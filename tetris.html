@@ -294,12 +294,15 @@
 
         .game-over-content {
             background: linear-gradient(135deg, rgba(45, 55, 72, 0.95), rgba(26, 32, 44, 0.95));
-            padding: 40px;
+            padding: 40px 32px 32px 32px;
             border-radius: var(--border-radius);
             text-align: center;
             box-shadow: 0 0 30px rgba(245, 101, 101, 0.5);
             border: 1px solid rgba(245, 101, 101, 0.3);
             animation: slideUp 0.4s ease-out;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
         }
 
         @keyframes slideUp {
@@ -315,7 +318,13 @@
 
         .game-over-content h2 {
             color: var(--danger-color);
-            margin-bottom: 20px;
+            margin-bottom: 0;
+            margin: 0 0 12px 0;
+            font-size: 20px;
+            margin-top: 8px;
+            padding: 14px 32px;
+            font-size: 18px;
+            letter-spacing: 1px;
             font-size: 36px;
             font-weight: 700;
             text-shadow: 0 0 20px rgba(245, 101, 101, 0.8);
@@ -430,31 +439,46 @@
 
         @media (max-width: 768px) {
             .game-container {
-                padding: 20px;
-                gap: 20px;
+                padding: 8px;
+                gap: 10px;
                 flex-direction: column;
+                max-width: 99vw;
             }
-
+            .game-board {
+                width: 100vw;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+            #tetris, #particleCanvas, #lineClearCanvas {
+                width: 100vw !important;
+                max-width: 400px;
+                height: 70vw !important;
+                max-height: 800px;
+                display: block;
+                margin: 0 auto;
+            }
             .info-panel {
                 min-width: 100%;
             }
-
             .controls {
                 flex-direction: row;
                 flex-wrap: wrap;
             }
-
             .btn {
                 flex: 1;
-                min-width: 100px;
-            }
-
-            .info-label {
+                min-width: 80px;
                 font-size: 14px;
+                padding: 10px 8px;
             }
-
+            .info-label {
+                font-size: 13px;
+            }
             .score-display {
-                font-size: 24px;
+                font-size: 18px;
+            }
+            .next-piece {
+                width: 60px !important;
+                height: 60px !important;
             }
         }
     </style>
@@ -487,6 +511,13 @@
                     <span class="score-display" id="score">0</span>
                 </div>
             </div>
+            <div class="info-box" style="margin-bottom:8px;">
+                <div class="info-row">
+                    <span class="info-label" id="usernameLabel"></span>
+                    <input id="usernameInput" type="text" maxlength="20" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid #667eea;background:#222;color:#fff;font-size:15px;" />
+                </div>
+                <div id="usernameTip" style="font-size:13px;color:#aaa;margin-top:4px;"></div>
+            </div>
 
             <div class="info-box">
                 <div class="info-row">
@@ -510,10 +541,10 @@
             </div>
 
             <div class="info-box">
-                <div class="info-row">
-                    <span class="info-label" id="nextLabel"></span>
+                <div class="info-row" style="align-items:center;">
+                    <span class="info-label" id="nextLabel" style="margin-right:18px;"></span>
+                    <canvas id="nextPiece" class="next-piece" width="100" height="100" style="margin:0;"></canvas>
                 </div>
-                <canvas id="nextPiece" class="next-piece" width="100" height="100"></canvas>
             </div>
 
             <div class="info-box controls">
@@ -572,6 +603,37 @@
         let currentLang = getUserLang();
         let TEXT = LANGUAGES[currentLang] || LANGUAGES['en'];
 
+        // 用户名输入框逻辑
+        function setupUsernameInput() {
+            const input = document.getElementById('usernameInput');
+            let username = localStorage.getItem('tetris_username');
+            // 只在第一次没有用户名时生成并存储
+            if (!username) {
+                username = 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
+                localStorage.setItem('tetris_username', username);
+            }
+            input.value = username;
+            input.addEventListener('change', function() {
+                let val = input.value.trim();
+                if (!val || val === 'Anonymous') {
+                    val = 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
+                }
+                input.value = val;
+                localStorage.setItem('tetris_username', val);
+            });
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    let val = input.value.trim();
+                    if (!val || val === 'Anonymous') {
+                        val = 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
+                    }
+                    input.value = val;
+                    localStorage.setItem('tetris_username', val);
+                    input.blur();
+                }
+            });
+        }
+
         function setLangUI() {
             document.getElementById('themeToggle').textContent = TEXT.themeToggle;
             document.getElementById('gameOverTitle').textContent = TEXT.gameOver;
@@ -586,9 +648,14 @@
             document.getElementById('pauseBtn').textContent = TEXT.pause;
             document.getElementById('restartBtn2').textContent = TEXT.restart;
             document.getElementById('levelUpEffect').textContent = TEXT.levelUp;
+            // 用户名 label
+            document.getElementById('usernameLabel').textContent = currentLang === 'zh' ? '用户名' : 'Username';
+            // 用户名输入提示
+            document.getElementById('usernameTip').textContent = currentLang === 'zh' ? '如需更改用户名，请输入后回车' : 'To change username, enter and press Enter';
         }
 
         window.addEventListener('DOMContentLoaded', setLangUI);
+        window.addEventListener('DOMContentLoaded', setupUsernameInput);
         class Particle {
             constructor(x, y, color) {
                 this.x = x;
@@ -864,15 +931,29 @@
 
             rotate() {
                 if (this.gameOver || this.paused) return;
-                
                 const rotated = this.currentPiece.shape[0].map((_, i) =>
                     this.currentPiece.shape.map(row => row[i]).reverse()
                 );
-                
                 const previousShape = this.currentPiece.shape;
                 this.currentPiece.shape = rotated;
-                
-                if (this.collision()) {
+                // Wall kick offsets: try center, left, right, up, down
+                const kicks = [
+                    {x:0, y:0},
+                    {x:-1, y:0},
+                    {x:1, y:0},
+                    {x:0, y:-1},
+                    {x:0, y:1},
+                ];
+                let kicked = false;
+                for (let i = 0; i < kicks.length; i++) {
+                    if (!this.collision(this.currentPiece, kicks[i].x, kicks[i].y)) {
+                        this.currentPiece.x += kicks[i].x;
+                        this.currentPiece.y += kicks[i].y;
+                        kicked = true;
+                        break;
+                    }
+                }
+                if (!kicked) {
                     this.currentPiece.shape = previousShape;
                 } else {
                     const centerX = (this.currentPiece.x + this.currentPiece.shape[0].length / 2) * this.blockSize;
@@ -911,10 +992,39 @@
             hardDrop() {
                 if (this.gameOver || this.paused) return;
                 let dropDistance = 0;
+                let tailColor = this.colors[this.currentPiece.type];
+                let tailBlocks = [];
+                this.tailGlow = [];
+                // 记录下落路径
                 while (!this.collision(this.currentPiece, 0, 1)) {
                     this.currentPiece.y++;
                     dropDistance++;
+                    // 记录每一步的所有方块坐标
+                    for (let y = 0; y < this.currentPiece.shape.length; y++) {
+                        for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                            if (this.currentPiece.shape[y][x]) {
+                                tailBlocks.push({
+                                    x: (this.currentPiece.x + x) * this.blockSize + this.blockSize / 2,
+                                    y: (this.currentPiece.y + y) * this.blockSize + this.blockSize / 2
+                                });
+                            }
+                        }
+                    }
                 }
+                // 记录 glow 拖尾路径（更长更亮）
+                const tailLen = Math.max(30, tailBlocks.length); // 拖尾至少30段
+                this.tailGlow = [];
+                for (let i = 0; i < tailLen; i++) {
+                    const pos = tailBlocks[Math.floor(i * tailBlocks.length / tailLen)] || tailBlocks[tailBlocks.length-1];
+                    this.tailGlow.push({
+                        x: pos.x,
+                        y: pos.y,
+                        color: tailColor,
+                        alpha: 0.85 * (1 - i / tailLen) + 0.15,
+                        size: 28 - 18 * (i / tailLen)
+                    });
+                }
+                // ...existing code...
                 this.score += dropDistance * 2;
                 this.lockPiece();
             }
@@ -930,7 +1040,6 @@
             clearLines() {
                 let linesCleared = [];
                 const newBoard = [];
-                
                 for (let y = this.rows - 1; y >= 0; y--) {
                     if (this.board[y].every(cell => cell !== 0)) {
                         linesCleared.push(y);
@@ -940,15 +1049,12 @@
                         newBoard.unshift(this.board[y]);
                     }
                 }
-                
                 while (newBoard.length < this.rows) {
                     newBoard.unshift(Array(this.cols).fill(0));
                 }
-                
                 if (linesCleared.length > 0) {
                     this.board = newBoard;
                     this.lines += linesCleared.length;
-                    
                     const currentTime = Date.now();
                     if (currentTime - this.lastClearTime < 3000) {
                         this.combo++;
@@ -956,20 +1062,50 @@
                         this.combo = 1;
                     }
                     this.lastClearTime = currentTime;
-                    
-                    if (this.combo > 1) {
+
+                    // 个性化消行提示
+                    if (linesCleared.length === 2) {
+                        this.showCustomMessage(currentLang === 'zh' ? '双行消除！Nice!' : 'Double Line Clear!');
+                    } else if (linesCleared.length === 3) {
+                        this.showCustomMessage(currentLang === 'zh' ? '三行消除！Awesome!' : 'Triple Line Clear!');
+                    } else if (linesCleared.length === 4) {
+                        this.showTetrisCelebration();
+                    } else if (this.combo > 1) {
                         this.showCombo(this.combo);
                     }
-                    
+
                     const baseScore = [0, 100, 300, 500, 800][linesCleared.length];
                     const comboMultiplier = Math.min(this.combo, 5);
                     this.score += baseScore * this.level * comboMultiplier;
-                    
                     const newLevel = Math.floor(this.lines / 10) + 1;
                     if (newLevel > this.level) {
                         this.level = newLevel;
                         this.showLevelUp();
                     }
+                }
+            }
+
+            showCustomMessage(msg) {
+                const comboDisplay = document.getElementById('comboDisplay');
+                comboDisplay.textContent = msg;
+                comboDisplay.style.animation = 'none';
+                void comboDisplay.offsetWidth;
+                comboDisplay.style.animation = 'comboAnimation 1.2s ease-out';
+            }
+
+            showTetrisCelebration() {
+                const comboDisplay = document.getElementById('comboDisplay');
+                comboDisplay.textContent = currentLang === 'zh' ? 'TETRIS！四行消除！🎉' : 'TETRIS! Four Lines! 🎉';
+                comboDisplay.style.animation = 'none';
+                void comboDisplay.offsetWidth;
+                comboDisplay.style.animation = 'comboAnimation 1.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
+                // 粒子特效
+                for (let i = 0; i < 80; i++) {
+                    this.particles.push(new Particle(
+                        Math.random() * this.canvas.width,
+                        Math.random() * this.canvas.height,
+                        this.rainbowColors[Math.floor(Math.random() * this.rainbowColors.length)]
+                    ));
                 }
             }
 
@@ -1053,7 +1189,25 @@
                 // Clear canvas
                 this.ctx.fillStyle = '#0a0a0a';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                
+
+                // Draw glow 拖尾（更亮更慢消失）
+                if (this.tailGlow && this.tailGlow.length) {
+                    for (let i = 0; i < this.tailGlow.length; i++) {
+                        const glow = this.tailGlow[i];
+                        this.ctx.save();
+                        this.ctx.globalAlpha = glow.alpha;
+                        this.ctx.shadowBlur = 40;
+                        this.ctx.shadowColor = glow.color;
+                        this.ctx.fillStyle = glow.color;
+                        this.ctx.beginPath();
+                        this.ctx.ellipse(glow.x, glow.y, glow.size, glow.size/2, 0, 0, 2*Math.PI);
+                        this.ctx.fill();
+                        this.ctx.restore();
+                    }
+                    // 拖尾渐隐消失（更慢）
+                    this.tailGlow = this.tailGlow.map(g => ({...g, alpha: g.alpha * 0.95, size: g.size * 0.98})).filter(g => g.alpha > 0.03 && g.size > 2);
+                }
+
                 // Apply screen shake
                 if (this.shakeAmount > 0) {
                     this.ctx.save();
@@ -1064,10 +1218,10 @@
                     this.shakeAmount *= 0.9;
                     if (this.shakeAmount < 0.1) this.shakeAmount = 0;
                 }
-                
+
                 // Draw grid
                 this.ctx.drawImage(this.gridCanvas, 0, 0);
-                
+
                 // Draw locked blocks
                 for (let y = 0; y < this.rows; y++) {
                     for (let x = 0; x < this.cols; x++) {
@@ -1076,7 +1230,7 @@
                         }
                     }
                 }
-                
+
                 // Draw current piece with glow effect
                 if (this.currentPiece) {
                     for (let y = 0; y < this.currentPiece.shape.length; y++) {
@@ -1092,11 +1246,11 @@
                         }
                     }
                 }
-                
+
                 if (this.shakeAmount > 0) {
                     this.ctx.restore();
                 }
-                
+
                 // Draw particles
                 this.particleCtx.clearRect(0, 0, this.particleCanvas.width, this.particleCanvas.height);
                 this.particles = this.particles.filter(particle => {
@@ -1104,7 +1258,7 @@
                     particle.draw(this.particleCtx);
                     return particle.life > 0;
                 });
-                
+
                 // Draw line clear animations
                 this.lineClearCtx.clearRect(0, 0, this.lineClearCanvas.width, this.lineClearCanvas.height);
                 this.lineClearAnimations = this.lineClearAnimations.filter(animation => {
@@ -1148,12 +1302,58 @@
                 document.getElementById('combo').textContent = this.combo;
             }
 
-            showGameOver() {
+            async showGameOver() {
                 document.getElementById('finalScore').textContent = this.score;
                 document.getElementById('gameOverOverlay').style.display = 'flex';
                 document.getElementById('startBtn').disabled = false;
                 document.getElementById('pauseBtn').disabled = true;
                 document.getElementById('pauseBtn').textContent = TEXT.pause;
+
+                // 上传分数到 Cloudflare Worker
+                let username = localStorage.getItem('tetris_username') || 'Anonymous';
+                // 本地分数记录
+                let localScores = JSON.parse(localStorage.getItem('tetris_scores') || '[]');
+                localScores.push({ score: this.score, time: Date.now() });
+                localScores = localScores.slice(-20); // 只保留最近20条
+                localStorage.setItem('tetris_scores', JSON.stringify(localScores));
+                try {
+                    await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: username, score: this.score })
+                    });
+                } catch (e) {}
+                this.showLeaderboard();
+            }
+
+            async showLeaderboard() {
+                // 获取排行榜并显示在 Game Over overlay
+                let leaderboard = [];
+                try {
+                    const res = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore');
+                    leaderboard = await res.json();
+                } catch (e) {}
+                let html = '<span id="finalScore">' + this.score + '</span>';
+                html += '<div style="margin-top:18px;text-align:left;font-size:18px;line-height:1.5;">';
+                html += currentLang === 'zh' ? '全站最高分：' : 'Global High Scores:';
+                html += '<ol style="margin:8px 0 0 18px;padding:0;">';
+                leaderboard.slice(0, 5).forEach((item, i) => {
+                    html += `<li>${currentLang === 'zh' ? '用户名' : 'Username'}: <b>${item.name}</b> ${currentLang === 'zh' ? '分数' : 'Score'}: <b>${item.score}</b></li>`;
+                });
+                html += '</ol></div>';
+                // 展示本地分数记录
+                let localScores = JSON.parse(localStorage.getItem('tetris_scores') || '[]');
+                if (localScores.length) {
+                    html += '<div style="margin-top:12px;font-size:15px;color:#aaa;">';
+                    html += currentLang === 'zh' ? '你的最近得分：' : 'Your Recent Scores:';
+                    html += '<ul style="margin:6px 0 0 18px;padding:0;">';
+                    localScores.slice(-5).reverse().forEach(item => {
+                        const date = new Date(item.time);
+                        html += `<li>${item.score} <span style='font-size:12px;color:#888;'>(${date.toLocaleDateString()} ${date.toLocaleTimeString()})</span></li>`;
+                    });
+                    html += '</ul></div>';
+                }
+                document.getElementById('finalScoreLabel').innerHTML = html;
             }
 
             start() {
@@ -1175,10 +1375,10 @@
 
             restart() {
                 this.init();
-                document.getElementById('startBtn').disabled = false;
-                document.getElementById('pauseBtn').disabled = true;
-                document.getElementById('pauseBtn').textContent = '暂停';
-                this.draw();
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                document.getElementById('pauseBtn').textContent = TEXT.pause;
+                this.gameLoop();
             }
 
             toggleTheme() {
@@ -1244,6 +1444,42 @@
             document.getElementById('restartBtn').onclick = () => game.restart();
             document.getElementById('restartBtn2').onclick = () => game.restart();
             document.getElementById('themeToggle').onclick = () => game.toggleTheme();
+
+            // Touch controls for mobile
+            let touchStartX = null;
+            let touchStartY = null;
+            const canvas = document.getElementById('tetris');
+            canvas.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 1) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                }
+            });
+            canvas.addEventListener('touchend', function(e) {
+                if (touchStartX === null || touchStartY === null) return;
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const dx = touchEndX - touchStartX;
+                const dy = touchEndY - touchStartY;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    if (dx > 30) game.moveRight();
+                    else if (dx < -30) game.moveLeft();
+                } else {
+                    if (dy > 30) game.moveDown();
+                    else if (dy < -30) game.rotate();
+                }
+                touchStartX = null;
+                touchStartY = null;
+            });
+            // Double tap for hard drop
+            let lastTap = 0;
+            canvas.addEventListener('touchend', function(e) {
+                const now = Date.now();
+                if (now - lastTap < 300) {
+                    game.hardDrop();
+                }
+                lastTap = now;
+            });
         });
     </script>
 </body>
