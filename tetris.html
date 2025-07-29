@@ -1237,6 +1237,14 @@
         // Create game instance
         const game = new Tetris();
         game.draw();
+        // 按钮事件绑定
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('startBtn').onclick = () => game.start();
+            document.getElementById('pauseBtn').onclick = () => game.togglePause();
+            document.getElementById('restartBtn').onclick = () => game.restart();
+            document.getElementById('restartBtn2').onclick = () => game.restart();
+            document.getElementById('themeToggle').onclick = () => game.toggleTheme();
+        });
     </script>
 </body>
 </html>
