@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Single Page Games Collection</title>
+    <title id="page-title">Single Page Games Collection</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23667eea'/><text x='50%' y='54%' text-anchor='middle' font-size='32' fill='white' font-family='Segoe UI,Arial' dy='.3em'>🎮</text></svg>">
     <style>
         body {
@@ -17,32 +17,31 @@
             align-items: center;
         }
         .container {
-        background: rgba(26,32,44,0.97);
-        border-radius: 20px;
-        box-shadow: 0 0 40px rgba(102,126,234,0.3);
-        padding: 48px 48px 32px 48px;
-        margin-top: 60px;
-        max-width: 800px;
-        width: 100%;
-        text-align: center;
-        border: 3px solid #667eea;
-        position: relative;
-        animation: borderGlow 2.5s infinite alternate;
-    }
-    @keyframes borderGlow {
-        0% {
-            box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px #667eea;
-            border-color: #667eea;
+            background: rgba(26,32,44,0.97);
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(102,126,234,0.3);
+            padding: 48px 48px 32px 48px;
+            margin-top: 60px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            border: 3px solid #667eea;
+            position: relative;
+            animation: borderGlow 2.5s infinite alternate;
         }
-        50% {
-            box-shadow: 0 0 60px #667eea, 0 0 12px #48bb78;
-            border-color: #48bb78;
-        }
-        100% {
-            box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px #667eea;
-            border-color: #667eea;
-        }
-    }
+        @keyframes borderGlow {
+            0% {
+                box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px #667eea;
+                border-color: #667eea;
+            }
+            50% {
+                box-shadow: 0 0 60px #667eea, 0 0 12px #48bb78;
+                border-color: #48bb78;
+            }
+            100% {
+                box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px #667eea;
+                border-color: #667eea;
+            }
         }
         .logo {
             font-size: 3.2em;
@@ -86,7 +85,6 @@
                 box-shadow: 0 0 18px #48bb7844, 0 0 0px #667eea;
                 border-color: #48bb78;
             }
-        }
         }
         li {
             margin: 18px 0;
@@ -150,10 +148,11 @@
 <body>
     <div class="container">
         <div class="logo">🎮</div>
-        <h1>Single Page Games Collection</h1>
-        <div class="desc">A curated set of single-file web games. Play instantly, share easily, and enjoy classic fun!</div>
+        <h1 id="main-title">Single Page Games Collection</h1>
+        <div class="desc" id="main-desc">A curated set of single-file web games. Play instantly, share easily, and enjoy classic fun!</div>
         <ul>
-            <li><a href="tetris.html">Tetris</a> <span class="tag">Classic, Modern UI</span></li>
+            <li><a href="tetris.html" id="tetris-name">Tetris</a> <span class="tag" id="tetris-tag">Classic, Modern UI</span></li>
+            <li><a href="tank-battle.html" id="tank-name">Tank Battle</a> <span class="tag" id="tank-tag">Classic Arcade, Retro Style</span></li>
             <!-- Add more games here -->
         </ul>
     
@@ -161,5 +160,61 @@
     <footer style="width:100vw;text-align:center;padding:18px 0 10px 0;font-size:15px;color:#aaa;letter-spacing:0.5px;background:rgba(26,32,44,0.85);border-top:1px solid #667eea;position:fixed;left:0;bottom:0;z-index:1001;backdrop-filter:blur(3px);">
         © 2025 Orangely.
     </footer>
+    <script>
+        // 国际化配置
+        const i18n = {
+            en: {
+                pageTitle: 'Single Page Games Collection',
+                mainTitle: 'Single Page Games Collection',
+                mainDesc: 'A curated set of single-file web games. Play instantly, share easily, and enjoy classic fun!',
+                tetrisName: 'Tetris',
+                tetrisTag: 'Classic, Modern UI',
+                tankName: 'Tank Battle',
+                tankTag: 'Classic Arcade, Retro Style',
+                footer: '© 2025 Orangely.'
+            },
+            zh: {
+                pageTitle: '单页游戏合集',
+                mainTitle: '单页游戏合集',
+                mainDesc: '精选的单文件网页游戏合集，即点即玩，轻松分享，享受经典乐趣！',
+                tetrisName: '俄罗斯方块',
+                tetrisTag: '经典游戏, 现代界面',
+                tankName: '坦克大战',
+                tankTag: '经典街机, 怀旧风格',
+                footer: '© 2025 Orangely.'
+            }
+        };
+
+        // 检测浏览器语言
+        function detectLanguage() {
+            const browserLang = navigator.language || navigator.userLanguage;
+            // 如果浏览器语言是中文（简体或繁体），使用中文，否则默认英文
+            return browserLang.startsWith('zh') ? 'zh' : 'en';
+        }
+
+        // 应用语言设置
+        function applyLanguage(lang) {
+            const texts = i18n[lang];
+            if (!texts) return;
+
+            // 更新页面内容
+            document.getElementById('page-title').textContent = texts.pageTitle;
+            document.getElementById('main-title').textContent = texts.mainTitle;
+            document.getElementById('main-desc').textContent = texts.mainDesc;
+            document.getElementById('tetris-name').textContent = texts.tetrisName;
+            document.getElementById('tetris-tag').textContent = texts.tetrisTag;
+            document.getElementById('tank-name').textContent = texts.tankName;
+            document.getElementById('tank-tag').textContent = texts.tankTag;
+            
+            // 更新HTML lang属性
+            document.getElementById('html-root').setAttribute('lang', lang);
+        }
+
+        // 页面加载时自动检测并应用语言
+        document.addEventListener('DOMContentLoaded', function() {
+            const language = detectLanguage();
+            applyLanguage(language);
+        });
+    </script>
 </body>
 </html>
