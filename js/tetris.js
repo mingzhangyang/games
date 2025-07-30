@@ -10,7 +10,10 @@ const LANGUAGES = {
         level: 'Level',
         lines: 'Lines',
         combo: 'Combo',
-        highestScore: 'Global High',
+        globalScoresHeader: 'Global Top 5',
+        loadingScores: 'Loading...',
+        noScores: 'No scores yet',
+        failedToLoad: 'Failed to load scores',
         next: 'Next Piece',
         start: 'Start',
         pause: 'Pause',
@@ -28,7 +31,10 @@ const LANGUAGES = {
         level: '等级',
         lines: '消除行数',
         combo: '连击',
-        highestScore: '全站最高',
+        globalScoresHeader: '全球前5名',
+        loadingScores: '加载中...',
+        noScores: '暂无分数',
+        failedToLoad: '加载失败',
         next: '下一个方块',
         start: '开始游戏',
         pause: '暂停',
@@ -88,13 +94,11 @@ function setLangUI() {
     document.getElementById('levelLabel').textContent = TEXT.level;
     document.getElementById('linesLabel').textContent = TEXT.lines;
     document.getElementById('comboLabel').textContent = TEXT.combo;
-    document.getElementById('highestScoreLabel').textContent = TEXT.highestScore;
+    document.getElementById('globalScoresHeader').textContent = TEXT.globalScoresHeader;
     document.getElementById('nextLabel').textContent = TEXT.next;
     document.getElementById('startBtn').textContent = TEXT.start;
     document.getElementById('pauseBtn').textContent = TEXT.pause;
     document.getElementById('restartGameBtn').textContent = TEXT.restart;
-    document.getElementById('leaderboardBtn').textContent = currentLang === 'zh' ? '排行榜' : 'Leaderboard';
-    document.getElementById('langBtn').textContent = currentLang === 'zh' ? 'English' : '中文';
     document.getElementById('levelUpEffect').textContent = TEXT.levelUp;
     // 用户名 label
     document.getElementById('usernameLabel').textContent = currentLang === 'zh' ? '用户名' : 'Username';
@@ -102,24 +106,44 @@ function setLangUI() {
     document.getElementById('usernameTip').textContent = currentLang === 'zh' ? '如需更改用户名，请输入后回车' : 'To change username, enter and press Enter';
 }
 
-// 获取并显示全站最高分
-async function fetchAndDisplayHighestScore() {
+// 获取并显示全站前5名分数
+async function fetchAndDisplayGlobalScores() {
+    const loadingElement = document.getElementById('loadingScores');
+    const listElement = document.getElementById('globalScoresList');
+    
+    // Update loading text
+    loadingElement.textContent = TEXT.loadingScores;
+    
     try {
-        const res = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore');
-        const leaderboard = await res.json();
-        if (leaderboard && leaderboard.length > 0) {
-            document.getElementById('highestScore').textContent = leaderboard[0].score;
+        const response = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore');
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            const top5 = data.slice(0, 5);
+            listElement.innerHTML = '';
+            
+            top5.forEach((score, index) => {
+                const scoreItem = document.createElement('div');
+                scoreItem.className = 'score-item';
+                scoreItem.innerHTML = `
+                    <span class="score-rank">#${index + 1}</span>
+                    <span class="score-name">${score.name || (currentLang === 'zh' ? '匿名' : 'Anonymous')}</span>
+                    <span class="score-value">${score.score.toLocaleString()}</span>
+                `;
+                listElement.appendChild(scoreItem);
+            });
         } else {
-            document.getElementById('highestScore').textContent = '-';
+            listElement.innerHTML = `<div class="no-scores">${TEXT.noScores}</div>`;
         }
-    } catch (e) {
-        document.getElementById('highestScore').textContent = '-';
+    } catch (error) {
+        console.error('Failed to fetch global scores:', error);
+        listElement.innerHTML = `<div class="no-scores">${TEXT.failedToLoad}</div>`;
     }
 }
 
 window.addEventListener('DOMContentLoaded', setLangUI);
 window.addEventListener('DOMContentLoaded', setupUsernameInput);
-window.addEventListener('DOMContentLoaded', fetchAndDisplayHighestScore);
+window.addEventListener('DOMContentLoaded', fetchAndDisplayGlobalScores);
 
 class Particle {
     constructor(x, y, color) {
@@ -788,7 +812,7 @@ class Tetris {
                 body: JSON.stringify({ name: username, score: this.score })
             });
             // 更新全站最高分显示
-            fetchAndDisplayHighestScore();
+            fetchAndDisplayGlobalScores();
         } catch (e) {}
         this.showLeaderboard();
     }
@@ -911,12 +935,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pauseBtn').onclick = () => game.togglePause();
     document.getElementById('restartBtn').onclick = () => game.restart();
     document.getElementById('restartGameBtn').onclick = () => game.restart();
-    document.getElementById('leaderboardBtn').onclick = () => game.showLeaderboard();
-    document.getElementById('langBtn').onclick = () => {
-        currentLang = currentLang === 'zh' ? 'en' : 'zh';
-        TEXT = LANGUAGES[currentLang];
-        setLangUI();
-    };
     document.getElementById('themeToggle').onclick = () => game.toggleTheme();
 
     // Touch controls for mobile

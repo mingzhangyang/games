@@ -64,13 +64,6 @@
             </div>
 
             <div class="info-box">
-                <div class="info-row">
-                    <span class="info-label" id="highestScoreLabel"></span>
-                    <span class="score-display" id="highestScore">-</span>
-                </div>
-            </div>
-
-            <div class="info-box">
                 <div class="info-row" style="align-items:center;">
                     <span class="info-label" id="nextLabel" style="margin-right:18px;"></span>
                     <canvas id="nextPiece" class="next-piece" width="100" height="100" style="margin:0;"></canvas>
@@ -81,9 +74,14 @@
                 <button class="btn" id="startBtn"></button>
                 <button class="btn" id="pauseBtn"></button>
                 <button class="btn" id="restartGameBtn"></button>
-                <button class="btn" id="leaderboardBtn"></button>
-                <button class="btn" id="langBtn"></button>
             </div>
+        </div>
+    </div>
+    
+    <div class="global-scores-panel" id="globalScoresPanel">
+        <div class="global-scores-header" id="globalScoresHeader">Global Top 5</div>
+        <div class="global-scores-list" id="globalScoresList">
+            <div class="loading-scores" id="loadingScores">Loading...</div>
         </div>
     </div>
 
