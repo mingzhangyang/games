@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Contra - Classic Edition</title>
+    <link rel="stylesheet" href="css/contra.css">
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="game-ui">
+            <div class="score"><span id="score-label">Score</span>: <span id="score">0</span></div>
+            <div class="level"><span id="level-label">Level</span>: <span id="level">1</span></div>
+            <div class="lives"><span id="lives-label">Lives</span>: <span id="lives">3</span></div>
+        </div>
+
+        <div class="power-up-indicator" id="powerUpIndicator">
+            <span id="weapon-label">Weapon</span>: <span id="weaponType">Normal</span>
+        </div>
+
+        <div class="health-bar">
+            <div class="health-fill" style="width: 60%;"></div>
+        </div>
+
+        <div class="pause-hint" id="pause-hint">Press P to Pause</div>
+        <div class="fps-counter">FPS: 60</div>
+        <div class="speed-display" id="speed-display">Game Speed: 1.00x</div>
+        
+        <div class="speed-controls" id="speed-controls">
+            <button class="speed-btn" onclick="game.decreaseSpeed()" id="speed-down">-</button>
+            <button class="speed-btn" onclick="game.resetSpeed()" id="speed-reset">Reset</button>
+            <button class="speed-btn" onclick="game.increaseSpeed()" id="speed-up">+</button>
+        </div>
+
+        <div class="game-overlay game-start" id="gameStart">
+            <h2 id="game-title">Block Version Contra</h2>
+            <p id="game-subtitle">Classic Edition - Optimized</p>
+            <div class="controls">
+                <p id="control-move">← → Move</p>
+                <p id="control-jump">↑ Jump</p>
+                <p id="control-shoot">Space Shoot</p>
+                <p id="control-pause">P Pause Game</p>
+                <p id="control-speed">+/- Speed Control | 0 Reset Speed</p>
+                <p id="control-touch">Touch Controls Supported</p>
+            </div>
+            <button class="game-button" onclick="startGame()" id="start-button">Start Game</button>
+        </div>
+
+        <div class="game-overlay game-paused" id="gamePaused">
+            <h2 id="paused-title">Game Paused</h2>
+            <p id="paused-text">Press P to Continue</p>
+        </div>
+
+        <div class="game-overlay game-over" id="gameOver">
+            <h2 id="gameover-title">Game Over</h2>
+            <p><span id="final-score-label">Final Score</span>: <span id="finalScore">0</span></p>
+            <p><span id="final-level-label">Level Reached</span>: <span id="finalLevel">1</span></p>
+            <div class="high-score-display">
+                <p><span id="high-score-label">High Score</span>: <span id="highScore">0</span></p>
+            </div>
+            <button class="game-button" onclick="restartGame()" id="restart-button">Restart Game</button>
+        </div>
+
+        <div class="game-overlay save-menu" id="saveMenu" style="display: none;">
+            <h2 id="save-menu-title">Save & Load</h2>
+            <div class="save-slots">
+                <div class="save-slot" data-slot="0">
+                    <span class="save-slot-name">Quick Save</span>
+                    <span class="save-slot-info" id="save-info-0">Empty</span>
+                    <button class="save-btn" onclick="saveGame(0)">Save</button>
+                    <button class="load-btn" onclick="loadGame(0)">Load</button>
+                </div>
+                <div class="save-slot" data-slot="1">
+                    <span class="save-slot-name">Slot 1</span>
+                    <span class="save-slot-info" id="save-info-1">Empty</span>
+                    <button class="save-btn" onclick="saveGame(1)">Save</button>
+                    <button class="load-btn" onclick="loadGame(1)">Load</button>
+                </div>
+                <div class="save-slot" data-slot="2">
+                    <span class="save-slot-name">Slot 2</span>
+                    <span class="save-slot-info" id="save-info-2">Empty</span>
+                    <button class="save-btn" onclick="saveGame(2)">Save</button>
+                    <button class="load-btn" onclick="loadGame(2)">Load</button>
+                </div>
+                <div class="save-slot" data-slot="3">
+                    <span class="save-slot-name">Slot 3</span>
+                    <span class="save-slot-info" id="save-info-3">Empty</span>
+                    <button class="save-btn" onclick="saveGame(3)">Save</button>
+                    <button class="load-btn" onclick="loadGame(3)">Load</button>
+                </div>
+            </div>
+            <div class="save-menu-actions">
+                <button class="game-button" onclick="exportSaveData()">Export Saves</button>
+                <button class="game-button" onclick="document.getElementById('importFile').click()">Import Saves</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importSaveData(this)">
+                <button class="game-button" onclick="clearAllSaves()">Clear All</button>
+                <button class="game-button" onclick="closeSaveMenu()">Close</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <span id="loading-text">Loading Game...</span>
+        </div>
+    </div>
+
+    <!-- 优化模块 -->
+    <script src="js/config-manager.js"></script>
+    <script src="js/performance-monitor.js"></script>
+    <script src="js/resource-manager.js"></script>
+    <script src="js/save-manager.js"></script>
+    <script src="js/debug-panel.js"></script>
+    
+    <!-- 游戏脚本 -->
+    <script src="js/contra.js"></script>
+    
+    <!-- 国际化脚本 -->
+    <script>
+        // 全局函数
+        function startGame() {
+            if (game) {
+                game.startGame();
+            }
+        }
+        
+        function restartGame() {
+            if (game) {
+                game.restartGame();
+            }
+        }
+        
+        function saveGame(slot = 0) {
+            if (window.saveManager && game) {
+                try {
+                    const success = window.saveManager.saveGame(slot);
+                    if (success) {
+                        game.updateSaveMenuInfo();
+                        alert('游戏已保存！');
+                    } else {
+                        alert('保存失败！');
+                    }
+                } catch (error) {
+                    console.error('保存游戏失败:', error);
+                    alert('保存游戏时出错！');
+                }
+            }
+        }
+        
+        function loadGame(slot = 0) {
+            if (window.saveManager && game) {
+                try {
+                    const saveData = window.saveManager.loadGame(slot);
+                    if (saveData) {
+                        if (window.saveManager.restoreGameState(saveData)) {
+                            game.updateUI();
+                            closeSaveMenu();
+                            game.gameState = 'playing';
+                            alert('游戏已加载！');
+                        } else {
+                            alert('加载游戏状态失败！');
+                        }
+                    } else {
+                        alert('存档为空！');
+                    }
+                } catch (error) {
+                    console.error('加载游戏失败:', error);
+                    alert('加载游戏时出错！');
+                }
+            }
+        }
+        
+        function openSaveMenu() {
+            document.getElementById('saveMenu').style.display = 'block';
+            if (game) {
+                game.updateSaveMenuInfo();
+            }
+        }
+        
+        function closeSaveMenu() {
+            document.getElementById('saveMenu').style.display = 'none';
+        }
+        
+        function exportSaveData() {
+            if (window.saveManager) {
+                try {
+                    window.saveManager.exportSaveData();
+                } catch (error) {
+                    console.error('导出存档失败:', error);
+                    alert('导出存档时出错！');
+                }
+            }
+        }
+        
+        function importSaveData(input) {
+            if (window.saveManager && input.files.length > 0) {
+                try {
+                    window.saveManager.importSaveData(input.files[0])
+                        .then(() => {
+                            if (game) {
+                                game.updateSaveMenuInfo();
+                            }
+                            alert('存档导入成功！');
+                        })
+                        .catch(error => {
+                            console.error('导入存档失败:', error);
+                            alert('导入存档时出错！');
+                        });
+                } catch (error) {
+                    console.error('导入存档失败:', error);
+                    alert('导入存档时出错！');
+                }
+            }
+        }
+        
+        function clearAllSaves() {
+            if (confirm('确定要清除所有存档数据吗？此操作不可恢复！')) {
+                if (window.saveManager) {
+                    try {
+                        window.saveManager.clearAllData();
+                        if (game) {
+                            game.updateSaveMenuInfo();
+                        }
+                        alert('所有存档已清除！');
+                    } catch (error) {
+                        console.error('清除存档失败:', error);
+                        alert('清除存档时出错！');
+                    }
+                }
+            }
+        }
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            // F5 打开存档菜单
+            if (e.key === 'F5') {
+                e.preventDefault();
+                openSaveMenu();
+            }
+            
+            // F8 快速保存
+            if (e.key === 'F8') {
+                e.preventDefault();
+                saveGame(0);
+            }
+            
+            // F9 快速加载
+            if (e.key === 'F9') {
+                e.preventDefault();
+                loadGame(0);
+            }
+        });
+
+        // 国际化配置
+        const i18n = {
+            en: {
+                pageTitle: 'Block Version Contra - Classic Edition',
+                scoreLabel: 'Score',
+                levelLabel: 'Level',
+                livesLabel: 'Lives',
+                weaponLabel: 'Weapon',
+                weaponNormal: 'Normal',
+                weaponSpread: 'Spread',
+                weaponLaser: 'Laser',
+                pauseHint: 'Press P to Pause',
+                gameTitle: 'Block Version Contra',
+                gameSubtitle: 'Classic Edition - Optimized',
+                controlMove: '← → Move',
+                controlJump: '↑ Jump',
+                controlShoot: 'Space Shoot',
+                controlPause: 'P Pause Game',
+                controlSpeed: '+/- Speed Control | 0 Reset Speed',
+                controlTouch: 'Touch Controls Supported',
+                startButton: 'Start Game',
+                pausedTitle: 'Game Paused',
+                pausedText: 'Press P to Continue',
+                gameoverTitle: 'Game Over',
+                finalScoreLabel: 'Final Score',
+                finalLevelLabel: 'Level Reached',
+                restartButton: 'Restart Game',
+                loadingText: 'Loading Game...',
+                speedDisplay: 'Game Speed',
+                speedDown: 'Slow Down',
+                speedUp: 'Speed Up',
+                speedReset: 'Reset Speed'
+            },
+            zh: {
+                pageTitle: 'Block版魂斗罗 - 经典版',
+                scoreLabel: '得分',
+                levelLabel: '关卡',
+                livesLabel: '生命',
+                weaponLabel: '武器',
+                weaponNormal: '普通',
+                weaponSpread: '散弹',
+                weaponLaser: '激光',
+                pauseHint: '按 P 暂停',
+                gameTitle: 'Block版魂斗罗',
+                gameSubtitle: '经典复刻版 - 优化版',
+                controlMove: '← → 移动',
+                controlJump: '↑ 跳跃',
+                controlShoot: '空格键 射击',
+                controlPause: 'P 暂停游戏',
+                controlSpeed: '+/- 速度控制 | 0 重置速度',
+                controlTouch: '支持触摸控制',
+                startButton: '开始游戏',
+                pausedTitle: '游戏暂停',
+                pausedText: '按 P 继续游戏',
+                gameoverTitle: '游戏结束',
+                finalScoreLabel: '最终得分',
+                finalLevelLabel: '到达关卡',
+                restartButton: '重新开始',
+                loadingText: '游戏加载中...',
+                speedDisplay: '游戏速度',
+                speedDown: '减速',
+                speedUp: '加速',
+                speedReset: '重置速度'
+            }
+        };
+
+        // 检测浏览器语言
+        function detectLanguage() {
+            const browserLang = navigator.language || navigator.userLanguage;
+            // 如果浏览器语言是中文（简体或繁体），使用中文，否则默认英文
+            return browserLang.startsWith('zh') ? 'zh' : 'en';
+        }
+
+        // 应用语言设置
+        function applyLanguage(lang) {
+            const texts = i18n[lang];
+            if (!texts) return;
+
+            // 更新页面内容
+            document.getElementById('page-title').textContent = texts.pageTitle;
+            document.getElementById('score-label').textContent = texts.scoreLabel;
+            document.getElementById('level-label').textContent = texts.levelLabel;
+            document.getElementById('lives-label').textContent = texts.livesLabel;
+            document.getElementById('weapon-label').textContent = texts.weaponLabel;
+            document.getElementById('pause-hint').textContent = texts.pauseHint;
+            document.getElementById('game-title').textContent = texts.gameTitle;
+            document.getElementById('game-subtitle').textContent = texts.gameSubtitle;
+            document.getElementById('control-move').textContent = texts.controlMove;
+            document.getElementById('control-jump').textContent = texts.controlJump;
+            document.getElementById('control-shoot').textContent = texts.controlShoot;
+            document.getElementById('control-pause').textContent = texts.controlPause;
+            document.getElementById('control-speed').textContent = texts.controlSpeed;
+            document.getElementById('control-touch').textContent = texts.controlTouch;
+            document.getElementById('start-button').textContent = texts.startButton;
+            document.getElementById('paused-title').textContent = texts.pausedTitle;
+            document.getElementById('paused-text').textContent = texts.pausedText;
+            document.getElementById('gameover-title').textContent = texts.gameoverTitle;
+            document.getElementById('final-score-label').textContent = texts.finalScoreLabel;
+            document.getElementById('final-level-label').textContent = texts.finalLevelLabel;
+            document.getElementById('restart-button').textContent = texts.restartButton;
+            document.getElementById('loading-text').textContent = texts.loadingText;
+            
+            // 速度控制按钮
+            const speedDown = document.getElementById('speed-down');
+            const speedUp = document.getElementById('speed-up');
+            const speedReset = document.getElementById('speed-reset');
+            
+            if (speedDown) speedDown.title = texts.speedDown;
+            if (speedUp) speedUp.title = texts.speedUp;
+            if (speedReset) speedReset.title = texts.speedReset;
+            
+            // 更新HTML lang属性
+            document.getElementById('html-root').setAttribute('lang', lang);
+            
+            // 存储当前语言设置
+            window.currentLanguage = lang;
+            window.i18nTexts = texts;
+        }
+
+        // 页面加载时自动检测并应用语言
+        document.addEventListener('DOMContentLoaded', function() {
+            const language = detectLanguage();
+            applyLanguage(language);
+        });
+        
+        // 为游戏脚本提供武器类型翻译函数
+        function translateWeaponType(weaponType) {
+            if (!window.i18nTexts) return weaponType;
+            
+            switch(weaponType.toLowerCase()) {
+                case 'normal':
+                case '普通':
+                    return window.i18nTexts.weaponNormal;
+                case 'spread':
+                case '散弹':
+                    return window.i18nTexts.weaponSpread;
+                case 'laser':
+                case '激光':
+                    return window.i18nTexts.weaponLaser;
+                default:
+                    return weaponType;
+            }
+        }
+    </script>
+</body>
+</html>
