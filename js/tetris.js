@@ -1,6 +1,7 @@
 // 多语言支持
 const LANGUAGES = {
     en: {
+        title: 'Tetris - Cool Edition',
         themeToggle: '🌈 Theme',
         gameOver: 'Game Over!',
         finalScore: 'Final Score: ',
@@ -9,6 +10,7 @@ const LANGUAGES = {
         level: 'Level',
         lines: 'Lines',
         combo: 'Combo',
+        highestScore: 'Global High',
         next: 'Next Piece',
         start: 'Start',
         pause: 'Pause',
@@ -17,6 +19,7 @@ const LANGUAGES = {
         comboDisplay: x => `${x}x Combo!`
     },
     zh: {
+        title: '俄罗斯方块 - 酷炫版',
         themeToggle: '🌈 切换主题',
         gameOver: '游戏结束！',
         finalScore: '最终得分: ',
@@ -25,6 +28,7 @@ const LANGUAGES = {
         level: '等级',
         lines: '消除行数',
         combo: '连击',
+        highestScore: '全站最高',
         next: '下一个方块',
         start: '开始游戏',
         pause: '暂停',
@@ -75,6 +79,7 @@ function setupUsernameInput() {
 }
 
 function setLangUI() {
+    document.title = TEXT.title;
     document.getElementById('themeToggle').textContent = TEXT.themeToggle;
     document.getElementById('gameOverTitle').textContent = TEXT.gameOver;
     document.getElementById('finalScoreLabel').innerHTML = TEXT.finalScore + '<span id="finalScore">0</span>';
@@ -83,6 +88,7 @@ function setLangUI() {
     document.getElementById('levelLabel').textContent = TEXT.level;
     document.getElementById('linesLabel').textContent = TEXT.lines;
     document.getElementById('comboLabel').textContent = TEXT.combo;
+    document.getElementById('highestScoreLabel').textContent = TEXT.highestScore;
     document.getElementById('nextLabel').textContent = TEXT.next;
     document.getElementById('startBtn').textContent = TEXT.start;
     document.getElementById('pauseBtn').textContent = TEXT.pause;
@@ -96,8 +102,24 @@ function setLangUI() {
     document.getElementById('usernameTip').textContent = currentLang === 'zh' ? '如需更改用户名，请输入后回车' : 'To change username, enter and press Enter';
 }
 
+// 获取并显示全站最高分
+async function fetchAndDisplayHighestScore() {
+    try {
+        const res = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore');
+        const leaderboard = await res.json();
+        if (leaderboard && leaderboard.length > 0) {
+            document.getElementById('highestScore').textContent = leaderboard[0].score;
+        } else {
+            document.getElementById('highestScore').textContent = '-';
+        }
+    } catch (e) {
+        document.getElementById('highestScore').textContent = '-';
+    }
+}
+
 window.addEventListener('DOMContentLoaded', setLangUI);
 window.addEventListener('DOMContentLoaded', setupUsernameInput);
+window.addEventListener('DOMContentLoaded', fetchAndDisplayHighestScore);
 
 class Particle {
     constructor(x, y, color) {
@@ -765,6 +787,8 @@ class Tetris {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: username, score: this.score })
             });
+            // 更新全站最高分显示
+            fetchAndDisplayHighestScore();
         } catch (e) {}
         this.showLeaderboard();
     }

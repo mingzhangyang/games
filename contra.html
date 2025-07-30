@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魂斗罗 - Contra Game</title>
+    <link rel="stylesheet" href="css/contra.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+        <div id="gameUI">
+            <div id="gameInfo">
+                <div>❤️ <span id="livesLabel">生命</span>: <span id="lives">3</span></div>
+                <div>🏆 <span id="scoreLabel">分数</span>: <span id="score">0</span></div>
+                <div>📊 <span id="levelLabel">关卡</span>: <span id="level">1</span></div>
+                <div>🎯 <span id="enemiesLabel">敌人</span>: <span id="enemies">0</span></div>
+            </div>
+            <div id="controls">
+                <span id="controlsText">WASD: 移动 | 空格: 射击 | J: 跳跃 | P: 暂停<br>1-3: 切换武器 | R: 重新开始 | L: 切换语言</span>
+            </div>
+            <div id="weaponInfo">
+                🔫 <span id="weaponLabel">武器</span>: <span id="currentWeapon">普通弹</span><br>
+                📦 <span id="ammoLabel">弹药</span>: <span id="ammo">∞</span>
+            </div>
+        </div>
+        <div id="gameOverlay" class="overlay hidden">
+            <div id="overlayContent">
+                <h2 id="overlayTitle">游戏暂停</h2>
+                <div id="overlayMessages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/contra.js"></script>
+</body>
+</html>

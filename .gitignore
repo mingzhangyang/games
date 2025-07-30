@@ -24,3 +24,8 @@ coverage/
 
 # Ignore npm debug files
 npm-debug.log*
+
+
+# Cloudflare Workers
+.env
+Workers/

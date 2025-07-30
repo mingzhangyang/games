@@ -153,6 +153,7 @@
         <ul>
             <li><a href="tetris.html" id="tetris-name">Tetris</a> <span class="tag" id="tetris-tag">Classic, Modern UI</span></li>
             <li><a href="tank-battle.html" id="tank-name">Tank Battle</a> <span class="tag" id="tank-tag">Classic Arcade, Retro Style</span></li>
+            <li><a href="contra.html" id="contra-name">Contra</a> <span class="tag" id="contra-tag">Side-scrolling Shooter</span></li>
             <!-- Add more games here -->
         </ul>
     
@@ -171,6 +172,8 @@
                 tetrisTag: 'Classic, Modern UI',
                 tankName: 'Tank Battle',
                 tankTag: 'Classic Arcade, Retro Style',
+                contraName: 'Contra',
+                contraTag: 'Side-scrolling Shooter',
                 footer: '© 2025 Orangely.'
             },
             zh: {
@@ -181,6 +184,8 @@
                 tetrisTag: '经典游戏, 现代界面',
                 tankName: '坦克大战',
                 tankTag: '经典街机, 怀旧风格',
+                contraName: '魂斗罗',
+                contraTag: '横版射击游戏',
                 footer: '© 2025 Orangely.'
             }
         };
@@ -205,6 +210,8 @@
             document.getElementById('tetris-tag').textContent = texts.tetrisTag;
             document.getElementById('tank-name').textContent = texts.tankName;
             document.getElementById('tank-tag').textContent = texts.tankTag;
+            document.getElementById('contra-name').textContent = texts.contraName;
+            document.getElementById('contra-tag').textContent = texts.contraTag;
             
             // 更新HTML lang属性
             document.getElementById('html-root').setAttribute('lang', lang);
