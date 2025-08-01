@@ -104,6 +104,13 @@ function setLangUI() {
     document.getElementById('usernameLabel').textContent = currentLang === 'zh' ? '用户名' : 'Username';
     // 用户名输入提示
     document.getElementById('usernameTip').textContent = currentLang === 'zh' ? '如需更改用户名，请输入后回车' : 'To change username, enter and press Enter';
+    
+    // Mobile controls
+    if (document.getElementById('mobileStartBtn')) {
+        document.getElementById('mobileStartBtn').textContent = TEXT.start;
+        document.getElementById('mobilePauseBtn').textContent = TEXT.pause;
+        document.getElementById('mobileRestartBtn').textContent = TEXT.restart;
+    }
 }
 
 // 获取并显示全站前5名分数
@@ -797,6 +804,16 @@ class Tetris {
         document.getElementById('startBtn').disabled = false;
         document.getElementById('pauseBtn').disabled = true;
         document.getElementById('pauseBtn').textContent = TEXT.pause;
+        
+        // Mobile controls
+        if (document.getElementById('mobileStartBtn')) {
+            document.getElementById('mobileStartBtn').disabled = false;
+            document.getElementById('mobilePauseBtn').disabled = true;
+            document.getElementById('mobilePauseBtn').textContent = TEXT.pause;
+        }
+        
+        // Unlock page when game ends
+        this.unlockPage();
 
         // 上传分数到 Cloudflare Worker
         let username = localStorage.getItem('tetris_username') || 'Anonymous';
@@ -854,14 +871,43 @@ class Tetris {
         this.gameLoop();
         document.getElementById('startBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
+        
+        // Mobile controls
+        if (document.getElementById('mobileStartBtn')) {
+            document.getElementById('mobileStartBtn').disabled = true;
+            document.getElementById('mobilePauseBtn').disabled = false;
+            document.getElementById('mobilePauseBtn').textContent = TEXT.pause;
+        }
+        
+        // Lock page on mobile when game starts
+        this.lockPage();
     }
 
     togglePause() {
         this.paused = !this.paused;
         document.getElementById('pauseBtn').textContent = this.paused ? TEXT.resume : TEXT.pause;
+        
+        // Mobile controls
+        if (document.getElementById('mobilePauseBtn')) {
+            document.getElementById('mobilePauseBtn').textContent = this.paused ? TEXT.resume : TEXT.pause;
+        }
+        
         if (!this.paused) {
             this.gameLoop();
+            this.lockPage();
+        } else {
+            this.unlockPage();
         }
+    }
+
+    lockPage() {
+        if (window.innerWidth <= 480) {
+            document.body.classList.add('game-locked');
+        }
+    }
+
+    unlockPage() {
+        document.body.classList.remove('game-locked');
     }
 
     restart() {
@@ -869,7 +915,16 @@ class Tetris {
         document.getElementById('startBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
         document.getElementById('pauseBtn').textContent = TEXT.pause;
+        
+        // Mobile controls
+        if (document.getElementById('mobileStartBtn')) {
+            document.getElementById('mobileStartBtn').disabled = true;
+            document.getElementById('mobilePauseBtn').disabled = false;
+            document.getElementById('mobilePauseBtn').textContent = TEXT.pause;
+        }
+        
         this.gameLoop();
+        this.lockPage();
     }
 
     toggleTheme() {
@@ -936,6 +991,13 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('restartBtn').onclick = () => game.restart();
     document.getElementById('restartGameBtn').onclick = () => game.restart();
     document.getElementById('themeToggle').onclick = () => game.toggleTheme();
+    
+    // Mobile controls
+    if (document.getElementById('mobileStartBtn')) {
+        document.getElementById('mobileStartBtn').onclick = () => game.start();
+        document.getElementById('mobilePauseBtn').onclick = () => game.togglePause();
+        document.getElementById('mobileRestartBtn').onclick = () => game.restart();
+    }
 
     // Touch controls for mobile
     let touchStartX = null;

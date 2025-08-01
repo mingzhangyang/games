@@ -248,6 +248,37 @@ body {
     gap: 12px;
 }
 
+/* Mobile bottom control bar */
+.mobile-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, rgba(45, 55, 72, 0.95), rgba(26, 32, 44, 0.95));
+    backdrop-filter: blur(10px);
+    border-top: 2px solid var(--primary-color);
+    padding: 12px;
+    display: none;
+    justify-content: space-around;
+    gap: 10px;
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-controls .btn {
+    flex: 1;
+    margin: 0;
+    min-height: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.mobile-controls .btn:active {
+    transform: scale(0.95);
+}
+
 .btn {
     padding: 14px 24px;
     border: none;
@@ -584,9 +615,16 @@ body.rainbow-theme {
     }
 
     .controls {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 8px;
+        display: none;
+    }
+
+    .mobile-controls {
+        display: flex;
+    }
+
+    /* Hide desktop controls on mobile */
+    .info-box.controls {
+        display: none;
     }
 
     .btn {
@@ -650,13 +688,28 @@ body.rainbow-theme {
 
 @media (max-width: 480px) {
     body {
-        padding: 2px;
+        padding: 2px 2px 80px 2px;
+        align-items: flex-start;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    body.game-locked {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
     }
 
     .game-container {
         margin: 0;
         padding: 8px;
         gap: 10px;
+        flex-direction: column;
+        align-items: center;
+        max-width: 100vw;
+        box-sizing: border-box;
     }
 
     .game-board {
