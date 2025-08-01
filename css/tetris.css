@@ -40,6 +40,11 @@ body {
     color: var(--light-color);
     overflow: hidden;
     position: relative;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    position: fixed;
+    width: 100%;
+    height: 100%;
 }
 
 .background-animation {
@@ -141,6 +146,13 @@ body {
         0 0 20px rgba(102, 126, 234, 0.5);
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+    touch-action: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
 }
 
 #particleCanvas, #lineClearCanvas {
@@ -752,6 +764,25 @@ body.rainbow-theme {
     /* Hide global scores on very small screens */
     .global-scores-panel {
         display: none;
+    }
+
+    /* Enhanced touch feedback for mobile */
+    #tetris:active {
+        transform: scale(0.99);
+        transition: transform 0.1s ease;
+    }
+
+    /* Better touch targets for mobile */
+    .btn,
+    .theme-toggle {
+        min-height: 44px;
+        min-width: 44px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Prevent any scrolling on mobile */
+    html {
+        overscroll-behavior: none;
     }
 
     /* Optimize game over overlay for small screens */

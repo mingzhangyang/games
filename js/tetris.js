@@ -941,35 +941,57 @@ window.addEventListener('DOMContentLoaded', () => {
     let touchStartX = null;
     let touchStartY = null;
     const canvas = document.getElementById('tetris');
+    
+    // Prevent default touch behaviors to avoid page scrolling
     canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
         if (e.touches.length === 1) {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
         }
-    });
+    }, { passive: false });
+    
+    canvas.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, { passive: false });
+    
     canvas.addEventListener('touchend', function(e) {
+        e.preventDefault();
         if (touchStartX === null || touchStartY === null) return;
         const touchEndX = e.changedTouches[0].clientX;
         const touchEndY = e.changedTouches[0].clientY;
         const dx = touchEndX - touchStartX;
         const dy = touchEndY - touchStartY;
+        const minSwipeDistance = 30;
+        
         if (Math.abs(dx) > Math.abs(dy)) {
-            if (dx > 30) game.moveRight();
-            else if (dx < -30) game.moveLeft();
+            if (Math.abs(dx) > minSwipeDistance) {
+                if (dx > 0) game.moveRight();
+                else game.moveLeft();
+            }
         } else {
-            if (dy > 30) game.moveDown();
-            else if (dy < -30) game.rotate();
+            if (Math.abs(dy) > minSwipeDistance) {
+                if (dy > 0) game.moveDown();
+                else game.rotate();
+            }
         }
         touchStartX = null;
         touchStartY = null;
-    });
+    }, { passive: false });
+    
     // Double tap for hard drop
     let lastTap = 0;
     canvas.addEventListener('touchend', function(e) {
+        e.preventDefault();
         const now = Date.now();
-        if (now - lastTap < 300) {
+        if (now - lastTap < 300 && now - lastTap > 50) {
             game.hardDrop();
         }
         lastTap = now;
+    }, { passive: false });
+    
+    // Prevent context menu on long press
+    canvas.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
     });
 });
