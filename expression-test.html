@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>算式生成器测试</title>
+    <style>
+        body {
+            font-family: 'Nunito', Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .difficulty-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+        .expression {
+            background: rgba(255, 255, 255, 0.2);
+            margin: 5px;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            min-width: 150px;
+            text-align: center;
+        }
+        .target {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #90EE90;
+        }
+        .correct {
+            background: rgba(34, 197, 94, 0.3) !important;
+            border: 2px solid #22c55e;
+        }
+        .wrong {
+            background: rgba(239, 68, 68, 0.3) !important;
+            border: 2px solid #ef4444;
+        }
+        button {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .stats {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>算式生成器测试 - 难度级别优化验证</h1>
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <button onclick="testAllDifficulties()">测试所有难度</button>
+        <button onclick="testSpecificDifficulty()">测试指定难度</button>
+        <button onclick="clearResults()">清除结果</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script src="js/math-rain/expression-generator.js"></script>
+    <script>
+        const generator = new ExpressionGenerator();
+        
+        function testAllDifficulties() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            for (let difficulty = 1; difficulty <= 6; difficulty++) {
+                testDifficulty(difficulty);
+            }
+        }
+        
+        function testSpecificDifficulty() {
+            const difficulty = parseInt(prompt('请输入难度级别 (1-6):', '1'));
+            if (difficulty >= 1 && difficulty <= 6) {
+                document.getElementById('results').innerHTML = '';
+                testDifficulty(difficulty);
+            } else {
+                alert('请输入有效的难度级别 (1-6)');
+            }
+        }
+        
+        function testDifficulty(difficulty) {
+            generator.setDifficulty(difficulty);
+            const config = generator.getCurrentConfig();
+            
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            const difficultyNames = {
+                1: '入门级',
+                2: '初级', 
+                3: '中级',
+                4: '高级',
+                5: '专家级',
+                6: '大师级'
+            };
+            
+            section.innerHTML = `
+                <div class="difficulty-title">
+                    难度 ${difficulty} - ${difficultyNames[difficulty]} 
+                    (目标范围: ${config.targetRange.min}-${config.targetRange.max}, 
+                     数字范围: ${config.numberRange.min}-${config.numberRange.max}, 
+                     运算符: ${config.operators.join(', ')})
+                </div>
+            `;
+            
+            // 生成多个测试样例
+            for (let i = 0; i < 5; i++) {
+                const targetValue = generator.generateTargetNumber();
+                const expressionSet = generator.generateExpressionSet(targetValue, 4);
+                
+                const testDiv = document.createElement('div');
+                testDiv.innerHTML = `<div class="target">目标值: ${targetValue}</div>`;
+                
+                expressionSet.forEach(expr => {
+                    const exprDiv = document.createElement('div');
+                    exprDiv.className = `expression ${expr.isCorrect ? 'correct' : 'wrong'}`;
+                    exprDiv.innerHTML = `${expr.expression} = ${expr.result}`;
+                    testDiv.appendChild(exprDiv);
+                });
+                
+                section.appendChild(testDiv);
+            }
+            
+            // 添加统计信息
+            const stats = document.createElement('div');
+            stats.className = 'stats';
+            stats.innerHTML = `
+                <strong>配置详情:</strong><br>
+                - 复杂度: ${config.complexity}<br>
+                - 最大操作数: ${config.maxOperands}<br>
+                - 允许负数: ${config.allowNegative ? '是' : '否'}<br>
+                - 允许小数: ${config.allowDecimals ? '是' : '否'}
+            `;
+            section.appendChild(stats);
+            
+            document.getElementById('results').appendChild(section);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // 页面加载时自动测试第一个难度
+        window.onload = function() {
+            testDifficulty(1);
+        };
+    </script>
+</body>
+</html>

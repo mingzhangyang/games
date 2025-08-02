@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO优化 -->
+    <meta name="description" content="Math Rain - An engaging mathematical expression game">
+    <meta name="keywords" content="math game, educational, arithmetic, puzzle">
+
+    <!-- 社交分享 -->
+    <meta property="og:title" content="Math Rain - Mathematical Expression Game">
+    <meta property="og:description" content="Test your math skills with falling expressions!">
+    <meta property="og:image" content="path/to/game-screenshot.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <title id="page-title">Math Rain - 数字雨</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23667eea'/><text x='50%' y='54%' text-anchor='middle' font-size='28' fill='white' font-family='Segoe UI,Arial' dy='.3em'>🧮</text></svg>">
+    <link rel="stylesheet" href="css/math-rain/math-rain.css">
+</head>
+
+<body>
+    <!-- 游戏容器 -->
+    <div id="game-container">
+        <!-- 游戏头部信息 -->
+        <div id="game-header">
+            <div class="score-display">
+                <span id="score-label">分数</span>
+                <span id="score-value">0</span>
+            </div>
+            <div class="combo-display">
+                <span id="combo-label">连击</span>
+                <span id="combo-value">0</span>
+            </div>
+            <div class="level-display">
+                <span id="level-label">等级</span>
+                <span id="level-value">1</span>
+            </div>
+            <div class="time-display">
+                <span id="time-label">时间</span>
+                <span id="time-value">0</span>
+            </div>
+        </div>
+
+        <!-- 游戏主区域 -->
+        <div id="game-area">
+            <!-- 主游戏画布 - 用于Canvas算式和特效动画 -->
+            <canvas id="game-canvas"></canvas>
+        </div>
+
+        <!-- 目标数字显示区域 -->
+        <div id="target-area">
+            <div id="target-label">目标数字</div>
+            <div id="target-number">5</div>
+            <div id="target-hint">点击结果等于此数字的算式</div>
+        </div>
+
+        <!-- 游戏控制按钮 -->
+        <div id="game-controls">
+            <button id="pause-btn" class="control-btn">⏸️ 暂停</button>
+            <button id="settings-btn" class="control-btn">⚙️ 设置</button>
+            <button id="theme-btn" class="control-btn">🎨 主题</button>
+            <button id="language-toggle" class="control-btn" onclick="toggleLanguage()">🌐 EN</button>
+        </div>
+    </div>
+
+    <!-- 游戏开始界面 -->
+    <div id="start-screen" class="screen">
+        <div class="screen-content">
+            <h1 id="game-title">Math Rain</h1>
+            <p id="game-subtitle">数字雨 - 数学算式掉落游戏</p>
+            <div class="difficulty-selection">
+                <h3 id="difficulty-title">选择难度</h3>
+                <div class="difficulty-buttons">
+                    <button class="difficulty-btn selected" data-level="1">入门级 (1-10)</button>
+                    <button class="difficulty-btn" data-level="2">初级 (1-20)</button>
+                    <button class="difficulty-btn" data-level="3">中级 (10-50)</button>
+                    <button class="difficulty-btn" data-level="4">高级 (20-100)</button>
+                    <button class="difficulty-btn" data-level="5">专家级 (50-500)</button>
+                    <button class="difficulty-btn" data-level="6">大师级 (100-2000)</button>
+                </div>
+            </div>
+            <div class="start-buttons">
+                <button id="start-game-btn" class="start-btn">🚀 开始游戏</button>
+                <button id="help-btn" class="help-btn">❓ 游戏帮助</button>
+            </div>
+            <div class="game-rules">
+                <h4>游戏规则</h4>
+                <ul>
+                    <li>点击结果等于目标数字的算式得分</li>
+                    <li>连续正确可获得连击加成</li>
+                    <li>连续错误会扣分，错误越多扣分越多</li>
+                    <li>算式掉落到底部会消失，抓紧时间！</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏暂停界面 -->
+    <div id="pause-screen" class="screen hidden">
+        <div class="screen-content">
+            <h2>⏸️ 游戏暂停</h2>
+            <button id="resume-btn" class="menu-btn">继续游戏</button>
+            <button id="restart-btn" class="menu-btn">重新开始</button>
+            <button id="main-menu-btn" class="menu-btn">主菜单</button>
+        </div>
+    </div>
+
+    <!-- 游戏结束界面 -->
+    <div id="game-over-screen" class="screen hidden">
+        <div class="screen-content">
+            <h2 id="game-over-title">🎮 游戏结束</h2>
+            <div class="final-stats">
+                <div class="stat-item">
+                    <span class="stat-label">最终得分</span>
+                    <span id="final-score" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">最高连击</span>
+                    <span id="max-combo" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">正确率</span>
+                    <span id="accuracy" class="stat-value">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">游戏时间</span>
+                    <span id="game-time" class="stat-value">0s</span>
+                </div>
+            </div>
+            <button id="play-again-btn" class="menu-btn">再玩一次</button>
+            <button id="change-difficulty-btn" class="menu-btn">更换难度</button>
+            <button id="home-btn" class="menu-btn">返回主页</button>
+        </div>
+    </div>
+
+    <!-- 设置界面 -->
+    <div id="settings-screen" class="screen hidden">
+        <div class="screen-content">
+            <h2>⚙️ 游戏设置</h2>
+            <div class="setting-group">
+                <label for="sound-volume">音效音量</label>
+                <input type="range" id="sound-volume" min="0" max="100" value="70">
+                <span id="sound-volume-value">70%</span>
+            </div>
+            <div class="setting-group">
+                <label for="music-volume">背景音乐</label>
+                <input type="range" id="music-volume" min="0" max="100" value="50">
+                <span id="music-volume-value">50%</span>
+            </div>
+            <div class="setting-group">
+                <label for="particle-effects">粒子效果</label>
+                <input type="checkbox" id="particle-effects" checked>
+            </div>
+            <div class="setting-group">
+                <label for="screen-shake">屏幕震动</label>
+                <input type="checkbox" id="screen-shake" checked>
+            </div>
+
+            <button id="settings-close-btn" class="menu-btn">关闭设置</button>
+        </div>
+    </div>
+
+    <!-- 帮助界面 -->
+    <div id="help-screen" class="screen hidden">
+        <div class="screen-content help-content">
+            <h2>❓ 游戏帮助</h2>
+            
+            <div class="help-section">
+                <h3>🎯 游戏目标</h3>
+                <p>在算式从天而降的过程中，快速识别并点击结果等于目标数字的算式，获得高分！</p>
+            </div>
+
+            <div class="help-section">
+                <h3>🎮 操作方法</h3>
+                <div class="controls-guide">
+                    <div class="control-item">
+                        <span class="control-icon">👆</span>
+                        <div class="control-desc">
+                            <strong>点击/触摸</strong>
+                            <p>点击或触摸算式来选择答案</p>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-icon">⏸️</span>
+                        <div class="control-desc">
+                            <strong>暂停游戏</strong>
+                            <p>点击暂停按钮或按空格键暂停</p>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-icon">⚙️</span>
+                        <div class="control-desc">
+                            <strong>游戏设置</strong>
+                            <p>调整音效、特效等游戏选项</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3>📊 计分规则</h3>
+                <div class="scoring-guide">
+                    <div class="score-item">
+                        <span class="score-icon">✅</span>
+                        <div class="score-desc">
+                            <strong>正确答案</strong>
+                            <p>基础分数 + 连击加成</p>
+                        </div>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-icon">❌</span>
+                        <div class="score-desc">
+                            <strong>错误答案</strong>
+                            <p>扣除分数，连续错误扣分更多</p>
+                        </div>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-icon">🔥</span>
+                        <div class="score-desc">
+                            <strong>连击加成</strong>
+                            <p>连续正确答案可获得额外分数</p>
+                        </div>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-icon">⏰</span>
+                        <div class="score-desc">
+                            <strong>时间奖励</strong>
+                            <p>快速回答可获得时间奖励</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3>🎚️ 难度等级</h3>
+                <div class="difficulty-guide">
+                    <div class="diff-item">
+                        <span class="diff-level">入门级</span>
+                        <span class="diff-range">1-10</span>
+                        <p>简单的加减法，适合初学者</p>
+                    </div>
+                    <div class="diff-item">
+                        <span class="diff-level">初级</span>
+                        <span class="diff-range">1-20</span>
+                        <p>基础四则运算</p>
+                    </div>
+                    <div class="diff-item">
+                        <span class="diff-level">中级</span>
+                        <span class="diff-range">10-50</span>
+                        <p>包含乘除法的混合运算</p>
+                    </div>
+                    <div class="diff-item">
+                        <span class="diff-level">高级</span>
+                        <span class="diff-range">20-100</span>
+                        <p>复杂的四则混合运算</p>
+                    </div>
+                    <div class="diff-item">
+                        <span class="diff-level">专家级</span>
+                        <span class="diff-range">50-500</span>
+                        <p>高难度计算，考验心算能力</p>
+                    </div>
+                    <div class="diff-item">
+                        <span class="diff-level">大师级</span>
+                        <span class="diff-range">100-2000</span>
+                        <p>极限挑战，适合数学高手</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3>💡 游戏技巧</h3>
+                <ul class="tips-list">
+                    <li>保持冷静，仔细观察每个算式</li>
+                    <li>优先点击即将到达底部的正确算式</li>
+                    <li>建立连击可以获得更高分数</li>
+                    <li>如果不确定答案，宁可不点击也不要猜测</li>
+                    <li>熟练掌握基础运算可以提高反应速度</li>
+                    <li>适当休息，避免视觉疲劳影响判断</li>
+                </ul>
+            </div>
+
+            <div class="help-buttons">
+                <button id="help-close-btn" class="menu-btn">返回游戏</button>
+                <button id="help-start-btn" class="menu-btn primary">开始游戏</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载脚本 -->
+    <script src="js/performance-monitor.js"></script>
+
+    <script src="js/config-manager.js"></script>
+    <script src="js/math-rain/expression-generator.js"></script>
+    <script src="js/math-rain/animation-engine.js"></script>
+    <script src="js/math-rain/particle-effects.js"></script>
+    <script src="js/math-rain/sound-manager.js"></script>
+    <script src="js/math-rain/difficulty-manager.js"></script>
+    <script src="js/math-rain/math-rain-core.js"></script>
+
+    <script>
+        // 多语言支持
+        const LANGUAGES = {
+            en: {
+                pageTitle: 'Math Rain - Number Drop Game',
+                gameTitle: 'Math Rain',
+                gameSubtitle: 'Mathematical Expression Drop Game',
+                difficultyTitle: 'Select Difficulty',
+                difficulties: [
+                    'Beginner (1-10)',
+                    'Easy (1-20)',
+                    'Medium (10-50)',
+                    'Hard (20-100)',
+                    'Expert (50-500)',
+                    'Master (100-2000)'
+                ],
+                startGame: '🚀 Start Game',
+                score: 'Score',
+                combo: 'Combo',
+                level: 'Level',
+                time: 'Time',
+                targetLabel: 'Target Number',
+                targetHint: 'Click expressions that equal this number',
+                pause: '⏸️ Pause',
+                settings: '⚙️ Settings',
+                theme: '🎨 Theme',
+                gameRules: 'Game Rules',
+                gameRulesList: [
+                    'Click expressions that equal the target number to score',
+                    'Consecutive correct answers give combo bonuses',
+                    'Consecutive mistakes will deduct points',
+                    'Expressions disappear when they reach the bottom!'
+                ],
+                finalScore: 'Final Score',
+                maxCombo: 'Max Combo',
+                accuracy: 'Accuracy',
+                gameTime: 'Game Time',
+                gamePaused: '⏸️ Game Paused',
+                gameOver: '🎮 Game Over',
+                resume: 'Resume',
+                restart: 'Restart',
+                mainMenu: 'Main Menu',
+                playAgain: 'Play Again',
+                changeDifficulty: 'Change Difficulty',
+                home: 'Home',
+                gameSettings: '⚙️ Game Settings',
+                soundVolume: 'Sound Volume',
+                musicVolume: 'Background Music',
+                particleEffects: 'Particle Effects',
+                screenShake: 'Screen Shake',
+                cssAnimations: 'CSS Animations (Performance)',
+                performanceMode: 'Performance Mode',
+                languageLabel: 'Language / 语言',
+                closeSettings: 'Close Settings',
+                helpBtn: '❓ Game Help',
+                helpTitle: '🎮 Game Help',
+                helpGoal: '🎯 Game Objective',
+                helpGoalDesc: 'Click on mathematical expressions that equal the target number to score points. The faster and more accurate you are, the higher your score!',
+                helpControls: '🎮 Controls',
+                helpControlsList: [
+                    'Mouse: Click on expressions',
+                    'Keyboard: Use number keys 0-9 to select expressions',
+                    'Touch: Tap expressions on mobile devices',
+                    'Pause: Press Space or click pause button',
+                    'Settings: Adjust sound, effects and other options'
+                ],
+                helpScoring: '📊 Scoring Rules',
+                helpScoringList: [
+                    'Correct Answer: Base score + combo bonus',
+                    'Wrong Answer: Points deducted, more for consecutive errors',
+                    'Combo Bonus: Consecutive correct answers give extra points',
+                    'Time Bonus: Quick responses earn time rewards'
+                ],
+                helpDifficulty: '🎚️ Difficulty Levels',
+                helpDifficultyList: [
+                    'Beginner (1-10): Simple addition and subtraction',
+                    'Easy (1-20): Basic arithmetic operations',
+                    'Medium (10-50): Mixed operations including multiplication',
+                    'Hard (20-100): Complex four-operation calculations',
+                    'Expert (50-500): High difficulty, tests mental math skills',
+                    'Master (100-2000): Ultimate challenge for math experts'
+                ],
+                helpTips: '💡 Game Tips',
+                helpTipsList: [
+                    'Stay calm and observe each expression carefully',
+                    'Prioritize expressions about to reach the bottom',
+                    'Build combos for higher scores',
+                    'When unsure, avoid guessing to prevent point loss',
+                    'Master basic arithmetic for faster responses',
+                    'Take breaks to avoid visual fatigue'
+                ],
+                helpClose: 'Back to Game',
+                helpStart: 'Start Game'
+            },
+            zh: {
+                pageTitle: 'Math Rain - 数字雨',
+                gameTitle: '数字雨',
+                gameSubtitle: '数学算式掉落游戏',
+                difficultyTitle: '选择难度',
+                difficulties: [
+                    '入门级 (1-10)',
+                    '初级 (1-20)',
+                    '中级 (10-50)',
+                    '高级 (20-100)',
+                    '专家级 (50-500)',
+                    '大师级 (100-2000)'
+                ],
+                startGame: '🚀 开始游戏',
+                score: '分数',
+                combo: '连击',
+                level: '等级',
+                time: '时间',
+                targetLabel: '目标数字',
+                targetHint: '点击结果等于此数字的算式',
+                pause: '⏸️ 暂停',
+                settings: '⚙️ 设置',
+                theme: '🎨 主题',
+                gameRules: '游戏规则',
+                gameRulesList: [
+                    '点击结果等于目标数字的算式得分',
+                    '连续正确可获得连击加成',
+                    '连续错误会扣分，错误越多扣分越多',
+                    '算式掉落到底部会消失，抓紧时间！'
+                ],
+                finalScore: '最终得分',
+                maxCombo: '最高连击',
+                accuracy: '正确率',
+                gameTime: '游戏时间',
+                gamePaused: '⏸️ 游戏暂停',
+                gameOver: '🎮 游戏结束',
+                resume: '继续游戏',
+                restart: '重新开始',
+                mainMenu: '主菜单',
+                playAgain: '再玩一次',
+                changeDifficulty: '更换难度',
+                home: '返回主页',
+                gameSettings: '⚙️ 游戏设置',
+                soundVolume: '音效音量',
+                musicVolume: '背景音乐',
+                particleEffects: '粒子效果',
+                screenShake: '屏幕震动',
+                cssAnimations: 'CSS动画（性能）',
+                performanceMode: '性能优先模式',
+                languageLabel: '语言 / Language',
+                closeSettings: '关闭设置',
+                helpBtn: '❓ 游戏帮助',
+                helpTitle: '🎮 游戏帮助',
+                helpGoal: '🎯 游戏目标',
+                helpGoalDesc: '点击结果等于目标数字的数学算式来得分。反应越快、越准确，得分越高！',
+                helpControls: '🎮 操作方法',
+                helpControlsList: [
+                    '鼠标：点击算式',
+                    '键盘：使用数字键0-9选择算式',
+                    '触摸：在移动设备上点击算式',
+                    '暂停：按空格键或点击暂停按钮',
+                    '设置：调整音效、特效等游戏选项'
+                ],
+                helpScoring: '📊 计分规则',
+                helpScoringList: [
+                    '正确答案：基础分数 + 连击加成',
+                    '错误答案：扣除分数，连续错误扣分更多',
+                    '连击加成：连续正确答案可获得额外分数',
+                    '时间奖励：快速回答可获得时间奖励'
+                ],
+                helpDifficulty: '🎚️ 难度等级',
+                helpDifficultyList: [
+                    '入门级 (1-10)：简单的加减法，适合初学者',
+                    '初级 (1-20)：基础四则运算',
+                    '中级 (10-50)：包含乘除法的混合运算',
+                    '高级 (20-100)：复杂的四则混合运算',
+                    '专家级 (50-500)：高难度计算，考验心算能力',
+                    '大师级 (100-2000)：极限挑战，适合数学高手'
+                ],
+                helpTips: '💡 游戏技巧',
+                helpTipsList: [
+                    '保持冷静，仔细观察每个算式',
+                    '优先点击即将到达底部的正确算式',
+                    '建立连击可以获得更高分数',
+                    '如果不确定答案，宁可不点击也不要猜测',
+                    '熟练掌握基础运算可以提高反应速度',
+                    '适当休息，避免视觉疲劳影响判断'
+                ],
+                helpClose: '返回游戏',
+                helpStart: '开始游戏'
+            }
+        };
+
+        // 检测语言
+        function detectLanguage() {
+            const browserLang = navigator.language || navigator.userLanguage;
+            return browserLang.startsWith('zh') ? 'zh' : 'en';
+        }
+
+        // 应用语言
+        function applyLanguage(lang) {
+            const texts = LANGUAGES[lang];
+            if (!texts) return;
+
+            // 基本信息
+            document.getElementById('page-title').textContent = texts.pageTitle;
+            document.getElementById('game-title').textContent = texts.gameTitle;
+            document.getElementById('game-subtitle').textContent = texts.gameSubtitle;
+            document.getElementById('difficulty-title').textContent = texts.difficultyTitle;
+            document.getElementById('start-game-btn').textContent = texts.startGame;
+
+            // 游戏界面
+            document.getElementById('score-label').textContent = texts.score;
+            document.getElementById('combo-label').textContent = texts.combo;
+            document.getElementById('level-label').textContent = texts.level;
+            document.getElementById('time-label').textContent = texts.time;
+            document.getElementById('target-label').textContent = texts.targetLabel;
+            document.getElementById('target-hint').textContent = texts.targetHint;
+
+            // 控制按钮
+            document.getElementById('pause-btn').textContent = texts.pause;
+            document.getElementById('settings-btn').textContent = texts.settings;
+            document.getElementById('theme-btn').textContent = texts.theme;
+
+            // 难度按钮
+            const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+            difficultyButtons.forEach((btn, index) => {
+                if (texts.difficulties && texts.difficulties[index]) {
+                    btn.textContent = texts.difficulties[index];
+                }
+            });
+
+            // 游戏规则
+            const gameRulesTitle = document.querySelector('.game-rules h4');
+            if (gameRulesTitle) {
+                gameRulesTitle.textContent = texts.gameRules;
+            }
+
+            const gameRulesList = document.querySelector('.game-rules ul');
+            if (gameRulesList && texts.gameRulesList) {
+                gameRulesList.innerHTML = texts.gameRulesList
+                    .map(rule => `<li>${rule}</li>`)
+                    .join('');
+            }
+
+            // 暂停界面
+            const pauseTitle = document.querySelector('#pause-screen h2');
+            if (pauseTitle) pauseTitle.textContent = texts.gamePaused;
+
+            const resumeBtn = document.getElementById('resume-btn');
+            if (resumeBtn) resumeBtn.textContent = texts.resume;
+
+            const restartBtn = document.getElementById('restart-btn');
+            if (restartBtn) restartBtn.textContent = texts.restart;
+
+            const mainMenuBtn = document.getElementById('main-menu-btn');
+            if (mainMenuBtn) mainMenuBtn.textContent = texts.mainMenu;
+
+            // 游戏结束界面
+            const gameOverTitle = document.getElementById('game-over-title');
+            if (gameOverTitle) gameOverTitle.textContent = texts.gameOver;
+
+            const statLabels = document.querySelectorAll('.stat-label');
+            const statTexts = [texts.finalScore, texts.maxCombo, texts.accuracy, texts.gameTime];
+            statLabels.forEach((label, index) => {
+                if (statTexts[index]) {
+                    label.textContent = statTexts[index];
+                }
+            });
+
+            const playAgainBtn = document.getElementById('play-again-btn');
+            if (playAgainBtn) playAgainBtn.textContent = texts.playAgain;
+
+            const changeDifficultyBtn = document.getElementById('change-difficulty-btn');
+            if (changeDifficultyBtn) changeDifficultyBtn.textContent = texts.changeDifficulty;
+
+            const homeBtn = document.getElementById('home-btn');
+            if (homeBtn) homeBtn.textContent = texts.home;
+
+            // 设置界面
+            const settingsTitle = document.querySelector('#settings-screen h2');
+            if (settingsTitle) settingsTitle.textContent = texts.gameSettings;
+
+            const settingLabels = document.querySelectorAll('#settings-screen label');
+            const settingTexts = [texts.soundVolume, texts.musicVolume, texts.particleEffects, texts.screenShake, texts.cssAnimations, texts.performanceMode, texts.languageLabel];
+            settingLabels.forEach((label, index) => {
+                if (settingTexts[index]) {
+                    label.textContent = settingTexts[index];
+                }
+            });
+
+            const settingsCloseBtn = document.getElementById('settings-close-btn');
+            if (settingsCloseBtn) settingsCloseBtn.textContent = texts.closeSettings;
+
+            // 帮助界面
+            const helpBtn = document.getElementById('help-btn');
+            if (helpBtn) helpBtn.textContent = texts.helpBtn;
+
+            const helpTitle = document.querySelector('#help-screen h2');
+            if (helpTitle) helpTitle.textContent = texts.helpTitle;
+
+            // 帮助内容各部分
+            const helpGoalTitle = document.querySelector('#help-screen .help-section:nth-child(1) h3');
+            if (helpGoalTitle) helpGoalTitle.textContent = texts.helpGoal;
+
+            const helpGoalDesc = document.querySelector('#help-screen .help-section:nth-child(1) p');
+            if (helpGoalDesc) helpGoalDesc.textContent = texts.helpGoalDesc;
+
+            const helpControlsTitle = document.querySelector('#help-screen .help-section:nth-child(2) h3');
+            if (helpControlsTitle) helpControlsTitle.textContent = texts.helpControls;
+
+            const helpControlsList = document.querySelector('#help-screen .help-section:nth-child(2) .controls-guide');
+            if (helpControlsList && texts.helpControlsList) {
+                const controlItems = helpControlsList.querySelectorAll('.control-item');
+                texts.helpControlsList.forEach((text, index) => {
+                    if (controlItems[index]) {
+                        const desc = controlItems[index].querySelector('.control-desc strong');
+                        const detail = controlItems[index].querySelector('.control-desc p');
+                        if (desc && detail) {
+                            const parts = text.split(': ');
+                            desc.textContent = parts[0];
+                            detail.textContent = parts[1] || text;
+                        }
+                    }
+                });
+            }
+
+            const helpScoringTitle = document.querySelector('#help-screen .help-section:nth-child(3) h3');
+            if (helpScoringTitle) helpScoringTitle.textContent = texts.helpScoring;
+
+            const helpScoringList = document.querySelector('#help-screen .help-section:nth-child(3) .scoring-guide');
+            if (helpScoringList && texts.helpScoringList) {
+                const scoreItems = helpScoringList.querySelectorAll('.score-item');
+                texts.helpScoringList.forEach((text, index) => {
+                    if (scoreItems[index]) {
+                        const desc = scoreItems[index].querySelector('.score-desc strong');
+                        const detail = scoreItems[index].querySelector('.score-desc p');
+                        if (desc && detail) {
+                            const parts = text.split(': ');
+                            desc.textContent = parts[0];
+                            detail.textContent = parts[1] || text;
+                        }
+                    }
+                });
+            }
+
+            const helpDifficultyTitle = document.querySelector('#help-screen .help-section:nth-child(4) h3');
+            if (helpDifficultyTitle) helpDifficultyTitle.textContent = texts.helpDifficulty;
+
+            const helpDifficultyList = document.querySelector('#help-screen .help-section:nth-child(4) .difficulty-guide');
+            if (helpDifficultyList && texts.helpDifficultyList) {
+                const diffItems = helpDifficultyList.querySelectorAll('.diff-item');
+                texts.helpDifficultyList.forEach((text, index) => {
+                    if (diffItems[index]) {
+                        const parts = text.split(': ');
+                        const levelSpan = diffItems[index].querySelector('.diff-level');
+                        const desc = diffItems[index].querySelector('p');
+                        if (levelSpan && desc && parts.length >= 2) {
+                            const levelPart = parts[0].split(' (');
+                            levelSpan.textContent = levelPart[0];
+                            desc.textContent = parts[1];
+                        }
+                    }
+                });
+            }
+
+            const helpTipsTitle = document.querySelector('#help-screen .help-section:nth-child(5) h3');
+            if (helpTipsTitle) helpTipsTitle.textContent = texts.helpTips;
+
+            const helpTipsList = document.querySelector('#help-screen .help-section:nth-child(5) .tips-list');
+            if (helpTipsList && texts.helpTipsList) {
+                helpTipsList.innerHTML = texts.helpTipsList
+                    .map(tip => `<li>${tip}</li>`)
+                    .join('');
+            }
+
+            const helpCloseBtn = document.getElementById('help-close-btn');
+            if (helpCloseBtn) helpCloseBtn.textContent = texts.helpClose;
+
+            const helpStartBtn = document.getElementById('help-start-btn');
+            if (helpStartBtn) helpStartBtn.textContent = texts.helpStart;
+
+            // 设置HTML语言属性
+            document.getElementById('html-root').setAttribute('lang', lang);
+        }
+
+        // 页面加载时应用语言
+        document.addEventListener('DOMContentLoaded', function () {
+            const language = loadLanguagePreference();
+            currentLanguage = language;
+            applyLanguage(language);
+
+            // 更新语言切换按钮
+            const toggleBtn = document.getElementById('language-toggle');
+            if (toggleBtn) {
+                toggleBtn.textContent = currentLanguage === 'zh' ? '🌐 EN' : '🌐 中文';
+            }
+
+            // 初始化游戏
+            if (typeof MathRainGame !== 'undefined') {
+                window.game = new MathRainGame();
+                
+                // 设置事件监听器
+                setupSettingsListeners();
+            }
+        });
+
+        // 当前语言
+        let currentLanguage = 'zh';
+
+        // 切换语言
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
+            applyLanguage(currentLanguage);
+
+            // 更新语言切换按钮
+            const toggleBtn = document.getElementById('language-toggle');
+            if (toggleBtn) {
+                toggleBtn.textContent = currentLanguage === 'zh' ? '🌐 EN' : '🌐 中文';
+            }
+
+            // 保存语言偏好
+            localStorage.setItem('mathrain_language', currentLanguage);
+        }
+
+        // 加载语言偏好
+        function loadLanguagePreference() {
+            const saved = localStorage.getItem('mathrain_language');
+            if (saved && LANGUAGES[saved]) {
+                currentLanguage = saved;
+            } else {
+                currentLanguage = detectLanguage();
+            }
+            return currentLanguage;
+        }
+
+        // 设置事件监听器
+        function setupSettingsListeners() {
+            // 音效音量设置
+            const soundVolumeSlider = document.getElementById('sound-volume');
+            const soundVolumeValue = document.getElementById('sound-volume-value');
+            if (soundVolumeSlider && soundVolumeValue) {
+                soundVolumeSlider.addEventListener('input', (e) => {
+                    const volume = e.target.value;
+                    soundVolumeValue.textContent = volume + '%';
+                    if (window.game && window.game.soundManager) {
+                        window.game.soundManager.setSoundVolume(volume / 100);
+                    }
+                    localStorage.setItem('mathrain_sound_volume', volume);
+                });
+                
+                // 加载保存的设置
+                const savedVolume = localStorage.getItem('mathrain_sound_volume');
+                if (savedVolume !== null) {
+                    soundVolumeSlider.value = savedVolume;
+                    soundVolumeValue.textContent = savedVolume + '%';
+                    if (window.game && window.game.soundManager) {
+                        window.game.soundManager.setSoundVolume(savedVolume / 100);
+                    }
+                }
+            }
+            
+            // 背景音乐音量设置
+            const musicVolumeSlider = document.getElementById('music-volume');
+            const musicVolumeValue = document.getElementById('music-volume-value');
+            if (musicVolumeSlider && musicVolumeValue) {
+                musicVolumeSlider.addEventListener('input', (e) => {
+                    const volume = e.target.value;
+                    musicVolumeValue.textContent = volume + '%';
+                    if (window.game && window.game.soundManager) {
+                        window.game.soundManager.setMusicVolume(volume / 100);
+                    }
+                    localStorage.setItem('mathrain_music_volume', volume);
+                });
+                
+                // 加载保存的设置
+                const savedMusicVolume = localStorage.getItem('mathrain_music_volume');
+                if (savedMusicVolume !== null) {
+                    musicVolumeSlider.value = savedMusicVolume;
+                    musicVolumeValue.textContent = savedMusicVolume + '%';
+                    if (window.game && window.game.soundManager) {
+                        window.game.soundManager.setMusicVolume(savedMusicVolume / 100);
+                    }
+                }
+            }
+            
+            // 粒子效果设置
+            const particleEffectsCheckbox = document.getElementById('particle-effects');
+            if (particleEffectsCheckbox) {
+                particleEffectsCheckbox.addEventListener('change', (e) => {
+                    if (window.game) {
+                        window.game.config.enableParticleEffects = e.target.checked;
+                        localStorage.setItem('mathrain_particle_effects', e.target.checked);
+                    }
+                });
+                
+                // 加载保存的设置
+                const savedParticles = localStorage.getItem('mathrain_particle_effects');
+                if (savedParticles !== null) {
+                    particleEffectsCheckbox.checked = savedParticles === 'true';
+                    if (window.game) {
+                        window.game.config.enableParticleEffects = particleEffectsCheckbox.checked;
+                    }
+                }
+            }
+            
+            // 屏幕震动设置
+            const screenShakeCheckbox = document.getElementById('screen-shake');
+            if (screenShakeCheckbox) {
+                screenShakeCheckbox.addEventListener('change', (e) => {
+                    if (window.game) {
+                        window.game.config.enableScreenShake = e.target.checked;
+                        localStorage.setItem('mathrain_screen_shake', e.target.checked);
+                    }
+                });
+                
+                // 加载保存的设置
+                const savedShake = localStorage.getItem('mathrain_screen_shake');
+                if (savedShake !== null) {
+                    screenShakeCheckbox.checked = savedShake === 'true';
+                    if (window.game) {
+                        window.game.config.enableScreenShake = screenShakeCheckbox.checked;
+                    }
+                }
+            }
+            
+
+            
+            // 语言切换按钮
+            const languageToggle = document.getElementById('language-toggle');
+            if (languageToggle) {
+                languageToggle.addEventListener('click', toggleLanguage);
+            }
+
+        }
+    </script>
+</body>
+
+</html>
