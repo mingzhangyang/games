@@ -17,9 +17,6 @@ class ParticleSystem {
         this.targetFPS = 60;
         this.lastFrameTime = 0;
         
-        // 检测设备性能
-        this.detectDeviceCapabilities();
-        
         // 预设的粒子效果配置
         this.presets = {
             correct: {
@@ -63,6 +60,9 @@ class ParticleSystem {
                 shape: 'circle'
             }
         };
+        
+        // 检测设备性能
+        this.detectDeviceCapabilities();
         
         // 绑定更新循环
         this.update = this.update.bind(this);
