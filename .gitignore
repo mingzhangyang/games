@@ -15,6 +15,9 @@ build/
 .idea/
 *.swp
 
+# Ignore Claude Code local settings
+.claude/settings.local.json
+
 # Ignore environment files
 .env
 .env.*
