@@ -4,8 +4,8 @@
 class SaveManager {
     constructor(game) {
         this.game = game;
-        this.storageKey = 'contra_save';
-        this.settingsKey = 'contra_settings';
+        this.storageKey = 'game_save';
+        this.settingsKey = 'game_settings';
         this.maxSaveSlots = 3;
         this.autoSaveInterval = 30000; // 30秒自动保存
         this.enableAutoSave = true;
@@ -221,7 +221,7 @@ class SaveManager {
             highScores.sort((a, b) => b.score - a.score);
             highScores.splice(10);
             
-            localStorage.setItem('contra_highscores', JSON.stringify(highScores));
+            localStorage.setItem('game_highscores', JSON.stringify(highScores));
             return true;
         } catch (error) {
             console.error('保存最高分失败:', error);
@@ -234,7 +234,7 @@ class SaveManager {
      */
     loadHighScores() {
         try {
-            const data = localStorage.getItem('contra_highscores');
+            const data = localStorage.getItem('game_highscores');
             return data ? JSON.parse(data) : [];
         } catch (error) {
             console.error('加载最高分失败:', error);
@@ -272,7 +272,7 @@ class SaveManager {
         try {
             localStorage.removeItem(this.storageKey);
             localStorage.removeItem(this.settingsKey);
-            localStorage.removeItem('contra_highscores');
+            localStorage.removeItem('game_highscores');
             console.log('所有存档数据已清除');
             return true;
         } catch (error) {
@@ -352,7 +352,7 @@ class SaveManager {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `contra-save-${Date.now()}.json`;
+            a.download = `game-save-${Date.now()}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -382,7 +382,7 @@ class SaveManager {
                         localStorage.setItem(this.settingsKey, JSON.stringify(data.settings));
                     }
                     if (data.highScores) {
-                        localStorage.setItem('contra_highscores', JSON.stringify(data.highScores));
+                        localStorage.setItem('game_highscores', JSON.stringify(data.highScores));
                     }
                     
                     console.log('存档导入成功');

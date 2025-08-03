@@ -1,0 +1,630 @@
+{
+  "generatedAt": "2025-08-02T22:26:12.089Z",
+  "version": "1.0.0",
+  "summary": {
+    "totalLevels": 6,
+    "totalQuestions": 778,
+    "levelStats": {
+      "1": {
+        "totalQuestions": 105,
+        "pools": 3,
+        "targetRange": {
+          "min": 1,
+          "max": 10
+        }
+      },
+      "2": {
+        "totalQuestions": 114,
+        "pools": 4,
+        "targetRange": {
+          "min": 1,
+          "max": 20
+        }
+      },
+      "3": {
+        "totalQuestions": 127,
+        "pools": 4,
+        "targetRange": {
+          "min": 5,
+          "max": 50
+        }
+      },
+      "4": {
+        "totalQuestions": 145,
+        "pools": 4,
+        "targetRange": {
+          "min": 10,
+          "max": 100
+        }
+      },
+      "5": {
+        "totalQuestions": 150,
+        "pools": 4,
+        "targetRange": {
+          "min": 20,
+          "max": 500
+        }
+      },
+      "6": {
+        "totalQuestions": 137,
+        "pools": 4,
+        "targetRange": {
+          "min": 50,
+          "max": 2000
+        }
+      }
+    }
+  },
+  "levelDetails": {
+    "1": {
+      "metadata": {
+        "totalQuestions": 160,
+        "generatedAt": "2025-08-02T22:26:11.988Z",
+        "targetRange": {
+          "min": 1,
+          "max": 10
+        }
+      },
+      "pools": {
+        "addition": {
+          "count": 33,
+          "targetCount": 80,
+          "weight": 0.5,
+          "operators": [
+            "+"
+          ],
+          "avgDifficulty": 1.5,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 1.5
+          },
+          "resultRange": {
+            "min": 1,
+            "max": 10
+          }
+        },
+        "subtraction": {
+          "count": 42,
+          "targetCount": 50,
+          "weight": 0.3,
+          "operators": [
+            "-"
+          ],
+          "avgDifficulty": 1.5,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 1.5
+          },
+          "resultRange": {
+            "min": 1,
+            "max": 10
+          }
+        },
+        "mixed_basic": {
+          "count": 30,
+          "targetCount": 30,
+          "weight": 0.2,
+          "operators": [
+            "+",
+            "-"
+          ],
+          "avgDifficulty": 1.5,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 1.5
+          },
+          "resultRange": {
+            "min": 1,
+            "max": 10
+          }
+        }
+      },
+      "qualityAnalysis": {
+        "totalQuestions": 105,
+        "avgDifficulty": 1.5,
+        "operatorDistribution": {
+          "+": 60,
+          "-": 45
+        },
+        "completionRate": 0.7508333333333334
+      }
+    },
+    "2": {
+      "metadata": {
+        "totalQuestions": 150,
+        "generatedAt": "2025-08-02T22:26:12.003Z",
+        "targetRange": {
+          "min": 1,
+          "max": 20
+        }
+      },
+      "pools": {
+        "addition": {
+          "count": 51,
+          "targetCount": 60,
+          "weight": 0.4,
+          "operators": [
+            "+"
+          ],
+          "avgDifficulty": 1.5,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 1.5
+          },
+          "resultRange": {
+            "min": 1,
+            "max": 20
+          }
+        },
+        "subtraction": {
+          "count": 43,
+          "targetCount": 45,
+          "weight": 0.3,
+          "operators": [
+            "-"
+          ],
+          "avgDifficulty": 1.5,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 1.5
+          },
+          "resultRange": {
+            "min": 1,
+            "max": 20
+          }
+        },
+        "multiplication": {
+          "count": 5,
+          "targetCount": 30,
+          "weight": 0.2,
+          "operators": [
+            "×"
+          ],
+          "avgDifficulty": 2.5,
+          "difficultyRange": {
+            "min": 2.5,
+            "max": 2.5
+          },
+          "resultRange": {
+            "min": 4,
+            "max": 20
+          }
+        },
+        "mixed": {
+          "count": 15,
+          "targetCount": 15,
+          "weight": 0.1,
+          "operators": [
+            "+",
+            "-",
+            "×"
+          ],
+          "avgDifficulty": 1.77,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 2.5
+          },
+          "resultRange": {
+            "min": 2,
+            "max": 19
+          }
+        }
+      },
+      "qualityAnalysis": {
+        "totalQuestions": 114,
+        "avgDifficulty": 1.58,
+        "operatorDistribution": {
+          "+": 74,
+          "-": 31,
+          "×": 9
+        },
+        "completionRate": 0.7430555555555556
+      }
+    },
+    "3": {
+      "metadata": {
+        "totalQuestions": 200,
+        "generatedAt": "2025-08-02T22:26:12.011Z",
+        "targetRange": {
+          "min": 5,
+          "max": 50
+        }
+      },
+      "pools": {
+        "basic_ops": {
+          "count": 50,
+          "targetCount": 60,
+          "weight": 0.3,
+          "operators": [
+            "+",
+            "-"
+          ],
+          "avgDifficulty": 1.76,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 2.5
+          },
+          "resultRange": {
+            "min": 5,
+            "max": 50
+          }
+        },
+        "multiplication": {
+          "count": 19,
+          "targetCount": 60,
+          "weight": 0.3,
+          "operators": [
+            "×"
+          ],
+          "avgDifficulty": 2.5,
+          "difficultyRange": {
+            "min": 2.5,
+            "max": 2.5
+          },
+          "resultRange": {
+            "min": 6,
+            "max": 50
+          }
+        },
+        "division": {
+          "count": 18,
+          "targetCount": 40,
+          "weight": 0.2,
+          "operators": [
+            "÷"
+          ],
+          "avgDifficulty": 3.28,
+          "difficultyRange": {
+            "min": 2.5,
+            "max": 3.5
+          },
+          "resultRange": {
+            "min": 8,
+            "max": 49
+          }
+        },
+        "mixed_all": {
+          "count": 40,
+          "targetCount": 40,
+          "weight": 0.2,
+          "operators": [
+            "+",
+            "-",
+            "×",
+            "÷"
+          ],
+          "avgDifficulty": 2.17,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 3.5
+          },
+          "resultRange": {
+            "min": 5,
+            "max": 50
+          }
+        }
+      },
+      "qualityAnalysis": {
+        "totalQuestions": 127,
+        "avgDifficulty": 2.22,
+        "operatorDistribution": {
+          "+": 73,
+          "-": 20,
+          "×": 25,
+          "÷": 29
+        },
+        "completionRate": 0.6499999999999999
+      }
+    },
+    "4": {
+      "metadata": {
+        "totalQuestions": 200,
+        "generatedAt": "2025-08-02T22:26:12.026Z",
+        "targetRange": {
+          "min": 10,
+          "max": 100
+        }
+      },
+      "pools": {
+        "basic_ops": {
+          "count": 50,
+          "targetCount": 50,
+          "weight": 0.25,
+          "operators": [
+            "+",
+            "-"
+          ],
+          "avgDifficulty": 2.25,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 3
+          },
+          "resultRange": {
+            "min": 10,
+            "max": 99
+          }
+        },
+        "multiplication": {
+          "count": 15,
+          "targetCount": 50,
+          "weight": 0.25,
+          "operators": [
+            "×"
+          ],
+          "avgDifficulty": 2.67,
+          "difficultyRange": {
+            "min": 2.5,
+            "max": 3
+          },
+          "resultRange": {
+            "min": 14,
+            "max": 100
+          }
+        },
+        "division": {
+          "count": 30,
+          "targetCount": 50,
+          "weight": 0.25,
+          "operators": [
+            "÷"
+          ],
+          "avgDifficulty": 4.03,
+          "difficultyRange": {
+            "min": 2.5,
+            "max": 4.5
+          },
+          "resultRange": {
+            "min": 10,
+            "max": 100
+          }
+        },
+        "complex_mixed": {
+          "count": 50,
+          "targetCount": 50,
+          "weight": 0.25,
+          "operators": [
+            "+",
+            "-",
+            "×",
+            "÷"
+          ],
+          "avgDifficulty": 2.69,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 4.5
+          },
+          "resultRange": {
+            "min": 10,
+            "max": 100
+          }
+        }
+      },
+      "qualityAnalysis": {
+        "totalQuestions": 145,
+        "avgDifficulty": 2.81,
+        "operatorDistribution": {
+          "-": 36,
+          "+": 67,
+          "×": 23,
+          "÷": 44
+        },
+        "completionRate": 0.725
+      }
+    },
+    "5": {
+      "metadata": {
+        "totalQuestions": 200,
+        "generatedAt": "2025-08-02T22:26:12.039Z",
+        "targetRange": {
+          "min": 20,
+          "max": 500
+        }
+      },
+      "pools": {
+        "basic_complex": {
+          "count": 40,
+          "targetCount": 40,
+          "weight": 0.2,
+          "operators": [
+            "+",
+            "-",
+            "×",
+            "÷"
+          ],
+          "avgDifficulty": 3.34,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 4.5
+          },
+          "resultRange": {
+            "min": 20,
+            "max": 500
+          }
+        },
+        "squares": {
+          "count": 10,
+          "targetCount": 60,
+          "weight": 0.3,
+          "operators": [
+            "^2"
+          ],
+          "avgDifficulty": 2.6,
+          "difficultyRange": {
+            "min": 2.5,
+            "max": 3
+          },
+          "resultRange": {
+            "min": 16,
+            "max": 484
+          }
+        },
+        "mixed_with_squares": {
+          "count": 60,
+          "targetCount": 60,
+          "weight": 0.3,
+          "operators": [
+            "+",
+            "-",
+            "×",
+            "÷",
+            "^2"
+          ],
+          "avgDifficulty": 3.44,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 4.5
+          },
+          "resultRange": {
+            "min": 20,
+            "max": 500
+          }
+        },
+        "advanced_mixed": {
+          "count": 40,
+          "targetCount": 40,
+          "weight": 0.2,
+          "operators": [
+            "+",
+            "-",
+            "×",
+            "÷",
+            "^2"
+          ],
+          "avgDifficulty": 3.51,
+          "difficultyRange": {
+            "min": 1.5,
+            "max": 4.5
+          },
+          "resultRange": {
+            "min": 20,
+            "max": 499
+          }
+        }
+      },
+      "qualityAnalysis": {
+        "totalQuestions": 150,
+        "avgDifficulty": 3.38,
+        "operatorDistribution": {
+          "+": 67,
+          "÷": 41,
+          "×": 27,
+          "-": 21,
+          "^2": 9
+        },
+        "completionRate": 0.7916666666666667
+      }
+    },
+    "6": {
+      "metadata": {
+        "totalQuestions": 200,
+        "generatedAt": "2025-08-02T22:26:12.058Z",
+        "targetRange": {
+          "min": 50,
+          "max": 2000
+        }
+      },
+      "pools": {
+        "advanced_basic": {
+          "count": 30,
+          "targetCount": 30,
+          "weight": 0.15,
+          "operators": [
+            "+",
+            "-",
+            "×",
+            "÷"
+          ],
+          "avgDifficulty": 3.75,
+          "difficultyRange": {
+            "min": 2,
+            "max": 4.5
+          },
+          "resultRange": {
+            "min": 50,
+            "max": 2000
+          }
+        },
+        "squares": {
+          "count": 9,
+          "targetCount": 50,
+          "weight": 0.25,
+          "operators": [
+            "^2"
+          ],
+          "avgDifficulty": 2.89,
+          "difficultyRange": {
+            "min": 2.5,
+            "max": 3
+          },
+          "resultRange": {
+            "min": 49,
+            "max": 1936
+          }
+        },
+        "square_roots": {
+          "count": 28,
+          "targetCount": 50,
+          "weight": 0.25,
+          "operators": [
+            "√"
+          ],
+          "avgDifficulty": 3.7,
+          "difficultyRange": {
+            "min": 2.5,
+            "max": 4.5
+          },
+          "resultRange": {
+            "min": 51,
+            "max": 2024
+          }
+        },
+        "complex_mixed": {
+          "count": 70,
+          "targetCount": 70,
+          "weight": 0.35,
+          "operators": [
+            "+",
+            "-",
+            "×",
+            "÷",
+            "^2",
+            "√"
+          ],
+          "avgDifficulty": 3.78,
+          "difficultyRange": {
+            "min": 2,
+            "max": 4.5
+          },
+          "resultRange": {
+            "min": 51,
+            "max": 2024
+          }
+        }
+      },
+      "qualityAnalysis": {
+        "totalQuestions": 137,
+        "avgDifficulty": 3.7,
+        "operatorDistribution": {
+          "×": 50,
+          "+": 49,
+          "÷": 23,
+          "-": 9,
+          "^2": 9
+        },
+        "completionRate": 0.685
+      }
+    }
+  },
+  "qualityMetrics": {
+    "totalCompletionRate": 0.7242592592592594,
+    "avgQuestionsPerLevel": 129.66666666666666,
+    "difficultyProgression": [
+      1.5,
+      1.58,
+      2.22,
+      2.81,
+      3.38,
+      3.7
+    ]
+  }
+}

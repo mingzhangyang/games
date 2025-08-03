@@ -55,7 +55,7 @@ body {
     z-index: 100;
 }
 
-.score-display, .combo-display, .level-display, .time-display {
+.score-display, .combo-display, .level-display, .time-display, .session-display, .session-target-display {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -101,6 +101,42 @@ body {
             0 2px 4px rgba(0, 0, 0, 0.3),
             0 0 16px rgba(237, 137, 54, 0.8),
             0 0 24px rgba(237, 137, 54, 0.4);
+    }
+}
+
+/* 会话系统UI样式 */
+.session-display span:last-child {
+    color: #f56565 !important;
+}
+
+.session-target-display span:last-child {
+    color: #4299e1 !important;
+}
+
+/* 升级提示样式 */
+.level-up-indicator {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    animation: levelUpPulse 2s ease-in-out infinite;
+}
+
+@keyframes levelUpPulse {
+    0%, 100% {
+        transform: translateY(-50%) scale(1);
+        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+    50% {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
     }
 }
 
@@ -557,6 +593,80 @@ body {
     font-size: 24px;
     font-weight: bold;
     color: #48bb78;
+}
+
+/* 会话完成屏幕 */
+.session-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.session-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid #667eea;
+}
+
+.session-stat-label {
+    font-size: 12px;
+    color: #a0aec0;
+    margin-bottom: 5px;
+}
+
+.session-stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #48bb78;
+}
+
+.session-stat-value.target {
+    color: #4299e1;
+}
+
+.session-stat-value.achieved {
+    color: #68d391;
+}
+
+.session-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.session-btn {
+    background: rgba(102, 126, 234, 0.2);
+    border: 2px solid #667eea;
+    color: #ffffff;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+}
+
+.session-btn:hover {
+    background: rgba(102, 126, 234, 0.4);
+    border-color: #48bb78;
+    transform: translateY(-2px);
+}
+
+.session-btn.continue {
+    background: rgba(72, 187, 120, 0.2);
+    border-color: #48bb78;
+}
+
+.session-btn.continue:hover {
+    background: rgba(72, 187, 120, 0.4);
+    border-color: #68d391;
 }
 
 /* 设置界面 */

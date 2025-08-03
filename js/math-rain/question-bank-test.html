@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题库系统测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        
+        .section h2 {
+            color: #34495e;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .output {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .question-display {
+            background-color: #e8f4fd;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .question-expression {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .question-info {
+            font-size: 14px;
+            color: #7f8c8d;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            color: #3498db;
+        }
+        
+        .error {
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background-color: #27ae60;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 数学雨题库系统测试</h1>
+        
+        <!-- 题库生成测试 -->
+        <div class="section">
+            <h2>📚 题库生成测试</h2>
+            <div class="controls">
+                <button class="btn-primary" onclick="generateSampleBank()">生成示例题库</button>
+                <button class="btn-success" onclick="generateFullBank()">生成完整题库</button>
+                <button class="btn-warning" onclick="clearOutput('generation-output')">清空输出</button>
+            </div>
+            <div id="generation-output" class="output">点击按钮开始生成题库...</div>
+        </div>
+        
+        <!-- 题库管理测试 -->
+        <div class="section">
+            <h2>🎯 题库管理测试</h2>
+            <div class="controls">
+                <select id="level-select">
+                    <option value="1">Level 1 - 入门级</option>
+                    <option value="2">Level 2 - 初级</option>
+                    <option value="3">Level 3 - 中级</option>
+                    <option value="4">Level 4 - 高级</option>
+                    <option value="5">Level 5 - 专家级</option>
+                    <option value="6">Level 6 - 大师级</option>
+                </select>
+                <button class="btn-primary" onclick="loadTestBank()">加载测试题库</button>
+                <button class="btn-success" onclick="getNextQuestion()">获取下一题</button>
+                <button class="btn-warning" onclick="switchLevel()">切换级别</button>
+            </div>
+            
+            <div id="current-question" class="question-display" style="display: none;">
+                <div class="question-expression" id="question-expr"></div>
+                <div class="question-info">
+                    <div><strong>结果:</strong> <span id="question-result"></span></div>
+                    <div><strong>难度:</strong> <span id="question-difficulty"></span></div>
+                    <div><strong>题目ID:</strong> <span id="question-id"></span></div>
+                    <div><strong>来源池:</strong> <span id="question-pool"></span></div>
+                </div>
+            </div>
+            
+            <div id="manager-output" class="output">等待加载题库...</div>
+        </div>
+        
+        <!-- 统计信息 -->
+        <div class="section">
+            <h2>📊 统计信息</h2>
+            <div class="controls">
+                <button class="btn-primary" onclick="showStats()">显示统计</button>
+                <button class="btn-success" onclick="showLevelInfo()">显示级别信息</button>
+                <button class="btn-warning" onclick="resetStats()">重置统计</button>
+            </div>
+            
+            <div id="stats-container" class="stats-grid"></div>
+            <div id="stats-output" class="output">点击按钮查看统计信息...</div>
+        </div>
+        
+        <!-- 性能测试 -->
+        <div class="section">
+            <h2>⚡ 性能测试</h2>
+            <div class="controls">
+                <button class="btn-primary" onclick="performanceTest(100)">测试100题生成</button>
+                <button class="btn-success" onclick="performanceTest(1000)">测试1000题生成</button>
+                <button class="btn-warning" onclick="antiRepeatTest()">防重复测试</button>
+            </div>
+            <div id="performance-output" class="output">等待性能测试...</div>
+        </div>
+    </div>
+
+    <!-- 引入依赖 -->
+    <script src="expression-generator.js"></script>
+    <script src="question-bank-generator.js"></script>
+    <script src="question-bank-manager.js"></script>
+    
+    <script>
+        // 全局变量
+        let questionBankManager = null;
+        let currentQuestionBank = null;
+        let lastSelectedPool = null;
+        
+        // 日志函数
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            element.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function clearOutput(elementId) {
+            document.getElementById(elementId).textContent = '';
+        }
+        
+        // 生成示例题库
+        function generateSampleBank() {
+            log('generation-output', '开始生成示例题库...');
+            
+            try {
+                const generator = new QuestionBankGenerator();
+                
+                // 只生成Level 1和Level 2作为示例
+                const sampleBank = {
+                    version: '1.0.0-sample',
+                    generatedAt: new Date().toISOString(),
+                    levels: {}
+                };
+                
+                for (let level = 1; level <= 2; level++) {
+                    log('generation-output', `生成Level ${level}...`);
+                    sampleBank.levels[level] = generator.generateLevelBank(level);
+                }
+                
+                currentQuestionBank = sampleBank;
+                
+                const stats = generator.generateStatistics(sampleBank);
+                log('generation-output', `示例题库生成完成!`, 'success');
+                log('generation-output', `总题目数: ${stats.totalQuestions}`);
+                
+                for (const [level, levelStats] of Object.entries(stats.levelStats)) {
+                    log('generation-output', `Level ${level}: ${levelStats.totalQuestions}题`);
+                }
+                
+            } catch (error) {
+                log('generation-output', `生成失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 生成完整题库
+        function generateFullBank() {
+            log('generation-output', '开始生成完整题库...');
+            
+            try {
+                const generator = new QuestionBankGenerator();
+                const startTime = Date.now();
+                
+                currentQuestionBank = generator.generateAllBanks();
+                
+                const endTime = Date.now();
+                const duration = (endTime - startTime) / 1000;
+                
+                const stats = generator.generateStatistics(currentQuestionBank);
+                log('generation-output', `完整题库生成完成! 耗时: ${duration.toFixed(2)}秒`, 'success');
+                log('generation-output', `总级别数: ${stats.totalLevels}`);
+                log('generation-output', `总题目数: ${stats.totalQuestions}`);
+                
+                for (const [level, levelStats] of Object.entries(stats.levelStats)) {
+                    log('generation-output', `Level ${level}: ${levelStats.totalQuestions}题, ${levelStats.pools}个池`);
+                }
+                
+            } catch (error) {
+                log('generation-output', `生成失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 加载测试题库
+        function loadTestBank() {
+            if (!currentQuestionBank) {
+                log('manager-output', '请先生成题库!', 'error');
+                return;
+            }
+            
+            try {
+                questionBankManager = new QuestionBankManager();
+                questionBankManager.loadQuestionBank(currentQuestionBank);
+                
+                const levelInfo = questionBankManager.getCurrentLevelInfo();
+                log('manager-output', '题库加载成功!', 'success');
+                log('manager-output', `当前级别: Level ${levelInfo.level}`);
+                log('manager-output', `总题目数: ${levelInfo.totalQuestions}`);
+                log('manager-output', `题目池: ${levelInfo.pools.join(', ')}`);
+                
+            } catch (error) {
+                log('manager-output', `加载失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 获取下一题
+        function getNextQuestion() {
+            if (!questionBankManager) {
+                log('manager-output', '请先加载题库!', 'error');
+                return;
+            }
+            
+            try {
+                const question = questionBankManager.getNextQuestion();
+                
+                if (question) {
+                    // 显示题目
+                    document.getElementById('question-expr').textContent = question.expression;
+                    document.getElementById('question-result').textContent = question.result;
+                    document.getElementById('question-difficulty').textContent = question.difficulty || 'N/A';
+                    document.getElementById('question-id').textContent = question.id;
+                    
+                    // 找出题目来源池
+                    const currentLevel = questionBankManager.currentLevel;
+                    const levelData = currentQuestionBank.levels[currentLevel];
+                    let sourcePool = 'Unknown';
+                    
+                    for (const [poolName, poolData] of Object.entries(levelData.pools)) {
+                        if (poolData.questions.some(q => q.id === question.id)) {
+                            sourcePool = poolName;
+                            break;
+                        }
+                    }
+                    
+                    document.getElementById('question-pool').textContent = sourcePool;
+                    document.getElementById('current-question').style.display = 'block';
+                    
+                    log('manager-output', `获取题目: ${question.expression} = ${question.result}`);
+                    log('manager-output', `来源: ${sourcePool}, 难度: ${question.difficulty}`);
+                    
+                    // 模拟答题
+                    const isCorrect = Math.random() > 0.3; // 70%正确率
+                    questionBankManager.recordAnswer(isCorrect);
+                    
+                } else {
+                    log('manager-output', '无法获取题目', 'error');
+                }
+                
+            } catch (error) {
+                log('manager-output', `获取题目失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 切换级别
+        function switchLevel() {
+            if (!questionBankManager) {
+                log('manager-output', '请先加载题库!', 'error');
+                return;
+            }
+            
+            const newLevel = parseInt(document.getElementById('level-select').value);
+            
+            try {
+                questionBankManager.setLevel(newLevel);
+                const levelInfo = questionBankManager.getCurrentLevelInfo();
+                
+                log('manager-output', `切换到Level ${newLevel}`, 'success');
+                log('manager-output', `题目数: ${levelInfo.totalQuestions}`);
+                log('manager-output', `目标范围: ${levelInfo.targetRange.min}-${levelInfo.targetRange.max}`);
+                
+            } catch (error) {
+                log('manager-output', `切换级别失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 显示统计信息
+        function showStats() {
+            if (!questionBankManager) {
+                log('stats-output', '请先加载题库!', 'error');
+                return;
+            }
+            
+            const stats = questionBankManager.getSessionStats();
+            const loadStats = questionBankManager.generateLoadStats();
+            
+            // 更新统计卡片
+            const container = document.getElementById('stats-container');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-title">已答题目</div>
+                    <div class="stat-value">${stats.questionsAnswered}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">正确率</div>
+                    <div class="stat-value">${Math.round(stats.accuracy * 100)}%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">当前级别</div>
+                    <div class="stat-value">Level ${questionBankManager.currentLevel}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">题库版本</div>
+                    <div class="stat-value">${loadStats.version}</div>
+                </div>
+            `;
+            
+            log('stats-output', '=== 会话统计 ===');
+            log('stats-output', `已答题目: ${stats.questionsAnswered}`);
+            log('stats-output', `正确答案: ${stats.correctAnswers}`);
+            log('stats-output', `正确率: ${Math.round(stats.accuracy * 100)}%`);
+            
+            if (stats.poolUsageArray.length > 0) {
+                log('stats-output', '\n=== 题目池使用情况 ===');
+                stats.poolUsageArray.forEach(([pool, count]) => {
+                    log('stats-output', `${pool}: ${count}次`);
+                });
+            }
+            
+            log('stats-output', '\n=== 题库信息 ===');
+            log('stats-output', `版本: ${loadStats.version}`);
+            log('stats-output', `总级别数: ${loadStats.totalLevels}`);
+            
+            for (const [level, info] of Object.entries(loadStats.levelDetails)) {
+                log('stats-output', `Level ${level}: ${info.totalQuestions}题, ${info.pools}个池`);
+            }
+        }
+        
+        // 显示级别信息
+        function showLevelInfo() {
+            if (!questionBankManager) {
+                log('stats-output', '请先加载题库!', 'error');
+                return;
+            }
+            
+            const levelInfo = questionBankManager.getCurrentLevelInfo();
+            
+            log('stats-output', '=== 当前级别信息 ===');
+            log('stats-output', `级别: Level ${levelInfo.level}`);
+            log('stats-output', `总题目数: ${levelInfo.totalQuestions}`);
+            log('stats-output', `目标范围: ${levelInfo.targetRange.min} - ${levelInfo.targetRange.max}`);
+            log('stats-output', `题目池: ${levelInfo.pools.join(', ')}`);
+        }
+        
+        // 重置统计
+        function resetStats() {
+            if (questionBankManager) {
+                questionBankManager.resetSessionStats();
+                questionBankManager.clearRecentHistory();
+                log('stats-output', '统计信息已重置', 'success');
+                document.getElementById('stats-container').innerHTML = '';
+            }
+        }
+        
+        // 性能测试
+        function performanceTest(count) {
+            if (!questionBankManager) {
+                log('performance-output', '请先加载题库!', 'error');
+                return;
+            }
+            
+            log('performance-output', `开始性能测试: 生成${count}个题目...`);
+            
+            const startTime = Date.now();
+            let successCount = 0;
+            const questionIds = new Set();
+            
+            for (let i = 0; i < count; i++) {
+                const question = questionBankManager.getNextQuestion();
+                if (question) {
+                    successCount++;
+                    questionIds.add(question.id);
+                }
+            }
+            
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            const avgTime = duration / count;
+            const uniqueRate = (questionIds.size / successCount) * 100;
+            
+            log('performance-output', `性能测试完成!`, 'success');
+            log('performance-output', `总耗时: ${duration}ms`);
+            log('performance-output', `平均每题: ${avgTime.toFixed(2)}ms`);
+            log('performance-output', `成功率: ${Math.round((successCount/count)*100)}%`);
+            log('performance-output', `唯一性: ${uniqueRate.toFixed(1)}% (${questionIds.size}/${successCount})`);
+        }
+        
+        // 防重复测试
+        function antiRepeatTest() {
+            if (!questionBankManager) {
+                log('performance-output', '请先加载题库!', 'error');
+                return;
+            }
+            
+            log('performance-output', '开始防重复测试...');
+            
+            const questions = [];
+            const questionIds = new Set();
+            const expressions = new Set();
+            
+            // 连续获取50个题目
+            for (let i = 0; i < 50; i++) {
+                const question = questionBankManager.getNextQuestion();
+                if (question) {
+                    questions.push(question);
+                    questionIds.add(question.id);
+                    expressions.add(question.expression);
+                }
+            }
+            
+            const idUniqueRate = (questionIds.size / questions.length) * 100;
+            const exprUniqueRate = (expressions.size / questions.length) * 100;
+            
+            log('performance-output', `防重复测试完成!`, 'success');
+            log('performance-output', `获取题目数: ${questions.length}`);
+            log('performance-output', `ID唯一率: ${idUniqueRate.toFixed(1)}%`);
+            log('performance-output', `表达式唯一率: ${exprUniqueRate.toFixed(1)}%`);
+            
+            // 检查连续重复
+            let maxConsecutive = 0;
+            let currentConsecutive = 0;
+            
+            for (let i = 1; i < questions.length; i++) {
+                if (questions[i].id === questions[i-1].id) {
+                    currentConsecutive++;
+                } else {
+                    maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
+                    currentConsecutive = 0;
+                }
+            }
+            
+            log('performance-output', `最大连续重复: ${maxConsecutive}`);
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            log('generation-output', '题库系统测试页面已加载');
+            log('manager-output', '等待操作...');
+            log('stats-output', '等待操作...');
+            log('performance-output', '等待操作...');
+        });
+    </script>
+</body>
+</html>

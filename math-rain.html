@@ -40,6 +40,19 @@
                 <span id="time-label">时间</span>
                 <span id="time-value">0</span>
             </div>
+            <!-- 会话系统UI -->
+            <div class="session-display" id="session-display">
+                <span id="session-time-label">剩余时间</span>
+                <span id="session-time">3:00</span>
+            </div>
+            <div class="session-target-display" id="session-target-display">
+                <span id="session-target-label">目标分数</span>
+                <span id="session-target">100</span>
+            </div>
+            <!-- 升级提示 -->
+            <div class="level-up-indicator" id="level-up-indicator" style="display: none;">
+                <span>🎯 可升级!</span>
+            </div>
         </div>
 
         <!-- 游戏主区域 -->
@@ -131,6 +144,44 @@
             <button id="play-again-btn" class="menu-btn">再玩一次</button>
             <button id="change-difficulty-btn" class="menu-btn">更换难度</button>
             <button id="home-btn" class="menu-btn">返回主页</button>
+        </div>
+    </div>
+
+    <!-- 会话完成界面 -->
+    <div id="session-complete-screen" class="screen hidden">
+        <div class="screen-content">
+            <h2 id="session-complete-title">🎯 会话完成</h2>
+            <div class="session-stats">
+                <div class="stat-item">
+                    <span class="stat-label">最终得分</span>
+                    <span id="session-final-score" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">目标分数</span>
+                    <span id="session-target-score" class="stat-value">100</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">正确率</span>
+                    <span id="session-accuracy" class="stat-value">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">最高连击</span>
+                    <span id="session-max-combo" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">会话时长</span>
+                    <span id="session-duration" class="stat-value">3 分钟</span>
+                </div>
+                <div class="stat-item level-up-stat">
+                    <span class="stat-label">升级达成</span>
+                    <span id="session-level-up" class="stat-value">否</span>
+                </div>
+            </div>
+            <div class="session-actions">
+                <button id="session-continue-btn" class="menu-btn primary">继续下一关</button>
+                <button id="session-retry-btn" class="menu-btn">重试本关</button>
+                <button id="session-menu-btn" class="menu-btn">返回菜单</button>
+            </div>
         </div>
     </div>
 

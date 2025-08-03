@@ -8,7 +8,7 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript. E
 
 - **Tetris** (`tetris.html`) - Modern Tetris implementation with themes, combo system, and global high scores
 - **Tank Battle** (`tank-battle.html`) - Classic arcade-style tank combat game  
-- **Contra** (`contra.html`) - Side-scrolling shooter (currently commented out in main menu)
+
 
 ## Architecture
 
@@ -36,7 +36,7 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript. E
 **Game-specific JavaScript**:
 - `js/tetris.js` - Tetris game engine and logic
 - `js/tank-battle.js` - Tank Battle game implementation
-- `js/contra.js` - Contra side-scroller implementation
+
 
 ### Internationalization
 - Built-in multi-language support (English/Chinese)
@@ -106,7 +106,7 @@ canvas.addEventListener('touchstart', handleTouch);
 ├── index.html              # Main game selection page
 ├── tetris.html            # Complete Tetris game
 ├── tank-battle.html       # Complete Tank Battle game  
-├── contra.html            # Complete Contra game
+
 ├── config/
 │   └── game-config.json   # Centralized game configuration
 ├── js/                    # Shared JavaScript modules

@@ -21,6 +21,15 @@ class MathRainGame {
             this.gameTime = 0;
             this.lives = 3;
             
+            // 会话系统状态
+            this.sessionStartTime = 0;
+            this.sessionEndTime = 0;
+            this.sessionTimeRemaining = 0;
+            this.sessionComplete = false;
+            this.sessionTargetScore = 0;
+            this.canLevelUp = false;
+            this.nextLevelUnlocked = false;
+            
             // 设置单例实例
             MathRainGame.instance = this;
             
@@ -52,6 +61,14 @@ class MathRainGame {
                 baseScore: 10,
                 comboMultiplier: 1.5,
                 errorPenalty: [0, -5, -15, -30, -50],
+                // 会话系统配置
+                sessionDuration: 180000, // 3分钟 (毫秒)
+                enableSessions: true,
+                progressionThresholds: {
+                    scoreMultiplier: 1.2, // 分数达到基准的1.2倍可升级
+                    accuracyThreshold: 0.75, // 正确率75%以上
+                    comboThreshold: 5 // 连击5次以上
+                }
             };
             
             // 性能优化相关
@@ -653,6 +670,11 @@ class MathRainGame {
             this.startGame();
         });
         
+        // 会话完成界面按钮
+        this.bindButton('session-continue-btn', () => this.continueToNextLevel());
+        this.bindButton('session-retry-btn', () => this.retryCurrentLevel());
+        this.bindButton('session-menu-btn', () => this.showMainMenu());
+        
         // 设置控件
         this.initializeSettings();
     }
@@ -757,18 +779,19 @@ class MathRainGame {
             
             this.gameState = 'playing';
     
-            
-
             this.resetGameData();
+            
+            // 初始化会话系统
+            if (this.config.enableSessions) {
+                this.initializeSession();
+            }
             
             // 清理所有现有算式
             this.expressions = [];
             
-
             this.generateNewTarget();
             
             // 正确的显示顺序：先隐藏所有屏幕，再显示游戏容器
-
             this.hideAllScreens();
             this.showScreen('game-container');
             
@@ -816,6 +839,171 @@ class MathRainGame {
     }
 
     /**
+     * 初始化会话
+     */
+    initializeSession() {
+        const currentTime = Date.now();
+        this.sessionStartTime = currentTime;
+        this.sessionEndTime = currentTime + this.config.sessionDuration;
+        this.sessionTimeRemaining = this.config.sessionDuration;
+        this.sessionComplete = false;
+        
+        // 计算目标分数（基于当前难度）
+        const currentConfig = this.difficultyManager.getCurrentConfig();
+        const baseTargetScore = Math.floor(currentConfig.range.max * this.config.progressionThresholds.scoreMultiplier * 10);
+        this.sessionTargetScore = Math.max(baseTargetScore, 100); // 最低100分
+        
+        this.canLevelUp = false;
+        this.nextLevelUnlocked = false;
+        
+        // 更新UI显示
+        this.updateSessionUI();
+    }
+    
+    /**
+     * 更新会话UI
+     */
+    updateSessionUI() {
+        if (!this.config.enableSessions) return;
+        
+        const minutes = Math.floor(this.sessionTimeRemaining / 60000);
+        const seconds = Math.floor((this.sessionTimeRemaining % 60000) / 1000);
+        const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        this.updateElement('session-time', timeText);
+        this.updateElement('session-target', this.sessionTargetScore);
+        
+        // 检查是否可以升级
+        this.checkLevelUpConditions();
+    }
+    
+    /**
+     * 检查升级条件
+     */
+    checkLevelUpConditions() {
+        if (!this.config.enableSessions || this.sessionComplete) return;
+        
+        const accuracy = this.totalAnswered > 0 ? this.correctAnswers / this.totalAnswered : 0;
+        const scoreReached = this.score >= this.sessionTargetScore;
+        const accuracyGood = accuracy >= this.config.progressionThresholds.accuracyThreshold;
+        const comboGood = this.maxCombo >= this.config.progressionThresholds.comboThreshold;
+        
+        this.canLevelUp = scoreReached && accuracyGood && comboGood;
+        
+        // 更新升级提示UI
+        const levelUpIndicator = document.getElementById('level-up-indicator');
+        if (levelUpIndicator) {
+            levelUpIndicator.style.display = this.canLevelUp ? 'block' : 'none';
+        }
+    }
+    
+    /**
+     * 更新会话时间
+     */
+    updateSessionTime(currentTime) {
+        if (!this.config.enableSessions || this.sessionComplete) return;
+        
+        this.sessionTimeRemaining = Math.max(0, this.sessionEndTime - currentTime);
+        
+        if (this.sessionTimeRemaining <= 0) {
+            this.completeSession();
+        } else {
+            this.updateSessionUI();
+        }
+    }
+    
+    /**
+     * 完成会话
+     */
+    completeSession() {
+        this.sessionComplete = true;
+        this.sessionTimeRemaining = 0;
+        
+        // 显示会话结果
+        this.showSessionResults();
+    }
+    
+    /**
+     * 显示会话结果
+     */
+    showSessionResults() {
+        // 暂停游戏
+        this.gameState = 'sessionComplete';
+        
+        // 计算准确的统计数据
+        const accuracy = this.totalAnswered > 0 ? (this.correctAnswers / this.totalAnswered * 100).toFixed(1) : 0;
+        const sessionDurationMinutes = Math.floor(this.config.sessionDuration / 60000);
+        
+        // 更新会话结果UI
+        this.updateElement('session-final-score', this.score);
+        this.updateElement('session-target-score', this.sessionTargetScore);
+        this.updateElement('session-accuracy', `${accuracy}%`);
+        this.updateElement('session-max-combo', this.maxCombo);
+        this.updateElement('session-duration', `${sessionDurationMinutes} 分钟`);
+        
+        // 检查是否达成升级条件
+        const levelUpAchieved = this.canLevelUp;
+        this.updateElement('session-level-up', levelUpAchieved ? '是' : '否');
+        
+        // 更新按钮状态
+        const continueBtn = document.getElementById('session-continue-btn');
+        if (continueBtn) {
+            continueBtn.style.display = levelUpAchieved ? 'block' : 'none';
+        }
+        
+        // 显示会话完成屏幕
+        this.hideAllScreens();
+        this.showScreen('session-complete-screen');
+        
+        // 播放完成音效
+        if (levelUpAchieved) {
+            this.safePlaySound('levelUp');
+        } else {
+            this.safePlaySound('sessionComplete');
+        }
+    }
+    
+    /**
+     * 继续到下一关
+     */
+    continueToNextLevel() {
+        if (!this.canLevelUp) return;
+        
+        // 升级到下一个难度
+        const currentLevel = this.difficultyManager.baseLevel;
+        const maxLevel = Object.keys(this.difficultyManager.difficultyConfig).length;
+        
+        if (currentLevel < maxLevel) {
+            // 找到下一个难度按钮并选择
+            const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+            const nextButton = difficultyButtons[currentLevel]; // currentLevel是从1开始的，所以直接用作索引
+            
+            if (nextButton) {
+                this.selectDifficulty(nextButton);
+            }
+        }
+        
+        // 隐藏会话完成屏幕并重置游戏状态
+        this.hideAllScreens();
+        this.gameState = 'menu';
+        
+        // 开始新游戏
+        this.startGame();
+    }
+    
+    /**
+     * 重试当前关卡
+     */
+    retryCurrentLevel() {
+        // 隐藏会话完成屏幕并重置游戏状态
+        this.hideAllScreens();
+        this.gameState = 'menu';
+        
+        // 重新开始当前难度的游戏
+        this.startGame();
+    }
+    
+    /**
      * 重置游戏数据
      */
     resetGameData() {
@@ -828,6 +1016,8 @@ class MathRainGame {
             this.correctClicks = 0;
             this.incorrectClicks = 0;
             this.consecutiveErrors = 0;
+            this.totalAnswered = 0;
+            this.correctAnswers = 0;
             
             // 标记需要更新UI
             this.needsUIUpdate = true;
@@ -894,6 +1084,11 @@ class MathRainGame {
         
         // 更新游戏时间
         this.gameTime = currentTime - this.gameStartTime;
+        
+        // 更新会话时间
+        if (this.config.enableSessions) {
+            this.updateSessionTime(currentTime);
+        }
         
         // 生成Canvas算式（用于背景动画效果）
         this.trySpawnCanvasExpression(currentTime);
@@ -1334,6 +1529,8 @@ class MathRainGame {
      */
     handleCorrectClick(expression, responseTime) {
         this.correctClicks++;
+        this.totalAnswered++;
+        this.correctAnswers++;
         this.consecutiveErrors = 0;
         this.combo++;
         this.maxCombo = Math.max(this.maxCombo, this.combo);
@@ -1386,6 +1583,7 @@ class MathRainGame {
      */
     handleIncorrectClick(expression, responseTime) {
         this.incorrectClicks++;
+        this.totalAnswered++;
         this.combo = 0; // 重置连击
         this.consecutiveErrors++;
         

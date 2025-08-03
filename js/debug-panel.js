@@ -293,7 +293,7 @@ class DebugPanel {
         
         const a = document.createElement('a');
         a.href = url;
-        a.download = `contra-debug-${timestamp.replace(/[:.]/g, '-')}.json`;
+        a.download = `game-debug-${timestamp.replace(/[:.]/g, '-')}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

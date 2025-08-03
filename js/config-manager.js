@@ -181,7 +181,7 @@ class ConfigManager {
     // 保存配置到本地存储
     saveToLocalStorage() {
         try {
-            localStorage.setItem('contra-game-config', JSON.stringify(this.config));
+            localStorage.setItem('game-config', JSON.stringify(this.config));
             return true;
         } catch (error) {
             console.error('保存配置失败:', error);
@@ -192,7 +192,7 @@ class ConfigManager {
     // 从本地存储加载配置
     loadFromLocalStorage() {
         try {
-            const saved = localStorage.getItem('contra-game-config');
+            const saved = localStorage.getItem('game-config');
             if (saved) {
                 const savedConfig = JSON.parse(saved);
                 this.config = this.deepMerge(this.defaultConfig, savedConfig);

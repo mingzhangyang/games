@@ -1,0 +1,23 @@
+{
+  "name": "mini-games-collection",
+  "version": "1.0.0",
+  "description": "A collection of mini games including Math Rain, Tetris, and Tank Battle",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:math-rain": "vite build --config vite.config.math-rain.js",
+    "build:tetris": "vite build --config vite.config.tetris.js",
+    "build:tank-battle": "vite build --config vite.config.tank-battle.js",
+
+    "build:all": "npm run build:math-rain && npm run build:tetris && npm run build:tank-battle",
+    "preview": "vite preview",
+    "serve": "vite preview --port 3000"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "@vitejs/plugin-legacy": "^5.0.0",
+    "terser": "^5.24.0",
+    "rollup-plugin-copy": "^3.5.0"
+  },
+  "type": "module"
+}
