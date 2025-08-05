@@ -49,6 +49,7 @@ class MathRainGame {
             this.correctClicks = 0;
             this.incorrectClicks = 0;
             this.consecutiveErrors = 0;
+            this.maxErrorRateExceeded = false;
             
             // UI更新标志
             this.needsUIUpdate = false;
@@ -57,6 +58,7 @@ class MathRainGame {
             // 游戏配置
             this.config = {
                 targetChangeInterval: 10000,
+                targetChangeWarningTime: 2000, // 目标变化前2秒开始提示
                 maxExpressions: 6,
                 baseScore: 10,
                 comboMultiplier: 1.5,
@@ -64,6 +66,7 @@ class MathRainGame {
                 // 会话系统配置
                 sessionDuration: 180000, // 3分钟 (毫秒)
                 enableSessions: true,
+                maxErrorRate: 0.4, // 错误率上限40%，超过则游戏结束
                 progressionThresholds: {
                     scoreMultiplier: 1.2, // 分数达到基准的1.2倍可升级
                     accuracyThreshold: 0.75, // 正确率75%以上
@@ -86,10 +89,14 @@ class MathRainGame {
             // 检查必要DOM元素
             this.checkRequiredElements();
             
-            // 初始化组件
-            this.initializeComponents();
-            this.initializeEventListeners();
-            this.initializeUI();
+            // 目标变化提示状态
+            this.targetChangeWarning = false;
+            
+            // 题库使用标志
+            this.useQuestionBank = true;
+            
+            // 异步初始化组件（避免与入口重复初始化）
+            // this.initializeAsync();
             
             // 添加错误监听
             this.setupErrorHandling();
@@ -98,7 +105,7 @@ class MathRainGame {
             this.initializePerformanceOptimizations();
         } catch (error) {
 
-            this.showErrorMessage(`游戏初始化失败: ${error.message}`);
+            this.showErrorMessage(`${this.getText('gameInitError')}: ${error.message}`);
         }
     }
     
@@ -160,7 +167,7 @@ class MathRainGame {
         
         if (this.gameState === 'playing') {
             this.pauseGame();
-            this.showErrorMessage('游戏出现错误，已自动暂停。');
+            this.showErrorMessage(this.getText('gameError'));
         }
     }
 
@@ -173,6 +180,48 @@ class MathRainGame {
     }
 
     /**
+     * 获取当前语言的文本
+     */
+    getText(key) {
+        try {
+            // 尝试从全局LANGUAGES对象获取文本
+            if (typeof window !== 'undefined' && window.LANGUAGES && window.currentLanguage) {
+                const texts = window.LANGUAGES[window.currentLanguage];
+                if (texts && texts[key]) {
+                    return texts[key];
+                }
+            }
+            
+            // 如果无法获取，返回默认中文文本
+            const defaultTexts = {
+                gameError: '游戏出现错误，已自动暂停。',
+                gameLoadError: '游戏加载失败，请刷新页面重试',
+                componentInitError: '组件初始化失败',
+                canvasNotFound: '找不到game-canvas元素',
+                questionBankLoadError: '题库加载失败',
+                questionBankFallback: '回退到实时生成模式',
+                gameInitError: '游戏初始化失败',
+                confirmButton: '确定',
+                sessionTimeLabel: '剩余时间',
+                sessionTargetLabel: '目标分数',
+                levelUpIndicator: '🎯 可升级!',
+                sessionCompleteTitle: '🎯 会话完成',
+                sessionContinue: '继续下一关',
+                sessionRetry: '重试本关',
+                sessionMenu: '返回菜单',
+                sessionDuration: '会话时长',
+                sessionLevelUp: '升级达成',
+                yes: '是',
+                no: '否'
+            };
+            
+            return defaultTexts[key] || key;
+        } catch (error) {
+            return key; // 如果出错，返回key本身
+        }
+    }
+
+    /**
      * 显示错误消息
      */
     showErrorMessage(message) {
@@ -182,7 +231,7 @@ class MathRainGame {
         errorDiv.innerHTML = `
             <div class="error-content">
                 <p>${message}</p>
-                <button onclick="this.parentElement.parentElement.remove()">确定</button>
+                <button onclick="this.parentElement.parentElement.remove()">${this.getText('confirmButton')}</button>
             </div>
         `;
         document.body.appendChild(errorDiv);
@@ -216,13 +265,25 @@ class MathRainGame {
     /**
      * 初始化游戏组件
      */
-    initializeComponents() {
+    async initializeComponents() {
         try {
+            // 检查必要的类是否存在
+            const requiredClasses = ['ExpressionGenerator', 'QuestionBankManager', 'AnimationEngine', 'DifficultyManager', 'SoundManager'];
+            const missingClasses = requiredClasses.filter(className => !window[className]);
+            
+            if (missingClasses.length > 0) {
+                throw new Error(`缺少必要的类: ${missingClasses.join(', ')}`);
+            }
+            
             // 初始化子系统
-            this.expressionGenerator = new ExpressionGenerator();
-            this.animationEngine = new AnimationEngine();
-            this.difficultyManager = new DifficultyManager();
-            this.soundManager = new SoundManager();
+            this.expressionGenerator = new window.ExpressionGenerator();
+            this.questionBankManager = new window.QuestionBankManager();
+            this.animationEngine = new window.AnimationEngine();
+            this.difficultyManager = new window.DifficultyManager();
+            this.soundManager = new window.SoundManager();
+            
+            // 加载题库
+            await this.loadQuestionBank();
             
             // 初始化Canvas渲染系统（只用于特效）
             this.initializeCanvas();
@@ -232,15 +293,48 @@ class MathRainGame {
             
             // Canvas渲染循环将在游戏开始时启动
             this.isRendering = false;
+            
+            console.log('MathRainGame 组件初始化完成');
         } catch (error) {
-
-            throw new Error(`组件初始化失败: ${error.message}`);
+            console.error('组件初始化失败:', error);
+            throw new Error(`${this.getText('componentInitError')}: ${error.message}`);
         }
     }
     
-
+    /**
+     * 异步初始化方法
+     */
+    async initializeAsync() {
+        try {
+            await this.initializeComponents();
+            this.initializeEventListeners();
+            this.initializeUI();
+            console.log('MathRainGame 异步初始化完成');
+        } catch (error) {
+            console.error('异步初始化失败:', error);
+            this.showErrorMessage(this.getText('gameLoadError'));
+        }
+    }
     
-
+    /**
+     * 加载题库
+     */
+    async loadQuestionBank() {
+        try {
+            const response = await fetch('assets/math-rain/question-bank.json');
+            if (!response.ok) {
+                throw new Error(`${this.getText('questionBankLoadError')}: ${response.status}`);
+            }
+            const questionBankData = await response.json();
+            this.questionBankManager.loadQuestionBank(questionBankData);
+            console.log('题库加载成功');
+        } catch (error) {
+            console.error('题库加载失败:', error);
+            // 如果题库加载失败，回退到实时生成模式
+            console.warn(this.getText('questionBankFallback'));
+            this.useQuestionBank = false;
+        }
+    }
 
     /**
      * 初始化Canvas渲染系统
@@ -251,7 +345,7 @@ class MathRainGame {
             
             this.canvas = document.getElementById('game-canvas');
             if (!this.canvas) {
-                throw new Error('找不到game-canvas元素');
+                throw new Error(this.getText('canvasNotFound'));
             }
 
             
@@ -278,7 +372,7 @@ class MathRainGame {
 
             } else {
                 // 启用粒子系统，但不启动它自己的循环
-                this.particleSystem = new ParticleSystem(this.canvas);
+                this.particleSystem = new window.ParticleSystem(this.canvas);
                 this.particleSystem.stop(); // 停止独立循环，使用主游戏循环
 
             }
@@ -878,6 +972,29 @@ class MathRainGame {
     }
     
     /**
+     * 检查错误率是否超过上限
+     */
+    checkErrorRateLimit() {
+        if (this.totalAnswered < 5) return; // 至少答题5次后才开始检查
+        
+        const errorRate = (this.totalAnswered - this.correctAnswers) / this.totalAnswered;
+        
+        if (errorRate > this.config.maxErrorRate && !this.maxErrorRateExceeded) {
+            this.maxErrorRateExceeded = true;
+            
+            // 显示错误率超限提示
+            this.showErrorMessage(`错误率过高！当前错误率：${(errorRate * 100).toFixed(1)}%，上限：${(this.config.maxErrorRate * 100)}%`);
+            
+            // 延迟触发游戏结束，给玩家看到提示的时间
+            setTimeout(() => {
+                if (this.gameState === 'playing') {
+                    this.gameOver();
+                }
+            }, 2000);
+        }
+    }
+    
+    /**
      * 检查升级条件
      */
     checkLevelUpConditions() {
@@ -1018,9 +1135,14 @@ class MathRainGame {
             this.consecutiveErrors = 0;
             this.totalAnswered = 0;
             this.correctAnswers = 0;
+            this.maxErrorRateExceeded = false;
+            this.targetChangeWarning = false;
             
             // 标记需要更新UI
             this.needsUIUpdate = true;
+            
+            // 重置目标变化警告
+            this.hideTargetChangeWarning();
             
     
             
@@ -1229,7 +1351,7 @@ class MathRainGame {
             
             // 动态判断表达式是否匹配当前目标数字
             isMatched: function(currentTargetNumber) {
-                return Math.abs(this.data.result - currentTargetNumber) < 0.01;
+                return this.data.result === currentTargetNumber;
             }
         };
         
@@ -1361,10 +1483,43 @@ class MathRainGame {
      */
     safeGenerateExpression(targetValue, isCorrect) {
         try {
+            // 优先使用题库
+            if (this.useQuestionBank && this.questionBankManager) {
+                // 设置当前难度级别
+                this.questionBankManager.setLevel(this.difficultyManager.currentLevel);
+                
+                // 获取下一个题目
+                const question = this.questionBankManager.getNextQuestion();
+                if (question) {
+                    // 判断题目是否匹配当前需求（基于结果而不是isCorrect字段）
+                    const questionIsCorrect = question.result === targetValue;
+                    if (questionIsCorrect === isCorrect) {
+                        return {
+                            expression: question.expression,
+                            result: question.result
+                        };
+                    }
+                }
+                // 如果题库中的题目不匹配当前需求，回退到实时生成
+            }
+            
+            // 回退到实时生成
             if (isCorrect) {
                 const expr = this.expressionGenerator.generateCorrectExpression(targetValue);
                 if (expr && expr.expression) {
                     return expr;
+                }
+                // 增强回退：尝试静态定向生成（ExpressionGenerator.generateExpressionForTarget）
+                if (typeof window !== 'undefined' && window.ExpressionGenerator && typeof window.ExpressionGenerator.generateExpressionForTarget === 'function') {
+                    const genExpr = window.ExpressionGenerator.generateExpressionForTarget(targetValue, {
+                        difficulty: this.difficultyManager.currentLevel,
+                        attempts: 200,
+                        timeBudgetMs: 60,
+                        allowApprox: false
+                    });
+                    if (genExpr && genExpr.expression && genExpr.result === targetValue) {
+                        return genExpr;
+                    }
                 }
             } else {
                 const decoys = this.expressionGenerator.generateDecoyExpressions(targetValue, 1);
@@ -1373,12 +1528,11 @@ class MathRainGame {
                 }
             }
         } catch (error) {
-
+            console.warn('表达式生成失败，使用回退方案:', error);
         }
         
         // 返回简单的回退表达式
         const fallback = this.createFallbackExpression(targetValue, isCorrect);
-
         return fallback;
     }
 
@@ -1529,6 +1683,7 @@ class MathRainGame {
      */
     handleCorrectClick(expression, responseTime) {
         this.correctClicks++;
+        this.totalClicks++;
         this.totalAnswered++;
         this.correctAnswers++;
         this.consecutiveErrors = 0;
@@ -1583,6 +1738,7 @@ class MathRainGame {
      */
     handleIncorrectClick(expression, responseTime) {
         this.incorrectClicks++;
+        this.totalClicks++;
         this.totalAnswered++;
         this.combo = 0; // 重置连击
         this.consecutiveErrors++;
@@ -1590,6 +1746,9 @@ class MathRainGame {
         // 计算扣分
         const penalty = this.config.errorPenalty[Math.min(this.consecutiveErrors, this.config.errorPenalty.length - 1)];
         this.score = Math.max(0, this.score + penalty); // 确保分数不为负
+        
+        // 检查错误率是否超过上限
+        this.checkErrorRateLimit();
         
         // 标记需要更新UI
         this.needsUIUpdate = true;
@@ -1637,10 +1796,10 @@ class MathRainGame {
     handleExpressionMissed(expression) {
         if (expression.isClicked) return;
         
-        // 如果错过的是正确答案，视为错误
+        // 如果错过的是正确答案，只重置连击，不计入错误率统计
         if (expression.isCorrect) {
             this.combo = 0;
-
+            // 不再将错过的正确答案计入totalAnswered，避免影响错误率计算
         }
         
         this.removeExpression(expression);
@@ -1716,19 +1875,33 @@ class MathRainGame {
      */
     generateNewTarget() {
         try {
-
-            
             const oldTarget = this.targetNumber;
             
-            if (!this.expressionGenerator) {
-                throw new Error('表达式生成器未初始化');
+            // 优先使用题库生成目标数字
+            if (this.useQuestionBank && this.questionBankManager) {
+                // 设置当前难度级别
+                this.questionBankManager.setLevel(this.difficultyManager.currentLevel);
+                
+                // 从题库获取一个题目来确定目标值
+                const sampleQuestion = this.questionBankManager.getNextQuestion();
+                if (sampleQuestion && typeof sampleQuestion.result === 'number') {
+                    this.targetNumber = sampleQuestion.result;
+                } else {
+                    // 题库中没有合适的目标，回退到实时生成
+                    this.targetNumber = this.expressionGenerator.generateTargetNumber();
+                }
+            } else {
+                // 使用实时生成
+                if (!this.expressionGenerator) {
+                    throw new Error('表达式生成器未初始化');
+                }
+                
+                if (typeof this.expressionGenerator.generateTargetNumber !== 'function') {
+                    throw new Error('表达式生成器缺少generateTargetNumber方法');
+                }
+                
+                this.targetNumber = this.expressionGenerator.generateTargetNumber();
             }
-            
-            if (typeof this.expressionGenerator.generateTargetNumber !== 'function') {
-                throw new Error('表达式生成器缺少generateTargetNumber方法');
-            }
-            
-            this.targetNumber = this.expressionGenerator.generateTargetNumber();
             
             if (typeof this.targetNumber !== 'number' || isNaN(this.targetNumber)) {
                 throw new Error(`生成的目标数字无效: ${this.targetNumber}`);
@@ -1784,9 +1957,22 @@ class MathRainGame {
      * 更新目标数字
      */
     updateTargetNumber(currentTime) {
+        const timeUntilChange = this.nextTargetChangeTime - currentTime;
+        
+        // 检查是否需要显示变化警告
+        if (timeUntilChange <= this.config.targetChangeWarningTime && timeUntilChange > 0) {
+            if (!this.targetChangeWarning) {
+                this.showTargetChangeWarning();
+                this.targetChangeWarning = true;
+            }
+        }
+        
+        // 检查是否需要变化目标数字
         if (currentTime >= this.nextTargetChangeTime) {
             this.generateNewTarget();
             this.nextTargetChangeTime = currentTime + this.config.targetChangeInterval;
+            this.targetChangeWarning = false;
+            this.hideTargetChangeWarning();
         }
     }
 
@@ -1797,6 +1983,26 @@ class MathRainGame {
         const targetElement = this.getCachedElement('target-number');
         if (targetElement) {
             targetElement.textContent = this.targetNumber;
+        }
+    }
+    
+    /**
+     * 显示目标变化警告
+     */
+    showTargetChangeWarning() {
+        const targetNumber = this.getCachedElement('target-number');
+        if (targetNumber) {
+            targetNumber.classList.add('target-changing-warning');
+        }
+    }
+    
+    /**
+     * 隐藏目标变化警告
+     */
+    hideTargetChangeWarning() {
+        const targetNumber = this.getCachedElement('target-number');
+        if (targetNumber) {
+            targetNumber.classList.remove('target-changing-warning');
         }
     }
 
@@ -1903,6 +2109,8 @@ class MathRainGame {
                 timeElement.textContent = newTimeText;
             }
         }
+        
+
     }
 
     /**
@@ -2195,14 +2403,41 @@ class MathRainGame {
     }
 }
 
+// ES模块导出
+export default MathRainGame;
+
+// 兼容性导出（用于非模块环境）
+if (typeof window !== 'undefined') {
+    window.MathRainGame = MathRainGame;
+}
+
 // 确保DOM加载完成后再初始化
-function createGameInstance() {
-    window.game = MathRainGame.getInstance();
+async function createGameInstance() {
+    try {
+        if (window.__mathRainInitInProgress || window.__mathRainInitialized) {
+            return;
+        }
+        window.__mathRainInitInProgress = true;
+        window.game = MathRainGame.getInstance();
+        await window.game.initializeAsync();
+        window.__mathRainInitialized = true;
+        console.log('MathRainGame 初始化完成');
+    } catch (error) {
+        console.error('游戏初始化失败:', error);
+    } finally {
+        window.__mathRainInitInProgress = false;
+    }
 }
 
 // 确保DOM加载完成后再初始化
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', createGameInstance);
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!window.__mathRainInitialized && !window.__mathRainInitInProgress) {
+            createGameInstance();
+        }
+    }, { once: true });
 } else {
-    createGameInstance();
+    if (!window.__mathRainInitialized && !window.__mathRainInitInProgress) {
+        createGameInstance();
+    }
 }

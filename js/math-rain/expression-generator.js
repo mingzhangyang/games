@@ -734,9 +734,134 @@ class ExpressionGenerator {
     }
 }
 
-// Export for both Node.js and browser environments
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ExpressionGenerator;
-} else {
+// 在类上新增静态定向生成功能
+ExpressionGenerator.generateExpressionForTarget = function(target, opts = {}) {
+    const start = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    const now = () => ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now());
+
+    const {
+        difficulty,
+        operators,
+        numberRange,
+        maxOperands,
+        allowNegative,
+        allowDecimal, // 与 allowDecimals 兼容的别名
+        allowDecimals,
+        attemptBudget = 200,
+        timeBudgetMs = 15,
+        approxDelta = 0,
+        operatorPriority,
+        debug = false
+    } = opts || {};
+
+    const gen = new ExpressionGenerator();
+
+    // 备份并应用临时配置
+    const originalLevel = gen.difficulty;
+    const originalCfg = { ...gen.getCurrentConfig() };
+
+    const restore = () => {
+        try {
+            gen.setDifficulty(originalLevel);
+            Object.assign(gen.getCurrentConfig(), originalCfg);
+        } catch (_) { /* noop */ }
+    };
+
+    try {
+        if (typeof difficulty === 'number') gen.setDifficulty(difficulty);
+        const cfg = gen.getCurrentConfig();
+
+        if (numberRange && typeof numberRange.min === 'number' && typeof numberRange.max === 'number') {
+            cfg.numberRange = { min: numberRange.min, max: numberRange.max };
+        }
+        if (typeof maxOperands === 'number') cfg.maxOperands = Math.max(2, Math.min(5, maxOperands));
+        if (typeof allowNegative === 'boolean') cfg.allowNegative = allowNegative;
+        const allowDec = (typeof allowDecimals === 'boolean') ? allowDecimals : (typeof allowDecimal === 'boolean' ? allowDecimal : undefined);
+        if (typeof allowDec === 'boolean') cfg.allowDecimals = allowDec;
+        if (Array.isArray(operators) && operators.length > 0) cfg.operators = [...operators];
+
+        // 将 maxOperands 粗略映射到 complexity
+        if (typeof cfg.maxOperands === 'number') {
+            cfg.complexity = cfg.maxOperands <= 2 ? 1 : (cfg.maxOperands === 3 ? 2 : 3);
+        }
+
+        const defaultPriority = ['+', '-', '×', '÷', '^2', '√'];
+        const prioritized = Array.isArray(operatorPriority) && operatorPriority.length ? operatorPriority : defaultPriority;
+
+        const tryLayers = ['simple', 'double', 'complex'];
+        let attempts = 0;
+        let best = null;
+        let bestErr = Infinity;
+
+        const evalErr = (exprObj) => {
+            if (!exprObj || typeof exprObj.result !== 'number' || !isFinite(exprObj.result)) return Infinity;
+            return Math.abs(exprObj.result - target);
+        };
+
+        const make = (layer, op) => {
+            if (layer === 'simple') {
+                // 尝试按指定运算符生成简单表达式。若失败，退回默认简单表达式。
+                if (op) {
+                    const byOp = gen.generateSimpleExpressionForValue(target, op);
+                    if (byOp) return byOp;
+                }
+                return gen.generateSimpleExpression(target);
+            }
+            if (layer === 'double') return gen.generateDoubleExpression(target);
+            return gen.generateComplexExpression(target);
+        };
+
+        outer: while (attempts < attemptBudget && (now() - start) <= timeBudgetMs) {
+            for (const layer of tryLayers) {
+                for (const op of prioritized) {
+                    attempts++;
+                    const expr = make(layer, op);
+                    if (!expr) continue;
+                    const err = evalErr(expr);
+                    if (err === 0) {
+                        expr.meta = { target, layer, operatorTried: op, attempts, elapsedMs: now() - start };
+                        best = expr;
+                        bestErr = 0;
+                        break outer;
+                    }
+                    if (approxDelta > 0 && err <= approxDelta) {
+                        expr.meta = { target, layer, operatorTried: op, attempts, elapsedMs: now() - start, approxError: err };
+                        best = expr;
+                        bestErr = err;
+                        break outer;
+                    }
+                    if (err < bestErr) {
+                        best = expr;
+                        bestErr = err;
+                        best.meta = { target, layer, operatorTried: op, attempts, elapsedMs: now() - start, approxError: err };
+                    }
+                    if (attempts >= attemptBudget || (now() - start) > timeBudgetMs) break;
+                }
+                if (attempts >= attemptBudget || (now() - start) > timeBudgetMs) break;
+            }
+        }
+
+        if (debug) {
+            const elapsed = now() - start;
+            // eslint-disable-next-line no-console
+            console.debug('[ExpressionGenerator.generateExpressionForTarget] target=%s attempts=%s elapsed=%sms bestErr=%s', target, attempts, elapsed, bestErr);
+        }
+
+        return best || null;
+    } finally {
+        restore();
+    }
+};
+
+// 命名导出别名，指向静态方法
+export const generateExpressionForTarget = ExpressionGenerator.generateExpressionForTarget;
+
+// Export for both Node.js and browser environments// ES模块导出
+export default ExpressionGenerator;
+
+// 兼容性导出（用于非模块环境）
+if (typeof window !== 'undefined') {
     window.ExpressionGenerator = ExpressionGenerator;
+    // 浏览器环境下也挂一个便捷函数（可选）
+    window.generateExpressionForTarget = ExpressionGenerator.generateExpressionForTarget;
 }

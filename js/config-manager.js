@@ -265,5 +265,11 @@ class ConfigManager {
     }
 }
 
+// ES模块导出
+export default ConfigManager;
+
 // 全局配置管理器实例
-window.gameConfig = new ConfigManager();
+if (typeof window !== 'undefined') {
+    window.gameConfig = new ConfigManager();
+    window.ConfigManager = ConfigManager;
+}

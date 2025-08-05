@@ -1,14 +1,14 @@
 /* Math Rain Game - 主样式文件 */
 
+/* 导入个性化字体 */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@600;700;800;900&display=swap');
+
 /* 全局重置和基础样式 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-
-/* 导入个性化字体 */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@600;700;800;900&display=swap');
 
 body {
     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -55,7 +55,7 @@ body {
     z-index: 100;
 }
 
-.score-display, .combo-display, .level-display, .time-display, .session-display, .session-target-display {
+.score-display, .combo-display, .level-display, .time-display, .session-display, .session-target-display, .accuracy-display, .session-accuracy-display {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -111,6 +111,15 @@ body {
 
 .session-target-display span:last-child {
     color: #4299e1 !important;
+}
+
+/* 准确率显示样式 */
+.accuracy-display span:last-child {
+    color: #38a169 !important;
+}
+
+.session-accuracy-display span:last-child {
+    color: #38a169 !important;
 }
 
 /* 升级提示样式 */
@@ -303,6 +312,33 @@ body {
     100% {
         transform: scale(1) rotateY(360deg);
         opacity: 1;
+    }
+}
+
+/* 目标变化警告样式 */
+#target-number.target-changing-warning {
+    border-color: #f6e05e !important;
+    animation: targetWarningPulse 0.5s ease-in-out infinite alternate;
+    box-shadow: 
+        0 0 20px rgba(246, 224, 94, 0.6),
+        0 0 40px rgba(246, 224, 94, 0.4),
+        inset 0 2px 0 rgba(246, 224, 94, 0.3) !important;
+}
+
+@keyframes targetWarningPulse {
+    0% {
+        border-color: #f6e05e;
+        box-shadow: 
+            0 0 20px rgba(246, 224, 94, 0.6),
+            0 0 40px rgba(246, 224, 94, 0.4),
+            inset 0 2px 0 rgba(246, 224, 94, 0.3);
+    }
+    100% {
+        border-color: #ecc94b;
+        box-shadow: 
+            0 0 30px rgba(236, 201, 75, 0.8),
+            0 0 60px rgba(236, 201, 75, 0.6),
+            inset 0 2px 0 rgba(236, 201, 75, 0.5);
     }
 }
 

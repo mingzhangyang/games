@@ -476,9 +476,10 @@ class SoundManager {
     }
 }
 
-// 导出供其他模块使用
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = SoundManager;
-} else {
+// ES模块导出
+export default SoundManager;
+
+// 兼容性导出（用于非模块环境）
+if (typeof window !== 'undefined') {
     window.SoundManager = SoundManager;
 }

@@ -32,7 +32,7 @@ class DifficultyManager {
                 fallSpeed: { min: 6000, max: 9000 }, // 毫秒 - 进一步减慢速度
                 spawnRate: { min: 1500, max: 2500 }, // 生成间隔
                 maxSimultaneous: 4, // 同时最大算式数
-                correctRatio: 0.4, // 正确答案比例
+                correctRatio: 0.8, // 正确答案比例 - 从40%提升到80%
                 decoyOffset: { min: 1, max: 3 } // 干扰项偏移范围
             },
             2: { // 初级 (1-20)
@@ -44,7 +44,7 @@ class DifficultyManager {
                 fallSpeed: { min: 5500, max: 8500 }, // 进一步减慢速度
                 spawnRate: { min: 1200, max: 2200 },
                 maxSimultaneous: 4,
-                correctRatio: 0.35,
+                correctRatio: 0.7, // 正确答案比例 - 从35%提升到70%
                 decoyOffset: { min: 1, max: 5 }
             },
             3: { // 中级 (10-50)
@@ -56,7 +56,7 @@ class DifficultyManager {
                 fallSpeed: { min: 5000, max: 8000 }, // 进一步减慢速度
                 spawnRate: { min: 1000, max: 2000 },
                 maxSimultaneous: 5,
-                correctRatio: 0.3,
+                correctRatio: 0.65, // 正确答案比例 - 从30%提升到65%
                 decoyOffset: { min: 2, max: 8 }
             },
             4: { // 高级 (20-100)
@@ -68,7 +68,7 @@ class DifficultyManager {
                 fallSpeed: { min: 4500, max: 7500 }, // 进一步减慢速度
                 spawnRate: { min: 800, max: 1800 },
                 maxSimultaneous: 5,
-                correctRatio: 0.25,
+                correctRatio: 0.6, // 正确答案比例 - 从25%提升到60%
                 decoyOffset: { min: 3, max: 12 }
             },
             5: { // 专家级 (50-500)
@@ -80,7 +80,7 @@ class DifficultyManager {
                 fallSpeed: { min: 4000, max: 7000 }, // 进一步减慢速度
                 spawnRate: { min: 600, max: 1500 },
                 maxSimultaneous: 5,
-                correctRatio: 0.2,
+                correctRatio: 0.55, // 正确答案比例 - 从20%提升到55%
                 decoyOffset: { min: 5, max: 20 }
             },
             6: { // 大师级 (100-2000)
@@ -92,7 +92,7 @@ class DifficultyManager {
                 fallSpeed: { min: 3500, max: 6500 }, // 进一步减慢速度
                 spawnRate: { min: 500, max: 1200 },
                 maxSimultaneous: 5,
-                correctRatio: 0.15,
+                correctRatio: 0.5, // 正确答案比例 - 从15%提升到50%
                 decoyOffset: { min: 10, max: 50 }
             }
         };
@@ -473,9 +473,10 @@ class DifficultyManager {
     }
 }
 
-// 导出供其他模块使用
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = DifficultyManager;
-} else {
+// ES模块导出
+export default DifficultyManager;
+
+// 兼容性导出（用于非模块环境）
+if (typeof window !== 'undefined') {
     window.DifficultyManager = DifficultyManager;
 }

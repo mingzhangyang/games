@@ -122,7 +122,20 @@ async function fetchAndDisplayGlobalScores() {
     loadingElement.textContent = TEXT.loadingScores;
     
     try {
-        const response = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        
+        const response = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
+            signal: controller.signal,
+            mode: 'cors'
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data && data.length > 0) {
@@ -143,8 +156,46 @@ async function fetchAndDisplayGlobalScores() {
             listElement.innerHTML = `<div class="no-scores">${TEXT.noScores}</div>`;
         }
     } catch (error) {
-        console.error('Failed to fetch global scores:', error);
-        listElement.innerHTML = `<div class="no-scores">${TEXT.failedToLoad}</div>`;
+        console.log('Global scores service unavailable:', error.message);
+        // 显示本地分数作为备选
+        showLocalScores(listElement, loadingElement);
+    }
+}
+
+function showLocalScores(listElement, loadingElement) {
+    try {
+        const localScores = JSON.parse(localStorage.getItem('tetris_scores') || '[]');
+        if (localScores.length > 0) {
+            const sortedScores = localScores.sort((a, b) => b.score - a.score).slice(0, 5);
+            listElement.innerHTML = '';
+            
+            sortedScores.forEach((score, index) => {
+                const scoreItem = document.createElement('div');
+                scoreItem.className = 'score-item';
+                scoreItem.innerHTML = `
+                    <span class="score-rank">#${index + 1}</span>
+                    <span class="score-name">${currentLang === 'zh' ? '本地记录' : 'Local Record'}</span>
+                    <span class="score-value">${score.score.toLocaleString()}</span>
+                `;
+                listElement.appendChild(scoreItem);
+            });
+            
+            if (loadingElement) {
+                loadingElement.textContent = currentLang === 'zh' ? '显示本地分数' : 'Showing local scores';
+            }
+        } else {
+            if (loadingElement) {
+                loadingElement.textContent = TEXT.noScores;
+            } else {
+                listElement.innerHTML = `<div class="no-scores">${TEXT.noScores}</div>`;
+            }
+        }
+    } catch (e) {
+        if (loadingElement) {
+            loadingElement.textContent = TEXT.failedToLoad;
+        } else {
+            listElement.innerHTML = `<div class="no-scores">${TEXT.failedToLoad}</div>`;
+        }
     }
 }
 
@@ -822,28 +873,65 @@ class Tetris {
         localScores.push({ score: this.score, time: Date.now() });
         localScores = localScores.slice(-20); // 只保留最近20条
         localStorage.setItem('tetris_scores', JSON.stringify(localScores));
+        
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
+            
             await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: username, score: this.score })
+                body: JSON.stringify({ name: username, score: this.score }),
+                signal: controller.signal,
+                mode: 'cors'
             });
+            
+            clearTimeout(timeoutId);
             // 更新全站最高分显示
             fetchAndDisplayGlobalScores();
-        } catch (e) {}
+        } catch (e) {
+            console.log('Score upload failed, saved locally only:', e.message);
+            // 即使上传失败，也更新显示（会显示本地分数）
+            fetchAndDisplayGlobalScores();
+        }
         this.showLeaderboard();
     }
 
     async showLeaderboard() {
         // 获取排行榜并显示在 Game Over overlay
         let leaderboard = [];
+        let isGlobalScores = false;
+        
         try {
-            const res = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore');
-            leaderboard = await res.json();
-        } catch (e) {}
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
+            
+            const res = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
+                signal: controller.signal,
+                mode: 'cors'
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (res.ok) {
+                leaderboard = await res.json();
+                isGlobalScores = true;
+            } else {
+                throw new Error(`HTTP ${res.status}`);
+            }
+        } catch (e) {
+            console.log('Using local scores for leaderboard:', e.message);
+            // 使用本地分数
+            const localScores = JSON.parse(localStorage.getItem('tetris_scores') || '[]');
+            leaderboard = localScores.sort((a, b) => b.score - a.score).slice(0, 5)
+                .map(score => ({ name: currentLang === 'zh' ? '本地记录' : 'Local', score: score.score }));
+        }
+        
         let html = '<span id="finalScore">' + this.score + '</span>';
         html += '<div style="margin-top:18px;text-align:left;font-size:18px;line-height:1.5;">';
-        html += currentLang === 'zh' ? '全站最高分：' : 'Global High Scores:';
+        html += isGlobalScores ? 
+            (currentLang === 'zh' ? '全站最高分：' : 'Global High Scores:') :
+            (currentLang === 'zh' ? '本地最高分：' : 'Local High Scores:');
         html += '<ol style="margin:8px 0 0 18px;padding:0;">';
         leaderboard.slice(0, 5).forEach((item, i) => {
             html += `<li>${currentLang === 'zh' ? '用户名' : 'Username'}: <b>${item.name}</b> ${currentLang === 'zh' ? '分数' : 'Score'}: <b>${item.score}</b></li>`;

@@ -1,3 +1,5 @@
+import ExpressionGenerator, { generateExpressionForTarget as genForTarget } from "./expression-generator.js";
+
 /**
  * 题库管理器
  * 负责运行时的题目选择、防重复、权重调整等逻辑
@@ -14,6 +16,7 @@ class QuestionBankManager {
             correctAnswers: 0,
             poolUsage: new Map()
         };
+        this.__emptyPoolLog = { lastTs: 0, intervalMs: 1000 }; // 空池日志限频状态
         
         // 防重复配置
         this.antiRepeatConfig = {
@@ -194,10 +197,32 @@ class QuestionBankManager {
 
         if (availableQuestions.length === 0) {
             // 如果没有可用题目，放宽限制
-            console.warn(`题目池 ${poolName} 没有可用题目，放宽限制`);
+            this.__logEmptyPoolOnce(`题目池 ${poolName} 没有可用题目，放宽限制`);
             const fallbackQuestions = poolData.questions.filter(q => 
                 !this.recentQuestions.has(q.id)
             );
+            // 新增：尝试根据目标定向生成
+            const targetHint = this.__inferTargetHint(poolData, poolName);
+            if (typeof targetHint === "number") {
+                const expr = ExpressionGenerator.generateExpressionForTarget(targetHint, {
+                    attemptBudget: 150,
+                    timeBudgetMs: 15,
+                    approxDelta: 0
+                });
+                if (expr) {
+                    return {
+                        id: `gen_${poolName}_${Date.now()}`,
+                        type: "generated",
+                        pool: poolName,
+                        target: expr.result,
+                        expression: expr.expression,
+                        result: expr.result,
+                        numbers: expr.numbers,
+                        operators: expr.operators,
+                        meta: { via: "generateExpressionForTarget", poolEmpty: true }
+                    };
+                }
+            }
             
             if (fallbackQuestions.length === 0) {
                 // 最后的回退：清空最近记录
@@ -425,11 +450,28 @@ class QuestionBankManager {
         
         return preloaded;
     }
+    __logEmptyPoolOnce(message) {
+        const now = Date.now();
+        if (now - this.__emptyPoolLog.lastTs > this.__emptyPoolLog.intervalMs) {
+            console.warn(message);
+            this.__emptyPoolLog.lastTs = now;
+        }
+    }
+
+    __inferTargetHint(poolData, poolName) {
+        const qs = poolData && Array.isArray(poolData.questions) ? poolData.questions : [];
+        if (!qs.length) return null;
+        const sorted = qs.map(q => q.result).filter(v => typeof v === "number").sort((a,b)=>a-b);
+        if (!sorted.length) return null;
+        const mid = sorted[Math.floor(sorted.length / 2)];
+        return mid;
+    }
 }
 
-// 导出模块
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = QuestionBankManager;
-} else {
+// ES模块导出
+export default QuestionBankManager;
+
+// 兼容性导出（用于非模块环境）
+if (typeof window !== 'undefined') {
     window.QuestionBankManager = QuestionBankManager;
 }

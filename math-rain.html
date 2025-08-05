@@ -15,7 +15,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <title id="page-title">Math Rain - 数字雨</title>
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23667eea'/><text x='50%' y='54%' text-anchor='middle' font-size='28' fill='white' font-family='Segoe UI,Arial' dy='.3em'>🧮</text></svg>">
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='28' fill='white' font-family='Segoe UI,Arial' dy='.3em'%3E%F0%9F%A7%AE%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/math-rain/math-rain.css">
 </head>
 
@@ -339,18 +339,66 @@
     </div>
 
     <!-- 加载脚本 -->
-    <script src="js/performance-monitor.js"></script>
+    <script type="module" src="./js/math-rain-main.js"></script>
+    <script>
+        console.log('All Math Rain scripts loaded successfully');
+        
+        // 添加全局错误处理
+        window.addEventListener('error', (event) => {
+            console.error('Math Rain 全局错误:', event.error);
+            console.error('错误详情:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno
+            });
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Math Rain 未处理的Promise拒绝:', event.reason);
+        });
+        
+        // 等待模块加载完成后检查类
+        function waitForModulesAndCheck() {
+            if (!window.mathRainModulesLoaded) {
+                console.log('等待模块加载完成...');
+                setTimeout(waitForModulesAndCheck, 100);
+                return;
+            }
+            
+            // 模块已加载，检查类是否存在
+            const requiredClasses = [
+                'ExpressionGenerator',
+                'QuestionBankManager', 
+                'AnimationEngine',
+                'DifficultyManager',
+                'SoundManager',
+                'MathRainGame'
+            ];
+            
+            const missingClasses = requiredClasses.filter(className => !window[className]);
+            
+            if (missingClasses.length > 0) {
+                console.error('Math Rain 缺少必要的类:', missingClasses);
+            } else {
+                console.log('Math Rain 所有必要的类都已加载');
+            }
+        }
+        
+        // 开始检查
+        setTimeout(waitForModulesAndCheck, 50);
+    </script>
 
-    <script src="js/config-manager.js"></script>
-    <script src="js/math-rain/expression-generator.js"></script>
-    <script src="js/math-rain/animation-engine.js"></script>
-    <script src="js/math-rain/particle-effects.js"></script>
-    <script src="js/math-rain/sound-manager.js"></script>
-    <script src="js/math-rain/difficulty-manager.js"></script>
-    <script src="js/math-rain/math-rain-core.js"></script>
+    <script type="module" src="./js/math-rain/main-inline-migrated.js"></script>
+
+    <!-- 迁移说明：原内联脚本（语言、多语言应用、设置监听与持久化、初始化入口）已拆分为 ESM 模块放置于 js/math-rain/main-inline-migrated.js，确保可维护性与可缓存性。若需回退，可改回此前内联脚本。 -->
 
     <script>
-        // 多语言支持
+        /* 占位：保留最小降级路径，若外部模块加载失败可在此提示或兜底。可按需删除。 */
+    </script>
+
+    <!-- 以下原始内联脚本起始标记（被替换为外链模块）。如需参考，请查看新文件 js/math-rain/main-inline-migrated.js -->
+    <!-- 原内联脚本开头: 语言文本 -->
         const LANGUAGES = {
             en: {
                 pageTitle: 'Math Rain - Number Drop Game',
@@ -441,7 +489,28 @@
                     'Take breaks to avoid visual fatigue'
                 ],
                 helpClose: 'Back to Game',
-                helpStart: 'Start Game'
+                helpStart: 'Start Game',
+                // Error messages
+                gameError: 'Game error occurred, automatically paused.',
+                gameLoadError: 'Game failed to load, please refresh the page',
+                componentInitError: 'Component initialization failed',
+                canvasNotFound: 'Cannot find game-canvas element',
+                questionBankLoadError: 'Question bank loading failed',
+                questionBankFallback: 'Fallback to real-time generation mode',
+                gameInitError: 'Game initialization failed',
+                confirmButton: 'OK',
+                // Session system
+                sessionTimeLabel: 'Time Remaining',
+                sessionTargetLabel: 'Target Score',
+                levelUpIndicator: '🎯 Level Up Available!',
+                sessionCompleteTitle: '🎯 Session Complete',
+                sessionContinue: 'Continue to Next Level',
+                sessionRetry: 'Retry Current Level',
+                sessionMenu: 'Return to Menu',
+                sessionDuration: 'Session Duration',
+                sessionLevelUp: 'Level Up Achieved',
+                yes: 'Yes',
+                no: 'No'
             },
             zh: {
                 pageTitle: 'Math Rain - 数字雨',
@@ -532,7 +601,28 @@
                     '适当休息，避免视觉疲劳影响判断'
                 ],
                 helpClose: '返回游戏',
-                helpStart: '开始游戏'
+                helpStart: '开始游戏',
+                // 错误消息
+                gameError: '游戏出现错误，已自动暂停。',
+                gameLoadError: '游戏加载失败，请刷新页面重试',
+                componentInitError: '组件初始化失败',
+                canvasNotFound: '找不到game-canvas元素',
+                questionBankLoadError: '题库加载失败',
+                questionBankFallback: '回退到实时生成模式',
+                gameInitError: '游戏初始化失败',
+                confirmButton: '确定',
+                // 会话系统
+                sessionTimeLabel: '剩余时间',
+                sessionTargetLabel: '目标分数',
+                levelUpIndicator: '🎯 可升级!',
+                sessionCompleteTitle: '🎯 会话完成',
+                sessionContinue: '继续下一关',
+                sessionRetry: '重试本关',
+                sessionMenu: '返回菜单',
+                sessionDuration: '会话时长',
+                sessionLevelUp: '升级达成',
+                yes: '是',
+                no: '否'
             }
         };
 
@@ -561,6 +651,16 @@
             document.getElementById('time-label').textContent = texts.time;
             document.getElementById('target-label').textContent = texts.targetLabel;
             document.getElementById('target-hint').textContent = texts.targetHint;
+            
+            // 会话系统UI
+            const sessionTimeLabel = document.getElementById('session-time-label');
+            if (sessionTimeLabel) sessionTimeLabel.textContent = texts.sessionTimeLabel;
+            
+            const sessionTargetLabel = document.getElementById('session-target-label');
+            if (sessionTargetLabel) sessionTargetLabel.textContent = texts.sessionTargetLabel;
+            
+            const levelUpIndicator = document.querySelector('#level-up-indicator span');
+            if (levelUpIndicator) levelUpIndicator.textContent = texts.levelUpIndicator;
 
             // 控制按钮
             document.getElementById('pause-btn').textContent = texts.pause;
@@ -621,6 +721,28 @@
 
             const homeBtn = document.getElementById('home-btn');
             if (homeBtn) homeBtn.textContent = texts.home;
+            
+            // 会话完成界面
+            const sessionCompleteTitle = document.getElementById('session-complete-title');
+            if (sessionCompleteTitle) sessionCompleteTitle.textContent = texts.sessionCompleteTitle;
+            
+            const sessionContinueBtn = document.getElementById('session-continue-btn');
+            if (sessionContinueBtn) sessionContinueBtn.textContent = texts.sessionContinue;
+            
+            const sessionRetryBtn = document.getElementById('session-retry-btn');
+            if (sessionRetryBtn) sessionRetryBtn.textContent = texts.sessionRetry;
+            
+            const sessionMenuBtn = document.getElementById('session-menu-btn');
+            if (sessionMenuBtn) sessionMenuBtn.textContent = texts.sessionMenu;
+            
+            // 会话统计标签
+            const sessionStatLabels = document.querySelectorAll('#session-complete-screen .stat-label');
+            const sessionStatTexts = [texts.finalScore, texts.sessionTargetLabel, texts.accuracy, texts.maxCombo, texts.sessionDuration, texts.sessionLevelUp];
+            sessionStatLabels.forEach((label, index) => {
+                if (sessionStatTexts[index]) {
+                    label.textContent = sessionStatTexts[index];
+                }
+            });
 
             // 设置界面
             const settingsTitle = document.querySelector('#settings-screen h2');
@@ -728,157 +850,10 @@
             // 设置HTML语言属性
             document.getElementById('html-root').setAttribute('lang', lang);
         }
-
-        // 页面加载时应用语言
-        document.addEventListener('DOMContentLoaded', function () {
-            const language = loadLanguagePreference();
-            currentLanguage = language;
-            applyLanguage(language);
-
-            // 更新语言切换按钮
-            const toggleBtn = document.getElementById('language-toggle');
-            if (toggleBtn) {
-                toggleBtn.textContent = currentLanguage === 'zh' ? '🌐 EN' : '🌐 中文';
-            }
-
-            // 初始化游戏
-            if (typeof MathRainGame !== 'undefined') {
-                window.game = new MathRainGame();
-                
-                // 设置事件监听器
-                setupSettingsListeners();
-            }
-        });
-
-        // 当前语言
-        let currentLanguage = 'zh';
-
-        // 切换语言
-        function toggleLanguage() {
-            currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
-            applyLanguage(currentLanguage);
-
-            // 更新语言切换按钮
-            const toggleBtn = document.getElementById('language-toggle');
-            if (toggleBtn) {
-                toggleBtn.textContent = currentLanguage === 'zh' ? '🌐 EN' : '🌐 中文';
-            }
-
-            // 保存语言偏好
-            localStorage.setItem('mathrain_language', currentLanguage);
-        }
-
-        // 加载语言偏好
-        function loadLanguagePreference() {
-            const saved = localStorage.getItem('mathrain_language');
-            if (saved && LANGUAGES[saved]) {
-                currentLanguage = saved;
-            } else {
-                currentLanguage = detectLanguage();
-            }
-            return currentLanguage;
-        }
-
-        // 设置事件监听器
-        function setupSettingsListeners() {
-            // 音效音量设置
-            const soundVolumeSlider = document.getElementById('sound-volume');
-            const soundVolumeValue = document.getElementById('sound-volume-value');
-            if (soundVolumeSlider && soundVolumeValue) {
-                soundVolumeSlider.addEventListener('input', (e) => {
-                    const volume = e.target.value;
-                    soundVolumeValue.textContent = volume + '%';
-                    if (window.game && window.game.soundManager) {
-                        window.game.soundManager.setSoundVolume(volume / 100);
-                    }
-                    localStorage.setItem('mathrain_sound_volume', volume);
-                });
-                
-                // 加载保存的设置
-                const savedVolume = localStorage.getItem('mathrain_sound_volume');
-                if (savedVolume !== null) {
-                    soundVolumeSlider.value = savedVolume;
-                    soundVolumeValue.textContent = savedVolume + '%';
-                    if (window.game && window.game.soundManager) {
-                        window.game.soundManager.setSoundVolume(savedVolume / 100);
-                    }
-                }
-            }
-            
-            // 背景音乐音量设置
-            const musicVolumeSlider = document.getElementById('music-volume');
-            const musicVolumeValue = document.getElementById('music-volume-value');
-            if (musicVolumeSlider && musicVolumeValue) {
-                musicVolumeSlider.addEventListener('input', (e) => {
-                    const volume = e.target.value;
-                    musicVolumeValue.textContent = volume + '%';
-                    if (window.game && window.game.soundManager) {
-                        window.game.soundManager.setMusicVolume(volume / 100);
-                    }
-                    localStorage.setItem('mathrain_music_volume', volume);
-                });
-                
-                // 加载保存的设置
-                const savedMusicVolume = localStorage.getItem('mathrain_music_volume');
-                if (savedMusicVolume !== null) {
-                    musicVolumeSlider.value = savedMusicVolume;
-                    musicVolumeValue.textContent = savedMusicVolume + '%';
-                    if (window.game && window.game.soundManager) {
-                        window.game.soundManager.setMusicVolume(savedMusicVolume / 100);
-                    }
-                }
-            }
-            
-            // 粒子效果设置
-            const particleEffectsCheckbox = document.getElementById('particle-effects');
-            if (particleEffectsCheckbox) {
-                particleEffectsCheckbox.addEventListener('change', (e) => {
-                    if (window.game) {
-                        window.game.config.enableParticleEffects = e.target.checked;
-                        localStorage.setItem('mathrain_particle_effects', e.target.checked);
-                    }
-                });
-                
-                // 加载保存的设置
-                const savedParticles = localStorage.getItem('mathrain_particle_effects');
-                if (savedParticles !== null) {
-                    particleEffectsCheckbox.checked = savedParticles === 'true';
-                    if (window.game) {
-                        window.game.config.enableParticleEffects = particleEffectsCheckbox.checked;
-                    }
-                }
-            }
-            
-            // 屏幕震动设置
-            const screenShakeCheckbox = document.getElementById('screen-shake');
-            if (screenShakeCheckbox) {
-                screenShakeCheckbox.addEventListener('change', (e) => {
-                    if (window.game) {
-                        window.game.config.enableScreenShake = e.target.checked;
-                        localStorage.setItem('mathrain_screen_shake', e.target.checked);
-                    }
-                });
-                
-                // 加载保存的设置
-                const savedShake = localStorage.getItem('mathrain_screen_shake');
-                if (savedShake !== null) {
-                    screenShakeCheckbox.checked = savedShake === 'true';
-                    if (window.game) {
-                        window.game.config.enableScreenShake = screenShakeCheckbox.checked;
-                    }
-                }
-            }
-            
-
-            
-            // 语言切换按钮
-            const languageToggle = document.getElementById('language-toggle');
-            if (languageToggle) {
-                languageToggle.addEventListener('click', toggleLanguage);
-            }
-
-        }
     </script>
-</body>
+
+    <!-- 用外部模块替换内联逻辑 -->
+    <script type="module" src="./js/math-rain/main-inline-remaining.js"></script>
+  </body>
 
 </html>
