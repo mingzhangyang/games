@@ -75,6 +75,22 @@
             <button id="theme-btn" class="control-btn">🎨 主题</button>
             <button id="language-toggle" class="control-btn" onclick="toggleLanguage()">🌐 EN</button>
         </div>
+
+        <!-- 工具栏（道具/技能） -->
+        <div id="tool-bar" class="tool-bar">
+            <div class="tool-item">
+                <button id="freeze-btn" class="tool-btn" title="时间冻结 (快捷键 F)">❄️ Freeze</button>
+                <span class="tool-count" id="freeze-count">x0</span>
+            </div>
+            <div class="tool-item">
+                <button id="bomb-btn" class="tool-btn" title="清屏 (快捷键 B)">💣 Bomb</button>
+                <span class="tool-count" id="bomb-count">x0</span>
+            </div>
+            <div class="tool-item coins">
+                <span class="coins-icon">🪙</span>
+                <span class="coins-value" id="coins-value">0</span>
+            </div>
+        </div>
     </div>
 
     <!-- 游戏开始界面 -->
@@ -226,24 +242,46 @@
                 <h3>🎮 操作方法</h3>
                 <div class="controls-guide">
                     <div class="control-item">
-                        <span class="control-icon">👆</span>
+                        <span class="control-icon">❄️</span>
                         <div class="control-desc">
-                            <strong>点击/触摸</strong>
-                            <p>点击或触摸算式来选择答案</p>
+                            <strong>Freeze 冻结 / Freeze</strong>
+                            <p>初始数量2个，持续4000毫秒（4秒）；快捷键：F。/ Initial count 2, duration 4000ms (4s); Hotkey: F.</p>
                         </div>
                     </div>
                     <div class="control-item">
-                        <span class="control-icon">⏸️</span>
+                        <span class="control-icon">💣</span>
                         <div class="control-desc">
-                            <strong>暂停游戏</strong>
-                            <p>点击暂停按钮或按空格键暂停</p>
+                            <strong>Bomb 炸弹 / Bomb</strong>
+                            <p>初始数量1个；快捷键：B。/ Initial count 1; Hotkey: B.</p>
                         </div>
                     </div>
                     <div class="control-item">
-                        <span class="control-icon">⚙️</span>
+                        <span class="control-icon">🪙</span>
                         <div class="control-desc">
-                            <strong>游戏设置</strong>
-                            <p>调整音效、特效等游戏选项</p>
+                            <strong>评级—金币映射 / Rank to Coins</strong>
+                            <p>S=50，A=30，B=20，C=10，D=5。/ S=50, A=30, B=20, C=10, D=5.</p>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-icon">⌨️</span>
+                        <div class="control-desc">
+                            <strong>快捷键 / Hotkeys</strong>
+                            <p>当前采用 F（Freeze）/ B（Bomb）。/ Current: F (Freeze) / B (Bomb).</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 追加：玩法参数与说明（与上方一致，便于集中查看） -->
+                <div class="controls-guide">
+                    <div class="control-item">
+                        <span class="control-icon">📘</span>
+                        <div class="control-desc">
+                            <strong>玩法参数与说明 / Gameplay Parameters & Notes</strong>
+                            <ul>
+                                <li>Freeze：初始数量 2，持续时长 4000 毫秒 / Freeze: Initial 2, duration 4000 ms</li>
+                                <li>Bomb：初始数量 1 / Bomb: Initial 1</li>
+                                <li>评级—金币：S=50，A=30，B=20，C=10，D=5 / Rank-to-Coins: S=50, A=30, B=20, C=10, D=5</li>
+                                <li>快捷键：F=Freeze，B=Bomb / Hotkeys: F for Freeze, B for Bomb</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -252,6 +290,13 @@
             <div class="help-section">
                 <h3>📊 计分规则</h3>
                 <div class="scoring-guide">
+                    <div class="score-item">
+                        <span class="score-icon">💰</span>
+                        <div class="score-desc">
+                            <strong>评级-金币</strong>
+                            <p>S=50，A=30，B=20，C=10，D=5</p>
+                        </div>
+                    </div>
                     <div class="score-item">
                         <span class="score-icon">✅</span>
                         <div class="score-desc">
@@ -457,6 +502,8 @@
                 helpGoalDesc: 'Click on mathematical expressions that equal the target number to score points. The faster and more accurate you are, the higher your score!',
                 helpControls: '🎮 Controls',
                 helpControlsList: [
+                    'Freeze: Press F to freeze expressions for 4s (default, configurable)',
+                    'Bomb: Press B to clear expressions (default, configurable)',
                     'Mouse: Click on expressions',
                     'Keyboard: Use number keys 0-9 to select expressions',
                     'Touch: Tap expressions on mobile devices',
@@ -465,6 +512,7 @@
                 ],
                 helpScoring: '📊 Scoring Rules',
                 helpScoringList: [
+                    'Rank→Coins: S=50, A=30, B=20, C=10, D=5',
                     'Correct Answer: Base score + combo bonus',
                     'Wrong Answer: Points deducted, more for consecutive errors',
                     'Combo Bonus: Consecutive correct answers give extra points',
@@ -569,6 +617,8 @@
                 helpGoalDesc: '点击结果等于目标数字的数学算式来得分。反应越快、越准确，得分越高！',
                 helpControls: '🎮 操作方法',
                 helpControlsList: [
+                    'Freeze：按 F 冻结算式4秒（可自定义）',
+                    'Bomb：按 B 清屏（可自定义）',
                     '鼠标：点击算式',
                     '键盘：使用数字键0-9选择算式',
                     '触摸：在移动设备上点击算式',
@@ -577,6 +627,7 @@
                 ],
                 helpScoring: '📊 计分规则',
                 helpScoringList: [
+                    '评级→金币：S=50，A=30，B=20，C=10，D=5',
                     '正确答案：基础分数 + 连击加成',
                     '错误答案：扣除分数，连续错误扣分更多',
                     '连击加成：连续正确答案可获得额外分数',

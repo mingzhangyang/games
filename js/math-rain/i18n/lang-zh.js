@@ -32,6 +32,16 @@ export default {
   particleEffects: "粒子效果",
   screenShake: "屏幕震动",
   language: "语言",
+  // 新增：玩法参数与说明
+  docTitle: "玩法参数与说明",
+  paramFreezeTitle: "Freeze 冰冻",
+  paramFreezeDesc: "初始数量与持续时长：freezeCount={freezeCount}，freezeDurationMs={freezeDurationMs} 毫秒。",
+  paramBombTitle: "Bomb 炸弹",
+  paramBombDesc: "初始数量：bombCount={bombCount}。",
+  ratingToGoldTitle: "评级—金币映射",
+  ratingToGoldDesc: "S={sGold}，A={aGold}，B={bGold}，C={cGold}，D={dGold}。",
+  hotkeySchemeTitle: "快捷键方案",
+  hotkeySchemeDesc: "是否采用 F/B，或其它键位：{hotkeyScheme}。",
   // 帮助
   helpTitle: "玩法说明",
   helpHowToPlay: "如何游玩",

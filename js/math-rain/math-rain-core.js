@@ -95,6 +95,24 @@ class MathRainGame {
             // 题库使用标志
             this.useQuestionBank = true;
             
+            // Freeze/Bomb/Coins 功能状态
+            this.freezeCount = 2; // 初始冻结次数
+            this.bombCount = 1; // 初始炸弹次数
+            this.coins = 0; // 金币数量
+            this.freezeActive = false; // 冻结是否激活
+            this.freezeEndTime = 0; // 冻结结束时间
+            this.freezeDuration = 4000; // 冻结持续时间（毫秒）
+            
+            // 评级到金币的映射
+            this.gradeToCoins = {
+                'S': 50,
+                'A': 30,
+                'B': 20,
+                'C': 10,
+                'D': 5,
+                'F': 0
+            };
+            
             // 异步初始化组件（避免与入口重复初始化）
             // this.initializeAsync();
             
@@ -769,6 +787,10 @@ class MathRainGame {
         this.bindButton('session-retry-btn', () => this.retryCurrentLevel());
         this.bindButton('session-menu-btn', () => this.showMainMenu());
         
+        // Freeze/Bomb 按钮
+        this.bindButton('freeze-btn', () => this.useFreeze());
+        this.bindButton('bomb-btn', () => this.useBomb());
+        
         // 设置控件
         this.initializeSettings();
     }
@@ -1138,6 +1160,12 @@ class MathRainGame {
             this.maxErrorRateExceeded = false;
             this.targetChangeWarning = false;
             
+            // 重置道具状态
+            this.freezeCount = 2;
+            this.bombCount = 1;
+            this.freezeActive = false;
+            this.freezeEndTime = 0;
+            
             // 标记需要更新UI
             this.needsUIUpdate = true;
             
@@ -1245,6 +1273,16 @@ class MathRainGame {
      * 更新表达式动画
      */
     updateExpressionAnimations(currentTime) {
+        // 检查冻结状态
+        if (this.freezeActive && currentTime < this.freezeEndTime) {
+            return; // 冻结期间不更新表达式动画
+        }
+        
+        // 如果冻结时间结束，取消冻结状态
+        if (this.freezeActive && currentTime >= this.freezeEndTime) {
+            this.freezeActive = false;
+        }
+        
         for (let i = this.expressions.length - 1; i >= 0; i--) {
             const expr = this.expressions[i];
             if (!expr.animation) continue;
@@ -1727,6 +1765,13 @@ class MathRainGame {
         // 分数飞出动画
         this.createScorePopup(centerX, centerY, `+${totalScore}`);
         
+        // 金币掉落（5%概率）
+        if (Math.random() < 0.05) {
+            const coinBonus = Math.floor(Math.random() * 3) + 1; // 1-3金币
+            this.coins += coinBonus;
+            this.createScorePopup(centerX, centerY + 30, `+${coinBonus} 金币`, '#ffd700');
+        }
+        
         // 移除算式
         this.removeExpression(expression);
         
@@ -1771,6 +1816,13 @@ class MathRainGame {
         // 扣分显示
         if (penalty < 0) {
             this.createScorePopup(centerX, centerY, `${penalty}`, '#e53e3e');
+        }
+        
+        // 金币扣除（10%概率）
+        if (Math.random() < 0.1 && this.coins > 0) {
+            const coinPenalty = Math.min(this.coins, Math.floor(Math.random() * 2) + 1); // 扣除1-2金币，但不超过现有金币
+            this.coins -= coinPenalty;
+            this.createScorePopup(centerX, centerY + 30, `-${coinPenalty} 金币`, '#e53e3e');
         }
         
         // 屏幕震动效果
@@ -2110,6 +2162,48 @@ class MathRainGame {
             }
         }
         
+        // 更新 Freeze 计数
+        const freezeCountElement = this.getCachedElement('freeze-count');
+        if (freezeCountElement) {
+            const newFreezeText = `x${this.freezeCount}`;
+            if (freezeCountElement.textContent !== newFreezeText) {
+                freezeCountElement.textContent = newFreezeText;
+            }
+        }
+        
+        // 更新 Bomb 计数
+        const bombCountElement = this.getCachedElement('bomb-count');
+        if (bombCountElement) {
+            const newBombText = `x${this.bombCount}`;
+            if (bombCountElement.textContent !== newBombText) {
+                bombCountElement.textContent = newBombText;
+            }
+        }
+        
+        // 更新金币数量
+        const coinsElement = this.getCachedElement('coins-value');
+        if (coinsElement) {
+            const newCoinsText = this.coins.toString();
+            if (coinsElement.textContent !== newCoinsText) {
+                coinsElement.textContent = newCoinsText;
+            }
+        }
+        
+        // 更新按钮状态
+        const freezeBtn = this.getCachedElement('freeze-btn');
+        if (freezeBtn) {
+            freezeBtn.disabled = this.freezeCount <= 0 || this.gameState !== 'playing';
+            if (this.freezeActive) {
+                freezeBtn.classList.add('active');
+            } else {
+                freezeBtn.classList.remove('active');
+            }
+        }
+        
+        const bombBtn = this.getCachedElement('bomb-btn');
+        if (bombBtn) {
+            bombBtn.disabled = this.bombCount <= 0 || this.gameState !== 'playing';
+        }
 
     }
 
@@ -2130,11 +2224,20 @@ class MathRainGame {
         const accuracy = this.totalClicks > 0 ? (this.correctClicks / this.totalClicks * 100) : 0;
         const gameTimeSeconds = Math.floor(this.gameTime / 1000);
         
+        // 计算评级和金币奖励
+        const grade = this.calculateGrade(accuracy);
+        const coinsEarned = this.gradeToCoins[grade] || 0;
+        this.coins += coinsEarned;
+        
         // 更新游戏结束界面
         this.updateElement('final-score', this.score.toLocaleString());
         this.updateElement('max-combo', this.maxCombo);
         this.updateElement('accuracy', accuracy.toFixed(1) + '%');
         this.updateElement('game-time', gameTimeSeconds + 's');
+        
+        // 显示评级和获得的金币
+        this.updateElement('final-grade', grade);
+        this.updateElement('final-coins', `+${coinsEarned}`);
         
         // 显示游戏结束界面
         this.showScreen('game-over-screen');
@@ -2326,6 +2429,63 @@ class MathRainGame {
     }
 
     /**
+     * 使用冻结道具
+     */
+    useFreeze() {
+        if (this.freezeCount <= 0 || this.gameState !== 'playing' || this.freezeActive) {
+            return;
+        }
+        
+        this.freezeCount--;
+        this.freezeActive = true;
+        this.freezeEndTime = Date.now() + this.freezeDuration;
+        
+        // 播放音效
+        this.safePlaySound('freeze');
+        
+        // 屏幕震动效果
+        this.shakeScreen();
+        
+        // 更新UI
+        this.needsUIUpdate = true;
+    }
+    
+    /**
+     * 使用炸弹道具
+     */
+    useBomb() {
+        if (this.bombCount <= 0 || this.gameState !== 'playing') {
+            return;
+        }
+        
+        this.bombCount--;
+        
+        // 清除所有表达式
+        this.clearAllExpressions();
+        
+        // 播放音效
+        this.safePlaySound('bomb');
+        
+        // 屏幕震动效果
+        this.shakeScreen();
+        
+        // 更新UI
+        this.needsUIUpdate = true;
+    }
+    
+    /**
+     * 计算游戏评级
+     */
+    calculateGrade(accuracy) {
+        if (accuracy >= 95) return 'S';
+        if (accuracy >= 90) return 'A';
+        if (accuracy >= 80) return 'B';
+        if (accuracy >= 70) return 'C';
+        if (accuracy >= 60) return 'D';
+        return 'F';
+    }
+    
+    /**
      * 处理窗口大小变化
      */
     handleResize() {
@@ -2353,6 +2513,18 @@ class MathRainGame {
             case 'KeyR':
                 if (this.gameState === 'gameOver') {
                     this.restartGame();
+                }
+                break;
+            case 'KeyF':
+                if (this.gameState === 'playing') {
+                    event.preventDefault();
+                    this.useFreeze();
+                }
+                break;
+            case 'KeyB':
+                if (this.gameState === 'playing') {
+                    event.preventDefault();
+                    this.useBomb();
                 }
                 break;
         }

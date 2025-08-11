@@ -1,10 +1,10 @@
 export default {
   languageName: "English",
   startGame: "Start Game",
-  resumeGame: "Resume Game",
+  resumeGame: "Resume",
   restartGame: "Restart",
   pauseGame: "Pause",
-  quitToMenu: "Back to Menu",
+  quitToMenu: "Quit to Menu",
   settings: "Settings",
   help: "Help",
   gameOver: "Game Over",
@@ -32,18 +32,28 @@ export default {
   particleEffects: "Particle Effects",
   screenShake: "Screen Shake",
   language: "Language",
+  // Added: Gameplay Parameters & Docs
+  docTitle: "Gameplay Parameters & Notes",
+  paramFreezeTitle: "Freeze",
+  paramFreezeDesc: "Initial count and duration: freezeCount={freezeCount}, freezeDurationMs={freezeDurationMs} ms.",
+  paramBombTitle: "Bomb",
+  paramBombDesc: "Initial count: bombCount={bombCount}.",
+  ratingToGoldTitle: "Rank-to-Coins Mapping",
+  ratingToGoldDesc: "S={sGold}, A={aGold}, B={bGold}, C={cGold}, D={dGold}.",
+  hotkeySchemeTitle: "Hotkey Scheme",
+  hotkeySchemeDesc: "Use F/B or other keys: {hotkeyScheme}.",
   // Help
   helpTitle: "How to Play",
-  helpHowToPlay: "How to play",
-  helpGoal: "Goal: Select expressions equal to the target number, press Space to drop and score.",
+  helpHowToPlay: "How to Play",
+  helpGoal: "Goal: Select equations equal to the target number, press Space to drop and score.",
   helpControls: "Controls",
-  clickToSelect: "Click to select",
+  clickToSelect: "Click to select equation",
   spaceToDrop: "Space to drop",
   escToPause: "Esc to pause",
   enterToResume: "Enter to resume",
-  helpTips: "Tip: Consecutive correct answers grant combo bonus. Time your drop wisely.",
+  helpTips: "Tip: Consecutive correct answers build combo multiplier. Time your drops wisely.",
   helpControlsList: [
-    "Click to select",
+    "Click to select equation",
     "Space to drop",
     "Esc to pause",
     "Enter to resume"
@@ -60,4 +70,4 @@ export default {
   playAgain: "Play Again",
   viewStats: "View Stats",
   ok: "OK"
-}
+};
