@@ -504,20 +504,22 @@
 
     <!-- Load Language and Shop Managers -->
     <script type="module">
-        try {
-            // Import language manager
-            const { default: LanguageManager } = await import('./js/math-rain/i18n/language-manager.js');
-            window.languageManager = new LanguageManager();
-            window.languageManager.initialize();
-            
-            // Import shop manager  
-            const { default: ShopManager } = await import('./js/math-rain/shop-manager.js');
-            window.shopManager = new ShopManager();
-            
-            console.log('✅ Language and Shop managers loaded');
-        } catch (error) {
-            console.error('❌ Failed to load Language/Shop managers:', error);
-        }
+        (async () => {
+            try {
+                // Import language manager
+                const { default: LanguageManager } = await import('./js/math-rain/i18n/language-manager.js');
+                window.languageManager = new LanguageManager();
+                window.languageManager.initialize();
+                
+                // Import shop manager  
+                const { default: ShopManager } = await import('./js/math-rain/shop-manager.js');
+                window.shopManager = new ShopManager();
+                
+                console.log('✅ Language and Shop managers loaded');
+            } catch (error) {
+                console.error('❌ Failed to load Language/Shop managers:', error);
+            }
+        })();
     </script>
 
     <!-- Load Core Dependencies -->
