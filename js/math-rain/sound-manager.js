@@ -25,21 +25,21 @@ class SoundManager {
         // 音效配置 - 更优雅清脆的音效
         this.soundConfig = {
             correct: {
-                frequencies: [523.25, 659.25], // C5, E5 和谐的正确提示
-                duration: 0.25,
-                type: 'sine',
-                envelope: { attack: 0.01, decay: 0.05, sustain: 0.15, release: 0.15 }
+                frequencies: [523.25, 659.25, 783.99], // C5, E5, G5 - C Major chord
+                duration: 0.4,
+                type: 'sine', // Changed to sine for a softer, purer tone
+                envelope: { attack: 0.02, decay: 0.1, sustain: 0.1, release: 0.3 } // Longer release for a gentler fade
             },
             incorrect: {
-                frequencies: [185, 196], // F#3, G3 轻柔的错误提示
-                duration: 0.35,
-                type: 'triangle',
-                envelope: { attack: 0.02, decay: 0.08, sustain: 0.15, release: 0.25 }
+                frequencies: [164.81, 155.56], // E3, D#3
+                duration: 0.4,
+                type: 'sawtooth',
+                envelope: { attack: 0.05, decay: 0.2, sustain: 0, release: 0.2 }
             },
             combo: {
-                frequencies: [659.25, 783.99, 987.77], // E5, G5, B5 上升的激励音
+                frequencies: [659.25, 783.99, 987.77, 1318.51], // E5, G5, B5, E6
                 duration: 0.4,
-                type: 'sine',
+                type: 'square',
                 envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.2 }
             },
             targetChange: {
@@ -67,16 +67,16 @@ class SoundManager {
                 envelope: { attack: 0.1, decay: 0.3, sustain: 0.4, release: 0.8 }
             },
             levelUp: {
-                frequencies: [261.63, 329.63, 392, 523.25, 659.25], // C4-E5 胜利琶音
-                duration: 0.9,
-                type: 'sine',
-                envelope: { attack: 0.01, decay: 0.08, sustain: 0.6, release: 0.3 }
+                frequencies: [523.25, 659.25, 783.99, 1046.50], // C5, E5, G5, C6 - Fanfare
+                duration: 1.0,
+                type: 'triangle',
+                envelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.4 }
             },
             click: {
-                frequency: 1046.50, // C6 清脆的点击音
-                duration: 0.08,
-                type: 'sine',
-                envelope: { attack: 0, decay: 0.03, sustain: 0, release: 0.05 }
+                frequency: 1200,
+                duration: 0.06,
+                type: 'triangle',
+                envelope: { attack: 0, decay: 0.02, sustain: 0, release: 0.04 }
             }
         };
         

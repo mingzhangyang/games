@@ -3,8 +3,8 @@
  * Handles multi-language support and UI updates
  */
 
-import { LANGUAGES_EN } from './lang-en.js';
-import { LANGUAGES_ZH } from './lang-zh.js';
+import LANGUAGES_EN from './lang-en.js';
+import LANGUAGES_ZH from './lang-zh.js';
 
 class LanguageManager {
     constructor() {
@@ -174,7 +174,7 @@ class LanguageManager {
         // Buy buttons
         const buyButtons = document.querySelectorAll('.buy-btn');
         buyButtons.forEach(btn => {
-            if (btn) btn.textContent = texts.buyButton;
+            if (btn) btn.textContent = texts.buy;
         });
 
         // Difficulty buttons
@@ -283,12 +283,15 @@ class LanguageManager {
                 return text;
             }
             
-            // Fallback texts
+            // Fallback texts根据语言决定
+            const isEnglish = this.currentLanguage === 'en' ||
+                             (typeof navigator !== 'undefined' && navigator.language && !navigator.language.startsWith('zh'));
+            
             const fallbackTexts = {
-                lifeLost: '生命 -1 (剩余: {{lives}})',
-                comboMessage: '{{count}}x 连击!',
-                coinsEarned: '+{{amount}} 金币',
-                coinsLost: '-{{amount}} 金币'
+                lifeLost: isEnglish ? 'Life -1 (Remaining: {{lives}})' : '生命 -1 (剩余: {{lives}})',
+                comboMessage: isEnglish ? '{{count}}x Combo!' : '{{count}}x 连击!',
+                coinsEarned: isEnglish ? '+{{amount}} Coins' : '+{{amount}} 金币',
+                coinsLost: isEnglish ? '-{{amount}} Coins' : '-{{amount}} 金币'
             };
             
             let text = fallbackTexts[key] || key;

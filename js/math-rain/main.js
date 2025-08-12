@@ -907,6 +907,12 @@ class MathRainGame {
      */
     getLocalizedText(key) {
         try {
+            // 尝试使用全局的多语言函数
+            if (typeof window !== 'undefined' && window.getLocalizedText) {
+                return window.getLocalizedText(key);
+            }
+            
+            // 尝试使用全局LANGUAGES对象
             if (typeof window !== 'undefined' && window.LANGUAGES && window.currentLanguage) {
                 const texts = window.LANGUAGES[window.currentLanguage];
                 if (texts && texts[key]) {
@@ -914,10 +920,15 @@ class MathRainGame {
                 }
             }
             
-            // Fallback to Chinese text
+            // Fallback根据页面语言决定
+            const isEnglish = (typeof window !== 'undefined' && window.currentLanguage === 'en') ||
+                             (typeof navigator !== 'undefined' && navigator.language && !navigator.language.startsWith('zh'));
+            
             const fallbackTexts = {
-                lifeLost: '生命 -1 (剩余: {{lives}})',
-                comboMessage: '{{count}}x 连击!'
+                lifeLost: isEnglish ? 'Life -1 (Remaining: {{lives}})' : '生命 -1 (剩余: {{lives}})',
+                comboMessage: isEnglish ? '{{count}}x Combo!' : '{{count}}x 连击!',
+                coinsEarned: isEnglish ? '+{{amount}} Coins' : '+{{amount}} 金币',
+                coinsLost: isEnglish ? '-{{amount}} Coins' : '-{{amount}} 金币'
             };
             
             return fallbackTexts[key] || key;

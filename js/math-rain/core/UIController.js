@@ -24,6 +24,9 @@ class UIController {
         // Input handling
         this.inputHandlers = new Map();
         
+        // Modal state tracking
+        this.settingsOpenedDuringGame = false;
+        
         this.initialize();
     }
 
@@ -413,6 +416,19 @@ class UIController {
      * Show settings screen
      */
     showSettings() {
+        // Pause game if running
+        if (this.gameStateManager) {
+            const gameState = this.gameStateManager.getState();
+            
+            // Record if settings was opened during game
+            this.settingsOpenedDuringGame = gameState && gameState.gameState === 'playing';
+            
+            // Pause if game is running
+            if (this.settingsOpenedDuringGame) {
+                this.gameStateManager.pauseGame();
+            }
+        }
+        
         this.showScreen('settings-screen');
     }
 
@@ -421,6 +437,23 @@ class UIController {
      */
     hideSettings() {
         this.hideScreen('settings-screen');
+        
+        // Resume game state
+        if (this.gameStateManager) {
+            const gameState = this.gameStateManager.getState();
+            
+            // If settings was opened during game, resume it
+            if (this.settingsOpenedDuringGame && gameState && gameState.gameState === 'paused') {
+                this.gameStateManager.resumeGame();
+                this.settingsOpenedDuringGame = false;
+                return;
+            }
+            
+            // If game is currently running, just hide settings
+            if (gameState && gameState.gameState === 'playing') {
+                return;
+            }
+        }
     }
 
     /**

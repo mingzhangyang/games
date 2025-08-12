@@ -556,6 +556,14 @@
         }).catch(error => {
             console.warn('ParticleSystem failed to load:', error);
         });
+        
+        // Load Mobile Adapter
+        import('./js/math-rain/mobile-adapter.js').then(module => {
+            window.MobileAdapter = module.default;
+            console.log('✅ Mobile Adapter loaded');
+        }).catch(error => {
+            console.warn('Mobile Adapter failed to load:', error);
+        });
     </script>
 
     <!-- 加载重构后的核心游戏逻辑 -->

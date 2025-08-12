@@ -404,19 +404,22 @@ class ErrorHandler {
                 }
             }
             
-            // Default texts
+            // Default texts根据语言决定
+            const isEnglish = (typeof window !== 'undefined' && window.currentLanguage === 'en') ||
+                             (typeof navigator !== 'undefined' && navigator.language && !navigator.language.startsWith('zh'));
+            
             const defaultTexts = {
-                gameError: '游戏出现错误，已自动暂停。',
-                gameLoadError: '游戏加载失败，请刷新页面重试',
-                componentInitError: '组件初始化失败',
-                canvasNotFound: '找不到game-canvas元素',
-                questionBankLoadError: '题库加载失败',
-                questionBankFallback: '回退到实时生成模式',
-                gameInitError: '游戏初始化失败',
-                confirmButton: '确定',
-                networkError: '网络连接错误',
-                performanceWarning: '性能警告',
-                renderingError: '渲染错误'
+                gameError: isEnglish ? 'Game error occurred, automatically paused.' : '游戏出现错误，已自动暂停。',
+                gameLoadError: isEnglish ? 'Game failed to load, please refresh the page.' : '游戏加载失败，请刷新页面重试',
+                componentInitError: isEnglish ? 'Component initialization failed' : '组件初始化失败',
+                canvasNotFound: isEnglish ? 'Cannot find game-canvas element' : '找不到game-canvas元素',
+                questionBankLoadError: isEnglish ? 'Question bank failed to load' : '题库加载失败',
+                questionBankFallback: isEnglish ? 'Fallback to real-time generation mode' : '回退到实时生成模式',
+                gameInitError: isEnglish ? 'Game initialization failed' : '游戏初始化失败',
+                confirmButton: isEnglish ? 'OK' : '确定',
+                networkError: isEnglish ? 'Network connection error' : '网络连接错误',
+                performanceWarning: isEnglish ? 'Performance warning' : '性能警告',
+                renderingError: isEnglish ? 'Rendering error' : '渲染错误'
             };
             
             return defaultTexts[key] || key;
