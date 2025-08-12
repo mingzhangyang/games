@@ -458,7 +458,8 @@ class ParticleSystem {
         });
         
         // 添加文字效果（如果需要）
-        this.createTextEffect(x, y - 30, `${comboCount}x Combo!`, {
+        const comboText = this.getLocalizedComboText(comboCount);
+        this.createTextEffect(x, y - 30, comboText, {
             color: '#ed8936',
             size: 16 + comboCount * 2,
             duration: 1500
@@ -614,6 +615,35 @@ class ParticleSystem {
         this.specialEffects = [];
         this.textEffects = [];
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    /**
+     * 获取本地化的连击文本
+     */
+    getLocalizedComboText(comboCount) {
+        try {
+            // 尝试使用全局的多语言函数
+            if (typeof window !== 'undefined' && window.getLocalizedText) {
+                return window.getLocalizedText('comboMessage', { count: comboCount });
+            }
+            
+            // 尝试使用全局LANGUAGES对象
+            if (typeof window !== 'undefined' && window.LANGUAGES && window.currentLanguage) {
+                const texts = window.LANGUAGES[window.currentLanguage];
+                if (texts && texts.comboMessage) {
+                    return texts.comboMessage.replace('{{count}}', comboCount);
+                }
+            }
+            
+            // Fallback根据页面语言决定
+            const isEnglish = (typeof window !== 'undefined' && window.currentLanguage === 'en') ||
+                             (typeof navigator !== 'undefined' && navigator.language && !navigator.language.startsWith('zh'));
+            
+            return isEnglish ? `${comboCount}x Combo!` : `${comboCount}x 连击!`;
+        } catch (error) {
+            // 最终fallback：默认英文避免中文显示问题
+            return `${comboCount}x Combo!`;
+        }
     }
 
     /**

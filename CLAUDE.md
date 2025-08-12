@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a collection of single-page HTML5 games built with vanilla JavaScript. Each game is self-contained in its own HTML file with embedded CSS and JavaScript. The games include:
 
+- **Math Rain** (`math-rain.html`) - Mathematical expression game with modular architecture
 - **Tetris** (`tetris.html`) - Modern Tetris implementation with themes, combo system, and global high scores
 - **Tank Battle** (`tank-battle.html`) - Classic arcade-style tank combat game  
 
@@ -34,8 +35,14 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript. E
 - `Workers/tetris-highest-scores.js` - Web Worker for high score processing
 
 **Game-specific JavaScript**:
+- `js/math-rain/main.js` - Math Rain game engine with modular architecture
 - `js/tetris.js` - Tetris game engine and logic
 - `js/tank-battle.js` - Tank Battle game implementation
+
+**Math Rain Modular Architecture**:
+- `js/math-rain/systems/` - Core systems (EventSystem, DependencyContainer)
+- `js/math-rain/core/` - Game managers (GameStateManager, SessionManager, UIController, etc.)
+- `js/math-rain/` - Game modules (expression-generator, sound-manager, particle-effects, etc.)
 
 
 ### Internationalization

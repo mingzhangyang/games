@@ -13,10 +13,131 @@
     <meta property="og:description" content="Test your math skills with falling expressions!">
     <meta property="og:image" content="path/to/game-screenshot.png">
     <meta name="twitter:card" content="summary_large_image">
-    <title id="page-title">Math Rain - 数字雨</title>
+    <title id="page-title">Math Rain</title>
     <link rel="icon"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='28' fill='white' font-family='Segoe UI,Arial' dy='.3em'%3E%F0%9F%A7%AE%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/math-rain/math-rain.css">
+    <style>
+        .language-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .lang-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+        .lang-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .setting-item .language-selector {
+            margin-bottom: 0;
+        }
+        
+        /* Shop styles */
+        .current-coins {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #ffd166;
+            font-weight: bold;
+        }
+        
+        .shop-items {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .shop-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        
+        .shop-item:hover {
+            background: rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .item-icon {
+            font-size: 28px;
+        }
+        
+        .item-details h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            color: #f7fafc;
+        }
+        
+        .item-details p {
+            margin: 0;
+            font-size: 13px;
+            color: #a0aec0;
+        }
+        
+        .item-price {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffd166;
+        }
+        
+        .buy-btn {
+            padding: 8px 16px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .buy-btn:hover {
+            background: #38a169;
+            transform: scale(1.05);
+        }
+        
+        .buy-btn:disabled {
+            background: #4a5568;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .buy-btn:disabled:hover {
+            background: #4a5568;
+        }
+    </style>
 </head>
 
 <body>
@@ -39,6 +160,10 @@
             <div class="time-display">
                 <span id="time-label">时间</span>
                 <span id="time-value">0</span>
+            </div>
+            <div class="lives-display">
+                <span id="lives-label">生命</span>
+                <span id="lives-value">10</span>
             </div>
             <!-- 会话系统UI -->
             <div class="session-display" id="session-display">
@@ -72,8 +197,8 @@
         <div id="game-controls">
             <button id="pause-btn" class="control-btn">⏸️ 暂停</button>
             <button id="settings-btn" class="control-btn">⚙️ 设置</button>
+            <button id="shop-btn" class="control-btn">🛒 商店</button>
             <button id="theme-btn" class="control-btn">🎨 主题</button>
-            <button id="language-toggle" class="control-btn" onclick="toggleLanguage()">🌐 EN</button>
         </div>
 
         <!-- 工具栏（道具/技能） -->
@@ -86,6 +211,10 @@
                 <button id="bomb-btn" class="tool-btn" title="清屏 (快捷键 B)">💣 Bomb</button>
                 <span class="tool-count" id="bomb-count">x0</span>
             </div>
+            <div class="tool-item">
+                <button id="shield-btn" class="tool-btn" title="护盾 (快捷键 S)">🛡️ Shield</button>
+                <span class="tool-count" id="shield-count">x0</span>
+            </div>
             <div class="tool-item coins">
                 <span class="coins-icon">🪙</span>
                 <span class="coins-value" id="coins-value">0</span>
@@ -96,17 +225,21 @@
     <!-- 游戏开始界面 -->
     <div id="start-screen" class="screen">
         <div class="screen-content">
+            <div class="language-selector">
+                <button id="lang-zh" class="lang-btn" onclick="selectLanguage('zh')">中文</button>
+                <button id="lang-en" class="lang-btn" onclick="selectLanguage('en')">English</button>
+            </div>
             <h1 id="game-title">Math Rain</h1>
-            <p id="game-subtitle">数字雨 - 数学算式掉落游戏</p>
+            <p id="game-subtitle">数字雨</p>
             <div class="difficulty-selection">
                 <h3 id="difficulty-title">选择难度</h3>
                 <div class="difficulty-buttons">
-                    <button class="difficulty-btn selected" data-level="1">入门级 (1-10)</button>
-                    <button class="difficulty-btn" data-level="2">初级 (1-20)</button>
-                    <button class="difficulty-btn" data-level="3">中级 (10-50)</button>
-                    <button class="difficulty-btn" data-level="4">高级 (20-100)</button>
-                    <button class="difficulty-btn" data-level="5">专家级 (50-500)</button>
-                    <button class="difficulty-btn" data-level="6">大师级 (100-2000)</button>
+                    <button class="difficulty-btn selected" data-level="1" id="difficulty-1">入门级 (1-10)</button>
+                    <button class="difficulty-btn" data-level="2" id="difficulty-2">初级 (1-20)</button>
+                    <button class="difficulty-btn" data-level="3" id="difficulty-3">中级 (10-50)</button>
+                    <button class="difficulty-btn" data-level="4" id="difficulty-4">高级 (20-100)</button>
+                    <button class="difficulty-btn" data-level="5" id="difficulty-5">专家级 (50-500)</button>
+                    <button class="difficulty-btn" data-level="6" id="difficulty-6">大师级 (100-2000)</button>
                 </div>
             </div>
             <div class="start-buttons">
@@ -114,12 +247,12 @@
                 <button id="help-btn" class="help-btn">❓ 游戏帮助</button>
             </div>
             <div class="game-rules">
-                <h4>游戏规则</h4>
+                <h4 id="game-rules-title">游戏规则</h4>
                 <ul>
-                    <li>点击结果等于目标数字的算式得分</li>
-                    <li>连续正确可获得连击加成</li>
-                    <li>连续错误会扣分，错误越多扣分越多</li>
-                    <li>算式掉落到底部会消失，抓紧时间！</li>
+                    <li id="rule-1">点击结果等于目标数字的算式得分</li>
+                    <li id="rule-2">连续正确可获得连击加成</li>
+                    <li id="rule-3">连续错误会扣分，错误越多扣分越多</li>
+                    <li id="rule-4">算式掉落到底部会消失，抓紧时间！</li>
                 </ul>
             </div>
         </div>
@@ -128,7 +261,7 @@
     <!-- 游戏暂停界面 -->
     <div id="pause-screen" class="screen hidden">
         <div class="screen-content">
-            <h2>⏸️ 游戏暂停</h2>
+            <h2 id="pause-title">⏸️ 游戏暂停</h2>
             <button id="resume-btn" class="menu-btn">继续游戏</button>
             <button id="restart-btn" class="menu-btn">重新开始</button>
             <button id="main-menu-btn" class="menu-btn">主菜单</button>
@@ -149,17 +282,27 @@
                     <span id="max-combo" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">正确率</span>
+                    <span class="stat-label">准确率</span>
                     <span id="accuracy" class="stat-value">0%</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">游戏时间</span>
                     <span id="game-time" class="stat-value">0s</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-label">评级</span>
+                    <span id="final-grade" class="stat-value grade">F</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">获得金币</span>
+                    <span id="final-coins" class="stat-value coins">+0</span>
+                </div>
             </div>
-            <button id="play-again-btn" class="menu-btn">再玩一次</button>
-            <button id="change-difficulty-btn" class="menu-btn">更换难度</button>
-            <button id="home-btn" class="menu-btn">返回主页</button>
+            <div class="game-over-buttons">
+                <button id="play-again-btn" class="menu-btn">再玩一次</button>
+                <button id="change-difficulty-btn" class="menu-btn">更改难度</button>
+                <button id="home-btn" class="menu-btn">返回主页</button>
+            </div>
         </div>
     </div>
 
@@ -167,17 +310,17 @@
     <div id="session-complete-screen" class="screen hidden">
         <div class="screen-content">
             <h2 id="session-complete-title">🎯 会话完成</h2>
-            <div class="session-stats">
+            <div class="final-stats">
                 <div class="stat-item">
-                    <span class="stat-label">最终得分</span>
+                    <span class="stat-label">最终分数</span>
                     <span id="session-final-score" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">目标分数</span>
-                    <span id="session-target-score" class="stat-value">100</span>
+                    <span id="session-target-score" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">正确率</span>
+                    <span class="stat-label">准确率</span>
                     <span id="session-accuracy" class="stat-value">0%</span>
                 </div>
                 <div class="stat-item">
@@ -188,12 +331,12 @@
                     <span class="stat-label">会话时长</span>
                     <span id="session-duration" class="stat-value">3 分钟</span>
                 </div>
-                <div class="stat-item level-up-stat">
+                <div class="stat-item">
                     <span class="stat-label">升级达成</span>
                     <span id="session-level-up" class="stat-value">否</span>
                 </div>
             </div>
-            <div class="session-actions">
+            <div class="session-buttons">
                 <button id="session-continue-btn" class="menu-btn primary">继续下一关</button>
                 <button id="session-retry-btn" class="menu-btn">重试本关</button>
                 <button id="session-menu-btn" class="menu-btn">返回菜单</button>
@@ -204,707 +347,229 @@
     <!-- 设置界面 -->
     <div id="settings-screen" class="screen hidden">
         <div class="screen-content">
-            <h2>⚙️ 游戏设置</h2>
-            <div class="setting-group">
-                <label for="sound-volume">音效音量</label>
-                <input type="range" id="sound-volume" min="0" max="100" value="70">
-                <span id="sound-volume-value">70%</span>
+            <h2 id="settings-title">⚙️ 游戏设置</h2>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label for="sound-volume" id="sound-volume-label">音效音量</label>
+                    <input type="range" id="sound-volume" min="0" max="100" value="70">
+                    <span id="sound-volume-value">70%</span>
+                </div>
+                <div class="setting-item">
+                    <label for="music-volume" id="music-volume-label">背景音乐音量</label>
+                    <input type="range" id="music-volume" min="0" max="100" value="50">
+                    <span id="music-volume-value">50%</span>
+                </div>
+                <div class="setting-item">
+                    <label for="particle-effects" id="particle-effects-label">粒子效果</label>
+                    <input type="checkbox" id="particle-effects" checked>
+                </div>
+                <div class="setting-item">
+                    <label id="language-setting-label">游戏语言</label>
+                    <div class="language-selector">
+                        <button id="settings-lang-zh" class="lang-btn" onclick="selectLanguage('zh')">中文</button>
+                        <button id="settings-lang-en" class="lang-btn" onclick="selectLanguage('en')">English</button>
+                    </div>
+                </div>
             </div>
-            <div class="setting-group">
-                <label for="music-volume">背景音乐</label>
-                <input type="range" id="music-volume" min="0" max="100" value="50">
-                <span id="music-volume-value">50%</span>
-            </div>
-            <div class="setting-group">
-                <label for="particle-effects">粒子效果</label>
-                <input type="checkbox" id="particle-effects" checked>
-            </div>
-            <div class="setting-group">
-                <label for="screen-shake">屏幕震动</label>
-                <input type="checkbox" id="screen-shake" checked>
-            </div>
-
             <button id="settings-close-btn" class="menu-btn">关闭设置</button>
+        </div>
+    </div>
+
+    <!-- 商店界面 -->
+    <div id="shop-screen" class="screen hidden">
+        <div class="screen-content">
+            <h2 id="shop-title">🛒 道具商店</h2>
+            <div class="current-coins">
+                <span class="coins-icon">🪙</span>
+                <span id="shop-coins-value">0</span>
+                <span id="shop-coins-label">金币</span>
+            </div>
+            <div class="shop-items">
+                <div class="shop-item">
+                    <div class="item-info">
+                        <span class="item-icon">❄️</span>
+                        <div class="item-details">
+                            <h3 id="freeze-shop-title">时间冻结</h3>
+                            <p id="freeze-shop-desc">暂时冻结所有下落的表达式</p>
+                        </div>
+                    </div>
+                    <div class="item-price">
+                        <span class="price-amount">10</span>
+                        <span class="coins-icon">🪙</span>
+                    </div>
+                    <button id="buy-freeze-btn" class="buy-btn">购买</button>
+                </div>
+                <div class="shop-item">
+                    <div class="item-info">
+                        <span class="item-icon">💣</span>
+                        <div class="item-details">
+                            <h3 id="bomb-shop-title">清屏炸弹</h3>
+                            <p id="bomb-shop-desc">清除屏幕上所有表达式</p>
+                        </div>
+                    </div>
+                    <div class="item-price">
+                        <span class="price-amount">25</span>
+                        <span class="coins-icon">🪙</span>
+                    </div>
+                    <button id="buy-bomb-btn" class="buy-btn">购买</button>
+                </div>
+                <div class="shop-item">
+                    <div class="item-info">
+                        <span class="item-icon">🛡️</span>
+                        <div class="item-details">
+                            <h3 id="shield-shop-title">生命护盾</h3>
+                            <p id="shield-shop-desc">防止一次生命损失</p>
+                        </div>
+                    </div>
+                    <div class="item-price">
+                        <span class="price-amount">15</span>
+                        <span class="coins-icon">🪙</span>
+                    </div>
+                    <button id="buy-shield-btn" class="buy-btn">购买</button>
+                </div>
+            </div>
+            <button id="shop-close-btn" class="menu-btn">关闭商店</button>
         </div>
     </div>
 
     <!-- 帮助界面 -->
     <div id="help-screen" class="screen hidden">
-        <div class="screen-content help-content">
-            <h2>❓ 游戏帮助</h2>
-            
+        <div class="screen-content">
+            <h2 id="help-title">❓ 游戏帮助</h2>
             <div class="help-section">
-                <h3>🎯 游戏目标</h3>
-                <p>在算式从天而降的过程中，快速识别并点击结果等于目标数字的算式，获得高分！</p>
+                <h3 id="help-objective-title">游戏目标</h3>
+                <p id="help-objective-text">点击结果等于目标数字的数学表达式来得分，避免错过正确答案！</p>
             </div>
-
             <div class="help-section">
-                <h3>🎮 操作方法</h3>
+                <h3 id="help-controls-title">控制方法</h3>
                 <div class="controls-guide">
                     <div class="control-item">
-                        <span class="control-icon">❄️</span>
+                        <span class="control-key" id="help-click-key">点击/触摸</span>
                         <div class="control-desc">
-                            <strong>Freeze 冻结 / Freeze</strong>
-                            <p>初始数量2个，持续4000毫秒（4秒）；快捷键：F。/ Initial count 2, duration 4000ms (4s); Hotkey: F.</p>
+                            <strong id="help-click-title">选择表达式</strong>
+                            <p id="help-click-desc">点击你认为正确的数学表达式</p>
                         </div>
                     </div>
                     <div class="control-item">
-                        <span class="control-icon">💣</span>
+                        <span class="control-key" id="help-space-key">空格键</span>
                         <div class="control-desc">
-                            <strong>Bomb 炸弹 / Bomb</strong>
-                            <p>初始数量1个；快捷键：B。/ Initial count 1; Hotkey: B.</p>
+                            <strong id="help-space-title">暂停/继续</strong>
+                            <p id="help-space-desc">暂停或继续游戏</p>
                         </div>
                     </div>
                     <div class="control-item">
-                        <span class="control-icon">🪙</span>
+                        <span class="control-key" id="help-f-key">F键</span>
                         <div class="control-desc">
-                            <strong>评级—金币映射 / Rank to Coins</strong>
-                            <p>S=50，A=30，B=20，C=10，D=5。/ S=50, A=30, B=20, C=10, D=5.</p>
+                            <strong id="help-f-title">使用冻结</strong>
+                            <p id="help-f-desc">暂时冻结所有下落的表达式</p>
                         </div>
                     </div>
                     <div class="control-item">
-                        <span class="control-icon">⌨️</span>
+                        <span class="control-key" id="help-b-key">B键</span>
                         <div class="control-desc">
-                            <strong>快捷键 / Hotkeys</strong>
-                            <p>当前采用 F（Freeze）/ B（Bomb）。/ Current: F (Freeze) / B (Bomb).</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- 追加：玩法参数与说明（与上方一致，便于集中查看） -->
-                <div class="controls-guide">
-                    <div class="control-item">
-                        <span class="control-icon">📘</span>
-                        <div class="control-desc">
-                            <strong>玩法参数与说明 / Gameplay Parameters & Notes</strong>
-                            <ul>
-                                <li>Freeze：初始数量 2，持续时长 4000 毫秒 / Freeze: Initial 2, duration 4000 ms</li>
-                                <li>Bomb：初始数量 1 / Bomb: Initial 1</li>
-                                <li>评级—金币：S=50，A=30，B=20，C=10，D=5 / Rank-to-Coins: S=50, A=30, B=20, C=10, D=5</li>
-                                <li>快捷键：F=Freeze，B=Bomb / Hotkeys: F for Freeze, B for Bomb</li>
-                            </ul>
+                            <strong id="help-b-title">使用炸弹</strong>
+                            <p id="help-b-desc">清除屏幕上所有表达式</p>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="help-section">
-                <h3>📊 计分规则</h3>
-                <div class="scoring-guide">
-                    <div class="score-item">
-                        <span class="score-icon">💰</span>
-                        <div class="score-desc">
-                            <strong>评级-金币</strong>
-                            <p>S=50，A=30，B=20，C=10，D=5</p>
-                        </div>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-icon">✅</span>
-                        <div class="score-desc">
-                            <strong>正确答案</strong>
-                            <p>基础分数 + 连击加成</p>
-                        </div>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-icon">❌</span>
-                        <div class="score-desc">
-                            <strong>错误答案</strong>
-                            <p>扣除分数，连续错误扣分更多</p>
-                        </div>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-icon">🔥</span>
-                        <div class="score-desc">
-                            <strong>连击加成</strong>
-                            <p>连续正确答案可获得额外分数</p>
-                        </div>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-icon">⏰</span>
-                        <div class="score-desc">
-                            <strong>时间奖励</strong>
-                            <p>快速回答可获得时间奖励</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="help-section">
-                <h3>🎚️ 难度等级</h3>
-                <div class="difficulty-guide">
-                    <div class="diff-item">
-                        <span class="diff-level">入门级</span>
-                        <span class="diff-range">1-10</span>
-                        <p>简单的加减法，适合初学者</p>
-                    </div>
-                    <div class="diff-item">
-                        <span class="diff-level">初级</span>
-                        <span class="diff-range">1-20</span>
-                        <p>基础四则运算</p>
-                    </div>
-                    <div class="diff-item">
-                        <span class="diff-level">中级</span>
-                        <span class="diff-range">10-50</span>
-                        <p>包含乘除法的混合运算</p>
-                    </div>
-                    <div class="diff-item">
-                        <span class="diff-level">高级</span>
-                        <span class="diff-range">20-100</span>
-                        <p>复杂的四则混合运算</p>
-                    </div>
-                    <div class="diff-item">
-                        <span class="diff-level">专家级</span>
-                        <span class="diff-range">50-500</span>
-                        <p>高难度计算，考验心算能力</p>
-                    </div>
-                    <div class="diff-item">
-                        <span class="diff-level">大师级</span>
-                        <span class="diff-range">100-2000</span>
-                        <p>极限挑战，适合数学高手</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="help-section">
-                <h3>💡 游戏技巧</h3>
-                <ul class="tips-list">
-                    <li>保持冷静，仔细观察每个算式</li>
-                    <li>优先点击即将到达底部的正确算式</li>
-                    <li>建立连击可以获得更高分数</li>
-                    <li>如果不确定答案，宁可不点击也不要猜测</li>
-                    <li>熟练掌握基础运算可以提高反应速度</li>
-                    <li>适当休息，避免视觉疲劳影响判断</li>
-                </ul>
-            </div>
-
             <div class="help-buttons">
-                <button id="help-close-btn" class="menu-btn">返回游戏</button>
+                <button id="help-close-btn" class="menu-btn">关闭帮助</button>
                 <button id="help-start-btn" class="menu-btn primary">开始游戏</button>
             </div>
         </div>
     </div>
 
-    <!-- 加载脚本 -->
-    <script type="module" src="./js/math-rain-main.js"></script>
+    <!-- Initialize Language and Shop Management -->
     <script>
-        console.log('All Math Rain scripts loaded successfully');
-        
-        // 添加全局错误处理
-        window.addEventListener('error', (event) => {
-            console.error('Math Rain 全局错误:', event.error);
-            console.error('错误详情:', {
-                message: event.message,
-                filename: event.filename,
-                lineno: event.lineno,
-                colno: event.colno
-            });
-        });
-        
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('Math Rain 未处理的Promise拒绝:', event.reason);
-        });
-        
-        // 等待模块加载完成后检查类
-        function waitForModulesAndCheck() {
-            if (!window.mathRainModulesLoaded) {
-                console.log('等待模块加载完成...');
-                setTimeout(waitForModulesAndCheck, 100);
-                return;
-            }
-            
-            // 模块已加载，检查类是否存在
-            const requiredClasses = [
-                'ExpressionGenerator',
-                'QuestionBankManager', 
-                'AnimationEngine',
-                'DifficultyManager',
-                'SoundManager',
-                'MathRainGame'
-            ];
-            
-            const missingClasses = requiredClasses.filter(className => !window[className]);
-            
-            if (missingClasses.length > 0) {
-                console.error('Math Rain 缺少必要的类:', missingClasses);
-            } else {
-                console.log('Math Rain 所有必要的类都已加载');
-            }
-        }
-        
-        // 开始检查
-        setTimeout(waitForModulesAndCheck, 50);
-    </script>
-
-    <script type="module" src="./js/math-rain/main-inline-migrated.js"></script>
-
-    <!-- 迁移说明：原内联脚本（语言、多语言应用、设置监听与持久化、初始化入口）已拆分为 ESM 模块放置于 js/math-rain/main-inline-migrated.js，确保可维护性与可缓存性。若需回退，可改回此前内联脚本。 -->
-
-    <script>
-        /* 占位：保留最小降级路径，若外部模块加载失败可在此提示或兜底。可按需删除。 */
-    </script>
-
-    <!-- 以下原始内联脚本起始标记（被替换为外链模块）。如需参考，请查看新文件 js/math-rain/main-inline-migrated.js -->
-    <!-- 原内联脚本开头: 语言文本 -->
-        const LANGUAGES = {
-            en: {
-                pageTitle: 'Math Rain - Number Drop Game',
-                gameTitle: 'Math Rain',
-                gameSubtitle: 'Mathematical Expression Drop Game',
-                difficultyTitle: 'Select Difficulty',
-                difficulties: [
-                    'Beginner (1-10)',
-                    'Easy (1-20)',
-                    'Medium (10-50)',
-                    'Hard (20-100)',
-                    'Expert (50-500)',
-                    'Master (100-2000)'
-                ],
-                startGame: '🚀 Start Game',
-                score: 'Score',
-                combo: 'Combo',
-                level: 'Level',
-                time: 'Time',
-                targetLabel: 'Target Number',
-                targetHint: 'Click expressions that equal this number',
-                pause: '⏸️ Pause',
-                settings: '⚙️ Settings',
-                theme: '🎨 Theme',
-                gameRules: 'Game Rules',
-                gameRulesList: [
-                    'Click expressions that equal the target number to score',
-                    'Consecutive correct answers give combo bonuses',
-                    'Consecutive mistakes will deduct points',
-                    'Expressions disappear when they reach the bottom!'
-                ],
-                finalScore: 'Final Score',
-                maxCombo: 'Max Combo',
-                accuracy: 'Accuracy',
-                gameTime: 'Game Time',
-                gamePaused: '⏸️ Game Paused',
-                gameOver: '🎮 Game Over',
-                resume: 'Resume',
-                restart: 'Restart',
-                mainMenu: 'Main Menu',
-                playAgain: 'Play Again',
-                changeDifficulty: 'Change Difficulty',
-                home: 'Home',
-                gameSettings: '⚙️ Game Settings',
-                soundVolume: 'Sound Volume',
-                musicVolume: 'Background Music',
-                particleEffects: 'Particle Effects',
-                screenShake: 'Screen Shake',
-                cssAnimations: 'CSS Animations (Performance)',
-                performanceMode: 'Performance Mode',
-                languageLabel: 'Language / 语言',
-                closeSettings: 'Close Settings',
-                helpBtn: '❓ Game Help',
-                helpTitle: '🎮 Game Help',
-                helpGoal: '🎯 Game Objective',
-                helpGoalDesc: 'Click on mathematical expressions that equal the target number to score points. The faster and more accurate you are, the higher your score!',
-                helpControls: '🎮 Controls',
-                helpControlsList: [
-                    'Freeze: Press F to freeze expressions for 4s (default, configurable)',
-                    'Bomb: Press B to clear expressions (default, configurable)',
-                    'Mouse: Click on expressions',
-                    'Keyboard: Use number keys 0-9 to select expressions',
-                    'Touch: Tap expressions on mobile devices',
-                    'Pause: Press Space or click pause button',
-                    'Settings: Adjust sound, effects and other options'
-                ],
-                helpScoring: '📊 Scoring Rules',
-                helpScoringList: [
-                    'Rank→Coins: S=50, A=30, B=20, C=10, D=5',
-                    'Correct Answer: Base score + combo bonus',
-                    'Wrong Answer: Points deducted, more for consecutive errors',
-                    'Combo Bonus: Consecutive correct answers give extra points',
-                    'Time Bonus: Quick responses earn time rewards'
-                ],
-                helpDifficulty: '🎚️ Difficulty Levels',
-                helpDifficultyList: [
-                    'Beginner (1-10): Simple addition and subtraction',
-                    'Easy (1-20): Basic arithmetic operations',
-                    'Medium (10-50): Mixed operations including multiplication',
-                    'Hard (20-100): Complex four-operation calculations',
-                    'Expert (50-500): High difficulty, tests mental math skills',
-                    'Master (100-2000): Ultimate challenge for math experts'
-                ],
-                helpTips: '💡 Game Tips',
-                helpTipsList: [
-                    'Stay calm and observe each expression carefully',
-                    'Prioritize expressions about to reach the bottom',
-                    'Build combos for higher scores',
-                    'When unsure, avoid guessing to prevent point loss',
-                    'Master basic arithmetic for faster responses',
-                    'Take breaks to avoid visual fatigue'
-                ],
-                helpClose: 'Back to Game',
-                helpStart: 'Start Game',
-                // Error messages
-                gameError: 'Game error occurred, automatically paused.',
-                gameLoadError: 'Game failed to load, please refresh the page',
-                componentInitError: 'Component initialization failed',
-                canvasNotFound: 'Cannot find game-canvas element',
-                questionBankLoadError: 'Question bank loading failed',
-                questionBankFallback: 'Fallback to real-time generation mode',
-                gameInitError: 'Game initialization failed',
-                confirmButton: 'OK',
-                // Session system
-                sessionTimeLabel: 'Time Remaining',
-                sessionTargetLabel: 'Target Score',
-                levelUpIndicator: '🎯 Level Up Available!',
-                sessionCompleteTitle: '🎯 Session Complete',
-                sessionContinue: 'Continue to Next Level',
-                sessionRetry: 'Retry Current Level',
-                sessionMenu: 'Return to Menu',
-                sessionDuration: 'Session Duration',
-                sessionLevelUp: 'Level Up Achieved',
-                yes: 'Yes',
-                no: 'No'
-            },
-            zh: {
-                pageTitle: 'Math Rain - 数字雨',
-                gameTitle: '数字雨',
-                gameSubtitle: '数学算式掉落游戏',
-                difficultyTitle: '选择难度',
-                difficulties: [
-                    '入门级 (1-10)',
-                    '初级 (1-20)',
-                    '中级 (10-50)',
-                    '高级 (20-100)',
-                    '专家级 (50-500)',
-                    '大师级 (100-2000)'
-                ],
-                startGame: '🚀 开始游戏',
-                score: '分数',
-                combo: '连击',
-                level: '等级',
-                time: '时间',
-                targetLabel: '目标数字',
-                targetHint: '点击结果等于此数字的算式',
-                pause: '⏸️ 暂停',
-                settings: '⚙️ 设置',
-                theme: '🎨 主题',
-                gameRules: '游戏规则',
-                gameRulesList: [
-                    '点击结果等于目标数字的算式得分',
-                    '连续正确可获得连击加成',
-                    '连续错误会扣分，错误越多扣分越多',
-                    '算式掉落到底部会消失，抓紧时间！'
-                ],
-                finalScore: '最终得分',
-                maxCombo: '最高连击',
-                accuracy: '正确率',
-                gameTime: '游戏时间',
-                gamePaused: '⏸️ 游戏暂停',
-                gameOver: '🎮 游戏结束',
-                resume: '继续游戏',
-                restart: '重新开始',
-                mainMenu: '主菜单',
-                playAgain: '再玩一次',
-                changeDifficulty: '更换难度',
-                home: '返回主页',
-                gameSettings: '⚙️ 游戏设置',
-                soundVolume: '音效音量',
-                musicVolume: '背景音乐',
-                particleEffects: '粒子效果',
-                screenShake: '屏幕震动',
-                cssAnimations: 'CSS动画（性能）',
-                performanceMode: '性能优先模式',
-                languageLabel: '语言 / Language',
-                closeSettings: '关闭设置',
-                helpBtn: '❓ 游戏帮助',
-                helpTitle: '🎮 游戏帮助',
-                helpGoal: '🎯 游戏目标',
-                helpGoalDesc: '点击结果等于目标数字的数学算式来得分。反应越快、越准确，得分越高！',
-                helpControls: '🎮 操作方法',
-                helpControlsList: [
-                    'Freeze：按 F 冻结算式4秒（可自定义）',
-                    'Bomb：按 B 清屏（可自定义）',
-                    '鼠标：点击算式',
-                    '键盘：使用数字键0-9选择算式',
-                    '触摸：在移动设备上点击算式',
-                    '暂停：按空格键或点击暂停按钮',
-                    '设置：调整音效、特效等游戏选项'
-                ],
-                helpScoring: '📊 计分规则',
-                helpScoringList: [
-                    '评级→金币：S=50，A=30，B=20，C=10，D=5',
-                    '正确答案：基础分数 + 连击加成',
-                    '错误答案：扣除分数，连续错误扣分更多',
-                    '连击加成：连续正确答案可获得额外分数',
-                    '时间奖励：快速回答可获得时间奖励'
-                ],
-                helpDifficulty: '🎚️ 难度等级',
-                helpDifficultyList: [
-                    '入门级 (1-10)：简单的加减法，适合初学者',
-                    '初级 (1-20)：基础四则运算',
-                    '中级 (10-50)：包含乘除法的混合运算',
-                    '高级 (20-100)：复杂的四则混合运算',
-                    '专家级 (50-500)：高难度计算，考验心算能力',
-                    '大师级 (100-2000)：极限挑战，适合数学高手'
-                ],
-                helpTips: '💡 游戏技巧',
-                helpTipsList: [
-                    '保持冷静，仔细观察每个算式',
-                    '优先点击即将到达底部的正确算式',
-                    '建立连击可以获得更高分数',
-                    '如果不确定答案，宁可不点击也不要猜测',
-                    '熟练掌握基础运算可以提高反应速度',
-                    '适当休息，避免视觉疲劳影响判断'
-                ],
-                helpClose: '返回游戏',
-                helpStart: '开始游戏',
-                // 错误消息
-                gameError: '游戏出现错误，已自动暂停。',
-                gameLoadError: '游戏加载失败，请刷新页面重试',
-                componentInitError: '组件初始化失败',
-                canvasNotFound: '找不到game-canvas元素',
-                questionBankLoadError: '题库加载失败',
-                questionBankFallback: '回退到实时生成模式',
-                gameInitError: '游戏初始化失败',
-                confirmButton: '确定',
-                // 会话系统
-                sessionTimeLabel: '剩余时间',
-                sessionTargetLabel: '目标分数',
-                levelUpIndicator: '🎯 可升级!',
-                sessionCompleteTitle: '🎯 会话完成',
-                sessionContinue: '继续下一关',
-                sessionRetry: '重试本关',
-                sessionMenu: '返回菜单',
-                sessionDuration: '会话时长',
-                sessionLevelUp: '升级达成',
-                yes: '是',
-                no: '否'
+        // Temporary compatibility functions until modules load
+        window.selectLanguage = function(lang) {
+            if (window.languageManager) {
+                window.languageManager.selectLanguage(lang);
             }
         };
-
-        // 检测语言
-        function detectLanguage() {
-            const browserLang = navigator.language || navigator.userLanguage;
-            return browserLang.startsWith('zh') ? 'zh' : 'en';
-        }
-
-        // 应用语言
-        function applyLanguage(lang) {
-            const texts = LANGUAGES[lang];
-            if (!texts) return;
-
-            // 基本信息
-            document.getElementById('page-title').textContent = texts.pageTitle;
-            document.getElementById('game-title').textContent = texts.gameTitle;
-            document.getElementById('game-subtitle').textContent = texts.gameSubtitle;
-            document.getElementById('difficulty-title').textContent = texts.difficultyTitle;
-            document.getElementById('start-game-btn').textContent = texts.startGame;
-
-            // 游戏界面
-            document.getElementById('score-label').textContent = texts.score;
-            document.getElementById('combo-label').textContent = texts.combo;
-            document.getElementById('level-label').textContent = texts.level;
-            document.getElementById('time-label').textContent = texts.time;
-            document.getElementById('target-label').textContent = texts.targetLabel;
-            document.getElementById('target-hint').textContent = texts.targetHint;
-            
-            // 会话系统UI
-            const sessionTimeLabel = document.getElementById('session-time-label');
-            if (sessionTimeLabel) sessionTimeLabel.textContent = texts.sessionTimeLabel;
-            
-            const sessionTargetLabel = document.getElementById('session-target-label');
-            if (sessionTargetLabel) sessionTargetLabel.textContent = texts.sessionTargetLabel;
-            
-            const levelUpIndicator = document.querySelector('#level-up-indicator span');
-            if (levelUpIndicator) levelUpIndicator.textContent = texts.levelUpIndicator;
-
-            // 控制按钮
-            document.getElementById('pause-btn').textContent = texts.pause;
-            document.getElementById('settings-btn').textContent = texts.settings;
-            document.getElementById('theme-btn').textContent = texts.theme;
-
-            // 难度按钮
-            const difficultyButtons = document.querySelectorAll('.difficulty-btn');
-            difficultyButtons.forEach((btn, index) => {
-                if (texts.difficulties && texts.difficulties[index]) {
-                    btn.textContent = texts.difficulties[index];
-                }
-            });
-
-            // 游戏规则
-            const gameRulesTitle = document.querySelector('.game-rules h4');
-            if (gameRulesTitle) {
-                gameRulesTitle.textContent = texts.gameRules;
+        
+        // Update shop interface function for compatibility
+        window.updateShopInterface = function() {
+            if (window.shopManager) {
+                window.shopManager.updateShopInterface();
             }
+        };
+        
+        // Initialize on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, waiting for modules...');
+        });
+    </script>
 
-            const gameRulesList = document.querySelector('.game-rules ul');
-            if (gameRulesList && texts.gameRulesList) {
-                gameRulesList.innerHTML = texts.gameRulesList
-                    .map(rule => `<li>${rule}</li>`)
-                    .join('');
-            }
-
-            // 暂停界面
-            const pauseTitle = document.querySelector('#pause-screen h2');
-            if (pauseTitle) pauseTitle.textContent = texts.gamePaused;
-
-            const resumeBtn = document.getElementById('resume-btn');
-            if (resumeBtn) resumeBtn.textContent = texts.resume;
-
-            const restartBtn = document.getElementById('restart-btn');
-            if (restartBtn) restartBtn.textContent = texts.restart;
-
-            const mainMenuBtn = document.getElementById('main-menu-btn');
-            if (mainMenuBtn) mainMenuBtn.textContent = texts.mainMenu;
-
-            // 游戏结束界面
-            const gameOverTitle = document.getElementById('game-over-title');
-            if (gameOverTitle) gameOverTitle.textContent = texts.gameOver;
-
-            const statLabels = document.querySelectorAll('.stat-label');
-            const statTexts = [texts.finalScore, texts.maxCombo, texts.accuracy, texts.gameTime];
-            statLabels.forEach((label, index) => {
-                if (statTexts[index]) {
-                    label.textContent = statTexts[index];
-                }
-            });
-
-            const playAgainBtn = document.getElementById('play-again-btn');
-            if (playAgainBtn) playAgainBtn.textContent = texts.playAgain;
-
-            const changeDifficultyBtn = document.getElementById('change-difficulty-btn');
-            if (changeDifficultyBtn) changeDifficultyBtn.textContent = texts.changeDifficulty;
-
-            const homeBtn = document.getElementById('home-btn');
-            if (homeBtn) homeBtn.textContent = texts.home;
+    <!-- Load Language and Shop Managers -->
+    <script type="module">
+        try {
+            // Import language manager
+            const { default: LanguageManager } = await import('./js/math-rain/i18n/language-manager.js');
+            window.languageManager = new LanguageManager();
+            window.languageManager.initialize();
             
-            // 会话完成界面
-            const sessionCompleteTitle = document.getElementById('session-complete-title');
-            if (sessionCompleteTitle) sessionCompleteTitle.textContent = texts.sessionCompleteTitle;
+            // Import shop manager  
+            const { default: ShopManager } = await import('./js/math-rain/shop-manager.js');
+            window.shopManager = new ShopManager();
             
-            const sessionContinueBtn = document.getElementById('session-continue-btn');
-            if (sessionContinueBtn) sessionContinueBtn.textContent = texts.sessionContinue;
-            
-            const sessionRetryBtn = document.getElementById('session-retry-btn');
-            if (sessionRetryBtn) sessionRetryBtn.textContent = texts.sessionRetry;
-            
-            const sessionMenuBtn = document.getElementById('session-menu-btn');
-            if (sessionMenuBtn) sessionMenuBtn.textContent = texts.sessionMenu;
-            
-            // 会话统计标签
-            const sessionStatLabels = document.querySelectorAll('#session-complete-screen .stat-label');
-            const sessionStatTexts = [texts.finalScore, texts.sessionTargetLabel, texts.accuracy, texts.maxCombo, texts.sessionDuration, texts.sessionLevelUp];
-            sessionStatLabels.forEach((label, index) => {
-                if (sessionStatTexts[index]) {
-                    label.textContent = sessionStatTexts[index];
-                }
-            });
-
-            // 设置界面
-            const settingsTitle = document.querySelector('#settings-screen h2');
-            if (settingsTitle) settingsTitle.textContent = texts.gameSettings;
-
-            const settingLabels = document.querySelectorAll('#settings-screen label');
-            const settingTexts = [texts.soundVolume, texts.musicVolume, texts.particleEffects, texts.screenShake, texts.cssAnimations, texts.performanceMode, texts.languageLabel];
-            settingLabels.forEach((label, index) => {
-                if (settingTexts[index]) {
-                    label.textContent = settingTexts[index];
-                }
-            });
-
-            const settingsCloseBtn = document.getElementById('settings-close-btn');
-            if (settingsCloseBtn) settingsCloseBtn.textContent = texts.closeSettings;
-
-            // 帮助界面
-            const helpBtn = document.getElementById('help-btn');
-            if (helpBtn) helpBtn.textContent = texts.helpBtn;
-
-            const helpTitle = document.querySelector('#help-screen h2');
-            if (helpTitle) helpTitle.textContent = texts.helpTitle;
-
-            // 帮助内容各部分
-            const helpGoalTitle = document.querySelector('#help-screen .help-section:nth-child(1) h3');
-            if (helpGoalTitle) helpGoalTitle.textContent = texts.helpGoal;
-
-            const helpGoalDesc = document.querySelector('#help-screen .help-section:nth-child(1) p');
-            if (helpGoalDesc) helpGoalDesc.textContent = texts.helpGoalDesc;
-
-            const helpControlsTitle = document.querySelector('#help-screen .help-section:nth-child(2) h3');
-            if (helpControlsTitle) helpControlsTitle.textContent = texts.helpControls;
-
-            const helpControlsList = document.querySelector('#help-screen .help-section:nth-child(2) .controls-guide');
-            if (helpControlsList && texts.helpControlsList) {
-                const controlItems = helpControlsList.querySelectorAll('.control-item');
-                texts.helpControlsList.forEach((text, index) => {
-                    if (controlItems[index]) {
-                        const desc = controlItems[index].querySelector('.control-desc strong');
-                        const detail = controlItems[index].querySelector('.control-desc p');
-                        if (desc && detail) {
-                            const parts = text.split(': ');
-                            desc.textContent = parts[0];
-                            detail.textContent = parts[1] || text;
-                        }
-                    }
-                });
-            }
-
-            const helpScoringTitle = document.querySelector('#help-screen .help-section:nth-child(3) h3');
-            if (helpScoringTitle) helpScoringTitle.textContent = texts.helpScoring;
-
-            const helpScoringList = document.querySelector('#help-screen .help-section:nth-child(3) .scoring-guide');
-            if (helpScoringList && texts.helpScoringList) {
-                const scoreItems = helpScoringList.querySelectorAll('.score-item');
-                texts.helpScoringList.forEach((text, index) => {
-                    if (scoreItems[index]) {
-                        const desc = scoreItems[index].querySelector('.score-desc strong');
-                        const detail = scoreItems[index].querySelector('.score-desc p');
-                        if (desc && detail) {
-                            const parts = text.split(': ');
-                            desc.textContent = parts[0];
-                            detail.textContent = parts[1] || text;
-                        }
-                    }
-                });
-            }
-
-            const helpDifficultyTitle = document.querySelector('#help-screen .help-section:nth-child(4) h3');
-            if (helpDifficultyTitle) helpDifficultyTitle.textContent = texts.helpDifficulty;
-
-            const helpDifficultyList = document.querySelector('#help-screen .help-section:nth-child(4) .difficulty-guide');
-            if (helpDifficultyList && texts.helpDifficultyList) {
-                const diffItems = helpDifficultyList.querySelectorAll('.diff-item');
-                texts.helpDifficultyList.forEach((text, index) => {
-                    if (diffItems[index]) {
-                        const parts = text.split(': ');
-                        const levelSpan = diffItems[index].querySelector('.diff-level');
-                        const desc = diffItems[index].querySelector('p');
-                        if (levelSpan && desc && parts.length >= 2) {
-                            const levelPart = parts[0].split(' (');
-                            levelSpan.textContent = levelPart[0];
-                            desc.textContent = parts[1];
-                        }
-                    }
-                });
-            }
-
-            const helpTipsTitle = document.querySelector('#help-screen .help-section:nth-child(5) h3');
-            if (helpTipsTitle) helpTipsTitle.textContent = texts.helpTips;
-
-            const helpTipsList = document.querySelector('#help-screen .help-section:nth-child(5) .tips-list');
-            if (helpTipsList && texts.helpTipsList) {
-                helpTipsList.innerHTML = texts.helpTipsList
-                    .map(tip => `<li>${tip}</li>`)
-                    .join('');
-            }
-
-            const helpCloseBtn = document.getElementById('help-close-btn');
-            if (helpCloseBtn) helpCloseBtn.textContent = texts.helpClose;
-
-            const helpStartBtn = document.getElementById('help-start-btn');
-            if (helpStartBtn) helpStartBtn.textContent = texts.helpStart;
-
-            // 设置HTML语言属性
-            document.getElementById('html-root').setAttribute('lang', lang);
+            console.log('✅ Language and Shop managers loaded');
+        } catch (error) {
+            console.error('❌ Failed to load Language/Shop managers:', error);
         }
     </script>
 
-    <!-- 用外部模块替换内联逻辑 -->
-    <script type="module" src="./js/math-rain/main-inline-remaining.js"></script>
-  </body>
+    <!-- Load Core Dependencies -->
+    <script type="module">
+        // Import and expose to global scope
+        import('./js/config-manager.js').then(module => {
+            window.ConfigManager = module.default;
+        });
+        
+        import('./js/performance-monitor.js').then(module => {
+            window.PerformanceMonitor = module.default;
+        });
+        
+        import('./js/math-rain/expression-generator.js').then(module => {
+            window.ExpressionGenerator = module.default;
+        });
+        
+        import('./js/math-rain/question-bank-manager.js').then(module => {
+            window.QuestionBankManager = module.default;
+        });
+        
+        import('./js/math-rain/difficulty-manager.js').then(module => {
+            window.DifficultyManager = module.default;
+        });
+        
+        import('./js/math-rain/sound-manager.js').then(module => {
+            window.SoundManager = module.default;
+        });
+        
+        import('./js/math-rain/animation-engine.js').then(module => {
+            window.AnimationEngine = module.default;
+        });
+        
+        import('./js/math-rain/particle-effects.js').then(module => {
+            window.ParticleSystem = module.default;
+        }).catch(error => {
+            console.warn('ParticleSystem failed to load:', error);
+        });
+    </script>
+
+    <!-- 加载重构后的核心游戏逻辑 -->
+    <script type="module">
+        // 等待依赖加载完成后再初始化
+        setTimeout(async () => {
+            try {
+                // 导入游戏主文件 (自动初始化)
+                const { default: MathRainGame } = await import('./js/math-rain/main.js');
+            } catch (error) {
+                console.error('Failed to load Math Rain:', error);
+            }
+        }, 2000); // 等待2秒确保所有依赖加载完成
+    </script>
+</body>
 
 </html>

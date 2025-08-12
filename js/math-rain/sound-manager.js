@@ -22,49 +22,61 @@ class SoundManager {
         // 音效缓存
         this.audioBuffers = new Map();
         
-        // 音效配置
+        // 音效配置 - 更优雅清脆的音效
         this.soundConfig = {
             correct: {
-                frequency: 523.25, // C5
-                duration: 0.3,
+                frequencies: [523.25, 659.25], // C5, E5 和谐的正确提示
+                duration: 0.25,
                 type: 'sine',
-                envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.2 }
+                envelope: { attack: 0.01, decay: 0.05, sustain: 0.15, release: 0.15 }
             },
             incorrect: {
-                frequency: 220, // A3
-                duration: 0.4,
-                type: 'sawtooth',
-                envelope: { attack: 0, decay: 0.05, sustain: 0.1, release: 0.35 }
+                frequencies: [185, 196], // F#3, G3 轻柔的错误提示
+                duration: 0.35,
+                type: 'triangle',
+                envelope: { attack: 0.02, decay: 0.08, sustain: 0.15, release: 0.25 }
             },
             combo: {
-                frequencies: [523.25, 659.25, 783.99], // C5, E5, G5 和弦
-                duration: 0.5,
+                frequencies: [659.25, 783.99, 987.77], // E5, G5, B5 上升的激励音
+                duration: 0.4,
                 type: 'sine',
-                envelope: { attack: 0.01, decay: 0.2, sustain: 0.4, release: 0.3 }
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.2 }
             },
             targetChange: {
-                frequencies: [440, 554.37, 659.25], // A4, C#5, E5 上行和弦
+                frequencies: [349.23, 415.30, 493.88], // F4, G#4, B4 神秘的变化音
+                duration: 0.5,
+                type: 'sine',
+                envelope: { attack: 0.05, decay: 0.1, sustain: 0.25, release: 0.2 }
+            },
+            freeze: {
+                frequencies: [261.63, 349.23, 523.25, 698.46], // C4, F4, C5, F5 冰冻音效
                 duration: 0.6,
                 type: 'sine',
                 envelope: { attack: 0.02, decay: 0.15, sustain: 0.3, release: 0.25 }
             },
+            bomb: {
+                frequencies: [130.81, 146.83, 164.81], // C3, D3, E3 爆炸低音
+                duration: 0.8,
+                type: 'sawtooth',
+                envelope: { attack: 0, decay: 0.2, sustain: 0.4, release: 0.4 }
+            },
             gameOver: {
-                frequency: 196, // G3
-                duration: 1.0,
+                frequencies: [220, 196, 174.61, 146.83], // A3, G3, F3, D3 下降的失败音
+                duration: 1.2,
                 type: 'triangle',
-                envelope: { attack: 0.1, decay: 0.3, sustain: 0.2, release: 0.6 }
+                envelope: { attack: 0.1, decay: 0.3, sustain: 0.4, release: 0.8 }
             },
             levelUp: {
-                frequencies: [261.63, 329.63, 392, 523.25], // C4, E4, G4, C5 琶音
-                duration: 0.8,
+                frequencies: [261.63, 329.63, 392, 523.25, 659.25], // C4-E5 胜利琶音
+                duration: 0.9,
                 type: 'sine',
-                envelope: { attack: 0.01, decay: 0.1, sustain: 0.5, release: 0.2 }
+                envelope: { attack: 0.01, decay: 0.08, sustain: 0.6, release: 0.3 }
             },
             click: {
-                frequency: 800,
-                duration: 0.1,
-                type: 'square',
-                envelope: { attack: 0, decay: 0.05, sustain: 0, release: 0.05 }
+                frequency: 1046.50, // C6 清脆的点击音
+                duration: 0.08,
+                type: 'sine',
+                envelope: { attack: 0, decay: 0.03, sustain: 0, release: 0.05 }
             }
         };
         

@@ -55,7 +55,7 @@ body {
     z-index: 100;
 }
 
-.score-display, .combo-display, .level-display, .time-display, .session-display, .session-target-display, .accuracy-display, .session-accuracy-display {
+.score-display, .combo-display, .level-display, .time-display, .lives-display, .session-display, .session-target-display, .accuracy-display, .session-accuracy-display {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -65,7 +65,8 @@ body {
 .score-display span:first-child,
 .combo-display span:first-child,
 .level-display span:first-child,
-.time-display span:first-child {
+.time-display span:first-child,
+.lives-display span:first-child {
     font-size: 12px;
     color: #a0aec0;
     margin-bottom: 5px;
@@ -74,7 +75,8 @@ body {
 .score-display span:last-child,
 .combo-display span:last-child,
 .level-display span:last-child,
-.time-display span:last-child {
+.time-display span:last-child,
+.lives-display span:last-child {
     font-family: 'Fredoka One', 'Nunito', cursive;
     font-size: 24px;
     font-weight: 900;
@@ -784,14 +786,15 @@ body {
         padding: 10px 15px;
     }
     
-    .score-display, .combo-display, .level-display, .time-display {
+    .score-display, .combo-display, .level-display, .time-display, .lives-display {
         min-width: 60px;
     }
     
     .score-display span:last-child,
     .combo-display span:last-child,
     .level-display span:last-child,
-    .time-display span:last-child {
+    .time-display span:last-child,
+    .lives-display span:last-child {
         font-size: 16px;
     }
     
@@ -851,7 +854,7 @@ body {
         gap: 10px;
     }
     
-    .score-display, .combo-display, .level-display, .time-display {
+    .score-display, .combo-display, .level-display, .time-display, .lives-display {
         min-width: 50px;
         margin: 5px;
     }
@@ -1039,7 +1042,7 @@ body {
         gap: 10px;
     }
 
-    .score-display, .combo-display, .level-display, .time-display {
+    .score-display, .combo-display, .level-display, .time-display, .lives-display {
         min-width: auto;
         flex: 1;
     }

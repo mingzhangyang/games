@@ -24,7 +24,7 @@ export default defineConfig({
           ],
           // Math Rain 相关模块
           'math-rain-core': [
-            './js/math-rain/math-rain-core.js',
+            './js/math-rain/main.js',
             './js/math-rain/expression-generator.js',
             './js/math-rain/question-bank-manager.js',
             './js/math-rain/question-bank-generator.js'
@@ -34,6 +34,17 @@ export default defineConfig({
             './js/math-rain/particle-effects.js',
             './js/math-rain/sound-manager.js',
             './js/math-rain/difficulty-manager.js'
+          ],
+          'math-rain-systems': [
+            './js/math-rain/systems/EventSystem.js',
+            './js/math-rain/systems/DependencyContainer.js'
+          ],
+          'math-rain-managers': [
+            './js/math-rain/core/GameStateManager.js',
+            './js/math-rain/core/SessionManager.js',
+            './js/math-rain/core/UIController.js',
+            './js/math-rain/core/PerformanceOptimizer.js',
+            './js/math-rain/core/ErrorHandler.js'
           ]
         },
         // 文件命名
