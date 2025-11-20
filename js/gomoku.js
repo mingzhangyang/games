@@ -6,6 +6,7 @@ const modeBtn = document.getElementById('modeBtn');
 const modal = document.getElementById('gameOverModal');
 const modalMessage = document.getElementById('modalMessage');
 const modalRestartBtn = document.getElementById('modalRestartBtn');
+const difficultySelect = document.getElementById('difficultySelect');
 
 // Game Constants
 const BOARD_SIZE = 15;
@@ -17,6 +18,7 @@ let board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
 let currentPlayer = 1; // 1: Black, 2: White
 let gameActive = false;
 let gameMode = 'pve'; // 'pvp' or 'pve'
+let difficulty = 'medium';
 let isComputerThinking = false;
 
 // Initialize
@@ -30,6 +32,10 @@ function init() {
         resetGame();
     });
     modeBtn.addEventListener('click', toggleMode);
+    difficultySelect.addEventListener('change', (e) => {
+        difficulty = e.target.value;
+        resetGame();
+    });
     
     resetGame();
 }
@@ -64,6 +70,7 @@ function resetGame() {
 function toggleMode() {
     gameMode = gameMode === 'pvp' ? 'pve' : 'pvp';
     modeBtn.textContent = gameMode === 'pvp' ? 'Mode: 2 Players' : 'Mode: vs Computer';
+    difficultySelect.style.display = gameMode === 'pve' ? 'inline-block' : 'none';
     resetGame();
 }
 
@@ -290,24 +297,50 @@ function computerMove() {
     // 2. Check if need to block player win
     const blockMove = findBestMove(1); // Opponent is player 1 (Black)
     if (blockMove.score >= 10000) {
-        makeMove(blockMove.r, blockMove.c);
-        return;
+        // Easy mode: 20% chance to miss a block
+        if (difficulty === 'easy' && Math.random() < 0.2) {
+            // Missed block, fall through to random/offensive move
+        } else {
+            makeMove(blockMove.r, blockMove.c);
+            return;
+        }
     }
     
     // 3. Otherwise, pick best offensive move
-    // We use the same evaluation but prioritize our own score slightly more or combine them
-    // A simple strategy: evaluate every empty cell for both players.
-    // Score = (My Potential Score) + (Opponent Potential Score * 0.8)
-    
     let bestScore = -1;
     let bestMoves = [];
     
+    // Weights based on difficulty
+    let attackWeight = 1.0;
+    let defenseWeight = 1.0;
+    
+    if (difficulty === 'easy') {
+        // Easy: Mostly random, low defense awareness
+        attackWeight = 1.0;
+        defenseWeight = 0.2; 
+    } else if (difficulty === 'medium') {
+        // Medium: Balanced
+        attackWeight = 1.0;
+        defenseWeight = 0.8;
+    } else {
+        // Hard: Aggressive defense and attack
+        attackWeight = 1.2;
+        defenseWeight = 1.0;
+    }
+
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             if (board[r][c] === 0) {
-                const attackScore = evaluatePosition(r, c, 2);
-                const defenseScore = evaluatePosition(r, c, 1);
-                const totalScore = attackScore + defenseScore;
+                let attackScore = evaluatePosition(r, c, 2);
+                let defenseScore = evaluatePosition(r, c, 1);
+                
+                // Hard mode: Positional bonus (center control)
+                if (difficulty === 'hard') {
+                    const centerDist = Math.abs(r - 7) + Math.abs(c - 7);
+                    attackScore += (14 - centerDist); // Small bonus for center
+                }
+
+                const totalScore = (attackScore * attackWeight) + (defenseScore * defenseWeight);
                 
                 if (totalScore > bestScore) {
                     bestScore = totalScore;
@@ -320,6 +353,23 @@ function computerMove() {
     }
     
     if (bestMoves.length > 0) {
+        // Easy mode: Add some randomness to the choice if multiple good moves or just pick random valid move sometimes
+        if (difficulty === 'easy' && Math.random() < 0.3) {
+             // Pick a random valid move near center or existing pieces to avoid total stupidity
+             // For simplicity, just pick a random empty spot
+             let randomMoves = [];
+             for(let r=0; r<BOARD_SIZE; r++) {
+                 for(let c=0; c<BOARD_SIZE; c++) {
+                     if(board[r][c] === 0) randomMoves.push({r,c});
+                 }
+             }
+             if(randomMoves.length > 0) {
+                 const move = randomMoves[Math.floor(Math.random() * randomMoves.length)];
+                 makeMove(move.r, move.c);
+                 return;
+             }
+        }
+
         const move = bestMoves[Math.floor(Math.random() * bestMoves.length)];
         makeMove(move.r, move.c);
     } else {
