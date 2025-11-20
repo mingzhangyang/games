@@ -49,6 +49,12 @@ function copyAssets() {
   
   assetDirs.forEach(dir => {
     if (existsSync(dir)) {
+      const rootTarget = join('dist', dir);
+      if (!existsSync(rootTarget)) {
+        mkdirSync(rootTarget, { recursive: true });
+      }
+      copyDirectory(dir, rootTarget);
+
       GAMES.forEach(game => {
         const targetDir = join('dist', game.name, dir);
         if (!existsSync(targetDir)) {
@@ -84,10 +90,25 @@ function generateIndexHtml() {
   log('\n📄 生成游戏索引页面...', 'cyan');
   
   const indexContent = `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Play lightweight browser games like Math Rain, Tetris, and Tank Battle instantly.">
+    <meta name="keywords" content="web games, html5 games, mini games, math game, tetris, tank battle">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="">
+    <meta property="og:title" content="Mini Games Collection">
+    <meta property="og:description" content="A curated collection of single-file browser games including Math Rain, Tetris, and Tank Battle.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:image" content="assets/seo/og-collection.svg">
+    <meta property="og:url" content="">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mini Games Collection">
+    <meta name="twitter:description" content="Classic titles rebuilt for instant HTML5 play.">
+    <meta name="twitter:image" content="assets/seo/og-collection.svg">
     <title>Mini Games Collection</title>
     <style>
         body {
@@ -107,6 +128,12 @@ function generateIndexHtml() {
             font-size: 3em;
             margin-bottom: 2em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .lede {
+            font-size: 1.05em;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-top: -10px;
         }
         .games-grid {
             display: grid;
@@ -141,34 +168,98 @@ function generateIndexHtml() {
             line-height: 1.4;
         }
     </style>
+    </style>
 </head>
 <body>
-    <div class="container">
+    <main class="container">
         <h1>🎮 Mini Games Collection</h1>
-        <p>选择一个游戏开始游玩</p>
+        <p class="lede">Pick a single-file HTML5 game, share the link, and play instantly on desktop or mobile.</p>
         
         <div class="games-grid">
             <a href="math-rain/math-rain.html" class="game-card">
                 <div class="game-icon">🧮</div>
                 <div class="game-title">Math Rain</div>
-                <div class="game-desc">数字雨 - 挑战你的数学计算能力</div>
+                <div class="game-desc">Answer falling equations and test your reflexes.</div>
             </a>
             
             <a href="tetris/tetris.html" class="game-card">
                 <div class="game-icon">🧩</div>
                 <div class="game-title">Tetris</div>
-                <div class="game-desc">俄罗斯方块 - 经典的益智游戏</div>
+                <div class="game-desc">Modern effects meet the classic falling block challenge.</div>
             </a>
             
             <a href="tank-battle/tank-battle.html" class="game-card">
                 <div class="game-icon">🚗</div>
                 <div class="game-title">Tank Battle</div>
-                <div class="game-desc">坦克大战 - 策略与反应的结合</div>
+                <div class="game-desc">Retro arcade tank battles with base defense.</div>
             </a>
             
 
         </div>
-    </div>
+    </main>
+    <script>
+        (() => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) {
+                canonical.setAttribute('href', currentUrl);
+            }
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-collection.svg', baseUrl).href;
+
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', currentUrl);
+            }
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) {
+                ogImage.setAttribute('content', socialImage);
+            }
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) {
+                twitterImage.setAttribute('content', socialImage);
+            }
+
+            const games = [
+                { path: 'math-rain/math-rain.html', name: 'Math Rain', description: 'Timed arithmetic practice game.' },
+                { path: 'tetris/tetris.html', name: 'Tetris', description: 'Classic puzzle game with modern polish.' },
+                { path: 'tank-battle/tank-battle.html', name: 'Tank Battle', description: 'Retro arcade tank shooter.' }
+            ];
+
+            const siteData = {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "Mini Games Collection",
+                "url": currentUrl,
+                "description": "Lightweight browser games including Math Rain, Tetris, and Tank Battle.",
+                "inLanguage": "en",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const itemList = {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "Mini Games Collection",
+                "itemListElement": games.map((game, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "name": game.name,
+                    "description": game.description,
+                    "url": new URL(game.path, baseUrl).href
+                }))
+            };
+
+            [siteData, itemList].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        })();
+    </script>
 </body>
 </html>`;
   

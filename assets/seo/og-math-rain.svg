@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Math Rain social card</title>
+  <desc id="desc">Social preview image for the Math Rain web game.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#0f172a" offset="0%"/>
+      <stop stop-color="#4338ca" offset="50%"/>
+      <stop stop-color="#1e293b" offset="100%"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.28)" stroke="#a78bfa" stroke-width="2"/>
+  <text x="88" y="190" fill="#e9d8fd" font-size="88" font-family="Segoe UI, Arial, sans-serif" font-weight="800">Math Rain</text>
+  <text x="88" y="260" fill="#cbd5e1" font-size="30" font-family="Segoe UI, Arial, sans-serif">Answer falling equations, sharpen arithmetic, and climb the leaderboard.</text>
+  <text x="88" y="340" fill="#fcd34d" font-size="54" font-family="Segoe UI Emoji, Segoe UI, Arial">🧮  + 7 × 3 = ?   ·   18 ÷ 6 = ?   ·   12 − 5 = ?</text>
+  <text x="88" y="420" fill="#c7d2fe" font-size="28" font-family="Segoe UI, Arial, sans-serif">Instant-play HTML5 · Keyboard and touch controls · Bilingual UI</text>
+</svg>

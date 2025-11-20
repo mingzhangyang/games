@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Mini Games Collection social card</title>
+  <desc id="desc">A colorful banner for the Mini Games Collection featuring Math Rain, Tetris, Tank Battle, and Gomoku.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#111927" offset="0%"/>
+      <stop stop-color="#4c51bf" offset="50%"/>
+      <stop stop-color="#2f855a" offset="100%"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="40" y="40" width="1120" height="550" rx="28" fill="rgba(0,0,0,0.24)" stroke="#7f9cf5" stroke-width="2"/>
+  <text x="80" y="180" fill="#f7fafc" font-size="78" font-family="Segoe UI, Arial, sans-serif" font-weight="800">Mini Games Collection</text>
+  <text x="80" y="250" fill="#cbd5e0" font-size="30" font-family="Segoe UI, Arial, sans-serif">Play Math Rain, Tetris, Tank Battle, and Gomoku instantly in your browser.</text>
+  <text x="80" y="340" fill="#fbd38d" font-size="40" font-family="Segoe UI Emoji, Segoe UI, Arial">🧮  Math Rain     🧩  Tetris     🚗  Tank Battle     ⚫  Gomoku</text>
+  <text x="80" y="420" fill="#c3dafe" font-size="26" font-family="Segoe UI, Arial, sans-serif">Single-file HTML5 games · Fast loading · Shareable links</text>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Tank Battle social card</title>
+  <desc id="desc">Social preview image for the Tank Battle browser game.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#2f0f0f" offset="0%"/>
+      <stop stop-color="#7c2d12" offset="45%"/>
+      <stop stop-color="#1f2937" offset="100%"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.33)" stroke="#fb923c" stroke-width="2"/>
+  <text x="88" y="190" fill="#fed7aa" font-size="86" font-family="Segoe UI, Arial, sans-serif" font-weight="800">Tank Battle</text>
+  <text x="88" y="260" fill="#fef3c7" font-size="34" font-family="Segoe UI Emoji, Segoe UI, Arial">🚗💥🛡️</text>
+  <text x="88" y="320" fill="#fde68a" font-size="30" font-family="Segoe UI, Arial, sans-serif">Retro-inspired arcade action with destructible terrain and power-ups.</text>
+  <text x="88" y="400" fill="#ffedd5" font-size="28" font-family="Segoe UI, Arial, sans-serif">Protect the base · Master weapon switching · Conquer endless waves</text>
+</svg>

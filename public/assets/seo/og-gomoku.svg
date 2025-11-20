@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Gomoku social card</title>
+  <desc id="desc">Social preview image for the Gomoku (Five in a Row) web game.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#0f172a" offset="0%"/>
+      <stop stop-color="#1f2937" offset="40%"/>
+      <stop stop-color="#2563eb" offset="100%"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.3)" stroke="#93c5fd" stroke-width="2"/>
+  <text x="88" y="190" fill="#e5e7eb" font-size="88" font-family="Segoe UI, Arial, sans-serif" font-weight="800">Gomoku</text>
+  <text x="88" y="260" fill="#d1d5db" font-size="30" font-family="Segoe UI, Arial, sans-serif">Challenge the AI or a friend in classic Five in a Row strategy play.</text>
+  <text x="88" y="340" fill="#f3f4f6" font-size="58" font-family="Segoe UI Emoji, Segoe UI, Arial">⚫ ⚪ ⚫ ⚫ ⚪</text>
+  <text x="88" y="420" fill="#bfdbfe" font-size="28" font-family="Segoe UI, Arial, sans-serif">Adaptive difficulty · Undo/redo free · Lightweight canvas board</text>
+</svg>

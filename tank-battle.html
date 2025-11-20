@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Play Tank Battle, a classic retro arcade tank game in your browser. Defend your base and destroy enemy tanks.">
     <meta name="keywords" content="tank battle, tank game, arcade game, retro game, html5 game">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="">
+    <meta property="og:title" content="Tank Battle - Retro Arcade">
+    <meta property="og:description" content="Protect your base, switch weapons, and survive waves of enemy tanks.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-tank-battle.svg">
+    <meta property="og:url" content="">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tank Battle - Retro Arcade">
+    <meta name="twitter:description" content="Classic browser tank shooter with keyboard controls and power-ups.">
+    <meta name="twitter:image" content="assets/seo/og-tank-battle.svg">
     <title>坦克大战 - Tank Battle Enhanced</title>
     <link rel="stylesheet" href="css/tank-battle.css">
 </head>
@@ -29,6 +42,74 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) {
+                canonical.setAttribute('href', currentUrl);
+            }
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-tank-battle.svg', baseUrl).href;
+
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', currentUrl);
+            }
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) {
+                ogImage.setAttribute('content', socialImage);
+            }
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) {
+                twitterImage.setAttribute('content', socialImage);
+            }
+
+            const gameData = {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "Tank Battle",
+                "url": currentUrl,
+                "description": "Protect your base, switch weapons, and survive waves of enemy tanks.",
+                "applicationCategory": "GameApplication",
+                "operatingSystem": "Web",
+                "genre": ["Arcade", "Shooter", "Retro"],
+                "playMode": "SinglePlayer",
+                "image": socialImage,
+                "inLanguage": document.documentElement.lang || "zh-CN",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Mini Games Collection",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Tank Battle",
+                        "item": currentUrl
+                    }
+                ]
+            };
+
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
     <script type="module" src="js/tank-battle.js"></script>
 </body>
 </html>

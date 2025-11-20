@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Tetris social card</title>
+  <desc id="desc">Social preview image for the Tetris - Cool Edition web game.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#0b132b" offset="0%"/>
+      <stop stop-color="#1f2937" offset="35%"/>
+      <stop stop-color="#0ea5e9" offset="100%"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.35)" stroke="#38bdf8" stroke-width="2"/>
+  <text x="88" y="190" fill="#e0f2fe" font-size="88" font-family="Segoe UI, Arial, sans-serif" font-weight="800">Tetris — Cool Edition</text>
+  <text x="88" y="260" fill="#cbd5e1" font-size="30" font-family="Segoe UI, Arial, sans-serif">Modern particle effects, smooth controls, and classic falling blocks.</text>
+  <text x="88" y="340" fill="#bfdbfe" font-size="60" font-family="Segoe UI, Arial, sans-serif">🟥 🟦 🟧 🟪 🟩</text>
+  <text x="88" y="420" fill="#bae6fd" font-size="28" font-family="Segoe UI, Arial, sans-serif">Web-based play · High score tracking · Keyboard and mobile friendly</text>
+</svg>

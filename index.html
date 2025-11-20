@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A curated collection of single-file web games including Math Rain, Tetris, Tank Battle, and Gomoku. Play instantly in your browser.">
     <meta name="keywords" content="web games, html5 games, mini games, math game, tetris, tank battle, gomoku, five in a row">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="">
+    <meta property="og:title" content="Mini Games Collection">
+    <meta property="og:description" content="Play lightweight browser games like Math Rain, Tetris, Tank Battle, and Gomoku instantly.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:image" content="assets/seo/og-collection.svg">
+    <meta property="og:url" content="">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mini Games Collection">
+    <meta name="twitter:description" content="A curated collection of instant-play HTML5 games.">
+    <meta name="twitter:image" content="assets/seo/og-collection.svg">
+    <meta name="theme-color" content="#667eea">
     <title id="page-title">Mini Games Collection</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='32' fill='white' font-family='Segoe UI,Arial' dy='.3em'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
     <style>
@@ -67,11 +81,23 @@
             text-shadow: 0 0 20px #667eea;
             font-weight: 800;
         }
+        h2 {
+            font-size: 1.35em;
+            margin: 18px 0 6px;
+            color: #fbd38d;
+            font-weight: 700;
+        }
         .desc {
             font-size: 1.15em;
             margin-bottom: 38px;
             color: #f7fafc;
             opacity: 0.95;
+        }
+        .lede {
+            font-size: 1em;
+            color: #e2e8f0;
+            margin: 8px 0 28px;
+            line-height: 1.55;
         }
         ul {
             list-style: none;
@@ -142,6 +168,27 @@
         .github:hover {
             color: #48bb78;
         }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .feature-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: left;
+            color: #e2e8f0;
+            line-height: 1.45;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+        }
+        .feature-card strong {
+            color: #fbd38d;
+            display: block;
+            margin-bottom: 6px;
+        }
         @media (max-width: 600px) {
             .container {
                 padding: 24px 8px 18px 8px;
@@ -158,10 +205,12 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <main class="container" id="page-top">
         <div class="logo">🎮</div>
         <h1 id="main-title">Mini Games Collection</h1>
         <div class="desc" id="main-desc">精选的单文件网页游戏合集，即点即玩，轻松分享，享受经典乐趣！</div>
+        <p class="lede">Instant-play HTML5 games with no downloads, no accounts, and no ads. Keep a link handy, share with friends, and play classic genres in seconds—great for quick breaks, classrooms, and retro fans.</p>
+        <h2>Featured browser games</h2>
         <ul>
             <li><a href="math-rain.html" id="math-rain-name">Math Rain</a> <span class="tag" id="math-rain-tag">✅ 已完成 | Mathematical Game</span></li>
             <li><a href="tetris.html" id="tetris-name">Tetris</a> <span class="tag" id="tetris-tag">🔧 开发中 | Classic Puzzle</span></li>
@@ -171,8 +220,22 @@
 
             <!-- Add more games here -->
         </ul>
-    
-    </div>
+        <h2>Why players bookmark us</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <strong>Single-file builds</strong>
+                Lightweight pages load fast, cache well, and are easy to host anywhere.
+            </div>
+            <div class="feature-card">
+                <strong>Keyboard + touch</strong>
+                Games are tuned for laptop keyboards and mobile touch controls so anyone can play.
+            </div>
+            <div class="feature-card">
+                <strong>Bilingual copy</strong>
+                English and Chinese text help search engines and players find the right experience.
+            </div>
+        </div>
+    </main>
     <footer style="width:100vw;text-align:center;padding:18px 0 10px 0;font-size:15px;color:#aaa;letter-spacing:0.5px;background:rgba(26,32,44,0.85);border-top:1px solid #667eea;position:fixed;left:0;bottom:0;z-index:1001;backdrop-filter:blur(3px);">
         © 2025 Orangely.
     </footer>
@@ -218,6 +281,76 @@
             return browserLang.startsWith('zh') ? 'zh' : 'en';
         }
 
+        // 设置 canonical、OG、Twitter 图像为绝对地址，便于搜索引擎收录
+        function setCanonicalAndSocialMeta() {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonicalLink = document.getElementById('canonical-link');
+            if (canonicalLink) {
+                canonicalLink.setAttribute('href', currentUrl);
+            }
+
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', currentUrl);
+            }
+
+            const baseUrl = new URL('.', currentUrl).href;
+            const imagePath = new URL('assets/seo/og-collection.svg', baseUrl).href;
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) {
+                ogImage.setAttribute('content', imagePath);
+            }
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) {
+                twitterImage.setAttribute('content', imagePath);
+            }
+        }
+
+        // 为搜索引擎注入结构化数据
+        function injectStructuredData() {
+            const currentUrl = window.location.href.split('#')[0];
+            const baseUrl = new URL('.', currentUrl).href;
+            const games = [
+                { slug: 'math-rain', name: 'Math Rain', description: 'Timed arithmetic practice game with falling equations.' },
+                { slug: 'tetris', name: 'Tetris', description: 'Modernized Tetris with particles, keyboard, and mobile controls.' },
+                { slug: 'tank-battle', name: 'Tank Battle', description: 'Retro arcade tank shooter with base defense.' },
+                { slug: 'gomoku', name: 'Gomoku', description: 'Five in a Row board game versus AI or a friend.' },
+            ];
+
+            const siteData = {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "Mini Games Collection",
+                "url": currentUrl,
+                "description": "Play lightweight browser games including Math Rain, Tetris, Tank Battle, and Gomoku.",
+                "inLanguage": document.documentElement.lang || "en",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const itemList = {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "Mini Games Collection",
+                "itemListElement": games.map((game, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "name": game.name,
+                    "description": game.description,
+                    "url": `${baseUrl}${game.slug}.html`
+                }))
+            };
+
+            [siteData, itemList].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        }
+
         // 应用语言设置
         function applyLanguage(lang) {
             const texts = i18n[lang];
@@ -246,6 +379,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const language = detectLanguage();
             applyLanguage(language);
+            setCanonicalAndSocialMeta();
+            injectStructuredData();
         });
     </script>
 </body>
