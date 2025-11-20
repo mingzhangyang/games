@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku - Five in a Row</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23fff'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/gomoku.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Gomoku</h1>
+        
+        <div class="status-bar">
+            <div class="status-item" id="statusText">Black's Turn</div>
+            <div class="status-item" id="modeText"></div>
+        </div>
+
+        <div class="board-container">
+            <canvas id="gameBoard"></canvas>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="restartBtn">Restart Game</button>
+            <button class="btn btn-secondary" id="modeBtn">Mode: vs Computer</button>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>Game Over</h2>
+            <p id="modalMessage"></p>
+            <button class="btn btn-primary" id="modalRestartBtn">Play Again</button>
+        </div>
+    </div>
+
+    <script src="js/gomoku.js"></script>
+</body>
+</html>

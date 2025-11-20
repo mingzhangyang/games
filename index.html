@@ -164,6 +164,7 @@
             <li><a href="math-rain.html" id="math-rain-name">Math Rain</a> <span class="tag" id="math-rain-tag">✅ 已完成 | Mathematical Game</span></li>
             <li><a href="tetris.html" id="tetris-name">Tetris</a> <span class="tag" id="tetris-tag">🔧 开发中 | Classic Puzzle</span></li>
             <li><a href="tank-battle.html" id="tank-name">Tank Battle</a> <span class="tag" id="tank-tag">🔧 开发中 | Retro Arcade</span></li>
+            <li><a href="gomoku.html" id="gomoku-name">Gomoku</a> <span class="tag" id="gomoku-tag">✨ New | Strategy Board</span></li>
             <!-- <li><a href="js/math-rain/question-bank-test.html" id="test-page">Question Bank Test</a> <span class="tag">🧪 测试页面</span></li> -->
 
             <!-- Add more games here -->
@@ -186,6 +187,8 @@
                 tankTag: 'Classic Arcade, Retro Style',
                 mathRainName: 'Math Rain',
                 mathRainTag: 'Mathematical Game',
+                gomokuName: 'Gomoku',
+                gomokuTag: 'Strategy Board Game',
 
                 footer: '© 2025 Orangely.'
             },
@@ -199,6 +202,8 @@
                 tankTag: '经典街机, 怀旧风格',
                 mathRainName: '数字雨',
                 mathRainTag: '数学游戏, 教育训练',
+                gomokuName: '五子棋',
+                gomokuTag: '经典策略, 益智对弈',
 
                 footer: '© 2025 Orangely.'
             }
@@ -226,6 +231,10 @@
             document.getElementById('tank-tag').textContent = texts.tankTag;
             document.getElementById('math-rain-name').textContent = texts.mathRainName;
             document.getElementById('math-rain-tag').textContent = texts.mathRainTag;
+            if (document.getElementById('gomoku-name')) {
+                document.getElementById('gomoku-name').textContent = texts.gomokuName;
+                document.getElementById('gomoku-tag').textContent = texts.gomokuTag;
+            }
             
             // 更新HTML lang属性
             document.getElementById('html-root').setAttribute('lang', lang);
