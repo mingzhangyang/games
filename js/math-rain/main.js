@@ -404,7 +404,8 @@ class MathRainGame {
      */
     async loadQuestionBank() {
         try {
-            const response = await fetch('/assets/math-rain/question-bank.json');
+            const questionBankUrl = `${import.meta.env.BASE_URL}assets/math-rain/question-bank.json`;
+            const response = await fetch(questionBankUrl);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }

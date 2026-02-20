@@ -10,7 +10,8 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         'math-rain': resolve(__dirname, 'math-rain.html'),
         tetris: resolve(__dirname, 'tetris.html'),
-        'tank-battle': resolve(__dirname, 'tank-battle.html')
+        'tank-battle': resolve(__dirname, 'tank-battle.html'),
+        gomoku: resolve(__dirname, 'gomoku.html')
       },
       output: {
         // 分块策略

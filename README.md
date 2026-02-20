@@ -2,6 +2,12 @@
 
 🎮 多合一小游戏平台，支持模块化构建和现代化开发流程。
 
+当前包含游戏：
+- Math Rain
+- Tetris
+- Tank Battle
+- Gomoku
+
 ## 🚀 快速开始
 
 ### 安装依赖
@@ -22,12 +28,8 @@ npm run dev
 # 构建所有游戏
 npm run build
 
-# 构建单个游戏
-npm run build:math-rain
-npm run build:tetris
-npm run build:tank-battle
-
-
 # 预览构建结果
 npm run serve
 ```
+
+构建产物位于 `dist/`，包含 `index.html`、`math-rain.html`、`tetris.html`、`tank-battle.html`、`gomoku.html`。

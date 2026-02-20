@@ -489,92 +489,21 @@
         </div>
     </div>
 
-    <!-- Initialize Language and Shop Management -->
+    <!-- Compatibility globals used by inline handlers -->
     <script>
-        // Temporary compatibility functions until modules load
+        window.__pendingLanguageSelection = null;
         window.selectLanguage = function(lang) {
+            window.__pendingLanguageSelection = lang;
             if (window.languageManager) {
                 window.languageManager.selectLanguage(lang);
             }
         };
-        
-        // Update shop interface function for compatibility
+
         window.updateShopInterface = function() {
             if (window.shopManager) {
                 window.shopManager.updateShopInterface();
             }
         };
-        
-        // Initialize on DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, waiting for modules...');
-        });
-    </script>
-
-    <!-- Load Language and Shop Managers -->
-    <script type="module">
-        (async () => {
-            try {
-                // Import language manager
-                const { default: LanguageManager } = await import('./js/math-rain/i18n/language-manager.js');
-                window.languageManager = new LanguageManager();
-                window.languageManager.initialize();
-                
-                // Import shop manager  
-                const { default: ShopManager } = await import('./js/math-rain/shop-manager.js');
-                window.shopManager = new ShopManager();
-                
-                console.log('✅ Language and Shop managers loaded');
-            } catch (error) {
-                console.error('❌ Failed to load Language/Shop managers:', error);
-            }
-        })();
-    </script>
-
-    <!-- Load Core Dependencies -->
-    <script type="module">
-        // Import and expose to global scope
-        import('./js/config-manager.js').then(module => {
-            window.ConfigManager = module.default;
-        });
-        
-        import('./js/performance-monitor.js').then(module => {
-            window.PerformanceMonitor = module.default;
-        });
-        
-        import('./js/math-rain/expression-generator.js').then(module => {
-            window.ExpressionGenerator = module.default;
-        });
-        
-        import('./js/math-rain/question-bank-manager.js').then(module => {
-            window.QuestionBankManager = module.default;
-        });
-        
-        import('./js/math-rain/difficulty-manager.js').then(module => {
-            window.DifficultyManager = module.default;
-        });
-        
-        import('./js/math-rain/sound-manager.js').then(module => {
-            window.SoundManager = module.default;
-        });
-        
-        import('./js/math-rain/animation-engine.js').then(module => {
-            window.AnimationEngine = module.default;
-        });
-        
-        import('./js/math-rain/particle-effects.js').then(module => {
-            window.ParticleSystem = module.default;
-        }).catch(error => {
-            console.warn('ParticleSystem failed to load:', error);
-        });
-        
-        // Load Mobile Adapter
-        import('./js/math-rain/mobile-adapter.js').then(module => {
-            window.MobileAdapter = module.default;
-            console.log('✅ Mobile Adapter loaded');
-        }).catch(error => {
-            console.warn('Mobile Adapter failed to load:', error);
-        });
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -645,17 +574,64 @@
         });
     </script>
 
-    <!-- 加载重构后的核心游戏逻辑 -->
     <script type="module">
-        // 等待依赖加载完成后再初始化
-        setTimeout(async () => {
+        (async () => {
             try {
-                // 导入游戏主文件 (自动初始化)
-                const { default: MathRainGame } = await import('./js/math-rain/main.js');
+                const [
+                    { default: LanguageManager },
+                    { default: ShopManager },
+                    { default: ConfigManager },
+                    { default: PerformanceMonitor },
+                    { default: ExpressionGenerator },
+                    { default: QuestionBankManager },
+                    { default: DifficultyManager },
+                    { default: SoundManager },
+                    { default: AnimationEngine },
+                    particleEffectsModule,
+                    mobileAdapterModule
+                ] = await Promise.all([
+                    import('./js/math-rain/i18n/language-manager.js'),
+                    import('./js/math-rain/shop-manager.js'),
+                    import('./js/config-manager.js'),
+                    import('./js/performance-monitor.js'),
+                    import('./js/math-rain/expression-generator.js'),
+                    import('./js/math-rain/question-bank-manager.js'),
+                    import('./js/math-rain/difficulty-manager.js'),
+                    import('./js/math-rain/sound-manager.js'),
+                    import('./js/math-rain/animation-engine.js'),
+                    import('./js/math-rain/particle-effects.js').catch(() => null),
+                    import('./js/math-rain/mobile-adapter.js').catch(() => null)
+                ]);
+
+                window.ConfigManager = ConfigManager;
+                window.PerformanceMonitor = PerformanceMonitor;
+                window.ExpressionGenerator = ExpressionGenerator;
+                window.QuestionBankManager = QuestionBankManager;
+                window.DifficultyManager = DifficultyManager;
+                window.SoundManager = SoundManager;
+                window.AnimationEngine = AnimationEngine;
+                if (particleEffectsModule?.default) {
+                    window.ParticleSystem = particleEffectsModule.default;
+                }
+                if (mobileAdapterModule?.default) {
+                    window.MobileAdapter = mobileAdapterModule.default;
+                }
+
+                window.languageManager = new LanguageManager();
+                window.languageManager.initialize();
+
+                if (window.__pendingLanguageSelection) {
+                    window.languageManager.selectLanguage(window.__pendingLanguageSelection);
+                    window.__pendingLanguageSelection = null;
+                }
+
+                window.shopManager = new ShopManager();
+
+                await import('./js/math-rain/main.js');
             } catch (error) {
-                console.error('Failed to load Math Rain:', error);
+                console.error('Failed to bootstrap Math Rain:', error);
             }
-        }, 2000); // 等待2秒确保所有依赖加载完成
+        })();
     </script>
 </body>
 

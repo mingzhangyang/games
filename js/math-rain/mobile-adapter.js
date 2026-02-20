@@ -13,6 +13,7 @@ class MobileAdapter {
         
         // Performance tracking
         this.performanceMode = this.detectPerformanceMode();
+        this.viewportChangeDebounceMs = this.performanceMode.low ? 120 : 0;
         
         // Gesture handling
         this.gestureStartX = 0;
@@ -86,8 +87,7 @@ class MobileAdapter {
      * Setup viewport handling for mobile devices
      */
     setupViewportHandling() {
-        // Handle viewport changes
-        const handleViewportChange = () => {
+        const updateViewportState = () => {
             const newHeight = window.innerHeight;
             const heightDiff = Math.abs(newHeight - this.viewportHeight);
             
@@ -105,9 +105,13 @@ class MobileAdapter {
             }
         };
 
+        const handleViewportChange = this.viewportChangeDebounceMs > 0
+            ? this.debounce(updateViewportState, this.viewportChangeDebounceMs)
+            : updateViewportState;
+
         window.addEventListener('resize', handleViewportChange);
         window.addEventListener('orientationchange', () => {
-            setTimeout(handleViewportChange, 100); // Delay to ensure viewport has updated
+            setTimeout(updateViewportState, 100); // Delay to ensure viewport has updated
         });
 
         // Prevent zoom on double tap
@@ -164,9 +168,6 @@ class MobileAdapter {
             
             // Reduce particle effects
             this.applyLowEndSettings();
-            
-            // Throttle resize events more aggressively
-            this.setupThrottledEventHandlers();
         } else if (this.performanceMode.medium) {
             console.log('⚡ Applying medium performance optimizations');
             document.documentElement.style.setProperty('--animation-duration', '0.2s');
@@ -205,21 +206,13 @@ class MobileAdapter {
     }
 
     /**
-     * Setup throttled event handlers for better performance
+     * Debounce utility to avoid running expensive handlers too frequently
      */
-    setupThrottledEventHandlers() {
-        let resizeTimeout;
-        const originalAddEventListener = window.addEventListener;
-        
-        window.addEventListener = function(type, listener, options) {
-            if (type === 'resize' || type === 'scroll') {
-                const throttledListener = function(...args) {
-                    clearTimeout(resizeTimeout);
-                    resizeTimeout = setTimeout(() => listener.apply(this, args), 100);
-                };
-                return originalAddEventListener.call(this, type, throttledListener, options);
-            }
-            return originalAddEventListener.call(this, type, listener, options);
+    debounce(callback, delay) {
+        let timeoutId = null;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => callback(...args), delay);
         };
     }
 
