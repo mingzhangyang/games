@@ -5,7 +5,8 @@
       "Bash(find:*)",
       "Bash(ls:*)",
       "Bash(mkdir:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

@@ -1,3 +1,11 @@
+function escapeHTML(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 // 多语言支持
 const LANGUAGES = {
     en: {
@@ -53,6 +61,14 @@ function getUserLang() {
 let currentLang = getUserLang();
 let TEXT = LANGUAGES[currentLang] || LANGUAGES['en'];
 
+function normalizeUsername(val) {
+    const trimmed = String(val).trim().slice(0, 20);
+    if (!trimmed || trimmed === 'Anonymous') {
+        return 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
+    }
+    return trimmed;
+}
+
 // 用户名输入框逻辑
 function setupUsernameInput() {
     const input = document.getElementById('usernameInput');
@@ -64,19 +80,13 @@ function setupUsernameInput() {
     }
     input.value = username;
     input.addEventListener('change', function() {
-        let val = input.value.trim();
-        if (!val || val === 'Anonymous') {
-            val = 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
-        }
+        const val = normalizeUsername(input.value);
         input.value = val;
         localStorage.setItem('tetris_username', val);
     });
     input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
-            let val = input.value.trim();
-            if (!val || val === 'Anonymous') {
-                val = 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
-            }
+            const val = normalizeUsername(input.value);
             input.value = val;
             localStorage.setItem('tetris_username', val);
             input.blur();
@@ -215,12 +225,12 @@ class Particle {
         this.size = Math.random() * 4 + 2;
     }
 
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vy += 0.2;
-        this.life -= this.decay;
-        this.size *= 0.98;
+    update(dt = 1) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.vy += 0.2 * dt;
+        this.life -= this.decay * dt;
+        this.size *= Math.pow(0.98, dt);
     }
 
     draw(ctx) {
@@ -255,17 +265,15 @@ class LineClearAnimation {
         }
     }
 
-    update() {
-        this.progress += 0.05;
-        
+    update(dt = 1) {
+        this.progress += 0.05 * dt;
         this.particles.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += 0.3;
-            p.life -= 0.02;
-            p.size *= 0.98;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vy += 0.3 * dt;
+            p.life -= 0.02 * dt;
+            p.size *= Math.pow(0.98, dt);
         });
-        
         return this.progress < 1;
     }
 
@@ -293,6 +301,20 @@ class LineClearAnimation {
         ctx.restore();
     }
 }
+
+// Standard SRS kick tables: [x_col_offset, y_row_offset] where y+ = down (canvas coords)
+const SRS_KICKS_JLSTZ = {
+    '0-1': [{x:0,y:0},{x:-1,y:0},{x:-1,y:-1},{x:0,y:2},{x:-1,y:2}],
+    '1-2': [{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:-2},{x:1,y:-2}],
+    '2-3': [{x:0,y:0},{x:1,y:0},{x:1,y:-1},{x:0,y:2},{x:1,y:2}],
+    '3-0': [{x:0,y:0},{x:-1,y:0},{x:-1,y:1},{x:0,y:-2},{x:-1,y:-2}],
+};
+const SRS_KICKS_I = {
+    '0-1': [{x:0,y:0},{x:-2,y:0},{x:1,y:0},{x:-2,y:1},{x:1,y:-2}],
+    '1-2': [{x:0,y:0},{x:-1,y:0},{x:2,y:0},{x:-1,y:-2},{x:2,y:1}],
+    '2-3': [{x:0,y:0},{x:2,y:0},{x:-1,y:0},{x:2,y:-1},{x:-1,y:2}],
+    '3-0': [{x:0,y:0},{x:1,y:0},{x:-2,y:0},{x:1,y:2},{x:-2,y:-1}],
+};
 
 class Tetris {
     constructor() {
@@ -399,6 +421,8 @@ class Tetris {
         this.shakeAmount = 0;
         this.lineClearAnimations = [];
         this.glowIntensity = 0;
+        this.deltaTime = 1;
+        this.dropInterval = 1000;
         this.updateDisplay();
         
         this.nextPiece = this.randomPiece();
@@ -418,7 +442,8 @@ class Tetris {
             type: type,
             shape: this.pieces[type],
             x: Math.floor(this.cols / 2) - Math.floor(this.pieces[type][0].length / 2),
-            y: 0
+            y: 0,
+            rotation: 0
         };
     }
 
@@ -478,30 +503,34 @@ class Tetris {
 
     rotate() {
         if (this.gameOver || this.paused) return;
+        if (this.currentPiece.type === 'O') return; // O piece doesn't rotate
+
+        const newRotation = (this.currentPiece.rotation + 1) % 4;
         const rotated = this.currentPiece.shape[0].map((_, i) =>
             this.currentPiece.shape.map(row => row[i]).reverse()
         );
         const previousShape = this.currentPiece.shape;
+        const previousRotation = this.currentPiece.rotation;
         this.currentPiece.shape = rotated;
-        // Wall kick offsets: try center, left, right, up, down
-        const kicks = [
-            {x:0, y:0},
-            {x:-1, y:0},
-            {x:1, y:0},
-            {x:0, y:-1},
-            {x:0, y:1},
-        ];
+        this.currentPiece.rotation = newRotation;
+
+        const kickKey = `${previousRotation}-${newRotation}`;
+        const kicks = this.currentPiece.type === 'I'
+            ? (SRS_KICKS_I[kickKey] || [{x:0,y:0}])
+            : (SRS_KICKS_JLSTZ[kickKey] || [{x:0,y:0}]);
+
         let kicked = false;
-        for (let i = 0; i < kicks.length; i++) {
-            if (!this.collision(this.currentPiece, kicks[i].x, kicks[i].y)) {
-                this.currentPiece.x += kicks[i].x;
-                this.currentPiece.y += kicks[i].y;
+        for (const kick of kicks) {
+            if (!this.collision(this.currentPiece, kick.x, kick.y)) {
+                this.currentPiece.x += kick.x;
+                this.currentPiece.y += kick.y;
                 kicked = true;
                 break;
             }
         }
         if (!kicked) {
             this.currentPiece.shape = previousShape;
+            this.currentPiece.rotation = previousRotation;
         } else {
             const centerX = (this.currentPiece.x + this.currentPiece.shape[0].length / 2) * this.blockSize;
             const centerY = (this.currentPiece.y + this.currentPiece.shape.length / 2) * this.blockSize;
@@ -572,7 +601,7 @@ class Tetris {
             });
         }
         // ...existing code...
-        this.score += dropDistance * 2;
+        this.score += dropDistance * 2 * this.level;
         this.lockPiece();
     }
 
@@ -627,6 +656,7 @@ class Tetris {
             const newLevel = Math.floor(this.lines / 10) + 1;
             if (newLevel > this.level) {
                 this.level = newLevel;
+                this.updateDropInterval();
                 this.showLevelUp();
             }
         }
@@ -752,7 +782,7 @@ class Tetris {
                 this.ctx.restore();
             }
             // 拖尾渐隐消失（更慢）
-            this.tailGlow = this.tailGlow.map(g => ({...g, alpha: g.alpha * 0.95, size: g.size * 0.98})).filter(g => g.alpha > 0.03 && g.size > 2);
+            this.tailGlow = this.tailGlow.map(g => ({...g, alpha: g.alpha * Math.pow(0.95, this.deltaTime), size: g.size * Math.pow(0.98, this.deltaTime)})).filter(g => g.alpha > 0.03 && g.size > 2);
         }
 
         // Apply screen shake
@@ -762,7 +792,7 @@ class Tetris {
                 (Math.random() - 0.5) * this.shakeAmount,
                 (Math.random() - 0.5) * this.shakeAmount
             );
-            this.shakeAmount *= 0.9;
+            this.shakeAmount *= Math.pow(0.9, this.deltaTime);
             if (this.shakeAmount < 0.1) this.shakeAmount = 0;
         }
 
@@ -801,7 +831,7 @@ class Tetris {
         // Draw particles
         this.particleCtx.clearRect(0, 0, this.particleCanvas.width, this.particleCanvas.height);
         this.particles = this.particles.filter(particle => {
-            particle.update();
+            particle.update(this.deltaTime);
             particle.draw(this.particleCtx);
             return particle.life > 0;
         });
@@ -809,7 +839,7 @@ class Tetris {
         // Draw line clear animations
         this.lineClearCtx.clearRect(0, 0, this.lineClearCanvas.width, this.lineClearCanvas.height);
         this.lineClearAnimations = this.lineClearAnimations.filter(animation => {
-            const active = animation.update();
+            const active = animation.update(this.deltaTime);
             animation.draw(this.lineClearCtx);
             return active;
         });
@@ -820,7 +850,7 @@ class Tetris {
         this.nextCtx.fillRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
         
         if (this.nextPiece) {
-            const blockSize = 20;
+            const blockSize = Math.floor(this.blockSize / 2);
             const offsetX = (this.nextCanvas.width - this.nextPiece.shape[0].length * blockSize) / 2;
             const offsetY = (this.nextCanvas.height - this.nextPiece.shape.length * blockSize) / 2;
             
@@ -934,7 +964,7 @@ class Tetris {
             (currentLang === 'zh' ? '本地最高分：' : 'Local High Scores:');
         html += '<ol style="margin:8px 0 0 18px;padding:0;">';
         leaderboard.slice(0, 5).forEach((item, i) => {
-            html += `<li>${currentLang === 'zh' ? '用户名' : 'Username'}: <b>${item.name}</b> ${currentLang === 'zh' ? '分数' : 'Score'}: <b>${item.score}</b></li>`;
+            html += `<li>${currentLang === 'zh' ? '用户名' : 'Username'}: <b>${escapeHTML(item.name)}</b> ${currentLang === 'zh' ? '分数' : 'Score'}: <b>${Number(item.score)}</b></li>`;
         });
         html += '</ol></div>';
         // 展示本地分数记录
@@ -1018,6 +1048,9 @@ class Tetris {
     toggleTheme() {
         this.isRainbowTheme = !this.isRainbowTheme;
         document.body.classList.toggle('rainbow-theme', this.isRainbowTheme);
+        document.getElementById('themeToggle').textContent = this.isRainbowTheme
+            ? (currentLang === 'zh' ? '✨ 普通主题' : '✨ Normal Theme')
+            : TEXT.themeToggle;
     }
 
     setupControls() {
@@ -1048,22 +1081,26 @@ class Tetris {
         });
     }
 
+    updateDropInterval() {
+        this.dropInterval = Math.max(50, 1000 - (this.level - 1) * 100);
+    }
+
     gameLoop(time = 0) {
         if (this.gameOver || this.paused) return;
-        
+
         this.animationId = requestAnimationFrame((time) => this.gameLoop(time));
-        
+
         const deltaTime = time - this.lastTime;
         this.lastTime = time;
-        
+        this.deltaTime = Math.min(deltaTime / 16.67, 3);
+
         this.dropCounter += deltaTime;
-        const dropInterval = Math.max(50, 1000 - (this.level - 1) * 100);
-        
-        if (this.dropCounter > dropInterval) {
+
+        if (this.dropCounter > this.dropInterval) {
             this.moveDown();
             this.dropCounter = 0;
         }
-        
+
         this.draw();
     }
 }

@@ -159,13 +159,13 @@ class Particle {
         this.color = color;
     }
 
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vx *= 0.98;
-        this.vy *= 0.98;
-        this.life -= this.decay;
-        this.size *= 0.99;
+    update(dt = 1) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.vx *= Math.pow(0.98, dt);
+        this.vy *= Math.pow(0.98, dt);
+        this.life -= this.decay * dt;
+        this.size *= Math.pow(0.99, dt);
         return this.life > 0;
     }
 
@@ -193,8 +193,8 @@ class PowerUp {
         this.time = 0;
     }
 
-    update() {
-        this.time += 0.1;
+    update(dt = 1) {
+        this.time += 0.1 * dt;
     }
 
     render(ctx) {
@@ -247,22 +247,22 @@ class Bullet {
         this.trail = [];
     }
 
-    update() {
+    update(dt = 1) {
         // 记录轨迹
         this.trail.push({x: this.x, y: this.y});
         if (this.trail.length > 5) this.trail.shift();
 
         // 移动子弹
         switch (this.direction) {
-            case 0: this.y -= this.speed; break;
-            case 1: this.x += this.speed; break;
-            case 2: this.y += this.speed; break;
-            case 3: this.x -= this.speed; break;
+            case 0: this.y -= this.speed * dt; break;
+            case 1: this.x += this.speed * dt; break;
+            case 2: this.y += this.speed * dt; break;
+            case 3: this.x -= this.speed * dt; break;
         }
 
         // 检查边界
-        return this.x >= 0 && this.x <= CONFIG.CANVAS_WIDTH && 
-               this.y >= 0 && this.y <= CONFIG.CANVAS_HEIGHT;
+        return this.x >= 0 && this.x < CONFIG.CANVAS_WIDTH &&
+               this.y >= 0 && this.y < CONFIG.CANVAS_HEIGHT;
     }
 
     render(ctx) {
@@ -322,17 +322,17 @@ class Tank {
         });
     }
 
-    update(game) {
-        if (this.invulnerable > 0) this.invulnerable--;
-        if (this.shield > 0) this.shield--;
-        if (this.speedBoost > 0) this.speedBoost--;
+    update(game, dt = 1) {
+        if (this.invulnerable > 0) this.invulnerable -= dt;
+        if (this.shield > 0) this.shield -= dt;
+        if (this.speedBoost > 0) this.speedBoost -= dt;
 
         if (!this.isPlayer) {
-            this.updateAI(game);
+            this.updateAI(game, dt);
         }
     }
 
-    updateAI(game) {
+    updateAI(game, dt = 1) {
         const now = Date.now();
         
         // 检测是否卡住
@@ -425,10 +425,10 @@ class Tank {
         const currentSpeed = this.speedBoost > 0 ? this.speed * 1.5 : this.speed;
 
         switch (this.direction) {
-            case 0: this.y -= currentSpeed; break;
-            case 1: this.x += currentSpeed; break;
-            case 2: this.y += currentSpeed; break;
-            case 3: this.x -= currentSpeed; break;
+            case 0: this.y -= currentSpeed * dt; break;
+            case 1: this.x += currentSpeed * dt; break;
+            case 2: this.y += currentSpeed * dt; break;
+            case 3: this.x -= currentSpeed * dt; break;
         }
 
         // 检查碰撞
@@ -689,7 +689,8 @@ class Tank {
         const directionAngle = this.direction * Math.PI / 2 - Math.PI / 2;
         const angleDiff = Math.abs(angle - directionAngle);
         
-        return angleDiff < Math.PI / 4 || angleDiff > 7 * Math.PI / 4;
+        const normDiff = angleDiff % (2 * Math.PI);
+        return (normDiff < Math.PI / 4) || (normDiff > 7 * Math.PI / 4);
     }
 
     takeDamage(damage, game) {
@@ -757,84 +758,141 @@ class Tank {
     }
     
     drawDetailedTank(ctx) {
-        const halfWidth = this.width / 2;
-        const halfHeight = this.height / 2;
-        const baseColor = this.isPlayer ? '#2d5a2d' : '#5a2d2d';
-        const highlightColor = this.isPlayer ? '#4a8a4a' : '#8a4a4a';
-        const shadowColor = this.isPlayer ? '#1a3a1a' : '#3a1a1a';
-        
-        // 坦克履带（底部）
-        ctx.fillStyle = '#333';
-        ctx.fillRect(-halfWidth + 2, -halfHeight + 2, this.width - 4, this.height - 4);
-        
-        // 履带纹理
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 1;
-        for (let i = -halfHeight + 4; i < halfHeight - 4; i += 3) {
-            ctx.beginPath();
-            ctx.moveTo(-halfWidth + 3, i);
-            ctx.lineTo(-halfWidth + this.width - 3, i);
-            ctx.stroke();
+        const hw = this.width / 2;
+        const hh = this.height / 2;
+        const isPlayer = this.isPlayer;
+
+        // Colour palette
+        const trackColor   = isPlayer ? '#1c2b18' : '#1c1818';
+        const trackLink    = isPlayer ? '#324828' : '#2a2020';
+        const hullLight    = isPlayer ? '#6a8e5a' : '#584040';
+        const hullBase     = isPlayer ? '#4d6640' : '#3c2c2c';
+        const hullDark     = isPlayer ? '#2a3e20' : '#201818';
+        const turretLight  = isPlayer ? '#5a7848' : '#6a3838';
+        const turretBase   = isPlayer ? '#3d5535' : '#4a2828';
+        const barrelColor  = '#252525';
+
+        // Ground shadow
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(2, 4, hw + 1, hh - 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // ── TREADS ──────────────────────────────────────────────
+        const trackW = 7;
+        for (const side of [-1, 1]) {
+            const tx = side > 0 ? hw - trackW : -hw;
+            // Track body
+            ctx.fillStyle = trackColor;
+            ctx.fillRect(tx, -hh, trackW, hh * 2);
+            // Link lines
+            ctx.strokeStyle = trackLink;
+            ctx.lineWidth = 1;
+            for (let ly = -hh + 2; ly < hh; ly += 4) {
+                ctx.beginPath();
+                ctx.moveTo(tx + 1, ly);
+                ctx.lineTo(tx + trackW - 1, ly);
+                ctx.stroke();
+            }
+            // Drive wheel (top) and idler wheel (bottom)
+            const cx = tx + trackW / 2;
+            for (const wy of [-hh + 4, hh - 4]) {
+                ctx.fillStyle = '#2e2e2e';
+                ctx.beginPath();
+                ctx.arc(cx, wy, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#484848';
+                ctx.beginPath();
+                ctx.arc(cx, wy, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
-        
-        // 坦克主体（车身）
-        ctx.fillStyle = baseColor;
-        ctx.fillRect(-halfWidth + 4, -halfHeight + 4, this.width - 8, this.height - 8);
-        
-        // 车身高光
-        ctx.fillStyle = highlightColor;
-        ctx.fillRect(-halfWidth + 4, -halfHeight + 4, this.width - 8, 3);
-        ctx.fillRect(-halfWidth + 4, -halfHeight + 4, 3, this.height - 8);
-        
-        // 车身阴影
-        ctx.fillStyle = shadowColor;
-        ctx.fillRect(halfWidth - 7, -halfHeight + 7, 3, this.height - 11);
-        ctx.fillRect(-halfWidth + 7, halfHeight - 7, this.width - 11, 3);
-        
-        // 炮塔
-        const turretSize = this.width * 0.6;
-        ctx.fillStyle = baseColor;
+
+        // ── HULL ────────────────────────────────────────────────
+        const hullX = -hw + trackW;
+        const hullW = (hw - trackW) * 2;
+        const hullGrad = ctx.createLinearGradient(hullX, -hh, hullX + hullW, hh);
+        hullGrad.addColorStop(0,    hullLight);
+        hullGrad.addColorStop(0.45, hullBase);
+        hullGrad.addColorStop(1,    hullDark);
+        ctx.fillStyle = hullGrad;
+        ctx.fillRect(hullX, -hh + 2, hullW, hh * 2 - 4);
+
+        // Front armour highlight
+        ctx.fillStyle = hullLight;
+        ctx.fillRect(hullX, -hh + 2, hullW, 2);
+
+        // Centre spine line
+        ctx.strokeStyle = hullDark;
+        ctx.lineWidth = 0.5;
         ctx.beginPath();
-        ctx.arc(0, 0, turretSize / 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 炮塔高光
-        ctx.fillStyle = highlightColor;
-        ctx.beginPath();
-        ctx.arc(-2, -2, turretSize / 2 - 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 炮管
-        const barrelLength = this.height * 0.8;
-        const barrelWidth = 4;
-        ctx.fillStyle = '#444';
-        ctx.fillRect(-barrelWidth/2, -halfHeight - barrelLength + 5, barrelWidth, barrelLength);
-        
-        // 炮管高光
-        ctx.fillStyle = '#666';
-        ctx.fillRect(-barrelWidth/2, -halfHeight - barrelLength + 5, 1, barrelLength);
-        
-        // 炮口
-        ctx.fillStyle = '#222';
-        ctx.beginPath();
-        ctx.arc(0, -halfHeight - barrelLength + 5, barrelWidth/2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 坦克标识（玩家坦克显示星星，敌方坦克显示骷髅）
-        ctx.fillStyle = this.isPlayer ? '#ffff00' : '#ff0000';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.isPlayer ? '★' : '☠', 0, 3);
-        
-        // 车身轮廓
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(-halfWidth + 4, -halfHeight + 4, this.width - 8, this.height - 8);
-        
-        // 炮塔轮廓
-        ctx.beginPath();
-        ctx.arc(0, 0, turretSize / 2, 0, Math.PI * 2);
+        ctx.moveTo(0, -hh + 6);
+        ctx.lineTo(0, hh - 6);
         ctx.stroke();
+
+        // ── TURRET ──────────────────────────────────────────────
+        const tR = Math.round(hw * 0.6);  // ~9 for TANK_SIZE 30
+        const turretGrad = ctx.createRadialGradient(-3, -3, 1, 0, 0, tR);
+        turretGrad.addColorStop(0,   turretLight);
+        turretGrad.addColorStop(0.6, turretBase);
+        turretGrad.addColorStop(1,   hullDark);
+        ctx.fillStyle = turretGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, tR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Turret ring
+        ctx.strokeStyle = hullLight;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, tR + 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Hatch
+        ctx.strokeStyle = hullDark;
+        ctx.lineWidth = 0.75;
+        ctx.beginPath();
+        ctx.arc(0, 0, tR * 0.42, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // ── BARREL ──────────────────────────────────────────────
+        const bW      = 5;
+        const tipY    = -(hh + 11);   // muzzle tip position
+        const rootY   = -tR + 1;      // barrel root at turret edge
+        const bLen    = rootY - tipY; // total barrel length
+
+        // Base sleeve (slightly wider where barrel meets turret)
+        ctx.fillStyle = '#333';
+        ctx.fillRect(-bW / 2 - 1, tipY + bLen * 0.55, bW + 2, bLen * 0.45 + 1);
+
+        // Main barrel
+        ctx.fillStyle = barrelColor;
+        ctx.fillRect(-bW / 2, tipY, bW, bLen);
+
+        // Muzzle brake (two rings)
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(-bW / 2 - 3, tipY,     bW + 6, 5);
+        ctx.fillRect(-bW / 2 - 1.5, tipY + 5, bW + 3, 3);
+
+        // Barrel highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.10)';
+        ctx.fillRect(-bW / 2, tipY, 1.5, bLen);
+
+        // ── INSIGNIA ────────────────────────────────────────────
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if (isPlayer) {
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 9px Arial';
+            ctx.fillText('★', 0, 1);
+        } else {
+            ctx.fillStyle = '#dd3333';
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText('✕', 0, 1);
+        }
     }
 
     renderHealthBar(ctx) {
@@ -879,17 +937,17 @@ class BossTank extends Tank {
         };
     }
     
-    update(game) {
+    update(game, dt = 1) {
         const now = Date.now();
-        
+
         // Boss特殊攻击模式
-        if (now - this.lastSpecialAttack > 3000) { // 每3秒一次特殊攻击
+        if (now - this.lastSpecialAttack > 3000) {
             this.performSpecialAttack(game);
             this.lastSpecialAttack = now;
         }
-        
+
         // 调用父类更新逻辑
-        super.update(game);
+        super.update(game, dt);
     }
     
     performSpecialAttack(game) {
@@ -926,7 +984,7 @@ class BossTank extends Tank {
         // 连续射击3发
         for (let i = 0; i < 3; i++) {
             setTimeout(() => {
-                if (this.health > 0) {
+                if (this.health > 0 && !game.paused && game.gameState === 'playing') {
                     const bullet = new Bullet(
                         this.x + this.width/2,
                         this.y + this.height/2,
@@ -963,109 +1021,161 @@ class BossTank extends Tank {
     }
     
     drawDetailedTank(ctx) {
-        const halfWidth = this.width / 2;
-        const halfHeight = this.height / 2;
-        const baseColor = '#4a1a1a'; // 深红色
-        const highlightColor = '#8a3a3a';
-        const shadowColor = '#2a0a0a';
-        
-        // Boss特殊光环效果
-        const time = Date.now() * 0.005;
-        const glowIntensity = Math.sin(time) * 0.3 + 0.7;
-        ctx.shadowColor = '#ff0000';
-        ctx.shadowBlur = 10 * glowIntensity;
-        
-        // 坦克履带（底部）- 更宽
-        ctx.fillStyle = '#222';
-        ctx.fillRect(-halfWidth + 2, -halfHeight + 2, this.width - 4, this.height - 4);
-        
-        // 履带纹理
-        ctx.strokeStyle = '#444';
-        ctx.lineWidth = 2;
-        for (let i = -halfHeight + 4; i < halfHeight - 4; i += 4) {
-            ctx.beginPath();
-            ctx.moveTo(-halfWidth + 3, i);
-            ctx.lineTo(-halfWidth + this.width - 3, i);
-            ctx.stroke();
+        const hw = this.width / 2;
+        const hh = this.height / 2;
+        const time = Date.now() * 0.003;
+        const pulse = Math.sin(time) * 0.5 + 0.5;
+
+        // ── AURA GLOW ───────────────────────────────────────────
+        ctx.save();
+        ctx.globalAlpha = 0.12 + pulse * 0.08;
+        ctx.fillStyle = '#ff2200';
+        ctx.shadowColor = '#ff2200';
+        ctx.shadowBlur = 24;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, hw + 10, hh + 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Ground shadow
+        ctx.save();
+        ctx.globalAlpha = 0.28;
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(3, 6, hw + 2, hh - 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // ── TREADS (wider) ──────────────────────────────────────
+        const trackW = 10;
+        for (const side of [-1, 1]) {
+            const tx = side > 0 ? hw - trackW : -hw;
+            ctx.fillStyle = '#111';
+            ctx.fillRect(tx, -hh, trackW, hh * 2);
+            // Link lines
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 2;
+            for (let ly = -hh + 3; ly < hh; ly += 5) {
+                ctx.beginPath();
+                ctx.moveTo(tx + 1, ly);
+                ctx.lineTo(tx + trackW - 1, ly);
+                ctx.stroke();
+            }
+            // Drive wheels
+            const cx = tx + trackW / 2;
+            for (const wy of [-hh + 6, hh - 6]) {
+                ctx.fillStyle = '#1a1a1a';
+                ctx.beginPath();
+                ctx.arc(cx, wy, 5.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(cx, wy, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
-        
-        // 坦克主体（车身）- Boss特殊颜色
-        ctx.fillStyle = baseColor;
-        ctx.fillRect(-halfWidth + 4, -halfHeight + 4, this.width - 8, this.height - 8);
-        
-        // 车身高光
-        ctx.fillStyle = highlightColor;
-        ctx.fillRect(-halfWidth + 4, -halfHeight + 4, this.width - 8, 4);
-        ctx.fillRect(-halfWidth + 4, -halfHeight + 4, 4, this.height - 8);
-        
-        // 车身阴影
-        ctx.fillStyle = shadowColor;
-        ctx.fillRect(halfWidth - 8, -halfHeight + 8, 4, this.height - 12);
-        ctx.fillRect(-halfWidth + 8, halfHeight - 8, this.width - 12, 4);
-        
-        // 炮塔 - 更大
-        const turretSize = this.width * 0.7;
-        ctx.fillStyle = baseColor;
-        ctx.beginPath();
-        ctx.arc(0, 0, turretSize / 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 炮塔高光
-        ctx.fillStyle = highlightColor;
-        ctx.beginPath();
-        ctx.arc(-3, -3, turretSize / 2 - 3, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 双炮管设计
-        const barrelLength = this.height * 0.9;
-        const barrelWidth = 5;
-        
-        // 左炮管
-        ctx.fillStyle = '#333';
-        ctx.fillRect(-barrelWidth - 2, -halfHeight - barrelLength + 5, barrelWidth, barrelLength);
-        // 右炮管
-        ctx.fillRect(2, -halfHeight - barrelLength + 5, barrelWidth, barrelLength);
-        
-        // 炮管高光
+
+        // ── HULL ────────────────────────────────────────────────
+        const hullX = -hw + trackW;
+        const hullW = (hw - trackW) * 2;
+        const hullGrad = ctx.createLinearGradient(hullX, -hh, hullX + hullW, hh);
+        hullGrad.addColorStop(0,    '#5a2020');
+        hullGrad.addColorStop(0.45, '#3a1414');
+        hullGrad.addColorStop(1,    '#1a0808');
+        ctx.fillStyle = hullGrad;
+        ctx.fillRect(hullX, -hh + 3, hullW, hh * 2 - 6);
+
+        // Front armour plate
+        ctx.fillStyle = '#4a1818';
+        ctx.fillRect(hullX, -hh + 3, hullW, 3);
+
+        // Armour bolt rivets
         ctx.fillStyle = '#555';
-        ctx.fillRect(-barrelWidth - 2, -halfHeight - barrelLength + 5, 1, barrelLength);
-        ctx.fillRect(2, -halfHeight - barrelLength + 5, 1, barrelLength);
-        
-        // Boss标识 - 皇冠
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#ffd700';
+        for (let by = -hh + 10; by < hh - 4; by += 9) {
+            for (const bx of [hullX + 3, -hullX - 3]) {
+                ctx.beginPath();
+                ctx.arc(bx, by, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // ── TURRET ──────────────────────────────────────────────
+        const tR = Math.round(hw * 0.58);  // ~13 for BossTank
+        const turretGrad = ctx.createRadialGradient(-4, -4, 2, 0, 0, tR);
+        turretGrad.addColorStop(0,   '#6a2828');
+        turretGrad.addColorStop(0.5, '#3a1010');
+        turretGrad.addColorStop(1,   '#150505');
+        ctx.fillStyle = turretGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, tR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pulsing gold ring
+        ctx.strokeStyle = `rgba(255, 200, 0, ${0.5 + pulse * 0.5})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, tR + 2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Red eye lights
+        const eyeAlpha = 0.7 + pulse * 0.3;
+        ctx.save();
+        ctx.shadowColor = '#ff3300';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = `rgba(255, 50, 0, ${eyeAlpha})`;
+        ctx.beginPath();
+        ctx.arc(-5, -2, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc( 5, -2, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // ── DUAL BARRELS ────────────────────────────────────────
+        const bW   = 5;
+        const tipY = -(hh + 16);
+        const rootY = -tR + 1;
+        const bLen  = rootY - tipY;
+        const offsets = [-4.5, 4.5]; // x centres of left/right barrel
+
+        for (const ox of offsets) {
+            // Base sleeve
+            ctx.fillStyle = '#292929';
+            ctx.fillRect(ox - bW / 2 - 1, tipY + bLen * 0.55, bW + 2, bLen * 0.45 + 1);
+
+            // Main barrel
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(ox - bW / 2, tipY, bW, bLen);
+
+            // Muzzle brake
+            ctx.fillStyle = '#111';
+            ctx.fillRect(ox - bW / 2 - 3, tipY,     bW + 6, 6);
+            ctx.fillRect(ox - bW / 2 - 1.5, tipY + 6, bW + 3, 3);
+
+            // Highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.07)';
+            ctx.fillRect(ox - bW / 2, tipY, 1.5, bLen);
+        }
+
+        // ── CROWN INSIGNIA ──────────────────────────────────────
+        ctx.fillStyle = `rgba(255, 215, 0, ${0.85 + pulse * 0.15})`;
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText('♛', 0, 4);
-        
-        // 车身轮廓 - 金色
-        ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(-halfWidth + 4, -halfHeight + 4, this.width - 8, this.height - 8);
-        
-        // 炮塔轮廓
-        ctx.beginPath();
-        ctx.arc(0, 0, turretSize / 2, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        // 血量条
-        const barWidth = this.width + 10;
-        const barHeight = 6;
-        const barY = -halfHeight - 15;
-        
-        // 血量条背景
-        ctx.fillStyle = '#333';
-        ctx.fillRect(-barWidth/2, barY, barWidth, barHeight);
-        
-        // 血量条
-        const healthPercent = this.health / this.maxHealth;
-        ctx.fillStyle = healthPercent > 0.5 ? '#4a4' : healthPercent > 0.25 ? '#aa4' : '#a44';
-        ctx.fillRect(-barWidth/2, barY, barWidth * healthPercent, barHeight);
-        
-        // 血量条边框
-        ctx.strokeStyle = '#fff';
+
+        // ── HEALTH BAR ──────────────────────────────────────────
+        const barW = this.width + 12;
+        const barH = 7;
+        const barY = -hh - 16;
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(-barW / 2, barY, barW, barH);
+        const hp = this.health / this.maxHealth;
+        ctx.fillStyle = hp > 0.5 ? '#44bb44' : hp > 0.25 ? '#bbbb44' : '#bb4444';
+        ctx.fillRect(-barW / 2, barY, barW * hp, barH);
+        ctx.strokeStyle = '#888';
         ctx.lineWidth = 1;
-        ctx.strokeRect(-barWidth/2, barY, barWidth, barHeight);
+        ctx.strokeRect(-barW / 2, barY, barW, barH);
     }
 }
 
@@ -1097,7 +1207,9 @@ class TankBattle {
         this.screenShake = 0;
         this.currentWeaponIndex = 0;
         this.weaponKeys = Object.keys(WEAPONS);
-        
+        this.lastTime = 0;
+        this.animationId = null;
+
         this.init();
         this.setupEventListeners();
         this.gameLoop();
@@ -1285,80 +1397,75 @@ class TankBattle {
         }
     }
 
-    update() {
+    update(dt = 1) {
         if (this.gameState !== 'playing' || this.paused) return;
-        
-        this.updatePlayer();
-        this.updateEnemies();
-        this.updateBullets();
-        this.updatePowerUps();
-        this.updateParticles();
+
+        this.updatePlayer(dt);
+        this.updateEnemies(dt);
+        this.updateBullets(dt);
+        this.updatePowerUps(dt);
+        this.updateParticles(dt);
         this.checkCollisions();
         this.checkWinCondition();
-        
+
         if (this.screenShake > 0) {
-            this.screenShake--;
+            this.screenShake -= dt;
+            if (this.screenShake < 0) this.screenShake = 0;
         }
     }
 
-    updatePlayer() {
-        const oldX = this.player.x;
-        const oldY = this.player.y;
-        
-        let moved = false;
+    updatePlayer(dt = 1) {
+        const step = (this.player.speedBoost > 0 ? this.player.speed * 1.5 : this.player.speed) * dt;
+
+        // Move each axis independently so wall collisions on one axis
+        // don't block movement on the other (fixes diagonal corner-clipping)
         if (this.keys['w']) {
             this.player.direction = 0;
-            this.player.y -= this.player.speed;
-            moved = true;
+            this.player.y -= step;
+            if (this.checkCollision(this.player, this.walls)) this.player.y += step;
         }
         if (this.keys['s']) {
             this.player.direction = 2;
-            this.player.y += this.player.speed;
-            moved = true;
+            this.player.y += step;
+            if (this.checkCollision(this.player, this.walls)) this.player.y -= step;
         }
         if (this.keys['a']) {
             this.player.direction = 3;
-            this.player.x -= this.player.speed;
-            moved = true;
+            this.player.x -= step;
+            if (this.checkCollision(this.player, this.walls)) this.player.x += step;
         }
         if (this.keys['d']) {
             this.player.direction = 1;
-            this.player.x += this.player.speed;
-            moved = true;
+            this.player.x += step;
+            if (this.checkCollision(this.player, this.walls)) this.player.x -= step;
         }
-        
-        // 检查碰撞
-        if (this.checkCollision(this.player, this.walls)) {
-            this.player.x = oldX;
-            this.player.y = oldY;
-        }
-        
+
         // 射击
         if (this.keys[' '] && Date.now() - this.player.lastShot > this.player.weapon.cooldown) {
-            if (this.player.ammo[this.weaponKeys[this.currentWeaponIndex]] > 0 || 
+            if (this.player.ammo[this.weaponKeys[this.currentWeaponIndex]] > 0 ||
                 this.player.weapon.ammo === Infinity) {
                 this.shoot(this.player);
                 this.player.lastShot = Date.now();
-                
+
                 if (this.player.weapon.ammo !== Infinity) {
                     this.player.ammo[this.weaponKeys[this.currentWeaponIndex]]--;
                     this.updateUI();
                 }
             }
         }
-        
-        this.player.update(this);
+
+        this.player.update(this, dt);
     }
 
-    updateEnemies() {
+    updateEnemies(dt = 1) {
         this.enemies.forEach(enemy => {
-            enemy.update(this);
+            enemy.update(this, dt);
         });
     }
 
-    updateBullets() {
+    updateBullets(dt = 1) {
         this.bullets = this.bullets.filter(bullet => {
-            const alive = bullet.update();
+            const alive = bullet.update(dt);
             
             if (!alive) return false;
             
@@ -1392,9 +1499,9 @@ class TankBattle {
         });
     }
 
-    updatePowerUps() {
+    updatePowerUps(dt = 1) {
         this.powerUps.forEach(powerUp => {
-            powerUp.update();
+            powerUp.update(dt);
             
             if (this.checkCollision(this.player, [powerUp])) {
                 this.collectPowerUp(powerUp);
@@ -1405,8 +1512,8 @@ class TankBattle {
         this.powerUps = this.powerUps.filter(p => !p.collected);
     }
 
-    updateParticles() {
-        this.particles = this.particles.filter(particle => particle.update());
+    updateParticles(dt = 1) {
+        this.particles = this.particles.filter(particle => particle.update(dt));
     }
 
 
@@ -1416,11 +1523,12 @@ class TankBattle {
             case 'health':
                 this.player.health = Math.min(this.player.health + 1, this.player.maxHealth);
                 break;
-            case 'weapon':
+            case 'weapon': {
                 // 随机给予武器弹药
                 const weaponKey = this.weaponKeys[Math.floor(Math.random() * (this.weaponKeys.length - 1)) + 1];
                 this.player.ammo[weaponKey] += WEAPONS[weaponKey].ammo === Infinity ? 0 : 20;
                 break;
+            }
             case 'shield':
                 this.player.shield = 300; // 5秒护盾
                 break;
@@ -1462,22 +1570,28 @@ class TankBattle {
     }
 
     checkCollisions() {
-        // 子弹与坦克的碰撞
-        this.bullets.forEach((bullet, bulletIndex) => {
+        const bulletsToRemove = new Set();
+        const enemiesToRemove = new Set();
+
+        // Bullet vs tank collisions
+        for (let bi = 0; bi < this.bullets.length; bi++) {
+            if (bulletsToRemove.has(bi)) continue;
+            const bullet = this.bullets[bi];
+
             if (bullet.isPlayer) {
-                // 玩家子弹击中敌人
-                this.enemies.forEach((enemy, enemyIndex) => {
+                // Player bullet vs enemies
+                for (let ei = 0; ei < this.enemies.length; ei++) {
+                    if (enemiesToRemove.has(ei)) continue;
+                    const enemy = this.enemies[ei];
                     if (this.checkCollision(bullet, [enemy])) {
                         if (enemy.takeDamage(bullet.damage, this)) {
-                            this.enemies.splice(enemyIndex, 1);
-                            // Boss坦克给予更高分数
+                            enemiesToRemove.add(ei);
                             if (enemy.isBoss) {
                                 this.score += 1000 * this.level;
-                                // Boss被击败时的特殊效果
                                 for (let i = 0; i < 20; i++) {
                                     this.particles.push(new Particle(
-                                        enemy.x + enemy.width/2, 
-                                        enemy.y + enemy.height/2, 
+                                        enemy.x + enemy.width / 2,
+                                        enemy.y + enemy.height / 2,
                                         '#ffd700'
                                     ));
                                 }
@@ -1485,44 +1599,48 @@ class TankBattle {
                                 this.score += 100 * this.level;
                             }
                         }
-                        this.bullets.splice(bulletIndex, 1);
+                        bulletsToRemove.add(bi);
                         this.screenShake = enemy.isBoss ? 8 : 3;
                         this.updateUI();
+                        break; // bullet is spent
                     }
-                });
+                }
             } else {
-                // 敌人子弹击中玩家
+                // Enemy bullet vs player
                 if (this.checkCollision(bullet, [this.player])) {
                     this.player.takeDamage(bullet.damage, this);
-                    this.bullets.splice(bulletIndex, 1);
+                    bulletsToRemove.add(bi);
                     this.screenShake = 8;
-                    
                     if (this.lives <= 0) {
                         this.gameState = 'gameOver';
                     }
                     this.updateUI();
                 }
             }
-        });
-        
-        // 子弹与子弹的碰撞
+        }
+
+        // Bullet vs bullet collisions (only between opposing sides)
         for (let i = 0; i < this.bullets.length; i++) {
+            if (bulletsToRemove.has(i)) continue;
             for (let j = i + 1; j < this.bullets.length; j++) {
+                if (bulletsToRemove.has(j)) continue;
                 if (this.bullets[i].isPlayer !== this.bullets[j].isPlayer &&
                     this.checkCollision(this.bullets[i], [this.bullets[j]])) {
-                    // 创建碰撞粒子效果
                     for (let k = 0; k < 6; k++) {
                         this.particles.push(new Particle(
                             this.bullets[i].x, this.bullets[i].y, '#ffff00'
                         ));
                     }
-                    this.bullets.splice(j, 1);
-                    this.bullets.splice(i, 1);
-                    i--;
+                    bulletsToRemove.add(i);
+                    bulletsToRemove.add(j);
                     break;
                 }
             }
         }
+
+        // Apply removals in one pass (safe — no mutation during iteration)
+        if (bulletsToRemove.size) this.bullets  = this.bullets.filter((_, i) => !bulletsToRemove.has(i));
+        if (enemiesToRemove.size) this.enemies   = this.enemies.filter((_, i) => !enemiesToRemove.has(i));
     }
 
     checkCollision(obj, obstacles) {
@@ -1812,6 +1930,10 @@ class TankBattle {
     }
 
     restart() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
         this.gameState = 'playing';
         this.paused = false;
         this.score = 0;
@@ -1823,14 +1945,18 @@ class TankBattle {
         this.particles = [];
         this.powerUps = [];
         this.screenShake = 0;
+        this.lastTime = 0;
         this.currentWeaponIndex = 0;
         this.init();
+        this.gameLoop();
     }
 
-    gameLoop() {
-        this.update();
+    gameLoop(time = 0) {
+        const dt = this.lastTime > 0 ? Math.min((time - this.lastTime) / 16.67, 3) : 1;
+        this.lastTime = time;
+        this.update(dt);
         this.render();
-        requestAnimationFrame(() => this.gameLoop());
+        this.animationId = requestAnimationFrame((t) => this.gameLoop(t));
     }
 }
 
