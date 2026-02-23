@@ -121,6 +121,9 @@ export default {
   comboMessage: "{{count}}x 连击!",
   coinsEarned: "+{{amount}} 金币",
   coinsLost: "-{{amount}} 金币",
+  minutes: "分钟",
+  yes: "是",
+  no: "否",
   // 错误消息
   gameError: "游戏出现错误，已自动暂停。",
   gameLoadError: "游戏加载失败，请刷新页面重试",

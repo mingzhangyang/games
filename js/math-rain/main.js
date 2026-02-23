@@ -404,7 +404,7 @@ class MathRainGame {
      */
     async loadQuestionBank() {
         try {
-            const questionBankUrl = `${import.meta.env.BASE_URL}assets/math-rain/question-bank.json`;
+            const questionBankUrl = 'assets/math-rain/question-bank.json';
             const response = await fetch(questionBankUrl);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -482,6 +482,7 @@ class MathRainGame {
         const currentTime = Date.now();
         this.lastSpawnTime = currentTime;
         this.nextTargetChangeTime = currentTime + this.config.targetChangeInterval;
+        this.nextCanvasSpawnTime = 0;
         this.gameLoop();
     }
     
@@ -595,44 +596,53 @@ class MathRainGame {
      */
     trySpawnCanvasExpression(currentTime) {
         if (!this.difficultyManager) return;
-        
-        const gameParams = this.difficultyManager.getGameParams();
-        
-        // Check spawn timing
-        if (currentTime - this.lastCanvasSpawnTime < gameParams.spawnRate) {
+
+        // Use a stored next-spawn timestamp so the randomized spawn rate is
+        // sampled once per spawn, not on every frame tick.
+        if (currentTime < this.nextCanvasSpawnTime) {
             return;
         }
-        
+
+        const gameParams = this.difficultyManager.getGameParams();
+
         // Check max expressions
         if (this.expressions.length >= gameParams.maxSimultaneous) {
             return;
         }
-        
+
         // Generate expression
         const gameState = this.gameStateManager?.getState();
         if (!gameState) return;
-        
+
         const shouldGenerateCorrect = Math.random() < gameParams.correctRatio;
         const expressionData = this.safeGenerateExpression(gameState.targetNumber, shouldGenerateCorrect);
-        
+
         if (expressionData) {
-            this.createCanvasExpression(expressionData, expressionData.result === gameState.targetNumber);
+            this.createCanvasExpression(expressionData, expressionData.result === gameState.targetNumber, gameParams.fallSpeed);
             this.lastCanvasSpawnTime = currentTime;
+            this.nextCanvasSpawnTime = currentTime + gameParams.spawnRate;
         }
     }
     
     /**
      * Create a canvas expression
      */
-    createCanvasExpression(expressionData, isCorrect) {
+    createCanvasExpression(expressionData, isCorrect, fallDuration) {
         const position = this.findSafePosition();
         if (!position) return;
-        
+
+        // Derive per-expression falling speed (px/frame) from the difficulty's
+        // fall duration so higher difficulty levels actually fall faster.
+        const cssHeight = this.canvas?.clientHeight || this.canvas?.height || 600;
+        const duration = fallDuration || 7000;
+        const speed = Math.max(0.5, (cssHeight / duration) * 16.67);
+
         const expression = {
             id: `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             data: expressionData,
             position,
             isCorrect,
+            speed,
             startTime: Date.now(),
             isClicked: false,
             isMatched: function(currentTarget) {
@@ -658,12 +668,17 @@ class MathRainGame {
      * Update expression animations (falling)
      */
     updateExpressionAnimations(currentTime) {
+        const frozen = this.gameStateManager?.getState()?.freezeActive;
+
         for (let i = this.expressions.length - 1; i >= 0; i--) {
             const expr = this.expressions[i];
             if (!expr.position) continue;
-            
-            // Simple downward movement
-            expr.position.y += 2; // pixels per frame
+
+            // Freeze power-up halts all falling expressions
+            if (frozen) continue;
+
+            // Use per-expression speed derived from difficulty fallSpeed
+            expr.position.y += expr.speed ?? 2;
             
             // Check if reached bottom
             if (expr.position.y >= (this.canvas?.height || window.innerHeight)) {
@@ -767,12 +782,13 @@ class MathRainGame {
      */
     handleExpressionClick(expression) {
         if (expression.isClicked) return;
-        
+
         expression.isClicked = true;
         const responseTime = Date.now() - expression.startTime;
         const gameState = this.gameStateManager?.getState();
-        
-        if (expression.isMatched && expression.isMatched(gameState?.targetNumber)) {
+        const isCorrect = !!(expression.isMatched && expression.isMatched(gameState?.targetNumber));
+
+        if (isCorrect) {
             this.gameStateManager?.handleCorrectAnswer({
                 responseTime,
                 position: expression.position
@@ -783,6 +799,9 @@ class MathRainGame {
                 position: expression.position
             });
         }
+
+        // Feed result into the adaptive difficulty system
+        this.difficultyManager?.recordAnswer(isCorrect, responseTime, gameState?.targetNumber);
         
         setTimeout(() => {
             const index = this.expressions.indexOf(expression);
@@ -844,6 +863,7 @@ class MathRainGame {
         this.lastSpawnTime = 0;
         this.nextTargetChangeTime = 0;
         this.lastCanvasSpawnTime = 0;
+        this.nextCanvasSpawnTime = 0;
         this.lastRenderTime = 0;
         this.lastUpdateTime = 0;
         

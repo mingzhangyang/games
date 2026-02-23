@@ -121,6 +121,9 @@ export default {
   comboMessage: "{{count}}x Combo!",
   coinsEarned: "+{{amount}} Coins",
   coinsLost: "-{{amount}} Coins",
+  minutes: "minutes",
+  yes: "Yes",
+  no: "No",
   // Error Messages
   gameError: "Game error occurred, automatically paused.",
   gameLoadError: "Game failed to load, please refresh the page.",

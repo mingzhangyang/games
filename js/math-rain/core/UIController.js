@@ -26,7 +26,11 @@ class UIController {
         
         // Modal state tracking
         this.settingsOpenedDuringGame = false;
-        
+
+        // Bound event handlers stored for proper cleanup in destroy()
+        this._boundHandleResize = this.handleResize.bind(this);
+        this._boundHandleKeyPress = this.handleKeyPress.bind(this);
+
         this.initialize();
     }
 
@@ -69,10 +73,10 @@ class UIController {
      */
     setupEventListeners() {
         // Window resize
-        window.addEventListener('resize', this.handleResize.bind(this));
-        
+        window.addEventListener('resize', this._boundHandleResize);
+
         // Keyboard events
-        document.addEventListener('keydown', this.handleKeyPress.bind(this));
+        document.addEventListener('keydown', this._boundHandleKeyPress);
         
         // Game control buttons
         this.bindButton('start-game-btn', () => {
@@ -479,8 +483,11 @@ class UIController {
         this.updateElement('session-target-score', data.targetScore);
         this.updateElement('session-accuracy', `${data.accuracy.toFixed(1)}%`);
         this.updateElement('session-max-combo', data.maxCombo);
-        this.updateElement('session-duration', `${data.sessionDurationMinutes} 分钟`);
-        this.updateElement('session-level-up', data.levelUpAchieved ? '是' : '否');
+        const minutesText = this.getLocalizedText('minutes') || '分钟';
+        const yesText = this.getLocalizedText('yes') || '是';
+        const noText = this.getLocalizedText('no') || '否';
+        this.updateElement('session-duration', `${data.sessionDurationMinutes} ${minutesText}`);
+        this.updateElement('session-level-up', data.levelUpAchieved ? yesText : noText);
         
         // Show/hide continue button based on level up status
         const continueBtn = document.getElementById('session-continue-btn');
@@ -611,12 +618,17 @@ class UIController {
      * @param {string} color - Text color
      */
     createScorePopup(x, y, text, color = '#48bb78') {
+        const canvas = document.getElementById('game-canvas');
+        const canvasRect = canvas ? canvas.getBoundingClientRect() : { left: 0, top: 0 };
+        const viewportX = x + canvasRect.left;
+        const viewportY = y + canvasRect.top;
+
         const popup = document.createElement('div');
         popup.className = 'score-popup';
         popup.style.cssText = `
             position: fixed;
-            left: ${x}px;
-            top: ${y}px;
+            left: ${viewportX}px;
+            top: ${viewportY}px;
             color: ${color};
             font-size: 20px;
             font-weight: bold;
@@ -736,8 +748,8 @@ class UIController {
      */
     destroy() {
         // Remove event listeners
-        window.removeEventListener('resize', this.handleResize);
-        document.removeEventListener('keydown', this.handleKeyPress);
+        window.removeEventListener('resize', this._boundHandleResize);
+        document.removeEventListener('keydown', this._boundHandleKeyPress);
         
         // Clear element cache
         this.elements.clear();

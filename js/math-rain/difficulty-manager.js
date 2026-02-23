@@ -162,7 +162,6 @@ class DifficultyManager {
             this.stats.consecutiveIncorrect = 0;
         } else {
             this.stats.incorrectAnswers++;
-            this.stats.incorrectAnswers++;
             this.stats.consecutiveCorrect = 0;
         }
         
