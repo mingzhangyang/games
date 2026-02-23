@@ -39,7 +39,6 @@ body {
     align-items: center;
     color: var(--light-color);
     overflow: hidden;
-    position: relative;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
     position: fixed;
@@ -368,15 +367,11 @@ body {
 
 .game-over-content h2 {
     color: var(--danger-color);
-    margin-bottom: 0;
-    margin: 0 0 12px 0;
-    font-size: 20px;
-    margin-top: 8px;
+    margin: 8px 0 12px 0;
     padding: 14px 32px;
-    font-size: 18px;
-    letter-spacing: 1px;
     font-size: 36px;
     font-weight: 700;
+    letter-spacing: 1px;
     text-shadow: 0 0 20px rgba(245, 101, 101, 0.8);
     animation: pulse 1s ease-in-out infinite;
 }

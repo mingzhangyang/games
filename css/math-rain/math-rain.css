@@ -1235,69 +1235,106 @@ body.light-theme .language-selector .lang-btn.active {
     }
 
     #target-number {
-        font-size: 56px; /* 移动端适中大小 */
+        font-size: 56px;
     }
-    
+
     /* 帮助界面移动端优化 */
     .help-content {
-        padding: 20px 15px;
-        max-height: 70vh;
+        padding: 20px;
+        max-height: 85vh;
+        margin: 20px;
     }
-    
-    .help-section {
+
+    .help-content h2 {
+        font-size: 28px;
         margin-bottom: 20px;
     }
-    
-    .help-section h3 {
-        font-size: 18px;
-        margin-bottom: 8px;
+
+    .help-section {
+        margin-bottom: 20px;
+        padding: 15px;
     }
-    
+
+    .help-section h3 {
+        font-size: 20px;
+        margin-bottom: 12px;
+    }
+
     .help-section p, .help-section ul {
         font-size: 14px;
         line-height: 1.5;
     }
-    
+
     .help-buttons {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .help-btn {
-         min-height: 44px;
-         font-size: 16px;
-     }
-     
-     /* 设置界面优化 */
-     .setting-group {
-         margin-bottom: 15px;
-     }
-     
-     .setting-group label {
-         font-size: 14px;
-     }
-     
-     .menu-btn.secondary {
-         background: rgba(255, 255, 255, 0.1);
-         border: 1px solid rgba(255, 255, 255, 0.2);
-         font-size: 14px;
-         padding: 8px 16px;
-         min-height: 40px;
-     }
-     
-     /* 平板端会话按钮优化 */
-     .session-actions {
-         gap: 11px;
-         margin-top: 22px;
-         padding: 0 18px;
-     }
-     
-     .session-actions .menu-btn {
-         max-width: 320px;
-         padding: 13px 22px;
-         font-size: 15px;
-     }
- }
+        min-height: 44px;
+        font-size: 16px;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .control-item,
+    .score-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .control-icon,
+    .score-icon {
+        width: auto;
+    }
+
+    .diff-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .diff-level,
+    .diff-range {
+        min-width: auto;
+    }
+
+    .start-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* 设置界面优化 */
+    .setting-group {
+        margin-bottom: 15px;
+    }
+
+    .setting-group label {
+        font-size: 14px;
+    }
+
+    .menu-btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 14px;
+        padding: 8px 16px;
+        min-height: 40px;
+    }
+
+    /* 会话按钮优化 */
+    .session-actions {
+        gap: 11px;
+        margin-top: 22px;
+        padding: 0 18px;
+    }
+
+    .session-actions .menu-btn {
+        max-width: 320px;
+        padding: 13px 22px;
+        font-size: 15px;
+    }
+}
 
 @media (max-width: 480px) {
 
@@ -1402,14 +1439,14 @@ body.light-theme .language-selector .lang-btn.active {
     }
 }
 
-/* 移动端性能优化 */
+/* 移动端性能优化 & 手势支持 */
 @media (max-width: 768px) {
     /* 启用硬件加速 */
     * {
         -webkit-transform: translateZ(0);
         transform: translateZ(0);
     }
-    
+
     /* 优化touch响应 */
     .control-btn, .menu-btn, .start-btn {
         -webkit-tap-highlight-color: transparent;
@@ -1418,11 +1455,8 @@ body.light-theme .language-selector .lang-btn.active {
         -webkit-user-select: none;
         user-select: none;
     }
-}
 
-/* 移动端手势支持 */
-@media (max-width: 768px) {
-    /* 添加触摸反馈效果 */
+    /* 触摸反馈效果 */
     .difficulty-btn:active,
     .control-btn:active,
     .menu-btn:active,
@@ -1432,19 +1466,19 @@ body.light-theme .language-selector .lang-btn.active {
         transform: scale(0.95);
         transition: transform 0.1s ease;
     }
-    
-    /* 优化转场动画 */
+
+    /* 转场动画 */
     .screen {
         transition: opacity 0.2s ease, transform 0.2s ease;
     }
-    
+
     .screen.hidden {
         opacity: 0;
         visibility: hidden;
         transform: scale(0.95);
     }
-    
-    /* 增强按钮点击区域 */
+
+    /* 按钮波纹效果 */
     .difficulty-btn,
     .control-btn,
     .menu-btn,
@@ -1452,8 +1486,7 @@ body.light-theme .language-selector .lang-btn.active {
         position: relative;
         overflow: hidden;
     }
-    
-    /* 波纹效果 */
+
     .difficulty-btn::after,
     .control-btn::after,
     .menu-btn::after,
@@ -1471,7 +1504,7 @@ body.light-theme .language-selector .lang-btn.active {
         pointer-events: none;
         opacity: 0;
     }
-    
+
     .difficulty-btn:active::after,
     .control-btn:active::after,
     .menu-btn:active::after,
@@ -1488,12 +1521,6 @@ body.light-theme .language-selector .lang-btn.active {
     /* 简化背景 */
     body {
         background: #667eea; /* 使用纯色背景替代渐变 */
-    }
-    
-    /* 禁用复杂动画 */
-    * {
-        animation-duration: 0.1s !important;
-        animation-iteration-count: 1 !important;
     }
     
     /* 简化阴影效果 */
@@ -1810,62 +1837,6 @@ body.light-theme .language-selector .lang-btn.active {
     box-shadow: 0 12px 35px rgba(72, 187, 120, 0.4);
 }
 
-/* 移动端帮助界面优化 */
-@media (max-width: 768px) {
-    .help-content {
-        padding: 20px;
-        max-height: 85vh;
-        margin: 20px;
-    }
-    
-    .help-content h2 {
-        font-size: 28px;
-        margin-bottom: 20px;
-    }
-    
-    .help-section {
-        margin-bottom: 20px;
-        padding: 15px;
-    }
-    
-    .help-section h3 {
-        font-size: 20px;
-        margin-bottom: 12px;
-    }
-    
-    .control-item,
-    .score-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
-    }
-    
-    .control-icon,
-    .score-icon {
-        width: auto;
-    }
-    
-    .diff-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 8px;
-    }
-    
-    .diff-level,
-    .diff-range {
-        min-width: auto;
-    }
-    
-    .start-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .help-btn {
-        width: 100%;
-        max-width: 300px;
-    }
-}
 
 @media (max-width: 480px) {
     .help-content {
@@ -2182,8 +2153,6 @@ body.light-theme .game-rules li {
 #game-title {
     font-size: 3.5em;
 }
-
-/* 移除标题中的算盘emoji，通过JavaScript或直接修改HTML */
 
 /* 浅色主题下的canvas背景 */
 body.light-theme #game-canvas {

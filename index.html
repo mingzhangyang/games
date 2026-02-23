@@ -22,12 +22,24 @@
     <title id="page-title">Mini Games Collection</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='32' fill='white' font-family='Segoe UI,Arial' dy='.3em'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
     <style>
+        :root {
+            --color-primary: #667eea;
+            --color-secondary: #764ba2;
+            --color-accent: #48bb78;
+            --color-warning: #fbd38d;
+            --color-link: #ed8936;
+            --color-danger: #f56565;
+            --color-text: #f7fafc;
+            --color-text-muted: #a0aec0;
+            --color-text-light: #e2e8f0;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             min-height: 100vh;
             margin: 0;
-            color: #f7fafc;
+            padding-bottom: 60px;
+            color: var(--color-text);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -41,7 +53,7 @@
             max-width: 1000px;
             width: 100%;
             text-align: center;
-            border: 3px solid #667eea;
+            border: 3px solid var(--color-primary);
             position: relative;
             animation: borderGlow 2.5s infinite alternate;
         }
@@ -57,45 +69,53 @@
         }
         @keyframes borderGlow {
             0% {
-                box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px #667eea;
-                border-color: #667eea;
+                box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px var(--color-primary);
+                border-color: var(--color-primary);
             }
             50% {
-                box-shadow: 0 0 60px #667eea, 0 0 12px #48bb78;
-                border-color: #48bb78;
+                box-shadow: 0 0 60px var(--color-primary), 0 0 12px var(--color-accent);
+                border-color: var(--color-accent);
             }
             100% {
-                box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px #667eea;
-                border-color: #667eea;
+                box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px var(--color-primary);
+                border-color: var(--color-primary);
             }
         }
         .logo {
             font-size: 3.2em;
             margin-bottom: 10px;
-            filter: drop-shadow(0 0 16px #667eea);
+            filter: drop-shadow(0 0 16px var(--color-primary));
         }
         h1 {
             font-size: 2.3em;
             margin-bottom: 8px;
-            color: #48bb78;
-            text-shadow: 0 0 20px #667eea;
+            color: var(--color-accent);
+            text-shadow: 0 0 20px var(--color-primary);
             font-weight: 800;
         }
         h2 {
             font-size: 1.35em;
             margin: 18px 0 6px;
-            color: #fbd38d;
+            color: var(--color-warning);
             font-weight: 700;
+        }
+        .features-heading {
+            font-size: 1.0em;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            margin-top: 32px;
         }
         .desc {
             font-size: 1.15em;
             margin-bottom: 38px;
-            color: #f7fafc;
+            color: var(--color-text);
             opacity: 0.95;
         }
         .lede {
             font-size: 1em;
-            color: #e2e8f0;
+            color: var(--color-text-light);
             margin: 8px 0 28px;
             line-height: 1.55;
         }
@@ -103,26 +123,10 @@
             list-style: none;
             padding: 22px 0 18px 0;
             margin-bottom: 28px;
-            border: 2.5px solid #48bb78;
+            border: 2.5px solid var(--color-accent);
             border-radius: 14px;
-            box-shadow: 0 0 18px #48bb7844, 0 0 0px #667eea;
-            animation: ulGlow 2.2s infinite alternate;
+            box-shadow: 0 0 18px rgba(72,187,120,0.27);
             background: rgba(72,187,120,0.07);
-            transition: box-shadow 0.3s;
-        }
-        @keyframes ulGlow {
-            0% {
-                box-shadow: 0 0 18px #48bb7844, 0 0 0px #667eea;
-                border-color: #48bb78;
-            }
-            50% {
-                box-shadow: 0 0 32px #667eea, 0 0 12px #48bb78;
-                border-color: #667eea;
-            }
-            100% {
-                box-shadow: 0 0 18px #48bb7844, 0 0 0px #667eea;
-                border-color: #48bb78;
-            }
         }
         li {
             margin: 18px 0;
@@ -133,19 +137,19 @@
             gap: 8px;
         }
         a {
-            color: #ed8936;
+            color: var(--color-link);
             text-decoration: none;
             font-weight: bold;
             transition: color 0.2s;
             font-size: 1.08em;
         }
         a:hover {
-            color: #f56565;
+            color: var(--color-danger);
             text-decoration: underline;
         }
         .tag {
-            background: #48bb7822;
-            color: #48bb78;
+            background: rgba(72,187,120,0.13);
+            color: var(--color-accent);
             border-radius: 8px;
             padding: 2px 10px;
             font-size: 0.95em;
@@ -153,20 +157,20 @@
         }
         .footer {
             margin-top: 36px;
-            color: #a0aec0;
+            color: var(--color-text-muted);
             font-size: 0.98em;
             opacity: 0.92;
         }
         .github {
             display: inline-block;
             margin-top: 10px;
-            color: #667eea;
+            color: var(--color-primary);
             font-size: 1.1em;
             text-decoration: none;
             transition: color 0.2s;
         }
         .github:hover {
-            color: #48bb78;
+            color: var(--color-accent);
         }
         .feature-grid {
             display: grid;
@@ -180,12 +184,12 @@
             border-radius: 12px;
             padding: 14px;
             text-align: left;
-            color: #e2e8f0;
+            color: var(--color-text-light);
             line-height: 1.45;
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
         }
         .feature-card strong {
-            color: #fbd38d;
+            color: var(--color-warning);
             display: block;
             margin-bottom: 6px;
         }
@@ -193,7 +197,7 @@
             .container {
                 padding: 24px 8px 18px 8px;
                 margin-top: 20px;
-            max-width: 99vw;
+                max-width: 99vw;
             }
             h1 {
                 font-size: 1.5em;
@@ -208,19 +212,19 @@
     <main class="container" id="page-top">
         <div class="logo">🎮</div>
         <h1 id="main-title">Mini Games Collection</h1>
-        <div class="desc" id="main-desc">精选的单文件网页游戏合集，即点即玩，轻松分享，享受经典乐趣！</div>
+        <div class="desc" id="main-desc">A curated collection of single-file web games. Play instantly, share easily, and enjoy classic fun!</div>
         <p class="lede">Instant-play HTML5 games with no downloads, no accounts, and no ads. Keep a link handy, share with friends, and play classic genres in seconds—great for quick breaks, classrooms, and retro fans.</p>
         <h2>Featured browser games</h2>
         <ul>
-            <li><a href="math-rain.html" id="math-rain-name">Math Rain</a> <span class="tag" id="math-rain-tag">✅ 已完成 | Mathematical Game</span></li>
-            <li><a href="tetris.html" id="tetris-name">Tetris</a> <span class="tag" id="tetris-tag">🔧 开发中 | Classic Puzzle</span></li>
-            <li><a href="tank-battle.html" id="tank-name">Tank Battle</a> <span class="tag" id="tank-tag">🔧 开发中 | Retro Arcade</span></li>
-            <li><a href="gomoku.html" id="gomoku-name">Gomoku</a> <span class="tag" id="gomoku-tag">✨ New | Strategy Board</span></li>
+            <li><a href="math-rain.html" id="math-rain-name">Math Rain</a> <span class="tag" id="math-rain-tag">Mathematical Game</span></li>
+            <li><a href="tetris.html" id="tetris-name">Tetris</a> <span class="tag" id="tetris-tag">Classic, Modern UI</span></li>
+            <li><a href="tank-battle.html" id="tank-name">Tank Battle</a> <span class="tag" id="tank-tag">Classic Arcade, Retro Style</span></li>
+            <li><a href="gomoku.html" id="gomoku-name">Gomoku</a> <span class="tag" id="gomoku-tag">Strategy Board Game</span></li>
             <!-- <li><a href="js/math-rain/question-bank-test.html" id="test-page">Question Bank Test</a> <span class="tag">🧪 测试页面</span></li> -->
 
             <!-- Add more games here -->
         </ul>
-        <h2>Why players bookmark us</h2>
+        <h2 class="features-heading">Why players bookmark us</h2>
         <div class="feature-grid">
             <div class="feature-card">
                 <strong>Single-file builds</strong>
