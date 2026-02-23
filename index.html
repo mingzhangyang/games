@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A curated collection of single-file web games including Math Rain, Tetris, Tank Battle, and Gomoku. Play instantly in your browser.">
-    <meta name="keywords" content="web games, html5 games, mini games, math game, tetris, tank battle, gomoku, five in a row">
+    <meta name="description" content="A curated collection of web games including Math Rain, Tetris, Tank Battle, Gomoku, and Dots and Boxes. Play instantly in your browser.">
+    <meta name="keywords" content="web games, html5 games, mini games, math game, tetris, tank battle, gomoku, five in a row, dots and boxes">
     <meta name="robots" content="index, follow">
     <meta name="author" content="Orangely">
     <link rel="canonical" id="canonical-link" href="">
@@ -32,293 +32,530 @@
             --color-text: #f7fafc;
             --color-text-muted: #a0aec0;
             --color-text-light: #e2e8f0;
+            --color-bg: #1a202c;
+            --color-surface: rgba(26, 32, 44, 0.97);
         }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             margin: 0;
-            padding-bottom: 60px;
+            padding: 0 0 72px 0;
             color: var(--color-text);
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .container {
-            background: rgba(26,32,44,0.97);
-            border-radius: 20px;
-            box-shadow: 0 0 40px rgba(102,126,234,0.3);
-            padding: 48px 48px 32px 48px;
-            margin-top: 60px;
-            max-width: 1000px;
-            width: 100%;
+
+        /* ── Hero ─────────────────────────────────────── */
+        .hero {
             text-align: center;
-            border: 3px solid var(--color-primary);
-            position: relative;
-            animation: borderGlow 2.5s infinite alternate;
+            padding: 64px 24px 40px;
+            width: 100%;
+            max-width: 860px;
         }
-        .dev-badge {
-            display: inline-block;
-            background: rgba(255, 193, 7, 0.2);
-            color: #FFC107;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 193, 7, 0.3);
+
+        .hero-logo {
+            font-size: 3.6em;
+            line-height: 1;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 24px var(--color-primary));
+            animation: float 3s ease-in-out infinite;
         }
-        @keyframes borderGlow {
-            0% {
-                box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px var(--color-primary);
-                border-color: var(--color-primary);
-            }
-            50% {
-                box-shadow: 0 0 60px var(--color-primary), 0 0 12px var(--color-accent);
-                border-color: var(--color-accent);
-            }
-            100% {
-                box-shadow: 0 0 40px rgba(102,126,234,0.3), 0 0 0px var(--color-primary);
-                border-color: var(--color-primary);
-            }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-8px); }
         }
-        .logo {
-            font-size: 3.2em;
-            margin-bottom: 10px;
-            filter: drop-shadow(0 0 16px var(--color-primary));
+
+        .hero h1 {
+            font-size: 2.6em;
+            font-weight: 900;
+            margin: 0 0 12px;
+            background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.15;
         }
-        h1 {
-            font-size: 2.3em;
-            margin-bottom: 8px;
-            color: var(--color-accent);
-            text-shadow: 0 0 20px var(--color-primary);
-            font-weight: 800;
+
+        .hero-sub {
+            font-size: 1.1em;
+            color: var(--color-text-muted);
+            margin: 0;
+            letter-spacing: 0.3px;
         }
-        h2 {
-            font-size: 1.35em;
-            margin: 18px 0 6px;
-            color: var(--color-warning);
+
+        /* ── Games grid ───────────────────────────────── */
+        .games-section {
+            width: 100%;
+            max-width: 1080px;
+            padding: 0 20px;
+        }
+
+        .section-label {
+            text-align: center;
+            font-size: 0.78em;
             font-weight: 700;
-        }
-        .features-heading {
-            font-size: 1.0em;
             color: var(--color-text-muted);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-            margin-top: 32px;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
         }
-        .desc {
-            font-size: 1.15em;
-            margin-bottom: 38px;
-            color: var(--color-text);
-            opacity: 0.95;
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
         }
-        .lede {
-            font-size: 1em;
-            color: var(--color-text-light);
-            margin: 8px 0 28px;
-            line-height: 1.55;
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
         }
-        ul {
-            list-style: none;
-            padding: 22px 0 18px 0;
-            margin-bottom: 28px;
-            border: 2.5px solid var(--color-accent);
-            border-radius: 14px;
-            box-shadow: 0 0 18px rgba(72,187,120,0.27);
-            background: rgba(72,187,120,0.07);
+
+        .game-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+            border-color: rgba(255, 255, 255, 0.25);
         }
-        li {
-            margin: 18px 0;
-            font-size: 1.18em;
+
+        .game-card:hover .card-preview {
+            filter: brightness(1.15);
+        }
+
+        .card-preview {
+            height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            font-size: 3.2em;
+            transition: filter 0.2s;
+            position: relative;
+            overflow: hidden;
         }
-        a {
-            color: var(--color-link);
+
+        .card-preview::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.35) 100%);
+        }
+
+        .card-preview--math   { background: linear-gradient(135deg, #1a365d, #2b6cb0); }
+        .card-preview--tetris { background: linear-gradient(135deg, #322659, #6b46c1); }
+        .card-preview--tank   { background: linear-gradient(135deg, #1c4532, #276749); }
+        .card-preview--gomoku { background: linear-gradient(135deg, #7b341e, #c05621); }
+        .card-preview--dots   { background: linear-gradient(135deg, #1a3a4a, #0e7490); }
+
+        .card-body {
+            padding: 18px 18px 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 1.15em;
+            font-weight: 800;
+            color: var(--color-text);
+            margin: 0 0 6px;
             text-decoration: none;
-            font-weight: bold;
-            transition: color 0.2s;
-            font-size: 1.08em;
         }
-        a:hover {
-            color: var(--color-danger);
-            text-decoration: underline;
-        }
-        .tag {
-            background: rgba(72,187,120,0.13);
+
+        .card-title:hover {
             color: var(--color-accent);
-            border-radius: 8px;
-            padding: 2px 10px;
-            font-size: 0.95em;
-            font-weight: 600;
         }
-        .footer {
-            margin-top: 36px;
+
+        .card-desc {
+            font-size: 0.88em;
             color: var(--color-text-muted);
-            font-size: 0.98em;
-            opacity: 0.92;
+            line-height: 1.5;
+            margin: 0 0 14px;
+            flex: 1;
         }
-        .github {
-            display: inline-block;
-            margin-top: 10px;
-            color: var(--color-primary);
-            font-size: 1.1em;
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--color-text-muted);
+            border-radius: 6px;
+            padding: 3px 9px;
+            font-size: 0.75em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .play-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--color-primary);
+            color: #fff;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.82em;
+            font-weight: 700;
             text-decoration: none;
-            transition: color 0.2s;
+            white-space: nowrap;
+            transition: background 0.18s, transform 0.15s;
+            margin-left: auto;
         }
-        .github:hover {
-            color: var(--color-accent);
+
+        .play-btn:hover {
+            background: #5a6fd6;
+            transform: scale(1.05);
+            color: #fff;
+            text-decoration: none;
         }
-        .feature-grid {
+
+        /* ── Perks strip ──────────────────────────────── */
+        .perks {
+            width: 100%;
+            max-width: 1080px;
+            padding: 36px 20px 0;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-top: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
         }
-        .feature-card {
+
+        .perk {
             background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 14px;
-            text-align: left;
-            color: var(--color-text-light);
-            line-height: 1.45;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            padding: 16px 18px;
         }
-        .feature-card strong {
+
+        .perk-icon {
+            font-size: 1.4em;
+            margin-bottom: 8px;
+        }
+
+        .perk-title {
+            font-size: 0.9em;
+            font-weight: 700;
             color: var(--color-warning);
-            display: block;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
+
+        .perk-body {
+            font-size: 0.82em;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+        }
+
+        /* ── Footer ───────────────────────────────────── */
+        footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            padding: 14px 0;
+            font-size: 13px;
+            color: #718096;
+            background: rgba(15, 12, 41, 0.9);
+            border-top: 1px solid rgba(102, 126, 234, 0.3);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+
+        /* ── Responsive ───────────────────────────────── */
         @media (max-width: 600px) {
-            .container {
-                padding: 24px 8px 18px 8px;
-                margin-top: 20px;
-                max-width: 99vw;
-            }
-            h1 {
-                font-size: 1.5em;
-            }
-            .logo {
-                font-size: 2em;
-            }
+            .hero { padding: 40px 16px 28px; }
+            .hero h1 { font-size: 1.8em; }
+            .hero-logo { font-size: 2.6em; }
+            .games-section, .perks { padding: 0 12px; }
+            .games-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .card-preview { height: 90px; font-size: 2.4em; }
+            .card-body { padding: 12px 12px 14px; }
+        }
+
+        @media (max-width: 380px) {
+            .games-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <main class="container" id="page-top">
-        <div class="logo">🎮</div>
-        <h1 id="main-title">Mini Games Collection</h1>
-        <div class="desc" id="main-desc">A curated collection of single-file web games. Play instantly, share easily, and enjoy classic fun!</div>
-        <p class="lede">Instant-play HTML5 games with no downloads, no accounts, and no ads. Keep a link handy, share with friends, and play classic genres in seconds—great for quick breaks, classrooms, and retro fans.</p>
-        <h2>Featured browser games</h2>
-        <ul>
-            <li><a href="math-rain.html" id="math-rain-name">Math Rain</a> <span class="tag" id="math-rain-tag">Mathematical Game</span></li>
-            <li><a href="tetris.html" id="tetris-name">Tetris</a> <span class="tag" id="tetris-tag">Classic, Modern UI</span></li>
-            <li><a href="tank-battle.html" id="tank-name">Tank Battle</a> <span class="tag" id="tank-tag">Classic Arcade, Retro Style</span></li>
-            <li><a href="gomoku.html" id="gomoku-name">Gomoku</a> <span class="tag" id="gomoku-tag">Strategy Board Game</span></li>
-            <!-- <li><a href="js/math-rain/question-bank-test.html" id="test-page">Question Bank Test</a> <span class="tag">🧪 测试页面</span></li> -->
 
-            <!-- Add more games here -->
-        </ul>
-        <h2 class="features-heading">Why players bookmark us</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <strong>Single-file builds</strong>
-                Lightweight pages load fast, cache well, and are easy to host anywhere.
-            </div>
-            <div class="feature-card">
-                <strong>Keyboard + touch</strong>
-                Games are tuned for laptop keyboards and mobile touch controls so anyone can play.
-            </div>
-            <div class="feature-card">
-                <strong>Bilingual copy</strong>
-                English and Chinese text help search engines and players find the right experience.
-            </div>
+    <!-- Hero -->
+    <header class="hero">
+        <div class="hero-logo">🎮</div>
+        <h1 id="main-title">Mini Games Collection</h1>
+        <p class="hero-sub" id="main-desc">Play instantly · No downloads · No accounts · No ads</p>
+    </header>
+
+    <!-- Games -->
+    <section class="games-section" aria-label="Games">
+        <p class="section-label" id="section-label">Choose a game</p>
+        <div class="games-grid">
+
+            <!-- Math Rain -->
+            <article class="game-card" onclick="location.href='math-rain.html'">
+                <div class="card-preview card-preview--math">🔢</div>
+                <div class="card-body">
+                    <a class="card-title" href="math-rain.html" id="math-rain-name">Math Rain</a>
+                    <p class="card-desc" id="math-rain-desc">Catch falling equations before they hit the ground. Practice arithmetic under pressure.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="math-rain-tag">Educational</span>
+                        <a class="play-btn" href="math-rain.html" id="math-rain-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Tetris -->
+            <article class="game-card" onclick="location.href='tetris.html'">
+                <div class="card-preview card-preview--tetris">🟦</div>
+                <div class="card-body">
+                    <a class="card-title" href="tetris.html" id="tetris-name">Tetris</a>
+                    <p class="card-desc" id="tetris-desc">Modern Tetris with SRS rotation, combo system, multiple themes, and global high scores.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="tetris-tag">Classic</span>
+                        <a class="play-btn" href="tetris.html" id="tetris-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Tank Battle -->
+            <article class="game-card" onclick="location.href='tank-battle.html'">
+                <div class="card-preview card-preview--tank">🎯</div>
+                <div class="card-body">
+                    <a class="card-title" href="tank-battle.html" id="tank-name">Tank Battle</a>
+                    <p class="card-desc" id="tank-desc">Retro arcade tank shooter. Defend your base, blast enemies, and survive wave after wave.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="tank-tag">Arcade</span>
+                        <a class="play-btn" href="tank-battle.html" id="tank-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Gomoku -->
+            <article class="game-card" onclick="location.href='gomoku.html'">
+                <div class="card-preview card-preview--gomoku">⚫</div>
+                <div class="card-body">
+                    <a class="card-title" href="gomoku.html" id="gomoku-name">Gomoku</a>
+                    <p class="card-desc" id="gomoku-desc">Five in a Row. Challenge the AI or play with a friend on the classic strategy board.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="gomoku-tag">Strategy</span>
+                        <a class="play-btn" href="gomoku.html" id="gomoku-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Dots and Boxes -->
+            <article class="game-card" onclick="location.href='/dots-and-boxes'">
+                <div class="card-preview card-preview--dots">🔵</div>
+                <div class="card-body">
+                    <a class="card-title" href="/dots-and-boxes" id="dots-name">Dots and Boxes</a>
+                    <p class="card-desc" id="dots-desc">Take turns drawing lines between dots. Complete a box to score a point and go again. Outsmart your opponent!</p>
+                    <div class="card-footer">
+                        <span class="tag" id="dots-tag">Multiplayer</span>
+                        <a class="play-btn" href="/dots-and-boxes" id="dots-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
         </div>
-    </main>
-    <footer style="width:100vw;text-align:center;padding:18px 0 10px 0;font-size:15px;color:#aaa;letter-spacing:0.5px;background:rgba(26,32,44,0.85);border-top:1px solid #667eea;position:fixed;left:0;bottom:0;z-index:1001;backdrop-filter:blur(3px);">
-        © 2025 Orangely.
-    </footer>
+    </section>
+
+    <!-- Perks -->
+    <aside class="perks" aria-label="Features">
+        <div class="perk">
+            <div class="perk-icon">⚡</div>
+            <div class="perk-title" id="perk1-title">Instant play</div>
+            <p class="perk-body" id="perk1-body">Single-file builds load fast and cache well. No install, no login.</p>
+        </div>
+        <div class="perk">
+            <div class="perk-icon">📱</div>
+            <div class="perk-title" id="perk2-title">Keyboard &amp; touch</div>
+            <p class="perk-body" id="perk2-body">Every game is tuned for laptop keyboards and mobile touch controls.</p>
+        </div>
+        <div class="perk">
+            <div class="perk-icon">🌐</div>
+            <div class="perk-title" id="perk3-title">Bilingual</div>
+            <p class="perk-body" id="perk3-body">English and Chinese — auto-detected from your browser language.</p>
+        </div>
+    </aside>
+
+    <footer id="footer-text">© 2026 Orangely.</footer>
+
     <script>
-        // 国际化配置
         const i18n = {
             en: {
-                pageTitle: 'Single Page Games Collection',
-                mainTitle: 'Single Page Games Collection',
-                mainDesc: 'A curated collection of single-file web games. Play instantly, share easily, and enjoy classic fun!',
-                tetrisName: 'Tetris',
-                tetrisTag: 'Classic, Modern UI',
-                tankName: 'Tank Battle',
-                tankTag: 'Classic Arcade, Retro Style',
-                mathRainName: 'Math Rain',
-                mathRainTag: 'Mathematical Game',
-                gomokuName: 'Gomoku',
-                gomokuTag: 'Strategy Board Game',
+                pageTitle: 'Mini Games Collection',
+                mainTitle: 'Mini Games Collection',
+                mainDesc: 'Play instantly · No downloads · No accounts · No ads',
+                sectionLabel: 'Choose a game',
 
-                footer: '© 2025 Orangely.'
+                mathRainName: 'Math Rain',
+                mathRainDesc: 'Catch falling equations before they hit the ground. Practice arithmetic under pressure.',
+                mathRainTag: 'Educational',
+                mathRainPlay: 'Play ›',
+
+                tetrisName: 'Tetris',
+                tetrisDesc: 'Modern Tetris with SRS rotation, combo system, multiple themes, and global high scores.',
+                tetrisTag: 'Classic',
+                tetrisPlay: 'Play ›',
+
+                tankName: 'Tank Battle',
+                tankDesc: 'Retro arcade tank shooter. Defend your base, blast enemies, and survive wave after wave.',
+                tankTag: 'Arcade',
+                tankPlay: 'Play ›',
+
+                gomokuName: 'Gomoku',
+                gomokuDesc: 'Five in a Row. Challenge the AI or play with a friend on the classic strategy board.',
+                gomokuTag: 'Strategy',
+                gomokuPlay: 'Play ›',
+
+                dotsName: 'Dots and Boxes',
+                dotsDesc: 'Take turns drawing lines between dots. Complete a box to score a point and go again. Outsmart your opponent!',
+                dotsTag: 'Multiplayer',
+                dotsPlay: 'Play ›',
+
+                perk1Title: 'Instant play',
+                perk1Body: 'Single-file builds load fast and cache well. No install, no login.',
+                perk2Title: 'Keyboard & touch',
+                perk2Body: 'Every game is tuned for laptop keyboards and mobile touch controls.',
+                perk3Title: 'Bilingual',
+                perk3Body: 'English and Chinese — auto-detected from your browser language.',
+
+                footer: '© 2026 Orangely.'
             },
             zh: {
                 pageTitle: '单页游戏合集',
                 mainTitle: '单页游戏合集',
-                mainDesc: '精选的单文件网页游戏合集，即点即玩，轻松分享，享受经典乐趣！',
-                tetrisName: '俄罗斯方块',
-                tetrisTag: '经典游戏, 现代界面',
-                tankName: '坦克大战',
-                tankTag: '经典街机, 怀旧风格',
-                mathRainName: '数字雨',
-                mathRainTag: '数学游戏, 教育训练',
-                gomokuName: '五子棋',
-                gomokuTag: '经典策略, 益智对弈',
+                mainDesc: '即点即玩 · 无需下载 · 无需注册 · 无广告',
+                sectionLabel: '选择游戏',
 
-                footer: '© 2025 Orangely.'
+                mathRainName: '数字雨',
+                mathRainDesc: '在等式落地前答对它。在压力下练习算术运算。',
+                mathRainTag: '益智教育',
+                mathRainPlay: '开始游戏 ›',
+
+                tetrisName: '俄罗斯方块',
+                tetrisDesc: '现代俄罗斯方块，支持 SRS 旋转、连击系统、多种主题与全球排行榜。',
+                tetrisTag: '经典游戏',
+                tetrisPlay: '开始游戏 ›',
+
+                tankName: '坦克大战',
+                tankDesc: '复古街机坦克射击。保卫基地，消灭敌人，坚持更多回合。',
+                tankTag: '街机竞技',
+                tankPlay: '开始游戏 ›',
+
+                gomokuName: '五子棋',
+                gomokuDesc: '五子连珠。与 AI 对决或和朋友在经典棋盘上一较高下。',
+                gomokuTag: '策略棋牌',
+                gomokuPlay: '开始游戏 ›',
+
+                dotsName: '点格棋',
+                dotsDesc: '轮流在相邻的点之间画线，围成方格得分，得分后可再画一条线，最终方格多者获胜！',
+                dotsTag: '双人对战',
+                dotsPlay: '开始游戏 ›',
+
+                perk1Title: '即点即玩',
+                perk1Body: '单文件构建，加载迅速，无需安装，无需登录。',
+                perk2Title: '键盘 & 触控',
+                perk2Body: '每款游戏均为键盘和移动端触控精心优化。',
+                perk3Title: '双语支持',
+                perk3Body: '英文与中文，根据浏览器语言自动切换。',
+
+                footer: '© 2026 Orangely.'
             }
         };
 
-        // 检测浏览器语言
         function detectLanguage() {
-            const browserLang = navigator.language || navigator.userLanguage;
-            // 如果浏览器语言是中文（简体或繁体），使用中文，否则默认英文
-            return browserLang.startsWith('zh') ? 'zh' : 'en';
+            const lang = navigator.language || navigator.userLanguage || 'en';
+            return lang.startsWith('zh') ? 'zh' : 'en';
         }
 
-        // 设置 canonical、OG、Twitter 图像为绝对地址，便于搜索引擎收录
+        function applyLanguage(lang) {
+            const t = i18n[lang];
+            if (!t) return;
+
+            document.getElementById('html-root').lang = lang;
+            document.getElementById('page-title').textContent = t.pageTitle;
+            document.getElementById('main-title').textContent = t.mainTitle;
+            document.getElementById('main-desc').textContent = t.mainDesc;
+            document.getElementById('section-label').textContent = t.sectionLabel;
+
+            document.getElementById('math-rain-name').textContent = t.mathRainName;
+            document.getElementById('math-rain-desc').textContent = t.mathRainDesc;
+            document.getElementById('math-rain-tag').textContent = t.mathRainTag;
+            document.getElementById('math-rain-play').textContent = t.mathRainPlay;
+
+            document.getElementById('tetris-name').textContent = t.tetrisName;
+            document.getElementById('tetris-desc').textContent = t.tetrisDesc;
+            document.getElementById('tetris-tag').textContent = t.tetrisTag;
+            document.getElementById('tetris-play').textContent = t.tetrisPlay;
+
+            document.getElementById('tank-name').textContent = t.tankName;
+            document.getElementById('tank-desc').textContent = t.tankDesc;
+            document.getElementById('tank-tag').textContent = t.tankTag;
+            document.getElementById('tank-play').textContent = t.tankPlay;
+
+            document.getElementById('gomoku-name').textContent = t.gomokuName;
+            document.getElementById('gomoku-desc').textContent = t.gomokuDesc;
+            document.getElementById('gomoku-tag').textContent = t.gomokuTag;
+            document.getElementById('gomoku-play').textContent = t.gomokuPlay;
+
+            document.getElementById('dots-name').textContent = t.dotsName;
+            document.getElementById('dots-desc').textContent = t.dotsDesc;
+            document.getElementById('dots-tag').textContent = t.dotsTag;
+            document.getElementById('dots-play').textContent = t.dotsPlay;
+
+            document.getElementById('perk1-title').textContent = t.perk1Title;
+            document.getElementById('perk1-body').textContent = t.perk1Body;
+            document.getElementById('perk2-title').textContent = t.perk2Title;
+            document.getElementById('perk2-body').textContent = t.perk2Body;
+            document.getElementById('perk3-title').textContent = t.perk3Title;
+            document.getElementById('perk3-body').textContent = t.perk3Body;
+
+            document.getElementById('footer-text').textContent = t.footer;
+        }
+
         function setCanonicalAndSocialMeta() {
             const currentUrl = window.location.href.split('#')[0];
             const canonicalLink = document.getElementById('canonical-link');
-            if (canonicalLink) {
-                canonicalLink.setAttribute('href', currentUrl);
-            }
+            if (canonicalLink) canonicalLink.setAttribute('href', currentUrl);
 
             const ogUrl = document.querySelector('meta[property="og:url"]');
-            if (ogUrl) {
-                ogUrl.setAttribute('content', currentUrl);
-            }
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
 
             const baseUrl = new URL('.', currentUrl).href;
             const imagePath = new URL('assets/seo/og-collection.svg', baseUrl).href;
             const ogImage = document.querySelector('meta[property="og:image"]');
-            if (ogImage) {
-                ogImage.setAttribute('content', imagePath);
-            }
+            if (ogImage) ogImage.setAttribute('content', imagePath);
             const twitterImage = document.querySelector('meta[name="twitter:image"]');
-            if (twitterImage) {
-                twitterImage.setAttribute('content', imagePath);
-            }
+            if (twitterImage) twitterImage.setAttribute('content', imagePath);
         }
 
-        // 为搜索引擎注入结构化数据
         function injectStructuredData() {
             const currentUrl = window.location.href.split('#')[0];
             const baseUrl = new URL('.', currentUrl).href;
             const games = [
-                { slug: 'math-rain', name: 'Math Rain', description: 'Timed arithmetic practice game with falling equations.' },
-                { slug: 'tetris', name: 'Tetris', description: 'Modernized Tetris with particles, keyboard, and mobile controls.' },
-                { slug: 'tank-battle', name: 'Tank Battle', description: 'Retro arcade tank shooter with base defense.' },
-                { slug: 'gomoku', name: 'Gomoku', description: 'Five in a Row board game versus AI or a friend.' },
+                { slug: 'math-rain',   name: 'Math Rain',    description: 'Timed arithmetic practice game with falling equations.' },
+                { slug: 'tetris',      name: 'Tetris',        description: 'Modernized Tetris with particles, keyboard, and mobile controls.' },
+                { slug: 'tank-battle', name: 'Tank Battle',   description: 'Retro arcade tank shooter with base defense.' },
+                { slug: 'gomoku',      name: 'Gomoku',        description: 'Five in a Row board game versus AI or a friend.' },
+                { url: 'https://games.orangely.xyz/dots-and-boxes', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' }
             ];
 
             const siteData = {
@@ -328,61 +565,33 @@
                 "url": currentUrl,
                 "description": "Play lightweight browser games including Math Rain, Tetris, Tank Battle, and Gomoku.",
                 "inLanguage": document.documentElement.lang || "en",
-                "publisher": {
-                    "@type": "Organization",
-                    "name": "Orangely"
-                }
+                "publisher": { "@type": "Organization", "name": "Orangely" }
             };
 
             const itemList = {
                 "@context": "https://schema.org",
                 "@type": "ItemList",
                 "name": "Mini Games Collection",
-                "itemListElement": games.map((game, index) => ({
+                "itemListElement": games.map((g, i) => ({
                     "@type": "ListItem",
-                    "position": index + 1,
-                    "name": game.name,
-                    "description": game.description,
-                    "url": `${baseUrl}${game.slug}.html`
+                    "position": i + 1,
+                    "name": g.name,
+                    "description": g.description,
+                    "url": g.url || `${baseUrl}${g.slug}.html`
                 }))
             };
 
             [siteData, itemList].forEach(data => {
-                const script = document.createElement('script');
-                script.type = 'application/ld+json';
-                script.textContent = JSON.stringify(data);
-                document.head.appendChild(script);
+                const s = document.createElement('script');
+                s.type = 'application/ld+json';
+                s.textContent = JSON.stringify(data);
+                document.head.appendChild(s);
             });
         }
 
-        // 应用语言设置
-        function applyLanguage(lang) {
-            const texts = i18n[lang];
-            if (!texts) return;
-
-            // 更新页面内容
-            document.getElementById('page-title').textContent = texts.pageTitle;
-            document.getElementById('main-title').textContent = texts.mainTitle;
-            document.getElementById('main-desc').textContent = texts.mainDesc;
-            document.getElementById('tetris-name').textContent = texts.tetrisName;
-            document.getElementById('tetris-tag').textContent = texts.tetrisTag;
-            document.getElementById('tank-name').textContent = texts.tankName;
-            document.getElementById('tank-tag').textContent = texts.tankTag;
-            document.getElementById('math-rain-name').textContent = texts.mathRainName;
-            document.getElementById('math-rain-tag').textContent = texts.mathRainTag;
-            if (document.getElementById('gomoku-name')) {
-                document.getElementById('gomoku-name').textContent = texts.gomokuName;
-                document.getElementById('gomoku-tag').textContent = texts.gomokuTag;
-            }
-            
-            // 更新HTML lang属性
-            document.getElementById('html-root').setAttribute('lang', lang);
-        }
-
-        // 页面加载时自动检测并应用语言
-        document.addEventListener('DOMContentLoaded', function() {
-            const language = detectLanguage();
-            applyLanguage(language);
+        document.addEventListener('DOMContentLoaded', () => {
+            const lang = detectLanguage();
+            applyLanguage(lang);
             setCanonicalAndSocialMeta();
             injectStructuredData();
         });
