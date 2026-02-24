@@ -5,11 +5,7 @@ export default {
     if (url.pathname === '/dots-and-boxes' || url.pathname.startsWith('/dots-and-boxes/')) {
       const targetPath = url.pathname.replace(/^\/dots-and-boxes/, '') || '/';
       const targetUrl = `https://dots-and-boxes.orangely.xyz${targetPath}${url.search}`;
-      return fetch(targetUrl, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-      });
+      return Response.redirect(targetUrl, 302);
     }
 
     return env.ASSETS.fetch(request);
