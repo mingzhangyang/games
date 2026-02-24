@@ -8,6 +8,7 @@
     "binding": "ASSETS"
   },
   "routes": [
-    { "pattern": "games.orangely.xyz", "custom_domain": true }
+    { "pattern": "games.orangely.xyz", "custom_domain": true },
+    { "pattern": "game.orangely.xyz", "custom_domain": true }
   ]
 }
