@@ -52,7 +52,6 @@ vite.*.log
 
 # Cloudflare Workers
 .env
-Workers/
 
 # Temporary files
 *.tmp
