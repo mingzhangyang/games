@@ -1,9 +1,11 @@
 {
   "name": "games",
+  "main": "src/index.js",
   "compatibility_date": "2025-04-01",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    "binding": "ASSETS"
   },
   "routes": [
     { "pattern": "games.orangely.xyz/*", "zone_name": "orangely.xyz" }
