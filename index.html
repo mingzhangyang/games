@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A curated collection of web games including Math Rain, Tetris, Tank Battle, Gomoku, 2D Minecraft, and Dots and Boxes. Play instantly in your browser.">
-    <meta name="keywords" content="web games, html5 games, mini games, math game, tetris, tank battle, gomoku, five in a row, dots and boxes, 2d minecraft">
+    <meta name="description" content="A curated collection of web games including Math Rain, Tetris, Tank Battle, Gomoku, 2D Minecraft, Dots and Boxes, and The Stack. Play instantly in your browser.">
+    <meta name="keywords" content="web games, html5 games, mini games, math game, tetris, tank battle, gomoku, five in a row, dots and boxes, 2d minecraft, pick-up sticks">
     <meta name="robots" content="index, follow">
     <meta name="author" content="Orangely">
     <link rel="canonical" id="canonical-link" href="">
@@ -142,6 +142,7 @@
         .card-icon--gomoku    { background: rgba(249, 115, 22, 0.15); }
         .card-icon--minecraft { background: rgba(132, 204, 22, 0.15); }
         .card-icon--dots      { background: rgba(6, 182, 212, 0.15); }
+        .card-icon--stack     { background: rgba(245, 158, 11, 0.15); }
 
         .card-title {
             font-size: 1em;
@@ -373,6 +374,21 @@
                 </div>
             </article>
 
+            <!-- The Stack -->
+            <article class="game-card" onclick="location.href='https://steady-hand.orangely.xyz'">
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--stack">🥢</span>
+                        <a class="card-title" href="https://steady-hand.orangely.xyz" id="stack-name">The Stack</a>
+                    </div>
+                    <p class="card-desc" id="stack-desc">Pick-up sticks, digitized. Lift each stick without disturbing the pile — thirty sticks, three lives, one steady hand.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="stack-tag">Puzzle</span>
+                        <a class="play-btn" href="https://steady-hand.orangely.xyz" id="stack-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
         </div>
     </section>
 
@@ -441,6 +457,11 @@
                 dotsTag: 'Multiplayer',
                 dotsPlay: 'Play ›',
 
+                stackName: 'The Stack',
+                stackDesc: 'Pick-up sticks, digitized. Lift each stick without disturbing the pile — thirty sticks, three lives, one steady hand.',
+                stackTag: 'Puzzle',
+                stackPlay: 'Play ›',
+
                 perk1Title: 'Instant play',
                 perk1Body: 'Single-file builds load fast and cache well. No install, no login.',
                 perk2Title: 'Keyboard & touch',
@@ -485,6 +506,11 @@
                 dotsDesc: '轮流在相邻的点之间画线，围成方格得分，得分后可再画一条线，最终方格多者获胜！',
                 dotsTag: '双人对战',
                 dotsPlay: '开始游戏 ›',
+
+                stackName: '挑棒',
+                stackDesc: '经典挑棒游戏的数字版。逐根挑起木棒，别碰动压在上面的那些——三十根木棒，三条命，全看你的手稳不稳。',
+                stackTag: '休闲益智',
+                stackPlay: '开始游戏 ›',
 
                 perk1Title: '即点即玩',
                 perk1Body: '单文件构建，加载迅速，无需安装，无需登录。',
@@ -542,6 +568,11 @@
             document.getElementById('dots-tag').textContent = t.dotsTag;
             document.getElementById('dots-play').textContent = t.dotsPlay;
 
+            document.getElementById('stack-name').textContent = t.stackName;
+            document.getElementById('stack-desc').textContent = t.stackDesc;
+            document.getElementById('stack-tag').textContent = t.stackTag;
+            document.getElementById('stack-play').textContent = t.stackPlay;
+
             document.getElementById('perk1-title').textContent = t.perk1Title;
             document.getElementById('perk1-body').textContent = t.perk1Body;
             document.getElementById('perk2-title').textContent = t.perk2Title;
@@ -577,7 +608,8 @@
                 { slug: 'tank-battle', name: 'Tank Battle',   description: 'Retro arcade tank shooter with base defense.' },
                 { slug: 'gomoku',      name: 'Gomoku',        description: 'Five in a Row board game versus AI or a friend.' },
                 { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
-                { url: 'https://games.orangely.xyz/dots-and-boxes', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' }
+                { url: 'https://games.orangely.xyz/dots-and-boxes', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
+                { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
             ];
 
             const siteData = {
