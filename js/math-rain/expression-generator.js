@@ -137,21 +137,97 @@ class ExpressionGenerator {
      */
     calculateExpression(expression) {
         try {
-            // 处理特殊运算符
-            let processedExp = expression
-                .replace(/×/g, '*')
-                .replace(/÷/g, '/')
-                .replace(/\^2/g, '**2')
-                .replace(/√(\d+)/g, 'Math.sqrt($1)');
-            
-            const result = Function('"use strict"; return (' + processedExp + ')')();
-            
+            const result = this.evaluateSafely(String(expression));
+            if (result === null || !isFinite(result)) {
+                return null;
+            }
             // 四舍五入到合理精度
             return Math.round(result * 100) / 100;
         } catch (error) {
 
             return null;
         }
+    }
+
+    /**
+     * 安全表达式求值（递归下降解析器，替代 Function eval）
+     * 语法：数字、+ - × ÷、^2（平方）、√N（平方根）、负数、括号
+     * 输入仅按数学语法解析，任何意外字符都会抛错而不是被执行
+     */
+    evaluateSafely(input) {
+        const src = input.replace(/\s+/g, '');
+        let pos = 0;
+
+        const peek = () => src[pos];
+        const eat = (ch) => {
+            if (src[pos] === ch) { pos++; return true; }
+            return false;
+        };
+
+        const applyPostfix = (v) => {
+            // ^2 平方后缀（如 5^2）
+            if (src.startsWith('^2', pos)) {
+                pos += 2;
+                return v * v;
+            }
+            return v;
+        };
+
+        const parseAtom = () => {
+            if (eat('(')) {
+                const v = parseExpr();
+                if (!eat(')')) throw new Error('括号不匹配');
+                return applyPostfix(v);
+            }
+            const start = pos;
+            while (pos < src.length && /[0-9.]/.test(src[pos])) pos++;
+            if (start === pos) throw new Error(`意外的字符: ${peek()}`);
+            const num = parseFloat(src.slice(start, pos));
+            if (isNaN(num)) throw new Error('非法数字');
+            return applyPostfix(num);
+        };
+
+        const parseUnary = () => {
+            if (eat('-')) return -parseUnary();
+            if (eat('+')) return parseUnary();
+            if (eat('√')) {
+                const v = parseUnary();
+                return v < 0 ? NaN : Math.sqrt(v);
+            }
+            return parseAtom();
+        };
+
+        const parseTerm = () => {
+            let value = parseUnary();
+            for (;;) {
+                if (eat('*')) {
+                    if (peek() === '*') { // **2 平方写法
+                        pos++;
+                        const exp = parseUnary();
+                        value = Math.pow(value, exp);
+                    } else {
+                        value *= parseUnary();
+                    }
+                } else if (eat('/')) {
+                    value /= parseUnary();
+                } else {
+                    return value;
+                }
+            }
+        };
+
+        const parseExpr = () => {
+            let value = parseTerm();
+            for (;;) {
+                if (eat('+')) value += parseTerm();
+                else if (eat('-')) value -= parseTerm();
+                else return value;
+            }
+        };
+
+        const result = parseExpr();
+        if (pos !== src.length) throw new Error(`存在未解析内容: ${src.slice(pos)}`);
+        return result;
     }
 
     /**
@@ -308,17 +384,34 @@ class ExpressionGenerator {
             }
         }
         
-        // 如果找不到合适的因数，生成一个接近的乘法
+        // 如果找不到合适的因数，生成 a × b ± 余数 的形式，
+        // 保证表达式求值结果仍然等于目标值（调用方依赖 result === targetValue 的契约）
         const a = Math.max(2, Math.min(Math.floor(Math.sqrt(targetValue)), config.numberRange.max));
         const b = Math.ceil(targetValue / a);
-        const actualResult = a * b;
-        
-        return {
-            expression: `${a} × ${b}`,
-            result: actualResult,
-            numbers: [a, b],
-            operators: ['×']
-        };
+        const remainder = targetValue - a * b;
+
+        if (remainder === 0) {
+            return {
+                expression: `${a} × ${b}`,
+                result: targetValue,
+                numbers: [a, b],
+                operators: ['×']
+            };
+        }
+
+        return remainder > 0
+            ? {
+                expression: `${a} × ${b} + ${remainder}`,
+                result: targetValue,
+                numbers: [a, b, remainder],
+                operators: ['×', '+']
+            }
+            : {
+                expression: `${a} × ${b} - ${-remainder}`,
+                result: targetValue,
+                numbers: [a, b, -remainder],
+                operators: ['×', '-']
+            };
     }
 
     /**
@@ -358,20 +451,20 @@ class ExpressionGenerator {
      */
     generateSquare(targetValue) {
         const base = Math.floor(Math.sqrt(targetValue));
-        const actualResult = base * base;
-        
-        // 如果结果与目标值差距太大，返回最接近的平方
-        if (Math.abs(actualResult - targetValue) > targetValue * 0.2) {
-            // 转换为乘法表达式
-            return this.generateMultiplication(targetValue);
+
+        // 只有目标值是完全平方数时才用平方形式，
+        // 否则表达式结果不等于目标值，会破坏"正确答案"的契约
+        if (base * base === targetValue && base >= 2) {
+            return {
+                expression: `${base}²`,
+                result: targetValue,
+                numbers: [base],
+                operators: ['^2']
+            };
         }
-        
-        return {
-            expression: `${base}²`,
-            result: actualResult,
-            numbers: [base],
-            operators: ['^2']
-        };
+
+        // 转换为乘法表达式
+        return this.generateMultiplication(targetValue);
     }
 
     /**
@@ -691,7 +784,9 @@ class ExpressionGenerator {
         // 生成正确答案
         const correctExpression = this.generateCorrectExpression(targetValue);
         if (correctExpression) {
-            correctExpression.isCorrect = true;
+            // 以实际求值结果为准做校验，而不是盲目打标
+            const verified = this.validateExpression(correctExpression.expression, targetValue);
+            correctExpression.isCorrect = verified;
             expressions.push(correctExpression);
         }
         

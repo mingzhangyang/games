@@ -7,6 +7,7 @@ import ExpressionGenerator, { generateExpressionForTarget as genForTarget } from
 class QuestionBankManager {
     constructor() {
         this.questionBank = null;
+        this.questionIndex = new Map(); // id -> question 的 O(1) 索引
         this.currentLevel = 1;
         this.recentQuestions = new Set(); // 最近使用的题目ID
         this.recentLimit = 20; // 最近题目记录数量
@@ -17,14 +18,14 @@ class QuestionBankManager {
             poolUsage: new Map()
         };
         this.__emptyPoolLog = { lastTs: 0, intervalMs: 1000 }; // 空池日志限频状态
-        
+
         // 防重复配置
         this.antiRepeatConfig = {
             maxRecentQuestions: 20,
             similarTargetGap: 3, // 相似目标值的最小间隔
             samePoolGap: 2 // 同一题目池的最小间隔
         };
-        
+
         this.lastUsedPools = []; // 最近使用的题目池
     }
 
@@ -34,8 +35,24 @@ class QuestionBankManager {
      */
     loadQuestionBank(questionBankData) {
         this.questionBank = questionBankData;
+        this.buildQuestionIndex();
         this.initializeWeights();
         console.log('题库加载完成:', this.generateLoadStats());
+    }
+
+    /**
+     * 构建题目 id 索引，避免每次选题都对全库做线性扫描
+     */
+    buildQuestionIndex() {
+        this.questionIndex = new Map();
+        if (!this.questionBank) return;
+        for (const levelData of Object.values(this.questionBank.levels)) {
+            for (const poolData of Object.values(levelData.pools)) {
+                for (const question of poolData.questions || []) {
+                    this.questionIndex.set(question.id, question);
+                }
+            }
+        }
     }
 
     /**
@@ -71,14 +88,16 @@ class QuestionBankManager {
      * @param {number} level - 难度级别 (1-6)
      */
     setLevel(level) {
-        if (level < 1 || level > 6) {
+        // 关卡必须是 1-6 的整数（防御外部传入小数或字符串）
+        const normalized = Math.round(Number(level));
+        if (!Number.isFinite(normalized) || normalized < 1 || normalized > 6) {
             throw new Error(`无效的难度级别: ${level}`);
         }
-        
-        if (level !== this.currentLevel) {
-            this.currentLevel = level;
+
+        if (normalized !== this.currentLevel) {
+            this.currentLevel = normalized;
             this.clearRecentHistory(); // 切换级别时清空历史
-            console.log(`切换到难度级别: ${level}`);
+            console.log(`切换到难度级别: ${normalized}`);
         }
     }
 
@@ -264,15 +283,7 @@ class QuestionBankManager {
      */
     findQuestionById(questionId) {
         if (!this.questionBank) return null;
-        
-        for (const levelData of Object.values(this.questionBank.levels)) {
-            for (const poolData of Object.values(levelData.pools)) {
-                const question = poolData.questions.find(q => q.id === questionId);
-                if (question) return question;
-            }
-        }
-        
-        return null;
+        return this.questionIndex.get(questionId) || null;
     }
 
     /**

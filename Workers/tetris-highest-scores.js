@@ -3,6 +3,7 @@
 
 const ALLOWED_ORIGINS = [
   'https://games.orangely.xyz',
+  'https://game.orangely.xyz',
 ];
 
 function getOrigin(request) {
@@ -21,6 +22,14 @@ function corsHeaders(origin) {
   return {};
 }
 
+// 清理用户名：去除控制字符和不可打印字符，防止存储脏数据
+function sanitizeName(value) {
+  return String(value)
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, '')
+    .trim()
+    .slice(0, 50);
+}
+
 export default {
   async fetch(request, env) {
     const origin = getOrigin(request);
@@ -37,13 +46,19 @@ export default {
 
     if (request.method === 'POST') {
       try {
+        // 只接受 JSON 请求体
+        const contentType = (request.headers.get('Content-Type') || '').split(';')[0].trim();
+        if (contentType !== 'application/json') {
+          return new Response('Invalid', { status: 400, headers: corsHeaders(origin) });
+        }
         const { name, score } = await request.json();
-        const cleanName = String(name).trim().slice(0, 50);
-        if (!cleanName || typeof score !== 'number' || !isFinite(score) || score < 0 || score > 2000000) {
+        const cleanName = sanitizeName(name);
+        if (!cleanName || typeof score !== 'number' || !Number.isFinite(score) || score < 0 || score > 2000000) {
           return new Response('Invalid', { status: 400, headers: corsHeaders(origin) });
         }
         let top = await env.TETRIS_SCORES.get('top5');
         top = top ? JSON.parse(top) : [];
+        if (!Array.isArray(top)) top = [];
         const idx = top.findIndex(item => item.name === cleanName);
         if (idx >= 0) {
           if (score > top[idx].score) {
@@ -62,8 +77,14 @@ export default {
     }
 
     // GET: 返回前五名排行榜
-    let top = await env.TETRIS_SCORES.get('top5');
-    top = top ? JSON.parse(top) : [];
+    let top;
+    try {
+      top = await env.TETRIS_SCORES.get('top5');
+      top = top ? JSON.parse(top) : [];
+    } catch (e) {
+      top = [];
+    }
+    if (!Array.isArray(top)) top = [];
     return new Response(JSON.stringify(top), {
       headers: {
         ...corsHeaders(origin),

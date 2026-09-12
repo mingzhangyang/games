@@ -246,7 +246,7 @@ class LanguageManager {
         const statMappings = {
             '最终分数': texts.finalScore,
             'Final Score': texts.finalScore,
-            '目标分数': texts.targetScore, 
+            '目标分数': texts.targetScore,
             'Target Score': texts.targetScore,
             '准确率': texts.accuracy,
             'Accuracy': texts.accuracy,
@@ -255,9 +255,15 @@ class LanguageManager {
             '会话时长': texts.sessionDuration,
             'Session Duration': texts.sessionDuration,
             '升级达成': texts.levelUpAchieved,
-            'Level Up Achieved': texts.levelUpAchieved
+            'Level Up Achieved': texts.levelUpAchieved,
+            '游戏时间': texts.gameTime,
+            'Game Time': texts.gameTime,
+            '评级': texts.grade,
+            'Grade': texts.grade,
+            '获得金币': texts.coinsEarnedLabel,
+            'Coins Earned': texts.coinsEarnedLabel
         };
-        
+
         statLabels.forEach(label => {
             if (statMappings[label.textContent]) {
                 label.textContent = statMappings[label.textContent];

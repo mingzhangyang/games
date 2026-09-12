@@ -521,21 +521,37 @@ class UIController {
         const body = document.body;
         const isDark = body.classList.contains('dark-theme');
         const isLight = body.classList.contains('light-theme');
-        
+
+        // 隐私模式下 localStorage 可能抛 SecurityError
+        const saveTheme = (theme) => {
+            try {
+                localStorage.setItem('theme', theme);
+            } catch (e) {
+                // 存储不可用时仅切换当前会话的主题
+            }
+        };
+
         if (isDark) {
             body.classList.remove('dark-theme');
             body.classList.add('light-theme');
-            localStorage.setItem('theme', 'light');
+            saveTheme('light');
         } else if (isLight) {
             body.classList.remove('light-theme');
-            localStorage.setItem('theme', 'default');
+            saveTheme('default');
         } else {
             body.classList.add('dark-theme');
-            localStorage.setItem('theme', 'dark');
+            saveTheme('dark');
         }
-        
+
+        let currentTheme = 'default';
+        try {
+            currentTheme = localStorage.getItem('theme') || 'default';
+        } catch (e) {
+            // ignore
+        }
+
         this.eventSystem.emit('ui:theme:changed', {
-            theme: localStorage.getItem('theme') || 'default'
+            theme: currentTheme
         });
     }
 
@@ -544,7 +560,12 @@ class UIController {
      */
     initializeSettings() {
         // Load saved theme
-        const savedTheme = localStorage.getItem('theme');
+        let savedTheme = null;
+        try {
+            savedTheme = localStorage.getItem('theme');
+        } catch (e) {
+            // 存储不可用时使用默认主题
+        }
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-theme');
         } else if (savedTheme === 'light') {

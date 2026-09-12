@@ -29,6 +29,14 @@ body {
     border-radius: 4px;
 }
 
+/* 小屏/窄窗口时等比缩放画布，避免被 overflow:hidden 直接裁掉 */
+#gameCanvas {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    width: auto;
+    height: auto;
+}
+
 #gameUI {
     position: absolute;
     top: 0;

@@ -135,5 +135,37 @@ export default {
   confirmButton: "OK",
   networkError: "Network connection error",
   performanceWarning: "Performance warning",
-  renderingError: "Rendering error"
+  renderingError: "Rendering error",
+  // Screens & buttons referenced by language-manager
+  gamePaused: "Game Paused",
+  gameHelp: "How to Play",
+  continueNext: "Continue to Next Level",
+  retryLevel: "Retry Level",
+  backToMenu: "Back to Menu",
+  // Help screen content
+  gameObjective: "Game Objective",
+  gameObjectiveText: "Click falling equations whose result equals the target number to score. Miss the right one and you lose a life!",
+  controlMethods: "Controls",
+  clickTouch: "Mouse / Touch",
+  selectExpression: "Select Expression",
+  selectExpressionDesc: "Click (or tap) an equation matching the current target number",
+  spaceKey: "Space",
+  pauseResume: "Pause / Resume",
+  pauseResumeDesc: "Press Space or Esc to pause and resume the game",
+  fKey: "F Key",
+  useFreeze: "Use Freeze",
+  useFreezeDesc: "Press F to freeze all falling expressions for a few seconds",
+  bKey: "B Key",
+  useBomb: "Use Bomb",
+  useBombDesc: "Press B to clear all expressions on screen",
+  closeHelp: "Close",
+  // Stat labels (also used by updateStatLabels)
+  finalScore: "Final Score",
+  targetScore: "Target Score",
+  maxCombo: "Max Combo",
+  sessionDuration: "Session Duration",
+  levelUpAchieved: "Level Up Achieved",
+  gameTime: "Game Time",
+  grade: "Grade",
+  coinsEarnedLabel: "Coins Earned"
 };

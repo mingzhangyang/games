@@ -52,18 +52,17 @@ class ErrorHandler {
      * Setup global error handling
      */
     setupGlobalErrorHandling() {
-        window.addEventListener('error', (event) => {
-            this.handleGlobalError(event);
-        });
+        // 保存绑定后的引用，destroy() 时才能正确移除
+        this._boundGlobalError = (event) => this.handleGlobalError(event);
+        window.addEventListener('error', this._boundGlobalError);
     }
 
     /**
      * Setup unhandled promise rejection handling
      */
     setupPromiseRejectionHandling() {
-        window.addEventListener('unhandledrejection', (event) => {
-            this.handlePromiseRejection(event);
-        });
+        this._boundPromiseRejection = (event) => this.handlePromiseRejection(event);
+        window.addEventListener('unhandledrejection', this._boundPromiseRejection);
     }
 
     /**
@@ -293,13 +292,24 @@ class ErrorHandler {
         // Create error notification
         const errorDiv = document.createElement('div');
         errorDiv.className = `error-notification ${severity}`;
-        errorDiv.innerHTML = `
-            <div class="error-content">
-                <div class="error-icon">⚠️</div>
-                <div class="error-text">${message}</div>
-                ${allowDismiss ? `<button class="error-dismiss" onclick="this.parentElement.parentElement.remove()">${this.getText('confirmButton')}</button>` : ''}
-            </div>
-        `;
+        // 用 DOM API 构建，错误消息内容不作为 HTML 解析
+        const content = document.createElement('div');
+        content.className = 'error-content';
+        const icon = document.createElement('div');
+        icon.className = 'error-icon';
+        icon.textContent = '⚠️';
+        const text = document.createElement('div');
+        text.className = 'error-text';
+        text.textContent = message;
+        content.append(icon, text);
+        if (allowDismiss) {
+            const dismissBtn = document.createElement('button');
+            dismissBtn.className = 'error-dismiss';
+            dismissBtn.textContent = this.getText('confirmButton');
+            dismissBtn.addEventListener('click', () => errorDiv.remove());
+            content.appendChild(dismissBtn);
+        }
+        errorDiv.appendChild(content);
 
         // Add styles
         this.addErrorStyles(errorDiv);
@@ -528,9 +538,15 @@ class ErrorHandler {
      * Destroy the error handler
      */
     destroy() {
-        // Remove event listeners
-        window.removeEventListener('error', this.handleGlobalError);
-        window.removeEventListener('unhandledrejection', this.handlePromiseRejection);
+        // Remove event listeners（必须用注册时保存的同一个引用）
+        if (this._boundGlobalError) {
+            window.removeEventListener('error', this._boundGlobalError);
+            this._boundGlobalError = null;
+        }
+        if (this._boundPromiseRejection) {
+            window.removeEventListener('unhandledrejection', this._boundPromiseRejection);
+            this._boundPromiseRejection = null;
+        }
         
         // Clear error history
         this.errors = [];

@@ -170,9 +170,9 @@ class MathRainGame {
             this.animationEngine = new window.AnimationEngine();
             this.difficultyManager = new window.DifficultyManager();
             this.soundManager = new window.SoundManager();
-            
-            // Start animation engine
-            this.animationEngine.start();
+
+            // 注意：不预先 start 动画引擎。当前没有任何模块创建动画，
+            // 预启动会让 rAF 循环整页空转；引擎已改为有动画时自启（animation-engine.js）
             
             // Initialize sound manager
             if (this.soundManager && typeof this.soundManager.init === 'function') {
@@ -275,8 +275,9 @@ class MathRainGame {
             this.safePlaySound('freeze');
             // Create freeze visual effect
             if (this.particleSystem) {
-                const centerX = this.canvas.width / 2;
-                const centerY = this.canvas.height / 2;
+                const center = this.getCanvasCenter();
+                const centerX = center.x;
+                const centerY = center.y;
                 this.particleSystem.createExplosion(centerX, centerY, 'combo', {
                     count: 25,
                     colors: ['#68d391', '#9ae6b4', '#c6f6d5', '#e6fffa'],
@@ -290,8 +291,9 @@ class MathRainGame {
             this.safePlaySound('powerup'); // Generic powerup sound
             // Create shield visual effect
             if (this.particleSystem) {
-                const centerX = this.canvas.width / 2;
-                const centerY = this.canvas.height / 2;
+                const center = this.getCanvasCenter();
+                const centerX = center.x;
+                const centerY = center.y;
                 this.particleSystem.createExplosion(centerX, centerY, 'combo', {
                     count: 30,
                     colors: ['#4FC3F7', '#29B6F6', '#03A9F4', '#0288D1'],
@@ -304,8 +306,9 @@ class MathRainGame {
         this.eventSystem.on('powerup:shield:absorbed', () => {
             // Visual feedback when shield absorbs damage
             if (this.particleSystem) {
-                const centerX = this.canvas.width / 2;
-                const centerY = this.canvas.height / 4;
+                const center = this.getCanvasCenter();
+                const centerX = center.x;
+                const centerY = center.y / 2;
                 this.particleSystem.createExplosion(centerX, centerY, 'combo', {
                     count: 20,
                     colors: ['#FFD54F', '#FFEB3B', '#FFF176'],
@@ -314,15 +317,56 @@ class MathRainGame {
                 });
             }
         });
-        this.eventSystem.on('game:over', () => this.safePlaySound('gameOver'));
-        
+        this.eventSystem.on('game:over', () => {
+            this.safePlaySound('gameOver');
+            // 结束后停止渲染循环，避免空转耗电
+            this.isRendering = false;
+        });
+
+        // 键盘快捷键（帮助界面所宣传的：空格暂停、F冻结、B炸弹）
+        this.eventSystem.on('ui:key:space', () => this.togglePauseResume());
+        this.eventSystem.on('ui:key:escape', () => this.togglePauseResume());
+        this.eventSystem.on('ui:key:f', () => this.gameStateManager?.useFreeze());
+        this.eventSystem.on('ui:key:b', () => this.useBomb());
+
+        // 会话结算界面的"下一关/重试"按钮
+        this.eventSystem.on('ui:session:continue', () => this.sessionManager?.continueToNextLevel());
+        this.eventSystem.on('ui:session:retry', () => this.sessionManager?.retryCurrentLevel());
+        this.eventSystem.on('session:level:advanced', (data) => {
+            if (this.difficultyManager && data?.toLevel) {
+                this.difficultyManager.setBaseLevel(data.toLevel);
+            }
+            this.restartGame();
+        });
+        this.eventSystem.on('session:level:retry', () => this.restartGame());
+
+        // 设置面板：粒子特效开关
+        this.eventSystem.on('ui:settings:particle:effects', (data) => {
+            this.particleSystem?.setEnabled(!!data?.enabled);
+        });
+
+        // 窗口尺寸变化 / 手机旋转时重设画布
+        this.eventSystem.on('ui:window:resized', () => this.resizeCanvas());
+        this.eventSystem.on('mobile:orientation:changed', () => this.resizeCanvas());
+
+        // 切换标签页时自动暂停（会话计时基于墙钟，切走后时间会白白流逝）
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                const state = this.gameStateManager?.getState();
+                if (state?.gameState === 'playing') {
+                    this.gameStateManager?.pauseGame();
+                }
+            }
+        });
+
         // Expression missed events
         this.eventSystem.on('expression:missed', (data) => {
             // Add visual feedback for lost lives
             if (data.lives !== undefined && this.particleSystem) {
                 // Create warning particles when life is lost
-                const centerX = this.canvas.width / 2;
-                const centerY = this.canvas.height / 4;
+                const center = this.getCanvasCenter();
+                const centerX = center.x;
+                const centerY = center.y / 2;
                 this.particleSystem.createExplosion(centerX, centerY, 'incorrect', {
                     count: 15,
                     colors: ['#e53e3e', '#fc8181', '#feb2b2'],
@@ -373,8 +417,12 @@ class MathRainGame {
                 this.nextTargetChangeTime += data.pausedDuration;
                 this.lastSpawnTime += data.pausedDuration;
                 this.lastCanvasSpawnTime += data.pausedDuration;
+                // 会话截止时间也要补偿暂停时长，否则暂停期间会白白扣时间
+                if (this.sessionManager && this.sessionManager.isSessionActive) {
+                    this.sessionManager.sessionEndTime += data.pausedDuration;
+                }
             }
-            
+
             // Restart both rendering and game loop
             this.startCanvasRendering();
             this.gameLoop(); // Restart the game loop
@@ -396,9 +444,21 @@ class MathRainGame {
                 this.gameStateManager.emitStateChanged();
             }
         });
-        
+
     }
-    
+
+    /**
+     * 空格/Esc 暂停或恢复（仅当游戏处于 playing/paused 状态时生效）
+     */
+    togglePauseResume() {
+        const state = this.gameStateManager?.getState();
+        if (state?.gameState === 'playing') {
+            this.gameStateManager?.pauseGame();
+        } else if (state?.gameState === 'paused') {
+            this.gameStateManager?.resumeGame();
+        }
+    }
+
     /**
      * Load question bank
      */
@@ -422,11 +482,14 @@ class MathRainGame {
      */
     startGame() {
         try {
-            
+
             if (this.gameStateManager?.gameState === 'playing') {
                 return;
             }
-            
+
+            // 重置自适应难度的统计，避免上一局的表现带入新对局
+            this.difficultyManager?.resetStats();
+
             // Reset game state
             this.gameStateManager?.reset();
             
@@ -456,9 +519,9 @@ class MathRainGame {
     generateNewTarget() {
         try {
             let newTarget = 10; // fallback
-            
+
             if (this.config.useQuestionBank && this.questionBankManager) {
-                this.questionBankManager.setLevel(this.difficultyManager?.currentLevel || 1);
+                this.questionBankManager.setLevel(this.difficultyManager?.getBankLevel() || 1);
                 const sampleQuestion = this.questionBankManager.getNextQuestion();
                 newTarget = sampleQuestion?.result || this.expressionGenerator?.generateTargetNumber() || 10;
             } else if (this.expressionGenerator) {
@@ -657,7 +720,8 @@ class MathRainGame {
      * Find a safe position for new expression
      */
     findSafePosition() {
-        const width = this.canvas?.width || window.innerWidth;
+        // 使用 CSS 逻辑宽度（canvas.width 是设备像素，DPR>1 时会超出生 visible 区域）
+        const width = this.canvasCssWidth || this.canvas?.clientWidth || window.innerWidth;
         const margin = 80;
         const x = margin + Math.random() * (width - 2 * margin);
         const y = -80 - Math.random() * 200;
@@ -679,9 +743,10 @@ class MathRainGame {
 
             // Use per-expression speed derived from difficulty fallSpeed
             expr.position.y += expr.speed ?? 2;
-            
-            // Check if reached bottom
-            if (expr.position.y >= (this.canvas?.height || window.innerHeight)) {
+
+            // Check if reached bottom（使用 CSS 逻辑高度做判定，与绘制坐标系一致）
+            const bottom = this.canvasCssHeight || this.canvas?.clientHeight || window.innerHeight;
+            if (expr.position.y >= bottom) {
                 // Check if this expression matches current target (not the target when it was created)
                 const gameState = this.gameStateManager?.getState();
                 const currentlyCorrect = gameState && expr.isMatched && expr.isMatched(gameState.targetNumber);
@@ -721,7 +786,7 @@ class MathRainGame {
     safeGenerateExpression(targetValue, isCorrect) {
         try {
             if (this.config.useQuestionBank && this.questionBankManager) {
-                this.questionBankManager.setLevel(this.difficultyManager?.currentLevel || 1);
+                this.questionBankManager.setLevel(this.difficultyManager?.getBankLevel() || 1);
                 const question = this.questionBankManager.getNextQuestion();
                 if (question && (question.result === targetValue) === isCorrect) {
                     return { expression: question.expression, result: question.result };
@@ -818,19 +883,33 @@ class MathRainGame {
         if (body.classList.contains('light-theme')) return '#f7fafc';
         return '#000000';
     }
+
+    /**
+     * 画布中心（CSS 逻辑坐标，与绘制坐标系一致）
+     */
+    getCanvasCenter() {
+        return {
+            x: (this.canvasCssWidth || this.canvas?.clientWidth || 400) / 2,
+            y: (this.canvasCssHeight || this.canvas?.clientHeight || 600) / 2
+        };
+    }
     
     resizeCanvas() {
         if (!this.canvas) return;
-        
+
         const gameArea = document.getElementById('game-area');
         if (gameArea) {
             const width = gameArea.offsetWidth;
             const height = gameArea.offsetHeight;
-            
+
             if (width > 0 && height > 0) {
+                // 记录 CSS 逻辑尺寸，供坐标计算使用（canvas.width 是设备像素）
+                this.canvasCssWidth = width;
+                this.canvasCssHeight = height;
+
                 this.canvas.width = width;
                 this.canvas.height = height;
-                
+
                 const dpr = window.devicePixelRatio || 1;
                 if (dpr > 1) {
                     this.canvas.width = width * dpr;
@@ -839,7 +918,7 @@ class MathRainGame {
                     this.canvas.style.height = height + 'px';
                     this.ctx.scale(dpr, dpr);
                 }
-                
+
                 // Update particle system canvas size
                 if (this.particleSystem && this.particleSystem.resize) {
                     this.particleSystem.resize(width, height);
@@ -894,9 +973,8 @@ class MathRainGame {
                 });
                 
                 // Add a central bomb explosion
-                const centerX = this.canvas.width / 2;
-                const centerY = this.canvas.height / 2;
-                this.particleSystem.createExplosion(centerX, centerY, 'explosion', {
+                const center = this.getCanvasCenter();
+                this.particleSystem.createExplosion(center.x, center.y, 'explosion', {
                     count: 60,
                     size: { min: 4, max: 16 },
                     speed: { min: 8, max: 20 }
@@ -1033,11 +1111,14 @@ async function initializeMathRainGame() {
             z-index: 10000;
             max-width: 400px;
         `;
-        errorDiv.innerHTML = `
-            <strong>❌ 游戏初始化失败</strong><br>
-            ${error.message}<br>
-            <small>请检查浏览器控制台获取详细信息</small>
-        `;
+        // 用 textContent 构建，避免错误消息内容被当作 HTML 解析
+        const strong = document.createElement('strong');
+        strong.textContent = '❌ 游戏初始化失败';
+        const msg = document.createElement('div');
+        msg.textContent = error.message;
+        const hint = document.createElement('small');
+        hint.textContent = '请检查浏览器控制台获取详细信息';
+        errorDiv.append(strong, msg, hint);
         document.body.appendChild(errorDiv);
         
         setTimeout(() => {

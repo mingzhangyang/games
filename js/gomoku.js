@@ -22,6 +22,8 @@ let gameMode = 'pve'; // 'pvp' or 'pve'
 let difficulty = 'medium';
 let isComputerThinking = false;
 let winningCells = null; // Fix #7: track winning cells for highlight
+let aiTimer = null; // AI 走棋定时器句柄，重置/切换模式时必须清除
+let cssSize = 600; // 画布 CSS 逻辑尺寸（canvas.width 是 DPR 缩放后的设备像素）
 
 // Initialize
 function init() {
@@ -35,8 +37,8 @@ function init() {
         if (!gameActive || isComputerThinking) return;
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        const scaleX = cssSize / rect.width;
+        const scaleY = cssSize / rect.height;
         const x = (touch.clientX - rect.left) * scaleX;
         const y = (touch.clientY - rect.top) * scaleY;
         const c = Math.round((x - CELL_PADDING) / CELL_SIZE);
@@ -53,6 +55,16 @@ function init() {
         closeModal();
         resetGame();
     });
+    // 关闭弹窗以便复盘最终棋局
+    const modalViewBtn = document.getElementById('modalViewBtn');
+    if (modalViewBtn) {
+        modalViewBtn.addEventListener('click', closeModal);
+    }
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
     modeBtn.addEventListener('click', toggleMode);
     difficultySelect.addEventListener('change', (e) => {
         difficulty = e.target.value;
@@ -66,20 +78,32 @@ function resizeCanvas() {
     const containerWidth = Math.min(window.innerWidth - 40, 600);
     const containerHeight = Math.min(window.innerHeight - 200, 600);
     const size = Math.min(containerWidth, containerHeight);
+    cssSize = size;
 
-    canvas.width = size;
-    canvas.height = size;
+    // 按 devicePixelRatio 放大画布 backing store，让棋盘在高清屏上清晰；
+    // 绘制坐标系仍使用 CSS 像素（setTransform 统一缩放）
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // Calculate cell size based on canvas width and padding
     // We need 14 squares across, but 15 lines.
     // Let's leave some padding on edges.
-    const availableWidth = canvas.width - (2 * CELL_PADDING);
+    const availableWidth = cssSize - (2 * CELL_PADDING);
     CELL_SIZE = availableWidth / (BOARD_SIZE - 1);
 
     drawBoard();
 }
 
 function resetGame() {
+    // 清除尚未触发的 AI 定时器，防止残留回调在新的对局/模式里替 AI 落子
+    if (aiTimer) {
+        clearTimeout(aiTimer);
+        aiTimer = null;
+    }
     board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
     currentPlayer = 1; // Black always starts
     gameActive = true;
@@ -99,8 +123,8 @@ function toggleMode() {
 }
 
 function drawBoard() {
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas（坐标系是 CSS 像素，canvas.width 是设备像素）
+    ctx.clearRect(0, 0, cssSize, cssSize);
 
     // Draw grid lines
     ctx.beginPath();
@@ -111,12 +135,12 @@ function drawBoard() {
         // Vertical lines
         const x = CELL_PADDING + i * CELL_SIZE;
         ctx.moveTo(x, CELL_PADDING);
-        ctx.lineTo(x, canvas.height - CELL_PADDING);
+        ctx.lineTo(x, cssSize - CELL_PADDING);
 
         // Horizontal lines
         const y = CELL_PADDING + i * CELL_SIZE;
         ctx.moveTo(CELL_PADDING, y);
-        ctx.lineTo(canvas.width - CELL_PADDING, y);
+        ctx.lineTo(cssSize - CELL_PADDING, y);
     }
     ctx.stroke();
 
@@ -140,14 +164,15 @@ function drawBoard() {
         }
     }
 
-    // Highlight last move if exists
+    // Highlight last move if exists — 用与棋子对比色的圆环标记，手机上也看得清
     if (lastMove) {
         const x = CELL_PADDING + lastMove.c * CELL_SIZE;
         const y = CELL_PADDING + lastMove.r * CELL_SIZE;
+        const stonePlayer = board[lastMove.r][lastMove.c];
         ctx.beginPath();
-        ctx.strokeStyle = '#ef4444'; // Red indicator
+        ctx.strokeStyle = stonePlayer === 1 ? '#ffffff' : '#ef4444'; // 黑子上白圈，白子上红圈
         ctx.lineWidth = 2;
-        ctx.arc(x, y, CELL_SIZE * 0.1, 0, Math.PI * 2);
+        ctx.arc(x, y, CELL_SIZE * 0.32, 0, Math.PI * 2);
         ctx.stroke();
     }
 
@@ -207,8 +232,8 @@ function handleCanvasClick(e) {
     if (!gameActive || isComputerThinking) return;
 
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const scaleX = cssSize / rect.width;
+    const scaleY = cssSize / rect.height;
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
 
@@ -245,7 +270,10 @@ function makeMove(r, c) {
 
     if (gameActive && gameMode === 'pve' && currentPlayer === 2) {
         isComputerThinking = true;
-        setTimeout(computerMove, 500); // Small delay for realism
+        aiTimer = setTimeout(() => {
+            aiTimer = null;
+            computerMove();
+        }, 500); // Small delay for realism
     } else {
         isComputerThinking = false;
     }

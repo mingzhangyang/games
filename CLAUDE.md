@@ -1,89 +1,66 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with this repository.
 
 ## Project Overview
 
-This is a collection of single-page HTML5 games built with vanilla JavaScript. Each game is self-contained in its own HTML file with embedded CSS and JavaScript. The games include:
+This is a collection of single-page HTML5 games built with vanilla JavaScript, built with Vite and deployed to Cloudflare Workers (static assets via `wrangler.jsonc`). The games include:
 
 - **Math Rain** (`math-rain.html`) - Mathematical expression game with modular architecture
 - **Tetris** (`tetris.html`) - Modern Tetris implementation with themes, combo system, and global high scores
-- **Tank Battle** (`tank-battle.html`) - Classic arcade-style tank combat game  
-
+- **Tank Battle** (`tank-battle.html`) - Classic arcade-style tank combat game
+- **Gomoku** (`gomoku.html`) - Five-in-a-row board game vs AI or another player
+- **index.html** - Game collection landing page (links out to external games too)
 
 ## Architecture
 
-### Core Structure
-- **Single-file games**: Each game is completely self-contained in one HTML file
-- **No build process**: Games run directly in the browser without compilation
-- **Vanilla JavaScript**: No external frameworks or libraries
-- **Modular JavaScript**: Core functionality separated into reusable modules in `js/` directory
+### Build & Deploy
+```bash
+npm run dev       # Vite dev server (vite.config.dev.js)
+npm run build     # Vite production build -> dist/ (multi-entry, legacy plugin, terser)
+npm run deploy    # vite build && wrangler deploy
+npm run preview   # wrangler dev (serves dist/ + src/index.js worker)
+```
+
+- Source HTML/CSS/JS live at the repo root, `css/`, and `js/`; `public/` holds static assets copied verbatim into `dist/` (including `404.html` for Cloudflare's `not_found_handling`).
+- `src/index.js` is the Worker entry: it redirects `/dots-and-boxes*` to the external game and falls through to static assets.
+- `Workers/tetris-highest-scores.js` is the leaderboard Worker (deployed separately to `tetris-highest-scores.orangely.workers.dev`, KV binding `TETRIS_SCORES`, CORS restricted to the games domains). Its deploy configuration is not in this repo.
 
 ### Key Components
 
-**Configuration System** (`js/config-manager.js`, `config/game-config.json`):
-- Centralized JSON-based configuration for game parameters
-- Local storage integration for saving user preferences
-- Deep merge system for config validation and defaults
-- Debug mode toggle and performance settings
-
 **Utility Modules**:
-- `js/performance-monitor.js` - FPS tracking and performance metrics
-- `js/resource-manager.js` - Asset loading and caching
-- `js/save-manager.js` - Save game state and high scores management
-- `js/debug-panel.js` - Developer debugging tools
-- `Workers/tetris-highest-scores.js` - Web Worker for high score processing
+- `js/performance-monitor.js` - FPS tracking and performance metrics (used by Math Rain)
+- `js/config-manager.js` - Config management (used by Math Rain; defaults only — no `config/game-config.json` exists)
+- `js/save-manager.js`, `js/resource-manager.js`, `js/debug-panel.js` - Legacy utilities, currently NOT imported by any game (kept for reference; do not assume they are wired up)
 
 **Game-specific JavaScript**:
-- `js/math-rain/main.js` - Math Rain game engine with modular architecture
+- `js/math-rain/main.js` - Math Rain orchestrator; game logic is event-driven across `js/math-rain/` (systems/, core/, i18n/)
 - `js/tetris.js` - Tetris game engine and logic
 - `js/tank-battle.js` - Tank Battle game implementation
-
-**Math Rain Modular Architecture**:
-- `js/math-rain/systems/` - Core systems (EventSystem, DependencyContainer)
-- `js/math-rain/core/` - Game managers (GameStateManager, SessionManager, UIController, etc.)
-- `js/math-rain/` - Game modules (expression-generator, sound-manager, particle-effects, etc.)
-
-
-### Internationalization
-- Built-in multi-language support (English/Chinese)
-- Browser language auto-detection
-- Consistent i18n pattern across all games
+- `js/gomoku.js` - Gomoku board, win detection, and AI
 
 ## Development Workflow
 
 ### Running Games
 ```bash
-# Serve the directory with any HTTP server
-python -m http.server 8000
-# or
-npx serve .
-# or open HTML files directly in browser (some features may be limited)
+npm run dev
+# or serve dist/ after a build with any static server
 ```
 
 ### Testing
 - No automated test framework
-- Test by opening HTML files in different browsers
-- Use browser dev tools for debugging
-- Enable debug mode via config for additional logging
-
-### Configuration
-- Modify `config/game-config.json` for game parameters
-- Use `js/config-manager.js` API for runtime config changes
-- Settings persist in localStorage automatically
+- Test by opening the pages in different browsers, including mobile viewports
+- `npm run build` catches syntax/import errors before deploying
 
 ## Code Patterns
 
 ### Game Structure
 Each game follows this pattern:
 ```javascript
-// Language support
-const LANGUAGES = { en: {...}, zh: {...} };
-
 // Game state and configuration
 let gameState = {...};
 
-// Game loop with requestAnimationFrame
+// Game loop with requestAnimationFrame (render-only games like Gomoku redraw on demand)
 function gameLoop() {
     update();
     render();
@@ -92,65 +69,16 @@ function gameLoop() {
 
 // Input handling with both keyboard and touch
 document.addEventListener('keydown', handleInput);
-canvas.addEventListener('touchstart', handleTouch);
+canvas.addEventListener('touchstart', handleTouch, { passive: false });
 ```
 
-### Performance Optimization
-- Viewport culling for off-screen objects
-- Object pooling for bullets and particles  
-- RequestAnimationFrame for smooth 60fps
-- Canvas layer separation for static/dynamic content
-
-### Mobile Support
-- Touch controls with virtual joysticks
-- Responsive canvas sizing
-- Device orientation handling
-- Performance scaling based on device capabilities
-
-## File Organization
-```
-/
-├── index.html              # Main game selection page
-├── tetris.html            # Complete Tetris game
-├── tank-battle.html       # Complete Tank Battle game  
-
-├── config/
-│   └── game-config.json   # Centralized game configuration
-├── js/                    # Shared JavaScript modules
-│   ├── config-manager.js  # Configuration management
-│   ├── performance-monitor.js
-│   ├── resource-manager.js
-│   ├── save-manager.js
-│   ├── debug-panel.js
-│   └── [game].js          # Game-specific logic
-├── css/                   # Game-specific stylesheets
-├── Workers/               # Web Workers for background processing
-└── docs/                  # Documentation and optimization notes
-```
-
-## Key Features
-
-### Tetris-specific
-- Modern UI with multiple color themes
-- Combo system with multipliers
-- Global high score tracking via Web Worker
-- Mobile-optimized touch controls
-- SRS (Super Rotation System) implementation
-
-### Configuration Management
-- Runtime config modification via `gameConfig.get()/set()`
-- Debug mode: `gameConfig.toggleDebugMode()`
-- Audio settings: `gameConfig.updateAudioSettings()`
-- Difficulty scaling: `gameConfig.getDifficultyMultipliers(level)`
-
-### Performance Monitoring
-- FPS counter and performance metrics
-- Object count tracking
-- Memory usage monitoring in debug mode
+### Conventions worth preserving
+- Pause the game on `visibilitychange` (tab hidden) and stop rAF loops on game over
+- Guard all `localStorage` access with try/catch (private mode throws)
+- Escape any remotely-supplied strings before `innerHTML` (leaderboard names!)
+- Canvas drawing uses CSS-pixel coordinates; scale the backing store by `devicePixelRatio`
 
 ## Development Notes
-- Games use canvas-based rendering with pixel-perfect scaling
-- Audio system supports volume control and muting
-- Save system uses localStorage with fallback handling
-- All games support both keyboard and touch input
-- Debug panels can be toggled for development
+- Games use canvas-based rendering; be careful to keep hit-testing and rendering in the same coordinate space
+- Tetris global high scores require the leaderboard Worker to be deployed and reachable
+- All games support both keyboard and touch input (Tank Battle is keyboard-only on desktop; its canvas scales down via CSS on small screens)

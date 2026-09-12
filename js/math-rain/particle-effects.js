@@ -89,10 +89,12 @@ class ParticleSystem {
 
     /**
      * 设置画布尺寸
+     * 注意：画布尺寸与 DPR 缩放由 main.resizeCanvas 统一管理，
+     * 这里仅记录逻辑尺寸；重设 canvas.width 会清空 2D 上下文的 DPR 变换
      */
     resize(width, height) {
-        this.canvas.width = width;
-        this.canvas.height = height;
+        this.width = width;
+        this.height = height;
     }
 
     /**

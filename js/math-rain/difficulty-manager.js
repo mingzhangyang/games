@@ -327,10 +327,19 @@ class DifficultyManager {
     }
 
     /**
+     * 获取题库使用的整数关卡号
+     * currentLevel 含自适应小数（如 1.3），题库按整数关卡索引，
+     * 直接传入小数会取不到数据导致题库静默失效
+     */
+    getBankLevel() {
+        return Math.max(1, Math.min(6, Math.round(this.currentLevel)));
+    }
+
+    /**
      * 获取正确率
      */
     getAccuracy() {
-        return this.stats.totalAnswers > 0 ? 
+        return this.stats.totalAnswers > 0 ?
             this.stats.correctAnswers / this.stats.totalAnswers : 0;
     }
 

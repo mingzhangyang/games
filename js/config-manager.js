@@ -125,15 +125,19 @@ class ConfigManager {
 
     deepMerge(target, source) {
         const result = { ...target };
-        
-        for (const key in source) {
+
+        // 只遍历自有属性，并跳过 __proto__/constructor，防止原型污染
+        for (const key of Object.keys(source)) {
+            if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+                continue;
+            }
             if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
                 result[key] = this.deepMerge(target[key] || {}, source[key]);
             } else {
                 result[key] = source[key];
             }
         }
-        
+
         return result;
     }
 

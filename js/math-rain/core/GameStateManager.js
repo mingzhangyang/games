@@ -6,8 +6,9 @@
 class GameStateManager {
     constructor(eventSystem) {
         this.eventSystem = eventSystem;
+        this.storageKey = 'math-rain-inventory';
         this.reset();
-        
+
         // Game configuration
         this.config = {
             baseScore: 10,
@@ -18,9 +19,45 @@ class GameStateManager {
     }
 
     /**
+     * 从 localStorage 读取持久化的金币和道具库存
+     * 存储不可用或数据损坏时返回 null，由调用方使用默认值
+     */
+    loadInventory() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
+            if (saved && typeof saved === 'object') {
+                return saved;
+            }
+        } catch (error) {
+            // 隐私模式或数据损坏时忽略
+        }
+        return null;
+    }
+
+    /**
+     * 持久化金币和道具库存（存储不可用时静默跳过）
+     */
+    saveInventory() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify({
+                coins: this.coins,
+                freezeCount: this.freezeCount,
+                bombCount: this.bombCount,
+                shieldCount: this.shieldCount
+            }));
+        } catch (error) {
+            // 存储不可用时静默降级
+        }
+    }
+
+    /**
      * Reset all game state to initial values
      */
     reset() {
+        // 恢复持久化的金币与道具库存，保证开局前购买的道具和累积的金币不丢失
+        const saved = this.loadInventory();
+        const num = (value, fallback) => (typeof value === 'number' && isFinite(value) && value >= 0 ? value : fallback);
+
         // Core game state
         this.gameState = 'menu'; // menu, playing, paused, gameOver, sessionComplete
         this.score = 0;
@@ -29,11 +66,11 @@ class GameStateManager {
         this.level = 1;
         this.gameTime = 0;
         this.lives = 10; // Increased from 3 to 10 for better gameplay balance
-        
+
         // Timing
         this.gameStartTime = 0;
         this.lastUpdateTime = 0;
-        
+
         // Statistics
         this.totalClicks = 0;
         this.correctClicks = 0;
@@ -42,23 +79,23 @@ class GameStateManager {
         this.correctAnswers = 0;
         this.consecutiveErrors = 0;
         this.maxErrorRateExceeded = false;
-        
+
         // Target number system
         this.targetNumber = 5;
         this.nextTargetChangeTime = 0;
         this.targetChangeWarning = false;
-        
-        // Power-ups and items
-        this.freezeCount = 2;
-        this.bombCount = 1;
-        this.shieldCount = 0; // New item type
-        this.coins = 0;
+
+        // Power-ups and items（库存跨对局持久化）
+        this.freezeCount = num(saved?.freezeCount, 2);
+        this.bombCount = num(saved?.bombCount, 1);
+        this.shieldCount = num(saved?.shieldCount, 0); // New item type
+        this.coins = num(saved?.coins, 0);
         this.freezeActive = false;
         this.freezeEndTime = 0;
         this.freezeDuration = 4000;
         this.shieldActive = false;
         this.shieldEndTime = 0;
-        
+
         // Grade to coins mapping
         this.gradeToCoins = {
             'S': 50,
@@ -425,6 +462,8 @@ class GameStateManager {
      * Emit state changed event
      */
     emitStateChanged() {
+        // 金币和道具是持久化资产，状态变化时同步到 localStorage
+        this.saveInventory();
         this.eventSystem.emit('gameState:changed', this.getState());
     }
 

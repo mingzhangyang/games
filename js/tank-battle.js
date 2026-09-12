@@ -88,7 +88,25 @@ function detectBrowserLanguage() {
     return browserLang.startsWith('zh') ? 'zh' : 'en';
 }
 
-let currentLanguage = localStorage.getItem('tankBattleLanguage') || detectBrowserLanguage();
+// 隐私模式/禁用存储时 localStorage 会抛 SecurityError，必须兜底，
+// 否则模块顶层抛错会让整个游戏黑屏
+function safeStorageGet(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        return null;
+    }
+}
+
+function safeStorageSet(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        // 存储不可用时静默降级
+    }
+}
+
+let currentLanguage = safeStorageGet('tankBattleLanguage') || detectBrowserLanguage();
 
 // 翻译函数
 function t(key) {
@@ -103,7 +121,7 @@ function t(key) {
 // 切换语言函数
 function switchLanguage() {
     currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
-    localStorage.setItem('tankBattleLanguage', currentLanguage);
+    safeStorageSet('tankBattleLanguage', currentLanguage);
     updateUILabels();
 }
 
@@ -252,12 +270,14 @@ class Bullet {
         this.trail.push({x: this.x, y: this.y});
         if (this.trail.length > 5) this.trail.shift();
 
-        // 移动子弹
+        // 限制单帧位移：低帧率时 dt 被钳制到 3，速射弹一帧可移动 21px，
+        // 超过墙厚(20px)会直接隧穿。封顶后子弹在卡顿时变慢而不是穿墙。
+        const step = Math.min(this.speed * dt, 12);
         switch (this.direction) {
-            case 0: this.y -= this.speed * dt; break;
-            case 1: this.x += this.speed * dt; break;
-            case 2: this.y += this.speed * dt; break;
-            case 3: this.x -= this.speed * dt; break;
+            case 0: this.y -= step; break;
+            case 1: this.x += step; break;
+            case 2: this.y += step; break;
+            case 3: this.x -= step; break;
         }
 
         // 检查边界
@@ -333,7 +353,8 @@ class Tank {
     }
 
     updateAI(game, dt = 1) {
-        const now = Date.now();
+        // 使用游戏内时钟：暂停/切后台时计时器冻结，恢复后敌人不会齐射
+        const now = game.time;
         
         // 检测是否卡住
         const currentPos = {x: this.x, y: this.y};
@@ -380,9 +401,11 @@ class Tank {
                 case 3: newX -= moveDistance; break;
             }
             
-            // 确保不会移出边界
-            if (newX >= 0 && newX + this.width <= game.width && 
-                newY >= 0 && newY + this.height <= game.height) {
+            // 确保不会移出边界，也不会嵌进墙里
+            // （嵌墙后正常移动会被碰撞回退永久卡死）
+            if (newX >= 0 && newX + this.width <= game.width &&
+                newY >= 0 && newY + this.height <= game.height &&
+                !game.checkCollision({x: newX, y: newY, width: this.width, height: this.height}, game.walls)) {
                 this.x = newX;
                 this.y = newY;
             }
@@ -431,20 +454,21 @@ class Tank {
             case 3: this.x -= currentSpeed * dt; break;
         }
 
-        // 检查碰撞
+        // 检查碰撞（敌人互碰 + 与玩家碰撞，不用 filter 避免每帧分配数组）
         const wallCollision = game.checkCollision(this, game.walls);
-        const enemyCollision = game.checkCollision(this, game.enemies.filter(e => e !== this));
-        
-        if (wallCollision || enemyCollision) {
+        const enemyCollision = game.enemies.some(e => e !== this && game.rectsOverlap(this, e));
+        const playerCollision = !this.isPlayer && game.player ? game.rectsOverlap(this, game.player) : false;
+
+        if (wallCollision || enemyCollision || playerCollision) {
             this.x = oldX;
             this.y = oldY;
-            
-            // 智能避让逻辑
-            if (enemyCollision) {
-                // 找到碰撞的敌方坦克
-                const collidingEnemy = game.enemies.find(e => 
-                    e !== this && game.checkCollision(this, [e])
-                );
+
+                // 智能避让逻辑
+                if (enemyCollision || playerCollision) {
+                    // 找到碰撞的敌方坦克
+                    const collidingEnemy = game.enemies.find(e =>
+                        e !== this && game.rectsOverlap(this, e)
+                    );
                 
                 if (collidingEnemy) {
                     // 计算避让方向
@@ -660,9 +684,9 @@ class Tank {
             
             const testTank = {x: newX, y: newY, width: this.width, height: this.height};
             
-            // 检查这个方向是否安全
-            if (!game.checkCollision(testTank, game.walls) && 
-                !game.checkCollision(testTank, game.enemies.filter(e => e !== this))) {
+            // 检查这个方向是否安全（不用 filter，避免每帧分配数组）
+            if (!game.checkCollision(testTank, game.walls) &&
+                !game.enemies.some(e => e !== this && game.rectsOverlap(testTank, e))) {
                 safeDirections.push(direction);
             }
         }
@@ -681,16 +705,33 @@ class Tank {
         const dx = player.x - this.x;
         const dy = player.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance > 200) return false; // 射程限制
-        
+
         // 检查是否在同一直线上
         const angle = Math.atan2(dy, dx);
         const directionAngle = this.direction * Math.PI / 2 - Math.PI / 2;
-        const angleDiff = Math.abs(angle - directionAngle);
-        
-        const normDiff = angleDiff % (2 * Math.PI);
-        return (normDiff < Math.PI / 4) || (normDiff > 7 * Math.PI / 4);
+        let angleDiff = Math.abs(angle - directionAngle);
+        angleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
+        if (angleDiff >= Math.PI / 4) return false;
+
+        // 视线检查：沿射击方向步进采样，中途有墙则不射击
+        // （此前 walls 参数从未被使用，敌人会隔着掩体浪费弹药）
+        const step = CONFIG.WALL_SIZE / 2;
+        const steps = Math.floor(distance / step);
+        const nx = dx / distance;
+        const ny = dy / distance;
+        for (let i = 1; i <= steps; i++) {
+            const px = this.x + this.width / 2 + nx * step * i;
+            const py = this.y + this.height / 2 + ny * step * i;
+            for (const wall of walls) {
+                if (px >= wall.x && px <= wall.x + wall.width &&
+                    py >= wall.y && py <= wall.y + wall.height) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     takeDamage(damage, game) {
@@ -927,6 +968,7 @@ class BossTank extends Tank {
         this.specialAttackCooldown = 0;
         this.burstShotCount = 0;
         this.lastSpecialAttack = 0;
+        this.pendingBurstShots = []; // 连发射击的帧内倒计时队列
         
         // Boss特殊武器
         this.weapon = {
@@ -938,7 +980,30 @@ class BossTank extends Tank {
     }
     
     update(game, dt = 1) {
-        const now = Date.now();
+        const now = game.time;
+
+        // 处理连发队列（帧内倒计时，随 dt 流逝）：
+        // 暂停时 update 不会被调用，倒计时自然冻结；
+        // Boss 被销毁/切关/重启时队列随对象一起失效，不会产生幽灵子弹
+        if (this.pendingBurstShots && this.pendingBurstShots.length > 0) {
+            const elapsed = dt * 16.67;
+            const remaining = [];
+            for (const countdown of this.pendingBurstShots) {
+                const left = countdown - elapsed;
+                if (left <= 0) {
+                    game.bullets.push(new Bullet(
+                        this.x + this.width / 2,
+                        this.y + this.height / 2,
+                        this.direction,
+                        this.weapon,
+                        false
+                    ));
+                } else {
+                    remaining.push(left);
+                }
+            }
+            this.pendingBurstShots = remaining;
+        }
 
         // Boss特殊攻击模式
         if (now - this.lastSpecialAttack > 3000) {
@@ -981,21 +1046,8 @@ class BossTank extends Tank {
     }
     
     burstShoot(game) {
-        // 连续射击3发
-        for (let i = 0; i < 3; i++) {
-            setTimeout(() => {
-                if (this.health > 0 && !game.paused && game.gameState === 'playing') {
-                    const bullet = new Bullet(
-                        this.x + this.width/2,
-                        this.y + this.height/2,
-                        this.direction,
-                        this.weapon,
-                        false
-                    );
-                    game.bullets.push(bullet);
-                }
-            }, i * 200);
-        }
+        // 连续射击3发：注册到帧内倒计时队列，由 update() 按游戏时钟触发
+        this.pendingBurstShots = [200, 400, 600];
     }
     
     trackingShoot(game) {
@@ -1209,6 +1261,7 @@ class TankBattle {
         this.weaponKeys = Object.keys(WEAPONS);
         this.lastTime = 0;
         this.animationId = null;
+        this.time = 0; // 游戏内时钟（毫秒）：暂停/切后台时冻结，AI 计时全部基于它
 
         this.init();
         this.setupEventListeners();
@@ -1378,6 +1431,18 @@ class TankBattle {
         document.addEventListener('keyup', (e) => {
             this.keys[e.key.toLowerCase()] = false;
         });
+
+        // 切换标签页时自动暂停
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && this.gameState === 'playing' && !this.paused) {
+                this.paused = true;
+            }
+        });
+
+        // 窗口失焦时清空按键，防止按住的方向键在切回后持续生效
+        window.addEventListener('blur', () => {
+            this.keys = {};
+        });
     }
 
     togglePause() {
@@ -1399,6 +1464,9 @@ class TankBattle {
 
     update(dt = 1) {
         if (this.gameState !== 'playing' || this.paused) return;
+
+        // 累计游戏内时钟，AI/射击冷却全部基于它，暂停时不流逝
+        this.time += dt * 16.67;
 
         this.updatePlayer(dt);
         this.updateEnemies(dt);
@@ -1440,12 +1508,12 @@ class TankBattle {
             if (this.checkCollision(this.player, this.walls)) this.player.x -= step;
         }
 
-        // 射击
-        if (this.keys[' '] && Date.now() - this.player.lastShot > this.player.weapon.cooldown) {
+        // 射击（使用游戏内时钟）
+        if (this.keys[' '] && this.time - this.player.lastShot > this.player.weapon.cooldown) {
             if (this.player.ammo[this.weaponKeys[this.currentWeaponIndex]] > 0 ||
                 this.player.weapon.ammo === Infinity) {
                 this.shoot(this.player);
-                this.player.lastShot = Date.now();
+                this.player.lastShot = this.time;
 
                 if (this.player.weapon.ammo !== Infinity) {
                     this.player.ammo[this.weaponKeys[this.currentWeaponIndex]]--;
@@ -1469,8 +1537,8 @@ class TankBattle {
             
             if (!alive) return false;
             
-            // 检查与墙的碰撞
-            const hitWall = this.walls.find(wall => this.checkCollision(bullet, [wall]));
+            // 检查与墙的碰撞（直接内联 AABB 测试，避免每面墙分配临时数组）
+            const hitWall = this.walls.find(wall => this.rectsOverlap(bullet, wall));
             if (hitWall) {
                 if (hitWall.destructible) {
                     this.walls = this.walls.filter(wall => wall !== hitWall);
@@ -1503,7 +1571,7 @@ class TankBattle {
         this.powerUps.forEach(powerUp => {
             powerUp.update(dt);
             
-            if (this.checkCollision(this.player, [powerUp])) {
+            if (this.rectsOverlap(this.player, powerUp)) {
                 this.collectPowerUp(powerUp);
                 powerUp.collected = true;
             }
@@ -1583,7 +1651,7 @@ class TankBattle {
                 for (let ei = 0; ei < this.enemies.length; ei++) {
                     if (enemiesToRemove.has(ei)) continue;
                     const enemy = this.enemies[ei];
-                    if (this.checkCollision(bullet, [enemy])) {
+                    if (this.rectsOverlap(bullet, enemy)) {
                         if (enemy.takeDamage(bullet.damage, this)) {
                             enemiesToRemove.add(ei);
                             if (enemy.isBoss) {
@@ -1607,7 +1675,7 @@ class TankBattle {
                 }
             } else {
                 // Enemy bullet vs player
-                if (this.checkCollision(bullet, [this.player])) {
+                if (this.rectsOverlap(bullet, this.player)) {
                     this.player.takeDamage(bullet.damage, this);
                     bulletsToRemove.add(bi);
                     this.screenShake = 8;
@@ -1625,7 +1693,7 @@ class TankBattle {
             for (let j = i + 1; j < this.bullets.length; j++) {
                 if (bulletsToRemove.has(j)) continue;
                 if (this.bullets[i].isPlayer !== this.bullets[j].isPlayer &&
-                    this.checkCollision(this.bullets[i], [this.bullets[j]])) {
+                    this.rectsOverlap(this.bullets[i], this.bullets[j])) {
                     for (let k = 0; k < 6; k++) {
                         this.particles.push(new Particle(
                             this.bullets[i].x, this.bullets[i].y, '#ffff00'
@@ -1644,12 +1712,22 @@ class TankBattle {
     }
 
     checkCollision(obj, obstacles) {
-        return obstacles.some(obstacle => 
+        return obstacles.some(obstacle =>
             obj.x < obstacle.x + obstacle.width &&
             obj.x + obj.width > obstacle.x &&
             obj.y < obstacle.y + obstacle.height &&
             obj.y + obj.height > obstacle.y
         );
+    }
+
+    /**
+     * 无分配版本的 AABB 相交测试（每帧调用上千次，避免创建临时数组）
+     */
+    rectsOverlap(a, b) {
+        return a.x < b.x + b.width &&
+               a.x + a.width > b.x &&
+               a.y < b.y + b.height &&
+               a.y + a.height > b.y;
     }
 
     checkWinCondition() {
@@ -1724,32 +1802,35 @@ class TankBattle {
     renderGrid() {
         this.ctx.strokeStyle = '#333';
         this.ctx.lineWidth = 0.5;
-        
+        // 单一路径批量绘制所有网格线，替代每条线一次 beginPath/stroke
+        this.ctx.beginPath();
+
         for (let x = 0; x < this.width; x += 40) {
-            this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, this.height);
-            this.ctx.stroke();
         }
-        
+
         for (let y = 0; y < this.height; y += 40) {
-            this.ctx.beginPath();
             this.ctx.moveTo(0, y);
             this.ctx.lineTo(this.width, y);
-            this.ctx.stroke();
         }
+
+        this.ctx.stroke();
     }
 
     renderWall(wall) {
         const ctx = this.ctx;
         
         if (wall.type === 'steel') {
-            // 钢板墙 - 银灰色金属质感
-            const gradient = ctx.createLinearGradient(wall.x, wall.y, wall.x + wall.width, wall.y + wall.height);
-            gradient.addColorStop(0, '#C0C0C0');
-            gradient.addColorStop(0.5, '#808080');
-            gradient.addColorStop(1, '#404040');
-            ctx.fillStyle = gradient;
+            // 钢板墙 - 银灰色金属质感（渐变对象缓存在墙对象上，避免每帧重建）
+            if (!wall._gradient) {
+                const gradient = ctx.createLinearGradient(wall.x, wall.y, wall.x + wall.width, wall.y + wall.height);
+                gradient.addColorStop(0, '#C0C0C0');
+                gradient.addColorStop(0.5, '#808080');
+                gradient.addColorStop(1, '#404040');
+                wall._gradient = gradient;
+            }
+            ctx.fillStyle = wall._gradient;
             ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
             
             // 金属边框
@@ -1946,6 +2027,7 @@ class TankBattle {
         this.powerUps = [];
         this.screenShake = 0;
         this.lastTime = 0;
+        this.time = 0; // 重置游戏内时钟
         this.currentWeaponIndex = 0;
         this.init();
         this.gameLoop();
@@ -1956,6 +2038,12 @@ class TankBattle {
         this.lastTime = time;
         this.update(dt);
         this.render();
+        // 结束后停止循环，结束画面是静态的，继续 60fps 渲染只是空耗电
+        // （restart() 会重新启动循环）
+        if (this.gameState === 'gameOver' || this.gameState === 'victory') {
+            this.animationId = null;
+            return;
+        }
         this.animationId = requestAnimationFrame((t) => this.gameLoop(t));
     }
 }

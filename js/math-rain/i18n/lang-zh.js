@@ -135,5 +135,37 @@ export default {
   confirmButton: "确定",
   networkError: "网络连接错误",
   performanceWarning: "性能警告",
-  renderingError: "渲染错误"
+  renderingError: "渲染错误",
+  // 界面标题与按钮（language-manager 引用）
+  gamePaused: "游戏暂停",
+  gameHelp: "玩法说明",
+  continueNext: "继续下一关",
+  retryLevel: "重试本关",
+  backToMenu: "返回主菜单",
+  // 帮助界面内容
+  gameObjective: "游戏目标",
+  gameObjectiveText: "点击结果等于目标数字的下落算式即可得分，漏掉正确的算式会损失生命！",
+  controlMethods: "操作方式",
+  clickTouch: "鼠标 / 触屏",
+  selectExpression: "选择算式",
+  selectExpressionDesc: "点击（或触摸）结果等于当前目标数字的算式",
+  spaceKey: "空格键",
+  pauseResume: "暂停 / 继续",
+  pauseResumeDesc: "按空格键或 Esc 键暂停并继续游戏",
+  fKey: "F 键",
+  useFreeze: "使用冰冻",
+  useFreezeDesc: "按 F 键冻结所有下落的算式数秒",
+  bKey: "B 键",
+  useBomb: "使用炸弹",
+  useBombDesc: "按 B 键清除屏幕上所有算式",
+  closeHelp: "关闭",
+  // 结算标签（updateStatLabels 使用）
+  finalScore: "最终分数",
+  targetScore: "目标分数",
+  maxCombo: "最高连击",
+  sessionDuration: "会话时长",
+  levelUpAchieved: "升级达成",
+  gameTime: "游戏时间",
+  grade: "评级",
+  coinsEarnedLabel: "获得金币"
 };

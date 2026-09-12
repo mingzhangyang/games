@@ -41,6 +41,16 @@ class AnimationEngine {
     }
 
     /**
+     * 注册动画（按需启动循环：有动画才运行 rAF，避免空转）
+     */
+    registerAnimation(animation) {
+        this.animations.set(animation.id, animation);
+        if (!this.isRunning) {
+            this.start();
+        }
+    }
+
+    /**
      * 暂停所有动画
      */
     pause() {
@@ -83,7 +93,7 @@ class AnimationEngine {
         completedAnimations.forEach(id => {
             const animation = this.animations.get(id);
             this.animations.delete(id);
-            
+
             // 执行完成回调
             if (this.callbacks.has(id)) {
                 const callback = this.callbacks.get(id);
@@ -91,6 +101,13 @@ class AnimationEngine {
                 callback(animation);
             }
         });
+
+        // 没有活动动画时停止循环，避免 rAF 空转；下次创建动画时会重新 start
+        if (this.animations.size === 0) {
+            this.isRunning = false;
+            this.rafId = null;
+            return;
+        }
 
         // 继续下一帧
         this.rafId = requestAnimationFrame(this.animate);
@@ -172,7 +189,7 @@ class AnimationEngine {
         element.style.top = animation.startY + 'px';
         element.style.zIndex = '10';
 
-        this.animations.set(animation.id, animation);
+        this.registerAnimation(animation);
         
         if (options.onComplete) {
             this.callbacks.set(animation.id, options.onComplete);
@@ -215,7 +232,7 @@ class AnimationEngine {
         };
 
         element.style.opacity = animation.startOpacity;
-        this.animations.set(animation.id, animation);
+        this.registerAnimation(animation);
         
         if (options.onComplete) {
             this.callbacks.set(animation.id, options.onComplete);
@@ -249,7 +266,7 @@ class AnimationEngine {
             endScale: options.to || 1.2
         };
 
-        this.animations.set(animation.id, animation);
+        this.registerAnimation(animation);
         
         if (options.onComplete) {
             this.callbacks.set(animation.id, options.onComplete);
@@ -284,7 +301,7 @@ class AnimationEngine {
             originalTransform: element.style.transform || ''
         };
 
-        this.animations.set(animation.id, animation);
+        this.registerAnimation(animation);
         
         if (options.onComplete) {
             this.callbacks.set(animation.id, options.onComplete);
@@ -321,7 +338,7 @@ class AnimationEngine {
             bounceHeight: options.height || 20
         };
 
-        this.animations.set(animation.id, animation);
+        this.registerAnimation(animation);
         
         if (options.onComplete) {
             this.callbacks.set(animation.id, options.onComplete);
@@ -356,7 +373,7 @@ class AnimationEngine {
             originalTransform: element.style.transform || ''
         };
 
-        this.animations.set(animation.id, animation);
+        this.registerAnimation(animation);
         
         if (options.onComplete) {
             this.callbacks.set(animation.id, options.onComplete);
@@ -393,7 +410,7 @@ class AnimationEngine {
             endY: options.toY || element.offsetTop
         };
 
-        this.animations.set(animation.id, animation);
+        this.registerAnimation(animation);
         
         if (options.onComplete) {
             this.callbacks.set(animation.id, options.onComplete);

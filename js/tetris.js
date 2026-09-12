@@ -6,6 +6,31 @@ function escapeHTML(str) {
         .replace(/"/g, '&quot;');
 }
 
+// 隐私模式/禁用存储时 localStorage 会抛 SecurityError
+function safeGetItem(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        return null;
+    }
+}
+
+function safeSetItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        // 存储不可用时静默降级
+    }
+}
+
+function safeParseJSON(text, fallback) {
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        return fallback;
+    }
+}
+
 // 多语言支持
 const LANGUAGES = {
     en: {
@@ -72,23 +97,23 @@ function normalizeUsername(val) {
 // 用户名输入框逻辑
 function setupUsernameInput() {
     const input = document.getElementById('usernameInput');
-    let username = localStorage.getItem('tetris_username');
+    let username = safeGetItem('tetris_username');
     // 只在第一次没有用户名时生成并存储
     if (!username) {
         username = 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
-        localStorage.setItem('tetris_username', username);
+        safeSetItem('tetris_username', username);
     }
     input.value = username;
     input.addEventListener('change', function() {
         const val = normalizeUsername(input.value);
         input.value = val;
-        localStorage.setItem('tetris_username', val);
+        safeSetItem('tetris_username', val);
     });
     input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             const val = normalizeUsername(input.value);
             input.value = val;
-            localStorage.setItem('tetris_username', val);
+            safeSetItem('tetris_username', val);
             input.blur();
         }
     });
@@ -147,28 +172,32 @@ async function fetchAndDisplayGlobalScores() {
         }
         
         const data = await response.json();
-        
+
         if (data && data.length > 0) {
             const top5 = data.slice(0, 5);
             listElement.innerHTML = '';
-            
+
             top5.forEach((score, index) => {
                 const scoreItem = document.createElement('div');
                 scoreItem.className = 'score-item';
+                // 玩家名来自远程 API，必须转义防 XSS
                 scoreItem.innerHTML = `
                     <span class="score-rank">#${index + 1}</span>
-                    <span class="score-name">${score.name || (currentLang === 'zh' ? '匿名' : 'Anonymous')}</span>
-                    <span class="score-value">${score.score.toLocaleString()}</span>
+                    <span class="score-name">${escapeHTML(score.name || (currentLang === 'zh' ? '匿名' : 'Anonymous'))}</span>
+                    <span class="score-value">${Number(score.score).toLocaleString()}</span>
                 `;
                 listElement.appendChild(scoreItem);
             });
+            return top5;
         } else {
             listElement.innerHTML = `<div class="no-scores">${TEXT.noScores}</div>`;
         }
+        return data || [];
     } catch (error) {
         console.log('Global scores service unavailable:', error.message);
         // 显示本地分数作为备选
         showLocalScores(listElement, loadingElement);
+        return null;
     }
 }
 
@@ -417,6 +446,7 @@ class Tetris {
         this.gameOver = false;
         this.paused = false;
         this.dropCounter = 0;
+        this.lastTime = 0; // 重置时间戳，避免重启/恢复后第一帧产生异常 delta
         this.particles = [];
         this.shakeAmount = 0;
         this.lineClearAnimations = [];
@@ -450,12 +480,13 @@ class Tetris {
     spawnPiece() {
         this.currentPiece = this.nextPiece;
         this.nextPiece = this.randomPiece();
-        
+        this.dropCounter = 0; // 防止刚生成的方块因上一块的计时器立即下坠一格
+
         if (this.collision()) {
             this.gameOver = true;
             this.showGameOver();
         }
-        
+
         this.drawNextPiece();
     }
 
@@ -554,11 +585,14 @@ class Tetris {
         }
     }
 
-    moveDown() {
+    moveDown(playerAction = false) {
         if (this.gameOver || this.paused) return;
         if (!this.collision(this.currentPiece, 0, 1)) {
             this.currentPiece.y++;
-            this.score++;
+            // 只有玩家主动软降才加分，重力自然下落不计分
+            if (playerAction) {
+                this.score++;
+            }
             this.updateDisplay();
         } else {
             this.lockPiece();
@@ -587,20 +621,21 @@ class Tetris {
                 }
             }
         }
-        // 记录 glow 拖尾路径（更长更亮）
-        const tailLen = Math.max(30, tailBlocks.length); // 拖尾至少30段
-        this.tailGlow = [];
-        for (let i = 0; i < tailLen; i++) {
-            const pos = tailBlocks[Math.floor(i * tailBlocks.length / tailLen)] || tailBlocks[tailBlocks.length-1];
-            this.tailGlow.push({
-                x: pos.x,
-                y: pos.y,
-                color: tailColor,
-                alpha: 0.85 * (1 - i / tailLen) + 0.15,
-                size: 28 - 18 * (i / tailLen)
-            });
+        // 记录 glow 拖尾路径（更长更亮）；方块贴地时没有下落路径，跳过拖尾
+        if (tailBlocks.length > 0) {
+            const tailLen = Math.max(30, tailBlocks.length); // 拖尾至少30段
+            this.tailGlow = [];
+            for (let i = 0; i < tailLen; i++) {
+                const pos = tailBlocks[Math.floor(i * tailBlocks.length / tailLen)];
+                this.tailGlow.push({
+                    x: pos.x,
+                    y: pos.y,
+                    color: tailColor,
+                    alpha: 0.85 * (1 - i / tailLen) + 0.15,
+                    size: 28 - 18 * (i / tailLen)
+                });
+            }
         }
-        // ...existing code...
         this.score += dropDistance * 2 * this.level;
         this.lockPiece();
     }
@@ -897,17 +932,18 @@ class Tetris {
         this.unlockPage();
 
         // 上传分数到 Cloudflare Worker
-        let username = localStorage.getItem('tetris_username') || 'Anonymous';
+        let username = safeGetItem('tetris_username') || 'Anonymous';
         // 本地分数记录
-        let localScores = JSON.parse(localStorage.getItem('tetris_scores') || '[]');
+        let localScores = safeParseJSON(safeGetItem('tetris_scores'), []);
+        if (!Array.isArray(localScores)) localScores = [];
         localScores.push({ score: this.score, time: Date.now() });
         localScores = localScores.slice(-20); // 只保留最近20条
-        localStorage.setItem('tetris_scores', JSON.stringify(localScores));
-        
+        safeSetItem('tetris_scores', JSON.stringify(localScores));
+
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
-            
+
             await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -915,45 +951,51 @@ class Tetris {
                 signal: controller.signal,
                 mode: 'cors'
             });
-            
+
             clearTimeout(timeoutId);
-            // 更新全站最高分显示
-            fetchAndDisplayGlobalScores();
         } catch (e) {
             console.log('Score upload failed, saved locally only:', e.message);
-            // 即使上传失败，也更新显示（会显示本地分数）
-            fetchAndDisplayGlobalScores();
         }
-        this.showLeaderboard();
+        // 一次拉取全站分数：侧边面板与结算弹窗共用，避免重复请求
+        const globalScores = await fetchAndDisplayGlobalScores();
+        await this.showLeaderboard(globalScores);
     }
 
-    async showLeaderboard() {
+    async showLeaderboard(preloaded = null) {
         // 获取排行榜并显示在 Game Over overlay
         let leaderboard = [];
         let isGlobalScores = false;
-        
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
-            
-            const res = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            
-            clearTimeout(timeoutId);
-            
-            if (res.ok) {
-                leaderboard = await res.json();
-                isGlobalScores = true;
-            } else {
-                throw new Error(`HTTP ${res.status}`);
+
+        if (Array.isArray(preloaded)) {
+            leaderboard = preloaded;
+            isGlobalScores = leaderboard.length > 0;
+        } else {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
+
+                const res = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
+                    signal: controller.signal,
+                    mode: 'cors'
+                });
+
+                clearTimeout(timeoutId);
+
+                if (res.ok) {
+                    leaderboard = await res.json();
+                    isGlobalScores = true;
+                } else {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+            } catch (e) {
+                console.log('Using local scores for leaderboard:', e.message);
             }
-        } catch (e) {
-            console.log('Using local scores for leaderboard:', e.message);
+        }
+        if (!isGlobalScores) {
             // 使用本地分数
-            const localScores = JSON.parse(localStorage.getItem('tetris_scores') || '[]');
-            leaderboard = localScores.sort((a, b) => b.score - a.score).slice(0, 5)
+            const localScores = safeParseJSON(safeGetItem('tetris_scores'), []);
+            leaderboard = (Array.isArray(localScores) ? localScores : [])
+                .sort((a, b) => b.score - a.score).slice(0, 5)
                 .map(score => ({ name: currentLang === 'zh' ? '本地记录' : 'Local', score: score.score }));
         }
         
@@ -968,12 +1010,12 @@ class Tetris {
         });
         html += '</ol></div>';
         // 展示本地分数记录
-        let localScores = JSON.parse(localStorage.getItem('tetris_scores') || '[]');
-        if (localScores.length) {
+        let recentScores = safeParseJSON(safeGetItem('tetris_scores'), []);
+        if (Array.isArray(recentScores) && recentScores.length) {
             html += '<div style="margin-top:12px;font-size:15px;color:#aaa;">';
             html += currentLang === 'zh' ? '你的最近得分：' : 'Your Recent Scores:';
             html += '<ul style="margin:6px 0 0 18px;padding:0;">';
-            localScores.slice(-5).reverse().forEach(item => {
+            recentScores.slice(-5).reverse().forEach(item => {
                 const date = new Date(item.time);
                 html += `<li>${item.score} <span style='font-size:12px;color:#888;'>(${date.toLocaleDateString()} ${date.toLocaleTimeString()})</span></li>`;
             });
@@ -1011,6 +1053,7 @@ class Tetris {
         }
         
         if (!this.paused) {
+            this.lastTime = 0; // 恢复时同步时间戳，避免一帧巨大 delta
             this.gameLoop();
             this.lockPage();
         } else {
@@ -1055,6 +1098,9 @@ class Tetris {
 
     setupControls() {
         document.addEventListener('keydown', (e) => {
+            // 正在输入用户名时不拦截按键（方向键/空格要正常用于编辑文本）
+            const tag = e.target && e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
             if (this.gameOver) return;
             switch(e.key) {
                 case 'ArrowLeft':
@@ -1067,7 +1113,7 @@ class Tetris {
                     break;
                 case 'ArrowDown':
                     e.preventDefault();
-                    this.moveDown();
+                    this.moveDown(true);
                     break;
                 case 'ArrowUp':
                     e.preventDefault();
@@ -1075,8 +1121,16 @@ class Tetris {
                     break;
                 case ' ':
                     e.preventDefault();
+                    if (e.repeat) break; // 防止按住空格连续硬降
                     this.hardDrop();
                     break;
+            }
+        });
+
+        // 切换标签页时自动暂停，防止后台掉分
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && !this.gameOver && !this.paused) {
+                this.togglePause();
             }
         });
     }
@@ -1090,9 +1144,15 @@ class Tetris {
 
         this.animationId = requestAnimationFrame((time) => this.gameLoop(time));
 
+        // 首帧（或暂停恢复后）只同步时间戳，不产生 delta
+        if (this.lastTime === 0) {
+            this.lastTime = time;
+            return;
+        }
+
         const deltaTime = time - this.lastTime;
         this.lastTime = time;
-        this.deltaTime = Math.min(deltaTime / 16.67, 3);
+        this.deltaTime = Math.min(Math.max(deltaTime / 16.67, 0), 3);
 
         this.dropCounter += deltaTime;
 
@@ -1124,11 +1184,12 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mobileRestartBtn').onclick = () => game.restart();
     }
 
-    // Touch controls for mobile
+    // 触摸手势：滑动 = 左右/下移动/旋转；双击（两次快速点按）= 硬降
     let touchStartX = null;
     let touchStartY = null;
+    let lastTap = 0;
     const canvas = document.getElementById('tetris');
-    
+
     // Prevent default touch behaviors to avoid page scrolling
     canvas.addEventListener('touchstart', function(e) {
         e.preventDefault();
@@ -1137,44 +1198,42 @@ window.addEventListener('DOMContentLoaded', () => {
             touchStartY = e.touches[0].clientY;
         }
     }, { passive: false });
-    
+
     canvas.addEventListener('touchmove', function(e) {
         e.preventDefault();
     }, { passive: false });
-    
+
     canvas.addEventListener('touchend', function(e) {
         e.preventDefault();
         if (touchStartX === null || touchStartY === null) return;
+        const now = Date.now();
         const touchEndX = e.changedTouches[0].clientX;
         const touchEndY = e.changedTouches[0].clientY;
         const dx = touchEndX - touchStartX;
         const dy = touchEndY - touchStartY;
         const minSwipeDistance = 30;
-        
-        if (Math.abs(dx) > Math.abs(dy)) {
-            if (Math.abs(dx) > minSwipeDistance) {
-                if (dx > 0) game.moveRight();
-                else game.moveLeft();
+        const isTap = Math.abs(dx) < minSwipeDistance && Math.abs(dy) < minSwipeDistance;
+
+        if (isTap) {
+            // 只有两次快速"点按"才触发硬降，滑动节奏不会误触
+            if (now - lastTap < 300 && now - lastTap > 50) {
+                game.hardDrop();
+                lastTap = 0;
+            } else {
+                lastTap = now;
             }
         } else {
-            if (Math.abs(dy) > minSwipeDistance) {
-                if (dy > 0) game.moveDown();
+            lastTap = 0;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0) game.moveRight();
+                else game.moveLeft();
+            } else {
+                if (dy > 0) game.moveDown(true);
                 else game.rotate();
             }
         }
         touchStartX = null;
         touchStartY = null;
-    }, { passive: false });
-    
-    // Double tap for hard drop
-    let lastTap = 0;
-    canvas.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        const now = Date.now();
-        if (now - lastTap < 300 && now - lastTap > 50) {
-            game.hardDrop();
-        }
-        lastTap = now;
     }, { passive: false });
     
     // Prevent context menu on long press
