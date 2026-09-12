@@ -1,6 +1,5 @@
 // 部署配置：Word Daily 全球战报 Worker（独立于主站 Worker 部署）
-// 使用方法：把 <KV_NAMESPACE_ID> 替换为 WORD_STATS 命名空间的 id，
-// 然后运行：npx wrangler deploy -c Workers/wrangler-word-daily.jsonc
+// 运行：npx wrangler deploy -c Workers/wrangler-word-daily.jsonc
 // 部署后地址：https://word-daily-stats.orangely.workers.dev
 {
   "name": "word-daily-stats",
@@ -8,6 +7,6 @@
   "compatibility_date": "2025-04-01",
   "workers_dev": true,
   "kv_namespaces": [
-    { "binding": "WORD_STATS", "id": "<KV_NAMESPACE_ID>" }
+    { "binding": "WORD_STATS", "id": "1954df5ca92747f09aa32e52c2badc55" }
   ]
 }

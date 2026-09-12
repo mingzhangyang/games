@@ -1,6 +1,5 @@
 // 部署配置：Planet Merge 排行榜 Worker（独立于主站 Worker 部署）
-// 使用方法：把 <KV_NAMESPACE_ID> 替换为 PLANET_SCORES 命名空间的 id，
-// 然后运行：npx wrangler deploy -c Workers/wrangler-planet-merge.jsonc
+// 运行：npx wrangler deploy -c Workers/wrangler-planet-merge.jsonc
 // 部署后地址：https://planet-merge-scores.orangely.workers.dev
 {
   "name": "planet-merge-scores",
@@ -8,6 +7,6 @@
   "compatibility_date": "2025-04-01",
   "workers_dev": true,
   "kv_namespaces": [
-    { "binding": "PLANET_SCORES", "id": "<KV_NAMESPACE_ID>" }
+    { "binding": "PLANET_SCORES", "id": "329479647c06456d9d3c9dbdd199eef3" }
   ]
 }
