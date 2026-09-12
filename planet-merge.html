@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0e24">
+    <meta name="description" content="Planet Merge — drop planets, merge identical ones, chain combos and forge a sun in this addictive physics merge game. Daily challenge with a global leaderboard.">
+    <meta name="keywords" content="planet merge, suika, merge game, physics game, casual game, puzzle game, drop game, daily challenge">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/planet-merge.html">
+    <meta property="og:title" content="Planet Merge — Drop, Merge, Chain the Cosmos">
+    <meta property="og:description" content="Merge identical planets to forge a sun. Chain combos, beat the daily challenge, climb the global leaderboard.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-planet-merge.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/planet-merge.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Planet Merge — Drop, Merge, Chain the Cosmos">
+    <meta name="twitter:description" content="Merge identical planets to forge a sun. Daily challenge with global leaderboard.">
+    <meta name="twitter:image" content="assets/seo/og-planet-merge.svg">
+    <title>Planet Merge — Cosmic Merge Puzzle</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='%23d7914f'/%3E%3Cellipse cx='32' cy='34' rx='40' ry='10' fill='none' stroke='%23f0d9a0' stroke-width='4' transform='rotate(-20 32 34)'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/planet-merge.css">
+</head>
+<body>
+    <div class="pm-shell">
+        <!-- 顶栏 HUD -->
+        <header class="pm-topbar">
+            <button class="pm-icon-btn" id="pm-home-btn" title="Home">🏠</button>
+            <div class="pm-scores">
+                <div class="pm-score-main"><span class="pm-score-label" id="pm-score-label">Score</span><span class="pm-score-value" id="pm-score">0</span></div>
+                <div class="pm-score-sub">🏆 <span id="pm-best">0</span> · <span id="pm-mode-label">♾️</span></div>
+            </div>
+            <div class="pm-topbar-actions">
+                <button class="pm-icon-btn" id="pm-mute-btn" title="Sound">🔊</button>
+                <button class="pm-icon-btn" id="pm-pause-btn" title="Pause">⏸️</button>
+            </div>
+        </header>
+
+        <!-- 游戏区 -->
+        <div class="pm-stage">
+            <canvas id="pm-canvas" width="420" height="640"></canvas>
+            <div class="pm-next-box" aria-hidden="true">
+                <span class="pm-next-label" id="pm-next-label">Next</span>
+                <span class="pm-next-emoji" id="pm-next-emoji">🌙</span>
+            </div>
+
+            <!-- 开始界面 -->
+            <div class="pm-overlay" id="pm-start">
+                <h1 class="pm-title" id="pm-title">Planet Merge</h1>
+                <p class="pm-subtitle" id="pm-subtitle">Drop · Merge · Chain the cosmos</p>
+                <div class="pm-chain" id="pm-chain"></div>
+                <p class="pm-howto" id="pm-howto"></p>
+                <div class="pm-btn-col">
+                    <button class="pm-btn pm-btn-primary" id="pm-btn-endless">♾️ Endless</button>
+                    <button class="pm-btn pm-btn-daily" id="pm-btn-daily">📅 Daily Challenge</button>
+                </div>
+                <p class="pm-daily-note" id="pm-daily-note"></p>
+                <p class="pm-stat-line" id="pm-best-line"></p>
+                <p class="pm-stat-line pm-daily-best" id="pm-daily-best-line"></p>
+                <div class="pm-start-footer">
+                    <button class="pm-icon-btn" id="pm-start-mute">🔊</button>
+                    <button class="pm-icon-btn pm-lang-btn" id="pm-start-lang">中文</button>
+                </div>
+            </div>
+
+            <!-- 暂停界面 -->
+            <div class="pm-overlay hidden" id="pm-pause">
+                <h2 class="pm-overlay-title" id="pm-pause-title">Paused</h2>
+                <div class="pm-btn-col">
+                    <button class="pm-btn pm-btn-primary" id="pm-btn-resume">Resume</button>
+                    <button class="pm-btn" id="pm-btn-restart">Restart</button>
+                    <button class="pm-btn pm-btn-ghost" id="pm-btn-menu">Home</button>
+                </div>
+            </div>
+
+            <!-- 结算界面 -->
+            <div class="pm-overlay hidden" id="pm-over">
+                <h2 class="pm-overlay-title" id="pm-over-title">Game Over</h2>
+                <div class="pm-newbest" id="pm-over-newbest"></div>
+                <div class="pm-over-score" id="pm-over-score">0</div>
+                <div class="pm-over-best" id="pm-over-best"></div>
+                <div class="pm-over-stats">
+                    <div class="pm-stat" id="pm-over-max"></div>
+                    <div class="pm-stat" id="pm-over-suns"></div>
+                    <div class="pm-stat" id="pm-over-merges"></div>
+                </div>
+                <div class="pm-btn-row">
+                    <button class="pm-btn pm-btn-primary" id="pm-btn-again">🔄 Again</button>
+                    <button class="pm-btn" id="pm-btn-share">📤 Share</button>
+                    <button class="pm-btn" id="pm-btn-copy">📋 Copy</button>
+                </div>
+                <div class="pm-lb">
+                    <div class="pm-lb-head">
+                        <span class="pm-lb-title" id="pm-lb-title">🏆 Leaderboard</span>
+                        <div class="pm-lb-tabs">
+                            <button class="pm-lb-tab active" id="pm-tab-daily">Today</button>
+                            <button class="pm-lb-tab" id="pm-tab-alltime">All-Time</button>
+                        </div>
+                    </div>
+                    <div class="pm-lb-list" id="pm-lb-list"></div>
+                    <div class="pm-lb-status" id="pm-lb-status"></div>
+                    <div class="pm-username-row">
+                        <label class="pm-username-label" for="pm-username" id="pm-username-label">Username</label>
+                        <input class="pm-username" id="pm-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+                <button class="pm-btn pm-btn-ghost" id="pm-btn-home2">🏠 Home</button>
+            </div>
+        </div>
+
+        <p class="pm-footer-hint">P 暂停 · M 静音 · R 重开</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) {
+                canonical.setAttribute('href', currentUrl);
+            }
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-planet-merge.svg', baseUrl).href;
+
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', currentUrl);
+            }
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) {
+                ogImage.setAttribute('content', socialImage);
+            }
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) {
+                twitterImage.setAttribute('content', socialImage);
+            }
+
+            const gameData = {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "Planet Merge",
+                "url": currentUrl,
+                "description": "Suika-style physics merge game. Drop planets, merge identical ones, chain combos and forge a sun. Daily challenge with a global leaderboard.",
+                "applicationCategory": "GameApplication",
+                "operatingSystem": "Web",
+                "genre": ["CasualGame", "PuzzleGame"],
+                "playMode": "SinglePlayer",
+                "image": socialImage,
+                "inLanguage": document.documentElement.lang || "en",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Mini Games Collection",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Planet Merge",
+                        "item": currentUrl
+                    }
+                ]
+            };
+
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <script type="module" src="js/planet-merge.js"></script>
+</body>
+</html>

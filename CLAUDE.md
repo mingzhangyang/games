@@ -10,6 +10,7 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript, b
 - **Tetris** (`tetris.html`) - Modern Tetris implementation with themes, combo system, and global high scores
 - **Tank Battle** (`tank-battle.html`) - Classic arcade-style tank combat game
 - **Gomoku** (`gomoku.html`) - Five-in-a-row board game vs AI or another player
+- **Planet Merge** (`planet-merge.html`) - Suika-style physics merge game (hand-rolled circle physics, daily challenge, own leaderboard Worker in `Workers/planet-merge-scores.js`, KV binding `PLANET_SCORES`)
 - **index.html** - Game collection landing page (links out to external games too)
 
 ## Architecture

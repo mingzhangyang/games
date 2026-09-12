@@ -1,0 +1,509 @@
+/* ─────────────────────────────────────────────
+   Planet Merge 星球合成 — deep-space theme
+   ───────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+        radial-gradient(ellipse 80% 50% at 70% -10%, rgba(99, 102, 241, 0.18), transparent),
+        radial-gradient(ellipse 60% 40% at 15% 110%, rgba(52, 211, 153, 0.10), transparent),
+        linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #120e2b 100%);
+    color: #e8ecff;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    min-height: 100vh;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pm-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 480px;
+    padding: 10px 12px 6px;
+}
+
+/* ── 顶栏 HUD ── */
+
+.pm-topbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 2px 10px;
+}
+
+.pm-icon-btn {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    color: inherit;
+}
+
+.pm-icon-btn:hover { background: rgba(255, 255, 255, 0.12); }
+.pm-icon-btn:active { transform: scale(0.92); }
+
+.pm-scores {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+.pm-score-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pm-score-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8fa0d8;
+}
+
+.pm-score-value {
+    font-size: 30px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-shadow: 0 0 18px rgba(148, 163, 255, 0.45);
+}
+
+.pm-score-sub {
+    margin-top: 3px;
+    font-size: 13px;
+    color: #aab6e6;
+    font-variant-numeric: tabular-nums;
+}
+
+.pm-topbar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ── 游戏区 ── */
+
+.pm-stage {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 0;
+}
+
+#pm-canvas {
+    display: block;
+    width: 100%;
+    max-width: 440px;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 255, 0.16);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 40px rgba(99, 102, 241, 0.12);
+    touch-action: none;
+    cursor: pointer;
+}
+
+.pm-next-box {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(10, 14, 36, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 6px 12px;
+    pointer-events: none;
+    backdrop-filter: blur(6px);
+}
+
+.pm-next-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #8fa0d8;
+}
+
+.pm-next-emoji {
+    font-size: 24px;
+    line-height: 1.1;
+}
+
+/* ── 覆盖层通用 ── */
+
+.pm-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(8, 10, 26, 0.88);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 22px;
+    text-align: center;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.pm-overlay.hidden { display: none; }
+
+.pm-title {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    background: linear-gradient(120deg, #a5b4fc, #f0abfc 55%, #fcd34d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+}
+
+.pm-subtitle {
+    font-size: 14px;
+    color: #8fa0d8;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-top: -6px;
+}
+
+.pm-chain {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 4px 0;
+}
+
+.pm-chain-item { font-size: 22px; line-height: 1.2; }
+
+.pm-chain-arrow {
+    font-size: 12px;
+    color: #5b689f;
+    margin: 0 1px;
+}
+
+.pm-howto {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: #aab6e6;
+    max-width: 320px;
+}
+
+.pm-btn-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
+}
+
+.pm-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pm-btn {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    color: #e8ecff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 13px 20px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s, box-shadow 0.15s;
+}
+
+.pm-btn:hover { background: rgba(255, 255, 255, 0.14); }
+.pm-btn:active { transform: scale(0.96); }
+
+.pm-btn-primary {
+    background: linear-gradient(120deg, #6366f1, #8b5cf6);
+    border: none;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.pm-btn-primary:hover { background: linear-gradient(120deg, #5458ee, #7c4ded); }
+
+.pm-btn-daily {
+    background: linear-gradient(120deg, #0ea5e9, #6366f1);
+    border: none;
+    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35);
+}
+
+.pm-btn-ghost {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #aab6e6;
+}
+
+.pm-daily-note {
+    font-size: 12px;
+    color: #7c89bf;
+}
+
+.pm-stat-line {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e8ecff;
+    font-variant-numeric: tabular-nums;
+}
+
+.pm-stat-line.pm-daily-best { color: #93c5fd; font-size: 13.5px; }
+
+.pm-start-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.pm-lang-btn {
+    width: auto;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+}
+
+/* ── 暂停 ── */
+
+.pm-overlay-title {
+    font-size: 30px;
+    font-weight: 800;
+}
+
+/* ── 结算 ── */
+
+.pm-newbest {
+    min-height: 24px;
+    font-size: 17px;
+    font-weight: 800;
+    color: #fcd34d;
+    text-shadow: 0 0 16px rgba(252, 211, 77, 0.6);
+}
+
+.pm-newbest.show { animation: pm-pop 0.5s ease-out; }
+
+@keyframes pm-pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    70% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.pm-over-score {
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 30px rgba(148, 163, 255, 0.55);
+}
+
+.pm-over-best {
+    font-size: 15px;
+    color: #8fa0d8;
+    font-variant-numeric: tabular-nums;
+}
+
+.pm-over-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    color: #c3cdf2;
+}
+
+.pm-lb {
+    width: 100%;
+    max-width: 340px;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.pm-lb-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.pm-lb-title {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.pm-lb-tabs { display: flex; gap: 6px; }
+
+.pm-lb-tab {
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #8fa0d8;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 99px;
+    padding: 3px 10px;
+    cursor: pointer;
+}
+
+.pm-lb-tab.active {
+    color: #fff;
+    background: rgba(99, 102, 241, 0.45);
+    border-color: transparent;
+}
+
+.pm-lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 60px;
+    max-height: 148px;
+    overflow-y: auto;
+}
+
+.pm-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    padding: 3px 6px;
+    border-radius: 7px;
+}
+
+.pm-lb-row.pm-lb-top1 { background: rgba(252, 211, 77, 0.14); }
+.pm-lb-row.pm-lb-top2 { background: rgba(203, 213, 225, 0.10); }
+.pm-lb-row.pm-lb-top3 { background: rgba(217, 119, 6, 0.12); }
+
+.pm-lb-rank {
+    width: 22px;
+    flex-shrink: 0;
+    color: #8fa0d8;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pm-lb-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.pm-lb-score {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pm-lb-empty {
+    color: #7c89bf;
+    font-size: 13px;
+    padding: 14px 0;
+}
+
+.pm-lb-status {
+    min-height: 16px;
+    font-size: 11.5px;
+    color: #7c89bf;
+    margin-top: 4px;
+}
+
+.pm-username-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.pm-username-label {
+    font-size: 11.5px;
+    color: #8fa0d8;
+    flex-shrink: 0;
+}
+
+.pm-username {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: #e8ecff;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 9px;
+    padding: 7px 10px;
+    outline: none;
+}
+
+.pm-username:focus { border-color: rgba(148, 163, 255, 0.5); }
+
+.pm-footer-hint {
+    padding: 8px 0 6px;
+    font-size: 11.5px;
+    color: #56618f;
+    letter-spacing: 0.06em;
+}
+
+/* ── 响应式 ── */
+
+@media (max-height: 760px) {
+    .pm-shell { padding-top: 6px; }
+    .pm-score-value { font-size: 25px; }
+    .pm-footer-hint { display: none; }
+}
+
+@media (max-width: 480px) {
+    .pm-shell { padding: 6px 8px 4px; }
+    .pm-score-value { font-size: 23px; }
+    .pm-icon-btn { width: 38px; height: 38px; font-size: 17px; }
+    .pm-title { font-size: 31px; }
+    .pm-over-score { font-size: 46px; }
+    .pm-overlay { padding: 16px; gap: 11px; }
+    .pm-btn { padding: 11px 16px; font-size: 14px; }
+    .pm-howto { font-size: 12.5px; }
+}
+
+/* 减少动态效果偏好：关掉结算弹窗弹跳动画 */
+@media (prefers-reduced-motion: reduce) {
+    .pm-newbest.show { animation: none; }
+    .pm-btn, .pm-icon-btn { transition: none; }
+}

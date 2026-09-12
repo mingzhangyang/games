@@ -29,6 +29,9 @@ vite.config.*.timestamp-*
 # Ignore Claude Code local settings
 .claude/settings.local.json
 
+# Ignore ZCode local session files
+.zcode/
+
 # Ignore environment files
 .env
 .env.*

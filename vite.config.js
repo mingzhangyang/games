@@ -11,7 +11,8 @@ export default defineConfig({
         'math-rain': resolve(__dirname, 'math-rain.html'),
         tetris: resolve(__dirname, 'tetris.html'),
         'tank-battle': resolve(__dirname, 'tank-battle.html'),
-        gomoku: resolve(__dirname, 'gomoku.html')
+        gomoku: resolve(__dirname, 'gomoku.html'),
+        'planet-merge': resolve(__dirname, 'planet-merge.html')
       },
       output: {
         // 分块策略

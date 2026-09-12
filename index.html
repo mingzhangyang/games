@@ -140,6 +140,7 @@
         .card-icon--tetris    { background: rgba(139, 92, 246, 0.15); }
         .card-icon--tank      { background: rgba(16, 185, 129, 0.15); }
         .card-icon--gomoku    { background: rgba(249, 115, 22, 0.15); }
+        .card-icon--planet    { background: rgba(168, 85, 247, 0.15); }
         .card-icon--minecraft { background: rgba(132, 204, 22, 0.15); }
         .card-icon--dots      { background: rgba(6, 182, 212, 0.15); }
         .card-icon--stack     { background: rgba(245, 158, 11, 0.15); }
@@ -344,6 +345,21 @@
                 </div>
             </article>
 
+            <!-- Planet Merge -->
+            <article class="game-card" onclick="location.href='planet-merge.html'">
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--planet">🪐</span>
+                        <a class="card-title" href="planet-merge.html" id="planet-merge-name">Planet Merge</a>
+                    </div>
+                    <p class="card-desc" id="planet-merge-desc">Drop planets, merge identical ones, chain combos and forge a sun. Daily challenge with a global leaderboard.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="planet-merge-tag">Casual</span>
+                        <a class="play-btn" href="planet-merge.html" id="planet-merge-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
             <!-- 2D Minecraft -->
             <article class="game-card" onclick="location.href='https://2d-minecraft.orangely.xyz'">
                 <div class="card-body">
@@ -447,6 +463,11 @@
                 gomokuTag: 'Strategy',
                 gomokuPlay: 'Play ›',
 
+                planetMergeName: 'Planet Merge',
+                planetMergeDesc: 'Drop planets, merge identical ones, chain combos and forge a sun. Daily challenge with a global leaderboard.',
+                planetMergeTag: 'Casual',
+                planetMergePlay: 'Play ›',
+
                 minecraftName: '2D Minecraft',
                 minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
                 minecraftTag: 'Sandbox',
@@ -496,6 +517,11 @@
                 gomokuDesc: '五子连珠。与 AI 对决或和朋友在经典棋盘上一较高下。',
                 gomokuTag: '策略棋牌',
                 gomokuPlay: '开始游戏 ›',
+
+                planetMergeName: '星球合成',
+                planetMergeDesc: '投放星球，相同合成，连锁 COMBO 造出太阳。每日挑战 + 全球排行榜，看你今天能冲多高！',
+                planetMergeTag: '休闲爆款',
+                planetMergePlay: '开始游戏 ›',
 
                 minecraftName: '2D 我的世界',
                 minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -558,6 +584,11 @@
             document.getElementById('gomoku-tag').textContent = t.gomokuTag;
             document.getElementById('gomoku-play').textContent = t.gomokuPlay;
 
+            document.getElementById('planet-merge-name').textContent = t.planetMergeName;
+            document.getElementById('planet-merge-desc').textContent = t.planetMergeDesc;
+            document.getElementById('planet-merge-tag').textContent = t.planetMergeTag;
+            document.getElementById('planet-merge-play').textContent = t.planetMergePlay;
+
             document.getElementById('minecraft-name').textContent = t.minecraftName;
             document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
             document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -607,6 +638,7 @@
                 { slug: 'tetris',      name: 'Tetris',        description: 'Modernized Tetris with particles, keyboard, and mobile controls.' },
                 { slug: 'tank-battle', name: 'Tank Battle',   description: 'Retro arcade tank shooter with base defense.' },
                 { slug: 'gomoku',      name: 'Gomoku',        description: 'Five in a Row board game versus AI or a friend.' },
+                { slug: 'planet-merge', name: 'Planet Merge', description: 'Suika-style physics merge game — drop planets, forge suns, chase combo high scores.' },
                 { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
                 { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
                 { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
