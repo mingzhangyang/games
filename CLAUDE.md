@@ -11,6 +11,7 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript, b
 - **Tank Battle** (`tank-battle.html`) - Classic arcade-style tank combat game
 - **Gomoku** (`gomoku.html`) - Five-in-a-row board game vs AI or another player
 - **Planet Merge** (`planet-merge.html`) - Suika-style physics merge game (hand-rolled circle physics, daily challenge, own leaderboard Worker in `Workers/planet-merge-scores.js`, KV binding `PLANET_SCORES`)
+- **Word Daily** (`word-daily.html`) - Bilingual daily word puzzle (EN 5-letter words / ZH 成语 with definitions; modules in `js/word-daily*.js`; global aggregate stats Worker in `Workers/word-daily-stats.js`, KV binding `WORD_STATS`); DOM-only, no game loop
 - **index.html** - Game collection landing page (links out to external games too)
 
 ## Architecture

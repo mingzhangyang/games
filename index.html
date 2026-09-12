@@ -141,6 +141,7 @@
         .card-icon--tank      { background: rgba(16, 185, 129, 0.15); }
         .card-icon--gomoku    { background: rgba(249, 115, 22, 0.15); }
         .card-icon--planet    { background: rgba(168, 85, 247, 0.15); }
+        .card-icon--word      { background: rgba(58, 166, 85, 0.15); }
         .card-icon--minecraft { background: rgba(132, 204, 22, 0.15); }
         .card-icon--dots      { background: rgba(6, 182, 212, 0.15); }
         .card-icon--stack     { background: rgba(245, 158, 11, 0.15); }
@@ -360,6 +361,21 @@
                 </div>
             </article>
 
+            <!-- Word Daily -->
+            <article class="game-card" onclick="location.href='word-daily.html'">
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--word">🔤</span>
+                        <a class="card-title" href="word-daily.html" id="word-daily-name">Word Daily</a>
+                    </div>
+                    <p class="card-desc" id="word-daily-desc">One puzzle a day for the whole world — guess the English word or the Chinese idiom in 6 tries. Keep your streak!</p>
+                    <div class="card-footer">
+                        <span class="tag" id="word-daily-tag">Daily</span>
+                        <a class="play-btn" href="word-daily.html" id="word-daily-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
             <!-- 2D Minecraft -->
             <article class="game-card" onclick="location.href='https://2d-minecraft.orangely.xyz'">
                 <div class="card-body">
@@ -468,6 +484,11 @@
                 planetMergeTag: 'Casual',
                 planetMergePlay: 'Play ›',
 
+                wordDailyName: 'Word Daily',
+                wordDailyDesc: 'One puzzle a day for the whole world — guess the English word or the Chinese idiom in 6 tries. Keep your streak!',
+                wordDailyTag: 'Daily',
+                wordDailyPlay: 'Play ›',
+
                 minecraftName: '2D Minecraft',
                 minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
                 minecraftTag: 'Sandbox',
@@ -522,6 +543,11 @@
                 planetMergeDesc: '投放星球，相同合成，连锁 COMBO 造出太阳。每日挑战 + 全球排行榜，看你今天能冲多高！',
                 planetMergeTag: '休闲爆款',
                 planetMergePlay: '开始游戏 ›',
+
+                wordDailyName: '每日猜词',
+                wordDailyDesc: '全球每天同一道题——英文单词或中文成语，6 次机会。连胜打卡，emoji 晒图，快来挑战！',
+                wordDailyTag: '每日智力',
+                wordDailyPlay: '开始游戏 ›',
 
                 minecraftName: '2D 我的世界',
                 minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -589,6 +615,11 @@
             document.getElementById('planet-merge-tag').textContent = t.planetMergeTag;
             document.getElementById('planet-merge-play').textContent = t.planetMergePlay;
 
+            document.getElementById('word-daily-name').textContent = t.wordDailyName;
+            document.getElementById('word-daily-desc').textContent = t.wordDailyDesc;
+            document.getElementById('word-daily-tag').textContent = t.wordDailyTag;
+            document.getElementById('word-daily-play').textContent = t.wordDailyPlay;
+
             document.getElementById('minecraft-name').textContent = t.minecraftName;
             document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
             document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -639,6 +670,7 @@
                 { slug: 'tank-battle', name: 'Tank Battle',   description: 'Retro arcade tank shooter with base defense.' },
                 { slug: 'gomoku',      name: 'Gomoku',        description: 'Five in a Row board game versus AI or a friend.' },
                 { slug: 'planet-merge', name: 'Planet Merge', description: 'Suika-style physics merge game — drop planets, forge suns, chase combo high scores.' },
+                { slug: 'word-daily', name: 'Word Daily', description: 'Daily bilingual word puzzle — guess the English word or the Chinese idiom in 6 tries.' },
                 { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
                 { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
                 { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }

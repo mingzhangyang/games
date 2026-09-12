@@ -12,7 +12,8 @@ export default defineConfig({
         tetris: resolve(__dirname, 'tetris.html'),
         'tank-battle': resolve(__dirname, 'tank-battle.html'),
         gomoku: resolve(__dirname, 'gomoku.html'),
-        'planet-merge': resolve(__dirname, 'planet-merge.html')
+        'planet-merge': resolve(__dirname, 'planet-merge.html'),
+        'word-daily': resolve(__dirname, 'word-daily.html')
       },
       output: {
         // 分块策略

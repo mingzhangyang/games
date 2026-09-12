@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e24">
+    <meta name="description" content="Word Daily 每日猜词 — a bilingual daily word puzzle. Guess the English word or the Chinese idiom (成语) in 6 tries. Same puzzle for everyone each day. Keep your streak, share your grid.">
+    <meta name="keywords" content="word game, daily puzzle, wordle style, 成语, 猜成语, word puzzle, brain game, bilingual game">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/word-daily.html">
+    <meta property="og:title" content="Word Daily 每日猜词 — Daily Bilingual Word Puzzle">
+    <meta property="og:description" content="Guess the word or the Chinese idiom in 6 tries. One puzzle a day for the whole world. Streaks, stats and spoiler-free sharing.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-word-daily.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/word-daily.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Word Daily 每日猜词 — Daily Bilingual Word Puzzle">
+    <meta name="twitter:description" content="Guess the word or the Chinese idiom in 6 tries. One puzzle a day.">
+    <meta name="twitter:image" content="assets/seo/og-word-daily.svg">
+    <title>Word Daily 每日猜词 — Daily Bilingual Word Puzzle</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e24'/%3E%3Crect x='8' y='8' width='22' height='22' rx='5' fill='%233aa655'/%3E%3Crect x='34' y='8' width='22' height='22' rx='5' fill='%23d0a63f'/%3E%3Crect x='8' y='34' width='22' height='22' rx='5' fill='%23333a56'/%3E%3Crect x='34' y='34' width='22' height='22' rx='5' fill='%233aa655'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/word-daily.css">
+</head>
+<body>
+    <div class="wd-shell">
+        <!-- 顶栏 -->
+        <header class="wd-topbar">
+            <div class="wd-topbar-group">
+                <button class="wd-icon-btn" id="wd-btn-mute" title="Sound">🔊</button>
+                <button class="wd-icon-btn wd-lang-btn" id="wd-btn-lang" title="Switch mode">中文成语</button>
+            </div>
+            <div class="wd-title-box">
+                <h1 class="wd-title" id="wd-title">Word Daily</h1>
+                <div class="wd-sub-row"><span class="wd-num" id="wd-num">#1</span><span class="wd-mode-tag" id="wd-mode-tag"></span></div>
+            </div>
+            <div class="wd-topbar-group">
+                <button class="wd-icon-btn" id="wd-btn-practice" title="Practice">🎲</button>
+                <button class="wd-icon-btn" id="wd-btn-help" title="How to play">❓</button>
+                <button class="wd-icon-btn" id="wd-btn-stats" title="Stats">📊</button>
+            </div>
+        </header>
+
+        <div class="wd-banner hidden" id="wd-practice-banner"></div>
+
+        <!-- 释义提示（成语模式） -->
+        <div class="wd-hint-card hidden" id="wd-hint-card">
+            <span class="wd-hint-label" id="wd-hint-label">📖 释义</span>
+            <span class="wd-hint-text" id="wd-hint-text"></span>
+        </div>
+
+        <!-- 棋盘 -->
+        <main class="wd-main">
+            <div class="wd-board" id="wd-board" style="--cols: 5"></div>
+            <div class="wd-toast" id="wd-toast"></div>
+            <div class="wd-practice-over hidden" id="wd-practice-over"></div>
+
+            <!-- 中文输入行 -->
+            <div class="wd-zh-row hidden" id="wd-zh-input-row">
+                <input class="wd-zh-input" id="wd-zh-input" maxlength="4" autocomplete="off" enterkeyhint="send">
+                <button class="wd-zh-submit" id="wd-zh-submit">猜</button>
+            </div>
+
+            <!-- 英文屏幕键盘 -->
+            <div class="wd-kb" id="wd-kb"></div>
+        </main>
+    </div>
+
+    <!-- 玩法说明 -->
+    <div class="wd-modal hidden" id="wd-help-modal">
+        <div class="wd-modal-box">
+            <h2 class="wd-modal-title" id="wd-help-title">How to play</h2>
+            <div class="wd-help-body" id="wd-help-body"></div>
+            <button class="wd-btn wd-btn-primary wd-btn-block" id="wd-help-close">OK</button>
+        </div>
+    </div>
+
+    <!-- 统计 -->
+    <div class="wd-modal hidden" id="wd-stats-modal">
+        <div class="wd-modal-box">
+            <h2 class="wd-modal-title" id="wd-stats-title">Statistics</h2>
+            <div class="wd-stat-grid">
+                <div class="wd-stat"><span class="wd-stat-num" id="wd-st-played">0</span><span class="wd-stat-label" id="wd-lb-played">Played</span></div>
+                <div class="wd-stat"><span class="wd-stat-num" id="wd-st-winrate">0%</span><span class="wd-stat-label" id="wd-lb-winrate">Win %</span></div>
+                <div class="wd-stat"><span class="wd-stat-num" id="wd-st-cur">0</span><span class="wd-stat-label" id="wd-lb-cur">Streak</span></div>
+                <div class="wd-stat"><span class="wd-stat-num" id="wd-st-max">0</span><span class="wd-stat-label" id="wd-lb-max">Max</span></div>
+            </div>
+            <h3 class="wd-dist-title" id="wd-dist-title">Guess Distribution</h3>
+            <div class="wd-dist" id="wd-dist"></div>
+            <div class="wd-global" id="wd-global"></div>
+            <button class="wd-btn wd-btn-primary wd-btn-block" id="wd-share">📤 Share</button>
+            <div class="wd-practice-over hidden" id="wd-practice-over-modal"></div>
+            <div class="wd-countdown" id="wd-countdown"></div>
+            <button class="wd-btn wd-btn-ghost wd-btn-block" id="wd-stats-close">Close</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) {
+                canonical.setAttribute('href', currentUrl);
+            }
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-word-daily.svg', baseUrl).href;
+
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', currentUrl);
+            }
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) {
+                ogImage.setAttribute('content', socialImage);
+            }
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) {
+                twitterImage.setAttribute('content', socialImage);
+            }
+
+            const gameData = {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "Word Daily 每日猜词",
+                "url": currentUrl,
+                "description": "Bilingual daily word puzzle — guess the English word or the Chinese idiom in 6 tries. One puzzle a day for everyone.",
+                "applicationCategory": "GameApplication",
+                "operatingSystem": "Web",
+                "genre": ["PuzzleGame", "WordGame"],
+                "playMode": "SinglePlayer",
+                "image": socialImage,
+                "inLanguage": ["en", "zh"],
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Mini Games Collection",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Word Daily",
+                        "item": currentUrl
+                    }
+                ]
+            };
+
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <script type="module" src="js/word-daily.js"></script>
+</body>
+</html>
