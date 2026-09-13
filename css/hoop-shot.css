@@ -17,7 +17,8 @@ body {
     display: flex;
     justify-content: center;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -146,13 +147,14 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 13px;
+    gap: 10px;
     background: rgba(8, 10, 26, 0.88);
     backdrop-filter: blur(10px);
     border-radius: 18px;
-    padding: 20px;
+    padding: 16px 18px;
     text-align: center;
     overflow-y: auto;
+    scrollbar-width: none;
     z-index: 10;
 }
 
@@ -381,3 +383,6 @@ body {
     .hs-ball-row, .hs-fire-badge, .hs-newbest.show { animation: none !important; }
     .hs-btn, .hs-icon-btn { transition: none; }
 }
+
+/* 覆盖层滚动条隐藏（滚轮/触摸仍可滚动） */
+.hs-overlay::-webkit-scrollbar { display: none; }

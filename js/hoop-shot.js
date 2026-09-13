@@ -360,6 +360,7 @@ class HoopShotGame {
         this.hideOverlays();
         this.updateHud();
         this.ensureLoop();
+        if (typeof window.hubTrack === 'function') window.hubTrack('hoop-shot', 'play');
     }
 
     togglePause() {
@@ -623,6 +624,7 @@ class HoopShotGame {
     onMiss() {
         if (this.state !== 'playing') return;
         this.state = 'gameover';
+        if (typeof window.hubTrack === 'function') window.hubTrack('hoop-shot', 'finish');
         this.streak = 0;
         this.onFire = false;
         Sfx.gameOver();
@@ -941,10 +943,23 @@ class HoopShotGame {
 
     resize() {
         const dpr = window.devicePixelRatio || 1;
-        const cssWidth = this.canvas.clientWidth || 420;
-        const cssHeight = cssWidth * (WORLD_H / WORLD_W);
+        // 可用高度 = 视口高度 - 画布兄弟元素的高亮，矮视口时缩放画布而不是截断
+        const shell = this.canvas.parentElement?.parentElement;
+        const usedH = shell
+            ? Array.from(shell.children)
+                .filter(el => el !== this.canvas.parentElement)
+                .reduce((sum, el) => sum + el.getBoundingClientRect().height, 0)
+            : 120;
+        const availH = Math.max(320, window.innerHeight - usedH - 20);
+        let cssWidth = this.canvas.clientWidth || 420;
+        let cssHeight = cssWidth * (WORLD_H / WORLD_W);
+        if (cssHeight > availH) {
+            cssHeight = availH;
+            cssWidth = cssHeight * (WORLD_W / WORLD_H);
+        }
         this.canvas.width = Math.round(cssWidth * dpr);
         this.canvas.height = Math.round(cssHeight * dpr);
+        this.canvas.style.width = `${cssWidth}px`;
         this.canvas.style.height = `${cssHeight}px`;
         this.scale = (cssWidth / WORLD_W) * dpr;
         this.buildStarfield();

@@ -319,6 +319,7 @@ class MathRainGame {
         });
         this.eventSystem.on('game:over', () => {
             this.safePlaySound('gameOver');
+            if (typeof window.hubTrack === 'function') window.hubTrack('math-rain', 'finish');
             // 结束后停止渲染循环，避免空转耗电
             this.isRendering = false;
         });
@@ -506,6 +507,7 @@ class MathRainGame {
             
             // Start game state
             this.gameStateManager?.startGame();
+            if (typeof window.hubTrack === 'function') window.hubTrack('math-rain', 'play');
             
             
         } catch (error) {

@@ -181,17 +181,87 @@ const COMBO_WINDOW = 2000; // 连锁窗口（毫秒）
 const SUPERNOVA_SCORE = 500;
 
 // 星球链：9 级可见星球 + 双太阳合成超新星爆炸
+// 星球链的结构字段（尺寸/分数固定），视觉由皮肤（SKINS）提供
 const CHAIN = [
-    { key: 'asteroid', emoji: '🪨', r: 15, color: '#9b8d7d', light: '#cdbfa9', dark: '#5d5347', score: 2,   name: { en: 'Asteroid', zh: '陨石' } },
-    { key: 'moon',     emoji: '🌙', r: 21, color: '#c8cede', light: '#f0f3fb', dark: '#7c8296', score: 4,   name: { en: 'Moon', zh: '月球' } },
-    { key: 'mars',     emoji: '🔴', r: 28, color: '#e0654a', light: '#ffb09a', dark: '#8c301d', score: 8,   name: { en: 'Mars', zh: '火星' } },
-    { key: 'earth',    emoji: '🌏', r: 36, color: '#3f8fd2', light: '#9fd8ff', dark: '#1c4e7e', score: 14,  name: { en: 'Earth', zh: '地球' } },
-    { key: 'neptune',  emoji: '🔵', r: 45, color: '#4467e0', light: '#a3b8ff', dark: '#22347f', score: 22,  name: { en: 'Neptune', zh: '海王星' } },
-    { key: 'uranus',   emoji: '🟢', r: 55, color: '#4fc7b5', light: '#b2f2e8', dark: '#237061', score: 32,  name: { en: 'Uranus', zh: '天王星' } },
-    { key: 'saturn',   emoji: '🪐', r: 66, color: '#d8b46a', light: '#ffe7b0', dark: '#8a6c33', score: 45,  name: { en: 'Saturn', zh: '土星' }, ring: true },
-    { key: 'jupiter',  emoji: '🟠', r: 78, color: '#d7914f', light: '#ffd0a0', dark: '#8c5322', score: 60,  name: { en: 'Jupiter', zh: '木星' } },
-    { key: 'sun',      emoji: '☀️', r: 90, color: '#f7c948', light: '#fff4c2', dark: '#b98a12', score: 80,  name: { en: 'Sun', zh: '太阳' }, glow: true }
+    { key: 'asteroid', r: 15, score: 2 },
+    { key: 'moon',     r: 21, score: 4 },
+    { key: 'mars',     r: 28, score: 8 },
+    { key: 'earth',    r: 36, score: 14 },
+    { key: 'neptune',  r: 45, score: 22 },
+    { key: 'uranus',   r: 55, score: 32 },
+    { key: 'saturn',   r: 66, score: 45 },
+    { key: 'jupiter',  r: 78, score: 60 },
+    { key: 'sun',      r: 90, score: 80 }
 ];
+
+// 皮肤：每级提供 emoji / 配色 / 名称（ring = 土星环，glow = 顶级光晕）
+const SKINS = {
+    planets: {
+        label: { en: 'Planets', zh: '星球' },
+        icon: '🪐',
+        tiers: [
+            { emoji: '🪨', color: '#9b8d7d', light: '#cdbfa9', dark: '#5d5347', name: { en: 'Asteroid', zh: '陨石' } },
+            { emoji: '🌙', color: '#c8cede', light: '#f0f3fb', dark: '#7c8296', name: { en: 'Moon', zh: '月球' } },
+            { emoji: '🔴', color: '#e0654a', light: '#ffb09a', dark: '#8c301d', name: { en: 'Mars', zh: '火星' } },
+            { emoji: '🌏', color: '#3f8fd2', light: '#9fd8ff', dark: '#1c4e7e', name: { en: 'Earth', zh: '地球' } },
+            { emoji: '🔵', color: '#4467e0', light: '#a3b8ff', dark: '#22347f', name: { en: 'Neptune', zh: '海王星' } },
+            { emoji: '🟢', color: '#4fc7b5', light: '#b2f2e8', dark: '#237061', name: { en: 'Uranus', zh: '天王星' } },
+            { emoji: '🪐', color: '#d8b46a', light: '#ffe7b0', dark: '#8a6c33', name: { en: 'Saturn', zh: '土星' }, ring: true },
+            { emoji: '🟠', color: '#d7914f', light: '#ffd0a0', dark: '#8c5322', name: { en: 'Jupiter', zh: '木星' } },
+            { emoji: '☀️', color: '#f7c948', light: '#fff4c2', dark: '#b98a12', name: { en: 'Sun', zh: '太阳' }, glow: true }
+        ]
+    },
+    fruits: {
+        label: { en: 'Fruits', zh: '水果' },
+        icon: '🍉',
+        tiers: [
+            { emoji: '🍒', color: '#d94f6b', light: '#ffa3b5', dark: '#8c2438', name: { en: 'Cherry', zh: '樱桃' } },
+            { emoji: '🍓', color: '#e8434f', light: '#ff9da6', dark: '#8c1d2a', name: { en: 'Strawberry', zh: '草莓' } },
+            { emoji: '🍇', color: '#8b5cf6', light: '#c4b5fd', dark: '#4c1d95', name: { en: 'Grape', zh: '葡萄' } },
+            { emoji: '🍊', color: '#f97316', light: '#fdba74', dark: '#9a3412', name: { en: 'Orange', zh: '橘子' } },
+            { emoji: '🍏', color: '#84cc16', light: '#d9f99d', dark: '#3f6212', name: { en: 'Green Apple', zh: '青苹果' } },
+            { emoji: '🍎', color: '#ef4444', light: '#fca5a5', dark: '#7f1d1d', name: { en: 'Apple', zh: '苹果' } },
+            { emoji: '🥭', color: '#f59e0b', light: '#fde68a', dark: '#92400e', name: { en: 'Mango', zh: '芒果' } },
+            { emoji: '🍍', color: '#eab308', light: '#fef08a', dark: '#854d0e', name: { en: 'Pineapple', zh: '菠萝' } },
+            { emoji: '🍉', color: '#22c55e', light: '#86efac', dark: '#14532d', name: { en: 'Watermelon', zh: '西瓜' }, glow: true }
+        ]
+    },
+    faces: {
+        label: { en: 'Faces', zh: '表情' },
+        icon: '🤩',
+        tiers: [
+            { emoji: '🙂', color: '#94a3b8', light: '#e2e8f0', dark: '#475569', name: { en: 'Smile', zh: '微笑' } },
+            { emoji: '😊', color: '#6ee7b7', light: '#d1fae5', dark: '#065f46', name: { en: 'Happy', zh: '开心' } },
+            { emoji: '😄', color: '#fbbf24', light: '#fef3c7', dark: '#92400e', name: { en: 'Cheer', zh: '欢乐' } },
+            { emoji: '😎', color: '#38bdf8', light: '#bae6fd', dark: '#075985', name: { en: 'Cool', zh: '酷炫' } },
+            { emoji: '🤩', color: '#a78bfa', light: '#ddd6fe', dark: '#5b21b6', name: { en: 'Starstruck', zh: '惊叹' } },
+            { emoji: '😍', color: '#f472b6', light: '#fbcfe8', dark: '#9d174d', name: { en: 'Lovestruck', zh: '心动' } },
+            { emoji: '🥳', color: '#fb923c', light: '#fed7aa', dark: '#9a3412', name: { en: 'Party', zh: '派对' } },
+            { emoji: '🤯', color: '#f87171', light: '#fecaca', dark: '#7f1d1d', name: { en: 'Mind-blown', zh: '爆炸' } },
+            { emoji: '😇', color: '#fde047', light: '#fef9c3', dark: '#a16207', name: { en: 'Angel', zh: '天使' }, glow: true }
+        ]
+    }
+};
+
+let skinId = SKINS[storageGet('pm_skin')] ? storageGet('pm_skin') : 'planets';
+
+// 应用皮肤：把选中皮肤的字段写入 CHAIN（尺寸/分数保持不变）
+function applySkin(id) {
+    skinId = SKINS[id] ? id : 'planets';
+    storageSet('pm_skin', skinId);
+    const tiers = SKINS[skinId].tiers;
+    CHAIN.forEach((tier, i) => {
+        const v = tiers[i];
+        tier.emoji = v.emoji;
+        tier.color = v.color;
+        tier.light = v.light;
+        tier.dark = v.dark;
+        tier.name = v.name;
+        tier.ring = !!v.ring;
+        tier.glow = !!v.glow;
+    });
+}
+
 const MAX_TIER = CHAIN.length - 1;
 
 // 可投放的层级与权重（层级越高越稀有）
@@ -358,6 +428,7 @@ class PlanetMergeGame {
 
         this.starfield = null;
 
+        applySkin(skinId);
         this.applyLanguage();
         this.bindInput();
         this.bindUI();
@@ -373,7 +444,8 @@ class PlanetMergeGame {
             'pm-score', 'pm-best', 'pm-mode-label', 'pm-next-emoji',
             'pm-start', 'pm-title', 'pm-subtitle', 'pm-howto', 'pm-chain',
             'pm-btn-endless', 'pm-btn-daily', 'pm-daily-best-line', 'pm-best-line',
-            'pm-start-mute', 'pm-start-lang', 'pm-daily-note',
+            'pm-start-mute', 'pm-start-lang',
+            'pm-skin-row', 'pm-daily-note',
             'pm-pause', 'pm-btn-resume', 'pm-btn-restart', 'pm-btn-menu', 'pm-pause-title',
             'pm-over', 'pm-over-title', 'pm-over-score', 'pm-over-best', 'pm-over-newbest',
             'pm-over-max', 'pm-over-suns', 'pm-over-merges',
@@ -440,6 +512,7 @@ class PlanetMergeGame {
         if (hint) hint.textContent = t.hint;
         this.updateStartStats();
         this.renderChainShowcase();
+        this.renderSkinPicker();
     }
 
     renderChainShowcase() {
@@ -457,6 +530,29 @@ class PlanetMergeGame {
                 arrow.textContent = '→';
                 this.el.chain.appendChild(arrow);
             }
+        });
+    }
+
+    /**
+     * 皮肤选择器（开始界面）：当前皮肤高亮，点击即时切换并持久化
+     */
+    renderSkinPicker() {
+        const row = this.el['skin-row'];
+        if (!row) return;
+        row.textContent = '';
+        Object.entries(SKINS).forEach(([id, skin]) => {
+            const btn = document.createElement('button');
+            btn.className = 'pm-skin-btn' + (id === skinId ? ' selected' : '');
+            btn.textContent = skin.icon + ' ' + skin.label[this.lang];
+            btn.addEventListener('click', () => {
+                if (id === skinId) return;
+                applySkin(id);
+                this.renderSkinPicker();
+                this.renderChainShowcase();
+                this.updateStartStats();
+                Sfx.click();
+            });
+            row.appendChild(btn);
         });
     }
 
@@ -525,6 +621,7 @@ class PlanetMergeGame {
         this.ensureLoop();
         this.updateHud();
         this.updateNextPreview();
+        if (typeof window.hubTrack === 'function') window.hubTrack('planet-merge', 'play');
     }
 
     pickTier() {
@@ -882,6 +979,7 @@ class PlanetMergeGame {
 
         this.showOverlay('pm-over');
         // 先同步记录本地榜，再尝试全球榜（Worker 离线也不影响本地成绩显示）
+        if (typeof window.hubTrack === 'function') window.hubTrack('planet-merge', 'finish');
         this.recordLocalScore();
         this.leaderboardTab = isDaily ? 'daily' : 'alltime';
         this.updateLbTabs();
@@ -1244,10 +1342,23 @@ class PlanetMergeGame {
 
     resize() {
         const dpr = window.devicePixelRatio || 1;
-        const cssWidth = this.canvas.clientWidth || 420;
-        const cssHeight = cssWidth * (WORLD_H / WORLD_W);
+        // 可用高度 = 视口高度 - 画布兄弟元素的高亮，矮视口时缩放画布而不是截断
+        const shell = this.canvas.parentElement?.parentElement;
+        const usedH = shell
+            ? Array.from(shell.children)
+                .filter(el => el !== this.canvas.parentElement)
+                .reduce((sum, el) => sum + el.getBoundingClientRect().height, 0)
+            : 120;
+        const availH = Math.max(320, window.innerHeight - usedH - 20);
+        let cssWidth = this.canvas.clientWidth || 420;
+        let cssHeight = cssWidth * (WORLD_H / WORLD_W);
+        if (cssHeight > availH) {
+            cssHeight = availH;
+            cssWidth = cssHeight * (WORLD_W / WORLD_H);
+        }
         this.canvas.width = Math.round(cssWidth * dpr);
         this.canvas.height = Math.round(cssHeight * dpr);
+        this.canvas.style.width = `${cssWidth}px`;
         this.canvas.style.height = `${cssHeight}px`;
         this.scale = (cssWidth / WORLD_W) * dpr;
         this.buildStarfield();

@@ -1266,6 +1266,7 @@ class TankBattle {
         this.init();
         this.setupEventListeners();
         this.gameLoop();
+        if (typeof window.hubTrack === 'function') window.hubTrack('tank-battle', 'play');
     }
 
     init() {
@@ -1681,6 +1682,7 @@ class TankBattle {
                     this.screenShake = 8;
                     if (this.lives <= 0) {
                         this.gameState = 'gameOver';
+                        if (typeof window.hubTrack === 'function') window.hubTrack('tank-battle', 'finish');
                     }
                     this.updateUI();
                 }
@@ -1737,6 +1739,7 @@ class TankBattle {
             
             if (this.level > CONFIG.MAX_LEVEL) {
                 this.gameState = 'victory';
+                if (typeof window.hubTrack === 'function') window.hubTrack('tank-battle', 'finish');
             } else {
                 // 下一关
                 this.createWalls();

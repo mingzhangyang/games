@@ -23,7 +23,8 @@ body {
     justify-content: center;
     align-items: stretch;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -169,13 +170,14 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 14px;
+    gap: 10px;
     background: rgba(8, 10, 26, 0.88);
     backdrop-filter: blur(10px);
     border-radius: 18px;
-    padding: 22px;
+    padding: 16px 18px;
     text-align: center;
     overflow-y: auto;
+    scrollbar-width: none;
     z-index: 10;
 }
 
@@ -215,6 +217,37 @@ body {
     font-size: 12px;
     color: #5b689f;
     margin: 0 1px;
+}
+
+/* ── 皮肤选择器 ── */
+
+.pm-skin-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pm-skin-btn {
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #aab6e6;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 99px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.pm-skin-btn:hover { background: rgba(255, 255, 255, 0.11); color: #fff; }
+.pm-skin-btn:active { transform: scale(0.95); }
+
+.pm-skin-btn.selected {
+    color: #fff;
+    background: rgba(99, 102, 241, 0.4);
+    border-color: rgba(148, 163, 255, 0.6);
 }
 
 .pm-howto {
@@ -507,3 +540,6 @@ body {
     .pm-newbest.show { animation: none; }
     .pm-btn, .pm-icon-btn { transition: none; }
 }
+
+/* 覆盖层滚动条隐藏（滚轮/触摸仍可滚动） */
+.pm-overlay::-webkit-scrollbar { display: none; }

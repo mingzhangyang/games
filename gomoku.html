@@ -20,6 +20,8 @@
     <meta name="twitter:image" content="assets/seo/og-gomoku.svg">
     <title>Gomoku - Five in a Row</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23fff'/%3E%3C/svg%3E">
+        <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="css/gomoku.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -137,5 +139,7 @@
         });
     </script>
     <script type="module" src="js/gomoku.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
 </body>
 </html>

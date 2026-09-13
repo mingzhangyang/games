@@ -19,6 +19,8 @@
     <meta name="twitter:description" content="A curated collection of instant-play HTML5 games.">
     <meta name="twitter:image" content="assets/seo/og-collection.svg">
     <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <title id="page-title">Mini Games Collection</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='32' fill='white' font-family='Segoe UI,Arial' dy='.3em'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
     <style>
@@ -300,6 +302,13 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .hub-total {
+            font-size: 0.72em;
+            color: var(--color-text-muted);
+            margin-right: auto;
+            font-variant-numeric: tabular-nums;
+        }
+
         .daily-hub-progress.all-done {
             color: #fcd34d;
             background: rgba(252, 211, 77, 0.12);
@@ -464,6 +473,7 @@
         <div class="daily-hub-head">
             <span class="daily-hub-title" id="hub-title">⚡ Daily Challenges</span>
             <span class="daily-hub-progress" id="hub-progress">0/2</span>
+            <span class="hub-total" id="hub-total" hidden></span>
         </div>
         <a class="daily-task" id="hub-task-word" href="word-daily.html">
             <span class="daily-task-icon">🔤</span>
@@ -720,6 +730,7 @@
                 hubProfileHint: 'Leaderboard name',
                 hubProfilePlaceholder: 'Your name',
                 langToggle: '中文',
+                hubTotalPlayed: 'plays today',
 
                 hoopShotName: 'Hoop Shot',
                 hoopShotDesc: 'Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!',
@@ -792,6 +803,7 @@
                 hubProfileHint: '全站排行榜昵称',
                 hubProfilePlaceholder: '你的昵称',
                 langToggle: 'English',
+                hubTotalPlayed: 'plays today',
 
                 hoopShotName: '街机投篮',
                 hoopShotDesc: '一指甩投，一球定胜负！连中 3 球点燃火球模式分数翻倍，冲击全球前 10！',
@@ -1027,6 +1039,19 @@
                 }
                 nameInput.value = name || '';
             }
+
+            // 今日全站战绩（统计 Worker 不可达时保持隐藏）
+            fetch('https://games-analytics.orangely.workers.dev/stats?day=' + compact)
+                .then(r => r.ok ? r.json() : Promise.reject(new Error('offline')))
+                .then(s => {
+                    const el = document.getElementById('hub-total');
+                    const label = i18n[detectLanguage()].hubTotalPlayed;
+                    if (el && s && s.total && s.total.p > 0) {
+                        el.textContent = '🔥 ' + s.total.p + ' ' + label;
+                        el.hidden = false;
+                    }
+                })
+                .catch(() => { /* 静默 */ });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1059,5 +1084,7 @@
             }
         });
     </script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
 </body>
 </html>

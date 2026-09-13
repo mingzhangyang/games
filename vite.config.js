@@ -22,9 +22,7 @@ export default defineConfig({
           // 公共模块
           'common': [
             './js/config-manager.js',
-            './js/performance-monitor.js',
-            './js/resource-manager.js',
-            './js/save-manager.js'
+            './js/performance-monitor.js'
           ],
           // Math Rain 相关模块
           'math-rain-core': [

@@ -22,6 +22,7 @@ let gameMode = 'pve'; // 'pvp' or 'pve'
 let difficulty = 'medium';
 let isComputerThinking = false;
 let winningCells = null; // Fix #7: track winning cells for highlight
+let moveCount = 0; // 每局手数（用于统计首手）
 let aiTimer = null; // AI 走棋定时器句柄，重置/切换模式时必须清除
 let cssSize = 600; // 画布 CSS 逻辑尺寸（canvas.width 是 DPR 缩放后的设备像素）
 
@@ -104,6 +105,7 @@ function resetGame() {
         clearTimeout(aiTimer);
         aiTimer = null;
     }
+    moveCount = 0;
     board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
     currentPlayer = 1; // Black always starts
     gameActive = true;
@@ -250,6 +252,8 @@ function handleCanvasClick(e) {
 }
 
 function makeMove(r, c) {
+    moveCount++;
+    if (typeof window.hubTrack === 'function') window.hubTrack('gomoku', 'play');
     board[r][c] = currentPlayer;
     lastMove = { r, c };
     drawBoard();
@@ -379,6 +383,7 @@ function checkDraw() {
 
 function endGame(winner) {
     gameActive = false;
+    if (typeof window.hubTrack === 'function') window.hubTrack('gomoku', 'finish');
     let msg = '';
     if (winner === 0) {
         msg = "It's a Draw!";

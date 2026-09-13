@@ -428,6 +428,7 @@ class WordDailyGame {
         } else {
             this.rows = [];
             this.status = 'playing';
+            if (typeof window.hubTrack === 'function') window.hubTrack('word-daily', 'play');
         }
         this.current = '';
         this.rebuildBoard();
@@ -722,6 +723,7 @@ class WordDailyGame {
         }
 
         if (this.mode === 'daily') {
+        if (typeof window.hubTrack === 'function') window.hubTrack('word-daily', 'finish');
             this.recordDaily(won ? this.rows.length : 0);
             this.reportGlobal(won, this.rows.length);
         } else if (this.el['practice-over']) {

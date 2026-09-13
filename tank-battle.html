@@ -19,6 +19,8 @@
     <meta name="twitter:description" content="Classic browser tank shooter with keyboard controls and power-ups.">
     <meta name="twitter:image" content="assets/seo/og-tank-battle.svg">
     <title>坦克大战 - Tank Battle Enhanced</title>
+        <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="css/tank-battle.css">
 </head>
 <body>
@@ -111,5 +113,7 @@
         });
     </script>
     <script type="module" src="js/tank-battle.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
 </body>
 </html>

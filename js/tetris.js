@@ -94,6 +94,26 @@ function normalizeUsername(val) {
     return trimmed;
 }
 
+// 桌面矮视口适配：整体等比缩放游戏容器，保证无滚动条、无截断
+function fitTetrisToViewport() {
+    const container = document.querySelector('.game-container');
+    if (!container) return;
+    if (window.innerWidth <= 768) {
+        // 移动端有自己的单列布局，交给媒体查询处理
+        container.style.transform = '';
+        return;
+    }
+    container.style.transform = 'none';
+    const unscaledH = container.getBoundingClientRect().height;
+    const availH = window.innerHeight - 16;
+    const scale = unscaledH > 0 ? Math.min(1, availH / unscaledH) : 1;
+    container.style.transformOrigin = 'top center';
+    container.style.transform = scale < 0.999 ? 'scale(' + scale + ')' : 'none';
+}
+window.addEventListener('resize', fitTetrisToViewport);
+window.addEventListener('load', fitTetrisToViewport);
+fitTetrisToViewport();
+
 // 统一玩家身份：读写全局 player_name，兼容迁移旧的 tetris_username
 function getGlobalUsername() {
     let name = (safeGetItem('player_name') || '').trim();
@@ -931,6 +951,7 @@ class Tetris {
     }
 
     async showGameOver() {
+    if (typeof window.hubTrack === 'function') window.hubTrack('tetris', 'finish');
         document.getElementById('finalScore').textContent = this.score;
         document.getElementById('gameOverOverlay').style.display = 'flex';
         document.getElementById('startBtn').disabled = false;
@@ -1044,6 +1065,7 @@ class Tetris {
         if (this.gameOver) {
             this.init();
         }
+        if (typeof window.hubTrack === 'function') window.hubTrack('tetris', 'play');
         this.gameLoop();
         document.getElementById('startBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
@@ -1089,6 +1111,7 @@ class Tetris {
 
     restart() {
         this.init();
+        if (typeof window.hubTrack === 'function') window.hubTrack('tetris', 'play');
         document.getElementById('startBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
         document.getElementById('pauseBtn').textContent = TEXT.pause;

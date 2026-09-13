@@ -1,0 +1,13 @@
+// 部署配置：全站统计 Worker（聚合计数，无个人信息）
+// 使用方法：把 <KV_NAMESPACE_ID> 替换为 GAMES_ANALYTICS 命名空间的 id，
+// 然后运行：npx wrangler deploy -c Workers/wrangler-games-analytics.jsonc
+// 部署后地址：https://games-analytics.orangely.workers.dev
+{
+  "name": "games-analytics",
+  "main": "games-analytics.js",
+  "compatibility_date": "2025-04-01",
+  "workers_dev": true,
+  "kv_namespaces": [
+    { "binding": "GAMES_ANALYTICS", "id": "<KV_NAMESPACE_ID>" }
+  ]
+}
