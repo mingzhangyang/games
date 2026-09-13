@@ -13,7 +13,8 @@ export default defineConfig({
         'tank-battle': resolve(__dirname, 'tank-battle.html'),
         gomoku: resolve(__dirname, 'gomoku.html'),
         'planet-merge': resolve(__dirname, 'planet-merge.html'),
-        'word-daily': resolve(__dirname, 'word-daily.html')
+        'word-daily': resolve(__dirname, 'word-daily.html'),
+        'hoop-shot': resolve(__dirname, 'hoop-shot.html')
       },
       output: {
         // 分块策略

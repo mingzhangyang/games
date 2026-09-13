@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e24">
+    <meta name="description" content="Hoop Shot 街机投篮 — flick the ball, arc it through the hoop, chain streaks for fire mode. One miss ends the run. Global top 10 leaderboard.">
+    <meta name="keywords" content="basketball game, flick game, arcade sports, hoop shot, one touch game, casual game, 街机投篮, 投篮游戏">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/hoop-shot.html">
+    <meta property="og:title" content="Hoop Shot 街机投篮 — Flick Basketball Arcade">
+    <meta property="og:description" content="One finger, one miss, endless chase. Flick the ball into the moving hoop and catch fire for double points.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-hoop-shot.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/hoop-shot.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hoop Shot 街机投篮 — Flick Basketball Arcade">
+    <meta name="twitter:description" content="Flick the ball into the moving hoop. One miss ends the run.">
+    <meta name="twitter:image" content="assets/seo/og-hoop-shot.svg">
+    <title>Hoop Shot 街机投篮 — Flick Basketball Arcade</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23f08c3a'/%3E%3Cpath d='M4 32h56M32 4v56M12 12c12 10 28 10 40 0M12 52c12-10 28-10 40 0' stroke='%235a2a08' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/hoop-shot.css">
+</head>
+<body>
+    <div class="hs-shell">
+        <!-- 顶栏 HUD -->
+        <header class="hs-topbar">
+            <button class="hs-icon-btn" id="hs-btn-home-top" title="Home">🏠</button>
+            <div class="hs-score-box">
+                <div class="hs-score-value" id="hs-score">0</div>
+                <div class="hs-score-sub">🏆 <span id="hs-best">0</span></div>
+            </div>
+            <div class="hs-topbar-actions">
+                <button class="hs-icon-btn" id="hs-mute-btn" title="Sound">🔊</button>
+                <button class="hs-icon-btn" id="hs-pause-btn" title="Pause">⏸️</button>
+            </div>
+        </header>
+
+        <div class="hs-streak-bar" id="hs-streak"></div>
+
+        <!-- 游戏区 -->
+        <div class="hs-stage">
+            <canvas id="hs-canvas" width="420" height="640"></canvas>
+            <div class="hs-fire-badge" id="hs-fire-badge">🔥</div>
+
+            <!-- 开始界面 -->
+            <div class="hs-overlay" id="hs-start">
+                <h1 class="hs-title" id="hs-title">Hoop Shot</h1>
+                <p class="hs-subtitle" id="hs-subtitle">Flick · Arc · Score</p>
+                <div class="hs-ball-row">🏀</div>
+                <p class="hs-howto" id="hs-howto"></p>
+                <button class="hs-btn hs-btn-primary" id="hs-btn-play">🏀 Play</button>
+                <p class="hs-stat-line" id="hs-best-line"></p>
+                <div class="hs-start-footer">
+                    <button class="hs-icon-btn" id="hs-start-mute">🔊</button>
+                    <button class="hs-icon-btn hs-lang-btn" id="hs-start-lang">中文</button>
+                </div>
+            </div>
+
+            <!-- 暂停界面 -->
+            <div class="hs-overlay hidden" id="hs-pause">
+                <h2 class="hs-overlay-title" id="hs-pause-title">Paused</h2>
+                <div class="hs-btn-col">
+                    <button class="hs-btn hs-btn-primary" id="hs-btn-resume">Resume</button>
+                    <button class="hs-btn hs-btn-ghost" id="hs-btn-menu">Home</button>
+                </div>
+            </div>
+
+            <!-- 结算界面 -->
+            <div class="hs-overlay hidden" id="hs-over">
+                <h2 class="hs-overlay-title" id="hs-over-title">Game Over</h2>
+                <div class="hs-newbest" id="hs-over-newbest"></div>
+                <div class="hs-over-score" id="hs-over-score">0</div>
+                <div class="hs-over-best" id="hs-over-best"></div>
+                <div class="hs-over-streak" id="hs-over-streak"></div>
+                <div class="hs-btn-row">
+                    <button class="hs-btn hs-btn-primary" id="hs-btn-again">🔄 Again</button>
+                    <button class="hs-btn" id="hs-btn-share">📤 Share</button>
+                    <button class="hs-btn" id="hs-btn-copy">📋 Copy</button>
+                </div>
+                <div class="hs-lb">
+                    <div class="hs-lb-title" id="hs-lb-title">🏆 Global Top 10</div>
+                    <div class="hs-lb-list" id="hs-lb-list"></div>
+                    <div class="hs-lb-status" id="hs-lb-status"></div>
+                    <div class="hs-username-row">
+                        <label class="hs-username-label" for="hs-username" id="hs-username-label">Username</label>
+                        <input class="hs-username" id="hs-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+                <button class="hs-btn hs-btn-ghost" id="hs-btn-home">🏠 Home</button>
+            </div>
+        </div>
+
+        <p class="hs-footer-hint" id="hs-hint">Swipe up to shoot · P pause · M mute</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) {
+                canonical.setAttribute('href', currentUrl);
+            }
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-hoop-shot.svg', baseUrl).href;
+
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', currentUrl);
+            }
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) {
+                ogImage.setAttribute('content', socialImage);
+            }
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) {
+                twitterImage.setAttribute('content', socialImage);
+            }
+
+            const gameData = {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "Hoop Shot 街机投篮",
+                "url": currentUrl,
+                "description": "Flick basketball arcade game — swipe to shoot, chain streaks for fire mode, one miss ends the run. Global top 10 leaderboard.",
+                "applicationCategory": "GameApplication",
+                "operatingSystem": "Web",
+                "genre": ["SportsGame", "ArcadeGame"],
+                "playMode": "SinglePlayer",
+                "image": socialImage,
+                "inLanguage": document.documentElement.lang || "en",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Mini Games Collection",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Hoop Shot",
+                        "item": currentUrl
+                    }
+                ]
+            };
+
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <script type="module" src="js/hoop-shot.js"></script>
+</body>
+</html>

@@ -12,6 +12,7 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript, b
 - **Gomoku** (`gomoku.html`) - Five-in-a-row board game vs AI or another player
 - **Planet Merge** (`planet-merge.html`) - Suika-style physics merge game (hand-rolled circle physics, daily challenge, own leaderboard Worker in `Workers/planet-merge-scores.js`, KV binding `PLANET_SCORES`)
 - **Word Daily** (`word-daily.html`) - Bilingual daily word puzzle (EN 5-letter words / ZH 成语 with definitions; modules in `js/word-daily*.js`; global aggregate stats Worker in `Workers/word-daily-stats.js`, KV binding `WORD_STATS`); DOM-only, no game loop
+- **Hoop Shot** (`hoop-shot.html`) - Flick-basketball arcade (one miss ends the run, fire-mode streaks, hand-rolled projectile physics; leaderboard Worker in `Workers/hoop-shot-scores.js`, KV binding `HOOP_SCORES`)
 - **index.html** - Game collection landing page (links out to external games too)
 
 ## Architecture
