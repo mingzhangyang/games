@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e24">
+    <meta name="description" content="Reversi 黑白棋 — classic Othello strategy. Play versus a tuned AI (three levels) or a friend, with flip animations and a global win-streak leaderboard.">
+    <meta name="keywords" content="reversi, othello, board game, strategy game, ai opponent, 黑白棋, 奥赛罗棋, 翻棋">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/reversi.html">
+    <meta property="og:title" content="Reversi 黑白棋 — Classic Strategy Board Game">
+    <meta property="og:description" content="Flip your way to victory. Three AI levels or pass-and-play, beautiful flip animations and a global win-streak leaderboard.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-reversi.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/reversi.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Reversi 黑白棋 — Classic Strategy Board Game">
+    <meta name="twitter:description" content="Flip your way to victory against a tuned AI or a friend.">
+    <meta name="twitter:image" content="assets/seo/og-reversi.svg">
+    <title>Reversi 黑白棋 — Classic Strategy Board Game</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2315402e'/%3E%3Ccircle cx='24' cy='24' r='13' fill='%23101426'/%3E%3Ccircle cx='40' cy='40' r='13' fill='%23f4f7ff'/%3E%3Ccircle cx='40' cy='40' r='13' fill='none' stroke='%23c9d2f0' stroke-width='1.5'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/reversi.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="rv-shell">
+        <!-- 顶栏 -->
+        <header class="rv-topbar">
+            <button class="rv-icon-btn" id="rv-btn-home" title="Home">🏠</button>
+            <div class="rv-player-box rv-black-box" id="rv-box-black">
+                <span class="rv-player-disc" id="rv-disc-black"></span>
+                <div class="rv-player-info">
+                    <span class="rv-player-name" id="rv-name-black">You</span>
+                    <span class="rv-player-count" id="rv-count-black">2</span>
+                </div>
+            </div>
+            <span class="rv-vs">·</span>
+            <div class="rv-player-box rv-white-box" id="rv-box-white">
+                <span class="rv-player-disc rv-disc-w" id="rv-disc-white"></span>
+                <div class="rv-player-info">
+                    <span class="rv-player-count" id="rv-count-white">2</span>
+                    <span class="rv-player-name" id="rv-name-white">AI</span>
+                </div>
+            </div>
+            <button class="rv-icon-btn" id="rv-mute-btn" title="Sound">🔊</button>
+        </header>
+
+        <!-- 状态行 -->
+        <div class="rv-status" id="rv-status">Your turn</div>
+
+        <!-- 棋盘 -->
+        <div class="rv-stage">
+            <div class="rv-board" id="rv-board" role="grid" aria-label="Reversi board"></div>
+
+            <!-- 过路提示 -->
+            <div class="rv-toast hidden" id="rv-toast"></div>
+
+            <!-- 开始界面 -->
+            <div class="rv-overlay" id="rv-start">
+                <h1 class="rv-title" id="rv-title">Reversi</h1>
+                <p class="rv-subtitle" id="rv-subtitle">Flip · Trap · Dominate</p>
+                <div class="rv-hero"><span class="rv-hero-b"></span><span class="rv-hero-w"></span></div>
+                <p class="rv-howto" id="rv-howto"></p>
+                <div class="rv-mode-row" id="rv-mode-row">
+                    <button class="rv-mode active" data-mode="ai" id="rv-mode-ai">🤖 <span id="rv-mode-ai-label">vs AI</span></button>
+                    <button class="rv-mode" data-mode="2p" id="rv-mode-2p">👥 <span id="rv-mode-2p-label">2 Players</span></button>
+                </div>
+                <div class="rv-diff-row" id="rv-diff-row">
+                    <button class="rv-diff" data-diff="easy" id="rv-diff-easy">Easy</button>
+                    <button class="rv-diff active" data-diff="medium" id="rv-diff-medium">Medium</button>
+                    <button class="rv-diff" data-diff="hard" id="rv-diff-hard">Hard</button>
+                </div>
+                <button class="rv-btn rv-btn-primary" id="rv-btn-play">⚫ Play</button>
+                <p class="rv-stat-line" id="rv-streak-line"></p>
+                <nav class="more-games">
+                    <div class="more-games-title">🎮 More Games · 更多游戏</div>
+                    <div class="more-games-links">
+                  <a href="math-rain.html">🔢 数字雨</a>
+                  <a href="tetris.html">🟦 俄罗斯方块</a>
+                  <a href="tank-battle.html">🎯 坦克大战</a>
+                  <a href="gomoku.html">⚫ 五子棋</a>
+                  <a href="planet-merge.html">🪐 星球合成</a>
+                  <a href="word-daily.html">🔤 每日猜词</a>
+                  <a href="hoop-shot.html">🏀 街机投篮</a>
+                  <a href="minesweeper.html">💣 扫雷</a>
+                  <a href="tower-defense.html">🏰 霓虹塔防</a>
+                  <a href="gravity-slingshot.html">🚀 引力弹弓</a>
+                    </div>
+                </nav>
+                <div class="rv-start-footer">
+                    <button class="rv-icon-btn" id="rv-start-mute">🔊</button>
+                    <button class="rv-icon-btn rv-lang-btn" id="rv-start-lang">中文</button>
+                </div>
+            </div>
+
+            <!-- 结算界面 -->
+            <div class="rv-overlay hidden" id="rv-over">
+                <h2 class="rv-overlay-title" id="rv-over-title">Game Over</h2>
+                <div class="rv-over-verdict" id="rv-over-verdict"></div>
+                <div class="rv-over-score" id="rv-over-score">0 : 0</div>
+                <div class="rv-over-streak" id="rv-over-streak"></div>
+                <div class="rv-btn-row">
+                    <button class="rv-btn rv-btn-primary" id="rv-btn-again">🔄 Again</button>
+                    <button class="rv-btn" id="rv-btn-copy">📋 Copy</button>
+                    <button class="rv-btn rv-btn-ghost" id="rv-btn-menu">🏠 Home</button>
+                </div>
+                <div class="rv-lb" id="rv-lb-box">
+                    <div class="rv-lb-title" id="rv-lb-title">🏆 Global Win Streaks</div>
+                    <div class="rv-lb-list" id="rv-lb-list"></div>
+                    <div class="rv-lb-status" id="rv-lb-status"></div>
+                    <div class="rv-username-row">
+                        <label class="rv-username-label" for="rv-username" id="rv-username-label">Username</label>
+                        <input class="rv-username" id="rv-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="rv-footer-hint" id="rv-hint"></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) {
+                canonical.setAttribute('href', currentUrl);
+            }
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-reversi.svg', baseUrl).href;
+
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', currentUrl);
+            }
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) {
+                ogImage.setAttribute('content', socialImage);
+            }
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) {
+                twitterImage.setAttribute('content', socialImage);
+            }
+
+            const gameData = {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "Reversi 黑白棋",
+                "url": currentUrl,
+                "description": "Classic Reversi (Othello) strategy board game — three AI levels, pass-and-play mode, global win-streak leaderboard.",
+                "applicationCategory": "GameApplication",
+                "operatingSystem": "Web",
+                "genre": ["StrategyGame", "BoardGame"],
+                "playMode": ["SinglePlayer", "CoOp"],
+                "image": socialImage,
+                "inLanguage": document.documentElement.lang || "en",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Mini Games Collection",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Reversi",
+                        "item": currentUrl
+                    }
+                ]
+            };
+
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <script type="module" src="js/reversi.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

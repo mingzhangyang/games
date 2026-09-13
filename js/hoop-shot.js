@@ -213,7 +213,8 @@ const RESTITUTION_RIM = 0.55;
 const REPOSITION_DELAY = 380;   // 进球后换篮筐延迟
 
 const STREAK_FIRE = 3;          // 连中 3 球触发火球
-const LEADERBOARD_URL = 'https://hoop-shot-scores.orangely.workers.dev';
+const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
+const LB_GAME = 'hoop-shot';
 
 /* ────────────────────────── game ────────────────────────── */
 
@@ -807,7 +808,7 @@ class HoopShotGame {
             await fetch(`${LEADERBOARD_URL}/scores`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: this.getUsername(), score: this.score }),
+                body: JSON.stringify({ game: LB_GAME, name: this.getUsername(), score: this.score }),
                 signal: controller.signal,
                 mode: 'cors'
             });
@@ -825,7 +826,7 @@ class HoopShotGame {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`${LEADERBOARD_URL}/scores`, {
+            const res = await fetch(`${LEADERBOARD_URL}/scores?game=${LB_GAME}`, {
                 signal: controller.signal,
                 mode: 'cors'
             });

@@ -9,7 +9,7 @@ const ALLOWED_ORIGINS = [
   'https://game.orangely.xyz',
 ];
 
-const GAMES = ['math-rain', 'tetris', 'tank-battle', 'gomoku', 'planet-merge', 'word-daily', 'hoop-shot'];
+const GAMES = ['math-rain', 'tetris', 'tank-battle', 'gomoku', 'planet-merge', 'word-daily', 'hoop-shot', 'minesweeper', 'reversi', 'tower-defense', 'gravity-slingshot'];
 const DAILY_TTL_SECONDS = 90 * 24 * 3600;
 
 function getOrigin(request) {

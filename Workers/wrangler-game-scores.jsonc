@@ -1,0 +1,13 @@
+// 部署配置：共享游戏排行榜 Worker（一个 Worker 承载 Reversi / Tower Defense / Minesweeper / Gravity Slingshot 榜单）
+// KV 命名空间 GAME_SCORES 已配置（gravity 每日赛程榜也在同一命名空间，键 top:gravity-d<日期>）
+// 运行：npx wrangler deploy -c Workers/wrangler-game-scores.jsonc
+// 部署后地址：https://game-scores.orangely.workers.dev
+{
+  "name": "game-scores",
+  "main": "game-scores.js",
+  "compatibility_date": "2025-04-01",
+  "workers_dev": true,
+  "kv_namespaces": [
+    { "binding": "GAME_SCORES", "id": "fe5897ff187e4ddca2e2430dcfe43e09" }
+  ]
+}

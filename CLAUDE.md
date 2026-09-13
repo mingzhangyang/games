@@ -10,10 +10,14 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript, b
 - **Tetris** (`tetris.html`) - Modern Tetris implementation with themes, combo system, and global high scores
 - **Tank Battle** (`tank-battle.html`) - Classic arcade-style tank combat game
 - **Gomoku** (`gomoku.html`) - Five-in-a-row board game vs AI or another player
-- **Planet Merge** (`planet-merge.html`) - Suika-style physics merge game (hand-rolled circle physics, daily challenge, own leaderboard Worker in `Workers/planet-merge-scores.js`, KV binding `PLANET_SCORES`)
+- **Planet Merge** (`planet-merge.html`) - Suika-style physics merge game (hand-rolled circle physics, daily challenge; daily + alltime leaderboards served by the shared `game-scores` Worker as `planet-merge` / `planet-merge-d<YYYYMMDD>`)
 - **Word Daily** (`word-daily.html`) - Bilingual daily word puzzle (EN 5-letter words / ZH 成语 with definitions; modules in `js/word-daily*.js`; global aggregate stats Worker in `Workers/word-daily-stats.js`, KV binding `WORD_STATS`); DOM-only, no game loop
-- **Hoop Shot** (`hoop-shot.html`) - Flick-basketball arcade (one miss ends the run, fire-mode streaks, hand-rolled projectile physics; leaderboard Worker in `Workers/hoop-shot-scores.js`, KV binding `HOOP_SCORES`)
-- **index.html** - Game collection landing page (links out to external games too)
+- **Hoop Shot** (`hoop-shot.html`) - Flick-basketball arcade (one miss ends the run, fire-mode streaks, hand-rolled projectile physics; leaderboard served by the shared `game-scores` Worker as `hoop-shot`)
+- **Minesweeper** (`minesweeper.html`) - Classic logic puzzle (safe first click, iterative flood reveal, chording, long-press/right-click flags; fastest-clear leaderboard per difficulty)
+- **Reversi** (`reversi.html`) - Othello strategy board game (negamax + alpha-beta AI with three levels and an endgame solver, pass-and-play mode, CSS 3D disc flips; global win-streak leaderboard)
+- **Tower Defense** (`tower-defense.html`) - Neon grid tower defense (pulse/frost/cannon/tesla towers, 25 waves, upgrades & 70% sell-back, ×2 speed; fixed 480×640 logical coordinates scaled at render time; global score leaderboard)
+- **Gravity Slingshot** (`gravity-slingshot.html`) - Original orbital physics puzzle: pull-back slingshot launch, softened inverse-square gravity, fixed 1/120s substep integration shared by the trajectory preview and real flight (fully deterministic); 12 handcrafted holes with star ratings + a **daily course** (5 holes seeded from the UTC+8 date, generated with a ballistic sampler that verifies solvability and honest par); daily score = total launches, posted to per-day leaderboard keys `gravity-d<YYYYMMDD>` (asc) handled by the shared game-scores Worker
+- **index.html** - Game collection landing page (links out to external games too); its Daily Hub shows 3 tasks: Word Daily (`wd_daily_*`), Planet Merge (`pm_daily_*`), Gravity Slingshot (`gs_daily_<YYYYMMDD>`, written when the daily course is finished)
 
 ## Architecture
 
@@ -27,7 +31,7 @@ npm run preview   # wrangler dev (serves dist/ + src/index.js worker)
 
 - Source HTML/CSS/JS live at the repo root, `css/`, and `js/`; `public/` holds static assets copied verbatim into `dist/` (including `404.html` for Cloudflare's `not_found_handling`).
 - `src/index.js` is the Worker entry: it redirects `/dots-and-boxes*` to the external game and falls through to static assets.
-- `Workers/tetris-highest-scores.js` is the leaderboard Worker (deployed separately to `tetris-highest-scores.orangely.workers.dev`, KV binding `TETRIS_SCORES`, CORS restricted to the games domains). Its deploy configuration is not in this repo.
+- `Workers/game-scores.js` is the **single leaderboard Worker for the whole site** (deployed to `game-scores.orangely.workers.dev`, one KV namespace `GAME_SCORES`, per-game keys `top:<game>`; games: `tetris`, `hoop-shot`, `planet-merge` (+ daily `planet-merge-d<YYYYMMDD>` with a 14-day TTL), `reversi`, `tower-defense`, `minesweeper-easy|medium|hard`, and daily `gravity-d<YYYYMMDD>` matched by regex; per-game `order: asc|desc`). The former per-game workers (tetris-highest-scores, planet-merge-scores, hoop-shot-scores) were consolidated into it — their sources were removed from this repo and their deployed instances can be deleted with `npx wrangler delete --name <name>`. Historical scores were replayed into `GAME_SCORES` via `scripts/migrate-legacy-scores.mjs`. Add new games to its `GAMES` map (or the daily-key patterns) rather than creating another worker. Deploy config: `Workers/wrangler-game-scores.jsonc`.
 
 ### Key Components
 

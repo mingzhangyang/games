@@ -99,6 +99,9 @@
             gap: 14px;
         }
 
+        /* 允许卡片收缩到内容宽度以下，防止标题避让空间把轨道撑出视口 */
+        .games-grid > .game-card { min-width: 0; }
+
         .game-card {
             position: relative;
             background: rgba(255, 255, 255, 0.03);
@@ -156,6 +159,10 @@
         .card-icon--planet    { background: rgba(168, 85, 247, 0.15); }
         .card-icon--word      { background: rgba(58, 166, 85, 0.15); }
         .card-icon--hoop      { background: rgba(249, 115, 22, 0.15); }
+        .card-icon--mines     { background: rgba(56, 132, 255, 0.15); }
+        .card-icon--reversi   { background: rgba(52, 211, 153, 0.15); }
+        .card-icon--td        { background: rgba(34, 211, 238, 0.15); }
+        .card-icon--gravity   { background: rgba(129, 140, 248, 0.15); }
         .card-icon--minecraft { background: rgba(132, 204, 22, 0.15); }
         .card-icon--dots      { background: rgba(6, 182, 212, 0.15); }
         .card-icon--stack     { background: rgba(245, 158, 11, 0.15); }
@@ -195,6 +202,9 @@
             border-radius: 99px;
             pointer-events: none;
         }
+
+        /* 有徽章的卡片为标题留出右侧空间，避免长标题被徽章遮挡 */
+        .card-badge ~ .card-body .card-header { padding-right: 48px; }
 
         .card-badge--new {
             color: #fcd34d;
@@ -472,7 +482,7 @@
     <section class="daily-hub" aria-label="Daily challenges">
         <div class="daily-hub-head">
             <span class="daily-hub-title" id="hub-title">⚡ Daily Challenges</span>
-            <span class="daily-hub-progress" id="hub-progress">0/2</span>
+            <span class="daily-hub-progress" id="hub-progress">0/3</span>
             <span class="hub-total" id="hub-total" hidden></span>
         </div>
         <a class="daily-task" id="hub-task-word" href="word-daily.html">
@@ -490,6 +500,14 @@
                 <div class="daily-task-sub" id="hub-task-merge-sub">Daily challenge</div>
             </div>
             <span class="daily-task-status" id="hub-task-merge-status">⚪</span>
+        </a>
+        <a class="daily-task" id="hub-task-gravity" href="gravity-slingshot.html">
+            <span class="daily-task-icon">🚀</span>
+            <div class="daily-task-body">
+                <div class="daily-task-name" id="hub-task-gravity-name">Gravity Slingshot</div>
+                <div class="daily-task-sub" id="hub-task-gravity-sub">Daily course · 5 holes</div>
+            </div>
+            <span class="daily-task-status" id="hub-task-gravity-status">⚪</span>
         </a>
         <div class="daily-profile">
             <span class="daily-profile-icon">👤</span>
@@ -611,6 +629,70 @@
                 </div>
             </article>
 
+            <!-- Minesweeper -->
+            <article class="game-card" onclick="location.href='minesweeper.html'">
+                <span class="card-badge card-badge--new">New</span>
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--mines">💣</span>
+                        <a class="card-title" href="minesweeper.html" id="minesweeper-name">Minesweeper</a>
+                    </div>
+                    <p class="card-desc" id="minesweeper-desc">The classic logic puzzle. Safe first click, chording, three difficulties, global fastest clears.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="minesweeper-tag">Puzzle</span>
+                        <a class="play-btn" href="minesweeper.html" id="minesweeper-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Reversi -->
+            <article class="game-card" onclick="location.href='reversi.html'">
+                <span class="card-badge card-badge--new">New</span>
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--reversi">⚪</span>
+                        <a class="card-title" href="reversi.html" id="reversi-name">Reversi</a>
+                    </div>
+                    <p class="card-desc" id="reversi-desc">Classic Othello strategy. Outsmart a tuned AI on three levels or pass-and-play with a friend.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="reversi-tag">Strategy</span>
+                        <a class="play-btn" href="reversi.html" id="reversi-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Tower Defense -->
+            <article class="game-card" onclick="location.href='tower-defense.html'">
+                <span class="card-badge card-badge--new">New</span>
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--td">🏰</span>
+                        <a class="card-title" href="tower-defense.html" id="td-name">Neon Tower Defense</a>
+                    </div>
+                    <p class="card-desc" id="td-desc">Build pulse, frost, cannon and tesla towers on the neon grid. Survive 25 waves and top the leaderboard.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="td-tag">Strategy</span>
+                        <a class="play-btn" href="tower-defense.html" id="td-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Gravity Slingshot -->
+            <article class="game-card" onclick="location.href='gravity-slingshot.html'">
+                <span class="card-badge card-badge--new">New</span>
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--gravity">🚀</span>
+                        <a class="card-title" href="gravity-slingshot.html" id="gravity-name">Gravity Slingshot</a>
+                    </div>
+                    <p class="card-desc" id="gravity-desc">Original orbital physics — slingshot your probe around planets into the wormhole. 12 holes plus a daily course.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="gravity-tag">Physics</span>
+                        <a class="play-btn" href="gravity-slingshot.html" id="gravity-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
             <!-- 2D Minecraft -->
             <article class="game-card" onclick="location.href='https://2d-minecraft.orangely.xyz'">
                 <div class="card-body">
@@ -727,6 +809,7 @@
                 hubTitle: '⚡ Daily Challenges',
                 hubTaskWordSub: 'Guess the word in 6 tries',
                 hubTaskMergeSub: 'Daily challenge — chase the high score',
+                hubTaskGravitySub: 'Daily course — 5 holes, fewest launches',
                 hubProfileHint: 'Leaderboard name',
                 hubProfilePlaceholder: 'Your name',
                 langToggle: '中文',
@@ -736,6 +819,26 @@
                 hoopShotDesc: 'Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!',
                 hoopShotTag: 'Sports',
                 hoopShotPlay: 'Play ›',
+
+                minesweeperName: 'Minesweeper',
+                minesweeperDesc: 'The classic logic puzzle. Safe first click, chording, three difficulties, global fastest clears.',
+                minesweeperTag: 'Puzzle',
+                minesweeperPlay: 'Play ›',
+
+                reversiName: 'Reversi',
+                reversiDesc: 'Classic Othello strategy. Outsmart a tuned AI on three levels or pass-and-play with a friend.',
+                reversiTag: 'Strategy',
+                reversiPlay: 'Play ›',
+
+                tdName: 'Neon Tower Defense',
+                tdDesc: 'Build pulse, frost, cannon and tesla towers on the neon grid. Survive 25 waves and top the leaderboard.',
+                tdTag: 'Strategy',
+                tdPlay: 'Play ›',
+
+                gravityName: 'Gravity Slingshot',
+                gravityDesc: 'Original orbital physics — slingshot your probe around planets into the wormhole. 12 holes plus a daily course.',
+                gravityTag: 'Physics',
+                gravityPlay: 'Play ›',
 
                 minecraftName: '2D Minecraft',
                 minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
@@ -800,6 +903,7 @@
                 hubTitle: '⚡ 今日挑战',
                 hubTaskWordSub: '6 次机会猜出今天的词语',
                 hubTaskMergeSub: '每日固定序列，冲击高分',
+                hubTaskGravitySub: '每日赛程 5 洞，杆数越少越强',
                 hubProfileHint: '全站排行榜昵称',
                 hubProfilePlaceholder: '你的昵称',
                 langToggle: 'English',
@@ -809,6 +913,26 @@
                 hoopShotDesc: '一指甩投，一球定胜负！连中 3 球点燃火球模式分数翻倍，冲击全球前 10！',
                 hoopShotTag: '运动街机',
                 hoopShotPlay: '开始游戏 ›',
+
+                minesweeperName: '扫雷',
+                minesweeperDesc: '经典逻辑推理。首次点击必安全，支持快开与插旗，三档难度，冲击全球最快榜！',
+                minesweeperTag: '益智经典',
+                minesweeperPlay: '开始游戏 ›',
+
+                reversiName: '黑白棋',
+                reversiDesc: '经典奥赛罗策略棋。三档 AI 随你挑战，也可与好友双人同屏，冲击全球连胜榜！',
+                reversiTag: '策略棋牌',
+                reversiPlay: '开始游戏 ›',
+
+                tdName: '霓虹塔防',
+                tdDesc: '在霓虹网格上建造脉冲、冰霜、加农、电磁四类塔，守住 25 波进攻，冲击全球排行榜！',
+                tdTag: '策略塔防',
+                tdPlay: '开始游戏 ›',
+
+                gravityName: '引力弹弓',
+                gravityDesc: '原创轨道物理——拖拽弹弓发射探测器，借行星引力甩尾进虫洞。12 个手工洞口 + 每日赛程！',
+                gravityTag: '物理弹道',
+                gravityPlay: '开始游戏 ›',
 
                 minecraftName: '2D 我的世界',
                 minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -891,6 +1015,26 @@
             document.getElementById('hoop-shot-tag').textContent = t.hoopShotTag;
             document.getElementById('hoop-shot-play').textContent = t.hoopShotPlay;
 
+            document.getElementById('minesweeper-name').textContent = t.minesweeperName;
+            document.getElementById('minesweeper-desc').textContent = t.minesweeperDesc;
+            document.getElementById('minesweeper-tag').textContent = t.minesweeperTag;
+            document.getElementById('minesweeper-play').textContent = t.minesweeperPlay;
+
+            document.getElementById('reversi-name').textContent = t.reversiName;
+            document.getElementById('reversi-desc').textContent = t.reversiDesc;
+            document.getElementById('reversi-tag').textContent = t.reversiTag;
+            document.getElementById('reversi-play').textContent = t.reversiPlay;
+
+            document.getElementById('td-name').textContent = t.tdName;
+            document.getElementById('td-desc').textContent = t.tdDesc;
+            document.getElementById('td-tag').textContent = t.tdTag;
+            document.getElementById('td-play').textContent = t.tdPlay;
+
+            document.getElementById('gravity-name').textContent = t.gravityName;
+            document.getElementById('gravity-desc').textContent = t.gravityDesc;
+            document.getElementById('gravity-tag').textContent = t.gravityTag;
+            document.getElementById('gravity-play').textContent = t.gravityPlay;
+
             document.getElementById('minecraft-name').textContent = t.minecraftName;
             document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
             document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -922,6 +1066,8 @@
             document.getElementById('hub-task-word-sub').textContent = t.hubTaskWordSub;
             document.getElementById('hub-task-merge-name').textContent = t.planetMergeName;
             document.getElementById('hub-task-merge-sub').textContent = t.hubTaskMergeSub;
+            document.getElementById('hub-task-gravity-name').textContent = t.gravityName;
+            document.getElementById('hub-task-gravity-sub').textContent = t.hubTaskGravitySub;
             document.getElementById('hub-profile-hint').textContent = t.hubProfileHint;
             document.getElementById('player-name').placeholder = t.hubProfilePlaceholder;
         }
@@ -953,6 +1099,10 @@
                 { slug: 'planet-merge', name: 'Planet Merge', description: 'Suika-style physics merge game — drop planets, forge suns, chase combo high scores.' },
                 { slug: 'word-daily', name: 'Word Daily', description: 'Daily bilingual word puzzle — guess the English word or the Chinese idiom in 6 tries.' },
                 { slug: 'hoop-shot', name: 'Hoop Shot', description: 'Flick basketball arcade — one miss ends the run, chain streaks for fire mode.' },
+                { slug: 'minesweeper', name: 'Minesweeper', description: 'Classic Minesweeper logic puzzle — safe first click, chording, three difficulties, global fastest clears.' },
+                { slug: 'reversi', name: 'Reversi', description: 'Classic Othello strategy board game — three AI levels or pass-and-play with a friend.' },
+                { slug: 'tower-defense', name: 'Neon Tower Defense', description: 'Neon-themed tower defense — four tower types, 25 escalating waves, upgrades and a global leaderboard.' },
+                { slug: 'gravity-slingshot', name: 'Gravity Slingshot', description: 'Original orbital physics puzzle — slingshot your probe around planets into the wormhole, 12 holes plus a daily course.' },
                 { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
                 { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
                 { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
@@ -1004,7 +1154,8 @@
 
             const wordDone = !!(ls(`wd_daily_${iso}_en`) || ls(`wd_daily_${iso}_zh`));
             const mergeDone = !!ls(`pm_daily_${compact}`);
-            const doneCount = (wordDone ? 1 : 0) + (mergeDone ? 1 : 0);
+            const gravityDone = !!ls(`gs_daily_${compact}`);
+            const doneCount = (wordDone ? 1 : 0) + (mergeDone ? 1 : 0) + (gravityDone ? 1 : 0);
 
             const setTask = (id, done) => {
                 const task = document.getElementById(id);
@@ -1015,11 +1166,12 @@
             };
             setTask('hub-task-word', wordDone);
             setTask('hub-task-merge', mergeDone);
+            setTask('hub-task-gravity', gravityDone);
 
             const progress = document.getElementById('hub-progress');
             if (progress) {
-                progress.textContent = `${doneCount}/2`;
-                progress.classList.toggle('all-done', doneCount === 2);
+                progress.textContent = `${doneCount}/3`;
+                progress.classList.toggle('all-done', doneCount === 3);
             }
 
             // 全站玩家昵称

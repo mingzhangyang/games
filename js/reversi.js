@@ -1,0 +1,931 @@
+/**
+ * Reversi 黑白棋 — classic strategy board game
+ * 标准 Othello 规则；AI 使用 negamax + α-β 剪枝 + 迭代加深，
+ * 评估函数 = 位置权重 + 机动性，残局（空格 ≤ 12）直接搜索到终局。
+ * 支持 vs AI（三档难度）与本地双人。
+ *
+ * Vanilla JS, DOM board with 3D flip animation. No runtime dependencies.
+ */
+
+import { ensurePlayerName, setPlayerName } from './player.js';
+
+/* ────────────────────────── utilities ────────────────────────── */
+
+function storageGet(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        return null;
+    }
+}
+
+function storageSet(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        // 存储不可用时静默降级
+    }
+}
+
+function storageParse(key, fallback) {
+    try {
+        const parsed = JSON.parse(storageGet(key));
+        return parsed === null || parsed === undefined ? fallback : parsed;
+    } catch (e) {
+        return fallback;
+    }
+}
+
+/* ────────────────────────── i18n ────────────────────────── */
+
+const LANGUAGES = {
+    en: {
+        title: 'Reversi',
+        subtitle: 'Flip · Trap · Dominate',
+        howto: 'Place a disc to flank the opponent\'s line and flip it to your color. Most discs when the board fills wins. Corners never flip — fight for them!',
+        vsAI: 'vs AI',
+        twoPlayers: '2 Players',
+        easy: 'Easy', medium: 'Medium', hard: 'Hard',
+        play: 'Play',
+        you: 'You', ai: 'AI', black: 'Black', white: 'White',
+        yourTurn: 'Your turn',
+        aiThinking: 'AI thinking…',
+        blackTurn: 'Black\'s turn',
+        whiteTurn: 'White\'s turn',
+        passToast: 'No legal move — {who} passes',
+        gameOver: 'Game Over',
+        youWin: 'You win! 🎉',
+        youLose: 'AI wins',
+        draw: 'Draw',
+        blackWins: 'Black wins! 🎉',
+        whiteWins: 'White wins! 🎉',
+        winStreak: '🔥 Win streak',
+        newBestStreak: 'New best streak!',
+        bestStreak: 'Best streak',
+        leaderboard: 'Global Win Streaks',
+        loadingScores: 'Loading…',
+        noScores: 'No games yet',
+        lbOffline: 'Leaderboard offline',
+        usernameLabel: 'Username (Enter to save)',
+        again: 'Play Again',
+        copyResult: 'Copy Result',
+        copied: 'Copied!',
+        home: 'Home',
+        language: '中文',
+        muteHint: 'Tap a highlighted square to place your disc'
+    },
+    zh: {
+        title: '黑白棋',
+        subtitle: '翻转 · 夹击 · 称霸',
+        howto: '落子夹住对方棋子即可将其翻成己方颜色。棋盘下满时子多者胜。四角永远不会被翻——努力抢角吧！',
+        vsAI: '人机对战',
+        twoPlayers: '双人对战',
+        easy: '简单', medium: '中等', hard: '困难',
+        play: '开始游戏',
+        you: '你', ai: 'AI', black: '黑方', white: '白方',
+        yourTurn: '轮到你了',
+        aiThinking: 'AI 思考中…',
+        blackTurn: '黑方行棋',
+        whiteTurn: '白方行棋',
+        passToast: '{who} 无处可落，跳过一手',
+        gameOver: '对局结束',
+        youWin: '你赢了！🎉',
+        youLose: 'AI 获胜',
+        draw: '平局',
+        blackWins: '黑方获胜！🎉',
+        whiteWins: '白方获胜！🎉',
+        winStreak: '🔥 连胜',
+        newBestStreak: '连胜新纪录！',
+        bestStreak: '最长连胜',
+        leaderboard: '全球连胜榜',
+        loadingScores: '加载中…',
+        noScores: '暂无对局',
+        lbOffline: '榜单离线',
+        usernameLabel: '用户名（回车保存）',
+        again: '再来一局',
+        copyResult: '复制成绩',
+        copied: '已复制！',
+        home: '返回主页',
+        language: 'English',
+        muteHint: '点击高亮格子落子'
+    }
+};
+
+/* ────────────────────────── audio ────────────────────────── */
+
+const Sfx = {
+    ctx: null,
+    muted: storageGet('rv_muted') === '1',
+
+    ensure() {
+        if (this.muted) return null;
+        try {
+            if (!this.ctx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (!AC) return null;
+                this.ctx = new AC();
+            }
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            return this.ctx;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    tone({ freq = 440, endFreq = null, type = 'sine', duration = 0.1, volume = 0.14, delay = 0 }) {
+        const ctx = this.ensure();
+        if (!ctx) return;
+        const now = ctx.currentTime + delay;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (endFreq !== null) {
+            osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), now + duration);
+        }
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+    },
+
+    place() {
+        this.tone({ freq: 320, endFreq: 180, type: 'sine', duration: 0.09, volume: 0.18 });
+    },
+    flip(n) {
+        this.tone({ freq: 500 + Math.min(n, 10) * 40, type: 'triangle', duration: 0.07, volume: 0.08, delay: 0.06 });
+    },
+    win() {
+        [523, 659, 784, 1046].forEach((f, i) => {
+            this.tone({ freq: f, type: 'triangle', duration: 0.16, volume: 0.14, delay: i * 0.09 });
+        });
+    },
+    lose() {
+        this.tone({ freq: 420, endFreq: 110, type: 'sawtooth', duration: 0.55, volume: 0.16 });
+    },
+    click() { this.tone({ freq: 640, type: 'square', duration: 0.05, volume: 0.06 }); },
+    toggleMuted() {
+        this.muted = !this.muted;
+        storageSet('rv_muted', this.muted ? '1' : '0');
+        return this.muted;
+    }
+};
+
+/* ────────────────────────── 棋规引擎（纯函数） ────────────────────────── */
+
+const EMPTY = 0, BLACK = 1, WHITE = 2;
+const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+
+// 位置权重：角最优，X 位/C 位危险，边次优
+const WEIGHTS = [
+    120, -20,  20,   5,   5,  20, -20, 120,
+    -20, -40,  -5,  -5,  -5,  -5, -40, -20,
+     20,  -5,  15,   3,   3,  15,  -5,  20,
+      5,  -5,   3,   3,   3,   3,  -5,   5,
+      5,  -5,   3,   3,   3,   3,  -5,   5,
+     20,  -5,  15,   3,   3,  15,  -5,  20,
+    -20, -40,  -5,  -5,  -5,  -5, -40, -20,
+    120, -20,  20,   5,   5,  20, -20, 120
+];
+
+// 找出在 (x,y) 落 color 子会翻转的所有子；无法翻转则返回 null
+function findFlips(board, x, y, color) {
+    if (board[y * 8 + x] !== EMPTY) return null;
+    const opp = 3 - color;
+    const flips = [];
+    for (let d = 0; d < 8; d++) {
+        const dx = DIRS[d][0], dy = DIRS[d][1];
+        let cx = x + dx, cy = y + dy;
+        const line = [];
+        while (cx >= 0 && cx < 8 && cy >= 0 && cy < 8 && board[cy * 8 + cx] === opp) {
+            line.push(cy * 8 + cx);
+            cx += dx;
+            cy += dy;
+        }
+        if (line.length && cx >= 0 && cx < 8 && cy >= 0 && cy < 8 && board[cy * 8 + cx] === color) {
+            for (const f of line) flips.push(f);
+        }
+    }
+    return flips.length ? flips : null;
+}
+
+function genMoves(board, color) {
+    const moves = [];
+    for (let i = 0; i < 64; i++) {
+        if (board[i] !== EMPTY) continue;
+        const flips = findFlips(board, i & 7, i >> 3, color);
+        if (flips) moves.push({ i, flips });
+    }
+    return moves;
+}
+
+function countDiscs(board) {
+    let b = 0, w = 0;
+    for (let i = 0; i < 64; i++) {
+        if (board[i] === BLACK) b++;
+        else if (board[i] === WHITE) w++;
+    }
+    return { b, w };
+}
+
+function evalFor(board, color) {
+    let pos = 0;
+    for (let i = 0; i < 64; i++) {
+        if (board[i] === color) pos += WEIGHTS[i];
+        else if (board[i] === 3 - color) pos -= WEIGHTS[i];
+    }
+    const myMob = genMoves(board, color).length;
+    const oppMob = genMoves(board, 3 - color).length;
+    return pos + (myMob - oppMob) * 12;
+}
+
+// 搜索状态（模块级，避免递归参数膨胀）
+let searchAborted = false;
+let searchNodes = 0;
+
+function negamax(board, color, depth, alpha, beta, deadline) {
+    if ((++searchNodes & 127) === 0 && performance.now() > deadline) {
+        searchAborted = true;
+    }
+    if (searchAborted) return 0;
+
+    const moves = genMoves(board, color);
+    if (moves.length === 0) {
+        const oppMoves = genMoves(board, 3 - color);
+        if (oppMoves.length === 0) {
+            // 终局：子差决定超大分值
+            const { b, w } = countDiscs(board);
+            const diff = color === BLACK ? b - w : w - b;
+            return diff > 0 ? 100000 + diff : diff < 0 ? -100000 + diff : 0;
+        }
+        return -negamax(board, 3 - color, depth, -beta, -alpha, deadline); // 过路，深度不变
+    }
+    if (depth <= 0) return evalFor(board, color);
+
+    moves.sort((a, b2) => WEIGHTS[b2.i] - WEIGHTS[a.i]); // 走法排序加速剪枝
+    let best = -Infinity;
+    for (const m of moves) {
+        const nb = board.slice();
+        nb[m.i] = color;
+        for (const f of m.flips) nb[f] = color;
+        const score = -negamax(nb, 3 - color, depth - 1, -beta, -alpha, deadline);
+        if (searchAborted) return 0;
+        if (score > best) best = score;
+        if (best > alpha) alpha = best;
+        if (alpha >= beta) break;
+    }
+    return best;
+}
+
+function pickAiMove(board, color, level) {
+    const moves = genMoves(board, color);
+    if (moves.length === 0) return null;
+    if (moves.length === 1) return moves[0];
+
+    // 简单：60% 随机，40% 最多翻转
+    if (level === 'easy') {
+        if (Math.random() < 0.6) {
+            return moves[Math.floor(Math.random() * moves.length)];
+        }
+        let best = moves[0];
+        for (const m of moves) {
+            if (m.flips.length > best.flips.length) best = m;
+        }
+        return best;
+    }
+
+    const empties = 64 - countDiscs(board).b - countDiscs(board).w;
+
+    // 中等：固定 3 层
+    if (level === 'medium') {
+        let bestMove = moves[0], bestScore = -Infinity;
+        for (const m of moves) {
+            const nb = board.slice();
+            nb[m.i] = color;
+            for (const f of m.flips) nb[f] = color;
+            const score = -negamax(nb, 3 - color, 2, -Infinity, Infinity, performance.now() + 1500);
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = m;
+            }
+        }
+        return bestMove;
+    }
+
+    // 困难：迭代加深，700ms 预算；残局直接搜索到终局
+    const budget = empties <= 12 ? 2200 : 700;
+    const deadline = performance.now() + budget;
+    const maxDepth = empties <= 12 ? empties : 10;
+    let bestMove = moves[0];
+
+    searchAborted = false;
+    for (let depth = 2; depth <= maxDepth; depth++) {
+        let iterBest = null;
+        let alpha = -Infinity;
+        const beta = Infinity;
+        for (const m of moves) {
+            const nb = board.slice();
+            nb[m.i] = color;
+            for (const f of m.flips) nb[f] = color;
+            const score = -negamax(nb, 3 - color, depth - 1, -beta, -alpha, deadline);
+            if (searchAborted) break;
+            if (score > alpha) {
+                alpha = score;
+                iterBest = m;
+            }
+        }
+        if (searchAborted) break;
+        if (iterBest) bestMove = iterBest;
+        if (alpha >= 100000) break; // 已找到必胜路线
+    }
+    return bestMove;
+}
+
+/* ────────────────────────── game ────────────────────────── */
+
+class ReversiGame {
+    constructor() {
+        this.boardEl = document.getElementById('rv-board');
+        this.el = {};
+        ['rv-btn-home', 'rv-box-black', 'rv-box-white', 'rv-name-black', 'rv-name-white',
+         'rv-count-black', 'rv-count-white', 'rv-mute-btn', 'rv-status',
+         'rv-toast', 'rv-start', 'rv-title', 'rv-subtitle', 'rv-howto',
+         'rv-mode-ai-label', 'rv-mode-2p-label', 'rv-diff-easy', 'rv-diff-medium', 'rv-diff-hard',
+         'rv-btn-play', 'rv-streak-line', 'rv-start-mute', 'rv-start-lang',
+         'rv-over', 'rv-over-title', 'rv-over-verdict', 'rv-over-score', 'rv-over-streak',
+         'rv-btn-again', 'rv-btn-copy', 'rv-btn-menu', 'rv-lb-box',
+         'rv-lb-title', 'rv-lb-list', 'rv-lb-status', 'rv-username', 'rv-username-label',
+         'rv-hint'
+        ].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) this.el[id.replace(/^rv-/, '')] = el;
+        });
+
+        this.mode = storageGet('rv_mode') === '2p' ? '2p' : 'ai';
+        this.diff = ['easy', 'medium', 'hard'].includes(storageGet('rv_diff')) ? storageGet('rv_diff') : 'medium';
+        this.lang = this.readLang();
+
+        this.gameId = 0;      // 递增令牌，用于作废过期的 AI 回调
+        this.timeouts = [];
+        this.state = 'menu';
+
+        this.applyLanguage();
+        this.syncModeButtons();
+        this.buildBoard();
+        this.bindUI();
+        this.updateMuteButtons();
+        this.updateStreakLine();
+        this.showStart();
+    }
+
+    readLang() {
+        const saved = storageGet('rv_lang');
+        return saved === 'zh' || saved === 'en' ? saved
+            : (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    }
+
+    get TEXT() { return LANGUAGES[this.lang]; }
+
+    /* ── 语言 ── */
+
+    applyLanguage() {
+        const t = this.TEXT;
+        document.documentElement.lang = this.lang;
+        if (this.el.title) this.el.title.textContent = t.title;
+        if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
+        if (this.el.howto) this.el.howto.textContent = t.howto;
+        if (this.el['mode-ai-label']) this.el['mode-ai-label'].textContent = t.vsAI;
+        if (this.el['mode-2p-label']) this.el['mode-2p-label'].textContent = t.twoPlayers;
+        if (this.el['diff-easy']) this.el['diff-easy'].textContent = t.easy;
+        if (this.el['diff-medium']) this.el['diff-medium'].textContent = t.medium;
+        if (this.el['diff-hard']) this.el['diff-hard'].textContent = t.hard;
+        if (this.el['btn-play']) this.el['btn-play'].textContent = `⚫ ${t.play}`;
+        if (this.el['btn-again']) this.el['btn-again'].textContent = `🔄 ${t.again}`;
+        if (this.el['btn-copy']) this.el['btn-copy'].textContent = `📋 ${t.copyResult}`;
+        if (this.el['btn-menu']) this.el['btn-menu'].textContent = `🏠 ${t.home}`;
+        if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
+        if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
+        if (this.el.username) this.el.username.placeholder = t.usernameLabel;
+        if (this.el.hint) this.el.hint.textContent = t.muteHint;
+        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
+        this.updatePlayerNames();
+        this.updateStreakLine();
+    }
+
+    updatePlayerNames() {
+        const t = this.TEXT;
+        if (this.mode === 'ai') {
+            if (this.el['name-black']) this.el['name-black'].textContent = t.you;
+            if (this.el['name-white']) this.el['name-white'].textContent = `${t.ai} · ${t[this.diff]}`;
+        } else {
+            if (this.el['name-black']) this.el['name-black'].textContent = t.black;
+            if (this.el['name-white']) this.el['name-white'].textContent = t.white;
+        }
+    }
+
+    syncModeButtons() {
+        document.querySelectorAll('.rv-mode').forEach(b => b.classList.toggle('active', b.dataset.mode === this.mode));
+        document.querySelectorAll('.rv-diff').forEach(b => {
+            b.classList.toggle('active', b.dataset.diff === this.diff);
+            b.style.display = this.mode === 'ai' ? '' : 'none';
+        });
+        if (this.el['lb-box']) this.el['lb-box'].style.display = this.mode === 'ai' ? '' : 'none';
+        this.updatePlayerNames();
+    }
+
+    /* ── 棋盘 DOM ── */
+
+    buildBoard() {
+        this.boardEl.textContent = '';
+        this.cellEls = new Array(64);
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < 64; i++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'rv-cell';
+            btn.dataset.i = i;
+            btn.setAttribute('role', 'gridcell');
+            this.cellEls[i] = btn;
+            frag.appendChild(btn);
+        }
+        this.boardEl.appendChild(frag);
+    }
+
+    discEl(i) {
+        return this.cellEls[i].querySelector('.rv-disc3');
+    }
+
+    // 在空格放置新棋子（带弹入动画）
+    addDisc(i, color, pop = true) {
+        const cell = this.cellEls[i];
+        const old = this.discEl(i);
+        if (old) old.remove();
+        const disc = document.createElement('div');
+        disc.className = 'rv-disc3' + (color === WHITE ? ' show-white' : '') + (pop ? ' pop' : '');
+        disc.innerHTML = '<div class="rv-face rv-face-b"></div><div class="rv-face rv-face-w"></div>';
+        cell.appendChild(disc);
+    }
+
+    renderAll() {
+        for (let i = 0; i < 64; i++) {
+            const cell = this.cellEls[i];
+            const existing = this.discEl(i);
+            if (this.board[i] === EMPTY) {
+                if (existing) existing.remove();
+                cell.classList.remove('last-move');
+                continue;
+            }
+            if (!existing) {
+                this.addDisc(i, this.board[i], false);
+            } else {
+                existing.classList.toggle('show-white', this.board[i] === WHITE);
+            }
+        }
+    }
+
+    /* ── 对局流程 ── */
+
+    newGame() {
+        this.gameId++;
+        this.clearTimeouts();
+        this.board = new Int8Array(64);
+        this.board[27] = WHITE; this.board[28] = BLACK;
+        this.board[35] = BLACK; this.board[36] = WHITE;
+        this.turn = BLACK;
+        this.state = 'playing';
+        this.lastMove = -1;
+
+        this.renderAll();
+        for (let i = 0; i < 64; i++) this.cellEls[i].classList.remove('last-move');
+        this.updateCounts();
+        this.beginTurn();
+    }
+
+    beginTurn() {
+        if (this.state !== 'playing') return;
+        const id = this.gameId;
+        const moves = genMoves(this.board, this.turn);
+
+        if (moves.length === 0) {
+            const oppMoves = genMoves(this.board, 3 - this.turn);
+            if (oppMoves.length === 0) {
+                this.gameOver();
+                return;
+            }
+            // 过路
+            this.showToast(this.TEXT.passToast.replace('{who}', this.turn === BLACK ? this.TEXT.black : this.TEXT.white));
+            this.turn = 3 - this.turn;
+            this.timeouts.push(setTimeout(() => {
+                if (id === this.gameId) this.beginTurn();
+            }, 900));
+            return;
+        }
+
+        this.updateTurnUi(moves);
+
+        const aiTurn = this.mode === 'ai' && this.turn === WHITE;
+        if (aiTurn) {
+            this.setStatus(this.TEXT.aiThinking, true);
+            const level = this.diff;
+            const boardCopy = this.board.slice();
+            // 让 UI 先渲染，再进行同步搜索
+            this.timeouts.push(setTimeout(() => {
+                if (id !== this.gameId) return;
+                const move = pickAiMove(boardCopy, WHITE, level);
+                if (id !== this.gameId || !move || this.state !== 'playing') return;
+                this.playMove(move.i, move.flips);
+            }, 420));
+        }
+    }
+
+    updateTurnUi(moves) {
+        const legalSet = new Set(moves.map(m => m.i));
+        for (let i = 0; i < 64; i++) {
+            this.cellEls[i].classList.toggle('legal', legalSet.has(i));
+        }
+        // 当前回合方高亮
+        if (this.el['box-black']) this.el['box-black'].classList.toggle('active', this.turn === BLACK);
+        if (this.el['box-white']) this.el['box-white'].classList.toggle('active', this.turn === WHITE);
+
+        const t = this.TEXT;
+        if (this.mode === 'ai') {
+            this.setStatus(this.turn === BLACK ? t.yourTurn : t.aiThinking, this.turn === WHITE);
+        } else {
+            this.setStatus(this.turn === BLACK ? t.blackTurn : t.whiteTurn, false);
+        }
+    }
+
+    playMove(i, flips) {
+        const color = this.turn;
+        this.board[i] = color;
+        for (const f of flips) this.board[f] = color;
+        this.lastMove = i;
+
+        // 落子 + 翻转动画（按与落点的距离错开）
+        this.addDisc(i, color, true);
+        const px = i & 7, py = i >> 3;
+        for (const f of flips) {
+            const dist = Math.max(Math.abs((f & 7) - px), Math.abs((f >> 3) - py));
+            const id = this.gameId;
+            this.timeouts.push(setTimeout(() => {
+                if (id !== this.gameId) return;
+                const disc = this.discEl(f);
+                if (disc) disc.classList.toggle('show-white', color === WHITE);
+            }, 60 + dist * 70));
+        }
+
+        Sfx.place();
+        Sfx.flip(flips.length);
+
+        // 最后落点标记
+        for (let c = 0; c < 64; c++) this.cellEls[c].classList.remove('last-move', 'legal');
+        this.cellEls[i].classList.add('last-move');
+
+        this.updateCounts();
+        this.turn = 3 - this.turn;
+        // 翻转动画的最远距离决定下一手等待时间
+        let maxDist = 1;
+        for (const f of flips) {
+            maxDist = Math.max(maxDist, Math.max(Math.abs((f & 7) - px), Math.abs((f >> 3) - py)));
+        }
+        const wait = 140 + maxDist * 70 + 300;
+        const id = this.gameId;
+        this.timeouts.push(setTimeout(() => {
+            if (id === this.gameId) this.beginTurn();
+        }, wait));
+    }
+
+    updateCounts() {
+        const { b, w } = countDiscs(this.board);
+        if (this.el['count-black']) this.el['count-black'].textContent = b;
+        if (this.el['count-white']) this.el['count-white'].textContent = w;
+        return { b, w };
+    }
+
+    setStatus(text, thinking) {
+        if (!this.el.status) return;
+        this.el.status.textContent = text;
+        this.el.status.classList.toggle('thinking', !!thinking);
+    }
+
+    showToast(text) {
+        if (!this.el.toast) return;
+        this.el.toast.textContent = text;
+        this.el.toast.classList.remove('hidden');
+        const id = this.gameId;
+        this.timeouts.push(setTimeout(() => {
+            if (id === this.gameId) this.el.toast.classList.add('hidden');
+        }, 1400));
+    }
+
+    gameOver() {
+        this.state = 'over';
+        for (let i = 0; i < 64; i++) this.cellEls[i].classList.remove('legal');
+        if (this.el['box-black']) this.el['box-black'].classList.remove('active');
+        if (this.el['box-white']) this.el['box-white'].classList.remove('active');
+
+        const { b, w } = countDiscs(this.board);
+        const t = this.TEXT;
+        this.setStatus(t.gameOver, false);
+
+        let verdictKey;
+        if (b > w) verdictKey = this.mode === 'ai' ? 'youWin' : 'blackWins';
+        else if (w > b) verdictKey = this.mode === 'ai' ? 'youLose' : 'whiteWins';
+        else verdictKey = 'draw';
+        const verdict = t[verdictKey];
+
+        if (this.el['over-title']) this.el['over-title'].textContent = t.gameOver;
+        if (this.el['over-verdict']) this.el['over-verdict'].textContent = verdict;
+        if (this.el['over-score']) this.el['over-score'].textContent = `${b} : ${w}`;
+
+        if (window.hubTrack) window.hubTrack('reversi', 'finish');
+
+        // AI 模式才更新连胜/榜单
+        let streakNote = '';
+        if (this.mode === 'ai') {
+            const won = b > w;
+            if (won) {
+                this.streak = (this.streak || 0) + 1;
+                const best = Number(storageGet('rv_best_streak')) || 0;
+                if (this.streak > best) storageSet('rv_best_streak', String(this.streak));
+                this.submitScore(this.streak);
+                streakNote = `${t.winStreak} ${this.streak}`;
+            } else if (b < w) {
+                this.streak = 0;
+            }
+            // 平局保持连胜
+            if (won) Sfx.win();
+            else if (b < w) Sfx.lose();
+        }
+        if (this.el['over-streak']) this.el['over-streak'].textContent = streakNote;
+        this.updateStreakLine();
+
+        if (this.el.over) this.el.over.classList.remove('hidden');
+        if (this.mode === 'ai') {
+            this.lbOpen = true;
+            this.fetchLeaderboard();
+        }
+    }
+
+    updateStreakLine() {
+        if (!this.el['streak-line']) return;
+        const best = Number(storageGet('rv_best_streak')) || 0;
+        this.el['streak-line'].textContent = best > 0
+            ? `${this.TEXT.winStreak}: ${this.streak || 0}   ·   ${this.TEXT.bestStreak}: ${best}`
+            : '';
+    }
+
+    /* ── 排行榜 ── */
+
+    localScores() {
+        try {
+            const all = JSON.parse(storageGet('rv_local_scores'));
+            return Array.isArray(all) ? all : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    renderLocalScores() {
+        const list = this.el['lb-list'];
+        if (!list) return;
+        list.textContent = '';
+        const filtered = this.localScores().slice(0, 10);
+        if (filtered.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'rv-lb-empty';
+            empty.textContent = this.TEXT.noScores;
+            list.appendChild(empty);
+            return;
+        }
+        filtered.forEach((s, i) => list.appendChild(this.buildLbRow(i, s)));
+    }
+
+    buildLbRow(rank, entry) {
+        const row = document.createElement('div');
+        row.className = 'rv-lb-row' + (rank < 3 ? ` rv-lb-top${rank + 1}` : '');
+        const rankEl = document.createElement('span');
+        rankEl.className = 'rv-lb-rank';
+        rankEl.textContent = `${rank + 1}.`;
+        const nameEl = document.createElement('span');
+        nameEl.className = 'rv-lb-name';
+        nameEl.textContent = entry.name; // textContent 防注入
+        const scoreEl = document.createElement('span');
+        scoreEl.className = 'rv-lb-score';
+        scoreEl.textContent = `🔥 ${entry.score}`;
+        row.append(rankEl, nameEl, scoreEl);
+        return row;
+    }
+
+    async submitScore(streak) {
+        if (streak <= 0) return;
+        const local = this.localScores();
+        local.push({ name: ensurePlayerName() || 'Anonymous', score: streak });
+        local.sort((a, b) => b.score - a.score);
+        storageSet('rv_local_scores', JSON.stringify(local.slice(0, 30)));
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            await fetch('https://game-scores.orangely.workers.dev/scores', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ game: 'reversi', name: ensurePlayerName() || 'Anonymous', score: streak }),
+                signal: controller.signal,
+                mode: 'cors'
+            });
+            clearTimeout(timeoutId);
+        } catch (e) {
+            // Worker 未部署：保留本地榜
+        }
+    }
+
+    async fetchLeaderboard() {
+        const list = this.el['lb-list'];
+        const statusEl = this.el['lb-status'];
+        if (!list) return;
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const res = await fetch('https://game-scores.orangely.workers.dev/scores?game=reversi', {
+                signal: controller.signal,
+                mode: 'cors'
+            });
+            clearTimeout(timeoutId);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (!this.lbOpen) return;
+            list.textContent = '';
+            if (!Array.isArray(data) || data.length === 0) {
+                this.renderLocalScores();
+                if (statusEl) statusEl.textContent = this.localScores().length ? '' : this.TEXT.noScores;
+                return;
+            }
+            data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
+            if (statusEl) statusEl.textContent = '';
+        } catch (e) {
+            this.renderLocalScores();
+            if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
+        }
+    }
+
+    /* ── 开始 / 菜单 ── */
+
+    showStart() {
+        this.gameId++;
+        this.clearTimeouts();
+        this.state = 'menu';
+        if (this.el.start) this.el.start.classList.remove('hidden');
+        if (this.el.over) this.el.over.classList.add('hidden');
+        this.setStatus('', false);
+        this.syncModeButtons();
+        this.updateStreakLine();
+    }
+
+    hideStart() {
+        if (this.el.start) this.el.start.classList.add('hidden');
+        Sfx.click();
+        if (window.hubTrack) window.hubTrack('reversi', 'play');
+    }
+
+    /* ── 复制成绩 ── */
+
+    async copyResult() {
+        const t = this.TEXT;
+        const { b, w } = countDiscs(this.board);
+        const mode = this.mode === 'ai' ? `${t.vsAI} · ${t[this.diff]}` : t.twoPlayers;
+        const text = `⚪ ${t.title} (${mode})\n${t.black} ${b} : ${w} ${t.white}\nhttps://games.orangely.xyz/reversi.html`;
+        let ok = false;
+        try {
+            await navigator.clipboard.writeText(text);
+            ok = true;
+        } catch (e) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.cssText = 'position:fixed;opacity:0;left:-999px;top:-999px;';
+                document.body.appendChild(ta);
+                ta.select();
+                ok = document.execCommand('copy');
+                ta.remove();
+            } catch (e2) {
+                ok = false;
+            }
+        }
+        if (this.el['btn-copy']) {
+            const original = `📋 ${t.copyResult}`;
+            this.el['btn-copy'].textContent = ok ? `✅ ${t.copied}` : original;
+            setTimeout(() => {
+                if (this.el['btn-copy']) this.el['btn-copy'].textContent = original;
+            }, 1600);
+        }
+    }
+
+    /* ── 工具 ── */
+
+    clearTimeouts() {
+        this.timeouts.forEach(t => clearTimeout(t));
+        this.timeouts = [];
+    }
+
+    updateMuteButtons() {
+        const icon = Sfx.muted ? '🔇' : '🔊';
+        if (this.el['mute-btn']) this.el['mute-btn'].textContent = icon;
+        if (this.el['start-mute']) this.el['start-mute'].textContent = icon;
+    }
+
+    /* ── 事件绑定 ── */
+
+    bindUI() {
+        this.boardEl.addEventListener('click', (e) => {
+            const cell = e.target.closest('.rv-cell');
+            if (!cell || this.state !== 'playing') return;
+            if (this.mode === 'ai' && this.turn === WHITE) return; // AI 回合禁手
+            const i = Number(cell.dataset.i);
+            if (!cell.classList.contains('legal')) return;
+            const flips = findFlips(this.board, i & 7, i >> 3, this.turn);
+            if (!flips) return;
+            this.playMove(i, flips);
+        });
+
+        document.getElementById('rv-mode-row').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-mode]');
+            if (!btn) return;
+            this.mode = btn.dataset.mode;
+            storageSet('rv_mode', this.mode);
+            this.syncModeButtons();
+            Sfx.click();
+        });
+
+        document.getElementById('rv-diff-row').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-diff]');
+            if (!btn) return;
+            this.diff = btn.dataset.diff;
+            storageSet('rv_diff', this.diff);
+            this.syncModeButtons();
+            Sfx.click();
+        });
+
+        if (this.el['btn-play']) this.el['btn-play'].addEventListener('click', () => {
+            this.hideStart();
+            this.newGame();
+        });
+        if (this.el['btn-again']) this.el['btn-again'].addEventListener('click', () => {
+            if (this.el.over) this.el.over.classList.add('hidden');
+            this.lbOpen = false;
+            Sfx.click();
+            this.newGame();
+        });
+        if (this.el['btn-menu']) this.el['btn-menu'].addEventListener('click', () => {
+            this.lbOpen = false;
+            this.showStart();
+            Sfx.click();
+        });
+        if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => {
+            this.lbOpen = false;
+            this.showStart();
+            Sfx.click();
+        });
+        if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());
+
+        if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => {
+            Sfx.toggleMuted();
+            this.updateMuteButtons();
+        });
+        if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => {
+            Sfx.toggleMuted();
+            this.updateMuteButtons();
+            if (!Sfx.muted) Sfx.click();
+        });
+
+        if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
+            this.lang = this.lang === 'zh' ? 'en' : 'zh';
+            storageSet('rv_lang', this.lang);
+            this.applyLanguage();
+        });
+
+        if (this.el.username) {
+            this.el.username.addEventListener('change', () => {
+                setPlayerName(this.el.username.value);
+                this.el.username.value = ensurePlayerName();
+            });
+            this.el.username.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') this.el.username.blur();
+            });
+        }
+    }
+}
+
+/* ────────────────────────── boot ────────────────────────── */
+
+document.addEventListener('DOMContentLoaded', () => {
+    const game = new ReversiGame();
+    window.rvGame = game; // 调试/测试句柄
+    game.streak = 0;
+    game.board = new Int8Array(64);
+    game.board[27] = WHITE; game.board[28] = BLACK;
+    game.board[35] = BLACK; game.board[36] = WHITE;
+    game.renderAll();
+    game.updateCounts();
+});

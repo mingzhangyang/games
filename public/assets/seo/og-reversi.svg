@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="rv-title rv-desc">
+  <title id="rv-title">Reversi social card</title>
+  <desc id="rv-desc">Social preview for Reversi 黑白棋 — classic strategy board game.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f24"/>
+      <stop offset="0.6" stop-color="#122036"/>
+      <stop offset="1" stop-color="#0e2426"/>
+    </linearGradient>
+    <radialGradient id="discB" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#525d86"/>
+      <stop offset="0.65" stop-color="#12172c"/>
+      <stop offset="1" stop-color="#0c1020"/>
+    </radialGradient>
+    <radialGradient id="discW" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.7" stop-color="#c9d2e8"/>
+      <stop offset="1" stop-color="#a8b4d0"/>
+    </radialGradient>
+    <radialGradient id="boardGlow" cx="0.5" cy="0.45" r="0.65">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g fill="#dfe7ff">
+    <circle cx="180" cy="95" r="2" opacity="0.55"/>
+    <circle cx="480" cy="60" r="1.5" opacity="0.45"/>
+    <circle cx="760" cy="110" r="1.8" opacity="0.5"/>
+    <circle cx="1010" cy="80" r="1.4" opacity="0.45"/>
+    <circle cx="120" cy="470" r="1.6" opacity="0.5"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#34d399" stroke-width="2.5"/>
+
+  <text x="88" y="185" fill="#f4f6ff" font-size="88" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Reversi</text>
+  <text x="88" y="250" fill="#34d399" font-size="40" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">黑白棋 · 经典策略对决</text>
+  <text x="88" y="312" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Flank and flip your opponent's line to your color.</text>
+  <text x="88" y="356" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Three AI levels or pass-and-play. Corners never flip!</text>
+
+  <!-- 棋盘一角 -->
+  <g transform="translate(820 190)">
+    <rect x="-20" y="-20" width="380" height="380" rx="18" fill="rgba(10,20,30,0.6)" stroke="rgba(120,200,255,0.25)" stroke-width="2"/>
+    <rect x="0" y="0" width="340" height="340" fill="url(#boardGlow)"/>
+    <g fill="rgba(255,255,255,0.05)">
+      <rect x="0" y="0" width="340" height="340"/>
+    </g>
+    <!-- 网格 -->
+    <g stroke="rgba(255,255,255,0.08)" stroke-width="1.5">
+      <line x1="85" y1="0" x2="85" y2="340"/>
+      <line x1="170" y1="0" x2="170" y2="340"/>
+      <line x1="255" y1="0" x2="255" y2="340"/>
+      <line x1="0" y1="85" x2="340" y2="85"/>
+      <line x1="0" y1="170" x2="340" y2="170"/>
+      <line x1="0" y1="255" x2="340" y2="255"/>
+    </g>
+    <!-- 棋子 -->
+    <circle cx="42.5" cy="42.5" r="34" fill="url(#discW)"/>
+    <circle cx="127.5" cy="42.5" r="34" fill="url(#discB)"/>
+    <circle cx="212.5" cy="42.5" r="34" fill="url(#discW)"/>
+    <circle cx="42.5" cy="127.5" r="34" fill="url(#discB)"/>
+    <circle cx="127.5" cy="127.5" r="34" fill="url(#discW)"/>
+    <circle cx="212.5" cy="127.5" r="34" fill="url(#discW)"/>
+    <circle cx="42.5" cy="212.5" r="34" fill="url(#discW)"/>
+    <circle cx="127.5" cy="212.5" r="34" fill="url(#discB)"/>
+    <!-- 合法落点提示 -->
+    <circle cx="297.5" cy="42.5" r="10" fill="rgba(94,234,176,0.55)"/>
+    <circle cx="297.5" cy="212.5" r="10" fill="rgba(94,234,176,0.55)"/>
+    <!-- 角部星星 -->
+    <circle cx="42.5" cy="297.5" r="34" fill="none" stroke="rgba(94,234,176,0.7)" stroke-width="3" stroke-dasharray="6 6"/>
+  </g>
+
+  <text x="88" y="552" fill="#e0e7ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">⚪ Play in browser · reversi</text>
+</svg>

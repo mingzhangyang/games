@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="wd-title wd-desc">
+  <title id="wd-title">Word Daily social card</title>
+  <desc id="wd-desc">Social preview for Word Daily 每日猜词 — a bilingual daily word puzzle with Chinese idiom mode.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f24"/>
+      <stop offset="0.6" stop-color="#141a3a"/>
+      <stop offset="1" stop-color="#1a1340"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g fill="#dfe7ff">
+    <circle cx="140" cy="80" r="2" opacity="0.6"/>
+    <circle cx="360" cy="50" r="1.4" opacity="0.5"/>
+    <circle cx="620" cy="90" r="1.8" opacity="0.55"/>
+    <circle cx="880" cy="60" r="1.3" opacity="0.45"/>
+    <circle cx="1080" cy="120" r="2" opacity="0.6"/>
+    <circle cx="90" cy="400" r="1.5" opacity="0.45"/>
+    <circle cx="1130" cy="420" r="1.7" opacity="0.5"/>
+    <circle cx="540" cy="600" r="1.4" opacity="0.4"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#818cf8" stroke-width="2.5"/>
+
+  <text x="88" y="185" fill="#f4f6ff" font-size="88" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Word Daily</text>
+  <text x="88" y="252" fill="#a5b4fc" font-size="42" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">每日猜词 · 成语模式</text>
+  <text x="88" y="316" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">One puzzle a day, same for the whole world.</text>
+  <text x="88" y="360" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">English words or Chinese idioms — keep your streak, share your grid.</text>
+
+  <!-- 色块拼图 -->
+  <g>
+    <rect x="88"  y="410" width="78" height="78" rx="10" fill="#3aa655"/>
+    <rect x="178" y="410" width="78" height="78" rx="10" fill="#333a56"/>
+    <rect x="268" y="410" width="78" height="78" rx="10" fill="#cfa53f"/>
+    <rect x="358" y="410" width="78" height="78" rx="10" fill="#333a56"/>
+    <rect x="448" y="410" width="78" height="78" rx="10" fill="#3aa655"/>
+    <text x="127" y="461" fill="#ffffff" font-size="52" font-weight="800" text-anchor="middle" font-family="Segoe UI, sans-serif">W</text>
+    <text x="217" y="461" fill="#aab3d8" font-size="52" font-weight="800" text-anchor="middle" font-family="Segoe UI, sans-serif">O</text>
+    <text x="307" y="461" fill="#ffffff" font-size="52" font-weight="800" text-anchor="middle" font-family="Segoe UI, sans-serif">R</text>
+    <text x="397" y="461" fill="#aab3d8" font-size="52" font-weight="800" text-anchor="middle" font-family="Segoe UI, sans-serif">D</text>
+    <text x="487" y="461" fill="#ffffff" font-size="52" font-weight="800" text-anchor="middle" font-family="Segoe UI, sans-serif">S</text>
+
+    <rect x="570" y="410" width="78" height="78" rx="10" fill="#3aa655"/>
+    <rect x="660" y="410" width="78" height="78" rx="10" fill="#333a56"/>
+    <rect x="750" y="410" width="78" height="78" rx="10" fill="#333a56"/>
+    <rect x="840" y="410" width="78" height="78" rx="10" fill="#cfa53f"/>
+    <text x="609" y="466" fill="#ffffff" font-size="46" font-weight="700" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif">水</text>
+    <text x="699" y="466" fill="#aab3d8" font-size="46" font-weight="700" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif">到</text>
+    <text x="789" y="466" fill="#aab3d8" font-size="46" font-weight="700" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif">渠</text>
+    <text x="879" y="466" fill="#ffffff" font-size="46" font-weight="700" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif">成</text>
+  </g>
+
+  <text x="88" y="552" fill="#e0e7ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">🎮 Play in browser · word-daily</text>
+</svg>

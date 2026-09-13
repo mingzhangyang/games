@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="hs-title hs-desc">
+  <title id="hs-title">Hoop Shot social card</title>
+  <desc id="hs-desc">Social preview for Hoop Shot 街机投篮 — flick basketball arcade game.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f24"/>
+      <stop offset="0.6" stop-color="#141a3a"/>
+      <stop offset="1" stop-color="#241238"/>
+    </linearGradient>
+    <radialGradient id="ballGrad" cx="0.35" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#ffcf8a"/>
+      <stop offset="0.55" stop-color="#f08c3a"/>
+      <stop offset="1" stop-color="#b85a1e"/>
+    </radialGradient>
+    <linearGradient id="fireTrail" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd34d" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#ff5a3c" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g fill="#dfe7ff">
+    <circle cx="150" cy="85" r="2" opacity="0.6"/>
+    <circle cx="420" cy="55" r="1.5" opacity="0.5"/>
+    <circle cx="700" cy="95" r="1.8" opacity="0.55"/>
+    <circle cx="950" cy="65" r="1.3" opacity="0.45"/>
+    <circle cx="1100" cy="170" r="2" opacity="0.6"/>
+    <circle cx="100" cy="470" r="1.6" opacity="0.5"/>
+    <circle cx="1130" cy="450" r="1.6" opacity="0.5"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#ffa05a" stroke-width="2.5"/>
+
+  <text x="88" y="185" fill="#f4f6ff" font-size="88" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Hoop Shot</text>
+  <text x="88" y="250" fill="#ffb03a" font-size="40" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">街机投篮 · 一球定胜负</text>
+  <text x="88" y="312" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Flick the ball, arc it through the moving hoop.</text>
+  <text x="88" y="356" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">3 straight makes = ON FIRE ×2. One miss ends the run.</text>
+
+  <!-- 篮筐 + 火球 -->
+  <g>
+    <!-- 火焰尾迹 -->
+    <ellipse cx="920" cy="375" rx="150" ry="60" fill="url(#fireTrail)" transform="rotate(35 920 375)"/>
+    <!-- 篮板 -->
+    <rect x="946" y="322" width="14" height="118" rx="4" fill="rgba(226,232,255,0.85)"/>
+    <rect x="949" y="368" width="8" height="34" rx="2" fill="none" stroke="rgba(226,90,60,0.9)" stroke-width="3"/>
+    <!-- 网 -->
+    <path d="M800 430 L946 430 M820 470 L930 470 M848 505 L905 505 M800 430 L848 505 M873 430 L876 505 M946 430 L905 505" stroke="#e6ecff" stroke-width="3" fill="none" opacity="0.75"/>
+    <!-- 篮筐 -->
+    <rect x="792" y="424" width="160" height="12" rx="6" fill="#ff5a3c"/>
+    <circle cx="792" cy="430" r="10" fill="#ff7a4c"/>
+    <!-- 篮球 -->
+    <circle cx="880" cy="300" r="62" fill="url(#ballGrad)"/>
+    <path d="M818 300h124M880 238v124M832 250c26 26 70 26 96 0M832 350c26-26 70-26 96 0" stroke="#5a2a08" stroke-width="5" fill="none"/>
+  </g>
+
+  <text x="88" y="552" fill="#e0e7ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">🏀 Play in browser · hoop-shot</text>
+</svg>

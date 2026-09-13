@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e24">
+    <meta name="description" content="Neon Tower Defense 霓虹塔防 — build pulse, frost, cannon and tesla towers along the neon grid, survive 25 waves and top the global leaderboard.">
+    <meta name="keywords" content="tower defense, td game, strategy game, neon, wave defense, 塔防, 霓虹塔防, 守塔">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/tower-defense.html">
+    <meta property="og:title" content="Neon Tower Defense 霓虹塔防 — Strategy TD">
+    <meta property="og:description" content="Four tower types, 25 escalating waves, endless neon glow. Build, upgrade and defend the core!">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-tower-defense.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/tower-defense.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Neon Tower Defense 霓虹塔防 — Strategy TD">
+    <meta name="twitter:description" content="Build, upgrade and survive 25 waves on the neon grid.">
+    <meta name="twitter:image" content="assets/seo/og-tower-defense.svg">
+    <title>Neon Tower Defense 霓虹塔防 — Strategy TD</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d1230'/%3E%3Crect x='26' y='14' width='12' height='30' rx='3' fill='%2330449a'/%3E%3Crect x='22' y='10' width='20' height='8' rx='3' fill='%2340d8ff'/%3E%3Ccircle cx='32' cy='9' r='3.4' fill='%23ffd34d'/%3E%3Crect x='10' y='46' width='44' height='8' rx='3' fill='%2330449a'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tower-defense.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="td-shell">
+        <!-- 顶栏 HUD -->
+        <header class="td-topbar">
+            <button class="td-icon-btn" id="td-btn-home" title="Home">🏠</button>
+            <div class="td-stat" title="Lives"><span>❤️</span><b id="td-lives">20</b></div>
+            <div class="td-stat" title="Gold"><span>💰</span><b id="td-gold">220</b></div>
+            <div class="td-stat" title="Wave"><span>🌊</span><b id="td-wave">0/25</b></div>
+            <div class="td-topbar-actions">
+                <button class="td-icon-btn" id="td-speed-btn" title="Speed">×1</button>
+                <button class="td-icon-btn" id="td-pause-btn" title="Pause">⏸️</button>
+                <button class="td-icon-btn" id="td-mute-btn" title="Sound">🔊</button>
+            </div>
+        </header>
+
+        <!-- 游戏区 -->
+        <div class="td-stage" id="td-stage">
+            <canvas id="td-canvas" width="480" height="640"></canvas>
+
+            <!-- 波次控制条 -->
+            <div class="td-wavebar">
+                <button class="td-wave-btn" id="td-wave-btn">▶ Wave 1</button>
+            </div>
+
+            <!-- 建造/升级面板 -->
+            <div class="td-panel hidden" id="td-panel"></div>
+
+            <!-- 提示 -->
+            <div class="td-toast hidden" id="td-toast"></div>
+
+            <!-- 开始界面 -->
+            <div class="td-overlay" id="td-start">
+                <h1 class="td-title" id="td-title">Neon Tower Defense</h1>
+                <p class="td-subtitle" id="td-subtitle">Build · Upgrade · Survive</p>
+                <div class="td-hero">🏰</div>
+                <p class="td-howto" id="td-howto"></p>
+                <div class="td-tower-intro" id="td-tower-intro"></div>
+                <button class="td-btn td-btn-primary" id="td-btn-play">🏰 Play</button>
+                <p class="td-stat-line" id="td-best-line"></p>
+                <nav class="more-games">
+                    <div class="more-games-title">🎮 More Games · 更多游戏</div>
+                    <div class="more-games-links">
+                  <a href="math-rain.html">🔢 数字雨</a>
+                  <a href="tetris.html">🟦 俄罗斯方块</a>
+                  <a href="tank-battle.html">🎯 坦克大战</a>
+                  <a href="gomoku.html">⚫ 五子棋</a>
+                  <a href="planet-merge.html">🪐 星球合成</a>
+                  <a href="word-daily.html">🔤 每日猜词</a>
+                  <a href="hoop-shot.html">🏀 街机投篮</a>
+                  <a href="reversi.html">⚪ 黑白棋</a>
+                  <a href="gravity-slingshot.html">🚀 引力弹弓</a>
+                  <a href="minesweeper.html">💣 扫雷</a>
+                    </div>
+                </nav>
+                <div class="td-start-footer">
+                    <button class="td-icon-btn" id="td-start-mute">🔊</button>
+                    <button class="td-icon-btn td-lang-btn" id="td-start-lang">中文</button>
+                </div>
+            </div>
+
+            <!-- 暂停界面 -->
+            <div class="td-overlay hidden" id="td-pause">
+                <h2 class="td-overlay-title" id="td-pause-title">Paused</h2>
+                <div class="td-btn-col">
+                    <button class="td-btn td-btn-primary" id="td-btn-resume">Resume</button>
+                    <button class="td-btn td-btn-ghost" id="td-btn-menu">Home</button>
+                </div>
+            </div>
+
+            <!-- 结算界面 -->
+            <div class="td-overlay hidden" id="td-over">
+                <h2 class="td-overlay-title" id="td-over-title">Game Over</h2>
+                <div class="td-over-verdict" id="td-over-verdict"></div>
+                <div class="td-over-score" id="td-over-score">0</div>
+                <div class="td-over-sub" id="td-over-sub"></div>
+                <div class="td-btn-row">
+                    <button class="td-btn td-btn-primary" id="td-btn-again">🔄 Again</button>
+                    <button class="td-btn" id="td-btn-copy">📋 Copy</button>
+                    <button class="td-btn td-btn-ghost" id="td-btn-menu2">🏠 Home</button>
+                </div>
+                <div class="td-lb">
+                    <div class="td-lb-title" id="td-lb-title">🏆 Global Top 10</div>
+                    <div class="td-lb-list" id="td-lb-list"></div>
+                    <div class="td-lb-status" id="td-lb-status"></div>
+                    <div class="td-username-row">
+                        <label class="td-username-label" for="td-username" id="td-username-label">Username</label>
+                        <input class="td-username" id="td-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="td-footer-hint" id="td-hint"></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) {
+                canonical.setAttribute('href', currentUrl);
+            }
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-tower-defense.svg', baseUrl).href;
+
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', currentUrl);
+            }
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) {
+                ogImage.setAttribute('content', socialImage);
+            }
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) {
+                twitterImage.setAttribute('content', socialImage);
+            }
+
+            const gameData = {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "Neon Tower Defense 霓虹塔防",
+                "url": currentUrl,
+                "description": "Neon-themed tower defense — four tower types, 25 escalating waves, upgrades and a global leaderboard.",
+                "applicationCategory": "GameApplication",
+                "operatingSystem": "Web",
+                "genre": ["StrategyGame"],
+                "playMode": "SinglePlayer",
+                "image": socialImage,
+                "inLanguage": document.documentElement.lang || "en",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Mini Games Collection",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Neon Tower Defense",
+                        "item": currentUrl
+                    }
+                ]
+            };
+
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <script type="module" src="js/tower-defense.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

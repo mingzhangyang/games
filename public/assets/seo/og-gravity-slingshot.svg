@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="gd-title gd-desc">
+  <title id="gd-title">Gravity Slingshot social card</title>
+  <desc id="gd-desc">Social preview for Gravity Slingshot 引力弹弓 — original orbital physics puzzle.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070a1c"/>
+      <stop offset="0.6" stop-color="#0d1230"/>
+      <stop offset="1" stop-color="#101336"/>
+    </linearGradient>
+    <radialGradient id="planetG" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#5a7bff"/>
+      <stop offset="0.55" stop-color="#1b2a6b"/>
+      <stop offset="1" stop-color="#0a0e20"/>
+    </radialGradient>
+    <radialGradient id="wormG" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7dfad0" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#7dfad0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="trail" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#60a5fa" stop-opacity="0"/>
+      <stop offset="1" stop-color="#f4f7ff" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g fill="#dfe7ff">
+    <circle cx="150" cy="85" r="2" opacity="0.6"/>
+    <circle cx="410" cy="55" r="1.5" opacity="0.45"/>
+    <circle cx="690" cy="100" r="1.8" opacity="0.5"/>
+    <circle cx="950" cy="65" r="1.3" opacity="0.45"/>
+    <circle cx="1120" cy="180" r="2" opacity="0.55"/>
+    <circle cx="90" cy="480" r="1.6" opacity="0.5"/>
+    <circle cx="1050" cy="480" r="1.6" opacity="0.5"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#7dfad0" stroke-width="2.5"/>
+
+  <text x="88" y="175" fill="#f4f6ff" font-size="76" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Gravity Slingshot</text>
+  <text x="88" y="238" fill="#7dfad0" font-size="38" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">引力弹弓 · 原创轨道物理</text>
+  <text x="88" y="300" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Pull back the slingshot and launch your probe.</text>
+  <text x="88" y="344" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Bend around planets, capture the wormhole.</text>
+
+  <!-- 场景示意 -->
+  <g>
+    <!-- 弹道 -->
+    <path d="M180 520 C 300 420, 340 300, 470 260 C 620 215, 700 250, 760 210"
+          fill="none" stroke="url(#trail)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 14"/>
+    <!-- 发射台与探测器 -->
+    <circle cx="180" cy="520" r="18" fill="none" stroke="rgba(125,250,208,0.5)" stroke-width="2" stroke-dasharray="4 5"/>
+    <circle cx="180" cy="520" r="6" fill="#f4f7ff"/>
+    <circle cx="180" cy="520" r="14" fill="rgba(223,231,255,0.12)"/>
+    <!-- 行星 -->
+    <circle cx="430" cy="360" r="52" fill="url(#planetG)"/>
+    <circle cx="430" cy="360" r="52" fill="none" stroke="#5a7bff" stroke-width="2" opacity="0.55"/>
+    <ellipse cx="430" cy="360" rx="84" ry="26" fill="none" stroke="#7dfad0" stroke-width="2.4" opacity="0.65" transform="rotate(-18 430 360)"/>
+    <circle cx="528" cy="318" r="10" fill="#3fd9a4"/>
+    <!-- 小行星 -->
+    <circle cx="640" cy="420" r="24" fill="url(#planetG)"/>
+    <circle cx="640" cy="420" r="24" fill="none" stroke="#8a5cff" stroke-width="2" opacity="0.55"/>
+    <!-- 虫洞 -->
+    <circle cx="770" cy="205" r="40" fill="url(#wormG)"/>
+    <circle cx="770" cy="205" r="17" fill="none" stroke="#7dfad0" stroke-width="3"/>
+    <path d="M770 186 a19 19 0 0 1 13 33" fill="none" stroke="#eafff6" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="770" cy="205" r="4.5" fill="#eafff6"/>
+  </g>
+
+  <text x="88" y="552" fill="#e0e7ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">🚀 Play in browser · gravity-slingshot</text>
+</svg>

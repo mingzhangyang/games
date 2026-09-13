@@ -14,7 +14,11 @@ export default defineConfig({
         gomoku: resolve(__dirname, 'gomoku.html'),
         'planet-merge': resolve(__dirname, 'planet-merge.html'),
         'word-daily': resolve(__dirname, 'word-daily.html'),
-        'hoop-shot': resolve(__dirname, 'hoop-shot.html')
+        'hoop-shot': resolve(__dirname, 'hoop-shot.html'),
+        minesweeper: resolve(__dirname, 'minesweeper.html'),
+        reversi: resolve(__dirname, 'reversi.html'),
+        'tower-defense': resolve(__dirname, 'tower-defense.html'),
+        'gravity-slingshot': resolve(__dirname, 'gravity-slingshot.html')
       },
       output: {
         // 分块策略

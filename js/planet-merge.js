@@ -274,7 +274,7 @@ const AIR_DAMP = 0.16;     // 指数阻尼系数（每秒）
 const MAX_SPEED = 2400;    // px/s，防隧穿
 const PHYS_STEP = 1 / 120; // 固定物理步长
 
-const LEADERBOARD_URL = 'https://planet-merge-scores.orangely.workers.dev';
+const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 
 /* ────────────────────────── audio ────────────────────────── */
 
@@ -1063,9 +1063,9 @@ class PlanetMergeGame {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3500);
         try {
-            const params = new URLSearchParams({ mode: this.leaderboardTab });
-            if (this.leaderboardTab === 'daily') params.set('day', this.dailyDay);
-            const res = await fetch(`${LEADERBOARD_URL}/scores?${params}`, {
+            // 共享榜 Worker：每日榜是按天一个 game id（planet-merge-d<YYYYMMDD>）
+            const game = this.leaderboardTab === 'daily' ? `planet-merge-d${this.dailyDay}` : 'planet-merge';
+            const res = await fetch(`${LEADERBOARD_URL}/scores?game=${game}`, {
                 signal: controller.signal,
                 mode: 'cors'
             });
@@ -1108,19 +1108,19 @@ class PlanetMergeGame {
         if (this.score <= 0) return;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
+        // 与旧 Worker 语义一致：每次提交同时进总榜与当日榜（两个 game id）
+        const entries = [
+            { game: 'planet-merge', score: this.score },
+            { game: `planet-merge-d${this.dailyDay}`, score: this.score }
+        ];
         try {
-            await fetch(`${LEADERBOARD_URL}/scores`, {
+            await Promise.all(entries.map(entry => fetch(`${LEADERBOARD_URL}/scores`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: this.getUsername(),
-                    score: this.score,
-                    mode: this.mode === 'daily' ? 'daily' : 'alltime',
-                    day: this.dailyDay
-                }),
+                body: JSON.stringify({ name: this.getUsername(), ...entry }),
                 signal: controller.signal,
                 mode: 'cors'
-            });
+            })));
             clearTimeout(timeoutId);
         } catch (e) {
             // 提交失败：本地榜已由 recordLocalScore 记录

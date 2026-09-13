@@ -196,7 +196,7 @@ async function fetchAndDisplayGlobalScores() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
         
-        const response = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
+        const response = await fetch('https://game-scores.orangely.workers.dev/scores?game=tetris', {
             signal: controller.signal,
             mode: 'cors'
         });
@@ -981,10 +981,10 @@ class Tetris {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
 
-            await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
+            await fetch('https://game-scores.orangely.workers.dev/scores', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: username, score: this.score }),
+                body: JSON.stringify({ game: 'tetris', name: username, score: this.score }),
                 signal: controller.signal,
                 mode: 'cors'
             });
@@ -1011,7 +1011,7 @@ class Tetris {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
 
-                const res = await fetch('https://tetris-highest-scores.orangely.workers.dev/highscore', {
+                const res = await fetch('https://game-scores.orangely.workers.dev/scores?game=tetris', {
                     signal: controller.signal,
                     mode: 'cors'
                 });
