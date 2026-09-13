@@ -8,6 +8,6 @@
   "compatibility_date": "2025-04-01",
   "workers_dev": true,
   "kv_namespaces": [
-    { "binding": "GAMES_ANALYTICS", "id": "<KV_NAMESPACE_ID>" }
+    { "binding": "GAMES_ANALYTICS", "id": "8288c96118c0425c98877e32783346af" }
   ]
 }

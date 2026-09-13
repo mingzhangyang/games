@@ -1,14 +1,27 @@
 {
-  "name": "games",
-  "main": "src/index.js",
-  "compatibility_date": "2025-04-01",
-  "assets": {
-    "directory": "./dist",
-    "not_found_handling": "404-page",
-    "binding": "ASSETS"
-  },
-  "routes": [
-    { "pattern": "games.orangely.xyz", "custom_domain": true },
-    { "pattern": "game.orangely.xyz", "custom_domain": true }
-  ]
+	"name": "games",
+	"main": "src/index.js",
+	"compatibility_date": "2025-04-01",
+	"assets": {
+		"directory": "./dist",
+		"not_found_handling": "404-page",
+		"binding": "ASSETS"
+	},
+	"routes": [
+		{
+			"pattern": "games.orangely.xyz",
+			"custom_domain": true
+		},
+		{
+			"pattern": "game.orangely.xyz",
+			"custom_domain": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "GAME_SCORES",
+			"id": "fe5897ff187e4ddca2e2430dcfe43e09",
+			"remote": true
+		}
+	]
 }
