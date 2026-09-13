@@ -5,6 +5,7 @@
 
 import LANGUAGES_EN from './lang-en.js';
 import LANGUAGES_ZH from './lang-zh.js';
+import { getLang, setLang } from '../../site-settings.js';
 
 class LanguageManager {
     constructor() {
@@ -12,8 +13,8 @@ class LanguageManager {
             en: LANGUAGES_EN,
             zh: LANGUAGES_ZH
         };
-        
-        this.currentLanguage = this.detectDefaultLanguage();
+
+        this.currentLanguage = getLang();
         
         // Expose to global scope for compatibility
         if (typeof window !== 'undefined') {
@@ -39,7 +40,8 @@ class LanguageManager {
      * @param {string} lang - Language code ('en' or 'zh')
      */
     selectLanguage(lang) {
-        this.currentLanguage = lang;
+        // 持久化到全站统一语言设置（跨页面/跨会话生效）
+        this.currentLanguage = setLang(lang);
         // Sync with global variable
         if (typeof window !== 'undefined') {
             window.currentLanguage = this.currentLanguage;

@@ -525,7 +525,7 @@ class UIController {
         // 隐私模式下 localStorage 可能抛 SecurityError
         const saveTheme = (theme) => {
             try {
-                localStorage.setItem('theme', theme);
+                localStorage.setItem('mr_theme', theme);
             } catch (e) {
                 // 存储不可用时仅切换当前会话的主题
             }
@@ -545,7 +545,7 @@ class UIController {
 
         let currentTheme = 'default';
         try {
-            currentTheme = localStorage.getItem('theme') || 'default';
+            currentTheme = localStorage.getItem('mr_theme') || localStorage.getItem('theme') || 'default';
         } catch (e) {
             // ignore
         }
@@ -559,10 +559,11 @@ class UIController {
      * Initialize settings controls
      */
     initializeSettings() {
-        // Load saved theme
+        // Load saved theme（mr_theme 为本游戏主题键；'theme' 为历史遗留键，回退兼容）
         let savedTheme = null;
         try {
-            savedTheme = localStorage.getItem('theme');
+            savedTheme = localStorage.getItem('mr_theme');
+            if (savedTheme === null) savedTheme = localStorage.getItem('theme');
         } catch (e) {
             // 存储不可用时使用默认主题
         }
@@ -576,20 +577,50 @@ class UIController {
         const soundVolumeSlider = document.getElementById('sound-volume');
         const soundVolumeValue = document.getElementById('sound-volume-value');
         if (soundVolumeSlider && soundVolumeValue) {
+            // 恢复上次保存的音量
+            try {
+                const savedSfx = localStorage.getItem('mr_sfx_volume');
+                if (savedSfx !== null) {
+                    soundVolumeSlider.value = savedSfx;
+                    soundVolumeValue.textContent = savedSfx + '%';
+                }
+            } catch (e) {
+                // ignore
+            }
             soundVolumeSlider.addEventListener('input', (e) => {
                 const volume = e.target.value / 100;
                 soundVolumeValue.textContent = e.target.value + '%';
+                try {
+                    localStorage.setItem('mr_sfx_volume', e.target.value);
+                } catch (err) {
+                    // 存储不可用时音量仅当前会话生效
+                }
                 this.eventSystem.emit('ui:settings:sound:volume', { volume });
             });
         }
-        
+
         // Music volume slider
         const musicVolumeSlider = document.getElementById('music-volume');
         const musicVolumeValue = document.getElementById('music-volume-value');
         if (musicVolumeSlider && musicVolumeValue) {
+            // 恢复上次保存的音量
+            try {
+                const savedMusic = localStorage.getItem('mr_music_volume');
+                if (savedMusic !== null) {
+                    musicVolumeSlider.value = savedMusic;
+                    musicVolumeValue.textContent = savedMusic + '%';
+                }
+            } catch (e) {
+                // ignore
+            }
             musicVolumeSlider.addEventListener('input', (e) => {
                 const volume = e.target.value / 100;
                 musicVolumeValue.textContent = e.target.value + '%';
+                try {
+                    localStorage.setItem('mr_music_volume', e.target.value);
+                } catch (err) {
+                    // 存储不可用时音量仅当前会话生效
+                }
                 this.eventSystem.emit('ui:settings:music:volume', { volume });
             });
         }

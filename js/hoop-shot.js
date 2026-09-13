@@ -9,6 +9,8 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
+import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { ICONS } from './icons.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -106,7 +108,7 @@ const LANGUAGES = {
 
 const Sfx = {
     ctx: null,
-    muted: storageGet('hs_muted') === '1',
+    muted: getMuted(),
 
     ensure() {
         if (this.muted) return null;
@@ -187,7 +189,7 @@ const Sfx = {
     click() { this.tone({ freq: 640, type: 'square', duration: 0.05, volume: 0.07 }); },
     toggleMuted() {
         this.muted = !this.muted;
-        storageSet('hs_muted', this.muted ? '1' : '0');
+        setMuted(this.muted);
         return this.muted;
     }
 };
@@ -288,9 +290,7 @@ class HoopShotGame {
     /* ── language ── */
 
     applyLanguage() {
-        const saved = storageGet('hs_lang');
-        this.lang = saved === 'zh' || saved === 'en' ? saved
-            : (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        this.lang = getLang();
         this.TEXT = LANGUAGES[this.lang];
         document.documentElement.lang = this.lang;
         const t = this.TEXT;
@@ -740,9 +740,9 @@ class HoopShotGame {
     }
 
     updateMuteButtons() {
-        const icon = Sfx.muted ? '🔇' : '🔊';
-        if (this.el['mute-btn']) this.el['mute-btn'].textContent = icon;
-        if (this.el['start-mute']) this.el['start-mute'].textContent = Sfx.muted ? '🔇' : '🔊';
+        const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
+        if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
+        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     toggleMute() {
@@ -918,7 +918,7 @@ class HoopShotGame {
         on('hs-mute-btn', () => this.toggleMute());
         on('hs-start-mute', () => this.toggleMute());
         on('hs-start-lang', () => {
-            storageSet('hs_lang', this.lang === 'zh' ? 'en' : 'zh');
+            setLang(this.lang === 'zh' ? 'en' : 'zh');
             this.applyLanguage();
         });
         on('hs-btn-copy', () => this.copyResult());

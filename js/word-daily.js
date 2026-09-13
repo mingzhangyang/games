@@ -9,6 +9,8 @@
 
 import { EN_ANSWERS, EN_EXTRA } from './word-daily-data-en.js';
 import { ZH_IDIOMS } from './word-daily-data-zh.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
+import { ICONS } from './icons.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -146,7 +148,7 @@ function evaluateGuess(guess, answer) {
 
 const Sfx = {
     ctx: null,
-    muted: storageGet('wd_muted') === '1',
+    muted: getMuted(),
     ensure() {
         if (this.muted) return null;
         try {
@@ -183,7 +185,7 @@ const Sfx = {
     lose() { this.tone({ freq: 300, endFreq: 0, type: 'sine', duration: 0.5, volume: 0.14 }); },
     toggleMuted() {
         this.muted = !this.muted;
-        storageSet('wd_muted', this.muted ? '1' : '0');
+        setMuted(this.muted);
         return this.muted;
     }
 };
@@ -331,9 +333,8 @@ class WordDailyGame {
     }
 
     applyLanguage() {
-        const saved = storageGet('wd_lang');
-        this.lang = saved === 'zh' || saved === 'en' ? saved
-            : (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        // UI 语言跟随全站设置（wd-btn-lang 是词库模式切换，不是语言切换）
+        this.lang = getLang();
         this.TEXT = LANGUAGES[this.lang];
         document.documentElement.lang = this.lang;
         const t = this.TEXT;
@@ -353,7 +354,8 @@ class WordDailyGame {
         this.updateHelpBody();
 
         const modeTag = this.langMode === 'zh' ? t.zhModeLabel : t.enModeLabel;
-        if (this.el['mode-tag']) this.el['mode-tag'].textContent = `# ${this.puzzleNum} · ${modeTag}`;
+        // 期号已由 wd-num 展示，这里只显示模式名，避免"#256 #256"重复
+        if (this.el['mode-tag']) this.el['mode-tag'].textContent = modeTag;
         this.updateMuteIcon();
     }
 
@@ -1055,7 +1057,7 @@ class WordDailyGame {
     }
 
     updateMuteIcon() {
-        if (this.el['btn-mute']) this.el['btn-mute'].textContent = Sfx.muted ? '🔇' : '🔊';
+        if (this.el['btn-mute']) this.el['btn-mute'].innerHTML = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
     }
 
     /* ── 事件绑定 ── */

@@ -1,4 +1,6 @@
 // 国际化语言支持
+import { getLang, setLang } from './site-settings.js';
+
 const LANGUAGES = {
     zh: {
         // 游戏界面
@@ -82,12 +84,6 @@ const LANGUAGES = {
     }
 };
 
-// 当前语言设置 - 根据浏览器语言自动选择
-function detectBrowserLanguage() {
-    const browserLang = navigator.language || navigator.userLanguage;
-    return browserLang.startsWith('zh') ? 'zh' : 'en';
-}
-
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError，必须兜底，
 // 否则模块顶层抛错会让整个游戏黑屏
 function safeStorageGet(key) {
@@ -106,7 +102,7 @@ function safeStorageSet(key, value) {
     }
 }
 
-let currentLanguage = safeStorageGet('tankBattleLanguage') || detectBrowserLanguage();
+let currentLanguage = getLang();
 
 // 翻译函数
 function t(key) {
@@ -120,8 +116,7 @@ function t(key) {
 
 // 切换语言函数
 function switchLanguage() {
-    currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
-    safeStorageSet('tankBattleLanguage', currentLanguage);
+    currentLanguage = setLang(currentLanguage === 'zh' ? 'en' : 'zh');
     updateUILabels();
 }
 

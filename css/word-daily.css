@@ -65,6 +65,16 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* 按钮组占第一行，标题独占第二行居中，避免与两侧按钮组互相挤压 */
+.wd-topbar {
+    flex-wrap: wrap;
+}
+
+.wd-title-box {
+    order: 3;
+    width: 100%;
+}
+
 .wd-topbar-group {
     display: flex;
     gap: 6px;
@@ -578,4 +588,12 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
     .wd-tile, .wd-row, .wd-modal-box, .wd-btn, .wd-icon-btn { animation: none !important; transition: none !important; }
+}
+
+/* 回首页锚点（复用 wd-icon-btn 外观） */
+.wd-home-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }

@@ -12,6 +12,8 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
+import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { ICONS } from './icons.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -118,7 +120,7 @@ const LANGUAGES = {
 
 const Sfx = {
     ctx: null,
-    muted: storageGet('gd_muted') === '1',
+    muted: getMuted(),
 
     ensure() {
         if (this.muted) return null;
@@ -174,7 +176,7 @@ const Sfx = {
     click() { this.tone({ freq: 640, type: 'square', duration: 0.05, volume: 0.06 }); },
     toggleMuted() {
         this.muted = !this.muted;
-        storageSet('gd_muted', this.muted ? '1' : '0');
+        setMuted(this.muted);
         return this.muted;
     }
 };
@@ -559,9 +561,7 @@ class GravityGame {
     }
 
     readLang() {
-        const saved = storageGet('gd_lang');
-        return saved === 'zh' || saved === 'en' ? saved
-            : (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        return getLang();
     }
 
     get TEXT() { return LANGUAGES[this.lang]; }
@@ -1028,7 +1028,7 @@ class GravityGame {
             Sfx.click();
             this.startDailyMode();
         });
-        if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => { Sfx.click(); this.enterMenu(true); });
+        if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => { window.location.href = 'index.html'; });
         if (this.el['btn-menu1']) this.el['btn-menu1'].addEventListener('click', () => { Sfx.click(); this.enterMenu(true); });
         if (this.el['btn-menu2']) this.el['btn-menu2'].addEventListener('click', () => { Sfx.click(); this.enterMenu(true); });
         if (this.el['btn-next']) this.el['btn-next'].addEventListener('click', () => { Sfx.click(); this.nextHole(); });
@@ -1048,7 +1048,7 @@ class GravityGame {
         if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
         if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
             this.lang = this.lang === 'zh' ? 'en' : 'zh';
-            storageSet('gd_lang', this.lang);
+            setLang(this.lang);
             this.applyLanguage();
         });
         if (this.el.username) {
@@ -1069,9 +1069,9 @@ class GravityGame {
     }
 
     updateMuteButtons() {
-        const icon = Sfx.muted ? '🔇' : '🔊';
-        if (this.el['mute-btn']) this.el['mute-btn'].textContent = icon;
-        if (this.el['start-mute']) this.el['start-mute'].textContent = icon;
+        const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
+        if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
+        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     async copyResult() {

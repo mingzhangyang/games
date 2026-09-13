@@ -7,6 +7,8 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
+import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { ICONS } from './icons.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -97,7 +99,7 @@ const LANGUAGES = {
 
 const Sfx = {
     ctx: null,
-    muted: storageGet('ms_muted') === '1',
+    muted: getMuted(),
 
     ensure() {
         if (this.muted) return null;
@@ -155,7 +157,7 @@ const Sfx = {
     click() { this.tone({ freq: 640, type: 'square', duration: 0.05, volume: 0.06 }); },
     toggleMuted() {
         this.muted = !this.muted;
-        storageSet('ms_muted', this.muted ? '1' : '0');
+        setMuted(this.muted);
         return this.muted;
     }
 };
@@ -209,9 +211,7 @@ class MinesweeperGame {
     }
 
     readLang() {
-        const saved = storageGet('ms_lang');
-        return saved === 'zh' || saved === 'en' ? saved
-            : (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        return getLang();
     }
 
     get TEXT() { return LANGUAGES[this.lang]; }
@@ -233,7 +233,6 @@ class MinesweeperGame {
         if (this.el['btn-copy']) this.el['btn-copy'].textContent = `📋 ${t.copyResult}`;
         if (this.el['btn-close']) this.el['btn-close'].textContent = `✖ ${t.close}`;
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
-        if (this.el['btn-home']) this.el['btn-home'].textContent = '🏠';
 
         for (const d of ['easy', 'medium', 'hard']) {
             const btn = document.querySelector(`[data-diff="${d}"]`);
@@ -857,7 +856,7 @@ class MinesweeperGame {
             this.newGame();
             this.hideStart();
         });
-        if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => { this.showStart(); Sfx.click(); });
+        if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => { window.location.href = 'index.html'; });
         if (this.el['btn-again']) this.el['btn-again'].addEventListener('click', () => {
             this.hideResult();
             this.newGame();
@@ -870,7 +869,7 @@ class MinesweeperGame {
 
         if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
             this.lang = this.lang === 'zh' ? 'en' : 'zh';
-            storageSet('ms_lang', this.lang);
+            setLang(this.lang);
             this.applyLanguage();
         });
 
@@ -893,9 +892,9 @@ class MinesweeperGame {
 
     toggleMute() {
         const muted = Sfx.toggleMuted();
-        const icon = muted ? '🔇' : '🔊';
-        if (this.el.mute) this.el.mute.textContent = icon;
-        if (this.el['start-mute']) this.el['start-mute'].textContent = icon;
+        const icon = muted ? ICONS.soundOff : ICONS.soundOn;
+        if (this.el.mute) this.el.mute.innerHTML = icon;
+        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
         if (!muted) Sfx.click();
     }
 }
@@ -906,9 +905,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const game = new MinesweeperGame();
     window.msGame = game; // 调试/测试句柄
     // 初始静音按钮状态
-    const icon = Sfx.muted ? '🔇' : '🔊';
-    if (game.el.mute) game.el.mute.textContent = icon;
-    if (game.el['start-mute']) game.el['start-mute'].textContent = icon;
+    const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
+    if (game.el.mute) game.el.mute.innerHTML = icon;
+    if (game.el['start-mute']) game.el['start-mute'].innerHTML = icon;
     // 初始难度高亮
     document.querySelectorAll('.ms-diff').forEach(b => b.classList.toggle('active', b.dataset.diff === game.diff));
 });

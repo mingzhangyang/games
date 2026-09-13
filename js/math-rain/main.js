@@ -396,6 +396,21 @@ class MathRainGame {
                 this.soundManager.setMusicVolume(data.volume);
             }
         });
+
+        // 恢复上次保存的音量（滑块位置由 UIController.initializeSettings 恢复；
+        // 此处订阅已就绪，直接应用即可，不依赖初始化期的事件时序）
+        try {
+            const savedSfxVolume = localStorage.getItem('mr_sfx_volume');
+            if (savedSfxVolume !== null && this.soundManager) {
+                this.soundManager.setSfxVolume(Number(savedSfxVolume) / 100);
+            }
+            const savedMusicVolume = localStorage.getItem('mr_music_volume');
+            if (savedMusicVolume !== null && this.soundManager) {
+                this.soundManager.setMusicVolume(Number(savedMusicVolume) / 100);
+            }
+        } catch (e) {
+            // 存储不可用时使用默认音量
+        }
         
         // Game state events
         this.eventSystem.on('game:started', () => {

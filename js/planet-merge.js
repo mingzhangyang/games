@@ -7,6 +7,8 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
+import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { ICONS } from './icons.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -280,7 +282,7 @@ const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 
 const Sfx = {
     ctx: null,
-    muted: storageGet('pm_muted') === '1',
+    muted: getMuted(),
 
     ensure() {
         if (this.muted) return null;
@@ -359,6 +361,7 @@ const Sfx = {
     toggleMuted() {
         this.muted = !this.muted;
         storageSet('pm_muted', this.muted ? '1' : '0');
+        setMuted(this.muted);
         return this.muted;
     }
 };
@@ -464,10 +467,7 @@ class PlanetMergeGame {
     /* ── language ── */
 
     resolveLanguage() {
-        const saved = storageGet('pm_lang');
-        if (saved === 'en' || saved === 'zh') return saved;
-        const lang = navigator.language || navigator.userLanguage || '';
-        return lang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        return getLang();
     }
 
     applyLanguage() {
@@ -1000,9 +1000,9 @@ class PlanetMergeGame {
     }
 
     updateMuteButtons() {
-        const icon = Sfx.muted ? '🔇' : '🔊';
-        if (this.el['mute-btn']) this.el['mute-btn'].textContent = icon;
-        if (this.el['start-mute']) this.el['start-mute'].textContent = Sfx.muted ? '🔇' : '🔊';
+        const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
+        if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
+        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     toggleMute() {
@@ -1307,7 +1307,7 @@ class PlanetMergeGame {
         });
         on('pm-start-mute', () => this.toggleMute());
         on('pm-start-lang', () => {
-            storageSet('pm_lang', this.lang === 'zh' ? 'en' : 'zh');
+            setLang(this.lang === 'zh' ? 'en' : 'zh');
             this.applyLanguage();
         });
         on('pm-btn-copy', () => this.copyResult());

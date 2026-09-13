@@ -207,6 +207,7 @@
 
         <!-- 游戏控制按钮 -->
         <div id="game-controls">
+            <button id="home-exit-btn" class="control-btn" title="Home" aria-label="Home" onclick="location.href='index.html'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             <button id="pause-btn" class="control-btn">⏸️ 暂停</button>
             <button id="settings-btn" class="control-btn">⚙️ 设置</button>
             <button id="shop-btn" class="control-btn">🛒 商店</button>
@@ -240,6 +241,7 @@
             <div class="language-selector">
                 <button id="lang-zh" class="lang-btn" onclick="selectLanguage('zh')">中文</button>
                 <button id="lang-en" class="lang-btn" onclick="selectLanguage('en')">English</button>
+                <a class="lang-btn" href="index.html" title="Home" aria-label="Home" style="text-decoration:none;display:inline-flex;align-items:center;">🏠 主页</a>
             </div>
             <h1 id="game-title">Math Rain</h1>
             <p id="game-subtitle">数字雨</p>

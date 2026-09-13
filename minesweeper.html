@@ -31,7 +31,7 @@
     <div class="ms-shell">
         <!-- 顶栏 -->
         <header class="ms-topbar">
-            <button class="ms-icon-btn" id="ms-btn-home" title="Home">🏠</button>
+            <button class="ms-icon-btn" id="ms-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             <div class="ms-counter" title="Mines left">
                 <span class="ms-counter-icon">💣</span>
                 <span class="ms-counter-value" id="ms-mines">010</span>
@@ -41,7 +41,7 @@
                 <span class="ms-counter-icon">⏱️</span>
                 <span class="ms-counter-value" id="ms-timer">000</span>
             </div>
-            <button class="ms-icon-btn" id="ms-mute-btn" title="Sound">🔊</button>
+            <button class="ms-icon-btn" id="ms-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
         </header>
 
         <!-- 难度选择 -->
@@ -49,7 +49,7 @@
             <button class="ms-diff active" data-diff="easy" id="ms-diff-easy">Easy</button>
             <button class="ms-diff" data-diff="medium" id="ms-diff-medium">Medium</button>
             <button class="ms-diff" data-diff="hard" id="ms-diff-hard">Expert</button>
-            <button class="ms-icon-btn ms-flagmode" id="ms-flagmode" title="Flag mode">🚩</button>
+            <button class="ms-icon-btn ms-flagmode" id="ms-flagmode" title="Flag mode" aria-label="Flag mode"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5.5 21V3.5"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.5 3.5H17l-2.6 4L17 11.5H5.5z"/></svg></button>
         </div>
 
         <!-- 棋盘 -->
@@ -106,7 +106,8 @@
                 </div>
             </nav>
             <div class="ms-start-footer">
-                <button class="ms-icon-btn" id="ms-start-mute">🔊</button>
+                <a class="ms-icon-btn" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+                <button class="ms-icon-btn" id="ms-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                 <button class="ms-icon-btn ms-lang-btn" id="ms-start-lang">中文</button>
             </div>
         </div>

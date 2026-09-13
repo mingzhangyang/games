@@ -11,6 +11,8 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
+import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { ICONS } from './icons.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -136,7 +138,7 @@ const LANGUAGES = {
 
 const Sfx = {
     ctx: null,
-    muted: storageGet('td_muted') === '1',
+    muted: getMuted(),
 
     ensure() {
         if (this.muted) return null;
@@ -218,7 +220,7 @@ const Sfx = {
     click() { this.tone({ freq: 640, type: 'square', duration: 0.05, volume: 0.06 }); },
     toggleMuted() {
         this.muted = !this.muted;
-        storageSet('td_muted', this.muted ? '1' : '0');
+        setMuted(this.muted);
         return this.muted;
     }
 };
@@ -470,9 +472,7 @@ class TowerDefenseGame {
     }
 
     readLang() {
-        const saved = storageGet('td_lang');
-        return saved === 'zh' || saved === 'en' ? saved
-            : (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        return getLang();
     }
 
     get TEXT() { return LANGUAGES[this.lang]; }
@@ -1642,7 +1642,7 @@ class TowerDefenseGame {
             this.startGame();
         });
         if (this.el['wave-btn']) this.el['wave-btn'].addEventListener('click', () => this.startWave());
-        if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => { Sfx.click(); this.toMenu(); });
+        if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => { window.location.href = 'index.html'; });
         if (this.el['pause-btn']) this.el['pause-btn'].addEventListener('click', () => {
             if (this.state === 'playing') this.pause();
             else if (this.state === 'paused') this.resume();
@@ -1667,7 +1667,7 @@ class TowerDefenseGame {
 
         if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
             this.lang = this.lang === 'zh' ? 'en' : 'zh';
-            storageSet('td_lang', this.lang);
+            setLang(this.lang);
             this.applyLanguage();
         });
 
@@ -1683,9 +1683,9 @@ class TowerDefenseGame {
     }
 
     updateMuteButtons() {
-        const icon = Sfx.muted ? '🔇' : '🔊';
-        if (this.el['mute-btn']) this.el['mute-btn'].textContent = icon;
-        if (this.el['start-mute']) this.el['start-mute'].textContent = icon;
+        const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
+        if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
+        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     toggleMute() {

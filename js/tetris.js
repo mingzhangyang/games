@@ -1,3 +1,5 @@
+import { getLang, setLang } from './site-settings.js';
+
 function escapeHTML(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -78,9 +80,8 @@ const LANGUAGES = {
 };
 
 function getUserLang() {
-    const lang = navigator.language || navigator.userLanguage;
-    if (lang.startsWith('zh')) return 'zh';
-    return 'en';
+    // 全站统一语言设置（site_lang，含浏览器语言兜底）
+    return getLang();
 }
 
 let currentLang = getUserLang();
@@ -411,7 +412,20 @@ class Tetris {
         this.particles = [];
         this.shakeAmount = 0;
         this.lastClearTime = 0;
-        this.isRainbowTheme = false;
+        this.isRainbowTheme = (function () {
+            try {
+                return localStorage.getItem('tetris_rainbow') === '1';
+            } catch (e) {
+                return false;
+            }
+        })();
+        if (this.isRainbowTheme) {
+            document.body.classList.add('rainbow-theme');
+            const themeToggleLabel = document.getElementById('themeToggle');
+            if (themeToggleLabel) {
+                themeToggleLabel.textContent = currentLang === 'zh' ? '✨ 普通主题' : '✨ Normal Theme';
+            }
+        }
         this.lineClearAnimations = [];
         this.glowIntensity = 0;
         
@@ -1130,6 +1144,11 @@ class Tetris {
     toggleTheme() {
         this.isRainbowTheme = !this.isRainbowTheme;
         document.body.classList.toggle('rainbow-theme', this.isRainbowTheme);
+        try {
+            localStorage.setItem('tetris_rainbow', this.isRainbowTheme ? '1' : '0');
+        } catch (e) {
+            // 存储不可用时仅切换当前会话主题
+        }
         document.getElementById('themeToggle').textContent = this.isRainbowTheme
             ? (currentLang === 'zh' ? '✨ 普通主题' : '✨ Normal Theme')
             : TEXT.themeToggle;
@@ -1215,6 +1234,19 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('restartBtn').onclick = () => game.restart();
     document.getElementById('restartGameBtn').onclick = () => game.restart();
     document.getElementById('themeToggle').onclick = () => game.toggleTheme();
+
+    // 全站语言切换（Tetris 文案在初始化时固化，切换后重载页面生效）
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle) {
+        const refreshLangToggle = () => {
+            langToggle.textContent = currentLang === 'zh' ? 'English' : '中文';
+        };
+        refreshLangToggle();
+        langToggle.onclick = () => {
+            setLang(currentLang === 'zh' ? 'en' : 'zh');
+            location.reload();
+        };
+    }
     
     // Mobile controls
     if (document.getElementById('mobileStartBtn')) {

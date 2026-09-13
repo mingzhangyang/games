@@ -48,8 +48,12 @@ npm run preview   # wrangler dev (serves dist/ + src/index.js worker)
 
 ### Shared infrastructure
 - `js/player.js` — global player identity: all games read/write `localStorage.player_name` (auto-migrates legacy `tetris_username`/`pm_username`/`hs_username`); landing page edits it too
+- `js/site-settings.js` — **site-wide settings, the single entry point for language & sound**: canonical keys `site_lang` (`'en'|'zh'`, also written by the landing page) and `site_muted` (`'1'|'0'`); first read migrates legacy per-game keys (`pm/hs/wd/ms/rv/td/gd_lang`, `*_muted`, `tankBattleLanguage`); writes dispatch a `site-settings:changed` event, cross-tab sync is the native `storage` event. Every game reads language through `getLang()` and sound through `getMuted()/setMuted()` — never write per-game `_lang`/`_muted` keys in new code
+- `js/icons.js` — inline SVG icon set (`ICONS.home/soundOn/soundOff/pause/play/retry/close/flag`, 24×24 stroke=currentColor) for **icon-only control buttons**; JS stateful toggles (mute) set `innerHTML` from it. Emoji policy: HUD stat icons, game-content glyphs (Minesweeper cells/faces, Planet Merge chains), text-labeled buttons and brand surfaces (cards/more-games strips) intentionally keep emoji — don't convert them
+- Navigation convention: every game's top-bar 🏠 jumps to `index.html`; "Home" buttons inside start/game-over overlays return to the game's own start menu
+- Theme keys are game-local: Math Rain uses `mr_theme` (legacy `'theme'` read as fallback), Tetris uses `tetris_rainbow`; Math Rain volume persists as `mr_sfx_volume`/`mr_music_volume`. There is no site-wide light/dark theme (dark neon is the design language)
 - `css/more-games.css` — cross-game "More Games" nav strip embedded in each game's start screen / stats modal (self links excluded)
-- Landing page daily hub reads game storage keys directly: Word Daily done = `wd_daily_<YYYY-MM-DD>_<en|zh>` exists; Planet Merge done = `pm_daily_<YYYYMMDD>` exists (both UTC+8)
+- Landing page daily hub reads game storage keys directly: Word Daily done = `wd_daily_<YYYY-MM-DD>_<en|zh>` exists; Planet Merge done = `pm_daily_<YYYYMMDD>` exists; Gravity Slingshot done = `gs_daily_<YYYYMMDD>` exists (all UTC+8)
 - `public/sitemap.xml` + `public/robots.txt` — keep game list in sync when adding pages
 
 ### PWA & analytics
