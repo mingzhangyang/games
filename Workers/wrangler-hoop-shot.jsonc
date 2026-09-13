@@ -1,6 +1,5 @@
 // 部署配置：Hoop Shot 排行榜 Worker（独立于主站 Worker 部署）
-// 使用方法：把 <KV_NAMESPACE_ID> 替换为 HOOP_SCORES 命名空间的 id，
-// 然后运行：npx wrangler deploy -c Workers/wrangler-hoop-shot.jsonc
+// 运行：npx wrangler deploy -c Workers/wrangler-hoop-shot.jsonc
 // 部署后地址：https://hoop-shot-scores.orangely.workers.dev
 {
   "name": "hoop-shot-scores",
@@ -8,6 +7,6 @@
   "compatibility_date": "2025-04-01",
   "workers_dev": true,
   "kv_namespaces": [
-    { "binding": "HOOP_SCORES", "id": "<KV_NAMESPACE_ID>" }
+    { "binding": "HOOP_SCORES", "id": "aec607ad94b2470fa92a6d8fb777d7a7" }
   ]
 }
