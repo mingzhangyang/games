@@ -6,6 +6,8 @@
  * Vanilla JS + hand-rolled circle physics. No runtime dependencies.
  */
 
+import { ensurePlayerName, setPlayerName } from './player.js';
+
 /* ────────────────────────── utilities ────────────────────────── */
 
 function escapeHTML(str) {
@@ -1028,12 +1030,8 @@ class PlanetMergeGame {
     }
 
     getUsername() {
-        let name = storageGet('pm_username');
-        if (!name) {
-            name = 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
-            storageSet('pm_username', name);
-        }
-        return name;
+        // 统一玩家身份：全站共享昵称（player.js 自动迁移旧的 pm_username）
+        return ensurePlayerName();
     }
 
     updateLbTabs() {
@@ -1233,9 +1231,8 @@ class PlanetMergeGame {
         if (username) {
             username.value = this.getUsername();
             username.addEventListener('change', () => {
-                const val = String(username.value).trim().slice(0, 20) || ('Anonymous' + Math.floor(1000 + Math.random() * 9000));
-                username.value = val;
-                storageSet('pm_username', val);
+                // 写入全局玩家身份，全站排行榜同步
+                username.value = setPlayerName(username.value);
             });
             username.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') username.blur();

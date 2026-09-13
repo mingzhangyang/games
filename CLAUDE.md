@@ -42,6 +42,12 @@ npm run preview   # wrangler dev (serves dist/ + src/index.js worker)
 - `js/tank-battle.js` - Tank Battle game implementation
 - `js/gomoku.js` - Gomoku board, win detection, and AI
 
+### Shared infrastructure
+- `js/player.js` — global player identity: all games read/write `localStorage.player_name` (auto-migrates legacy `tetris_username`/`pm_username`/`hs_username`); landing page edits it too
+- `css/more-games.css` — cross-game "More Games" nav strip embedded in each game's start screen / stats modal (self links excluded)
+- Landing page daily hub reads game storage keys directly: Word Daily done = `wd_daily_<YYYY-MM-DD>_<en|zh>` exists; Planet Merge done = `pm_daily_<YYYYMMDD>` exists (both UTC+8)
+- `public/sitemap.xml` + `public/robots.txt` — keep game list in sync when adding pages
+
 ## Development Workflow
 
 ### Running Games

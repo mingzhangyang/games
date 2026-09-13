@@ -204,6 +204,120 @@
             text-decoration: none;
         }
 
+        /* ── Daily Hub ─────────────────────────────── */
+        .daily-hub {
+            width: 100%;
+            max-width: 640px;
+            margin: -24px 16px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 16px 18px;
+        }
+
+        .daily-hub-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .daily-hub-title {
+            font-size: 0.92em;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .daily-hub-progress {
+            font-size: 0.78em;
+            font-weight: 700;
+            color: var(--color-accent);
+            background: rgba(52, 211, 153, 0.12);
+            border-radius: 99px;
+            padding: 3px 10px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .daily-hub-progress.all-done {
+            color: #fcd34d;
+            background: rgba(252, 211, 77, 0.12);
+        }
+
+        .daily-task {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.15s;
+        }
+
+        .daily-task + .daily-task { margin-top: 6px; }
+        .daily-task:hover { background: rgba(255, 255, 255, 0.05); }
+
+        .daily-task-icon { font-size: 1.4em; flex-shrink: 0; }
+
+        .daily-task-name {
+            font-size: 0.88em;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .daily-task-sub {
+            font-size: 0.75em;
+            color: var(--color-text-muted);
+            margin-top: 1px;
+        }
+
+        .daily-task-body { flex: 1; min-width: 0; }
+
+        .daily-task-status {
+            font-size: 1.15em;
+            flex-shrink: 0;
+            filter: grayscale(1) opacity(0.45);
+        }
+
+        .daily-task.done .daily-task-status { filter: none; }
+        .daily-task.done .daily-task-name { color: var(--color-accent); }
+
+        .daily-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .daily-profile-icon { font-size: 1em; flex-shrink: 0; }
+
+        .daily-profile input {
+            flex: 1;
+            min-width: 0;
+            font-family: inherit;
+            font-size: 0.82em;
+            color: var(--color-text);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--color-border);
+            border-radius: 9px;
+            padding: 7px 11px;
+            outline: none;
+        }
+
+        .daily-profile input:focus { border-color: rgba(99, 102, 241, 0.55); }
+
+        .daily-profile-hint {
+            font-size: 0.7em;
+            color: var(--color-text-muted);
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 600px) {
+            .daily-hub { margin: -16px 12px 8px; padding: 13px 14px; }
+        }
+
         /* ── Perks strip ───────────────────────────── */
         .perks {
             width: 100%;
@@ -281,6 +395,35 @@
         <h1 id="main-title">Mini Games Collection</h1>
         <p class="hero-sub" id="main-desc">Play instantly · No downloads · No accounts · No ads</p>
     </header>
+
+    <!-- Daily Hub -->
+    <section class="daily-hub" aria-label="Daily challenges">
+        <div class="daily-hub-head">
+            <span class="daily-hub-title" id="hub-title">⚡ Daily Challenges</span>
+            <span class="daily-hub-progress" id="hub-progress">0/2</span>
+        </div>
+        <a class="daily-task" id="hub-task-word" href="word-daily.html">
+            <span class="daily-task-icon">🔤</span>
+            <div class="daily-task-body">
+                <div class="daily-task-name" id="hub-task-word-name">Word Daily</div>
+                <div class="daily-task-sub" id="hub-task-word-sub">Guess in 6 tries</div>
+            </div>
+            <span class="daily-task-status" id="hub-task-word-status">⚪</span>
+        </a>
+        <a class="daily-task" id="hub-task-merge" href="planet-merge.html">
+            <span class="daily-task-icon">🪐</span>
+            <div class="daily-task-body">
+                <div class="daily-task-name" id="hub-task-merge-name">Planet Merge</div>
+                <div class="daily-task-sub" id="hub-task-merge-sub">Daily challenge</div>
+            </div>
+            <span class="daily-task-status" id="hub-task-merge-status">⚪</span>
+        </a>
+        <div class="daily-profile">
+            <span class="daily-profile-icon">👤</span>
+            <input id="player-name" maxlength="20" autocomplete="off">
+            <span class="daily-profile-hint" id="hub-profile-hint">Used on all leaderboards</span>
+        </div>
+    </section>
 
     <!-- Games -->
     <section class="games-section" aria-label="Games">
@@ -505,6 +648,12 @@
                 wordDailyTag: 'Daily',
                 wordDailyPlay: 'Play ›',
 
+                hubTitle: '⚡ Daily Challenges',
+                hubTaskWordSub: 'Guess the word in 6 tries',
+                hubTaskMergeSub: 'Daily challenge — chase the high score',
+                hubProfileHint: 'Leaderboard name',
+                hubProfilePlaceholder: 'Your name',
+
                 hoopShotName: 'Hoop Shot',
                 hoopShotDesc: 'Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!',
                 hoopShotTag: 'Sports',
@@ -569,6 +718,12 @@
                 wordDailyDesc: '全球每天同一道题——英文单词或中文成语，6 次机会。连胜打卡，emoji 晒图，快来挑战！',
                 wordDailyTag: '每日智力',
                 wordDailyPlay: '开始游戏 ›',
+
+                hubTitle: '⚡ 今日挑战',
+                hubTaskWordSub: '6 次机会猜出今天的词语',
+                hubTaskMergeSub: '每日固定序列，冲击高分',
+                hubProfileHint: '全站排行榜昵称',
+                hubProfilePlaceholder: '你的昵称',
 
                 hoopShotName: '街机投篮',
                 hoopShotDesc: '一指甩投，一球定胜负！连中 3 球点燃火球模式分数翻倍，冲击全球前 10！',
@@ -674,6 +829,15 @@
             document.getElementById('perk3-body').textContent = t.perk3Body;
 
             document.getElementById('footer-text').textContent = t.footer;
+
+            // Daily Hub 文案
+            document.getElementById('hub-title').textContent = t.hubTitle;
+            document.getElementById('hub-task-word-name').textContent = t.wordDailyName;
+            document.getElementById('hub-task-word-sub').textContent = t.hubTaskWordSub;
+            document.getElementById('hub-task-merge-name').textContent = t.planetMergeName;
+            document.getElementById('hub-task-merge-sub').textContent = t.hubTaskMergeSub;
+            document.getElementById('hub-profile-hint').textContent = t.hubProfileHint;
+            document.getElementById('player-name').placeholder = t.hubProfilePlaceholder;
         }
 
         function setCanonicalAndSocialMeta() {
@@ -739,11 +903,78 @@
             });
         }
 
+        function updateDailyHub() {
+            // 与各游戏一致的 UTC+8 日期键
+            const d = new Date(Date.now() + 8 * 3600 * 1000);
+            const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+            const compact = iso.replace(/-/g, '');
+            const ls = (k) => {
+                try {
+                    return localStorage.getItem(k);
+                } catch (e) {
+                    return null;
+                }
+            };
+
+            const wordDone = !!(ls(`wd_daily_${iso}_en`) || ls(`wd_daily_${iso}_zh`));
+            const mergeDone = !!ls(`pm_daily_${compact}`);
+            const doneCount = (wordDone ? 1 : 0) + (mergeDone ? 1 : 0);
+
+            const setTask = (id, done) => {
+                const task = document.getElementById(id);
+                if (!task) return;
+                task.classList.toggle('done', done);
+                const status = task.querySelector('.daily-task-status');
+                if (status) status.textContent = done ? '✅' : '⚪';
+            };
+            setTask('hub-task-word', wordDone);
+            setTask('hub-task-merge', mergeDone);
+
+            const progress = document.getElementById('hub-progress');
+            if (progress) {
+                progress.textContent = `${doneCount}/2`;
+                progress.classList.toggle('all-done', doneCount === 2);
+            }
+
+            // 全站玩家昵称
+            const nameInput = document.getElementById('player-name');
+            if (nameInput && document.activeElement !== nameInput) {
+                let name = null;
+                try {
+                    name = localStorage.getItem('player_name');
+                } catch (e) { /* ignore */ }
+                if (!name) {
+                    for (const k of ['tetris_username', 'pm_username', 'hs_username']) {
+                        try {
+                            name = localStorage.getItem(k);
+                        } catch (e) { /* ignore */ }
+                        if (name) break;
+                    }
+                }
+                nameInput.value = name || '';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const lang = detectLanguage();
             applyLanguage(lang);
             setCanonicalAndSocialMeta();
             injectStructuredData();
+            updateDailyHub();
+
+            const nameInput = document.getElementById('player-name');
+            if (nameInput) {
+                nameInput.addEventListener('change', () => {
+                    const clean = String(nameInput.value).replace(/[\u0000-\u001f\u007f-\u009f]/g, '').trim().slice(0, 20);
+                    nameInput.value = clean;
+                    try {
+                        localStorage.setItem('player_name', clean);
+                    } catch (e) { /* ignore */ }
+                });
+                nameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') nameInput.blur();
+                });
+            }
         });
     </script>
 </body>

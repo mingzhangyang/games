@@ -94,26 +94,42 @@ function normalizeUsername(val) {
     return trimmed;
 }
 
+// 统一玩家身份：读写全局 player_name，兼容迁移旧的 tetris_username
+function getGlobalUsername() {
+    let name = (safeGetItem('player_name') || '').trim();
+    if (name) return name;
+    name = (safeGetItem('tetris_username') || '').trim();
+    if (name) {
+        safeSetItem('player_name', name);
+        return name;
+    }
+    return 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
+}
+
+function saveGlobalUsername(val) {
+    safeSetItem('player_name', val);
+    safeSetItem('tetris_username', val);
+}
+
 // 用户名输入框逻辑
 function setupUsernameInput() {
     const input = document.getElementById('usernameInput');
-    let username = safeGetItem('tetris_username');
+    let username = getGlobalUsername();
     // 只在第一次没有用户名时生成并存储
-    if (!username) {
-        username = 'Anonymous' + Math.floor(1000 + Math.random() * 9000);
+    if (!safeGetItem('tetris_username') && !safeGetItem('player_name')) {
         safeSetItem('tetris_username', username);
     }
     input.value = username;
     input.addEventListener('change', function() {
         const val = normalizeUsername(input.value);
         input.value = val;
-        safeSetItem('tetris_username', val);
+        saveGlobalUsername(val);
     });
     input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             const val = normalizeUsername(input.value);
             input.value = val;
-            safeSetItem('tetris_username', val);
+            saveGlobalUsername(val);
             input.blur();
         }
     });
@@ -932,7 +948,7 @@ class Tetris {
         this.unlockPage();
 
         // 上传分数到 Cloudflare Worker
-        let username = safeGetItem('tetris_username') || 'Anonymous';
+        let username = getGlobalUsername();
         // 本地分数记录
         let localScores = safeParseJSON(safeGetItem('tetris_scores'), []);
         if (!Array.isArray(localScores)) localScores = [];
