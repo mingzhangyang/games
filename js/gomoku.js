@@ -76,8 +76,10 @@ function init() {
 }
 
 function resizeCanvas() {
-    const containerWidth = Math.min(window.innerWidth - 40, 600);
-    const containerHeight = Math.min(window.innerHeight - 200, 600);
+    // 桌面端放宽棋盘上限（≤1024px 视口维持 600，大屏最高 700）
+    const desktopCap = window.matchMedia('(min-width: 1024px)').matches ? 700 : 600;
+    const containerWidth = Math.min(window.innerWidth - 40, desktopCap);
+    const containerHeight = Math.min(window.innerHeight - 200, desktopCap);
     const size = Math.min(containerWidth, containerHeight);
     cssSize = size;
 

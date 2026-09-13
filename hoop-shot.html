@@ -45,6 +45,7 @@
         <div class="hs-streak-bar" id="hs-streak"></div>
 
         <!-- 游戏区 -->
+        <div class="hs-main">
         <div class="hs-stage">
             <canvas id="hs-canvas" width="420" height="640"></canvas>
             <div class="hs-fire-badge" id="hs-fire-badge">🔥</div>
@@ -112,7 +113,19 @@
             </div>
         </div>
 
-        <p class="hs-footer-hint" id="hs-hint">Swipe up to shoot · P pause · M mute</p>
+            <aside class="hs-sidebar">
+            <div class="hs-side-card">
+                <div class="hs-side-title" id="hs-side-howto-title"></div>
+                <p class="hs-side-text" id="hs-side-howto"></p>
+            </div>
+            <div class="hs-side-card">
+                <div class="hs-side-title" id="hs-side-records-title"></div>
+                <div class="hs-side-records" id="hs-side-records"></div>
+            </div>
+        </aside>
+    </div>
+
+    <p class="hs-footer-hint" id="hs-hint">Swipe up to shoot · P pause · M mute</p>
     </div>
 
     <script>

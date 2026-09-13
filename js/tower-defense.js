@@ -60,6 +60,9 @@ const LANGUAGES = {
         pulse: 'Pulse', frost: 'Frost', cannon: 'Cannon', tesla: 'Tesla',
         pulseDesc: 'rapid single shot', frostDesc: 'slows creeps', cannonDesc: 'splash damage', teslaDesc: 'chain lightning',
         towerIntro: '🔹 Pulse · ❄️ Frost · 💥 Cannon · ⚡ Tesla',
+        towerLegend: 'Towers',
+        sideHowTo: 'How to play',
+        sideRecords: 'Records',
         wave: 'Wave',
         startWave: '▶ Wave {n}',
         waveRunning: 'Wave {n}',
@@ -100,6 +103,9 @@ const LANGUAGES = {
         pulse: '脉冲塔', frost: '冰霜塔', cannon: '加农炮', tesla: '电磁塔',
         pulseDesc: '高速单发', frostDesc: '减速光环', cannonDesc: '溅射伤害', teslaDesc: '闪电连锁',
         towerIntro: '🔹 脉冲 · ❄️ 冰霜 · 💥 加农 · ⚡ 电磁',
+        towerLegend: '防御塔',
+        sideHowTo: '玩法说明',
+        sideRecords: '战绩',
         wave: '第',
         startWave: '▶ 第 {n} 波',
         waveRunning: '第 {n} 波',
@@ -441,7 +447,9 @@ class TowerDefenseGame {
          'td-over', 'td-over-title', 'td-over-verdict', 'td-over-score', 'td-over-sub',
          'td-btn-again', 'td-btn-copy', 'td-btn-menu2',
          'td-lb-title', 'td-lb-list', 'td-lb-status', 'td-username', 'td-username-label',
-         'td-btn-home', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn', 'td-hint'
+            'td-btn-home', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn', 'td-hint',
+            'td-side-howto-title', 'td-side-howto', 'td-side-towers-title', 'td-side-towers',
+            'td-side-records-title', 'td-side-records'
         ].forEach(id => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^td-/, '')] = el;
@@ -538,6 +546,13 @@ class TowerDefenseGame {
             const best = Number(storageGet('td_best')) || 0;
             this.el['best-line'].textContent = best ? `🏆 ${t.best}: ${formatNumber(best)}` : '';
         }
+        // 桌面侧栏（≥1024px 可见）
+        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
+        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
+        if (this.el['side-towers-title']) this.el['side-towers-title'].textContent = `🗼 ${t.towerLegend}`;
+        this.updateSideTowers();
+        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
+        this.updateSideRecords();
         this.renderPanel();
         this.renderWaveButton();
     }
@@ -1505,6 +1520,7 @@ class TowerDefenseGame {
         const prevBest = Number(storageGet('td_best')) || 0;
         const isBest = this.score > prevBest;
         if (isBest) storageSet('td_best', String(this.score));
+        this.updateSideRecords();
         if (this.el['best-line']) {
             this.el['best-line'].textContent = `🏆 ${t.best}: ${formatNumber(Math.max(prevBest, this.score))}` +
                 (isBest ? `  🌟 ${t.newBest}` : '');
@@ -1686,6 +1702,52 @@ class TowerDefenseGame {
         const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
         if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
+    }
+
+    /** 桌面侧栏：防御塔图鉴（≥1024px 可见） */
+    updateSideTowers() {
+        const box = this.el['side-towers'];
+        if (!box) return;
+        const t = this.TEXT;
+        const defs = [
+            [TOWER_TYPES.pulse.icon, t.pulse, t.pulseDesc],
+            [TOWER_TYPES.frost.icon, t.frost, t.frostDesc],
+            [TOWER_TYPES.cannon.icon, t.cannon, t.cannonDesc],
+            [TOWER_TYPES.tesla.icon, t.tesla, t.teslaDesc]
+        ];
+        box.textContent = '';
+        defs.forEach(([icon, name, desc]) => {
+            const row = document.createElement('div');
+            row.className = 'td-side-tower';
+            const nameEl = document.createElement('b');
+            nameEl.textContent = `${icon} ${name}`;
+            const descEl = document.createElement('span');
+            descEl.textContent = desc;
+            row.append(nameEl, descEl);
+            box.appendChild(row);
+        });
+    }
+
+    /** 桌面侧栏战绩（≥1024px 可见） */
+    updateSideRecords() {
+        const box = this.el['side-records'];
+        if (!box) return;
+        const t = this.TEXT;
+        const best = Number(storageGet('td_best')) || 0;
+        const rows = [
+            [`🏆 ${t.best}`, best ? formatNumber(best) : '—']
+        ];
+        box.textContent = '';
+        rows.forEach(([label, value]) => {
+            const row = document.createElement('div');
+            row.className = 'td-side-row';
+            const labelEl = document.createElement('span');
+            labelEl.textContent = label;
+            const valueEl = document.createElement('b');
+            valueEl.textContent = value;
+            row.append(labelEl, valueEl);
+            box.appendChild(row);
+        });
     }
 
     toggleMute() {

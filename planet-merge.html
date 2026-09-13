@@ -44,6 +44,7 @@
         </header>
 
         <!-- 游戏区 -->
+        <div class="pm-main">
         <div class="pm-stage">
             <canvas id="pm-canvas" width="420" height="640"></canvas>
             <div class="pm-next-box" aria-hidden="true">
@@ -131,7 +132,19 @@
             </div>
         </div>
 
-        <p class="pm-footer-hint">P 暂停 · M 静音 · R 重开</p>
+            <aside class="pm-sidebar">
+            <div class="pm-side-card">
+                <div class="pm-side-title" id="pm-side-howto-title"></div>
+                <p class="pm-side-text" id="pm-side-howto"></p>
+            </div>
+            <div class="pm-side-card">
+                <div class="pm-side-title" id="pm-side-records-title"></div>
+                <div class="pm-side-records" id="pm-side-records"></div>
+            </div>
+        </aside>
+    </div>
+
+    <p class="pm-footer-hint">P 暂停 · M 静音 · R 重开</p>
     </div>
 
     <script>

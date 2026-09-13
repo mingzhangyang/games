@@ -386,3 +386,68 @@ body {
 
 /* 覆盖层滚动条隐藏（滚轮/触摸仍可滚动） */
 .hs-overlay::-webkit-scrollbar { display: none; }
+
+/* ── 桌面大屏（≥1024px）：舞台 + 信息侧栏 ── */
+.hs-sidebar {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .hs-shell { max-width: 940px; }
+    .hs-main {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 28px;
+    }
+    .hs-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 300px;
+        flex-shrink: 0;
+    }
+    .hs-side-card {
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 14px 16px;
+        text-align: left;
+    }
+    .hs-side-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    .hs-side-text {
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: #c3cdf2;
+    }
+    .hs-side-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 13.5px;
+        padding: 4px 0;
+        color: #c3cdf2;
+    }
+    .hs-side-row b {
+        color: #e8ecff;
+        font-variant-numeric: tabular-nums;
+    }
+    .hs-side-tower {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        font-size: 12.5px;
+        line-height: 1.6;
+        padding: 3px 0;
+        color: #c3cdf2;
+    }
+    .hs-side-tower b {
+        color: #e8ecff;
+        white-space: nowrap;
+    }
+}

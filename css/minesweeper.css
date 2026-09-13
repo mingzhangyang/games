@@ -544,3 +544,15 @@ body {
     .ms-hero, .ms-result-card, .ms-cell.revealed, .ms-cell.boom { animation: none !important; }
     .ms-btn, .ms-icon-btn, .ms-face, .ms-diff { transition: none; }
 }
+
+/* ── 桌面大屏（≥1024px）：更大的格子与结算面板 ── */
+@media (min-width: 1024px) {
+    .ms-shell { max-width: 780px; }
+    .ms-counter { padding: 8px 14px; }
+    .ms-counter-value { font-size: 22px; }
+    .ms-face { width: 54px; height: 54px; font-size: 27px; }
+    .ms-diff { font-size: 14px; padding: 10px 8px; }
+    .ms-result-card { max-width: 460px; }
+    .ms-result-time { font-size: 52px; }
+}
+

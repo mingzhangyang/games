@@ -39,6 +39,12 @@ h1 {
     margin-bottom: 10px;
 }
 
+@media (min-width: 1024px) {
+    .status-bar {
+        max-width: 700px;
+    }
+}
+
 .status-item {
     font-size: 1.2rem;
     font-weight: bold;

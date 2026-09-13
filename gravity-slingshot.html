@@ -42,6 +42,7 @@
         </header>
 
         <!-- 星区总览 -->
+        <div class="gd-main">
         <div class="gd-stage" id="gd-stage">
             <canvas id="gd-canvas" width="480" height="640"></canvas>
 
@@ -118,7 +119,19 @@
             </div>
         </div>
 
-        <p class="gd-footer-hint" id="gd-hint"></p>
+            <aside class="gd-sidebar">
+            <div class="gd-side-card">
+                <div class="gd-side-title" id="gd-side-howto-title"></div>
+                <p class="gd-side-text" id="gd-side-howto"></p>
+            </div>
+            <div class="gd-side-card">
+                <div class="gd-side-title" id="gd-side-records-title"></div>
+                <div class="gd-side-records" id="gd-side-records"></div>
+            </div>
+        </aside>
+    </div>
+
+    <p class="gd-footer-hint" id="gd-hint"></p>
     </div>
 
     <script>

@@ -74,7 +74,9 @@ const LANGUAGES = {
         lbOffline: 'Leaderboard offline — showing local scores',
         usernameLabel: 'Username (Enter to save)',
         language: '中文',
-        tapToStart: 'Swipe up to shoot'
+        tapToStart: 'Swipe up to shoot',
+        sideHowTo: 'How to play',
+        sideRecords: 'Records'
     },
     zh: {
         title: '街机投篮',
@@ -100,7 +102,9 @@ const LANGUAGES = {
         lbOffline: '榜单离线——显示本地成绩',
         usernameLabel: '用户名（回车保存）',
         language: 'English',
-        tapToStart: '向上滑动投篮'
+        tapToStart: '向上滑动投篮',
+        sideHowTo: '玩法说明',
+        sideRecords: '战绩'
     }
 };
 
@@ -279,7 +283,8 @@ class HoopShotGame {
             'hs-over-streak', 'hs-btn-share', 'hs-btn-copy', 'hs-btn-again', 'hs-btn-home',
             'hs-lb-title', 'hs-lb-list', 'hs-lb-status',
             'hs-username', 'hs-username-label',
-            'hs-pause-btn', 'hs-mute-btn', 'hs-fire-badge', 'hs-hint'
+            'hs-pause-btn', 'hs-mute-btn', 'hs-fire-badge', 'hs-hint',
+            'hs-side-howto-title', 'hs-side-howto', 'hs-side-records-title', 'hs-side-records'
         ];
         ids.forEach(id => {
             const el = document.getElementById(id);
@@ -315,12 +320,39 @@ class HoopShotGame {
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         this.updateMuteButtons();
         this.updateStartStats();
+        // 桌面侧栏（≥1024px 可见）
+        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
+        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
+        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
+        this.updateSideRecords();
     }
 
     updateStartStats() {
         if (this.el['best-line']) {
             this.el['best-line'].textContent = `🏆 ${this.TEXT.best}: ${formatNumber(this.best)}`;
         }
+    }
+
+    /** 桌面侧栏战绩（≥1024px 可见） */
+    updateSideRecords() {
+        const box = this.el['side-records'];
+        if (!box) return;
+        const t = this.TEXT;
+        const rows = [
+            [`🏆 ${t.best}`, formatNumber(this.best)],
+            [`🔥 ${t.longestStreak}`, String(this.longestStreak)]
+        ];
+        box.textContent = '';
+        rows.forEach(([label, value]) => {
+            const row = document.createElement('div');
+            row.className = 'hs-side-row';
+            const labelEl = document.createElement('span');
+            labelEl.textContent = label;
+            const valueEl = document.createElement('b');
+            valueEl.textContent = value;
+            row.append(labelEl, valueEl);
+            box.appendChild(row);
+        });
     }
 
     showStartScreen() {
@@ -634,6 +666,7 @@ class HoopShotGame {
         if (isNewBest) {
             this.best = this.score;
             storageSet('hs_best', String(this.best));
+            this.updateSideRecords();
         }
 
         const t = this.TEXT;

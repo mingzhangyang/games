@@ -301,11 +301,13 @@ class MinesweeperGame {
     }
 
     layoutCells() {
-        const wrap = this.boardEl.parentElement;
-        if (!wrap) return;
+        // 以壳层宽度为基准（board-wrap 是 fit-content，自宽会跟随内容形成死循环）
+        const shell = this.boardEl.closest('.ms-shell');
         const gap = 2;
-        const avail = wrap.clientWidth - 8; // 内边距余量
-        const cell = clamp(Math.floor((avail - (this.cols + 1) * gap) / this.cols), 20, 40);
+        const avail = (shell ? shell.clientWidth : window.innerWidth) - 32; // 壳内边距 + 余量
+        // 桌面大屏允许更大的格子（20px 下限不变，移动端行为不变）
+        const maxCell = window.matchMedia('(min-width: 1024px)').matches ? 48 : 40;
+        const cell = clamp(Math.floor((avail - (this.cols + 1) * gap) / this.cols), 20, maxCell);
         this.boardEl.style.setProperty('--ms-cell', `${cell}px`);
         this.boardEl.style.setProperty('--ms-gap', `${gap}px`);
     }

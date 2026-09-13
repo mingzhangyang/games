@@ -43,6 +43,7 @@
         </header>
 
         <!-- 游戏区 -->
+        <div class="td-main">
         <div class="td-stage" id="td-stage">
             <canvas id="td-canvas" width="480" height="640"></canvas>
 
@@ -120,7 +121,23 @@
             </div>
         </div>
 
-        <p class="td-footer-hint" id="td-hint"></p>
+            <aside class="td-sidebar">
+            <div class="td-side-card">
+                <div class="td-side-title" id="td-side-howto-title"></div>
+                <p class="td-side-text" id="td-side-howto"></p>
+            </div>
+            <div class="td-side-card">
+                <div class="td-side-title" id="td-side-towers-title"></div>
+                <div class="td-side-towers" id="td-side-towers"></div>
+            </div>
+            <div class="td-side-card">
+                <div class="td-side-title" id="td-side-records-title"></div>
+                <div class="td-side-records" id="td-side-records"></div>
+            </div>
+        </aside>
+    </div>
+
+    <p class="td-footer-hint" id="td-hint"></p>
     </div>
 
     <script>

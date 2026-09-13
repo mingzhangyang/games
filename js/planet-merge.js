@@ -123,6 +123,8 @@ const LANGUAGES = {
         mute: 'Sound',
         language: '中文',
         hint: 'P pause · M mute · R restart',
+        sideHowTo: 'How to play',
+        sideRecords: 'Records',
         modeEndless: 'Endless',
         modeDaily: 'Daily',
         confirmReplace: 'Start a new daily run? Your current progress will be lost.'
@@ -162,6 +164,8 @@ const LANGUAGES = {
         mute: '音效',
         language: 'English',
         hint: 'P 暂停 · M 静音 · R 重开',
+        sideHowTo: '玩法说明',
+        sideRecords: '战绩',
         modeEndless: '无尽',
         modeDaily: '每日',
         confirmReplace: '开始新的每日挑战？当前进度将丢失。'
@@ -456,7 +460,8 @@ class PlanetMergeGame {
             'pm-lb-title', 'pm-tab-daily', 'pm-tab-alltime', 'pm-lb-list', 'pm-lb-status',
             'pm-username', 'pm-username-label',
             'pm-pause-btn', 'pm-mute-btn',
-            'pm-toast'
+            'pm-toast',
+            'pm-side-howto-title', 'pm-side-howto', 'pm-side-records-title', 'pm-side-records'
         ];
         ids.forEach(id => {
             const el = document.getElementById(id);
@@ -502,6 +507,11 @@ class PlanetMergeGame {
         if (this.el['over-merges']) this.el['over-merges'].textContent = '';
 
         this.updateMuteButtons();
+        // 桌面侧栏（≥1024px 可见）
+        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
+        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
+        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
+        this.updateSideRecords();
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         // HUD 小标签
         const scoreLabel = document.getElementById('pm-score-label');
@@ -949,6 +959,7 @@ class PlanetMergeGame {
         if (isNewBest) {
             this.best = this.score;
             storageSet('pm_best', String(this.best));
+            this.updateSideRecords();
         }
         const isDaily = this.mode === 'daily';
         if (isDaily) {
@@ -1003,6 +1014,27 @@ class PlanetMergeGame {
         const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
         if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
+    }
+
+    /** 桌面侧栏战绩（≥1024px 可见） */
+    updateSideRecords() {
+        const box = this.el['side-records'];
+        if (!box) return;
+        const t = this.TEXT;
+        const rows = [
+            [`🏆 ${t.best}`, formatNumber(this.best)]
+        ];
+        box.textContent = '';
+        rows.forEach(([label, value]) => {
+            const row = document.createElement('div');
+            row.className = 'pm-side-row';
+            const labelEl = document.createElement('span');
+            labelEl.textContent = label;
+            const valueEl = document.createElement('b');
+            valueEl.textContent = value;
+            row.append(labelEl, valueEl);
+            box.appendChild(row);
+        });
     }
 
     toggleMute() {

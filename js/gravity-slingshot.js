@@ -74,6 +74,8 @@ const LANGUAGES = {
         copied: 'Copied!',
         language: '中文',
         hint: 'Pull back & release to launch · planets bend your path',
+        sideHowTo: 'How to play',
+        sideRecords: 'Records',
         crashHint: 'Auto retry in a moment…',
         tapToAim: 'Drag to aim · release to launch'
     },
@@ -111,6 +113,8 @@ const LANGUAGES = {
         copied: '已复制！',
         language: 'English',
         hint: '向后拉弹弓松手发射 · 借助行星引力变轨',
+        sideHowTo: '玩法说明',
+        sideRecords: '战绩',
         crashHint: '即将自动重试…',
         tapToAim: '拖拽瞄准 · 松手发射'
     }
@@ -504,6 +508,7 @@ class GravityGame {
          'gd-reset-btn', 'gd-mute-btn', 'gd-toast',
          'gd-start', 'gd-title', 'gd-subtitle', 'gd-howto', 'gd-btn-levels', 'gd-btn-daily',
          'gd-level-grid', 'gd-daily-best', 'gd-start-mute', 'gd-start-lang',
+         'gd-side-howto-title', 'gd-side-howto', 'gd-side-records-title', 'gd-side-records',
          'gd-hole', 'gd-hole-stars', 'gd-hole-line', 'gd-btn-next', 'gd-btn-replay', 'gd-btn-menu1',
          'gd-over', 'gd-over-title', 'gd-over-score', 'gd-over-sub',
          'gd-btn-again', 'gd-btn-copy', 'gd-btn-menu2',
@@ -587,8 +592,37 @@ class GravityGame {
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
+        // 桌面侧栏（≥1024px 可见）
+        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
+        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
+        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
+        this.updateSideRecords();
         this.renderLevelGrid();
         this.updateDailyBest();
+    }
+
+    /** 桌面侧栏战绩（≥1024px 可见）：今日赛程最好杆数 + 关卡总星数 */
+    updateSideRecords() {
+        const box = this.el['side-records'];
+        if (!box) return;
+        const t = this.TEXT;
+        const todayBest = Number(storageGet('gd_daily_' + todayCompact())) || 0;
+        const totalStars = this.stars.reduce((a, b) => a + (b || 0), 0);
+        const rows = [
+            [`📅 ${t.bestToday}`, todayBest ? `${todayBest} ${t.launchesWord}` : '—'],
+            [`⭐ ${t.stars}`, `${totalStars}/${LEVELS.length * 3}`]
+        ];
+        box.textContent = '';
+        rows.forEach(([label, value]) => {
+            const row = document.createElement('div');
+            row.className = 'gd-side-row';
+            const labelEl = document.createElement('span');
+            labelEl.textContent = label;
+            const valueEl = document.createElement('b');
+            valueEl.textContent = value;
+            row.append(labelEl, valueEl);
+            box.appendChild(row);
+        });
     }
 
     updateDailyBest() {
@@ -821,11 +855,12 @@ class GravityGame {
         }
 
         // 关卡模式：记录星星
-        const prev = this.stars[this.holeIdx] || 0;
-        if (starCount > prev) {
-            this.stars[this.holeIdx] = starCount;
-            storageSet('gd_stars', JSON.stringify(this.stars));
-        }
+            const prev = this.stars[this.holeIdx] || 0;
+            if (starCount > prev) {
+                this.stars[this.holeIdx] = starCount;
+                storageSet('gd_stars', JSON.stringify(this.stars));
+            }
+            this.updateSideRecords();
         if (this.el['hole-stars']) this.el['hole-stars'].textContent = '⭐'.repeat(starCount) + '☆☆☆'.slice(0, (3 - starCount) * 1);
         if (this.el['hole-line']) {
             this.el['hole-line'].textContent = `${this.TEXT.launches} ${this.launches} · ${this.TEXT.par} ${par}`;
@@ -857,6 +892,7 @@ class GravityGame {
         const isBest = !prev || this.totalLaunches < prev;
         if (isBest) storageSet('gd_daily_' + date, String(this.totalLaunches));
         this.updateDailyBest();
+        this.updateSideRecords();
 
         if (this.el['over-title']) this.el['over-title'].textContent = `📅 ${this.TEXT.dailyDone}`;
         if (this.el['over-score']) this.el['over-score'].textContent = `${this.totalLaunches} ${this.TEXT.launchesWord}`;

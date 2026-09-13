@@ -597,3 +597,12 @@ body {
     justify-content: center;
     text-decoration: none;
 }
+
+/* ── 桌面大屏（≥1024px）：更大的棋盘、键盘与壳层 ── */
+@media (min-width: 1024px) {
+    .wd-shell { max-width: 720px; }
+    .wd-board { max-width: calc(var(--cols) * 76px + (var(--cols) - 1) * 6px); max-height: 560px; }
+    .wd-key { max-width: 52px; height: 62px; font-size: 16px; }
+    .wd-key-wide { max-width: 82px; }
+}
+

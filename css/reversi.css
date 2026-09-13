@@ -549,3 +549,13 @@ body {
     .rv-disc3 { transition: none; }
     .rv-btn, .rv-icon-btn, .rv-mode, .rv-diff { transition: none; }
 }
+
+/* ── 桌面大屏（≥1024px）：更大的棋盘与计分盒 ── */
+@media (min-width: 1024px) {
+    .rv-shell { max-width: 820px; }
+    .rv-board { width: min(100%, 640px, calc(100vh - 200px)); }
+    .rv-player-count { font-size: 24px; }
+    .rv-player-name { max-width: 110px; }
+    .rv-lb { max-width: 440px; }
+}
+
