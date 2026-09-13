@@ -34,10 +34,11 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f172a;
+            background:
+                radial-gradient(ellipse 60% 30% at 50% -6%, rgba(99, 102, 241, 0.16), transparent),
+                #0f172a;
             min-height: 100vh;
             margin: 0;
-            padding: 0 0 60px;
             color: var(--color-text);
             display: flex;
             flex-direction: column;
@@ -46,6 +47,7 @@
 
         /* ── Hero ──────────────────────────────────── */
         .hero {
+            position: relative;
             text-align: center;
             padding: 72px 24px 48px;
             width: 100%;
@@ -96,6 +98,7 @@
         }
 
         .game-card {
+            position: relative;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--color-border);
             border-radius: 14px;
@@ -104,6 +107,14 @@
             cursor: pointer;
             transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
         }
+
+        .game-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(148, 163, 255, 0.45);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), 0 0 22px rgba(99, 102, 241, 0.14);
+        }
+
+        .game-card:active { transform: translateY(-1px) scale(0.995); }
 
         .game-card:hover {
             border-color: rgba(255, 255, 255, 0.16);
@@ -163,6 +174,57 @@
             line-height: 1.6;
             margin: 0;
             flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.62em;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 3px 9px;
+            border-radius: 99px;
+            pointer-events: none;
+        }
+
+        .card-badge--new {
+            color: #fcd34d;
+            background: rgba(252, 211, 77, 0.13);
+            border: 1px solid rgba(252, 211, 77, 0.45);
+        }
+
+        .card-badge--daily {
+            color: #34d399;
+            background: rgba(52, 211, 153, 0.11);
+            border: 1px solid rgba(52, 211, 153, 0.4);
+        }
+
+        .lang-toggle {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--color-border);
+            border-radius: 99px;
+            padding: 5px 12px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .lang-toggle:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--color-text);
         }
 
         .card-footer {
@@ -359,18 +421,11 @@
 
         /* ── Footer ────────────────────────────────── */
         footer {
-            position: fixed;
-            left: 0;
-            bottom: 0;
             width: 100%;
             text-align: center;
-            padding: 11px 0;
+            padding: 20px 0 28px;
             font-size: 12px;
             color: var(--color-text-muted);
-            background: rgba(15, 23, 42, 0.92);
-            border-top: 1px solid var(--color-border);
-            backdrop-filter: blur(8px);
-            z-index: 100;
         }
 
         /* ── Responsive ────────────────────────────── */
@@ -380,6 +435,13 @@
             .games-section, .perks { padding: 0 12px; }
             .games-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .card-body { padding: 14px; gap: 8px; }
+            .card-desc { -webkit-line-clamp: 3; line-clamp: 3; }
+            .lang-toggle { top: 10px; right: 12px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .game-card { transition: none; }
+            .game-card:hover { transform: none; }
         }
 
         @media (max-width: 380px) {
@@ -391,6 +453,7 @@
 
     <!-- Hero -->
     <header class="hero">
+        <button class="lang-toggle" id="lang-toggle" title="Language">中文</button>
         <div class="hero-logo">🎮</div>
         <h1 id="main-title">Mini Games Collection</h1>
         <p class="hero-sub" id="main-desc">Play instantly · No downloads · No accounts · No ads</p>
@@ -492,6 +555,7 @@
 
             <!-- Planet Merge -->
             <article class="game-card" onclick="location.href='planet-merge.html'">
+                <span class="card-badge card-badge--daily">Daily</span>
                 <div class="card-body">
                     <div class="card-header">
                         <span class="card-icon card-icon--planet">🪐</span>
@@ -507,6 +571,7 @@
 
             <!-- Word Daily -->
             <article class="game-card" onclick="location.href='word-daily.html'">
+                <span class="card-badge card-badge--daily">Daily</span>
                 <div class="card-body">
                     <div class="card-header">
                         <span class="card-icon card-icon--word">🔤</span>
@@ -522,6 +587,7 @@
 
             <!-- Hoop Shot -->
             <article class="game-card" onclick="location.href='hoop-shot.html'">
+                <span class="card-badge card-badge--new">New</span>
                 <div class="card-body">
                     <div class="card-header">
                         <span class="card-icon card-icon--hoop">🏀</span>
@@ -608,7 +674,7 @@
         </div>
     </aside>
 
-    <footer id="footer-text">© 2026 Orangely.</footer>
+    <footer id="footer-text">© 2026 orangely.xyz</footer>
 
     <script>
         const i18n = {
@@ -653,6 +719,7 @@
                 hubTaskMergeSub: 'Daily challenge — chase the high score',
                 hubProfileHint: 'Leaderboard name',
                 hubProfilePlaceholder: 'Your name',
+                langToggle: '中文',
 
                 hoopShotName: 'Hoop Shot',
                 hoopShotDesc: 'Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!',
@@ -681,7 +748,7 @@
                 perk3Title: 'Bilingual',
                 perk3Body: 'English and Chinese — auto-detected from your browser language.',
 
-                footer: '© 2026 Orangely.'
+                footer: '© 2026 orangely.xyz'
             },
             zh: {
                 pageTitle: '单页游戏合集',
@@ -724,6 +791,7 @@
                 hubTaskMergeSub: '每日固定序列，冲击高分',
                 hubProfileHint: '全站排行榜昵称',
                 hubProfilePlaceholder: '你的昵称',
+                langToggle: 'English',
 
                 hoopShotName: '街机投篮',
                 hoopShotDesc: '一指甩投，一球定胜负！连中 3 球点燃火球模式分数翻倍，冲击全球前 10！',
@@ -752,11 +820,16 @@
                 perk3Title: '双语支持',
                 perk3Body: '英文与中文，根据浏览器语言自动切换。',
 
-                footer: '© 2026 Orangely.'
+                footer: '© 2026 orangely.xyz'
             }
         };
 
         function detectLanguage() {
+            let saved = null;
+            try {
+                saved = localStorage.getItem('site_lang');
+            } catch (e) { /* ignore */ }
+            if (saved === 'zh' || saved === 'en') return saved;
             const lang = navigator.language || navigator.userLanguage || 'en';
             return lang.startsWith('zh') ? 'zh' : 'en';
         }
@@ -829,6 +902,7 @@
             document.getElementById('perk3-body').textContent = t.perk3Body;
 
             document.getElementById('footer-text').textContent = t.footer;
+            document.getElementById('lang-toggle').textContent = t.langToggle;
 
             // Daily Hub 文案
             document.getElementById('hub-title').textContent = t.hubTitle;
@@ -958,6 +1032,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             const lang = detectLanguage();
             applyLanguage(lang);
+            document.getElementById('lang-toggle').addEventListener('click', () => {
+                const next = document.getElementById('html-root').lang === 'zh' ? 'en' : 'zh';
+                try {
+                    localStorage.setItem('site_lang', next);
+                } catch (e) { /* ignore */ }
+                applyLanguage(next);
+                updateDailyHub();
+            });
             setCanonicalAndSocialMeta();
             injectStructuredData();
             updateDailyHub();
