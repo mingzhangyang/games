@@ -207,16 +207,20 @@ const BALL_R = 19;
 const BALL_X = WORLD_W / 2;
 const BALL_Y = WORLD_H - 62;
 const GRAVITY = 1750;
-const FLICK_SCALE = 3.3;        // 甩动像素 → 速度倍率
+const FLICK_SCALE = 6.5;        // 甩动像素 → 速度倍率（170~230px 的自然甩动可覆盖全部筐高）
 const MAX_SPEED = 2050;
 const MAX_VX = 950;
 const MIN_FLICK_UP = 34;        // 最小向上甩动距离
 const RIM_R = 5;                // 篮筐前沿碰撞半径
 const RIM_LEN = 64;             // 篮筐宽度
+const RIM_RY = 8;               // 篮筐椭圆环纵向半径（透视压扁）
 const BB_W = 9;                 // 篮板厚度
 const BB_H = 84;                // 篮板高度
 const RESTITUTION_RIM = 0.55;
-const REPOSITION_DELAY = 380;   // 进球后换篮筐延迟
+const RESTITUTION_BB = 0.62;
+const REPOSITION_DELAY = 420;   // 进球后换篮筐延迟（等球穿网落地）
+const PREVIEW_DT = 1 / 60;
+const PREVIEW_STEPS = 28;       // 瞄准弹道预览步数（约 0.47s，只提示弧线不含碰撞）
 
 const STREAK_FIRE = 3;          // 连中 3 球触发火球
 const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
@@ -241,6 +245,7 @@ class HoopShotGame {
         this.ball = null;      // { x, y, vx, vy, rot, prevY }
         this.ballReady = true;
         this.launched = false;
+        this.settling = false; // 进球后等球穿网的过渡期（篮筐暂不摆动/换位）
 
         // 篮筐位置
         this.hoopX = 120;      // 篮筐前沿 lip 的 x
@@ -386,6 +391,7 @@ class HoopShotGame {
         this.ball = null;
         this.ballReady = true;
         this.launched = false;
+        this.settling = false;
         this.particles = [];
         this.popups = [];
         this.shake = 0;
@@ -420,27 +426,54 @@ class HoopShotGame {
 
     /* ── 篮筐 ── */
 
+    // 篮筐朝向始终面向投篮点：筐心在球左侧时镜像（板在左、筐口朝右），
+    // 否则篮板会挡在球与筐口之间，远侧篮筐无可行轨迹
     randomizeHoop(initial = false) {
-        const maxLipX = WORLD_W - 16 - RIM_LEN - BB_W;
-        this.hoopBaseX = 40 + Math.random() * Math.max(40, maxLipX - 40);
+        const minC = 89, maxC = WORLD_W - 89; // 板+筐组装体完整在屏内
+        const cx = minC + Math.random() * (maxC - minC);
+        this.hoopFlip = cx < BALL_X;
+        this.hoopBaseX = this.hoopFlip ? cx + RIM_LEN / 2 : cx - RIM_LEN / 2; // lip = 靠球一侧的筐沿
         this.hoopX = this.hoopBaseX;
-        if (!initial) {
+        // 摆动相位归零：新筐从基位起摆，不继承旧相位
+        this.hoopOsc = 0;
+        if (initial) {
+            this.rimY = 210;    // 每局第一筐固定高度，开局体验一致
+        } else {
             this.rimY = 150 + Math.random() * 110;
         }
     }
 
-    // 高分后篮筐开始左右飘移，速度随分数增加
+    // 高分后篮筐开始左右飘移，速度随分数增加。
+    // 相位自累计 + 振幅缓入：任何分数临界点、任何一帧都不发生位置跳变
     updateHoopMotion(dt) {
-        if (this.state !== 'playing' || this.score < 8) return;
-        const t = this.time;
+        if (this.state !== 'playing' || this.score < 8 || this.settling) {
+            if (this.score < 8) {
+                this.hoopOsc = 0;
+                this.hoopMotionAge = 0;
+            }
+            return;
+        }
+        this.hoopMotionAge += dt;
         const speed = 1.1 + Math.min(1.6, (this.score - 8) * 0.08);
-        const amp = Math.min(70, 34 + (this.score - 8) * 2.2);
-        const maxLipX = WORLD_W - 16 - RIM_LEN - BB_W;
-        this.hoopX = clamp(this.hoopBaseX + Math.sin(t * speed + (this.hoopPhase || 0)) * amp, 24, maxLipX);
+        const ampTarget = Math.min(70, 34 + (this.score - 8) * 2.2);
+        const amp = ampTarget * Math.min(1, this.hoopMotionAge / 1.2);
+        this.hoopOsc += speed * dt;
+        const lo = this.hoopFlip ? 89 : 40;
+        const hi = this.hoopFlip ? WORLD_W - 24 : WORLD_W - 16 - RIM_LEN - BB_W;
+        this.hoopX = clamp(this.hoopBaseX + Math.sin(this.hoopOsc) * amp, lo, hi);
     }
 
     get bbX() {
-        return this.hoopX + RIM_LEN;
+        // 篮板左侧面 x（两种朝向统一：板总在 bbX..bbX+BB_W）
+        return this.hoopFlip ? this.hoopX - BB_W - RIM_LEN : this.hoopX + RIM_LEN;
+    }
+
+    get rimLeft() {
+        return this.hoopFlip ? this.hoopX - RIM_LEN : this.hoopX;
+    }
+
+    get rimRight() {
+        return this.hoopFlip ? this.hoopX : this.hoopX + RIM_LEN;
     }
 
     /* ── 输入 ── */
@@ -565,16 +598,58 @@ class HoopShotGame {
     collideBackboard(ball) {
         const bx = this.bbX;
         const top = this.rimY - BB_H;
-        const bottom = this.rimY + 12;
-        // 从左侧撞上篮板
-        if (ball.x + BALL_R > bx && ball.x - BALL_R < bx + BB_W &&
-            ball.y > top - BALL_R && ball.y < bottom + BALL_R) {
-            if (ball.vx > 0) {
+        const bottom = this.rimY - 4; // 板面碰撞到筐线上沿为止：筐口通道必须畅通
+        const clank = (sx, sy) => {
+            ball.rimTouched = true;
+            Sfx.clank();
+            this.shake = Math.max(this.shake, 3);
+            this.spark(sx, sy, 5, '#dfe7ff');
+        };
+
+        // 按轴分解的挡板碰撞：板是墙，只响应各自轴向的入射。
+        // 圆-矩形斜法线会把竖直速度投影成横向弹飞（板角截胡筐口通道），必须避免。
+        if (ball.y > top - 4 && ball.y < bottom) {
+            // 左面：水平向右入射才反弹；竖直掠过的球仅被推出重叠
+            if (ball.x < bx && ball.x + BALL_R > bx) {
                 ball.x = bx - BALL_R;
-                ball.vx = -ball.vx * 0.6;
-                this.spark(ball.x + BALL_R, ball.y, 5, '#dfe7ff');
-                Sfx.clank();
-                this.shake = Math.max(this.shake, 3);
+                if (ball.vx > 0) {
+                    ball.vx = -ball.vx * RESTITUTION_BB;
+                    clank(bx, ball.y);
+                }
+            } else if (ball.x > bx + BB_W && ball.x - BALL_R < bx + BB_W) {
+                // 右面（镜像朝向时朝向投篮通道）
+                ball.x = bx + BB_W + BALL_R;
+                if (ball.vx < 0) {
+                    ball.vx = -ball.vx * RESTITUTION_BB;
+                    clank(bx + BB_W, ball.y);
+                }
+            }
+        }
+        // 顶面：只响应垂直下落
+        if (ball.x > bx && ball.x < bx + BB_W && ball.vy > 0 &&
+            ball.y + BALL_R > top && ball.y < top) {
+            ball.y = top - BALL_R;
+            ball.vy = -ball.vy * RESTITUTION_BB;
+            clank(ball.x, top);
+        }
+
+        // 兜底：斜角切入导致球心陷入板内——沿最浅轴推出，仅该轴速度向内时反弹
+        if (ball.x > bx && ball.x < bx + BB_W && ball.y > top && ball.y < bottom) {
+            const dL = ball.x - bx, dR = bx + BB_W - ball.x;
+            const dT = ball.y - top, dB = bottom - ball.y;
+            const m = Math.min(dL, dR, dT, dB);
+            if (m === dL) {
+                ball.x = bx - BALL_R;
+                if (ball.vx > 0) { ball.vx = -ball.vx * RESTITUTION_BB; clank(bx, ball.y); }
+            } else if (m === dR) {
+                ball.x = bx + BB_W + BALL_R;
+                if (ball.vx < 0) { ball.vx = -ball.vx * RESTITUTION_BB; clank(bx + BB_W, ball.y); }
+            } else if (m === dT) {
+                ball.y = top - BALL_R;
+                if (ball.vy > 0) { ball.vy = -ball.vy * RESTITUTION_BB; clank(ball.x, top); }
+            } else {
+                ball.y = bottom + BALL_R;
+                if (ball.vy < 0) { ball.vy = -ball.vy * RESTITUTION_BB; clank(ball.x, bottom); }
             }
         }
     }
@@ -609,7 +684,7 @@ class HoopShotGame {
         if (ball.scored || ball.vy <= 0) return;
         // 球心从篮筐线上方穿到下方，且水平位置在筐口内
         if (ball.prevY < this.rimY && ball.y >= this.rimY &&
-            ball.x > this.hoopX + 6 && ball.x < this.bbX - 6) {
+            ball.x > this.rimLeft + 6 && ball.x < this.rimRight - 6) {
             ball.scored = true;
             this.onScore(ball);
         }
@@ -643,14 +718,16 @@ class HoopShotGame {
         this.popups.push({ x: ball.x, y: this.rimY - 26, text: label, big: swish, life: 1 });
 
         this.updateHud();
-        this.randomizeHoop();
-        // 短暂延时后发球
+        // 换筐推迟到球穿网落地、新球就位时——避免球还挂在网里篮筐就瞬移
+        this.settling = true;
         setTimeout(() => {
-            if (this.state === 'playing') {
-                this.ball = null;
-                this.ballReady = true;
-                this.launched = false;
-            }
+            // 暂停（含切后台）时照常重生，否则恢复后无球可投（软锁）
+            if (this.state === 'gameover' || this.state === 'menu') return;
+            this.settling = false;
+            this.ball = null;
+            this.ballReady = true;
+            this.launched = false;
+            this.randomizeHoop();
         }, REPOSITION_DELAY);
     }
 
@@ -1052,9 +1129,10 @@ class HoopShotGame {
             ctx.fillRect(0, 0, WORLD_W, WORLD_H);
         }
 
-        this.drawHoop(ctx);
+        this.drawHoopBack(ctx);
         this.drawAim(ctx);
         this.drawBall(ctx);
+        this.drawHoopFront(ctx);
 
         // 粒子
         for (const p of this.particles) {
@@ -1081,8 +1159,8 @@ class HoopShotGame {
         ctx.restore();
     }
 
-    drawHoop(ctx) {
-        const lipX = this.hoopX;
+    /** 篮筐后景：篮板 + 环的后半弧 + 网的后半（球从它们前面穿过） */
+    drawHoopBack(ctx) {
         const bbX = this.bbX;
         const rimY = this.rimY;
 
@@ -1102,56 +1180,83 @@ class HoopShotGame {
         ctx.strokeRect(bbX + 1.5, rimY - 34, BB_W - 3, 26);
         ctx.restore();
 
-        // 网（在球后面画一半）
+        this.drawRimArc(ctx, false);
         this.drawNet(ctx, false);
+    }
 
-        // 篮筐（横杆）
-        ctx.save();
+    /** 篮筐前景：网的前半 + 环的前半弧 + 前沿圆头 + 支架（画在球之上） */
+    drawHoopFront(ctx) {
+        const rimY = this.rimY;
+        const bbX = this.bbX;
+        this.drawNet(ctx, true);
+        this.drawRimArc(ctx, true);
+
+        // 连接篮板的支架（板所在的一侧）
         const rimColor = this.onFire ? '#ff8c3a' : '#ff5a3c';
-        const rimGrad = ctx.createLinearGradient(lipX, rimY - 3, lipX, rimY + 3);
-        rimGrad.addColorStop(0, '#ffb08a');
-        rimGrad.addColorStop(0.5, rimColor);
-        rimGrad.addColorStop(1, '#b83a20');
-        ctx.fillStyle = rimGrad;
-        ctx.fillRect(lipX - RIM_R, rimY - 3, RIM_LEN + RIM_R + 3, 6);
-        // 前沿圆头
-        ctx.beginPath();
-        ctx.arc(lipX, rimY, RIM_R, 0, Math.PI * 2);
-        ctx.fillStyle = rimColor;
-        ctx.fill();
-        // 连接篮板的支架
+        ctx.save();
         ctx.strokeStyle = rimColor;
         ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(bbX, rimY - 14);
-        ctx.lineTo(bbX - 2, rimY);
+        if (this.hoopFlip) {
+            ctx.moveTo(bbX + BB_W, rimY - 14);
+            ctx.lineTo(bbX + BB_W + 2, rimY);
+        } else {
+            ctx.moveTo(bbX, rimY - 14);
+            ctx.lineTo(bbX - 2, rimY);
+        }
         ctx.stroke();
-        if (this.onFire) {
-            // 火热状态篮筐发光
-            ctx.globalAlpha = 0.35 + 0.15 * Math.sin(this.time * 8);
-            ctx.strokeStyle = '#ffb03a';
-            ctx.lineWidth = 2;
+        ctx.restore();
+    }
+
+    /** 开放的椭圆环（透视压扁）。front=true 画下半圈（靠观察者），否则上半圈 */
+    drawRimArc(ctx, front) {
+        const cx = (this.rimLeft + this.rimRight) / 2;
+        const rx = RIM_LEN / 2;
+        const rimColor = this.onFire ? '#ff8c3a' : '#ff5a3c';
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        if (front) {
+            ctx.strokeStyle = rimColor;
+            ctx.lineWidth = 4;
+            ctx.ellipse(cx, this.rimY, rx, RIM_RY, 0, 0, Math.PI);
+        } else {
+            ctx.strokeStyle = '#b8462e';
+            ctx.lineWidth = 3;
+            ctx.ellipse(cx, this.rimY, rx, RIM_RY, 0, Math.PI, Math.PI * 2);
+        }
+        ctx.stroke();
+        if (front) {
+            // 前沿圆头 = 碰撞体位置，醒目提示这是唯一会弹球的筐沿
             ctx.beginPath();
-            ctx.moveTo(lipX - RIM_R, rimY);
-            ctx.lineTo(bbX, rimY);
-            ctx.stroke();
-            ctx.globalAlpha = 1;
+            ctx.arc(this.hoopX, this.rimY, RIM_R, 0, Math.PI * 2);
+            ctx.fillStyle = rimColor;
+            ctx.fill();
+            if (this.onFire) {
+                ctx.globalAlpha = 0.35 + 0.15 * Math.sin(this.time * 8);
+                ctx.strokeStyle = '#ffb03a';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.ellipse(cx, this.rimY, rx + 3, RIM_RY + 3, 0, 0, Math.PI);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
         }
         ctx.restore();
-
-        // 网（前半）
-        this.drawNet(ctx, true);
     }
 
     drawNet(ctx, frontHalf) {
-        const lipX = this.hoopX;
-        const bbX = this.bbX;
         const rimY = this.rimY;
+        const rimL = this.rimLeft;
+        const rimR = this.rimRight;
         const squash = 1 + this.netSquash * 0.55;
         const netH = 42 * squash;
         const topW = RIM_LEN;
         const botW = topW * 0.55;
-        const cx = lipX + topW / 2;
+        const cx = (rimL + rimR) / 2;
+        // 前半网挂在环的前弧下方，后半网略高——椭圆环的纵深感
+        const topY = rimY + (frontHalf ? RIM_RY - 3 : -3);
         const bottomY = rimY + netH;
         const segs = 5;
 
@@ -1161,10 +1266,10 @@ class HoopShotGame {
         // 纵向线
         for (let i = 0; i <= segs; i++) {
             const t = i / segs;
-            const x1 = lipX + topW * t;
+            const x1 = rimL + topW * t;
             const x2 = cx - botW / 2 + botW * t;
             ctx.beginPath();
-            ctx.moveTo(x1, rimY + 3);
+            ctx.moveTo(x1, topY);
             ctx.lineTo(x2, bottomY);
             ctx.stroke();
         }
@@ -1174,8 +1279,8 @@ class HoopShotGame {
                 const t = j / 4;
                 const w = topW + (botW - topW) * t;
                 ctx.beginPath();
-                ctx.moveTo(cx - w / 2, rimY + 3 + netH * t);
-                ctx.lineTo(cx + w / 2, rimY + 3 + netH * t);
+                ctx.moveTo(cx - w / 2, topY + netH * t);
+                ctx.lineTo(cx + w / 2, topY + netH * t);
                 ctx.stroke();
             }
         }
@@ -1283,6 +1388,26 @@ class HoopShotGame {
         ctx.font = '700 13px "Segoe UI", system-ui, sans-serif';
         ctx.fillStyle = 'rgba(232,236,255,0.75)';
         ctx.fillText(`${Math.round(power * 100)}%`, BALL_X, BALL_Y - BALL_R - 16);
+        ctx.restore();
+
+        // 弹道预览：与 flick() 同一速度映射 + 同一重力的前半段弧线（不含碰撞）
+        const flen = Math.hypot(dx, dy);
+        const fspeed = Math.min(MAX_SPEED, flen * FLICK_SCALE);
+        let pvx = clamp((dx / flen) * fspeed, -MAX_VX, MAX_VX);
+        let pvy = (dy / flen) * fspeed;
+        let px = BALL_X, py = BALL_Y;
+        ctx.save();
+        ctx.fillStyle = '#ffd34d';
+        for (let i = 0; i < PREVIEW_STEPS; i++) {
+            pvy += GRAVITY * PREVIEW_DT;
+            px += pvx * PREVIEW_DT;
+            py += pvy * PREVIEW_DT;
+            if (i % 2 !== 0) continue;
+            ctx.globalAlpha = 0.55 * (1 - i / PREVIEW_STEPS) + 0.1;
+            ctx.beginPath();
+            ctx.arc(px, py, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
         ctx.restore();
     }
 
