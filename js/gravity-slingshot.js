@@ -5,8 +5,9 @@
  * 杆数计分（越少越好）：12 个手工关卡 + 每日赛程（5 洞，全场同一套，
  * 由 UTC+8 日期种子生成，并用弹道采样器验证可解性与标准杆）。
  *
- * 物理：固定 1/120s 子步半隐式欧拉积分， softened 逆平方引力，
- * 弹道预测与实际飞行共用同一积分器（完全确定）。
+ * 物理：固定 1/120s 子步半隐式欧拉积分（累积器驱动，任意刷新率下
+ * 实际飞行都与弹道预测逐帧一致），softened 逆平方引力。
+ * 瞄准阶段天体冻结在 t=0 位形——预测、所见与飞行三者一致。
  *
  * Vanilla JS. No runtime dependencies.
  */
@@ -35,6 +36,14 @@ function storageSet(key, value) {
 
 function clamp(v, min, max) {
     return v < min ? min : v > max ? max : v;
+}
+
+function vibrate(pattern) {
+    try {
+        if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch (e) {
+        // 不支持则忽略
+    }
 }
 
 /* ────────────────────────── i18n ────────────────────────── */
@@ -197,7 +206,10 @@ const CAPTURE_R = 15;        // 虫洞捕获半径
 const BOUNDS = 170;          // 出界边距
 const FLIGHT_TIMEOUT = 20;   // 飞行超时（卡死轨道）
 const DT = 1 / 120;          // 物理子步
-const PREVIEW_STEPS = 66;    // 弹道预测步数（0.55s，留操作空间）
+const PREVIEW_STEPS = 150;   // 弹道预测步数（1.25s，留操作空间）
+const MAX_STEPS_PER_FRAME = 30; // 单帧物理步上限（防掉帧螺旋）
+const WARP_1 = 8;            // 飞行超过 8s（模拟时间）→ 2× 观看速度
+const WARP_2 = 14;           // 超过 14s → 3×
 const POWER_K = 2.6;         // 拖拽像素 → 速度
 const MIN_DRAG = 18;         // 最小拖拽（逻辑像素）
 
@@ -385,8 +397,32 @@ function solvePar(level) {
     return 3;                                             // 需要行星辅助的多杆路线
 }
 
+// 当日赛程缓存：赛程由日期种子唯一决定，弹道采样验证较重，
+// 命中缓存可免去每次进入每日模式的重建卡顿
+function cachedDailyCourse(date) {
+    try {
+        const arr = JSON.parse(storageGet('gd_course_' + date));
+        if (!Array.isArray(arr) || arr.length !== 5) return null;
+        for (const lv of arr) {
+            if (!lv || typeof lv.par !== 'number' || !lv.pad || !lv.target
+                || typeof lv.pad.x !== 'number' || typeof lv.pad.y !== 'number'
+                || typeof lv.target.x !== 'number' || typeof lv.target.y !== 'number'
+                || !Array.isArray(lv.bodies)) return null;
+            for (const b of lv.bodies) {
+                if (!b || typeof b.x !== 'number' || typeof b.y !== 'number' || typeof b.r !== 'number') return null;
+            }
+        }
+        return arr;
+    } catch (e) {
+        return null;
+    }
+}
+
 function buildDailyCourse() {
-    const rng = mulberry32(hashStr('gravity-daily-' + todayCompact()));
+    const date = todayCompact();
+    const cached = cachedDailyCourse(date);
+    if (cached) return cached;
+    const rng = mulberry32(hashStr('gravity-daily-' + date));
     const holes = [];
     for (let i = 0; i < 5; i++) {
         let lv = null, par = null;
@@ -403,6 +439,18 @@ function buildDailyCourse() {
         }
         lv.par = par;
         holes.push(lv);
+    }
+    storageSet('gd_course_' + date, JSON.stringify(holes));
+    // 清理往日赛程缓存（纯缓存非战绩，可安全删除）
+    try {
+        const stale = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('gd_course_') && k !== 'gd_course_' + date) stale.push(k);
+        }
+        for (const k of stale) localStorage.removeItem(k);
+    } catch (e) {
+        // 存储不可用时跳过清理
     }
     return holes;
 }
@@ -534,6 +582,7 @@ class GravityGame {
         this.probe = null;
         this.trail = [];
         this.flightT = 0;
+        this.acc = 0;             // 固定步长累积器
         this.particles = [];
         this.rings = [];
         this.time = 0;
@@ -695,6 +744,7 @@ class GravityGame {
         this.trail = [];
         this.preview = null;
         this.drag = null;
+        this.flightT = 0;         // 天体时钟归零：瞄准所见 = 模拟所算
         this.particles.length = 0;
         this.rings.length = 0;
     }
@@ -753,27 +803,34 @@ class GravityGame {
         this.probe = { x: this.level.pad.x, y: this.level.pad.y, vx, vy };
         this.trail = [];
         this.flightT = 0;
+        this.acc = 0;
         Sfx.launch(clamp(Math.hypot(vx, vy) / SPEED_CAP, 0, 1));
+        vibrate(12);
         this.updateHud();
     }
 
     stepFlight() {
-        let steps = Math.min(8, Math.round(this.frameDt / DT));
-        if (steps <= 0) steps = 1;
-        const sub = this.frameDt / steps;
+        // 时间加速只影响墙钟进度（每帧多积分几个固定步），不改变积分器与结果
+        const warp = this.flightT > WARP_2 ? 3 : this.flightT > WARP_1 ? 2 : 1;
+        // 固定步长累积器：任何刷新率/帧抖动下实际飞行都与弹道预测逐帧一致
+        this.acc += this.frameDt * warp;
+        let steps = Math.floor(this.acc / DT);
+        if (steps > MAX_STEPS_PER_FRAME) { steps = MAX_STEPS_PER_FRAME; this.acc = 0; }
+        else this.acc -= steps * DT;
+
         for (let s = 0; s < steps; s++) {
             const n = bodiesAt(this.level, this.flightT);
             const a = accelAt(this.probe.x, this.probe.y, n);
-            this.probe.vx += a.ax * sub;
-            this.probe.vy += a.ay * sub;
+            this.probe.vx += a.ax * DT;
+            this.probe.vy += a.ay * DT;
             const sp = Math.hypot(this.probe.vx, this.probe.vy);
             if (sp > SPEED_CAP) {
                 this.probe.vx *= SPEED_CAP / sp;
                 this.probe.vy *= SPEED_CAP / sp;
             }
-            this.probe.x += this.probe.vx * sub;
-            this.probe.y += this.probe.vy * sub;
-            this.flightT += sub;
+            this.probe.x += this.probe.vx * DT;
+            this.probe.y += this.probe.vy * DT;
+            this.flightT += DT;
 
             if (collisionAt(this.probe.x, this.probe.y, n)) {
                 this.resolveFlight('crash');
@@ -794,20 +851,24 @@ class GravityGame {
                 this.resolveFlight('lost');
                 return;
             }
+            if ((s & 1) === 0) {
+                this.trail.push({ x: this.probe.x, y: this.probe.y });
+                if (this.trail.length > 90) this.trail.shift();
+            }
         }
-        this.trail.push({ x: this.probe.x, y: this.probe.y });
-        if (this.trail.length > 34) this.trail.shift();
     }
 
     resolveFlight(outcome) {
         this.phase = 'resolved';
         if (outcome === 'crash') {
             Sfx.crash();
+            vibrate(60);
             this.shake = 0.35;
             this.burst(this.probe.x, this.probe.y, '#ff8a5c', 18);
             this.showToast(this.TEXT.crashed + ' ' + this.TEXT.crashHint, 900, true);
         } else if (outcome === 'lost') {
             Sfx.lost();
+            vibrate(35);
             this.showToast(this.TEXT.lost + ' ' + this.TEXT.crashHint, 900, true);
         } else if (outcome === 'capture') {
             this.onCapture();
@@ -831,6 +892,7 @@ class GravityGame {
     onCapture() {
         this.phase = 'holed';
         Sfx.capture();
+        vibrate([25, 40, 70]);
         this.burst(this.probe.x, this.probe.y, '#7dfad0', 26);
         this.rings.push({ x: this.probe.x, y: this.probe.y, r: 6, maxR: 90, age: 0, life: 0.6, color: '#7dfad0' });
 
@@ -861,7 +923,7 @@ class GravityGame {
                 storageSet('gd_stars', JSON.stringify(this.stars));
             }
             this.updateSideRecords();
-        if (this.el['hole-stars']) this.el['hole-stars'].textContent = '⭐'.repeat(starCount) + '☆☆☆'.slice(0, (3 - starCount) * 1);
+        if (this.el['hole-stars']) this.el['hole-stars'].textContent = '⭐'.repeat(starCount) + '☆'.repeat(3 - starCount);
         if (this.el['hole-line']) {
             this.el['hole-line'].textContent = `${this.TEXT.launches} ${this.launches} · ${this.TEXT.par} ${par}`;
         }
@@ -1055,6 +1117,14 @@ class GravityGame {
 
     /* ── UI 事件 ── */
 
+    resetHole() {
+        if (this.phase === 'flying' || this.phase === 'resolved' || this.phase === 'aiming') {
+            this.phase = 'aiming';
+            this.loadLevelIntoView(this.level);
+            this.updateHud();
+        }
+    }
+
     bindUI() {
         if (this.el['btn-levels']) this.el['btn-levels'].addEventListener('click', () => {
             Sfx.click();
@@ -1072,13 +1142,21 @@ class GravityGame {
         if (this.el['btn-again']) this.el['btn-again'].addEventListener('click', () => { Sfx.click(); this.startDailyMode(); });
         if (this.el['reset-btn']) this.el['reset-btn'].addEventListener('click', () => {
             Sfx.click();
-            if (this.phase === 'flying' || this.phase === 'resolved' || this.phase === 'aiming') {
-                this.phase = 'aiming';
-                this.loadLevelIntoView(this.level);
-                this.updateHud();
-            }
+            this.resetHole();
         });
         if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());
+
+        // 键盘快捷键：R 重试/中止飞行，M 静音
+        window.addEventListener('keydown', (e) => {
+            if (e.target && e.target.closest && e.target.closest('input, textarea')) return;
+            const k = e.key.toLowerCase();
+            if (k === 'r') {
+                Sfx.click();
+                this.resetHole();
+            } else if (k === 'm') {
+                this.toggleMute();
+            }
+        });
 
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
         if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
@@ -1227,7 +1305,10 @@ class GravityGame {
 
         const level = this.level;
         if (!level) return;
-        const n = bodiesAt(level, this.phase === 'flying' ? this.flightT : this.time * 0.2);
+        // 天体时钟：菜单空闲漂移；其余阶段与物理模拟同步（瞄准=t0 冻结，
+        // 飞行/结算=flightT），保证预测、所见与飞行三者一致
+        const bodyT = this.phase === 'menu' ? this.time * 0.2 : this.flightT;
+        const n = bodiesAt(level, bodyT);
 
         // 卫星轨道环
         ctx.strokeStyle = 'rgba(255,255,255,0.07)';
@@ -1242,7 +1323,6 @@ class GravityGame {
         // 行星 + 卫星
         for (let i = 0; i < n; i++) {
             const b = bodyScratch[i];
-            const tone = 2; // 精灵缓存按半径区分，色相由 key 决定——这里用半径哈希选色
             const sprite = planetSprite(b.r, (b.r | 0) % PLANET_TONES.length);
             ctx.drawImage(sprite, b.x - sprite.width / 2, b.y - sprite.height / 2);
         }
@@ -1310,15 +1390,38 @@ class GravityGame {
 
         // 弹道预测
         if (this.preview && this.preview.pts.length) {
+            const pts = this.preview.pts;
             ctx.fillStyle = 'rgba(223,231,255,0.7)';
-            for (let i = 2; i < this.preview.pts.length; i += 3) {
-                const p = this.preview.pts[i];
-                ctx.globalAlpha = 0.65 * (1 - i / this.preview.pts.length);
+            for (let i = 2; i < pts.length; i += 3) {
+                const p = pts[i];
+                ctx.globalAlpha = 0.65 * (1 - i / pts.length);
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.globalAlpha = 1;
+            // 端点预告：撞毁 ✕ / 捕获环
+            const last = pts[pts.length - 1];
+            if (this.preview.outcome === 'crash' && last) {
+                ctx.strokeStyle = '#ff8a5c';
+                ctx.globalAlpha = 0.9;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(last.x - 4.5, last.y - 4.5);
+                ctx.lineTo(last.x + 4.5, last.y + 4.5);
+                ctx.moveTo(last.x + 4.5, last.y - 4.5);
+                ctx.lineTo(last.x - 4.5, last.y + 4.5);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            } else if (this.preview.outcome === 'capture' && last) {
+                ctx.strokeStyle = '#7dfad0';
+                ctx.globalAlpha = 0.85;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(last.x, last.y, 8 + Math.sin(this.time * 6) * 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
         }
 
         // 飞行尾迹（发光渐变）
@@ -1375,6 +1478,15 @@ class GravityGame {
         }
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
+
+        // 时间加速指示（物理结果不变，只是观看提速）
+        if (this.phase === 'flying' && this.flightT > WARP_1) {
+            ctx.fillStyle = 'rgba(223,231,255,0.4)';
+            ctx.font = 'bold 13px system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(this.flightT > WARP_2 ? '▶▶▶' : '▶▶', W - 10, 24);
+            ctx.textAlign = 'left';
+        }
     }
 }
 
