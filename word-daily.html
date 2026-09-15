@@ -20,7 +20,7 @@
     <meta name="twitter:title" content="Word Daily 每日猜词 — Daily Bilingual Word Puzzle">
     <meta name="twitter:description" content="Guess the word or the Chinese idiom in 6 tries. One puzzle a day.">
     <meta name="twitter:image" content="assets/seo/og-word-daily.svg">
-    <title>Word Daily 每日猜词 — Daily Bilingual Word Puzzle</title>
+    <title>Word Daily — Daily Bilingual Word Puzzle</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e24'/%3E%3Crect x='8' y='8' width='22' height='22' rx='5' fill='%233aa655'/%3E%3Crect x='34' y='8' width='22' height='22' rx='5' fill='%23d0a63f'/%3E%3Crect x='8' y='34' width='22' height='22' rx='5' fill='%23333a56'/%3E%3Crect x='34' y='34' width='22' height='22' rx='5' fill='%233aa655'/%3E%3C/svg%3E">
         <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -33,7 +33,7 @@
         <header class="wd-topbar">
             <div class="wd-topbar-group">
                 <button class="wd-icon-btn" id="wd-btn-mute" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
-                <button class="wd-icon-btn wd-lang-btn" id="wd-btn-lang" title="Switch mode">中文成语</button>
+                <button class="wd-icon-btn wd-lang-btn" id="wd-btn-lang" title="Switch mode">Idioms</button>
             </div>
             <div class="wd-title-box">
                 <h1 class="wd-title" id="wd-title">Word Daily</h1>
@@ -70,16 +70,16 @@
                 <div class="wd-end-actions">
                     <button type="button" class="wd-btn wd-btn-success wd-btn-lg wd-btn-block" id="wd-btn-next">
                         <span class="btn-icon">➡️</span>
-                        <span id="wd-next-label">下一题（无限练习）</span>
+                        <span id="wd-next-label">Next (Practice)</span>
                     </button>
                     <div class="wd-end-sub-actions">
                         <button type="button" class="wd-btn wd-btn-secondary" id="wd-btn-stats-inline">
                             <span class="btn-icon">📊</span>
-                            <span id="wd-stats-inline-label">查看战报</span>
+                            <span id="wd-stats-inline-label">Stats</span>
                         </button>
                         <button type="button" class="wd-btn wd-btn-secondary" id="wd-btn-share-inline">
                             <span class="btn-icon">📤</span>
-                            <span id="wd-share-inline-label">分享成绩</span>
+                            <span id="wd-share-inline-label">Share</span>
                         </button>
                     </div>
                 </div>
@@ -88,7 +88,7 @@
             <!-- 中文输入行 -->
             <div class="wd-zh-row hidden" id="wd-zh-input-row">
                 <input class="wd-zh-input" id="wd-zh-input" maxlength="4" autocomplete="off" enterkeyhint="send">
-                <button class="wd-zh-submit" id="wd-zh-submit">猜</button>
+                <button class="wd-zh-submit" id="wd-zh-submit">Guess</button>
             </div>
 
             <!-- 英文屏幕键盘 -->
@@ -120,12 +120,12 @@
             <div class="wd-global" id="wd-global"></div>
             <button class="wd-btn wd-btn-success wd-btn-block" id="wd-modal-next">
                 <span class="btn-icon">➡️</span>
-                <span id="wd-modal-next-label">下一题（无限练习）</span>
+                <span id="wd-modal-next-label">Next (Practice)</span>
             </button>
             <button class="wd-btn wd-btn-primary wd-btn-block" id="wd-share">📤 Share</button>
             <div class="wd-countdown" id="wd-countdown"></div>
             <nav class="more-games">
-                <div class="more-games-title">🎮 More Games · 更多游戏</div>
+                <div class="more-games-title">🎮 More Games</div>
                 <div class="more-games-links">
               <a href="math-rain.html">🔢 数字雨</a>
               <a href="tetris.html">🟦 俄罗斯方块</a>

@@ -814,6 +814,8 @@
                 hubProfilePlaceholder: 'Your name',
                 langToggle: '中文',
                 hubTotalPlayed: 'plays today',
+                badgeDaily: 'Daily',
+                badgeNew: 'New',
 
                 hoopShotName: 'Hoop Shot',
                 hoopShotDesc: 'Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!',
@@ -907,7 +909,9 @@
                 hubProfileHint: '全站排行榜昵称',
                 hubProfilePlaceholder: '你的昵称',
                 langToggle: 'English',
-                hubTotalPlayed: 'plays today',
+                hubTotalPlayed: '次今日对局',
+                badgeDaily: '今日挑战',
+                badgeNew: '新上线',
 
                 hoopShotName: '街机投篮',
                 hoopShotDesc: '一指甩投，一球定胜负！连中 3 球点燃火球模式分数翻倍，冲击全球前 10！',
@@ -1070,6 +1074,10 @@
             document.getElementById('hub-task-gravity-sub').textContent = t.hubTaskGravitySub;
             document.getElementById('hub-profile-hint').textContent = t.hubProfileHint;
             document.getElementById('player-name').placeholder = t.hubProfilePlaceholder;
+
+            // 徽章
+            document.querySelectorAll('.card-badge--daily').forEach(el => { el.textContent = t.badgeDaily; });
+            document.querySelectorAll('.card-badge--new').forEach(el => { el.textContent = t.badgeNew; });
         }
 
         function setCanonicalAndSocialMeta() {
@@ -1197,9 +1205,11 @@
                 .then(r => r.ok ? r.json() : Promise.reject(new Error('offline')))
                 .then(s => {
                     const el = document.getElementById('hub-total');
-                    const label = i18n[detectLanguage()].hubTotalPlayed;
+                    const curLang = detectLanguage();
                     if (el && s && s.total && s.total.p > 0) {
-                        el.textContent = '🔥 ' + s.total.p + ' ' + label;
+                        el.textContent = curLang === 'zh'
+                            ? ('🔥 今日已玩 ' + s.total.p + ' 次')
+                            : ('🔥 ' + s.total.p + ' ' + i18n.en.hubTotalPlayed);
                         el.hidden = false;
                     }
                 })
@@ -1213,6 +1223,7 @@
                 const next = document.getElementById('html-root').lang === 'zh' ? 'en' : 'zh';
                 try {
                     localStorage.setItem('site_lang', next);
+                    window.dispatchEvent(new CustomEvent('site-settings:changed'));
                 } catch (e) { /* ignore */ }
                 applyLanguage(next);
                 updateDailyHub();

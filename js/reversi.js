@@ -10,6 +10,7 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { updateMoreGames } from './more-games.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -393,6 +394,9 @@ class ReversiGame {
     applyLanguage() {
         const t = this.TEXT;
         document.documentElement.lang = this.lang;
+        document.title = this.lang === 'zh'
+            ? '黑白棋 — 经典策略棋类游戏'
+            : 'Reversi — Classic Strategy Board Game';
         if (this.el.title) this.el.title.textContent = t.title;
         if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
         if (this.el.howto) this.el.howto.textContent = t.howto;
@@ -412,6 +416,19 @@ class ReversiGame {
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         this.updatePlayerNames();
         this.updateStreakLine();
+
+        if (this.state === 'playing') {
+            const BLACK = 1, WHITE = 2;
+            if (this.mode === 'ai') {
+                this.setStatus(this.turn === BLACK ? t.yourTurn : t.aiThinking, this.turn === WHITE);
+            } else {
+                this.setStatus(this.turn === BLACK ? t.blackTurn : t.whiteTurn, false);
+            }
+        } else if (this.state === 'over') {
+            this.setStatus(t.gameOver, false);
+        }
+
+        updateMoreGames(this.lang);
     }
 
     updatePlayerNames() {
@@ -912,6 +929,11 @@ class ReversiGame {
                 if (e.key === 'Enter') this.el.username.blur();
             });
         }
+
+        window.addEventListener('site-settings:changed', () => {
+            this.lang = this.readLang();
+            this.applyLanguage();
+        });
     }
 }
 

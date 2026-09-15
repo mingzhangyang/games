@@ -1,3 +1,6 @@
+import { getLang, setLang } from './site-settings.js';
+import { updateMoreGames } from './more-games.js';
+
 const canvas = document.getElementById('gameBoard');
 const ctx = canvas.getContext('2d');
 const statusText = document.getElementById('statusText');
@@ -8,6 +11,58 @@ const modalMessage = document.getElementById('modalMessage');
 const modalRestartBtn = document.getElementById('modalRestartBtn');
 const difficultySelect = document.getElementById('difficultySelect');
 const modeText = document.getElementById('modeText'); // Fix #8
+
+const LANGUAGES = {
+    en: {
+        title: 'Gomoku - Five in a Row',
+        h1: 'Gomoku',
+        langBtn: '中文',
+        blackTurn: "Black's Turn",
+        whiteTurn: "White's Turn",
+        computerThinking: 'Computer Thinking...',
+        modeVsComputer: 'vs Computer',
+        mode2Players: '2 Players',
+        modeBtnVsComputer: 'Mode: vs Computer',
+        modeBtn2Players: 'Mode: 2 Players',
+        restart: 'Restart Game',
+        diffEasy: 'Easy',
+        diffMedium: 'Medium',
+        diffHard: 'Hard',
+        gameOver: 'Game Over',
+        draw: "It's a Draw!",
+        blackWins: 'Black Wins!',
+        whiteWins: 'White Wins!',
+        playAgain: 'Play Again',
+        viewBoard: 'View Board'
+    },
+    zh: {
+        title: '五子棋 - 经典策略棋牌',
+        h1: '五子棋',
+        langBtn: 'English',
+        blackTurn: '黑方走棋',
+        whiteTurn: '白方走棋',
+        computerThinking: '电脑思考中...',
+        modeVsComputer: '人机对战',
+        mode2Players: '双人对战',
+        modeBtnVsComputer: '模式: 人机对战',
+        modeBtn2Players: '模式: 双人对战',
+        restart: '重新开始',
+        diffEasy: '简单',
+        diffMedium: '中等',
+        diffHard: '困难',
+        gameOver: '对局结束',
+        draw: '平局！',
+        blackWins: '黑方获胜！',
+        whiteWins: '白方获胜！',
+        playAgain: '再来一局',
+        viewBoard: '查看棋盘'
+    }
+};
+
+let currentLang = getLang();
+function getTEXT() {
+    return LANGUAGES[currentLang] || LANGUAGES.en;
+}
 
 // Game Constants
 const BOARD_SIZE = 15;
@@ -72,6 +127,19 @@ function init() {
         resetGame();
     });
 
+    const langBtn = document.getElementById('langBtn');
+    if (langBtn) {
+        langBtn.addEventListener('click', () => {
+            const nextLang = currentLang === 'zh' ? 'en' : 'zh';
+            setLang(nextLang);
+            applyLanguage(nextLang);
+        });
+    }
+    window.addEventListener('site-settings:changed', () => {
+        applyLanguage(getLang());
+    });
+
+    applyLanguage(currentLang);
     resetGame();
 }
 
@@ -121,7 +189,8 @@ function resetGame() {
 
 function toggleMode() {
     gameMode = gameMode === 'pvp' ? 'pve' : 'pvp';
-    modeBtn.textContent = gameMode === 'pvp' ? 'Mode: 2 Players' : 'Mode: vs Computer';
+    const t = getTEXT();
+    modeBtn.textContent = gameMode === 'pvp' ? t.modeBtn2Players : t.modeBtnVsComputer;
     difficultySelect.style.display = gameMode === 'pve' ? 'inline-block' : 'none';
     resetGame();
 }
@@ -288,16 +357,17 @@ function makeMove(r, c) {
 function updateStatus() {
     // Fix #4: use a light color for both turns (dark background)
     statusText.style.color = '#e2e8f0';
+    const t = getTEXT();
 
     if (gameMode === 'pve' && currentPlayer === 2 && gameActive) {
-        statusText.textContent = "Computer Thinking...";
+        statusText.textContent = t.computerThinking;
     } else {
-        const playerText = currentPlayer === 1 ? "Black's Turn" : "White's Turn";
+        const playerText = currentPlayer === 1 ? t.blackTurn : t.whiteTurn;
         statusText.textContent = playerText;
     }
 
     // Fix #8: populate modeText
-    modeText.textContent = gameMode === 'pve' ? 'vs Computer' : '2 Players';
+    modeText.textContent = gameMode === 'pve' ? t.modeVsComputer : t.mode2Players;
 }
 
 // Fix #7: checkWin now collects winning cells into winningCells
@@ -386,12 +456,12 @@ function checkDraw() {
 function endGame(winner) {
     gameActive = false;
     if (typeof window.hubTrack === 'function') window.hubTrack('gomoku', 'finish');
+    const t = getTEXT();
     let msg = '';
     if (winner === 0) {
-        msg = "It's a Draw!";
+        msg = t.draw;
     } else {
-        const winnerName = winner === 1 ? "Black" : "White";
-        msg = `${winnerName} Wins!`;
+        msg = winner === 1 ? t.blackWins : t.whiteWins;
     }
 
     modalMessage.textContent = msg;
@@ -404,6 +474,36 @@ function showModal() {
 
 function closeModal() {
     modal.style.display = 'none';
+}
+
+function applyLanguage(lang) {
+    currentLang = lang || getLang();
+    const t = getTEXT();
+    document.documentElement.lang = currentLang;
+    document.title = t.title;
+
+    const gameTitle = document.getElementById('gameTitle');
+    if (gameTitle) gameTitle.textContent = t.h1;
+    const langBtn = document.getElementById('langBtn');
+    if (langBtn) langBtn.textContent = t.langBtn;
+    if (restartBtn) restartBtn.textContent = t.restart;
+    if (modeBtn) modeBtn.textContent = gameMode === 'pvp' ? t.modeBtn2Players : t.modeBtnVsComputer;
+
+    const optEasy = document.getElementById('optEasy');
+    if (optEasy) optEasy.textContent = t.diffEasy;
+    const optMedium = document.getElementById('optMedium');
+    if (optMedium) optMedium.textContent = t.diffMedium;
+    const optHard = document.getElementById('optHard');
+    if (optHard) optHard.textContent = t.diffHard;
+
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) modalTitle.textContent = t.gameOver;
+    if (modalRestartBtn) modalRestartBtn.textContent = t.playAgain;
+    const modalViewBtn = document.getElementById('modalViewBtn');
+    if (modalViewBtn) modalViewBtn.textContent = t.viewBoard;
+
+    updateStatus();
+    updateMoreGames(currentLang);
 }
 
 // Fix #11: getCandidateMoves helper - cells within distance 2 of existing pieces

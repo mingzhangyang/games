@@ -27,8 +27,11 @@
 </head>
 <body>
     <div class="game-container">
-        <a href="index.html" style="align-self:flex-start;color:#63b3ed;text-decoration:none;display:inline-flex;margin-bottom:-6px;" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
-        <h1>Gomoku</h1>
+        <div class="gomoku-top-row" style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:600px;margin-bottom:-6px;">
+            <a href="index.html" style="color:#63b3ed;text-decoration:none;display:inline-flex;" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button id="langBtn" class="btn btn-secondary" style="padding:6px 14px;font-size:14px;">中文</button>
+        </div>
+        <h1 id="gameTitle">Gomoku</h1>
         
         <div class="status-bar">
             <div class="status-item" id="statusText">Black's Turn</div>
@@ -43,31 +46,31 @@
             <button class="btn btn-primary" id="restartBtn">Restart Game</button>
             <button class="btn btn-secondary" id="modeBtn">Mode: vs Computer</button>
             <select id="difficultySelect" class="btn btn-secondary" style="appearance: auto; padding-right: 30px;">
-                <option value="easy">Easy</option>
-                <option value="medium" selected>Medium</option>
-                <option value="hard">Hard</option>
+                <option value="easy" id="optEasy">Easy</option>
+                <option value="medium" id="optMedium" selected>Medium</option>
+                <option value="hard" id="optHard">Hard</option>
             </select>
         </div>
     </div>
 
         <nav class="more-games">
-            <div class="more-games-title">🎮 More Games · 更多游戏</div>
+            <div class="more-games-title">🎮 More Games</div>
             <div class="more-games-links">
-          <a href="math-rain.html">🔢 数字雨</a>
-          <a href="tetris.html">🟦 俄罗斯方块</a>
-          <a href="tank-battle.html">🎯 坦克大战</a>
-          <a href="planet-merge.html">🪐 星球合成</a>
-          <a href="word-daily.html">🔤 每日猜词</a>
-          <a href="hoop-shot.html">🏀 街机投篮</a>
-          <a href="minesweeper.html">💣 扫雷</a>
-          <a href="reversi.html">⚪ 黑白棋</a>
-          <a href="tower-defense.html">🏰 霓虹塔防</a>
-          <a href="gravity-slingshot.html">🚀 引力弹弓</a>
+          <a href="math-rain.html">🔢 Math Rain</a>
+          <a href="tetris.html">🟦 Tetris</a>
+          <a href="tank-battle.html">🎯 Tank Battle</a>
+          <a href="planet-merge.html">🪐 Planet Merge</a>
+          <a href="word-daily.html">🔤 Word Daily</a>
+          <a href="hoop-shot.html">🏀 Hoop Shot</a>
+          <a href="minesweeper.html">💣 Minesweeper</a>
+          <a href="reversi.html">⚪ Reversi</a>
+          <a href="tower-defense.html">🏰 Neon TD</a>
+          <a href="gravity-slingshot.html">🚀 Gravity Slingshot</a>
             </div>
         </nav>
     <div class="modal" id="gameOverModal">
         <div class="modal-content">
-            <h2>Game Over</h2>
+            <h2 id="modalTitle">Game Over</h2>
             <p id="modalMessage"></p>
             <button class="btn btn-primary" id="modalRestartBtn">Play Again</button>
             <button class="btn btn-secondary" id="modalViewBtn">View Board</button>

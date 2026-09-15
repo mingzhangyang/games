@@ -36,8 +36,20 @@
 </head>
 <body>
     <p class="code">🎮 404</p>
-    <h1>Page not found</h1>
-    <p>The game you are looking for doesn't exist or has moved.</p>
-    <a href="/">Back to Games</a>
+    <h1 id="error-title">Page not found</h1>
+    <p id="error-desc">The game you are looking for doesn't exist or has moved.</p>
+    <a href="/" id="error-home">Back to Games</a>
+    <script>
+        try {
+            const lang = localStorage.getItem('site_lang') || (navigator.language && navigator.language.startsWith('zh') ? 'zh' : 'en');
+            if (lang === 'zh') {
+                document.documentElement.lang = 'zh';
+                document.title = '页面未找到 - 经典小游戏合集';
+                document.getElementById('error-title').textContent = '页面未找到';
+                document.getElementById('error-desc').textContent = '你访问的游戏页面不存在或已被移动。';
+                document.getElementById('error-home').textContent = '返回游戏大厅';
+            }
+        } catch (e) {}
+    </script>
 </body>
 </html>

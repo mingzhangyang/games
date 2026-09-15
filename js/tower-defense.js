@@ -13,6 +13,7 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { updateMoreGames } from './more-games.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -103,6 +104,16 @@ const LANGUAGES = {
         usernameLabel: 'Username (Enter to save)',
         copyResult: 'Copy',
         copied: 'Copied!',
+        statLives: 'Lives',
+        statGold: 'Gold',
+        statWave: 'Wave',
+        rangeBtnTitle: 'Toggle Ranges (R)',
+        speedBtnTitle: 'Speed',
+        pauseBtnTitle: 'Pause',
+        muteBtnTitle: 'Sound',
+        homeBtnTitle: 'Home',
+        empBtnTitle: 'EMP Shockwave (Q)',
+        overdriveBtnTitle: 'Overdrive (E)',
         language: '中文',
         hint: 'Click cell to build · Click tower to upgrade · Space to start wave'
     },
@@ -166,6 +177,16 @@ const LANGUAGES = {
         usernameLabel: '用户名（回车保存）',
         copyResult: '复制',
         copied: '已复制！',
+        statLives: '生命',
+        statGold: '金币',
+        statWave: '波次',
+        rangeBtnTitle: '切换射程圈 (R)',
+        speedBtnTitle: '游戏速度',
+        pauseBtnTitle: '暂停',
+        muteBtnTitle: '声音',
+        homeBtnTitle: '返回主页',
+        empBtnTitle: 'EMP 电磁震荡 (Q)',
+        overdriveBtnTitle: '战术超频 (E)',
         language: 'English',
         hint: '点空格建塔 · 点塔升级/集火 · 空格发波'
     }
@@ -523,6 +544,7 @@ class TowerDefenseGame {
         this.ctx = this.canvas.getContext('2d');
         this.el = {};
         ['td-lives', 'td-gold', 'td-wave', 'td-wave-btn', 'td-wave-text', 'td-wave-preview',
+         'td-stat-lives', 'td-stat-gold', 'td-stat-wave',
          'td-panel', 'td-toast', 'td-start', 'td-title', 'td-subtitle', 'td-howto', 'td-tower-intro',
          'td-btn-play', 'td-best-line', 'td-start-mute', 'td-start-lang',
          'td-pause', 'td-pause-title', 'td-btn-resume', 'td-btn-menu',
@@ -632,6 +654,9 @@ class TowerDefenseGame {
     applyLanguage() {
         const t = this.TEXT;
         document.documentElement.lang = this.lang;
+        document.title = this.lang === 'zh'
+            ? '霓虹塔防 — 策略塔防游戏'
+            : 'Neon Tower Defense — Strategy TD';
         if (this.el.title) this.el.title.textContent = t.title;
         if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
         if (this.el.howto) this.el.howto.textContent = t.howto;
@@ -655,6 +680,34 @@ class TowerDefenseGame {
         if (this.el['over-lbl-waves']) this.el['over-lbl-waves'].textContent = t.waveStat;
         if (this.el['over-lbl-kills']) this.el['over-lbl-kills'].textContent = t.kills;
         if (this.el['over-lbl-lives']) this.el['over-lbl-lives'].textContent = t.lives;
+        if (this.el['stat-lives']) this.el['stat-lives'].title = t.statLives;
+        if (this.el['stat-gold']) this.el['stat-gold'].title = t.statGold;
+        if (this.el['stat-wave']) this.el['stat-wave'].title = t.statWave;
+        if (this.el['range-btn']) {
+            this.el['range-btn'].title = t.rangeBtnTitle;
+            this.el['range-btn'].setAttribute('aria-label', t.rangeBtnTitle);
+        }
+        if (this.el['speed-btn']) this.el['speed-btn'].title = t.speedBtnTitle;
+        if (this.el['pause-btn']) {
+            this.el['pause-btn'].title = t.pauseBtnTitle;
+            this.el['pause-btn'].setAttribute('aria-label', t.pauseBtnTitle);
+        }
+        if (this.el['mute-btn']) {
+            this.el['mute-btn'].title = t.muteBtnTitle;
+            this.el['mute-btn'].setAttribute('aria-label', t.muteBtnTitle);
+        }
+        if (this.el['btn-home']) {
+            this.el['btn-home'].title = t.homeBtnTitle;
+            this.el['btn-home'].setAttribute('aria-label', t.homeBtnTitle);
+        }
+        if (this.el['skill-emp']) {
+            this.el['skill-emp'].title = t.empBtnTitle;
+            this.el['skill-emp'].setAttribute('aria-label', t.empBtnTitle);
+        }
+        if (this.el['skill-boost']) {
+            this.el['skill-boost'].title = t.overdriveBtnTitle;
+            this.el['skill-boost'].setAttribute('aria-label', t.overdriveBtnTitle);
+        }
 
         // 侧栏
         if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
@@ -671,6 +724,7 @@ class TowerDefenseGame {
         this.renderPanel();
         this.renderWaveButton();
         this.updateSkillButtons();
+        updateMoreGames(this.lang);
     }
 
     updateSideSkills() {
@@ -2586,6 +2640,11 @@ class TowerDefenseGame {
                 if (e.key === 'Enter') this.el.username.blur();
             });
         }
+
+        window.addEventListener('site-settings:changed', () => {
+            this.lang = this.readLang();
+            this.applyLanguage();
+        });
     }
 
     updateMuteButtons() {

@@ -11,6 +11,7 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { updateMoreGames } from './more-games.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -303,6 +304,9 @@ class HoopShotGame {
         this.lang = getLang();
         this.TEXT = LANGUAGES[this.lang];
         document.documentElement.lang = this.lang;
+        document.title = this.lang === 'zh'
+            ? '街机投篮 — 投篮街机游戏'
+            : 'Hoop Shot — Flick Basketball Arcade';
         const t = this.TEXT;
 
         if (this.el.title) this.el.title.textContent = t.title;
@@ -330,6 +334,7 @@ class HoopShotGame {
         if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
         if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
+        updateMoreGames(this.lang);
     }
 
     updateStartStats() {
@@ -1048,6 +1053,10 @@ class HoopShotGame {
                 if (e.key === 'Enter') username.blur();
             });
         }
+
+        window.addEventListener('site-settings:changed', () => {
+            this.applyLanguage();
+        });
     }
 
     /* ── 渲染 ── */

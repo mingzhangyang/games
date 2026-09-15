@@ -15,6 +15,7 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { updateMoreGames } from './more-games.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -81,6 +82,9 @@ const LANGUAGES = {
         usernameLabel: 'Username (Enter to save)',
         copyResult: 'Copy',
         copied: 'Copied!',
+        retryTitle: 'Retry',
+        sound: 'Sound',
+        home: 'Home',
         language: '中文',
         hint: 'Pull back & release to launch · planets bend your path',
         sideHowTo: 'How to play',
@@ -94,7 +98,7 @@ const LANGUAGES = {
         howto: '按住任意位置向后拉弹弓，松手发射探测器。行星引力会弯曲你的轨迹——借力甩尾，把探测器送进虫洞。杆数越少，星星越多！',
         playLevels: '🛰 关卡模式',
         playDaily: '📅 每日赛程',
-        level: '第',
+        level: '洞口',
         daily: '每日',
         launches: '杆数',
         par: '标准杆',
@@ -120,6 +124,9 @@ const LANGUAGES = {
         usernameLabel: '用户名（回车保存）',
         copyResult: '复制',
         copied: '已复制！',
+        retryTitle: '重试',
+        sound: '声音',
+        home: '主页',
         language: 'English',
         hint: '向后拉弹弓松手发射 · 借助行星引力变轨',
         sideHowTo: '玩法说明',
@@ -627,7 +634,7 @@ class GravityGame {
         ['gd-btn-home', 'gd-hole-label', 'gd-launches', 'gd-par', 'gd-total-box', 'gd-total',
          'gd-reset-btn', 'gd-mute-btn', 'gd-toast',
          'gd-start', 'gd-title', 'gd-subtitle', 'gd-howto', 'gd-btn-levels', 'gd-btn-daily',
-         'gd-level-grid', 'gd-daily-best', 'gd-start-mute', 'gd-start-lang',
+         'gd-level-label', 'gd-level-grid', 'gd-daily-best', 'gd-start-mute', 'gd-start-lang',
          'gd-side-howto-title', 'gd-side-howto', 'gd-side-records-title', 'gd-side-records',
          'gd-hole', 'gd-hole-stars', 'gd-hole-line', 'gd-btn-next', 'gd-btn-replay', 'gd-btn-menu1',
          'gd-over', 'gd-over-title', 'gd-over-score', 'gd-over-sub',
@@ -700,11 +707,15 @@ class GravityGame {
     applyLanguage() {
         const t = this.TEXT;
         document.documentElement.lang = this.lang;
+        document.title = this.lang === 'zh'
+            ? '引力弹弓 — 轨道物理益智游戏'
+            : 'Gravity Slingshot — Orbital Physics Puzzle';
         if (this.el.title) this.el.title.textContent = t.title;
         if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
         if (this.el.howto) this.el.howto.textContent = t.howto;
         if (this.el['btn-levels']) this.el['btn-levels'].textContent = t.playLevels;
         if (this.el['btn-daily']) this.el['btn-daily'].textContent = t.playDaily;
+        if (this.el['level-label']) this.el['level-label'].textContent = t.levelSelect;
         if (this.el['btn-next']) this.el['btn-next'].textContent = t.next;
         if (this.el['btn-replay']) this.el['btn-replay'].textContent = `⟲ ${t.retry}`;
         if (this.el['btn-menu1']) this.el['btn-menu1'].textContent = `🏠 ${t.menu}`;
@@ -716,6 +727,18 @@ class GravityGame {
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
+        if (this.el['reset-btn']) {
+            this.el['reset-btn'].title = t.retryTitle;
+            this.el['reset-btn'].setAttribute('aria-label', t.retryTitle);
+        }
+        if (this.el['btn-home']) {
+            this.el['btn-home'].title = t.home;
+            this.el['btn-home'].setAttribute('aria-label', t.home);
+        }
+        if (this.el['mute-btn']) {
+            this.el['mute-btn'].title = t.sound;
+            this.el['mute-btn'].setAttribute('aria-label', t.sound);
+        }
         // 桌面侧栏（≥1024px 可见）
         if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
         if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
@@ -723,6 +746,7 @@ class GravityGame {
         this.updateSideRecords();
         this.renderLevelGrid();
         this.updateDailyBest();
+        updateMoreGames(this.lang);
     }
 
     /** 桌面侧栏战绩（≥1024px 可见）：今日赛程最好杆数 + 关卡总星数 */
@@ -1270,6 +1294,12 @@ class GravityGame {
                 if (e.key === 'Enter') this.el.username.blur();
             });
         }
+
+        window.addEventListener('site-settings:changed', () => {
+            this.lang = this.readLang();
+            this.applyLanguage();
+            this.updateHud();
+        });
     }
 
     toggleMute() {

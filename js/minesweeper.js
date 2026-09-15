@@ -9,6 +9,7 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { updateMoreGames } from './more-games.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -54,6 +55,7 @@ const LANGUAGES = {
         noScores: 'No clears yet',
         lbOffline: 'Leaderboard offline',
         usernameLabel: 'Username (Enter to save)',
+        again: 'Play Again',
         copyResult: 'Copy',
         copied: 'Copied!',
         close: 'Close',
@@ -61,6 +63,12 @@ const LANGUAGES = {
         hintFlagMode: 'Flag mode on — taps place flags',
         mines: 'Mines',
         time: 'Time',
+        minesLeft: 'Mines left',
+        newGame: 'New game',
+        timeElapsed: 'Time',
+        flagModeTitle: 'Flag mode',
+        sound: 'Sound',
+        home: 'Home',
         language: '中文',
         shareLine: 'Cleared in'
     },
@@ -83,6 +91,7 @@ const LANGUAGES = {
         noScores: '暂无成绩',
         lbOffline: '榜单离线',
         usernameLabel: '用户名（回车保存）',
+        again: '再来一局',
         copyResult: '复制',
         copied: '已复制！',
         close: '关闭',
@@ -90,6 +99,12 @@ const LANGUAGES = {
         hintFlagMode: '插旗模式已开启——点击即插旗',
         mines: '剩余雷数',
         time: '用时',
+        minesLeft: '剩余地雷',
+        newGame: '新游戏',
+        timeElapsed: '时间',
+        flagModeTitle: '插旗模式',
+        sound: '声音',
+        home: '主页',
         language: 'English',
         shareLine: '用时'
     }
@@ -183,6 +198,7 @@ class MinesweeperGame {
         this.boardEl = document.getElementById('ms-board');
         this.el = {};
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
+         'ms-counter-mines', 'ms-counter-timer',
          'ms-flagmode', 'ms-hint', 'ms-start', 'ms-title', 'ms-subtitle', 'ms-howto',
          'ms-btn-play', 'ms-best-grid', 'ms-start-mute', 'ms-start-lang',
          'ms-result', 'ms-result-title', 'ms-result-time', 'ms-result-best',
@@ -223,6 +239,7 @@ class MinesweeperGame {
     applyLanguage() {
         const t = this.TEXT;
         document.documentElement.lang = this.lang;
+        document.title = this.lang === 'zh' ? '扫雷 — 经典逻辑益智游戏' : 'Minesweeper — Classic Logic Puzzle';
         if (this.el.title) this.el.title.textContent = t.title;
         if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
         if (this.el.howto) this.el.howto.textContent = t.howto;
@@ -230,9 +247,25 @@ class MinesweeperGame {
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
+        if (this.el['btn-again']) this.el['btn-again'].textContent = `🔄 ${t.again}`;
         if (this.el['btn-copy']) this.el['btn-copy'].textContent = `📋 ${t.copyResult}`;
         if (this.el['btn-close']) this.el['btn-close'].textContent = `✖ ${t.close}`;
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
+        if (this.el['counter-mines']) this.el['counter-mines'].title = t.minesLeft;
+        if (this.el['counter-timer']) this.el['counter-timer'].title = t.timeElapsed;
+        if (this.el.face) this.el.face.title = t.newGame;
+        if (this.el.flagmode) {
+            this.el.flagmode.title = t.flagModeTitle;
+            this.el.flagmode.setAttribute('aria-label', t.flagModeTitle);
+        }
+        if (this.el['btn-home']) {
+            this.el['btn-home'].title = t.home;
+            this.el['btn-home'].setAttribute('aria-label', t.home);
+        }
+        if (this.el['mute-btn']) {
+            this.el['mute-btn'].title = t.sound;
+            this.el['mute-btn'].setAttribute('aria-label', t.sound);
+        }
 
         for (const d of ['easy', 'medium', 'hard']) {
             const btn = document.querySelector(`[data-diff="${d}"]`);
@@ -242,6 +275,7 @@ class MinesweeperGame {
         this.updateFlagModeButton();
         this.updateHint();
         this.renderBestChips();
+        updateMoreGames(this.lang);
     }
 
     updateHint() {
@@ -889,6 +923,11 @@ class MinesweeperGame {
         document.addEventListener('visibilitychange', () => {
             // 页面隐藏时暂停计时显示不中断真实计时，回归后立即刷新
             if (!document.hidden && this.state === 'playing') this.updateTimerDisplay();
+        });
+
+        window.addEventListener('site-settings:changed', () => {
+            this.lang = this.readLang();
+            this.applyLanguage();
         });
     }
 

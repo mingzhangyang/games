@@ -1,4 +1,5 @@
 import { getLang, setLang } from './site-settings.js';
+import { updateMoreGames } from './more-games.js';
 
 function escapeHTML(str) {
     return String(str)
@@ -74,7 +75,7 @@ const LANGUAGES = {
         start: '开始游戏',
         pause: '暂停',
         resume: '继续',
-        levelUp: 'LEVEL UP!',
+        levelUp: '升级！',
         comboDisplay: x => `${x}x 连击!`
     }
 };
@@ -157,8 +158,11 @@ function setupUsernameInput() {
 }
 
 function setLangUI() {
+    document.documentElement.lang = currentLang;
     document.title = TEXT.title;
-    document.getElementById('themeToggle').textContent = TEXT.themeToggle;
+    document.getElementById('themeToggle').textContent = (typeof game !== 'undefined' && game && game.isRainbowTheme)
+        ? (currentLang === 'zh' ? '✨ 普通主题' : '✨ Normal Theme')
+        : TEXT.themeToggle;
     document.getElementById('gameOverTitle').textContent = TEXT.gameOver;
     document.getElementById('finalScoreLabel').innerHTML = TEXT.finalScore + '<span id="finalScore">0</span>';
     document.getElementById('restartBtn').textContent = TEXT.restart;
@@ -183,6 +187,8 @@ function setLangUI() {
         document.getElementById('mobilePauseBtn').textContent = TEXT.pause;
         document.getElementById('mobileRestartBtn').textContent = TEXT.restart;
     }
+
+    updateMoreGames(currentLang);
 }
 
 // 获取并显示全站前5名分数

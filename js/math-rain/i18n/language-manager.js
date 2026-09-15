@@ -6,6 +6,7 @@
 import LANGUAGES_EN from './lang-en.js';
 import LANGUAGES_ZH from './lang-zh.js';
 import { getLang, setLang } from '../../site-settings.js';
+import { updateMoreGames } from '../../more-games.js';
 
 class LanguageManager {
     constructor() {
@@ -86,12 +87,18 @@ class LanguageManager {
         const texts = this.languages[this.currentLanguage];
         if (!texts) return;
 
+        if (typeof document !== 'undefined') {
+            document.documentElement.lang = this.currentLanguage;
+            document.title = this.currentLanguage === 'zh' ? '数字雨 - 算术益智游戏' : 'Math Rain - Mathematical Expression Game';
+        }
+
         // Basic game elements
         this.updateElement('game-title', texts.gameTitle);
         this.updateElement('game-subtitle', texts.gameSubtitle);
         this.updateElement('start-game-btn', texts.startGame);
         this.updateElement('help-btn', texts.helpButton);
         this.updateElement('difficulty-title', texts.difficulty);
+        this.updateElement('start-home-btn', `🏠 ${texts.home || 'Home'}`);
 
         // Game stats labels
         this.updateElement('score-label', texts.score);
@@ -136,6 +143,9 @@ class LanguageManager {
         this.updateElement('session-continue-btn', texts.continueNext);
         this.updateElement('session-retry-btn', texts.retryLevel);
         this.updateElement('session-menu-btn', texts.backToMenu);
+        this.updateElement('play-again-btn', texts.playAgain || 'Play Again');
+        this.updateElement('change-difficulty-btn', texts.changeDifficulty || 'Change Difficulty');
+        this.updateElement('home-btn', this.currentLanguage === 'zh' ? '返回主页' : 'Home');
 
         // Settings
         this.updateElement('sound-volume-label', texts.soundVolume);
@@ -195,6 +205,9 @@ class LanguageManager {
         
         // Update language buttons state
         this.updateLanguageButtons();
+
+        // 刷新交叉推荐条
+        updateMoreGames(this.currentLanguage);
     }
 
     /**

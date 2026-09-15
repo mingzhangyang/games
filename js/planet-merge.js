@@ -9,6 +9,7 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { updateMoreGames } from './more-games.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -480,6 +481,7 @@ class PlanetMergeGame {
         this.TEXT = LANGUAGES[this.lang];
         const t = this.TEXT;
         document.documentElement.lang = this.lang;
+        document.title = this.lang === 'zh' ? '星球合成 — 宇宙合成消除' : 'Planet Merge — Cosmic Merge Puzzle';
 
         if (this.el.title) this.el.title.textContent = t.title;
         if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
@@ -523,6 +525,7 @@ class PlanetMergeGame {
         this.updateStartStats();
         this.renderChainShowcase();
         this.renderSkinPicker();
+        updateMoreGames(this.lang);
     }
 
     renderChainShowcase() {

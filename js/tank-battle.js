@@ -39,6 +39,11 @@ const LANGUAGES = {
         orientSub: '专为横屏掌机体验深度优化',
         orientEn: 'Rotate to landscape for arcade controls',
         orientHomeText: '返回游戏大厅',
+        title: '坦克大战 - 经典街机',
+        fire: '开火',
+        pauseTitle: '暂停/继续',
+        langTitle: '切换语言',
+        weaponTitle: '切换武器',
         
         // 道具图标
         powerUpIcons: {
@@ -83,8 +88,13 @@ const LANGUAGES = {
         continueHintMobile: 'Tap Screen to Continue',
         orientTitle: 'Please Rotate to Landscape',
         orientSub: 'Optimized for Arcade Controls',
-        orientEn: 'Rotate to landscape for arcade controls',
+        orientEn: '',
         orientHomeText: 'Back to Games',
+        title: 'Tank Battle - Retro Arcade',
+        fire: 'FIRE',
+        pauseTitle: 'Pause / Resume',
+        langTitle: 'Switch Language',
+        weaponTitle: 'Switch Weapon',
         
         // Power-up Icons
         powerUpIcons: {
@@ -143,6 +153,8 @@ function updateUILabels() {
         const el = document.getElementById(id);
         if (el) el.textContent = text;
     };
+    document.documentElement.lang = currentLanguage;
+    document.title = t('title');
     setElemText('livesLabel', t('lives'));
     setElemText('scoreLabel', t('score'));
     setElemText('levelLabel', t('level'));
@@ -153,8 +165,26 @@ function updateUILabels() {
     if (controlsText) controlsText.innerHTML = t('controls');
     setElemText('orientTitle', t('orientTitle'));
     setElemText('orientSub', t('orientSub'));
-    setElemText('orientEn', t('orientEn'));
+    const orientEn = document.getElementById('orientEn');
+    if (orientEn) {
+        orientEn.textContent = t('orientEn');
+        orientEn.style.display = currentLanguage === 'zh' ? '' : 'none';
+    }
     setElemText('orientHomeText', t('orientHomeText'));
+    const vFireLabel = document.getElementById('vFireLabel');
+    if (vFireLabel) vFireLabel.textContent = t('fire');
+
+    const btnPause = document.getElementById('btnPause');
+    if (btnPause) btnPause.title = t('pauseTitle');
+    const btnLang = document.getElementById('btnLang');
+    if (btnLang) btnLang.title = t('langTitle');
+    const btnWeapon = document.getElementById('btnWeapon');
+    if (btnWeapon) btnWeapon.title = t('weaponTitle');
+
+    if (window.tankBattleInstance && window.tankBattleInstance.player) {
+        const curW = document.getElementById('currentWeapon');
+        if (curW) curW.textContent = getWeaponName(window.tankBattleInstance.player.weapon);
+    }
 }
 
 // 游戏配置常量
@@ -2270,5 +2300,9 @@ class TankBattle {
 // 启动游戏
 window.addEventListener('load', () => {
     updateUILabels(); // 初始化UI标签
-    new TankBattle();
+    window.tankBattleInstance = new TankBattle();
+});
+window.addEventListener('site-settings:changed', () => {
+    currentLanguage = getLang();
+    updateUILabels();
 });
