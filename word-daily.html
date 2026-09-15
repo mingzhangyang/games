@@ -31,16 +31,16 @@
     <div class="wd-shell">
         <!-- 顶栏 -->
         <header class="wd-topbar">
-            <div class="wd-topbar-group">
+            <div class="wd-topbar-group wd-topbar-left">
+                <a class="wd-icon-btn wd-home-link" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
                 <button class="wd-icon-btn" id="wd-btn-mute" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
-                <button class="wd-icon-btn wd-lang-btn" id="wd-btn-lang" title="Switch mode">Idioms</button>
             </div>
             <div class="wd-title-box">
                 <h1 class="wd-title" id="wd-title">Word Daily</h1>
                 <div class="wd-sub-row"><span class="wd-num" id="wd-num">#1</span><span class="wd-mode-tag" id="wd-mode-tag"></span></div>
             </div>
-            <div class="wd-topbar-group">
-                <a class="wd-icon-btn wd-home-link" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <div class="wd-topbar-group wd-topbar-right">
+                <button class="wd-icon-btn wd-lang-btn" id="wd-btn-lang" title="Switch mode">Idioms</button>
                 <button class="wd-icon-btn" id="wd-btn-practice" title="Practice">🎲</button>
                 <button class="wd-icon-btn" id="wd-btn-help" title="How to play">❓</button>
                 <button class="wd-icon-btn" id="wd-btn-stats" title="Stats">📊</button>
@@ -49,16 +49,45 @@
 
         <div class="wd-banner hidden" id="wd-practice-banner"></div>
 
+        <!-- 难度选择（单词模式） -->
+        <div class="wd-diff-row" id="wd-diff-row">
+            <button type="button" class="wd-diff-btn" data-len="4" id="wd-diff-4">
+                <span class="wd-diff-tag">4</span>
+                <span class="wd-diff-title" id="wd-diff-label-4">4 Letters</span>
+                <span class="wd-diff-status" id="wd-diff-status-4"></span>
+            </button>
+            <button type="button" class="wd-diff-btn active" data-len="5" id="wd-diff-5">
+                <span class="wd-diff-tag">5</span>
+                <span class="wd-diff-title" id="wd-diff-label-5">5 Letters</span>
+                <span class="wd-diff-status" id="wd-diff-status-5"></span>
+            </button>
+            <button type="button" class="wd-diff-btn" data-len="6" id="wd-diff-6">
+                <span class="wd-diff-tag">6</span>
+                <span class="wd-diff-title" id="wd-diff-label-6">6 Letters</span>
+                <span class="wd-diff-status" id="wd-diff-status-6"></span>
+            </button>
+        </div>
+
         <!-- 释义提示（成语模式） -->
         <div class="wd-hint-card hidden" id="wd-hint-card">
             <span class="wd-hint-label" id="wd-hint-label">📖 释义</span>
             <span class="wd-hint-text" id="wd-hint-text"></span>
         </div>
 
-        <!-- 棋盘 -->
+        <!-- 棋盘与操作区 -->
         <main class="wd-main">
-            <div class="wd-board" id="wd-board" style="--cols: 5"></div>
+            <div class="wd-board-wrap">
+                <div class="wd-board" id="wd-board" style="--cols: 5"></div>
+            </div>
             <div class="wd-toast" id="wd-toast"></div>
+
+            <!-- 统一输入行 -->
+            <div class="wd-input-row" id="wd-input-row">
+                <input class="wd-input" id="wd-input" maxlength="5" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="send">
+                <button type="button" class="wd-submit-btn" id="wd-submit-btn">
+                    <span class="wd-submit-text" id="wd-submit-text">Guess</span>
+                </button>
+            </div>
 
             <!-- 结算与进入下一题操作区 -->
             <div class="wd-end-panel hidden" id="wd-end-panel">
@@ -84,15 +113,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- 中文输入行 -->
-            <div class="wd-zh-row hidden" id="wd-zh-input-row">
-                <input class="wd-zh-input" id="wd-zh-input" maxlength="4" autocomplete="off" enterkeyhint="send">
-                <button class="wd-zh-submit" id="wd-zh-submit">Guess</button>
-            </div>
-
-            <!-- 英文屏幕键盘 -->
-            <div class="wd-kb" id="wd-kb"></div>
         </main>
     </div>
 

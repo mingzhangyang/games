@@ -1160,7 +1160,7 @@
                 }
             };
 
-            const wordDone = !!(ls(`wd_daily_${iso}_en`) || ls(`wd_daily_${iso}_zh`));
+            const wordDone = !!(ls(`wd_daily_${iso}_en`) || ls(`wd_daily_${iso}_en_4`) || ls(`wd_daily_${iso}_en_5`) || ls(`wd_daily_${iso}_en_6`) || ls(`wd_daily_${iso}_zh`));
             const mergeDone = !!ls(`pm_daily_${compact}`);
             const gravityDone = !!ls(`gs_daily_${compact}`);
             const doneCount = (wordDone ? 1 : 0) + (mergeDone ? 1 : 0) + (gravityDone ? 1 : 0);

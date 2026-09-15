@@ -7,7 +7,7 @@
  * spoiler-free emoji share, global daily battle report.
  */
 
-import { EN_ANSWERS, EN_EXTRA } from './word-daily-data-en.js';
+import { EN_DATA_MAP } from './word-daily-data-en.js';
 import { ZH_IDIOMS } from './word-daily-data-zh.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
@@ -83,25 +83,30 @@ function hashString(str) {
 
 /* ────────────────────────── data prep ────────────────────────── */
 
-const WORD_LEN_EN = 5;
+const WORD_LEN_DEFAULT = 5;
 const WORD_LEN_ZH = 4;
 const MAX_GUESSES = 6;
 
 const EN = (() => {
-    const clean = (list) => {
+    const clean = (list, len) => {
         const out = [];
         const seen = new Set();
-        for (const raw of list) {
+        for (const raw of (list || [])) {
             const w = String(raw).toLowerCase().trim();
-            if (w.length !== WORD_LEN_EN || !/^[a-z]{5}$/.test(w) || seen.has(w)) continue;
+            if (w.length !== len || !/^[a-z]+$/.test(w) || seen.has(w)) continue;
             seen.add(w);
             out.push(w);
         }
         return out;
     };
-    const answers = clean(EN_ANSWERS);
-    const extra = clean(EN_EXTRA);
-    return { answers, valid: new Set([...answers, ...extra]) };
+    const map = {};
+    for (const len of [4, 5, 6]) {
+        const entry = EN_DATA_MAP[len] || { answers: [], extra: [] };
+        const answers = clean(entry.answers, len);
+        const extra = clean(entry.extra, len);
+        map[len] = { answers, valid: new Set([...answers, ...extra]) };
+    }
+    return map;
 })();
 
 const ZH = (() => {
@@ -116,30 +121,34 @@ const ZH = (() => {
     return { idioms: out, wordSet: new Set(out.map(x => x.w)) };
 })();
 
-// 按谜题编号取当日题目
-function dailyEntry(langMode, num) {
+// 按谜题编号与字长取当日题目
+function dailyEntry(langMode, num, wordLen = WORD_LEN_DEFAULT) {
     if (langMode === 'zh') {
         return ZH.idioms[(hashString('zh-' + num) + num) % ZH.idioms.length];
     }
-    return EN.answers[(hashString('en-' + num) + num) % EN.answers.length];
+    const pool = EN[wordLen] || EN[WORD_LEN_DEFAULT];
+    const key = wordLen === 5 ? `en-${num}` : `en-${wordLen}-${num}`;
+    return pool.answers[(hashString(key) + num) % pool.answers.length];
 }
 
 function evaluateGuess(guess, answer) {
-    const len = guess.length;
+    const g = String(guess || '').trim().toLowerCase();
+    const a = String(answer || '').trim().toLowerCase();
+    const len = g.length;
     const result = Array(len).fill('absent');
     const remaining = {};
     for (let i = 0; i < len; i++) {
-        if (guess[i] === answer[i]) {
+        if (g[i] === a[i]) {
             result[i] = 'correct';
         } else {
-            remaining[answer[i]] = (remaining[answer[i]] || 0) + 1;
+            remaining[a[i]] = (remaining[a[i]] || 0) + 1;
         }
     }
     for (let i = 0; i < len; i++) {
         if (result[i] === 'correct') continue;
-        if ((remaining[guess[i]] || 0) > 0) {
+        if ((remaining[g[i]] || 0) > 0) {
             result[i] = 'present';
-            remaining[guess[i]]--;
+            remaining[g[i]]--;
         }
     }
     return result;
@@ -208,11 +217,21 @@ const LANGUAGES = {
         switchToEn: 'Words',
         switchModeTitle: 'Switch puzzle mode',
         guessPlaceholder: 'Type a 4-character idiom…',
+        guessPlaceholderZh: 'Type a 4-character idiom…',
+        guessPlaceholderEn: 'Type a {n}-letter word…',
         submit: 'Guess',
         hintLabel: 'Definition',
+        diff4: '4 Letters',
+        diff5: '5 Letters',
+        diff6: '6 Letters',
+        diff4Desc: 'Easy',
+        diff5Desc: 'Classic',
+        diff6Desc: 'Hard',
         notInDict: 'Not in the word list',
         notInIdiomDict: 'No such idiom in the list — try another',
-        tooShort: 'Too short',
+        tooShort: 'Too short — please enter a full word',
+        tooShortZh: 'Please enter a 4-character idiom',
+        tooShortEn: 'Please enter a {n}-letter word',
         needIme: 'Tip: use a Chinese input method (IME) to type the idiom',
         winMsg: 'Brilliant!',
         loseMsg: 'The word was',
@@ -273,11 +292,21 @@ const LANGUAGES = {
         switchToEn: '单词模式',
         switchModeTitle: '切换词库模式',
         guessPlaceholder: '输入四字成语…',
+        guessPlaceholderZh: '输入四字成语…',
+        guessPlaceholderEn: '输入{n}位英文单词…',
         submit: '猜',
         hintLabel: '释义',
+        diff4: '4 字母',
+        diff5: '5 字母',
+        diff6: '6 字母',
+        diff4Desc: '简单',
+        diff5Desc: '经典',
+        diff6Desc: '挑战',
         notInDict: '词库里没有这个单词',
         notInIdiomDict: '词库里没有这个成语，换一个试试',
-        tooShort: '字数不够',
+        tooShort: '字数不够，请输入完整词语',
+        tooShortZh: '请输满 4 个字的成语后再提交',
+        tooShortEn: '请输满 {n} 个字母的单词后再提交',
         needIme: '小提示：用中文输入法打出四字成语',
         winMsg: '太棒了！',
         loseMsg: '答案是',
@@ -333,6 +362,7 @@ const STATS_URL = 'https://word-daily-stats.orangely.workers.dev';
 class WordDailyGame {
     constructor() {
         this.langMode = this.resolveLangMode(); // 'en' | 'zh'
+        this.wordLength = this.resolveWordLength(); // 4 | 5 | 6 (for en)
         this.TEXT = null;
         this.mode = 'daily'; // 'daily' | 'practice'
         this.status = 'playing'; // playing | won | lost
@@ -357,7 +387,10 @@ class WordDailyGame {
         const ids = [
             'wd-title', 'wd-num', 'wd-mode-tag', 'wd-practice-banner',
             'wd-board', 'wd-toast',
-            'wd-kb', 'wd-zh-input-row', 'wd-zh-input', 'wd-zh-submit',
+            'wd-diff-row', 'wd-diff-4', 'wd-diff-5', 'wd-diff-6',
+            'wd-diff-label-4', 'wd-diff-label-5', 'wd-diff-label-6',
+            'wd-diff-status-4', 'wd-diff-status-5', 'wd-diff-status-6',
+            'wd-input-row', 'wd-input', 'wd-submit-btn', 'wd-submit-text',
             'wd-hint-card', 'wd-hint-text', 'wd-hint-label',
             'wd-btn-stats', 'wd-btn-help', 'wd-btn-practice', 'wd-btn-lang', 'wd-btn-mute',
             'wd-help-modal', 'wd-help-title', 'wd-help-close', 'wd-help-body',
@@ -380,6 +413,11 @@ class WordDailyGame {
         if (saved === 'en' || saved === 'zh') return saved;
         const lang = navigator.language || navigator.userLanguage || '';
         return lang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    }
+
+    resolveWordLength() {
+        const saved = parseInt(storageGet('wd_word_len_en'), 10);
+        return [4, 5, 6].includes(saved) ? saved : WORD_LEN_DEFAULT;
     }
 
     applyLanguage() {
@@ -420,8 +458,13 @@ class WordDailyGame {
         if (this.el['lb-max']) this.el['lb-max'].textContent = t.maxStreakLabel;
         if (this.el['dist-title']) this.el['dist-title'].textContent = t.distTitle;
         if (this.el.share) this.el.share.textContent = `📤 ${t.share}`;
-        if (this.el['zh-submit']) this.el['zh-submit'].textContent = t.submit;
-        if (this.el['zh-input']) this.el['zh-input'].placeholder = t.guessPlaceholder;
+        if (this.el['submit-text']) this.el['submit-text'].textContent = t.submit;
+        if (this.el.input) {
+            const len = this.wordLen();
+            this.el.input.placeholder = this.langMode === 'zh'
+                ? (t.guessPlaceholderZh || t.guessPlaceholder)
+                : (t.guessPlaceholderEn ? t.guessPlaceholderEn.replace('{n}', len) : t.guessPlaceholder);
+        }
         if (this.el['hint-label']) this.el['hint-label'].textContent = `📖 ${t.hintLabel}`;
         if (this.el['practice-banner']) this.el['practice-banner'].textContent = t.practiceBanner;
 
@@ -432,6 +475,7 @@ class WordDailyGame {
         if (this.el['share-inline-label']) this.el['share-inline-label'].textContent = t.share;
 
         this.updateHelpBody();
+        this.updateDiffUi();
 
         const modeTag = this.langMode === 'zh' ? t.zhModeLabel : t.enModeLabel;
         if (this.el['mode-tag']) {
@@ -462,7 +506,11 @@ class WordDailyGame {
         example.className = 'wd-example';
         const sample = this.langMode === 'zh'
             ? { word: '水到渠成', states: ['correct', 'absent', 'absent', 'absent'] }
-            : { word: 'PLANT', states: ['correct', 'absent', 'absent', 'absent', 'absent'] };
+            : ({
+                4: { word: 'BIRD', states: ['correct', 'absent', 'absent', 'absent'] },
+                5: { word: 'PLANT', states: ['correct', 'absent', 'absent', 'absent', 'absent'] },
+                6: { word: 'PLANET', states: ['correct', 'absent', 'absent', 'absent', 'absent', 'absent'] }
+            }[this.wordLength] || { word: 'PLANT', states: ['correct', 'absent', 'absent', 'absent', 'absent'] });
         sample.states.forEach((s, i) => {
             const tile = document.createElement('span');
             tile.className = `wd-mini-tile ${s}`;
@@ -474,7 +522,7 @@ class WordDailyGame {
         note.textContent = t.exampleNote;
         example.appendChild(note);
         body.appendChild(example);
-        if (this.langMode === 'zh' && this.el['zh-input-row']) {
+        if (this.langMode === 'zh' && this.el['input-row']) {
             const tip = document.createElement('p');
             tip.className = 'wd-help-tip';
             tip.textContent = t.needIme;
@@ -485,22 +533,27 @@ class WordDailyGame {
     /* ── 题目与状态 ── */
 
     lockKey() {
-        return `wd_daily_${this.day}_${this.langMode}`;
+        if (this.langMode === 'zh') {
+            return `wd_daily_${this.day}_zh`;
+        }
+        return `wd_daily_${this.day}_en_${this.wordLength}`;
     }
 
     statsKey() {
-        return `wd_stats_${this.langMode}`;
+        if (this.langMode === 'zh') return 'wd_stats_zh';
+        return `wd_stats_en_${this.wordLength}`;
     }
 
     histKey() {
-        return `wd_hist_${this.langMode}`;
+        if (this.langMode === 'zh') return 'wd_hist_zh';
+        return `wd_hist_en_${this.wordLength}`;
     }
 
     startDaily() {
         this.mode = 'daily';
         this.puzzleNum = dailyNumber();
         this.day = dayKey();
-        const entry = dailyEntry(this.langMode, this.puzzleNum);
+        const entry = dailyEntry(this.langMode, this.puzzleNum, this.wordLen());
         if (this.langMode === 'zh') {
             this.answer = entry.w;
             this.hint = entry.h;
@@ -509,7 +562,10 @@ class WordDailyGame {
             this.hint = '';
         }
 
-        const saved = storageParse(this.lockKey(), null);
+        let saved = storageParse(this.lockKey(), null);
+        if (!saved && this.langMode === 'en' && this.wordLength === 5) {
+            saved = storageParse(`wd_daily_${this.day}_en`, null);
+        }
         if (saved && Array.isArray(saved.rows)) {
             // 今天已玩过：恢复局面，禁止输入
             this.rows = saved.rows;
@@ -520,9 +576,11 @@ class WordDailyGame {
             if (typeof window.hubTrack === 'function') window.hubTrack('word-daily', 'play');
         }
         this.current = '';
+        if (this.el.input) this.el.input.value = '';
         this.rebuildBoard();
         this.renderRows();
         this.updateModeUi();
+        this.updateDiffUi();
     }
 
     startPractice() {
@@ -530,6 +588,7 @@ class WordDailyGame {
         this.status = 'playing';
         this.rows = [];
         this.current = '';
+        if (this.el.input) this.el.input.value = '';
         this.practiceCount = (this.practiceCount || 0) + 1;
         this.puzzleNum = this.practiceCount;
 
@@ -543,19 +602,76 @@ class WordDailyGame {
             this.answer = entry.w;
             this.hint = entry.h;
         } else {
+            const pool = (EN[this.wordLength] || EN[5]).answers;
             let nextWord;
             let attempts = 0;
             do {
-                nextWord = EN.answers[Math.floor(Math.random() * EN.answers.length)];
+                nextWord = pool[Math.floor(Math.random() * pool.length)];
                 attempts++;
-            } while (nextWord === this.answer && attempts < 20 && EN.answers.length > 1);
+            } while (nextWord === this.answer && attempts < 20 && pool.length > 1);
             this.answer = nextWord;
             this.hint = '';
         }
 
         this.rebuildBoard();
         this.updateModeUi();
+        this.updateDiffUi();
         this.showToast(`${this.TEXT.practiceBadge} #${this.practiceCount}`, 1600);
+    }
+
+    setWordLength(len) {
+        if (![4, 5, 6].includes(len)) return;
+        if (this.wordLength === len && this.langMode === 'en') return;
+        this.wordLength = len;
+        storageSet('wd_word_len_en', String(len));
+        this.current = '';
+        if (this.el.input) this.el.input.value = '';
+        if (this.mode === 'daily') {
+            this.startDaily();
+        } else {
+            this.startPractice();
+        }
+    }
+
+    updateDiffUi() {
+        const row = this.el['diff-row'];
+        if (!row) return;
+        const isEn = this.langMode === 'en';
+        row.classList.toggle('hidden', !isEn);
+        if (!isEn) return;
+
+        const t = this.TEXT;
+        [4, 5, 6].forEach(len => {
+            const btn = this.el[`diff-${len}`];
+            if (btn) {
+                btn.classList.toggle('active', this.wordLength === len);
+            }
+            const label = this.el[`diff-label-${len}`];
+            if (label) {
+                const desc = t[`diff${len}Desc`];
+                label.textContent = desc ? `${t[`diff${len}`]} (${desc})` : t[`diff${len}`];
+            }
+            const statusEl = this.el[`diff-status-${len}`];
+            if (statusEl) {
+                statusEl.className = 'wd-diff-status';
+                let saved = storageParse(`wd_daily_${this.day}_en_${len}`, null);
+                if (!saved && len === 5) {
+                    saved = storageParse(`wd_daily_${this.day}_en`, null);
+                }
+                if (saved && saved.status === 'won') {
+                    statusEl.textContent = '✓';
+                    statusEl.classList.add('won');
+                    statusEl.title = 'Solved';
+                } else if (saved && saved.status === 'lost') {
+                    statusEl.textContent = '✕';
+                    statusEl.classList.add('lost');
+                    statusEl.title = 'Lost';
+                } else {
+                    statusEl.textContent = '';
+                    statusEl.removeAttribute('title');
+                }
+            }
+        });
     }
 
     updateModeUi() {
@@ -605,19 +721,27 @@ class WordDailyGame {
                 ? `${t.practiceBadge} · ${baseMode}`
                 : baseMode;
         }
+        if (this.el.input) {
+            const len = this.wordLen();
+            this.el.input.maxLength = len;
+            this.el.input.placeholder = this.langMode === 'zh'
+                ? (t.guessPlaceholderZh || t.guessPlaceholder)
+                : (t.guessPlaceholderEn ? t.guessPlaceholderEn.replace('{n}', len) : t.guessPlaceholder);
+        }
         this.updateInputUi();
         this.updateHintCard();
+        this.updateDiffUi();
     }
 
     updateBoardSize() {
-        const board = this.el.board;
-        if (!board) return;
         const cols = this.wordLen();
-        board.style.setProperty('--cols', String(cols));
+        if (this.el.board) this.el.board.style.setProperty('--cols', String(cols));
+        if (this.el['input-row']) this.el['input-row'].style.setProperty('--cols', String(cols));
+        if (this.el['end-panel']) this.el['end-panel'].style.setProperty('--cols', String(cols));
     }
 
     wordLen() {
-        return this.langMode === 'zh' ? WORD_LEN_ZH : WORD_LEN_EN;
+        return this.langMode === 'zh' ? WORD_LEN_ZH : this.wordLength;
     }
 
     updateHintCard() {
@@ -664,14 +788,15 @@ class WordDailyGame {
                 if (!tile) continue;
                 tile.className = 'wd-tile';
                 if (guess) {
-                    tile.textContent = guess.word[c];
+                    const ch = guess.word[c];
+                    tile.textContent = this.langMode === 'zh' ? ch : ch.toUpperCase();
                     tile.classList.add(guess.states[c]);
                 } else {
                     // 正在输入的行
                     if (r === this.rows.length && this.status === 'playing') {
                         const ch = this.current[c];
                         if (ch) {
-                            tile.textContent = ch;
+                            tile.textContent = this.langMode === 'zh' ? ch : ch.toUpperCase();
                             tile.classList.add('filled');
                         } else {
                             tile.textContent = '';
@@ -682,7 +807,6 @@ class WordDailyGame {
                 }
             }
         }
-        this.updateKeyboardColors();
     }
 
     renderCurrent() {
@@ -692,7 +816,7 @@ class WordDailyGame {
             if (!tile) continue;
             const ch = this.current[c];
             if (ch) {
-                tile.textContent = ch;
+                tile.textContent = this.langMode === 'zh' ? ch : ch.toUpperCase();
                 tile.classList.add('filled');
                 tile.classList.add('pop');
                 setTimeout(() => tile.classList.remove('pop'), 120);
@@ -706,10 +830,8 @@ class WordDailyGame {
     /* ── 输入与操作栏 ── */
 
     updateInputUi() {
-        const zhRow = this.el['zh-input-row'];
-        const kb = this.el.kb;
+        const inputRow = this.el['input-row'];
         const endPanel = this.el['end-panel'];
-        const isZh = this.langMode === 'zh';
         const playing = this.status === 'playing';
 
         if (endPanel) {
@@ -719,11 +841,18 @@ class WordDailyGame {
             }
         }
 
-        if (zhRow) zhRow.classList.toggle('hidden', !isZh || !playing);
-        if (kb) kb.classList.toggle('hidden', isZh || !playing);
-
-        if (isZh && playing) {
-            setTimeout(() => this.el['zh-input']?.focus(), 50);
+        if (inputRow) {
+            inputRow.classList.toggle('hidden', !playing);
+            if (playing) {
+                if (this.el.input) {
+                    this.el.input.value = this.langMode === 'zh' ? this.current : this.current.toUpperCase();
+                    this.el.input.maxLength = this.wordLen();
+                    this.el.input.placeholder = this.langMode === 'zh'
+                        ? (this.TEXT.guessPlaceholderZh || this.TEXT.guessPlaceholder)
+                        : (this.TEXT.guessPlaceholderEn || this.TEXT.guessPlaceholder);
+                }
+                setTimeout(() => this.el.input?.focus(), 60);
+            }
         }
         this.renderRows();
     }
@@ -764,86 +893,136 @@ class WordDailyGame {
         if (this.el['share-inline-label']) this.el['share-inline-label'].textContent = t.share;
     }
 
-    bindZhInput() {
-        const input = this.el['zh-input'];
+    bindInput() {
+        const input = this.el.input;
         if (!input) return;
+
+        let isComposing = false;
+
+        input.addEventListener('compositionstart', () => {
+            isComposing = true;
+        });
+
+        input.addEventListener('compositionend', () => {
+            isComposing = false;
+            this.handleInputChange();
+        });
+
+        input.addEventListener('input', () => {
+            if (isComposing) return;
+            this.handleInputChange();
+        });
+
         input.addEventListener('keydown', (e) => {
-            if (e.isComposing) return; // 输入法组词过程中的回车不提交
+            if (e.isComposing || isComposing) return;
             if (e.key === 'Enter') {
                 e.preventDefault();
-                this.submitZh();
+                this.submitCurrent();
             }
         });
-        this.el['zh-submit']?.addEventListener('click', () => this.submitZh());
+
+        this.el['submit-btn']?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.submitCurrent();
+        });
+
+        this.el.board?.addEventListener('click', () => {
+            if (this.status === 'playing') {
+                input.focus();
+            }
+        });
     }
 
-    submitZh() {
+    handleInputChange() {
         if (this.status !== 'playing') return;
-        const input = this.el['zh-input'];
+        const input = this.el.input;
         if (!input) return;
-        const value = input.value.replace(/[\s，。、]/g, '');
-        if (value.length < WORD_LEN_ZH) {
-            this.showToast(this.TEXT.tooShort);
-            this.shakeRow();
-            return;
+
+        if (this.langMode === 'zh') {
+            const val = input.value.replace(/[^\u4e00-\u9fa5]/g, '').slice(0, WORD_LEN_ZH);
+            if (input.value !== val) input.value = val;
+            this.current = val;
+        } else {
+            const val = input.value.replace(/[^a-zA-Z]/g, '').slice(0, this.wordLen());
+            const upper = val.toUpperCase();
+            if (input.value !== upper) input.value = upper;
+            this.current = val.toLowerCase();
         }
-        if (value.length > WORD_LEN_ZH) {
-            this.showToast(this.TEXT.guessPlaceholder);
-            return;
-        }
-        if (!ZH.wordSet.has(value)) {
-            this.showToast(this.TEXT.notInIdiomDict);
+        this.renderCurrent();
+    }
+
+    submitCurrent() {
+        if (this.status !== 'playing' || this.revealing) return;
+        const raw = (this.current || (this.el.input ? this.el.input.value : '')).trim();
+        const len = this.wordLen();
+
+        if (raw.length < len) {
+            const msg = this.langMode === 'zh'
+                ? (this.TEXT.tooShortZh || this.TEXT.tooShort)
+                : (this.TEXT.tooShortEn ? this.TEXT.tooShortEn.replace('{n}', len) : this.TEXT.tooShort);
+            this.showToast(msg);
             this.shakeRow();
             Sfx.invalid();
             return;
         }
-        input.value = '';
-        this.commitGuess(value);
+
+        const val = this.langMode === 'zh' ? raw : raw.toLowerCase();
+
+        if (this.langMode === 'zh') {
+            if (!ZH.wordSet.has(val)) {
+                this.showToast(this.TEXT.notInIdiomDict);
+                this.shakeRow();
+                Sfx.invalid();
+                return;
+            }
+        } else {
+            const pool = (EN[len] || EN[5]).valid;
+            if (!pool || !pool.has(val)) {
+                this.showToast(this.TEXT.notInDict);
+                this.shakeRow();
+                Sfx.invalid();
+                return;
+            }
+        }
+
+        if (this.el.input) this.el.input.value = '';
+        this.current = '';
+        this.commitGuess(val);
     }
 
     bindPhysicalKeyboard() {
         document.addEventListener('keydown', (e) => {
             const tag = e.target && e.target.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
-            if (this.langMode !== 'en' || this.status !== 'playing') return;
-            if (e.key === 'Enter') {
-                this.submitEn();
-            } else if (e.key === 'Backspace') {
-                if (this.current.length > 0) {
-                    this.current = this.current.slice(0, -1);
-                    this.renderCurrent();
+            if (this.status !== 'playing' || this.revealing) return;
+
+            const input = this.el.input;
+            if (this.langMode === 'en') {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.submitCurrent();
+                } else if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    if (this.current.length > 0) {
+                        this.current = this.current.slice(0, -1);
+                        if (input) input.value = this.current.toUpperCase();
+                        this.renderCurrent();
+                    }
+                } else if (/^[a-zA-Z]$/.test(e.key)) {
+                    e.preventDefault();
+                    if (this.current.length < this.wordLen()) {
+                        this.current += e.key.toLowerCase();
+                        if (input) input.value = this.current.toUpperCase();
+                        Sfx.key();
+                        this.renderCurrent();
+                    }
                 }
-            } else if (/^[a-zA-Z]$/.test(e.key)) {
-                this.typeLetter(e.key.toLowerCase());
+            } else if (this.langMode === 'zh') {
+                if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    input?.focus();
+                }
             }
         });
-    }
-
-    typeLetter(ch) {
-        if (this.status !== 'playing') return;
-        if (this.current.length >= this.wordLen()) return;
-        this.current += ch;
-        Sfx.key();
-        this.renderCurrent();
-    }
-
-    submitEn() {
-        if (this.status !== 'playing') return;
-        if (this.current.length < this.wordLen()) {
-            this.showToast(this.TEXT.tooShort);
-            this.shakeRow();
-            Sfx.invalid();
-            return;
-        }
-        if (!EN.valid.has(this.current)) {
-            this.showToast(this.TEXT.notInDict);
-            this.shakeRow();
-            Sfx.invalid();
-            return;
-        }
-        const guess = this.current;
-        this.current = '';
-        this.commitGuess(guess);
     }
 
     shakeRow() {
@@ -863,7 +1042,6 @@ class WordDailyGame {
         this.revealing = true;
         this.animateReveal(rowIndex, states, () => {
             this.revealing = false;
-            this.updateKeyboardColors();
             if (guess === this.answer) {
                 this.finish(true);
             } else if (this.rows.length >= MAX_GUESSES) {
@@ -879,7 +1057,8 @@ class WordDailyGame {
         for (let c = 0; c < this.wordLen(); c++) {
             const tile = this.tileAt(rowIndex, c);
             if (!tile) continue;
-            tile.textContent = this.rows[rowIndex].word[c];
+            const ch = this.rows[rowIndex].word[c];
+            tile.textContent = this.langMode === 'zh' ? ch : ch.toUpperCase();
             tile.classList.add('filled');
             Sfx.reveal(c);
             setTimeout(() => {
@@ -926,21 +1105,28 @@ class WordDailyGame {
 
     recordDaily(rowsUsed) {
         // 锁定今日题目并保存局面
-        storageSet(this.lockKey(), JSON.stringify({
+        const payload = JSON.stringify({
             rows: this.rows,
             status: this.status
-        }));
+        });
+        storageSet(this.lockKey(), payload);
+        if (this.langMode === 'en' && this.wordLength === 5) {
+            storageSet(`wd_daily_${this.day}_en`, payload);
+        }
+
         // 历史与连胜
         const won = this.status === 'won';
-        const hist = storageParse(this.histKey(), {});
-        if (typeof hist === 'object' && hist) {
-            hist[this.day] = won ? rowsUsed : 0;
-            const keys = Object.keys(hist).sort();
-            while (keys.length > 120) {
-                delete hist[keys.shift()];
-            }
-            storageSet(this.histKey(), JSON.stringify(hist));
+        const hist = storageParse(this.histKey(), {}) || {};
+        hist[this.day] = won ? rowsUsed : 0;
+        const keys = Object.keys(hist).sort();
+        while (keys.length > 120) {
+            delete hist[keys.shift()];
         }
+        storageSet(this.histKey(), JSON.stringify(hist));
+        if (this.langMode === 'en' && this.wordLength === 5) {
+            storageSet('wd_hist_en', JSON.stringify(hist));
+        }
+
         // 统计
         const stats = this.loadStats();
         stats.played += 1;
@@ -952,10 +1138,17 @@ class WordDailyGame {
         stats.curStreak = streak;
         stats.maxStreak = Math.max(stats.maxStreak, streak);
         storageSet(this.statsKey(), JSON.stringify(stats));
+        if (this.langMode === 'en' && this.wordLength === 5) {
+            storageSet('wd_stats_en', JSON.stringify(stats));
+        }
+        this.updateDiffUi();
     }
 
     loadStats() {
-        const s = storageParse(this.statsKey(), null);
+        let s = storageParse(this.statsKey(), null);
+        if (!s && this.langMode === 'en' && this.wordLength === 5) {
+            s = storageParse('wd_stats_en', null);
+        }
         const base = { played: 0, wins: 0, dist: [0, 0, 0, 0, 0, 0, 0], curStreak: 0, maxStreak: 0 };
         if (!s || typeof s !== 'object') return base;
         return {
@@ -968,7 +1161,10 @@ class WordDailyGame {
     }
 
     computeStreak() {
-        const hist = storageParse(this.histKey(), {});
+        let hist = storageParse(this.histKey(), null);
+        if (!hist && this.langMode === 'en' && this.wordLength === 5) {
+            hist = storageParse('wd_hist_en', null);
+        }
         if (!hist || typeof hist !== 'object') return 0;
         let streak = 0;
         const d = new Date();
@@ -995,10 +1191,11 @@ class WordDailyGame {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const mode = this.langMode === 'zh' ? 'zh' : `en-${this.wordLength}`;
             await fetch(`${STATS_URL}/stats`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ day: this.day, mode: this.langMode, win: won, rows }),
+                body: JSON.stringify({ day: this.day, mode, win: won, rows }),
                 signal: controller.signal,
                 mode: 'cors'
             });
@@ -1015,7 +1212,8 @@ class WordDailyGame {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
-            const res = await fetch(`${STATS_URL}/stats?day=${this.day}&mode=${this.langMode}`, {
+            const mode = this.langMode === 'zh' ? 'zh' : `en-${this.wordLength}`;
+            const res = await fetch(`${STATS_URL}/stats?day=${this.day}&mode=${mode}`, {
                 signal: controller.signal,
                 mode: 'cors'
             });
@@ -1035,57 +1233,7 @@ class WordDailyGame {
         }
     }
 
-    /* ── 键盘 ── */
 
-    buildKeyboard() {
-        const kb = this.el.kb;
-        if (!kb) return;
-        kb.textContent = '';
-        const layout = [
-            ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-            ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-            ['ENTER', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'BACK']
-        ];
-        layout.forEach(rowKeys => {
-            const row = document.createElement('div');
-            row.className = 'wd-kb-row';
-            rowKeys.forEach(key => {
-                const btn = document.createElement('button');
-                btn.className = 'wd-key' + (key.length > 1 ? ' wd-key-wide' : '');
-                btn.dataset.key = key;
-                btn.textContent = key === 'ENTER' ? '⏎' : key === 'BACK' ? '⌫' : key.toUpperCase();
-                btn.addEventListener('click', () => {
-                    if (key === 'ENTER') this.submitEn();
-                    else if (key === 'BACK') {
-                        this.current = this.current.slice(0, -1);
-                        this.renderCurrent();
-                    } else {
-                        this.typeLetter(key);
-                    }
-                });
-                row.appendChild(btn);
-            });
-            kb.appendChild(row);
-        });
-    }
-
-    updateKeyboardColors() {
-        const best = {};
-        const rank = { absent: 1, present: 2, correct: 3 };
-        for (const { word, states } of this.rows) {
-            for (let i = 0; i < word.length; i++) {
-                const ch = word[i];
-                if (!best[ch] || rank[states[i]] > rank[best[ch]]) {
-                    best[ch] = states[i];
-                }
-            }
-        }
-        this.el.kb?.querySelectorAll('.wd-key').forEach(btn => {
-            const key = btn.dataset.key;
-            btn.classList.remove('correct', 'present', 'absent');
-            if (best[key]) btn.classList.add(best[key]);
-        });
-    }
 
     /* ── 统计弹窗 ── */
 
@@ -1189,7 +1337,9 @@ class WordDailyGame {
 
     buildShareText() {
         const t = this.TEXT;
-        const modeTag = this.langMode === 'zh' ? (this.lang === 'zh' ? '成语' : 'idiom') : (this.lang === 'zh' ? '单词' : 'word');
+        const modeTag = this.langMode === 'zh'
+            ? (this.lang === 'zh' ? '成语' : 'idiom')
+            : (this.lang === 'zh' ? `${this.wordLength}字母` : `${this.wordLength}-letter`);
         const attempts = this.rows.length;
         const result = this.status === 'won' ? `${attempts}/${MAX_GUESSES}` : `X/${MAX_GUESSES}`;
         const stats = this.loadStats();
@@ -1264,9 +1414,8 @@ class WordDailyGame {
     /* ── 事件绑定 ── */
 
     bindUI() {
-        this.buildKeyboard();
+        this.bindInput();
         this.bindPhysicalKeyboard();
-        this.bindZhInput();
 
         const on = (id, fn) => {
             const el = document.getElementById(id);
@@ -1275,6 +1424,10 @@ class WordDailyGame {
                 fn();
             });
         };
+
+        [4, 5, 6].forEach(len => {
+            on(`wd-diff-${len}`, () => this.setWordLength(len));
+        });
 
         on('wd-btn-lang', () => {
             this.langMode = this.langMode === 'zh' ? 'en' : 'zh';
