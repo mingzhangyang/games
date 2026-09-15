@@ -10,7 +10,7 @@ class PerformanceOptimizer {
         // Performance configuration
         this.config = {
             batchUpdateSize: 5,
-            frameSkipThreshold: 16.67, // ~60 FPS
+            frameSkipThreshold: 35, // ~28 FPS (避免正常 60Hz 移动端因毫秒抖动被误判为掉帧而减半性能)
             memoryCleanupInterval: 30000, // 30 seconds
             throttleUpdateInterval: 50,
             maxExpressions: 6

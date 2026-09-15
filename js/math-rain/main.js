@@ -561,7 +561,47 @@ class MathRainGame {
         this.lastSpawnTime = currentTime;
         this.nextTargetChangeTime = currentTime + this.config.targetChangeInterval;
         this.nextCanvasSpawnTime = 0;
+        this.spawnInitialExpressions();
         this.gameLoop();
+    }
+
+    /**
+     * 在开局时立即生成 2-3 个算式并排布在可见区域，
+     * 确保进入游戏后玩家立即可见下落算式，彻底消除移动端“开局空屏等几秒”的问题。
+     */
+    spawnInitialExpressions() {
+        if (!this.difficultyManager) return;
+        if (this.expressions && this.expressions.length > 0) return;
+        const gameState = this.gameStateManager?.getState();
+        if (!gameState) return;
+
+        const target = gameState.targetNumber;
+        const gameParams = this.difficultyManager.getGameParams();
+        const cssHeight = this.canvasCssHeight || this.canvas?.clientHeight || 450;
+
+        // 1. 必出 1 个正确算式，排布在可见区偏上方（约 25% 高度处），开局一眼就能辨识并点击
+        const correctData = this.safeGenerateExpression(target, true);
+        if (correctData) {
+            this.createCanvasExpression(correctData, true, gameParams.fallSpeed, Math.round(cssHeight * 0.25));
+        }
+
+        // 2. 生成第 2 个干扰算式，位于更高处（约 10% 高度处）
+        const decoy1 = this.safeGenerateExpression(target, false);
+        if (decoy1) {
+            this.createCanvasExpression(decoy1, false, gameParams.fallSpeed, Math.round(cssHeight * 0.10));
+        }
+
+        // 3. 生成第 3 个算式，刚好在顶部边缘（-15px）平滑滑入
+        const shouldBeCorrect = Math.random() < gameParams.correctRatio;
+        const thirdData = this.safeGenerateExpression(target, shouldBeCorrect);
+        if (thirdData) {
+            this.createCanvasExpression(thirdData, thirdData.result === target, gameParams.fallSpeed, -15);
+        }
+
+        const currentTime = Date.now();
+        this.lastCanvasSpawnTime = currentTime;
+        // 错开下一次新生成时间，让初批算式顺畅流转
+        this.nextCanvasSpawnTime = currentTime + Math.max(1200, gameParams.spawnRate * 0.7);
     }
     
     gameLoop() {
@@ -618,10 +658,13 @@ class MathRainGame {
     renderLoop() {
         if (!this.isRendering || !this.ctx) return;
         
-        // Clear and setup canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const width = this.canvasCssWidth || this.canvas?.clientWidth || window.innerWidth;
+        const height = this.canvasCssHeight || this.canvas?.clientHeight || window.innerHeight;
+
+        // Clear and setup canvas (使用逻辑尺寸，与 scale(dpr, dpr) 保持一致)
+        this.ctx.clearRect(0, 0, width, height);
         this.ctx.fillStyle = this.getCanvasBackgroundColor();
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(0, 0, width, height);
         
         // Render expressions
         this.renderExpressions();
@@ -717,15 +760,17 @@ class MathRainGame {
     /**
      * Create a canvas expression
      */
-    createCanvasExpression(expressionData, isCorrect, fallDuration) {
-        const position = this.findSafePosition();
+    createCanvasExpression(expressionData, isCorrect, fallDuration, initialY = null) {
+        const position = this.findSafePosition(initialY);
         if (!position) return;
 
         // Derive per-expression falling speed (px/frame) from the difficulty's
         // fall duration so higher difficulty levels actually fall faster.
-        const cssHeight = this.canvas?.clientHeight || this.canvas?.height || 600;
+        const cssHeight = this.canvasCssHeight || this.canvas?.clientHeight || 450;
         const duration = fallDuration || 7000;
-        const speed = Math.max(0.5, (cssHeight / duration) * 16.67);
+        const width = this.canvasCssWidth || this.canvas?.clientWidth || window.innerWidth;
+        const minSpeed = width < 600 ? 1.05 : 0.85;
+        const speed = Math.max(minSpeed, (cssHeight / duration) * 16.67);
 
         const expression = {
             id: `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -746,12 +791,13 @@ class MathRainGame {
     /**
      * Find a safe position for new expression
      */
-    findSafePosition() {
+    findSafePosition(initialY = null) {
         // 使用 CSS 逻辑宽度（canvas.width 是设备像素，DPR>1 时会超出生 visible 区域）
         const width = this.canvasCssWidth || this.canvas?.clientWidth || window.innerWidth;
         const margin = Math.min(50, Math.max(25, width * 0.1));
         const x = margin + Math.random() * Math.max(40, width - 2 * margin);
-        const y = -60 - Math.random() * 160;
+        // 若传入 initialY 则直接使用（开局预生成），否则在顶部边缘刚不可见处 (-25 ~ -60) 生成，滑入屏幕仅需 ~0.5s
+        const y = initialY !== null ? initialY : (-25 - Math.random() * 35);
         return { x, y };
     }
     
@@ -937,22 +983,21 @@ class MathRainGame {
 
         const gameArea = document.getElementById('game-area');
         if (gameArea) {
-            const width = gameArea.offsetWidth;
-            const height = gameArea.offsetHeight;
+            // 保持自适应百分比，避免像素固定宽高导致 flexbox 容器尺寸锁死
+            this.canvas.style.width = '100%';
+            this.canvas.style.height = '100%';
+
+            const width = gameArea.clientWidth || gameArea.offsetWidth;
+            const height = gameArea.clientHeight || gameArea.offsetHeight;
 
             if (width > 0 && height > 0) {
                 // 记录 CSS 逻辑尺寸，供坐标计算使用（canvas.width 是设备像素）
                 this.canvasCssWidth = width;
                 this.canvasCssHeight = height;
 
-                this.canvas.width = width;
-                this.canvas.height = height;
-
                 const dpr = window.devicePixelRatio || 1;
                 this.canvas.width = Math.round(width * dpr);
                 this.canvas.height = Math.round(height * dpr);
-                this.canvas.style.width = width + 'px';
-                this.canvas.style.height = height + 'px';
 
                 this.ctx.setTransform(1, 0, 0, 1, 0, 0);
                 this.ctx.scale(dpr, dpr);
