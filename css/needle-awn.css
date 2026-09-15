@@ -1,0 +1,840 @@
+/* ─────────────────────────────────────────────
+   针尖对麦芒 (Pinpoint Clash: Needle vs Awn)
+   Cyber-Ink Martial Precision Action Game
+   ───────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --color-bg: #030712;
+    --color-surface: rgba(11, 19, 43, 0.75);
+    --color-border: rgba(56, 189, 248, 0.22);
+    --color-border-glow: rgba(56, 189, 248, 0.45);
+    --color-needle: #38bdf8;
+    --color-needle-glow: rgba(56, 189, 248, 0.5);
+    --color-needle-light: #f0f9ff;
+    --color-awn: #f59e0b;
+    --color-awn-glow: rgba(245, 158, 11, 0.5);
+    --color-awn-light: #fef08a;
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
+    --color-danger: #ef4444;
+    --color-gold: #fbbf24;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56, 189, 248, 0.12), transparent),
+        radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.08), transparent),
+        linear-gradient(170deg, #030712 0%, #070e22 50%, #0d0f28 100%);
+    color: var(--color-text);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.na-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 520px;
+    padding: 8px 12px 12px;
+    min-height: 100vh;
+}
+
+.hidden { display: none !important; }
+
+/* ── 顶栏 HUD ── */
+.na-topbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 0 8px;
+}
+
+.na-icon-btn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, border-color 0.2s;
+    color: inherit;
+    font-family: inherit;
+    font-weight: 700;
+}
+
+.na-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(56, 189, 248, 0.4);
+}
+.na-icon-btn:active { transform: scale(0.92); }
+
+.na-title-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.na-stage-label {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--color-needle);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    text-shadow: 0 0 10px var(--color-needle-glow);
+}
+
+.na-mode-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-muted);
+}
+
+.na-hud-box {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 5px 12px;
+}
+
+.na-score-val {
+    font-size: 19px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+    min-width: 3ch;
+    text-align: right;
+    letter-spacing: 0.5px;
+}
+
+.na-combo-val {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--color-awn);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── 游戏主舞台 ── */
+.na-main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.na-stage {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 480 / 640;
+    background: #02040b;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 24px rgba(56, 189, 248, 0.15);
+    border: 1.5px solid rgba(56, 189, 248, 0.25);
+}
+
+#na-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+/* 舞台内部 HUD (血量、充能槽、姿态指示) */
+.na-in-hud {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.na-lives-wrap {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.na-heart {
+    font-size: 16px;
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.7));
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.na-heart.lost {
+    opacity: 0.25;
+    filter: grayscale(1);
+    transform: scale(0.85);
+}
+
+.na-ult-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 99px;
+    padding: 3px 8px 3px 6px;
+}
+
+.na-ult-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--color-awn);
+    letter-spacing: 0.5px;
+}
+
+.na-ult-bar-track {
+    width: 65px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.na-ult-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #f59e0b, #fef08a);
+    border-radius: 99px;
+    transition: width 0.15s ease-out;
+}
+
+.na-ult-bar-fill.ready {
+    animation: ultGlow 0.8s infinite alternate;
+}
+
+@keyframes ultGlow {
+    from { box-shadow: 0 0 6px #f59e0b; }
+    to { box-shadow: 0 0 14px #fef08a; }
+}
+
+.na-stance-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+    pointer-events: auto;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.15s, transform 0.1s;
+}
+.na-stance-chip:active { transform: scale(0.92); }
+
+.na-stance-chip.needle {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--color-needle);
+    color: var(--color-needle-light);
+    box-shadow: 0 0 10px var(--color-needle-glow);
+}
+
+.na-stance-chip.awn {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: var(--color-awn);
+    color: var(--color-awn-light);
+    box-shadow: 0 0 10px var(--color-awn-glow);
+}
+
+/* 舞台浮动控制按钮 (移动端与触屏操作) */
+.na-touch-controls {
+    position: absolute;
+    bottom: 14px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+    z-index: 6;
+}
+
+.na-touch-btn {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: rgba(11, 19, 43, 0.78);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.08s, background 0.15s, border-color 0.15s;
+}
+
+.na-touch-btn .btn-icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.na-touch-btn:active {
+    transform: scale(0.92);
+}
+
+.na-touch-btn--dash {
+    border-color: var(--color-needle);
+    box-shadow: 0 0 14px var(--color-needle-glow);
+    background: rgba(56, 189, 248, 0.22);
+}
+
+.na-touch-btn--stance {
+    border-color: var(--color-awn);
+    box-shadow: 0 0 14px var(--color-awn-glow);
+    background: rgba(245, 158, 11, 0.22);
+}
+
+.na-touch-btn--ult {
+    width: 54px;
+    height: 54px;
+    border-color: #a855f7;
+    opacity: 0.45;
+    pointer-events: none;
+    transition: opacity 0.2s, box-shadow 0.2s, transform 0.1s;
+}
+
+.na-touch-btn--ult.active {
+    opacity: 1;
+    pointer-events: auto;
+    border-color: #fef08a;
+    box-shadow: 0 0 20px rgba(254, 240, 138, 0.7);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(245, 158, 11, 0.4));
+    animation: ultPulse 1s infinite alternate;
+}
+
+@keyframes ultPulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.08); }
+}
+
+/* ── 覆盖层 / 弹窗 (Start, Over, Levels, 1v1) ── */
+.na-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 24px 18px 20px;
+    text-align: center;
+    overflow-y: auto;
+    z-index: 10;
+    transition: opacity 0.2s ease;
+}
+
+.na-overlay::-webkit-scrollbar {
+    width: 4px;
+}
+.na-overlay::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+}
+
+.na-badge {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: var(--color-needle);
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+.na-title {
+    font-size: 32px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+}
+
+.na-subtitle {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+}
+
+.na-hero-art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 36px;
+    margin-bottom: 12px;
+    animation: heroFloat 3s ease-in-out infinite alternate;
+}
+
+@keyframes heroFloat {
+    from { transform: translateY(0); }
+    to { transform: translateY(-4px); }
+}
+
+.na-hero-divider {
+    font-size: 18px;
+    color: var(--color-needle);
+    font-weight: 900;
+}
+
+.na-howto-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.na-howto-box b {
+    color: var(--color-awn-light);
+}
+
+.na-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 14px;
+}
+
+.na-mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 10px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 13.5px;
+    transition: all 0.15s ease;
+}
+
+.na-mode-btn .mode-icon {
+    font-size: 22px;
+}
+
+.na-mode-btn .mode-sub {
+    font-size: 10.5px;
+    color: var(--color-text-muted);
+    font-weight: normal;
+}
+
+.na-mode-btn:hover {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.4);
+    transform: translateY(-2px);
+}
+.na-mode-btn:active { transform: scale(0.97); }
+
+.na-mode-btn.highlight {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(245, 158, 11, 0.22));
+    border-color: rgba(251, 191, 36, 0.45);
+}
+
+/* 关卡选择栅格 */
+.na-level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    width: 100%;
+    margin: 10px 0 16px;
+}
+
+.na-level-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: var(--color-text);
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.na-level-chip.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: transparent;
+}
+
+.na-level-chip.unlocked:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: var(--color-needle);
+    transform: scale(1.05);
+}
+
+.na-level-stars {
+    font-size: 9px;
+    margin-top: 2px;
+    color: #fbbf24;
+}
+
+/* 1v1 对决配置面板 */
+.na-duel-panel {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.na-duel-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.na-duel-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+.na-diff-options {
+    display: flex;
+    gap: 6px;
+}
+
+.na-diff-btn {
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.na-diff-btn.active {
+    background: var(--color-needle);
+    border-color: var(--color-needle-light);
+    color: #030712;
+}
+
+/* 结算卡片 (Game Over / Level Clear) */
+.na-card {
+    width: 100%;
+    max-width: 380px;
+    background: rgba(11, 19, 43, 0.95);
+    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    border-radius: 18px;
+    padding: 22px 18px;
+    margin: auto 0;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.na-card-title {
+    font-size: 26px;
+    font-weight: 900;
+    margin-bottom: 4px;
+}
+
+.na-card-title.victory {
+    color: #fef08a;
+    text-shadow: 0 0 16px rgba(254, 240, 138, 0.6);
+}
+
+.na-card-title.defeat {
+    color: #f87171;
+    text-shadow: 0 0 16px rgba(248, 113, 113, 0.6);
+}
+
+.na-card-stars {
+    font-size: 22px;
+    margin-bottom: 12px;
+    letter-spacing: 4px;
+}
+
+.na-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.na-stat-cell {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    padding: 8px 10px;
+}
+
+.na-stat-label {
+    font-size: 10.5px;
+    color: var(--color-text-muted);
+    margin-bottom: 2px;
+}
+
+.na-stat-value {
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.na-btn-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+}
+
+.na-btn {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-family: inherit;
+    transition: all 0.12s;
+}
+
+.na-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+}
+.na-btn:active { transform: scale(0.97); }
+
+.na-btn--primary {
+    background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    border-color: #38bdf8;
+    box-shadow: 0 0 16px rgba(14, 165, 233, 0.4);
+}
+
+.na-btn--primary:hover {
+    background: linear-gradient(135deg, #0369a1, #0284c7);
+}
+
+.na-btn--ghost {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 名字输入行 */
+.na-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 16px;
+    width: 100%;
+}
+
+.na-name-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.na-name-input:focus {
+    border-color: var(--color-needle);
+}
+
+/* 底部功能条 (主页、声音、语言) */
+.na-footer-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 14px;
+    width: 100%;
+}
+
+.na-lang-btn {
+    width: auto;
+    padding: 0 14px;
+    font-size: 12px;
+}
+
+/* Toast 浮动提示 */
+.na-toast {
+    position: absolute;
+    top: 55px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(11, 19, 43, 0.9);
+    border: 1px solid var(--color-needle);
+    box-shadow: 0 0 18px var(--color-needle-glow);
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    pointer-events: none;
+    z-index: 20;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+/* ── 桌面大屏布局（≥1024px）：舞台 + 侧边栏 ── */
+.na-sidebar {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .na-shell {
+        max-width: 960px;
+    }
+    .na-main {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 28px;
+    }
+    .na-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 320px;
+        flex-shrink: 0;
+    }
+    .na-side-card {
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 14px 16px;
+        text-align: left;
+    }
+    .na-side-title {
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: var(--color-needle);
+        letter-spacing: 0.5px;
+    }
+    .na-side-text {
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: #cbd5e1;
+    }
+    .na-side-text b {
+        color: #fef08a;
+    }
+    .na-side-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 13px;
+        padding: 4px 0;
+        color: #cbd5e1;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+    .na-side-row:last-child {
+        border-bottom: none;
+    }
+    .na-side-row b {
+        color: #fff;
+        font-variant-numeric: tabular-nums;
+    }
+    .na-shortcut-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3px 0;
+        font-size: 12px;
+        color: #cbd5e1;
+    }
+    .na-key {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+    }
+}
+
+/* ── 移动端小屏微调（≤480px） ── */
+@media (max-width: 480px) {
+    .na-shell { padding: 4px 6px 8px; }
+    .na-icon-btn { width: 36px; height: 36px; font-size: 14px; }
+    .na-stage-label { font-size: 12px; }
+    .na-score-val { font-size: 16px; }
+    .na-title { font-size: 26px; }
+    .na-mode-btn { font-size: 12.5px; padding: 10px 6px; }
+    .na-mode-btn .mode-icon { font-size: 18px; }
+    .na-touch-btn { width: 56px; height: 56px; font-size: 9.5px; }
+    .na-touch-btn .btn-icon { font-size: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .na-hero-art, .na-toast, .na-card, .na-ult-bar-fill { animation: none !important; }
+    .na-btn, .na-icon-btn, .na-touch-btn { transition: none !important; }
+}

@@ -11,7 +11,8 @@ export const MORE_GAMES = [
     { href: 'minesweeper.html', emoji: '💣', en: 'Minesweeper', zh: '扫雷' },
     { href: 'reversi.html', emoji: '⚪', en: 'Reversi', zh: '黑白棋' },
     { href: 'tower-defense.html', emoji: '🏰', en: 'Neon TD', zh: '霓虹塔防' },
-    { href: 'gravity-slingshot.html', emoji: '🚀', en: 'Gravity Slingshot', zh: '引力弹弓' }
+    { href: 'gravity-slingshot.html', emoji: '🚀', en: 'Gravity Slingshot', zh: '引力弹弓' },
+    { href: 'needle-awn.html', emoji: '⚔️', en: 'Pinpoint Clash', zh: '针尖对麦芒' }
 ];
 
 export function updateMoreGames(lang) {

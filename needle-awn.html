@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#030712">
+    <meta name="description" content="针尖对麦芒 Pinpoint Clash: Needle vs Awn — an original cyber-ink martial precision action duel. Clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm!">
+    <meta name="keywords" content="针尖对麦芒, pinpoint clash, needle vs awn, martial action game, parry game, arcade reflex, daily challenge, 国风动作, 弹反游戏">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/needle-awn.html">
+    <meta property="og:title" content="针尖对麦芒 Pinpoint Clash: Needle vs Awn">
+    <meta property="og:description" content="Clash tip-to-tip, weave dual stances of Silver Needle and Golden Awn, slow time and awaken supreme martial prowess.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-needle-awn.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/needle-awn.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="针尖对麦芒 Pinpoint Clash: Needle vs Awn">
+    <meta name="twitter:description" content="Clash tip-to-tip, weave dual stances, slow time and awaken supreme martial prowess.">
+    <meta name="twitter:image" content="assets/seo/og-needle-awn.svg">
+    <title>针尖对麦芒 — Pinpoint Clash</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23030712'/%3E%3Cpath d='M14 50 L44 20' stroke='%2338bdf8' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M50 50 L20 20' stroke='%23f59e0b' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='20' r='6' fill='%23ffffff'/%3E%3Ccircle cx='32' cy='20' r='12' fill='none' stroke='%23fef08a' stroke-width='2'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/needle-awn.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="na-shell">
+        <!-- 顶栏 HUD -->
+        <header class="na-topbar">
+            <button class="na-icon-btn" id="na-btn-home" title="Home" aria-label="Home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
+            </button>
+            <div class="na-title-pill">
+                <span class="na-stage-label" id="na-stage-label">针尖对麦芒</span>
+                <span class="na-mode-badge" id="na-mode-badge">Trials</span>
+            </div>
+            <div class="na-hud-box">
+                <span class="na-score-val" id="na-score-val">0</span>
+                <span class="na-combo-val" id="na-combo-val">×1</span>
+            </div>
+            <button class="na-icon-btn" id="na-btn-pause" title="Pause" aria-label="Pause">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg>
+            </button>
+            <button class="na-icon-btn" id="na-btn-sound" title="Sound" aria-label="Sound">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg>
+            </button>
+        </header>
+
+        <!-- 主竞技区域 -->
+        <div class="na-main">
+            <div class="na-stage" id="na-stage">
+                <canvas id="na-canvas" width="480" height="640"></canvas>
+
+                <!-- 内部即时 HUD -->
+                <div class="na-in-hud" id="na-in-hud">
+                    <div class="na-lives-wrap" id="na-lives-wrap">
+                        <span class="na-heart" id="na-heart-1">🗡️</span>
+                        <span class="na-heart" id="na-heart-2">🗡️</span>
+                        <span class="na-heart" id="na-heart-3">🗡️</span>
+                    </div>
+                    <div class="na-stance-chip needle" id="na-stance-chip" title="Switch Stance (Q / Space / Tap)">
+                        <span id="na-stance-icon">⚡</span>
+                        <span id="na-stance-text">银针态</span>
+                    </div>
+                    <div class="na-ult-bar-wrap" id="na-ult-bar-wrap" title="Awakened Lotus (E / Tap)">
+                        <span class="na-ult-label" id="na-ult-label">极意</span>
+                        <div class="na-ult-bar-track">
+                            <div class="na-ult-bar-fill" id="na-ult-bar-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 移动端触控按钮 -->
+                <div class="na-touch-controls" id="na-touch-controls">
+                    <button class="na-touch-btn na-touch-btn--stance" id="na-touch-stance" aria-label="Switch Stance">
+                        <span class="btn-icon">🔄</span>
+                        <span id="na-touch-stance-lbl">转锋</span>
+                    </button>
+                    <button class="na-touch-btn na-touch-btn--ult" id="na-touch-ult" aria-label="Awakened Ultimate">
+                        <span class="btn-icon">🌟</span>
+                        <span id="na-touch-ult-lbl">极意</span>
+                    </button>
+                    <button class="na-touch-btn na-touch-btn--dash" id="na-touch-dash" aria-label="Thrust Clash">
+                        <span class="btn-icon">⚡</span>
+                        <span id="na-touch-dash-lbl">破空刺</span>
+                    </button>
+                </div>
+
+                <!-- 悬浮提示 -->
+                <div class="na-toast hidden" id="na-toast"></div>
+
+                <!-- 1. 主菜单覆盖层 -->
+                <div class="na-overlay" id="na-overlay-start">
+                    <div class="na-badge">ORIENTAL KINETIC ACTION</div>
+                    <h1 class="na-title" id="na-main-title">针尖对麦芒</h1>
+                    <p class="na-subtitle" id="na-main-sub">极速破锋 · 针芒毕露 · 刹那生灭</p>
+
+                    <div class="na-hero-art">
+                        <span>🗡️</span>
+                        <span class="na-hero-divider">VS</span>
+                        <span>🌾</span>
+                    </div>
+
+                    <div class="na-howto-box" id="na-howto-box">
+                        <b>核心玩法：</b>敌来刺我，非退即进！正对敌方锋芒<b>破空突刺</b>触发<b>【针尖对麦芒】</b>极致弹反！<br>
+                        破空瞬息定格时空，震落碎芒反弹追击。流转<b>银针</b>与<b>金芒</b>双姿态，聚极意，斩乾坤！
+                    </div>
+
+                    <div class="na-mode-grid">
+                        <button class="na-mode-btn highlight" id="na-btn-levels">
+                            <span class="mode-icon">⚔️</span>
+                            <span id="na-lbl-mode-levels">十关演武</span>
+                            <span class="mode-sub" id="na-sub-mode-levels">10 Trials &amp; Bosses</span>
+                        </button>
+                        <button class="na-mode-btn" id="na-btn-endless">
+                            <span class="mode-icon">🌊</span>
+                            <span id="na-lbl-mode-endless">无尽争锋</span>
+                            <span class="mode-sub" id="na-sub-mode-endless">Endless Survival</span>
+                        </button>
+                        <button class="na-mode-btn" id="na-btn-daily">
+                            <span class="mode-icon">📅</span>
+                            <span id="na-lbl-mode-daily">每日论剑</span>
+                            <span class="mode-sub" id="na-sub-mode-daily">Global Seeded</span>
+                        </button>
+                        <button class="na-mode-btn" id="na-btn-duel">
+                            <span class="mode-icon">🥋</span>
+                            <span id="na-lbl-mode-duel">双雄对决</span>
+                            <span class="mode-sub" id="na-sub-mode-duel">1v1 AI / 2-Player</span>
+                        </button>
+                    </div>
+
+                    <!-- 关卡选择子面板 -->
+                    <div class="hidden" id="na-level-select-wrap" style="width: 100%;">
+                        <div style="font-size: 13px; font-weight: 800; color: var(--color-needle); margin-bottom: 6px;" id="na-level-title">选择演武关卡</div>
+                        <div class="na-level-grid" id="na-level-grid"></div>
+                    </div>
+
+                    <!-- 1v1 对决设置子面板 -->
+                    <div class="na-duel-panel hidden" id="na-duel-panel">
+                        <div class="na-duel-row">
+                            <span class="na-duel-label" id="na-duel-mode-lbl">对决模式</span>
+                            <div class="na-diff-options">
+                                <button class="na-diff-btn active" id="na-duel-type-ai">vs AI 人机</button>
+                                <button class="na-diff-btn" id="na-duel-type-2p">双人同屏 2P</button>
+                            </div>
+                        </div>
+                        <div class="na-duel-row" id="na-ai-diff-row">
+                            <span class="na-duel-label" id="na-ai-diff-lbl">AI 宗师造诣</span>
+                            <div class="na-diff-options">
+                                <button class="na-diff-btn" data-diff="easy" id="na-diff-easy">剑徒</button>
+                                <button class="na-diff-btn active" data-diff="medium" id="na-diff-medium">宗师</button>
+                                <button class="na-diff-btn" data-diff="hard" id="na-diff-hard">剑圣</button>
+                            </div>
+                        </div>
+                        <button class="na-btn na-btn--primary" id="na-btn-start-duel" style="margin-top: 8px;">开始对决 ▶</button>
+                    </div>
+
+                    <!-- 更多游戏链接导航条 -->
+                    <nav class="more-games">
+                        <div class="more-games-title">🎮 More Games</div>
+                        <div class="more-games-links">
+                            <a href="math-rain.html">🔢 数字雨</a>
+                            <a href="tetris.html">🟦 俄罗斯方块</a>
+                            <a href="tank-battle.html">🎯 坦克大战</a>
+                            <a href="gomoku.html">⚫ 五子棋</a>
+                            <a href="planet-merge.html">🪐 星球合成</a>
+                            <a href="word-daily.html">🔤 每日猜词</a>
+                            <a href="hoop-shot.html">🏀 街机投篮</a>
+                            <a href="minesweeper.html">💣 扫雷</a>
+                            <a href="reversi.html">⚪ 黑白棋</a>
+                            <a href="tower-defense.html">🏰 霓虹塔防</a>
+                            <a href="gravity-slingshot.html">🚀 引力弹弓</a>
+                        </div>
+                    </nav>
+
+                    <div class="na-footer-bar">
+                        <a class="na-icon-btn" href="index.html" title="Home" aria-label="Home">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
+                        </a>
+                        <button class="na-icon-btn" id="na-start-sound" aria-label="Sound">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg>
+                        </button>
+                        <button class="na-icon-btn na-lang-btn" id="na-btn-lang">中文</button>
+                    </div>
+                </div>
+
+                <!-- 2. 暂停界面 -->
+                <div class="na-overlay hidden" id="na-overlay-pause">
+                    <div class="na-card">
+                        <h2 class="na-card-title" id="na-pause-title">凝神静思 · 暂停</h2>
+                        <p class="na-subtitle" id="na-pause-sub">Breath &amp; Focus</p>
+                        <div class="na-btn-row">
+                            <button class="na-btn na-btn--primary" id="na-btn-resume">继续战斗 ▶</button>
+                            <button class="na-btn" id="na-btn-restart">重新挑战 ⟲</button>
+                            <button class="na-btn na-btn--ghost" id="na-btn-pause-home">返回主页 🏠</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 结算界面 (胜负/通关/战败) -->
+                <div class="na-overlay hidden" id="na-overlay-result">
+                    <div class="na-card">
+                        <h2 class="na-card-title" id="na-result-title">锋芒毕露</h2>
+                        <div class="na-card-stars" id="na-result-stars">⭐⭐⭐</div>
+                        <p class="na-subtitle" id="na-result-sub">Trial Completed</p>
+
+                        <div class="na-stats-grid">
+                            <div class="na-stat-cell">
+                                <div class="na-stat-label" id="na-stat-score-lbl">交锋得分</div>
+                                <div class="na-stat-value" id="na-stat-score-val">0</div>
+                            </div>
+                            <div class="na-stat-cell">
+                                <div class="na-stat-label" id="na-stat-clashes-lbl">针尖麦芒碰撞</div>
+                                <div class="na-stat-value" id="na-stat-clashes-val">0</div>
+                            </div>
+                            <div class="na-stat-cell">
+                                <div class="na-stat-label" id="na-stat-combo-lbl">最高连击</div>
+                                <div class="na-stat-value" id="na-stat-combo-val">0</div>
+                            </div>
+                            <div class="na-stat-cell">
+                                <div class="na-stat-label" id="na-stat-extra-lbl">用时 / 存活</div>
+                                <div class="na-stat-value" id="na-stat-extra-val">0s</div>
+                            </div>
+                        </div>
+
+                        <!-- 玩家昵称输入 -->
+                        <div class="na-name-row" id="na-name-row">
+                            <input type="text" class="na-name-input" id="na-player-input" maxlength="20" placeholder="侠客尊号 Player Name">
+                        </div>
+
+                        <div class="na-btn-row">
+                            <button class="na-btn na-btn--primary" id="na-btn-next-stage">下一关卡 ▶</button>
+                            <button class="na-btn" id="na-btn-replay">再战一局 ⟲</button>
+                            <button class="na-btn na-btn--ghost" id="na-btn-result-home">返回菜单 🏠</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 桌面大屏侧边栏 (≥1024px) -->
+            <aside class="na-sidebar">
+                <div class="na-side-card">
+                    <div class="na-side-title" id="na-side-rules-title">⚔️ 针尖对麦芒 · 核心法则</div>
+                    <div class="na-side-text" id="na-side-rules-text">
+                        <b>硬碰硬：</b>朝向迎面而来的利刃或尖刺突刺，在毫厘之间触发<b>针尖对麦芒</b>！完美格挡所有伤害并爆发出碎芒反弹。<br><br>
+                        <b>双锋流转：</b><br>
+                        • <b>银针（水蓝）</b>：极速穿云刺，碰撞触发时空凝滞（子弹时间）。<br>
+                        • <b>金芒（暖金）</b>：回旋破晓舞，碰撞引发金芒天爆全屏净空。<br>
+                        <b>逆克爆发：</b>以针刺破麦芒，倍率翻倍！
+                    </div>
+                </div>
+
+                <div class="na-side-card">
+                    <div class="na-side-title" id="na-side-records-title">🏆 绝巅战绩</div>
+                    <div class="na-side-row">
+                        <span id="na-side-rec-endless-lbl">无尽争锋最高分</span>
+                        <b id="na-side-rec-endless">0</b>
+                    </div>
+                    <div class="na-side-row">
+                        <span id="na-side-rec-clash-lbl">单局极致碰撞</span>
+                        <b id="na-side-rec-clash">0</b>
+                    </div>
+                    <div class="na-side-row">
+                        <span id="na-side-rec-stars-lbl">演武通关星数</span>
+                        <b id="na-side-rec-stars">0 / 30</b>
+                    </div>
+                    <div class="na-side-row">
+                        <span id="na-side-rec-daily-lbl">今日论剑状态</span>
+                        <b id="na-side-rec-daily">未挑战</b>
+                    </div>
+                </div>
+
+                <div class="na-side-card">
+                    <div class="na-side-title" id="na-side-controls-title">⌨️ 键位与操控</div>
+                    <div class="na-shortcut-item">
+                        <span id="na-sc-aim">瞄准方向</span>
+                        <span class="na-key">鼠标移动 / 触摸拖动</span>
+                    </div>
+                    <div class="na-shortcut-item">
+                        <span id="na-sc-dash">破空突刺 (交锋)</span>
+                        <span class="na-key">鼠标左键 / 空格 / ⚡按钮</span>
+                    </div>
+                    <div class="na-shortcut-item">
+                        <span id="na-sc-stance">转换锋芒姿态</span>
+                        <span class="na-key">鼠标右键 / Q / Shift / 🔄</span>
+                    </div>
+                    <div class="na-shortcut-item">
+                        <span id="na-sc-ult">万芒天破 (极意)</span>
+                        <span class="na-key">E 键 / 双击 / 🌟按钮</span>
+                    </div>
+                    <div class="na-shortcut-item">
+                        <span id="na-sc-move">身法移动</span>
+                        <span class="na-key">W A S D / 方向键</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- 结构化数据 (Schema.org) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const baseUrl = 'https://games.orangely.xyz/';
+            const currentUrl = 'https://games.orangely.xyz/needle-awn.html';
+            const socialImage = new URL('assets/seo/og-needle-awn.svg', baseUrl).href;
+
+            const gameData = {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "针尖对麦芒 Pinpoint Clash: Needle vs Awn",
+                "description": "Cyber-ink martial precision action duel. Clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm!",
+                "genre": ["Action", "Arcade", "Martial Arts", "Precision"],
+                "playMode": ["SinglePlayer", "MultiPlayer"],
+                "applicationCategory": "Game",
+                "url": currentUrl,
+                "image": socialImage,
+                "inLanguage": document.documentElement.lang || "en",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Mini Games Collection",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Pinpoint Clash",
+                        "item": currentUrl
+                    }
+                ]
+            };
+
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <script type="module" src="js/needle-awn.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

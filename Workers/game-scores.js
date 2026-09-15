@@ -23,12 +23,14 @@ const GAMES = {
   'minesweeper-easy':   { order: 'asc',  maxScore: 9999,     maxEntries: 50 }, // 最快通关（秒）
   'minesweeper-medium': { order: 'asc',  maxScore: 9999,     maxEntries: 50 },
   'minesweeper-hard':   { order: 'asc',  maxScore: 9999,     maxEntries: 50 },
+  'needle-awn':         { order: 'desc', maxScore: 5000000,  maxEntries: 50 },
 };
 
 // 每日赛程 / 每日挑战榜：按天一个键，正则白名单 + TTL 自然滚动
 const DAILY_PATTERNS = [
   { re: /^gravity-d\d{8}$/,      config: { order: 'asc',  maxScore: 99,      maxEntries: 50 } }, // 杆数越少越好
   { re: /^planet-merge-d\d{8}$/, config: { order: 'desc', maxScore: 10000000, maxEntries: 50, ttl: 14 * 24 * 3600 } },
+  { re: /^needle-awn-d\d{8}$/,   config: { order: 'desc', maxScore: 5000000,  maxEntries: 50, ttl: 14 * 24 * 3600 } },
 ];
 
 function resolveGame(game) {

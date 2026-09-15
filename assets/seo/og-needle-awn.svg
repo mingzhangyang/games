@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="na-title na-desc">
+  <title id="na-title">Pinpoint Clash: Needle vs Awn</title>
+  <desc id="na-desc">Social preview for 针尖对麦芒 Pinpoint Clash — Kinetic oriental duel of precision, parrying and dual stances.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#04060f"/>
+      <stop offset="0.5" stop-color="#090f24"/>
+      <stop offset="1" stop-color="#14112e"/>
+    </linearGradient>
+
+    <!-- 针 (Silver Needle) 辉光渐变 -->
+    <linearGradient id="needleG" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.1"/>
+      <stop offset="70%" stop-color="#38bdf8" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#f0f9ff" stop-opacity="1"/>
+    </linearGradient>
+
+    <!-- 麦芒 (Golden Awn) 辉光渐变 -->
+    <linearGradient id="awnG" x1="1" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.1"/>
+      <stop offset="70%" stop-color="#fbbf24" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#fef08a" stop-opacity="1"/>
+    </linearGradient>
+
+    <!-- 碰撞爆心径向光 -->
+    <radialGradient id="clashG" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="25%" stop-color="#fef08a" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="#38bdf8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- 动态流线与星点背景 -->
+  <g opacity="0.3" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4 12">
+    <line x1="100" y1="150" x2="500" y2="350"/>
+    <line x1="200" y1="80" x2="550" y2="320"/>
+  </g>
+  <g opacity="0.3" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4 12">
+    <line x1="1100" y1="500" x2="700" y2="350"/>
+    <line x1="1000" y1="580" x2="650" y2="380"/>
+  </g>
+
+  <!-- 外边框 -->
+  <rect x="48" y="48" width="1104" height="534" rx="24" fill="rgba(6, 10, 26, 0.45)" stroke="rgba(56, 189, 248, 0.4)" stroke-width="2"/>
+
+  <!-- 针尖对麦芒 交锋视觉主体 (居中偏右) -->
+  <g transform="translate(100, 20)">
+    <!-- 碰撞冲击波环 -->
+    <circle cx="680" cy="300" r="140" fill="none" stroke="rgba(254, 240, 138, 0.25)" stroke-width="3"/>
+    <circle cx="680" cy="300" r="80" fill="none" stroke="rgba(56, 189, 248, 0.45)" stroke-width="4"/>
+    <circle cx="680" cy="300" r="45" fill="url(#clashG)"/>
+
+    <!-- 银针 (来自左上，刺向碰撞中心 680, 300) -->
+    <!-- 针身 -->
+    <path d="M 440 180 L 676 298 L 445 190 Z" fill="url(#needleG)" filter="url(#glow)"/>
+    <line x1="420" y1="170" x2="678" y2="299" stroke="#ffffff" stroke-width="4" stroke-linecap="round" filter="url(#glow)"/>
+    <!-- 针尾灵光 -->
+    <circle cx="420" cy="170" r="10" fill="#38bdf8" opacity="0.8"/>
+    <circle cx="420" cy="170" r="4" fill="#ffffff"/>
+
+    <!-- 金麦芒 (来自右下，挺向碰撞中心 680, 300) -->
+    <!-- 麦穗主芒 -->
+    <path d="M 920 420 L 684 302 L 915 410 Z" fill="url(#awnG)" filter="url(#glow)"/>
+    <line x1="940" y1="430" x2="682" y2="301" stroke="#ffffff" stroke-width="4" stroke-linecap="round" filter="url(#glow)"/>
+    <!-- 麦芒刺簇 (有机羽状芒刺) -->
+    <path d="M 900 410 Q 850 415 800 370" fill="none" stroke="#fbbf24" stroke-width="3" filter="url(#glow)"/>
+    <path d="M 860 390 Q 810 400 760 350" fill="none" stroke="#fbbf24" stroke-width="2.5" filter="url(#glow)"/>
+    <path d="M 820 370 Q 770 380 720 330" fill="none" stroke="#fbbf24" stroke-width="2" filter="url(#glow)"/>
+    <path d="M 920 440 Q 880 460 840 430" fill="none" stroke="#fbbf24" stroke-width="2.5" filter="url(#glow)"/>
+    <circle cx="940" cy="430" r="10" fill="#f59e0b" opacity="0.8"/>
+    <circle cx="940" cy="430" r="4" fill="#ffffff"/>
+
+    <!-- 碰撞爆裂粒子 -->
+    <g fill="#ffffff">
+      <circle cx="670" cy="270" r="4" filter="url(#glow)"/>
+      <circle cx="695" cy="330" r="4" filter="url(#glow)"/>
+      <circle cx="650" cy="320" r="3"/>
+      <circle cx="710" cy="280" r="3.5"/>
+      <circle cx="630" cy="285" r="2.5"/>
+      <circle cx="730" cy="315" r="2.5"/>
+    </g>
+    <g fill="#38bdf8">
+      <circle cx="660" cy="245" r="3"/>
+      <circle cx="640" cy="260" r="2"/>
+      <circle cx="620" cy="330" r="3"/>
+    </g>
+    <g fill="#fbbf24">
+      <circle cx="700" cy="355" r="3"/>
+      <circle cx="720" cy="340" r="2"/>
+      <circle cx="740" cy="270" r="3"/>
+    </g>
+  </g>
+
+  <!-- 左侧文本区域 -->
+  <!-- 徽标与模式 -->
+  <g transform="translate(100, 150)">
+    <rect x="0" y="0" width="130" height="34" rx="17" fill="rgba(56, 189, 248, 0.15)" stroke="rgba(56, 189, 248, 0.4)"/>
+    <text x="65" y="22" fill="#7dd3fc" font-size="15" font-weight="700" font-family="'Segoe UI', system-ui, sans-serif" text-anchor="middle">NEW GAME</text>
+  </g>
+
+  <!-- 主标题 -->
+  <text x="100" y="260" fill="#f8fafc" font-size="78" font-weight="900" font-family="'Segoe UI', 'Noto Sans SC', system-ui, sans-serif" letter-spacing="-1">
+    针尖对麦芒
+  </text>
+  <text x="100" y="325" fill="#38bdf8" font-size="34" font-weight="700" font-family="'Segoe UI', system-ui, sans-serif" letter-spacing="1">
+    PINPOINT CLASH · NEEDLE VS AWN
+  </text>
+
+  <!-- 描述与副标 -->
+  <text x="100" y="380" fill="#94a3b8" font-size="22" font-family="'Segoe UI', system-ui, sans-serif">
+    极速破锋 · 针芒毕露 · 刹那生灭 · 毫厘对决
+  </text>
+  <text x="100" y="415" fill="#64748b" font-size="18" font-family="'Segoe UI', system-ui, sans-serif">
+    Pierce · Clash · Deflect · Awaken · 10 Stages &amp; Endless Duel
+  </text>
+
+  <!-- 底部标签栏 -->
+  <g transform="translate(100, 480)">
+    <text x="0" y="25" fill="#f8fafc" font-size="20" font-weight="600" font-family="'Segoe UI', system-ui, sans-serif">
+      ⚔️ Browser Action · Dual Stance · Web Audio · Daily Course
+    </text>
+  </g>
+</svg>

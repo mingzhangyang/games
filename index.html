@@ -679,7 +679,7 @@
 
             <!-- Gravity Slingshot -->
             <article class="game-card" onclick="location.href='gravity-slingshot.html'">
-                <span class="card-badge card-badge--new">New</span>
+                <span class="card-badge card-badge--daily">Daily</span>
                 <div class="card-body">
                     <div class="card-header">
                         <span class="card-icon card-icon--gravity">🚀</span>
@@ -689,6 +689,22 @@
                     <div class="card-footer">
                         <span class="tag" id="gravity-tag">Physics</span>
                         <a class="play-btn" href="gravity-slingshot.html" id="gravity-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Pinpoint Clash: Needle vs Awn 针尖对麦芒 -->
+            <article class="game-card" onclick="location.href='needle-awn.html'">
+                <span class="card-badge card-badge--new">New</span>
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--needle">⚔️</span>
+                        <a class="card-title" href="needle-awn.html" id="needle-awn-name">Pinpoint Clash</a>
+                    </div>
+                    <p class="card-desc" id="needle-awn-desc">Kinetic martial precision duel. Clash tip-to-tip, weave Silver Needle and Golden Awn stances, freeze time and awaken supreme prowess.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="needle-awn-tag">Action</span>
+                        <a class="play-btn" href="needle-awn.html" id="needle-awn-play">Play ›</a>
                     </div>
                 </div>
             </article>
@@ -842,6 +858,11 @@
                 gravityTag: 'Physics',
                 gravityPlay: 'Play ›',
 
+                needleAwnName: 'Pinpoint Clash',
+                needleAwnDesc: 'Kinetic martial precision duel. Clash tip-to-tip, weave Silver Needle and Golden Awn stances, freeze time and awaken supreme prowess.',
+                needleAwnTag: 'Action',
+                needleAwnPlay: 'Play ›',
+
                 minecraftName: '2D Minecraft',
                 minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
                 minecraftTag: 'Sandbox',
@@ -937,6 +958,11 @@
                 gravityDesc: '原创轨道物理——拖拽弹弓发射探测器，借行星引力甩尾进虫洞。20 个手工洞口 + 每日赛程！',
                 gravityTag: '物理弹道',
                 gravityPlay: '开始游戏 ›',
+
+                needleAwnName: '针尖对麦芒',
+                needleAwnDesc: '极速破锋，毫厘交错！正对敌方锋芒冲刺触发【针尖对麦芒】极致弹反，双姿态流转，斩破万芒！',
+                needleAwnTag: '硬核动作',
+                needleAwnPlay: '开始游戏 ›',
 
                 minecraftName: '2D 我的世界',
                 minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -1039,6 +1065,11 @@
             document.getElementById('gravity-tag').textContent = t.gravityTag;
             document.getElementById('gravity-play').textContent = t.gravityPlay;
 
+            document.getElementById('needle-awn-name').textContent = t.needleAwnName;
+            document.getElementById('needle-awn-desc').textContent = t.needleAwnDesc;
+            document.getElementById('needle-awn-tag').textContent = t.needleAwnTag;
+            document.getElementById('needle-awn-play').textContent = t.needleAwnPlay;
+
             document.getElementById('minecraft-name').textContent = t.minecraftName;
             document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
             document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -1111,6 +1142,7 @@
                 { slug: 'reversi', name: 'Reversi', description: 'Classic Othello strategy board game — three AI levels or pass-and-play with a friend.' },
                 { slug: 'tower-defense', name: 'Neon Tower Defense', description: 'Neon-themed tower defense — four tower types, 25 escalating waves, upgrades and a global leaderboard.' },
                 { slug: 'gravity-slingshot', name: 'Gravity Slingshot', description: 'Original orbital physics puzzle — slingshot your probe around planets into the wormhole, 20 holes plus a daily course.' },
+                { slug: 'needle-awn', name: 'Pinpoint Clash', description: 'Original cyber-ink martial precision action duel — clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm.' },
                 { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
                 { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
                 { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }

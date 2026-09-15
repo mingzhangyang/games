@@ -18,7 +18,8 @@ export default defineConfig({
         minesweeper: resolve(__dirname, 'minesweeper.html'),
         reversi: resolve(__dirname, 'reversi.html'),
         'tower-defense': resolve(__dirname, 'tower-defense.html'),
-        'gravity-slingshot': resolve(__dirname, 'gravity-slingshot.html')
+        'gravity-slingshot': resolve(__dirname, 'gravity-slingshot.html'),
+        'needle-awn': resolve(__dirname, 'needle-awn.html')
       },
       output: {
         // 分块策略
