@@ -36,6 +36,7 @@
             <div class="td-stat" title="Gold"><span>💰</span><b id="td-gold">220</b></div>
             <div class="td-stat" title="Wave"><span>🌊</span><b id="td-wave">0/25</b></div>
             <div class="td-topbar-actions">
+                <button class="td-icon-btn" id="td-range-btn" title="Toggle Ranges (R)" aria-label="Toggle Ranges"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></button>
                 <button class="td-icon-btn" id="td-speed-btn" title="Speed">×1</button>
                 <button class="td-icon-btn" id="td-pause-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
                 <button class="td-icon-btn" id="td-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
@@ -47,9 +48,30 @@
         <div class="td-stage" id="td-stage">
             <canvas id="td-canvas" width="480" height="640"></canvas>
 
-            <!-- 波次控制条 -->
-            <div class="td-wavebar">
-                <button class="td-wave-btn" id="td-wave-btn">▶ Wave 1</button>
+            <!-- 底部战术与波次控制条 -->
+            <div class="td-bottom-controls" id="td-bottom-controls">
+                <button class="td-skill-btn" id="td-skill-emp" title="EMP Shockwave (Q)" aria-label="EMP Shockwave">
+                    <svg class="td-skill-ring" viewBox="0 0 44 44">
+                        <circle class="td-ring-bg" cx="22" cy="22" r="19"/>
+                        <circle class="td-ring-fg" id="td-emp-ring" cx="22" cy="22" r="19"/>
+                    </svg>
+                    <span class="td-skill-icon">⚡</span>
+                    <span class="td-skill-hotkey">Q</span>
+                    <span class="td-skill-timer" id="td-emp-timer"></span>
+                </button>
+                <button class="td-wave-btn" id="td-wave-btn">
+                    <span class="td-wave-title" id="td-wave-text">▶ Wave 1</span>
+                    <span class="td-wave-preview" id="td-wave-preview"></span>
+                </button>
+                <button class="td-skill-btn" id="td-skill-boost" title="Overdrive (E)" aria-label="Overdrive">
+                    <svg class="td-skill-ring" viewBox="0 0 44 44">
+                        <circle class="td-ring-bg" cx="22" cy="22" r="19"/>
+                        <circle class="td-ring-fg" id="td-boost-ring" cx="22" cy="22" r="19"/>
+                    </svg>
+                    <span class="td-skill-icon">🔥</span>
+                    <span class="td-skill-hotkey">E</span>
+                    <span class="td-skill-timer" id="td-boost-timer"></span>
+                </button>
             </div>
 
             <!-- 建造/升级面板 -->
@@ -104,6 +126,11 @@
                 <div class="td-over-verdict" id="td-over-verdict"></div>
                 <div class="td-over-score" id="td-over-score">0</div>
                 <div class="td-over-sub" id="td-over-sub"></div>
+                <div class="td-over-stats-grid" id="td-over-stats-grid">
+                    <div class="td-over-stat-item"><span class="td-over-stat-icon">🌊</span><b id="td-over-waves">0/25</b><span class="td-over-stat-lbl" id="td-over-lbl-waves">Wave</span></div>
+                    <div class="td-over-stat-item"><span class="td-over-stat-icon">💀</span><b id="td-over-kills">0</b><span class="td-over-stat-lbl" id="td-over-lbl-kills">Kills</span></div>
+                    <div class="td-over-stat-item"><span class="td-over-stat-icon">❤️</span><b id="td-over-lives">0</b><span class="td-over-stat-lbl" id="td-over-lbl-lives">Lives</span></div>
+                </div>
                 <div class="td-btn-row">
                     <button class="td-btn td-btn-primary" id="td-btn-again">🔄 Again</button>
                     <button class="td-btn" id="td-btn-copy">📋 Copy</button>
@@ -121,14 +148,22 @@
             </div>
         </div>
 
-            <aside class="td-sidebar">
+        <aside class="td-sidebar">
             <div class="td-side-card">
                 <div class="td-side-title" id="td-side-howto-title"></div>
                 <p class="td-side-text" id="td-side-howto"></p>
             </div>
             <div class="td-side-card">
+                <div class="td-side-title" id="td-side-skills-title"></div>
+                <div class="td-side-skills" id="td-side-skills"></div>
+            </div>
+            <div class="td-side-card">
                 <div class="td-side-title" id="td-side-towers-title"></div>
                 <div class="td-side-towers" id="td-side-towers"></div>
+            </div>
+            <div class="td-side-card">
+                <div class="td-side-title" id="td-side-shortcuts-title"></div>
+                <div class="td-side-shortcuts" id="td-side-shortcuts"></div>
             </div>
             <div class="td-side-card">
                 <div class="td-side-title" id="td-side-records-title"></div>

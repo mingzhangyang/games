@@ -1,7 +1,7 @@
 /**
  * Neon Tower Defense 霓虹塔防
  * Canvas 塔防：脉冲 / 冰霜 / 加农 / 电磁四类塔，25 波敌人，
- * 升级与出售（70% 回收），×2 倍速，全球排行榜。
+ * 目标集火策略、战术指挥技能、提前发波奖励、4阶觉醒形态、×1/×2/×3倍速、全球排行榜。
  *
  * 逻辑坐标固定 480×640（12×16 格，格宽 40），渲染时按容器宽度
  * 等比缩放并乘 devicePixelRatio；背景静态层离屏预渲染；
@@ -32,15 +32,6 @@ function storageSet(key, value) {
     }
 }
 
-function storageParse(key, fallback) {
-    try {
-        const parsed = JSON.parse(storageGet(key));
-        return parsed === null || parsed === undefined ? fallback : parsed;
-    } catch (e) {
-        return fallback;
-    }
-}
-
 function clamp(v, min, max) {
     return v < min ? min : v > max ? max : v;
 }
@@ -55,13 +46,15 @@ const LANGUAGES = {
     en: {
         title: 'Neon Tower Defense',
         subtitle: 'Build · Upgrade · Survive',
-        howto: 'Tap a free cell to build a tower, tap a tower to upgrade or sell. Stop every creep before it reaches your core — 25 waves and you win!',
+        howto: 'Tap a cell to build towers, tap a tower to upgrade, sell or set targeting priority. Use tactical commander skills (EMP & Overdrive) and survive all 25 waves!',
         play: 'Play',
         pulse: 'Pulse', frost: 'Frost', cannon: 'Cannon', tesla: 'Tesla',
-        pulseDesc: 'rapid single shot', frostDesc: 'slows creeps', cannonDesc: 'splash damage', teslaDesc: 'chain lightning',
+        pulseDesc: 'rapid single laser', frostDesc: 'slows & freezes creeps', cannonDesc: 'splash damage & napalm', teslaDesc: 'chain lightning & shock',
         towerIntro: '🔹 Pulse · ❄️ Frost · 💥 Cannon · ⚡ Tesla',
-        towerLegend: 'Towers',
-        sideHowTo: 'How to play',
+        towerLegend: 'Towers & Awakenings',
+        sideHowTo: 'How to Play',
+        sideSkillsTitle: 'Tactical Skills',
+        sideShortcutsTitle: 'Shortcuts',
         sideRecords: 'Records',
         wave: 'Wave',
         startWave: '▶ Wave {n}',
@@ -79,12 +72,30 @@ const LANGUAGES = {
         newBest: 'NEW BEST!',
         waveCleared: 'Wave {n} cleared! +{g} gold',
         bossIncoming: '⚠️ BOSS INCOMING',
+        bossDefeated: '👑 BOSS ELIMINATED!',
         notEnoughGold: 'Not enough gold',
         cantBuild: 'Can\'t build here',
         maxLevel: 'MAX',
         upgrade: 'Upgrade',
         sell: 'Sell',
         dmg: 'DMG', range: 'RNG', rate: 'RATE',
+        priority: 'Priority',
+        prioFirst: 'First', prioLast: 'Last', prioStrong: 'Strong', prioWeak: 'Weak', prioClose: 'Close',
+        emp: 'EMP Shockwave',
+        empDesc: 'Stuns all creeps 2.4s + electric damage [Q]',
+        empCast: '⚡ EMP Shockwave Triggered!',
+        overdrive: 'Overdrive',
+        overdriveDesc: '+50% fire rate & +20% range for 6s [E]',
+        overdriveCast: '🔥 Overdrive Activated!',
+        earlyCall: '⚡ Early +{g}💰',
+        earlyCallBonus: 'Early Call',
+        earlyCallToast: '⚡ Early Wave Bonus: +{g} Gold!',
+        ultimate: 'AWAKENING',
+        damageDealt: 'DMG',
+        kills: 'Kills',
+        lives: 'Lives',
+        waveStat: 'Wave',
+        toggleRanges: 'Ranges',
         leaderboard: 'Global Top 10',
         loadingScores: 'Loading…',
         noScores: 'No scores yet',
@@ -93,18 +104,20 @@ const LANGUAGES = {
         copyResult: 'Copy',
         copied: 'Copied!',
         language: '中文',
-        hint: 'Tap a free cell to build · tap a tower to upgrade'
+        hint: 'Click cell to build · Click tower to upgrade · Space to start wave'
     },
     zh: {
         title: '霓虹塔防',
         subtitle: '建造 · 升级 · 守护',
-        howto: '点击空格子建塔，点击塔升级或出售。别让任何敌人碰到核心——守住 25 波即获胜！',
+        howto: '点击空格子建塔，点击塔升级、出售或切换集火策略。合理运用指挥官战术技能（EMP震荡与超频加速），守住 25 波即获胜！',
         play: '开始游戏',
         pulse: '脉冲塔', frost: '冰霜塔', cannon: '加农炮', tesla: '电磁塔',
-        pulseDesc: '高速单发', frostDesc: '减速光环', cannonDesc: '溅射伤害', teslaDesc: '闪电连锁',
+        pulseDesc: '高速单体激光', frostDesc: '减速与冰冻急冻', cannonDesc: '范围溅射与火海', teslaDesc: '闪电连锁与感电',
         towerIntro: '🔹 脉冲 · ❄️ 冰霜 · 💥 加农 · ⚡ 电磁',
-        towerLegend: '防御塔',
+        towerLegend: '防御塔与觉醒',
         sideHowTo: '玩法说明',
+        sideSkillsTitle: '指挥官技能',
+        sideShortcutsTitle: '键盘快捷键',
         sideRecords: '战绩',
         wave: '第',
         startWave: '▶ 第 {n} 波',
@@ -122,12 +135,30 @@ const LANGUAGES = {
         newBest: '新纪录！',
         waveCleared: '第 {n} 波守住！+{g} 金币',
         bossIncoming: '⚠️ BOSS 来袭',
+        bossDefeated: '👑 BOSS 已歼灭！',
         notEnoughGold: '金币不足',
         cantBuild: '这里不能建造',
         maxLevel: '满级',
         upgrade: '升级',
         sell: '出售',
         dmg: '攻击', range: '射程', rate: '攻速',
+        priority: '集火目标',
+        prioFirst: '首位', prioLast: '末位', prioStrong: '强敌', prioWeak: '残血', prioClose: '最近',
+        emp: 'EMP 震荡',
+        empDesc: '全屏瘫痪 2.4 秒并造成高额电击伤害 [Q]',
+        empCast: '⚡ EMP 电磁脉冲已释放！',
+        overdrive: '战术超频',
+        overdriveDesc: '全塔攻速提升 50%，射程提升 20%，持续 6 秒 [E]',
+        overdriveCast: '🔥 全塔超频启动！',
+        earlyCall: '⚡ 提前迎击 +{g}💰',
+        earlyCallBonus: '提前迎击',
+        earlyCallToast: '⚡ 提前迎击奖励：+{g} 金币！',
+        ultimate: '觉醒形态',
+        damageDealt: '总伤',
+        kills: '击杀',
+        lives: '生命',
+        waveStat: '波次',
+        toggleRanges: '射程',
         leaderboard: '全球前 10',
         loadingScores: '加载中…',
         noScores: '暂无分数',
@@ -136,7 +167,7 @@ const LANGUAGES = {
         copyResult: '复制',
         copied: '已复制！',
         language: 'English',
-        hint: '点空格建塔 · 点塔升级'
+        hint: '点空格建塔 · 点塔升级/集火 · 空格发波'
     }
 };
 
@@ -184,7 +215,7 @@ const Sfx = {
         const ctx = this.ensure();
         if (!ctx) return;
         const now = ctx.currentTime + delay;
-        const buffer = ctx.createBuffer(1, Math.max(1, ctx.sampleRate * duration), ctx.sampleRate);
+        const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * duration)), ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < data.length; i++) {
             data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 1.6);
@@ -203,13 +234,13 @@ const Sfx = {
         this.tone({ freq: 780, type: 'triangle', duration: 0.11, volume: 0.12, delay: 0.07 });
     },
     sell() { this.tone({ freq: 520, endFreq: 260, type: 'sine', duration: 0.14, volume: 0.13 }); },
-    explode() { this.noise(0.22, 0.16); this.tone({ freq: 140, endFreq: 60, type: 'sawtooth', duration: 0.2, volume: 0.14 }); },
+    explode() { this.noise(0.22, 0.18); this.tone({ freq: 140, endFreq: 60, type: 'sawtooth', duration: 0.2, volume: 0.16 }); },
     zap() { this.tone({ freq: 900, endFreq: 240, type: 'sawtooth', duration: 0.1, volume: 0.08 }); },
     leak() {
         this.tone({ freq: 220, endFreq: 90, type: 'square', duration: 0.25, volume: 0.18 });
         this.noise(0.15, 0.1);
     },
-    bigDeath() { this.noise(0.35, 0.2); this.tone({ freq: 180, endFreq: 50, type: 'sawtooth', duration: 0.3, volume: 0.16 }); },
+    bigDeath() { this.noise(0.35, 0.22); this.tone({ freq: 180, endFreq: 50, type: 'sawtooth', duration: 0.3, volume: 0.18 }); },
     waveStart() {
         this.tone({ freq: 392, type: 'triangle', duration: 0.12, volume: 0.15 });
         this.tone({ freq: 523, type: 'triangle', duration: 0.14, volume: 0.15, delay: 0.12 });
@@ -224,6 +255,31 @@ const Sfx = {
         this.noise(0.5, 0.18, 0.1);
     },
     click() { this.tone({ freq: 640, type: 'square', duration: 0.05, volume: 0.06 }); },
+    emp() {
+        this.tone({ freq: 1100, endFreq: 70, type: 'sawtooth', duration: 0.45, volume: 0.22 });
+        this.noise(0.3, 0.15, 0.05);
+    },
+    overdrive() {
+        [330, 440, 554, 659, 880].forEach((f, i) => {
+            this.tone({ freq: f, type: 'triangle', duration: 0.11, volume: 0.11, delay: i * 0.05 });
+        });
+    },
+    crit() {
+        this.tone({ freq: 1200, endFreq: 1600, type: 'sine', duration: 0.08, volume: 0.15 });
+    },
+    freeze() {
+        this.tone({ freq: 880, endFreq: 440, type: 'sine', duration: 0.18, volume: 0.14 });
+        this.noise(0.12, 0.08);
+    },
+    earlyWave() {
+        [440, 554, 659, 880].forEach((f, i) => {
+            this.tone({ freq: f, type: 'triangle', duration: 0.1, volume: 0.13, delay: i * 0.06 });
+        });
+    },
+    shieldBreak() {
+        this.tone({ freq: 900, endFreq: 250, type: 'square', duration: 0.15, volume: 0.12 });
+        this.noise(0.15, 0.1);
+    },
     toggleMuted() {
         this.muted = !this.muted;
         setMuted(this.muted);
@@ -240,8 +296,8 @@ const START_GOLD = 220;
 const START_LIVES = 20;
 const SELL_RATIO = 0.7;
 const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
-const MAX_PARTICLES = 140;
-const MAX_FLOATERS = 30;
+const MAX_PARTICLES = 160;
+const MAX_FLOATERS = 40;
 
 // 敌人路径（格子坐标，起点在画布上方之外）
 const WAYPOINTS = [
@@ -249,46 +305,54 @@ const WAYPOINTS = [
 ];
 
 const ENEMY_TYPES = {
-    normal: { hp: 34,  speed: 55, gold: 6,  dmg: 1, r: 9,  color: '#ff6b7a', sides: 8 },
-    fast:   { hp: 20,  speed: 96, gold: 5,  dmg: 1, r: 7,  color: '#ffd34d', sides: 3 },
-    tank:   { hp: 130, speed: 33, gold: 14, dmg: 2, r: 12, color: '#a78bfa', sides: 6 },
-    boss:   { hp: 950, speed: 26, gold: 90, dmg: 4, r: 17, color: '#ff5a3c', sides: 5 }
+    normal: { hp: 34,  speed: 55,  gold: 6,  dmg: 1, r: 9,   color: '#ff6b7a', sides: 8, icon: '👾' },
+    fast:   { hp: 20,  speed: 98,  gold: 5,  dmg: 1, r: 7,   color: '#ffd34d', sides: 3, icon: '⚡' },
+    tank:   { hp: 135, speed: 33,  gold: 14, dmg: 2, r: 12,  color: '#a78bfa', sides: 6, icon: '🛡️' },
+    swarm:  { hp: 16,  speed: 108, gold: 3,  dmg: 1, r: 6.5, color: '#34d399', sides: 4, icon: '🐝' },
+    shield: { hp: 75,  speed: 48,  gold: 10, dmg: 1, r: 10,  color: '#38bdf8', sides: 7, icon: '💠', maxShield: 50 },
+    boss:   { hp: 950, speed: 25,  gold: 90, dmg: 4, r: 17,  color: '#ff5a3c', sides: 5, icon: '👑' }
 };
 
 const TOWER_TYPES = {
     pulse: {
         icon: '🔹', color: '#40d8ff', cost: 50,
         levels: [
-            { dmg: 9,  range: 105, rate: 2.2 },
-            { dmg: 16, range: 115, rate: 2.6, cost: 40 },
-            { dmg: 28, range: 125, rate: 3.0, cost: 65 }
+            { dmg: 9,   range: 105, rate: 2.2 },
+            { dmg: 16,  range: 115, rate: 2.6, cost: 40 },
+            { dmg: 28,  range: 125, rate: 3.0, cost: 65 },
+            { dmg: 48,  range: 140, rate: 3.6, cost: 110, crit: 0.35, critMul: 2.5, perkName: 'Hyper Cannon (Crit)' }
         ]
     },
     frost: {
         icon: '❄️', color: '#7dd3fc', cost: 70,
         levels: [
-            { dmg: 4,  range: 95,  rate: 1.1, slow: 0.42, slowDur: 1.3 },
-            { dmg: 7,  range: 105, rate: 1.3, slow: 0.52, slowDur: 1.6, cost: 55 },
-            { dmg: 11, range: 115, rate: 1.5, slow: 0.62, slowDur: 2.0, cost: 90 }
+            { dmg: 4,   range: 95,  rate: 1.1, slow: 0.42, slowDur: 1.3 },
+            { dmg: 7,   range: 105, rate: 1.3, slow: 0.52, slowDur: 1.6, cost: 55 },
+            { dmg: 11,  range: 115, rate: 1.5, slow: 0.62, slowDur: 2.0, cost: 90 },
+            { dmg: 18,  range: 130, rate: 1.8, slow: 0.72, slowDur: 2.4, cost: 140, blizzard: true, perkName: 'Blizzard Cryo (Freeze)' }
         ]
     },
     cannon: {
         icon: '💥', color: '#ff9f43', cost: 100,
         levels: [
-            { dmg: 24, range: 110, rate: 0.75, splash: 55 },
-            { dmg: 40, range: 120, rate: 0.85, splash: 62, cost: 80 },
-            { dmg: 66, range: 130, rate: 0.95, splash: 70, cost: 130 }
+            { dmg: 24,  range: 110, rate: 0.75, splash: 55 },
+            { dmg: 40,  range: 120, rate: 0.85, splash: 62, cost: 80 },
+            { dmg: 66,  range: 130, rate: 0.95, splash: 70, cost: 130 },
+            { dmg: 105, range: 145, rate: 1.1,  splash: 80, cost: 200, napalm: true, perkName: 'Napalm Nova (Fire Zone)' }
         ]
     },
     tesla: {
         icon: '⚡', color: '#c084fc', cost: 140,
         levels: [
-            { dmg: 15, range: 100, rate: 1.3, chain: 3 },
-            { dmg: 25, range: 110, rate: 1.5, chain: 4, cost: 110 },
-            { dmg: 40, range: 120, rate: 1.7, chain: 5, cost: 170 }
+            { dmg: 15,  range: 100, rate: 1.3, chain: 3 },
+            { dmg: 25,  range: 110, rate: 1.5, chain: 4, cost: 110 },
+            { dmg: 40,  range: 120, rate: 1.7, chain: 5, cost: 170 },
+            { dmg: 65,  range: 135, rate: 2.0, chain: 7, cost: 250, shock: true, perkName: 'Overcharge Storm (Shock)' }
         ]
     }
 };
+
+const TARGET_PRIORITIES = ['first', 'strong', 'weak', 'close', 'last'];
 
 /* ────────────────────────── 路径几何 ────────────────────────── */
 
@@ -406,7 +470,7 @@ const towerBaseSprite = (() => {
     return cv;
 })();
 
-/* ────────────────────────── 波次 ────────────────────────── */
+/* ────────────────────────── 波次构建 ────────────────────────── */
 
 function buildWave(n) {
     const queue = [];
@@ -417,54 +481,74 @@ function buildWave(n) {
     const spdMul = 1 + Math.min(0.35, (n - 1) * 0.012);
 
     if (n === MAX_WAVES) {
-        // 终局波：常规大股敌人 + 双 BOSS 压轴
-        push('normal', 6 + Math.floor(n * 1.3), 0.34);
-        push('fast', 2 + Math.floor((n - 2) * 1.35), 0.4);
-        push('tank', Math.floor((n - 3) * 0.9), 1.4);
-        push('boss', 2, 2.4);
-    } else if (n % 10 === 0) {
-        push('normal', 6 + n, 0.55);
-        push('boss', Math.max(1, Math.floor(n / 10)), 2.4);
+        // 终局第25波：全面进攻 + 双 BOSS 压轴
+        push('normal', 10, 0.28);
+        push('fast', 8, 0.3);
+        push('swarm', 14, 0.16);
+        push('shield', 5, 0.7);
+        push('tank', 4, 1.1);
+        push('boss', 2, 2.2);
+    } else if (n === 20) {
+        // 第20波：双 BOSS 降临
+        push('normal', 8, 0.4);
+        push('shield', 4, 0.8);
+        push('tank', 3, 1.2);
+        push('boss', 2, 2.6);
+    } else if (n === 10) {
+        // 第10波：初次迎战 BOSS
+        push('normal', 8, 0.5);
+        push('fast', 4, 0.4);
+        push('boss', 1, 2.4);
     } else {
-        push('normal', 6 + Math.floor(n * 1.3), Math.max(0.34, 0.85 - n * 0.02));
-        if (n >= 3) push('fast', 2 + Math.floor((n - 2) * 1.35), 0.4);
-        if (n >= 5) push('tank', Math.floor((n - 3) * 0.9), 1.5);
+        push('normal', 5 + Math.floor(n * 1.1), Math.max(0.28, 0.8 - n * 0.02));
+        if (n >= 3) push('fast', 2 + Math.floor((n - 2) * 1.1), 0.38);
+        if (n >= 5) push('tank', Math.max(1, Math.floor((n - 3) * 0.8)), 1.3);
+        if (n >= 7) push('swarm', Math.floor(4 + (n - 6) * 1.4), 0.18);
+        if (n >= 11) push('shield', Math.floor(1 + (n - 10) * 0.7), 0.9);
     }
-    return { queue, hpMul, spdMul };
+
+    const summary = {};
+    for (const item of queue) {
+        summary[item.type] = (summary[item.type] || 0) + 1;
+    }
+
+    return { queue, hpMul, spdMul, summary };
 }
 
-/* ────────────────────────── game ────────────────────────── */
+/* ────────────────────────── 游戏类 ────────────────────────── */
 
 class TowerDefenseGame {
     constructor() {
         this.canvas = document.getElementById('td-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.el = {};
-        ['td-lives', 'td-gold', 'td-wave', 'td-wave-btn', 'td-panel', 'td-toast',
-         'td-start', 'td-title', 'td-subtitle', 'td-howto', 'td-tower-intro',
+        ['td-lives', 'td-gold', 'td-wave', 'td-wave-btn', 'td-wave-text', 'td-wave-preview',
+         'td-panel', 'td-toast', 'td-start', 'td-title', 'td-subtitle', 'td-howto', 'td-tower-intro',
          'td-btn-play', 'td-best-line', 'td-start-mute', 'td-start-lang',
          'td-pause', 'td-pause-title', 'td-btn-resume', 'td-btn-menu',
          'td-over', 'td-over-title', 'td-over-verdict', 'td-over-score', 'td-over-sub',
+         'td-over-waves', 'td-over-kills', 'td-over-lives',
+         'td-over-lbl-waves', 'td-over-lbl-kills', 'td-over-lbl-lives',
          'td-btn-again', 'td-btn-copy', 'td-btn-menu2',
          'td-lb-title', 'td-lb-list', 'td-lb-status', 'td-username', 'td-username-label',
-            'td-btn-home', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn', 'td-hint',
-            'td-side-howto-title', 'td-side-howto', 'td-side-towers-title', 'td-side-towers',
-            'td-side-records-title', 'td-side-records'
+         'td-btn-home', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn', 'td-range-btn', 'td-hint',
+         'td-skill-emp', 'td-emp-timer', 'td-emp-ring', 'td-skill-boost', 'td-boost-timer', 'td-boost-ring',
+         'td-side-howto-title', 'td-side-howto', 'td-side-skills-title', 'td-side-skills',
+         'td-side-towers-title', 'td-side-towers', 'td-side-shortcuts-title', 'td-side-shortcuts',
+         'td-side-records-title', 'td-side-records'
         ].forEach(id => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^td-/, '')] = el;
         });
 
         this.lang = this.readLang();
-        this.resetRun(); // 先建好全部运行状态，再渲染语言相关的 UI
+        this.resetRun();
         this.applyLanguage();
 
         this.bgCanvas = document.createElement('canvas');
-        this.state = 'menu';   // menu | playing | paused | over
+        this.state = 'menu'; // menu | playing | paused | over
         this.animationId = null;
         this.lastFrameTime = 0;
-
-        this.resetRun();
 
         this.bindInput();
         this.bindUI();
@@ -476,7 +560,7 @@ class TowerDefenseGame {
             if (document.hidden && this.state === 'playing') this.pause();
         });
 
-        this.drawFrame(); // 菜单背后先画一帧静态场景
+        this.drawFrame();
     }
 
     readLang() {
@@ -492,6 +576,7 @@ class TowerDefenseGame {
         this.lives = START_LIVES;
         this.wave = 0;
         this.score = 0;
+        this.totalKills = 0;
         this.speedMult = 1;
         this.time = 0;
 
@@ -502,26 +587,47 @@ class TowerDefenseGame {
         this.particles = [];
         this.floaters = [];
         this.effects = [];
+        this.groundHazards = [];
 
         this.spawnQueue = [];
         this.spawnTimer = 0;
-        this.spawnGap = 0;
         this.hpMul = 1;
         this.spdMul = 1;
         this.waveState = 'idle'; // idle | spawning | fighting
 
-        this.selectedCell = null;   // {c, r} 面板目标格
-        this.selectedTowerIdx = -1; // 面板选中塔
-        this.preview = null;        // {x,y,range,color}
-        this.hoverCell = null;
+        this.empCd = 0;
+        this.boostCd = 0;
+        this.overdriveUntil = 0;
+        this.showAllRanges = false;
+        this.shakeMag = 0;
+        this.shakeDur = 0;
 
+        this.selectedCell = null;
+        this.selectedTowerIdx = -1;
+        this.preview = null;
+        this.hoverCell = null;
         this.coreFlash = 0;
+        this.sellConfirming = false;
+        if (this.sellTimer) {
+            clearTimeout(this.sellTimer);
+            this.sellTimer = null;
+        }
+        document.querySelectorAll('.td-confetti-piece').forEach(el => el.remove());
+
         this.updateHud();
         this.renderWaveButton();
+        this.updateSkillButtons();
         this.closePanel();
     }
 
-    /* ── 语言 ── */
+    /* ── 震屏特效 ── */
+
+    shake(mag, dur = 0.2) {
+        this.shakeMag = Math.max(this.shakeMag, mag);
+        this.shakeDur = Math.max(this.shakeDur, dur);
+    }
+
+    /* ── 语言与侧栏 ── */
 
     applyLanguage() {
         const t = this.TEXT;
@@ -546,18 +652,122 @@ class TowerDefenseGame {
             const best = Number(storageGet('td_best')) || 0;
             this.el['best-line'].textContent = best ? `🏆 ${t.best}: ${formatNumber(best)}` : '';
         }
-        // 桌面侧栏（≥1024px 可见）
+        if (this.el['over-lbl-waves']) this.el['over-lbl-waves'].textContent = t.waveStat;
+        if (this.el['over-lbl-kills']) this.el['over-lbl-kills'].textContent = t.kills;
+        if (this.el['over-lbl-lives']) this.el['over-lbl-lives'].textContent = t.lives;
+
+        // 侧栏
         if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
         if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
+        if (this.el['side-skills-title']) this.el['side-skills-title'].textContent = `⚡ ${t.sideSkillsTitle}`;
+        this.updateSideSkills();
         if (this.el['side-towers-title']) this.el['side-towers-title'].textContent = `🗼 ${t.towerLegend}`;
         this.updateSideTowers();
+        if (this.el['side-shortcuts-title']) this.el['side-shortcuts-title'].textContent = `⌨️ ${t.sideShortcutsTitle}`;
+        this.updateSideShortcuts();
         if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
+
         this.renderPanel();
         this.renderWaveButton();
+        this.updateSkillButtons();
     }
 
-    /* ── 尺寸与背景 ── */
+    updateSideSkills() {
+        const box = this.el['side-skills'];
+        if (!box) return;
+        const t = this.TEXT;
+        const skills = [
+            ['⚡ ' + t.emp, t.empDesc],
+            ['🔥 ' + t.overdrive, t.overdriveDesc]
+        ];
+        box.textContent = '';
+        skills.forEach(([name, desc]) => {
+            const item = document.createElement('div');
+            item.className = 'td-side-skill-item';
+            const nameEl = document.createElement('b');
+            nameEl.textContent = name;
+            const descEl = document.createElement('span');
+            descEl.textContent = desc;
+            item.append(nameEl, descEl);
+            box.appendChild(item);
+        });
+    }
+
+    updateSideTowers() {
+        const box = this.el['side-towers'];
+        if (!box) return;
+        const t = this.TEXT;
+        const defs = [
+            [TOWER_TYPES.pulse.icon, t.pulse, t.pulseDesc, 'Lv4: ' + (this.lang === 'zh' ? '超导脉冲 (35%暴击 2.5×伤害)' : 'Hyper Cannon (35% Crit 2.5×)')],
+            [TOWER_TYPES.frost.icon, t.frost, t.frostDesc, 'Lv4: ' + (this.lang === 'zh' ? '绝对零度 (72%减速 + 急冻寒潮)' : 'Blizzard Cryo (72% Slow + Freeze)')],
+            [TOWER_TYPES.cannon.icon, t.cannon, t.cannonDesc, 'Lv4: ' + (this.lang === 'zh' ? '超新星迫击炮 (持续火海地面DOT)' : 'Napalm Nova (Lingering Fire Zone)')],
+            [TOWER_TYPES.tesla.icon, t.tesla, t.teslaDesc, 'Lv4: ' + (this.lang === 'zh' ? '超能雷暴 (7跳连锁 + 感电+20%易伤)' : 'Overcharge Storm (7 Chains + Shock)')]
+        ];
+        box.textContent = '';
+        defs.forEach(([icon, name, desc, perk]) => {
+            const row = document.createElement('div');
+            row.className = 'td-side-tower';
+            const nameEl = document.createElement('b');
+            nameEl.textContent = `${icon} ${name}`;
+            const descEl = document.createElement('span');
+            descEl.textContent = desc;
+            const perkEl = document.createElement('span');
+            perkEl.className = 'td-perk';
+            perkEl.textContent = `⭐ ${perk}`;
+            row.append(nameEl, descEl, perkEl);
+            box.appendChild(row);
+        });
+    }
+
+    updateSideShortcuts() {
+        const box = this.el['side-shortcuts'];
+        if (!box) return;
+        const shortcuts = [
+            ['Space', this.lang === 'zh' ? '发波 / 提前迎击' : 'Wave / Early Call'],
+            ['1 - 4', this.lang === 'zh' ? '建造脉冲/冰霜/加农/电磁' : 'Build Tower 1-4'],
+            ['U / S', this.lang === 'zh' ? '升级 / 出售所选塔' : 'Upgrade / Sell Tower'],
+            ['T', this.lang === 'zh' ? '切换集火策略 (首位/强敌/残血)' : 'Cycle Target Priority'],
+            ['Q / E', this.lang === 'zh' ? '释放 EMP / 战术超频' : 'Cast EMP / Overdrive'],
+            ['R', this.lang === 'zh' ? '显示/隐藏全屏射程覆盖' : 'Toggle Range Circles'],
+            ['P / Esc', this.lang === 'zh' ? '暂停 / 取消选择' : 'Pause / Deselect']
+        ];
+        box.textContent = '';
+        shortcuts.forEach(([key, desc]) => {
+            const row = document.createElement('div');
+            row.className = 'td-side-shortcut-row';
+            const descEl = document.createElement('span');
+            descEl.textContent = desc;
+            const kbd = document.createElement('kbd');
+            kbd.textContent = key;
+            row.append(descEl, kbd);
+            box.appendChild(row);
+        });
+    }
+
+    updateSideRecords() {
+        const box = this.el['side-records'];
+        if (!box) return;
+        const t = this.TEXT;
+        const best = Number(storageGet('td_best')) || 0;
+        const rows = [
+            [`🏆 ${t.best}`, best ? formatNumber(best) : '—'],
+            [`💀 ${t.kills}`, formatNumber(this.totalKills || 0)]
+        ];
+        box.textContent = '';
+        rows.forEach(([label, value]) => {
+            const row = document.createElement('div');
+            row.className = 'td-side-row';
+            const labelEl = document.createElement('span');
+            labelEl.textContent = label;
+            const valueEl = document.createElement('b');
+            valueEl.textContent = value;
+            row.append(labelEl, valueEl);
+            box.appendChild(row);
+        });
+    }
+
+    /* ── 尺寸与离屏背景 ── */
 
     resize() {
         const cssW = this.canvas.clientWidth || 300;
@@ -580,85 +790,53 @@ class TowerDefenseGame {
         const ctx = this.bgCanvas.getContext('2d');
         ctx.setTransform(this.renderScale, 0, 0, this.renderScale, 0, 0);
 
-        // 底色
+        // 底色渐变
         const bg = ctx.createLinearGradient(0, 0, W, H);
         bg.addColorStop(0, '#0a0e24');
-        bg.addColorStop(1, '#0d1530');
+        bg.addColorStop(1, '#0c132c');
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, W, H);
 
-        // 可建格
+        // 可建网格
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 if (pathGrid[r * COLS + c]) continue;
                 const x = c * CELL, y = r * CELL;
-                ctx.fillStyle = 'rgba(255,255,255,0.028)';
+                ctx.fillStyle = 'rgba(255,255,255,0.026)';
                 ctx.beginPath();
                 ctx.roundRect(x + 2, y + 2, CELL - 4, CELL - 4, 7);
                 ctx.fill();
-                ctx.strokeStyle = 'rgba(64,216,255,0.05)';
+                ctx.strokeStyle = 'rgba(64,216,255,0.055)';
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
         }
 
-        // 道路
+        // 道路底层
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
         ctx.moveTo(pathPts[0].x, pathPts[0].y);
         for (let i = 1; i < pathPts.length; i++) ctx.lineTo(pathPts[i].x, pathPts[i].y);
-        ctx.strokeStyle = '#141c44';
+        ctx.strokeStyle = '#12183e';
         ctx.lineWidth = CELL - 8;
         ctx.stroke();
-        ctx.strokeStyle = 'rgba(64,216,255,0.10)';
+        ctx.strokeStyle = 'rgba(64,216,255,0.12)';
         ctx.lineWidth = CELL - 8;
-        ctx.setLineDash([]);
         ctx.stroke();
-        // 中心虚线
+
+        // 道路中心虚线
         ctx.beginPath();
         ctx.moveTo(pathPts[0].x, pathPts[0].y);
         for (let i = 1; i < pathPts.length; i++) ctx.lineTo(pathPts[i].x, pathPts[i].y);
-        ctx.strokeStyle = 'rgba(64,216,255,0.22)';
+        ctx.strokeStyle = 'rgba(64,216,255,0.24)';
         ctx.lineWidth = 2;
         ctx.setLineDash([9, 11]);
         ctx.stroke();
         ctx.setLineDash([]);
-
-        // 入口传送门
-        const entry = pointAtDist(26);
-        ctx.beginPath();
-        ctx.arc(entry.x, entry.y, 15, 0, Math.PI * 2);
-        ctx.strokeStyle = '#ff6b7a';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = '#ff6b7a';
-        ctx.shadowBlur = 14;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // 核心基地
-        const core = pathPts[pathPts.length - 1];
-        ctx.save();
-        ctx.translate(core.x, core.y - 14);
-        ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const ang = (i / 6) * Math.PI * 2 - Math.PI / 2;
-            const px = Math.cos(ang) * 16, py = Math.sin(ang) * 16;
-            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.fillStyle = '#12204a';
-        ctx.fill();
-        ctx.strokeStyle = '#40d8ff';
-        ctx.lineWidth = 2.5;
-        ctx.shadowColor = '#40d8ff';
-        ctx.shadowBlur = 16;
-        ctx.stroke();
-        ctx.restore();
-        ctx.shadowBlur = 0;
     }
 
-    /* ── 输入 ── */
+    /* ── 输入与快捷键 ── */
 
     toLogical(e) {
         const rect = this.canvas.getBoundingClientRect();
@@ -679,6 +857,10 @@ class TowerDefenseGame {
                 return;
             }
             const towerIdx = this.towerAt(c, r);
+            if (this.selectedTowerIdx !== towerIdx) {
+                if (this.sellTimer) clearTimeout(this.sellTimer);
+                this.sellConfirming = false;
+            }
             this.selectedCell = { c, r };
             this.selectedTowerIdx = towerIdx;
             Sfx.click();
@@ -692,6 +874,52 @@ class TowerDefenseGame {
             this.hoverCell = (c >= 0 && c < COLS && r >= 0 && r < ROWS) ? { c, r } : null;
         });
         this.canvas.addEventListener('pointerleave', () => { this.hoverCell = null; });
+
+        // 全局键盘快捷键
+        window.addEventListener('keydown', (e) => {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+            if (this.state === 'menu' && e.code === 'Space') {
+                e.preventDefault();
+                this.startGame();
+                return;
+            }
+            if (this.state !== 'playing') {
+                if (this.state === 'paused' && (e.code === 'Space' || e.key === 'p' || e.key === 'P')) {
+                    e.preventDefault();
+                    this.resume();
+                }
+                return;
+            }
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                this.startWave();
+            } else if (e.key === '1') {
+                this.tryBuild('pulse');
+            } else if (e.key === '2') {
+                this.tryBuild('frost');
+            } else if (e.key === '3') {
+                this.tryBuild('cannon');
+            } else if (e.key === '4') {
+                this.tryBuild('tesla');
+            } else if (e.key === 'u' || e.key === 'U') {
+                this.tryUpgrade();
+            } else if (e.key === 's' || e.key === 'S') {
+                this.trySell();
+            } else if (e.key === 't' || e.key === 'T') {
+                this.cycleTargetPriority();
+            } else if (e.key === 'q' || e.key === 'Q') {
+                this.castEmp();
+            } else if (e.key === 'e' || e.key === 'E') {
+                this.castOverdrive();
+            } else if (e.key === 'r' || e.key === 'R') {
+                this.toggleShowAllRanges();
+            } else if (e.code === 'Escape') {
+                this.closePanel();
+            } else if (e.key === 'p' || e.key === 'P') {
+                this.pause();
+            }
+        });
     }
 
     towerAt(c, r) {
@@ -699,11 +927,12 @@ class TowerDefenseGame {
         return this.towerGrid[r * COLS + c];
     }
 
-    /* ── 建造 / 升级 / 出售 ── */
+    /* ── 建造 / 升级 / 出售 / 集火策略 ── */
 
     tryBuild(type) {
         if (!this.selectedCell || this.state !== 'playing') return;
         const { c, r } = this.selectedCell;
+        if (!isBuildable(c, r) || this.towerAt(c, r) >= 0) return;
         const cfg = TOWER_TYPES[type];
         if (cfg.cost > this.gold) {
             this.showToast(this.TEXT.notEnoughGold);
@@ -715,14 +944,18 @@ class TowerDefenseGame {
             level: 0,
             cooldown: 0,
             invested: cfg.cost,
-            angle: -Math.PI / 2
+            angle: -Math.PI / 2,
+            priority: 'first',
+            damageDealt: 0,
+            kills: 0,
+            blizzardCount: 0
         };
         this.towers.push(tower);
         this.towerGrid[r * COLS + c] = this.towers.length - 1;
         this.gold -= cfg.cost;
         this.selectedTowerIdx = this.towers.length - 1;
         Sfx.place();
-        this.burst(tower.x, tower.y, cfg.color, 10);
+        this.burst(tower.x, tower.y, cfg.color, 12);
         this.updateHud();
         this.renderPanel();
     }
@@ -732,16 +965,20 @@ class TowerDefenseGame {
         if (!tower || this.state !== 'playing') return;
         const cfg = TOWER_TYPES[tower.type];
         if (tower.level >= cfg.levels.length - 1) return;
-        const cost = cfg.levels[tower.level + 1].cost;
-        if (cost > this.gold) {
+        const nextLv = cfg.levels[tower.level + 1];
+        if (nextLv.cost > this.gold) {
             this.showToast(this.TEXT.notEnoughGold);
             return;
         }
-        this.gold -= cost;
-        tower.invested += cost;
+        this.gold -= nextLv.cost;
+        tower.invested += nextLv.cost;
         tower.level++;
         Sfx.upgrade();
-        this.burst(tower.x, tower.y, cfg.color, 12);
+        this.burst(tower.x, tower.y, tower.level === 3 ? '#ffd34d' : cfg.color, tower.level === 3 ? 24 : 14);
+        if (tower.level === 3) {
+            this.shake(3, 0.2);
+            this.floater(tower.x, tower.y - 16, `⭐ ${this.TEXT.ultimate}!`, '#ffd34d', 1.3);
+        }
         this.updateHud();
         this.renderPanel();
     }
@@ -749,19 +986,53 @@ class TowerDefenseGame {
     trySell() {
         const tower = this.towers[this.selectedTowerIdx];
         if (!tower || this.state !== 'playing') return;
+        if (!this.sellConfirming) {
+            this.sellConfirming = true;
+            if (this.sellTimer) clearTimeout(this.sellTimer);
+            this.sellTimer = setTimeout(() => {
+                this.sellConfirming = false;
+                this.renderPanel();
+            }, 2500);
+            Sfx.click();
+            this.renderPanel();
+            return;
+        }
+        if (this.sellTimer) clearTimeout(this.sellTimer);
+        this.sellConfirming = false;
         const refund = Math.round(tower.invested * SELL_RATIO);
         this.gold += refund;
         this.towerGrid[tower.r * COLS + tower.c] = -1;
         this.towers[this.selectedTowerIdx] = null;
-        // 压缩塔数组会破坏 towerGrid 索引——保留 null 槽位即可
         Sfx.sell();
         this.closePanel();
         this.updateHud();
     }
 
-    /* ── 面板 ── */
+    cycleTargetPriority() {
+        const tower = this.towers[this.selectedTowerIdx];
+        if (!tower || this.state !== 'playing') return;
+        const curIdx = TARGET_PRIORITIES.indexOf(tower.priority || 'first');
+        tower.priority = TARGET_PRIORITIES[(curIdx + 1) % TARGET_PRIORITIES.length];
+        Sfx.click();
+        this.renderPanel();
+    }
+
+    toggleShowAllRanges() {
+        this.showAllRanges = !this.showAllRanges;
+        if (this.el['range-btn']) {
+            this.el['range-btn'].classList.toggle('active', this.showAllRanges);
+        }
+        Sfx.click();
+    }
+
+    /* ── 面板渲染 ── */
 
     closePanel() {
+        if (this.sellTimer) {
+            clearTimeout(this.sellTimer);
+            this.sellTimer = null;
+        }
+        this.sellConfirming = false;
         this.selectedCell = null;
         this.selectedTowerIdx = -1;
         this.preview = null;
@@ -779,36 +1050,6 @@ class TowerDefenseGame {
         panel.textContent = '';
         panel.classList.remove('hidden');
 
-        const mkCard = (cls, icon, name, cost, stats, action) => {
-            const card = document.createElement('button');
-            card.type = 'button';
-            card.className = 'td-card' + (cls ? ' ' + cls : '');
-            if (action.startsWith('build:') && cost > this.gold) card.classList.add('poor');
-            if (action === 'info') card.classList.add('info');
-            const iconEl = document.createElement('span');
-            iconEl.className = 'td-card-icon';
-            iconEl.textContent = icon;
-            const nameEl = document.createElement('span');
-            nameEl.className = 'td-card-name';
-            nameEl.textContent = name;
-            const costEl = document.createElement('span');
-            costEl.className = 'td-card-cost';
-            costEl.textContent = cost;
-            const statsEl = document.createElement('span');
-            statsEl.className = 'td-card-stats';
-            statsEl.textContent = stats || '';
-            card.append(iconEl, nameEl, costEl, statsEl);
-            if (action !== 'info') {
-                card.addEventListener('click', () => {
-                    if (action.startsWith('build:')) this.tryBuild(action.slice(6));
-                    else if (action === 'upgrade') this.tryUpgrade();
-                    else if (action === 'sell') this.trySell();
-                    else if (action === 'close') { Sfx.click(); this.closePanel(); }
-                });
-            }
-            return card;
-        };
-
         if (this.selectedTowerIdx >= 0 && this.towers[this.selectedTowerIdx]) {
             const tower = this.towers[this.selectedTowerIdx];
             const cfg = TOWER_TYPES[tower.type];
@@ -816,60 +1057,245 @@ class TowerDefenseGame {
             const isMax = tower.level >= cfg.levels.length - 1;
             const next = isMax ? null : cfg.levels[tower.level + 1];
 
-            this.preview = { x: tower.x, y: tower.y, range: lv.range, color: cfg.color };
+            this.preview = {
+                x: tower.x, y: tower.y,
+                range: lv.range,
+                nextRange: next ? next.range : null,
+                color: cfg.color
+            };
 
-            panel.appendChild(mkCard('info', cfg.icon, `${t[tower.type]} Lv${tower.level + 1}`,
-                '', `${t.dmg} ${lv.dmg} · ${t.range} ${lv.range} · ${t.rate} ${lv.rate}`, 'info'));
+            const prioKey = 'prio' + (tower.priority || 'first').charAt(0).toUpperCase() + (tower.priority || 'first').slice(1);
+            const prioName = t[prioKey] || tower.priority;
 
+            // 头部：塔名、等级标牌、总伤击杀、关闭按钮
+            const header = document.createElement('div');
+            header.className = 'td-panel-header';
+
+            const titleRow = document.createElement('div');
+            titleRow.className = 'td-panel-title-row';
+            titleRow.innerHTML = `<span>${cfg.icon}</span> <b>${t[tower.type]}</b> <span class="td-lv-tag ${tower.level === 3 ? 'ult' : ''}">Lv.${tower.level + 1}</span>`;
+
+            const mvpTag = document.createElement('span');
+            mvpTag.className = 'td-mvp-tag';
+            mvpTag.textContent = `💥 ${formatNumber(tower.damageDealt || 0)} · 💀 ${tower.kills || 0}`;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'td-close-btn';
+            closeBtn.textContent = '✕';
+            closeBtn.addEventListener('click', () => { Sfx.click(); this.closePanel(); });
+
+            header.append(titleRow, mvpTag, closeBtn);
+
+            // 动作网格：集火策略、升级、出售
+            const inspectGrid = document.createElement('div');
+            inspectGrid.className = 'td-inspect-grid';
+
+            // 1. 集火按钮
+            const prioBtn = document.createElement('button');
+            prioBtn.type = 'button';
+            prioBtn.className = 'td-action-card priority';
+            prioBtn.innerHTML = `<span class="td-act-label">🎯 ${t.priority} [T]</span><b class="td-act-val">${prioName}</b><span class="td-act-diff">Tap to switch</span>`;
+            prioBtn.addEventListener('click', () => this.cycleTargetPriority());
+
+            // 2. 升级按钮
+            const upBtn = document.createElement('button');
+            upBtn.type = 'button';
             if (next) {
-                const up = mkCard('upgrade', '⬆️', t.upgrade, next.cost,
-                    `${t.dmg} ${next.dmg} · ${t.range} ${next.range}`, 'upgrade');
-                if (next.cost > this.gold) up.classList.add('poor');
-                panel.appendChild(up);
+                const isNextUlt = (tower.level + 1) === 3;
+                upBtn.className = `td-action-card upgrade ${isNextUlt ? 'ultimate' : ''} ${next.cost > this.gold ? 'poor' : ''}`;
+                upBtn.innerHTML = `<span class="td-act-label">${isNextUlt ? '⭐ ' + t.ultimate : '⬆️ ' + t.upgrade + ' [U]'}</span><b class="td-act-val">${next.cost} 💰</b><span class="td-act-diff">${t.dmg} ${lv.dmg}→${next.dmg} · ${t.range} ${lv.range}→${next.range}</span>`;
+                upBtn.addEventListener('click', () => this.tryUpgrade());
             } else {
-                panel.appendChild(mkCard('info', '⭐', t.maxLevel, '', '', 'info'));
+                upBtn.className = 'td-action-card maxed';
+                upBtn.innerHTML = `<span class="td-act-label">⭐ ${t.maxLevel}</span><b class="td-act-val">MAXED</b><span class="td-act-diff">${lv.perkName || ''}</span>`;
             }
+
+            // 3. 出售按钮
             const refund = Math.round(tower.invested * SELL_RATIO);
-            panel.appendChild(mkCard('sell', '💰', t.sell, `+${refund}`, '', 'sell'));
+            const sellBtn = document.createElement('button');
+            sellBtn.type = 'button';
+            if (this.sellConfirming) {
+                sellBtn.className = 'td-action-card sell confirming';
+                sellBtn.innerHTML = `<span class="td-act-label">⚠️ ${this.lang === 'zh' ? '确认出售?' : 'Confirm?'} [S]</span><b class="td-act-val">+${refund} 💰</b><span class="td-act-diff">${this.lang === 'zh' ? '再次点击确认' : 'Tap again'}</span>`;
+            } else {
+                sellBtn.className = 'td-action-card sell';
+                sellBtn.innerHTML = `<span class="td-act-label">💰 ${t.sell} [S]</span><b class="td-act-val">+${refund}</b><span class="td-act-diff">70% refund</span>`;
+            }
+            sellBtn.addEventListener('click', () => this.trySell());
+
+            inspectGrid.append(prioBtn, upBtn, sellBtn);
+            panel.append(header, inspectGrid);
         } else {
             const { c, r } = this.selectedCell;
             if (!isBuildable(c, r) || this.towerAt(c, r) >= 0) {
                 this.closePanel();
                 return;
             }
-            this.preview = null;
+
+            // 选定建造模式
+            this.preview = { x: (c + 0.5) * CELL, y: (r + 0.5) * CELL, range: 105, color: '#40d8ff' };
+
+            const header = document.createElement('div');
+            header.className = 'td-panel-header';
+            header.innerHTML = `<div class="td-panel-title-row"><span>🏗️</span> <b>${this.lang === 'zh' ? '建造防御塔' : 'Build Tower'}</b></div>`;
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'td-close-btn';
+            closeBtn.textContent = '✕';
+            closeBtn.addEventListener('click', () => { Sfx.click(); this.closePanel(); });
+            header.appendChild(closeBtn);
+
+            const buildGrid = document.createElement('div');
+            buildGrid.className = 'td-build-grid';
+
+            const hotkeys = { pulse: '1', frost: '2', cannon: '3', tesla: '4' };
+
             for (const [type, cfg] of Object.entries(TOWER_TYPES)) {
                 const lv = cfg.levels[0];
-                panel.appendChild(mkCard('', cfg.icon, t[type], cfg.cost,
-                    `${t.dmg} ${lv.dmg} · ${t.range} ${lv.range}`, 'build:' + type));
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = `td-build-card ${type} ${cfg.cost > this.gold ? 'poor' : ''}`;
+                card.innerHTML = `
+                    <span class="td-card-hotkey">[${hotkeys[type]}]</span>
+                    <span class="td-card-icon">${cfg.icon}</span>
+                    <span class="td-card-name">${t[type]}</span>
+                    <span class="td-card-cost">${cfg.cost} 💰</span>
+                    <span class="td-card-stats">${lv.dmg}⚔️ · ${lv.range}🎯</span>
+                `;
+                card.addEventListener('mouseenter', () => {
+                    this.preview = { x: (c + 0.5) * CELL, y: (r + 0.5) * CELL, range: lv.range, color: cfg.color };
+                });
+                card.addEventListener('mouseleave', () => {
+                    this.preview = { x: (c + 0.5) * CELL, y: (r + 0.5) * CELL, range: 105, color: '#40d8ff' };
+                });
+                card.addEventListener('click', () => this.tryBuild(type));
+                buildGrid.appendChild(card);
             }
-            // 点击空格时给出落点预览（最近塔类型射程以 pulse 为参考）
-            this.preview = { x: (c + 0.5) * CELL, y: (r + 0.5) * CELL, range: 105, color: '#40d8ff' };
-        }
-        if (!panel.lastChild || panel.querySelector('.td-card') === null) {
-            panel.classList.add('hidden');
+
+            panel.append(header, buildGrid);
         }
     }
 
-    /* ── HUD ── */
+    /* ── 指挥官战术技能 ── */
+
+    castEmp() {
+        if (this.state !== 'playing' || this.empCd > 0) return;
+        this.empCd = 35;
+        const dmg = 45 + this.wave * 6;
+        for (const e of this.enemies) {
+            if (e.dead) continue;
+            e.stunUntil = Math.max(e.stunUntil, this.time + 2.4);
+            this.damageEnemy(e, dmg);
+            this.burst(e.x, e.y, '#40d8ff', 8);
+        }
+        this.effects.push({ kind: 'emp_wave', x: W / 2, y: H / 2, maxR: Math.hypot(W, H) / 2 + 60, age: 0, life: 0.65 });
+        this.shake(5, 0.35);
+        Sfx.emp();
+        this.showToast(this.TEXT.empCast, 1500);
+        this.updateSkillButtons();
+    }
+
+    castOverdrive() {
+        if (this.state !== 'playing' || this.boostCd > 0) return;
+        this.boostCd = 45;
+        this.overdriveUntil = this.time + 6.0;
+        this.effects.push({ kind: 'overdrive_burst', age: 0, life: 0.8 });
+        this.shake(3, 0.25);
+        Sfx.overdrive();
+        this.showToast(this.TEXT.overdriveCast, 1500);
+        this.updateSkillButtons();
+    }
+
+    updateSkillButtons() {
+        if (this.el['skill-emp']) {
+            const ready = this.empCd <= 0;
+            this.el['skill-emp'].classList.toggle('ready', ready && this.state === 'playing');
+            this.el['skill-emp'].classList.toggle('on-cooldown', !ready);
+            if (this.el['emp-timer']) {
+                this.el['emp-timer'].textContent = ready ? '' : `${Math.ceil(this.empCd)}s`;
+            }
+            if (this.el['emp-ring']) {
+                const pct = clamp(this.empCd / 35, 0, 1);
+                this.el['emp-ring'].style.strokeDashoffset = (119.38 * pct).toFixed(1);
+            }
+        }
+        if (this.el['skill-boost']) {
+            const ready = this.boostCd <= 0;
+            this.el['skill-boost'].classList.toggle('ready', ready && this.state === 'playing');
+            this.el['skill-boost'].classList.toggle('on-cooldown', !ready);
+            if (this.el['boost-timer']) {
+                this.el['boost-timer'].textContent = ready ? '' : `${Math.ceil(this.boostCd)}s`;
+            }
+            if (this.el['boost-ring']) {
+                const pct = clamp(this.boostCd / 45, 0, 1);
+                this.el['boost-ring'].style.strokeDashoffset = (119.38 * pct).toFixed(1);
+            }
+        }
+    }
+
+    /* ── HUD 与波次按钮 ── */
 
     updateHud() {
-        if (this.el.lives) this.el.lives.textContent = Math.max(0, this.lives);
-        if (this.el.gold) this.el.gold.textContent = formatNumber(this.gold);
+        if (this.el.lives) {
+            this.el.lives.textContent = Math.max(0, this.lives);
+            const livesStat = this.el.lives.closest('.td-stat');
+            if (livesStat) {
+                livesStat.classList.toggle('danger', this.lives <= 5 && this.lives > 0);
+            }
+        }
+        if (this.el.gold) {
+            const currentGoldStr = formatNumber(this.gold);
+            if (this.el.gold.textContent !== currentGoldStr) {
+                this.el.gold.textContent = currentGoldStr;
+                this.el.gold.classList.remove('gold-bounce');
+                void this.el.gold.offsetWidth;
+                this.el.gold.classList.add('gold-bounce');
+            }
+        }
         if (this.el.wave) this.el.wave.textContent = `${Math.max(1, this.wave)}/${MAX_WAVES}`;
     }
 
     renderWaveButton() {
         const btn = this.el['wave-btn'];
-        if (!btn) return;
+        const textEl = this.el['wave-text'];
+        const previewEl = this.el['wave-preview'];
+        if (!btn || !textEl) return;
         const t = this.TEXT;
+
         if (this.waveState === 'idle') {
             btn.disabled = false;
-            btn.textContent = t.startWave.replace('{n}', Math.min(MAX_WAVES, this.wave + 1));
+            btn.classList.remove('early-call');
+            const nextWave = Math.min(MAX_WAVES, this.wave + 1);
+            textEl.textContent = t.startWave.replace('{n}', nextWave);
+
+            // 下波怪物预告
+            if (previewEl && this.wave < MAX_WAVES) {
+                const nextCfg = buildWave(nextWave);
+                const chips = Object.entries(nextCfg.summary)
+                    .map(([type, cnt]) => `${ENEMY_TYPES[type].icon}×${cnt}`)
+                    .slice(0, 4)
+                    .join(' ');
+                previewEl.textContent = chips;
+            } else if (previewEl) {
+                previewEl.textContent = '';
+            }
         } else {
-            btn.disabled = true;
-            const alive = this.enemies.length + this.spawnQueue.length;
-            btn.textContent = `${t.waveRunning.replace('{n}', this.wave)} · ${alive}`;
+            // 战斗中：如果未到最后一波，支持提前迎击抢金币
+            if (this.wave < MAX_WAVES) {
+                btn.disabled = false;
+                btn.classList.add('early-call');
+                const bonus = Math.min(70, 15 + Math.floor(this.wave * 2.5));
+                textEl.textContent = t.earlyCall.replace('{g}', bonus);
+                const alive = this.enemies.length + this.spawnQueue.length;
+                if (previewEl) previewEl.textContent = `${t.waveRunning.replace('{n}', this.wave)} · ${alive}`;
+            } else {
+                btn.disabled = true;
+                btn.classList.remove('early-call');
+                const alive = this.enemies.length + this.spawnQueue.length;
+                textEl.textContent = `${t.waveRunning.replace('{n}', this.wave)} · ${alive}`;
+                if (previewEl) previewEl.textContent = 'FINAL WAVE';
+            }
         }
     }
 
@@ -886,16 +1312,14 @@ class TowerDefenseGame {
 
     burst(x, y, color, count) {
         for (let i = 0; i < count; i++) {
-            if (this.particles.length >= MAX_PARTICLES) {
-                this.particles.shift();
-            }
+            if (this.particles.length >= MAX_PARTICLES) this.particles.shift();
             const ang = Math.random() * Math.PI * 2;
-            const spd = 40 + Math.random() * 130;
+            const spd = 40 + Math.random() * 140;
             this.particles.push({
                 x, y,
                 vx: Math.cos(ang) * spd,
                 vy: Math.sin(ang) * spd,
-                life: 0.4 + Math.random() * 0.3,
+                life: 0.35 + Math.random() * 0.35,
                 age: 0,
                 size: 1.5 + Math.random() * 2.5,
                 color
@@ -903,35 +1327,78 @@ class TowerDefenseGame {
         }
     }
 
-    floater(x, y, text, color) {
+    floater(x, y, text, color, scale = 1) {
         if (this.floaters.length >= MAX_FLOATERS) this.floaters.shift();
-        this.floaters.push({ x, y, text, color, age: 0, life: 0.8 });
+        this.floaters.push({ x, y, text, color, scale, age: 0, life: 0.85 });
     }
 
     /* ── 战斗逻辑 ── */
 
-    damageEnemy(e, dmg) {
+    damageEnemy(e, dmg, isCrit = false, killerTower = null) {
         if (e.dead) return;
-        e.hp -= dmg;
-        e.hitFlash = 0.09;
-        if (e.hp <= 0) this.killEnemy(e);
+
+        // 感电易伤（Tesla Lv4）
+        if (this.time < e.shockUntil) {
+            dmg = Math.round(dmg * 1.2);
+        }
+
+        // 护盾抵消机制
+        if (e.shield > 0) {
+            if (e.shield >= dmg) {
+                e.shield -= dmg;
+                this.burst(e.x, e.y, '#38bdf8', 4);
+                dmg = 0;
+            } else {
+                dmg -= e.shield;
+                e.shield = 0;
+                this.burst(e.x, e.y, '#38bdf8', 8);
+                Sfx.shieldBreak();
+            }
+        }
+
+        if (dmg > 0) {
+            e.hp -= dmg;
+            e.hitFlash = 0.08;
+            if (killerTower) killerTower.damageDealt = (killerTower.damageDealt || 0) + dmg;
+            if (isCrit) {
+                this.floater(e.x, e.y - 12, `CRIT ${dmg}!`, '#ffd34d', 1.25);
+                this.burst(e.x, e.y, '#ffd34d', 8);
+                Sfx.crit();
+            }
+        }
+
+        if (e.hp <= 0) this.killEnemy(e, killerTower);
     }
 
-    killEnemy(e) {
+    killEnemy(e, killerTower = null) {
+        if (e.dead) return;
         e.dead = true;
         this.gold += e.gold;
         this.score += e.gold;
-        this.burst(e.x, e.y, e.color, e.type === 'boss' ? 26 : 8);
+        this.totalKills = (this.totalKills || 0) + 1;
+        if (killerTower) killerTower.kills = (killerTower.kills || 0) + 1;
+
+        this.burst(e.x, e.y, e.color, e.type === 'boss' ? 32 : 10);
         this.floater(e.x, e.y - 10, `+${e.gold}`, '#ffd34d');
-        if (e.type === 'tank' || e.type === 'boss') Sfx.bigDeath();
+
+        if (e.type === 'tank' || e.type === 'boss') {
+            this.shake(e.type === 'boss' ? 6 : 3, 0.3);
+            Sfx.bigDeath();
+        }
+        if (e.type === 'boss') {
+            this.showToast(this.TEXT.bossDefeated, 2200);
+        }
+
         this.updateHud();
         this.renderWaveButton();
+        this.updateSideRecords();
     }
 
     leakEnemy(e) {
         e.dead = true;
         this.lives -= e.dmg;
-        this.coreFlash = 0.4;
+        this.coreFlash = 0.45;
+        this.shake(5.5, 0.35);
         Sfx.leak();
         this.updateHud();
         if (this.lives <= 0) {
@@ -941,10 +1408,14 @@ class TowerDefenseGame {
 
     spawnEnemy(type) {
         const cfg = ENEMY_TYPES[type];
+        const hp = cfg.hp * this.hpMul;
+        const maxShield = (cfg.maxShield || 0) * this.hpMul;
         this.enemies.push({
             type,
-            hp: cfg.hp * this.hpMul,
-            maxHp: cfg.hp * this.hpMul,
+            hp,
+            maxHp: hp,
+            shield: maxShield,
+            maxShield,
             speed: cfg.speed * this.spdMul,
             gold: cfg.gold,
             dmg: cfg.dmg,
@@ -955,24 +1426,56 @@ class TowerDefenseGame {
             y: pathPts[0].y,
             slowUntil: 0,
             slowFactor: 0,
+            stunUntil: 0,
+            shockUntil: 0,
             hitFlash: 0,
             dead: false
         });
         if (type === 'boss') {
             this.showToast(this.TEXT.bossIncoming);
+            this.shake(5, 0.4);
             Sfx.bigDeath();
         }
     }
 
     startWave() {
-        if (this.waveState !== 'idle' || this.state !== 'playing') return;
+        if (this.state !== 'playing') return;
+
+        // 如果在战斗中点击，触发提前迎击奖励
+        if (this.waveState !== 'idle') {
+            if (this.wave < MAX_WAVES) {
+                const bonus = Math.min(70, 15 + Math.floor(this.wave * 2.5));
+                this.gold += bonus;
+                this.score += bonus * 2;
+                this.floater(W / 2, H / 2, `+${bonus} ${this.TEXT.earlyCallBonus}!`, '#ffd34d', 1.25);
+                this.showToast(this.TEXT.earlyCallToast.replace('{g}', bonus), 1500);
+                Sfx.earlyWave();
+                this.wave++;
+                const waveCfg = buildWave(this.wave);
+                this.spawnQueue.push(...waveCfg.queue);
+                this.hpMul = waveCfg.hpMul;
+                this.spdMul = waveCfg.spdMul;
+                this.updateHud();
+                this.renderWaveButton();
+            }
+            return;
+        }
+
         this.wave++;
         const waveCfg = buildWave(this.wave);
         this.spawnQueue = waveCfg.queue;
         this.hpMul = waveCfg.hpMul;
         this.spdMul = waveCfg.spdMul;
-        this.spawnTimer = 0.4;
+        this.spawnTimer = 0.35;
         this.waveState = 'spawning';
+        this.waveBanner = {
+            text: (this.wave === MAX_WAVES) ? (this.lang === 'zh' ? '终极决战' : 'FINAL SHOWDOWN') :
+                  (this.wave % 10 === 0) ? (this.lang === 'zh' ? '⚠️ BOSS 降临 ⚠️' : '⚠️ BOSS INCOMING ⚠️') :
+                  (this.lang === 'zh' ? `第 ${this.wave} 波` : `WAVE ${this.wave}`),
+            isBoss: (this.wave % 10 === 0 || this.wave === MAX_WAVES),
+            life: 1.5,
+            age: 0
+        };
         Sfx.waveStart();
         this.updateHud();
         this.renderWaveButton();
@@ -992,72 +1495,103 @@ class TowerDefenseGame {
         this.renderWaveButton();
     }
 
-    /* ── 塔攻击 ── */
+    /* ── 塔索敌与攻击 ── */
 
     pickTarget(tower, range) {
-        let best = null, bestDist = -1;
         const rangeSq = range * range;
+        const candidates = [];
         for (const e of this.enemies) {
             if (e.dead) continue;
             const dx = e.x - tower.x, dy = e.y - tower.y;
             const d2 = dx * dx + dy * dy;
-            if (d2 <= rangeSq && e.dist > bestDist) {
-                bestDist = e.dist;
-                best = e;
+            if (d2 <= rangeSq) {
+                candidates.push({ e, d2, dist: e.dist, hp: e.hp });
             }
         }
-        return best;
+        if (!candidates.length) return null;
+
+        const prio = tower.priority || 'first';
+        if (prio === 'first') {
+            candidates.sort((a, b) => b.dist - a.dist);
+        } else if (prio === 'last') {
+            candidates.sort((a, b) => a.dist - b.dist);
+        } else if (prio === 'strong') {
+            candidates.sort((a, b) => b.hp - a.hp || b.dist - a.dist);
+        } else if (prio === 'weak') {
+            candidates.sort((a, b) => a.hp - b.hp || b.dist - a.dist);
+        } else if (prio === 'close') {
+            candidates.sort((a, b) => a.d2 - b.d2);
+        }
+        return candidates[0].e;
     }
 
     fireTower(tower) {
         const cfg = TOWER_TYPES[tower.type];
         const lv = cfg.levels[tower.level];
+        const isBoosted = this.time < this.overdriveUntil;
+        const range = isBoosted ? lv.range * 1.2 : lv.range;
 
+        // 冰霜塔：全向光环攻击
         if (tower.type === 'frost') {
-            // 光环脉冲：伤害 + 减速范围内所有敌人
             let any = false;
-            const rangeSq = lv.range * lv.range;
+            const rangeSq = range * range;
+            const isBlizzard = lv.blizzard && ((tower.blizzardCount = (tower.blizzardCount || 0) + 1) % 4 === 0);
+
             for (const e of this.enemies) {
                 if (e.dead) continue;
                 const dx = e.x - tower.x, dy = e.y - tower.y;
                 if (dx * dx + dy * dy <= rangeSq) {
-                    this.damageEnemy(e, lv.dmg);
+                    this.damageEnemy(e, lv.dmg, false, tower);
                     const expired = this.time >= e.slowUntil;
                     e.slowUntil = this.time + lv.slowDur;
                     e.slowFactor = expired ? lv.slow : Math.max(e.slowFactor, lv.slow);
+                    if (isBlizzard) {
+                        e.stunUntil = Math.max(e.stunUntil, this.time + 0.8);
+                    }
                     any = true;
                 }
             }
             if (!any) return false;
-            this.effects.push({ kind: 'ring', x: tower.x, y: tower.y, r: 8, maxR: lv.range, age: 0, life: 0.45, color: cfg.color });
+
+            if (isBlizzard) {
+                Sfx.freeze();
+                this.effects.push({ kind: 'ring', x: tower.x, y: tower.y, r: 8, maxR: range * 1.15, age: 0, life: 0.55, color: '#e0f2fe' });
+                this.burst(tower.x, tower.y, '#e0f2fe', 16);
+            } else {
+                this.effects.push({ kind: 'ring', x: tower.x, y: tower.y, r: 8, maxR: range, age: 0, life: 0.42, color: cfg.color });
+            }
             return true;
         }
 
-        const target = this.pickTarget(tower, lv.range);
+        const target = this.pickTarget(tower, range);
         if (!target) return false;
         tower.angle = Math.atan2(target.y - tower.y, target.x - tower.x);
 
         if (tower.type === 'pulse') {
+            const isCrit = lv.crit && (Math.random() < lv.crit);
+            const dmg = isCrit ? Math.round(lv.dmg * lv.critMul) : lv.dmg;
             this.projectiles.push({
                 kind: 'bullet', x: tower.x, y: tower.y,
                 target, lastX: target.x, lastY: target.y,
-                speed: 430, dmg: lv.dmg, color: cfg.color, r: 3
+                speed: 460, dmg, isCrit, tower, color: cfg.color, r: isCrit ? 4.5 : 3
             });
             return true;
         }
+
         if (tower.type === 'cannon') {
             this.projectiles.push({
                 kind: 'shell', x: tower.x, y: tower.y,
                 target, lastX: target.x, lastY: target.y,
-                speed: 270, dmg: lv.dmg, splash: lv.splash, color: cfg.color, r: 5
+                speed: 280, dmg: lv.dmg, splash: lv.splash,
+                napalm: lv.napalm, tower, color: cfg.color, r: 5
             });
             return true;
         }
+
         if (tower.type === 'tesla') {
-            // 闪电链
             const chain = [target];
             let current = target;
-            const chainRangeSq = 75 * 75;
+            const chainRangeSq = 85 * 85;
             while (chain.length < lv.chain) {
                 let next = null, nd = Infinity;
                 for (const e of this.enemies) {
@@ -1073,38 +1607,76 @@ class TowerDefenseGame {
                 chain.push(next);
                 current = next;
             }
+
             const pts = [{ x: tower.x, y: tower.y }];
             let dmg = lv.dmg;
             for (const e of chain) {
                 pts.push({ x: e.x, y: e.y });
-                this.damageEnemy(e, dmg);
-                dmg = Math.round(dmg * 0.65);
+                if (lv.shock) e.shockUntil = this.time + 3.0;
+                this.damageEnemy(e, dmg, false, tower);
+                this.burst(e.x, e.y, cfg.color, 4);
+                dmg = Math.round(dmg * 0.7);
             }
-            this.effects.push({ kind: 'zap', pts, age: 0, life: 0.16, color: cfg.color });
+            this.effects.push({ kind: 'zap', pts, age: 0, life: 0.18, color: cfg.color });
             Sfx.zap();
             return true;
         }
+
         return false;
     }
 
-    explodeShell(x, y, dmg, radius) {
+    explodeShell(x, y, dmg, radius, tower, napalm) {
         const rSq = radius * radius;
         for (const e of this.enemies) {
             if (e.dead) continue;
             const dx = e.x - x, dy = e.y - y;
-            if (dx * dx + dy * dy <= rSq) this.damageEnemy(e, dmg);
+            if (dx * dx + dy * dy <= rSq) this.damageEnemy(e, dmg, false, tower);
         }
-        this.effects.push({ kind: 'ring', x, y, r: 4, maxR: radius, age: 0, life: 0.3, color: '#ff9f43' });
-        this.burst(x, y, '#ff9f43', 10);
+        this.effects.push({ kind: 'ring', x, y, r: 4, maxR: radius, age: 0, life: 0.32, color: '#ff9f43' });
+        this.burst(x, y, '#ff9f43', 12);
+        this.shake(3.2, 0.2);
         Sfx.explode();
+
+        // 4阶觉醒：火海地面持续伤害
+        if (napalm) {
+            this.groundHazards.push({
+                x, y, r: radius * 0.75,
+                dps: 18,
+                duration: 3.5,
+                age: 0,
+                tower
+            });
+        }
     }
 
-    /* ── 更新 ── */
+    /* ── 帧更新 ── */
 
     update(dt) {
         this.time += dt;
 
-        // 出怪
+        // 技能冷却
+        if (this.empCd > 0) {
+            this.empCd = Math.max(0, this.empCd - dt);
+            this.updateSkillButtons();
+        }
+        if (this.boostCd > 0) {
+            this.boostCd = Math.max(0, this.boostCd - dt);
+            this.updateSkillButtons();
+        }
+
+        // 震屏衰减
+        if (this.shakeDur > 0) {
+            this.shakeDur -= dt;
+            if (this.shakeDur <= 0) this.shakeMag = 0;
+        }
+
+        // 全息波次通告
+        if (this.waveBanner) {
+            this.waveBanner.age += dt;
+            if (this.waveBanner.age >= this.waveBanner.life) this.waveBanner = null;
+        }
+
+        // 出怪队列
         if (this.waveState === 'spawning') {
             this.spawnTimer -= dt;
             if (this.spawnTimer <= 0 && this.spawnQueue.length) {
@@ -1116,24 +1688,73 @@ class TowerDefenseGame {
             if (!this.spawnQueue.length) this.waveState = 'fighting';
         }
 
-        // 敌人
+        // 地面火海危害
+        for (let i = this.groundHazards.length - 1; i >= 0; i--) {
+            const g = this.groundHazards[i];
+            g.age += dt;
+            if (g.age >= g.duration) {
+                this.groundHazards.splice(i, 1);
+                continue;
+            }
+            const tickDmg = g.dps * dt;
+            const rSq = g.r * g.r;
+            for (const e of this.enemies) {
+                if (e.dead) continue;
+                const dx = e.x - g.x, dy = e.y - g.y;
+                if (dx * dx + dy * dy <= rSq) {
+                    e.hp -= tickDmg;
+                    e.hitFlash = 0.04;
+                    if (g.tower) g.tower.damageDealt = (g.tower.damageDealt || 0) + tickDmg;
+                    if (e.hp <= 0) this.killEnemy(e, g.tower);
+                }
+            }
+            if (Math.random() < 0.25) {
+                const ang = Math.random() * Math.PI * 2;
+                const rad = Math.random() * g.r;
+                this.particles.push({
+                    x: g.x + Math.cos(ang) * rad,
+                    y: g.y + Math.sin(ang) * rad,
+                    vx: (Math.random() - 0.5) * 15,
+                    vy: -15 - Math.random() * 20,
+                    life: 0.35,
+                    age: 0,
+                    size: 2,
+                    color: '#ff9f43'
+                });
+            }
+        }
+
+        // 敌人更新
         let alive = 0;
         for (const e of this.enemies) {
             if (e.dead) continue;
             alive++;
-            const slowed = this.time < e.slowUntil;
-            const speed = e.speed * (slowed ? (1 - e.slowFactor) : 1);
-            e.dist += speed * dt;
-            const p = pointAtDist(e.dist);
-            e.x = p.x;
-            e.y = p.y;
+
+            const isStunned = this.time < e.stunUntil;
+            if (!isStunned) {
+                const slowed = this.time < e.slowUntil;
+                const speed = e.speed * (slowed ? (1 - e.slowFactor) : 1);
+                e.dist += speed * dt;
+                const p = pointAtDist(e.dist);
+                e.x = p.x;
+                e.y = p.y;
+            } else if (Math.random() < 0.2) {
+                this.particles.push({
+                    x: e.x + (Math.random() - 0.5) * 12,
+                    y: e.y + (Math.random() - 0.5) * 12,
+                    vx: 0, vy: -10,
+                    life: 0.25, age: 0, size: 2,
+                    color: '#40d8ff'
+                });
+            }
+
             if (e.hitFlash > 0) e.hitFlash -= dt;
             if (e.dist >= PATH_TOTAL - 6) {
                 this.leakEnemy(e);
                 alive--;
             }
         }
-        // 压缩死亡敌人
+
         if (this.enemies.some(e => e.dead)) {
             this.enemies = this.enemies.filter(e => !e.dead);
         }
@@ -1141,19 +1762,20 @@ class TowerDefenseGame {
             this.waveCleared();
         }
 
-        // 塔
+        // 防御塔更新
+        const isBoosted = this.time < this.overdriveUntil;
         for (const tower of this.towers) {
             if (!tower) continue;
             tower.cooldown -= dt;
             if (tower.cooldown <= 0) {
                 const fired = this.fireTower(tower);
-                const rate = TOWER_TYPES[tower.type].levels[tower.level].rate;
-                tower.cooldown = fired ? 1 / rate : 0.06; // 无目标时低频探测
+                const rate = TOWER_TYPES[tower.type].levels[tower.level].rate * (isBoosted ? 1.5 : 1);
+                tower.cooldown = fired ? 1 / rate : 0.05;
             }
-            if (tower.type === 'frost') tower.angle += dt * 1.2;
+            if (tower.type === 'frost') tower.angle += dt * 1.4;
         }
 
-        // 子弹
+        // 子弹更新
         for (const p of this.projectiles) {
             const tx = p.target && !p.target.dead ? p.target.x : p.lastX;
             const ty = p.target && !p.target.dead ? p.target.y : p.lastY;
@@ -1164,11 +1786,10 @@ class TowerDefenseGame {
             const dist = Math.hypot(dx, dy);
             const step = p.speed * dt;
             if (dist <= step + 3) {
-                // 命中
                 if (p.kind === 'shell') {
-                    this.explodeShell(tx, ty, p.dmg, p.splash);
+                    this.explodeShell(tx, ty, p.dmg, p.splash, p.tower, p.napalm);
                 } else if (p.target && !p.target.dead) {
-                    this.damageEnemy(p.target, p.dmg);
+                    this.damageEnemy(p.target, p.dmg, p.isCrit, p.tower);
                 }
                 p.dead = true;
             } else {
@@ -1178,7 +1799,7 @@ class TowerDefenseGame {
         }
         this.projectiles = this.projectiles.filter(p => !p.dead);
 
-        // 粒子
+        // 粒子更新
         let w = 0;
         for (let i = 0; i < this.particles.length; i++) {
             const pt = this.particles[i];
@@ -1192,7 +1813,7 @@ class TowerDefenseGame {
         }
         this.particles.length = w;
 
-        // 漂浮文字
+        // 漂浮文字更新
         w = 0;
         for (let i = 0; i < this.floaters.length; i++) {
             const f = this.floaters[i];
@@ -1203,14 +1824,13 @@ class TowerDefenseGame {
         }
         this.floaters.length = w;
 
-        // 特效
+        // 特效更新
         w = 0;
         for (let i = 0; i < this.effects.length; i++) {
             const fx = this.effects[i];
             fx.age += dt;
-            if (fx.kind === 'ring') {
-                fx.r = fx.maxR * (fx.age / fx.life);
-            }
+            if (fx.kind === 'ring') fx.r = fx.maxR * (fx.age / fx.life);
+            if (fx.kind === 'emp_wave') fx.r = fx.maxR * (fx.age / fx.life);
             if (fx.age >= fx.life) continue;
             this.effects[w++] = fx;
         }
@@ -1219,31 +1839,164 @@ class TowerDefenseGame {
         if (this.coreFlash > 0) this.coreFlash -= dt;
     }
 
-    /* ── 渲染 ── */
+    /* ── 画布渲染 ── */
 
     drawFrame() {
         const ctx = this.ctx;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // 静态背景层
         ctx.drawImage(this.bgCanvas, 0, 0);
 
-        ctx.setTransform(this.renderScale, 0, 0, this.renderScale, 0, 0);
+        // 震屏变换
+        let shakeX = 0, shakeY = 0;
+        if (this.shakeDur > 0 && this.shakeMag > 0) {
+            shakeX = (Math.random() - 0.5) * this.shakeMag;
+            shakeY = (Math.random() - 0.5) * this.shakeMag;
+        }
+        ctx.setTransform(
+            this.renderScale, 0, 0, this.renderScale,
+            shakeX * this.renderScale, shakeY * this.renderScale
+        );
 
-        // 预览射程
+        // 赛博光脉冲沿路径流动
+        if (this.state === 'playing') {
+            const pulseDist = (this.time * 95) % PATH_TOTAL;
+            const pt1 = pointAtDist(pulseDist);
+            const pt2 = pointAtDist((pulseDist + PATH_TOTAL * 0.5) % PATH_TOTAL);
+            [pt1, pt2].forEach(p => {
+                ctx.fillStyle = 'rgba(64,216,255,0.7)';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // 入口动态传送门
+        const entry = pointAtDist(26);
+        ctx.save();
+        ctx.translate(entry.x, entry.y);
+        ctx.rotate(this.time * 2.5);
+        ctx.strokeStyle = '#ff6b7a';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // 核心基地（旋转防护六角形）
+        const core = pathPts[pathPts.length - 1];
+        ctx.save();
+        ctx.translate(core.x, core.y - 14);
+        ctx.rotate(-this.time * 0.9);
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const ang = (i / 6) * Math.PI * 2 - Math.PI / 2;
+            const px = Math.cos(ang) * 16, py = Math.sin(ang) * 16;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#12204a';
+        ctx.fill();
+        ctx.strokeStyle = this.coreFlash > 0 ? '#ff6b7a' : '#40d8ff';
+        ctx.lineWidth = 2.4;
+        ctx.stroke();
+
+        // 核心能量水晶
+        ctx.rotate(this.time * 1.8);
+        ctx.beginPath();
+        ctx.arc(0, 0, 6.5, 0, Math.PI * 2);
+        ctx.fillStyle = this.coreFlash > 0 ? '#ff6b7a' : '#40d8ff';
+        ctx.fill();
+        ctx.restore();
+
+        // 全局射程透视
+        if (this.showAllRanges) {
+            for (const tower of this.towers) {
+                if (!tower) continue;
+                const cfg = TOWER_TYPES[tower.type];
+                const lv = cfg.levels[tower.level];
+                ctx.beginPath();
+                ctx.arc(tower.x, tower.y, lv.range, 0, Math.PI * 2);
+                ctx.strokeStyle = cfg.color + '26';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+            }
+        }
+
+        // 选定塔 / 空格射程预览
         if (this.preview) {
             ctx.beginPath();
             ctx.arc(this.preview.x, this.preview.y, this.preview.range, 0, Math.PI * 2);
             ctx.fillStyle = this.preview.color + '14';
             ctx.fill();
-            ctx.strokeStyle = this.preview.color + '55';
+            ctx.strokeStyle = this.preview.color + '66';
             ctx.lineWidth = 1.5;
             ctx.stroke();
+
+            // 下级升级射程预览虚线
+            if (this.preview.nextRange) {
+                ctx.beginPath();
+                ctx.arc(this.preview.x, this.preview.y, this.preview.nextRange, 0, Math.PI * 2);
+                ctx.strokeStyle = '#ffd34d88';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 选定塔的当前锁敌指示准星与激光瞄准线
+            if (this.selectedTowerIdx >= 0 && this.towers[this.selectedTowerIdx]) {
+                const tower = this.towers[this.selectedTowerIdx];
+                const target = this.pickTarget(tower, this.preview.range);
+                if (target) {
+                    ctx.save();
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = 'rgba(255, 107, 122, 0.65)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(tower.x, tower.y);
+                    ctx.lineTo(target.x, target.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // 目标准星
+                    ctx.strokeStyle = '#ff6b7a';
+                    ctx.lineWidth = 1.6;
+                    ctx.beginPath();
+                    ctx.arc(target.x, target.y, target.r + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // 准星十字刻度
+                    ctx.beginPath();
+                    ctx.moveTo(target.x - target.r - 8, target.y); ctx.lineTo(target.x - target.r - 2, target.y);
+                    ctx.moveTo(target.x + target.r + 2, target.y); ctx.lineTo(target.x + target.r + 8, target.y);
+                    ctx.moveTo(target.x, target.y - target.r - 8); ctx.lineTo(target.x, target.y - target.r - 2);
+                    ctx.moveTo(target.x, target.y + target.r + 2); ctx.lineTo(target.x, target.y + target.r + 8);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        }
+
+        // 地面火海危害
+        for (const g of this.groundHazards) {
+            const grad = ctx.createRadialGradient(g.x, g.y, g.r * 0.2, g.x, g.y, g.r);
+            grad.addColorStop(0, 'rgba(255, 159, 67, 0.42)');
+            grad.addColorStop(1, 'rgba(255, 107, 122, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2);
+            ctx.fill();
         }
 
         // 选中格高亮
         if (this.selectedCell) {
             const { c, r } = this.selectedCell;
-            ctx.strokeStyle = 'rgba(94,234,176,0.7)';
+            ctx.strokeStyle = 'rgba(94,234,176,0.85)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(c * CELL + 2, r * CELL + 2, CELL - 4, CELL - 4, 7);
@@ -1256,16 +2009,40 @@ class TowerDefenseGame {
             ctx.stroke();
         }
 
-        // 塔
+        // 防御塔渲染
         for (const tower of this.towers) {
             if (!tower) continue;
             this.drawTower(ctx, tower);
         }
 
-        // 敌人
+        // 敌人渲染
         for (const e of this.enemies) {
             const sprite = enemySprites[e.type];
-            ctx.drawImage(sprite, e.x - sprite.width / 2, e.y - sprite.height / 2);
+            if (sprite) {
+                ctx.drawImage(sprite, e.x - sprite.width / 2, e.y - sprite.height / 2);
+            }
+
+            // 冰冻 / 眩晕电流标志
+            if (this.time < e.stunUntil) {
+                ctx.strokeStyle = '#40d8ff';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.r + 4, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // 护盾光环
+            if (e.shield > 0) {
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.r + 3.5, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 受击白闪
             if (e.hitFlash > 0) {
                 ctx.globalAlpha = Math.min(1, e.hitFlash * 8);
                 ctx.fillStyle = '#ffffff';
@@ -1274,18 +2051,25 @@ class TowerDefenseGame {
                 ctx.fill();
                 ctx.globalAlpha = 1;
             }
-            // 血条
-            if (e.hp < e.maxHp) {
+
+            // 血条与护盾条
+            if (e.hp < e.maxHp || e.shield > 0) {
                 const bw = e.r * 2.2;
                 const frac = Math.max(0, e.hp / e.maxHp);
-                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
                 ctx.fillRect(e.x - bw / 2, e.y - e.r - 8, bw, 3.5);
                 ctx.fillStyle = frac > 0.5 ? '#3fd97c' : frac > 0.25 ? '#ffd34d' : '#ff6b7a';
                 ctx.fillRect(e.x - bw / 2, e.y - e.r - 8, bw * frac, 3.5);
+
+                if (e.shield > 0 && e.maxShield > 0) {
+                    const sFrac = Math.max(0, e.shield / e.maxShield);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fillRect(e.x - bw / 2, e.y - e.r - 12, bw * sFrac, 2.5);
+                }
             }
         }
 
-        // 子弹
+        // 子弹渲染
         ctx.globalCompositeOperation = 'lighter';
         for (const p of this.projectiles) {
             ctx.fillStyle = p.color;
@@ -1293,7 +2077,7 @@ class TowerDefenseGame {
             ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
             ctx.fill();
             if (p.kind === 'shell') {
-                ctx.globalAlpha = 0.4;
+                ctx.globalAlpha = 0.45;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
                 ctx.fill();
@@ -1301,13 +2085,13 @@ class TowerDefenseGame {
             }
         }
 
-        // 特效
+        // 特效渲染
         for (const fx of this.effects) {
             const t = fx.age / fx.life;
             ctx.globalAlpha = 1 - t;
-            if (fx.kind === 'ring') {
-                ctx.strokeStyle = fx.color;
-                ctx.lineWidth = 2.5;
+            if (fx.kind === 'ring' || fx.kind === 'emp_wave') {
+                ctx.strokeStyle = fx.kind === 'emp_wave' ? '#40d8ff' : fx.color;
+                ctx.lineWidth = fx.kind === 'emp_wave' ? 4 : 2.5;
                 ctx.beginPath();
                 ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2);
                 ctx.stroke();
@@ -1318,8 +2102,8 @@ class TowerDefenseGame {
                 for (let i = 0; i < fx.pts.length - 1; i++) {
                     const a = fx.pts[i], b = fx.pts[i + 1];
                     ctx.moveTo(a.x, a.y);
-                    const mx = (a.x + b.x) / 2 + (Math.random() - 0.5) * 10;
-                    const my = (a.y + b.y) / 2 + (Math.random() - 0.5) * 10;
+                    const mx = (a.x + b.x) / 2 + (Math.random() - 0.5) * 12;
+                    const my = (a.y + b.y) / 2 + (Math.random() - 0.5) * 12;
                     ctx.lineTo(mx, my);
                     ctx.lineTo(b.x, b.y);
                 }
@@ -1328,7 +2112,7 @@ class TowerDefenseGame {
             ctx.globalAlpha = 1;
         }
 
-        // 粒子
+        // 粒子渲染
         for (const pt of this.particles) {
             const alpha = 1 - pt.age / pt.life;
             ctx.globalAlpha = alpha;
@@ -1339,16 +2123,70 @@ class TowerDefenseGame {
         ctx.globalCompositeOperation = 'source-over';
 
         // 漂浮文字
-        ctx.font = '800 13px "Segoe UI", system-ui, sans-serif';
-        ctx.textAlign = 'center';
         for (const f of this.floaters) {
             ctx.globalAlpha = 1 - f.age / f.life;
             ctx.fillStyle = f.color;
+            const fontSz = Math.round(13 * (f.scale || 1));
+            ctx.font = `800 ${fontSz}px "Segoe UI", system-ui, sans-serif`;
+            ctx.textAlign = 'center';
             ctx.fillText(f.text, f.x, f.y);
         }
         ctx.globalAlpha = 1;
 
-        // 核心受击红光
+        // BOSS 血条（当场上有 BOSS 时在顶部渲染）
+        const boss = this.enemies.find(e => e.type === 'boss' && !e.dead);
+        if (boss) {
+            const bx = W / 2 - 130, by = 12, bw = 260, bh = 14;
+            ctx.fillStyle = 'rgba(10, 14, 36, 0.85)';
+            ctx.strokeStyle = '#ff5a3c';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(bx, by, bw, bh, 7);
+            ctx.fill();
+            ctx.stroke();
+
+            const hpRatio = clamp(boss.hp / boss.maxHp, 0, 1);
+            const bGrad = ctx.createLinearGradient(bx, by, bx + bw, by);
+            bGrad.addColorStop(0, '#ff5a3c');
+            bGrad.addColorStop(1, '#ffd34d');
+            ctx.fillStyle = bGrad;
+            ctx.beginPath();
+            ctx.roundRect(bx + 2, by + 2, (bw - 4) * hpRatio, bh - 4, 5);
+            ctx.fill();
+
+            ctx.font = '800 10px "Segoe UI", system-ui, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText(`👑 BOSS · ${Math.ceil(boss.hp)} / ${Math.ceil(boss.maxHp)}`, W / 2, by + 11);
+        }
+
+        // 全息波次通告横幅
+        if (this.waveBanner) {
+            const b = this.waveBanner;
+            const progress = b.age / b.life;
+            const alpha = progress < 0.2 ? progress / 0.2 : progress > 0.7 ? (1 - progress) / 0.3 : 1;
+            const cy = H * 0.36;
+            ctx.save();
+            ctx.fillStyle = b.isBoss ? `rgba(255, 90, 60, ${alpha * 0.18})` : `rgba(64, 216, 255, ${alpha * 0.14})`;
+            ctx.fillRect(0, cy - 24, W, 48);
+            ctx.strokeStyle = b.isBoss ? `rgba(255, 90, 60, ${alpha * 0.65})` : `rgba(64, 216, 255, ${alpha * 0.55})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, cy - 24); ctx.lineTo(W, cy - 24);
+            ctx.moveTo(0, cy + 24); ctx.lineTo(W, cy + 24);
+            ctx.stroke();
+
+            ctx.font = '900 22px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = b.isBoss ? `rgba(255, 211, 77, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+            ctx.shadowColor = b.isBoss ? '#ff5a3c' : '#40d8ff';
+            ctx.shadowBlur = 14;
+            ctx.fillText(b.text, W / 2, cy);
+            ctx.restore();
+        }
+
+        // 核心受击全屏红光
         if (this.coreFlash > 0) {
             ctx.fillStyle = `rgba(255,60,60,${this.coreFlash * 0.5})`;
             ctx.fillRect(0, 0, W, H);
@@ -1360,25 +2198,43 @@ class TowerDefenseGame {
         ctx.drawImage(towerBaseSprite, tower.c * CELL, tower.r * CELL);
         const cx = tower.x, cy = tower.y;
 
+        // 战术超频高能光环
+        if (this.time < this.overdriveUntil) {
+            ctx.strokeStyle = 'rgba(255, 180, 84, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 18 + Math.sin(this.time * 8) * 2, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // 4阶觉醒皇冠光芒
+        if (tower.level === 3) {
+            ctx.strokeStyle = '#ffd34d88';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 17, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(tower.angle);
 
         if (tower.type === 'pulse') {
             ctx.fillStyle = cfg.color;
-            ctx.fillRect(0, -3, 15, 6);
+            ctx.fillRect(0, -3.5, 16, 7);
             ctx.beginPath();
-            ctx.arc(15, 0, 3.4, 0, Math.PI * 2);
+            ctx.arc(16, 0, tower.level === 3 ? 4.5 : 3.4, 0, Math.PI * 2);
             ctx.fill();
         } else if (tower.type === 'cannon') {
             ctx.fillStyle = '#1a2148';
-            ctx.fillRect(-2, -6, 20, 12);
+            ctx.fillRect(-2, -6, 21, 12);
             ctx.strokeStyle = cfg.color;
             ctx.lineWidth = 2;
-            ctx.strokeRect(-2, -6, 20, 12);
+            ctx.strokeRect(-2, -6, 21, 12);
             ctx.fillStyle = cfg.color;
             ctx.beginPath();
-            ctx.arc(18, 0, 4, 0, Math.PI * 2);
+            ctx.arc(19, 0, 4.2, 0, Math.PI * 2);
             ctx.fill();
         } else if (tower.type === 'tesla') {
             ctx.strokeStyle = cfg.color;
@@ -1391,13 +2247,7 @@ class TowerDefenseGame {
             ctx.moveTo(0, -orbR - 5); ctx.lineTo(0, -orbR + 1);
             ctx.moveTo(0, orbR + 5); ctx.lineTo(0, orbR - 1);
             ctx.stroke();
-        }
-        ctx.restore();
-
-        if (tower.type === 'frost') {
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(tower.angle);
+        } else if (tower.type === 'frost') {
             ctx.strokeStyle = cfg.color;
             ctx.lineWidth = 2;
             for (let i = 0; i < 3; i++) {
@@ -1407,20 +2257,20 @@ class TowerDefenseGame {
                 ctx.lineTo(Math.cos(ang) * 10, Math.sin(ang) * 10);
                 ctx.stroke();
             }
-            ctx.restore();
         }
+        ctx.restore();
 
-        // 等级点
+        // 等级指示点
         const lv = tower.level + 1;
         for (let i = 0; i < lv; i++) {
             ctx.beginPath();
             ctx.arc(tower.x - (lv - 1) * 3.5 + i * 7, tower.y + 14, 2.2, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffd34d';
+            ctx.fillStyle = tower.level === 3 ? '#ffd34d' : '#ffffff';
             ctx.fill();
         }
     }
 
-    /* ── 主循环 ── */
+    /* ── 游戏主循环 ── */
 
     startLoop() {
         this.stopLoop();
@@ -1429,12 +2279,13 @@ class TowerDefenseGame {
             this.animationId = requestAnimationFrame(tick);
             let dt = (now - this.lastFrameTime) / 1000;
             this.lastFrameTime = now;
-            if (dt > 0.05) dt = 0.05; // 防止切页后追赶螺旋
+            if (dt > 0.05) dt = 0.05;
             if (this.state === 'playing') {
                 const scaled = dt * this.speedMult;
-                // ×2 时分两步更新，避免高速穿模
-                this.update(scaled / 2);
-                this.update(scaled / 2);
+                const steps = this.speedMult === 3 ? 3 : 2;
+                for (let i = 0; i < steps; i++) {
+                    this.update(scaled / steps);
+                }
             }
             this.drawFrame();
         };
@@ -1494,7 +2345,7 @@ class TowerDefenseGame {
         this.closePanel();
 
         if (victory) {
-            const bonus = this.lives * 30;
+            const bonus = this.lives * 35;
             this.score += bonus;
             Sfx.win();
         } else {
@@ -1516,6 +2367,19 @@ class TowerDefenseGame {
                 : t.defeatSub.replace('{n}', Math.max(1, this.wave));
         }
 
+        if (this.el['over-waves']) {
+            this.el['over-waves'].textContent = `${Math.max(1, this.wave)}/${MAX_WAVES}`;
+        }
+        if (this.el['over-kills']) {
+            this.el['over-kills'].textContent = formatNumber(this.totalKills || 0);
+        }
+        if (this.el['over-lives']) {
+            this.el['over-lives'].textContent = Math.max(0, this.lives);
+        }
+        if (victory) {
+            this.triggerConfetti();
+        }
+
         // 本地最佳
         const prevBest = Number(storageGet('td_best')) || 0;
         const isBest = this.score > prevBest;
@@ -1535,7 +2399,7 @@ class TowerDefenseGame {
         if (this.el.over) this.el.over.classList.remove('hidden');
         if (this.el.username) this.el.username.value = ensurePlayerName() || '';
 
-        // 上报 + 拉取全球榜
+        // 上报全球榜
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -1547,8 +2411,26 @@ class TowerDefenseGame {
                 mode: 'cors'
             });
             clearTimeout(timeoutId);
-        } catch (e) { /* Worker 未部署：保留本地榜 */ }
+        } catch (e) { /* 离线时静默保留本地榜 */ }
         this.fetchLeaderboard();
+    }
+
+    triggerConfetti() {
+        const over = this.el.over;
+        if (!over) return;
+        document.querySelectorAll('.td-confetti-piece').forEach(el => el.remove());
+        const colors = ['#40d8ff', '#ffd34d', '#ff4b6b', '#5eead4', '#c084fc', '#4ade80'];
+        for (let i = 0; i < 32; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'td-confetti-piece';
+            piece.style.left = `${6 + Math.random() * 88}%`;
+            piece.style.backgroundColor = colors[i % colors.length];
+            piece.style.animationDelay = `${Math.random() * 0.7}s`;
+            piece.style.animationDuration = `${1.8 + Math.random() * 1.4}s`;
+            piece.style.width = `${6 + Math.random() * 6}px`;
+            piece.style.height = `${8 + Math.random() * 10}px`;
+            over.appendChild(piece);
+        }
     }
 
     localScores() {
@@ -1583,7 +2465,7 @@ class TowerDefenseGame {
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
         nameEl.className = 'td-lb-name';
-        nameEl.textContent = entry.name; // textContent 防注入
+        nameEl.textContent = entry.name;
         const scoreEl = document.createElement('span');
         scoreEl.className = 'td-lb-score';
         scoreEl.textContent = formatNumber(entry.score);
@@ -1650,7 +2532,7 @@ class TowerDefenseGame {
         }
     }
 
-    /* ── UI 事件 ── */
+    /* ── UI 绑定 ── */
 
     bindUI() {
         if (this.el['btn-play']) this.el['btn-play'].addEventListener('click', () => {
@@ -1672,8 +2554,16 @@ class TowerDefenseGame {
         });
         if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());
 
+        // 战术技能
+        if (this.el['skill-emp']) this.el['skill-emp'].addEventListener('click', () => this.castEmp());
+        if (this.el['skill-boost']) this.el['skill-boost'].addEventListener('click', () => this.castOverdrive());
+
+        // 射程透视开关
+        if (this.el['range-btn']) this.el['range-btn'].addEventListener('click', () => this.toggleShowAllRanges());
+
+        // ×1 / ×2 / ×3 倍速
         if (this.el['speed-btn']) this.el['speed-btn'].addEventListener('click', () => {
-            this.speedMult = this.speedMult === 1 ? 2 : 1;
+            this.speedMult = this.speedMult === 1 ? 2 : this.speedMult === 2 ? 3 : 1;
             this.el['speed-btn'].textContent = `×${this.speedMult}`;
             Sfx.click();
         });
@@ -1702,52 +2592,6 @@ class TowerDefenseGame {
         const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
         if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
-    }
-
-    /** 桌面侧栏：防御塔图鉴（≥1024px 可见） */
-    updateSideTowers() {
-        const box = this.el['side-towers'];
-        if (!box) return;
-        const t = this.TEXT;
-        const defs = [
-            [TOWER_TYPES.pulse.icon, t.pulse, t.pulseDesc],
-            [TOWER_TYPES.frost.icon, t.frost, t.frostDesc],
-            [TOWER_TYPES.cannon.icon, t.cannon, t.cannonDesc],
-            [TOWER_TYPES.tesla.icon, t.tesla, t.teslaDesc]
-        ];
-        box.textContent = '';
-        defs.forEach(([icon, name, desc]) => {
-            const row = document.createElement('div');
-            row.className = 'td-side-tower';
-            const nameEl = document.createElement('b');
-            nameEl.textContent = `${icon} ${name}`;
-            const descEl = document.createElement('span');
-            descEl.textContent = desc;
-            row.append(nameEl, descEl);
-            box.appendChild(row);
-        });
-    }
-
-    /** 桌面侧栏战绩（≥1024px 可见） */
-    updateSideRecords() {
-        const box = this.el['side-records'];
-        if (!box) return;
-        const t = this.TEXT;
-        const best = Number(storageGet('td_best')) || 0;
-        const rows = [
-            [`🏆 ${t.best}`, best ? formatNumber(best) : '—']
-        ];
-        box.textContent = '';
-        rows.forEach(([label, value]) => {
-            const row = document.createElement('div');
-            row.className = 'td-side-row';
-            const labelEl = document.createElement('span');
-            labelEl.textContent = label;
-            const valueEl = document.createElement('b');
-            valueEl.textContent = value;
-            row.append(labelEl, valueEl);
-            box.appendChild(row);
-        });
     }
 
     toggleMute() {
