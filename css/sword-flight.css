@@ -1,0 +1,1006 @@
+/* ─────────────────────────────────────────────
+   御剑飞行 (Sword Flight: Soaring Heavens)
+   Oriental Xianxia Kinetic Flight Action
+   ───────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --color-bg: #030816;
+    --color-surface: rgba(7, 21, 41, 0.78);
+    --color-border: rgba(56, 189, 248, 0.22);
+    --color-border-glow: rgba(56, 189, 248, 0.45);
+    --color-cyan: #38bdf8;
+    --color-cyan-glow: rgba(56, 189, 248, 0.5);
+    --color-cyan-light: #f0f9ff;
+    --color-jade: #10b981;
+    --color-gold: #fbbf24;
+    --color-gold-glow: rgba(251, 191, 36, 0.5);
+    --color-gold-light: #fef08a;
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
+    --color-danger: #ef4444;
+    --color-purple: #a855f7;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background:
+        radial-gradient(ellipse 90% 60% at 50% -10%, rgba(56, 189, 248, 0.14), transparent),
+        radial-gradient(circle at 85% 90%, rgba(251, 191, 36, 0.08), transparent),
+        linear-gradient(175deg, #020612 0%, #061528 45%, #0a2139 100%);
+    color: var(--color-text);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.sf-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 520px;
+    padding: 8px 12px 14px;
+    min-height: 100vh;
+}
+
+.hidden { display: none !important; }
+
+/* ── 顶栏 HUD ── */
+.sf-topbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 0 8px;
+}
+
+.sf-icon-btn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, border-color 0.2s;
+    color: inherit;
+    font-family: inherit;
+    font-weight: 700;
+}
+
+.sf-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(56, 189, 248, 0.45);
+}
+.sf-icon-btn:active { transform: scale(0.92); }
+
+.sf-title-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.sf-stage-label {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.sf-mode-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--color-gold-light);
+    text-transform: uppercase;
+    background: rgba(251, 191, 36, 0.16);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 99px;
+    padding: 1px 8px;
+    margin-top: 1px;
+}
+
+.sf-hud-box {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    background: rgba(7, 21, 41, 0.65);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 12px;
+    padding: 5px 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.sf-score-val {
+    font-size: 18px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.sf-combo-val {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--color-gold);
+    transition: transform 0.15s, color 0.15s;
+}
+
+/* ── 主游戏区域 ── */
+.sf-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.sf-stage {
+    position: relative;
+    width: 480px;
+    height: 640px;
+    max-width: 100%;
+    aspect-ratio: 480 / 640;
+    background: #020713;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(56, 189, 248, 0.25),
+        0 0 35px rgba(56, 189, 248, 0.12);
+}
+
+#sf-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+}
+
+/* ── 内部 HUD ── */
+.sf-in-hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px 16px;
+    z-index: 10;
+}
+
+.sf-lives-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 18px;
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+    animation: pulseSubtle 3s infinite ease-in-out;
+}
+
+@keyframes pulseSubtle {
+    0%, 100% { opacity: 0.95; }
+    50% { opacity: 1; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 1)); }
+}
+
+.sf-heart {
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.sf-heart.lost {
+    opacity: 0.2;
+    transform: scale(0.8);
+    filter: grayscale(1);
+}
+
+.sf-realm-chip {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(7, 21, 41, 0.75);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    backdrop-filter: blur(8px);
+    border-radius: 99px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #e0f2fe;
+}
+
+.sf-progress-wrap {
+    position: absolute;
+    top: 48px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sf-progress-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-cyan);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.sf-progress-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.sf-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #38bdf8, #fbbf24);
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+    transition: width 0.1s linear;
+}
+
+/* 底部双翼能量槽 */
+.sf-bottom-bars {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 70px; /* Leave space for touch buttons */
+}
+
+.sf-energy-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(7, 21, 41, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(6px);
+    border-radius: 10px;
+    padding: 6px 10px;
+}
+
+.sf-energy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.sf-energy-label {
+    color: var(--color-text-muted);
+}
+
+.sf-energy-val {
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.sf-bar-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.sf-bar-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.1s ease-out;
+}
+
+.sf-bar-fill.qi {
+    background: linear-gradient(90deg, #0284c7, #38bdf8, #ffffff);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+}
+
+.sf-bar-fill.ult {
+    background: linear-gradient(90deg, #d97706, #fbbf24, #fef08a);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.85);
+}
+
+/* ── 移动端触控按钮 ── */
+.sf-touch-controls {
+    position: absolute;
+    bottom: 14px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 18px;
+    pointer-events: auto;
+    z-index: 15;
+}
+
+.sf-touch-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(7, 21, 41, 0.82);
+    border: 2px solid rgba(56, 189, 248, 0.35);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(56, 189, 248, 0.15);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    transition: transform 0.1s, border-color 0.15s, background 0.15s;
+}
+
+.sf-touch-btn:active {
+    transform: scale(0.9);
+    background: rgba(56, 189, 248, 0.25);
+    border-color: var(--color-cyan);
+}
+
+.sf-touch-btn .btn-icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.sf-touch-btn--dash {
+    border-color: rgba(56, 189, 248, 0.6);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+}
+
+.sf-touch-btn--ult {
+    border-color: rgba(251, 191, 36, 0.6);
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.4);
+}
+
+.sf-touch-btn--ult:disabled {
+    opacity: 0.4;
+    filter: grayscale(0.8);
+    pointer-events: none;
+}
+
+/* ── 覆盖层基类 (Start / Pause / Victory / GameOver) ── */
+.sf-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 18, 0.9);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 24px 20px 20px;
+    z-index: 25;
+    overflow-y: auto;
+    text-align: center;
+    animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.sf-badge {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--color-cyan);
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 99px;
+    padding: 3px 12px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.sf-badge.gold {
+    color: var(--color-gold);
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.sf-title {
+    font-family: 'Noto Serif SC', 'Songti SC', 'Source Han Serif', serif;
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: #fff;
+    text-shadow: 0 0 18px rgba(56, 189, 248, 0.6);
+    margin-bottom: 4px;
+}
+
+.sf-subtitle {
+    font-size: 12.5px;
+    color: var(--color-gold-light);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.sf-hero-art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 28px;
+    margin-bottom: 12px;
+    animation: floatHero 3s ease-in-out infinite;
+}
+
+@keyframes floatHero {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.sf-howto-box {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    text-align: left;
+    margin-bottom: 14px;
+}
+
+.sf-howto-box b {
+    color: var(--color-gold-light);
+}
+
+/* 模式选择按钮 */
+.sf-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.sf-mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 10px 6px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.sf-mode-btn:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.5);
+    transform: translateY(-2px);
+}
+
+.sf-mode-btn.highlight {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+.sf-mode-btn .mode-icon {
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.sf-mode-btn .mode-sub {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+/* 关卡选择子面板 */
+.sf-stage-select-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.sf-stage-select-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--color-cyan);
+}
+
+.sf-stage-stars-total {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-gold);
+}
+
+.sf-stage-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.sf-stage-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(7, 21, 41, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 12px;
+    padding: 10px 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.sf-stage-card:hover:not(.locked) {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: var(--color-cyan);
+    transform: translateY(-2px);
+}
+
+.sf-stage-card.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: grayscale(0.8);
+}
+
+.sf-stage-num {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.sf-stage-name {
+    font-size: 10.5px;
+    color: var(--color-cyan-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+}
+
+.sf-stage-stars {
+    font-size: 10px;
+    color: var(--color-gold);
+    margin-top: 4px;
+    letter-spacing: 1px;
+}
+
+/* 每日挑战卡片 */
+.sf-daily-card {
+    width: 100%;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.sf-daily-date {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-gold);
+    margin-bottom: 4px;
+}
+
+.sf-daily-modifier {
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: #e2e8f0;
+}
+
+/* 仙榜入口按钮 */
+.sf-leaderboard-entry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 99px;
+    padding: 7px 18px;
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 4px;
+}
+
+.sf-leaderboard-entry-btn:hover {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: var(--color-gold);
+    color: #fff;
+}
+
+/* ── 覆层通用标题与按钮 ── */
+.sf-overlay-title {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.sf-overlay-sub {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 16px;
+}
+
+.sf-stars-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    font-size: 32px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.7));
+}
+
+.sf-stats-box {
+    width: 100%;
+    max-width: 320px;
+    background: rgba(7, 21, 41, 0.75);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.sf-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    font-size: 12.5px;
+    color: #cbd5e1;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.sf-stat-row:last-child {
+    border-bottom: none;
+}
+
+.sf-stat-row .val {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.sf-stat-row .val.highlight {
+    color: var(--color-gold);
+}
+
+.sf-overlay-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 280px;
+}
+
+.sf-action-btn {
+    width: 100%;
+    padding: 11px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.sf-action-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+}
+
+.sf-action-btn.primary {
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    border-color: #7dd3fc;
+    box-shadow: 0 4px 18px rgba(56, 189, 248, 0.4);
+}
+
+.sf-action-btn.primary:hover {
+    background: linear-gradient(135deg, #0369a1, #0ea5e9);
+    box-shadow: 0 6px 22px rgba(56, 189, 248, 0.55);
+}
+
+/* 结算玩家道号输入 */
+.sf-name-submit-box {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 12px;
+}
+
+.sf-name-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 12.5px;
+    font-family: inherit;
+    outline: none;
+}
+
+.sf-name-input:focus {
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.sf-submit-score-btn {
+    background: var(--color-gold);
+    color: #040817;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.sf-submit-score-btn:hover {
+    background: var(--color-gold-light);
+}
+
+.sf-submit-feedback {
+    font-size: 11.5px;
+    color: var(--color-cyan);
+    margin-bottom: 12px;
+}
+
+/* ── 仙榜模态框 ── */
+.sf-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 35;
+}
+
+.sf-modal {
+    width: 100%;
+    max-width: 380px;
+    background: #07152b;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.2);
+}
+
+.sf-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.sf-modal-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--color-gold);
+}
+
+.sf-modal-close {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.sf-rank-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.sf-rank-tab {
+    flex: 1;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #cbd5e1;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.sf-rank-tab.active {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: var(--color-cyan);
+    color: #fff;
+}
+
+.sf-rank-list {
+    max-height: 280px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sf-rank-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.sf-rank-item.top1 { color: #fbbf24; font-weight: 800; }
+.sf-rank-item.top2 { color: #cbd5e1; font-weight: 800; }
+.sf-rank-item.top3 { color: #f97316; font-weight: 800; }
+
+.sf-rank-loading {
+    padding: 24px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
+/* Toast 浮动提示 */
+.sf-toast {
+    position: absolute;
+    top: 55px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(7, 21, 41, 0.9);
+    border: 1px solid var(--color-cyan);
+    box-shadow: 0 0 18px var(--color-cyan-glow);
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    pointer-events: none;
+    z-index: 20;
+    transition: opacity 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+/* ── 桌面大屏布局（≥1024px）：舞台 + 侧边栏 ── */
+.sf-sidebar {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .sf-shell {
+        max-width: 960px;
+    }
+    .sf-main {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 28px;
+    }
+    .sf-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 320px;
+        flex-shrink: 0;
+    }
+    .sf-side-card {
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 14px 16px;
+        text-align: left;
+    }
+    .sf-side-title {
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: var(--color-cyan);
+        letter-spacing: 0.5px;
+    }
+    .sf-side-text {
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: #cbd5e1;
+    }
+    .sf-side-text b {
+        color: #fef08a;
+    }
+    .sf-side-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 13px;
+        padding: 4px 0;
+        color: #cbd5e1;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+    .sf-side-row:last-child {
+        border-bottom: none;
+    }
+    .sf-side-row b {
+        color: #fff;
+        font-variant-numeric: tabular-nums;
+    }
+    .sf-shortcut-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 0;
+        font-size: 12px;
+        color: #cbd5e1;
+    }
+    .sf-key {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+    }
+}
+
+/* ── 移动端小屏微调（≤480px） ── */
+@media (max-width: 480px) {
+    .sf-shell { padding: 4px 6px 8px; }
+    .sf-icon-btn { width: 36px; height: 36px; font-size: 14px; }
+    .sf-stage-label { font-size: 12px; }
+    .sf-score-val { font-size: 16px; }
+    .sf-title { font-size: 26px; }
+    .sf-mode-btn { font-size: 12px; padding: 8px 4px; }
+    .sf-mode-btn .mode-icon { font-size: 18px; }
+    .sf-touch-btn { width: 56px; height: 56px; font-size: 9.5px; }
+    .sf-touch-btn .btn-icon { font-size: 17px; }
+    .sf-bottom-bars { margin-bottom: 64px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sf-hero-art, .sf-toast, .sf-bar-fill { animation: none !important; }
+    .sf-action-btn, .sf-icon-btn, .sf-touch-btn { transition: none !important; }
+}

@@ -19,7 +19,8 @@ export default defineConfig({
         reversi: resolve(__dirname, 'reversi.html'),
         'tower-defense': resolve(__dirname, 'tower-defense.html'),
         'gravity-slingshot': resolve(__dirname, 'gravity-slingshot.html'),
-        'needle-awn': resolve(__dirname, 'needle-awn.html')
+        'needle-awn': resolve(__dirname, 'needle-awn.html'),
+        'sword-flight': resolve(__dirname, 'sword-flight.html')
       },
       output: {
         // 分块策略

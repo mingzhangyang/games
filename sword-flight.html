@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#030816">
+    <meta name="description" content="御剑飞行 Sword Flight: Soaring Heavens — 国风仙侠轻功御剑动作游戏。扶摇直上九重天，踏剑破云海，御灵剑化阵，穿玄天仙环，悟无上仙道！">
+    <meta name="keywords" content="御剑飞行, sword flight, 修仙游戏, 仙侠动作, 飞剑, 万剑归宗, 国风动作, 弹幕闪避, 网页游戏, 每日挑战">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/sword-flight.html">
+    <meta property="og:title" content="御剑飞行 Sword Flight: Soaring Heavens">
+    <meta property="og:description" content="扶摇直上九重天，剑气纵横御清风。踏灵剑翱翔云海，引雷淬剑，凝万剑归宗！">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-sword-flight.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/sword-flight.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="御剑飞行 Sword Flight: Soaring Heavens">
+    <meta name="twitter:description" content="扶摇直上九重天，剑气纵横御清风。踏灵剑翱翔云海，引雷淬剑，凝万剑归宗！">
+    <meta name="twitter:image" content="assets/seo/og-sword-flight.svg">
+    <title>御剑飞行 — Sword Flight</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23030816'/%3E%3Cpath d='M16 48 L48 16' stroke='%2338bdf8' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M20 20 L44 44' stroke='%23fbbf24' stroke-width='2' stroke-dasharray='2 4'/%3E%3Ccircle cx='48' cy='16' r='5' fill='%23ffffff'/%3E%3Ccircle cx='32' cy='32' r='14' fill='none' stroke='%2338bdf8' stroke-width='2' opacity='0.7'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/sword-flight.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="sf-shell">
+        <!-- 顶栏 HUD -->
+        <header class="sf-topbar">
+            <button class="sf-icon-btn" id="sf-btn-home" title="Home" aria-label="Home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
+            </button>
+            <div class="sf-title-pill">
+                <span class="sf-stage-label" id="sf-stage-label">御剑飞行</span>
+                <span class="sf-mode-badge" id="sf-mode-badge">九天问道</span>
+            </div>
+            <div class="sf-hud-box">
+                <span class="sf-score-val" id="sf-score-val">0</span>
+                <span class="sf-combo-val" id="sf-combo-val">×1</span>
+            </div>
+            <button class="sf-icon-btn" id="sf-btn-pause" title="Pause" aria-label="Pause">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg>
+            </button>
+            <button class="sf-icon-btn" id="sf-btn-sound" title="Sound" aria-label="Sound">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg>
+            </button>
+        </header>
+
+        <!-- 主游戏区域 -->
+        <div class="sf-main">
+            <div class="sf-stage" id="sf-stage">
+                <canvas id="sf-canvas" width="480" height="640"></canvas>
+
+                <!-- 内部即时 HUD -->
+                <div class="sf-in-hud" id="sf-in-hud">
+                    <!-- 仙元护体 (生命值) -->
+                    <div class="sf-lives-wrap" id="sf-lives-wrap">
+                        <span class="sf-heart" id="sf-heart-1">🗡️</span>
+                        <span class="sf-heart" id="sf-heart-2">🗡️</span>
+                        <span class="sf-heart" id="sf-heart-3">🗡️</span>
+                    </div>
+
+                    <!-- 当前修仙境界标签 -->
+                    <div class="sf-realm-chip" id="sf-realm-chip" title="修仙境界">
+                        <span id="sf-realm-icon">✨</span>
+                        <span id="sf-realm-text">炼气期</span>
+                    </div>
+
+                    <!-- 进度 / 仙门距离指示器 -->
+                    <div class="sf-progress-wrap" id="sf-progress-wrap">
+                        <span class="sf-progress-label" id="sf-progress-label">登仙之路</span>
+                        <div class="sf-progress-track">
+                            <div class="sf-progress-fill" id="sf-progress-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 底部能量槽双翼：左真气，右万剑极意 -->
+                    <div class="sf-bottom-bars">
+                        <!-- 真气冲刺槽 -->
+                        <div class="sf-energy-bar-wrap" title="真气冲刺 (空格 / 左键 / ⚡)">
+                            <div class="sf-energy-header">
+                                <span class="sf-energy-label" id="sf-lbl-qi">真气</span>
+                                <span class="sf-energy-val" id="sf-val-qi">100%</span>
+                            </div>
+                            <div class="sf-bar-track qi">
+                                <div class="sf-bar-fill qi" id="sf-bar-qi" style="width: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- 青莲万剑极意槽 -->
+                        <div class="sf-energy-bar-wrap" title="万剑归宗 (E 键 / 🌸 极意)">
+                            <div class="sf-energy-header">
+                                <span class="sf-energy-label" id="sf-lbl-ult">青莲极意</span>
+                                <span class="sf-energy-val" id="sf-val-ult">0%</span>
+                            </div>
+                            <div class="sf-bar-track ult">
+                                <div class="sf-bar-fill ult" id="sf-bar-ult" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 移动端触控按钮 -->
+                <div class="sf-touch-controls" id="sf-touch-controls">
+                    <button class="sf-touch-btn sf-touch-btn--array" id="sf-touch-array" aria-label="Sword Array">
+                        <span class="btn-icon">⚔️</span>
+                        <span id="sf-touch-array-lbl">剑阵</span>
+                    </button>
+                    <button class="sf-touch-btn sf-touch-btn--ult" id="sf-touch-ult" aria-label="Thousand Swords Ultimate">
+                        <span class="btn-icon">🌸</span>
+                        <span id="sf-touch-ult-lbl">归宗</span>
+                    </button>
+                    <button class="sf-touch-btn sf-touch-btn--dash" id="sf-touch-dash" aria-label="Sword Qi Dash">
+                        <span class="btn-icon">⚡</span>
+                        <span id="sf-touch-dash-lbl">破空</span>
+                    </button>
+                </div>
+
+                <!-- 悬浮提示 -->
+                <div class="sf-toast hidden" id="sf-toast"></div>
+
+                <!-- 1. 主菜单覆盖层 -->
+                <div class="sf-overlay" id="sf-overlay-start">
+                    <div class="sf-badge">ORIENTAL XIANXIA SOARING</div>
+                    <h1 class="sf-title" id="sf-main-title">御剑飞行</h1>
+                    <p class="sf-subtitle" id="sf-main-sub">扶摇直上九重天 · 剑气纵横御清风</p>
+
+                    <div class="sf-hero-art">
+                        <span class="sf-hero-icon">🗡️</span>
+                        <span class="sf-hero-sparkle">✨</span>
+                        <span class="sf-hero-icon">☁️</span>
+                    </div>
+
+                    <div class="sf-howto-box" id="sf-howto-box">
+                        <b>仙道法门：</b>鼠标引路或触控拖曳御剑穿云，穿行<b>【玄天仙环】</b>聚引天地灵气与五音合鸣！<br>
+                        按<b>空格/点击</b>发动<b>破空疾刺</b>斩断断崖绝壁、吞噬九天玄雷；聚万仙灵韵突破<b>境界飞升</b>，祭出<b>【万剑归宗】</b>！
+                    </div>
+
+                    <div class="sf-mode-grid">
+                        <button class="sf-mode-btn highlight" id="sf-btn-stages">
+                            <span class="mode-icon">🌌</span>
+                            <span id="sf-lbl-mode-stages">九天问道</span>
+                            <span class="mode-sub" id="sf-sub-mode-stages">9 Celestial Stages</span>
+                        </button>
+                        <button class="sf-mode-btn" id="sf-btn-endless">
+                            <span class="mode-icon">☁️</span>
+                            <span id="sf-lbl-mode-endless">万里长空</span>
+                            <span class="mode-sub" id="sf-sub-mode-endless">Endless Soaring</span>
+                        </button>
+                        <button class="sf-mode-btn" id="sf-btn-daily">
+                            <span class="mode-icon">📅</span>
+                            <span id="sf-lbl-mode-daily">每日仙缘</span>
+                            <span class="mode-sub" id="sf-sub-mode-daily">Global Seeded Daily</span>
+                        </button>
+                        <button class="sf-mode-btn" id="sf-btn-zen">
+                            <span class="mode-icon">🧘</span>
+                            <span id="sf-lbl-mode-zen">问道清修</span>
+                            <span class="mode-sub" id="sf-sub-mode-zen">Zen Peaceful Flight</span>
+                        </button>
+                    </div>
+
+                    <!-- 关卡选择面板 (九天问道) -->
+                    <div class="hidden" id="sf-stage-select-wrap" style="width: 100%;">
+                        <div class="sf-stage-select-head">
+                            <span class="sf-stage-select-title" id="sf-stage-select-title">选择天境重霄</span>
+                            <span class="sf-stage-stars-total" id="sf-stage-stars-total">⭐ 0/27</span>
+                        </div>
+                        <div class="sf-stage-grid" id="sf-stage-grid"></div>
+                    </div>
+
+                    <!-- 每日挑战卡片信息 -->
+                    <div class="sf-daily-card hidden" id="sf-daily-card">
+                        <div class="sf-daily-date" id="sf-daily-date">今日仙历：2026-09-15</div>
+                        <div class="sf-daily-modifier" id="sf-daily-modifier">天象奇观：【罡风浩荡】飞行极速提升 30%，仙环灵韵翻倍！</div>
+                        <button class="sf-action-btn primary" id="sf-btn-start-daily" style="margin-top: 10px;">开启今日仙途 ▶</button>
+                    </div>
+
+                    <!-- 排行榜快速入口按钮 -->
+                    <button class="sf-leaderboard-entry-btn" id="sf-btn-open-rank">
+                        <span>🏆</span> <span id="sf-lbl-open-rank">查看九天仙榜</span>
+                    </button>
+                </div>
+
+                <!-- 2. 暂停覆盖层 -->
+                <div class="sf-overlay hidden" id="sf-overlay-pause">
+                    <h2 class="sf-overlay-title" id="sf-pause-title">凝神静思 · 调息</h2>
+                    <p class="sf-overlay-sub" id="sf-pause-sub">调和龙虎，蓄势待发</p>
+                    <div class="sf-overlay-btns">
+                        <button class="sf-action-btn primary" id="sf-btn-resume">继续御剑 ▶</button>
+                        <button class="sf-action-btn" id="sf-btn-restart">重新启程 ⟲</button>
+                        <button class="sf-action-btn" id="sf-btn-menu">返回仙门 🏠</button>
+                    </div>
+                </div>
+
+                <!-- 3. 通关胜利覆盖层 (九天问道) -->
+                <div class="sf-overlay hidden" id="sf-overlay-victory">
+                    <div class="sf-badge gold">ASCENSION COMPLETED</div>
+                    <h2 class="sf-overlay-title" id="sf-victory-title">破境飞升 · 仙门洞开</h2>
+                    <p class="sf-overlay-sub" id="sf-victory-sub">剑意通神，跨入更高重天！</p>
+
+                    <div class="sf-stars-row" id="sf-victory-stars">
+                        <span class="sf-star-slot">⭐</span>
+                        <span class="sf-star-slot">⭐</span>
+                        <span class="sf-star-slot">⭐</span>
+                    </div>
+
+                    <div class="sf-stats-box">
+                        <div class="sf-stat-row">
+                            <span class="lbl" id="sf-v-lbl-score">修仙得分</span>
+                            <span class="val" id="sf-v-score">0</span>
+                        </div>
+                        <div class="sf-stat-row">
+                            <span class="lbl" id="sf-v-lbl-rings">仙环通贯率</span>
+                            <span class="val" id="sf-v-rings">0%</span>
+                        </div>
+                        <div class="sf-stat-row">
+                            <span class="lbl" id="sf-v-lbl-combo">最高连环合鸣</span>
+                            <span class="val" id="sf-v-combo">×1</span>
+                        </div>
+                        <div class="sf-stat-row">
+                            <span class="lbl" id="sf-v-lbl-realm">修得道果</span>
+                            <span class="val highlight" id="sf-v-realm">筑基期</span>
+                        </div>
+                    </div>
+
+                    <div class="sf-overlay-btns">
+                        <button class="sf-action-btn primary" id="sf-btn-next-stage">下一重天 ▶</button>
+                        <button class="sf-action-btn" id="sf-btn-stage-replay">再战此境 ⟲</button>
+                        <button class="sf-action-btn" id="sf-btn-victory-menu">返回仙境 🏠</button>
+                    </div>
+                </div>
+
+                <!-- 4. 结算覆盖层 (无尽 / 每日 / 陨落) -->
+                <div class="sf-overlay hidden" id="sf-overlay-gameover">
+                    <h2 class="sf-overlay-title" id="sf-go-title">仙缘未尽 · 调息重来</h2>
+                    <p class="sf-overlay-sub" id="sf-go-sub">剑心不灭，再问长生</p>
+
+                    <div class="sf-stats-box">
+                        <div class="sf-stat-row">
+                            <span class="lbl" id="sf-go-lbl-score">最终御剑得分</span>
+                            <span class="val" id="sf-go-score">0</span>
+                        </div>
+                        <div class="sf-stat-row">
+                            <span class="lbl" id="sf-go-lbl-distance">翱翔万里长空</span>
+                            <span class="val" id="sf-go-distance">0 里</span>
+                        </div>
+                        <div class="sf-stat-row">
+                            <span class="lbl" id="sf-go-lbl-realm">达至最高境界</span>
+                            <span class="val highlight" id="sf-go-realm">结丹期</span>
+                        </div>
+                        <div class="sf-stat-row">
+                            <span class="lbl" id="sf-go-lbl-rings">贯通仙环总数</span>
+                            <span class="val" id="sf-go-rings">0</span>
+                        </div>
+                    </div>
+
+                    <div class="sf-name-submit-box" id="sf-name-box">
+                        <input type="text" class="sf-name-input" id="sf-player-name-input" maxlength="16" placeholder="输入道号以铭刻仙榜...">
+                        <button class="sf-submit-score-btn" id="sf-btn-submit-score">铭刻道号</button>
+                    </div>
+                    <div class="sf-submit-feedback hidden" id="sf-submit-feedback"></div>
+
+                    <div class="sf-overlay-btns">
+                        <button class="sf-action-btn primary" id="sf-btn-go-replay">再次御剑 ⟲</button>
+                        <button class="sf-action-btn" id="sf-btn-go-menu">返回仙门 🏠</button>
+                    </div>
+                </div>
+
+                <!-- 5. 全球仙榜浮层 -->
+                <div class="sf-modal-backdrop hidden" id="sf-rank-modal">
+                    <div class="sf-modal">
+                        <div class="sf-modal-header">
+                            <h3 class="sf-modal-title" id="sf-rank-title">🏆 九天绝巅仙榜</h3>
+                            <button class="sf-modal-close" id="sf-btn-close-rank">✕</button>
+                        </div>
+                        <div class="sf-rank-tabs">
+                            <button class="sf-rank-tab active" id="sf-tab-endless">万里长空总榜</button>
+                            <button class="sf-rank-tab" id="sf-tab-daily">今日仙缘榜</button>
+                        </div>
+                        <div class="sf-rank-list" id="sf-rank-list">
+                            <div class="sf-rank-loading">正在接引九天仙榜...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 桌面端宽屏右侧栏 (≥1024px) -->
+            <aside class="sf-sidebar">
+                <!-- 卡片 1：仙道法则 -->
+                <div class="sf-side-card">
+                    <div class="sf-side-title" id="sf-side-rules-title">📜 仙道御剑法则</div>
+                    <div class="sf-side-text" id="sf-side-rules-text">
+                        <b>御剑随心：</b>移动光标或手指引领飞剑穿行。俯冲蓄势破空，冲霄直入云霄！<br><br>
+                        • <b>玄天仙环</b>：连续穿梭灵环可引发<b>五音合鸣</b>，真气急速回复，得分倍率飞升！<br>
+                        • <b>破空疾刺 (空格)</b>：消耗真气化身银色剑光，斩断孤石断崖、吞纳九天玄雷！<br>
+                        • <b>伴生剑阵 (Q)</b>：境界突破后唤出游龙飞剑护体，自动绞杀凶禽与煞气，释放剑气浪涌。<br>
+                        • <b>青莲万剑 (E)</b>：极意圆满后引万剑归宗，百丈青莲绽放，涤荡乾坤！
+                    </div>
+                </div>
+
+                <!-- 卡片 2：绝巅战绩 -->
+                <div class="sf-side-card">
+                    <div class="sf-side-title" id="sf-side-records-title">🏆 仙修造诣记录</div>
+                    <div class="sf-side-row">
+                        <span id="sf-side-stars-lbl">九天问道星数</span>
+                        <b id="sf-rec-stars">0 / 27 ⭐</b>
+                    </div>
+                    <div class="sf-side-row">
+                        <span id="sf-side-endless-lbl">万里长空最高分</span>
+                        <b id="sf-rec-endless">0</b>
+                    </div>
+                    <div class="sf-side-row">
+                        <span id="sf-side-maxrealm-lbl">至高修成境界</span>
+                        <b id="sf-rec-realm">炼气期</b>
+                    </div>
+                    <div class="sf-side-row">
+                        <span id="sf-side-combo-lbl">单局极意连环</span>
+                        <b id="sf-rec-combo">0 环</b>
+                    </div>
+                    <div class="sf-side-row">
+                        <span id="sf-side-daily-lbl">今日仙缘修途</span>
+                        <b id="sf-rec-daily">未涉足</b>
+                    </div>
+                </div>
+
+                <!-- 卡片 3：操作指南 -->
+                <div class="sf-side-card">
+                    <div class="sf-side-title" id="sf-side-controls-title">⌨️ 键位与操控指南</div>
+                    <div class="sf-shortcut-item">
+                        <span id="sf-sc-steer">指引剑路</span>
+                        <span class="sf-key">鼠标移动 / 触控拖拽</span>
+                    </div>
+                    <div class="sf-shortcut-item">
+                        <span id="sf-sc-keyboard">身法微调</span>
+                        <span class="sf-key">W A S D / 方向键</span>
+                    </div>
+                    <div class="sf-shortcut-item">
+                        <span id="sf-sc-dash">破空疾刺 (无敌穿斩)</span>
+                        <span class="sf-key">鼠标左键 / 空格 / ⚡按钮</span>
+                    </div>
+                    <div class="sf-shortcut-item">
+                        <span id="sf-sc-array">唤发剑气 / 阵列变幻</span>
+                        <span class="sf-key">鼠标右键 / Q 键 / ⚔️按钮</span>
+                    </div>
+                    <div class="sf-shortcut-item">
+                        <span id="sf-sc-ult">万剑归宗 (青莲绝技)</span>
+                        <span class="sf-key">E 键 / 双击 / 🌸按钮</span>
+                    </div>
+                    <div class="sf-shortcut-item">
+                        <span id="sf-sc-pause">调息凝神 (暂停)</span>
+                        <span class="sf-key">P 键 / Esc 键</span>
+                    </div>
+                </div>
+
+                <!-- 卡片 4：全站游戏导航 -->
+                <div class="sf-side-card">
+                    <div class="more-games">
+                        <div class="more-games-title">🎮 更多游戏</div>
+                        <div class="more-games-links">
+                            <a href="needle-awn.html">⚔️ 针尖对麦芒</a>
+                            <a href="gravity-slingshot.html">🚀 引力弹弓</a>
+                            <a href="planet-merge.html">🪐 星球合成</a>
+                            <a href="tower-defense.html">🏰 霓虹塔防</a>
+                            <a href="word-daily.html">🔤 每日猜词</a>
+                            <a href="hoop-shot.html">🏀 街机投篮</a>
+                            <a href="tetris.html">🟦 俄罗斯方块</a>
+                            <a href="math-rain.html">🔢 数字雨</a>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- 结构化数据 (Schema.org) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const baseUrl = 'https://games.orangely.xyz/';
+            const currentUrl = 'https://games.orangely.xyz/sword-flight.html';
+            const socialImage = new URL('assets/seo/og-sword-flight.svg', baseUrl).href;
+
+            const gameData = {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "御剑飞行 Sword Flight: Soaring Heavens",
+                "description": "国风仙侠轻功御剑动作游戏。扶摇直上九重天，踏剑破云海，御灵剑化阵，穿玄天仙环，悟无上仙道！",
+                "genre": ["Action", "Flight", "Xianxia", "Arcade"],
+                "playMode": "SinglePlayer",
+                "applicationCategory": "Game",
+                "url": currentUrl,
+                "image": socialImage,
+                "inLanguage": document.documentElement.lang || "zh-CN",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Orangely"
+                }
+            };
+
+            const breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Mini Games Collection",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Sword Flight",
+                        "item": currentUrl
+                    }
+                ]
+            };
+
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <script type="module" src="js/sword-flight.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

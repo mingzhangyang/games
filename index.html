@@ -709,6 +709,22 @@
                 </div>
             </article>
 
+            <!-- Sword Flight: Soaring Heavens 御剑飞行 -->
+            <article class="game-card" onclick="location.href='sword-flight.html'">
+                <span class="card-badge card-badge--new">New</span>
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="card-icon card-icon--sword">🗡️</span>
+                        <a class="card-title" href="sword-flight.html" id="sword-flight-name">Sword Flight</a>
+                    </div>
+                    <p class="card-desc" id="sword-flight-desc">Soar through the Nine Heavens on a flying sword. Thread celestial rings, cleave crags, summon companion sword arrays, and ascend to immortality.</p>
+                    <div class="card-footer">
+                        <span class="tag" id="sword-flight-tag">Action</span>
+                        <a class="play-btn" href="sword-flight.html" id="sword-flight-play">Play ›</a>
+                    </div>
+                </div>
+            </article>
+
             <!-- 2D Minecraft -->
             <article class="game-card" onclick="location.href='https://2d-minecraft.orangely.xyz'">
                 <div class="card-body">
@@ -863,6 +879,11 @@
                 needleAwnTag: 'Action',
                 needleAwnPlay: 'Play ›',
 
+                swordFlightName: 'Sword Flight',
+                swordFlightDesc: 'Soar through the Nine Heavens on a flying sword. Thread celestial rings, cleave crags, summon companion sword arrays, and ascend to immortality.',
+                swordFlightTag: 'Action',
+                swordFlightPlay: 'Play ›',
+
                 minecraftName: '2D Minecraft',
                 minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
                 minecraftTag: 'Sandbox',
@@ -963,6 +984,11 @@
                 needleAwnDesc: '极速破锋，毫厘交错！正对敌方锋芒冲刺触发【针尖对麦芒】极致弹反，双姿态流转，斩破万芒！',
                 needleAwnTag: '硬核动作',
                 needleAwnPlay: '开始游戏 ›',
+
+                swordFlightName: '御剑飞行',
+                swordFlightDesc: '扶摇直上九重天，踏剑破云海。穿梭玄天仙环，引雷淬剑，御剑化阵，突破境界，凝万剑归宗！',
+                swordFlightTag: '国风仙侠',
+                swordFlightPlay: '开始游戏 ›',
 
                 minecraftName: '2D 我的世界',
                 minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -1070,6 +1096,11 @@
             document.getElementById('needle-awn-tag').textContent = t.needleAwnTag;
             document.getElementById('needle-awn-play').textContent = t.needleAwnPlay;
 
+            document.getElementById('sword-flight-name').textContent = t.swordFlightName;
+            document.getElementById('sword-flight-desc').textContent = t.swordFlightDesc;
+            document.getElementById('sword-flight-tag').textContent = t.swordFlightTag;
+            document.getElementById('sword-flight-play').textContent = t.swordFlightPlay;
+
             document.getElementById('minecraft-name').textContent = t.minecraftName;
             document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
             document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -1143,6 +1174,7 @@
                 { slug: 'tower-defense', name: 'Neon Tower Defense', description: 'Neon-themed tower defense — four tower types, 25 escalating waves, upgrades and a global leaderboard.' },
                 { slug: 'gravity-slingshot', name: 'Gravity Slingshot', description: 'Original orbital physics puzzle — slingshot your probe around planets into the wormhole, 20 holes plus a daily course.' },
                 { slug: 'needle-awn', name: 'Pinpoint Clash', description: 'Original cyber-ink martial precision action duel — clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm.' },
+                { slug: 'sword-flight', name: 'Sword Flight', description: 'Oriental xianxia kinetic flight action — soar through nine celestial realms, summon companion sword arrays, thread spiritual rings, and ascend to immortality.' },
                 { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
                 { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
                 { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
