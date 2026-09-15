@@ -2,7 +2,7 @@
  * Gravity Slingshot 引力弹弓
  * 原创轨道物理游戏：拖拽向后拉弹弓发射探测器，
  * 借助行星引力转弯、甩尾，把探测器送进虫洞。
- * 杆数计分（越少越好）：12 个手工关卡 + 每日赛程（5 洞，全场同一套，
+ * 杆数计分（越少越好）：20 个手工关卡 + 每日赛程（5 洞，全场同一套，
  * 由 UTC+8 日期种子生成，并用弹道采样器验证可解性与标准杆）。
  *
  * 物理：固定 1/120s 子步半隐式欧拉积分（累积器驱动，任意刷新率下
@@ -251,6 +251,8 @@ function bodiesAt(level, t) {
         bodyScratch[n].y = b.y;
         bodyScratch[n].r = b.r;
         bodyScratch[n].m = b.r * b.r * 0.5;
+        bodyScratch[n].tone = b.tone;      // 视觉属性（行星配色 / 行星环）
+        bodyScratch[n].ring = !!b.ring;
         n++;
         if (b.moon) {
             const ang = b.moon.speed * t + b.moon.phase;
@@ -258,6 +260,8 @@ function bodiesAt(level, t) {
             bodyScratch[n].y = b.y + Math.sin(ang) * b.moon.dist;
             bodyScratch[n].r = b.moon.r;
             bodyScratch[n].m = b.moon.r * b.moon.r * 0.5;
+            bodyScratch[n].tone = undefined;
+            bodyScratch[n].ring = false;
             n++;
         }
     }
@@ -317,21 +321,32 @@ function simulate(level, x, y, vx, vy, maxSteps) {
     return { pts, outcome: 'timeout', steps: maxSteps };
 }
 
-/* ────────────────────────── 关卡（手工 12 洞） ────────────────────────── */
+/* ────────────────────────── 关卡（手工 20 洞） ────────────────────────── */
+/* 1-12 布局与 par 保持原版；13-20 由弹道采样器核定可解且 par 诚实。
+ * tone / ring 只影响绘制，不进入质量、引力或碰撞。 */
 
 const LEVELS = [
     { pad: { x: 90, y: 545 },  target: { x: 395, y: 110 }, par: 1, bodies: [] },
-    { pad: { x: 85, y: 545 },  target: { x: 390, y: 120 }, par: 1, bodies: [{ x: 240, y: 330, r: 30 }] },
-    { pad: { x: 80, y: 560 },  target: { x: 235, y: 85 },  par: 1, bodies: [{ x: 310, y: 370, r: 34 }] },
-    { pad: { x: 70, y: 555 },  target: { x: 425, y: 95 },  par: 1, bodies: [{ x: 195, y: 420, r: 24 }, { x: 330, y: 300, r: 24 }] },
-    { pad: { x: 75, y: 560 },  target: { x: 255, y: 85 },  par: 2, bodies: [{ x: 195, y: 350, r: 40 }, { x: 320, y: 470, r: 30 }] },
-    { pad: { x: 80, y: 555 },  target: { x: 240, y: 195 }, par: 2, bodies: [{ x: 245, y: 345, r: 46 }] },
-    { pad: { x: 405, y: 550 }, target: { x: 85, y: 110 },  par: 2, bodies: [{ x: 250, y: 330, r: 30, moon: { dist: 74, r: 10, speed: 1.15, phase: 0 } }] },
-    { pad: { x: 65, y: 560 },  target: { x: 420, y: 115 }, par: 2, bodies: [{ x: 180, y: 300, r: 26 }, { x: 315, y: 430, r: 26 }] },
-    { pad: { x: 80, y: 555 },  target: { x: 400, y: 320 }, par: 2, bodies: [{ x: 300, y: 480, r: 22 }, { x: 300, y: 330, r: 22 }, { x: 300, y: 180, r: 22 }] },
-    { pad: { x: 70, y: 570 },  target: { x: 345, y: 240 }, par: 3, bodies: [{ x: 240, y: 340, r: 40, moon: { dist: 80, r: 11, speed: 1.0, phase: 0 } }, { x: 150, y: 220, r: 22 }] },
-    { pad: { x: 95, y: 560 },  target: { x: 140, y: 110 }, par: 3, bodies: [{ x: 250, y: 470, r: 36 }, { x: 360, y: 300, r: 24 }] },
-    { pad: { x: 70, y: 580 },  target: { x: 240, y: 75 },  par: 3, bodies: [{ x: 150, y: 430, r: 24 }, { x: 300, y: 330, r: 28, moon: { dist: 66, r: 10, speed: -1.25, phase: 2.1 } }, { x: 395, y: 190, r: 22 }] }
+    { pad: { x: 85, y: 545 },  target: { x: 390, y: 120 }, par: 1, bodies: [{ x: 240, y: 330, r: 30, tone: 0 }] },
+    { pad: { x: 80, y: 560 },  target: { x: 235, y: 85 },  par: 1, bodies: [{ x: 310, y: 370, r: 34, tone: 1 }] },
+    { pad: { x: 70, y: 555 },  target: { x: 425, y: 95 },  par: 1, bodies: [{ x: 195, y: 420, r: 24, tone: 2 }, { x: 330, y: 300, r: 24, tone: 3 }] },
+    { pad: { x: 75, y: 560 },  target: { x: 255, y: 85 },  par: 2, bodies: [{ x: 195, y: 350, r: 40, tone: 4 }, { x: 320, y: 470, r: 30, tone: 1 }] },
+    { pad: { x: 80, y: 555 },  target: { x: 240, y: 195 }, par: 2, bodies: [{ x: 245, y: 345, r: 46, tone: 0 }] },
+    { pad: { x: 405, y: 550 }, target: { x: 85, y: 110 },  par: 2, bodies: [{ x: 250, y: 330, r: 30, tone: 3, moon: { dist: 74, r: 10, speed: 1.15, phase: 0 } }] },
+    { pad: { x: 65, y: 560 },  target: { x: 420, y: 115 }, par: 2, bodies: [{ x: 180, y: 300, r: 26, tone: 2 }, { x: 315, y: 430, r: 26, tone: 4 }] },
+    { pad: { x: 80, y: 555 },  target: { x: 400, y: 320 }, par: 2, bodies: [{ x: 300, y: 480, r: 22, tone: 1 }, { x: 300, y: 330, r: 22, tone: 0 }, { x: 300, y: 180, r: 22, tone: 3 }] },
+    { pad: { x: 70, y: 570 },  target: { x: 345, y: 240 }, par: 3, bodies: [{ x: 240, y: 340, r: 40, tone: 1, moon: { dist: 80, r: 11, speed: 1.0, phase: 0 } }, { x: 150, y: 220, r: 22, tone: 4 }] },
+    { pad: { x: 95, y: 560 },  target: { x: 140, y: 110 }, par: 3, bodies: [{ x: 250, y: 470, r: 36, tone: 2 }, { x: 360, y: 300, r: 24, tone: 0 }] },
+    { pad: { x: 70, y: 580 },  target: { x: 240, y: 75 },  par: 3, bodies: [{ x: 150, y: 430, r: 24, tone: 4 }, { x: 300, y: 330, r: 28, tone: 3, moon: { dist: 66, r: 10, speed: -1.25, phase: 2.1 } }, { x: 395, y: 190, r: 22, tone: 1 }] },
+    // —— 第二季 13-20：环行星、走廊、钩射、双卫星、终局大行星 ——
+    { pad: { x: 150, y: 560 }, target: { x: 330, y: 90 },  par: 2, bodies: [{ x: 245, y: 390, r: 30, tone: 1 }, { x: 365, y: 225, r: 25, tone: 3 }] },
+    { pad: { x: 80, y: 555 },  target: { x: 400, y: 185 }, par: 2, bodies: [{ x: 250, y: 330, r: 44, tone: 4, ring: true, moon: { dist: 88, r: 11, speed: -0.95, phase: 1.2 } }] },
+    { pad: { x: 240, y: 575 }, target: { x: 240, y: 80 },  par: 2, bodies: [{ x: 118, y: 330, r: 27, tone: 2 }, { x: 362, y: 330, r: 27, tone: 2 }, { x: 240, y: 455, r: 17, tone: 0 }] },
+    { pad: { x: 75, y: 555 },  target: { x: 400, y: 120 }, par: 2, bodies: [{ x: 175, y: 420, r: 32, tone: 1 }, { x: 320, y: 250, r: 50, tone: 4, ring: true }] },
+    { pad: { x: 410, y: 560 }, target: { x: 70, y: 80 },   par: 2, bodies: [{ x: 300, y: 380, r: 36, tone: 3, moon: { dist: 74, r: 12, speed: 1.1, phase: 5.0 } }, { x: 150, y: 220, r: 30, tone: 0, moon: { dist: 64, r: 11, speed: -1.3, phase: 1.2 } }] },
+    { pad: { x: 85, y: 570 },  target: { x: 400, y: 90 },  par: 2, bodies: [{ x: 140, y: 420, r: 28, tone: 4 }, { x: 300, y: 300, r: 34, tone: 2 }, { x: 160, y: 160, r: 24, tone: 1 }] },
+    { pad: { x: 90, y: 560 },  target: { x: 390, y: 100 }, par: 2, bodies: [{ x: 250, y: 360, r: 54, tone: 0, ring: true, moon: { dist: 88, r: 12, speed: -0.85, phase: 2.4 } }] },
+    { pad: { x: 80, y: 570 },  target: { x: 400, y: 80 },  par: 2, bodies: [{ x: 240, y: 480, r: 36, tone: 3, moon: { dist: 72, r: 12, speed: 1.1, phase: 0.4 } }, { x: 360, y: 280, r: 28, tone: 1 }, { x: 140, y: 200, r: 26, tone: 4 }] }
 ];
 
 /* ────────────────────────── 每日赛程生成 + 可解性验证 ────────────────────────── */
@@ -466,18 +481,40 @@ const PLANET_TONES = [
 ];
 const spriteCache = new Map();
 
-function planetSprite(r, toneIdx) {
-    const key = `${r | 0}|${toneIdx % PLANET_TONES.length}`;
+function planetSprite(r, toneIdx, ring) {
+    const key = `${r | 0}|${toneIdx % PLANET_TONES.length}|${ring ? 1 : 0}`;
     let cv = spriteCache.get(key);
     if (cv) return cv;
-    const pad = 12;
-    const size = (r + pad) * 2;
+    const ringR = ring ? r * 1.85 : 0;
+    const lineW = ring ? Math.max(3, r * 0.3) : 0;
+    const rot = 0.5;
+    const rx = ringR, ry = ringR * 0.34;
+    const extX = Math.abs(rx * Math.cos(rot)) + Math.abs(ry * Math.sin(rot));
+    const extY = Math.abs(rx * Math.sin(rot)) + Math.abs(ry * Math.cos(rot));
+    const pad = ring ? 4 : 12;
+    const size = Math.ceil((Math.max(r, extX, extY) + lineW / 2 + pad) * 2);
     cv = document.createElement('canvas');
     cv.width = size;
     cv.height = size;
     const ctx = cv.getContext('2d');
     const cx = size / 2, cy = size / 2;
     const [c1, c2] = PLANET_TONES[toneIdx % PLANET_TONES.length];
+
+    // 行星环后半（球体之后，上侧半环）
+    const ringHalf = (back) => {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-0.5);
+        ctx.scale(1, 0.34);
+        ctx.beginPath();
+        if (back) ctx.arc(0, 0, ringR, Math.PI, Math.PI * 2);
+        else ctx.arc(0, 0, ringR, 0, Math.PI);
+        ctx.strokeStyle = back ? c1 + '59' : c1 + 'd9';
+        ctx.lineWidth = lineW;
+        ctx.stroke();
+        ctx.restore();
+    };
+    if (ring) ringHalf(true);
 
     const glow = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, r + pad * 0.9);
     glow.addColorStop(0, c1 + '3a');
@@ -499,11 +536,46 @@ function planetSprite(r, toneIdx) {
     ctx.lineWidth = 1.6;
     ctx.stroke();
 
+    // 行星环前半（球体之前，下侧半环）
+    if (ring) ringHalf(false);
+
     spriteCache.set(key, cv);
     return cv;
 }
 
 const bgCanvas = document.createElement('canvas');
+const starLayer = document.createElement('canvas'); // 视差星层：缓慢漂移的第二层星星
+
+function buildStarLayer(scale) {
+    starLayer.width = Math.round(W * scale);
+    starLayer.height = Math.round(H * scale);
+    const ctx = starLayer.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    const rng = mulberry32(77123);
+    const tints = ['#dfe7ff', '#bfe9ff', '#ffe9c9', '#e9d8ff'];
+    for (let i = 0; i < 42; i++) {
+        const x = rng() * W, y = rng() * H;
+        const r = 0.8 + rng() * 1.2;
+        ctx.globalAlpha = 0.25 + rng() * 0.5;
+        ctx.fillStyle = tints[Math.floor(rng() * tints.length)];
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        // 少量十字星光
+        if (rng() < 0.18) {
+            ctx.globalAlpha *= 0.6;
+            ctx.strokeStyle = ctx.fillStyle;
+            ctx.lineWidth = 0.7;
+            ctx.beginPath();
+            ctx.moveTo(x - r * 3, y);
+            ctx.lineTo(x + r * 3, y);
+            ctx.moveTo(x, y - r * 3);
+            ctx.lineTo(x, y + r * 3);
+            ctx.stroke();
+        }
+    }
+    ctx.globalAlpha = 1;
+}
 
 function renderBackground(scale) {
     bgCanvas.width = Math.round(W * scale);
@@ -585,6 +657,9 @@ class GravityGame {
         this.acc = 0;             // 固定步长累积器
         this.particles = [];
         this.rings = [];
+        this.meteors = [];        // 背景流星（纯视觉）
+        this.meteorTimer = 4;
+        this.thrusterAcc = 0;     // 探测器喷焰发射累积器
         this.time = 0;
         this.shake = 0;
 
@@ -747,6 +822,7 @@ class GravityGame {
         this.flightT = 0;         // 天体时钟归零：瞄准所见 = 模拟所算
         this.particles.length = 0;
         this.rings.length = 0;
+        this.thrusterAcc = 0;
     }
 
     enterMenu(show = true) {
@@ -893,8 +969,9 @@ class GravityGame {
         this.phase = 'holed';
         Sfx.capture();
         vibrate([25, 40, 70]);
-        this.burst(this.probe.x, this.probe.y, '#7dfad0', 26);
-        this.rings.push({ x: this.probe.x, y: this.probe.y, r: 6, maxR: 90, age: 0, life: 0.6, color: '#7dfad0' });
+        this.burstSwirl(this.probe.x, this.probe.y, '#7dfad0', 26);
+        this.rings.push({ x: this.probe.x, y: this.probe.y, r: 6, maxR: 96, age: 0, life: 0.62, color: '#7dfad0' });
+        this.rings.push({ x: this.probe.x, y: this.probe.y, r: 3, maxR: 52, age: 0, life: 0.42, color: '#eafff6' });
 
         const par = this.level.par;
         const starCount = this.launches <= par ? 3 : this.launches <= par + 1 ? 2 : 1;
@@ -1053,6 +1130,25 @@ class GravityGame {
                 vx: Math.cos(ang) * spd,
                 vy: Math.sin(ang) * spd,
                 life: 0.45 + Math.random() * 0.4,
+                age: 0,
+                size: 1.4 + Math.random() * 2.4,
+                color
+            });
+        }
+    }
+
+    /** 漩涡爆发：粒子带切向速度，呈螺旋散开（捕获特效） */
+    burstSwirl(x, y, color, count) {
+        for (let i = 0; i < count; i++) {
+            if (this.particles.length >= 130) this.particles.shift();
+            const ang = Math.random() * Math.PI * 2;
+            const spd = 40 + Math.random() * 130;
+            this.particles.push({
+                x: x + Math.cos(ang) * 6,
+                y: y + Math.sin(ang) * 6,
+                vx: Math.cos(ang) * spd * 0.45 - Math.sin(ang) * spd,
+                vy: Math.sin(ang) * spd * 0.45 + Math.cos(ang) * spd,
+                life: 0.5 + Math.random() * 0.45,
                 age: 0,
                 size: 1.4 + Math.random() * 2.4,
                 color
@@ -1230,6 +1326,7 @@ class GravityGame {
             this.canvas.height = Math.round(H * this.renderScale);
         }
         renderBackground(this.renderScale);
+        buildStarLayer(this.renderScale);
     }
 
     /* ── 主循环 ── */
@@ -1272,6 +1369,49 @@ class GravityGame {
 
             if (this.shake > 0) this.shake -= dt;
 
+            // 背景流星：随机生成，斜掠而过
+            this.meteorTimer -= dt;
+            if (this.meteorTimer <= 0) {
+                this.meteorTimer = 4 + Math.random() * 7;
+                const dir = Math.random() < 0.5 ? 1 : -1;
+                this.meteors.push({
+                    x: 40 + Math.random() * (W - 80),
+                    y: -20,
+                    vx: dir * (110 + Math.random() * 150),
+                    vy: 240 + Math.random() * 190,
+                    life: 1
+                });
+            }
+            for (let i = this.meteors.length - 1; i >= 0; i--) {
+                const m = this.meteors[i];
+                m.x += m.vx * dt;
+                m.y += m.vy * dt;
+                m.life -= dt * 0.55;
+                if (m.life <= 0 || m.y > H + 40) this.meteors.splice(i, 1);
+            }
+
+            // 探测器喷焰（飞行中）
+            if (this.phase === 'flying' && this.probe && this.particles.length < 120) {
+                this.thrusterAcc += dt * 80;
+                const sp = Math.hypot(this.probe.vx, this.probe.vy) || 1;
+                const ux = this.probe.vx / sp, uy = this.probe.vy / sp;
+                while (this.thrusterAcc >= 1) {
+                    this.thrusterAcc -= 1;
+                    this.particles.push({
+                        x: this.probe.x - ux * 7 + (Math.random() - 0.5) * 3,
+                        y: this.probe.y - uy * 7 + (Math.random() - 0.5) * 3,
+                        vx: -ux * (35 + Math.random() * 30) + (Math.random() - 0.5) * 18,
+                        vy: -uy * (35 + Math.random() * 30) + (Math.random() - 0.5) * 18 + 25,
+                        life: 0.22 + Math.random() * 0.18,
+                        age: 0,
+                        size: 1.3 + Math.random() * 1.8,
+                        color: Math.random() < 0.55 ? '#ffb03a' : '#ff8a5c'
+                    });
+                }
+            } else {
+                this.thrusterAcc = 0;
+            }
+
             this.draw();
         };
         this.animationId = requestAnimationFrame(tick);
@@ -1284,6 +1424,23 @@ class GravityGame {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         ctx.drawImage(bgCanvas, 0, 0);
+
+        // 视差星层：远慢近快，模拟航向纵深
+        {
+            const lw = starLayer.width, lh = starLayer.height;
+            const farY = Math.round(((this.time * 4) % H) * this.renderScale);
+            ctx.globalAlpha = 0.55;
+            ctx.drawImage(starLayer, 0, farY - lh, lw, lh);
+            ctx.drawImage(starLayer, 0, farY, lw, lh);
+            const nearY = Math.round(((this.time * 11) % H) * this.renderScale);
+            const nearX = Math.round(((this.time * 3) % W) * this.renderScale);
+            ctx.globalAlpha = 0.9;
+            ctx.drawImage(starLayer, nearX - lw, nearY - lh, lw, lh);
+            ctx.drawImage(starLayer, nearX, nearY - lh, lw, lh);
+            ctx.drawImage(starLayer, nearX - lw, nearY, lw, lh);
+            ctx.drawImage(starLayer, nearX, nearY, lw, lh);
+            ctx.globalAlpha = 1;
+        }
 
         if (this.shake > 0) {
             const s = this.shake * 7;
@@ -1303,6 +1460,19 @@ class GravityGame {
         }
         ctx.globalAlpha = 1;
 
+        // 流星
+        for (const m of this.meteors) {
+            const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * 0.13, m.y - m.vy * 0.13);
+            grad.addColorStop(0, `rgba(223,231,255,${0.85 * m.life})`);
+            grad.addColorStop(1, 'rgba(223,231,255,0)');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(m.x, m.y);
+            ctx.lineTo(m.x - m.vx * 0.13, m.y - m.vy * 0.13);
+            ctx.stroke();
+        }
+
         const level = this.level;
         if (!level) return;
         // 天体时钟：菜单空闲漂移；其余阶段与物理模拟同步（瞄准=t0 冻结，
@@ -1320,10 +1490,14 @@ class GravityGame {
             ctx.stroke();
         }
 
-        // 行星 + 卫星
-        for (let i = 0; i < n; i++) {
+        // 行星 + 卫星（按 y 排序，纯绘制，不影响物理）
+        const drawOrder = [];
+        for (let i = 0; i < n; i++) drawOrder.push(i);
+        drawOrder.sort((a, b) => bodyScratch[a].y - bodyScratch[b].y);
+        for (const i of drawOrder) {
             const b = bodyScratch[i];
-            const sprite = planetSprite(b.r, (b.r | 0) % PLANET_TONES.length);
+            const tone = b.tone === undefined ? (b.r | 0) % PLANET_TONES.length : b.tone % PLANET_TONES.length;
+            const sprite = planetSprite(b.r, tone, b.ring);
             ctx.drawImage(sprite, b.x - sprite.width / 2, b.y - sprite.height / 2);
         }
 
@@ -1353,7 +1527,38 @@ class GravityGame {
         ctx.arc(tw.x, tw.y, 3.4 * pulse + 1.5, 0, Math.PI * 2);
         ctx.fill();
 
-        // 发射台
+        // 虫洞螺旋吸入粒子：绕行并收缩的星屑
+        for (let k = 0; k < 10; k++) {
+            const prog = (this.time * 0.38 + k / 10) % 1;
+            const rad = 32 * (1 - prog) + 6;
+            const ang = this.time * 2.4 + k * 0.63 + prog * 4.2;
+            ctx.globalAlpha = 0.1 + 0.55 * prog * pulse;
+            ctx.fillStyle = k % 2 ? '#9ffbe4' : '#eafff6';
+            ctx.beginPath();
+            ctx.arc(tw.x + Math.cos(ang) * rad, tw.y + Math.sin(ang) * rad, 1.1 + prog * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // 发射台底座（始终绘制；瞄准圈仅待发时）
+        {
+            const px = level.pad.x, py = level.pad.y;
+            ctx.fillStyle = 'rgba(16,24,54,0.92)';
+            ctx.strokeStyle = 'rgba(125,250,208,0.55)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(px - 18, py + 6);
+            ctx.lineTo(px + 18, py + 6);
+            ctx.lineTo(px + 13, py + 14);
+            ctx.lineTo(px - 13, py + 14);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(125,250,208,0.28)';
+            ctx.beginPath();
+            ctx.arc(px, py + 8.5, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
         if (this.phase === 'aiming' || this.phase === 'menu') {
             ctx.strokeStyle = 'rgba(125,250,208,0.35)';
             ctx.lineWidth = 1.5;
@@ -1443,9 +1648,11 @@ class GravityGame {
             ctx.globalCompositeOperation = 'source-over';
         }
 
-        // 探测器
+        // 探测器（小火箭：飞行中朝向速度方向，待发时直立轻微浮动）
         const probeDraw = this.phase === 'flying' ? this.probe : this.level.pad;
         const bob = this.phase === 'aiming' ? Math.sin(this.time * 3) * 1.5 : 0;
+        const flyingFast = this.phase === 'flying' && (Math.abs(this.probe.vx) + Math.abs(this.probe.vy)) > 1;
+        const noseAng = flyingFast ? Math.atan2(this.probe.vy, this.probe.vx) : -Math.PI / 2;
         const pglow = ctx.createRadialGradient(probeDraw.x, probeDraw.y + bob, 1, probeDraw.x, probeDraw.y + bob, 12);
         pglow.addColorStop(0, 'rgba(223,231,255,0.8)');
         pglow.addColorStop(1, 'rgba(223,231,255,0)');
@@ -1453,10 +1660,49 @@ class GravityGame {
         ctx.beginPath();
         ctx.arc(probeDraw.x, probeDraw.y + bob, 12, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.save();
+        ctx.translate(probeDraw.x, probeDraw.y + bob);
+        ctx.rotate(noseAng + Math.PI / 2);   // 火箭造型以"朝上"为基准绘制
+        // 飞行喷焰（粒子之外的本体火焰，纯视觉）
+        if (this.phase === 'flying') {
+            const flicker = 0.65 + 0.35 * Math.sin(this.time * 42);
+            ctx.fillStyle = '#ff8a5c';
+            ctx.beginPath();
+            ctx.moveTo(-2.4, 4);
+            ctx.lineTo(0, 4 + 8.5 * flicker);
+            ctx.lineTo(2.4, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#ffe08a';
+            ctx.beginPath();
+            ctx.moveTo(-1.2, 4);
+            ctx.lineTo(0, 4 + 5 * flicker);
+            ctx.lineTo(1.2, 4);
+            ctx.closePath();
+            ctx.fill();
+        }
+        // 尾翼
+        ctx.fillStyle = '#7dfad0';
+        ctx.beginPath();
+        ctx.moveTo(-4, 2); ctx.lineTo(-7.5, 7); ctx.lineTo(-2.6, 5.2); ctx.closePath();
+        ctx.moveTo(4, 2); ctx.lineTo(7.5, 7); ctx.lineTo(2.6, 5.2); ctx.closePath();
+        ctx.fill();
+        // 箭身
         ctx.fillStyle = '#f4f7ff';
         ctx.beginPath();
-        ctx.arc(probeDraw.x, probeDraw.y + bob, PROBE_R, 0, Math.PI * 2);
+        ctx.moveTo(0, -8.5);
+        ctx.quadraticCurveTo(4.6, -2.5, 4.2, 4);
+        ctx.lineTo(-4.2, 4);
+        ctx.quadraticCurveTo(-4.6, -2.5, 0, -8.5);
+        ctx.closePath();
         ctx.fill();
+        // 舷窗
+        ctx.fillStyle = '#7dfad0';
+        ctx.beginPath();
+        ctx.arc(0, -1.6, 1.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
         // 波纹
         for (const r of this.rings) {
@@ -1493,7 +1739,9 @@ class GravityGame {
 function storageParseStars() {
     try {
         const arr = JSON.parse(storageGet('gd_stars'));
-        return Array.isArray(arr) ? arr : new Array(LEVELS.length).fill(0);
+        const out = Array.isArray(arr) ? arr.slice() : [];
+        while (out.length < LEVELS.length) out.push(0);
+        return out;
     } catch (e) {
         return new Array(LEVELS.length).fill(0);
     }

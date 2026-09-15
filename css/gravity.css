@@ -245,7 +245,7 @@ body {
 
 .gd-level-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 6px;
     width: 100%;
     max-width: 360px;
@@ -470,7 +470,7 @@ body {
     .gd-over-score { font-size: 34px; }
     .gd-howto { font-size: 12px; }
     .gd-mode { font-size: 13px; padding: 10px 15px; }
-    .gd-level-grid { grid-template-columns: repeat(6, 1fr); gap: 5px; }
+    .gd-level-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
     .gd-footer-hint { display: none; }
 }
 
