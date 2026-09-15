@@ -121,10 +121,11 @@ body {
     display: flex;
     align-items: baseline;
     gap: 6px;
-    background: rgba(7, 21, 41, 0.65);
-    border: 1px solid rgba(56, 189, 248, 0.25);
+    background: rgba(7, 21, 41, 0.78);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.18), inset 0 0 10px rgba(56, 189, 248, 0.15);
     border-radius: 12px;
-    padding: 5px 12px;
+    padding: 5px 14px;
     font-variant-numeric: tabular-nums;
 }
 
@@ -159,10 +160,16 @@ body {
     background: #020713;
     border-radius: 20px;
     overflow: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     box-shadow:
         0 16px 40px rgba(0, 0, 0, 0.7),
         0 0 0 1px rgba(56, 189, 248, 0.25),
         0 0 35px rgba(56, 189, 248, 0.12);
+}
+
+.sf-stage::-webkit-scrollbar {
+    display: none;
 }
 
 #sf-canvas {
@@ -187,25 +194,30 @@ body {
 .sf-lives-wrap {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 18px;
-    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
-    animation: pulseSubtle 3s infinite ease-in-out;
-}
-
-@keyframes pulseSubtle {
-    0%, 100% { opacity: 0.95; }
-    50% { opacity: 1; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 1)); }
+    gap: 6px;
 }
 
 .sf-heart {
-    transition: transform 0.2s, opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(7, 21, 41, 0.75);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35), inset 0 0 8px rgba(56, 189, 248, 0.2);
+    font-size: 14px;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .sf-heart.lost {
-    opacity: 0.2;
-    transform: scale(0.8);
+    opacity: 0.25;
+    transform: scale(0.78);
     filter: grayscale(1);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+    background: rgba(0, 0, 0, 0.35);
 }
 
 .sf-realm-chip {
@@ -214,16 +226,16 @@ body {
     right: 16px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    background: rgba(7, 21, 41, 0.75);
-    border: 1px solid rgba(56, 189, 248, 0.4);
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(7, 21, 41, 0.88), rgba(15, 76, 110, 0.7));
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.25), inset 0 0 10px rgba(56, 189, 248, 0.2);
     backdrop-filter: blur(8px);
     border-radius: 99px;
-    padding: 4px 12px;
+    padding: 4px 14px;
     font-size: 12px;
     font-weight: 800;
-    color: #e0f2fe;
+    color: #fef08a;
 }
 
 .sf-progress-wrap {
@@ -387,17 +399,23 @@ body {
 .sf-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(2, 6, 18, 0.9);
+    background: rgba(2, 6, 18, 0.92);
     backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 24px 20px 20px;
+    padding: 16px 18px 16px;
     z-index: 25;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     text-align: center;
     animation: fadeIn 0.25s ease-out;
+}
+
+.sf-overlay::-webkit-scrollbar {
+    display: none;
 }
 
 @keyframes fadeIn {
@@ -406,15 +424,15 @@ body {
 }
 
 .sf-badge {
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 800;
     letter-spacing: 2px;
     color: var(--color-cyan);
     background: rgba(56, 189, 248, 0.12);
     border: 1px solid rgba(56, 189, 248, 0.35);
     border-radius: 99px;
-    padding: 3px 12px;
-    margin-bottom: 8px;
+    padding: 2px 10px;
+    margin-bottom: 6px;
     text-transform: uppercase;
 }
 
@@ -426,19 +444,19 @@ body {
 
 .sf-title {
     font-family: 'Noto Serif SC', 'Songti SC', 'Source Han Serif', serif;
-    font-size: 34px;
+    font-size: 30px;
     font-weight: 900;
-    letter-spacing: 4px;
+    letter-spacing: 3px;
     color: #fff;
     text-shadow: 0 0 18px rgba(56, 189, 248, 0.6);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .sf-subtitle {
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--color-gold-light);
     letter-spacing: 1px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .sf-hero-art {
@@ -446,14 +464,14 @@ body {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    font-size: 28px;
-    margin-bottom: 12px;
+    font-size: 24px;
+    margin-bottom: 8px;
     animation: floatHero 3s ease-in-out infinite;
 }
 
 @keyframes floatHero {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+    50% { transform: translateY(-5px); }
 }
 
 .sf-howto-box {
@@ -461,12 +479,12 @@ body {
     background: rgba(255, 255, 255, 0.045);
     border: 1px solid rgba(56, 189, 248, 0.2);
     border-radius: 12px;
-    padding: 10px 14px;
-    font-size: 12px;
-    line-height: 1.6;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    line-height: 1.55;
     color: #cbd5e1;
     text-align: left;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
 }
 
 .sf-howto-box b {
@@ -477,9 +495,9 @@ body {
 .sf-mode-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .sf-mode-btn {
@@ -489,8 +507,8 @@ body {
     justify-content: center;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 14px;
-    padding: 10px 6px;
+    border-radius: 12px;
+    padding: 8px 6px;
     color: #fff;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -510,12 +528,12 @@ body {
 }
 
 .sf-mode-btn .mode-icon {
-    font-size: 22px;
-    margin-bottom: 4px;
+    font-size: 20px;
+    margin-bottom: 2px;
 }
 
 .sf-mode-btn .mode-sub {
-    font-size: 10px;
+    font-size: 9.5px;
     color: var(--color-text-muted);
     margin-top: 2px;
 }
@@ -526,17 +544,17 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .sf-stage-select-title {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 800;
     color: var(--color-cyan);
 }
 
 .sf-stage-stars-total {
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 700;
     color: var(--color-gold);
 }
@@ -544,9 +562,9 @@ body {
 .sf-stage-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .sf-stage-card {
@@ -556,8 +574,8 @@ body {
     justify-content: center;
     background: rgba(7, 21, 41, 0.7);
     border: 1px solid rgba(56, 189, 248, 0.2);
-    border-radius: 12px;
-    padding: 10px 4px;
+    border-radius: 10px;
+    padding: 7px 3px;
     cursor: pointer;
     transition: all 0.15s;
 }
@@ -575,14 +593,14 @@ body {
 }
 
 .sf-stage-num {
-    font-size: 14px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #fff;
     margin-bottom: 2px;
 }
 
 .sf-stage-name {
-    font-size: 10.5px;
+    font-size: 10px;
     color: var(--color-cyan-light);
     white-space: nowrap;
     overflow: hidden;
@@ -591,7 +609,7 @@ body {
 }
 
 .sf-stage-stars {
-    font-size: 10px;
+    font-size: 9.5px;
     color: var(--color-gold);
     margin-top: 4px;
     letter-spacing: 1px;
@@ -861,9 +879,15 @@ body {
 .sf-rank-list {
     max-height: 280px;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+.sf-rank-list::-webkit-scrollbar {
+    display: none;
 }
 
 .sf-rank-item {
@@ -915,31 +939,32 @@ body {
 @media (min-width: 1024px) {
     .sf-shell {
         max-width: 960px;
+        padding: 6px 14px 14px;
     }
     .sf-main {
         flex-direction: row;
         align-items: flex-start;
         justify-content: center;
-        gap: 28px;
+        gap: 24px;
     }
     .sf-sidebar {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 10px;
         width: 320px;
         flex-shrink: 0;
     }
     .sf-side-card {
         background: rgba(255, 255, 255, 0.045);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 14px;
-        padding: 14px 16px;
+        border-radius: 12px;
+        padding: 10px 14px;
         text-align: left;
     }
     .sf-side-title {
-        font-size: 14px;
+        font-size: 13.5px;
         font-weight: 800;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         color: var(--color-cyan);
         letter-spacing: 0.5px;
     }
