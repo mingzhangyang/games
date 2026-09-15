@@ -106,6 +106,13 @@ const I18N = {
         touchDash: '破空刺',
         touchStance: '转锋',
         touchUlt: '极意',
+        ultLabel: '极意',
+        namePlaceholder: '输入侠客尊号以登金榜...',
+        duelFinale: '⚔️ 对决终局 ⚔️',
+        duelSubResult: '双雄争锋 · 胜负已分',
+        victorySub: '演武告捷 · 锋芒初试',
+        defeatSub: '胜败常事 · 重整旗鼓',
+        modeBadgeMenu: '演武',
         levelNames: [
             '初试锋芒', '飞针入微', '芒刺在背', '阴阳交错', '灵虚针尊',
             '暴雨梨花', '麦浪连天', '扶摇麦皇', '绝命千本', '针尖麦芒'
@@ -178,6 +185,13 @@ const I18N = {
         touchDash: 'Thrust',
         touchStance: 'Stance',
         touchUlt: 'Awaken',
+        ultLabel: 'Awaken',
+        namePlaceholder: 'Warrior / Player Name...',
+        duelFinale: '⚔️ DUEL FINALE ⚔️',
+        duelSubResult: '1v1 Arena Duel Concluded',
+        victorySub: 'Trial Accomplished',
+        defeatSub: 'Defeated · Strike Again',
+        modeBadgeMenu: 'Trials',
         levelNames: [
             'First Spark', 'Needle Stream', 'Awn Swarm', 'Dual Weaving', 'Needle Sovereign',
             'Blossom Rain', 'Golden Surge', 'Awn Emperor', 'Thousand Needles', 'Grandmaster Duel'
@@ -580,6 +594,7 @@ class GameEngine {
             stanceIcon: document.getElementById('na-stance-icon'),
             stanceText: document.getElementById('na-stance-text'),
             ultFill: document.getElementById('na-ult-bar-fill'),
+            ultLabel: document.getElementById('na-ult-label'),
             touchControls: document.getElementById('na-touch-controls'),
             touchDash: document.getElementById('na-touch-dash'),
             touchStance: document.getElementById('na-touch-stance'),
@@ -613,6 +628,7 @@ class GameEngine {
             // Result
             resultTitle: document.getElementById('na-result-title'),
             resultStars: document.getElementById('na-result-stars'),
+            resultSub: document.getElementById('na-result-sub'),
             statScoreVal: document.getElementById('na-stat-score-val'),
             statClashesVal: document.getElementById('na-stat-clashes-val'),
             statComboVal: document.getElementById('na-stat-combo-val'),
@@ -858,6 +874,7 @@ class GameEngine {
     applyLanguage(lang) {
         const t = I18N[lang] || I18N.zh;
         document.documentElement.lang = lang;
+        document.title = lang === 'zh' ? '针尖对麦芒 — Pinpoint Clash' : 'Pinpoint Clash — Needle vs Awn';
 
         document.getElementById('na-main-title').textContent = t.gameTitle;
         document.getElementById('na-main-sub').textContent = t.gameSub;
@@ -906,29 +923,50 @@ class GameEngine {
         document.getElementById('na-side-controls-title').textContent = t.sideControlsTitle;
 
         document.getElementById('na-sc-aim').textContent = t.scAim;
-        document.querySelector('.na-shortcut-item:nth-child(2) .na-key').textContent = t.scAimKey;
+        const scAimKeyEl = document.getElementById('na-sc-aim-key');
+        if (scAimKeyEl) scAimKeyEl.textContent = t.scAimKey;
         document.getElementById('na-sc-dash').textContent = t.scDash;
-        document.querySelector('.na-shortcut-item:nth-child(3) .na-key').textContent = t.scDashKey;
+        const scDashKeyEl = document.getElementById('na-sc-dash-key');
+        if (scDashKeyEl) scDashKeyEl.textContent = t.scDashKey;
         document.getElementById('na-sc-stance').textContent = t.scStance;
-        document.querySelector('.na-shortcut-item:nth-child(4) .na-key').textContent = t.scStanceKey;
+        const scStanceKeyEl = document.getElementById('na-sc-stance-key');
+        if (scStanceKeyEl) scStanceKeyEl.textContent = t.scStanceKey;
         document.getElementById('na-sc-ult').textContent = t.scUlt;
-        document.querySelector('.na-shortcut-item:nth-child(5) .na-key').textContent = t.scUltKey;
+        const scUltKeyEl = document.getElementById('na-sc-ult-key');
+        if (scUltKeyEl) scUltKeyEl.textContent = t.scUltKey;
         document.getElementById('na-sc-move').textContent = t.scMove;
-        document.querySelector('.na-shortcut-item:nth-child(6) .na-key').textContent = t.scMoveKey;
+        const scMoveKeyEl = document.getElementById('na-sc-move-key');
+        if (scMoveKeyEl) scMoveKeyEl.textContent = t.scMoveKey;
 
         document.getElementById('na-touch-dash-lbl').textContent = t.touchDash;
         document.getElementById('na-touch-stance-lbl').textContent = t.touchStance;
         document.getElementById('na-touch-ult-lbl').textContent = t.touchUlt;
         this.dom.btnLang.textContent = lang === 'zh' ? 'English' : '中文';
 
+        // 内部 HUD 姿态与极意标签
+        const isNeedle = !this.player || this.player.stance === 'needle';
+        this.dom.stanceText.textContent = isNeedle ? t.stanceNeedle : t.stanceAwn;
+        this.dom.stanceIcon.textContent = isNeedle ? '⚡' : '🌾';
+        if (this.dom.ultLabel) this.dom.ultLabel.textContent = t.ultLabel;
+
+        // 玩家名称输入占位符
+        if (this.dom.playerInput) this.dom.playerInput.placeholder = t.namePlaceholder;
+
         this.updateHUDLabels();
+        this.updateSideRecords();
         updateMoreGames(lang);
     }
 
     updateHUDLabels() {
         const t = I18N[getLang()] || I18N.zh;
+        if (this.state === 'menu') {
+            this.dom.stageLabel.textContent = t.gameTitle;
+            this.dom.modeBadge.textContent = t.modeBadgeMenu;
+            return;
+        }
         if (this.mode === 'levels') {
-            this.dom.stageLabel.textContent = `${t.trials} · ${t.levelNames[this.currentLevel - 1] || this.currentLevel}`;
+            const lvlName = (t.levelNames && t.levelNames[this.currentLevel - 1]) || this.currentLevel;
+            this.dom.stageLabel.textContent = `${t.trials} · ${lvlName}`;
             this.dom.modeBadge.textContent = `Stage ${this.currentLevel}/10`;
         } else if (this.mode === 'endless') {
             this.dom.stageLabel.textContent = t.endless;
@@ -1008,6 +1046,7 @@ class GameEngine {
         this.dom.overlayPause.classList.add('hidden');
         this.dom.overlayResult.classList.add('hidden');
         this.renderLevelGrid();
+        this.updateHUDLabels();
         this.updateSideRecords();
         SoundEngine.stopAmbientMusic();
     }
@@ -1065,6 +1104,12 @@ class GameEngine {
         this.ricochets = [];
         this.player = this.createPlayer(ARENA_WIDTH / 2, ARENA_HEIGHT * 0.72);
         this.player2 = null;
+
+        const t = I18N[getLang()] || I18N.zh;
+        this.dom.stanceChip.className = 'na-stance-chip needle';
+        this.dom.stanceIcon.textContent = '⚡';
+        this.dom.stanceText.textContent = t.stanceNeedle;
+        if (this.dom.ultLabel) this.dom.ultLabel.textContent = t.ultLabel;
 
         this.updateHUD();
         this.updateHUDLabels();
@@ -1320,9 +1365,11 @@ class GameEngine {
                 ? (this.duelMode === 'ai' ? t.victoryTitle : t.duelP1Win)
                 : (this.duelMode === 'ai' ? t.duelAiWin : t.duelP2Win);
             this.dom.resultTitle.textContent = winnerText;
-            this.dom.resultStars.textContent = '⚔️ 对决终局 ⚔️';
+            this.dom.resultStars.textContent = t.duelFinale;
+            if (this.dom.resultSub) this.dom.resultSub.textContent = t.duelSubResult;
         } else {
             this.dom.resultTitle.textContent = victory ? t.victoryTitle : t.defeatTitle;
+            if (this.dom.resultSub) this.dom.resultSub.textContent = victory ? t.victorySub : t.defeatSub;
 
             // 星级计算
             let stars = 0;
