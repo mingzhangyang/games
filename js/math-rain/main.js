@@ -218,7 +218,7 @@ class MathRainGame {
             
             // Add event listeners
             this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
-            this.canvas.addEventListener('touchstart', (e) => this.handleCanvasTouch(e));
+            this.canvas.addEventListener('touchstart', (e) => this.handleCanvasTouch(e), { passive: false });
             
             
         } catch (error) {
@@ -414,12 +414,10 @@ class MathRainGame {
         
         // Game state events
         this.eventSystem.on('game:started', () => {
-            // 确保canvas在游戏开始时正确调整大小
-            setTimeout(() => {
-                this.resizeCanvas();
-                this.setupGameLoop();
-                this.startCanvasRendering();
-            }, 100); // 给UI一点时间切换屏幕
+            this.resizeCanvas();
+            this.setupGameLoop();
+            this.startCanvasRendering();
+            setTimeout(() => this.resizeCanvas(), 350);
         });
         
         this.eventSystem.on('game:paused', () => {
@@ -639,22 +637,34 @@ class MathRainGame {
     }
     
     /**
+     * Dynamically determine expression font size based on canvas width
+     */
+    getExpressionFontSize() {
+        const width = this.canvasCssWidth || this.canvas?.clientWidth || window.innerWidth;
+        if (width < 420) return 22;
+        if (width < 600) return 26;
+        if (width < 768) return 30;
+        return 36;
+    }
+
+    /**
      * Render all expressions on canvas
      */
     renderExpressions() {
         const gameState = this.gameStateManager?.getState();
         if (gameState?.gameState === 'paused') return;
         
+        const fontSize = this.getExpressionFontSize();
+        this.ctx.font = `${fontSize}px "Fredoka One", "Nunito", cursive, sans-serif`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+
         this.expressions.forEach((expr, index) => {
             if (expr?.data?.expression && expr?.position) {
                 const { x, y } = expr.position;
                 const text = expr.data.expression;
                 
-                // Set text style
-                this.ctx.font = '36px "Fredoka One", "Nunito", cursive, sans-serif';
                 this.ctx.fillStyle = this.canvasConfig.expressionColors[index % this.canvasConfig.expressionColors.length];
-                this.ctx.textAlign = 'center';
-                this.ctx.textBaseline = 'middle';
                 
                 // Add glow effect
                 this.ctx.shadowColor = this.ctx.fillStyle;
@@ -739,9 +749,9 @@ class MathRainGame {
     findSafePosition() {
         // 使用 CSS 逻辑宽度（canvas.width 是设备像素，DPR>1 时会超出生 visible 区域）
         const width = this.canvasCssWidth || this.canvas?.clientWidth || window.innerWidth;
-        const margin = 80;
-        const x = margin + Math.random() * (width - 2 * margin);
-        const y = -80 - Math.random() * 200;
+        const margin = Math.min(50, Math.max(25, width * 0.1));
+        const x = margin + Math.random() * Math.max(40, width - 2 * margin);
+        const y = -60 - Math.random() * 160;
         return { x, y };
     }
     
@@ -835,7 +845,10 @@ class MathRainGame {
     }
     
     handleCanvasTouch(event) {
-        event.preventDefault();
+        if (!event.touches || event.touches.length === 0) return;
+        if (event.cancelable) {
+            event.preventDefault();
+        }
         const rect = this.canvas.getBoundingClientRect();
         const touch = event.touches[0];
         const x = touch.clientX - rect.left;
@@ -847,12 +860,20 @@ class MathRainGame {
      * Check if click hit an expression
      */
     checkExpressionClick(clickX, clickY) {
+        const fontSize = this.getExpressionFontSize();
         for (let i = this.expressions.length - 1; i >= 0; i--) {
             const expr = this.expressions[i];
             if (!expr?.position || expr.isClicked) continue;
             
-            const distance = Math.sqrt((clickX - expr.position.x) ** 2 + (clickY - expr.position.y) ** 2);
-            if (distance <= 60) {
+            const text = expr.data?.expression || '';
+            // 胶囊形包围盒：基于字符长度与当前字号动态计算命中区域（宽 ±半宽+22px，高 ±28px）
+            const halfWidth = Math.max(48, (text.length * fontSize * 0.35) + 22);
+            const halfHeight = Math.max(34, fontSize * 0.85);
+            
+            const dx = Math.abs(clickX - expr.position.x);
+            const dy = Math.abs(clickY - expr.position.y);
+            
+            if (dx <= halfWidth && dy <= halfHeight) {
                 this.handleExpressionClick(expr);
                 break;
             }
@@ -928,13 +949,13 @@ class MathRainGame {
                 this.canvas.height = height;
 
                 const dpr = window.devicePixelRatio || 1;
-                if (dpr > 1) {
-                    this.canvas.width = width * dpr;
-                    this.canvas.height = height * dpr;
-                    this.canvas.style.width = width + 'px';
-                    this.canvas.style.height = height + 'px';
-                    this.ctx.scale(dpr, dpr);
-                }
+                this.canvas.width = Math.round(width * dpr);
+                this.canvas.height = Math.round(height * dpr);
+                this.canvas.style.width = width + 'px';
+                this.canvas.style.height = height + 'px';
+
+                this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                this.ctx.scale(dpr, dpr);
 
                 // Update particle system canvas size
                 if (this.particleSystem && this.particleSystem.resize) {

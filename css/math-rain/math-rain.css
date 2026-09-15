@@ -567,11 +567,15 @@ body.light-theme .language-selector .lang-btn.active {
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background: rgba(26, 32, 44, 0.95);
     backdrop-filter: blur(15px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 24px 14px;
     z-index: 1000;
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
@@ -579,17 +583,19 @@ body.light-theme .language-selector .lang-btn.active {
 .screen.hidden {
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
 }
 
 .screen-content {
+    margin: auto 0;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    padding: 40px;
+    padding: 30px 24px;
     text-align: center;
     border: 2px solid #667eea;
     box-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
     max-width: 500px;
-    width: 90%;
+    width: 100%;
 }
 
 /* 开始界面样式 */
@@ -955,182 +961,232 @@ body.light-theme .language-selector .lang-btn.active {
 
 /* 移动端适配 - 增强版 */
 @media (max-width: 768px) {
-    #game-header {
-        padding: 8px 12px;
-        min-height: 60px;
+    #game-container {
+        height: 100vh;
+        height: 100dvh;
+        width: 100vw;
+        max-width: 100%;
     }
+
+    #game-header {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding: 6px 8px;
+        min-height: 48px;
+        gap: 4px;
+        justify-content: space-around;
+    }
+    #game-header::-webkit-scrollbar { display: none; }
     
-    .score-display, .combo-display, .level-display, .time-display, .lives-display {
-        min-width: 55px;
-        margin: 2px;
+    .score-display, .combo-display, .level-display, .time-display, .lives-display,
+    .session-display, .session-target-display {
+        min-width: 44px;
+        flex: 1 0 auto;
+        margin: 0 1px;
+        padding: 2px;
     }
     
     .score-display span:first-child,
     .combo-display span:first-child,
     .level-display span:first-child,
     .time-display span:first-child,
-    .lives-display span:first-child {
-        font-size: 10px;
-        margin-bottom: 3px;
+    .lives-display span:first-child,
+    .session-display span:first-child,
+    .session-target-display span:first-child {
+        font-size: 9px;
+        margin-bottom: 2px;
     }
     
     .score-display span:last-child,
     .combo-display span:last-child,
     .level-display span:last-child,
     .time-display span:last-child,
-    .lives-display span:last-child {
-        font-size: 18px;
+    .lives-display span:last-child,
+    .session-display span:last-child,
+    .session-target-display span:last-child {
+        font-size: 15px;
     }
-    
-    
-    #target-number {
-        font-size: 48px;
-        padding: 12px 18px;
-    }
-    
-    #target-label {
-        font-size: 14px;
-        margin-bottom: 10px;
-    }
-    
-    #target-area {
-        padding: 25px 20px; /* 增加底部区域高度 */
-    }
-    
-    .difficulty-buttons {
-        grid-template-columns: 1fr;
-        gap: 15px; /* 增加按钮间距 */
-    }
-    
-    .difficulty-btn {
-        padding: 15px 20px; /* 增大按钮尺寸 */
-        font-size: 16px;
-    }
-    
-    .final-stats {
-        grid-template-columns: 1fr;
-    }
-    
-    .screen-content {
-        padding: 30px 20px;
-        max-width: 95%;
-    }
-    
-    #game-title {
-        font-size: 2.5em;
-    }
-    
-    .start-btn {
-        padding: 18px 50px; /* 增大开始按钮 */
-        font-size: 20px;
-    }
-    
-    .menu-btn {
-        padding: 16px 32px; /* 增大菜单按钮 */
-        font-size: 16px;
-        margin: 8px;
-        min-height: 48px; /* 确保触摸友好 */
-        border-radius: 12px;
-    }
-    
-    /* 移动端游戏控制按钮优化 */
+
+    /* 移动端控制按钮横向排布在右上角，不再遮挡下落区域 */
     #game-controls {
-        top: 75px;
-        right: 15px;
-        gap: 8px;
-        flex-direction: column; /* 竖直排列节省空间 */
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        gap: 6px;
+        flex-direction: row;
+        z-index: 200;
     }
     
     .control-btn {
-        padding: 8px 10px;
+        padding: 6px 8px;
         font-size: 11px;
-        min-height: 36px;
-        min-width: 36px;
+        min-height: 32px;
+        min-width: 32px;
         border-radius: 8px;
-        /* 简化文本，只显示图标 */
-    }
-    
-    /* 移动端按钮文本优化 */
-    .control-btn {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-}
 
-@media (max-width: 480px) {
-    /* 小屏幕适配 */
-    #game-container {
-        height: 100vh;
-        height: 100dvh; /* 动态视窗高度 */
-    }
-    
-    #game-header {
-        flex-wrap: wrap;
-        gap: 6px;
-        padding: 6px 10px;
-        min-height: 50px;
-    }
-    
-    .score-display, .combo-display, .level-display, .time-display, .lives-display {
-        min-width: 45px;
-        margin: 2px;
-        font-size: 12px;
-    }
-    
-    #target-number {
-        font-size: 42px;
-        padding: 10px 16px;
-        margin-bottom: 8px;
+    /* 底部目标数字区紧凑化：为画布腾出 100px+ 下落高度 */
+    #target-area {
+        padding: 8px 12px;
+        border-top-width: 3px;
+        box-shadow: 0 -4px 16px rgba(72, 187, 120, 0.2);
     }
     
     #target-label {
-        font-size: 12px;
-        margin-bottom: 6px;
-    }
-    
-    #target-area {
-        padding: 18px 15px;
-    }
-    
-    .control-btn {
-        padding: 8px 10px;
         font-size: 11px;
-        min-height: 36px;
-        min-width: 36px;
+        margin-bottom: 3px;
+        letter-spacing: 1px;
     }
-    
-    #game-controls {
-        top: 60px;
-        right: 10px;
-        gap: 6px;
+
+    #target-number {
+        font-size: 38px;
+        padding: 4px 18px;
+        margin-bottom: 3px;
+        border-radius: 14px;
+        border-width: 2px;
     }
-    
-    #game-title {
-        font-size: 2.2em;
+
+    #target-hint {
+        display: none;
     }
-    
-    /* 工具栏移动端优化 */
+
+    /* 工具栏紧凑化 */
     .tool-bar {
-        gap: 10px;
-        padding: 8px 12px;
-        flex-wrap: wrap;
+        gap: 8px;
+        padding: 6px 10px;
+        min-height: 48px;
         justify-content: space-around;
-        min-height: 55px;
     }
     
     .tool-btn {
         padding: 6px 10px;
         font-size: 12px;
-        min-height: 36px;
+        min-height: 34px;
+        border-radius: 8px;
     }
     
     .tool-count {
-        font-size: 12px;
+        font-size: 11px;
+    }
+
+    /* 弹窗内容紧凑化：2列难度选择，避免按钮被挤出屏幕 */
+    .screen {
+        padding: 16px 10px;
+    }
+
+    .screen-content {
+        padding: 20px 14px;
+        border-radius: 16px;
+        max-width: 100%;
     }
     
-    .coins-icon {
-        font-size: 16px;
+    #game-title {
+        font-size: 2.2em;
+        margin-bottom: 6px;
+    }
+
+    #game-subtitle {
+        font-size: 1.1em;
+        margin-bottom: 14px;
+    }
+
+    .difficulty-selection {
+        margin: 14px 0;
+    }
+
+    #difficulty-title {
+        font-size: 1.1em;
+        margin-bottom: 8px;
+    }
+    
+    .difficulty-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 14px !important;
+    }
+    
+    .difficulty-btn {
+        padding: 10px 6px !important;
+        font-size: 13px !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+    }
+
+    .start-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 14px;
+    }
+    
+    .start-btn {
+        padding: 12px 28px !important;
+        font-size: 17px !important;
+        border-radius: 12px !important;
+        flex: 1;
+        max-width: 220px;
+    }
+
+    .help-btn {
+        padding: 12px 18px !important;
+        font-size: 14px !important;
+        border-radius: 12px !important;
+    }
+    
+    .menu-btn {
+        padding: 12px 24px;
+        font-size: 15px;
+        margin: 6px;
+        min-height: 44px;
+        border-radius: 10px;
+    }
+
+    .final-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .game-rules {
+        font-size: 12px;
+        padding: 8px 10px;
+        margin-top: 10px;
+    }
+
+    .game-rules ul {
+        padding-left: 18px;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    .more-games {
+        margin-top: 10px;
+        padding: 8px 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .time-display {
+        display: none;
+    }
+
+    .screen-content {
+        padding: 16px 10px;
+    }
+
+    .difficulty-btn {
+        font-size: 12px !important;
+        padding: 8px 4px !important;
+    }
+
+    #target-number {
+        font-size: 34px;
+        padding: 4px 14px;
     }
 }
 
