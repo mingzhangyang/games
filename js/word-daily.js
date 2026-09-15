@@ -231,17 +231,29 @@ const LANGUAGES = {
         rules3: 'Green: right letter, right spot. Yellow: right letter, wrong spot. Gray: not in the word.',
         exampleWord: 'PLANT',
         exampleNote: 'P is in the word and in the right spot.',
-        practiceOver: 'Practice finished — hit Practice for another round',
-        dailyDone: 'Come back tomorrow for a new puzzle!',
+        practiceOver: 'Practice finished — click Next for another round',
+        dailyDone: 'Daily puzzle completed!',
         modeZh: 'Idiom',
-        modeEn: 'Word'
+        modeEn: 'Word',
+        dailyWon: '🎉 Brilliant! Solved in {n} tries',
+        dailyLost: '😔 Nice try! The answer is revealed below',
+        practiceWon: '🎉 Solved in {n} tries!',
+        practiceLost: '😔 Nice try! The answer is revealed below',
+        correctAnswer: 'Answer',
+        idiomDef: 'Definition',
+        nextDaily: 'Next Puzzle (Unlimited Practice)',
+        nextPractice: 'Next Puzzle',
+        viewStats: 'View Stats',
+        backToDaily: 'Back to Daily',
+        practiceBadge: 'Practice',
+        practiceBannerTpl: 'Practice #{n} — not recorded in streaks'
     },
     zh: {
         title: '每日猜词',
         dailyBadge: '第',
         zhModeLabel: '成语模式',
         enModeLabel: '单词模式',
-        practice: '练习',
+        practice: '练习模式',
         practiceBanner: '练习模式——不计入统计与连胜',
         stats: '统计',
         help: '玩法说明',
@@ -274,10 +286,22 @@ const LANGUAGES = {
         rules3: '绿色：位置正确；黄色：词中有但位置不对；灰色：词中没有。',
         exampleWord: '示例',
         exampleNote: '词中恰好有这个字，且位置正确。',
-        practiceOver: '练习结束——再点一次"练习"开始新一轮',
-        dailyDone: '今天的题目已完成，明天再来！',
+        practiceOver: '练习结束——点击"下一题"开始新一轮',
+        dailyDone: '今日每日一词已完成！',
         modeZh: '成语',
-        modeEn: '单词'
+        modeEn: '单词',
+        dailyWon: '🎉 太棒了！用了 {n} 次机会猜中',
+        dailyLost: '😔 挑战未成功，答案已在下方揭晓',
+        practiceWon: '🎉 恭喜猜中！用了 {n} 次机会',
+        practiceLost: '😔 挑战未成功，答案已在下方揭晓',
+        correctAnswer: '正确答案',
+        idiomDef: '成语释义',
+        nextDaily: '下一题（无限练习）',
+        nextPractice: '下一题',
+        viewStats: '查看战报',
+        backToDaily: '返回今日一词',
+        practiceBadge: '练习',
+        practiceBannerTpl: '练习模式（第 {n} 局）——不计入每日连胜'
     }
 };
 
@@ -298,6 +322,7 @@ class WordDailyGame {
         this.puzzleNum = dailyNumber();
         this.day = dayKey();
         this.revealing = false;
+        this.practiceCount = 0;
 
         this.el = {};
         this.gatherElements();
@@ -317,7 +342,10 @@ class WordDailyGame {
             'wd-help-modal', 'wd-help-close', 'wd-help-body',
             'wd-stats-modal', 'wd-stats-close', 'wd-stats-title',
             'wd-st-played', 'wd-st-winrate', 'wd-st-cur', 'wd-st-max',
-            'wd-dist', 'wd-global', 'wd-share', 'wd-countdown', 'wd-practice-over'
+            'wd-dist', 'wd-global', 'wd-share', 'wd-countdown', 'wd-practice-over',
+            'wd-end-panel', 'wd-end-status', 'wd-end-answer', 'wd-end-hint',
+            'wd-btn-next', 'wd-next-label', 'wd-btn-stats-inline', 'wd-stats-inline-label',
+            'wd-btn-share-inline', 'wd-share-inline-label', 'wd-modal-next', 'wd-modal-next-label'
         ];
         ids.forEach(id => {
             const el = document.getElementById(id);
@@ -341,7 +369,11 @@ class WordDailyGame {
 
         if (this.el.title) this.el.title.textContent = t.title;
         if (this.el['btn-lang']) this.el['btn-lang'].textContent = t.langBtn;
-        if (this.el['btn-practice']) this.el['btn-practice'].textContent = `🎲 ${t.practice}`;
+        if (this.el['btn-practice']) {
+            this.el['btn-practice'].textContent = this.mode === 'practice'
+                ? `📅 ${t.backToDaily}`
+                : `🎲 ${t.practice}`;
+        }
         if (this.el['btn-help']) this.el['btn-help'].textContent = `❓ ${t.help}`;
         if (this.el['btn-stats']) this.el['btn-stats'].textContent = `📊 ${t.stats}`;
         if (this.el['stats-title']) this.el['stats-title'].textContent = t.statsTitle;
@@ -350,13 +382,18 @@ class WordDailyGame {
         if (this.el['zh-input']) this.el['zh-input'].placeholder = t.guessPlaceholder;
         if (this.el['hint-label']) this.el['hint-label'].textContent = `📖 ${t.hintLabel}`;
         if (this.el['practice-banner']) this.el['practice-banner'].textContent = t.practiceBanner;
-        if (this.el['practice-over']) this.el['practice-over'].textContent = t.practiceOver;
         this.updateHelpBody();
 
         const modeTag = this.langMode === 'zh' ? t.zhModeLabel : t.enModeLabel;
-        // 期号已由 wd-num 展示，这里只显示模式名，避免"#256 #256"重复
-        if (this.el['mode-tag']) this.el['mode-tag'].textContent = modeTag;
+        if (this.el['mode-tag']) {
+            this.el['mode-tag'].textContent = this.mode === 'practice'
+                ? `${t.practiceBadge} · ${modeTag}`
+                : modeTag;
+        }
         this.updateMuteIcon();
+        if (this.status !== 'playing') {
+            this.renderEndPanel();
+        }
     }
 
     updateHelpBody() {
@@ -443,26 +480,76 @@ class WordDailyGame {
         this.status = 'playing';
         this.rows = [];
         this.current = '';
+        this.practiceCount = (this.practiceCount || 0) + 1;
+        this.puzzleNum = this.practiceCount;
+
         if (this.langMode === 'zh') {
-            const entry = ZH.idioms[Math.floor(Math.random() * ZH.idioms.length)];
+            let entry;
+            let attempts = 0;
+            do {
+                entry = ZH.idioms[Math.floor(Math.random() * ZH.idioms.length)];
+                attempts++;
+            } while (entry.w === this.answer && attempts < 20 && ZH.idioms.length > 1);
             this.answer = entry.w;
             this.hint = entry.h;
         } else {
-            this.answer = EN.answers[Math.floor(Math.random() * EN.answers.length)];
+            let nextWord;
+            let attempts = 0;
+            do {
+                nextWord = EN.answers[Math.floor(Math.random() * EN.answers.length)];
+                attempts++;
+            } while (nextWord === this.answer && attempts < 20 && EN.answers.length > 1);
+            this.answer = nextWord;
             this.hint = '';
         }
+
         this.rebuildBoard();
         this.updateModeUi();
-        this.showToast(this.TEXT.practiceBanner, 2200);
+        this.showToast(`${this.TEXT.practiceBadge} #${this.practiceCount}`, 1600);
     }
 
     updateModeUi() {
+        const t = this.TEXT;
         const banner = this.el['practice-banner'];
-        if (banner) banner.classList.toggle('hidden', this.mode !== 'practice');
-        const practiceOver = this.el['practice-over'];
-        if (practiceOver) practiceOver.classList.add('hidden');
+        if (banner) {
+            banner.classList.toggle('hidden', this.mode !== 'practice');
+            if (this.mode === 'practice') {
+                const count = this.practiceCount || 1;
+                const bannerText = t.practiceBannerTpl.replace('{n}', count);
+                banner.innerHTML = `<span>${bannerText}</span><button type="button" class="wd-banner-btn" id="wd-btn-back-daily">${t.backToDaily}</button>`;
+                const backBtn = document.getElementById('wd-btn-back-daily');
+                if (backBtn) {
+                    backBtn.onclick = (e) => {
+                        e.preventDefault();
+                        this.startDaily();
+                    };
+                }
+            }
+        }
+
+        // 顶部切换练习/每日按钮
+        if (this.el['btn-practice']) {
+            if (this.mode === 'practice') {
+                this.el['btn-practice'].textContent = `📅 ${t.backToDaily}`;
+                this.el['btn-practice'].title = t.backToDaily;
+            } else {
+                this.el['btn-practice'].textContent = `🎲 ${t.practice}`;
+                this.el['btn-practice'].title = t.practice;
+            }
+        }
+
         this.updateBoardSize();
-        if (this.el.num) this.el.num.textContent = `#${this.puzzleNum}`;
+        if (this.el.num) {
+            this.el.num.textContent = this.mode === 'practice'
+                ? `${t.practiceBadge} #${this.practiceCount || 1}`
+                : `#${this.puzzleNum}`;
+        }
+        if (this.el['mode-tag']) {
+            const baseMode = this.langMode === 'zh' ? t.zhModeLabel : t.enModeLabel;
+            this.el['mode-tag'].textContent = this.mode === 'practice'
+                ? `${t.practiceBadge} · ${baseMode}`
+                : baseMode;
+        }
         this.updateInputUi();
         this.updateHintCard();
     }
@@ -561,19 +648,65 @@ class WordDailyGame {
         }
     }
 
-    /* ── 输入 ── */
+    /* ── 输入与操作栏 ── */
 
     updateInputUi() {
         const zhRow = this.el['zh-input-row'];
         const kb = this.el.kb;
+        const endPanel = this.el['end-panel'];
         const isZh = this.langMode === 'zh';
         const playing = this.status === 'playing';
+
+        if (endPanel) {
+            endPanel.classList.toggle('hidden', playing);
+            if (!playing) {
+                this.renderEndPanel();
+            }
+        }
+
         if (zhRow) zhRow.classList.toggle('hidden', !isZh || !playing);
-        if (kb) kb.classList.toggle('hidden', isZh);
+        if (kb) kb.classList.toggle('hidden', isZh || !playing);
+
         if (isZh && playing) {
             setTimeout(() => this.el['zh-input']?.focus(), 50);
         }
         this.renderRows();
+    }
+
+    renderEndPanel() {
+        const t = this.TEXT;
+        const won = this.status === 'won';
+        const isDaily = this.mode === 'daily';
+
+        if (this.el['end-status']) {
+            this.el['end-status'].className = `wd-end-status ${won ? 'won' : 'lost'}`;
+            if (won) {
+                const tmpl = isDaily ? t.dailyWon : t.practiceWon;
+                this.el['end-status'].textContent = tmpl.replace('{n}', this.rows.length);
+            } else {
+                this.el['end-status'].textContent = isDaily ? t.dailyLost : t.practiceLost;
+            }
+        }
+
+        if (this.el['end-answer']) {
+            const displayAns = this.langMode === 'zh' ? this.answer : this.answer.toUpperCase();
+            this.el['end-answer'].textContent = `${t.correctAnswer}：${displayAns}`;
+        }
+
+        if (this.el['end-hint']) {
+            if (this.langMode === 'zh' && this.hint) {
+                this.el['end-hint'].textContent = `${t.idiomDef}：${this.hint}`;
+                this.el['end-hint'].classList.remove('hidden');
+            } else {
+                this.el['end-hint'].classList.add('hidden');
+            }
+        }
+
+        const nextText = isDaily ? t.nextDaily : t.nextPractice;
+        if (this.el['next-label']) this.el['next-label'].textContent = nextText;
+        if (this.el['modal-next-label']) this.el['modal-next-label'].textContent = nextText;
+        if (this.el['stats-inline-label']) this.el['stats-inline-label'].textContent = t.viewStats;
+        if (this.el['share-inline-label']) this.el['share-inline-label'].textContent = t.share;
     }
 
     bindZhInput() {
@@ -721,18 +854,19 @@ class WordDailyGame {
             }
         } else {
             Sfx.lose();
-            this.showToast(`${this.TEXT.loseMsg}: ${this.answer}`, 4000);
+            this.showToast(`${this.TEXT.loseMsg}: ${this.answer}`, 3500);
         }
 
         if (this.mode === 'daily') {
-        if (typeof window.hubTrack === 'function') window.hubTrack('word-daily', 'finish');
+            if (typeof window.hubTrack === 'function') window.hubTrack('word-daily', 'finish');
             this.recordDaily(won ? this.rows.length : 0);
             this.reportGlobal(won, this.rows.length);
-        } else if (this.el['practice-over']) {
-            this.el['practice-over'].classList.remove('hidden');
         }
 
-        setTimeout(() => this.openStats(), won ? 1600 : 900);
+        // 切换输入区为结算与下一题操作面板
+        this.updateInputUi();
+
+        setTimeout(() => this.openStats(), won ? 1500 : 800);
     }
 
     recordDaily(rowsUsed) {
@@ -913,19 +1047,28 @@ class WordDailyGame {
         if (this.el['st-max']) this.el['st-max'].textContent = String(stats.maxStreak);
         this.renderDistribution(stats);
 
-        const showShare = this.mode === 'daily' && this.status !== 'playing';
+        const showShare = this.status !== 'playing';
         if (this.el.share) this.el.share.classList.toggle('hidden', !showShare);
-        const practiceOver = this.el['practice-over-modal'];
-        if (practiceOver) {
-            practiceOver.classList.toggle('hidden', !(this.mode === 'practice' && this.status !== 'playing'));
+
+        const showNext = this.status !== 'playing';
+        if (this.el['modal-next']) {
+            this.el['modal-next'].classList.toggle('hidden', !showNext);
+            const nextText = this.mode === 'daily' ? t.nextDaily : t.nextPractice;
+            if (this.el['modal-next-label']) this.el['modal-next-label'].textContent = nextText;
         }
 
         this.el['stats-modal']?.classList.remove('hidden');
-        if (showShare) {
+        if (this.mode === 'daily' && this.status !== 'playing') {
             this.fetchGlobalReport();
             this.startCountdown();
+        } else if (this.el.countdown) {
+            this.el.countdown.textContent = '';
         }
-        if (showShare) this.el.share?.focus();
+        if (this.el['modal-next'] && !this.el['modal-next'].classList.contains('hidden')) {
+            this.el['modal-next'].focus();
+        } else if (showShare) {
+            this.el.share?.focus();
+        }
     }
 
     renderDistribution(stats) {
@@ -999,7 +1142,10 @@ class WordDailyGame {
         const grid = this.rows.map(({ states }) =>
             states.map(s => s === 'correct' ? '🟩' : s === 'present' ? '🟨' : '⬛').join('')
         ).join('\n');
-        return `${t.title} #${this.puzzleNum} ${modeTag} ${result}${streak}\n${grid}\nhttps://games.orangely.xyz/word-daily.html`;
+        const headerNum = this.mode === 'practice'
+            ? `${this.TEXT.practiceBadge} #${this.practiceCount || 1}`
+            : `#${this.puzzleNum}`;
+        return `${t.title} ${headerNum} ${modeTag} ${result}${streak}\n${grid}\nhttps://games.orangely.xyz/word-daily.html`;
     }
 
     async shareResult() {
@@ -1080,7 +1226,20 @@ class WordDailyGame {
             storageSet('wd_lang_mode', this.langMode);
             this.startDaily();
         });
-        on('wd-btn-practice', () => this.startPractice());
+        on('wd-btn-practice', () => {
+            if (this.mode === 'practice') {
+                this.startDaily();
+            } else {
+                this.startPractice();
+            }
+        });
+        on('wd-btn-next', () => this.startPractice());
+        on('wd-modal-next', () => {
+            this.closeStats();
+            this.startPractice();
+        });
+        on('wd-btn-stats-inline', () => this.openStats());
+        on('wd-btn-share-inline', () => this.shareResult());
         on('wd-btn-stats', () => this.openStats());
         on('wd-btn-help', () => this.openHelp());
         on('wd-btn-mute', () => {

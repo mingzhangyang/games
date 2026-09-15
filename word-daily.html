@@ -59,7 +59,31 @@
         <main class="wd-main">
             <div class="wd-board" id="wd-board" style="--cols: 5"></div>
             <div class="wd-toast" id="wd-toast"></div>
-            <div class="wd-practice-over hidden" id="wd-practice-over"></div>
+
+            <!-- 结算与进入下一题操作区 -->
+            <div class="wd-end-panel hidden" id="wd-end-panel">
+                <div class="wd-end-info">
+                    <div class="wd-end-status" id="wd-end-status"></div>
+                    <div class="wd-end-answer" id="wd-end-answer"></div>
+                    <div class="wd-end-hint hidden" id="wd-end-hint"></div>
+                </div>
+                <div class="wd-end-actions">
+                    <button type="button" class="wd-btn wd-btn-success wd-btn-lg wd-btn-block" id="wd-btn-next">
+                        <span class="btn-icon">➡️</span>
+                        <span id="wd-next-label">下一题（无限练习）</span>
+                    </button>
+                    <div class="wd-end-sub-actions">
+                        <button type="button" class="wd-btn wd-btn-secondary" id="wd-btn-stats-inline">
+                            <span class="btn-icon">📊</span>
+                            <span id="wd-stats-inline-label">查看战报</span>
+                        </button>
+                        <button type="button" class="wd-btn wd-btn-secondary" id="wd-btn-share-inline">
+                            <span class="btn-icon">📤</span>
+                            <span id="wd-share-inline-label">分享成绩</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 中文输入行 -->
             <div class="wd-zh-row hidden" id="wd-zh-input-row">
@@ -94,8 +118,11 @@
             <h3 class="wd-dist-title" id="wd-dist-title">Guess Distribution</h3>
             <div class="wd-dist" id="wd-dist"></div>
             <div class="wd-global" id="wd-global"></div>
+            <button class="wd-btn wd-btn-success wd-btn-block" id="wd-modal-next">
+                <span class="btn-icon">➡️</span>
+                <span id="wd-modal-next-label">下一题（无限练习）</span>
+            </button>
             <button class="wd-btn wd-btn-primary wd-btn-block" id="wd-share">📤 Share</button>
-            <div class="wd-practice-over hidden" id="wd-practice-over-modal"></div>
             <div class="wd-countdown" id="wd-countdown"></div>
             <nav class="more-games">
                 <div class="more-games-title">🎮 More Games · 更多游戏</div>

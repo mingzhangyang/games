@@ -137,6 +137,28 @@ body {
     border-radius: 9px;
     padding: 6px 14px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.wd-banner-btn {
+    background: rgba(252, 211, 77, 0.2);
+    border: 1px solid rgba(252, 211, 77, 0.5);
+    color: #fef08a;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: inherit;
+}
+
+.wd-banner-btn:hover {
+    background: rgba(252, 211, 77, 0.35);
 }
 
 .wd-hint-card {
@@ -290,11 +312,82 @@ body {
 
 .wd-toast.show { opacity: 1; }
 
-.wd-practice-over {
-    margin-top: 8px;
-    font-size: 12.5px;
-    color: var(--text-dim);
+/* ── 结算与进入下一题操作区 ── */
+.wd-end-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 440px;
+    margin-top: 14px;
+    padding: 16px 20px;
+    background: rgba(18, 24, 48, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    animation: wd-fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+@keyframes wd-fade-in-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.wd-end-info {
     text-align: center;
+    margin-bottom: 14px;
+    width: 100%;
+}
+
+.wd-end-status {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+.wd-end-status.won { color: #34d399; }
+.wd-end-status.lost { color: #f87171; }
+
+.wd-end-answer {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #f8fafc;
+    margin: 4px 0;
+}
+
+.wd-end-hint {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    max-height: 90px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.wd-end-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.wd-end-sub-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.wd-end-sub-actions .wd-btn {
+    flex: 1;
+    padding: 9px 12px;
+    font-size: 13.5px;
 }
 
 /* ── 中文输入 ── */
@@ -554,6 +647,33 @@ body {
     background: linear-gradient(120deg, #6366f1, #8b5cf6);
     border: none;
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.wd-btn-success {
+    background: linear-gradient(120deg, #10b981, #059669);
+    border: none;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    color: #ffffff;
+}
+
+.wd-btn-success:hover {
+    background: linear-gradient(120deg, #34d399, #10b981);
+}
+
+.wd-btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--text);
+}
+
+.wd-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.wd-btn-lg {
+    padding: 13px 22px;
+    font-size: 15.5px;
+    font-weight: 800;
 }
 
 .wd-btn-ghost {
