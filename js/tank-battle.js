@@ -30,9 +30,15 @@ const LANGUAGES = {
         finalScore: '最终分数',
         reachedLevel: '到达关卡',
         restartHint: '按 R 重新开始',
+        restartHintMobile: '点击屏幕重新开始',
         victoryMessage: '你是真正的坦克英雄!',
         restartChallenge: '按 R 重新挑战',
         continueHint: '按 P 继续游戏',
+        continueHintMobile: '点击屏幕继续游戏',
+        orientTitle: '请旋转手机横屏游玩',
+        orientSub: '专为横屏掌机体验深度优化',
+        orientEn: 'Rotate to landscape for arcade controls',
+        orientHomeText: '返回游戏大厅',
         
         // 道具图标
         powerUpIcons: {
@@ -70,9 +76,15 @@ const LANGUAGES = {
         finalScore: 'Final Score',
         reachedLevel: 'Reached Level',
         restartHint: 'Press R to Restart',
+        restartHintMobile: 'Tap Screen to Restart',
         victoryMessage: 'You are a true tank hero!',
         restartChallenge: 'Press R to Play Again',
         continueHint: 'Press P to Continue',
+        continueHintMobile: 'Tap Screen to Continue',
+        orientTitle: 'Please Rotate to Landscape',
+        orientSub: 'Optimized for Arcade Controls',
+        orientEn: 'Rotate to landscape for arcade controls',
+        orientHomeText: 'Back to Games',
         
         // Power-up Icons
         powerUpIcons: {
@@ -83,6 +95,11 @@ const LANGUAGES = {
         }
     }
 };
+
+// 触控设备检测辅助
+function isTouchDevice() {
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+}
 
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError，必须兜底，
 // 否则模块顶层抛错会让整个游戏黑屏
@@ -122,13 +139,22 @@ function switchLanguage() {
 
 // 更新UI标签文本
 function updateUILabels() {
-    document.getElementById('livesLabel').textContent = t('lives');
-    document.getElementById('scoreLabel').textContent = t('score');
-    document.getElementById('levelLabel').textContent = t('level');
-    document.getElementById('enemiesLabel').textContent = t('enemies');
-    document.getElementById('weaponLabel').textContent = t('weapon');
-    document.getElementById('ammoLabel').textContent = t('ammo');
-    document.getElementById('controlsText').innerHTML = t('controls');
+    const setElemText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    };
+    setElemText('livesLabel', t('lives'));
+    setElemText('scoreLabel', t('score'));
+    setElemText('levelLabel', t('level'));
+    setElemText('enemiesLabel', t('enemies'));
+    setElemText('weaponLabel', t('weapon'));
+    setElemText('ammoLabel', t('ammo'));
+    const controlsText = document.getElementById('controlsText');
+    if (controlsText) controlsText.innerHTML = t('controls');
+    setElemText('orientTitle', t('orientTitle'));
+    setElemText('orientSub', t('orientSub'));
+    setElemText('orientEn', t('orientEn'));
+    setElemText('orientHomeText', t('orientHomeText'));
 }
 
 // 游戏配置常量
@@ -1428,6 +1454,15 @@ class TankBattle {
             this.keys[e.key.toLowerCase()] = false;
         });
 
+        // 点击画布重新开始或继续游戏（触屏/鼠标友好）
+        this.canvas.addEventListener('pointerdown', () => {
+            if (this.gameState === 'gameOver' || this.gameState === 'victory') {
+                this.restart();
+            } else if (this.paused) {
+                this.togglePause();
+            }
+        });
+
         // 切换标签页时自动暂停
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && this.gameState === 'playing' && !this.paused) {
@@ -1435,10 +1470,187 @@ class TankBattle {
             }
         });
 
-        // 窗口失焦时清空按键，防止按住的方向键在切回后持续生效
-        window.addEventListener('blur', () => {
+        // 窗口失焦或方向旋转时清空按键，防止方向键粘连
+        const resetKeys = () => {
             this.keys = {};
+            const dpad = document.getElementById('dpad');
+            if (dpad) {
+                dpad.querySelectorAll('.dpad-btn').forEach(b => b.classList.remove('active'));
+            }
+            const btnFire = document.getElementById('btnFire');
+            if (btnFire) btnFire.classList.remove('active');
+        };
+        window.addEventListener('blur', resetKeys);
+        window.addEventListener('orientationchange', resetKeys);
+
+        // 初始化移动端虚拟掌机控制器
+        this.setupVirtualController();
+    }
+
+    setupVirtualController() {
+        const dpad = document.getElementById('dpad');
+        const btnFire = document.getElementById('btnFire');
+        const btnWeapon = document.getElementById('btnWeapon');
+        const btnPause = document.getElementById('btnPause');
+        const btnLang = document.getElementById('btnLang');
+
+        if (!dpad || !btnFire) return;
+
+        // --- D-Pad 十字键多点触控与平滑滑动变向 ---
+        let dpadTouchId = null;
+
+        const clearDpadKeys = () => {
+            ['w', 's', 'a', 'd'].forEach(k => { this.keys[k] = false; });
+            dpad.querySelectorAll('.dpad-btn').forEach(b => b.classList.remove('active'));
+        };
+
+        const updateDpadFromCoords = (clientX, clientY) => {
+            const rect = dpad.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = clientX - cx;
+            const dy = clientY - cy;
+            const dist = Math.hypot(dx, dy);
+
+            // 死区判定：离中心小于 16px 视为中立（停止行进）
+            if (dist < 16) {
+                clearDpadKeys();
+                return;
+            }
+
+            // 主方向判定 (上下左右十字)
+            let targetDir = '';
+            if (Math.abs(dx) > Math.abs(dy)) {
+                targetDir = dx > 0 ? 'd' : 'a';
+            } else {
+                targetDir = dy > 0 ? 's' : 'w';
+            }
+
+            ['w', 's', 'a', 'd'].forEach(k => {
+                this.keys[k] = (k === targetDir);
+            });
+
+            dpad.querySelectorAll('.dpad-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.dir === targetDir);
+            });
+        };
+
+        dpad.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (dpadTouchId === null && e.changedTouches.length > 0) {
+                const touch = e.changedTouches[0];
+                dpadTouchId = touch.identifier;
+                updateDpadFromCoords(touch.clientX, touch.clientY);
+            }
+        }, { passive: false });
+
+        const onWindowTouchMove = (e) => {
+            if (dpadTouchId === null) return;
+            for (let i = 0; i < e.touches.length; i++) {
+                const touch = e.touches[i];
+                if (touch.identifier === dpadTouchId) {
+                    updateDpadFromCoords(touch.clientX, touch.clientY);
+                    break;
+                }
+            }
+        };
+
+        const onWindowTouchEnd = (e) => {
+            if (dpadTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === dpadTouchId) {
+                    dpadTouchId = null;
+                    clearDpadKeys();
+                    break;
+                }
+            }
+        };
+
+        window.addEventListener('touchmove', onWindowTouchMove, { passive: true });
+        window.addEventListener('touchend', onWindowTouchEnd, { passive: true });
+        window.addEventListener('touchcancel', onWindowTouchEnd, { passive: true });
+
+        // 鼠标事件兼容（方便在桌面端按 F12 调试小屏）
+        let dpadMouseDown = false;
+        dpad.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            dpadMouseDown = true;
+            updateDpadFromCoords(e.clientX, e.clientY);
         });
+        window.addEventListener('mousemove', (e) => {
+            if (dpadMouseDown) {
+                updateDpadFromCoords(e.clientX, e.clientY);
+            }
+        });
+        window.addEventListener('mouseup', () => {
+            if (dpadMouseDown) {
+                dpadMouseDown = false;
+                clearDpadKeys();
+            }
+        });
+
+        // --- 发射按键 (FIRE) ---
+        const startFiring = (e) => {
+            e.preventDefault();
+            this.keys[' '] = true;
+            btnFire.classList.add('active');
+        };
+
+        const stopFiring = (e) => {
+            if (e) e.preventDefault();
+            this.keys[' '] = false;
+            btnFire.classList.remove('active');
+        };
+
+        btnFire.addEventListener('touchstart', startFiring, { passive: false });
+        btnFire.addEventListener('touchend', stopFiring, { passive: false });
+        btnFire.addEventListener('touchcancel', stopFiring, { passive: false });
+        btnFire.addEventListener('mousedown', startFiring);
+        btnFire.addEventListener('mouseup', stopFiring);
+
+        // --- 切换武器 ---
+        if (btnWeapon) {
+            let lastWeaponTime = 0;
+            const handleWeaponSwitch = (e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastWeaponTime < 250) return;
+                lastWeaponTime = now;
+                const nextIdx = (this.currentWeaponIndex + 1) % this.weaponKeys.length;
+                this.switchWeapon(nextIdx);
+            };
+            btnWeapon.addEventListener('touchstart', handleWeaponSwitch, { passive: false });
+            btnWeapon.addEventListener('click', handleWeaponSwitch);
+        }
+
+        // --- 暂停按键 ---
+        if (btnPause) {
+            let lastPauseTime = 0;
+            const handlePause = (e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastPauseTime < 250) return;
+                lastPauseTime = now;
+                this.togglePause();
+            };
+            btnPause.addEventListener('touchstart', handlePause, { passive: false });
+            btnPause.addEventListener('click', handlePause);
+        }
+
+        // --- 切换语言 ---
+        if (btnLang) {
+            let lastLangTime = 0;
+            const handleLang = (e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastLangTime < 250) return;
+                lastLangTime = now;
+                switchLanguage();
+                this.updateUI();
+            };
+            btnLang.addEventListener('touchstart', handleLang, { passive: false });
+            btnLang.addEventListener('click', handleLang);
+        }
     }
 
     togglePause() {
@@ -1954,24 +2166,27 @@ class TankBattle {
     }
 
     renderGameOver() {
+        const restartMsg = isTouchDevice() ? t('restartHintMobile') : t('restartHint');
         this.renderOverlay(t('gameOver'), '#ff4444', [
             `${t('finalScore')}: ${this.score}`,
             `${t('reachedLevel')}: ${this.level}`,
-            t('restartHint')
+            restartMsg
         ]);
     }
 
     renderVictory() {
+        const restartMsg = isTouchDevice() ? t('restartHintMobile') : t('restartChallenge');
         this.renderOverlay(t('victory'), '#44ff44', [
             `${t('finalScore')}: ${this.score}`,
             t('victoryMessage'),
-            t('restartChallenge')
+            restartMsg
         ]);
     }
 
     renderPaused() {
+        const continueMsg = isTouchDevice() ? t('continueHintMobile') : t('continueHint');
         this.renderOverlay(t('paused'), '#ffff44', [
-            t('continueHint')
+            continueMsg
         ]);
     }
 
@@ -2006,6 +2221,12 @@ class TankBattle {
         const currentAmmo = this.player.ammo[this.weaponKeys[this.currentWeaponIndex]];
         document.getElementById('ammo').textContent = 
             currentAmmo === Infinity ? '∞' : currentAmmo;
+
+        // 同步移动端手柄武器角标
+        const vWeaponBadge = document.getElementById('vWeaponBadge');
+        if (vWeaponBadge) {
+            vWeaponBadge.textContent = `${this.currentWeaponIndex + 1}`;
+        }
     }
 
     restart() {
