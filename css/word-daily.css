@@ -96,6 +96,11 @@ body {
     border-color: rgba(255, 255, 255, 0.2);
 }
 .wd-icon-btn:active { transform: scale(0.94); }
+.wd-icon-btn.active {
+    background: rgba(99, 102, 241, 0.24);
+    border-color: rgba(148, 163, 255, 0.45);
+    color: #fff;
+}
 
 .wd-lang-btn {
     font-size: 12px;
@@ -116,6 +121,10 @@ body {
     text-align: center;
     min-width: 0;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .wd-title {
@@ -128,6 +137,9 @@ body {
     -webkit-text-fill-color: transparent;
     white-space: nowrap;
     line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .wd-sub-row {
@@ -139,6 +151,7 @@ body {
     color: var(--text-dim);
     margin-top: 2px;
     white-space: nowrap;
+    max-width: 100%;
 }
 
 .wd-num { font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -829,13 +842,15 @@ body {
 }
 
 @media (max-width: 480px) {
-    .wd-shell { padding: 6px 10px 16px; }
+    .wd-shell { padding: 6px 8px 16px; }
     .wd-topbar { gap: 4px; padding: 2px 0 8px; }
     .wd-topbar-group { gap: 4px; }
-    .wd-icon-btn { height: 34px; min-width: 34px; font-size: 14px; padding: 0 6px; border-radius: 8px; }
-    .wd-lang-btn { font-size: 11px; padding: 0 8px; }
-    .wd-title { font-size: 17px; }
-    .wd-sub-row { font-size: 10px; }
+    .wd-icon-btn { height: 34px; min-width: 34px; font-size: 14px; padding: 0 4px; border-radius: 8px; }
+    .wd-icon-btn svg { width: 18px; height: 18px; }
+    .wd-lang-btn { font-size: 11px; padding: 0 7px; min-width: 34px; font-weight: 600; }
+    .wd-title { font-size: 16px; letter-spacing: 0.02em; }
+    .wd-sub-row { font-size: 10px; gap: 4px; }
+    .wd-mode-tag { padding: 1px 5px; font-size: 9.5px; }
     .wd-diff-row { gap: 5px; margin-top: 6px; }
     .wd-diff-btn { min-height: 33px; font-size: 11px; padding: 4px 6px; border-radius: 9px; gap: 4px; }
     .wd-diff-tag { width: 17px; height: 17px; font-size: 10.5px; border-radius: 5px; }
@@ -854,6 +869,18 @@ body {
     }
     .wd-input { height: 44px; font-size: 18px; border-radius: 10px; }
     .wd-submit-btn { height: 44px; min-width: 72px; font-size: 14px; border-radius: 10px; padding: 0 14px; }
+}
+
+@media (max-width: 360px) {
+    .wd-shell { padding: 4px 6px 14px; }
+    .wd-topbar { gap: 2px; }
+    .wd-topbar-group { gap: 3px; }
+    .wd-icon-btn { height: 31px; min-width: 31px; font-size: 13px; padding: 0 3px; border-radius: 7px; }
+    .wd-icon-btn svg { width: 16px; height: 16px; }
+    .wd-lang-btn { font-size: 10px; padding: 0 5px; min-width: 31px; }
+    .wd-title { font-size: 14px; }
+    .wd-sub-row { font-size: 9px; gap: 3px; }
+    .wd-mode-tag { padding: 0 4px; font-size: 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

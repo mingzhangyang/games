@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e24">
     <meta name="description" content="Word Daily 每日猜词 — a bilingual daily word puzzle. Guess the English word or the Chinese idiom (成语) in 6 tries. Same puzzle for everyone each day. Keep your streak, share your grid.">
@@ -33,6 +33,7 @@
         <header class="wd-topbar">
             <div class="wd-topbar-group wd-topbar-left">
                 <a class="wd-icon-btn wd-home-link" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+                <button class="wd-icon-btn" id="wd-btn-help" title="How to play" aria-label="How to play">❓</button>
                 <button class="wd-icon-btn" id="wd-btn-mute" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
             </div>
             <div class="wd-title-box">
@@ -40,10 +41,9 @@
                 <div class="wd-sub-row"><span class="wd-num" id="wd-num">#1</span><span class="wd-mode-tag" id="wd-mode-tag"></span></div>
             </div>
             <div class="wd-topbar-group wd-topbar-right">
-                <button class="wd-icon-btn wd-lang-btn" id="wd-btn-lang" title="Switch mode">Idioms</button>
-                <button class="wd-icon-btn" id="wd-btn-practice" title="Practice">🎲</button>
-                <button class="wd-icon-btn" id="wd-btn-help" title="How to play">❓</button>
-                <button class="wd-icon-btn" id="wd-btn-stats" title="Stats">📊</button>
+                <button class="wd-icon-btn wd-lang-btn" id="wd-btn-lang" title="Switch mode" aria-label="Switch mode">Idioms</button>
+                <button class="wd-icon-btn" id="wd-btn-practice" title="Practice" aria-label="Practice">🎲</button>
+                <button class="wd-icon-btn" id="wd-btn-stats" title="Stats" aria-label="Stats">📊</button>
             </div>
         </header>
 

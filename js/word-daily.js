@@ -206,8 +206,8 @@ const LANGUAGES = {
     en: {
         title: 'Word Daily',
         dailyBadge: 'Puzzle',
-        zhModeLabel: 'Idiom mode',
-        enModeLabel: 'Word mode',
+        zhModeLabel: 'Idioms',
+        enModeLabel: 'Words',
         practice: 'Practice',
         practiceBanner: 'Practice round — result not recorded',
         stats: 'Stats',
@@ -215,7 +215,7 @@ const LANGUAGES = {
         langBtn: 'Idioms',
         switchToZh: 'Idioms',
         switchToEn: 'Words',
-        switchModeTitle: 'Switch puzzle mode',
+        switchModeTitle: 'Switch between Words and Idioms',
         guessPlaceholder: 'Type a 4-character idiom…',
         guessPlaceholderZh: 'Type a 4-character idiom…',
         guessPlaceholderEn: 'Type a {n}-letter word…',
@@ -281,16 +281,16 @@ const LANGUAGES = {
     zh: {
         title: '每日猜词',
         dailyBadge: '第',
-        zhModeLabel: '成语模式',
-        enModeLabel: '单词模式',
+        zhModeLabel: '成语',
+        enModeLabel: '单词',
         practice: '练习模式',
         practiceBanner: '练习模式——不计入统计与连胜',
         stats: '统计',
         help: '玩法说明',
-        langBtn: '成语模式',
-        switchToZh: '成语模式',
-        switchToEn: '单词模式',
-        switchModeTitle: '切换词库模式',
+        langBtn: '成语',
+        switchToZh: '成语',
+        switchToEn: '单词',
+        switchModeTitle: '切换成语 / 单词模式',
         guessPlaceholder: '输入四字成语…',
         guessPlaceholderZh: '输入四字成语…',
         guessPlaceholderEn: '输入{n}位英文单词…',
@@ -433,21 +433,28 @@ class WordDailyGame {
         if (this.el.title) this.el.title.textContent = t.title;
         if (this.el['btn-lang']) {
             this.el['btn-lang'].textContent = this.langMode === 'zh' ? t.switchToEn : t.switchToZh;
-            this.el['btn-lang'].title = t.switchModeTitle;
+            const switchTitle = this.langMode === 'zh'
+                ? (this.lang === 'zh' ? '切换为单词模式' : 'Switch to Word mode')
+                : (this.lang === 'zh' ? '切换为成语模式' : 'Switch to Idiom mode');
+            this.el['btn-lang'].title = switchTitle;
+            this.el['btn-lang'].setAttribute('aria-label', switchTitle);
         }
         if (this.el['btn-practice']) {
-            this.el['btn-practice'].textContent = this.mode === 'practice'
-                ? `📅 ${t.backToDaily}`
-                : `🎲 ${t.practice}`;
-            this.el['btn-practice'].title = this.mode === 'practice' ? t.backToDaily : t.practice;
+            this.el['btn-practice'].textContent = this.mode === 'practice' ? '📅' : '🎲';
+            const practiceTitle = this.mode === 'practice' ? t.backToDaily : t.practice;
+            this.el['btn-practice'].title = practiceTitle;
+            this.el['btn-practice'].setAttribute('aria-label', practiceTitle);
+            this.el['btn-practice'].classList.toggle('active', this.mode === 'practice');
         }
         if (this.el['btn-help']) {
-            this.el['btn-help'].textContent = `❓ ${t.help}`;
+            this.el['btn-help'].textContent = '❓';
             this.el['btn-help'].title = t.help;
+            this.el['btn-help'].setAttribute('aria-label', t.help);
         }
         if (this.el['btn-stats']) {
-            this.el['btn-stats'].textContent = `📊 ${t.stats}`;
+            this.el['btn-stats'].textContent = '📊';
             this.el['btn-stats'].title = t.stats;
+            this.el['btn-stats'].setAttribute('aria-label', t.stats);
         }
         if (this.el['help-title']) this.el['help-title'].textContent = t.helpTitle;
         if (this.el['help-close']) this.el['help-close'].textContent = t.ok;
@@ -479,9 +486,7 @@ class WordDailyGame {
 
         const modeTag = this.langMode === 'zh' ? t.zhModeLabel : t.enModeLabel;
         if (this.el['mode-tag']) {
-            this.el['mode-tag'].textContent = this.mode === 'practice'
-                ? `${t.practiceBadge} · ${modeTag}`
-                : modeTag;
+            this.el['mode-tag'].textContent = modeTag;
         }
         this.updateMuteIcon();
         if (this.status !== 'playing') {
@@ -696,17 +701,25 @@ class WordDailyGame {
         // 顶部切换练习/每日按钮
         if (this.el['btn-practice']) {
             if (this.mode === 'practice') {
-                this.el['btn-practice'].textContent = `📅 ${t.backToDaily}`;
+                this.el['btn-practice'].textContent = '📅';
                 this.el['btn-practice'].title = t.backToDaily;
+                this.el['btn-practice'].setAttribute('aria-label', t.backToDaily);
+                this.el['btn-practice'].classList.add('active');
             } else {
-                this.el['btn-practice'].textContent = `🎲 ${t.practice}`;
+                this.el['btn-practice'].textContent = '🎲';
                 this.el['btn-practice'].title = t.practice;
+                this.el['btn-practice'].setAttribute('aria-label', t.practice);
+                this.el['btn-practice'].classList.remove('active');
             }
         }
 
         if (this.el['btn-lang']) {
             this.el['btn-lang'].textContent = this.langMode === 'zh' ? t.switchToEn : t.switchToZh;
-            this.el['btn-lang'].title = t.switchModeTitle;
+            const switchTitle = this.langMode === 'zh'
+                ? (this.lang === 'zh' ? '切换为单词模式' : 'Switch to Word mode')
+                : (this.lang === 'zh' ? '切换为成语模式' : 'Switch to Idiom mode');
+            this.el['btn-lang'].title = switchTitle;
+            this.el['btn-lang'].setAttribute('aria-label', switchTitle);
         }
 
         this.updateBoardSize();
@@ -717,9 +730,7 @@ class WordDailyGame {
         }
         if (this.el['mode-tag']) {
             const baseMode = this.langMode === 'zh' ? t.zhModeLabel : t.enModeLabel;
-            this.el['mode-tag'].textContent = this.mode === 'practice'
-                ? `${t.practiceBadge} · ${baseMode}`
-                : baseMode;
+            this.el['mode-tag'].textContent = baseMode;
         }
         if (this.el.input) {
             const len = this.wordLen();
