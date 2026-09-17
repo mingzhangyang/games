@@ -19,6 +19,16 @@ const CANVAS_WIDTH = 480;
 const CANVAS_HEIGHT = 640;
 const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 
+// UTC+8 日期（与全站每日挑战口径一致：word-daily/planet-merge/gravity/needle-awn）
+function dailyDateStr() {
+    const d = new Date(Date.now() + 8 * 3600 * 1000);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+function dailyDateKey() {
+    return dailyDateStr().replace(/-/g, '');
+}
+
 const STORAGE_KEYS = {
     UNLOCKED_STAGE: 'sf_unlocked_stage',
     STAGE_STARS: 'sf_stage_stars',
@@ -111,6 +121,7 @@ const I18N = {
         toastThunder: '以剑引雷！',
         toastUlt: '万剑归宗！',
         toastHurt: '灵气涣散！',
+        submitting: '正在沟通天地灵脉...',
         dailyStatusDone: '今日已飞升',
         dailyStatusUndone: '未涉足',
         realms: [
@@ -921,8 +932,7 @@ class SwordFlightGame {
         const dailyCard = document.getElementById('sf-daily-card');
         dailyCard.classList.remove('hidden');
 
-        const now = new Date();
-        const dateStr = now.toISOString().slice(0, 10);
+        const dateStr = dailyDateStr();
         document.getElementById('sf-daily-date').textContent = `${getLang() === 'zh' ? '今日仙历' : 'Daily Date'}：${dateStr}`;
     }
 
@@ -3056,8 +3066,7 @@ class SwordFlightGame {
         document.getElementById('sf-rec-realm').textContent = this.maxRealm;
         document.getElementById('sf-rec-combo').textContent = `${this.maxComboRecord} ${I18N[getLang() === 'zh' ? 'zh' : 'en'].unitRings}`;
 
-        const now = new Date();
-        const dateKey = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+        const dateKey = dailyDateKey();
         const dailyRecord = storageGet(`${STORAGE_KEYS.DAILY_PREFIX}${dateKey}`);
         const isZh = getLang() === 'zh';
         document.getElementById('sf-rec-daily').textContent = dailyRecord
@@ -3163,10 +3172,9 @@ class SwordFlightGame {
     async submitScoreToLeaderboard(name, score) {
         const fb = document.getElementById('sf-submit-feedback');
         fb.classList.remove('hidden');
-        fb.textContent = '正在沟通天地灵脉...';
+        fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].submitting;
 
-        const now = new Date();
-        const dateKey = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+        const dateKey = dailyDateKey();
         const gameKey = (this.mode === 'daily') ? `sword-flight-d${dateKey}` : 'sword-flight';
 
         try {

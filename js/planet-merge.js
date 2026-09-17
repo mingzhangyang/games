@@ -119,6 +119,7 @@ const LANGUAGES = {
         loadingScores: 'Loading…',
         noScores: 'No scores yet',
         lbOffline: 'Leaderboard offline — showing local scores',
+        lbSubmitFail: 'Score upload failed — saved locally',
         usernameLabel: 'Username (Enter to save)',
         next: 'Next',
         mute: 'Sound',
@@ -160,6 +161,7 @@ const LANGUAGES = {
         loadingScores: '加载中…',
         noScores: '暂无分数',
         lbOffline: '榜单离线——显示本地成绩',
+        lbSubmitFail: '成绩上传失败——已保存到本地',
         usernameLabel: '用户名（回车保存）',
         next: '下一个',
         mute: '音效',
@@ -1160,8 +1162,18 @@ class PlanetMergeGame {
             })));
             clearTimeout(timeoutId);
         } catch (e) {
-            // 提交失败：本地榜已由 recordLocalScore 记录
+            // 提交失败：本地榜已由 recordLocalScore 记录，但要让玩家知道未进全球榜
+            this.showToast(this.TEXT.lbSubmitFail);
         }
+    }
+
+    showToast(msg, duration = 2400) {
+        const toast = this.el.toast;
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
     }
 
     getUsername() {

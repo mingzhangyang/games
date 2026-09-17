@@ -75,9 +75,11 @@ const LANGUAGES = {
         loadingScores: 'Loading…',
         noScores: 'No scores yet',
         lbOffline: 'Leaderboard offline — showing local scores',
+        submitFail: 'Score upload failed — saved locally',
         usernameLabel: 'Username (Enter to save)',
         language: '中文',
         tapToStart: 'Swipe up to shoot',
+        footerHint: 'Swipe up to shoot · P pause · M mute',
         sideHowTo: 'How to play',
         sideRecords: 'Records'
     },
@@ -105,9 +107,11 @@ const LANGUAGES = {
         loadingScores: '加载中…',
         noScores: '暂无分数',
         lbOffline: '榜单离线——显示本地成绩',
+        submitFail: '成绩上传失败——已保存到本地',
         usernameLabel: '用户名（回车保存）',
         language: 'English',
         tapToStart: '向上滑动投篮',
+        footerHint: '向上滑动投篮 · P 暂停 · M 静音',
         sideHowTo: '玩法说明',
         sideRecords: '战绩'
     }
@@ -244,7 +248,8 @@ class HoopShotGame {
         this.score = 0;
         this.best = storageParse('hs_best', 0);
         this.streak = 0;
-        this.longestStreak = 0;
+        this.longestStreak = 0;      // 本局最长连击
+        this.bestStreakAll = storageParse('hs_longest_streak', 0); // 全局最长连击
         this.onFire = false;
 
         this.ball = null;      // { x, y, vx, vy, rot, prevY }
@@ -329,7 +334,7 @@ class HoopShotGame {
         if (this.el['lb-status']) this.el['lb-status'].textContent = '';
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el.hint) this.el.hint.textContent = t.tapToStart;
+        if (this.el.hint) this.el.hint.textContent = t.footerHint; // 保留键位说明，不再被 tapToStart 整体替换
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         this.updateMuteButtons();
         this.updateStartStats();
@@ -354,7 +359,7 @@ class HoopShotGame {
         const t = this.TEXT;
         const rows = [
             [`🏆 ${t.best}`, formatNumber(this.best)],
-            [`🔥 ${t.longestStreak}`, String(this.longestStreak)]
+            [`🔥 ${t.longestStreak}`, String(this.bestStreakAll)]
         ];
         box.textContent = '';
         rows.forEach(([label, value]) => {
@@ -395,7 +400,8 @@ class HoopShotGame {
         this.state = 'playing';
         this.score = 0;
         this.streak = 0;
-        this.longestStreak = 0;
+        this.longestStreak = 0; // 本局最长连击（全局纪录另存 hs_longest_streak）
+        this.bestStreakAll = storageParse('hs_longest_streak', 0);
         this.onFire = false;
         this.ball = null;
         this.ballReady = true;
@@ -752,8 +758,14 @@ class HoopShotGame {
         if (isNewBest) {
             this.best = this.score;
             storageSet('hs_best', String(this.best));
-            this.updateSideRecords();
         }
+
+        // 最长连击跨局持久化
+        if (this.longestStreak > this.bestStreakAll) {
+            this.bestStreakAll = this.longestStreak;
+            storageSet('hs_longest_streak', String(this.bestStreakAll));
+        }
+        this.updateSideRecords();
 
         const t = this.TEXT;
         if (this.el['over-score']) this.el['over-score'].textContent = formatNumber(this.score);
@@ -934,7 +946,9 @@ class HoopShotGame {
             clearTimeout(timeoutId);
             await this.fetchLeaderboard();
         } catch (e) {
-            // Worker 未部署：保留本地榜
+            // Worker 未部署：保留本地榜，并在结算面板提示未进全球榜
+            const statusEl = this.el['lb-status'];
+            if (statusEl) statusEl.textContent = this.TEXT.submitFail;
         }
     }
 

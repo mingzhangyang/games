@@ -747,13 +747,13 @@ class UIController {
      * @param {KeyboardEvent} event - Keyboard event
      */
     handleKeyPress(event) {
+        // 按住不放不重复触发（道具连发）
+        if (event.repeat) return;
         const keyActions = {
             'Space': () => this.eventSystem.emit('ui:key:space'),
             'Escape': () => this.eventSystem.emit('ui:key:escape'),
-            'KeyR': () => this.eventSystem.emit('ui:key:r'),
             'KeyF': () => this.eventSystem.emit('ui:key:f'),
-            'KeyB': () => this.eventSystem.emit('ui:key:b'),
-            'KeyS': () => this.eventSystem.emit('ui:key:s')
+            'KeyB': () => this.eventSystem.emit('ui:key:b')
         };
         
         const action = keyActions[event.code];

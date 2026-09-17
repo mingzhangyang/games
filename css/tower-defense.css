@@ -244,9 +244,9 @@ body {
     position: absolute;
     bottom: 2px;
     right: 4px;
-    font-size: 8.5px;
+    font-size: 10px;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.55);
     background: rgba(0, 0, 0, 0.4);
     border-radius: 3px;
     padding: 0 2px;

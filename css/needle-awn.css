@@ -279,7 +279,7 @@ body {
     box-shadow: 0 0 10px var(--color-awn-glow);
 }
 
-/* 舞台浮动控制按钮 (移动端与触屏操作) */
+/* 舞台浮动控制按钮 (移动端与触屏操作)；桌面精确指针设备无触控意义，隐藏 */
 .na-touch-controls {
     position: absolute;
     bottom: 14px;
@@ -290,6 +290,12 @@ body {
     align-items: flex-end;
     pointer-events: none;
     z-index: 6;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .na-touch-controls {
+        display: none;
+    }
 }
 
 .na-touch-btn {

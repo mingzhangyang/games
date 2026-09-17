@@ -116,6 +116,7 @@ const I18N = {
         badgeStage: '第 {n} / 10 关',
         badgeWave: '第 {n} 波',
         badgeDaily: '每日挑战',
+        lbSubmitFail: '金榜上传失败——战绩已存本地',
         duel2pTouchWarn: '双人同屏 2P 需要实体键盘，触屏设备建议选择 vs AI',
         levelNames: [
             '初试锋芒', '飞针入微', '芒刺在背', '阴阳交错', '灵虚针尊',
@@ -199,6 +200,7 @@ const I18N = {
         badgeStage: 'Stage {n}/10',
         badgeWave: 'Wave {n}',
         badgeDaily: 'Daily Run',
+        lbSubmitFail: 'Score upload failed — saved locally',
         duel2pTouchWarn: '2P mode needs a physical keyboard; on touch devices try vs AI',
         levelNames: [
             'First Spark', 'Needle Stream', 'Awn Swarm', 'Dual Weaving', 'Needle Sovereign',
@@ -526,6 +528,7 @@ class GameEngine {
         // 子弹时间 / 定格系统
         this.timeScale = 1.0;
         this.hitStop = 0;
+        this.slowMoTimer = 0;
 
         // 玩家实体
         this.player = this.createPlayer(ARENA_WIDTH / 2, ARENA_HEIGHT * 0.72);
@@ -1355,9 +1358,9 @@ class GameEngine {
         // 视听音效
         if (p.stance === 'needle') {
             SoundEngine.clashPing();
-            // 银针特性：触发子弹时间 0.85s，放慢世界
+            // 银针特性：触发子弹时间 0.85s（游戏时钟计时），放慢世界
             this.timeScale = 0.35;
-            setTimeout(() => { this.timeScale = 1.0; }, 850);
+            this.slowMoTimer = 0.85;
         } else {
             SoundEngine.awnBurst();
             // 金芒特性：金芒天爆，轰击周围小怪与弹幕
@@ -1528,7 +1531,9 @@ class GameEngine {
                 })
             });
         } catch (e) {
-            // 离线环境静默降级
+            // 离线环境静默降级，但要让玩家知道未进金榜
+            const t = I18N[getLang()] || I18N.zh;
+            this.showToast(t.lbSubmitFail || '金榜上传失败', 2600);
         }
     }
 
@@ -1665,6 +1670,14 @@ class GameEngine {
             if (this.hitStop > 0) {
                 this.hitStop -= dt;
             } else {
+                // 子弹时间用游戏时钟计时：暂停/定格时不消耗时长
+                if (this.timeScale < 1 && this.slowMoTimer > 0) {
+                    this.slowMoTimer -= dt;
+                    if (this.slowMoTimer <= 0) {
+                        this.timeScale = 1.0;
+                        this.slowMoTimer = 0;
+                    }
+                }
                 const scaledDt = dt * this.timeScale;
                 this.update(scaledDt);
             }

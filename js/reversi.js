@@ -66,6 +66,8 @@ const LANGUAGES = {
         winStreak: '🔥 Win streak',
         newBestStreak: 'New best streak!',
         bestStreak: 'Best streak',
+        submitFail: 'Score upload failed — saved locally',
+        leaveConfirm: 'A game is in progress. Leave and discard it?',
         leaderboard: 'Global Win Streaks',
         loadingScores: 'Loading…',
         noScores: 'No games yet',
@@ -101,6 +103,8 @@ const LANGUAGES = {
         winStreak: '🔥 连胜',
         newBestStreak: '连胜新纪录！',
         bestStreak: '最长连胜',
+        submitFail: '成绩上传失败——已保存到本地',
+        leaveConfirm: '对局进行中，离开将丢失当前进度。确定离开吗？',
         leaderboard: '全球连胜榜',
         loadingScores: '加载中…',
         noScores: '暂无对局',
@@ -589,7 +593,8 @@ class ReversiGame {
             });
             clearTimeout(timeoutId);
         } catch (e) {
-            // Worker 未部署：保留本地榜
+            // Worker 未部署：保留本地榜，但要提示玩家未进全球榜
+            this.showToast(this.TEXT.submitFail);
         }
     }
 
@@ -735,6 +740,7 @@ class ReversiGame {
             Sfx.click();
         });
         if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => {
+            if (this.state === 'playing' && !window.confirm(this.TEXT.leaveConfirm)) return;
             window.location.href = 'index.html';
         });
         if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());

@@ -43,7 +43,8 @@ const LANGUAGES = {
         whiteWins: 'White Wins!',
         playAgain: 'Play Again',
         viewBoard: 'View Board',
-        changeDiffConfirm: 'Changing difficulty will clear the current game. Continue?'
+        changeDiffConfirm: 'Changing difficulty will clear the current game. Continue?',
+        leaveConfirm: 'A game is in progress. Leave and discard it?'
     },
     zh: {
         title: '五子棋 - 经典策略棋牌',
@@ -65,7 +66,9 @@ const LANGUAGES = {
         blackWins: '黑方获胜！',
         whiteWins: '白方获胜！',
         playAgain: '再来一局',
-        viewBoard: '查看棋盘'
+        viewBoard: '查看棋盘',
+        changeDiffConfirm: '切换难度将清空当前对局，确定继续吗？',
+        leaveConfirm: '对局进行中，离开将丢失当前进度。确定离开吗？'
     }
 };
 
@@ -151,6 +154,15 @@ function init() {
             const nextLang = currentLang === 'zh' ? 'en' : 'zh';
             setLang(nextLang);
             applyLanguage(nextLang);
+        });
+    }
+    // 对局进行中返回首页需确认，防止误触丢局
+    const homeLink = document.getElementById('homeLink');
+    if (homeLink) {
+        homeLink.addEventListener('click', (e) => {
+            if (gameActive && moveCount > 0 && !window.confirm(getTEXT().leaveConfirm)) {
+                e.preventDefault();
+            }
         });
     }
     window.addEventListener('site-settings:changed', () => {

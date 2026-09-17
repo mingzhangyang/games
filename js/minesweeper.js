@@ -71,6 +71,7 @@ const LANGUAGES = {
         resume: 'Resume',
         pausedTitle: 'Paused',
         pausedHint: 'Timer stopped — tap to resume',
+        submitFail: 'Score upload failed — saved locally',
         sound: 'Sound',
         home: 'Home',
         language: '中文',
@@ -111,6 +112,7 @@ const LANGUAGES = {
         resume: '继续',
         pausedTitle: '已暂停',
         pausedHint: '计时已停止 — 点击任意处继续',
+        submitFail: '成绩上传失败——已保存到本地',
         sound: '声音',
         home: '主页',
         language: 'English',
@@ -756,7 +758,8 @@ class MinesweeperGame {
             clearTimeout(timeoutId);
             await this.fetchLeaderboard();
         } catch (e) {
-            // Worker 未部署：保留本地榜
+            // Worker 未部署：保留本地榜，并在结算面板提示未进全球榜
+            if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.submitFail;
         }
     }
 
@@ -953,6 +956,10 @@ class MinesweeperGame {
             this.newGame();
         });
         if (this.el['btn-close']) this.el['btn-close'].addEventListener('click', () => this.hideResult());
+        // 点击遮罩空白处关闭结算弹窗
+        if (this.el.result) this.el.result.addEventListener('click', (e) => {
+            if (e.target === this.el.result) this.hideResult();
+        });
         if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());
 
         if (this.el.mute) this.el.mute.addEventListener('click', () => this.toggleMute());

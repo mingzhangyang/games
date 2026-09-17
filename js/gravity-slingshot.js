@@ -58,6 +58,7 @@ const LANGUAGES = {
         playDaily: '📅 Daily Course',
         level: 'Hole',
         daily: 'Daily',
+        dailyStartToast: '📅 Daily course — par as few launches as possible',
         launches: 'Launches',
         par: 'Par',
         total: 'Total',
@@ -100,6 +101,7 @@ const LANGUAGES = {
         playDaily: '📅 每日赛程',
         level: '洞口',
         daily: '每日',
+        dailyStartToast: '📅 每日赛程开始——杆数越少星越多',
         launches: '杆数',
         par: '标准杆',
         total: '总计',
@@ -824,7 +826,7 @@ class GravityGame {
         this.totalLaunches = 0;
         this.enterMenu(false);
         this.loadHole();
-        this.showToast(`📅 ${this.TEXT.daily} · ${this.TEXT.launchesWord} ↓`, 1800);
+        this.showToast(this.TEXT.dailyStartToast, 1800);
         if (window.hubTrack) window.hubTrack('gravity-slingshot', 'play');
     }
 

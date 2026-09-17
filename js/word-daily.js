@@ -1115,7 +1115,7 @@ class WordDailyGame {
         // 切换输入区为结算与下一题操作面板
         this.updateInputUi();
 
-        setTimeout(() => this.openStats(), won ? 1500 : 800);
+        // 结算面板已含答案/统计入口，不再强制弹统计窗打断复盘
     }
 
     recordDaily(rowsUsed) {
