@@ -1029,3 +1029,11 @@ body {
     .sf-hero-art, .sf-toast, .sf-bar-fill { animation: none !important; }
     .sf-action-btn, .sf-icon-btn, .sf-touch-btn { transition: none !important; }
 }
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.sf-icon-btn { position: relative; }
+.sf-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+
+
+.sf-lang-glyph { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+

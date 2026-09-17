@@ -696,12 +696,13 @@ body.rainbow-theme {
         height: 36px;
     }
 
+    /* 窄屏下排行榜回归文档流，避免悬浮遮挡棋盘/信息面板 */
     .global-scores-panel {
-        position: fixed;
-        top: 148px;
-        right: 5px;
-        width: 200px;
-        max-height: 250px;
+        position: static;
+        width: auto;
+        max-width: 350px;
+        max-height: none;
+        margin: 10px auto;
         font-size: 12px;
     }
 
@@ -922,3 +923,6 @@ body.rainbow-theme .game-container::before {
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.theme-toggle::after, .lang-toggle::after, .home-toggle::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+

@@ -543,3 +543,8 @@ body {
         white-space: nowrap;
     }
 }
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.gd-icon-btn { position: relative; }
+.gd-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+

@@ -608,3 +608,8 @@ body {
         white-space: nowrap;
     }
 }
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.pm-icon-btn { position: relative; }
+.pm-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+

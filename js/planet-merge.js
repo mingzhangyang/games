@@ -498,6 +498,8 @@ class PlanetMergeGame {
         if (this.el['btn-copy']) this.el['btn-copy'].textContent = `📋 ${t.copyResult}`;
         if (this.el['btn-again']) this.el['btn-again'].textContent = `🔄 ${t.again}`;
         if (this.el['btn-home']) this.el['btn-home'].textContent = `🏠 ${t.home}`;
+        const btnHome2 = document.getElementById('pm-btn-home2');
+        if (btnHome2) btnHome2.textContent = `🏠 ${t.home}`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (this.el['tab-daily']) this.el['tab-daily'].textContent = t.today;
         if (this.el['tab-alltime']) this.el['tab-alltime'].textContent = t.allTime;

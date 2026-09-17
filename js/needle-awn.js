@@ -90,7 +90,7 @@ const I18N = {
         sideDailyLbl: '今日论剑状态',
         sideControlsTitle: '⌨️ 键位与操控',
         scAim: '瞄准方向',
-        scAimKey: '鼠标移动 / 触控拖拽',
+        scAimKey: '鼠标移动 / 触屏拖拽（右半屏）',
         scDash: '破空突刺 (交锋)',
         scDashKey: '鼠标左键 / 空格 / ⚡按钮',
         scStance: '转换锋芒姿态',
@@ -98,7 +98,7 @@ const I18N = {
         scUlt: '万芒天破 (极意)',
         scUltKey: 'E 键 / 双击 / 🌟按钮',
         scMove: '身法游走',
-        scMoveKey: 'W A S D / 触屏轻推',
+        scMoveKey: 'W A S D / 左半屏摇杆',
         dailyDone: '今日已登顶',
         dailyNotDone: '今日未挑战',
         stanceNeedle: '银针态',
@@ -113,6 +113,10 @@ const I18N = {
         victorySub: '演武告捷 · 锋芒初试',
         defeatSub: '胜败常事 · 重整旗鼓',
         modeBadgeMenu: '演武',
+        badgeStage: '第 {n} / 10 关',
+        badgeWave: '第 {n} 波',
+        badgeDaily: '每日挑战',
+        duel2pTouchWarn: '双人同屏 2P 需要实体键盘，触屏设备建议选择 vs AI',
         levelNames: [
             '初试锋芒', '飞针入微', '芒刺在背', '阴阳交错', '灵虚针尊',
             '暴雨梨花', '麦浪连天', '扶摇麦皇', '绝命千本', '针尖麦芒'
@@ -169,7 +173,7 @@ const I18N = {
         sideDailyLbl: 'Daily Challenge',
         sideControlsTitle: '⌨️ Controls & Shortcuts',
         scAim: 'Aim Angle',
-        scAimKey: 'Mouse Move / Touch Drag',
+        scAimKey: 'Mouse Move / Touch Drag (right half)',
         scDash: 'Thrust (Clash)',
         scDashKey: 'Left Click / Space / ⚡',
         scStance: 'Switch Stance',
@@ -177,7 +181,7 @@ const I18N = {
         scUlt: 'Awakened Lotus',
         scUltKey: 'E / Double Tap / 🌟',
         scMove: 'Agile Maneuver',
-        scMoveKey: 'W A S D / Keys',
+        scMoveKey: 'W A S D / Touch Joystick (left half)',
         dailyDone: 'Completed Today',
         dailyNotDone: 'Unattempted',
         stanceNeedle: 'Needle Stance',
@@ -192,6 +196,10 @@ const I18N = {
         victorySub: 'Trial Accomplished',
         defeatSub: 'Defeated · Strike Again',
         modeBadgeMenu: 'Trials',
+        badgeStage: 'Stage {n}/10',
+        badgeWave: 'Wave {n}',
+        badgeDaily: 'Daily Run',
+        duel2pTouchWarn: '2P mode needs a physical keyboard; on touch devices try vs AI',
         levelNames: [
             'First Spark', 'Needle Stream', 'Awn Swarm', 'Dual Weaving', 'Needle Sovereign',
             'Blossom Rain', 'Golden Surge', 'Awn Emperor', 'Thousand Needles', 'Grandmaster Duel'
@@ -533,6 +541,9 @@ class GameEngine {
         this.keys = {};
         this.pointer = { x: ARENA_WIDTH / 2, y: ARENA_HEIGHT * 0.4, down: false };
         this.lastTouchTime = 0;
+        this.aimTouchId = null;
+        // 触屏虚拟摇杆状态（左半屏浮动出现，控制 P1 身法）
+        this.joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0, x: 0, y: 0 };
 
         this.initDOM();
         this.initInput();
@@ -599,6 +610,8 @@ class GameEngine {
             touchDash: document.getElementById('na-touch-dash'),
             touchStance: document.getElementById('na-touch-stance'),
             touchUlt: document.getElementById('na-touch-ult'),
+            joy: document.getElementById('na-joy'),
+            joyKnob: document.getElementById('na-joy-knob'),
 
             // Overlays
             overlayStart: document.getElementById('na-overlay-start'),
@@ -697,27 +710,94 @@ class GameEngine {
 
         this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        // 移动端触控
-        const handleTouchMove = (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const touch = e.touches[0];
-            if (touch) {
-                this.pointer.x = (touch.clientX - rect.left) * (ARENA_WIDTH / rect.width);
-                this.pointer.y = (touch.clientY - rect.top) * (ARENA_HEIGHT / rect.height);
+        // 移动端触控：左半屏为浮动摇杆（身法），其余区域拖拽为瞄准
+        const JOY_RADIUS = 56;
+
+        const setPointerFromTouch = (touch, rect) => {
+            this.pointer.x = (touch.clientX - rect.left) * (ARENA_WIDTH / rect.width);
+            this.pointer.y = (touch.clientY - rect.top) * (ARENA_HEIGHT / rect.height);
+        };
+
+        const moveJoyKnob = () => {
+            const kx = 50 + (this.joy.dx / JOY_RADIUS) * 38;
+            const ky = 50 + (this.joy.dy / JOY_RADIUS) * 38;
+            this.dom.joyKnob.style.left = `${kx}%`;
+            this.dom.joyKnob.style.top = `${ky}%`;
+        };
+
+        const updateJoyVector = (touch) => {
+            let dx = touch.clientX - this.joy.ox;
+            let dy = touch.clientY - this.joy.oy;
+            const dist = Math.hypot(dx, dy);
+            if (dist > JOY_RADIUS) {
+                dx = (dx / dist) * JOY_RADIUS;
+                dy = (dy / dist) * JOY_RADIUS;
             }
+            this.joy.dx = dx;
+            this.joy.dy = dy;
+            this.joy.x = dx / JOY_RADIUS;
+            this.joy.y = dy / JOY_RADIUS;
+            moveJoyKnob();
         };
 
         this.canvas.addEventListener('touchstart', (e) => {
-            handleTouchMove(e);
-            const now = performance.now();
-            if (now - this.lastTouchTime < 300) {
-                // 双击释放大招
-                this.triggerUltimate(this.player);
+            const rect = this.canvas.getBoundingClientRect();
+            const stageRect = this.dom.joy.parentElement.getBoundingClientRect();
+            for (const touch of e.changedTouches) {
+                const isLeftZone = !this.joy.active && (touch.clientX - rect.left) < rect.width * 0.45;
+                if (isLeftZone) {
+                    // 启动摇杆
+                    this.joy.active = true;
+                    this.joy.id = touch.identifier;
+                    this.joy.ox = touch.clientX;
+                    this.joy.oy = touch.clientY;
+                    this.joy.dx = 0;
+                    this.joy.dy = 0;
+                    this.joy.x = 0;
+                    this.joy.y = 0;
+                    this.dom.joy.style.left = `${touch.clientX - stageRect.left}px`;
+                    this.dom.joy.style.top = `${touch.clientY - stageRect.top}px`;
+                    this.dom.joy.classList.remove('hidden');
+                    moveJoyKnob();
+                } else {
+                    this.aimTouchId = touch.identifier;
+                    setPointerFromTouch(touch, rect);
+                    const now = performance.now();
+                    if (now - this.lastTouchTime < 300) {
+                        // 双击释放大招
+                        this.triggerUltimate(this.player);
+                    }
+                    this.lastTouchTime = now;
+                }
             }
-            this.lastTouchTime = now;
         }, { passive: true });
 
-        this.canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+        this.canvas.addEventListener('touchmove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            for (const touch of e.changedTouches) {
+                if (this.joy.active && touch.identifier === this.joy.id) {
+                    updateJoyVector(touch);
+                } else if (touch.identifier === this.aimTouchId) {
+                    setPointerFromTouch(touch, rect);
+                }
+            }
+        }, { passive: true });
+
+        const endCanvasTouch = (e) => {
+            for (const touch of e.changedTouches) {
+                if (this.joy.active && touch.identifier === this.joy.id) {
+                    this.joy.active = false;
+                    this.joy.id = null;
+                    this.joy.x = 0;
+                    this.joy.y = 0;
+                    this.dom.joy.classList.add('hidden');
+                } else if (touch.identifier === this.aimTouchId) {
+                    this.aimTouchId = null;
+                }
+            }
+        };
+        this.canvas.addEventListener('touchend', endCanvasTouch);
+        this.canvas.addEventListener('touchcancel', endCanvasTouch);
 
         // 触控按钮绑定
         this.dom.touchDash.addEventListener('touchstart', (e) => {
@@ -786,6 +866,11 @@ class GameEngine {
             this.dom.duelType2P.classList.add('active');
             this.dom.duelTypeAi.classList.remove('active');
             this.dom.aiDiffRow.style.display = 'none';
+            // 2P 全程依赖键盘，触屏设备给出提示
+            if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+                const t = I18N[getLang()] || I18N.zh;
+                this.showToast(t.duel2pTouchWarn, 3200);
+            }
         });
 
         ['easy', 'medium', 'hard'].forEach(diff => {
@@ -967,13 +1052,13 @@ class GameEngine {
         if (this.mode === 'levels') {
             const lvlName = (t.levelNames && t.levelNames[this.currentLevel - 1]) || this.currentLevel;
             this.dom.stageLabel.textContent = `${t.trials} · ${lvlName}`;
-            this.dom.modeBadge.textContent = `Stage ${this.currentLevel}/10`;
+            this.dom.modeBadge.textContent = (t.badgeStage || 'Stage {n}/10').replace('{n}', this.currentLevel);
         } else if (this.mode === 'endless') {
             this.dom.stageLabel.textContent = t.endless;
-            this.dom.modeBadge.textContent = `Wave ${this.waveIndex + 1}`;
+            this.dom.modeBadge.textContent = (t.badgeWave || 'Wave {n}').replace('{n}', this.waveIndex + 1);
         } else if (this.mode === 'daily') {
             this.dom.stageLabel.textContent = t.daily;
-            this.dom.modeBadge.textContent = 'Daily Run';
+            this.dom.modeBadge.textContent = t.badgeDaily || 'Daily Run';
         } else if (this.mode === 'duel') {
             this.dom.stageLabel.textContent = t.duel;
             this.dom.modeBadge.textContent = this.duelMode === 'ai' ? 'vs AI' : '1v1 2P';
@@ -1675,10 +1760,17 @@ class GameEngine {
             if (this.keys['KeyA'] || this.keys['ArrowLeft']) moveX -= 1;
             if (this.keys['KeyD'] || this.keys['ArrowRight']) moveX += 1;
 
+            // 触屏摇杆兜底（键盘不动时生效），偏移量决定移动速度
+            if (moveX === 0 && moveY === 0 && this.joy.active) {
+                moveX = this.joy.x;
+                moveY = this.joy.y;
+            }
+
             if (moveX !== 0 || moveY !== 0) {
                 const len = Math.hypot(moveX, moveY);
-                p.vx = (moveX / len) * 220;
-                p.vy = (moveY / len) * 220;
+                const speed = 220 * Math.min(1, len);
+                p.vx = (moveX / len) * speed;
+                p.vy = (moveY / len) * speed;
             } else {
                 p.vx *= 0.82;
                 p.vy *= 0.82;

@@ -559,3 +559,8 @@ body {
     .rv-lb { max-width: 440px; }
 }
 
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.rv-icon-btn { position: relative; }
+.rv-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+

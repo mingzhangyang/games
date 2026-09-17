@@ -48,32 +48,6 @@
         <div class="td-stage" id="td-stage">
             <canvas id="td-canvas" width="480" height="640"></canvas>
 
-            <!-- 底部战术与波次控制条 -->
-            <div class="td-bottom-controls" id="td-bottom-controls">
-                <button class="td-skill-btn" id="td-skill-emp" title="EMP Shockwave (Q)" aria-label="EMP Shockwave">
-                    <svg class="td-skill-ring" viewBox="0 0 44 44">
-                        <circle class="td-ring-bg" cx="22" cy="22" r="19"/>
-                        <circle class="td-ring-fg" id="td-emp-ring" cx="22" cy="22" r="19"/>
-                    </svg>
-                    <span class="td-skill-icon">⚡</span>
-                    <span class="td-skill-hotkey">Q</span>
-                    <span class="td-skill-timer" id="td-emp-timer"></span>
-                </button>
-                <button class="td-wave-btn" id="td-wave-btn">
-                    <span class="td-wave-title" id="td-wave-text">▶ Wave 1</span>
-                    <span class="td-wave-preview" id="td-wave-preview"></span>
-                </button>
-                <button class="td-skill-btn" id="td-skill-boost" title="Overdrive (E)" aria-label="Overdrive">
-                    <svg class="td-skill-ring" viewBox="0 0 44 44">
-                        <circle class="td-ring-bg" cx="22" cy="22" r="19"/>
-                        <circle class="td-ring-fg" id="td-boost-ring" cx="22" cy="22" r="19"/>
-                    </svg>
-                    <span class="td-skill-icon">🔥</span>
-                    <span class="td-skill-hotkey">E</span>
-                    <span class="td-skill-timer" id="td-boost-timer"></span>
-                </button>
-            </div>
-
             <!-- 建造/升级面板 -->
             <div class="td-panel hidden" id="td-panel"></div>
 
@@ -146,6 +120,32 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- 底部战术与波次控制条（置于画布下方，避免遮挡核心） -->
+        <div class="td-bottom-controls" id="td-bottom-controls">
+            <button class="td-skill-btn" id="td-skill-emp" title="EMP Shockwave (Q)" aria-label="EMP Shockwave">
+                <svg class="td-skill-ring" viewBox="0 0 44 44">
+                    <circle class="td-ring-bg" cx="22" cy="22" r="19"/>
+                    <circle class="td-ring-fg" id="td-emp-ring" cx="22" cy="22" r="19"/>
+                </svg>
+                <span class="td-skill-icon">⚡</span>
+                <span class="td-skill-hotkey">Q</span>
+                <span class="td-skill-timer" id="td-emp-timer"></span>
+            </button>
+            <button class="td-wave-btn" id="td-wave-btn">
+                <span class="td-wave-title" id="td-wave-text">▶ Wave 1</span>
+                <span class="td-wave-preview" id="td-wave-preview"></span>
+            </button>
+            <button class="td-skill-btn" id="td-skill-boost" title="Overdrive (E)" aria-label="Overdrive">
+                <svg class="td-skill-ring" viewBox="0 0 44 44">
+                    <circle class="td-ring-bg" cx="22" cy="22" r="19"/>
+                    <circle class="td-ring-fg" id="td-boost-ring" cx="22" cy="22" r="19"/>
+                </svg>
+                <span class="td-skill-icon">🔥</span>
+                <span class="td-skill-hotkey">E</span>
+                <span class="td-skill-timer" id="td-boost-timer"></span>
+            </button>
         </div>
 
         <aside class="td-sidebar">

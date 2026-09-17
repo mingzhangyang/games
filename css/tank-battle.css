@@ -500,8 +500,9 @@ html, body {
     padding: 24px;
 }
 
-@media (hover: none) and (pointer: coarse) and (orientation: portrait),
-       (max-width: 900px) and (orientation: portrait) {
+/* 仅触屏设备竖屏时提示旋转；桌面窄窗口不触发 */
+@media ((hover: none) and (pointer: coarse) and (orientation: portrait)),
+       ((max-width: 900px) and (orientation: portrait) and (pointer: coarse)) {
     .orientation-overlay {
         display: flex;
     }
@@ -602,4 +603,9 @@ html, body {
     background: #334155;
     border-color: #64748b;
 }
+
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.v-aux-btn { position: relative; }
+.v-aux-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 

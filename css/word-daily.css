@@ -968,3 +968,13 @@ body {
     .wd-submit-btn { height: 50px; min-width: 90px; font-size: 16px; }
 }
 
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.wd-icon-btn { position: relative; }
+.wd-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+
+
+@media (max-width: 360px) {
+    .wd-icon-btn { height: 34px; min-width: 34px; }
+}
+

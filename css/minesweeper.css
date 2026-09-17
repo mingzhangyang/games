@@ -556,3 +556,8 @@ body {
     .ms-result-time { font-size: 52px; }
 }
 
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.ms-icon-btn { position: relative; }
+.ms-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+

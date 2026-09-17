@@ -66,6 +66,8 @@ const LANGUAGES = {
         longestStreak: 'Longest streak',
         swish: 'SWISH',
         onFire: 'ON FIRE!',
+        onFireHud: 'ON FIRE ×2',
+        score: 'Score',
         share: 'Share',
         copyResult: 'Copy Result',
         copied: 'Copied!',
@@ -94,6 +96,8 @@ const LANGUAGES = {
         longestStreak: '最长连击',
         swish: '空心入网',
         onFire: '火热状态！',
+        onFireHud: '火热 ×2',
+        score: '得分',
         share: '分享成绩',
         copyResult: '复制成绩',
         copied: '已复制！',
@@ -848,7 +852,7 @@ class HoopShotGame {
         if (this.el.best) this.el.best.textContent = `${this.TEXT.best} ${formatNumber(Math.max(this.best, this.score))}`;
         if (this.el.streak) {
             const flames = '🔥'.repeat(Math.min(this.streak, 5));
-            this.el.streak.textContent = this.streak > 0 ? (this.onFire ? `${flames} ON FIRE ×2` : flames || '') : '';
+            this.el.streak.textContent = this.streak > 0 ? (this.onFire ? `${flames} ${this.TEXT.onFireHud}` : flames || '') : '';
         }
         const fireBadge = this.el['fire-badge'];
         if (fireBadge) fireBadge.classList.toggle('visible', this.onFire);

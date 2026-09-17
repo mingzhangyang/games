@@ -200,6 +200,10 @@ const I18N = {
         toastThunder: 'Thunder Forging!',
         toastUlt: 'Thousand Swords Bloom!',
         toastHurt: 'Spiritual Qi Shaken!',
+        unitLi: 'li',
+        unitRings: 'rings',
+        submitting: 'Communing with the spiritual ley lines...',
+        dailyModifier: 'Heavenly Omen: [Raging Gale] Flight speed +30%, ring harmony doubled!',
         dailyStatusDone: 'Ascended Today',
         dailyStatusUndone: 'Untraveled',
         realms: [
@@ -758,6 +762,16 @@ class SwordFlightGame {
             SFX.updateMute();
             refreshSoundIcon();
         });
+
+        // 语言切换
+        const langBtn = document.getElementById('sf-btn-lang');
+        if (langBtn) {
+            langBtn.addEventListener('click', () => {
+                SFX.init();
+                setLang(getLang() === 'zh' ? 'en' : 'zh');
+                this.applyLanguage();
+            });
+        }
 
         window.addEventListener('site-settings:changed', () => {
             SFX.updateMute();
@@ -3040,7 +3054,7 @@ class SwordFlightGame {
         document.getElementById('sf-rec-stars').textContent = `${stars} / 27 ⭐`;
         document.getElementById('sf-rec-endless').textContent = this.endlessBest.toLocaleString();
         document.getElementById('sf-rec-realm').textContent = this.maxRealm;
-        document.getElementById('sf-rec-combo').textContent = `${this.maxComboRecord} 环`;
+        document.getElementById('sf-rec-combo').textContent = `${this.maxComboRecord} ${I18N[getLang() === 'zh' ? 'zh' : 'en'].unitRings}`;
 
         const now = new Date();
         const dateKey = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
@@ -3242,6 +3256,13 @@ class SwordFlightGame {
         document.getElementById('sf-sc-pause').textContent = t.scPause;
 
         updateMoreGames(lang);
+
+        // 每日卡与语言按钮标签
+        const dailyMod = document.getElementById('sf-daily-modifier');
+        if (dailyMod) dailyMod.textContent = t.dailyModifier;
+        const langGlyph = document.getElementById('sf-lang-glyph');
+        if (langGlyph) langGlyph.textContent = lang === 'zh' ? 'EN' : '中';
+
         this.updateRealmDisplay();
         this.updateSideRecords();
     }

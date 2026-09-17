@@ -177,19 +177,15 @@ body {
     cursor: crosshair;
 }
 
-/* ── 底部控制条（技能 + 发波） ── */
+/* ── 底部控制条（技能 + 发波，置于画布下方文档流） ── */
 
 .td-bottom-controls {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 10px;
+    position: static;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    pointer-events: none;
-    z-index: 4;
+    margin-top: 10px;
 }
 
 .td-skill-btn {
@@ -946,7 +942,10 @@ body {
         align-items: flex-start;
         justify-content: center;
         gap: 28px;
+        flex-wrap: wrap;
     }
+    /* 控制条独占一行，避免挤占画布与侧栏 */
+    .td-bottom-controls { width: 100%; }
     .td-sidebar {
         display: flex;
         flex-direction: column;
@@ -1034,3 +1033,8 @@ body {
         font-size: 10.5px;
     }
 }
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.td-icon-btn, .td-skill-btn { position: relative; }
+.td-icon-btn, .td-skill-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+

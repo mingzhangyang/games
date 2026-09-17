@@ -533,14 +533,21 @@ body.light-theme .language-selector .lang-btn.active {
     }
 }
 
-/* 游戏控制按钮 */
+/* 游戏控制按钮：右缘竖排窄条，避免横条遮挡下落算式的必经之路 */
 #game-controls {
     position: absolute;
-    top: 70px;
-    right: 20px;
+    top: 84px;
+    right: 8px;
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
     z-index: 200;
+}
+
+#game-controls .control-btn {
+    justify-content: center;
+    text-align: center;
 }
 
 .control-btn {
@@ -1010,13 +1017,13 @@ body.light-theme .language-selector .lang-btn.active {
         font-size: 15px;
     }
 
-    /* 移动端控制按钮横向排布在右上角，不再遮挡下落区域 */
+    /* 移动端控制按钮右缘竖排，窄条占位，不再横压 header 与算式生成区 */
     #game-controls {
         position: absolute;
-        top: 8px;
-        right: 8px;
+        top: 56px;
+        right: 6px;
         gap: 6px;
-        flex-direction: row;
+        flex-direction: column;
         z-index: 200;
     }
     
@@ -2414,3 +2421,8 @@ body.light-theme #game-canvas {
         min-width: 28px;
     }
 }
+
+/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
+.tool-btn { position: relative; }
+.tool-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+
