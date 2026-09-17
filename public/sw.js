@@ -4,7 +4,7 @@
  * 非 GET、跨域请求（各游戏 Worker 的榜单/统计）一律不拦截。
  */
 
-const CACHE = 'games-cache-v1';
+const CACHE = 'games-cache-v2';
 const ASSET_RE = /\.(css|js|mjs|png|svg|jpg|jpeg|webp|ico|json|woff2?)$/i;
 
 self.addEventListener('install', () => {
