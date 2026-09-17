@@ -45,8 +45,8 @@ body {
 }
 
 .hs-icon-btn {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -304,7 +304,7 @@ body {
 
 .hs-lb-row.hs-lb-top1 { background: rgba(252, 211, 77, 0.14); }
 .hs-lb-row.hs-lb-top2 { background: rgba(203, 213, 225, 0.10); }
-.hs-lb-row.hs-lb-top3 { background: rgba(255, 106, 60, 0.12); }
+.hs-lb-row.hs-lb-top3 { background: rgba(205, 127, 50, 0.12); }
 
 .hs-lb-rank { width: 22px; flex-shrink: 0; color: #b8a58c; font-weight: 700; font-variant-numeric: tabular-nums; }
 
@@ -437,7 +437,7 @@ body {
         color: #e8ecff;
         font-variant-numeric: tabular-nums;
     }
-    .hs-side-tower {
+    .hs-side-panel {
         display: flex;
         gap: 8px;
         align-items: baseline;
@@ -446,7 +446,7 @@ body {
         padding: 3px 0;
         color: #c3cdf2;
     }
-    .hs-side-tower b {
+    .hs-side-panel b {
         color: #e8ecff;
         white-space: nowrap;
     }

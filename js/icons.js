@@ -23,6 +23,12 @@ export const ICONS = {
     play: filled('<path d="M8 5.2v13.6L19 12 8 5.2z"/>'),
     // 环形箭头重试
     retry: svg('<path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/>'),
+    // 双矩形复制
+    copy: svg('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>'),
+    // 对勾
+    check: svg('<path d="M4.5 12.5l5 5L19.5 7"/>'),
+    // 地雷（圆 + 八向尖刺）
+    mine: svg('<circle cx="12" cy="13" r="5.5"/><path d="M12 4.5v3M12 18.5v3M3.5 13h3M17.5 13h3M6.3 7.3l2.1 2.1M17.7 7.3l-2.1 2.1M6.3 18.7l2.1-2.1M17.7 18.7l-2.1-2.1"/>'),
     // 叉号关闭
     close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
     // 旗帜（单 svg：旗杆描边 + 旗面填充）

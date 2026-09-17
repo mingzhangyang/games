@@ -43,6 +43,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 8px;
     padding: 4px 0 10px;
 }
@@ -69,6 +70,16 @@ body {
     text-align: center;
     letter-spacing: 0.02em;
 }
+
+.td-stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.td-stat-icon--lives { color: #ff6b7a; }
+.td-stat-icon--gold  { color: #ffd34d; }
+.td-stat-icon--wave  { color: #40d8ff; }
 
 /* 顶栏独立数值光效 */
 #td-lives { color: #ff6b7a; text-shadow: 0 0 10px rgba(255, 107, 122, 0.4); }
@@ -859,8 +870,8 @@ body {
     border: 1px solid rgba(203, 213, 225, 0.22);
 }
 .td-lb-row.td-lb-top3 {
-    background: rgba(64, 216, 255, 0.13);
-    border: 1px solid rgba(64, 216, 255, 0.25);
+    background: rgba(205, 127, 50, 0.13);
+    border: 1px solid rgba(205, 127, 50, 0.28);
 }
 
 .td-lb-rank { width: 22px; flex-shrink: 0; color: #9aa6d8; font-weight: 800; font-variant-numeric: tabular-nums; }

@@ -531,19 +531,6 @@ body {
         color: #e8ecff;
         font-variant-numeric: tabular-nums;
     }
-    .gd-side-tower {
-        display: flex;
-        gap: 8px;
-        align-items: baseline;
-        font-size: 12.5px;
-        line-height: 1.6;
-        padding: 3px 0;
-        color: #c3cdf2;
-    }
-    .gd-side-tower b {
-        color: #e8ecff;
-        white-space: nowrap;
-    }
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */

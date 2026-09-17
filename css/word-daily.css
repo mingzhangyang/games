@@ -14,7 +14,7 @@
     --tile-border: rgba(255, 255, 255, 0.14);
     --tile-border-filled: rgba(148, 163, 255, 0.55);
     --tile-bg: transparent;
-    --correct: #3aa655;
+    --correct: #10b981;
     --present: #cfa53f;
     --absent: #333a56;
     --key-bg: #2a3155;
@@ -75,8 +75,8 @@ body {
 }
 
 .wd-icon-btn {
-    height: 36px;
-    min-width: 36px;
+    height: 40px;
+    min-width: 40px;
     padding: 0 8px;
     font-size: 15px;
     font-family: inherit;

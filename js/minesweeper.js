@@ -253,13 +253,13 @@ class MinesweeperGame {
         if (this.el.title) this.el.title.textContent = t.title;
         if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
         if (this.el.howto) this.el.howto.textContent = t.howto;
-        if (this.el['btn-play']) this.el['btn-play'].textContent = `💣 ${t.play}`;
+        if (this.el['btn-play']) this.el['btn-play'].innerHTML = `${ICONS.mine}<span>${t.play}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el['btn-again']) this.el['btn-again'].textContent = `🔄 ${t.again}`;
-        if (this.el['btn-copy']) this.el['btn-copy'].textContent = `📋 ${t.copyResult}`;
-        if (this.el['btn-close']) this.el['btn-close'].textContent = `✖ ${t.close}`;
+        if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
+        if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
+        if (this.el['btn-close']) this.el['btn-close'].innerHTML = `${ICONS.close}<span>${t.close}</span>`;
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         if (this.el['counter-mines']) this.el['counter-mines'].title = t.minesLeft;
         if (this.el['counter-timer']) this.el['counter-timer'].title = t.timeElapsed;
@@ -849,10 +849,10 @@ class MinesweeperGame {
             }
         }
         if (this.el['btn-copy']) {
-            const original = `📋 ${t.copyResult}`;
-            this.el['btn-copy'].textContent = ok ? `✅ ${t.copied}` : original;
+            const original = `${ICONS.copy}<span>${t.copyResult}</span>`;
+            this.el['btn-copy'].innerHTML = ok ? `${ICONS.check}<span>${t.copied}</span>` : original;
             setTimeout(() => {
-                if (this.el['btn-copy']) this.el['btn-copy'].textContent = original;
+                if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = original;
             }, 1600);
         }
     }

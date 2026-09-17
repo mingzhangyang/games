@@ -49,8 +49,8 @@ body {
 }
 
 .pm-icon-btn {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -444,7 +444,7 @@ body {
 
 .pm-lb-row.pm-lb-top1 { background: rgba(252, 211, 77, 0.14); }
 .pm-lb-row.pm-lb-top2 { background: rgba(203, 213, 225, 0.10); }
-.pm-lb-row.pm-lb-top3 { background: rgba(217, 119, 6, 0.12); }
+.pm-lb-row.pm-lb-top3 { background: rgba(205, 127, 50, 0.12); }
 
 .pm-lb-rank {
     width: 22px;
@@ -594,7 +594,7 @@ body {
         color: #e8ecff;
         font-variant-numeric: tabular-nums;
     }
-    .pm-side-tower {
+    .pm-side-panel {
         display: flex;
         gap: 8px;
         align-items: baseline;
@@ -603,7 +603,7 @@ body {
         padding: 3px 0;
         color: #c3cdf2;
     }
-    .pm-side-tower b {
+    .pm-side-panel b {
         color: #e8ecff;
         white-space: nowrap;
     }
