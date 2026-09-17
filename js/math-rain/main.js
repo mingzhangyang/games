@@ -204,9 +204,7 @@ class MathRainGame {
             this.resizeCanvas();
             
             this.canvasConfig = {
-                backgroundColor: this.getCanvasBackgroundColor(),
-                expressionFont: '36px "Fredoka One", "Nunito", cursive',
-                expressionColors: ['#ff6b9d', '#4ecdc4', '#45b7d1', '#f9ca24', '#a55eea', '#fd9644']
+                backgroundColor: this.getCanvasBackgroundColor()
             };
             
             // Initialize particle system
@@ -696,32 +694,59 @@ class MathRainGame {
     renderExpressions() {
         const gameState = this.gameStateManager?.getState();
         if (gameState?.gameState === 'paused') return;
-        
+
         const fontSize = this.getExpressionFontSize();
-        this.ctx.font = `${fontSize}px "Fredoka One", "Nunito", cursive, sans-serif`;
+        this.ctx.font = `600 ${fontSize}px "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
-        this.expressions.forEach((expr, index) => {
+        this.expressions.forEach((expr) => {
             if (expr?.data?.expression && expr?.position) {
                 const { x, y } = expr.position;
                 const text = expr.data.expression;
-                
-                this.ctx.fillStyle = this.canvasConfig.expressionColors[index % this.canvasConfig.expressionColors.length];
-                
-                // Add glow effect
-                this.ctx.shadowColor = this.ctx.fillStyle;
-                this.ctx.shadowBlur = 8;
+
+                // 颜色语义化：已答对=绿、已答错=红、普通=浅灰白
+                let fill = '#dbe4ff';
+                if (expr.answered === true) fill = '#4ade80';
+                else if (expr.answered === false) fill = '#f87171';
+
+                // 圆角底牌：半透明深色背景 + 细描边
+                const metrics = this.ctx.measureText(text);
+                const padX = 12;
+                const padY = 8;
+                const cardW = metrics.width + padX * 2;
+                const cardH = fontSize + padY * 2;
+                this.ctx.beginPath();
+                this.roundRectPath(x - cardW / 2, y - cardH / 2, cardW, cardH, 12);
+                this.ctx.fillStyle = 'rgba(10, 10, 30, 0.55)';
+                this.ctx.fill();
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                this.ctx.stroke();
+
+                // 文字（浅色 + 微弱 glow）
+                this.ctx.fillStyle = fill;
+                this.ctx.shadowColor = fill;
+                this.ctx.shadowBlur = 6;
                 this.ctx.shadowOffsetX = 0;
                 this.ctx.shadowOffsetY = 0;
-                
-                // Draw text
                 this.ctx.fillText(text, x, y);
-                
-                // Reset shadow
                 this.ctx.shadowBlur = 0;
             }
         });
+    }
+
+    /**
+     * 在 (x, y) 处绘制圆角矩形路径（兼容旧浏览器，不依赖 ctx.roundRect）
+     */
+    roundRectPath(x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        this.ctx.moveTo(x + radius, y);
+        this.ctx.arcTo(x + w, y, x + w, y + h, radius);
+        this.ctx.arcTo(x + w, y + h, x, y + h, radius);
+        this.ctx.arcTo(x, y + h, x, y, radius);
+        this.ctx.arcTo(x, y, x + w, y, radius);
+        this.ctx.closePath();
     }
     
     /**
@@ -936,6 +961,7 @@ class MathRainGame {
         const responseTime = Date.now() - expression.startTime;
         const gameState = this.gameStateManager?.getState();
         const isCorrect = !!(expression.isMatched && expression.isMatched(gameState?.targetNumber));
+        expression.answered = isCorrect;
 
         if (isCorrect) {
             this.gameStateManager?.handleCorrectAnswer({
@@ -962,9 +988,7 @@ class MathRainGame {
     
     // Utility methods
     getCanvasBackgroundColor() {
-        // 半透明底色：让 #game-area 的三层径向渐变透出，避免画布被纯色盖死
-        const body = document.body;
-        if (body.classList.contains('light-theme')) return 'rgba(247, 250, 252, 0.85)';
+        // 半透明深色底：让 #game-area 的径向渐变透出，避免画布被纯色盖死
         return 'rgba(10, 10, 30, 0.35)';
     }
 

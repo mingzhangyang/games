@@ -20,6 +20,8 @@ body {
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .gd-shell {
@@ -152,7 +154,7 @@ body {
 /* ── 覆盖层 ── */
 
 .gd-overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
     z-index: 10;
     display: flex;

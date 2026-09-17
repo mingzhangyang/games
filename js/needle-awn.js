@@ -504,6 +504,7 @@ class GameEngine {
         this.dpr = window.devicePixelRatio || 1;
         this.scale = 1;
         this.setupCanvas();
+        this._buildBackground();
 
         this.mode = 'levels'; // 'levels' | 'endless' | 'daily' | 'duel'
         this.currentLevel = 1;
@@ -2096,6 +2097,39 @@ class GameEngine {
 
     /* ────────────────────────── 渲染层 (赛博水墨画风) ────────────────────────── */
 
+    _buildBackground() {
+        // 大半径极弱 radial 墨晕（仅构建一次，运行时只平移 → 零每帧渐变）
+        this.bgBlobs = [
+            this._makeInkBlob('#38bdf8', 0.05),
+            this._makeInkBlob('#fbbf24', 0.045),
+            this._makeInkBlob('#38bdf8', 0.04)
+        ];
+        this.bgBlobInfo = [
+            { x: ARENA_WIDTH * 0.28, y: ARENA_HEIGHT * 0.30, r: 230, sx: 0.18, sy: 0.12, ph: 0.0 },
+            { x: ARENA_WIDTH * 0.72, y: ARENA_HEIGHT * 0.58, r: 270, sx: 0.10, sy: 0.15, ph: 2.1 },
+            { x: ARENA_WIDTH * 0.50, y: ARENA_HEIGHT * 0.82, r: 190, sx: 0.22, sy: 0.14, ph: 4.0 }
+        ];
+    }
+
+    _makeInkBlob(hex, alpha) {
+        const s = 256;
+        const c = document.createElement('canvas');
+        c.width = s;
+        c.height = s;
+        const x = c.getContext('2d');
+        const g = x.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+        g.addColorStop(0, this._hexA(hex, alpha));
+        g.addColorStop(1, this._hexA(hex, 0));
+        x.fillStyle = g;
+        x.fillRect(0, 0, s, s);
+        return c;
+    }
+
+    _hexA(hex, a) {
+        const n = parseInt(hex.slice(1), 16);
+        return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+    }
+
     draw() {
         const ctx = this.ctx;
         ctx.save();
@@ -2107,18 +2141,37 @@ class GameEngine {
             ctx.translate(shakeX, shakeY);
         }
 
-        // 1. 背景绘制 (深渊夜色与水墨网格微光)
+        // 1. 背景绘制 (赛博水墨：漂移斜网格 + 极弱墨晕)
         ctx.fillStyle = '#02040b';
         ctx.fillRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
 
-        // 浮动游丝水墨暗纹
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
+        // 缓慢漂移的水墨斜网格 (细线 alpha <= 0.06)
+        const gridDrift = (this.timeElapsed * 8) % 46;
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
         ctx.lineWidth = 1;
-        for (let y = 40; y < ARENA_HEIGHT; y += 40) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(ARENA_WIDTH, y);
-            ctx.stroke();
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
+        ctx.clip();
+        for (let x = -ARENA_HEIGHT - 46 + gridDrift; x < ARENA_WIDTH; x += 46) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x + ARENA_HEIGHT, ARENA_HEIGHT);
+        }
+        for (let x = gridDrift; x < ARENA_WIDTH + ARENA_HEIGHT; x += 46) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x - ARENA_HEIGHT, ARENA_HEIGHT);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // 大半径极弱 radial 墨晕 (预渲染一次，运行时仅平移 → 零每帧渐变)
+        if (this.bgBlobs) {
+            for (let i = 0; i < this.bgBlobs.length; i++) {
+                const info = this.bgBlobInfo[i];
+                const dx = Math.sin(this.timeElapsed * info.sx + info.ph) * info.r * 0.35;
+                const dy = Math.cos(this.timeElapsed * info.sy + info.ph) * info.r * 0.35;
+                ctx.drawImage(this.bgBlobs[i], info.x + dx - info.r, info.y + dy - info.r, info.r * 2, info.r * 2);
+            }
         }
 
         // 2. 绘制边界竞技场界圈 (八卦太极微光虚环)
@@ -2223,12 +2276,56 @@ class GameEngine {
             ctx.shadowBlur = 10;
 
             if (e.isBoss) {
-                // Boss 巨大法相核心
+                // Boss 多层描边「法相」
+                const R = e.radius;
+                const tB = this.timeElapsed;
+
+                // 内核实心
+                ctx.shadowColor = colorGlow;
+                ctx.shadowBlur = 14;
                 ctx.fillStyle = colorGlow;
                 ctx.beginPath();
-                ctx.arc(0, 0, e.radius, 0, Math.PI * 2);
+                ctx.arc(0, 0, R * 0.55, 0, Math.PI * 2);
                 ctx.fill();
 
+                // 中层金色虚线环（反向旋转）
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 7]);
+                ctx.save();
+                ctx.rotate(-tB * 0.6);
+                ctx.beginPath();
+                ctx.arc(0, 0, R * 0.82, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+                ctx.setLineDash([]);
+
+                // 外层青色细环（正向旋转）
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+                ctx.lineWidth = 1.5;
+                ctx.save();
+                ctx.rotate(tB * 0.9);
+                ctx.beginPath();
+                ctx.arc(0, 0, R * 1.05, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+
+                // 6-8 根环绕芒刺（短径向线段）
+                const spikes = 8;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                for (let s = 0; s < spikes; s++) {
+                    const a = (s / spikes) * Math.PI * 2 + tB * 0.5;
+                    const r0 = R * 1.12;
+                    const r1 = R * 1.32;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0);
+                    ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+                    ctx.stroke();
+                }
+
+                // 尖端破阵光标（保留原白三角描边）
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
@@ -2237,12 +2334,6 @@ class GameEngine {
                 ctx.lineTo(-e.radius * 0.8, e.radius);
                 ctx.closePath();
                 ctx.stroke();
-
-                // 尖端破阵光标
-                ctx.fillStyle = '#fef08a';
-                ctx.beginPath();
-                ctx.arc(e.tipDistance, 0, 5, 0, Math.PI * 2);
-                ctx.fill();
 
                 // 绘制 Boss 血条
                 ctx.restore();

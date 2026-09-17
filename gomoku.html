@@ -22,14 +22,15 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23fff'/%3E%3C/svg%3E">
         <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/gomoku.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
 <body>
     <div class="game-container">
-        <div class="gomoku-top-row" style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:600px;margin-bottom:-6px;">
-            <a href="index.html" id="homeLink" style="color:#63b3ed;text-decoration:none;display:inline-flex;" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
-            <button id="langBtn" class="btn btn-secondary" style="padding:6px 14px;font-size:14px;">中文</button>
+        <div class="gomoku-top-row">
+            <a href="index.html" id="homeLink" class="icon-btn" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button id="langBtn" class="btn btn-ghost">中文</button>
         </div>
         <h1 id="gameTitle">Gomoku</h1>
         
@@ -44,8 +45,8 @@
 
         <div class="controls">
             <button class="btn btn-primary" id="restartBtn">Restart Game</button>
-            <button class="btn btn-secondary" id="modeBtn">Mode: vs Computer</button>
-            <select id="difficultySelect" class="btn btn-secondary" style="appearance: auto; padding-right: 30px;">
+            <button class="btn btn-ghost" id="modeBtn">Mode: vs Computer</button>
+            <select id="difficultySelect" class="btn btn-ghost gomoku-select">
                 <option value="easy" id="optEasy">Easy</option>
                 <option value="medium" id="optMedium" selected>Medium</option>
                 <option value="hard" id="optHard">Hard</option>
@@ -73,7 +74,7 @@
             <h2 id="modalTitle">Game Over</h2>
             <p id="modalMessage"></p>
             <button class="btn btn-primary" id="modalRestartBtn">Play Again</button>
-            <button class="btn btn-secondary" id="modalViewBtn">View Board</button>
+            <button class="btn btn-ghost" id="modalViewBtn">View Board</button>
         </div>
     </div>
 

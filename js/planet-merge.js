@@ -1650,11 +1650,12 @@ class PlanetMergeGame {
         ctx.ellipse(x - r * 0.32, y - r * 0.42, r * 0.22, r * 0.13, -0.6, 0, Math.PI * 2);
         ctx.fill();
 
-        // emoji 纹理
-        ctx.font = `${r * 1.05}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+        // emoji 纹理（缩到约 r*0.72，整体下移，让渐变球体当主角；高级星球更小）
+        const emojiScale = tier <= 3 ? 0.72 : 0.5;
+        ctx.font = `${r * emojiScale}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(cfg.emoji, x, y + r * 0.04);
+        ctx.fillText(cfg.emoji, x, y + r * 0.18);
 
         // 土星环（前半）
         if (cfg.ring) {

@@ -449,13 +449,13 @@ class Tetris {
         this.glowIntensity = 0;
         
         this.colors = {
-            I: '#00f0f0',
-            O: '#f0f000',
-            T: '#a000f0',
-            S: '#00f000',
-            Z: '#f00000',
-            J: '#0000f0',
-            L: '#f0a000'
+            I: '#4fd1e0',
+            O: '#f6c960',
+            T: '#b48ee8',
+            S: '#6fcf97',
+            Z: '#e06c75',
+            J: '#5b8def',
+            L: '#ef9f5a'
         };
         
         this.rainbowColors = [

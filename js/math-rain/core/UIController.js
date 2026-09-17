@@ -93,7 +93,6 @@ class UIController {
         // Settings buttons
         this.bindButton('settings-btn', () => this.showSettings());
         this.bindButton('settings-close-btn', () => this.hideSettings());
-        this.bindButton('theme-btn', () => this.toggleTheme());
         
         // Help buttons
         this.bindButton('help-btn', () => this.showHelp());
@@ -233,7 +232,8 @@ class UIController {
         const comboElement = this.elements.get('combo-value');
         if (comboElement) {
             comboElement.textContent = state.combo.toString();
-            comboElement.style.color = state.combo > 0 ? '#ed8936' : '#48bb78';
+            // 仅在高连击（≥5）时点亮呼吸 glow，平时保持静态
+            comboElement.classList.toggle('combo-hot', state.combo >= 5);
         }
         
         // Update other stats
@@ -515,64 +515,9 @@ class UIController {
     }
 
     /**
-     * Toggle theme
-     */
-    toggleTheme() {
-        const body = document.body;
-        const isDark = body.classList.contains('dark-theme');
-        const isLight = body.classList.contains('light-theme');
-
-        // 隐私模式下 localStorage 可能抛 SecurityError
-        const saveTheme = (theme) => {
-            try {
-                localStorage.setItem('mr_theme', theme);
-            } catch (e) {
-                // 存储不可用时仅切换当前会话的主题
-            }
-        };
-
-        if (isDark) {
-            body.classList.remove('dark-theme');
-            body.classList.add('light-theme');
-            saveTheme('light');
-        } else if (isLight) {
-            body.classList.remove('light-theme');
-            saveTheme('default');
-        } else {
-            body.classList.add('dark-theme');
-            saveTheme('dark');
-        }
-
-        let currentTheme = 'default';
-        try {
-            currentTheme = localStorage.getItem('mr_theme') || localStorage.getItem('theme') || 'default';
-        } catch (e) {
-            // ignore
-        }
-
-        this.eventSystem.emit('ui:theme:changed', {
-            theme: currentTheme
-        });
-    }
-
-    /**
      * Initialize settings controls
      */
     initializeSettings() {
-        // Load saved theme（mr_theme 为本游戏主题键；'theme' 为历史遗留键，回退兼容）
-        let savedTheme = null;
-        try {
-            savedTheme = localStorage.getItem('mr_theme');
-            if (savedTheme === null) savedTheme = localStorage.getItem('theme');
-        } catch (e) {
-            // 存储不可用时使用默认主题
-        }
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-theme');
-        } else if (savedTheme === 'light') {
-            document.body.classList.add('light-theme');
-        }
-        
         // Sound volume slider
         const soundVolumeSlider = document.getElementById('sound-volume');
         const soundVolumeValue = document.getElementById('sound-volume-value');

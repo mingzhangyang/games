@@ -211,6 +211,7 @@ const Sfx = {
 
 const WORLD_W = 420;
 const WORLD_H = 640;
+const FLOOR_H = 100; // 球场木纹地板高度（世界像素）
 
 const BALL_R = 19;
 const BALL_X = WORLD_W / 2;
@@ -1123,13 +1124,41 @@ class HoopShotGame {
             ctx.fill();
         }
         ctx.globalAlpha = 1;
-        // 地板（球场木纹色调的暗色带）
-        const floor = ctx.createLinearGradient(0, c.height - 46 * this.scale, 0, c.height);
+        // 地板（加宽的球场木纹色调暗色带）
+        const floorTop = c.height - FLOOR_H * this.scale;
+        const floor = ctx.createLinearGradient(0, floorTop, 0, c.height);
         floor.addColorStop(0, 'rgba(216,150,84,0.16)');
-        floor.addColorStop(1, 'rgba(216,150,84,0.32)');
+        floor.addColorStop(1, 'rgba(216,150,84,0.34)');
         ctx.fillStyle = floor;
-        ctx.fillRect(0, c.height - 46 * this.scale, c.width, 46 * this.scale);
+        ctx.fillRect(0, floorTop, c.width, FLOOR_H * this.scale);
         this.starfield = c;
+    }
+
+    drawCourt(ctx) {
+        // 地板球场线：罚球圈（半弧）+ 三分弧（大弧线），随篮筐位置取景
+        const floorTop = WORLD_H - FLOOR_H;
+        const hx = this.hoopX;
+        const hy = this.rimY;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, floorTop, WORLD_W, FLOOR_H);
+        ctx.clip();
+
+        // 三分弧：以篮筐为中心、向下凸向玩家的大弧线
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(hx, hy, (WORLD_H - hy) + 6, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 罚球圈：主题橙点缀的半圆弧
+        ctx.strokeStyle = 'rgba(255,140,90,0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(hx, floorTop + 36, 78, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
     }
 
     render() {
@@ -1155,6 +1184,8 @@ class HoopShotGame {
             ctx.fillStyle = '#0a0e24';
             ctx.fillRect(0, 0, WORLD_W, WORLD_H);
         }
+
+        this.drawCourt(ctx);
 
         this.drawHoopBack(ctx);
         this.drawAim(ctx);

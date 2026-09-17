@@ -1,3 +1,9 @@
+:root {
+    /* gomoku 主色：蓝（保持辨识），tokens 的 .btn-primary/.btn-ghost 复用 */
+    --tok-accent: #4299e1;
+    --tok-accent-2: #3182ce;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
@@ -9,6 +15,16 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
+}
+
+/* 顶行：home / 语言按钮容器（原行内样式移入） */
+.gomoku-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: -6px;
 }
 
 .game-container {
@@ -23,7 +39,7 @@ body {
 h1 {
     margin: 10px 0;
     font-size: 2.5rem;
-    text-shadow: 0 0 10px rgba(66, 153, 225, 0.5);
+    text-shadow: 0 0 4px rgba(66, 153, 225, 0.25);
     color: #63b3ed;
 }
 
@@ -52,13 +68,21 @@ h1 {
 
 
 .board-container {
+    --tb-frame: clamp(6px, 1.5vw, 12px);
     position: relative;
-    padding: 10px;
-    background: #d69e2e; /* Wood-like color base */
-    background: radial-gradient(circle, #ecc94b 0%, #d69e2e 100%);
-    border-radius: 5px;
+    padding: var(--tb-frame);
+    background: linear-gradient(145deg, #1a202c, #2d3748); /* 深色渐变外框，与暗黑 UI 同系 */
+    border-radius: 10px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    border: 8px solid #744210;
+}
+
+.board-container::before {
+    content: '';
+    position: absolute;
+    inset: var(--tb-frame);
+    border-radius: 4px;
+    background: radial-gradient(circle, #ecc94b 0%, #d69e2e 100%); /* 木质棋盘本体保留 */
+    box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.5); /* 内侧 1px 金色细线 */
 }
 
 canvas {
@@ -77,7 +101,7 @@ canvas {
     padding: 10px 20px;
     font-size: 1rem;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--tok-radius-btn, 12px);
     cursor: pointer;
     transition: all 0.2s;
     font-weight: bold;
@@ -93,26 +117,19 @@ button:focus-visible {
     outline-offset: 2px;
 }
 
-.btn-primary {
-    background-color: #4299e1;
-    color: white;
-    box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3);
-}
+/* 主按钮 / 幽灵按钮沿用 tokens.css 的 .btn-primary / .btn-ghost（蓝渐变主色） */
 
-.btn-primary:hover {
-    background-color: #3182ce;
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background-color: #718096;
-    color: white;
-    box-shadow: 0 4px 6px rgba(113, 128, 150, 0.3);
-}
-
-.btn-secondary:hover {
-    background-color: #4a5568;
-    transform: translateY(-2px);
+/* 原生 select 最小定制：去原生外观 + 自绘下拉箭头，融入深色玻璃 UI */
+.gomoku-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 30px;
+    background-color: var(--tok-panel, rgba(255, 255, 255, 0.06));
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
 }
 
 .modal {
@@ -152,10 +169,9 @@ button:focus-visible {
 /* Responsive adjustments */
 @media (max-width: 650px) {
     .board-container {
-        padding: 5px;
-        border-width: 4px;
+        --tb-frame: clamp(5px, 1.4vw, 8px);
     }
-    
+
     canvas {
         width: 100%;
         height: auto;

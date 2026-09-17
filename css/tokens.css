@@ -1,0 +1,124 @@
+/* ─────────────────────────────────────────────
+   Shared design tokens — 全仓统一设计系统（唯一新增公共文件）
+   ─────────────────────────────────────────────
+   引入方式：在各自游戏 css 之前
+       <link rel="stylesheet" href="css/tokens.css">
+   每款游戏通过覆盖 --tok-accent / --tok-accent-2 继承同一套
+   玻璃拟态语言，同时保留各自辨识度：
+       tetris      → #667eea 紫蓝（默认）
+       tank-battle → #10b981 翠绿
+       gomoku      → #4299e1 蓝
+   通用组件类：.icon-btn（玻璃图标钮）、.btn-primary / .btn-ghost
+   （玻璃 + 渐变主色按钮）。各页若另需主色，仅覆盖 --tok-accent 即可。
+   ───────────────────────────────────────────── */
+
+:root {
+    /* 深底与玻璃面板 */
+    --tok-bg: #05060f;                       /* 页面最深底色 */
+    --tok-bg-2: #0b0f26;                     /* 渐变中段 */
+    --tok-panel: rgba(255, 255, 255, 0.06);  /* 玻璃面板填充 */
+    --tok-panel-strong: rgba(255, 255, 255, 0.12);
+    --tok-border: rgba(255, 255, 255, 0.1);  /* 玻璃描边 */
+    --tok-border-strong: rgba(255, 255, 255, 0.14);
+
+    /* 文字 */
+    --tok-text: #e8ecff;
+    --tok-text-dim: #9aa6d8;
+    --tok-text-mute: #56618f;
+
+    /* 主色（各页覆盖 --tok-accent 即可换肤） */
+    --tok-accent: #667eea;
+    --tok-accent-2: #764ba2;
+
+    /* 圆角 */
+    --tok-radius-btn: 12px;
+    --tok-radius-panel: 16px;
+
+    /* 控件尺寸 */
+    --tok-btn-size: 40px;   /* 图标按钮视觉尺寸 */
+    --tok-hit-pad: -6px;   /* 触控热区外扩（保持视觉尺寸不变） */
+}
+
+/* ── 图标按钮：玻璃圆角钮（40px 视觉，≥44px 触控热区） ──
+   以 minesweeper / reversi 的 .ms-icon-btn / .rv-icon-btn 为模板 */
+.icon-btn {
+    width: var(--tok-btn-size);
+    height: var(--tok-btn-size);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    background: var(--tok-panel);
+    border: 1px solid var(--tok-border);
+    border-radius: var(--tok-radius-btn);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, border-color 0.15s;
+    color: inherit;
+    font-family: inherit;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.icon-btn:hover { background: var(--tok-panel-strong); }
+.icon-btn:active { transform: scale(0.92); }
+
+/* 键盘焦点可见环（跟随主色） */
+.icon-btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-ghost:focus-visible {
+    outline: 2px solid var(--tok-accent);
+    outline-offset: 2px;
+}
+
+/* 触控热区放大：视觉尺寸不变，命中区域扩展到 ≥44px */
+.icon-btn { position: relative; }
+.icon-btn::after {
+    content: '';
+    position: absolute;
+    inset: var(--tok-hit-pad);
+    border-radius: inherit;
+}
+
+/* ── 主按钮：玻璃 + 渐变主色 ── */
+.btn-primary,
+.btn-ghost {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: var(--tok-radius-btn);
+    padding: 11px 18px;
+    transition: transform 0.12s, background 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+    color: #0b0f26;
+    background: linear-gradient(120deg, var(--tok-accent), var(--tok-accent-2));
+    border: none;
+    box-shadow: 0 8px 24px rgba(64, 184, 255, 0.3); /* 回退 */
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--tok-accent) 35%, transparent);
+}
+.btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.btn-primary:active { transform: scale(0.96); }
+
+.btn-ghost {
+    color: var(--tok-text-dim);
+    background: var(--tok-panel);
+    border: 1px solid var(--tok-border);
+}
+.btn-ghost:hover { background: var(--tok-panel-strong); color: var(--tok-text); }
+.btn-ghost:active { transform: scale(0.96); }
+
+/* 共享基础 .btn（无背景，仅排版/交互基线，供各页按钮复用） */
+.btn {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: var(--tok-radius-btn);
+    transition: transform 0.12s, background 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}

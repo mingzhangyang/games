@@ -1,7 +1,7 @@
 /* Math Rain Game - 主样式文件 */
 
 /* 导入个性化字体 */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap');
 
 /* 全局重置和基础样式 */
 * {
@@ -11,11 +11,13 @@
 }
 
 body {
-    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background:
+        radial-gradient(ellipse 75% 45% at 50% -10%, rgba(99, 102, 241, 0.12), transparent),
+        linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #0f172a 100%);
     min-height: 100vh;
     overflow: hidden;
-    color: #ffffff;
+    color: #e8ecff;
     user-select: none;
     /* 性能优化 */
     -webkit-transform: translateZ(0);
@@ -49,9 +51,9 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 15px 25px;
-    background: rgba(26, 32, 44, 0.9);
+    background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(10px);
-    border-bottom: 2px solid #667eea;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 100;
 }
 
@@ -77,32 +79,30 @@ body {
 .level-display span:last-child,
 .time-display span:last-child,
 .lives-display span:last-child {
-    font-family: 'Fredoka One', 'Nunito', cursive;
+    font-family: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 24px;
     font-weight: 900;
-    color: #48bb78;
-    text-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.3),
-        0 0 8px rgba(72, 187, 120, 0.5);
+    color: #6366f1;
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
     letter-spacing: 1px;
 }
 
 #combo-value {
-    color: #ed8936 !important;
+    color: #818cf8 !important;
+}
+
+#combo-value.combo-hot {
     animation: comboGlow 1s ease-in-out infinite alternate;
 }
 
 @keyframes comboGlow {
     from {
-        text-shadow: 
-            0 2px 4px rgba(0, 0, 0, 0.3),
-            0 0 8px rgba(237, 137, 54, 0.5);
+        text-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
     }
     to {
         text-shadow: 
-            0 2px 4px rgba(0, 0, 0, 0.3),
-            0 0 16px rgba(237, 137, 54, 0.8),
-            0 0 24px rgba(237, 137, 54, 0.4);
+            0 0 16px rgba(129, 140, 248, 0.8),
+            0 0 24px rgba(129, 140, 248, 0.4);
     }
 }
 
@@ -122,13 +122,13 @@ body {
     padding: 15px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
-    border: 1px solid rgba(102, 126, 234, 0.3);
+    border: 1px solid rgba(99, 102, 241, 0.3);
     transition: all 0.3s ease;
 }
 
 .setting-item:hover {
     background: rgba(0, 0, 0, 0.4);
-    border-color: rgba(102, 126, 234, 0.5);
+    border-color: rgba(99, 102, 241, 0.5);
     transform: translateY(-2px);
 }
 
@@ -154,7 +154,7 @@ body {
     appearance: none;
     width: 20px;
     height: 20px;
-    background: #667eea;
+    background: #6366f1;
     border-radius: 50%;
     cursor: pointer;
     border: 2px solid white;
@@ -163,14 +163,14 @@ body {
 }
 
 .setting-item input[type="range"]::-webkit-slider-thumb:hover {
-    background: #48bb78;
+    background: #6366f1;
     transform: scale(1.1);
 }
 
 .setting-item input[type="range"]::-moz-range-thumb {
     width: 20px;
     height: 20px;
-    background: #667eea;
+    background: #6366f1;
     border-radius: 50%;
     cursor: pointer;
     border: 2px solid white;
@@ -180,7 +180,7 @@ body {
 .setting-item input[type="checkbox"] {
     width: 20px;
     height: 20px;
-    accent-color: #667eea;
+    accent-color: #6366f1;
     cursor: pointer;
 }
 
@@ -200,8 +200,8 @@ body {
 .language-selector .lang-btn {
     flex: 1;
     padding: 8px 16px;
-    background: rgba(102, 126, 234, 0.2);
-    border: 1px solid rgba(102, 126, 234, 0.4);
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.4);
     border-radius: 6px;
     color: #e2e8f0;
     font-size: 12px;
@@ -210,15 +210,15 @@ body {
 }
 
 .language-selector .lang-btn:hover {
-    background: rgba(102, 126, 234, 0.3);
-    border-color: #48bb78;
+    background: rgba(99, 102, 241, 0.3);
+    border-color: #6366f1;
     transform: translateY(-1px);
 }
 
 .language-selector .lang-btn.active {
-    background: rgba(72, 187, 120, 0.3);
-    border-color: #48bb78;
-    color: #48bb78;
+    background: rgba(99, 102, 241, 0.3);
+    border-color: #6366f1;
+    color: #6366f1;
     font-weight: 600;
 }
 
@@ -239,46 +239,6 @@ body {
     }
 }
 
-/* 深色主题优化 */
-body.dark-theme .setting-item {
-    background: rgba(0, 0, 0, 0.4);
-    border-color: rgba(102, 126, 234, 0.4);
-}
-
-body.dark-theme .setting-item:hover {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: rgba(102, 126, 234, 0.6);
-}
-
-/* 浅色主题优化 */
-body.light-theme .setting-item {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(102, 126, 234, 0.3);
-    color: #2d3748;
-}
-
-body.light-theme .setting-item label {
-    color: #2d3748;
-}
-
-body.light-theme .setting-item span {
-    color: #4a5568;
-}
-
-body.light-theme .language-selector .lang-btn {
-    background: rgba(102, 126, 234, 0.1);
-    color: #2d3748;
-}
-
-body.light-theme .language-selector .lang-btn:hover {
-    background: rgba(102, 126, 234, 0.2);
-}
-
-body.light-theme .language-selector .lang-btn.active {
-    background: rgba(72, 187, 120, 0.2);
-    color: #38a169;
-}
-
 /* 会话系统UI样式 */
 .session-display span:last-child {
     color: #f56565 !important;
@@ -290,11 +250,11 @@ body.light-theme .language-selector .lang-btn.active {
 
 /* 准确率显示样式 */
 .accuracy-display span:last-child {
-    color: #38a169 !important;
+    color: #4f46e5 !important;
 }
 
 .session-accuracy-display span:last-child {
-    color: #38a169 !important;
+    color: #4f46e5 !important;
 }
 
 /* 升级提示样式 */
@@ -303,24 +263,24 @@ body.light-theme .language-selector .lang-btn.active {
     top: 50%;
     right: 20px;
     transform: translateY(-50%);
-    background: linear-gradient(135deg, #48bb78, #38a169);
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
     color: white;
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 14px;
     font-weight: bold;
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
     animation: levelUpPulse 2s ease-in-out infinite;
 }
 
 @keyframes levelUpPulse {
     0%, 100% {
         transform: translateY(-50%) scale(1);
-        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
     }
     50% {
         transform: translateY(-50%) scale(1.05);
-        box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
     }
 }
 
@@ -331,9 +291,9 @@ body.light-theme .language-selector .lang-btn.active {
     position: relative;
     overflow: hidden;
     background: 
-        radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(72, 187, 120, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(79, 70, 229), 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
         rgba(0, 0, 0, 0.1);
 }
 
@@ -363,16 +323,14 @@ body.light-theme .language-selector .lang-btn.active {
 
 /* 目标数字区域 */
 #target-area {
-    background: linear-gradient(145deg, rgba(26, 32, 44, 0.95), rgba(45, 55, 72, 0.95));
+    background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(15px);
     padding: 25px;
     text-align: center;
-    border-top: 4px solid #48bb78;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     z-index: 100;
-    box-shadow: 
-        0 -10px 30px rgba(72, 187, 120, 0.2),
-        inset 0 2px 0 rgba(72, 187, 120, 0.1);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
 }
 
 #target-label {
@@ -387,43 +345,21 @@ body.light-theme .language-selector .lang-btn.active {
 }
 
 #target-number {
-    font-family: 'Fredoka One', 'Nunito', cursive;
+    font-family: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 72px;
     font-weight: 900;
-    color: #48bb78;
-    text-shadow: 
-        0 0 30px rgba(72, 187, 120, 0.8),
-        0 0 60px rgba(72, 187, 120, 0.4),
-        0 6px 12px rgba(0, 0, 0, 0.4),
-        0 2px 4px rgba(255, 255, 255, 0.8);
+    color: #6366f1;
+    text-shadow: 0 0 16px rgba(99, 102, 241, 0.45);
     margin-bottom: 12px;
     animation: targetPulse 3s ease-in-out infinite;
     letter-spacing: 3px;
     border-radius: 24px;
-    background: linear-gradient(145deg, 
-        rgba(72, 187, 120, 0.15), 
-        rgba(72, 187, 120, 0.05),
-        rgba(72, 187, 120, 0.1));
+    background: rgba(99, 102, 241, 0.1);
     padding: 16px 24px;
-    border: 4px solid rgba(72, 187, 120, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     display: inline-block;
     position: relative;
     overflow: hidden;
-}
-
-#target-number::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, 
-        transparent, 
-        rgba(72, 187, 120, 0.1), 
-        transparent);
-    animation: targetShine 4s ease-in-out infinite;
-    pointer-events: none;
 }
 
 #target-number.changing {
@@ -433,38 +369,11 @@ body.light-theme .language-selector .lang-btn.active {
 @keyframes targetPulse {
     0%, 100% {
         transform: scale(1);
-        text-shadow: 
-            0 0 30px rgba(72, 187, 120, 0.8),
-            0 0 60px rgba(72, 187, 120, 0.4),
-            0 6px 12px rgba(0, 0, 0, 0.4),
-            0 2px 4px rgba(255, 255, 255, 0.8);
-        box-shadow: 
-            0 0 20px rgba(72, 187, 120, 0.3),
-            inset 0 2px 0 rgba(255, 255, 255, 0.2);
+        text-shadow: 0 0 14px rgba(99, 102, 241, 0.4);
     }
     50% {
-        transform: scale(1.05);
-        text-shadow: 
-            0 0 40px rgba(72, 187, 120, 1),
-            0 0 80px rgba(72, 187, 120, 0.6),
-            0 8px 16px rgba(0, 0, 0, 0.4),
-            0 2px 4px rgba(255, 255, 255, 1);
-        box-shadow: 
-            0 0 30px rgba(72, 187, 120, 0.5),
-            0 0 60px rgba(72, 187, 120, 0.2),
-            inset 0 2px 0 rgba(255, 255, 255, 0.3);
-    }
-}
-
-@keyframes targetShine {
-    0% {
-        transform: translateX(-100%) translateY(-100%) rotate(45deg);
-    }
-    50% {
-        transform: translateX(100%) translateY(100%) rotate(45deg);
-    }
-    100% {
-        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        transform: scale(1.04);
+        text-shadow: 0 0 22px rgba(99, 102, 241, 0.6);
     }
 }
 
@@ -526,10 +435,10 @@ body.light-theme .language-selector .lang-btn.active {
 
 @keyframes targetGlow {
     from {
-        text-shadow: 0 0 20px rgba(72, 187, 120, 0.5);
+        text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
     }
     to {
-        text-shadow: 0 0 30px rgba(72, 187, 120, 0.8), 0 0 40px rgba(72, 187, 120, 0.3);
+        text-shadow: 0 0 30px rgba(99, 102, 241, 0.8), 0 0 40px rgba(99, 102, 241, 0.3);
     }
 }
 
@@ -551,21 +460,30 @@ body.light-theme .language-selector .lang-btn.active {
 }
 
 .control-btn {
-    background: rgba(26, 32, 44, 0.9);
-    border: 2px solid #667eea;
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e8ecff;
     padding: 8px 15px;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
     backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .control-btn:hover {
-    background: rgba(102, 126, 234, 0.3);
-    border-color: #48bb78;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
+}
+
+.control-btn svg {
+    flex-shrink: 0;
+    display: block;
 }
 
 /* 屏幕覆盖层 */
@@ -576,7 +494,7 @@ body.light-theme .language-selector .lang-btn.active {
     width: 100vw;
     height: 100vh;
     height: 100dvh;
-    background: rgba(26, 32, 44, 0.95);
+    background: rgba(5, 6, 15, 0.85);
     backdrop-filter: blur(15px);
     display: flex;
     align-items: flex-start;
@@ -596,27 +514,24 @@ body.light-theme .language-selector .lang-btn.active {
 
 .screen-content {
     margin: auto 0;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(13, 17, 38, 0.92);
     border-radius: 20px;
     padding: 30px 24px;
     text-align: center;
-    border: 2px solid #667eea;
-    box-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
     max-width: 500px;
     width: 100%;
 }
 
 /* 开始界面样式 */
 #game-title {
-    font-family: 'Fredoka One', 'Nunito', cursive;
+    font-family: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 3.5em;
     font-weight: 900;
     margin-bottom: 10px;
-    color: #48bb78;
-    text-shadow: 
-        0 0 20px rgba(72, 187, 120, 0.6),
-        0 4px 8px rgba(0, 0, 0, 0.3),
-        0 2px 4px rgba(255, 255, 255, 0.8);
+    color: #6366f1;
+    text-shadow: 0 0 18px rgba(99, 102, 241, 0.5);
     letter-spacing: 2px;
     animation: titleBounce 2s ease-in-out infinite;
 }
@@ -665,7 +580,7 @@ body.light-theme .language-selector .lang-btn.active {
 
 .difficulty-btn {
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
-    border: 3px solid #667eea;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     color: #ffffff;
     padding: 15px 18px;
     border-radius: 16px;
@@ -682,23 +597,23 @@ body.light-theme .language-selector .lang-btn.active {
 
 .difficulty-btn:hover,
 .difficulty-btn.selected {
-    background: linear-gradient(145deg, rgba(72, 187, 120, 0.3), rgba(72, 187, 120, 0.1));
-    border-color: #48bb78;
-    color: #48bb78;
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.1));
+    border-color: #6366f1;
+    color: #6366f1;
     transform: translateY(-3px) scale(1.02);
     box-shadow: 
-        0 8px 25px rgba(72, 187, 120, 0.3),
+        0 8px 25px rgba(99, 102, 241, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    text-shadow: 0 0 8px rgba(72, 187, 120, 0.5);
+    text-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
 }
 
 /* 开始按钮 */
 .start-btn {
-    background: linear-gradient(145deg, #48bb78, #38a169);
-    border: 3px solid #2f855a;
+    background: linear-gradient(145deg, #6366f1, #4f46e5);
+    border: 1px solid #4338ca;
     color: white;
     padding: 18px 45px;
-    font-family: 'Fredoka One', 'Nunito', cursive;
+    font-family: 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 20px;
     font-weight: 900;
     border-radius: 20px;
@@ -706,7 +621,7 @@ body.light-theme .language-selector .lang-btn.active {
     margin: 25px 0;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 
-        0 6px 20px rgba(72, 187, 120, 0.4),
+        0 6px 20px rgba(99, 102, 241, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     letter-spacing: 1px;
@@ -715,23 +630,23 @@ body.light-theme .language-selector .lang-btn.active {
 .start-btn:hover {
     transform: translateY(-5px) scale(1.05);
     box-shadow: 
-        0 10px 30px rgba(72, 187, 120, 0.5),
+        0 10px 30px rgba(99, 102, 241, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    background: linear-gradient(145deg, #68d391, #48bb78);
+    background: linear-gradient(145deg, #818cf8, #6366f1);
     animation: startButtonPulse 0.8s ease-in-out infinite alternate;
 }
 
 @keyframes startButtonPulse {
     from {
         box-shadow: 
-            0 10px 30px rgba(72, 187, 120, 0.5),
+            0 10px 30px rgba(99, 102, 241, 0.5),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
     to {
         box-shadow: 
-            0 15px 40px rgba(72, 187, 120, 0.7),
+            0 15px 40px rgba(99, 102, 241, 0.7),
             inset 0 1px 0 rgba(255, 255, 255, 0.5),
-            0 0 20px rgba(72, 187, 120, 0.4);
+            0 0 20px rgba(99, 102, 241, 0.4);
     }
 }
 
@@ -742,11 +657,11 @@ body.light-theme .language-selector .lang-btn.active {
     padding: 20px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
-    border-left: 4px solid #48bb78;
+    border-left: 4px solid #6366f1;
 }
 
 .game-rules h4 {
-    color: #48bb78;
+    color: #6366f1;
     margin-bottom: 15px;
     text-align: center;
 }
@@ -768,25 +683,25 @@ body.light-theme .language-selector .lang-btn.active {
     content: "▶";
     position: absolute;
     left: 0;
-    color: #48bb78;
+    color: #6366f1;
 }
 
 /* 菜单按钮 */
 .menu-btn {
-    background: rgba(102, 126, 234, 0.2);
-    border: 2px solid #667eea;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     color: #ffffff;
     padding: 12px 30px;
     margin: 8px;
     border-radius: 8px;
     font-size: 16px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .menu-btn:hover {
-    background: rgba(102, 126, 234, 0.4);
-    border-color: #48bb78;
+    background: rgba(99, 102, 241, 0.4);
+    border-color: #6366f1;
     transform: translateY(-2px);
 }
 
@@ -805,7 +720,7 @@ body.light-theme .language-selector .lang-btn.active {
     padding: 15px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
-    border: 1px solid #667eea;
+    border: 1px solid #6366f1;
 }
 
 .stat-label {
@@ -817,7 +732,7 @@ body.light-theme .language-selector .lang-btn.active {
 .stat-value {
     font-size: 24px;
     font-weight: bold;
-    color: #48bb78;
+    color: #6366f1;
 }
 
 /* 会话完成屏幕 */
@@ -835,7 +750,7 @@ body.light-theme .language-selector .lang-btn.active {
     padding: 15px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
-    border: 1px solid #667eea;
+    border: 1px solid #6366f1;
 }
 
 /* 会话操作按钮容器 */
@@ -859,29 +774,29 @@ body.light-theme .language-selector .lang-btn.active {
 }
 
 .session-actions .menu-btn.primary {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    border: 2px solid #48bb78;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: #ffffff;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .session-actions .menu-btn.primary:hover {
-    background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
-    border-color: #38a169;
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    border-color: #4f46e5;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(72, 187, 120, 0.4);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 }
 
 .session-actions .menu-btn:not(.primary) {
-    background: rgba(102, 126, 234, 0.15);
-    border: 2px solid rgba(102, 126, 234, 0.4);
+    background: rgba(99, 102, 241, 0.15);
+    border: 2px solid rgba(99, 102, 241, 0.4);
     color: #e2e8f0;
 }
 
 .session-actions .menu-btn:not(.primary):hover {
-    background: rgba(102, 126, 234, 0.25);
-    border-color: #667eea;
+    background: rgba(99, 102, 241, 0.25);
+    border-color: #6366f1;
     transform: translateY(-2px);
 }
 
@@ -894,7 +809,7 @@ body.light-theme .language-selector .lang-btn.active {
 .session-stat-value {
     font-size: 24px;
     font-weight: bold;
-    color: #48bb78;
+    color: #6366f1;
 }
 
 .session-stat-value.target {
@@ -902,7 +817,7 @@ body.light-theme .language-selector .lang-btn.active {
 }
 
 .session-stat-value.achieved {
-    color: #68d391;
+    color: #818cf8;
 }
 
 .session-buttons {
@@ -914,8 +829,8 @@ body.light-theme .language-selector .lang-btn.active {
 }
 
 .session-btn {
-    background: rgba(102, 126, 234, 0.2);
-    border: 2px solid #667eea;
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: #ffffff;
     padding: 12px 30px;
     border-radius: 8px;
@@ -926,19 +841,19 @@ body.light-theme .language-selector .lang-btn.active {
 }
 
 .session-btn:hover {
-    background: rgba(102, 126, 234, 0.4);
-    border-color: #48bb78;
+    background: rgba(99, 102, 241, 0.4);
+    border-color: #6366f1;
     transform: translateY(-2px);
 }
 
 .session-btn.continue {
-    background: rgba(72, 187, 120, 0.2);
-    border-color: #48bb78;
+    background: rgba(99, 102, 241, 0.2);
+    border-color: #6366f1;
 }
 
 .session-btn.continue:hover {
-    background: rgba(72, 187, 120, 0.4);
-    border-color: #68d391;
+    background: rgba(99, 102, 241, 0.4);
+    border-color: #818cf8;
 }
 
 /* 设置界面 */
@@ -1042,7 +957,7 @@ body.light-theme .language-selector .lang-btn.active {
     #target-area {
         padding: 8px 12px;
         border-top-width: 3px;
-        box-shadow: 0 -4px 16px rgba(72, 187, 120, 0.2);
+        box-shadow: 0 -4px 16px rgba(99, 102, 241, 0.2);
     }
     
     #target-label {
@@ -1488,13 +1403,6 @@ body.light-theme .language-selector .lang-btn.active {
      }
  }
 
-/* 高DPI屏幕优化 */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .expression-card {
-        border-width: 0.5px; /* 高DPI屏幕上更细的边框 */
-    }
-}
-
 /* 移动端性能优化 & 手势支持 */
 @media (max-width: 768px) {
     /* 启用硬件加速 */
@@ -1576,7 +1484,7 @@ body.light-theme .language-selector .lang-btn.active {
 @media (max-width: 480px) {
     /* 简化背景 */
     body {
-        background: #667eea; /* 使用纯色背景替代渐变 */
+        background: #6366f1; /* 使用纯色背景替代渐变 */
     }
     
     /* 简化阴影效果 */
@@ -1617,8 +1525,8 @@ body.light-theme .language-selector .lang-btn.active {
 }
 
 #help-btn {
-    background: linear-gradient(145deg, #667eea, #764ba2);
-    border: 2px solid #5a67d8;
+    background: linear-gradient(145deg, #6366f1, #4f46e5);
+    border: 1px solid #4f46e5;
     color: white;
     padding: 18px 32px;
     border-radius: 18px;
@@ -1628,7 +1536,7 @@ body.light-theme .language-selector .lang-btn.active {
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 
-        0 6px 20px rgba(102, 126, 234, 0.35),
+        0 6px 20px rgba(99, 102, 241, 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
@@ -1657,9 +1565,9 @@ body.light-theme .language-selector .lang-btn.active {
 #help-btn:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 
-        0 10px 30px rgba(102, 126, 234, 0.45),
+        0 10px 30px rgba(99, 102, 241, 0.45),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    background: linear-gradient(145deg, #7c3aed, #667eea);
+    background: linear-gradient(145deg, #7c3aed, #6366f1);
     border-color: #6366f1;
 }
 
@@ -1851,7 +1759,7 @@ body.light-theme .language-selector .lang-btn.active {
     padding: 12px 15px;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    border-left: 4px solid #48bb78;
+    border-left: 4px solid #6366f1;
     transition: all 0.3s ease;
     position: relative;
     padding-left: 45px;
@@ -1884,13 +1792,13 @@ body.light-theme .language-selector .lang-btn.active {
 }
 
 .help-buttons .primary {
-    background: linear-gradient(135deg, #48bb78, #38a169);
-    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
 }
 
 .help-buttons .primary:hover {
-    background: linear-gradient(135deg, #38a169, #2f855a);
-    box-shadow: 0 12px 35px rgba(72, 187, 120, 0.4);
+    background: linear-gradient(135deg, #4f46e5, #4338ca);
+    box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
 }
 
 
@@ -1949,254 +1857,6 @@ body.light-theme .language-selector .lang-btn.active {
     background: rgba(66, 153, 225, 0.8);
 }
 
-/* 暗色主题样式 */
-body.dark-theme {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-    color: #e2e8f0;
-}
-
-body.dark-theme #game-container {
-    background: rgba(26, 32, 44, 0.1);
-}
-
-body.dark-theme .screen {
-    background: rgba(26, 32, 44, 0.9);
-    border: 2px solid #4a5568;
-}
-
-body.dark-theme .menu-btn {
-    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-    color: #e2e8f0;
-    border: 2px solid #718096;
-}
-
-body.dark-theme .menu-btn:hover {
-    background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
-    border-color: #a0aec0;
-    transform: translateY(-3px);
-}
-
-body.dark-theme .difficulty-btn.selected {
-    background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
-    border-color: #4299e1;
-}
-
-body.dark-theme .setting-group {
-    background: rgba(45, 55, 72, 0.6);
-    border: 1px solid #4a5568;
-}
-
-body.dark-theme .setting-group label {
-    color: #e2e8f0;
-}
-
-body.dark-theme input[type="range"] {
-    background: #4a5568;
-}
-
-body.dark-theme input[type="range"]::-webkit-slider-thumb {
-    background: #3182ce;
-}
-
-body.dark-theme input[type="checkbox"]:checked {
-    background: #3182ce;
-    border-color: #3182ce;
-}
-
-body.dark-theme .help-content {
-    background: rgba(26, 32, 44, 0.9);
-    color: #e2e8f0;
-}
-
-body.dark-theme .help-section {
-    background: rgba(45, 55, 72, 0.6);
-    border: 1px solid #4a5568;
-}
-
-body.dark-theme .help-content::-webkit-scrollbar-track {
-    background: rgba(74, 85, 104, 0.3);
-}
-
-body.dark-theme .help-content::-webkit-scrollbar-thumb {
-    background: rgba(49, 130, 206, 0.6);
-}
-
-body.dark-theme .help-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(49, 130, 206, 0.8);
-}
-
-/* 浅色主题样式 */
-body.light-theme {
-    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-    color: #2d3748;
-}
-
-body.light-theme #game-container {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-body.light-theme .screen {
-    background: rgba(255, 255, 255, 0.95);
-    border: 2px solid #e2e8f0;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-body.light-theme .menu-btn {
-    background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
-    color: #2d3748;
-    border: 2px solid #cbd5e0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-body.light-theme .menu-btn:hover {
-    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
-    border-color: #a0aec0;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-body.light-theme .difficulty-btn {
-    background: linear-gradient(145deg, rgba(226, 232, 240, 0.8), rgba(237, 242, 247, 0.6));
-    border-color: #4a5568;
-    color: #2d3748;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-body.light-theme .difficulty-btn:hover,
-body.light-theme .difficulty-btn.selected {
-    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-    border-color: #2b6cb0;
-    color: #ffffff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-body.light-theme .setting-group {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme .setting-group label {
-    color: #2d3748;
-}
-
-body.light-theme input[type="range"] {
-    background: #e2e8f0;
-}
-
-body.light-theme input[type="range"]::-webkit-slider-thumb {
-    background: #4299e1;
-}
-
-body.light-theme input[type="checkbox"]:checked {
-    background: #4299e1;
-    border-color: #4299e1;
-}
-
-body.light-theme .help-content {
-    background: rgba(255, 255, 255, 0.95);
-    color: #2d3748;
-}
-
-/* 浅色主题下的游戏控制按钮 */
-body.light-theme .control-btn {
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #4299e1;
-    color: #2d3748;
-    backdrop-filter: blur(10px);
-}
-
-body.light-theme .control-btn:hover {
-    background: rgba(66, 153, 225, 0.2);
-    border-color: #3182ce;
-    color: #1a365d;
-    transform: translateY(-2px);
-}
-
-/* 浅色主题下的游戏头部 */
-body.light-theme #game-header {
-    background: rgba(255, 255, 255, 0.9);
-    border-bottom: 2px solid #4299e1;
-    backdrop-filter: blur(10px);
-}
-
-body.light-theme .score-display span:first-child,
-body.light-theme .combo-display span:first-child,
-body.light-theme .level-display span:first-child,
-body.light-theme .time-display span:first-child {
-    color: #718096;
-}
-
-/* 浅色主题下的目标区域 */
-body.light-theme #target-area {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(247, 250, 252, 0.95));
-    border-top: 4px solid #4299e1;
-    box-shadow: 
-        0 -10px 30px rgba(66, 153, 225, 0.2),
-        inset 0 2px 0 rgba(66, 153, 225, 0.1);
-}
-
-body.light-theme #target-label {
-    color: #4a5568;
-}
-
-body.light-theme #target-number {
-    color: #4299e1;
-    text-shadow: 
-        0 0 30px rgba(66, 153, 225, 0.8),
-        0 0 60px rgba(66, 153, 225, 0.4),
-        0 6px 12px rgba(0, 0, 0, 0.1),
-        0 2px 4px rgba(255, 255, 255, 0.8);
-    background: linear-gradient(145deg, 
-        rgba(66, 153, 225, 0.15), 
-        rgba(66, 153, 225, 0.05),
-        rgba(66, 153, 225, 0.1));
-    border: 4px solid rgba(66, 153, 225, 0.4);
-}
-
-body.light-theme .help-section {
-    background: rgba(247, 250, 252, 0.8);
-    border: 1px solid #e2e8f0;
-}
-
-body.light-theme .help-content::-webkit-scrollbar-track {
-    background: rgba(226, 232, 240, 0.5);
-}
-
-body.light-theme .help-content::-webkit-scrollbar-thumb {
-    background: rgba(66, 153, 225, 0.6);
-}
-
-body.light-theme .help-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(66, 153, 225, 0.8);
-}
-
-/* 浅色主题下的文字颜色修复 */
-body.light-theme #game-title {
-    color: #2b6cb0;
-    text-shadow: 
-        0 0 20px rgba(43, 108, 176, 0.4),
-        0 4px 8px rgba(0, 0, 0, 0.2),
-        0 2px 4px rgba(255, 255, 255, 0.9);
-}
-
-body.light-theme #game-subtitle {
-    color: #4a5568;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-body.light-theme .difficulty-selection h3 {
-    color: #2d3748;
-}
-
-body.light-theme .game-rules h3 {
-    color: #2d3748;
-}
-
-body.light-theme .game-rules li {
-    color: #4a5568;
-}
-
 /* 算盘图标旋转 - 只旋转emoji */
 #game-title::before {
     content: '🧮';
@@ -2210,11 +1870,6 @@ body.light-theme .game-rules li {
     font-size: 3.5em;
 }
 
-/* 浅色主题下的canvas背景 */
-body.light-theme #game-canvas {
-    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%) !important;
-}
-
 /* 工具栏（道具/技能）样式 */
 .tool-bar {
     display: flex;
@@ -2222,10 +1877,10 @@ body.light-theme #game-canvas {
     align-items: center;
     gap: 16px;
     padding: 12px 16px;
-    background: rgba(26, 32, 44, 0.9);
+    background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(10px);
-    border-top: 2px solid #2d3748;
-    border-bottom: 2px solid #667eea;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     min-height: 60px;
 }
 .tool-item {
@@ -2259,7 +1914,7 @@ body.light-theme #game-canvas {
 .coins-value { font-weight: 900; color: #ffd166; text-shadow: 0 0 8px rgba(255, 209, 102, 0.4); }
 
 /* Freeze 与 Bomb 的可选强调色 */
-#freeze-btn { border-color: rgba(72, 187, 120, 0.5); }
+#freeze-btn { border-color: rgba(99, 102, 241, 0.5); }
 #bomb-btn { border-color: rgba(245, 101, 101, 0.5); }
 
 /* 移动端响应式样式 - Help按钮 */
@@ -2323,7 +1978,7 @@ body.light-theme #game-canvas {
     .control-btn:active,
     .menu-btn:active,
     .start-btn:active {
-        background: rgba(102, 126, 234, 0.4);
+        background: rgba(99, 102, 241, 0.4);
         transform: scale(0.95);
     }
     

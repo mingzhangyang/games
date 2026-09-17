@@ -117,7 +117,6 @@ class LanguageManager {
         // Control buttons
         this.updateButtonWithIcon('pause-btn', '⏸️', texts.pause);
         this.updateButtonWithIcon('settings-btn', '⚙️', texts.settings);
-        this.updateButtonWithIcon('theme-btn', '🎨', texts.theme);
         this.updateButtonWithIcon('shop-btn', '🛒', texts.shop);
 
         // Session display
@@ -235,7 +234,12 @@ class LanguageManager {
      */
     updateButtonWithIcon(id, icon, text) {
         const element = document.getElementById(id);
-        if (element && text) {
+        if (!element) return;
+        // 控制栏按钮内含内联 SVG 图标，仅更新文字 span，保留图标不被覆盖
+        const textSpan = element.querySelector('.btn-text');
+        if (textSpan && text) {
+            textSpan.textContent = text;
+        } else if (text) {
             element.innerHTML = `${icon} ${text}`;
         }
     }

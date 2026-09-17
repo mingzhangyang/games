@@ -112,25 +112,6 @@ body {
     }
 }
 
-.game-container::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--success-color));
-    border-radius: var(--border-radius);
-    z-index: -1;
-    opacity: 0.7;
-    animation: neonPulse 2s ease-in-out infinite alternate;
-}
-
-@keyframes neonPulse {
-    from { opacity: 0.5; }
-    to { opacity: 0.8; }
-}
-
 .game-board {
     position: relative;
     flex-shrink: 0;
@@ -217,15 +198,29 @@ body {
     font-weight: 700;
     color: var(--light-color);
     line-height: 1;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-    animation: glow 2s ease-in-out infinite alternate;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.22);
     min-width: 60px;
     text-align: right;
 }
 
-@keyframes glow {
-    from { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
-    to { text-shadow: 0 0 30px rgba(102, 126, 234, 0.8); }
+/* 用户名输入（原行内样式并入，深底引用 token 变量） */
+#usernameInput {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--primary-color);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--tok-text, #e8ecff);
+    font-size: 15px;
+    outline: none;
+}
+
+#usernameInput:focus { border-color: var(--tok-accent, #667eea); }
+
+#usernameTip {
+    font-size: 13px;
+    color: var(--tok-text-dim, #9aa6d8);
+    margin-top: 4px;
 }
 
 .next-piece {
@@ -447,10 +442,10 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    padding: 10px 20px;
-    background: rgba(102, 126, 234, 0.2);
-    border: 1px solid var(--primary-color);
-    border-radius: 20px;
+    padding: 10px 18px;
+    background: var(--tok-panel, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
+    border-radius: 999px;
     color: var(--light-color);
     cursor: pointer;
     transition: var(--transition);
@@ -458,18 +453,17 @@ body {
 }
 
 .theme-toggle:hover {
-    background: rgba(102, 126, 234, 0.4);
-    transform: scale(1.05);
+    background: var(--tok-panel-strong, rgba(255, 255, 255, 0.12));
 }
 
 .lang-toggle {
     position: fixed;
     top: 70px;
     right: 20px;
-    padding: 10px 20px;
-    background: rgba(102, 126, 234, 0.2);
-    border: 1px solid var(--primary-color);
-    border-radius: 20px;
+    padding: 10px 18px;
+    background: var(--tok-panel, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
+    border-radius: 999px;
     color: var(--light-color);
     cursor: pointer;
     transition: var(--transition);
@@ -480,8 +474,7 @@ body {
 }
 
 .lang-toggle:hover {
-    background: rgba(102, 126, 234, 0.4);
-    transform: scale(1.05);
+    background: var(--tok-panel-strong, rgba(255, 255, 255, 0.12));
 }
 
 .home-toggle {
@@ -492,10 +485,7 @@ body {
     align-items: center;
     justify-content: center;
     width: 44px;
-    height: 40px;
-    background: rgba(102, 126, 234, 0.2);
-    border: 1px solid var(--primary-color);
-    border-radius: 20px;
+    height: 44px;
     color: var(--light-color);
     cursor: pointer;
     transition: var(--transition);
@@ -503,8 +493,7 @@ body {
 }
 
 .home-toggle:hover {
-    background: rgba(102, 126, 234, 0.4);
-    transform: scale(1.05);
+    background: var(--tok-panel-strong, rgba(255, 255, 255, 0.12));
 }
 
 .global-scores-panel {
@@ -912,17 +901,6 @@ body.rainbow-theme {
     }
 }
 
-body.rainbow-theme .game-container::before {
-    background: linear-gradient(45deg, #ff0080, #00ff80, #8000ff, #ff8000, #00ffff);
-    background-size: 400% 400%;
-    animation: rainbowShift 3s ease infinite;
-}
-
-@keyframes rainbowShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
 .theme-toggle::after, .lang-toggle::after, .home-toggle::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 

@@ -1,3 +1,15 @@
+:root {
+    /* tank-battle 唯一主色：翠绿，供 tokens 焦点环与控件复用 */
+    --tok-accent: #10b981;
+    --tok-accent-2: #34d399;
+    /* 小地图尺寸变量：回首页按钮相对其定位 */
+    --tb-minimap-right: 15px;
+    --tb-minimap-w: 120px;
+    /* HUD 文字两级层级 */
+    --tb-hud-label: #9fe8c6;
+    --tb-hud-value: #eafff5;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -56,43 +68,59 @@ body {
     position: absolute;
     top: 15px;
     left: 15px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #444;
+    border-radius: 8px;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: var(--tb-hud-label);
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 #miniMap {
     position: absolute;
     top: 15px;
-    right: 15px;
-    width: 120px;
+    right: var(--tb-minimap-right);
+    width: var(--tb-minimap-w);
     height: 90px;
-    background: rgba(0,0,0,0.8);
-    border: 1px solid #444;
-    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: 8px;
 }
 
 #controls {
     position: absolute;
     bottom: 15px;
     left: 15px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     padding: 8px;
-    border-radius: 5px;
-    font-size: 11px;
-    border: 1px solid #444;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--tb-hud-label);
+    border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 #weaponInfo {
     position: absolute;
     bottom: 15px;
     right: 15px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #444;
+    border-radius: 8px;
+    color: var(--tb-hud-label);
+    font-size: 13px;
+    line-height: 1.5;
+    border: 1px solid rgba(16, 185, 129, 0.35);
 }
+
+/* HUD 数值（二级层级：更亮更粗） */
+#lives, #score, #level, #enemies, #currentWeapon, #ammo {
+    color: var(--tb-hud-value);
+    font-weight: 700;
+}
+
+/* HUD 图标基线对齐 */
+.tb-hud-ico { vertical-align: -2px; }
 
 .overlay {
     position: absolute;
@@ -111,7 +139,7 @@ body {
 .overlay h2 {
     font-size: 48px;
     margin-bottom: 20px;
-    text-shadow: 0 0 20px currentColor;
+    text-shadow: 0 0 20px rgba(16, 185, 129, 0.55);
 }
 
 .overlay p {
@@ -119,9 +147,9 @@ body {
     margin: 5px 0;
 }
 
-.game-over h2 { color: #ff4444; }
-.victory h2 { color: #44ff44; }
-.paused h2 { color: #ffff44; }
+.game-over h2 { color: #6ee7b7; }
+.victory h2 { color: #34d399; }
+.paused h2 { color: #9fe8c6; }
 
 .health-bar {
     position: absolute;
@@ -146,26 +174,26 @@ body {
 .shake {
     animation: shake 0.3s ease-in-out;
 }
-/* 回首页按钮（小地图左侧） */
+/* 回首页按钮（小地图左侧，相对小地图容器定位） */
 .tb-home-btn {
     position: absolute;
     top: 15px;
-    right: 148px;
+    right: calc(var(--tb-minimap-right) + var(--tb-minimap-w) + 13px);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    color: #e8ecff;
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid #444;
-    border-radius: 5px;
+    width: 40px;
+    height: 40px;
+    color: var(--tb-hud-label);
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    border-radius: var(--tok-radius-btn, 12px);
     cursor: pointer;
     z-index: 10;
 }
 .tb-home-btn:hover {
-    background: rgba(40, 48, 70, 0.85);
-    border-color: #667eea;
+    background: rgba(16, 185, 129, 0.18);
+    border-color: #10b981;
 }
 
 /* ==========================================================================
@@ -223,17 +251,21 @@ html, body {
         border-color: rgba(255, 255, 255, 0.15);
     }
 
+    :root {
+        --tb-minimap-right: max(8px, env(safe-area-inset-right));
+        --tb-minimap-w: 72px;
+    }
+
     #miniMap {
         top: 6px;
-        right: max(8px, env(safe-area-inset-right));
-        width: 72px;
+        right: var(--tb-minimap-right);
+        width: var(--tb-minimap-w);
         height: 54px;
-        border-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(16, 185, 129, 0.35);
     }
 
     .tb-home-btn {
         top: 6px;
-        right: calc(max(8px, env(safe-area-inset-right)) + 78px);
         width: 32px;
         height: 32px;
         padding: 0;
@@ -417,20 +449,19 @@ html, body {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(30, 58, 138, 0.85);
-    border: 2px solid #3b82f6;
+    background: rgba(6, 78, 59, 0.85);
+    border: 2px solid #10b981;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.08s;
 }
 
 .v-weapon-icon {
-    font-size: 18px;
     line-height: 1;
 }
 
@@ -438,7 +469,7 @@ html, body {
     position: absolute;
     bottom: -2px;
     right: -2px;
-    background: #2563eb;
+    background: #0e9f6e;
     color: #fff;
     font-size: 11px;
     font-weight: 800;
@@ -453,16 +484,16 @@ html, body {
 
 .v-weapon-btn:active {
     transform: scale(0.92);
-    background: #2563eb;
+    background: #0e9f6e;
 }
 
 .v-fire-btn {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #ef4444, #991b1b);
-    border: 3px solid #fca5a5;
-    color: #ffffff;
+    background: radial-gradient(circle at 35% 35%, #fbbf24, #d97706);
+    border: 3px solid #fcd34d;
+    color: #1a1205;
     font-weight: 900;
     font-size: 15px;
     letter-spacing: 1px;
@@ -470,15 +501,15 @@ html, body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.35);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.35);
     transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
     -webkit-tap-highlight-color: transparent;
 }
 
 .v-fire-btn.active, .v-fire-btn:active {
     transform: scale(0.92);
-    background: radial-gradient(circle at 35% 35%, #dc2626, #7f1d1d);
-    box-shadow: 0 0 25px rgba(239, 68, 68, 0.8), inset 0 3px 6px rgba(0, 0, 0, 0.5);
+    background: radial-gradient(circle at 35% 35%, #d97706, #92400e);
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.8), inset 0 3px 6px rgba(0, 0, 0, 0.5);
 }
 
 /* 移动端竖屏旋转提示浮层 */
@@ -613,7 +644,7 @@ html, body {
 
 /* ── Accessibility baseline: keyboard focus + reduced motion ── */
 :focus-visible {
-    outline: 2px solid #667eea;
+    outline: 2px solid #10b981;
     outline-offset: 2px;
 }
 
