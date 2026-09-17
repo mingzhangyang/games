@@ -452,7 +452,7 @@ body {
 }
 
 .sf-title {
-    font-family: 'Noto Serif SC', 'Songti SC', 'Source Han Serif', serif;
+    font-family: 'Noto Serif SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti SC', 'STSong', serif;
     font-size: 30px;
     font-weight: 900;
     letter-spacing: 3px;

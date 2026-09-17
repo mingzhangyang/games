@@ -962,10 +962,10 @@ class MathRainGame {
     
     // Utility methods
     getCanvasBackgroundColor() {
+        // 半透明底色：让 #game-area 的三层径向渐变透出，避免画布被纯色盖死
         const body = document.body;
-        if (body.classList.contains('dark-theme')) return '#000000';
-        if (body.classList.contains('light-theme')) return '#f7fafc';
-        return '#000000';
+        if (body.classList.contains('light-theme')) return 'rgba(247, 250, 252, 0.85)';
+        return 'rgba(10, 10, 30, 0.35)';
     }
 
     /**

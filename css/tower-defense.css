@@ -1036,5 +1036,5 @@ body {
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
 .td-icon-btn, .td-skill-btn { position: relative; }
-.td-icon-btn, .td-skill-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+.td-icon-btn::after, .td-skill-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 

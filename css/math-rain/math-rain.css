@@ -1298,10 +1298,6 @@ body.light-theme .language-selector .lang-btn.active {
         padding: 12px 20px;
     }
 
-    #target-number {
-        font-size: 56px;
-    }
-
     /* 帮助界面移动端优化 */
     .help-content {
         padding: 20px;
@@ -1406,10 +1402,6 @@ body.light-theme .language-selector .lang-btn.active {
         padding: 10px 16px;
         font-size: 13px;
         margin: 3px;
-    }
-
-    #target-number {
-        font-size: 48px;
     }
 
     #game-header {
