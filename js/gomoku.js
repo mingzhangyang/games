@@ -1,5 +1,14 @@
 import { getLang, setLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
+import { createSfx } from './game-sfx.js';
+
+// 音效：落子/胜利/失败/平局
+const sfx = createSfx({
+    place: { freq: 720, slideTo: 320, type: 'triangle', dur: 0.09, vol: 0.25 },
+    win:   { freqs: [523.25, 659.25, 783.99, 1046.5], delay: 0.1, type: 'sine', dur: 0.45, vol: 0.3 },
+    lose:  { freqs: [392, 329.63, 261.63], delay: 0.16, type: 'sawtooth', dur: 0.4, vol: 0.2 },
+    draw:  { freqs: [440, 440], delay: 0.2, type: 'triangle', dur: 0.25, vol: 0.22 }
+});
 
 const canvas = document.getElementById('gameBoard');
 const ctx = canvas.getContext('2d');
@@ -33,7 +42,8 @@ const LANGUAGES = {
         blackWins: 'Black Wins!',
         whiteWins: 'White Wins!',
         playAgain: 'Play Again',
-        viewBoard: 'View Board'
+        viewBoard: 'View Board',
+        changeDiffConfirm: 'Changing difficulty will clear the current game. Continue?'
     },
     zh: {
         title: '五子棋 - 经典策略棋牌',
@@ -122,8 +132,16 @@ function init() {
         }
     });
     modeBtn.addEventListener('click', toggleMode);
+    let prevDifficulty = difficultySelect.value;
     difficultySelect.addEventListener('change', (e) => {
+        // 对局进行中且有落子时需确认，避免误触清盘
+        const inProgress = gameActive && moveCount > 0;
+        if (inProgress && !window.confirm(getTEXT().changeDiffConfirm)) {
+            e.target.value = prevDifficulty; // 回滚选择
+            return;
+        }
         difficulty = e.target.value;
+        prevDifficulty = e.target.value;
         resetGame();
     });
 
@@ -327,15 +345,18 @@ function makeMove(r, c) {
     if (typeof window.hubTrack === 'function') window.hubTrack('gomoku', 'play');
     board[r][c] = currentPlayer;
     lastMove = { r, c };
+    sfx.play('place');
     drawBoard();
 
     if (checkWin(r, c, currentPlayer)) {
         drawBoard(); // Redraw to show winning highlight
+        sfx.play(currentPlayer === 1 ? 'win' : (gameMode === 'pve' ? 'lose' : 'win'));
         endGame(currentPlayer);
         return;
     }
 
     if (checkDraw()) {
+        sfx.play('draw');
         endGame(0);
         return;
     }

@@ -862,7 +862,11 @@ class WordDailyGame {
                         ? (this.TEXT.guessPlaceholderZh || this.TEXT.guessPlaceholder)
                         : (this.TEXT.guessPlaceholderEn || this.TEXT.guessPlaceholder);
                 }
-                setTimeout(() => this.el.input?.focus(), 60);
+                // 仅精确指针（桌面）自动聚焦；触屏设备自动 focus 会立即弹软键盘遮住棋盘，
+                // 用户点击棋盘区即可聚焦（board click 已绑定 input.focus）
+                if (!window.matchMedia('(pointer: coarse)').matches) {
+                    setTimeout(() => this.el.input?.focus(), 60);
+                }
             }
         }
         this.renderRows();
@@ -1338,6 +1342,17 @@ class WordDailyGame {
 
     openHelp() {
         this.el['help-modal']?.classList.remove('hidden');
+    }
+
+    /* 首次访问自动展示玩法说明（只弹一次） */
+    maybeShowFirstRunHelp() {
+        try {
+            if (localStorage.getItem('wd_seen_help') === '1') return;
+            localStorage.setItem('wd_seen_help', '1');
+        } catch (e) {
+            return; // 存储不可用时不弹，避免每次刷新打扰
+        }
+        this.openHelp();
     }
 
     closeHelp() {

@@ -67,6 +67,10 @@ const LANGUAGES = {
         newGame: 'New game',
         timeElapsed: 'Time',
         flagModeTitle: 'Flag mode',
+        pause: 'Pause',
+        resume: 'Resume',
+        pausedTitle: 'Paused',
+        pausedHint: 'Timer stopped — tap to resume',
         sound: 'Sound',
         home: 'Home',
         language: '中文',
@@ -103,6 +107,10 @@ const LANGUAGES = {
         newGame: '新游戏',
         timeElapsed: '时间',
         flagModeTitle: '插旗模式',
+        pause: '暂停',
+        resume: '继续',
+        pausedTitle: '已暂停',
+        pausedHint: '计时已停止 — 点击任意处继续',
         sound: '声音',
         home: '主页',
         language: 'English',
@@ -254,6 +262,11 @@ class MinesweeperGame {
         if (this.el['counter-mines']) this.el['counter-mines'].title = t.minesLeft;
         if (this.el['counter-timer']) this.el['counter-timer'].title = t.timeElapsed;
         if (this.el.face) this.el.face.title = t.newGame;
+        if (this.el['btn-pause']) {
+            this.refreshPauseUi();
+        }
+        if (this.el['pause-title']) this.el['pause-title'].textContent = t.pausedTitle;
+        if (this.el['pause-hint']) this.el['pause-hint'].textContent = t.pausedHint;
         if (this.el.flagmode) {
             this.el.flagmode.title = t.flagModeTitle;
             this.el.flagmode.setAttribute('aria-label', t.flagModeTitle);
@@ -306,9 +319,13 @@ class MinesweeperGame {
         this.flagCount = 0;
         this.startTs = 0;
         this.elapsed = 0;
+        this.paused = false;
+        this.pauseStartTs = 0;
         this.boomIndex = -1;
 
         this.stopTimer();
+        if (this.el['pause-overlay']) this.el['pause-overlay'].classList.add('hidden');
+        this.refreshPauseUi();
         this.updateMineCounter();
         this.updateTimerDisplay();
         this.setFace('🙂');
@@ -395,7 +412,7 @@ class MinesweeperGame {
     /* ── 交互 ── */
 
     handleReveal(i) {
-        if (this.state === 'won' || this.state === 'lost') return;
+        if (this.state === 'won' || this.state === 'lost' || this.paused) return;
         if (this.stateGrid[i] === FLAGGED || this.stateGrid[i] === REVEALED) return;
 
         if (!this.placed) {
@@ -547,10 +564,48 @@ class MinesweeperGame {
         }
     }
 
+    /* 暂停/恢复：通过平移 startTs 补偿，真实用时公式保持不变 */
+    setPaused(paused) {
+        if (paused === this.paused) return;
+        if (paused && this.state !== 'playing') return;
+        this.paused = paused;
+        if (paused) {
+            this.pauseStartTs = performance.now();
+        } else if (this.pauseStartTs) {
+            this.startTs += performance.now() - this.pauseStartTs;
+            this.pauseStartTs = 0;
+        }
+        if (this.el['pause-overlay']) this.el['pause-overlay'].classList.toggle('hidden', !paused);
+        this.refreshPauseUi();
+        this.updateTimerDisplay();
+    }
+
+    togglePause() {
+        if (this.state !== 'playing') return;
+        this.setPaused(!this.paused);
+        Sfx.click();
+    }
+
+    refreshPauseUi() {
+        const t = this.TEXT;
+        if (this.el['btn-pause']) {
+            this.el['btn-pause'].innerHTML = this.paused
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4.5" height="16" rx="1.2"/><rect x="13.5" y="4" width="4.5" height="16" rx="1.2"/></svg>';
+            this.el['btn-pause'].title = this.paused ? t.resume : t.pause;
+            this.el['btn-pause'].setAttribute('aria-label', this.paused ? t.resume : t.pause);
+        }
+    }
+
     updateTimerDisplay() {
-        const secs = this.state === 'playing' || this.state === 'idle'
-            ? (this.placed ? Math.floor((performance.now() - this.startTs) / 1000) : 0)
-            : this.elapsed;
+        let secs;
+        if (this.paused && this.pauseStartTs) {
+            secs = Math.floor((this.pauseStartTs - this.startTs) / 1000);
+        } else if (this.state === 'playing' || this.state === 'idle') {
+            secs = this.placed ? Math.floor((performance.now() - this.startTs) / 1000) : 0;
+        } else {
+            secs = this.elapsed;
+        }
         if (this.el.timer) this.el.timer.textContent = String(clamp(secs, 0, 999)).padStart(3, '0');
     }
 
@@ -921,8 +976,12 @@ class MinesweeperGame {
 
         window.addEventListener('resize', () => this.layoutCells());
         document.addEventListener('visibilitychange', () => {
-            // 页面隐藏时暂停计时显示不中断真实计时，回归后立即刷新
-            if (!document.hidden && this.state === 'playing') this.updateTimerDisplay();
+            if (document.hidden) {
+                // 切后台自动暂停，计时公平（返回页面点击遮罩或暂停键继续）
+                if (this.state === 'playing' && !this.paused) this.setPaused(true);
+            } else if (this.state === 'playing') {
+                this.updateTimerDisplay();
+            }
         });
 
         window.addEventListener('site-settings:changed', () => {

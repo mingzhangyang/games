@@ -159,6 +159,15 @@ body {
     border: 1.5px solid rgba(56, 189, 248, 0.25);
 }
 
+/* 手机横屏：改为按视口高度定尺寸，避免画布纵向溢出、边玩边滚 */
+@media (orientation: landscape) and (max-height: 640px) {
+    .na-stage {
+        width: auto;
+        max-width: 100%;
+        height: min(640px, calc(100vh - 72px));
+    }
+}
+
 #na-canvas {
     display: block;
     width: 100%;

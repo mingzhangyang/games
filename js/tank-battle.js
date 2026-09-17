@@ -1,5 +1,19 @@
 // 国际化语言支持
 import { getLang, setLang } from './site-settings.js';
+import { createSfx } from './game-sfx.js';
+
+// 音效：射击/爆炸/受伤/道具/胜负
+const sfx = createSfx({
+    shoot:      { freq: 880, slideTo: 220, type: 'square', dur: 0.08, vol: 0.14 },
+    shootEnemy: { freq: 560, slideTo: 160, type: 'square', dur: 0.07, vol: 0.07 },
+    explode:    { type: 'noise', dur: 0.4, vol: 0.35, filterFreq: 900, filterSlideTo: 100 },
+    clink:      { freq: 1300, slideTo: 900, type: 'square', dur: 0.05, vol: 0.1 },
+    powerup:    { freqs: [523.25, 659.25, 783.99], delay: 0.06, type: 'sine', dur: 0.18, vol: 0.24 },
+    hurt:       { freq: 200, slideTo: 60, type: 'sawtooth', dur: 0.25, vol: 0.28 },
+    levelup:    { freqs: [523.25, 659.25, 783.99, 1046.5], delay: 0.09, type: 'triangle', dur: 0.35, vol: 0.28 },
+    victory:    { freqs: [523.25, 659.25, 783.99, 1046.5, 1318.5], delay: 0.11, type: 'triangle', dur: 0.5, vol: 0.3 },
+    gameover:   { freqs: [392, 329.63, 261.63, 196], delay: 0.18, type: 'sawtooth', dur: 0.45, vol: 0.22 }
+});
 
 const LANGUAGES = {
     zh: {
@@ -1853,6 +1867,7 @@ class TankBattle {
         }
         
         this.score += 50;
+        sfx.play('powerup');
         this.updateUI();
     }
 
@@ -1868,7 +1883,9 @@ class TankBattle {
         );
         
         this.bullets.push(bullet);
-        
+
+        sfx.play(tank.isPlayer ? 'shoot' : 'shootEnemy');
+
         // 屏幕震动
         if (tank.isPlayer && tank.weapon.damage > 1) {
             this.screenShake = 5;

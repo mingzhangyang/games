@@ -41,6 +41,7 @@
                 <span class="ms-counter-icon">⏱️</span>
                 <span class="ms-counter-value" id="ms-timer">000</span>
             </div>
+            <button class="ms-icon-btn" id="ms-btn-pause" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4.5" height="16" rx="1.2"/><rect x="13.5" y="4" width="4.5" height="16" rx="1.2"/></svg></button>
             <button class="ms-icon-btn" id="ms-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
         </header>
 
@@ -55,6 +56,10 @@
         <!-- 棋盘 -->
         <div class="ms-board-wrap">
             <div class="ms-board" id="ms-board" role="grid" aria-label="Minesweeper board"></div>
+            <div class="ms-pause-overlay hidden" id="ms-pause-overlay">
+                <div class="ms-pause-title" id="ms-pause-title">已暂停</div>
+                <div class="ms-pause-hint" id="ms-pause-hint">计时已停止 — 点击任意处继续</div>
+            </div>
         </div>
 
         <p class="ms-hint" id="ms-hint"></p>

@@ -1,5 +1,18 @@
 import { getLang, setLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
+import { createSfx } from './game-sfx.js';
+
+// 音效：移动/旋转/锁定/消行/升级/结束
+const sfx = createSfx({
+    move:     { freq: 200, type: 'square', dur: 0.04, vol: 0.1 },
+    rotate:   { freq: 300, slideTo: 420, type: 'triangle', dur: 0.07, vol: 0.14 },
+    drop:     { type: 'noise', dur: 0.12, vol: 0.3, filterFreq: 400, filterSlideTo: 120 },
+    lock:     { type: 'noise', dur: 0.08, vol: 0.18, filterFreq: 300, filterSlideTo: 100 },
+    line:     { freqs: [523.25, 659.25, 783.99], delay: 0.06, type: 'sine', dur: 0.25, vol: 0.3 },
+    tetris:   { freqs: [523.25, 659.25, 783.99, 1046.5], delay: 0.07, type: 'sine', dur: 0.4, vol: 0.34 },
+    levelup:  { freqs: [523.25, 659.25, 783.99, 1046.5, 1318.5], delay: 0.09, type: 'triangle', dur: 0.5, vol: 0.3 },
+    gameover: { freqs: [392, 329.63, 261.63, 196], delay: 0.18, type: 'sawtooth', dur: 0.45, vol: 0.22 }
+});
 
 function escapeHTML(str) {
     return String(str)
@@ -631,6 +644,7 @@ class Tetris {
         if (this.gameOver || this.paused) return;
         if (!this.collision(this.currentPiece, -1, 0)) {
             this.currentPiece.x--;
+            sfx.play('move');
         }
     }
 
@@ -638,6 +652,7 @@ class Tetris {
         if (this.gameOver || this.paused) return;
         if (!this.collision(this.currentPiece, 1, 0)) {
             this.currentPiece.x++;
+            sfx.play('move');
         }
     }
 
@@ -744,11 +759,13 @@ class Tetris {
             const baseScore = [0, 100, 300, 500, 800][linesCleared.length];
             const comboMultiplier = Math.min(this.combo, 5);
             this.score += baseScore * this.level * comboMultiplier;
+            sfx.play(linesCleared.length === 4 ? 'tetris' : 'line');
             const newLevel = Math.floor(this.lines / 10) + 1;
             if (newLevel > this.level) {
                 this.level = newLevel;
                 this.updateDropInterval();
                 this.showLevelUp();
+                sfx.play('levelup');
             }
         }
     }
@@ -972,6 +989,7 @@ class Tetris {
 
     async showGameOver() {
     if (typeof window.hubTrack === 'function') window.hubTrack('tetris', 'finish');
+        sfx.play('gameover');
         document.getElementById('finalScore').textContent = this.score;
         document.getElementById('gameOverOverlay').style.display = 'flex';
         document.getElementById('startBtn').disabled = false;

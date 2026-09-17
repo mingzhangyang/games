@@ -168,6 +168,15 @@ body {
         0 0 35px rgba(56, 189, 248, 0.12);
 }
 
+/* 手机横屏：改为按视口高度定尺寸，避免画布纵向溢出、边玩边滚 */
+@media (orientation: landscape) and (max-height: 640px) {
+    .sf-stage {
+        width: auto;
+        max-width: 100%;
+        height: min(640px, calc(100vh - 72px));
+    }
+}
+
 .sf-stage::-webkit-scrollbar {
     display: none;
 }
