@@ -464,22 +464,7 @@ body {
     background: var(--tok-panel-strong, rgba(255, 255, 255, 0.12));
 }
 
-.lang-toggle {
-    padding: 10px 18px;
-    background: var(--tok-panel, rgba(255, 255, 255, 0.06));
-    border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
-    border-radius: 999px;
-    color: var(--light-color);
-    cursor: pointer;
-    transition: var(--transition);
-    font-family: inherit;
-    font-size: 14px;
-    min-height: 40px;
-}
-
-.lang-toggle:hover {
-    background: var(--tok-panel-strong, rgba(255, 255, 255, 0.12));
-}
+/* 语言切换已移除（统一在首页切换，site_lang 全站生效），仅保留 Home + 主题 */
 
 .home-toggle {
     display: inline-flex;
@@ -662,25 +647,15 @@ body.rainbow-theme {
         min-height: 44px;
     }
 
-    .theme-toggle {
-        top: 5px;
-        right: 5px;
-        padding: 8px 12px;
-        font-size: 12px;
-        min-height: 36px;
-    }
+    /* 语言切换已移除，按钮统一在 .top-actions 弹性行内排列 */
 
-    .lang-toggle {
-        top: 52px;
-        right: 5px;
+    .theme-toggle {
         padding: 8px 12px;
         font-size: 12px;
         min-height: 36px;
     }
 
     .home-toggle {
-        top: 99px;
-        right: 5px;
         width: 40px;
         height: 36px;
     }
@@ -803,15 +778,10 @@ body.rainbow-theme {
     .top-actions {
         top: 8px;
         right: 8px;
-        gap: 6px;
+        gap: 10px;
     }
 
     .theme-toggle {
-        padding: 6px 8px;
-        font-size: 10px;
-    }
-
-    .lang-toggle {
         padding: 6px 8px;
         font-size: 10px;
     }
@@ -883,7 +853,6 @@ body.rainbow-theme {
     /* Better touch targets for mobile (top-actions cluster included) */
     .btn,
     .theme-toggle,
-    .lang-toggle,
     .home-toggle {
         min-height: 44px;
         min-width: 44px;
@@ -914,7 +883,7 @@ body.rainbow-theme {
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
-.theme-toggle::after, .lang-toggle::after, .home-toggle::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+.theme-toggle::after, .home-toggle::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 
 
 

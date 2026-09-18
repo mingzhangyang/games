@@ -1259,18 +1259,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('restartGameBtn').onclick = () => game.restart();
     document.getElementById('themeToggle').onclick = () => game.toggleTheme();
 
-    // 全站语言切换（Tetris 文案在初始化时固化，切换后重载页面生效）
-    const langToggle = document.getElementById('langToggle');
-    if (langToggle) {
-        const refreshLangToggle = () => {
-            langToggle.textContent = currentLang === 'zh' ? 'English' : '中文';
-        };
-        refreshLangToggle();
-        langToggle.onclick = () => {
-            setLang(currentLang === 'zh' ? 'en' : 'zh');
-            location.reload();
-        };
-    }
+    // 语言切换统一在首页进行（site_lang 全站生效），页面内不再提供语言按钮
     
     // Mobile controls
     if (document.getElementById('mobileStartBtn')) {
