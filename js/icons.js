@@ -43,5 +43,11 @@ export const ICONS = {
     // 日历（每日挑战）
     calendar: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/>'),
     // 骰子（练习模式）
-    dice: svg('<rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/>')
+    dice: svg('<rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/>'),
+    // 三节点分享（右上 / 左中 / 右下 + 两条连线）
+    share: svg('<circle cx="17.5" cy="5.5" r="2.8"/><circle cx="6.5" cy="12" r="2.8"/><circle cx="17.5" cy="18.5" r="2.8"/><path d="M9.1 10.7l5.8-3.4M9.1 13.3l5.8 3.4"/>'),
+    // 右箭头（下一步）
+    arrowRight: svg('<path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/>'),
+    // 奖杯（排行榜）
+    trophy: svg('<path d="M8 4h8v5.5a4 4 0 0 1-8 0V4z"/><path d="M8 5.5H5.2v1.4a3 3 0 0 0 3 3"/><path d="M16 5.5h2.8v1.4a3 3 0 0 1-3 3"/><path d="M12 13.5v4"/><path d="M8.5 20.5h7"/>')
 };

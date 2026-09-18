@@ -16,6 +16,9 @@ console.log(await p.evaluate(s => {
         w: el && Math.round(el.getBoundingClientRect().width),
         width: cs?.width, maxWidth: cs?.maxWidth, boxSizing: cs?.boxSizing,
         padding: cs?.padding, display: cs?.display,
+        // whiteSpace / borderRadius 是共享层最容易压掉页面意图的两个属性
+        // （.game-toast 曾用 nowrap 把 pm/wd 的 max-width 换行压成单行）
+        whiteSpace: cs?.whiteSpace, borderRadius: cs?.borderRadius,
         frameMax: cs?.getPropertyValue('--frame-max').trim(),
         frameMaxWide: cs?.getPropertyValue('--frame-max-wide').trim(),
         frameStage: cs?.getPropertyValue('--frame-stage').trim(),

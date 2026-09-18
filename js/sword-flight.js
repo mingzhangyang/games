@@ -71,7 +71,7 @@ const I18N = {
         pauseSub: '调和龙虎，蓄势待发',
         resume: '继续御剑 ▶',
         restart: '重新启程 ⟲',
-        home: '返回仙门 🏠',
+        home: '返回仙门',
         victoryTitle: '破境飞升 · 仙门洞开',
         victorySub: '剑意通神，跨入更高重天！',
         defeatTitle: '仙缘未尽 · 调息重来',
@@ -161,7 +161,7 @@ const I18N = {
         pauseSub: 'Calm the mind, gathering inner power',
         resume: 'Resume Flight ▶',
         restart: 'Restart Flight ⟲',
-        home: 'Immortal Gate 🏠',
+        home: 'Immortal Gate',
         victoryTitle: 'Ascension Accomplished',
         victorySub: 'Sword intent reaches divinity, opening the celestial gate!',
         defeatTitle: 'Qi Exhausted · Recenter',
@@ -3222,7 +3222,7 @@ class SwordFlightGame {
         document.getElementById('sf-pause-sub').textContent = t.pauseSub;
         document.getElementById('sf-btn-resume').textContent = t.resume;
         document.getElementById('sf-btn-restart').textContent = t.restart;
-        document.getElementById('sf-btn-menu').textContent = t.home;
+        document.getElementById('sf-btn-menu').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
 
         document.getElementById('sf-victory-title').textContent = t.victoryTitle;
         document.getElementById('sf-victory-sub').textContent = t.victorySub;
@@ -3232,7 +3232,7 @@ class SwordFlightGame {
         document.getElementById('sf-v-lbl-realm').textContent = t.realmResultLbl;
         document.getElementById('sf-btn-next-stage').textContent = t.nextStage;
         document.getElementById('sf-btn-stage-replay').textContent = t.replayStage;
-        document.getElementById('sf-btn-victory-menu').textContent = t.home;
+        document.getElementById('sf-btn-victory-menu').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
 
         document.getElementById('sf-go-title').textContent = t.defeatTitle;
         document.getElementById('sf-go-sub').textContent = t.defeatSub;
@@ -3241,7 +3241,7 @@ class SwordFlightGame {
         document.getElementById('sf-go-lbl-realm').textContent = t.realmResultLbl;
         document.getElementById('sf-go-lbl-rings').textContent = t.ringsCountLbl;
         document.getElementById('sf-btn-go-replay').textContent = t.replayEndless;
-        document.getElementById('sf-btn-go-menu').textContent = t.home;
+        document.getElementById('sf-btn-go-menu').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         document.getElementById('sf-btn-submit-score').textContent = t.submitScore;
         document.getElementById('sf-player-name-input').placeholder = t.namePlaceholder;
 

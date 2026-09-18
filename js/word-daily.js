@@ -464,7 +464,7 @@ class WordDailyGame {
         if (this.el['lb-cur']) this.el['lb-cur'].textContent = t.curStreakLabel;
         if (this.el['lb-max']) this.el['lb-max'].textContent = t.maxStreakLabel;
         if (this.el['dist-title']) this.el['dist-title'].textContent = t.distTitle;
-        if (this.el.share) this.el.share.textContent = `📤 ${t.share}`;
+        if (this.el.share) this.el.share.innerHTML = `${ICONS.share}<span>${t.share}</span>`;
         if (this.el['submit-text']) this.el['submit-text'].textContent = t.submit;
         if (this.el.input) {
             this.el.input.placeholder = this.guessPlaceholderText();

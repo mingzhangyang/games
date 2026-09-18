@@ -11,9 +11,10 @@
 | 真实几何（390×844 / 1280×900） | `scripts/layout-metrics.mjs` | 通过 |
 | 前景色/字体继承 | `scripts/fg-audit.mjs` | 13/13 通过 |
 | 占位符泄漏 | `scripts/placeholder-leak-check.mjs` | 全站 0 |
-| 按钮 emoji 政策 | `scripts/emoji-button-audit.py` | **54 处待处理** |
-| 骨架契约类覆盖 | 本文件表格 | **见 P1/P2** |
-| 源码 vs `dist/` 新鲜度 | 时间戳 + 内容抽样 | 通过（dist 15:05 > 源码 15:02） |
+| 按钮 emoji 政策 | `scripts/emoji-button-audit.py` | 结果/动作类已清零（剩 25 处为已登记的模式/能力砖） |
+| 按钮图标实测 | `scripts/verify-button-icons.mjs` | 34/34 通过 |
+| 骨架契约类覆盖 | 本文件表格 | 见 P1/P2 |
+| 源码 vs `dist/` 新鲜度 | 时间戳 + 内容抽样 | 通过 |
 
 ## 已通过项
 
@@ -29,42 +30,67 @@
    来源：上一批删除 `game-body` 注入时只删了类名、留下空属性。无选择器依赖 `body` 类（仅 tetris 运行时会加 `rainbow-theme` / `game-locked`，与本次无关），已直接移除属性。
 2. **`js/icons.js` 头注释与 `CLAUDE.md` 自相矛盾**。注释写"仅用于无文字的控件按钮；带文字的按钮保留 emoji"，而 `CLAUDE.md` 要求含文字的动作/结果按钮（Play/Again/Copy/Close/Home/Share）也用 SVG。已按 `CLAUDE.md` 改写注释，并点明 emoji 的三处豁免（游戏内容字形、装饰性 hero 图、more-games 导航条）。
 
-## P1 — 图标政策执行不完整（建议下一批）
+## P1 — 图标政策执行不完整（已完成）
 
-`CLAUDE.md` 第 54 行声明的政策只落实在 `index.html`、`minesweeper.html`、`tetris.html`、`word-daily.html` 的部分按钮上；**同语义按钮在不同页面外观不同**，正是"各自为政"的残留。
+`CLAUDE.md` 第 54 行声明的政策原先只落实在 `index.html`、`minesweeper.html`、`tetris.html`、`word-daily.html` 的部分按钮上，**同语义按钮在不同页面外观不同**，正是"各自为政"的残留。
 
 更关键的是：这些 emoji 多数由 **i18n 在切语言时重新写回**，例如 `js/planet-merge.js:501` `textContent = \`🔄 ${t.again}\``。因此只改 HTML 会被覆盖，必须同时改 JS 赋值点。
 
-### P1-a 结果/动作类按钮（`CLAUDE.md` 明确点名，应改 SVG）
+### P1-a 结果/动作类按钮 → inline SVG（已完成，32 处）
 
-| 动作 | 页面（处数） | 现有 emoji |
-| --- | --- | --- |
-| Again | planet-merge, hoop-shot, gravity-slingshot, tower-defense, reversi（5） | 🔄 |
-| Copy | 同上 5 页（5） | 📋 |
-| Home | planet-merge×2, hoop-shot, gravity-slingshot×2, tower-defense, reversi, needle-awn×2, sword-flight×3（13） | 🏠 |
-| Share | planet-merge, hoop-shot, word-daily×2（4） | 📤 |
-| Stats | word-daily（1） | 📊 |
-| Next | word-daily×2（2） | ➡️ |
-| 查看九天仙榜 | sword-flight（1） | 🏆 |
+| 动作 | 页面（处数） | 原 emoji | 现图标 |
+| --- | --- | --- | --- |
+| Again | planet-merge, hoop-shot, gravity-slingshot, tower-defense, reversi（5） | 🔄 | `ICONS.retry` |
+| Retry | gravity-slingshot（1） | ⟲ U+27F2 | `ICONS.retry` |
+| Copy | 上述 5 页（5） | 📋 | `ICONS.copy` |
+| Home | planet-merge×2, hoop-shot×2, gravity-slingshot×2, tower-defense×2, reversi, needle-awn×2, sword-flight×3（14） | 🏠 | `ICONS.home` |
+| Share | planet-merge, hoop-shot, word-daily×2（4） | 📤 | `ICONS.share` |
+| Stats | word-daily（1） | 📊 | `ICONS.stats` |
+| Next | word-daily×2（2） | ➡️ | `ICONS.arrowRight` |
+| 查看九天仙榜 | sword-flight（1） | 🏆 | `ICONS.trophy` |
 
-小计 **31 处**。`ICONS` 已有 `retry/copy/home/stats`，需新增 `share`（`next`/`trophy` 按需）。
+**三层根因，缺一层就会回退：**
 
-对应 JS 赋值点：`planet-merge.js:491-505,1016,1195,1312`、`hoop-shot.js:325-352`、`gravity-slingshot.js:723-727`、`tower-defense.js:664-671`、`reversi.js:246-249`、`word-daily.js:467`、`sword-flight.js`/`needle-awn.js` 的 `返回…🏠` 系列。
+1. **静态 HTML** —— 首屏（`applyLanguage` 之前）可见的初始内容。
+2. **JS i18n 赋值点** —— 切语言时用 `textContent` 覆盖，会把图标抹掉；已统一改成
+   `innerHTML = \`${ICONS.x}<span>${t.x}</span>\``（文案均为本地 i18n 常量，非远端数据）。
+3. **i18n 字符串本身** —— `needle-awn` / `sword-flight` 把 🏠 直接写进了 `home` 文案的
+   **中英两版**（`'返回菜单 🏠'` / `'Menu 🏠'`），改前两层也没用。已去掉 4 处。
 
-### P1-b 模式/能力类按钮（含描述文字，可保留 emoji，建议只做统一登记）
+新增共享类 `.game-btn`（`css/layout.css`）：只负责 `inline-flex` + 居中对齐 + 图标 15×15，
+按钮自身的配色/内距/圆角仍归各页 `.xx-btn`。不用它的话，inline SVG 的基线会让图标视觉上抬高。
 
-planet-merge `♾️/📅`、gravity-slingshot `🛰/📅`、reversi `🤖/👥`、needle-awn `🔄转锋/🌟极意` 与 `⚔️🌊📅🥋` 模式瓷砖、sword-flight `⚔️/🌸/🌌☁️📅🧘`、math-rain `❄️💣🛡️🚀` —— 约 **23 处**，属"游戏内容字形/能力标识"，与 `CLAUDE.md` 豁免条款接近，判定为可保留，但需在文档里明确归属，避免下次再被当成漏项。
+### P1-b 模式/能力类按钮 —— 判定为可保留（已登记）
 
-### P1-c `.game-toast` 的 `white-space: nowrap` 是一处回归
+planet-merge `♾️/📅`、gravity-slingshot `🛰/📅`、reversi `🤖/👥`、needle-awn
+`🔄转锋/🌟极意` 与 `⚔️🌊📅🥋` 模式瓷砖、sword-flight `⚔️/🌸/🌌☁️📅🧘`、math-rain
+`❄️💣🛡️🚀`、tower-defense `🔥`，约 **25 处**。它们是有描述文字的模式砖 / 能力标识，
+与 `CLAUDE.md` 的"游戏内容字形"豁免接近，**保留 emoji**。
 
-共享层 `css/layout.css:139` 给 `.game-toast` 加了 `white-space: nowrap`、`border-radius: 99px`，而迁移前：
+同一判定下保留的还有**区块标题**（`🏆 Global Win Streaks`、`📖 操作说明`、`📜 法则`）
+与 **toast/公告文案**里的 emoji。下次审计不要把这三类当漏项。
 
-| 页面 | 迁移前（`30a3a5d`） | 现在 |
-| --- | --- | --- |
-| `.pm-toast` | `max-width: min(90vw,360px)` + `text-align:center`，可换行 | `nowrap` 生效 → `max-width` 与居中失效，长文案横向溢出 |
-| `.wd-toast` | `border-radius: 9px`，可换行 | 圆角被顶成 `99px`，且同样被 `nowrap` 压制换行 |
+注：`needle-awn` 侧栏提示 `鼠标右键 / Q / 🔄按钮`、`sword-flight` 的 `… / ⚔️按钮`
+仍在**引用这些保留 emoji 的按钮**，所以它们必须同步保留 —— 若将来改这些能力按钮，
+提示文案要一起改。
 
-建议：把 `white-space: nowrap` 从 `.game-toast` 移出，改由真正需要单行的 `gd/rv/td`（`top:14-16px` 的胶囊提示）自行声明；或让 `.game-toast` 仅在配置了 `max-width` 时允许换行。
+### P1-c `.game-toast` 的 `white-space: nowrap`（已修）
+
+共享层 `css/layout.css` 给 `.game-toast` 加过 `white-space: nowrap`，而迁移前**任何页面的
+toast 都没有这个属性**：
+
+| 页面 | 迁移前（`30a3a5d`） | 加 nowrap 后 | 现在 |
+| --- | --- | --- | --- |
+| `.pm-toast` | `max-width: min(90vw,360px)` + `text-align:center`，可换行 | `nowrap` 生效 → max-width 与居中失效，长文案横向溢出 | 已恢复（`white-space: normal`，max-width 实测 351px） |
+| `.wd-toast` | `border-radius: 9px`，可换行 | 同样被 nowrap 压制换行 | 换行已恢复 |
+
+处理：**把 `white-space: nowrap` 从共享层移除**（并加注释说明原因），没有反向补到页面层——
+因为原本就没有任何页面需要它。`border-radius: 99px` 则**刻意保留**：7 个页面的 toast 统一
+为胶囊是该共享层本来的设计意图，`.wd-toast` 的 `9px` 属迁移前漂移；若要页面独立圆角，
+在页面层覆盖即可（页面 CSS 在 layout 之后加载，同优先级后者胜）。
+
+验证：`node scripts/probe.mjs <page> 390 844 .<xx>-toast` 现在会打印 `whiteSpace: normal`
+（`probe.mjs` 本轮新增了 `whiteSpace` / `borderRadius` 两个字段，正是这两个属性最容易让共享层压掉页面意图）。
 
 ## P2 — 次要
 
@@ -89,4 +115,12 @@ node scripts/layout-metrics.mjs http://127.0.0.1:8899
 node scripts/fg-audit.mjs
 node scripts/placeholder-leak-check.mjs
 python scripts/emoji-button-audit.py
+python scripts/apply-button-icons.py --dry    # 按钮图标迁移（幂等，--dry 只报告）
+node scripts/verify-button-icons.mjs http://127.0.0.1:8899 /tmp/btn-icons
+node scripts/probe.mjs planet-merge 390 844 .pm-toast
 ```
+
+`verify-button-icons.mjs` 会按 id 解开结果面板的 `hidden`，断言每个按钮
+`display:inline-flex`、恰好 1 个 `<svg>`、图标计算宽度 15px、图标与文案**垂直中心偏差 ≤1px**、
+内容不溢出，并给每页留一张整页截图供目视。注意结果面板可能有入场 `transform: scale()`，
+所以断言读的是**计算样式**与未变换的 `offset/client` 宽度，而不是 `getBoundingClientRect()`。

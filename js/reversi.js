@@ -243,9 +243,9 @@ class ReversiGame {
         if (this.el['diff-medium']) this.el['diff-medium'].textContent = t.medium;
         if (this.el['diff-hard']) this.el['diff-hard'].textContent = t.hard;
         if (this.el['btn-play']) this.el['btn-play'].textContent = `⚫ ${t.play}`;
-        if (this.el['btn-again']) this.el['btn-again'].textContent = `🔄 ${t.again}`;
-        if (this.el['btn-copy']) this.el['btn-copy'].textContent = `📋 ${t.copyResult}`;
-        if (this.el['btn-menu']) this.el['btn-menu'].textContent = `🏠 ${t.home}`;
+        if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
+        if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
+        if (this.el['btn-menu']) this.el['btn-menu'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;

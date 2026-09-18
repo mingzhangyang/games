@@ -128,7 +128,10 @@
 
 .game-overlay::-webkit-scrollbar { display: none; }
 
-/* ── 舞台内提示条 ── */
+/* ── 舞台内提示条 ──
+   注意：这里**不要**加 white-space: nowrap。共享层比页面层先加载，
+   一旦加上就会把页面自己的 max-width + text-align:center（意在长文案换行）
+   压成单行 —— pm/wd 的 toast 原本都靠它换行。需要单行的胶囊提示由页面自己声明。 */
 .game-toast {
     position: absolute;
     left: 50%;
@@ -136,7 +139,6 @@
     z-index: 20;
     border-radius: 99px;
     pointer-events: none;
-    white-space: nowrap;
 }
 
 /* ── 底部操作提示 ── */
@@ -190,6 +192,22 @@
     min-width: var(--tok-btn-size);
     padding: 0 12px;
     white-space: nowrap;
+}
+
+/* ── 含图标的文字按钮（Play/Again/Copy/Close/Home/Share/Stats/Next）──
+   只负责「图标 + 文案」在同一行居中，让 inline SVG 的基线不再抬高图标；
+   按钮的配色/内距/圆角依然归各页自己的 .xx-btn，不在此处接管。 */
+.game-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+}
+
+.game-btn > svg {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 auto;
 }
 
 /* ── 侧栏卡片族 ── */

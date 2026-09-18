@@ -65,7 +65,7 @@ const I18N = {
         pauseSub: '调息片刻，蓄势待发',
         resume: '继续战斗 ▶',
         restart: '重新挑战 ⟲',
-        home: '返回菜单 🏠',
+        home: '返回菜单',
         victoryTitle: '大获全胜 · 锋芒毕露',
         defeatTitle: '气力耗尽 · 胜败常事',
         duelP1Win: '银针破阵 · P1 胜出！',
@@ -149,7 +149,7 @@ const I18N = {
         pauseSub: 'Catch your breath and prepare to clash',
         resume: 'Resume Battle ▶',
         restart: 'Restart ⟲',
-        home: 'Menu 🏠',
+        home: 'Menu',
         victoryTitle: 'VICTORY · Sharp & Radiant',
         defeatTitle: 'DEFEAT · The Blade Broke',
         duelP1Win: 'Silver Needle Strikes · P1 Wins!',
@@ -992,7 +992,7 @@ class GameEngine {
         document.getElementById('na-pause-sub').textContent = t.pauseSub;
         document.getElementById('na-btn-resume').textContent = t.resume;
         document.getElementById('na-btn-restart').textContent = t.restart;
-        document.getElementById('na-btn-pause-home').textContent = t.home;
+        document.getElementById('na-btn-pause-home').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
 
         document.getElementById('na-stat-score-lbl').textContent = t.scoreLbl;
         document.getElementById('na-stat-clashes-lbl').textContent = t.clashesLbl;
@@ -1000,7 +1000,7 @@ class GameEngine {
         document.getElementById('na-stat-extra-lbl').textContent = t.extraLbl;
         document.getElementById('na-btn-next-stage').textContent = t.nextStage;
         document.getElementById('na-btn-replay').textContent = t.replay;
-        document.getElementById('na-btn-result-home').textContent = t.home;
+        document.getElementById('na-btn-result-home').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
 
         document.getElementById('na-side-rules-title').textContent = t.sideRulesTitle;
         document.getElementById('na-side-rules-text').innerHTML = t.sideRulesText;

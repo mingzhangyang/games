@@ -325,12 +325,12 @@ class HoopShotGame {
         if (this.el['btn-play']) this.el['btn-play'].textContent = `🏀 ${t.play}`;
         if (this.el['pause-title']) this.el['pause-title'].textContent = t.paused;
         if (this.el['btn-resume']) this.el['btn-resume'].textContent = t.resume;
-        if (this.el['btn-menu']) this.el['btn-menu'].textContent = t.home;
+        if (this.el['btn-menu']) this.el['btn-menu'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['over-title']) this.el['over-title'].textContent = t.gameOver;
-        if (this.el['btn-share']) this.el['btn-share'].textContent = `📤 ${t.share}`;
-        if (this.el['btn-copy']) this.el['btn-copy'].textContent = `📋 ${t.copyResult}`;
-        if (this.el['btn-again']) this.el['btn-again'].textContent = `🔄 ${t.again}`;
-        if (this.el['btn-home']) this.el['btn-home'].textContent = `🏠 ${t.home}`;
+        if (this.el['btn-share']) this.el['btn-share'].innerHTML = `${ICONS.share}<span>${t.share}</span>`;
+        if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
+        if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
+        if (this.el['btn-home']) this.el['btn-home'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (this.el['lb-status']) this.el['lb-status'].textContent = '';
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
