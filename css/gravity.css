@@ -12,6 +12,8 @@ body {
     background:
         radial-gradient(ellipse 75% 45% at 50% -10%, rgba(125, 250, 208, 0.08), transparent),
         linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #0f1230 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #e8ecff;
 }
 
 .hidden { display: none !important; }
@@ -100,6 +102,7 @@ body {
 .gd-overlay {
     background: rgba(8, 10, 26, 0.92);
     text-align: center;
+    backdrop-filter: blur(10px);
 }
 
 .gd-overlay-dim { background: rgba(8, 10, 26, 0.72); }

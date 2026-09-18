@@ -132,6 +132,10 @@ PAGES=tetris,gomoku node scripts/shots.mjs C:/path/out
 
 # 单页探针（含画布尺寸、容器宽度、transform 等）
 node scripts/probe.mjs gomoku 1280 900 ".board-container"
+
+# 前景色 / 字体审计：报「纯黑前景 = 深色底上不可见」与「退回浏览器默认衬线字体」
+node scripts/fg-audit.mjs
+node scripts/fg-audit.mjs http://127.0.0.1:8900   # 构建产物
 ```
 
 期望值（统一后）：
@@ -149,3 +153,62 @@ node scripts/probe.mjs gomoku 1280 900 ".board-container"
   圆角 4px 是「满屏」语义；接入 shell 会破坏其横屏布局。
 - **math-rain**：自成一体的全屏街机 HUD（`css/math-rain/`，未引用 tokens.css），
   画布满屏、圆角 0。若要统一，应先做一次独立的换肤改造，而不是套用页面骨架。
+
+## 8. 事后修复：迁移把页面前景色/字体当几何属性剪掉了（2026-09-18 下午）
+
+**现象**：Word Daily 顶栏左侧的 Home / 帮助 / 声音三个图标只有红色的 ❓ emoji 看得见，
+其余全是黑的（深色底上不可见）。
+
+**根因**：`scripts/apply-layout-unification.py` 早先把 `body` 的 `color` / `font-family`
+也列进了 `BODY_STRIP`，把各页 `.xx-icon-btn` 的 `color` 列进了角色裁剪清单——理由是想让
+「共享骨架接管」，但 `css/layout.css` 只提供 `color: inherit` / `font-family: inherit`，
+**并没有替代品**。继承链一断，颜色回落到 UA 默认的纯黑，字体回落到浏览器默认衬线字体。
+共 9 页 36 条声明被误删：
+
+| 位置 | 丢失内容 | 后果 |
+|---|---|---|
+| 9 页 `body` | `color`（`#e8ecff` / `var(--text)` / `var(--color-text)`） | 顶栏图标、标题等靠继承的元素变纯黑 |
+| 9 页 `body` | `font-family`（Segoe UI / system-ui 栈） | 全页退回 Times New Roman（Win）/ 衬线 |
+| 8 页 `.xx-icon-btn` | `color: inherit` / `font-family: inherit` | 无实际损失（共享类已提供同值） |
+| word-daily `.wd-icon-btn` | `color: var(--text)` | 同上，由 body 修复覆盖 |
+
+另有两处同源问题：
+
+- `.gd-overlay` / `.hs-overlay` 的 `backdrop-filter: blur(10px)` 被剪（共享 `.game-overlay` 不做毛玻璃）
+  → 已从 overlay 裁剪清单移除该属性并恢复声明。
+- `.td-topbar { gap: 6px }` / `.td-topbar-actions { gap: 4px }`（≤480px）与共享类重复
+  → 改为把窄屏间距写进 `layout.css` 的 `@media (max-width: 480px)`（`.game-topbar` 6px /
+  `.game-topbar-group` 4px），页面内的两条随迁移删除，符合「几何只走共享类」。
+
+**修复动作**
+
+1. `BODY_STRIP` 去掉 `color` / `font-family`；`icon-btn`、`overlay` 的角色清单去掉
+   `color` / `font-family` / `backdrop-filter`（附注释说明为何不可剪）。
+2. 从 `30a3a5d` 取回原值，向现有规则内插回 22 条声明（`body` 18 条 + overlay 2 条 + word-daily icon-btn 2 条）。
+3. 重跑迁移脚本确认已成为**空操作**：`删除规则 0 条 | 裁剪规则 0 条`。
+4. Word Daily 顶栏 4 个按钮（帮助/统计/练习/返回每日）此前被 JS 用 emoji（`❓📊📅🎲`）
+   覆写 `textContent`，既违反 CLAUDE.md 的 emoji→SVG 约定，又抹掉了 HTML 里的 SVG
+   → 改为 `ICONS.help / stats / calendar / dice`（新增到 `js/icons.js`）。
+
+**教训 / 守卫**：剪裁「共享层已提供」的重复声明时，必须逐条确认共享层**真的有**同属性替代；
+`scripts/fg-audit.mjs` 用「纯黑前景 + 衬线回退」两条精确判据守住这类回归，
+`layout-metrics.mjs` 的几何表不受影响（字体变化会让内容高度浮动 ±1~3px，属预期）。
+
+## 9. 迁移脚本的第二类幂等缺陷：HTML 类名重复追加
+
+`inject_classes()` 里 `<body>` 与 `<canvas>` 的注入**不做判重**（角色类的注入 `fix_list` 做了），
+于是每跑一次脚本就多一个 token。历史多次运行后 HTML 里累积成：
+
+```html
+<body class="game-body game-body game-body game-body game-body">
+<canvas class="game-canvas game-canvas game-canvas">   <!-- gd/hs/pm/sf/na/td 六页 -->
+```
+
+其中 **`game-body` 全站没有任何 CSS 使用**（纯死类）。
+
+处理：
+
+1. 移除 `game-body` 注入逻辑（附注释说明为何删）；`game-canvas` 注入改为判重后再追加。
+2. 清理 9 页 HTML：删掉全部 `game-body` token、`game-canvas` 去重（15 个 class 属性）。
+3. 重跑脚本确认 `HTML 类注入 0`，`git diff` 为空 → 幂等。
+4. 复查：13 页无重复类名（用脚本精确比对 token），几何表与修复前逐行一致。

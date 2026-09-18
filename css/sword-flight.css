@@ -32,6 +32,8 @@ body {
         radial-gradient(ellipse 90% 60% at 50% -10%, rgba(56, 189, 248, 0.14), transparent),
         radial-gradient(circle at 85% 90%, rgba(251, 191, 36, 0.08), transparent),
         linear-gradient(175deg, #020612 0%, #061528 45%, #0a2139 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: var(--color-text);
 }
 
 .hidden { display: none !important; }

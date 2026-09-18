@@ -12,6 +12,8 @@ body {
     background:
         radial-gradient(ellipse 75% 45% at 50% -10%, rgba(52, 211, 153, 0.09), transparent),
         linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #0e1f22 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #e8ecff;
 }
 
 .hidden { display: none !important; }

@@ -289,6 +289,9 @@
 @media (max-width: 480px) {
     :root { --tok-btn-size: 36px; }
     .game-shell { padding: 6px 8px 4px; }
+    /* 窄屏收紧顶栏间距：保证最挤的页面（td 三个状态胶囊）仍保持单行 */
+    .game-topbar { gap: 6px; }
+    .game-topbar-group { gap: 4px; }
     .game-icon-btn { font-size: 14px; }
     .game-icon-btn--wide { padding: 0 9px; }
     .game-overlay { padding: 16px; gap: 11px; }

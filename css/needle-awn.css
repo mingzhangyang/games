@@ -31,6 +31,8 @@ body {
         radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56, 189, 248, 0.12), transparent),
         radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.08), transparent),
         linear-gradient(170deg, #030712 0%, #070e22 50%, #0d0f28 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--color-text);
 }
 
 .hidden { display: none !important; }

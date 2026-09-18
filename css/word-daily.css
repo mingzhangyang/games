@@ -32,6 +32,8 @@ body {
         radial-gradient(ellipse 80% 45% at 70% -10%, rgba(99, 102, 241, 0.16), transparent),
         linear-gradient(165deg, #05060f 0%, #0a0e24 55%, #120e2b 100%);
     touch-action: manipulation;
+    font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: var(--text);
 }
 
 .hidden { display: none !important; }
@@ -44,6 +46,8 @@ body {
 
 .wd-icon-btn {
     white-space: nowrap;
+    font-family: inherit;
+    color: var(--text);
 }
 
 .wd-icon-btn:hover {

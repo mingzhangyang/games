@@ -88,15 +88,18 @@ ROLE_SPECS = {
     "sidebar": ALL,
     "stage": ["position", "display", "justify-content", "align-items", "flex",
               "min-height", "max-width", "width"],
+    # backdrop-filter 不剪：共享 .game-overlay 不做毛玻璃，各页按自己的底色自选（gd/hs 用 blur）
     "overlay": ["position", "inset", "z-index", "display", "flex-direction", "align-items",
                 "justify-content", "gap", "padding", "border-radius", "overflow-y",
-                "scrollbar-width", "backdrop-filter", "-webkit-backdrop-filter"],
+                "scrollbar-width"],
     "toast": ["position", "left", "transform", "z-index", "border-radius",
               "pointer-events", "white-space"],
     "footer-hint": ALL,
+    # color / font-family 不剪：页面可能给自己的图标钮定色调（如 wd 用 var(--text)），
+    # 共享类的 color: inherit 不能替代它。
     "icon-btn": ["width", "height", "min-width", "flex-shrink", "position", "display",
                  "align-items", "justify-content", "padding", "font-size", "font-weight",
-                 "font-family", "color", "background", "border", "border-radius",
+                 "background", "border", "border-radius",
                  "cursor", "transition", "backdrop-filter", "-webkit-backdrop-filter"],
     "side-card": ["background", "border", "border-radius", "padding", "text-align",
                   "backdrop-filter", "-webkit-backdrop-filter", "box-shadow"],
@@ -139,8 +142,10 @@ ROLE_OVERRIDE = {
                      "min-height", "max-width"]},
 }
 
+# 只剪「共享层已经提供」的几何声明。color / font-family 是页面自己的调色板与字体，
+# 共享层不提供替代，剪掉会让继承链断掉（黑字黑图标 + 退回浏览器默认字体）——不可剪。
 BODY_STRIP = ["display", "justify-content", "align-items", "min-height", "overflow-x",
-              "overflow-y", "-webkit-tap-highlight-color", "font-family", "color",
+              "overflow-y", "-webkit-tap-highlight-color",
               "user-select", "-webkit-user-select"]
 
 
@@ -422,23 +427,19 @@ def inject_classes(text, page, counter):
     text = re.sub(r'(className\s*=\s*")([^"]*)(")',
                   lambda m: m.group(1) + fix_list(m.group(2)) + m.group(3), text)
 
-    # <body>
-    def body_fix(m):
-        tag = m.group(0)
-        if "class=" in tag:
-            return re.sub(r'class="([^"]*)"',
-                          lambda mm: 'class="%s game-body"' % mm.group(1), tag)
-        return tag[:-1].rstrip() + ' class="game-body">'
+    # <body>：不再注入 game-body —— 全站没有任何 CSS 用到这个类，
+    # 早先版本每次运行都无脑追加，HTML 里已累积出 5 个同名 token（见 git diff）。
 
-    text = re.sub(r"<body[^>]*>", body_fix, text, count=1)
-
-    # 画布
+    # 画布：必须判重，否则每次运行都会再追加一个 game-canvas
     for cid in page.get("canvas", []):
         def canvas_fix(m):
             tag = m.group(0)
             if "class=" in tag:
                 return re.sub(r'class="([^"]*)"',
-                              lambda mm: 'class="%s game-canvas"' % mm.group(1), tag)
+                              lambda mm: 'class="%s%s"' % (
+                                  mm.group(1),
+                                  "" if "game-canvas" in mm.group(1).split()
+                                  else " game-canvas"), tag)
             return re.sub(r"<canvas", '<canvas class="game-canvas"', tag, count=1)
         text = re.sub(r'<canvas[^>]*id="%s"[^>]*>' % re.escape(cid), canvas_fix, text)
 
