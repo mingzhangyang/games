@@ -334,7 +334,7 @@ html, body {
 
 .dpad-btn {
     position: absolute;
-    background: rgba(15, 23, 42, 0.82);
+    background: rgba(15, 23, 42, 0.55);
     border: 2px solid rgba(16, 185, 129, 0.5);
     color: #10b981;
     display: flex;
@@ -395,7 +395,7 @@ html, body {
     left: 47px;
     width: 46px;
     height: 46px;
-    background: rgba(10, 16, 28, 0.95);
+    background: rgba(10, 16, 28, 0.7);
     border: 1px solid rgba(16, 185, 129, 0.3);
     border-radius: 50%;
     pointer-events: none;
@@ -426,7 +426,9 @@ html, body {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: rgba(30, 41, 59, 0.85);
+    background: rgba(30, 41, 59, 0.55);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     border: 1.5px solid rgba(255, 255, 255, 0.25);
     color: #cbd5e1;
     display: flex;
@@ -449,7 +451,9 @@ html, body {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(6, 78, 59, 0.85);
+    background: rgba(6, 78, 59, 0.6);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     border: 2px solid #10b981;
     color: #fff;
     display: flex;
@@ -636,9 +640,80 @@ html, body {
 }
 
 
+/* 窄横屏（小屏手机横握）：压缩虚拟控件尺寸，减少对棋盘的遮挡 */
+@media (max-width: 740px) and (orientation: landscape) {
+    .v-dpad {
+        width: 118px;
+        height: 118px;
+        left: max(8px, env(safe-area-inset-left, 8px));
+        bottom: max(8px, env(safe-area-inset-bottom, 8px));
+    }
+
+    .dpad-up, .dpad-down {
+        left: 39px;
+        width: 40px;
+        height: 41px;
+    }
+
+    .dpad-left, .dpad-right {
+        top: 39px;
+        height: 40px;
+        width: 41px;
+    }
+
+    .dpad-center {
+        top: 39px;
+        left: 39px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .dpad-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .v-actions {
+        right: max(8px, env(safe-area-inset-right, 8px));
+        bottom: max(8px, env(safe-area-inset-bottom, 8px));
+        gap: 10px;
+    }
+
+    .v-aux-row {
+        gap: 8px;
+    }
+
+    .v-aux-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .v-aux-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .v-weapon-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .v-weapon-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+    }
+
+    .v-fire-btn {
+        width: 68px;
+        height: 68px;
+        font-size: 13px;
+    }
+}
+
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
-.v-aux-btn { position: relative; }
-.v-aux-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+.v-aux-btn, .v-weapon-btn { position: relative; }
+.v-aux-btn::after, .v-weapon-btn::after, .tb-home-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 
 
 
