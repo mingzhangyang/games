@@ -438,10 +438,19 @@ body {
     }
 }
 
-.theme-toggle {
+/* 顶栏操作簇：主题/语言/主页，统一一行钉右上，不遮挡棋盘 */
+.top-actions {
     position: fixed;
     top: 20px;
     right: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.theme-toggle {
     padding: 10px 18px;
     background: var(--tok-panel, rgba(255, 255, 255, 0.06));
     border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
@@ -449,7 +458,6 @@ body {
     color: var(--light-color);
     cursor: pointer;
     transition: var(--transition);
-    z-index: 1000;
 }
 
 .theme-toggle:hover {
@@ -457,9 +465,6 @@ body {
 }
 
 .lang-toggle {
-    position: fixed;
-    top: 70px;
-    right: 20px;
     padding: 10px 18px;
     background: var(--tok-panel, rgba(255, 255, 255, 0.06));
     border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
@@ -467,7 +472,6 @@ body {
     color: var(--light-color);
     cursor: pointer;
     transition: var(--transition);
-    z-index: 1000;
     font-family: inherit;
     font-size: 14px;
     min-height: 40px;
@@ -478,9 +482,6 @@ body {
 }
 
 .home-toggle {
-    position: fixed;
-    top: 120px;
-    right: 20px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -489,7 +490,6 @@ body {
     color: var(--light-color);
     cursor: pointer;
     transition: var(--transition);
-    z-index: 1000;
 }
 
 .home-toggle:hover {
@@ -749,7 +749,7 @@ body.rainbow-theme {
 
     .game-container {
         margin: 0;
-        padding: 8px;
+        padding: 60px 8px 8px;
         gap: 10px;
         flex-direction: column;
         align-items: center;
@@ -798,12 +798,22 @@ body.rainbow-theme {
         min-height: 40px;
     }
 
+    /* 移动端操作簇：一行钉右上角，棋盘经容器 padding-top 让位，不再重叠
+       （44px 触控目标由下方 .btn/.theme-toggle 组规则统一保证） */
+    .top-actions {
+        top: 8px;
+        right: 8px;
+        gap: 6px;
+    }
+
     .theme-toggle {
         padding: 6px 8px;
         font-size: 10px;
-        min-height: 32px;
-        top: 2px;
-        right: 2px;
+    }
+
+    .lang-toggle {
+        padding: 6px 8px;
+        font-size: 10px;
     }
 
     .global-scores-panel {
@@ -870,9 +880,11 @@ body.rainbow-theme {
         transition: transform 0.1s ease;
     }
 
-    /* Better touch targets for mobile */
+    /* Better touch targets for mobile (top-actions cluster included) */
     .btn,
-    .theme-toggle {
+    .theme-toggle,
+    .lang-toggle,
+    .home-toggle {
         min-height: 44px;
         min-width: 44px;
         -webkit-tap-highlight-color: transparent;
