@@ -28,73 +28,21 @@
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background:
         radial-gradient(ellipse 90% 60% at 50% -10%, rgba(56, 189, 248, 0.14), transparent),
         radial-gradient(circle at 85% 90%, rgba(251, 191, 36, 0.08), transparent),
         linear-gradient(175deg, #020612 0%, #061528 45%, #0a2139 100%);
-    color: var(--color-text);
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-}
-
-.sf-shell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 520px;
-    padding: 8px 12px 14px;
-    min-height: 100vh;
 }
 
 .hidden { display: none !important; }
 
 /* ── 顶栏 HUD ── */
-.sf-topbar {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 4px 0 8px;
-}
-
-.sf-icon-btn {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 17px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s, border-color 0.2s;
-    color: inherit;
-    font-family: inherit;
-    font-weight: 700;
-}
 
 .sf-icon-btn:hover {
     background: rgba(255, 255, 255, 0.14);
     border-color: rgba(56, 189, 248, 0.45);
 }
 .sf-icon-btn:active { transform: scale(0.92); }
-
-.sf-title-pill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
 
 .sf-stage-label {
     font-size: 14px;
@@ -118,15 +66,9 @@ body {
 }
 
 .sf-hud-box {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
     background: rgba(7, 21, 41, 0.78);
     border: 1px solid rgba(251, 191, 36, 0.4);
     box-shadow: 0 0 14px rgba(251, 191, 36, 0.18), inset 0 0 10px rgba(56, 189, 248, 0.15);
-    border-radius: 12px;
-    padding: 5px 14px;
-    font-variant-numeric: tabular-nums;
 }
 
 .sf-score-val {
@@ -144,18 +86,9 @@ body {
 }
 
 /* ── 主游戏区域 ── */
-.sf-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
 
 .sf-stage {
-    position: relative;
-    width: 480px;
     height: 640px;
-    max-width: 100%;
     aspect-ratio: 480 / 640;
     background: #020713;
     border-radius: 20px;
@@ -171,8 +104,6 @@ body {
 /* 手机横屏：改为按视口高度定尺寸，避免画布纵向溢出、边玩边滚 */
 @media (orientation: landscape) and (max-height: 640px) {
     .sf-stage {
-        width: auto;
-        max-width: 100%;
         height: min(640px, calc(100vh - 72px));
     }
 }
@@ -406,25 +337,10 @@ body {
 
 /* ── 覆盖层基类 (Start / Pause / Victory / GameOver) ── */
 .sf-overlay {
-    position: absolute;
-    inset: 0;
     background: rgba(2, 6, 18, 0.92);
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 16px 18px 16px;
-    z-index: 25;
-    overflow-y: auto;
-    scrollbar-width: none;
     -ms-overflow-style: none;
     text-align: center;
     animation: fadeIn 0.25s ease-out;
-}
-
-.sf-overlay::-webkit-scrollbar {
-    display: none;
 }
 
 @keyframes fadeIn {
@@ -922,76 +838,27 @@ body {
 
 /* Toast 浮动提示 */
 .sf-toast {
-    position: absolute;
     top: 55px;
-    left: 50%;
-    transform: translateX(-50%);
     background: rgba(7, 21, 41, 0.9);
     border: 1px solid var(--color-cyan);
     box-shadow: 0 0 18px var(--color-cyan-glow);
     padding: 6px 16px;
-    border-radius: 99px;
     font-size: 12px;
     font-weight: 800;
     color: #fff;
-    pointer-events: none;
-    z-index: 20;
     transition: opacity 0.2s, transform 0.2s;
-    white-space: nowrap;
 }
 
 /* ── 桌面大屏布局（≥1024px）：舞台 + 侧边栏 ── */
-.sf-sidebar {
-    display: none;
-}
 
 @media (min-width: 1024px) {
-    .sf-shell {
-        max-width: 960px;
-        padding: 6px 14px 14px;
-    }
-    .sf-main {
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 24px;
-    }
-    .sf-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 320px;
-        flex-shrink: 0;
-    }
-    .sf-side-card {
-        background: rgba(255, 255, 255, 0.045);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 10px 14px;
-        text-align: left;
-    }
     .sf-side-title {
-        font-size: 13.5px;
-        font-weight: 800;
-        margin-bottom: 6px;
         color: var(--color-cyan);
-        letter-spacing: 0.5px;
-    }
-    .sf-side-text {
-        font-size: 12.5px;
-        line-height: 1.7;
-        color: #cbd5e1;
     }
     .sf-side-text b {
         color: #fef08a;
     }
     .sf-side-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        font-size: 13px;
-        padding: 4px 0;
-        color: #cbd5e1;
         border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
     }
     .sf-side-row:last-child {
@@ -1001,29 +868,10 @@ body {
         color: #fff;
         font-variant-numeric: tabular-nums;
     }
-    .sf-shortcut-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 4px 0;
-        font-size: 12px;
-        color: #cbd5e1;
-    }
-    .sf-key {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 4px;
-        padding: 1px 6px;
-        font-size: 11px;
-        font-weight: 700;
-        color: #fff;
-    }
 }
 
 /* ── 移动端小屏微调（≤480px） ── */
 @media (max-width: 480px) {
-    .sf-shell { padding: 4px 6px 8px; }
-    .sf-icon-btn { width: 36px; height: 36px; font-size: 14px; }
     .sf-stage-label { font-size: 12px; }
     .sf-score-val { font-size: 16px; }
     .sf-title { font-size: 26px; }
@@ -1040,9 +888,13 @@ body {
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
-.sf-icon-btn { position: relative; }
-.sf-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
-
 
 .sf-lang-glyph { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
 
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ── */
+.sf-shell {
+    --frame-max-wide: 960px;
+    --frame-stage: 480px;
+    --frame-side: 320px;
+    --frame-side-gap: 10px;
+}

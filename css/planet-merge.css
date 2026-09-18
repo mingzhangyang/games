@@ -13,56 +13,13 @@ html, body {
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background:
         radial-gradient(ellipse 80% 50% at 70% -10%, rgba(99, 102, 241, 0.18), transparent),
         radial-gradient(ellipse 60% 40% at 15% 110%, rgba(52, 211, 153, 0.10), transparent),
         linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #120e2b 100%);
-    color: #e8ecff;
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    min-height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.pm-shell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 480px;
-    padding: 10px 12px 6px;
 }
 
 /* ── 顶栏 HUD ── */
-
-.pm-topbar {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 4px 2px 10px;
-}
-
-.pm-icon-btn {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    color: inherit;
-}
 
 .pm-icon-btn:hover { background: rgba(255, 255, 255, 0.12); }
 .pm-icon-btn:active { transform: scale(0.92); }
@@ -103,23 +60,7 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.pm-topbar-actions {
-    display: flex;
-    gap: 8px;
-}
-
 /* ── 游戏区 ── */
-
-.pm-stage {
-    position: relative;
-    width: 100%;
-    max-width: 440px;
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 0;
-}
 
 #pm-canvas {
     display: block;
@@ -164,21 +105,8 @@ body {
 /* ── 覆盖层通用 ── */
 
 .pm-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
     background: rgba(8, 10, 26, 0.88);
-    backdrop-filter: blur(10px);
-    border-radius: 18px;
-    padding: 16px 18px;
     text-align: center;
-    overflow-y: auto;
-    scrollbar-width: none;
-    z-index: 10;
 }
 
 .pm-overlay.hidden { display: none; }
@@ -329,8 +257,6 @@ body {
 }
 
 .pm-lang-btn {
-    width: auto;
-    padding: 0 14px;
     font-size: 13px;
     font-weight: 600;
     font-family: inherit;
@@ -509,28 +435,17 @@ body {
 
 .pm-username:focus { border-color: rgba(148, 163, 255, 0.5); }
 
-.pm-footer-hint {
-    padding: 8px 0 6px;
-    font-size: 11.5px;
-    color: #56618f;
-    letter-spacing: 0.06em;
-}
-
 /* ── 响应式 ── */
 
 @media (max-height: 760px) {
     .pm-shell { padding-top: 6px; }
     .pm-score-value { font-size: 25px; }
-    .pm-footer-hint { display: none; }
 }
 
 @media (max-width: 480px) {
-    .pm-shell { padding: 6px 8px 4px; }
     .pm-score-value { font-size: 23px; }
-    .pm-icon-btn { width: 38px; height: 38px; font-size: 17px; }
     .pm-title { font-size: 31px; }
     .pm-over-score { font-size: 46px; }
-    .pm-overlay { padding: 16px; gap: 11px; }
     .pm-btn { padding: 11px 16px; font-size: 14px; }
     .pm-howto { font-size: 12.5px; }
 }
@@ -542,99 +457,40 @@ body {
 }
 
 /* 覆盖层滚动条隐藏（滚轮/触摸仍可滚动） */
-.pm-overlay::-webkit-scrollbar { display: none; }
 
 /* ── 桌面大屏（≥1024px）：舞台 + 信息侧栏 ── */
-.pm-sidebar {
-    display: none;
-}
 
 @media (min-width: 1024px) {
-    .pm-shell { max-width: 940px; }
-    .pm-main {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 28px;
-    }
-    .pm-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        width: 300px;
-        flex-shrink: 0;
-    }
-    .pm-side-card {
-        background: rgba(255, 255, 255, 0.045);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 14px;
-        padding: 14px 16px;
-        text-align: left;
-    }
-    .pm-side-title {
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-    .pm-side-text {
-        font-size: 12.5px;
-        line-height: 1.7;
-        color: #c3cdf2;
-    }
-    .pm-side-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 10px;
-        font-size: 13.5px;
-        padding: 4px 0;
-        color: #c3cdf2;
-    }
     .pm-side-row b {
         color: #e8ecff;
         font-variant-numeric: tabular-nums;
     }
-    .pm-side-panel {
-        display: flex;
-        gap: 8px;
-        align-items: baseline;
-        font-size: 12.5px;
-        line-height: 1.6;
-        padding: 3px 0;
-        color: #c3cdf2;
-    }
-    .pm-side-panel b {
-        color: #e8ecff;
-        white-space: nowrap;
-    }
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
-.pm-icon-btn { position: relative; }
-.pm-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
-
-
 
 /* Toast 提示（榜单提交失败等） */
 .pm-toast {
-    position: fixed;
-    left: 50%;
     bottom: 32px;
-    transform: translate(-50%, 12px);
     max-width: min(90vw, 360px);
     padding: 10px 18px;
-    border-radius: 999px;
     background: rgba(15, 23, 42, 0.92);
     color: #e2e8f0;
     font-size: 14px;
     text-align: center;
     opacity: 0;
-    pointer-events: none;
     transition: opacity 0.25s, transform 0.25s;
-    z-index: 300;
 }
 
 .pm-toast.show {
     opacity: 1;
     transform: translate(-50%, 0);
+}
+
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ── */
+.pm-shell {
+    --frame-max-wide: 940px;
+    --frame-stage: 440px;
+    --frame-side: 300px;
+    --frame-side-gap: 14px;
 }

@@ -24,36 +24,38 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23030712'/%3E%3Cpath d='M14 50 L44 20' stroke='%2338bdf8' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M50 50 L20 20' stroke='%23f59e0b' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='20' r='6' fill='%23ffffff'/%3E%3Ccircle cx='32' cy='20' r='12' fill='none' stroke='%23fef08a' stroke-width='2'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/needle-awn.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
-<body>
-    <div class="na-shell">
+<body class="game-body game-body game-body">
+    <div class="na-shell game-shell">
         <!-- 顶栏 HUD -->
-        <header class="na-topbar">
-            <button class="na-icon-btn" id="na-btn-home" title="Home" aria-label="Home">
+        <header class="na-topbar game-topbar">
+            <button class="na-icon-btn game-icon-btn" id="na-btn-home" title="Home" aria-label="Home">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
             </button>
-            <div class="na-title-pill">
+            <div class="na-title-pill game-title-pill">
                 <span class="na-stage-label" id="na-stage-label">针尖对麦芒</span>
                 <span class="na-mode-badge" id="na-mode-badge">Trials</span>
             </div>
-            <div class="na-hud-box">
+            <div class="na-hud-box game-hud-box">
                 <span class="na-score-val" id="na-score-val">0</span>
                 <span class="na-combo-val" id="na-combo-val">×1</span>
             </div>
-            <button class="na-icon-btn" id="na-btn-pause" title="Pause" aria-label="Pause">
+            <button class="na-icon-btn game-icon-btn" id="na-btn-pause" title="Pause" aria-label="Pause">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg>
             </button>
-            <button class="na-icon-btn" id="na-btn-sound" title="Sound" aria-label="Sound">
+            <button class="na-icon-btn game-icon-btn" id="na-btn-sound" title="Sound" aria-label="Sound">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg>
             </button>
         </header>
 
         <!-- 主竞技区域 -->
-        <div class="na-main">
-            <div class="na-stage" id="na-stage">
-                <canvas id="na-canvas" width="480" height="640"></canvas>
+        <div class="na-main game-main">
+            <div class="na-stage game-stage" id="na-stage">
+                <canvas class="game-canvas game-canvas game-canvas" id="na-canvas" width="480" height="640"></canvas>
 
                 <!-- 内部即时 HUD -->
                 <div class="na-in-hud" id="na-in-hud">
@@ -96,10 +98,10 @@
                 </div>
 
                 <!-- 悬浮提示 -->
-                <div class="na-toast hidden" id="na-toast"></div>
+                <div class="na-toast hidden game-toast" id="na-toast"></div>
 
                 <!-- 1. 主菜单覆盖层 -->
-                <div class="na-overlay" id="na-overlay-start">
+                <div class="na-overlay game-overlay" id="na-overlay-start">
                     <div class="na-badge">ORIENTAL KINETIC ACTION</div>
                     <h1 class="na-title" id="na-main-title">针尖对麦芒</h1>
                     <p class="na-subtitle" id="na-main-sub">极速破锋 · 针芒毕露 · 刹那生灭</p>
@@ -184,18 +186,18 @@
                     </nav>
 
                     <div class="na-footer-bar">
-                        <a class="na-icon-btn" href="index.html" title="Home" aria-label="Home">
+                        <a class="na-icon-btn game-icon-btn" href="index.html" title="Home" aria-label="Home">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
                         </a>
-                        <button class="na-icon-btn" id="na-start-sound" aria-label="Sound">
+                        <button class="na-icon-btn game-icon-btn" id="na-start-sound" aria-label="Sound">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg>
                         </button>
-                        <button class="na-icon-btn na-lang-btn" id="na-btn-lang">中文</button>
+                        <button class="na-icon-btn na-lang-btn game-icon-btn" id="na-btn-lang">中文</button>
                     </div>
                 </div>
 
                 <!-- 2. 暂停界面 -->
-                <div class="na-overlay hidden" id="na-overlay-pause">
+                <div class="na-overlay hidden game-overlay" id="na-overlay-pause">
                     <div class="na-card">
                         <h2 class="na-card-title" id="na-pause-title">凝神静思 · 暂停</h2>
                         <p class="na-subtitle" id="na-pause-sub">Breath &amp; Focus</p>
@@ -208,7 +210,7 @@
                 </div>
 
                 <!-- 3. 结算界面 (胜负/通关/战败) -->
-                <div class="na-overlay hidden" id="na-overlay-result">
+                <div class="na-overlay hidden game-overlay" id="na-overlay-result">
                     <div class="na-card">
                         <h2 class="na-card-title" id="na-result-title">锋芒毕露</h2>
                         <div class="na-card-stars" id="na-result-stars">⭐⭐⭐</div>
@@ -248,10 +250,10 @@
             </div>
 
             <!-- 桌面大屏侧边栏 (≥1024px) -->
-            <aside class="na-sidebar">
-                <div class="na-side-card">
-                    <div class="na-side-title" id="na-side-rules-title">⚔️ 针尖对麦芒 · 核心法则</div>
-                    <div class="na-side-text" id="na-side-rules-text">
+            <aside class="na-sidebar game-sidebar">
+                <div class="na-side-card game-side-card">
+                    <div class="na-side-title game-side-title" id="na-side-rules-title">⚔️ 针尖对麦芒 · 核心法则</div>
+                    <div class="na-side-text game-side-text" id="na-side-rules-text">
                         <b>硬碰硬：</b>朝向迎面而来的利刃或尖刺突刺，在毫厘之间触发<b>针尖对麦芒</b>！完美格挡所有伤害并爆发出碎芒反弹。<br><br>
                         <b>双锋流转：</b><br>
                         • <b>银针（水蓝）</b>：极速穿云刺，碰撞触发时空凝滞（子弹时间）。<br>
@@ -260,47 +262,47 @@
                     </div>
                 </div>
 
-                <div class="na-side-card">
-                    <div class="na-side-title" id="na-side-records-title">🏆 绝巅战绩</div>
-                    <div class="na-side-row">
+                <div class="na-side-card game-side-card">
+                    <div class="na-side-title game-side-title" id="na-side-records-title">🏆 绝巅战绩</div>
+                    <div class="na-side-row game-side-row">
                         <span id="na-side-rec-endless-lbl">无尽争锋最高分</span>
                         <b id="na-side-rec-endless">0</b>
                     </div>
-                    <div class="na-side-row">
+                    <div class="na-side-row game-side-row">
                         <span id="na-side-rec-clash-lbl">单局极致碰撞</span>
                         <b id="na-side-rec-clash">0</b>
                     </div>
-                    <div class="na-side-row">
+                    <div class="na-side-row game-side-row">
                         <span id="na-side-rec-stars-lbl">演武通关星数</span>
                         <b id="na-side-rec-stars">0 / 30</b>
                     </div>
-                    <div class="na-side-row">
+                    <div class="na-side-row game-side-row">
                         <span id="na-side-rec-daily-lbl">今日论剑状态</span>
                         <b id="na-side-rec-daily">未挑战</b>
                     </div>
                 </div>
 
-                <div class="na-side-card">
-                    <div class="na-side-title" id="na-side-controls-title">⌨️ 键位与操控</div>
-                    <div class="na-shortcut-item">
+                <div class="na-side-card game-side-card">
+                    <div class="na-side-title game-side-title" id="na-side-controls-title">⌨️ 键位与操控</div>
+                    <div class="na-shortcut-item game-side-kbd-row">
                         <span id="na-sc-aim">瞄准方向</span>
-                        <span class="na-key" id="na-sc-aim-key">鼠标移动 / 触摸拖动</span>
+                        <span class="na-key game-side-kbd" id="na-sc-aim-key">鼠标移动 / 触摸拖动</span>
                     </div>
-                    <div class="na-shortcut-item">
+                    <div class="na-shortcut-item game-side-kbd-row">
                         <span id="na-sc-dash">破空突刺 (交锋)</span>
-                        <span class="na-key" id="na-sc-dash-key">鼠标左键 / 空格 / ⚡按钮</span>
+                        <span class="na-key game-side-kbd" id="na-sc-dash-key">鼠标左键 / 空格 / ⚡按钮</span>
                     </div>
-                    <div class="na-shortcut-item">
+                    <div class="na-shortcut-item game-side-kbd-row">
                         <span id="na-sc-stance">转换锋芒姿态</span>
-                        <span class="na-key" id="na-sc-stance-key">鼠标右键 / Q / Shift / 🔄</span>
+                        <span class="na-key game-side-kbd" id="na-sc-stance-key">鼠标右键 / Q / Shift / 🔄</span>
                     </div>
-                    <div class="na-shortcut-item">
+                    <div class="na-shortcut-item game-side-kbd-row">
                         <span id="na-sc-ult">万芒天破 (极意)</span>
-                        <span class="na-key" id="na-sc-ult-key">E 键 / 双击 / 🌟按钮</span>
+                        <span class="na-key game-side-kbd" id="na-sc-ult-key">E 键 / 双击 / 🌟按钮</span>
                     </div>
-                    <div class="na-shortcut-item">
+                    <div class="na-shortcut-item game-side-kbd-row">
                         <span id="na-sc-move">身法移动</span>
-                        <span class="na-key" id="na-sc-move-key">W A S D / 方向键</span>
+                        <span class="na-key game-side-kbd" id="na-sc-move-key">W A S D / 方向键</span>
                     </div>
                 </div>
             </aside>

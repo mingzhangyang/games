@@ -109,25 +109,9 @@ function normalizeUsername(val) {
     return trimmed;
 }
 
-// 桌面矮视口适配：整体等比缩放游戏容器，保证无滚动条、无截断
-function fitTetrisToViewport() {
-    const container = document.querySelector('.game-container');
-    if (!container) return;
-    if (window.innerWidth <= 768) {
-        // 移动端有自己的单列布局，交给媒体查询处理
-        container.style.transform = '';
-        return;
-    }
-    container.style.transform = 'none';
-    const unscaledH = container.getBoundingClientRect().height;
-    const availH = window.innerHeight - 16;
-    const scale = unscaledH > 0 ? Math.min(1, availH / unscaledH) : 1;
-    container.style.transformOrigin = 'top center';
-    container.style.transform = scale < 0.999 ? 'scale(' + scale + ')' : 'none';
-}
-window.addEventListener('resize', fitTetrisToViewport);
-window.addEventListener('load', fitTetrisToViewport);
-fitTetrisToViewport();
+// 布局说明：容器不再做整体等比缩放。页面骨架与其它小游戏一致
+// （css/layout.css 的 .game-shell/.game-main/.game-stage/.game-sidebar），
+// 超出视口时由页面自然滚动，不再靠 transform 压缩整块界面。
 
 // 统一玩家身份：读写全局 player_name，兼容迁移旧的 tetris_username
 function getGlobalUsername() {

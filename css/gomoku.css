@@ -4,75 +4,62 @@
     --tok-accent-2: #3182ce;
 }
 
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
+   棋盘 15×15 由 JS 按视口计算像素尺寸，桌面约 700px，故容器需比其他游戏宽 */
+:root {
+    --frame-max: 760px;
+    --frame-max-wide: 760px;
+    --frame-stage: 760px;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
     color: #e2e8f0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
 }
 
-/* 顶行：home / 语言按钮容器（原行内样式移入） */
-.gomoku-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 600px;
-    margin-bottom: -6px;
-}
-
+/* 顶行/标题/容器几何由 css/layout.css 的 .game-topbar/.game-title-pill/.game-shell 提供 */
 .game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    gap: 20px;
+    gap: 18px;
 }
 
-h1 {
-    margin: 10px 0;
-    font-size: 2.5rem;
-    text-shadow: 0 0 4px rgba(66, 153, 225, 0.25);
+.gomoku-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    margin: 0;
     color: #63b3ed;
+    text-shadow: 0 0 4px rgba(66, 153, 225, 0.25);
 }
 
+/* 状态条：与其它页顶栏 HUD 同节奏的紧凑胶囊（不再铺满整宽） */
 .status-bar {
     display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 600px;
+    justify-content: center;
+    gap: 16px;
+    width: auto;
+    max-width: 100%;
+    align-self: center;
     background: rgba(45, 55, 72, 0.8);
-    padding: 15px;
-    border-radius: 10px;
+    padding: 6px 16px;
+    border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-}
-
-@media (min-width: 1024px) {
-    .status-bar {
-        max-width: 700px;
-    }
 }
 
 .status-item {
-    font-size: 1.2rem;
-    font-weight: bold;
+    font-size: 14px;
+    font-weight: 700;
 }
 
-
+/* 棋盘外框：几何（width/max-width/居中）由 .game-stage 提供，这里只留皮肤 */
 .board-container {
     --tb-frame: clamp(6px, 1.5vw, 12px);
-    position: relative;
     padding: var(--tb-frame);
     background: linear-gradient(145deg, #1a202c, #2d3748); /* 深色渐变外框，与暗黑 UI 同系 */
-    border-radius: 10px;
+    border-radius: var(--frame-radius);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
@@ -93,19 +80,20 @@ canvas {
 
 .controls {
     display: flex;
-    gap: 15px;
-    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 4px;
 }
 
 .btn {
-    padding: 10px 20px;
-    font-size: 1rem;
+    padding: 11px 16px;
+    font-size: 14px;
     border: none;
     border-radius: var(--tok-radius-btn, 12px);
     cursor: pointer;
     transition: all 0.2s;
-    font-weight: bold;
-    text-transform: uppercase;
+    font-weight: 700;
     outline: none;
 }
 
@@ -139,30 +127,35 @@ button:focus-visible {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(8, 10, 26, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 100;
     justify-content: center;
     align-items: center;
+    padding: 24px 20px;
 }
 
 .modal-content {
-    background-color: #2d3748;
-    padding: 30px;
-    border-radius: 10px;
+    background-color: rgba(13, 17, 38, 0.96);
+    padding: 22px 18px 18px;
+    border-radius: 20px;
     text-align: center;
-    box-shadow: 0 0 20px rgba(66, 153, 225, 0.5);
-    border: 2px solid #4299e1;
-    max-width: 400px;
-    width: 90%;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    max-width: 360px;
+    width: 100%;
 }
 
 .modal h2 {
     color: #63b3ed;
     margin-top: 0;
+    font-size: 26px;
 }
 
 .modal p {
-    font-size: 1.2rem;
+    font-size: 14px;
+    color: var(--tok-text-dim);
     margin-bottom: 20px;
 }
 
@@ -176,15 +169,13 @@ button:focus-visible {
         width: 100%;
         height: auto;
     }
-    
-    h1 {
-        font-size: 1.8rem;
+
+    .gomoku-title {
+        font-size: 16px;
     }
-    
-    .status-bar {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
+
+    .status-item {
+        font-size: 13px;
     }
 }
 

@@ -32,6 +32,9 @@ vite.config.*.timestamp-*
 # Ignore ZCode local session files
 .zcode/
 
+# Ignore WorkBuddy local agent state (memory, sessions)
+.workbuddy/
+
 # Ignore environment files
 .env
 .env.*

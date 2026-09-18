@@ -365,7 +365,7 @@ class HoopShotGame {
         box.textContent = '';
         rows.forEach(([label, value]) => {
             const row = document.createElement('div');
-            row.className = 'hs-side-row';
+            row.className = 'hs-side-row game-side-row';
             const labelEl = document.createElement('span');
             labelEl.textContent = label;
             const valueEl = document.createElement('b');

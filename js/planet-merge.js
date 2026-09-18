@@ -1034,7 +1034,7 @@ class PlanetMergeGame {
         box.textContent = '';
         rows.forEach(([label, value]) => {
             const row = document.createElement('div');
-            row.className = 'pm-side-row';
+            row.className = 'pm-side-row game-side-row';
             const labelEl = document.createElement('span');
             labelEl.textContent = label;
             const valueEl = document.createElement('b');

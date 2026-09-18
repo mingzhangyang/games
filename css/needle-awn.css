@@ -27,73 +27,21 @@
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background:
         radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56, 189, 248, 0.12), transparent),
         radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.08), transparent),
         linear-gradient(170deg, #030712 0%, #070e22 50%, #0d0f28 100%);
-    color: var(--color-text);
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-}
-
-.na-shell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 520px;
-    padding: 8px 12px 12px;
-    min-height: 100vh;
 }
 
 .hidden { display: none !important; }
 
 /* ── 顶栏 HUD ── */
-.na-topbar {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 4px 0 8px;
-}
-
-.na-icon-btn {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 17px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s, border-color 0.2s;
-    color: inherit;
-    font-family: inherit;
-    font-weight: 700;
-}
 
 .na-icon-btn:hover {
     background: rgba(255, 255, 255, 0.14);
     border-color: rgba(56, 189, 248, 0.4);
 }
 .na-icon-btn:active { transform: scale(0.92); }
-
-.na-title-pill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
 
 .na-stage-label {
     font-size: 13.5px;
@@ -113,15 +61,9 @@ body {
 }
 
 .na-hud-box {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
     background: rgba(7, 21, 41, 0.78);
     border: 1px solid rgba(56, 189, 248, 0.4);
     box-shadow: 0 0 14px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.15);
-    border-radius: 12px;
-    padding: 5px 14px;
-    font-variant-numeric: tabular-nums;
 }
 
 .na-score-val {
@@ -142,17 +84,8 @@ body {
 }
 
 /* ── 游戏主舞台 ── */
-.na-main {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
 
 .na-stage {
-    position: relative;
-    width: 100%;
-    max-width: 480px;
     aspect-ratio: 480 / 640;
     background: #02040b;
     border-radius: 18px;
@@ -164,8 +97,6 @@ body {
 /* 手机横屏：改为按视口高度定尺寸，避免画布纵向溢出、边玩边滚 */
 @media (orientation: landscape) and (max-height: 640px) {
     .na-stage {
-        width: auto;
-        max-width: 100%;
         height: min(640px, calc(100vh - 72px));
     }
 }
@@ -368,24 +299,11 @@ body {
 
 /* ── 覆盖层 / 弹窗 (Start, Over, Levels, 1v1) ── */
 .na-overlay {
-    position: absolute;
-    inset: 0;
     background: rgba(3, 7, 18, 0.88);
-    backdrop-filter: blur(8px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 24px 18px 20px;
     text-align: center;
-    overflow-y: auto;
-    z-index: 10;
     transition: opacity 0.2s ease;
 }
 
-.na-overlay::-webkit-scrollbar {
-    width: 4px;
-}
 .na-overlay::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 2px;
@@ -735,81 +653,32 @@ body {
 }
 
 .na-lang-btn {
-    width: auto;
-    padding: 0 14px;
     font-size: 12px;
 }
 
 /* Toast 浮动提示 */
 .na-toast {
-    position: absolute;
     top: 55px;
-    left: 50%;
-    transform: translateX(-50%);
     background: rgba(11, 19, 43, 0.9);
     border: 1px solid var(--color-needle);
     box-shadow: 0 0 18px var(--color-needle-glow);
     padding: 6px 16px;
-    border-radius: 99px;
     font-size: 12px;
     font-weight: 800;
     color: #fff;
-    pointer-events: none;
-    z-index: 20;
     transition: opacity 0.2s, transform 0.2s;
 }
 
 /* ── 桌面大屏布局（≥1024px）：舞台 + 侧边栏 ── */
-.na-sidebar {
-    display: none;
-}
 
 @media (min-width: 1024px) {
-    .na-shell {
-        max-width: 960px;
-    }
-    .na-main {
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 28px;
-    }
-    .na-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        width: 320px;
-        flex-shrink: 0;
-    }
-    .na-side-card {
-        background: rgba(255, 255, 255, 0.045);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 14px;
-        padding: 14px 16px;
-        text-align: left;
-    }
     .na-side-title {
-        font-size: 14px;
-        font-weight: 800;
-        margin-bottom: 8px;
         color: var(--color-needle);
-        letter-spacing: 0.5px;
-    }
-    .na-side-text {
-        font-size: 12.5px;
-        line-height: 1.7;
-        color: #cbd5e1;
     }
     .na-side-text b {
         color: #fef08a;
     }
     .na-side-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        font-size: 13px;
-        padding: 4px 0;
-        color: #cbd5e1;
         border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
     }
     .na-side-row:last-child {
@@ -819,29 +688,10 @@ body {
         color: #fff;
         font-variant-numeric: tabular-nums;
     }
-    .na-shortcut-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 3px 0;
-        font-size: 12px;
-        color: #cbd5e1;
-    }
-    .na-key {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 4px;
-        padding: 1px 6px;
-        font-size: 11px;
-        font-weight: 700;
-        color: #fff;
-    }
 }
 
 /* ── 移动端小屏微调（≤480px） ── */
 @media (max-width: 480px) {
-    .na-shell { padding: 4px 6px 8px; }
-    .na-icon-btn { width: 36px; height: 36px; font-size: 14px; }
     .na-stage-label { font-size: 12px; }
     .na-score-val { font-size: 16px; }
     .na-title { font-size: 26px; }
@@ -857,8 +707,6 @@ body {
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
-.na-icon-btn { position: relative; }
-.na-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 
 /* Virtual joystick (floating on left half of canvas, touch only) */
 .na-joy {
@@ -888,3 +736,10 @@ body {
 
 .na-joy.hidden { display: none; }
 
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ── */
+.na-shell {
+    --frame-max-wide: 960px;
+    --frame-stage: 480px;
+    --frame-side: 320px;
+    --frame-side-gap: 14px;
+}

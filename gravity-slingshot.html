@@ -24,33 +24,35 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a0e24'/%3E%3Ccircle cx='40' cy='38' r='14' fill='%232a3c8f'/%3E%3Ccircle cx='40' cy='38' r='14' fill='none' stroke='%235a7bff' stroke-width='2'/%3E%3Cellipse cx='40' cy='38' rx='26' ry='10' fill='none' stroke='%237dfad0' stroke-width='2' transform='rotate(-24 40 38)'/%3E%3Ccircle cx='17' cy='29' r='3.4' fill='%23f4f7ff'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/gravity.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
-<body>
-    <div class="gd-shell">
+<body class="game-body game-body game-body">
+    <div class="gd-shell game-shell">
         <!-- 顶栏 HUD -->
-        <header class="gd-topbar">
-            <button class="gd-icon-btn" id="gd-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+        <header class="gd-topbar game-topbar">
+            <button class="gd-icon-btn game-icon-btn" id="gd-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             <div class="gd-hole-label" id="gd-hole-label">Hole 1/20</div>
             <div class="gd-launch-box">
                 <span class="gd-launch-value" id="gd-launches">0</span>
                 <span class="gd-par" id="gd-par">· Par 1</span>
             </div>
-            <button class="gd-icon-btn" id="gd-reset-btn" title="Retry" aria-label="Retry"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
-            <button class="gd-icon-btn" id="gd-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+            <button class="gd-icon-btn game-icon-btn" id="gd-reset-btn" title="Retry" aria-label="Retry"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+            <button class="gd-icon-btn game-icon-btn" id="gd-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
         </header>
 
         <!-- 星区总览 -->
-        <div class="gd-main">
-        <div class="gd-stage" id="gd-stage">
-            <canvas id="gd-canvas" width="480" height="640"></canvas>
+        <div class="gd-main game-main">
+        <div class="gd-stage game-stage" id="gd-stage">
+            <canvas class="game-canvas game-canvas game-canvas" id="gd-canvas" width="480" height="640"></canvas>
 
             <!-- 提示 -->
-            <div class="gd-toast hidden" id="gd-toast"></div>
+            <div class="gd-toast hidden game-toast" id="gd-toast"></div>
 
             <!-- 开始界面 -->
-            <div class="gd-overlay" id="gd-start">
+            <div class="gd-overlay game-overlay" id="gd-start">
                 <h1 class="gd-title" id="gd-title">Gravity Slingshot</h1>
                 <p class="gd-subtitle" id="gd-subtitle">Aim · Bend · Orbit · Capture</p>
                 <div class="gd-hero">🚀</div>
@@ -78,13 +80,13 @@
                     </div>
                 </nav>
                 <div class="gd-start-footer">
-                    <button class="gd-icon-btn" id="gd-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
-                    <button class="gd-icon-btn gd-lang-btn" id="gd-start-lang">中文</button>
+                    <button class="gd-icon-btn game-icon-btn" id="gd-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                    <button class="gd-icon-btn gd-lang-btn game-icon-btn" id="gd-start-lang">中文</button>
                 </div>
             </div>
 
             <!-- 过关面板 -->
-            <div class="gd-overlay gd-overlay-dim hidden" id="gd-hole">
+            <div class="gd-overlay gd-overlay-dim hidden game-overlay" id="gd-hole">
                 <div class="gd-card">
                     <h2 class="gd-card-title" id="gd-hole-stars">⭐⭐⭐</h2>
                     <div class="gd-card-line" id="gd-hole-line">Launches 1 · Par 1</div>
@@ -97,7 +99,7 @@
             </div>
 
             <!-- 每日结算 -->
-            <div class="gd-overlay hidden" id="gd-over">
+            <div class="gd-overlay hidden game-overlay" id="gd-over">
                 <h2 class="gd-overlay-title" id="gd-over-title">Daily complete!</h2>
                 <div class="gd-over-score" id="gd-over-score">7</div>
                 <div class="gd-over-sub" id="gd-over-sub"></div>
@@ -118,19 +120,19 @@
             </div>
         </div>
 
-            <aside class="gd-sidebar">
-            <div class="gd-side-card">
-                <div class="gd-side-title" id="gd-side-howto-title"></div>
-                <p class="gd-side-text" id="gd-side-howto"></p>
+            <aside class="gd-sidebar game-sidebar">
+            <div class="gd-side-card game-side-card">
+                <div class="gd-side-title game-side-title" id="gd-side-howto-title"></div>
+                <p class="gd-side-text game-side-text" id="gd-side-howto"></p>
             </div>
-            <div class="gd-side-card">
-                <div class="gd-side-title" id="gd-side-records-title"></div>
+            <div class="gd-side-card game-side-card">
+                <div class="gd-side-title game-side-title" id="gd-side-records-title"></div>
                 <div class="gd-side-records" id="gd-side-records"></div>
             </div>
         </aside>
     </div>
 
-    <p class="gd-footer-hint" id="gd-hint"></p>
+    <p class="gd-footer-hint game-footer-hint" id="gd-hint"></p>
     </div>
 
     <script>

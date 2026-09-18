@@ -9,58 +9,14 @@
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background:
         radial-gradient(ellipse 75% 45% at 50% -10%, rgba(64, 184, 255, 0.10), transparent),
         linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #101a2b 100%);
-    color: #e8ecff;
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.ms-shell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 640px;
-    padding: 10px 12px 8px;
-    min-height: 100vh;
 }
 
 .hidden { display: none !important; }
 
 /* ── 顶栏 ── */
-
-.ms-topbar {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 4px 0 8px;
-}
-
-.ms-icon-btn {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    color: inherit;
-    font-family: inherit;
-}
 
 .ms-icon-btn:hover { background: rgba(255, 255, 255, 0.12); }
 .ms-icon-btn:active { transform: scale(0.92); }
@@ -557,8 +513,6 @@ body {
 .ms-start-footer { display: flex; gap: 10px; margin-top: 4px; }
 
 .ms-lang-btn {
-    width: auto;
-    padding: 0 14px;
     font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
@@ -567,8 +521,6 @@ body {
 /* ── 响应式 ── */
 
 @media (max-width: 480px) {
-    .ms-shell { padding: 6px 8px 4px; }
-    .ms-icon-btn { width: 36px; height: 36px; font-size: 15px; }
     .ms-face { width: 42px; height: 42px; font-size: 21px; }
     .ms-counter { padding: 5px 9px; }
     .ms-counter-value { font-size: 16px; }
@@ -583,7 +535,6 @@ body {
 
 /* ── 桌面大屏（≥1024px）：更大的格子与结算面板 ── */
 @media (min-width: 1024px) {
-    .ms-shell { max-width: 780px; }
     .ms-counter { padding: 8px 14px; }
     .ms-counter-value { font-size: 22px; }
     .ms-face { width: 54px; height: 54px; font-size: 27px; }
@@ -592,8 +543,10 @@ body {
     .ms-result-time { font-size: 52px; }
 }
 
-
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
-.ms-icon-btn { position: relative; }
-.ms-icon-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ── */
+.ms-shell {
+    --frame-max: 640px;
+    --frame-max-wide: 780px;
+}

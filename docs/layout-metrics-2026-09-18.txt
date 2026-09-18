@@ -1,0 +1,32 @@
+
+===== M390 =====
+page                 shell      pad       topbar    btn     hit      stageMax  canvas        radius  sidebar  hint
+gravity-slingshot    390x844    6px 8px   374x50    36x36   48x48    460px     374x498/18px  18px    374x232  y=0 11.5px
+hoop-shot            390x869    6px 8px   374x60    36x36   48x48    440px     372x567/18px  18px    374x211  y=0 11.5px
+planet-merge         390x844    6px 8px   374x58    36x36   48x48    440px     372x567/18px  18px    374x184  y=0 11.5px
+sword-flight         390x1607   6px 8px   374x50    36x36   48x48    480px     374x640/18px  18px    374x907  -
+needle-awn           390x1152   6px 8px   374x50    36x36   48x48    480px     372x497/18px  18px    374x594  -
+tower-defense        390x1392   6px 8px   374x50    36x36   48x48    460px     374x498/18px  18px    374x784  y=0 11.5px
+reversi              390x844    6px 8px   374x59    36x36   48x48    460px     -/                    -        y=0 11.5px
+minesweeper          390x844    6px 8px   374x56    36x36   48x48              -/                    -        -
+word-daily           390x844    6px 8px   374x51    36x36   48x48              -/                    -        -
+gomoku               390x844    6px 8px   374x50    36x36   48x48    760px     350x350/0px   0px     -        -
+tetris               390x1128   6px 8px   374x50    36x36   48x48    280px     280x560/18px  18px    -        -
+tank-battle          -                    -         -       -                  366x275/4px   4px     -        -
+math-rain            -                    -         -       -                  390x557/0px   0px     -        -
+
+===== D1280 =====
+page                 shell      pad       topbar    btn     hit      stageMax  canvas        radius  sidebar  hint
+gravity-slingshot    940x900    10px 12px 916x54    40x40   52x52    460px     460x613/18px  18px    300x267  y=677 11.5px
+hoop-shot            940x900    10px 12px 916x67    40x40   52x52    440px     416x634/18px  18px    300x246  y=733 11.5px
+planet-merge         940x900    10px 12px 916x65    40x40   52x52    440px     434x661/18px  18px    300x219  y=736 11.5px
+sword-flight         960x1137   10px 12px 936x54    40x40   52x52    480px     480x640/18px  18px    320x1067 -
+needle-awn           960x900    10px 12px 936x54    40x40   52x52    480px     478x638/18px  18px    320x646  -
+tower-defense        940x1769   10px 12px 916x54    40x40   52x52    460px     460x613/18px  18px    300x944  y=1731 11.5px
+reversi              820x900    10px 12px 796x66    40x40   52x52    460px     -/                    -        y=558 11.5px
+minesweeper          780x900    10px 12px 756x68    40x40   52x52              -/                    -        -
+word-daily           600x900    10px 12px 576x56    40x40   52x52              -/                    -        -
+gomoku               760x1029   10px 12px 736x54    40x40   52x52    760px     700x700/0px   0px     -        -
+tetris               940x1155   10px 12px 916x57    40x40   52x52    400px     400x800/18px  18px    -        -
+tank-battle          -                    -         -       -                  800x600/4px   4px     -        -
+math-rain            -                    -         -       -                  1200x506/0px  0px     -        -

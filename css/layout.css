@@ -1,0 +1,324 @@
+/* ─────────────────────────────────────────────
+   共享页面骨架 — 全站游戏页统一的布局契约
+   ─────────────────────────────────────────────
+   引入顺序（每页固定）：
+       css/tokens.css → css/layout.css → css/<game>.css → css/more-games.css
+   layout.css 在前，因此各页仍可用自己的规则/变量覆盖。
+
+   用法：在原有类名上追加通用类，不动 JS 选择器、不改原有命名。
+       <div class="xx-shell game-shell">        页面容器
+       <header class="xx-topbar game-topbar">   顶栏
+       <div class="xx-topbar-actions game-topbar-group">
+       <div class="xx-main game-main">          舞台 + 侧栏的横向容器
+       <div class="xx-stage game-stage">        舞台（含画布/棋盘）
+       <canvas class="game-canvas">             画布外框（圆角/描边/投影自备）
+       <aside class="xx-sidebar game-sidebar">  桌面侧栏
+       <div class="xx-side-card game-side-card"> 侧栏卡片
+       <div class="xx-side-title game-side-title">
+       <div class="xx-side-row game-side-row">  键值行（内层标签用 <b>）
+       <div class="xx-side-kbd-row game-side-kbd-row"> 快捷键行
+       <span class="xx-key game-side-kbd">      键帽
+       <div class="xx-overlay game-overlay">    舞台内覆盖层（absolute 铺满）
+       <div class="xx-toast game-toast">        舞台内提示条
+       <p class="xx-footer-hint game-footer-hint"> 底部操作提示
+       <button class="xx-icon-btn game-icon-btn">  顶栏图标钮
+
+   调参：只覆盖 CSS 变量，不要重写几何属性
+       --frame-max          移动端容器宽度（默认 520）
+       --frame-max-wide     ≥1024px 容器宽度（默认 940）
+       --frame-stage        舞台最大宽度（默认 460）
+       --frame-side         侧栏宽度（默认 300）
+       --frame-side-gap     侧栏卡片间距（默认 12）
+       --frame-radius       画布/覆盖层圆角（默认 18）
+   ───────────────────────────────────────────── */
+
+:root {
+    --frame-max: 520px;
+    --frame-max-wide: 940px;
+    --frame-stage: 460px;
+    --frame-side: 300px;
+    --frame-side-gap: 12px;
+    --frame-radius: 18px;
+}
+
+/* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* ── 页面容器：单列居中的移动优先栏 ── */
+.game-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: var(--frame-max);
+    margin: 0 auto;
+    padding: 10px 12px 6px;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* ── 顶栏：左 home / 中信息 / 右动作 ── */
+.game-topbar {
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 0 10px;
+}
+
+.game-topbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* ── 主体：移动端纵向，桌面端回退为 舞台+侧栏 横排 ── */
+.game-main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ── 舞台：承载画布与覆盖层的定位盒 ── */
+.game-stage {
+    position: relative;
+    width: 100%;
+    max-width: var(--frame-stage);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* 需要吃掉剩余高度的舞台（纵向 100vh 布局的游戏） */
+.game-stage--fill {
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── 画布：圆角 + 描边 + 投影由各页上色，几何统一 ── */
+.game-canvas {
+    display: block;
+    width: 100%;
+    border-radius: var(--frame-radius);
+}
+
+/* ── 覆盖层：填充舞台、玻璃模糊、内容安全居中可滚动 ── */
+.game-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: safe center;
+    gap: 10px;
+    padding: 20px 18px;
+    border-radius: var(--frame-radius);
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.game-overlay::-webkit-scrollbar { display: none; }
+
+/* ── 舞台内提示条 ── */
+.game-toast {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    border-radius: 99px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* ── 底部操作提示 ── */
+.game-footer-hint {
+    padding: 8px 0 6px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+
+/* ── 图标钮：40px 视觉 / ≥44px 触控热区（尺寸取 tokens 变量，与 .icon-btn 同源） ── */
+.game-icon-btn {
+    width: var(--tok-btn-size);
+    height: var(--tok-btn-size);
+    flex-shrink: 0;
+    padding: 0;
+    white-space: nowrap;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-family: inherit;
+    font-weight: 700;
+    color: inherit;
+    cursor: pointer;
+    background: var(--tok-panel);
+    border: 1px solid var(--tok-border);
+    border-radius: var(--tok-radius-btn);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.15s, transform 0.1s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.game-icon-btn::after {
+    content: '';
+    position: absolute;
+    inset: var(--tok-hit-pad);
+    border-radius: inherit;
+}
+
+.game-icon-btn:hover { background: var(--tok-panel-strong); }
+.game-icon-btn:active { transform: scale(0.92); }
+
+/* 文字型图标钮（语言切换等）：宽度自适应，最小不低于视觉尺寸 */
+.game-icon-btn--wide {
+    width: auto;
+    min-width: var(--tok-btn-size);
+    padding: 0 12px;
+    white-space: nowrap;
+}
+
+/* ── 侧栏卡片族 ── */
+.game-side-card {
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 14px 16px;
+    text-align: left;
+}
+
+.game-side-title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+}
+
+.game-side-text {
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--tok-text-dim);
+}
+
+.game-side-text b { color: var(--tok-text); }
+
+.game-side-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13.5px;
+    padding: 4px 0;
+    color: var(--tok-text-dim);
+}
+
+.game-side-row b {
+    color: var(--tok-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.game-side-panel {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    padding: 3px 0;
+    color: var(--tok-text-dim);
+}
+
+.game-side-panel b {
+    color: var(--tok-text);
+    white-space: nowrap;
+}
+
+.game-side-kbd-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    padding: 3px 0;
+    color: var(--tok-text-dim);
+}
+
+.game-side-kbd {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--tok-text);
+}
+
+/* ── 顶栏中部信息块（模式标记 + 分数） ── */
+.game-title-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 0;
+}
+
+.game-hud-box {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    border-radius: 12px;
+    padding: 5px 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── 响应式：窄屏压缩 ── */
+@media (max-width: 480px) {
+    :root { --tok-btn-size: 36px; }
+    .game-shell { padding: 6px 8px 4px; }
+    .game-icon-btn { font-size: 14px; }
+    .game-icon-btn--wide { padding: 0 9px; }
+    .game-overlay { padding: 16px; gap: 11px; }
+    .game-footer-hint { display: none; }
+}
+
+/* ── 响应式：矮屏压缩 ── */
+@media (max-height: 720px) {
+    .game-shell { padding-top: 6px; }
+    .game-footer-hint { display: none; }
+}
+
+/* ── 响应式：桌面横排 ── */
+@media (min-width: 1024px) {
+    .game-shell { max-width: var(--frame-max-wide); }
+    .game-main {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 28px;
+    }
+    .game-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: var(--frame-side-gap);
+        width: var(--frame-side);
+        flex-shrink: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .game-icon-btn { transition: none; }
+}

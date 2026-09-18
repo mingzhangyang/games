@@ -24,34 +24,36 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23f08c3a'/%3E%3Cpath d='M4 32h56M32 4v56M12 12c12 10 28 10 40 0M12 52c12-10 28-10 40 0' stroke='%235a2a08' stroke-width='3' fill='none'/%3E%3C/svg%3E">
         <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/hoop-shot.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
-<body>
-    <div class="hs-shell">
+<body class="game-body game-body game-body">
+    <div class="hs-shell game-shell">
         <!-- 顶栏 HUD -->
-        <header class="hs-topbar">
-            <button class="hs-icon-btn" id="hs-btn-home-top" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+        <header class="hs-topbar game-topbar">
+            <button class="hs-icon-btn game-icon-btn" id="hs-btn-home-top" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             <div class="hs-score-box">
                 <div class="hs-score-value" id="hs-score">0</div>
                 <div class="hs-score-sub">🏆 <span id="hs-best">0</span></div>
             </div>
-            <div class="hs-topbar-actions">
-                <button class="hs-icon-btn" id="hs-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
-                <button class="hs-icon-btn" id="hs-pause-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
+            <div class="hs-topbar-actions game-topbar-group">
+                <button class="hs-icon-btn game-icon-btn" id="hs-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                <button class="hs-icon-btn game-icon-btn" id="hs-pause-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
             </div>
         </header>
 
         <div class="hs-streak-bar" id="hs-streak"></div>
 
         <!-- 游戏区 -->
-        <div class="hs-main">
-        <div class="hs-stage">
-            <canvas id="hs-canvas" width="420" height="640"></canvas>
+        <div class="hs-main game-main">
+        <div class="hs-stage game-stage game-stage--fill">
+            <canvas class="game-canvas game-canvas game-canvas" id="hs-canvas" width="420" height="640"></canvas>
             <div class="hs-fire-badge" id="hs-fire-badge">🔥</div>
 
             <!-- 开始界面 -->
-            <div class="hs-overlay" id="hs-start">
+            <div class="hs-overlay game-overlay" id="hs-start">
                 <h1 class="hs-title" id="hs-title">Hoop Shot</h1>
                 <p class="hs-subtitle" id="hs-subtitle">Flick · Arc · Score</p>
                 <div class="hs-ball-row">🏀</div>
@@ -74,13 +76,13 @@
                     </div>
                 </nav>
                 <div class="hs-start-footer">
-                    <button class="hs-icon-btn" id="hs-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
-                    <button class="hs-icon-btn hs-lang-btn" id="hs-start-lang">中文</button>
+                    <button class="hs-icon-btn game-icon-btn" id="hs-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                    <button class="hs-icon-btn hs-lang-btn game-icon-btn" id="hs-start-lang">中文</button>
                 </div>
             </div>
 
             <!-- 暂停界面 -->
-            <div class="hs-overlay hidden" id="hs-pause">
+            <div class="hs-overlay hidden game-overlay" id="hs-pause">
                 <h2 class="hs-overlay-title" id="hs-pause-title">Paused</h2>
                 <div class="hs-btn-col">
                     <button class="hs-btn hs-btn-primary" id="hs-btn-resume">Resume</button>
@@ -89,7 +91,7 @@
             </div>
 
             <!-- 结算界面 -->
-            <div class="hs-overlay hidden" id="hs-over">
+            <div class="hs-overlay hidden game-overlay" id="hs-over">
                 <h2 class="hs-overlay-title" id="hs-over-title">Game Over</h2>
                 <div class="hs-newbest" id="hs-over-newbest"></div>
                 <div class="hs-over-score" id="hs-over-score">0</div>
@@ -113,19 +115,19 @@
             </div>
         </div>
 
-            <aside class="hs-sidebar">
-            <div class="hs-side-card">
-                <div class="hs-side-title" id="hs-side-howto-title"></div>
-                <p class="hs-side-text" id="hs-side-howto"></p>
+            <aside class="hs-sidebar game-sidebar">
+            <div class="hs-side-card game-side-card">
+                <div class="hs-side-title game-side-title" id="hs-side-howto-title"></div>
+                <p class="hs-side-text game-side-text" id="hs-side-howto"></p>
             </div>
-            <div class="hs-side-card">
-                <div class="hs-side-title" id="hs-side-records-title"></div>
+            <div class="hs-side-card game-side-card">
+                <div class="hs-side-title game-side-title" id="hs-side-records-title"></div>
                 <div class="hs-side-records" id="hs-side-records"></div>
             </div>
         </aside>
     </div>
 
-    <p class="hs-footer-hint" id="hs-hint">Swipe up to shoot · P pause · M mute</p>
+    <p class="hs-footer-hint game-footer-hint" id="hs-hint">Swipe up to shoot · P pause · M mute</p>
     </div>
 
     <script>

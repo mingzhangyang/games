@@ -789,7 +789,7 @@ class TowerDefenseGame {
         box.textContent = '';
         shortcuts.forEach(([key, desc]) => {
             const row = document.createElement('div');
-            row.className = 'td-side-shortcut-row';
+            row.className = 'td-side-shortcut-row game-side-kbd-row';
             const descEl = document.createElement('span');
             descEl.textContent = desc;
             const kbd = document.createElement('kbd');
@@ -811,7 +811,7 @@ class TowerDefenseGame {
         box.textContent = '';
         rows.forEach(([label, value]) => {
             const row = document.createElement('div');
-            row.className = 'td-side-row';
+            row.className = 'td-side-row game-side-row';
             const labelEl = document.createElement('span');
             labelEl.textContent = label;
             const valueEl = document.createElement('b');

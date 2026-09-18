@@ -26,6 +26,7 @@
         <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/tetris.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -33,13 +34,16 @@
     <div class="background-animation"></div>
     <div class="stars" id="stars"></div>
 
-    <div class="top-actions">
-        <button class="icon-btn home-toggle" id="homeBtn" title="Home" aria-label="Home" onclick="location.href='index.html'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
-        <div class="theme-toggle" id="themeToggle"></div>
-    </div>
+    <div class="game-container game-shell">
+        <header class="game-topbar">
+            <button class="icon-btn game-icon-btn home-toggle" id="homeBtn" title="Home" aria-label="Home" onclick="location.href='index.html'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            <div class="game-topbar-group">
+                <div class="theme-toggle" id="themeToggle"></div>
+            </div>
+        </header>
 
-    <div class="game-container">
-        <div class="game-board">
+        <div class="game-main">
+        <div class="game-board game-stage">
             <canvas id="tetris" width="400" height="800"></canvas>
             <canvas id="particleCanvas" width="400" height="800"></canvas>
             <canvas id="lineClearCanvas" width="400" height="800"></canvas>
@@ -116,13 +120,14 @@
               <a href="gravity-slingshot.html">🚀 Gravity Slingshot</a>
                 </div>
             </nav>
+
+            <div class="global-scores-panel game-side-card" id="globalScoresPanel">
+                <div class="global-scores-header" id="globalScoresHeader">Global Top 5</div>
+                <div class="global-scores-list" id="globalScoresList">
+                    <div class="loading-scores" id="loadingScores">Loading...</div>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="global-scores-panel" id="globalScoresPanel">
-        <div class="global-scores-header" id="globalScoresHeader">Global Top 5</div>
-        <div class="global-scores-list" id="globalScoresList">
-            <div class="loading-scores" id="loadingScores">Loading...</div>
         </div>
     </div>
 

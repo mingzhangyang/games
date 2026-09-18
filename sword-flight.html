@@ -24,42 +24,44 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23030816'/%3E%3Cpath d='M16 48 L48 16' stroke='%2338bdf8' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M20 20 L44 44' stroke='%23fbbf24' stroke-width='2' stroke-dasharray='2 4'/%3E%3Ccircle cx='48' cy='16' r='5' fill='%23ffffff'/%3E%3Ccircle cx='32' cy='32' r='14' fill='none' stroke='%2338bdf8' stroke-width='2' opacity='0.7'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/sword-flight.css">
     <link rel="stylesheet" href="css/more-games.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&display=swap">
 </head>
-<body>
-    <div class="sf-shell">
+<body class="game-body game-body game-body">
+    <div class="sf-shell game-shell">
         <!-- 顶栏 HUD -->
-        <header class="sf-topbar">
-            <button class="sf-icon-btn" id="sf-btn-home" title="Home" aria-label="Home">
+        <header class="sf-topbar game-topbar">
+            <button class="sf-icon-btn game-icon-btn" id="sf-btn-home" title="Home" aria-label="Home">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
             </button>
-            <div class="sf-title-pill">
+            <div class="sf-title-pill game-title-pill">
                 <span class="sf-stage-label" id="sf-stage-label">御剑飞行</span>
                 <span class="sf-mode-badge" id="sf-mode-badge">九天问道</span>
             </div>
-            <div class="sf-hud-box">
+            <div class="sf-hud-box game-hud-box">
                 <span class="sf-score-val" id="sf-score-val">0</span>
                 <span class="sf-combo-val" id="sf-combo-val">×1</span>
             </div>
-            <button class="sf-icon-btn" id="sf-btn-pause" title="Pause" aria-label="Pause">
+            <button class="sf-icon-btn game-icon-btn" id="sf-btn-pause" title="Pause" aria-label="Pause">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg>
             </button>
-            <button class="sf-icon-btn" id="sf-btn-sound" title="Sound" aria-label="Sound">
+            <button class="sf-icon-btn game-icon-btn" id="sf-btn-sound" title="Sound" aria-label="Sound">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg>
             </button>
-            <button class="sf-icon-btn" id="sf-btn-lang" title="Language" aria-label="Language">
+            <button class="sf-icon-btn game-icon-btn" id="sf-btn-lang" title="Language" aria-label="Language">
                 <span class="sf-lang-glyph" id="sf-lang-glyph">文</span>
             </button>
         </header>
 
         <!-- 主游戏区域 -->
-        <div class="sf-main">
-            <div class="sf-stage" id="sf-stage">
-                <canvas id="sf-canvas" width="480" height="640"></canvas>
+        <div class="sf-main game-main">
+            <div class="sf-stage game-stage" id="sf-stage">
+                <canvas class="game-canvas game-canvas game-canvas" id="sf-canvas" width="480" height="640"></canvas>
 
                 <!-- 内部即时 HUD -->
                 <div class="sf-in-hud" id="sf-in-hud">
@@ -127,10 +129,10 @@
                 </div>
 
                 <!-- 悬浮提示 -->
-                <div class="sf-toast hidden" id="sf-toast"></div>
+                <div class="sf-toast hidden game-toast" id="sf-toast"></div>
 
                 <!-- 1. 主菜单覆盖层 -->
-                <div class="sf-overlay" id="sf-overlay-start">
+                <div class="sf-overlay game-overlay" id="sf-overlay-start">
                     <div class="sf-badge">ORIENTAL XIANXIA SOARING</div>
                     <h1 class="sf-title" id="sf-main-title">御剑飞行</h1>
                     <p class="sf-subtitle" id="sf-main-sub">扶摇直上九重天 · 剑气纵横御清风</p>
@@ -192,7 +194,7 @@
                 </div>
 
                 <!-- 2. 暂停覆盖层 -->
-                <div class="sf-overlay hidden" id="sf-overlay-pause">
+                <div class="sf-overlay hidden game-overlay" id="sf-overlay-pause">
                     <h2 class="sf-overlay-title" id="sf-pause-title">凝神静思 · 调息</h2>
                     <p class="sf-overlay-sub" id="sf-pause-sub">调和龙虎，蓄势待发</p>
                     <div class="sf-overlay-btns">
@@ -203,7 +205,7 @@
                 </div>
 
                 <!-- 3. 通关胜利覆盖层 (九天问道) -->
-                <div class="sf-overlay hidden" id="sf-overlay-victory">
+                <div class="sf-overlay hidden game-overlay" id="sf-overlay-victory">
                     <div class="sf-badge gold">ASCENSION COMPLETED</div>
                     <h2 class="sf-overlay-title" id="sf-victory-title">破境飞升 · 仙门洞开</h2>
                     <p class="sf-overlay-sub" id="sf-victory-sub">剑意通神，跨入更高重天！</p>
@@ -241,7 +243,7 @@
                 </div>
 
                 <!-- 4. 结算覆盖层 (无尽 / 每日 / 陨落) -->
-                <div class="sf-overlay hidden" id="sf-overlay-gameover">
+                <div class="sf-overlay hidden game-overlay" id="sf-overlay-gameover">
                     <h2 class="sf-overlay-title" id="sf-go-title">仙缘未尽 · 调息重来</h2>
                     <p class="sf-overlay-sub" id="sf-go-sub">剑心不灭，再问长生</p>
 
@@ -295,11 +297,11 @@
             </div>
 
             <!-- 桌面端宽屏右侧栏 (≥1024px) -->
-            <aside class="sf-sidebar">
+            <aside class="sf-sidebar game-sidebar">
                 <!-- 卡片 1：仙道法则 -->
-                <div class="sf-side-card">
-                    <div class="sf-side-title" id="sf-side-rules-title">📜 仙道御剑法则</div>
-                    <div class="sf-side-text" id="sf-side-rules-text">
+                <div class="sf-side-card game-side-card">
+                    <div class="sf-side-title game-side-title" id="sf-side-rules-title">📜 仙道御剑法则</div>
+                    <div class="sf-side-text game-side-text" id="sf-side-rules-text">
                         <b>御剑随心：</b>移动光标或手指引领飞剑穿行。俯冲蓄势破空，冲霄直入云霄！<br><br>
                         • <b>玄天仙环</b>：连续穿梭灵环可引发<b>五音合鸣</b>，真气急速回复，得分倍率飞升！<br>
                         • <b>破空疾刺 (空格)</b>：消耗真气化身银色剑光，斩断孤石断崖、吞纳九天玄雷！<br>
@@ -309,61 +311,61 @@
                 </div>
 
                 <!-- 卡片 2：绝巅战绩 -->
-                <div class="sf-side-card">
-                    <div class="sf-side-title" id="sf-side-records-title">🏆 仙修造诣记录</div>
-                    <div class="sf-side-row">
+                <div class="sf-side-card game-side-card">
+                    <div class="sf-side-title game-side-title" id="sf-side-records-title">🏆 仙修造诣记录</div>
+                    <div class="sf-side-row game-side-row">
                         <span id="sf-side-stars-lbl">九天问道星数</span>
                         <b id="sf-rec-stars">0 / 27 ⭐</b>
                     </div>
-                    <div class="sf-side-row">
+                    <div class="sf-side-row game-side-row">
                         <span id="sf-side-endless-lbl">万里长空最高分</span>
                         <b id="sf-rec-endless">0</b>
                     </div>
-                    <div class="sf-side-row">
+                    <div class="sf-side-row game-side-row">
                         <span id="sf-side-maxrealm-lbl">至高修成境界</span>
                         <b id="sf-rec-realm">炼气期</b>
                     </div>
-                    <div class="sf-side-row">
+                    <div class="sf-side-row game-side-row">
                         <span id="sf-side-combo-lbl">单局极意连环</span>
                         <b id="sf-rec-combo">0 环</b>
                     </div>
-                    <div class="sf-side-row">
+                    <div class="sf-side-row game-side-row">
                         <span id="sf-side-daily-lbl">今日仙缘修途</span>
                         <b id="sf-rec-daily">未涉足</b>
                     </div>
                 </div>
 
                 <!-- 卡片 3：操作指南 -->
-                <div class="sf-side-card">
-                    <div class="sf-side-title" id="sf-side-controls-title">⌨️ 键位与操控指南</div>
-                    <div class="sf-shortcut-item">
+                <div class="sf-side-card game-side-card">
+                    <div class="sf-side-title game-side-title" id="sf-side-controls-title">⌨️ 键位与操控指南</div>
+                    <div class="sf-shortcut-item game-side-kbd-row">
                         <span id="sf-sc-steer">指引剑路</span>
-                        <span class="sf-key">鼠标移动 / 触控拖拽</span>
+                        <span class="sf-key game-side-kbd">鼠标移动 / 触控拖拽</span>
                     </div>
-                    <div class="sf-shortcut-item">
+                    <div class="sf-shortcut-item game-side-kbd-row">
                         <span id="sf-sc-keyboard">身法微调</span>
-                        <span class="sf-key">W A S D / 方向键</span>
+                        <span class="sf-key game-side-kbd">W A S D / 方向键</span>
                     </div>
-                    <div class="sf-shortcut-item">
+                    <div class="sf-shortcut-item game-side-kbd-row">
                         <span id="sf-sc-dash">破空疾刺 (无敌穿斩)</span>
-                        <span class="sf-key">鼠标左键 / 空格 / ⚡按钮</span>
+                        <span class="sf-key game-side-kbd">鼠标左键 / 空格 / ⚡按钮</span>
                     </div>
-                    <div class="sf-shortcut-item">
+                    <div class="sf-shortcut-item game-side-kbd-row">
                         <span id="sf-sc-array">唤发剑气 / 阵列变幻</span>
-                        <span class="sf-key">鼠标右键 / Q 键 / ⚔️按钮</span>
+                        <span class="sf-key game-side-kbd">鼠标右键 / Q 键 / ⚔️按钮</span>
                     </div>
-                    <div class="sf-shortcut-item">
+                    <div class="sf-shortcut-item game-side-kbd-row">
                         <span id="sf-sc-ult">万剑归宗 (青莲绝技)</span>
-                        <span class="sf-key">E 键 / 双击 / 🌸按钮</span>
+                        <span class="sf-key game-side-kbd">E 键 / 双击 / 🌸按钮</span>
                     </div>
-                    <div class="sf-shortcut-item">
+                    <div class="sf-shortcut-item game-side-kbd-row">
                         <span id="sf-sc-pause">调息凝神 (暂停)</span>
-                        <span class="sf-key">P 键 / Esc 键</span>
+                        <span class="sf-key game-side-kbd">P 键 / Esc 键</span>
                     </div>
                 </div>
 
                 <!-- 卡片 4：全站游戏导航 -->
-                <div class="sf-side-card">
+                <div class="sf-side-card game-side-card">
                     <div class="more-games">
                         <div class="more-games-title">🎮 更多游戏</div>
                         <div class="more-games-links">

@@ -38,7 +38,8 @@ body {
     justify-content: center;
     align-items: flex-start;
     color: var(--light-color);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
     position: fixed;
@@ -85,19 +86,11 @@ body {
     50% { opacity: 1; }
 }
 
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ── */
 .game-container {
-    background: rgba(26, 32, 44, 0.95);
-    border-radius: var(--border-radius);
-    padding: 30px;
-    box-shadow: 0 0 50px rgba(102, 126, 234, 0.5);
-    display: flex;
-    gap: 30px;
-    max-width: 900px;
-    width: 100%;
-    margin: auto;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(102, 126, 234, 0.3);
-    animation: fadeIn 0.5s ease-out;
+    --frame-stage: 400px;
+    --frame-side: 300px;
+    --frame-side-gap: 12px;
     position: relative;
 }
 
@@ -118,10 +111,15 @@ body {
 }
 
 #tetris {
-    border: 3px solid var(--primary-color);
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    aspect-ratio: 400 / 800;
     background: #0a0a0a;
-    border-radius: var(--border-radius);
-    box-shadow: 
+    border-radius: var(--frame-radius);
+    /* 3px 描边用 box-shadow 绘制：不占布局尺寸，与叠加画布保持像素级对齐 */
+    box-shadow:
+        0 0 0 3px var(--primary-color),
         inset 0 0 30px rgba(102, 126, 234, 0.3),
         0 0 20px rgba(102, 126, 234, 0.5);
     image-rendering: pixelated;
@@ -135,20 +133,27 @@ body {
     cursor: pointer;
 }
 
+/* 叠加画布：与主画布同尺寸，锚定中轴，与舞台宽度解耦 */
 #particleCanvas, #lineClearCanvas {
     position: absolute;
     top: 0;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    aspect-ratio: 400 / 800;
     pointer-events: none;
-    border-radius: var(--border-radius);
+    border-radius: var(--frame-radius);
 }
 
 .info-panel {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: var(--frame-side-gap);
     min-width: 200px;
-    flex: 1;
+    flex: 0 1 auto;
+    width: 100%;
 }
 
 .info-box {
@@ -438,18 +443,7 @@ body {
     }
 }
 
-/* 顶栏操作簇：主题/语言/主页，统一一行钉右上，不遮挡棋盘 */
-.top-actions {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    z-index: 1000;
-}
-
+/* 顶栏操作簇：由 css/layout.css 的 .game-topbar 统一承载（左 home / 右主题） */
 .theme-toggle {
     padding: 10px 18px;
     background: var(--tok-panel, rgba(255, 255, 255, 0.06));
@@ -466,15 +460,9 @@ body {
 
 /* 语言切换已移除（统一在首页切换，site_lang 全站生效），仅保留 Home + 主题 */
 
+/* 尺寸由 .icon-btn（tokens）与 .game-icon-btn（layout）决定，此处只留皮肤 */
 .home-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
     color: var(--light-color);
-    cursor: pointer;
-    transition: var(--transition);
 }
 
 .home-toggle:hover {
@@ -482,17 +470,13 @@ body {
 }
 
 .global-scores-panel {
-    position: fixed;
-    top: 175px;
-    right: 20px;
-    width: 280px;
     background: rgba(26, 32, 44, 0.95);
     border: 1px solid var(--primary-color);
-    border-radius: 12px;
+    border-radius: var(--frame-radius);
     backdrop-filter: blur(10px);
-    z-index: 999;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     transition: var(--transition);
+    overflow: hidden;
 }
 
 .global-scores-header {
@@ -581,51 +565,22 @@ body.rainbow-theme {
 @media (max-width: 768px) {
     body {
         overflow-y: auto;
-        align-items: flex-start;
-        padding: 5px;
         min-height: 100vh;
     }
 
+    /* 容器/棋盘/侧栏几何由 css/layout.css 的 .game-shell/.game-stage/.game-sidebar 统一提供 */
     .game-container {
-        flex-direction: column;
-        max-width: 100vw;
-        width: 100%;
-        margin: 0;
-        padding: 10px;
-        gap: 15px;
-        box-sizing: border-box;
+        --frame-stage: 340px;
     }
 
-    .game-board {
-        align-self: center;
-        width: 100%;
-        max-width: 350px;
-    }
-
-    #tetris {
-        width: 100%;
-        max-width: 350px;
-        height: calc(100vw * 1.8);
-        max-height: 630px;
-    }
-
-    #particleCanvas, #lineClearCanvas {
-        width: 100%;
-        max-width: 350px;
-        height: calc(100vw * 1.8);
-        max-height: 630px;
-    }
-
-    .info-panel {
-        min-width: auto;
-        width: 100%;
-        max-width: 350px;
-        margin: 0 auto;
+    #tetris,
+    #particleCanvas,
+    #lineClearCanvas {
+        max-width: 340px;
     }
 
     .info-box {
         padding: 12px;
-        margin-bottom: 10px;
     }
 
     .controls {
@@ -647,28 +602,13 @@ body.rainbow-theme {
         min-height: 44px;
     }
 
-    /* 语言切换已移除，按钮统一在 .top-actions 弹性行内排列 */
-
     .theme-toggle {
         padding: 8px 12px;
         font-size: 12px;
         min-height: 36px;
     }
 
-    .home-toggle {
-        width: 40px;
-        height: 36px;
-    }
-
-    /* 窄屏下排行榜回归文档流，避免悬浮遮挡棋盘/信息面板 */
-    .global-scores-panel {
-        position: static;
-        width: auto;
-        max-width: 350px;
-        max-height: none;
-        margin: 10px auto;
-        font-size: 12px;
-    }
+    /* 排行榜：随侧栏卡片排列，不再走移动端特例（几何由 .game-side-card 决定） */
 
     .global-scores-header {
         padding: 8px 12px;
@@ -708,8 +648,7 @@ body.rainbow-theme {
 
 @media (max-width: 480px) {
     body {
-        padding: 2px 2px 80px 2px;
-        align-items: flex-start;
+        padding: 0 0 72px;
         min-height: 100vh;
         overflow-y: auto;
         overflow-x: hidden;
@@ -722,41 +661,20 @@ body.rainbow-theme {
         height: 100%;
     }
 
+    /* 容器几何由 css/layout.css 的 .game-shell 统一，勿再覆盖 padding/max-width */
+    /* 舞台宽度跟随棋盘（保持 1:2 正方形格子，不拉伸） */
     .game-container {
-        margin: 0;
-        padding: 60px 8px 8px;
-        gap: 10px;
-        flex-direction: column;
-        align-items: center;
-        max-width: 100vw;
-        box-sizing: border-box;
+        --frame-stage: 280px;
     }
 
-    .game-board {
-        max-width: 300px;
-    }
-
-    #tetris {
-        width: 100%;
-        max-width: 300px;
-        height: calc(100vw * 1.6);
-        max-height: 480px;
-    }
-
-    #particleCanvas, #lineClearCanvas {
-        width: 100%;
-        max-width: 300px;
-        height: calc(100vw * 1.6);
-        max-height: 480px;
-    }
-
-    .info-panel {
-        max-width: 300px;
+    #tetris,
+    #particleCanvas,
+    #lineClearCanvas {
+        max-width: 280px;
     }
 
     .info-box {
         padding: 8px;
-        margin-bottom: 8px;
     }
 
     .score-display {
@@ -773,14 +691,7 @@ body.rainbow-theme {
         min-height: 40px;
     }
 
-    /* 移动端操作簇：一行钉右上角，棋盘经容器 padding-top 让位，不再重叠
-       （44px 触控目标由下方 .btn/.theme-toggle 组规则统一保证） */
-    .top-actions {
-        top: 8px;
-        right: 8px;
-        gap: 10px;
-    }
-
+    /* 移动端顶栏由 css/layout.css 的 .game-topbar 统一（44px 触控目标由 .btn/.theme-toggle 组规则保证） */
     .theme-toggle {
         padding: 6px 8px;
         font-size: 10px;
@@ -850,12 +761,10 @@ body.rainbow-theme {
         transition: transform 0.1s ease;
     }
 
-    /* Better touch targets for mobile (top-actions cluster included) */
+    /* Better touch targets for mobile；顶栏图标钮的命中区由 .game-icon-btn::after 提供 */
     .btn,
-    .theme-toggle,
-    .home-toggle {
-        min-height: 44px;
-        min-width: 44px;
+    .theme-toggle {
+        min-height: var(--tok-btn-size, 40px);
         -webkit-tap-highlight-color: transparent;
     }
 

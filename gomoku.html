@@ -23,23 +23,24 @@
         <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/gomoku.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
 <body>
-    <div class="game-container">
-        <div class="gomoku-top-row">
-            <a href="index.html" id="homeLink" class="icon-btn" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
-            <button id="langBtn" class="btn btn-ghost">中文</button>
-        </div>
-        <h1 id="gameTitle">Gomoku</h1>
-        
+    <div class="game-container game-shell">
+        <header class="gomoku-top-row game-topbar">
+            <a href="index.html" id="homeLink" class="icon-btn game-icon-btn" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <h1 id="gameTitle" class="gomoku-title game-title-pill">Gomoku</h1>
+            <button id="langBtn" class="game-icon-btn">中文</button>
+        </header>
+
         <div class="status-bar">
             <div class="status-item" id="statusText">Black's Turn</div>
             <div class="status-item" id="modeText"></div>
         </div>
 
-        <div class="board-container">
+        <div class="board-container game-stage">
             <canvas id="gameBoard"></canvas>
         </div>
 
@@ -52,7 +53,6 @@
                 <option value="hard" id="optHard">Hard</option>
             </select>
         </div>
-    </div>
 
         <nav class="more-games">
             <div class="more-games-title">🎮 More Games</div>
@@ -69,6 +69,7 @@
           <a href="gravity-slingshot.html">🚀 Gravity Slingshot</a>
             </div>
         </nav>
+    </div>
     <div class="modal" id="gameOverModal">
         <div class="modal-content">
             <h2 id="modalTitle">Game Over</h2>

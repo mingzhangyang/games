@@ -10,28 +10,10 @@
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background:
         radial-gradient(ellipse 80% 50% at 50% -15%, rgba(64, 216, 255, 0.14), transparent),
         radial-gradient(ellipse 60% 40% at 50% 110%, rgba(167, 139, 250, 0.10), transparent),
         linear-gradient(165deg, #05060f 0%, #0a0e26 50%, #0d1532 100%);
-    color: #e8ecff;
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.td-shell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 520px;
-    padding: 10px 12px 6px;
-    min-height: 100vh;
 }
 
 .hidden { display: none !important; }
@@ -39,13 +21,7 @@ body {
 /* ── 顶栏 HUD ── */
 
 .td-topbar {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 4px 0 10px;
 }
 
 .td-stat {
@@ -110,27 +86,6 @@ body {
     animation: td-gold-bounce 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
-.td-topbar-actions { display: flex; gap: 6px; }
-
-.td-icon-btn {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
-    color: inherit;
-    font-family: inherit;
-    font-weight: 800;
-    backdrop-filter: blur(8px);
-}
-
 .td-icon-btn:hover {
     background: rgba(255, 255, 255, 0.13);
     border-color: rgba(64, 216, 255, 0.35);
@@ -148,7 +103,6 @@ body {
 /* ── 游戏主舞台 ── */
 
 .td-stage {
-    position: relative;
     width: min(100%, 460px, calc((100vh - 185px) * 0.72));
     min-width: 280px;
 }
@@ -601,21 +555,14 @@ body {
 /* ── 浮动提示 ── */
 
 .td-toast {
-    position: absolute;
     top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 20;
     font-size: 13px;
     font-weight: 800;
     color: #0b0f26;
     background: linear-gradient(120deg, #ffd34d, #ff9f43);
     border: 1px solid rgba(255, 255, 255, 0.45);
-    border-radius: 99px;
     padding: 8px 22px;
     box-shadow: 0 8px 28px rgba(255, 180, 84, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    pointer-events: none;
-    white-space: nowrap;
     animation: td-toast-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -726,8 +673,6 @@ body {
 .td-start-footer { display: flex; gap: 10px; }
 
 .td-lang-btn {
-    width: auto;
-    padding: 0 14px;
     font-size: 13px;
     font-weight: 700;
     white-space: nowrap;
@@ -909,21 +854,18 @@ body {
     box-shadow: 0 0 10px rgba(64, 216, 255, 0.35);
 }
 
-.td-footer-hint {
-    padding: 8px 0 6px;
-    font-size: 11.5px;
-    color: #56618f;
-    letter-spacing: 0.05em;
-    text-align: center;
-}
-
 /* ── 移动端自适应 (≤480px) ── */
 
 @media (max-width: 480px) {
-    .td-shell { padding: 6px 8px 4px; }
-    .td-icon-btn { width: 36px; height: 36px; font-size: 13px; }
-    .td-stat { padding: 5px 8px; font-size: 11.5px; }
-    .td-stat b { font-size: 13px; }
+    /* 顶栏保持单行：状态胶囊去图标、数字直接上色，与其它页顶栏高度一致 */
+    .td-topbar { gap: 6px; }
+    .td-topbar-actions { gap: 4px; }
+    .td-stat { padding: 4px 6px; font-size: 11.5px; gap: 4px; }
+    .td-stat-icon { display: none; }
+    .td-stat b { font-size: 12.5px; min-width: 2ch; }
+    #td-stat-lives b { color: #ff6b7a; }
+    #td-stat-gold b { color: #ffd34d; }
+    #td-stat-wave b { color: #40d8ff; }
     .td-title { font-size: 26px; }
     .td-over-score { font-size: 40px; }
     .td-howto { font-size: 12px; }
@@ -934,7 +876,6 @@ body {
     .td-build-card { padding: 5px 3px 4px; }
     .td-build-card .td-card-name { font-size: 10px; }
     .td-build-card .td-card-cost { font-size: 10.5px; }
-    .td-footer-hint { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -944,55 +885,14 @@ body {
 
 /* ── 桌面大屏（≥1024px）：舞台 + 侧边信息栏 ── */
 
-.td-sidebar { display: none; }
-
 @media (min-width: 1024px) {
-    .td-shell { max-width: 940px; }
     .td-main {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 28px;
         flex-wrap: wrap;
     }
     /* 控制条独占一行，避免挤占画布与侧栏 */
     .td-bottom-controls { width: 100%; }
-    .td-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        width: 300px;
-        flex-shrink: 0;
-    }
-    .td-side-card {
-        background: linear-gradient(155deg, rgba(20, 26, 62, 0.65), rgba(10, 14, 38, 0.78));
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 15px;
-        padding: 13px 15px;
-        text-align: left;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    }
     .td-side-title {
-        font-size: 13.5px;
-        font-weight: 800;
-        margin-bottom: 8px;
         color: #e8ecff;
-        letter-spacing: 0.02em;
-    }
-    .td-side-text {
-        font-size: 12px;
-        line-height: 1.65;
-        color: #c3cdf2;
-    }
-    .td-side-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 10px;
-        font-size: 13px;
-        padding: 3px 0;
-        color: #c3cdf2;
     }
     .td-side-row b {
         color: #ffd34d;
@@ -1025,27 +925,15 @@ body {
     .td-side-skill-item:last-child { border-bottom: none; }
     .td-side-skill-item b { color: #40d8ff; font-size: 12px; }
 
-    .td-side-shortcut-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 11.5px;
-        padding: 3px 0;
-        color: #c3cdf2;
-    }
-    .td-side-shortcut-row kbd {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 5px;
-        padding: 1px 6px;
-        font-family: inherit;
-        font-weight: 800;
-        color: #ffd34d;
-        font-size: 10.5px;
-    }
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
 .td-icon-btn, .td-skill-btn { position: relative; }
 .td-icon-btn::after, .td-skill-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ── */
+.td-shell {
+    --frame-max-wide: 940px;
+    --frame-stage: 460px;
+    --frame-side: 300px;
+}
