@@ -32,5 +32,13 @@ export const ICONS = {
     // 叉号关闭
     close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
     // 旗帜（单 svg：旗杆描边 + 旗面填充）
-    flag: svg('<path d="M5.5 21V3.5"/><path d="M5.5 3.5H17l-2.6 4L17 11.5H5.5z" fill="currentColor" stroke="none"/>')
+    flag: svg('<path d="M5.5 21V3.5"/><path d="M5.5 3.5H17l-2.6 4L17 11.5H5.5z" fill="currentColor" stroke="none"/>'),
+    // 圆圈问号（帮助）
+    help: svg('<circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 0 1 5.4.9c0 1.8-2.6 2.1-2.6 3.6"/><path d="M12 17h.01"/>'),
+    // 柱状图（统计）
+    stats: svg('<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>'),
+    // 日历（每日挑战）
+    calendar: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/>'),
+    // 骰子（练习模式）
+    dice: svg('<rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/>')
 };

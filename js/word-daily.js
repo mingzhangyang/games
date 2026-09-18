@@ -447,12 +447,12 @@ class WordDailyGame {
             this.el['btn-practice'].classList.toggle('active', this.mode === 'practice');
         }
         if (this.el['btn-help']) {
-            this.el['btn-help'].textContent = '❓';
+            this.el['btn-help'].innerHTML = ICONS.help;
             this.el['btn-help'].title = t.help;
             this.el['btn-help'].setAttribute('aria-label', t.help);
         }
         if (this.el['btn-stats']) {
-            this.el['btn-stats'].textContent = '📊';
+            this.el['btn-stats'].innerHTML = ICONS.stats;
             this.el['btn-stats'].title = t.stats;
             this.el['btn-stats'].setAttribute('aria-label', t.stats);
         }
@@ -698,12 +698,12 @@ class WordDailyGame {
         // 顶部切换练习/每日按钮
         if (this.el['btn-practice']) {
             if (this.mode === 'practice') {
-                this.el['btn-practice'].textContent = '📅';
+                this.el['btn-practice'].innerHTML = ICONS.calendar;
                 this.el['btn-practice'].title = t.backToDaily;
                 this.el['btn-practice'].setAttribute('aria-label', t.backToDaily);
                 this.el['btn-practice'].classList.add('active');
             } else {
-                this.el['btn-practice'].textContent = '🎲';
+                this.el['btn-practice'].innerHTML = ICONS.dice;
                 this.el['btn-practice'].title = t.practice;
                 this.el['btn-practice'].setAttribute('aria-label', t.practice);
                 this.el['btn-practice'].classList.remove('active');
