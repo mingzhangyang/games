@@ -178,7 +178,9 @@ function resizeCanvas() {
     const desktopCap = window.matchMedia('(min-width: 1024px)').matches ? 700 : 600;
     const containerWidth = Math.min(window.innerWidth - 40, desktopCap);
     const containerHeight = Math.min(window.innerHeight - 200, desktopCap);
-    const size = Math.min(containerWidth, containerHeight);
+    // 下限 200：视口极矮时（innerHeight < 200）上式会得到负值，CELL_SIZE 随之为负，
+    // 之后 drawPiece 的 arc() 会抛异常并中断整个 resize 回调，棋盘就停在被清空的状态
+    const size = Math.max(200, Math.min(containerWidth, containerHeight));
     cssSize = size;
 
     // 按 devicePixelRatio 放大画布 backing store，让棋盘在高清屏上清晰；

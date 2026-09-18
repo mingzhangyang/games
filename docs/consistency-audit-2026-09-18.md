@@ -107,6 +107,41 @@ toast 都没有这个属性**：
 - **more-games 导航条**：emoji 为既定设计（`js/more-games.js`），`CLAUDE.md` 明确保留。
 - **扫雷格子/表情、星球合成链**：游戏内容字形，保留 emoji。
 
+## 追记：五子棋「棋盘点不动」——绝对定位伪元素盖住画布（2026-09-18）
+
+**现象**：五子棋棋盘只剩一块黄木色，没有网格也没有棋子，点哪儿都没反应。
+
+**根因**：`566dd8f`（09-17 视觉打磨）为了给棋盘加一层深色外框，把木质底从 `.board-container`
+**自身的 background** 挪到了 `.board-container::before`，并给它 `position: absolute; inset: var(--tb-frame)`。
+绝对定位的伪元素按层叠顺序画在**非定位的 `<canvas>` 之上**，于是它同时造成两个后果：
+
+1. 画布内容被完全遮住（canvas 位图里网格与棋子在，屏幕上不可见）；
+2. 命中测试落在容器 DIV 上，`canvas` 的 `click` 监听器永远收不到事件，落子不可能发生。
+
+`.game-stage { position: relative }` 只是提供了定位上下文，并不改变伪元素与画布的层叠关系，
+所以 `cc71fa1` 的布局统一并没有引入这个 bug，也修不掉它。
+
+**为什么现有检查器全部漏过**：`layout-metrics` 只量盒子几何（尺寸、内距、圆角、热区），
+棋盘「看得见但点不动」在几何上完全正常；`shots.mjs` 只扫控制台错误，伪元素遮挡不报错。
+**必须验证「画布位图 + 命中目标 + 真实点击落子」**，这正是 `scripts/verify-gomoku.mjs` 做的事。
+
+**修复**（`css/gomoku.css`）：
+
+```css
+.board-container { position: relative; isolation: isolate; }
+.board-container::before { z-index: -1; }   /* 木质底落到画布之下 */
+```
+
+`isolation: isolate` 让 `z-index: -1` 停在「本容器背景之上、画布之下」，
+不会穿透到祖先层叠上下文去（那样会被容器自己的深色底盖住）。
+配套：迁移脚本 `ROLE_SPECS["stage"]` 不再剪 `position`（`cc71fa1` 曾把
+`.board-container` 的 `position: relative` 剪掉，所幸当时 `.game-stage` 顶上了）。
+
+**顺带修掉的一处隐患**：`js/gomoku.js` 的 `resizeCanvas()` 在视口极矮时
+（`innerHeight < 200`）会算出负的 `cssSize`，`CELL_SIZE` 随之为负，
+`drawPiece()` 的 `ctx.arc()` 抛 `IndexSizeError` 并中断整个 `resize` 回调，
+棋盘停在被清空的状态。已给尺寸加 200px 下限。
+
 ## 复现命令
 
 ```bash
@@ -117,6 +152,7 @@ node scripts/placeholder-leak-check.mjs
 python scripts/emoji-button-audit.py
 python scripts/apply-button-icons.py --dry    # 按钮图标迁移（幂等，--dry 只报告）
 node scripts/verify-button-icons.mjs http://127.0.0.1:8899 /tmp/btn-icons
+node scripts/verify-gomoku.mjs http://127.0.0.1:8899 /tmp   # 棋盘可见 + 能落子 + 五连判胜
 node scripts/probe.mjs planet-merge 390 844 .pm-toast
 ```
 

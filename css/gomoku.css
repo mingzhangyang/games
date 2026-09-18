@@ -57,16 +57,26 @@ body {
 /* 棋盘外框：几何（width/max-width/居中）由 .game-stage 提供，这里只留皮肤 */
 .board-container {
     --tb-frame: clamp(6px, 1.5vw, 12px);
+    /* position 虽与 .game-stage 重复，但 ::before 的 inset 与下面 z-index 的层叠上下文
+       都依赖它 —— 别让迁移脚本再删掉 */
+    position: relative;
+    /* 建立层叠上下文，使 ::before 的 z-index: -1 落在「本容器背景之上、画布之下」，
+       而不会穿透到祖先的层叠上下文里去（那样会被容器自己的深色底盖住） */
+    isolation: isolate;
     padding: var(--tb-frame);
     background: linear-gradient(145deg, #1a202c, #2d3748); /* 深色渐变外框，与暗黑 UI 同系 */
     border-radius: var(--frame-radius);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
+/* 木质棋盘本体。⚠️ 必须 z-index: -1：绝对定位的伪元素默认画在**画布之上**，
+   会盖住 canvas 里绘制的网格与棋子、并且吃掉 canvas 的点击事件（棋子落不下去）。
+   2026-09-17 的 566dd8f 把木质底从 .board-container 背景搬到 ::before 时踩了这个坑。 */
 .board-container::before {
     content: '';
     position: absolute;
     inset: var(--tb-frame);
+    z-index: -1;
     border-radius: 4px;
     background: radial-gradient(circle, #ecc94b 0%, #d69e2e 100%); /* 木质棋盘本体保留 */
     box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.5); /* 内侧 1px 金色细线 */

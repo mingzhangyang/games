@@ -86,7 +86,11 @@ ROLE_SPECS = {
     "topbar": TOPBAR_STRIP,
     "main": ALL,
     "sidebar": ALL,
-    "stage": ["position", "display", "justify-content", "align-items", "flex",
+    # stage 的 position 不剪：它不只是几何，还是舞台内 ::before/::after 装饰、
+    # .game-overlay 的定位上下文。共享 .game-stage 虽提供 position: relative，
+    # 但一旦有人给该规则加了 z-index/-1 伪元素，剪掉 position 会让它们跳到外层容器
+    # （gomoku 的木质底就是这么被误伤的）。留一句冗余的 position: relative 无副作用。
+    "stage": ["display", "justify-content", "align-items", "flex",
               "min-height", "max-width", "width"],
     # backdrop-filter 不剪：共享 .game-overlay 不做毛玻璃，各页按自己的底色自选（gd/hs 用 blur）
     "overlay": ["position", "inset", "z-index", "display", "flex-direction", "align-items",
@@ -138,7 +142,7 @@ ROLE_OVERRIDE = {
            "topbar": TOPBAR_STRIP + []},
     # td 舞台宽度跟随视口高度（保证棋盘完整可见），保留其自适应表达式
     "td": {"main": ["display", "align-items", "justify-content", "gap"],
-           "stage": ["position", "display", "justify-content", "align-items", "flex",
+           "stage": ["display", "justify-content", "align-items", "flex",
                      "min-height", "max-width"]},
 }
 
