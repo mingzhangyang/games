@@ -211,8 +211,6 @@ class ReversiGame {
         this.timeouts = [];
         this.state = 'menu';
 
-        this.initAiWorker();
-
         this.applyLanguage();
         this.syncModeButtons();
         this.buildBoard();
