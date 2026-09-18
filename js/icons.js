@@ -1,6 +1,9 @@
 /**
  * 全站控件图标 — inline SVG（24×24 viewBox，stroke 跟随 currentColor）
- * 仅用于无文字的控件按钮；带文字的按钮与游戏内容字符保留 emoji（见 CLAUDE.md）。
+ * 适用两类按钮：① 无文字控件按钮；② 含文字的动作/结果按钮（Play/Again/Copy/
+ * Close/Home/Share/Stats/Next）——两者都用 ICONS，不要在按钮里硬编码 emoji。
+ * emoji 仅保留在游戏内容字形（扫雷格子与表情、星球合成链）、装饰性 hero 图、
+ * 以及 more-games 导航条。以 CLAUDE.md「Shared infrastructure」一节为准。
  * 用法：element.innerHTML = ICONS.soundOff; 或直接把字符串贴进静态 HTML。
  */
 
