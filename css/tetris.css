@@ -22,6 +22,15 @@
     user-select: none;
 }
 
+/* 触屏操作面禁止「双击放大」：手指在棋盘/操作钮周围快速连点会触发浏览器的双击
+   缩放，整页被放大后棋盘看起来就是"被缩放了"，而且放大态会一直留着。
+   只禁双击放大，**保留双指捏合**（可访问性上仍要能放大阅读）。
+   棋盘自身的 #tetris 用 touch-action: none 更严格，会覆盖这里。 */
+html,
+body {
+    touch-action: manipulation;
+}
+
 /* Allow text selection for input fields */
 input, textarea {
     -webkit-user-select: text;
@@ -124,6 +133,12 @@ body {
         0 0 20px rgba(102, 126, 234, 0.5);
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+    /* 棋盘是操作面，不是"被按一下"的按钮：不允许任何变换或过渡。
+       曾有 #tetris:active { transform: scale(0.99) }（2026-09-18 移除）——手指每次
+       触碰棋盘都会让它缩一下再弹回，看起来就是"棋盘被缩放了"；而且粒子层与消行层
+       是它的绝对定位兄弟节点、不会跟着缩放，动画那 0.1s 里棋盘与特效层还会错位。
+       这里显式 transition: none 兜底，防止以后共享层再加过渡时又把它带进来。 */
+    transition: none;
     touch-action: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -755,11 +770,9 @@ body.rainbow-theme {
         display: none;
     }
 
-    /* Enhanced touch feedback for mobile */
-    #tetris:active {
-        transform: scale(0.99);
-        transition: transform 0.1s ease;
-    }
+    /* 移动端操作钮的按压反馈保留（scale 0.95，见上）——它是按钮不是棋盘。
+       ⚠️ 不要给 #tetris 再加任何 :active 缩放/过渡：棋盘必须纹丝不动，
+       规则见 #tetris 自身的 transition: none 注释。 */
 
     /* Better touch targets for mobile；顶栏图标钮的命中区由 .game-icon-btn::after 提供 */
     .btn,

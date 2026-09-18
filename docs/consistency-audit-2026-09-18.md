@@ -212,3 +212,54 @@ node scripts/probe.mjs planet-merge 390 844 .pm-toast
 （真正值得注意的余项：`sword-flight` 的 `rankTitle` 两个语言的值里**自带 🏆**，
 而同一功能的入口按钮已改用 `ICONS.trophy` —— 同一图标一处 SVG 一处 emoji，属政策执行不一致，
 待决定是否统一。）
+
+---
+
+## 追加（18:25）：Tetris 手机上「棋盘会被缩放」= `:active` 变换
+
+用户报：手机浏览器里手指操作时棋盘会缩放，应该固定大小、没有交互动画。
+
+根因在 `css/tetris.css`（`@media (max-width:480px)` 内）：
+
+```css
+#tetris:active { transform: scale(0.99); transition: transform 0.1s ease; }
+```
+
+一行规则造成三个问题：
+
+1. **棋盘被缩放**：手指一碰棋盘，它就缩到 99% 再弹回，实测 `280×560 → 277.2×554.4`。
+2. **有交互动画**：`transition: transform 0.1s ease` 让这个缩放变成可见的动效。
+3. **叠加层错位**（这条是连带的，几何表也测不出）：`#particleCanvas` / `#lineClearCanvas`
+   是 `position: absolute` 的**兄弟节点**，不会跟着 `#tetris` 缩放，于是动画那 0.1s 里
+   棋盘与粒子/消行特效层差出 1.4px（x）/ 2.8px（y）。
+
+### 修复
+
+| 文件 | 改动 |
+| --- | --- |
+| `css/tetris.css` | 删掉 `#tetris:active` 整块；`#tetris` 补 `transition: none` 兜底；`html, body` 加 `touch-action: manipulation` |
+| `scripts/verify-tetris-touch.mjs`（新） | 触屏回归：**按住**棋盘期间量 `transform`/rect/叠加层对齐，另验操作钮按下时棋盘不动、真实触摸后尺寸不变、`touch-action` 取值 |
+
+关于第三项：键盘/触摸之外的空白区域快速连点会触发浏览器的**双击放大**，整页放大后棋盘看起来
+也是"被缩放了"，且放大态会一直留着。用 `touch-action: manipulation` 只禁双击放大，
+**保留双指捏合**（`user-scalable=no` 会违反 WCAG 1.4.4，不用）。
+
+### 为什么必须「按住」才测得出来
+
+旧规则只在 `:active` 生效，**量初始布局必然通过**。所以脚本用 `page.mouse.down()` 压住棋盘、
+等 250ms（远长于 0.1s 过渡）再采样。反向验证（`git archive HEAD` 导出未修复版跑同一套断言）
+5 项失败，数字与预期完全吻合：
+
+```
+✗ 按住棋盘时 transform 保持 none        (matrix(0.99, 0, 0, 0.99, 0, 0))
+✗ 按住棋盘时也没有过渡动画              (transform / 0.1s)
+✗ 按住棋盘时尺寸与位置逐像素不变          (280×560 → 277.2×554.4)
+✗ 粒子层/消行层与棋盘始终对齐            (按住时: particleCanvas 280×560@55,56 ≠ board 277.2×554.4@56.4,58.8)
+✗ 页面层禁双击放大                      (html=auto body=auto)
+```
+
+### 保留未动
+
+`.mobile-controls .btn:active { transform: scale(0.95) }`——那是**按钮**的按压反馈，不是棋盘；
+棋盘本身已 `transition: none`。同理其他游戏的 `:active` 缩放（`.gd-btn` / `.ms-face` / `.rv-btn` 等）
+全部只作用于控件，全站**没有任何其他棋盘/画布**带 `:active` 变换（已全量 grep 确认）。
