@@ -84,6 +84,32 @@ export default defineConfig({
   
   // 插件配置
   plugins: [
+    // 契约样式必须排在各页样式之前：tokens(变量) → layout(骨架) → 页面 → more-games。
+    // Vite 打包后会按入口把页面 CSS 提到最前，导致 layout 的默认值反向覆盖页面覆盖值
+    // （实测 gomoku 的 --frame-* 在产物中失效）。这里在产出 HTML 时重新排序 link。
+    {
+      name: 'shared-css-first',
+      transformIndexHtml: {
+        order: 'post',
+        handler(html) {
+          const RANK = name =>
+            /\/tokens-/.test(name) ? 0
+              : /\/layout-/.test(name) ? 1
+                : /\/more-games-/.test(name) ? 9
+                  : 5;
+          const links = [...html.matchAll(/[ \t]*<link rel="stylesheet"[^>]*>/g)];
+          if (links.length < 2) return html;
+          const sorted = [...links].sort((a, b) => RANK(a[0]) - RANK(b[0]));
+          if (sorted.every((m, i) => m.index === links[i].index)) return html;
+          let out = '', last = 0;
+          links.forEach((m, i) => {
+            out += html.slice(last, m.index) + sorted[i][0];
+            last = m.index + m[0].length;
+          });
+          return out + html.slice(last);
+        }
+      }
+    },
     // 兼容性支持
     legacy({
       targets: ['defaults', 'not IE 11']
