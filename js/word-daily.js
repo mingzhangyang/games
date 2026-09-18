@@ -467,10 +467,7 @@ class WordDailyGame {
         if (this.el.share) this.el.share.textContent = `📤 ${t.share}`;
         if (this.el['submit-text']) this.el['submit-text'].textContent = t.submit;
         if (this.el.input) {
-            const len = this.wordLen();
-            this.el.input.placeholder = this.langMode === 'zh'
-                ? (t.guessPlaceholderZh || t.guessPlaceholder)
-                : (t.guessPlaceholderEn ? t.guessPlaceholderEn.replace('{n}', len) : t.guessPlaceholder);
+            this.el.input.placeholder = this.guessPlaceholderText();
         }
         if (this.el['hint-label']) this.el['hint-label'].textContent = `📖 ${t.hintLabel}`;
         if (this.el['practice-banner']) this.el['practice-banner'].textContent = t.practiceBanner;
@@ -733,11 +730,8 @@ class WordDailyGame {
             this.el['mode-tag'].textContent = baseMode;
         }
         if (this.el.input) {
-            const len = this.wordLen();
-            this.el.input.maxLength = len;
-            this.el.input.placeholder = this.langMode === 'zh'
-                ? (t.guessPlaceholderZh || t.guessPlaceholder)
-                : (t.guessPlaceholderEn ? t.guessPlaceholderEn.replace('{n}', len) : t.guessPlaceholder);
+            this.el.input.maxLength = this.wordLen();
+            this.el.input.placeholder = this.guessPlaceholderText();
         }
         this.updateInputUi();
         this.updateHintCard();
@@ -753,6 +747,15 @@ class WordDailyGame {
 
     wordLen() {
         return this.langMode === 'zh' ? WORD_LEN_ZH : this.wordLength;
+    }
+
+    /* 输入框占位文案：在此统一展开 {n}，避免各调用点重复实现时漏替换 */
+    guessPlaceholderText() {
+        const t = this.TEXT || LANGUAGES[this.lang] || {};
+        const tpl = this.langMode === 'zh'
+            ? (t.guessPlaceholderZh || t.guessPlaceholder)
+            : (t.guessPlaceholderEn || t.guessPlaceholder);
+        return String(tpl || '').replace('{n}', String(this.wordLen()));
     }
 
     updateHintCard() {
@@ -858,9 +861,7 @@ class WordDailyGame {
                 if (this.el.input) {
                     this.el.input.value = this.langMode === 'zh' ? this.current : this.current.toUpperCase();
                     this.el.input.maxLength = this.wordLen();
-                    this.el.input.placeholder = this.langMode === 'zh'
-                        ? (this.TEXT.guessPlaceholderZh || this.TEXT.guessPlaceholder)
-                        : (this.TEXT.guessPlaceholderEn || this.TEXT.guessPlaceholder);
+                    this.el.input.placeholder = this.guessPlaceholderText();
                 }
                 // 仅精确指针（桌面）自动聚焦；触屏设备自动 focus 会立即弹软键盘遮住棋盘，
                 // 用户点击棋盘区即可聚焦（board click 已绑定 input.focus）
