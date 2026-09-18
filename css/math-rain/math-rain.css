@@ -442,37 +442,39 @@ body {
     }
 }
 
-/* 游戏控制按钮：右缘竖排窄条，避免横条遮挡下落算式的必经之路 */
+/* 游戏控制按钮：并入顶栏（移动端 sticky 钉右缘），不再悬浮遮挡画布 */
 #game-controls {
-    position: absolute;
-    top: 84px;
-    right: 8px;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
     gap: 8px;
-    z-index: 200;
-}
-
-#game-controls .control-btn {
-    justify-content: center;
-    text-align: center;
+    margin-left: auto;
 }
 
 .control-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #e8ecff;
-    padding: 8px 15px;
-    border-radius: 12px;
-    font-size: 14px;
+    border-radius: 10px;
     cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
     backdrop-filter: blur(10px);
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 6px;
+    position: relative;
+}
+
+/* 触控热区扩展（视觉 40px，热区 48px） */
+.control-btn::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
 }
 
 .control-btn:hover {
@@ -932,25 +934,20 @@ body {
         font-size: 15px;
     }
 
-    /* 移动端控制按钮右缘竖排，窄条占位，不再横压 header 与算式生成区 */
+    /* 控制按钮随顶栏滚动容器 sticky 钉右缘，统计块滚动时保持可见 */
     #game-controls {
-        position: absolute;
-        top: 56px;
-        right: 6px;
+        position: sticky;
+        right: 4px;
         gap: 6px;
-        flex-direction: column;
-        z-index: 200;
+        margin-left: 4px;
+        flex: 0 0 auto;
+        padding: 4px 2px 4px 14px;
+        background: linear-gradient(90deg, transparent, rgba(13, 17, 38, 0.92) 14px);
     }
-    
+
     .control-btn {
-        padding: 6px 8px;
-        font-size: 11px;
-        min-height: 32px;
-        min-width: 32px;
-        border-radius: 8px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        width: 38px;
+        height: 38px;
     }
 
     /* 底部目标数字区紧凑化：为画布腾出 100px+ 下落高度 */
@@ -1208,10 +1205,12 @@ body {
         margin: 5px;
     }
 
-    .control-btn, .menu-btn, .start-btn {
+    .menu-btn, .start-btn {
         min-height: 44px;
         padding: 12px 20px;
     }
+
+    /* 图标方钮 control-btn 的尺寸由基础规则控制（40px，sticky 入顶栏） */
 
     /* 帮助界面移动端优化 */
     .help-content {
@@ -1442,9 +1441,8 @@ body {
         transform: scale(0.95);
     }
 
-    /* 按钮波纹效果 */
+    /* 按钮波纹效果（control-btn 使用 ::after 作触控热区，不参与波纹） */
     .difficulty-btn,
-    .control-btn,
     .menu-btn,
     .start-btn {
         position: relative;
@@ -1452,7 +1450,6 @@ body {
     }
 
     .difficulty-btn::after,
-    .control-btn::after,
     .menu-btn::after,
     .start-btn::after {
         content: '';
@@ -1470,7 +1467,6 @@ body {
     }
 
     .difficulty-btn:active::after,
-    .control-btn:active::after,
     .menu-btn:active::after,
     .start-btn:active::after {
         width: 100px;
@@ -2059,13 +2055,6 @@ body {
     #target-number {
         font-size: 32px;
         padding: 6px 10px;
-    }
-    
-    .control-btn {
-        padding: 4px 6px;
-        font-size: 10px;
-        min-height: 28px;
-        min-width: 28px;
     }
 }
 

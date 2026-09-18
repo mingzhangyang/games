@@ -240,7 +240,11 @@ class LanguageManager {
         if (textSpan && text) {
             textSpan.textContent = text;
         } else if (text) {
-            element.innerHTML = `${icon} ${text}`;
+            // 图标方钮（无文字 span）：文字进 title/aria-label，避免 innerHTML 覆盖 SVG
+            element.setAttribute('title', text);
+            if (element.hasAttribute('aria-label')) {
+                element.setAttribute('aria-label', text);
+            }
         }
     }
 
