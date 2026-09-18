@@ -108,6 +108,37 @@ for (const vp of [
     const title = await page.evaluate(() => document.getElementById('modalMessage').textContent);
     check(modalShown, '五连即判胜并弹出结算面板', '文案 "' + title + '"');
 
+    // 结算态：状态栏不能还停在「该谁走棋」（面板写「黑方获胜」而状态栏写「黑方走棋」自相矛盾）
+    const endStatus = await page.evaluate(() => document.getElementById('statusText').textContent.trim());
+    check(!/Turn|走棋/.test(endStatus), '对局结束后状态栏不再是「该谁走棋」', endStatus);
+
+    // 面板开着时切语言：标题、按钮、结果文案要一起变。
+    // 必须用 el.click() 而非 page.click() —— 结算浮层盖住了顶栏，坐标点击会被浮层
+    // 吃掉（只是把面板关掉），键盘 Tab 聚焦后 Enter 激活走的正是 el.click() 这条路径。
+    const readModal = () => page.evaluate(() => ({
+        lang: document.documentElement.lang,
+        title: document.getElementById('modalTitle').textContent.trim(),
+        msg: document.getElementById('modalMessage').textContent.trim(),
+        btn: document.getElementById('modalRestartBtn').textContent.trim(),
+        shown: getComputedStyle(document.getElementById('gameOverModal')).display !== 'none',
+        status: document.getElementById('statusText').textContent.trim(),
+    }));
+    const beforeLang = await readModal();
+    await page.$eval('#langBtn', el => el.click());
+    await new Promise(r => setTimeout(r, 350));
+    const afterLang = await readModal();
+    check(afterLang.lang !== beforeLang.lang, '面板开着时可切换语言', beforeLang.lang + ' → ' + afterLang.lang);
+    check(
+        afterLang.title !== beforeLang.title && afterLang.msg !== beforeLang.msg && afterLang.btn !== beforeLang.btn,
+        '结算标题/结果文案/按钮同步换语言',
+        beforeLang.title + ' · ' + beforeLang.msg + '  →  ' + afterLang.title + ' · ' + afterLang.msg
+    );
+    check(afterLang.shown, '切语言不会误关结算面板');
+    check(!/Turn|走棋/.test(afterLang.status), '换语言后状态栏仍保持结束态', afterLang.status);
+    // 复位语言，避免影响后续与下一个视口
+    await page.$eval('#langBtn', el => el.click());
+    await new Promise(r => setTimeout(r, 300));
+
     await page.screenshot({ path: OUT + '/gomoku-' + (vp.width > 400 ? 'desktop' : 'mobile') + '.png', fullPage: true });
 
     // 重开一局仍可落子

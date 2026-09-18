@@ -90,6 +90,7 @@ let gameMode = 'pve'; // 'pvp' or 'pve'
 let difficulty = 'medium';
 let isComputerThinking = false;
 let winningCells = null; // Fix #7: track winning cells for highlight
+let lastResult = null; // 上一局结果：null=未结束 / 0=平局 / 1=黑胜 / 2=白胜
 let moveCount = 0; // 每局手数（用于统计首手）
 let aiTimer = null; // AI 走棋定时器句柄，重置/切换模式时必须清除
 let cssSize = 600; // 画布 CSS 逻辑尺寸（canvas.width 是 DPR 缩放后的设备像素）
@@ -214,6 +215,7 @@ function resetGame() {
     isComputerThinking = false;
     winningCells = null; // Fix #7: reset winning cells
     lastMove = null;
+    lastResult = null; // 新一局开始，清掉上一局结果，否则状态栏会一直停在「对局结束」
     updateStatus();
     drawBoard();
     closeModal();
@@ -394,7 +396,11 @@ function updateStatus() {
     statusText.style.color = '#e2e8f0';
     const t = getTEXT();
 
-    if (gameMode === 'pve' && currentPlayer === 2 && gameActive) {
+    if (!gameActive && lastResult !== null) {
+        // 对局已结束。此前这里继续走下面的分支，于是结算面板写着「黑方获胜！」
+        // 而状态栏还停在「黑方走棋」，两句自相矛盾。
+        statusText.textContent = t.gameOver;
+    } else if (gameMode === 'pve' && currentPlayer === 2 && gameActive) {
         statusText.textContent = t.computerThinking;
     } else {
         const playerText = currentPlayer === 1 ? t.blackTurn : t.whiteTurn;
@@ -488,18 +494,22 @@ function checkDraw() {
     return board.every(row => row.every(cell => cell !== 0));
 }
 
+// 结算文案：endGame 与 applyLanguage 共用同一处渲染，
+// 这样面板开着时切语言，结果文案才会跟着变（否则只有标题和按钮变了）
+function resultText(t) {
+    if (lastResult === 0) return t.draw;
+    if (lastResult === 1) return t.blackWins;
+    if (lastResult === 2) return t.whiteWins;
+    return '';
+}
+
 function endGame(winner) {
     gameActive = false;
+    lastResult = winner;
     if (typeof window.hubTrack === 'function') window.hubTrack('gomoku', 'finish');
-    const t = getTEXT();
-    let msg = '';
-    if (winner === 0) {
-        msg = t.draw;
-    } else {
-        msg = winner === 1 ? t.blackWins : t.whiteWins;
-    }
 
-    modalMessage.textContent = msg;
+    modalMessage.textContent = resultText(getTEXT());
+    updateStatus(); // 结束态由 updateStatus 统一渲染（显示「对局结束」）
     showModal();
 }
 
@@ -533,6 +543,11 @@ function applyLanguage(lang) {
 
     const modalTitle = document.getElementById('modalTitle');
     if (modalTitle) modalTitle.textContent = t.gameOver;
+    // 结果文案同样要跟随语言。面板开着时切语言，只有标题和按钮变、
+    // 「黑方获胜！」还留着上一个语言的版本会很割裂。
+    // 这条路径真实可达：结算浮层盖住了顶栏，键盘 Tab 聚焦后用 Enter 激活
+    // 走的是元素自身的 click，不经过浮层的命中测试。
+    if (lastResult !== null) modalMessage.textContent = resultText(t);
     if (modalRestartBtn) modalRestartBtn.textContent = t.playAgain;
     const modalViewBtn = document.getElementById('modalViewBtn');
     if (modalViewBtn) modalViewBtn.textContent = t.viewBoard;

@@ -160,3 +160,55 @@ node scripts/probe.mjs planet-merge 390 844 .pm-toast
 `display:inline-flex`、恰好 1 个 `<svg>`、图标计算宽度 15px、图标与文案**垂直中心偏差 ≤1px**、
 内容不溢出，并给每页留一张整页截图供目视。注意结果面板可能有入场 `transform: scale()`，
 所以断言读的是**计算样式**与未变换的 `offset/client` 宽度，而不是 `getBoundingClientRect()`。
+
+---
+
+## 追加（18:15）：五子棋结算面板的两处状态 / i18n 缺陷
+
+起因是上一轮收尾时我口头断言「`modalTitle` 从未被赋值，标题恒为英文」。**该判断是错的** ——
+`applyLanguage()`（`js/gomoku.js:534`）一直有 `modalTitle.textContent = t.gameOver`，
+实测标题正常跟随语言（`Game Over` ↔ `对局结束`）。旧结论来自只看了 `endGame()` 的局部阅读。
+写了个临时探针（按 id 落子到五连后 dump 面板各元素文案）实测，真正的问题在另外两处：
+
+### 缺陷 1：胜局后状态栏停留在「该谁走棋」
+
+`makeMove()` 判胜后 `endGame()` 直接 `return`，**跳过了 `updateStatus()`**，于是：
+
+| 位置 | 修复前 |
+| --- | --- |
+| 结算面板 | 黑方获胜！ |
+| 状态栏 | 黑方走棋（`Black's Turn`） |
+
+两句自相矛盾：对局已经结束，状态栏还在说该谁走。平局同理。
+
+### 缺陷 2：面板开着切语言，结果文案不跟着变
+
+`applyLanguage()` 重写了 `modalTitle` 与两个按钮，但**没有**重写 `modalMessage`：
+
+| 元素 | 切到中文后（修复前） |
+| --- | --- |
+| 标题 | 对局结束 ✓ |
+| 按钮 | 再来一局 / 查看棋盘 ✓ |
+| 结果文案 | `Black Wins!` ✗ 仍是英文 |
+
+**为什么真实可达**：结算浮层铺满视口、盖住顶栏，坐标点击会被浮层吃掉（只把面板关掉），
+但顶栏按钮仍是可聚焦的真实 `<button>`，**键盘 Tab + Enter 触发的是元素自身的 `click`，
+不经过浮层的命中测试**。所以「面板开着时切语言」这条路径在真机上能走通。
+
+### 修复
+
+- 新增状态 `lastResult`（`null` / `0` 平局 / `1` 黑胜 / `2` 白胜），`resetGame()` 里清空
+- 新增 `resultText(t)`，`endGame()` 与 `applyLanguage()` 共用同一个渲染入口
+- `endGame()` 增加 `updateStatus()`；`updateStatus()` 增加结束态分支（显示 `t.gameOver`）
+- `scripts/verify-gomoku.mjs` 增加 5 条断言（结束态状态栏、面板开着切语言、标题/文案/按钮同步、
+  不误关面板、换语言后仍为结束态），并做**反向验证**：拿修复前的 `9a24631` 跑同一套断言，
+  6 项失败（移动/桌面各 3 项），证明断言不是空转
+
+### 一个被证伪的排查手段
+
+试过用「HTML 里声明了但 JS 从未引用」的静态扫描找同类缺陷，结果**全是假阳性**：
+`minesweeper` 用 `this.el['pause-title']` 这种**片段键查找表**，`sword-flight` 用 i18n 键
+`rankTitle`，都不需要出现完整 id 字面量。这类扫描只能当线索，不能当结论。
+（真正值得注意的余项：`sword-flight` 的 `rankTitle` 两个语言的值里**自带 🏆**，
+而同一功能的入口按钮已改用 `ICONS.trophy` —— 同一图标一处 SVG 一处 emoji，属政策执行不一致，
+待决定是否统一。）
