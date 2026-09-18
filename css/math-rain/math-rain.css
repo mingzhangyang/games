@@ -1887,16 +1887,26 @@ body {
 .tool-btn {
     padding: 8px 14px;
     border-radius: 10px;
-    background: linear-gradient(145deg, #4a5568, #2d3748);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: #e8ecff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
     font-weight: 800;
     letter-spacing: 0.5px;
-    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease;
+    backdrop-filter: blur(10px);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease, border-color 0.2s ease;
 }
-.tool-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,0.25); }
+.tool-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
 .tool-btn:active { transform: translateY(0); box-shadow: none; }
+.tool-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+.tool-btn.active {
+    background: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 0 14px rgba(99, 102, 241, 0.45);
+}
 .tool-count {
     font-weight: 800;
     color: #a0aec0;
@@ -1909,9 +1919,13 @@ body {
 .coins-icon { font-size: 18px; }
 .coins-value { font-weight: 900; color: #ffd166; text-shadow: 0 0 8px rgba(255, 209, 102, 0.4); }
 
-/* Freeze 与 Bomb 的可选强调色 */
-#freeze-btn { border-color: rgba(99, 102, 241, 0.5); }
-#bomb-btn { border-color: rgba(245, 101, 101, 0.5); }
+/* Freeze 与 Bomb 的语义强调（底色微染 + 描边，随玻璃体系） */
+#freeze-btn { border-color: rgba(99, 102, 241, 0.5); background: rgba(99, 102, 241, 0.12); }
+#bomb-btn { border-color: rgba(245, 101, 101, 0.5); background: rgba(245, 101, 101, 0.1); }
+#shield-btn { border-color: rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.1); }
+#freeze-btn:hover { background: rgba(99, 102, 241, 0.22); border-color: rgba(99, 102, 241, 0.7); }
+#bomb-btn:hover { background: rgba(245, 101, 101, 0.2); border-color: rgba(245, 101, 101, 0.7); }
+#shield-btn:hover { background: rgba(16, 185, 129, 0.18); border-color: rgba(16, 185, 129, 0.65); }
 
 /* 移动端响应式样式 - Help按钮 */
 @media (max-width: 480px) {
