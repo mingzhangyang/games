@@ -86,6 +86,24 @@ overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` �
 校验：`node scripts/verify-desktop-frame.mjs`（六页 × 五档视口 × 双语，
 断言整页不滚 / 画幅 / 不糊 / 随视口长大 / 侧栏屏内 / chrome 收敛 / 无 pageerror）。
 
+**第二批接入（2026-09-19 晚）**：gomoku 与 tetris 也收进「桌面端一屏放下」。
+两者的接法与六个画布游戏不同，各自有一条必须记住的前提：
+
+- **gomoku** 只借 `--frame-chrome`，棋盘边长仍由 `resizeCanvas()` 自己算
+  （原本写死 `innerHeight - 200`，实际 chrome 是 334）。它的 shell 是五段式
+  （顶栏 · 状态条 · 棋盘 · 控制条 · 页脚）+ 18px `gap` + 舞台自带 12px 内距，
+  `bindFrame` 只认其中 166px，其余经 `extraChrome` 补齐。
+  ⚠️ 补齐时**只加高度与 gap，不加页脚的 margin** —— `.game-footer` 带
+  `margin-top: auto`，其计算值是「剩余空白」，算进去会让棋盘越缩越小。
+- **tetris** 走完整契约（`--frame-ratio: 0.5`，棋盘 400×800）。三张画布的后端
+  缓冲区固定 400×800、靠 CSS 等比缩放，三者共用同一组宽度来源才不会错位，
+  所以 `#tetris` 与 `#particleCanvas,#lineClearCanvas` 的 `max-width: 400px`
+  必须一起删掉。`.info-panel` 原本的 `width:100%` 会压过 `.game-sidebar` 的
+  300px（实测被撑到 488px，比棋盘还宽），一并移除。
+  ⚠️ 侧栏限高后 `.info-box.controls` 必须排在 `#statsPanels` **之前**，
+  否则 1280×900 下 Pause / Restart 正好落到滚动区之外 —— 参考内容可以滚，
+  对局按钮不能滚。
+
 每页在**自己 CSS 末尾**追加同名变量覆盖，例如：
 
 ```css

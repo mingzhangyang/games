@@ -105,6 +105,12 @@ body {
     --frame-stage: 400px;
     --frame-side: 300px;
     --frame-side-gap: 12px;
+    /* 桌面纵向预算（2026-09-19）：棋盘 400×800 → 0.5 画幅。
+       封顶 960px 高（= 480px 宽）；矮视口下棋盘缩小以换取「整页一屏」。 */
+    --frame-ratio: 0.5;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
     position: relative;
 }
 
@@ -126,7 +132,9 @@ body {
 
 #tetris {
     width: 100%;
-    max-width: 400px;
+    /* 不再写 max-width:400px —— 它是独立于 --frame-stage 的第二道上限，
+       桌面推导出的舞台宽度会被它钉死（hs/pm 踩过同一个坑）。宽度统一由
+       .game-stage 的 max-width 决定：移动端 --frame-stage，桌面 --frame-stage-cap。 */
     height: auto;
     aspect-ratio: 400 / 800;
     background: #0a0a0a;
@@ -160,20 +168,22 @@ body {
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 400px;
+    /* 与 #tetris 同样去掉 max-width：三张画布必须用完全一致的宽度来源，
+       否则棋盘长大后特效层会停在 400px，二者错位（CLAUDE.md 记过这个对齐不变量）。 */
     height: auto;
     aspect-ratio: 400 / 800;
     pointer-events: none;
     border-radius: var(--frame-radius);
 }
 
+/* 这个元素同时是 .game-sidebar：宽度与收缩交给共享层（桌面 --frame-side + flex-shrink:0）。
+   此前这里的 width:100% 与 flex:0 1 auto 会压过共享层，侧栏在 1280 下被撑到 488px —— 比
+   400px 的棋盘还宽，正是「两列不平衡」最刺眼的一处。 */
 .info-panel {
     display: flex;
     flex-direction: column;
     gap: var(--frame-side-gap);
     min-width: 200px;
-    flex: 0 1 auto;
-    width: 100%;
 }
 
 /* #statsPanels 是移动/桌面共用的同一个节点：桌面在侧栏内，移动端移动进抽屉。

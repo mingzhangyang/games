@@ -230,7 +230,21 @@ for (const vp of VIEWPORTS) {
     //   主文档在手机上只剩 .game-shell（顶栏 + 棋盘），已没有页尾卡片 ⇒ end.tail 恒为 null。
     // 新契约下真正要守的是「末尾的在流元素不被固定底栏盖住」——这才是 body 底部留白
     //   = calc(76px + env(safe-area-inset-bottom)) 那条规则的目的（漏写就是曾发生的真缺陷）。
-    await page.evaluate(() => document.scrollingElement.scrollTo({ top: 999999, behavior: 'instant' }));
+    //
+    // ⚠️ 2026-09-19（第二次）：桌面端侧栏接入了「限高 + 内部滚动」契约
+    //   （css/layout.css 的 body.has-frame-budget .game-sidebar），末尾内容可能落在
+    //   **嵌套滚动容器**里而不是主文档里。本断言要守的是「页尾内容可达」，
+    //   不是「只靠滚主文档就能看见」——所以先把文档滚到底，再把 shell 内每个
+    //   overflow-y:auto/scroll 的容器也滚到底，然后才测量。
+    //   这样既保留原缺陷的守护（主文档完全滚不动时，末位仍会留在视口外 ⇒ 失败），
+    //   又不会把「侧栏内部滚动」误报成回归。
+    await page.evaluate(() => {
+        document.scrollingElement.scrollTo({ top: 999999, behavior: 'instant' });
+        document.querySelectorAll('.game-shell *').forEach(el => {
+            const oy = getComputedStyle(el).overflowY;
+            if (oy === 'auto' || oy === 'scroll') el.scrollTop = el.scrollHeight;
+        });
+    });
     await new Promise(r => setTimeout(r, 400));
     const end = await page.evaluate(() => {
         const box = r => ({ y: +r.y.toFixed(2), bottom: +r.bottom.toFixed(2), h: +r.height.toFixed(2) });

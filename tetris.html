@@ -79,6 +79,14 @@
 
         <!-- 桌面端常驻侧栏；移动端由底部抽屉接管（同一个 #statsPanels 节点搬家） -->
         <div class="info-panel game-sidebar" id="infoPanel">
+            <!-- 控制条置于侧栏首位：侧栏在桌面端限高内部滚动，而开始/暂停/重开
+                 是对局中要用的按钮，绝不能落到滚动区之外。排在计分板之后时，
+                 1280×900 下 Pause/Restart 正好被截在可视区外面。 -->
+            <div class="info-box controls">
+                <button class="btn" id="startBtn"></button>
+                <button class="btn" id="pauseBtn"></button>
+                <button class="btn" id="restartGameBtn"></button>
+            </div>
             <div id="statsPanels">
             <div class="info-box" style="margin-bottom:8px;">
                 <div class="info-row">
@@ -124,26 +132,6 @@
             </div>
             </div>
 
-            <div class="info-box controls">
-                <button class="btn" id="startBtn"></button>
-                <button class="btn" id="pauseBtn"></button>
-                <button class="btn" id="restartGameBtn"></button>
-            </div>
-            <nav class="more-games" id="moreGamesNav">
-                <div class="more-games-title">🎮 More Games</div>
-                <div class="more-games-links">
-              <a href="math-rain.html">🔢 Math Rain</a>
-              <a href="tank-battle.html">🎯 Tank Battle</a>
-              <a href="gomoku.html">⚫ Gomoku</a>
-              <a href="planet-merge.html">🪐 Planet Merge</a>
-              <a href="word-daily.html">🔤 Word Daily</a>
-              <a href="hoop-shot.html">🏀 Hoop Shot</a>
-              <a href="minesweeper.html">💣 Minesweeper</a>
-              <a href="reversi.html">⚪ Reversi</a>
-              <a href="tower-defense.html">🏰 Neon TD</a>
-              <a href="gravity-slingshot.html">🚀 Gravity Slingshot</a>
-                </div>
-            </nav>
         </div>
         </div>
 

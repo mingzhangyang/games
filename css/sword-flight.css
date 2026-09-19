@@ -106,6 +106,12 @@ body {
 @media (orientation: landscape) and (max-height: 640px) {
     .sf-stage {
         height: min(640px, calc(100vh - 72px));
+        /* ⚠️ width:auto 不能省。.game-stage 给的是 width:100%，这里再给 height，
+           两轴都定死时 aspect-ratio 直接不参与计算 —— 画布会被拉成视口的宽高比。
+           实测 844×390 横屏：画幅 1.51，而逻辑场是 0.75（2026-09-19 修）。
+           改成只定高、让 aspect-ratio 反推宽度。 */
+        width: auto;
+        max-width: 100%;
     }
 }
 

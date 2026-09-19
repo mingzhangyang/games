@@ -3,6 +3,7 @@ import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
 import { ICONS } from './icons.js';
 import { bindChrome } from './game-chrome.js';
+import { bindFrame } from './game-frame.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -1508,6 +1509,14 @@ game.draw();
 // 暴露实例，便于回归脚本与调试观察运行态（与 sword-flight 的 window.game 一致）。
 // 只读用途：不要在页面逻辑里依赖它，页面内部一律用闭包里的 `game` 或 currentGame()。
 window.game = game;
+
+// 桌面端纵向预算：棋盘 400×800（1:2）由「可用高度 × 画幅比」定尺寸。
+// 此前侧栏内容 1000px 高、棋盘固定 800px，1280×900 下整页 1153px，必须滚动。
+// 三张画布（主/粒子/消行）后端缓冲区都固定 400×800、靠 CSS 等比缩放，
+// 三者用同一组 CSS 规则，缩放后天然对齐 —— 手机上本来就是这么跑的（280/400）。
+window.addEventListener('DOMContentLoaded', () => {
+    bindFrame({ logicalWidth: 400 });
+});
 
 // 按钮事件绑定
 window.addEventListener('DOMContentLoaded', () => {

@@ -2,6 +2,7 @@ import { getLang, setLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
 import { bindChrome } from './game-chrome.js';
+import { bindFrame } from './game-frame.js';
 
 // 音效：落子/胜利/失败/平局
 const sfx = createSfx({
@@ -106,8 +107,45 @@ let cssSize = 600; // 画布 CSS 逻辑尺寸（canvas.width 是 DPR 缩放后�
 
 // Initialize
 function init() {
+    // 先量 chrome 再排版：bindFrame 把实测值写进 --frame-chrome，resizeCanvas 据此定棋盘边长。
+    //
+    // gomoku 的 shell 不是「顶栏 / main / 页脚」三段式，而是五个在流内的直接子节点
+    // （顶栏 · 状态条 · 棋盘 · 控制条 · 页脚），彼此还有 18px 的 flex gap，棋盘外面
+    // 又套了 12px 的木框内距。bindFrame 只认 shell 内距 + 顶栏 + 页脚（= 166px），
+    // 剩下的 168px 必须经 extraChrome 补齐，否则棋盘按 700px 排，整页 1038px > 视口。
+    //
+    // ⚠️ 只累加**高度与 gap，不累加 margin**：.game-footer 带 margin-top:auto，
+    //    内容不足一屏时它的计算值是「剩余空白」，把它算进 chrome 会让棋盘越缩越小。
+    //    高度和 gap 与空白无关，因此这个量是稳定不动点。
+    bindFrame({
+        extraChrome: () => {
+            const shell = document.querySelector('.game-shell');
+            const stage = document.querySelector('.game-stage');
+            if (!shell || !stage) return 0;
+            const topbar = shell.querySelector(':scope > .game-topbar');
+            const footer = shell.querySelector(':scope > .game-footer');
+            const kids = [...shell.children]
+                .filter(el => getComputedStyle(el).display !== 'none');
+            let h = 0;
+            for (const el of kids) {
+                if (el === topbar || el === footer || el === stage) continue;
+                // 这里可以安全地算 margin：带 margin-top:auto 的只有页脚，而它已被跳过
+                // （bindFrame 自己按高度算它）。.controls 就带着真实的 margin-top:4px。
+                const cs = getComputedStyle(el);
+                h += el.getBoundingClientRect().height
+                    + (parseFloat(cs.marginTop) || 0)
+                    + (parseFloat(cs.marginBottom) || 0);
+            }
+            const rowGap = parseFloat(getComputedStyle(shell).rowGap) || 0;
+            if (kids.length > 1) h += rowGap * (kids.length - 1);
+            const tcs = getComputedStyle(stage);
+            h += (parseFloat(tcs.paddingTop) || 0) + (parseFloat(tcs.paddingBottom) || 0);
+            return h;
+        },
+    });
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('game-frame:changed', resizeCanvas);
     canvas.addEventListener('click', handleCanvasClick);
 
     // Fix #6: touch input support
@@ -181,7 +219,14 @@ function resizeCanvas() {
     // 桌面端放宽棋盘上限（≤1024px 视口维持 600，大屏最高 700）
     const desktopCap = window.matchMedia('(min-width: 1024px)').matches ? 700 : 600;
     const containerWidth = Math.min(window.innerWidth - 40, desktopCap);
-    const containerHeight = Math.min(window.innerHeight - 200, desktopCap);
+    // 纵向预算取 js/game-frame.js 实测写入的 --frame-chrome（顶栏 + 状态条 + 页脚 + 容器内距）。
+    // 这里原本写死减 200，而实际 chrome 是 338 —— 1280×900 下整页被撑到 1038px，
+    // 桌面端要滚动才能看全棋盘（2026-09-19 修）。200 仅作 bindFrame 落笔前的首帧兜底。
+    const shell = document.querySelector('.game-shell');
+    const chrome = shell
+        ? parseFloat(getComputedStyle(shell).getPropertyValue('--frame-chrome')) || 200
+        : 200;
+    const containerHeight = Math.min(window.innerHeight - chrome, desktopCap);
     // 下限 200：视口极矮时（innerHeight < 200）上式会得到负值，CELL_SIZE 随之为负，
     // 之后 drawPiece 的 arc() 会抛异常并中断整个 resize 回调，棋盘就停在被清空的状态
     const size = Math.max(200, Math.min(containerWidth, containerHeight));
