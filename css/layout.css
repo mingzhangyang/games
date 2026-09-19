@@ -20,8 +20,26 @@
        <span class="xx-key game-side-kbd">      键帽
        <div class="xx-overlay game-overlay">    舞台内覆盖层（absolute 铺满）
        <div class="xx-toast game-toast">        舞台内提示条
-       <p class="xx-footer-hint game-footer-hint"> 底部操作提示
        <button class="xx-icon-btn game-icon-btn">  顶栏图标钮
+
+       顶栏三槽位（右簇顺序为契约，见 docs/header-footer-contract-2026-09-19.md）：
+       <header class="xx-topbar game-topbar">
+         <div class="game-topbar-group">         左簇：Home 永远第一个
+         <div class="game-topbar-center">        中槽：标题 / HUD，各页自由
+         <div class="game-topbar-actions game-topbar-group">  右簇：固定顺序
+             ① 页面专属（Retry / Range / Speed / Theme …）
+             ② data-chrome="stats"   ③ data-chrome="pause"
+             ④ data-chrome="sound"   ⑤ data-chrome="lang"
+           —— Sound 与 Lang 永远是最右两颗，故全站开关位置一致。
+
+       持久页脚（随流在底部，不用 sticky/fixed）：
+       <footer class="xx-footer game-footer">
+         <p class="xx-footer-hint game-footer-hint">   操作提示
+         <div class="xx-footer-actions game-topbar-group">
+           <a|button class="game-icon-btn" data-chrome="home">
+           <button class="game-icon-btn" data-chrome="more" aria-expanded aria-controls>
+         <nav class="more-games game-footer-nav" id="xxMoreNav" hidden>
+       —— 有状态的开关（Sound / Lang）只在 header，页脚只放无状态导航。
 
        底部抽屉（移动端专用，桌面端自动失效）：
        <button class="xx-icon-btn game-icon-btn game-stats-btn">  触发钮（≥1024px 隐藏）
@@ -89,6 +107,20 @@
     flex-shrink: 0;
 }
 
+/* ── 顶栏中槽：标题 / HUD 的自适应块 ──
+   flex:1 + min-width:0 让它吃掉左右两簇之外的全部宽度并允许收缩换行；
+   左右两簇 flex-shrink:0，因此无论中槽内容多宽，两侧按钮的屏幕位置都不变。
+   flex-wrap 是必需的：td 三个状态胶囊 / rv 两个玩家框在 390px 下必须能折行。 */
+.game-topbar-center {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 /* ── 主体：移动端纵向，桌面端回退为 舞台+侧栏 横排 ── */
 .game-main {
     width: 100%;
@@ -151,14 +183,50 @@
     pointer-events: none;
 }
 
-/* ── 底部操作提示 ── */
+/* ── 持久页脚：随流在底部 ──
+   ⚠️ 只放无状态导航（Home / 更多游戏）+ 操作提示。Sound 与 Lang 是状态开关，
+   它们的唯一真源在 header —— 若两处都写同一标签，切语言时会出现两个写入者
+   （CLAUDE.md 记过这个坑），且页脚开关无法与 header 的 aria-pressed 同步。
+
+   ⚠️ 不要改成 sticky / fixed：tetris 的 .mobile-controls(z-index 1000)、
+   底部统计抽屉(z-index 1200)、各页结算浮层都会与它抢层级，固定底栏还会吃掉
+   竖版画布（gd/td/hs/pm 的 480×640 逻辑场）的可用高度。随流可滚动即可。 */
+.game-footer {
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0 2px;
+    margin-top: auto;
+}
+
+.game-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* 页脚展开的「更多游戏」导航：收起时不占高度（[hidden] 优先于下面的 display） */
+.game-footer-nav {
+    width: 100%;
+}
+
+.game-footer-nav[hidden] { display: none; }
+
+/* ── 底部操作提示 ──
+   手机上必须可见：此前 ≤480px 与 ≤720px 高都 display:none，等于没有页脚。
+   改为永不隐藏，窄屏/矮屏压成单行省略。 */
 .game-footer-hint {
-    padding: 8px 0 6px;
+    padding: 2px 0 0;
     font-size: 11.5px;
     line-height: 1.5;
     color: var(--tok-text-mute);
     letter-spacing: 0.05em;
     text-align: center;
+    max-width: 100%;
 }
 
 /* ── 图标钮：40px 视觉 / ≥44px 触控热区（尺寸取 tokens 变量，与 .icon-btn 同源） ── */
@@ -419,16 +487,31 @@ body.drawer-locked {
     /* 窄屏收紧顶栏间距：保证最挤的页面（td 三个状态胶囊）仍保持单行 */
     .game-topbar { gap: 6px; }
     .game-topbar-group { gap: 4px; }
+    .game-topbar-center { gap: 5px; }
     .game-icon-btn { font-size: 14px; }
     .game-icon-btn--wide { padding: 0 9px; }
     .game-overlay { padding: 16px; gap: 11px; }
-    .game-footer-hint { display: none; }
+    /* 页脚在手机上保留（此前是 display:none，等于没有页脚），压成单行省略 */
+    .game-footer-hint {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .game-footer { padding: 4px 0 2px; gap: 5px; }
 }
 
 /* ── 响应式：矮屏压缩 ── */
 @media (max-height: 720px) {
     .game-shell { padding-top: 6px; }
-    .game-footer-hint { display: none; }
+    /* 不再隐藏页脚，只压缩纵向占用 */
+    .game-footer-hint {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 11px;
+    }
+    .game-footer { padding: 2px 0 0; gap: 4px; }
+    :root { --tok-btn-size: 36px; }
 }
 
 /* ── 响应式：窄屏把侧栏让给底部抽屉 ── */

@@ -79,3 +79,7 @@ bundle-analyzer-report.html
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# 临时工作目录（迁移脚本的试跑副本、探针等）
+.scratch/
+__pycache__/

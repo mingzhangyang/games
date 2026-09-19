@@ -15,6 +15,7 @@ import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -149,7 +150,9 @@ const LANGUAGES = {
             singularity: { name: 'Singularity', tag: 'Nightmare', desc: 'Every threat at once, and the Overlord heals its own army.' }
         },
         threatHealer: 'Healer', threatArmor: 'Armored', threatFlyer: 'Flying',
-        threatSplitter: 'Splitter', threatAttacker: 'Siege', threatOverlord: 'Overlord'
+        threatSplitter: 'Splitter', threatAttacker: 'Siege', threatOverlord: 'Overlord',
+        sound: 'Sound',
+        moreGames: 'More games',
     },
     zh: {
         close: '关闭',
@@ -255,7 +258,9 @@ const LANGUAGES = {
             singularity: { name: '奇点终局', tag: '噩梦', desc: '所有威胁同时压上，霸主还会给整支军队回血。' }
         },
         threatHealer: '治疗兵', threatArmor: '装甲兵', threatFlyer: '飞行兵',
-        threatSplitter: '分裂兵', threatAttacker: '攻城兵', threatOverlord: '霸主'
+        threatSplitter: '分裂兵', threatAttacker: '攻城兵', threatOverlord: '霸主',
+        sound: '声音',
+        moreGames: '更多游戏',
     }
 };
 
@@ -3446,4 +3451,17 @@ document.addEventListener('DOMContentLoaded', () => {
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
     });
     if (window.tdDrawer) window.tdDrawer.init();
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'tower-defense.html',
+        owns: ['lang', 'more'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+    });
 });

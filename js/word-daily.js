@@ -12,6 +12,7 @@ import { ZH_IDIOMS } from './word-daily-data-zh.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -276,7 +277,11 @@ const LANGUAGES = {
         viewStats: 'View Stats',
         backToDaily: 'Back to Daily',
         practiceBadge: 'Practice',
-        practiceBannerTpl: 'Practice #{n} — not recorded in streaks'
+        practiceBannerTpl: 'Practice #{n} — not recorded in streaks',
+        home: 'Home',
+        sound: 'Sound',
+        moreGames: 'More games',
+        hint: 'Type your guess · Enter to submit · M mute',
     },
     zh: {
         title: '每日猜词',
@@ -351,7 +356,11 @@ const LANGUAGES = {
         viewStats: '查看战报',
         backToDaily: '返回今日一词',
         practiceBadge: '练习',
-        practiceBannerTpl: '练习模式（第 {n} 局）——不计入每日连胜'
+        practiceBannerTpl: '练习模式（第 {n} 局）——不计入每日连胜',
+        home: '返回主页',
+        sound: '声音',
+        moreGames: '更多游戏',
+        hint: '输入猜测 · 回车提交 · M 静音',
     }
 };
 
@@ -425,6 +434,11 @@ class WordDailyGame {
         this.lang = getLang();
         this.TEXT = LANGUAGES[this.lang];
         document.documentElement.lang = this.lang;
+
+        // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的 applyLanguage 写）
+        const wdHint = document.getElementById('wd-hint');
+        if (wdHint) wdHint.textContent = this.TEXT.hint;
+
         document.title = this.lang === 'zh'
             ? '每日猜词 — 每日成语与单词益智解谜'
             : 'Word Daily — Daily Bilingual Word Puzzle';
@@ -1511,4 +1525,17 @@ class WordDailyGame {
 
 window.addEventListener('DOMContentLoaded', () => {
     window.wordDailyGame = new WordDailyGame();
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'word-daily.html',
+        owns: ['lang', 'more'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+    });
 });

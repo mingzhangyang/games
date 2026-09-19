@@ -2,6 +2,7 @@ import { getLang, setLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
 import { ICONS } from './icons.js';
+import { bindChrome } from './game-chrome.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -73,7 +74,11 @@ const LANGUAGES = {
         pause: 'Pause',
         resume: 'Resume',
         levelUp: 'LEVEL UP!',
-        comboDisplay: x => `${x}x Combo!`
+        comboDisplay: x => `${x}x Combo!`,
+        home: 'Home',
+        sound: 'Sound',
+        moreGames: 'More games',
+        hint: 'Arrows move · Space hard drop · P pause · M mute',
     },
     zh: {
         title: '俄罗斯方块 - 酷炫版',
@@ -98,7 +103,11 @@ const LANGUAGES = {
         pause: '暂停',
         resume: '继续',
         levelUp: '升级！',
-        comboDisplay: x => `${x}x 连击!`
+        comboDisplay: x => `${x}x 连击!`,
+        home: '返回主页',
+        sound: '声音',
+        moreGames: '更多游戏',
+        hint: '方向键移动 · 空格瞬降 · P 暂停 · M 静音',
     }
 };
 
@@ -246,6 +255,11 @@ function getBestScore() {
 function setLangUI() {
     document.documentElement.lang = currentLang;
     document.title = TEXT.title;
+
+    // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的语言渲染入口写）
+    const ttHint = document.getElementById('tt-hint');
+    if (ttHint) ttHint.textContent = TEXT.hint;
+
     renderThemeToggle();
     renderDrawerIcons();
     document.getElementById('gameOverTitle').textContent = TEXT.gameOver;
@@ -510,6 +524,15 @@ const drawer = {
 
 window.addEventListener('DOMContentLoaded', () => drawer.init());
 window.addEventListener('DOMContentLoaded', setLangUI);
+
+// 顶栏语言钮（#tt-btn-lang-ui，data-chrome="lang"）由 js/game-chrome.js 接管：
+// 它只负责 setLang() + 派发事件，本页据此重取 TEXT 并整页重刷。
+// 本页此前根本没有语言入口（import 了 setLang 却从未调用），所以也没有这个监听器。
+window.addEventListener('site-settings:changed', () => {
+    currentLang = getUserLang();
+    TEXT = LANGUAGES[currentLang] || LANGUAGES['en'];
+    setLangUI();
+});
 window.addEventListener('DOMContentLoaded', setupUsernameInput);
 window.addEventListener('DOMContentLoaded', fetchAndDisplayGlobalScores);
 
@@ -1558,5 +1581,20 @@ window.addEventListener('DOMContentLoaded', () => {
     // Prevent context menu on long press
     canvas.addEventListener('contextmenu', function(e) {
         e.preventDefault();
+    });
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
+       本页的静音钮是随槽位契约新增的，页面自身没有 handler，
+       所以显式把 sound 交给 chrome 接管。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'tetris.html',
+        owns: ['lang', 'more', 'sound'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });
 });

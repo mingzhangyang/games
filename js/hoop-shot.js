@@ -13,6 +13,7 @@ import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { updateMoreGames } from './more-games.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -82,9 +83,11 @@ const LANGUAGES = {
         usernameLabel: 'Username (Enter to save)',
         language: '中文',
         tapToStart: 'Swipe up to shoot',
-        footerHint: 'Swipe up to shoot · P pause · M mute',
+        hint: 'Swipe up to shoot · P pause · M mute',
         sideHowTo: 'How to play',
-        sideRecords: 'Records'
+        sideRecords: 'Records',
+        sound: 'Sound',
+        moreGames: 'More games',
     },
     zh: {
         close: '关闭',
@@ -116,9 +119,11 @@ const LANGUAGES = {
         usernameLabel: '用户名（回车保存）',
         language: 'English',
         tapToStart: '向上滑动投篮',
-        footerHint: '向上滑动投篮 · P 暂停 · M 静音',
+        hint: '向上滑动投篮 · P 暂停 · M 静音',
         sideHowTo: '玩法说明',
-        sideRecords: '战绩'
+        sideRecords: '战绩',
+        sound: '声音',
+        moreGames: '更多游戏',
     }
 };
 
@@ -340,7 +345,7 @@ class HoopShotGame {
         if (this.el['lb-status']) this.el['lb-status'].textContent = '';
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el.hint) this.el.hint.textContent = t.footerHint; // 保留键位说明，不再被 tapToStart 整体替换
+        if (this.el.hint) this.el.hint.textContent = t.hint; // 保留键位说明，不再被 tapToStart 整体替换
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         this.updateMuteButtons();
         this.updateStartStats();
@@ -1560,4 +1565,17 @@ window.addEventListener('DOMContentLoaded', () => {
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
     });
     if (window.hsDrawer) window.hsDrawer.init();
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'hoop-shot.html',
+        owns: ['lang', 'more'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+    });
 });

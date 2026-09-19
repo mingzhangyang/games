@@ -16,6 +16,36 @@ export const MORE_GAMES = [
     { href: 'sword-flight.html', emoji: '🗡️', en: 'Sword Flight', zh: '御剑飞行' }
 ];
 
+/**
+ * 往一个空容器里生成「更多游戏」导航条（含标题 + 链接），排除自身。
+ * 页面用静态 <nav class="more-games"> 的走 updateMoreGames()；
+ * 页脚按需展开的那种走本函数（内容在首次展开时才建，既能省首屏 DOM，
+ * 又保证链接文案用的是点开那一刻的语言）。
+ *
+ * @param {Element} container  目标容器（会被清空重建）
+ * @param {object}  [opts]
+ * @param {string}  [opts.exclude]  排除的 href（通常传当前页文件名）
+ * @param {string}  [opts.lang]     语言，缺省读 getLang()
+ * @param {string}  [opts.title]    标题文案，缺省用内置的「更多游戏 / MORE GAMES」
+ * @returns {number} 写入的链接条数
+ */
+export function renderMoreGames(container, opts = {}) {
+    if (!container) return 0;
+    const { exclude = '', lang = getLang(), title = '' } = opts;
+    const isZh = lang === 'zh';
+    const self = String(exclude).split('?')[0].split('#')[0];
+
+    const linkHtml = MORE_GAMES
+        .filter(g => g.href !== self)
+        .map(g => `<a href="${g.href}">${g.emoji} ${isZh ? g.zh : g.en}</a>`)
+        .join('');
+
+    container.innerHTML =
+        `<div class="more-games-title">${title || (isZh ? '🎮 更多游戏' : '🎮 MORE GAMES')}</div>` +
+        `<div class="more-games-links">${linkHtml}</div>`;
+    return MORE_GAMES.filter(g => g.href !== self).length;
+}
+
 export function updateMoreGames(lang) {
     const activeLang = lang || getLang();
     const isZh = activeLang === 'zh';
@@ -23,6 +53,9 @@ export function updateMoreGames(lang) {
     if (!navs.length) return;
 
     navs.forEach(nav => {
+        // 页脚导航由 game-chrome.js 在展开时重建整块（它会重写标题与链接），
+        // 这里跳过它，避免两个写入者互相覆盖。
+        if (nav.id && /MoreNav$/.test(nav.id)) return;
         const title = nav.querySelector('.more-games-title');
         if (title) {
             title.textContent = isZh ? '🎮 更多游戏' : '🎮 MORE GAMES';

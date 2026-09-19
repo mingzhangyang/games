@@ -1,6 +1,7 @@
 import { getLang, setLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
+import { bindChrome } from './game-chrome.js';
 
 // 音效：落子/胜利/失败/平局
 const sfx = createSfx({
@@ -44,7 +45,11 @@ const LANGUAGES = {
         playAgain: 'Play Again',
         viewBoard: 'View Board',
         changeDiffConfirm: 'Changing difficulty will clear the current game. Continue?',
-        leaveConfirm: 'A game is in progress. Leave and discard it?'
+        leaveConfirm: 'A game is in progress. Leave and discard it?',
+        home: 'Home',
+        sound: 'Sound',
+        moreGames: 'More games',
+        hint: 'Click a point to place your stone',
     },
     zh: {
         title: '五子棋 - 经典策略棋牌',
@@ -68,7 +73,11 @@ const LANGUAGES = {
         playAgain: '再来一局',
         viewBoard: '查看棋盘',
         changeDiffConfirm: '切换难度将清空当前对局，确定继续吗？',
-        leaveConfirm: '对局进行中，离开将丢失当前进度。确定离开吗？'
+        leaveConfirm: '对局进行中，离开将丢失当前进度。确定离开吗？',
+        home: '返回主页',
+        sound: '声音',
+        moreGames: '更多游戏',
+        hint: '点击交叉点落子',
     }
 };
 
@@ -149,14 +158,8 @@ function init() {
         resetGame();
     });
 
-    const langBtn = document.getElementById('langBtn');
-    if (langBtn) {
-        langBtn.addEventListener('click', () => {
-            const nextLang = currentLang === 'zh' ? 'en' : 'zh';
-            setLang(nextLang);
-            applyLanguage(nextLang);
-        });
-    }
+    // 语言钮（#langBtn，data-chrome="lang"）的点击与文案由 js/game-chrome.js 独家接管：
+    // 它 setLang() 后派发 site-settings:changed，下面的监听器再调 applyLanguage()。
     // 对局进行中返回首页需确认，防止误触丢局
     const homeLink = document.getElementById('homeLink');
     if (homeLink) {
@@ -529,8 +532,13 @@ function applyLanguage(lang) {
 
     const gameTitle = document.getElementById('gameTitle');
     if (gameTitle) gameTitle.textContent = t.h1;
-    const langBtn = document.getElementById('langBtn');
-    if (langBtn) langBtn.textContent = t.langBtn;
+
+    // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的语言渲染入口写）
+    const gmHint = document.getElementById('gm-hint');
+    if (gmHint) gmHint.textContent = t.hint;
+
+    // #langBtn 的文案由 js/game-chrome.js 渲染（它写的是「目标语言的自称」，
+    // 与这里的 t.langBtn 同值）——只保留一个写入者，避免两处漂移。
     if (restartBtn) restartBtn.textContent = t.restart;
     if (modeBtn) modeBtn.textContent = gameMode === 'pvp' ? t.modeBtn2Players : t.modeBtnVsComputer;
 
@@ -848,3 +856,18 @@ function evaluateLine(r, c, dr, dc, player) {
 
 // Start
 init();
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
+       本页的静音钮是随槽位契约新增的，页面自身没有 handler，
+       所以显式把 sound 交给 chrome 接管。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'gomoku.html',
+        owns: ['lang', 'more', 'sound'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+    });
+});

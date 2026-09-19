@@ -10,6 +10,7 @@ import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -75,7 +76,8 @@ const LANGUAGES = {
         sound: 'Sound',
         home: 'Home',
         language: '中文',
-        shareLine: 'Cleared in'
+        shareLine: 'Cleared in',
+        moreGames: 'More games',
     },
     zh: {
         title: '扫雷',
@@ -116,7 +118,8 @@ const LANGUAGES = {
         sound: '声音',
         home: '主页',
         language: 'English',
-        shareLine: '用时'
+        shareLine: '用时',
+        moreGames: '更多游戏',
     }
 };
 
@@ -962,7 +965,9 @@ class MinesweeperGame {
         });
         if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());
 
-        if (this.el.mute) this.el.mute.addEventListener('click', () => this.toggleMute());
+        // ⚠️ 键是 'mute-btn'（id 去掉 ms- 前缀），写成 this.el.mute 会永远是 undefined，
+        //    顶栏静音钮因此从未绑上过 —— scripts/verify-chrome.mjs 的"点一次必须翻转"断言抓到的。
+        if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
         if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
 
         if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
@@ -1000,7 +1005,7 @@ class MinesweeperGame {
     toggleMute() {
         const muted = Sfx.toggleMuted();
         const icon = muted ? ICONS.soundOff : ICONS.soundOn;
-        if (this.el.mute) this.el.mute.innerHTML = icon;
+        if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
         if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
         if (!muted) Sfx.click();
     }
@@ -1017,4 +1022,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (game.el['start-mute']) game.el['start-mute'].innerHTML = icon;
     // 初始难度高亮
     document.querySelectorAll('.ms-diff').forEach(b => b.classList.toggle('active', b.dataset.diff === game.diff));
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'minesweeper.html',
+        owns: ['lang', 'more'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+    });
 });

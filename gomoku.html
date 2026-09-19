@@ -30,9 +30,19 @@
 <body>
     <div class="game-container game-shell">
         <header class="gomoku-top-row game-topbar">
-            <a href="index.html" id="homeLink" class="icon-btn game-icon-btn" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
-            <h1 id="gameTitle" class="gomoku-title game-title-pill">Gomoku</h1>
-            <button id="langBtn" class="game-icon-btn">中文</button>
+            <div class="gm-topbar-lead game-topbar-group">
+                <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
+                <a data-chrome="home" href="index.html" id="homeLink" class="icon-btn game-icon-btn" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            </div>
+            <!-- 中槽：标题 / HUD，各页自由 -->
+            <div class="gm-topbar-center game-topbar-center">
+                <h1 id="gameTitle" class="gomoku-title game-title-pill">Gomoku</h1>
+            </div>
+            <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
+            <div class="gm-topbar-actions game-topbar-group">
+                <button type="button" class="gm-icon-btn game-icon-btn" id="gm-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                <button data-chrome="lang" id="langBtn" class="game-icon-btn" title="Language" aria-label="Language">中文</button>
+            </div>
         </header>
 
         <div class="status-bar">
@@ -54,21 +64,18 @@
             </select>
         </div>
 
-        <nav class="more-games">
-            <div class="more-games-title">🎮 More Games</div>
-            <div class="more-games-links">
-          <a href="math-rain.html">🔢 Math Rain</a>
-          <a href="tetris.html">🟦 Tetris</a>
-          <a href="tank-battle.html">🎯 Tank Battle</a>
-          <a href="planet-merge.html">🪐 Planet Merge</a>
-          <a href="word-daily.html">🔤 Word Daily</a>
-          <a href="hoop-shot.html">🏀 Hoop Shot</a>
-          <a href="minesweeper.html">💣 Minesweeper</a>
-          <a href="reversi.html">⚪ Reversi</a>
-          <a href="tower-defense.html">🏰 Neon TD</a>
-          <a href="gravity-slingshot.html">🚀 Gravity Slingshot</a>
-            </div>
-        </nav>
+
+    <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
+         统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
+         ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
+    <footer class="gm-footer game-footer">
+        <p class="gm-footer-hint game-footer-hint" id="gm-hint"></p>
+        <div class="gm-footer-actions game-footer-actions game-topbar-group">
+            <a class="gm-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button type="button" class="gm-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="gmMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+        <nav class="more-games game-footer-nav" id="gmMoreNav" hidden></nav>
+    </footer>
     </div>
     <div class="modal" id="gameOverModal">
         <div class="modal-content">

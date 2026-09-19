@@ -11,6 +11,7 @@ import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -132,7 +133,9 @@ const LANGUAGES = {
         sideRecords: 'Records',
         modeEndless: 'Endless',
         modeDaily: 'Daily',
-        confirmReplace: 'Start a new daily run? Your current progress will be lost.'
+        confirmReplace: 'Start a new daily run? Your current progress will be lost.',
+        sound: 'Sound',
+        moreGames: 'More games',
     },
     zh: {
         close: '关闭',
@@ -176,7 +179,9 @@ const LANGUAGES = {
         sideRecords: '战绩',
         modeEndless: '无尽',
         modeDaily: '每日',
-        confirmReplace: '开始新的每日挑战？当前进度将丢失。'
+        confirmReplace: '开始新的每日挑战？当前进度将丢失。',
+        sound: '声音',
+        moreGames: '更多游戏',
     }
 };
 
@@ -1832,4 +1837,23 @@ window.addEventListener('DOMContentLoaded', () => {
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
     });
     if (window.pmDrawer) window.pmDrawer.init();
+
+    // 顶栏语言钮由 chrome 接管后，切换只派发 site-settings:changed —— 本页此前没有
+    // 监听它（语言只在开始浮层里切，切完自己调 applyLanguage），补上才会真正刷新。
+    window.addEventListener('site-settings:changed', () => {
+        if (window.planetMergeGame) window.planetMergeGame.applyLanguage();
+    });
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'planet-merge.html',
+        owns: ['lang', 'more'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+    });
 });

@@ -17,6 +17,7 @@ import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -94,7 +95,8 @@ const LANGUAGES = {
         sideHowTo: 'How to play',
         sideRecords: 'Records',
         crashHint: 'Auto retry in a moment…',
-        tapToAim: 'Drag to aim · release to launch'
+        tapToAim: 'Drag to aim · release to launch',
+        moreGames: 'More games',
     },
     zh: {
         close: '关闭',
@@ -139,7 +141,8 @@ const LANGUAGES = {
         sideHowTo: '玩法说明',
         sideRecords: '战绩',
         crashHint: '即将自动重试…',
-        tapToAim: '拖拽瞄准 · 松手发射'
+        tapToAim: '拖拽瞄准 · 松手发射',
+        moreGames: '更多游戏',
     }
 };
 
@@ -1845,4 +1848,17 @@ document.addEventListener('DOMContentLoaded', () => {
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
     });
     if (window.gdDrawer) window.gdDrawer.init();
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'gravity-slingshot.html',
+        owns: ['lang', 'more'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+    });
 });

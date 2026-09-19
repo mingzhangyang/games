@@ -12,6 +12,7 @@ import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from './reversi-ai.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -78,7 +79,9 @@ const LANGUAGES = {
         copied: 'Copied!',
         home: 'Home',
         language: '中文',
-        muteHint: 'Tap a highlighted square to place your disc'
+        hint: 'Tap a highlighted square to place your disc',
+        sound: 'Sound',
+        moreGames: 'More games',
     },
     zh: {
         title: '黑白棋',
@@ -115,7 +118,9 @@ const LANGUAGES = {
         copied: '已复制！',
         home: '返回主页',
         language: 'English',
-        muteHint: '点击高亮格子落子'
+        hint: '点击高亮格子落子',
+        sound: '声音',
+        moreGames: '更多游戏',
     }
 };
 
@@ -249,7 +254,7 @@ class ReversiGame {
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el.hint) this.el.hint.textContent = t.muteHint;
+        if (this.el.hint) this.el.hint.textContent = t.hint;
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         this.updatePlayerNames();
         this.updateStreakLine();
@@ -788,4 +793,17 @@ document.addEventListener('DOMContentLoaded', () => {
     game.board[35] = BLACK; game.board[36] = WHITE;
     game.renderAll();
     game.updateCounts();
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'reversi.html',
+        owns: ['lang', 'more'],
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+    });
 });

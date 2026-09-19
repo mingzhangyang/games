@@ -13,6 +13,7 @@ import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -140,7 +141,10 @@ const I18N = {
             { name: '炽焰赤霄', desc: '涅槃朱雀，热浪翻涌' },
             { name: '九幽魔障', desc: '魔禽夜袭，剑阵诛煞' },
             { name: '登仙天门', desc: '云开仙阙，万剑朝宗' }
-        ]
+        ],
+        sound: '声音',
+        moreGames: '更多游戏',
+        hint: '拖拽御剑 · 空格疾刺 · P 暂停 · M 静音',
     },
     en: {
         close: 'Close',
@@ -235,7 +239,10 @@ const I18N = {
             { name: 'Blazing Vermilion Sky', desc: 'Crimson plumes & soaring updrafts' },
             { name: 'Nine Nether Fiends', desc: 'Phantom birds & shadow rifts' },
             { name: 'Ascension Gate', desc: 'The golden gate to true immortality' }
-        ]
+        ],
+        sound: 'Sound',
+        moreGames: 'More games',
+        hint: 'Drag to fly · Space dash · P pause · M mute',
     }
 };
 
@@ -779,15 +786,9 @@ class SwordFlightGame {
             refreshSoundIcon();
         });
 
-        // 语言切换
-        const langBtn = document.getElementById('sf-btn-lang');
-        if (langBtn) {
-            langBtn.addEventListener('click', () => {
-                SFX.init();
-                setLang(getLang() === 'zh' ? 'en' : 'zh');
-                this.applyLanguage();
-            });
-        }
+        // 语言切换：顶栏语言钮（#sf-btn-lang-ui，data-chrome="lang"）由
+        // js/game-chrome.js 接管，它 setLang() 后派发 site-settings:changed，
+        // 下面的监听器再走 this.applyLanguage()。
 
         window.addEventListener('site-settings:changed', () => {
             SFX.updateMute();
@@ -3226,6 +3227,13 @@ class SwordFlightGame {
     applyLanguage() {
         const lang = getLang() === 'zh' ? 'zh' : 'en';
         const t = I18N[lang];
+        // HTML 里静态写的是 zh-CN；加载时若全站语言是 en，这里要把它纠正过来
+        // （setLang 只在“切换那一刻”同步，进不到首次加载这条路径）。
+        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+
+        // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的 applyLanguage 写）
+        const sfHint = document.getElementById('sf-hint');
+        if (sfHint) sfHint.textContent = t.hint;
 
         document.getElementById('sf-stage-label').textContent = t.gameTitle;
         document.getElementById('sf-main-title').textContent = t.gameTitle;
@@ -3294,8 +3302,7 @@ class SwordFlightGame {
         // 每日卡与语言按钮标签
         const dailyMod = document.getElementById('sf-daily-modifier');
         if (dailyMod) dailyMod.textContent = t.dailyModifier;
-        const langGlyph = document.getElementById('sf-lang-glyph');
-        if (langGlyph) langGlyph.textContent = lang === 'zh' ? 'EN' : '中';
+        // 原先的 #sf-lang-glyph 字形钮已统一成全站的文字型语言钮，文案由 chrome 渲染。
 
         this.updateRealmDisplay();
         this.updateSideRecords();
@@ -3320,4 +3327,17 @@ window.addEventListener('DOMContentLoaded', () => {
         getText: () => I18N[getLang()] || I18N.zh,
     });
     if (window.sfDrawer) window.sfDrawer.init();
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'sword-flight.html',
+        owns: ['lang', 'more'],
+        getText: () => I18N[getLang()] || I18N.zh,
+        labels: { pause: () => (I18N[getLang()] || {}).pause },
+    });
 });

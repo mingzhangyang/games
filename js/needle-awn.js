@@ -14,6 +14,7 @@ import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
+import { bindChrome } from './game-chrome.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -124,7 +125,10 @@ const I18N = {
         levelNames: [
             '初试锋芒', '飞针入微', '芒刺在背', '阴阳交错', '灵虚针尊',
             '暴雨梨花', '麦浪连天', '扶摇麦皇', '绝命千本', '针尖麦芒'
-        ]
+        ],
+        sound: '声音',
+        moreGames: '更多游戏',
+        hint: '移动即突刺 · Q 转锋 · E 极意 · P 暂停',
     },
     en: {
         close: 'Close',
@@ -210,7 +214,10 @@ const I18N = {
         levelNames: [
             'First Spark', 'Needle Stream', 'Awn Swarm', 'Dual Weaving', 'Needle Sovereign',
             'Blossom Rain', 'Golden Surge', 'Awn Emperor', 'Thousand Needles', 'Grandmaster Duel'
-        ]
+        ],
+        sound: 'Sound',
+        moreGames: 'More games',
+        hint: 'Move to thrust · Q switch stance · E ultimate · P pause',
     }
 };
 
@@ -969,6 +976,10 @@ class GameEngine {
         const t = I18N[lang] || I18N.zh;
         document.documentElement.lang = lang;
         document.title = lang === 'zh' ? '针尖对麦芒 — Pinpoint Clash' : 'Pinpoint Clash — Needle vs Awn';
+
+        // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的 applyLanguage 写）
+        const naHint = document.getElementById('na-hint');
+        if (naHint) naHint.textContent = t.hint;
 
         document.getElementById('na-main-title').textContent = t.gameTitle;
         document.getElementById('na-main-sub').textContent = t.gameSub;
@@ -2451,4 +2462,19 @@ document.addEventListener('DOMContentLoaded', () => {
         getText: () => I18N[getLang()] || I18N.zh,
     });
     if (window.naDrawer) window.naDrawer.init();
+});
+
+/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
+       na-btn-home 历史上只被 cache、从未绑过点击（HEAD 即如此），
+       顺手交给 chrome 接管。 */
+window.addEventListener('DOMContentLoaded', () => {
+    bindChrome({
+        self: 'needle-awn.html',
+        owns: ['lang', 'more', 'home'],
+        getText: () => I18N[getLang()] || I18N.zh,
+        labels: { pause: () => (I18N[getLang()] || {}).pause },
+    });
 });

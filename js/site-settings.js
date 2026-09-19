@@ -63,8 +63,20 @@ export function getLang() {
 export function setLang(lang) {
     const v = lang === 'zh' ? 'zh' : 'en';
     write(LANG_KEY, v);
+    // 同步 <html lang>：切语言按钮统一进顶栏后，这是唯一还能顺手做对的地方。
+    // （此前只有 gd/ms/tetris 在自己的 applyLanguage 里改，其余 8 页读屏标签
+    //   永远停在上一次页面加载时的语言。）各页重复写同一个值是无害的幂等操作。
+    syncDocumentLang(v);
     emitChanged();
     return v;
+}
+
+function syncDocumentLang(v) {
+    try {
+        document.documentElement.lang = v === 'zh' ? 'zh-CN' : 'en';
+    } catch (e) {
+        // document 不可用（非浏览器环境）时静默跳过
+    }
 }
 
 /** 声音开关：true = 已静音 */

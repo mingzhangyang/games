@@ -52,5 +52,7 @@ export const ICONS = {
     trophy: svg('<path d="M8 4h8v5.5a4 4 0 0 1-8 0V4z"/><path d="M8 5.5H5.2v1.4a3 3 0 0 0 3 3"/><path d="M16 5.5h2.8v1.4a3 3 0 0 1-3 3"/><path d="M12 13.5v4"/><path d="M8.5 20.5h7"/>'),
     // 对比/主题（右半实心圆）——顶栏主题钮用；此前是 🌈/✨ emoji，
     // emoji 的字体度量会把行盒撑高并让文字偏离胶囊中心（见 css/tetris.css .theme-toggle 注释）
-    theme: svg('<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4a8.6 8.6 0 0 1 0 17.2z" fill="currentColor" stroke="none"/>')
+    theme: svg('<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4a8.6 8.6 0 0 1 0 17.2z" fill="currentColor" stroke="none"/>'),
+    // 手柄（更多游戏）——页脚「更多游戏」展开钮用，替代原本的导航条常驻占位
+    games: svg('<path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/>')
 };

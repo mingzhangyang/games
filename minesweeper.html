@@ -33,18 +33,28 @@
     <div class="ms-shell game-shell">
         <!-- 顶栏 -->
         <header class="ms-topbar game-topbar">
-            <button class="ms-icon-btn game-icon-btn" id="ms-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
-            <div class="ms-counter" id="ms-counter-mines" title="Mines left">
-                <span class="ms-counter-icon">💣</span>
-                <span class="ms-counter-value" id="ms-mines">010</span>
+            <div class="ms-topbar-lead game-topbar-group">
+                <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
+                <button data-chrome="home" class="ms-icon-btn game-icon-btn" id="ms-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             </div>
-            <button class="ms-face" id="ms-face" title="New game">🙂</button>
-            <div class="ms-counter" id="ms-counter-timer" title="Time">
-                <span class="ms-counter-icon">⏱️</span>
-                <span class="ms-counter-value" id="ms-timer">000</span>
+            <!-- 中槽：标题 / HUD，各页自由 -->
+            <div class="ms-topbar-center game-topbar-center">
+                <div class="ms-counter" id="ms-counter-mines" title="Mines left">
+                    <span class="ms-counter-icon">💣</span>
+                    <span class="ms-counter-value" id="ms-mines">010</span>
+                </div>
+                <button class="ms-face" id="ms-face" title="New game">🙂</button>
+                <div class="ms-counter" id="ms-counter-timer" title="Time">
+                    <span class="ms-counter-icon">⏱️</span>
+                    <span class="ms-counter-value" id="ms-timer">000</span>
+                </div>
             </div>
-            <button class="ms-icon-btn game-icon-btn" id="ms-btn-pause" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4.5" height="16" rx="1.2"/><rect x="13.5" y="4" width="4.5" height="16" rx="1.2"/></svg></button>
-            <button class="ms-icon-btn game-icon-btn" id="ms-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+            <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
+            <div class="ms-topbar-actions game-topbar-group">
+                <button data-chrome="pause" class="ms-icon-btn game-icon-btn" id="ms-btn-pause" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4.5" height="16" rx="1.2"/><rect x="13.5" y="4" width="4.5" height="16" rx="1.2"/></svg></button>
+                <button data-chrome="sound" class="ms-icon-btn game-icon-btn" id="ms-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                <button type="button" class="ms-icon-btn ms-lang-btn game-icon-btn game-icon-btn--wide" id="ms-btn-lang-ui" data-chrome="lang" title="Language" aria-label="Language">中文</button>
+            </div>
         </header>
 
         <!-- 难度选择 -->
@@ -64,7 +74,7 @@
             </div>
         </div>
 
-        <p class="ms-hint" id="ms-hint"></p>
+        
 
         <!-- 结算浮层 -->
         <div class="ms-result hidden" id="ms-result">
@@ -118,6 +128,18 @@
                 <button class="ms-icon-btn ms-lang-btn game-icon-btn" id="ms-start-lang">中文</button>
             </div>
         </div>
+
+    <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
+         统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
+         ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
+    <footer class="ms-footer game-footer">
+        <p class="ms-hint game-footer-hint" id="ms-hint"></p>
+        <div class="ms-footer-actions game-footer-actions game-topbar-group">
+            <a class="ms-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button type="button" class="ms-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="msMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+        <nav class="more-games game-footer-nav" id="msMoreNav" hidden></nav>
+    </footer>
     </div>
 
     <script>
