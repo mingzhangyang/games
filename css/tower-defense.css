@@ -47,8 +47,16 @@ body {
 .td-topbar-row--app { position: relative; }
 .td-topbar-spacer { flex: 1 1 auto; min-width: 0; }
 
-/* 第二行：本局状态左对齐，右侧留空给堆叠徽章 */
-.td-topbar-row--game { justify-content: flex-start; }
+/*
+ * 第二行：本局状态（生命/金币/波次）水平居中。
+ *
+ * ⚠️ 这里刻意**不加** `padding-inline` 来给第一行图标的 6px 外扩热区留位。
+ * 视觉居中的定义是"内容盒中点 = 行中点"，加了 padding 反而会把它推偏 6px；
+ * 热区外扩在顶栏里本来就不会被裁剪 —— 祖先 .game-shell 是普通流布局、
+ * 没有 overflow 限制，第一行底部(≈57px)到第二行胶囊顶部(≈65px)还留着
+ * .td-topbar 的 8px gap，两行热区互不接触。
+ */
+.td-topbar-row--game { justify-content: center; }
 
 .td-stat {
     display: flex;
@@ -924,8 +932,16 @@ body {
     border: 1px solid rgba(255, 90, 60, 0.7);
     color: #ffb0a0;
     white-space: nowrap;
-    /* 顶栏第二行里：贴最右，和左侧的状态胶囊分开（margin-left:auto 在 flex 行内生效） */
-    margin-left: auto;
+    /*
+     * 顶栏第二行现在是居中布局，徽章是这一行的**第 4 个 flex 项**，参与居中
+     * 计算：出现时整组（3 胶囊 + 徽章）一起居中，消失时 3 胶囊不动 —— 因为
+     * 变化量均摊在两侧。
+     *
+     * ⚠️ 绝不能用 `margin-left: auto`：在 `justify-content: center` 下 auto
+     * 外边距会吃掉左侧全部剩余空间，把三个胶囊整体推到中心左侧，看着就是"没居中"。
+     * 这里用普通 gap 把徽章和波次胶囊分开即可。
+     */
+    margin-left: 6px;
 }
 
 .td-stack-badge.hidden { display: none; }

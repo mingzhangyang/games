@@ -65,6 +65,17 @@ const probe = () => page.evaluate(() => {
         // 关键：功能钮必须都在 app 行里，状态胶囊必须都在 game 行里
         appHasStats: !!rowApp.querySelector('.td-stat'),
         gameHasButtons: !!rowGame.querySelector('.td-icon-btn'),
+        // 堆叠徽章：居中判定要看它显不显示、多宽
+        stack: (() => {
+            const el = document.getElementById('td-stack-badge');
+            if (!el) return null;
+            const cs = getComputedStyle(el);
+            return {
+                visible: !el.classList.contains('hidden') && cs.display !== 'none',
+                marginLeft: parseFloat(cs.marginLeft) || 0,
+                ...r(el),
+            };
+        })(),
     };
 });
 
@@ -103,7 +114,40 @@ for (let i = 1; i < p.stats.length; i++) {
     check(Math.abs(p.stats[i].y - p.stats[0].y) < 1.5,
         `${p.stats[i].id} 与首个胶囊同高（未换行）`);
 }
-check(Math.abs(p.stats[0].x - p.rowGame.x) < 1.5, '状态胶囊左对齐到行首');
+// 状态胶囊在第二行内水平居中
+/*
+ * 注意：这里断言的是「内容组中点 ≈ 行中点」，不是「首个胶囊贴行首」。
+ * 2026-09-19 用户要求把三个状态胶囊改为水平居中，因此旧的
+ * `stats[0].x ≈ rowGame.x`（左对齐）断言已作废，会必然失败。
+ *
+ * 内容组 = 第一个胶囊左边缘 → 最后一个 flex 项（有徽章时是徽章，否则是波次胶囊）右边缘。
+ * 这样判定的好处：徽章显隐都不影响结论 —— 它对居中的破坏方式很隐蔽，
+ * 若给徽章写 `margin-left: auto`（旧写法），auto 外边距会吃掉左侧全部剩余空间，
+ * 内容组中点会被推到行中点左侧，下面的 midDelta 断言立刻抓到。
+ */
+const gameContent = (q) => {
+    const left = q.stats[0].x;
+    const right = q.stack && q.stack.visible ? q.stack.right : q.stats[q.stats.length - 1].right;
+    return { left, right, mid: (left + right) / 2 };
+};
+const gc = gameContent(p);
+const rowMid = p.rowGame.x + p.rowGame.w / 2;
+const midDelta = gc.mid - rowMid;
+check(Math.abs(midDelta) < 2, '状态胶囊组水平居中于第二行',
+    `组中点 ${gc.mid.toFixed(1)} vs 行中点 ${rowMid.toFixed(1)}（偏 ${midDelta.toFixed(1)}px）`);
+// 左右余量对称（居中的直接后果）
+const slackL = gc.left - p.rowGame.x;
+const slackR = p.rowGame.right - gc.right;
+check(Math.abs(slackL - slackR) < 4, '第二行左右余量对称',
+    `左 ${slackL.toFixed(1)}px / 右 ${slackR.toFixed(1)}px`);
+// 反向守卫：绝不能是左对齐（旧实现）
+check(slackL > 12, '第二行不是左对齐（旧实现已移除）', `左侧余量 ${slackL.toFixed(1)}px`);
+// 徽章不得再用 margin-left:auto 破坏居中
+check(!p.stack || p.stack.marginLeft < 20, '堆叠徽章未使用 auto 外边距',
+    `margin-left ${p.stack ? p.stack.marginLeft : 0}px`);
+// 防御性下限：居中后左右余量天然各 ≈85px，这里只是防止将来内容变长把这一行撑满
+check(slackL >= 6 && slackR >= 6, '第二行左右仍留有安全余量',
+    `左 ${slackL.toFixed(1)}px ≥ 6px`);
 
 console.log('\n=== 2. 触控热区（≥44px） ===');
 check(p.homeHit.h >= 44, 'Home 热区高 ≥44px', `${p.homeHit.h}px`);
@@ -131,6 +175,11 @@ for (const v of VIEWPORTS) {
     const statsRight = q.stats[q.stats.length - 1].right;
     check(statsRight <= v.w + 0.5, `  ${v.name} 状态胶囊未溢出视口`,
         `最右 ${Math.round(statsRight)} ≤ ${v.w}`);
+
+    // 居中在每种视口下都要成立（窄屏超宽时也要保持对称，而不是被挤成左对齐）
+    const gq = gameContent(q);
+    const dq = gq.mid - (q.rowGame.x + q.rowGame.w / 2);
+    check(Math.abs(dq) < 2, `  ${v.name} 状态胶囊组仍居中`, `偏 ${dq.toFixed(1)}px`);
 }
 
 console.log('\n=== 4. 空中航线只在有飞行兵的关卡绘制 ===');
