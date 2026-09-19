@@ -14,6 +14,7 @@ import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
+import { bindFrame } from './game-frame.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -509,6 +510,9 @@ class SwordFlightGame {
         this.dpr = window.devicePixelRatio || 1;
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 js/game-frame.js）：
+        // 后端缓冲区必须在 CSS 尺寸变化之后重算
+        window.addEventListener('game-frame:changed', () => this.resizeCanvas());
 
         // 游戏模式: 'stages' | 'endless' | 'daily' | 'zen'
         this.mode = 'stages';
@@ -592,10 +596,20 @@ class SwordFlightGame {
     }
 
     resizeCanvas() {
-        this.dpr = window.devicePixelRatio || 1;
-        this.canvas.width = CANVAS_WIDTH * this.dpr;
-        this.canvas.height = CANVAS_HEIGHT * this.dpr;
-        this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        // 按容器实测缩放（照 js/gravity-slingshot.js 的形状，2026-09-19）：
+        // 此前后端固定 CANVAS_WIDTH*dpr（只重读 dpr），CSS 尺寸一变位图就脱节，
+        // 桌面舞台放大后整体拉伸变糊。setTransform 幂等，重复调用安全。
+        const stage = this.canvas.parentElement;
+        const cssW = (stage && stage.clientWidth) || CANVAS_WIDTH;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const s = (cssW / CANVAS_WIDTH) * dpr;
+        const pw = Math.round(CANVAS_WIDTH * s);
+        if (this.canvas.width !== pw) {
+            this.canvas.width = pw;
+            this.canvas.height = Math.round(CANVAS_HEIGHT * s);
+        }
+        this.ctx.setTransform(s, 0, 0, s, 0, 0);
+        this.dpr = dpr;
     }
 
     /* ── 背景多重视差与云海初始化 ── */
@@ -3312,6 +3326,10 @@ class SwordFlightGame {
 // 启动游戏实例
 window.addEventListener('DOMContentLoaded', () => {
     window.game = new SwordFlightGame();
+
+    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
+    // 变化后经 game-frame:changed 驱动上面的 resizeCanvas()
+    bindFrame({ logicalWidth: CANVAS_WIDTH });
 
     // 移动端底部统计抽屉
     window.sfDrawer = createStatsDrawer({

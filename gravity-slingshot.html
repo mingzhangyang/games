@@ -75,21 +75,6 @@
                 <p class="gd-level-label" id="gd-level-label">Select hole</p>
                 <div class="gd-level-grid" id="gd-level-grid"></div>
                 <p class="gd-daily-best" id="gd-daily-best"></p>
-                <nav class="more-games">
-                    <div class="more-games-title">🎮 More Games</div>
-                    <div class="more-games-links">
-                  <a href="math-rain.html">🔢 数字雨</a>
-                  <a href="tetris.html">🟦 俄罗斯方块</a>
-                  <a href="tank-battle.html">🎯 坦克大战</a>
-                  <a href="gomoku.html">⚫ 五子棋</a>
-                  <a href="planet-merge.html">🪐 星球合成</a>
-                  <a href="word-daily.html">🔤 每日猜词</a>
-                  <a href="hoop-shot.html">🏀 街机投篮</a>
-                  <a href="minesweeper.html">💣 扫雷</a>
-                  <a href="reversi.html">⚪ 黑白棋</a>
-                  <a href="tower-defense.html">🏰 霓虹塔防</a>
-                    </div>
-                </nav>
                 <div class="gd-start-footer">
                     <button class="gd-icon-btn game-icon-btn" id="gd-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                     <button class="gd-icon-btn gd-lang-btn game-icon-btn" id="gd-start-lang">中文</button>
@@ -143,6 +128,13 @@
                     <div class="gd-side-title game-side-title" id="gd-side-records-title"></div>
                     <div class="gd-side-records" id="gd-side-records"></div>
                 </div>
+            </div>
+
+            <!-- 桌面侧栏专属：必须放在 #gdStatsPanels 外面 —— 那个节点会被
+                 js/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
+                 放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <div class="gd-side-card game-side-card">
+                <nav class="more-games" id="gdSideMore"></nav>
             </div>
 
         </aside>

@@ -15,6 +15,7 @@ import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
+import { bindFrame } from './game-frame.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -516,6 +517,11 @@ class GameEngine {
         this.dpr = window.devicePixelRatio || 1;
         this.scale = 1;
         this.setupCanvas();
+        // 本页此前没有任何 resize 监听（画布尺寸恒定），现在舞台尺寸会随
+        // --frame-chrome 实测值与视口变化（见 js/game-frame.js），必须跟上；
+        // setupCanvas 用 setTransform 幂等重设变换，重复调用安全。
+        window.addEventListener('resize', () => this.setupCanvas());
+        window.addEventListener('game-frame:changed', () => this.setupCanvas());
         this._buildBackground();
 
         this.mode = 'levels'; // 'levels' | 'endless' | 'daily' | 'duel'
@@ -573,9 +579,22 @@ class GameEngine {
     }
 
     setupCanvas() {
-        this.canvas.width = ARENA_WIDTH * this.dpr;
-        this.canvas.height = ARENA_HEIGHT * this.dpr;
-        this.ctx.scale(this.dpr, this.dpr);
+        // 按容器实测缩放（照 js/gravity-slingshot.js 的形状，2026-09-19）：
+        // 此前后端固定 ARENA_WIDTH*dpr 且无 resize 监听，桌面舞台放大后位图
+        // 跟不上会整体拉伸变糊。
+        // ⚠️ 必须用 setTransform（幂等）——原先的 ctx.scale(dpr, dpr) 是累乘的，
+        // 一旦有了 resize 监听，第二次调用就会把缩放翻倍、画面瞬间放大两倍。
+        const stage = this.canvas.parentElement;
+        const cssW = (stage && stage.clientWidth) || ARENA_WIDTH;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const s = (cssW / ARENA_WIDTH) * dpr;
+        const pw = Math.round(ARENA_WIDTH * s);
+        if (this.canvas.width !== pw) {
+            this.canvas.width = pw;
+            this.canvas.height = Math.round(ARENA_HEIGHT * s);
+        }
+        this.ctx.setTransform(s, 0, 0, s, 0, 0);
+        this.dpr = dpr;
     }
 
     createPlayer(x, y, isP2 = false) {
@@ -2447,6 +2466,10 @@ class GameEngine {
 // 页面加载完成后实例化
 document.addEventListener('DOMContentLoaded', () => {
     window.gameEngine = new GameEngine();
+
+    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
+    // 变化后经 game-frame:changed 驱动上面的 setupCanvas()
+    bindFrame({ logicalWidth: ARENA_WIDTH });
 
     // 移动端底部统计抽屉
     window.naDrawer = createStatsDrawer({

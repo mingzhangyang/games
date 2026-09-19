@@ -120,9 +120,19 @@ for (const P of PAGES) {
     check(s.panelsCardCount > 0, '抽屉里确有面板卡片', `cards=${s.panelsCardCount}`);
     check(s.drawerHidden === true, '未打开时抽屉是 hidden');
     check(!!s.titleText, '抽屉标题已渲染（非空）', `title=${JSON.stringify(s.titleText)}`);
-    check(s.panelsCardCount === (await page.evaluate(() =>
-        document.querySelectorAll('.game-side-card').length)),
-        '面板卡片没有重复（原地搬移而非复制）');
+    check(await page.evaluate((ids) => {
+        const panels = document.getElementById(ids.panels);
+        if (!panels) return false;
+        const inPanels = panels.querySelectorAll('.game-side-card').length;
+        // 抽屉 body 内不得出现 panels 之外的复制卡
+        const body = document.getElementById(ids.body);
+        const inBody = body ? body.querySelectorAll('.game-side-card').length : -1;
+        // 侧栏内 panels 外不得残留面板卡（P3 的更多游戏导航卡含 .more-games，合法除外）
+        const sidebar = document.querySelector('.game-sidebar');
+        const stray = sidebar ? [...sidebar.querySelectorAll('.game-side-card')]
+            .filter(c => !panels.contains(c) && !c.querySelector('.more-games')).length : -1;
+        return inBody === inPanels && stray === 0;
+    }, ids), '面板卡片没有重复（原地搬移而非复制）');
 
     // 远点不得命中 Stats 钮（防隐形全页命中层）
     const far = await page.evaluate((ids) => {

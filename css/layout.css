@@ -57,6 +57,16 @@
        --frame-side-gap     侧栏卡片间距（默认 12）
        --frame-radius       画布/覆盖层圆角（默认 18）
        --drawer-max         抽屉最大高度（默认 90dvh）
+       桌面纵向预算（2026-09-19，选择加入）：
+       --frame-ratio        画幅比 w/h（默认 0.75；420×640 页面覆盖 0.65625）
+       --frame-stage-h      舞台高度封顶（默认 960px）
+       --frame-chrome       顶栏+页脚+容器内距的纵向开销；js/game-frame.js 实测
+                            写入 .game-shell，150px 仅首帧兜底
+       --frame-main-gap     桌面 .game-main 的 gap（默认 28）
+       --frame-scrollbar-thumb / -hover  侧栏细滚动条滑块配色（白色半透明）
+       接入：画布游戏在自己的 .xx-shell 上覆盖 --frame-shell-max 与
+       --frame-stage-cap（表达式见 css/layout.css 桌面 media 注释）；
+       未覆盖的页面回落 --frame-max-wide / --frame-stage，行为不变。
    ───────────────────────────────────────────── */
 
 :root {
@@ -67,6 +77,12 @@
     --frame-side-gap: 12px;
     --frame-radius: 18px;
     --drawer-max: 90dvh;
+    --frame-ratio: 0.75;
+    --frame-stage-h: 960px;
+    --frame-chrome: 150px;
+    --frame-main-gap: 28px;
+    --frame-scrollbar-thumb: rgba(255, 255, 255, 0.14);
+    --frame-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
 }
 
 /* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */
@@ -530,19 +546,83 @@ body.drawer-locked {
 
 /* ── 响应式：桌面横排 ── */
 @media (min-width: 1024px) {
-    .game-shell { max-width: var(--frame-max-wide); }
+    /*
+     * 桌面纵向预算（2026-09-19）：舞台宽度由「视口可用高度 × 画幅比」推导，
+     * 而不再是固定像素上限 —— 1920×1080 下 480×640 逻辑场从 460px 放大到 ~700px。
+     *
+     *   --stage-w = min(--frame-stage-h, 100dvh - --frame-chrome) × --frame-ratio
+     *
+     * --frame-chrome 由 js/game-frame.js 实测（顶栏+页脚+shell 内距，td 另加技能条）
+     * 写进 .game-shell 的内联样式，CSS 里的 150px 只兜首帧。
+     *
+     * ⚠️ 选择加入：只有覆盖了 --frame-shell-max / --frame-stage-cap 的页面
+     * （六个画布游戏）才消费 --stage-w；其余页面（tetris/gomoku/reversi/
+     * minesweeper/word-daily）回落到旧契约的 --frame-max-wide / --frame-stage，
+     * 棋盘几何不受影响。页面侧的覆盖形如：
+     *     .xx-shell {
+     *         --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+     *         --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+     *     }
+     */
+    .game-shell {
+        --stage-w: calc(min(var(--frame-stage-h), 100dvh - var(--frame-chrome)) * var(--frame-ratio));
+        max-width: var(--frame-shell-max, var(--frame-max-wide));
+    }
     .game-main {
         flex-direction: row;
         align-items: flex-start;
         justify-content: center;
-        gap: 28px;
+        gap: var(--frame-main-gap);
     }
+    /* 横向安全网：1024–1200px 视口下容器吃满视口时，
+       舞台不得挤掉 flex-shrink:0 的侧栏 */
+    .game-stage { max-width: var(--frame-stage-cap, var(--frame-stage)); }
     .game-sidebar {
         display: flex;
         flex-direction: column;
         gap: var(--frame-side-gap);
         width: var(--frame-side);
         flex-shrink: 0;
+    }
+    /* 过长的侧栏锁到同一可用高度、内部滚动
+       —— 这一条单独消灭 td 的 1998px 整页与 sf 的 1097px。
+       ⚠️ 必须和 --frame-shell-max / --frame-stage-cap 一样「选择加入」：
+       它是本段里唯一会改**双属性**（max-height + overflow-y）的规则，无法靠
+       var() 回退自行失效。写成无条件规则时它越界命中了 tetris —— 侧栏（488×930）
+       变成可滚容器且带 overscroll-behavior: contain，鼠标落在侧栏上滚轮就再也
+       传不到主文档，verify-tetris-topbar-mobile 的「滚轮下滚能滚起来」因此变红。
+       判据取「本页接没接纵向预算」这个不随视口变化的事实：由 js/game-frame.js
+       的 bindFrame() 打 body 类，与 game-drawer.js 的 has-stats-drawer 同模式。 */
+    body.has-frame-budget .game-sidebar {
+        max-height: calc(100dvh - var(--frame-chrome));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        /* Firefox */
+        scrollbar-width: thin;
+        scrollbar-color: var(--frame-scrollbar-thumb) transparent;
+    }
+
+    /* 细滚动条 —— 配色取玻璃语言的白色半透明（与 .game-side-card 的填充/描边同源），
+       不用 --tok-accent：六页都没覆盖它，橙色系的 hoop-shot 上会显出靛蓝色。
+       想换肤的页面覆盖 --frame-scrollbar-thumb / -hover 即可。
+       ⚠️ 必须同时写 ::-webkit-scrollbar：scrollbar-width 在 Blink 要 Chrome 121+
+       才支持（本仓回归用的 puppeteer 是 119），只写它等于什么都没做。 */
+    body.has-frame-budget .game-sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    body.has-frame-budget .game-sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb {
+        background: var(--frame-scrollbar-thumb);
+        border-radius: 99px;
+    }
+
+    body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb,
+    body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb:hover {
+        background: var(--frame-scrollbar-thumb-hover);
     }
     /* 桌面端有常驻侧栏，抽屉与它的触发钮都没有意义 */
     .game-drawer { display: none; }

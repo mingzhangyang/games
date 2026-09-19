@@ -46,7 +46,45 @@
 --frame-side: 300px;       /* 桌面侧栏宽度 */
 --frame-side-gap: 12px;    /* 侧栏卡片间距 */
 --frame-radius: 18px;      /* 画布/覆盖层圆角 */
+--frame-ratio: 0.75;       /* 桌面画幅比 w/h（420×640 页面覆盖 0.65625） */
+--frame-stage-h: 960px;    /* 桌面舞台高度封顶 */
+--frame-chrome: 150px;     /* 顶栏+页脚+shell 内距；js/game-frame.js 实测覆盖，此值仅首帧兜底 */
+--frame-main-gap: 28px;    /* 桌面 .game-main 的 gap */
 ```
+
+**桌面纵向预算（2026-09-19，选择加入）**：六个画布游戏（gd/hs/pm/td/na/sf）的
+舞台宽度在桌面端由「视口可用高度 × 画幅比」推导，
+`--stage-w = min(--frame-stage-h, 100dvh - --frame-chrome) × --frame-ratio`，
+替换掉旧的固定 `--frame-max-wide` 上限——1920×1080 下 480×640 逻辑场从 460px
+放大到 ~700px，整页恒等于一屏。`--frame-chrome` 由 `js/game-frame.js` 的
+`bindFrame()` 实测写入 `.game-shell`（ResizeObserver + resize + 自派发的
+`game-frame:changed`；1px 死区 + 500ms 振荡锁定两个反馈环护栏），页面监听
+`game-frame:changed` 调用自己的 `resize()` 重算画布后端缓冲区。
+
+接入方式：页面 shell 上覆盖两个**消费**变量，未覆盖的页面回落旧契约、几何不变：
+
+```css
+.xx-shell {
+    --frame-ratio: 0.75;            /* 或 0.65625 */
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}
+```
+
+配套规则（同在 layout.css 桌面 media）：`.game-main` 的 gap 提为 `--frame-main-gap`；
+侧栏限高写作 `body.has-frame-budget .game-sidebar { max-height: calc(100dvh - var(--frame-chrome));
+overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` 打上。
+⚠️ 这条**必须**跟着选择加入，不能写成无条件规则：它是本段里唯一同时改
+`max-height` 与 `overflow-y` 的规则，没法靠 `var()` 回退自行失效。写成无条件时
+它越界命中了未接入的 tetris —— 侧栏（488×930）变成带 `overscroll-behavior: contain`
+的滚动容器，鼠标落在侧栏上滚轮就再也传不到主文档，`verify-tetris-topbar-mobile`
+的「滚轮下滚能滚起来」因此变红（实测 scrollTop=0 / 上限 53）。判据取
+「本页接没接纵向预算」这种不随视口变化的事实，与 `game-drawer.js` 的
+`has-stats-drawer` 同模式。tower-defense 另有桌面两列网格
+（`.td-main` grid，技能条回画布列下方，`extraChrome` 把技能条高度并入 chrome）。
+校验：`node scripts/verify-desktop-frame.mjs`（六页 × 五档视口 × 双语，
+断言整页不滚 / 画幅 / 不糊 / 随视口长大 / 侧栏屏内 / chrome 收敛 / 无 pageerror）。
 
 每页在**自己 CSS 末尾**追加同名变量覆盖，例如：
 

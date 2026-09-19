@@ -418,4 +418,10 @@ body {
     --frame-stage: 460px;
     --frame-side: 300px;
     --frame-side-gap: 14px;
+    /* 桌面纵向预算（2026-09-19）：480×640 逻辑场 → 0.75 画幅；
+       舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
+    --frame-ratio: 0.75;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
 }

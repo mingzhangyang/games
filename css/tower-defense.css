@@ -134,12 +134,10 @@ body {
     box-shadow: 0 0 14px rgba(64, 216, 255, 0.45);
 }
 
-/* ── 游戏主舞台 ── */
-
-.td-stage {
-    width: min(100%, 460px, calc((100vh - 185px) * 0.72));
-    min-width: 280px;
-}
+/* ── 游戏主舞台 ──
+   宽度交给 layout.css 契约：移动端 --frame-stage、桌面 --frame-stage-cap
+   （由「视口可用高度 × 画幅比」推导）。旧的 calc((100vh - 185px) * 0.72)
+   魔数随顶栏折行高度漂移，2026-09-19 删除。 */
 
 /* 赛博战术边角点缀 */
 .td-stage::before, .td-stage::after {
@@ -1170,11 +1168,38 @@ body {
 /* ── 桌面大屏（≥1024px）：舞台 + 侧边信息栏 ── */
 
 @media (min-width: 1024px) {
+    /*
+     * 桌面两列网格（2026-09-19）：此前 flex-wrap:wrap + 技能条 width:100%
+     * 把侧栏挤到第三行，整页拉到 1998px、桌面根本不是两列布局。
+     * 现在技能条回到画布列下方，侧栏独占右列并跨两行。
+     * --stage-w 由 css/layout.css 桌面契约推导，--frame-chrome 由
+     * js/game-frame.js 经 extraChrome 把技能条高度并入。
+     */
     .td-main {
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: var(--stage-w) var(--frame-side);
+        grid-template-rows: auto auto;
+        column-gap: var(--frame-main-gap);
+        /* layout.css 的 .game-main 用 gap: var(--frame-main-gap)（双向），
+           桌面两行网格会把行 1/行 2 拉开 28px 且不在纵向预算内
+           （行距由 .td-bottom-controls 的 margin-top 提供） */
+        row-gap: 0;
+        justify-content: center;
+        align-content: start;
     }
-    /* 控制条独占一行，避免挤占画布与侧栏 */
-    .td-bottom-controls { width: 100%; }
+    .td-stage {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    .td-bottom-controls {
+        grid-column: 1;
+        grid-row: 2;
+        width: auto;
+    }
+    .td-sidebar {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
     .td-side-title {
         color: #e8ecff;
     }
@@ -1220,4 +1245,14 @@ body {
     --frame-max-wide: 940px;
     --frame-stage: 460px;
     --frame-side: 300px;
+    /* 桌面纵向预算（2026-09-19）：480×640 逻辑场 → 0.75 画幅；
+       舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
+    --frame-ratio: 0.75;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    /* td 桌面是固定列网格：.td-stage 的包含块就是列轨道本身，
+       --frame-stage-cap 里的 calc(100% - gap - side) 会解析成「列宽-328px」
+       把舞台压瘪（2026-09-19 实测 594.75→266.75）。列宽已由 --stage-w 定死，
+       cap 无需二次限制 */
+    --frame-stage-cap: var(--stage-w);
 }

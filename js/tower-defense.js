@@ -16,6 +16,7 @@ import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
+import { bindFrame } from './game-frame.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -811,6 +812,9 @@ class TowerDefenseGame {
         this.updateHud();
         this.resize();
         window.addEventListener('resize', () => this.resize());
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 js/game-frame.js）：
+        // 后端缓冲区必须在 CSS 尺寸变化之后重算
+        window.addEventListener('game-frame:changed', () => this.resize());
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && this.state === 'playing') this.pause();
         });
@@ -3436,6 +3440,23 @@ window.__TD_GRID__ = { COLS, ROWS, CELL, pathGrid };
 
 document.addEventListener('DOMContentLoaded', () => {
     window.tdGame = new TowerDefenseGame();
+
+    // 桌面端舞台纵向预算：td 的技能条在 .game-main 内部（桌面网格第二行），
+    // bindFrame 量的顶栏/页脚不含它，用 extraChrome 并入。只量技能条自身高度 +
+    // 外边距——不能量 main 总高减 stage 高：桌面网格里侧栏跨两行会把行高撑到
+    // 侧栏自身高度，量出来是「侧栏-舞台」的差值，形成 chrome↑→stage-w↓→差值↑
+    // 的反馈环，舞台会收敛到 0
+    bindFrame({
+        logicalWidth: W,
+        extraChrome: () => {
+            const c = document.querySelector('.td-bottom-controls');
+            if (!c) return 0;
+            const cs = getComputedStyle(c);
+            return c.getBoundingClientRect().height
+                + parseFloat(cs.marginTop || '0')
+                + parseFloat(cs.marginBottom || '0');
+        },
+    });
 
     // 移动端底部统计抽屉
     window.tdDrawer = createStatsDrawer({

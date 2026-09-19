@@ -15,9 +15,10 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { updateMoreGames } from './more-games.js';
+import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
+import { bindFrame } from './game-frame.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -703,6 +704,9 @@ class GravityGame {
         this.updateMuteButtons();
         this.resize();
         window.addEventListener('resize', () => this.resize());
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 js/game-frame.js）：
+        // 后端缓冲区必须在 CSS 尺寸变化之后重算
+        window.addEventListener('game-frame:changed', () => this.resize());
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && this.phase !== 'menu') {
                 // 飞行中切走：直接判负重置，避免追赶
@@ -1833,6 +1837,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const game = new GravityGame();
     window.gdGame = game; // 调试/测试句柄
     window.__gravityDebug = { LEVELS, simulate, solvePar, buildDailyCourse, DT, SPEED_CAP }; // QA 用
+
+    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
+    // 变化后经 game-frame:changed 驱动上面的 resize()
+    bindFrame({ logicalWidth: W });
+
+    // 桌面侧栏「更多游戏」卡（P3）：语言切换由 more-games.js 的全局
+    // updateMoreGames 监听自动同步（id 不以 MoreNav 结尾）
+    const gdSideMore = document.getElementById('gdSideMore');
+    if (gdSideMore) renderMoreGames(gdSideMore, { exclude: 'gravity-slingshot.html' });
 
     // 移动端底部统计抽屉
     window.gdDrawer = createStatsDrawer({

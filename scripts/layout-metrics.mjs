@@ -62,7 +62,7 @@ const browser = await puppeteer.launch({
 });
 
 const rows = [];
-for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 900 }]) {
+for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 900 }, { tag: 'D1920', w: 1920, h: 1080 }]) {
     for (const name of PAGES) {
         const page = await browser.newPage();
         await page.setViewport({ width: vp.w, height: vp.h });
@@ -92,7 +92,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
 await browser.close();
 
 const f = o => o ? `${o.w}x${o.h}` : '-';
-for (const vp of ['M390', 'D1280']) {
+for (const vp of ['M390', 'D1280', 'D1920']) {
     console.log(`\n===== ${vp} =====`);
     console.log('page                 shell      pad       topbar    btn     hit      stageMax  canvas        radius  sidebar  hint');
     for (const r of rows.filter(r => r.vp === vp)) {

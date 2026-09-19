@@ -90,8 +90,7 @@ body {
 /* ── 主游戏区域 ── */
 
 .sf-stage {
-    height: 640px;
-    aspect-ratio: 480 / 640;
+    aspect-ratio: var(--frame-ratio);
     background: #020713;
     border-radius: 20px;
     overflow: hidden;
@@ -899,4 +898,9 @@ body {
     --frame-stage: 480px;
     --frame-side: 320px;
     --frame-side-gap: 10px;
+    /* 桌面纵向预算（2026-09-19）：480×640 逻辑场 → 0.75 画幅 */
+    --frame-ratio: 0.75;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
 }

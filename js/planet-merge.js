@@ -9,9 +9,10 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { updateMoreGames } from './more-games.js';
+import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
+import { bindFrame } from './game-frame.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -454,6 +455,9 @@ class PlanetMergeGame {
         this.bindUI();
         this.resize();
         window.addEventListener('resize', () => this.resize());
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 js/game-frame.js）：
+        // 后端缓冲区必须在 CSS 尺寸变化之后重算
+        window.addEventListener('game-frame:changed', () => this.resize());
         this.updateHud();
         this.showStartScreen();
         this.startLoop();
@@ -1425,15 +1429,22 @@ class PlanetMergeGame {
 
     resize() {
         const dpr = window.devicePixelRatio || 1;
-        // 可用高度 = 视口高度 - 画布兄弟元素的高亮，矮视口时缩放画布而不是截断
-        const shell = this.canvas.parentElement?.parentElement;
+        // 可用高度 = 视口高度 - shell 直接子节点里除 .game-main 之外的部分
+        // （顶栏 + 页脚 + 抽屉）。旧实现取 canvas.parentElement.parentElement
+        // 得到的是 .game-main，其非舞台子节点只有侧栏 —— usedH 实际等于侧栏
+        // 高度，与"视口高度 - 顶栏页脚"的注释完全不是一回事（2026-09-19 修正）。
+        const shell = this.canvas.closest('.game-shell');
+        const main = this.canvas.closest('.game-main');
         const usedH = shell
             ? Array.from(shell.children)
-                .filter(el => el !== this.canvas.parentElement)
+                .filter(el => el !== main)
                 .reduce((sum, el) => sum + el.getBoundingClientRect().height, 0)
             : 120;
         const availH = Math.max(320, window.innerHeight - usedH - 20);
-        let cssWidth = this.canvas.clientWidth || 420;
+        // 量舞台不量画布：本方法会把 cssWidth 写进内联 style.width，内联胜过
+        // width:100%，再用 clientWidth 当输入就自锁了 —— 舞台放宽画布也不会长
+        const stage = this.canvas.parentElement;
+        let cssWidth = (stage && stage.clientWidth) || WORLD_W;
         let cssHeight = cssWidth * (WORLD_H / WORLD_W);
         if (cssHeight > availH) {
             cssHeight = availH;
@@ -1822,6 +1833,15 @@ class PlanetMergeGame {
 
 window.addEventListener('DOMContentLoaded', () => {
     window.planetMergeGame = new PlanetMergeGame();
+
+    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
+    // 变化后经 game-frame:changed 驱动上面的 resize()
+    bindFrame({ logicalWidth: WORLD_W });
+
+    // 桌面侧栏「更多游戏」卡（P3）：语言切换由 more-games.js 的全局
+    // updateMoreGames 监听自动同步（id 不以 MoreNav 结尾）
+    const pmSideMore = document.getElementById('pmSideMore');
+    if (pmSideMore) renderMoreGames(pmSideMore, { exclude: 'planet-merge.html' });
 
     // 移动端底部统计抽屉：把侧栏面板收进抽屉，顶栏 Stats 钮开合
     window.pmDrawer = createStatsDrawer({
