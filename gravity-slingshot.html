@@ -39,8 +39,11 @@
                 <span class="gd-launch-value" id="gd-launches">0</span>
                 <span class="gd-par" id="gd-par">· Par 1</span>
             </div>
-            <button class="gd-icon-btn game-icon-btn" id="gd-reset-btn" title="Retry" aria-label="Retry"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
-            <button class="gd-icon-btn game-icon-btn" id="gd-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+<div class="gd-topbar-actions game-topbar-group">
+                <button class="gd-icon-btn game-icon-btn" id="gd-reset-btn" title="Retry" aria-label="Retry"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button class="gd-icon-btn game-icon-btn" id="gd-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>                <button type="button" class="gd-icon-btn game-icon-btn gd-stats-btn game-stats-btn" id="gdStatsToggle"
+                        aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="gdStatsDrawer"></button>
+            </div>
         </header>
 
         <!-- 星区总览 -->
@@ -121,19 +124,36 @@
         </div>
 
             <aside class="gd-sidebar game-sidebar">
-            <div class="gd-side-card game-side-card">
-                <div class="gd-side-title game-side-title" id="gd-side-howto-title"></div>
-                <p class="gd-side-text game-side-text" id="gd-side-howto"></p>
+
+            <!-- 由 apply-stats-drawer.py 生成的搬迁节点：JS 在侧栏 / 底部抽屉之间搬移它 -->
+            <div id="gdStatsPanels">
+                <div class="gd-side-card game-side-card">
+                    <div class="gd-side-title game-side-title" id="gd-side-howto-title"></div>
+                    <p class="gd-side-text game-side-text" id="gd-side-howto"></p>
+                </div>
+                <div class="gd-side-card game-side-card">
+                    <div class="gd-side-title game-side-title" id="gd-side-records-title"></div>
+                    <div class="gd-side-records" id="gd-side-records"></div>
+                </div>
             </div>
-            <div class="gd-side-card game-side-card">
-                <div class="gd-side-title game-side-title" id="gd-side-records-title"></div>
-                <div class="gd-side-records" id="gd-side-records"></div>
-            </div>
+
         </aside>
     </div>
 
     <p class="gd-footer-hint game-footer-hint" id="gd-hint"></p>
     </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="gdStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="gdStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="gdStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="gdStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="gdStatsDrawerBody"></div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

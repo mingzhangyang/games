@@ -37,8 +37,19 @@
     <div class="game-container game-shell">
         <header class="game-topbar">
             <button class="icon-btn game-icon-btn home-toggle" id="homeBtn" title="Home" aria-label="Home" onclick="location.href='index.html'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            <div class="game-title-pill">
+                <div class="game-hud-box" id="scoreHud">
+                    <span class="hud-label" id="scoreHudLabel">Score</span>
+                    <span class="hud-value" id="scoreHud">0</span>
+                </div>
+                <div class="hud-sub">
+                    <span id="scoreHudBestLabel">Best</span><b id="scoreHudBest">0</b>
+                    <span id="scoreHudLevelLabel">Lv</span><b id="scoreHudLevel">1</b>
+                </div>
+            </div>
             <div class="game-topbar-group">
-                <div class="theme-toggle" id="themeToggle"></div>
+                <button type="button" class="icon-btn game-icon-btn game-stats-btn" id="statsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="statsDrawer"></button>
+                <button type="button" class="icon-btn game-icon-btn theme-toggle" id="themeToggle" aria-pressed="false"></button>
             </div>
         </header>
 
@@ -57,19 +68,15 @@
             <div class="combo-display" id="comboDisplay"></div>
         </div>
 
-        <div class="info-panel">
+        <!-- 桌面端常驻侧栏；移动端由底部抽屉接管（同一个 #statsPanels 节点搬家） -->
+        <div class="info-panel game-sidebar" id="infoPanel">
+            <div id="statsPanels">
             <div class="info-box" style="margin-bottom:8px;">
                 <div class="info-row">
                     <span class="info-label" id="usernameLabel"></span>
                     <input id="usernameInput" type="text" maxlength="20" />
                 </div>
                 <div id="usernameTip"></div>
-            </div>
-            <div class="info-box">
-                <div class="info-row">
-                    <span class="info-label" id="scoreLabel"></span>
-                    <span class="score-display" id="score">0</span>
-                </div>
             </div>
 
             <div class="info-box">
@@ -100,12 +107,20 @@
                 </div>
             </div>
 
+            <div class="global-scores-panel game-side-card" id="globalScoresPanel">
+                <div class="global-scores-header" id="globalScoresHeader">Global Top 5</div>
+                <div class="global-scores-list" id="globalScoresList">
+                    <div class="loading-scores" id="loadingScores">Loading...</div>
+                </div>
+            </div>
+            </div>
+
             <div class="info-box controls">
                 <button class="btn" id="startBtn"></button>
                 <button class="btn" id="pauseBtn"></button>
                 <button class="btn" id="restartGameBtn"></button>
             </div>
-            <nav class="more-games">
+            <nav class="more-games" id="moreGamesNav">
                 <div class="more-games-title">🎮 More Games</div>
                 <div class="more-games-links">
               <a href="math-rain.html">🔢 Math Rain</a>
@@ -120,14 +135,19 @@
               <a href="gravity-slingshot.html">🚀 Gravity Slingshot</a>
                 </div>
             </nav>
-
-            <div class="global-scores-panel game-side-card" id="globalScoresPanel">
-                <div class="global-scores-header" id="globalScoresHeader">Global Top 5</div>
-                <div class="global-scores-list" id="globalScoresList">
-                    <div class="loading-scores" id="loadingScores">Loading...</div>
-                </div>
-            </div>
         </div>
+        </div>
+    </div>
+
+    <!-- 移动端底部抽屉：桌面端由 .game-drawer 整体隐藏，内容区仍用 #statsPanels 搬家 -->
+    <div class="game-drawer" id="statsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="statsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="statsDrawerTitle">Stats</span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="statsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="statsDrawerBody"></div>
         </div>
     </div>
 

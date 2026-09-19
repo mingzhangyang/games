@@ -38,6 +38,8 @@
             <div class="td-stat" id="td-stat-gold" title="Gold"><span class="td-stat-icon td-stat-icon--gold"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2 0 2.6 5.8 1.3 5.8 4 0 1.2-1.2 2-3 2-1.4 0-2.5-.5-3-1.4"/><path d="M12 6.5v11"/></svg></span><b id="td-gold">220</b></div>
             <div class="td-stat" id="td-stat-wave" title="Wave"><span class="td-stat-icon td-stat-icon--wave"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 13c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 18c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/></svg></span><b id="td-wave">0/25</b></div>
             <div class="td-topbar-actions game-topbar-group">
+                <button type="button" class="td-icon-btn game-icon-btn td-stats-btn game-stats-btn" id="tdStatsToggle"
+                        aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="tdStatsDrawer"></button>
                 <button class="td-icon-btn game-icon-btn" id="td-range-btn" title="Toggle Ranges (R)" aria-label="Toggle Ranges"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></button>
                 <button class="td-icon-btn game-icon-btn" id="td-speed-btn" title="Speed">×1</button>
                 <button class="td-icon-btn game-icon-btn" id="td-pause-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
@@ -151,31 +153,48 @@
         </div>
 
         <aside class="td-sidebar game-sidebar">
-            <div class="td-side-card game-side-card">
-                <div class="td-side-title game-side-title" id="td-side-howto-title"></div>
-                <p class="td-side-text game-side-text" id="td-side-howto"></p>
+
+            <!-- 由 apply-stats-drawer.py 生成的搬迁节点：JS 在侧栏 / 底部抽屉之间搬移它 -->
+            <div id="tdStatsPanels">
+                <div class="td-side-card game-side-card">
+                    <div class="td-side-title game-side-title" id="td-side-howto-title"></div>
+                    <p class="td-side-text game-side-text" id="td-side-howto"></p>
+                </div>
+                <div class="td-side-card game-side-card">
+                    <div class="td-side-title game-side-title" id="td-side-skills-title"></div>
+                    <div class="td-side-skills" id="td-side-skills"></div>
+                </div>
+                <div class="td-side-card game-side-card">
+                    <div class="td-side-title game-side-title" id="td-side-towers-title"></div>
+                    <div class="td-side-towers" id="td-side-towers"></div>
+                </div>
+                <div class="td-side-card game-side-card">
+                    <div class="td-side-title game-side-title" id="td-side-shortcuts-title"></div>
+                    <div class="td-side-shortcuts" id="td-side-shortcuts"></div>
+                </div>
+                <div class="td-side-card game-side-card">
+                    <div class="td-side-title game-side-title" id="td-side-records-title"></div>
+                    <div class="td-side-records" id="td-side-records"></div>
+                </div>
             </div>
-            <div class="td-side-card game-side-card">
-                <div class="td-side-title game-side-title" id="td-side-skills-title"></div>
-                <div class="td-side-skills" id="td-side-skills"></div>
-            </div>
-            <div class="td-side-card game-side-card">
-                <div class="td-side-title game-side-title" id="td-side-towers-title"></div>
-                <div class="td-side-towers" id="td-side-towers"></div>
-            </div>
-            <div class="td-side-card game-side-card">
-                <div class="td-side-title game-side-title" id="td-side-shortcuts-title"></div>
-                <div class="td-side-shortcuts" id="td-side-shortcuts"></div>
-            </div>
-            <div class="td-side-card game-side-card">
-                <div class="td-side-title game-side-title" id="td-side-records-title"></div>
-                <div class="td-side-records" id="td-side-records"></div>
-            </div>
+
         </aside>
     </div>
 
     <p class="td-footer-hint game-footer-hint" id="td-hint"></p>
     </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="tdStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="tdStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="tdStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="tdStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="tdStatsDrawerBody"></div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

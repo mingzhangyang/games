@@ -12,6 +12,7 @@ import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
+import { createStatsDrawer } from './game-drawer.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -50,6 +51,8 @@ function storageSet(key, val) {
 
 const I18N = {
     zh: {
+        close: '关闭',
+        stats: '数据统计',
         gameTitle: '御剑飞行',
         gameSub: '扶摇直上九重天 · 剑气纵横御清风',
         badge: '国风仙侠御剑',
@@ -140,6 +143,8 @@ const I18N = {
         ]
     },
     en: {
+        close: 'Close',
+        stats: 'Stats',
         gameTitle: 'Sword Flight',
         gameSub: 'Soaring Heavens · Treading the Wind with Divine Blades',
         badge: 'ORIENTAL XIANXIA FLIGHT',
@@ -3101,6 +3106,27 @@ class SwordFlightGame {
         document.getElementById('sf-overlay-pause').classList.add('hidden');
     }
 
+    /**
+     * 静默暂停 / 恢复 —— 给底部统计抽屉用。
+     * 与 pauseGame()/resumeGame() 状态迁移一致，但不显示暂停遮罩，
+     * 免得玩家开抽屉时背后闪一层暂停界面。
+     */
+    pauseQuiet() {
+        if (!this.isPlaying || this.isPaused) return;
+        this.isPaused = true;
+    }
+
+    resumeQuiet() {
+        if (!this.isPaused) return;
+        this.isPaused = false;
+        this.lastTime = performance.now();   // 丢掉暂停期间的时间跳跃
+    }
+
+    /** 抽屉判据 */
+    isRunning() {
+        return this.isPlaying && !this.isPaused;
+    }
+
     restartGame() {
         document.getElementById('sf-overlay-pause').classList.add('hidden');
         this.startFlight(this.mode, this.currentStageIndex);
@@ -3279,4 +3305,19 @@ class SwordFlightGame {
 // 启动游戏实例
 window.addEventListener('DOMContentLoaded', () => {
     window.game = new SwordFlightGame();
+
+    // 移动端底部统计抽屉
+    window.sfDrawer = createStatsDrawer({
+        idPrefix: 'sf',
+        getGame: () => window.game,
+        onPause: (g) => g && g.pauseQuiet(),
+        onResume: (g) => g && g.resumeQuiet(),
+        isBusy: () => {
+            const g = window.game;
+            return !!g && typeof g.isRunning === 'function' && g.isRunning();
+        },
+        ICONS,
+        getText: () => I18N[getLang()] || I18N.zh,
+    });
+    if (window.sfDrawer) window.sfDrawer.init();
 });

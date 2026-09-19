@@ -49,5 +49,8 @@ export const ICONS = {
     // 右箭头（下一步）
     arrowRight: svg('<path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/>'),
     // 奖杯（排行榜）
-    trophy: svg('<path d="M8 4h8v5.5a4 4 0 0 1-8 0V4z"/><path d="M8 5.5H5.2v1.4a3 3 0 0 0 3 3"/><path d="M16 5.5h2.8v1.4a3 3 0 0 1-3 3"/><path d="M12 13.5v4"/><path d="M8.5 20.5h7"/>')
+    trophy: svg('<path d="M8 4h8v5.5a4 4 0 0 1-8 0V4z"/><path d="M8 5.5H5.2v1.4a3 3 0 0 0 3 3"/><path d="M16 5.5h2.8v1.4a3 3 0 0 1-3 3"/><path d="M12 13.5v4"/><path d="M8.5 20.5h7"/>'),
+    // 对比/主题（右半实心圆）——顶栏主题钮用；此前是 🌈/✨ emoji，
+    // emoji 的字体度量会把行盒撑高并让文字偏离胶囊中心（见 css/tetris.css .theme-toggle 注释）
+    theme: svg('<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4a8.6 8.6 0 0 1 0 17.2z" fill="currentColor" stroke="none"/>')
 };

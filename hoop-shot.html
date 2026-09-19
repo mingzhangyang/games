@@ -39,6 +39,8 @@
                 <div class="hs-score-sub">🏆 <span id="hs-best">0</span></div>
             </div>
             <div class="hs-topbar-actions game-topbar-group">
+                <button type="button" class="hs-icon-btn game-icon-btn hs-stats-btn game-stats-btn" id="hsStatsToggle"
+                        aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="hsStatsDrawer"></button>
                 <button class="hs-icon-btn game-icon-btn" id="hs-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                 <button class="hs-icon-btn game-icon-btn" id="hs-pause-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
             </div>
@@ -116,19 +118,36 @@
         </div>
 
             <aside class="hs-sidebar game-sidebar">
-            <div class="hs-side-card game-side-card">
-                <div class="hs-side-title game-side-title" id="hs-side-howto-title"></div>
-                <p class="hs-side-text game-side-text" id="hs-side-howto"></p>
+
+            <!-- 由 apply-stats-drawer.py 生成的搬迁节点：JS 在侧栏 / 底部抽屉之间搬移它 -->
+            <div id="hsStatsPanels">
+                <div class="hs-side-card game-side-card">
+                    <div class="hs-side-title game-side-title" id="hs-side-howto-title"></div>
+                    <p class="hs-side-text game-side-text" id="hs-side-howto"></p>
+                </div>
+                <div class="hs-side-card game-side-card">
+                    <div class="hs-side-title game-side-title" id="hs-side-records-title"></div>
+                    <div class="hs-side-records" id="hs-side-records"></div>
+                </div>
             </div>
-            <div class="hs-side-card game-side-card">
-                <div class="hs-side-title game-side-title" id="hs-side-records-title"></div>
-                <div class="hs-side-records" id="hs-side-records"></div>
-            </div>
+
         </aside>
     </div>
 
     <p class="hs-footer-hint game-footer-hint" id="hs-hint">Swipe up to shoot · P pause · M mute</p>
     </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="hsStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="hsStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="hsStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="hsStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="hsStatsDrawerBody"></div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

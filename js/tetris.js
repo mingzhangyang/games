@@ -1,6 +1,7 @@
 import { getLang, setLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
+import { ICONS } from './icons.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -51,7 +52,11 @@ function safeParseJSON(text, fallback) {
 const LANGUAGES = {
     en: {
         title: 'Tetris - Cool Edition',
-        themeToggle: '🌈 Theme',
+        themeToggle: 'Theme',
+        stats: 'Stats',
+        close: 'Close',
+        best: 'Best',
+        lv: 'Lv',
         gameOver: 'Game Over!',
         finalScore: 'Final Score: ',
         restart: 'Restart',
@@ -72,7 +77,11 @@ const LANGUAGES = {
     },
     zh: {
         title: '俄罗斯方块 - 酷炫版',
-        themeToggle: '🌈 切换主题',
+        themeToggle: '切换主题',
+        stats: '统计与排名',
+        close: '关闭',
+        best: '最高',
+        lv: '等级',
         gameOver: '游戏结束！',
         finalScore: '最终得分: ',
         restart: '重新开始',
@@ -154,16 +163,99 @@ function setupUsernameInput() {
     });
 }
 
+// 主题钮是纯图标钮（与顶栏其他图标钮一致）：图标走 ICONS，
+// 文案只进 aria-label / title。四处会改它（初始化 / 恢复彩虹主题 / 切语言 + 点击切换），
+// 统一收在这一处渲染，避免哪个分支漏掉图标或漏掉 aria-pressed。
+// ⚠️ 同 updateHud：**绝不能**读模块级 `const game`。构造函数会调它，那时指针停在
+// TDZ，`typeof game !== 'undefined'` 自己就抛 ReferenceError（曾如此，把 init 打断）。
+// 需要知道当前主题时由调用方传进来：构造中用 this.isRainbowTheme，其余用 currentGame()。
+function renderThemeToggle(rainbowOverride) {
+    const el = document.getElementById('themeToggle');
+    if (!el) return;
+    const g = currentGame();
+    const rainbow = typeof rainbowOverride === 'boolean'
+        ? rainbowOverride
+        : !!(g && g.isRainbowTheme);
+    const label = rainbow
+        ? (currentLang === 'zh' ? '普通主题' : 'Normal Theme')
+        : TEXT.themeToggle;
+    el.innerHTML = ICONS.theme;
+    el.setAttribute('aria-pressed', rainbow ? 'true' : 'false');
+    el.setAttribute('title', label);
+    el.setAttribute('aria-label', label);
+}
+
+// 抽屉里两个图标钮同样只渲染图标。
+// ⚠️ 这个函数被 setLangUI 调用，而 setLangUI 会在 Tetris 构造函数里被调一次，
+// 那时 `const game` 还在 TDZ —— 所以这里**绝不能**碰 game（renderThemeToggle
+// 之所以要收 rainbowOverride 参数，就是同一个坑）。
+function renderDrawerIcons() {
+    const statsBtn = document.getElementById('statsToggle');
+    if (statsBtn) {
+        statsBtn.innerHTML = ICONS.stats;
+        statsBtn.setAttribute('title', TEXT.stats);
+        statsBtn.setAttribute('aria-label', TEXT.stats);
+    }
+    const closeBtn = document.getElementById('statsClose');
+    if (closeBtn) {
+        closeBtn.innerHTML = ICONS.close;
+        closeBtn.setAttribute('title', TEXT.close);
+        closeBtn.setAttribute('aria-label', TEXT.close);
+    }
+}
+
+// 顶栏中部 HUD：移动端首屏就要能看到分数/等级，不能等点开抽屉。
+// ⚠️ 这里**只能**读传入的实例，绝不能引用模块级的 `const game`：
+// updateDisplay 会在 Tetris 构造函数里（init）被调一次，那时 `const game` 还在 TDZ。
+// 注意 typeof 救不了 —— 指针一旦停在 TDZ，`typeof game !== 'undefined'` 自己就抛
+// ReferenceError（曾如此，报错把整个 init()/draw() 打断）。所以调用方负责把
+// 实例传进来：构造中用 this，外部用 game。
+function updateHud(g = currentGame()) {
+    const best = getBestScore();
+    const ready = !!g;
+    setText('scoreHud', Number(ready ? g.score : 0).toLocaleString());
+    setText('scoreHudBest', Number(best).toLocaleString());
+    setText('scoreHudLevel', ready ? g.level : 1);
+}
+
+// 延迟解析当前实例。
+// ⚠️ 这里**必须**用一个 var 持有者，不能写 `typeof game !== 'undefined' ? game : null`：
+// 模块级 `const game` 在 TDZ 期间，`typeof game` 自己就会抛 ReferenceError
+// （typeof 只对**未声明**的标识符安全，对 TDZ 中的 let/const 不安全）。
+// 持有者在 new Tetris() 之后立即赋值，构造期间读到的就是 null。
+var gameRef = null;
+
+function currentGame() {
+    return gameRef;
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+function getBestScore() {
+    try {
+        const local = safeParseJSON(safeGetItem('tetris_scores') || '[]', []);
+        return local.reduce((max, s) => Math.max(max, Number(s.score) || 0), 0);
+    } catch (e) {
+        return 0;
+    }
+}
+
 function setLangUI() {
     document.documentElement.lang = currentLang;
     document.title = TEXT.title;
-    document.getElementById('themeToggle').textContent = (typeof game !== 'undefined' && game && game.isRainbowTheme)
-        ? (currentLang === 'zh' ? '✨ 普通主题' : '✨ Normal Theme')
-        : TEXT.themeToggle;
+    renderThemeToggle();
+    renderDrawerIcons();
     document.getElementById('gameOverTitle').textContent = TEXT.gameOver;
     document.getElementById('finalScoreLabel').innerHTML = TEXT.finalScore + '<span id="finalScore">0</span>';
     document.getElementById('restartBtn').textContent = TEXT.restart;
-    document.getElementById('scoreLabel').textContent = TEXT.score;
+    // 分数已从侧栏移到顶栏 HUD（#score 这个 id 不再存在），改由 updateHud 呈现
+    setText('scoreHudLabel', TEXT.score);
+    setText('scoreHudBestLabel', TEXT.best);
+    setText('scoreHudLevelLabel', TEXT.lv);
+    setText('statsDrawerTitle', TEXT.stats);
     document.getElementById('levelLabel').textContent = TEXT.level;
     document.getElementById('linesLabel').textContent = TEXT.lines;
     document.getElementById('comboLabel').textContent = TEXT.combo;
@@ -184,7 +276,7 @@ function setLangUI() {
         document.getElementById('mobilePauseBtn').textContent = TEXT.pause;
         document.getElementById('mobileRestartBtn').textContent = TEXT.restart;
     }
-
+    updateHud();
     updateMoreGames(currentLang);
 }
 
@@ -278,6 +370,145 @@ function showLocalScores(listElement, loadingElement) {
     }
 }
 
+// ── 移动端底部抽屉 ──────────────────────────────────────────────
+// 桌面端侧栏常驻（.game-sidebar），移动端抽屉接管。抽屉内容在移动端才需要，
+// 但为了不重复维护两份 DOM，桌面端把侧栏里的面板整体搬到当前该显示的容器里。
+// ⚠️ 打开时**强制暂停**游戏：否则用户在读排行榜时方块还在掉。
+// ⚠️ 锁背景滚动只用 overflow:hidden（body.drawer-locked），
+//    绝不能用 body{position:fixed}——那会让整页永久滚不动（见 css/tetris.css 顶部注释）。
+const drawer = {
+    el: null,
+    panel: null,
+    panels: null,
+    sidebar: null,
+    body: null,
+    open: false,
+    pausedByDrawer: false,
+    lastFocus: null,
+
+    init() {
+        this.el = document.getElementById('statsDrawer');
+        this.panel = this.el && this.el.querySelector('.game-drawer-panel');
+        this.body = document.getElementById('statsDrawerBody');
+        this.panels = document.getElementById('statsPanels');
+        this.sidebar = document.getElementById('infoPanel');
+        if (!this.el || !this.body) return;
+
+        // 标记"本页已接入抽屉"：css/layout.css 靠它决定窄屏是否隐藏侧栏
+        // （判据不能在 CSS 里做 —— 搬迁节点此时已被移进抽屉，:has() 必然失配）
+        document.body.classList.add('has-stats-drawer');
+
+        const btn = document.getElementById('statsToggle');
+        const closeBtn = document.getElementById('statsClose');
+        if (btn) btn.addEventListener('click', () => this.toggle());
+        if (closeBtn) closeBtn.addEventListener('click', () => this.close());
+        // 点遮罩关闭（只在遮罩本体上，点面板内部不关）
+        this.el.addEventListener('click', (e) => {
+            if (e.target === this.el) this.close();
+        });
+        // Esc 关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.open) {
+                e.stopPropagation();
+                this.close();
+            }
+        }, true);
+        // 焦点陷阱：Tab 在抽屉内循环
+        this.el.addEventListener('keydown', (e) => {
+            if (e.key !== 'Tab' || !this.open) return;
+            const focusables = this.panel.querySelectorAll(
+                'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
+
+        // 桌面/移动端切换时把面板搬到该显示的容器里
+        this.place();
+        const mq = window.matchMedia('(min-width: 1024px)');
+        const onChange = () => {
+            if (this.open && mq.matches) this.close();
+            this.place();
+        };
+        if (mq.addEventListener) mq.addEventListener('change', onChange);
+        else if (mq.addListener) mq.addListener(onChange);
+    },
+
+    // 面板 DOM 只有一个实例：桌面进侧栏、移动进抽屉
+    place() {
+        if (!this.panels || !this.body || !this.sidebar) return;
+        const target = window.matchMedia('(min-width: 1024px)').matches
+            ? this.sidebar
+            : this.body;
+        if (this.panels.parentElement !== target) target.appendChild(this.panels);
+    },
+
+    isDesktop() {
+        return window.matchMedia('(min-width: 1024px)').matches;
+    },
+
+    toggle() {
+        this.open ? this.close() : this.openDrawer();
+    },
+
+    openDrawer() {
+        if (this.open || this.isDesktop()) return;
+        this.open = true;
+        this.lastFocus = document.activeElement;
+        // 强制暂停：只有"进行中的对局"需要暂停。判据用 animationId（主循环在跑）
+        // 而不是 paused —— 玩家自己暂停时 paused=true 但循环已停，此时不该再 toggle
+        // （会反过来把它切成继续）。
+        const g = currentGame();
+        if (g && !g.gameOver && g.animationId !== null && !g.paused) {
+            g.togglePause();
+            this.pausedByDrawer = true;
+        }
+        this.el.hidden = false;
+        // 先落 [hidden] 再改类，否则过渡不触发
+        requestAnimationFrame(() => {
+            this.el.classList.add('is-open');
+            document.body.classList.add('drawer-locked');
+        });
+        const btn = document.getElementById('statsToggle');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+        const closeBtn = document.getElementById('statsClose');
+        if (closeBtn) closeBtn.focus();
+    },
+
+    close() {
+        if (!this.open) return;
+        this.open = false;
+        this.el.classList.remove('is-open');
+        document.body.classList.remove('drawer-locked');
+        const btn = document.getElementById('statsToggle');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        const finish = () => {
+            if (!this.open) this.el.hidden = true;
+        };
+        this.el.addEventListener('transitionend', finish, { once: true });
+        // 兜底：reduced-motion 下没有过渡事件
+        setTimeout(finish, 320);
+        // 只恢复「因打开抽屉而暂停」的那一次，避免把用户自己的暂停解掉
+        if (this.pausedByDrawer) {
+            this.pausedByDrawer = false;
+            const g2 = currentGame();
+            if (g2 && g2.paused && !g2.gameOver) {
+                game.togglePause();
+            }
+        }
+        if (this.lastFocus && typeof this.lastFocus.focus === 'function') this.lastFocus.focus();
+    }
+};
+
+window.addEventListener('DOMContentLoaded', () => drawer.init());
 window.addEventListener('DOMContentLoaded', setLangUI);
 window.addEventListener('DOMContentLoaded', setupUsernameInput);
 window.addEventListener('DOMContentLoaded', fetchAndDisplayGlobalScores);
@@ -424,11 +655,10 @@ class Tetris {
         })();
         if (this.isRainbowTheme) {
             document.body.classList.add('rainbow-theme');
-            const themeToggleLabel = document.getElementById('themeToggle');
-            if (themeToggleLabel) {
-                themeToggleLabel.textContent = currentLang === 'zh' ? '✨ 普通主题' : '✨ Normal Theme';
-            }
         }
+        // 无论哪一支都渲染一次：否则首帧会是一个空钮（label 要等 setLangUI 才填）
+        renderThemeToggle(this.isRainbowTheme);
+        renderDrawerIcons();
         this.lineClearAnimations = [];
         this.glowIntensity = 0;
         
@@ -515,6 +745,10 @@ class Tetris {
         
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
+            // ⚠️ 必须同时置 null：animationId 是"主循环是否在跑"的唯一判据
+            // （gameLoop 每帧回写），cancel 后不置空会让它永远不为 null，
+            // 抽屉的"是否需要对局暂停"判断就会失真（曾如此）。
+            this.animationId = null;
         }
     }
 
@@ -965,10 +1199,12 @@ class Tetris {
     }
 
     updateDisplay() {
-        document.getElementById('score').textContent = this.score;
-        document.getElementById('level').textContent = this.level;
-        document.getElementById('lines').textContent = this.lines;
-        document.getElementById('combo').textContent = this.combo;
+        // 分数只在顶栏 HUD（#score 已随侧栏面板搬迁并弃用），
+        // 等级/行数/连击仍在抽屉面板里
+        setText('level', this.level);
+        setText('lines', this.lines);
+        setText('combo', this.combo);
+        updateHud(this);
     }
 
     async showGameOver() {
@@ -1117,6 +1353,15 @@ class Tetris {
             this.gameLoop();
             this.lockPage();
         } else {
+            // ⚠️ 暂停时必须停掉在飞的那一帧并置空 animationId。
+            // gameLoop 开头虽有 `if (this.paused) return`，但它**不再排下一帧**，
+            // 于是 animationId 会永远停在上一个 id 上 —— 而它是"主循环是否在跑"
+            // 的唯一判据（抽屉的暂停判断就依赖它）。两者必须同时维护。
+            if (this.animationId) {
+                cancelAnimationFrame(this.animationId);
+                this.animationId = null;
+            }
+            this.lastTime = 0;
             this.unlockPage();
         }
     }
@@ -1157,9 +1402,7 @@ class Tetris {
         } catch (e) {
             // 存储不可用时仅切换当前会话主题
         }
-        document.getElementById('themeToggle').textContent = this.isRainbowTheme
-            ? (currentLang === 'zh' ? '✨ 普通主题' : '✨ Normal Theme')
-            : TEXT.themeToggle;
+        renderThemeToggle(this.isRainbowTheme);
     }
 
     setupControls() {
@@ -1167,6 +1410,8 @@ class Tetris {
             // 正在输入用户名时不拦截按键（方向键/空格要正常用于编辑文本）
             const tag = e.target && e.target.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+            // 抽屉打开时游戏已暂停，方向键/空格不应再操作方块
+            if (drawer.open) return;
             if (this.gameOver) return;
             switch(e.key) {
                 case 'ArrowLeft':
@@ -1233,7 +1478,13 @@ class Tetris {
 
 // Create game instance
 const game = new Tetris();
+// 供延迟解析用：构造期间 gameRef 为 null，构造完成后立即可读（见 currentGame）
+gameRef = game;
 game.draw();
+
+// 暴露实例，便于回归脚本与调试观察运行态（与 sword-flight 的 window.game 一致）。
+// 只读用途：不要在页面逻辑里依赖它，页面内部一律用闭包里的 `game` 或 currentGame()。
+window.game = game;
 
 // 按钮事件绑定
 window.addEventListener('DOMContentLoaded', () => {

@@ -11,6 +11,7 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { createStatsDrawer } from './game-drawer.js';
 import { updateMoreGames } from './more-games.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
@@ -52,6 +53,8 @@ function formatNumber(n) {
 
 const LANGUAGES = {
     en: {
+        close: 'Close',
+        stats: 'Stats',
         title: 'Hoop Shot',
         subtitle: 'Flick · Arc · Score',
         howto: 'Swipe up to flick the ball into the hoop. One miss ends the run. 3 straight makes = ON FIRE, double points!',
@@ -84,6 +87,8 @@ const LANGUAGES = {
         sideRecords: 'Records'
     },
     zh: {
+        close: '关闭',
+        stats: '数据统计',
         title: '街机投篮',
         subtitle: '甩投 · 抛物线 · 得分',
         howto: '向上滑动把球投进篮筐。投失一球就结束。连中 3 球点燃火球模式，分数翻倍！',
@@ -429,6 +434,28 @@ class HoopShotGame {
             this.hideOverlays();
             this.ensureLoop();
         }
+    }
+
+    /**
+     * 静默暂停 / 恢复 —— 给底部统计抽屉用。
+     * 与 togglePause 的状态迁移一致，但不显示「Paused」遮罩，
+     * 免得玩家开抽屉时背后闪一层暂停界面。
+     */
+    pauseQuiet() {
+        if (this.state !== 'playing') return;
+        this.state = 'paused';
+        this.stopLoop();
+    }
+
+    resumeQuiet() {
+        if (this.state !== 'paused') return;
+        this.state = 'playing';
+        this.ensureLoop();
+    }
+
+    /** 抽屉判据：只有真正在跑的对局才值得暂停 */
+    isRunning() {
+        return this.state === 'playing';
     }
 
     goHome() {
@@ -1518,4 +1545,19 @@ class HoopShotGame {
 
 window.addEventListener('DOMContentLoaded', () => {
     window.hoopShotGame = new HoopShotGame();
+
+    // 移动端底部统计抽屉
+    window.hsDrawer = createStatsDrawer({
+        idPrefix: 'hs',
+        getGame: () => window.hoopShotGame,
+        onPause: (g) => g && g.pauseQuiet(),
+        onResume: (g) => g && g.resumeQuiet(),
+        isBusy: () => {
+            const g = window.hoopShotGame;
+            return !!g && typeof g.isRunning === 'function' && g.isRunning();
+        },
+        ICONS,
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+    });
+    if (window.hsDrawer) window.hsDrawer.init();
 });

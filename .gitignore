@@ -63,6 +63,11 @@ vite.*.log
 *.tmp
 *.temp
 
+# 验收/回归截图与临时导出目录（脚本产物，不入库）
+.acceptance/
+.tmp-shots/
+.tmp-*/
+
 # Build analysis
 stats.html
 bundle-analyzer-report.html

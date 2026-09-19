@@ -10,6 +10,7 @@ import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
+import { createStatsDrawer } from './game-drawer.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -90,6 +91,8 @@ function formatNumber(n) {
 
 const LANGUAGES = {
     en: {
+        close: 'Close',
+        stats: 'Stats',
         title: 'Planet Merge',
         subtitle: 'Drop · Merge · Chain the cosmos',
         howto: 'Drag to aim, release to drop. Two identical planets merge into the next one. Don\'t let the pile cross the danger line!',
@@ -132,6 +135,8 @@ const LANGUAGES = {
         confirmReplace: 'Start a new daily run? Your current progress will be lost.'
     },
     zh: {
+        close: '关闭',
+        stats: '数据统计',
         title: '星球合成',
         subtitle: '投放 · 合成 · 连锁宇宙',
         howto: '拖动瞄准，松手投放。两颗相同星球合成下一级。堆过危险线就结束！',
@@ -660,6 +665,30 @@ class PlanetMergeGame {
             this.showOverlay(null);
             this.ensureLoop();
         }
+    }
+
+    /**
+     * 静默暂停 / 恢复 —— 给底部统计抽屉用。
+     *
+     * 普通的 `togglePause()` 会给玩家看「Paused」遮罩，但打开抽屉时那个遮罩
+     * 会顶在抽屉后面闪一下，体验很怪。这里复用同一套状态迁移，只是**不碰遮罩**：
+     * 状态与循环的变更和 togglePause 完全一致，保证不会出现"状态说在玩、循环已停"的错配。
+     */
+    pauseQuiet() {
+        if (this.state !== 'playing') return;
+        this.state = 'paused';
+        this.stopLoop();
+    }
+
+    resumeQuiet() {
+        if (this.state !== 'paused') return;
+        this.state = 'playing';
+        this.ensureLoop();
+    }
+
+    /** 供抽屉判断"是否值得暂停"：只有真正在跑的对局才需要 */
+    isRunning() {
+        return this.state === 'playing';
     }
 
     goHome() {
@@ -1788,4 +1817,19 @@ class PlanetMergeGame {
 
 window.addEventListener('DOMContentLoaded', () => {
     window.planetMergeGame = new PlanetMergeGame();
+
+    // 移动端底部统计抽屉：把侧栏面板收进抽屉，顶栏 Stats 钮开合
+    window.pmDrawer = createStatsDrawer({
+        idPrefix: 'pm',
+        getGame: () => window.planetMergeGame,
+        onPause: (g) => g && g.pauseQuiet(),
+        onResume: (g) => g && g.resumeQuiet(),
+        isBusy: () => {
+            const g = window.planetMergeGame;
+            return !!g && typeof g.isRunning === 'function' && g.isRunning();
+        },
+        ICONS,
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+    });
+    if (window.pmDrawer) window.pmDrawer.init();
 });

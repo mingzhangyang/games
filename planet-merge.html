@@ -40,6 +40,8 @@
                 <div class="pm-score-sub">🏆 <span id="pm-best">0</span> · <span id="pm-mode-label">♾️</span></div>
             </div>
             <div class="pm-topbar-actions game-topbar-group">
+                <button type="button" class="pm-icon-btn game-icon-btn pm-stats-btn game-stats-btn" id="pmStatsToggle"
+                        aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="pmStatsDrawer"></button>
                 <button class="pm-icon-btn game-icon-btn" id="pm-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                 <button class="pm-icon-btn game-icon-btn" id="pm-pause-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
             </div>
@@ -135,14 +137,19 @@
         </div>
 
             <aside class="pm-sidebar game-sidebar">
-            <div class="pm-side-card game-side-card">
-                <div class="pm-side-title game-side-title" id="pm-side-howto-title"></div>
-                <p class="pm-side-text game-side-text" id="pm-side-howto"></p>
+
+            <!-- 由 apply-stats-drawer.py 生成的搬迁节点：JS 在侧栏 / 底部抽屉之间搬移它 -->
+            <div id="pmStatsPanels">
+                <div class="pm-side-card game-side-card">
+                    <div class="pm-side-title game-side-title" id="pm-side-howto-title"></div>
+                    <p class="pm-side-text game-side-text" id="pm-side-howto"></p>
+                </div>
+                <div class="pm-side-card game-side-card">
+                    <div class="pm-side-title game-side-title" id="pm-side-records-title"></div>
+                    <div class="pm-side-records" id="pm-side-records"></div>
+                </div>
             </div>
-            <div class="pm-side-card game-side-card">
-                <div class="pm-side-title game-side-title" id="pm-side-records-title"></div>
-                <div class="pm-side-records" id="pm-side-records"></div>
-            </div>
+
         </aside>
     </div>
 
@@ -150,6 +157,18 @@
 
     <div class="pm-toast game-toast" id="pm-toast" role="status" aria-live="polite"></div>
     </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="pmStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="pmStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="pmStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="pmStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="pmStatsDrawerBody"></div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

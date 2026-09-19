@@ -14,6 +14,7 @@ import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
+import { createStatsDrawer } from './game-drawer.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -45,6 +46,8 @@ function formatNumber(n) {
 
 const LANGUAGES = {
     en: {
+        close: 'Close',
+        stats: 'Stats',
         title: 'Neon Tower Defense',
         subtitle: 'Build · Upgrade · Survive',
         howto: 'Tap a cell to build towers, tap a tower to upgrade, sell or set targeting priority. Use tactical commander skills (EMP & Overdrive) and survive all 25 waves!',
@@ -118,6 +121,8 @@ const LANGUAGES = {
         hint: 'Click cell to build · Click tower to upgrade · Space to start wave'
     },
     zh: {
+        close: '关闭',
+        stats: '数据统计',
         title: '霓虹塔防',
         subtitle: '建造 · 升级 · 守护',
         howto: '点击空格子建塔，点击塔升级、出售或切换集火策略。合理运用指挥官战术技能（EMP震荡与超频加速），守住 25 波即获胜！',
@@ -2382,6 +2387,28 @@ class TowerDefenseGame {
         Sfx.click();
     }
 
+    /**
+     * 静默暂停 / 恢复 —— 给底部统计抽屉用。
+     * 与 pause()/resume() 状态迁移一致，但不显示暂停遮罩、不播点击音，
+     * 免得玩家开抽屉时背后闪一层暂停界面。
+     */
+    pauseQuiet() {
+        if (this.state !== 'playing') return;
+        this.state = 'paused';
+        this.lastFrameTime = performance.now();
+    }
+
+    resumeQuiet() {
+        if (this.state !== 'paused') return;
+        this.state = 'playing';
+        this.lastFrameTime = performance.now();
+    }
+
+    /** 抽屉判据 */
+    isRunning() {
+        return this.state === 'playing';
+    }
+
     toMenu() {
         this.stopLoop();
         this.state = 'menu';
@@ -2664,4 +2691,19 @@ class TowerDefenseGame {
 
 document.addEventListener('DOMContentLoaded', () => {
     window.tdGame = new TowerDefenseGame();
+
+    // 移动端底部统计抽屉
+    window.tdDrawer = createStatsDrawer({
+        idPrefix: 'td',
+        getGame: () => window.tdGame,
+        onPause: (g) => g && g.pauseQuiet(),
+        onResume: (g) => g && g.resumeQuiet(),
+        isBusy: () => {
+            const g = window.tdGame;
+            return !!g && typeof g.isRunning === 'function' && g.isRunning();
+        },
+        ICONS,
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+    });
+    if (window.tdDrawer) window.tdDrawer.init();
 });

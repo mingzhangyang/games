@@ -16,6 +16,7 @@ import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
+import { createStatsDrawer } from './game-drawer.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -51,6 +52,8 @@ function vibrate(pattern) {
 
 const LANGUAGES = {
     en: {
+        close: 'Close',
+        stats: 'Stats',
         title: 'Gravity Slingshot',
         subtitle: 'Aim · Bend · Orbit · Capture',
         howto: 'Drag anywhere to pull back the slingshot, release to launch the probe. Planets bend your path — use their gravity to slingshot into the wormhole. Fewer launches, more stars!',
@@ -94,6 +97,8 @@ const LANGUAGES = {
         tapToAim: 'Drag to aim · release to launch'
     },
     zh: {
+        close: '关闭',
+        stats: '数据统计',
         title: '引力弹弓',
         subtitle: '瞄准 · 变轨 · 绕行 · 捕获',
         howto: '按住任意位置向后拉弹弓，松手发射探测器。行星引力会弯曲你的轨迹——借力甩尾，把探测器送进虫洞。杆数越少，星星越多！',
@@ -679,6 +684,14 @@ class GravityGame {
         this.animationId = null;
         this.lastFrame = 0;
         this.renderScale = 1;
+        /**
+         * 暂停标记（2026-09-19 为底部统计抽屉新增）。
+         * ⚠️ 本页原先**没有任何暂停能力**：tick 每帧无条件推进 time / 物理 / 粒子。
+         * 抽屉要求"打开时强制暂停"，所以必须补一个真正能冻结模拟的开关：
+         * `stepFlight()`（飞行弹道）、粒子推进、以及所有以真实时间为基础的动画
+         * （背景星层视差等）都读这个标记。判据放主循环里统一处理，避免散落各处。
+         */
+        this.isPaused = false;
 
         this.applyLanguage();
         this.renderLevelGrid();
@@ -1361,6 +1374,30 @@ class GravityGame {
         buildStarLayer(this.renderScale);
     }
 
+    /* ── 暂停（供底部统计抽屉调用） ── */
+
+    /**
+     * 静默暂停 / 恢复。
+     * 本页没有暂停界面（也没有按钮），所以没有"遮罩闪烁"问题——
+     * 冻结完全靠主循环里的 `isPaused` 判断。
+     */
+    pauseQuiet() {
+        // menu 态本来就没有模拟在跑，标记它没意义（恢复时反而容易误判）
+        if (this.phase === 'menu') return;
+        this.isPaused = true;
+    }
+
+    resumeQuiet() {
+        if (!this.isPaused) return;
+        this.isPaused = false;
+        this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃
+    }
+
+    /** 抽屉判据：只有瞄准/飞行/结算这些"活"的阶段才值得暂停 */
+    isRunning() {
+        return !this.isPaused && this.phase !== 'menu';
+    }
+
     /* ── 主循环 ── */
 
     startLoop() {
@@ -1370,6 +1407,14 @@ class GravityGame {
             let dt = (now - this.lastFrame) / 1000;
             this.lastFrame = now;
             if (dt > 0.05) dt = 0.05;
+            // ⚠️ 暂停时：只重排下一帧、不推进任何时间。
+            // 关键是 `this.lastFrame = now` 必须在暂停判断**之前**已赋值
+            // （上面就赋了），否则恢复那一帧会拿到整个暂停时长的 dt → 弹道瞬移。
+            // 同时把 frameDt 归零，让依赖它的视觉动画也静止。
+            if (this.isPaused) {
+                this.frameDt = 0;
+                return;
+            }
             this.frameDt = dt;
             this.time += dt;
             if (this.phase === 'flying') this.stepFlight();
@@ -1785,4 +1830,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const game = new GravityGame();
     window.gdGame = game; // 调试/测试句柄
     window.__gravityDebug = { LEVELS, simulate, solvePar, buildDailyCourse, DT, SPEED_CAP }; // QA 用
+
+    // 移动端底部统计抽屉
+    window.gdDrawer = createStatsDrawer({
+        idPrefix: 'gd',
+        getGame: () => window.gdGame,
+        onPause: (g) => g && g.pauseQuiet(),
+        onResume: (g) => g && g.resumeQuiet(),
+        isBusy: () => {
+            const g = window.gdGame;
+            return !!g && typeof g.isRunning === 'function' && g.isRunning();
+        },
+        ICONS,
+        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+    });
+    if (window.gdDrawer) window.gdDrawer.init();
 });

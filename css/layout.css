@@ -23,6 +23,14 @@
        <p class="xx-footer-hint game-footer-hint"> 底部操作提示
        <button class="xx-icon-btn game-icon-btn">  顶栏图标钮
 
+       底部抽屉（移动端专用，桌面端自动失效）：
+       <button class="xx-icon-btn game-icon-btn game-stats-btn">  触发钮（≥1024px 隐藏）
+       <div class="xx-drawer game-drawer">                    遮罩 + 面板容器
+         <div class="xx-drawer-panel game-drawer-panel">
+           <div class="xx-drawer-handle game-drawer-handle">
+           <div class="xx-drawer-head game-drawer-head">        标题 + 关闭钮
+           <div class="xx-drawer-body game-drawer-body">        可滚动内容区
+
    调参：只覆盖 CSS 变量，不要重写几何属性
        --frame-max          移动端容器宽度（默认 520）
        --frame-max-wide     ≥1024px 容器宽度（默认 940）
@@ -30,6 +38,7 @@
        --frame-side         侧栏宽度（默认 300）
        --frame-side-gap     侧栏卡片间距（默认 12）
        --frame-radius       画布/覆盖层圆角（默认 18）
+       --drawer-max         抽屉最大高度（默认 90dvh）
    ───────────────────────────────────────────── */
 
 :root {
@@ -39,6 +48,7 @@
     --frame-side: 300px;
     --frame-side-gap: 12px;
     --frame-radius: 18px;
+    --drawer-max: 90dvh;
 }
 
 /* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */
@@ -303,6 +313,105 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* ── 底部抽屉（移动端）──
+   桌面端侧栏常驻，抽屉无意义，故 ≥1024px 整体隐藏。
+   默认关闭：只用 [hidden] 控制存在性，开合用 .is-open 触发过渡。
+   ⚠️ 三个已踩过的坑，改动时勿踩回去：
+   ① 锁背景滚动**不能**用 body{position:fixed} —— body 脱流后 html 没有滚动盒，
+      视口可滚高度=视口高度，整页永久滚不动，而 devtools 与几何检查器全绿
+      （tetris 2026-09-18 修过一次）。这里只用 overflow:hidden。
+   ② 面板用 transform 滑入，且**不要**给画布加任何 transform/transition。
+   ③ .mobile-controls 固定底栏（z-index 1000）会与抽屉抢层级，抽屉放 1200；
+      面板底部内距仍要和底栏留白对得上（见各页 padding-bottom）。 */
+.game-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(4, 5, 10, 0.62);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
+
+.game-drawer[hidden] { display: none; }
+
+.game-drawer.is-open { opacity: 1; }
+
+.game-drawer-panel {
+    position: relative;
+    width: 100%;
+    max-width: var(--frame-max);
+    max-height: var(--drawer-max);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-radius: 20px 20px 0 0;
+    background: rgba(18, 21, 28, 0.98);
+    border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
+    border-bottom: none;
+    box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.5);
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.game-drawer.is-open .game-drawer-panel { transform: translateY(0); }
+
+/* 抓握条：纯装饰，不承担拖拽（拖拽手势与棋盘滑动会互相污染） */
+.game-drawer-handle {
+    flex-shrink: 0;
+    width: 44px;
+    height: 4px;
+    margin: 10px auto 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.game-drawer-head {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 14px 10px;
+    border-bottom: 1px solid var(--tok-border, rgba(255, 255, 255, 0.08));
+}
+
+.game-drawer-title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--tok-text, #f7fafc);
+}
+
+.game-drawer-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 14px calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: var(--frame-side-gap);
+    scrollbar-width: none;
+}
+
+.game-drawer-body::-webkit-scrollbar { display: none; }
+
+/* 抽屉打开时锁背景滚动 —— 只改 overflow，绝不 body{position:fixed} */
+body.drawer-locked {
+    overflow: hidden;
+}
+
+/* 触发钮：与普通图标钮同形，仅桌面端隐藏 */
+@media (min-width: 1024px) {
+    .game-stats-btn { display: none; }
+}
+
 /* ── 响应式：窄屏压缩 ── */
 @media (max-width: 480px) {
     :root { --tok-btn-size: 36px; }
@@ -322,6 +431,20 @@
     .game-footer-hint { display: none; }
 }
 
+/* ── 响应式：窄屏把侧栏让给底部抽屉 ── */
+/*
+ * 只在「已接入抽屉」的页面上隐藏侧栏 —— 由 `js/game-drawer.js` 在 `init()` 时
+ * 给 `<body>` 打上 `has-stats-drawer`，本规则据此生效。
+ *
+ * ⚠️ 不要试图用 `.game-sidebar:has([id$="StatsPanels"])` 判断！
+ * 搬迁节点在窄屏下**已经被 JS 移进抽屉**了（这正是它存在的意义），
+ * 所以 CSS 求值时侧栏里根本没有那个节点，`:has()` 永远不匹配 —— 侧栏纹丝不动。
+ * 判据必须来自"这个页面接没接抽屉"这种**不随视口变化**的事实，而不是当前 DOM 位置。
+ */
+@media (max-width: 1023.98px) {
+    body.has-stats-drawer .game-sidebar { display: none; }
+}
+
 /* ── 响应式：桌面横排 ── */
 @media (min-width: 1024px) {
     .game-shell { max-width: var(--frame-max-wide); }
@@ -338,8 +461,12 @@
         width: var(--frame-side);
         flex-shrink: 0;
     }
+    /* 桌面端有常驻侧栏，抽屉与它的触发钮都没有意义 */
+    .game-drawer { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .game-icon-btn { transition: none; }
+    .game-drawer,
+    .game-drawer-panel { transition: none; }
 }

@@ -39,6 +39,13 @@ input, textarea {
     user-select: text;
 }
 
+/* ⚠️ 不要把 body 设成 position:fixed + height:100%（曾如此）。
+   body 带 overflow:auto 时，html 的 overflow 为 visible ⇒ 按 CSS Overflow 规范，
+   body 的 overflow 会被「传播给视口」，body 自身反而没有滚动盒；再叠加
+   position:fixed 把 body 挪出文档流，html 就没有任何在流内容 ⇒ 视口可滚高度 = 视口高度，
+   整页彻底滚不动（实测 body.scrollTop 赋值 / wheel / 真实触摸上滑全部纹丝不动）。
+   后果：移动端 SCORE 以下的 Level/Lines/Combo/Next Piece/More Games 永远不可达。
+   现在让 body 正常在流内，由视口自然滚动；游戏进行中需要锁滚动时用 .game-locked。 */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #0a0a0a;
@@ -51,9 +58,7 @@ body {
     overflow-y: auto;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
-    position: fixed;
     width: 100%;
-    height: 100%;
 }
 
 .background-animation {
@@ -171,6 +176,15 @@ body {
     width: 100%;
 }
 
+/* #statsPanels 是移动/桌面共用的同一个节点：桌面在侧栏内，移动端移动进抽屉。
+   自身不设几何，只透传 gap，避免两处容器各写一套间距。 */
+.info-panel > #statsPanels,
+.game-drawer-body > #statsPanels {
+    display: flex;
+    flex-direction: column;
+    gap: var(--frame-side-gap);
+}
+
 .info-box {
     background: linear-gradient(135deg, rgba(45, 55, 72, 0.8), rgba(26, 32, 44, 0.8));
     padding: 20px;
@@ -271,7 +285,8 @@ body {
     background: linear-gradient(135deg, rgba(45, 55, 72, 0.95), rgba(26, 32, 44, 0.95));
     backdrop-filter: blur(10px);
     border-top: 2px solid var(--primary-color);
-    padding: 12px;
+    /* 底部内距带上安全区：内容高度必须与 body 的 padding-bottom 对得上（76px + 安全区） */
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
     display: none;
     justify-content: space-around;
     gap: 10px;
@@ -458,22 +473,16 @@ body {
     }
 }
 
-/* 顶栏操作簇：由 css/layout.css 的 .game-topbar 统一承载（左 home / 右主题） */
-.theme-toggle {
-    padding: 10px 18px;
-    background: var(--tok-panel, rgba(255, 255, 255, 0.06));
-    border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
-    border-radius: 999px;
-    color: var(--light-color);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.theme-toggle:hover {
-    background: var(--tok-panel-strong, rgba(255, 255, 255, 0.12));
-}
-
-/* 语言切换已移除（统一在首页切换，site_lang 全站生效），仅保留 Home + 主题 */
+/* 顶栏操作簇：由 css/layout.css 的 .game-topbar 统一承载
+   （左 Home / 中 分数 HUD / 右 Stats + Theme，全部图标钮）。
+   改成图标钮以前踩过两个坑，别踩回去：
+   ① emoji（🌈 / ✨）的字体度量远大于行盒，文字胶囊时代量得「上留 7px、下留 15px」，
+      文案看起来偏上 4px。→ 图标走 inline SVG（ICONS.theme，见 js/icons.js），
+      居中由 flex（.game-icon-btn）决定，不受字形度量影响。
+   ② 热区外扩伪元素 ::after 是 position:absolute + inset:-6px —— 宿主若
+      position:static，包含块会解析成整个 .game-container，等于给整页铺一层
+      隐形命中层（实测 elementsFromPoint 在棋盘中心、SCORE 上都能看到 themeToggle）。
+      .game-icon-btn 自带 position:relative，故现在两个钮都不再有这个风险。 */
 
 /* 尺寸由 .icon-btn（tokens）与 .game-icon-btn（layout）决定，此处只留皮肤 */
 .home-toggle {
@@ -483,6 +492,63 @@ body {
 .home-toggle:hover {
     background: var(--tok-panel-strong, rgba(255, 255, 255, 0.12));
 }
+
+/* ── 顶栏中部 HUD：移动端首屏必须能看到分数，不能等点开抽屉 ──
+   宽度用 max-content 而不是让 flex 自由收缩：分数是动作钮（tabular-nums）
+   会随位数变宽，若不锁住测量宽度，两位变五位时整条顶栏会抖动。 */
+.game-hud-box {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 7px;
+    padding: 4px 14px;
+    background: var(--tok-panel, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
+    border-radius: 12px;
+}
+
+.game-title-pill {
+    min-width: 0;
+    flex: 0 1 auto;
+    gap: 0;
+}
+
+.hud-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tok-text-mute, #8b929e);
+}
+
+.hud-value {
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--light-color);
+}
+
+/* 副行（最高分 / 等级）：给足行高与字距，避免 M 前缀字母在小字号下贴着数字 */
+.hud-sub {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 4px;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--tok-text-mute, #8b929e);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.hud-sub b {
+    margin-right: 6px;
+    color: var(--tok-text-dim, #c9ced6);
+    font-weight: 700;
+}
+
+.hud-sub b:last-child { margin-right: 0; }
 
 .global-scores-panel {
     background: rgba(26, 32, 44, 0.95);
@@ -581,12 +647,21 @@ body.rainbow-theme {
     body {
         overflow-y: auto;
         min-height: 100vh;
+        /* 固定底栏 .mobile-controls 会盖住页尾：留出「底栏高 + 刘海安全区」。
+           底栏高度 = 2px 上边框 + 12px 内距×2 + 50px 按钮 = 76px（按钮 min-height 由
+           .mobile-controls .btn 定，40/44px 的窄屏规则盖不过它）。
+           此前只留了 72px，且只在 ≤480px 生效，481–768px 之间完全没留。 */
+        padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     }
 
     /* 容器/棋盘/侧栏几何由 css/layout.css 的 .game-shell/.game-stage/.game-sidebar 统一提供 */
     .game-container {
         --frame-stage: 340px;
     }
+
+    /* 移动端侧栏让位给底部抽屉的规则已收敛到 css/layout.css 的
+       `body.has-stats-drawer .game-sidebar { display: none }`（由 js/tetris.js 打 body 类），
+       本页不再单独声明 —— 与其余 6 个页面走同一条路径，避免两处规则各自演化。 */
 
     #tetris,
     #particleCanvas,
@@ -615,12 +690,6 @@ body.rainbow-theme {
         padding: 12px 8px;
         font-size: 14px;
         min-height: 44px;
-    }
-
-    .theme-toggle {
-        padding: 8px 12px;
-        font-size: 12px;
-        min-height: 36px;
     }
 
     /* 排行榜：随侧栏卡片排列，不再走移动端特例（几何由 .game-side-card 决定） */
@@ -663,7 +732,7 @@ body.rainbow-theme {
 
 @media (max-width: 480px) {
     body {
-        padding: 0 0 72px;
+        /* 底部留白（底栏高 + 安全区）由上面的 ≤768px 块统一给，这里不要再写死 72px */
         min-height: 100vh;
         overflow-y: auto;
         overflow-x: hidden;
@@ -706,17 +775,12 @@ body.rainbow-theme {
         min-height: 40px;
     }
 
-    /* 移动端顶栏由 css/layout.css 的 .game-topbar 统一（44px 触控目标由 .btn/.theme-toggle 组规则保证） */
-    .theme-toggle {
-        padding: 6px 8px;
-        font-size: 10px;
-    }
-
+    /* 移动端顶栏由 css/layout.css 的 .game-topbar / .game-icon-btn 统一 */
     .global-scores-panel {
-        width: 160px;
-        top: 40px;
-        right: 2px;
-        max-height: 200px;
+        /* 旧代码在这里写 width/top/right 是按「浮在棋盘右上角的浮层」写的，
+           但 .global-scores-panel 早已是抽屉/侧栏里的普通卡片，没有定位上下文，
+           top/right 完全无效。这里只收紧高度，不再假装它是浮层。 */
+        max-height: none;
     }
 
     .global-scores-header {
@@ -751,10 +815,6 @@ body.rainbow-theme {
         touch-action: manipulation;
     }
 
-    .theme-toggle {
-        touch-action: manipulation;
-    }
-
     /* Prevent zoom on input focus */
     input {
         font-size: 16px;
@@ -765,18 +825,8 @@ body.rainbow-theme {
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Hide global scores on very small screens */
-    .global-scores-panel {
-        display: none;
-    }
-
-    /* 移动端操作钮的按压反馈保留（scale 0.95，见上）——它是按钮不是棋盘。
-       ⚠️ 不要给 #tetris 再加任何 :active 缩放/过渡：棋盘必须纹丝不动，
-       规则见 #tetris 自身的 transition: none 注释。 */
-
     /* Better touch targets for mobile；顶栏图标钮的命中区由 .game-icon-btn::after 提供 */
-    .btn,
-    .theme-toggle {
+    .btn {
         min-height: var(--tok-btn-size, 40px);
         -webkit-tap-highlight-color: transparent;
     }
@@ -804,8 +854,8 @@ body.rainbow-theme {
     }
 }
 
-/* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
-.theme-toggle::after, .home-toggle::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
+/* Touch hit-area expansion 由 .game-icon-btn::after 统一提供
+   （宿主自带 position:relative，不会解析到 .game-container 形成隐形全页命中层）。 */
 
 
 

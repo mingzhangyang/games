@@ -13,6 +13,7 @@ import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
+import { createStatsDrawer } from './game-drawer.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -40,6 +41,8 @@ function storageSet(key, val) {
 
 const I18N = {
     zh: {
+        close: '关闭',
+        stats: '数据统计',
         gameTitle: '针尖对麦芒',
         gameSub: '极速破锋 · 针芒毕露 · 刹那生灭',
         badge: '东方赛博交锋',
@@ -124,6 +127,8 @@ const I18N = {
         ]
     },
     en: {
+        close: 'Close',
+        stats: 'Stats',
         gameTitle: 'Pinpoint Clash',
         gameSub: 'Needle vs Awn · Pierce · Clash · Awaken',
         badge: 'ORIENTAL KINETIC ACTION',
@@ -1222,6 +1227,33 @@ class GameEngine {
             this.dom.overlayPause.classList.add('hidden');
             this.dom.btnPause.innerHTML = ICONS.pause;
         }
+    }
+
+    /**
+     * 静默暂停 / 恢复 —— 给底部统计抽屉用。
+     *
+     * ⚠️ 本页的 rAF 循环是**自续**的（每帧末尾无条件再排一帧），不像 pm/hs 那样
+     * 靠 `stopLoop()` 掐断。好在 `loop()` 内部已经用 `state === 'playing'` 门禁
+     * 包住了所有 update，所以只改状态就能让模拟真正停住 —— 不需要也无法用
+     * cancelAnimationFrame（循环没有保存 id）。这里刻意不进暂停遮罩。
+     */
+    pauseQuiet() {
+        if (this.state !== 'playing') return;
+        this.state = 'paused';
+        // 按钮图标要跟着切（暂停中显示"播放"），否则关掉抽屉后图标与状态不符
+        if (this.dom.btnPause) this.dom.btnPause.innerHTML = ICONS.play;
+    }
+
+    resumeQuiet() {
+        if (this.state !== 'paused') return;
+        this.state = 'playing';
+        this.lastTime = performance.now();   // 丢掉暂停期间的时间跳跃，避免恢复瞬间 dt 爆炸
+        if (this.dom.btnPause) this.dom.btnPause.innerHTML = ICONS.pause;
+    }
+
+    /** 抽屉判据 */
+    isRunning() {
+        return this.state === 'playing';
     }
 
     /* ────────────────────────── 核心交互与操作 ────────────────────────── */
@@ -2404,4 +2436,19 @@ class GameEngine {
 // 页面加载完成后实例化
 document.addEventListener('DOMContentLoaded', () => {
     window.gameEngine = new GameEngine();
+
+    // 移动端底部统计抽屉
+    window.naDrawer = createStatsDrawer({
+        idPrefix: 'na',
+        getGame: () => window.gameEngine,
+        onPause: (g) => g && g.pauseQuiet(),
+        onResume: (g) => g && g.resumeQuiet(),
+        isBusy: () => {
+            const g = window.gameEngine;
+            return !!g && typeof g.isRunning === 'function' && g.isRunning();
+        },
+        ICONS,
+        getText: () => I18N[getLang()] || I18N.zh,
+    });
+    if (window.naDrawer) window.naDrawer.init();
 });
