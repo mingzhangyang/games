@@ -50,7 +50,7 @@ const LANGUAGES = {
         stats: 'Stats',
         title: 'Neon Tower Defense',
         subtitle: 'Build · Upgrade · Survive',
-        howto: 'Tap a cell to build towers, tap a tower to upgrade, sell or set targeting priority. Use tactical commander skills (EMP & Overdrive) and survive all 25 waves!',
+        howto: 'Tap a cell to build towers, tap a tower to upgrade, sell or set targeting priority. Watch out for healers, armored units, flyers and tower-breakers — pick the right counter. Use commander skills (EMP & Overdrive) to hold every line.',
         play: 'Play',
         pulse: 'Pulse', frost: 'Frost', cannon: 'Cannon', tesla: 'Tesla',
         pulseDesc: 'rapid single laser', frostDesc: 'slows & freezes creeps', cannonDesc: 'splash damage & napalm', teslaDesc: 'chain lightning & shock',
@@ -69,14 +69,17 @@ const LANGUAGES = {
         again: 'Play Again',
         gameOver: 'Base Destroyed',
         victory: 'VICTORY!',
-        defeatSub: 'You reached wave {n}',
-        victorySub: 'All 25 waves cleared — {lives} lives left',
+        defeatSub: 'You reached wave {n} of {total}',
+        victorySub: '{lv} cleared — {lives} lives left',
         score: 'Score',
         best: 'Best',
         newBest: 'NEW BEST!',
         waveCleared: 'Wave {n} cleared! +{g} gold',
         bossIncoming: '⚠️ BOSS INCOMING',
+        overlordIncoming: '💀 OVERLORD INCOMING',
         bossDefeated: '👑 BOSS ELIMINATED!',
+        towerLost: '⚠️ A tower was destroyed!',
+        splitToast: 'SPLIT!',
         notEnoughGold: 'Not enough gold',
         cantBuild: 'Can\'t build here',
         maxLevel: 'MAX',
@@ -84,16 +87,19 @@ const LANGUAGES = {
         sell: 'Sell',
         dmg: 'DMG', range: 'RNG', rate: 'RATE',
         priority: 'Priority',
-        prioFirst: 'First', prioLast: 'Last', prioStrong: 'Strong', prioWeak: 'Weak', prioClose: 'Close',
+        prioFirst: 'First', prioLast: 'Last', prioStrong: 'Strong', prioWeak: 'Weak', prioClose: 'Close', prioHealer: 'Healer',
         emp: 'EMP Shockwave',
         empDesc: 'Stuns all creeps 2.4s + electric damage [Q]',
         empCast: '⚡ EMP Shockwave Triggered!',
         overdrive: 'Overdrive',
         overdriveDesc: '+50% fire rate & +20% range for 6s [E]',
         overdriveCast: '🔥 Overdrive Activated!',
-        earlyCall: '⚡ Early +{g}💰',
+        earlyCall: '⚡ Rush Wave {n}',
         earlyCallBonus: 'Early Call',
         earlyCallToast: '⚡ Early Wave Bonus: +{g} Gold!',
+        stackToast: '⚡ Wave rushed! Stack ×{n} — enemies +{hp}% HP, +{g}% gold',
+        stackMax: '⚠️ Stack limit reached — clear the wave first!',
+        stackLabel: 'Rush',
         ultimate: 'AWAKENING',
         damageDealt: 'DMG',
         kills: 'Kills',
@@ -118,14 +124,39 @@ const LANGUAGES = {
         empBtnTitle: 'EMP Shockwave (Q)',
         overdriveBtnTitle: 'Overdrive (E)',
         language: '中文',
-        hint: 'Click cell to build · Click tower to upgrade · Space to start wave'
+        hint: 'Click cell to build · Click tower to upgrade · Space to start wave',
+
+        // 关卡选择
+        selectLevel: 'Select Operation',
+        levelBest: 'Best',
+        levelLocked: 'Locked',
+        levelLockHint: 'Clear {name} to unlock',
+        levelWaves: '{n} waves',
+        levelGold: '{n} gold',
+        levelLives: '{n} lives',
+        difficulty: 'Difficulty',
+        enemyTeaches: 'New threats',
+        levelStart: '▶ Deploy',
+        back: 'Back',
+        finalWave: 'FINAL SHOWDOWN',
+        bossWave: '⚠️ BOSS INCOMING ⚠️',
+        levels: {
+            outpost: { name: 'Neon Outpost', tag: 'Recruit', desc: 'A calm perimeter run. Learn the grid and the four towers.' },
+            vanguard: { name: 'Vanguard Line', tag: 'Standard', desc: 'Field medics appear. Kill them first or nothing dies.' },
+            citadel: { name: 'Iron Citadel', tag: 'Hard', desc: 'Armored columns soak physical hits — bring Tesla or napalm.' },
+            skyfall: { name: 'Skyfall', tag: 'Brutal', desc: 'Flyers cut straight across the map. Cover the middle, not the road.' },
+            juggernaut: { name: 'Juggernaut', tag: 'Extreme', desc: 'Splitters and siege hammers. Rebuild as your towers fall.' },
+            singularity: { name: 'Singularity', tag: 'Nightmare', desc: 'Every threat at once, and the Overlord heals its own army.' }
+        },
+        threatHealer: 'Healer', threatArmor: 'Armored', threatFlyer: 'Flying',
+        threatSplitter: 'Splitter', threatAttacker: 'Siege', threatOverlord: 'Overlord'
     },
     zh: {
         close: '关闭',
         stats: '数据统计',
         title: '霓虹塔防',
         subtitle: '建造 · 升级 · 守护',
-        howto: '点击空格子建塔，点击塔升级、出售或切换集火策略。合理运用指挥官战术技能（EMP震荡与超频加速），守住 25 波即获胜！',
+        howto: '点击空格子建塔，点击塔升级、出售或切换集火策略。当心治疗兵、装甲兵、飞行兵和攻城兵——用对克制手段。合理运用指挥官技能（EMP震荡与超频加速），守住每一道防线。',
         play: '开始游戏',
         pulse: '脉冲塔', frost: '冰霜塔', cannon: '加农炮', tesla: '电磁塔',
         pulseDesc: '高速单体激光', frostDesc: '减速与冰冻急冻', cannonDesc: '范围溅射与火海', teslaDesc: '闪电连锁与感电',
@@ -144,14 +175,17 @@ const LANGUAGES = {
         again: '再来一局',
         gameOver: '核心被摧毁',
         victory: '胜利！',
-        defeatSub: '你到达了第 {n} 波',
-        victorySub: '25 波全部守住——剩余 {lives} 条生命',
+        defeatSub: '你到达了第 {n} / {total} 波',
+        victorySub: '{lv} 已攻陷——剩余 {lives} 条生命',
         score: '得分',
         best: '最佳',
         newBest: '新纪录！',
         waveCleared: '第 {n} 波守住！+{g} 金币',
         bossIncoming: '⚠️ BOSS 来袭',
+        overlordIncoming: '💀 霸主降临',
         bossDefeated: '👑 BOSS 已歼灭！',
+        towerLost: '⚠️ 一座防御塔被摧毁！',
+        splitToast: '分裂！',
         notEnoughGold: '金币不足',
         cantBuild: '这里不能建造',
         maxLevel: '满级',
@@ -159,16 +193,19 @@ const LANGUAGES = {
         sell: '出售',
         dmg: '攻击', range: '射程', rate: '攻速',
         priority: '集火目标',
-        prioFirst: '首位', prioLast: '末位', prioStrong: '强敌', prioWeak: '残血', prioClose: '最近',
+        prioFirst: '首位', prioLast: '末位', prioStrong: '强敌', prioWeak: '残血', prioClose: '最近', prioHealer: '治疗兵',
         emp: 'EMP 震荡',
         empDesc: '全屏瘫痪 2.4 秒并造成高额电击伤害 [Q]',
         empCast: '⚡ EMP 电磁脉冲已释放！',
         overdrive: '战术超频',
         overdriveDesc: '全塔攻速提升 50%，射程提升 20%，持续 6 秒 [E]',
         overdriveCast: '🔥 全塔超频启动！',
-        earlyCall: '⚡ 提前迎击 +{g}💰',
+        earlyCall: '⚡ 抢发第 {n} 波',
         earlyCallBonus: '提前迎击',
         earlyCallToast: '⚡ 提前迎击奖励：+{g} 金币！',
+        stackToast: '⚡ 已抢发！堆叠 ×{n} —— 敌人血量 +{hp}%、金币 +{g}%',
+        stackMax: '⚠️ 已达堆叠上限，先清完这波！',
+        stackLabel: '堆叠',
         ultimate: '觉醒形态',
         damageDealt: '总伤',
         kills: '击杀',
@@ -193,7 +230,32 @@ const LANGUAGES = {
         empBtnTitle: 'EMP 电磁震荡 (Q)',
         overdriveBtnTitle: '战术超频 (E)',
         language: 'English',
-        hint: '点空格建塔 · 点塔升级/集火 · 空格发波'
+        hint: '点空格建塔 · 点塔升级/集火 · 空格发波',
+
+        // 关卡选择
+        selectLevel: '选择作战行动',
+        levelBest: '最佳',
+        levelLocked: '未解锁',
+        levelLockHint: '通关「{name}」后解锁',
+        levelWaves: '{n} 波',
+        levelGold: '{n} 金币',
+        levelLives: '{n} 生命',
+        difficulty: '难度',
+        enemyTeaches: '新增威胁',
+        levelStart: '▶ 出击',
+        back: '返回',
+        finalWave: '终极决战',
+        bossWave: '⚠️ BOSS 降临 ⚠️',
+        levels: {
+            outpost: { name: '霓虹哨站', tag: '新兵', desc: '一段平静的外围巡逻，用来熟悉棋盘与四种塔。' },
+            vanguard: { name: '先锋防线', tag: '标准', desc: '战地医师登场——不先切掉它，其他敌人根本打不死。' },
+            citadel: { name: '钢铁堡垒', tag: '困难', desc: '装甲纵队硬吃物理伤害，请带上电磁塔或加农火海破甲。' },
+            skyfall: { name: '天穹坠落', tag: '残酷', desc: '飞行兵直线穿越地图。要守住中路，而不是守那条路。' },
+            juggernaut: { name: '重装军团', tag: '极限', desc: '分裂兵与攻城锤齐上。塔倒了就得边打边重建。' },
+            singularity: { name: '奇点终局', tag: '噩梦', desc: '所有威胁同时压上，霸主还会给整支军队回血。' }
+        },
+        threatHealer: '治疗兵', threatArmor: '装甲兵', threatFlyer: '飞行兵',
+        threatSplitter: '分裂兵', threatAttacker: '攻城兵', threatOverlord: '霸主'
     }
 };
 
@@ -317,26 +379,138 @@ const Sfx = {
 
 const W = 480, H = 640;
 const COLS = 12, ROWS = 16, CELL = 40;
-const MAX_WAVES = 25;
-const START_GOLD = 220;
-const START_LIVES = 20;
 const SELL_RATIO = 0.7;
 const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 const MAX_PARTICLES = 160;
 const MAX_FLOATERS = 40;
+
+// 提前迎击：每叠一层，敌人血量与金币同步上浮，清波后重置
+const STACK_HP_PER = 0.08;
+const STACK_GOLD_PER = 0.08;
+const STACK_MAX = 6;
+
+/*
+ * 关卡配置。
+ * waves       —— 本关波次总数
+ * gold/lives  —— 本关起始资源（后面的关卡给得更少，逼玩家精打细算）
+ * hpBase      —— 血量曲线基数，决定本关"体感难度"
+ * hpExp       —— 血量指数，把线性曲线改成前松后紧
+ * speed       —— 敌人速度整体倍率
+ * bounty      —— 金币收益倍率（越低越穷，越难滚雪球）
+ * modifiers   —— 本关专属规则
+ */
+const LEVELS = [
+    {
+        id: 'outpost', waves: 15, gold: 240, lives: 20,
+        hpBase: 0.16, hpExp: 1.16, speed: 1.0, bounty: 1.0,
+        modifiers: {}
+    },
+    {
+        id: 'vanguard', waves: 20, gold: 230, lives: 18,
+        hpBase: 0.19, hpExp: 1.20, speed: 1.03, bounty: 0.98,
+        modifiers: { regen: true }
+    },
+    {
+        id: 'citadel', waves: 25, gold: 220, lives: 15,
+        hpBase: 0.21, hpExp: 1.24, speed: 1.06, bounty: 0.95,
+        modifiers: { regen: true, armored: true }
+    },
+    {
+        id: 'skyfall', waves: 30, gold: 210, lives: 12,
+        hpBase: 0.23, hpExp: 1.27, speed: 1.09, bounty: 0.92,
+        modifiers: { regen: true, armored: true, flyers: true }
+    },
+    {
+        id: 'juggernaut', waves: 35, gold: 200, lives: 10,
+        hpBase: 0.25, hpExp: 1.30, speed: 1.12, bounty: 0.89,
+        modifiers: { regen: true, armored: true, flyers: true, splitters: true }
+    },
+    {
+        id: 'singularity', waves: 40, gold: 190, lives: 8,
+        hpBase: 0.27, hpExp: 1.34, speed: 1.15, bounty: 0.86,
+        modifiers: { regen: true, armored: true, flyers: true, splitters: true, drain: 2 }
+    }
+];
+
+const LEVEL_BY_ID = {};
+LEVELS.forEach(lv => { LEVEL_BY_ID[lv.id] = lv; });
 
 // 敌人路径（格子坐标，起点在画布上方之外）
 const WAYPOINTS = [
     [5, -1], [5, 3], [9, 3], [9, 6], [2, 6], [2, 10], [8, 10], [8, 13], [3, 13], [3, 15]
 ];
 
+// 飞行单位的空中捷径：几乎直线插到底，不再绕行
+const AIR_WAYPOINTS = [
+    [5, -1], [6, 2], [4, 5], [7, 8], [5, 11], [3, 15]
+];
+
+/*
+ * 敌人类型。
+ * armor    —— 物理伤害减免比例（脉冲/加农被压，需电磁或火海破防）
+ * attacker —— 可以攻击防御塔
+ * healer   —— 周期性治疗附近友军
+ * split    —— 死亡时分裂
+ * flying   —— 走空中捷径
+ * energy   —— 电磁伤害减免（装甲兵的抗性反制面）
+ */
 const ENEMY_TYPES = {
-    normal: { hp: 34,  speed: 55,  gold: 6,  dmg: 1, r: 9,   color: '#ff6b7a', sides: 8, icon: '👾' },
-    fast:   { hp: 20,  speed: 98,  gold: 5,  dmg: 1, r: 7,   color: '#ffd34d', sides: 3, icon: '⚡' },
-    tank:   { hp: 135, speed: 33,  gold: 14, dmg: 2, r: 12,  color: '#a78bfa', sides: 6, icon: '🛡️' },
-    swarm:  { hp: 16,  speed: 108, gold: 3,  dmg: 1, r: 6.5, color: '#34d399', sides: 4, icon: '🐝' },
-    shield: { hp: 75,  speed: 48,  gold: 10, dmg: 1, r: 10,  color: '#38bdf8', sides: 7, icon: '💠', maxShield: 50 },
-    boss:   { hp: 950, speed: 25,  gold: 90, dmg: 4, r: 17,  color: '#ff5a3c', sides: 5, icon: '👑' }
+    normal: {
+        hp: 34, speed: 55, gold: 6, dmg: 1, r: 9, sides: 8,
+        color: '#ff6b7a', icon: '👾'
+    },
+    fast: {
+        hp: 20, speed: 98, gold: 5, dmg: 1, r: 7, sides: 3,
+        color: '#ffd34d', icon: '⚡'
+    },
+    tank: {
+        hp: 135, speed: 33, gold: 14, dmg: 2, r: 12, sides: 6,
+        color: '#a78bfa', icon: '🛡️'
+    },
+    swarm: {
+        hp: 16, speed: 108, gold: 3, dmg: 1, r: 6.5, sides: 4,
+        color: '#34d399', icon: '🐝'
+    },
+    shield: {
+        hp: 75, speed: 48, gold: 10, dmg: 1, r: 10, sides: 7,
+        color: '#38bdf8', icon: '💠', maxShield: 50
+    },
+    // 治疗兵：自身脆，但持续给周围友军回血，不管它就永远打不完
+    healer: {
+        hp: 90, speed: 44, gold: 16, dmg: 1, r: 11, sides: 6,
+        color: '#86efac', icon: '💚', healer: { radius: 90, hps: 14 }
+    },
+    // 装甲兵：减免 60% 物理伤害，脉冲/加农打得动但极慢，要靠电磁或火海
+    armor: {
+        hp: 170, speed: 40, gold: 18, dmg: 2, r: 12, sides: 5,
+        color: '#cbd5e1', icon: '🪨', armor: 0.6
+    },
+    // 飞行兵：走空中捷径，路线短、不绕路，塔位覆盖不到就必漏
+    flyer: {
+        hp: 60, speed: 88, gold: 11, dmg: 1, r: 8.5, sides: 3,
+        color: '#f0abfc', icon: '🦇', flying: true
+    },
+    // 分裂兵：死亡裂成 3 只小怪，溅射清不干净就雪崩
+    splitter: {
+        hp: 120, speed: 52, gold: 15, dmg: 1, r: 10.5, sides: 4,
+        color: '#fdba74', icon: '🧬', split: { type: 'swarm', count: 3 }
+    },
+    // 攻城兵：远程攻击防御塔，会把你辛苦建的塔一座座拆掉
+    attacker: {
+        hp: 200, speed: 38, gold: 22, dmg: 2, r: 12, sides: 6,
+        color: '#fb7185', icon: '🔨',
+        attacker: { range: 130, dps: 16, rate: 0.9 }
+    },
+    boss: {
+        hp: 950, speed: 25, gold: 90, dmg: 4, r: 17, sides: 5,
+        color: '#ff5a3c', icon: '👑'
+    },
+    // 终局 BOSS：带回血光环 + 40% 物理减伤，是最硬的一道墙
+    overlord: {
+        hp: 1600, speed: 22, gold: 200, dmg: 6, r: 20, sides: 8,
+        color: '#e11d48', icon: '💀', armor: 0.4,
+        healer: { radius: 110, hps: 22 }
+    }
 };
 
 const TOWER_TYPES = {
@@ -378,38 +552,50 @@ const TOWER_TYPES = {
     }
 };
 
-const TARGET_PRIORITIES = ['first', 'strong', 'weak', 'close', 'last'];
+const TARGET_PRIORITIES = ['first', 'strong', 'weak', 'close', 'healer', 'last'];
 
 /* ────────────────────────── 路径几何 ────────────────────────── */
 
-const pathPts = WAYPOINTS.map(([c, r]) => ({ x: (c + 0.5) * CELL, y: (r + 0.5) * CELL }));
-const pathSegLen = [];
-let PATH_TOTAL = 0;
-for (let i = 0; i < pathPts.length - 1; i++) {
-    const dx = pathPts[i + 1].x - pathPts[i].x;
-    const dy = pathPts[i + 1].y - pathPts[i].y;
-    const len = Math.hypot(dx, dy);
-    pathSegLen.push(len);
-    PATH_TOTAL += len;
+/** 把格子路径编译成可沿着走的折线（累计长度 + 按距离取点） */
+function compilePath(waypoints) {
+    const pts = waypoints.map(([c, r]) => ({ x: (c + 0.5) * CELL, y: (r + 0.5) * CELL }));
+    const segs = [];
+    let total = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+        const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+        segs.push(len);
+        total += len;
+    }
+    const pointAt = (d) => {
+        if (d <= 0) return { x: pts[0].x, y: pts[0].y };
+        if (d >= total) return { x: pts[pts.length - 1].x, y: pts[pts.length - 1].y };
+        let acc = 0;
+        for (let i = 0; i < segs.length; i++) {
+            if (d <= acc + segs[i]) {
+                const t = (d - acc) / segs[i];
+                const a = pts[i], b = pts[i + 1];
+                return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+            }
+            acc += segs[i];
+        }
+        return { x: pts[pts.length - 1].x, y: pts[pts.length - 1].y };
+    };
+    return { pts, segs, total, pointAt };
 }
 
+const GROUND_PATH = compilePath(WAYPOINTS);
+const AIR_PATH = compilePath(AIR_WAYPOINTS);
+
+const pathPts = GROUND_PATH.pts;
+const PATH_TOTAL = GROUND_PATH.total;
+const AIR_PATH_TOTAL = AIR_PATH.total;
+
 function pointAtDist(d) {
-    if (d <= 0) return { x: pathPts[0].x, y: pathPts[0].y, seg: 0 };
-    if (d >= PATH_TOTAL) {
-        const p = pathPts[pathPts.length - 1];
-        return { x: p.x, y: p.y, seg: pathPts.length - 2 };
-    }
-    let acc = 0;
-    for (let i = 0; i < pathSegLen.length; i++) {
-        if (d <= acc + pathSegLen[i]) {
-            const t = (d - acc) / pathSegLen[i];
-            const a = pathPts[i], b = pathPts[i + 1];
-            return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, seg: i };
-        }
-        acc += pathSegLen[i];
-    }
-    const p = pathPts[pathPts.length - 1];
-    return { x: p.x, y: p.y, seg: 0 };
+    return GROUND_PATH.pointAt(d);
+}
+
+function pathOf(enemy) {
+    return enemy && enemy.flying ? AIR_PATH : GROUND_PATH;
 }
 
 // 路径覆盖的格子（禁止建造）
@@ -498,39 +684,74 @@ const towerBaseSprite = (() => {
 
 /* ────────────────────────── 波次构建 ────────────────────────── */
 
-function buildWave(n) {
+/**
+ * 单波编成。
+ * 血量/速度/收益均由所属关卡的曲线推导，本函数只负责"放什么、放多少、多密"。
+ * 新增机制型敌人按关卡 modifiers 解锁，越靠后的关卡解锁越早、分量越重。
+ */
+function buildWave(n, level) {
+    const L = level || LEVELS[0];
+    const mods = L.modifiers || {};
     const queue = [];
     const push = (type, count, gap) => {
         for (let i = 0; i < count; i++) queue.push({ type, gap });
     };
-    const hpMul = 1 + (n - 1) * 0.18 + Math.max(0, n - 12) ** 2 * 0.02;
-    const spdMul = 1 + Math.min(0.35, (n - 1) * 0.012);
 
-    if (n === MAX_WAVES) {
-        // 终局第25波：全面进攻 + 双 BOSS 压轴
-        push('normal', 10, 0.28);
-        push('fast', 8, 0.3);
-        push('swarm', 14, 0.16);
-        push('shield', 5, 0.7);
-        push('tank', 4, 1.1);
-        push('boss', 2, 2.2);
-    } else if (n === 20) {
-        // 第20波：双 BOSS 降临
-        push('normal', 8, 0.4);
-        push('shield', 4, 0.8);
-        push('tank', 3, 1.2);
-        push('boss', 2, 2.6);
-    } else if (n === 10) {
-        // 第10波：初次迎战 BOSS
-        push('normal', 8, 0.5);
-        push('fast', 4, 0.4);
-        push('boss', 1, 2.4);
+    // 血量：前段温和、后段陡增，避免"线性曲线 = 第 1 波和第 25 波差不多"
+    const t = (n - 1) / Math.max(1, L.waves - 1);
+    const hpMul = (1 + (n - 1) * L.hpBase) * Math.pow(1 + t * 0.9, L.hpExp) * 1.0;
+    const spdMul = L.speed * (1 + Math.min(0.4, (n - 1) * 0.013));
+
+    // BOSS 波：每 10 波一次，末波压轴
+    const isBossWave = n === L.waves || n % 10 === 0;
+
+    if (n === L.waves) {
+        // 终局：全兵种总攻，末关改为双 OVERLORD
+        push('normal', 8, 0.26);
+        push('fast', 8, 0.28);
+        push('swarm', 12, 0.15);
+        push('shield', 5, 0.6);
+        push('tank', 4, 1.0);
+        if (mods.armored) push('armor', 5, 0.8);
+        if (mods.flyers) push('flyer', 8, 0.42);
+        if (mods.splitters) push('splitter', 5, 0.85);
+        if (mods.regen) push('healer', 3, 1.3);
+        push(L.id === 'singularity' ? 'overlord' : 'boss', L.id === 'singularity' ? 2 : 2, 2.1);
+    } else if (n % 10 === 0) {
+        // 阶段 BOSS，前面垫兵
+        push('normal', 7, 0.35);
+        push('shield', 3, 0.7);
+        push('tank', 3, 1.1);
+        if (mods.armored) push('armor', 3, 0.9);
+        if (mods.flyers) push('flyer', 5, 0.45);
+        if (mods.regen) push('healer', 2, 1.5);
+        const bossCount = n >= 30 ? 2 : 1;
+        push(n >= L.waves - 10 && L.id === 'singularity' ? 'overlord' : 'boss', bossCount, 2.5);
     } else {
-        push('normal', 5 + Math.floor(n * 1.1), Math.max(0.28, 0.8 - n * 0.02));
-        if (n >= 3) push('fast', 2 + Math.floor((n - 2) * 1.1), 0.38);
-        if (n >= 5) push('tank', Math.max(1, Math.floor((n - 3) * 0.8)), 1.3);
-        if (n >= 7) push('swarm', Math.floor(4 + (n - 6) * 1.4), 0.18);
-        if (n >= 11) push('shield', Math.floor(1 + (n - 10) * 0.7), 0.9);
+        // 常规波：基础兵种滚动增长
+        push('normal', 5 + Math.floor(n * 1.0), Math.max(0.24, 0.78 - n * 0.018));
+        if (n >= 3) push('fast', 2 + Math.floor((n - 2) * 1.0), 0.34);
+        if (n >= 5) push('tank', Math.max(1, Math.floor((n - 3) * 0.7)), 1.2);
+        if (n >= 6) push('swarm', Math.floor(4 + (n - 6) * 1.3), 0.16);
+        if (n >= 8) push('shield', Math.floor(1 + (n - 8) * 0.6), 0.85);
+
+        // 机制兵种：解锁后穿插进场，密度随波次抬高
+        if (mods.regen && n >= 5) {
+            push('healer', Math.max(1, Math.floor((n - 4) * 0.28)), 1.4);
+        }
+        if (mods.armored && n >= 7) {
+            push('armor', Math.max(1, Math.floor((n - 6) * 0.32)), 0.95);
+        }
+        if (mods.flyers && n >= 9) {
+            push('flyer', Math.max(2, Math.floor((n - 8) * 0.5)), 0.4);
+        }
+        if (mods.splitters && n >= 11) {
+            push('splitter', Math.max(1, Math.floor((n - 10) * 0.28)), 0.9);
+        }
+        // 攻城兵：越后面越多，专门拆塔
+        if (mods.armored && n >= 13) {
+            push('attacker', Math.max(1, Math.floor((n - 12) * 0.22)), 1.0);
+        }
     }
 
     const summary = {};
@@ -538,7 +759,7 @@ function buildWave(n) {
         summary[item.type] = (summary[item.type] || 0) + 1;
     }
 
-    return { queue, hpMul, spdMul, summary };
+    return { queue, hpMul, spdMul, summary, isBossWave, bounty: L.bounty };
 }
 
 /* ────────────────────────── 游戏类 ────────────────────────── */
@@ -549,9 +770,11 @@ class TowerDefenseGame {
         this.ctx = this.canvas.getContext('2d');
         this.el = {};
         ['td-lives', 'td-gold', 'td-wave', 'td-wave-btn', 'td-wave-text', 'td-wave-preview',
-         'td-stat-lives', 'td-stat-gold', 'td-stat-wave',
+         'td-stat-lives', 'td-stat-gold', 'td-stat-wave', 'td-stack-badge',
          'td-panel', 'td-toast', 'td-start', 'td-title', 'td-subtitle', 'td-howto', 'td-tower-intro',
          'td-btn-play', 'td-best-line', 'td-start-mute', 'td-start-lang',
+         'td-level-cards', 'td-level-brief', 'td-brief-waves', 'td-brief-gold', 'td-brief-lives',
+         'td-select-title', 'td-brief-lbl-waves', 'td-brief-lbl-gold', 'td-brief-lbl-lives',
          'td-pause', 'td-pause-title', 'td-btn-resume', 'td-btn-menu',
          'td-over', 'td-over-title', 'td-over-verdict', 'td-over-score', 'td-over-sub',
          'td-over-waves', 'td-over-kills', 'td-over-lives',
@@ -599,8 +822,9 @@ class TowerDefenseGame {
     /* ── 一局的初始状态 ── */
 
     resetRun() {
-        this.gold = START_GOLD;
-        this.lives = START_LIVES;
+        this.level = this.level || LEVELS[0];
+        this.gold = this.level.gold;
+        this.lives = this.level.lives;
         this.wave = 0;
         this.score = 0;
         this.totalKills = 0;
@@ -621,6 +845,11 @@ class TowerDefenseGame {
         this.hpMul = 1;
         this.spdMul = 1;
         this.waveState = 'idle'; // idle | spawning | fighting
+
+        // 提前迎击堆叠：层数越高敌人越强、赏金越高
+        this.stack = 0;
+        this.stackHp = 1;
+        this.stackGold = 1;
 
         this.empCd = 0;
         this.boostCd = 0;
@@ -666,7 +895,7 @@ class TowerDefenseGame {
         if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
         if (this.el.howto) this.el.howto.textContent = t.howto;
         if (this.el['tower-intro']) this.el['tower-intro'].textContent = t.towerIntro;
-        if (this.el['btn-play']) this.el['btn-play'].textContent = `🏰 ${t.play}`;
+        if (this.el['btn-play']) this.el['btn-play'].innerHTML = `${ICONS.play}<span>${t.levelStart.replace('▶ ', '')}</span>`;
         if (this.el['pause-title']) this.el['pause-title'].textContent = t.paused;
         if (this.el['btn-resume']) this.el['btn-resume'].textContent = t.resume;
         if (this.el['btn-menu']) this.el['btn-menu'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
@@ -678,8 +907,12 @@ class TowerDefenseGame {
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
         if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
+        if (this.el['select-title']) this.el['select-title'].textContent = t.selectLevel;
+        if (this.el['brief-lbl-waves']) this.el['brief-lbl-waves'].textContent = t.statWave;
+        if (this.el['brief-lbl-gold']) this.el['brief-lbl-gold'].textContent = t.statGold;
+        if (this.el['brief-lbl-lives']) this.el['brief-lbl-lives'].textContent = t.statLives;
         if (this.el['best-line']) {
-            const best = Number(storageGet('td_best')) || 0;
+            const best = Number(storageGet(`td_best_${this.level.id}`)) || 0;
             this.el['best-line'].textContent = best ? `🏆 ${t.best}: ${formatNumber(best)}` : '';
         }
         if (this.el['over-lbl-waves']) this.el['over-lbl-waves'].textContent = t.waveStat;
@@ -729,6 +962,7 @@ class TowerDefenseGame {
         this.renderPanel();
         this.renderWaveButton();
         this.updateSkillButtons();
+        this.renderLevelCards();
         updateMoreGames(this.lang);
     }
 
@@ -753,28 +987,189 @@ class TowerDefenseGame {
         });
     }
 
+    /* ── 关卡选择 ── */
+
+    /** 关卡解锁进度：通关过的最小难度关卡数 + 1 */
+    unlockedCount() {
+        let count = 1;
+        for (let i = 0; i < LEVELS.length - 1; i++) {
+            if (storageGet(`td_clear_${LEVELS[i].id}`)) count = i + 2;
+            else break;
+        }
+        return Math.min(LEVELS.length, count);
+    }
+
+    isLevelUnlocked(level) {
+        return LEVELS.indexOf(level) < this.unlockedCount();
+    }
+
+    /** 该关会出现的机制型敌人（用于关卡卡片上的威胁标签） */
+    levelThreats(level) {
+        const m = level.modifiers || {};
+        const list = [];
+        if (m.regen) list.push('threatHealer');
+        if (m.armored) list.push('threatArmor');
+        if (m.flyers) list.push('threatFlyer');
+        if (m.splitters) list.push('threatSplitter');
+        // 攻城兵随 armored 解锁但更晚，只在长波次关卡提示
+        if (m.armored && level.waves >= 30) list.push('threatAttacker');
+        if (level.id === 'singularity') list.push('threatOverlord');
+        return list;
+    }
+
+    renderLevelCards() {
+        const box = this.el['level-cards'];
+        if (!box) return;
+        const t = this.TEXT;
+        const unlocked = this.unlockedCount();
+        box.textContent = '';
+
+        LEVELS.forEach((level, idx) => {
+            const name = t.levels[level.id] || { name: level.id, tag: '', desc: '' };
+            const isUnlocked = idx < unlocked;
+            const best = Number(storageGet(`td_best_${level.id}`)) || 0;
+            const cleared = !!storageGet(`td_clear_${level.id}`);
+
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = `td-level-card${isUnlocked ? '' : ' locked'}${idx === LEVELS.indexOf(this.level) ? ' active' : ''}`;
+            card.dataset.level = level.id;
+            if (!isUnlocked) card.disabled = true;
+
+            const head = document.createElement('div');
+            head.className = 'td-level-head';
+            const nameEl = document.createElement('b');
+            nameEl.className = 'td-level-name';
+            nameEl.textContent = `${idx + 1}. ${name.name}`;
+            const tagEl = document.createElement('span');
+            tagEl.className = 'td-level-tag';
+            tagEl.textContent = cleared ? `✓ ${name.tag}` : name.tag;
+            head.append(nameEl, tagEl);
+
+            const descEl = document.createElement('p');
+            descEl.className = 'td-level-desc';
+            descEl.textContent = isUnlocked
+                ? name.desc
+                : t.levelLockHint.replace('{name}', name.name);
+
+            const stats = document.createElement('div');
+            stats.className = 'td-level-stats';
+            [`🌊 ${t.levelWaves.replace('{n}', level.waves)}`,
+             `💰 ${t.levelGold.replace('{n}', level.gold)}`,
+             `❤️ ${t.levelLives.replace('{n}', level.lives)}`].forEach(txt => {
+                const chip = document.createElement('span');
+                chip.className = 'td-level-chip';
+                chip.textContent = txt;
+                stats.appendChild(chip);
+            });
+
+            card.append(head, descEl, stats);
+
+            // 机制提示：这关新增了什么威胁
+            const threats = this.levelThreats(level);
+            if (isUnlocked && threats.length) {
+                const row = document.createElement('div');
+                row.className = 'td-level-threats';
+                const lbl = document.createElement('span');
+                lbl.className = 'td-level-threats-lbl';
+                lbl.textContent = `${t.enemyTeaches}:`;
+                row.appendChild(lbl);
+                threats.forEach(key => {
+                    const chip = document.createElement('span');
+                    chip.className = 'td-level-threat-chip';
+                    chip.textContent = t[key];
+                    row.appendChild(chip);
+                });
+                card.appendChild(row);
+            }
+
+            if (best) {
+                const bestEl = document.createElement('span');
+                bestEl.className = 'td-level-best';
+                bestEl.textContent = `🏆 ${t.levelBest} ${formatNumber(best)}`;
+                card.appendChild(bestEl);
+            } else if (!isUnlocked) {
+                const lockEl = document.createElement('span');
+                lockEl.className = 'td-level-best locked';
+                lockEl.textContent = `🔒 ${t.levelLocked}`;
+                card.appendChild(lockEl);
+            }
+
+            card.addEventListener('click', () => {
+                if (!isUnlocked) return;
+                Sfx.click();
+                this.level = level;
+                this.resetRun();
+                this.renderLevelCards();
+                this.renderBriefing();
+            });
+            box.appendChild(card);
+        });
+
+        this.renderBriefing();
+    }
+
+    renderBriefing() {
+        const box = this.el['level-brief'];
+        if (!box) return;
+        const t = this.TEXT;
+        const level = this.level;
+        const name = t.levels[level.id] || { name: level.id, tag: '', desc: '' };
+        box.textContent = '';
+
+        const title = document.createElement('div');
+        title.className = 'td-brief-title';
+        title.textContent = `${name.name} · ${name.tag}`;
+        const desc = document.createElement('p');
+        desc.className = 'td-brief-desc';
+        desc.textContent = name.desc;
+        box.append(title, desc);
+
+        if (this.el['brief-waves']) {
+            this.el['brief-waves'].textContent = String(level.waves);
+        }
+        if (this.el['brief-gold']) {
+            this.el['brief-gold'].textContent = String(level.gold);
+        }
+        if (this.el['brief-lives']) {
+            this.el['brief-lives'].textContent = String(level.lives);
+        }
+    }
+
     updateSideTowers() {
         const box = this.el['side-towers'];
         if (!box) return;
         const t = this.TEXT;
+        const zh = this.lang === 'zh';
         const defs = [
-            [TOWER_TYPES.pulse.icon, t.pulse, t.pulseDesc, 'Lv4: ' + (this.lang === 'zh' ? '超导脉冲 (35%暴击 2.5×伤害)' : 'Hyper Cannon (35% Crit 2.5×)')],
-            [TOWER_TYPES.frost.icon, t.frost, t.frostDesc, 'Lv4: ' + (this.lang === 'zh' ? '绝对零度 (72%减速 + 急冻寒潮)' : 'Blizzard Cryo (72% Slow + Freeze)')],
-            [TOWER_TYPES.cannon.icon, t.cannon, t.cannonDesc, 'Lv4: ' + (this.lang === 'zh' ? '超新星迫击炮 (持续火海地面DOT)' : 'Napalm Nova (Lingering Fire Zone)')],
-            [TOWER_TYPES.tesla.icon, t.tesla, t.teslaDesc, 'Lv4: ' + (this.lang === 'zh' ? '超能雷暴 (7跳连锁 + 感电+20%易伤)' : 'Overcharge Storm (7 Chains + Shock)')]
+            [TOWER_TYPES.pulse.icon, t.pulse, t.pulseDesc,
+                'Lv4: ' + (zh ? '超导脉冲 (35%暴击 2.5×伤害)' : 'Hyper Cannon (35% Crit 2.5×)'),
+                zh ? '物理 · 被装甲减免' : 'Physical · reduced by armor'],
+            [TOWER_TYPES.frost.icon, t.frost, t.frostDesc,
+                'Lv4: ' + (zh ? '绝对零度 (72%减速 + 急冻寒潮)' : 'Blizzard Cryo (72% Slow + Freeze)'),
+                zh ? '能量 · 无视装甲' : 'Energy · ignores armor'],
+            [TOWER_TYPES.cannon.icon, t.cannon, t.cannonDesc,
+                'Lv4: ' + (zh ? '超新星迫击炮 (持续火海地面DOT)' : 'Napalm Nova (Lingering Fire Zone)'),
+                zh ? '溅射物理 / 火海破甲' : 'Splash physical / napalm pierces armor'],
+            [TOWER_TYPES.tesla.icon, t.tesla, t.teslaDesc,
+                'Lv4: ' + (zh ? '超能雷暴 (7跳连锁 + 感电+20%易伤)' : 'Overcharge Storm (7 Chains + Shock)'),
+                zh ? '能量 · 装甲兵的克星' : 'Energy · the armor answer']
         ];
         box.textContent = '';
-        defs.forEach(([icon, name, desc, perk]) => {
+        defs.forEach(([icon, name, desc, perk, channel]) => {
             const row = document.createElement('div');
             row.className = 'td-side-tower';
             const nameEl = document.createElement('b');
             nameEl.textContent = `${icon} ${name}`;
             const descEl = document.createElement('span');
             descEl.textContent = desc;
+            const chEl = document.createElement('span');
+            chEl.className = 'td-side-channel';
+            chEl.textContent = channel;
             const perkEl = document.createElement('span');
             perkEl.className = 'td-perk';
             perkEl.textContent = `⭐ ${perk}`;
-            row.append(nameEl, descEl, perkEl);
+            row.append(nameEl, descEl, chEl, perkEl);
             box.appendChild(row);
         });
     }
@@ -893,6 +1288,27 @@ class TowerDefenseGame {
         ctx.setLineDash([9, 11]);
         ctx.stroke();
         ctx.setLineDash([]);
+
+        // 空中航线：飞行兵走的直线捷径，用紫色虚线单独标出来，
+        // 让玩家能提前判断"中路要不要补塔"
+        const air = AIR_PATH.pts;
+        ctx.beginPath();
+        ctx.moveTo(air[0].x, air[0].y);
+        for (let i = 1; i < air.length; i++) ctx.lineTo(air[i].x, air[i].y);
+        ctx.strokeStyle = 'rgba(240,171,252,0.20)';
+        ctx.lineWidth = CELL - 16;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(air[0].x, air[0].y);
+        for (let i = 1; i < air.length; i++) ctx.lineTo(air[i].x, air[i].y);
+        ctx.strokeStyle = 'rgba(240,171,252,0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 9]);
+        ctx.stroke();
+        ctx.setLineDash([]);
     }
 
     /* ── 输入与快捷键 ── */
@@ -1007,7 +1423,10 @@ class TowerDefenseGame {
             priority: 'first',
             damageDealt: 0,
             kills: 0,
-            blizzardCount: 0
+            blizzardCount: 0,
+            hp: this.towerMaxHp({ invested: cfg.cost }),
+            destroyed: false,
+            hurtFlash: 0
         };
         this.towers.push(tower);
         this.towerGrid[r * COLS + c] = this.towers.length - 1;
@@ -1032,6 +1451,8 @@ class TowerDefenseGame {
         this.gold -= nextLv.cost;
         tower.invested += nextLv.cost;
         tower.level++;
+        // 升级同时加固：满血补上新增的耐久
+        tower.hp = this.towerMaxHp(tower);
         Sfx.upgrade();
         this.burst(tower.x, tower.y, tower.level === 3 ? '#ffd34d' : cfg.color, tower.level === 3 ? 24 : 14);
         if (tower.level === 3) {
@@ -1245,7 +1666,8 @@ class TowerDefenseGame {
         for (const e of this.enemies) {
             if (e.dead) continue;
             e.stunUntil = Math.max(e.stunUntil, this.time + 2.4);
-            this.damageEnemy(e, dmg);
+            // EMP 是能量系：无视装甲
+            this.damageEnemy(e, dmg, false, null, 'energy');
             this.burst(e.x, e.y, '#40d8ff', 8);
         }
         this.effects.push({ kind: 'emp_wave', x: W / 2, y: H / 2, maxR: Math.hypot(W, H) / 2 + 60, age: 0, life: 0.65 });
@@ -1312,7 +1734,22 @@ class TowerDefenseGame {
                 this.el.gold.classList.add('gold-bounce');
             }
         }
-        if (this.el.wave) this.el.wave.textContent = `${Math.max(1, this.wave)}/${MAX_WAVES}`;
+        const total = this.level ? this.level.waves : 1;
+        if (this.el.wave) this.el.wave.textContent = `${Math.max(1, this.wave)}/${total}`;
+
+        // 堆叠徽标：只在压波时出现，提示玩家当前承受的额外强度
+        if (this.el['stack-badge']) {
+            const badge = this.el['stack-badge'];
+            if (this.stack > 0) {
+                badge.classList.remove('hidden');
+                badge.textContent = `×${this.stack} +${Math.round(this.stack * STACK_HP_PER * 100)}%`;
+                badge.classList.remove('pulse');
+                void badge.offsetWidth;
+                badge.classList.add('pulse');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
     }
 
     renderWaveButton() {
@@ -1321,31 +1758,35 @@ class TowerDefenseGame {
         const previewEl = this.el['wave-preview'];
         if (!btn || !textEl) return;
         const t = this.TEXT;
+        const L = this.level;
 
         if (this.waveState === 'idle') {
             btn.disabled = false;
             btn.classList.remove('early-call');
-            const nextWave = Math.min(MAX_WAVES, this.wave + 1);
+            const nextWave = Math.min(L.waves, this.wave + 1);
             textEl.textContent = t.startWave.replace('{n}', nextWave);
 
             // 下波怪物预告
-            if (previewEl && this.wave < MAX_WAVES) {
-                const nextCfg = buildWave(nextWave);
+            if (previewEl && this.wave < L.waves) {
+                const nextCfg = buildWave(nextWave, L);
                 const chips = Object.entries(nextCfg.summary)
+                    .sort((a, b) => b[1] - a[1])
                     .map(([type, cnt]) => `${ENEMY_TYPES[type].icon}×${cnt}`)
-                    .slice(0, 4)
+                    .slice(0, 5)
                     .join(' ');
                 previewEl.textContent = chips;
             } else if (previewEl) {
                 previewEl.textContent = '';
             }
         } else {
-            // 战斗中：如果未到最后一波，支持提前迎击抢金币
-            if (this.wave < MAX_WAVES) {
+            const stackCap = Math.min(STACK_MAX, L.waves - this.wave);
+            if (this.wave < L.waves) {
                 btn.disabled = false;
-                btn.classList.add('early-call');
-                const bonus = Math.min(70, 15 + Math.floor(this.wave * 2.5));
-                textEl.textContent = t.earlyCall.replace('{g}', bonus);
+                // 还能压波 → 高亮成"有风险的加速"；已到上限 → 收敛为普通状态
+                btn.classList.toggle('early-call', this.stack < stackCap);
+                textEl.textContent = this.stack < stackCap
+                    ? t.earlyCall.replace('{n}', this.stack + 1)
+                    : t.waveRunning.replace('{n}', this.wave);
                 const alive = this.enemies.length + this.spawnQueue.length;
                 if (previewEl) previewEl.textContent = `${t.waveRunning.replace('{n}', this.wave)} · ${alive}`;
             } else {
@@ -1353,7 +1794,7 @@ class TowerDefenseGame {
                 btn.classList.remove('early-call');
                 const alive = this.enemies.length + this.spawnQueue.length;
                 textEl.textContent = `${t.waveRunning.replace('{n}', this.wave)} · ${alive}`;
-                if (previewEl) previewEl.textContent = 'FINAL WAVE';
+                if (previewEl) previewEl.textContent = t.finalWave;
             }
         }
     }
@@ -1393,13 +1834,24 @@ class TowerDefenseGame {
 
     /* ── 战斗逻辑 ── */
 
-    damageEnemy(e, dmg, isCrit = false, killerTower = null) {
+    /**
+     * 统一伤害入口。
+     * channel: 'physical' 走护甲减免，'energy'（电磁/火海/EMP）无视护甲。
+     */
+    damageEnemy(e, dmg, isCrit = false, killerTower = null, channel = 'physical') {
         if (e.dead) return;
+
+        // 装甲减免：物理伤害被大幅削减，逼玩家上电磁塔或加农火海
+        if (e.armor > 0 && channel === 'physical') {
+            dmg = dmg * (1 - e.armor);
+        }
 
         // 感电易伤（Tesla Lv4）
         if (this.time < e.shockUntil) {
-            dmg = Math.round(dmg * 1.2);
+            dmg = dmg * 1.2;
         }
+
+        dmg = Math.max(1, Math.round(dmg));
 
         // 护盾抵消机制
         if (e.shield > 0) {
@@ -1437,14 +1889,27 @@ class TowerDefenseGame {
         this.totalKills = (this.totalKills || 0) + 1;
         if (killerTower) killerTower.kills = (killerTower.kills || 0) + 1;
 
-        this.burst(e.x, e.y, e.color, e.type === 'boss' ? 32 : 10);
+        const isBig = e.type === 'boss' || e.type === 'overlord';
+        this.burst(e.x, e.y, e.color, isBig ? 34 : 10);
         this.floater(e.x, e.y - 10, `+${e.gold}`, '#ffd34d');
 
-        if (e.type === 'tank' || e.type === 'boss') {
-            this.shake(e.type === 'boss' ? 6 : 3, 0.3);
+        // 分裂：死亡裂出一群小怪，位置接在当前位置，溅射清不干净就会滚雪球
+        if (e.split) {
+            const path = e.path;
+            for (let i = 0; i < e.split.count; i++) {
+                this.spawnEnemy(e.split.type, Math.max(0, e.dist - i * 14), true);
+            }
+            this.floaters.push({
+                x: e.x, y: e.y - 22, text: this.TEXT.splitToast,
+                color: '#fdba74', scale: 1, age: 0, life: 0.7
+            });
+        }
+
+        if (e.type === 'tank' || isBig) {
+            this.shake(isBig ? 7 : 3, 0.3);
             Sfx.bigDeath();
         }
-        if (e.type === 'boss') {
+        if (isBig) {
             this.showToast(this.TEXT.bossDefeated, 2200);
         }
 
@@ -1465,10 +1930,14 @@ class TowerDefenseGame {
         }
     }
 
-    spawnEnemy(type) {
+    spawnEnemy(type, overrideDist = 0, isSplitChild = false) {
         const cfg = ENEMY_TYPES[type];
-        const hp = cfg.hp * this.hpMul;
-        const maxShield = (cfg.maxShield || 0) * this.hpMul;
+        const hp = cfg.hp * this.hpMul * this.stackHp * (isSplitChild ? 0.55 : 1);
+        const maxShield = (cfg.maxShield || 0) * this.hpMul * this.stackHp;
+        const path = cfg.flying ? AIR_PATH : GROUND_PATH;
+        const start = path.pointAt(overrideDist);
+        const bounty = this.stackGold * (this.level ? this.level.bounty : 1);
+
         this.enemies.push({
             type,
             hp,
@@ -1476,62 +1945,90 @@ class TowerDefenseGame {
             shield: maxShield,
             maxShield,
             speed: cfg.speed * this.spdMul,
-            gold: cfg.gold,
+            gold: Math.max(1, Math.round(cfg.gold * bounty)),
             dmg: cfg.dmg,
             r: cfg.r,
             color: cfg.color,
-            dist: 0,
-            x: pathPts[0].x,
-            y: pathPts[0].y,
+            armor: cfg.armor || 0,
+            flying: !!cfg.flying,
+            healer: cfg.healer || null,
+            attacker: cfg.attacker || null,
+            split: cfg.split || null,
+            path,
+            dist: overrideDist,
+            x: start.x,
+            y: start.y,
             slowUntil: 0,
             slowFactor: 0,
             stunUntil: 0,
             shockUntil: 0,
             hitFlash: 0,
+            healPulse: 0,
+            attackCd: 0,
             dead: false
         });
-        if (type === 'boss') {
-            this.showToast(this.TEXT.bossIncoming);
-            this.shake(5, 0.4);
+
+        if (type === 'boss' || type === 'overlord') {
+            this.showToast(type === 'overlord' ? this.TEXT.overlordIncoming : this.TEXT.bossIncoming);
+            this.shake(6, 0.45);
             Sfx.bigDeath();
         }
     }
 
+    /** 把当前堆叠层数换算成倍率 */
+    applyStack() {
+        this.stackHp = 1 + this.stack * STACK_HP_PER;
+        this.stackGold = 1 + this.stack * STACK_GOLD_PER;
+    }
+
     startWave() {
         if (this.state !== 'playing') return;
+        const L = this.level;
+        const stackCap = Math.min(STACK_MAX, L.waves - this.wave);
 
-        // 如果在战斗中点击，触发提前迎击奖励
+        // 战斗中再点 = 提前迎击：没有白给的金币，取而代之的是"压波"堆叠。
+        // 每压一波，敌人血量与赏金同步 +8%，层数只有等全部清空才重置。
         if (this.waveState !== 'idle') {
-            if (this.wave < MAX_WAVES) {
-                const bonus = Math.min(70, 15 + Math.floor(this.wave * 2.5));
-                this.gold += bonus;
-                this.score += bonus * 2;
-                this.floater(W / 2, H / 2, `+${bonus} ${this.TEXT.earlyCallBonus}!`, '#ffd34d', 1.25);
-                this.showToast(this.TEXT.earlyCallToast.replace('{g}', bonus), 1500);
-                Sfx.earlyWave();
+            if (this.wave < L.waves && this.stack < stackCap) {
+                this.stack++;
+                this.applyStack();
                 this.wave++;
-                const waveCfg = buildWave(this.wave);
+                const waveCfg = buildWave(this.wave, L);
                 this.spawnQueue.push(...waveCfg.queue);
                 this.hpMul = waveCfg.hpMul;
                 this.spdMul = waveCfg.spdMul;
+
+                this.effects.push({ kind: 'emp_wave', x: W / 2, y: H / 2, maxR: Math.hypot(W, H) / 2 + 60, age: 0, life: 0.5 });
+                this.shake(3, 0.25);
+                Sfx.earlyWave();
+                this.showToast(this.TEXT.stackToast
+                    .replace('{n}', this.stack)
+                    .replace('{hp}', Math.round(this.stack * STACK_HP_PER * 100))
+                    .replace('{g}', Math.round(this.stack * STACK_GOLD_PER * 100)), 1700);
                 this.updateHud();
                 this.renderWaveButton();
+            } else if (this.stack >= stackCap && this.wave < L.waves) {
+                this.showToast(this.TEXT.stackMax, 1500);
             }
             return;
         }
 
         this.wave++;
-        const waveCfg = buildWave(this.wave);
+        const waveCfg = buildWave(this.wave, L);
         this.spawnQueue = waveCfg.queue;
         this.hpMul = waveCfg.hpMul;
         this.spdMul = waveCfg.spdMul;
         this.spawnTimer = 0.35;
         this.waveState = 'spawning';
+        const t = this.TEXT;
         this.waveBanner = {
-            text: (this.wave === MAX_WAVES) ? (this.lang === 'zh' ? '终极决战' : 'FINAL SHOWDOWN') :
-                  (this.wave % 10 === 0) ? (this.lang === 'zh' ? '⚠️ BOSS 降临 ⚠️' : '⚠️ BOSS INCOMING ⚠️') :
-                  (this.lang === 'zh' ? `第 ${this.wave} 波` : `WAVE ${this.wave}`),
-            isBoss: (this.wave % 10 === 0 || this.wave === MAX_WAVES),
+            text: (this.wave === L.waves) ? t.finalWave :
+                  waveCfg.isBossWave ? t.bossWave :
+                  this.lang === 'zh' ? `第 ${this.wave} 波` : `WAVE ${this.wave}`,
+            sub: this.stack > 0
+                ? (this.lang === 'zh' ? `堆叠 ×${this.stack} · 敌人强度 +${Math.round(this.stack * STACK_HP_PER * 100)}%` : `STACKED ×${this.stack} · +${Math.round(this.stack * STACK_HP_PER * 100)}% ENEMY POWER`)
+                : '',
+            isBoss: waveCfg.isBossWave,
             life: 1.5,
             age: 0
         };
@@ -1541,17 +2038,81 @@ class TowerDefenseGame {
     }
 
     waveCleared() {
+        const L = this.level;
         const bonus = 25 + this.wave * 3;
         this.gold += bonus;
         this.score += 40 + this.wave * 5;
+        const stacked = this.stack;
         this.showToast(this.TEXT.waveCleared.replace('{n}', this.wave).replace('{g}', bonus), 2000);
-        if (this.wave >= MAX_WAVES) {
+        if (this.wave >= L.waves) {
             this.endGame(true);
             return;
+        }
+        // 清空整波才重置堆叠：这就是"压波"的风险所在
+        if (stacked > 0) {
+            this.stack = 0;
+            this.applyStack();
         }
         this.waveState = 'idle';
         this.updateHud();
         this.renderWaveButton();
+    }
+
+    /* ── 防御塔受损（攻城兵） ── */
+
+    nearestTower(e, range) {
+        const r2 = range * range;
+        let best = null, bd = Infinity;
+        for (const t of this.towers) {
+            if (!t || t.destroyed) continue;
+            const dx = t.x - e.x, dy = t.y - e.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 <= r2 && d2 < bd) { bd = d2; best = t; }
+        }
+        return best;
+    }
+
+    /**
+     * 塔的血量 = 投资额的一半 + 下限，越贵的塔越耐拆。
+     * 塔被打到 0 不是卖掉，是就地摧毁：不给退款，格子清空。
+     */
+    towerMaxHp(tower) {
+        return Math.round(tower.invested * 0.6) + 60;
+    }
+
+    damageTower(tower, amount) {
+        if (!tower || tower.destroyed) return;
+        if (tower.hp === undefined) tower.hp = this.towerMaxHp(tower);
+        tower.hp -= amount;
+        tower.hurtFlash = 0.18;
+        if (Math.random() < 0.35) {
+            this.particles.push({
+                x: tower.x + (Math.random() - 0.5) * 20,
+                y: tower.y + (Math.random() - 0.5) * 20,
+                vx: (Math.random() - 0.5) * 40,
+                vy: -20 - Math.random() * 30,
+                life: 0.35, age: 0, size: 2.4,
+                color: '#ff9f43'
+            });
+        }
+        if (tower.hp <= 0) this.destroyTower(tower);
+    }
+
+    destroyTower(tower) {
+        tower.destroyed = true;
+        this.burst(tower.x, tower.y, '#ff6b7a', 22);
+        this.shake(4.5, 0.3);
+        Sfx.explode();
+        this.showToast(this.TEXT.towerLost, 1800);
+        const idx = this.towers.indexOf(tower);
+        if (idx >= 0) {
+            this.towerGrid[tower.r * COLS + tower.c] = -1;
+            this.towers[idx] = null;
+        }
+        if (this.selectedTowerIdx === idx) {
+            this.selectedTowerIdx = -1;
+            this.closePanel();
+        }
     }
 
     /* ── 塔索敌与攻击 ── */
@@ -1564,22 +2125,34 @@ class TowerDefenseGame {
             const dx = e.x - tower.x, dy = e.y - tower.y;
             const d2 = dx * dx + dy * dy;
             if (d2 <= rangeSq) {
-                candidates.push({ e, d2, dist: e.dist, hp: e.hp });
+                // 进度按"走了全程的百分比"算：地面兵和飞行兵路径长度不同，
+                // 直接用 dist 排序会把绕远路的敌人误判成"最靠前"
+                candidates.push({
+                    e, d2, hp: e.hp,
+                    prog: e.dist / e.path.total
+                });
             }
         }
         if (!candidates.length) return null;
 
         const prio = tower.priority || 'first';
         if (prio === 'first') {
-            candidates.sort((a, b) => b.dist - a.dist);
+            candidates.sort((a, b) => b.prog - a.prog);
         } else if (prio === 'last') {
-            candidates.sort((a, b) => a.dist - b.dist);
+            candidates.sort((a, b) => a.prog - b.prog);
         } else if (prio === 'strong') {
-            candidates.sort((a, b) => b.hp - a.hp || b.dist - a.dist);
+            candidates.sort((a, b) => b.hp - a.hp || b.prog - a.prog);
         } else if (prio === 'weak') {
-            candidates.sort((a, b) => a.hp - b.hp || b.dist - a.dist);
+            candidates.sort((a, b) => a.hp - b.hp || b.prog - a.prog);
         } else if (prio === 'close') {
             candidates.sort((a, b) => a.d2 - b.d2);
+        } else if (prio === 'healer') {
+            // 优先集火治疗兵：不切掉它，前面的伤害全被奶回来
+            candidates.sort((a, b) => {
+                const ah = a.e.healer ? 1 : 0;
+                const bh = b.e.healer ? 1 : 0;
+                return bh - ah || b.prog - a.prog;
+            });
         }
         return candidates[0].e;
     }
@@ -1600,7 +2173,8 @@ class TowerDefenseGame {
                 if (e.dead) continue;
                 const dx = e.x - tower.x, dy = e.y - tower.y;
                 if (dx * dx + dy * dy <= rangeSq) {
-                    this.damageEnemy(e, lv.dmg, false, tower);
+                    // 冰霜塔是能量系：无视装甲
+                    this.damageEnemy(e, lv.dmg, false, tower, 'energy');
                     const expired = this.time >= e.slowUntil;
                     e.slowUntil = this.time + lv.slowDur;
                     e.slowFactor = expired ? lv.slow : Math.max(e.slowFactor, lv.slow);
@@ -1672,7 +2246,8 @@ class TowerDefenseGame {
             for (const e of chain) {
                 pts.push({ x: e.x, y: e.y });
                 if (lv.shock) e.shockUntil = this.time + 3.0;
-                this.damageEnemy(e, dmg, false, tower);
+                // 电磁塔是能量系：无视装甲，是装甲兵的正确答案
+                this.damageEnemy(e, dmg, false, tower, 'energy');
                 this.burst(e.x, e.y, cfg.color, 4);
                 dmg = Math.round(dmg * 0.7);
             }
@@ -1689,7 +2264,8 @@ class TowerDefenseGame {
         for (const e of this.enemies) {
             if (e.dead) continue;
             const dx = e.x - x, dy = e.y - y;
-            if (dx * dx + dy * dy <= rSq) this.damageEnemy(e, dmg, false, tower);
+            // 加农炮是物理系：会被装甲大幅削减
+            if (dx * dx + dy * dy <= rSq) this.damageEnemy(e, dmg, false, tower, 'physical');
         }
         this.effects.push({ kind: 'ring', x, y, r: 4, maxR: radius, age: 0, life: 0.32, color: '#ff9f43' });
         this.burst(x, y, '#ff9f43', 12);
@@ -1761,6 +2337,7 @@ class TowerDefenseGame {
                 if (e.dead) continue;
                 const dx = e.x - g.x, dy = e.y - g.y;
                 if (dx * dx + dy * dy <= rSq) {
+                    // 火海是能量系持续伤害：无视装甲，是加农塔 Lv4 的破甲答案
                     e.hp -= tickDmg;
                     e.hitFlash = 0.04;
                     if (g.tower) g.tower.damageDealt = (g.tower.damageDealt || 0) + tickDmg;
@@ -1794,7 +2371,7 @@ class TowerDefenseGame {
                 const slowed = this.time < e.slowUntil;
                 const speed = e.speed * (slowed ? (1 - e.slowFactor) : 1);
                 e.dist += speed * dt;
-                const p = pointAtDist(e.dist);
+                const p = e.path.pointAt(e.dist);
                 e.x = p.x;
                 e.y = p.y;
             } else if (Math.random() < 0.2) {
@@ -1807,8 +2384,35 @@ class TowerDefenseGame {
                 });
             }
 
+            // 治疗兵：持续给范围内的友军（不含自己）回血，是"必须先切掉"的目标
+            if (e.healer && !isStunned) {
+                const hr2 = e.healer.radius * e.healer.radius;
+                for (const other of this.enemies) {
+                    if (other === e || other.dead || other.hp >= other.maxHp) continue;
+                    const ox = other.x - e.x, oy = other.y - e.y;
+                    if (ox * ox + oy * oy <= hr2) {
+                        other.hp = Math.min(other.maxHp, other.hp + e.healer.hps * dt);
+                        other.healedBy = e;
+                    }
+                }
+            }
+
+            // 攻城兵：停下来拆最近的塔
+            if (e.attacker && !isStunned) {
+                e.attackCd -= dt;
+                if (e.attackCd <= 0) {
+                    const t = this.nearestTower(e, e.attacker.range);
+                    if (t) {
+                        this.damageTower(t, e.attacker.dps / e.attacker.rate);
+                        e.attackCd = 1 / e.attacker.rate;
+                    } else {
+                        e.attackCd = 0.2;
+                    }
+                }
+            }
+
             if (e.hitFlash > 0) e.hitFlash -= dt;
-            if (e.dist >= PATH_TOTAL - 6) {
+            if (e.dist >= e.path.total - 6) {
                 this.leakEnemy(e);
                 alive--;
             }
@@ -2073,12 +2677,67 @@ class TowerDefenseGame {
             if (!tower) continue;
             this.drawTower(ctx, tower);
         }
-
         // 敌人渲染
         for (const e of this.enemies) {
+            // 飞行单位投影到地面，提示它不在路径上
+            if (e.flying) {
+                ctx.globalAlpha = 0.22;
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.ellipse(e.x, e.y + 16, e.r * 0.9, e.r * 0.38, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
             const sprite = enemySprites[e.type];
             if (sprite) {
                 ctx.drawImage(sprite, e.x - sprite.width / 2, e.y - sprite.height / 2);
+            }
+
+            // 治疗兵：脉动的治疗光环 + 与受疗目标的连线
+            if (e.healer) {
+                const pulse = 0.5 + Math.sin(this.time * 3.4) * 0.5;
+                ctx.strokeStyle = `rgba(134, 239, 172, ${0.22 + pulse * 0.24})`;
+                ctx.lineWidth = 1.4;
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.healer.radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // 十字标，一眼认出是奶妈
+                ctx.strokeStyle = '#dcfce7';
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                ctx.moveTo(e.x, e.y - e.r - 7);
+                ctx.lineTo(e.x, e.y - e.r - 1);
+                ctx.moveTo(e.x - 3, e.y - e.r - 4);
+                ctx.lineTo(e.x + 3, e.y - e.r - 4);
+                ctx.stroke();
+            }
+
+            // 装甲兵：外圈装甲板示意
+            if (e.armor > 0) {
+                ctx.strokeStyle = 'rgba(226, 232, 240, 0.85)';
+                ctx.lineWidth = 2.6;
+                ctx.setLineDash([5, 4]);
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.r + 2.5, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 攻城兵：炮口指向最近的目标塔
+            if (e.attacker) {
+                const tgt = this.nearestTower(e, e.attacker.range);
+                if (tgt) {
+                    ctx.strokeStyle = 'rgba(251, 113, 133, 0.5)';
+                    ctx.lineWidth = 1.3;
+                    ctx.setLineDash([3, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(e.x, e.y);
+                    ctx.lineTo(tgt.x, tgt.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
             }
 
             // 冰冻 / 眩晕电流标志
@@ -2192,12 +2851,13 @@ class TowerDefenseGame {
         }
         ctx.globalAlpha = 1;
 
-        // BOSS 血条（当场上有 BOSS 时在顶部渲染）
-        const boss = this.enemies.find(e => e.type === 'boss' && !e.dead);
+        // BOSS / 霸主 血条（当场上有 BOSS 时在顶部渲染）
+        const boss = this.enemies.find(e => (e.type === 'boss' || e.type === 'overlord') && !e.dead);
         if (boss) {
+            const isOverlord = boss.type === 'overlord';
             const bx = W / 2 - 130, by = 12, bw = 260, bh = 14;
             ctx.fillStyle = 'rgba(10, 14, 36, 0.85)';
-            ctx.strokeStyle = '#ff5a3c';
+            ctx.strokeStyle = isOverlord ? '#e11d48' : '#ff5a3c';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.roundRect(bx, by, bw, bh, 7);
@@ -2206,7 +2866,7 @@ class TowerDefenseGame {
 
             const hpRatio = clamp(boss.hp / boss.maxHp, 0, 1);
             const bGrad = ctx.createLinearGradient(bx, by, bx + bw, by);
-            bGrad.addColorStop(0, '#ff5a3c');
+            bGrad.addColorStop(0, isOverlord ? '#e11d48' : '#ff5a3c');
             bGrad.addColorStop(1, '#ffd34d');
             ctx.fillStyle = bGrad;
             ctx.beginPath();
@@ -2216,7 +2876,8 @@ class TowerDefenseGame {
             ctx.font = '800 10px "Segoe UI", system-ui, sans-serif';
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
-            ctx.fillText(`👑 BOSS · ${Math.ceil(boss.hp)} / ${Math.ceil(boss.maxHp)}`, W / 2, by + 11);
+            const tag = isOverlord ? '💀 OVERLORD' : '👑 BOSS';
+            ctx.fillText(`${tag} · ${Math.ceil(boss.hp)} / ${Math.ceil(boss.maxHp)}`, W / 2, by + 11);
         }
 
         // 全息波次通告横幅
@@ -2241,7 +2902,15 @@ class TowerDefenseGame {
             ctx.fillStyle = b.isBoss ? `rgba(255, 211, 77, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
             ctx.shadowColor = b.isBoss ? '#ff5a3c' : '#40d8ff';
             ctx.shadowBlur = 14;
-            ctx.fillText(b.text, W / 2, cy);
+            ctx.fillText(b.text, W / 2, b.sub ? cy - 7 : cy);
+
+            // 压波提示：告诉玩家这一波额外承受了多少强度
+            if (b.sub) {
+                ctx.font = '800 12px "Segoe UI", system-ui, sans-serif';
+                ctx.fillStyle = `rgba(255, 176, 160, ${alpha})`;
+                ctx.shadowBlur = 8;
+                ctx.fillText(b.sub, W / 2, cy + 13);
+            }
             ctx.restore();
         }
 
@@ -2327,6 +2996,30 @@ class TowerDefenseGame {
             ctx.fillStyle = tower.level === 3 ? '#ffd34d' : '#ffffff';
             ctx.fill();
         }
+
+        // 受损闪烁
+        if (tower.hurtFlash > 0) {
+            tower.hurtFlash -= 1 / 60;
+            ctx.globalAlpha = Math.min(1, tower.hurtFlash * 5);
+            ctx.fillStyle = '#ff6b7a';
+            ctx.beginPath();
+            ctx.roundRect(tower.c * CELL + 3, tower.r * CELL + 3, CELL - 6, CELL - 6, 8);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+
+        // 受损血条：只在掉血后出现，避免平时画面变乱
+        const maxHp = this.towerMaxHp(tower);
+        if (tower.hp !== undefined && tower.hp < maxHp) {
+            const frac = clamp(tower.hp / maxHp, 0, 1);
+            const bw = CELL - 12;
+            const bx = tower.c * CELL + 6;
+            const by = tower.r * CELL + CELL - 7;
+            ctx.fillStyle = 'rgba(0,0,0,0.65)';
+            ctx.fillRect(bx, by, bw, 3.5);
+            ctx.fillStyle = frac > 0.5 ? '#3fd97c' : frac > 0.25 ? '#ffd34d' : '#ff6b7a';
+            ctx.fillRect(bx, by, bw * frac, 3.5);
+        }
     }
 
     /* ── 游戏主循环 ── */
@@ -2372,6 +3065,18 @@ class TowerDefenseGame {
         if (window.hubTrack) window.hubTrack('tower-defense', 'play');
     }
 
+    toMenu() {
+        this.stopLoop();
+        this.state = 'menu';
+        this.resetRun();
+        if (this.el.pause) this.el.pause.classList.add('hidden');
+        if (this.el.over) this.el.over.classList.add('hidden');
+        if (this.el.start) this.el.start.classList.remove('hidden');
+        this.closePanel();
+        this.renderLevelCards();
+        this.drawFrame();
+    }
+
     pause() {
         if (this.state !== 'playing') return;
         this.state = 'paused';
@@ -2409,25 +3114,18 @@ class TowerDefenseGame {
         return this.state === 'playing';
     }
 
-    toMenu() {
-        this.stopLoop();
-        this.state = 'menu';
-        this.resetRun();
-        if (this.el.pause) this.el.pause.classList.add('hidden');
-        if (this.el.over) this.el.over.classList.add('hidden');
-        if (this.el.start) this.el.start.classList.remove('hidden');
-        this.closePanel();
-        this.drawFrame();
-    }
-
     async endGame(victory) {
         this.state = 'over';
         this.stopLoop();
         this.closePanel();
 
         if (victory) {
-            const bonus = this.lives * 35;
-            this.score += bonus;
+            // 越难的关卡，通关奖励越高；提前压波也折算成额外分数
+            const diffIdx = LEVELS.indexOf(this.level);
+            const bonus = this.lives * 35 * (1 + diffIdx * 0.35) + this.level.waves * 40;
+            this.score += Math.round(bonus);
+            // 记录通关，用于解锁下一关
+            storageSet(`td_clear_${this.level.id}`, '1');
             Sfx.win();
         } else {
             Sfx.lose();
@@ -2444,12 +3142,12 @@ class TowerDefenseGame {
         if (this.el['over-score']) this.el['over-score'].textContent = formatNumber(this.score);
         if (this.el['over-sub']) {
             this.el['over-sub'].textContent = victory
-                ? t.victorySub.replace('{lives}', this.lives)
-                : t.defeatSub.replace('{n}', Math.max(1, this.wave));
+                ? t.victorySub.replace('{lives}', this.lives).replace('{lv}', this.levelName(this.level))
+                : t.defeatSub.replace('{n}', Math.max(1, this.wave)).replace('{total}', this.level.waves);
         }
 
         if (this.el['over-waves']) {
-            this.el['over-waves'].textContent = `${Math.max(1, this.wave)}/${MAX_WAVES}`;
+            this.el['over-waves'].textContent = `${Math.max(1, this.wave)}/${this.level.waves}`;
         }
         if (this.el['over-kills']) {
             this.el['over-kills'].textContent = formatNumber(this.totalKills || 0);
@@ -2461,39 +3159,55 @@ class TowerDefenseGame {
             this.triggerConfetti();
         }
 
-        // 本地最佳
-        const prevBest = Number(storageGet('td_best')) || 0;
+        // 每关独立最佳分：简单关卡的高分不该压掉困难关卡的成绩
+        const bestKey = `td_best_${this.level.id}`;
+        const prevBest = Number(storageGet(bestKey)) || 0;
         const isBest = this.score > prevBest;
-        if (isBest) storageSet('td_best', String(this.score));
+        if (isBest) {
+            storageSet(bestKey, String(this.score));
+            // 兼容旧键：只要新成绩比旧记录好就同步，避免老玩家记录丢失
+            const legacy = Number(storageGet('td_best')) || 0;
+            if (this.score > legacy) storageSet('td_best', String(this.score));
+        }
         this.updateSideRecords();
         if (this.el['best-line']) {
             this.el['best-line'].textContent = `🏆 ${t.best}: ${formatNumber(Math.max(prevBest, this.score))}` +
                 (isBest ? `  🌟 ${t.newBest}` : '');
         }
+        this.renderLevelCards();
 
-        // 本地榜
+        // 本地榜（按关卡隔离）
         const local = this.localScores();
-        local.push({ name: ensurePlayerName() || 'Anonymous', score: this.score });
+        local.push({ name: ensurePlayerName() || 'Anonymous', score: this.score, level: this.level.id });
         local.sort((a, b) => b.score - a.score);
         storageSet('td_local_scores', JSON.stringify(local.slice(0, 30)));
 
         if (this.el.over) this.el.over.classList.remove('hidden');
         if (this.el.username) this.el.username.value = ensurePlayerName() || '';
 
-        // 上报全球榜
+        // 上报全球榜（带关卡维度）
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
             await fetch(`${LEADERBOARD_URL}/scores`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ game: 'tower-defense', name: ensurePlayerName() || 'Anonymous', score: this.score }),
+                body: JSON.stringify({
+                    game: `tower-defense-${this.level.id}`,
+                    name: ensurePlayerName() || 'Anonymous',
+                    score: this.score
+                }),
                 signal: controller.signal,
                 mode: 'cors'
             });
             clearTimeout(timeoutId);
         } catch (e) { /* 离线时静默保留本地榜 */ }
         this.fetchLeaderboard();
+    }
+
+    levelName(level) {
+        const name = this.TEXT.levels && this.TEXT.levels[level.id];
+        return name ? name.name : level.id;
     }
 
     triggerConfetti() {
@@ -2527,7 +3241,10 @@ class TowerDefenseGame {
         const list = this.el['lb-list'];
         if (!list) return;
         list.textContent = '';
-        const filtered = this.localScores().slice(0, 10);
+        // 只显示当前关卡的本地成绩
+        const filtered = this.localScores()
+            .filter(s => !s.level || s.level === (this.level && this.level.id))
+            .slice(0, 10);
         if (filtered.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'td-lb-empty';
@@ -2561,7 +3278,7 @@ class TowerDefenseGame {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`${LEADERBOARD_URL}/scores?game=tower-defense`, {
+            const res = await fetch(`${LEADERBOARD_URL}/scores?game=tower-defense-${this.level.id}`, {
                 signal: controller.signal,
                 mode: 'cors'
             });
@@ -2586,7 +3303,7 @@ class TowerDefenseGame {
 
     async copyResult() {
         const t = this.TEXT;
-        const text = `🏰 ${t.title}\n${t.score}: ${formatNumber(this.score)} · ${t.wave} ${this.wave}/${MAX_WAVES}\nhttps://games.orangely.xyz/tower-defense.html`;
+        const text = `🏰 ${t.title} · ${this.levelName(this.level)}\n${t.score}: ${formatNumber(this.score)} · ${t.wave} ${this.wave}/${this.level.waves}\nhttps://games.orangely.xyz/tower-defense.html`;
         let ok = false;
         try {
             await navigator.clipboard.writeText(text);
@@ -2605,10 +3322,12 @@ class TowerDefenseGame {
             }
         }
         if (this.el['btn-copy']) {
-            const original = `📋 ${t.copyResult}`;
-            this.el['btn-copy'].textContent = ok ? `✅ ${t.copied}` : original;
+            const original = `${ICONS.copy}<span>${t.copyResult}</span>`;
+            this.el['btn-copy'].innerHTML = ok
+                ? `${ICONS.check}<span>${t.copied}</span>`
+                : original;
             setTimeout(() => {
-                if (this.el['btn-copy']) this.el['btn-copy'].textContent = original;
+                if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = original;
             }, 1600);
         }
     }
@@ -2688,6 +3407,22 @@ class TowerDefenseGame {
 }
 
 /* ────────────────────────── boot ────────────────────────── */
+
+// 回归测试挂钩：scripts/verify-td-difficulty.mjs 需要直接驱动内部状态。
+// 这些全是常量与纯函数，暴露出来不会改变任何玩法行为。
+window.__TD_LEVELS__ = LEVELS;
+window.__TD_BUILD_WAVE__ = buildWave;
+window.__TD_ENEMY_TYPES__ = ENEMY_TYPES;
+window.__TD_TOWER_TYPES__ = TOWER_TYPES;
+window.__TD_TARGET_PRIORITIES__ = TARGET_PRIORITIES;
+window.__TD_STACK_MAX__ = STACK_MAX;
+window.__TD_STACK_HP_PER__ = STACK_HP_PER;
+window.__TD_STACK_GOLD_PER__ = STACK_GOLD_PER;
+window.__TD_AIR_PATH__ = AIR_PATH;
+window.__TD_GROUND_PATH__ = GROUND_PATH;
+// 网格维度是模块常量（不在实例上），回归脚本按坐标反查格子时需要它；
+// pathGrid 同理——不导出的话脚本会挑到路径格，tryBuild 静默失败。
+window.__TD_GRID__ = { COLS, ROWS, CELL, pathGrid };
 
 document.addEventListener('DOMContentLoaded', () => {
     window.tdGame = new TowerDefenseGame();
