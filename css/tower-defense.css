@@ -22,9 +22,33 @@ body {
 
 /* ── 顶栏 HUD ── */
 
+/*
+ * 顶栏两行结构（用户要求「全应用级 icons 在第一行，本应用信息在第二行」）。
+ * 外层 .game-topbar 是 flex + space-between + wrap，这里把它转成纵向两行：
+ * 每一行自己是一个 flex 行，行内各自对齐，不再依赖 wrap 随机折断。
+ */
 .td-topbar {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+    flex-wrap: nowrap;
 }
+
+.td-topbar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+}
+
+/* 第一行：Home 靠左，其余功能钮靠右；中间用一个弹性占位撑开 */
+.td-topbar-row--app { position: relative; }
+.td-topbar-spacer { flex: 1 1 auto; min-width: 0; }
+
+/* 第二行：本局状态左对齐，右侧留空给堆叠徽章 */
+.td-topbar-row--game { justify-content: flex-start; }
 
 .td-stat {
     display: flex;
@@ -900,6 +924,8 @@ body {
     border: 1px solid rgba(255, 90, 60, 0.7);
     color: #ffb0a0;
     white-space: nowrap;
+    /* 顶栏第二行里：贴最右，和左侧的状态胶囊分开（margin-left:auto 在 flex 行内生效） */
+    margin-left: auto;
 }
 
 .td-stack-badge.hidden { display: none; }
@@ -1099,12 +1125,14 @@ body {
 /* ── 移动端自适应 (≤480px) ── */
 
 @media (max-width: 480px) {
-    /* 顶栏保持单行：状态胶囊去图标、数字直接上色，与其它页顶栏高度一致 */
-    .td-stat { padding: 4px 6px; font-size: 11.5px; gap: 4px; }
-    .td-stat-icon { display: none; }
-    .td-stat b { font-size: 12.5px; min-width: 2ch; }
-    #td-stat-lives b { color: #ff6b7a; }
-    #td-stat-gold b { color: #ffd34d; }
+    /*
+     * 顶栏现在是两行结构：第二行只放三块状态胶囊，宽度很宽裕。
+     * 原先为"保持单行"而隐藏图标、只靠数字上色，现在没必要了 ——
+     * 光看 "20 / 240 / 1/15" 三个数字无法判断哪个是生命/金币/波次，
+     * 图标是这一行的语义载体，必须留着。
+     */
+    .td-stat { padding: 5px 9px; font-size: 11.5px; gap: 5px; }
+    .td-stat b { font-size: 13px; min-width: 2ch; }
     #td-stat-wave b { color: #40d8ff; }
     .td-title { font-size: 26px; }
     .td-over-score { font-size: 40px; }

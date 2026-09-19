@@ -1289,26 +1289,31 @@ class TowerDefenseGame {
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // 空中航线：飞行兵走的直线捷径，用紫色虚线单独标出来，
-        // 让玩家能提前判断"中路要不要补塔"
-        const air = AIR_PATH.pts;
-        ctx.beginPath();
-        ctx.moveTo(air[0].x, air[0].y);
-        for (let i = 1; i < air.length; i++) ctx.lineTo(air[i].x, air[i].y);
-        ctx.strokeStyle = 'rgba(240,171,252,0.20)';
-        ctx.lineWidth = CELL - 16;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
+        // 空中航线：飞行兵走的直线捷径。
+        // ⚠️ 只在「本关真的会出飞行兵」时才画（modifiers.flyers）。
+        // 否则新手关会平白多出一条斜穿棋盘的紫色宽带，玩家会以为路画糊了；
+        // 宽度也从 CELL-16(24px) 收到 12px、透明度 0.20→0.10 —— 它只是提示，
+        // 不该抢地面主路的视觉权重。
+        if (this.level && this.level.modifiers && this.level.modifiers.flyers) {
+            const air = AIR_PATH.pts;
+            ctx.beginPath();
+            ctx.moveTo(air[0].x, air[0].y);
+            for (let i = 1; i < air.length; i++) ctx.lineTo(air[i].x, air[i].y);
+            ctx.strokeStyle = 'rgba(240,171,252,0.10)';
+            ctx.lineWidth = 12;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
 
-        ctx.beginPath();
-        ctx.moveTo(air[0].x, air[0].y);
-        for (let i = 1; i < air.length; i++) ctx.lineTo(air[i].x, air[i].y);
-        ctx.strokeStyle = 'rgba(240,171,252,0.5)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 9]);
-        ctx.stroke();
-        ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(air[0].x, air[0].y);
+            for (let i = 1; i < air.length; i++) ctx.lineTo(air[i].x, air[i].y);
+            ctx.strokeStyle = 'rgba(240,171,252,0.42)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 9]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
     }
 
     /* ── 输入与快捷键 ── */

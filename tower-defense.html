@@ -32,19 +32,29 @@
 <body>
     <div class="td-shell game-shell">
         <!-- 顶栏 HUD -->
+        <!--
+          顶栏分两行（用户要求）：
+            第一行 = 全应用级图标钮（Home / Stats / Range / Speed / Pause / Mute）
+            第二行 = 本局专属信息（生命 / 金币 / 波次 + 压波堆叠徽章）
+          分行的意义是"层级"，不是"折行"：原来 7 个控件平铺，靠 flex-wrap
+          随机折断，窄屏上会掉成 3 行且顺序不可控。现在两行各自成组、各自对齐。
+        -->
         <header class="td-topbar game-topbar">
-            <button class="td-icon-btn game-icon-btn" id="td-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
-            <div class="td-stat" id="td-stat-lives" title="Lives"><span class="td-stat-icon td-stat-icon--lives"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.6 5 8.2 5c1.6 0 3 .8 3.8 2 .8-1.2 2.2-2 3.8-2 2.6 0 4.7 2 4.7 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg></span><b id="td-lives">20</b></div>
-            <div class="td-stat" id="td-stat-gold" title="Gold"><span class="td-stat-icon td-stat-icon--gold"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2 0 2.6 5.8 1.3 5.8 4 0 1.2-1.2 2-3 2-1.4 0-2.5-.5-3-1.4"/><path d="M12 6.5v11"/></svg></span><b id="td-gold">220</b></div>
-            <div class="td-stat" id="td-stat-wave" title="Wave"><span class="td-stat-icon td-stat-icon--wave"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 13c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 18c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/></svg></span><b id="td-wave">0/15</b></div>
-            <div class="td-stack-badge hidden" id="td-stack-badge"></div>
-            <div class="td-topbar-actions game-topbar-group">
+            <div class="td-topbar-row td-topbar-row--app game-topbar-group">
+                <button class="td-icon-btn game-icon-btn" id="td-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+                <div class="td-topbar-spacer"></div>
                 <button type="button" class="td-icon-btn game-icon-btn td-stats-btn game-stats-btn" id="tdStatsToggle"
                         aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="tdStatsDrawer"></button>
                 <button class="td-icon-btn game-icon-btn" id="td-range-btn" title="Toggle Ranges (R)" aria-label="Toggle Ranges"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></button>
                 <button class="td-icon-btn game-icon-btn" id="td-speed-btn" title="Speed">×1</button>
                 <button class="td-icon-btn game-icon-btn" id="td-pause-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
                 <button class="td-icon-btn game-icon-btn" id="td-mute-btn" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+            </div>
+            <div class="td-topbar-row td-topbar-row--game">
+                <div class="td-stat" id="td-stat-lives" title="Lives"><span class="td-stat-icon td-stat-icon--lives"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.6 5 8.2 5c1.6 0 3 .8 3.8 2 .8-1.2 2.2-2 3.8-2 2.6 0 4.7 2 4.7 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg></span><b id="td-lives">20</b></div>
+                <div class="td-stat" id="td-stat-gold" title="Gold"><span class="td-stat-icon td-stat-icon--gold"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2 0 2.6 5.8 1.3 5.8 4 0 1.2-1.2 2-3 2-1.4 0-2.5-.5-3-1.4"/><path d="M12 6.5v11"/></svg></span><b id="td-gold">220</b></div>
+                <div class="td-stat" id="td-stat-wave" title="Wave"><span class="td-stat-icon td-stat-icon--wave"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 13c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 18c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/></svg></span><b id="td-wave">0/15</b></div>
+                <div class="td-stack-badge hidden" id="td-stack-badge"></div>
             </div>
         </header>
 
