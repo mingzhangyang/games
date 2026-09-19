@@ -654,7 +654,11 @@ body {
     backdrop-filter: blur(8px);
 }
 
-.td-btn:hover { background: rgba(255, 255, 255, 0.14); }
+/* ⚠️ 通用 hover 必须 :not(.td-btn-primary): 它设的是 background 长手，
+   而主按钮用 background 简手画渐变。`:hover` 的选择器权重(0,2,0)天然高于
+   `.td-btn-primary`(0,1,0)，不加排除的话悬停会用一层近乎透明的白把渐变整个换掉，
+   深色文字 #0b0f26 落在深色面板上 ⇒ 按钮和文字一起"消失"。 */
+.td-btn:hover:not(.td-btn-primary) { background: rgba(255, 255, 255, 0.14); }
 .td-btn:active { transform: scale(0.96); }
 
 .td-btn-primary {
@@ -663,8 +667,15 @@ body {
     border: none;
     box-shadow: 0 8px 26px rgba(64, 216, 255, 0.45);
 }
+/* 悬停：渐变换成更亮的一档 + 加强光晕，保留深色文字（对比度不受破坏） */
 .td-btn-primary:hover {
+    background: linear-gradient(125deg, #5fe1ff, #7bf0dd);
     box-shadow: 0 10px 32px rgba(64, 216, 255, 0.6);
+}
+/* 按下：整档压暗，配合 .td-btn:active 的 scale(.96) 做"压下去"的手感 */
+.td-btn-primary:active {
+    background: linear-gradient(125deg, #2fc8ef, #48d9c4);
+    box-shadow: 0 4px 16px rgba(64, 216, 255, 0.4);
 }
 
 .td-btn-ghost { background: transparent; color: #9aa6d8; border-color: transparent; }
