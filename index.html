@@ -23,6 +23,12 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <title id="page-title">Mini Games Collection</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Crect x='12' y='22' width='40' height='22' rx='11' fill='white'/%3E%3Cpath d='M22 27v12M16 33h12' stroke='%23667eea' stroke-width='3.4' stroke-linecap='round'/%3E%3Ccircle cx='39' cy='29' r='3' fill='%23667eea'/%3E%3Ccircle cx='45' cy='36' r='3' fill='%23667eea'/%3E%3C/svg%3E">
+    <!-- 共享骨架：必须排在下面的内联样式之前 —— 内联样式在后，冲突时落地页仍胜。
+         index 自己的 54 个类名与共享层的 38 个选择器零交集（已核对），
+         这里只为页脚复用 .game-footer 与 --tok-* 配色。
+         构建时 vite.config.js 的 shared-css-first 插件会保证 tokens 先于 layout。 -->
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <style>
         :root {
             --color-primary: #6366f1;
@@ -214,10 +220,9 @@
             border: 1px solid rgba(52, 211, 153, 0.4);
         }
 
+        /* 基础形态不含定位 —— 它现在有两个落点：hero 右上角与页脚。
+           绝对定位只属于 hero 那颗，否则页脚那颗会飞出文档流。 */
         .lang-toggle {
-            position: absolute;
-            top: 14px;
-            right: 16px;
             font-family: inherit;
             font-size: 12px;
             font-weight: 700;
@@ -228,6 +233,12 @@
             padding: 5px 12px;
             cursor: pointer;
             transition: background 0.15s, color 0.15s;
+        }
+
+        .hero .lang-toggle {
+            position: absolute;
+            top: 14px;
+            right: 16px;
         }
 
         .lang-toggle:hover {
@@ -435,12 +446,23 @@
         }
 
         /* ── Footer ────────────────────────────────── */
+        /* 排版骨架来自 css/layout.css 的 .game-footer（纵向居中 + margin-top:auto
+           把它压到短视口底部）；配色与内距仍归本页，不吃共享层的紧凑值与 --tok-* 暗色。 */
         footer {
             width: 100%;
             text-align: center;
             padding: 20px 0 28px;
             font-size: 12px;
             color: var(--color-text-muted);
+        }
+
+        #footer-text {
+            margin: 0;
+        }
+
+        .game-footer {
+            gap: 10px;
+            padding: 20px 0 28px;
         }
 
         /* ── Responsive ────────────────────────────── */
@@ -451,7 +473,7 @@
             .games-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .card-body { padding: 14px; gap: 8px; }
             .card-desc { -webkit-line-clamp: 3; line-clamp: 3; }
-            .lang-toggle { top: 10px; right: 12px; }
+            .hero .lang-toggle { top: 10px; right: 12px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -790,7 +812,14 @@
         </div>
     </aside>
 
-    <footer id="footer-text">© 2026 orangely.xyz</footer>
+    <!-- 页脚接入共享 .game-footer（css/layout.css）：长页面滚到底也能切语言。
+         index 是「更多游戏」页本身，故不放 More 钮；hero 右上角那颗语言钮保留。 -->
+    <footer class="game-footer">
+        <p id="footer-text">© 2026 orangely.xyz</p>
+        <div class="game-footer-actions">
+            <button type="button" class="lang-toggle" id="footer-lang-toggle" title="Language" aria-label="Language">中文</button>
+        </div>
+    </footer>
 
     <script>
         const i18n = {
@@ -1116,7 +1145,9 @@
             document.getElementById('perk3-body').textContent = t.perk3Body;
 
             document.getElementById('footer-text').textContent = t.footer;
-            document.getElementById('lang-toggle').textContent = t.langToggle;
+            // 两颗语言钮共用同一个写入者：applyLanguage 是唯一改它们文案的地方
+            document.querySelectorAll('#lang-toggle, #footer-lang-toggle')
+                .forEach(btn => { btn.textContent = t.langToggle; });
 
             // Daily Hub 文案
             document.getElementById('hub-title').textContent = t.hubTitle;
@@ -1275,7 +1306,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const lang = detectLanguage();
             applyLanguage(lang);
-            document.getElementById('lang-toggle').addEventListener('click', () => {
+            // 两颗钮共用同一个 handler，避免两份逻辑各自漂移
+            const toggleLang = () => {
                 const next = document.getElementById('html-root').lang === 'zh' ? 'en' : 'zh';
                 try {
                     localStorage.setItem('site_lang', next);
@@ -1283,7 +1315,9 @@
                 } catch (e) { /* ignore */ }
                 applyLanguage(next);
                 updateDailyHub();
-            });
+            };
+            document.querySelectorAll('#lang-toggle, #footer-lang-toggle')
+                .forEach(btn => btn.addEventListener('click', toggleLang));
             setCanonicalAndSocialMeta();
             injectStructuredData();
             updateDailyHub();
