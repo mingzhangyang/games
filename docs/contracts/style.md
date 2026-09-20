@@ -72,7 +72,7 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 
 - 11 个值精确映射（大小写不敏感，`\b` 边界防 `#e8ecffaa` 这类 8 位 hex 误伤）
 - 跳过 custom property **定义行**（`/^\s*--[\w-]+\s*:/`）—— 定义收敛另行处理
-- 递归扫 `css/`，**豁免 `css/math-rain/`**（化外页，P4 收编前不动）
+- 递归扫 `css/`，**文件级豁免 `css/math-rain/math-rain.css`**（化外旧代色板；B 批次起 shop.css 已纳入扫描——其 hex 不在映射表内白过，误写映射 hex 会被抓）
 - 产物 `var()` 不再匹配 → 第二遍 0 替换，天然幂等
 
 对账口径（2026-09-19 收敛时点）：**182 处替换** + tokens.css 内 13 处定义 + math-rain 5 处豁免 = 200 处闭合。
@@ -108,7 +108,7 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 ### 4.1 ignoreFiles
 
 ```json
-["dist/**", "node_modules/**", "css/math-rain/**"]
+["dist/**", "node_modules/**", "css/math-rain/math-rain.css"]
 ```
 
 ⚠️ 路径必须与实际位置一致（曾误写 `js/math-rain/**`，实际 CSS 在 `css/math-rain/`，

@@ -186,8 +186,12 @@ Vite 会把**页面自己的 CSS chunk 排在共享 CSS 之前**，构建后 HTM
 - ⚠️ `vite build` 与 `npm install` 并发会间歇性失败（`No matching HTML proxy module
   found`，失败入口随机漂移）——构建前确保 npm 空闲，CI 串行（见 `docs/backlog.md`）。
 - ⚠️ 内联 `<style>` / 内联 `<script type="module">` 是 html-inline-proxy 竞态的风险源。
-  2026-09-20（P4）已把 index/tank-battle/math-rain 三页的内联块全部抽离为外链文件，
-  仅保留 gen 契约的 seo-script 内联块（全站模式，gen 管理）。
+  2026-09-20（P4）已把 index/tank-battle/math-rain 三页的内联块抽离为外链文件，
+  2026-09-20（B 批次）补齐 math-rain 最后残留：内联 `<style>`（商店/语言皮肤）→
+  `css/math-rain/shop.css`、compatibility globals 内联 script → `js/math-rain/page-boot.js`
+  （globals 挂载先于 languageManager 初始化，`__pendingLanguageSelection` 顺序约定见该文件头注释；
+  死代码 `window.updateShopInterface` 顺手删除）。
+  至此仅保留 gen 契约的 seo-script 内联块（全站模式，gen 管理）。
 
 ## 5. 验证方式
 
@@ -228,5 +232,7 @@ CSS 契约顺序 + `<main>` 语义 + h1，**不套** shell/topbar/sidebar 几何
 - **tank-battle**：横屏掌机（强制横屏 + 虚拟手柄），画布铺满、HUD 覆盖四角。
   接入 shell 会破坏横屏布局——`<main class="tb-main">` 用 `display: contents`
   透传 body flex 居中，JS 引用的 DOM id 全部未动。
-- **math-rain**：全屏街机 HUD，皮肤自持于 `css/math-rain/`。`eslint`/`stylelint`
-  对 `js/math-rain/**`、`css/math-rain/**` 仍豁免（老式类架构，收编成本高，见 backlog）。
+- **math-rain**：全屏街机 HUD，皮肤自持于 `css/math-rain/`（`math-rain.css` 主皮肤 +
+  `shop.css` 商店/语言皮肤，B 批次自内联 style 抽离）。`eslint` 对 `js/math-rain/**`、
+  `stylelint`/token-swap 对 `math-rain.css` 主皮肤仍豁免（老式类架构，收编成本高，见 backlog）；
+  `shop.css` 已纳入 stylelint/token-swap（B 批次收窄）。

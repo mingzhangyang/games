@@ -1,0 +1,131 @@
+/*
+ * math-rain 商店/语言选择皮肤（2026-09-20 自 math-rain.html 内联 \3c style> 原样抽离，
+ * B 批次收编残留内联块；规则内容与顺序保持原样——.buy-btn:disabled 与 :hover
+ * 同特异性靠顺序定胜负，不得重排）。
+ * 注意：本文件内的 hex 不在 p3-token-swap 的 11 个映射表内，故意保留 math-rain
+ * 自有色板（如 #667eea 主紫、#ffd166 金币）；令牌化属 math-rain 皮肤重制，另行立项。
+ */
+
+.language-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.lang-btn {
+    padding: 8px 16px;
+    border: 2px solid #667eea;
+    background: rgb(102, 126, 234, 0.1);
+    color: #667eea;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.lang-btn:hover {
+    background: rgb(102, 126, 234, 0.2);
+    transform: translateY(-1px);
+}
+
+.lang-btn.active {
+    background: #667eea;
+    color: white;
+    box-shadow: 0 4px 12px rgb(102, 126, 234, 0.3);
+}
+
+.setting-item .language-selector {
+    margin-bottom: 0;
+}
+
+/* Shop styles */
+.current-coins {
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #ffd166;
+    font-weight: bold;
+}
+
+.shop-items {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.shop-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgb(102, 126, 234, 0.1);
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.shop-item:hover {
+    background: rgb(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+}
+
+.item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.item-icon {
+    font-size: 28px;
+}
+
+.item-details h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    color: #f7fafc;
+}
+
+.item-details p {
+    margin: 0;
+    font-size: 13px;
+    color: #a0aec0;
+}
+
+.item-price {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffd166;
+}
+
+.buy-btn {
+    padding: 8px 16px;
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.buy-btn:hover {
+    background: #38a169;
+    transform: scale(1.05);
+}
+
+.buy-btn:disabled {
+    background: #4a5568;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.buy-btn:disabled:hover {
+    background: #4a5568;
+}

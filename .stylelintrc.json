@@ -1,6 +1,6 @@
 {
     "extends": "stylelint-config-standard",
-    "ignoreFiles": ["dist/**", "node_modules/**", "css/math-rain/**"],
+    "ignoreFiles": ["dist/**", "node_modules/**", "css/math-rain/math-rain.css"],
     "rules": {
         "selector-class-pattern": null,
         "selector-id-pattern": null,
