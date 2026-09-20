@@ -21,6 +21,7 @@ import { track } from './analytics.js';
 import { todayKey } from './daily.js';
 import { submitScore } from './leaderboard.js';
 import { makeText } from './i18n.js';
+import { onReady } from './boot.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -2441,7 +2442,7 @@ class GameEngine {
 }
 
 // 页面加载完成后实例化
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     window.gameEngine = new GameEngine();
 
     // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
@@ -2470,7 +2471,7 @@ document.addEventListener('DOMContentLoaded', () => {
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
        na-btn-home 历史上只被 cache、从未绑过点击（HEAD 即如此），
        顺手交给 chrome 接管。 */
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     bindChrome({
         self: 'needle-awn.html',
         owns: ['lang', 'more', 'home'],

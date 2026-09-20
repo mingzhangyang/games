@@ -23,6 +23,10 @@ const BASE_URL = argv.find(a => !a.startsWith('--')) || '';
 const SUITE = [
     { name: 'gen-check', script: 'scripts/gen-from-registry.mjs', args: ['--check'], needsServer: false },
     { name: 'lint', script: 'scripts/run-lint.mjs', args: [], needsServer: false },
+    { name: 'boot', script: 'scripts/verify-boot.mjs', args: [], needsServer: false },
+    { name: 'daily', script: 'scripts/verify-daily.mjs', args: [], needsServer: false },
+    { name: 'leaderboard', script: 'scripts/verify-leaderboard.mjs', args: [], needsServer: false },
+    { name: 'i18n', script: 'scripts/verify-i18n.mjs', args: [], needsServer: false },
     { name: 'registry', script: 'scripts/verify-registry.mjs', args: [], needsServer: false },
     { name: 'fg-audit', script: 'scripts/fg-audit.mjs', args: [], needsServer: true },
     { name: 'placeholder-leak', script: 'scripts/placeholder-leak-check.mjs', args: [], needsServer: true },
@@ -31,15 +35,12 @@ const SUITE = [
     { name: 'stats-drawer', script: 'scripts/verify-stats-drawer.mjs', args: [], needsServer: true },
     { name: 'gomoku', script: 'scripts/verify-gomoku.mjs', args: [], needsServer: true },
     { name: 'button-icons', script: 'scripts/verify-button-icons.mjs', args: [], needsServer: true },
-    { name: 'daily', script: 'scripts/verify-daily.mjs', args: [], needsServer: false },
-    { name: 'leaderboard', script: 'scripts/verify-leaderboard.mjs', args: [], needsServer: false },
-    { name: 'i18n', script: 'scripts/verify-i18n.mjs', args: [], needsServer: false },
     { name: 'tetris-topbar-mobile', script: 'scripts/verify-tetris-topbar-mobile.mjs', args: [], needsServer: true },
     { name: 'tetris-touch', script: 'scripts/verify-tetris-touch.mjs', args: [], needsServer: true },
     { name: 'tetris-drawer', script: 'scripts/verify-tetris-drawer.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'registry', 'fg-audit', 'placeholder-leak', 'chrome', 'desktop-frame'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'daily', 'leaderboard', 'i18n', 'registry', 'fg-audit', 'placeholder-leak', 'chrome', 'desktop-frame'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿

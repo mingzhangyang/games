@@ -5,6 +5,7 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { track } from './analytics.js';
 import { makeText } from './i18n.js';
+import { onReady } from './boot.js';
 
 // 音效：落子/胜利/失败/平局
 const sfx = createSfx({
@@ -906,7 +907,7 @@ init();
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
        本页的静音钮是随槽位契约新增的，页面自身没有 handler，
        所以显式把 sound 交给 chrome 接管。 */
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     bindChrome({
         self: 'gomoku.html',
         owns: ['lang', 'more', 'sound'],

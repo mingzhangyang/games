@@ -8,6 +8,7 @@ import { storageGet as safeGetItem, storageSet as safeSetItem } from './safe-sto
 import { track } from './analytics.js';
 import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
 import { makeText } from './i18n.js';
+import { onReady } from './boot.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -486,8 +487,8 @@ const drawer = {
     }
 };
 
-window.addEventListener('DOMContentLoaded', () => drawer.init());
-window.addEventListener('DOMContentLoaded', setLangUI);
+onReady(() => drawer.init());
+onReady(setLangUI);
 
 // 顶栏语言钮（#tt-btn-lang-ui，data-chrome="lang"）由 js/game-chrome.js 接管：
 // 它只负责 setLang() + 派发事件，本页据此重取 TEXT 并整页重刷。
@@ -497,8 +498,8 @@ window.addEventListener('site-settings:changed', () => {
     TEXT = LANGUAGES[currentLang] || LANGUAGES['en'];
     setLangUI();
 });
-window.addEventListener('DOMContentLoaded', setupUsernameInput);
-window.addEventListener('DOMContentLoaded', fetchAndDisplayGlobalScores);
+onReady(setupUsernameInput);
+onReady(fetchAndDisplayGlobalScores);
 
 class Particle {
     constructor(x, y, color) {
@@ -1453,12 +1454,12 @@ window.game = game;
 // 此前侧栏内容 1000px 高、棋盘固定 800px，1280×900 下整页 1153px，必须滚动。
 // 三张画布（主/粒子/消行）后端缓冲区都固定 400×800、靠 CSS 等比缩放，
 // 三者用同一组 CSS 规则，缩放后天然对齐 —— 手机上本来就是这么跑的（280/400）。
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     bindFrame({ logicalWidth: 400 });
 });
 
 // 按钮事件绑定
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     document.getElementById('startBtn').onclick = () => game.start();
     document.getElementById('pauseBtn').onclick = () => game.togglePause();
     document.getElementById('restartBtn').onclick = () => game.restart();
@@ -1538,7 +1539,7 @@ window.addEventListener('DOMContentLoaded', () => {
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
        本页的静音钮是随槽位契约新增的，页面自身没有 handler，
        所以显式把 sound 交给 chrome 接管。 */
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     bindChrome({
         self: 'tetris.html',
         owns: ['lang', 'more', 'sound'],

@@ -21,6 +21,7 @@ import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
+import { onReady } from './boot.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -3390,7 +3391,7 @@ window.__TD_GROUND_PATH__ = GROUND_PATH;
 // pathGrid 同理——不导出的话脚本会挑到路径格，tryBuild 静默失败。
 window.__TD_GRID__ = { COLS, ROWS, CELL, pathGrid };
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     window.tdGame = new TowerDefenseGame();
 
     // 桌面端舞台纵向预算：td 的技能条在 .game-main 内部（桌面网格第二行），
@@ -3430,7 +3431,7 @@ document.addEventListener('DOMContentLoaded', () => {
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
    owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     bindChrome({
         self: 'tower-defense.html',
         owns: ['lang', 'more'],

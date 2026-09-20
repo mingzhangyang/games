@@ -20,6 +20,7 @@ import { track } from './analytics.js';
 import { todayKey as dailyDateKey, todayKeyDisplay as dailyDateStr } from './daily.js';
 import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
 import { makeText } from './i18n.js';
+import { onReady } from './boot.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -3295,7 +3296,7 @@ class SwordFlightGame {
 }
 
 // 启动游戏实例
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     window.game = new SwordFlightGame();
 
     // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
@@ -3322,7 +3323,7 @@ window.addEventListener('DOMContentLoaded', () => {
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
    owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     bindChrome({
         self: 'sword-flight.html',
         owns: ['lang', 'more'],

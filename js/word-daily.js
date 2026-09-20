@@ -17,6 +17,7 @@ import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { hashString, mulberry32, todayKeyDisplay, msUntilNextDay } from './daily.js';
 import { makeText } from './i18n.js';
+import { onReady } from './boot.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -1475,7 +1476,7 @@ class WordDailyGame {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     window.wordDailyGame = new WordDailyGame();
 });
 
@@ -1483,7 +1484,7 @@ window.addEventListener('DOMContentLoaded', () => {
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
    owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     bindChrome({
         self: 'word-daily.html',
         owns: ['lang', 'more'],

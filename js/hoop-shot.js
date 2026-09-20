@@ -19,6 +19,7 @@ import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { makeText } from './i18n.js';
+import { onReady } from './boot.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -1518,7 +1519,7 @@ class HoopShotGame {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     window.hoopShotGame = new HoopShotGame();
 
     // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
@@ -1550,7 +1551,7 @@ window.addEventListener('DOMContentLoaded', () => {
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
    owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-window.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
     bindChrome({
         self: 'hoop-shot.html',
         owns: ['lang', 'more'],
