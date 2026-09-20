@@ -137,6 +137,8 @@
         .card-icon--stack     { background: rgb(245, 158, 11, 0.15); color: #fbbf24; }
         .card-icon--needle    { background: rgb(56, 189, 248, 0.15); color: #38bdf8; }
         .card-icon--sword     { background: rgb(251, 191, 36, 0.15); color: #fbbf24; }
+        .card-icon--lumen     { background: rgb(45, 212, 191, 0.15); color: #2dd4bf; }
+        .card-icon--circuit   { background: rgb(250, 204, 21, 0.15); color: #facc15; }
 
         .card-title {
             font-size: 1em;
@@ -255,14 +257,25 @@
         }
 
         /* ── Daily Hub ─────────────────────────────── */
+        /* 归属 .idx-main（普通块容器，不像 body 那样 flex 居中），
+           max-width 一旦小于可用宽度而左右 margin 对称时块会贴左
+           ⇒ 必须用 auto 外边距自己居中。纵向负 margin 用于把卡片
+           上提贴住 hero。 */
         .daily-hub {
-            width: 100%;
             max-width: 640px;
-            margin: -24px 16px 8px;
+            margin: -24px auto 8px;
             background: rgb(255, 255, 255, 0.03);
             border: 1px solid var(--color-border);
             border-radius: 16px;
             padding: 16px 18px;
+        }
+
+        /* .idx-main 只做分组，不参与几何 —— 其子块各自居中 */
+        .idx-main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .daily-hub-head {
@@ -372,7 +385,7 @@
         }
 
         @media (width <= 600px) {
-            .daily-hub { margin: -16px 12px 8px; padding: 13px 14px; }
+            .daily-hub { margin: -16px auto 8px; padding: 13px 14px; }
         }
 
         /* ── Perks strip ───────────────────────────── */

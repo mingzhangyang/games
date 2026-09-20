@@ -84,6 +84,16 @@ const i18n = {
         swordFlightTag: 'Action',
         swordFlightPlay: 'Play ›',
 
+        lumenName: 'Lumen',
+        lumenDesc: 'Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle.',
+        lumenTag: 'Puzzle',
+        lumenPlay: 'Play ›',
+
+        circuitName: 'Circuit',
+        circuitDesc: 'Flip switches, route the current, light every bulb — and dodge the short circuit. 20 levels plus a daily puzzle.',
+        circuitTag: 'Puzzle',
+        circuitPlay: 'Play ›',
+
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
         minecraftTag: 'Sandbox',
@@ -189,6 +199,16 @@ const i18n = {
         swordFlightDesc: '扶摇直上九重天，踏剑破云海。穿梭玄天仙环，引雷淬剑，御剑化阵，突破境界，凝万剑归宗！',
         swordFlightTag: '国风仙侠',
         swordFlightPlay: '开始游戏 ›',
+
+        lumenName: '折光',
+        lumenDesc: '翻转镜面，偏折光束，点亮全部水晶。20 关手工关卡 + 每日谜题，用最少翻转通关！',
+        lumenTag: '光路解谜',
+        lumenPlay: '开始游戏 ›',
+
+        circuitName: '电路谜题',
+        circuitDesc: '拨动开关，接通电流，点亮全部目标灯泡——小心短路！20 关手工关卡 + 每日谜题。',
+        circuitTag: '电路解谜',
+        circuitPlay: '开始游戏 ›',
 
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -301,6 +321,16 @@ function applyLanguage(lang) {
     document.getElementById('sword-flight-tag').textContent = t.swordFlightTag;
     document.getElementById('sword-flight-play').textContent = t.swordFlightPlay;
 
+    document.getElementById('lumen-name').textContent = t.lumenName;
+    document.getElementById('lumen-desc').textContent = t.lumenDesc;
+    document.getElementById('lumen-tag').textContent = t.lumenTag;
+    document.getElementById('lumen-play').textContent = t.lumenPlay;
+
+    document.getElementById('circuit-name').textContent = t.circuitName;
+    document.getElementById('circuit-desc').textContent = t.circuitDesc;
+    document.getElementById('circuit-tag').textContent = t.circuitTag;
+    document.getElementById('circuit-play').textContent = t.circuitPlay;
+
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
     document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -377,6 +407,8 @@ function injectStructuredData() {
         { slug: 'gravity-slingshot', name: 'Gravity Slingshot', description: 'Original orbital physics puzzle — slingshot your probe around planets into the wormhole, 20 holes plus a daily course.' },
         { slug: 'needle-awn', name: 'Pinpoint Clash', description: 'Original cyber-ink martial precision action duel — clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm.' },
         { slug: 'sword-flight', name: 'Sword Flight', description: 'Oriental xianxia kinetic flight action — soar through nine celestial realms, summon companion sword arrays, thread spiritual rings, and ascend to immortality.' },
+        { slug: 'lumen', name: 'Lumen', description: 'Original beam refraction puzzle — flip mirrors, bend the beam and light every crystal. 20 handcrafted levels plus a daily puzzle.' },
+        { slug: 'circuit', name: 'Circuit', description: 'Physics puzzle of switches and circuits — route the current, light every target bulb and dodge the short circuit. 20 levels plus a daily puzzle.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }

@@ -29,6 +29,7 @@ const SUITE = [
     { name: 'i18n', script: 'scripts/verify-i18n.mjs', args: [], needsServer: false },
     { name: 'sfx', script: 'scripts/verify-sfx.mjs', args: [], needsServer: false },
     { name: 'registry', script: 'scripts/verify-registry.mjs', args: [], needsServer: false },
+    { name: 'index-cards', script: 'scripts/verify-index-cards.mjs', args: [], needsServer: false },
     { name: 'fg-audit', script: 'scripts/fg-audit.mjs', args: [], needsServer: true },
     { name: 'placeholder-leak', script: 'scripts/placeholder-leak-check.mjs', args: [], needsServer: true },
     { name: 'chrome', script: 'scripts/verify-chrome.mjs', args: [], needsServer: true },
@@ -40,13 +41,14 @@ const SUITE = [
     { name: 'tetris-touch', script: 'scripts/verify-tetris-touch.mjs', args: [], needsServer: true },
     { name: 'tetris-drawer', script: 'scripts/verify-tetris-drawer.mjs', args: [], needsServer: true },
     { name: 'smoke-index', script: 'scripts/smoke-index.mjs', args: [], needsServer: true },
+    { name: 'index-layout', script: 'scripts/verify-index-layout.mjs', args: [], needsServer: true },
     { name: 'smoke-tank-battle', script: 'scripts/smoke-tank-battle.mjs', args: [], needsServer: true },
     { name: 'smoke-math-rain', script: 'scripts/smoke-math-rain.mjs', args: [], needsServer: true },
     { name: 'lumen-levels', script: 'scripts/verify-lumen-levels.mjs', args: [], needsServer: false },
     { name: 'smoke-lumen', script: 'scripts/smoke-lumen.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'lumen-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'desktop-frame'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'lumen-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'desktop-frame'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿
