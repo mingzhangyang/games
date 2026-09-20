@@ -41,7 +41,7 @@ const SUITE = [
     { name: 'tetris-drawer', script: 'scripts/verify-tetris-drawer.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'fg-audit', 'placeholder-leak', 'chrome', 'desktop-frame'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'desktop-frame'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿
