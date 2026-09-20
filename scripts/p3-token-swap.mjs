@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 /**
  * p3-token-swap — P3-4 逐页 hex→令牌收敛（值精确映射，边界严格）。
- * 用法：node scripts/p3-token-swap.mjs [--dry]
+ * 用法：node scripts/p3-token-swap.mjs [--dry|--check]
+ *   --dry    只报告不写盘
+ *   --check  只报告不写盘，且发现残留即退出码 1（供 run-lint 把"禁写字面量"
+ *            这条规则变成机器约束 —— 此前它只是 docs/contracts/style.md 里的
+ *            一句话，没有任何东西执行，结果 css/index.css 带着 3 处 #34d399
+ *            进了仓库都没人发现）
  * 规则：
  *   - 仅处理 css 目录递归的全部 .css（豁免 math-rain 子目录，化外页 P4 收编）
  *   - 11 个值精确映射到既有令牌（大小写不敏感，\b 边界防 8 位 hex 误伤）
@@ -13,7 +18,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DRY = process.argv.includes('--dry');
+const CHECK = process.argv.includes('--check');
+const DRY = CHECK || process.argv.includes('--dry');
 
 const MAP = [
     ['e8ecff', 'tok-text'],
@@ -44,6 +50,7 @@ function walk(dir, out = []) {
 
 const files = walk(join(ROOT, 'css'));
 let total = 0;
+const offenders = [];
 for (const file of files) {
     const src = readFileSync(file, 'utf8');
     const lines = src.split('\n');
@@ -61,9 +68,22 @@ for (const file of files) {
     });
     if (n > 0) {
         total += n;
-        const rel = file.slice(ROOT.length + 1);
-        console.log(`${DRY ? 'DRY' : 'WRITE'} ${rel}  ${n} 处`);
+        const rel = file.slice(ROOT.length + 1).replace(/\\/g, '/');
+        offenders.push(`${rel}（${n} 处）`);
+        console.log(`${CHECK ? 'FOUND' : DRY ? 'DRY' : 'WRITE'} ${rel}  ${n} 处`);
         if (!DRY) writeFileSync(file, next.join('\n'));
     }
+}
+
+if (CHECK) {
+    if (total === 0) {
+        console.log(`token-swap --check：无字面量残留 ✅（扫描 ${files.length} 个文件）`);
+        process.exit(0);
+    }
+    console.error(`\n✗ 发现 ${total} 处应为 var(--tok-*) 的字面 hex：`);
+    offenders.forEach(o => console.error('  ✗ ' + o));
+    console.error('  修复：node scripts/p3-token-swap.mjs（幂等，可反复跑）');
+    console.error('  规则见 docs/contracts/style.md §2');
+    process.exit(1);
 }
 console.log(`${DRY ? '[dry] 将替换' : '已替换'} ${total} 处 / ${files.length} 个文件扫描`);

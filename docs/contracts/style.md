@@ -55,6 +55,19 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 
 **新代码禁止再写上表 11 个值的字面 hex，一律 `var(--tok-*)`。**
 
+这条规则由 `node scripts/p3-token-swap.mjs --check` 执行（已并入 `run-lint.mjs`，
+即 `npm run verify` 的 `lint` 档）：发现残留即退出码 1 并列出文件。
+`node scripts/run-lint.mjs --fix` 会真的替换掉。
+
+⚠️ stylelint 的 `color-no-hex` **不适用** —— 它禁的是所有 hex，而本契约
+只禁"已映射的 11 个值"，页面专属美术色仍然允许写字面量（见本节末例外）。
+所以这条必须由上面那个值精确的脚本守，不能指望 stylelint。
+
+背景：这条规则曾经整整一天只是文档里的一句话。`css/index.css` 带着 3 处
+`#34d399` 进了仓库都没人发现 —— P3-4 收敛只扫 `css/`，那时这些颜色还在
+`index.html` 的内联 `<style>` 里；P4-1 抽离后它们才落进 CSS 树，而没有任何
+东西会复扫。**契约没有执行器就不是契约。**
+
 一次性迁移脚本 `scripts/p3-token-swap.mjs`（值精确映射，幂等）已完成全仓收敛：
 
 - 11 个值精确映射（大小写不敏感，`\b` 边界防 `#e8ecffaa` 这类 8 位 hex 误伤）
@@ -122,7 +135,9 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 ## 5. 运行
 
 ```bash
-node scripts/run-lint.mjs          # eslint + stylelint 一键
+node scripts/run-lint.mjs          # eslint + stylelint + 令牌残留检查 一键
+node scripts/run-lint.mjs --fix    # 同上，且真的替换令牌字面量
+node scripts/p3-token-swap.mjs --check   # 只查令牌残留
 npx eslint js scripts --fix        # 修 JS（勿碰 js/more-games.js —— 已 ignores 保护）
 npx stylelint "css/**/*.css" --fix # 修 CSS（避开 math-rain；产物要烟测）
 ```

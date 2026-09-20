@@ -123,13 +123,13 @@
 
         .card-icon--math      { background: rgb(59, 130, 246, 0.15); color: #60a5fa; }
         .card-icon--tetris    { background: rgb(139, 92, 246, 0.15); color: #a78bfa; }
-        .card-icon--tank      { background: rgb(16, 185, 129, 0.15); color: #34d399; }
+        .card-icon--tank      { background: rgb(16, 185, 129, 0.15); color: var(--tok-success); }
         .card-icon--gomoku    { background: rgb(249, 115, 22, 0.15); color: #fb923c; }
         .card-icon--planet    { background: rgb(168, 85, 247, 0.15); color: #c084fc; }
         .card-icon--word      { background: rgb(58, 166, 85, 0.15); color: #4ade80; }
         .card-icon--hoop      { background: rgb(249, 115, 22, 0.15); color: #fb923c; }
         .card-icon--mines     { background: rgb(56, 132, 255, 0.15); color: #60a5fa; }
-        .card-icon--reversi   { background: rgb(52, 211, 153, 0.15); color: #34d399; }
+        .card-icon--reversi   { background: rgb(52, 211, 153, 0.15); color: var(--tok-success); }
         .card-icon--td        { background: rgb(34, 211, 238, 0.15); color: #22d3ee; }
         .card-icon--gravity   { background: rgb(129, 140, 248, 0.15); color: #818cf8; }
         .card-icon--minecraft { background: rgb(132, 204, 22, 0.15); color: #a3e635; }
@@ -184,7 +184,7 @@
         }
 
         .card-badge--daily {
-            color: #34d399;
+            color: var(--tok-success);
             background: rgb(52, 211, 153, 0.11);
             border: 1px solid rgb(52, 211, 153, 0.4);
         }
