@@ -59,3 +59,17 @@ export function mulberry32(seed) {
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 }
+
+/** 距离下一个 UTC+8 午夜的毫秒数（倒计时用）。
+ *
+ * ⚠ 这里曾有一个存活到 2026-09-20 的错误：调用方写成
+ *   `todayKeyDisplay(now + 8h + 24h)`，而 todayKeyDisplay 内部**本来就加 8h**，
+ *   于是实际取的是 now+40h 的日期。UTC+8 16:00 之后 now+40h 会跨到后天，
+ *   倒计时整整多报 24 小时（实测 18:00 显示 30:00:00、23:00 显示 25:00:00）。
+ *   正确写法是只加 24h —— 把 UTC+8 的偏移**只交给 todayKeyDisplay 做一次**。
+ */
+export function msUntilNextDay(now = Date.now()) {
+    const [y, m, d] = todayKeyDisplay(now + 24 * 3600 * 1000).split('-').map(Number);
+    // UTC+8 的午夜 = 同一日期的 UTC 00:00 往前 8 小时
+    return Date.UTC(y, m - 1, d) - 8 * 3600 * 1000 - now;
+}

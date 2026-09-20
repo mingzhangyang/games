@@ -15,7 +15,7 @@ import { updateMoreGames } from './more-games.js';
 import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
-import { hashString, mulberry32, todayKeyDisplay } from './daily.js';
+import { hashString, mulberry32, todayKeyDisplay, msUntilNextDay } from './daily.js';
 import { makeText } from './i18n.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
@@ -31,14 +31,8 @@ function storageParse(key, fallback) {
 
 // UTC+8 日期键（YYYY-MM-DD）：委托 js/daily.js 唯一口径（原手写 dayKey 退役）
 
-// 距离下一个 UTC+8 午夜的毫秒数
-function msUntilNextDay() {
-    const now = Date.now();
-    const tomorrow = todayKeyDisplay(now + 8 * 3600 * 1000 + 24 * 3600 * 1000);
-    const [y, m, dd] = tomorrow.split('-').map(Number);
-    // UTC+8 的午夜 = UTC 前一日 16:00
-    return Date.UTC(y, m - 1, dd) - 8 * 3600 * 1000 - now;
-}
+// 距离下一个 UTC+8 午夜的毫秒数：委托 js/daily.js（原手写版多加了一次 8h 偏移，
+// UTC+8 16:00 之后倒计时整整多报 24 小时）
 
 // 每日谜题编号（自 2026-01-01 UTC+8 起）
 const EPOCH = Date.UTC(2026, 0, 1) - 8 * 3600 * 1000;

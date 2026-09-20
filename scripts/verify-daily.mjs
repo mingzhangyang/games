@@ -37,7 +37,7 @@ if (!DAILY_SRC.includes('export function todayKey')) {
 /* ─────────────── 子进程：冻结 Date + 行为断言 ─────────────── */
 
 const CHILD_SRC = String.raw`
-import { todayKey, todayKeyDisplay, dailyKey, hashString, hashStringFNV, mulberry32 } from ${JSON.stringify(pathToFileURL(DAILY_JS).href)};
+import { todayKey, todayKeyDisplay, dailyKey, hashString, hashStringFNV, mulberry32, msUntilNextDay } from ${JSON.stringify(pathToFileURL(DAILY_JS).href)};
 
 const FROZEN = ${FROZEN_MS};
 // 冻结 Date：无参构造/now() 返回 FROZEN，显式参数原样放行（防实现偷用 new Date() 绕过口径）
@@ -74,6 +74,27 @@ ok(todayKey(${Date.UTC(2026, 0, 1, 16, 0, 0, 0)}) === '20260102',
     'UTC 16:00:00.000 → 20260102', todayKey(${Date.UTC(2026, 0, 1, 16, 0, 0, 0)}));
 ok(todayKeyDisplay(${Date.UTC(2026, 0, 1, 16, 0, 0)}) === '2026-01-02',
     'todayKeyDisplay 翻转点 = 2026-01-02');
+
+// 2.5) 倒计时：距下一个 UTC+8 午夜。
+//      历史 bug：调用方写成 todayKeyDisplay(now + 8h + 24h)，而该函数内部本来就加 8h，
+//      实际取的是 now+40h 的日期 —— UTC+8 16:00 之后整整多报 24 小时
+//      （实测 18:00 显示 30:00:00、23:00 显示 25:00:00）。下面这些时刻正是当年翻车的区间。
+//      ⚠ 本段处在 String.raw 子进程源码里：反引号与模板插值占位符都会被父进程吃掉，
+//        所以这里一律用字符串拼接（父进程有意注入的常量除外）。
+const H = 3600000;
+const DAY0 = ${Date.UTC(2026, 5, 10)};
+const CASES = [[0, 24], [8, 16], [12, 12], [15, 9], [16, 8], [18, 6], [23, 1]];
+for (const pair of CASES) {
+    const hh = pair[0], wantH = pair[1];
+    // 构造 UTC+8 当日 hh:00 —— UTC 小时 = hh - 8
+    const got = msUntilNextDay(DAY0 + (hh - 8) * H);
+    ok(got === wantH * H,
+        'msUntilNextDay @UTC+8 ' + String(hh).padStart(2, '0') + ':00 = ' + wantH + 'h',
+        (got / H).toFixed(2) + 'h');
+}
+// 跨日瞬间
+ok(msUntilNextDay(${Date.UTC(2026, 5, 9, 16, 0, 0)} + 1) === 24 * H - 1, '午夜后 1ms -> 24h-1ms');
+ok(msUntilNextDay(${Date.UTC(2026, 5, 10, 16, 0, 0)} - 1) === 1, '午夜前 1ms -> 1ms');
 
 // 3) 黄金哈希值（算法漂移即断言失败——已发布每日内容序列不容改变）
 ok(hashStringFNV('20260102') === 2449071838,
@@ -136,6 +157,8 @@ okp(distinct.size === TIMEZONES.length,
 
 console.log('\n▶ 源码收敛（防复制粘贴复活）');
 const GAME_FILES = ['planet-merge', 'word-daily', 'gravity-slingshot', 'sword-flight', 'needle-awn'];
+okp(!/function msUntilNextDay/.test(readFileSync(join(ROOT, 'js', 'word-daily.js'), 'utf8')),
+    'word-daily.js 不再自带 msUntilNextDay（收敛到 daily.js）');
 for (const g of GAME_FILES) {
     const p = join(ROOT, 'js', `${g}.js`);
     const src = readFileSync(p, 'utf8');
