@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a1230">
+    <meta name="description" content="电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 handcrafted levels plus a daily puzzle for the whole world.">
+    <meta name="keywords" content="undefined">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/circuit.html">
+    <meta property="og:title" content="电路谜题 Circuit — Light It Up">
+    <meta property="og:description" content="Flip switches, route the current, light every target bulb — and dodge the short circuit.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-circuit.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/circuit.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="电路谜题 Circuit — Light It Up">
+    <meta name="twitter:description" content="Flip switches, route current, light every bulb.">
+    <meta name="twitter:image" content="assets/seo/og-circuit.svg">
+    <title>电路谜题 Circuit — Light It Up</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a1230'/%3E%3Ccircle cx='32' cy='30' r='12' fill='none' stroke='%23ffc94d' stroke-width='3'/%3E%3Cpath d='M25 23l14 14M39 23L25 37' stroke='%23ffc94d' stroke-width='2.5'/%3E%3Cpath d='M32 46v8M22 54h20' stroke='%23ffc94d' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/circuit.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="cc-shell game-shell">
+        <!-- 顶栏 HUD -->
+        <header class="cc-topbar game-topbar">
+            <div class="cc-topbar-lead game-topbar-group">
+                <button data-chrome="home" class="cc-icon-btn game-icon-btn" id="cc-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <div class="cc-topbar-center game-topbar-center">
+                <div class="cc-hud-level" id="cc-hud-level">Level 1/20</div>
+                <div class="cc-move-box">
+                    <span class="cc-move-value" id="cc-moves">0</span>
+                    <span class="cc-par" id="cc-par">· Par 2</span>
+                </div>
+            </div>
+            <div class="cc-topbar-actions game-topbar-group">
+                <button class="cc-icon-btn game-icon-btn" id="cc-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button data-chrome="stats" type="button" class="cc-icon-btn game-icon-btn cc-stats-btn game-stats-btn" id="ccStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="ccStatsDrawer"></button>
+                <button type="button" class="cc-icon-btn game-icon-btn" id="cc-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                <button type="button" class="cc-icon-btn cc-lang-btn game-icon-btn game-icon-btn--wide" id="cc-btn-lang-ui" data-chrome="lang" title="Language" aria-label="Language">中文</button>
+            </div>
+        </header>
+
+        <!-- 舞台 -->
+        <main class="cc-main game-main">
+        <div class="cc-stage game-stage" id="cc-stage">
+            <canvas class="game-canvas" id="cc-canvas" width="560" height="420"></canvas>
+            <div class="cc-toast hidden game-toast" id="cc-toast"></div>
+
+            <!-- 开始界面 -->
+            <div class="cc-overlay game-overlay" id="cc-start">
+                <h1 class="cc-title" id="cc-title">Circuit</h1>
+                <p class="cc-subtitle" id="cc-subtitle">Switch · Wire · Light</p>
+                <div class="cc-hero">💡</div>
+                <p class="cc-howto" id="cc-howto"></p>
+                <div class="cc-mode-row">
+                    <button class="cc-mode" id="cc-btn-levels">🧩 Levels</button>
+                    <button class="cc-mode cc-mode-daily" id="cc-btn-daily">📅 Daily</button>
+                </div>
+                <p class="cc-level-label" id="cc-level-label">Select level</p>
+                <div class="cc-level-grid" id="cc-level-grid"></div>
+                <p class="cc-daily-best" id="cc-daily-best"></p>
+                <div class="cc-start-footer">
+                    <button class="cc-icon-btn game-icon-btn" id="cc-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                    <button class="cc-icon-btn cc-lang-btn game-icon-btn" id="cc-start-lang">中文</button>
+                </div>
+            </div>
+
+            <!-- 过关面板 -->
+            <div class="cc-overlay cc-overlay-dim hidden game-overlay" id="cc-clear">
+                <div class="cc-card">
+                    <h2 class="cc-card-title" id="cc-clear-stars">⭐⭐⭐</h2>
+                    <div class="cc-card-line" id="cc-clear-line">Moves 0 · Par 0</div>
+                    <div class="cc-btn-row">
+                        <button class="cc-btn cc-btn-primary game-btn" id="cc-btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/></svg><span>Next</span></button>
+                        <button class="cc-btn game-btn" id="cc-btn-replay"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Retry</span></button>
+                        <button class="cc-btn cc-btn-ghost game-btn" id="cc-btn-menu1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每日结算 -->
+            <div class="cc-overlay hidden game-overlay" id="cc-over">
+                <h2 class="cc-overlay-title" id="cc-over-title">Daily complete!</h2>
+                <div class="cc-over-score" id="cc-over-score">0</div>
+                <div class="cc-over-sub" id="cc-over-sub"></div>
+                <div class="cc-btn-row">
+                    <button class="cc-btn game-btn" id="cc-btn-copy"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg><span>Copy</span></button>
+                    <button class="cc-btn cc-btn-ghost game-btn" id="cc-btn-menu2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
+                </div>
+                <div class="cc-lb">
+                    <div class="cc-lb-title" id="cc-lb-title">🏆 Global · Today's Puzzle</div>
+                    <div class="cc-lb-list" id="cc-lb-list"></div>
+                    <div class="cc-lb-status" id="cc-lb-status"></div>
+                    <div class="cc-username-row">
+                        <label class="cc-username-label" for="cc-username" id="cc-username-label">Username</label>
+                        <input class="cc-username" id="cc-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+                <button class="cc-btn cc-btn-primary game-btn" id="cc-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Again</span></button>
+            </div>
+        </div>
+
+            <aside class="cc-sidebar game-sidebar">
+            <div id="ccStatsPanels">
+                <div class="cc-side-card game-side-card">
+                    <div class="cc-side-title game-side-title" id="cc-side-howto-title"></div>
+                    <p class="cc-side-text game-side-text" id="cc-side-howto"></p>
+                </div>
+                <div class="cc-side-card game-side-card">
+                    <div class="cc-side-title game-side-title" id="cc-side-records-title"></div>
+                    <div class="cc-side-records" id="cc-side-records"></div>
+                </div>
+            </div>
+            <div class="cc-side-card game-side-card">
+                <nav class="more-games" id="ccSideMore"></nav>
+            </div>
+        </aside>
+    </main>
+
+    <footer class="cc-footer game-footer">
+        <p class="cc-footer-hint game-footer-hint" id="cc-hint"></p>
+        <div class="cc-footer-actions game-footer-actions game-topbar-group">
+            <a class="cc-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button type="button" class="cc-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="ccMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+        <nav class="more-games game-footer-nav" id="ccMoreNav" hidden></nav>
+    </footer>
+    </div>
+    <div class="game-drawer" id="ccStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="ccStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="ccStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="ccStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="ccStatsDrawerBody"></div>
+        </div>
+    </div>
+
+
+        <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-circuit.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"电路谜题 Circuit — Light It Up","url":currentUrl,"description":"电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 handcrafted levels plus a daily puzzle for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"电路谜题 Circuit — Light It Up","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+        <!-- registry:end seo-script -->
+    <script type="module" src="js/circuit.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

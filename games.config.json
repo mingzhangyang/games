@@ -626,6 +626,56 @@
         "priority": "0.8"
       },
       "themeColor": "#070b22"
+    },
+    {
+      "id": "circuit",
+      "prefix": "cc",
+      "href": "circuit.html",
+      "entry": "js/circuit.js",
+      "emoji": "💡",
+      "title": {
+        "doc": "电路谜题 Circuit — Light It Up",
+        "seo": "电路谜题 Circuit — Light It Up"
+      },
+      "name": {
+        "en": "Circuit",
+        "zh": "电路谜题"
+      },
+      "desc": {
+        "meta": "电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 handcrafted levels plus a daily puzzle for the whole world.",
+        "og": "Flip switches, route the current, light every target bulb — and dodge the short circuit.",
+        "twitter": "Flip switches, route current, light every bulb."
+      },
+      "genre": [
+        "PuzzleGame",
+        "EducationalGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "order": "asc",
+        "maxScore": 99,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "circuit",
+        "dailyTtlDays": 14
+      },
+      "stage": {
+        "w": 560,
+        "h": 420
+      },
+      "sitemap": {
+        "changefreq": "daily",
+        "priority": "0.8"
+      },
+      "themeColor": "#0a1230"
     }
   ]
 }

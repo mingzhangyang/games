@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="cc-og-title cc-og-desc">
+  <title id="cc-og-title">Circuit social card</title>
+  <desc id="cc-og-desc">Social preview for Circuit 电路谜题 — a physics puzzle of switches and circuits.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#060a1e"/>
+      <stop offset="0.6" stop-color="#0a1230"/>
+      <stop offset="1" stop-color="#0e1a40"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd98a" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#ffd98a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wire" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffc94d" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#ffe9b0" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g fill="#dfe7ff">
+    <circle cx="150" cy="85" r="2" opacity="0.6"/>
+    <circle cx="410" cy="55" r="1.5" opacity="0.45"/>
+    <circle cx="690" cy="100" r="1.8" opacity="0.5"/>
+    <circle cx="950" cy="65" r="1.3" opacity="0.45"/>
+    <circle cx="1120" cy="180" r="2" opacity="0.55"/>
+    <circle cx="90" cy="480" r="1.6" opacity="0.5"/>
+    <circle cx="1050" cy="480" r="1.6" opacity="0.5"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#ffc94d" stroke-width="2.5"/>
+
+  <text x="88" y="175" fill="#f4f6ff" font-size="76" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Circuit</text>
+  <text x="88" y="238" fill="#ffc94d" font-size="38" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">电路谜题 · 中学物理闯关</text>
+  <text x="88" y="300" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Flip switches, route the current,</text>
+  <text x="88" y="344" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">light every bulb — dodge the short.</text>
+
+  <!-- 场景示意：电池 → 开关 → 点亮灯泡 回路 -->
+  <g>
+    <!-- 底边导线 -->
+    <path d="M200 500 H960" fill="none" stroke="url(#wire)" stroke-width="5" stroke-linecap="round"/>
+    <!-- 电池（两竖板） -->
+    <line x1="256" y1="478" x2="256" y2="522" stroke="#4dc3ff" stroke-width="6" stroke-linecap="round"/>
+    <line x1="282" y1="486" x2="282" y2="514" stroke="#4dc3ff" stroke-width="10" stroke-linecap="round"/>
+    <!-- 闭合开关 -->
+    <circle cx="480" cy="500" r="5" fill="#ffe9b0"/>
+    <circle cx="544" cy="500" r="5" fill="#ffe9b0"/>
+    <line x1="484" y1="500" x2="540" y2="478" stroke="#ffe9b0" stroke-width="5" stroke-linecap="round"/>
+    <!-- 短路警告火花（未点亮支路） -->
+    <path d="M700 500 l14 -12 -6 12 14 -2" fill="none" stroke="#e24b4a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- 灯泡回路：右行 → 上行 → 左行回电池 -->
+    <path d="M960 500 V300 H560" fill="none" stroke="url(#wire)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M560 300 H330 V470" fill="none" stroke="url(#wire)" stroke-width="5" stroke-linecap="round"/>
+    <!-- 点亮灯泡 -->
+    <circle cx="760" cy="300" r="66" fill="url(#glow)"/>
+    <circle cx="760" cy="300" r="30" fill="#ffd98a" stroke="#ffc94d" stroke-width="4"/>
+    <line x1="740" y1="280" x2="780" y2="320" stroke="#c98f1d" stroke-width="3" stroke-linecap="round"/>
+    <line x1="780" y1="280" x2="740" y2="320" stroke="#c98f1d" stroke-width="3" stroke-linecap="round"/>
+    <line x1="760" y1="252" x2="760" y2="236" stroke="#ffc94d" stroke-width="4" stroke-linecap="round"/>
+    <line x1="738" y1="262" x2="726" y2="250" stroke="#ffc94d" stroke-width="4" stroke-linecap="round"/>
+    <line x1="782" y1="262" x2="794" y2="250" stroke="#ffc94d" stroke-width="4" stroke-linecap="round"/>
+    <!-- 未点亮灯泡 -->
+    <circle cx="330" cy="380" r="26" fill="none" stroke="#3c4a8f" stroke-width="3"/>
+    <circle cx="330" cy="380" r="10" fill="none" stroke="#3c4a8f" stroke-width="2.5"/>
+  </g>
+
+  <text x="88" y="552" fill="#e0e7ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">💡 Play in browser · circuit</text>
+</svg>

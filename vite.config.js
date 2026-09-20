@@ -57,6 +57,7 @@ main: resolve(__dirname, 'index.html'),
             "needle-awn": resolve(__dirname, 'needle-awn.html'),
             "sword-flight": resolve(__dirname, 'sword-flight.html'),
             "lumen": resolve(__dirname, 'lumen.html'),
+            "circuit": resolve(__dirname, 'circuit.html'),
             // registry:end inputs
         },
         output: {

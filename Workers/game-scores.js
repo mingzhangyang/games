@@ -35,6 +35,7 @@ const DAILY_PATTERNS = [
   { re: /^needle-awn-d\d{8}$/, config: { order: 'desc', maxScore: 5000000, maxEntries: 50, ttl: 14 * 24 * 3600 } },
   { re: /^sword-flight-d\d{8}$/, config: { order: 'desc', maxScore: 5000000, maxEntries: 50, ttl: 14 * 24 * 3600 } },
   { re: /^lumen-d\d{8}$/, config: { order: 'asc', maxScore: 99, maxEntries: 50 } },
+  { re: /^circuit-d\d{8}$/, config: { order: 'asc', maxScore: 99, maxEntries: 50, ttl: 14 * 24 * 3600 } },
 ];
 // registry:end games-scores
 
