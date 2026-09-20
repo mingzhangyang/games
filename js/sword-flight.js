@@ -19,6 +19,7 @@ import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey as dailyDateKey, todayKeyDisplay as dailyDateStr } from './daily.js';
 import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -40,9 +41,8 @@ const STORAGE_KEYS = {
 
 /* ────────────────────────── 国际化 i18n ────────────────────────── */
 
-const I18N = {
+const I18N = makeText({
     zh: {
-        close: '关闭',
         stats: '数据统计',
         gameTitle: '御剑飞行',
         gameSub: '扶摇直上九重天 · 剑气纵横御清风',
@@ -132,12 +132,9 @@ const I18N = {
             { name: '九幽魔障', desc: '魔禽夜袭，剑阵诛煞' },
             { name: '登仙天门', desc: '云开仙阙，万剑朝宗' }
         ],
-        sound: '声音',
-        moreGames: '更多游戏',
         hint: '拖拽御剑 · 空格疾刺 · P 暂停 · M 静音',
     },
     en: {
-        close: 'Close',
         stats: 'Stats',
         gameTitle: 'Sword Flight',
         gameSub: 'Soaring Heavens · Treading the Wind with Divine Blades',
@@ -230,11 +227,9 @@ const I18N = {
             { name: 'Nine Nether Fiends', desc: 'Phantom birds & shadow rifts' },
             { name: 'Ascension Gate', desc: 'The golden gate to true immortality' }
         ],
-        sound: 'Sound',
-        moreGames: 'More games',
         hint: 'Drag to fly · Space dash · P pause · M mute',
     }
-};
+});
 
 /* ────────────────────────── Web Audio API 声音合成 ────────────────────────── */
 

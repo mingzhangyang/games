@@ -17,6 +17,7 @@ import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay, hashString, mulberry32 } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -42,9 +43,8 @@ function formatNumber(n) {
 
 /* ────────────────────────── i18n ────────────────────────── */
 
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
-        close: 'Close',
         stats: 'Stats',
         title: 'Planet Merge',
         subtitle: 'Drop · Merge · Chain the cosmos',
@@ -68,7 +68,6 @@ const LANGUAGES = {
         merges: 'Merges',
         share: 'Share',
         copyResult: 'Copy Result',
-        copied: 'Copied!',
         leaderboard: 'Global Leaderboard',
         today: 'Today',
         allTime: 'All-Time',
@@ -76,21 +75,16 @@ const LANGUAGES = {
         noScores: 'No scores yet',
         lbOffline: 'Leaderboard offline — showing local scores',
         lbSubmitFail: 'Score upload failed — saved locally',
-        usernameLabel: 'Username (Enter to save)',
         next: 'Next',
         mute: 'Sound',
-        language: '中文',
         hint: 'P pause · M mute · R restart',
         sideHowTo: 'How to play',
         sideRecords: 'Records',
         modeEndless: 'Endless',
         modeDaily: 'Daily',
         confirmReplace: 'Start a new daily run? Your current progress will be lost.',
-        sound: 'Sound',
-        moreGames: 'More games',
     },
     zh: {
-        close: '关闭',
         stats: '数据统计',
         title: '星球合成',
         subtitle: '投放 · 合成 · 连锁宇宙',
@@ -114,7 +108,6 @@ const LANGUAGES = {
         merges: '合成次数',
         share: '分享',
         copyResult: '复制成绩',
-        copied: '已复制！',
         leaderboard: '全球排行榜',
         today: '今日榜',
         allTime: '总榜',
@@ -122,20 +115,16 @@ const LANGUAGES = {
         noScores: '暂无分数',
         lbOffline: '榜单离线——显示本地成绩',
         lbSubmitFail: '成绩上传失败——已保存到本地',
-        usernameLabel: '用户名（回车保存）',
         next: '下一个',
         mute: '音效',
-        language: 'English',
         hint: 'P 暂停 · M 静音 · R 重开',
         sideHowTo: '玩法说明',
         sideRecords: '战绩',
         modeEndless: '无尽',
         modeDaily: '每日',
         confirmReplace: '开始新的每日挑战？当前进度将丢失。',
-        sound: '声音',
-        moreGames: '更多游戏',
     }
-};
+});
 
 /* ────────────────────────── game config ────────────────────────── */
 

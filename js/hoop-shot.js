@@ -18,6 +18,7 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -40,9 +41,8 @@ function formatNumber(n) {
 
 /* ────────────────────────── i18n ────────────────────────── */
 
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
-        close: 'Close',
         stats: 'Stats',
         title: 'Hoop Shot',
         subtitle: 'Flick · Arc · Score',
@@ -62,23 +62,17 @@ const LANGUAGES = {
         score: 'Score',
         share: 'Share',
         copyResult: 'Copy Result',
-        copied: 'Copied!',
         leaderboard: 'Global Top 10',
         loadingScores: 'Loading…',
         noScores: 'No scores yet',
         lbOffline: 'Leaderboard offline — showing local scores',
         submitFail: 'Score upload failed — saved locally',
-        usernameLabel: 'Username (Enter to save)',
-        language: '中文',
         tapToStart: 'Swipe up to shoot',
         hint: 'Swipe up to shoot · P pause · M mute',
         sideHowTo: 'How to play',
         sideRecords: 'Records',
-        sound: 'Sound',
-        moreGames: 'More games',
     },
     zh: {
-        close: '关闭',
         stats: '数据统计',
         title: '街机投篮',
         subtitle: '甩投 · 抛物线 · 得分',
@@ -98,22 +92,17 @@ const LANGUAGES = {
         score: '得分',
         share: '分享成绩',
         copyResult: '复制成绩',
-        copied: '已复制！',
         leaderboard: '全球前 10',
         loadingScores: '加载中…',
         noScores: '暂无分数',
         lbOffline: '榜单离线——显示本地成绩',
         submitFail: '成绩上传失败——已保存到本地',
-        usernameLabel: '用户名（回车保存）',
-        language: 'English',
         tapToStart: '向上滑动投篮',
         hint: '向上滑动投篮 · P 暂停 · M 静音',
         sideHowTo: '玩法说明',
         sideRecords: '战绩',
-        sound: '声音',
-        moreGames: '更多游戏',
     }
-};
+});
 
 /* ────────────────────────── audio ────────────────────────── */
 

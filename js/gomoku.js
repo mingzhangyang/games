@@ -4,6 +4,7 @@ import { createSfx } from './game-sfx.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { track } from './analytics.js';
+import { makeText } from './i18n.js';
 
 // 音效：落子/胜利/失败/平局
 const sfx = createSfx({
@@ -24,7 +25,7 @@ const modalRestartBtn = document.getElementById('modalRestartBtn');
 const difficultySelect = document.getElementById('difficultySelect');
 const modeText = document.getElementById('modeText'); // Fix #8
 
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
         title: 'Gomoku - Five in a Row',
         h1: 'Gomoku',
@@ -49,8 +50,6 @@ const LANGUAGES = {
         changeDiffConfirm: 'Changing difficulty will clear the current game. Continue?',
         leaveConfirm: 'A game is in progress. Leave and discard it?',
         home: 'Home',
-        sound: 'Sound',
-        moreGames: 'More games',
         hint: 'Click a point to place your stone',
     },
     zh: {
@@ -77,11 +76,9 @@ const LANGUAGES = {
         changeDiffConfirm: '切换难度将清空当前对局，确定继续吗？',
         leaveConfirm: '对局进行中，离开将丢失当前进度。确定离开吗？',
         home: '返回主页',
-        sound: '声音',
-        moreGames: '更多游戏',
         hint: '点击交叉点落子',
     }
-};
+});
 
 let currentLang = getLang();
 function getTEXT() {

@@ -16,6 +16,7 @@ import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -30,7 +31,7 @@ function storageParse(key, fallback) {
 
 /* ────────────────────────── i18n ────────────────────────── */
 
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
         title: 'Reversi',
         subtitle: 'Flip · Trap · Dominate',
@@ -60,15 +61,10 @@ const LANGUAGES = {
         loadingScores: 'Loading…',
         noScores: 'No games yet',
         lbOffline: 'Leaderboard offline',
-        usernameLabel: 'Username (Enter to save)',
         again: 'Play Again',
         copyResult: 'Copy Result',
-        copied: 'Copied!',
         home: 'Home',
-        language: '中文',
         hint: 'Tap a highlighted square to place your disc',
-        sound: 'Sound',
-        moreGames: 'More games',
     },
     zh: {
         title: '黑白棋',
@@ -99,17 +95,12 @@ const LANGUAGES = {
         loadingScores: '加载中…',
         noScores: '暂无对局',
         lbOffline: '榜单离线',
-        usernameLabel: '用户名（回车保存）',
         again: '再来一局',
         copyResult: '复制成绩',
-        copied: '已复制！',
         home: '返回主页',
-        language: 'English',
         hint: '点击高亮格子落子',
-        sound: '声音',
-        moreGames: '更多游戏',
     }
-};
+});
 
 /* ────────────────────────── audio ────────────────────────── */
 

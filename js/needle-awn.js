@@ -20,6 +20,7 @@ import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey } from './daily.js';
 import { submitScore } from './leaderboard.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -36,9 +37,8 @@ const STORAGE_KEYS = {
 
 /* ────────────────────────── 国际化 i18n ────────────────────────── */
 
-const I18N = {
+const I18N = makeText({
     zh: {
-        close: '关闭',
         stats: '数据统计',
         gameTitle: '针尖对麦芒',
         gameSub: '极速破锋 · 针芒毕露 · 刹那生灭',
@@ -122,12 +122,9 @@ const I18N = {
             '初试锋芒', '飞针入微', '芒刺在背', '阴阳交错', '灵虚针尊',
             '暴雨梨花', '麦浪连天', '扶摇麦皇', '绝命千本', '针尖麦芒'
         ],
-        sound: '声音',
-        moreGames: '更多游戏',
         hint: '移动即突刺 · Q 转锋 · E 极意 · P 暂停',
     },
     en: {
-        close: 'Close',
         stats: 'Stats',
         gameTitle: 'Pinpoint Clash',
         gameSub: 'Needle vs Awn · Pierce · Clash · Awaken',
@@ -211,11 +208,9 @@ const I18N = {
             'First Spark', 'Needle Stream', 'Awn Swarm', 'Dual Weaving', 'Needle Sovereign',
             'Blossom Rain', 'Golden Surge', 'Awn Emperor', 'Thousand Needles', 'Grandmaster Duel'
         ],
-        sound: 'Sound',
-        moreGames: 'More games',
         hint: 'Move to thrust · Q switch stance · E ultimate · P pause',
     }
-};
+});
 
 /* ────────────────────────── Web Audio 音频引擎 ────────────────────────── */
 

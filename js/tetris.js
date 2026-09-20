@@ -7,6 +7,7 @@ import { bindFrame } from './game-frame.js';
 import { storageGet as safeGetItem, storageSet as safeSetItem } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
+import { makeText } from './i18n.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -32,12 +33,11 @@ function safeParseJSON(text, fallback) {
 }
 
 // 多语言支持
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
         title: 'Tetris - Cool Edition',
         themeToggle: 'Theme',
         stats: 'Stats',
-        close: 'Close',
         best: 'Best',
         lv: 'Lv',
         gameOver: 'Game Over!',
@@ -58,15 +58,12 @@ const LANGUAGES = {
         levelUp: 'LEVEL UP!',
         comboDisplay: x => `${x}x Combo!`,
         home: 'Home',
-        sound: 'Sound',
-        moreGames: 'More games',
         hint: 'Arrows move · Space hard drop · P pause · M mute',
     },
     zh: {
         title: '俄罗斯方块 - 酷炫版',
         themeToggle: '切换主题',
         stats: '统计与排名',
-        close: '关闭',
         best: '最高',
         lv: '等级',
         gameOver: '游戏结束！',
@@ -87,11 +84,9 @@ const LANGUAGES = {
         levelUp: '升级！',
         comboDisplay: x => `${x}x 连击!`,
         home: '返回主页',
-        sound: '声音',
-        moreGames: '更多游戏',
         hint: '方向键移动 · 空格瞬降 · P 暂停 · M 静音',
     }
-};
+});
 
 function getUserLang() {
     // 全站统一语言设置（site_lang，含浏览器语言兜底）

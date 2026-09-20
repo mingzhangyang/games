@@ -23,6 +23,7 @@ import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey as todayCompact, mulberry32, hashStringFNV as hashStr } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -40,9 +41,8 @@ function vibrate(pattern) {
 
 /* ────────────────────────── i18n ────────────────────────── */
 
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
-        close: 'Close',
         stats: 'Stats',
         title: 'Gravity Slingshot',
         subtitle: 'Aim · Bend · Orbit · Capture',
@@ -73,22 +73,16 @@ const LANGUAGES = {
         loadingScores: 'Loading…',
         noScores: 'No scores yet',
         lbOffline: 'Leaderboard offline',
-        usernameLabel: 'Username (Enter to save)',
         copyResult: 'Copy',
-        copied: 'Copied!',
         retryTitle: 'Retry',
-        sound: 'Sound',
         home: 'Home',
-        language: '中文',
         hint: 'Pull back & release to launch · planets bend your path',
         sideHowTo: 'How to play',
         sideRecords: 'Records',
         crashHint: 'Auto retry in a moment…',
         tapToAim: 'Drag to aim · release to launch',
-        moreGames: 'More games',
     },
     zh: {
-        close: '关闭',
         stats: '数据统计',
         title: '引力弹弓',
         subtitle: '瞄准 · 变轨 · 绕行 · 捕获',
@@ -119,21 +113,16 @@ const LANGUAGES = {
         loadingScores: '加载中…',
         noScores: '暂无成绩',
         lbOffline: '榜单离线',
-        usernameLabel: '用户名（回车保存）',
         copyResult: '复制',
-        copied: '已复制！',
         retryTitle: '重试',
-        sound: '声音',
         home: '主页',
-        language: 'English',
         hint: '向后拉弹弓松手发射 · 借助行星引力变轨',
         sideHowTo: '玩法说明',
         sideRecords: '战绩',
         crashHint: '即将自动重试…',
         tapToAim: '拖拽瞄准 · 松手发射',
-        moreGames: '更多游戏',
     }
-};
+});
 
 /* ────────────────────────── audio ────────────────────────── */
 

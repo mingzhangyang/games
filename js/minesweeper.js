@@ -14,6 +14,7 @@ import { updateMoreGames } from './more-games.js';
 import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -23,7 +24,7 @@ function clamp(v, min, max) {
 
 /* ────────────────────────── i18n ────────────────────────── */
 
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
         title: 'Minesweeper',
         subtitle: 'Logic · Deduction · Nerves of steel',
@@ -42,11 +43,8 @@ const LANGUAGES = {
         loadingScores: 'Loading…',
         noScores: 'No clears yet',
         lbOffline: 'Leaderboard offline',
-        usernameLabel: 'Username (Enter to save)',
         again: 'Play Again',
         copyResult: 'Copy',
-        copied: 'Copied!',
-        close: 'Close',
         hintDefault: 'Right-click / long-press to flag · tap a number to chord',
         hintFlagMode: 'Flag mode on — taps place flags',
         mines: 'Mines',
@@ -60,11 +58,8 @@ const LANGUAGES = {
         pausedTitle: 'Paused',
         pausedHint: 'Timer stopped — tap to resume',
         submitFail: 'Score upload failed — saved locally',
-        sound: 'Sound',
         home: 'Home',
-        language: '中文',
         shareLine: 'Cleared in',
-        moreGames: 'More games',
     },
     zh: {
         title: '扫雷',
@@ -84,11 +79,8 @@ const LANGUAGES = {
         loadingScores: '加载中…',
         noScores: '暂无成绩',
         lbOffline: '榜单离线',
-        usernameLabel: '用户名（回车保存）',
         again: '再来一局',
         copyResult: '复制',
-        copied: '已复制！',
-        close: '关闭',
         hintDefault: '右键 / 长按插旗 · 点数字快开',
         hintFlagMode: '插旗模式已开启——点击即插旗',
         mines: '剩余雷数',
@@ -102,13 +94,10 @@ const LANGUAGES = {
         pausedTitle: '已暂停',
         pausedHint: '计时已停止 — 点击任意处继续',
         submitFail: '成绩上传失败——已保存到本地',
-        sound: '声音',
         home: '主页',
-        language: 'English',
         shareLine: '用时',
-        moreGames: '更多游戏',
     }
-};
+});
 
 /* ────────────────────────── audio ────────────────────────── */
 

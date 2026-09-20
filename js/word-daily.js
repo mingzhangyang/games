@@ -16,6 +16,7 @@ import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { hashString, mulberry32, todayKeyDisplay } from './daily.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -168,7 +169,7 @@ const Sfx = {
 
 /* ────────────────────────── i18n ────────────────────────── */
 
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
         title: 'Word Daily',
         dailyBadge: 'Puzzle',
@@ -218,10 +219,8 @@ const LANGUAGES = {
         globalLoading: 'Loading…',
         globalNone: 'Be the first to play today!',
         share: 'Share',
-        copied: 'Copied!',
         nextPuzzle: 'Next puzzle',
         playAgain: 'Play Practice',
-        close: 'Close',
         rules1: 'Guess the word in 6 tries.',
         rules2: 'Each guess must be a real word of the right length.',
         rules3: 'Green: right letter, right spot. Yellow: right letter, wrong spot. Gray: not in the word.',
@@ -244,8 +243,6 @@ const LANGUAGES = {
         practiceBadge: 'Practice',
         practiceBannerTpl: 'Practice #{n} — not recorded in streaks',
         home: 'Home',
-        sound: 'Sound',
-        moreGames: 'More games',
         hint: 'Type your guess · Enter to submit · M mute',
     },
     zh: {
@@ -297,10 +294,8 @@ const LANGUAGES = {
         globalLoading: '加载中…',
         globalNone: '今天你可能是第一个玩的！',
         share: '分享成绩',
-        copied: '已复制！',
         nextPuzzle: '下一题',
         playAgain: '来一局练习',
-        close: '关闭',
         rules1: '在 6 次机会内猜出词语。',
         rules2: '每次猜测必须是正确长度的真实词语。',
         rules3: '绿色：位置正确；黄色：词中有但位置不对；灰色：词中没有。',
@@ -323,11 +318,9 @@ const LANGUAGES = {
         practiceBadge: '练习',
         practiceBannerTpl: '练习模式（第 {n} 局）——不计入每日连胜',
         home: '返回主页',
-        sound: '声音',
-        moreGames: '更多游戏',
         hint: '输入猜测 · 回车提交 · M 静音',
     }
-};
+});
 
 /* ────────────────────────── game ────────────────────────── */
 

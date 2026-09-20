@@ -20,6 +20,7 @@ import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
+import { makeText } from './i18n.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -33,9 +34,8 @@ function formatNumber(n) {
 
 /* ────────────────────────── i18n ────────────────────────── */
 
-const LANGUAGES = {
+const LANGUAGES = makeText({
     en: {
-        close: 'Close',
         stats: 'Stats',
         title: 'Neon Tower Defense',
         subtitle: 'Build · Upgrade · Survive',
@@ -99,9 +99,7 @@ const LANGUAGES = {
         loadingScores: 'Loading…',
         noScores: 'No scores yet',
         lbOffline: 'Leaderboard offline',
-        usernameLabel: 'Username (Enter to save)',
         copyResult: 'Copy',
-        copied: 'Copied!',
         statLives: 'Lives',
         statGold: 'Gold',
         statWave: 'Wave',
@@ -112,7 +110,6 @@ const LANGUAGES = {
         homeBtnTitle: 'Home',
         empBtnTitle: 'EMP Shockwave (Q)',
         overdriveBtnTitle: 'Overdrive (E)',
-        language: '中文',
         hint: 'Click cell to build · Click tower to upgrade · Space to start wave',
 
         // 关卡选择
@@ -139,11 +136,8 @@ const LANGUAGES = {
         },
         threatHealer: 'Healer', threatArmor: 'Armored', threatFlyer: 'Flying',
         threatSplitter: 'Splitter', threatAttacker: 'Siege', threatOverlord: 'Overlord',
-        sound: 'Sound',
-        moreGames: 'More games',
     },
     zh: {
-        close: '关闭',
         stats: '数据统计',
         title: '霓虹塔防',
         subtitle: '建造 · 升级 · 守护',
@@ -207,9 +201,7 @@ const LANGUAGES = {
         loadingScores: '加载中…',
         noScores: '暂无分数',
         lbOffline: '榜单离线',
-        usernameLabel: '用户名（回车保存）',
         copyResult: '复制',
-        copied: '已复制！',
         statLives: '生命',
         statGold: '金币',
         statWave: '波次',
@@ -220,7 +212,6 @@ const LANGUAGES = {
         homeBtnTitle: '返回主页',
         empBtnTitle: 'EMP 电磁震荡 (Q)',
         overdriveBtnTitle: '战术超频 (E)',
-        language: 'English',
         hint: '点空格建塔 · 点塔升级/集火 · 空格发波',
 
         // 关卡选择
@@ -247,10 +238,8 @@ const LANGUAGES = {
         },
         threatHealer: '治疗兵', threatArmor: '装甲兵', threatFlyer: '飞行兵',
         threatSplitter: '分裂兵', threatAttacker: '攻城兵', threatOverlord: '霸主',
-        sound: '声音',
-        moreGames: '更多游戏',
     }
-};
+});
 
 /* ────────────────────────── audio ────────────────────────── */
 
