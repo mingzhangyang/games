@@ -4,6 +4,7 @@ import { createSfx } from './game-sfx.js';
 import { ICONS } from './icons.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
+import { storageGet as safeGetItem, storageSet as safeSetItem } from './safe-storage.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -26,22 +27,6 @@ function escapeHTML(str) {
 }
 
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError
-function safeGetItem(key) {
-    try {
-        return localStorage.getItem(key);
-    } catch (e) {
-        return null;
-    }
-}
-
-function safeSetItem(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch (e) {
-        // 存储不可用时静默降级
-    }
-}
-
 function safeParseJSON(text, fallback) {
     try {
         return JSON.parse(text);

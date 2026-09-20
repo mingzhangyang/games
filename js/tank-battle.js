@@ -1,6 +1,7 @@
 // 国际化语言支持
 import { getLang, setLang } from './site-settings.js';
 import { createSfx } from './game-sfx.js';
+import { storageGet as safeStorageGet, storageSet as safeStorageSet } from './safe-storage.js';
 
 // 音效：射击/爆炸/受伤/道具/胜负
 const sfx = createSfx({
@@ -127,22 +128,6 @@ function isTouchDevice() {
 
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError，必须兜底，
 // 否则模块顶层抛错会让整个游戏黑屏
-function safeStorageGet(key) {
-    try {
-        return localStorage.getItem(key);
-    } catch (e) {
-        return null;
-    }
-}
-
-function safeStorageSet(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch (e) {
-        // 存储不可用时静默降级
-    }
-}
-
 let currentLanguage = getLang();
 
 // 翻译函数

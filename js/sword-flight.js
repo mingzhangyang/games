@@ -15,6 +15,7 @@ import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
+import { storageGet, storageSet } from './safe-storage.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -40,14 +41,6 @@ const STORAGE_KEYS = {
     MAX_COMBO: 'sf_max_combo',
     DAILY_PREFIX: 'sf_daily_'
 };
-
-function storageGet(key) {
-    try { return localStorage.getItem(key); } catch (e) { return null; }
-}
-
-function storageSet(key, val) {
-    try { localStorage.setItem(key, val); } catch (e) {}
-}
 
 /* ────────────────────────── 国际化 i18n ────────────────────────── */
 

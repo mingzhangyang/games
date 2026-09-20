@@ -15,24 +15,9 @@ import { createStatsDrawer } from './game-drawer.js';
 import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
+import { storageGet, storageSet } from './safe-storage.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
-
-function storageGet(key) {
-    try {
-        return localStorage.getItem(key);
-    } catch (e) {
-        return null;
-    }
-}
-
-function storageSet(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch (e) {
-        // 存储不可用时静默降级
-    }
-}
 
 function storageParse(key, fallback) {
     try {

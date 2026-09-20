@@ -13,6 +13,7 @@ import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
+import { storageGet, storageSet } from './safe-storage.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -25,22 +26,6 @@ function escapeHTML(str) {
 }
 
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError，所有访问必须兜底
-function storageGet(key) {
-    try {
-        return localStorage.getItem(key);
-    } catch (e) {
-        return null;
-    }
-}
-
-function storageSet(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch (e) {
-        // 存储不可用时静默降级
-    }
-}
-
 function storageParse(key, fallback) {
     try {
         const parsed = JSON.parse(storageGet(key));
