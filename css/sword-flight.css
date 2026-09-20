@@ -11,15 +11,15 @@
 
 :root {
     --color-bg: #030816;
-    --color-surface: rgba(7, 21, 41, 0.78);
-    --color-border: rgba(56, 189, 248, 0.22);
-    --color-border-glow: rgba(56, 189, 248, 0.45);
+    --color-surface: rgb(7, 21, 41, 0.78);
+    --color-border: rgb(56, 189, 248, 0.22);
+    --color-border-glow: rgb(56, 189, 248, 0.45);
     --color-cyan: #38bdf8;
-    --color-cyan-glow: rgba(56, 189, 248, 0.5);
+    --color-cyan-glow: rgb(56, 189, 248, 0.5);
     --color-cyan-light: #f0f9ff;
     --color-jade: #10b981;
     --color-gold: #fbbf24;
-    --color-gold-glow: rgba(251, 191, 36, 0.5);
+    --color-gold-glow: rgb(251, 191, 36, 0.5);
     --color-gold-light: #fef08a;
     --color-text: #f1f5f9;
     --color-text-muted: #94a3b8;
@@ -29,8 +29,8 @@
 
 body {
     background:
-        radial-gradient(ellipse 90% 60% at 50% -10%, rgba(56, 189, 248, 0.14), transparent),
-        radial-gradient(circle at 85% 90%, rgba(251, 191, 36, 0.08), transparent),
+        radial-gradient(ellipse 90% 60% at 50% -10%, rgb(56, 189, 248, 0.14), transparent),
+        radial-gradient(circle at 85% 90%, rgb(251, 191, 36, 0.08), transparent),
         linear-gradient(175deg, #020612 0%, #061528 45%, #0a2139 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     color: var(--color-text);
@@ -41,8 +41,8 @@ body {
 /* ── 顶栏 HUD ── */
 
 .sf-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(56, 189, 248, 0.45);
+    background: rgb(255, 255, 255, 0.14);
+    border-color: rgb(56, 189, 248, 0.45);
 }
 .sf-icon-btn:active { transform: scale(0.92); }
 
@@ -51,7 +51,7 @@ body {
     font-weight: 800;
     letter-spacing: 1px;
     color: #fff;
-    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    text-shadow: 0 0 10px rgb(56, 189, 248, 0.6);
 }
 
 .sf-mode-badge {
@@ -60,17 +60,17 @@ body {
     letter-spacing: 0.5px;
     color: var(--color-gold-light);
     text-transform: uppercase;
-    background: rgba(251, 191, 36, 0.16);
-    border: 1px solid rgba(251, 191, 36, 0.3);
+    background: rgb(251, 191, 36, 0.16);
+    border: 1px solid rgb(251, 191, 36, 0.3);
     border-radius: 99px;
     padding: 1px 8px;
     margin-top: 1px;
 }
 
 .sf-hud-box {
-    background: rgba(7, 21, 41, 0.78);
-    border: 1px solid rgba(251, 191, 36, 0.4);
-    box-shadow: 0 0 14px rgba(251, 191, 36, 0.18), inset 0 0 10px rgba(56, 189, 248, 0.15);
+    background: rgb(7, 21, 41, 0.78);
+    border: 1px solid rgb(251, 191, 36, 0.4);
+    box-shadow: 0 0 14px rgb(251, 191, 36, 0.18), inset 0 0 10px rgb(56, 189, 248, 0.15);
 }
 
 .sf-score-val {
@@ -97,13 +97,13 @@ body {
     scrollbar-width: none;
     -ms-overflow-style: none;
     box-shadow:
-        0 16px 40px rgba(0, 0, 0, 0.7),
-        0 0 0 1px rgba(56, 189, 248, 0.25),
-        0 0 35px rgba(56, 189, 248, 0.12);
+        0 16px 40px rgb(0, 0, 0, 0.7),
+        0 0 0 1px rgb(56, 189, 248, 0.25),
+        0 0 35px rgb(56, 189, 248, 0.12);
 }
 
 /* 手机横屏：改为按视口高度定尺寸，避免画布纵向溢出、边玩边滚 */
-@media (orientation: landscape) and (max-height: 640px) {
+@media (orientation: landscape) and (height <= 640px) {
     .sf-stage {
         height: min(640px, calc(100vh - 72px));
         /* ⚠️ width:auto 不能省。.game-stage 给的是 width:100%，这里再给 height，
@@ -151,9 +151,9 @@ body {
     width: 28px;
     height: 28px;
     border-radius: 8px;
-    background: rgba(7, 21, 41, 0.75);
-    border: 1px solid rgba(56, 189, 248, 0.45);
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35), inset 0 0 8px rgba(56, 189, 248, 0.2);
+    background: rgb(7, 21, 41, 0.75);
+    border: 1px solid rgb(56, 189, 248, 0.45);
+    box-shadow: 0 0 12px rgb(56, 189, 248, 0.35), inset 0 0 8px rgb(56, 189, 248, 0.2);
     font-size: 14px;
     transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -162,9 +162,9 @@ body {
     opacity: 0.25;
     transform: scale(0.78);
     filter: grayscale(1);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgb(255, 255, 255, 0.1);
     box-shadow: none;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgb(0, 0, 0, 0.35);
 }
 
 .sf-realm-chip {
@@ -174,9 +174,9 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: linear-gradient(135deg, rgba(7, 21, 41, 0.88), rgba(15, 76, 110, 0.7));
-    border: 1px solid rgba(251, 191, 36, 0.5);
-    box-shadow: 0 0 16px rgba(251, 191, 36, 0.25), inset 0 0 10px rgba(56, 189, 248, 0.2);
+    background: linear-gradient(135deg, rgb(7, 21, 41, 0.88), rgb(15, 76, 110, 0.7));
+    border: 1px solid rgb(251, 191, 36, 0.5);
+    box-shadow: 0 0 16px rgb(251, 191, 36, 0.25), inset 0 0 10px rgb(56, 189, 248, 0.2);
     backdrop-filter: blur(8px);
     border-radius: 99px;
     padding: 4px 14px;
@@ -206,7 +206,7 @@ body {
 .sf-progress-track {
     flex: 1;
     height: 4px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgb(255, 255, 255, 0.12);
     border-radius: 99px;
     overflow: hidden;
 }
@@ -215,7 +215,7 @@ body {
     height: 100%;
     width: 0%;
     background: linear-gradient(90deg, #38bdf8, #fbbf24);
-    box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+    box-shadow: 0 0 8px rgb(251, 191, 36, 0.8);
     transition: width 0.1s linear;
 }
 
@@ -232,8 +232,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background: rgba(7, 21, 41, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgb(7, 21, 41, 0.65);
+    border: 1px solid rgb(255, 255, 255, 0.1);
     backdrop-filter: blur(6px);
     border-radius: 10px;
     padding: 6px 10px;
@@ -259,7 +259,7 @@ body {
 .sf-bar-track {
     width: 100%;
     height: 6px;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgb(0, 0, 0, 0.4);
     border-radius: 99px;
     overflow: hidden;
 }
@@ -271,13 +271,13 @@ body {
 }
 
 .sf-bar-fill.qi {
-    background: linear-gradient(90deg, #0284c7, #38bdf8, #ffffff);
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+    background: linear-gradient(90deg, #0284c7, #38bdf8, #fff);
+    box-shadow: 0 0 10px rgb(56, 189, 248, 0.7);
 }
 
 .sf-bar-fill.ult {
     background: linear-gradient(90deg, #d97706, #fbbf24, #fef08a);
-    box-shadow: 0 0 12px rgba(251, 191, 36, 0.85);
+    box-shadow: 0 0 12px rgb(251, 191, 36, 0.85);
 }
 
 /* ── 移动端触控按钮 ── */
@@ -302,9 +302,9 @@ body {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: rgba(7, 21, 41, 0.82);
-    border: 2px solid rgba(56, 189, 248, 0.35);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(56, 189, 248, 0.15);
+    background: rgb(7, 21, 41, 0.82);
+    border: 2px solid rgb(56, 189, 248, 0.35);
+    box-shadow: 0 4px 16px rgb(0, 0, 0, 0.5), inset 0 0 12px rgb(56, 189, 248, 0.15);
     backdrop-filter: blur(8px);
     color: #fff;
     font-size: 10.5px;
@@ -317,7 +317,7 @@ body {
 
 .sf-touch-btn:active {
     transform: scale(0.9);
-    background: rgba(56, 189, 248, 0.25);
+    background: rgb(56, 189, 248, 0.25);
     border-color: var(--color-cyan);
 }
 
@@ -327,13 +327,13 @@ body {
 }
 
 .sf-touch-btn--dash {
-    border-color: rgba(56, 189, 248, 0.6);
-    box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+    border-color: rgb(56, 189, 248, 0.6);
+    box-shadow: 0 0 16px rgb(56, 189, 248, 0.4);
 }
 
 .sf-touch-btn--ult {
-    border-color: rgba(251, 191, 36, 0.6);
-    box-shadow: 0 0 16px rgba(251, 191, 36, 0.4);
+    border-color: rgb(251, 191, 36, 0.6);
+    box-shadow: 0 0 16px rgb(251, 191, 36, 0.4);
 }
 
 .sf-touch-btn--ult:disabled {
@@ -344,7 +344,7 @@ body {
 
 /* ── 覆盖层基类 (Start / Pause / Victory / GameOver) ── */
 .sf-overlay {
-    background: rgba(2, 6, 18, 0.92);
+    background: rgb(2, 6, 18, 0.92);
     -ms-overflow-style: none;
     text-align: center;
     animation: fadeIn 0.25s ease-out;
@@ -360,8 +360,8 @@ body {
     font-weight: 800;
     letter-spacing: 2px;
     color: var(--color-cyan);
-    background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.35);
+    background: rgb(56, 189, 248, 0.12);
+    border: 1px solid rgb(56, 189, 248, 0.35);
     border-radius: 99px;
     padding: 2px 10px;
     margin-bottom: 6px;
@@ -370,17 +370,17 @@ body {
 
 .sf-badge.gold {
     color: var(--color-gold);
-    background: rgba(251, 191, 36, 0.15);
-    border-color: rgba(251, 191, 36, 0.4);
+    background: rgb(251, 191, 36, 0.15);
+    border-color: rgb(251, 191, 36, 0.4);
 }
 
 .sf-title {
-    font-family: 'Noto Serif SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti SC', 'STSong', serif;
+    font-family: 'Noto Serif SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti SC', STSong, serif;
     font-size: 30px;
     font-weight: 900;
     letter-spacing: 3px;
     color: #fff;
-    text-shadow: 0 0 18px rgba(56, 189, 248, 0.6);
+    text-shadow: 0 0 18px rgb(56, 189, 248, 0.6);
     margin-bottom: 2px;
 }
 
@@ -408,8 +408,8 @@ body {
 
 .sf-howto-box {
     width: 100%;
-    background: rgba(255, 255, 255, 0.045);
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    background: rgb(255, 255, 255, 0.045);
+    border: 1px solid rgb(56, 189, 248, 0.2);
     border-radius: 12px;
     padding: 8px 12px;
     font-size: 11.5px;
@@ -437,8 +437,8 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.12);
     border-radius: 12px;
     padding: 8px 6px;
     color: #fff;
@@ -448,15 +448,15 @@ body {
 }
 
 .sf-mode-btn:hover {
-    background: rgba(56, 189, 248, 0.15);
-    border-color: rgba(56, 189, 248, 0.5);
+    background: rgb(56, 189, 248, 0.15);
+    border-color: rgb(56, 189, 248, 0.5);
     transform: translateY(-2px);
 }
 
 .sf-mode-btn.highlight {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgb(56, 189, 248, 0.12);
     border-color: var(--color-cyan);
-    box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+    box-shadow: 0 0 14px rgb(56, 189, 248, 0.25);
 }
 
 .sf-mode-btn .mode-icon {
@@ -504,8 +504,8 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(7, 21, 41, 0.7);
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    background: rgb(7, 21, 41, 0.7);
+    border: 1px solid rgb(56, 189, 248, 0.2);
     border-radius: 10px;
     padding: 7px 3px;
     cursor: pointer;
@@ -513,7 +513,7 @@ body {
 }
 
 .sf-stage-card:hover:not(.locked) {
-    background: rgba(56, 189, 248, 0.2);
+    background: rgb(56, 189, 248, 0.2);
     border-color: var(--color-cyan);
     transform: translateY(-2px);
 }
@@ -550,8 +550,8 @@ body {
 /* 每日挑战卡片 */
 .sf-daily-card {
     width: 100%;
-    background: rgba(251, 191, 36, 0.08);
-    border: 1px solid rgba(251, 191, 36, 0.35);
+    background: rgb(251, 191, 36, 0.08);
+    border: 1px solid rgb(251, 191, 36, 0.35);
     border-radius: 14px;
     padding: 12px 14px;
     margin-bottom: 12px;
@@ -576,8 +576,8 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgb(255, 255, 255, 0.06);
+    border: 1px solid rgb(255, 255, 255, 0.15);
     border-radius: 99px;
     padding: 7px 18px;
     color: #e2e8f0;
@@ -589,7 +589,7 @@ body {
 }
 
 .sf-leaderboard-entry-btn:hover {
-    background: rgba(251, 191, 36, 0.15);
+    background: rgb(251, 191, 36, 0.15);
     border-color: var(--color-gold);
     color: #fff;
 }
@@ -614,14 +614,14 @@ body {
     gap: 8px;
     font-size: 32px;
     margin-bottom: 16px;
-    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.7));
+    filter: drop-shadow(0 0 10px rgb(251, 191, 36, 0.7));
 }
 
 .sf-stats-box {
     width: 100%;
     max-width: 320px;
-    background: rgba(7, 21, 41, 0.75);
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    background: rgb(7, 21, 41, 0.75);
+    border: 1px solid rgb(56, 189, 248, 0.2);
     border-radius: 14px;
     padding: 12px 16px;
     margin-bottom: 18px;
@@ -635,7 +635,7 @@ body {
     padding: 5px 0;
     font-size: 12.5px;
     color: #cbd5e1;
-    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    border-bottom: 1px dashed rgb(255, 255, 255, 0.08);
 }
 
 .sf-stat-row:last-child {
@@ -664,8 +664,8 @@ body {
 .sf-action-btn {
     width: 100%;
     padding: 11px 16px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgb(255, 255, 255, 0.08);
+    border: 1px solid rgb(255, 255, 255, 0.16);
     border-radius: 12px;
     color: #fff;
     font-size: 13.5px;
@@ -676,19 +676,19 @@ body {
 }
 
 .sf-action-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgb(255, 255, 255, 0.16);
     transform: translateY(-1px);
 }
 
 .sf-action-btn.primary {
     background: linear-gradient(135deg, #0284c7, #38bdf8);
     border-color: #7dd3fc;
-    box-shadow: 0 4px 18px rgba(56, 189, 248, 0.4);
+    box-shadow: 0 4px 18px rgb(56, 189, 248, 0.4);
 }
 
 .sf-action-btn.primary:hover {
     background: linear-gradient(135deg, #0369a1, #0ea5e9);
-    box-shadow: 0 6px 22px rgba(56, 189, 248, 0.55);
+    box-shadow: 0 6px 22px rgb(56, 189, 248, 0.55);
 }
 
 /* 结算玩家道号输入 */
@@ -702,8 +702,8 @@ body {
 
 .sf-name-input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(56, 189, 248, 0.35);
+    background: rgb(0, 0, 0, 0.5);
+    border: 1px solid rgb(56, 189, 248, 0.35);
     border-radius: 10px;
     padding: 8px 12px;
     color: #fff;
@@ -714,7 +714,7 @@ body {
 
 .sf-name-input:focus {
     border-color: var(--color-cyan);
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 10px rgb(56, 189, 248, 0.4);
 }
 
 .sf-submit-score-btn {
@@ -744,7 +744,7 @@ body {
 .sf-modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgb(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
@@ -757,10 +757,10 @@ body {
     width: 100%;
     max-width: 380px;
     background: #07152b;
-    border: 1px solid rgba(56, 189, 248, 0.4);
+    border: 1px solid rgb(56, 189, 248, 0.4);
     border-radius: 18px;
     padding: 16px;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.2);
+    box-shadow: 0 16px 36px rgb(0, 0, 0, 0.7), 0 0 25px rgb(56, 189, 248, 0.2);
 }
 
 .sf-modal-header {
@@ -793,8 +793,8 @@ body {
 .sf-rank-tab {
     flex: 1;
     padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.12);
     border-radius: 8px;
     color: #cbd5e1;
     font-size: 11.5px;
@@ -803,7 +803,7 @@ body {
 }
 
 .sf-rank-tab.active {
-    background: rgba(56, 189, 248, 0.2);
+    background: rgb(56, 189, 248, 0.2);
     border-color: var(--color-cyan);
     color: #fff;
 }
@@ -827,7 +827,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgb(255, 255, 255, 0.03);
     border-radius: 6px;
     font-size: 12px;
 }
@@ -846,7 +846,7 @@ body {
 /* Toast 浮动提示 */
 .sf-toast {
     top: 55px;
-    background: rgba(7, 21, 41, 0.9);
+    background: rgb(7, 21, 41, 0.9);
     border: 1px solid var(--color-cyan);
     box-shadow: 0 0 18px var(--color-cyan-glow);
     padding: 6px 16px;
@@ -858,19 +858,23 @@ body {
 
 /* ── 桌面大屏布局（≥1024px）：舞台 + 侧边栏 ── */
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
     .sf-side-title {
         color: var(--color-cyan);
     }
+
     .sf-side-text b {
         color: #fef08a;
     }
+
     .sf-side-row {
-        border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+        border-bottom: 1px dashed rgb(255, 255, 255, 0.08);
     }
+
     .sf-side-row:last-child {
         border-bottom: none;
     }
+
     .sf-side-row b {
         color: #fff;
         font-variant-numeric: tabular-nums;
@@ -878,7 +882,7 @@ body {
 }
 
 /* ── 移动端小屏微调（≤480px） ── */
-@media (max-width: 480px) {
+@media (width <= 480px) {
     .sf-stage-label { font-size: 12px; }
     .sf-score-val { font-size: 16px; }
     .sf-title { font-size: 26px; }

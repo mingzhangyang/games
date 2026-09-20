@@ -16,10 +16,10 @@
     /* 深底与玻璃面板 */
     --tok-bg: #05060f;                       /* 页面最深底色 */
     --tok-bg-2: #0b0f26;                     /* 渐变中段 */
-    --tok-panel: rgba(255, 255, 255, 0.06);  /* 玻璃面板填充 */
-    --tok-panel-strong: rgba(255, 255, 255, 0.12);
-    --tok-border: rgba(255, 255, 255, 0.1);  /* 玻璃描边 */
-    --tok-border-strong: rgba(255, 255, 255, 0.14);
+    --tok-panel: rgb(255, 255, 255, 0.06);  /* 玻璃面板填充 */
+    --tok-panel-strong: rgb(255, 255, 255, 0.12);
+    --tok-border: rgb(255, 255, 255, 0.1);  /* 玻璃描边 */
+    --tok-border-strong: rgb(255, 255, 255, 0.14);
 
     /* 文字 */
     --tok-text: #e8ecff;
@@ -82,6 +82,7 @@
 
 /* 触控热区放大：视觉尺寸不变，命中区域扩展到 ≥44px */
 .icon-btn { position: relative; }
+
 .icon-btn::after {
     content: '';
     position: absolute;
@@ -106,7 +107,7 @@
     color: #0b0f26;
     background: linear-gradient(120deg, var(--tok-accent), var(--tok-accent-2));
     border: none;
-    box-shadow: 0 8px 24px rgba(64, 184, 255, 0.3); /* 回退 */
+    box-shadow: 0 8px 24px rgb(64, 184, 255, 0.3); /* 回退 */
     box-shadow: 0 8px 24px color-mix(in srgb, var(--tok-accent) 35%, transparent);
 }
 .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05); }

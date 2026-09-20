@@ -111,6 +111,7 @@ body {
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+
     position: relative;
 }
 
@@ -119,6 +120,7 @@ body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -142,8 +144,8 @@ body {
     /* 3px 描边用 box-shadow 绘制：不占布局尺寸，与叠加画布保持像素级对齐 */
     box-shadow:
         0 0 0 3px var(--primary-color),
-        inset 0 0 30px rgba(102, 126, 234, 0.3),
-        0 0 20px rgba(102, 126, 234, 0.5);
+        inset 0 0 30px rgb(102, 126, 234, 0.3),
+        0 0 20px rgb(102, 126, 234, 0.5);
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     /* 棋盘是操作面，不是"被按一下"的按钮：不允许任何变换或过渡。
@@ -196,18 +198,18 @@ body {
 }
 
 .info-box {
-    background: linear-gradient(135deg, rgba(45, 55, 72, 0.8), rgba(26, 32, 44, 0.8));
+    background: linear-gradient(135deg, rgb(45, 55, 72, 0.8), rgb(26, 32, 44, 0.8));
     padding: 20px;
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgb(0, 0, 0, 0.1);
     transition: var(--transition);
-    border: 1px solid rgba(102, 126, 234, 0.2);
+    border: 1px solid rgb(102, 126, 234, 0.2);
     backdrop-filter: blur(5px);
 }
 
 .info-box:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 20px rgb(102, 126, 234, 0.3);
 }
 
 .info-box h3 {
@@ -217,7 +219,7 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    text-shadow: 0 0 10px rgb(102, 126, 234, 0.5);
 }
 
 .info-row {
@@ -233,7 +235,7 @@ body {
     color: var(--primary-color);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    text-shadow: 0 0 10px rgb(102, 126, 234, 0.5);
     white-space: nowrap;
 }
 
@@ -242,7 +244,7 @@ body {
     font-weight: 700;
     color: var(--light-color);
     line-height: 1;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.22);
+    text-shadow: 0 0 12px rgb(255, 255, 255, 0.22);
     min-width: 60px;
     text-align: right;
 }
@@ -253,7 +255,7 @@ body {
     padding: 6px 10px;
     border-radius: 6px;
     border: 1px solid var(--primary-color);
-    background: rgba(0, 0, 0, 0.35);
+    background: rgb(0, 0, 0, 0.35);
     color: var(--tok-text, #e8ecff);
     font-size: 15px;
     outline: none;
@@ -276,8 +278,8 @@ body {
     margin: 10px auto;
     position: relative;
     box-shadow: 
-        inset 0 0 10px rgba(102, 126, 234, 0.5),
-        0 0 15px rgba(102, 126, 234, 0.3);
+        inset 0 0 10px rgb(102, 126, 234, 0.5),
+        0 0 15px rgb(102, 126, 234, 0.3);
 }
 
 .controls {
@@ -292,7 +294,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(135deg, rgba(45, 55, 72, 0.95), rgba(26, 32, 44, 0.95));
+    background: linear-gradient(135deg, rgb(45, 55, 72, 0.95), rgb(26, 32, 44, 0.95));
     backdrop-filter: blur(10px);
     border-top: 2px solid var(--primary-color);
     /* 底部内距带上安全区：内容高度必须与 body 的 padding-bottom 对得上（76px + 安全区） */
@@ -301,7 +303,7 @@ body {
     justify-content: space-around;
     gap: 10px;
     z-index: 1000;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 -4px 20px rgb(0, 0, 0, 0.3);
 }
 
 .mobile-controls .btn {
@@ -333,7 +335,7 @@ body {
     z-index: 1;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 15px rgb(102, 126, 234, 0.3);
 }
 
 .btn::before {
@@ -344,7 +346,7 @@ body {
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
+    background: rgb(255, 255, 255, 0.3);
     transform: translate(-50%, -50%);
     transition: width 0.6s, height 0.6s;
     z-index: -1;
@@ -357,7 +359,7 @@ body {
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 6px 20px rgb(102, 126, 234, 0.6);
 }
 
 .btn:disabled {
@@ -372,7 +374,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgb(0, 0, 0, 0.9);
     display: none;
     justify-content: center;
     align-items: center;
@@ -382,12 +384,12 @@ body {
 }
 
 .game-over-content {
-    background: linear-gradient(135deg, rgba(45, 55, 72, 0.95), rgba(26, 32, 44, 0.95));
+    background: linear-gradient(135deg, rgb(45, 55, 72, 0.95), rgb(26, 32, 44, 0.95));
     padding: 40px 32px 32px 32px;
     border-radius: var(--border-radius);
     text-align: center;
-    box-shadow: 0 0 30px rgba(245, 101, 101, 0.5);
-    border: 1px solid rgba(245, 101, 101, 0.3);
+    box-shadow: 0 0 30px rgb(245, 101, 101, 0.5);
+    border: 1px solid rgb(245, 101, 101, 0.3);
     animation: slideUp 0.4s ease-out;
     display: flex;
     flex-direction: column;
@@ -399,6 +401,7 @@ body {
         transform: translateY(30px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -412,7 +415,7 @@ body {
     font-size: 36px;
     font-weight: 700;
     letter-spacing: 1px;
-    text-shadow: 0 0 20px rgba(245, 101, 101, 0.8);
+    text-shadow: 0 0 20px rgb(245, 101, 101, 0.8);
     animation: pulse 1s ease-in-out infinite;
 }
 
@@ -429,7 +432,7 @@ body {
     font-size: 48px;
     font-weight: bold;
     color: var(--warning-color);
-    text-shadow: 0 0 30px rgba(237, 137, 54, 0.8);
+    text-shadow: 0 0 30px rgb(237, 137, 54, 0.8);
     pointer-events: none;
     opacity: 0;
     animation: comboAnimation 1s ease-out;
@@ -440,10 +443,12 @@ body {
         opacity: 0;
         transform: translate(-50%, -50%) scale(0.5);
     }
+
     50% {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1.2);
     }
+
     100% {
         opacity: 0;
         transform: translate(-50%, -50%) scale(1);
@@ -458,7 +463,7 @@ body {
     font-size: 72px;
     font-weight: bold;
     color: var(--success-color);
-    text-shadow: 0 0 50px rgba(72, 187, 120, 0.8);
+    text-shadow: 0 0 50px rgb(72, 187, 120, 0.8);
     pointer-events: none;
     opacity: 0;
     z-index: 1000;
@@ -473,10 +478,12 @@ body {
         opacity: 0;
         transform: translate(-50%, -50%) scale(0.5) rotate(-10deg);
     }
+
     50% {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1.5) rotate(5deg);
     }
+
     100% {
         opacity: 0;
         transform: translate(-50%, -50%) scale(2) rotate(0deg);
@@ -500,7 +507,7 @@ body {
 }
 
 .home-toggle:hover {
-    background: var(--tok-panel-strong, rgba(255, 255, 255, 0.12));
+    background: var(--tok-panel-strong, rgb(255, 255, 255, 0.12));
 }
 
 /* ── 顶栏中部 HUD：移动端首屏必须能看到分数，不能等点开抽屉 ──
@@ -512,8 +519,8 @@ body {
     align-items: baseline;
     gap: 7px;
     padding: 4px 14px;
-    background: var(--tok-panel, rgba(255, 255, 255, 0.06));
-    border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
+    background: var(--tok-panel, rgb(255, 255, 255, 0.06));
+    border: 1px solid var(--tok-border, rgb(255, 255, 255, 0.1));
     border-radius: 12px;
 }
 
@@ -561,11 +568,11 @@ body {
 .hud-sub b:last-child { margin-right: 0; }
 
 .global-scores-panel {
-    background: rgba(26, 32, 44, 0.95);
+    background: rgb(26, 32, 44, 0.95);
     border: 1px solid var(--primary-color);
     border-radius: var(--frame-radius);
     backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgb(0, 0, 0, 0.3);
     transition: var(--transition);
     overflow: hidden;
 }
@@ -578,7 +585,7 @@ body {
     font-size: 16px;
     text-align: center;
     border-radius: 12px 12px 0 0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 1px 2px rgb(0, 0, 0, 0.5);
 }
 
 .global-scores-list {
@@ -593,14 +600,14 @@ body {
     align-items: center;
     padding: 8px 12px;
     margin-bottom: 8px;
-    background: rgba(45, 55, 72, 0.6);
+    background: rgb(45, 55, 72, 0.6);
     border-radius: 8px;
     border-left: 3px solid var(--primary-color);
     transition: var(--transition);
 }
 
 .score-item:hover {
-    background: rgba(45, 55, 72, 0.8);
+    background: rgb(45, 55, 72, 0.8);
     transform: translateX(4px);
 }
 
@@ -649,11 +656,11 @@ body.rainbow-theme {
     --secondary-color: #00ff80;
     --success-color: #8000ff;
     --danger-color: #ff8000;
-    --warning-color: #00ffff;
+    --warning-color: #0ff;
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (width <= 768px) {
     body {
         overflow-y: auto;
         min-height: 100vh;
@@ -740,7 +747,7 @@ body.rainbow-theme {
     }
 }
 
-@media (max-width: 480px) {
+@media (width <= 480px) {
     body {
         /* 底部留白（底栏高 + 安全区）由上面的 ≤768px 块统一给，这里不要再写死 72px */
         min-height: 100vh;

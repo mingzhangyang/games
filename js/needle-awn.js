@@ -1639,8 +1639,8 @@ class GameEngine {
 
     spawnBoss(bossType, x, y) {
         let hp = 300;
-        let radius = 28;
-        let tipDist = 34;
+        const radius = 28;
+        const tipDist = 34;
         let stance = 'needle';
 
         if (bossType === 'awn_emperor') {

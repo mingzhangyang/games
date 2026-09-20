@@ -41,7 +41,7 @@ let ranA = false;
 boot.onReady(() => { ranA = true; });
 ok(listeners.length === 1 && listeners[0].type === 'DOMContentLoaded'
     && listeners[0].opts && listeners[0].opts.once === true,
-    "readyState='loading' → 挂 DOMContentLoaded once 监听");
+"readyState='loading' → 挂 DOMContentLoaded once 监听");
 ok(ranA === false, 'loading 态不立即执行');
 
 // 2) interactive 态：同步立即执行（defer 模块脚本的真实路径）

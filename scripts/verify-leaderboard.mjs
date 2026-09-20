@@ -59,7 +59,7 @@ try {
         && JSON.parse(calls[0].body).game === 'tetris'
         && JSON.parse(calls[0].body).name === 'MZ'
         && JSON.parse(calls[0].body).score === 42,
-        'submitScore 请求 URL/方法/请求体', JSON.stringify(calls[0]));
+    'submitScore 请求 URL/方法/请求体', JSON.stringify(calls[0]));
 
     // submitScore：非 2xx → false（不抛出）
     mockFetch(500);
@@ -99,7 +99,7 @@ try {
     // escapeHTML 黄金值
     ok(lb.escapeHTML('<b class="x">A&B\'C</b>')
         === '&lt;b class=&quot;x&quot;&gt;A&amp;B&#39;C&lt;/b&gt;',
-        'escapeHTML 黄金值', lb.escapeHTML('<b class="x">A&B\'C</b>'));
+    'escapeHTML 黄金值', lb.escapeHTML('<b class="x">A&B\'C</b>'));
 } finally {
     globalThis.fetch = realFetch;
 }

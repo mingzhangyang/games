@@ -524,7 +524,7 @@ class HoopShotGame {
         if (len < 1) return;
         const speed = Math.min(MAX_SPEED, len * FLICK_SCALE);
         let vx = (dx / len) * speed;
-        let vy = (dy / len) * speed;
+        const vy = (dy / len) * speed;
         vx = clamp(vx, -MAX_VX, MAX_VX);
 
         this.ball = {
@@ -1409,7 +1409,7 @@ class HoopShotGame {
         // 弹道预览：与 flick() 同一速度映射 + 同一重力的前半段弧线（不含碰撞）
         const flen = Math.hypot(dx, dy);
         const fspeed = Math.min(MAX_SPEED, flen * FLICK_SCALE);
-        let pvx = clamp((dx / flen) * fspeed, -MAX_VX, MAX_VX);
+        const pvx = clamp((dx / flen) * fspeed, -MAX_VX, MAX_VX);
         let pvy = (dy / flen) * fspeed;
         let px = BALL_X, py = BALL_Y;
         ctx.save();

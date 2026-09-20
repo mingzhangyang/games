@@ -568,15 +568,15 @@ class GravityGame {
         this.ctx = this.canvas.getContext('2d');
         this.el = {};
         ['gd-btn-home', 'gd-hole-label', 'gd-launches', 'gd-par', 'gd-total-box', 'gd-total',
-         'gd-reset-btn', 'gd-mute-btn', 'gd-toast',
-         'gd-start', 'gd-title', 'gd-subtitle', 'gd-howto', 'gd-btn-levels', 'gd-btn-daily',
-         'gd-level-label', 'gd-level-grid', 'gd-daily-best', 'gd-start-mute', 'gd-start-lang',
-         'gd-side-howto-title', 'gd-side-howto', 'gd-side-records-title', 'gd-side-records',
-         'gd-hole', 'gd-hole-stars', 'gd-hole-line', 'gd-btn-next', 'gd-btn-replay', 'gd-btn-menu1',
-         'gd-over', 'gd-over-title', 'gd-over-score', 'gd-over-sub',
-         'gd-btn-again', 'gd-btn-copy', 'gd-btn-menu2',
-         'gd-lb-title', 'gd-lb-list', 'gd-lb-status', 'gd-username', 'gd-username-label',
-         'gd-hint'
+            'gd-reset-btn', 'gd-mute-btn', 'gd-toast',
+            'gd-start', 'gd-title', 'gd-subtitle', 'gd-howto', 'gd-btn-levels', 'gd-btn-daily',
+            'gd-level-label', 'gd-level-grid', 'gd-daily-best', 'gd-start-mute', 'gd-start-lang',
+            'gd-side-howto-title', 'gd-side-howto', 'gd-side-records-title', 'gd-side-records',
+            'gd-hole', 'gd-hole-stars', 'gd-hole-line', 'gd-btn-next', 'gd-btn-replay', 'gd-btn-menu1',
+            'gd-over', 'gd-over-title', 'gd-over-score', 'gd-over-sub',
+            'gd-btn-again', 'gd-btn-copy', 'gd-btn-menu2',
+            'gd-lb-title', 'gd-lb-list', 'gd-lb-status', 'gd-username', 'gd-username-label',
+            'gd-hint'
         ].forEach(id => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^gd-/, '')] = el;
@@ -965,12 +965,12 @@ class GravityGame {
         }
 
         // 关卡模式：记录星星
-            const prev = this.stars[this.holeIdx] || 0;
-            if (starCount > prev) {
-                this.stars[this.holeIdx] = starCount;
-                storageSet('gd_stars', JSON.stringify(this.stars));
-            }
-            this.updateSideRecords();
+        const prev = this.stars[this.holeIdx] || 0;
+        if (starCount > prev) {
+            this.stars[this.holeIdx] = starCount;
+            storageSet('gd_stars', JSON.stringify(this.stars));
+        }
+        this.updateSideRecords();
         if (this.el['hole-stars']) this.el['hole-stars'].textContent = '⭐'.repeat(starCount) + '☆'.repeat(3 - starCount);
         if (this.el['hole-line']) {
             this.el['hole-line'].textContent = `${this.TEXT.launches} ${this.launches} · ${this.TEXT.par} ${par}`;

@@ -129,7 +129,7 @@ function saveGlobalUsername(val) {
 // 用户名输入框逻辑
 function setupUsernameInput() {
     const input = document.getElementById('usernameInput');
-    let username = getGlobalUsername();
+    const username = getGlobalUsername();
     // 只在第一次没有用户名时生成并存储
     if (!safeGetItem('tetris_username') && !safeGetItem('player_name')) {
         safeSetItem('tetris_username', username);
@@ -879,8 +879,8 @@ class Tetris {
     hardDrop() {
         if (this.gameOver || this.paused) return;
         let dropDistance = 0;
-        let tailColor = this.colors[this.currentPiece.type];
-        let tailBlocks = [];
+        const tailColor = this.colors[this.currentPiece.type];
+        const tailBlocks = [];
         this.tailGlow = [];
         // 记录下落路径
         while (!this.collision(this.currentPiece, 0, 1)) {
@@ -926,7 +926,7 @@ class Tetris {
     }
 
     clearLines() {
-        let linesCleared = [];
+        const linesCleared = [];
         const newBoard = [];
         for (let y = this.rows - 1; y >= 0; y--) {
             if (this.board[y].every(cell => cell !== 0)) {
@@ -1196,7 +1196,7 @@ class Tetris {
     }
 
     async showGameOver() {
-    track('tetris', 'finish');
+        track('tetris', 'finish');
         sfx.play('gameover');
         document.getElementById('finalScore').textContent = this.score;
         document.getElementById('gameOverOverlay').style.display = 'flex';
@@ -1215,7 +1215,7 @@ class Tetris {
         this.unlockPage();
 
         // 上传分数到 Cloudflare Worker
-        let username = getGlobalUsername();
+        const username = getGlobalUsername();
         // 本地分数记录
         let localScores = safeParseJSON(safeGetItem('tetris_scores'), []);
         if (!Array.isArray(localScores)) localScores = [];
@@ -1269,7 +1269,7 @@ class Tetris {
         });
         html += '</ol></div>';
         // 展示本地分数记录
-        let recentScores = safeParseJSON(safeGetItem('tetris_scores'), []);
+        const recentScores = safeParseJSON(safeGetItem('tetris_scores'), []);
         if (Array.isArray(recentScores) && recentScores.length) {
             html += '<div style="margin-top:12px;font-size:15px;color:#aaa;">';
             html += currentLang === 'zh' ? '你的最近得分：' : 'Your Recent Scores:';

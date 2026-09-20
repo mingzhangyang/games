@@ -32,7 +32,7 @@ body {
     letter-spacing: 0.02em;
     margin: 0;
     color: #63b3ed;
-    text-shadow: 0 0 4px rgba(66, 153, 225, 0.25);
+    text-shadow: 0 0 4px rgb(66, 153, 225, 0.25);
 }
 
 /* 状态条：与其它页顶栏 HUD 同节奏的紧凑胶囊（不再铺满整宽） */
@@ -43,10 +43,10 @@ body {
     width: auto;
     max-width: 100%;
     align-self: center;
-    background: rgba(45, 55, 72, 0.8);
+    background: rgb(45, 55, 72, 0.8);
     padding: 6px 16px;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgb(0, 0, 0, 0.1);
 }
 
 .status-item {
@@ -66,7 +66,7 @@ body {
     padding: var(--tb-frame);
     background: linear-gradient(145deg, #1a202c, #2d3748); /* 深色渐变外框，与暗黑 UI 同系 */
     border-radius: var(--frame-radius);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px rgb(0, 0, 0, 0.5);
 }
 
 /* 木质棋盘本体。⚠️ 必须 z-index: -1：绝对定位的伪元素默认画在**画布之上**，
@@ -79,7 +79,7 @@ body {
     z-index: -1;
     border-radius: 4px;
     background: radial-gradient(circle, #ecc94b 0%, #d69e2e 100%); /* 木质棋盘本体保留 */
-    box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.5); /* 内侧 1px 金色细线 */
+    box-shadow: inset 0 0 0 1px rgb(212, 175, 55, 0.5); /* 内侧 1px 金色细线 */
 }
 
 canvas {
@@ -123,7 +123,7 @@ button:focus-visible {
     -webkit-appearance: none;
     -moz-appearance: none;
     padding-right: 30px;
-    background-color: var(--tok-panel, rgba(255, 255, 255, 0.06));
+    background-color: var(--tok-panel, rgb(255, 255, 255, 0.06));
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
@@ -137,7 +137,7 @@ button:focus-visible {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(8, 10, 26, 0.9);
+    background-color: rgb(8, 10, 26, 0.9);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: 100;
@@ -147,12 +147,12 @@ button:focus-visible {
 }
 
 .modal-content {
-    background-color: rgba(13, 17, 38, 0.96);
+    background-color: rgb(13, 17, 38, 0.96);
     padding: 22px 18px 18px;
     border-radius: 20px;
     text-align: center;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    border: 1px solid rgb(255, 255, 255, 0.12);
     max-width: 360px;
     width: 100%;
 }
@@ -170,7 +170,7 @@ button:focus-visible {
 }
 
 /* Responsive adjustments */
-@media (max-width: 650px) {
+@media (width <= 650px) {
     .board-container {
         --tb-frame: clamp(5px, 1.4vw, 8px);
     }

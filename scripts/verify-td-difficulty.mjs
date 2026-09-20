@@ -206,8 +206,8 @@ const armorTest = await page.evaluate(() => {
     const ovLost = hpBefore4 - ov.hp;
 
     return { physLost, energyLost, normalLost, ovLost,
-             armorCfg: window.__TD_ENEMY_TYPES__.armor.armor,
-             ovCfg: window.__TD_ENEMY_TYPES__.overlord.armor };
+        armorCfg: window.__TD_ENEMY_TYPES__.armor.armor,
+        ovCfg: window.__TD_ENEMY_TYPES__.overlord.armor };
 });
 check(Math.abs(armorTest.physLost - 40) <= 1,
     `装甲兵吃物理伤害 100 → ${armorTest.physLost}（应约 40 = 60% 减免）`, `配置 armor=${armorTest.armorCfg}`);
@@ -240,7 +240,7 @@ const healNear = await page.evaluate(() => {
     const before = victim.hp;
     for (let i = 0; i < 60; i++) g.update(1 / 60);
     return { before, after: victim.hp, samePoint: { x: Math.round(x), y: Math.round(y) },
-             healerPos: { x: Math.round(healer.x), y: Math.round(healer.y) } };
+        healerPos: { x: Math.round(healer.x), y: Math.round(healer.y) } };
 });
 check(healNear.after > healNear.before,
     `治疗范围内目标回血 ${healNear.before} → ${healNear.after.toFixed(1)}`);
@@ -596,7 +596,7 @@ const scoreTest = await page.evaluate(async () => {
     const outpostAfter = localStorage.getItem('td_best_outpost');
 
     return { bestOutpost: Number(bestOutpost) || 0, bestVanguardBefore, outpostAfter,
-             idxOutpost: 0 };
+        idxOutpost: 0 };
 });
 check(scoreTest.bestOutpost > 0, '通关后写入本关最佳分 td_best_outpost',
     `${scoreTest.bestOutpost}`);

@@ -23,8 +23,8 @@ for (const name of readdirSync(DIR)) {
     if (!PATH_RE.test(src)) continue;
     PATH_RE.lastIndex = 0;
 
-    let out = src.replace(PATH_RE, "CHROME_PATH");
-    if (!out.includes("./lib/browser.mjs")) {
+    let out = src.replace(PATH_RE, 'CHROME_PATH');
+    if (!out.includes('./lib/browser.mjs')) {
         // 插到第一条 import 之后（所有命中文件都有 puppeteer import）
         out = out.replace(/^import .*$/m, m => `${m}\n${IMPORT_LINE}`);
     }

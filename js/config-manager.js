@@ -4,8 +4,8 @@ class ConfigManager {
         this.config = null;
         this.defaultConfig = {
             game: {
-                title: "魂斗罗 - 经典复刻版",
-                version: "2.0.0",
+                title: '魂斗罗 - 经典复刻版',
+                version: '2.0.0',
                 canvas: { width: 800, height: 600 },
                 fps: { target: 60, showCounter: true }
             },
@@ -78,11 +78,11 @@ class ConfigManager {
             },
             controls: {
                 keyboard: {
-                    left: "ArrowLeft",
-                    right: "ArrowRight",
-                    jump: "ArrowUp",
-                    shoot: "Space",
-                    pause: "KeyP"
+                    left: 'ArrowLeft',
+                    right: 'ArrowRight',
+                    jump: 'ArrowUp',
+                    shoot: 'Space',
+                    pause: 'KeyP'
                 },
                 touch: {
                     enabled: true,

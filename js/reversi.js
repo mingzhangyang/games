@@ -142,14 +142,14 @@ class ReversiGame {
         this.boardEl = document.getElementById('rv-board');
         this.el = {};
         ['rv-btn-home', 'rv-box-black', 'rv-box-white', 'rv-name-black', 'rv-name-white',
-         'rv-count-black', 'rv-count-white', 'rv-mute-btn', 'rv-status',
-         'rv-toast', 'rv-start', 'rv-title', 'rv-subtitle', 'rv-howto',
-         'rv-mode-ai-label', 'rv-mode-2p-label', 'rv-diff-easy', 'rv-diff-medium', 'rv-diff-hard',
-         'rv-btn-play', 'rv-streak-line', 'rv-start-mute', 'rv-start-lang',
-         'rv-over', 'rv-over-title', 'rv-over-verdict', 'rv-over-score', 'rv-over-streak',
-         'rv-btn-again', 'rv-btn-copy', 'rv-btn-menu', 'rv-lb-box',
-         'rv-lb-title', 'rv-lb-list', 'rv-lb-status', 'rv-username', 'rv-username-label',
-         'rv-hint'
+            'rv-count-black', 'rv-count-white', 'rv-mute-btn', 'rv-status',
+            'rv-toast', 'rv-start', 'rv-title', 'rv-subtitle', 'rv-howto',
+            'rv-mode-ai-label', 'rv-mode-2p-label', 'rv-diff-easy', 'rv-diff-medium', 'rv-diff-hard',
+            'rv-btn-play', 'rv-streak-line', 'rv-start-mute', 'rv-start-lang',
+            'rv-over', 'rv-over-title', 'rv-over-verdict', 'rv-over-score', 'rv-over-streak',
+            'rv-btn-again', 'rv-btn-copy', 'rv-btn-menu', 'rv-lb-box',
+            'rv-lb-title', 'rv-lb-list', 'rv-lb-status', 'rv-username', 'rv-username-label',
+            'rv-hint'
         ].forEach(id => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^rv-/, '')] = el;

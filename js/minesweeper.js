@@ -155,12 +155,12 @@ class MinesweeperGame {
         this.boardEl = document.getElementById('ms-board');
         this.el = {};
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
-         'ms-counter-mines', 'ms-counter-timer',
-         'ms-flagmode', 'ms-hint', 'ms-start', 'ms-title', 'ms-subtitle', 'ms-howto',
-         'ms-btn-play', 'ms-best-grid', 'ms-start-mute', 'ms-start-lang',
-         'ms-result', 'ms-result-title', 'ms-result-time', 'ms-result-best',
-         'ms-lb-title', 'ms-lb-list', 'ms-lb-status', 'ms-username', 'ms-username-label',
-         'ms-btn-again', 'ms-btn-copy', 'ms-btn-close'
+            'ms-counter-mines', 'ms-counter-timer',
+            'ms-flagmode', 'ms-hint', 'ms-start', 'ms-title', 'ms-subtitle', 'ms-howto',
+            'ms-btn-play', 'ms-best-grid', 'ms-start-mute', 'ms-start-lang',
+            'ms-result', 'ms-result-title', 'ms-result-time', 'ms-result-best',
+            'ms-lb-title', 'ms-lb-list', 'ms-lb-status', 'ms-username', 'ms-username-label',
+            'ms-btn-again', 'ms-btn-copy', 'ms-btn-close'
         ].forEach(id => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^ms-/, '')] = el;

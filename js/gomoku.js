@@ -467,7 +467,7 @@ function checkWin(r, c, player) {
         [1, -1]  // Diagonal /
     ];
 
-    for (let [dr, dc] of directions) {
+    for (const [dr, dc] of directions) {
         const cells = [[r, c]];
 
         // Check forward
@@ -509,7 +509,7 @@ function checkWinFast(r, c, player) {
         [1, -1]
     ];
 
-    for (let [dr, dc] of directions) {
+    for (const [dr, dc] of directions) {
         let count = 1;
 
         for (let i = 1; i < 5; i++) {
@@ -841,7 +841,7 @@ function evaluatePosition(r, c, player) {
     let score = 0;
     const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
-    for (let [dr, dc] of directions) {
+    for (const [dr, dc] of directions) {
         score += evaluateLine(r, c, dr, dc, player);
     }
     return score;

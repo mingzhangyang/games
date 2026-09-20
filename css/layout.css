@@ -81,8 +81,8 @@
     --frame-stage-h: 960px;
     --frame-chrome: 150px;
     --frame-main-gap: 28px;
-    --frame-scrollbar-thumb: rgba(255, 255, 255, 0.14);
-    --frame-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+    --frame-scrollbar-thumb: rgb(255, 255, 255, 0.14);
+    --frame-scrollbar-thumb-hover: rgb(255, 255, 255, 0.28);
 }
 
 /* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */
@@ -113,7 +113,6 @@
     margin: -1px;
     padding: 0;
     border: 0;
-    clip: rect(0 0 0 0);
     clip-path: inset(50%);
     overflow: hidden;
     white-space: nowrap;
@@ -320,8 +319,8 @@
 
 /* ── 侧栏卡片族 ── */
 .game-side-card {
-    background: rgba(255, 255, 255, 0.045);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgb(255, 255, 255, 0.045);
+    border: 1px solid rgb(255, 255, 255, 0.1);
     border-radius: 14px;
     padding: 14px 16px;
     text-align: left;
@@ -383,8 +382,8 @@
 }
 
 .game-side-kbd {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgb(255, 255, 255, 0.1);
+    border: 1px solid rgb(255, 255, 255, 0.2);
     border-radius: 5px;
     padding: 1px 6px;
     font-family: inherit;
@@ -428,7 +427,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    background: rgba(4, 5, 10, 0.62);
+    background: rgb(4, 5, 10, 0.62);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     opacity: 0;
@@ -448,10 +447,10 @@
     flex-direction: column;
     min-height: 0;
     border-radius: 20px 20px 0 0;
-    background: rgba(18, 21, 28, 0.98);
-    border: 1px solid var(--tok-border, rgba(255, 255, 255, 0.1));
+    background: rgb(18, 21, 28, 0.98);
+    border: 1px solid var(--tok-border, rgb(255, 255, 255, 0.1));
     border-bottom: none;
-    box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 -18px 50px rgb(0, 0, 0, 0.5);
     transform: translateY(100%);
     transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -465,7 +464,7 @@
     height: 4px;
     margin: 10px auto 2px;
     border-radius: 2px;
-    background: rgba(255, 255, 255, 0.22);
+    background: rgb(255, 255, 255, 0.22);
 }
 
 .game-drawer-head {
@@ -475,7 +474,7 @@
     justify-content: space-between;
     gap: 10px;
     padding: 6px 14px 10px;
-    border-bottom: 1px solid var(--tok-border, rgba(255, 255, 255, 0.08));
+    border-bottom: 1px solid var(--tok-border, rgb(255, 255, 255, 0.08));
 }
 
 .game-drawer-title {
@@ -506,12 +505,12 @@ body.drawer-locked {
 }
 
 /* 触发钮：与普通图标钮同形，仅桌面端隐藏 */
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
     .game-stats-btn { display: none; }
 }
 
 /* ── 响应式：窄屏压缩 ── */
-@media (max-width: 480px) {
+@media (width <= 480px) {
     :root { --tok-btn-size: 36px; }
     .game-shell { padding: 6px 8px 4px; }
     /* 窄屏收紧顶栏间距：保证最挤的页面（td 三个状态胶囊）仍保持单行 */
@@ -531,7 +530,7 @@ body.drawer-locked {
 }
 
 /* ── 响应式：矮屏压缩 ── */
-@media (max-height: 720px) {
+@media (height <= 720px) {
     .game-shell { padding-top: 6px; }
     /* 不再隐藏页脚，只压缩纵向占用 */
     .game-footer-hint {
@@ -554,12 +553,12 @@ body.drawer-locked {
  * 所以 CSS 求值时侧栏里根本没有那个节点，`:has()` 永远不匹配 —— 侧栏纹丝不动。
  * 判据必须来自"这个页面接没接抽屉"这种**不随视口变化**的事实，而不是当前 DOM 位置。
  */
-@media (max-width: 1023.98px) {
+@media (width <= 1023.98px) {
     body.has-stats-drawer .game-sidebar { display: none; }
 }
 
 /* ── 响应式：桌面横排 ── */
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
     /*
      * 桌面纵向预算（2026-09-19）：舞台宽度由「视口可用高度 × 画幅比」推导，
      * 而不再是固定像素上限 —— 1920×1080 下 480×640 逻辑场从 460px 放大到 ~700px。
@@ -580,8 +579,10 @@ body.drawer-locked {
      */
     .game-shell {
         --stage-w: calc(min(var(--frame-stage-h), 100dvh - var(--frame-chrome)) * var(--frame-ratio));
+
         max-width: var(--frame-shell-max, var(--frame-max-wide));
     }
+
     .game-main {
         flex-direction: row;
         align-items: flex-start;
@@ -591,6 +592,7 @@ body.drawer-locked {
     /* 横向安全网：1024–1200px 视口下容器吃满视口时，
        舞台不得挤掉 flex-shrink:0 的侧栏 */
     .game-stage { max-width: var(--frame-stage-cap, var(--frame-stage)); }
+
     .game-sidebar {
         display: flex;
         flex-direction: column;
@@ -644,6 +646,7 @@ body.drawer-locked {
 
 @media (prefers-reduced-motion: reduce) {
     .game-icon-btn { transition: none; }
+
     .game-drawer,
     .game-drawer-panel { transition: none; }
 }

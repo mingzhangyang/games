@@ -707,22 +707,22 @@ class TowerDefenseGame {
         this.ctx = this.canvas.getContext('2d');
         this.el = {};
         ['td-lives', 'td-gold', 'td-wave', 'td-wave-btn', 'td-wave-text', 'td-wave-preview',
-         'td-stat-lives', 'td-stat-gold', 'td-stat-wave', 'td-stack-badge',
-         'td-panel', 'td-toast', 'td-start', 'td-title', 'td-subtitle', 'td-howto', 'td-tower-intro',
-         'td-btn-play', 'td-best-line', 'td-start-mute', 'td-start-lang',
-         'td-level-cards', 'td-level-brief', 'td-brief-waves', 'td-brief-gold', 'td-brief-lives',
-         'td-select-title', 'td-brief-lbl-waves', 'td-brief-lbl-gold', 'td-brief-lbl-lives',
-         'td-pause', 'td-pause-title', 'td-btn-resume', 'td-btn-menu',
-         'td-over', 'td-over-title', 'td-over-verdict', 'td-over-score', 'td-over-sub',
-         'td-over-waves', 'td-over-kills', 'td-over-lives',
-         'td-over-lbl-waves', 'td-over-lbl-kills', 'td-over-lbl-lives',
-         'td-btn-again', 'td-btn-copy', 'td-btn-menu2',
-         'td-lb-title', 'td-lb-list', 'td-lb-status', 'td-username', 'td-username-label',
-         'td-btn-home', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn', 'td-range-btn', 'td-hint',
-         'td-skill-emp', 'td-emp-timer', 'td-emp-ring', 'td-skill-boost', 'td-boost-timer', 'td-boost-ring',
-         'td-side-howto-title', 'td-side-howto', 'td-side-skills-title', 'td-side-skills',
-         'td-side-towers-title', 'td-side-towers', 'td-side-shortcuts-title', 'td-side-shortcuts',
-         'td-side-records-title', 'td-side-records'
+            'td-stat-lives', 'td-stat-gold', 'td-stat-wave', 'td-stack-badge',
+            'td-panel', 'td-toast', 'td-start', 'td-title', 'td-subtitle', 'td-howto', 'td-tower-intro',
+            'td-btn-play', 'td-best-line', 'td-start-mute', 'td-start-lang',
+            'td-level-cards', 'td-level-brief', 'td-brief-waves', 'td-brief-gold', 'td-brief-lives',
+            'td-select-title', 'td-brief-lbl-waves', 'td-brief-lbl-gold', 'td-brief-lbl-lives',
+            'td-pause', 'td-pause-title', 'td-btn-resume', 'td-btn-menu',
+            'td-over', 'td-over-title', 'td-over-verdict', 'td-over-score', 'td-over-sub',
+            'td-over-waves', 'td-over-kills', 'td-over-lives',
+            'td-over-lbl-waves', 'td-over-lbl-kills', 'td-over-lbl-lives',
+            'td-btn-again', 'td-btn-copy', 'td-btn-menu2',
+            'td-lb-title', 'td-lb-list', 'td-lb-status', 'td-username', 'td-username-label',
+            'td-btn-home', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn', 'td-range-btn', 'td-hint',
+            'td-skill-emp', 'td-emp-timer', 'td-emp-ring', 'td-skill-boost', 'td-boost-timer', 'td-boost-ring',
+            'td-side-howto-title', 'td-side-howto', 'td-side-skills-title', 'td-side-skills',
+            'td-side-towers-title', 'td-side-towers', 'td-side-shortcuts-title', 'td-side-shortcuts',
+            'td-side-records-title', 'td-side-records'
         ].forEach(id => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^td-/, '')] = el;
@@ -995,8 +995,8 @@ class TowerDefenseGame {
             const stats = document.createElement('div');
             stats.className = 'td-level-stats';
             [`🌊 ${t.levelWaves.replace('{n}', level.waves)}`,
-             `💰 ${t.levelGold.replace('{n}', level.gold)}`,
-             `❤️ ${t.levelLives.replace('{n}', level.lives)}`].forEach(txt => {
+                `💰 ${t.levelGold.replace('{n}', level.gold)}`,
+                `❤️ ${t.levelLives.replace('{n}', level.lives)}`].forEach(txt => {
                 const chip = document.createElement('span');
                 chip.className = 'td-level-chip';
                 chip.textContent = txt;
@@ -1968,8 +1968,8 @@ class TowerDefenseGame {
         const t = this.TEXT;
         this.waveBanner = {
             text: (this.wave === L.waves) ? t.finalWave :
-                  waveCfg.isBossWave ? t.bossWave :
-                  this.lang === 'zh' ? `第 ${this.wave} 波` : `WAVE ${this.wave}`,
+                waveCfg.isBossWave ? t.bossWave :
+                    this.lang === 'zh' ? `第 ${this.wave} 波` : `WAVE ${this.wave}`,
             sub: this.stack > 0
                 ? (this.lang === 'zh' ? `堆叠 ×${this.stack} · 敌人强度 +${Math.round(this.stack * STACK_HP_PER * 100)}%` : `STACKED ×${this.stack} · +${Math.round(this.stack * STACK_HP_PER * 100)}% ENEMY POWER`)
                 : '',

@@ -74,13 +74,13 @@ const sample = async (sel) => {
     const rest = await page.$eval(sel, el => {
         const cs = getComputedStyle(el);
         return { bg: cs.backgroundImage + ' | ' + cs.backgroundColor, color: cs.color,
-                 opacity: cs.opacity, visibility: cs.visibility, boxShadow: cs.boxShadow };
+            opacity: cs.opacity, visibility: cs.visibility, boxShadow: cs.boxShadow };
     });
     const box = await hoverAt(sel);
     const hover = await page.$eval(sel, el => {
         const cs = getComputedStyle(el);
         return { bg: cs.backgroundImage + ' | ' + cs.backgroundColor, color: cs.color,
-                 opacity: cs.opacity, visibility: cs.visibility, boxShadow: cs.boxShadow };
+            opacity: cs.opacity, visibility: cs.visibility, boxShadow: cs.boxShadow };
     });
     // 自证真的处于 :hover 状态（否则后面的断言全是空转）
     const isHovered = await page.$eval(sel, el => el.matches(':hover'));

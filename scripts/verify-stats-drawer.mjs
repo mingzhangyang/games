@@ -238,7 +238,7 @@ for (const P of PAGES) {
         await new Promise(r => setTimeout(r, 400));
         const running = await page.evaluate(({ gameVar, runningExpr }) => {
             const g = window[gameVar];
-            // eslint-disable-next-line no-new-func
+             
             return new Function('g', `return (${runningExpr});`)(g);
         }, P);
         check(running, `开局后游戏在跑（为暂停断言建立基线）`, `via=${started.via}`);
@@ -248,7 +248,7 @@ for (const P of PAGES) {
             await new Promise(r => setTimeout(r, 600));
             const afterOpen = await page.evaluate(({ gameVar, runningExpr }) => {
                 const g = window[gameVar];
-                // eslint-disable-next-line no-new-func
+                 
                 return new Function('g', `return (${runningExpr});`)(g);
             }, P);
             check(afterOpen === false, '打开抽屉后游戏被强制暂停');
@@ -258,7 +258,7 @@ for (const P of PAGES) {
             await new Promise(r => setTimeout(r, 600));
             const afterClose = await page.evaluate(({ gameVar, runningExpr }) => {
                 const g = window[gameVar];
-                // eslint-disable-next-line no-new-func
+                 
                 return new Function('g', `return (${runningExpr});`)(g);
             }, P);
             check(afterClose === true, '关闭抽屉后恢复「因抽屉而暂停」的那一次（游戏继续）');
@@ -277,7 +277,7 @@ for (const P of PAGES) {
                 await new Promise(r => setTimeout(r, 600));
                 const stillPaused = await page.evaluate(({ gameVar, runningExpr }) => {
                     const g = window[gameVar];
-                    // eslint-disable-next-line no-new-func
+                     
                     return new Function('g', `return (${runningExpr});`)(g);
                 }, P);
                 check(stillPaused === false,

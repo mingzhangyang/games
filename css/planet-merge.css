@@ -14,8 +14,8 @@ html, body {
 
 body {
     background:
-        radial-gradient(ellipse 80% 50% at 70% -10%, rgba(99, 102, 241, 0.18), transparent),
-        radial-gradient(ellipse 60% 40% at 15% 110%, rgba(52, 211, 153, 0.10), transparent),
+        radial-gradient(ellipse 80% 50% at 70% -10%, rgb(99, 102, 241, 0.18), transparent),
+        radial-gradient(ellipse 60% 40% at 15% 110%, rgb(52, 211, 153, 0.10), transparent),
         linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #120e2b 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: #e8ecff;
@@ -23,7 +23,7 @@ body {
 
 /* ── 顶栏 HUD ── */
 
-.pm-icon-btn:hover { background: rgba(255, 255, 255, 0.12); }
+.pm-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
 .pm-icon-btn:active { transform: scale(0.92); }
 
 .pm-scores {
@@ -52,7 +52,7 @@ body {
     font-weight: 800;
     font-variant-numeric: tabular-nums;
     line-height: 1;
-    text-shadow: 0 0 18px rgba(148, 163, 255, 0.45);
+    text-shadow: 0 0 18px rgb(148, 163, 255, 0.45);
 }
 
 .pm-score-sub {
@@ -68,8 +68,8 @@ body {
     display: block;
     width: 100%;
     border-radius: 18px;
-    border: 1px solid rgba(148, 163, 255, 0.16);
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 40px rgba(99, 102, 241, 0.12);
+    border: 1px solid rgb(148, 163, 255, 0.16);
+    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.45), 0 0 40px rgb(99, 102, 241, 0.12);
     touch-action: none;
     cursor: pointer;
 }
@@ -82,8 +82,8 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    background: rgba(10, 14, 36, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgb(10, 14, 36, 0.72);
+    border: 1px solid rgb(255, 255, 255, 0.12);
     border-radius: 12px;
     padding: 6px 12px;
     pointer-events: none;
@@ -106,7 +106,7 @@ body {
 /* ── 覆盖层通用 ── */
 
 .pm-overlay {
-    background: rgba(8, 10, 26, 0.88);
+    background: rgb(8, 10, 26, 0.88);
     text-align: center;
 }
 
@@ -162,21 +162,21 @@ body {
     font-size: 12.5px;
     font-weight: 700;
     color: #aab6e6;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.12);
     border-radius: 99px;
     padding: 6px 14px;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
 }
 
-.pm-skin-btn:hover { background: rgba(255, 255, 255, 0.11); color: #fff; }
+.pm-skin-btn:hover { background: rgb(255, 255, 255, 0.11); color: #fff; }
 .pm-skin-btn:active { transform: scale(0.95); }
 
 .pm-skin-btn.selected {
     color: #fff;
-    background: rgba(99, 102, 241, 0.4);
-    border-color: rgba(148, 163, 255, 0.6);
+    background: rgb(99, 102, 241, 0.4);
+    border-color: rgb(148, 163, 255, 0.6);
 }
 
 .pm-howto {
@@ -206,21 +206,21 @@ body {
     font-size: 15px;
     font-weight: 700;
     color: #e8ecff;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgb(255, 255, 255, 0.08);
+    border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 14px;
     padding: 13px 20px;
     cursor: pointer;
     transition: transform 0.12s, background 0.15s, box-shadow 0.15s;
 }
 
-.pm-btn:hover { background: rgba(255, 255, 255, 0.14); }
+.pm-btn:hover { background: rgb(255, 255, 255, 0.14); }
 .pm-btn:active { transform: scale(0.96); }
 
 .pm-btn-primary {
     background: linear-gradient(120deg, #6366f1, #8b5cf6);
     border: none;
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 8px 24px rgb(99, 102, 241, 0.4);
 }
 
 .pm-btn-primary:hover { background: linear-gradient(120deg, #5458ee, #7c4ded); }
@@ -228,12 +228,12 @@ body {
 .pm-btn-daily {
     background: linear-gradient(120deg, #0ea5e9, #6366f1);
     border: none;
-    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35);
+    box-shadow: 0 8px 24px rgb(14, 165, 233, 0.35);
 }
 
 .pm-btn-ghost {
     background: transparent;
-    border-color: rgba(255, 255, 255, 0.16);
+    border-color: rgb(255, 255, 255, 0.16);
     color: #aab6e6;
 }
 
@@ -277,7 +277,7 @@ body {
     font-size: 17px;
     font-weight: 800;
     color: #fcd34d;
-    text-shadow: 0 0 16px rgba(252, 211, 77, 0.6);
+    text-shadow: 0 0 16px rgb(252, 211, 77, 0.6);
 }
 
 .pm-newbest.show { animation: pm-pop 0.5s ease-out; }
@@ -293,7 +293,7 @@ body {
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 30px rgba(148, 163, 255, 0.55);
+    text-shadow: 0 0 30px rgb(148, 163, 255, 0.55);
 }
 
 .pm-over-best {
@@ -313,8 +313,8 @@ body {
 .pm-lb {
     width: 100%;
     max-width: 340px;
-    background: rgba(255, 255, 255, 0.045);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgb(255, 255, 255, 0.045);
+    border: 1px solid rgb(255, 255, 255, 0.1);
     border-radius: 14px;
     padding: 12px 14px;
 }
@@ -339,7 +339,7 @@ body {
     font-weight: 600;
     color: #8fa0d8;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 99px;
     padding: 3px 10px;
     cursor: pointer;
@@ -347,7 +347,7 @@ body {
 
 .pm-lb-tab.active {
     color: #fff;
-    background: rgba(99, 102, 241, 0.45);
+    background: rgb(99, 102, 241, 0.45);
     border-color: transparent;
 }
 
@@ -369,9 +369,9 @@ body {
     border-radius: 7px;
 }
 
-.pm-lb-row.pm-lb-top1 { background: rgba(252, 211, 77, 0.14); }
-.pm-lb-row.pm-lb-top2 { background: rgba(203, 213, 225, 0.10); }
-.pm-lb-row.pm-lb-top3 { background: rgba(205, 127, 50, 0.12); }
+.pm-lb-row.pm-lb-top1 { background: rgb(252, 211, 77, 0.14); }
+.pm-lb-row.pm-lb-top2 { background: rgb(203, 213, 225, 0.10); }
+.pm-lb-row.pm-lb-top3 { background: rgb(205, 127, 50, 0.12); }
 
 .pm-lb-rank {
     width: 22px;
@@ -427,23 +427,23 @@ body {
     font-family: inherit;
     font-size: 13px;
     color: #e8ecff;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 9px;
     padding: 7px 10px;
     outline: none;
 }
 
-.pm-username:focus { border-color: rgba(148, 163, 255, 0.5); }
+.pm-username:focus { border-color: rgb(148, 163, 255, 0.5); }
 
 /* ── 响应式 ── */
 
-@media (max-height: 760px) {
+@media (height <= 760px) {
     .pm-shell { padding-top: 6px; }
     .pm-score-value { font-size: 25px; }
 }
 
-@media (max-width: 480px) {
+@media (width <= 480px) {
     .pm-score-value { font-size: 23px; }
     .pm-title { font-size: 31px; }
     .pm-over-score { font-size: 46px; }
@@ -461,7 +461,7 @@ body {
 
 /* ── 桌面大屏（≥1024px）：舞台 + 信息侧栏 ── */
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
     .pm-side-row b {
         color: #e8ecff;
         font-variant-numeric: tabular-nums;
@@ -475,7 +475,7 @@ body {
     bottom: 32px;
     max-width: min(90vw, 360px);
     padding: 10px 18px;
-    background: rgba(15, 23, 42, 0.92);
+    background: rgb(15, 23, 42, 0.92);
     color: #e2e8f0;
     font-size: 14px;
     text-align: center;

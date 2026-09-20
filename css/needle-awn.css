@@ -11,14 +11,14 @@
 
 :root {
     --color-bg: #030712;
-    --color-surface: rgba(11, 19, 43, 0.75);
-    --color-border: rgba(56, 189, 248, 0.22);
-    --color-border-glow: rgba(56, 189, 248, 0.45);
+    --color-surface: rgb(11, 19, 43, 0.75);
+    --color-border: rgb(56, 189, 248, 0.22);
+    --color-border-glow: rgb(56, 189, 248, 0.45);
     --color-needle: #38bdf8;
-    --color-needle-glow: rgba(56, 189, 248, 0.5);
+    --color-needle-glow: rgb(56, 189, 248, 0.5);
     --color-needle-light: #f0f9ff;
     --color-awn: #f59e0b;
-    --color-awn-glow: rgba(245, 158, 11, 0.5);
+    --color-awn-glow: rgb(245, 158, 11, 0.5);
     --color-awn-light: #fef08a;
     --color-text: #f1f5f9;
     --color-text-muted: #94a3b8;
@@ -28,8 +28,8 @@
 
 body {
     background:
-        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56, 189, 248, 0.12), transparent),
-        radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.08), transparent),
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgb(56, 189, 248, 0.12), transparent),
+        radial-gradient(circle at 85% 85%, rgb(245, 158, 11, 0.08), transparent),
         linear-gradient(170deg, #030712 0%, #070e22 50%, #0d0f28 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--color-text);
@@ -40,8 +40,8 @@ body {
 /* ── 顶栏 HUD ── */
 
 .na-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(56, 189, 248, 0.4);
+    background: rgb(255, 255, 255, 0.14);
+    border-color: rgb(56, 189, 248, 0.4);
 }
 .na-icon-btn:active { transform: scale(0.92); }
 
@@ -63,16 +63,16 @@ body {
 }
 
 .na-hud-box {
-    background: rgba(7, 21, 41, 0.78);
-    border: 1px solid rgba(56, 189, 248, 0.4);
-    box-shadow: 0 0 14px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.15);
+    background: rgb(7, 21, 41, 0.78);
+    border: 1px solid rgb(56, 189, 248, 0.4);
+    box-shadow: 0 0 14px rgb(56, 189, 248, 0.2), inset 0 0 10px rgb(56, 189, 248, 0.15);
 }
 
 .na-score-val {
     font-size: 19px;
     font-weight: 900;
     font-variant-numeric: tabular-nums;
-    color: #ffffff;
+    color: #fff;
     min-width: 3ch;
     text-align: right;
     letter-spacing: 0.5px;
@@ -92,12 +92,12 @@ body {
     background: #02040b;
     border-radius: 18px;
     overflow: hidden;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 24px rgba(56, 189, 248, 0.15);
-    border: 1.5px solid rgba(56, 189, 248, 0.25);
+    box-shadow: 0 16px 40px rgb(0, 0, 0, 0.65), 0 0 24px rgb(56, 189, 248, 0.15);
+    border: 1.5px solid rgb(56, 189, 248, 0.25);
 }
 
 /* 手机横屏：改为按视口高度定尺寸，避免画布纵向溢出、边玩边滚 */
-@media (orientation: landscape) and (max-height: 640px) {
+@media (orientation: landscape) and (height <= 640px) {
     .na-stage {
         height: min(640px, calc(100vh - 72px));
         /* ⚠️ width:auto 不能省。.game-stage 给的是 width:100%，这里再给 height，
@@ -137,7 +137,7 @@ body {
 
 .na-heart {
     font-size: 16px;
-    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.7));
+    filter: drop-shadow(0 0 5px rgb(239, 68, 68, 0.7));
     transition: transform 0.2s, opacity 0.2s;
 }
 
@@ -151,8 +151,8 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgb(0, 0, 0, 0.55);
+    border: 1px solid rgb(255, 255, 255, 0.15);
     border-radius: 99px;
     padding: 3px 8px 3px 6px;
 }
@@ -167,7 +167,7 @@ body {
 .na-ult-bar-track {
     width: 65px;
     height: 6px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgb(255, 255, 255, 0.12);
     border-radius: 99px;
     overflow: hidden;
 }
@@ -207,14 +207,14 @@ body {
 .na-stance-chip:active { transform: scale(0.92); }
 
 .na-stance-chip.needle {
-    background: rgba(56, 189, 248, 0.18);
+    background: rgb(56, 189, 248, 0.18);
     border-color: var(--color-needle);
     color: var(--color-needle-light);
     box-shadow: 0 0 10px var(--color-needle-glow);
 }
 
 .na-stance-chip.awn {
-    background: rgba(245, 158, 11, 0.2);
+    background: rgb(245, 158, 11, 0.2);
     border-color: var(--color-awn);
     color: var(--color-awn-light);
     box-shadow: 0 0 10px var(--color-awn-glow);
@@ -248,13 +248,13 @@ body {
     width: 62px;
     height: 62px;
     border-radius: 50%;
-    background: rgba(11, 19, 43, 0.78);
-    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    background: rgb(11, 19, 43, 0.78);
+    border: 1.5px solid rgb(255, 255, 255, 0.2);
     color: #fff;
     font-family: inherit;
     font-size: 10.5px;
     font-weight: 800;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 6px 16px rgb(0, 0, 0, 0.45);
     backdrop-filter: blur(6px);
     cursor: pointer;
     touch-action: manipulation;
@@ -273,13 +273,13 @@ body {
 .na-touch-btn--dash {
     border-color: var(--color-needle);
     box-shadow: 0 0 14px var(--color-needle-glow);
-    background: rgba(56, 189, 248, 0.22);
+    background: rgb(56, 189, 248, 0.22);
 }
 
 .na-touch-btn--stance {
     border-color: var(--color-awn);
     box-shadow: 0 0 14px var(--color-awn-glow);
-    background: rgba(245, 158, 11, 0.22);
+    background: rgb(245, 158, 11, 0.22);
 }
 
 .na-touch-btn--ult {
@@ -295,8 +295,8 @@ body {
     opacity: 1;
     pointer-events: auto;
     border-color: #fef08a;
-    box-shadow: 0 0 20px rgba(254, 240, 138, 0.7);
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(245, 158, 11, 0.4));
+    box-shadow: 0 0 20px rgb(254, 240, 138, 0.7);
+    background: linear-gradient(135deg, rgb(168, 85, 247, 0.4), rgb(245, 158, 11, 0.4));
     animation: ultPulse 1s infinite alternate;
 }
 
@@ -307,13 +307,13 @@ body {
 
 /* ── 覆盖层 / 弹窗 (Start, Over, Levels, 1v1) ── */
 .na-overlay {
-    background: rgba(3, 7, 18, 0.88);
+    background: rgb(3, 7, 18, 0.88);
     text-align: center;
     transition: opacity 0.2s ease;
 }
 
 .na-overlay::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgb(255, 255, 255, 0.15);
     border-radius: 2px;
 }
 
@@ -324,8 +324,8 @@ body {
     letter-spacing: 2px;
     padding: 4px 12px;
     border-radius: 99px;
-    background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.35);
+    background: rgb(56, 189, 248, 0.12);
+    border: 1px solid rgb(56, 189, 248, 0.35);
     color: var(--color-needle);
     margin-bottom: 8px;
     display: inline-block;
@@ -334,10 +334,10 @@ body {
 .na-title {
     font-size: 32px;
     font-weight: 900;
-    color: #ffffff;
+    color: #fff;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
-    text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    text-shadow: 0 0 20px rgb(56, 189, 248, 0.5);
 }
 
 .na-subtitle {
@@ -369,8 +369,8 @@ body {
 }
 
 .na-howto-box {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgb(255, 255, 255, 0.04);
+    border: 1px solid rgb(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 10px 14px;
     font-size: 12px;
@@ -400,8 +400,8 @@ body {
     gap: 4px;
     padding: 12px 10px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.12);
     color: #fff;
     cursor: pointer;
     font-family: inherit;
@@ -421,15 +421,15 @@ body {
 }
 
 .na-mode-btn:hover {
-    background: rgba(56, 189, 248, 0.12);
-    border-color: rgba(56, 189, 248, 0.4);
+    background: rgb(56, 189, 248, 0.12);
+    border-color: rgb(56, 189, 248, 0.4);
     transform: translateY(-2px);
 }
 .na-mode-btn:active { transform: scale(0.97); }
 
 .na-mode-btn.highlight {
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(245, 158, 11, 0.22));
-    border-color: rgba(251, 191, 36, 0.45);
+    background: linear-gradient(135deg, rgb(56, 189, 248, 0.22), rgb(245, 158, 11, 0.22));
+    border-color: rgb(251, 191, 36, 0.45);
 }
 
 /* 关卡选择栅格 */
@@ -447,8 +447,8 @@ body {
     align-items: center;
     justify-content: center;
     padding: 8px 4px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.1);
     border-radius: 10px;
     color: var(--color-text);
     font-weight: 800;
@@ -464,7 +464,7 @@ body {
 }
 
 .na-level-chip.unlocked:hover {
-    background: rgba(56, 189, 248, 0.2);
+    background: rgb(56, 189, 248, 0.2);
     border-color: var(--color-needle);
     transform: scale(1.05);
 }
@@ -478,8 +478,8 @@ body {
 /* 1v1 对决配置面板 */
 .na-duel-panel {
     width: 100%;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgb(255, 255, 255, 0.04);
+    border: 1px solid rgb(255, 255, 255, 0.1);
     border-radius: 14px;
     padding: 14px;
     margin-bottom: 16px;
@@ -507,8 +507,8 @@ body {
 .na-diff-btn {
     padding: 4px 10px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgb(255, 255, 255, 0.06);
+    border: 1px solid rgb(255, 255, 255, 0.12);
     color: #cbd5e1;
     font-size: 11.5px;
     font-weight: 700;
@@ -526,12 +526,12 @@ body {
 .na-card {
     width: 100%;
     max-width: 380px;
-    background: rgba(11, 19, 43, 0.95);
-    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    background: rgb(11, 19, 43, 0.95);
+    border: 1.5px solid rgb(56, 189, 248, 0.35);
     border-radius: 18px;
     padding: 22px 18px;
     margin: auto 0;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 16px 36px rgb(0, 0, 0, 0.6);
 }
 
 .na-card-title {
@@ -542,12 +542,12 @@ body {
 
 .na-card-title.victory {
     color: #fef08a;
-    text-shadow: 0 0 16px rgba(254, 240, 138, 0.6);
+    text-shadow: 0 0 16px rgb(254, 240, 138, 0.6);
 }
 
 .na-card-title.defeat {
     color: #f87171;
-    text-shadow: 0 0 16px rgba(248, 113, 113, 0.6);
+    text-shadow: 0 0 16px rgb(248, 113, 113, 0.6);
 }
 
 .na-card-stars {
@@ -565,7 +565,7 @@ body {
 }
 
 .na-stat-cell {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgb(255, 255, 255, 0.04);
     border-radius: 10px;
     padding: 8px 10px;
 }
@@ -597,15 +597,15 @@ body {
     font-size: 13.5px;
     font-weight: 800;
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgb(255, 255, 255, 0.15);
+    background: rgb(255, 255, 255, 0.08);
     color: #fff;
     font-family: inherit;
     transition: all 0.12s;
 }
 
 .na-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgb(255, 255, 255, 0.16);
     transform: translateY(-1px);
 }
 .na-btn:active { transform: scale(0.97); }
@@ -613,7 +613,7 @@ body {
 .na-btn--primary {
     background: linear-gradient(135deg, #0284c7, #0ea5e9);
     border-color: #38bdf8;
-    box-shadow: 0 0 16px rgba(14, 165, 233, 0.4);
+    box-shadow: 0 0 16px rgb(14, 165, 233, 0.4);
 }
 
 .na-btn--primary:hover {
@@ -622,7 +622,7 @@ body {
 
 .na-btn--ghost {
     background: transparent;
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgb(255, 255, 255, 0.2);
 }
 
 /* 名字输入行 */
@@ -636,8 +636,8 @@ body {
 
 .na-name-input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgb(0, 0, 0, 0.4);
+    border: 1px solid rgb(255, 255, 255, 0.15);
     border-radius: 10px;
     padding: 8px 12px;
     color: #fff;
@@ -646,6 +646,7 @@ body {
     outline: none;
     transition: border-color 0.15s;
 }
+
 .na-name-input:focus {
     border-color: var(--color-needle);
 }
@@ -667,7 +668,7 @@ body {
 /* Toast 浮动提示 */
 .na-toast {
     top: 55px;
-    background: rgba(11, 19, 43, 0.9);
+    background: rgb(11, 19, 43, 0.9);
     border: 1px solid var(--color-needle);
     box-shadow: 0 0 18px var(--color-needle-glow);
     padding: 6px 16px;
@@ -679,19 +680,23 @@ body {
 
 /* ── 桌面大屏布局（≥1024px）：舞台 + 侧边栏 ── */
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
     .na-side-title {
         color: var(--color-needle);
     }
+
     .na-side-text b {
         color: #fef08a;
     }
+
     .na-side-row {
-        border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+        border-bottom: 1px dashed rgb(255, 255, 255, 0.08);
     }
+
     .na-side-row:last-child {
         border-bottom: none;
     }
+
     .na-side-row b {
         color: #fff;
         font-variant-numeric: tabular-nums;
@@ -699,7 +704,7 @@ body {
 }
 
 /* ── 移动端小屏微调（≤480px） ── */
-@media (max-width: 480px) {
+@media (width <= 480px) {
     .na-stage-label { font-size: 12px; }
     .na-score-val { font-size: 16px; }
     .na-title { font-size: 26px; }
@@ -723,8 +728,8 @@ body {
     height: 112px;
     margin: -56px 0 0 -56px;
     border-radius: 50%;
-    border: 1.5px solid rgba(56, 189, 248, 0.45);
-    background: rgba(15, 23, 42, 0.35);
+    border: 1.5px solid rgb(56, 189, 248, 0.45);
+    background: rgb(15, 23, 42, 0.35);
     pointer-events: none;
     z-index: 30;
 }
@@ -737,8 +742,8 @@ body {
     height: 48px;
     margin: -24px 0 0 -24px;
     border-radius: 50%;
-    background: rgba(56, 189, 248, 0.55);
-    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: rgb(56, 189, 248, 0.55);
+    border: 1.5px solid rgb(255, 255, 255, 0.5);
     transition: left 0.05s linear, top 0.05s linear;
 }
 

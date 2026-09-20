@@ -344,7 +344,7 @@ class Bullet {
             ctx.fillStyle = this.color;
             ctx.fillRect(point.x, point.y, this.width * 0.7, this.height * 0.7);
         });
-         ctx.restore();
+        ctx.restore();
 
         // 绘制子弹
         ctx.fillStyle = this.color;
@@ -514,12 +514,12 @@ class Tank {
             this.x = oldX;
             this.y = oldY;
 
-                // 智能避让逻辑
-                if (enemyCollision || playerCollision) {
-                    // 找到碰撞的敌方坦克
-                    const collidingEnemy = game.enemies.find(e =>
-                        e !== this && game.rectsOverlap(this, e)
-                    );
+            // 智能避让逻辑
+            if (enemyCollision || playerCollision) {
+                // 找到碰撞的敌方坦克
+                const collidingEnemy = game.enemies.find(e =>
+                    e !== this && game.rectsOverlap(this, e)
+                );
                 
                 if (collidingEnemy) {
                     // 计算避让方向
@@ -636,7 +636,7 @@ class Tank {
         let bestDirection = -1;
         let bestScore = -1;
         
-        for (let direction of possibleDirections) {
+        for (const direction of possibleDirections) {
             let newX = this.x, newY = this.y;
             
             // 模拟移动
@@ -695,7 +695,7 @@ class Tank {
         
         // 如果所有方向都不安全，使用紧急分散策略
         const emergencyDirections = [0, 1, 2, 3];
-        for (let direction of emergencyDirections) {
+        for (const direction of emergencyDirections) {
             let newX = this.x, newY = this.y;
             
             switch (direction) {
@@ -722,7 +722,7 @@ class Tank {
         const directions = [0, 1, 2, 3];
         const safeDirections = [];
         
-        for (let direction of directions) {
+        for (const direction of directions) {
             let newX = this.x, newY = this.y;
             
             // 模拟移动
