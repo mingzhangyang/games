@@ -281,7 +281,7 @@ class LumenGame {
         if (this.el['btn-levels']) this.el['btn-levels'].textContent = t.playLevels;
         if (this.el['btn-daily']) this.el['btn-daily'].textContent = t.playDaily;
         if (this.el['level-label']) this.el['level-label'].textContent = t.levelSelect;
-        if (this.el['btn-next']) this.el['btn-next'].textContent = t.next;
+        if (this.el['btn-next']) this.el['btn-next'].innerHTML = `${ICONS.arrowRight}<span>${t.next}</span>`;
         if (this.el['btn-replay']) this.el['btn-replay'].innerHTML = `${ICONS.retry}<span>${t.retry}</span>`;
         if (this.el['btn-menu1']) this.el['btn-menu1'].innerHTML = `${ICONS.home}<span>${t.menu}</span>`;
         if (this.el['btn-menu2']) this.el['btn-menu2'].innerHTML = `${ICONS.home}<span>${t.menu}</span>`;
