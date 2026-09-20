@@ -19,6 +19,7 @@ import { todayKey, todayKeyDisplay, hashString, mulberry32 } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -237,89 +238,41 @@ const PHYS_STEP = 1 / 120; // 固定物理步长
 
 /* ────────────────────────── audio ────────────────────────── */
 
+const sfxEngine = createSfxEngine();
+
 const Sfx = {
-    ctx: null,
-    muted: getMuted(),
+    get muted() { return getMuted(); },
 
-    ensure() {
-        if (this.muted) return null;
-        try {
-            if (!this.ctx) {
-                const AC = window.AudioContext || window.webkitAudioContext;
-                if (!AC) return null;
-                this.ctx = new AC();
-            }
-            if (this.ctx.state === 'suspended') {
-                this.ctx.resume();
-            }
-            return this.ctx;
-        } catch (e) {
-            return null;
-        }
+    noise(duration, volume) {
+        sfxEngine.noise({ dur: duration, vol: volume, filterFreq: 0 });
     },
 
-    tone({ freq = 440, endFreq = null, type = 'sine', duration = 0.12, volume = 0.2, delay = 0 }) {
-        const ctx = this.ensure();
-        if (!ctx) return;
-        const now = ctx.currentTime + delay;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, now);
-        if (endFreq !== null) {
-            osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), now + duration);
-        }
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + duration + 0.02);
-    },
-
-    noise(duration = 0.4, volume = 0.25) {
-        const ctx = this.ensure();
-        if (!ctx) return;
-        const now = ctx.currentTime;
-        const buffer = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i++) {
-            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
-        }
-        const src = ctx.createBufferSource();
-        const gain = ctx.createGain();
-        gain.gain.value = volume;
-        src.buffer = buffer;
-        src.connect(gain).connect(ctx.destination);
-        src.start(now);
-    },
-
-    click() { this.tone({ freq: 640, type: 'square', duration: 0.05, volume: 0.08 }); },
-    drop() { this.tone({ freq: 170, endFreq: 95, type: 'sine', duration: 0.1, volume: 0.18 }); },
+    click() { sfxEngine.tone({ freq: 640, type: 'square', dur: 0.05, vol: 0.08 }); },
+    drop() { sfxEngine.tone({ freq: 170, slideTo: 95, type: 'sine', dur: 0.1, vol: 0.18 }); },
     merge(tier, combo) {
         const base = 300 + tier * 42 + Math.min(combo, 8) * 24;
-        this.tone({ freq: base, endFreq: base * 1.5, type: 'triangle', duration: 0.14, volume: 0.2 });
-        this.tone({ freq: base * 2, type: 'sine', duration: 0.09, volume: 0.08, delay: 0.03 });
+        sfxEngine.tone({ freq: base, slideTo: base * 1.5, type: 'triangle', dur: 0.14, vol: 0.2 });
+        sfxEngine.tone({ freq: base * 2, type: 'sine', dur: 0.09, vol: 0.08, delay: 0.03 });
     },
     supernova() {
         this.noise(0.5, 0.3);
-        this.tone({ freq: 220, endFreq: 50, type: 'sawtooth', duration: 0.5, volume: 0.25 });
+        sfxEngine.tone({ freq: 220, slideTo: 50, type: 'sawtooth', dur: 0.5, vol: 0.25 });
     },
-    danger() { this.tone({ freq: 880, type: 'sine', duration: 0.07, volume: 0.1 }); },
+    danger() { sfxEngine.tone({ freq: 880, type: 'sine', dur: 0.07, vol: 0.1 }); },
     gameOver() {
-        this.tone({ freq: 420, endFreq: 90, type: 'sawtooth', duration: 0.6, volume: 0.2 });
-        this.tone({ freq: 300, endFreq: 70, type: 'sine', duration: 0.7, volume: 0.15, delay: 0.1 });
+        sfxEngine.tone({ freq: 420, slideTo: 90, type: 'sawtooth', dur: 0.6, vol: 0.2 });
+        sfxEngine.tone({ freq: 300, slideTo: 70, type: 'sine', dur: 0.7, vol: 0.15, delay: 0.1 });
     },
     newBest() {
         [523, 659, 784, 1046].forEach((f, i) => {
-            this.tone({ freq: f, type: 'triangle', duration: 0.16, volume: 0.16, delay: i * 0.09 });
+            sfxEngine.tone({ freq: f, type: 'triangle', dur: 0.16, vol: 0.16, delay: i * 0.09 });
         });
     },
     toggleMuted() {
-        this.muted = !this.muted;
-        storageSet('pm_muted', this.muted ? '1' : '0');
-        setMuted(this.muted);
-        return this.muted;
+        const muted = !getMuted();
+        storageSet('pm_muted', muted ? '1' : '0');
+        setMuted(muted);
+        return muted;
     }
 };
 

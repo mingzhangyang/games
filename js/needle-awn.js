@@ -22,6 +22,7 @@ import { todayKey } from './daily.js';
 import { submitScore } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -215,51 +216,19 @@ const I18N = makeText({
 
 /* ────────────────────────── Web Audio 音频引擎 ────────────────────────── */
 
+const sfxEngine = createSfxEngine();
+
 const SoundEngine = {
-    ctx: null,
-    bgmOsc: null,
-    bgmGain: null,
     bgmInterval: null,
     pentatonic: [220, 246.94, 277.18, 329.63, 369.99, 440, 493.88, 554.37, 659.25],
 
     init() {
         if (getMuted()) return null;
-        try {
-            if (!this.ctx) {
-                const AC = window.AudioContext || window.webkitAudioContext;
-                if (!AC) return null;
-                this.ctx = new AC();
-            }
-            if (this.ctx.state === 'suspended') {
-                this.ctx.resume();
-            }
-            return this.ctx;
-        } catch (e) {
-            return null;
-        }
+        return sfxEngine.ensure();
     },
 
     playTone(freq, duration, type = 'sine', vol = 0.12, endFreq = null) {
-        const ctx = this.init();
-        if (!ctx) return;
-        const now = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, now);
-        if (endFreq) {
-            osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), now + duration);
-        }
-
-        gain.gain.setValueAtTime(0.001, now);
-        gain.gain.linearRampToValueAtTime(vol, now + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + duration + 0.05);
+        sfxEngine.tone({ freq, dur: duration, type, vol, slideTo: endFreq || undefined });
     },
 
     clashPing() {

@@ -16,6 +16,7 @@ import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -102,68 +103,35 @@ const LANGUAGES = makeText({
 
 /* ────────────────────────── audio ────────────────────────── */
 
+const sfxEngine = createSfxEngine();
+
 const Sfx = {
-    ctx: null,
-    muted: getMuted(),
-
-    ensure() {
-        if (this.muted) return null;
-        try {
-            if (!this.ctx) {
-                const AC = window.AudioContext || window.webkitAudioContext;
-                if (!AC) return null;
-                this.ctx = new AC();
-            }
-            if (this.ctx.state === 'suspended') this.ctx.resume();
-            return this.ctx;
-        } catch (e) {
-            return null;
-        }
-    },
-
-    tone({ freq = 440, endFreq = null, type = 'sine', duration = 0.1, volume = 0.14, delay = 0 }) {
-        const ctx = this.ensure();
-        if (!ctx) return;
-        const now = ctx.currentTime + delay;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, now);
-        if (endFreq !== null) {
-            osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), now + duration);
-        }
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + duration + 0.02);
-    },
+    get muted() { return getMuted(); },
 
     reveal(n) {
-        this.tone({ freq: 420 + Math.min(n, 6) * 60, type: 'triangle', duration: 0.05, volume: 0.07 });
+        sfxEngine.tone({ freq: 420 + Math.min(n, 6) * 60, type: 'triangle', dur: 0.05, vol: 0.07 });
     },
     flag(on) {
-        this.tone({ freq: on ? 760 : 520, endFreq: on ? 980 : 380, type: 'square', duration: 0.07, volume: 0.09 });
+        sfxEngine.tone({ freq: on ? 760 : 520, slideTo: on ? 980 : 380, type: 'square', dur: 0.07, vol: 0.09 });
     },
     chord() {
-        this.tone({ freq: 500, type: 'triangle', duration: 0.08, volume: 0.1 });
-        this.tone({ freq: 700, type: 'triangle', duration: 0.08, volume: 0.08, delay: 0.05 });
+        sfxEngine.tone({ freq: 500, type: 'triangle', dur: 0.08, vol: 0.1 });
+        sfxEngine.tone({ freq: 700, type: 'triangle', dur: 0.08, vol: 0.08, delay: 0.05 });
     },
     boom() {
-        this.tone({ freq: 160, endFreq: 40, type: 'sawtooth', duration: 0.7, volume: 0.22 });
-        this.tone({ freq: 90, endFreq: 30, type: 'square', duration: 0.9, volume: 0.16, delay: 0.05 });
+        sfxEngine.tone({ freq: 160, slideTo: 40, type: 'sawtooth', dur: 0.7, vol: 0.22 });
+        sfxEngine.tone({ freq: 90, slideTo: 30, type: 'square', dur: 0.9, vol: 0.16, delay: 0.05 });
     },
     win() {
         [523, 659, 784, 1046].forEach((f, i) => {
-            this.tone({ freq: f, type: 'triangle', duration: 0.16, volume: 0.14, delay: i * 0.09 });
+            sfxEngine.tone({ freq: f, type: 'triangle', dur: 0.16, vol: 0.14, delay: i * 0.09 });
         });
     },
-    click() { this.tone({ freq: 640, type: 'square', duration: 0.05, volume: 0.06 }); },
+    click() { sfxEngine.tone({ freq: 640, type: 'square', dur: 0.05, vol: 0.06 }); },
     toggleMuted() {
-        this.muted = !this.muted;
-        setMuted(this.muted);
-        return this.muted;
+        const muted = !getMuted();
+        setMuted(muted);
+        return muted;
     }
 };
 
