@@ -65,6 +65,8 @@
       "caps": [
         "sidebar",
         "drawer",
+        "frame-budget",
+        "leaderboard",
         "analytics",
         "topbar"
       ],
@@ -225,6 +227,7 @@
       ],
       "caps": [
         "daily",
+        "analytics",
         "topbar"
       ],
       "sitemap": {

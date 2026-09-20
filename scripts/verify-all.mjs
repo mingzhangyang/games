@@ -23,6 +23,7 @@ const BASE_URL = argv.find(a => !a.startsWith('--')) || '';
 const SUITE = [
     { name: 'gen-check', script: 'scripts/gen-from-registry.mjs', args: ['--check'], needsServer: false },
     { name: 'lint', script: 'scripts/run-lint.mjs', args: [], needsServer: false },
+    { name: 'registry', script: 'scripts/verify-registry.mjs', args: [], needsServer: false },
     { name: 'fg-audit', script: 'scripts/fg-audit.mjs', args: [], needsServer: true },
     { name: 'placeholder-leak', script: 'scripts/placeholder-leak-check.mjs', args: [], needsServer: true },
     { name: 'chrome', script: 'scripts/verify-chrome.mjs', args: [], needsServer: true },
@@ -38,7 +39,7 @@ const SUITE = [
     { name: 'tetris-drawer', script: 'scripts/verify-tetris-drawer.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'fg-audit', 'placeholder-leak', 'chrome', 'desktop-frame'];
+const QUICK_NAMES = ['gen-check', 'lint', 'registry', 'fg-audit', 'placeholder-leak', 'chrome', 'desktop-frame'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿
