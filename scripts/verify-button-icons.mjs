@@ -5,10 +5,11 @@
 // 这里按 id 找到按钮 → 把它的浮层祖先解开 hidden → 量「图标尺寸/与文案的垂直居中对齐」
 // → 收一张该按钮的元素级截图，供人工目视。
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { mkdir } from 'node:fs/promises';
 
 const CHROME = process.env.CHROME_BIN ||
-    'C:\\Users\\mingz\\.cache\\puppeteer\\chrome\\win64-119.0.6045.105\\chrome-win64\\chrome.exe';
+    CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/Users/mingz/AppData/Local/Temp/btn-icons';
 

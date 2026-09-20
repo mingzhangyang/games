@@ -2,9 +2,10 @@
 // 是否把热区外扩解析成了整个 .game-container，从而盖住同排更早出现的 Home 钮。
 // 用法：node scripts/probe-hit-stack.mjs http://127.0.0.1:8921
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { existsSync } from 'node:fs';
 
-const EXE = ['C:/Users/mingz/.cache/puppeteer/chrome/win64-119.0.6045.105/chrome-win64/chrome.exe'].find(existsSync);
+const EXE = [CHROME_PATH].find(existsSync);
 const BASE = process.argv[2] || 'http://127.0.0.1:8921';
 
 const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: ['--no-sandbox'] });

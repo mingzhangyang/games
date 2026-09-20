@@ -10,11 +10,12 @@
 //   · 移动端侧栏让位（display:none），桌面端侧栏常驻且 Stats 钮与抽屉隐藏
 //   · 面板 DOM 只有一个实例：桌面在侧栏里，移动端在抽屉里
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
 const EXE = process.env.CHROME_BIN || [
-    'C:\\Users\\mingz\\.cache\\puppeteer\\chrome\\win64-119.0.6045.105\\chrome-win64\\chrome.exe',
+    CHROME_PATH,
 ].find(existsSync);
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8900';

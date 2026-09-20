@@ -2,9 +2,10 @@
 // 输出各页 shell/topbar/icon-btn/stage/canvas/sidebar/footer-hint 的实际计算值，
 // 用于检查跨页一致性（触控热区 ≥44px、顶栏高度、容器宽度等）。
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 
 const CHROME = process.env.CHROME_BIN ||
-    'C:\\Users\\mingz\\.cache\\puppeteer\\chrome\\win64-119.0.6045.105\\chrome-win64\\chrome.exe';
+    CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
 const PAGES = [

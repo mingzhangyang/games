@@ -13,10 +13,11 @@
 // 用法：node scripts/serve-static.mjs 8899 & 然后
 //       node scripts/verify-tetris-topbar-mobile.mjs http://127.0.0.1:8899 [outDir]
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { existsSync, mkdirSync } from 'node:fs';
 
 const EXE = [
-    'C:/Users/mingz/.cache/puppeteer/chrome/win64-119.0.6045.105/chrome-win64/chrome.exe',
+    CHROME_PATH,
 ].find(existsSync);
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp/tetris-topbar-mobile';

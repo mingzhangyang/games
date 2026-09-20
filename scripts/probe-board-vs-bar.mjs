@@ -1,8 +1,9 @@
 // 各机型：移动端棋盘几何 vs 固定底栏，量「棋盘有多少被底栏遮住」
 // 以及「底栏上方还有多少横向空隙可以起手滚动」（棋盘自身 touch-action:none，起手在棋盘上滚不动）。
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { existsSync } from 'node:fs';
-const EXE = ['C:/Users/mingz/.cache/puppeteer/chrome/win64-119.0.6045.105/chrome-win64/chrome.exe'].find(existsSync);
+const EXE = [CHROME_PATH].find(existsSync);
 const BASE = process.argv[2] || 'http://127.0.0.1:8923';
 const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: ['--no-sandbox'] });
 

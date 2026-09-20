@@ -11,10 +11,11 @@
 // 解锁门槛），几何检查器与静态分析一律测不出来。因此这里直接驱动 window.tdGame
 // 的内部状态做真实推进，并对每个机制做一次"正向 + 反向"双向验证。
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { existsSync, mkdirSync } from 'node:fs';
 
 const EXE = [
-    'C:/Users/mingz/.cache/puppeteer/chrome/win64-119.0.6045.105/chrome-win64/chrome.exe',
+    CHROME_PATH,
 ].find(existsSync);
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp';

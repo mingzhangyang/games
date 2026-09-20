@@ -1,10 +1,11 @@
 // 盘点各游戏页「移动端顶栏 + 信息面板去向」
 // 用法: node scripts/probe-headers.mjs <baseUrl>
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { existsSync } from 'node:fs';
 
 const EXE = process.env.CHROME_BIN ||
-    'C:\\Users\\mingz\\.cache\\puppeteer\\chrome\\win64-119.0.6045.105\\chrome-win64\\chrome.exe';
+    CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8900';
 
 const PAGES = [

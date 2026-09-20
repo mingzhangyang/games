@@ -5,9 +5,10 @@
  * 用法：node scripts/wd-placeholder-check.mjs [baseUrl]
  */
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
-const EXE = 'C:\\Users\\mingz\\.cache\\puppeteer\\chrome\\win64-119.0.6045.105\\chrome-win64\\chrome.exe';
+const EXE = CHROME_PATH;
 
 const browser = await puppeteer.launch({
   executablePath: EXE,

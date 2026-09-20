@@ -10,12 +10,13 @@
  * 用法：node scripts/fg-audit.mjs [baseUrl]
  */
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const ROOT = path.resolve(import.meta.dirname, '..');
-const EXE = 'C:\\Users\\mingz\\.cache\\puppeteer\\chrome\\win64-119.0.6045.105\\chrome-win64\\chrome.exe';
+const EXE = CHROME_PATH;
 
 const pages = (await readdir(ROOT)).filter(f => f.endsWith('.html') && f !== 'index.html').sort();
 

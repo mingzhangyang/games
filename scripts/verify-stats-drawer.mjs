@@ -1,10 +1,11 @@
 // 六个页面「顶部 Stats 钮 + 底部抽屉」快速冒烟测试
 // 用法：node scripts/verify-stats-drawer.mjs <baseUrl> [outDir]
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { existsSync, mkdirSync } from 'node:fs';
 
 const EXE = [
-    'C:/Users/mingz/.cache/puppeteer/chrome/win64-119.0.6045.105/chrome-win64/chrome.exe',
+    CHROME_PATH,
 ].find(existsSync);
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || '';

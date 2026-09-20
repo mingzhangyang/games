@@ -5,10 +5,11 @@
 // 伪元素因此画在 <canvas> 之上 —— 网格被盖住、点击被吃掉，棋盘完全点不动。
 // 单纯量几何（layout-metrics）测不出来，必须验「像素 + 命中目标 + 真实落子」。
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 import { existsSync, mkdirSync } from 'node:fs';
 
 const EXE = [
-    'C:/Users/mingz/.cache/puppeteer/chrome/win64-119.0.6045.105/chrome-win64/chrome.exe',
+    CHROME_PATH,
 ].find(existsSync);
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp';

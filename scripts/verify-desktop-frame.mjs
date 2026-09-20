@@ -9,9 +9,10 @@
 //   g. 无 pageerror
 // 用法：node scripts/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 
 const CHROME = process.env.CHROME_BIN ||
-    'C:\\Users\\mingz\\.cache\\puppeteer\\chrome\\win64-119.0.6045.105\\chrome-win64\\chrome.exe';
+    CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
 const PAGES = {

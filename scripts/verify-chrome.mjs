@@ -13,9 +13,10 @@
 // ⚠️ 语言存储键是 site_lang（js/site-settings.js 的 LANG_KEY），不是 'lang'。
 //    种错键会让页面停在 navigator.language 默认值，于是"中文没生效"全是假故障。
 import puppeteer from 'puppeteer-core';
+import { CHROME_PATH } from './lib/browser.mjs';
 
 const CHROME = process.env.CHROME_BIN ||
-    'C:\\Users\\mingz\\.cache\\puppeteer\\chrome\\win64-119.0.6045.105\\chrome-win64\\chrome.exe';
+    CHROME_PATH;
 const args = process.argv.slice(2);
 const BASE = args.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 
