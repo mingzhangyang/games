@@ -45,8 +45,11 @@ const snap = await page.evaluate(() => {
             return vc ? getComputedStyle(vc).display === 'none' : false;
         })(),
         layoutVarApplied: (() => {
-            // layout.css 引入生效证据：页面能读到共享 token
-            return getComputedStyle(document.documentElement).getPropertyValue('--tok-bg').trim() !== '';
+            // ⚠ 必须读 layout.css **独有**的变量。这里原本读的是 --tok-bg，
+            //   但那是 css/tokens.css 定义的，而 tank-battle 在接骨架之前就已经引了
+            //   tokens.css —— 把新加的 layout.css <link> 删掉，断言照样绿，
+            //   等于没测。--frame-max 只在 css/layout.css 的 :root 里定义。
+            return getComputedStyle(document.documentElement).getPropertyValue('--frame-max').trim() !== '';
         })(),
         bodyFlex: getComputedStyle(document.body).display === 'flex',
     };
@@ -61,7 +64,7 @@ if (!snap.canvasVisible) fail('canvas 不可见（布局被破坏？）');
 if (!snap.containerCentered) fail('游戏容器未居中（body flex 被破坏？）');
 if (!snap.hud) fail('缺 HUD (#gameInfo)');
 if (!snap.virtualControllerHidden) fail('桌面端虚拟手柄应为 display:none');
-if (!snap.layoutVarApplied) fail('--tok-bg 未定义（layout/tokens 未生效）');
+if (!snap.layoutVarApplied) fail('--frame-max 未定义（css/layout.css 未生效）');
 if (!snap.bodyFlex) fail('body flex 居中被 layout.css 破坏');
 
 await browser.close();
