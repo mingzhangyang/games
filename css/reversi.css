@@ -11,9 +11,9 @@
 body {
     background:
         radial-gradient(ellipse 75% 45% at 50% -10%, rgb(52, 211, 153, 0.09), transparent),
-        linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #0e1f22 100%);
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #0e1f22 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    color: #e8ecff;
+    color: var(--tok-text);
 }
 
 .hidden { display: none !important; }
@@ -50,7 +50,7 @@ body {
 .rv-player-name {
     font-size: 11px;
     font-weight: 600;
-    color: #9aa6d8;
+    color: var(--tok-text-dim);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -64,7 +64,7 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.rv-vs { color: #56618f; font-weight: 800; }
+.rv-vs { color: var(--tok-text-mute); font-weight: 800; }
 
 .rv-player-disc {
     width: 22px;
@@ -86,7 +86,7 @@ body {
     min-height: 22px;
     font-size: 13.5px;
     font-weight: 700;
-    color: #34d399;
+    color: var(--tok-success);
     text-align: center;
     letter-spacing: 0.04em;
 }
@@ -205,8 +205,8 @@ body {
     top: 14px;
     font-size: 13px;
     font-weight: 700;
-    color: #0b0f26;
-    background: linear-gradient(120deg, #ffd34d, #ffb454);
+    color: var(--tok-bg-2);
+    background: linear-gradient(120deg, var(--tok-gold), #ffb454);
     padding: 7px 18px;
     box-shadow: 0 8px 24px rgb(255, 180, 84, 0.4);
     animation: rv-toast-in 0.25s ease-out;
@@ -241,7 +241,7 @@ body {
 .rv-title {
     font-size: 38px;
     font-weight: 800;
-    background: linear-gradient(120deg, #5eead4, #34d399 55%, #40d8ff);
+    background: linear-gradient(120deg, #5eead4, var(--tok-success) 55%, var(--tok-cyan));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -249,7 +249,7 @@ body {
 
 .rv-subtitle {
     font-size: 13px;
-    color: #56618f;
+    color: var(--tok-text-mute);
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-top: -8px;
@@ -283,7 +283,7 @@ body {
 .rv-howto {
     font-size: 13.5px;
     line-height: 1.65;
-    color: #c3cdf2;
+    color: var(--tok-text-soft);
     max-width: 330px;
 }
 
@@ -298,7 +298,7 @@ body {
     font-family: inherit;
     font-size: 13.5px;
     font-weight: 700;
-    color: #9aa6d8;
+    color: var(--tok-text-dim);
     background: rgb(255, 255, 255, 0.05);
     border: 1px solid rgb(255, 255, 255, 0.12);
     border-radius: 11px;
@@ -307,11 +307,11 @@ body {
     transition: background 0.15s, color 0.15s;
 }
 
-.rv-mode:hover, .rv-diff:hover { background: rgb(255, 255, 255, 0.1); color: #e8ecff; }
+.rv-mode:hover, .rv-diff:hover { background: rgb(255, 255, 255, 0.1); color: var(--tok-text); }
 
 .rv-mode.active, .rv-diff.active {
-    color: #0b0f26;
-    background: linear-gradient(120deg, #34d399, #5eead4);
+    color: var(--tok-bg-2);
+    background: linear-gradient(120deg, var(--tok-success), #5eead4);
     border-color: transparent;
     box-shadow: 0 4px 16px rgb(52, 211, 153, 0.35);
 }
@@ -322,7 +322,7 @@ body {
     font-family: inherit;
     font-size: 15px;
     font-weight: 700;
-    color: #e8ecff;
+    color: var(--tok-text);
     background: rgb(255, 255, 255, 0.08);
     border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 14px;
@@ -335,12 +335,12 @@ body {
 .rv-btn:active { transform: scale(0.96); }
 
 .rv-btn-primary {
-    background: linear-gradient(120deg, #34d399, #2dd4d4);
+    background: linear-gradient(120deg, var(--tok-success), #2dd4d4);
     border: none;
     box-shadow: 0 8px 24px rgb(52, 211, 153, 0.4);
 }
 
-.rv-btn-ghost { background: transparent; color: #9aa6d8; }
+.rv-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 .rv-stat-line { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
@@ -357,7 +357,7 @@ body {
 .rv-over-verdict {
     font-size: 17px;
     font-weight: 800;
-    color: #ffd34d;
+    color: var(--tok-gold);
     min-height: 22px;
     text-shadow: 0 0 16px rgb(255, 211, 77, 0.5);
 }
@@ -369,7 +369,7 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.rv-over-streak { font-size: 13.5px; color: #34d399; min-height: 17px; }
+.rv-over-streak { font-size: 13.5px; color: var(--tok-success); min-height: 17px; }
 
 .rv-btn-row {
     display: flex;
@@ -417,7 +417,7 @@ body {
 .rv-lb-row.rv-lb-top2 { background: rgb(203, 213, 225, 0.10); }
 .rv-lb-row.rv-lb-top3 { background: rgb(52, 211, 153, 0.12); }
 
-.rv-lb-rank { width: 22px; flex-shrink: 0; color: #9aa6d8; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rv-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .rv-lb-name {
     flex: 1;
@@ -430,12 +430,12 @@ body {
 
 .rv-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.rv-lb-empty { color: #56618f; font-size: 13px; padding: 10px 0; }
+.rv-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
 
 .rv-lb-status {
     min-height: 16px;
     font-size: 11.5px;
-    color: #56618f;
+    color: var(--tok-text-mute);
     margin-top: 4px;
 }
 
@@ -446,14 +446,14 @@ body {
     margin-top: 6px;
 }
 
-.rv-username-label { font-size: 11.5px; color: #9aa6d8; flex-shrink: 0; }
+.rv-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
 
 .rv-username {
     flex: 1;
     min-width: 0;
     font-family: inherit;
     font-size: 13px;
-    color: #e8ecff;
+    color: var(--tok-text);
     background: rgb(255, 255, 255, 0.07);
     border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 9px;

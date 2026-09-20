@@ -104,7 +104,7 @@
 }
 
 .btn-primary {
-    color: #0b0f26;
+    color: var(--tok-bg-2);
     background: linear-gradient(120deg, var(--tok-accent), var(--tok-accent-2));
     border: none;
     box-shadow: 0 8px 24px rgb(64, 184, 255, 0.3); /* 回退 */

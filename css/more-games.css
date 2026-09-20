@@ -13,7 +13,7 @@
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #7c89bf;
+    color: var(--tok-text-faint);
     text-align: center;
     margin-bottom: 7px;
 }
@@ -28,7 +28,7 @@
 .more-games-links a {
     font-size: 12px;
     font-weight: 600;
-    color: #c3cdf2;
+    color: var(--tok-text-soft);
     text-decoration: none;
     background: rgb(255, 255, 255, 0.06);
     border: 1px solid rgb(255, 255, 255, 0.1);

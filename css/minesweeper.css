@@ -11,9 +11,9 @@
 body {
     background:
         radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.10), transparent),
-        linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #101a2b 100%);
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #101a2b 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    color: #e8ecff;
+    color: var(--tok-text);
 }
 
 .hidden { display: none !important; }
@@ -39,14 +39,14 @@ body {
     font-family: Consolas, Menlo, monospace;
     font-size: 19px;
     font-weight: 700;
-    color: #ff6b7a;
+    color: var(--tok-danger);
     font-variant-numeric: tabular-nums;
     min-width: 3ch;
     text-align: center;
     text-shadow: 0 0 12px rgb(255, 107, 122, 0.45);
 }
 
-.ms-counter:last-child .ms-counter-value { color: #40d8ff; text-shadow: 0 0 12px rgb(64, 216, 255, 0.45); }
+.ms-counter:last-child .ms-counter-value { color: var(--tok-cyan); text-shadow: 0 0 12px rgb(64, 216, 255, 0.45); }
 
 .ms-face {
     width: 48px;
@@ -82,7 +82,7 @@ body {
     font-family: inherit;
     font-size: 13px;
     font-weight: 700;
-    color: #9aa6d8;
+    color: var(--tok-text-dim);
     background: rgb(255, 255, 255, 0.05);
     border: 1px solid rgb(255, 255, 255, 0.1);
     border-radius: 10px;
@@ -91,10 +91,10 @@ body {
     transition: background 0.15s, color 0.15s;
 }
 
-.ms-diff:hover { background: rgb(255, 255, 255, 0.1); color: #e8ecff; }
+.ms-diff:hover { background: rgb(255, 255, 255, 0.1); color: var(--tok-text); }
 
 .ms-diff.active {
-    color: #0b0f26;
+    color: var(--tok-bg-2);
     background: linear-gradient(120deg, #40b8ff, #40e0ff);
     border-color: transparent;
     box-shadow: 0 4px 16px rgb(64, 184, 255, 0.35);
@@ -151,7 +151,7 @@ body {
 .ms-pause-title {
     font-size: 20px;
     font-weight: 700;
-    color: #e8ecff;
+    color: var(--tok-text);
 }
 
 .ms-pause-hint {
@@ -211,12 +211,12 @@ body {
 /* 数字配色（深色主题提亮版） */
 .ms-cell.n1 { color: #58a6ff; }
 .ms-cell.n2 { color: #3fd97c; }
-.ms-cell.n3 { color: #ff6b7a; }
+.ms-cell.n3 { color: var(--tok-danger); }
 .ms-cell.n4 { color: #b48cff; }
 .ms-cell.n5 { color: #ffb454; }
 .ms-cell.n6 { color: #2dd4d4; }
-.ms-cell.n7 { color: #e8ecff; }
-.ms-cell.n8 { color: #9aa6d8; }
+.ms-cell.n7 { color: var(--tok-text); }
+.ms-cell.n8 { color: var(--tok-text-dim); }
 
 .ms-cell.flagged { background: linear-gradient(150deg, #3a3260, #2b2550); }
 
@@ -299,7 +299,7 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-.ms-result-title.lose { color: #ff6b7a; }
+.ms-result-title.lose { color: var(--tok-danger); }
 
 .ms-result-time {
     font-size: 44px;
@@ -308,7 +308,7 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.ms-result-best { font-size: 13.5px; color: #9aa6d8; font-variant-numeric: tabular-nums; min-height: 17px; }
+.ms-result-best { font-size: 13.5px; color: var(--tok-text-dim); font-variant-numeric: tabular-nums; min-height: 17px; }
 
 /* ── 排行榜 ── */
 
@@ -348,7 +348,7 @@ body {
 .ms-lb-row.ms-lb-top2 { background: rgb(203, 213, 225, 0.10); }
 .ms-lb-row.ms-lb-top3 { background: rgb(64, 184, 255, 0.12); }
 
-.ms-lb-rank { width: 22px; flex-shrink: 0; color: #9aa6d8; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ms-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .ms-lb-name {
     flex: 1;
@@ -361,12 +361,12 @@ body {
 
 .ms-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.ms-lb-empty { color: #56618f; font-size: 13px; padding: 10px 0; }
+.ms-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
 
 .ms-lb-status {
     min-height: 16px;
     font-size: 11.5px;
-    color: #56618f;
+    color: var(--tok-text-mute);
     margin-top: 4px;
 }
 
@@ -377,14 +377,14 @@ body {
     margin-top: 6px;
 }
 
-.ms-username-label { font-size: 11.5px; color: #9aa6d8; flex-shrink: 0; }
+.ms-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
 
 .ms-username {
     flex: 1;
     min-width: 0;
     font-family: inherit;
     font-size: 13px;
-    color: #e8ecff;
+    color: var(--tok-text);
     background: rgb(255, 255, 255, 0.07);
     border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 9px;
@@ -410,7 +410,7 @@ body {
     font-family: inherit;
     font-size: 14px;
     font-weight: 700;
-    color: #e8ecff;
+    color: var(--tok-text);
     background: rgb(255, 255, 255, 0.08);
     border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 13px;
@@ -431,7 +431,7 @@ body {
     box-shadow: 0 8px 24px rgb(64, 184, 255, 0.35);
 }
 
-.ms-btn-ghost { background: transparent; color: #9aa6d8; }
+.ms-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 .ms-btn-big { font-size: 16px; padding: 14px 34px; }
 
@@ -452,7 +452,7 @@ body {
     text-align: center;
     background:
         radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.12), transparent),
-        linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #101a2b 100%);
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #101a2b 100%);
 }
 
 .ms-start::-webkit-scrollbar { display: none; }
@@ -468,7 +468,7 @@ body {
 
 .ms-subtitle {
     font-size: 13px;
-    color: #56618f;
+    color: var(--tok-text-mute);
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-top: -8px;
@@ -488,7 +488,7 @@ body {
 .ms-howto {
     font-size: 13.5px;
     line-height: 1.65;
-    color: #c3cdf2;
+    color: var(--tok-text-soft);
     max-width: 340px;
 }
 
@@ -502,7 +502,7 @@ body {
 .ms-best-chip {
     font-size: 12px;
     font-weight: 600;
-    color: #9aa6d8;
+    color: var(--tok-text-dim);
     background: rgb(255, 255, 255, 0.05);
     border: 1px solid rgb(255, 255, 255, 0.1);
     border-radius: 99px;
@@ -510,7 +510,7 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.ms-best-chip b { color: #40d8ff; font-weight: 700; }
+.ms-best-chip b { color: var(--tok-cyan); font-weight: 700; }
 
 .ms-start-footer { display: flex; gap: 10px; margin-top: 4px; }
 

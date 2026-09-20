@@ -11,9 +11,9 @@
 body {
     background:
         radial-gradient(ellipse 75% 45% at 50% -10%, rgb(125, 250, 208, 0.08), transparent),
-        linear-gradient(160deg, #05060f 0%, #0b0f26 55%, #0f1230 100%);
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #0f1230 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    color: #e8ecff;
+    color: var(--tok-text);
 }
 
 .hidden { display: none !important; }
@@ -46,14 +46,14 @@ body {
     font-size: 19px;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    color: #e8ecff;
+    color: var(--tok-text);
     min-width: 1.4ch;
     text-align: center;
 }
 
 .gd-par {
     font-size: 11.5px;
-    color: #7c89bf;
+    color: var(--tok-text-faint);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
@@ -80,15 +80,15 @@ body {
     top: 14px;
     font-size: 13px;
     font-weight: 700;
-    color: #0b0f26;
-    background: linear-gradient(120deg, #7dfad0, #40d8ff);
+    color: var(--tok-bg-2);
+    background: linear-gradient(120deg, #7dfad0, var(--tok-cyan));
     padding: 7px 18px;
     box-shadow: 0 8px 24px rgb(125, 250, 208, 0.35);
     animation: gd-toast-in 0.22s ease-out;
 }
 
 .gd-toast.warn {
-    background: linear-gradient(120deg, #ffd34d, #ff8a5c);
+    background: linear-gradient(120deg, var(--tok-gold), #ff8a5c);
     box-shadow: 0 8px 24px rgb(255, 138, 92, 0.35);
 }
 
@@ -119,7 +119,7 @@ body {
 
 .gd-subtitle {
     font-size: 12.5px;
-    color: #56618f;
+    color: var(--tok-text-mute);
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-top: -6px;
@@ -139,7 +139,7 @@ body {
 .gd-howto {
     font-size: 13px;
     line-height: 1.6;
-    color: #c3cdf2;
+    color: var(--tok-text-soft);
     max-width: 340px;
 }
 
@@ -152,7 +152,7 @@ body {
     font-family: inherit;
     font-size: 14.5px;
     font-weight: 700;
-    color: #e8ecff;
+    color: var(--tok-text);
     background: rgb(255, 255, 255, 0.07);
     border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 13px;
@@ -165,7 +165,7 @@ body {
 .gd-mode:active { transform: scale(0.95); }
 
 .gd-mode-daily {
-    background: linear-gradient(120deg, #34d399, #40d8ff);
+    background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
     border: none;
     box-shadow: 0 8px 24px rgb(52, 211, 153, 0.35);
 }
@@ -173,7 +173,7 @@ body {
 .gd-level-label {
     font-size: 11px;
     font-weight: 700;
-    color: #56618f;
+    color: var(--tok-text-mute);
     letter-spacing: 0.14em;
     text-transform: uppercase;
 }
@@ -252,7 +252,7 @@ body {
 
 .gd-card-line {
     font-size: 14px;
-    color: #9aa6d8;
+    color: var(--tok-text-dim);
     font-variant-numeric: tabular-nums;
 }
 
@@ -266,7 +266,7 @@ body {
     text-shadow: 0 0 26px rgb(125, 250, 208, 0.45);
 }
 
-.gd-over-sub { font-size: 13px; color: #9aa6d8; min-height: 16px; font-variant-numeric: tabular-nums; }
+.gd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
 .gd-btn-row {
     display: flex;
@@ -279,7 +279,7 @@ body {
     font-family: inherit;
     font-size: 14.5px;
     font-weight: 700;
-    color: #e8ecff;
+    color: var(--tok-text);
     background: rgb(255, 255, 255, 0.08);
     border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 13px;
@@ -292,12 +292,12 @@ body {
 .gd-btn:active { transform: scale(0.96); }
 
 .gd-btn-primary {
-    background: linear-gradient(120deg, #34d399, #40d8ff);
+    background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
     border: none;
     box-shadow: 0 8px 24px rgb(52, 211, 153, 0.4);
 }
 
-.gd-btn-ghost { background: transparent; color: #9aa6d8; }
+.gd-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 /* ── 排行榜 ── */
 
@@ -338,7 +338,7 @@ body {
 .gd-lb-row.gd-lb-top2 { background: rgb(203, 213, 225, 0.10); }
 .gd-lb-row.gd-lb-top3 { background: rgb(52, 211, 153, 0.12); }
 
-.gd-lb-rank { width: 22px; flex-shrink: 0; color: #9aa6d8; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gd-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .gd-lb-name {
     flex: 1;
@@ -351,12 +351,12 @@ body {
 
 .gd-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.gd-lb-empty { color: #56618f; font-size: 13px; padding: 10px 0; }
+.gd-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
 
 .gd-lb-status {
     min-height: 16px;
     font-size: 11.5px;
-    color: #56618f;
+    color: var(--tok-text-mute);
     margin-top: 4px;
 }
 
@@ -367,14 +367,14 @@ body {
     margin-top: 6px;
 }
 
-.gd-username-label { font-size: 11.5px; color: #9aa6d8; flex-shrink: 0; }
+.gd-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
 
 .gd-username {
     flex: 1;
     min-width: 0;
     font-family: inherit;
     font-size: 13px;
-    color: #e8ecff;
+    color: var(--tok-text);
     background: rgb(255, 255, 255, 0.07);
     border: 1px solid rgb(255, 255, 255, 0.14);
     border-radius: 9px;
@@ -405,7 +405,7 @@ body {
 
 @media (width >= 1024px) {
     .gd-side-row b {
-        color: #e8ecff;
+        color: var(--tok-text);
         font-variant-numeric: tabular-nums;
     }
 }

@@ -256,7 +256,7 @@ body {
     border-radius: 6px;
     border: 1px solid var(--primary-color);
     background: rgb(0, 0, 0, 0.35);
-    color: var(--tok-text, #e8ecff);
+    color: var(--tok-text, var(--tok-text));
     font-size: 15px;
     outline: none;
 }
@@ -265,7 +265,7 @@ body {
 
 #usernameTip {
     font-size: 13px;
-    color: var(--tok-text-dim, #9aa6d8);
+    color: var(--tok-text-dim, var(--tok-text-dim));
     margin-top: 4px;
 }
 

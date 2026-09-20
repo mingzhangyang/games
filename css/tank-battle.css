@@ -148,7 +148,7 @@ body {
 }
 
 .game-over h2 { color: #6ee7b7; }
-.victory h2 { color: #34d399; }
+.victory h2 { color: var(--tok-success); }
 .paused h2 { color: #9fe8c6; }
 
 .health-bar {
@@ -349,7 +349,7 @@ html, body {
 
 .dpad-btn.active, .dpad-btn:active {
     background: rgb(16, 185, 129, 0.65);
-    border-color: #34d399;
+    border-color: var(--tok-success);
     color: #fff;
     box-shadow: 0 0 15px rgb(16, 185, 129, 0.8), inset 0 2px 4px rgb(0, 0, 0, 0.3);
 }
