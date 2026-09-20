@@ -82,6 +82,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     hasLead: !!(header && header.querySelector('[class*="topbar-lead"], .game-topbar-group')),
                     hasCenter: !!(header && header.querySelector('.game-topbar-center')),
                     hasActions: !!actions,
+                    h1Count: document.querySelectorAll('h1').length,
                     rightRoles: actions ? Array.from(actions.querySelectorAll('[data-chrome]')).map(roleOf) : [],
                     chrome: Array.from(document.querySelectorAll('[data-chrome]')).map(label),
                     footerVisible: vis(footer),
@@ -95,6 +96,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             if (!snap.hasLead) fail(name, vp.tag, lang, '顶栏缺左簇');
             if (!snap.hasCenter) fail(name, vp.tag, lang, '顶栏缺中槽 .game-topbar-center');
             if (!snap.hasActions) fail(name, vp.tag, lang, '顶栏缺右簇');
+            if (snap.h1Count < 1) fail(name, vp.tag, lang, '页面缺 <h1>（语义标题，可为 .sr-only 视觉隐藏）');
 
             const canonSeen = snap.rightRoles.filter(r => CANON.includes(r));
             const expect = CANON.filter(c => canonSeen.includes(c));

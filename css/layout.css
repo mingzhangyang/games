@@ -105,6 +105,20 @@
     min-height: 100dvh;
 }
 
+/* 视觉隐藏（屏幕阅读器可读）：语义 h1 等辅助标签用 */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 /* ── 顶栏：左 home / 中信息 / 右动作 ── */
 .game-topbar {
     width: 100%;

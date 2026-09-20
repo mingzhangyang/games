@@ -45,6 +45,7 @@
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="tt-topbar-center game-topbar-center">
+                <h1 class="sr-only">Tetris</h1>
                 <div class="game-title-pill">
                     <div class="game-hud-box" id="scoreHud">
                         <span class="hud-label" id="scoreHudLabel">Score</span>
@@ -65,7 +66,7 @@
             </div>
         </header>
 
-        <div class="game-main">
+        <main class="game-main">
         <div class="game-board game-stage">
             <canvas id="tetris" width="400" height="800"></canvas>
             <canvas id="particleCanvas" width="400" height="800"></canvas>
@@ -136,7 +137,7 @@
             </div>
 
         </div>
-        </div>
+        </main>
 
     <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
