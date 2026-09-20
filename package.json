@@ -10,7 +10,8 @@
     "gen": "node scripts/gen-from-registry.mjs",
     "serve:static": "node scripts/serve-static.mjs 8899",
     "verify": "node scripts/verify-all.mjs",
-    "verify:quick": "node scripts/verify-all.mjs --quick"
+    "verify:quick": "node scripts/verify-all.mjs --quick",
+    "verify:daily": "node scripts/verify-daily.mjs"
   },
   "devDependencies": {
     "vite": "^7.0.0",

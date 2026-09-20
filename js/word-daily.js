@@ -15,6 +15,7 @@ import { updateMoreGames } from './more-games.js';
 import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { hashString, mulberry32, todayKeyDisplay } from './daily.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -27,16 +28,12 @@ function storageParse(key, fallback) {
     }
 }
 
-// UTC+8 日期键，与全球玩家同一天
-function dayKey(date = new Date()) {
-    const d = new Date(date.getTime() + 8 * 3600 * 1000);
-    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-}
+// UTC+8 日期键（YYYY-MM-DD）：委托 js/daily.js 唯一口径（原手写 dayKey 退役）
 
 // 距离下一个 UTC+8 午夜的毫秒数
 function msUntilNextDay() {
     const now = Date.now();
-    const tomorrow = dayKey(new Date(now + 8 * 3600 * 1000 + 24 * 3600 * 1000));
+    const tomorrow = todayKeyDisplay(now + 8 * 3600 * 1000 + 24 * 3600 * 1000);
     const [y, m, dd] = tomorrow.split('-').map(Number);
     // UTC+8 的午夜 = UTC 前一日 16:00
     return Date.UTC(y, m - 1, dd) - 8 * 3600 * 1000 - now;
@@ -48,25 +45,7 @@ function dailyNumber() {
     return Math.floor((Date.now() - EPOCH) / (24 * 3600 * 1000)) + 1;
 }
 
-function mulberry32(seed) {
-    let a = seed;
-    return function () {
-        a |= 0;
-        a = (a + 0x6D2B79F5) | 0;
-        let t = Math.imul(a ^ (a >>> 15), 1 | a);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-}
-
-function hashString(str) {
-    let h = 1779033703;
-    for (let i = 0; i < str.length; i++) {
-        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
-        h = (h << 13) | (h >>> 19);
-    }
-    return h >>> 0;
-}
+// 每日种子哈希 / PRNG：已收敛到 js/daily.js
 
 /* ────────────────────────── data prep ────────────────────────── */
 
@@ -366,7 +345,7 @@ class WordDailyGame {
         this.answer = '';
         this.hint = '';
         this.puzzleNum = dailyNumber();
-        this.day = dayKey();
+        this.day = todayKeyDisplay();
         this.revealing = false;
         this.practiceCount = 0;
 
@@ -554,7 +533,7 @@ class WordDailyGame {
     startDaily() {
         this.mode = 'daily';
         this.puzzleNum = dailyNumber();
-        this.day = dayKey();
+        this.day = todayKeyDisplay();
         const entry = dailyEntry(this.langMode, this.puzzleNum, this.wordLen());
         if (this.langMode === 'zh') {
             this.answer = entry.w;
@@ -1186,7 +1165,7 @@ class WordDailyGame {
         const d = new Date();
         // 今天没玩（或刚输）不影响此前连胜的展示；从最近一天往前数
         for (;;) {
-            const key = dayKey(d);
+            const key = todayKeyDisplay(d.getTime());
             const v = hist[key];
             if (typeof v === 'number' && v > 0) {
                 streak++;
@@ -1426,7 +1405,7 @@ class WordDailyGame {
     startRolloverWatch() {
         // 页面跨天时自动刷新到新题
         this._rolloverTimer = setInterval(() => {
-            const now = dayKey();
+            const now = todayKeyDisplay();
             if (now !== this.day && this.mode === 'daily') {
                 this.puzzleNum = dailyNumber();
                 this.startDaily();

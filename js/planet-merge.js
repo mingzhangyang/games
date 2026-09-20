@@ -15,6 +15,7 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { todayKey, todayKeyDisplay, hashString, mulberry32 } from './daily.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -40,36 +41,7 @@ function clamp(v, min, max) {
     return v < min ? min : v > max ? max : v;
 }
 
-// UTC+8 日期键：每日挑战以同一天为界，全球一致
-function todayKey() {
-    const d = new Date(Date.now() + 8 * 3600 * 1000);
-    return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
-}
-
-function todayKeyDisplay() {
-    const k = todayKey();
-    return `${k.slice(0, 4)}-${k.slice(4, 6)}-${k.slice(6, 8)}`;
-}
-
-function hashString(str) {
-    let h = 1779033703;
-    for (let i = 0; i < str.length; i++) {
-        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
-        h = (h << 13) | (h >>> 19);
-    }
-    return h >>> 0;
-}
-
-function mulberry32(seed) {
-    let a = seed;
-    return function () {
-        a |= 0;
-        a = (a + 0x6D2B79F5) | 0;
-        let t = Math.imul(a ^ (a >>> 15), 1 | a);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-}
+// UTC+8 日期键 / 每日种子哈希 / PRNG：已收敛到 js/daily.js（UTC+8 唯一口径）
 
 function formatNumber(n) {
     return Number(n).toLocaleString('en-US');

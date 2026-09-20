@@ -17,6 +17,7 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { todayKey as dailyDateKey, todayKeyDisplay as dailyDateStr } from './daily.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -24,15 +25,9 @@ const CANVAS_WIDTH = 480;
 const CANVAS_HEIGHT = 640;
 const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 
-// UTC+8 日期（与全站每日挑战口径一致：word-daily/planet-merge/gravity/needle-awn）
-function dailyDateStr() {
-    const d = new Date(Date.now() + 8 * 3600 * 1000);
-    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-}
-
-function dailyDateKey() {
-    return dailyDateStr().replace(/-/g, '');
-}
+// UTC+8 日期：已收敛到 js/daily.js（dailyDateKey=YYYYMMDD / dailyDateStr=YYYY-MM-DD）。
+// ⚠ 榜单页签也必须用 dailyDateKey()——曾用本地时区算读取键、UTC+8 写提交键，
+//   导致 UTC+8 以外玩家每日榜恒空（线上 bug，2026-09 修复）。
 
 const STORAGE_KEYS = {
     UNLOCKED_STAGE: 'sf_unlocked_stage',
@@ -3163,8 +3158,9 @@ class SwordFlightGame {
             tabEndless.classList.remove('active');
         }
 
-        const now = new Date();
-        const dateKey = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+        // 修复：此处曾用本地时区 new Date() 算读取键，与提交侧 dailyDateKey()（UTC+8）
+        // 不一致，UTC+8 以外的玩家提交到 A 键、读取 B 键，每日榜恒为空。
+        const dateKey = dailyDateKey();
         const gameKey = (tab === 'endless') ? 'sword-flight' : `sword-flight-d${dateKey}`;
 
         try {

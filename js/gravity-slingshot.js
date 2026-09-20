@@ -21,6 +21,7 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { todayKey as todayCompact, mulberry32, hashStringFNV as hashStr } from './daily.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -219,29 +220,8 @@ const MIN_DRAG = 18;         // 最小拖拽（逻辑像素）
 
 /* ────────────────────────── 随机与日期 ────────────────────────── */
 
-function hashStr(s) {
-    let h = 2166136261;
-    for (let i = 0; i < s.length; i++) {
-        h ^= s.charCodeAt(i);
-        h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
-}
-
-function mulberry32(seed) {
-    let a = seed >>> 0;
-    return function () {
-        a |= 0; a = (a + 0x6D2B79F5) | 0;
-        let t = Math.imul(a ^ (a >>> 15), 1 | a);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-}
-
-function todayCompact() {
-    const d = new Date(Date.now() + 8 * 3600 * 1000);
-    return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
-}
+// 每日关卡种子哈希（FNV-1a）/ PRNG / UTC+8 日期：已收敛到 js/daily.js
+// （hashStr 必须保持 FNV-1a：改算法会改变已发布每日关卡的序列）
 
 /* ────────────────────────── 物理引擎 ────────────────────────── */
 

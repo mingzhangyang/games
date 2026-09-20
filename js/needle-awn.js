@@ -18,6 +18,7 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { todayKey } from './daily.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -1147,13 +1148,8 @@ class GameEngine {
     }
 
     getTodayDateString() {
-        const now = new Date();
-        // 采用 UTC+8 确定每日种子与键值
-        const utc8 = new Date(now.getTime() + (8 * 60 + now.getTimezoneOffset()) * 60000);
-        const y = utc8.getFullYear();
-        const m = String(utc8.getMonth() + 1).padStart(2, '0');
-        const d = String(utc8.getDate()).padStart(2, '0');
-        return `${y}${m}${d}`;
+        // UTC+8 唯一口径已收敛到 js/daily.js（原 getTimezoneOffset 手写版退役）
+        return todayKey();
     }
 
     /* ────────────────────────── 游戏流程启动 ────────────────────────── */
