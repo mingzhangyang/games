@@ -46,6 +46,9 @@ import re
 import sys
 import pathlib
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from lib.registry import REGISTRY  # noqa: E402
+
 DRY = '--dry' in sys.argv
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -683,7 +686,15 @@ def main():
 
     print('\n'.join(report))
     print('=' * 76)
+    bad = [r for r in report if '!!' in r]
+    if bad:
+        print(f'\n{len(bad)} 处未完成 ❌')
+    return 1 if bad else 0
 
 
 if __name__ == '__main__':
-    main()
+    # 表里的每页参数（顶栏选择器顺序、footer hint id）派生不出来，留在本地；
+    # 但条目必须仍是注册表里挂 topbar cap 的页，未覆盖的新页只提示不拦。
+    REGISTRY.report_coverage('topbar', list(PAGES), label='PAGES',
+                             checker='node scripts/verify-chrome.mjs')
+    sys.exit(main())

@@ -37,18 +37,18 @@ import re
 import sys
 import pathlib
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from lib.registry import REGISTRY  # noqa: E402
+
 DRY = '--dry' in sys.argv
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# 页面 → (css/文件前缀, 侧栏类, 卡片类前缀)
-PAGES = [
-    ('planet-merge',      'pm'),
-    ('hoop-shot',         'hs'),
-    ('needle-awn',        'na'),
-    ('tower-defense',     'td'),
-    ('gravity-slingshot', 'gd'),
-    ('sword-flight',      'sf'),
-]
+# 页面 → 前缀，全部来自注册表（games.config.json 挂 drawer cap 的游戏）。
+# 以前这里是手写数组：新游戏不补进来，脚本就一声不吭地不迁移它。
+# tetris 豁免 —— 它是 2026-09-19 的手工原型，结构与本脚本模板不同（`#statsPanels`
+# 无前缀），由 verify-tetris-drawer.mjs 单独守。
+PAGES = [(g['id'], g['prefix'])
+         for g in REGISTRY.with_cap('drawer') if g['id'] != 'tetris']
 
 report = []
 
@@ -339,7 +339,11 @@ def main():
 
     print('\n'.join(report))
     print('=' * 72)
+    bad = [r for r in report if '!!' in r]
+    if bad:
+        print(f'\n{len(bad)} 处未完成 ❌')
+    return 1 if bad else 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

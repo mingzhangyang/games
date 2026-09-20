@@ -83,3 +83,22 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
 ## codegen 脚本
 
 - ⚠️ **Never mutate a string while iterating its own match offsets.** The dedupe pass in `add-drawer-i18n.py` sliced `block` inside a loop over `finditer(block)` — the offsets are relative to the *original* string, so once the first removal shifts them, every later cut lands on arbitrary characters (it split `'开始新的每日挑战？…'` mid-string), and reassembling with `tail[len(block):]` reused an already-shortened length. All six JS files became syntax errors and had to be hand-repaired, because the damage spanned entire i18n tables and `git checkout` would have discarded the session's real work. Safe form: collect every hit's **absolute** `(start, end)`, delete **backwards on the whole `src`**, return once. Pair it with: `--dry` support, a `cp`'d scratch copy + `node --check` before touching real files, and **`md5sum` twice** to prove idempotence — never trust the script's own printed "skipped" report, since `tail -N` truncates lines and misleads. Related: a dedupe window that starts at `pos` can never see the key it is looking for, because `pos` points at that key's own indentation and the slice has no leading `\n` for `r'\n[ \t]*key:'` to match — start the preview at `pos - 1`
+
+- ⚠️ **迁移器会静默空转，而空转和成功长得一模一样。** 2026-09-20 排查发现两处叠在一起：
+  (1) `add-drawer-i18n.py` / `add-chrome-i18n.py` 的表定位正则还是 `const LANGUAGES = {`，
+  而 P2 的 i18n 收敛早把源码改成了 `const LANGUAGES = makeText({` —— 12 个页面全部匹配不上，
+  脚本逐页打印「!! 找不到表」然后**以 0 退出**，看上去和「无事可做」没区别；
+  (2) 页面清单是手写数组，新游戏不补进去就根本不在循环里，连一行输出都不会有。
+  两者合起来：lumen 上线后跑 CLAUDE.md 写的那套迁移命令，屏幕上一片祥和，实际什么都没发生。
+  规约：迁移器的页面清单一律 `REGISTRY.with_cap(...)` 派生；表名走 `i18nVar`；
+  `!!` 必须换成非零退出（`return 1 if bad else 0`）；跨版本的结构假设（表被 `makeText(...)` 包过）
+  写进正则时要同时认新旧两种形态。反向验证：摘掉一条注册表条目跑脚本，必须红。
+- ⚠️ **修活一个迁移器之前，先确认它要写的东西现在还该不该写。** 上面那两个脚本一旦恢复匹配，
+  就会按 P2 之前的清单往每页插 `sound` / `moreGames` / `close` —— 而这三个键那时已被收进
+  `js/i18n.js` 的 `COMMON_TEXT`，靠 `makeText` 原型链兜底，页面里留副本会被
+  `verify-i18n.mjs` 的「无公共键字面量副本」判红。也就是说「修好」的脚本会当场把 12 个页面改红。
+  判据同样不能再抄一份：`scripts/lib/i18n_common.py` 现读 `COMMON_TEXT` 的键集合并剔除。
+- ⚠️ **收紧一条断言时，先确认宽松版不是在容忍某种合法形态。** 给 `add-chrome-i18n.py` 加
+  「缺 hint 文案要报错」之后，minesweeper 立刻两条 `!!` —— 它的页脚提示本就是按插旗模式切换的
+  `hintDefault` / `hintFlagMode` 两条，不是单个 `hint`。正确做法是按事实放宽成 `hint\w*` 家族，
+  而不是给 minesweeper 加一条豁免：豁免会把「这页有合法的另一种形态」记成「这页有问题」。

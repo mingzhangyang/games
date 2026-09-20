@@ -14,30 +14,39 @@ import re
 import sys
 import pathlib
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from lib.registry import REGISTRY  # noqa: E402
+from lib.i18n_common import common_keys  # noqa: E402
+
 DRY = '--dry' in sys.argv
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# 页面 → (i18n 表变量名, 语言块顺序)
-#   注：四个 LANGUAGES 页面（pm/hs/td/gd）里，`this.TEXT` 只是指向该表的类属性别名，
+# 页面清单 + 表变量名来自注册表（drawer cap；表名取 i18nVar，缺省 LANGUAGES）。
+#   注：LANGUAGES 页面（pm/hs/td/gd）里 `this.TEXT` 只是指向该表的类属性别名，
 #   真正声明在模块级 `const LANGUAGES = {...}`。别照 "TEXT" 去找，找不到。
-PAGES = [
-    ('planet-merge',      'LANGUAGES', 'en-first'),
-    ('hoop-shot',         'LANGUAGES', 'en-first'),
-    ('needle-awn',        'I18N',      'zh-first'),
-    ('tower-defense',     'LANGUAGES', 'en-first'),
-    ('gravity-slingshot', 'LANGUAGES', 'en-first'),
-    ('sword-flight',      'I18N',      'zh-first'),
-]
+# 语言块顺序不进注册表 —— 它是源文件的事实，直接从源码探测（见 detect_order）。
+# tetris 豁免，理由同 apply-stats-drawer.py。
+PAGES = [(g['id'], REGISTRY.i18n_var(g))
+         for g in REGISTRY.with_cap('drawer') if g['id'] != 'tetris']
 
 ZH = ('stats', '数据统计')
 EN = ('stats', 'Stats')
 ZH_CLOSE = ('close', '关闭')
 EN_CLOSE = ('close', 'Close')
+# close 在 P2 归入 COMMON_TEXT，各页经原型链兜底；再往页面插一份副本会被
+# verify-i18n 的「无公共键字面量副本」判红。判据从 js/i18n.js 现读，别写死。
+INJECT_CLOSE = 'close' not in common_keys()
 
 
 def find_table_start(src, name):
-    """找 `const <name> = {` 的起始下标。"""
-    m = re.search(r'\bconst\s+' + re.escape(name) + r'\s*=\s*\{', src)
+    """找 `const <name> = {` 的起始下标。
+
+    ⚠️ P2 的 i18n 收敛把所有语言表包进了 `makeText({...})`，源码从
+    `const LANGUAGES = {` 变成 `const LANGUAGES = makeText({`。本函数的正则
+    当时没跟着改，于是**每一页都匹配不上**，inject() 一路返回「!! 找不到表」，
+    脚本打完报告以 0 退出 —— 整个迁移器静默空转了一整轮。两种形态都要认。
+    """
+    m = re.search(r'\bconst\s+' + re.escape(name) + r'\s*=\s*(?:makeText\()?\{', src)
     return m
 
 
@@ -123,10 +132,31 @@ def inject(src, name, lang, key, value):
     return src[:pos] + line + src[pos:], f'{lang}.{key} 已插入'
 
 
+def detect_order(src, name):
+    """从源码判断语言块谁在前 —— 这是文件的事实，不该另存一份清单。
+
+    找不到表（页面改了表名而注册表没跟上）直接报错，不要猜。
+    """
+    m = find_table_start(src, name)
+    if not m:
+        raise SystemExit(f'找不到 const {name} = {{ —— 注册表的 i18nVar 与源码不符？')
+    rest = src[m.end():]
+    ien = rest.find('\n    en: {')
+    izh = rest.find('\n    zh: {')
+    if ien < 0 or izh < 0:   # 缩进不是 4 空格时退回宽松匹配
+        ien = re.search(r'\n\s*en:\s*\{', rest)
+        izh = re.search(r'\n\s*zh:\s*\{', rest)
+        if not ien or not izh:
+            raise SystemExit(f'{name} 里找不到 en/zh 两个语言块')
+        ien, izh = ien.start(), izh.start()
+    return 'en-first' if ien < izh else 'zh-first'
+
+
 def main():
-    for page, name, order in PAGES:
+    for page, name in PAGES:
         f = ROOT / f'js/{page}.js'
         src0 = f.read_text(encoding='utf-8')
+        order = detect_order(src0, name)
         src = src0
         msgs = []
         for lang, (k, v), (ck, cv) in (
@@ -135,16 +165,18 @@ def main():
             # ⚠️ 两个键都要插！早期版本只 inject 了 (k, v)，(ck, cv) 解包后从未使用，
             # 于是 close 永远没写进表里，抽屉关闭钮只剩 fallback 的英文 'Close'。
             src, m1 = inject(src, name, lang, k, v)
-            src, m2 = inject(src, name, lang, ck, cv)
             msgs.append(m1)
-            msgs.append(m2)
+            if INJECT_CLOSE:
+                src, m2 = inject(src, name, lang, ck, cv)
+                msgs.append(m2)
             # 收口早期 bug 叠出的重复键
             src, n = dedupe(src, name, lang, k)
             if n:
                 msgs.append(f'清理 {lang}.{k} 重复 {n} 行')
-            src, n = dedupe(src, name, lang, ck)
-            if n:
-                msgs.append(f'清理 {lang}.{ck} 重复 {n} 行')
+            if INJECT_CLOSE:
+                src, n = dedupe(src, name, lang, ck)
+                if n:
+                    msgs.append(f'清理 {lang}.{ck} 重复 {n} 行')
         if src != src0:
             if DRY:
                 msgs.append('→ 有改动（DRY）')
@@ -158,4 +190,6 @@ if __name__ == '__main__':
     print('=' * 72)
     print('补 stats/close i18n 键' + ('  [DRY]' if DRY else ''))
     print('=' * 72)
+    if not INJECT_CLOSE:
+        print('  close 已归 COMMON_TEXT（js/i18n.js），本轮只补 stats')
     main()

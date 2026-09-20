@@ -6,6 +6,7 @@
 // → 收一张该按钮的元素级截图，供人工目视。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH } from './lib/browser.mjs';
+import { registry } from './lib/registry.mjs';
 import { mkdir } from 'node:fs/promises';
 
 const CHROME = process.env.CHROME_BIN ||
@@ -22,7 +23,20 @@ const TARGETS = {
     'needle-awn': ['na-btn-pause-home', 'na-btn-result-home'],
     'sword-flight': ['sf-btn-menu', 'sf-btn-victory-menu', 'sf-btn-go-menu', 'sf-btn-open-rank'],
     'word-daily': ['wd-btn-next', 'wd-btn-stats-inline', 'wd-btn-share-inline', 'wd-modal-next', 'wd-share'],
+    'lumen': ['lm-btn-next', 'lm-btn-replay', 'lm-btn-menu1', 'lm-btn-copy', 'lm-btn-menu2', 'lm-btn-again'],
 };
+
+// TARGETS 是每页的按钮 id，派生不出来，但漏页必须红：新游戏挂了 topbar cap 却
+// 没有条目，此前只是「不测它」，悄无声息（lumen 就是这么漏掉的）。
+// 豁免三页，理由各不相同，详见 docs/backlog.md：
+//   gomoku      —— 结果面板没有「图标 + 文字」按钮，无可测
+//   tetris / minesweeper —— 图标早于本次迁移就有，本校验器一直没覆盖（待补）
+registry.assertCovered({
+    cap: 'topbar',
+    covered: Object.keys(TARGETS),
+    exempt: ['gomoku', 'tetris', 'minesweeper'],
+    label: 'TARGETS',
+});
 
 const REVEAL = (ids) => {
     for (const id of ids) {

@@ -24,6 +24,10 @@ const AUGMENT = {
     'sword-flight':      { gameVar: 'game',            runningExpr: 'g.isPlaying && !g.isPaused', startMethod: 'startFlight', startArgs: ['endless'] },
     'lumen':             { gameVar: 'lmGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
 };
+// ⚠ 曾经这里写的是 `.filter(g => AUGMENT[g.id])` —— 手工表静默收窄注册表：
+// 新游戏挂了 drawer cap 却忘了补 AUGMENT，校验器当它不存在，抽屉没接也全绿。
+// 现在缺条目直接抛错。tetris 是唯一豁免，理由见上。
+registry.assertCovered({ cap: 'drawer', covered: Object.keys(AUGMENT), exempt: ['tetris'], label: 'AUGMENT' });
 const PAGES = registry.withCap('drawer')
     .filter(g => AUGMENT[g.id])
     .map(g => ({ name: g.id, pre: g.prefix, ...AUGMENT[g.id] }));

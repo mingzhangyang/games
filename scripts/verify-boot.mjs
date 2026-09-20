@@ -12,10 +12,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
+import { registry } from './lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const PAGES = ['gomoku', 'gravity-slingshot', 'hoop-shot', 'lumen', 'minesweeper', 'needle-awn',
-    'planet-merge', 'reversi', 'sword-flight', 'tetris', 'tower-defense', 'word-daily'];
+// 页面清单来自注册表：骨架契约内的页面（caps:topbar）。新游戏一进
+// games.config.json 就自动纳入本校验，不必再手工往数组里补一行。
+// math-rain / tank-battle 不在骨架契约内，故不在此列。
+const PAGES = registry.withCap('topbar');
 
 let failed = 0;
 const ok = (cond, label, extra) => {
@@ -62,9 +65,9 @@ ok(ranC === true, "readyState='complete' → 立即执行");
 
 console.log('\n▶ 源码收敛（防手写复活）');
 for (const g of PAGES) {
-    const src = readFileSync(join(ROOT, 'js', `${g}.js`), 'utf8');
-    ok(src.includes("import { onReady } from './boot.js';"), `${g}.js import onReady`);
-    ok(!/addEventListener\(\s*['"]DOMContentLoaded['"]/.test(src), `${g}.js 无 DOMContentLoaded 注册`);
+    const src = readFileSync(join(ROOT, g.entry), 'utf8');
+    ok(src.includes("import { onReady } from './boot.js';"), `${g.entry} import onReady`);
+    ok(!/addEventListener\(\s*['"]DOMContentLoaded['"]/.test(src), `${g.entry} 无 DOMContentLoaded 注册`);
 }
 for (const f of readdirSync(join(ROOT, 'js')).filter(f => f.endsWith('.js'))) {
     if (f === 'boot.js') continue;

@@ -59,3 +59,26 @@ npm 进程并发，重跑即可。CI/脚本编排中 install 与 build 必须串
 ✅ 已完成：index.html main 升级（P4-2 批次补齐，hero/footer 保持在外）、
 tank-battle main 升级（P4-2 最小接骨架：layout.css 引入 + `<main class="tb-main">`
 display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不变）。
+
+---
+
+## verify-button-icons 未覆盖 tetris / minesweeper 的结果按钮
+
+**现象**：`scripts/verify-button-icons.mjs` 的 `TARGETS` 只列了 8 页（2026-09-20 补上
+lumen 后 9 页）。tetris（`js/tetris.js` 3 处 `ICONS.`）与 minesweeper（`js/minesweeper.js`
+8 处）确实有「图标 + 文字」的结果/动作按钮，却一直不在表内，等于没被量过
+inline-flex / 单 svg / 图标 15px / 基线偏移这四条。
+
+**定位**：这两页的图标早于 2026-09-18 那批按钮迁移就已手工落地，迁移脚本
+`scripts/apply-button-icons.py` 的 EDITS 表因此没有它们的条目，校验器的 TARGETS
+也就跟着没写。不是断言被关掉，而是从未打开。
+
+**当前状态**：`TARGETS` 旁的 `registry.assertCovered({ cap: 'topbar', … })` 把这两页
+连同 gomoku 列入 `exempt` 显式豁免 —— 漏页从此会红，但这两页的豁免是白纸黑字的
+待办，不是分工。gomoku 不算缺口：它的结果面板本来就没有图标 + 文字按钮
+（`js/gomoku.js` 零处 `ICONS.`），无可测。
+
+**修法**：给两页的结果按钮补 `TARGETS` 条目（tetris 需先确认其结果面板按钮 id），
+跑 `node scripts/verify-button-icons.mjs` 看四条量化断言是否通过；不通过的按
+`docs/traps.md` 的「按钮图标」节处理（量计算样式，别量 getBoundingClientRect）。
+修完把 `exempt` 里对应的 id 删掉——`assertCovered` 会在豁免失效时主动报「豁免可以删了」。

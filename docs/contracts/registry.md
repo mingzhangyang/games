@@ -19,9 +19,47 @@ registry.withCap('drawer');      // 具备某能力的游戏
 registry.byId('sword-flight');   // 单个，找不到直接抛错（宁可红不可静默）
 registry.site();                 // 站点级字段（origin / scoresWorker / siteName / publisher / ogImageDir）
 registry.hrefs();                // href 文件名集合（校验器拼 URL 用）
+registry.assertCovered({ cap, covered, exempt, label });  // 手工表覆盖率守卫，见 §1.2
+```
+
+Python 侧同构（`scripts/lib/registry.py`，迁移脚本用）：
+
+```python
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from lib.registry import REGISTRY
+REGISTRY.all() / .with_cap(cap) / .by_id(id) / .site() / .hrefs()
+REGISTRY.i18n_var(game)                       # i18n 表变量名，缺省 LANGUAGES
+REGISTRY.assert_covered(cap, covered, exempt, label)      # 硬失败，见 §1.2
+REGISTRY.report_coverage(cap, covered, label, checker)    # 提示 + 陈旧硬失败
 ```
 
 **校验器 / 迁移脚本一律从这里拿页面清单，禁止再各自维护一份字符串数组。**
+
+### 1.1 派生 vs 手工：判据
+
+能从注册表推出来的，**必须**推：页面集合（`with_cap`）、前缀（`prefix`）、
+入口文件（`entry`）、i18n 表名（`i18nVar`）。
+推不出来的留在脚本本地：测试数据（`gameVar` / 按钮 id）、迁移参数
+（顶栏选择器顺序、`--frame-*` 值、字面替换片段）。这些是脚本自己的事，
+塞进 `games.config.json` 会把登记源变成垃圾场 —— 迁移参数在迁移跑完那刻就死了。
+
+第三类是**源文件的事实**（语言块 en/zh 谁在前）：既不派生也不手写，**现读源码**。
+`add-drawer-i18n.py` 的 `detect_order()` 是范例。
+
+### 1.2 手工表必须有覆盖率守卫
+
+只要一张手工表是按页面 id 索引的，它就会悄悄收窄注册表：新游戏没进表，
+脚本／校验器当它不存在，全绿。两种守卫按表的性质选：
+
+| 表的性质 | 守卫 | 漏页 | 陈旧条目 |
+|---|---|---|---|
+| 校验器的覆盖面（AUGMENT / TARGETS） | `assertCovered` | **红** | **红** |
+| 一次性迁移器的参数（PAGES / EDITS） | `report_coverage` | 提示 | **红** |
+
+分界线：迁移器的表是**历史**迁移的参数，新页是直接照契约写的（lumen 就是），
+硬拦只会逼人往永不执行的分支里补条目；而校验器的表就是覆盖面本身，漏一页
+就是少测一页。豁免（`exempt`）必须在调用处写明理由，并在 `docs/backlog.md`
+留条目 —— `assertCovered` 会在豁免失效时主动提醒「可以删了」。
 
 ## 2. caps 语义
 

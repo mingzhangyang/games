@@ -5,7 +5,7 @@
 //   1) 行为：mock globalThis.fetch，验证 submitScore / fetchBoard 的
 //      请求 URL、方法、请求体、ok 判定、超时兜底、escapeHTML 黄金值。
 //      （submitScore 绝不抛出；fetchBoard 失败抛出由页面兜底——契约不变。）
-//   2) 收敛：9 个游戏文件均 import ./leaderboard.js，且不再存在
+//   2) 收敛：注册表里挂 leaderboard cap 的游戏均 import ./leaderboard.js，且不再存在
 //      硬编码 Workers URL、本地 escapeHTML 定义、榜单 AbortController 样板。
 //
 // 用法：node scripts/verify-leaderboard.mjs（无需浏览器/服务器）
@@ -13,11 +13,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
+import { registry } from './lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LB_PATH = join(ROOT, 'js', 'leaderboard.js');
-const GAMES = ['tetris', 'hoop-shot', 'minesweeper', 'planet-merge', 'reversi',
-    'gravity-slingshot', 'sword-flight', 'needle-awn', 'tower-defense'];
+// 清单来自注册表：挂 leaderboard cap 的游戏。此前是手写的 9 个，lumen 上线后
+// 漏在外面（verify-registry 只校验 cap ⟺ 代码事实，管不到别的脚本的手写数组）。
+const GAMES = registry.withCap('leaderboard');
 
 let failed = 0;
 const ok = (cond, label, extra) => {
@@ -108,8 +110,8 @@ try {
 
 console.log('\n▶ 源码收敛（防复制粘贴复活）');
 for (const g of GAMES) {
-    const src = readFileSync(join(ROOT, 'js', `${g}.js`), 'utf8');
-    ok(src.includes("from './leaderboard.js'"), `${g}.js import ./leaderboard.js`);
+    const src = readFileSync(join(ROOT, g.entry), 'utf8');
+    ok(src.includes("from './leaderboard.js'"), `${g.entry} import ./leaderboard.js`);
 }
 for (const f of readdirSync(join(ROOT, 'js')).filter(f => f.endsWith('.js'))) {
     if (f === 'leaderboard.js') continue;

@@ -13,6 +13,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.registry import REGISTRY  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 DRY = "--dry" in sys.argv
 
@@ -498,4 +501,8 @@ def main():
 
 
 if __name__ == "__main__":
+    # 每页的 --frame-* / canvas 类 / extra_class 是迁移参数，不进注册表；
+    # 但条目必须仍是注册表里的骨架页，未覆盖的新页只提示不拦。
+    REGISTRY.report_coverage("topbar", [p["html"].replace(".html", "") for p in PAGES],
+                             label="PAGES", checker="node scripts/layout-metrics.mjs")
     main()

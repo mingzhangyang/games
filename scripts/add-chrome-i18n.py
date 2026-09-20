@@ -32,6 +32,10 @@ import re
 import sys
 import pathlib
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from lib.registry import REGISTRY  # noqa: E402
+from lib.i18n_common import drop_common  # noqa: E402
+
 DRY = '--dry' in sys.argv
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -42,27 +46,20 @@ def log(page, msg):
     report.append(f'  [{page}] {msg}')
 
 
-# 页面 → i18n 表名（pm/hs/td/gd/ms/rv/wd/gm/tt 叫 LANGUAGES；na/sf 叫 I18N）
-PAGES = {
-    'gravity-slingshot': 'LANGUAGES',
-    'hoop-shot':         'LANGUAGES',
-    'planet-merge':      'LANGUAGES',
-    'sword-flight':      'I18N',
-    'needle-awn':        'I18N',
-    'tower-defense':     'LANGUAGES',
-    'reversi':           'LANGUAGES',
-    'minesweeper':       'LANGUAGES',
-    'word-daily':        'LANGUAGES',
-    'gomoku':            'LANGUAGES',
-    'tetris':            'LANGUAGES',
-}
+# 页面 → i18n 表名，来自注册表：骨架契约内的页面（topbar cap），
+# 表名取 i18nVar（缺省 LANGUAGES；目前只有 na/sf 写成 I18N）。
+PAGES = {g['id']: REGISTRY.i18n_var(g) for g in REGISTRY.with_cap('topbar')}
 
 # 每页要补的键 → {en, zh}。已存在的跳过。
+# sound / moreGames 写在这里是 P2 之前的事实；收敛之后它们归 COMMON_TEXT，
+# 页面再留字面量副本会被 verify-i18n 判红 —— 由 drop_common 按 js/i18n.js 现读剔除，
+# 不在此处手工删，这样将来公共键增减也不必再回来改本表。
 NEW_KEYS = {
     'home':      {'en': 'Home', 'zh': '返回主页'},
     'sound':     {'en': 'Sound', 'zh': '声音'},
     'moreGames': {'en': 'More games', 'zh': '更多游戏'},
 }
+NEW_KEYS, _COMMON_NOTE = drop_common(NEW_KEYS, 'NEW_KEYS')
 
 # 各页 hint 文案（只在缺 hint 时补；已有 hint 的页面保留其原文案）
 HINTS = {
@@ -131,7 +128,9 @@ def find_lang_blocks(src, table):
     于是"语言块"被截在嵌套对象内部 —— 补键就插进了 `helpText: { ... }` 的花括号里，
     11 个文件同时变成语法错误。必须按花括号深度定位第一层。
     """
-    tm = re.search(r'^const ' + re.escape(table) + r' = \{', src, re.M)
+    # ⚠️ 同 add-drawer-i18n：表已被 P2 包进 makeText(...)，两种形态都要认，
+    #    否则这里返回 None → 每页都报「找不到 en/zh 块」→ 脚本空转。
+    tm = re.search(r'^const ' + re.escape(table) + r' = (?:makeText\()?\{', src, re.M)
     if not tm:
         return None
     table_open = src.index('{', tm.start())
@@ -165,6 +164,17 @@ def has_key(src, block, key):
     """该语言块里是否已有顶层 `key:`。"""
     bs, be = block
     return re.search(r'(?m)^[ \t]+' + re.escape(key) + r'\s*:', src[bs:be]) is not None
+
+
+def has_hint_key(src, block):
+    """该语言块里是否有页脚提示文案。
+
+    ⚠️ 不能只认 `hint:` —— minesweeper 的提示按插旗模式在
+    `hintDefault` / `hintFlagMode` 之间切换，是 `hint*` 家族而非单键。
+    只认精确键会把这类页面误报成「缺文案」。
+    """
+    bs, be = block
+    return re.search(r'(?m)^[ \t]+hint\w*\s*:', src[bs:be]) is not None
 
 
 def block_indent(src, block):
@@ -224,6 +234,8 @@ def main():
     print('=' * 74)
     print('补 / 归一 chrome i18n 键' + ('   [DRY RUN]' if DRY else ''))
     print('=' * 74)
+    if _COMMON_NOTE:
+        print('  ' + _COMMON_NOTE)
 
     for page, table in PAGES.items():
         f = ROOT / 'js' / f'{page}.js'
@@ -258,8 +270,14 @@ def main():
                 if not has_key(src, blk, k):
                     missing.append((k, vals[lang]))
             # hint
-            if page in HINTS and not has_key(src, blk, 'hint'):
-                missing.append(('hint', HINTS[page][lang]))
+            if not has_hint_key(src, blk):
+                if page in HINTS:
+                    missing.append(('hint', HINTS[page][lang]))
+                else:
+                    # 以前这里只有 `page in HINTS` 一个条件：新页既没 hint 键、
+                    # HINTS 里也没文案时，脚本一声不吭地跳过。必须报出来。
+                    log(page, f'!! {lang} 缺 hint 键，且 HINTS 表里没有该页文案 —— '
+                              f'请在页面 i18n 表里补 hint，或给 HINTS 加条目')
             todo[lang] = missing
 
         # ⚠️ 倒序处理：先插 zh（偏移在后）再插 en，避免偏移失准。
@@ -284,7 +302,12 @@ def main():
 
     print('\n'.join(report))
     print('=' * 74)
+    # `!!` 是「该做的事没做成」。以前一律 0 退出，迁移失败看起来跟成功一样。
+    bad = [r for r in report if '!!' in r]
+    if bad:
+        print(f'\n{len(bad)} 处未完成 ❌')
+    return 1 if bad else 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

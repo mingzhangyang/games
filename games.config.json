@@ -600,7 +600,6 @@
         "PuzzleGame",
         "CasualGame"
       ],
-      "i18nVar": "I18N",
       "caps": [
         "sidebar",
         "drawer",

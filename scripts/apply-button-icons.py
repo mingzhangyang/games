@@ -22,6 +22,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.registry import REGISTRY  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 DRY = "--dry" in sys.argv
 
@@ -458,4 +461,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # EDITS 是字面替换片段，派生不出来；这里只体检「条目指向的页还在不在」。
+    REGISTRY.report_coverage(
+        "topbar",
+        sorted({p.replace(".html", "") for p, _, _ in EDITS if p.endswith(".html")}),
+        label="EDITS", checker="node scripts/verify-button-icons.mjs")
     sys.exit(main())

@@ -13,10 +13,11 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
+import { registry } from './lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const PAGES = ['gomoku', 'gravity-slingshot', 'hoop-shot', 'lumen', 'minesweeper', 'needle-awn',
-    'planet-merge', 'reversi', 'sword-flight', 'tetris', 'tower-defense', 'word-daily'];
+// 页面清单来自注册表：骨架契约内的页面（caps:topbar）。新游戏自动纳入。
+const PAGES = registry.withCap('topbar');
 const KEYS = ['sound', 'language', 'moreGames', 'close', 'copied', 'usernameLabel'];
 
 let failed = 0;
@@ -52,10 +53,13 @@ ok(Object.getPrototypeOf(plain.en) === COMMON_TEXT.en && Object.getPrototypeOf(p
 
 console.log('\n▶ 源码收敛（防复制粘贴复活）');
 for (const g of PAGES) {
-    const p = join(ROOT, 'js', `${g}.js`);
-    const src = readFileSync(p, 'utf8');
-    ok(src.includes("import { makeText } from './i18n.js';"), `${g}.js import makeText`);
-    ok(/const (LANGUAGES|I18N) = makeText\(\{/.test(src), `${g}.js 语言表经 makeText 包装`);
+    const src = readFileSync(join(ROOT, g.entry), 'utf8');
+    const i18nVar = g.i18nVar || 'LANGUAGES';
+    ok(src.includes("import { makeText } from './i18n.js';"), `${g.entry} import makeText`);
+    // 表名由注册表的 i18nVar 决定（缺省 LANGUAGES）—— 与迁移脚本同一判据，
+    // 页面改名而注册表没跟着改，这里就会红。
+    ok(new RegExp(`const ${i18nVar} = makeText\\(\\{`).test(src),
+        `${g.entry} 语言表 ${i18nVar} 经 makeText 包装`);
 }
 const LITS = {
     en: { sound: 'Sound', language: '中文', moreGames: 'More games', close: 'Close', copied: 'Copied!', usernameLabel: 'Username (Enter to save)' },
