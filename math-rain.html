@@ -30,6 +30,8 @@
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='28' fill='white' font-family='Segoe UI,Arial' dy='.3em'%3E%F0%9F%A7%AE%3C/text%3E%3C/svg%3E">
         <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/math-rain/math-rain.css">
     <link rel="stylesheet" href="css/more-games.css">
     <style>
@@ -156,6 +158,7 @@
 </head>
 
 <body>
+    <main class="mr-main">
     <!-- 游戏容器 -->
     <div id="game-container">
         <!-- 游戏头部信息 -->
@@ -509,6 +512,7 @@
             </div>
         </div>
     </div>
+    </main>
 
     <!-- Compatibility globals used by inline handlers -->
     <script>
@@ -553,65 +557,7 @@
     </script>
         <!-- registry:end seo-script -->
 
-    <script type="module">
-        (async () => {
-            try {
-                const [
-                    { default: LanguageManager },
-                    { default: ShopManager },
-                    { default: ConfigManager },
-                    { default: PerformanceMonitor },
-                    { default: ExpressionGenerator },
-                    { default: QuestionBankManager },
-                    { default: DifficultyManager },
-                    { default: SoundManager },
-                    { default: AnimationEngine },
-                    particleEffectsModule,
-                    mobileAdapterModule
-                ] = await Promise.all([
-                    import('./js/math-rain/i18n/language-manager.js'),
-                    import('./js/math-rain/shop-manager.js'),
-                    import('./js/config-manager.js'),
-                    import('./js/performance-monitor.js'),
-                    import('./js/math-rain/expression-generator.js'),
-                    import('./js/math-rain/question-bank-manager.js'),
-                    import('./js/math-rain/difficulty-manager.js'),
-                    import('./js/math-rain/sound-manager.js'),
-                    import('./js/math-rain/animation-engine.js'),
-                    import('./js/math-rain/particle-effects.js').catch(() => null),
-                    import('./js/math-rain/mobile-adapter.js').catch(() => null)
-                ]);
-
-                window.ConfigManager = ConfigManager;
-                window.PerformanceMonitor = PerformanceMonitor;
-                window.ExpressionGenerator = ExpressionGenerator;
-                window.QuestionBankManager = QuestionBankManager;
-                window.DifficultyManager = DifficultyManager;
-                window.SoundManager = SoundManager;
-                window.AnimationEngine = AnimationEngine;
-                if (particleEffectsModule?.default) {
-                    window.ParticleSystem = particleEffectsModule.default;
-                }
-                if (mobileAdapterModule?.default) {
-                    window.MobileAdapter = mobileAdapterModule.default;
-                }
-
-                window.languageManager = new LanguageManager();
-                window.languageManager.initialize();
-
-                if (window.__pendingLanguageSelection) {
-                    window.languageManager.selectLanguage(window.__pendingLanguageSelection);
-                    window.__pendingLanguageSelection = null;
-                }
-
-                window.shopManager = new ShopManager();
-
-                await import('./js/math-rain/main.js');
-            } catch (error) {
-                console.error('Failed to bootstrap Math Rain:', error);
-            }
-        })();
-    </script>
+    <script type="module" src="js/math-rain/page-boot.js"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>
 </body>
