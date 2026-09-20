@@ -26,6 +26,14 @@
     --tok-text-dim: #9aa6d8;
     --tok-text-mute: #56618f;
 
+    /* 功能语义色（P3-1 扩表：跨 ≥4 页复用的高频色收编；旧 15 变量原样保留） */
+    --tok-cyan: #40d8ff;      /* 高亮/悬停/强调（minesweeper/reversi/gravity/tower-defense 等） */
+    --tok-gold: #ffd34d;      /* 金币/星星/奖励 */
+    --tok-success: #34d399;   /* 成功/胜势（兼 tank-battle 主色） */
+    --tok-danger: #ff6b7a;    /* 失败/炸弹/危险 */
+    --tok-text-soft: #c3cdf2; /* 次级标题文字 */
+    --tok-text-faint: #7c89bf;/* 弱化说明文字 */
+
     /* 主色（各页覆盖 --tok-accent 即可换肤） */
     --tok-accent: #667eea;
     --tok-accent-2: #764ba2;
