@@ -27,6 +27,12 @@ body {
     color: #fff;
 }
 
+/* P4-2 接骨架：main 语义容器布局透传（body flex 居中不受影响） */
+.tb-main {
+    display: contents;
+}
+
+
 #gameContainer {
     position: relative;
     border: 4px solid #333;

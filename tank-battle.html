@@ -29,9 +29,13 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/tank-battle.css">
 </head>
 <body>
+    <!-- P4-2 最小接骨架：main 语义 + sr-only h1（横屏掌机形态保持覆盖式 HUD，不套竖屏 topbar/sidebar） -->
+    <main class="tb-main">
+        <h1 class="sr-only">Tank Battle - 坦克大战</h1>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="gameUI">
@@ -114,7 +118,7 @@
             </button>
         </div>
     </div>
-
+    </main>
 
         <!-- registry:begin seo-script -->
     <script>
