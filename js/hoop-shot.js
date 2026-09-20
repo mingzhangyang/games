@@ -9,6 +9,7 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
+import { submitScore, fetchBoard } from './leaderboard.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -230,7 +231,6 @@ const PREVIEW_DT = 1 / 60;
 const PREVIEW_STEPS = 28;       // 瞄准弹道预览步数（约 0.47s，只提示弧线不含碰撞）
 
 const STREAK_FIRE = 3;          // 连中 3 球触发火球
-const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 const LB_GAME = 'hoop-shot';
 
 /* ────────────────────────── game ────────────────────────── */
@@ -956,19 +956,11 @@ class HoopShotGame {
 
     async submitScore() {
         if (this.score <= 0) return;
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            await fetch(`${LEADERBOARD_URL}/scores`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ game: LB_GAME, name: this.getUsername(), score: this.score }),
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
+        // 网络层收敛到 js/leaderboard.js（超时/cors/ok 判定统一；false=未进全球榜）
+        const ok = await submitScore({ game: LB_GAME, name: this.getUsername(), score: this.score });
+        if (ok) {
             await this.fetchLeaderboard();
-        } catch (e) {
+        } else {
             // Worker 未部署：保留本地榜，并在结算面板提示未进全球榜
             const statusEl = this.el['lb-status'];
             if (statusEl) statusEl.textContent = this.TEXT.submitFail;
@@ -980,15 +972,7 @@ class HoopShotGame {
         const statusEl = this.el['lb-status'];
         if (!list) return;
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`${LEADERBOARD_URL}/scores?game=${LB_GAME}`, {
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await fetchBoard(LB_GAME);
             if (this.state !== 'gameover') return;
             list.textContent = '';
             if (!Array.isArray(data) || data.length === 0) {

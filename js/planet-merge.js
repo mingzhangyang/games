@@ -16,16 +16,9 @@ import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay, hashString, mulberry32 } from './daily.js';
+import { submitScore, fetchBoard } from './leaderboard.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
-
-function escapeHTML(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
 
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError，所有访问必须兜底
 function storageParse(key, fallback) {
@@ -251,8 +244,6 @@ const RESTITUTION = 0.18;
 const AIR_DAMP = 0.16;     // 指数阻尼系数（每秒）
 const MAX_SPEED = 2400;    // px/s，防隧穿
 const PHYS_STEP = 1 / 120; // 固定物理步长
-
-const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 
 /* ────────────────────────── audio ────────────────────────── */
 
@@ -1095,18 +1086,10 @@ class PlanetMergeGame {
         const statusEl = this.el['lb-status'];
         const list = this.el['lb-list'];
         if (!list) return;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
         try {
             // 共享榜 Worker：每日榜是按天一个 game id（planet-merge-d<YYYYMMDD>）
             const game = this.leaderboardTab === 'daily' ? `planet-merge-d${this.dailyDay}` : 'planet-merge';
-            const res = await fetch(`${LEADERBOARD_URL}/scores?game=${game}`, {
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await fetchBoard(game);
             if (this.state !== 'gameover') return;
             if (!Array.isArray(data) || data.length === 0) {
                 list.textContent = '';
@@ -1122,7 +1105,6 @@ class PlanetMergeGame {
             }
             if (statusEl) statusEl.textContent = '';
         } catch (e) {
-            clearTimeout(timeoutId);
             // Worker 未部署/网络失败：保留本地榜
             if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
         }
@@ -1141,23 +1123,14 @@ class PlanetMergeGame {
 
     async submitScore() {
         if (this.score <= 0) return;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
         // 与旧 Worker 语义一致：每次提交同时进总榜与当日榜（两个 game id）
         const entries = [
             { game: 'planet-merge', score: this.score },
             { game: `planet-merge-d${this.dailyDay}`, score: this.score }
         ];
-        try {
-            await Promise.all(entries.map(entry => fetch(`${LEADERBOARD_URL}/scores`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: this.getUsername(), ...entry }),
-                signal: controller.signal,
-                mode: 'cors'
-            })));
-            clearTimeout(timeoutId);
-        } catch (e) {
+        // 网络层收敛到 js/leaderboard.js（任一失败即提示未进全球榜）
+        const results = await Promise.all(entries.map(entry => submitScore({ name: this.getUsername(), ...entry })));
+        if (results.some(r => !r)) {
             // 提交失败：本地榜已由 recordLocalScore 记录，但要让玩家知道未进全球榜
             this.showToast(this.TEXT.lbSubmitFail);
         }

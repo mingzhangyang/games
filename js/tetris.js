@@ -6,6 +6,7 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet as safeGetItem, storageSet as safeSetItem } from './safe-storage.js';
 import { track } from './analytics.js';
+import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -19,13 +20,7 @@ const sfx = createSfx({
     gameover: { freqs: [392, 329.63, 261.63, 196], delay: 0.18, type: 'sawtooth', dur: 0.45, vol: 0.22 }
 });
 
-function escapeHTML(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
+// escapeHTML 已收敛到 js/leaderboard.js（本地重复实现退役）
 
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError
 function safeParseJSON(text, fallback) {
@@ -290,21 +285,8 @@ async function fetchAndDisplayGlobalScores() {
     loadingElement.textContent = TEXT.loadingScores;
     
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
-        
-        const response = await fetch('https://game-scores.orangely.workers.dev/scores?game=tetris', {
-            signal: controller.signal,
-            mode: 'cors'
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const data = await response.json();
+        // 网络层收敛到 js/leaderboard.js（侧栏拉取保持 5s 宽限）
+        const data = await fetchBoard('tetris', { timeoutMs: 5000 });
 
         if (data && data.length > 0) {
             const top5 = data.slice(0, 5);
@@ -1245,21 +1227,10 @@ class Tetris {
         localScores = localScores.slice(-20); // 只保留最近20条
         safeSetItem('tetris_scores', JSON.stringify(localScores));
 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
-
-            await fetch('https://game-scores.orangely.workers.dev/scores', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ game: 'tetris', name: username, score: this.score }),
-                signal: controller.signal,
-                mode: 'cors'
-            });
-
-            clearTimeout(timeoutId);
-        } catch (e) {
-            console.log('Score upload failed, saved locally only:', e.message);
+        // 网络层收敛到 js/leaderboard.js（false=仅存本地）
+        const ok = await submitScore({ game: 'tetris', name: username, score: this.score });
+        if (!ok) {
+            console.log('Score upload failed, saved locally only');
         }
         // 一次拉取全站分数：侧边面板与结算弹窗共用，避免重复请求
         const globalScores = await fetchAndDisplayGlobalScores();
@@ -1276,22 +1247,9 @@ class Tetris {
             isGlobalScores = leaderboard.length > 0;
         } else {
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
-
-                const res = await fetch('https://game-scores.orangely.workers.dev/scores?game=tetris', {
-                    signal: controller.signal,
-                    mode: 'cors'
-                });
-
-                clearTimeout(timeoutId);
-
-                if (res.ok) {
-                    leaderboard = await res.json();
-                    isGlobalScores = true;
-                } else {
-                    throw new Error(`HTTP ${res.status}`);
-                }
+                // 网络层收敛到 js/leaderboard.js
+                leaderboard = await fetchBoard('tetris');
+                isGlobalScores = true;
             } catch (e) {
                 console.log('Using local scores for leaderboard:', e.message);
             }

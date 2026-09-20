@@ -15,6 +15,7 @@ import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from
 import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { submitScore, fetchBoard } from './leaderboard.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -570,18 +571,9 @@ class ReversiGame {
         local.push({ name: ensurePlayerName() || 'Anonymous', score: streak });
         local.sort((a, b) => b.score - a.score);
         storageSet('rv_local_scores', JSON.stringify(local.slice(0, 30)));
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            await fetch('https://game-scores.orangely.workers.dev/scores', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ game: 'reversi', name: ensurePlayerName() || 'Anonymous', score: streak }),
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
-        } catch (e) {
+        // 网络层收敛到 js/leaderboard.js（false=未进全球榜）
+        const ok = await submitScore({ game: 'reversi', name: ensurePlayerName() || 'Anonymous', score: streak });
+        if (!ok) {
             // Worker 未部署：保留本地榜，但要提示玩家未进全球榜
             this.showToast(this.TEXT.submitFail);
         }
@@ -592,15 +584,7 @@ class ReversiGame {
         const statusEl = this.el['lb-status'];
         if (!list) return;
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch('https://game-scores.orangely.workers.dev/scores?game=reversi', {
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await fetchBoard('reversi');
             if (!this.lbOpen) return;
             list.textContent = '';
             if (!Array.isArray(data) || data.length === 0) {

@@ -22,6 +22,7 @@ import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey as todayCompact, mulberry32, hashStringFNV as hashStr } from './daily.js';
+import { submitScore, fetchBoard } from './leaderboard.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -1055,12 +1056,9 @@ class GravityGame {
         track('gravity-slingshot', 'finish');
 
         const game = `gravity-d${date}`;
-        fetch('https://game-scores.orangely.workers.dev/scores', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ game, name: ensurePlayerName() || 'Anonymous', score: this.totalLaunches }),
-            mode: 'cors'
-        }).then(() => this.fetchDailyBoard(game)).catch(() => {
+        // 网络层收敛到 js/leaderboard.js（false=未进全球榜，走本地兜底）
+        submitScore({ game, name: ensurePlayerName() || 'Anonymous', score: this.totalLaunches }).then(ok => {
+            if (ok) return this.fetchDailyBoard(game);
             this.renderLocalBoard();
             if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbOffline;
         });
@@ -1107,15 +1105,7 @@ class GravityGame {
         const statusEl = this.el['lb-status'];
         if (!list) return;
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`https://game-scores.orangely.workers.dev/scores?game=${encodeURIComponent(game)}`, {
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await fetchBoard(game);
             if (this.phase !== 'holed' || !this.el.over || this.el.over.classList.contains('hidden')) return;
             list.textContent = '';
             if (!Array.isArray(data) || data.length === 0) {

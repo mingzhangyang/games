@@ -19,12 +19,12 @@ import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey } from './daily.js';
+import { submitScore } from './leaderboard.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
 const ARENA_WIDTH = 480;
 const ARENA_HEIGHT = 640;
-const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 
 const STORAGE_KEYS = {
     UNLOCKED_LEVEL: 'na_unlocked_level',
@@ -1573,17 +1573,9 @@ class GameEngine {
         const name = getPlayerName() || ensurePlayerName();
         const gameKey = this.mode === 'daily' ? `needle-awn-d${this.getTodayDateString()}` : 'needle-awn';
 
-        try {
-            await fetch(`${LEADERBOARD_URL}/scores`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    game: gameKey,
-                    name: name,
-                    score: this.score
-                })
-            });
-        } catch (e) {
+        // 网络层收敛到 js/leaderboard.js（原无超时/cors，统一补齐；false=未进金榜）
+        const ok = await submitScore({ game: gameKey, name, score: this.score });
+        if (!ok) {
             // 离线环境静默降级，但要让玩家知道未进金榜
             const t = I18N[getLang()] || I18N.zh;
             this.showToast(t.lbSubmitFail || '金榜上传失败', 2600);

@@ -19,6 +19,7 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { submitScore, fetchBoard } from './leaderboard.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -372,7 +373,6 @@ const Sfx = {
 const W = 480, H = 640;
 const COLS = 12, ROWS = 16, CELL = 40;
 const SELL_RATIO = 0.7;
-const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 const MAX_PARTICLES = 160;
 const MAX_FLOATERS = 40;
 
@@ -3185,23 +3185,8 @@ class TowerDefenseGame {
         if (this.el.over) this.el.over.classList.remove('hidden');
         if (this.el.username) this.el.username.value = ensurePlayerName() || '';
 
-        // 上报全球榜（带关卡维度）
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            await fetch(`${LEADERBOARD_URL}/scores`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    game: `tower-defense-${this.level.id}`,
-                    name: ensurePlayerName() || 'Anonymous',
-                    score: this.score
-                }),
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
-        } catch (e) { /* 离线时静默保留本地榜 */ }
+        // 上报全球榜（带关卡维度）；网络层收敛到 js/leaderboard.js（false=静默保留本地榜）
+        await submitScore({ game: `tower-defense-${this.level.id}`, name: ensurePlayerName() || 'Anonymous', score: this.score });
         this.fetchLeaderboard();
     }
 
@@ -3276,15 +3261,7 @@ class TowerDefenseGame {
         const statusEl = this.el['lb-status'];
         if (!list || this.state !== 'over') return;
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`${LEADERBOARD_URL}/scores?game=tower-defense-${this.level.id}`, {
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await fetchBoard(`tower-defense-${this.level.id}`);
             if (this.state !== 'over') return;
             list.textContent = '';
             if (!Array.isArray(data) || data.length === 0) {

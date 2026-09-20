@@ -31,7 +31,7 @@ const SUITE = [
     { name: 'gomoku', script: 'scripts/verify-gomoku.mjs', args: [], needsServer: true },
     { name: 'button-icons', script: 'scripts/verify-button-icons.mjs', args: [], needsServer: true },
     { name: 'daily', script: 'scripts/verify-daily.mjs', args: [], needsServer: false },
-    { name: 'leaderboard', script: 'scripts/verify-leaderboard.mjs', args: [], needsServer: true },
+    { name: 'leaderboard', script: 'scripts/verify-leaderboard.mjs', args: [], needsServer: false },
     { name: 'i18n', script: 'scripts/verify-i18n.mjs', args: [], needsServer: true },
     { name: 'tetris-topbar-mobile', script: 'scripts/verify-tetris-topbar-mobile.mjs', args: [], needsServer: true },
     { name: 'tetris-touch', script: 'scripts/verify-tetris-touch.mjs', args: [], needsServer: true },

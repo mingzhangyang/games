@@ -18,12 +18,12 @@ import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey as dailyDateKey, todayKeyDisplay as dailyDateStr } from './daily.js';
+import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
 const CANVAS_WIDTH = 480;
 const CANVAS_HEIGHT = 640;
-const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 
 // UTC+8 日期：已收敛到 js/daily.js（dailyDateKey=YYYYMMDD / dailyDateStr=YYYY-MM-DD）。
 // ⚠ 榜单页签也必须用 dailyDateKey()——曾用本地时区算读取键、UTC+8 写提交键，
@@ -3164,9 +3164,7 @@ class SwordFlightGame {
         const gameKey = (tab === 'endless') ? 'sword-flight' : `sword-flight-d${dateKey}`;
 
         try {
-            const res = await fetch(`${LEADERBOARD_URL}/scores?game=${gameKey}`);
-            if (!res.ok) throw new Error('Network error');
-            const data = await res.json();
+            const data = await fetchBoard(gameKey);
             this.renderLeaderboardList(data);
         } catch (e) {
             list.innerHTML = `<div class="sf-rank-loading">${I18N[getLang() === 'zh' ? 'zh' : 'en'].noRankData}</div>`;
@@ -3185,7 +3183,8 @@ class SwordFlightGame {
             const item = document.createElement('div');
             const topClass = idx === 0 ? 'top1' : idx === 1 ? 'top2' : idx === 2 ? 'top3' : '';
             item.className = `sf-rank-item ${topClass}`;
-            const safeName = (entry.name || '无名剑仙').replace(/[<>&"]/g, '');
+            // 剥字符正则退役：escapeHTML 转义而非删除（原名 "A & B" 不再丢 &）
+            const safeName = escapeHTML(entry.name || '无名剑仙');
             item.innerHTML = `
                 <span><b>#${idx + 1}</b> ${safeName}</span>
                 <b>${entry.score.toLocaleString()}</b>
@@ -3202,21 +3201,14 @@ class SwordFlightGame {
         const dateKey = dailyDateKey();
         const gameKey = (this.mode === 'daily') ? `sword-flight-d${dateKey}` : 'sword-flight';
 
-        try {
-            const res = await fetch(`${LEADERBOARD_URL}/scores`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ game: gameKey, name, score })
-            });
-            if (res.ok) {
-                fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].scoreSubmitted;
-                if (this.mode === 'daily') {
-                    storageSet(`${STORAGE_KEYS.DAILY_PREFIX}${dateKey}`, score.toString());
-                }
-            } else {
-                fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].scoreSubmitFailed;
+        // 网络层收敛到 js/leaderboard.js（原无超时，统一补齐；false=未进全球榜）
+        const ok = await submitScore({ game: gameKey, name, score });
+        if (ok) {
+            fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].scoreSubmitted;
+            if (this.mode === 'daily') {
+                storageSet(`${STORAGE_KEYS.DAILY_PREFIX}${dateKey}`, score.toString());
             }
-        } catch (e) {
+        } else {
             fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].scoreSubmitFailed;
         }
     }

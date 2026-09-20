@@ -7,6 +7,7 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
+import { submitScore, fetchBoard } from './leaderboard.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
@@ -184,7 +185,6 @@ const DIFFICULTIES = {
     hard:   { cols: 30, rows: 16, mines: 99, lb: 'minesweeper-hard' }
 };
 
-const LEADERBOARD_URL = 'https://game-scores.orangely.workers.dev';
 const LONG_PRESS_MS = 320;
 
 // 隐藏 / 翻开 / 插旗
@@ -734,19 +734,11 @@ class MinesweeperGame {
     async submitScore(seconds) {
         this.recordLocalScore(seconds);
         const game = DIFFICULTIES[this.diff].lb;
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            await fetch(`${LEADERBOARD_URL}/scores`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ game, name: ensurePlayerName() || 'Anonymous', score: seconds }),
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
+        // 网络层收敛到 js/leaderboard.js（超时/cors/ok 判定统一；false=未进全球榜）
+        const ok = await submitScore({ game, name: ensurePlayerName() || 'Anonymous', score: seconds });
+        if (ok) {
             await this.fetchLeaderboard();
-        } catch (e) {
+        } else {
             // Worker 未部署：保留本地榜，并在结算面板提示未进全球榜
             if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.submitFail;
         }
@@ -759,15 +751,7 @@ class MinesweeperGame {
         const atStart = this.lbTabGame === game;
         if (!list) return;
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`${LEADERBOARD_URL}/scores?game=${encodeURIComponent(game)}`, {
-                signal: controller.signal,
-                mode: 'cors'
-            });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await fetchBoard(game);
             if (!atStart || !Array.isArray(data)) return;
             list.textContent = '';
             if (data.length === 0) {
