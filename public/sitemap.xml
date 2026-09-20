@@ -5,6 +5,7 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  // registry:begin games
   <url>
     <loc>https://games.orangely.xyz/math-rain.html</loc>
     <changefreq>monthly</changefreq>
@@ -70,4 +71,5 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+  // registry:end games
 </urlset>

@@ -2,6 +2,7 @@
 // 用法：node scripts/verify-stats-drawer.mjs <baseUrl> [outDir]
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH } from './lib/browser.mjs';
+import { registry } from './lib/registry.mjs';
 import { existsSync, mkdirSync } from 'node:fs';
 
 const EXE = [
@@ -11,24 +12,20 @@ const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || '';
 if (OUT) mkdirSync(OUT, { recursive: true });
 
-const PAGES = [
-    // runningExpr：一个在页面里求值的表达式，判断"对局是否正在进行"。
-    // 各页暂停表示不同（pm/hs/na/td = state 字符串；sf = isPaused 布尔；gd = isPaused + phase），
-    // 所以由数据表描述，不写死在某处。
-    // startMethod：该页真正的"开一局"入口方法名（各页不同，不能统一猜）。
-    { name: 'planet-merge', pre: 'pm', gameVar: 'planetMergeGame',
-      runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
-    { name: 'hoop-shot', pre: 'hs', gameVar: 'hoopShotGame',
-      runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
-    { name: 'needle-awn', pre: 'na', gameVar: 'gameEngine',
-      runningExpr: 'g.state === "playing"', startMethod: 'startLevel', startArgs: [1] },
-    { name: 'tower-defense', pre: 'td', gameVar: 'tdGame',
-      runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
-    { name: 'gravity-slingshot', pre: 'gd', gameVar: 'gdGame',
-      runningExpr: '!g.isPaused && g.phase !== "menu"', startMethod: 'startLevelMode', startArgs: [0] },
-    { name: 'sword-flight', pre: 'sf', gameVar: 'game',
-      runningExpr: 'g.isPlaying && !g.isPaused', startMethod: 'startFlight', startArgs: ['endless'] },
-];
+// 抽屉页清单 = 挂 drawer cap 的游戏（tetris 的抽屉由 verify-tetris-drawer.mjs 专检，
+// 其启动路径与共享契约不同，不进本表的 AUGMENT）。
+// pre 前缀来自注册表；gameVar / runningExpr / startMethod 是本脚本自己的测试数据，不进注册表。
+const AUGMENT = {
+    'planet-merge':      { gameVar: 'planetMergeGame', runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
+    'hoop-shot':         { gameVar: 'hoopShotGame',    runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
+    'needle-awn':        { gameVar: 'gameEngine',      runningExpr: 'g.state === "playing"', startMethod: 'startLevel', startArgs: [1] },
+    'tower-defense':     { gameVar: 'tdGame',          runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
+    'gravity-slingshot': { gameVar: 'gdGame',          runningExpr: '!g.isPaused && g.phase !== "menu"', startMethod: 'startLevelMode', startArgs: [0] },
+    'sword-flight':      { gameVar: 'game',            runningExpr: 'g.isPlaying && !g.isPaused', startMethod: 'startFlight', startArgs: ['endless'] },
+};
+const PAGES = registry.withCap('drawer')
+    .filter(g => AUGMENT[g.id])
+    .map(g => ({ name: g.id, pre: g.prefix, ...AUGMENT[g.id] }));
 
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true };
 const DESKTOP = { width: 1280, height: 900, deviceScaleFactor: 1, hasTouch: false };

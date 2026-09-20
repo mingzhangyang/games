@@ -1,6 +1,7 @@
 // 布局截图 + 控制台错误巡检：node scripts/shots.mjs [outDir] [baseUrl]
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH } from './lib/browser.mjs';
+import { registry } from './lib/registry.mjs';
 import { mkdir } from 'node:fs/promises';
 
 const CHROME = process.env.CHROME_BIN ||
@@ -8,11 +9,7 @@ const CHROME = process.env.CHROME_BIN ||
 const OUT = process.argv[2] || 'C:/Users/mingz/AppData/Local/Temp/shots';
 const BASE = process.argv[3] || 'http://127.0.0.1:8899';
 
-const PAGES = (process.env.PAGES || [
-    'gravity-slingshot', 'hoop-shot', 'planet-merge', 'sword-flight', 'needle-awn',
-    'tower-defense', 'reversi', 'minesweeper', 'word-daily', 'gomoku', 'tetris',
-    'tank-battle', 'math-rain',
-].join(',')).split(',');
+const PAGES = (process.env.PAGES || registry.all().map(g => g.id).join(',')).split(',');
 
 const VIEWPORTS = [
     { tag: 'm', width: 390, height: 844 },

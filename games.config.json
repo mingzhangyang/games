@@ -14,12 +14,30 @@
       "href": "math-rain.html",
       "entry": "js/math-rain/main.js",
       "emoji": "🔢",
-      "title": { "doc": "Math Rain - Mathematical Expression Game", "seo": "Math Rain - Mathematical Expression Game" },
-      "name": { "en": "Math Rain", "zh": "数字雨" },
-      "desc": { "meta": "Math Rain 数字雨 — solve falling math equations before they land. Beat the timer, climb the streak and sharpen your mental arithmetic.", "og": "Beat the timer as equations fall from the sky.", "twitter": "Beat the timer as equations fall from the sky." },
-      "genre": ["EducationalGame", "PuzzleGame"],
-      "caps": ["analytics"],
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
+      "title": {
+        "doc": "Math Rain - Mathematical Expression Game",
+        "seo": "Math Rain - Mathematical Expression Game"
+      },
+      "name": {
+        "en": "Math Rain",
+        "zh": "数字雨"
+      },
+      "desc": {
+        "meta": "Math Rain 数字雨 — solve falling math equations before they land. Beat the timer, climb the streak and sharpen your mental arithmetic.",
+        "og": "Beat the timer as equations fall from the sky.",
+        "twitter": "Beat the timer as equations fall from the sky."
+      },
+      "genre": [
+        "EducationalGame",
+        "PuzzleGame"
+      ],
+      "caps": [
+        "analytics"
+      ],
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
       "themeColor": "#0b1020"
     },
     {
@@ -28,14 +46,42 @@
       "href": "tetris.html",
       "entry": "js/tetris.js",
       "emoji": "🟦",
-      "title": { "doc": "Tetris - Cool edition", "seo": "Tetris - Cool Edition" },
-      "name": { "en": "Tetris", "zh": "俄罗斯方块" },
-      "desc": { "meta": "Play Tetris - Cool Edition. A modern take on the classic puzzle game with particle effects and smooth animations.", "twitter": "Clear lines with smooth controls on desktop and mobile." },
-      "genre": ["Puzzle", "Arcade"],
-      "caps": ["sidebar", "drawer", "analytics"],
-      "scores": { "key": "tetris", "order": "desc", "maxScore": 2000000, "maxEntries": 50 },
-      "stage": { "w": 400, "h": 800 },
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
+      "title": {
+        "doc": "Tetris - Cool edition",
+        "seo": "Tetris - Cool Edition"
+      },
+      "name": {
+        "en": "Tetris",
+        "zh": "俄罗斯方块"
+      },
+      "desc": {
+        "meta": "Play Tetris - Cool Edition. A modern take on the classic puzzle game with particle effects and smooth animations.",
+        "twitter": "Clear lines with smooth controls on desktop and mobile."
+      },
+      "genre": [
+        "Puzzle",
+        "Arcade"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "key": "tetris",
+        "order": "desc",
+        "maxScore": 2000000,
+        "maxEntries": 50
+      },
+      "stage": {
+        "w": 400,
+        "h": 800
+      },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
       "themeColor": "#667eea"
     },
     {
@@ -44,12 +90,31 @@
       "href": "tank-battle.html",
       "entry": "js/tank-battle.js",
       "emoji": "🎯",
-      "title": { "doc": "Tank Battle - Retro Arcade", "seo": "Tank Battle - Retro Arcade" },
-      "name": { "en": "Tank Battle", "zh": "坦克大战" },
-      "desc": { "meta": "Play Tank Battle, a classic retro arcade tank game in your browser. Defend your base and destroy enemy tanks.", "og": "Protect your base, switch weapons, and survive waves of enemy tanks.", "twitter": "Classic browser tank shooter with keyboard controls and power-ups." },
-      "genre": ["Arcade", "Shooter", "Retro"],
-      "caps": ["analytics"],
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
+      "title": {
+        "doc": "Tank Battle - Retro Arcade",
+        "seo": "Tank Battle - Retro Arcade"
+      },
+      "name": {
+        "en": "Tank Battle",
+        "zh": "坦克大战"
+      },
+      "desc": {
+        "meta": "Play Tank Battle, a classic retro arcade tank game in your browser. Defend your base and destroy enemy tanks.",
+        "og": "Protect your base, switch weapons, and survive waves of enemy tanks.",
+        "twitter": "Classic browser tank shooter with keyboard controls and power-ups."
+      },
+      "genre": [
+        "Arcade",
+        "Shooter",
+        "Retro"
+      ],
+      "caps": [
+        "analytics"
+      ],
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
       "themeColor": "#1a2f1a"
     },
     {
@@ -58,12 +123,30 @@
       "href": "gomoku.html",
       "entry": "js/gomoku.js",
       "emoji": "⚫",
-      "title": { "doc": "Gomoku - Five in a Row", "seo": "Gomoku - Five in a Row" },
-      "name": { "en": "Gomoku", "zh": "五子棋" },
-      "desc": { "meta": "Play Gomoku (Five in a Row) online. Challenge the AI or play with a friend in this classic strategy board game.", "twitter": "Online Five in a Row with adaptive AI and two-player mode." },
-      "genre": ["BoardGame", "Strategy"],
-      "caps": ["analytics"],
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
+      "title": {
+        "doc": "Gomoku - Five in a Row",
+        "seo": "Gomoku - Five in a Row"
+      },
+      "name": {
+        "en": "Gomoku",
+        "zh": "五子棋"
+      },
+      "desc": {
+        "meta": "Play Gomoku (Five in a Row) online. Challenge the AI or play with a friend in this classic strategy board game.",
+        "twitter": "Online Five in a Row with adaptive AI and two-player mode."
+      },
+      "genre": [
+        "BoardGame",
+        "Strategy"
+      ],
+      "caps": [
+        "analytics",
+        "topbar"
+      ],
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
       "themeColor": "#151009"
     },
     {
@@ -72,14 +155,49 @@
       "href": "planet-merge.html",
       "entry": "js/planet-merge.js",
       "emoji": "🪐",
-      "title": { "doc": "Planet Merge — Cosmic Merge Puzzle", "seo": "Planet Merge — Drop, Merge, Chain the Cosmos" },
-      "name": { "en": "Planet Merge", "zh": "星球合成" },
-      "desc": { "meta": "Planet Merge — drop planets, merge identical ones, chain combos and forge a sun in this addictive physics merge game. Daily challenge with a global leaderboard.", "og": "Merge identical planets to forge a sun. Chain combos, beat the daily challenge, climb the global leaderboard.", "twitter": "Merge identical planets to forge a sun. Daily challenge with global leaderboard." },
-      "genre": ["CasualGame", "PuzzleGame"],
-      "caps": ["sidebar", "drawer", "frame-budget", "leaderboard", "daily", "analytics"],
-      "scores": { "key": "planet-merge", "order": "desc", "maxScore": 10000000, "maxEntries": 50, "daily": true, "dailyKeyPrefix": "planet-merge", "dailyTtlDays": 14 },
-      "stage": { "w": 420, "h": 640 },
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
+      "title": {
+        "doc": "Planet Merge — Cosmic Merge Puzzle",
+        "seo": "Planet Merge — Drop, Merge, Chain the Cosmos"
+      },
+      "name": {
+        "en": "Planet Merge",
+        "zh": "星球合成"
+      },
+      "desc": {
+        "meta": "Planet Merge — drop planets, merge identical ones, chain combos and forge a sun in this addictive physics merge game. Daily challenge with a global leaderboard.",
+        "og": "Merge identical planets to forge a sun. Chain combos, beat the daily challenge, climb the global leaderboard.",
+        "twitter": "Merge identical planets to forge a sun. Daily challenge with global leaderboard."
+      },
+      "genre": [
+        "CasualGame",
+        "PuzzleGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "key": "planet-merge",
+        "order": "desc",
+        "maxScore": 10000000,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "planet-merge",
+        "dailyTtlDays": 14
+      },
+      "stage": {
+        "w": 420,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
       "themeColor": "#0a0e24"
     },
     {
@@ -88,13 +206,34 @@
       "href": "word-daily.html",
       "entry": "js/word-daily.js",
       "emoji": "🔤",
-      "title": { "doc": "Word Daily — Daily Bilingual Word Puzzle", "seo": "Word Daily 每日猜词 — Daily Bilingual Word Puzzle" },
-      "name": { "en": "Word Daily", "zh": "每日猜词" },
-      "desc": { "meta": "Word Daily 每日猜词 — a bilingual daily word puzzle. Guess the English word or the Chinese idiom (成语) in 6 tries. Same puzzle for everyone each day. Keep your streak, share your grid.", "og": "Guess the word or the Chinese idiom in 6 tries. One puzzle a day for the whole world. Streaks, stats and spoiler-free sharing.", "twitter": "Guess the word or the Chinese idiom in 6 tries. One puzzle a day." },
-      "genre": ["PuzzleGame", "WordGame"],
-      "caps": ["daily"],
-      "sitemap": { "changefreq": "weekly", "priority": "0.8" },
-      "manifest": { "shortcut": true },
+      "title": {
+        "doc": "Word Daily — Daily Bilingual Word Puzzle",
+        "seo": "Word Daily 每日猜词 — Daily Bilingual Word Puzzle"
+      },
+      "name": {
+        "en": "Word Daily",
+        "zh": "每日猜词"
+      },
+      "desc": {
+        "meta": "Word Daily 每日猜词 — a bilingual daily word puzzle. Guess the English word or the Chinese idiom (成语) in 6 tries. Same puzzle for everyone each day. Keep your streak, share your grid.",
+        "og": "Guess the word or the Chinese idiom in 6 tries. One puzzle a day for the whole world. Streaks, stats and spoiler-free sharing.",
+        "twitter": "Guess the word or the Chinese idiom in 6 tries. One puzzle a day."
+      },
+      "genre": [
+        "PuzzleGame",
+        "WordGame"
+      ],
+      "caps": [
+        "daily",
+        "topbar"
+      ],
+      "sitemap": {
+        "changefreq": "weekly",
+        "priority": "0.8"
+      },
+      "manifest": {
+        "shortcut": true
+      },
       "themeColor": "#0a0e24"
     },
     {
@@ -103,15 +242,48 @@
       "href": "hoop-shot.html",
       "entry": "js/hoop-shot.js",
       "emoji": "🏀",
-      "title": { "doc": "Hoop Shot — Flick Basketball Arcade", "seo": "Hoop Shot 街机投篮 — Flick Basketball Arcade" },
-      "name": { "en": "Hoop Shot", "zh": "街机投篮" },
-      "desc": { "meta": "Hoop Shot 街机投篮 — flick the ball, arc it through the hoop, chain streaks for fire mode. One miss ends the run. Global top 10 leaderboard.", "og": "One finger, one miss, endless chase. Flick the ball into the moving hoop and catch fire for double points.", "twitter": "Flick the ball into the moving hoop. One miss ends the run." },
-      "genre": ["SportsGame", "ArcadeGame"],
-      "caps": ["sidebar", "drawer", "frame-budget", "leaderboard", "analytics"],
-      "scores": { "key": "hoop-shot", "order": "desc", "maxScore": 1000000, "maxEntries": 50 },
-      "stage": { "w": 420, "h": 640 },
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
-      "manifest": { "shortcut": true },
+      "title": {
+        "doc": "Hoop Shot — Flick Basketball Arcade",
+        "seo": "Hoop Shot 街机投篮 — Flick Basketball Arcade"
+      },
+      "name": {
+        "en": "Hoop Shot",
+        "zh": "街机投篮"
+      },
+      "desc": {
+        "meta": "Hoop Shot 街机投篮 — flick the ball, arc it through the hoop, chain streaks for fire mode. One miss ends the run. Global top 10 leaderboard.",
+        "og": "One finger, one miss, endless chase. Flick the ball into the moving hoop and catch fire for double points.",
+        "twitter": "Flick the ball into the moving hoop. One miss ends the run."
+      },
+      "genre": [
+        "SportsGame",
+        "ArcadeGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "key": "hoop-shot",
+        "order": "desc",
+        "maxScore": 1000000,
+        "maxEntries": 50
+      },
+      "stage": {
+        "w": 420,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
+      "manifest": {
+        "shortcut": true
+      },
       "themeColor": "#0a0e24"
     },
     {
@@ -120,18 +292,42 @@
       "href": "minesweeper.html",
       "entry": "js/minesweeper.js",
       "emoji": "💣",
-      "title": { "doc": "Minesweeper — Classic Logic Puzzle", "seo": "Minesweeper 扫雷 — Classic Logic Puzzle" },
-      "name": { "en": "Minesweeper", "zh": "扫雷" },
-      "desc": { "meta": "Minesweeper 扫雷 — the classic logic puzzle. Three difficulties, safe first click, chording, flags and a global fastest-clear leaderboard.", "og": "The timeless mine-hunting puzzle. Safe first click, chording, three difficulties and a global fastest-clear leaderboard.", "twitter": "The timeless mine-hunting puzzle. Clear the board without detonating a single mine." },
-      "genre": ["PuzzleGame", "StrategyGame"],
-      "caps": ["leaderboard", "analytics"],
+      "title": {
+        "doc": "Minesweeper — Classic Logic Puzzle",
+        "seo": "Minesweeper 扫雷 — Classic Logic Puzzle"
+      },
+      "name": {
+        "en": "Minesweeper",
+        "zh": "扫雷"
+      },
+      "desc": {
+        "meta": "Minesweeper 扫雷 — the classic logic puzzle. Three difficulties, safe first click, chording, flags and a global fastest-clear leaderboard.",
+        "og": "The timeless mine-hunting puzzle. Safe first click, chording, three difficulties and a global fastest-clear leaderboard.",
+        "twitter": "The timeless mine-hunting puzzle. Clear the board without detonating a single mine."
+      },
+      "genre": [
+        "PuzzleGame",
+        "StrategyGame"
+      ],
+      "caps": [
+        "leaderboard",
+        "analytics",
+        "topbar"
+      ],
       "scores": {
         "order": "asc",
         "maxScore": 9999,
         "maxEntries": 50,
-        "keys": ["minesweeper-easy", "minesweeper-medium", "minesweeper-hard"]
+        "keys": [
+          "minesweeper-easy",
+          "minesweeper-medium",
+          "minesweeper-hard"
+        ]
       },
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
       "themeColor": "#0a0e24"
     },
     {
@@ -140,13 +336,38 @@
       "href": "reversi.html",
       "entry": "js/reversi.js",
       "emoji": "⚪",
-      "title": { "doc": "Reversi — Classic Strategy Board Game", "seo": "Reversi 黑白棋 — Classic Strategy Board Game" },
-      "name": { "en": "Reversi", "zh": "黑白棋" },
-      "desc": { "meta": "Reversi 黑白棋 — classic Othello strategy. Play versus a tuned AI (three levels) or a friend, with flip animations and a global win-streak leaderboard.", "og": "Flip your way to victory. Three AI levels or pass-and-play, beautiful flip animations and a global win-streak leaderboard.", "twitter": "Flip your way to victory against a tuned AI or a friend." },
-      "genre": ["StrategyGame", "BoardGame"],
-      "caps": ["leaderboard", "analytics"],
-      "scores": { "key": "reversi", "order": "desc", "maxScore": 9999, "maxEntries": 50 },
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
+      "title": {
+        "doc": "Reversi — Classic Strategy Board Game",
+        "seo": "Reversi 黑白棋 — Classic Strategy Board Game"
+      },
+      "name": {
+        "en": "Reversi",
+        "zh": "黑白棋"
+      },
+      "desc": {
+        "meta": "Reversi 黑白棋 — classic Othello strategy. Play versus a tuned AI (three levels) or a friend, with flip animations and a global win-streak leaderboard.",
+        "og": "Flip your way to victory. Three AI levels or pass-and-play, beautiful flip animations and a global win-streak leaderboard.",
+        "twitter": "Flip your way to victory against a tuned AI or a friend."
+      },
+      "genre": [
+        "StrategyGame",
+        "BoardGame"
+      ],
+      "caps": [
+        "leaderboard",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "key": "reversi",
+        "order": "desc",
+        "maxScore": 9999,
+        "maxEntries": 50
+      },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
       "themeColor": "#0a0e24"
     },
     {
@@ -155,14 +376,44 @@
       "href": "tower-defense.html",
       "entry": "js/tower-defense.js",
       "emoji": "🏰",
-      "title": { "doc": "Neon Tower Defense — Strategy TD", "seo": "Neon Tower Defense 霓虹塔防 — Strategy TD" },
-      "name": { "en": "Neon TD", "zh": "霓虹塔防" },
-      "desc": { "meta": "Neon Tower Defense 霓虹塔防 — build pulse, frost, cannon and tesla towers along the neon grid, survive 25 waves and top the global leaderboard.", "og": "Four tower types, 25 escalating waves, endless neon glow. Build, upgrade and defend the core!", "twitter": "Build, upgrade and survive 25 waves on the neon grid." },
-      "genre": ["StrategyGame"],
-      "caps": ["sidebar", "drawer", "frame-budget", "leaderboard", "analytics"],
-      "scores": { "key": "tower-defense", "order": "desc", "maxScore": 5000000, "maxEntries": 50 },
-      "stage": { "w": 480, "h": 640 },
-      "sitemap": { "changefreq": "monthly", "priority": "0.8" },
+      "title": {
+        "doc": "Neon Tower Defense — Strategy TD",
+        "seo": "Neon Tower Defense 霓虹塔防 — Strategy TD"
+      },
+      "name": {
+        "en": "Neon TD",
+        "zh": "霓虹塔防"
+      },
+      "desc": {
+        "meta": "Neon Tower Defense 霓虹塔防 — build pulse, frost, cannon and tesla towers along the neon grid, survive 25 waves and top the global leaderboard.",
+        "og": "Four tower types, 25 escalating waves, endless neon glow. Build, upgrade and defend the core!",
+        "twitter": "Build, upgrade and survive 25 waves on the neon grid."
+      },
+      "genre": [
+        "StrategyGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "key": "tower-defense",
+        "order": "desc",
+        "maxScore": 5000000,
+        "maxEntries": 50
+      },
+      "stage": {
+        "w": 480,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
       "themeColor": "#0a0e24"
     },
     {
@@ -171,14 +422,48 @@
       "href": "gravity-slingshot.html",
       "entry": "js/gravity-slingshot.js",
       "emoji": "🚀",
-      "title": { "doc": "Gravity Slingshot — Orbital Physics Puzzle", "seo": "Gravity Slingshot 引力弹弓 — Orbital Physics Puzzle" },
-      "name": { "en": "Gravity Slingshot", "zh": "引力弹弓" },
-      "desc": { "meta": "Gravity Slingshot 引力弹弓 — an original orbital physics game. Pull back the slingshot, bend your path around planets and capture the wormhole. 20 holes plus a daily course for the whole world.", "og": "Pull back the slingshot, bend around planets, capture the wormhole. 20 handcrafted holes and a daily course — fewer launches, more stars.", "twitter": "Bend your path around planets and capture the wormhole." },
-      "genre": ["PuzzleGame", "SimulationGame"],
-      "caps": ["sidebar", "drawer", "frame-budget", "leaderboard", "daily", "analytics"],
-      "scores": { "key": "gravity-slingshot", "order": "asc", "maxScore": 99, "maxEntries": 50, "daily": true, "dailyKeyPrefix": "gravity", "dailyTtlDays": 0 },
-      "stage": { "w": 480, "h": 640 },
-      "sitemap": { "changefreq": "daily", "priority": "0.8" },
+      "title": {
+        "doc": "Gravity Slingshot — Orbital Physics Puzzle",
+        "seo": "Gravity Slingshot 引力弹弓 — Orbital Physics Puzzle"
+      },
+      "name": {
+        "en": "Gravity Slingshot",
+        "zh": "引力弹弓"
+      },
+      "desc": {
+        "meta": "Gravity Slingshot 引力弹弓 — an original orbital physics game. Pull back the slingshot, bend your path around planets and capture the wormhole. 20 holes plus a daily course for the whole world.",
+        "og": "Pull back the slingshot, bend around planets, capture the wormhole. 20 handcrafted holes and a daily course — fewer launches, more stars.",
+        "twitter": "Bend your path around planets and capture the wormhole."
+      },
+      "genre": [
+        "PuzzleGame",
+        "SimulationGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "order": "asc",
+        "maxScore": 99,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "gravity",
+        "dailyTtlDays": 0
+      },
+      "stage": {
+        "w": 480,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "daily",
+        "priority": "0.8"
+      },
       "themeColor": "#0a0e24"
     },
     {
@@ -187,15 +472,52 @@
       "href": "needle-awn.html",
       "entry": "js/needle-awn.js",
       "emoji": "⚔️",
-      "title": { "doc": "针尖对麦芒 — Pinpoint Clash", "seo": "针尖对麦芒 Pinpoint Clash: Needle vs Awn" },
-      "name": { "en": "Pinpoint Clash", "zh": "针尖对麦芒" },
-      "desc": { "meta": "针尖对麦芒 Pinpoint Clash: Needle vs Awn — an original cyber-ink martial precision action duel. Clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm!", "og": "Clash tip-to-tip, weave dual stances of Silver Needle and Golden Awn, slow time and awaken supreme martial prowess.", "twitter": "Clash tip-to-tip, weave dual stances, slow time and awaken supreme martial prowess." },
-      "genre": ["Action", "Arcade", "Martial Arts", "Precision"],
+      "title": {
+        "doc": "针尖对麦芒 — Pinpoint Clash",
+        "seo": "针尖对麦芒 Pinpoint Clash: Needle vs Awn"
+      },
+      "name": {
+        "en": "Pinpoint Clash",
+        "zh": "针尖对麦芒"
+      },
+      "desc": {
+        "meta": "针尖对麦芒 Pinpoint Clash: Needle vs Awn — an original cyber-ink martial precision action duel. Clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm!",
+        "og": "Clash tip-to-tip, weave dual stances of Silver Needle and Golden Awn, slow time and awaken supreme martial prowess.",
+        "twitter": "Clash tip-to-tip, weave dual stances, slow time and awaken supreme martial prowess."
+      },
+      "genre": [
+        "Action",
+        "Arcade",
+        "Martial Arts",
+        "Precision"
+      ],
       "i18nVar": "I18N",
-      "caps": ["sidebar", "drawer", "frame-budget", "leaderboard", "daily", "analytics"],
-      "scores": { "key": "needle-awn", "order": "desc", "maxScore": 5000000, "maxEntries": 50, "daily": true, "dailyKeyPrefix": "needle-awn", "dailyTtlDays": 14 },
-      "stage": { "w": 480, "h": 640 },
-      "sitemap": { "changefreq": "weekly", "priority": "0.9" },
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "key": "needle-awn",
+        "order": "desc",
+        "maxScore": 5000000,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "needle-awn",
+        "dailyTtlDays": 14
+      },
+      "stage": {
+        "w": 480,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "weekly",
+        "priority": "0.9"
+      },
       "themeColor": "#030712"
     },
     {
@@ -204,15 +526,52 @@
       "href": "sword-flight.html",
       "entry": "js/sword-flight.js",
       "emoji": "🗡️",
-      "title": { "doc": "御剑飞行 — Sword Flight", "seo": "御剑飞行 Sword Flight: Soaring Heavens" },
-      "name": { "en": "Sword Flight", "zh": "御剑飞行" },
-      "desc": { "meta": "御剑飞行 Sword Flight: Soaring Heavens — 国风仙侠轻功御剑动作游戏。扶摇直上九重天，踏剑破云海，御灵剑化阵，穿玄天仙环，悟无上仙道！", "og": "扶摇直上九重天，剑气纵横御清风。踏灵剑翱翔云海，引雷淬剑，凝万剑归宗！", "twitter": "扶摇直上九重天，剑气纵横御清风。踏灵剑翱翔云海，引雷淬剑，凝万剑归宗！" },
-      "genre": ["Action", "Flight", "Xianxia", "Arcade"],
+      "title": {
+        "doc": "御剑飞行 — Sword Flight",
+        "seo": "御剑飞行 Sword Flight: Soaring Heavens"
+      },
+      "name": {
+        "en": "Sword Flight",
+        "zh": "御剑飞行"
+      },
+      "desc": {
+        "meta": "御剑飞行 Sword Flight: Soaring Heavens — 国风仙侠轻功御剑动作游戏。扶摇直上九重天，踏剑破云海，御灵剑化阵，穿玄天仙环，悟无上仙道！",
+        "og": "扶摇直上九重天，剑气纵横御清风。踏灵剑翱翔云海，引雷淬剑，凝万剑归宗！",
+        "twitter": "扶摇直上九重天，剑气纵横御清风。踏灵剑翱翔云海，引雷淬剑，凝万剑归宗！"
+      },
+      "genre": [
+        "Action",
+        "Flight",
+        "Xianxia",
+        "Arcade"
+      ],
       "i18nVar": "I18N",
-      "caps": ["sidebar", "drawer", "frame-budget", "leaderboard", "daily", "analytics"],
-      "scores": { "key": "sword-flight", "order": "desc", "maxScore": 5000000, "maxEntries": 50, "daily": true, "dailyKeyPrefix": "sword-flight", "dailyTtlDays": 14 },
-      "stage": { "w": 480, "h": 640 },
-      "sitemap": { "changefreq": "weekly", "priority": "0.9" },
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "key": "sword-flight",
+        "order": "desc",
+        "maxScore": 5000000,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "sword-flight",
+        "dailyTtlDays": 14
+      },
+      "stage": {
+        "w": 480,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "weekly",
+        "priority": "0.9"
+      },
       "themeColor": "#030816"
     }
   ]

@@ -14,26 +14,28 @@ const ALLOWED_ORIGINS = [
 
 // 每个游戏一份配置：order=asc 表示分数越小越好（如扫雷用时秒数）；
 // ttl 为可选的 KV 过期秒数（用于每日榜的自然滚动）
+// registry:begin games-scores
 const GAMES = {
-  'reversi':            { order: 'desc', maxScore: 9999,     maxEntries: 50 },
-  'tower-defense':      { order: 'desc', maxScore: 5000000,  maxEntries: 50 },
-  'tetris':             { order: 'desc', maxScore: 2000000,  maxEntries: 50 }, // 客户端只展示前 5
-  'hoop-shot':          { order: 'desc', maxScore: 1000000,  maxEntries: 50 },
-  'planet-merge':       { order: 'desc', maxScore: 10000000, maxEntries: 50 }, // 总榜
-  'minesweeper-easy':   { order: 'asc',  maxScore: 9999,     maxEntries: 50 }, // 最快通关（秒）
-  'minesweeper-medium': { order: 'asc',  maxScore: 9999,     maxEntries: 50 },
-  'minesweeper-hard':   { order: 'asc',  maxScore: 9999,     maxEntries: 50 },
-  'needle-awn':         { order: 'desc', maxScore: 5000000,  maxEntries: 50 },
-  'sword-flight':       { order: 'desc', maxScore: 5000000,  maxEntries: 50 },
+  'tetris': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'planet-merge': { order: 'desc', maxScore: 10000000, maxEntries: 50 },
+  'hoop-shot': { order: 'desc', maxScore: 1000000, maxEntries: 50 },
+  'minesweeper-easy': { order: 'asc', maxScore: 9999, maxEntries: 50 },
+  'minesweeper-medium': { order: 'asc', maxScore: 9999, maxEntries: 50 },
+  'minesweeper-hard': { order: 'asc', maxScore: 9999, maxEntries: 50 },
+  'reversi': { order: 'desc', maxScore: 9999, maxEntries: 50 },
+  'tower-defense': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'needle-awn': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'sword-flight': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
 };
 
 // 每日赛程 / 每日挑战榜：按天一个键，正则白名单 + TTL 自然滚动
 const DAILY_PATTERNS = [
-  { re: /^gravity-d\d{8}$/,      config: { order: 'asc',  maxScore: 99,      maxEntries: 50 } }, // 杆数越少越好
   { re: /^planet-merge-d\d{8}$/, config: { order: 'desc', maxScore: 10000000, maxEntries: 50, ttl: 14 * 24 * 3600 } },
-  { re: /^needle-awn-d\d{8}$/,   config: { order: 'desc', maxScore: 5000000,  maxEntries: 50, ttl: 14 * 24 * 3600 } },
-  { re: /^sword-flight-d\d{8}$/, config: { order: 'desc', maxScore: 5000000,  maxEntries: 50, ttl: 14 * 24 * 3600 } },
+  { re: /^gravity-d\d{8}$/, config: { order: 'asc', maxScore: 99, maxEntries: 50 } },
+  { re: /^needle-awn-d\d{8}$/, config: { order: 'desc', maxScore: 5000000, maxEntries: 50, ttl: 14 * 24 * 3600 } },
+  { re: /^sword-flight-d\d{8}$/, config: { order: 'desc', maxScore: 5000000, maxEntries: 50, ttl: 14 * 24 * 3600 } },
 ];
+// registry:end games-scores
 
 function resolveGame(game) {
   if (GAMES[game]) return GAMES[game];

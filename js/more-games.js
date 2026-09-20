@@ -1,20 +1,22 @@
 import { getLang } from './site-settings.js';
 
+// registry:begin more-games
 export const MORE_GAMES = [
-    { href: 'math-rain.html', emoji: '🔢', en: 'Math Rain', zh: '数字雨' },
-    { href: 'tetris.html', emoji: '🟦', en: 'Tetris', zh: '俄罗斯方块' },
-    { href: 'tank-battle.html', emoji: '🎯', en: 'Tank Battle', zh: '坦克大战' },
-    { href: 'gomoku.html', emoji: '⚫', en: 'Gomoku', zh: '五子棋' },
-    { href: 'planet-merge.html', emoji: '🪐', en: 'Planet Merge', zh: '星球合成' },
-    { href: 'word-daily.html', emoji: '🔤', en: 'Word Daily', zh: '每日猜词' },
-    { href: 'hoop-shot.html', emoji: '🏀', en: 'Hoop Shot', zh: '街机投篮' },
-    { href: 'minesweeper.html', emoji: '💣', en: 'Minesweeper', zh: '扫雷' },
-    { href: 'reversi.html', emoji: '⚪', en: 'Reversi', zh: '黑白棋' },
-    { href: 'tower-defense.html', emoji: '🏰', en: 'Neon TD', zh: '霓虹塔防' },
-    { href: 'gravity-slingshot.html', emoji: '🚀', en: 'Gravity Slingshot', zh: '引力弹弓' },
-    { href: 'needle-awn.html', emoji: '⚔️', en: 'Pinpoint Clash', zh: '针尖对麦芒' },
-    { href: 'sword-flight.html', emoji: '🗡️', en: 'Sword Flight', zh: '御剑飞行' }
+    { href: 'math-rain.html', emoji: '🔢', en: "Math Rain", zh: "数字雨" },
+    { href: 'tetris.html', emoji: '🟦', en: "Tetris", zh: "俄罗斯方块" },
+    { href: 'tank-battle.html', emoji: '🎯', en: "Tank Battle", zh: "坦克大战" },
+    { href: 'gomoku.html', emoji: '⚫', en: "Gomoku", zh: "五子棋" },
+    { href: 'planet-merge.html', emoji: '🪐', en: "Planet Merge", zh: "星球合成" },
+    { href: 'word-daily.html', emoji: '🔤', en: "Word Daily", zh: "每日猜词" },
+    { href: 'hoop-shot.html', emoji: '🏀', en: "Hoop Shot", zh: "街机投篮" },
+    { href: 'minesweeper.html', emoji: '💣', en: "Minesweeper", zh: "扫雷" },
+    { href: 'reversi.html', emoji: '⚪', en: "Reversi", zh: "黑白棋" },
+    { href: 'tower-defense.html', emoji: '🏰', en: "Neon TD", zh: "霓虹塔防" },
+    { href: 'gravity-slingshot.html', emoji: '🚀', en: "Gravity Slingshot", zh: "引力弹弓" },
+    { href: 'needle-awn.html', emoji: '⚔️', en: "Pinpoint Clash", zh: "针尖对麦芒" },
+    { href: 'sword-flight.html', emoji: '🗡️', en: "Sword Flight", zh: "御剑飞行" },
 ];
+// registry:end more-games
 
 /**
  * 往一个空容器里生成「更多游戏」导航条（含标题 + 链接），排除自身。

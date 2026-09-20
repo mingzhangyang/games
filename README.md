@@ -3,6 +3,7 @@
 🎮 多合一小游戏平台，支持模块化构建和现代化开发流程。
 
 当前包含游戏：
+<!-- registry:begin game-list -->
 - Math Rain（数字雨）
 - Tetris（俄罗斯方块）
 - Tank Battle（坦克大战）
@@ -12,8 +13,11 @@
 - Hoop Shot（街机投篮）
 - Minesweeper（扫雷）
 - Reversi（黑白棋）
-- Neon Tower Defense（霓虹塔防）
-- Gravity Slingshot（引力弹弓，原创轨道物理 + 每日赛程）
+- Neon TD（霓虹塔防）
+- Gravity Slingshot（引力弹弓）
+- Pinpoint Clash（针尖对麦芒）
+- Sword Flight（御剑飞行）
+<!-- registry:end game-list -->
 
 全站只有一个排行榜 Worker（`Workers/game-scores.js`，KV 命名空间 `GAME_SCORES`，按 `top:<game>` 键区分；旧三榜 Tetris / Hoop Shot / Planet Merge 已并入，每日榜如 `top:planet-merge-d<日期>`、`top:gravity-d<日期>` 按天滚动），另有全站统计（`games-analytics`）与猜词战报（`word-daily-stats`）两个聚合 Worker。
 

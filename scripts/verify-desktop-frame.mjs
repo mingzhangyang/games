@@ -10,19 +10,16 @@
 // 用法：node scripts/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH } from './lib/browser.mjs';
+import { registry } from './lib/registry.mjs';
 
 const CHROME = process.env.CHROME_BIN ||
     CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
-const PAGES = {
-    'gravity-slingshot': 480 / 640,
-    'tower-defense': 480 / 640,
-    'needle-awn': 480 / 640,
-    'sword-flight': 480 / 640,
-    'hoop-shot': 420 / 640,
-    'planet-merge': 420 / 640,
-};
+// 画幅预算页 = 挂 frame-budget cap 的游戏；ratio 由注册表 stage.w/h 派生（不再手写 0.75）
+const PAGES = Object.fromEntries(
+    registry.withCap('frame-budget').map(g => [g.id, g.stage.w / g.stage.h]),
+);
 const VIEWPORTS = [[1280, 800], [1280, 900], [1440, 900], [1920, 1080], [2560, 1440]];
 const LANGS = ['en', 'zh'];
 

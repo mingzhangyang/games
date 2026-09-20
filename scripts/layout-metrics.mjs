@@ -3,22 +3,13 @@
 // 用于检查跨页一致性（触控热区 ≥44px、顶栏高度、容器宽度等）。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH } from './lib/browser.mjs';
+import { registry } from './lib/registry.mjs';
+
+const PAGES = registry.all().map(g => g.id);
 
 const CHROME = process.env.CHROME_BIN ||
     CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
-
-const PAGES = [
-    'gravity-slingshot', 'hoop-shot', 'planet-merge', 'sword-flight', 'needle-awn',
-    'tower-defense', 'reversi', 'minesweeper', 'word-daily', 'gomoku', 'tetris',
-    'tank-battle', 'math-rain',
-];
-
-const START_SEL = [
-    '.gd-hole:not([disabled])', '.hs-play', '.pm-start', '.sf-start', '.na-start',
-    '.td-start', '.rv-start-btn', '.ms-diff', '.wd-diff-btn', '.btn-primary',
-    '.btn', 'button',
-];
 
 const MEASURE = () => {
     const px = v => Math.round(parseFloat(v) || 0);

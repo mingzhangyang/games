@@ -14,16 +14,15 @@
 //    种错键会让页面停在 navigator.language 默认值，于是"中文没生效"全是假故障。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH } from './lib/browser.mjs';
+import { registry } from './lib/registry.mjs';
 
 const CHROME = process.env.CHROME_BIN ||
     CHROME_PATH;
 const args = process.argv.slice(2);
 const BASE = args.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 
-const PAGES = [
-    'gravity-slingshot', 'hoop-shot', 'planet-merge', 'sword-flight', 'needle-awn',
-    'tower-defense', 'reversi', 'minesweeper', 'word-daily', 'gomoku', 'tetris',
-];
+// 顶栏契约页 = 挂了 topbar cap 的游戏（tank-battle / math-rain 化外，见 docs/backlog）
+const PAGES = registry.withCap('topbar').map(g => g.id);
 const CANON = ['stats', 'pause', 'sound', 'lang'];
 
 const fails = [];

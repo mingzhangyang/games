@@ -41,20 +41,22 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         input: {
-          main: resolve(__dirname, 'index.html'),
-          'math-rain': resolve(__dirname, 'math-rain.html'),
-          tetris: resolve(__dirname, 'tetris.html'),
-          'tank-battle': resolve(__dirname, 'tank-battle.html'),
-          gomoku: resolve(__dirname, 'gomoku.html'),
-          'planet-merge': resolve(__dirname, 'planet-merge.html'),
-          'word-daily': resolve(__dirname, 'word-daily.html'),
-          'hoop-shot': resolve(__dirname, 'hoop-shot.html'),
-          minesweeper: resolve(__dirname, 'minesweeper.html'),
-          reversi: resolve(__dirname, 'reversi.html'),
-          'tower-defense': resolve(__dirname, 'tower-defense.html'),
-          'gravity-slingshot': resolve(__dirname, 'gravity-slingshot.html'),
-          'needle-awn': resolve(__dirname, 'needle-awn.html'),
-          'sword-flight': resolve(__dirname, 'sword-flight.html'),
+            // registry:begin inputs
+main: resolve(__dirname, 'index.html'),
+            "math-rain": resolve(__dirname, 'math-rain.html'),
+            "tetris": resolve(__dirname, 'tetris.html'),
+            "tank-battle": resolve(__dirname, 'tank-battle.html'),
+            "gomoku": resolve(__dirname, 'gomoku.html'),
+            "planet-merge": resolve(__dirname, 'planet-merge.html'),
+            "word-daily": resolve(__dirname, 'word-daily.html'),
+            "hoop-shot": resolve(__dirname, 'hoop-shot.html'),
+            "minesweeper": resolve(__dirname, 'minesweeper.html'),
+            "reversi": resolve(__dirname, 'reversi.html'),
+            "tower-defense": resolve(__dirname, 'tower-defense.html'),
+            "gravity-slingshot": resolve(__dirname, 'gravity-slingshot.html'),
+            "needle-awn": resolve(__dirname, 'needle-awn.html'),
+            "sword-flight": resolve(__dirname, 'sword-flight.html'),
+            // registry:end inputs
         },
         output: {
           // 分块策略
