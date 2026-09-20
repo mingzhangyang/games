@@ -1,7 +1,7 @@
 # Style 契约：设计令牌 / hex 收敛 / lint 基建
 
 > 视觉与代码风格的单一规则集。令牌定义在 `css/tokens.css`，linter 入口 `node scripts/run-lint.mjs`
-> （eslint + stylelint 一键，已并入 `npm run verify`，SUITE 名 `lint`）。
+> （eslint + stylelint + 令牌残留检查 一键，已并入 `npm run verify`，SUITE 名 `lint`）。
 
 ---
 

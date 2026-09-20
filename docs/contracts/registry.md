@@ -33,7 +33,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | `drawer` | 接移动端统计抽屉（`js/game-drawer.js`） |
 | `frame-budget` | 桌面舞台纵向预算（`--frame-shell-max` 覆写 + `bindFrame`，`verify-desktop-frame` 检查） |
 | `leaderboard` | 使用共享排行榜 Worker（入口 import `js/leaderboard.js`；与 `scores` 块同进同出） |
-| `daily` | 有每日挑战（榜键 `<scores.dailyKeyPrefix>-d<YYYYMMDD>`） |
+| `daily` | 有每日挑战（判据：入口 import `js/daily.js`）。带 `scores` 的另有每日榜键 `<dailyKeyPrefix>-d<YYYYMMDD>`；word-daily 有每日玩法但不用共享榜，故只有本 cap |
 | `analytics` | 客户端调用 `hubTrack`（入口 import `js/analytics.js`） |
 | `topbar` | 有 `.game-topbar-center`（Header 三槽位契约，见 `chrome.md`） |
 
