@@ -62,7 +62,7 @@ def main() -> int:
             print(f"  [{kind:>9}] {text}")
         total_bad += len(rows)
     print(f"\n合计 {total_bad} 个按钮仍带非白名单 emoji")
-    return 0
+    return 1 if total_bad else 0
 
 
 if __name__ == "__main__":

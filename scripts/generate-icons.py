@@ -3,7 +3,7 @@
 from PIL import Image, ImageDraw
 import os
 
-OUT = 'C:/Users/mingz/Codes/games/public/icons'
+OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'public', 'icons')
 
 BG_TOP = (124, 140, 250)    # lighter indigo
 BG_BOT = (92, 106, 235)     # favicon #667eea deep end
