@@ -18,6 +18,7 @@ import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -3061,7 +3062,7 @@ class TowerDefenseGame {
         if (this.el.username) this.el.username.value = ensurePlayerName() || '';
         this.resize();
         this.startLoop();
-        if (window.hubTrack) window.hubTrack('tower-defense', 'play');
+        track('tower-defense', 'play');
     }
 
     toMenu() {
@@ -3129,7 +3130,7 @@ class TowerDefenseGame {
         } else {
             Sfx.lose();
         }
-        if (window.hubTrack) window.hubTrack('tower-defense', 'finish');
+        track('tower-defense', 'finish');
 
         const t = this.TEXT;
         if (this.el['over-title']) {

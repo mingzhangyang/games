@@ -5,6 +5,7 @@ import { ICONS } from './icons.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet as safeGetItem, storageSet as safeSetItem } from './safe-storage.js';
+import { track } from './analytics.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -1217,7 +1218,7 @@ class Tetris {
     }
 
     async showGameOver() {
-    if (typeof window.hubTrack === 'function') window.hubTrack('tetris', 'finish');
+    track('tetris', 'finish');
         sfx.play('gameover');
         document.getElementById('finalScore').textContent = this.score;
         document.getElementById('gameOverOverlay').style.display = 'flex';
@@ -1332,7 +1333,7 @@ class Tetris {
         if (this.gameOver) {
             this.init();
         }
-        if (typeof window.hubTrack === 'function') window.hubTrack('tetris', 'play');
+        track('tetris', 'play');
         this.gameLoop();
         document.getElementById('startBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
@@ -1387,7 +1388,7 @@ class Tetris {
 
     restart() {
         this.init();
-        if (typeof window.hubTrack === 'function') window.hubTrack('tetris', 'play');
+        track('tetris', 'play');
         document.getElementById('startBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
         document.getElementById('pauseBtn').textContent = TEXT.pause;

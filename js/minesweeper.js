@@ -12,6 +12,7 @@ import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -524,7 +525,7 @@ class MinesweeperGame {
         const seconds = Math.max(1, Math.round((performance.now() - this.startTs) / 1000));
         this.elapsed = seconds;
 
-        if (window.hubTrack) window.hubTrack('minesweeper', 'finish');
+        track('minesweeper', 'finish');
 
         let isBest = false;
         if (won) {
@@ -793,7 +794,7 @@ class MinesweeperGame {
     hideStart() {
         if (this.el.start) this.el.start.classList.add('hidden');
         Sfx.click();
-        if (window.hubTrack) window.hubTrack('minesweeper', 'play');
+        track('minesweeper', 'play');
     }
 
     renderBestChips() {

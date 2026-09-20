@@ -14,6 +14,7 @@ import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -637,7 +638,7 @@ class PlanetMergeGame {
         this.ensureLoop();
         this.updateHud();
         this.updateNextPreview();
-        if (typeof window.hubTrack === 'function') window.hubTrack('planet-merge', 'play');
+        track('planet-merge', 'play');
     }
 
     pickTier() {
@@ -1020,7 +1021,7 @@ class PlanetMergeGame {
 
         this.showOverlay('pm-over');
         // 先同步记录本地榜，再尝试全球榜（Worker 离线也不影响本地成绩显示）
-        if (typeof window.hubTrack === 'function') window.hubTrack('planet-merge', 'finish');
+        track('planet-merge', 'finish');
         this.recordLocalScore();
         this.leaderboardTab = isDaily ? 'daily' : 'alltime';
         this.updateLbTabs();

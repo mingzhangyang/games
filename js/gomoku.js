@@ -3,6 +3,7 @@ import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
+import { track } from './analytics.js';
 
 // 音效：落子/胜利/失败/平局
 const sfx = createSfx({
@@ -406,7 +407,7 @@ function handleCanvasClick(e) {
 
 function makeMove(r, c) {
     moveCount++;
-    if (typeof window.hubTrack === 'function') window.hubTrack('gomoku', 'play');
+    track('gomoku', 'play');
     board[r][c] = currentPlayer;
     lastMove = { r, c };
     sfx.play('place');
@@ -554,7 +555,7 @@ function resultText(t) {
 function endGame(winner) {
     gameActive = false;
     lastResult = winner;
-    if (typeof window.hubTrack === 'function') window.hubTrack('gomoku', 'finish');
+    track('gomoku', 'finish');
 
     modalMessage.textContent = resultText(getTEXT());
     updateStatus(); // 结束态由 updateStatus 统一渲染（显示「对局结束」）

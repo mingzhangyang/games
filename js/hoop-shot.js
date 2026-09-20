@@ -16,6 +16,7 @@ import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -414,7 +415,7 @@ class HoopShotGame {
         this.hideOverlays();
         this.updateHud();
         this.ensureLoop();
-        if (typeof window.hubTrack === 'function') window.hubTrack('hoop-shot', 'play');
+        track('hoop-shot', 'play');
     }
 
     togglePause() {
@@ -771,7 +772,7 @@ class HoopShotGame {
     onMiss() {
         if (this.state !== 'playing') return;
         this.state = 'gameover';
-        if (typeof window.hubTrack === 'function') window.hubTrack('hoop-shot', 'finish');
+        track('hoop-shot', 'finish');
         this.streak = 0;
         this.onFire = false;
         Sfx.gameOver();

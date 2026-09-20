@@ -11,6 +11,7 @@ import SessionManager from './core/SessionManager.js';
 import PerformanceOptimizer from './core/PerformanceOptimizer.js';
 import ErrorHandler from './core/ErrorHandler.js';
 import UIController from './core/UIController.js';
+import { track } from '../analytics.js';
 
 /**
  * Math Rain Game Class
@@ -317,7 +318,7 @@ class MathRainGame {
         });
         this.eventSystem.on('game:over', () => {
             this.safePlaySound('gameOver');
-            if (typeof window.hubTrack === 'function') window.hubTrack('math-rain', 'finish');
+            track('math-rain', 'finish');
             // 结束后停止渲染循环，避免空转耗电
             this.isRendering = false;
         });
@@ -518,7 +519,7 @@ class MathRainGame {
             
             // Start game state
             this.gameStateManager?.startGame();
-            if (typeof window.hubTrack === 'function') window.hubTrack('math-rain', 'play');
+            track('math-rain', 'play');
             
             
         } catch (error) {

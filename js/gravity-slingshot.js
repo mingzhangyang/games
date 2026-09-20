@@ -20,6 +20,7 @@ import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -821,7 +822,7 @@ class GravityGame {
         this.totalLaunches = 0;
         this.enterMenu(false);
         this.loadHole();
-        if (window.hubTrack) window.hubTrack('gravity-slingshot', 'play');
+        track('gravity-slingshot', 'play');
     }
 
     startDailyMode() {
@@ -832,7 +833,7 @@ class GravityGame {
         this.enterMenu(false);
         this.loadHole();
         this.showToast(this.TEXT.dailyStartToast, 1800);
-        if (window.hubTrack) window.hubTrack('gravity-slingshot', 'play');
+        track('gravity-slingshot', 'play');
     }
 
     loadHole() {
@@ -1046,7 +1047,7 @@ class GravityGame {
 
     nextHole() {
         if (this.mode === 'levels' && this.holeIdx >= LEVELS.length - 1) {
-            if (window.hubTrack) window.hubTrack('gravity-slingshot', 'finish');
+            track('gravity-slingshot', 'finish');
             this.enterMenu(true);
             return;
         }
@@ -1071,7 +1072,7 @@ class GravityGame {
         }
         if (this.el.username) this.el.username.value = ensurePlayerName() || '';
         if (this.el.over) this.el.over.classList.remove('hidden');
-        if (window.hubTrack) window.hubTrack('gravity-slingshot', 'finish');
+        track('gravity-slingshot', 'finish');
 
         const game = `gravity-d${date}`;
         fetch('https://game-scores.orangely.workers.dev/scores', {

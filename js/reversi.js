@@ -14,6 +14,7 @@ import { updateMoreGames } from './more-games.js';
 import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from './reversi-ai.js';
 import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -484,7 +485,7 @@ class ReversiGame {
         if (this.el['over-verdict']) this.el['over-verdict'].textContent = verdict;
         if (this.el['over-score']) this.el['over-score'].textContent = `${b} : ${w}`;
 
-        if (window.hubTrack) window.hubTrack('reversi', 'finish');
+        track('reversi', 'finish');
 
         // AI 模式才更新连胜/榜单
         let streakNote = '';
@@ -631,7 +632,7 @@ class ReversiGame {
     hideStart() {
         if (this.el.start) this.el.start.classList.add('hidden');
         Sfx.click();
-        if (window.hubTrack) window.hubTrack('reversi', 'play');
+        track('reversi', 'play');
     }
 
     /* ── 复制成绩 ── */

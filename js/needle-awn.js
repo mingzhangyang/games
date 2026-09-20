@@ -17,6 +17,7 @@ import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -1174,21 +1175,21 @@ class GameEngine {
         this.resetGameState();
         this.loadStageWave(levelNum);
         this.resumeBattle();
-        if (window.hubTrack) window.hubTrack('needle-awn', 'play');
+        track('needle-awn', 'play');
     }
 
     startEndlessMode() {
         this.mode = 'endless';
         this.resetGameState();
         this.resumeBattle();
-        if (window.hubTrack) window.hubTrack('needle-awn', 'play');
+        track('needle-awn', 'play');
     }
 
     startDailyMode() {
         this.mode = 'daily';
         this.resetGameState();
         this.resumeBattle();
-        if (window.hubTrack) window.hubTrack('needle-awn', 'play');
+        track('needle-awn', 'play');
     }
 
     startDuelMode() {
@@ -1197,7 +1198,7 @@ class GameEngine {
         this.player2 = this.createPlayer(ARENA_WIDTH / 2, ARENA_HEIGHT * 0.28, true);
         this.player2.stance = 'awn';
         this.resumeBattle();
-        if (window.hubTrack) window.hubTrack('needle-awn', 'play');
+        track('needle-awn', 'play');
     }
 
     restartCurrentMode() {
@@ -1554,7 +1555,7 @@ class GameEngine {
         this.updateSideRecords();
         this.dom.overlayResult.classList.remove('hidden');
 
-        if (window.hubTrack) window.hubTrack('needle-awn', 'finish');
+        track('needle-awn', 'finish');
     }
 
     async submitScore() {

@@ -16,6 +16,7 @@ import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -1014,9 +1015,7 @@ class SwordFlightGame {
         this.showToast(this.getRealmName(0));
 
         // Analytics
-        if (typeof window !== 'undefined' && window.hubTrack) {
-            window.hubTrack('sword-flight', 'play');
-        }
+        track('sword-flight', 'play');
     }
 
     /* ── 生成初始与随行天境实体 ── */
@@ -1645,9 +1644,7 @@ class SwordFlightGame {
             slot.style.opacity = i < stars ? '1' : '0.35';
         });
 
-        if (typeof window !== 'undefined' && window.hubTrack) {
-            window.hubTrack('sword-flight', 'finish');
-        }
+        track('sword-flight', 'finish');
     }
 
     handleGameOver() {
@@ -1666,9 +1663,7 @@ class SwordFlightGame {
         document.getElementById('sf-go-realm').textContent = this.getRealmName(this.player.realmIndex);
         document.getElementById('sf-go-rings').textContent = this.ringsThreaded.toString();
 
-        if (typeof window !== 'undefined' && window.hubTrack) {
-            window.hubTrack('sword-flight', 'finish');
-        }
+        track('sword-flight', 'finish');
     }
 
     /* ── 渲染系统 (Render) ── */

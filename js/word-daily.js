@@ -14,6 +14,7 @@ import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
+import { track } from './analytics.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -574,7 +575,7 @@ class WordDailyGame {
         } else {
             this.rows = [];
             this.status = 'playing';
-            if (typeof window.hubTrack === 'function') window.hubTrack('word-daily', 'play');
+            track('word-daily', 'play');
         }
         this.current = '';
         if (this.el.input) this.el.input.value = '';
@@ -1107,7 +1108,7 @@ class WordDailyGame {
         }
 
         if (this.mode === 'daily') {
-            if (typeof window.hubTrack === 'function') window.hubTrack('word-daily', 'finish');
+            track('word-daily', 'finish');
             this.recordDaily(won ? this.rows.length : 0);
             this.reportGlobal(won, this.rows.length);
         }
