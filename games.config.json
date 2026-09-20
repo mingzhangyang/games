@@ -576,6 +576,57 @@
         "priority": "0.9"
       },
       "themeColor": "#030816"
+    },
+    {
+      "id": "lumen",
+      "prefix": "lm",
+      "href": "lumen.html",
+      "entry": "js/lumen.js",
+      "emoji": "💎",
+      "title": {
+        "doc": "Lumen — Beam Refraction Puzzle",
+        "seo": "折光 Lumen — Beam Refraction Puzzle"
+      },
+      "name": {
+        "en": "Lumen",
+        "zh": "折光"
+      },
+      "desc": {
+        "meta": "折光 Lumen — an original beam refraction puzzle. Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle for the whole world.",
+        "og": "Flip mirrors, bend the beam, light every crystal. 20 handcrafted levels and a daily puzzle — light every gem with the fewest flips.",
+        "twitter": "Flip mirrors, bend the beam, light every crystal."
+      },
+      "genre": [
+        "PuzzleGame",
+        "CasualGame"
+      ],
+      "i18nVar": "I18N",
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "order": "asc",
+        "maxScore": 99,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "lumen",
+        "dailyTtlDays": 0
+      },
+      "stage": {
+        "w": 560,
+        "h": 560
+      },
+      "sitemap": {
+        "changefreq": "daily",
+        "priority": "0.8"
+      },
+      "themeColor": "#070b22"
     }
   ]
 }

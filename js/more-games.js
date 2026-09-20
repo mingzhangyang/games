@@ -15,6 +15,7 @@ export const MORE_GAMES = [
     { href: 'gravity-slingshot.html', emoji: '🚀', en: "Gravity Slingshot", zh: "引力弹弓" },
     { href: 'needle-awn.html', emoji: '⚔️', en: "Pinpoint Clash", zh: "针尖对麦芒" },
     { href: 'sword-flight.html', emoji: '🗡️', en: "Sword Flight", zh: "御剑飞行" },
+    { href: 'lumen.html', emoji: '💎', en: "Lumen", zh: "折光" },
 ];
 // registry:end more-games
 

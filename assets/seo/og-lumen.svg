@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="lm-og-title lm-og-desc">
+  <title id="lm-og-title">Lumen social card</title>
+  <desc id="lm-og-desc">Social preview for Lumen 折光 — original beam refraction puzzle.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#05081c"/>
+      <stop offset="0.6" stop-color="#0a0f2e"/>
+      <stop offset="1" stop-color="#0d1338"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7dfad0" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#7dfad0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7dfad0" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#eafff6" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="beamUp" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#7dfad0" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#eafff6" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g fill="#dfe7ff">
+    <circle cx="150" cy="85" r="2" opacity="0.6"/>
+    <circle cx="410" cy="55" r="1.5" opacity="0.45"/>
+    <circle cx="690" cy="100" r="1.8" opacity="0.5"/>
+    <circle cx="950" cy="65" r="1.3" opacity="0.45"/>
+    <circle cx="1120" cy="180" r="2" opacity="0.55"/>
+    <circle cx="90" cy="480" r="1.6" opacity="0.5"/>
+    <circle cx="1050" cy="480" r="1.6" opacity="0.5"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#7dfad0" stroke-width="2.5"/>
+
+  <text x="88" y="175" fill="#f4f6ff" font-size="76" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Lumen</text>
+  <text x="88" y="238" fill="#7dfad0" font-size="38" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">折光 · 原创光束折射解谜</text>
+  <text x="88" y="300" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Flip mirrors to bend the beam of light.</text>
+  <text x="88" y="344" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Light every crystal in as few flips as you can.</text>
+
+  <!-- 场景示意：发射器 → 两面镜子 → 点亮水晶 -->
+  <g>
+    <!-- 发射器 -->
+    <rect x="176" y="462" width="36" height="36" rx="8" fill="#131a44" stroke="#5a7bff" stroke-width="2.5"/>
+    <circle cx="212" cy="480" r="5" fill="#eafff6"/>
+    <!-- 光束：向右 → 折向上 → 折向右 -->
+    <path d="M216 480 H400" fill="none" stroke="url(#beam)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M400 476 V334" fill="none" stroke="url(#beamUp)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M404 330 H548" fill="none" stroke="url(#beam)" stroke-width="5" stroke-linecap="round"/>
+    <!-- 镜面 1（/ 朝向） -->
+    <line x1="384" y1="496" x2="416" y2="464" stroke="#5a7bff" stroke-width="6" stroke-linecap="round"/>
+    <line x1="384" y1="496" x2="416" y2="464" stroke="#a5b8ff" stroke-width="2" stroke-linecap="round"/>
+    <!-- 镜面 2（/ 朝向） -->
+    <line x1="384" y1="346" x2="416" y2="314" stroke="#5a7bff" stroke-width="6" stroke-linecap="round"/>
+    <line x1="384" y1="346" x2="416" y2="314" stroke="#a5b8ff" stroke-width="2" stroke-linecap="round"/>
+    <!-- 墙 -->
+    <rect x="280" y="392" width="30" height="30" rx="6" fill="#1c2350" stroke="#3c4a8f" stroke-width="2"/>
+    <!-- 未点亮水晶 -->
+    <path d="M700 452 l20 24 -20 24 -20 -24 z" fill="none" stroke="#3c4a8f" stroke-width="2.5"/>
+    <!-- 点亮水晶 -->
+    <circle cx="584" cy="330" r="52" fill="url(#glow)"/>
+    <path d="M584 296 l24 34 -24 34 -24 -34 z" fill="#eafff6" stroke="#7dfad0" stroke-width="3"/>
+  </g>
+
+  <text x="88" y="552" fill="#e0e7ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">💎 Play in browser · lumen</text>
+</svg>

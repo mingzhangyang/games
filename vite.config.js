@@ -56,6 +56,7 @@ main: resolve(__dirname, 'index.html'),
             "gravity-slingshot": resolve(__dirname, 'gravity-slingshot.html'),
             "needle-awn": resolve(__dirname, 'needle-awn.html'),
             "sword-flight": resolve(__dirname, 'sword-flight.html'),
+            "lumen": resolve(__dirname, 'lumen.html'),
             // registry:end inputs
         },
         output: {
