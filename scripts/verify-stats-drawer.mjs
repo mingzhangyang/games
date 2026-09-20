@@ -22,6 +22,7 @@ const AUGMENT = {
     'tower-defense':     { gameVar: 'tdGame',          runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
     'gravity-slingshot': { gameVar: 'gdGame',          runningExpr: '!g.isPaused && g.phase !== "menu"', startMethod: 'startLevelMode', startArgs: [0] },
     'sword-flight':      { gameVar: 'game',            runningExpr: 'g.isPlaying && !g.isPaused', startMethod: 'startFlight', startArgs: ['endless'] },
+    'lumen':             { gameVar: 'lmGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
 };
 const PAGES = registry.withCap('drawer')
     .filter(g => AUGMENT[g.id])

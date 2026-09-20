@@ -14,7 +14,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const PAGES = ['gomoku', 'gravity-slingshot', 'hoop-shot', 'minesweeper', 'needle-awn',
+const PAGES = ['gomoku', 'gravity-slingshot', 'hoop-shot', 'lumen', 'minesweeper', 'needle-awn',
     'planet-merge', 'reversi', 'sword-flight', 'tetris', 'tower-defense', 'word-daily'];
 
 let failed = 0;

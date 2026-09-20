@@ -42,9 +42,11 @@ const SUITE = [
     { name: 'smoke-index', script: 'scripts/smoke-index.mjs', args: [], needsServer: true },
     { name: 'smoke-tank-battle', script: 'scripts/smoke-tank-battle.mjs', args: [], needsServer: true },
     { name: 'smoke-math-rain', script: 'scripts/smoke-math-rain.mjs', args: [], needsServer: true },
+    { name: 'lumen-levels', script: 'scripts/verify-lumen-levels.mjs', args: [], needsServer: false },
+    { name: 'smoke-lumen', script: 'scripts/smoke-lumen.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'smoke-tank-battle', 'smoke-math-rain', 'desktop-frame'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'lumen-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'desktop-frame'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿
