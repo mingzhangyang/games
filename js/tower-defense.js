@@ -485,14 +485,9 @@ const AIR_PATH = compilePath(AIR_WAYPOINTS);
 
 const pathPts = GROUND_PATH.pts;
 const PATH_TOTAL = GROUND_PATH.total;
-const AIR_PATH_TOTAL = AIR_PATH.total;
 
 function pointAtDist(d) {
     return GROUND_PATH.pointAt(d);
-}
-
-function pathOf(enemy) {
-    return enemy && enemy.flying ? AIR_PATH : GROUND_PATH;
 }
 
 // 路径覆盖的格子（禁止建造）
@@ -1799,7 +1794,6 @@ class TowerDefenseGame {
 
         // 分裂：死亡裂出一群小怪，位置接在当前位置，溅射清不干净就会滚雪球
         if (e.split) {
-            const path = e.path;
             for (let i = 0; i < e.split.count; i++) {
                 this.spawnEnemy(e.split.type, Math.max(0, e.dist - i * 14), true);
             }

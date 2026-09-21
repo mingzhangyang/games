@@ -72,7 +72,7 @@
                 <canvas class="game-canvas" id="sf-canvas" width="480" height="640"></canvas>
 
                 <!-- 内部即时 HUD -->
-                <div class="sf-in-hud" id="sf-in-hud">
+                <div class="sf-in-hud hidden" id="sf-in-hud">
                     <!-- 仙元护体 (生命值) -->
                     <div class="sf-lives-wrap" id="sf-lives-wrap">
                         <span class="sf-heart" id="sf-heart-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg></span>
@@ -121,7 +121,7 @@
                 </div>
 
                 <!-- 移动端触控按钮 -->
-                <div class="sf-touch-controls" id="sf-touch-controls">
+                <div class="sf-touch-controls hidden" id="sf-touch-controls" aria-hidden="true">
                     <button class="sf-touch-btn sf-touch-btn--array" id="sf-touch-array" aria-label="Sword Array">
                         <span class="btn-icon">⚔️</span>
                         <span id="sf-touch-array-lbl">剑阵</span>

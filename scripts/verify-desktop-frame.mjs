@@ -9,11 +9,10 @@
 //   g. 无 pageerror
 // 用法：node scripts/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { registry } from './lib/registry.mjs';
 
-const CHROME = process.env.CHROME_BIN ||
-    CHROME_PATH;
+const CHROME = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
 // 画幅预算页 = 挂 frame-budget cap 的游戏；ratio 由注册表 stage.w/h 派生（不再手写 0.75）
@@ -50,7 +49,7 @@ const MEASURE = () => {
 
 const browser = await puppeteer.launch({
     executablePath: CHROME, headless: 'new',
-    args: ['--no-first-run', '--disable-gpu', '--hide-scrollbars', '--mute-audio'],
+    args: LAUNCH_ARGS,
 });
 
 const failures = [];

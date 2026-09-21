@@ -18,7 +18,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SELF = fileURLToPath(import.meta.url);
 const node = process.execPath;
 
 // 时区矩阵：UTC-5 / UTC+8 / UTC+13（覆盖西半球、本地口径、最东断日线）

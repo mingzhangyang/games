@@ -13,12 +13,10 @@
 // 用法：node scripts/serve-static.mjs 8899 & 然后
 //       node scripts/verify-tetris-topbar-mobile.mjs http://127.0.0.1:8899 [outDir]
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
-import { existsSync, mkdirSync } from 'node:fs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { mkdirSync } from 'node:fs';
 
-const EXE = [
-    CHROME_PATH,
-].find(existsSync);
+const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp/tetris-topbar-mobile';
 mkdirSync(OUT, { recursive: true });
@@ -37,7 +35,7 @@ const VIEWPORTS = [
     { name: '桌面 1280×900', width: 1280, height: 900, deviceScaleFactor: 1, hasTouch: false },
 ];
 
-const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: LAUNCH_ARGS });
 
 const SNAP = () => {
     const box = r => ({ x: +r.x.toFixed(2), y: +r.y.toFixed(2), w: +r.width.toFixed(2), h: +r.height.toFixed(2), bottom: +r.bottom.toFixed(2) });

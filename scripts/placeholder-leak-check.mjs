@@ -4,7 +4,7 @@
  * 用法：node scripts/placeholder-leak-check.mjs [baseUrl]
  */
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -19,7 +19,7 @@ const pages = (await readdir(ROOT))
 const browser = await puppeteer.launch({
     executablePath: EXE,
     headless: 'new',
-    args: ['--no-first-run', '--disable-gpu', '--hide-scrollbars'],
+    args: LAUNCH_ARGS,
 });
 
 let total = 0;

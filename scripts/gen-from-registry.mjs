@@ -61,10 +61,6 @@ function applyRegion(src, name, content, installer, style = 'js') {
     return { src: installed, state: 'written' };
 }
 
-function regionBodyHtml(name, content) {
-    return `<!-- registry:begin ${name} -->\n${content.trimEnd()}\n<!-- registry:end ${name} -->`;
-}
-
 // ---------- 每页 <head> 生成 ----------
 function headBlock(g) {
     const u = `${ORIGIN}/${g.href}`;

@@ -5,12 +5,10 @@
 // 伪元素因此画在 <canvas> 之上 —— 网格被盖住、点击被吃掉，棋盘完全点不动。
 // 单纯量几何（layout-metrics）测不出来，必须验「像素 + 命中目标 + 真实落子」。
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
-import { existsSync, mkdirSync } from 'node:fs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { mkdirSync } from 'node:fs';
 
-const EXE = [
-    CHROME_PATH,
-].find(existsSync);
+const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp';
 mkdirSync(OUT, { recursive: true });
@@ -21,7 +19,7 @@ const check = (ok, label, detail) => {
     console.log(`  ${ok ? '✓' : '✗'} ${label}${detail ? '  (' + detail + ')' : ''}`);
 };
 
-const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: LAUNCH_ARGS });
 const page = await browser.newPage();
 const pageErrors = [];
 page.on('pageerror', e => pageErrors.push((e.stack || e.message).split('\n').slice(0, 4).join('\n    ')));

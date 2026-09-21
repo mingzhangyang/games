@@ -9,12 +9,10 @@
 // 这条规则只在**触摸按下**时才生效，所以不能只看初始状态（那样必然"通过"）：
 // 必须真的按住棋盘，在 :active 生效期间量 transform 与 rect。
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
-import { existsSync, mkdirSync } from 'node:fs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { mkdirSync } from 'node:fs';
 
-const EXE = [
-    CHROME_PATH,
-].find(existsSync);
+const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp';
 mkdirSync(OUT, { recursive: true });
@@ -25,7 +23,7 @@ const check = (ok, label, detail) => {
     console.log(`  ${ok ? '✓' : '✗'} ${label}${detail ? '  (' + detail + ')' : ''}`);
 };
 
-const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: LAUNCH_ARGS });
 
 // 采集棋盘 + 两个叠加画布的几何与变换
 const SNAP = () => {

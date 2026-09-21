@@ -22,15 +22,6 @@ import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
-function storageParse(key, fallback) {
-    try {
-        const parsed = JSON.parse(storageGet(key));
-        return parsed === null || parsed === undefined ? fallback : parsed;
-    } catch (e) {
-        return fallback;
-    }
-}
-
 /* ────────────────────────── i18n ────────────────────────── */
 
 const LANGUAGES = makeText({

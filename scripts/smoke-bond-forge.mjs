@@ -23,7 +23,7 @@ const ok = [];
 const pass = m => ok.push(m);
 
 const browser = await puppeteer.launch({
-    executablePath: process.env.CHROME_BIN || CHROME_PATH,
+    executablePath: CHROME_PATH,
     headless: 'new',
     args: LAUNCH_ARGS,
 });

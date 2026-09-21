@@ -64,7 +64,14 @@ const I18N = makeText({
         openRank: '查看九天仙榜',
         pauseTitle: '凝神静思 · 调息',
         pauseSub: '调和龙虎，蓄势待发',
+        pause: '暂停',
         resume: '继续御剑 ▶',
+        touchArray: '剑阵',
+        touchArrayLabel: '发动剑阵',
+        touchUlt: '归宗',
+        touchUltLabel: '发动万剑归宗',
+        touchDash: '破空',
+        touchDashLabel: '发动破空冲刺',
         restart: '重新启程 ⟲',
         home: '返回仙门',
         victoryTitle: '破境飞升 · 仙门洞开',
@@ -156,7 +163,14 @@ const I18N = makeText({
         openRank: 'View Celestial Leaderboard',
         pauseTitle: 'Meditation & Breath',
         pauseSub: 'Calm the mind, gathering inner power',
+        pause: 'Pause',
         resume: 'Resume Flight ▶',
+        touchArray: 'Array',
+        touchArrayLabel: 'Sword Array',
+        touchUlt: 'Ultimate',
+        touchUltLabel: 'Thousand Swords Ultimate',
+        touchDash: 'Dash',
+        touchDashLabel: 'Sword Qi Dash',
         restart: 'Restart Flight ⟲',
         home: 'Immortal Gate',
         victoryTitle: 'Ascension Accomplished',
@@ -484,6 +498,8 @@ class SoundFX {
 
 const SFX = new SoundFX();
 
+let swordFlightChrome = null;
+
 /* ────────────────────────── 游戏核心逻辑 ────────────────────────── */
 
 class SwordFlightGame {
@@ -669,18 +685,18 @@ class SwordFlightGame {
 
     /* ── 输入与操控 ── */
     initControls() {
-        const stage = document.getElementById('sf-stage');
+        const canvas = this.canvas;
 
         // 鼠标移动导引
-        stage.addEventListener('mousemove', (e) => {
+        canvas.addEventListener('mousemove', (e) => {
             if (!this.isPlaying || this.isPaused) return;
-            const rect = this.canvas.getBoundingClientRect();
+            const rect = canvas.getBoundingClientRect();
             this.player.targetX = ((e.clientX - rect.left) / rect.width) * CANVAS_WIDTH;
             this.player.targetY = ((e.clientY - rect.top) / rect.height) * CANVAS_HEIGHT;
         });
 
         // 鼠标点击 -> 破空刺
-        stage.addEventListener('mousedown', (e) => {
+        canvas.addEventListener('mousedown', (e) => {
             if (!this.isPlaying || this.isPaused) return;
             SFX.init();
             if (e.button === 0) {
@@ -690,7 +706,7 @@ class SwordFlightGame {
             }
         });
 
-        stage.addEventListener('contextmenu', (e) => e.preventDefault());
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // 触控拖拽
         const handleTouch = (e) => {
@@ -698,14 +714,17 @@ class SwordFlightGame {
             SFX.init();
             const touch = e.touches[0];
             if (!touch) return;
-            const rect = this.canvas.getBoundingClientRect();
+            const rect = canvas.getBoundingClientRect();
             this.player.targetX = Math.max(20, Math.min(CANVAS_WIDTH - 20, ((touch.clientX - rect.left) / rect.width) * CANVAS_WIDTH));
             this.player.targetY = Math.max(40, Math.min(CANVAS_HEIGHT - 60, ((touch.clientY - rect.top) / rect.height) * CANVAS_HEIGHT));
             e.preventDefault();
         };
 
-        stage.addEventListener('touchstart', handleTouch, { passive: false });
-        stage.addEventListener('touchmove', handleTouch, { passive: false });
+        // Bind to the canvas only. The action buttons are siblings inside the
+        // stage; listening on the stage made a finger tap on a button call
+        // preventDefault() before the button could synthesize its click.
+        canvas.addEventListener('touchstart', handleTouch, { passive: false });
+        canvas.addEventListener('touchmove', handleTouch, { passive: false });
 
         // 键盘操控
         window.addEventListener('keydown', (e) => {
@@ -738,16 +757,19 @@ class SwordFlightGame {
 
         // 移动端触控按钮
         document.getElementById('sf-touch-dash').addEventListener('click', () => {
+            if (!this.isPlaying || this.isPaused) return;
             SFX.init();
             this.triggerDash();
         });
 
         document.getElementById('sf-touch-array').addEventListener('click', () => {
+            if (!this.isPlaying || this.isPaused) return;
             SFX.init();
             this.triggerSwordArray();
         });
 
         document.getElementById('sf-touch-ult').addEventListener('click', () => {
+            if (!this.isPlaying || this.isPaused) return;
             SFX.init();
             this.triggerUltimate();
         });
@@ -909,10 +931,13 @@ class SwordFlightGame {
             const stars = this.stageStars[stageNum] || 0;
             totalStars += stars;
 
-            const card = document.createElement('div');
+            const card = document.createElement('button');
+            card.type = 'button';
             card.className = `sf-stage-card ${isUnlocked ? '' : 'locked'}`;
+            card.disabled = !isUnlocked;
+            card.setAttribute('aria-label', isUnlocked ? st.name : `${st.name} · 🔒`);
             card.innerHTML = `
-                <span class="sf-stage-num">${isUnlocked ? `第${stageNum}重` : '🔒'}</span>
+                <span class="sf-stage-num">${isUnlocked ? (isZh ? `第${stageNum}重` : `Realm ${stageNum}`) : '🔒'}</span>
                 <span class="sf-stage-name">${st.name}</span>
                 <span class="sf-stage-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>
             `;
@@ -928,6 +953,7 @@ class SwordFlightGame {
         starsTotal.textContent = `⭐ ${totalStars}/27`;
         wrap.classList.remove('hidden');
         document.getElementById('sf-daily-card').classList.add('hidden');
+        document.getElementById('sf-overlay-start').scrollTop = 0;
     }
 
     showDailyCard() {
@@ -938,6 +964,7 @@ class SwordFlightGame {
 
         const dateStr = dailyDateStr();
         document.getElementById('sf-daily-date').textContent = `${getLang() === 'zh' ? '今日仙历' : 'Daily Date'}：${dateStr}`;
+        document.getElementById('sf-overlay-start').scrollTop = 0;
     }
 
     /* ── 开始一局飞行 ── */
@@ -947,6 +974,9 @@ class SwordFlightGame {
         this.currentStageIndex = stageIndex;
         this.isPlaying = true;
         this.isPaused = false;
+        this.setGameplayHudVisible(true);
+        this.setTouchControlsVisible(true);
+        this.refreshPauseButton();
 
         // 隐藏所有弹窗
         document.getElementById('sf-overlay-start').classList.add('hidden');
@@ -1096,6 +1126,7 @@ class SwordFlightGame {
 
     /* ── 动作指令：破空疾刺 (Dash) ── */
     triggerDash() {
+        if (!this.isPlaying || this.isPaused) return;
         if (this.player.qi < 25 || this.player.dashTimer > 0) return;
         this.player.qi -= 25;
         this.player.dashTimer = 0.35; // 0.35s 冲刺无敌
@@ -1113,6 +1144,7 @@ class SwordFlightGame {
 
     /* ── 动作指令：伴生剑阵出鞘 (Sword Array Wave) ── */
     triggerSwordArray() {
+        if (!this.isPlaying || this.isPaused) return;
         if (this.satelliteSwords.length === 0) return;
         SFX.playArrayWave();
         this.screenShakes = 4;
@@ -1130,6 +1162,7 @@ class SwordFlightGame {
 
     /* ── 动作指令：绝技·万剑归宗 / 青莲剑歌 (Ultimate) ── */
     triggerUltimate() {
+        if (!this.isPlaying || this.isPaused) return;
         if (this.player.ultEnergy < 100) return;
         this.player.ultEnergy = 0;
         SFX.playUltimate();
@@ -1597,6 +1630,9 @@ class SwordFlightGame {
 
     handleStageVictory() {
         this.isPlaying = false;
+        this.setGameplayHudVisible(false);
+        this.setTouchControlsVisible(false);
+        this.refreshPauseButton();
         SFX.playUltimate();
 
         // 计算通关星级
@@ -1639,6 +1675,9 @@ class SwordFlightGame {
 
     handleGameOver() {
         this.isPlaying = false;
+        this.setGameplayHudVisible(false);
+        this.setTouchControlsVisible(false);
+        this.refreshPauseButton();
         if (this.score > this.endlessBest) {
             this.endlessBest = this.score;
             storageSet(STORAGE_KEYS.ENDLESS_BEST, this.endlessBest.toString());
@@ -3011,6 +3050,31 @@ class SwordFlightGame {
     }
 
     /* ── UI 界面与悬浮气泡 ── */
+    setGameplayHudVisible(visible) {
+        const hud = document.getElementById('sf-in-hud');
+        if (hud) hud.classList.toggle('hidden', !visible);
+    }
+
+    setTouchControlsVisible(visible) {
+        const controls = document.getElementById('sf-touch-controls');
+        if (!controls) return;
+        controls.classList.toggle('hidden', !visible);
+        controls.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        if (!visible && controls.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+    }
+
+    refreshPauseButton() {
+        const button = document.getElementById('sf-btn-pause');
+        const t = I18N[getLang() === 'zh' ? 'zh' : 'en'];
+        if (!button || !t) return;
+        button.innerHTML = this.isPaused ? ICONS.play : ICONS.pause;
+        button.setAttribute('title', this.isPaused ? t.resume : t.pause);
+        button.setAttribute('aria-label', this.isPaused ? t.resume : t.pause);
+        swordFlightChrome?.renderPause();
+    }
+
     updateHUD() {
         document.getElementById('sf-score-val').textContent = this.score.toLocaleString();
         const comboEl = document.getElementById('sf-combo-val');
@@ -3090,11 +3154,15 @@ class SwordFlightGame {
 
     pauseGame() {
         this.isPaused = true;
+        this.setTouchControlsVisible(false);
+        this.refreshPauseButton();
         document.getElementById('sf-overlay-pause').classList.remove('hidden');
     }
 
     resumeGame() {
         this.isPaused = false;
+        this.setTouchControlsVisible(true);
+        this.refreshPauseButton();
         this.lastTime = performance.now();
         document.getElementById('sf-overlay-pause').classList.add('hidden');
     }
@@ -3107,11 +3175,15 @@ class SwordFlightGame {
     pauseQuiet() {
         if (!this.isPlaying || this.isPaused) return;
         this.isPaused = true;
+        this.setTouchControlsVisible(false);
+        this.refreshPauseButton();
     }
 
     resumeQuiet() {
         if (!this.isPaused) return;
         this.isPaused = false;
+        this.setTouchControlsVisible(true);
+        this.refreshPauseButton();
         this.lastTime = performance.now();   // 丢掉暂停期间的时间跳跃
     }
 
@@ -3128,11 +3200,20 @@ class SwordFlightGame {
     returnToMenu() {
         this.isPlaying = false;
         this.isPaused = false;
+        this.score = 0;
+        this.combo = 1;
+        this.setGameplayHudVisible(false);
+        this.setTouchControlsVisible(false);
+        this.refreshPauseButton();
         document.getElementById('sf-overlay-pause').classList.add('hidden');
         document.getElementById('sf-overlay-victory').classList.add('hidden');
         document.getElementById('sf-overlay-gameover').classList.add('hidden');
+        document.getElementById('sf-stage-select-wrap').classList.add('hidden');
+        document.getElementById('sf-daily-card').classList.add('hidden');
+        document.getElementById('sf-overlay-start').scrollTop = 0;
         document.getElementById('sf-overlay-start').classList.remove('hidden');
         this.loadRecords();
+        this.updateHUD();
         this.updateSideRecords();
     }
 
@@ -3234,6 +3315,18 @@ class SwordFlightGame {
         document.getElementById('sf-lbl-mode-zen').textContent = t.modeZen;
         document.getElementById('sf-sub-mode-zen').textContent = t.modeZenSub;
 
+        const touchLabels = [
+            ['sf-touch-array-lbl', 'sf-touch-array', t.touchArray, t.touchArrayLabel],
+            ['sf-touch-ult-lbl', 'sf-touch-ult', t.touchUlt, t.touchUltLabel],
+            ['sf-touch-dash-lbl', 'sf-touch-dash', t.touchDash, t.touchDashLabel],
+        ];
+        touchLabels.forEach(([textId, buttonId, text, label]) => {
+            const textNode = document.getElementById(textId);
+            const button = document.getElementById(buttonId);
+            if (textNode) textNode.textContent = text;
+            if (button) button.setAttribute('aria-label', label);
+        });
+
         document.getElementById('sf-btn-start-daily').textContent = t.dailyStart;
         document.getElementById('sf-lbl-open-rank').textContent = t.openRank;
 
@@ -3290,6 +3383,10 @@ class SwordFlightGame {
 
         this.updateRealmDisplay();
         this.updateSideRecords();
+        this.refreshPauseButton();
+        if (!document.getElementById('sf-stage-select-wrap').classList.contains('hidden')) {
+            this.showStageSelect();
+        }
     }
 }
 
@@ -3322,10 +3419,15 @@ onReady(() => {
    owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
-    bindChrome({
+    swordFlightChrome = bindChrome({
         self: 'sword-flight.html',
         owns: ['more'],
         getText: () => I18N[getLang()] || I18N.zh,
-        labels: { pause: () => (I18N[getLang()] || {}).pause },
+        labels: {
+            pause: () => {
+                const t = I18N[getLang()] || I18N.zh;
+                return window.game?.isPaused ? t.resume : t.pause;
+            },
+        },
     });
 });

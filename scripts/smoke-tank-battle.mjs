@@ -7,7 +7,7 @@ const fails = [];
 const fail = m => fails.push(m);
 
 const browser = await puppeteer.launch({
-    executablePath: process.env.CHROME_BIN || CHROME_PATH,
+    executablePath: CHROME_PATH,
     headless: 'new',
     args: [...LAUNCH_ARGS, '--auto-accept-this-tab-capture'],
 });

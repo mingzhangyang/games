@@ -49,7 +49,6 @@ const HIT_R = 26;           // 开关命中半径（≥44px 触控目标：直�
 
 const AMBER = '#ffc94d';
 const AMBER_SOFT = '#ffe9b0';
-const BLUE = '#4dc3ff';
 const DIM_WIRE = '#3a4a78';
 const RED = '#e24b4a';
 
@@ -501,8 +500,6 @@ class CircuitGame {
         this.moves += 1;
         this.flipFx = { idx: stateIdx, start: this.time };
 
-        const ops = operableIndexes(this.spec);
-        const elIdx = ops[stateIdx];
         const prevLit = this.sol.lit;
         this.sol = solveCircuit(this.spec, this.states);
         Sfx.flip();
@@ -1156,7 +1153,6 @@ class CircuitGame {
         ctx.fill();
         ctx.stroke();
 
-        const eps = endpointsOf(el);
         const pad = (p, d = 4) => {
             const dx = x - p.x, dy = y - p.y;
             const len = Math.hypot(dx, dy) || 1;

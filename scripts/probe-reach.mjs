@@ -1,10 +1,9 @@
 // 探测各页移动端「内容超出视口但仍不可滚」的情况（body 脱流 / html 无滚动盒）
 // 用法: node scripts/probe-reach.mjs <baseUrl>
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 
-const EXE = process.env.CHROME_BIN ||
-    CHROME_PATH;
+const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8900';
 
 const PAGES = [
@@ -15,7 +14,7 @@ const PAGES = [
 const browser = await puppeteer.launch({
     executablePath: EXE,
     headless: 'new',
-    args: ['--no-first-run', '--disable-gpu', '--hide-scrollbars', '--mute-audio'],
+    args: LAUNCH_ARGS,
 });
 
 console.log('\n页面                  视口  内容底边  可滚高  能滚?  滚动后真位移?  body position   结论');
@@ -54,7 +53,7 @@ for (const name of PAGES) {
     });
 
     // 真正调用滚动 API，确认能不能动
-    const moved = await page.evaluate(() => {
+    await page.evaluate(() => {
         const sc = document.scrollingElement;
         sc.scrollTop = 500;
         return sc.scrollTop;

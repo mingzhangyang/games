@@ -8,15 +8,15 @@
 // 判据：skew = 左间隙 − 右间隙，|skew| ≤ 2px 视为居中。五档视口全覆盖。
 // 用法：node scripts/verify-index-layout.mjs [baseUrl]（需静态服务器）
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8911';
-const CHROME = process.env.CHROME_BIN || CHROME_PATH;
+const CHROME = CHROME_PATH;
 
 const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: 'new',
-    args: ['--no-sandbox'],
+    args: LAUNCH_ARGS,
 });
 
 const VIEWPORTS = [

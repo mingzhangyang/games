@@ -210,6 +210,7 @@ function updateHud(g = currentGame()) {
 // 模块级 `const game` 在 TDZ 期间，`typeof game` 自己就会抛 ReferenceError
 // （typeof 只对**未声明**的标识符安全，对 TDZ 中的 let/const 不安全）。
 // 持有者在 new Tetris() 之后立即赋值，构造期间读到的就是 null。
+// eslint-disable-next-line no-var -- 需要避开模块级 const game 的 TDZ
 var gameRef = null;
 
 function currentGame() {

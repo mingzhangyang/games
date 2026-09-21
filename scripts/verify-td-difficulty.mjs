@@ -11,12 +11,10 @@
 // 解锁门槛），几何检查器与静态分析一律测不出来。因此这里直接驱动 window.tdGame
 // 的内部状态做真实推进，并对每个机制做一次"正向 + 反向"双向验证。
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
-import { existsSync, mkdirSync } from 'node:fs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { mkdirSync } from 'node:fs';
 
-const EXE = [
-    CHROME_PATH,
-].find(existsSync);
+const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp';
 mkdirSync(OUT, { recursive: true });
@@ -27,7 +25,7 @@ const check = (ok, label, detail) => {
     console.log(`  ${ok ? '\u2713' : '\u2717'} ${label}${detail ? '  (' + detail + ')' : ''}`);
 };
 
-const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: LAUNCH_ARGS });
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 });
 const pageErrors = [];
@@ -386,8 +384,6 @@ const splitTest = await page.evaluate(() => {
     // 本体此刻 dead=true 但仍在数组里（update() 才 filter），所以要按 dead 过滤
     const alive = g.enemies.filter(e => !e.dead);
     const children = alive.filter(e => e.type === 'swarm');
-    const parentInArray = g.enemies.some(e => e.type === 'splitter' && e.dead);
-
     return {
         before,
         totalAfter: g.enemies.length,

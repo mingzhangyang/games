@@ -165,8 +165,9 @@ python scripts/apply-header-footer.py --dry
 python scripts/add-chrome-i18n.py --dry
 ```
 
-> ⚠️ WSL 里的 linux node 起不了 puppeteer（脚本写死的是 Windows 的 chrome.exe），
-> 用 Windows 侧的 node 跑，或自备 linux chrome 并设 `CHROME_BIN`。
+> `scripts/lib/browser.mjs` 会按「环境变量 → 系统 Chrome/Chromium → Puppeteer 缓存」解析路径，
+> 不再依赖固定的 Puppeteer 版本目录。换机器时优先设置 `CHROME_BIN`；WSL 里的 Linux Node
+> 若要使用 Windows Chrome，请用 Windows 侧 Node 运行校验，或在 WSL 安装 Linux Chrome 后设置 `CHROME_BIN`。
 
 `verify-chrome.mjs` 的断言（11 页 × 移动 390 / 桌面 1280 × zh / en = 44 组）：
 

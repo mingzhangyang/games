@@ -388,9 +388,6 @@ export class Tank {
 
     findPathToPlayer(player) {
         // 简单的A*路径寻找逻辑
-        const dx = player.x - this.x;
-        const dy = player.y - this.y;
-
         this.targetX = player.x;
         this.targetY = player.y;
     }

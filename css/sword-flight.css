@@ -113,6 +113,7 @@ body {
         width: auto;
         max-width: 100%;
     }
+
 }
 
 .sf-stage::-webkit-scrollbar {
@@ -286,12 +287,18 @@ body {
     bottom: 14px;
     left: 0;
     right: 0;
-    display: flex;
+    display: none;
     justify-content: space-between;
     align-items: center;
     padding: 0 18px;
     pointer-events: auto;
     z-index: 15;
+}
+
+/* These are gameplay controls, not menu controls. Keep them out of the way while
+   an overlay is open and avoid showing them on pointer-driven desktop layouts. */
+@media (pointer: coarse), (width <= 480px) {
+    .sf-touch-controls:not(.hidden) { display: flex; }
 }
 
 .sf-touch-btn {
@@ -347,6 +354,7 @@ body {
     background: rgb(2, 6, 18, 0.92);
     -ms-overflow-style: none;
     text-align: center;
+    overscroll-behavior: contain;
     animation: fadeIn 0.25s ease-out;
 }
 
@@ -504,12 +512,21 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
     background: rgb(7, 21, 41, 0.7);
     border: 1px solid rgb(56, 189, 248, 0.2);
     border-radius: 10px;
     padding: 7px 3px;
+    color: inherit;
+    font: inherit;
+    text-align: center;
     cursor: pointer;
     transition: all 0.15s;
+}
+
+.sf-stage-card:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
 }
 
 .sf-stage-card:hover:not(.locked) {
@@ -891,6 +908,31 @@ body {
     .sf-touch-btn { width: 56px; height: 56px; font-size: 9.5px; }
     .sf-touch-btn .btn-icon { font-size: 17px; }
     .sf-bottom-bars { margin-bottom: 64px; }
+}
+
+@media (width <= 360px) {
+    .sf-overlay { padding: 12px 16px 24px; gap: 8px; }
+    .sf-title { font-size: 24px; }
+    .sf-subtitle { font-size: 11px; margin-bottom: 4px; }
+    .sf-hero-art { margin-bottom: 4px; }
+    .sf-howto-box { padding: 7px 10px; font-size: 11px; line-height: 1.45; margin-bottom: 6px; }
+    .sf-mode-grid { margin-bottom: 8px; }
+}
+
+/* The portrait playfield is intentionally narrow in landscape. This block
+   comes after the base menu rules so the compact values win the cascade. */
+@media (orientation: landscape) and (height <= 640px) {
+    .sf-overlay { padding: 8px 12px 16px; gap: 6px; }
+    .sf-badge { font-size: 7px; letter-spacing: 1.2px; padding: 2px 7px; margin-bottom: 2px; }
+    .sf-title { font-size: 20px; letter-spacing: 2px; }
+    .sf-subtitle { font-size: 9px; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .sf-hero-art { font-size: 17px; gap: 7px; margin-bottom: 2px; }
+    .sf-howto-box { flex-shrink: 0; max-height: 70px; overflow-y: auto; padding: 5px 7px; font-size: 9px; line-height: 1.35; margin-bottom: 3px; }
+    .sf-mode-grid { gap: 4px; margin-bottom: 4px; }
+    .sf-mode-btn { padding: 5px 2px; font-size: 9px; }
+    .sf-mode-btn .mode-icon { font-size: 14px; }
+    .sf-mode-btn .mode-sub { font-size: 7px; }
+    .sf-leaderboard-entry-btn { font-size: 9px; padding: 5px 10px; margin-top: 1px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

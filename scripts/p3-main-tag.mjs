@@ -33,7 +33,7 @@ for (const page of PAGES) {
     const openEnd = openStart + open[0].length;
 
     // 标签深度扫描找配对 </div>（注释内的 div 不计——game-main 内无 HTML 注释含 div 标签）
-    let depth = 1, i = openEnd, closeIdx = -1;
+    let depth = 1, closeIdx = -1;
     const re = /<\/?div\b/g;
     re.lastIndex = openEnd;
     let m;

@@ -1,13 +1,11 @@
 // 六个页面「顶部 Stats 钮 + 底部抽屉」快速冒烟测试
 // 用法：node scripts/verify-stats-drawer.mjs <baseUrl> [outDir]
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { registry } from './lib/registry.mjs';
-import { existsSync, mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 
-const EXE = [
-    CHROME_PATH,
-].find(existsSync);
+const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || '';
 if (OUT) mkdirSync(OUT, { recursive: true });
@@ -78,7 +76,7 @@ const isNoise = (m) => IGNORABLE.some(re => re.test(m));
 const domClick = (page, sel) => page.$eval(sel, el => el.click());
 
 const browser = await puppeteer.launch({
-    executablePath: EXE, headless: 'new', args: ['--no-sandbox'],
+    executablePath: EXE, headless: 'new', args: LAUNCH_ARGS,
 });
 
 for (const P of PAGES) {
@@ -111,7 +109,6 @@ for (const P of PAGES) {
         const panels = document.getElementById(ids.panels);
         const sidebar = document.querySelector('.game-sidebar');
         const body = document.getElementById(ids.body);
-        const tcs = toggle ? getComputedStyle(toggle) : null;
         // 热区：读 ::after 外扩
         let hit = null;
         if (toggle) {

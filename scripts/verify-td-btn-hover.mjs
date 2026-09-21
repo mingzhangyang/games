@@ -9,12 +9,10 @@
 // elementFromPoint 全部测不出来（元素仍在、仍可点）。只有读 :hover 下的
 // computed background / color 才能发现。
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
-import { existsSync, mkdirSync } from 'node:fs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { mkdirSync } from 'node:fs';
 
-const EXE = [
-    CHROME_PATH,
-].find(existsSync);
+const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp';
 mkdirSync(OUT, { recursive: true });
@@ -25,7 +23,7 @@ const check = (ok, label, detail) => {
     console.log(`  ${ok ? '\u2713' : '\u2717'} ${label}${detail ? '  (' + detail + ')' : ''}`);
 };
 
-const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: LAUNCH_ARGS });
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 });
 const pageErrors = [];
@@ -146,7 +144,7 @@ check(true, '通用 .td-btn 基线背景可读', generic);
 
 /* ── 4. 反向验证：把选择器还原成旧的宽泛写法，对比度必须不合格 ── */
 console.log('\n=== 4. 反向验证（注入旧规则） ===');
-const injected = await page.evaluate(() => {
+await page.evaluate(() => {
     const st = document.createElement('style');
     // 旧写法：不带 :not()，权重 (0,2,0) 压过 .td-btn-primary
     st.textContent = '.td-btn:hover { background: rgba(255,255,255,0.14) !important; }';

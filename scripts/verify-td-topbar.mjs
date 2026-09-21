@@ -7,10 +7,10 @@
 // 页面侧不再有任何纵向拆行覆盖；.td-topbar-row--app / --game / -spacer 已随 HTML 拍平删除，
 // 本脚本守住「不再回退成多行」+ 触控热区，并原样保留「空中航线只在飞行关绘制」像素断言。
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
-import { existsSync, mkdirSync } from 'node:fs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { mkdirSync } from 'node:fs';
 
-const EXE = [CHROME_PATH].find(existsSync);
+const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp';
 mkdirSync(OUT, { recursive: true });
@@ -21,7 +21,7 @@ const check = (ok, label, detail) => {
     console.log(`  ${ok ? '\u2713' : '\u2717'} ${label}${detail ? '  (' + detail + ')' : ''}`);
 };
 
-const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({ executablePath: EXE, headless: 'new', args: LAUNCH_ARGS });
 const page = await browser.newPage();
 const pageErrors = [];
 page.on('pageerror', e => pageErrors.push((e.stack || e.message).split('\n').slice(0, 4).join('\n    ')));

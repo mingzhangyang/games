@@ -10,13 +10,10 @@
 //   · 移动端侧栏让位（display:none），桌面端侧栏常驻且 Stats 钮与抽屉隐藏
 //   · 面板 DOM 只有一个实例：桌面在侧栏里，移动端在抽屉里
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 
-const EXE = process.env.CHROME_BIN || [
-    CHROME_PATH,
-].find(existsSync);
+const EXE = CHROME_PATH;
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8900';
 const SHOTS = process.argv[3] || null;
@@ -63,7 +60,7 @@ if (SHOTS) await mkdir(SHOTS, { recursive: true });
 const browser = await puppeteer.launch({
     executablePath: EXE,
     headless: 'new',
-    args: ['--no-first-run', '--disable-gpu', '--hide-scrollbars', '--mute-audio', '--no-sandbox'],
+    args: LAUNCH_ARGS,
 });
 
 const SNAP = () => {

@@ -20,7 +20,7 @@ const fails = [];
 const fail = m => fails.push(m);
 
 const browser = await puppeteer.launch({
-    executablePath: process.env.CHROME_BIN || CHROME_PATH,
+    executablePath: CHROME_PATH,
     headless: 'new',
     args: LAUNCH_ARGS,
 });
@@ -183,4 +183,3 @@ if (fails.length) {
     process.exit(1);
 }
 console.log(`smoke-circuit：boot / 渲染 / 启动 / 点击开关 / 判胜 / 结算 / 星级 / 全 ${levelCount} 关渲染回归(含 ${spdtSeen} 个 spdt) 全部通过 ✅`);
-

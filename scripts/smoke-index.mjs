@@ -13,7 +13,7 @@ const fails = [];
 const fail = msg => fails.push(msg);
 
 const browser = await puppeteer.launch({
-    executablePath: process.env.CHROME_BIN || CHROME_PATH,
+    executablePath: CHROME_PATH,
     headless: 'new',
     args: LAUNCH_ARGS,
 });

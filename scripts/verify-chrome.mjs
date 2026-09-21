@@ -18,11 +18,10 @@
 // ⚠️ 语言存储键是 site_lang（js/site-settings.js 的 LANG_KEY），不是 'lang'。
 //    游戏页只读不写：语言切换入口只在首页，boot 时的 site_lang 决定本页初始语言。
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { registry } from './lib/registry.mjs';
 
-const CHROME = process.env.CHROME_BIN ||
-    CHROME_PATH;
+const CHROME = CHROME_PATH;
 const args = process.argv.slice(2);
 const BASE = args.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 
@@ -57,7 +56,7 @@ const gap = msg => knownGaps.add(msg);
 
 const browser = await puppeteer.launch({
     executablePath: CHROME, headless: 'new',
-    args: ['--no-first-run', '--disable-gpu', '--hide-scrollbars', '--mute-audio'],
+    args: LAUNCH_ARGS,
 });
 
 for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 900 }]) {
@@ -75,7 +74,9 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             }, lang);
 
             try {
-                await page.goto(`${BASE}/${name}.html`, { waitUntil: 'networkidle2', timeout: 25000 });
+                // 这个契约只检查 DOM/运行时标签；外部字体、统计上报和 service worker
+                // 不应让页面加载状态把校验拖到超时。
+                await page.goto(`${BASE}/${name}.html`, { waitUntil: 'domcontentloaded', timeout: 25000 });
             } catch {
                 fail(name, vp.tag, lang, '页面加载超时');
                 await page.close();

@@ -5,7 +5,7 @@
  * 用法：node scripts/wd-placeholder-check.mjs [baseUrl]
  */
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const EXE = CHROME_PATH;
@@ -13,7 +13,7 @@ const EXE = CHROME_PATH;
 const browser = await puppeteer.launch({
     executablePath: EXE,
     headless: 'new',
-    args: ['--no-first-run', '--disable-gpu', '--hide-scrollbars'],
+    args: LAUNCH_ARGS,
 });
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 900 });
