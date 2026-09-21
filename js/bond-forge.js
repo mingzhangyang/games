@@ -22,7 +22,7 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -313,7 +313,7 @@ class BondForgeGame {
         // 全站语言 / 静音设置变化（js/site-settings.js 派发 site-settings:changed）→ 本页重刷。
         // 语言切换入口已收敛到首页（2026-09-21）：本页不再主动 setLang，
         // 此监听器主要服务静音切换后的文案重刷。
-        // 注意要从 getLang() 重新取值，不要沿用 this.lang —— setLang 才是真源。
+        // 注意要从 getLang() 重新取值，不要沿用 this.lang —— 全站设置才是真源。
         window.addEventListener('site-settings:changed', () => {
             this.lang = getLang();
             this.applyLanguage();
@@ -535,12 +535,6 @@ class BondForgeGame {
         this.renderCheatSheet();
         this.renderSideRecords();
         this.updateHud();
-    }
-
-    setLang(lang) {
-        this.lang = lang;
-        setLang(lang);
-        this.applyLanguage();
     }
 
     applyLanguage() {

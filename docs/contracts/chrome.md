@@ -115,6 +115,9 @@ bindChrome({
 **豁免**（维持既定豁免，P4 只做了最小语义对齐，不套三槽位）：
 
 - `tank-battle`：横屏全屏画布 + 虚拟手柄，P4-2 仅加 `<main class="tb-main">`（`display: contents`）+ sr-only h1。
+  自带 `#btnLang`（虚拟手柄 aux-row）+ `switchLanguage()` + `L` 快捷键，也于 2026-09-21 随收敛移除。
+  ⚠️ 这类自带语言钮的页面**不在 `verify-chrome` 的覆盖内**（它只遍历带 topbar cap 的页面），
+  本次就是这样漏了整整一轮 —— 现在由 `scripts/verify-no-game-lang.mjs` 兜住。
 - `math-rain`：全屏街机 HUD，P4-3 仅加 `<main class="mr-main">`（包 game-container）+ sr-only h1；
   其开始界面与设置面板的语言选择器也于 2026-09-21 随收敛一起移除（HTML-only，JS 空值守卫天然兼容）。
 - `index.html`：落地页，P4-1 加 `<main class="idx-main">`，有自己的头部，不属于本契约；
@@ -177,6 +180,15 @@ python scripts/add-chrome-i18n.py --dry
 7. 页脚「更多游戏」展开后 `aria-expanded=true`、列表非空、不含自链接
 8. 顶栏首页钮点击后真的导航回 `index.html`（行为断言，防死按钮）
 9. 全程无 `pageerror`
+
+> ⚠️ **覆盖范围陷阱**：上面的 ①–⑨ 只遍历 `registry.withCap('topbar')` 的页面。
+> tank-battle / math-rain 这类豁免页根本不进循环 —— 它们的语言钮回归**一条断言都抓不到**。
+> 补齐手段是静态源扫描守卫 `scripts/verify-no-game-lang.mjs`（无需起服务，1 秒内）：
+> 扫全部 `*.html` + `js/**`，禁 `setLang(` / `selectLanguage(` / `switchLanguage(` /
+> `langTitle` / `btnLang` / `langBtn` / `data-chrome="lang"` / `__pendingLanguageSelection =`，
+> 外加「HTML 里名字带 lang 的按钮」结构检查；只豁免 `index.html`、`js/index-page.js`、
+> `js/site-settings.js`，以及 word-daily 的 `#wd-btn-lang`（单词/成语模式切换，非语言）。
+> 已注册进 `verify-all` 全量档与 `--quick` 档。
 
 > 它已经抓到一个**与迁移无关的历史 bug**：`js/minesweeper.js` 里写的是 `this.el.mute`，
 > 而元素缓存的键是 `mute-btn`（id 去掉 `ms-` 前缀），所以扫雷顶栏的静音钮**自 HEAD 起就没绑上过**。

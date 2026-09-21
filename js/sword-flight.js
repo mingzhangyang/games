@@ -9,7 +9,7 @@
  */
 
 import { getPlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -3213,7 +3213,7 @@ class SwordFlightGame {
         const lang = getLang() === 'zh' ? 'zh' : 'en';
         const t = I18N[lang];
         // HTML 里静态写的是 zh-CN；加载时若全站语言是 en，这里要把它纠正过来
-        // （setLang 只在“切换那一刻”同步，进不到首次加载这条路径）。
+        // （语言切换已于 2026-09-21 收敛到首页，这里只能靠 boot 时纠正一次）。
         document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
 
         // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的 applyLanguage 写）

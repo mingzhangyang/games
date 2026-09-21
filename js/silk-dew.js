@@ -29,7 +29,7 @@ import {
     dailyCourse,
 } from './silk-dew-levels.js';
 import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -394,12 +394,6 @@ class SilkfallGame {
             });
         }
         this.renderLevelGrid();
-    }
-
-    setLang(lang) {
-        this.lang = lang;
-        setLang(lang);
-        this.applyLanguage();
     }
 
     applyLanguage() {

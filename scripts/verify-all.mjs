@@ -31,6 +31,7 @@ const SUITE = [
     { name: 'sfx', script: 'scripts/verify-sfx.mjs', args: [], needsServer: false },
     { name: 'registry', script: 'scripts/verify-registry.mjs', args: [], needsServer: false },
     { name: 'index-cards', script: 'scripts/verify-index-cards.mjs', args: [], needsServer: false },
+    { name: 'no-game-lang', script: 'scripts/verify-no-game-lang.mjs', args: [], needsServer: false },
     { name: 'fg-audit', script: 'scripts/fg-audit.mjs', args: [], needsServer: true },
     { name: 'placeholder-leak', script: 'scripts/placeholder-leak-check.mjs', args: [], needsServer: true },
     { name: 'chrome', script: 'scripts/verify-chrome.mjs', args: [], needsServer: true },
@@ -55,7 +56,7 @@ const SUITE = [
     { name: 'smoke-bond-forge', script: 'scripts/smoke-bond-forge.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'bond-forge-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'smoke-bond-forge', 'desktop-frame'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'no-game-lang', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'bond-forge-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'smoke-bond-forge', 'desktop-frame'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿

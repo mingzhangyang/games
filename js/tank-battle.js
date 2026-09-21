@@ -1,7 +1,6 @@
 // 国际化语言支持
-import { getLang, setLang } from './site-settings.js';
+import { getLang } from './site-settings.js';
 import { createSfx } from './game-sfx.js';
-import { storageGet as safeStorageGet, storageSet as safeStorageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { CONFIG, WEAPONS, Particle, PowerUp, Bullet, Tank, BossTank, bindTankI18n } from './tank-entities.js';
 
@@ -29,7 +28,7 @@ const LANGUAGES = {
         ammo: '弹药',
         
         // 控制说明
-        controls: 'WASD: 移动 | 空格: 射击 | P: 暂停<br>1-3: 切换武器 | R: 重新开始 | L: 切换语言',
+        controls: 'WASD: 移动 | 空格: 射击 | P: 暂停<br>1-3: 切换武器 | R: 重新开始',
         
         // 武器名称
         weapons: {
@@ -59,7 +58,6 @@ const LANGUAGES = {
         title: '坦克大战 - 经典街机',
         fire: '开火',
         pauseTitle: '暂停/继续',
-        langTitle: '切换语言',
         weaponTitle: '切换武器',
         
         // 道具图标
@@ -80,7 +78,7 @@ const LANGUAGES = {
         ammo: 'Ammo',
         
         // Controls
-        controls: 'WASD: Move | Space: Shoot | P: Pause<br>1-3: Switch Weapon | R: Restart | L: Language',
+        controls: 'WASD: Move | Space: Shoot | P: Pause<br>1-3: Switch Weapon | R: Restart',
         
         // Weapon Names
         weapons: {
@@ -110,7 +108,6 @@ const LANGUAGES = {
         title: 'Tank Battle - Retro Arcade',
         fire: 'FIRE',
         pauseTitle: 'Pause / Resume',
-        langTitle: 'Switch Language',
         weaponTitle: 'Switch Weapon',
         
         // Power-up Icons
@@ -145,12 +142,6 @@ function t(key) {
 // 实体层（tank-entities.js）的 PowerUp.getIcon 依赖翻译函数，加载即注入
 bindTankI18n(t);
 
-// 切换语言函数
-function switchLanguage() {
-    currentLanguage = setLang(currentLanguage === 'zh' ? 'en' : 'zh');
-    updateUILabels();
-}
-
 // 更新UI标签文本
 function updateUILabels() {
     const setElemText = (id, text) => {
@@ -180,8 +171,6 @@ function updateUILabels() {
 
     const btnPause = document.getElementById('btnPause');
     if (btnPause) btnPause.title = t('pauseTitle');
-    const btnLang = document.getElementById('btnLang');
-    if (btnLang) btnLang.title = t('langTitle');
     const btnWeapon = document.getElementById('btnWeapon');
     if (btnWeapon) btnWeapon.title = t('weaponTitle');
 
@@ -387,11 +376,6 @@ class TankBattle {
                 this.restart();
             }
             
-            if (e.key.toLowerCase() === 'l') {
-                switchLanguage();
-                this.updateUI();
-            }
-            
             // 武器切换
             const num = parseInt(e.key);
             if (num >= 1 && num <= 3) {
@@ -441,7 +425,6 @@ class TankBattle {
         const btnFire = document.getElementById('btnFire');
         const btnWeapon = document.getElementById('btnWeapon');
         const btnPause = document.getElementById('btnPause');
-        const btnLang = document.getElementById('btnLang');
 
         if (!dpad || !btnFire) return;
 
@@ -584,21 +567,6 @@ class TankBattle {
             };
             btnPause.addEventListener('touchstart', handlePause, { passive: false });
             btnPause.addEventListener('click', handlePause);
-        }
-
-        // --- 切换语言 ---
-        if (btnLang) {
-            let lastLangTime = 0;
-            const handleLang = (e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastLangTime < 250) return;
-                lastLangTime = now;
-                switchLanguage();
-                this.updateUI();
-            };
-            btnLang.addEventListener('touchstart', handleLang, { passive: false });
-            btnLang.addEventListener('click', handleLang);
         }
     }
 

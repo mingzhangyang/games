@@ -51,7 +51,7 @@ const snap = await page.evaluate(() => {
         mainTag: !!document.querySelector('main.mr-main'),
         h1: document.getElementById('game-title')?.textContent || '',
         containerSize: r ? `${Math.round(r.width)}x${Math.round(r.height)}` : 'missing',
-        languageManager: typeof window.languageManager?.selectLanguage === 'function',
+        languageManager: typeof window.languageManager?.updateLanguage === 'function',
         shopManager: !!window.shopManager,
         // P1 加固：main.js 初始化失败会被自身 catch 吞成 console.error（不触发 pageerror），
         // 必须显式断言游戏实例与核心组件就位，否则 smoke 假绿

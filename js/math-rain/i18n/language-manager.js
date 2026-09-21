@@ -5,7 +5,7 @@
 
 import LANGUAGES_EN from './lang-en.js';
 import LANGUAGES_ZH from './lang-zh.js';
-import { getLang, setLang } from '../../site-settings.js';
+import { getLang } from '../../site-settings.js';
 import { updateMoreGames } from '../../more-games.js';
 
 // 站内唯一取词口（P1 合并：原 language-manager / UIController / main.js / shop-manager
@@ -37,9 +37,7 @@ class LanguageManager {
         if (typeof window !== 'undefined') {
             window.LANGUAGES = this.languages;
             window.currentLanguage = this.currentLanguage;
-            window.selectLanguage = this.selectLanguage.bind(this);
             window.updateLanguage = this.updateLanguage.bind(this);
-            window.updateLanguageButtons = this.updateLanguageButtons.bind(this);
             window.getLocalizedText = this.getLocalizedText.bind(this);
         }
     }
@@ -50,50 +48,6 @@ class LanguageManager {
     detectDefaultLanguage() {
         const browserLang = navigator.language || navigator.userLanguage || '';
         return browserLang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
-    }
-
-    /**
-     * Select and switch language
-     * @param {string} lang - Language code ('en' or 'zh')
-     */
-    selectLanguage(lang) {
-        // 持久化到全站统一语言设置（跨页面/跨会话生效）
-        this.currentLanguage = setLang(lang);
-        // Sync with global variable
-        if (typeof window !== 'undefined') {
-            window.currentLanguage = this.currentLanguage;
-        }
-        
-        this.updateLanguage();
-        this.updateLanguageButtons();
-        
-        // Notify other components of language change
-        if (typeof window !== 'undefined' && window.mathRainGame && window.mathRainGame.eventSystem) {
-            window.mathRainGame.eventSystem.emit('language:changed', {
-                language: this.currentLanguage
-            });
-        }
-    }
-
-    /**
-     * Update language buttons state
-     */
-    updateLanguageButtons() {
-        // Update start screen language buttons
-        const zhBtn = document.getElementById('lang-zh');
-        const enBtn = document.getElementById('lang-en');
-        const settingsZhBtn = document.getElementById('settings-lang-zh');
-        const settingsEnBtn = document.getElementById('settings-lang-en');
-        
-        if (zhBtn && enBtn) {
-            zhBtn.classList.toggle('active', this.currentLanguage === 'zh');
-            enBtn.classList.toggle('active', this.currentLanguage === 'en');
-        }
-        
-        if (settingsZhBtn && settingsEnBtn) {
-            settingsZhBtn.classList.toggle('active', this.currentLanguage === 'zh');
-            settingsEnBtn.classList.toggle('active', this.currentLanguage === 'en');
-        }
     }
 
     /**
@@ -166,7 +120,6 @@ class LanguageManager {
         this.updateElement('sound-volume-label', texts.soundVolume);
         this.updateElement('music-volume-label', texts.musicVolume);
         this.updateElement('particle-effects-label', texts.particleEffects);
-        this.updateElement('language-setting-label', texts.languageSetting);
         this.updateElement('settings-close-btn', texts.closeSettings);
 
         // Help screen
@@ -218,9 +171,6 @@ class LanguageManager {
         // Update stat labels
         this.updateStatLabels(texts);
         
-        // Update language buttons state
-        this.updateLanguageButtons();
-
         // 刷新交叉推荐条
         updateMoreGames(this.currentLanguage);
     }
@@ -310,7 +260,6 @@ class LanguageManager {
      */
     initialize() {
         this.updateLanguage();
-        this.updateLanguageButtons();
     }
 }
 
