@@ -82,4 +82,5 @@ bundle-analyzer-report.html
 
 # 临时工作目录（迁移脚本的试跑副本、探针等）
 .scratch/
+scratch/
 __pycache__/

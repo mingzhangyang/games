@@ -25,6 +25,7 @@ const TARGETS = {
     'word-daily': ['wd-btn-next', 'wd-btn-stats-inline', 'wd-btn-share-inline', 'wd-modal-next', 'wd-share'],
     'lumen': ['lm-btn-next', 'lm-btn-replay', 'lm-btn-menu1', 'lm-btn-copy', 'lm-btn-menu2', 'lm-btn-again'],
     'circuit': ['cc-btn-next', 'cc-btn-replay', 'cc-btn-menu1', 'cc-btn-copy', 'cc-btn-menu2', 'cc-btn-again'],
+    'silk-dew': ['sd-btn-next', 'sd-btn-replay', 'sd-btn-menu1', 'sd-btn-copy', 'sd-btn-menu2', 'sd-btn-again'],
 };
 
 // TARGETS 是每页的按钮 id，派生不出来，但漏页必须红：新游戏挂了 topbar cap 却

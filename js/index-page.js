@@ -94,6 +94,11 @@ const i18n = {
         circuitTag: 'Puzzle',
         circuitPlay: 'Play ›',
 
+        silkDewName: 'Silkfall',
+        silkDewDesc: 'Drag the anchor knot to thread a silken strand, guide the dew pearl past thorns and gales, and let it fall into the jade vessel. 20 levels plus a daily course.',
+        silkDewTag: 'Physics',
+        silkDewPlay: 'Play ›',
+
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
         minecraftTag: 'Sandbox',
@@ -209,6 +214,11 @@ const i18n = {
         circuitDesc: '拨动开关，接通电流，点亮全部目标灯泡——小心短路！20 关手工关卡 + 每日谜题。',
         circuitTag: '电路解谜',
         circuitPlay: '开始游戏 ›',
+
+        silkDewName: '垂丝引露',
+        silkDewDesc: '拖动丝线顶端的锚结，牵引露珠穿过荆棘与气旋，让它坠入玉壶。20 关手工关卡 + 每日挑战。',
+        silkDewTag: '绳物理',
+        silkDewPlay: '开始游戏 ›',
 
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -331,6 +341,11 @@ function applyLanguage(lang) {
     document.getElementById('circuit-tag').textContent = t.circuitTag;
     document.getElementById('circuit-play').textContent = t.circuitPlay;
 
+    document.getElementById('silk-dew-name').textContent = t.silkDewName;
+    document.getElementById('silk-dew-desc').textContent = t.silkDewDesc;
+    document.getElementById('silk-dew-tag').textContent = t.silkDewTag;
+    document.getElementById('silk-dew-play').textContent = t.silkDewPlay;
+
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
     document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -409,6 +424,7 @@ function injectStructuredData() {
         { slug: 'sword-flight', name: 'Sword Flight', description: 'Oriental xianxia kinetic flight action — soar through nine celestial realms, summon companion sword arrays, thread spiritual rings, and ascend to immortality.' },
         { slug: 'lumen', name: 'Lumen', description: 'Original beam refraction puzzle — flip mirrors, bend the beam and light every crystal. 20 handcrafted levels plus a daily puzzle.' },
         { slug: 'circuit', name: 'Circuit', description: 'Physics puzzle of switches and circuits — route the current, light every target bulb and dodge the short circuit. 20 levels plus a daily puzzle.' },
+        { slug: 'silk-dew', name: 'Silkfall', description: 'Rope-physics puzzle — drag the anchor knot to thread a silken strand, steer the dew pearl past thorns and gales and let it fall into the jade vessel. 20 levels plus a daily course.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }

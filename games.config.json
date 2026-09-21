@@ -676,6 +676,56 @@
         "priority": "0.8"
       },
       "themeColor": "#0a1230"
+    },
+    {
+      "id": "silk-dew",
+      "prefix": "sd",
+      "href": "silk-dew.html",
+      "entry": "js/silk-dew.js",
+      "emoji": "💧",
+      "title": {
+        "doc": "垂丝引露 Silkfall — Rope Physics Puzzle",
+        "seo": "垂丝引露 Silkfall — Rope Physics Puzzle"
+      },
+      "name": {
+        "en": "Silkfall",
+        "zh": "垂丝引露"
+      },
+      "desc": {
+        "meta": "垂丝引露 Silkfall — an original rope physics puzzle. Cut the silk, swing the dewdrop past thorns and breezes, guide it into the jade vessel. 20 handcrafted levels plus a daily course for the whole world.",
+        "og": "Cut the silk, swing the dew, land it in the jade vessel. 20 handcrafted levels and a daily course — fewer cuts, more stars.",
+        "twitter": "Cut the silk, swing the dew, land it in the jade vessel."
+      },
+      "genre": [
+        "PuzzleGame",
+        "SimulationGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "order": "asc",
+        "maxScore": 999,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "silk-dew",
+        "dailyTtlDays": 0
+      },
+      "stage": {
+        "w": 480,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "daily",
+        "priority": "0.8"
+      },
+      "themeColor": "#0a1712"
     }
   ]
 }

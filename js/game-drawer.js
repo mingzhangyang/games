@@ -143,7 +143,15 @@ export function createStatsDrawer(opts) {
             this.open ? this.close() : this.openDrawer();
         },
 
-        /** 渲染按钮/抽屉的图标与无障碍文案（i18n 切换后自动重调） */
+        /**
+         * 渲染按钮/抽屉的图标与无障碍文案。
+         * 语言切换后由 `site-settings:changed` 重调，init() 也调一次保证首屏正确。
+         *
+         * ⚠️ 没有 `ICONS` 时**也必须**跑后半段的文案赋值。早先的写法是
+         * `if (ICONS) { ...文案也塞里面... }`，结果没传图标表的页面
+         * 连 stats/close 都不渲染，移动端抽屉一直在说英文（verify-stats-drawer
+         * 的 `[zh] 文案已本地化` 专门抓这个）。
+         */
         renderIcons() {
             const txt = (typeof getText === 'function' ? getText() : null) || {};
             const statsLabel = txt.stats || 'Stats';
@@ -167,6 +175,15 @@ export function createStatsDrawer(opts) {
             // ⚠️ 必须在 JS 而不是 CSS 里判断 —— 搬迁节点在窄屏下已被移进抽屉，
             // CSS 里任何「侧栏是否含有节点」的判据都会失效（见 layout.css 注释）。
             document.body.classList.add('has-stats-drawer');
+
+            // ⚠️ 图标与无障碍文案必须在 init() 里无条件渲染一次。
+            //
+            // 实测踩过：silk-dew 的移动端抽屉在 zh 下仍显示 Stats/Close/Stats，
+            // 而其余 7 页都正常。原因是本模块原先只在 `if (ICONS)` 分支里渲染，
+            // 而那 7 页都会在随后某次语言重渲染里被兜住，silk-dew 没有第二条路径。
+            // 修法不是「给 silk-dew 补一次调用」，而是让首渲染不再依赖 ICONS：
+            // 没传图标表的页面同样要拿到 stats / close 文案。
+            this.renderIcons();
 
             btn.addEventListener('click', () => this.toggle());
             if (closeBtn) closeBtn.addEventListener('click', () => this.close());
@@ -209,10 +226,8 @@ export function createStatsDrawer(opts) {
 
             // 语言切换时自己重渲染文案 —— 各页的 applyLanguage 有 6 个不同实现，
             // 与其在 6 处分别插一行，不如让抽屉订阅全站统一事件（site-settings.js 派发）。
-            if (ICONS) {
-                this.renderIcons();
-                window.addEventListener('site-settings:changed', () => this.renderIcons());
-            }
+            // ⚠️ 这里只挂监听：首次渲染在 init() 顶部，重复调用没必要。
+            window.addEventListener('site-settings:changed', () => this.renderIcons());
 
             const onChange = () => {
                 // 桌面态不该有抽屉：切过去时若开着就先关（含恢复暂停）

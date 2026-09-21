@@ -81,5 +81,10 @@
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://games.orangely.xyz/silk-dew.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
   // registry:end games
 </urlset>

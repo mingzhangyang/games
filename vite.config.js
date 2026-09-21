@@ -58,6 +58,7 @@ main: resolve(__dirname, 'index.html'),
             "sword-flight": resolve(__dirname, 'sword-flight.html'),
             "lumen": resolve(__dirname, 'lumen.html'),
             "circuit": resolve(__dirname, 'circuit.html'),
+            "silk-dew": resolve(__dirname, 'silk-dew.html'),
             // registry:end inputs
         },
         output: {

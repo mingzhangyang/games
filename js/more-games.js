@@ -17,6 +17,7 @@ export const MORE_GAMES = [
     { href: 'sword-flight.html', emoji: '🗡️', en: "Sword Flight", zh: "御剑飞行" },
     { href: 'lumen.html', emoji: '💎', en: "Lumen", zh: "折光" },
     { href: 'circuit.html', emoji: '💡', en: "Circuit", zh: "电路谜题" },
+    { href: 'silk-dew.html', emoji: '💧', en: "Silkfall", zh: "垂丝引露" },
 ];
 // registry:end more-games
 

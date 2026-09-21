@@ -24,6 +24,7 @@ const AUGMENT = {
     'sword-flight':      { gameVar: 'game',            runningExpr: 'g.isPlaying && !g.isPaused', startMethod: 'startFlight', startArgs: ['endless'] },
     'lumen':             { gameVar: 'lmGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'circuit':           { gameVar: 'ccGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
+    'silk-dew':          { gameVar: 'sdGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
 };
 // ⚠ 曾经这里写的是 `.filter(g => AUGMENT[g.id])` —— 手工表静默收窄注册表：
 // 新游戏挂了 drawer cap 却忘了补 AUGMENT，校验器当它不存在，抽屉没接也全绿。

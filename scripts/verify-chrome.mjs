@@ -25,6 +25,20 @@ const BASE = args.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const PAGES = registry.withCap('topbar').map(g => g.id);
 const CANON = ['stats', 'pause', 'sound', 'lang'];
 
+// 共享层（bindChrome / createStatsDrawer）在这些钮上消耗的**公共**键，
+// 它们的 zh/en 值全站唯一（js/i18n.js 的 COMMON_TEXT）。
+//
+// ⚠️ 为什么要按语言断死值，而不是只断「文案非空 / 切换后变了」：
+//   这两条早就有（下面 §② 的非空 + §④ 的「变了」），但 silk-dew 曾把
+//   `getText` 传成 `(k) => t(k)`（共享层要的是 `() => 整表`），于是共享层读到的
+//   整表为空、全部退回内置英文兜底 —— 文案非空 ✅、「切换后变了」也 ✅
+//   （因为变的是页面自己的 hint/title），全绿。只有把期望值写死，
+//   「该是中文却给了英文」才无处可躲。
+const EXPECT_LABEL = {
+    zh: { sound: '声音', more: '更多游戏' },
+    en: { sound: 'Sound', more: 'More games' },
+};
+
 // 语义标签契约的已登记缺口：这三页主体是平铺结构，升级 <main> 需引入新包裹层。
 // 见 docs/backlog.md。补一页就从这里删一页 —— 白名单只许缩不许涨。
 const MAIN_PENDING = new Set(['gomoku', 'minesweeper', 'reversi']);
@@ -128,6 +142,22 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                 if (!c.title) fail(name, vp.tag, lang, `data-chrome="${c.role}" 缺 title`);
                 if (!c.aria) fail(name, vp.tag, lang, `data-chrome="${c.role}" 缺 aria-label`);
             }
+
+            /* ── ②b 共享文案必须真的本地化（不是只「非空」）──
+               只查 sound / moreGames：这两个键来自 js/i18n.js 的 COMMON_TEXT，
+               zh 值全站唯一，断死值不会误伤。
+               ⚠️ 刻意不查 home —— 它是**页面自有键**，各页取值不同（'Home' /
+               '返回菜单' / '返回仙门'），断死值会在 needle-awn、sword-flight 上误报。 */
+            const want = EXPECT_LABEL[lang];
+            const labelOf = role => (snap.chrome.find(c => c.role === role) || {}).aria || '';
+            const soundLabel = labelOf('sound');
+            // 静音态下文案会换成 soundOffLabel（'Unmute' / '取消静音'），两种情况都接受
+            if (soundLabel && soundLabel !== want.sound && !/Unmute|取消静音/.test(soundLabel))
+                fail(name, vp.tag, lang, `静音钮文案未本地化：期望「${want.sound}」，实得「${soundLabel}」（共享层 getText 是否返回整表？）`);
+            const moreLabel = labelOf('more');
+            if (moreLabel && moreLabel !== want.more)
+                fail(name, vp.tag, lang, `更多游戏钮文案未本地化：期望「${want.more}」，实得「${moreLabel}」（共享层 getText 是否返回整表？）`);
+
             if (!snap.chrome.some(c => c.role === 'lang'))
                 fail(name, vp.tag, lang, '没有语言钮');
             if (!snap.chrome.some(c => c.role === 'sound'))

@@ -1,0 +1,449 @@
+/* ─────────────────────────────────────────────
+   垂丝引露 Silkfall — rope physics puzzle
+   夜庭墨绿底 + 玉青（#58c9a0）+ 露青（#9fe8ff）双主色
+   ───────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background:
+        radial-gradient(ellipse 70% 42% at 50% -8%, rgb(88, 201, 160, 0.12), transparent),
+        radial-gradient(ellipse 50% 30% at 85% 110%, rgb(159, 232, 255, 0.07), transparent),
+        linear-gradient(165deg, #0a1712 0%, var(--tok-bg-2) 55%, #0d1338 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--tok-text);
+
+    --tok-accent: #58c9a0;
+    --tok-accent-2: #9fe8ff;
+}
+
+.hidden { display: none !important; }
+
+/* ── 顶栏 HUD ── */
+
+.sd-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.sd-icon-btn:active { transform: scale(0.92); }
+
+.sd-hud-level {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #9fe8c8;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.sd-cut-box {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    background: rgb(0, 0, 0, 0.35);
+    border: 1px solid rgb(255, 255, 255, 0.09);
+    border-radius: 11px;
+    padding: 6px 12px;
+}
+
+.sd-cut-value {
+    font-size: 19px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--tok-text);
+    min-width: 1.4ch;
+    text-align: center;
+}
+
+.sd-par {
+    font-size: 11.5px;
+    color: var(--tok-text-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── 舞台 ── */
+
+.sd-stage {
+    min-width: 280px;
+}
+
+#sd-canvas {
+    display: block;
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid rgb(88, 201, 160, 0.18);
+    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.5), 0 0 46px rgb(88, 201, 160, 0.12);
+    touch-action: manipulation;
+    cursor: pointer;
+}
+
+/* ── 提示 ── */
+
+.sd-toast {
+    top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tok-bg-2);
+    background: linear-gradient(120deg, #9fe8c8, var(--tok-cyan));
+    padding: 7px 18px;
+    box-shadow: 0 8px 24px rgb(88, 201, 160, 0.35);
+    animation: sd-toast-in 0.22s ease-out;
+}
+
+.sd-toast.warn {
+    background: linear-gradient(120deg, var(--tok-gold), #ff8a5c);
+    box-shadow: 0 8px 24px rgb(255, 138, 92, 0.35);
+}
+
+@keyframes sd-toast-in {
+    from { transform: translateX(-50%) translateY(-10px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* ── 覆盖层 ── */
+
+.sd-overlay {
+    background: rgb(8, 18, 14, 0.92);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.sd-overlay-dim { background: rgb(8, 18, 14, 0.72); }
+
+.sd-title {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.15;
+    background: linear-gradient(120deg, #9fe8ff, #58c9a0 55%, #a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sd-subtitle {
+    font-size: 12.5px;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: -6px;
+}
+
+.sd-hero {
+    font-size: 46px;
+    line-height: 1;
+    animation: sd-bob 2.1s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgb(159, 232, 255, 0.35));
+}
+
+@keyframes sd-bob {
+    0%, 100% { transform: translateY(0) rotate(-4deg); }
+    50% { transform: translateY(-8px) rotate(5deg); }
+}
+
+.sd-howto {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--tok-text-soft);
+    max-width: 350px;
+}
+
+.sd-mode-row {
+    display: flex;
+    gap: 8px;
+}
+
+.sd-mode {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.sd-mode:hover { background: rgb(255, 255, 255, 0.13); }
+.sd-mode:active { transform: scale(0.95); }
+
+.sd-mode-daily {
+    background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
+    border: none;
+    box-shadow: 0 8px 24px rgb(52, 211, 153, 0.35);
+}
+
+.sd-level-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.sd-level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 360px;
+}
+
+/* ⚠️ 类名必须与 js/silk-dew.js 的 renderLevelGrid() 一致：那里写的是
+   `'sd-chip' + (is-done)`，不是 `sd-level-chip`。类名错位会让整块容器规则静默失效，
+   芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑 20 处」。 */
+.sd-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    font-family: inherit;
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 6px 2px 4px;
+    cursor: pointer;
+    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
+    color: var(--tok-text);
+    transition: background 0.15s, transform 0.1s;
+}
+
+.sd-chip:hover { background: rgb(255, 255, 255, 0.11); }
+.sd-chip:active { transform: scale(0.93); }
+
+.sd-chip.is-done {
+    background: rgb(88, 201, 160, 0.14);
+    border-color: rgb(88, 201, 160, 0.38);
+}
+
+.sd-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
+
+.sd-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; color: var(--tok-gold); }
+
+.sd-daily-best {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #9fe8c8;
+    min-height: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.sd-start-footer { display: flex; gap: 10px; }
+
+.sd-lang-btn {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── 过关卡片 ── */
+
+.sd-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    background: rgb(12, 22, 18, 0.96);
+    border: 1px solid rgb(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 20px 22px;
+    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    animation: sd-card-in 0.26s ease-out;
+}
+
+@keyframes sd-card-in {
+    from { transform: scale(0.9) translateY(14px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.sd-card-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.sd-card-line {
+    font-size: 14px;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.sd-overlay-title { font-size: 26px; font-weight: 800; }
+
+.sd-over-score {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 26px rgb(159, 232, 255, 0.45);
+}
+
+.sd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
+
+.sd-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.sd-btn {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.08);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 18px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.sd-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.sd-btn:active { transform: scale(0.96); }
+
+.sd-btn-primary {
+    background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
+    border: none;
+    box-shadow: 0 8px 24px rgb(52, 211, 153, 0.4);
+}
+
+.sd-btn-ghost { background: transparent; color: var(--tok-text-dim); }
+
+/* ── 排行榜 ── */
+
+.sd-lb {
+    width: 100%;
+    max-width: 330px;
+    background: rgb(255, 255, 255, 0.045);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.sd-lb-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.sd-lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 40px;
+    max-height: 168px;
+    overflow-y: auto;
+}
+
+.sd-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    padding: 3px 6px;
+    border-radius: 7px;
+}
+
+.sd-lb-row.sd-lb-top1 { background: rgb(252, 211, 77, 0.14); }
+.sd-lb-row.sd-lb-top2 { background: rgb(203, 213, 225, 0.10); }
+.sd-lb-row.sd-lb-top3 { background: rgb(88, 201, 160, 0.12); }
+
+.sd-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.sd-lb-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.sd-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.sd-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
+
+.sd-lb-status {
+    min-height: 16px;
+    font-size: 11.5px;
+    color: var(--tok-text-mute);
+    margin-top: 4px;
+}
+
+.sd-username-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.sd-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
+
+.sd-username {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 9px;
+    padding: 7px 10px;
+    outline: none;
+}
+
+.sd-username:focus { border-color: rgb(88, 201, 160, 0.5); }
+
+/* ── 侧栏：每日记录行 ── */
+
+.sd-side-records { display: flex; flex-direction: column; }
+
+.sd-side-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+    padding: 4px 0;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.sd-side-row b { color: var(--tok-text); }
+
+/* ── 响应式 ── */
+
+@media (width <= 480px) {
+    .sd-hud-level { font-size: 12px; }
+    .sd-cut-value { font-size: 16px; }
+    .sd-title { font-size: 27px; }
+    .sd-over-score { font-size: 34px; }
+    .sd-howto { font-size: 12px; }
+    .sd-mode { font-size: 13px; padding: 10px 15px; }
+    .sd-level-grid { gap: 5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sd-hero, .sd-toast, .sd-card { animation: none !important; }
+    .sd-btn, .sd-icon-btn, .sd-mode, .sd-level-chip { transition: none; }
+}
+
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
+   480×640 竖版逻辑场 → --frame-ratio: 0.75；
+   舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
+.sd-shell {
+    --frame-max-wide: 940px;
+    --frame-stage: 480px;
+    --frame-side: 300px;
+    --frame-side-gap: 14px;
+    --frame-ratio: 0.75;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}

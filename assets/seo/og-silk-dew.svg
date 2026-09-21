@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="sd-og-title sd-og-desc">
+  <title id="sd-og-title">Silkfall social card</title>
+  <desc id="sd-og-desc">Social preview for 垂丝引露 Silkfall — original rope-cutting physics puzzle.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081009"/>
+      <stop offset="0.6" stop-color="#0a1712"/>
+      <stop offset="1" stop-color="#0d1338"/>
+    </linearGradient>
+    <radialGradient id="dewGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#40d8ff" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#40d8ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pearl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dffcff"/>
+      <stop offset="1" stop-color="#40d8ff"/>
+    </linearGradient>
+    <linearGradient id="jade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#58c9a0"/>
+      <stop offset="1" stop-color="#1f6f57"/>
+    </linearGradient>
+    <linearGradient id="silk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5f1de"/>
+      <stop offset="1" stop-color="#cfc7a6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g fill="#bfe8d8">
+    <circle cx="150" cy="85" r="2" opacity="0.55"/>
+    <circle cx="410" cy="55" r="1.5" opacity="0.4"/>
+    <circle cx="690" cy="100" r="1.8" opacity="0.45"/>
+    <circle cx="950" cy="65" r="1.3" opacity="0.4"/>
+    <circle cx="1120" cy="180" r="2" opacity="0.5"/>
+    <circle cx="90" cy="480" r="1.6" opacity="0.45"/>
+    <circle cx="1050" cy="480" r="1.6" opacity="0.45"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#58c9a0" stroke-width="2.5"/>
+
+  <text x="88" y="175" fill="#f4f6ff" font-size="76" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Silkfall</text>
+  <text x="88" y="238" fill="#58c9a0" font-size="38" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">垂丝引露 · 原创绳子物理解谜</text>
+  <text x="88" y="300" fill="#8fb8a8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Cut the silks and let the dew pearl fall.</text>
+  <text x="88" y="344" fill="#8fb8a8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Guide it into the jade vessel in as few cuts as you can.</text>
+
+  <!-- 场景示意：锚点 → 垂丝 → 露珠 → 荆棘/气泡 → 玉盏 + 星屑 -->
+  <g>
+    <!-- 锚点 1 -->
+    <circle cx="760" cy="392" r="9" fill="#131a44" stroke="#8fa0d8" stroke-width="2.5"/>
+    <circle cx="920" cy="392" r="9" fill="#131a44" stroke="#8fa0d8" stroke-width="2.5"/>
+    <!-- 垂丝 -->
+    <path d="M760 392 C 756 452, 772 500, 826 528" fill="none" stroke="url(#silk)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M920 392 C 924 448, 902 496, 852 528" fill="none" stroke="url(#silk)" stroke-width="4" stroke-linecap="round"/>
+    <!-- 露珠 -->
+    <circle cx="838" cy="540" r="46" fill="url(#dewGlow)"/>
+    <circle cx="838" cy="540" r="17" fill="url(#pearl)" stroke="#eafcff" stroke-width="2"/>
+    <!-- 星屑 -->
+    <path d="M1000 470 l6 14 14 6 -14 6 -6 14 -6 -14 -14 -6 14 -6 z" fill="#ffd34d"/>
+    <path d="M1060 520 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 z" fill="#ffd34d" opacity="0.75"/>
+    <!-- 玉盏 -->
+    <path d="M640 512 q0 44 52 44 q52 0 52 -44 l0 -16 -104 0 z" fill="url(#jade)" stroke="#a8ecd4" stroke-width="2.5"/>
+    <!-- 荆棘 -->
+    <g stroke="#ff6b7a" stroke-width="2.5" fill="#3a1220">
+      <circle cx="700" cy="300" r="14"/>
+      <circle cx="740" cy="300" r="14"/>
+      <circle cx="720" cy="328" r="14"/>
+    </g>
+    <!-- 气泡 -->
+    <circle cx="580" cy="330" r="22" fill="none" stroke="#9fe8ff" stroke-width="2" opacity="0.8"/>
+    <circle cx="573" cy="323" r="5" fill="none" stroke="#eafcff" stroke-width="1.6" opacity="0.8"/>
+    <!-- 剪切线示意 -->
+    <path d="M742 470 l20 -16 M744 454 l18 16" stroke="#ff6b7a" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+  </g>
+
+  <text x="88" y="552" fill="#dff5ec" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">💧 Play in browser · silk-dew</text>
+</svg>

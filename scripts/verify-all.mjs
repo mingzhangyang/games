@@ -49,9 +49,11 @@ const SUITE = [
     { name: 'smoke-lumen', script: 'scripts/smoke-lumen.mjs', args: [], needsServer: true },
     { name: 'circuit-levels', script: 'scripts/verify-circuit-levels.mjs', args: [], needsServer: false },
     { name: 'smoke-circuit', script: 'scripts/smoke-circuit.mjs', args: [], needsServer: true },
+    { name: 'silk-dew-levels', script: 'scripts/verify-silk-dew-levels.mjs', args: [], needsServer: false },
+    { name: 'smoke-silk-dew', script: 'scripts/smoke-silk-dew.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'lumen-levels', 'circuit-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'smoke-circuit', 'desktop-frame'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'desktop-frame'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿
