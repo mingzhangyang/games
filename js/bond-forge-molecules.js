@@ -137,7 +137,7 @@ export function allowsBonds(symbol, n) {
 /** 该元素在与**任何**伙伴成键时都可能表现为离子物种吗？
  *  判据：它是金属性/电正性很强的一侧（Na），即 maxBonds === 0。
  *  （当前元素表里只有 Na 命中；H 虽然 maxBonds 是 1，不在此列。） */
-function isIonicSelf(symbol) {
+export function isIonicSelf(symbol) {
     const e = ELEMENTS[symbol];
     return !!e && e.maxBonds === 0;
 }

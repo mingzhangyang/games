@@ -33,6 +33,8 @@ import {
     findByComposition,
     solveBest,
     dailyPicks,
+    canonicalize,
+    bondSignature,
 } from './bond-forge-molecules.js';
 
 // 每日赛程的抽取器与运行时共用（js/bond-forge.js 从这里 re-export 出去用）。
@@ -277,8 +279,13 @@ const EXTRA_SPECS = [
     },
 ];
 
-// 惰性导入避免循环依赖：canonicalize / bondSignature 从 molecules.js 取。
-const { canonicalize, bondSignature } = await import('./bond-forge-molecules.js');
+// ⚠️ canonicalize / bondSignature 走**上面的静态 import**，不要改回 `await import()`。
+//    本文件与 molecules.js 之间**没有**循环依赖（molecules.js 不反向 import 本文件），
+//    所以惰性导入没有任何收益；而顶层 await 会直接让 `vite build` 失败：
+//    legacy 目标（chrome64/es2020）不支持 top-level await，
+//    esbuild 在 [vite:esbuild-transpile] 阶段报
+//    "Top-level await is not available in the configured target environment"。
+//    这正是 M1 里程碑首次全量 build 真实踩到的坑（dev 下一切正常 —— dev 不做 legacy 转译）。
 
 for (const spec of EXTRA_SPECS) {
     if (MOLECULES[spec.id]) continue;
