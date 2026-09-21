@@ -1123,10 +1123,19 @@ class MathRainGame {
 // Export for ES modules
 export default MathRainGame;
 
-// Auto-initialization
+// Auto-initialization. Host-page gate: this file imports site-wide shared
+// modules, so a shared-chunk leak would otherwise run init on every game
+// and pop "游戏初始化失败" (2026-09-21).
+function isMathRainHostPage() {
+    return !!document.querySelector('main.mr-main') && !!document.getElementById('game-canvas');
+}
+
 async function initializeMathRainGame() {
     try {
-        
+        if (!isMathRainHostPage()) {
+            return;
+        }
+
         if (window.__mathRainInitInProgress || window.__mathRainInitialized) {
             return;
         }

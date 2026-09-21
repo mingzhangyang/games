@@ -24,6 +24,7 @@ const SUITE = [
     { name: 'gen-check', script: 'scripts/gen-from-registry.mjs', args: ['--check'], needsServer: false },
     { name: 'lint', script: 'scripts/run-lint.mjs', args: [], needsServer: false },
     { name: 'boot', script: 'scripts/verify-boot.mjs', args: [], needsServer: false },
+    { name: 'chunk-isolation', script: 'scripts/verify-chunk-isolation.mjs', args: [], needsServer: false },
     { name: 'daily', script: 'scripts/verify-daily.mjs', args: [], needsServer: false },
     { name: 'leaderboard', script: 'scripts/verify-leaderboard.mjs', args: [], needsServer: false },
     { name: 'i18n', script: 'scripts/verify-i18n.mjs', args: [], needsServer: false },
@@ -50,7 +51,7 @@ const SUITE = [
     { name: 'smoke-circuit', script: 'scripts/smoke-circuit.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'lumen-levels', 'circuit-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'smoke-circuit', 'desktop-frame'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'lumen-levels', 'circuit-levels', 'fg-audit', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'smoke-circuit', 'desktop-frame'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿

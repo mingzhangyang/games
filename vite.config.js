@@ -61,28 +61,13 @@ main: resolve(__dirname, 'index.html'),
             // registry:end inputs
         },
         output: {
-          // 分块策略
-          manualChunks: {
-            // Math Rain 相关模块
-            // （P0 重构：config-manager/performance-monitor 已删，animation-engine 与
-            //   question-bank-generator 系死代码随之移除，见 scripts/math-rain-tools/）
-            'math-rain-core': [
-              './js/math-rain/main.js',
-              './js/math-rain/expression-generator.js',
-              './js/math-rain/question-bank-manager.js'
-            ],
-            'math-rain-systems': [
-              './js/math-rain/systems/EventSystem.js',
-              './js/math-rain/systems/DependencyContainer.js'
-            ],
-            'math-rain-managers': [
-              './js/math-rain/core/GameStateManager.js',
-              './js/math-rain/core/SessionManager.js',
-              './js/math-rain/core/UIController.js',
-              './js/math-rain/core/PerformanceOptimizer.js',
-              './js/math-rain/core/ErrorHandler.js'
-            ]
-          },
+          // ⚠️ 不要再加 manualChunks：Rollup 的对象式 manualChunks 会把列出模块
+          //   **连同其整条依赖图**塞进该分块。math-rain/main.js 的依赖里有
+          //   safe-storage / site-settings / icons / analytics 这些**全站共享模块**，
+          //   它们一旦被并进 math-rain-core，其它 14 个页面为了拿这些共享导出
+          //   就必须加载整个 math-rain-core —— 于是 main.js 的自动初始化副作用
+          //   在每个游戏页都会执行一次，弹出「❌ 游戏初始化失败」红框（2026-09-21 事故）。
+          //   现在交给 Vite 默认的共享分块策略。
           // 文件命名
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
