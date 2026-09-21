@@ -10,7 +10,6 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0b1020">
     <meta name="description" content="Math Rain 数字雨 — solve falling math equations before they land. Beat the timer, climb the streak and sharpen your mental arithmetic.">
-    <meta name="keywords" content="undefined">
     <meta name="robots" content="index, follow">
     <meta name="author" content="Orangely">
     <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/math-rain.html">
@@ -74,7 +73,7 @@
             </div>
             <!-- 游戏控制按钮（顶栏内，移动端 sticky 钉右缘，不遮挡画布） -->
             <div id="game-controls">
-                <button id="home-exit-btn" class="control-btn" title="Home" aria-label="Home" onclick="location.href='index.html'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+                <button id="home-exit-btn" class="control-btn" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
                 <button id="pause-btn" class="control-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/></svg></button>
                 <button id="settings-btn" class="control-btn" title="Settings" aria-label="Settings"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
                 <button id="shop-btn" class="control-btn" title="Shop" aria-label="Shop"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
@@ -101,15 +100,15 @@
         <!-- 工具栏（道具/技能） -->
         <div id="tool-bar" class="tool-bar">
             <div class="tool-item">
-                <button id="freeze-btn" class="tool-btn" title="时间冻结 (快捷键 F)">❄️ Freeze</button>
+                <button id="freeze-btn" class="tool-btn" title="时间冻结 (快捷键 F)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg><span class="tool-text">Freeze</span></button>
                 <span class="tool-count" id="freeze-count">x0</span>
             </div>
             <div class="tool-item">
-                <button id="bomb-btn" class="tool-btn" title="清屏 (快捷键 B)">💣 Bomb</button>
+                <button id="bomb-btn" class="tool-btn" title="清屏 (快捷键 B)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="13.5" r="6"/><path d="M14.8 9.2l3.7-3.7"/><path d="M18.5 3.5h.01M21 6h.01M19.5 9h.01"/></svg><span class="tool-text">Bomb</span></button>
                 <span class="tool-count" id="bomb-count">x0</span>
             </div>
             <div class="tool-item">
-                <button id="shield-btn" class="tool-btn" title="护盾 (快捷键 S)">🛡️ Shield</button>
+                <button id="shield-btn" class="tool-btn" title="护盾 (快捷键 S)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 2.8v5.4c0 4.4-3 7.6-7 9.3-4-1.7-7-4.9-7-9.3V5.8z"/></svg><span class="tool-text">Shield</span></button>
                 <span class="tool-count" id="shield-count">x0</span>
             </div>
             <div class="tool-item coins">
@@ -123,9 +122,9 @@
     <div id="start-screen" class="screen">
         <div class="screen-content">
             <div class="language-selector">
-                <button id="lang-zh" class="lang-btn" onclick="selectLanguage('zh')">中文</button>
-                <button id="lang-en" class="lang-btn" onclick="selectLanguage('en')">English</button>
-                <a class="lang-btn" id="start-home-btn" href="index.html" title="Home" aria-label="Home" style="text-decoration:none;display:inline-flex;align-items:center;">🏠 主页</a>
+                <button id="lang-zh" class="lang-btn" data-lang="zh">中文</button>
+                <button id="lang-en" class="lang-btn" data-lang="en">English</button>
+                <a class="lang-btn" id="start-home-btn" href="index.html" title="Home" aria-label="Home" style="text-decoration:none;display:inline-flex;align-items:center;gap:7px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span class="btn-text">主页</span></a>
             </div>
             <h1 id="game-title">Math Rain</h1>
             <p id="game-subtitle">数字雨</p>
@@ -141,8 +140,8 @@
                 </div>
             </div>
             <div class="start-buttons">
-                <button id="start-game-btn" class="start-btn">🚀 开始游戏</button>
-                <button id="help-btn" class="help-btn">❓ 游戏帮助</button>
+                <button id="start-game-btn" class="start-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8c2.2 1.9 3.5 4.9 3.5 8l-1.3 4.7h-4.4L8.5 10.8c0-3.1 1.3-6.1 3.5-8z"/><circle cx="12" cy="9" r="1.5"/><path d="M9.8 15.5c-1.3 1-2 2.4-2.2 4.2 1.5-.4 2.7-1.3 3.5-2.6M14.2 15.5c1.3 1 2 2.4 2.2 4.2-1.5-.4-2.7-1.3-3.5-2.6"/></svg><span class="btn-text">开始游戏</span></button>
+                <button id="help-btn" class="help-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 0 1 5.4.9c0 1.8-2.6 2.1-2.6 3.6"/><path d="M12 17h.01"/></svg><span class="btn-text">游戏帮助</span></button>
             </div>
 <nav class="more-games">
     <div class="more-games-title">🎮 More Games</div>
@@ -187,27 +186,27 @@
             <h2 id="game-over-title">🎮 游戏结束</h2>
             <div class="final-stats">
                 <div class="stat-item">
-                    <span class="stat-label">最终得分</span>
+                    <span class="stat-label" data-i18n="finalScore">最终得分</span>
                     <span id="final-score" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">最高连击</span>
+                    <span class="stat-label" data-i18n="maxCombo">最高连击</span>
                     <span id="max-combo" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">准确率</span>
+                    <span class="stat-label" data-i18n="accuracy">准确率</span>
                     <span id="accuracy" class="stat-value">0%</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">游戏时间</span>
+                    <span class="stat-label" data-i18n="gameTime">游戏时间</span>
                     <span id="game-time" class="stat-value">0s</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">评级</span>
+                    <span class="stat-label" data-i18n="grade">评级</span>
                     <span id="final-grade" class="stat-value grade">F</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">获得金币</span>
+                    <span class="stat-label" data-i18n="coinsEarnedLabel">获得金币</span>
                     <span id="final-coins" class="stat-value coins">+0</span>
                 </div>
             </div>
@@ -225,27 +224,27 @@
             <h2 id="session-complete-title">🎯 会话完成</h2>
             <div class="final-stats">
                 <div class="stat-item">
-                    <span class="stat-label">最终分数</span>
+                    <span class="stat-label" data-i18n="finalScore">最终分数</span>
                     <span id="session-final-score" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">目标分数</span>
+                    <span class="stat-label" data-i18n="targetScore">目标分数</span>
                     <span id="session-target-score" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">准确率</span>
+                    <span class="stat-label" data-i18n="accuracy">准确率</span>
                     <span id="session-accuracy" class="stat-value">0%</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">最高连击</span>
+                    <span class="stat-label" data-i18n="maxCombo">最高连击</span>
                     <span id="session-max-combo" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">会话时长</span>
+                    <span class="stat-label" data-i18n="sessionDuration">会话时长</span>
                     <span id="session-duration" class="stat-value">3 分钟</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">升级达成</span>
+                    <span class="stat-label" data-i18n="levelUpAchieved">升级达成</span>
                     <span id="session-level-up" class="stat-value">否</span>
                 </div>
             </div>
@@ -279,8 +278,8 @@
                 <div class="setting-item">
                     <label id="language-setting-label">游戏语言</label>
                     <div class="language-selector">
-                        <button id="settings-lang-zh" class="lang-btn" onclick="selectLanguage('zh')">中文</button>
-                        <button id="settings-lang-en" class="lang-btn" onclick="selectLanguage('en')">English</button>
+                        <button id="settings-lang-zh" class="lang-btn" data-lang="zh">中文</button>
+                        <button id="settings-lang-en" class="lang-btn" data-lang="en">English</button>
                     </div>
                 </div>
             </div>

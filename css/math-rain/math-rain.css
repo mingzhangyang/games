@@ -611,6 +611,12 @@ body {
 
 /* 开始按钮 */
 .start-btn {
+    /* P2 emoji 收编为 SVG：flex + gap 让图标与 .btn-text 垂直居中对齐 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    line-height: 1;
     background: linear-gradient(145deg, #6366f1, #4f46e5);
     border: 1px solid #4338ca;
     color: white;
@@ -622,7 +628,7 @@ body {
     cursor: pointer;
     margin: 25px 0;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 
+    box-shadow:
         0 6px 20px rgba(99, 102, 241, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -1537,11 +1543,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 7px;
+    line-height: 1;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     letter-spacing: 0.5px;
     position: relative;
     overflow: hidden;
 }
+#help-btn svg { flex: 0 0 auto; }
 
 #help-btn::before {
     content: '';
@@ -1885,6 +1894,12 @@ body {
     gap: 8px;
 }
 .tool-btn {
+    /* P2 emoji 收编为 SVG 后按钮变为「图标+文字」组合，flex 布局保证垂直居中
+       （emoji 的字体度量会把行盒撑高导致文字偏离中心，见 js/icons.js 头注） */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
     padding: 8px 14px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.06);
@@ -1893,9 +1908,11 @@ body {
     cursor: pointer;
     font-weight: 800;
     letter-spacing: 0.5px;
+    line-height: 1;
     backdrop-filter: blur(10px);
     transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease, border-color 0.2s ease;
 }
+.tool-btn svg { flex: 0 0 auto; }
 .tool-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
 .tool-btn:active { transform: translateY(0); box-shadow: none; }
 .tool-btn:disabled {

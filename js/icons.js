@@ -54,5 +54,13 @@ export const ICONS = {
     // emoji 的字体度量会把行盒撑高并让文字偏离胶囊中心（见 css/tetris.css .theme-toggle 注释）
     theme: svg('<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4a8.6 8.6 0 0 1 0 17.2z" fill="currentColor" stroke="none"/>'),
     // 手柄（更多游戏）——页脚「更多游戏」展开钮用，替代原本的导航条常驻占位
-    games: svg('<path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/>')
+    games: svg('<path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/>'),
+    // 雪花（时间冻结）——math-rain 工具栏
+    snowflake: svg('<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/>'),
+    // 炸弹（清屏）——math-rain 工具栏
+    bomb: svg('<circle cx="10.5" cy="13.5" r="6"/><path d="M14.8 9.2l3.7-3.7"/><path d="M18.5 3.5h.01M21 6h.01M19.5 9h.01"/>'),
+    // 盾牌（护盾）——math-rain 工具栏
+    shield: svg('<path d="M12 3l7 2.8v5.4c0 4.4-3 7.6-7 9.3-4-1.7-7-4.9-7-9.3V5.8z"/>'),
+    // 火箭（开始游戏）——math-rain 开始按钮
+    rocket: svg('<path d="M12 2.8c2.2 1.9 3.5 4.9 3.5 8l-1.3 4.7h-4.4L8.5 10.8c0-3.1 1.3-6.1 3.5-8z"/><circle cx="12" cy="9" r="1.5"/><path d="M9.8 15.5c-1.3 1-2 2.4-2.2 4.2 1.5-.4 2.7-1.3 3.5-2.6M14.2 15.5c1.3 1 2 2.4 2.2 4.2-1.5-.4-2.7-1.3-3.5-2.6"/>')
 };

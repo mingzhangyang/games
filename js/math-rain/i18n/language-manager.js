@@ -108,13 +108,13 @@ class LanguageManager {
             document.title = this.currentLanguage === 'zh' ? '数字雨 - 算术益智游戏' : 'Math Rain - Mathematical Expression Game';
         }
 
-        // Basic game elements
+        // Basic game elements（start-game/help/start-home 内含内联 SVG，仅更新 .btn-text span）
         this.updateElement('game-title', texts.gameTitle);
         this.updateElement('game-subtitle', texts.gameSubtitle);
-        this.updateElement('start-game-btn', texts.startGame);
-        this.updateElement('help-btn', texts.helpButton);
+        this.updateButtonWithIcon('start-game-btn', null, texts.startGame);
+        this.updateButtonWithIcon('help-btn', null, texts.helpButton);
         this.updateElement('difficulty-title', texts.difficulty);
-        this.updateElement('start-home-btn', `🏠 ${texts.home || 'Home'}`);
+        this.updateButtonWithIcon('start-home-btn', null, texts.home || 'Home');
 
         // Game stats labels
         this.updateElement('score-label', texts.score);
@@ -126,9 +126,9 @@ class LanguageManager {
         this.updateElement('target-hint', texts.clickHint);
 
         // Tool buttons
-        this.updateToolButton('freeze-btn', '❄️', texts.freeze, texts.freezeTitle);
-        this.updateToolButton('bomb-btn', '💣', texts.bomb, texts.bombTitle);
-        this.updateToolButton('shield-btn', '🛡️', texts.shield, texts.shieldTitle);
+        this.updateToolButton('freeze-btn', texts.freeze, texts.freezeTitle);
+        this.updateToolButton('bomb-btn', texts.bomb, texts.bombTitle);
+        this.updateToolButton('shield-btn', texts.shield, texts.shieldTitle);
 
         // Control buttons
         this.updateButtonWithIcon('pause-btn', '⏸️', texts.pause);
@@ -265,47 +265,31 @@ class LanguageManager {
     }
 
     /**
-     * Update tool button with title attribute
+     * Update tool button text (span-only; tool buttons contain inline SVG icons)
      */
-    updateToolButton(id, icon, text, title) {
+    updateToolButton(id, text, title) {
         const element = document.getElementById(id);
-        if (element && text) {
-            element.innerHTML = `${icon} ${text}`;
-            if (title) {
-                element.setAttribute('title', title);
-            }
+        if (!element) return;
+        // 仅更新 .tool-text 文字 span，保留内联 SVG 图标不被 innerHTML 覆盖
+        const textSpan = element.querySelector('.tool-text');
+        if (textSpan && text) {
+            textSpan.textContent = text;
+        }
+        if (title) {
+            element.setAttribute('title', title);
         }
     }
 
     /**
      * Update stat labels dynamically
+     * （结算面板 12 个 .stat-label 带 data-i18n 键，直接查 texts；不再按显示文案反查——
+     *   反查在文案微调后会静默失效，data-i18n 是稳定锚点）
      */
     updateStatLabels(texts) {
-        const statLabels = document.querySelectorAll('.stat-label');
-        const statMappings = {
-            '最终分数': texts.finalScore,
-            'Final Score': texts.finalScore,
-            '目标分数': texts.targetScore,
-            'Target Score': texts.targetScore,
-            '准确率': texts.accuracy,
-            'Accuracy': texts.accuracy,
-            '最高连击': texts.maxCombo,
-            'Max Combo': texts.maxCombo,
-            '会话时长': texts.sessionDuration,
-            'Session Duration': texts.sessionDuration,
-            '升级达成': texts.levelUpAchieved,
-            'Level Up Achieved': texts.levelUpAchieved,
-            '游戏时间': texts.gameTime,
-            'Game Time': texts.gameTime,
-            '评级': texts.grade,
-            'Grade': texts.grade,
-            '获得金币': texts.coinsEarnedLabel,
-            'Coins Earned': texts.coinsEarnedLabel
-        };
-
-        statLabels.forEach(label => {
-            if (statMappings[label.textContent]) {
-                label.textContent = statMappings[label.textContent];
+        document.querySelectorAll('.stat-label[data-i18n]').forEach(label => {
+            const value = texts[label.dataset.i18n];
+            if (value) {
+                label.textContent = value;
             }
         });
     }

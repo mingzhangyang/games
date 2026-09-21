@@ -2,8 +2,8 @@
 // B 批次（2026-09-20）：math-rain.html 的 compatibility globals 内联 script 并入此处。
 // 顺序约定：globals 挂载必须先于 languageManager 初始化（__pendingLanguageSelection
 // 缓存机制依赖该顺序，与抽离前 body 末尾内联 script → module 的时序等价）。
-// ⚠️ HTML 里的 4 个 lang-btn 用 onclick="selectLanguage(...)" 内联处理器，
-// 求值时查 window.selectLanguage —— 本文件顶部必须保持全局挂载，勿改模块作用域。
+// P2（2026-09-20）：HTML 的 onclick 内联处理器已全部移除（4 个 lang-btn + home-exit-btn），
+// 事件绑定统一收敛到本文件 —— 本 module 为 type="module"（defer 语义），执行时 DOM 已就绪。
 // P1（2026-09-20）：游戏依赖类（expression-generator 等 6 个）不再经此处动态 import +
 // window 兼容挂载，全部由 main.js 静态 import 直连；本文件只保留语言/商店/主入口编排。
 // mobile-adapter 保持 import 以触发其 DOM-ready 自初始化。
@@ -17,6 +17,16 @@ window.selectLanguage = function (lang) {
 };
 // 原 globals 里的 window.updateShopInterface 转发包装已删：
 // git grep 全仓无任何消费者（shop-manager 内部用 this.updateShopInterface），死代码。
+
+// P2：语言切换与主页退出按钮绑定（module defer ⇒ DOM 就绪；走 window.selectLanguage
+// 保留 languageManager 未就绪时的 __pendingLanguageSelection 缓存语义）
+document.querySelectorAll('.lang-btn[data-lang]').forEach(btn => {
+    btn.addEventListener('click', () => window.selectLanguage(btn.dataset.lang));
+});
+const homeExitBtn = document.getElementById('home-exit-btn');
+if (homeExitBtn) {
+    homeExitBtn.addEventListener('click', () => { window.location.href = 'index.html'; });
+}
 
 (async () => {
     try {

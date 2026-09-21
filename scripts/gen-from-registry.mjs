@@ -76,7 +76,10 @@ function headBlock(g) {
     L.push(`    <meta name="mobile-web-app-capable" content="yes">`);
     L.push(`    <meta name="theme-color" content="${g.themeColor}">`);
     L.push(`    <meta name="description" content="${esc(g.desc.meta)}">`);
-    L.push(`    <meta name="keywords" content="${esc(g.keywords)}">`);
+    // keywords 为可选字段：缺省时直接跳过该行（否则输出字面 "undefined"）
+    if (g.keywords) {
+        L.push(`    <meta name="keywords" content="${esc(g.keywords)}">`);
+    }
     L.push(`    <meta name="robots" content="index, follow">`);
     L.push(`    <meta name="author" content="${SITE.publisher}">`);
     L.push(`    <link rel="canonical" id="canonical-link" href="${u}">`);
