@@ -144,7 +144,6 @@ class MobileAdapter {
      */
     setupPerformanceOptimizations() {
         if (this.performanceMode.low) {
-            console.log('🔥 Applying low-end device optimizations');
             
             // Disable complex animations
             document.documentElement.style.setProperty('--animation-duration', '0.1s');
@@ -153,7 +152,6 @@ class MobileAdapter {
             // Reduce particle effects
             this.applyLowEndSettings();
         } else if (this.performanceMode.medium) {
-            console.log('⚡ Applying medium performance optimizations');
             document.documentElement.style.setProperty('--animation-duration', '0.2s');
             document.documentElement.style.setProperty('--transition-duration', '0.2s');
         }
@@ -302,7 +300,6 @@ class MobileAdapter {
      * Handle swipe gestures
      */
     handleSwipe(direction, x, y) {
-        console.log(`👆 Swipe detected: ${direction} at (${x}, ${y})`);
 
         // Emit swipe event
         if (typeof window !== 'undefined' && window.mathRainGame && window.mathRainGame.eventSystem) {
@@ -399,7 +396,6 @@ class MobileAdapter {
      */
     destroy() {
         this.isInitialized = false;
-        console.log('🔧 Mobile Adapter destroyed');
     }
 }
 
@@ -408,8 +404,6 @@ export default MobileAdapter;
 
 // Auto-initialize if in browser environment
 if (typeof window !== 'undefined') {
-    window.MobileAdapter = MobileAdapter;
-    
     // Auto-initialize on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {

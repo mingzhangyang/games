@@ -71,11 +71,6 @@ main: resolve(__dirname, 'index.html'),
               './js/math-rain/expression-generator.js',
               './js/math-rain/question-bank-manager.js'
             ],
-            'math-rain-engine': [
-              './js/math-rain/particle-effects.js',
-              './js/math-rain/sound-manager.js',
-              './js/math-rain/difficulty-manager.js'
-            ],
             'math-rain-systems': [
               './js/math-rain/systems/EventSystem.js',
               './js/math-rain/systems/DependencyContainer.js'

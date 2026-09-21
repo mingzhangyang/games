@@ -3,6 +3,8 @@
  * Handles all game state, scoring, and progression logic
  */
 
+import { storageGet, storageSet } from '../../safe-storage.js';
+
 class GameStateManager {
     constructor(eventSystem) {
         this.eventSystem = eventSystem;
@@ -24,12 +26,12 @@ class GameStateManager {
      */
     loadInventory() {
         try {
-            const saved = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
+            const saved = JSON.parse(storageGet(this.storageKey) || 'null');
             if (saved && typeof saved === 'object') {
                 return saved;
             }
         } catch (error) {
-            // 隐私模式或数据损坏时忽略
+            // 数据损坏时忽略
         }
         return null;
     }
@@ -38,16 +40,12 @@ class GameStateManager {
      * 持久化金币和道具库存（存储不可用时静默跳过）
      */
     saveInventory() {
-        try {
-            localStorage.setItem(this.storageKey, JSON.stringify({
-                coins: this.coins,
-                freezeCount: this.freezeCount,
-                bombCount: this.bombCount,
-                shieldCount: this.shieldCount
-            }));
-        } catch (error) {
-            // 存储不可用时静默降级
-        }
+        storageSet(this.storageKey, JSON.stringify({
+            coins: this.coins,
+            freezeCount: this.freezeCount,
+            bombCount: this.bombCount,
+            shieldCount: this.shieldCount
+        }));
     }
 
     /**

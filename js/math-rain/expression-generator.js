@@ -953,10 +953,3 @@ export const generateExpressionForTarget = ExpressionGenerator.generateExpressio
 
 // Export for both Node.js and browser environments// ES模块导出
 export default ExpressionGenerator;
-
-// 兼容性导出（用于非模块环境）
-if (typeof window !== 'undefined') {
-    window.ExpressionGenerator = ExpressionGenerator;
-    // 浏览器环境下也挂一个便捷函数（可选）
-    window.generateExpressionForTarget = ExpressionGenerator.generateExpressionForTarget;
-}

@@ -8,6 +8,21 @@ import LANGUAGES_ZH from './lang-zh.js';
 import { getLang, setLang } from '../../site-settings.js';
 import { updateMoreGames } from '../../more-games.js';
 
+// 站内唯一取词口（P1 合并：原 language-manager / UIController / main.js / shop-manager
+// 四处各持一份 getLocalizedText + 同一套 fallback 表，现收敛于此）。
+// 语义：命中返回已替换 {{placeholder}} 的字符串；未命中返回 null（调用方自带 || 兜底）。
+let activeManager = null;
+
+export function getLocalizedText(key, replacements = {}) {
+    const texts = activeManager?.languages?.[activeManager.currentLanguage];
+    if (!texts || !texts[key]) return null;
+    let text = texts[key];
+    for (const [placeholder, value] of Object.entries(replacements)) {
+        text = text.replace(`{{${placeholder}}}`, value);
+    }
+    return text;
+}
+
 class LanguageManager {
     constructor() {
         this.languages = {
@@ -16,7 +31,8 @@ class LanguageManager {
         };
 
         this.currentLanguage = getLang();
-        
+        activeManager = this;
+
         // Expose to global scope for compatibility
         if (typeof window !== 'undefined') {
             window.LANGUAGES = this.languages;
@@ -296,41 +312,13 @@ class LanguageManager {
 
     /**
      * Get localized text with placeholder replacement
+     * （委托给模块级唯一实现 getLocalizedText，见文件顶部）
      * @param {string} key - Text key
      * @param {Object} replacements - Placeholder replacements
-     * @returns {string} Localized text
+     * @returns {string|null} Localized text, or null when missing
      */
     getLocalizedText(key, replacements = {}) {
-        try {
-            const texts = this.languages[this.currentLanguage];
-            if (texts && texts[key]) {
-                let text = texts[key];
-                // Replace placeholders like {{count}} with actual values
-                for (const [placeholder, value] of Object.entries(replacements)) {
-                    text = text.replace(`{{${placeholder}}}`, value);
-                }
-                return text;
-            }
-            
-            // Fallback texts根据语言决定
-            const isEnglish = this.currentLanguage === 'en' ||
-                             (typeof navigator !== 'undefined' && navigator.language && !navigator.language.startsWith('zh'));
-            
-            const fallbackTexts = {
-                lifeLost: isEnglish ? 'Life -1 (Remaining: {{lives}})' : '生命 -1 (剩余: {{lives}})',
-                comboMessage: isEnglish ? '{{count}}x Combo!' : '{{count}}x 连击!',
-                coinsEarned: isEnglish ? '+{{amount}} Coins' : '+{{amount}} 金币',
-                coinsLost: isEnglish ? '-{{amount}} Coins' : '-{{amount}} 金币'
-            };
-            
-            let text = fallbackTexts[key] || key;
-            for (const [placeholder, value] of Object.entries(replacements)) {
-                text = text.replace(`{{${placeholder}}}`, value);
-            }
-            return text;
-        } catch (error) {
-            return key;
-        }
+        return getLocalizedText(key, replacements);
     }
 
     /**

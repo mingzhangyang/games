@@ -483,8 +483,3 @@ class DifficultyManager {
 
 // ES模块导出
 export default DifficultyManager;
-
-// 兼容性导出（用于非模块环境）
-if (typeof window !== 'undefined') {
-    window.DifficultyManager = DifficultyManager;
-}

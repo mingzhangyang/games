@@ -29,7 +29,20 @@ await page.evaluateOnNewDocument(() => {
     try { localStorage.setItem('site_lang', 'zh'); } catch (e) { /* ignore */ }
 });
 await page.goto(`${BASE}/math-rain.html`, { waitUntil: 'networkidle0', timeout: 45000 });
-await new Promise(r => setTimeout(r, 1200)); // 等异步 bootstrap（Promise.all 12 模块 + main.js）
+// P1：main.js 静态直连依赖后初始化时序略有变化——轮询等待核心组件就位（上限 8s），
+// 不再用固定 sleep（固定 1200ms 在慢机上会假红）
+{
+    const deadline = Date.now() + 8000;
+    let ready = false;
+    while (Date.now() < deadline) {
+        ready = await page.evaluate(() =>
+            !!window.mathRainGame?.gameStateManager && !!window.mathRainGame?.uiController
+        );
+        if (ready) break;
+        await new Promise((r) => setTimeout(r, 100));
+    }
+    if (!ready) console.error('[smoke] 8s 内核心组件未就位，按当前状态断言');
+}
 
 const snap = await page.evaluate(() => {
     const gc = document.getElementById('game-container');
@@ -40,14 +53,20 @@ const snap = await page.evaluate(() => {
         containerSize: r ? `${Math.round(r.width)}x${Math.round(r.height)}` : 'missing',
         languageManager: typeof window.languageManager?.selectLanguage === 'function',
         shopManager: !!window.shopManager,
+        // P1 加固：main.js 初始化失败会被自身 catch 吞成 console.error（不触发 pageerror），
+        // 必须显式断言游戏实例与核心组件就位，否则 smoke 假绿
+        gameInstance: !!window.mathRainGame,
+        gameStateReady: !!window.mathRainGame?.gameStateManager && !!window.mathRainGame?.uiController,
         tokensApplied: getComputedStyle(document.documentElement).getPropertyValue('--tok-bg').trim() !== '',
         bodyOverflowHidden: getComputedStyle(document.body).overflow === 'hidden',
     };
 });
 
 // bootstrap 失败会走 console.error('Failed to bootstrap Math Rain:', ...)
+// main.js 初始化失败会走 console.error('❌ Math Rain - Initialization failed:', ...)
 const bootFail = consoleErrors.find(t => t.includes('Failed to bootstrap Math Rain'));
 if (bootFail) fail(`bootstrap 失败: ${bootFail}`);
+if (consoleErrors.some(t => t.includes('Initialization failed'))) fail('main.js 初始化失败（见控制台错误）');
 if (errs.length) fail(`页面错误: ${errs.join(' | ')}`);
 if (!snap.mainTag) fail('缺 <main class="mr-main">');
 if (!snap.h1) fail('缺 #game-title h1');
@@ -58,6 +77,8 @@ else {
 }
 if (!snap.languageManager) fail('languageManager 未初始化（bootstrap 未完成）');
 if (!snap.shopManager) fail('shopManager 未初始化');
+if (!snap.gameInstance) fail('mathRainGame 实例未创建（main.js 初始化链中断）');
+if (!snap.gameStateReady) fail('GameStateManager/UIController 未就位');
 if (!snap.tokensApplied) fail('tokens.css 变量未生效');
 if (!snap.bodyOverflowHidden) fail('body overflow:hidden 被破坏（游戏页需满屏）');
 

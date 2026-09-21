@@ -12,6 +12,14 @@ import PerformanceOptimizer from './core/PerformanceOptimizer.js';
 import ErrorHandler from './core/ErrorHandler.js';
 import UIController from './core/UIController.js';
 import { track } from '../analytics.js';
+// P1：外部组件静态 import 直连（替代原 window.* 全局轮询）
+import ExpressionGenerator from './expression-generator.js';
+import QuestionBankManager from './question-bank-manager.js';
+import DifficultyManager from './difficulty-manager.js';
+import SoundManager from './sound-manager.js';
+import ParticleSystem from './particle-effects.js';
+import { getLocalizedText } from './i18n/language-manager.js';
+import { storageGet } from '../safe-storage.js';
 
 /**
  * Math Rain Game Class
@@ -87,12 +95,9 @@ class MathRainGame {
      */
     async initializeAsync() {
         try {
-            
-            // Wait for external dependencies to be available
-            await this.waitForExternalDependencies();
-            
-            // Initialize external components
-            await this.initializeExternalComponents();
+
+            // Initialize external components（P1 起为同步直连，无轮询等待）
+            this.initializeExternalComponents();
             
             // Initialize core components directly (simplify for now)
             this.gameStateManager = new GameStateManager(this.eventSystem);
@@ -129,61 +134,28 @@ class MathRainGame {
     }
     
     /**
-     * Wait for external dependencies to be loaded
-     */
-    async waitForExternalDependencies() {
-        const requiredClasses = ['ExpressionGenerator', 'QuestionBankManager', 'DifficultyManager', 'SoundManager'];
-        const maxWait = 15000; // 15 seconds max to allow for module loading
-        const checkInterval = 500; // Check every 500ms to be less aggressive
-        let waited = 0;
-        
-        return new Promise((resolve, reject) => {
-            const checkDependencies = () => {
-                const missingClasses = requiredClasses.filter(className => !window[className]);
-                
-                if (missingClasses.length === 0) {
-                    resolve();
-                    return;
-                }
-                
-                waited += checkInterval;
-                if (waited >= maxWait) {
-                    reject(new Error(`Missing required classes after ${maxWait}ms: ${missingClasses.join(', ')}`));
-                    return;
-                }
-                
-                setTimeout(checkDependencies, checkInterval);
-            };
-            
-            checkDependencies();
-        });
-    }
-    
-    /**
      * Initialize external components (existing game modules)
+     * P1：静态 import 直连实例化，删除原 window.* 轮询等待（waitForExternalDependencies）
      */
-    async initializeExternalComponents() {
+    initializeExternalComponents() {
         try {
-            // Initialize external components from global scope
-            this.expressionGenerator = new window.ExpressionGenerator();
-            this.questionBankManager = new window.QuestionBankManager();
-            this.animationEngine = new window.AnimationEngine();
-            this.difficultyManager = new window.DifficultyManager();
-            this.soundManager = new window.SoundManager();
+            this.expressionGenerator = new ExpressionGenerator();
+            this.questionBankManager = new QuestionBankManager();
+            this.difficultyManager = new DifficultyManager();
+            this.soundManager = new SoundManager();
 
-            // 注意：不预先 start 动画引擎。当前没有任何模块创建动画，
-            // 预启动会让 rAF 循环整页空转；引擎已改为有动画时自启（animation-engine.js）
-            
             // Initialize sound manager
             if (this.soundManager && typeof this.soundManager.init === 'function') {
-                await this.soundManager.init();
+                const initResult = this.soundManager.init();
+                if (initResult && typeof initResult.then === 'function') {
+                    return initResult;
+                }
             }
-            
-            
         } catch (error) {
             console.error('❌ Failed to initialize external components:', error);
             throw error;
         }
+        return undefined;
     }
     
     /**
@@ -208,11 +180,9 @@ class MathRainGame {
             };
             
             // Initialize particle system
-            if (typeof window.ParticleSystem !== 'undefined') {
-                this.particleSystem = new window.ParticleSystem(this.canvas);
-                this.particleSystem.setEnabled(true);
-                // Don't start its own loop, we'll update it manually
-            }
+            this.particleSystem = new ParticleSystem(this.canvas);
+            this.particleSystem.setEnabled(true);
+            // Don't start its own loop, we'll update it manually
             
             // Add event listeners
             this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
@@ -375,10 +345,10 @@ class MathRainGame {
                 
                 // Add text effect showing lives lost
                 if (this.particleSystem.createTextEffect) {
-                    const lifeText = this.getLocalizedText('lifeLost').replace('{{lives}}', data.lives);
+                    const lifeText = getLocalizedText('lifeLost', { lives: data.lives }) || 'Life -1';
                     this.particleSystem.createTextEffect(
-                        centerX, centerY - 20, 
-                        lifeText, 
+                        centerX, centerY - 20,
+                        lifeText,
                         { color: '#e53e3e', size: 18, duration: 2000 }
                     );
                 }
@@ -397,17 +367,15 @@ class MathRainGame {
 
         // 恢复上次保存的音量（滑块位置由 UIController.initializeSettings 恢复；
         // 此处订阅已就绪，直接应用即可，不依赖初始化期的事件时序）
-        try {
-            const savedSfxVolume = localStorage.getItem('mr_sfx_volume');
+        {
+            const savedSfxVolume = storageGet('mr_sfx_volume');
             if (savedSfxVolume !== null && this.soundManager) {
                 this.soundManager.setSfxVolume(Number(savedSfxVolume) / 100);
             }
-            const savedMusicVolume = localStorage.getItem('mr_music_volume');
+            const savedMusicVolume = storageGet('mr_music_volume');
             if (savedMusicVolume !== null && this.soundManager) {
                 this.soundManager.setMusicVolume(Number(savedMusicVolume) / 100);
             }
-        } catch (e) {
-            // 存储不可用时使用默认音量
         }
         
         // Game state events
@@ -423,21 +391,20 @@ class MathRainGame {
         });
         
         this.eventSystem.on('game:resumed', (data) => {
-            
+
             // Adjust timing variables for pause duration
             if (data && data.pausedDuration) {
                 this.nextTargetChangeTime += data.pausedDuration;
                 this.lastSpawnTime += data.pausedDuration;
                 this.lastCanvasSpawnTime += data.pausedDuration;
                 // 会话截止时间也要补偿暂停时长，否则暂停期间会白白扣时间
-                if (this.sessionManager && this.sessionManager.isSessionActive) {
-                    this.sessionManager.sessionEndTime += data.pausedDuration;
-                }
+                // （P1：经 SessionManager.pauseFor() 封装，不再直改内部字段）
+                this.sessionManager?.pauseFor?.(data.pausedDuration);
             }
 
-            // Restart both rendering and game loop
+            // Restart both rendering and game loop（幂等，防双链）
             this.startCanvasRendering();
-            this.gameLoop(); // Restart the game loop
+            this.startGameLoop();
         });
         
         // Session events
@@ -558,6 +525,17 @@ class MathRainGame {
         this.nextTargetChangeTime = currentTime + this.config.targetChangeInterval;
         this.nextCanvasSpawnTime = 0;
         this.spawnInitialExpressions();
+        this.startGameLoop();
+    }
+
+    /**
+     * 启动游戏逻辑循环（幂等）。
+     * gameLoop 是自递归 rAF 链：非 playing 态自动熄火并清 _gameLoopRunning。
+     * 旧实现 game:resumed 直接重入 gameLoop()，与既有链叠加会双倍推进。
+     */
+    startGameLoop() {
+        if (this._gameLoopRunning) return;
+        this._gameLoopRunning = true;
         this.gameLoop();
     }
 
@@ -647,6 +625,7 @@ class MathRainGame {
     }
     
     startCanvasRendering() {
+        if (this.isRendering) return; // 幂等：防 game:resumed 重复触发叠出双 rAF 链
         this.isRendering = true;
         this.renderLoop();
     }
@@ -1101,43 +1080,6 @@ class MathRainGame {
             }
         } catch (error) {
             console.warn(`Failed to play sound '${soundName}':`, error);
-        }
-    }
-    
-    /**
-     * Get localized text from global LANGUAGES object
-     * @param {string} key - Text key
-     * @returns {string} Localized text
-     */
-    getLocalizedText(key) {
-        try {
-            // 尝试使用全局的多语言函数
-            if (typeof window !== 'undefined' && window.getLocalizedText) {
-                return window.getLocalizedText(key);
-            }
-            
-            // 尝试使用全局LANGUAGES对象
-            if (typeof window !== 'undefined' && window.LANGUAGES && window.currentLanguage) {
-                const texts = window.LANGUAGES[window.currentLanguage];
-                if (texts && texts[key]) {
-                    return texts[key];
-                }
-            }
-            
-            // Fallback根据页面语言决定
-            const isEnglish = (typeof window !== 'undefined' && window.currentLanguage === 'en') ||
-                             (typeof navigator !== 'undefined' && navigator.language && !navigator.language.startsWith('zh'));
-            
-            const fallbackTexts = {
-                lifeLost: isEnglish ? 'Life -1 (Remaining: {{lives}})' : '生命 -1 (剩余: {{lives}})',
-                comboMessage: isEnglish ? '{{count}}x Combo!' : '{{count}}x 连击!',
-                coinsEarned: isEnglish ? '+{{amount}} Coins' : '+{{amount}} 金币',
-                coinsLost: isEnglish ? '-{{amount}} Coins' : '-{{amount}} 金币'
-            };
-            
-            return fallbackTexts[key] || key;
-        } catch (error) {
-            return key;
         }
     }
     

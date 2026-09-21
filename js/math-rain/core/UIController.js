@@ -3,6 +3,9 @@
  * Handles all UI updates, screen transitions, and user input
  */
 
+import { getLocalizedText } from '../i18n/language-manager.js';
+import { storageGet, storageSet } from '../../safe-storage.js';
+
 class UIController {
     constructor(eventSystem, gameStateManager, sessionManager) {
         this.eventSystem = eventSystem;
@@ -153,12 +156,12 @@ class UIController {
         });
         
         this.eventSystem.on('coins:earned', (data) => {
-            const coinsText = this.getLocalizedText('coinsEarned', { amount: data.amount }) || `+${data.amount} Coins`;
+            const coinsText = getLocalizedText('coinsEarned', { amount: data.amount }) || `+${data.amount} Coins`;
             this.createScorePopup(data.position?.x || 100, data.position?.y || 100, coinsText, '#ffd700');
         });
         
         this.eventSystem.on('coins:lost', (data) => {
-            const coinsText = this.getLocalizedText('coinsLost', { amount: data.amount }) || `-${data.amount} Coins`;
+            const coinsText = getLocalizedText('coinsLost', { amount: data.amount }) || `-${data.amount} Coins`;
             this.createScorePopup(data.position?.x || 100, data.position?.y || 100, coinsText, '#e53e3e');
         });
     }
@@ -483,9 +486,9 @@ class UIController {
         this.updateElement('session-target-score', data.targetScore);
         this.updateElement('session-accuracy', `${data.accuracy.toFixed(1)}%`);
         this.updateElement('session-max-combo', data.maxCombo);
-        const minutesText = this.getLocalizedText('minutes') || '分钟';
-        const yesText = this.getLocalizedText('yes') || '是';
-        const noText = this.getLocalizedText('no') || '否';
+        const minutesText = getLocalizedText('minutes') || '分钟';
+        const yesText = getLocalizedText('yes') || '是';
+        const noText = getLocalizedText('no') || '否';
         this.updateElement('session-duration', `${data.sessionDurationMinutes} ${minutesText}`);
         this.updateElement('session-level-up', data.levelUpAchieved ? yesText : noText);
         
@@ -523,23 +526,16 @@ class UIController {
         const soundVolumeValue = document.getElementById('sound-volume-value');
         if (soundVolumeSlider && soundVolumeValue) {
             // 恢复上次保存的音量
-            try {
-                const savedSfx = localStorage.getItem('mr_sfx_volume');
-                if (savedSfx !== null) {
-                    soundVolumeSlider.value = savedSfx;
-                    soundVolumeValue.textContent = savedSfx + '%';
-                }
-            } catch (e) {
-                // ignore
+            const savedSfx = storageGet('mr_sfx_volume');
+            if (savedSfx !== null) {
+                soundVolumeSlider.value = savedSfx;
+                soundVolumeValue.textContent = savedSfx + '%';
             }
             soundVolumeSlider.addEventListener('input', (e) => {
                 const volume = e.target.value / 100;
                 soundVolumeValue.textContent = e.target.value + '%';
-                try {
-                    localStorage.setItem('mr_sfx_volume', e.target.value);
-                } catch (err) {
-                    // 存储不可用时音量仅当前会话生效
-                }
+                // 存储不可用时音量仅当前会话生效
+                storageSet('mr_sfx_volume', e.target.value);
                 this.eventSystem.emit('ui:settings:sound:volume', { volume });
             });
         }
@@ -549,23 +545,16 @@ class UIController {
         const musicVolumeValue = document.getElementById('music-volume-value');
         if (musicVolumeSlider && musicVolumeValue) {
             // 恢复上次保存的音量
-            try {
-                const savedMusic = localStorage.getItem('mr_music_volume');
-                if (savedMusic !== null) {
-                    musicVolumeSlider.value = savedMusic;
-                    musicVolumeValue.textContent = savedMusic + '%';
-                }
-            } catch (e) {
-                // ignore
+            const savedMusic = storageGet('mr_music_volume');
+            if (savedMusic !== null) {
+                musicVolumeSlider.value = savedMusic;
+                musicVolumeValue.textContent = savedMusic + '%';
             }
             musicVolumeSlider.addEventListener('input', (e) => {
                 const volume = e.target.value / 100;
                 musicVolumeValue.textContent = e.target.value + '%';
-                try {
-                    localStorage.setItem('mr_music_volume', e.target.value);
-                } catch (err) {
-                    // 存储不可用时音量仅当前会话生效
-                }
+                // 存储不可用时音量仅当前会话生效
+                storageSet('mr_music_volume', e.target.value);
                 this.eventSystem.emit('ui:settings:music:volume', { volume });
             });
         }
@@ -578,32 +567,6 @@ class UIController {
                     enabled: e.target.checked 
                 });
             });
-        }
-    }
-
-    /**
-     * Get localized text
-     */
-    getLocalizedText(key, replacements = {}) {
-        try {
-            if (typeof window !== 'undefined' && window.getLocalizedText) {
-                return window.getLocalizedText(key, replacements);
-            }
-            
-            if (typeof window !== 'undefined' && window.LANGUAGES && window.currentLanguage) {
-                const texts = window.LANGUAGES[window.currentLanguage];
-                if (texts && texts[key]) {
-                    let text = texts[key];
-                    for (const [placeholder, value] of Object.entries(replacements)) {
-                        text = text.replace(`{{${placeholder}}}`, value);
-                    }
-                    return text;
-                }
-            }
-            
-            return null; // Return null to use fallback
-        } catch (error) {
-            return null;
         }
     }
 

@@ -3,9 +3,18 @@
  * Handles shop functionality, purchases, and UI management
  */
 
+import { getLocalizedText } from './i18n/language-manager.js';
+
 class ShopManager {
-    constructor(eventSystem = null) {
-        this.eventSystem = eventSystem;
+    /**
+     * @param {object} [deps]
+     * @param {() => object|null} [deps.getGameStateManager] - 注入 GameStateManager 访问器。
+     * P1 前：构造签名收 eventSystem 但 page-boot 传空，内部 6 处直摸 window.mathRainGame（服务定位器反模式）。
+     */
+    constructor(deps = {}) {
+        this.eventSystem = deps.eventSystem ?? null;
+        this.getGameStateManager = deps.getGameStateManager
+            || (() => window.mathRainGame?.gameStateManager || null);
         this.isInitialized = false;
         this.shopOpenedDuringGame = false;
         
@@ -94,17 +103,18 @@ class ShopManager {
      */
     showShop() {
         // Pause game if running
-        if (window.mathRainGame && window.mathRainGame.gameStateManager) {
-            const gameState = window.mathRainGame.gameStateManager.getState();
-            
+        const gsm = this.getGameStateManager();
+        if (gsm) {
+            const gameState = gsm.getState();
+
             // Record if shop was opened during game
             this.shopOpenedDuringGame = gameState && gameState.gameState === 'playing';
-            
+
             // Pause if game is running
             if (this.shopOpenedDuringGame) {
-                window.mathRainGame.gameStateManager.pauseGame();
+                gsm.pauseGame();
             }
-            
+
             // Update coin display
             this.updateCoinDisplay(gameState);
         }
@@ -138,12 +148,13 @@ class ShopManager {
         }
         
         // Resume game state
-        if (window.mathRainGame && window.mathRainGame.gameStateManager) {
-            const gameState = window.mathRainGame.gameStateManager.getState();
-            
+        const gsm = this.getGameStateManager();
+        if (gsm) {
+            const gameState = gsm.getState();
+
             // If shop was opened during game, resume it
             if (this.shopOpenedDuringGame && gameState && gameState.gameState === 'paused') {
-                window.mathRainGame.gameStateManager.resumeGame();
+                gsm.resumeGame();
                 this.shopOpenedDuringGame = false;
                 // Return to game (don't show any screen)
                 if (this.eventSystem) {
@@ -187,9 +198,10 @@ class ShopManager {
      * Update buy button states based on available coins
      */
     updateBuyButtonStates() {
-        if (!window.mathRainGame || !window.mathRainGame.gameStateManager) return;
-        
-        const gameState = window.mathRainGame.gameStateManager.getState();
+        const gsm = this.getGameStateManager();
+        if (!gsm) return;
+
+        const gameState = gsm.getState();
         const coins = gameState ? gameState.coins : 0;
         
         // Update each buy button
@@ -213,19 +225,18 @@ class ShopManager {
      * @param {number} price - Price of the item
      */
     purchaseItem(itemType, price) {
-        if (!window.mathRainGame || !window.mathRainGame.gameStateManager) {
+        const gameStateManager = this.getGameStateManager();
+        if (!gameStateManager) {
             this.showNotification('游戏未初始化！', 'error');
             return;
         }
-        
-        const gameStateManager = window.mathRainGame.gameStateManager;
-        
+
         // Attempt purchase
         const purchaseSuccess = gameStateManager.purchaseItem(itemType, price);
         
         if (purchaseSuccess) {
             // Success message
-            const purchasedMsg = this.getLocalizedText('itemPurchased', '道具已购买！');
+            const purchasedMsg = getLocalizedText('itemPurchased') || '道具已购买！';
             const itemName = this.getItemName(itemType);
             
             this.showNotification(`${purchasedMsg} ${itemName} (-${price}🪙)`, 'success');
@@ -243,7 +254,7 @@ class ShopManager {
             }
         } else {
             // Failure message (insufficient coins)
-            const notEnoughMsg = this.getLocalizedText('notEnoughCoins', '金币不足！');
+            const notEnoughMsg = getLocalizedText('notEnoughCoins') || '金币不足！';
             this.showNotification(notEnoughMsg, 'error');
             
             // Emit event
@@ -261,9 +272,10 @@ class ShopManager {
      * Update shop interface after purchase
      */
     updateShopInterface() {
-        if (!window.mathRainGame || !window.mathRainGame.gameStateManager) return;
-        
-        const gameState = window.mathRainGame.gameStateManager.getState();
+        const gsm = this.getGameStateManager();
+        if (!gsm) return;
+
+        const gameState = gsm.getState();
         
         // Update coin display
         this.updateCoinDisplay(gameState);
@@ -279,27 +291,11 @@ class ShopManager {
      */
     getItemName(itemType) {
         const itemNames = {
-            'freeze': this.getLocalizedText('freezeItem', '冻结'),
-            'bomb': this.getLocalizedText('bombItem', '炸弹'),
-            'shield': this.getLocalizedText('shieldItem', '护盾')
+            'freeze': getLocalizedText('freezeItem') || '冻结',
+            'bomb': getLocalizedText('bombItem') || '炸弹',
+            'shield': getLocalizedText('shieldItem') || '护盾'
         };
         return itemNames[itemType] || itemType;
-    }
-
-    /**
-     * Get localized text
-     * @param {string} key - Text key
-     * @param {string} fallback - Fallback text
-     * @returns {string} Localized text
-     */
-    getLocalizedText(key, fallback) {
-        if (typeof window !== 'undefined' && window.LANGUAGES && window.currentLanguage) {
-            const texts = window.LANGUAGES[window.currentLanguage];
-            if (texts && texts[key]) {
-                return texts[key];
-            }
-        }
-        return fallback;
     }
 
     /**

@@ -149,6 +149,19 @@ class SessionManager {
     }
 
     /**
+     * 暂停补偿：把暂停流逝的时长补回会话截止时间。
+     * （P1 新增：原 main.js 直接改 sessionEndTime 内部字段，现收口到本类）
+     * @param {number} duration - 暂停持续的毫秒数
+     */
+    pauseFor(duration) {
+        if (!(duration > 0) || !this.isSessionActive) {
+            return;
+        }
+        this.sessionEndTime += duration;
+        this.sessionTimeRemaining = Math.max(0, this.sessionEndTime - Date.now());
+    }
+
+    /**
      * Complete the current session
      */
     completeSession() {
