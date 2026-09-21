@@ -344,8 +344,3 @@ class LanguageManager {
 
 // Export for ES modules
 export default LanguageManager;
-
-// Auto-initialize if in browser environment
-if (typeof window !== 'undefined') {
-    window.LanguageManager = LanguageManager;
-}

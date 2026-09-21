@@ -763,8 +763,3 @@ class UIController {
 
 // ES Module export
 export default UIController;
-
-// CommonJS compatibility
-if (typeof window !== 'undefined') {
-    window.UIController = UIController;
-}

@@ -230,8 +230,3 @@ class DependencyContainer {
 
 // ES Module export
 export default DependencyContainer;
-
-// CommonJS compatibility
-if (typeof window !== 'undefined') {
-    window.DependencyContainer = DependencyContainer;
-}

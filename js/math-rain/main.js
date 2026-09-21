@@ -41,7 +41,6 @@ class MathRainGame {
             // External dependencies (loaded from global scope)
             this.expressionGenerator = null;
             this.questionBankManager = null;
-            this.animationEngine = null;
             this.difficultyManager = null;
             this.soundManager = null;
             this.particleSystem = null;
@@ -133,7 +132,7 @@ class MathRainGame {
      * Wait for external dependencies to be loaded
      */
     async waitForExternalDependencies() {
-        const requiredClasses = ['ExpressionGenerator', 'QuestionBankManager', 'AnimationEngine', 'DifficultyManager', 'SoundManager'];
+        const requiredClasses = ['ExpressionGenerator', 'QuestionBankManager', 'DifficultyManager', 'SoundManager'];
         const maxWait = 15000; // 15 seconds max to allow for module loading
         const checkInterval = 500; // Check every 500ms to be less aggressive
         let waited = 0;
@@ -443,16 +442,14 @@ class MathRainGame {
         
         // Session events
         this.eventSystem.on('session:completed', (sessionData) => {
-            console.log('🎮 Main game received session:completed event, stopping game', sessionData);
             // Stop the game when session completes
             this.isRendering = false;
-            
+
             // Clear any remaining expressions
             this.expressions = [];
-            
+
             // Set game state to session complete (this will stop the game loop)
             if (this.gameStateManager) {
-                console.log('🔄 Setting game state to sessionComplete');
                 this.gameStateManager.gameState = 'sessionComplete';
                 this.gameStateManager.emitStateChanged();
             }
@@ -1246,44 +1243,3 @@ if (document.readyState === 'loading') {
 } else {
     initializeMathRainGame();
 }
-
-// Developer debugging tools
-window.debugMathRain = {
-    getComponents: () => {
-        if (!window.mathRainGame) return null;
-        return {
-            gameStateManager: window.mathRainGame.gameStateManager,
-            sessionManager: window.mathRainGame.sessionManager,
-            performanceOptimizer: window.mathRainGame.performanceOptimizer,
-            errorHandler: window.mathRainGame.errorHandler,
-            uiController: window.mathRainGame.uiController,
-            eventSystem: window.mathRainGame.eventSystem
-        };
-    },
-    getArchitectureInfo: () => ({
-        pattern: 'Single Responsibility + Event-Driven + Dependency Injection',
-        originalLines: 2627,
-        refactoredLines: '~400',
-        components: [
-            'EventSystem - Central event bus',
-            'DependencyContainer - Dependency injection',
-            'GameStateManager - Game state & scoring',
-            'SessionManager - Session & progression',
-            'PerformanceOptimizer - Performance monitoring',
-            'ErrorHandler - Centralized error handling',
-            'UIController - UI management'
-        ],
-        benefits: [
-            'Reduced complexity (2,627 → ~400 lines)',
-            'Single Responsibility Principle compliance',
-            'Loose coupling via events',
-            'Easy testing with dependency injection',
-            'Better error handling and monitoring'
-        ]
-    }),
-    restartGame: () => {
-        if (window.mathRainGame) {
-            window.mathRainGame.restartGame();
-        }
-    }
-};

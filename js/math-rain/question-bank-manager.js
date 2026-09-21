@@ -37,7 +37,6 @@ class QuestionBankManager {
         this.questionBank = questionBankData;
         this.buildQuestionIndex();
         this.initializeWeights();
-        console.log('题库加载完成:', this.generateLoadStats());
     }
 
     /**
@@ -97,7 +96,6 @@ class QuestionBankManager {
         if (normalized !== this.currentLevel) {
             this.currentLevel = normalized;
             this.clearRecentHistory(); // 切换级别时清空历史
-            console.log(`切换到难度级别: ${normalized}`);
         }
     }
 

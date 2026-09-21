@@ -560,8 +560,3 @@ class ErrorHandler {
 
 // ES Module export
 export default ErrorHandler;
-
-// CommonJS compatibility
-if (typeof window !== 'undefined') {
-    window.ErrorHandler = ErrorHandler;
-}

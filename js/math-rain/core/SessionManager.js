@@ -174,7 +174,6 @@ class SessionManager {
             requirements: this.getLevelUpRequirements()
         };
         
-        console.log('🎯 Session completed, emitting session:completed event', sessionData);
         this.eventSystem.emit('session:completed', sessionData);
     }
 
@@ -360,8 +359,3 @@ class SessionManager {
 
 // ES Module export
 export default SessionManager;
-
-// CommonJS compatibility
-if (typeof window !== 'undefined') {
-    window.SessionManager = SessionManager;
-}

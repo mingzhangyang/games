@@ -63,20 +63,15 @@ main: resolve(__dirname, 'index.html'),
         output: {
           // 分块策略
           manualChunks: {
-            // 公共模块
-            'common': [
-              './js/config-manager.js',
-              './js/performance-monitor.js'
-            ],
             // Math Rain 相关模块
+            // （P0 重构：config-manager/performance-monitor 已删，animation-engine 与
+            //   question-bank-generator 系死代码随之移除，见 scripts/math-rain-tools/）
             'math-rain-core': [
               './js/math-rain/main.js',
               './js/math-rain/expression-generator.js',
-              './js/math-rain/question-bank-manager.js',
-              './js/math-rain/question-bank-generator.js'
+              './js/math-rain/question-bank-manager.js'
             ],
             'math-rain-engine': [
-              './js/math-rain/animation-engine.js',
               './js/math-rain/particle-effects.js',
               './js/math-rain/sound-manager.js',
               './js/math-rain/difficulty-manager.js'

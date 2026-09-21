@@ -91,10 +91,8 @@ class PerformanceOptimizer {
      * Setup performance monitoring
      */
     setupPerformanceMonitoring() {
-        // Connect to global performance monitor if available
-        if (window.performanceMonitor) {
-            this.globalPerformanceMonitor = window.performanceMonitor;
-        }
+        // 历史上曾对接 window.performanceMonitor（js/performance-monitor.js，
+        // 已删除）：全仓无创建方，分支恒死，随 P0 一并移除。
     }
 
     /**
@@ -398,8 +396,3 @@ class PerformanceOptimizer {
 
 // ES Module export
 export default PerformanceOptimizer;
-
-// CommonJS compatibility
-if (typeof window !== 'undefined') {
-    window.PerformanceOptimizer = PerformanceOptimizer;
-}

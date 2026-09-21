@@ -607,8 +607,3 @@ class GameStateManager {
 
 // ES Module export
 export default GameStateManager;
-
-// CommonJS compatibility
-if (typeof window !== 'undefined') {
-    window.GameStateManager = GameStateManager;
-}

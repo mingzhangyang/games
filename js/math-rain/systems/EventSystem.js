@@ -214,8 +214,3 @@ class EventSystem {
 
 // ES Module export
 export default EventSystem;
-
-// CommonJS compatibility
-if (typeof window !== 'undefined') {
-    window.EventSystem = EventSystem;
-}

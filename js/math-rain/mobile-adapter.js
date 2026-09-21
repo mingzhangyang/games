@@ -75,12 +75,6 @@ class MobileAdapter {
         this.setupGestureHandling();
         
         this.isInitialized = true;
-        console.log('🔧 Mobile Adapter initialized', {
-            isMobile: this.isMobile,
-            isTouch: this.isTouch,
-            orientation: this.orientation,
-            performance: this.performanceMode
-        });
     }
 
     /**
@@ -217,8 +211,6 @@ class MobileAdapter {
      * Handle orientation change
      */
     handleOrientationChange(newOrientation) {
-        console.log(`📱 Orientation changed to: ${newOrientation}`);
-        
         // Update CSS classes
         document.body.classList.remove('orientation-portrait', 'orientation-landscape');
         document.body.classList.add(`orientation-${newOrientation}`);
@@ -247,8 +239,6 @@ class MobileAdapter {
      * Handle virtual keyboard appearance/disappearance
      */
     handleKeyboardToggle(keyboardVisible) {
-        console.log(`⌨️ Virtual keyboard ${keyboardVisible ? 'shown' : 'hidden'}`);
-        
         const gameContainer = document.getElementById('game-container');
         if (gameContainer) {
             if (keyboardVisible) {

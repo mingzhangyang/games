@@ -20,42 +20,28 @@ window.selectLanguage = function (lang) {
                 const [
                     { default: LanguageManager },
                     { default: ShopManager },
-                    { default: ConfigManager },
-                    { default: PerformanceMonitor },
                     { default: ExpressionGenerator },
                     { default: QuestionBankManager },
                     { default: DifficultyManager },
                     { default: SoundManager },
-                    { default: AnimationEngine },
                     particleEffectsModule,
                     mobileAdapterModule
                 ] = await Promise.all([
                     import('./i18n/language-manager.js'),
                     import('./shop-manager.js'),
-                    import('../config-manager.js'),
-                    import('../performance-monitor.js'),
                     import('./expression-generator.js'),
                     import('./question-bank-manager.js'),
                     import('./difficulty-manager.js'),
                     import('./sound-manager.js'),
-                    import('./animation-engine.js'),
                     import('./particle-effects.js').catch(() => null),
                     import('./mobile-adapter.js').catch(() => null)
                 ]);
 
-                window.ConfigManager = ConfigManager;
-                window.PerformanceMonitor = PerformanceMonitor;
-                window.ExpressionGenerator = ExpressionGenerator;
-                window.QuestionBankManager = QuestionBankManager;
-                window.DifficultyManager = DifficultyManager;
-                window.SoundManager = SoundManager;
-                window.AnimationEngine = AnimationEngine;
-                if (particleEffectsModule?.default) {
-                    window.ParticleSystem = particleEffectsModule.default;
-                }
-                if (mobileAdapterModule?.default) {
-                    window.MobileAdapter = mobileAdapterModule.default;
-                }
+                // 各游戏类模块底部自带 window.X 兼容挂载（P0 保留，P1 直连 import 后一并移除），
+                // 此处不再重复挂载。window.mathRainGame / window.languageManager / window.shopManager
+                // 是 shop-manager、language-manager 与 smoke-math-rain 的真实消费面，保留。
+                void ExpressionGenerator; void QuestionBankManager;
+                void DifficultyManager; void SoundManager;
 
                 window.languageManager = new LanguageManager();
                 window.languageManager.initialize();

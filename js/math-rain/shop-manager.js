@@ -241,8 +241,6 @@ class ShopManager {
                     success: true
                 });
             }
-            
-            console.log(`Purchase successful: ${itemType}, cost: ${price} coins`);
         } else {
             // Failure message (insufficient coins)
             const notEnoughMsg = this.getLocalizedText('notEnoughCoins', '金币不足！');
@@ -391,8 +389,3 @@ class ShopManager {
 
 // Export for ES modules
 export default ShopManager;
-
-// Auto-initialize if in browser environment
-if (typeof window !== 'undefined') {
-    window.ShopManager = ShopManager;
-}
