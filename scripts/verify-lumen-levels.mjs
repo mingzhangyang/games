@@ -12,7 +12,7 @@
 // 用法：node scripts/verify-lumen-levels.mjs
 
 import {
-    GRID_N, buildGrid, traceGrid,
+    GRID_N, buildGrid, traceGrid, mirrorCoords,
     LUMEN_LEVELS, DAILY_POOL, dailyLevel,
 } from '../js/lumen-levels.js';
 
@@ -25,6 +25,44 @@ const ok = (cond, label, extra) => {
 };
 
 /* ── 1) 手工关卡 ── */
+
+// 本地翻转工具（applyFlips 在 lumen-levels.js 中为私有）
+function applyFlipsLocal(grid, flips) {
+    const g = grid.map(row => row.split(''));
+    for (const [r, c] of flips) g[r][c] = g[r][c] === '/' ? '\\' : '/';
+    return g.map(row => row.join(''));
+}
+
+// BFS：从初盘出发每步翻转一面镜，到任意可解态的最短步数（应 = par，否则 par 虚标）
+function bfsMinFlips(sol, mirrors, ini) {
+    const errSet = [];
+    for (let i = 0; i < mirrors.length; i++) {
+        const [r, c] = mirrors[i];
+        if (ini[r][c] !== sol[r][c]) errSet.push(i);
+    }
+    const key = (set) => [...set].sort((a, b) => a - b).join('|');
+    const isSolved = (set) => traceGrid(applyFlipsLocal(sol, set.map(i => mirrors[i]))).solved;
+    let frontier = [new Set(errSet)];
+    const start = frontier[0];
+    if (isSolved([...start])) return 0;
+    const seen = new Set([key([...start])]);
+    for (let d = 1; d <= mirrors.length; d++) {
+        const next = [];
+        for (const st of frontier) {
+            for (let i = 0; i < mirrors.length; i++) {
+                const ns = new Set(st);
+                if (ns.has(i)) ns.delete(i); else ns.add(i);
+                const k = key([...ns]);
+                if (seen.has(k)) continue;
+                seen.add(k);
+                if (isSolved([...ns])) return d;
+                next.push(ns);
+            }
+        }
+        frontier = next;
+    }
+    return -1;
+}
 
 console.log('▶ 25 手工关卡');
 ok(LUMEN_LEVELS.length === 25, `关卡数 = 25（实际 ${LUMEN_LEVELS.length}）`);
@@ -53,6 +91,21 @@ for (const lv of LUMEN_LEVELS) {
         }
     }
     ok(emitters >= 1 && emitters <= 2, `${tag} 发射器 1..2`, String(emitters));
+
+    // 唯一解：2^m 全枚举恰好 1 个镜面组合可解（消灭「自由镜」与捷径解）
+    const mirrors = mirrorCoords(lv.sol);
+    const mN = mirrors.length;
+    let solCombs = 0;
+    for (let mask = 0; mask < (1 << mN); mask++) {
+        const set = [];
+        for (let i = 0; i < mN; i++) if (mask & (1 << i)) set.push(mirrors[i]);
+        if (traceGrid(applyFlipsLocal(lv.sol, set)).solved) solCombs++;
+    }
+    ok(solCombs === 1, `${tag} 唯一解（2^${mN} 组合仅 1 解）`, String(solCombs));
+
+    // BFS 最短翻转步数 = par（par 无虚标、无捷径）
+    const bfs = bfsMinFlips(lv.sol, mirrors, lv.grid);
+    ok(bfs === lv.par, `${tag} 最短翻转步数 = par`, `${bfs} vs ${lv.par}`);
 }
 
 /* ── 2) 每日池 ── */
