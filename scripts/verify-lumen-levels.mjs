@@ -2,7 +2,7 @@
 // verify-lumen-levels.mjs — Lumen 关卡数据校验器（node 直跑，无需浏览器）
 //
 // 锁定四件事：
-//   1) 20 手工关卡：解态可解（全水晶点亮）、初盘不可解、par = 翻转数 ∈ [1,6]；
+//   1) 25 手工关卡：解态可解（全水晶点亮）、初盘不可解、par = 翻转数 ∈ [1,6]；
 //   2) 16 每日池布局：解态可解、镜面数 ≥3（打乱才有意义）；
 //   3) dailyLevel 全日期扫描（2026-01-01 → 2027-12-31）：确定性、par ≥2、
 //      初盘 ≠ 解态、解态可解、初盘不可解，且 16 布局全覆盖；
@@ -26,8 +26,8 @@ const ok = (cond, label, extra) => {
 
 /* ── 1) 手工关卡 ── */
 
-console.log('▶ 20 手工关卡');
-ok(LUMEN_LEVELS.length === 20, `关卡数 = 20（实际 ${LUMEN_LEVELS.length}）`);
+console.log('▶ 25 手工关卡');
+ok(LUMEN_LEVELS.length === 25, `关卡数 = 25（实际 ${LUMEN_LEVELS.length}）`);
 
 for (const lv of LUMEN_LEVELS) {
     const tag = `L${lv.index + 1}`;
