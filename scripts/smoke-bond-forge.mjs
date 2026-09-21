@@ -361,6 +361,49 @@ if (daily.a.length !== 5) fail(`每日应有 5 关，got ${daily.a.length}`);
 if (!daily.same) fail('每日赛程应确定性（同一天两次调用不一致）');
 else pass(`每日赛程：5 关且同一天内确定性 [${daily.a.slice(0, 2).join(',')}…]`);
 
+/* ── 9. 托盘几何：任何托盘规模都不许溢出/重叠 ──
+ *
+ * 回归的是沙盒那个洞：旧 `trayGeometry()` 用 `slot = min(58, (W-40)/n)` 单行排布，
+ * 18 个原子时 pitch ≈ 26.7px，而碳直径 44、槽位圈直径 48 ⇒ 原子互相叠压，
+ * 整行还从台面右侧溢出去（截图里 Na 被裁掉一半）。修法是折行 + 均分 + 必要时压缩槽距。
+ * 这里对 1..20 个原子的**每一种规模**都断言落点不越界。
+ */
+const trayGeom = await page.evaluate(() => {
+    const g = window.bfGame;
+    const slotR = 24;
+    const rows = [];
+    const saved = g.tray.slice();
+    for (let n = 1; n <= 20; n++) {
+        g.tray = [];
+        for (let i = 0; i < n; i++) g.tray.push({ sym: 'C', used: false });
+        const geo = g.trayGeometry();
+        const xs = geo.slots.map(s => s.x);
+        const ys = geo.slots.map(s => s.y);
+        // 越界：最左/最右槽位的圆边必须落在 [0, W]
+        const minX = Math.min(...xs) - slotR;
+        const maxX = Math.max(...xs) + slotR;
+        // 重叠：同一行（y 相近）内相邻槽距必须 > 0（留一点余量，避免贴死）
+        let worstGap = Infinity;
+        for (let i = 0; i + 1 < geo.slots.length; i++) {
+            const a = geo.slots[i], b = geo.slots[i + 1];
+            if (Math.abs(a.y - b.y) < 1) worstGap = Math.min(worstGap, Math.abs(b.x - a.x));
+        }
+        rows.push({ n, nRows: geo.rows, minX, maxX, worstGap: worstGap === Infinity ? null : worstGap, distinctY: new Set(ys).size });
+    }
+    g.tray = saved;
+    return rows;
+});
+const oob = trayGeom.filter(r => r.minX < -0.5 || r.maxX > 520.5);
+const tooTight = trayGeom.filter(r => r.worstGap !== null && r.worstGap <= 48);
+const tooTall = trayGeom.filter(r => r.nRows > 2);
+if (oob.length) fail(`托盘越界（n=${oob.map(r => r.n).join(',')}）`);
+if (tooTight.length) fail(`托盘槽距不足 48px（会叠压，n=${tooTight.map(r => r.n).join(',')}）`);
+if (tooTall.length) fail(`托盘行数超过 2（会画出背板，n=${tooTall.map(r => r.n).join(',')}）`);
+if (!oob.length && !tooTight.length && !tooTall.length) {
+    const n18 = trayGeom.find(r => r.n === 18);
+    pass(`托盘几何：n=1..20 全部不越界不叠压（n=18 → ${n18.nRows} 行、x[${n18.minX.toFixed(0)}..${n18.maxX.toFixed(0)}]）`);
+}
+
 await browser.close();
 
 /* ── 结果 ── */

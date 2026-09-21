@@ -374,16 +374,47 @@ class BondForgeGame {
      */
     trayGeometry() {
         const n = this.tray.length;
-        const slot = Math.min(TRAY.slot, (W - 40) / Math.max(1, n));
-        const x0 = W / 2 - (slot * (n - 1)) / 2;
-        return {
-            slot,
-            x0,
-            y: TRAY.y,
-            slots: this.tray.map((t, i) => ({
-                sym: t.sym, used: t.used, x: x0 + i * slot, y: TRAY.y,
-            })),
-        };
+
+        // 托盘几何：**必须换行**，不能无限收缩间距。
+        //
+        // ⚠️ 早期版本是单行 + `slot = Math.min(TRAY.slot, (W - 40) / n)`。
+        //    这个式子有个致命缺陷：它只保证「n 个槽位的**中心**跨度」装得下，
+        //    完全没管槽位/原子本身的宽度。18 个原子时 slot ≈ 26.7px，而最大的
+        //    碳半径 22（直径 44）+ 槽位圈半径 24（直径 48）⇒ 相邻原子直接叠在
+        //    一起，整行还从台面右侧溢出去（沙盒里 Na 被裁掉一半）。
+        //    沙盒固定 18 个原子（9 种元素 × 2），必然踩中。
+        //
+        // 正确做法：先定行数（最多 2 行 —— 托盘背板就这么高），再把元素**均分**到
+        // 各行；若均分后仍然放不下，就压缩槽距，而不是继续加行。
+        const slotR = TRAY.slotR;                      // 24 → 槽位圈直径 48
+        const usable = W - 32;                         // 左右各留 16 边框余量
+        const slot = TRAY.slot;                        // 58：设计槽距，也是不许更挤的下限
+
+        // 一行最多几个：末尾要给槽位自身留半径，否则最右那个圈的边缘会压到台面边框。
+        const perRowSafe = Math.max(1, Math.floor((usable - slotR) / slot));
+
+        const MAX_ROWS = 2;
+        let rows = 1;
+        while (rows < MAX_ROWS && Math.ceil(n / rows) > perRowSafe) rows++;
+        const perRowBalanced = Math.ceil(n / rows);
+
+        // 真正画出来的槽距：默认 58；行数 >1 且 58 装不下时压到刚好够用。
+        // 下界 slotR*2+2 = 50 > 槽位圈直径 48 ⇒ 永远不会重叠。
+        let pitch = slot;
+        if (rows > 1 && perRowBalanced > 1) {
+            const maxPitch = (usable - slotR * 2) / (perRowBalanced - 1);
+            pitch = Math.min(slot, Math.max(slotR * 2 + 2, maxPitch));
+        }
+        const rowY = (r) => TRAY.y - (rows - 1) * 30 + r * 60;
+
+        const slots = this.tray.map((t, i) => {
+            const r = Math.min(rows - 1, Math.floor(i / perRowBalanced));
+            const inRow = Math.min(perRowBalanced, n - r * perRowBalanced);
+            const idx = i - r * perRowBalanced;
+            const x0 = W / 2 - (pitch * (inRow - 1)) / 2;
+            return { sym: t.sym, used: t.used, x: x0 + idx * pitch, y: rowY(r) };
+        });
+        return { slot: pitch, x0: W / 2 - (pitch * (perRowBalanced - 1)) / 2, y: TRAY.y, rows, perRow: perRowBalanced, slots };
     }
 
     /* ---------------------- DOM 绑定 ---------------------- */
@@ -1243,28 +1274,31 @@ class BondForgeGame {
     drawTray(ctx) {
         if (!this.tray.length) return;
 
+        // 槽位几何与 hitTray() 共用 trayGeometry()，两处算法不许各写一份。
+        // ⚠️ 每个槽位的 y 取自 geo.slots[i].y（可能两行），**不是**恒定的 TRAY.y ——
+        //    背板高度也要按 rows 撑开，否则第二行画在背板外面。
+        const geo = this.trayGeometry();
+        const half = geo.rows === 1 ? 34 : 34 + (geo.rows - 1) * 30;
+
         ctx.save();
         // 托盘背板
         ctx.fillStyle = 'rgba(12,16,38,0.72)';
-        ctx.fillRect(0, TRAY.y - 34, W, 68);
+        ctx.fillRect(0, TRAY.y - half, W, half * 2);
         ctx.strokeStyle = 'rgba(120,150,240,0.22)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(0, TRAY.y - 34.5);
-        ctx.lineTo(W, TRAY.y - 34.5);
+        ctx.moveTo(0, TRAY.y - half - 0.5);
+        ctx.lineTo(W, TRAY.y - half - 0.5);
         ctx.stroke();
-
-        // 槽位几何与 hitTray() 共用 trayGeometry()，两处算法不许各写一份
-        const geo = this.trayGeometry();
 
         this.tray.forEach((t, i) => {
             const x = geo.slots[i].x;
-            const e = this.elemOf(t.sym);
+            const y = geo.slots[i].y;
 
             if (t.used) {
                 // 空槽：只留一个很淡的坑
                 ctx.beginPath();
-                ctx.arc(x, TRAY.y, TRAY.slotR, 0, Math.PI * 2);
+                ctx.arc(x, y, TRAY.slotR, 0, Math.PI * 2);
                 ctx.strokeStyle = 'rgba(120,150,240,0.16)';
                 ctx.lineWidth = 2;
                 ctx.setLineDash([3, 5]);
@@ -1274,15 +1308,14 @@ class BondForgeGame {
             }
 
             ctx.beginPath();
-            ctx.arc(x, TRAY.y, TRAY.slotR, 0, Math.PI * 2);
+            ctx.arc(x, y, TRAY.slotR, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(120,150,240,0.10)';
             ctx.fill();
             ctx.strokeStyle = 'rgba(120,150,240,0.38)';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            this.drawAtom(ctx, { id: -1, sym: t.sym, x, y: TRAY.y }, { showValence: false });
-            void e;
+            this.drawAtom(ctx, { id: -1, sym: t.sym, x, y }, { showValence: false });
         });
         ctx.restore();
     }
@@ -1654,7 +1687,12 @@ class BondForgeGame {
     keepInStage(a) {
         const r = this.elemOf(a.sym).radius;
         const top = 10 + r;
-        const bottom = TRAY.y - 40 - r;
+        // 下界要给**两行**托盘留位置：rows=2 时顶行在 TRAY.y-30，
+        // 再减去槽位半径 24 就是舞台可用底边。写死 TRAY.y-40 会让原子
+        // 压在托盘第一行上（沙盒里必现）。
+        const rows = this.tray.length ? this.trayGeometry().rows : 1;
+        const trayTop = TRAY.y - (rows - 1) * 30 - TRAY.slotR;
+        const bottom = trayTop - 8 - r;
         a.x = Math.max(r + 8, Math.min(W - r - 8, a.x));
         a.y = Math.max(top, Math.min(bottom, a.y));
     }
