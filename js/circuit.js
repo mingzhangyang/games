@@ -1206,7 +1206,7 @@ class CircuitGame {
             ctx.arc(a.x, a.y, 3, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = '#8b96c4';
-            [o1, o2].forEach(([px, py]) => {
+            [[o1.x, o1.y], [o2.x, o2.y]].forEach(([px, py]) => {
                 ctx.beginPath();
                 ctx.arc(px, py, 2.6, 0, Math.PI * 2);
                 ctx.fill();

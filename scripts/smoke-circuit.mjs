@@ -116,7 +116,58 @@ if (!after.clearVisible) fail('过关面板未显示');
 if (!after.stars.includes('⭐')) fail(`星级未渲染: ${after.stars}`);
 if (after.starsStored !== 3) fail(`L1 翻 1 次应为 3 星，got ${after.starsStored}`);
 
-/* ── 5. 噪声过滤后的页面错误 ──
+/* ── 5. 全关卡渲染回归：逐关 loadLevel + 强制 draw，捕获绘制期异常 ──
+ * 教训：drawSwitch 的 spdt 分支曾把 {x,y} 对象直接塞进 forEach 解构
+ * （`[o1,o2].forEach(([px,py]) => …)`）⇒ "object is not iterable"。
+ * spdt 首次出现在 idx=6 (M2)，而 smoke 原先停在 L1 就结束 ⇒ 该崩溃 100% 漏网。
+ * 注意：不能只抽前几关——前 6 关 (S1-S5/M1) 均无 spdt，只测前 5 关等于没测。
+ * 这里遍历全部 20 关，逐关强制同步 draw() 若干帧并收集页面异常。 */
+const levelErrors = [];
+const levelCount = await page.evaluate(async () => {
+    // LEVELS 未挂到 window，直接动态 import 数据层（与页面同一模块实例）
+    try {
+        const m = await import('/js/circuit-levels.js');
+        return m.LEVELS.length;
+    } catch (e) {
+        return 0;
+    }
+});
+if (!levelCount) fail('无法取得 LEVELS.length（回归遍历无法进行）');
+let spdtSeen = 0;
+for (let lv = 0; lv < levelCount; lv++) {
+    const before = errs.length;
+    const meta = await page.evaluate((i) => {
+        const g = window.ccGame;
+        g.startLevel(i);
+        const spdt = g.spec.elements.filter(e => e.t === 'spdt').length;
+        // 强制同步渲染（render 走 rAF；直接调 draw 立即触发开关绘制路径）。
+        // 必须 try/catch：draw 抛错会直接终止 evaluate 并把异常冒泡出脚本，
+        // 那样后续关卡不会被执行，也拿不到完整的失败清单。
+        const drawErrs = [];
+        try { g.draw(); } catch (e) { drawErrs.push('draw#1: ' + e.message); }
+        try { g.draw(); } catch (e) { drawErrs.push('draw#2: ' + e.message); }
+        return { spdt, state: g.state, drawErrs };
+    }, lv);
+    spdtSeen += meta.spdt;
+    for (const de of meta.drawErrs) errs.push(`idx=${lv} ${de}`);
+    await new Promise(r => setTimeout(r, 350));
+    if (errs.length > before) {
+        levelErrors.push(`idx=${lv}: ${errs.slice(before).join(' | ')}`);
+    }
+    const shapes = await page.evaluate(() => {
+        const c = document.getElementById('cc-canvas');
+        const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+        let n = 0;
+        for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++;
+        return n;
+    });
+    if (shapes < 5000) levelErrors.push(`idx=${lv}: canvas 接近空白 (${shapes} px)`);
+}
+/* 自检：本轮必须真的渲染过 spdt 元件，否则断言形同虚设（防假绿） */
+if (spdtSeen === 0) levelErrors.push('遍历中未遇到任何 spdt 元件 ⇒ 该回归未真正覆盖 drawSwitch 的 spdt 分支');
+for (const e of levelErrors) fail(`关卡渲染回归 — ${e}`);
+
+/* ── 6. 噪声过滤后的页面错误 ──
  * 源码树直跑的已知 404：manifest / icons / analytics / sw-register 由 vite build
  * 从 public/ 与 src/ 拷入 dist 根（与既有 smoke 的噪声口径一致）。 */
 const IGNORABLE = [/analytics\.js/, /sw-register\.js/, /manifest/i, /CORS/i, /game-scores/i,
@@ -131,5 +182,5 @@ if (fails.length) {
     for (const f of fails) console.error(`  - ${f}`);
     process.exit(1);
 }
-console.log('smoke-circuit：boot / 渲染 / 启动 / 点击开关 / 判胜 / 结算 / 星级 全部通过 ✅');
+console.log(`smoke-circuit：boot / 渲染 / 启动 / 点击开关 / 判胜 / 结算 / 星级 / 全 ${levelCount} 关渲染回归(含 ${spdtSeen} 个 spdt) 全部通过 ✅`);
 
