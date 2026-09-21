@@ -298,6 +298,7 @@ class WordDailyGame {
     constructor() {
         this.langMode = this.resolveLangMode(); // 'en' | 'zh'
         this.wordLength = this.resolveWordLength(); // 4 | 5 | 6 (for en)
+        this.diffMenuOpen = false;
         this.TEXT = null;
         this.mode = 'daily'; // 'daily' | 'practice'
         this.status = 'playing'; // playing | won | lost
@@ -326,6 +327,8 @@ class WordDailyGame {
             'wd-diff-row', 'wd-diff-4', 'wd-diff-5', 'wd-diff-6',
             'wd-diff-label-4', 'wd-diff-label-5', 'wd-diff-label-6',
             'wd-diff-status-4', 'wd-diff-status-5', 'wd-diff-status-6',
+            'wd-diff-dd', 'wd-diff-trigger', 'wd-diff-menu',
+            'wd-diff-trigger-tag', 'wd-diff-trigger-label', 'wd-diff-status-cur',
             'wd-input-row', 'wd-input', 'wd-submit-btn', 'wd-submit-text',
             'wd-hint-card', 'wd-hint-text', 'wd-hint-label',
             'wd-btn-stats', 'wd-btn-help', 'wd-btn-practice', 'wd-btn-lang', 'wd-btn-mute',
@@ -581,40 +584,96 @@ class WordDailyGame {
         if (!row) return;
         const isEn = this.langMode === 'en';
         row.classList.toggle('hidden', !isEn);
-        if (!isEn) return;
+        if (!isEn) {
+            this.closeDiffMenu();
+            return;
+        }
 
         const t = this.TEXT;
+        // 读某长度的当日战果（5 字母兼容无后缀的历史键）
+        const readStatus = (len) => {
+            let saved = storageParse(`wd_daily_${this.day}_en_${len}`, null);
+            if (!saved && len === 5) {
+                saved = storageParse(`wd_daily_${this.day}_en`, null);
+            }
+            return saved && (saved.status === 'won' || saved.status === 'lost') ? saved.status : null;
+        };
+        const paintStatus = (el, state) => {
+            if (!el) return;
+            el.className = 'wd-diff-status';
+            if (state === 'won') {
+                el.textContent = '✓';
+                el.classList.add('won');
+                el.title = 'Solved';
+            } else if (state === 'lost') {
+                el.textContent = '✕';
+                el.classList.add('lost');
+                el.title = 'Lost';
+            } else {
+                el.textContent = '';
+                el.removeAttribute('title');
+            }
+        };
+        const labelOf = (len, withDesc) => {
+            const desc = t[`diff${len}Desc`];
+            return withDesc && desc ? `${t[`diff${len}`]} (${desc})` : t[`diff${len}`];
+        };
+
+        // 菜单项
         [4, 5, 6].forEach(len => {
-            const btn = this.el[`diff-${len}`];
-            if (btn) {
-                btn.classList.toggle('active', this.wordLength === len);
+            const opt = this.el[`diff-${len}`];
+            if (opt) {
+                const active = this.wordLength === len;
+                opt.classList.toggle('active', active);
+                opt.setAttribute('aria-selected', active ? 'true' : 'false');
             }
             const label = this.el[`diff-label-${len}`];
-            if (label) {
-                const desc = t[`diff${len}Desc`];
-                label.textContent = desc ? `${t[`diff${len}`]} (${desc})` : t[`diff${len}`];
-            }
-            const statusEl = this.el[`diff-status-${len}`];
-            if (statusEl) {
-                statusEl.className = 'wd-diff-status';
-                let saved = storageParse(`wd_daily_${this.day}_en_${len}`, null);
-                if (!saved && len === 5) {
-                    saved = storageParse(`wd_daily_${this.day}_en`, null);
-                }
-                if (saved && saved.status === 'won') {
-                    statusEl.textContent = '✓';
-                    statusEl.classList.add('won');
-                    statusEl.title = 'Solved';
-                } else if (saved && saved.status === 'lost') {
-                    statusEl.textContent = '✕';
-                    statusEl.classList.add('lost');
-                    statusEl.title = 'Lost';
-                } else {
-                    statusEl.textContent = '';
-                    statusEl.removeAttribute('title');
-                }
-            }
+            if (label) label.textContent = labelOf(len, true);
+            paintStatus(this.el[`diff-status-${len}`], readStatus(len));
         });
+
+        // 触发器：显示当前选择
+        const triggerTag = this.el['diff-trigger-tag'];
+        if (triggerTag) triggerTag.textContent = String(this.wordLength);
+        const triggerLabel = this.el['diff-trigger-label'];
+        if (triggerLabel) {
+            const desc = t[`diff${this.wordLength}Desc`];
+            triggerLabel.textContent = labelOf(this.wordLength, false);
+            // 描述性后缀单独成 span，窄屏可隐藏（见 css）
+            if (desc) {
+                const span = document.createElement('span');
+                span.className = 'wd-diff-desc';
+                span.textContent = ` (${desc})`;
+                triggerLabel.appendChild(span);
+            }
+        }
+        paintStatus(this.el['diff-status-cur'], readStatus(this.wordLength));
+    }
+
+    openDiffMenu() {
+        const menu = this.el['diff-menu'];
+        const trigger = this.el['diff-trigger'];
+        if (!menu || !trigger) return;
+        menu.classList.remove('hidden');
+        trigger.setAttribute('aria-expanded', 'true');
+        this.diffMenuOpen = true;
+    }
+
+    closeDiffMenu() {
+        const menu = this.el['diff-menu'];
+        const trigger = this.el['diff-trigger'];
+        if (!menu || !trigger) return;
+        menu.classList.add('hidden');
+        trigger.setAttribute('aria-expanded', 'false');
+        this.diffMenuOpen = false;
+    }
+
+    toggleDiffMenu() {
+        if (this.diffMenuOpen) {
+            this.closeDiffMenu();
+        } else {
+            this.openDiffMenu();
+        }
     }
 
     updateModeUi() {
@@ -1476,7 +1535,33 @@ class WordDailyGame {
         };
 
         [4, 5, 6].forEach(len => {
-            on(`wd-diff-${len}`, () => this.setWordLength(len));
+            on(`wd-diff-${len}`, () => {
+                this.closeDiffMenu();
+                this.setWordLength(len);
+            });
+        });
+
+        // 难度下拉：触发器开合
+        const trigger = this.el['diff-trigger'];
+        if (trigger) {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleDiffMenu();
+            });
+        }
+        // 菜单内部点击不冒泡到 document（否则会立刻关掉自己）
+        const menu = this.el['diff-menu'];
+        if (menu) {
+            menu.addEventListener('click', (e) => e.stopPropagation());
+        }
+        // 点外部 / Esc 关闭
+        document.addEventListener('click', () => this.closeDiffMenu());
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.diffMenuOpen) {
+                this.closeDiffMenu();
+                this.el['diff-trigger']?.focus();
+            }
         });
 
         on('wd-btn-lang', () => {

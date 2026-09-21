@@ -58,23 +58,34 @@
 
         <div class="wd-banner hidden" id="wd-practice-banner"></div>
 
-        <!-- 难度选择（单词模式） -->
+        <!-- 难度选择（单词模式）：下拉菜单 -->
         <div class="wd-diff-row" id="wd-diff-row">
-            <button type="button" class="wd-diff-btn" data-len="4" id="wd-diff-4">
-                <span class="wd-diff-tag">4</span>
-                <span class="wd-diff-title" id="wd-diff-label-4">4 Letters</span>
-                <span class="wd-diff-status" id="wd-diff-status-4"></span>
-            </button>
-            <button type="button" class="wd-diff-btn active" data-len="5" id="wd-diff-5">
-                <span class="wd-diff-tag">5</span>
-                <span class="wd-diff-title" id="wd-diff-label-5">5 Letters</span>
-                <span class="wd-diff-status" id="wd-diff-status-5"></span>
-            </button>
-            <button type="button" class="wd-diff-btn" data-len="6" id="wd-diff-6">
-                <span class="wd-diff-tag">6</span>
-                <span class="wd-diff-title" id="wd-diff-label-6">6 Letters</span>
-                <span class="wd-diff-status" id="wd-diff-status-6"></span>
-            </button>
+            <div class="wd-diff-dd" id="wd-diff-dd">
+                <button type="button" class="wd-diff-trigger" id="wd-diff-trigger"
+                        aria-haspopup="listbox" aria-expanded="false" aria-controls="wd-diff-menu">
+                    <span class="wd-diff-tag" id="wd-diff-trigger-tag">5</span>
+                    <span class="wd-diff-title" id="wd-diff-trigger-label">5 Letters</span>
+                    <span class="wd-diff-status" id="wd-diff-status-cur"></span>
+                    <svg class="wd-diff-caret" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="wd-diff-menu hidden" id="wd-diff-menu" role="listbox" aria-labelledby="wd-diff-trigger">
+                    <button type="button" class="wd-diff-opt" data-len="4" id="wd-diff-4" role="option" aria-selected="false">
+                        <span class="wd-diff-tag">4</span>
+                        <span class="wd-diff-title" id="wd-diff-label-4">4 Letters</span>
+                        <span class="wd-diff-status" id="wd-diff-status-4"></span>
+                    </button>
+                    <button type="button" class="wd-diff-opt active" data-len="5" id="wd-diff-5" role="option" aria-selected="true">
+                        <span class="wd-diff-tag">5</span>
+                        <span class="wd-diff-title" id="wd-diff-label-5">5 Letters</span>
+                        <span class="wd-diff-status" id="wd-diff-status-5"></span>
+                    </button>
+                    <button type="button" class="wd-diff-opt" data-len="6" id="wd-diff-6" role="option" aria-selected="false">
+                        <span class="wd-diff-tag">6</span>
+                        <span class="wd-diff-title" id="wd-diff-label-6">6 Letters</span>
+                        <span class="wd-diff-status" id="wd-diff-status-6"></span>
+                    </button>
+                </div>
+            </div>
         <button data-chrome-moved="1" class="wd-icon-btn wd-lang-btn game-icon-btn game-icon-btn--wide" id="wd-btn-lang" title="Switch mode" aria-label="Switch mode">Idioms</button>
         <button data-chrome-moved="1" class="wd-icon-btn game-icon-btn" id="wd-btn-practice" title="Practice" aria-label="Practice"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/></svg></button>
         </div>
