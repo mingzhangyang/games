@@ -42,6 +42,7 @@ const SUITE = [
     { name: 'tetris-topbar-mobile', script: 'scripts/verify-tetris-topbar-mobile.mjs', args: [], needsServer: true },
     { name: 'tetris-touch', script: 'scripts/verify-tetris-touch.mjs', args: [], needsServer: true },
     { name: 'tetris-drawer', script: 'scripts/verify-tetris-drawer.mjs', args: [], needsServer: true },
+    { name: 'td-topbar', script: 'scripts/verify-td-topbar.mjs', args: [], needsServer: true },
     { name: 'smoke-index', script: 'scripts/smoke-index.mjs', args: [], needsServer: true },
     { name: 'index-layout', script: 'scripts/verify-index-layout.mjs', args: [], needsServer: true },
     { name: 'smoke-tank-battle', script: 'scripts/smoke-tank-battle.mjs', args: [], needsServer: true },

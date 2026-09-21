@@ -49,12 +49,11 @@
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="td-topbar-center game-topbar-center">
-                <div class="td-topbar-row td-topbar-row--game">
-                    <div class="td-stat" id="td-stat-lives" title="Lives"><span class="td-stat-icon td-stat-icon--lives"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.6 5 8.2 5c1.6 0 3 .8 3.8 2 .8-1.2 2.2-2 3.8-2 2.6 0 4.7 2 4.7 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg></span><b id="td-lives">20</b></div>
+                <!-- 状态胶囊直接放中槽（单行契约，窄屏由共享层 flex-wrap 折行） -->
+                <div class="td-stat" id="td-stat-lives" title="Lives"><span class="td-stat-icon td-stat-icon--lives"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.6 5 8.2 5c1.6 0 3 .8 3.8 2 .8-1.2 2.2-2 3.8-2 2.6 0 4.7 2 4.7 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg></span><b id="td-lives">20</b></div>
                     <div class="td-stat" id="td-stat-gold" title="Gold"><span class="td-stat-icon td-stat-icon--gold"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2 0 2.6 5.8 1.3 5.8 4 0 1.2-1.2 2-3 2-1.4 0-2.5-.5-3-1.4"/><path d="M12 6.5v11"/></svg></span><b id="td-gold">220</b></div>
                     <div class="td-stat" id="td-stat-wave" title="Wave"><span class="td-stat-icon td-stat-icon--wave"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 13c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 18c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/></svg></span><b id="td-wave">0/15</b></div>
-                    <div class="td-stack-badge hidden" id="td-stack-badge"></div>
-                </div>
+                <div class="td-stack-badge hidden" id="td-stack-badge"></div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
             <div class="td-topbar-actions game-topbar-group">

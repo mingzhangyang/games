@@ -1,17 +1,16 @@
-// 顶栏两行结构回归
+// tower-defense 顶栏「单行三槽」契约回归
 // 用法：node scripts/verify-td-topbar.mjs [baseUrl] [outDir]
 //
-// 背景（2026-09-19）：用户要求「全应用级 icons 在第一行，本应用信息在第二行」。
-// 原来 7 个控件平铺在同一个 flex + wrap 里，靠 wrap 随机折断。
-//
-// 断言重点：两行必须真的分层（y 不重叠、顺序正确），且触控目标仍 ≥44px。
+// 背景：2026-09-19 曾按当时需求做过「两行顶栏」（全应用 icons 一行、本局信息一行），
+// 2026-09-21 起废弃 —— 与 lumen / gravity-slingshot 对齐为共享层单行三槽契约：
+//   左 Home ｜ 中 状态胶囊 ×3 + 堆叠徽章（窄屏可折行，整组居中）｜ 右 Range/Speed/Stats/Pause/Sound
+// 页面侧不再有任何纵向拆行覆盖；.td-topbar-row--app / --game / -spacer 已随 HTML 拍平删除，
+// 本脚本守住「不再回退成多行」+ 触控热区，并原样保留「空中航线只在飞行关绘制」像素断言。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH } from './lib/browser.mjs';
 import { existsSync, mkdirSync } from 'node:fs';
 
-const EXE = [
-    CHROME_PATH,
-].find(existsSync);
+const EXE = [CHROME_PATH].find(existsSync);
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const OUT = process.argv[3] || 'C:/tmp';
 mkdirSync(OUT, { recursive: true });
@@ -36,13 +35,18 @@ const VIEWPORTS = [
 
 const probe = () => page.evaluate(() => {
     const r = (el) => { const b = el.getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height, bottom: b.bottom, right: b.right }; };
-    const rowApp = document.querySelector('.td-topbar-row--app');
-    const rowGame = document.querySelector('.td-topbar-row--game');
+    const topbar = document.querySelector('.game-topbar');
     const home = document.getElementById('td-btn-home');
     const ids = ['tdStatsToggle', 'td-range-btn', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn'];
     const appBtns = ids.map(id => ({ id, ...r(document.getElementById(id)) }));
     const stats = ['td-stat-lives', 'td-stat-gold', 'td-stat-wave']
         .map(id => ({ id, ...r(document.getElementById(id)) }));
+    const stack = (() => {
+        const el = document.getElementById('td-stack-badge');
+        if (!el) return null;
+        const cs = getComputedStyle(el);
+        return { visible: !el.classList.contains('hidden') && cs.display !== 'none', ...r(el) };
+    })();
 
     // 触控热区：目标或它的 ::after 外扩后的有效区域
     const hit = (el) => {
@@ -58,97 +62,51 @@ const probe = () => page.evaluate(() => {
     };
 
     return {
-        rowApp: r(rowApp), rowGame: r(rowGame),
-        home: r(home), appBtns, stats,
+        dir: topbar ? getComputedStyle(topbar).flexDirection : null,
+        topbarH: topbar ? Math.round(topbar.getBoundingClientRect().height) : 0,
+        legacy: {
+            appRow: document.querySelectorAll('.td-topbar-row--app').length,
+            gameRow: document.querySelectorAll('.td-topbar-row--game').length,
+            spacer: document.querySelectorAll('.td-topbar-spacer').length,
+        },
+        home: r(home),
+        appBtns,
+        stats,
+        stack,
         homeHit: hit(home),
         appHit: ids.map(id => ({ id, ...hit(document.getElementById(id)) })),
-        stackInGameRow: !!rowGame.querySelector('#td-stack-badge'),
-        // 关键：功能钮必须都在 app 行里，状态胶囊必须都在 game 行里
-        appHasStats: !!rowApp.querySelector('.td-stat'),
-        gameHasButtons: !!rowGame.querySelector('.td-icon-btn'),
-        // 堆叠徽章：居中判定要看它显不显示、多宽
-        stack: (() => {
-            const el = document.getElementById('td-stack-badge');
-            if (!el) return null;
-            const cs = getComputedStyle(el);
-            return {
-                visible: !el.classList.contains('hidden') && cs.display !== 'none',
-                marginLeft: parseFloat(cs.marginLeft) || 0,
-                ...r(el),
-            };
-        })(),
     };
 });
 
-console.log('\n=== 1. 两行分层结构 ===');
+console.log('\n=== 1. 单行三槽结构（390×844） ===');
 await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
 await page.goto(BASE + '/tower-defense.html', { waitUntil: 'networkidle2' });
 await new Promise(r => setTimeout(r, 800));
 let p = await probe();
 
-check(!!p.rowApp && !!p.rowGame, '存在两行容器');
-check(!p.appHasStats, '第一行不含本局状态胶囊');
-check(!p.gameHasButtons, '第二行不含功能图标钮');
-check(p.stackInGameRow, '堆叠徽章位于第二行（本局信息行）');
-check(p.rowApp.h > 0 && p.rowGame.h > 0, '两行都有实际高度', `${Math.round(p.rowApp.h)} / ${Math.round(p.rowGame.h)}px`);
-
-// 竖直分层：第一行整体在第二行之上，且不重叠
-const gapV = p.rowGame.y - p.rowApp.bottom;
-check(p.rowApp.y < p.rowGame.y, '第一行在第二行之上');
-check(gapV >= -0.5, '两行未垂直重叠', `间距 ${gapV.toFixed(1)}px`);
-
-// Home 在第一行最左；其余功能钮都在第一行内
-check(Math.abs(p.home.y - p.rowApp.y) < p.rowApp.h, 'Home 位于第一行');
-check(Math.abs(p.home.x - p.rowApp.x) < 1.5, 'Home 贴第一行左侧', `x=${Math.round(p.home.x)} vs ${Math.round(p.rowApp.x)}`);
-for (const b of p.appBtns) {
-    check(Math.abs(b.y - p.home.y) < p.rowApp.h, `${b.id} 与 Home 同行`);
-    check(b.x >= p.home.right - 1, `${b.id} 在 Home 右侧`, `x=${Math.round(b.x)}`);
-}
-// 状态胶囊都在第二行
-for (const s of p.stats) {
-    check(Math.abs(s.y - p.rowGame.y) < p.rowGame.h, `${s.id} 位于第二行`);
-}
-// 状态胶囊左对齐成一行、不换行、不重叠
+check(!!p.home && !!p.topbarH, '顶栏与 Home 钮存在');
+check(p.dir === 'row', '顶栏是横向单行（flex-direction:row）', `dir=${p.dir}`);
+check(p.legacy.appRow === 0 && p.legacy.gameRow === 0 && p.legacy.spacer === 0,
+    '两行时代的行容器/占位已不存在（不回退）',
+    `app=${p.legacy.appRow} game=${p.legacy.gameRow} spacer=${p.legacy.spacer}`);
+// Home 贴左、功能钮贴右且与 Home 同一视觉行
+check(p.home.x <= 30, 'Home 贴顶栏左侧', `x=${Math.round(p.home.x)}`);
+const rightMost = Math.max(...p.appBtns.map(b => b.right));
+check(rightMost <= 390 + 0.5, '功能钮未溢出视口', `最右 ${Math.round(rightMost)} ≤ 390`);
+const act = p.appBtns.find(b => b.id === 'td-pause-btn');
+check(act && Math.abs(act.y - p.home.y) < 8, '功能钮与 Home 同一视觉行',
+    `dy=${act ? Math.abs(act.y - p.home.y).toFixed(1) : 'NaN'}px`);
+// 顶栏纵向占用：窄屏允许胶囊折一行（≤110px），绝不允许回到三行（>120px）
+check(p.topbarH <= 110, '顶栏高度回到单行量级（≤110px，含胶囊折行）', `${p.topbarH}px`);
+// 状态胶囊：横向不重叠、不溢出视口
 for (let i = 1; i < p.stats.length; i++) {
-    check(p.stats[i].x >= p.stats[i - 1].right - 0.5,
-        `${p.stats[i - 1].id} → ${p.stats[i].id} 横向不重叠`);
-    check(Math.abs(p.stats[i].y - p.stats[0].y) < 1.5,
-        `${p.stats[i].id} 与首个胶囊同高（未换行）`);
+    const prev = p.stats[i - 1], cur = p.stats[i];
+    const sameLine = Math.abs(cur.y - prev.y) < 1.5;
+    check(!sameLine || cur.x >= prev.right - 0.5,
+        `${prev.id} → ${cur.id} 横向不重叠`);
 }
-// 状态胶囊在第二行内水平居中
-/*
- * 注意：这里断言的是「内容组中点 ≈ 行中点」，不是「首个胶囊贴行首」。
- * 2026-09-19 用户要求把三个状态胶囊改为水平居中，因此旧的
- * `stats[0].x ≈ rowGame.x`（左对齐）断言已作废，会必然失败。
- *
- * 内容组 = 第一个胶囊左边缘 → 最后一个 flex 项（有徽章时是徽章，否则是波次胶囊）右边缘。
- * 这样判定的好处：徽章显隐都不影响结论 —— 它对居中的破坏方式很隐蔽，
- * 若给徽章写 `margin-left: auto`（旧写法），auto 外边距会吃掉左侧全部剩余空间，
- * 内容组中点会被推到行中点左侧，下面的 midDelta 断言立刻抓到。
- */
-const gameContent = (q) => {
-    const left = q.stats[0].x;
-    const right = q.stack && q.stack.visible ? q.stack.right : q.stats[q.stats.length - 1].right;
-    return { left, right, mid: (left + right) / 2 };
-};
-const gc = gameContent(p);
-const rowMid = p.rowGame.x + p.rowGame.w / 2;
-const midDelta = gc.mid - rowMid;
-check(Math.abs(midDelta) < 2, '状态胶囊组水平居中于第二行',
-    `组中点 ${gc.mid.toFixed(1)} vs 行中点 ${rowMid.toFixed(1)}（偏 ${midDelta.toFixed(1)}px）`);
-// 左右余量对称（居中的直接后果）
-const slackL = gc.left - p.rowGame.x;
-const slackR = p.rowGame.right - gc.right;
-check(Math.abs(slackL - slackR) < 4, '第二行左右余量对称',
-    `左 ${slackL.toFixed(1)}px / 右 ${slackR.toFixed(1)}px`);
-// 反向守卫：绝不能是左对齐（旧实现）
-check(slackL > 12, '第二行不是左对齐（旧实现已移除）', `左侧余量 ${slackL.toFixed(1)}px`);
-// 徽章不得再用 margin-left:auto 破坏居中
-check(!p.stack || p.stack.marginLeft < 20, '堆叠徽章未使用 auto 外边距',
-    `margin-left ${p.stack ? p.stack.marginLeft : 0}px`);
-// 防御性下限：居中后左右余量天然各 ≈85px，这里只是防止将来内容变长把这一行撑满
-check(slackL >= 6 && slackR >= 6, '第二行左右仍留有安全余量',
-    `左 ${slackL.toFixed(1)}px ≥ 6px`);
+check(Math.max(...p.stats.map(s => s.right)) <= 390 + 0.5, '状态胶囊未溢出视口',
+    `最右 ${Math.round(Math.max(...p.stats.map(s => s.right)))} ≤ 390`);
 
 console.log('\n=== 2. 触控热区（≥44px） ===');
 check(p.homeHit.h >= 44, 'Home 热区高 ≥44px', `${p.homeHit.h}px`);
@@ -162,25 +120,16 @@ for (const v of VIEWPORTS) {
     await page.setViewport({ width: v.w, height: v.h, deviceScaleFactor: 1 });
     await new Promise(r => setTimeout(r, 320));
     const q = await probe();
-    const ok = q.rowGame.y - q.rowApp.bottom >= -0.5
-        && !q.appHasStats && !q.gameHasButtons
-        && q.rowApp.h > 0 && q.rowGame.h > 0;
-    check(ok, `${v.name} ${v.w}×${v.h} 两行结构保持`, `行间距 ${(q.rowGame.y - q.rowApp.bottom).toFixed(1)}px`);
-
-    // 第一行六个钮是否放得下（不溢出视口）
-    const rightMost = Math.max(q.home.right, ...q.appBtns.map(b => b.right));
-    check(rightMost <= v.w + 0.5, `  ${v.name} 第一行控件未溢出视口`,
-        `最右 ${Math.round(rightMost)} ≤ ${v.w}`);
-
-    // 状态胶囊是否放得下
-    const statsRight = q.stats[q.stats.length - 1].right;
-    check(statsRight <= v.w + 0.5, `  ${v.name} 状态胶囊未溢出视口`,
-        `最右 ${Math.round(statsRight)} ≤ ${v.w}`);
-
-    // 居中在每种视口下都要成立（窄屏超宽时也要保持对称，而不是被挤成左对齐）
-    const gq = gameContent(q);
-    const dq = gq.mid - (q.rowGame.x + q.rowGame.w / 2);
-    check(Math.abs(dq) < 2, `  ${v.name} 状态胶囊组仍居中`, `偏 ${dq.toFixed(1)}px`);
+    const ok = q.dir === 'row'
+        && q.legacy.appRow === 0 && q.legacy.gameRow === 0 && q.legacy.spacer === 0
+        && Math.abs(q.appBtns.find(b => b.id === 'td-pause-btn').y - q.home.y) < 8;
+    check(ok, `${v.name} ${v.w}×${v.h} 单行结构保持`);
+    const right1 = Math.max(q.home.right, ...q.appBtns.map(b => b.right));
+    check(right1 <= v.w + 0.5, `  ${v.name} 第一行控件未溢出视口`, `最右 ${Math.round(right1)} ≤ ${v.w}`);
+    check(Math.max(...q.stats.map(s => s.right)) <= v.w + 0.5, `  ${v.name} 状态胶囊未溢出视口`,
+        `最右 ${Math.round(Math.max(...q.stats.map(s => s.right)))} ≤ ${v.w}`);
+    const cap = v.w >= 1024 ? 64 : 110;
+    check(q.topbarH <= cap, `  ${v.name} 顶栏高度 ≤${cap}px`, `${q.topbarH}px`);
 }
 
 console.log('\n=== 4. 空中航线只在有飞行兵的关卡绘制 ===');

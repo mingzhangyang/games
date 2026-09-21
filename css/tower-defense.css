@@ -23,40 +23,13 @@ body {
 /* ── 顶栏 HUD ── */
 
 /*
- * 顶栏两行结构（用户要求「全应用级 icons 在第一行，本应用信息在第二行」）。
- * 外层 .game-topbar 是 flex + space-between + wrap，这里把它转成纵向两行：
- * 每一行自己是一个 flex 行，行内各自对齐，不再依赖 wrap 随机折断。
+ * 顶栏中槽：3 个状态胶囊 + 堆叠徽章直接放在 .game-topbar-center 里，
+ * 与 lumen / gravity-slingshot 同一「单行三槽」契约。
+ * 窄屏折行由共享层 .game-topbar-center 的 flex-wrap 负责（胶囊彼此保持单行、
+ * 整组居中）；这里不再有任何纵向拆行覆盖。
+ * 历史：「顶栏两行结构」（2026-09-19）已废弃 —— HTML 拍平 + 本段覆盖删除，
+ * 回归脚本见 scripts/verify-td-topbar.mjs（断言单行契约 + 触控热区）。
  */
-.td-topbar {
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    gap: 8px;
-    flex-wrap: nowrap;
-}
-
-.td-topbar-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    min-width: 0;
-}
-
-/* 第一行：Home 靠左，其余功能钮靠右；中间用一个弹性占位撑开 */
-.td-topbar-row--app { position: relative; }
-.td-topbar-spacer { flex: 1 1 auto; min-width: 0; }
-
-/*
- * 第二行：本局状态（生命/金币/波次）水平居中。
- *
- * ⚠️ 这里刻意**不加** `padding-inline` 来给第一行图标的 6px 外扩热区留位。
- * 视觉居中的定义是"内容盒中点 = 行中点"，加了 padding 反而会把它推偏 6px；
- * 热区外扩在顶栏里本来就不会被裁剪 —— 祖先 .game-shell 是普通流布局、
- * 没有 overflow 限制，第一行底部(≈57px)到第二行胶囊顶部(≈65px)还留着
- * .td-topbar 的 8px gap，两行热区互不接触。
- */
-.td-topbar-row--game { justify-content: center; }
 
 .td-stat {
     display: flex;
@@ -970,12 +943,6 @@ body {
 
 .td-start-footer { display: flex; gap: 10px; }
 
-.td-lang-btn {
-    font-size: 13px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
 .td-overlay-title {
     font-size: 28px;
     font-weight: 900;
@@ -1176,6 +1143,14 @@ body {
     .td-build-card { padding: 5px 3px 4px; }
     .td-build-card .td-card-name { font-size: 10px; }
     .td-build-card .td-card-cost { font-size: 10.5px; }
+}
+
+/* iPhone SE 375px：比 390 再窄 15px 会把胶囊挤到第三行（顶栏实测 111px），
+   再收一档让三胶囊 + 堆叠徽章回到两行（守卫：verify-td-topbar iPhone SE 档 ≤110px）。 */
+@media (width <= 400px) {
+    .td-stat { padding: 4px 7px; font-size: 11px; gap: 4px; border-radius: 10px; }
+    .td-stat b { font-size: 12px; min-width: 1.8ch; }
+    .td-stack-badge { padding: 3px 7px; font-size: 10.5px; margin-left: 4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

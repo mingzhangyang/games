@@ -527,11 +527,15 @@ body {
 .game-title-pill {
     min-width: 0;
     flex: 0 1 auto;
-    gap: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 8px;
 }
 
 .hud-label {
-    font-size: 10.5px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -550,9 +554,9 @@ body {
 .hud-sub {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 5px;
     margin-top: 4px;
-    font-size: 10.5px;
+    font-size: 12px;
     line-height: 1.4;
     color: var(--tok-text-mute, #8b929e);
     font-variant-numeric: tabular-nums;
@@ -561,8 +565,13 @@ body {
 
 .hud-sub b {
     margin-right: 6px;
-    color: var(--tok-text-dim, #c9ced6);
     font-weight: 700;
+    color: var(--tok-text-dim, #c9ced6);
+}
+
+/* 并排行内副文本不再需要堆叠时的上边距 */
+.game-title-pill .hud-sub {
+    margin-top: 0;
 }
 
 .hud-sub b:last-child { margin-right: 0; }

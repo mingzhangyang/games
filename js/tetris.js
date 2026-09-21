@@ -200,7 +200,7 @@ function renderDrawerIcons() {
 function updateHud(g = currentGame()) {
     const best = getBestScore();
     const ready = !!g;
-    setText('scoreHud', Number(ready ? g.score : 0).toLocaleString());
+    setText('scoreHudValue', Number(ready ? g.score : 0).toLocaleString());
     setText('scoreHudBest', Number(best).toLocaleString());
     setText('scoreHudLevel', ready ? g.level : 1);
 }

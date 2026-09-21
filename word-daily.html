@@ -39,7 +39,6 @@
             <div class="wd-topbar-lead game-topbar-group">
                 <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
                 <a data-chrome="home" class="wd-icon-btn wd-home-link game-icon-btn" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
-                <button class="wd-icon-btn game-icon-btn" id="wd-btn-help" title="How to play" aria-label="How to play"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 0 1 5.4.9c0 1.8-2.6 2.1-2.6 3.6"/><path d="M12 17h.01"/></svg></button>
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="wd-topbar-center game-topbar-center">
@@ -50,6 +49,8 @@
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
             <div class="wd-topbar-actions game-topbar-group">
+                <!-- 契约顺序：① 页面专属（Help）→ stats → sound；左簇只保留 Home -->
+                <button class="wd-icon-btn game-icon-btn" id="wd-btn-help" title="How to play" aria-label="How to play"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 0 1 5.4.9c0 1.8-2.6 2.1-2.6 3.6"/><path d="M12 17h.01"/></svg></button>
                 <button class="wd-icon-btn game-icon-btn" id="wd-btn-stats" title="Stats" aria-label="Stats"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></button>
                 <button type="button" class="wd-icon-btn game-icon-btn" id="wd-btn-mute" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
             </div>
