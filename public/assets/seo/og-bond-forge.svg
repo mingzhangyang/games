@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="bf-title bf-desc">
+  <title id="bf-title">键合工坊 Bond Forge — Molecule Building Puzzle</title>
+  <desc id="bf-desc">Social preview for 键合工坊 Bond Forge — drag atoms from the tray, snap them into bonds, and satisfy every valence shell to forge the target molecule.</desc>
+
+  <defs>
+    <!-- Lab bench: deep indigo to near-black -->
+    <linearGradient id="benchGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#161c3d"/>
+      <stop offset="50%" stop-color="#0d1024"/>
+      <stop offset="100%" stop-color="#070914"/>
+    </linearGradient>
+
+    <!-- Cold top light cone -->
+    <radialGradient id="coldLight" cx="0.5" cy="0" r="0.75">
+      <stop offset="0%" stop-color="#9ec2ff" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#9ec2ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Atom spheres: radius-gradient for a lit 3D look -->
+    <radialGradient id="atomO" cx="0.35" cy="0.3" r="0.75">
+      <stop offset="0%" stop-color="#ffd0d5"/>
+      <stop offset="45%" stop-color="#ff6b7a"/>
+      <stop offset="100%" stop-color="#a8232f"/>
+    </radialGradient>
+    <radialGradient id="atomC" cx="0.35" cy="0.3" r="0.75">
+      <stop offset="0%" stop-color="#aab6c8"/>
+      <stop offset="45%" stop-color="#4a5568"/>
+      <stop offset="100%" stop-color="#242b38"/>
+    </radialGradient>
+    <radialGradient id="atomH" cx="0.35" cy="0.3" r="0.75">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#cdd7f5"/>
+      <stop offset="100%" stop-color="#8a97c4"/>
+    </radialGradient>
+
+    <!-- Bond glow along the stroke -->
+    <linearGradient id="bondGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5b8dee" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#8fb6ff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#5b8dee" stop-opacity="0.35"/>
+    </linearGradient>
+
+    <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="tightGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Backdrop -->
+  <rect width="1200" height="630" fill="url(#benchGrad)"/>
+  <rect width="1200" height="630" fill="url(#coldLight)"/>
+
+  <!-- Bench grid -->
+  <g stroke="#7896f0" stroke-opacity="0.10" stroke-width="1">
+    <path d="M60 0v630M120 0v630M180 0v630M240 0v630M300 0v630M360 0v630M420 0v630M480 0v630M540 0v630M600 0v630M660 0v630M720 0v630M780 0v630M840 0v630M900 0v630M960 0v630M1020 0v630M1080 0v630M1140 0v630"/>
+    <path d="M0 60h1200M0 120h1200M0 180h1200M0 240h1200M0 300h1200M0 360h1200M0 420h1200M0 480h1200M0 540h1200M0 600h1200"/>
+  </g>
+
+  <!-- ── The molecule: a water-like bent geometry, drawn large at right ── -->
+  <g transform="translate(860 315)">
+    <!-- bonds first (under the atoms) -->
+    <g stroke="url(#bondGrad)" stroke-linecap="round" filter="url(#tightGlow)">
+      <path d="M-108 -84 L0 0" stroke-width="13"/>
+      <path d="M108 -84 L0 0" stroke-width="13"/>
+    </g>
+    <!-- electron cloud pulse riding the bond -->
+    <g stroke="#cfe0ff" stroke-opacity="0.55" stroke-linecap="round">
+      <path d="M-108 -84 L0 0" stroke-width="3"/>
+      <path d="M108 -84 L0 0" stroke-width="3"/>
+    </g>
+
+    <!-- lone pairs on O: two faint dots -->
+    <g fill="#ff6b7a" fill-opacity="0.45">
+      <circle cx="-34" cy="46" r="7"/>
+      <circle cx="34" cy="46" r="7"/>
+    </g>
+
+    <!-- H atoms -->
+    <g filter="url(#softGlow)">
+      <circle cx="-108" cy="-84" r="46" fill="url(#atomH)"/>
+      <circle cx="108" cy="-84" r="46" fill="url(#atomH)"/>
+    </g>
+    <!-- O atom -->
+    <g filter="url(#softGlow)">
+      <circle cx="0" cy="0" r="62" fill="url(#atomO)"/>
+    </g>
+
+    <!-- Atom labels -->
+    <g font-family="Segoe UI, system-ui, sans-serif" font-weight="700" text-anchor="middle">
+      <text x="-108" y="-73" font-size="42" fill="#1b2138">H</text>
+      <text x="108" y="-73" font-size="42" fill="#1b2138">H</text>
+      <text x="0" y="17" font-size="54" fill="#3d0d13">O</text>
+    </g>
+
+    <!-- 104.5° angle arc between the two bonds -->
+    <path d="M-38 -30 A48 48 0 0 0 38 -30" fill="none" stroke="#ffd34d" stroke-opacity="0.7" stroke-width="3" stroke-linecap="round"/>
+    <text x="0" y="-36" font-family="Segoe UI, system-ui, sans-serif" font-size="20" font-weight="700" fill="#ffd34d" text-anchor="middle">104.5°</text>
+  </g>
+
+  <!-- ── Atom tray at bottom-left (the puzzle's signature UI) ── -->
+  <g transform="translate(96 520)">
+    <rect x="-46" y="-38" width="300" height="76" rx="20" fill="#ffffff" fill-opacity="0.055" stroke="#ffffff" stroke-opacity="0.14"/>
+    <circle cx="-6" cy="0" r="22" fill="url(#atomC)"/>
+    <text x="-6" y="8" font-family="Segoe UI, system-ui, sans-serif" font-size="20" font-weight="700" fill="#e8ecff" text-anchor="middle">C</text>
+    <circle cx="62" cy="0" r="20" fill="url(#atomH)"/>
+    <text x="62" y="7" font-family="Segoe UI, system-ui, sans-serif" font-size="18" font-weight="700" fill="#1b2138" text-anchor="middle">H</text>
+    <circle cx="126" cy="0" r="19" fill="url(#atomO)"/>
+    <text x="126" y="7" font-family="Segoe UI, system-ui, sans-serif" font-size="18" font-weight="700" fill="#3d0d13" text-anchor="middle">O</text>
+    <circle cx="188" cy="0" r="20" fill="#5b8dee"/>
+    <text x="188" y="7" font-family="Segoe UI, system-ui, sans-serif" font-size="18" font-weight="700" fill="#0b1020" text-anchor="middle">N</text>
+  </g>
+
+  <!-- ── Title block ── -->
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <text x="96" y="150" font-size="76" font-weight="800" fill="#e8ecff" letter-spacing="1">键合工坊</text>
+    <text x="98" y="216" font-size="44" font-weight="700" fill="#9aa6d8" letter-spacing="7">BOND FORGE</text>
+
+    <g font-size="26" font-weight="600" fill="#c3cdf2">
+      <text x="98" y="290">Drag atoms · Snap bonds</text>
+      <text x="98" y="330">Fill every valence shell</text>
+    </g>
+
+    <!-- target formula chip -->
+    <g transform="translate(96 372)">
+      <rect x="0" y="0" width="222" height="66" rx="16" fill="#5b8dee" fill-opacity="0.16" stroke="#5b8dee" stroke-opacity="0.42"/>
+      <text x="20" y="28" font-size="15" font-weight="700" fill="#9aa6d8" letter-spacing="2.5">TARGET</text>
+      <text x="20" y="56" font-size="30" font-weight="800" fill="#e8ecff">H₂O</text>
+    </g>
+
+    <!-- star row -->
+    <g transform="translate(348 372)">
+      <rect x="0" y="0" width="180" height="66" rx="16" fill="#ffd34d" fill-opacity="0.12" stroke="#ffd34d" stroke-opacity="0.34"/>
+      <text x="20" y="28" font-size="15" font-weight="700" fill="#9aa6d8" letter-spacing="2.5">DRAGS</text>
+      <text x="20" y="56" font-size="30" font-weight="800" fill="#ffd34d">4 / 6</text>
+    </g>
+  </g>
+
+  <!-- Bottom rule + tagline -->
+  <path d="M96 588h1008" stroke="#ffffff" stroke-opacity="0.12" stroke-width="2"/>
+  <text x="96" y="620" font-family="Segoe UI, system-ui, sans-serif" font-size="21" font-weight="600" fill="#7c89bf">
+    20 handcrafted levels · a daily challenge · real chemistry along the way
+  </text>
+</svg>

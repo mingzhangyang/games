@@ -59,6 +59,7 @@ main: resolve(__dirname, 'index.html'),
             "lumen": resolve(__dirname, 'lumen.html'),
             "circuit": resolve(__dirname, 'circuit.html'),
             "silk-dew": resolve(__dirname, 'silk-dew.html'),
+            "bond-forge": resolve(__dirname, 'bond-forge.html'),
             // registry:end inputs
         },
         output: {

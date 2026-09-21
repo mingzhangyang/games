@@ -25,6 +25,7 @@ const AUGMENT = {
     'lumen':             { gameVar: 'lmGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'circuit':           { gameVar: 'ccGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'silk-dew':          { gameVar: 'sdGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
+    'bond-forge':        { gameVar: 'bfGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
 };
 // ⚠ 曾经这里写的是 `.filter(g => AUGMENT[g.id])` —— 手工表静默收窄注册表：
 // 新游戏挂了 drawer cap 却忘了补 AUGMENT，校验器当它不存在，抽屉没接也全绿。
@@ -36,6 +37,29 @@ const PAGES = registry.withCap('drawer')
 
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true };
 const DESKTOP = { width: 1280, height: 900, deviceScaleFactor: 1, hasTouch: false };
+
+// ── 单页超时 + 总预算 ──
+//
+// 这个校验器要跑 10 个页面 × （移动端 1 次 + 桌面端 1 次 + 2 种语言）≈ 40 次导航，
+// 每次 networkidle2 都可能被 analytics / service worker 的长连接拖住。曾经的实测：
+// 前 5 页全绿，第 6 页 goto 一直不返回，最终 net::ERR_CONNECTION_REFUSED（服务端早已
+// 被外层硬超时杀掉），**剩下 5 页一条断言都没跑**，而退出码只有 1 —— 看起来像"某页
+// 抽屉坏了"，实际是整轮截断。加两道闸：
+//   1. 每次 goto 单独限时，超时归为"该页失败"而不是拖死整轮；
+//   2. 总预算封顶，超了就明确报告"未跑完"，避免把截断读成通过。
+const NAV_TIMEOUT = Number(process.env.STATS_NAV_TIMEOUT || 25000);
+const DEADLINE = Date.now() + Number(process.env.STATS_DEADLINE_MS || 300000);
+
+const gotoPage = async (page, url) => {
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
+};
+
+// 返回 true 表示预算已耗尽，调用方应立即收尾
+const budgetGone = (label) => {
+    if (Date.now() < DEADLINE) return false;
+    fails.push(`总预算耗尽，未跑完（停在 ${label}）`);
+    return true;
+};
 
 const fails = [];
 const check = (ok, label, detail) => {
@@ -58,6 +82,10 @@ const browser = await puppeteer.launch({
 });
 
 for (const P of PAGES) {
+    // 预算是每轮开头查一次：已经超时就别再开新页，直接把"没跑完"写进失败清单。
+    // 若在这里静默 break，剩下的页面会以"零断言"混过去，正是上面注释里那个坑。
+    if (budgetGone(P.name)) break;
+
     console.log(`\n════════ ${P.name} ════════`);
 
     // ── 移动端 ──
@@ -65,7 +93,7 @@ for (const P of PAGES) {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.setViewport(MOBILE);
-    await page.goto(`${BASE}/${P.name}.html`, { waitUntil: 'networkidle2' });
+    await gotoPage(page, `${BASE}/${P.name}.html`);
     await new Promise(r => setTimeout(r, 900));
 
     const ids = {
@@ -133,9 +161,27 @@ for (const P of PAGES) {
         const body = document.getElementById(ids.body);
         const inBody = body ? body.querySelectorAll('.game-side-card').length : -1;
         // 侧栏内 panels 外不得残留面板卡（P3 的更多游戏导航卡含 .more-games，合法除外）
+        //
+        // ⚠️ 注意这个断言在**窄屏**下的口径：搬迁节点 #<pre>StatsPanels 已被 JS 移进
+        //    抽屉，而 `.game-sidebar` 整体是 display:none（body.has-stats-drawer 隐藏它）。
+        //    也就是说，留在侧栏里的「桌面专属卡」（bond-forge 的元素小抄卡就是这么放的，
+        //    理由见 bond-forge.html 里的注释：放进去会与抽屉里的内容重复）**是惰性的**，
+        //    既不渲染也不可交互。把它判成"重复卡"是假阳性。
+        //
+        //    真正要抓的缺陷是「同一个卡片被复制成两份，两份都可见」——
+        //    所以只统计**实际渲染**的游离卡。用户看得见的重复才是 bug。
         const sidebar = document.querySelector('.game-sidebar');
-        const stray = sidebar ? [...sidebar.querySelectorAll('.game-side-card')]
-            .filter(c => !panels.contains(c) && !c.querySelector('.more-games')).length : -1;
+        const rendered = (el) => {
+            if (el.closest('[hidden]')) return false;
+            for (let n = el; n && n !== document.body; n = n.parentElement) {
+                if (getComputedStyle(n).display === 'none') return false;
+            }
+            return true;
+        };
+        const stray = sidebar
+            ? [...sidebar.querySelectorAll('.game-side-card')]
+                .filter(c => !panels.contains(c) && !c.querySelector('.more-games') && rendered(c)).length
+            : -1;
         return inBody === inPanels && stray === 0;
     }, ids), '面板卡片没有重复（原地搬移而非复制）');
 
@@ -300,7 +346,7 @@ for (const P of PAGES) {
     const dErr = [];
     d.on('pageerror', e => dErr.push(e.message));
     await d.setViewport(DESKTOP);
-    await d.goto(`${BASE}/${P.name}.html`, { waitUntil: 'networkidle2' });
+    await gotoPage(d, `${BASE}/${P.name}.html`);
     await new Promise(r => setTimeout(r, 800));
     const ds = await d.evaluate((ids) => {
         const drawer = document.getElementById(ids.drawer);
@@ -340,7 +386,7 @@ for (const P of PAGES) {
         const lp = await browser.newPage();
         await lp.setViewport(MOBILE);
         await lp.evaluateOnNewDocument((l) => { try { localStorage.setItem('site_lang', l); } catch (e) {} }, lang);
-        await lp.goto(`${BASE}/${P.name}.html`, { waitUntil: 'networkidle2' });
+        await lp.goto(`${BASE}/${P.name}.html`, { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
         await new Promise(r => setTimeout(r, 500));
         const ls = await lp.evaluate(() => {
             const t = document.querySelector('[id$="StatsToggle"]');

@@ -37,6 +37,7 @@ const DAILY_PATTERNS = [
   { re: /^lumen-d\d{8}$/, config: { order: 'asc', maxScore: 99, maxEntries: 50 } },
   { re: /^circuit-d\d{8}$/, config: { order: 'asc', maxScore: 99, maxEntries: 50, ttl: 14 * 24 * 3600 } },
   { re: /^silk-dew-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
+  { re: /^bond-forge-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
 ];
 // registry:end games-scores
 

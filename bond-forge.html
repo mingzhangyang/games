@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0d1024">
+    <meta name="description" content="键合工坊 Bond Forge — an original molecule building puzzle. Drag atoms from the tray, snap them into bonds, and satisfy every valence shell to forge the target formula. 20 handcrafted levels, a daily challenge, and real chemistry along the way.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/bond-forge.html">
+    <meta property="og:title" content="键合工坊 Bond Forge — Molecule Building Puzzle">
+    <meta property="og:description" content="Drag atoms, snap bonds, forge the target molecule. 20 handcrafted levels plus a daily challenge — fewer drags, more stars.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-bond-forge.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/bond-forge.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="键合工坊 Bond Forge — Molecule Building Puzzle">
+    <meta name="twitter:description" content="Drag atoms, snap bonds, forge the molecule.">
+    <meta name="twitter:image" content="assets/seo/og-bond-forge.svg">
+    <title>键合工坊 Bond Forge — Molecule Building Puzzle</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d1024'/%3E%3Cpath d='M32 12v40' stroke='%235b8dee' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='12' r='8' fill='%23ff6b7a'/%3E%3Ccircle cx='22' cy='48' r='7' fill='%23e8ecff'/%3E%3Ccircle cx='42' cy='48' r='7' fill='%23e8ecff'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/bond-forge.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="bf-shell game-shell">
+        <!-- 顶栏 HUD -->
+        <header class="bf-topbar game-topbar">
+            <div class="bf-topbar-lead game-topbar-group">
+                <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
+                <button data-chrome="home" class="bf-icon-btn game-icon-btn" id="bf-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <!-- 中槽：关卡 / 拖拽 HUD，各页自由 -->
+            <div class="bf-topbar-center game-topbar-center">
+                <div class="bf-hud-level" id="bf-hud-level">Level 1/20</div>
+                <div class="bf-drag-box">
+                    <span class="bf-drag-value" id="bf-drags">0</span>
+                    <span class="bf-par" id="bf-par">· Par 4</span>
+                </div>
+            </div>
+            <!-- 右簇固定顺序：专属 → stats → sound → lang -->
+            <div class="bf-topbar-actions game-topbar-group">
+                <button class="bf-icon-btn game-icon-btn" id="bf-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button data-chrome="stats" type="button" class="bf-icon-btn game-icon-btn bf-stats-btn game-stats-btn" id="bfStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="bfStatsDrawer"></button>
+                <button type="button" class="bf-icon-btn game-icon-btn" id="bf-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                <button type="button" class="bf-icon-btn bf-lang-btn game-icon-btn game-icon-btn--wide" id="bf-btn-lang-ui" data-chrome="lang" title="Language" aria-label="Language">中文</button>
+            </div>
+        </header>
+
+        <!-- 舞台 -->
+        <main class="bf-main game-main">
+        <div class="bf-stage game-stage" id="bf-stage">
+            <canvas class="game-canvas" id="bf-canvas" width="520" height="680"></canvas>
+
+            <!-- 提示 -->
+            <div class="bf-toast hidden game-toast" id="bf-toast"></div>
+
+            <!-- 开始界面 -->
+            <div class="bf-overlay game-overlay" id="bf-start">
+                <h1 class="bf-title" id="bf-title">Bond Forge</h1>
+                <p class="bf-subtitle" id="bf-subtitle">Drag · Snap · Forge</p>
+                <div class="bf-hero">⚗️</div>
+                <p class="bf-howto" id="bf-howto"></p>
+                <div class="bf-mode-row">
+                    <button class="bf-mode" id="bf-btn-levels"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7l9 5 9-5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg><span>Levels</span></button>
+                    <button class="bf-mode bf-mode-daily" id="bf-btn-daily"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg><span>Daily</span></button>
+                    <button class="bf-mode" id="bf-btn-sandbox"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 18h6"/><path d="M6 15 10 5h8"/></svg><span>Sandbox</span></button>
+                </div>
+                <p class="bf-level-label" id="bf-level-label">Select level</p>
+                <div class="bf-level-grid" id="bf-level-grid"></div>
+                <p class="bf-daily-best" id="bf-daily-best"></p>
+                <div class="bf-start-footer">
+                    <button class="bf-icon-btn game-icon-btn" id="bf-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                    <button class="bf-icon-btn bf-lang-btn game-icon-btn" id="bf-start-lang">中文</button>
+                </div>
+            </div>
+
+            <!-- 过关面板 -->
+            <div class="bf-overlay bf-overlay-dim hidden game-overlay" id="bf-clear">
+                <div class="bf-card">
+                    <h2 class="bf-card-title" id="bf-clear-stars">★★★</h2>
+                    <div class="bf-card-line" id="bf-clear-line">Drags 0 · Par 0</div>
+                    <p class="bf-card-note" id="bf-clear-note"></p>
+                    <div class="bf-btn-row">
+                        <button class="bf-btn bf-btn-primary game-btn" id="bf-btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/></svg><span>Next</span></button>
+                        <button class="bf-btn game-btn" id="bf-btn-replay"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Retry</span></button>
+                        <button class="bf-btn bf-btn-ghost game-btn" id="bf-btn-menu1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每日结算 -->
+            <div class="bf-overlay hidden game-overlay" id="bf-over">
+                <h2 class="bf-overlay-title" id="bf-over-title">Daily complete!</h2>
+                <div class="bf-over-score" id="bf-over-score">0</div>
+                <div class="bf-over-sub" id="bf-over-sub"></div>
+                <div class="bf-btn-row">
+                    <button class="bf-btn game-btn" id="bf-btn-copy"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg><span>Copy</span></button>
+                    <button class="bf-btn bf-btn-ghost game-btn" id="bf-btn-menu2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
+                </div>
+                <div class="bf-lb">
+                    <div class="bf-lb-title" id="bf-lb-title">Global · Today's Challenge</div>
+                    <div class="bf-lb-list" id="bf-lb-list"></div>
+                    <div class="bf-lb-status" id="bf-lb-status"></div>
+                    <div class="bf-username-row">
+                        <label class="bf-username-label" for="bf-username" id="bf-username-label">Username</label>
+                        <input class="bf-username" id="bf-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+                <button class="bf-btn bf-btn-primary game-btn" id="bf-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Again</span></button>
+            </div>
+        </div>
+
+            <aside class="bf-sidebar game-sidebar">
+
+            <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
+            <div id="bfStatsPanels">
+                <div class="bf-side-card game-side-card">
+                    <div class="bf-side-title game-side-title" id="bf-side-howto-title"></div>
+                    <p class="bf-side-text game-side-text" id="bf-side-howto"></p>
+                </div>
+                <div class="bf-side-card game-side-card">
+                    <div class="bf-side-title game-side-title" id="bf-side-records-title"></div>
+                    <div class="bf-side-records" id="bf-side-records"></div>
+                </div>
+            </div>
+
+            <!-- 桌面侧栏专属：必须放在 #bfStatsPanels 外面 —— 那个节点会被
+                 js/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
+                 放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <div class="bf-side-card game-side-card" id="bf-cheat-card">
+                <button type="button" class="bf-cheat-head" id="bf-cheat-toggle" aria-expanded="true" aria-controls="bf-cheat-body">
+                    <span class="bf-side-title game-side-title" id="bf-cheat-title">Element cheat sheet</span>
+                    <svg class="bf-cheat-caret" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="bf-cheat-body" id="bf-cheat-body"></div>
+            </div>
+
+            <div class="bf-side-card game-side-card">
+                <nav class="more-games" id="bfSideMore"></nav>
+            </div>
+
+        </aside>
+    </main>
+
+
+
+    <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
+         统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
+         ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
+    <footer class="bf-footer game-footer">
+        <p class="bf-footer-hint game-footer-hint" id="bf-hint"></p>
+        <div class="bf-footer-actions game-footer-actions game-topbar-group">
+            <a class="bf-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button type="button" class="bf-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="bfMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+        <nav class="more-games game-footer-nav" id="bfMoreNav" hidden></nav>
+    </footer>
+    </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="bfStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="bfStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="bfStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="bfStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="bfStatsDrawerBody"></div>
+        </div>
+    </div>
+
+
+        <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-bond-forge.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"键合工坊 Bond Forge — Molecule Building Puzzle","url":currentUrl,"description":"键合工坊 Bond Forge — an original molecule building puzzle. Drag atoms from the tray, snap them into bonds, and satisfy every valence shell to forge the target formula. 20 handcrafted levels, a daily challenge, and real chemistry along the way.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["EducationalGame","PuzzleGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"键合工坊 Bond Forge — Molecule Building Puzzle","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+        <!-- registry:end seo-script -->
+    <script type="module" src="js/bond-forge.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

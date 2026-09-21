@@ -18,6 +18,7 @@ export const MORE_GAMES = [
     { href: 'lumen.html', emoji: '💎', en: "Lumen", zh: "折光" },
     { href: 'circuit.html', emoji: '💡', en: "Circuit", zh: "电路谜题" },
     { href: 'silk-dew.html', emoji: '💧', en: "Silkfall", zh: "垂丝引露" },
+    { href: 'bond-forge.html', emoji: '⚗️', en: "Bond Forge", zh: "键合工坊" },
 ];
 // registry:end more-games
 

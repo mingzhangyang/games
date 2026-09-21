@@ -140,6 +140,7 @@
         .card-icon--lumen     { background: rgb(45, 212, 191, 0.15); color: #2dd4bf; }
         .card-icon--circuit   { background: rgb(250, 204, 21, 0.15); color: #facc15; }
         .card-icon--silk-dew  { background: rgb(88, 201, 160, 0.16); color: #58c9a0; }
+        .card-icon--bond-forge { background: rgb(91, 141, 238, 0.16); color: #5b8dee; }
 
         .card-title {
             font-size: 1em;

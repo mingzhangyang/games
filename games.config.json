@@ -726,6 +726,56 @@
         "priority": "0.8"
       },
       "themeColor": "#0a1712"
+    },
+    {
+      "id": "bond-forge",
+      "prefix": "bf",
+      "href": "bond-forge.html",
+      "entry": "js/bond-forge.js",
+      "emoji": "⚗️",
+      "title": {
+        "doc": "键合工坊 Bond Forge — Molecule Building Puzzle",
+        "seo": "键合工坊 Bond Forge — Molecule Building Puzzle"
+      },
+      "name": {
+        "en": "Bond Forge",
+        "zh": "键合工坊"
+      },
+      "desc": {
+        "meta": "键合工坊 Bond Forge — an original molecule building puzzle. Drag atoms from the tray, snap them into bonds, and satisfy every valence shell to forge the target formula. 20 handcrafted levels, a daily challenge, and real chemistry along the way.",
+        "og": "Drag atoms, snap bonds, forge the target molecule. 20 handcrafted levels plus a daily challenge — fewer drags, more stars.",
+        "twitter": "Drag atoms, snap bonds, forge the molecule."
+      },
+      "genre": [
+        "EducationalGame",
+        "PuzzleGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "order": "asc",
+        "maxScore": 999,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "bond-forge",
+        "dailyTtlDays": 0
+      },
+      "stage": {
+        "w": 520,
+        "h": 680
+      },
+      "sitemap": {
+        "changefreq": "daily",
+        "priority": "0.8"
+      },
+      "themeColor": "#0d1024"
     }
   ]
 }
