@@ -1838,8 +1838,11 @@ onReady(() => {
         self: 'bond-forge.html',
         // ⚠️ 必须含 'more'：页脚「更多游戏」的展开行为归 chrome，owns 里漏掉
         // 就等于按钮是死的（chrome 校验器会报 aria-expanded 未置 true / 列表为空）。
+        // ⚠️ 必须含 'home'：本页顶栏首页钮是无 href 的 <button>，点击跳转完全靠
+        // chrome 接管 —— 而 owns 默认只含 lang/more，漏掉 'home' = 按钮是死的
+        // （页脚 home 是原生 <a> 天然可用，所以症状只出现在顶栏）。
         // sound 不在 owns 里：顶栏静音钮已有自己的 handler（还要同步刷图标）。
-        owns: ['lang', 'more'],
+        owns: ['lang', 'more', 'home'],
         // ⚠️ 同抽屉：共享层要的是整表。返回 (key)=>string 会让顶栏的
         // sound / moreGames / language 永远停在英文兜底。
         getText: () => (window.bfGame ? window.bfGame.textTable() : LANGUAGES.en),

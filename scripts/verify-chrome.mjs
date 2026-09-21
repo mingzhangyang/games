@@ -9,6 +9,10 @@
 //      导致一次点击切换两次 = 净效果为零"这个最隐蔽的回归）
 //   ⑥ 页脚「更多游戏」展开后 aria-expanded=true、列表非空、不含指向本页的自链接
 //   ⑦ 整轮无 pageerror
+//   ⑧ 点一次**顶栏**首页钮，必须真的导航回 index.html。顶栏 home 多为无 href 的
+//      <button>，跳转完全依赖 chrome（owns 含 'home'）或页面自绑 —— §② 只查标签，
+//      查不出「按钮是死的」。bond-forge / silk-dew 曾双双中招（footer 的 <a> 天然
+//      可用，所以用户只见顶栏坏）。每页只测一次、且是本轮最后一个操作（会真的离开页面）。
 //
 // ⚠️ 语言存储键是 site_lang（js/site-settings.js 的 LANG_KEY），不是 'lang'。
 //    种错键会让页面停在 navigator.language 默认值，于是"中文没生效"全是假故障。
@@ -46,6 +50,7 @@ const MAIN_PENDING = new Set(['gomoku', 'minesweeper', 'reversi']);
 const fails = [];
 const warns = [];
 const knownGaps = new Set();
+const homeTested = new Set();   // §⑧ 每页只测一次（与视口/语言无关）
 const fail = (p, vp, lang, msg) => fails.push(`${p} @${vp}/${lang}: ${msg}`);
 const gap = msg => knownGaps.add(msg);
 
@@ -235,6 +240,28 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     fail(name, vp.tag, lang, `语言钮自身文案未变（${after.label}）`);
                 if (b.hint === after.hint && b.title === after.title)
                     fail(name, vp.tag, lang, '切语言后页脚提示与 document.title 都没变 —— 界面没跟着刷新');
+            }
+
+            /* ── ⑧ 顶栏首页钮：点击必须真的导航回 index.html ──
+               编程式 click（element.click()）只验证「监听器接没接」，绕开命中测试 ——
+               遮挡类问题归 verify-button-icons 的几何断言，两处口径互补。
+               必须是本轮最后一个操作：点击会真的离开本页。 */
+            if (!homeTested.has(name)) {
+                homeTested.add(name);
+                const nav = page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 8000 }).catch(() => null);
+                const clicked = await page.evaluate(() => {
+                    const btn = document.querySelector('.game-topbar [data-chrome="home"]');
+                    if (!btn) return false;
+                    btn.click();
+                    return true;
+                });
+                await nav;
+                if (!clicked) fail(name, vp.tag, lang, '顶栏没有首页钮（.game-topbar [data-chrome="home"] 不存在）');
+                else {
+                    const landed = new URL(page.url()).pathname;
+                    if (!/index\.html$/.test(landed))
+                        fail(name, vp.tag, lang, `顶栏首页钮点击无效（仍停在 ${landed}）—— topbar home 是无 href 的 <button> 且 chrome owns 漏了 'home'、页面也没自绑？`);
+                }
             }
 
             await page.close();
