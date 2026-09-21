@@ -8,7 +8,7 @@
 
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { bindChrome } from './game-chrome.js';
@@ -157,7 +157,7 @@ class MinesweeperGame {
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
             'ms-counter-mines', 'ms-counter-timer',
             'ms-flagmode', 'ms-hint', 'ms-start', 'ms-title', 'ms-subtitle', 'ms-howto',
-            'ms-btn-play', 'ms-best-grid', 'ms-start-mute', 'ms-start-lang',
+            'ms-btn-play', 'ms-best-grid', 'ms-start-mute',
             'ms-result', 'ms-result-title', 'ms-result-time', 'ms-result-best',
             'ms-lb-title', 'ms-lb-list', 'ms-lb-status', 'ms-username', 'ms-username-label',
             'ms-btn-again', 'ms-btn-copy', 'ms-btn-close'
@@ -207,7 +207,6 @@ class MinesweeperGame {
         if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
         if (this.el['btn-close']) this.el['btn-close'].innerHTML = `${ICONS.close}<span>${t.close}</span>`;
-        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         if (this.el['counter-mines']) this.el['counter-mines'].title = t.minesLeft;
         if (this.el['counter-timer']) this.el['counter-timer'].title = t.timeElapsed;
         if (this.el.face) this.el.face.title = t.newGame;
@@ -898,12 +897,6 @@ class MinesweeperGame {
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
         if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
 
-        if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
-            this.lang = this.lang === 'zh' ? 'en' : 'zh';
-            setLang(this.lang);
-            this.applyLanguage();
-        });
-
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
                 setPlayerName(this.el.username.value);
@@ -952,14 +945,14 @@ onReady(() => {
     document.querySelectorAll('.ms-diff').forEach(b => b.classList.toggle('active', b.dataset.diff === game.diff));
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
     bindChrome({
         self: 'minesweeper.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });

@@ -13,7 +13,7 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -570,7 +570,7 @@ class GravityGame {
         ['gd-btn-home', 'gd-hole-label', 'gd-launches', 'gd-par', 'gd-total-box', 'gd-total',
             'gd-reset-btn', 'gd-mute-btn', 'gd-toast',
             'gd-start', 'gd-title', 'gd-subtitle', 'gd-howto', 'gd-btn-levels', 'gd-btn-daily',
-            'gd-level-label', 'gd-level-grid', 'gd-daily-best', 'gd-start-mute', 'gd-start-lang',
+            'gd-level-label', 'gd-level-grid', 'gd-daily-best', 'gd-start-mute',
             'gd-side-howto-title', 'gd-side-howto', 'gd-side-records-title', 'gd-side-records',
             'gd-hole', 'gd-hole-stars', 'gd-hole-line', 'gd-btn-next', 'gd-btn-replay', 'gd-btn-menu1',
             'gd-over', 'gd-over-title', 'gd-over-score', 'gd-over-sub',
@@ -673,7 +673,6 @@ class GravityGame {
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
-        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         if (this.el['reset-btn']) {
             this.el['reset-btn'].title = t.retryTitle;
             this.el['reset-btn'].setAttribute('aria-label', t.retryTitle);
@@ -1216,11 +1215,6 @@ class GravityGame {
 
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
         if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
-        if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
-            this.lang = this.lang === 'zh' ? 'en' : 'zh';
-            setLang(this.lang);
-            this.applyLanguage();
-        });
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
                 setPlayerName(this.el.username.value);
@@ -1777,14 +1771,14 @@ onReady(() => {
     if (window.gdDrawer) window.gdDrawer.init();
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
     bindChrome({
         self: 'gravity-slingshot.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });

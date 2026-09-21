@@ -10,7 +10,7 @@
  */
 
 import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -591,7 +591,6 @@ class GameEngine {
             btnHome: document.getElementById('na-btn-home'),
             btnPause: document.getElementById('na-btn-pause'),
             btnSound: document.getElementById('na-btn-sound'),
-            btnLang: document.getElementById('na-btn-lang'),
             toast: document.getElementById('na-toast'),
 
             // In-hud
@@ -923,12 +922,6 @@ class GameEngine {
             });
         }
 
-        this.dom.btnLang.addEventListener('click', () => {
-            const nextLang = getLang() === 'zh' ? 'en' : 'zh';
-            setLang(nextLang);
-            this.applyLanguage(nextLang);
-        });
-
         // 玩家名称输入
         this.dom.playerInput.value = ensurePlayerName();
         this.dom.playerInput.addEventListener('change', (e) => {
@@ -1025,7 +1018,6 @@ class GameEngine {
         document.getElementById('na-touch-dash-lbl').textContent = t.touchDash;
         document.getElementById('na-touch-stance-lbl').textContent = t.touchStance;
         document.getElementById('na-touch-ult-lbl').textContent = t.touchUlt;
-        this.dom.btnLang.textContent = lang === 'zh' ? 'English' : '中文';
 
         // 内部 HUD 姿态与极意标签
         const isNeedle = !this.player || this.player.stance === 'needle';
@@ -2434,16 +2426,16 @@ onReady(() => {
     if (window.naDrawer) window.naDrawer.init();
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
        na-btn-home 历史上只被 cache、从未绑过点击（HEAD 即如此），
        顺手交给 chrome 接管。 */
 onReady(() => {
     bindChrome({
         self: 'needle-awn.html',
-        owns: ['lang', 'more', 'home'],
+        owns: ['more', 'home'],
         getText: () => I18N[getLang()] || I18N.zh,
         labels: { pause: () => (I18N[getLang()] || {}).pause },
     });

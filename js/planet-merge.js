@@ -7,7 +7,7 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -360,7 +360,7 @@ class PlanetMergeGame {
             'pm-score', 'pm-best', 'pm-mode-label', 'pm-next-emoji',
             'pm-start', 'pm-title', 'pm-subtitle', 'pm-howto', 'pm-chain',
             'pm-btn-endless', 'pm-btn-daily', 'pm-daily-best-line', 'pm-best-line',
-            'pm-start-mute', 'pm-start-lang',
+            'pm-start-mute',
             'pm-skin-row', 'pm-daily-note',
             'pm-pause', 'pm-btn-resume', 'pm-btn-restart', 'pm-btn-menu', 'pm-pause-title',
             'pm-over', 'pm-over-title', 'pm-over-score', 'pm-over-best', 'pm-over-newbest',
@@ -424,7 +424,6 @@ class PlanetMergeGame {
         if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
         if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
-        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         // HUD 小标签
         const scoreLabel = document.getElementById('pm-score-label');
         if (scoreLabel) scoreLabel.textContent = t.score;
@@ -1267,10 +1266,6 @@ class PlanetMergeGame {
             window.location.href = 'index.html';
         });
         on('pm-start-mute', () => this.toggleMute());
-        on('pm-start-lang', () => {
-            setLang(this.lang === 'zh' ? 'en' : 'zh');
-            this.applyLanguage();
-        });
         on('pm-btn-copy', () => this.copyResult());
         on('pm-btn-share', () => this.shareResult());
         on('pm-tab-daily', () => {
@@ -1739,14 +1734,14 @@ onReady(() => {
     });
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
     bindChrome({
         self: 'planet-merge.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });

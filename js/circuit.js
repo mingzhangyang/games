@@ -26,7 +26,7 @@ import {
     buildConductionUF,
 } from './circuit-levels.js';
 import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -213,7 +213,7 @@ class CircuitGame {
         this.el = {};
         ['cc-btn-home', 'cc-hud-level', 'cc-moves', 'cc-par', 'cc-reset-btn', 'cc-mute-btn', 'cc-toast',
             'cc-start', 'cc-title', 'cc-subtitle', 'cc-howto', 'cc-btn-levels', 'cc-btn-daily',
-            'cc-level-label', 'cc-level-grid', 'cc-daily-best', 'cc-start-mute', 'cc-start-lang',
+            'cc-level-label', 'cc-level-grid', 'cc-daily-best', 'cc-start-mute',
             'cc-side-howto-title', 'cc-side-howto', 'cc-side-records-title', 'cc-side-records',
             'cc-clear', 'cc-clear-stars', 'cc-clear-line', 'cc-btn-next', 'cc-btn-replay', 'cc-btn-menu1',
             'cc-over', 'cc-over-title', 'cc-over-score', 'cc-over-sub',
@@ -293,7 +293,6 @@ class CircuitGame {
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
-        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         if (this.el['reset-btn']) {
             this.el['reset-btn'].title = t.resetTitle;
             this.el['reset-btn'].setAttribute('aria-label', t.resetTitle);
@@ -819,12 +818,6 @@ class CircuitGame {
         if (this.el['start-mute']) {
             this.el['start-mute'].addEventListener('click', () => this.toggleMute());
         }
-        // 开始界面的语言钮没有 data-chrome 槽位，行为归本页
-        if (this.el['start-lang']) {
-            this.el['start-lang'].addEventListener('click', () => {
-                setLang(getLang() === 'zh' ? 'en' : 'zh');
-            });
-        }
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
                 setPlayerName(this.el.username.value);
@@ -1286,12 +1279,12 @@ onReady(() => {
     if (window.ccDrawer) window.ccDrawer.init();
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
-   owns 默认只含 lang / more：静音钮在本页有自己的 handler，Home 是页面自己绑的 button。 */
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
+   owns 默认只含 more：静音钮在本页有自己的 handler，Home 是页面自己绑的 button。 */
 onReady(() => {
     bindChrome({
         self: 'circuit.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
     });
 });

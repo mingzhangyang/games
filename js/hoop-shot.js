@@ -10,7 +10,7 @@
 
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { updateMoreGames, renderMoreGames } from './more-games.js';
@@ -238,7 +238,7 @@ class HoopShotGame {
         const ids = [
             'hs-score', 'hs-best', 'hs-streak',
             'hs-start', 'hs-title', 'hs-subtitle', 'hs-howto', 'hs-btn-play',
-            'hs-best-line', 'hs-start-mute', 'hs-start-lang',
+            'hs-best-line', 'hs-start-mute',
             'hs-pause', 'hs-btn-resume', 'hs-btn-menu', 'hs-pause-title',
             'hs-over', 'hs-over-title', 'hs-over-score', 'hs-over-best', 'hs-over-newbest',
             'hs-over-streak', 'hs-btn-share', 'hs-btn-copy', 'hs-btn-again', 'hs-btn-home',
@@ -281,7 +281,6 @@ class HoopShotGame {
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint; // 保留键位说明，不再被 tapToStart 整体替换
-        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         this.updateMuteButtons();
         this.updateStartStats();
         // 桌面侧栏（≥1024px 可见）
@@ -1002,10 +1001,6 @@ class HoopShotGame {
         on('hs-pause-btn', () => this.togglePause());
         on('hs-mute-btn', () => this.toggleMute());
         on('hs-start-mute', () => this.toggleMute());
-        on('hs-start-lang', () => {
-            setLang(this.lang === 'zh' ? 'en' : 'zh');
-            this.applyLanguage();
-        });
         on('hs-btn-copy', () => this.copyResult());
         on('hs-btn-share', () => this.shareResult());
         on('hs-btn-home-top', () => {
@@ -1502,14 +1497,14 @@ onReady(() => {
     if (window.hsDrawer) window.hsDrawer.init();
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
     bindChrome({
         self: 'hoop-shot.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });

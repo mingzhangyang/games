@@ -24,16 +24,19 @@
   <div class="xx-topbar-actions game-topbar-group">   <!-- 右簇：固定顺序 -->
     …页面专属（Retry / Range / Speed / Theme）
     <button data-chrome="stats">    <button data-chrome="pause">
-    <button data-chrome="sound">    <button data-chrome="lang">
+    <button data-chrome="sound">
   </div>
 </header>
 ```
 
-**核心性质：Sound 与 Lang 永远是最右两颗。** 这两颗是 11 页全有的全站开关，
-无论一页有没有 Stats / Pause，它们的屏幕位置都一致。页面专属钮一律排在右簇最左。
+**核心性质：Sound 永远是最右一颗。** 它是 11 页全有的全站开关，无论一页有没有
+Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇最左。
 
-语言钮是**文字钮**（`game-icon-btn game-icon-btn--wide`），显示**目标语言的自称**
-（界面英文时显示「中文」，界面中文时显示「English」）。
+> **2026-09-21 变更：语言切换 UI 收敛到首页 index.html。** 游戏页不再有语言钮
+> （顶栏 `data-chrome="lang"`、开始浮层语言钮、math-rain 的两处 language-selector
+> 全部移除）。游戏页对 `site_lang` **只读不写**：boot 时的值决定初始语言，
+> 跨标签页为「下次加载生效」。`verify-chrome.mjs` 对游戏页语言钮做**负向断言**
+> （出现即失败）。历史上的「文字钮显示目标语言自称」规格随 UI 作废。
 
 ### 1.2 Footer：持久页脚，随流在底部
 
@@ -48,20 +51,20 @@
 </footer>
 ```
 
-- **有状态的开关（Sound / Lang）只在 header**，页脚只放无状态导航 + 操作提示：
+- **有状态的开关（Sound）只在 header**，页脚只放无状态导航 + 操作提示：
   每个开关只有一个真源，避开本仓库反复踩过的「同一标签多处写入」。
 - **随流，不用 sticky / fixed**：否则会与 tetris 的 `.mobile-controls`（z-index 1000）、
   底部统计抽屉（1200）、各页结算浮层抢层级，还会吃掉竖版画布的可用高度。
 - **手机上可见**：`.game-footer-hint` 永不 `display:none`，窄屏 / 矮屏压成单行省略。
-- 开始浮层里原有的 `.xx-start-footer` / `.na-footer-bar` 保留不动（首屏的跨游戏推荐位 +
-  首次进入时的语言入口）。
+- 开始浮层里原有的 `.xx-start-footer` / `.na-footer-bar` 保留不动（首屏的跨游戏推荐位；
+  其中的语言钮已于 2026-09-21 随收敛一起移除）。
 
 ### 1.3 行为：`bindChrome`
 
 ```js
 bindChrome({
     self: 'planet-merge.html',          // 从「更多游戏」里排除自身
-    owns: ['lang', 'more'],             // 本模块接管点击的角色
+    owns: ['more'],                     // 本模块接管点击的角色（默认 ['more']）
     getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
     labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
 });
@@ -71,9 +74,8 @@ bindChrome({
 
 | 角色 | 文案 / 图标 | 点击 |
 | --- | --- | --- |
-| `home` | `bindChrome` | 各页自己（多为 `<a href>`；na 例外，交给 chrome） |
+| `home` | `bindChrome` | 各页自己（多为 `<a href>`；na / bond-forge / silk-dew 顶栏是无 href 的 `<button>`，交给 chrome） |
 | `sound` | `bindChrome`（图标 + `aria-pressed`） | **各页自己**（见下方警告） |
-| `lang` | `bindChrome` | `bindChrome` |
 | `more` | `bindChrome` | `bindChrome` |
 | `stats` | `js/game-drawer.js` | `js/game-drawer.js` |
 | `pause` | 各页经 `labels.pause` 提供，`bindChrome` 落笔 | 各页自己 |
@@ -94,25 +96,29 @@ bindChrome({
 
 ## 2. 各页现状
 
-| 页面 | 左簇 | 右簇（专属 → stats → pause → sound → lang） | 页脚 hint 来源 |
+| 页面 | 左簇 | 右簇（专属 → stats → pause → sound） | 页脚 hint 来源 |
 | --- | --- | --- | --- |
-| gravity-slingshot | Home | Retry · Stats · Sound · Lang | `t.hint` |
-| hoop-shot | Home | Stats · Pause · Sound · Lang | `t.hint`（原 `footerHint`） |
-| planet-merge | Home | Stats · Pause · Sound · Lang | `t.hint` |
-| sword-flight | Home | Stats · Pause · Sound · Lang | `t.hint`（新） |
-| needle-awn | Home | Stats · Pause · Sound · Lang | `t.hint`（新） |
-| tower-defense | Home | Range · Speed · Stats · Pause · Sound · Lang | `t.hint` |
-| reversi | Home | Sound · Lang | `t.hint`（原 `muteHint`） |
-| minesweeper | Home | Pause · Sound · Lang | `hintDefault` / `hintFlagMode` |
-| word-daily | Home · Help | Stats · Sound · Lang | `t.hint`（新） |
-| gomoku | Home | Sound · Lang | `t.hint`（新） |
-| tetris | Home | Theme · Stats · Sound · Lang | `TEXT.hint`（新） |
+| gravity-slingshot | Home | Retry · Stats · Sound | `t.hint` |
+| hoop-shot | Home | Stats · Pause · Sound | `t.hint`（原 `footerHint`） |
+| planet-merge | Home | Stats · Pause · Sound | `t.hint` |
+| sword-flight | Home | Stats · Pause · Sound | `t.hint`（新） |
+| needle-awn | Home | Stats · Pause · Sound | `t.hint`（新） |
+| tower-defense | Home | Range · Speed · Stats · Pause · Sound | `t.hint` |
+| reversi | Home | Sound | `t.hint`（原 `muteHint`） |
+| minesweeper | Home | Pause · Sound | `hintDefault` / `hintFlagMode` |
+| word-daily | Home · Help | Stats · Sound | `t.hint`（新） |
+| gomoku | Home | Sound | `t.hint`（新） |
+| tetris | Home | Theme · Stats · Sound | `TEXT.hint`（新） |
+
+（表为 2026-09-21 语言钮收敛后的现状；历史含 Lang 的版本见 git。）
 
 **豁免**（维持既定豁免，P4 只做了最小语义对齐，不套三槽位）：
 
 - `tank-battle`：横屏全屏画布 + 虚拟手柄，P4-2 仅加 `<main class="tb-main">`（`display: contents`）+ sr-only h1。
-- `math-rain`：全屏街机 HUD，P4-3 仅加 `<main class="mr-main">`（包 game-container）+ sr-only h1。
-- `index.html`：落地页，P4-1 加 `<main class="idx-main">`，有自己的头部，不属于本契约。
+- `math-rain`：全屏街机 HUD，P4-3 仅加 `<main class="mr-main">`（包 game-container）+ sr-only h1；
+  其开始界面与设置面板的语言选择器也于 2026-09-21 随收敛一起移除（HTML-only，JS 空值守卫天然兼容）。
+- `index.html`：落地页，P4-1 加 `<main class="idx-main">`，有自己的头部，不属于本契约；
+  **全站唯一的语言切换 UI 在这里保留**（顶栏 + 页脚）。
 
 ---
 
@@ -163,13 +169,14 @@ python scripts/add-chrome-i18n.py --dry
 
 1. 顶栏三槽位齐全；右簇通用钮顺序符合契约
 2. 页面至少一个 `<h1>`（`h1Count >= 1`，可为 `.sr-only`）—— P3-3 并入
-3. `home` / `sound` / `lang` / `more` / `pause` 的 `title` 与 `aria-label` 非空
+3. `home` / `sound` / `more` / `pause` 的 `title` 与 `aria-label` 非空
 4. 页脚在 390 宽下**可见**，hint 非空
-5. 点一次语言钮：`site_lang` 变了、钮自身文案变了、且页脚提示或 `document.title` 跟着变
-   （只改存储不刷界面会被抓出来）
+5. 游戏页**不得出现语言钮**（负向断言；2026-09-21 语言 UI 收敛到首页后新增，
+   取代历史上的「点一次语言钮 UI 必须换语言」）
 6. 点一次静音钮：`site_muted` 必须翻转（双绑导致的「切两次 = 没切」会被抓出来）
 7. 页脚「更多游戏」展开后 `aria-expanded=true`、列表非空、不含自链接
-8. 全程无 `pageerror`
+8. 顶栏首页钮点击后真的导航回 `index.html`（行为断言，防死按钮）
+9. 全程无 `pageerror`
 
 > 它已经抓到一个**与迁移无关的历史 bug**：`js/minesweeper.js` 里写的是 `this.el.mute`，
 > 而元素缓存的键是 `mute-btn`（id 去掉 `ms-` 前缀），所以扫雷顶栏的静音钮**自 HEAD 起就没绑上过**。

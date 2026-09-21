@@ -8,7 +8,7 @@
  * Vanilla JS ES Module. No runtime dependencies.
  */
 
-import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
+import { getPlayerName, setPlayerName } from './player.js';
 import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
@@ -785,9 +785,8 @@ class SwordFlightGame {
             refreshSoundIcon();
         });
 
-        // 语言切换：顶栏语言钮（#sf-btn-lang-ui，data-chrome="lang"）由
-        // js/game-chrome.js 接管，它 setLang() 后派发 site-settings:changed，
-        // 下面的监听器再走 this.applyLanguage()。
+        // 语言切换入口在首页（2026-09-21 收敛）：下面的监听器响应
+        // site-settings:changed 走 this.applyLanguage()。
 
         window.addEventListener('site-settings:changed', () => {
             SFX.updateMute();
@@ -3285,10 +3284,9 @@ class SwordFlightGame {
 
         updateMoreGames(lang);
 
-        // 每日卡与语言按钮标签
+        // 每日卡标签
         const dailyMod = document.getElementById('sf-daily-modifier');
         if (dailyMod) dailyMod.textContent = t.dailyModifier;
-        // 原先的 #sf-lang-glyph 字形钮已统一成全站的文字型语言钮，文案由 chrome 渲染。
 
         this.updateRealmDisplay();
         this.updateSideRecords();
@@ -3319,14 +3317,14 @@ onReady(() => {
     if (window.sfDrawer) window.sfDrawer.init();
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
     bindChrome({
         self: 'sword-flight.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => I18N[getLang()] || I18N.zh,
         labels: { pause: () => (I18N[getLang()] || {}).pause },
     });

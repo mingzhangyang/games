@@ -1,10 +1,11 @@
 // 顶栏/页脚槽位契约校验：node scripts/verify-chrome.mjs [baseUrl] [--shots <dir>]
 //
 // 断言（每页 × 移动 390 / 桌面 1280 × zh / en）：
-//   ① 顶栏三槽位齐全；右簇通用钮顺序 = stats → pause → sound → lang
-//   ② home / sound / lang / more / pause 的 title 与 aria-label 非空，且随语言变化
+//   ① 顶栏三槽位齐全；右簇通用钮顺序 = stats → pause → sound
+//   ② home / sound / more / pause 的 title 与 aria-label 非空，且随语言变化
 //   ③ 页脚在 390 宽下**可见**（此前 ≤480px 被 display:none，等于没有页脚），hint 非空
-//   ④ 点一次语言钮，UI 真的换语言（挡住"只改 localStorage 不刷界面"）
+//   ④ 游戏页**不得**出现语言钮（2026-09-21 语言切换 UI 收敛到首页 index.html；
+//      历史上的「点一次语言钮 UI 必须换语言」断言随 UI 一起移除）
 //   ⑤ 点一次静音钮，site_muted 真的翻转（挡住"页面与 chrome 各挂一个 handler
 //      导致一次点击切换两次 = 净效果为零"这个最隐蔽的回归）
 //   ⑥ 页脚「更多游戏」展开后 aria-expanded=true、列表非空、不含指向本页的自链接
@@ -15,7 +16,7 @@
 //      可用，所以用户只见顶栏坏）。每页只测一次、且是本轮最后一个操作（会真的离开页面）。
 //
 // ⚠️ 语言存储键是 site_lang（js/site-settings.js 的 LANG_KEY），不是 'lang'。
-//    种错键会让页面停在 navigator.language 默认值，于是"中文没生效"全是假故障。
+//    游戏页只读不写：语言切换入口只在首页，boot 时的 site_lang 决定本页初始语言。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH } from './lib/browser.mjs';
 import { registry } from './lib/registry.mjs';
@@ -27,7 +28,7 @@ const BASE = args.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 
 // 顶栏契约页 = 挂了 topbar cap 的游戏（tank-battle / math-rain 化外，见 docs/backlog）
 const PAGES = registry.withCap('topbar').map(g => g.id);
-const CANON = ['stats', 'pause', 'sound', 'lang'];
+const CANON = ['stats', 'pause', 'sound'];
 
 // 共享层（bindChrome / createStatsDrawer）在这些钮上消耗的**公共**键，
 // 它们的 zh/en 值全站唯一（js/i18n.js 的 COMMON_TEXT）。
@@ -163,8 +164,9 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             if (moreLabel && moreLabel !== want.more)
                 fail(name, vp.tag, lang, `更多游戏钮文案未本地化：期望「${want.more}」，实得「${moreLabel}」（共享层 getText 是否返回整表？）`);
 
-            if (!snap.chrome.some(c => c.role === 'lang'))
-                fail(name, vp.tag, lang, '没有语言钮');
+            // ④ 负向断言：游戏页不允许再有语言钮（入口收敛到首页，2026-09-21）
+            if (snap.chrome.some(c => c.role === 'lang'))
+                fail(name, vp.tag, lang, '游戏页出现了语言钮（data-chrome="lang"，2026-09-21 已收敛到首页）');
             if (!snap.chrome.some(c => c.role === 'sound'))
                 fail(name, vp.tag, lang, '没有静音钮');
 
@@ -205,41 +207,6 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                 if (moreRes.hidden !== false) fail(name, vp.tag, lang, '更多游戏：展开后 nav 仍 hidden');
                 if (!moreRes.count) fail(name, vp.tag, lang, '更多游戏：列表为空');
                 if (moreRes.self) fail(name, vp.tag, lang, '更多游戏：包含指向本页的自链接');
-            }
-
-            /* ── ④ 语言钮：点一次，界面必须真的换语言 ── */
-            const langRes = await page.evaluate(() => {
-                const btn = document.querySelector('[data-chrome="lang"]');
-                if (!btn) return { missing: true };
-                const hintEl = document.querySelector('.game-footer .game-footer-hint');
-                const before = {
-                    label: (btn.textContent || '').trim(),
-                    hint: hintEl ? (hintEl.textContent || '').trim() : '',
-                    title: document.title,
-                    stored: (() => { try { return localStorage.getItem('site_lang'); } catch (e) { return null; } })(),
-                };
-                btn.click();
-                return { before };
-            });
-            if (!langRes.missing) {
-                await new Promise(r => setTimeout(r, 350));
-                const after = await page.evaluate(() => {
-                    const btn = document.querySelector('[data-chrome="lang"]');
-                    const hintEl = document.querySelector('.game-footer .game-footer-hint');
-                    return {
-                        label: (btn.textContent || '').trim(),
-                        hint: hintEl ? (hintEl.textContent || '').trim() : '',
-                        title: document.title,
-                        stored: (() => { try { return localStorage.getItem('site_lang'); } catch (e) { return null; } })(),
-                    };
-                });
-                const b = langRes.before;
-                if (b.stored === after.stored)
-                    fail(name, vp.tag, lang, `语言钮未写入 site_lang（仍是 ${after.stored}）`);
-                if (b.label === after.label)
-                    fail(name, vp.tag, lang, `语言钮自身文案未变（${after.label}）`);
-                if (b.hint === after.hint && b.title === after.title)
-                    fail(name, vp.tag, lang, '切语言后页脚提示与 document.title 都没变 —— 界面没跟着刷新');
             }
 
             /* ── ⑧ 顶栏首页钮：点击必须真的导航回 index.html ──

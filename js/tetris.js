@@ -1,4 +1,4 @@
-import { getLang, setLang } from './site-settings.js';
+import { getLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
 import { ICONS } from './icons.js';
@@ -490,9 +490,8 @@ const drawer = {
 onReady(() => drawer.init());
 onReady(setLangUI);
 
-// 顶栏语言钮（#tt-btn-lang-ui，data-chrome="lang"）由 js/game-chrome.js 接管：
-// 它只负责 setLang() + 派发事件，本页据此重取 TEXT 并整页重刷。
-// 本页此前根本没有语言入口（import 了 setLang 却从未调用），所以也没有这个监听器。
+// 语言切换入口已收敛到首页（2026-09-21）：游戏页不再有语言钮，本页只监听
+// site-settings:changed 重取 TEXT 并整页重刷（boot 时的 site_lang 决定初始语言）。
 window.addEventListener('site-settings:changed', () => {
     currentLang = getUserLang();
     TEXT = LANGUAGES[currentLang] || LANGUAGES['en'];
@@ -1533,16 +1532,16 @@ onReady(() => {
     });
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
        本页的静音钮是随槽位契约新增的，页面自身没有 handler，
        所以显式把 sound 交给 chrome 接管。 */
 onReady(() => {
     bindChrome({
         self: 'tetris.html',
-        owns: ['lang', 'more', 'sound'],
+        owns: ['more', 'sound'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });

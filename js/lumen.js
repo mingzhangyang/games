@@ -20,7 +20,7 @@ import {
     traceGrid,
 } from './lumen-levels.js';
 import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -213,7 +213,7 @@ class LumenGame {
         this.el = {};
         ['lm-btn-home', 'lm-hud-level', 'lm-flips', 'lm-par', 'lm-reset-btn', 'lm-mute-btn', 'lm-toast',
             'lm-start', 'lm-title', 'lm-subtitle', 'lm-howto', 'lm-btn-levels', 'lm-btn-daily',
-            'lm-level-label', 'lm-level-grid', 'lm-daily-best', 'lm-start-mute', 'lm-start-lang',
+            'lm-level-label', 'lm-level-grid', 'lm-daily-best', 'lm-start-mute',
             'lm-side-howto-title', 'lm-side-howto', 'lm-side-records-title', 'lm-side-records',
             'lm-clear', 'lm-clear-stars', 'lm-clear-line', 'lm-btn-next', 'lm-btn-replay', 'lm-btn-menu1',
             'lm-over', 'lm-over-title', 'lm-over-score', 'lm-over-sub',
@@ -291,7 +291,6 @@ class LumenGame {
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
-        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         if (this.el['reset-btn']) {
             this.el['reset-btn'].title = t.resetTitle;
             this.el['reset-btn'].setAttribute('aria-label', t.resetTitle);
@@ -779,13 +778,6 @@ class LumenGame {
         if (this.el['start-mute']) {
             this.el['start-mute'].addEventListener('click', () => this.toggleMute());
         }
-        // 开始界面的语言钮没有 data-chrome 槽位（chrome 只认 header / footer 的），
-        // 点击行为归本页：setLang 派发 site-settings:changed → applyLanguage 统一重刷。
-        if (this.el['start-lang']) {
-            this.el['start-lang'].addEventListener('click', () => {
-                setLang(getLang() === 'zh' ? 'en' : 'zh');
-            });
-        }
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
                 setPlayerName(this.el.username.value);
@@ -1130,13 +1122,13 @@ onReady(() => {
     if (window.lmDrawer) window.lmDrawer.init();
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
-   owns 默认只含 lang / more：静音钮在本页有自己的 handler（要同步开始界面的
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
+   owns 默认只含 more：静音钮在本页有自己的 handler（要同步开始界面的
    静音钮与音效实例），Home 是页面自己绑的 button（与 gravity 同款）。 */
 onReady(() => {
     bindChrome({
         self: 'lumen.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
     });
 });

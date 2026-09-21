@@ -1,4 +1,4 @@
-import { getLang, setLang } from './site-settings.js';
+import { getLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
 import { bindChrome } from './game-chrome.js';
@@ -30,7 +30,6 @@ const LANGUAGES = makeText({
     en: {
         title: 'Gomoku - Five in a Row',
         h1: 'Gomoku',
-        langBtn: '中文',
         blackTurn: "Black's Turn",
         whiteTurn: "White's Turn",
         computerThinking: 'Computer Thinking...',
@@ -56,7 +55,6 @@ const LANGUAGES = makeText({
     zh: {
         title: '五子棋 - 经典策略棋牌',
         h1: '五子棋',
-        langBtn: 'English',
         blackTurn: '黑方走棋',
         whiteTurn: '白方走棋',
         computerThinking: '电脑思考中...',
@@ -195,8 +193,8 @@ function init() {
         resetGame();
     });
 
-    // 语言钮（#langBtn，data-chrome="lang"）的点击与文案由 js/game-chrome.js 独家接管：
-    // 它 setLang() 后派发 site-settings:changed，下面的监听器再调 applyLanguage()。
+    // 语言切换入口已收敛到首页（2026-09-21）：游戏页只监听
+    // site-settings:changed，由 applyLanguage() 统一重刷。
     // 对局进行中返回首页需确认，防止误触丢局
     const homeLink = document.getElementById('homeLink');
     if (homeLink) {
@@ -581,8 +579,6 @@ function applyLanguage(lang) {
     const gmHint = document.getElementById('gm-hint');
     if (gmHint) gmHint.textContent = t.hint;
 
-    // #langBtn 的文案由 js/game-chrome.js 渲染（它写的是「目标语言的自称」，
-    // 与这里的 t.langBtn 同值）——只保留一个写入者，避免两处漂移。
     if (restartBtn) restartBtn.textContent = t.restart;
     if (modeBtn) modeBtn.textContent = gameMode === 'pvp' ? t.modeBtn2Players : t.modeBtnVsComputer;
 
@@ -901,16 +897,16 @@ function evaluateLine(r, c, dr, dc, player) {
 // Start
 init();
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
        本页的静音钮是随槽位契约新增的，页面自身没有 handler，
        所以显式把 sound 交给 chrome 接管。 */
 onReady(() => {
     bindChrome({
         self: 'gomoku.html',
-        owns: ['lang', 'more', 'sound'],
+        owns: ['more', 'sound'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });

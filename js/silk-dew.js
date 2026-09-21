@@ -230,7 +230,7 @@ class SilkfallGame {
         [
             'sd-hud-level', 'sd-drags', 'sd-par', 'sd-reset-btn', 'sd-mute-btn', 'sd-toast',
             'sd-start', 'sd-title', 'sd-subtitle', 'sd-howto', 'sd-btn-levels', 'sd-btn-daily',
-            'sd-level-label', 'sd-level-grid', 'sd-daily-best', 'sd-start-mute', 'sd-start-lang',
+            'sd-level-label', 'sd-level-grid', 'sd-daily-best', 'sd-start-mute',
             'sd-side-howto-title', 'sd-side-howto', 'sd-side-records-title', 'sd-side-records',
             'sd-clear', 'sd-clear-stars', 'sd-clear-line', 'sd-btn-next', 'sd-btn-replay', 'sd-btn-menu1',
             'sd-over', 'sd-over-title', 'sd-over-score', 'sd-over-sub',
@@ -386,18 +386,6 @@ class SilkfallGame {
                 if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
             });
         }
-        // ⚠️ 顶栏语言钮**不在这里挂 handler**：点击归 js/game-chrome.js（owns 含 'lang'）。
-        // 页面再挂一个 = 一次点击切两次 = 净效果为零（site_lang 写回原值、文案看起来没变）。
-        // 文字由 chrome 的 renderLang() 负责（写的是「目标语言的自称」：中文⇄English），
-        // 这里不要再写 innerHTML —— ICONS 里根本没有 globe 键，写它 = 塞进 "undefined"。
-        // 开始覆盖层里的语言钮**没有** data-chrome="lang"（它不在 chrome 槽位契约内），
-        // 点击必须由本页接管，否则是个死按钮。
-        if (el['start-lang']) {
-            el['start-lang'].addEventListener('click', () => {
-                this.setLang(this.lang === 'zh' ? 'en' : 'zh');
-                Sfx.click();
-            });
-        }
         // 每日榜用户名
         if (el['username']) {
             el['username'].value = ensurePlayerName();
@@ -452,8 +440,6 @@ class SilkfallGame {
         if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
         if (el['drags']) el['drags'].title = this.t('drags');
         // 开始覆盖层的语言钮走文字（与 lumen/circuit 同口径：显示「切换目标语言的自称」）。
-        // 顶栏那个 [data-chrome="lang"] 由 chrome 的 renderLang() 自己写，这里不要碰。
-        if (el['start-lang']) el['start-lang'].textContent = this.t('language');
 
         this.renderLevelGrid();
         this.renderSideRecords();
@@ -1311,9 +1297,9 @@ onReady(() => {
         // ⚠️ 必须含 'more'：页脚「更多游戏」的展开行为归 chrome，owns 里漏掉
         // 就等于按钮是死的（chrome 校验器会报 aria-expanded 未置 true / 列表为空）。
         // ⚠️ 必须含 'home'：本页顶栏首页钮是无 href 的 <button>，点击跳转完全靠
-        // chrome 接管 —— 而 owns 默认只含 lang/more，漏掉 'home' = 按钮是死的
+        // chrome 接管 —— 而 owns 默认只含 more，漏掉 'home' = 按钮是死的
         // （页脚 home 是原生 <a> 天然可用，所以症状只出现在顶栏）。
-        owns: ['lang', 'more', 'home'],
+        owns: ['more', 'home'],
         // ⚠️ 同抽屉：共享层要的是整表。返回 (key)=>string 会让顶栏的
         // sound / moreGames / language 永远停在英文兜底。
         getText: () => (window.sdGame ? window.sdGame.textTable() : LANGUAGES.en),

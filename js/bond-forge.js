@@ -310,9 +310,9 @@ class BondForgeGame {
         this.initUI();
         this.applyLanguage();
 
-        // 全站语言 / 静音设置变化（js/site-settings.js 的 setLang/setMuted 派发）→ 本页重刷。
-        // ⚠️ 缺这一行 = 点顶栏语言钮只写 localStorage、界面纹丝不动
-        // （verify-chrome §④ 断「切语言后页脚提示与 document.title 都变了」）。
+        // 全站语言 / 静音设置变化（js/site-settings.js 派发 site-settings:changed）→ 本页重刷。
+        // 语言切换入口已收敛到首页（2026-09-21）：本页不再主动 setLang，
+        // 此监听器主要服务静音切换后的文案重刷。
         // 注意要从 getLang() 重新取值，不要沿用 this.lang —— setLang 才是真源。
         window.addEventListener('site-settings:changed', () => {
             this.lang = getLang();
@@ -431,7 +431,7 @@ class BondForgeGame {
             'cheat-title', 'cheat-body', 'cheat-toggle',
             'btn-levels', 'btn-daily', 'btn-sandbox',
             'btn-next', 'btn-replay', 'btn-menu1', 'btn-copy', 'btn-menu2', 'btn-again',
-            'reset-btn', 'mute-btn', 'start-mute', 'start-lang',
+            'reset-btn', 'mute-btn', 'start-mute',
         ];
         ids.forEach(id => {
             this.el[id] = document.getElementById('bf-' + id);
@@ -510,15 +510,6 @@ class BondForgeGame {
             });
         }
 
-        // ⚠️ 顶栏语言钮**不在这里挂 handler**：点击归 js/game-chrome.js（owns 含 'lang'）。
-        // 页面再挂一个 = 一次点击切两次 = 净效果为零（site_lang 写回原值、文案看起来没变）。
-        // 开始覆盖层里的语言钮**没有** data-chrome="lang"，点击必须由本页接管。
-        if (el['start-lang']) {
-            el['start-lang'].addEventListener('click', () => {
-                this.setLang(this.lang === 'zh' ? 'en' : 'zh');
-                sfxTone(700, 0.1, 'triangle', 0.12);
-            });
-        }
 
         // 元素小抄：折叠开关
         if (el['cheat-toggle'] && el['cheat-body']) {
@@ -595,9 +586,6 @@ class BondForgeGame {
 
         if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
         if (el['drags']) el['drags'].title = this.t('drags');
-        // 开始覆盖层的语言钮走文字（显示「切换目标语言的自称」）。
-        // 顶栏那个 [data-chrome="lang"] 由 chrome 的 renderLang() 自己写，这里不要碰。
-        if (el['start-lang']) el['start-lang'].textContent = this.t('language');
 
         this.renderLevelGrid();
         this.renderCheatSheet();
@@ -1839,10 +1827,10 @@ onReady(() => {
         // ⚠️ 必须含 'more'：页脚「更多游戏」的展开行为归 chrome，owns 里漏掉
         // 就等于按钮是死的（chrome 校验器会报 aria-expanded 未置 true / 列表为空）。
         // ⚠️ 必须含 'home'：本页顶栏首页钮是无 href 的 <button>，点击跳转完全靠
-        // chrome 接管 —— 而 owns 默认只含 lang/more，漏掉 'home' = 按钮是死的
+        // chrome 接管 —— 而 owns 默认只含 more，漏掉 'home' = 按钮是死的
         // （页脚 home 是原生 <a> 天然可用，所以症状只出现在顶栏）。
         // sound 不在 owns 里：顶栏静音钮已有自己的 handler（还要同步刷图标）。
-        owns: ['lang', 'more', 'home'],
+        owns: ['more', 'home'],
         // ⚠️ 同抽屉：共享层要的是整表。返回 (key)=>string 会让顶栏的
         // sound / moreGames / language 永远停在英文兜底。
         getText: () => (window.bfGame ? window.bfGame.textTable() : LANGUAGES.en),

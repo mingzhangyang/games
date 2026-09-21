@@ -113,32 +113,14 @@ for (const vp of [
     const endStatus = await page.evaluate(() => document.getElementById('statusText').textContent.trim());
     check(!/Turn|走棋/.test(endStatus), '对局结束后状态栏不再是「该谁走棋」', endStatus);
 
-    // 面板开着时切语言：标题、按钮、结果文案要一起变。
-    // 必须用 el.click() 而非 page.click() —— 结算浮层盖住了顶栏，坐标点击会被浮层
-    // 吃掉（只是把面板关掉），键盘 Tab 聚焦后 Enter 激活走的正是 el.click() 这条路径。
-    const readModal = () => page.evaluate(() => ({
-        lang: document.documentElement.lang,
-        title: document.getElementById('modalTitle').textContent.trim(),
-        msg: document.getElementById('modalMessage').textContent.trim(),
-        btn: document.getElementById('modalRestartBtn').textContent.trim(),
-        shown: getComputedStyle(document.getElementById('gameOverModal')).display !== 'none',
-        status: document.getElementById('statusText').textContent.trim(),
+    // 语言切换 UI 已收敛到首页（2026-09-21）：游戏页不得再有语言钮 ——
+    // 本页 #langBtn 与顶栏 data-chrome="lang" 都应不存在（verify-chrome §④ 同口径）。
+    const langUi = await page.evaluate(() => ({
+        pageBtn: !!document.getElementById('langBtn'),
+        chromeBtn: !!document.querySelector('[data-chrome="lang"]'),
     }));
-    const beforeLang = await readModal();
-    await page.$eval('#langBtn', el => el.click());
-    await new Promise(r => setTimeout(r, 350));
-    const afterLang = await readModal();
-    check(afterLang.lang !== beforeLang.lang, '面板开着时可切换语言', beforeLang.lang + ' → ' + afterLang.lang);
-    check(
-        afterLang.title !== beforeLang.title && afterLang.msg !== beforeLang.msg && afterLang.btn !== beforeLang.btn,
-        '结算标题/结果文案/按钮同步换语言',
-        beforeLang.title + ' · ' + beforeLang.msg + '  →  ' + afterLang.title + ' · ' + afterLang.msg
-    );
-    check(afterLang.shown, '切语言不会误关结算面板');
-    check(!/Turn|走棋/.test(afterLang.status), '换语言后状态栏仍保持结束态', afterLang.status);
-    // 复位语言，避免影响后续与下一个视口
-    await page.$eval('#langBtn', el => el.click());
-    await new Promise(r => setTimeout(r, 300));
+    check(!langUi.pageBtn && !langUi.chromeBtn, '游戏页无语言钮（语言入口收敛到首页）',
+        'pageBtn=' + langUi.pageBtn + ' chromeBtn=' + langUi.chromeBtn);
 
     await page.screenshot({ path: OUT + '/gomoku-' + (vp.width > 400 ? 'desktop' : 'mobile') + '.png', fullPage: true });
 
@@ -154,6 +136,24 @@ for (const vp of [
 }
 
 check(pageErrors.length === 0, '无 JS 运行时错误', pageErrors.join(' | ') || 'none');
+
+// ── en boot 趟（语言入口收敛到首页后的唯一生效路径）──
+// 游戏页对 site_lang 只读不写：预置 en 后冷加载，<html lang> 与顶栏共享文案
+// 必须直接是英文 —— 这验证「首页切好的语言，进游戏页生效」。
+console.log('\n=== en boot 趟（预置 site_lang=en 冷加载） ===');
+await page.evaluateOnNewDocument(() => {
+    try { localStorage.setItem('site_lang', 'en'); } catch (e) { /* ignore */ }
+});
+await page.goto(BASE + '/gomoku.html', { waitUntil: 'networkidle2' });
+await new Promise(r => setTimeout(r, 800));
+const enBoot = await page.evaluate(() => ({
+    htmlLang: document.documentElement.lang,
+    moreAria: (document.querySelector('[data-chrome="more"]') || { getAttribute: () => null }).getAttribute('aria-label'),
+    langBtn: !!document.getElementById('langBtn'),
+}));
+check(/^en/.test(enBoot.htmlLang), '预置 en 后 boot：<html lang> 以 en 开头', enBoot.htmlLang);
+check(enBoot.moreAria === 'More games', '预置 en 后 boot：顶栏共享文案为英文', String(enBoot.moreAria));
+check(!enBoot.langBtn, '预置 en 后 boot：仍无语言钮', String(enBoot.langBtn));
 
 await browser.close();
 console.log('\n' + (fails.length ? '失败 ' + fails.length + ' 项:\n - ' + fails.join('\n - ') : '全部通过'));

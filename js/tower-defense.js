@@ -11,7 +11,7 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
@@ -669,7 +669,7 @@ class TowerDefenseGame {
         ['td-lives', 'td-gold', 'td-wave', 'td-wave-btn', 'td-wave-text', 'td-wave-preview',
             'td-stat-lives', 'td-stat-gold', 'td-stat-wave', 'td-stack-badge',
             'td-panel', 'td-toast', 'td-start', 'td-title', 'td-subtitle', 'td-howto', 'td-tower-intro',
-            'td-btn-play', 'td-best-line', 'td-start-mute', 'td-start-lang',
+            'td-btn-play', 'td-best-line', 'td-start-mute',
             'td-level-cards', 'td-level-brief', 'td-brief-waves', 'td-brief-gold', 'td-brief-lives',
             'td-select-title', 'td-brief-lbl-waves', 'td-brief-lbl-gold', 'td-brief-lbl-lives',
             'td-pause', 'td-pause-title', 'td-btn-resume', 'td-btn-menu',
@@ -806,7 +806,6 @@ class TowerDefenseGame {
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
-        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         if (this.el['select-title']) this.el['select-title'].textContent = t.selectLevel;
         if (this.el['brief-lbl-waves']) this.el['brief-lbl-waves'].textContent = t.statWave;
         if (this.el['brief-lbl-gold']) this.el['brief-lbl-gold'].textContent = t.statGold;
@@ -3253,12 +3252,6 @@ class TowerDefenseGame {
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
         if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
 
-        if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
-            this.lang = this.lang === 'zh' ? 'en' : 'zh';
-            setLang(this.lang);
-            this.applyLanguage();
-        });
-
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
                 setPlayerName(this.el.username.value);
@@ -3342,14 +3335,14 @@ onReady(() => {
     if (window.tdDrawer) window.tdDrawer.init();
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
     bindChrome({
         self: 'tower-defense.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });

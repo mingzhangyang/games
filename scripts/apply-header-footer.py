@@ -13,8 +13,8 @@
     <div class="xx-topbar-actions game-topbar-group"> 右簇：固定顺序
         ① 页面专属（Retry / Range / Speed / Theme / Help …）
         ② data-chrome="stats"   ③ data-chrome="pause"
-        ④ data-chrome="sound"   ⑤ data-chrome="lang"
-      —— Sound 与 Lang 永远是最右两颗 ⇒ 全站通用开关的屏幕位置一致。
+        ④ data-chrome="sound"
+      —— Sound 永远是最右一颗 ⇒ 全站通用开关的屏幕位置一致。
   </header>
 
   <footer class="xx-footer game-footer">        （.game-shell 内最后，随流）
@@ -33,9 +33,14 @@
    而且 spec 本身就是契约的可读文档。
 
 ⚠️ 本脚本只改 HTML 结构，不碰 JS / i18n
-   - 行为（Home/Sound/Lang/More 的点击与文案）在 `js/game-chrome.js`；
+   - 行为（Home/Sound/More 的点击与文案）在 `js/game-chrome.js`；
    - 页脚与更多游戏等 i18n 键由 `scripts/add-chrome-i18n.py` 补；
    - 开始浮层里已有的静态 `<nav class="more-games">` 原样保留（首屏推荐位）。
+
+⚠️ 2026-09-21 起：语言切换 UI 已收敛到首页 index.html
+   游戏页不再有 data-chrome="lang" 钮（顶栏 / 开始浮层 / math-rain 设置面板均已移除），
+   本脚本的 `new:lang` 模板（LANG_TPL）已废弃：重跑迁移时**不要**再注入语言钮，
+   否则 verify-chrome §④ 的负向断言（游戏页出现语言钮即失败）会报错。
 
 用法
 ----

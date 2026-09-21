@@ -8,7 +8,7 @@
  */
 
 import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, setLang, getMuted, setMuted } from './site-settings.js';
+import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from './reversi-ai.js';
@@ -145,7 +145,7 @@ class ReversiGame {
             'rv-count-black', 'rv-count-white', 'rv-mute-btn', 'rv-status',
             'rv-toast', 'rv-start', 'rv-title', 'rv-subtitle', 'rv-howto',
             'rv-mode-ai-label', 'rv-mode-2p-label', 'rv-diff-easy', 'rv-diff-medium', 'rv-diff-hard',
-            'rv-btn-play', 'rv-streak-line', 'rv-start-mute', 'rv-start-lang',
+            'rv-btn-play', 'rv-streak-line', 'rv-start-mute',
             'rv-over', 'rv-over-title', 'rv-over-verdict', 'rv-over-score', 'rv-over-streak',
             'rv-btn-again', 'rv-btn-copy', 'rv-btn-menu', 'rv-lb-box',
             'rv-lb-title', 'rv-lb-list', 'rv-lb-status', 'rv-username', 'rv-username-label',
@@ -202,7 +202,6 @@ class ReversiGame {
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
-        if (this.el['start-lang']) this.el['start-lang'].textContent = t.language;
         this.updatePlayerNames();
         this.updateStreakLine();
 
@@ -688,12 +687,6 @@ class ReversiGame {
             if (!Sfx.muted) Sfx.click();
         });
 
-        if (this.el['start-lang']) this.el['start-lang'].addEventListener('click', () => {
-            this.lang = this.lang === 'zh' ? 'en' : 'zh';
-            setLang(this.lang);
-            this.applyLanguage();
-        });
-
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
                 setPlayerName(this.el.username.value);
@@ -725,14 +718,14 @@ onReady(() => {
     game.updateCounts();
 });
 
-/* ── 顶栏 / 页脚通用控件：Home · Sound · Lang · More ──
+/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
    槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 lang / more：静音钮在本页早就有自己的 handler（还要顺带做
+   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
     bindChrome({
         self: 'reversi.html',
-        owns: ['lang', 'more'],
+        owns: ['more'],
         getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });
