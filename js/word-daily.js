@@ -316,6 +316,7 @@ class WordDailyGame {
         this.bindUI();
         this.startDaily();
         this.startRolloverWatch();
+        this.bindBoardFit();
     }
 
     gatherElements() {
@@ -683,6 +684,88 @@ class WordDailyGame {
         if (this.el.board) this.el.board.style.setProperty('--cols', String(cols));
         if (this.el['input-row']) this.el['input-row'].style.setProperty('--cols', String(cols));
         if (this.el['end-panel']) this.el['end-panel'].style.setProperty('--cols', String(cols));
+    }
+
+    /* ── 桌面矮窗口适配：实测「棋盘之外的纵向开销」 ──
+       word-daily 不是固定画幅比的画布页，没接 --frame-stage-h 纵向预算
+       （css/layout.css 的桌面契约），1088×605 这类矮窗口下 6 行棋盘会把整页
+       顶出视口 ~106px。这里实测开销后把「棋盘可用高度」写进 .wd-shell 的
+       --wd-avail-h，由 css/word-daily.css 的桌面规则换算成棋盘宽度上限
+       （格子尺寸来自 1fr 列轨道，只能靠收窄来降高度）。
+
+       ⚠️ 两个不计入项：
+         · 结算面板 —— 它与输入行互斥（updateInputUi），计入会让棋盘在游戏
+           结束时突然缩小一截；结算态允许页面滚动。
+         · 绝对定位的 toast —— 不在流内，不占高度。
+
+       ⚠️ 反馈环：被观测的元素高度都不随棋盘宽度变化（shell 宽固定、
+          .wd-diff-row 是自己的 440px 封顶），所以写入不会反过来改变自己；
+          仍保留 rAF 合并 + 1px 死区（与 js/game-frame.js 同款护栏）。 */
+    bindBoardFit() {
+        const shell = document.querySelector('.wd-shell');
+        const main = shell && shell.querySelector('.wd-main');
+        const wrap = shell && shell.querySelector('.wd-board-wrap');
+        if (!shell || !main || !wrap) return;
+
+        const outerH = (el) => {
+            const cs = getComputedStyle(el);
+            if (cs.display === 'none') return 0;
+            if (cs.position === 'absolute' || cs.position === 'fixed') return 0;
+            return el.getBoundingClientRect().height
+                + (parseFloat(cs.marginTop) || 0)
+                + (parseFloat(cs.marginBottom) || 0);
+        };
+
+        let rafId = 0;
+        let last = NaN;
+
+        const apply = () => {
+            rafId = 0;
+            let chrome = 0;
+            const cs = getComputedStyle(shell);
+            chrome += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+
+            // shell 直属子项（除 .wd-main）
+            shell.querySelectorAll(':scope > *').forEach(el => {
+                if (el !== main) chrome += outerH(el);
+            });
+
+            // .wd-main 内除棋盘外的部分（含 main 自己的上下内距与 row-gap）
+            const mcs = getComputedStyle(main);
+            chrome += (parseFloat(mcs.paddingTop) || 0) + (parseFloat(mcs.paddingBottom) || 0);
+            let shown = 0;
+            main.querySelectorAll(':scope > *').forEach(el => {
+                if (el === wrap) return;
+                const h = outerH(el);
+                chrome += h;
+                if (h > 0) shown += 1;
+            });
+            const gap = parseFloat(mcs.rowGap) || 0;
+            if (gap > 0 && shown > 0) chrome += gap * shown; // 可见项彼此之间 + 与棋盘之间
+
+            const avail = Math.max(160, Math.round(window.innerHeight - chrome - 8));
+            if (!Number.isNaN(last) && Math.abs(avail - last) <= 1) return;
+            last = avail;
+            shell.style.setProperty('--wd-avail-h', avail + 'px');
+        };
+
+        const schedule = () => {
+            if (!rafId) rafId = requestAnimationFrame(apply);
+        };
+
+        // 触发源：构成 chrome 的任一元素尺寸变化（语言切换导致顶栏折行、
+        // 成语模式释义卡 / 练习横幅显隐）+ 视口 resize + 语言设置变更。
+        if (typeof ResizeObserver !== 'undefined') {
+            const ro = new ResizeObserver(schedule);
+            ['.wd-topbar', '#wd-practice-banner', '.wd-diff-row', '#wd-hint-card', '#wd-input-row', '.wd-footer']
+                .forEach(sel => {
+                    const el = shell.querySelector(sel);
+                    if (el) ro.observe(el);
+                });
+        }
+        window.addEventListener('resize', schedule);
+        window.addEventListener('site-settings:changed', schedule);
+        schedule();
     }
 
     wordLen() {

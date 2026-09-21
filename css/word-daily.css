@@ -165,10 +165,18 @@ body {
     align-items: center;
     justify-content: center;
     transition: opacity 0.2s;
+    /* 三个按钮都 white-space:nowrap（"5 字母 (经典)" / "6 Letters (Hard)"），
+       min-content 之和约 500px > 容器 440px。此时 justify-content:center 会让
+       整行**向两侧同时溢出**，右端被挤出容器裁掉（"✓/✕" 解决标记随之消失）。
+       允许换行后每行在容器内居中，两侧对称，不再有裁切。 */
+    flex-wrap: wrap;
 }
 
 .wd-diff-btn {
     flex: 1;
+    /* ⚠️ 必须覆盖 flex 默认的 min-width:auto：nowrap 时它等于 min-content，
+       flex-shrink 失效 ⇒ 按钮不会缩，只能溢出容器。设 0 才会真正均分/收缩。 */
+    min-width: 0;
     min-height: 38px;
     display: inline-flex;
     align-items: center;
@@ -276,6 +284,18 @@ body {
     width: 100%;
     max-width: 480px;
     flex: 1;
+    /* ⚠️ ≥1024px 时 .game-main 变成 flex-direction:row（css/layout.css）。
+       继承后 .wd-main 自己也是横向 flex 容器 ⇒ 它的三个子项（棋盘 / 输入行 /
+       结算面板）会**并排**成三列，而不是上下堆叠；同时 .wd-main 只有
+       max-width:480px、无 flex-basis ⇒ flex-shrink 生效被压成 80px，
+       棋盘每格只剩 9.6px（整块"小点阵"）。
+       这里显式声明单列 + flex-basis:0%（让 max-width 重新成为唯一宽度约束），
+       两者都只在桌面暴露，窄屏本来就是这个形态。纵向预算页（六个画布游戏）
+       用 --frame-stage-h/ratio 推导舞台宽度，本条不涉及其它页面。 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-basis: 0%;
     padding: 12px 0 20px;
     min-height: min-content;
 }
@@ -284,6 +304,9 @@ body {
     width: 100%;
     display: flex;
     justify-content: center;
+    /* 父级 .wd-main 是纵向 flex 容器，默认 flex-shrink:1；棋盘较高时会被压扁
+       （每格跟着变矮 ⇒ 非正方形）。固定住，让棋盘按自身 aspect-ratio 决定高度。 */
+    flex-shrink: 0;
 }
 
 .wd-board {
@@ -803,7 +826,7 @@ body {
     .wd-diff-tag { width: 17px; height: 17px; font-size: 10.5px; border-radius: 5px; }
     .wd-diff-title { font-size: 11px; }
     .wd-diff-status { font-size: 11px; }
-    .wd-main { padding: 8px 0 14px; }
+    .wd-main { padding: 8px 0 14px; flex-basis: 0%; }
 
     .wd-board {
         gap: 6px;
@@ -897,19 +920,51 @@ body {
     text-decoration: none;
 }
 
-/* ── 桌面大屏（≥1024px）：适度放大的棋盘与输入栏 ── */
+/* ── 桌面大屏（≥1024px）：棋盘适度放大，纵向单列居中 ── */
 @media (width >= 1024px) {
-    .wd-board {
-        max-width: calc(var(--cols) * 68px + (var(--cols) - 1) * 8px);
-        gap: 8px;
+    /* 棋盘的可用高度 = 视口高 − 棋盘之外的全部纵向开销。
+       实测值由 js/word-daily.js 的 bindBoardFit() 写成内联样式覆盖这里；
+       CSS 里的 304px 只兜首帧（实测 259~298 + 余量）。
+       ⚠️ 棋盘只能通过「收窄」来降高度：格子是 width:100% + aspect-ratio:1，
+          尺寸来自 1fr 列轨道（由容器**宽度**推出）——直接给棋盘限高只会把
+          格子压成长方形，整页照样溢出。 */
+    .wd-shell {
+        --wd-avail-h: max(160px, calc(100dvh - 304px));
     }
+
+    /* 纵向单列布局下 480px 太宽：棋盘只有 ~296px，内容整体贴左、右半屏空白。
+       收窄到棋盘量级，让列真正居中（棋盘与输入行共用同一宽度基准）。
+       ⚠️ 该值同时是棋盘的实际上限（.wd-board 的 max-width 比它大，够不着）。
+       ⚠️ row-gap:0 —— .game-main 在桌面带了 gap:var(--frame-main-gap)=28px，
+          单列棋盘页用不上（输入行自己有 margin-top:20px），这 28px 不在任何
+          纵向预算里，白吃掉一整行格子的高度。 */
+    .wd-main {
+        max-width: 352px;
+        row-gap: 0;
+    }
+
+    /* .wd-main 已显式 flex-direction:column（见上文），这里放开原布局给子项
+       设的 flex 约束，让它们各占一行、宽度吃满列宽。 */
+    .wd-board-wrap, .wd-input-row, .wd-end-panel { flex: 0 0 auto; }
+
+    /* 取「宽度封顶」与「按可用高度反推的封顶」的较小者：
+         cell = (--wd-avail-h − 5 × gap) / 6
+         宽   = cols × cell + (cols − 1) × gap
+       高窗口下前者生效（棋盘 296~408px），矮窗口（如 1088×605）下后者生效，
+       棋盘按视口高收缩，整页不再溢出。 */
+    .wd-board,
+    .wd-input-row,
+    .wd-end-panel {
+        max-width: min(
+            calc(296px + (var(--cols) - 4) * 56px),
+            calc(var(--cols) * (var(--wd-avail-h) - 40px) / 6 + (var(--cols) - 1) * 8px)
+        );
+    }
+    .wd-board { gap: 8px; }
     .wd-row { gap: 8px; }
     .wd-tile { border-radius: 12px; font-size: 32px; }
 
-    .wd-input-row, .wd-end-panel {
-        max-width: calc(var(--cols) * 68px + (var(--cols) - 1) * 8px);
-        margin-top: 20px;
-    }
+    .wd-input-row, .wd-end-panel { margin-top: 20px; }
     .wd-input { height: 50px; font-size: 22px; }
     .wd-submit-btn { height: 50px; min-width: 90px; font-size: 16px; }
 }
