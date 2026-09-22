@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#070a18">
+    <meta name="description" content="晶绽 Crystal Bloom — draw a cooling curve on the temperature-time chart and grow the habit you were asked for. Cool fast and the crystal shoots needles and dendrites; cool slowly and it grows into a faceted octahedron; stir the bath to force compact blocks. Every anchor you place and every stir you buy costs points — 20 vessels plus a daily run for the whole world.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/crystal-bloom.html">
+    <meta property="og:title" content="晶绽 Crystal Bloom — Cooling Curve Crystal Puzzle">
+    <meta property="og:description" content="Draw a cooling curve. Grow the crystal. Fast makes needles, slow makes facets.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-crystal-bloom.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/crystal-bloom.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="晶绽 Crystal Bloom — Cooling Curve Crystal Puzzle">
+    <meta name="twitter:description" content="Your cooling curve is the crystal's temper — draw it well and pay as little as you can.">
+    <meta name="twitter:image" content="assets/seo/og-crystal-bloom.svg">
+    <title>晶绽 Crystal Bloom — Cooling Curve Crystal Puzzle</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070a18'/%3E%3Cpath d='M32 8 46 26 32 56 18 26z' fill='%236fd8ff' opacity='.9'/%3E%3Cpath d='M32 8 32 56 18 26z' fill='%23a8e8ff' opacity='.55'/%3E%3Cpath d='M18 26h28M32 8v48' stroke='%23ffd34d' stroke-width='1.6' opacity='.7'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/crystal-bloom.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="cb-shell game-shell">
+        <!-- 顶栏 HUD -->
+        <header class="cb-topbar game-topbar">
+            <div class="cb-topbar-lead game-topbar-group">
+                <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
+                <button data-chrome="home" class="cb-icon-btn game-icon-btn" id="cb-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <!-- 中槽：容器 / 预算 HUD -->
+            <div class="cb-topbar-center game-topbar-center">
+                <div class="cb-hud-level" id="cb-hud-level">Vessel 1/3</div>
+                <div class="cb-cut-box">
+                    <span class="cb-cut-value" id="cb-budget">120</span>
+                    <span class="cb-par" id="cb-par">Par 48</span>
+                </div>
+            </div>
+            <!-- 右簇固定顺序：专属 → stats → sound -->
+            <div class="cb-topbar-actions game-topbar-group">
+                <button class="cb-icon-btn game-icon-btn" id="cb-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button data-chrome="stats" type="button" class="cb-icon-btn game-icon-btn cb-stats-btn game-stats-btn" id="cbStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="cbStatsDrawer"></button>
+                <button type="button" class="cb-icon-btn game-icon-btn" id="cb-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+            </div>
+        </header>
+
+        <!-- 舞台 -->
+        <main class="cb-main game-main">
+        <div class="cb-stage game-stage" id="cb-stage">
+            <canvas class="game-canvas" id="cb-canvas" width="560" height="640"></canvas>
+
+            <!-- 提示 -->
+            <div class="cb-toast hidden game-toast" id="cb-toast"></div>
+
+            <!-- 两个动作钮：观测（看清速度） / 开门（放行窗口） -->
+            <button type="button" class="cb-action-btn cb-stir-btn" id="cb-stir-btn" title="Stir" aria-label="Stir">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="7.5"/>
+                    <path d="M12 4.5a7.5 7.5 0 0 1 6.5 3.75"/>
+                    <path d="M8.5 12a3.5 3.5 0 1 0 3.5-3.5"/>
+                </svg>
+            </button>
+            <button type="button" class="cb-action-btn cb-run-btn" id="cb-run-btn" title="Grow" aria-label="Grow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                    <path d="M8 5.2v13.6l11-6.8z"/>
+                </svg>
+            </button>
+
+            <!-- 开始界面 -->
+            <div class="cb-overlay game-overlay" id="cb-start">
+                <h1 class="cb-title" id="cb-title">Crystal Bloom</h1>
+                <p class="cb-subtitle" id="cb-subtitle">Draw · Chill · Grow</p>
+                <div class="cb-hero" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 64 64" fill="none">
+                        <path d="M32 6 46 24 32 58 18 24z" fill="#6fd8ff" opacity="0.9"/>
+                        <path d="M32 6 32 58 18 24z" fill="#a8e8ff" opacity="0.5"/>
+                        <path d="M18 24h28M32 6v52" stroke="#ffd34d" stroke-width="1.6" opacity="0.65"/>
+                        <circle cx="32" cy="32" r="26" stroke="#a8b8ff" stroke-width="1.6" opacity="0.35"/>
+                    </svg>
+                </div>
+                <p class="cb-howto" id="cb-howto"></p>
+                <div class="cb-mode-row">
+                    <button class="cb-mode" id="cb-btn-levels"></button>
+                    <button class="cb-mode cb-mode-daily" id="cb-btn-daily"></button>
+                </div>
+                <p class="cb-level-label" id="cb-level-label"></p>
+                <div class="cb-level-grid" id="cb-level-grid"></div>
+                <p class="cb-daily-best" id="cb-daily-best"></p>
+                <div class="cb-start-footer">
+                    <button class="cb-icon-btn game-icon-btn" id="cb-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                </div>
+            </div>
+
+            <!-- 过关面板 -->
+            <div class="cb-overlay cb-overlay-dim hidden game-overlay" id="cb-clear">
+                <div class="cb-card">
+                    <h2 class="cb-card-title" id="cb-clear-stars">☆☆☆</h2>
+                    <div class="cb-card-line" id="cb-clear-line"></div>
+                    <div class="cb-btn-row">
+                        <button class="cb-btn cb-btn-primary game-btn" id="cb-btn-next"><span></span></button>
+                        <button class="cb-btn game-btn" id="cb-btn-replay"><span></span></button>
+                        <button class="cb-btn cb-btn-ghost game-btn" id="cb-btn-menu1"><span></span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每日结算 -->
+            <div class="cb-overlay hidden game-overlay" id="cb-over">
+                <h2 class="cb-overlay-title" id="cb-over-title"></h2>
+                <div class="cb-over-score" id="cb-over-score">0</div>
+                <div class="cb-over-sub" id="cb-over-sub"></div>
+                <div class="cb-btn-row">
+                    <button class="cb-btn game-btn" id="cb-btn-copy"><span></span></button>
+                    <button class="cb-btn cb-btn-ghost game-btn" id="cb-btn-menu2"><span></span></button>
+                </div>
+                <div class="cb-lb">
+                    <div class="cb-lb-title" id="cb-lb-title"></div>
+                    <div class="cb-lb-list" id="cb-lb-list"></div>
+                    <div class="cb-lb-status" id="cb-lb-status"></div>
+                    <div class="cb-username-row">
+                        <label class="cb-username-label" for="cb-username" id="cb-username-label"></label>
+                        <input class="cb-username" id="cb-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+                <button class="cb-btn cb-btn-primary game-btn" id="cb-btn-again"><span></span></button>
+            </div>
+        </div>
+
+            <aside class="cb-sidebar game-sidebar">
+
+            <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
+            <div id="cbStatsPanels">
+                <div class="cb-side-card game-side-card">
+                    <div class="cb-side-title game-side-title" id="cb-side-howto-title"></div>
+                    <p class="cb-side-text game-side-text" id="cb-side-howto"></p>
+                </div>
+                <div class="cb-side-card game-side-card">
+                    <div class="cb-side-title game-side-title" id="cb-side-records-title"></div>
+                    <div class="cb-side-records" id="cb-side-records"></div>
+                </div>
+            </div>
+
+            <!-- 桌面侧栏专属：必须放在 #cbStatsPanels 外面 —— 那个节点会被
+                 js/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
+                 放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <div class="cb-side-card game-side-card">
+                <div class="cb-side-title game-side-title" id="cb-side-legend-title"></div>
+                <div class="cb-side-legend" id="cb-side-legend"></div>
+            </div>
+
+            <div class="cb-side-card game-side-card">
+                <nav class="more-games" id="cbSideMore"></nav>
+            </div>
+
+        </aside>
+    </main>
+
+
+
+    <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
+         统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
+         ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
+    <footer class="cb-footer game-footer">
+        <p class="cb-footer-hint game-footer-hint" id="cb-hint"></p>
+        <div class="cb-footer-actions game-footer-actions game-topbar-group">
+            <a class="cb-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button type="button" class="cb-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="cbMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+        <nav class="more-games game-footer-nav" id="cbMoreNav" hidden></nav>
+    </footer>
+    </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="cbStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cbStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="cbStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="cbStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="cbStatsDrawerBody"></div>
+        </div>
+    </div>
+
+
+        <!-- ld+json placeholder — replaced by `npm run gen` -->
+        <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-crystal-bloom.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"晶绽 Crystal Bloom — Cooling Curve Crystal Puzzle","url":currentUrl,"description":"晶绽 Crystal Bloom — draw a cooling curve on the temperature-time chart and grow the habit you were asked for. Cool fast and the crystal shoots needles and dendrites; cool slowly and it grows into a faceted octahedron; stir the bath to force compact blocks. Every anchor you place and every stir you buy costs points — 20 vessels plus a daily run for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"晶绽 Crystal Bloom — Cooling Curve Crystal Puzzle","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+        <!-- registry:end seo-script -->
+    <script type="module" src="js/crystal-bloom.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

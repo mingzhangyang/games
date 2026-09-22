@@ -143,6 +143,7 @@
         .card-icon--bond-forge { background: rgb(91, 141, 238, 0.16); color: #5b8dee; }
         .card-icon--echo-cave { background: rgb(111, 216, 255, 0.16); color: #6fd8ff; }
         .card-icon--maxwell-demon { background: rgb(168, 184, 255, 0.16); color: #8ea8ff; }
+        .card-icon--crystal-bloom { background: rgb(126, 224, 165, 0.16); color: #7ee0a5; }
 
         .card-title {
             font-size: 1em;

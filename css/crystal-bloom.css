@@ -1,0 +1,534 @@
+/* ─────────────────────────────────────────────
+   麦克斯韦妖 Maxwell's Demon — 热与熵分拣解谜
+   深靛底 + 冷蓝慢分子（--tok-accent）+ 暖橙快分子（--tok-hot）
+   门 / 预算用萤光琥珀 --tok-gold
+   ───────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background:
+        radial-gradient(ellipse 62% 40% at 18% 8%, rgb(255, 138, 92, 0.10), transparent),
+        radial-gradient(ellipse 62% 40% at 84% 92%, rgb(111, 216, 255, 0.10), transparent),
+        linear-gradient(165deg, #05070f 0%, var(--tok-bg-2) 55%, #0d1330 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--tok-text);
+
+    --tok-accent: #7fa8ff;
+    --tok-accent-2: #ff8a5c;
+    --tok-hot: #ff8a5c;
+    --tok-cold: #6fd8ff;
+}
+
+.hidden { display: none !important; }
+
+/* ── 顶栏 HUD ── */
+
+.cb-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.cb-icon-btn:active { transform: scale(0.92); }
+
+.cb-hud-level {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #a8c4ff;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.cb-cut-box {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    background: rgb(0, 0, 0, 0.4);
+    border: 1px solid rgb(168, 184, 255, 0.18);
+    border-radius: 11px;
+    padding: 6px 12px;
+}
+
+.cb-cut-value {
+    font-size: 19px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--tok-gold);
+    min-width: 2ch;
+    text-align: center;
+}
+
+.cb-par {
+    font-size: 11.5px;
+    color: var(--tok-text-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── 舞台 ── */
+
+.cb-stage {
+    min-width: 280px;
+}
+
+#cb-canvas {
+    display: block;
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid rgb(168, 184, 255, 0.18);
+    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.6), 0 0 46px rgb(127, 168, 255, 0.1);
+    /* 主要输入是底部两个动作钮；允许页面手势会让移动浏览器
+       在 pointer stream 归属明确前把它交给滚动容器。 */
+    touch-action: none;
+    cursor: pointer;
+}
+
+/* ── 两个动作钮：观测（左）/ 开门（右） ── */
+
+.cb-action-btn {
+    position: absolute;
+    bottom: 16px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(255, 255, 255, 0.35);
+    cursor: pointer;
+    z-index: 15;
+    transition: opacity 0.25s, transform 0.1s, box-shadow 0.15s;
+}
+
+.cb-stir-btn {
+    left: 16px;
+    color: #050810;
+    background: radial-gradient(circle at 32% 30%, #b9e7ff, #6fd8ff 62%);
+    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(111, 216, 255, 0.45);
+}
+
+.cb-run-btn {
+    right: 16px;
+    color: #2a1a05;
+    background: radial-gradient(circle at 32% 30%, #ffe6a8, var(--tok-gold) 62%);
+    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(255, 211, 77, 0.45);
+}
+
+.cb-action-btn:active {
+    transform: scale(0.9);
+}
+
+.cb-stir-btn:active { box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(111, 216, 255, 0.7); }
+.cb-run-btn:active { box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(255, 211, 77, 0.7); }
+
+/* 预算不足：钮变灰（JS 加 .is-broke） */
+.cb-action-btn.is-broke {
+    filter: grayscale(0.7);
+    opacity: 0.55;
+}
+
+/* 非 playing 态（菜单/结算）整体隐藏：z-index 15 > overlay 10，
+   不藏起来会浮在菜单关卡 chips 上把「1」挡住（移动端实测）。 */
+.cb-action-btn.is-dimmed {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ── 提示 ── */
+
+.cb-toast {
+    top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tok-bg-2);
+    background: linear-gradient(120deg, #ffe6a8, var(--tok-gold));
+    padding: 7px 18px;
+    box-shadow: 0 8px 24px rgb(255, 211, 77, 0.35);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.cb-toast.is-on { opacity: 1; }
+
+/* ── 覆盖层 ── */
+
+.cb-overlay {
+    background: rgb(5, 7, 15, 0.92);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.cb-overlay-dim { background: rgb(5, 7, 15, 0.72); }
+
+.cb-title {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.15;
+    background: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.cb-subtitle {
+    font-size: 12.5px;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: -6px;
+}
+
+.cb-hero {
+    line-height: 1;
+    animation: cb-bob 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgb(127, 168, 255, 0.35));
+}
+
+@keyframes cb-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.cb-howto {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--tok-text-soft);
+    max-width: 350px;
+}
+
+.cb-mode-row {
+    display: flex;
+    gap: 8px;
+}
+
+.cb-mode {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.cb-mode:hover { background: rgb(255, 255, 255, 0.13); }
+.cb-mode:active { transform: scale(0.95); }
+
+.cb-mode-daily {
+    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    border: none;
+    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+}
+
+.cb-level-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.cb-level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 360px;
+}
+
+/* ⚠️ 类名必须与 js/crystal-bloom.js 的 renderLevelGrid() 一致：那里写的是
+   `'cb-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
+   芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
+.cb-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    font-family: inherit;
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 6px 2px 4px;
+    cursor: pointer;
+    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
+    color: var(--tok-text);
+    transition: background 0.15s, transform 0.1s;
+}
+
+.cb-chip:hover { background: rgb(255, 255, 255, 0.11); }
+.cb-chip:active { transform: scale(0.93); }
+
+.cb-chip.is-done {
+    background: rgb(127, 168, 255, 0.12);
+    border-color: rgb(127, 168, 255, 0.38);
+}
+
+.cb-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
+
+.cb-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; color: var(--tok-gold); }
+
+.cb-daily-best {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #a8c4ff;
+    min-height: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.cb-start-footer { display: flex; gap: 10px; }
+
+/* ── 过关卡片 ── */
+
+.cb-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    background: rgb(9, 12, 26, 0.96);
+    border: 1px solid rgb(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 20px 22px;
+    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    animation: cb-card-in 0.26s ease-out;
+}
+
+@keyframes cb-card-in {
+    from { transform: scale(0.9) translateY(14px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.cb-card-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--tok-gold);
+}
+
+.cb-card-line {
+    font-size: 14px;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.cb-overlay-title { font-size: 26px; font-weight: 800; }
+
+.cb-over-score {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 26px rgb(255, 211, 77, 0.4);
+}
+
+.cb-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
+
+.cb-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.cb-btn {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.08);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 18px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.cb-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.cb-btn:active { transform: scale(0.96); }
+
+.cb-btn-primary {
+    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    border: none;
+    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+}
+
+.cb-btn-ghost { background: transparent; color: var(--tok-text-dim); }
+
+/* ── 排行榜 ── */
+
+.cb-lb {
+    width: 100%;
+    max-width: 330px;
+    background: rgb(255, 255, 255, 0.045);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.cb-lb-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.cb-lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 40px;
+    max-height: 168px;
+    overflow-y: auto;
+}
+
+.cb-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    padding: 3px 6px;
+    border-radius: 7px;
+}
+
+.cb-lb-row.cb-lb-top1 { background: rgb(252, 211, 77, 0.14); }
+.cb-lb-row.cb-lb-top2 { background: rgb(203, 213, 225, 0.10); }
+.cb-lb-row.cb-lb-top3 { background: rgb(111, 216, 255, 0.12); }
+
+.cb-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.cb-lb-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.cb-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.cb-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
+
+.cb-lb-status {
+    min-height: 16px;
+    font-size: 11.5px;
+    color: var(--tok-text-mute);
+    margin-top: 4px;
+}
+
+.cb-username-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.cb-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
+
+.cb-username {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 9px;
+    padding: 7px 10px;
+    outline: none;
+}
+
+.cb-username:focus { border-color: rgb(127, 168, 255, 0.5); }
+
+/* ── 侧栏：记录行 ── */
+
+.cb-side-records { display: flex; flex-direction: column; }
+
+.cb-side-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+    padding: 4px 0;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.cb-side-k { color: var(--tok-text-dim); }
+.cb-side-v { color: var(--tok-text); font-weight: 700; }
+
+/* ── 侧栏：热力学图例 ──
+   颜色必须与 js/crystal-bloom.js 渲染层的语义色一一对应：
+   快分子 --tok-hot / 慢分子 --tok-cold / 未观测灰 / 门 --tok-gold / 温差 = 光谱带 */
+
+.cb-side-legend { display: flex; flex-direction: column; gap: 2px; }
+
+.cb-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    padding: 3px 0;
+    color: var(--tok-text-dim);
+}
+
+.cb-legend-text { flex: 1; min-width: 0; line-height: 1.45; }
+
+.cb-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.cb-legend-fast { background: #ff8a5c; box-shadow: 0 0 8px rgb(255, 138, 92, 0.55); }
+.cb-legend-slow { background: #6fd8ff; box-shadow: 0 0 8px rgb(111, 216, 255, 0.55); }
+.cb-legend-blind { background: #7d86ad; }
+.cb-legend-gate { background: var(--tok-gold); box-shadow: 0 0 8px rgb(255, 211, 77, 0.55); }
+
+/* 「温差」用光谱渐变条表示：不是单色语义，而是冷热两端之间的连续量 */
+.cb-legend-band {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #ff8a5c, var(--tok-gold) 50%, #6fd8ff);
+}
+
+/* ── 响应式 ── */
+
+@media (width <= 480px) {
+    .cb-hud-level { font-size: 12px; }
+    .cb-cut-value { font-size: 16px; }
+    .cb-title { font-size: 27px; }
+    .cb-over-score { font-size: 34px; }
+    .cb-howto { font-size: 12px; }
+    .cb-mode { font-size: 13px; padding: 10px 15px; }
+    .cb-level-grid { gap: 5px; }
+    .cb-action-btn { width: 58px; height: 58px; bottom: 12px; }
+    .cb-stir-btn { left: 12px; }
+    .cb-run-btn { right: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cb-hero, .cb-card { animation: none !important; }
+    .cb-toast { transition: none; }
+    .cb-btn, .cb-icon-btn, .cb-mode, .cb-chip, .cb-action-btn { transition: none; }
+}
+
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
+   560×640 逻辑场 → --frame-ratio: 0.875；
+   舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
+.cb-shell {
+    --frame-max-wide: 940px;
+    --frame-stage: 560px;
+    --frame-side: 300px;
+    --frame-side-gap: 14px;
+    --frame-ratio: 0.875;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}

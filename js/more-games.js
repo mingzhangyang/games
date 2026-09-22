@@ -21,6 +21,7 @@ export const MORE_GAMES = [
     { href: 'bond-forge.html', emoji: '⚗️', en: "Bond Forge", zh: "键合工坊" },
     { href: 'echo-cave.html', emoji: '🦇', en: "Echo Cave", zh: "回声洞窟" },
     { href: 'maxwell-demon.html', emoji: '😈', en: "Maxwell's Demon", zh: "麦克斯韦妖" },
+    { href: 'crystal-bloom.html', emoji: '💎', en: "Crystal Bloom", zh: "晶绽" },
 ];
 // registry:end more-games
 

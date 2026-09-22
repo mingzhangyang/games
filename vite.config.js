@@ -62,6 +62,7 @@ main: resolve(__dirname, 'index.html'),
             "bond-forge": resolve(__dirname, 'bond-forge.html'),
             "echo-cave": resolve(__dirname, 'echo-cave.html'),
             "maxwell-demon": resolve(__dirname, 'maxwell-demon.html'),
+            "crystal-bloom": resolve(__dirname, 'crystal-bloom.html'),
             // registry:end inputs
         },
         output: {

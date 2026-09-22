@@ -23,6 +23,7 @@
 - Bond Forge（键合工坊）
 - Echo Cave（回声洞窟）
 - Maxwell's Demon（麦克斯韦妖）
+- Crystal Bloom（晶绽）
 <!-- registry:end game-list -->
 
 全站只有一个排行榜 Worker（`Workers/game-scores.js`，KV 命名空间 `GAME_SCORES`，按 `top:<game>` 键区分；旧三榜 Tetris / Hoop Shot / Planet Merge 已并入，每日榜如 `top:planet-merge-d<日期>`、`top:gravity-d<日期>` 按天滚动），另有全站统计（`games-analytics`）与猜词战报（`word-daily-stats`）两个聚合 Worker。
