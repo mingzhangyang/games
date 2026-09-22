@@ -102,6 +102,10 @@ const i18n = {
         bondForgeDesc: 'Drag atoms from the tray, snap them into bonds, and satisfy every valence shell to forge the target formula. 20 levels plus a daily challenge, with real chemistry along the way.',
         bondForgeTag: 'Chemistry',
         bondForgePlay: 'Play ›',
+        echoCaveName: 'Echo Cave',
+        echoCaveDesc: 'The cave is pitch dark until you sing: send out pulses, read the echoes bouncing off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily course.',
+        echoCaveTag: 'Physics',
+        echoCavePlay: 'Play ›',
 
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
@@ -227,6 +231,10 @@ const i18n = {
         bondForgeDesc: '从原子盘拖出原子，靠近即成键，把所有价键填满、拼出目标分子。20 关手工关卡 + 每日挑战，一路都是真实化学。',
         bondForgeTag: '化学',
         bondForgePlay: '开始游戏 ›',
+        echoCaveName: '回声洞窟',
+        echoCaveDesc: '洞窟伸手不见五指，直到你开口：发出声波脉冲，读着看不见的岩壁传回的回声，收齐鸣唱的声晶，找到月光洞口。20 关手工洞穴 + 每日挑战。',
+        echoCaveTag: '声学',
+        echoCavePlay: '开始游戏 ›',
 
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -357,6 +365,10 @@ function applyLanguage(lang) {
     document.getElementById('bond-forge-desc').textContent = t.bondForgeDesc;
     document.getElementById('bond-forge-tag').textContent = t.bondForgeTag;
     document.getElementById('bond-forge-play').textContent = t.bondForgePlay;
+    document.getElementById('echo-cave-name').textContent = t.echoCaveName;
+    document.getElementById('echo-cave-desc').textContent = t.echoCaveDesc;
+    document.getElementById('echo-cave-tag').textContent = t.echoCaveTag;
+    document.getElementById('echo-cave-play').textContent = t.echoCavePlay;
 
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
@@ -438,6 +450,7 @@ function injectStructuredData() {
         { slug: 'circuit', name: 'Circuit', description: 'Physics puzzle of switches and circuits — route the current, light every target bulb and dodge the short circuit. 20 levels plus a daily puzzle.' },
         { slug: 'silk-dew', name: 'Silkfall', description: 'Rope-physics puzzle — drag the anchor knot to thread a silken strand, steer the dew pearl past thorns and gales and let it fall into the jade vessel. 20 levels plus a daily course.' },
         { slug: 'bond-forge', name: 'Bond Forge', description: 'Molecule-building chemistry puzzle — drag atoms from the tray, snap them into bonds and satisfy every valence shell to forge the target formula. 20 levels plus a daily challenge.' },
+        { slug: 'echo-cave', name: 'Echo Cave', description: 'Original sonar puzzle — the cave is pitch dark until you sing: emit pulses, read the echoes off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily course.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
