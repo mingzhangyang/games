@@ -96,5 +96,10 @@
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://games.orangely.xyz/maxwell-demon.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
   // registry:end games
 </urlset>

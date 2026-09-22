@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#070a18">
+    <meta name="description" content="麦克斯韦妖 Maxwell's Demon — an original thermodynamics puzzle. Keep the tiny door between two chambers: let fast molecules into the left, shove slow ones to the right, and a real temperature gap appears out of nothing. Every glance and every open door spends budget — information is not free. 20 handcrafted vessels plus a daily run for the whole world.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/maxwell-demon.html">
+    <meta property="og:title" content="麦克斯韦妖 Maxwell's Demon — Heat &amp; Entropy Puzzle">
+    <meta property="og:description" content="Sort fast from slow and build a temperature gap out of nothing. Every bit you learn is paid for.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-maxwell-demon.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/maxwell-demon.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="麦克斯韦妖 Maxwell's Demon — Heat &amp; Entropy Puzzle">
+    <meta name="twitter:description" content="Keep the door. Sort the molecules. Pay for every bit you learn.">
+    <meta name="twitter:image" content="assets/seo/og-maxwell-demon.svg">
+    <title>麦克斯韦妖 Maxwell's Demon — Heat &amp; Entropy Puzzle</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070a18'/%3E%3Crect x='29' y='4' width='6' height='20' rx='2' fill='%23263352'/%3E%3Crect x='29' y='40' width='6' height='20' rx='2' fill='%23263352'/%3E%3Crect x='28' y='26' width='8' height='12' rx='4' fill='%23ffd34d'/%3E%3Ccircle cx='14' cy='20' r='3.4' fill='%23ff8a5c'/%3E%3Ccircle cx='18' cy='44' r='3.4' fill='%23ff8a5c'/%3E%3Ccircle cx='50' cy='24' r='3.4' fill='%236fd8ff'/%3E%3Ccircle cx='46' cy='48' r='3.4' fill='%236fd8ff'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/maxwell-demon.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="md-shell game-shell">
+        <!-- 顶栏 HUD -->
+        <header class="md-topbar game-topbar">
+            <div class="md-topbar-lead game-topbar-group">
+                <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
+                <button data-chrome="home" class="md-icon-btn game-icon-btn" id="md-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <!-- 中槽：容器 / 预算 HUD -->
+            <div class="md-topbar-center game-topbar-center">
+                <div class="md-hud-level" id="md-hud-level">Vessel 1/3</div>
+                <div class="md-cut-box">
+                    <span class="md-cut-value" id="md-budget">120</span>
+                    <span class="md-par" id="md-par">Par 48</span>
+                </div>
+            </div>
+            <!-- 右簇固定顺序：专属 → stats → sound -->
+            <div class="md-topbar-actions game-topbar-group">
+                <button class="md-icon-btn game-icon-btn" id="md-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button data-chrome="stats" type="button" class="md-icon-btn game-icon-btn md-stats-btn game-stats-btn" id="mdStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="mdStatsDrawer"></button>
+                <button type="button" class="md-icon-btn game-icon-btn" id="md-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+            </div>
+        </header>
+
+        <!-- 舞台 -->
+        <main class="md-main game-main">
+        <div class="md-stage game-stage" id="md-stage">
+            <canvas class="game-canvas" id="md-canvas" width="560" height="640"></canvas>
+
+            <!-- 提示 -->
+            <div class="md-toast hidden game-toast" id="md-toast"></div>
+
+            <!-- 两个动作钮：观测（看清速度） / 开门（放行窗口） -->
+            <button type="button" class="md-action-btn md-scan-btn" id="md-scan-btn" title="Scan" aria-label="Scan">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>
+                    <circle cx="12" cy="12" r="3.2"/>
+                </svg>
+            </button>
+            <button type="button" class="md-action-btn md-gate-btn" id="md-gate-btn" title="Open gate" aria-label="Open gate">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 3v18M20 3v18"/>
+                    <path d="M9.5 4.5h5v15h-5z" fill="currentColor" stroke="none"/>
+                </svg>
+            </button>
+
+            <!-- 开始界面 -->
+            <div class="md-overlay game-overlay" id="md-start">
+                <h1 class="md-title" id="md-title">Maxwell's Demon</h1>
+                <p class="md-subtitle" id="md-subtitle">Watch · Sort · Pay</p>
+                <div class="md-hero" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 64 64" fill="none">
+                        <rect x="29" y="4" width="6" height="20" rx="2" fill="#263352"/>
+                        <rect x="29" y="40" width="6" height="20" rx="2" fill="#263352"/>
+                        <rect x="27" y="26" width="10" height="12" rx="5" fill="#ffd34d"/>
+                        <circle cx="13" cy="18" r="3.4" fill="#ff8a5c"/>
+                        <circle cx="17" cy="46" r="3.4" fill="#ff8a5c"/>
+                        <circle cx="51" cy="22" r="3.4" fill="#6fd8ff"/>
+                        <circle cx="47" cy="50" r="3.4" fill="#6fd8ff"/>
+                        <circle cx="32" cy="32" r="26" stroke="#a8b8ff" stroke-width="1.6" opacity="0.35"/>
+                    </svg>
+                </div>
+                <p class="md-howto" id="md-howto"></p>
+                <div class="md-mode-row">
+                    <button class="md-mode" id="md-btn-levels"></button>
+                    <button class="md-mode md-mode-daily" id="md-btn-daily"></button>
+                </div>
+                <p class="md-level-label" id="md-level-label"></p>
+                <div class="md-level-grid" id="md-level-grid"></div>
+                <p class="md-daily-best" id="md-daily-best"></p>
+                <div class="md-start-footer">
+                    <button class="md-icon-btn game-icon-btn" id="md-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                </div>
+            </div>
+
+            <!-- 过关面板 -->
+            <div class="md-overlay md-overlay-dim hidden game-overlay" id="md-clear">
+                <div class="md-card">
+                    <h2 class="md-card-title" id="md-clear-stars">☆☆☆</h2>
+                    <div class="md-card-line" id="md-clear-line"></div>
+                    <div class="md-btn-row">
+                        <button class="md-btn md-btn-primary game-btn" id="md-btn-next"><span></span></button>
+                        <button class="md-btn game-btn" id="md-btn-replay"><span></span></button>
+                        <button class="md-btn md-btn-ghost game-btn" id="md-btn-menu1"><span></span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每日结算 -->
+            <div class="md-overlay hidden game-overlay" id="md-over">
+                <h2 class="md-overlay-title" id="md-over-title"></h2>
+                <div class="md-over-score" id="md-over-score">0</div>
+                <div class="md-over-sub" id="md-over-sub"></div>
+                <div class="md-btn-row">
+                    <button class="md-btn game-btn" id="md-btn-copy"><span></span></button>
+                    <button class="md-btn md-btn-ghost game-btn" id="md-btn-menu2"><span></span></button>
+                </div>
+                <div class="md-lb">
+                    <div class="md-lb-title" id="md-lb-title"></div>
+                    <div class="md-lb-list" id="md-lb-list"></div>
+                    <div class="md-lb-status" id="md-lb-status"></div>
+                    <div class="md-username-row">
+                        <label class="md-username-label" for="md-username" id="md-username-label"></label>
+                        <input class="md-username" id="md-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+                <button class="md-btn md-btn-primary game-btn" id="md-btn-again"><span></span></button>
+            </div>
+        </div>
+
+            <aside class="md-sidebar game-sidebar">
+
+            <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
+            <div id="mdStatsPanels">
+                <div class="md-side-card game-side-card">
+                    <div class="md-side-title game-side-title" id="md-side-howto-title"></div>
+                    <p class="md-side-text game-side-text" id="md-side-howto"></p>
+                </div>
+                <div class="md-side-card game-side-card">
+                    <div class="md-side-title game-side-title" id="md-side-records-title"></div>
+                    <div class="md-side-records" id="md-side-records"></div>
+                </div>
+            </div>
+
+            <!-- 桌面侧栏专属：必须放在 #mdStatsPanels 外面 —— 那个节点会被
+                 js/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
+                 放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <div class="md-side-card game-side-card">
+                <div class="md-side-title game-side-title" id="md-side-legend-title"></div>
+                <div class="md-side-legend" id="md-side-legend"></div>
+            </div>
+
+            <div class="md-side-card game-side-card">
+                <nav class="more-games" id="mdSideMore"></nav>
+            </div>
+
+        </aside>
+    </main>
+
+
+
+    <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
+         统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
+         ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
+    <footer class="md-footer game-footer">
+        <p class="md-footer-hint game-footer-hint" id="md-hint"></p>
+        <div class="md-footer-actions game-footer-actions game-topbar-group">
+            <a class="md-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button type="button" class="md-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="mdMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+        <nav class="more-games game-footer-nav" id="mdMoreNav" hidden></nav>
+    </footer>
+    </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="mdStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="mdStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="mdStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="mdStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="mdStatsDrawerBody"></div>
+        </div>
+    </div>
+
+
+        <!-- ld+json placeholder — replaced by `npm run gen` -->
+        <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-maxwell-demon.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"麦克斯韦妖 Maxwell's Demon — Heat & Entropy Puzzle","url":currentUrl,"description":"麦克斯韦妖 Maxwell's Demon — an original thermodynamics puzzle. Keep the tiny door between two chambers: let fast molecules into the left, shove slow ones to the right, and a real temperature gap appears out of nothing. Every glance and every open door spends budget — information is not free. 20 handcrafted vessels plus a daily run for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"麦克斯韦妖 Maxwell's Demon — Heat & Entropy Puzzle","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+        <!-- registry:end seo-script -->
+    <script type="module" src="js/maxwell-demon.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

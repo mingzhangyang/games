@@ -61,6 +61,7 @@ main: resolve(__dirname, 'index.html'),
             "silk-dew": resolve(__dirname, 'silk-dew.html'),
             "bond-forge": resolve(__dirname, 'bond-forge.html'),
             "echo-cave": resolve(__dirname, 'echo-cave.html'),
+            "maxwell-demon": resolve(__dirname, 'maxwell-demon.html'),
             // registry:end inputs
         },
         output: {

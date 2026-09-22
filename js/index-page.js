@@ -106,6 +106,10 @@ const i18n = {
         echoCaveDesc: 'The cave is pitch dark until you sing: send out pulses, read the echoes bouncing off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily course.',
         echoCaveTag: 'Physics',
         echoCavePlay: 'Play ›',
+        maxwellDemonName: 'Maxwell\'s Demon',
+        maxwellDemonDesc: 'Two chambers, one tiny door. Pay to see which molecules are fast, pay again to open it — sort the gas until a temperature gap appears out of nowhere. 20 vessels plus a daily run.',
+        maxwellDemonTag: 'Physics',
+        maxwellDemonPlay: 'Play ›',
 
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
@@ -235,6 +239,10 @@ const i18n = {
         echoCaveDesc: '洞窟伸手不见五指，直到你开口：发出声波脉冲，读着看不见的岩壁传回的回声，收齐鸣唱的声晶，找到月光洞口。20 关手工洞穴 + 每日挑战。',
         echoCaveTag: '声学',
         echoCavePlay: '开始游戏 ›',
+        maxwellDemonName: '麦克斯韦妖',
+        maxwellDemonDesc: '两个腔室，一扇小门。花钱看清哪些分子是快的，再花钱开门——把气体分拣到温差凭空出现。20 个容器 + 每日挑战。',
+        maxwellDemonTag: '热力学',
+        maxwellDemonPlay: '开始游戏 ›',
 
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -369,6 +377,10 @@ function applyLanguage(lang) {
     document.getElementById('echo-cave-desc').textContent = t.echoCaveDesc;
     document.getElementById('echo-cave-tag').textContent = t.echoCaveTag;
     document.getElementById('echo-cave-play').textContent = t.echoCavePlay;
+    document.getElementById('maxwell-demon-name').textContent = t.maxwellDemonName;
+    document.getElementById('maxwell-demon-desc').textContent = t.maxwellDemonDesc;
+    document.getElementById('maxwell-demon-tag').textContent = t.maxwellDemonTag;
+    document.getElementById('maxwell-demon-play').textContent = t.maxwellDemonPlay;
 
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
@@ -451,6 +463,7 @@ function injectStructuredData() {
         { slug: 'silk-dew', name: 'Silkfall', description: 'Rope-physics puzzle — drag the anchor knot to thread a silken strand, steer the dew pearl past thorns and gales and let it fall into the jade vessel. 20 levels plus a daily course.' },
         { slug: 'bond-forge', name: 'Bond Forge', description: 'Molecule-building chemistry puzzle — drag atoms from the tray, snap them into bonds and satisfy every valence shell to forge the target formula. 20 levels plus a daily challenge.' },
         { slug: 'echo-cave', name: 'Echo Cave', description: 'Original sonar puzzle — the cave is pitch dark until you sing: emit pulses, read the echoes off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily course.' },
+        { slug: 'maxwell-demon', name: 'Maxwell\'s Demon', description: 'Original thermodynamics puzzle — keep the tiny door between two chambers, sort fast molecules from slow ones and build a temperature gap out of nothing. Every bit you learn is paid for. 20 vessels plus a daily run.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }

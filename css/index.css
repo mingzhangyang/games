@@ -142,6 +142,7 @@
         .card-icon--silk-dew  { background: rgb(88, 201, 160, 0.16); color: #58c9a0; }
         .card-icon--bond-forge { background: rgb(91, 141, 238, 0.16); color: #5b8dee; }
         .card-icon--echo-cave { background: rgb(111, 216, 255, 0.16); color: #6fd8ff; }
+        .card-icon--maxwell-demon { background: rgb(168, 184, 255, 0.16); color: #8ea8ff; }
 
         .card-title {
             font-size: 1em;

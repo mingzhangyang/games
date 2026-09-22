@@ -826,6 +826,56 @@
         "priority": "0.8"
       },
       "themeColor": "#050810"
+    },
+    {
+      "id": "maxwell-demon",
+      "prefix": "md",
+      "href": "maxwell-demon.html",
+      "entry": "js/maxwell-demon.js",
+      "emoji": "😈",
+      "title": {
+        "doc": "麦克斯韦妖 Maxwell's Demon — Heat & Entropy Puzzle",
+        "seo": "麦克斯韦妖 Maxwell's Demon — Heat & Entropy Puzzle"
+      },
+      "name": {
+        "en": "Maxwell's Demon",
+        "zh": "麦克斯韦妖"
+      },
+      "desc": {
+        "meta": "麦克斯韦妖 Maxwell's Demon — an original thermodynamics puzzle. Keep the tiny door between two chambers: let fast molecules into the left, shove slow ones to the right, and a real temperature gap appears out of nothing. Every glance and every open door spends budget — information is not free. 20 handcrafted vessels plus a daily run for the whole world.",
+        "og": "Sort fast from slow and build a temperature gap out of nothing. Every bit you learn is paid for.",
+        "twitter": "Keep the door. Sort the molecules. Pay for every bit you learn."
+      },
+      "genre": [
+        "PuzzleGame",
+        "EducationalGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "order": "asc",
+        "maxScore": 999,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "maxwell-demon",
+        "dailyTtlDays": 0
+      },
+      "stage": {
+        "w": 560,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "daily",
+        "priority": "0.8"
+      },
+      "themeColor": "#070a18"
     }
   ]
 }

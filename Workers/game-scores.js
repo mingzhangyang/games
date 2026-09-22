@@ -39,6 +39,7 @@ const DAILY_PATTERNS = [
   { re: /^silk-dew-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
   { re: /^bond-forge-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
   { re: /^echo-cave-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
+  { re: /^maxwell-demon-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
 ];
 // registry:end games-scores
 

@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="md-og-title md-og-desc">
+  <title id="md-og-title">Maxwell's Demon social card</title>
+  <desc id="md-og-desc">Social preview for 麦克斯韦妖 Maxwell's Demon — original thermodynamics puzzle about sorting molecules and paying for information.</desc>
+
+  <defs>
+    <linearGradient id="md-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#05070f"/>
+      <stop offset="0.6" stop-color="#070a18"/>
+      <stop offset="1" stop-color="#0d1330"/>
+    </linearGradient>
+    <radialGradient id="hotGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ff8a5c" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ff8a5c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="coldGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6fd8ff" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#6fd8ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="doorGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd34d" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#ffd34d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="md-heat" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff8a5c"/>
+      <stop offset="0.5" stop-color="#ffd34d"/>
+      <stop offset="1" stop-color="#6fd8ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#md-bg)"/>
+
+  <g fill="#9fdcff">
+    <circle cx="150" cy="85" r="2" opacity="0.4"/>
+    <circle cx="410" cy="55" r="1.5" opacity="0.35"/>
+    <circle cx="690" cy="100" r="1.8" opacity="0.4"/>
+    <circle cx="950" cy="65" r="1.3" opacity="0.35"/>
+    <circle cx="1120" cy="180" r="2" opacity="0.4"/>
+    <circle cx="90" cy="480" r="1.6" opacity="0.4"/>
+    <circle cx="1050" cy="500" r="1.6" opacity="0.4"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#8ea8ff" stroke-width="2.5"/>
+
+  <text x="88" y="172" fill="#f4f6ff" font-size="72" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Maxwell's Demon</text>
+  <text x="88" y="234" fill="#a8b8ff" font-size="38" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">麦克斯韦妖 · 原创热力学分拣解谜</text>
+  <text x="88" y="298" fill="#7f9ab8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Keep the tiny door: fast molecules to the left, slow to the right.</text>
+  <text x="88" y="342" fill="#7f9ab8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Every glance and every open door spends budget — information is not free.</text>
+
+  <!-- 场景示意：双腔容器 + 中央隔板小门 + 红（快）/ 蓝（慢）分子云 + 温差光谱带 -->
+  <g>
+    <!-- 容器 -->
+    <rect x="660" y="96" width="488" height="438" rx="22" fill="#0b1024" stroke="#8ea8ff" stroke-width="3"/>
+    <!-- 左腔暖辉 / 右腔冷辉 -->
+    <rect x="662" y="98" width="242" height="434" rx="21" fill="url(#hotGlow)"/>
+    <rect x="904" y="98" width="242" height="434" rx="21" fill="url(#coldGlow)"/>
+
+    <!-- 隔板 + 门洞 -->
+    <rect x="896" y="98" width="16" height="150" fill="#263352"/>
+    <rect x="896" y="382" width="16" height="150" fill="#263352"/>
+    <circle cx="904" cy="315" r="58" fill="url(#doorGlow)"/>
+    <rect x="892" y="292" width="24" height="46" rx="8" fill="#ffd34d" opacity="0.9"/>
+    <!-- 妖之眼 -->
+    <ellipse cx="904" cy="315" rx="15" ry="9" fill="#0b1024"/>
+    <circle cx="904" cy="315" r="4.6" fill="#ffd34d"/>
+
+    <!-- 左腔：快分子（暖红） -->
+    <g fill="#ff8a5c">
+      <circle cx="712" cy="170" r="7"/>
+      <circle cx="778" cy="232" r="7"/>
+      <circle cx="740" cy="330" r="7"/>
+      <circle cx="820" cy="180" r="7"/>
+      <circle cx="846" cy="404" r="7"/>
+      <circle cx="700" cy="448" r="7"/>
+      <circle cx="790" cy="470" r="7"/>
+      <circle cx="866" cy="250" r="7"/>
+    </g>
+    <g stroke="#ff8a5c" stroke-width="2.4" opacity="0.55" fill="none">
+      <path d="M712 170 l26 -14M778 232 l30 12M740 330 l-28 22M820 180 l30 -10M846 404 l-26 20M700 448 l24 24M790 470 l28 -18M866 250 l24 16"/>
+    </g>
+
+    <!-- 右腔：慢分子（冷蓝） -->
+    <g fill="#6fd8ff">
+      <circle cx="960" cy="196" r="7"/>
+      <circle cx="1024" cy="150" r="7"/>
+      <circle cx="1080" cy="252" r="7"/>
+      <circle cx="982" cy="356" r="7"/>
+      <circle cx="1050" cy="420" r="7"/>
+      <circle cx="1104" cy="452" r="7"/>
+      <circle cx="946" cy="472" r="7"/>
+      <circle cx="1010" cy="300" r="7"/>
+    </g>
+    <g stroke="#6fd8ff" stroke-width="2.4" opacity="0.5" fill="none">
+      <path d="M960 196 l14 -8M1024 150 l10 -12M1080 252 l-14 8M982 356 l12 12M1050 420 l-10 14M1104 452 l-12 8M946 472 l14 -6M1010 300 l-12 10"/>
+    </g>
+
+    <!-- 温差光谱带 -->
+    <rect x="700" y="510" width="400" height="14" rx="7" fill="url(#md-heat)" opacity="0.9"/>
+    <text x="700" y="500" fill="#dff2ff" font-size="20" font-weight="700" font-family="Segoe UI, system-ui, sans-serif">ΔT</text>
+  </g>
+
+  <text x="88" y="552" fill="#dff2ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">Sort the gas · Pay for every bit — Play in browser · maxwell-demon</text>
+</svg>
