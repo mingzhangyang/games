@@ -1,0 +1,505 @@
+/* ─────────────────────────────────────────────
+   回声洞窟 Echo Cave — sonar cave puzzle
+   深渊蓝黑底（#050810）+ 声呐青（#6fd8ff）+ 萤光琥珀（#ffd34d）双主色
+   紫罗兰 #a78bfa = 出口嗡鸣 / 荆棘红 #ff6b7a = 尖鸣警示
+   ───────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background:
+        radial-gradient(ellipse 70% 42% at 50% -8%, rgb(111, 216, 255, 0.09), transparent),
+        radial-gradient(ellipse 50% 30% at 85% 110%, rgb(167, 139, 250, 0.07), transparent),
+        linear-gradient(165deg, #050810 0%, var(--tok-bg-2) 55%, #0a1024 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--tok-text);
+
+    --tok-accent: #6fd8ff;
+    --tok-accent-2: #ffd34d;
+}
+
+.hidden { display: none !important; }
+
+/* ── 顶栏 HUD ── */
+
+.ec-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.ec-icon-btn:active { transform: scale(0.92); }
+
+.ec-hud-level {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #9fdcff;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.ec-cut-box {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    background: rgb(0, 0, 0, 0.4);
+    border: 1px solid rgb(111, 216, 255, 0.16);
+    border-radius: 11px;
+    padding: 6px 12px;
+}
+
+.ec-cut-value {
+    font-size: 19px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--tok-text);
+    min-width: 1.4ch;
+    text-align: center;
+}
+
+.ec-par {
+    font-size: 11.5px;
+    color: var(--tok-text-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── 舞台 ── */
+
+.ec-stage {
+    min-width: 280px;
+}
+
+#ec-canvas {
+    display: block;
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid rgb(111, 216, 255, 0.18);
+    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.6), 0 0 46px rgb(111, 216, 255, 0.1);
+    /* 核心输入是拖摇杆 / 轻点即脉冲；允许页面手势会让移动浏览器
+       在 pointer stream 归属明确前把它交给滚动容器。 */
+    touch-action: none;
+    cursor: pointer;
+}
+
+/* ── 手动脉冲钮（摇杆 / 轻点之外的第三条脉冲通道） ── */
+
+.ec-pulse-btn {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #050810;
+    background: radial-gradient(circle at 32% 30%, #a8e6ff, #6fd8ff 62%);
+    border: 1px solid rgb(255, 255, 255, 0.35);
+    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(111, 216, 255, 0.45);
+    cursor: pointer;
+    z-index: 15;
+    transition: transform 0.1s, box-shadow 0.15s;
+}
+
+.ec-pulse-btn:active {
+    transform: scale(0.9);
+    box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(111, 216, 255, 0.7);
+}
+
+/* ── 提示 ── */
+
+.ec-toast {
+    top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tok-bg-2);
+    background: linear-gradient(120deg, #a8e6ff, var(--tok-cyan));
+    padding: 7px 18px;
+    box-shadow: 0 8px 24px rgb(111, 216, 255, 0.35);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.ec-toast.is-on { opacity: 1; }
+
+/* ── 覆盖层 ── */
+
+.ec-overlay {
+    background: rgb(5, 8, 16, 0.92);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.ec-overlay-dim { background: rgb(5, 8, 16, 0.72); }
+
+.ec-title {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.15;
+    background: linear-gradient(120deg, #6fd8ff, #ffd34d 55%, #a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.ec-subtitle {
+    font-size: 12.5px;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: -6px;
+}
+
+.ec-hero {
+    line-height: 1;
+    animation: ec-bob 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgb(111, 216, 255, 0.35));
+}
+
+@keyframes ec-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.ec-howto {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--tok-text-soft);
+    max-width: 350px;
+}
+
+.ec-mode-row {
+    display: flex;
+    gap: 8px;
+}
+
+.ec-mode {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.ec-mode:hover { background: rgb(255, 255, 255, 0.13); }
+.ec-mode:active { transform: scale(0.95); }
+
+.ec-mode-daily {
+    background: linear-gradient(120deg, #6fd8ff, #a78bfa);
+    border: none;
+    box-shadow: 0 8px 24px rgb(167, 139, 250, 0.35);
+}
+
+.ec-level-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.ec-level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 360px;
+}
+
+/* ⚠️ 类名必须与 js/echo-cave.js 的 renderLevelGrid() 一致：那里写的是
+   `'ec-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
+   芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
+.ec-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    font-family: inherit;
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 6px 2px 4px;
+    cursor: pointer;
+    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
+    color: var(--tok-text);
+    transition: background 0.15s, transform 0.1s;
+}
+
+.ec-chip:hover { background: rgb(255, 255, 255, 0.11); }
+.ec-chip:active { transform: scale(0.93); }
+
+.ec-chip.is-done {
+    background: rgb(111, 216, 255, 0.12);
+    border-color: rgb(111, 216, 255, 0.38);
+}
+
+.ec-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
+
+.ec-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; color: var(--tok-gold); }
+
+.ec-daily-best {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #9fdcff;
+    min-height: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ec-start-footer { display: flex; gap: 10px; }
+
+/* ── 过关卡片 ── */
+
+.ec-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    background: rgb(8, 13, 26, 0.96);
+    border: 1px solid rgb(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 20px 22px;
+    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    animation: ec-card-in 0.26s ease-out;
+}
+
+@keyframes ec-card-in {
+    from { transform: scale(0.9) translateY(14px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.ec-card-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--tok-gold);
+}
+
+.ec-card-line {
+    font-size: 14px;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.ec-overlay-title { font-size: 26px; font-weight: 800; }
+
+.ec-over-score {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 26px rgb(255, 211, 77, 0.4);
+}
+
+.ec-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
+
+.ec-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.ec-btn {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.08);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 18px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.ec-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.ec-btn:active { transform: scale(0.96); }
+
+.ec-btn-primary {
+    background: linear-gradient(120deg, #6fd8ff, #a78bfa);
+    border: none;
+    box-shadow: 0 8px 24px rgb(111, 216, 255, 0.35);
+}
+
+.ec-btn-ghost { background: transparent; color: var(--tok-text-dim); }
+
+/* ── 排行榜 ── */
+
+.ec-lb {
+    width: 100%;
+    max-width: 330px;
+    background: rgb(255, 255, 255, 0.045);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.ec-lb-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.ec-lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 40px;
+    max-height: 168px;
+    overflow-y: auto;
+}
+
+.ec-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    padding: 3px 6px;
+    border-radius: 7px;
+}
+
+.ec-lb-row.ec-lb-top1 { background: rgb(252, 211, 77, 0.14); }
+.ec-lb-row.ec-lb-top2 { background: rgb(203, 213, 225, 0.10); }
+.ec-lb-row.ec-lb-top3 { background: rgb(111, 216, 255, 0.12); }
+
+.ec-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.ec-lb-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.ec-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.ec-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
+
+.ec-lb-status {
+    min-height: 16px;
+    font-size: 11.5px;
+    color: var(--tok-text-mute);
+    margin-top: 4px;
+}
+
+.ec-username-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.ec-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
+
+.ec-username {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 9px;
+    padding: 7px 10px;
+    outline: none;
+}
+
+.ec-username:focus { border-color: rgb(111, 216, 255, 0.5); }
+
+/* ── 侧栏：记录行 ── */
+
+.ec-side-records { display: flex; flex-direction: column; }
+
+.ec-side-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+    padding: 4px 0;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.ec-side-k { color: var(--tok-text-dim); }
+.ec-side-v { color: var(--tok-text); font-weight: 700; }
+
+/* ── 侧栏：声学图例 ──
+   颜色必须与 js/echo-cave.js 渲染层的语义色一一对应：
+   岩壁 #8ea0b8 / 苔藓 #7fe0b0 / 声晶 #ffd34d / 出口 #a78bfa / 荆棘 #ff6b7a / 法则 = 青色波环 */
+
+.ec-side-legend { display: flex; flex-direction: column; gap: 2px; }
+
+.ec-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    padding: 3px 0;
+    color: var(--tok-text-dim);
+}
+
+.ec-legend-text { flex: 1; min-width: 0; line-height: 1.45; }
+
+.ec-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ec-legend-wall { background: #8ea0b8; }
+.ec-legend-moss { background: #7fe0b0; }
+.ec-legend-crystal { background: #ffd34d; box-shadow: 0 0 8px rgb(255, 211, 77, 0.55); }
+.ec-legend-exit { background: #a78bfa; box-shadow: 0 0 8px rgb(167, 139, 250, 0.55); }
+.ec-legend-thorn { background: #ff6b7a; }
+
+/* 「法则」用空心波环表示：不被单色语义绑定的通用声学行为 */
+.ec-legend-law {
+    background: transparent;
+    border: 2px solid #6fd8ff;
+    box-shadow: 0 0 8px rgb(111, 216, 255, 0.4);
+}
+
+/* ── 响应式 ── */
+
+@media (width <= 480px) {
+    .ec-hud-level { font-size: 12px; }
+    .ec-cut-value { font-size: 16px; }
+    .ec-title { font-size: 27px; }
+    .ec-over-score { font-size: 34px; }
+    .ec-howto { font-size: 12px; }
+    .ec-mode { font-size: 13px; padding: 10px 15px; }
+    .ec-level-grid { gap: 5px; }
+    .ec-pulse-btn { width: 58px; height: 58px; right: 12px; bottom: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ec-hero, .ec-card { animation: none !important; }
+    .ec-toast { transition: none; }
+    .ec-btn, .ec-icon-btn, .ec-mode, .ec-chip, .ec-pulse-btn { transition: none; }
+}
+
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
+   480×640 竖版逻辑场 → --frame-ratio: 0.75；
+   舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
+.ec-shell {
+    --frame-max-wide: 940px;
+    --frame-stage: 480px;
+    --frame-side: 300px;
+    --frame-side-gap: 14px;
+    --frame-ratio: 0.75;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}

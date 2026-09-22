@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#050810">
+    <meta name="description" content="回声洞窟 Echo Cave — an original sonar puzzle. The cave is pitch black until you sing: emit pulses, watch the wavefronts bounce back off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily run for the whole world.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/echo-cave.html">
+    <meta property="og:title" content="回声洞窟 Echo Cave — Sonar Cave Puzzle">
+    <meta property="og:description" content="Sing into the dark and read the echoes. 20 handcrafted caves — fewer pulses, more stars.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-echo-cave.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/echo-cave.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="回声洞窟 Echo Cave — Sonar Cave Puzzle">
+    <meta name="twitter:description" content="Ping the darkness and read the echoes.">
+    <meta name="twitter:image" content="assets/seo/og-echo-cave.svg">
+    <title>回声洞窟 Echo Cave — Sonar Cave Puzzle</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23050810'/%3E%3Ccircle cx='22' cy='32' r='3.5' fill='%23ffd34d'/%3E%3Ccircle cx='22' cy='32' r='9' fill='none' stroke='%236fd8ff' stroke-width='2' opacity='.9'/%3E%3Ccircle cx='22' cy='32' r='16' fill='none' stroke='%236fd8ff' stroke-width='2' opacity='.55'/%3E%3Ccircle cx='22' cy='32' r='23' fill='none' stroke='%236fd8ff' stroke-width='2' opacity='.3'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/echo-cave.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="ec-shell game-shell">
+        <!-- 顶栏 HUD -->
+        <header class="ec-topbar game-topbar">
+            <div class="ec-topbar-lead game-topbar-group">
+                <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
+                <button data-chrome="home" class="ec-icon-btn game-icon-btn" id="ec-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <!-- 中槽：洞穴 / 脉冲 HUD -->
+            <div class="ec-topbar-center game-topbar-center">
+                <div class="ec-hud-level" id="ec-hud-level">Cave 1/3</div>
+                <div class="ec-cut-box">
+                    <span class="ec-cut-value" id="ec-pulses">0</span>
+                    <span class="ec-par" id="ec-par">Par 1</span>
+                </div>
+            </div>
+            <!-- 右簇固定顺序：专属 → stats → sound -->
+            <div class="ec-topbar-actions game-topbar-group">
+                <button class="ec-icon-btn game-icon-btn" id="ec-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button data-chrome="stats" type="button" class="ec-icon-btn game-icon-btn ec-stats-btn game-stats-btn" id="ecStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="ecStatsDrawer"></button>
+                <button type="button" class="ec-icon-btn game-icon-btn" id="ec-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+            </div>
+        </header>
+
+        <!-- 舞台 -->
+        <main class="ec-main game-main">
+        <div class="ec-stage game-stage" id="ec-stage">
+            <canvas class="game-canvas" id="ec-canvas" width="480" height="640"></canvas>
+
+            <!-- 提示 -->
+            <div class="ec-toast hidden game-toast" id="ec-toast"></div>
+
+            <!-- 手动脉冲钮：摇杆 / 轻点之外的第二条脉冲通道 -->
+            <button type="button" class="ec-pulse-btn" id="ec-pulse-btn" title="Pulse" aria-label="Pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>
+                    <path d="M12 6.4a5.6 5.6 0 0 1 5.6 5.6"/>
+                    <path d="M12 2.8a9.2 9.2 0 0 1 9.2 9.2"/>
+                    <path d="M12 6.4a5.6 5.6 0 0 0-5.6 5.6"/>
+                    <path d="M12 2.8a9.2 9.2 0 0 0-9.2 9.2"/>
+                </svg>
+            </button>
+
+            <!-- 开始界面 -->
+            <div class="ec-overlay game-overlay" id="ec-start">
+                <h1 class="ec-title" id="ec-title">Echo Cave</h1>
+                <p class="ec-subtitle" id="ec-subtitle">Sing · Listen · Find</p>
+                <div class="ec-hero" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 64 64" fill="none">
+                        <circle cx="24" cy="32" r="4" fill="#ffd34d"/>
+                        <circle cx="24" cy="32" r="11" stroke="#6fd8ff" stroke-width="2.4" opacity=".9"/>
+                        <circle cx="24" cy="32" r="19" stroke="#6fd8ff" stroke-width="2.2" opacity=".55"/>
+                        <circle cx="24" cy="32" r="27" stroke="#6fd8ff" stroke-width="2" opacity=".3"/>
+                        <path d="M44 20c4 3.4 6.4 7.4 6.4 12s-2.4 8.6-6.4 12" stroke="#a78bfa" stroke-width="2.4" stroke-linecap="round"/>
+                        <path d="M49 14c6 4.8 9.4 10.8 9.4 18s-3.4 13.2-9.4 18" stroke="#a78bfa" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+                    </svg>
+                </div>
+                <p class="ec-howto" id="ec-howto"></p>
+                <div class="ec-mode-row">
+                    <button class="ec-mode" id="ec-btn-levels"></button>
+                    <button class="ec-mode ec-mode-daily" id="ec-btn-daily"></button>
+                </div>
+                <p class="ec-level-label" id="ec-level-label"></p>
+                <div class="ec-level-grid" id="ec-level-grid"></div>
+                <p class="ec-daily-best" id="ec-daily-best"></p>
+                <div class="ec-start-footer">
+                    <button class="ec-icon-btn game-icon-btn" id="ec-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                </div>
+            </div>
+
+            <!-- 过关面板 -->
+            <div class="ec-overlay ec-overlay-dim hidden game-overlay" id="ec-clear">
+                <div class="ec-card">
+                    <h2 class="ec-card-title" id="ec-clear-stars">☆☆☆</h2>
+                    <div class="ec-card-line" id="ec-clear-line"></div>
+                    <div class="ec-btn-row">
+                        <button class="ec-btn ec-btn-primary game-btn" id="ec-btn-next"><span></span></button>
+                        <button class="ec-btn game-btn" id="ec-btn-replay"><span></span></button>
+                        <button class="ec-btn ec-btn-ghost game-btn" id="ec-btn-menu1"><span></span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每日结算 -->
+            <div class="ec-overlay hidden game-overlay" id="ec-over">
+                <h2 class="ec-overlay-title" id="ec-over-title"></h2>
+                <div class="ec-over-score" id="ec-over-score">0</div>
+                <div class="ec-over-sub" id="ec-over-sub"></div>
+                <div class="ec-btn-row">
+                    <button class="ec-btn game-btn" id="ec-btn-copy"><span></span></button>
+                    <button class="ec-btn ec-btn-ghost game-btn" id="ec-btn-menu2"><span></span></button>
+                </div>
+                <div class="ec-lb">
+                    <div class="ec-lb-title" id="ec-lb-title"></div>
+                    <div class="ec-lb-list" id="ec-lb-list"></div>
+                    <div class="ec-lb-status" id="ec-lb-status"></div>
+                    <div class="ec-username-row">
+                        <label class="ec-username-label" for="ec-username" id="ec-username-label"></label>
+                        <input class="ec-username" id="ec-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+                <button class="ec-btn ec-btn-primary game-btn" id="ec-btn-again"><span></span></button>
+            </div>
+        </div>
+
+            <aside class="ec-sidebar game-sidebar">
+
+            <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
+            <div id="ecStatsPanels">
+                <div class="ec-side-card game-side-card">
+                    <div class="ec-side-title game-side-title" id="ec-side-howto-title"></div>
+                    <p class="ec-side-text game-side-text" id="ec-side-howto"></p>
+                </div>
+                <div class="ec-side-card game-side-card">
+                    <div class="ec-side-title game-side-title" id="ec-side-records-title"></div>
+                    <div class="ec-side-records" id="ec-side-records"></div>
+                </div>
+            </div>
+
+            <!-- 桌面侧栏专属：必须放在 #ecStatsPanels 外面 —— 那个节点会被
+                 js/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
+                 放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <div class="ec-side-card game-side-card">
+                <div class="ec-side-title game-side-title" id="ec-side-legend-title"></div>
+                <div class="ec-side-legend" id="ec-side-legend"></div>
+            </div>
+
+            <div class="ec-side-card game-side-card">
+                <nav class="more-games" id="ecSideMore"></nav>
+            </div>
+
+        </aside>
+    </main>
+
+
+
+    <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
+         统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
+         ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
+    <footer class="ec-footer game-footer">
+        <p class="ec-footer-hint game-footer-hint" id="ec-hint"></p>
+        <div class="ec-footer-actions game-footer-actions game-topbar-group">
+            <a class="ec-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button type="button" class="ec-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="ecMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+        <nav class="more-games game-footer-nav" id="ecMoreNav" hidden></nav>
+    </footer>
+    </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="ecStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="ecStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="ecStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="ecStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="ecStatsDrawerBody"></div>
+        </div>
+    </div>
+
+
+        <!-- ld+json placeholder — replaced by `npm run gen` -->
+        <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-echo-cave.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"回声洞窟 Echo Cave — Sonar Cave Puzzle","url":currentUrl,"description":"回声洞窟 Echo Cave — an original sonar puzzle. The cave is pitch black until you sing: emit pulses, watch the wavefronts bounce back off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily run for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"回声洞窟 Echo Cave — Sonar Cave Puzzle","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+        <!-- registry:end seo-script -->
+    <script type="module" src="js/echo-cave.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

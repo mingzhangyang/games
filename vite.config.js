@@ -60,6 +60,7 @@ main: resolve(__dirname, 'index.html'),
             "circuit": resolve(__dirname, 'circuit.html'),
             "silk-dew": resolve(__dirname, 'silk-dew.html'),
             "bond-forge": resolve(__dirname, 'bond-forge.html'),
+            "echo-cave": resolve(__dirname, 'echo-cave.html'),
             // registry:end inputs
         },
         output: {

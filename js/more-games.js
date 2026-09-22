@@ -19,6 +19,7 @@ export const MORE_GAMES = [
     { href: 'circuit.html', emoji: '💡', en: "Circuit", zh: "电路谜题" },
     { href: 'silk-dew.html', emoji: '💧', en: "Silkfall", zh: "垂丝引露" },
     { href: 'bond-forge.html', emoji: '⚗️', en: "Bond Forge", zh: "键合工坊" },
+    { href: 'echo-cave.html', emoji: '🦇', en: "Echo Cave", zh: "回声洞窟" },
 ];
 // registry:end more-games
 

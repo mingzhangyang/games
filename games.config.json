@@ -776,6 +776,56 @@
         "priority": "0.8"
       },
       "themeColor": "#0d1024"
+    },
+    {
+      "id": "echo-cave",
+      "prefix": "ec",
+      "href": "echo-cave.html",
+      "entry": "js/echo-cave.js",
+      "emoji": "🦇",
+      "title": {
+        "doc": "回声洞窟 Echo Cave — Sonar Cave Puzzle",
+        "seo": "回声洞窟 Echo Cave — Sonar Cave Puzzle"
+      },
+      "name": {
+        "en": "Echo Cave",
+        "zh": "回声洞窟"
+      },
+      "desc": {
+        "meta": "回声洞窟 Echo Cave — an original sonar puzzle. The cave is pitch black until you sing: emit pulses, watch the wavefronts bounce back off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily run for the whole world.",
+        "og": "Sing into the dark and read the echoes. 20 handcrafted caves — fewer pulses, more stars.",
+        "twitter": "Ping the darkness and read the echoes."
+      },
+      "genre": [
+        "PuzzleGame",
+        "EducationalGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "order": "asc",
+        "maxScore": 999,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "echo-cave",
+        "dailyTtlDays": 0
+      },
+      "stage": {
+        "w": 480,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "daily",
+        "priority": "0.8"
+      },
+      "themeColor": "#050810"
     }
   ]
 }

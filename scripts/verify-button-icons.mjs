@@ -26,6 +26,7 @@ const TARGETS = {
     'circuit': ['cc-btn-next', 'cc-btn-replay', 'cc-btn-menu1', 'cc-btn-copy', 'cc-btn-menu2', 'cc-btn-again'],
     'silk-dew': ['sd-btn-next', 'sd-btn-replay', 'sd-btn-menu1', 'sd-btn-copy', 'sd-btn-menu2', 'sd-btn-again'],
     'bond-forge': ['bf-btn-next', 'bf-btn-replay', 'bf-btn-menu1', 'bf-btn-copy', 'bf-btn-menu2', 'bf-btn-again'],
+    'echo-cave': ['ec-btn-next', 'ec-btn-replay', 'ec-btn-menu1', 'ec-btn-copy', 'ec-btn-menu2', 'ec-btn-again'],
 };
 
 // TARGETS 是每页的按钮 id，派生不出来，但漏页必须红：新游戏挂了 topbar cap 却

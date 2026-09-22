@@ -24,6 +24,7 @@ const AUGMENT = {
     'circuit':           { gameVar: 'ccGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'silk-dew':          { gameVar: 'sdGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'bond-forge':        { gameVar: 'bfGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
+    'echo-cave':         { gameVar: 'ecGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
 };
 // ⚠ 曾经这里写的是 `.filter(g => AUGMENT[g.id])` —— 手工表静默收窄注册表：
 // 新游戏挂了 drawer cap 却忘了补 AUGMENT，校验器当它不存在，抽屉没接也全绿。
@@ -48,8 +49,13 @@ const DESKTOP = { width: 1280, height: 900, deviceScaleFactor: 1, hasTouch: fals
 const NAV_TIMEOUT = Number(process.env.STATS_NAV_TIMEOUT || 25000);
 const DEADLINE = Date.now() + Number(process.env.STATS_DEADLINE_MS || 300000);
 
+// ⚠️ waitUntil 用 domcontentloaded（与 verify-chrome 一致），不用 networkidle2：
+// sword-flight 是唯一外链 Google Fonts 的页面，字体的跨域请求恰好横跨 load 事件时，
+// networkidle2 的空闲判定会被卡死（CDP 层 inflight=0 也不返回），25s 超时炸整轮 ——
+// 正是上面注释里"前 5 页全绿，第 6 页不返回"的那个坑的真实成因之一。
+// dcl 后脚本自己 sleep 900ms 且全部断言都是显式 DOM 等待，不依赖网络空闲语义。
 const gotoPage = async (page, url) => {
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
 };
 
 // 返回 true 表示预算已耗尽，调用方应立即收尾
@@ -91,7 +97,13 @@ for (const P of PAGES) {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.setViewport(MOBILE);
-    await gotoPage(page, `${BASE}/${P.name}.html`);
+    try {
+        await gotoPage(page, `${BASE}/${P.name}.html`);
+    } catch (e) {
+        check(false, '页面导航失败，跳过该页（不拖死整轮）', String(e.message).split('\n')[0]);
+        await page.close().catch(() => {});
+        continue;
+    }
     await new Promise(r => setTimeout(r, 900));
 
     const ids = {
@@ -343,7 +355,14 @@ for (const P of PAGES) {
     const dErr = [];
     d.on('pageerror', e => dErr.push(e.message));
     await d.setViewport(DESKTOP);
-    await gotoPage(d, `${BASE}/${P.name}.html`);
+    try {
+        await gotoPage(d, `${BASE}/${P.name}.html`);
+    } catch (e) {
+        check(false, '桌面端导航失败，跳过该页（不拖死整轮）', String(e.message).split('\n')[0]);
+        await page.close().catch(() => {});
+        await d.close().catch(() => {});
+        continue;
+    }
     await new Promise(r => setTimeout(r, 800));
     const ds = await d.evaluate((ids) => {
         const drawer = document.getElementById(ids.drawer);
@@ -383,7 +402,7 @@ for (const P of PAGES) {
         const lp = await browser.newPage();
         await lp.setViewport(MOBILE);
         await lp.evaluateOnNewDocument((l) => { try { localStorage.setItem('site_lang', l); } catch (e) {} }, lang);
-        await lp.goto(`${BASE}/${P.name}.html`, { waitUntil: 'networkidle2', timeout: NAV_TIMEOUT });
+        await lp.goto(`${BASE}/${P.name}.html`, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
         await new Promise(r => setTimeout(r, 500));
         const ls = await lp.evaluate(() => {
             const t = document.querySelector('[id$="StatsToggle"]');

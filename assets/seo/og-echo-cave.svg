@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="ec-og-title ec-og-desc">
+  <title id="ec-og-title">Echo Cave social card</title>
+  <desc id="ec-og-desc">Social preview for 回声洞窟 Echo Cave — original sonar cave puzzle.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#04060c"/>
+      <stop offset="0.6" stop-color="#050810"/>
+      <stop offset="1" stop-color="#0a1024"/>
+    </linearGradient>
+    <radialGradient id="fireflyGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd34d" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffd34d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="exitGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="crystal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9a0"/>
+      <stop offset="1" stop-color="#ffb84d"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g fill="#9fdcff">
+    <circle cx="150" cy="85" r="2" opacity="0.5"/>
+    <circle cx="410" cy="55" r="1.5" opacity="0.4"/>
+    <circle cx="690" cy="100" r="1.8" opacity="0.45"/>
+    <circle cx="950" cy="65" r="1.3" opacity="0.4"/>
+    <circle cx="1120" cy="180" r="2" opacity="0.5"/>
+    <circle cx="90" cy="480" r="1.6" opacity="0.45"/>
+    <circle cx="1050" cy="500" r="1.6" opacity="0.45"/>
+  </g>
+
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#6fd8ff" stroke-width="2.5"/>
+
+  <text x="88" y="175" fill="#f4f6ff" font-size="76" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Echo Cave</text>
+  <text x="88" y="238" fill="#6fd8ff" font-size="38" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">回声洞窟 · 原创声呐洞窟解谜</text>
+  <text x="88" y="300" fill="#7f9ab8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">The cave is pitch black until you sing.</text>
+  <text x="88" y="344" fill="#7f9ab8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Read the echoes, gather the crystals, find the exit.</text>
+
+  <!-- 场景示意：萤火虫 → 声波环 → 岩壁剖面 → 声晶 / 苔藓 / 荆棘 / 出口拱门 -->
+  <g>
+    <!-- 岩壁剖面（右侧洞穴轮廓） -->
+    <path d="M660 96 L1148 96 L1148 534 L660 534 L660 470 L716 470 L716 420 L780 420 L780 330 L720 330 L720 250 L660 250 Z"
+          fill="#0d1626" stroke="#8ea0b8" stroke-width="3"/>
+    <!-- 出口拱门（月夜微光） -->
+    <circle cx="1050" cy="430" r="86" fill="url(#exitGlow)"/>
+    <path d="M1012 470 l0 -52 a38 38 0 0 1 76 0 l0 52 z" fill="#1a1233" stroke="#a78bfa" stroke-width="3"/>
+    <path d="M1028 470 l0 -44 a22 22 0 0 1 44 0 l0 44 z" fill="#a78bfa" opacity="0.35"/>
+    <!-- 荆棘 -->
+    <g stroke="#ff6b7a" stroke-width="2.5" fill="#3a1220">
+      <circle cx="800" cy="180" r="14"/>
+      <circle cx="840" cy="180" r="14"/>
+      <circle cx="820" cy="208" r="14"/>
+    </g>
+    <!-- 吸音苔藓 -->
+    <g fill="#7fe0b0" opacity="0.9">
+      <circle cx="748" cy="300" r="7"/>
+      <circle cx="762" cy="292" r="5"/>
+      <circle cx="736" cy="290" r="5"/>
+    </g>
+    <!-- 声晶（琥珀菱形） -->
+    <path d="M900 320 l20 26 -20 26 -20 -26 z" fill="url(#crystal)" stroke="#ffd34d" stroke-width="2"/>
+    <circle cx="900" cy="346" r="40" fill="none" stroke="#ffd34d" stroke-width="2" opacity="0.5"/>
+    <circle cx="900" cy="346" r="58" fill="none" stroke="#ffd34d" stroke-width="1.6" opacity="0.28"/>
+    <!-- 萤火虫玩家 + 声呐波环 -->
+    <circle cx="780" cy="460" r="64" fill="url(#fireflyGlow)"/>
+    <circle cx="780" cy="460" r="10" fill="#ffd34d"/>
+    <circle cx="780" cy="460" r="7" fill="#fff3c4"/>
+    <circle cx="780" cy="460" r="30" fill="none" stroke="#6fd8ff" stroke-width="2.6" opacity="0.85"/>
+    <circle cx="780" cy="460" r="52" fill="none" stroke="#6fd8ff" stroke-width="2.2" opacity="0.5"/>
+    <circle cx="780" cy="460" r="74" fill="none" stroke="#6fd8ff" stroke-width="1.8" opacity="0.3"/>
+  </g>
+
+  <text x="88" y="552" fill="#dff2ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">Bat echo — Play in browser · echo-cave</text>
+</svg>
