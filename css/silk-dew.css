@@ -75,7 +75,9 @@ body {
     border-radius: 18px;
     border: 1px solid rgb(88, 201, 160, 0.18);
     box-shadow: 0 18px 50px rgb(0, 0, 0, 0.5), 0 0 46px rgb(88, 201, 160, 0.12);
-    touch-action: manipulation;
+    /* Silkfall 的核心输入是按住并拖动；允许页面手势会让移动浏览器
+       在拖动方向明确前把 pointer stream 交给滚动容器。 */
+    touch-action: none;
     cursor: pointer;
 }
 

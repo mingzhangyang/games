@@ -33,6 +33,7 @@ PAGES = [
          frame=dict(wide="940px", stage="440px", side="300px", gap="14px")),
     dict(html="sword-flight.html", css="css/sword-flight.css", p="sf",
          js="js/sword-flight.js", canvas=["sf-canvas"],
+         fill=True,
          frame=dict(wide="960px", stage="480px", side="320px", gap="10px"),
          extra_class={"sf-shortcut-item": "game-side-kbd-row", "sf-key": "game-side-kbd"}),
     dict(html="needle-awn.html", css="css/needle-awn.css", p="na",
