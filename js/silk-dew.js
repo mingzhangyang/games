@@ -1020,7 +1020,11 @@ class SilkfallGame {
 
     draw() {
         const ctx = this.ctx;
-        const s = (this.renderScale || 1) * (this.dpr || 1);
+        // `renderScale` already contains the CSS scale and device-pixel ratio
+        // used to size the backing store in resize(). Multiplying by `dpr`
+        // again makes high-DPR mobile browsers draw the logical scene ~2x
+        // too large, so ropes and the dew pearl get clipped at the right edge.
+        const s = this.renderScale || 1;
         ctx.setTransform(s, 0, 0, s, 0, 0);
         ctx.clearRect(0, 0, W, H);
 
