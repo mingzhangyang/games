@@ -141,7 +141,7 @@ overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` �
 | gravity-slingshot | 520 / 940 | 460 | 300 | 竖版画布 480×640 |
 | hoop-shot | 520 / 940 | 440 | 300 | `game-stage--fill` |
 | planet-merge | 520 / 940 | 440 | 300 | `game-stage--fill` |
-| sword-flight | 520 / 960 | 480 | 320 | 舞台尺寸由 `--frame-stage` 收敛（原为 `max-width:100%`，移动端曾溢出） |
+| sword-flight | 520 / 960 | 480 | 320 | `game-stage--fill`；竖屏移动端填充顶栏与页脚之间的剩余高度 |
 | needle-awn | 520 / 960 | 480 | 320 | 同 sf |
 | tower-defense | 520 / 940 | 460 | 300 | 舞台宽度保留按视口高度自适应的表达式 |
 | reversi | 560 / 820 | 460 | — | DOM 棋盘 |

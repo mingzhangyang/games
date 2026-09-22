@@ -248,7 +248,65 @@ const drawerOk = await page.evaluate(() => {
 if (!drawerOk.ok) fail(`抽屉不可用: ${drawerOk.why}`);
 else if (!drawerOk.open) fail('点击 Stats 后抽屉未打开');
 
-/* ── 8. 噪声过滤后的页面错误 ──
+/* ── 8. 移动端真实触控拖拽回归 ──
+ * page.mouse 会产生 pointerType=mouse，无法覆盖手机上「按住锚结 → 滑动」的路径。
+ * 这里用 CDP touch events，让 Chromium 走真实的 touch/pointer 兼容链。 */
+const mobile = await browser.newPage();
+await mobile.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+await mobile.evaluateOnNewDocument(() => {
+    try { localStorage.clear(); } catch (e) { /* ignore */ }
+});
+await mobile.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 500));
+await mobile.evaluate(() => window.sdGame.startLevel(0));
+const mobileDrag = await mobile.evaluate(() => {
+    const c = document.getElementById('sd-canvas');
+    const r = c.getBoundingClientRect();
+    const a = window.sdGame.world.ropes[0].particles[0];
+    return {
+        rect: { left: r.left, top: r.top, width: r.width, height: r.height },
+        from: { x: r.left + a.x / 480 * r.width, y: r.top + a.y / 640 * r.height },
+    };
+});
+const touchClient = await mobile.createCDPSession();
+const touchPoint = (x, y) => ({ x, y, radiusX: 1, radiusY: 1, force: 1 });
+const touchTo = {
+    x: mobileDrag.from.x + Math.min(120, mobileDrag.rect.width * 0.28),
+    y: mobileDrag.from.y + 40,
+};
+await touchClient.send('Input.dispatchTouchEvent', {
+    type: 'touchStart', touchPoints: [touchPoint(mobileDrag.from.x, mobileDrag.from.y)], modifiers: 0,
+});
+for (let i = 1; i <= 16; i++) {
+    const k = i / 16;
+    await touchClient.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [touchPoint(
+            mobileDrag.from.x + (touchTo.x - mobileDrag.from.x) * k,
+            mobileDrag.from.y + (touchTo.y - mobileDrag.from.y) * k,
+        )],
+        modifiers: 0,
+    });
+    await new Promise(r => setTimeout(r, 12));
+}
+await touchClient.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [], modifiers: 0 });
+await new Promise(r => setTimeout(r, 180));
+const mobileAfter = await mobile.evaluate(() => ({
+    state: window.sdGame.state,
+    drags: Number(document.getElementById('sd-drags').textContent),
+    dragging: window.sdGame.isDragging,
+    scrollHeight: document.documentElement.scrollHeight,
+    viewportHeight: innerHeight,
+}));
+if (mobileAfter.state !== 'playing') fail(`移动端触控启动后 state=${mobileAfter.state}`);
+if (mobileAfter.drags < 1) fail(`移动端真实触控未抓住锚结（drags=${mobileAfter.drags}）`);
+if (mobileAfter.dragging) fail('移动端触控结束后仍卡在 dragging 状态');
+if (mobileAfter.scrollHeight > mobileAfter.viewportHeight) {
+    fail(`移动端触控测试页面产生滚动溢出: ${mobileAfter.scrollHeight} > ${mobileAfter.viewportHeight}`);
+}
+await mobile.close();
+
+/* ── 9. 噪声过滤后的页面错误 ──
  * 源码树直跑的已知 404（与既有 smoke 口径一致）。 */
 const IGNORABLE = [/analytics\.js/, /sw-register\.js/, /manifest/i, /CORS/i, /game-scores/i,
     /games-analytics/, /apple-touch-icon/, /favicon/i];

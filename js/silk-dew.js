@@ -266,6 +266,7 @@ class SilkfallGame {
         this.particles = [];
         this.starfield = this.buildStarfield();
         this.pointerId = null;
+        this.dragInput = null;
         this.isDragging = false;
         this.dragMoved = false;
 
@@ -795,42 +796,102 @@ class SilkfallGame {
     bindInput() {
         const c = this.canvas;
         c.style.touchAction = 'none';
-        c.addEventListener('pointerdown', (e) => {
-            if (this.state !== 'playing' || this.isPaused) return;
-            const p = this.toLogical(e);
+        const prevent = (e) => {
+            if (e.cancelable) e.preventDefault();
+        };
+
+        // Pointer Events 是主路径；Touch Events 作为移动浏览器兼容回退。
+        // 两套事件在部分浏览器上会同时派发，isDragging 让它们不会重复计数。
+        const startAt = (point, id, e, capture) => {
+            if (this.state !== 'playing' || this.isPaused || this.isDragging) return false;
+            const p = this.toLogical(point);
             if (this.world && beginDrag(this.world, p.x, p.y)) {
-                this.pointerId = e.pointerId;
+                this.pointerId = id;
+                this.dragInput = capture
+                    ? (e.pointerType === 'touch' ? 'pointer-touch' : 'pointer')
+                    : 'touch';
                 this.isDragging = true;
                 this.dragMoved = false;
-                c.setPointerCapture(e.pointerId);
+                if (capture && typeof c.setPointerCapture === 'function') {
+                    // 老版本 iOS 对 canvas 的 pointer capture 可能抛异常；
+                    // 不应因此中断已经开始的拖拽，touch/window 回退仍会接管后续事件。
+                    try { c.setPointerCapture(id); } catch { /* ignore */ }
+                }
                 Sfx.grab();
                 this.drags = this.world.drags;
                 this.updateHud();
-                e.preventDefault();
-                return;
+                prevent(e);
+                return true;
             }
             // 未抓住锚结：若点到气泡则点破（点破不计入拖拽次数）
             if (this.world && bubbleAt(this.world, p.x, p.y)) {
                 popBubble(this.world, p.x, p.y);
-                e.preventDefault();
+                prevent(e);
+                return true;
             }
-        });
-        c.addEventListener('pointermove', (e) => {
-            if (!this.isDragging || e.pointerId !== this.pointerId) return;
-            const p = this.toLogical(e);
+            return false;
+        };
+
+        const moveAt = (point, id, e, source = 'pointer') => {
+            const touchFallback = source === 'touch' && this.dragInput === 'pointer-touch';
+            if (!this.isDragging || (id !== this.pointerId && !touchFallback)) return false;
+            const p = this.toLogical(point);
             if (this.world) moveDrag(this.world, p.x, p.y);
             this.dragMoved = true;
-            e.preventDefault();
-        });
-        const up = (e) => {
-            if (e.pointerId !== this.pointerId) return;
+            prevent(e);
+            return true;
+        };
+
+        const endAt = (id, e, source = 'pointer') => {
+            const touchFallback = source === 'touch' && this.dragInput === 'pointer-touch';
+            if (!this.isDragging || (id !== this.pointerId && !touchFallback)) return false;
             if (this.world) endDrag(this.world);
             this.isDragging = false;
             this.pointerId = null;
+            this.dragInput = null;
             Sfx.release();
+            prevent(e);
+            return true;
         };
-        c.addEventListener('pointerup', up);
-        c.addEventListener('pointercancel', up);
+
+        c.addEventListener('pointerdown', (e) => startAt(e, e.pointerId, e, true));
+        c.addEventListener('pointermove', (e) => moveAt(e, e.pointerId, e));
+        c.addEventListener('pointerup', (e) => endAt(e.pointerId, e));
+        c.addEventListener('pointercancel', (e) => endAt(e.pointerId, e));
+        c.addEventListener('lostpointercapture', (e) => endAt(e.pointerId, e));
+        // 如果 pointer capture 不可用，窗口级 pointerup 仍能收尾，避免卡在 dragging 状态。
+        window.addEventListener('pointerup', (e) => endAt(e.pointerId, e));
+        window.addEventListener('pointercancel', (e) => endAt(e.pointerId, e));
+
+        const firstTouch = (e) => e.changedTouches && e.changedTouches.length
+            ? e.changedTouches[0]
+            : null;
+        const touchWithId = (e) => {
+            if (!e.changedTouches) return null;
+            for (const touch of e.changedTouches) {
+                if (touch.identifier === this.pointerId || this.dragInput === 'pointer-touch') return touch;
+            }
+            return null;
+        };
+
+        // Safari / embedded webviews without a complete Pointer Events
+        // implementation still get a real drag path, including moves outside canvas.
+        c.addEventListener('touchstart', (e) => {
+            const touch = firstTouch(e);
+            if (touch) startAt(touch, touch.identifier, e, false);
+        }, { passive: false });
+        window.addEventListener('touchmove', (e) => {
+            const touch = touchWithId(e);
+            if (touch) moveAt(touch, touch.identifier, e, 'touch');
+        }, { passive: false });
+        window.addEventListener('touchend', (e) => {
+            const touch = touchWithId(e);
+            if (touch) endAt(touch.identifier, e, 'touch');
+        }, { passive: false });
+        window.addEventListener('touchcancel', (e) => {
+            const touch = touchWithId(e);
+            if (touch) endAt(touch.identifier, e, 'touch');
+        }, { passive: false });
         c.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 

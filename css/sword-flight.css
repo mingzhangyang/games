@@ -935,6 +935,30 @@ body {
     .sf-leaderboard-entry-btn { font-size: 9px; padding: 5px 10px; margin-top: 1px; }
 }
 
+/* 竖屏移动端：让舞台填满顶栏与页脚之间的剩余视口。
+   之前只由宽度和 480×640 画幅比决定高度，高屏手机会在舞台下方留下大块空白，
+   同时开始菜单底部内容被压在舞台边界之外。覆盖 aspect-ratio 是有意的：
+   这里由 shell 的 flex 高度负责舞台尺寸，覆盖层仍可在矮屏内滚动。 */
+@media (width <= 1023.98px) and (orientation: portrait) {
+    .sf-main {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .sf-stage {
+        aspect-ratio: auto;
+        min-height: 0;
+    }
+
+    /* canvas 的固有 480×640 尺寸会在 flex 舞台里抢回高度；显式拉伸，
+       否则舞台虽然变高，实际游戏画面仍会停在原来的 499/640px。 */
+    #sf-canvas {
+        height: auto;
+        align-self: stretch;
+        min-height: 0;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .sf-hero-art, .sf-toast, .sf-bar-fill { animation: none !important; }
     .sf-action-btn, .sf-icon-btn, .sf-touch-btn { transition: none !important; }
