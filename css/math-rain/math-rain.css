@@ -2093,3 +2093,77 @@ body {
 .tool-btn { position: relative; }
 .tool-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 
+/* 移动端布局修复：控制组固定在统计信息上方，避免窄屏 flex 换行后落到中间 */
+@media (max-width: 768px) {
+    #game-header {
+        flex-wrap: wrap;
+        overflow-x: hidden;
+        justify-content: center;
+        align-content: center;
+        row-gap: 6px;
+    }
+
+    #game-controls {
+        order: -1;
+        flex: 0 0 100%;
+        position: static;
+        justify-content: center;
+        margin-left: 0;
+        padding: 4px 8px;
+        background: rgba(13, 17, 38, 0.92);
+        border-radius: 12px;
+    }
+}
+
+/* 移动端工具栏：在单行内收纳道具、数量和金币，防止左右内容被裁切 */
+@media (max-width: 480px) {
+    .tool-bar {
+        gap: 4px;
+        padding: 6px 8px;
+        justify-content: stretch;
+        overflow: hidden;
+    }
+
+    .tool-item {
+        min-width: 0;
+        flex: 1 1 0;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .tool-item.coins {
+        flex: 0 0 auto;
+        margin-left: 0;
+        padding-left: 8px;
+    }
+
+    .tool-btn {
+        min-width: 44px;
+        max-width: 100%;
+        padding: 6px 7px;
+        gap: 4px;
+        overflow: hidden;
+    }
+
+    .tool-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .tool-count {
+        flex: 0 0 auto;
+    }
+}
+
+/* 极窄屏收紧间距，仍保留三个道具的数量状态 */
+@media (max-width: 360px) {
+    .tool-bar { gap: 2px; padding-inline: 4px; }
+    .tool-item { gap: 2px; }
+    .tool-btn { padding-inline: 4px; gap: 2px; font-size: 11px; }
+    .tool-count { font-size: 10px; }
+    .tool-item.coins {
+        padding-left: 2px;
+    }
+}
