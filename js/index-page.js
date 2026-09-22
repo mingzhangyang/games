@@ -114,6 +114,10 @@ const i18n = {
         crystalBloomDesc: 'A hot saturated bath cools along the curve you draw. Drop the temperature fast and supersaturation spikes — tips race into ferns; ease it down and only the facets advance. 20 vessels plus a daily run.',
         crystalBloomTag: 'Crystallization',
         crystalBloomPlay: 'Play ›',
+        flameVerseName: 'Flame Verse',
+        flameVerseDesc: 'Throw salt into a burner and the flame speaks: every element answers with its own fixed set of light lines. Read the unknown sample\'s barcode of light — position names the element, brightness names the dose. 20 unknowns plus a daily sample.',
+        flameVerseTag: 'Spectroscopy',
+        flameVersePlay: 'Play ›',
 
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
@@ -251,6 +255,10 @@ const i18n = {
         crystalBloomDesc: '一锅热饱和溶液，照着你在图上画出的曲线降温。降得猛，过饱和度冲高，尖端窜成霜蕨；降得缓，只有晶面在推进。20 个皿 + 每日挑战。',
         crystalBloomTag: '结晶',
         crystalBloomPlay: '开始游戏 ›',
+        flameVerseName: '焰语',
+        flameVerseDesc: '往本生灯里投一撮盐，火焰就开始说话：每种元素都用自己那几条固定的谱线作答。读懂未知样品的光之条码——谱线位置说出元素，亮度说出含量。20 份未知样品 + 每日挑战。',
+        flameVerseTag: '光谱',
+        flameVersePlay: '开始游戏 ›',
 
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -393,6 +401,10 @@ function applyLanguage(lang) {
     document.getElementById('crystal-bloom-desc').textContent = t.crystalBloomDesc;
     document.getElementById('crystal-bloom-tag').textContent = t.crystalBloomTag;
     document.getElementById('crystal-bloom-play').textContent = t.crystalBloomPlay;
+    document.getElementById('flame-verse-name').textContent = t.flameVerseName;
+    document.getElementById('flame-verse-desc').textContent = t.flameVerseDesc;
+    document.getElementById('flame-verse-tag').textContent = t.flameVerseTag;
+    document.getElementById('flame-verse-play').textContent = t.flameVersePlay;
 
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
@@ -477,6 +489,7 @@ function injectStructuredData() {
         { slug: 'echo-cave', name: 'Echo Cave', description: 'Original sonar puzzle — the cave is pitch dark until you sing: emit pulses, read the echoes off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily course.' },
         { slug: 'maxwell-demon', name: 'Maxwell\'s Demon', description: 'Original thermodynamics puzzle — keep the tiny door between two chambers, sort fast molecules from slow ones and build a temperature gap out of nothing. Every bit you learn is paid for. 20 vessels plus a daily run.' },
         { slug: 'crystal-bloom', name: 'Crystal Bloom', description: 'Original crystallization puzzle — draw the cooling curve of a saturated bath: quench it for dendrites, ease it down for facets, stir to pack it dense. 20 vessels plus a daily run.' },
+        { slug: 'flame-verse', name: 'Flame Verse', description: 'Original flame spectroscopy puzzle — throw salts into the burner, read the emission lines each element leaves behind and match the mystery sample\'s barcode of light. 20 unknowns plus a daily sample.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }

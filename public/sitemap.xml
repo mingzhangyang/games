@@ -106,5 +106,10 @@
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://games.orangely.xyz/flame-verse.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
   // registry:end games
 </urlset>

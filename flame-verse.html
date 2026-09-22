@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0c0612">
+    <meta name="description" content="焰语 Flame Verse — an original flame spectroscopy puzzle. Throw salts into the burner, watch the flame speak in color, read the emission lines each element leaves behind and match the mystery sample's barcode of light. 20 unknowns plus a daily sample for the whole world.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/flame-verse.html">
+    <meta property="og:title" content="焰语 Flame Verse — Flame Spectrum Puzzle">
+    <meta property="og:description" content="Throw salt into the flame and it speaks the element's name. Read the lines, match the barcode of light.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-flame-verse.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/flame-verse.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="焰语 Flame Verse — Flame Spectrum Puzzle">
+    <meta name="twitter:description" content="Every element has a fingerprint of light. Learn to read it.">
+    <meta name="twitter:image" content="assets/seo/og-flame-verse.svg">
+    <title>焰语 Flame Verse — Flame Spectrum Puzzle</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230c0612'/%3E%3Cpath d='M32 8c8 10 14 15 14 25a14 14 0 1 1-28 0c0-6 3-10 6-14 0 5 1.5 8 5 10-1-8 0-15 3-21z' fill='%23ffb35c'/%3E%3Cpath d='M32 26c4 5 7 8 7 13a7 7 0 1 1-14 0c0-5 3-8 7-13z' fill='%23ffd34d'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/flame-verse.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="fv-shell game-shell">
+        <!-- 顶栏 HUD -->
+        <header class="fv-topbar game-topbar">
+            <div class="fv-topbar-lead game-topbar-group">
+                <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
+                <button data-chrome="home" class="fv-icon-btn game-icon-btn" id="fv-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <!-- 中槽：样品 / 已投 HUD -->
+            <div class="fv-topbar-center game-topbar-center">
+                <div class="fv-hud-level" id="fv-hud-level">Sample 1/3</div>
+                <div class="fv-cut-box">
+                    <span class="fv-cut-value" id="fv-budget">0</span>
+                    <span class="fv-par" id="fv-par">Par 0</span>
+                </div>
+            </div>
+            <!-- 右簇固定顺序：专属 → stats → sound -->
+            <div class="fv-topbar-actions game-topbar-group">
+                <button class="fv-icon-btn game-icon-btn" id="fv-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button data-chrome="stats" type="button" class="fv-icon-btn game-icon-btn fv-stats-btn game-stats-btn" id="fvStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="fvStatsDrawer"></button>
+                <button type="button" class="fv-icon-btn game-icon-btn" id="fv-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+            </div>
+        </header>
+
+        <!-- 舞台 -->
+        <main class="fv-main game-main">
+        <div class="fv-stage game-stage" id="fv-stage">
+            <canvas class="game-canvas" id="fv-canvas" width="560" height="640"></canvas>
+
+            <!-- 提示 -->
+            <div class="fv-toast hidden game-toast" id="fv-toast"></div>
+
+            <!-- 两个动作钮：清空重撒（+2）/ 送检（判定） -->
+            <button type="button" class="fv-action-btn fv-clear-btn" id="fv-clear-btn" title="Empty" aria-label="Empty">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 7h16"/>
+                    <path d="M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2"/>
+                    <path d="M6.5 7 8 19.5a1.5 1.5 0 0 0 1.5 1.3h5a1.5 1.5 0 0 0 1.5-1.3L17.5 7"/>
+                </svg>
+            </button>
+            <button type="button" class="fv-action-btn fv-run-btn" id="fv-run-btn" title="Assay" aria-label="Assay">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                    <path d="M8 5.2v13.6l11-6.8z"/>
+                </svg>
+            </button>
+
+            <!-- 盐架画在 canvas 上（与条码一起跟着舞台等比缩放；DOM 盐罐会在
+                 窄屏被浮动动作钮压住，且中英盐名要跟着 canvas 一起缩放） -->
+
+            <!-- 开始界面 -->
+            <div class="fv-overlay game-overlay" id="fv-start">
+                <h1 class="fv-title" id="fv-title">Flame Verse</h1>
+                <p class="fv-subtitle" id="fv-subtitle">Salt · Flame · Light</p>
+                <div class="fv-hero" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 64 64" fill="none">
+                        <path d="M32 6c8 10 14 16 14 26a14 14 0 1 1-28 0c0-7 3.5-11 7-16 .5 5 2 8.5 5.5 10.5C29 18 30 11.5 32 6z" fill="#ffb35c" opacity="0.92"/>
+                        <path d="M32 27c4.2 5 7 8 7 12.6A7 7 0 1 1 25 39.6c0-4.6 2.8-7.6 7-12.6z" fill="#ffd34d" opacity="0.95"/>
+                        <path d="M10 58h44" stroke="#5b8dee" stroke-width="2" opacity="0.5"/>
+                        <path d="M14 55v6M27 53v8M40 54v7M50 56v5" stroke="#ffd34d" stroke-width="2" opacity="0.75"/>
+                    </svg>
+                </div>
+                <p class="fv-howto" id="fv-howto"></p>
+                <div class="fv-mode-row">
+                    <button class="fv-mode" id="fv-btn-levels"></button>
+                    <button class="fv-mode fv-mode-daily" id="fv-btn-daily"></button>
+                </div>
+                <p class="fv-level-label" id="fv-level-label"></p>
+                <div class="fv-level-grid" id="fv-level-grid"></div>
+                <p class="fv-daily-best" id="fv-daily-best"></p>
+                <div class="fv-start-footer">
+                    <button class="fv-icon-btn game-icon-btn" id="fv-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                </div>
+            </div>
+
+            <!-- 过关面板 -->
+            <div class="fv-overlay fv-overlay-dim hidden game-overlay" id="fv-clear">
+                <div class="fv-card">
+                    <h2 class="fv-card-title" id="fv-clear-stars">☆☆☆</h2>
+                    <div class="fv-card-line" id="fv-clear-line"></div>
+                    <div class="fv-btn-row">
+                        <button class="fv-btn fv-btn-primary game-btn" id="fv-btn-next"><span></span></button>
+                        <button class="fv-btn game-btn" id="fv-btn-replay"><span></span></button>
+                        <button class="fv-btn fv-btn-ghost game-btn" id="fv-btn-menu1"><span></span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每日结算 -->
+            <div class="fv-overlay hidden game-overlay" id="fv-over">
+                <h2 class="fv-overlay-title" id="fv-over-title"></h2>
+                <div class="fv-over-score" id="fv-over-score">0</div>
+                <div class="fv-over-sub" id="fv-over-sub"></div>
+                <div class="fv-btn-row">
+                    <button class="fv-btn game-btn" id="fv-btn-copy"><span></span></button>
+                    <button class="fv-btn fv-btn-ghost game-btn" id="fv-btn-menu2"><span></span></button>
+                </div>
+                <div class="fv-lb">
+                    <div class="fv-lb-title" id="fv-lb-title"></div>
+                    <div class="fv-lb-list" id="fv-lb-list"></div>
+                    <div class="fv-lb-status" id="fv-lb-status"></div>
+                    <div class="fv-username-row">
+                        <label class="fv-username-label" for="fv-username" id="fv-username-label"></label>
+                        <input class="fv-username" id="fv-username" maxlength="20" autocomplete="off">
+                    </div>
+                </div>
+                <button class="fv-btn fv-btn-primary game-btn" id="fv-btn-again"><span></span></button>
+            </div>
+        </div>
+
+            <aside class="fv-sidebar game-sidebar">
+
+            <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
+            <div id="fvStatsPanels">
+                <div class="fv-side-card game-side-card">
+                    <div class="fv-side-title game-side-title" id="fv-side-howto-title"></div>
+                    <p class="fv-side-text game-side-text" id="fv-side-howto"></p>
+                </div>
+                <div class="fv-side-card game-side-card">
+                    <div class="fv-side-title game-side-title" id="fv-side-records-title"></div>
+                    <div class="fv-side-records" id="fv-side-records"></div>
+                </div>
+            </div>
+
+            <!-- 桌面侧栏专属：必须放在 #fvStatsPanels 外面 —— 那个节点会被
+                 js/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
+                 放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <div class="fv-side-card game-side-card">
+                <div class="fv-side-title game-side-title" id="fv-side-legend-title"></div>
+                <div class="fv-side-legend" id="fv-side-legend"></div>
+            </div>
+
+            <div class="fv-side-card game-side-card">
+                <nav class="more-games" id="fvSideMore"></nav>
+            </div>
+
+        </aside>
+    </main>
+
+
+
+    <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
+         统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
+         ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
+    <footer class="fv-footer game-footer">
+        <p class="fv-footer-hint game-footer-hint" id="fv-hint"></p>
+        <div class="fv-footer-actions game-footer-actions game-topbar-group">
+            <a class="fv-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+            <button type="button" class="fv-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="fvMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+        <nav class="more-games game-footer-nav" id="fvMoreNav" hidden></nav>
+    </footer>
+    </div>
+    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <div class="game-drawer" id="fvStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="fvStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="fvStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="fvStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="fvStatsDrawerBody"></div>
+        </div>
+    </div>
+
+
+        <!-- ld+json placeholder — replaced by `npm run gen` -->
+        <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-flame-verse.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"焰语 Flame Verse — Flame Spectrum Puzzle","url":currentUrl,"description":"焰语 Flame Verse — an original flame spectroscopy puzzle. Throw salts into the burner, watch the flame speak in color, read the emission lines each element leaves behind and match the mystery sample's barcode of light. 20 unknowns plus a daily sample for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"焰语 Flame Verse — Flame Spectrum Puzzle","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+        <!-- registry:end seo-script -->
+    <script type="module" src="js/flame-verse.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

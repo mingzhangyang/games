@@ -63,6 +63,7 @@ main: resolve(__dirname, 'index.html'),
             "echo-cave": resolve(__dirname, 'echo-cave.html'),
             "maxwell-demon": resolve(__dirname, 'maxwell-demon.html'),
             "crystal-bloom": resolve(__dirname, 'crystal-bloom.html'),
+            "flame-verse": resolve(__dirname, 'flame-verse.html'),
             // registry:end inputs
         },
         output: {

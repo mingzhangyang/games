@@ -1,0 +1,543 @@
+/* ─────────────────────────────────────────────
+   焰语 Flame Verse — 焰色光谱解谜
+   暗夜底 + 焰橙主色（#ffb35c 系）+ 谱线按真实波长上色
+   盐架 / 代价用萤光琥珀 --tok-gold
+   ───────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background:
+        radial-gradient(ellipse 62% 40% at 18% 8%, rgb(255, 138, 92, 0.10), transparent),
+        radial-gradient(ellipse 62% 40% at 84% 92%, rgb(111, 216, 255, 0.10), transparent),
+        linear-gradient(165deg, #05070f 0%, var(--tok-bg-2) 55%, #0d1330 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--tok-text);
+
+    --tok-accent: #7fa8ff;
+    --tok-accent-2: #ff8a5c;
+    --tok-hot: #ff8a5c;
+    --tok-cold: #ffb35c;
+}
+
+.hidden { display: none !important; }
+
+/* ── 顶栏 HUD ── */
+
+.fv-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.fv-icon-btn:active { transform: scale(0.92); }
+
+.fv-hud-level {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #a8c4ff;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.fv-cut-box {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    background: rgb(0, 0, 0, 0.4);
+    border: 1px solid rgb(168, 184, 255, 0.18);
+    border-radius: 11px;
+    padding: 6px 12px;
+}
+
+.fv-cut-value {
+    font-size: 19px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--tok-gold);
+    min-width: 2ch;
+    text-align: center;
+}
+
+.fv-par {
+    font-size: 11.5px;
+    color: var(--tok-text-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── 舞台 ── */
+
+.fv-stage {
+    min-width: 280px;
+}
+
+#fv-canvas {
+    display: block;
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid rgb(168, 184, 255, 0.18);
+    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.6), 0 0 46px rgb(127, 168, 255, 0.1);
+    /* 主要输入是底部两个动作钮；允许页面手势会让移动浏览器
+       在 pointer stream 归属明确前把它交给滚动容器。 */
+    touch-action: none;
+    cursor: pointer;
+}
+
+/* ── 两个动作钮：观测（左）/ 开门（右） ── */
+
+.fv-action-btn {
+    position: absolute;
+    bottom: 16px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(255, 255, 255, 0.35);
+    cursor: pointer;
+    z-index: 15;
+    transition: opacity 0.25s, transform 0.1s, box-shadow 0.15s;
+}
+
+.fv-clear-btn {
+    left: 16px;
+    color: #04121c;
+    background: radial-gradient(circle at 32% 30%, #cfe6ff, #6fd8ff 62%);
+    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(111, 216, 255, 0.45);
+}
+
+.fv-run-btn {
+    right: 16px;
+    color: #2a1a05;
+    background: radial-gradient(circle at 32% 30%, #ffe6a8, var(--tok-gold) 62%);
+    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(255, 211, 77, 0.45);
+}
+
+.fv-action-btn:active {
+    transform: scale(0.9);
+}
+
+.fv-clear-btn:active { box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(111, 216, 255, 0.7); }
+.fv-run-btn:active { box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(255, 211, 77, 0.7); }
+
+/* 预算不足：钮变灰（JS 加 .is-broke） */
+.fv-action-btn.is-broke {
+    filter: grayscale(0.7);
+    opacity: 0.55;
+}
+
+/* 非 playing 态（菜单/结算）整体隐藏：z-index 15 > overlay 10，
+   不藏起来会浮在菜单关卡 chips 上把「1」挡住（移动端实测）。 */
+.fv-action-btn.is-dimmed {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ── 提示 ── */
+
+.fv-toast {
+    top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tok-bg-2);
+    background: linear-gradient(120deg, #ffe6a8, var(--tok-gold));
+    padding: 7px 18px;
+    box-shadow: 0 8px 24px rgb(255, 211, 77, 0.35);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.fv-toast.is-on { opacity: 1; }
+
+/* ── 覆盖层 ── */
+
+.fv-overlay {
+    background: rgb(5, 7, 15, 0.92);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.fv-overlay-dim { background: rgb(5, 7, 15, 0.72); }
+
+.fv-title {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.15;
+    background: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.fv-subtitle {
+    font-size: 12.5px;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: -6px;
+}
+
+.fv-hero {
+    line-height: 1;
+    animation: fv-bob 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgb(127, 168, 255, 0.35));
+}
+
+@keyframes fv-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.fv-howto {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--tok-text-soft);
+    max-width: 350px;
+}
+
+.fv-mode-row {
+    display: flex;
+    gap: 8px;
+}
+
+.fv-mode {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.fv-mode:hover { background: rgb(255, 255, 255, 0.13); }
+.fv-mode:active { transform: scale(0.95); }
+
+.fv-mode-daily {
+    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    border: none;
+    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+}
+
+.fv-level-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.fv-level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 360px;
+}
+
+/* ⚠️ 类名必须与 js/flame-verse.js 的 renderLevelGrid() 一致：那里写的是
+   `'fv-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
+   芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
+.fv-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    font-family: inherit;
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 6px 2px 4px;
+    cursor: pointer;
+    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
+    color: var(--tok-text);
+    transition: background 0.15s, transform 0.1s;
+}
+
+.fv-chip:hover { background: rgb(255, 255, 255, 0.11); }
+.fv-chip:active { transform: scale(0.93); }
+
+.fv-chip.is-done {
+    background: rgb(127, 168, 255, 0.12);
+    border-color: rgb(127, 168, 255, 0.38);
+}
+
+.fv-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
+
+.fv-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; color: var(--tok-gold); }
+
+.fv-daily-best {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #a8c4ff;
+    min-height: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.fv-start-footer { display: flex; gap: 10px; }
+
+/* ── 过关卡片 ── */
+
+.fv-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    background: rgb(9, 12, 26, 0.96);
+    border: 1px solid rgb(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 20px 22px;
+    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    animation: fv-card-in 0.26s ease-out;
+}
+
+@keyframes fv-card-in {
+    from { transform: scale(0.9) translateY(14px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.fv-card-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--tok-gold);
+}
+
+.fv-card-line {
+    font-size: 14px;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.fv-overlay-title { font-size: 26px; font-weight: 800; }
+
+.fv-over-score {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 26px rgb(255, 211, 77, 0.4);
+}
+
+.fv-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
+
+.fv-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.fv-btn {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.08);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 18px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.fv-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.fv-btn:active { transform: scale(0.96); }
+
+.fv-btn-primary {
+    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    border: none;
+    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+}
+
+.fv-btn-ghost { background: transparent; color: var(--tok-text-dim); }
+
+/* ── 排行榜 ── */
+
+.fv-lb {
+    width: 100%;
+    max-width: 330px;
+    background: rgb(255, 255, 255, 0.045);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.fv-lb-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.fv-lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 40px;
+    max-height: 168px;
+    overflow-y: auto;
+}
+
+.fv-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    padding: 3px 6px;
+    border-radius: 7px;
+}
+
+.fv-lb-row.fv-lb-top1 { background: rgb(252, 211, 77, 0.14); }
+.fv-lb-row.fv-lb-top2 { background: rgb(203, 213, 225, 0.10); }
+.fv-lb-row.fv-lb-top3 { background: rgb(111, 216, 255, 0.12); }
+
+.fv-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.fv-lb-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.fv-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.fv-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
+
+.fv-lb-status {
+    min-height: 16px;
+    font-size: 11.5px;
+    color: var(--tok-text-mute);
+    margin-top: 4px;
+}
+
+.fv-username-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.fv-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
+
+.fv-username {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 9px;
+    padding: 7px 10px;
+    outline: none;
+}
+
+.fv-username:focus { border-color: rgb(127, 168, 255, 0.5); }
+
+/* ── 侧栏：记录行 ── */
+
+.fv-side-records { display: flex; flex-direction: column; }
+
+.fv-side-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+    padding: 4px 0;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.fv-side-k { color: var(--tok-text-dim); }
+.fv-side-v { color: var(--tok-text); font-weight: 700; }
+
+/* ── 侧栏：盐架图谱 ──
+   参考条码由 js/flame-verse.js 按真实波长写 linear-gradient 色标，
+   黑底 + 竖线与 canvas 里的条码同一套读法（400nm 在左，700nm 在右） */
+
+.fv-side-legend { display: flex; flex-direction: column; gap: 2px; }
+
+.fv-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    padding: 3px 0;
+    color: var(--tok-text-dim);
+}
+
+.fv-legend-text { flex: 1; min-width: 0; line-height: 1.45; }
+
+.fv-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* 元素符号牌：宽度写死保证 8 行条码左缘对齐（flex 子项默认会被压缩） */
+.fv-legend-sym {
+    width: 30px;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+    color: var(--tok-text);
+}
+
+/* 参考条码：由 JS 按真实波长写 linear-gradient 的色标位置，
+   黑底 + 竖线 = 与 canvas 里的条码同一套读法（400→700nm 从左到右） */
+.fv-legend-bar {
+    width: 108px;
+    height: 12px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    background-color: #08060f;
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    background-repeat: no-repeat;
+}
+
+/* ── 响应式 ── */
+
+@media (width <= 480px) {
+    .fv-hud-level { font-size: 12px; }
+    .fv-cut-value { font-size: 16px; }
+    .fv-title { font-size: 27px; }
+    .fv-over-score { font-size: 34px; }
+    .fv-howto { font-size: 12px; }
+    .fv-mode { font-size: 13px; padding: 10px 15px; }
+    .fv-level-grid { gap: 5px; }
+    .fv-action-btn { width: 58px; height: 58px; bottom: 12px; }
+    .fv-clear-btn { left: 12px; }
+    .fv-run-btn { right: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fv-hero, .fv-card { animation: none !important; }
+    .fv-toast { transition: none; }
+    .fv-btn, .fv-icon-btn, .fv-mode, .fv-chip, .fv-action-btn { transition: none; }
+}
+
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
+   560×640 逻辑场 → --frame-ratio: 0.875；
+   舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
+.fv-shell {
+    --frame-max-wide: 940px;
+    --frame-stage: 560px;
+    --frame-side: 300px;
+    --frame-side-gap: 14px;
+    --frame-ratio: 0.875;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}
