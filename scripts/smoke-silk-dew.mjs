@@ -170,8 +170,15 @@ if (after.state !== 'won-level') {
  * 教训（circuit）：新元素类型（spdt）首次出现在中后段关卡，冒烟若只测前 5 关，
  * 该崩溃 100% 漏网。这里遍历全部 20 关，逐关强制同步 draw() 若干帧。
  * 统计「气泡/风/荆棘」出现次数做自检：若遍历中一个都没遇到，说明该回归形同虚设。 */
-const levelCount = await page.evaluate(async () => {
-    try { const m = await import('/js/silk-dew-levels.js'); return m.LEVELS.length; } catch (e) { return 0; }
+const levelCount = await page.evaluate(() => {
+    // ⚠ 不要 import('/js/silk-dew-levels.js')：dist 里源码路径已打包成哈希 chunk，
+    // 动态 import 必 404。改用 startLevel 的钳制语义探关数（越界 → 最后一关）。
+    try {
+        window.sdGame.startLevel(9999);
+        return window.sdGame.levelIdx + 1;
+    } catch (e) {
+        return 0;
+    }
 });
 if (!levelCount) fail('无法取得 LEVELS.length（回归遍历无法进行）');
 const levelErrors = [];

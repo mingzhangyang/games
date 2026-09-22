@@ -123,11 +123,13 @@ if (after.starsStored !== 3) fail(`L1 翻 1 次应为 3 星，got ${after.starsS
  * 注意：不能只抽前几关——前 6 关 (S1-S5/M1) 均无 spdt，只测前 5 关等于没测。
  * 这里遍历全部 20 关，逐关强制同步 draw() 若干帧并收集页面异常。 */
 const levelErrors = [];
-const levelCount = await page.evaluate(async () => {
-    // LEVELS 未挂到 window，直接动态 import 数据层（与页面同一模块实例）
+const levelCount = await page.evaluate(() => {
+    // ⚠ 不要 import('/js/circuit-levels.js')：dist 里源码路径已打包成哈希 chunk，
+    // 动态 import 必 404（smoke 打 dist 产物时"无法取得 LEVELS.length"就是它）。
+    // 改用游戏自身的钳制语义探关数：startLevel 越界会 clamp 到最后一关。
     try {
-        const m = await import('/js/circuit-levels.js');
-        return m.LEVELS.length;
+        window.ccGame.startLevel(9999);
+        return window.ccGame.levelIdx + 1;
     } catch (e) {
         return 0;
     }

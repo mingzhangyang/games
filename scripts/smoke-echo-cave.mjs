@@ -72,8 +72,8 @@ else pass('bootstrap：句柄/初始态/20 关格/图例/更多游戏');
 
 /* ── 走位工具：现算 BFS 路线 + 真键盘驱动 ── */
 const playerPos = () => page.evaluate(() => {
-    const w = window.ecGame.world;
-    return { x: w.player.x, y: w.player.y };
+    const g = window.ecGame, w = g.world;
+    return { x: w.player.x, y: w.player.y, state: g.state };
 });
 let CELL = 20;
 
@@ -120,33 +120,55 @@ const pathTo = (tx, ty) => page.evaluate(([gx, gy]) => {
 /**
  * 走到 (cx,cy) 的**格心**并停在那里，而不是"刚踏进这一格"就松手。
  *
- * 为什么必须对准格心：玩家半径 7px、格宽 20px，贴着格子边缘走时圆会伸进隔壁格；
- * 隔壁若是墙（尤其拐角），下一脚就被卡住 —— 表现是"走到了却过不去"。
- * 每一站都归位到格心，后续的正交移动才不会擦到墙角。
+ * 为什么必须对准格心、且容差必须 < 3px：
+ *   格半宽 10px、玩家半径 7px ⇒ 偏离格心超过 `10 - 7 = 3px` 时，玩家的圆就已经
+ *   贴到隔壁格的墙面。轴分离碰撞下（先试 x 再试 y），一旦纵向擦到下方墙格，
+ *   横向移动会被**整体判死**——表现是"只差 10px 却永远走不过去"。
+ *   （dist 冒烟首次跑就撞上：停在 199.4,233.0 卡死，距目标格心 210,230 差 10.6px。）
+ * 所以：到达容差 2px（< 3px 安全边距），且纵向残留优先纠到 1.5px 以内再动横向。
+ *
+ * 每次按键只按「误差 / 速度」那么久就松手：按住轮询会因单帧位移（132px/s × 45ms
+ * ≈ 6px）过冲，来回震荡永远收敛不到 2px。
  */
-async function walkToCell(cx, cy, timeout = 6000) {
+const ARRIVE_TOL = 2.0;   // 到达判定：必须小于 cell/2 - playerR = 3px
+const AXIS_TOL = 1.5;     // 换轴判定：留够余量再动另一轴
+async function walkToCell(cx, cy, timeout = 8000) {
     const t0 = Date.now();
-    let held = null;
     let last = null;
+    let nudges = 0;
     while (Date.now() - t0 < timeout) {
         const pos = await playerPos();
         last = pos;
+        // 胜负已分（洞口触发半径 19px > 到站容差，常在到达末站格心**之前**就 won）：
+        // 世界一旦冻结，再按多久都不会动 —— 直接视为到站，交给 walkRouteTo 的状态检查收尾。
+        if (pos.state !== 'playing') return true;
         const tx = cx * CELL + CELL / 2, ty = cy * CELL + CELL / 2;
         const ex = tx - pos.x, ey = ty - pos.y;
-        if (Math.abs(ex) < 3.5 && Math.abs(ey) < 3.5) { if (held) await page.keyboard.up(held); return true; }
-        // 两轴都偏 → 先纠纵向（每一步都是单轴位移，此时纵向偏差来自上一站的残留）
-        let want;
-        if (Math.abs(ey) > 3.5 && Math.abs(ex) > 3.5) want = ey > 0 ? 'ArrowDown' : 'ArrowUp';
-        else if (Math.abs(ex) > 3.5) want = ex > 0 ? 'ArrowRight' : 'ArrowLeft';
-        else want = ey > 0 ? 'ArrowDown' : 'ArrowUp';
-        if (want !== held) {
-            if (held) await page.keyboard.up(held);
-            await page.keyboard.down(want);
-            held = want;
+        if (Math.abs(ex) <= ARRIVE_TOL && Math.abs(ey) <= ARRIVE_TOL) return true;
+        // 纵向残留优先归零（BFS 路线每一步都是单轴位移，纵向偏差全是上一站的残留）
+        const axis = Math.abs(ey) > AXIS_TOL ? 'y' : 'x';
+        const e = axis === 'y' ? ey : ex;
+        if (Math.abs(e) <= ARRIVE_TOL) return true;
+        const key = axis === 'y'
+            ? (e > 0 ? 'ArrowDown' : 'ArrowUp')
+            : (e > 0 ? 'ArrowRight' : 'ArrowLeft');
+        const ms = Math.max(14, Math.min(70, Math.abs(e) / 132 * 1000));
+        await page.keyboard.down(key);
+        await wait(ms);
+        await page.keyboard.up(key);
+        await wait(18);
+        // 卡死兜底：一脚下去位置几乎没动 → 往垂直方向蹭 2px 脱离墙角再试
+        const after = await playerPos();
+        if (Math.hypot(after.x - pos.x, after.y - pos.y) < 0.4 && nudges < 6) {
+            nudges++;
+            const away = axis === 'y' ? (ex > 0 ? 'ArrowRight' : 'ArrowLeft')
+                : (ey > 0 ? 'ArrowDown' : 'ArrowUp');
+            await page.keyboard.down(away);
+            await wait(24);
+            await page.keyboard.up(away);
+            await wait(18);
         }
-        await wait(45);
     }
-    if (held) await page.keyboard.up(held);
     return last ? { stuckAt: `${last.x.toFixed(1)},${last.y.toFixed(1)}` } : false;
 }
 
