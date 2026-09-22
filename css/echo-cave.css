@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────
    回声洞窟 Echo Cave — sonar cave puzzle
-   深渊蓝黑底（#050810）+ 声呐青（#6fd8ff）+ 萤光琥珀（#ffd34d）双主色
-   紫罗兰 #a78bfa = 出口嗡鸣 / 荆棘红 #ff6b7a = 尖鸣警示
+   深渊蓝黑底 + 声呐青（--tok-accent）+ 萤光琥珀（--tok-gold）双主色
+   紫罗兰 = 出口嗡鸣 / 荆棘红 --tok-danger = 尖鸣警示
    ───────────────────────────────────────────── */
 
 * {
@@ -139,7 +139,7 @@ body {
     font-size: 34px;
     font-weight: 800;
     line-height: 1.15;
-    background: linear-gradient(120deg, #6fd8ff, #ffd34d 55%, #a78bfa);
+    background: linear-gradient(120deg, #6fd8ff, var(--tok-gold) 55%, #a78bfa);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -436,7 +436,7 @@ body {
 
 /* ── 侧栏：声学图例 ──
    颜色必须与 js/echo-cave.js 渲染层的语义色一一对应：
-   岩壁 #8ea0b8 / 苔藓 #7fe0b0 / 声晶 #ffd34d / 出口 #a78bfa / 荆棘 #ff6b7a / 法则 = 青色波环 */
+   岩壁 / 苔藓 / 声晶 --tok-gold / 出口 / 荆棘 --tok-danger / 法则 = 青色波环 */
 
 .ec-side-legend { display: flex; flex-direction: column; gap: 2px; }
 
@@ -460,9 +460,9 @@ body {
 
 .ec-legend-wall { background: #8ea0b8; }
 .ec-legend-moss { background: #7fe0b0; }
-.ec-legend-crystal { background: #ffd34d; box-shadow: 0 0 8px rgb(255, 211, 77, 0.55); }
+.ec-legend-crystal { background: var(--tok-gold); box-shadow: 0 0 8px rgb(255, 211, 77, 0.55); }
 .ec-legend-exit { background: #a78bfa; box-shadow: 0 0 8px rgb(167, 139, 250, 0.55); }
-.ec-legend-thorn { background: #ff6b7a; }
+.ec-legend-thorn { background: var(--tok-danger); }
 
 /* 「法则」用空心波环表示：不被单色语义绑定的通用声学行为 */
 .ec-legend-law {
