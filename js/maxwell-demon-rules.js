@@ -221,7 +221,13 @@ function substep(world, dt) {
         // 分子单步位移（v≈190px/s × 1/120s ≈ 1.6px）足以一步跨出 24px 宽的隔板带，
         // 放在带内判定里就会永远轮不到执行——实测 pass 事件恒为 0、
         // 分子却已经换腔（因为它们是在门关闭那一帧被"推"到新侧的）。
-        if (world.gateArmed && atDoor && nowSide !== oldSide) {
+        //
+        // ⚠️⚠️ 这里**不能**再加 `atDoor` 判定：是否被放行已经由「进带那一刻」的
+        // atDoor 决定了（上面的 else 分支会把它弹回去）。若穿越时二次校验 y，
+        // 那些「对准进带、却在带内漂移出 y 窗口」的分子会**静默溜过去**——
+        // 不放行事件、门也不关，玩家看到的是「钱花了、门白开、分子还换了腔」。
+        // 实测窄门关里这种静默溜走占武装次数的 1/3（arms 27 / pass 4 / expire 23）。
+        if (world.gateArmed && nowSide !== oldSide) {
             world.gateArmed = false;
             world.gateOpen = false;
             world.gateT = 0;
@@ -329,26 +335,139 @@ export function starsForLevel(spent, par, gap, stretch) {
 
 /* ────────────────────────── 关卡 ────────────────────────── */
 /**
- * par 是「预算消耗目标」——M2 的 scripts/verify-maxwell-demon-levels.mjs 会用
- * 贪心 + 模拟现算，此处为 M1 的手填初值，绝不许当成最终值。
+ * 20 关。par / budget / doorHalf / molecules 全部由
+ * scripts/verify-maxwell-demon-levels.mjs 用「诚实机器人」现算并断言，
+ * **不许手填**（手填 = 校验器立刻红）。
+ *
+ * 诚实机器人的定义：位置永远可见，快慢只能靠花钱观测才知道
+ * （revealT > 0 且分子在 scanR 圈内才记账），速率大小恒定 ⇒ 记住即永久有效。
+ * 它怎么打，par 就是多少 —— 玩家只要比它更会用信息，就能省下预算拿星。
+ *
+ * 难度曲线的两条硬约束（都是实测出来的，别改）：
+ *  ① 门宽 doorHalf **下限 21**：< 20 时机会密度崩塌（最窄关 150s 内 0 次成交）。
+ *     后期难度交给「分子数 + 预算余量」，不再收窄门。
+ *  ② target 单调非降（0.30 → 0.46），每关都留 0.18 的天花板余量；
+ *     天花板容不下就换分子数重抽世界，而不是去压 target 或放宽门。
  */
 export const LEVELS = [
     {
         id: 'md1',
         name: { en: 'The First Gate', zh: '第一道门' },
-        molecules: 24, budget: 130, target: 0.35, stretch: 0.50, par: 26, doorHalf: 34,
+        molecules: 22, budget: 26, target: 0.30, stretch: 0.44, par: 10, doorHalf: 34,
         tipKey: 'tipFirst',
     },
     {
         id: 'md2',
         name: { en: 'Narrower Door', zh: '更窄的门' },
-        molecules: 30, budget: 125, target: 0.55, stretch: 0.72, par: 44, doorHalf: 27,
+        molecules: 23, budget: 40, target: 0.31, stretch: 0.45, par: 16, doorHalf: 33,
         tipKey: 'tipNarrow',
     },
     {
         id: 'md3',
+        name: { en: 'Cold Shoulder', zh: '冷肩' },
+        molecules: 24, budget: 50, target: 0.32, stretch: 0.46, par: 20, doorHalf: 33,
+        tipKey: 'tipCrowd',
+    },
+    {
+        id: 'md4',
         name: { en: 'The Reckoning', zh: '清算' },
-        molecules: 36, budget: 120, target: 0.75, stretch: 0.92, par: 64, doorHalf: 22,
+        molecules: 25, budget: 35, target: 0.33, stretch: 0.47, par: 14, doorHalf: 32,
+        tipKey: 'tipScan',
+    },
+    {
+        id: 'md5',
+        name: { en: 'Price of a Bit', zh: '一比特的价钱' },
+        molecules: 26, budget: 26, target: 0.33, stretch: 0.47, par: 10, doorHalf: 31,
+        tipKey: 'tipHold',
+    },
+    {
+        id: 'md6',
+        name: { en: 'Thin Passage', zh: '细缝' },
+        molecules: 27, budget: 45, target: 0.34, stretch: 0.48, par: 20, doorHalf: 31,
+        tipKey: null,
+    },
+    {
+        id: 'md7',
+        name: { en: 'Double Check', zh: '再看一眼' },
+        molecules: 28, budget: 30, target: 0.35, stretch: 0.49, par: 14, doorHalf: 30,
+        tipKey: null,
+    },
+    {
+        id: 'md8',
+        name: { en: 'Slow Burn', zh: '慢火' },
+        molecules: 29, budget: 45, target: 0.36, stretch: 0.50, par: 20, doorHalf: 29,
+        tipKey: 'tipSave',
+    },
+    {
+        id: 'md9',
+        name: { en: 'Tight Ledger', zh: '吃紧的账' },
+        molecules: 30, budget: 30, target: 0.37, stretch: 0.51, par: 14, doorHalf: 29,
+        tipKey: null,
+    },
+    {
+        id: 'md10',
+        name: { en: 'The Waiting', zh: '久候' },
+        molecules: 31, budget: 50, target: 0.38, stretch: 0.52, par: 24, doorHalf: 28,
+        tipKey: null,
+    },
+    {
+        id: 'md11',
+        name: { en: 'Dense Air', zh: '稠气' },
+        molecules: 31, budget: 55, target: 0.38, stretch: 0.52, par: 26, doorHalf: 27,
+        tipKey: null,
+    },
+    {
+        id: 'md12',
+        name: { en: 'Counting Cost', zh: '数着花' },
+        molecules: 32, budget: 30, target: 0.39, stretch: 0.53, par: 14, doorHalf: 26,
+        tipKey: 'tipSave',
+    },
+    {
+        id: 'md13',
+        name: { en: 'The Long Hold', zh: '长久的稳' },
+        molecules: 33, budget: 45, target: 0.40, stretch: 0.54, par: 22, doorHalf: 26,
+        tipKey: null,
+    },
+    {
+        id: 'md14',
+        name: { en: 'Half Chance', zh: '一半的机会' },
+        molecules: 34, budget: 32, target: 0.41, stretch: 0.55, par: 16, doorHalf: 25,
+        tipKey: null,
+    },
+    {
+        id: 'md15',
+        name: { en: 'Pressure', zh: '压强' },
+        molecules: 37, budget: 35, target: 0.42, stretch: 0.56, par: 18, doorHalf: 24,
+        tipKey: null,
+    },
+    {
+        id: 'md16',
+        name: { en: 'The Ledger', zh: '账簿' },
+        molecules: 36, budget: 45, target: 0.43, stretch: 0.57, par: 24, doorHalf: 24,
+        tipKey: 'tipCrowd',
+    },
+    {
+        id: 'md17',
+        name: { en: 'Thin Margin', zh: '薄利' },
+        molecules: 39, budget: 40, target: 0.43, stretch: 0.57, par: 24, doorHalf: 23,
+        tipKey: null,
+    },
+    {
+        id: 'md18',
+        name: { en: 'Last Ember', zh: '余烬' },
+        molecules: 42, budget: 36, target: 0.44, stretch: 0.58, par: 20, doorHalf: 22,
+        tipKey: null,
+    },
+    {
+        id: 'md19',
+        name: { en: 'Entropy Due', zh: '熵债' },
+        molecules: 39, budget: 36, target: 0.45, stretch: 0.59, par: 20, doorHalf: 22,
+        tipKey: null,
+    },
+    {
+        id: 'md20',
+        name: { en: "The Demon's Bill", zh: '妖的账单' },
+        molecules: 40, budget: 32, target: 0.46, stretch: 0.60, par: 16, doorHalf: 21,
         tipKey: 'tipCrowd',
     },
 ];
