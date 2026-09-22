@@ -939,7 +939,7 @@ onReady(() => {
     window.msGame = game; // 调试/测试句柄
     // 初始静音按钮状态
     const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
-    if (game.el.mute) game.el.mute.innerHTML = icon;
+    if (game.el['mute-btn']) game.el['mute-btn'].innerHTML = icon;
     if (game.el['start-mute']) game.el['start-mute'].innerHTML = icon;
     // 初始难度高亮
     document.querySelectorAll('.ms-diff').forEach(b => b.classList.toggle('active', b.dataset.diff === game.diff));
