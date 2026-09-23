@@ -976,6 +976,56 @@
         "priority": "0.8"
       },
       "themeColor": "#0c0612"
+    },
+    {
+      "id": "ripple-duet",
+      "prefix": "rd",
+      "href": "ripple-duet.html",
+      "entry": "js/ripple-duet.js",
+      "emoji": "🌊",
+      "title": {
+        "doc": "涟漪双生 Ripple Duet — Wave Interference Puzzle",
+        "seo": "涟漪双生 Ripple Duet — Wave Interference Puzzle"
+      },
+      "name": {
+        "en": "Ripple Duet",
+        "zh": "涟漪双生"
+      },
+      "desc": {
+        "meta": "涟漪双生 Ripple Duet — an original wave interference puzzle. Drag two sources across the sea, set their phase, and sculpt the ripple field: flatten the storm at one point, blaze a beacon at another, keep a whole channel calm. 20 wave puzzles plus a daily course for the whole world.",
+        "og": "Two sources, one sea. Sculpt the interference pattern — flatten here, blaze there.",
+        "twitter": "Every calm spot on the water is a coincidence you built on purpose."
+      },
+      "genre": [
+        "PuzzleGame",
+        "EducationalGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "leaderboard",
+        "daily",
+        "analytics",
+        "topbar"
+      ],
+      "scores": {
+        "order": "asc",
+        "maxScore": 999,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "ripple-duet",
+        "dailyTtlDays": 0
+      },
+      "stage": {
+        "w": 560,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "daily",
+        "priority": "0.8"
+      },
+      "themeColor": "#041826"
     }
   ]
 }

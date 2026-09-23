@@ -23,6 +23,7 @@ export const MORE_GAMES = [
     { href: 'maxwell-demon.html', emoji: '😈', en: "Maxwell's Demon", zh: "麦克斯韦妖" },
     { href: 'crystal-bloom.html', emoji: '💎', en: "Crystal Bloom", zh: "晶绽" },
     { href: 'flame-verse.html', emoji: '🔥', en: "Flame Verse", zh: "焰语" },
+    { href: 'ripple-duet.html', emoji: '🌊', en: "Ripple Duet", zh: "涟漪双生" },
 ];
 // registry:end more-games
 

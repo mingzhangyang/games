@@ -42,6 +42,7 @@ const DAILY_PATTERNS = [
   { re: /^maxwell-demon-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
   { re: /^crystal-bloom-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
   { re: /^flame-verse-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
+  { re: /^ripple-duet-d\d{8}$/, config: { order: 'asc', maxScore: 999, maxEntries: 50 } },
 ];
 // registry:end games-scores
 

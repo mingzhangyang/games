@@ -1,0 +1,553 @@
+/* ─────────────────────────────────────────────
+   涟漪双生 Ripple Duet — 波的干涉解谜
+   深海底 + 波谷青蓝（#6fd8ff 系）+ 波峰暖橙（#ff9a5c 系）
+   海面画在 canvas 里，控制台也在 canvas 里 —— 没有浮动 DOM 动作钮
+   ───────────────────────────────────────────── */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background:
+        radial-gradient(ellipse 62% 40% at 18% 8%, rgb(90, 200, 250, 0.12), transparent),
+        radial-gradient(ellipse 62% 40% at 84% 92%, rgb(255, 154, 92, 0.10), transparent),
+        linear-gradient(165deg, #02070e 0%, var(--tok-bg-2) 55%, #05121f 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--tok-text);
+
+    --tok-accent: #6fd8ff;
+    --tok-accent-2: #ff9a5c;
+    --tok-hot: #ff9a5c;   /* 波峰 */
+    --tok-cold: #6fd8ff;   /* 波谷 */
+}
+
+.hidden { display: none !important; }
+
+/* ── 顶栏 HUD ── */
+
+.rd-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.rd-icon-btn:active { transform: scale(0.92); }
+
+.rd-hud-level {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #a8c4ff;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.rd-cut-box {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    background: rgb(0, 0, 0, 0.4);
+    border: 1px solid rgb(168, 184, 255, 0.18);
+    border-radius: 11px;
+    padding: 6px 12px;
+}
+
+.rd-cut-value {
+    font-size: 19px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--tok-gold);
+    min-width: 2ch;
+    text-align: center;
+}
+
+.rd-par {
+    font-size: 11.5px;
+    color: var(--tok-text-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── 舞台 ── */
+
+.rd-stage {
+    min-width: 280px;
+}
+
+#rd-canvas {
+    display: block;
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid rgb(168, 184, 255, 0.18);
+    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.6), 0 0 46px rgb(127, 168, 255, 0.1);
+    /* 主要输入是底部两个动作钮；允许页面手势会让移动浏览器
+       在 pointer stream 归属明确前把它交给滚动容器。 */
+    touch-action: none;
+    cursor: pointer;
+}
+
+/* ── 两个动作钮：观测（左）/ 开门（右） ── */
+
+.rd-action-btn {
+    position: absolute;
+    bottom: 16px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(255, 255, 255, 0.35);
+    cursor: pointer;
+    z-index: 15;
+    transition: opacity 0.25s, transform 0.1s, box-shadow 0.15s;
+}
+
+.rd-clear-btn {
+    left: 16px;
+    color: #04121c;
+    background: radial-gradient(circle at 32% 30%, #cfe6ff, #6fd8ff 62%);
+    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(111, 216, 255, 0.45);
+}
+
+.rd-run-btn {
+    right: 16px;
+    color: #2a1a05;
+    background: radial-gradient(circle at 32% 30%, #ffe6a8, var(--tok-gold) 62%);
+    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(255, 211, 77, 0.45);
+}
+
+.rd-action-btn:active {
+    transform: scale(0.9);
+}
+
+.rd-clear-btn:active { box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(111, 216, 255, 0.7); }
+.rd-run-btn:active { box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(255, 211, 77, 0.7); }
+
+/* 预算不足：钮变灰（JS 加 .is-broke） */
+.rd-action-btn.is-broke {
+    filter: grayscale(0.7);
+    opacity: 0.55;
+}
+
+/* 非 playing 态（菜单/结算）整体隐藏：z-index 15 > overlay 10，
+   不藏起来会浮在菜单关卡 chips 上把「1」挡住（移动端实测）。 */
+.rd-action-btn.is-dimmed {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ── 提示 ── */
+
+.rd-toast {
+    top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tok-bg-2);
+    background: linear-gradient(120deg, #ffe6a8, var(--tok-gold));
+    padding: 7px 18px;
+    box-shadow: 0 8px 24px rgb(255, 211, 77, 0.35);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.rd-toast.is-on { opacity: 1; }
+
+/* ── 覆盖层 ── */
+
+.rd-overlay {
+    background: rgb(5, 7, 15, 0.92);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.rd-overlay-dim { background: rgb(5, 7, 15, 0.72); }
+
+.rd-title {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.15;
+    background: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.rd-subtitle {
+    font-size: 12.5px;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: -6px;
+}
+
+.rd-hero {
+    line-height: 1;
+    animation: rd-bob 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgb(127, 168, 255, 0.35));
+}
+
+@keyframes rd-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.rd-howto {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--tok-text-soft);
+    max-width: 350px;
+}
+
+.rd-mode-row {
+    display: flex;
+    gap: 8px;
+}
+
+.rd-mode {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.rd-mode:hover { background: rgb(255, 255, 255, 0.13); }
+.rd-mode:active { transform: scale(0.95); }
+
+.rd-mode-daily {
+    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    border: none;
+    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+}
+
+.rd-level-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--tok-text-mute);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.rd-level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 360px;
+}
+
+/* ⚠️ 类名必须与 js/ripple-duet.js 的 renderLevelGrid() 一致：那里写的是
+   `'rd-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
+   芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
+.rd-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    font-family: inherit;
+    background: rgb(255, 255, 255, 0.05);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 6px 2px 4px;
+    cursor: pointer;
+    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
+    color: var(--tok-text);
+    transition: background 0.15s, transform 0.1s;
+}
+
+.rd-chip:hover { background: rgb(255, 255, 255, 0.11); }
+.rd-chip:active { transform: scale(0.93); }
+
+.rd-chip.is-done {
+    background: rgb(127, 168, 255, 0.12);
+    border-color: rgb(127, 168, 255, 0.38);
+}
+
+.rd-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
+
+.rd-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; color: var(--tok-gold); }
+
+.rd-daily-best {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #a8c4ff;
+    min-height: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.rd-start-footer { display: flex; gap: 10px; }
+
+/* ── 过关卡片 ── */
+
+.rd-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    background: rgb(9, 12, 26, 0.96);
+    border: 1px solid rgb(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 20px 22px;
+    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    animation: rd-card-in 0.26s ease-out;
+}
+
+@keyframes rd-card-in {
+    from { transform: scale(0.9) translateY(14px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.rd-card-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--tok-gold);
+}
+
+.rd-card-line {
+    font-size: 14px;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.rd-overlay-title { font-size: 26px; font-weight: 800; }
+
+.rd-over-score {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 26px rgb(255, 211, 77, 0.4);
+}
+
+.rd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
+
+.rd-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.rd-btn {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.08);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 13px;
+    padding: 11px 18px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.rd-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.rd-btn:active { transform: scale(0.96); }
+
+.rd-btn-primary {
+    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    border: none;
+    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+}
+
+.rd-btn-ghost { background: transparent; color: var(--tok-text-dim); }
+
+/* ── 排行榜 ── */
+
+.rd-lb {
+    width: 100%;
+    max-width: 330px;
+    background: rgb(255, 255, 255, 0.045);
+    border: 1px solid rgb(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.rd-lb-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.rd-lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 40px;
+    max-height: 168px;
+    overflow-y: auto;
+}
+
+.rd-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    padding: 3px 6px;
+    border-radius: 7px;
+}
+
+.rd-lb-row.rd-lb-top1 { background: rgb(252, 211, 77, 0.14); }
+.rd-lb-row.rd-lb-top2 { background: rgb(203, 213, 225, 0.10); }
+.rd-lb-row.rd-lb-top3 { background: rgb(111, 216, 255, 0.12); }
+
+.rd-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.rd-lb-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.rd-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.rd-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
+
+.rd-lb-status {
+    min-height: 16px;
+    font-size: 11.5px;
+    color: var(--tok-text-mute);
+    margin-top: 4px;
+}
+
+.rd-username-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.rd-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
+
+.rd-username {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--tok-text);
+    background: rgb(255, 255, 255, 0.07);
+    border: 1px solid rgb(255, 255, 255, 0.14);
+    border-radius: 9px;
+    padding: 7px 10px;
+    outline: none;
+}
+
+.rd-username:focus { border-color: rgb(127, 168, 255, 0.5); }
+
+/* ── 侧栏：记录行 ── */
+
+.rd-side-records { display: flex; flex-direction: column; }
+
+.rd-side-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+    padding: 4px 0;
+    color: var(--tok-text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.rd-side-k { color: var(--tok-text-dim); }
+.rd-side-v { color: var(--tok-text); font-weight: 700; }
+
+/* ── 侧栏：读水 ──
+   参考条码由 js/ripple-duet.js 按真实波长写 linear-gradient 色标，
+   黑底 + 竖线与 canvas 里的条码同一套读法（400nm 在左，700nm 在右） */
+
+.rd-side-legend { display: flex; flex-direction: column; gap: 2px; }
+
+.rd-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    padding: 3px 0;
+    color: var(--tok-text-dim);
+}
+
+.rd-legend-text { flex: 1; min-width: 0; line-height: 1.45; }
+
+.rd-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* 元素符号牌：宽度写死保证 8 行条码左缘对齐（flex 子项默认会被压缩） */
+/* ── 侧栏：读水图例（与 canvas 里海面同一套配色） ── */
+
+.rd-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 7px;
+    font-size: 12.5px;
+    color: #cdd9f5;
+}
+
+.rd-legend-swatch {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.rd-legend-crest { background: linear-gradient(90deg, #101826 0%, #ff8a40 100%); }
+.rd-legend-trough { background: linear-gradient(90deg, #101826 0%, #4092ff 100%); }
+.rd-legend-dark { background: #101826; border: 1px solid rgb(160, 190, 240, 0.35); }
+.rd-legend-storm { background: linear-gradient(90deg, #8e97b4 0%, #e8eefc 100%); }
+.rd-legend-wall { background: linear-gradient(90deg, transparent 0%, #bed2f0 45%, #bed2f0 55%, transparent 100%); }
+
+.rd-legend-note {
+    margin-top: 9px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: rgb(205 217 245 / 72%);
+}
+
+/* ── 响应式 ── */
+
+@media (width <= 480px) {
+    .rd-hud-level { font-size: 12px; }
+    .rd-cut-value { font-size: 16px; }
+    .rd-title { font-size: 27px; }
+    .rd-over-score { font-size: 34px; }
+    .rd-howto { font-size: 12px; }
+    .rd-mode { font-size: 13px; padding: 10px 15px; }
+    .rd-level-grid { gap: 5px; }
+    .rd-action-btn { width: 58px; height: 58px; bottom: 12px; }
+    .rd-clear-btn { left: 12px; }
+    .rd-run-btn { right: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rd-hero, .rd-card { animation: none !important; }
+    .rd-toast { transition: none; }
+    .rd-btn, .rd-icon-btn, .rd-mode, .rd-chip, .rd-action-btn { transition: none; }
+}
+
+/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
+   560×640 逻辑场 → --frame-ratio: 0.875；
+   舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
+.rd-shell {
+    --frame-max-wide: 940px;
+    --frame-stage: 560px;
+    --frame-side: 300px;
+    --frame-side-gap: 14px;
+    --frame-ratio: 0.875;
+    --frame-stage-h: 960px;
+    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
+    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}

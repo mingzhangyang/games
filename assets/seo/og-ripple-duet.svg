@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="rd-og-title rd-og-desc">
+  <title id="rd-og-title">Ripple Duet social card</title>
+  <desc id="rd-og-desc">Social preview for 涟漪双生 Ripple Duet — original wave interference puzzle.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#02060c"/>
+      <stop offset="0.6" stop-color="#04101c"/>
+      <stop offset="1" stop-color="#061826"/>
+    </linearGradient>
+    <radialGradient id="crestGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ff9a5c" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#ff9a5c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="troughGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6fd8ff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#6fd8ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="beaconGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd34d" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffd34d" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 干涉条纹：橙（波峰）↔ 蓝（波谷）交替，中间是被抹平的暗带 -->
+    <linearGradient id="stripes" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.00" stop-color="#ff8a40"/>
+      <stop offset="0.18" stop-color="#101826"/>
+      <stop offset="0.34" stop-color="#4092ff"/>
+      <stop offset="0.50" stop-color="#101826"/>
+      <stop offset="0.66" stop-color="#ff8a40"/>
+      <stop offset="0.82" stop-color="#101826"/>
+      <stop offset="1.00" stop-color="#4092ff"/>
+    </linearGradient>
+    <clipPath id="seaClip">
+      <rect x="640" y="96" width="512" height="438" rx="22"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="48" y="48" width="1104" height="534" rx="26" fill="rgba(0,0,0,0.30)" stroke="#6fd8ff" stroke-width="2.5"/>
+
+  <text x="88" y="172" fill="#f4f6ff" font-size="76" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Ripple Duet</text>
+  <text x="88" y="236" fill="#6fd8ff" font-size="38" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">涟漪双生 · 原创波的干涉解谜</text>
+  <text x="88" y="298" fill="#7f9ab8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">A still sea is not a silent one.</text>
+  <text x="88" y="342" fill="#7f9ab8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Two waves arrive opposite and call it even.</text>
+  <text x="88" y="386" fill="#7f9ab8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Drag, de-tune, and the dark band is yours.</text>
+
+  <!-- 场景示意：两个波源 + 干涉条纹 + 暗带里的「平静」标记 + 点亮的浮标 -->
+  <g clip-path="url(#seaClip)">
+    <rect x="640" y="96" width="512" height="438" fill="#0a1420"/>
+    <g>
+      <!-- 干涉条纹（同心弧，示意两源叠加的图样） -->
+      <g fill="none" opacity="0.95">
+        <circle cx="770" cy="315" r="52" stroke="#ff8a40" stroke-width="9"/>
+        <circle cx="770" cy="315" r="86" stroke="#4092ff" stroke-width="9"/>
+        <circle cx="770" cy="315" r="120" stroke="#ff8a40" stroke-width="9"/>
+        <circle cx="1022" cy="315" r="52" stroke="#4092ff" stroke-width="9"/>
+        <circle cx="1022" cy="315" r="86" stroke="#ff8a40" stroke-width="9"/>
+        <circle cx="1022" cy="315" r="120" stroke="#4092ff" stroke-width="9"/>
+      </g>
+      <!-- 相消暗带：两源之间那条竖直的静水带 -->
+      <rect x="880" y="96" width="32" height="438" fill="#04070d"/>
+      <!-- 波源 S1 / S2 -->
+      <circle cx="770" cy="315" r="58" fill="url(#crestGlow)"/>
+      <circle cx="770" cy="315" r="19" fill="#0f1a28" stroke="#ffd34d" stroke-width="4"/>
+      <circle cx="1022" cy="315" r="58" fill="url(#troughGlow)"/>
+      <circle cx="1022" cy="315" r="19" fill="#0f1a28" stroke="#ffd34d" stroke-width="4"/>
+      <!-- 平静标记（落在暗带上） -->
+      <circle cx="896" cy="315" r="26" fill="none" stroke="#7ee0a5" stroke-width="4"/>
+      <circle cx="896" cy="315" r="12" fill="none" stroke="#7ee0a5" stroke-width="3"/>
+      <!-- 点亮的浮标 -->
+      <circle cx="896" cy="150" r="46" fill="url(#beaconGlow)"/>
+      <rect x="882" y="136" width="28" height="28" transform="rotate(45 896 150)" fill="#ffd34d" stroke="#fff3cf" stroke-width="3"/>
+    </g>
+  </g>
+  <rect x="640" y="96" width="512" height="438" rx="22" fill="none" stroke="#8ea0b8" stroke-width="3"/>
+  <text x="640" y="566" fill="#7f9ab8" font-size="19" font-family="Segoe UI, system-ui, sans-serif" text-anchor="middle">crest = orange · trough = blue · dark band = cancelled</text>
+
+  <text x="88" y="552" fill="#dff2ff" font-size="27" font-weight="600" font-family="Segoe UI, system-ui, sans-serif">Still water — Play in browser · ripple-duet</text>
+</svg>

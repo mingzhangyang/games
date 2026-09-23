@@ -1474,7 +1474,18 @@ onReady(() => {
 
     // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
     // 变化后经 game-frame:changed 驱动上面的 resize()
-    bindFrame({ logicalWidth: WORLD_W });
+    //
+    // ⚠️ extraChrome 必须报上连胜条：它是 .game-shell 的直接子元素（22px 高），
+    // 但既不是 .game-topbar 也不是 .game-footer，bindFrame 默认量不到。
+    // 漏报时 --frame-chrome 少算 22px ⇒ 侧栏 max-height 比真实行高多出 22px
+    // ⇒ 1280×800 下整页溢出可滚（新增第 22 款游戏后侧栏正好顶到上限才暴露）。
+    bindFrame({
+        logicalWidth: WORLD_W,
+        extraChrome: () => {
+            const bar = document.querySelector('.hs-streak-bar');
+            return bar ? bar.getBoundingClientRect().height : 0;
+        },
+    });
 
     // 桌面侧栏「更多游戏」卡（P3）：语言切换由 more-games.js 的全局
     // updateMoreGames 监听自动同步（id 不以 MoreNav 结尾）

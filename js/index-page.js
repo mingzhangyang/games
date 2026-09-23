@@ -118,6 +118,10 @@ const i18n = {
         flameVerseDesc: 'Throw salt into a burner and the flame speaks: every element answers with its own fixed set of light lines. Read the unknown sample\'s barcode of light — position names the element, brightness names the dose. 20 unknowns plus a daily sample.',
         flameVerseTag: 'Spectroscopy',
         flameVersePlay: 'Play ›',
+        rippleDuetName: 'Ripple Duet',
+        rippleDuetDesc: 'Two sources, one sea. Drag them and turn their phase until the water obeys — flatten the storm at one point, pile the crests up to light a beacon at another. 20 wave puzzles plus a daily course.',
+        rippleDuetTag: 'Interference',
+        rippleDuetPlay: 'Play ›',
 
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
@@ -259,6 +263,10 @@ const i18n = {
         flameVerseDesc: '往本生灯里投一撮盐，火焰就开始说话：每种元素都用自己那几条固定的谱线作答。读懂未知样品的光之条码——谱线位置说出元素，亮度说出含量。20 份未知样品 + 每日挑战。',
         flameVerseTag: '光谱',
         flameVersePlay: '开始游戏 ›',
+        rippleDuetName: '涟漪双生',
+        rippleDuetDesc: '两个波源，一片海。拖动它们、拧动相位，让水听你的话——在一处把风暴抹平，在另一处把波峰叠起来点亮浮标。20 片海 + 每日赛程。',
+        rippleDuetTag: '干涉',
+        rippleDuetPlay: '开始游戏 ›',
 
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -405,6 +413,10 @@ function applyLanguage(lang) {
     document.getElementById('flame-verse-desc').textContent = t.flameVerseDesc;
     document.getElementById('flame-verse-tag').textContent = t.flameVerseTag;
     document.getElementById('flame-verse-play').textContent = t.flameVersePlay;
+    document.getElementById('ripple-duet-name').textContent = t.rippleDuetName;
+    document.getElementById('ripple-duet-desc').textContent = t.rippleDuetDesc;
+    document.getElementById('ripple-duet-tag').textContent = t.rippleDuetTag;
+    document.getElementById('ripple-duet-play').textContent = t.rippleDuetPlay;
 
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
@@ -490,6 +502,7 @@ function injectStructuredData() {
         { slug: 'maxwell-demon', name: 'Maxwell\'s Demon', description: 'Original thermodynamics puzzle — keep the tiny door between two chambers, sort fast molecules from slow ones and build a temperature gap out of nothing. Every bit you learn is paid for. 20 vessels plus a daily run.' },
         { slug: 'crystal-bloom', name: 'Crystal Bloom', description: 'Original crystallization puzzle — draw the cooling curve of a saturated bath: quench it for dendrites, ease it down for facets, stir to pack it dense. 20 vessels plus a daily run.' },
         { slug: 'flame-verse', name: 'Flame Verse', description: 'Original flame spectroscopy puzzle — throw salts into the burner, read the emission lines each element leaves behind and match the mystery sample\'s barcode of light. 20 unknowns plus a daily sample.' },
+        { slug: 'ripple-duet', name: 'Ripple Duet', description: 'Original wave interference puzzle — drag two sources across the sea, set their phase and sculpt the ripple field: flatten the storm at one point, blaze a beacon at another, keep a whole channel calm. 20 wave puzzles plus a daily course.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
