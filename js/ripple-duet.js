@@ -1137,8 +1137,10 @@ class RippleDuetGame {
         put('title', 'title');
         put('subtitle', 'subtitle');
         put('howto', 'howto');
-        put('btn-levels', 'playLevels');
-        put('btn-daily', 'playDaily');
+        // 与 maxwell-demon / crystal-bloom / flame-verse / echo-cave 同款：图标 + 文字 span
+        // （纯 textContent 会让模式按钮缺图标，且移动端热区掉到 41px）
+        if (el['btn-levels']) el['btn-levels'].innerHTML = `${ICONS.play}<span class="btn-text">${this.t('playLevels')}</span>`;
+        if (el['btn-daily']) el['btn-daily'].innerHTML = `${ICONS.calendar}<span class="btn-text">${this.t('playDaily')}</span>`;
         put('level-label', 'levelSelect');
         put('side-howto-title', 'sideHowTo');
         put('side-howto', 'howto');

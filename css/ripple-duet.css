@@ -204,6 +204,11 @@ body {
 }
 
 .rd-mode {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    line-height: 1;
     font-family: inherit;
     font-size: 14.5px;
     font-weight: 700;
@@ -525,7 +530,7 @@ body {
     .rd-title { font-size: 27px; }
     .rd-over-score { font-size: 34px; }
     .rd-howto { font-size: 12px; }
-    .rd-mode { font-size: 13px; padding: 10px 15px; }
+    .rd-mode { font-size: 13px; padding: 11px 15px; }
     .rd-level-grid { gap: 5px; }
     .rd-action-btn { width: 58px; height: 58px; bottom: 12px; }
     .rd-clear-btn { left: 12px; }

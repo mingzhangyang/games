@@ -177,6 +177,11 @@ body {
 }
 
 .ec-mode {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    line-height: 1;
     font-family: inherit;
     font-size: 14.5px;
     font-weight: 700;
@@ -479,7 +484,7 @@ body {
     .ec-title { font-size: 27px; }
     .ec-over-score { font-size: 34px; }
     .ec-howto { font-size: 12px; }
-    .ec-mode { font-size: 13px; padding: 10px 15px; }
+    .ec-mode { font-size: 13px; padding: 11px 15px; }
     .ec-level-grid { gap: 5px; }
     .ec-pulse-btn { width: 58px; height: 58px; right: 12px; bottom: 12px; }
 }

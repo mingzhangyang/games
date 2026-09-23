@@ -204,6 +204,11 @@ body {
 }
 
 .cb-mode {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    line-height: 1;
     font-family: inherit;
     font-size: 14.5px;
     font-weight: 700;
@@ -506,7 +511,7 @@ body {
     .cb-title { font-size: 27px; }
     .cb-over-score { font-size: 34px; }
     .cb-howto { font-size: 12px; }
-    .cb-mode { font-size: 13px; padding: 10px 15px; }
+    .cb-mode { font-size: 13px; padding: 11px 15px; }
     .cb-level-grid { gap: 5px; }
     .cb-action-btn { width: 58px; height: 58px; bottom: 12px; }
     .cb-stir-btn { left: 12px; }

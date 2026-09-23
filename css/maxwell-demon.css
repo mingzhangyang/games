@@ -204,6 +204,11 @@ body {
 }
 
 .md-mode {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    line-height: 1;
     font-family: inherit;
     font-size: 14.5px;
     font-weight: 700;
@@ -506,7 +511,7 @@ body {
     .md-title { font-size: 27px; }
     .md-over-score { font-size: 34px; }
     .md-howto { font-size: 12px; }
-    .md-mode { font-size: 13px; padding: 10px 15px; }
+    .md-mode { font-size: 13px; padding: 11px 15px; }
     .md-level-grid { gap: 5px; }
     .md-action-btn { width: 58px; height: 58px; bottom: 12px; }
     .md-scan-btn { left: 12px; }
