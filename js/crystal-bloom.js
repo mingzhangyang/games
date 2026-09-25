@@ -279,7 +279,7 @@ class CrystalBloomGame {
             'cb-over', 'cb-over-title', 'cb-over-score', 'cb-over-sub',
             'cb-btn-again', 'cb-btn-copy', 'cb-btn-menu2',
             'cb-lb-title', 'cb-lb-list', 'cb-lb-status', 'cb-username', 'cb-username-label',
-            'cb-hint', 'cb-stir-btn', 'cb-run-btn',
+            'cb-hint', 'cb-stir-btn', 'cb-run-btn', 'cb-action-row',
         ].forEach((id) => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^cb-/, '')] = el;
@@ -356,6 +356,7 @@ class CrystalBloomGame {
     /** 动作钮只在 playing 态显示（z-index 高于 overlay，菜单态会挡住关卡 chips） */
     syncActionVisibility() {
         const on = this.state === 'playing';
+        if (this.el['action-row']) this.el['action-row'].classList.toggle('is-hidden', !on);
         if (this.el['run-btn']) this.el['run-btn'].classList.toggle('is-dimmed', !on);
         // 搅拌只在晶体真的在长时才有意义：draw 阶段按下去是白花一点代价
         if (this.el['stir-btn']) this.el['stir-btn'].classList.toggle('is-dimmed', !(on && this.phase === 'grow'));
