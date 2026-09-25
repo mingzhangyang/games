@@ -270,29 +270,30 @@
                                 <path d="M-64-206L-8-214" stroke="#f3eee2" stroke-width="23" stroke-linecap="round"/>
                                 <path d="M-8-214L24-200" stroke="#4a2e22" stroke-width="21" stroke-linecap="round"/>
                                 <path d="M-8-214L24-200" stroke="#f7c9a4" stroke-width="16" stroke-linecap="round"/>
-                                <!-- boots -->
-                                <g fill="#f6c43c" stroke="#a8751c" stroke-width="2.6" stroke-linejoin="round">
-                                    <path d="M-72-54h36v34q24 2 28 14 1 9-10 9h-52q-8 0-8-9Z"/>
-                                    <rect x="-76" y="-64" width="44" height="14" rx="6" fill="#f9d460"/>
-                                    <g transform="rotate(-16 44 0)">
-                                        <path d="M22-56h36v34q26 2 30 14 1 9-10 9H24q-8 0-8-9Z"/>
-                                        <rect x="18" y="-66" width="44" height="14" rx="6" fill="#f9d460"/>
-                                    </g>
-                                </g>
-                                <g fill="#7a4a2b" opacity=".85">
-                                    <ellipse cx="-50" cy="-24" rx="7" ry="4"/><circle cx="-22" cy="-8" r="3"/><circle cx="48" cy="-18" r="4.5"/><circle cx="70" cy="-10" r="3"/>
-                                </g>
-                                <!-- legs -->
+                                <!-- legs：先画裤腿，末端伸进靴筒，由后画的靴子盖住 -->
                                 <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M-50-126L-54-70" stroke="#1f5f5c" stroke-width="40"/>
-                                    <path d="M-50-126L-54-70" stroke="#2f8f8a" stroke-width="34"/>
-                                    <path d="M-30-128Q6-122 36-74" stroke="#1f5f5c" stroke-width="40"/>
-                                    <path d="M-30-128Q6-122 36-74" stroke="#2f8f8a" stroke-width="34"/>
+                                    <path d="M-50-126L-54-60" stroke="#1f5f5c" stroke-width="40"/>
+                                    <path d="M-50-126L-54-60" stroke="#2f8f8a" stroke-width="34"/>
+                                    <path d="M-30-128Q6-122 40-58" stroke="#1f5f5c" stroke-width="40"/>
+                                    <path d="M-30-128Q6-122 40-58" stroke="#2f8f8a" stroke-width="34"/>
                                     <path d="M-12-120q14 6 24 20" stroke="#287a76" stroke-width="3"/>
                                 </g>
-                                <g fill="#3fa8a0" stroke="#1f5f5c" stroke-width="2.6">
-                                    <rect x="-80" y="-78" width="52" height="17" rx="7"/>
-                                    <rect x="14" y="-90" width="52" height="17" rx="7" transform="rotate(-34 40 -81)"/>
+                                <!-- boots：原点 = 靴口中心，旋转到与小腿同向；卷起的裤脚压在靴口上 -->
+                                <g transform="translate(-54 -56)">
+                                    <path d="M-24-2H22V30Q48 32 52 44 53 54 42 54H-18Q-26 54-26 46Z" fill="#f6c43c" stroke="#a8751c" stroke-width="2.6" stroke-linejoin="round"/>
+                                    <path d="M-14 8v36" stroke="#fbe08a" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+                                    <rect x="-27" y="-10" width="52" height="13" rx="6" fill="#f9d460" stroke="#a8751c" stroke-width="2.6"/>
+                                    <rect x="-28" y="-24" width="54" height="16" rx="7" fill="#3fa8a0" stroke="#1f5f5c" stroke-width="2.6"/>
+                                    <ellipse cx="4" cy="30" rx="7" ry="4" fill="#7a4a2b" opacity=".85"/>
+                                    <circle cx="32" cy="46" r="3" fill="#7a4a2b" opacity=".85"/>
+                                </g>
+                                <g transform="translate(40 -58) rotate(-28)">
+                                    <path d="M-24-2H22V30Q48 32 52 44 53 54 42 54H-18Q-26 54-26 46Z" fill="#f6c43c" stroke="#a8751c" stroke-width="2.6" stroke-linejoin="round"/>
+                                    <path d="M-14 8v36" stroke="#fbe08a" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+                                    <rect x="-27" y="-10" width="52" height="13" rx="6" fill="#f9d460" stroke="#a8751c" stroke-width="2.6"/>
+                                    <rect x="-28" y="-24" width="54" height="16" rx="7" fill="#3fa8a0" stroke="#1f5f5c" stroke-width="2.6"/>
+                                    <circle cx="8" cy="22" r="4.5" fill="#7a4a2b" opacity=".85"/>
+                                    <circle cx="38" cy="44" r="3" fill="#7a4a2b" opacity=".85"/>
                                 </g>
                                 <!-- torso -->
                                 <g transform="rotate(-26 -46 -132)">
