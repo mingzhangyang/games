@@ -1106,10 +1106,10 @@ class FlameVerseGame {
     drawFlame(ctx, recipe) {
         const box = FLAME;
         this.roundRect(ctx, box.x, box.y, box.w, box.h, 12);
-        ctx.fillStyle = '#07050e';
+        ctx.fillStyle = '#141b1f';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(200,190,255,0.16)';
-        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = 'rgba(226,180,111,0.30)';
+        ctx.lineWidth = 1.2;
         ctx.stroke();
 
         const cx = box.x + box.w / 2;
@@ -1117,24 +1117,48 @@ class FlameVerseGame {
         const total = costOf(recipe);
         const flameH = 46 + Math.min(total, 12) * 11 + this.flamePulse * 10;
 
-        // 灯头
-        ctx.fillStyle = '#2a2436';
-        ctx.fillRect(cx - 26, baseY, 52, 14);
-        ctx.fillStyle = '#4a4258';
-        ctx.fillRect(cx - 18, baseY - 5, 36, 6);
+        // Metal burner: rim, mesh and a small calibration notch.
+        ctx.fillStyle = '#3a4547';
+        ctx.fillRect(cx - 30, baseY + 1, 60, 13);
+        ctx.fillStyle = '#758080';
+        ctx.fillRect(cx - 22, baseY - 5, 44, 7);
+        ctx.fillStyle = '#1d292d';
+        ctx.fillRect(cx - 17, baseY - 3, 34, 3);
+        ctx.strokeStyle = 'rgba(229,239,233,0.42)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(cx - 30.5, baseY + 1.5, 61, 12);
+        for (let x = cx - 13; x <= cx + 13; x += 6) {
+            ctx.beginPath(); ctx.moveTo(x, baseY + 4); ctx.lineTo(x, baseY + 11); ctx.stroke();
+        }
 
         ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalCompositeOperation = 'source-over';
 
         // 本生灯底焰：永远是淡蓝（没投盐时也只有它）
-        const blue = ctx.createRadialGradient(cx, baseY - 14, 2, cx, baseY - 14, 46);
-        blue.addColorStop(0, 'rgba(150,200,255,0.55)');
-        blue.addColorStop(0.5, 'rgba(70,120,255,0.22)');
-        blue.addColorStop(1, 'rgba(40,60,180,0)');
+        const blue = ctx.createRadialGradient(cx, baseY - 14, 2, cx, baseY - 14, 42);
+        blue.addColorStop(0, 'rgba(141,198,201,0.36)');
+        blue.addColorStop(0.55, 'rgba(74,132,142,0.16)');
+        blue.addColorStop(1, 'rgba(40,70,90,0)');
         ctx.fillStyle = blue;
         ctx.beginPath();
         ctx.ellipse(cx, baseY - 16, 30, 42, 0, 0, Math.PI * 2);
         ctx.fill();
+
+        // A layered silhouette gives the flame a natural outline; the moving
+        // particles are only the spectral material inside it.
+        const sway = Math.sin(this.time * 2.1) * 5;
+        const flamePath = (scale, fill) => {
+            ctx.beginPath();
+            ctx.moveTo(cx, baseY - 6);
+            ctx.bezierCurveTo(cx - 23 * scale, baseY - 20 * scale, cx - 16 * scale + sway, baseY - flameH * 0.58, cx - 5 * scale + sway, baseY - flameH);
+            ctx.bezierCurveTo(cx + 3 * scale, baseY - flameH * 0.78, cx + 22 * scale - sway, baseY - flameH * 0.58, cx + 7 * scale, baseY - 8);
+            ctx.bezierCurveTo(cx + 5 * scale, baseY - 15, cx - 4 * scale, baseY - 17, cx, baseY - 6);
+            ctx.closePath();
+            ctx.fillStyle = fill;
+            ctx.fill();
+        };
+        flamePath(1, total ? 'rgba(226,145,65,0.70)' : 'rgba(94,157,173,0.52)');
+        flamePath(0.58, total ? 'rgba(248,193,83,0.86)' : 'rgba(190,235,226,0.72)');
 
         // 元素火舌：确定性粒子（index → 相位/速度），零随机数
         let seed = 0;
@@ -1154,7 +1178,7 @@ class FlameVerseGame {
                 const a = (1 - life) * 0.5;
                 const r = 1.1 + 3.4 * (1 - life);
                 ctx.fillStyle = e.flame;
-                ctx.globalAlpha = a;
+                ctx.globalAlpha = a * 0.72;
                 ctx.beginPath();
                 ctx.arc(x, y, r, 0, Math.PI * 2);
                 ctx.fill();
@@ -1170,7 +1194,7 @@ class FlameVerseGame {
         cg.addColorStop(0.45, core);
         cg.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.save();
-        ctx.globalAlpha = total ? 0.34 : 0.12;
+        ctx.globalAlpha = total ? 0.18 : 0.08;
         ctx.fillStyle = cg;
         ctx.beginPath();
         ctx.ellipse(cx, baseY - flameH * 0.34, flameH * 0.3, flameH * 0.5, 0, 0, Math.PI * 2);
@@ -1192,9 +1216,9 @@ class FlameVerseGame {
 
     drawBarcode(ctx, box, recipe, title) {
         this.roundRect(ctx, box.x, box.y, box.w, box.h, 10);
-        ctx.fillStyle = 'rgba(6,4,14,0.95)';
+        ctx.fillStyle = '#111b20';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(200,190,255,0.2)';
+        ctx.strokeStyle = 'rgba(226,180,111,0.26)';
         ctx.lineWidth = 1.2;
         ctx.stroke();
 
@@ -1208,10 +1232,10 @@ class FlameVerseGame {
         const linesH = box.h - 22 - 18;
         const axisY = box.y + box.h - 14;
 
-        // 谱线：软边竖带（sigma 故意偏大 —— 邻近线会糊在一起，逼玩家看谱线组）
+        // 谱线：离散竖线（真实玩法是读位置与谱线组，不是猜火焰颜色）。
         const halfPx = (LINE_SIGMA / (WL[1] - WL[0])) * box.w;
         ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalCompositeOperation = 'source-over';
         for (const k of EL_ORDER) {
             const d = recipe[k] | 0;
             if (!d) continue;
@@ -1219,15 +1243,12 @@ class FlameVerseGame {
             for (const line of e.lines) {
                 const x = wlX(line.nm, box);
                 const peak = Math.min(1, 0.3 + 0.24 * d * line.w);
-                const g = ctx.createLinearGradient(x - halfPx * 2, 0, x + halfPx * 2, 0);
-                g.addColorStop(0, 'rgba(0,0,0,0)');
-                g.addColorStop(0.35, wlColor(line.nm));
-                g.addColorStop(0.5, `rgba(255,255,255,${(peak * 0.75).toFixed(3)})`);
-                g.addColorStop(0.65, wlColor(line.nm));
-                g.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.globalAlpha = peak;
-                ctx.fillStyle = g;
-                ctx.fillRect(x - halfPx * 2, linesTop, halfPx * 4, linesH);
+                ctx.fillStyle = wlColor(line.nm);
+                ctx.fillRect(x - Math.max(1, halfPx * 0.72), linesTop, Math.max(2, halfPx * 1.44), linesH);
+                ctx.globalAlpha = Math.min(1, peak + 0.18);
+                ctx.fillStyle = '#fff6df';
+                ctx.fillRect(x - 0.55, linesTop, 1.1, linesH);
             }
         }
         ctx.globalAlpha = 1;
@@ -1241,9 +1262,15 @@ class FlameVerseGame {
         ctx.fillStyle = ag;
         ctx.fillRect(box.x + 8, axisY, box.w - 16, 5);
 
-        ctx.font = '9px ui-sans-serif, system-ui, sans-serif';
+        ctx.font = '9px ui-monospace, SFMono-Regular, Consolas, monospace';
         ctx.textBaseline = 'bottom';
-        ctx.fillStyle = 'rgba(200,214,255,0.45)';
+        ctx.fillStyle = 'rgba(214,229,226,0.66)';
+        for (const nm of [400, 450, 500, 550, 600, 650, 700]) {
+            const x = box.x + 8 + ((nm - WL[0]) / (WL[1] - WL[0])) * (box.w - 16);
+            ctx.strokeStyle = 'rgba(214,229,226,0.38)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(x, axisY + 5); ctx.lineTo(x, axisY + 9); ctx.stroke();
+        }
         ctx.textAlign = 'left';
         ctx.fillText('400', box.x + 8, axisY - 1);
         ctx.textAlign = 'center';

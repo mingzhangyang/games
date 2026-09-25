@@ -63,11 +63,11 @@ const FW = 260;
 const FH = 200;
 
 const OMEGA = Math.PI * 2 * 0.45;        // 0.45Hz：看得清起伏，也不晃眼
-const GOLD = '#ffd34d';
+const GOLD = '#e17b61';             // coral marker / active control
 const DIM = 'rgba(200,214,255,0.62)';
-const CREST = [255, 138, 64];            // 波峰：暖橙
-const TROUGH = [64, 146, 255];           // 波谷：冷蓝
-const BASEC = [16, 24, 42];              // 静止水面（也是相消带的颜色）
+const CREST = [222, 126, 98];            // 波峰：珊瑚红
+const TROUGH = [78, 180, 183];           // 波谷：深海青
+const BASEC = [13, 35, 42];              // 静止水面（也是相消带的颜色）
 const SRC_R = 21;                        // 波源命中半径（逻辑像素；窄屏换算后 ≈15px，靠视觉圆盘 42px 兜底）
 
 /* 控制台命中区（逻辑坐标，CONSOLE 内） */
@@ -794,6 +794,7 @@ class RippleDuetGame {
         ctx.clip();
         ctx.imageSmoothingEnabled = true;
         ctx.drawImage(this.fieldCanvas, SEA.x, SEA.y, SEA.w, SEA.h);
+        this.drawContours(ctx);
         this.drawWalls(ctx);
         this.drawTargets(ctx);
         this.drawSources(ctx, cosT, sinT);
@@ -806,11 +807,67 @@ class RippleDuetGame {
         this.drawConsole(ctx);
     }
 
+    /**
+     * 叠在瞬时波场上的等高线：实线是波峰、虚线是波谷，静区用菱形点记号。
+     * 这些线只解释传播现象，不参与判定；判定仍完全来自 rules 的复振幅。
+     */
+    drawContours(ctx) {
+        const sources = [];
+        (this.spec.ctrl || []).forEach((src, idx) => {
+            const p = this.place[idx] || src;
+            sources.push({ x: gridX(p.i), y: gridY(p.j), ph: (p.ph || 0) * (Math.PI * 2 / PHASES) });
+        });
+        (this.spec.storms || []).forEach((src) => {
+            sources.push({ x: src.x, y: src.y, ph: (src.ph || 0) * (Math.PI * 2 / PHASES) });
+        });
+
+        const lambda = this.k > 0 ? (Math.PI * 2) / this.k : 72;
+        const spacing = clamp(lambda, 30, 82);
+        const maxRadius = Math.hypot(SEA.w, SEA.h);
+        ctx.save();
+        ctx.lineWidth = 1.1;
+        ctx.lineCap = 'round';
+        sources.forEach((source, sourceIndex) => {
+            const phaseOffset = source.ph + OMEGA * this.time;
+            const offset = ((phaseOffset / (Math.PI * 2)) * spacing % spacing + spacing) % spacing;
+            for (let ring = 0; ring * spacing + offset < maxRadius; ring++) {
+                const radius = offset + ring * spacing;
+                if (radius < 7) continue;
+                const trough = (ring + sourceIndex) % 2 === 1;
+                ctx.strokeStyle = trough ? 'rgba(116,211,207,0.25)' : 'rgba(241,152,125,0.29)';
+                ctx.setLineDash(trough ? [5, 5] : []);
+                ctx.beginPath();
+                ctx.arc(source.x, source.y, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        });
+
+        // A quiet zone is a symbol, not merely a dark colour patch.
+        const list = emitters(this.spec, this.place, this.k);
+        ctx.setLineDash([1, 4]);
+        ctx.strokeStyle = 'rgba(215,235,222,0.36)';
+        ctx.lineWidth = 1;
+        for (let y = SEA.y + 24; y < SEA.y + SEA.h - 12; y += 34) {
+            for (let x = SEA.x + 24; x < SEA.x + SEA.w - 12; x += 34) {
+                if (fieldAt(list, x, y, this.k).mag > 0.12) continue;
+                ctx.beginPath();
+                ctx.moveTo(x, y - 3);
+                ctx.lineTo(x + 3, y);
+                ctx.lineTo(x, y + 3);
+                ctx.lineTo(x - 3, y);
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
+
     drawWalls(ctx) {
         const walls = this.spec.walls || [];
         ctx.save();
-        ctx.strokeStyle = 'rgba(190,210,240,0.75)';
-        ctx.lineWidth = 5;
+        ctx.strokeStyle = 'rgba(181,211,210,0.76)';
+        ctx.lineWidth = 4;
         ctx.lineCap = 'round';
         walls.forEach((w) => {
             // 判定用的是无限长直线的镜像，画的时候裁到海面内，视觉与判定一致
@@ -820,6 +877,17 @@ class RippleDuetGame {
             ctx.moveTo(pts[0], pts[1]);
             ctx.lineTo(pts[2], pts[3]);
             ctx.stroke();
+            // 虚线内芯提示“反射边界”，与波峰/波谷线型形成第三种读法。
+            ctx.strokeStyle = 'rgba(224,239,233,0.38)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 5]);
+            ctx.beginPath();
+            ctx.moveTo(pts[0], pts[1]);
+            ctx.lineTo(pts[2], pts[3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.strokeStyle = 'rgba(181,211,210,0.76)';
+            ctx.lineWidth = 4;
         });
         ctx.restore();
     }
@@ -830,9 +898,9 @@ class RippleDuetGame {
             const m = measure(this.spec, this.place, i, this.k);
             if (t.kind === 'lane') {
                 ctx.save();
-                ctx.strokeStyle = m.ok ? GOLD : 'rgba(220,230,255,0.55)';
+                ctx.strokeStyle = m.ok ? GOLD : 'rgba(210,231,224,0.62)';
                 ctx.lineWidth = m.ok ? 4 : 3;
-                ctx.setLineDash([8, 6]);
+                ctx.setLineDash(m.ok ? [] : [3, 7]);
                 ctx.beginPath();
                 ctx.moveTo(t.x1, t.y1);
                 ctx.lineTo(t.x2, t.y2);
@@ -853,29 +921,36 @@ class RippleDuetGame {
                 ctx.fillRect(-s / 2, -s / 2, s, s);
                 ctx.strokeRect(-s / 2, -s / 2, s, s);
                 ctx.restore();
-                if (m.ok) {
-                    ctx.save();
-                    ctx.globalAlpha = 0.35;
-                    ctx.fillStyle = GOLD;
-                    ctx.beginPath();
-                    ctx.arc(t.x, t.y, 16 + 4 * Math.sin(this.time * 3), 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
+                ctx.save();
+                ctx.globalAlpha = m.ok ? 0.48 : 0.22;
+                ctx.strokeStyle = m.ok ? GOLD : 'rgba(241,205,178,0.72)';
+                ctx.lineWidth = 1.4;
+                ctx.setLineDash([2, 4]);
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, 17 + (m.ok ? 2 * Math.sin(this.time * 2) : 0), 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
                 return;
             }
             // calm：同心圆环，达标即填满
             ctx.save();
-            ctx.strokeStyle = m.ok ? '#7ee0a5' : 'rgba(220,230,255,0.6)';
+            ctx.strokeStyle = m.ok ? '#a9d8c1' : 'rgba(210,231,224,0.62)';
             ctx.lineWidth = m.ok ? 3 : 2;
+            ctx.setLineDash(m.ok ? [] : [2, 4]);
             ctx.beginPath();
             ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
             ctx.stroke();
+            ctx.setLineDash([]);
             ctx.beginPath();
             ctx.arc(t.x, t.y, 7, 0, Math.PI * 2);
             ctx.stroke();
+            // “平静”用叉号标记，避免只靠青绿色环来识别。
+            ctx.beginPath();
+            ctx.moveTo(t.x - 4, t.y - 4); ctx.lineTo(t.x + 4, t.y + 4);
+            ctx.moveTo(t.x + 4, t.y - 4); ctx.lineTo(t.x - 4, t.y + 4);
+            ctx.stroke();
             if (m.ok) {
-                ctx.fillStyle = 'rgba(126,224,165,0.28)';
+                ctx.fillStyle = 'rgba(169,216,193,0.22)';
                 ctx.beginPath();
                 ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
                 ctx.fill();
@@ -883,7 +958,7 @@ class RippleDuetGame {
                 // 未达标时给出方向感：包络越大，环越"响"
                 const shake = Math.min(1, m.value / Math.max(m.need * 3, 0.001));
                 ctx.globalAlpha = 0.25 + 0.35 * shake;
-                ctx.strokeStyle = '#ff9a6b';
+                ctx.strokeStyle = '#e17b61';
                 ctx.beginPath();
                 ctx.arc(t.x, t.y, 15 + 3 * shake * (1 + Math.sin(this.time * 4)), 0, Math.PI * 2);
                 ctx.stroke();
@@ -898,8 +973,8 @@ class RippleDuetGame {
         (this.spec.storms || []).forEach((s) => {
             ctx.save();
             ctx.translate(s.x, s.y);
-            ctx.fillStyle = 'rgba(150,160,190,0.85)';
-            ctx.strokeStyle = '#e8eefc';
+            ctx.fillStyle = 'rgba(125,151,153,0.92)';
+            ctx.strokeStyle = '#d8e8e4';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(0, -14);
@@ -908,7 +983,7 @@ class RippleDuetGame {
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
-            ctx.fillStyle = '#1b1030';
+            ctx.fillStyle = '#102027';
             ctx.font = 'bold 11px system-ui, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('!', 0, 7);
@@ -957,8 +1032,8 @@ class RippleDuetGame {
     drawReadout(ctx) {
         const box = READOUT;
         ctx.save();
-        ctx.fillStyle = 'rgba(10,18,32,0.55)';
-        ctx.strokeStyle = 'rgba(120,160,220,0.22)';
+        ctx.fillStyle = '#132832';
+        ctx.strokeStyle = 'rgba(133,184,183,0.34)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.roundRect(box.x, box.y, box.w, box.h, 10);
@@ -971,9 +1046,11 @@ class RippleDuetGame {
         rows.forEach((t, i) => {
             const m = measure(this.spec, this.place, i, this.k);
             const y = box.y + 6 + rowH * i + rowH / 2;
-            const label = t.kind === 'calm' ? this.t('calm') : t.kind === 'blaze' ? this.t('blaze') : this.t('lane');
+            const label = t.kind === 'calm'
+                ? `× ${this.t('calm')}`
+                : t.kind === 'blaze' ? `◆ ${this.t('blaze')}` : `∥ ${this.t('lane')}`;
             ctx.save();
-            ctx.fillStyle = m.ok ? (t.kind === 'blaze' ? GOLD : '#7ee0a5') : DIM;
+            ctx.fillStyle = m.ok ? (t.kind === 'blaze' ? GOLD : '#a9d8c1') : DIM;
             ctx.font = 'bold 13px system-ui, sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
@@ -982,12 +1059,12 @@ class RippleDuetGame {
             // 进度条：平静要"压下去"，点亮要"顶上去"
             const bx = box.x + 62;
             const bw = box.w - 62 - 96;
-            ctx.fillStyle = 'rgba(255,255,255,0.08)';
+            ctx.fillStyle = 'rgba(221,240,236,0.10)';
             ctx.fillRect(bx, y - 6, bw, 12);
             const ratio = t.kind === 'blaze'
                 ? clamp(m.value / Math.max(m.need, 0.001) / 1.5, 0, 1)
                 : clamp(1 - m.value / Math.max(m.need * 4, 0.001), 0, 1);
-            ctx.fillStyle = m.ok ? (t.kind === 'blaze' ? GOLD : '#7ee0a5') : '#6fa8ff';
+            ctx.fillStyle = m.ok ? (t.kind === 'blaze' ? GOLD : '#a9d8c1') : '#5faeaf';
             ctx.fillRect(bx, y - 6, bw * ratio, 12);
 
             ctx.fillStyle = m.ok ? '#e8eefc' : DIM;
@@ -1004,8 +1081,8 @@ class RippleDuetGame {
     drawConsole(ctx) {
         const box = CONSOLE;
         ctx.save();
-        ctx.fillStyle = 'rgba(10,18,32,0.55)';
-        ctx.strokeStyle = 'rgba(120,160,220,0.22)';
+        ctx.fillStyle = '#132832';
+        ctx.strokeStyle = 'rgba(133,184,183,0.34)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.roundRect(box.x, box.y, box.w, box.h, 10);
@@ -1019,7 +1096,7 @@ class RippleDuetGame {
         this.place.forEach((_, i) => {
             const b = this.chipBox(i);
             ctx.save();
-            ctx.fillStyle = i === this.sel ? 'rgba(255,211,77,0.22)' : 'rgba(255,255,255,0.06)';
+            ctx.fillStyle = i === this.sel ? 'rgba(225,123,97,0.20)' : 'rgba(221,240,236,0.06)';
             ctx.strokeStyle = i === this.sel ? GOLD : 'rgba(160,190,240,0.5)';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -1039,7 +1116,7 @@ class RippleDuetGame {
         const cx = 244;
         const cy = 584;
         ctx.save();
-        ctx.fillStyle = '#e8eefc';
+        ctx.fillStyle = '#dcebe7';
         ctx.font = 'bold 15px ui-monospace, monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -1050,7 +1127,7 @@ class RippleDuetGame {
             const py = cy + 12 + Math.sin(a) * 20;
             ctx.beginPath();
             ctx.arc(px, py, i === ph ? 5 : 3, 0, Math.PI * 2);
-            ctx.fillStyle = i === ph ? GOLD : 'rgba(200,214,255,0.35)';
+            ctx.fillStyle = i === ph ? GOLD : 'rgba(190,215,210,0.35)';
             ctx.fill();
         }
         ctx.restore();
@@ -1063,14 +1140,14 @@ class RippleDuetGame {
         const ready = this.allSatisfied();
         ctx.save();
         const b = BTN.freeze;
-        ctx.fillStyle = ready ? 'rgba(255,211,77,0.9)' : 'rgba(255,255,255,0.08)';
-        ctx.strokeStyle = ready ? '#fff3cf' : 'rgba(160,190,240,0.45)';
+        ctx.fillStyle = ready ? 'rgba(225,123,97,0.90)' : 'rgba(221,240,236,0.08)';
+        ctx.strokeStyle = ready ? '#ffe0d2' : 'rgba(160,190,240,0.45)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.roundRect(b.x, b.y, b.w, b.h, 10);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = ready ? '#1b1030' : DIM;
+        ctx.fillStyle = ready ? '#102027' : DIM;
         ctx.font = 'bold 15px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -1081,14 +1158,14 @@ class RippleDuetGame {
     drawRoundButton(ctx, b, glyph, active) {
         ctx.save();
         ctx.globalAlpha = active ? 1 : 0.45;
-        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillStyle = 'rgba(221,240,236,0.08)';
         ctx.strokeStyle = 'rgba(160,190,240,0.6)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.roundRect(b.x, b.y, b.w, b.h, 10);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = '#e8eefc';
+        ctx.fillStyle = '#dcebe7';
         ctx.font = 'bold 26px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
