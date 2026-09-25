@@ -1091,8 +1091,14 @@ class CrystalBloomGame {
         ctx.moveTo(DISH.x + 16, meniscusY);
         ctx.quadraticCurveTo(DISH.x + DISH.w / 2, meniscusY + 3, DISH.x + DISH.w - 16, meniscusY);
         ctx.stroke();
+        // Liquid body: from the meniscus down to the dish floor, clipped to the
+        // rounded vessel so it never bleeds into the gap above the chart.
+        ctx.save();
+        this.roundRect(ctx, DISH.x + 1, DISH.y + 1, DISH.w - 2, DISH.h - 2, 13);
+        ctx.clip();
         ctx.fillStyle = 'rgba(105,199,199,0.07)';
-        ctx.fillRect(DISH.x + 2, meniscusY + 1, DISH.w - 4, DISH.h - 3);
+        ctx.fillRect(DISH.x + 1, meniscusY + 1, DISH.w - 2, DISH.y + DISH.h - meniscusY - 2);
+        ctx.restore();
         ctx.fillStyle = 'rgba(219,236,235,0.48)';
         ctx.font = '10px ui-monospace, SFMono-Regular, Consolas, monospace';
         ctx.textAlign = 'left';
