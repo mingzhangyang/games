@@ -1269,7 +1269,6 @@ class MaxwellDemonGame {
             ctx.lineTo(m.x - m.vx / sp * tl, m.y - m.vy / sp * tl);
             ctx.stroke();
             ctx.globalAlpha = alpha;
-            ctx.globalAlpha = alpha;
             // Blind particles stay neutral and circular.  Once observed, the
             // shape carries the same state as the colour: diamond = fast/hot,
             // circle = slow/cold.
@@ -1342,7 +1341,7 @@ class MaxwellDemonGame {
             const y = by + Math.cos(t * 0.6 + ph * 1.3) * 14;
             const warm = bx < VESSEL.wallX;
             ctx.beginPath();
-            if (i % 3 === 0) {
+            if (warm) {
                 ctx.moveTo(x, y - 4); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 4); ctx.lineTo(x - 4, y); ctx.closePath();
             } else {
                 ctx.arc(x, y, 4.2, 0, Math.PI * 2);
