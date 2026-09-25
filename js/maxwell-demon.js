@@ -254,7 +254,7 @@ class MaxwellDemonGame {
             'md-over', 'md-over-title', 'md-over-score', 'md-over-sub',
             'md-btn-again', 'md-btn-copy', 'md-btn-menu2',
             'md-lb-title', 'md-lb-list', 'md-lb-status', 'md-username', 'md-username-label',
-            'md-hint', 'md-scan-btn', 'md-gate-btn',
+            'md-hint', 'md-scan-btn', 'md-gate-btn', 'md-action-row',
         ].forEach((id) => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^md-/, '')] = el;
@@ -325,6 +325,7 @@ class MaxwellDemonGame {
      */
     syncActionVisibility() {
         const on = this.state === 'playing';
+        if (this.el['action-row']) this.el['action-row'].classList.toggle('is-hidden', !on);
         for (const key of ['scan-btn', 'gate-btn']) {
             if (this.el[key]) this.el[key].classList.toggle('is-dimmed', !on);
         }
@@ -833,6 +834,7 @@ class MaxwellDemonGame {
         c.style.touchAction = 'none';
 
         document.addEventListener('keydown', (e) => {
+            if (e.target instanceof Element && e.target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [role="button"]')) return;
             if (e.key === ' ' || e.key === 'Enter') {
                 if (this.state === 'playing' && !this.isPaused) {
                     if (!e.repeat) this.wantGate = true;
@@ -841,9 +843,9 @@ class MaxwellDemonGame {
             } else if (e.key === 'f' || e.key === 'F') {
                 if (this.state === 'playing' && !this.isPaused && !e.repeat) this.wantScan = true;
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing') this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused) this.restartLevel();
             } else if (e.key === 'Escape') {
-                if (this.state === 'playing') this.toMenu();
+                if (this.state === 'playing' && !this.isPaused) this.toMenu();
             }
         });
 
