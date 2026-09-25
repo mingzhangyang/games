@@ -735,6 +735,7 @@ class CrystalBloomGame {
     onLevelFailed(ev) {
         if (this.state !== 'playing') return;
         this.state = 'failed';
+        this.syncActionVisibility();
         Sfx.fail();
         vibrate([25, 40, 25]);
         const why = !ev.chilled ? this.t('failChill')
@@ -915,6 +916,7 @@ class CrystalBloomGame {
         c.style.touchAction = 'none';
 
         document.addEventListener('keydown', (e) => {
+            if (e.target instanceof Element && e.target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [role="button"]')) return;
             if (e.key === ' ' || e.key === 'Enter') {
                 if (this.state === 'playing' && !this.isPaused && !e.repeat) {
                     this.pressGrow();
@@ -923,9 +925,9 @@ class CrystalBloomGame {
             } else if (e.key === 'f' || e.key === 'F') {
                 if (this.state === 'playing' && !this.isPaused && !e.repeat) this.pressStir();
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing') this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused) this.restartLevel();
             } else if (e.key === 'Escape') {
-                if (this.state === 'playing') this.toMenu();
+                if (this.state === 'playing' && !this.isPaused) this.toMenu();
             }
         });
 
