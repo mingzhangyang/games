@@ -113,6 +113,195 @@ function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
 }
 
+// ── 场景动画 ──
+// 所有角色位移都写 SVG 的 transform 属性，不用 CSS transform：两者作用在同一
+// 元素上时 CSS 会整体覆盖属性，萝卜会在抖动期间跳回初始高度。
+// 手里握着的叶茎是实时路径：一端跟随萝卜顶部，一端跟随手/爪，永远连着。
+const SCENE = {
+    carrot: { x: 316, y: 506 },
+    girl: { x: 186, y: 692, s: 0.94 },
+    mole: { x: 482, y: 612, s: 0.9 },
+    girlHands: [[38, -218], [32, -210], [26, -200]],
+    molePaws: [[-70, -46], [-60, -22]],
+    crown: [[-8, -22], [0, -24], [8, -22]],
+    maxRise: 92,
+    harvestMs: 720,
+    emergeMs: 460,
+};
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const easeOut = t => 1 - (1 - t) ** 3;
+
+function place(point, x, y, deg, scale = 1) {
+    const rad = deg * Math.PI / 180;
+    const px = point[0] * scale;
+    const py = point[1] * scale;
+    return [x + px * Math.cos(rad) - py * Math.sin(rad), y + px * Math.sin(rad) + py * Math.cos(rad)];
+}
+
+function stemPath(from, to, sag) {
+    const mx = (from[0] + to[0]) / 2;
+    const my = (from[1] + to[1]) / 2 - sag;
+    return `M${from[0].toFixed(1)} ${from[1].toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${to[0].toFixed(1)} ${to[1].toFixed(1)}`;
+}
+
+function createScene() {
+    const $ = id => document.getElementById(id);
+    const svg = $('cp-scene');
+    const nodes = {
+        carrot: $('cp-carrot'),
+        girl: $('cp-girl'),
+        girlHands: $('cp-girl-hands'),
+        mole: $('cp-mole'),
+        molePaws: $('cp-mole-paws'),
+        stemsGirl: $('cp-stems-girl'),
+        stemsMole: $('cp-stems-mole'),
+        tug: $('cp-tug-lines'),
+        particles: $('cp-particles'),
+    };
+    if (!svg || !nodes.carrot) return null;
+    const girlStems = [...nodes.stemsGirl.querySelectorAll('path')];
+    const moleStems = [...nodes.stemsMole.querySelectorAll('path')];
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const fx = { rise: 0, tug: 0, miss: 0, harvestAt: -1e9, harvestRise: 0, last: 0 };
+    let lastKey = '';
+    let oopsTimer = 0;
+
+    function hit() {
+        fx.tug = 1;
+        burst(true);
+    }
+
+    function miss() {
+        fx.miss = 1;
+        burst(false);
+        svg.classList.add('is-oops');
+        window.clearTimeout(oopsTimer);
+        oopsTimer = window.setTimeout(() => svg.classList.remove('is-oops'), 650);
+    }
+
+    function harvest(now) {
+        fx.harvestAt = now;
+        fx.harvestRise = fx.rise;
+        fx.rise = 0;
+        burst(true, true);
+    }
+
+    function reset() {
+        fx.rise = 0;
+        fx.tug = 0;
+        fx.miss = 0;
+        fx.harvestAt = -1e9;
+        svg.classList.remove('is-oops');
+        nodes.particles.replaceChildren();
+    }
+
+    // 土块从洞口四散 + 叶冠附近的金色火花；动画走 CSS（元素本身没有 transform 属性）
+    function burst(success, big = false) {
+        if (reduced) return;
+        const count = big ? 16 : success ? 9 : 5;
+        for (let i = 0; i < count; i += 1) {
+            const dirt = document.createElementNS(SVG_NS, 'circle');
+            const side = i % 2 ? 1 : -1;
+            dirt.setAttribute('cx', String(SCENE.carrot.x + side * (40 + Math.random() * 50)));
+            dirt.setAttribute('cy', String(596 + Math.random() * 8));
+            dirt.setAttribute('r', String(3 + Math.random() * (big ? 6 : 4)));
+            dirt.setAttribute('fill', i % 3 ? '#7a4a2b' : '#a26a3e');
+            dirt.setAttribute('class', 'cp-dirt');
+            dirt.style.setProperty('--dx', `${side * (20 + Math.random() * (big ? 90 : 50))}px`);
+            dirt.style.setProperty('--dy', `${-(30 + Math.random() * (big ? 110 : 60))}px`);
+            spawn(dirt);
+        }
+        if (success) {
+            for (let i = 0; i < (big ? 10 : 5); i += 1) {
+                const spark = document.createElementNS(SVG_NS, 'circle');
+                const angle = (Math.PI * 2 * i) / (big ? 10 : 5) + Math.random();
+                spark.setAttribute('cx', String(SCENE.carrot.x));
+                spark.setAttribute('cy', String(SCENE.carrot.y - fx.rise - 40));
+                spark.setAttribute('r', String(big ? 5 : 3.5));
+                spark.setAttribute('fill', i % 2 ? '#fff3b0' : '#f7d36e');
+                spark.setAttribute('class', 'cp-spark');
+                spark.style.setProperty('--dx', `${Math.cos(angle) * (big ? 110 : 60)}px`);
+                spark.style.setProperty('--dy', `${Math.sin(angle) * (big ? 90 : 50)}px`);
+                spawn(spark);
+            }
+        }
+    }
+
+    function spawn(node) {
+        node.addEventListener('animationend', () => node.remove(), { once: true });
+        nodes.particles.appendChild(node);
+    }
+
+    // progress: 当前这根萝卜已拔的比例 0..1；playing: 对局进行中（控制呼吸晃动）
+    function tick(now, progress, playing) {
+        const dt = Math.min(100, fx.last ? now - fx.last : 16);
+        fx.last = now;
+        fx.rise += (progress * SCENE.maxRise - fx.rise) * (1 - Math.exp(-dt / 90));
+        fx.tug *= Math.exp(-dt / 170);
+        fx.miss *= Math.exp(-dt / 220);
+        if (fx.tug < 0.002) fx.tug = 0;
+        if (fx.miss < 0.002) fx.miss = 0;
+
+        const sway = playing && !reduced ? Math.sin(now / 420) : 0;
+        const shake = reduced ? 0 : Math.sin(now / 26) * 7 * fx.miss;
+        let girlLean = -3 - progress * 4 - fx.tug * 9 + fx.miss * 5 + sway * 0.8;
+        let moleLean = 2 + progress * 3 + fx.tug * 7 - fx.miss * 3 - sway * 0.8;
+        let hop = 0;
+        let cx = SCENE.carrot.x - fx.tug * 6;
+        let cy = SCENE.carrot.y - fx.rise - fx.tug * 12;
+        let tilt = -6 - progress * 10 - fx.tug * 4 + shake;
+        let stemAlpha = 1;
+
+        const since = now - fx.harvestAt;
+        if (since < SCENE.harvestMs) {
+            // 收获：萝卜连根飞起、旋转着越过女孩头顶；两人往后一仰再蹦一下
+            const p = easeOut(since / SCENE.harvestMs);
+            cx = SCENE.carrot.x - 150 * p;
+            cy = SCENE.carrot.y - fx.harvestRise - 430 * p;
+            tilt = -16 - 70 * p;
+            stemAlpha = Math.max(0, 1 - since / 120);
+            girlLean -= 5 * Math.sin(Math.PI * Math.min(1, since / 500));
+            moleLean += 8 * Math.sin(Math.PI * Math.min(1, since / 500));
+            hop = -18 * Math.sin(Math.PI * Math.min(1, since / 420));
+        } else if (since < SCENE.harvestMs + SCENE.emergeMs) {
+            // 新萝卜从土里冒出来
+            const p = easeOut((since - SCENE.harvestMs) / SCENE.emergeMs);
+            cy += 110 * (1 - p);
+            stemAlpha = p;
+        }
+
+        const key = `${cx.toFixed(1)}|${cy.toFixed(1)}|${tilt.toFixed(2)}|${girlLean.toFixed(2)}|${moleLean.toFixed(2)}|${hop.toFixed(1)}|${stemAlpha.toFixed(2)}|${fx.tug.toFixed(2)}`;
+        if (key === lastKey) return;
+        lastKey = key;
+
+        const g = SCENE.girl;
+        const m = SCENE.mole;
+        const carrotTf = `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${tilt.toFixed(2)})`;
+        const girlTf = `translate(${g.x} ${(g.y + hop).toFixed(1)}) rotate(${girlLean.toFixed(2)}) scale(${g.s})`;
+        const moleTf = `translate(${m.x} ${(m.y + hop * 0.7).toFixed(1)}) rotate(${moleLean.toFixed(2)}) scale(${m.s})`;
+        nodes.carrot.setAttribute('transform', carrotTf);
+        nodes.girl.setAttribute('transform', girlTf);
+        nodes.girlHands.setAttribute('transform', girlTf);
+        nodes.mole.setAttribute('transform', moleTf);
+        nodes.molePaws.setAttribute('transform', moleTf);
+
+        const crowns = SCENE.crown.map(pt => place(pt, cx, cy, tilt));
+        girlStems.forEach((path, i) => {
+            const hand = place(SCENE.girlHands[i], g.x, g.y + hop, girlLean, g.s);
+            path.setAttribute('d', stemPath(crowns[i], hand, 10 - fx.tug * 8));
+        });
+        moleStems.forEach((path, i) => {
+            const paw = place(SCENE.molePaws[i], m.x, m.y + hop * 0.7, moleLean, m.s);
+            path.setAttribute('d', stemPath(crowns[2 - i], paw, 8 - fx.tug * 6));
+        });
+        nodes.stemsGirl.setAttribute('opacity', stemAlpha.toFixed(2));
+        nodes.stemsMole.setAttribute('opacity', stemAlpha.toFixed(2));
+        nodes.tug.setAttribute('opacity', (fx.tug * 0.9).toFixed(2));
+    }
+
+    return { hit, miss, harvest, reset, tick };
+}
+
 function createGame() {
     const state = {
         mode: 'menu',
@@ -126,9 +315,9 @@ function createGame() {
         pulls: 0,
         needed: PULLS_NEEDED[0],
         streak: 0,
-        wobble: 0,
         lastFrame: 0,
         messageTimer: 0,
+        resultTimer: 0,
         won: false,
     };
     const refs = {};
@@ -136,6 +325,7 @@ function createGame() {
     const sfx = createSfxEngine({ masterGain: 0.55 });
 
     const text = () => LANGUAGES[lang] || LANGUAGES.en;
+    let scene = null;
     let best = 0;
     let dotsRound = -1;
 
@@ -150,8 +340,7 @@ function createGame() {
             'cp-side-score-label', 'cp-side-best-label', 'cp-side-tip-title', 'cp-side-tip', 'cp-hint',
             'cp-side-score', 'cp-side-best', 'cp-final-score', 'cp-meter', 'cp-meter-needle',
             'cp-sweet-zone', 'cp-pull-btn', 'cp-start-btn', 'cp-again-btn', 'cp-menu-btn',
-            'cp-reset-btn', 'cp-stage', 'cp-toast', 'cp-carrot-root', 'cp-carrot-leaves',
-            'cp-tug-lines', 'cp-particles', 'cp-status-dot', 'cp-progress-dots',
+            'cp-reset-btn', 'cp-stage', 'cp-toast', 'cp-status-dot', 'cp-progress-dots',
         ].forEach(id => { refs[id] = document.getElementById(id); });
         refs.card = document.querySelector('.cp-stage-card');
     }
@@ -243,20 +432,11 @@ function createGame() {
         state.messageTimer = window.setTimeout(() => refs['cp-toast'].classList.remove('is-on'), 850);
     }
 
-    function paintCarrot() {
-        const y = -state.pulls * 7;
-        const rotation = state.wobble;
-        if (refs['cp-carrot-root']) refs['cp-carrot-root'].setAttribute('transform', `translate(0 ${y}) rotate(${rotation} 280 360)`);
-        if (refs['cp-carrot-leaves']) refs['cp-carrot-leaves'].setAttribute('transform', `translate(0 ${y}) rotate(${rotation} 280 360)`);
-        if (refs['cp-tug-lines']) refs['cp-tug-lines'].setAttribute('opacity', state.mode === 'playing' && state.pulls > 0 ? '0.82' : '0');
-    }
-
-    // Per-frame work only: needle, timer and carrot wobble.
+    // Per-frame work only: needle and timer (the scene animates itself in frame()).
     function updateFrameUi() {
         if (refs['cp-time']) refs['cp-time'].textContent = String(Math.ceil(state.time));
         if (refs['cp-meter-needle']) refs['cp-meter-needle'].style.left = `${state.needle * 100}%`;
         if (refs['cp-meter']) refs['cp-meter'].setAttribute('aria-valuenow', String(Math.round(state.needle * 100)));
-        paintCarrot();
     }
 
     function updateUi() {
@@ -273,30 +453,10 @@ function createGame() {
         updateFrameUi();
     }
 
-    function addParticles(success) {
-        const group = refs['cp-particles'];
-        if (!group) return;
-        group.replaceChildren();
-        const ns = 'http://www.w3.org/2000/svg';
-        for (let i = 0; i < (success ? 10 : 4); i += 1) {
-            const circle = document.createElementNS(ns, 'circle');
-            const angle = (Math.PI * 2 * i) / (success ? 10 : 4);
-            const radius = success ? 28 + (i % 3) * 10 : 18;
-            circle.setAttribute('cx', String(280 + Math.cos(angle) * radius));
-            circle.setAttribute('cy', String(333 + Math.sin(angle) * radius));
-            circle.setAttribute('r', success ? String(3 + (i % 2)) : '4');
-            circle.setAttribute('fill', success ? (i % 2 ? '#f7d36e' : '#f08a3c') : '#a86e52');
-            circle.classList.add('cp-particle');
-            group.appendChild(circle);
-        }
-        window.setTimeout(() => group.replaceChildren(), 430);
-    }
-
     function nextCarrot() {
         state.target = TARGETS[state.round] || TARGETS[TARGETS.length - 1];
         state.needed = PULLS_NEEDED[state.round] || PULLS_NEEDED[PULLS_NEEDED.length - 1];
         state.pulls = 0;
-        state.wobble = 0;
         updateStatus(text().statusPlaying);
         updateUi();
     }
@@ -308,15 +468,27 @@ function createGame() {
         }
     }
 
+    function hideToast() {
+        window.clearTimeout(state.messageTimer);
+        refs['cp-toast']?.classList.remove('is-on');
+    }
+
     function finish(won) {
         if (state.mode !== 'playing') return;
         state.mode = 'over';
         state.paused = false;
         saveBest();
         state.won = won;
-        if (refs['cp-result']) refs['cp-result'].hidden = false;
-        if (refs['cp-start']) refs['cp-start'].hidden = true;
+        if (won) state.pulls = 0;
+        hideToast();
         renderResult();
+        // 通关时先让最后一根萝卜飞出去，再盖上结算层
+        window.clearTimeout(state.resultTimer);
+        state.resultTimer = window.setTimeout(() => {
+            if (state.mode !== 'over') return;
+            if (refs['cp-result']) refs['cp-result'].hidden = false;
+            if (refs['cp-start']) refs['cp-start'].hidden = true;
+        }, won ? 820 : 0);
         updateUi();
         updateStatus(currentStatusText(), won ? 'good' : 'bad');
         track('carrot-pull', 'finish');
@@ -336,6 +508,8 @@ function createGame() {
         state.target = TARGETS[0];
         state.needed = PULLS_NEEDED[0];
         state.pulls = 0;
+        window.clearTimeout(state.resultTimer);
+        scene?.reset();
         if (refs['cp-start']) refs['cp-start'].hidden = true;
         if (refs['cp-result']) refs['cp-result'].hidden = true;
         updateStatus(text().statusPlaying);
@@ -353,6 +527,9 @@ function createGame() {
         state.pulls = 0;
         state.target = TARGETS[0];
         state.needed = PULLS_NEEDED[0];
+        window.clearTimeout(state.resultTimer);
+        hideToast();
+        scene?.reset();
         if (refs['cp-start']) refs['cp-start'].hidden = false;
         if (refs['cp-result']) refs['cp-result'].hidden = true;
         updateStatus(text().statusReady);
@@ -368,9 +545,7 @@ function createGame() {
             state.streak += 1;
             const perfect = distance <= 0.045;
             state.score += (perfect ? 150 : 100) + Math.min(state.streak, 8) * 20;
-            state.wobble = 0;
-            addParticles(true);
-            refs.card.classList.remove('is-miss');
+            scene?.hit();
             refs.card.classList.add('is-good');
             window.setTimeout(() => refs.card.classList.remove('is-good'), 300);
             updateStatus(perfect ? text().statusGreat : text().statusGood, 'good');
@@ -379,7 +554,7 @@ function createGame() {
             if (state.pulls >= state.needed) {
                 state.score += 180 + state.streak * 25;
                 state.round += 1;
-                addParticles(true);
+                scene?.harvest(performance.now());
                 if (state.round >= TOTAL_CARROTS) {
                     finish(true);
                     return;
@@ -390,11 +565,7 @@ function createGame() {
         } else {
             state.streak = 0;
             state.time = Math.max(0, state.time - 1);
-            state.wobble = distance > 0.3 ? 5 : -4;
-            addParticles(false);
-            refs.card.classList.remove('is-good');
-            refs.card.classList.add('is-miss');
-            window.setTimeout(() => refs.card.classList.remove('is-miss'), 320);
+            scene?.miss();
             updateStatus(text().statusBad, 'bad');
             showToast(text().toastBad, 'bad');
             sfx.tone({ freq: 160, slideTo: 110, type: 'sine', dur: 0.12, vol: 0.09 });
@@ -423,10 +594,10 @@ function createGame() {
                 state.needle = 0;
                 state.needleDirection = 1;
             }
-            state.wobble *= 0.88;
             if (state.time <= 0) finish(false);
             else updateFrameUi();
         }
+        scene?.tick(now, state.mode === 'menu' ? 0 : state.pulls / state.needed, state.mode === 'playing' && !state.paused);
         window.requestAnimationFrame(frame);
     }
 
@@ -460,6 +631,7 @@ function createGame() {
 
     function init() {
         cacheRefs();
+        scene = createScene();
         best = bestScore();
         applyLanguage(lang);
         updateUi();
@@ -494,7 +666,9 @@ onReady(() => {
         getText,
     });
     if (drawer) drawer.init();
-    bindChrome({ self: 'carrot-pull.html', getText, owns: ['more', 'sound'] });
+    // 顶栏首页钮是无 href 的 <button>，跳转靠 chrome 接管，所以 owns 必须含 'home'；
+    // 本页静音钮没有自己的 handler，交给 chrome（见 docs/contracts/chrome.md §1.3）。
+    bindChrome({ self: 'carrot-pull.html', getText, owns: ['more', 'home', 'sound'] });
     bindFrame({ logicalWidth: 560 });
     game.init();
 });

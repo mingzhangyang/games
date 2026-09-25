@@ -31,6 +31,7 @@ const TARGETS = {
     'crystal-bloom': ['cb-btn-next', 'cb-btn-replay', 'cb-btn-menu1', 'cb-btn-copy', 'cb-btn-menu2', 'cb-btn-again'],
     'flame-verse': ['fv-btn-next', 'fv-btn-replay', 'fv-btn-menu1', 'fv-btn-copy', 'fv-btn-menu2', 'fv-btn-again'],
     'ripple-duet': ['rd-btn-next', 'rd-btn-replay', 'rd-btn-menu1', 'rd-btn-copy', 'rd-btn-menu2', 'rd-btn-again'],
+    'carrot-pull': ['cp-start-btn', 'cp-again-btn', 'cp-menu-btn'],
 };
 
 // TARGETS 是每页的按钮 id，派生不出来，但漏页必须红：新游戏挂了 topbar cap 却

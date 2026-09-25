@@ -129,19 +129,44 @@ body {
     overflow: hidden;
 }
 
+/* 场景 viewBox 是 560×720：下方 520 为核心画面（桌面正好显示这一段），
+   上方 200 是只在高屏手机上露出的天空。SVG 始终按宽度铺满、底部对齐，
+   多出的高度由与天空顶色相同的背景补齐 —— 任何比例下都不裁掉两侧角色。 */
 .cp-scene-wrap {
     position: relative;
     width: 100%;
     aspect-ratio: 560 / 520;
     overflow: hidden;
-    background: var(--cp-mint);
+    background: #6fc3ea;
 }
 
 .cp-scene {
+    position: absolute;
+    bottom: 0;
+    left: 0;
     display: block;
     width: 100%;
-    height: 100%;
+    height: auto;
+    aspect-ratio: 560 / 720;
     user-select: none;
+}
+
+.cp-scene .cp-face-oops { display: none; }
+.cp-scene.is-oops .cp-face-oops { display: inline; }
+.cp-scene.is-oops .cp-face-happy { display: none; }
+
+.cp-float { animation: cp-float 5.5s ease-in-out infinite; }
+.cp-float--b { animation-duration: 6.5s; animation-delay: -2s; }
+.cp-float--c { animation-duration: 4.8s; animation-delay: -3.4s; }
+
+.cp-clouds { animation: cp-drift 16s ease-in-out infinite alternate; }
+
+.cp-dirt {
+    animation: cp-dirt-fly 0.62s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+}
+
+.cp-spark {
+    animation: cp-spark 0.5s ease-out forwards;
 }
 
 #cp-carrot-hit {
@@ -282,13 +307,6 @@ body {
     border: 1px solid rgb(216, 238, 224, 0.24);
     background: rgb(255, 255, 255, 0.07);
     color: #d8eee0;
-}
-
-.cp-btn-icon {
-    display: inline-block;
-    font-size: 22px;
-    line-height: 0.6;
-    transform: translateY(1px);
 }
 
 .cp-key-hint {
@@ -504,13 +522,15 @@ body {
     background: rgb(255, 255, 255, 0.06);
     color: #8db8ac;
     font-size: 15px;
-    filter: grayscale(1);
+    filter: saturate(0.35) brightness(0.95);
+    opacity: 0.6;
 }
 
 .cp-progress-dot.is-done {
     border-color: rgb(247, 211, 110, 0.52);
     background: #e4f5d2;
     filter: none;
+    opacity: 1;
 }
 
 .cp-side-row {
@@ -533,10 +553,25 @@ body {
 
 .cp-footer-hint { color: #8db8ac; }
 
-@keyframes cp-carrot-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px) rotate(-1deg); }
-    75% { transform: translateX(5px) rotate(1deg); }
+@keyframes cp-float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    50% { transform: translate(14px, 10px) rotate(24deg); }
+}
+
+@keyframes cp-drift {
+    from { transform: translateX(-8px); }
+    to { transform: translateX(10px); }
+}
+
+@keyframes cp-dirt-fly {
+    0% { opacity: 1; transform: translate(0, 0); }
+    60% { opacity: 1; transform: translate(var(--dx), var(--dy)); }
+    100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 26px)); }
+}
+
+@keyframes cp-spark {
+    0% { opacity: 1; transform: translate(0, 0) scale(0.4); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2); }
 }
 
 @keyframes cp-good-pop {
@@ -545,15 +580,30 @@ body {
     100% { transform: scale(1); }
 }
 
-.cp-stage-card.is-miss #cp-carrot-root,
-.cp-stage-card.is-miss #cp-carrot-leaves { animation: cp-carrot-shake 0.28s ease-in-out; }
-
 .cp-stage-card.is-good { animation: cp-good-pop 0.28s ease-out; }
 
 @media (width <= 1023.98px) {
     .cp-shell { max-width: 620px; }
 
-    .cp-main { width: 100%; }
+    .cp-main {
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* .game-stage 是 align-items: flex-start，卡片要显式拉伸才能吃满剩余高度 */
+    .cp-stage-card {
+        display: flex;
+        flex-direction: column;
+        align-self: stretch;
+        container-type: inline-size;
+    }
+
+    .cp-scene-wrap {
+        flex: 1 1 auto;
+        min-height: calc(100cqw * 520 / 560);
+        aspect-ratio: auto;
+    }
 
     .cp-stage { max-width: 620px; }
 
@@ -604,7 +654,10 @@ body {
     .cp-toast,
     .cp-meter-needle { transition: none; }
 
-    .cp-stage-card.is-miss #cp-carrot-root,
-    .cp-stage-card.is-miss #cp-carrot-leaves,
-    .cp-stage-card.is-good { animation: none; }
+    .cp-stage-card.is-good,
+    .cp-float,
+    .cp-clouds { animation: none; }
+
+    .cp-dirt,
+    .cp-spark { display: none; }
 }
