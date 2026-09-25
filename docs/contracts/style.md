@@ -75,6 +75,11 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 重跑时已校准的浅色值原样保留。页面自己早已有的自定义属性调色板（如 word-daily 的 `--bg` / `--text`）
 不在工具范围内，手写一个 `:root[data-theme="light"]` 覆盖块。
 
+画布颜色：JS 里的字面色改为 `P.xxx`，`P = bindPalette(CANVAS_VARS, { onChange: () => game.draw() })`
+在 `onReady` 里、创建游戏实例**之前**调用；变量 `--<prefix>-cv-*` 定义在页面 CSS 末尾的「画布调色板」块
+（深色 = 原字面量）。只把**随主题变化**的颜色放进调色板；棋子、元素球、露珠这类游戏实物保留字面量。
+需要动态透明度的颜色存成 RGB 三元组（`--cc-cv-amber-rgb: 255, 201, 77`，用法 `rgba(${P.amberRgb}, ${a})`）。
+
 ## 2. hex 收敛规则（P3-4）
 
 **新代码禁止再写上表 11 个值的字面 hex，一律 `var(--tok-*)`。**

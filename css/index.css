@@ -2,6 +2,8 @@
 
 /* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
+    --ix-tag--dark-only-text: #e2e8f0;
+    --ix-tag--dark-only-bg: #1e2436;
     --ix-body-bg: radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
                 #0f172a;
     --ix-game-card-bg: rgb(255, 255, 255, 0.03);
@@ -78,6 +80,8 @@
 
 /* theme:begin light */
 :root[data-theme="light"] {
+    --ix-tag--dark-only-text: #e2e8f0;
+    --ix-tag--dark-only-bg: #1e2436;
     --ix-body-bg: radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
                 #eceef3;
     --ix-game-card-bg: rgb(255, 255, 255, 0.64);
@@ -408,8 +412,8 @@
             display: none;
             margin-left: auto;
             margin-right: 6px;
-            color: #e2e8f0;
-            background: #1e2436;
+            color: var(--ix-tag--dark-only-text);
+            background: var(--ix-tag--dark-only-bg);
         }
 
         .theme-light-active .tag--dark-only { display: inline-block; }

@@ -41,3 +41,25 @@ export function readPalette(el, map, fallback = {}) {
     }
     return out;
 }
+
+/**
+ * 画布调色板：读一组 CSS 变量到一个对象里，主题切换时就地刷新（对象引用不变，绘制代码直接读 P.xxx）。
+ *   const P = bindPalette({ bg: '--xx-cv-bg', amberRgb: '--xx-cv-amber-rgb' }, { onChange: () => game.draw() });
+ * 变量缺失直接抛错 —— 空字符串交给 canvas 会被静默忽略、沿用上一个颜色，画错了也不报。
+ * 必须在样式表生效后调用（onReady 里即可）。onChange 用来让按需重绘 / 停了循环的页面补画一帧。
+ */
+export function bindPalette(map, { el, onChange } = {}) {
+    const pal = {};
+    const load = () => {
+        const v = readPalette(el || document.documentElement, map);
+        const missing = Object.keys(map).filter(k => !v[k]);
+        if (missing.length) throw new Error(`theme palette: missing CSS variables ${missing.map(k => map[k]).join(', ')}`);
+        Object.assign(pal, v);
+    };
+    load();
+    onThemeChange(() => {
+        load();
+        if (onChange) onChange(pal);
+    });
+    return pal;
+}

@@ -39,6 +39,38 @@ import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
+import { bindPalette } from './theme.js';
+
+/* 画布调色板：颜色只在 css/circuit.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
+   P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。 */
+const CANVAS_VARS = {
+    amberSoft: '--cc-cv-amber-soft',
+    amber: '--cc-cv-amber',
+    dimWire: '--cc-cv-dim-wire',
+    red: '--cc-cv-red',
+    bgA: '--cc-cv-bg-a',
+    bgB: '--cc-cv-bg-b',
+    bgC: '--cc-cv-bg-c',
+    grid: '--cc-cv-grid',
+    redGlow: '--cc-cv-red-glow',
+    amberGlow: '--cc-cv-amber-glow',
+    amberGlowSoft: '--cc-cv-amber-glow-soft',
+    amberGlowStrong: '--cc-cv-amber-glow-strong',
+    bulbRing: '--cc-cv-bulb-ring',
+    bulbHalo: '--cc-cv-bulb-halo',
+    bulbHaloOut: '--cc-cv-bulb-halo-out',
+    bulbGlow: '--cc-cv-bulb-glow',
+    bulbLit: '--cc-cv-bulb-lit',
+    bulbOff: '--cc-cv-bulb-off',
+    slate: '--cc-cv-slate',
+    bulbStroke: '--cc-cv-bulb-stroke',
+    filamentOn: '--cc-cv-filament-on',
+    filamentOff: '--cc-cv-filament-off',
+    switchBase: '--cc-cv-switch-base',
+    amberRgb: '--cc-cv-amber-rgb',
+    redRgb: '--cc-cv-red-rgb',
+};
+let P = null;
 
 /* ────────────────────────── 常量与几何 ────────────────────────── */
 
@@ -47,10 +79,6 @@ const CW = W / GRID_COLS;   // 40
 const CH = H / GRID_ROWS;   // 42
 const HIT_R = 26;           // 开关命中半径（≥44px 触控目标：直径 52）
 
-const AMBER = '#ffc94d';
-const AMBER_SOFT = '#ffe9b0';
-const DIM_WIRE = '#3a4a78';
-const RED = '#e24b4a';
 
 function clamp(v, min, max) {
     return v < min ? min : v > max ? max : v;
@@ -513,7 +541,7 @@ class CircuitGame {
             this.spec.elements.forEach((el, i) => {
                 if (el.t === 'bulb' && this.sol.lit[i] && prevLit[i] === false) {
                     const { x, y } = cellCenter(el.r, el.c);
-                    this.burst(x, y, AMBER_SOFT, 16);
+                    this.burst(x, y, P.amberSoft, 16);
                 }
             });
         }
@@ -901,14 +929,14 @@ class CircuitGame {
 
         // 蓝图底
         const bg = ctx.createLinearGradient(0, 0, W, H);
-        bg.addColorStop(0, '#0a1230');
-        bg.addColorStop(0.55, '#0b1436');
-        bg.addColorStop(1, '#0d1a40');
+        bg.addColorStop(0, P.bgA);
+        bg.addColorStop(0.55, P.bgB);
+        bg.addColorStop(1, P.bgC);
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, W, H);
 
         // 蓝图网格
-        ctx.strokeStyle = 'rgba(80, 110, 200, 0.13)';
+        ctx.strokeStyle = P.grid;
         ctx.lineWidth = 1;
         ctx.beginPath();
         for (let i = 1; i < GRID_COLS; i++) {
@@ -962,16 +990,16 @@ class CircuitGame {
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             if (shorted && on) {
-                ctx.shadowColor = 'rgba(226, 75, 74, 0.9)';
+                ctx.shadowColor = P.redGlow;
                 ctx.shadowBlur = 10;
-                ctx.strokeStyle = RED;
+                ctx.strokeStyle = P.red;
             } else if (on) {
-                ctx.shadowColor = 'rgba(255, 201, 77, 0.75)';
+                ctx.shadowColor = P.amberGlow;
                 ctx.shadowBlur = 9;
-                ctx.strokeStyle = AMBER;
+                ctx.strokeStyle = P.amber;
             } else {
                 ctx.shadowBlur = 0;
-                ctx.strokeStyle = DIM_WIRE;
+                ctx.strokeStyle = P.dimWire;
             }
             ctx.lineWidth = on ? 4 : 3;
             ctx.stroke();
@@ -985,8 +1013,8 @@ class CircuitGame {
                 const phase = (this.time * 0.9 + el.r * 31 + el.c * 17) % 1;
                 const px = a.x + (b.x - a.x) * phase;
                 const py = a.y + (b.y - a.y) * phase;
-                ctx.fillStyle = AMBER_SOFT;
-                ctx.shadowColor = AMBER;
+                ctx.fillStyle = P.amberSoft;
+                ctx.shadowColor = P.amber;
                 ctx.shadowBlur = 7;
                 ctx.beginPath();
                 ctx.arc(px, py, 2.2, 0, Math.PI * 2);
@@ -1007,9 +1035,9 @@ class CircuitGame {
         const shortY = cy + (el.pol === 'a' ? 3 : -3) * (horiz ? 0 : 1);
         ctx.save();
         ctx.lineCap = 'round';
-        ctx.shadowColor = 'rgba(255, 201, 77, 0.55)';
+        ctx.shadowColor = P.amberGlowSoft;
         ctx.shadowBlur = 8;
-        ctx.strokeStyle = AMBER_SOFT;
+        ctx.strokeStyle = P.amberSoft;
         // 引线
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -1035,7 +1063,7 @@ class CircuitGame {
         ctx.stroke();
         // 正极标记
         ctx.shadowBlur = 0;
-        ctx.fillStyle = AMBER_SOFT;
+        ctx.fillStyle = P.amberSoft;
         ctx.font = 'bold 11px Segoe UI, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -1051,7 +1079,7 @@ class CircuitGame {
         const on = lit[idx] === true;
         ctx.save();
         if (isTarget && !on) {
-            ctx.strokeStyle = 'rgba(255, 201, 77, 0.45)';
+            ctx.strokeStyle = P.bulbRing;
             ctx.lineWidth = 1.5;
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
@@ -1062,20 +1090,20 @@ class CircuitGame {
         if (on) {
             const pulse = 0.85 + 0.15 * Math.sin(this.time * 3 + (el.r + el.c));
             const g = ctx.createRadialGradient(x, y, 2, x, y, 26);
-            g.addColorStop(0, 'rgba(255, 217, 138, 0.5)');
-            g.addColorStop(1, 'rgba(255, 217, 138, 0)');
+            g.addColorStop(0, P.bulbHalo);
+            g.addColorStop(1, P.bulbHaloOut);
             ctx.fillStyle = g;
             ctx.beginPath();
             ctx.arc(x, y, 26 * pulse, 0, Math.PI * 2);
             ctx.fill();
-            ctx.shadowColor = 'rgba(255, 217, 138, 0.95)';
+            ctx.shadowColor = P.bulbGlow;
             ctx.shadowBlur = 14 * pulse;
-            ctx.fillStyle = '#ffd98a';
-            ctx.strokeStyle = AMBER;
+            ctx.fillStyle = P.bulbLit;
+            ctx.strokeStyle = P.amber;
         } else {
             ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-            ctx.strokeStyle = isTarget ? '#8b96c4' : '#55628f';
+            ctx.fillStyle = P.bulbOff;
+            ctx.strokeStyle = isTarget ? P.slate : P.bulbStroke;
         }
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1084,7 +1112,7 @@ class CircuitGame {
         ctx.stroke();
         // 灯丝
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = on ? '#c98f1d' : 'rgba(139, 150, 196, 0.6)';
+        ctx.strokeStyle = on ? P.filamentOn : P.filamentOff;
         ctx.lineWidth = 1.4;
         ctx.beginPath();
         ctx.moveTo(x - 4.5, y + 3.5);
@@ -1102,10 +1130,10 @@ class CircuitGame {
         const { x, y } = cellCenter(el.r, el.c);
         ctx.save();
         ctx.lineCap = 'round';
-        ctx.strokeStyle = shorted && on ? RED : on ? AMBER : DIM_WIRE;
+        ctx.strokeStyle = shorted && on ? P.red : on ? P.amber : P.dimWire;
         ctx.lineWidth = on ? 4 : 3;
         if (on) {
-            ctx.shadowColor = shorted ? 'rgba(226, 75, 74, 0.9)' : 'rgba(255, 201, 77, 0.75)';
+            ctx.shadowColor = shorted ? P.redGlow : P.amberGlow;
             ctx.shadowBlur = 9;
         }
         for (const arm of el.arms.split('')) {
@@ -1141,8 +1169,8 @@ class CircuitGame {
         ctx.save();
         // 底座（可点击暗示：琥珀脉动描边）
         const pulse = 0.3 + 0.14 * Math.sin(this.time * 3 + el.c);
-        ctx.strokeStyle = `rgba(255, 201, 77, ${pulse.toFixed(3)})`;
-        ctx.fillStyle = 'rgba(16, 24, 56, 0.92)';
+        ctx.strokeStyle = `rgba(${P.amberRgb}, ${pulse.toFixed(3)})`;
+        ctx.fillStyle = P.switchBase;
         ctx.lineWidth = 1.6;
         if (el.t === 'sw') {
             roundRectPath(ctx, x - 14, y - 10, 28, 20, 6);
@@ -1165,7 +1193,7 @@ class CircuitGame {
             const b = horiz ? endPx(el, 'e') : endPx(el, 's');
             const bi = pad(b, 5);
             // 触点
-            ctx.fillStyle = AMBER_SOFT;
+            ctx.fillStyle = P.amberSoft;
             [[a.x, a.y], [bi.x, bi.y]].forEach(([px, py]) => {
                 ctx.beginPath();
                 ctx.arc(px, py, 3, 0, Math.PI * 2);
@@ -1175,9 +1203,9 @@ class CircuitGame {
             const baseAng = Math.atan2(bi.y - a.y, bi.x - a.x);
             const ang = baseAng + (closed ? 0 : -0.56) + swing;
             const len = Math.hypot(bi.x - a.x, bi.y - a.y);
-            ctx.strokeStyle = closed ? AMBER : '#8b96c4';
+            ctx.strokeStyle = closed ? P.amber : P.slate;
             if (closed) {
-                ctx.shadowColor = 'rgba(255, 201, 77, 0.85)';
+                ctx.shadowColor = P.amberGlowStrong;
                 ctx.shadowBlur = 8;
             }
             ctx.lineWidth = 3.4;
@@ -1190,11 +1218,11 @@ class CircuitGame {
             const a = pad(endPx(el, el.a));
             const o1 = pad(endPx(el, el.o1));
             const o2 = pad(endPx(el, el.o2));
-            ctx.fillStyle = AMBER_SOFT;
+            ctx.fillStyle = P.amberSoft;
             ctx.beginPath();
             ctx.arc(a.x, a.y, 3, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#8b96c4';
+            ctx.fillStyle = P.slate;
             [[o1.x, o1.y], [o2.x, o2.y]].forEach(([px, py]) => {
                 ctx.beginPath();
                 ctx.arc(px, py, 2.6, 0, Math.PI * 2);
@@ -1204,8 +1232,8 @@ class CircuitGame {
             const baseAng = Math.atan2(cur.y - a.y, cur.x - a.x);
             const ang = baseAng + swing;
             const len = Math.hypot(cur.x - a.x, cur.y - a.y);
-            ctx.strokeStyle = AMBER;
-            ctx.shadowColor = 'rgba(255, 201, 77, 0.85)';
+            ctx.strokeStyle = P.amber;
+            ctx.shadowColor = P.amberGlowStrong;
             ctx.shadowBlur = 8;
             ctx.lineWidth = 3.4;
             ctx.beginPath();
@@ -1222,11 +1250,11 @@ class CircuitGame {
         const sT = this.time - this.shortAt;
         if (sT >= 0 && sT < 1.2) {
             const a = 0.34 * (1 - sT / 1.2) * (0.6 + 0.4 * Math.sin(this.time * 22));
-            ctx.fillStyle = `rgba(226, 75, 74, ${a.toFixed(3)})`;
+            ctx.fillStyle = `rgba(${P.redRgb}, ${a.toFixed(3)})`;
             ctx.fillRect(0, 0, W, H);
         }
         const slow = 0.05 + 0.04 * Math.sin(this.time * 2.5);
-        ctx.fillStyle = `rgba(226, 75, 74, ${slow.toFixed(3)})`;
+        ctx.fillStyle = `rgba(${P.redRgb}, ${slow.toFixed(3)})`;
         ctx.fillRect(0, 0, W, H);
     }
 
@@ -1249,6 +1277,7 @@ function initStatesLocal(spec) {
 /* ────────────────────────── boot ────────────────────────── */
 
 onReady(() => {
+    P = bindPalette(CANVAS_VARS, { onChange: () => window.ccGame && window.ccGame.draw() });
     const game = new CircuitGame();
     window.ccGame = game; // 调试/测试句柄（AUGMENT startLevel 启动点）
 

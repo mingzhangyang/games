@@ -381,7 +381,32 @@ const contrastAudit = page => page.evaluate(() => {
     await ctx.close();
 }
 
-/* ── ④ 支持浅色的页面：像素底色 / 对比度 / 即时切换 ── */
+/* ── ④ 支持浅色的页面：像素底色 / 画布底色 / 对比度 / 即时切换 ── */
+// 画布底色随主题的例外：画布里画的是「实物」、两套主题本就一致（gomoku 的木棋盘）
+const CANVAS_KEEP = new Set(['gomoku']);
+// 最大画布（≥ 200×200）四个内角的平均亮度 —— 直接读画布位图（getImageData），
+// 不看截图：开始菜单等 DOM 浮层会盖住画布，截图取样会把浮层当成画布（实测漏判过）。
+// 角上像素近乎透明（底色由 CSS 画）时返回 null，不做断言。
+const canvasLuminance = page => page.evaluate(() => {
+    const c = [...document.querySelectorAll('canvas')]
+        .filter(el => el.width >= 200 && el.height >= 200)
+        .sort((a, b) => b.width * b.height - a.width * a.height)[0];
+    if (!c) return null;
+    const ctx = c.getContext('2d');
+    if (!ctx) return null;
+    const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    const m = Math.round(Math.min(c.width, c.height) * 0.03) + 2;
+    let sum = 0, n = 0, alpha = 0;
+    for (const [x, y] of [[m, m], [c.width - m - 6, m], [m, c.height - m - 6], [c.width - m - 6, c.height - m - 6]]) {
+        const d = ctx.getImageData(x, y, 6, 6).data;
+        for (let i = 0; i < d.length; i += 4) {
+            sum += 0.2126 * lin(d[i]) + 0.7152 * lin(d[i + 1]) + 0.0722 * lin(d[i + 2]);
+            alpha += d[i + 3] / 255;
+            n++;
+        }
+    }
+    return alpha / n < 0.5 ? null : sum / n;
+});
 const darkContrast = [];
 for (const p of PAGES.filter(x => x.light)) {
     for (const [w, h] of [[390, 844], [1280, 900]]) {
@@ -394,6 +419,10 @@ for (const p of PAGES.filter(x => x.light)) {
             await new Promise(r => setTimeout(r, 400));
             const L = await cornerLuminance(page);
             check(theme === 'light' ? L > 0.6 : L < 0.3, `${p.id}@${w}：${theme} 页面底色（四角亮度 ${L.toFixed(2)}）`);
+            const CL = CANVAS_KEEP.has(p.id) ? null : await canvasLuminance(page);
+            if (CL !== null) {
+                check(theme === 'light' ? CL > 0.55 : CL < 0.3, `${p.id}@${w}：${theme} 画布底色（位图四角亮度 ${CL.toFixed(2)}）`);
+            }
             const audit = await contrastAudit(page);
             if (theme === 'light') {
                 check(audit.bad.length === 0, `${p.id}@${w}：浅色文字对比度（${audit.total} 处）`, audit.bad.slice(0, 6).join(' | '));

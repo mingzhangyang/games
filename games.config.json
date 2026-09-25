@@ -665,7 +665,8 @@
         "leaderboard",
         "daily",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "order": "asc",
@@ -683,7 +684,8 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#0a1230"
+      "themeColor": "#0a1230",
+      "themeColorLight": "#f3f7fd"
     },
     {
       "id": "silk-dew",
@@ -715,7 +717,8 @@
         "leaderboard",
         "daily",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "order": "asc",
@@ -733,7 +736,8 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#0a1712"
+      "themeColor": "#0a1712",
+      "themeColorLight": "#eaf6f0"
     },
     {
       "id": "bond-forge",
@@ -765,7 +769,8 @@
         "leaderboard",
         "daily",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "order": "asc",
@@ -783,7 +788,8 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#0d1024"
+      "themeColor": "#0d1024",
+      "themeColorLight": "#f4f6fb"
     },
     {
       "id": "echo-cave",

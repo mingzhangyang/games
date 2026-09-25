@@ -29,8 +29,11 @@ createServer(async (req, res) => {
         // 与 Vite dev / dist 一致：根目录没有的文件回退到 public/（theme-boot.js、sw-register.js、
         // analytics.js、manifest.json、icons/ 都在那里）。此前这些在本服务器上一律 404 ——
         // theme-boot 首屏定主题因此在校验里根本不执行。
-        // sw.js 刻意不回退：源码态校验不装 Service Worker，免得缓存让各校验器互相污染。
-        if (!s && rel !== 'sw.js') {
+        // sw.js / sw-register.js 刻意不回退：源码态校验不装 Service Worker —— 装上后导航请求先过 SW，
+        // 既会让各校验器互相污染缓存，也会绕过 puppeteer 的请求拦截（verify-theme 的夹具页）。
+        // 两个要一起排除：只排除 sw.js 时 sw-register.js 照样去注册，报「fetching the script 404」的
+        // console 错误，smoke-circuit / smoke-silk-dew 因此变红（2026-09-25）。
+        if (!s && rel !== 'sw.js' && rel !== 'sw-register.js') {
             file = join(ROOT, 'public', rel);
             s = await stat(file).catch(() => null);
         }

@@ -110,8 +110,9 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
   Vite dev 与 `dist/` 都把 `public/` 挂在站点根，但这台校验服务器只认仓库根：`/sw-register.js`、`/analytics.js`、
   `/manifest.json` 一直是静默 404（`<script src>` 失败不抛 pageerror）。2026-09-25 主题 P0 加入同步脚本
   `/theme-boot.js` 后才暴露：夹具页里 boot 看起来工作正常，真实页面上 `data-theme` 却全是 `null`。
-  修法：serve-static 按 Vite 的语义回退 `public/`（`sw.js` 刻意除外——源码态校验不装 Service Worker，
-  免得缓存串扰各校验器）。回归：`node scripts/verify-theme.mjs` 的「真实页面」段断言每页 `data-theme`
+  修法：serve-static 按 Vite 的语义回退 `public/`（`sw.js` 与 `sw-register.js` 刻意除外——源码态校验不装
+  Service Worker，免得缓存串扰各校验器、绕过请求拦截；只排除 `sw.js` 不够，`sw-register.js` 仍会去注册并
+  报「fetching the script 404」console 错误，smoke-circuit / smoke-silk-dew 因此红过）。回归：`node scripts/verify-theme.mjs` 的「真实页面」段断言每页 `data-theme`
   必须存在，回退一失效就红。教训：任何「依赖 `public/` 资源」的新校验，先 `curl` 一下它在校验服务器上是不是 200。
 
 ## codegen 脚本

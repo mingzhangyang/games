@@ -3,6 +3,7 @@
 //
 //   node scripts/theme-varize.mjs css/minesweeper.css ms --dry   只打印将要做什么
 //   node scripts/theme-varize.mjs css/minesweeper.css ms         就地改写
+//   … --reset-light                                             浅色区域按启发式重出（丢弃已校准值，慎用）
 //
 // 做法：
 //   · 逐条声明扫描：属性是颜色类（color / background* / border* / box-shadow / text-shadow /
@@ -17,6 +18,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const [file, prefix] = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const DRY = process.argv.includes('--dry');
+// --reset-light：丢弃已有浅色区域、全部按启发式重出初稿（只在还没人工校准时用）
+const RESET_LIGHT = process.argv.includes('--reset-light');
 if (!file || !prefix) {
     console.error('用法：node scripts/theme-varize.mjs <css 文件> <前缀> [--dry]');
     process.exit(2);
@@ -41,7 +44,7 @@ function readRegion(begin, end, into) {
     for (const m of src.slice(bi, ei).matchAll(/(--[\w-]+):\s*([^;]+);/g)) into.set(m[1], m[2].trim());
 }
 readRegion(BEGIN_DARK, END_DARK, existingDark);
-readRegion(BEGIN_LIGHT, END_LIGHT, existingLight);
+if (!RESET_LIGHT) readRegion(BEGIN_LIGHT, END_LIGHT, existingLight);
 // 区域先整体摘掉，改写完再放回
 function stripRegion(begin, end) {
     const bi = src.indexOf(begin);
@@ -110,7 +113,7 @@ function lightOf(c, role) {
     if (role === 'text') {         // 文字：浅底上压暗到可读
         return { ...rgbOf({ h, s: Math.min(s, 0.85), l: Math.min(l, 0.4) }), a: c.a };
     }
-    if (l < 0.35 && s < 0.6) {     // 深色实底 → 对应的浅色实底
+    if (l < 0.35 && (s < 0.6 || l < 0.2)) {   // 深色实底（含很暗的高饱和夜蓝）→ 对应的浅色实底
         return { ...rgbOf({ h, s: s * 0.5, l: clamp(1 - l * 0.55, 0.86, 0.98) }), a: c.a };
     }
     return c;                      // 高饱和强调色：保留
@@ -193,8 +196,15 @@ while (i < src.length) {
     i = close + 1;
 }
 
-// 上一轮已收编（值已是 var）的变量也要留在区域里
-for (const [name, v] of existingDark) if (!vars.has(name)) { vars.set(name, v); light.set(name, existingLight.get(name) ?? v); }
+// 上一轮已收编（值已是 var）的变量也要留在区域里；没有已校准浅色值时按变量名后缀推回属性重出初稿
+const propFromName = n => (/-text(-\d+)?$/.test(n) ? 'color' : /-glow(-\d+)?$/.test(n) ? 'text-shadow'
+    : /-shadow(-\d+)?$/.test(n) ? 'box-shadow' : /-(border|outline)[\w-]*$/.test(n) ? 'border'
+        : /-(fill|stroke|caret)(-\d+)?$/.test(n) ? 'fill' : 'background');
+for (const [name, v] of existingDark) {
+    if (vars.has(name)) continue;
+    vars.set(name, v);
+    light.set(name, existingLight.get(name) ?? lightValue(v, propFromName(name)));
+}
 
 const pad = '    ';
 const darkBlock = `${BEGIN_DARK}\n:root {\n${[...vars].map(([n, v]) => `${pad}${n}: ${v};`).join('\n')}\n}\n${END_DARK}\n`;
