@@ -1013,12 +1013,16 @@ class MaxwellDemonGame {
     }
 
     drawBackdrop(ctx) {
-        const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, '#05070f');
-        g.addColorStop(0.5, '#0a0f22');
-        g.addColorStop(1, '#05070f');
-        ctx.fillStyle = g;
+        ctx.fillStyle = '#0b1721';
         ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(126,160,163,0.08)';
+        ctx.lineWidth = 1;
+        for (let y = 78; y < H; y += 44) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(W, y);
+            ctx.stroke();
+        }
     }
 
     /** 顶部：左右腔温度条 + 中央 ΔT；底部：预算条 */
@@ -1098,11 +1102,29 @@ class MaxwellDemonGame {
     drawVessel(ctx) {
         const p = VESSEL.pad;
         this.roundRect(ctx, p, p, W - p * 2, H - p * 2, 18);
-        ctx.fillStyle = '#0b1024';
+        ctx.fillStyle = '#13232d';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(168,184,255,0.42)';
-        ctx.lineWidth = 2.4;
+        ctx.strokeStyle = 'rgba(183,217,213,0.48)';
+        ctx.lineWidth = 1.8;
         ctx.stroke();
+        ctx.save();
+        ctx.strokeStyle = 'rgba(225,239,235,0.15)';
+        ctx.lineWidth = 1;
+        this.roundRect(ctx, p + 8, p + 8, W - p * 2 - 16, H - p * 2 - 16, 12);
+        ctx.stroke();
+        const bolt = (x, y) => {
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#6e858c';
+            ctx.fill();
+            ctx.strokeStyle = '#b3c6c8';
+            ctx.stroke();
+        };
+        bolt(p + 18, p + 18);
+        bolt(W - p - 18, p + 18);
+        bolt(p + 18, H - p - 18);
+        bolt(W - p - 18, H - p - 18);
+        ctx.restore();
     }
 
     /** 腔体温/冷染色：T 偏离 1 越多，腔体底色越偏向热/冷 */
@@ -1114,13 +1136,25 @@ class MaxwellDemonGame {
         const tint = (x, wd, temp, hot) => {
             const k = clamp(Math.abs(temp - 1) / 1.1, 0, 1) * 0.16;
             if (k <= 0.004) return;
-            ctx.fillStyle = hot ? `rgba(255,138,92,${k.toFixed(3)})` : `rgba(111,216,255,${k.toFixed(3)})`;
+            ctx.fillStyle = hot ? `rgba(223,155,98,${(k * 0.72).toFixed(3)})` : `rgba(112,196,193,${(k * 0.72).toFixed(3)})`;
             ctx.fillRect(x, p, wd, H - p * 2);
         };
         // ⚠️ 热色/冷色必须跟随**当前温度**：写死「左=热 右=冷」的话，
         // 玩家把分拣做反了腔体颜色却还在给旧方向背书（实测截图抓到）。
         tint(p + 1, wxL - p - 2, w.tempL, w.tempL >= 1);
         tint(wxR + 1, W - p - wxR - 2, w.tempR, w.tempR >= 1);
+        // Fine measurement ticks make the two chambers read as a calibrated
+        // apparatus; colour only supplements the numeric temperature labels.
+        ctx.save();
+        ctx.strokeStyle = 'rgba(218,235,232,0.13)';
+        ctx.lineWidth = 1;
+        for (let y = p + 52; y < H - p - 18; y += 28) {
+            ctx.beginPath();
+            ctx.moveTo(p + 12, y); ctx.lineTo(p + 20, y);
+            ctx.moveTo(W - p - 12, y); ctx.lineTo(W - p - 20, y);
+            ctx.stroke();
+        }
+        ctx.restore();
     }
 
     /** 观测场：以门为中心的虚线圈（花钱才看得见的那一圈） */
@@ -1153,10 +1187,10 @@ class MaxwellDemonGame {
         const dh = this.world.doorHalf;
         const bottomY = H - p;
 
-        ctx.fillStyle = '#263352';
+        ctx.fillStyle = '#2a414d';
         ctx.fillRect(wxL, p, wxR - wxL, (DOOR_Y - dh) - p);
         ctx.fillRect(wxL, DOOR_Y + dh, wxR - wxL, bottomY - (DOOR_Y + dh));
-        ctx.strokeStyle = 'rgba(168,184,255,0.3)';
+        ctx.strokeStyle = 'rgba(195,222,219,0.32)';
         ctx.lineWidth = 1;
         ctx.strokeRect(wxL + 0.5, p + 0.5, wxR - wxL - 1, (DOOR_Y - dh) - p - 1);
         ctx.strokeRect(wxL + 0.5, DOOR_Y + dh + 0.5, wxR - wxL - 1, bottomY - (DOOR_Y + dh) - 1);
@@ -1164,20 +1198,20 @@ class MaxwellDemonGame {
         // 门洞：armed = 正在等第一个撞上门洞的分子
         const open = this.world.gateArmed || this.world.gateOpen;
         const glow = open ? 0.85 : Math.max(0, this.passFlash) * 0.5;
-        ctx.fillStyle = open ? `rgba(255,211,77,${(0.55 + 0.35 * glow).toFixed(3)})` : 'rgba(38,51,82,0.95)';
+        ctx.fillStyle = open ? `rgba(223,155,98,${(0.48 + 0.32 * glow).toFixed(3)})` : 'rgba(42,65,77,0.98)';
         ctx.fillRect(wxL, DOOR_Y - dh, wxR - wxL, dh * 2);
-        ctx.strokeStyle = open ? GOLD : 'rgba(168,184,255,0.35)';
+        ctx.strokeStyle = open ? '#e3aa70' : 'rgba(195,222,219,0.38)';
         ctx.lineWidth = open ? 2 : 1.2;
         ctx.strokeRect(wxL + 0.5, DOOR_Y - dh + 0.5, wxR - wxL - 1, dh * 2 - 1);
 
         if (open || glow > 0.01) {
-            const g = ctx.createRadialGradient(DOOR_X, DOOR_Y, 2, DOOR_X, DOOR_Y, 54);
-            g.addColorStop(0, `rgba(255,211,77,${(0.32 * (open ? 1 : glow)).toFixed(3)})`);
-            g.addColorStop(1, 'rgba(255,211,77,0)');
-            ctx.fillStyle = g;
+            ctx.strokeStyle = `rgba(223,155,98,${(0.55 * (open ? 1 : glow)).toFixed(3)})`;
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([4, 5]);
             ctx.beginPath();
-            ctx.arc(DOOR_X, DOOR_Y, 54, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.arc(DOOR_X, DOOR_Y, 34, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
         }
         // 武装倒计时：门洞里一条随剩余时间收缩的横杠，让玩家知道「还能等多久」
         if (this.world.gateArmed) {
@@ -1194,12 +1228,12 @@ class MaxwellDemonGame {
         ctx.ellipse(DOOR_X, DOOR_Y, 13, 8, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#0b1024';
         ctx.fill();
-        ctx.strokeStyle = `rgba(255,211,77,${open ? 0.9 : 0.5})`;
+        ctx.strokeStyle = `rgba(227,170,112,${open ? 0.9 : 0.5})`;
         ctx.lineWidth = 1.4;
         ctx.stroke();
         ctx.beginPath();
         ctx.arc(DOOR_X, DOOR_Y, 4.2, 0, Math.PI * 2);
-        ctx.fillStyle = open ? GOLD : `rgba(255,211,77,${(0.35 + 0.4 * Math.abs(Math.sin(this.time * 1.6))).toFixed(3)})`;
+        ctx.fillStyle = open ? '#e3aa70' : `rgba(227,170,112,${(0.35 + 0.4 * Math.abs(Math.sin(this.time * 1.6))).toFixed(3)})`;
         ctx.fill();
         ctx.restore();
     }
@@ -1235,19 +1269,27 @@ class MaxwellDemonGame {
             ctx.lineTo(m.x - m.vx / sp * tl, m.y - m.vy / sp * tl);
             ctx.stroke();
             ctx.globalAlpha = alpha;
-            const g = ctx.createRadialGradient(m.x, m.y, 0.5, m.x, m.y, m.r * 3);
-            g.addColorStop(0, color);
-            g.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.globalAlpha = alpha * 0.28;
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(m.x, m.y, m.r * 3, 0, Math.PI * 2);
-            ctx.fill();
             ctx.globalAlpha = alpha;
+            // Blind particles stay neutral and circular.  Once observed, the
+            // shape carries the same state as the colour: diamond = fast/hot,
+            // circle = slow/cold.
             ctx.beginPath();
-            ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+            if (seen && fast) {
+                ctx.moveTo(m.x, m.y - m.r - 1);
+                ctx.lineTo(m.x + m.r + 1, m.y);
+                ctx.lineTo(m.x, m.y + m.r + 1);
+                ctx.lineTo(m.x - m.r - 1, m.y);
+                ctx.closePath();
+            } else {
+                ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+            }
             ctx.fillStyle = color;
             ctx.fill();
+            if (seen) {
+                ctx.strokeStyle = fast ? 'rgba(244,196,143,0.85)' : 'rgba(173,229,224,0.85)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
             ctx.restore();
         }
         ctx.globalAlpha = 1;
@@ -1277,15 +1319,18 @@ class MaxwellDemonGame {
     drawMenuAmbience(ctx) {
         const p = VESSEL.pad;
         this.roundRect(ctx, p, p, W - p * 2, H - p * 2, 18);
-        ctx.fillStyle = 'rgba(11,16,36,0.85)';
+        ctx.fillStyle = '#13232d';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(168,184,255,0.22)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(183,217,213,0.28)';
+        ctx.lineWidth = 1.6;
         ctx.stroke();
 
         const wxL = VESSEL.wallX - VESSEL.wallHalf;
-        ctx.fillStyle = 'rgba(38,51,82,0.9)';
+        ctx.fillStyle = 'rgba(42,65,77,0.95)';
         ctx.fillRect(wxL, p, VESSEL.wallHalf * 2, H - p * 2);
+        ctx.strokeStyle = 'rgba(196,224,220,0.35)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(wxL + 0.5, p + 0.5, VESSEL.wallHalf * 2 - 1, H - p * 2 - 1);
 
         const rng = (() => { let s = 20260921; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; })();
         const t = this.time;
@@ -1297,8 +1342,12 @@ class MaxwellDemonGame {
             const y = by + Math.cos(t * 0.6 + ph * 1.3) * 14;
             const warm = bx < VESSEL.wallX;
             ctx.beginPath();
-            ctx.arc(x, y, 4.2, 0, Math.PI * 2);
-            ctx.fillStyle = warm ? 'rgba(255,138,92,0.28)' : 'rgba(111,216,255,0.28)';
+            if (i % 3 === 0) {
+                ctx.moveTo(x, y - 4); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 4); ctx.lineTo(x - 4, y); ctx.closePath();
+            } else {
+                ctx.arc(x, y, 4.2, 0, Math.PI * 2);
+            }
+            ctx.fillStyle = warm ? 'rgba(223,155,98,0.38)' : 'rgba(112,196,193,0.34)';
             ctx.fill();
         }
         const pulse = 0.4 + 0.3 * Math.sin(t * 1.6);
