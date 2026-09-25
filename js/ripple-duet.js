@@ -1195,13 +1195,13 @@ class RippleDuetGame {
         this.syncMuteIcons();
 
         window.addEventListener('keydown', (e) => {
-            if (this.state !== 'playing') return;
-            if (e.key === 'Tab') {
-                e.preventDefault();
+            if (e.target instanceof Element && e.target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [role="button"]')) return;
+            if (this.state !== 'playing' || this.isPaused) return;
+            if ((e.key === 'q' || e.key === 'Q') && !e.repeat) {
                 if (this.place.length) this.sel = (this.sel + 1) % this.place.length;
                 Sfx.click();
-            } else if (e.key === 'ArrowLeft') { this.turnPhase(-1); }
-            else if (e.key === 'ArrowRight') { this.turnPhase(1); }
+            } else if (e.key === 'ArrowLeft') { e.preventDefault(); this.turnPhase(-1); }
+            else if (e.key === 'ArrowRight') { e.preventDefault(); this.turnPhase(1); }
             else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.pressFreeze(); }
             else if (e.key === 'r' || e.key === 'R') { this.restartLevel(); }
         });
