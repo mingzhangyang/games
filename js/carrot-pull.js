@@ -8,6 +8,7 @@ import { createSfxEngine } from './game-sfx.js';
 import { getLang } from './site-settings.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { renderMoreGames } from './more-games.js';
 
 const LANGUAGES = makeText({
     en: {
@@ -52,7 +53,8 @@ const LANGUAGES = makeText({
         toastGood: 'Great pull!',
         toastPerfect: 'Perfect pull!',
         toastBad: 'Missed the beat',
-        stats: 'Garden stats',
+        stats: 'Stats',
+        statusPaused: 'Paused — take a breath.',
     },
     zh: {
         brand: '拔萝卜',
@@ -96,7 +98,8 @@ const LANGUAGES = makeText({
         toastGood: '拔得漂亮！',
         toastPerfect: '完美一拔！',
         toastBad: '没踩准节奏',
-        stats: '菜园统计',
+        stats: '数据统计',
+        statusPaused: '暂停中，准备好再继续。',
     },
 });
 
@@ -126,12 +129,15 @@ function createGame() {
         wobble: 0,
         lastFrame: 0,
         messageTimer: 0,
+        won: false,
     };
     const refs = {};
     let lang = getLang();
     const sfx = createSfxEngine({ masterGain: 0.55 });
 
     const text = () => LANGUAGES[lang] || LANGUAGES.en;
+    let best = 0;
+    let dotsRound = -1;
 
     function cacheRefs() {
         [
@@ -147,6 +153,7 @@ function createGame() {
             'cp-reset-btn', 'cp-stage', 'cp-toast', 'cp-carrot-root', 'cp-carrot-leaves',
             'cp-tug-lines', 'cp-particles', 'cp-status-dot', 'cp-progress-dots',
         ].forEach(id => { refs[id] = document.getElementById(id); });
+        refs.card = document.querySelector('.cp-stage-card');
     }
 
     function bestScore() {
@@ -154,8 +161,9 @@ function createGame() {
         return Number.isFinite(value) ? value : 0;
     }
 
-    function updateProgressDots() {
-        if (!refs['cp-progress-dots']) return;
+    function updateProgressDots(force = false) {
+        if (!refs['cp-progress-dots'] || (!force && dotsRound === state.round)) return;
+        dotsRound = state.round;
         refs['cp-progress-dots'].replaceChildren();
         for (let i = 0; i < TOTAL_CARROTS; i += 1) {
             const dot = document.createElement('span');
@@ -202,8 +210,24 @@ function createGame() {
             const node = document.getElementById(id);
             if (node) node.textContent = value;
         });
-        updateProgressDots();
-        updateStatus(state.mode === 'menu' ? t.statusReady : t.statusPlaying);
+        updateProgressDots(true);
+        if (state.mode === 'over') renderResult();
+        updateStatus(currentStatusText(), state.mode === 'over' ? (state.won ? 'good' : 'bad') : '');
+    }
+
+    function currentStatusText() {
+        const t = text();
+        if (state.mode === 'menu') return t.statusReady;
+        if (state.mode === 'over') return state.won ? t.resultWinTitle : t.resultLoseTitle;
+        return state.paused ? t.statusPaused : t.statusPlaying;
+    }
+
+    function renderResult() {
+        const t = text();
+        const won = state.won;
+        if (refs['cp-result-stamp']) refs['cp-result-stamp'].textContent = won ? t.harvestedStamp : t.resultLoseStamp;
+        if (refs['cp-result-title']) refs['cp-result-title'].textContent = won ? t.resultWinTitle : t.resultLoseTitle;
+        if (refs['cp-result-copy']) refs['cp-result-copy'].textContent = won ? t.resultWinCopy : t.resultLoseCopy;
     }
 
     function updateStatus(message, tone = '') {
@@ -227,23 +251,26 @@ function createGame() {
         if (refs['cp-tug-lines']) refs['cp-tug-lines'].setAttribute('opacity', state.mode === 'playing' && state.pulls > 0 ? '0.82' : '0');
     }
 
+    // Per-frame work only: needle, timer and carrot wobble.
+    function updateFrameUi() {
+        if (refs['cp-time']) refs['cp-time'].textContent = String(Math.ceil(state.time));
+        if (refs['cp-meter-needle']) refs['cp-meter-needle'].style.left = `${state.needle * 100}%`;
+        if (refs['cp-meter']) refs['cp-meter'].setAttribute('aria-valuenow', String(Math.round(state.needle * 100)));
+        paintCarrot();
+    }
+
     function updateUi() {
-        const t = text();
         if (refs['cp-round']) refs['cp-round'].textContent = `${Math.min(state.round + 1, TOTAL_CARROTS)}/${TOTAL_CARROTS}`;
         if (refs['cp-score']) refs['cp-score'].textContent = String(state.score);
-        if (refs['cp-time']) refs['cp-time'].textContent = String(Math.ceil(state.time));
         if (refs['cp-side-score']) refs['cp-side-score'].textContent = String(state.score);
-        if (refs['cp-side-best']) refs['cp-side-best'].textContent = String(bestScore());
-        if (refs['cp-meter-needle']) refs['cp-meter-needle'].style.left = `${state.needle * 100}%`;
+        if (refs['cp-side-best']) refs['cp-side-best'].textContent = String(best);
         if (refs['cp-sweet-zone']) {
             refs['cp-sweet-zone'].style.left = `${clamp((state.target - 0.12) * 100, 0, 76)}%`;
         }
-        if (refs['cp-meter']) refs['cp-meter'].setAttribute('aria-valuenow', String(Math.round(state.needle * 100)));
         if (refs['cp-pull-btn']) refs['cp-pull-btn'].disabled = state.mode !== 'playing' || state.paused;
         if (refs['cp-final-score']) refs['cp-final-score'].textContent = String(state.score);
         updateProgressDots();
-        paintCarrot();
-        if (state.mode === 'playing' && refs['cp-status']?.textContent === t.statusReady) updateStatus(t.statusPlaying);
+        updateFrameUi();
     }
 
     function addParticles(success) {
@@ -275,7 +302,10 @@ function createGame() {
     }
 
     function saveBest() {
-        if (state.score > bestScore()) storageSet(BEST_KEY, String(state.score));
+        if (state.score > best) {
+            best = state.score;
+            storageSet(BEST_KEY, String(best));
+        }
     }
 
     function finish(won) {
@@ -283,15 +313,13 @@ function createGame() {
         state.mode = 'over';
         state.paused = false;
         saveBest();
-        const t = text();
+        state.won = won;
         if (refs['cp-result']) refs['cp-result'].hidden = false;
         if (refs['cp-start']) refs['cp-start'].hidden = true;
-        if (refs['cp-result-stamp']) refs['cp-result-stamp'].textContent = won ? t.harvestedStamp : t.resultLoseStamp;
-        if (refs['cp-result-title']) refs['cp-result-title'].textContent = won ? t.resultWinTitle : t.resultLoseTitle;
-        if (refs['cp-result-copy']) refs['cp-result-copy'].textContent = won ? t.resultWinCopy : t.resultLoseCopy;
-        if (refs['cp-pull-btn']) refs['cp-pull-btn'].disabled = true;
-        updateStatus(won ? t.resultWinTitle : t.resultLoseTitle, won ? 'good' : 'bad');
-        track('carrot-pull', won ? 'complete' : 'timeout');
+        renderResult();
+        updateUi();
+        updateStatus(currentStatusText(), won ? 'good' : 'bad');
+        track('carrot-pull', 'finish');
         if (won) sfx.tone({ freq: 523, slideTo: 784, type: 'triangle', dur: 0.36, vol: 0.18 });
         else sfx.tone({ freq: 220, slideTo: 140, type: 'sine', dur: 0.28, vol: 0.13 });
     }
@@ -312,7 +340,7 @@ function createGame() {
         if (refs['cp-result']) refs['cp-result'].hidden = true;
         updateStatus(text().statusPlaying);
         updateUi();
-        track('carrot-pull', 'start');
+        track('carrot-pull', 'play');
         sfx.tone({ freq: 392, slideTo: 659, type: 'triangle', dur: 0.2, vol: 0.13 });
     }
 
@@ -342,9 +370,9 @@ function createGame() {
             state.score += (perfect ? 150 : 100) + Math.min(state.streak, 8) * 20;
             state.wobble = 0;
             addParticles(true);
-            refs['cp-stage'].classList.remove('is-miss');
-            refs['cp-stage'].classList.add('is-good');
-            window.setTimeout(() => refs['cp-stage'].classList.remove('is-good'), 300);
+            refs.card.classList.remove('is-miss');
+            refs.card.classList.add('is-good');
+            window.setTimeout(() => refs.card.classList.remove('is-good'), 300);
             updateStatus(perfect ? text().statusGreat : text().statusGood, 'good');
             showToast(perfect ? text().toastPerfect : text().toastGood, 'good');
             sfx.tone({ freq: perfect ? 740 : 560, slideTo: perfect ? 1040 : 760, type: 'triangle', dur: 0.12, vol: 0.12 });
@@ -364,14 +392,21 @@ function createGame() {
             state.time = Math.max(0, state.time - 1);
             state.wobble = distance > 0.3 ? 5 : -4;
             addParticles(false);
-            refs['cp-stage'].classList.remove('is-good');
-            refs['cp-stage'].classList.add('is-miss');
-            window.setTimeout(() => refs['cp-stage'].classList.remove('is-miss'), 320);
+            refs.card.classList.remove('is-good');
+            refs.card.classList.add('is-miss');
+            window.setTimeout(() => refs.card.classList.remove('is-miss'), 320);
             updateStatus(text().statusBad, 'bad');
             showToast(text().toastBad, 'bad');
             sfx.tone({ freq: 160, slideTo: 110, type: 'sine', dur: 0.12, vol: 0.09 });
         }
         updateUi();
+    }
+
+    function setPaused(paused) {
+        if (state.mode !== 'playing' || state.paused === paused) return;
+        state.paused = paused;
+        updateUi();
+        updateStatus(currentStatusText());
     }
 
     function frame(now) {
@@ -390,7 +425,7 @@ function createGame() {
             }
             state.wobble *= 0.88;
             if (state.time <= 0) finish(false);
-            updateUi();
+            else updateFrameUi();
         }
         window.requestAnimationFrame(frame);
     }
@@ -417,8 +452,7 @@ function createGame() {
                 tryPull();
             }
             if (event.key === 'Escape' && state.mode === 'playing') {
-                state.paused = !state.paused;
-                updateStatus(state.paused ? (lang === 'zh' ? '暂停中，准备好再继续。' : 'Paused — take a breath.') : text().statusPlaying);
+                setPaused(!state.paused);
             }
         });
         window.addEventListener('site-settings:changed', () => applyLanguage(getLang()));
@@ -426,24 +460,36 @@ function createGame() {
 
     function init() {
         cacheRefs();
+        best = bestScore();
         applyLanguage(lang);
         updateUi();
         bindEvents();
         window.requestAnimationFrame(frame);
     }
 
-    return { state, init, applyLanguage };
+    return {
+        state,
+        init,
+        applyLanguage,
+        start,
+        pauseQuiet: () => setPaused(true),
+        resumeQuiet: () => setPaused(false),
+        isRunning: () => state.mode === 'playing' && !state.paused,
+    };
 }
 
 onReady(() => {
     const game = createGame();
+    window.cpGame = game;
+    const more = document.getElementById('cpSideMore');
+    if (more) renderMoreGames(more, { exclude: 'carrot-pull.html' });
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
     const drawer = createStatsDrawer({
         idPrefix: 'cp',
         getGame: () => game.state,
-        isBusy: () => game.state.mode === 'playing' && !game.state.paused,
-        onPause: () => { game.state.paused = true; },
-        onResume: () => { game.state.paused = false; },
+        isBusy: () => game.isRunning(),
+        onPause: () => game.pauseQuiet(),
+        onResume: () => game.resumeQuiet(),
         ICONS,
         getText,
     });
