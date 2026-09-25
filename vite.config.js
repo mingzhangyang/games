@@ -103,9 +103,11 @@ main: resolve(__dirname, 'index.html'),
             const RANK = name =>
               /\/tokens-/.test(name) ? 0
                 : /\/layout-/.test(name) ? 1
-                  : /\/more-games-/.test(name) ? 9
-                    : 5;
-            // ① 外链之间排序：tokens → layout → 页面 → more-games
+                  // 科学展柜共享皮肤（5 个实验室游戏）：源码里排在 layout 之后、页面 CSS 之前
+                  : /\/science-showcase-/.test(name) ? 2
+                    : /\/more-games-/.test(name) ? 9
+                      : 5;
+            // ① 外链之间排序：tokens → layout → [science-showcase] → 页面 → more-games
             const links = [...html.matchAll(/[ \t]*<link rel="stylesheet"[^>]*>/g)];
             if (links.length >= 2) {
               const sorted = [...links].sort((a, b) => RANK(a[0]) - RANK(b[0]));
