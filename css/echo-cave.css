@@ -70,6 +70,17 @@ body {
     min-width: 280px;
 }
 
+.ec-action-row {
+    position: absolute;
+    inset: auto 16px 16px;
+    display: flex;
+    justify-content: flex-end;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.ec-action-row.is-hidden { display: none; }
+
 #ec-canvas {
     display: block;
     width: 100%;
@@ -85,9 +96,9 @@ body {
 /* ── 手动脉冲钮（摇杆 / 轻点之外的第三条脉冲通道） ── */
 
 .ec-pulse-btn {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
+    position: relative;
+    right: auto;
+    bottom: auto;
     width: 64px;
     height: 64px;
     border-radius: 50%;
@@ -99,7 +110,7 @@ body {
     border: 1px solid rgb(255, 255, 255, 0.35);
     box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(111, 216, 255, 0.45);
     cursor: pointer;
-    z-index: 15;
+    pointer-events: auto;
     transition: transform 0.1s, box-shadow 0.15s;
 }
 
@@ -486,7 +497,16 @@ body {
     .ec-howto { font-size: 12px; }
     .ec-mode { font-size: 13px; padding: 11px 15px; }
     .ec-level-grid { gap: 5px; }
-    .ec-pulse-btn { width: 58px; height: 58px; right: 12px; bottom: 12px; }
+    .ec-stage { flex-direction: column; align-items: stretch; }
+    .ec-action-row {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        min-height: 82px;
+        padding: 12px;
+        margin-top: 2px;
+    }
+    .ec-pulse-btn { width: 58px; height: 58px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
