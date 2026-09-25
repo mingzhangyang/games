@@ -947,6 +947,7 @@ class FlameVerseGame {
         c.style.touchAction = 'none';
 
         document.addEventListener('keydown', (e) => {
+            if (e.target instanceof Element && e.target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [role="button"]')) return;
             if (this.state === 'playing' && !this.isPaused && !e.repeat) {
                 if (e.key >= '1' && e.key <= '8') {
                     this.throwSalt(EL_ORDER[Number(e.key) - 1]);
@@ -965,9 +966,9 @@ class FlameVerseGame {
                 }
             }
             if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing') this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused) this.restartLevel();
             } else if (e.key === 'Escape') {
-                if (this.state === 'playing') this.toMenu();
+                if (this.state === 'playing' && !this.isPaused) this.toMenu();
             }
         });
 
