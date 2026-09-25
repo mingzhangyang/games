@@ -244,7 +244,7 @@ class EchoCaveGame {
             'ec-over', 'ec-over-title', 'ec-over-score', 'ec-over-sub',
             'ec-btn-again', 'ec-btn-copy', 'ec-btn-menu2',
             'ec-lb-title', 'ec-lb-list', 'ec-lb-status', 'ec-username', 'ec-username-label',
-            'ec-hint', 'ec-pulse-btn',
+            'ec-hint', 'ec-pulse-btn', 'ec-action-row',
         ].forEach((id) => {
             const el = document.getElementById(id);
             if (el) this.el[id.replace(/^ec-/, '')] = el;
@@ -287,6 +287,7 @@ class EchoCaveGame {
         this.applyLanguage();
         this.bindInput();
         this.bindUI();
+        this.syncActionVisibility();
         this.resize();
         this.startLoop();
     }
@@ -569,6 +570,7 @@ class EchoCaveGame {
         this.world = createWorld(this.spec);
         this.memDirty = true;
         this.state = 'playing';
+        this.syncActionVisibility();
         this.isPaused = false;
         this.lastFrame = 0;
         this.hide(this.el['start']);
@@ -602,6 +604,7 @@ class EchoCaveGame {
 
     toMenu() {
         this.state = 'menu';
+        this.syncActionVisibility();
         this.world = null;
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
@@ -657,6 +660,7 @@ class EchoCaveGame {
     showClearPanel(stars) {
         const el = this.el;
         this.state = 'won-level';
+        this.syncActionVisibility();
         if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         if (el['clear-line']) {
             const rest = 3 - stars;
@@ -674,6 +678,7 @@ class EchoCaveGame {
     onLevelFailed() {
         if (this.state !== 'playing') return;
         this.state = 'failed';
+        this.syncActionVisibility();
         this.failReason = 'thorns';
         this.failTimer = 0;
         Sfx.fail();
@@ -683,6 +688,7 @@ class EchoCaveGame {
 
     finishDaily() {
         this.state = 'won-daily';
+        this.syncActionVisibility();
         const el = this.el;
         this.hide(el['clear']);
         if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
@@ -808,6 +814,10 @@ class EchoCaveGame {
     show(el) { if (el) el.classList.remove('hidden'); }
     hide(el) { if (el) el.classList.add('hidden'); }
 
+    syncActionVisibility() {
+        if (this.el['action-row']) this.el['action-row'].classList.toggle('is-hidden', this.state !== 'playing');
+    }
+
     /* ---------------------- 输入 ---------------------- */
 
     toLogical(e) {
@@ -829,6 +839,7 @@ class EchoCaveGame {
             'ArrowRight': 'r', 'd': 'r', 'D': 'r',
         };
         document.addEventListener('keydown', (e) => {
+            if (e.target instanceof Element && e.target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [role="button"]')) return;
             if (MOVE_KEYS[e.key]) {
                 this.keys.add(MOVE_KEYS[e.key]);
                 if (this.state === 'playing') e.preventDefault();
@@ -838,9 +849,9 @@ class EchoCaveGame {
                     e.preventDefault();
                 }
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing') this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused) this.restartLevel();
             } else if (e.key === 'Escape') {
-                if (this.state === 'playing') this.toMenu();
+                if (this.state === 'playing' && !this.isPaused) this.toMenu();
             }
         });
         document.addEventListener('keyup', (e) => {
