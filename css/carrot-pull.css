@@ -160,6 +160,9 @@ body {
     -webkit-backdrop-filter: blur(7px);
 }
 
+/* .game-overlay sets display:flex, which would otherwise override [hidden] */
+.cp-overlay[hidden] { display: none; }
+
 .cp-overlay-result {
     background: rgb(23, 60, 62, 0.78);
 }
