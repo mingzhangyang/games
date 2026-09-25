@@ -224,6 +224,37 @@ body.science-theme-ripple {
     border-color: var(--showcase-accent) !important;
 }
 
+/* The page CSS gives these icons a dark ink meant for a bright cyan/gold
+   fill, so the showcase must set ink and fill together.  Secondary actions
+   stay matte with an accent icon; the primary action keeps a solid fill so
+   the two buttons never read as the same control. */
+.science-showcase .cb-stir-btn,
+.science-showcase .md-scan-btn,
+.science-showcase .fv-clear-btn {
+    color: var(--showcase-accent) !important;
+}
+
+.science-showcase .cb-run-btn,
+.science-showcase .md-gate-btn,
+.science-showcase .fv-run-btn {
+    background: var(--showcase-accent-strong) !important;
+    border-color: var(--showcase-accent-strong) !important;
+    color: #071318 !important;
+}
+
+.science-showcase .ec-pulse-btn {
+    background: var(--showcase-accent) !important;
+    border-color: var(--showcase-accent) !important;
+    color: #071318 !important;
+}
+
+.science-showcase .cb-run-btn:hover,
+.science-showcase .md-gate-btn:hover,
+.science-showcase .fv-run-btn:hover,
+.science-showcase .ec-pulse-btn:hover {
+    border-color: var(--showcase-focus) !important;
+}
+
 .science-showcase .cb-overlay,
 .science-showcase .ec-overlay,
 .science-showcase .md-overlay,
