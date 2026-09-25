@@ -65,6 +65,7 @@ main: resolve(__dirname, 'index.html'),
             "crystal-bloom": resolve(__dirname, 'crystal-bloom.html'),
             "flame-verse": resolve(__dirname, 'flame-verse.html'),
             "ripple-duet": resolve(__dirname, 'ripple-duet.html'),
+            "carrot-pull": resolve(__dirname, 'carrot-pull.html'),
             // registry:end inputs
         },
         output: {

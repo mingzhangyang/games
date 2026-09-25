@@ -1026,6 +1026,46 @@
         "priority": "0.8"
       },
       "themeColor": "#041826"
+    },
+    {
+      "id": "carrot-pull",
+      "prefix": "cp",
+      "href": "carrot-pull.html",
+      "entry": "js/carrot-pull.js",
+      "emoji": "🥕",
+      "title": {
+        "doc": "拔萝卜 Carrot Pull — Garden Rhythm Game",
+        "seo": "拔萝卜 Carrot Pull — Garden Rhythm Game"
+      },
+      "name": {
+        "en": "Carrot Pull",
+        "zh": "拔萝卜"
+      },
+      "desc": {
+        "meta": "拔萝卜 Carrot Pull — a playful garden rhythm game. Press in the sweet spot, build a pulling streak, and help a tiny mole harvest six giant carrots before time runs out.",
+        "og": "Find the sweet spot, pull in rhythm, and harvest the garden.",
+        "twitter": "Pull in rhythm, keep your streak, and harvest six giant carrots."
+      },
+      "genre": [
+        "CasualGame",
+        "ArcadeGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "analytics",
+        "topbar"
+      ],
+      "stage": {
+        "w": 560,
+        "h": 640
+      },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
+      "themeColor": "#173c3e"
     }
   ]
 }

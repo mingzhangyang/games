@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#173c3e">
+    <meta name="description" content="拔萝卜 Carrot Pull — a playful garden rhythm game. Press in the sweet spot, build a pulling streak, and help a tiny mole harvest six giant carrots before time runs out.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/carrot-pull.html">
+    <meta property="og:title" content="拔萝卜 Carrot Pull — Garden Rhythm Game">
+    <meta property="og:description" content="Find the sweet spot, pull in rhythm, and harvest the garden.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-carrot-pull.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/carrot-pull.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="拔萝卜 Carrot Pull — Garden Rhythm Game">
+    <meta name="twitter:description" content="Pull in rhythm, keep your streak, and harvest six giant carrots.">
+    <meta name="twitter:image" content="assets/seo/og-carrot-pull.svg">
+    <title>拔萝卜 Carrot Pull — Garden Rhythm Game</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173c3e'/%3E%3Cpath d='M32 38c-6-3-9-8-8-14 5 1 9 4 10 10 1-7 5-11 11-12 1 7-3 13-10 16v12h-6V38Z' fill='%235fae57'/%3E%3Cpath d='M26 34c8-1 13 2 13 9 0 7-5 13-11 13s-10-6-10-13c0-5 3-8 8-9Z' fill='%23f08a3c'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/carrot-pull.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="cp-shell game-shell">
+        <header class="cp-topbar game-topbar">
+            <div class="cp-topbar-lead game-topbar-group">
+                <button data-chrome="home" class="cp-icon-btn game-icon-btn" id="cp-btn-home" title="Home" aria-label="Home">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
+                </button>
+            </div>
+            <div class="cp-topbar-center game-topbar-center">
+                <div class="cp-brand">
+                    <span class="cp-brand-zh" id="cp-brand-zh">拔萝卜</span>
+                    <span class="cp-brand-en">CARROT PULL</span>
+                </div>
+                <div class="cp-hud-row" aria-label="Game status">
+                    <span class="cp-chip"><span id="cp-round-label">Round</span><b id="cp-round">0/6</b></span>
+                    <span class="cp-chip"><span id="cp-score-label">Score</span><b id="cp-score">0</b></span>
+                    <span class="cp-chip cp-chip-time"><span id="cp-time-label">Time</span><b id="cp-time">45</b></span>
+                </div>
+            </div>
+            <div class="cp-topbar-actions game-topbar-group">
+                <button class="cp-icon-btn game-icon-btn" id="cp-reset-btn" title="Reset" aria-label="Reset">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg>
+                </button>
+                <button data-chrome="stats" type="button" class="cp-icon-btn game-icon-btn cp-stats-btn game-stats-btn" id="cpStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="cpStatsDrawer"></button>
+                <button data-chrome="sound" type="button" class="cp-icon-btn game-icon-btn" id="cp-mute-btn" aria-label="Sound"></button>
+            </div>
+        </header>
+
+        <main class="cp-main game-main">
+            <section class="cp-stage game-stage game-stage--fill" id="cp-stage" aria-labelledby="cp-scene-heading">
+                <h1 id="cp-scene-heading" class="sr-only">拔萝卜 Carrot Pull</h1>
+                <div class="cp-stage-card">
+                    <div class="cp-scene-wrap">
+                        <svg class="cp-scene" id="cp-scene" viewBox="0 0 560 520" role="img" aria-labelledby="cp-scene-title cp-scene-desc" xmlns="http://www.w3.org/2000/svg">
+                            <title id="cp-scene-title">A friendly mole helps pull a giant carrot from a garden bed</title>
+                            <desc id="cp-scene-desc">A bright mint garden with a carrot, a mole, a small gardener, and a soft soil bed.</desc>
+                            <defs>
+                                <linearGradient id="cp-sky" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0" stop-color="#b9edf0"/>
+                                    <stop offset="1" stop-color="#e4f5d2"/>
+                                </linearGradient>
+                                <filter id="cp-soft-shadow" x="-30%" y="-30%" width="160%" height="170%">
+                                    <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#173c3e" flood-opacity=".18"/>
+                                </filter>
+                            </defs>
+
+                            <rect width="560" height="520" fill="url(#cp-sky)"/>
+                            <g class="cp-clouds" fill="#f8fff0" opacity=".82">
+                                <path d="M38 93c-8-21 17-37 37-26 7-26 49-25 54 6 24-5 39 22 19 37H57C45 110 39 103 38 93Z"/>
+                                <path d="M387 75c-4-19 18-31 35-21 9-24 42-19 46 6 22-4 37 20 20 33h-83c-10-1-16-8-18-18Z"/>
+                            </g>
+                            <path d="M0 235C88 178 170 205 243 239c75 34 163-8 317-58v163H0Z" fill="#acd997"/>
+                            <path d="M0 273c105-38 182-6 256 20 87 30 177-24 304-54v125H0Z" fill="#92c687"/>
+
+                            <g class="cp-fence" fill="#e3bc7f" stroke="#9b704d" stroke-width="3">
+                                <path d="M0 314h560v43H0z" fill="#c99b64" stroke="none"/>
+                                <path d="M30 292h26v83H30zM150 287h26v88h-26zM430 286h26v89h-26zM526 292h26v83h-26z"/>
+                                <path d="M0 320h560M0 350h560" fill="none"/>
+                            </g>
+                            <g class="cp-flower-bed" fill="#fff8e6" stroke="#eaa848" stroke-width="2">
+                                <g transform="translate(45 266)"><circle r="7"/><circle cx="9" cy="7" r="7"/><circle cx="-8" cy="8" r="7"/><circle cx="0" cy="4" r="4" fill="#f4a837"/></g>
+                                <g transform="translate(506 264)"><circle r="7"/><circle cx="9" cy="7" r="7"/><circle cx="-8" cy="8" r="7"/><circle cx="0" cy="4" r="4" fill="#f4a837"/></g>
+                            </g>
+
+                            <path d="M0 345c76-17 150-16 222 0 76 17 159 18 228 0 39-10 76-11 110-3v178H0Z" fill="#a86e52"/>
+                            <path d="M0 367c80-16 147-13 220 3 76 17 159 18 229-1 42-11 78-10 111-2v153H0Z" fill="#754d42"/>
+                            <path d="M0 406c70-13 143-8 214 5 87 16 155 15 236-4 43-10 77-8 110-1v114H0Z" fill="#5e3f3a"/>
+                            <g class="cp-soil-specks" fill="#b98a61" opacity=".55">
+                                <circle cx="49" cy="392" r="6"/><circle cx="106" cy="452" r="4"/><circle cx="172" cy="394" r="5"/><circle cx="407" cy="397" r="5"/><circle cx="478" cy="454" r="6"/><circle cx="528" cy="388" r="4"/><circle cx="75" cy="493" r="3"/><circle cx="356" cy="474" r="4"/>
+                            </g>
+
+                            <ellipse id="cp-hole" cx="283" cy="386" rx="92" ry="20" fill="#3d292c" opacity=".82"/>
+                            <g id="cp-carrot-root" filter="url(#cp-soft-shadow)">
+                                <path d="M223 346c-4 34 1 113 43 155 19 19 42 23 59 7 36-34 39-119 28-163-28-15-96-15-130 1Z" fill="#f08a3c" stroke="#733e38" stroke-width="5" stroke-linejoin="round"/>
+                                <path d="M235 372c19-10 50-13 83-4M231 401c26-11 58-12 100-1M239 432c23-8 50-8 82 0" fill="none" stroke="#d96838" stroke-width="7" stroke-linecap="round" opacity=".75"/>
+                                <path d="M262 473c9 6 20 7 30 4" fill="none" stroke="#ffb25c" stroke-width="5" stroke-linecap="round" opacity=".8"/>
+                            </g>
+                            <g id="cp-carrot-leaves" stroke="#386a4f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M282 357c-28-31-28-68-4-91 15 24 20 48 10 76" fill="#6eb857"/>
+                                <path d="M286 356c-5-42 12-75 42-88 5 29-7 59-34 83" fill="#5ba54f"/>
+                                <path d="M276 356c-43-25-52-59-37-83 27 11 43 35 43 66" fill="#83c958"/>
+                                <path d="M291 358c38-27 70-25 89-4-25 21-54 25-84 13" fill="#70bb53"/>
+                                <path d="M283 293v61M291 283l-3 72M240 281l39 71M369 353l-75 5" fill="none" stroke="#b4df70" stroke-width="3"/>
+                            </g>
+
+                            <g id="cp-gardener" transform="translate(85 319)">
+                                <path d="M20 62c12-25 40-30 61-16 17 11 26 35 20 62H14C12 88 13 73 20 62Z" fill="#f8d8aa" stroke="#3b4f4f" stroke-width="4"/>
+                                <path d="M33 55c6 25 37 34 53 5l3 47H28Z" fill="#3f9a91" stroke="#2e6669" stroke-width="4"/>
+                                <circle cx="59" cy="30" r="32" fill="#f4b98f" stroke="#3b4f4f" stroke-width="4"/>
+                                <path d="M28 25c-3-29 27-47 59-33 17 7 24 20 22 38-14-8-27-12-43-11-13 0-25 4-38 12Z" fill="#7c513e" stroke="#3b4f4f" stroke-width="4"/>
+                                <path d="M44 32h1M73 32h1" stroke="#3b4f4f" stroke-width="5" stroke-linecap="round"/>
+                                <path d="M53 47c6 6 13 6 19 0" fill="none" stroke="#3b4f4f" stroke-width="3" stroke-linecap="round"/>
+                                <circle cx="35" cy="41" r="6" fill="#ed8f86" opacity=".7"/><circle cx="82" cy="41" r="6" fill="#ed8f86" opacity=".7"/>
+                                <path d="M90 77 154 45" fill="none" stroke="#f4b98f" stroke-width="16" stroke-linecap="round"/>
+                                <path d="M143 39c15-6 23 3 17 15" fill="none" stroke="#f4b98f" stroke-width="13" stroke-linecap="round"/>
+                                <path d="M19 111H0M96 111h21" stroke="#f6c246" stroke-width="13" stroke-linecap="round"/>
+                            </g>
+
+                            <g id="cp-mole" transform="translate(372 331)">
+                                <path d="M13 71C3 44 18 12 53 9c44-4 66 27 64 61-2 26-23 39-55 38-25-1-43-12-49-37Z" fill="#6c5d63" stroke="#3b4f4f" stroke-width="5"/>
+                                <ellipse cx="100" cy="51" rx="28" ry="22" fill="#c39b8c" stroke="#3b4f4f" stroke-width="4"/>
+                                <circle cx="112" cy="49" r="6" fill="#493f46"/>
+                                <path d="M30 23C17 3 33-4 47 15M72 11C75-12 96-4 89 19" fill="#9d7a80" stroke="#3b4f4f" stroke-width="4"/>
+                                <circle cx="49" cy="43" r="5" fill="#fff8e6"/><circle cx="50" cy="43" r="2" fill="#3b4f4f"/>
+                                <path d="M75 73c-8 4-15 4-23 0" fill="none" stroke="#3b4f4f" stroke-width="4" stroke-linecap="round"/>
+                                <path d="M27 70 0 45M39 88 16 96" fill="none" stroke="#c39b8c" stroke-width="14" stroke-linecap="round"/>
+                                <circle cx="112" cy="38" r="8" fill="#ef7676"/>
+                            </g>
+
+                            <g id="cp-particles" aria-hidden="true"></g>
+                            <g id="cp-tug-lines" fill="none" stroke="#f7d36e" stroke-width="5" stroke-linecap="round" opacity="0">
+                                <path d="M208 282l-22-14M212 300l-27-2M216 318l-22 10"/>
+                            </g>
+                            <path id="cp-carrot-hit" d="M210 258h180v130H210z" fill="#fff" opacity="0" aria-label="Pull the carrot"/>
+                        </svg>
+
+                        <div class="cp-toast game-toast" id="cp-toast" role="status" aria-live="polite"></div>
+
+                        <div class="cp-overlay game-overlay" id="cp-start">
+                            <div class="cp-mini-mark" aria-hidden="true">
+                                <span class="cp-mini-carrot">🥕</span>
+                                <span class="cp-mini-spark">✦</span>
+                            </div>
+                            <p class="cp-kicker" id="cp-start-kicker">GARDEN RHYTHM</p>
+                            <h2 class="cp-overlay-title" id="cp-start-title">拔萝卜</h2>
+                            <p class="cp-overlay-copy" id="cp-start-copy">看准绿色甜蜜区，按下按钮用力一拔！和鼹鼠一起收获 6 根大萝卜。</p>
+                            <div class="cp-howto-row">
+                                <span class="cp-howto-chip"><b>1</b><span id="cp-howto-one">看准指针</span></span>
+                                <span class="cp-howto-chip"><b>2</b><span id="cp-howto-two">落在甜蜜区</span></span>
+                                <span class="cp-howto-chip"><b>3</b><span id="cp-howto-three">连续拔出</span></span>
+                            </div>
+                            <button class="cp-primary game-btn" id="cp-start-btn" type="button"><span class="cp-btn-icon">↟</span><span id="cp-start-label">开始拔萝卜</span></button>
+                            <p class="cp-key-hint" id="cp-key-hint">Space / ↑ 也可以用力拔</p>
+                        </div>
+
+                        <div class="cp-overlay cp-overlay-result game-overlay" id="cp-result" hidden>
+                            <div class="cp-result-stamp" id="cp-result-stamp">HARVESTED!</div>
+                            <h2 class="cp-overlay-title" id="cp-result-title">萝卜大丰收！</h2>
+                            <p class="cp-overlay-copy" id="cp-result-copy">你和鼹鼠把菜园搬空啦。</p>
+                            <div class="cp-result-score"><span id="cp-result-score-label">Score</span><b id="cp-final-score">0</b></div>
+                            <div class="cp-result-actions">
+                                <button class="cp-primary game-btn" id="cp-again-btn" type="button"><span class="cp-btn-icon">↟</span><span id="cp-again-label">再拔一次</span></button>
+                                <button class="cp-secondary game-btn" id="cp-menu-btn" type="button"><span id="cp-menu-label">回到菜单</span></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cp-controls" id="cp-controls">
+                        <div class="cp-meter-block">
+                            <div class="cp-status-line">
+                                <span class="cp-status-dot" aria-hidden="true"></span>
+                                <span id="cp-status" aria-live="polite">找准时机，准备发力！</span>
+                            </div>
+                            <div class="cp-meter-labels"><span id="cp-meter-label">拔萝卜节奏</span><span id="cp-sweet-label">甜蜜区</span></div>
+                            <div class="cp-meter" id="cp-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-label="Pull timing">
+                                <span class="cp-meter-track"><span class="cp-sweet-zone" id="cp-sweet-zone"></span><span class="cp-meter-needle" id="cp-meter-needle"><i></i></span></span>
+                            </div>
+                        </div>
+                        <button class="cp-pull-btn" id="cp-pull-btn" type="button" aria-label="Pull the carrot">
+                            <span class="cp-pull-arrow" aria-hidden="true">↟</span>
+                            <span class="cp-pull-text" id="cp-pull-label">用力拔！</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="cp-sidebar game-sidebar">
+                <div id="cpStatsPanels">
+                    <div class="cp-side-card game-side-card">
+                        <div class="cp-side-title game-side-title" id="cp-side-howto-title">怎么玩</div>
+                        <p class="cp-side-text game-side-text" id="cp-side-howto">按下“用力拔！”时，让指针落进绿色甜蜜区。连续命中会增加连击分，失误不会结束游戏，但会打断连击。</p>
+                    </div>
+                    <div class="cp-side-card game-side-card">
+                        <div class="cp-side-title game-side-title" id="cp-side-progress-title">今日菜园</div>
+                        <div class="cp-progress-dots" id="cp-progress-dots" aria-label="Carrot harvest progress"></div>
+                        <div class="cp-side-row game-side-row"><span id="cp-side-score-label">本局得分</span><b id="cp-side-score">0</b></div>
+                        <div class="cp-side-row game-side-row"><span id="cp-side-best-label">最佳记录</span><b id="cp-side-best">0</b></div>
+                    </div>
+                </div>
+                <div class="cp-side-card game-side-card cp-tip-card">
+                    <div class="cp-side-title game-side-title" id="cp-side-tip-title">小鼹鼠提示</div>
+                    <p class="cp-side-text game-side-text" id="cp-side-tip">不要急着乱拔。把节奏踩在绿色区域，萝卜会自己松土。</p>
+                </div>
+                <nav class="more-games game-side-card" id="cpSideMore"></nav>
+            </aside>
+        </main>
+
+        <footer class="cp-footer game-footer">
+            <p class="cp-footer-hint game-footer-hint" id="cp-hint">按住按钮或使用 Space / ↑，在绿色区间拔萝卜。</p>
+            <div class="cp-footer-actions game-footer-actions game-topbar-group">
+                <a class="cp-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
+                </a>
+                <button type="button" class="cp-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="cpMoreNav" title="More games" aria-label="More games"></button>
+            </div>
+            <nav class="more-games game-footer-nav" id="cpMoreNav" hidden></nav>
+        </footer>
+    </div>
+
+    <div class="game-drawer" id="cpStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cpStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="cpStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="cpStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="cpStatsDrawerBody"></div>
+        </div>
+    </div>
+
+    <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-carrot-pull.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"拔萝卜 Carrot Pull — Garden Rhythm Game","url":currentUrl,"description":"拔萝卜 Carrot Pull — a playful garden rhythm game. Press in the sweet spot, build a pulling streak, and help a tiny mole harvest six giant carrots before time runs out.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["CasualGame","ArcadeGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"拔萝卜 Carrot Pull — Garden Rhythm Game","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <!-- registry:end seo-script -->
+    <script type="module" src="js/carrot-pull.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>
