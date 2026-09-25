@@ -812,28 +812,27 @@ class RippleDuetGame {
      * 这些线只解释传播现象，不参与判定；判定仍完全来自 rules 的复振幅。
      */
     drawContours(ctx) {
-        const sources = [];
-        (this.spec.ctrl || []).forEach((src, idx) => {
-            const p = this.place[idx] || src;
-            sources.push({ x: gridX(p.i), y: gridY(p.j), ph: (p.ph || 0) * (Math.PI * 2 / PHASES) });
-        });
-        (this.spec.storms || []).forEach((src) => {
-            sources.push({ x: src.x, y: src.y, ph: (src.ph || 0) * (Math.PI * 2 / PHASES) });
-        });
+        // 与判定同源：emitters() 的前 ctrl+storms 项就是真实波源（其后是墙的镜像源）。
+        // 等高线只画真实波源各自的波前；反射波不另画圈，否则墙边会糊成一片。
+        const list = emitters(this.spec, this.place, this.k);
+        const realCount = (this.spec.ctrl || []).length + (this.spec.storms || []).length;
+        const sources = list.slice(0, realCount);
 
-        const lambda = this.k > 0 ? (Math.PI * 2) / this.k : 72;
-        const spacing = clamp(lambda, 30, 82);
+        // 瞬时波面 u = Σ a·cos(φ − k·r + ωt)（与 paintField 一致）：
+        //   波峰在 r ≡ (φ + ωt)/k (mod λ)，波谷在其外 λ/2 处。
+        // 所以圈距必须是 λ/2、奇偶交替，且 λ 不能被截断，否则线会与底下的波场错位。
+        const lambda = (Math.PI * 2) / this.k;
+        const half = lambda / 2;
         const maxRadius = Math.hypot(SEA.w, SEA.h);
         ctx.save();
         ctx.lineWidth = 1.1;
         ctx.lineCap = 'round';
-        sources.forEach((source, sourceIndex) => {
-            const phaseOffset = source.ph + OMEGA * this.time;
-            const offset = ((phaseOffset / (Math.PI * 2)) * spacing % spacing + spacing) % spacing;
-            for (let ring = 0; ring * spacing + offset < maxRadius; ring++) {
-                const radius = offset + ring * spacing;
+        sources.forEach((source) => {
+            const crest0 = ((((source.ph + OMEGA * this.time) / this.k) % lambda) + lambda) % lambda;
+            for (let n = 0; crest0 + n * half < maxRadius; n++) {
+                const radius = crest0 + n * half;
                 if (radius < 7) continue;
-                const trough = (ring + sourceIndex) % 2 === 1;
+                const trough = n % 2 === 1;
                 ctx.strokeStyle = trough ? 'rgba(116,211,207,0.25)' : 'rgba(241,152,125,0.29)';
                 ctx.setLineDash(trough ? [5, 5] : []);
                 ctx.beginPath();
@@ -843,7 +842,6 @@ class RippleDuetGame {
         });
 
         // A quiet zone is a symbol, not merely a dark colour patch.
-        const list = emitters(this.spec, this.place, this.k);
         ctx.setLineDash([1, 4]);
         ctx.strokeStyle = 'rgba(215,235,222,0.36)';
         ctx.lineWidth = 1;
@@ -1043,22 +1041,39 @@ class RippleDuetGame {
 
         const rows = this.spec.targets;
         const rowH = Math.min(34, (box.h - 10) / Math.max(rows.length, 1));
-        rows.forEach((t, i) => {
+        const LABEL_FONT = 'bold 13px system-ui, sans-serif';
+        const STATE_FONT = '12px ui-monospace, monospace';
+        const lines = rows.map((t, i) => {
             const m = measure(this.spec, this.place, i, this.k);
-            const y = box.y + 6 + rowH * i + rowH / 2;
             const label = t.kind === 'calm'
                 ? `× ${this.t('calm')}`
                 : t.kind === 'blaze' ? `◆ ${this.t('blaze')}` : `∥ ${this.t('lane')}`;
+            const state = t.kind === 'blaze'
+                ? (m.ok ? this.t('litUp') : this.t('needBrighter'))
+                : (m.ok ? this.t('readyToFreeze') : this.t('notReady'));
+            return { t, m, label, readout: `${m.value.toFixed(3)} · ${state}` };
+        });
+        // 进度条夹在最宽的标签与最宽的读数之间（按实际文字宽度量，换语言/加符号都不会压字）
+        ctx.save();
+        ctx.font = LABEL_FONT;
+        const labelW = Math.max(0, ...lines.map((l) => ctx.measureText(l.label).width));
+        ctx.font = STATE_FONT;
+        // 取所有状态文案里最长的一条：状态切换（未达标 → 达标）时进度条不跳宽
+        const readoutW = Math.max(0, ...['litUp', 'needBrighter', 'readyToFreeze', 'notReady']
+            .map((k) => ctx.measureText(`0.000 · ${this.t(k)}`).width));
+        ctx.restore();
+        const bx = box.x + 12 + labelW + 10;
+        const bw = Math.max(24, box.x + box.w - 12 - readoutW - 10 - bx);
+        lines.forEach(({ t, m, label, readout }, i) => {
+            const y = box.y + 6 + rowH * i + rowH / 2;
             ctx.save();
             ctx.fillStyle = m.ok ? (t.kind === 'blaze' ? GOLD : '#a9d8c1') : DIM;
-            ctx.font = 'bold 13px system-ui, sans-serif';
+            ctx.font = LABEL_FONT;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.fillText(label, box.x + 12, y);
 
             // 进度条：平静要"压下去"，点亮要"顶上去"
-            const bx = box.x + 62;
-            const bw = box.w - 62 - 96;
             ctx.fillStyle = 'rgba(221,240,236,0.10)';
             ctx.fillRect(bx, y - 6, bw, 12);
             const ratio = t.kind === 'blaze'
@@ -1068,12 +1083,9 @@ class RippleDuetGame {
             ctx.fillRect(bx, y - 6, bw * ratio, 12);
 
             ctx.fillStyle = m.ok ? '#e8eefc' : DIM;
-            ctx.font = '12px ui-monospace, monospace';
+            ctx.font = STATE_FONT;
             ctx.textAlign = 'right';
-            const state = t.kind === 'blaze'
-                ? (m.ok ? this.t('litUp') : this.t('needBrighter'))
-                : (m.ok ? this.t('readyToFreeze') : this.t('notReady'));
-            ctx.fillText(`${m.value.toFixed(3)} · ${state}`, box.x + box.w - 12, y);
+            ctx.fillText(readout, box.x + box.w - 12, y);
             ctx.restore();
         });
     }
