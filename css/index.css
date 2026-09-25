@@ -449,6 +449,39 @@
             margin: 0;
         }
 
+        /* 主题三档：与 .lang-toggle 同一套胶囊语言，按下态用主色描边 */
+        .theme-switch {
+            display: inline-flex;
+            gap: 2px;
+            padding: 2px;
+            border: 1px solid var(--color-border);
+            border-radius: 99px;
+        }
+
+        .theme-switch[hidden] { display: none; }
+
+        .theme-switch-btn {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 99px;
+            padding: 4px 10px;
+            min-height: 28px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+
+        .theme-switch-btn:hover { color: var(--color-text); }
+
+        .theme-switch-btn[aria-pressed="true"] {
+            color: var(--color-text);
+            background: var(--tok-fill-raised);
+            border-color: var(--tok-border-raised);
+        }
+
         .game-footer {
             gap: 10px;
             padding: 20px 0 28px;

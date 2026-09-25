@@ -104,6 +104,16 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
 
 - Emoji as a *button label* also breaks vertical centring, not just policy: `🌈 Theme` at 10px measured 4px above the pill's centre (7px gap above vs 15px below), because the emoji's font metrics inflate the line box while `display: block` + `line-height: normal` places the Latin text on the shared baseline. Use inline SVG + a flex host + `line-height: 1` so centring comes from layout, not glyph metrics; keep label + `aria-pressed` in **one** renderer (`renderThemeToggle()` in `js/tetris.js` — three code paths used to write this label, and a rewrite without the icon silently drops it). The theme toggle is a real `<button>` now, so it is keyboard-focusable. Known remaining gap (not yet fixed): on **short** viewports the board's bottom sits under the fixed bar — 320×568 hides 124px, 360×640 hides 52px, 375×667 hides 25px (≥740px tall is clean) — fixing it needs the board's `max-height` to follow viewport height
 
+## 校验基础设施
+
+- ⚠️ **`scripts/serve-static.mjs` 不回退 `public/`，于是 `public/` 下的一切在校验里都是 404 —— 而且没有任何检查会因此变红。**
+  Vite dev 与 `dist/` 都把 `public/` 挂在站点根，但这台校验服务器只认仓库根：`/sw-register.js`、`/analytics.js`、
+  `/manifest.json` 一直是静默 404（`<script src>` 失败不抛 pageerror）。2026-09-25 主题 P0 加入同步脚本
+  `/theme-boot.js` 后才暴露：夹具页里 boot 看起来工作正常，真实页面上 `data-theme` 却全是 `null`。
+  修法：serve-static 按 Vite 的语义回退 `public/`（`sw.js` 刻意除外——源码态校验不装 Service Worker，
+  免得缓存串扰各校验器）。回归：`node scripts/verify-theme.mjs` 的「真实页面」段断言每页 `data-theme`
+  必须存在，回退一失效就红。教训：任何「依赖 `public/` 资源」的新校验，先 `curl` 一下它在校验服务器上是不是 200。
+
 ## codegen 脚本
 
 - ⚠️ **Never mutate a string while iterating its own match offsets.** The dedupe pass in `add-drawer-i18n.py` sliced `block` inside a loop over `finditer(block)` — the offsets are relative to the *original* string, so once the first removal shifts them, every later cut lands on arbitrary characters (it split `'开始新的每日挑战？…'` mid-string), and reassembling with `tail[len(block):]` reused an already-shortened length. All six JS files became syntax errors and had to be hand-repaired, because the damage spanned entire i18n tables and `git checkout` would have discarded the session's real work. Safe form: collect every hit's **absolute** `(start, end)`, delete **backwards on the whole `src`**, return once. Pair it with: `--dry` support, a `cp`'d scratch copy + `node --check` before touching real files, and **`md5sum` twice** to prove idempotence — never trust the script's own printed "skipped" report, since `tail -N` truncates lines and misleads. Related: a dedupe window that starts at `pos` can never see the key it is looking for, because `pos` points at that key's own indentation and the slice has no leading `\n` for `r'\n[ \t]*key:'` to match — start the preview at `pos - 1`

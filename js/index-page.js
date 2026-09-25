@@ -1,5 +1,7 @@
 // index.html 落地页脚本（P4-1 自内联 <script> 原样抽离，module 化：执行时机等价——原脚本在 body 尾同步执行，module 为 DOM 就绪后执行）
 import { onReady } from './boot.js';
+import { getThemePref, setThemePref } from './site-settings.js';
+import { supportsLight } from './theme.js';
 
 const i18n = {
     en: {
@@ -45,6 +47,10 @@ const i18n = {
         hubProfileHint: 'Leaderboard name',
         hubProfilePlaceholder: 'Your name',
         langToggle: '中文',
+        themeLabel: 'Theme',
+        themeDark: 'Dark',
+        themeLight: 'Light',
+        themeSystem: 'System',
         hubTotalPlayed: 'plays today',
         badgeDaily: 'Daily',
         badgeNew: 'New',
@@ -190,6 +196,10 @@ const i18n = {
         hubProfileHint: '全站排行榜昵称',
         hubProfilePlaceholder: '你的昵称',
         langToggle: 'English',
+        themeLabel: '主题',
+        themeDark: '深色',
+        themeLight: '浅色',
+        themeSystem: '跟随系统',
         hubTotalPlayed: '次今日对局',
         badgeDaily: '今日挑战',
         badgeNew: '新上线',
@@ -444,6 +454,13 @@ function applyLanguage(lang) {
     // 两颗语言钮共用同一个写入者：applyLanguage 是唯一改它们文案的地方
     document.querySelectorAll('#lang-toggle, #footer-lang-toggle')
         .forEach(btn => { btn.textContent = t.langToggle; });
+    const themeSwitch = document.getElementById('theme-switch');
+    if (themeSwitch) {
+        themeSwitch.setAttribute('aria-label', t.themeLabel);
+        const THEME_TEXT = { dark: t.themeDark, light: t.themeLight, system: t.themeSystem };
+        themeSwitch.querySelectorAll('[data-theme-pref]')
+            .forEach(btn => { btn.textContent = THEME_TEXT[btn.dataset.themePref]; });
+    }
 
     // Daily Hub 文案
     document.getElementById('hub-title').textContent = t.hubTitle;
@@ -608,6 +625,29 @@ function updateDailyHub() {
         .catch(() => { /* 静默 */ });
 }
 
+/**
+ * 主题三档开关：全站唯一写 site_theme 的地方（游戏页只读）。
+ * 写入后 setThemePref 派发 site-settings:changed，本页的 theme-boot 据此即时换主题；
+ * 其它已打开的游戏页由 storage 事件同步。首页自己不支持浅色时开关保持隐藏 ——
+ * P0 阶段即如此（见 docs/contracts/theme.md §6）。
+ */
+function bindThemeSwitch() {
+    const box = document.getElementById('theme-switch');
+    if (!box) return;
+    box.hidden = !supportsLight();
+    const buttons = [...box.querySelectorAll('[data-theme-pref]')];
+    const sync = () => {
+        const pref = getThemePref();
+        buttons.forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.themePref === pref)));
+    };
+    buttons.forEach(btn => btn.addEventListener('click', () => {
+        setThemePref(btn.dataset.themePref);
+        sync();
+    }));
+    window.addEventListener('storage', (e) => { if (!e.key || e.key === 'site_theme') sync(); });
+    sync();
+}
+
 onReady(() => {
     const lang = detectLanguage();
     applyLanguage(lang);
@@ -623,6 +663,7 @@ onReady(() => {
     };
     document.querySelectorAll('#lang-toggle, #footer-lang-toggle')
         .forEach(btn => btn.addEventListener('click', toggleLang));
+    bindThemeSwitch();
     setCanonicalAndSocialMeta();
     injectStructuredData();
     updateDailyHub();

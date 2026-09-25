@@ -18,7 +18,11 @@
     <meta name="twitter:title" content="Mini Games Collection">
     <meta name="twitter:description" content="A curated collection of instant-play HTML5 games.">
     <meta name="twitter:image" content="assets/seo/og-collection.svg">
+    <!-- 主题三行（首页不在注册表里，手写；顺序与 gen 的 head 区域一致，见 docs/contracts/theme.md §3）。
+         P1 让首页支持浅色时：content 改成 "light dark"，theme-color 补 data-light。 -->
+    <meta name="theme-support" content="dark">
     <meta name="theme-color" content="#6366f1">
+    <script src="/theme-boot.js"></script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <title id="page-title">Mini Games Collection</title>
@@ -509,6 +513,13 @@
         <p id="footer-text">© 2026 orangely.xyz</p>
         <div class="game-footer-actions">
             <button type="button" class="lang-toggle" id="footer-lang-toggle" title="Language" aria-label="Language">中文</button>
+            <!-- 主题三档（全站唯一写 site_theme 的地方，见 docs/contracts/theme.md）。
+                 首页声明支持浅色之前保持 hidden，由 js/index-page.js 按 theme-support 显现。 -->
+            <div class="theme-switch" id="theme-switch" role="group" aria-label="Theme" hidden>
+                <button type="button" class="theme-switch-btn" data-theme-pref="dark" aria-pressed="true">Dark</button>
+                <button type="button" class="theme-switch-btn" data-theme-pref="light" aria-pressed="false">Light</button>
+                <button type="button" class="theme-switch-btn" data-theme-pref="system" aria-pressed="false">System</button>
+            </div>
         </div>
     </footer>
 

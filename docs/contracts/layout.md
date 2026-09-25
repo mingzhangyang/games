@@ -9,6 +9,7 @@
 
 - 契约文件：`css/layout.css`（骨架与 `--frame-*` 参数）、`css/tokens.css`（颜色/圆角/控件尺寸）
 - 引入顺序（硬性）：`tokens.css → layout.css → <game>.css → more-games.css`
+  - 在这之前：gen 的 `head` 区域输出同步脚本 `/theme-boot.js`，必须先于任何样式表（首屏主题，见 `theme.md`）
 - 迁移工具：`scripts/apply-layout-unification.py`（幂等，可重复执行）
 - 校验工具：`scripts/layout-metrics.mjs`、`scripts/shots.mjs`、`scripts/serve-static.mjs`、
   `scripts/verify-desktop-frame.mjs`、`scripts/verify-stats-drawer.mjs`
