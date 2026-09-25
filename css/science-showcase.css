@@ -289,12 +289,14 @@ body.science-theme-ripple {
     box-shadow: none !important;
 }
 
+/* Same line code as the Ripple Duet canvas contours: crest = solid, trough = dashed. */
 .science-showcase .rd-legend-crest {
-    background: repeating-linear-gradient(90deg, transparent 0 5px, var(--showcase-accent-strong) 5px 8px, transparent 8px 12px) !important;
+    background: linear-gradient(0deg, transparent 0 40%, var(--showcase-accent-strong) 40% 60%, transparent 60%) !important;
 }
 
 .science-showcase .rd-legend-trough {
-    background: repeating-linear-gradient(90deg, transparent 0 5px, var(--showcase-accent) 5px 8px, transparent 8px 12px) !important;
+    background:
+        repeating-linear-gradient(90deg, var(--showcase-accent) 0 4px, transparent 4px 7px) center / 100% 20% no-repeat !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

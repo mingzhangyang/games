@@ -1157,8 +1157,13 @@ class FlameVerseGame {
             ctx.fillStyle = fill;
             ctx.fill();
         };
-        flamePath(1, total ? 'rgba(226,145,65,0.70)' : 'rgba(94,157,173,0.52)');
-        flamePath(0.58, total ? 'rgba(248,193,83,0.86)' : 'rgba(190,235,226,0.72)');
+        // 轮廓跟随投进去的盐（与焰心同一个 blendColor）：铜焰是绿的、钾焰偏紫，
+        // 不能一律画成钠黄 —— 焰色反应本身就是这个游戏的现象。内层向白提亮，像真实火焰的亮芯。
+        const tint = total ? blendColor(recipe).match(/\d+/g).map(Number) : null;
+        flamePath(1, tint ? `rgba(${tint.join(',')},0.62)` : 'rgba(94,157,173,0.52)');
+        flamePath(0.58, tint
+            ? `rgba(${tint.map((c) => Math.round(c + (255 - c) * 0.45)).join(',')},0.8)`
+            : 'rgba(190,235,226,0.72)');
 
         // 元素火舌：确定性粒子（index → 相位/速度），零随机数
         let seed = 0;
@@ -1232,10 +1237,12 @@ class FlameVerseGame {
         const linesH = box.h - 22 - 18;
         const axisY = box.y + box.h - 14;
 
-        // 谱线：离散竖线（真实玩法是读位置与谱线组，不是猜火焰颜色）。
+        // 谱线：软边竖带（sigma 故意偏大 —— 邻近线会糊在一起，逼玩家看谱线组）。
+        // ⚠️ 这是难度设计，不是画风：细锐线能把 Li 670.8 / Sr 674.0 的主线直接分开，
+        //    「靠旁边的次级线分辨」这条玩法就失效了。发射谱线相互叠加，所以用 lighter。
         const halfPx = (LINE_SIGMA / (WL[1] - WL[0])) * box.w;
         ctx.save();
-        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalCompositeOperation = 'lighter';
         for (const k of EL_ORDER) {
             const d = recipe[k] | 0;
             if (!d) continue;
@@ -1243,12 +1250,15 @@ class FlameVerseGame {
             for (const line of e.lines) {
                 const x = wlX(line.nm, box);
                 const peak = Math.min(1, 0.3 + 0.24 * d * line.w);
+                const g = ctx.createLinearGradient(x - halfPx * 2, 0, x + halfPx * 2, 0);
+                g.addColorStop(0, 'rgba(0,0,0,0)');
+                g.addColorStop(0.35, wlColor(line.nm));
+                g.addColorStop(0.5, `rgba(255,246,223,${(peak * 0.6).toFixed(3)})`);
+                g.addColorStop(0.65, wlColor(line.nm));
+                g.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.globalAlpha = peak;
-                ctx.fillStyle = wlColor(line.nm);
-                ctx.fillRect(x - Math.max(1, halfPx * 0.72), linesTop, Math.max(2, halfPx * 1.44), linesH);
-                ctx.globalAlpha = Math.min(1, peak + 0.18);
-                ctx.fillStyle = '#fff6df';
-                ctx.fillRect(x - 0.55, linesTop, 1.1, linesH);
+                ctx.fillStyle = g;
+                ctx.fillRect(x - halfPx * 2, linesTop, halfPx * 4, linesH);
             }
         }
         ctx.globalAlpha = 1;

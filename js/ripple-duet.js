@@ -6,7 +6,7 @@
  * 或者把波峰叠起来点亮浮标，再按「定格」收下这张图样。
  *
  * 机制即教学：
- *   · 波峰烧橙、波谷沉蓝，**从来不动的暗带就是相消带** —— 眼睛先学会看；
+ *   · 波峰珊瑚红、波谷深海青，**从来不动的暗带就是相消带** —— 眼睛先学会看；
  *   · 一个源永远消不掉自己（实测最小包络 0.184），所以「平静」必须有第二个
  *     波或者一场风暴来抵消 —— 对消天生是两个波的事；
  *   · 相位是 8 档（45° 一档）；把波源挪半格就能换来半波程差，等价于反相。
@@ -121,7 +121,7 @@ const LANGUAGES = makeText({
         stats: 'Stats',
         title: 'Ripple Duet',
         subtitle: 'Two Sources · One Sea',
-        howto: 'A still sea is not a silent one — it is two waves arriving opposite and calling it even. You can drag a source or two, and turn their phase; the storm never stops and cannot be moved. Watch the water: crests burn orange, troughs sink blue, and the dark bands that never move are where the waves cancel. Lay the calm marker into that dark, or pile the crests up until a beacon lights — then freeze the pattern. Every drop and every eighth turn of phase costs one operation, and you are judged on how few it took.',
+        howto: 'A still sea is not a silent one — it is two waves arriving opposite and calling it even. You can drag a source or two, and turn their phase; the storm never stops and cannot be moved. Watch the water: crests glow coral on solid lines, troughs sink teal on dashed ones, and the dark bands that never move are where the waves cancel. Lay the calm marker into that dark, or pile the crests up until a beacon lights — then freeze the pattern. Every drop and every eighth turn of phase costs one operation, and you are judged on how few it took.',
         playLevels: 'Levels',
         playDaily: 'Daily',
         levelSelect: 'Select wave',
@@ -179,7 +179,7 @@ const LANGUAGES = makeText({
         stats: '数据统计',
         title: '涟漪双生',
         subtitle: '两源 · 一海',
-        howto: '平静的海面不是没有波，是两列波正好相反地抵达、彼此抵消。你能拖动一两个波源，还能拧动它们的相位；风暴源不会停，也搬不走。看水：波峰烧成橙色，波谷沉成蓝色，而那些从来不动的暗带，就是两列波相消的地方。把「平静」标记放进暗带，或者把波峰叠起来点亮浮标，然后定格。每落位一次、每拧四十五度，都算一次操作——评判只看你用了几次。',
+        howto: '平静的海面不是没有波，是两列波正好相反地抵达、彼此抵消。你能拖动一两个波源，还能拧动它们的相位；风暴源不会停，也搬不走。看水：波峰是珊瑚红（实线），波谷是深海青（虚线），而那些从来不动的暗带，就是两列波相消的地方。把「平静」标记放进暗带，或者把波峰叠起来点亮浮标，然后定格。每落位一次、每拧四十五度，都算一次操作——评判只看你用了几次。',
         playLevels: '关卡模式',
         playDaily: '每日挑战',
         levelSelect: '选择海面',
