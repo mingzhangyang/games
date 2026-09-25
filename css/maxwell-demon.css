@@ -72,6 +72,17 @@ body {
     min-width: 280px;
 }
 
+.md-action-row {
+    position: absolute;
+    inset: auto 16px 16px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.md-action-row.is-hidden { display: none; }
+
 #md-canvas {
     display: block;
     width: 100%;
@@ -87,8 +98,8 @@ body {
 /* ── 两个动作钮：观测（左）/ 开门（右） ── */
 
 .md-action-btn {
-    position: absolute;
-    bottom: 16px;
+    position: relative;
+    bottom: auto;
     width: 64px;
     height: 64px;
     border-radius: 50%;
@@ -98,18 +109,19 @@ body {
     border: 1px solid rgb(255, 255, 255, 0.35);
     cursor: pointer;
     z-index: 15;
+    pointer-events: auto;
     transition: opacity 0.25s, transform 0.1s, box-shadow 0.15s;
 }
 
 .md-scan-btn {
-    left: 16px;
+    left: auto;
     color: #050810;
     background: radial-gradient(circle at 32% 30%, #b9e7ff, #6fd8ff 62%);
     box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(111, 216, 255, 0.45);
 }
 
 .md-gate-btn {
-    right: 16px;
+    right: auto;
     color: #2a1a05;
     background: radial-gradient(circle at 32% 30%, #ffe6a8, var(--tok-gold) 62%);
     box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(255, 211, 77, 0.45);
@@ -513,9 +525,17 @@ body {
     .md-howto { font-size: 12px; }
     .md-mode { font-size: 13px; padding: 11px 15px; }
     .md-level-grid { gap: 5px; }
-    .md-action-btn { width: 58px; height: 58px; bottom: 12px; }
-    .md-scan-btn { left: 12px; }
-    .md-gate-btn { right: 12px; }
+    .md-stage { flex-direction: column; align-items: stretch; }
+    .md-action-row {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        min-height: 82px;
+        padding: 12px;
+        margin-top: 2px;
+    }
+    .md-action-btn { width: 58px; height: 58px; }
+    .md-scan-btn, .md-gate-btn { left: auto; right: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
