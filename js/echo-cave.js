@@ -1379,17 +1379,8 @@ class EchoCaveGame {
 
     /** 菜单态：缓慢的装饰涟漪（远处未知之声） */
     drawMenuAmbience(ctx) {
+        // 底色、岩层与萤光尘埃已由 drawBackdrop() 画好，这里只叠装饰涟漪
         const t = this.time;
-        ctx.fillStyle = '#0a151e';
-        ctx.fillRect(0, 0, W, H);
-        ctx.strokeStyle = 'rgba(121,154,157,0.12)';
-        ctx.lineWidth = 1;
-        for (let y = 90; y < H; y += 54) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.quadraticCurveTo(W * 0.52, y - 14, W, y + 4);
-            ctx.stroke();
-        }
         const rings = [
             { x: 132, y: 458, per: 4.2, maxR: 96, color: '99,199,200' },
             { x: 356, y: 210, per: 3.6, maxR: 76, color: '194,147,85' },
