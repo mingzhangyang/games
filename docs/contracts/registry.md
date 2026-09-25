@@ -74,7 +74,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | `daily` | 有每日挑战（判据：入口 import `js/daily.js`）。带 `scores` 的另有每日榜键 `<dailyKeyPrefix>-d<YYYYMMDD>`；word-daily 有每日玩法但不用共享榜，故只有本 cap |
 | `analytics` | 客户端调用 `hubTrack`（入口 import `js/analytics.js`） |
 | `topbar` | 有 `.game-topbar-center`（Header 三槽位契约，见 `chrome.md`） |
-| `theme-light` | 支持浅色模式（入口 import `js/theme.js` 且页面 CSS 写了 `[data-theme="light"]` 覆盖；与 `themeColorLight` 字段同进同出）。不带即仅深色，见 `theme.md` |
+| `theme-light` | 支持浅色模式（页面 CSS 写了 `[data-theme="light"]` 覆盖；与 `themeColorLight` 字段同进同出）。不带即仅深色，见 `theme.md` |
 
 ## 3. gen 派生清单
 

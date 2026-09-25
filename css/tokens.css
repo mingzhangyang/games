@@ -34,6 +34,10 @@
     --tok-text-soft: #c3cdf2; /* 次级标题文字 */
     --tok-text-faint: #7c89bf;/* 弱化说明文字 */
 
+    /* 亮色强调底（青/金/主色渐变）上的文字：两套主题都用深色 ——
+       以前直接写 var(--tok-bg-2)，浅色下 bg-2 变成浅底色，按钮文字会变白而看不清 */
+    --tok-on-accent: #0b0f26;
+
     /* 主色（各页覆盖 --tok-accent 即可换肤） */
     --tok-accent: #667eea;
     --tok-accent-2: #764ba2;
@@ -76,10 +80,10 @@
 
     /* 文字 */
     --tok-text: #182033;
-    --tok-text-dim: #465270;
-    --tok-text-mute: #687390;
+    --tok-text-dim: #3f4a66;
+    --tok-text-mute: #525c78;
     --tok-text-soft: #2b3552;
-    --tok-text-faint: #5a6582;
+    --tok-text-faint: #4d5873;
 
     /* 功能语义色：加深以在浅底上保持 ≥4.5:1 */
     --tok-cyan: #0b84ad;
@@ -158,7 +162,7 @@
 }
 
 .btn-primary {
-    color: var(--tok-bg-2);
+    color: var(--tok-on-accent);
     background: linear-gradient(120deg, var(--tok-accent), var(--tok-accent-2));
     border: none;
     box-shadow: 0 8px 24px rgb(64, 184, 255, 0.3); /* 回退 */

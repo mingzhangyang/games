@@ -7,10 +7,18 @@
 //   ② 全部真实页面（注册表 22 页 + 首页），HTML 取自被测服务器（源码或 dist 都适用）：
 //      theme-support meta 与 cap 一致、boot 脚本排在任何样式之前、
 //      默认深色、偏好浅色时 = cap 决定的主题、color-scheme（仅深色页不改写）、无 pageerror
-//   ③ 首页主题开关：可见性跟随首页是否支持浅色；三档写入 site_theme 并更新按下态
+//   ③ 首页主题开关：可见性跟随首页是否支持浅色；三档写入 site_theme 并更新按下态；
+//      「仅深色」小标只在浅色时出现，且恰好标在不支持浅色的注册表游戏上
+//   ④ 支持浅色的页面：{浅色, 深色} × {390, 1280}
+//      - 页面底色取自真实截图像素（四角）：浅色亮度 > 0.6、深色 < 0.3（抓「只换了外框」）
+//      - 文字对比度：浅色下正文 ≥ 4.5:1、大字 ≥ 3:1，不达标即失败；深色下只统计不判红
+//        （深色是既有设计，部分弱化文字本就低于 4.5，另行治理）
+//      - 同页即时切换：深色加载后改偏好为浅色，不刷新即变浅
 //
 // 用法：node scripts/verify-theme.mjs [baseUrl]（verify-all 自动传入）
 import puppeteer from 'puppeteer-core';
+import { inflateSync } from 'node:zlib';
+import { Buffer } from 'node:buffer';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { registry } from './lib/registry.mjs';
 
@@ -25,7 +33,7 @@ const check = (cond, label, extra = '') => {
 };
 
 const PAGES = [
-    { id: 'index', href: 'index.html', light: false },   // 首页不在注册表里：P1 支持浅色时把这里改成 true
+    { id: 'index', href: 'index.html', light: true },    // 首页不在注册表里，手写（P1 起支持浅色）
     ...registry.all().map(g => ({ id: g.id, href: g.href, light: (g.caps || []).includes('theme-light') })),
 ];
 
@@ -186,6 +194,146 @@ for (const p of PAGES) {
     await ctx.close();
 }
 
+/* ── 截图像素：最小 PNG 解码（Chrome 截图为 8 位 RGB/RGBA、非隔行）── */
+function decodePng(buf) {
+    let off = 8, w = 0, h = 0, ct = 0;
+    const idat = [];
+    while (off < buf.length) {
+        const len = buf.readUInt32BE(off);
+        const type = buf.toString('ascii', off + 4, off + 8);
+        const data = buf.subarray(off + 8, off + 8 + len);
+        if (type === 'IHDR') { w = data.readUInt32BE(0); h = data.readUInt32BE(4); ct = data[9]; }
+        if (type === 'IDAT') idat.push(data);
+        off += 12 + len;
+    }
+    const bpp = ct === 6 ? 4 : 3;
+    const raw = inflateSync(Buffer.concat(idat));
+    const stride = w * bpp;
+    const px = Buffer.alloc(h * stride);
+    for (let y = 0; y < h; y++) {
+        const f = raw[y * (stride + 1)];
+        for (let x = 0; x < stride; x++) {
+            const cur = raw[y * (stride + 1) + 1 + x];
+            const a = x >= bpp ? px[y * stride + x - bpp] : 0;
+            const b = y > 0 ? px[(y - 1) * stride + x] : 0;
+            const c = x >= bpp && y > 0 ? px[(y - 1) * stride + x - bpp] : 0;
+            const pa = Math.abs(b - c), pb = Math.abs(a - c), pc = Math.abs(a + b - 2 * c);
+            const pred = f === 0 ? 0 : f === 1 ? a : f === 2 ? b : f === 3 ? (a + b) >> 1 : (pa <= pb && pa <= pc ? a : pb <= pc ? b : c);
+            px[y * stride + x] = (cur + pred) & 255;
+        }
+    }
+    return { w, h, bpp, px };
+}
+const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+/** 视口四角 6×6 色块的平均相对亮度 */
+async function cornerLuminance(page) {
+    const vp = page.viewport();
+    const img = decodePng(await page.screenshot({ type: 'png' }));
+    const sx = img.w / vp.width;
+    let sum = 0, n = 0;
+    for (const [cx, cy] of [[4, 4], [vp.width - 10, 4], [4, vp.height - 10], [vp.width - 10, vp.height - 10]]) {
+        for (let dy = 0; dy < 6; dy++) for (let dx = 0; dx < 6; dx++) {
+            const i = (Math.round((cy + dy) * sx) * img.w + Math.round((cx + dx) * sx)) * img.bpp;
+            sum += 0.2126 * lin(img.px[i]) + 0.7152 * lin(img.px[i + 1]) + 0.0722 * lin(img.px[i + 2]);
+            n++;
+        }
+    }
+    return sum / n;
+}
+
+/** 页面内的文字对比度审计：返回不达标的文字（背景按祖先链合成；渐变层取色标平均值近似） */
+const contrastAudit = page => page.evaluate(() => {
+    const parse = (s) => {
+        const m = s && s.match(/rgba?\(([^)]+)\)/);
+        if (!m) return null;
+        const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+    };
+    const lum = (c) => {
+        const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+        return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+    };
+    const over = (t, b) => {
+        const a = t.a + b.a * (1 - t.a);
+        if (!a) return { r: 0, g: 0, b: 0, a: 0 };
+        const mix = k => (t[k] * t.a + b[k] * b.a * (1 - t.a)) / a;
+        return { r: mix('r'), g: mix('g'), b: mix('b'), a };
+    };
+    // background-image 按顶层逗号拆成图层；每层取色标的 alpha 加权平均（transparent 计为 a=0，
+    // 不能直接平均 rgb —— 那会把背景往黑拉）；再自下而上合成为一个近似颜色
+    const splitTop = (s) => {
+        const out = [];
+        let depth = 0, cur = '';
+        for (const ch of s) {
+            if (ch === '(') depth++;
+            if (ch === ')') depth--;
+            if (ch === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += ch;
+        }
+        return cur ? [...out, cur] : out;
+    };
+    const layerAvg = (layer) => {
+        const cols = [...layer.matchAll(/rgba?\([^)]+\)/g)].map(m => parse(m[0])).filter(Boolean);
+        if (!cols.length) return null;
+        const sa = cols.reduce((s, c) => s + c.a, 0);
+        if (!sa) return { r: 0, g: 0, b: 0, a: 0 };
+        const w = k => cols.reduce((s, c) => s + c[k] * c.a, 0) / sa;
+        return { r: w('r'), g: w('g'), b: w('b'), a: sa / cols.length };
+    };
+    const gradAvg = (img) => {
+        const layers = splitTop(img).map(layerAvg).filter(Boolean);
+        if (!layers.length) return null;
+        return layers.reverse().reduce((acc, l) => over(l, acc), { r: 0, g: 0, b: 0, a: 0 });
+    };
+    const base = getComputedStyle(document.documentElement).colorScheme === 'dark'
+        ? { r: 18, g: 18, b: 18, a: 1 } : { r: 255, g: 255, b: 255, a: 1 };
+    const bgOf = (el) => {
+        const layers = [];
+        for (let e = el; e; e = e.parentElement) {
+            const cs = getComputedStyle(e);
+            const img = cs.backgroundImage !== 'none' && !/url\(/.test(cs.backgroundImage) ? gradAvg(cs.backgroundImage) : null;
+            const col = parse(cs.backgroundColor);
+            if (img && img.a > 0) layers.push(img);
+            if (col && col.a > 0) layers.push(col);
+            if ((col && col.a >= 1) || (img && img.a >= 1)) break;
+        }
+        return layers.reverse().reduce((acc, l) => over(l, acc), base);
+    };
+    const bad = [];
+    let total = 0;
+    const walker = document.createTreeWalker(document.body, 4 /* NodeFilter.SHOW_TEXT */);
+    const seen = new Set();
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const el = n.parentElement;
+        if (!el || seen.has(el) || !/[\p{L}\p{N}]/u.test(n.textContent)) continue;
+        seen.add(el);
+        if (el.closest('script, style, [aria-hidden="true"], button:disabled, [aria-disabled="true"], select, option')) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1 || rect.bottom < 0 || rect.top > innerHeight) continue;
+        const cs = getComputedStyle(el);
+        if (cs.visibility !== 'visible' || /transparent|rgba\(0, 0, 0, 0\)/.test(cs.webkitTextFillColor)) continue;
+        let op = 1;
+        for (let e = el; e; e = e.parentElement) op *= Number(getComputedStyle(e).opacity);
+        if (op < 0.2) continue;
+        // 被别的层（遮罩、浮层）盖住的文字不算：取中心点命中测试
+        const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        if (hit && hit !== el && !el.contains(hit) && !hit.contains(el)) continue;
+        const fg0 = parse(cs.color);
+        if (!fg0) continue;
+        const bg = bgOf(el);
+        const fg = over({ ...fg0, a: fg0.a * op }, bg);
+        const [L1, L2] = [lum(fg), lum(bg)].sort((a, b) => b - a);
+        const ratio = (L1 + 0.05) / (L2 + 0.05);
+        const size = parseFloat(cs.fontSize);
+        const large = size >= 24 || (size >= 18.66 && Number(cs.fontWeight) >= 700);
+        total++;
+        if (ratio < (large ? 3 : 4.5)) {
+            const id = el.id ? '#' + el.id : el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/)[0] : el.tagName.toLowerCase();
+            bad.push(`${id} "${n.textContent.trim().slice(0, 16)}" ${ratio.toFixed(2)}:1`);
+        }
+    }
+    return { total, bad };
+});
+
 /* ── ③ 首页主题开关 ── */
 {
     const ctx = await browser.createBrowserContext();
@@ -194,6 +342,11 @@ for (const p of PAGES) {
     await page.waitForFunction(() => !!document.querySelector('#theme-switch [aria-pressed="true"]'), { timeout: 5000 })
         .catch(() => {});
     const indexLight = PAGES[0].light;
+    // 「仅深色」小标：深色下全隐藏；切到浅色后恰好标在不支持浅色的注册表游戏卡片上
+    const badges = () => page.evaluate(() => [...document.querySelectorAll('.tag--dark-only')]
+        .filter(el => getComputedStyle(el).display !== 'none')
+        .map(el => el.closest('.game-card').querySelector('.card-title').getAttribute('href')).sort());
+    check((await badges()).length === 0, '首页：深色下不显示「仅深色」小标');
     const vis = await page.evaluate(() => {
         const el = document.getElementById('theme-switch');
         return el ? { exists: true, hidden: el.hidden, shown: getComputedStyle(el).display !== 'none' } : { exists: false };
@@ -211,11 +364,56 @@ for (const p of PAGES) {
         }));
         check(r.stored === pref && r.pressed.join() === pref, `首页：点击「${pref}」写入 site_theme 并独占按下态`, JSON.stringify(r));
     }
+    if (indexLight) {
+        await page.click('#theme-switch [data-theme-pref="light"]');
+        const want = registry.all().filter(g => !(g.caps || []).includes('theme-light')).map(g => g.href);
+        const got = await badges();
+        const cards = await page.evaluate(() => [...document.querySelectorAll('.game-card .card-title')].map(a => a.getAttribute('href')));
+        const expect = want.filter(h => cards.includes(h)).sort();
+        check((await state(page)).theme === 'light', '首页：点「浅色」后首页即时变浅');
+        check(got.join() === expect.join(), '首页：浅色下「仅深色」小标恰好标在不支持浅色的游戏上', `got ${got.length} / want ${expect.length}`);
+        await page.click('#theme-switch [data-theme-pref="dark"]');
+        check((await badges()).length === 0, '首页：切回深色后小标隐藏');
+    }
     const labels = await page.evaluate(() => [...document.querySelectorAll('#theme-switch [data-theme-pref]')].map(b => b.textContent.trim()));
     check(labels.every(Boolean), '首页：开关文案非空', labels.join('/'));
     check(errors.length === 0, '首页开关：无 pageerror', errors.join(' | '));
     await ctx.close();
 }
+
+/* ── ④ 支持浅色的页面：像素底色 / 对比度 / 即时切换 ── */
+const darkContrast = [];
+for (const p of PAGES.filter(x => x.light)) {
+    for (const [w, h] of [[390, 844], [1280, 900]]) {
+        const ctx = await browser.createBrowserContext();
+        const { page, errors } = await openPage(ctx);
+        await page.setViewport({ width: w, height: h });
+        for (const theme of ['light', 'dark']) {
+            await gotoWithPref(page, `/${p.href}`, theme);
+            await page.waitForNetworkIdle({ idleTime: 300, timeout: 8000 }).catch(() => {});
+            await new Promise(r => setTimeout(r, 400));
+            const L = await cornerLuminance(page);
+            check(theme === 'light' ? L > 0.6 : L < 0.3, `${p.id}@${w}：${theme} 页面底色（四角亮度 ${L.toFixed(2)}）`);
+            const audit = await contrastAudit(page);
+            if (theme === 'light') {
+                check(audit.bad.length === 0, `${p.id}@${w}：浅色文字对比度（${audit.total} 处）`, audit.bad.slice(0, 6).join(' | '));
+            } else if (audit.bad.length) {
+                darkContrast.push(`${p.id}@${w}: ${audit.bad.length}/${audit.total}`);
+            }
+        }
+        // 同页即时切换：当前为深色，改偏好为浅色（= 首页开关的写入方式），不刷新
+        await page.evaluate(() => {
+            localStorage.setItem('site_theme', 'light');
+            window.dispatchEvent(new CustomEvent('site-settings:changed'));
+        });
+        await new Promise(r => setTimeout(r, 400));
+        const L = await cornerLuminance(page);
+        check((await state(page)).theme === 'light' && L > 0.6, `${p.id}@${w}：同页切到浅色即时生效（亮度 ${L.toFixed(2)}）`);
+        check(errors.length === 0, `${p.id}@${w}：无 pageerror`, errors.join(' | '));
+        await ctx.close();
+    }
+}
+if (darkContrast.length) console.log(`ℹ 深色对比度（只统计，不判红）：${darkContrast.join('；')}`);
 
 await browser.close();
 

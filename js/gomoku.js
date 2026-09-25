@@ -437,8 +437,8 @@ function makeMove(r, c) {
 }
 
 function updateStatus() {
-    // Fix #4: use a light color for both turns (dark background)
-    statusText.style.color = '#e2e8f0';
+    // Fix #4: 状态文字不随执子方变色；颜色交给 CSS（随主题，见 --gk-text）
+    statusText.style.color = '';
     const t = getTEXT();
 
     if (!gameActive && lastResult !== null) {

@@ -143,13 +143,15 @@
       ],
       "caps": [
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "sitemap": {
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#151009"
+      "themeColor": "#151009",
+      "themeColorLight": "#eef1f6"
     },
     {
       "id": "planet-merge",
@@ -228,7 +230,8 @@
       "caps": [
         "daily",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "sitemap": {
         "changefreq": "weekly",
@@ -237,7 +240,8 @@
       "manifest": {
         "shortcut": true
       },
-      "themeColor": "#0a0e24"
+      "themeColor": "#0a0e24",
+      "themeColorLight": "#f3f5fa"
     },
     {
       "id": "hoop-shot",
@@ -315,7 +319,8 @@
       "caps": [
         "leaderboard",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "order": "asc",
@@ -331,7 +336,8 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#0a0e24"
+      "themeColor": "#0a0e24",
+      "themeColorLight": "#f3f5fa"
     },
     {
       "id": "reversi",
@@ -359,7 +365,8 @@
       "caps": [
         "leaderboard",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "key": "reversi",
@@ -371,7 +378,8 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#0a0e24"
+      "themeColor": "#0a0e24",
+      "themeColorLight": "#f3f5fa"
     },
     {
       "id": "tower-defense",

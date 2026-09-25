@@ -65,8 +65,9 @@
 
 ## 3. 登记与生成
 
-- cap `theme-light`：页面支持浅色。判据（`verify-registry` 双向探针）：
-  入口 import `js/theme.js` 且页面 CSS 含 `[data-theme="light"]`。
+- cap `theme-light`：页面支持浅色。判据（`verify-registry` 双向探针）：页面自己的 CSS 含
+  `[data-theme="light"]`。`js/theme.js` 只在画布颜色随主题变化时才需要 import
+  （gomoku 的木质棋盘与棋子是「实物」，两套主题一致，所以不 import）。
 - 字段 `themeColorLight`：浅色下的浏览器顶栏色，带 `theme-light` cap 时必填。
 - gen 的 `head` 区域输出：`theme-support` meta → `theme-color` meta（`data-light`）→
   `<script src="/theme-boot.js">`，三者顺序固定。首页不在注册表里，手写同样三行。
@@ -78,15 +79,15 @@
 | 全部页面 | 首帧前 `<html>` 已有 `data-theme`；`theme-boot.js` 在第一个样式表之前；无 pageerror |
 | 默认（未设偏好） | 所有页面均为深色 —— 「默认深色」不能被悄悄改掉 |
 | 仅深色页面 | 在 `site_theme=light` 与 `system`+系统浅色下仍为 `data-theme="dark"`，`color-scheme` 不被改写 |
-| `theme-light` 页面 | 偏好浅色 / 跟随系统时为浅色（P0 已实现）。**P1 随首批页面补齐**：{浅色, 深色} × {390, 1280} 文字对比度 ≥ 4.5:1、控件 ≥ 3:1；画布背景取样亮度（浅色 > 0.7）；图例色块 = 画布调色板 |
-| 首页 | 三档切换写入 `site_theme` 并独占按下态；首页不支持浅色时开关隐藏 |
+| `theme-light` 页面 | 偏好浅色 / 跟随系统时为浅色；{浅色, 深色} × {390, 1280}：页面底色取真实截图四角像素（浅色亮度 > 0.6、深色 < 0.3）；文字对比度浅色下正文 ≥ 4.5:1、大字 ≥ 3:1（深色只统计不判红——既有设计另行治理）；同页改偏好不刷新即变浅。**P2 起补**：图例色块 = 画布调色板（有画布调色板的页面才有意义） |
+| 首页 | 三档切换写入 `site_theme` 并独占按下态；首页不支持浅色时开关隐藏；「仅深色」小标只在浅色下出现，且恰好标在不带 `theme-light` 的注册表游戏上 |
 | 夹具页（校验器内置） | boot + `theme.js` 本身：默认 / 非法值 / 浅色 / 跟随系统、同页与跨标签页即时切换、theme-color 切换、`readPalette` 读到浅色值、`--tok-*` 浅色层生效 |
 
 ## 5. 游戏分类
 
 | 批次 | 页面 | 理由 | 状态 |
 | --- | --- | --- | --- |
-| P1 | 首页、word-daily、minesweeper、reversi、gomoku | DOM / 棋盘为主，改动量小，收益最明显 | 未开始 |
+| P1 | 首页、word-daily、minesweeper、reversi、gomoku | DOM / 棋盘为主，改动量小，收益最明显 | **已完成**（2026-09-25） |
 | P2 | crystal-bloom、maxwell-demon、ripple-duet、bond-forge、circuit、silk-dew | 科学 / 解谜，「白色实验台」风格；ripple 的相消暗带改为低饱和灰 | 未开始（待 PR 5–7 合并） |
 | P3 | tetris、hoop-shot、math-rain、tank-battle | 可做但画布色多；math-rain 在 hex 规则豁免内，需先收敛 | 未开始（逐个评估） |
 | 仅深色 | echo-cave | 「黑暗中靠回声照亮」就是玩法 | 例外 |
@@ -96,7 +97,8 @@
 |  | needle-awn、sword-flight | 电影感夜景，画布色 100–200 处 | 例外 |
 |  | lumen | 光束折射，暗背景是可读性前提 | 例外 |
 
-仅深色的游戏在首页卡片上带一个「仅深色」小标（P1 实施）。
+仅深色的游戏在首页卡片上带一个「仅深色」小标：数据来自 gen 派生的 `MORE_GAMES[].light`，
+只在首页处于浅色时显示（深色下所有游戏看上去都一样，小标就是噪音）。
 
 ## 6. 分期
 
@@ -117,5 +119,11 @@
 - **`scripts/serve-static.mjs` 曾不回退 `public/`**：`/theme-boot.js`（以及 `sw-register.js`、`analytics.js`）
   在校验服务器上一律 404，boot 根本不执行而校验照样能「通过」其它项。P0 给它加了与 Vite 一致的
   `public/` 回退（`sw.js` 除外）；`verify-theme` 的真实页面断言会在它失效时变红。
+- **`var(--tok-bg-2)` 曾被当作「亮色按钮上的深色文字」用了 15 处**：浅色下 bg-2 是浅底色，按钮字全变白。
+  P1 收编为 `--tok-on-accent`（两套主题都深色）；需要白字的深色按钮在页面浅色块里覆盖它（gomoku）。
+- **启发式初稿会把「实物」也调浅**：`theme-varize` 第一版把黑白棋的黑子变成了灰蓝色。棋子、棋盘、
+  牌面这类游戏内容要在浅色块里显式写回（见 `style.md` §1.5「游戏实物」）。
+- **跨选择器共用一个变量是陷阱**：同值（都是 `#fff`）不代表同语义 —— word-daily「图标钮按下态文字」
+  和「绿色格子上的字母」深色时同为白，浅色时一个要深一个要白。`theme-varize` 因此只在同一选择器内复用。
 - **页面 CSS 里 `body { background: … !important }`**（science-showcase 就有）会盖掉令牌，
   迁移时必须改成变量。

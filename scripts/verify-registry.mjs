@@ -66,9 +66,9 @@ const PROBES = {
     sidebar: g => /game-sidebar/.test(read(g.href)),
     topbar: g => /game-topbar-center/.test(read(g.href)),
     'frame-budget': g => /--frame-shell-max/.test(read(`css/${g.id === 'gravity-slingshot' ? 'gravity' : g.id}.css`)),
-    // 支持浅色 = 运行时读主题（import theme.js）且页面 CSS 真写了浅色覆盖（docs/contracts/theme.md §3）
-    'theme-light': g => /from '\.{1,2}\/theme\.js'/.test(read(g.entry))
-        && /\[data-theme="light"\]/.test(pageCss(g)),
+    // 支持浅色 = 页面 CSS 真写了浅色覆盖（docs/contracts/theme.md §3）。
+    // 不要求 import theme.js：只有画布颜色随主题变的页面才需要它（gomoku 的木棋盘两套主题一致）
+    'theme-light': g => /\[data-theme="light"\]/.test(pageCss(g)),
 };
 
 for (const [cap, probe] of Object.entries(PROBES)) {

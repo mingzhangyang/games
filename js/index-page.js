@@ -1,7 +1,8 @@
 // index.html 落地页脚本（P4-1 自内联 <script> 原样抽离，module 化：执行时机等价——原脚本在 body 尾同步执行，module 为 DOM 就绪后执行）
 import { onReady } from './boot.js';
 import { getThemePref, setThemePref } from './site-settings.js';
-import { supportsLight } from './theme.js';
+import { supportsLight, getTheme, onThemeChange } from './theme.js';
+import { MORE_GAMES } from './more-games.js';
 
 const i18n = {
     en: {
@@ -51,6 +52,8 @@ const i18n = {
         themeDark: 'Dark',
         themeLight: 'Light',
         themeSystem: 'System',
+        darkOnly: 'Dark only',
+        darkOnlyTitle: 'This game is designed for dark mode and always opens dark',
         hubTotalPlayed: 'plays today',
         badgeDaily: 'Daily',
         badgeNew: 'New',
@@ -200,6 +203,8 @@ const i18n = {
         themeDark: '深色',
         themeLight: '浅色',
         themeSystem: '跟随系统',
+        darkOnly: '仅深色',
+        darkOnlyTitle: '这款游戏按深色设计，总是以深色打开',
         hubTotalPlayed: '次今日对局',
         badgeDaily: '今日挑战',
         badgeNew: '新上线',
@@ -454,6 +459,10 @@ function applyLanguage(lang) {
     // 两颗语言钮共用同一个写入者：applyLanguage 是唯一改它们文案的地方
     document.querySelectorAll('#lang-toggle, #footer-lang-toggle')
         .forEach(btn => { btn.textContent = t.langToggle; });
+    document.querySelectorAll('.tag--dark-only').forEach(el => {
+        el.textContent = t.darkOnly;
+        el.title = t.darkOnlyTitle;
+    });
     const themeSwitch = document.getElementById('theme-switch');
     if (themeSwitch) {
         themeSwitch.setAttribute('aria-label', t.themeLabel);
@@ -648,7 +657,32 @@ function bindThemeSwitch() {
     sync();
 }
 
+/**
+ * 「仅深色」标记：不支持浅色的游戏卡片上加一枚小标（数据来自 gen 派生的 MORE_GAMES.light）。
+ * 只在首页处于浅色时显示 —— 深色下所有游戏看上去都一样，这枚标就是噪音。
+ * 必须在 applyLanguage 之前调用，文案由 applyLanguage 统一写入。
+ */
+function markDarkOnlyCards() {
+    const lightHrefs = new Set(MORE_GAMES.filter(g => g.light).map(g => g.href));
+    const known = new Set(MORE_GAMES.map(g => g.href));
+    document.querySelectorAll('.game-card').forEach(card => {
+        const href = card.querySelector('.card-title')?.getAttribute('href');
+        // 外链游戏（dots-and-boxes 等）不在注册表里，不做判断
+        if (!href || !known.has(href) || lightHrefs.has(href)) return;
+        const footer = card.querySelector('.card-footer');
+        const play = footer && footer.querySelector('.play-btn');
+        if (!play || footer.querySelector('.tag--dark-only')) return;
+        const note = document.createElement('span');
+        note.className = 'tag tag--dark-only';
+        play.before(note);
+    });
+    const sync = () => document.body.classList.toggle('theme-light-active', getTheme() === 'light');
+    onThemeChange(sync);
+    sync();
+}
+
 onReady(() => {
+    markDarkOnlyCards();
     const lang = detectLanguage();
     applyLanguage(lang);
     // 两颗钮共用同一个 handler，避免两份逻辑各自漂移

@@ -190,7 +190,8 @@ function manifestTransform(src) {
 // ---------- more-games.js ----------
 const moreGamesContent = () =>
     `export const MORE_GAMES = [\n` +
-    GAMES.map(g => `    { href: '${g.href}', emoji: '${g.emoji}', en: ${JSON.stringify(g.name.en)}, zh: ${JSON.stringify(g.name.zh)} },`).join('\n') +
+    // light: true = 支持浅色（theme-light cap）；首页据此给其余卡片标「仅深色」（docs/contracts/theme.md §5）
+    GAMES.map(g => `    { href: '${g.href}', emoji: '${g.emoji}', en: ${JSON.stringify(g.name.en)}, zh: ${JSON.stringify(g.name.zh)}${(g.caps || []).includes('theme-light') ? ', light: true' : ''} },`).join('\n') +
     `\n];`;
 function moreGamesTransform(src) {
     return applyRegion(src, 'more-games', moreGamesContent(), (s, body) => {

@@ -285,7 +285,7 @@ body {
     max-width: 260px;
     height: 44px;
     font-family: inherit;
-    color: var(--tok-bg-2);
+    color: var(--tok-on-accent);
     background: linear-gradient(125deg, var(--tok-cyan) 0%, #5eead4 60%, #38bdf8 100%);
     border: none;
     border-radius: 99px;
@@ -579,7 +579,7 @@ body {
     top: 16px;
     font-size: 13px;
     font-weight: 800;
-    color: var(--tok-bg-2);
+    color: var(--tok-on-accent);
     background: linear-gradient(120deg, var(--tok-gold), #ff9f43);
     border: 1px solid rgb(255, 255, 255, 0.45);
     padding: 8px 22px;
@@ -682,7 +682,7 @@ body {
 
 .td-btn-primary {
     background: linear-gradient(125deg, var(--tok-cyan), #5eead4);
-    color: var(--tok-bg-2);
+    color: var(--tok-on-accent);
     border: none;
     box-shadow: 0 8px 26px rgb(64, 216, 255, 0.45);
 }
