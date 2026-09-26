@@ -67,6 +67,9 @@ vite.*.log
 .acceptance/
 .tmp-shots/
 .tmp-*/
+# 校验脚本旧版默认输出到 Windows 路径（C:/tmp、C:/Users/...），在 Linux / macOS 上会变成
+# 仓库根目录下名为 `C:` 的文件夹，曾被 git add -A 误提交；脚本默认已改为 os.tmpdir()，这里兜底
+/C:/
 
 # Build analysis
 stats.html

@@ -15,10 +15,12 @@
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
-const OUT = process.argv[3] || 'C:/tmp/tetris-topbar-mobile';
+const OUT = process.argv[3] || join(tmpdir(), 'tetris-topbar-mobile');
 mkdirSync(OUT, { recursive: true });
 
 const fails = [];
