@@ -1075,7 +1075,8 @@
         "drawer",
         "frame-budget",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "stage": {
         "w": 560,
@@ -1085,7 +1086,8 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#173c3e"
+      "themeColor": "#173c3e",
+      "themeColorLight": "#f4efe1"
     }
   ]
 }
