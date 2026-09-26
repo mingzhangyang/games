@@ -20,10 +20,10 @@ export const MORE_GAMES = [
     { href: 'silk-dew.html', emoji: '💧', en: "Silkfall", zh: "垂丝引露", light: true },
     { href: 'bond-forge.html', emoji: '⚗️', en: "Bond Forge", zh: "键合工坊", light: true },
     { href: 'echo-cave.html', emoji: '🦇', en: "Echo Cave", zh: "回声洞窟" },
-    { href: 'maxwell-demon.html', emoji: '😈', en: "Maxwell's Demon", zh: "麦克斯韦妖" },
-    { href: 'crystal-bloom.html', emoji: '💎', en: "Crystal Bloom", zh: "晶绽" },
+    { href: 'maxwell-demon.html', emoji: '😈', en: "Maxwell's Demon", zh: "麦克斯韦妖", light: true },
+    { href: 'crystal-bloom.html', emoji: '💎', en: "Crystal Bloom", zh: "晶绽", light: true },
     { href: 'flame-verse.html', emoji: '🔥', en: "Flame Verse", zh: "焰语" },
-    { href: 'ripple-duet.html', emoji: '🌊', en: "Ripple Duet", zh: "涟漪双生" },
+    { href: 'ripple-duet.html', emoji: '🌊', en: "Ripple Duet", zh: "涟漪双生", light: true },
     { href: 'carrot-pull.html', emoji: '🥕', en: "Carrot Pull", zh: "拔萝卜" },
 ];
 // registry:end more-games

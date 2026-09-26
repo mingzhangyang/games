@@ -871,7 +871,8 @@
         "leaderboard",
         "daily",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "order": "asc",
@@ -889,7 +890,8 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#070a18"
+      "themeColor": "#070a18",
+      "themeColorLight": "#eef3f5"
     },
     {
       "id": "crystal-bloom",
@@ -921,7 +923,8 @@
         "leaderboard",
         "daily",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "order": "asc",
@@ -939,7 +942,8 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#070a18"
+      "themeColor": "#070a18",
+      "themeColorLight": "#eef3f5"
     },
     {
       "id": "flame-verse",
@@ -1021,7 +1025,8 @@
         "leaderboard",
         "daily",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "order": "asc",
@@ -1039,7 +1044,8 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#041826"
+      "themeColor": "#041826",
+      "themeColorLight": "#eef3f5"
     },
     {
       "id": "carrot-pull",

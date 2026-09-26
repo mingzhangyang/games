@@ -51,6 +51,27 @@ import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
+import { bindPalette } from './theme.js';
+
+/* 画布调色板：颜色只在 css/crystal-bloom.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
+   P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。
+   结晶皿与晶体是「实物」：两套主题一致，不进调色板；只有温度曲线图 / HUD 条随主题。 */
+const CANVAS_VARS = {
+    chartBg: '--cb-cv-chart-bg',
+    chartEdge: '--cb-cv-chart-edge',
+    tick: '--cb-cv-tick',
+    grid: '--cb-cv-grid',
+    deadline: '--cb-cv-deadline',
+    curve: '--cb-cv-curve',
+    cursor: '--cb-cv-cursor',
+    cursorDot: '--cb-cv-cursor-dot',
+    hudText: '--cb-cv-hud-text',
+    hudTrack: '--cb-cv-hud-track',
+    hudSub: '--cb-cv-hud-sub',
+    menuChartBg: '--cb-cv-menu-chart-bg',
+    menuChartEdge: '--cb-cv-menu-chart-edge',
+};
+let P = null;
 
 /* ────────────────────────── 常量 ────────────────────────── */
 
@@ -1203,9 +1224,9 @@ class CrystalBloomGame {
         const [TLo, THi] = RULES.tRange;
         // 底
         this.roundRect(ctx, CHART.x, CHART.y, CHART.w, CHART.h, 10);
-        ctx.fillStyle = 'rgba(10,14,32,0.92)';
+        ctx.fillStyle = P.chartBg;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(168,184,255,0.28)';
+        ctx.strokeStyle = P.chartEdge;
         ctx.lineWidth = 1.4;
         ctx.stroke();
 
@@ -1224,21 +1245,21 @@ class CrystalBloomGame {
         ctx.setLineDash([]);
 
         // 刻度：温度 10/50/90
-        ctx.fillStyle = 'rgba(168,184,255,0.55)';
+        ctx.fillStyle = P.tick;
         ctx.font = '10px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         for (const T of [TLo, 50, THi]) {
             const y = this.chartY(T);
             ctx.fillText(`${T}°`, CHART.x - 6, y);
-            ctx.fillStyle = 'rgba(168,184,255,0.16)';
+            ctx.fillStyle = P.grid;
             ctx.fillRect(CHART.x + 1, y, CHART.w - 2, 1);
-            ctx.fillStyle = 'rgba(168,184,255,0.55)';
+            ctx.fillStyle = P.tick;
         }
 
         // 急冷时限：必须在这条线之前降到目标带里
         const xc = this.chartX(spec.tChill);
-        ctx.strokeStyle = 'rgba(255,211,77,0.75)';
+        ctx.strokeStyle = P.deadline;
         ctx.lineWidth = 1.6;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
@@ -1247,7 +1268,7 @@ class CrystalBloomGame {
         ctx.setLineDash([]);
 
         // 曲线：逐像素采样（段间线性，画出来就是折线）
-        ctx.strokeStyle = COOL;
+        ctx.strokeStyle = P.curve;
         ctx.lineWidth = 2.4;
         ctx.beginPath();
         for (let px = 0; px <= CHART.w; px++) {
@@ -1274,14 +1295,14 @@ class CrystalBloomGame {
         if (this.phase !== 'draw') {
             const x = this.chartX(clamp(this.world.t, 0, spec.tMax));
             const y = this.chartY(this.world.temp);
-            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+            ctx.strokeStyle = P.cursor;
             ctx.lineWidth = 1.2;
             ctx.beginPath();
             ctx.moveTo(x, CHART.y); ctx.lineTo(x, CHART.y + CHART.h);
             ctx.stroke();
             ctx.beginPath();
             ctx.arc(x, y, 4, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = P.cursorDot;
             ctx.fill();
         }
     }
@@ -1294,13 +1315,13 @@ class CrystalBloomGame {
         ctx.font = '12px ui-sans-serif, system-ui, sans-serif';
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'left';
-        ctx.fillStyle = 'rgba(168,184,255,0.75)';
+        ctx.fillStyle = P.hudText;
         const sizeText = `${this.t('target')} ${this.habitName(spec.target)} · ${this.t('size')} ${w.cells}/${spec.minCells} · ${this.t('endTemp')} ${spec.tEndMin}–${spec.tEndMax}°`;
         ctx.fillText(sizeText, DISH.x + 2, y + 8);
 
         // 过饱和度条：S 越高越红，档位分界线画成刻度
         const bx = DISH.x + 2, bw = DISH.w - 4, by = y + 22;
-        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillStyle = P.hudTrack;
         ctx.fillRect(bx, by, bw, 6);
         const k = clamp(w.s / 1.5, 0, 1);
         ctx.fillStyle = mixHex(GOOD, WARM, k);
@@ -1310,7 +1331,7 @@ class CrystalBloomGame {
             ctx.fillStyle = col;
             ctx.fillRect(x - 0.5, by - 2, 1, 10);
         }
-        ctx.fillStyle = 'rgba(168,184,255,0.6)';
+        ctx.fillStyle = P.hudSub;
         ctx.textAlign = 'left';
         ctx.fillText(`S ${w.s.toFixed(2)} · ${this.regimeName(w.regime)}`, bx, by + 18);
         ctx.textAlign = 'right';
@@ -1347,9 +1368,9 @@ class CrystalBloomGame {
         }
 
         this.roundRect(ctx, CHART.x, CHART.y, CHART.w, CHART.h, 10);
-        ctx.fillStyle = 'rgba(10,14,32,0.7)';
+        ctx.fillStyle = P.menuChartBg;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(168,184,255,0.18)';
+        ctx.strokeStyle = P.menuChartEdge;
         ctx.lineWidth = 1.2;
         ctx.stroke();
     }
@@ -1358,6 +1379,7 @@ class CrystalBloomGame {
 /* ────────────────────────── 启动 ────────────────────────── */
 
 onReady(() => {
+    P = bindPalette(CANVAS_VARS, { onChange: () => window.cbGame && window.cbGame.draw() });
     window.cbGame = new CrystalBloomGame();
     bindFrame({ logicalWidth: W });
     const more = document.getElementById('cbSideMore');

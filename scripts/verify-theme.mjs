@@ -382,8 +382,9 @@ const contrastAudit = page => page.evaluate(() => {
 }
 
 /* ── ④ 支持浅色的页面：像素底色 / 画布底色 / 对比度 / 即时切换 ── */
-// 画布底色随主题的例外：画布里画的是「实物」、两套主题本就一致（gomoku 的木棋盘）
-const CANVAS_KEEP = new Set(['gomoku']);
+// 画布底色随主题的例外：画布四角画的是「实物」、两套主题本就一致
+// （gomoku 的木棋盘、crystal-bloom 的结晶皿、ripple-duet 的海面）
+const CANVAS_KEEP = new Set(['gomoku', 'crystal-bloom', 'ripple-duet']);
 // 最大画布（≥ 200×200）四个内角的平均亮度 —— 直接读画布位图（getImageData），
 // 不看截图：开始菜单等 DOM 浮层会盖住画布，截图取样会把浮层当成画布（实测漏判过）。
 // 角上像素近乎透明（底色由 CSS 画）时返回 null，不做断言。
