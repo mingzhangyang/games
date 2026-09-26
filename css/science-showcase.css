@@ -1,0 +1,324 @@
+/*
+ * Modern science showcase
+ * ------------------------
+ * A quiet, shared material language for the five laboratory games.  The
+ * canvas keeps the phenomenon-specific light; the chrome stays matte and
+ * legible so the experiment, not a generic glow, owns the attention.
+ */
+
+body.science-showcase {
+    --showcase-bg: #0d1722;
+    --showcase-bg-deep: #0a121c;
+    --showcase-panel: #162431;
+    --showcase-panel-raised: #1b2b39;
+    --showcase-border: #334858;
+    --showcase-border-strong: #4c6473;
+    --showcase-text: #edf3f5;
+    --showcase-text-soft: #c1ced3;
+    --showcase-text-muted: #8fa1aa;
+    --showcase-focus: #b7e5e2;
+    --showcase-radius: 12px;
+    --showcase-shadow: 0 12px 28px rgb(0, 0, 0, 0.28);
+
+    background: var(--showcase-bg) !important;
+    color: var(--showcase-text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body.science-theme-crystal {
+    --showcase-accent: #69c7c7;
+    --showcase-accent-strong: #b79055;
+    --showcase-accent-soft: #183a3c;
+}
+
+body.science-theme-echo {
+    --showcase-accent: #63c7c8;
+    --showcase-accent-strong: #c29355;
+    --showcase-accent-soft: #183b3c;
+}
+
+body.science-theme-maxwell {
+    --showcase-accent: #70c4c3;
+    --showcase-accent-strong: #df9b62;
+    --showcase-accent-soft: #1b3a3a;
+}
+
+body.science-theme-flame {
+    --showcase-accent: #e9954f;
+    --showcase-accent-strong: #f2bd69;
+    --showcase-accent-soft: #493025;
+}
+
+body.science-theme-ripple {
+    --showcase-accent: #63c1c5;
+    --showcase-accent-strong: #e17b61;
+    --showcase-accent-soft: #1b3d42;
+}
+
+.science-showcase .game-topbar,
+.science-showcase .game-footer,
+.science-showcase .game-side-card,
+.science-showcase .game-drawer-panel {
+    background: var(--showcase-panel) !important;
+    border-color: var(--showcase-border) !important;
+    box-shadow: none !important;
+}
+
+.science-showcase .game-topbar {
+    border-bottom: 1px solid var(--showcase-border);
+}
+
+.science-showcase .game-footer {
+    border-top: 1px solid var(--showcase-border);
+}
+
+.science-showcase .game-side-card {
+    border-radius: var(--showcase-radius);
+}
+
+.science-showcase .game-topbar-center,
+.science-showcase .game-side-title,
+.science-showcase .game-drawer-title {
+    color: var(--showcase-text) !important;
+}
+
+.science-showcase .game-footer-hint,
+.science-showcase .game-side-text,
+.science-showcase .game-side-row,
+.science-showcase .game-drawer-body {
+    color: var(--showcase-text-soft) !important;
+}
+
+/* Solid headings: the theme belongs to the specimen and canvas, not the UI. */
+.science-showcase .cb-title,
+.science-showcase .ec-title,
+.science-showcase .md-title,
+.science-showcase .fv-title,
+.science-showcase .rd-title,
+.science-showcase .cb-overlay-title,
+.science-showcase .ec-overlay-title,
+.science-showcase .md-overlay-title,
+.science-showcase .fv-overlay-title,
+.science-showcase .rd-overlay-title {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: currentcolor !important;
+    color: var(--showcase-text) !important;
+}
+
+.science-showcase .cb-title { color: #b7e5e2 !important; }
+.science-showcase .ec-title { color: #9ed9d7 !important; }
+.science-showcase .md-title { color: #b7d9d5 !important; }
+.science-showcase .fv-title { color: #f2bd69 !important; }
+.science-showcase .rd-title { color: #e9b19d !important; }
+
+/* One control contract: 44px minimum targets, quiet fill, clear focus ring. */
+.science-showcase .game-icon-btn,
+.science-showcase .game-btn,
+.science-showcase .cb-mode,
+.science-showcase .ec-mode,
+.science-showcase .md-mode,
+.science-showcase .fv-mode,
+.science-showcase .rd-mode,
+.science-showcase .cb-chip,
+.science-showcase .ec-chip,
+.science-showcase .md-chip,
+.science-showcase .fv-chip,
+.science-showcase .rd-chip {
+    min-height: 44px;
+    border: 1px solid var(--showcase-border-strong) !important;
+    border-radius: 9px !important;
+    background: var(--showcase-panel-raised) !important;
+    color: var(--showcase-text) !important;
+    box-shadow: none !important;
+    transition: background-color 140ms ease, border-color 140ms ease, transform 100ms ease;
+}
+
+.science-showcase .game-icon-btn:hover,
+.science-showcase .game-btn:hover,
+.science-showcase .cb-mode:hover,
+.science-showcase .ec-mode:hover,
+.science-showcase .md-mode:hover,
+.science-showcase .fv-mode:hover,
+.science-showcase .rd-mode:hover,
+.science-showcase .cb-chip:hover,
+.science-showcase .ec-chip:hover,
+.science-showcase .md-chip:hover,
+.science-showcase .fv-chip:hover,
+.science-showcase .rd-chip:hover {
+    background: #243846 !important;
+    border-color: var(--showcase-accent) !important;
+}
+
+.science-showcase .game-icon-btn:focus-visible,
+.science-showcase button:focus-visible,
+.science-showcase a:focus-visible,
+.science-showcase input:focus-visible {
+    outline: 2px solid var(--showcase-focus) !important;
+    outline-offset: 2px;
+}
+
+.science-showcase .cb-mode-daily,
+.science-showcase .ec-mode-daily,
+.science-showcase .md-mode-daily,
+.science-showcase .fv-mode-daily,
+.science-showcase .rd-mode-daily,
+.science-showcase .cb-btn-primary,
+.science-showcase .ec-btn-primary,
+.science-showcase .md-btn-primary,
+.science-showcase .fv-btn-primary,
+.science-showcase .rd-btn-primary {
+    background: var(--showcase-accent) !important;
+    border-color: var(--showcase-accent) !important;
+    color: #071318 !important;
+}
+
+.science-showcase .cb-btn-ghost,
+.science-showcase .ec-btn-ghost,
+.science-showcase .md-btn-ghost,
+.science-showcase .fv-btn-ghost,
+.science-showcase .rd-btn-ghost {
+    background: transparent !important;
+    color: var(--showcase-text-soft) !important;
+}
+
+.science-showcase .cb-cut-box,
+.science-showcase .ec-cut-box,
+.science-showcase .md-cut-box,
+.science-showcase .fv-cut-box,
+.science-showcase .rd-cut-box {
+    background: #101d29 !important;
+    border-color: var(--showcase-border) !important;
+    border-radius: 8px !important;
+}
+
+.science-showcase .cb-cut-value,
+.science-showcase .ec-cut-value,
+.science-showcase .md-cut-value,
+.science-showcase .fv-cut-value,
+.science-showcase .rd-cut-value,
+.science-showcase [class*="side-v"],
+.science-showcase [class*="par"],
+.science-showcase [id*="budget"],
+.science-showcase [id*="score"] {
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.science-showcase .cb-action-btn,
+.science-showcase .ec-pulse-btn,
+.science-showcase .md-action-btn,
+.science-showcase .fv-action-btn,
+.science-showcase .rd-action-btn {
+    background: var(--showcase-panel-raised) !important;
+    border: 1px solid var(--showcase-border-strong) !important;
+    box-shadow: var(--showcase-shadow) !important;
+}
+
+.science-showcase .cb-action-btn:hover,
+.science-showcase .ec-pulse-btn:hover,
+.science-showcase .md-action-btn:hover,
+.science-showcase .fv-action-btn:hover,
+.science-showcase .rd-action-btn:hover {
+    border-color: var(--showcase-accent) !important;
+}
+
+/* The page CSS gives these icons a dark ink meant for a bright cyan/gold
+   fill, so the showcase must set ink and fill together.  Secondary actions
+   stay matte with an accent icon; the primary action keeps a solid fill so
+   the two buttons never read as the same control. */
+.science-showcase .cb-stir-btn,
+.science-showcase .md-scan-btn,
+.science-showcase .fv-clear-btn {
+    color: var(--showcase-accent) !important;
+}
+
+.science-showcase .cb-run-btn,
+.science-showcase .md-gate-btn,
+.science-showcase .fv-run-btn {
+    background: var(--showcase-accent-strong) !important;
+    border-color: var(--showcase-accent-strong) !important;
+    color: #071318 !important;
+}
+
+.science-showcase .ec-pulse-btn {
+    background: var(--showcase-accent) !important;
+    border-color: var(--showcase-accent) !important;
+    color: #071318 !important;
+}
+
+.science-showcase .cb-run-btn:hover,
+.science-showcase .md-gate-btn:hover,
+.science-showcase .fv-run-btn:hover,
+.science-showcase .ec-pulse-btn:hover {
+    border-color: var(--showcase-focus) !important;
+}
+
+.science-showcase .cb-overlay,
+.science-showcase .ec-overlay,
+.science-showcase .md-overlay,
+.science-showcase .fv-overlay,
+.science-showcase .rd-overlay {
+    background: rgb(10, 18, 28, 0.94) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.science-showcase .cb-overlay-dim,
+.science-showcase .ec-overlay-dim,
+.science-showcase .md-overlay-dim,
+.science-showcase .fv-overlay-dim,
+.science-showcase .rd-overlay-dim {
+    background: rgb(10, 18, 28, 0.78) !important;
+}
+
+/* Shape/pattern cues supplement colour in the two most data-dense legends. */
+.science-showcase .ec-legend-wall,
+.science-showcase .md-legend-blind {
+    border-radius: 2px !important;
+    background: repeating-linear-gradient(135deg, #6e7e87 0 2px, transparent 2px 4px) !important;
+    border: 1px solid #8497a0;
+}
+
+.science-showcase .ec-legend-law,
+.science-showcase .md-legend-band {
+    border-radius: 2px !important;
+    background: repeating-linear-gradient(90deg, transparent 0 3px, var(--showcase-accent) 3px 5px, transparent 5px 8px) !important;
+    border: 1px solid var(--showcase-accent);
+    box-shadow: none !important;
+}
+
+.science-showcase .rd-legend-crest {
+    background: repeating-linear-gradient(90deg, transparent 0 5px, var(--showcase-accent-strong) 5px 8px, transparent 8px 12px) !important;
+}
+
+.science-showcase .rd-legend-trough {
+    background: repeating-linear-gradient(90deg, transparent 0 5px, var(--showcase-accent) 5px 8px, transparent 8px 12px) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .science-showcase *,
+    .science-showcase *::before,
+    .science-showcase *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+@media (width <= 680px) {
+    .science-showcase .game-side-card {
+        border-radius: 10px;
+    }
+
+    .science-showcase .cb-howto,
+    .science-showcase .ec-howto,
+    .science-showcase .md-howto,
+    .science-showcase .fv-howto,
+    .science-showcase .rd-howto {
+        max-width: 34rem;
+        line-height: 1.55;
+    }
+}

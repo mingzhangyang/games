@@ -1072,15 +1072,51 @@ class CrystalBloomGame {
 
     drawDish(ctx) {
         this.roundRect(ctx, DISH.x, DISH.y, DISH.w, DISH.h, 14);
-        ctx.fillStyle = '#080c1c';
+        ctx.fillStyle = '#10202a';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(168,184,255,0.34)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(183,229,226,0.42)';
+        ctx.lineWidth = 1.6;
         ctx.stroke();
+        // Thick glass rim and a quiet meniscus make this read as a lab vessel,
+        // not a generic rounded game panel.
+        ctx.save();
+        ctx.strokeStyle = 'rgba(221,241,238,0.16)';
+        ctx.lineWidth = 1;
+        this.roundRect(ctx, DISH.x + 7, DISH.y + 7, DISH.w - 14, DISH.h - 14, 10);
+        ctx.stroke();
+        const meniscusY = DISH.y + 34;
+        ctx.strokeStyle = 'rgba(105,199,199,0.36)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(DISH.x + 16, meniscusY);
+        ctx.quadraticCurveTo(DISH.x + DISH.w / 2, meniscusY + 3, DISH.x + DISH.w - 16, meniscusY);
+        ctx.stroke();
+        // Liquid body: from the meniscus down to the dish floor, clipped to the
+        // rounded vessel so it never bleeds into the gap above the chart.
+        ctx.save();
+        this.roundRect(ctx, DISH.x + 1, DISH.y + 1, DISH.w - 2, DISH.h - 2, 13);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(105,199,199,0.07)';
+        ctx.fillRect(DISH.x + 1, meniscusY + 1, DISH.w - 2, DISH.y + DISH.h - meniscusY - 2);
+        ctx.restore();
+        ctx.fillStyle = 'rgba(219,236,235,0.48)';
+        ctx.font = '10px ui-monospace, SFMono-Regular, Consolas, monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('SATURATION VESSEL', DISH.x + 16, DISH.y + 14);
+        for (let i = 0; i < 5; i++) {
+            const x = DISH.x + 18 + i * 120;
+            ctx.strokeStyle = 'rgba(219,236,235,0.16)';
+            ctx.beginPath();
+            ctx.moveTo(x, DISH.y + DISH.h - 18);
+            ctx.lineTo(x, DISH.y + DISH.h - 11);
+            ctx.stroke();
+        }
+        ctx.restore();
         // 饱和线：当前温度下的饱和浓度，画成皿底一条刻度（浓度降到它就是终点）
         const k = clamp(this.world.conc / satAt(this.spec.t0), 0, 1);
-        ctx.fillStyle = 'rgba(111,216,255,0.10)';
-        ctx.fillRect(DISH.x + 1, DISH.y + DISH.h - 8, (DISH.w - 2) * k, 6);
+        ctx.fillStyle = 'rgba(105,199,199,0.18)';
+        ctx.fillRect(DISH.x + 2, DISH.y + DISH.h - 8, (DISH.w - 4) * k, 5);
     }
 
     /**
@@ -1112,6 +1148,28 @@ class CrystalBloomGame {
                 ctx.fillRect(px, py, CELL, CELL);
             }
         }
+
+        // Hairline crystal facets: the small cells remain the deterministic
+        // simulation, while these edges give the specimen a readable mineral
+        // silhouette at phone scale.
+        ctx.save();
+        ctx.strokeStyle = 'rgba(226,244,239,0.26)';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                const i = y * cols + x;
+                if (!grid[i]) continue;
+                const px = DISH.x + x * CELL;
+                const py = DISH.y + y * CELL;
+                if (x === 0 || !grid[i - 1]) { ctx.moveTo(px, py); ctx.lineTo(px, py + CELL); }
+                if (x === cols - 1 || !grid[i + 1]) { ctx.moveTo(px + CELL, py); ctx.lineTo(px + CELL, py + CELL); }
+                if (y === 0 || !grid[i - cols]) { ctx.moveTo(px, py); ctx.lineTo(px + CELL, py); }
+                if (y === rows - 1 || !grid[i + cols]) { ctx.moveTo(px, py + CELL); ctx.lineTo(px + CELL, py + CELL); }
+            }
+        }
+        ctx.stroke();
+        ctx.restore();
     }
 
     /** 搅拌：皿里一圈转起来的涟漪（窗口内才转，过档就停 —— 搅拌是限时的） */
@@ -1263,10 +1321,10 @@ class CrystalBloomGame {
     /** 菜单态：皿里飘几粒未成形的晶核，图上一条默认曲线 */
     drawMenuAmbience(ctx) {
         this.roundRect(ctx, DISH.x, DISH.y, DISH.w, DISH.h, 14);
-        ctx.fillStyle = 'rgba(8,12,28,0.9)';
+        ctx.fillStyle = '#10202a';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(168,184,255,0.2)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(183,229,226,0.28)';
+        ctx.lineWidth = 1.6;
         ctx.stroke();
 
         const rng = (() => { let s = 20260922; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; })();
@@ -1277,9 +1335,15 @@ class CrystalBloomGame {
             const x = bx + Math.sin(this.time * 0.5 + ph) * 9;
             const y = by + Math.cos(this.time * 0.42 + ph * 1.2) * 11;
             ctx.beginPath();
-            ctx.arc(x, y, 3 + rng() * 2, 0, Math.PI * 2);
-            ctx.fillStyle = i % 3 === 0 ? 'rgba(255,211,77,0.30)' : 'rgba(111,216,255,0.26)';
+            ctx.moveTo(x, y - 4 - rng() * 3);
+            ctx.lineTo(x + 3 + rng() * 2, y);
+            ctx.lineTo(x, y + 4 + rng() * 3);
+            ctx.lineTo(x - 3 - rng() * 2, y);
+            ctx.closePath();
+            ctx.fillStyle = i % 3 === 0 ? 'rgba(183,144,85,0.32)' : 'rgba(105,199,199,0.26)';
             ctx.fill();
+            ctx.strokeStyle = 'rgba(226,244,239,0.18)';
+            ctx.stroke();
         }
 
         this.roundRect(ctx, CHART.x, CHART.y, CHART.w, CHART.h, 10);
