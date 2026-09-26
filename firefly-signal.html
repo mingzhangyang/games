@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-support" content="dark">
+    <meta name="theme-color" content="#060b1a">
+    <script src="/theme-boot.js"></script>
+    <meta name="description" content="萤火信号 Firefly Signal — a midsummer-night synchrony puzzle. Every firefly blinks to its own rhythm; nudge just a few of them and watch whole meadows fall into step until the entire field lights up at once.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/firefly-signal.html">
+    <meta property="og:title" content="萤火信号 Firefly Signal — Synchrony Puzzle">
+    <meta property="og:description" content="Nudge a few fireflies. Watch the whole meadow blink as one.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-firefly-signal.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/firefly-signal.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="萤火信号 Firefly Signal — Synchrony Puzzle">
+    <meta name="twitter:description" content="Every firefly blinks alone — until you find the one that connects them.">
+    <meta name="twitter:image" content="assets/seo/og-firefly-signal.svg">
+    <title>萤火信号 Firefly Signal — Synchrony Puzzle</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23060b1a'/%3E%3Ccircle cx='32' cy='36' r='18' fill='%23ffc85a' opacity='.22'/%3E%3Cellipse cx='32' cy='38' rx='6' ry='8' fill='%23ffd98a'/%3E%3Cellipse cx='32' cy='26' rx='4.5' ry='5' fill='%23241c16'/%3E%3Cellipse cx='23' cy='30' rx='8' ry='4' fill='%23cfe3ff' opacity='.55' transform='rotate(-25 23 30)'/%3E%3Cellipse cx='41' cy='30' rx='8' ry='4' fill='%23cfe3ff' opacity='.55' transform='rotate(25 41 30)'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/firefly-signal.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body class="fs-body">
+    <!-- 舞台两侧的夜色延展（桌面 / 平板）：JS 用背景层列平均竖条填充并对齐舞台 -->
+    <div class="fs-backdrop" id="fs-backdrop" aria-hidden="true"></div>
+    <!-- Immersive Stage（games.config.json layout: "immersive"，契约 docs/contracts/layout.md §7）：
+         顶栏以下的整块视口都是场景；HUD 是场景里的浮层；页脚随流在首屏之下 -->
+    <div class="fs-shell game-shell game-shell--immersive">
+        <header class="fs-topbar game-topbar">
+            <div class="fs-topbar-lead game-topbar-group">
+                <button data-chrome="home" type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <div class="fs-topbar-center game-topbar-center">
+                <h1 class="sr-only" id="fs-h1">Firefly Signal</h1>
+                <div class="fs-level-pill" id="fs-level-pill">Firefly Signal</div>
+            </div>
+            <!-- 右簇固定顺序：专属（重来）→ sound -->
+            <div class="fs-topbar-actions game-topbar-group">
+                <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-restart" title="Restart" aria-label="Restart" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-mute" data-chrome="sound" title="Sound" aria-label="Sound"></button>
+            </div>
+        </header>
+
+        <main class="fs-main game-main">
+            <div class="fs-stage game-stage game-stage--immersive" id="fs-stage">
+                <!-- 画布包一层：开始菜单期间舞台让位给菜单高度（layout.css 的 .game-overlay--menu），
+                     那条规则会把舞台的直接子 canvas 设为 height:auto —— 包起来就不受影响 -->
+                <div class="fs-scene" id="fs-scene">
+                    <canvas class="fs-canvas" id="fs-canvas" role="img" aria-label="A midsummer meadow full of fireflies"></canvas>
+                </div>
+
+                <!-- HUD：悬浮在天空区域，无面板 -->
+                <div class="fs-hud hidden" id="fs-hud">
+                    <div class="fs-harmony" id="fs-harmony" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Harmony">
+                        <svg class="fs-ring" viewBox="0 0 36 36" aria-hidden="true">
+                            <circle class="fs-ring-track" cx="18" cy="18" r="14"/>
+                            <circle class="fs-ring-fill" id="fs-ring-fill" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="0 100"/>
+                            <line class="fs-ring-target" id="fs-ring-target" x1="18" y1="1.5" x2="18" y2="6.5"/>
+                        </svg>
+                        <span class="fs-harmony-value" id="fs-harmony-value">0%</span>
+                    </div>
+                    <div class="fs-dots" id="fs-dots" role="img" aria-label="Interventions"></div>
+                </div>
+                <p class="fs-coach hidden" id="fs-coach" aria-live="polite"></p>
+
+                <!-- 开始菜单 -->
+                <div class="fs-overlay fs-start game-overlay game-overlay--menu" id="fs-start">
+                    <p class="fs-kicker" id="fs-kicker">A midsummer synchrony puzzle</p>
+                    <h2 class="fs-start-title" id="fs-start-title">Firefly Signal</h2>
+                    <p class="fs-start-copy" id="fs-start-copy"></p>
+                    <div class="fs-level-list" id="fs-level-list"></div>
+                    <div class="fs-start-footer">
+                        <nav class="more-games" id="fsStartMore"></nav>
+                    </div>
+                </div>
+
+                <!-- 结算：克制，无 modal 卡片 -->
+                <div class="fs-overlay fs-result game-overlay hidden" id="fs-result" role="dialog" aria-labelledby="fs-result-title">
+                    <h2 class="fs-result-title" id="fs-result-title">Midsummer Resonance</h2>
+                    <p class="fs-result-line" id="fs-result-harmony">Harmony 96%</p>
+                    <p class="fs-result-line fs-result-sub" id="fs-result-used">3 / 8 interventions</p>
+                    <div class="fs-btn-row">
+                        <button type="button" class="fs-btn fs-btn-primary game-btn" id="fs-btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/></svg><span>Continue</span></button>
+                        <button type="button" class="fs-btn game-btn" id="fs-btn-retry"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Retry</span></button>
+                        <button type="button" class="fs-btn fs-btn-ghost game-btn" id="fs-btn-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Menu</span></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 持久页脚：immersive 布局下随流在首屏之下（不占场景高度），只放无状态导航 -->
+        <footer class="fs-footer game-footer">
+            <p class="fs-footer-hint game-footer-hint" id="fs-hint"></p>
+            <div class="fs-footer-actions game-footer-actions game-topbar-group">
+                <a class="fs-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+                <button type="button" class="fs-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="fsMoreNav" title="More games" aria-label="More games"></button>
+            </div>
+            <nav class="more-games game-footer-nav" id="fsMoreNav" hidden></nav>
+        </footer>
+    </div>
+
+    <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-firefly-signal.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"萤火信号 Firefly Signal — Synchrony Puzzle","url":currentUrl,"description":"萤火信号 Firefly Signal — a midsummer-night synchrony puzzle. Every firefly blinks to its own rhythm; nudge just a few of them and watch whole meadows fall into step until the entire field lights up at once.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","CasualGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"萤火信号 Firefly Signal — Synchrony Puzzle","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <!-- registry:end seo-script -->
+    <script type="module" src="js/firefly-signal/main.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

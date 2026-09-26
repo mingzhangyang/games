@@ -1,0 +1,405 @@
+/* ─────────────────────────────────────────────
+   Firefly Signal 萤火信号 — 仲夏夜同步谜题
+   绘本自然主义 × 仲夏夜 × 生物荧光；仅深色（夜色是可读性的一部分，不接 theme-light）
+   布局：Immersive Stage（css/layout.css 末尾），本文件只管配色、字体与浮层内容，
+   不写 shell / topbar / stage 的几何。
+   ───────────────────────────────────────────── */
+
+:root {
+    --fs-night-0: #070d22;
+    --fs-night-1: #0b1633;
+    --fs-night-2: #0c1b2c;
+    --fs-meadow-0: #08150f;
+    --fs-meadow-1: #040a07;
+    --fs-glow: #ffd27a;
+    --fs-glow-soft: rgb(255, 210, 122, 0.55);
+    --fs-ink: #eef0f8;
+    --fs-ink-dim: rgb(226, 232, 250, 0.72);
+    --fs-ink-mute: rgb(214, 222, 245, 0.5);
+    --fs-glass: rgb(10, 18, 40, 0.42);
+    --fs-glass-line: rgb(255, 236, 190, 0.16);
+}
+
+html {
+    background: var(--fs-meadow-1);
+}
+
+/* 桌面端舞台两侧由这层夜色自然延展：天空 → 湖 → 草地，与画布的纵向配色同序 */
+body.fs-body {
+    margin: 0;
+    min-height: 100dvh;
+    background:
+        radial-gradient(ellipse 60% 26% at 50% 0%, rgb(120, 140, 220, 0.12), transparent),
+        linear-gradient(180deg, var(--fs-night-0) 0%, var(--fs-night-1) 26%, var(--fs-night-2) 48%, var(--fs-meadow-0) 70%, var(--fs-meadow-1) 100%);
+    background-attachment: fixed;
+    color: var(--fs-ink);
+    font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+}
+
+.hidden { display: none !important; }
+
+/* ── 顶栏：透明、只保留轻微对比 ── */
+.fs-icon-btn {
+    color: var(--fs-ink);
+    background: rgb(255, 255, 255, 0.05);
+    border-color: rgb(255, 255, 255, 0.09);
+}
+
+.fs-icon-btn:hover { background: rgb(255, 255, 255, 0.1); }
+
+.fs-icon-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.fs-level-pill {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--fs-ink-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ── 场景 ── */
+/* 舞台窄于视口时两侧的延展：JS 写入 top / height / background-image（背景层列平均竖条） */
+.fs-backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 0;
+    z-index: 0;
+    background-repeat: repeat-x;
+    background-size: 1px 100%;
+    pointer-events: none;
+}
+
+.fs-shell {
+    position: relative;
+    z-index: 1;
+}
+
+.fs-scene {
+    position: absolute;
+    inset: 0;
+}
+
+.fs-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+/* 舞台比视口窄时（平板 / 桌面），两侧柔和过渡进 body 的夜色，不留硬边 */
+@media (width >= 660px) {
+    .fs-scene {
+        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+        mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+    }
+}
+
+/* ── HUD：悬浮在天空区域，透明，只加一点点对比 ── */
+.fs-hud {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    pointer-events: none;
+    transition: opacity 0.9s ease;
+    text-shadow: 0 1px 8px rgb(0, 0, 0, 0.55);
+}
+
+.fs-hud.is-faded { opacity: 0; }
+
+.fs-harmony {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fs-ring {
+    width: 30px;
+    height: 30px;
+    overflow: visible;
+    transform: rotate(-90deg);
+    filter: drop-shadow(0 0 6px rgb(0, 0, 0, 0.5));
+}
+
+.fs-ring-track {
+    fill: none;
+    stroke: rgb(255, 255, 255, 0.16);
+    stroke-width: 2.4;
+}
+
+.fs-ring-fill {
+    fill: none;
+    stroke: var(--fs-glow);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+}
+
+.fs-ring-target {
+    stroke: rgb(255, 244, 214, 0.85);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+}
+
+.fs-harmony-value {
+    min-width: 3.2ch;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--fs-ink);
+}
+
+.fs-harmony.is-met .fs-harmony-value { color: var(--fs-glow); }
+
+.fs-dots {
+    display: flex;
+    gap: 7px;
+}
+
+.fs-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--fs-glow);
+    box-shadow: 0 0 6px var(--fs-glow-soft);
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+.fs-dot.is-used {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.3px rgb(255, 236, 190, 0.55);
+}
+
+/* 教学提示：天空里一行字，不是气泡 */
+.fs-coach {
+    position: absolute;
+    top: 78px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    width: min(88%, 440px);
+    margin: 0;
+    text-align: center;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--fs-ink-dim);
+    text-shadow: 0 1px 8px rgb(0, 0, 0, 0.7);
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+}
+
+.fs-coach.is-faded { opacity: 0; }
+
+/* ── 浮层：夜色渐隐，不做卡片 ── */
+.fs-overlay {
+    z-index: 10;
+    border-radius: 0;
+    text-align: center;
+    color: var(--fs-ink);
+}
+
+.fs-start {
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgb(5, 9, 24, 0.5), rgb(5, 9, 24, 0.82));
+    justify-content: safe center;
+    gap: 12px;
+    padding: 28px 20px;
+}
+
+.fs-kicker {
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fs-glow);
+    opacity: 0.85;
+}
+
+.fs-start-title {
+    margin: 0;
+    font-size: clamp(30px, 8vw, 40px);
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: #fff6e0;
+    text-shadow: 0 0 22px rgb(255, 200, 110, 0.45);
+}
+
+.fs-start-copy {
+    margin: 0;
+    max-width: 380px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--fs-ink-dim);
+}
+
+.fs-level-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(100%, 360px);
+    margin-top: 6px;
+}
+
+.fs-level-btn {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 4px 12px;
+    width: 100%;
+    min-height: 56px;
+    padding: 10px 14px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: var(--fs-glass);
+    border: 1px solid var(--fs-glass-line);
+    border-radius: 14px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+
+.fs-level-btn:hover {
+    border-color: rgb(255, 214, 140, 0.45);
+    background: rgb(20, 30, 60, 0.5);
+}
+
+.fs-level-btn:active { transform: scale(0.98); }
+
+.fs-level-no {
+    grid-row: 1 / span 2;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1406;
+    background: var(--fs-glow);
+    box-shadow: 0 0 12px rgb(255, 205, 110, 0.5);
+}
+
+.fs-level-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.fs-level-desc {
+    grid-column: 2 / span 2;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--fs-ink-mute);
+}
+
+.fs-level-best {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--fs-glow);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.fs-start-footer {
+    width: min(100%, 380px);
+    margin-top: 4px;
+}
+
+.fs-result {
+    background: radial-gradient(ellipse 90% 55% at 50% 45%, rgb(5, 9, 24, 0.66), rgb(5, 9, 24, 0.2));
+    gap: 8px;
+    animation: fs-fade-in 1.2s ease both;
+}
+
+.fs-result-title {
+    margin: 0 0 6px;
+    font-size: clamp(24px, 6.4vw, 30px);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: #fff6e0;
+    text-shadow: 0 0 24px rgb(255, 200, 110, 0.5);
+}
+
+.fs-result-line {
+    margin: 0;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    color: var(--fs-ink);
+}
+
+.fs-result-sub {
+    font-size: 14px;
+    color: var(--fs-ink-dim);
+}
+
+.fs-btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.fs-btn {
+    min-height: 44px;
+    padding: 0 18px;
+    font: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--fs-ink);
+    cursor: pointer;
+    background: var(--fs-glass);
+    border: 1px solid var(--fs-glass-line);
+    border-radius: 999px;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.fs-btn:hover { border-color: rgb(255, 214, 140, 0.5); }
+.fs-btn:active { transform: scale(0.96); }
+
+.fs-btn-primary {
+    color: #1a1406;
+    background: var(--fs-glow);
+    border-color: transparent;
+    box-shadow: 0 0 18px rgb(255, 200, 110, 0.35);
+}
+
+.fs-btn-primary:hover { background: #ffdc96; }
+
+.fs-btn-ghost { background: transparent; }
+
+@keyframes fs-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ── 页脚（首屏之下） ── */
+.fs-footer-hint { color: var(--fs-ink-mute); }
+
+@media (prefers-reduced-motion: reduce) {
+    .fs-hud,
+    .fs-coach,
+    .fs-dot,
+    .fs-level-btn,
+    .fs-btn { transition: none; }
+
+    .fs-result { animation: none; }
+}
