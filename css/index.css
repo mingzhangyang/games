@@ -457,6 +457,7 @@
            ⇒ 必须用 auto 外边距自己居中。纵向负 margin 用于把卡片
            上提贴住 hero。 */
         .daily-hub {
+            width: calc(100% - 40px);
             max-width: 640px;
             margin: -24px auto 8px;
             background: var(--ix-daily-hub-bg);
@@ -580,7 +581,11 @@
         }
 
         @media (width <= 600px) {
-            .daily-hub { margin: -16px auto 8px; padding: 13px 14px; }
+            .daily-hub {
+                width: calc(100% - 24px);
+                margin: -16px auto 8px;
+                padding: 13px 14px;
+            }
         }
 
         /* ── Perks strip ───────────────────────────── */
