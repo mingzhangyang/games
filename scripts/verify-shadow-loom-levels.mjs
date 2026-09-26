@@ -8,9 +8,10 @@
  *   ② 初始：相似度 ≤ 0.45（开局是抽象碎影，不是「差一点」）；每块可动纸片的初始影子
  *      至少一半落在纸幕上（看得见才谈得上观察）；初始位置在可拖动范围内
  *   ③ 章节开关：灯固定的关卡没有钉住的纸片（否则无解）；钉住的纸片在初始灯位下
- *      影子偏离目标 ≥ 16px（逼玩家去移动灯）；不开放旋转的关卡初始角 = 解角；
+ *      影子偏离目标 ≥ 4% 幕宽（逼玩家去移动灯）；不开放旋转的关卡初始角 = 解角；
  *      开放旋转的关卡至少一块纸片初始角偏离 ≥ 25°
- *   ④ 容差（判定手感）：任一纸片的影子偏 4px 仍可完成；偏 24px 必不可完成
+ *   ④ 容差（判定手感）：任一纸片的影子偏 1% 幕宽仍可完成；偏 6% 幕宽必不可完成
+ *      （阈值按纸幕宽度表示：纸幕尺寸随美术分层调整时，手感约束跟着等比缩放）
  *   ⑤ 深度：每关至少两个不同深度，第二章起至少三个（「错层」的教学点）
  *   ⑥ 数学：投影公式与设计方案 §6.1 一致（S = L + (P − L) / z），灯视差随深度单调
  *
@@ -26,6 +27,10 @@ const ok = (cond, label, extra = '') => {
     failed++;
     console.error(`✗ ${label}${extra ? ' —— ' + extra : ''}`);
 };
+// 手感阈值按纸幕宽度表示（300px 幕宽下 = 3px / 18px / 12px）
+const TOL_OK = R.SCREEN.w * 0.01;
+const TOL_FAIL = R.SCREEN.w * 0.06;
+const PIN_OFF = R.SCREEN.w * 0.04;
 const inBox = (p, b) => p.x >= b.x0 && p.x <= b.x1 && p.y >= b.y0 && p.y <= b.y1;
 
 /** 多边形面积（鞋带公式） */
@@ -104,7 +109,7 @@ for (const lv of LEVELS) {
         if (!p.pinned) return;
         const S0 = R.shadowCenter(init.lamp, init.pieces[i], p.z);
         const d = Math.hypot(S0.x - p.sol.x, S0.y - p.sol.y);
-        ok(d >= 16, `${tag}/${p.id}: 初始灯位下钉住纸片的影子偏离目标 ≥ 16px`, d.toFixed(1));
+        ok(d >= PIN_OFF, `${tag}/${p.id}: 初始灯位下钉住纸片的影子偏离目标 ≥ ${PIN_OFF}px`, d.toFixed(1));
     });
     if (!lv.rotate) {
         lv.pieces.forEach(p => ok((p.start?.rot || 0) === (p.sol.rot || 0), `${tag}/${p.id}: 不开放旋转 ⇒ 初始角 = 解角`));
@@ -122,10 +127,10 @@ for (const lv of LEVELS) {
                 st.pieces[i] = { ...st.pieces[i], x: st.pieces[i].x + dx * px * p.z, y: st.pieces[i].y + dy * px * p.z };
                 return R.evaluate(lv, st).sim;
             };
-            const s4 = shift(4);
-            const s24 = shift(24);
-            ok(s4 >= R.THRESHOLDS.win, `${tag}/${p.id}: 影子偏 4px 仍可完成`, s4.toFixed(3));
-            ok(s24 < R.THRESHOLDS.win, `${tag}/${p.id}: 影子偏 24px 不可完成`, s24.toFixed(3));
+            const sOk = shift(TOL_OK);
+            const sFail = shift(TOL_FAIL);
+            ok(sOk >= R.THRESHOLDS.win, `${tag}/${p.id}: 影子偏 ${TOL_OK}px 仍可完成`, sOk.toFixed(3));
+            ok(sFail < R.THRESHOLDS.win, `${tag}/${p.id}: 影子偏 ${TOL_FAIL}px 不可完成`, sFail.toFixed(3));
         }
     });
 

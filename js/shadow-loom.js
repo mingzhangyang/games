@@ -122,7 +122,7 @@ const LANGUAGES = makeText({
 
 const W = R.STAGE.w;
 const H = R.STAGE.h;
-const RAIL_Y = 86;
+const RAIL_Y = R.SCREEN.y + 2;   // 丝线挂在木框内缘（纸幕顶沿）
 const PROGRESS_KEY = 'sl_progress';
 const SEEN_KEY = 'sl_seen_chapters';
 const SNAP_S = 0.45;
@@ -196,7 +196,7 @@ class ShadowLoomGame {
             const h = (k) => { const v = Math.sin((i + 1) * k) * 43758.5453; return v - Math.floor(v); };
             return { x: h(12.9) * W, y: h(78.2) < 0.55 ? 20 + h(3.7) * 90 : 560 + h(5.1) * 260, p: h(9.3) * 20, v: 0.15 + h(4.4) * 0.25, r: 0.9 + h(6.6) * 1.6, a: 0.5 + h(2.2) * 0.5 };
         });
-        this.scene = createScene({ W, H, SCREEN: R.SCREEN, RAIL_Y, LAMP_BOX: R.LAMP_BOX });
+        this.scene = createScene({ W, H, SCREEN: R.SCREEN });
         this.fret = [];
         this.progress = readJson(PROGRESS_KEY, {});
         this.seen = readJson(SEEN_KEY, {});
@@ -569,8 +569,9 @@ class ShadowLoomGame {
     }
 
     lampHit(x, y) {
-        const L = this.st.lamp;
-        return Math.hypot(x - L.x, y - (L.y - 12)) < 38;
+        // 灯位图的包围盒（灯罩 + 灯座），四周再放宽 8px 方便手指
+        const r = this.scene.lampRect(this.st.lamp);
+        return x > r.x - 8 && x < r.x + r.w + 8 && y > r.y - 8 && y < r.y + r.h + 8;
     }
 
     canInteract() { return this.state === 'playing' && !this.isPaused; }
@@ -879,13 +880,13 @@ class ShadowLoomGame {
         const sc = this.scene;
         const S = R.SCREEN;
         sc.ensure(rs);
-        sc.back(ctx, rs);
+        sc.background(ctx, rs);
 
         // 纸幕透光：亮区跟着灯走；接近目标时整体增亮，完成时更亮
         const L = R.lampModel(this.st.lamp);
         const home = R.lampModel(R.LAMP_HOME);
         const boost = (stage >= 2 ? 0.08 : 0) + (stage >= 3 ? 0.06 : 0) + dim * 0.14;
-        sc.paper(ctx, rs, L.x, S.y + S.h * 0.6 + (L.y - home.y) * 0.8, boost, flicker);
+        sc.paper(ctx, rs, L.x, S.y + S.h * 0.62 + (L.y - home.y) * 0.8, boost, flicker);
 
         ctx.save();
         this.clipScreen(ctx);
@@ -896,16 +897,16 @@ class ShadowLoomGame {
         if (solving) this.drawLeaves(ctx);
         ctx.restore();
 
-        sc.table(ctx, rs, this.st.lamp, flicker);
-        sc.rail(ctx, 1 - dim * 0.4);
+        sc.frame(ctx, rs);
+        sc.desk(ctx, rs);
         this.drawPieces(ctx, dim);
         if (!solving) this.drawHandles(ctx);
+        sc.foreground(ctx, rs);
         sc.lamp(ctx, this.st.lamp, flicker, {
             movable: this.level.lamp.movable && this.state === 'playing',
             selected: this.sel === 'lamp',
             clock: this.clock,
         });
-        sc.front(ctx, rs);
         // 完成：纸幕以外全部暗下，完整的影子成为唯一焦点
         if (dim > 0) {
             ctx.save();

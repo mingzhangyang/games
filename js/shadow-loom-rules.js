@@ -17,20 +17,31 @@
  */
 
 export const STAGE = { w: 480, h: 854 };
-/** 纸幕（可见影子区域 = 判定网格区域） */
-export const SCREEN = { x: 40, y: 112, w: 400, h: 420 };
-/** 判定网格：5px 一格 → 80 × 84 */
-export const CELL = 5;
+/**
+ * 纸幕（可见影子区域 = 判定网格区域）。取自美术分层 manifest 的 paperWindow
+ * （1080×1920 下 205,345 起 670×795，÷2.25 → 91,153 起 298×353），向外取整到 4px 网格；
+ * 多出的 1–2px 压在木框下面。
+ */
+export const SCREEN = { x: 90, y: 153, w: 300, h: 356 };
+/**
+ * 判定网格：4px 一格 → 75 × 89（与旧 400×420 幕、5px 格的 80×84 同量级；
+ * 轮廓容差按格计，所以格宽要随纸幕等比缩放，否则判定会相对变松）
+ */
+export const CELL = 4;
 export const COLS = SCREEN.w / CELL;
 export const ROWS = SCREEN.h / CELL;
 
-/** 灯的视觉托盘范围与投影映射 */
-export const LAMP_BOX = { x0: 72, x1: 408, y0: 620, y1: 700 };
+/**
+ * 灯：lamp.x / lamp.y 是**火焰**在舞台上的位置（灯的位图按火焰对齐绘制）。
+ * 投影用的灯位 L = lampModel(lamp)：x 相同，y 压到纸幕下沿附近（风格化：真实比例下
+ * 影子会整片飞出幕布）。灯的可拖范围在纸幕下沿以下，灯罩不遮挡纸幕。
+ */
+export const LAMP_BOX = { x0: 114, x1: 366, y0: 648, y1: 672 };
 export const LAMP_HOME = { x: 240, y: 660 };
-const LAMP_MODEL_Y = 522;
-const LAMP_MODEL_K = 0.6;
+const LAMP_MODEL_Y = 480.5;
+const LAMP_MODEL_K = 1.5;
 /** 纸片中心可活动的范围（悬挂在幕前） */
-export const PIECE_BOX = { x0: 26, x1: 454, y0: 118, y1: 588 };
+export const PIECE_BOX = { x0: 80, x1: 400, y0: 158, y1: 530 };
 
 /** 相似度 → 反馈阶段（设计方案 §8：阈值需试玩调校，这里是唯一出处） */
 export const THRESHOLDS = { faint: 0.70, glow: 0.85, stitch: 0.89, win: 0.925 };
