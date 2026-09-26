@@ -27,3 +27,7 @@ shade asset.
 
 Transparent WebP layers were exported with an actual RGBA channel. There is no
 checkerboard pattern baked into any layer.
+
+The `silhouettes/` subdirectory is part of this same asset drop. It contains one
+uncoloured, transparent SVG per movable paper piece, with its family and level mapping
+in `silhouettes/manifest.json`.

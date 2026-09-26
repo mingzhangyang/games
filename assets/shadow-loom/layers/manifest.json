@@ -71,5 +71,10 @@
     "width": 1254,
     "height": 1254,
     "applyTo": "paperWindow"
+  },
+  "silhouettes": {
+    "manifest": "silhouettes/manifest.json",
+    "directory": "silhouettes/",
+    "note": "Each listed SVG is an independently movable paper piece."
   }
 }
