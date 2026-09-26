@@ -54,6 +54,10 @@ const LANGUAGES = makeText({
         toastPerfect: 'Perfect pull!',
         toastBad: 'Missed the beat',
         stats: 'Stats',
+        hudAria: 'Game status',
+        meterAria: 'Pull timing',
+        progressAria: 'Carrot harvest progress',
+        pullAria: 'Pull the carrot',
         statusPaused: 'Paused — take a breath.',
     },
     zh: {
@@ -99,6 +103,10 @@ const LANGUAGES = makeText({
         toastPerfect: '完美一拔！',
         toastBad: '没踩准节奏',
         stats: '数据统计',
+        hudAria: '游戏状态',
+        meterAria: '拔萝卜节奏',
+        progressAria: '萝卜收获进度',
+        pullAria: '拔萝卜',
         statusPaused: '暂停中，准备好再继续。',
     },
 });
@@ -241,6 +249,7 @@ function createScene() {
         fx.miss *= Math.exp(-dt / 220);
         if (fx.tug < 0.002) fx.tug = 0;
         if (fx.miss < 0.002) fx.miss = 0;
+        const settling = Math.abs(progress * SCENE.maxRise - fx.rise) > 0.05;
 
         const sway = playing && !reduced ? Math.sin(now / 420) : 0;
         const shake = reduced ? 0 : Math.sin(now / 26) * 7 * fx.miss;
@@ -253,6 +262,8 @@ function createScene() {
         let stemAlpha = 1;
 
         const since = now - fx.harvestAt;
+        const active = (playing && !reduced) || settling || fx.tug > 0 || fx.miss > 0
+            || since < SCENE.harvestMs + SCENE.emergeMs;
         if (since < SCENE.harvestMs) {
             // 收获：萝卜连根飞起、旋转着越过女孩头顶；两人往后一仰再蹦一下
             const p = easeOut(since / SCENE.harvestMs);
@@ -271,7 +282,7 @@ function createScene() {
         }
 
         const key = `${cx.toFixed(1)}|${cy.toFixed(1)}|${tilt.toFixed(2)}|${girlLean.toFixed(2)}|${moleLean.toFixed(2)}|${hop.toFixed(1)}|${stemAlpha.toFixed(2)}|${fx.tug.toFixed(2)}`;
-        if (key === lastKey) return;
+        if (key === lastKey) return active;
         lastKey = key;
 
         const g = SCENE.girl;
@@ -297,6 +308,7 @@ function createScene() {
         nodes.stemsGirl.setAttribute('opacity', stemAlpha.toFixed(2));
         nodes.stemsMole.setAttribute('opacity', stemAlpha.toFixed(2));
         nodes.tug.setAttribute('opacity', (fx.tug * 0.9).toFixed(2));
+        return active;
     }
 
     return { hit, miss, harvest, reset, tick };
@@ -326,6 +338,8 @@ function createGame() {
 
     const text = () => LANGUAGES[lang] || LANGUAGES.en;
     let scene = null;
+    let rafId = 0;
+    let pausedByHidden = false;
     let best = 0;
     let dotsRound = -1;
 
@@ -398,6 +412,16 @@ function createGame() {
         Object.entries(labels).forEach(([id, value]) => {
             const node = document.getElementById(id);
             if (node) node.textContent = value;
+        });
+        // 无可见文字的控件，无障碍名称也要跟随语言（Pull 按钮不设 aria-label，直接读可见文案）
+        const ariaLabels = {
+            'cp-hud-row': t.hudAria,
+            'cp-meter': t.meterAria,
+            'cp-progress-dots': t.progressAria,
+            'cp-carrot-hit': t.pullAria,
+        };
+        Object.entries(ariaLabels).forEach(([id, value]) => {
+            document.getElementById(id)?.setAttribute('aria-label', value);
         });
         updateProgressDots(true);
         if (state.mode === 'over') renderResult();
@@ -515,6 +539,7 @@ function createGame() {
         updateStatus(text().statusPlaying);
         updateUi();
         track('carrot-pull', 'play');
+        ensureLoop();
         sfx.tone({ freq: 392, slideTo: 659, type: 'triangle', dur: 0.2, vol: 0.13 });
     }
 
@@ -534,6 +559,7 @@ function createGame() {
         if (refs['cp-result']) refs['cp-result'].hidden = true;
         updateStatus(text().statusReady);
         updateUi();
+        ensureLoop();
     }
 
     function tryPull() {
@@ -571,16 +597,27 @@ function createGame() {
             sfx.tone({ freq: 160, slideTo: 110, type: 'sine', dur: 0.12, vol: 0.09 });
         }
         updateUi();
+        ensureLoop();
     }
 
     function setPaused(paused) {
         if (state.mode !== 'playing' || state.paused === paused) return;
         state.paused = paused;
+        if (!paused) pausedByHidden = false;
         updateUi();
         updateStatus(currentStatusText());
+        ensureLoop();
+    }
+
+    // rAF 只在对局进行中、或场景动画还没落定时运行；空闲（菜单 / 结算 / 暂停落定）就停下
+    function ensureLoop() {
+        if (rafId) return;
+        state.lastFrame = 0;
+        rafId = window.requestAnimationFrame(frame);
     }
 
     function frame(now) {
+        rafId = 0;
         if (!state.lastFrame) state.lastFrame = now;
         const delta = Math.min(100, now - state.lastFrame);
         state.lastFrame = now;
@@ -597,8 +634,11 @@ function createGame() {
             if (state.time <= 0) finish(false);
             else updateFrameUi();
         }
-        scene?.tick(now, state.mode === 'menu' ? 0 : state.pulls / state.needed, state.mode === 'playing' && !state.paused);
-        window.requestAnimationFrame(frame);
+        const running = state.mode === 'playing' && !state.paused;
+        const animating = scene
+            ? scene.tick(now, state.mode === 'menu' ? 0 : state.pulls / state.needed, running)
+            : false;
+        if (running || animating) rafId = window.requestAnimationFrame(frame);
     }
 
     function bindEvents() {
@@ -610,6 +650,10 @@ function createGame() {
             event.preventDefault();
             refs['cp-pull-btn'].classList.add('is-pressed');
             tryPull();
+        });
+        // 键盘 Enter / 读屏激活只派发 click（detail === 0）；指针点击已在 pointerdown 处理，不重复
+        refs['cp-pull-btn'].addEventListener('click', (event) => {
+            if (event.detail === 0) tryPull();
         });
         refs['cp-pull-btn'].addEventListener('pointerup', () => refs['cp-pull-btn'].classList.remove('is-pressed'));
         refs['cp-pull-btn'].addEventListener('pointercancel', () => refs['cp-pull-btn'].classList.remove('is-pressed'));
@@ -627,6 +671,17 @@ function createGame() {
             }
         });
         window.addEventListener('site-settings:changed', () => applyLanguage(getLang()));
+        // 切到后台暂停；回来时只恢复「因切后台而暂停」的那一次（手机上没有暂停键，否则会卡住）
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (state.mode === 'playing' && !state.paused) {
+                    setPaused(true);
+                    pausedByHidden = true;
+                }
+            } else if (pausedByHidden) {
+                setPaused(false);
+            }
+        });
     }
 
     function init() {
@@ -636,7 +691,7 @@ function createGame() {
         applyLanguage(lang);
         updateUi();
         bindEvents();
-        window.requestAnimationFrame(frame);
+        ensureLoop();
     }
 
     return {
