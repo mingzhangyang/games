@@ -4,6 +4,174 @@
    场景插画用 SVG，控件保持统一的可读、可触达规格。
    ───────────────────────────────────────────── */
 
+/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+:root {
+    --cp-body-bg: #102d31;
+    --cp-body-text: #f6f3e8;
+    --cp-icon-btn-hover-bg: rgb(255, 255, 255, 0.14);
+    --cp-icon-btn-hover-border: rgb(255, 255, 255, 0.22);
+    --cp-brand-text: #fdf8e8;
+    --cp-brand-en-text: #a9d5cb;
+    --cp-chip-border: 1px solid rgb(169, 213, 203, 0.22);
+    --cp-chip-bg: rgb(255, 255, 255, 0.07);
+    --cp-chip-text: #a9d5cb;
+    --cp-chip-text-2: #fff8e6;
+    --cp-chip-time-text: #f7d36e;
+    --cp-stage-card-border: 1px solid rgb(169, 213, 203, 0.22);
+    --cp-stage-card-bg: #173c3e;
+    --cp-stage-card-shadow: 0 22px 50px rgb(0, 0, 0, 0.26);
+    --cp-scene-wrap-bg: #6fc3ea;
+    --cp-overlay-bg: rgb(23, 60, 62, 0.88);
+    --cp-overlay-result-bg: rgb(23, 60, 62, 0.78);
+    --cp-mini-mark-border: 1px solid rgb(247, 211, 110, 0.42);
+    --cp-mini-mark-bg: #e4f5d2;
+    --cp-mini-mark-shadow: 0 10px 22px rgb(0, 0, 0, 0.16);
+    --cp-mini-spark-text: #f08a3c;
+    --cp-kicker-text: #f7d36e;
+    --cp-overlay-title-text: #fff8e6;
+    --cp-overlay-copy-text: #d8eee0;
+    --cp-howto-chip-border: 1px solid rgb(216, 238, 224, 0.18);
+    --cp-howto-chip-bg: rgb(255, 255, 255, 0.06);
+    --cp-howto-chip-text: #d8eee0;
+    --cp-howto-chip-bg-2: #f7d36e;
+    --cp-howto-chip-text-2: #173c3e;
+    --cp-primary-border: 1px solid #ffc778;
+    --cp-primary-bg: #f08a3c;
+    --cp-primary-text: #fff8e6;
+    --cp-primary-shadow: 0 9px 0 #b85438, 0 15px 22px rgb(0, 0, 0, 0.18);
+    --cp-primary-active-shadow: 0 5px 0 #b85438, 0 9px 14px rgb(0, 0, 0, 0.16);
+    --cp-secondary-border: 1px solid rgb(216, 238, 224, 0.24);
+    --cp-secondary-bg: rgb(255, 255, 255, 0.07);
+    --cp-secondary-text: #d8eee0;
+    --cp-key-hint-text: #9cc9bc;
+    --cp-result-score-text: #a9d5cb;
+    --cp-result-score-text-2: #f7d36e;
+    --cp-toast-border: 1px solid rgb(255, 248, 230, 0.3);
+    --cp-toast-bg: #173c3e;
+    --cp-toast-text: #fff8e6;
+    --cp-controls-border-top: 1px solid rgb(169, 213, 203, 0.18);
+    --cp-controls-bg: #173c3e;
+    --cp-status-line-text: #d8eee0;
+    --cp-status-dot-bg: #f7d36e;
+    --cp-status-dot-shadow: 0 0 0 4px rgb(247, 211, 110, 0.12);
+    --cp-status-dot-is-good-bg: #83d36d;
+    --cp-status-dot-is-good-shadow: 0 0 0 4px rgb(131, 211, 109, 0.15);
+    --cp-status-dot-is-bad-bg: #f58b78;
+    --cp-status-dot-is-bad-shadow: 0 0 0 4px rgb(245, 139, 120, 0.15);
+    --cp-meter-labels-text: #8db8ac;
+    --cp-meter-labels-text-2: #83d36d;
+    --cp-meter-track-border: 1px solid rgb(216, 238, 224, 0.2);
+    --cp-meter-track-bg: #0e292d;
+    --cp-sweet-zone-border-right: 1px solid rgb(255, 248, 230, 0.48);
+    --cp-sweet-zone-border-left: 1px solid rgb(255, 248, 230, 0.48);
+    --cp-sweet-zone-bg: #5fae57;
+    --cp-meter-needle-bg: #fff8e6;
+    --cp-meter-needle-shadow: 0 0 0 2px rgb(23, 60, 62, 0.55), 0 0 10px rgb(255, 248, 230, 0.7);
+    --cp-meter-needle-border-bottom: 6px solid #fff8e6;
+    --cp-pull-btn-border: 1px solid #ffc778;
+    --cp-pull-btn-bg: #f08a3c;
+    --cp-pull-btn-text: #fff8e6;
+    --cp-pull-btn-shadow: 0 6px 0 #b85438, 0 10px 17px rgb(0, 0, 0, 0.2);
+    --cp-pull-btn-active-shadow: 0 2px 0 #b85438, 0 6px 11px rgb(0, 0, 0, 0.16);
+    --cp-progress-dot-border: 1px solid rgb(169, 213, 203, 0.24);
+    --cp-progress-dot-bg: rgb(255, 255, 255, 0.06);
+    --cp-progress-dot-text: #8db8ac;
+    --cp-progress-dot-is-done-border: rgb(247, 211, 110, 0.52);
+    --cp-progress-dot-is-done-bg: #e4f5d2;
+    --cp-side-row-text: #8db8ac;
+    --cp-side-row-text-2: #fff8e6;
+    --cp-side-title-text: #f7d36e;
+    --cp-side-text-text: #a9d5cb;
+    --cp-tip-card-border: rgb(247, 211, 110, 0.2);
+    --cp-footer-hint-text: #8db8ac;
+}
+/* theme:end vars */
+
+/* theme:begin light */
+/* 浅色：暖奶油纸外壳 + 深青墨字；SVG 场景本来就是白天花园，两套主题一致（「实物」）。
+   橙色主按钮在浅底上加深为焦橙，保证奶油字 ≥ 4.5:1；节拍针改为深墨色压在浅轨道上。 */
+:root[data-theme="light"] {
+    --cp-body-bg: #f4efe1;
+    --cp-body-text: #1f3b3a;
+    --cp-icon-btn-hover-bg: rgb(255, 250, 240, 0.95);
+    --cp-icon-btn-hover-border: rgb(23, 60, 62, 0.24);
+    --cp-brand-text: #173c3e;
+    --cp-brand-en-text: #3f6f64;
+    --cp-chip-border: 1px solid rgb(23, 60, 62, 0.16);
+    --cp-chip-bg: rgb(255, 250, 240, 0.85);
+    --cp-chip-text: #3f6f64;
+    --cp-chip-text-2: #173c3e;
+    --cp-chip-time-text: #8a5a00;
+    --cp-stage-card-border: 1px solid rgb(23, 60, 62, 0.16);
+    --cp-stage-card-bg: #fffaf0;
+    --cp-stage-card-shadow: 0 22px 50px rgb(80, 60, 20, 0.14);
+    --cp-scene-wrap-bg: #6fc3ea;
+    --cp-overlay-bg: rgb(255, 250, 238, 0.86);
+    --cp-overlay-result-bg: rgb(255, 250, 238, 0.8);
+    --cp-mini-mark-border: 1px solid rgb(191, 83, 27, 0.3);
+    --cp-mini-mark-bg: #e4f5d2;
+    --cp-mini-mark-shadow: 0 10px 22px rgb(80, 60, 20, 0.14);
+    --cp-mini-spark-text: #bf531b;
+    --cp-kicker-text: #8a5a00;
+    --cp-overlay-title-text: #173c3e;
+    --cp-overlay-copy-text: #2c4b47;
+    --cp-howto-chip-border: 1px solid rgb(23, 60, 62, 0.16);
+    --cp-howto-chip-bg: rgb(255, 255, 255, 0.72);
+    --cp-howto-chip-text: #2c4b47;
+    --cp-howto-chip-bg-2: #f7d36e;
+    --cp-howto-chip-text-2: #173c3e;
+    --cp-primary-border: 1px solid #d9763a;
+    --cp-primary-bg: #bf531b;
+    --cp-primary-text: #fffaf0;
+    --cp-primary-shadow: 0 9px 0 #85380f, 0 15px 22px rgb(80, 60, 20, 0.16);
+    --cp-primary-active-shadow: 0 5px 0 #85380f, 0 9px 14px rgb(80, 60, 20, 0.14);
+    --cp-secondary-border: 1px solid rgb(23, 60, 62, 0.2);
+    --cp-secondary-bg: rgb(255, 255, 255, 0.78);
+    --cp-secondary-text: #173c3e;
+    --cp-key-hint-text: #3f6f64;
+    --cp-result-score-text: #3f6f64;
+    --cp-result-score-text-2: #8a5a00;
+    --cp-toast-border: 1px solid rgb(23, 60, 62, 0.18);
+    --cp-toast-bg: #fffaf0;
+    --cp-toast-text: #173c3e;
+    --cp-controls-border-top: 1px solid rgb(23, 60, 62, 0.12);
+    --cp-controls-bg: #fffaf0;
+    --cp-status-line-text: #1f3b3a;
+    --cp-status-dot-bg: #e0a91b;
+    --cp-status-dot-shadow: 0 0 0 4px rgb(224, 169, 27, 0.18);
+    --cp-status-dot-is-good-bg: #4f9e3a;
+    --cp-status-dot-is-good-shadow: 0 0 0 4px rgb(79, 158, 58, 0.18);
+    --cp-status-dot-is-bad-bg: #d9573f;
+    --cp-status-dot-is-bad-shadow: 0 0 0 4px rgb(217, 87, 63, 0.18);
+    --cp-meter-labels-text: #3f6f64;
+    --cp-meter-labels-text-2: #2f6f22;
+    --cp-meter-track-border: 1px solid rgb(23, 60, 62, 0.18);
+    --cp-meter-track-bg: #ebe4d0;
+    --cp-sweet-zone-border-right: 1px solid rgb(23, 60, 62, 0.25);
+    --cp-sweet-zone-border-left: 1px solid rgb(23, 60, 62, 0.25);
+    --cp-sweet-zone-bg: #6cbb5e;
+    --cp-meter-needle-bg: #173c3e;
+    --cp-meter-needle-shadow: 0 0 0 2px rgb(255, 250, 240, 0.9), 0 0 8px rgb(23, 60, 62, 0.35);
+    --cp-meter-needle-border-bottom: 6px solid #173c3e;
+    --cp-pull-btn-border: 1px solid #d9763a;
+    --cp-pull-btn-bg: #bf531b;
+    --cp-pull-btn-text: #fffaf0;
+    --cp-pull-btn-shadow: 0 6px 0 #85380f, 0 10px 17px rgb(80, 60, 20, 0.18);
+    --cp-pull-btn-active-shadow: 0 2px 0 #85380f, 0 6px 11px rgb(80, 60, 20, 0.14);
+    --cp-progress-dot-border: 1px solid rgb(23, 60, 62, 0.16);
+    --cp-progress-dot-bg: rgb(23, 60, 62, 0.05);
+    --cp-progress-dot-text: #3f6f64;
+    --cp-progress-dot-is-done-border: rgb(191, 83, 27, 0.4);
+    --cp-progress-dot-is-done-bg: #e4f5d2;
+    --cp-side-row-text: #3f6f64;
+    --cp-side-row-text-2: #173c3e;
+    --cp-side-title-text: #8a5a00;
+    --cp-side-text-text: #2c4b47;
+    --cp-tip-card-border: rgb(191, 83, 27, 0.22);
+    --cp-footer-hint-text: #3f6f64;
+}
+/* theme:end light */
+
 * {
     margin: 0;
     padding: 0;
@@ -16,8 +184,8 @@ body {
     --tok-success: #6eb857;
     --tok-gold: #f7d36e;
 
-    background: #102d31;
-    color: #f6f3e8;
+    background: var(--cp-body-bg);
+    color: var(--cp-body-text);
     font-family: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
@@ -45,8 +213,8 @@ body {
 }
 
 .cp-icon-btn:hover {
-    background: rgb(255, 255, 255, 0.14);
-    border-color: rgb(255, 255, 255, 0.22);
+    background: var(--cp-icon-btn-hover-bg);
+    border-color: var(--cp-icon-btn-hover-border);
 }
 
 .cp-icon-btn:active { transform: scale(0.92); }
@@ -61,7 +229,7 @@ body {
     display: inline-flex;
     align-items: baseline;
     gap: 8px;
-    color: #fdf8e8;
+    color: var(--cp-brand-text);
     line-height: 1;
     white-space: nowrap;
 }
@@ -73,7 +241,7 @@ body {
 }
 
 .cp-brand-en {
-    color: #a9d5cb;
+    color: var(--cp-brand-en-text);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 10px;
     font-weight: 800;
@@ -93,23 +261,23 @@ body {
     gap: 5px;
     min-width: 66px;
     padding: 5px 9px;
-    border: 1px solid rgb(169, 213, 203, 0.22);
+    border: var(--cp-chip-border);
     border-radius: 999px;
-    background: rgb(255, 255, 255, 0.07);
-    color: #a9d5cb;
+    background: var(--cp-chip-bg);
+    color: var(--cp-chip-text);
     font-size: 10px;
     line-height: 1;
     white-space: nowrap;
 }
 
 .cp-chip b {
-    color: #fff8e6;
+    color: var(--cp-chip-text-2);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
 }
 
-.cp-chip-time b { color: #f7d36e; }
+.cp-chip-time b { color: var(--cp-chip-time-text); }
 
 .cp-main {
     align-items: stretch;
@@ -122,10 +290,10 @@ body {
 .cp-stage-card {
     position: relative;
     width: 100%;
-    border: 1px solid rgb(169, 213, 203, 0.22);
+    border: var(--cp-stage-card-border);
     border-radius: 22px;
-    background: #173c3e;
-    box-shadow: 0 22px 50px rgb(0, 0, 0, 0.26);
+    background: var(--cp-stage-card-bg);
+    box-shadow: var(--cp-stage-card-shadow);
     overflow: hidden;
 }
 
@@ -137,7 +305,7 @@ body {
     width: 100%;
     aspect-ratio: 560 / 520;
     overflow: hidden;
-    background: #6fc3ea;
+    background: var(--cp-scene-wrap-bg);
 }
 
 .cp-scene {
@@ -178,7 +346,7 @@ body {
 
 .cp-overlay {
     inset: 0;
-    background: rgb(23, 60, 62, 0.88);
+    background: var(--cp-overlay-bg);
     color: var(--cp-cream);
     text-align: center;
     backdrop-filter: blur(7px);
@@ -189,7 +357,7 @@ body {
 .cp-overlay[hidden] { display: none; }
 
 .cp-overlay-result {
-    background: rgb(23, 60, 62, 0.78);
+    background: var(--cp-overlay-result-bg);
 }
 
 .cp-mini-mark {
@@ -198,10 +366,10 @@ body {
     place-items: center;
     width: 76px;
     height: 76px;
-    border: 1px solid rgb(247, 211, 110, 0.42);
+    border: var(--cp-mini-mark-border);
     border-radius: 26px;
-    background: #e4f5d2;
-    box-shadow: 0 10px 22px rgb(0, 0, 0, 0.16);
+    background: var(--cp-mini-mark-bg);
+    box-shadow: var(--cp-mini-mark-shadow);
     transform: rotate(-4deg);
 }
 
@@ -215,13 +383,13 @@ body {
     position: absolute;
     top: 8px;
     right: 9px;
-    color: #f08a3c;
+    color: var(--cp-mini-spark-text);
     font-size: 20px;
 }
 
 .cp-kicker,
 .cp-result-stamp {
-    color: #f7d36e;
+    color: var(--cp-kicker-text);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 10px;
     font-weight: 900;
@@ -229,7 +397,7 @@ body {
 }
 
 .cp-overlay-title {
-    color: #fff8e6;
+    color: var(--cp-overlay-title-text);
     font-size: clamp(27px, 6vw, 38px);
     font-weight: 900;
     letter-spacing: 0.04em;
@@ -238,7 +406,7 @@ body {
 
 .cp-overlay-copy {
     max-width: 330px;
-    color: #d8eee0;
+    color: var(--cp-overlay-copy-text);
     font-size: 13px;
     line-height: 1.65;
 }
@@ -259,10 +427,10 @@ body {
     gap: 5px;
     min-width: 0;
     padding: 8px 4px;
-    border: 1px solid rgb(216, 238, 224, 0.18);
+    border: var(--cp-howto-chip-border);
     border-radius: 12px;
-    background: rgb(255, 255, 255, 0.06);
-    color: #d8eee0;
+    background: var(--cp-howto-chip-bg);
+    color: var(--cp-howto-chip-text);
     font-size: 10px;
     line-height: 1.2;
 }
@@ -273,8 +441,8 @@ body {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #f7d36e;
-    color: #173c3e;
+    background: var(--cp-howto-chip-bg-2);
+    color: var(--cp-howto-chip-text-2);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 11px;
 }
@@ -290,27 +458,27 @@ body {
 }
 
 .cp-primary {
-    border: 1px solid #ffc778;
-    background: #f08a3c;
-    color: #fff8e6;
-    box-shadow: 0 9px 0 #b85438, 0 15px 22px rgb(0, 0, 0, 0.18);
+    border: var(--cp-primary-border);
+    background: var(--cp-primary-bg);
+    color: var(--cp-primary-text);
+    box-shadow: var(--cp-primary-shadow);
 }
 
 .cp-primary:hover { filter: brightness(1.06); }
 
 .cp-primary:active {
     transform: translateY(4px);
-    box-shadow: 0 5px 0 #b85438, 0 9px 14px rgb(0, 0, 0, 0.16);
+    box-shadow: var(--cp-primary-active-shadow);
 }
 
 .cp-secondary {
-    border: 1px solid rgb(216, 238, 224, 0.24);
-    background: rgb(255, 255, 255, 0.07);
-    color: #d8eee0;
+    border: var(--cp-secondary-border);
+    background: var(--cp-secondary-bg);
+    color: var(--cp-secondary-text);
 }
 
 .cp-key-hint {
-    color: #9cc9bc;
+    color: var(--cp-key-hint-text);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 10px;
 }
@@ -319,13 +487,13 @@ body {
     display: flex;
     align-items: baseline;
     gap: 9px;
-    color: #a9d5cb;
+    color: var(--cp-result-score-text);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 12px;
 }
 
 .cp-result-score b {
-    color: #f7d36e;
+    color: var(--cp-result-score-text-2);
     font-size: 34px;
     font-variant-numeric: tabular-nums;
 }
@@ -342,9 +510,9 @@ body {
     z-index: 20;
     min-width: 140px;
     padding: 8px 15px;
-    border: 1px solid rgb(255, 248, 230, 0.3);
-    background: #173c3e;
-    color: #fff8e6;
+    border: var(--cp-toast-border);
+    background: var(--cp-toast-bg);
+    color: var(--cp-toast-text);
     font-size: 12px;
     font-weight: 900;
     opacity: 0;
@@ -362,8 +530,8 @@ body {
     align-items: center;
     gap: 12px;
     padding: 13px 15px 15px;
-    border-top: 1px solid rgb(169, 213, 203, 0.18);
-    background: #173c3e;
+    border-top: var(--cp-controls-border-top);
+    background: var(--cp-controls-bg);
 }
 
 .cp-meter-block {
@@ -382,7 +550,7 @@ body {
 .cp-status-line {
     justify-content: flex-start;
     min-height: 22px;
-    color: #d8eee0;
+    color: var(--cp-status-line-text);
     font-size: 12px;
     font-weight: 700;
 }
@@ -392,23 +560,23 @@ body {
     height: 8px;
     flex: 0 0 auto;
     border-radius: 50%;
-    background: #f7d36e;
-    box-shadow: 0 0 0 4px rgb(247, 211, 110, 0.12);
+    background: var(--cp-status-dot-bg);
+    box-shadow: var(--cp-status-dot-shadow);
 }
 
 .cp-status-dot.is-good {
-    background: #83d36d;
-    box-shadow: 0 0 0 4px rgb(131, 211, 109, 0.15);
+    background: var(--cp-status-dot-is-good-bg);
+    box-shadow: var(--cp-status-dot-is-good-shadow);
 }
 
 .cp-status-dot.is-bad {
-    background: #f58b78;
-    box-shadow: 0 0 0 4px rgb(245, 139, 120, 0.15);
+    background: var(--cp-status-dot-is-bad-bg);
+    box-shadow: var(--cp-status-dot-is-bad-shadow);
 }
 
 .cp-meter-labels {
     margin: 5px 0 4px;
-    color: #8db8ac;
+    color: var(--cp-meter-labels-text);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 9px;
     letter-spacing: 0.05em;
@@ -416,7 +584,7 @@ body {
 }
 
 .cp-meter-labels span:last-child {
-    color: #83d36d;
+    color: var(--cp-meter-labels-text-2);
     font-weight: 800;
 }
 
@@ -424,9 +592,9 @@ body {
     position: relative;
     display: block;
     height: 13px;
-    border: 1px solid rgb(216, 238, 224, 0.2);
+    border: var(--cp-meter-track-border);
     border-radius: 999px;
-    background: #0e292d;
+    background: var(--cp-meter-track-bg);
     overflow: hidden;
 }
 
@@ -436,9 +604,9 @@ body {
     bottom: 0;
     left: 38%;
     width: 24%;
-    border-right: 1px solid rgb(255, 248, 230, 0.48);
-    border-left: 1px solid rgb(255, 248, 230, 0.48);
-    background: #5fae57;
+    border-right: var(--cp-sweet-zone-border-right);
+    border-left: var(--cp-sweet-zone-border-left);
+    background: var(--cp-sweet-zone-bg);
 }
 
 .cp-meter-needle {
@@ -448,8 +616,8 @@ body {
     left: 50%;
     width: 4px;
     border-radius: 99px;
-    background: #fff8e6;
-    box-shadow: 0 0 0 2px rgb(23, 60, 62, 0.55), 0 0 10px rgb(255, 248, 230, 0.7);
+    background: var(--cp-meter-needle-bg);
+    box-shadow: var(--cp-meter-needle-shadow);
     transform: translateX(-50%);
     transition: left 0.05s linear;
 }
@@ -461,7 +629,7 @@ body {
     width: 0;
     height: 0;
     border-right: 5px solid transparent;
-    border-bottom: 6px solid #fff8e6;
+    border-bottom: var(--cp-meter-needle-border-bottom);
     border-left: 5px solid transparent;
     transform: translateX(-50%);
 }
@@ -474,15 +642,15 @@ body {
     gap: 7px;
     min-width: 120px;
     min-height: 62px;
-    border: 1px solid #ffc778;
+    border: var(--cp-pull-btn-border);
     border-radius: 16px;
-    background: #f08a3c;
-    color: #fff8e6;
+    background: var(--cp-pull-btn-bg);
+    color: var(--cp-pull-btn-text);
     cursor: pointer;
     font-family: inherit;
     font-size: 15px;
     font-weight: 900;
-    box-shadow: 0 6px 0 #b85438, 0 10px 17px rgb(0, 0, 0, 0.2);
+    box-shadow: var(--cp-pull-btn-shadow);
     touch-action: manipulation;
     user-select: none;
 }
@@ -492,7 +660,7 @@ body {
 .cp-pull-btn:active,
 .cp-pull-btn.is-pressed {
     transform: translateY(4px);
-    box-shadow: 0 2px 0 #b85438, 0 6px 11px rgb(0, 0, 0, 0.16);
+    box-shadow: var(--cp-pull-btn-active-shadow);
 }
 
 .cp-pull-btn:disabled {
@@ -517,41 +685,41 @@ body {
     height: 26px;
     display: grid;
     place-items: center;
-    border: 1px solid rgb(169, 213, 203, 0.24);
+    border: var(--cp-progress-dot-border);
     border-radius: 9px;
-    background: rgb(255, 255, 255, 0.06);
-    color: #8db8ac;
+    background: var(--cp-progress-dot-bg);
+    color: var(--cp-progress-dot-text);
     font-size: 15px;
     filter: saturate(0.35) brightness(0.95);
     opacity: 0.6;
 }
 
 .cp-progress-dot.is-done {
-    border-color: rgb(247, 211, 110, 0.52);
-    background: #e4f5d2;
+    border-color: var(--cp-progress-dot-is-done-border);
+    background: var(--cp-progress-dot-is-done-bg);
     filter: none;
     opacity: 1;
 }
 
 .cp-side-row {
     padding: 3px 0;
-    color: #8db8ac;
+    color: var(--cp-side-row-text);
     font-size: 12px;
 }
 
 .cp-side-row b {
-    color: #fff8e6;
+    color: var(--cp-side-row-text-2);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-variant-numeric: tabular-nums;
 }
 
-.cp-side-title { color: #f7d36e; }
+.cp-side-title { color: var(--cp-side-title-text); }
 
-.cp-side-text { color: #a9d5cb; }
+.cp-side-text { color: var(--cp-side-text-text); }
 
-.cp-tip-card { border-color: rgb(247, 211, 110, 0.2); }
+.cp-tip-card { border-color: var(--cp-tip-card-border); }
 
-.cp-footer-hint { color: #8db8ac; }
+.cp-footer-hint { color: var(--cp-footer-hint-text); }
 
 @keyframes cp-float {
     0%, 100% { transform: translate(0, 0) rotate(0deg); }

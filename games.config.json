@@ -68,7 +68,8 @@
         "frame-budget",
         "leaderboard",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "key": "tetris",
@@ -84,7 +85,8 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#667eea"
+      "themeColor": "#667eea",
+      "themeColorLight": "#eef1f8"
     },
     {
       "id": "tank-battle",
@@ -272,7 +274,8 @@
         "frame-budget",
         "leaderboard",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "scores": {
         "key": "hoop-shot",
@@ -291,7 +294,8 @@
       "manifest": {
         "shortcut": true
       },
-      "themeColor": "#0a0e24"
+      "themeColor": "#0a0e24",
+      "themeColorLight": "#f4eee6"
     },
     {
       "id": "minesweeper",
@@ -1075,7 +1079,8 @@
         "drawer",
         "frame-budget",
         "analytics",
-        "topbar"
+        "topbar",
+        "theme-light"
       ],
       "stage": {
         "w": 560,
@@ -1085,7 +1090,8 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#173c3e"
+      "themeColor": "#173c3e",
+      "themeColorLight": "#f4efe1"
     }
   ]
 }

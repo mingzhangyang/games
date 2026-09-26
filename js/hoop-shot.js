@@ -18,6 +18,32 @@ import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
+import { bindPalette } from './theme.js';
+
+/* 画布调色板：颜色只在 css/hoop-shot.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
+   P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新（背景离屏缓存随之重建）。
+   篮球与篮筐是「实物」：两套主题一致，不进调色板；只有场馆背景、球场线、篮板、球网、瞄准与飘字随主题。
+   *-rgb 变量是「r, g, b」三元组，供需要逐帧改 alpha 的地方拼 rgba()。 */
+const CANVAS_VARS = {
+    bgTop: '--hs-cv-bg-top',
+    bgMid: '--hs-cv-bg-mid',
+    bgBottom: '--hs-cv-bg-bottom',
+    star: '--hs-cv-star',
+    floorTop: '--hs-cv-floor-top',
+    floorBottom: '--hs-cv-floor-bottom',
+    courtLine: '--hs-cv-court-line',
+    courtKey: '--hs-cv-court-key',
+    boardTop: '--hs-cv-board-top',
+    boardBottom: '--hs-cv-board-bottom',
+    boardEdge: '--hs-cv-board-edge',
+    netRgb: '--hs-cv-net-rgb',
+    aimRgb: '--hs-cv-aim-rgb',
+    aimText: '--hs-cv-aim-text',
+    popup: '--hs-cv-popup',
+    popupBig: '--hs-cv-popup-big',
+    spark: '--hs-cv-spark',
+};
+let P = null;
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
@@ -585,7 +611,7 @@ class HoopShotGame {
             ball.rimTouched = true;
             Sfx.clank();
             this.shake = Math.max(this.shake, 3);
-            this.spark(sx, sy, 5, '#dfe7ff');
+            this.spark(sx, sy, 5, P.spark);
         };
 
         // 按轴分解的挡板碰撞：板是墙，只响应各自轴向的入射。
@@ -1063,15 +1089,16 @@ class HoopShotGame {
         c.height = Math.max(1, this.canvas.height);
         const ctx = c.getContext('2d');
         const bg = ctx.createLinearGradient(0, 0, 0, c.height);
-        bg.addColorStop(0, '#0a0e24');
-        bg.addColorStop(0.65, '#101538');
-        bg.addColorStop(1, '#161040');
+        bg.addColorStop(0, P.bgTop);
+        bg.addColorStop(0.65, P.bgMid);
+        bg.addColorStop(1, P.bgBottom);
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, c.width, c.height);
-        const starCount = Math.round((c.width * c.height) / 5600);
+        // 浅色场馆没有星空：--hs-cv-star 为 none 时跳过
+        const starCount = P.star === 'none' ? 0 : Math.round((c.width * c.height) / 5600);
         for (let i = 0; i < starCount; i++) {
             ctx.globalAlpha = 0.12 + Math.random() * 0.55;
-            ctx.fillStyle = '#dfe7ff';
+            ctx.fillStyle = P.star;
             ctx.beginPath();
             ctx.arc(Math.random() * c.width, Math.random() * c.height, Math.random() * 1.4 + 0.3, 0, Math.PI * 2);
             ctx.fill();
@@ -1080,8 +1107,8 @@ class HoopShotGame {
         // 地板（加宽的球场木纹色调暗色带）
         const floorTop = c.height - FLOOR_H * this.scale;
         const floor = ctx.createLinearGradient(0, floorTop, 0, c.height);
-        floor.addColorStop(0, 'rgba(216,150,84,0.16)');
-        floor.addColorStop(1, 'rgba(216,150,84,0.34)');
+        floor.addColorStop(0, P.floorTop);
+        floor.addColorStop(1, P.floorBottom);
         ctx.fillStyle = floor;
         ctx.fillRect(0, floorTop, c.width, FLOOR_H * this.scale);
         this.starfield = c;
@@ -1098,14 +1125,14 @@ class HoopShotGame {
         ctx.clip();
 
         // 三分弧：以篮筐为中心、向下凸向玩家的大弧线
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.strokeStyle = P.courtLine;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(hx, hy, (WORLD_H - hy) + 6, 0, Math.PI * 2);
         ctx.stroke();
 
         // 罚球圈：主题橙点缀的半圆弧
-        ctx.strokeStyle = 'rgba(255,140,90,0.3)';
+        ctx.strokeStyle = P.courtKey;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(hx, floorTop + 36, 78, 0, Math.PI * 2);
@@ -1134,7 +1161,7 @@ class HoopShotGame {
         if (this.starfield) {
             ctx.drawImage(this.starfield, -shakeX * this.scale, -shakeY * this.scale, WORLD_W, WORLD_H);
         } else {
-            ctx.fillStyle = '#0a0e24';
+            ctx.fillStyle = P.bgTop;
             ctx.fillRect(0, 0, WORLD_W, WORLD_H);
         }
 
@@ -1162,7 +1189,7 @@ class HoopShotGame {
             ctx.font = p.big
                 ? '800 26px "Segoe UI", system-ui, sans-serif'
                 : '800 19px "Segoe UI", system-ui, sans-serif';
-            ctx.fillStyle = p.big ? '#ffd34d' : '#e8ecff';
+            ctx.fillStyle = p.big ? P.popupBig : P.popup;
             ctx.fillText(p.text, p.x, p.y);
         }
         ctx.globalAlpha = 1;
@@ -1178,11 +1205,11 @@ class HoopShotGame {
         // 篮板
         ctx.save();
         const bbGrad = ctx.createLinearGradient(bbX, rimY - BB_H, bbX + BB_W, rimY);
-        bbGrad.addColorStop(0, 'rgba(226,232,255,0.85)');
-        bbGrad.addColorStop(1, 'rgba(170,185,235,0.7)');
+        bbGrad.addColorStop(0, P.boardTop);
+        bbGrad.addColorStop(1, P.boardBottom);
         ctx.fillStyle = bbGrad;
         ctx.fillRect(bbX, rimY - BB_H, BB_W, BB_H + 12);
-        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.strokeStyle = P.boardEdge;
         ctx.lineWidth = 1.5;
         ctx.strokeRect(bbX, rimY - BB_H, BB_W, BB_H + 12);
         // 篮板小方框标记
@@ -1272,7 +1299,7 @@ class HoopShotGame {
         const segs = 5;
 
         ctx.save();
-        ctx.strokeStyle = `rgba(230,236,255,${frontHalf ? 0.75 : 0.38})`;
+        ctx.strokeStyle = `rgba(${P.netRgb}, ${frontHalf ? 0.75 : 0.38})`;
         ctx.lineWidth = 1.2;
         // 纵向线
         for (let i = 0; i <= segs; i++) {
@@ -1376,7 +1403,7 @@ class HoopShotGame {
         ctx.save();
         ctx.translate(BALL_X, BALL_Y);
         ctx.rotate(angle);
-        ctx.strokeStyle = `rgba(255,211,77,${0.45 + power * 0.4})`;
+        ctx.strokeStyle = `rgba(${P.aimRgb}, ${0.45 + power * 0.4})`;
         ctx.lineWidth = 4;
         ctx.lineCap = 'round';
         ctx.beginPath();
@@ -1384,7 +1411,7 @@ class HoopShotGame {
         ctx.lineTo(BALL_R + 4 + arrowLen, 0);
         ctx.stroke();
         // 箭头
-        ctx.fillStyle = `rgba(255,211,77,${0.55 + power * 0.4})`;
+        ctx.fillStyle = `rgba(${P.aimRgb}, ${0.55 + power * 0.4})`;
         ctx.beginPath();
         ctx.moveTo(BALL_R + 10 + arrowLen, 0);
         ctx.lineTo(BALL_R + arrowLen, -8);
@@ -1397,7 +1424,7 @@ class HoopShotGame {
         ctx.save();
         ctx.textAlign = 'center';
         ctx.font = '700 13px "Segoe UI", system-ui, sans-serif';
-        ctx.fillStyle = 'rgba(232,236,255,0.75)';
+        ctx.fillStyle = P.aimText;
         ctx.fillText(`${Math.round(power * 100)}%`, BALL_X, BALL_Y - BALL_R - 16);
         ctx.restore();
 
@@ -1408,7 +1435,7 @@ class HoopShotGame {
         let pvy = (dy / flen) * fspeed;
         let px = BALL_X, py = BALL_Y;
         ctx.save();
-        ctx.fillStyle = '#ffd34d';
+        ctx.fillStyle = `rgb(${P.aimRgb})`;
         for (let i = 0; i < PREVIEW_STEPS; i++) {
             pvy += GRAVITY * PREVIEW_DT;
             px += pvx * PREVIEW_DT;
@@ -1470,6 +1497,16 @@ class HoopShotGame {
 }
 
 onReady(() => {
+    // 背景（场馆 + 星空 + 地板）画在离屏缓存里，主题切换必须重建；
+    // 空闲时（开始菜单 / 暂停 / 结算）rAF 已停，不会有下一帧，所以重建后要主动重画一次
+    P = bindPalette(CANVAS_VARS, {
+        onChange: () => {
+            const game = window.hoopShotGame;
+            if (!game) return;
+            game.buildStarfield();
+            game.render();
+        },
+    });
     window.hoopShotGame = new HoopShotGame();
 
     // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
