@@ -788,6 +788,22 @@ export function createRenderer(canvas, opts = {}) {
         /* ── 近处萤火虫：画在前景植被之前（远的先画） ── */
         for (const f of order) if (!behind(f)) drawFly(f, brights[f.id], time);
 
+        /* ── 键盘焦点环（只在键盘 / 读屏操作时出现）：与触控热区同半径的虚线圈 ── */
+        if (frame.focusId >= 0 && sim.flies[frame.focusId]) {
+            const p = worldToScreen(sim.flies[frame.focusId].x, sim.flies[frame.focusId].y);
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(10,14,30,0.85)';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 23, 0, TAU);
+            ctx.stroke();
+            ctx.lineDashOffset = 4;
+            ctx.strokeStyle = 'rgba(255,236,190,0.95)';
+            ctx.stroke();
+            ctx.restore();
+        }
+
         /* ── 干预扩散圆：被点的虫周围两圈快速的小涟漪（概念图）+ 一圈走到真实影响半径的细线 ── */
         for (const pl of frame.pulses || []) {
             const p = worldToScreen(pl.x, pl.y);

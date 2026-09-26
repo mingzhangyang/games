@@ -83,7 +83,7 @@ for (const [cap, probe] of Object.entries(PROBES)) {
 
 /* ── 2b) layout 字段 ⟺ 页面骨架 ──
    layout 是互斥的布局类型（缺省 standard），不是 cap。取值必须合法，且与页面事实双向一致：
-   声明 immersive ⟺ HTML 用了 game-shell--immersive + game-stage--immersive；
+   声明 immersive ⟺ HTML 带 game-shell--immersive ⟺ HTML 带 game-stage--immersive ⟺ 入口 bindFrame({ layout: 'immersive' })（逐项双向）；
    immersive 页不得同时挂只对标准骨架有意义的 cap（sidebar / drawer / frame-budget）。 */
 console.log('\n▶ layout ⟺ 页面骨架');
 const LAYOUTS = ['standard', 'immersive'];
@@ -92,13 +92,23 @@ for (const g of games) {
     const layout = registry.layoutOf(g);
     ok(LAYOUTS.includes(layout), `${g.id}: layout "${layout}" 合法`, `允许 ${LAYOUTS.join(' / ')}`);
     const html = read(g.href);
-    const immersiveHtml = /game-shell--immersive/.test(html) && /game-stage--immersive/.test(html);
-    ok(immersiveHtml === (layout === 'immersive'), `${g.id}: layout=${layout} 与 HTML 骨架一致`,
-        immersiveHtml ? 'HTML 是 immersive 骨架但注册表没声明' : '注册表声明 immersive 但 HTML 缺 game-shell--immersive / game-stage--immersive');
-    if (layout === 'immersive') {
+    const isImmersive = layout === 'immersive';
+    // 两个类分开判：只带其中一个的页面是残缺骨架，无论注册表怎么写都要红（PR #20 评审）
+    const hasShell = /game-shell--immersive/.test(html);
+    const hasStage = /game-stage--immersive/.test(html);
+    ok(hasShell === hasStage, `${g.id}: game-shell--immersive 与 game-stage--immersive 成对出现`,
+        `shell=${hasShell} stage=${hasStage}`);
+    ok(hasShell === isImmersive, `${g.id}: layout=${layout} 与 HTML shell 骨架一致`,
+        hasShell ? 'HTML 带 game-shell--immersive 但注册表没声明 immersive' : '注册表声明 immersive 但 HTML 缺 game-shell--immersive');
+    ok(hasStage === isImmersive, `${g.id}: layout=${layout} 与 HTML stage 骨架一致`,
+        hasStage ? 'HTML 带 game-stage--immersive 但注册表没声明 immersive' : '注册表声明 immersive 但 HTML 缺 game-stage--immersive');
+    // bindFrame 的 immersive 模式同样双向：标准页误用它也要红（会漏测页脚、改 body 标记）
+    const bindsImmersive = /bindFrame\(\{[^}]*layout:\s*'immersive'/.test(read(g.entry));
+    ok(bindsImmersive === isImmersive, `${g.id}: 入口 bindFrame({ layout: 'immersive' }) 与 layout=${layout} 一致`,
+        bindsImmersive ? '标准页的入口调用了 bindFrame({ layout: \'immersive\' })' : 'immersive 页的入口没有以 bindFrame({ layout: \'immersive\' }) 实测 chrome');
+    if (isImmersive) {
         const bad = (g.caps || []).filter(c => STANDARD_ONLY_CAPS.includes(c));
         ok(bad.length === 0, `${g.id}: immersive 页不挂标准骨架专属 cap`, bad.join(', '));
-        ok(/bindFrame\(\{[^}]*layout:\s*'immersive'/.test(read(g.entry)), `${g.id}: 入口以 bindFrame({ layout: 'immersive' }) 实测 chrome`);
     }
 }
 

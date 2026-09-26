@@ -98,6 +98,14 @@ body.fs-body {
     cursor: pointer;
 }
 
+/* 键盘聚焦到场景时的外框（选中的萤火虫另有画布里的虚线焦点环） */
+.fs-canvas:focus { outline: none; }
+
+.fs-canvas:focus-visible {
+    outline: 2px solid rgb(255, 214, 140, 0.7);
+    outline-offset: -3px;
+}
+
 /* 舞台比视口窄时（平板 / 桌面），两侧柔和过渡进 body 的夜色，不留硬边 */
 @media (width >= 660px) {
     .fs-scene {

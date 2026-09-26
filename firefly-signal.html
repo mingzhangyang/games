@@ -60,7 +60,7 @@
                 <!-- 画布包一层：开始菜单期间舞台让位给菜单高度（layout.css 的 .game-overlay--menu），
                      那条规则会把舞台的直接子 canvas 设为 height:auto —— 包起来就不受影响 -->
                 <div class="fs-scene" id="fs-scene">
-                    <canvas class="fs-canvas" id="fs-canvas" role="img" aria-label="A midsummer meadow full of fireflies"></canvas>
+                    <canvas class="fs-canvas" id="fs-canvas" tabindex="0" role="application" aria-roledescription="firefly meadow" aria-label="A midsummer meadow full of fireflies"></canvas>
                 </div>
 
                 <!-- HUD：悬浮在天空区域，无面板（概念图：左上同步度圆环 / 右上剩余干预） -->
@@ -83,6 +83,8 @@
                     </div>
                 </div>
                 <p class="fs-coach hidden" id="fs-coach" aria-live="polite"></p>
+                <!-- 读屏播报：键盘选中 / 发信号 / 冷却 / 同步度（视觉隐藏） -->
+                <p class="sr-only" id="fs-sr-status" aria-live="polite" aria-atomic="true"></p>
 
                 <!-- 开始菜单 -->
                 <div class="fs-overlay fs-start game-overlay game-overlay--menu" id="fs-start">

@@ -80,6 +80,8 @@ export class FireflyGame {
         this.result = null;
         this.resultAt = 0;
         this.firstTapDone = false;
+        this.kbFocus = -1;          // 键盘 / 读屏：当前选中的萤火虫
+        this.kbActive = false;      // 只有键盘在用时才画焦点环（鼠标 / 触屏用户看不到）
 
         this.renderer.setScene(LEVELS[0].seed);
         this.bindInput();
@@ -109,6 +111,7 @@ export class FireflyGame {
         this.displayHarmony = this.sim.harmony;
         this.lastTapAt = -1e9;
         this.firstTapDone = false;
+        this.kbFocus = -1;
         this.audio.reset();
         this.dom.start.classList.add('hidden');
         this.dom.result.classList.add('hidden');
@@ -301,6 +304,7 @@ export class FireflyGame {
         c.addEventListener('pointerdown', e => {
             e.preventDefault();
             this.audio.prime();
+            this.kbActive = false;
             const r = c.getBoundingClientRect();
             this.tapAt(e.clientX - r.left, e.clientY - r.top, performance.now());
         });
@@ -308,6 +312,103 @@ export class FireflyGame {
         c.addEventListener('dblclick', e => e.preventDefault());
         c.addEventListener('contextmenu', e => e.preventDefault());
         c.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+
+        // 键盘 / 读屏路径（PR #20 评审）：画布可聚焦，方向键在萤火虫之间移动焦点环，
+        // Enter / 空格发信号（与点击同一条干预路径、同样的去抖与冷却），H 朗读同步度与剩余次数。
+        c.addEventListener('focus', () => {
+            this.kbActive = true;
+            if (this.state === 'playing') {
+                if (this.kbFocus < 0) this.kbFocus = this.nearestTo(0.5, 0.75);
+                this.announceFocus(true);
+            }
+            this.render();
+        });
+        c.addEventListener('blur', () => { this.kbActive = false; this.render(); });
+        c.addEventListener('keydown', e => this.onKey(e));
+    }
+
+    onKey(e) {
+        if (this.state !== 'playing' || this.paused) return;
+        const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+        if (dirs[e.key]) {
+            e.preventDefault();
+            this.kbActive = true;
+            this.audio.prime();
+            this.kbFocus = this.kbFocus < 0 ? this.nearestTo(0.5, 0.75) : this.step(this.kbFocus, dirs[e.key]);
+            this.announceFocus(false);
+            this.render();
+        } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.kbActive = true;
+            this.audio.prime();
+            if (this.kbFocus < 0) { this.kbFocus = this.nearestTo(0.5, 0.75); this.announceFocus(false); this.render(); return; }
+            this.interveneOn(this.kbFocus, performance.now());
+        } else if (e.key === 'h' || e.key === 'H') {
+            e.preventDefault();
+            this.announceStatus();
+        }
+    }
+
+    /** 离画布相对坐标 (fx, fy) 最近的虫 */
+    nearestTo(fx, fy) {
+        const { w, h } = this.renderer.size;
+        let best = 0, bestD = Infinity;
+        for (const f of this.sim.flies) {
+            const p = this.renderer.screenOf(f);
+            const d = Math.hypot(p.x - w * fx, p.y - h * fy);
+            if (d < bestD) { bestD = d; best = f.id; }
+        }
+        return best;
+    }
+
+    /** 从 id 出发朝 dir 方向找下一只：在 ±60° 扇形里，偏离轴线的距离加倍计分；没有就原地不动 */
+    step(id, [dx, dy]) {
+        const o = this.renderer.screenOf(this.sim.flies[id]);
+        let best = id, bestScore = Infinity;
+        for (const f of this.sim.flies) {
+            if (f.id === id) continue;
+            const p = this.renderer.screenOf(f);
+            const vx = p.x - o.x, vy = p.y - o.y;
+            const along = vx * dx + vy * dy;
+            const across = Math.abs(vx * dy - vy * dx);
+            if (along <= 0 || across > along * 1.8) continue;
+            const score = along + across * 2;
+            if (score < bestScore) { bestScore = score; best = f.id; }
+        }
+        return best;
+    }
+
+    say(text) {
+        if (!this.dom.srStatus) return;
+        // 同一句话重复播报时先清空，读屏才会再读一次
+        this.dom.srStatus.textContent = '';
+        this.dom.srStatus.textContent = text;
+    }
+
+    fmt(str, vars) {
+        return str.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+    }
+
+    announceFocus(withHelp) {
+        const t = this.t();
+        const f = this.sim.flies[this.kbFocus];
+        if (!f) return;
+        const { w, h } = this.renderer.size;
+        const p = this.renderer.screenOf(f);
+        const col = p.x < w / 3 ? t.srLeft : p.x > (w * 2) / 3 ? t.srRight : t.srCenter;
+        const row = p.y < h * 0.55 ? t.srFar : p.y > h * 0.8 ? t.srNear : t.srMiddle;
+        const glowing = this.sim.tick - f.lastFlash < 24 ? t.srGlowing : '';   // 0.4 秒内闪过
+        const line = this.fmt(t.srFocus, { i: f.id + 1, n: this.sim.flies.length, where: `${row}${t.srSep}${col}`, glow: glowing });
+        this.say(withHelp ? `${t.srHelp} ${line}` : line);
+    }
+
+    announceStatus() {
+        const t = this.t();
+        const s = this.sim;
+        this.say(this.fmt(t.srStatus, {
+            n: Math.round(s.harmony * 100), t: Math.round(s.target * 100),
+            left: s.remaining(), max: s.maxInterventions,
+        }));
     }
 
     /** 屏幕坐标（CSS 像素，相对画布）→ 最近的虫（在 HIT_RADIUS 内），没有则 -1 */
@@ -323,10 +424,20 @@ export class FireflyGame {
 
     tapAt(x, y, nowMs) {
         if (this.state !== 'playing' || this.paused) return false;
-        if (nowMs - this.lastTapAt < TAP_DEBOUNCE_MS) return false;
         const id = this.pick(x, y);
         if (id < 0) return false;
-        if (!this.sim.canIntervene()) return false;
+        return this.interveneOn(id, nowMs);
+    }
+
+    /** 点击与键盘共用的干预路径：去抖 → 冷却 / 次数 → 模拟 → 扩散圆 / 声音 / HUD / 播报 */
+    interveneOn(id, nowMs) {
+        if (this.state !== 'playing' || this.paused) return false;
+        if (nowMs - this.lastTapAt < TAP_DEBOUNCE_MS) return false;
+        const t = this.t();
+        if (!this.sim.canIntervene()) {
+            if (this.kbActive) this.say(this.sim.remaining() === 0 ? t.srNone : t.srWait);
+            return false;
+        }
         this.lastTapAt = nowMs;
         this.sim.intervene(id);
         for (const p of this.sim.pulses) this.pulses.push({ x: p.x, y: p.y, r: p.r, age: 0 });
@@ -336,6 +447,11 @@ export class FireflyGame {
             this.setCoach('afterFirst');
         }
         this.updateHud(true);
+        if (this.kbActive) {
+            this.say(this.fmt(t.srSent, {
+                n: Math.round(this.sim.harmony * 100), left: this.sim.remaining(), max: this.sim.maxInterventions,
+            }));
+        }
         if (this.manual) this.render();
         return true;
     }
@@ -449,6 +565,7 @@ export class FireflyGame {
             pulses: this.pulses,
             climax: e ? e.climax : 0,
             lightBoost: e ? e.boost : 1,
+            focusId: this.kbActive && this.state === 'playing' ? this.kbFocus : -1,
         });
         if (this.state === 'playing') {
             this.updateHud(false, dt);

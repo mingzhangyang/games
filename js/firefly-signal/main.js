@@ -38,8 +38,23 @@ const LANGUAGES = makeText({
         next: 'Continue',
         retry: 'Retry',
         menu: 'Menu',
-        hint: 'Tap a firefly to send a signal · its ring shows who will follow',
-        canvasLabel: 'A midsummer meadow full of fireflies',
+        hint: 'Tap a firefly to send a signal · its ring shows who will follow · keys: arrows + Enter',
+        canvasLabel: 'A midsummer meadow full of fireflies. Arrow keys choose a firefly, Enter or Space sends a signal, H reads the harmony.',
+        roleDescription: 'firefly meadow',
+        srHelp: 'Arrow keys choose a firefly, Enter or Space sends a signal, H reads the harmony.',
+        srFocus: 'Firefly {i} of {n}: {where}{glow}.',
+        srLeft: 'left',
+        srCenter: 'centre',
+        srRight: 'right',
+        srFar: 'far',
+        srMiddle: 'middle',
+        srNear: 'near',
+        srSep: ', ',
+        srGlowing: ', glowing',
+        srSent: 'Signal sent. Harmony {n}%. {left} of {max} signals left.',
+        srWait: 'The last signal is still spreading. Try again in a moment.',
+        srNone: 'No signals left.',
+        srStatus: 'Harmony {n}%, target {t}%. {left} of {max} signals left.',
         levels: {
             'first-light': { name: 'First Light', desc: 'Two small groups, two rhythms.' },
             'two-meadows': { name: 'Two Meadows', desc: 'Some fireflies sit in between.' },
@@ -85,8 +100,23 @@ const LANGUAGES = makeText({
         next: '继续',
         retry: '重来',
         menu: '返回',
-        hint: '点一只萤火虫进行干预 · 光圈就是会跟随它的范围',
-        canvasLabel: '满是萤火虫的仲夏夜草地',
+        hint: '点一只萤火虫进行干预 · 光圈就是会跟随它的范围 · 键盘：方向键 + 回车',
+        canvasLabel: '满是萤火虫的仲夏夜草地。方向键选择萤火虫，回车或空格发出干预，H 键朗读同步度。',
+        roleDescription: '萤火虫草地',
+        srHelp: '方向键选择萤火虫，回车或空格发出干预，H 键朗读同步度。',
+        srFocus: '第 {i} 只，共 {n} 只：{where}{glow}。',
+        srLeft: '左侧',
+        srCenter: '中间',
+        srRight: '右侧',
+        srFar: '远处',
+        srMiddle: '中景',
+        srNear: '近处',
+        srSep: '、',
+        srGlowing: '，正在发光',
+        srSent: '已干预。同步度 {n}%，剩余 {left}/{max} 次。',
+        srWait: '上一次的信号还在扩散，稍等再试。',
+        srNone: '干预次数已用完。',
+        srStatus: '同步度 {n}%，目标 {t}%，剩余干预 {left}/{max} 次。',
         levels: {
             'first-light': { name: '初光', desc: '两小群，两种节奏。' },
             'two-meadows': { name: '两片草地', desc: '有几只停在两群中间。' },
@@ -161,6 +191,7 @@ function applyLanguage(game) {
     $('fs-harmony-label').textContent = t.harmonyShort;
     $('fs-signals-label').textContent = t.signalsLabel;
     $('fs-canvas').setAttribute('aria-label', t.canvasLabel);
+    $('fs-canvas').setAttribute('aria-roledescription', t.roleDescription);
     const restart = $('fs-btn-restart');
     restart.title = t.restart;
     restart.setAttribute('aria-label', t.restart);
@@ -192,6 +223,7 @@ onReady(() => {
         levelPill: $('fs-level-pill'),
         btnRestart: $('fs-btn-restart'),
         backdrop: $('fs-backdrop'),
+        srStatus: $('fs-sr-status'),
     }, getText, { track });
     // 测试钩子（verify-immersive / smoke-firefly-signal 用）：只读快照 + 公开方法，不暴露模拟内部可写引用
     window.__fireflySignal = game;

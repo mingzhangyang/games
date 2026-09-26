@@ -175,7 +175,38 @@ check(await G(() => window.scrollY) === scrollBefore, '⑤ 在舞台上拖动不
 check(await G(() => getComputedStyle(document.getElementById('fs-stage')).touchAction) === 'none', '⑤ 舞台 touch-action:none');
 check(await G(() => getComputedStyle(document.getElementById('fs-stage')).userSelect) === 'none', '⑤ 舞台 user-select:none');
 
-/* ⑦ resize / 转屏 */
+/* ⑧ 键盘 / 读屏路径（PR #20 评审）：画布可聚焦，方向键移动焦点，Enter 干预，冷却与状态有播报 */
+await G(() => window.__fireflySignal.startLevel(1, { manual: true }));
+await advance(60);
+const a11y = await G(() => {
+    const c = document.getElementById('fs-canvas');
+    return { tab: c.tabIndex, role: c.getAttribute('role'), label: c.getAttribute('aria-label') || '' };
+});
+check(a11y.tab === 0 && a11y.role === 'application', '⑧ 画布可聚焦（tabindex=0, role=application）', JSON.stringify(a11y));
+check(/Arrow keys/.test(a11y.label), '⑧ 画布 aria-label 说明键盘操作', a11y.label);
+const sr = () => G(() => document.getElementById('fs-sr-status').textContent);
+await page.focus('#fs-canvas');
+await sleep(50);
+check(/^Arrow keys.*Firefly \d+ of 18/.test(await sr()), '⑧ 聚焦后播报操作说明与当前萤火虫', await sr());
+const f0 = await G(() => window.__fireflySignal.kbFocus);
+await page.keyboard.press('ArrowRight');
+const f1 = await G(() => window.__fireflySignal.kbFocus);
+check(f1 !== f0 && f1 >= 0, '⑧ 方向键移动到另一只萤火虫', `${f0} → ${f1}`);
+const p0 = await flyPos(f0), p1 = await flyPos(f1);
+check(p1.x > p0.x, '⑧ →键选中的虫在右边', `${p0.x.toFixed(0)} → ${p1.x.toFixed(0)}`);
+check(/^Firefly \d+ of 18: /.test(await sr()), '⑧ 移动后播报新位置', await sr());
+await page.keyboard.press('Enter');
+check((await snap()).used === 1, '⑧ Enter 对选中的虫干预（used +1）');
+check(/^Signal sent\. Harmony \d+%\. 4 of 5 signals left\.$/.test(await sr()), '⑧ 干预结果播报（无占位符泄漏）', await sr());
+await sleep(360);
+await page.keyboard.press(' ');
+check((await snap()).used === 1, '⑧ 冷却中空格不扣次数');
+check(/still spreading/.test(await sr()), '⑧ 冷却中有播报', await sr());
+await page.keyboard.press('h');
+check(/^Harmony \d+%, target 88%\. 4 of 5 signals left\.$/.test(await sr()), '⑧ H 键朗读同步度与剩余次数', await sr());
+await G(() => document.getElementById('fs-canvas').blur());
+
+
 for (const [w, h] of [[844, 390], [430, 932], [390, 844]]) {
     await page.setViewport({ width: w, height: h, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
     await sleep(350);
