@@ -77,6 +77,8 @@ body.fs-body {
     background-repeat: repeat-x;
     background-size: 1px 100%;
     pointer-events: none;
+    /* 两侧延展压暗一点，让视线留在舞台上 */
+    filter: brightness(0.62) saturate(0.85);
 }
 
 .fs-shell {

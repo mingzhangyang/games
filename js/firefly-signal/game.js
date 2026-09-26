@@ -55,7 +55,11 @@ export class FireflyGame {
         this.t = getText;
         this.track = typeof hooks.track === 'function' ? hooks.track : () => {};
         this.reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-        this.renderer = createRenderer(dom.canvas, { reducedMotion: this.reduced });
+        this.renderer = createRenderer(dom.canvas, {
+            reducedMotion: this.reduced,
+            // 手绘图层异步加载完成：重画一帧（循环可能已停）并刷新桌面两侧的夜色延展
+            onLayersReady: () => { this.render(); this.paintBackdrop(); },
+        });
         this.audio = createFireflyAudio();
         this.state = 'menu';
         this.levelIndex = 0;
