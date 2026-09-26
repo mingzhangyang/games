@@ -2,6 +2,8 @@
 
 /* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
+    --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
+    --ix-card-icon--carrot-pull-text: #f08a3c;
     --ix-tag--dark-only-text: #e2e8f0;
     --ix-tag--dark-only-bg: #1e2436;
     --ix-body-bg: radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
@@ -80,6 +82,8 @@
 
 /* theme:begin light */
 :root[data-theme="light"] {
+    --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
+    --ix-card-icon--carrot-pull-text: #bd5a0f;
     --ix-tag--dark-only-text: #e2e8f0;
     --ix-tag--dark-only-bg: #1e2436;
     --ix-body-bg: radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
@@ -311,6 +315,7 @@
         .card-icon--crystal-bloom { background: var(--ix-card-icon--crystal-bloom-bg); color: var(--ix-card-icon--crystal-bloom-text); }
         .card-icon--flame-verse { background: var(--ix-card-icon--flame-verse-bg); color: var(--ix-card-icon--flame-verse-text); }
 .card-icon--ripple-duet { background: var(--ix-card-icon--ripple-duet-bg); color: var(--ix-card-icon--ripple-duet-text); }
+.card-icon--carrot-pull { background: var(--ix-card-icon--carrot-pull-bg); color: var(--ix-card-icon--carrot-pull-text); }
 
         .card-title {
             font-size: 1em;

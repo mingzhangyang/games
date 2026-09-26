@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-support" content="dark">
+    <meta name="theme-color" content="#173c3e">
+    <script src="/theme-boot.js"></script>
+    <meta name="description" content="拔萝卜 Carrot Pull — a playful garden rhythm game. Press in the sweet spot, build a pulling streak, and help a tiny mole harvest six giant carrots before time runs out.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/carrot-pull.html">
+    <meta property="og:title" content="拔萝卜 Carrot Pull — Garden Rhythm Game">
+    <meta property="og:description" content="Find the sweet spot, pull in rhythm, and harvest the garden.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-carrot-pull.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/carrot-pull.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="拔萝卜 Carrot Pull — Garden Rhythm Game">
+    <meta name="twitter:description" content="Pull in rhythm, keep your streak, and harvest six giant carrots.">
+    <meta name="twitter:image" content="assets/seo/og-carrot-pull.svg">
+    <title>拔萝卜 Carrot Pull — Garden Rhythm Game</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173c3e'/%3E%3Cpath d='M32 38c-6-3-9-8-8-14 5 1 9 4 10 10 1-7 5-11 11-12 1 7-3 13-10 16v12h-6V38Z' fill='%235fae57'/%3E%3Cpath d='M26 34c8-1 13 2 13 9 0 7-5 13-11 13s-10-6-10-13c0-5 3-8 8-9Z' fill='%23f08a3c'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/carrot-pull.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="cp-shell game-shell">
+        <header class="cp-topbar game-topbar">
+            <div class="cp-topbar-lead game-topbar-group">
+                <button data-chrome="home" class="cp-icon-btn game-icon-btn" id="cp-btn-home" title="Home" aria-label="Home">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
+                </button>
+            </div>
+            <div class="cp-topbar-center game-topbar-center">
+                <div class="cp-brand">
+                    <span class="cp-brand-zh" id="cp-brand-zh">拔萝卜</span>
+                    <span class="cp-brand-en">CARROT PULL</span>
+                </div>
+                <div class="cp-hud-row" id="cp-hud-row" aria-label="Game status">
+                    <span class="cp-chip"><span id="cp-round-label">Round</span><b id="cp-round">0/6</b></span>
+                    <span class="cp-chip"><span id="cp-score-label">Score</span><b id="cp-score">0</b></span>
+                    <span class="cp-chip cp-chip-time"><span id="cp-time-label">Time</span><b id="cp-time">45</b></span>
+                </div>
+            </div>
+            <div class="cp-topbar-actions game-topbar-group">
+                <button class="cp-icon-btn game-icon-btn" id="cp-reset-btn" title="Reset" aria-label="Reset">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg>
+                </button>
+                <button data-chrome="stats" type="button" class="cp-icon-btn game-icon-btn cp-stats-btn game-stats-btn" id="cpStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="cpStatsDrawer"></button>
+                <button data-chrome="sound" type="button" class="cp-icon-btn game-icon-btn" id="cp-mute-btn" aria-label="Sound"></button>
+            </div>
+        </header>
+
+        <main class="cp-main game-main">
+            <section class="cp-stage game-stage game-stage--fill" id="cp-stage" aria-labelledby="cp-scene-heading">
+                <h1 id="cp-scene-heading" class="sr-only">拔萝卜 Carrot Pull</h1>
+                <div class="cp-stage-card">
+                    <div class="cp-scene-wrap">
+                        <svg class="cp-scene" id="cp-scene" viewBox="0 0 560 720" role="img" aria-labelledby="cp-scene-title cp-scene-desc" xmlns="http://www.w3.org/2000/svg">
+                            <title id="cp-scene-title">A laughing girl in a straw hat and a happy mole pull a giant carrot out of a garden bed</title>
+                            <desc id="cp-scene-desc">A sunny garden with rolling hills, a farmhouse, a wooden fence, daisies and raised vegetable beds. A girl in teal overalls and yellow boots leans back holding the carrot leaves while a mole pops out of the soil to help.</desc>
+                            <defs>
+                                <linearGradient id="cp-sky" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0" stop-color="#6fc3ea"/>
+                                    <stop offset=".62" stop-color="#bfe7f3"/>
+                                    <stop offset="1" stop-color="#e6f6ec"/>
+                                </linearGradient>
+                                <linearGradient id="cp-carrot-grad" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0" stop-color="#ffab4a"/>
+                                    <stop offset=".55" stop-color="#f28a2e"/>
+                                    <stop offset="1" stop-color="#d9651d"/>
+                                </linearGradient>
+                                <linearGradient id="cp-soil-grad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0" stop-color="#8a5431"/>
+                                    <stop offset="1" stop-color="#6a3e24"/>
+                                </linearGradient>
+                                <symbol id="cp-leaf" viewBox="-50 -130 100 132" overflow="visible">
+                                    <path d="M0 0V-54" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+                                    <g transform="translate(0 -22) scale(.88)">
+                                    <path d="M0-28C-22-34-40-50-38-68-52-72-54-92-40-98-46-114-30-128-15-120-10-134 10-134 15-120 30-128 46-114 40-98 54-92 52-72 38-68 40-50 22-34 0-28Z" stroke="#3d7a2e" stroke-width="2.5" stroke-linejoin="round"/>
+                                    <path d="M0-30V-122M0-58-24-76M0-58 24-76M0-86-20-104M0-86 20-104" fill="none" stroke="#c4ea8a" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
+                                    </g>
+                                </symbol>
+                                <symbol id="cp-daisy" viewBox="-12 -12 24 24" overflow="visible">
+                                    <g fill="#fffdf5" stroke="#d9d2bd" stroke-width=".8">
+                                        <ellipse cy="-7" rx="3.2" ry="5.5"/><ellipse cy="7" rx="3.2" ry="5.5"/><ellipse cx="-7" rx="5.5" ry="3.2"/><ellipse cx="7" rx="5.5" ry="3.2"/>
+                                        <ellipse cx="-5" cy="-5" rx="3" ry="5" transform="rotate(-45 -5 -5)"/><ellipse cx="5" cy="5" rx="3" ry="5" transform="rotate(-45 5 5)"/>
+                                        <ellipse cx="5" cy="-5" rx="3" ry="5" transform="rotate(45 5 -5)"/><ellipse cx="-5" cy="5" rx="3" ry="5" transform="rotate(45 -5 5)"/>
+                                    </g>
+                                    <circle r="3.6" fill="#f6c33b" stroke="#d99a1e" stroke-width=".8"/>
+                                </symbol>
+                                <symbol id="cp-sprout" viewBox="-20 -34 40 44" overflow="visible">
+                                    <ellipse cy="4" rx="11" ry="7" fill="#f28a2e" stroke="#9a4a1c" stroke-width="1.6"/>
+                                    <path d="M0 0C-4-12-14-20-18-30-6-28 0-18 0 0ZM0 0C2-14 8-24 16-30 16-18 8-8 0 0ZM0 0C0-14 0-24-2-34 6-26 6-12 0 0Z" fill="#6fba49" stroke="#3d7a2e" stroke-width="1.4" stroke-linejoin="round"/>
+                                </symbol>
+                            </defs>
+
+                            <!-- ── 远景：天空 / 云 / 山 / 树 / 农舍 ── -->
+                            <rect width="560" height="720" fill="url(#cp-sky)"/>
+                            <g class="cp-sun">
+                                <circle cx="470" cy="92" r="58" fill="#fff6c8" opacity=".35"/>
+                                <circle cx="470" cy="92" r="36" fill="#ffe487" stroke="#f6c64a" stroke-width="3"/>
+                            </g>
+                            <path class="cp-birds" d="M120 196q8-8 16 0 8-8 16 0M176 176q6-6 12 0 6-6 12 0" fill="none" stroke="#4d7f99" stroke-width="2.6" stroke-linecap="round"/>
+                            <g class="cp-clouds">
+                                <g fill="#fff" opacity=".95">
+                                    <path d="M106 128c-18 0-26-18-12-28-2-20 24-30 38-16 10-18 42-16 48 6 18-2 28 20 12 30-2 6-8 8-14 8Z"/>
+                                    <path d="M398 84c-14 0-20-14-8-22 0-16 20-24 32-12 10-14 34-10 36 8 14 0 20 16 8 24Z"/>
+                                    <path d="M-20 318c-10-22 8-40 30-34 4-30 44-40 64-18 16-26 60-20 66 12 24-4 40 20 26 40Z"/>
+                                    <path d="M372 296c-8-22 12-38 32-30 8-30 52-34 66-8 20-16 56-4 58 24 26 0 36 26 20 38H388c-10-6-16-14-16-24Z"/>
+                                </g>
+                                <g fill="#d6ecf5" opacity=".9">
+                                    <path d="M-10 318c30 8 90 8 150 0-4 6-10 10-18 12H-6Z"/>
+                                    <path d="M390 318c40 6 110 6 150-2-2 6-8 10-16 12H398Z"/>
+                                </g>
+                            </g>
+                            <path d="M0 402C70 372 130 380 190 396c64 18 130 12 196-8 62-18 120-18 174 2v80H0Z" fill="#b8dfae"/>
+                            <g class="cp-trees">
+                                <ellipse cx="26" cy="378" rx="17" ry="52" fill="#3f8a4c"/><ellipse cx="22" cy="372" rx="7" ry="40" fill="#58a560" opacity=".7"/>
+                                <ellipse cx="58" cy="392" rx="13" ry="38" fill="#4a9552"/>
+                                <circle cx="96" cy="404" r="20" fill="#5aa257"/><circle cx="118" cy="410" r="14" fill="#4b9550"/>
+                                <ellipse cx="528" cy="372" rx="16" ry="50" fill="#3f8a4c"/><ellipse cx="524" cy="366" rx="6" ry="38" fill="#58a560" opacity=".7"/>
+                                <ellipse cx="552" cy="392" rx="12" ry="34" fill="#4a9552"/>
+                                <circle cx="372" cy="404" r="16" fill="#5aa257"/>
+                            </g>
+                            <g class="cp-house">
+                                <path d="M424 404h52v28h-52z" fill="#fff4e0" stroke="#b9956a" stroke-width="1.5"/>
+                                <path d="M418 406l32-24 32 24z" fill="#d9674b" stroke="#a24a36" stroke-width="1.5" stroke-linejoin="round"/>
+                                <path d="M462 386v-12h8v18" fill="#c9573f"/>
+                                <path d="M432 412h10v9h-10zM458 412h10v9h-10z" fill="#7fb3d4"/>
+                                <path d="M446 418h8v14h-8z" fill="#a8744c"/>
+                            </g>
+                            <path d="M0 440C80 414 170 424 250 436c90 14 180 4 250-12 26-6 44-6 60-2v96H0Z" fill="#9fd382"/>
+                            <path d="M0 462c100-20 200-14 290-4 100 10 190 2 270-12v100H0Z" fill="#86c566"/>
+
+                            <!-- ── 中景：栅栏 / 雏菊 / 菜畦 / 水壶 ── -->
+                            <g class="cp-fence" stroke="#7a5638" stroke-width="2.4" stroke-linejoin="round">
+                                <path d="M0 470h560v11H0zM0 496h560v11H0z" fill="#c79d70"/>
+                                <path d="M14 458l8-7 8 7v74H14zM86 454l8-7 8 7v78H86zM158 456l8-7 8 7v76h-16zM388 456l8-7 8 7v76h-16zM460 452l8-7 8 7v80h-16zM532 456l8-7 8 7v76h-16z" fill="#d7b084"/>
+                            </g>
+                            <g class="cp-meadow-daisies">
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(40 528)"/>
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(66 520) scale(.8)"/>
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(128 526) scale(.9)"/>
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(418 526) scale(.85)"/>
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(500 522)"/>
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(546 530) scale(.8)"/>
+                                <path d="M34 540c4-10 10-14 16-14M120 540c2-8 8-12 14-12M492 538c4-8 10-12 16-12" fill="none" stroke="#5aa34a" stroke-width="3" stroke-linecap="round"/>
+                            </g>
+                            <g class="cp-bed-left">
+                                <use href="#cp-sprout" x="-20" y="-34" width="40" height="44" transform="translate(30 544)"/>
+                                <use href="#cp-sprout" x="-20" y="-34" width="40" height="44" transform="translate(76 546) scale(.9)"/>
+                                <use href="#cp-sprout" x="-20" y="-34" width="40" height="44" transform="translate(120 546) scale(1.05)"/>
+                                <path d="M-4 548h160v28H-4z" fill="#b98552" stroke="#7a5234" stroke-width="2.4"/>
+                                <path d="M-4 562h160" stroke="#8f623c" stroke-width="2"/>
+                                <path d="M40 552v8M104 566v8" stroke="#8f623c" stroke-width="2" stroke-linecap="round"/>
+                            </g>
+                            <g class="cp-bed-right">
+                                <path d="M506 536c-2-12 6-20 20-20h10c10 0 14 6 14 14v20h-44Z" fill="#a9bdcb" stroke="#5f7483" stroke-width="2.2"/>
+                                <path d="M506 530l-26-20" stroke="#8ea4b3" stroke-width="6" stroke-linecap="round"/>
+                                <path d="M478 506l-8-4 2 10z" fill="#8ea4b3" stroke="#5f7483" stroke-width="1.5"/>
+                                <path d="M534 516c10-14 22-10 24 2" fill="none" stroke="#5f7483" stroke-width="3.5"/>
+                                <path d="M512 530h30" stroke="#dce7ee" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+                                <path d="M424 550h140v26H424z" fill="#b98552" stroke="#7a5234" stroke-width="2.4"/>
+                                <path d="M424 563h140" stroke="#8f623c" stroke-width="2"/>
+                            </g>
+
+                            <!-- ── 土地 ── -->
+                            <path d="M-4 572c60-8 120-6 180-2 70 5 150 4 220-2 60-5 120-4 168 0v156H-4Z" fill="url(#cp-soil-grad)"/>
+                            <g class="cp-soil-texture" fill="#5c341e" opacity=".55">
+                                <path d="M24 612c30-6 60-6 88 0M60 660c40-6 80-6 110 2M430 650c34-6 70-4 100 4M400 700c40-6 90-6 140 2" fill="none" stroke="#5c341e" stroke-width="3" stroke-linecap="round"/>
+                                <circle cx="40" cy="592" r="6"/><circle cx="140" cy="600" r="5"/><circle cx="500" cy="602" r="6"/><circle cx="88" cy="690" r="7"/><circle cx="380" cy="676" r="5"/>
+                            </g>
+                            <ellipse id="cp-hole" cx="312" cy="600" rx="104" ry="20" fill="#44261a"/>
+
+                            <!-- ── 大萝卜（JS 驱动 transform：拔起高度 / 倾斜 / 抖动 / 收获飞出） ── -->
+                            <g id="cp-carrot" transform="translate(316 506) rotate(-8)">
+                                <g class="cp-carrot-leaves-back" color="#5a9e3a" fill="#67ad42">
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(-14 -18) rotate(-66) scale(1.02)"/>
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(-8 -22) rotate(-34) scale(1.14)"/>
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(0 -24) rotate(-4) scale(1.22)"/>
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(8 -22) rotate(28) scale(1.14)"/>
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(14 -18) rotate(62) scale(1.02)"/>
+                                </g>
+                                <g class="cp-carrot-leaves-front" color="#7fbc4c" fill="#8ed25c">
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(-10 -20) rotate(-48) scale(.9)"/>
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(-2 -22) rotate(-16) scale(.98)"/>
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(6 -22) rotate(14) scale(.96)"/>
+                                    <use href="#cp-leaf" x="-50" y="-130" width="100" height="132" transform="translate(12 -20) rotate(44) scale(.88)"/>
+                                </g>
+                                <path d="M-80 10C-88-14-54-28 0-28 54-28 88-16 82 10 78 90 54 200 18 318 11 336-3 336-9 318-46 200-76 90-80 10Z" fill="url(#cp-carrot-grad)" stroke="#9a4a1c" stroke-width="4" stroke-linejoin="round"/>
+                                <path d="M-70 36q34-10 60 2M14 60q34-10 60 0M-66 104q30-10 58 2M8 138q30-8 52 2M-50 190q26-8 48 2M6 236q20-6 36 2" fill="none" stroke="#cf5f1b" stroke-width="4.5" stroke-linecap="round" opacity=".75"/>
+                                <ellipse cx="0" cy="-24" rx="26" ry="8" fill="#8a6a2e" opacity=".55"/>
+                                <path d="M-62 4q-10 60 12 150" fill="none" stroke="#ffd08a" stroke-width="9" stroke-linecap="round" opacity=".55"/>
+                                <g class="cp-carrot-dirt" fill="#6b4024" stroke="#4d2c18" stroke-width="1.5">
+                                    <path d="M-58 70c6-8 18-6 20 2 4 8-6 16-14 12-8 2-12-8-6-14Z"/>
+                                    <path d="M40 96c8-6 18 0 16 8 0 8-12 10-16 4-6-2-6-10 0-12Z"/>
+                                    <path d="M-26 150c6-6 16-2 14 6-2 6-10 8-14 4-4-2-4-8 0-10Z"/>
+                                    <path d="M52 20c6-4 12 0 10 6-2 4-8 4-10 2-3-2-3-6 0-8Z"/>
+                                    <circle cx="-8" cy="210" r="6"/><circle cx="24" cy="176" r="5"/>
+                                </g>
+                            </g>
+
+                            <!-- 前方土垄：盖住萝卜埋在土里的部分 -->
+                            <g class="cp-soil-front">
+                                <path d="M164 724V616c14-14 36-12 52-18 22-8 40 4 64 0 24-4 44 4 66-2 26-6 48 4 70 6 14 2 24 8 32 16v106Z" fill="#7d4a2b"/>
+                                <g fill="#8e5834" stroke="#5c341e" stroke-width="2" stroke-linejoin="round">
+                                    <path d="M172 616c2-14 20-20 32-12 10-4 22 4 18 14-6 10-44 12-50-2Z"/>
+                                    <path d="M236 604c4-12 22-14 30-4 12-2 16 12 6 16-12 6-38 2-36-12Z"/>
+                                    <path d="M300 608c2-8 14-10 20-2 8 0 8 10 0 12-10 2-22 0-20-10Z"/>
+                                    <path d="M342 602c6-14 28-14 34-2 12 0 14 14 2 18-14 4-40 0-36-16Z"/>
+                                    <path d="M408 612c4-10 18-10 22 0 8 2 6 12-2 14-12 2-22-4-20-14Z"/>
+                                </g>
+                                <g fill="#b07445" opacity=".75">
+                                    <ellipse cx="190" cy="606" rx="7" ry="3"/><ellipse cx="252" cy="602" rx="6" ry="2.6"/><ellipse cx="358" cy="600" rx="7" ry="3"/><ellipse cx="418" cy="608" rx="5" ry="2.4"/>
+                                </g>
+                                <g fill="#5c341e"><circle cx="286" cy="628" r="4"/><circle cx="226" cy="640" r="3"/><circle cx="392" cy="636" r="4"/><circle cx="330" cy="660" r="3"/></g>
+                            </g>
+
+                            <g id="cp-stems-mole" fill="none" stroke-linecap="round">
+                                <path class="cp-stem" d="M316 488Q380 500 426 526" stroke="#5b9a36" stroke-width="7"/>
+                                <path class="cp-stem" d="M316 488Q384 510 432 548" stroke="#6fb046" stroke-width="6"/>
+                            </g>
+                            <!-- ── 鼹鼠（叶茎在身体后面穿过，爪子盖在叶茎上；身体与爪子共用同一 transform） ── -->
+                            <g id="cp-mole" transform="translate(482 612) scale(.9)">
+                                <path d="M-64 30C-78-30-70-116-24-144 8-164 52-152 64-108 78-58 74 0 68 30Z" fill="#5f5453" stroke="#352a29" stroke-width="3.5" stroke-linejoin="round"/>
+                                <path d="M-40-40c0-40 20-66 44-66s40 26 40 66-18 60-42 60-42-20-42-60Z" fill="#6f6361" opacity=".7"/>
+                                <path d="M-18-146l-6-12M-4-150l0-13M10-148l7-11M22-142l10-8" stroke="#352a29" stroke-width="3" stroke-linecap="round"/>
+                                <path d="M8-138q12-6 22 2" fill="none" stroke="#7d706e" stroke-width="3" stroke-linecap="round"/>
+                                <ellipse cx="-44" cy="-100" rx="30" ry="21" fill="#978683" stroke="#352a29" stroke-width="2.5"/>
+                                <ellipse cx="-4" cy="-102" rx="10" ry="6.5" fill="#f08e93" opacity=".8"/>
+                                <g class="cp-face-happy" fill="none" stroke="#231a19" stroke-width="3.4" stroke-linecap="round">
+                                    <path d="M-44-128q6-7 12 0M-18-130q6-7 12 0"/>
+                                    <path d="M-58-92q16 22 34 0q-17 5-34 0Z" fill="#8a2c34" stroke-width="2.5" stroke-linejoin="round"/>
+                                    <path d="M-48-91h7v4h-7zM-38-91h7v4h-7z" fill="#fff" stroke="none"/>
+                                </g>
+                                <g class="cp-face-oops" fill="#231a19">
+                                    <circle cx="-38" cy="-128" r="4"/><circle cx="-12" cy="-130" r="4"/>
+                                    <path d="M-52-88q5-5 10 0t10 0" fill="none" stroke="#231a19" stroke-width="3" stroke-linecap="round"/>
+                                </g>
+                                <ellipse cx="-74" cy="-108" rx="13" ry="11" fill="#ec717b" stroke="#a8434c" stroke-width="2"/>
+                                <circle cx="-77" cy="-112" r="3.2" fill="#fff" opacity=".85"/>
+                                <path d="M-60-100l-28-4M-60-94l-26 6M-28-102l22-6M-28-96l22 2" stroke="#231a19" stroke-width="1.4" stroke-linecap="round"/>
+                            </g>
+                            <g id="cp-mole-paws" transform="translate(482 612) scale(.9)" fill="#f3bba9" stroke="#b0705f" stroke-width="2.4">
+                                <ellipse cx="-70" cy="-46" rx="14" ry="12"/>
+                                <ellipse cx="-60" cy="-22" rx="13" ry="11"/>
+                                <path d="M-80-50l-6-2M-80-44l-6 1M-70-26l-6-2M-70-20l-6 1" stroke-linecap="round"/>
+                            </g>
+                            <path class="cp-mole-mound" d="M394 724V650c4-22 30-34 54-26 16-12 44-12 62 0 22-6 44 6 54 24v76Z" fill="#7d4a2b"/>
+                            <g class="cp-mole-clods" fill="#8e5834" stroke="#5c341e" stroke-width="2">
+                                <path d="M400 644c2-12 18-16 28-8 10-2 16 8 10 14-10 6-38 8-38-6Z"/>
+                                <path d="M458 628c4-12 22-14 30-4 12-2 16 12 6 16-12 6-38 2-36-12Z"/>
+                                <path d="M520 638c4-10 18-10 22 0 8 2 6 12-2 14-12 2-22-4-20-14Z"/>
+                            </g>
+
+                            <!-- ── 女孩（身体 → 握住的叶茎 → 双手） ── -->
+                            <g id="cp-girl" transform="translate(186 692) rotate(-4) scale(.94)">
+                                <!-- far arm -->
+                                <path d="M-64-206L-8-214" stroke="#4a2e22" stroke-width="29" stroke-linecap="round"/>
+                                <path d="M-64-206L-8-214" stroke="#f3eee2" stroke-width="23" stroke-linecap="round"/>
+                                <path d="M-8-214L24-200" stroke="#4a2e22" stroke-width="21" stroke-linecap="round"/>
+                                <path d="M-8-214L24-200" stroke="#f7c9a4" stroke-width="16" stroke-linecap="round"/>
+                                <!-- legs：先画裤腿，末端伸进靴筒，由后画的靴子盖住 -->
+                                <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M-50-126L-54-60" stroke="#1f5f5c" stroke-width="40"/>
+                                    <path d="M-50-126L-54-60" stroke="#2f8f8a" stroke-width="34"/>
+                                    <path d="M-30-128Q6-122 40-58" stroke="#1f5f5c" stroke-width="40"/>
+                                    <path d="M-30-128Q6-122 40-58" stroke="#2f8f8a" stroke-width="34"/>
+                                    <path d="M-12-120q14 6 24 20" stroke="#287a76" stroke-width="3"/>
+                                </g>
+                                <!-- boots：原点 = 靴口中心，旋转到与小腿同向；卷起的裤脚压在靴口上 -->
+                                <g transform="translate(-54 -56)">
+                                    <path d="M-24-2H22V30Q48 32 52 44 53 54 42 54H-18Q-26 54-26 46Z" fill="#f6c43c" stroke="#a8751c" stroke-width="2.6" stroke-linejoin="round"/>
+                                    <path d="M-14 8v36" stroke="#fbe08a" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+                                    <rect x="-27" y="-10" width="52" height="13" rx="6" fill="#f9d460" stroke="#a8751c" stroke-width="2.6"/>
+                                    <rect x="-28" y="-24" width="54" height="16" rx="7" fill="#3fa8a0" stroke="#1f5f5c" stroke-width="2.6"/>
+                                    <ellipse cx="4" cy="30" rx="7" ry="4" fill="#7a4a2b" opacity=".85"/>
+                                    <circle cx="32" cy="46" r="3" fill="#7a4a2b" opacity=".85"/>
+                                </g>
+                                <g transform="translate(40 -58) rotate(-28)">
+                                    <path d="M-24-2H22V30Q48 32 52 44 53 54 42 54H-18Q-26 54-26 46Z" fill="#f6c43c" stroke="#a8751c" stroke-width="2.6" stroke-linejoin="round"/>
+                                    <path d="M-14 8v36" stroke="#fbe08a" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+                                    <rect x="-27" y="-10" width="52" height="13" rx="6" fill="#f9d460" stroke="#a8751c" stroke-width="2.6"/>
+                                    <rect x="-28" y="-24" width="54" height="16" rx="7" fill="#3fa8a0" stroke="#1f5f5c" stroke-width="2.6"/>
+                                    <circle cx="8" cy="22" r="4.5" fill="#7a4a2b" opacity=".85"/>
+                                    <circle cx="38" cy="44" r="3" fill="#7a4a2b" opacity=".85"/>
+                                </g>
+                                <!-- torso -->
+                                <g transform="rotate(-26 -46 -132)">
+                                    <rect x="-80" y="-228" width="68" height="108" rx="28" fill="#f3eee2" stroke="#4a2e22" stroke-width="2.6"/>
+                                    <path d="M-74-190h56v58q-28 14-56 0Z" fill="#2f8f8a" stroke="#1f5f5c" stroke-width="2.6" stroke-linejoin="round"/>
+                                    <path d="M-70-190l-4-30M-22-190l4-30" stroke="#2f8f8a" stroke-width="9" stroke-linecap="round"/>
+                                    <path d="M-56-176h20v16h-20z" fill="#287a76" rx="4"/>
+                                    <circle cx="-68" cy="-186" r="5" fill="#f4c430" stroke="#b58414" stroke-width="1.6"/>
+                                    <circle cx="-24" cy="-186" r="5" fill="#f4c430" stroke="#b58414" stroke-width="1.6"/>
+                                </g>
+                                <!-- head -->
+                                <g class="cp-girl-head" transform="translate(12 4)">
+                                    <ellipse cx="-150" cy="-236" rx="17" ry="25" fill="#6b3f2a" stroke="#40241a" stroke-width="2.4" transform="rotate(24 -150 -236)"/>
+                                    <circle cx="-138" cy="-252" r="6.5" fill="#e0483f" stroke="#9c2a24" stroke-width="1.6"/>
+                                    <circle cx="-104" cy="-266" r="54" fill="#6b3f2a" stroke="#40241a" stroke-width="2.6"/>
+                                    <circle cx="-94" cy="-258" r="47" fill="#fad4b6" stroke="#4a2e22" stroke-width="2.6"/>
+                                    <circle cx="-132" cy="-250" r="11" fill="#f5c3a0" stroke="#4a2e22" stroke-width="2.2"/>
+                                    <path d="M-142-270q18-42 64-34 32 6 34 36-14-12-30-8-12-12-26-4-16-10-42 10Z" fill="#6b3f2a" stroke="#40241a" stroke-width="2.4" stroke-linejoin="round"/>
+                                    <ellipse cx="-108" cy="-236" rx="11" ry="7" fill="#f3958c" opacity=".75"/>
+                                    <ellipse cx="-54" cy="-236" rx="7" ry="6" fill="#f3958c" opacity=".75"/>
+                                    <g class="cp-face-happy" fill="none" stroke="#3a2219" stroke-width="3.6" stroke-linecap="round">
+                                        <path d="M-100-260q8-9 16 0M-72-256q7-8 14 0"/>
+                                        <path d="M-92-238q14 30 34 2-16 2-34-2Z" fill="#b8373a" stroke-width="2.6" stroke-linejoin="round"/>
+                                        <ellipse cx="-74" cy="-226" rx="8" ry="4.5" fill="#f38a86" stroke="none"/>
+                                    </g>
+                                    <g class="cp-face-oops" fill="#3a2219">
+                                        <circle cx="-90" cy="-258" r="5"/><circle cx="-64" cy="-254" r="4.5"/>
+                                        <circle cx="-88" cy="-260" r="1.6" fill="#fff"/><circle cx="-62" cy="-256" r="1.4" fill="#fff"/>
+                                        <ellipse cx="-72" cy="-230" rx="6" ry="7" fill="#b8373a"/>
+                                        <path d="M-40-282q-8 12 0 16 8-4 0-16Z" fill="#8fd3f4" stroke="#4d9cc4" stroke-width="1.6"/>
+                                    </g>
+                                    <g class="cp-hat" transform="rotate(-18 -104 -304)">
+                                        <ellipse cx="-104" cy="-300" rx="80" ry="24" fill="#e9c27a" stroke="#a47a3a" stroke-width="2.6"/>
+                                        <ellipse cx="-104" cy="-300" rx="65" ry="17" fill="none" stroke="#d3a457" stroke-width="2" stroke-dasharray="6 5"/>
+                                        <path d="M-152-306q2-48 48-50 46 2 48 50-48 10-96 0Z" fill="#efcb86" stroke="#a47a3a" stroke-width="2.6" stroke-linejoin="round"/>
+                                        <path d="M-140-340q36-10 72 0M-148-322q44-8 88 0" fill="none" stroke="#d3a457" stroke-width="2" stroke-dasharray="6 5"/>
+                                        <path d="M-153-316q49 10 98 0l1 12q-50 10-100 0Z" fill="#8a5a3a" stroke="#5e3b24" stroke-width="2"/>
+                                    </g>
+                                </g>
+                                <!-- near arm -->
+                                <path d="M-84-198L-10-222" stroke="#4a2e22" stroke-width="30" stroke-linecap="round"/>
+                                <path d="M-84-198L-10-222" stroke="#fbf7ee" stroke-width="24" stroke-linecap="round"/>
+                                <path d="M-10-222L36-218" stroke="#4a2e22" stroke-width="22" stroke-linecap="round"/>
+                                <path d="M-10-222L36-218" stroke="#f9cfac" stroke-width="17" stroke-linecap="round"/>
+                            </g>
+                            <g id="cp-stems-girl" fill="none" stroke-linecap="round">
+                                <path class="cp-stem" d="M316 488Q260 470 214 506" stroke="#5b9a36" stroke-width="7"/>
+                                <path class="cp-stem" d="M316 488Q262 480 212 510" stroke="#6fb046" stroke-width="6"/>
+                                <path class="cp-stem" d="M316 488Q266 490 206 518" stroke="#83c455" stroke-width="5"/>
+                            </g>
+                            <g id="cp-girl-hands" transform="translate(186 692) rotate(-4) scale(.94)">
+                                <path d="M40-228c10-16 24-20 36-14-6 8-18 14-36 14ZM40-226c14-4 26 2 30 12-10 2-22-2-30-12Z" fill="#7fbc4c" stroke="#3d7a2e" stroke-width="2"/>
+                                <circle cx="26" cy="-200" r="13" fill="#f7c9a4" stroke="#4a2e22" stroke-width="2.6"/>
+                                <circle cx="38" cy="-218" r="14" fill="#f9cfac" stroke="#4a2e22" stroke-width="2.6"/>
+                                <path d="M34-228q8 2 12 8M30-222q8 2 12 8" fill="none" stroke="#c98e6c" stroke-width="2" stroke-linecap="round"/>
+                            </g>
+
+                            <!-- ── 动效层 ── -->
+                            <g id="cp-particles" aria-hidden="true"></g>
+                            <g id="cp-tug-lines" fill="none" stroke="#f7d36e" stroke-width="5" stroke-linecap="round" opacity="0">
+                                <path d="M52 540l-24-10M46 562l-28 0M50 584l-24 10"/>
+                            </g>
+                            <g class="cp-flying-leaves" fill="#8bd05a" stroke="#3d7a2e" stroke-width="1.6">
+                                <g transform="translate(150 160)"><path class="cp-float" d="M0 0c8-10 22-12 30-6-6 10-20 14-30 6Z"/></g>
+                                <g transform="translate(446 356)"><path class="cp-float cp-float--b" d="M0 0c8-10 22-12 30-6-6 10-20 14-30 6Z"/></g>
+                                <g transform="translate(236 290)"><path class="cp-float cp-float--c" d="M0 0c6-8 16-9 22-4-4 7-14 10-22 4Z"/></g>
+                            </g>
+
+                            <!-- ── 前景 ── -->
+                            <g class="cp-foreground">
+                                <use href="#cp-sprout" x="-20" y="-34" width="40" height="44" transform="translate(30 712) scale(1.5)"/>
+                                <use href="#cp-sprout" x="-20" y="-34" width="40" height="44" transform="translate(536 716) scale(1.4)"/>
+                                <path d="M-6 724c6-30 30-40 56-34-10 14-28 26-56 34ZM566 724c-8-26-30-34-52-28 10 14 26 22 52 28Z" fill="#5aa043" stroke="#3d7a2e" stroke-width="2"/>
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(84 700) scale(1.6)"/>
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(118 712) scale(1.2)"/>
+                                <use href="#cp-daisy" x="-6" y="-6" width="12" height="12" transform="translate(480 704) scale(1.5)"/>
+                            </g>
+                            <path id="cp-carrot-hit" d="M190 300h260v320H190z" fill="#fff" opacity="0" aria-label="Pull the carrot"/>
+                        </svg>
+
+                        <div class="cp-toast game-toast" id="cp-toast" role="status" aria-live="polite"></div>
+
+                        <div class="cp-overlay game-overlay" id="cp-start">
+                            <div class="cp-mini-mark" aria-hidden="true">
+                                <span class="cp-mini-carrot">🥕</span>
+                                <span class="cp-mini-spark">✦</span>
+                            </div>
+                            <p class="cp-kicker" id="cp-start-kicker">GARDEN RHYTHM</p>
+                            <h2 class="cp-overlay-title" id="cp-start-title">拔萝卜</h2>
+                            <p class="cp-overlay-copy" id="cp-start-copy">看准绿色甜蜜区，按下按钮用力一拔！和鼹鼠一起收获 6 根大萝卜。</p>
+                            <div class="cp-howto-row">
+                                <span class="cp-howto-chip"><b>1</b><span id="cp-howto-one">看准指针</span></span>
+                                <span class="cp-howto-chip"><b>2</b><span id="cp-howto-two">落在甜蜜区</span></span>
+                                <span class="cp-howto-chip"><b>3</b><span id="cp-howto-three">连续拔出</span></span>
+                            </div>
+                            <button class="cp-primary game-btn" id="cp-start-btn" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span id="cp-start-label">开始拔萝卜</span></button>
+                            <p class="cp-key-hint" id="cp-key-hint">Space / ↑ 也可以用力拔</p>
+                        </div>
+
+                        <div class="cp-overlay cp-overlay-result game-overlay" id="cp-result" hidden>
+                            <div class="cp-result-stamp" id="cp-result-stamp">HARVESTED!</div>
+                            <h2 class="cp-overlay-title" id="cp-result-title">萝卜大丰收！</h2>
+                            <p class="cp-overlay-copy" id="cp-result-copy">你和鼹鼠把菜园搬空啦。</p>
+                            <div class="cp-result-score"><span id="cp-result-score-label">Score</span><b id="cp-final-score">0</b></div>
+                            <div class="cp-result-actions">
+                                <button class="cp-primary game-btn" id="cp-again-btn" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span id="cp-again-label">再拔一次</span></button>
+                                <button class="cp-secondary game-btn" id="cp-menu-btn" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span id="cp-menu-label">回到菜单</span></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cp-controls" id="cp-controls">
+                        <div class="cp-meter-block">
+                            <div class="cp-status-line">
+                                <span class="cp-status-dot" id="cp-status-dot" aria-hidden="true"></span>
+                                <span id="cp-status" aria-live="polite">找准时机，准备发力！</span>
+                            </div>
+                            <div class="cp-meter-labels"><span id="cp-meter-label">拔萝卜节奏</span><span id="cp-sweet-label">甜蜜区</span></div>
+                            <div class="cp-meter" id="cp-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-label="Pull timing">
+                                <span class="cp-meter-track"><span class="cp-sweet-zone" id="cp-sweet-zone"></span><span class="cp-meter-needle" id="cp-meter-needle"><i></i></span></span>
+                            </div>
+                        </div>
+                        <button class="cp-pull-btn" id="cp-pull-btn" type="button">
+                            <span class="cp-pull-arrow" aria-hidden="true">↟</span>
+                            <span class="cp-pull-text" id="cp-pull-label">用力拔！</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="cp-sidebar game-sidebar">
+                <div id="cpStatsPanels">
+                    <div class="cp-side-card game-side-card">
+                        <div class="cp-side-title game-side-title" id="cp-side-howto-title">怎么玩</div>
+                        <p class="cp-side-text game-side-text" id="cp-side-howto">按下“用力拔！”时，让指针落进绿色甜蜜区。连续命中会增加连击分，失误不会结束游戏，但会打断连击。</p>
+                    </div>
+                    <div class="cp-side-card game-side-card">
+                        <div class="cp-side-title game-side-title" id="cp-side-progress-title">今日菜园</div>
+                        <div class="cp-progress-dots" id="cp-progress-dots" aria-label="Carrot harvest progress"></div>
+                        <div class="cp-side-row game-side-row"><span id="cp-side-score-label">本局得分</span><b id="cp-side-score">0</b></div>
+                        <div class="cp-side-row game-side-row"><span id="cp-side-best-label">最佳记录</span><b id="cp-side-best">0</b></div>
+                    </div>
+                </div>
+                <div class="cp-side-card game-side-card cp-tip-card">
+                    <div class="cp-side-title game-side-title" id="cp-side-tip-title">小鼹鼠提示</div>
+                    <p class="cp-side-text game-side-text" id="cp-side-tip">不要急着乱拔。把节奏踩在绿色区域，萝卜会自己松土。</p>
+                </div>
+                <nav class="more-games game-side-card" id="cpSideMore"></nav>
+            </aside>
+        </main>
+
+        <footer class="cp-footer game-footer">
+            <p class="cp-footer-hint game-footer-hint" id="cp-hint">按住按钮或使用 Space / ↑，在绿色区间拔萝卜。</p>
+            <div class="cp-footer-actions game-footer-actions game-topbar-group">
+                <a class="cp-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
+                </a>
+                <button type="button" class="cp-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="cpMoreNav" title="More games" aria-label="More games"></button>
+            </div>
+            <nav class="more-games game-footer-nav" id="cpMoreNav" hidden></nav>
+        </footer>
+    </div>
+
+    <div class="game-drawer" id="cpStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cpStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="cpStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="cpStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="cpStatsDrawerBody"></div>
+        </div>
+    </div>
+
+    <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-carrot-pull.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"拔萝卜 Carrot Pull — Garden Rhythm Game","url":currentUrl,"description":"拔萝卜 Carrot Pull — a playful garden rhythm game. Press in the sweet spot, build a pulling streak, and help a tiny mole harvest six giant carrots before time runs out.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["CasualGame","ArcadeGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"拔萝卜 Carrot Pull — Garden Rhythm Game","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <!-- registry:end seo-script -->
+    <script type="module" src="js/carrot-pull.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#173c3e"/>
+  <path d="M0 0h1200v350c-170-70-285 26-470-8-240-44-389-92-730 8Z" fill="#b9edf0"/>
+  <path d="M0 350c170-64 320-26 472 5 211 43 350-27 728-51v326H0Z" fill="#92c687"/>
+  <path d="M0 462c200-50 354-26 502 7 190 42 390-42 698-28v189H0Z" fill="#754d42"/>
+  <path d="M0 522c230-45 390 2 546 14 228 18 406-35 654-15v109H0Z" fill="#5e3f3a"/>
+  <g transform="translate(570 270)">
+    <path d="M-116 11c-8 57 7 172 74 228 30 25 73 28 100 1 56-57 57-175 37-228-54-27-144-26-211-1Z" fill="#f08a3c" stroke="#733e38" stroke-width="9"/>
+    <path d="M-78-1c-50-57-45-113-3-144 27 41 36 77 20 129M-8 1c-12-73 17-129 70-150 9 55-12 99-58 137M-93-2c-70-42-82-99-52-141 51 19 80 62 80 120M4 4c69-51 122-48 155-8-45 39-97 44-151 24" fill="#6eb857" stroke="#386a4f" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M-75 48c42-21 94-24 151-7M-83 101c48-20 105-21 170-2M-66 157c39-14 85-14 139 0" fill="none" stroke="#d96838" stroke-width="13" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(280 370)">
+    <circle cx="0" cy="-60" r="56" fill="#f4b98f" stroke="#3b4f4f" stroke-width="8"/>
+    <path d="M-57-63c-4-56 54-86 106-50 23 16 31 38 26 70-26-20-53-29-80-27-19 1-34 8-52 18Z" fill="#7c513e" stroke="#3b4f4f" stroke-width="8"/>
+    <path d="M-24-54h2M28-54h2M-12-26c13 13 27 13 40 0" fill="none" stroke="#3b4f4f" stroke-width="8" stroke-linecap="round"/>
+    <path d="M-55 15c22 41 88 47 121 3l8 119h-140Z" fill="#3f9a91" stroke="#2e6669" stroke-width="8"/>
+  </g>
+  <g transform="translate(760 390)">
+    <path d="M-66 57C-84 9-60-48-2-55c72-8 106 42 97 98-7 37-42 56-91 52-38-3-63-20-70-38Z" fill="#6c5d63" stroke="#3b4f4f" stroke-width="8"/>
+    <ellipse cx="85" cy="2" rx="39" ry="29" fill="#c39b8c" stroke="#3b4f4f" stroke-width="7"/>
+    <circle cx="105" cy="0" r="8" fill="#493f46"/><circle cx="47" cy="-13" r="7" fill="#fff8e6"/><circle cx="49" cy="-13" r="3" fill="#3b4f4f"/>
+    <path d="M-34-40c-25-38 5-53 24-19M31-50c0-43 35-37 28 2" fill="#9d7a80" stroke="#3b4f4f" stroke-width="7"/>
+  </g>
+  <g fill="#f7d36e" font-family="Trebuchet MS,Segoe UI,sans-serif" font-weight="900">
+    <text x="70" y="105" font-size="66">拔萝卜</text>
+    <text x="76" y="158" font-size="25" letter-spacing="7">CARROT PULL</text>
+  </g>
+  <g fill="#fff8e6" opacity=".9"><circle cx="1010" cy="97" r="9"/><circle cx="1055" cy="130" r="6"/><circle cx="982" cy="147" r="5"/></g>
+</svg>
