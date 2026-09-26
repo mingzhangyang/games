@@ -66,13 +66,19 @@ ok(ranC === true, "readyState='complete' → 立即执行");
 console.log('\n▶ 源码收敛（防手写复活）');
 for (const g of PAGES) {
     const src = readFileSync(join(ROOT, g.entry), 'utf8');
-    ok(src.includes("import { onReady } from './boot.js';"), `${g.entry} import onReady`);
+    // 入口可以在 js/ 顶层（'./boot.js'）或子目录（js/firefly-signal/main.js → '../boot.js'）
+    ok(/import \{ onReady \} from '\.{1,2}\/boot\.js';/.test(src), `${g.entry} import onReady`);
     ok(!/addEventListener\(\s*['"]DOMContentLoaded['"]/.test(src), `${g.entry} 无 DOMContentLoaded 注册`);
 }
-for (const f of readdirSync(join(ROOT, 'js')).filter(f => f.endsWith('.js'))) {
-    if (f === 'boot.js') continue;
-    const src = readFileSync(join(ROOT, 'js', f), 'utf8');
-    ok(!/addEventListener\(\s*['"]DOMContentLoaded['"]/.test(src), `${f} 无 DOMContentLoaded 注册`);
+// 扫描范围：js/ 顶层 + 骨架契约页入口所在的子目录（如 js/firefly-signal/）。
+// 子目录入口的同目录模块同样不许手写 DOMContentLoaded；js/math-rain/ 化外，不在此列。
+const SCAN_DIRS = ['js', ...new Set(PAGES.map(g => dirname(g.entry)).filter(d => d !== 'js'))];
+for (const dir of SCAN_DIRS) {
+    for (const f of readdirSync(join(ROOT, dir)).filter(f => f.endsWith('.js'))) {
+        if (dir === 'js' && f === 'boot.js') continue;
+        const src = readFileSync(join(ROOT, dir, f), 'utf8');
+        ok(!/addEventListener\(\s*['"]DOMContentLoaded['"]/.test(src), `${dir}/${f} 无 DOMContentLoaded 注册`);
+    }
 }
 
 console.log(failed === 0 ? '\nverify-boot 全部通过 ✅' : `\n${failed} 个失败 ❌`);

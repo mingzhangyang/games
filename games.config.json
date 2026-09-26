@@ -1,5 +1,5 @@
 {
-  "$comment": "全站游戏元数据唯一真源。所有登记点（vite 入口 / more-games / index 卡片 / sitemap / manifest / Workers 白名单 / 校验器页面清单 / README）一律由 scripts/gen-from-registry.mjs 从本文件派生（npm run gen）。caps 是校验器与迁移脚本的唯一判据：sidebar=有 .game-sidebar；drawer=接移动端统计抽屉；frame-budget=桌面舞台纵向预算（verify-desktop-frame 检查）；leaderboard=使用共享排行榜 Worker；daily=有每日挑战（键 <scores.dailyKeyPrefix>-YYYYMMDD）；analytics=客户端调用 hubTrack。",
+  "$comment": "全站游戏元数据唯一真源。所有登记点（vite 入口 / more-games / index 卡片 / sitemap / manifest / Workers 白名单 / 校验器页面清单 / README）一律由 scripts/gen-from-registry.mjs 从本文件派生（npm run gen）。caps 是校验器与迁移脚本的唯一判据：sidebar=有 .game-sidebar；drawer=接移动端统计抽屉；frame-budget=桌面舞台纵向预算（verify-desktop-frame 检查）；leaderboard=使用共享排行榜 Worker；daily=有每日挑战（键 <scores.dailyKeyPrefix>-YYYYMMDD）；analytics=客户端调用 hubTrack。layout=页面布局类型（缺省 standard；immersive = 顶栏以下整块视口归场景，见 docs/contracts/layout.md §7），互斥类型用独立字段而不是 cap。",
   "site": {
     "origin": "https://games.orangely.xyz",
     "scoresWorker": "https://game-scores.orangely.workers.dev",
@@ -1092,6 +1092,40 @@
       },
       "themeColor": "#173c3e",
       "themeColorLight": "#f4efe1"
+    },
+    {
+      "id": "firefly-signal",
+      "prefix": "fs",
+      "href": "firefly-signal.html",
+      "entry": "js/firefly-signal/main.js",
+      "emoji": "✨",
+      "layout": "immersive",
+      "title": {
+        "doc": "萤火信号 Firefly Signal — Synchrony Puzzle",
+        "seo": "萤火信号 Firefly Signal — Synchrony Puzzle"
+      },
+      "name": {
+        "en": "Firefly Signal",
+        "zh": "萤火信号"
+      },
+      "desc": {
+        "meta": "萤火信号 Firefly Signal — a midsummer-night synchrony puzzle. Every firefly blinks to its own rhythm; nudge just a few of them and watch whole meadows fall into step until the entire field lights up at once.",
+        "og": "Nudge a few fireflies. Watch the whole meadow blink as one.",
+        "twitter": "Every firefly blinks alone — until you find the one that connects them."
+      },
+      "genre": [
+        "PuzzleGame",
+        "CasualGame"
+      ],
+      "caps": [
+        "analytics",
+        "topbar"
+      ],
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
+      "themeColor": "#060b1a"
     }
   ]
 }

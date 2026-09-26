@@ -256,3 +256,57 @@ CSS 契约顺序 + `<main>` 语义 + h1，**不套** shell/topbar/sidebar 几何
   加载时可见、非全屏的舞台内浮层一旦内部溢出即红（新游戏漏加 class 会被抓）；菜单里**每个可见按钮**都必须能
   滚到并点中；菜单不得被 `overflow≠visible` 的舞台截断
 
+
+## 7. Immersive Stage（2026-09-26，`games.config.json` 的 `"layout": "immersive"`）
+
+与标准骨架（§1–§6）**互斥**的第二种页面布局，给「场景就是游戏」的重场景游戏用（首个消费方
+firefly-signal；未来《影织》等可复用）。**保留共享顶栏**，顶栏以下的整块视口都属于游戏场景；
+HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向预算。
+
+**为什么是字段不是 cap**：caps 是可以叠加的能力（sidebar + drawer + leaderboard…），布局类型是互斥的
+（一页不可能既是标准骨架又是沉浸舞台）。用 cap 表示会允许 `immersive + sidebar` 这种无意义组合。
+缺省 `standard`；未声明 `layout` 的页面行为完全不变（见下方「零回归」）。
+
+### 7.1 结构
+
+```html
+<div class="xx-shell game-shell game-shell--immersive">
+  <header class="xx-topbar game-topbar"> …三槽位照旧（chrome.md）… </header>
+  <main class="xx-main game-main">
+    <div class="xx-stage game-stage game-stage--immersive"> 场景（canvas 包在一层 div 里）+ HUD + 浮层 </div>
+  </main>
+  <footer class="game-footer"> 随流在首屏之下，滚动可达 </footer>
+</div>
+```
+
+入口：`bindFrame({ layout: 'immersive' })`（`verify-registry` 断言入口里有这一句）。
+
+### 7.2 几何
+
+| 量 | 取值 |
+| --- | --- |
+| 舞台高度 | `calc(100dvh − var(--frame-chrome) − env(safe-area-inset-bottom))`，下限 `--frame-immersive-min-h`（300px，极矮横屏兜底） |
+| `--frame-chrome` | `bindFrame({ layout: 'immersive' })` **实测** = shell 上内距（= 顶部安全区）+ 顶栏高；**不含页脚**（页脚在首屏之下）。不是魔数 |
+| 宽度 | 视口 ≤ `--frame-immersive-max`（640px）时贴边铺满（无 shell 内距、无圆角）；更宽时居中，宽 640px |
+| 顶栏 | 最大宽度同舞台；左右内距 `max(10px, 安全区)` |
+| 两侧延展 | 舞台窄于视口时，页面自己负责把夜色 / 场景横向延展（firefly-signal：背景层列平均成 1px 竖条铺在 fixed 背景层上，舞台边缘 mask 渐隐） |
+| 手势 | 舞台 `touch-action:none` + `user-select:none` + 禁长按菜单 / 点击高亮：不滚页、不双击缩放、不选字 |
+| body 标记 | `has-immersive-stage`（**不打** `has-frame-budget`，因此不会命中侧栏限高规则） |
+
+开始菜单照旧用 `.game-overlay--menu`（§「开始菜单」）：< 1024px 菜单显示期间舞台让位给菜单高度，
+那条规则把舞台的**直接子 canvas** 设为 `height:auto` —— 所以画布要包一层 div（`.fs-scene`），否则
+绝对定位的画布会按后备缓冲像素撑开。
+
+### 7.3 零回归
+
+所有规则只新增 `.game-shell--immersive` / `.game-stage--immersive` 选择器，放在 `layout.css` **末尾**
+（靠「同特异度后声明者胜」+ shell 上的双类选择器压过上方 ≥1024px 桌面预算块），不改任何既有规则。
+验证：`scripts/layout-metrics.mjs` 在改动前后对全部标准页逐行一致；`verify-immersive.mjs` ⑨ 抽查
+标准页不带 immersive 类 / body 标记。
+
+### 7.4 校验
+
+`node scripts/verify-immersive.mjs`（SUITE 名 `immersive`）：页面清单 = `registry.withLayout('immersive')`；
+视口 390×844 / 393×852 / 430×932 / 844×390 / 1280×800 / 1440×900；断言舞台贴顶栏且到视口底、
+`--frame-chrome` 为实测值、窄屏贴边 / 宽屏 600–640 居中、无横向滚动、页脚在首屏之下且可滚到、
+手势属性、画布后备缓冲 = CSS × min(dpr, 2)、HUD 在舞台上部 25%、转屏后重新贴合、无 pageerror。

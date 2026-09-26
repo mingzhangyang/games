@@ -25,6 +25,7 @@ export const MORE_GAMES = [
     { href: 'flame-verse.html', emoji: '🔥', en: "Flame Verse", zh: "焰语" },
     { href: 'ripple-duet.html', emoji: '🌊', en: "Ripple Duet", zh: "涟漪双生", light: true },
     { href: 'carrot-pull.html', emoji: '🥕', en: "Carrot Pull", zh: "拔萝卜", light: true },
+    { href: 'firefly-signal.html', emoji: '✨', en: "Firefly Signal", zh: "萤火信号" },
 ];
 // registry:end more-games
 
