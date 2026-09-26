@@ -4,6 +4,134 @@
    海面画在 canvas 里，控制台也在 canvas 里 —— 没有浮动 DOM 动作钮
    ───────────────────────────────────────────── */
 
+/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+:root {
+    --rd-body-bg: radial-gradient(ellipse 62% 40% at 18% 8%, rgb(90, 200, 250, 0.12), transparent),
+        radial-gradient(ellipse 62% 40% at 84% 92%, rgb(255, 154, 92, 0.10), transparent),
+        linear-gradient(165deg, #02070e 0%, var(--tok-bg-2) 55%, #05121f 100%);
+    --rd-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
+    --rd-hud-level-text: #a8c4ff;
+    --rd-cut-box-bg: rgb(0, 0, 0, 0.4);
+    --rd-cut-box-border: 1px solid rgb(168, 184, 255, 0.18);
+    --rd-canvas-border: 1px solid rgb(168, 184, 255, 0.18);
+    --rd-canvas-shadow: 0 18px 50px rgb(0, 0, 0, 0.6), 0 0 46px rgb(127, 168, 255, 0.1);
+    --rd-action-btn-border: 1px solid rgb(255, 255, 255, 0.35);
+    --rd-clear-btn-text: #04121c;
+    --rd-clear-btn-bg: radial-gradient(circle at 32% 30%, #cfe6ff, #6fd8ff 62%);
+    --rd-clear-btn-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(111, 216, 255, 0.45);
+    --rd-run-btn-text: #2a1a05;
+    --rd-run-btn-bg: radial-gradient(circle at 32% 30%, #ffe6a8, var(--tok-gold) 62%);
+    --rd-run-btn-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(255, 211, 77, 0.45);
+    --rd-clear-btn-active-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(111, 216, 255, 0.7);
+    --rd-run-btn-active-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(255, 211, 77, 0.7);
+    --rd-toast-bg: linear-gradient(120deg, #ffe6a8, var(--tok-gold));
+    --rd-toast-shadow: 0 8px 24px rgb(255, 211, 77, 0.35);
+    --rd-overlay-bg: rgb(5, 7, 15, 0.92);
+    --rd-overlay-dim-bg: rgb(5, 7, 15, 0.72);
+    --rd-title-bg: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
+    --rd-mode-bg: rgb(255, 255, 255, 0.07);
+    --rd-mode-border: 1px solid rgb(255, 255, 255, 0.14);
+    --rd-mode-hover-bg: rgb(255, 255, 255, 0.13);
+    --rd-mode-daily-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    --rd-mode-daily-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+    --rd-chip-bg: rgb(255, 255, 255, 0.05);
+    --rd-chip-border: 1px solid rgb(255, 255, 255, 0.1);
+    --rd-chip-hover-bg: rgb(255, 255, 255, 0.11);
+    --rd-chip-is-done-bg: rgb(127, 168, 255, 0.12);
+    --rd-chip-is-done-border: rgb(127, 168, 255, 0.38);
+    --rd-daily-best-text: #a8c4ff;
+    --rd-card-bg: rgb(9, 12, 26, 0.96);
+    --rd-card-border: 1px solid rgb(255, 255, 255, 0.12);
+    --rd-card-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    --rd-over-score-glow: 0 0 26px rgb(255, 211, 77, 0.4);
+    --rd-btn-bg: rgb(255, 255, 255, 0.08);
+    --rd-btn-border: 1px solid rgb(255, 255, 255, 0.14);
+    --rd-btn-hover-bg: rgb(255, 255, 255, 0.14);
+    --rd-btn-primary-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    --rd-btn-primary-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+    --rd-lb-bg: rgb(255, 255, 255, 0.045);
+    --rd-lb-border: 1px solid rgb(255, 255, 255, 0.1);
+    --rd-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
+    --rd-lb-row-lb-top2-bg: rgb(203, 213, 225, 0.10);
+    --rd-lb-row-lb-top3-bg: rgb(111, 216, 255, 0.12);
+    --rd-username-bg: rgb(255, 255, 255, 0.07);
+    --rd-username-border: 1px solid rgb(255, 255, 255, 0.14);
+    --rd-username-focus-border: rgb(127, 168, 255, 0.5);
+    --rd-legend-row-text: #cdd9f5;
+    --rd-legend-crest-bg: linear-gradient(90deg, #101826 0%, #ff8a40 100%);
+    --rd-legend-trough-bg: linear-gradient(90deg, #101826 0%, #4092ff 100%);
+    --rd-legend-dark-bg: #101826;
+    --rd-legend-dark-border: 1px solid rgb(160, 190, 240, 0.35);
+    --rd-legend-storm-bg: linear-gradient(90deg, #8e97b4 0%, #e8eefc 100%);
+    --rd-legend-wall-bg: linear-gradient(90deg, transparent 0%, #bed2f0 45%, #bed2f0 55%, transparent 100%);
+    --rd-legend-note-text: rgb(205 217 245 / 72%);
+}
+/* theme:end vars */
+
+/* theme:begin light */
+:root[data-theme="light"] {
+    --rd-body-bg: radial-gradient(ellipse 62% 40% at 18% 8%, rgb(90, 200, 250, 0.12), transparent),
+        radial-gradient(ellipse 62% 40% at 84% 92%, rgb(255, 154, 92, 0.1), transparent),
+        linear-gradient(165deg, #f8fafc 0%, var(--tok-bg-2) 55%, #f2f5f9 100%);
+    --rd-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
+    --rd-hud-level-text: #0f172a;
+    --rd-cut-box-bg: rgb(15, 23, 42, 0.1);
+    --rd-cut-box-border: 1px solid rgb(168, 184, 255, 0.18);
+    --rd-canvas-border: 1px solid rgb(168, 184, 255, 0.18);
+    --rd-canvas-shadow: 0 18px 50px rgb(15, 23, 42, 0.2), 0 0 46px rgb(15, 23, 42, 0.04);
+    --rd-action-btn-border: 1px solid rgb(15, 23, 42, 0.2);
+    --rd-clear-btn-text: #04121c;
+    --rd-clear-btn-bg: radial-gradient(circle at 32% 30%, #cfe6ff, #6fd8ff 62%);
+    --rd-clear-btn-shadow: 0 10px 26px rgb(15, 23, 42, 0.175), 0 0 24px rgb(15, 23, 42, 0.158);
+    --rd-run-btn-text: #2a1a05;
+    --rd-run-btn-bg: radial-gradient(circle at 32% 30%, #ffe6a8, var(--tok-gold) 62%);
+    --rd-run-btn-shadow: 0 10px 26px rgb(15, 23, 42, 0.175), 0 0 24px rgb(15, 23, 42, 0.158);
+    --rd-clear-btn-active-shadow: 0 6px 18px rgb(15, 23, 42, 0.175), 0 0 34px rgb(15, 23, 42, 0.2);
+    --rd-run-btn-active-shadow: 0 6px 18px rgb(15, 23, 42, 0.175), 0 0 34px rgb(15, 23, 42, 0.2);
+    --rd-toast-bg: linear-gradient(120deg, #ffe6a8, var(--tok-gold));
+    --rd-toast-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
+    --rd-overlay-bg: rgb(255, 255, 255, 0.98);
+    --rd-overlay-dim-bg: rgb(15, 23, 42, 0.32);
+    --rd-title-bg: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
+    --rd-mode-bg: rgb(255, 255, 255, 0.76);
+    --rd-mode-border: 1px solid rgb(15, 23, 42, 0.154);
+    --rd-mode-hover-bg: rgb(255, 255, 255, 0.94);
+    --rd-mode-daily-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    --rd-mode-daily-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
+    --rd-chip-bg: rgb(255, 255, 255, 0.7);
+    --rd-chip-border: 1px solid rgb(15, 23, 42, 0.11);
+    --rd-chip-hover-bg: rgb(255, 255, 255, 0.88);
+    --rd-chip-is-done-bg: rgb(127, 168, 255, 0.12);
+    --rd-chip-is-done-border: rgb(127, 168, 255, 0.38);
+    --rd-daily-best-text: #0f172a;
+    --rd-card-bg: rgb(255, 255, 255, 0.98);
+    --rd-card-border: 1px solid rgb(15, 23, 42, 0.132);
+    --rd-card-shadow: 0 24px 70px rgb(15, 23, 42, 0.2);
+    --rd-over-score-glow: none;
+    --rd-btn-bg: rgb(255, 255, 255, 0.79);
+    --rd-btn-border: 1px solid rgb(15, 23, 42, 0.154);
+    --rd-btn-hover-bg: rgb(255, 255, 255, 0.95);
+    --rd-btn-primary-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    --rd-btn-primary-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
+    --rd-lb-bg: rgb(255, 255, 255, 0.685);
+    --rd-lb-border: 1px solid rgb(15, 23, 42, 0.11);
+    --rd-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
+    --rd-lb-row-lb-top2-bg: rgb(203, 213, 225, 0.1);
+    --rd-lb-row-lb-top3-bg: rgb(111, 216, 255, 0.12);
+    --rd-username-bg: rgb(255, 255, 255, 0.76);
+    --rd-username-border: 1px solid rgb(15, 23, 42, 0.154);
+    --rd-username-focus-border: rgb(127, 168, 255, 0.5);
+    --rd-legend-row-text: #0f172a;
+    --rd-legend-crest-bg: linear-gradient(90deg, #edeff3 0%, #ff8a40 100%);
+    --rd-legend-trough-bg: linear-gradient(90deg, #edeff3 0%, #4092ff 100%);
+    --rd-legend-dark-bg: #0d232a;
+    --rd-legend-dark-border: 1px solid rgb(15, 23, 42, 0.3);
+    --rd-legend-storm-bg: linear-gradient(90deg, #7d9799 0%, #d8e8e4 100%);
+    --rd-legend-wall-bg: linear-gradient(90deg, #0d232a 0%, #b5d3d2 45%, #b5d3d2 55%, #0d232a 100%);
+    --rd-legend-note-text: #0f172a;
+}
+/* theme:end light */
+
 * {
     margin: 0;
     padding: 0;
@@ -12,9 +140,7 @@
 
 body {
     background:
-        radial-gradient(ellipse 62% 40% at 18% 8%, rgb(90, 200, 250, 0.12), transparent),
-        radial-gradient(ellipse 62% 40% at 84% 92%, rgb(255, 154, 92, 0.10), transparent),
-        linear-gradient(165deg, #02070e 0%, var(--tok-bg-2) 55%, #05121f 100%);
+        var(--rd-body-bg);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
 
@@ -28,13 +154,13 @@ body {
 
 /* ── 顶栏 HUD ── */
 
-.rd-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.rd-icon-btn:hover { background: var(--rd-icon-btn-hover-bg); }
 .rd-icon-btn:active { transform: scale(0.92); }
 
 .rd-hud-level {
     font-size: 13.5px;
     font-weight: 800;
-    color: #a8c4ff;
+    color: var(--rd-hud-level-text);
     letter-spacing: 0.04em;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
@@ -44,8 +170,8 @@ body {
     display: flex;
     align-items: baseline;
     gap: 5px;
-    background: rgb(0, 0, 0, 0.4);
-    border: 1px solid rgb(168, 184, 255, 0.18);
+    background: var(--rd-cut-box-bg);
+    border: var(--rd-cut-box-border);
     border-radius: 11px;
     padding: 6px 12px;
 }
@@ -76,8 +202,8 @@ body {
     display: block;
     width: 100%;
     border-radius: 18px;
-    border: 1px solid rgb(168, 184, 255, 0.18);
-    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.6), 0 0 46px rgb(127, 168, 255, 0.1);
+    border: var(--rd-canvas-border);
+    box-shadow: var(--rd-canvas-shadow);
     /* 主要输入是底部两个动作钮；允许页面手势会让移动浏览器
        在 pointer stream 归属明确前把它交给滚动容器。 */
     touch-action: none;
@@ -95,7 +221,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgb(255, 255, 255, 0.35);
+    border: var(--rd-action-btn-border);
     cursor: pointer;
     z-index: 15;
     transition: opacity 0.25s, transform 0.1s, box-shadow 0.15s;
@@ -103,24 +229,24 @@ body {
 
 .rd-clear-btn {
     left: 16px;
-    color: #04121c;
-    background: radial-gradient(circle at 32% 30%, #cfe6ff, #6fd8ff 62%);
-    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(111, 216, 255, 0.45);
+    color: var(--rd-clear-btn-text);
+    background: var(--rd-clear-btn-bg);
+    box-shadow: var(--rd-clear-btn-shadow);
 }
 
 .rd-run-btn {
     right: 16px;
-    color: #2a1a05;
-    background: radial-gradient(circle at 32% 30%, #ffe6a8, var(--tok-gold) 62%);
-    box-shadow: 0 10px 26px rgb(0, 0, 0, 0.5), 0 0 24px rgb(255, 211, 77, 0.45);
+    color: var(--rd-run-btn-text);
+    background: var(--rd-run-btn-bg);
+    box-shadow: var(--rd-run-btn-shadow);
 }
 
 .rd-action-btn:active {
     transform: scale(0.9);
 }
 
-.rd-clear-btn:active { box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(111, 216, 255, 0.7); }
-.rd-run-btn:active { box-shadow: 0 6px 18px rgb(0, 0, 0, 0.5), 0 0 34px rgb(255, 211, 77, 0.7); }
+.rd-clear-btn:active { box-shadow: var(--rd-clear-btn-active-shadow); }
+.rd-run-btn:active { box-shadow: var(--rd-run-btn-active-shadow); }
 
 /* 预算不足：钮变灰（JS 加 .is-broke） */
 .rd-action-btn.is-broke {
@@ -142,9 +268,9 @@ body {
     font-size: 13px;
     font-weight: 700;
     color: var(--tok-on-accent);
-    background: linear-gradient(120deg, #ffe6a8, var(--tok-gold));
+    background: var(--rd-toast-bg);
     padding: 7px 18px;
-    box-shadow: 0 8px 24px rgb(255, 211, 77, 0.35);
+    box-shadow: var(--rd-toast-shadow);
     opacity: 0;
     transition: opacity 0.2s;
 }
@@ -154,19 +280,19 @@ body {
 /* ── 覆盖层 ── */
 
 .rd-overlay {
-    background: rgb(5, 7, 15, 0.92);
+    background: var(--rd-overlay-bg);
     text-align: center;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
 
-.rd-overlay-dim { background: rgb(5, 7, 15, 0.72); }
+.rd-overlay-dim { background: var(--rd-overlay-dim-bg); }
 
 .rd-title {
     font-size: 34px;
     font-weight: 800;
     line-height: 1.15;
-    background: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
+    background: var(--rd-title-bg);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -213,21 +339,21 @@ body {
     font-size: 14.5px;
     font-weight: 700;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--rd-mode-bg);
+    border: var(--rd-mode-border);
     border-radius: 13px;
     padding: 11px 20px;
     cursor: pointer;
     transition: transform 0.12s, background 0.15s;
 }
 
-.rd-mode:hover { background: rgb(255, 255, 255, 0.13); }
+.rd-mode:hover { background: var(--rd-mode-hover-bg); }
 .rd-mode:active { transform: scale(0.95); }
 
 .rd-mode-daily {
-    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    background: var(--rd-mode-daily-bg);
     border: none;
-    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+    box-shadow: var(--rd-mode-daily-shadow);
 }
 
 .rd-level-label {
@@ -255,8 +381,8 @@ body {
     align-items: center;
     gap: 1px;
     font-family: inherit;
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--rd-chip-bg);
+    border: var(--rd-chip-border);
     border-radius: 10px;
     padding: 6px 2px 4px;
     cursor: pointer;
@@ -265,12 +391,12 @@ body {
     transition: background 0.15s, transform 0.1s;
 }
 
-.rd-chip:hover { background: rgb(255, 255, 255, 0.11); }
+.rd-chip:hover { background: var(--rd-chip-hover-bg); }
 .rd-chip:active { transform: scale(0.93); }
 
 .rd-chip.is-done {
-    background: rgb(127, 168, 255, 0.12);
-    border-color: rgb(127, 168, 255, 0.38);
+    background: var(--rd-chip-is-done-bg);
+    border-color: var(--rd-chip-is-done-border);
 }
 
 .rd-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
@@ -280,7 +406,7 @@ body {
 .rd-daily-best {
     font-size: 12.5px;
     font-weight: 600;
-    color: #a8c4ff;
+    color: var(--rd-daily-best-text);
     min-height: 15px;
     font-variant-numeric: tabular-nums;
 }
@@ -294,11 +420,11 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 9px;
-    background: rgb(9, 12, 26, 0.96);
-    border: 1px solid rgb(255, 255, 255, 0.12);
+    background: var(--rd-card-bg);
+    border: var(--rd-card-border);
     border-radius: 20px;
     padding: 20px 22px;
-    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    box-shadow: var(--rd-card-shadow);
     animation: rd-card-in 0.26s ease-out;
 }
 
@@ -327,7 +453,7 @@ body {
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 26px rgb(255, 211, 77, 0.4);
+    text-shadow: var(--rd-over-score-glow);
 }
 
 .rd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
@@ -344,21 +470,21 @@ body {
     font-size: 14.5px;
     font-weight: 700;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.08);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--rd-btn-bg);
+    border: var(--rd-btn-border);
     border-radius: 13px;
     padding: 11px 18px;
     cursor: pointer;
     transition: transform 0.12s, background 0.15s;
 }
 
-.rd-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.rd-btn:hover { background: var(--rd-btn-hover-bg); }
 .rd-btn:active { transform: scale(0.96); }
 
 .rd-btn-primary {
-    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
+    background: var(--rd-btn-primary-bg);
     border: none;
-    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
+    box-shadow: var(--rd-btn-primary-shadow);
 }
 
 .rd-btn-ghost { background: transparent; color: var(--tok-text-dim); }
@@ -368,8 +494,8 @@ body {
 .rd-lb {
     width: 100%;
     max-width: 330px;
-    background: rgb(255, 255, 255, 0.045);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--rd-lb-bg);
+    border: var(--rd-lb-border);
     border-radius: 14px;
     padding: 12px 14px;
 }
@@ -398,9 +524,9 @@ body {
     border-radius: 7px;
 }
 
-.rd-lb-row.rd-lb-top1 { background: rgb(252, 211, 77, 0.14); }
-.rd-lb-row.rd-lb-top2 { background: rgb(203, 213, 225, 0.10); }
-.rd-lb-row.rd-lb-top3 { background: rgb(111, 216, 255, 0.12); }
+.rd-lb-row.rd-lb-top1 { background: var(--rd-lb-row-lb-top1-bg); }
+.rd-lb-row.rd-lb-top2 { background: var(--rd-lb-row-lb-top2-bg); }
+.rd-lb-row.rd-lb-top3 { background: var(--rd-lb-row-lb-top3-bg); }
 
 .rd-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
 
@@ -439,14 +565,14 @@ body {
     font-family: inherit;
     font-size: 13px;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--rd-username-bg);
+    border: var(--rd-username-border);
     border-radius: 9px;
     padding: 7px 10px;
     outline: none;
 }
 
-.rd-username:focus { border-color: rgb(127, 168, 255, 0.5); }
+.rd-username:focus { border-color: var(--rd-username-focus-border); }
 
 /* ── 侧栏：记录行 ── */
 
@@ -499,7 +625,7 @@ body {
     gap: 10px;
     margin-bottom: 7px;
     font-size: 12.5px;
-    color: #cdd9f5;
+    color: var(--rd-legend-row-text);
 }
 
 .rd-legend-swatch {
@@ -509,17 +635,17 @@ body {
     border-radius: 3px;
 }
 
-.rd-legend-crest { background: linear-gradient(90deg, #101826 0%, #ff8a40 100%); }
-.rd-legend-trough { background: linear-gradient(90deg, #101826 0%, #4092ff 100%); }
-.rd-legend-dark { background: #101826; border: 1px solid rgb(160, 190, 240, 0.35); }
-.rd-legend-storm { background: linear-gradient(90deg, #8e97b4 0%, #e8eefc 100%); }
-.rd-legend-wall { background: linear-gradient(90deg, transparent 0%, #bed2f0 45%, #bed2f0 55%, transparent 100%); }
+.rd-legend-crest { background: var(--rd-legend-crest-bg); }
+.rd-legend-trough { background: var(--rd-legend-trough-bg); }
+.rd-legend-dark { background: var(--rd-legend-dark-bg); border: var(--rd-legend-dark-border); }
+.rd-legend-storm { background: var(--rd-legend-storm-bg); }
+.rd-legend-wall { background: var(--rd-legend-wall-bg); }
 
 .rd-legend-note {
     margin-top: 9px;
     font-size: 12px;
     line-height: 1.55;
-    color: rgb(205 217 245 / 72%);
+    color: var(--rd-legend-note-text);
 }
 
 /* ── 响应式 ── */
@@ -555,4 +681,46 @@ body {
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}
+
+/* ── 画布调色板（js/ripple-duet.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
+   深色 = 迁移前 JS 里的字面量，逐字不变；浅色在下方覆盖 */
+:root {
+    --rd-cv-panel: #132832;
+    --rd-cv-panel-edge: rgb(133,184,183,0.34);
+    --rd-cv-accent: #e17b61;
+    --rd-cv-ok: #a9d8c1;
+    --rd-cv-dim: rgb(200,214,255,0.62);
+    --rd-cv-bar-track: rgb(221,240,236,0.10);
+    --rd-cv-bar-fill: #5faeaf;
+    --rd-cv-value: #e8eefc;
+    --rd-cv-chip-sel: rgb(225,123,97,0.20);
+    --rd-cv-chip: rgb(221,240,236,0.06);
+    --rd-cv-chip-edge: rgb(160,190,240,0.5);
+    --rd-cv-glyph: #dcebe7;
+    --rd-cv-dot: rgb(190,215,210,0.35);
+    --rd-cv-button: rgb(221,240,236,0.08);
+    --rd-cv-freeze-edge: #ffe0d2;
+    --rd-cv-button-edge: rgb(160,190,240,0.45);
+    --rd-cv-round-edge: rgb(160,190,240,0.6);
+}
+
+:root[data-theme="light"] {
+    --rd-cv-panel: #fff;
+    --rd-cv-panel-edge: rgb(40,80,90,0.22);
+    --rd-cv-accent: #b8472d;
+    --rd-cv-ok: #2d7a57;
+    --rd-cv-dim: rgb(52,70,84,0.85);
+    --rd-cv-bar-track: rgb(20,50,60,0.09);
+    --rd-cv-bar-fill: #2b8a8e;
+    --rd-cv-value: #13222b;
+    --rd-cv-chip-sel: rgb(184,71,45,0.14);
+    --rd-cv-chip: rgb(20,50,60,0.05);
+    --rd-cv-chip-edge: rgb(60,90,110,0.4);
+    --rd-cv-glyph: #13222b;
+    --rd-cv-dot: rgb(60,90,100,0.35);
+    --rd-cv-button: rgb(20,50,60,0.06);
+    --rd-cv-freeze-edge: #8f3520;
+    --rd-cv-button-edge: rgb(60,90,110,0.4);
+    --rd-cv-round-edge: rgb(60,90,110,0.5);
 }

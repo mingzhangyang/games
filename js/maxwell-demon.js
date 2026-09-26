@@ -42,6 +42,20 @@ import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
+import { bindPalette } from './theme.js';
+
+/* 画布调色板：颜色只在 css/maxwell-demon.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
+   P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。
+   容器、隔板、门与分子是「实物」：两套主题一致，不进调色板；只有背板与容器外的读数随主题。 */
+const CANVAS_VARS = {
+    backdrop: '--md-cv-backdrop',
+    strata: '--md-cv-strata',
+    barTrack: '--md-cv-bar-track',
+    gapHit: '--md-cv-gap-hit',
+    gapText: '--md-cv-gap-text',
+    budgetText: '--md-cv-budget-text',
+};
+let P = null;
 
 /* ────────────────────────── 常量 ────────────────────────── */
 
@@ -1013,9 +1027,9 @@ class MaxwellDemonGame {
     }
 
     drawBackdrop(ctx) {
-        ctx.fillStyle = '#0b1721';
+        ctx.fillStyle = P.backdrop;
         ctx.fillRect(0, 0, W, H);
-        ctx.strokeStyle = 'rgba(126,160,163,0.08)';
+        ctx.strokeStyle = P.strata;
         ctx.lineWidth = 1;
         for (let y = 78; y < H; y += 44) {
             ctx.beginPath();
@@ -1035,7 +1049,7 @@ class MaxwellDemonGame {
         const barH = 10;
         const drawTemp = (x0, x1, temp, side) => {
             const wdt = x1 - x0;
-            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            ctx.fillStyle = P.barTrack;
             this.roundRect(ctx, x0, barY, wdt, barH, 5);
             ctx.fill();
             const k = clamp(temp / 2, 0, 1);
@@ -1057,14 +1071,14 @@ class MaxwellDemonGame {
         ctx.textAlign = 'center';
         const shown = Math.abs(w.gap) < 0.005 ? 0 : w.gap;
         const hit = w.gap >= this.spec.target;
-        ctx.fillStyle = hit ? GOLD : '#e8ecff';
+        ctx.fillStyle = hit ? P.gapHit : P.gapText;
         ctx.font = '800 15px "Segoe UI", system-ui, sans-serif';
         ctx.fillText(`ΔT ${shown >= 0 ? '+' : ''}${shown.toFixed(2)} / ${this.spec.target.toFixed(2)}`, DOOR_X, barY + 5);
 
         // 底部预算条
         const by = H - 26;
         const bx0 = 40, bx1 = 520;
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillStyle = P.barTrack;
         this.roundRect(ctx, bx0, by, bx1 - bx0, 8, 4);
         ctx.fill();
         const left = budgetLeft(w);
@@ -1075,7 +1089,7 @@ class MaxwellDemonGame {
             ctx.fill();
         }
         ctx.font = '700 11px "Segoe UI", system-ui, sans-serif';
-        ctx.fillStyle = '#c9d6ff';
+        ctx.fillStyle = P.budgetText;
         // 标签放条**下方**：by-9 = 605 会压在 vessel 底边（606）上
         ctx.textAlign = 'left';
         ctx.fillText(`${this.t('budget')} ${left}`, bx0, by + 14);
@@ -1372,6 +1386,7 @@ class MaxwellDemonGame {
 /* ────────────────────────── 启动 ────────────────────────── */
 
 onReady(() => {
+    P = bindPalette(CANVAS_VARS, { onChange: () => window.mdGame && window.mdGame.draw() });
     window.mdGame = new MaxwellDemonGame();
     bindFrame({ logicalWidth: W });
     const more = document.getElementById('mdSideMore');

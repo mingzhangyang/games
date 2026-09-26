@@ -19,6 +19,11 @@ body.science-showcase {
     --showcase-focus: #b7e5e2;
     --showcase-radius: 12px;
     --showcase-shadow: 0 12px 28px rgb(0, 0, 0, 0.28);
+    --showcase-hover: #243846;
+    --showcase-on-accent: #071318;
+    --showcase-cut-bg: #101d29;
+    --showcase-overlay: rgb(10, 18, 28, 0.94);
+    --showcase-overlay-dim: rgb(10, 18, 28, 0.78);
 
     background: var(--showcase-bg) !important;
     color: var(--showcase-text);
@@ -53,6 +58,51 @@ body.science-theme-ripple {
     --showcase-accent: #63c1c5;
     --showcase-accent-strong: #e17b61;
     --showcase-accent-soft: #1b3d42;
+}
+
+/* ── 浅色（docs/contracts/theme.md）：只有带 theme-light cap 的页面会进到这里 ——
+   晶绽 / 麦克斯韦妖 / 涟漪双生。「哑光实验台」的浅色版：冷白台面、石板字、加深的主题色。 */
+:root[data-theme="light"] body.science-showcase {
+    --showcase-bg: #eef3f5;
+    --showcase-bg-deep: #e3ebee;
+    --showcase-panel: #fff;
+    --showcase-panel-raised: #f5f9fa;
+    --showcase-border: #cfdbe0;
+    --showcase-border-strong: #a9bbc3;
+    --showcase-text: #13222b;
+    --showcase-text-soft: #30444d;
+    --showcase-text-muted: #4f636c;
+    --showcase-focus: #1f7f7c;
+    --showcase-shadow: 0 10px 24px rgb(15, 23, 42, 0.12);
+    --showcase-hover: #e6f0f2;
+    --showcase-on-accent: #fff;
+    --showcase-cut-bg: #f1f6f7;
+    --showcase-overlay: rgb(238, 243, 245, 0.96);
+    --showcase-overlay-dim: rgb(238, 243, 245, 0.82);
+
+    /* 顶栏计数（var(--tok-gold)）在冷白 HUD 盒上只有 3.5:1，手机字号不够「大字」→ 本组页面加深金色 */
+    --tok-gold: #8a6400;
+}
+
+:root[data-theme="light"] body.science-theme-crystal {
+    --showcase-accent: #22807f;
+    --showcase-accent-strong: #8a6224;
+    --showcase-accent-soft: #dcefee;
+    --showcase-title: #1d6f6d;
+}
+
+:root[data-theme="light"] body.science-theme-maxwell {
+    --showcase-accent: #267f7d;
+    --showcase-accent-strong: #a55a1c;
+    --showcase-accent-soft: #ddefee;
+    --showcase-title: #22625f;
+}
+
+:root[data-theme="light"] body.science-theme-ripple {
+    --showcase-accent: #237b80;
+    --showcase-accent-strong: #b8472d;
+    --showcase-accent-soft: #dbeeef;
+    --showcase-title: #a4432c;
 }
 
 .science-showcase .game-topbar,
@@ -107,11 +157,11 @@ body.science-theme-ripple {
     color: var(--showcase-text) !important;
 }
 
-.science-showcase .cb-title { color: #b7e5e2 !important; }
-.science-showcase .ec-title { color: #9ed9d7 !important; }
-.science-showcase .md-title { color: #b7d9d5 !important; }
-.science-showcase .fv-title { color: #f2bd69 !important; }
-.science-showcase .rd-title { color: #e9b19d !important; }
+.science-showcase .cb-title { color: var(--showcase-title, #b7e5e2) !important; }
+.science-showcase .ec-title { color: var(--showcase-title, #9ed9d7) !important; }
+.science-showcase .md-title { color: var(--showcase-title, #b7d9d5) !important; }
+.science-showcase .fv-title { color: var(--showcase-title, #f2bd69) !important; }
+.science-showcase .rd-title { color: var(--showcase-title, #e9b19d) !important; }
 
 /* One control contract: 44px minimum targets, quiet fill, clear focus ring. */
 .science-showcase .game-icon-btn,
@@ -147,7 +197,7 @@ body.science-theme-ripple {
 .science-showcase .md-chip:hover,
 .science-showcase .fv-chip:hover,
 .science-showcase .rd-chip:hover {
-    background: #243846 !important;
+    background: var(--showcase-hover) !important;
     border-color: var(--showcase-accent) !important;
 }
 
@@ -171,7 +221,7 @@ body.science-theme-ripple {
 .science-showcase .rd-btn-primary {
     background: var(--showcase-accent) !important;
     border-color: var(--showcase-accent) !important;
-    color: #071318 !important;
+    color: var(--showcase-on-accent) !important;
 }
 
 .science-showcase .cb-btn-ghost,
@@ -188,7 +238,7 @@ body.science-theme-ripple {
 .science-showcase .md-cut-box,
 .science-showcase .fv-cut-box,
 .science-showcase .rd-cut-box {
-    background: #101d29 !important;
+    background: var(--showcase-cut-bg) !important;
     border-color: var(--showcase-border) !important;
     border-radius: 8px !important;
 }
@@ -239,13 +289,13 @@ body.science-theme-ripple {
 .science-showcase .fv-run-btn {
     background: var(--showcase-accent-strong) !important;
     border-color: var(--showcase-accent-strong) !important;
-    color: #071318 !important;
+    color: var(--showcase-on-accent) !important;
 }
 
 .science-showcase .ec-pulse-btn {
     background: var(--showcase-accent) !important;
     border-color: var(--showcase-accent) !important;
-    color: #071318 !important;
+    color: var(--showcase-on-accent) !important;
 }
 
 .science-showcase .cb-run-btn:hover,
@@ -260,7 +310,7 @@ body.science-theme-ripple {
 .science-showcase .md-overlay,
 .science-showcase .fv-overlay,
 .science-showcase .rd-overlay {
-    background: rgb(10, 18, 28, 0.94) !important;
+    background: var(--showcase-overlay) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
@@ -270,7 +320,7 @@ body.science-theme-ripple {
 .science-showcase .md-overlay-dim,
 .science-showcase .fv-overlay-dim,
 .science-showcase .rd-overlay-dim {
-    background: rgb(10, 18, 28, 0.78) !important;
+    background: var(--showcase-overlay-dim) !important;
 }
 
 /* Shape/pattern cues supplement colour in the two most data-dense legends. */

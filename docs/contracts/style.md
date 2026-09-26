@@ -78,6 +78,10 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 画布颜色：JS 里的字面色改为 `P.xxx`，`P = bindPalette(CANVAS_VARS, { onChange: () => game.draw() })`
 在 `onReady` 里、创建游戏实例**之前**调用；变量 `--<prefix>-cv-*` 定义在页面 CSS 末尾的「画布调色板」块
 （深色 = 原字面量）。只把**随主题变化**的颜色放进调色板；棋子、元素球、露珠这类游戏实物保留字面量。
+整块「实物」画面（晶绽的结晶皿、麦克斯韦妖的气体容器、涟漪的海面）同理保持深色，只有画布上的
+读数板 / 图表 / 背板随主题；这时 DOM 图例里镜像实物的色块也要保持实物的颜色。
+科学展柜（`science-showcase.css`）的浅色在 `:root[data-theme="light"] body.science-showcase` 与
+`body.science-theme-*` 覆盖块里；未开浅色的 echo-cave / flame-verse 进不到这些选择器。
 需要动态透明度的颜色存成 RGB 三元组（`--cc-cv-amber-rgb: 255, 201, 77`，用法 `rgba(${P.amberRgb}, ${a})`）。
 
 ## 2. hex 收敛规则（P3-4）
