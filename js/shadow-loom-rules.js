@@ -16,21 +16,21 @@
  * 影子会整片飞出幕布）。拖灯同时改变所有影子，不同深度视差不同。
  */
 
-export const STAGE = { w: 480, h: 720 };
+export const STAGE = { w: 480, h: 854 };
 /** 纸幕（可见影子区域 = 判定网格区域） */
-export const SCREEN = { x: 40, y: 64, w: 400, h: 420 };
+export const SCREEN = { x: 40, y: 112, w: 400, h: 420 };
 /** 判定网格：5px 一格 → 80 × 84 */
 export const CELL = 5;
 export const COLS = SCREEN.w / CELL;
 export const ROWS = SCREEN.h / CELL;
 
 /** 灯的视觉托盘范围与投影映射 */
-export const LAMP_BOX = { x0: 72, x1: 408, y0: 572, y1: 652 };
-export const LAMP_HOME = { x: 240, y: 612 };
-const LAMP_MODEL_Y = 474;
+export const LAMP_BOX = { x0: 72, x1: 408, y0: 620, y1: 700 };
+export const LAMP_HOME = { x: 240, y: 660 };
+const LAMP_MODEL_Y = 522;
 const LAMP_MODEL_K = 0.6;
 /** 纸片中心可活动的范围（悬挂在幕前） */
-export const PIECE_BOX = { x0: 26, x1: 454, y0: 70, y1: 540 };
+export const PIECE_BOX = { x0: 26, x1: 454, y0: 118, y1: 588 };
 
 /** 相似度 → 反馈阶段（设计方案 §8：阈值需试玩调校，这里是唯一出处） */
 export const THRESHOLDS = { faint: 0.70, glow: 0.85, stitch: 0.89, win: 0.925 };

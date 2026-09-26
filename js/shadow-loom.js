@@ -23,6 +23,7 @@ import { track } from './analytics.js';
 import { renderMoreGames } from './more-games.js';
 import * as R from './shadow-loom-rules.js';
 import { LEVELS, CHAPTERS } from './shadow-loom-levels.js';
+import { createScene, fretwork } from './shadow-loom-scene.js';
 
 const LANGUAGES = makeText({
     en: {
@@ -121,7 +122,7 @@ const LANGUAGES = makeText({
 
 const W = R.STAGE.w;
 const H = R.STAGE.h;
-const RAIL_Y = 40;
+const RAIL_Y = 86;
 const PROGRESS_KEY = 'sl_progress';
 const SEEN_KEY = 'sl_seen_chapters';
 const SNAP_S = 0.45;
@@ -190,9 +191,13 @@ class ShadowLoomGame {
         this.lastFrame = 0;
         this.clock = 0;             // 场景动画钟（暂停时冻结）
         this.leaves = [];
-        this.motes = Array.from({ length: 18 }, (_, i) => ({
-            x: 120 + ((i * 97) % 240), y: 120 + ((i * 131) % 360), p: i * 0.37,
-        }));
+        // 萤火光尘：多数落在纸幕外（上方枝叶间与桌面附近），少数飘过幕前
+        this.motes = Array.from({ length: 24 }, (_, i) => {
+            const h = (k) => { const v = Math.sin((i + 1) * k) * 43758.5453; return v - Math.floor(v); };
+            return { x: h(12.9) * W, y: h(78.2) < 0.55 ? 20 + h(3.7) * 90 : 560 + h(5.1) * 260, p: h(9.3) * 20, v: 0.15 + h(4.4) * 0.25, r: 0.9 + h(6.6) * 1.6, a: 0.5 + h(2.2) * 0.5 };
+        });
+        this.scene = createScene({ W, H, SCREEN: R.SCREEN, RAIL_Y, LAMP_BOX: R.LAMP_BOX });
+        this.fret = [];
         this.progress = readJson(PROGRESS_KEY, {});
         this.seen = readJson(SEEN_KEY, {});
         this.lastRustle = 0;
@@ -205,7 +210,6 @@ class ShadowLoomGame {
             'side-keys', 'hint', 'toast', 'brand', 'progress', 'target-btn', 'target-icon', 'reset-btn',
         ].forEach(id => { this.el[id] = document.getElementById(`sl-${id}`); });
 
-        this.buildPaper();
         this.resize();
         this.bindEvents();
         this.applyLanguage();
@@ -387,6 +391,8 @@ class ShadowLoomGame {
         this.level = LEVELS[this.levelIdx];
         this.st = R.initialState(this.level);
         this.sway = this.level.pieces.map(() => ({ a: 0, v: 0 }));
+        const compiled = R.compileLevel(this.level);
+        this.fret = compiled.pieces.map(pc => fretwork(pc.polys, R.pointInPoly));
         this.sel = -1;
         this.drag = null;
         this.dirty = true;
@@ -855,91 +861,8 @@ class ShadowLoomGame {
         this.ctx.setTransform(this.renderScale, 0, 0, this.renderScale, 0, 0);
     }
 
-    /** 纸幕：天然纤维 + 不规则边缘，离屏缓存一次 */
-    buildPaper() {
-        const S = R.SCREEN;
-        const k = 2;
-        const pad = 6;
-        const c = document.createElement('canvas');
-        c.width = (S.w + pad * 2) * k;
-        c.height = (S.h + pad * 2) * k;
-        const g = c.getContext('2d');
-        g.scale(k, k);
-        g.translate(pad, pad);
-        // 不规则纸边
-        const edge = [];
-        const jitter = (i) => Math.sin(i * 12.9898) * 43758.5453 % 1;
-        const step = 10;
-        for (let x = 0; x <= S.w; x += step) edge.push([x, -1.2 * Math.abs(jitter(x))]);
-        for (let y = step; y <= S.h; y += step) edge.push([S.w + 1.2 * Math.abs(jitter(y + 7)), y]);
-        for (let x = S.w - step; x >= 0; x -= step) edge.push([x, S.h + 1.2 * Math.abs(jitter(x + 13))]);
-        for (let y = S.h - step; y > 0; y -= step) edge.push([-1.2 * Math.abs(jitter(y + 29)), y]);
-        this.paperEdge = edge.map(([x, y]) => [x + S.x, y + S.y]);
-        g.beginPath();
-        edge.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
-        g.closePath();
-        g.fillStyle = '#ecdcbc';
-        g.fill();
-        g.save();
-        g.clip();
-        // 纤维
-        let seed = 7;
-        const rnd = () => {
-            seed = (seed * 16807) % 2147483647;
-            return (seed - 1) / 2147483646;
-        };
-        for (let i = 0; i < 900; i++) {
-            const x = rnd() * S.w;
-            const y = rnd() * S.h;
-            const a = rnd() * Math.PI;
-            const len = 4 + rnd() * 18;
-            g.strokeStyle = rnd() < 0.5 ? 'rgba(150,118,80,0.10)' : 'rgba(255,248,230,0.22)';
-            g.lineWidth = 0.4 + rnd() * 0.5;
-            g.beginPath();
-            g.moveTo(x, y);
-            g.quadraticCurveTo(x + Math.cos(a) * len * 0.5 + (rnd() - 0.5) * 4, y + Math.sin(a) * len * 0.5 + (rnd() - 0.5) * 4, x + Math.cos(a) * len, y + Math.sin(a) * len);
-            g.stroke();
-        }
-        // 四周极淡的植物影（不影响谜题可读性）
-        g.fillStyle = 'rgba(70,52,36,0.07)';
-        const frond = (bx, by, dir, h) => {
-            for (let j = 0; j < 7; j++) {
-                const t = j / 6;
-                const x = bx + dir * t * 26;
-                const y = by - t * h;
-                g.beginPath();
-                g.ellipse(x + dir * 8, y, 9, 3.2, dir * (0.5 - t * 0.4), 0, Math.PI * 2);
-                g.fill();
-                g.beginPath();
-                g.ellipse(x - dir * 6, y - 6, 8, 3, -dir * (0.7 - t * 0.3), 0, Math.PI * 2);
-                g.fill();
-            }
-            g.strokeStyle = 'rgba(70,52,36,0.08)';
-            g.lineWidth = 1.2;
-            g.beginPath();
-            g.moveTo(bx, by);
-            g.quadraticCurveTo(bx + dir * 10, by - h * 0.5, bx + dir * 26, by - h);
-            g.stroke();
-        };
-        frond(10, S.h, 1, 120);
-        frond(34, S.h, 1, 80);
-        frond(S.w - 12, S.h, -1, 110);
-        frond(S.w - 40, S.h, -1, 70);
-        // 纸张四周的暗角
-        const vg = g.createRadialGradient(S.w / 2, S.h * 0.55, S.h * 0.2, S.w / 2, S.h * 0.55, S.h * 0.78);
-        vg.addColorStop(0, 'rgba(0,0,0,0)');
-        vg.addColorStop(1, 'rgba(92,62,32,0.30)');
-        g.fillStyle = vg;
-        g.fillRect(0, 0, S.w, S.h);
-        g.restore();
-        this.paper = { canvas: c, pad };
-    }
-
     clipScreen(ctx) {
-        ctx.beginPath();
-        this.paperEdge.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-        ctx.closePath();
-        ctx.clip();
+        this.scene.clipPaper(ctx);
     }
 
     render() {
@@ -952,8 +875,17 @@ class ShadowLoomGame {
         const stage = this.state === 'playing' && this.ev ? R.stageOf(this.ev.sim) : 0;
         const flicker = this.reduced ? 1 : 1 + Math.sin(T * 9.3) * 0.025 + Math.sin(T * 23.1) * 0.015;
 
-        this.drawBackdrop(ctx, dim);
-        this.drawScreen(ctx, stage, dim, flicker);
+        const rs = this.renderScale;
+        const sc = this.scene;
+        const S = R.SCREEN;
+        sc.ensure(rs);
+        sc.back(ctx, rs);
+
+        // 纸幕透光：亮区跟着灯走；接近目标时整体增亮，完成时更亮
+        const L = R.lampModel(this.st.lamp);
+        const home = R.lampModel(R.LAMP_HOME);
+        const boost = (stage >= 2 ? 0.08 : 0) + (stage >= 3 ? 0.06 : 0) + dim * 0.14;
+        sc.paper(ctx, rs, L.x, S.y + S.h * 0.6 + (L.y - home.y) * 0.8, boost, flicker);
 
         ctx.save();
         this.clipScreen(ctx);
@@ -964,102 +896,31 @@ class ShadowLoomGame {
         if (solving) this.drawLeaves(ctx);
         ctx.restore();
 
-        this.drawRail(ctx, dim);
+        sc.table(ctx, rs, this.st.lamp, flicker);
+        sc.rail(ctx, 1 - dim * 0.4);
         this.drawPieces(ctx, dim);
         if (!solving) this.drawHandles(ctx);
-        this.drawLamp(ctx, flicker, dim);
-        this.drawMotes(ctx, dim);
+        sc.lamp(ctx, this.st.lamp, flicker, {
+            movable: this.level.lamp.movable && this.state === 'playing',
+            selected: this.sel === 'lamp',
+            clock: this.clock,
+        });
+        sc.front(ctx, rs);
+        // 完成：纸幕以外全部暗下，完整的影子成为唯一焦点
+        if (dim > 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, 0, W, H);
+            ctx.rect(S.x, S.y, S.w, S.h);
+            ctx.fillStyle = `rgba(4,5,12,${0.42 * dim})`;
+            ctx.fill('evenodd');
+            ctx.restore();
+        }
+        if (!this.reduced) sc.motes(ctx, this.motes, this.clock, dim);
         if (this.isPaused && this.state === 'playing') {
             ctx.fillStyle = 'rgba(9,12,28,0.35)';
             ctx.fillRect(0, 0, W, H);
         }
-    }
-
-    drawBackdrop(ctx, dim) {
-        const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, '#0a0e21');
-        g.addColorStop(0.55, '#10152f');
-        g.addColorStop(1, '#0b0f22');
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, W, H);
-        // 极少量青绿色环境层次
-        const tg = ctx.createRadialGradient(40, 120, 10, 40, 120, 220);
-        tg.addColorStop(0, 'rgba(95,168,160,0.10)');
-        tg.addColorStop(1, 'rgba(95,168,160,0)');
-        ctx.fillStyle = tg;
-        ctx.fillRect(0, 0, W, H);
-        // 桌面与铜托盘
-        const S = R.SCREEN;
-        const tableY = S.y + S.h + 26;
-        const tg2 = ctx.createLinearGradient(0, tableY, 0, H);
-        tg2.addColorStop(0, '#1d1510');
-        tg2.addColorStop(1, '#0c0907');
-        ctx.fillStyle = tg2;
-        ctx.fillRect(0, tableY, W, H - tableY);
-        ctx.strokeStyle = 'rgba(176,122,74,0.25)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, tableY + 0.5);
-        ctx.lineTo(W, tableY + 0.5);
-        ctx.stroke();
-        const L = this.st.lamp;
-        const tray = ctx.createRadialGradient(L.x, 640, 10, 240, 640, 210);
-        tray.addColorStop(0, 'rgba(120,82,46,0.55)');
-        tray.addColorStop(1, 'rgba(60,40,24,0.2)');
-        ctx.fillStyle = tray;
-        ctx.beginPath();
-        ctx.ellipse(240, 640, 200, 48, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(200,146,90,0.4)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.strokeStyle = 'rgba(200,146,90,0.14)';
-        ctx.beginPath();
-        ctx.ellipse(240, 640, 168, 36, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        // 木框
-        ctx.save();
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#2b1d14';
-        ctx.lineWidth = 14;
-        ctx.strokeRect(S.x - 8, S.y - 8, S.w + 16, S.h + 16);
-        ctx.strokeStyle = 'rgba(200,146,90,0.28)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(S.x - 15, S.y - 15, S.w + 30, S.h + 30);
-        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-        ctx.strokeRect(S.x - 1.5, S.y - 1.5, S.w + 3, S.h + 3);
-        ctx.restore();
-        if (dim > 0) {
-            ctx.fillStyle = `rgba(4,6,14,${0.35 * dim})`;
-            ctx.fillRect(0, 0, W, H);
-        }
-    }
-
-    drawScreen(ctx, stage, dim, flicker) {
-        const S = R.SCREEN;
-        const p = this.paper;
-        ctx.drawImage(p.canvas, S.x - p.pad, S.y - p.pad, S.w + p.pad * 2, S.h + p.pad * 2);
-        ctx.save();
-        this.clipScreen(ctx);
-        // 灯光透射：亮区跟着灯走，接近目标时整体增亮
-        const L = R.lampModel(this.st.lamp);
-        const cx = L.x;
-        const cy = S.y + S.h * 0.58 + (L.y - 474) * 0.8;
-        const boost = (stage >= 2 ? 0.08 : 0) + (stage >= 3 ? 0.05 : 0) + dim * 0.12;
-        const lg = ctx.createRadialGradient(cx, cy, 20, cx, cy, 330);
-        lg.addColorStop(0, `rgba(255,226,180,${(0.13 + boost) * flicker})`);
-        lg.addColorStop(0.5, `rgba(255,206,140,${0.05 + boost * 0.6})`);
-        lg.addColorStop(1, 'rgba(255,200,120,0)');
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = lg;
-        ctx.fillRect(S.x, S.y, S.w, S.h);
-        ctx.globalCompositeOperation = 'multiply';
-        const vg = ctx.createRadialGradient(cx, cy, 120, cx, cy, 420);
-        vg.addColorStop(0, 'rgba(255,255,255,1)');
-        vg.addColorStop(1, 'rgba(150,110,70,1)');
-        ctx.fillStyle = vg;
-        ctx.fillRect(S.x, S.y, S.w, S.h);
-        ctx.restore();
     }
 
     targetAlpha(solving) {
@@ -1077,7 +938,7 @@ class ShadowLoomGame {
         pathPolys(ctx, c.targetPolys);
         // 正片叠底的暖褐：淡影像是纸里透出的旧痕，而不是一层灰雾
         ctx.globalCompositeOperation = 'multiply';
-        ctx.fillStyle = `rgba(176,128,78,${a * 3})`;
+        ctx.fillStyle = `rgba(128,82,44,${Math.min(1, a * 2.8)})`;
         ctx.fill('nonzero');
         ctx.restore();
     }
@@ -1154,11 +1015,13 @@ class ShadowLoomGame {
                 dx = g.vx * u * u * 0.8;
                 dy = g.vy * u * u * 0.8 - Math.sin(u * 5) * 4;
             } else if (g.kind === 'swim') {
-                dx = g.vx * u;
+                // 游一小段就停住（结果层出现后影子仍留在幕上）
+                dx = g.vx * Math.min(u, 3);
                 dy = Math.sin(u * g.freq * Math.PI * 2) * g.amp;
             } else if (g.kind === 'rise') {
-                dx = u * 12;
-                dy = g.vy * u * u + Math.sin(u * g.freq * Math.PI * 2) * g.amp;
+                const k = ease(clamp(u / 2.4, 0, 1));
+                dx = 14 * k;
+                dy = -g.height * k + Math.sin(u * g.freq * Math.PI * 2) * g.amp;
             }
         }
         return { ops, dx, dy };
@@ -1194,12 +1057,30 @@ class ShadowLoomGame {
             f.fill('nonzero');
             f.restore();
         });
-        const solidity = 0.55 + 0.35 * smooth(snapK);
+        const solidity = 0.55 + 0.37 * smooth(snapK);
+        const glowK = smooth(clamp((st - SNAP_S) / SWEEP_S, 0, 1));
+        // 剪影背后的暖光：纸幕被「点亮」的那一下
+        if (glowK > 0) {
+            const cx = R.SCREEN.x + R.SCREEN.w / 2;
+            const cy = R.SCREEN.y + R.SCREEN.h * 0.5;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            const halo = ctx.createRadialGradient(cx, cy, 20, cx, cy, 260);
+            halo.addColorStop(0, `rgba(255,214,150,${0.30 * glowK})`);
+            halo.addColorStop(1, 'rgba(255,180,100,0)');
+            ctx.fillStyle = halo;
+            ctx.fillRect(R.SCREEN.x, R.SCREEN.y, R.SCREEN.w, R.SCREEN.h);
+            ctx.restore();
+        }
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.globalAlpha = solidity;
-        ctx.shadowColor = 'rgba(255,190,100,0.9)';
-        ctx.shadowBlur = (6 + 10 * smooth(clamp((st - SNAP_S) / SWEEP_S, 0, 1))) * this.renderScale;
+        // 两层描光：外层宽而淡的金晕 + 内层贴边的亮金线
+        ctx.shadowColor = `rgba(255,176,80,${0.55 + 0.4 * glowK})`;
+        ctx.shadowBlur = (10 + 26 * glowK) * this.renderScale;
+        ctx.drawImage(this.fx, 0, 0);
+        ctx.shadowColor = `rgba(255,226,160,${0.4 + 0.6 * glowK})`;
+        ctx.shadowBlur = (3 + 4 * glowK) * this.renderScale;
         ctx.drawImage(this.fx, 0, 0);
         ctx.restore();
         ctx.setTransform(this.renderScale, 0, 0, this.renderScale, 0, 0);
@@ -1255,24 +1136,6 @@ class ShadowLoomGame {
         ctx.restore();
     }
 
-    drawRail(ctx, dim) {
-        ctx.save();
-        ctx.globalAlpha = 1 - dim * 0.4;
-        const g = ctx.createLinearGradient(0, RAIL_Y - 6, 0, RAIL_Y + 6);
-        g.addColorStop(0, '#6d4a2e');
-        g.addColorStop(0.5, '#a57344');
-        g.addColorStop(1, '#4a311e');
-        ctx.fillStyle = g;
-        ctx.fillRect(24, RAIL_Y - 4, W - 48, 8);
-        ctx.fillStyle = '#c8955a';
-        [24, W - 24].forEach(x => {
-            ctx.beginPath();
-            ctx.arc(x, RAIL_Y, 6, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        ctx.restore();
-    }
-
     drawPieces(ctx, dim) {
         const solving = this.state === 'solving' || this.state === 'done';
         const depths = [...new Set(this.level.pieces.map(p => p.z))].sort((a, b) => b - a);
@@ -1280,74 +1143,97 @@ class ShadowLoomGame {
             const pc = this.level.pieces[i];
             const pose = this.effPose(i);
             const polys = R.piecePolys(this.level, pose, i);
+            const holes = (this.fret[i] || []).map(h => R.placePoly(h, pose.x, pose.y, pose.rot || 0, pc.z));
             const at = R.attachPoint(this.level, pose, i);
             const selected = this.sel === i && !solving;
             ctx.save();
             ctx.globalAlpha = 1 - dim * 0.82;
-            // 丝线：从横杆垂到悬挂点
-            ctx.strokeStyle = 'rgba(236,214,172,0.38)';
-            ctx.lineWidth = 0.9;
+            // 丝线：从横杆垂到悬挂点，受光的一侧发亮
+            ctx.strokeStyle = 'rgba(246,222,176,0.5)';
+            ctx.lineWidth = 0.8;
             ctx.beginPath();
             ctx.moveTo(at[0], RAIL_Y + 3);
-            ctx.lineTo(at[0], RAIL_Y + 4);
             ctx.lineTo(at[0], at[1]);
             ctx.stroke();
-            ctx.fillStyle = '#c8955a';
+            ctx.fillStyle = '#d29a5c';
             ctx.beginPath();
-            ctx.arc(at[0], RAIL_Y + 2, 2.4, 0, Math.PI * 2);
+            ctx.arc(at[0], RAIL_Y + 3, 2.4, 0, Math.PI * 2);
             ctx.fill();
             // 深度珠：离灯越近珠子越多（一眼读出层次）
             const layer = depths.indexOf(pc.z) + 1;
-            ctx.fillStyle = 'rgba(255,215,154,0.75)';
+            ctx.fillStyle = 'rgba(255,215,154,0.8)';
             for (let b = 0; b < layer; b++) {
                 ctx.beginPath();
-                ctx.arc(at[0], RAIL_Y + 12 + b * 6, 1.7, 0, Math.PI * 2);
+                ctx.arc(at[0], RAIL_Y + 13 + b * 6, 1.7, 0, Math.PI * 2);
                 ctx.fill();
             }
-            // 纸片本体
-            pathPolys(ctx, polys);
-            if (selected) {
-                ctx.shadowColor = 'rgba(255,190,100,0.85)';
-                ctx.shadowBlur = 14 * this.renderScale;
-            } else {
-                ctx.shadowColor = 'rgba(0,0,0,0.45)';
-                ctx.shadowBlur = 5 * this.renderScale;
-                ctx.shadowOffsetY = 2 * this.renderScale;
-            }
-            const bb = polys.flat();
-            const minY = Math.min(...bb.map(v => v[1]));
-            const maxY = Math.max(...bb.map(v => v[1]));
+            // 纸片路径：外轮廓 + 镂空孔（evenodd，孔里透出后面的亮纸幕）
+            const cut = () => {
+                ctx.beginPath();
+                for (const poly of polys) {
+                    ctx.moveTo(poly[0][0], poly[0][1]);
+                    for (let k = 1; k < poly.length; k++) ctx.lineTo(poly[k][0], poly[k][1]);
+                    ctx.closePath();
+                }
+                for (const h of holes) {
+                    ctx.moveTo(h[0][0], h[0][1]);
+                    for (let k = 1; k < h.length; k++) ctx.lineTo(h[k][0], h[k][1]);
+                    ctx.closePath();
+                }
+            };
+            // 纸的厚度：先在右下错开一点画暗边
+            ctx.save();
+            ctx.translate(0.9, 1.1);
+            cut();
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 6 * this.renderScale;
+            ctx.shadowOffsetY = 3 * this.renderScale;
+            ctx.fillStyle = '#140c07';
+            ctx.fill('evenodd');
+            ctx.restore();
+            // 本体：顶部背光暗、底部被灯照亮
+            const flat = polys.flat();
+            const minY = Math.min(...flat.map(v => v[1]));
+            const maxY = Math.max(...flat.map(v => v[1]));
             const pg = ctx.createLinearGradient(0, minY, 0, maxY);
-            pg.addColorStop(0, pc.pinned ? '#3c3440' : '#3f2b1f');
-            pg.addColorStop(1, pc.pinned ? '#6a5a5c' : '#7a5334');
+            if (pc.pinned) {
+                pg.addColorStop(0, '#2a2330');
+                pg.addColorStop(1, '#5d4a52');
+            } else {
+                pg.addColorStop(0, '#2b1c13');
+                pg.addColorStop(0.6, '#4a301d');
+                pg.addColorStop(1, '#7a4e2c');
+            }
+            cut();
+            if (selected) {
+                ctx.shadowColor = 'rgba(255,190,100,0.9)';
+                ctx.shadowBlur = 16 * this.renderScale;
+            }
             ctx.fillStyle = pg;
-            ctx.fill('nonzero');
+            ctx.fill('evenodd');
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
-            // 背光暖边
-            ctx.strokeStyle = selected ? 'rgba(255,214,150,0.95)' : 'rgba(255,184,110,0.5)';
-            ctx.lineWidth = selected ? 1.5 : 1;
-            ctx.stroke();
-            // 纸纤维 + 叶脉样的剪刻纹（仅装饰本体）
+            // 纸纤维（极淡）
             ctx.save();
-            ctx.clip('nonzero');
-            ctx.strokeStyle = 'rgba(255,214,160,0.16)';
-            ctx.lineWidth = 0.8;
-            polys.forEach((poly) => {
-                let cx = 0;
-                let cy = 0;
-                poly.forEach(([x, y]) => { cx += x; cy += y; });
-                cx /= poly.length;
-                cy /= poly.length;
-                for (let k = 0; k < poly.length; k += Math.max(3, Math.floor(poly.length / 7))) {
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy);
-                    ctx.lineTo(cx + (poly[k][0] - cx) * 0.7, cy + (poly[k][1] - cy) * 0.7);
-                    ctx.stroke();
-                }
-            });
+            ctx.clip('evenodd');
+            ctx.strokeStyle = 'rgba(255,214,160,0.07)';
+            ctx.lineWidth = 0.6;
+            const bx = Math.min(...flat.map(v => v[0]));
+            const bw = Math.max(...flat.map(v => v[0])) - bx;
+            for (let k = 0; k < 14; k++) {
+                const y = minY + ((k * 37) % 100) / 100 * (maxY - minY);
+                ctx.beginPath();
+                ctx.moveTo(bx, y);
+                ctx.quadraticCurveTo(bx + bw / 2, y + ((k % 3) - 1) * 4, bx + bw, y + 2);
+                ctx.stroke();
+            }
             ctx.restore();
+            // 背光暖边：外轮廓与每个镂空孔都描一圈
+            // （save/restore 不保存路径：纤维循环之后必须重建剪纸路径再描边）
+            cut();
+            ctx.strokeStyle = selected ? 'rgba(255,220,160,0.95)' : 'rgba(255,178,100,0.55)';
+            ctx.lineWidth = selected ? 1.5 : 0.9;
+            ctx.stroke();
             if (pc.pinned) {
                 const pg2 = ctx.createRadialGradient(at[0] - 1, at[1] + 3, 0.5, at[0], at[1] + 4, 5);
                 pg2.addColorStop(0, '#ffe2a8');
@@ -1385,107 +1271,6 @@ class ShadowLoomGame {
         ctx.beginPath();
         ctx.arc(k.x, k.y, 7, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
-    }
-
-    drawLamp(ctx, flicker, dim) {
-        const L = this.st.lamp;
-        const movable = this.level.lamp.movable && this.state === 'playing';
-        const x = L.x;
-        const y = L.y;
-        ctx.save();
-        // 光锥
-        ctx.globalCompositeOperation = 'lighter';
-        const cone = ctx.createLinearGradient(0, y - 20, 0, R.SCREEN.y + R.SCREEN.h - 40);
-        cone.addColorStop(0, `rgba(255,190,110,${0.16 * flicker})`);
-        cone.addColorStop(1, 'rgba(255,190,110,0)');
-        ctx.fillStyle = cone;
-        ctx.beginPath();
-        ctx.moveTo(x - 14, y - 22);
-        ctx.lineTo(x + 14, y - 22);
-        ctx.lineTo(x + 170, R.SCREEN.y + R.SCREEN.h - 40);
-        ctx.lineTo(x - 170, R.SCREEN.y + R.SCREEN.h - 40);
-        ctx.closePath();
-        ctx.fill();
-        const glow = ctx.createRadialGradient(x, y - 14, 2, x, y - 14, 90);
-        glow.addColorStop(0, `rgba(255,214,150,${0.55 * flicker})`);
-        glow.addColorStop(0.35, `rgba(255,170,80,${0.18 * flicker})`);
-        glow.addColorStop(1, 'rgba(255,170,80,0)');
-        ctx.fillStyle = glow;
-        ctx.fillRect(x - 100, y - 110, 200, 200);
-        ctx.restore();
-
-        ctx.save();
-        if (movable) {
-            // 可拖的灯：一圈淡淡的铜色光环
-            ctx.strokeStyle = this.sel === 'lamp' ? 'rgba(255,215,154,0.8)' : `rgba(255,215,154,${0.25 + 0.15 * Math.sin(this.clock * 2.4)})`;
-            ctx.setLineDash([3, 5]);
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.ellipse(x, y + 16, 34, 9, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
-        // 底座
-        ctx.fillStyle = '#5a3b22';
-        ctx.beginPath();
-        ctx.ellipse(x, y + 16, 22, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#9a6a3c';
-        ctx.fillRect(x - 12, y + 6, 24, 8);
-        // 玻璃罩
-        const gl = ctx.createRadialGradient(x, y - 14, 2, x, y - 14, 20);
-        gl.addColorStop(0, '#fff6dc');
-        gl.addColorStop(0.4, `rgba(255,200,110,${0.95 * flicker})`);
-        gl.addColorStop(1, 'rgba(200,110,40,0.55)');
-        ctx.fillStyle = gl;
-        ctx.beginPath();
-        ctx.moveTo(x - 13, y + 6);
-        ctx.bezierCurveTo(x - 20, y - 8, x - 16, y - 30, x, y - 36);
-        ctx.bezierCurveTo(x + 16, y - 30, x + 20, y - 8, x + 13, y + 6);
-        ctx.closePath();
-        ctx.fill();
-        // 铜笼
-        ctx.strokeStyle = '#b07a4a';
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x, y - 36);
-        ctx.lineTo(x, y + 6);
-        ctx.moveTo(x - 10, y - 26);
-        ctx.quadraticCurveTo(x - 6, y - 12, x - 8, y + 6);
-        ctx.moveTo(x + 10, y - 26);
-        ctx.quadraticCurveTo(x + 6, y - 12, x + 8, y + 6);
-        ctx.stroke();
-        ctx.fillStyle = '#9a6a3c';
-        ctx.beginPath();
-        ctx.arc(x, y - 40, 4, 0, Math.PI * 2);
-        ctx.fill();
-        // 火苗
-        const fh = 9 * flicker;
-        ctx.fillStyle = '#fffbe8';
-        ctx.beginPath();
-        ctx.moveTo(x, y - 12 - fh);
-        ctx.quadraticCurveTo(x + 4, y - 10, x, y - 6);
-        ctx.quadraticCurveTo(x - 4, y - 10, x, y - 12 - fh);
-        ctx.fill();
-        ctx.restore();
-        void dim;
-    }
-
-    drawMotes(ctx, dim) {
-        if (this.reduced) return;
-        const L = this.st.lamp;
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        this.motes.forEach((m) => {
-            const t = this.clock * 0.25 + m.p;
-            const x = m.x + Math.sin(t * 1.3) * 18 + (L.x - 240) * 0.15;
-            const y = m.y + Math.cos(t) * 14;
-            const a = (0.18 + 0.18 * Math.sin(t * 2.1)) * (1 - dim * 0.5);
-            ctx.fillStyle = `rgba(255,220,170,${a})`;
-            ctx.fillRect(x, y, 1.4, 1.4);
-        });
         ctx.restore();
     }
 
