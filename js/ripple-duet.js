@@ -1260,12 +1260,15 @@ class RippleDuetGame {
         put('side-records-title', 'sideRecords');
         put('side-legend-title', 'legendTitle');
         put('hint', 'hint');
-        put('btn-next', 'next');
-        put('btn-replay', 'retry');
-        put('btn-menu1', 'menu');
-        put('btn-again', 'again');
-        put('btn-copy', 'copyResult');
-        put('btn-menu2', 'menu');
+        const setActionButton = (id, icon, key) => {
+            if (el[id]) el[id].innerHTML = `${icon}<span class="btn-text">${this.t(key)}</span>`;
+        };
+        setActionButton('btn-next', ICONS.arrowRight, 'next');
+        setActionButton('btn-replay', ICONS.retry, 'retry');
+        setActionButton('btn-menu1', ICONS.home, 'menu');
+        setActionButton('btn-again', ICONS.retry, 'again');
+        setActionButton('btn-copy', ICONS.copy, 'copyResult');
+        setActionButton('btn-menu2', ICONS.home, 'menu');
         put('lb-title', 'leaderboard');
         put('username-label', 'playerName');
         document.title = this.lang === 'zh'
