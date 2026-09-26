@@ -106,6 +106,13 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
 
 ## 校验基础设施
 
+- ⚠️ **「菜单在舞台里」不代表「菜单看得全」。** 2026-09-26 用户截图发现晶绽手机版只露出 1–2 行关卡：
+  舞台内浮层是 `absolute + inset:0 + overflow-y:auto + 隐藏滚动条`，高度等于画布（手机上 280–500px），
+  关卡网格被压进一个看不出能滚的盒子 —— 晶绽 / 涟漪 / 焰语 20 关只可点 10 个，电路谜题 0 个，
+  11 个游戏中招。所有几何检查器都是绿的：它们只量「在不在舞台里」，不量「能不能点到」。
+  修法见 `layout.md`「开始菜单」（`.game-overlay--menu`）；回归：`node scripts/verify-start-menus.mjs`
+  （对 main 跑有 19 项失败，修后全绿）。教训：可达性要用 `scrollIntoView` + `elementFromPoint` 逐个按钮断言。
+
 - ⚠️ **`scripts/serve-static.mjs` 不回退 `public/`，于是 `public/` 下的一切在校验里都是 404 —— 而且没有任何检查会因此变红。**
   Vite dev 与 `dist/` 都把 `public/` 挂在站点根，但这台校验服务器只认仓库根：`/sw-register.js`、`/analytics.js`、
   `/manifest.json` 一直是静默 404（`<script src>` 失败不抛 pageerror）。2026-09-25 主题 P0 加入同步脚本

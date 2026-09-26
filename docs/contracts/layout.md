@@ -238,3 +238,19 @@ CSS 契约顺序 + `<main>` 语义 + h1，**不套** shell/topbar/sidebar 几何
   `shop.css` 商店/语言皮肤，B 批次自内联 style 抽离）。`eslint` 对 `js/math-rain/**`、
   `stylelint`/token-swap 对 `math-rain.css` 主皮肤仍豁免（老式类架构，收编成本高，见 backlog）；
   `shop.css` 已纳入 stylelint/token-swap（B 批次收窄）。
+
+## 开始菜单（手机 / 平板 < 1024px）
+
+舞台内的浮层（`.game-overlay`）默认 `position:absolute; inset:0`，高度被画布卡死。**带关卡网格或较长
+说明的开始菜单**要加 `.game-overlay--menu`（与 `game-overlay` 并列）：< 1024px 时，菜单显示期间舞台变成
+单格网格，画布与菜单叠在同一格，格高取两者较高者 —— 菜单完整铺开、页面整体滚动，顶栏 Home / 声音
+始终可用；菜单一加 `.hidden` 舞台就回到原 flex 布局（游戏中的几何与之前逐像素一致）。
+菜单期间舞台 `aspect-ratio:auto`、画布 `height:auto !important`（否则定了宽高比的舞台不长高、
+`height:100%` 的画布会被拉成菜单那么高）。≥ 1024px 不生效（桌面舞台够高，且有舞台预算契约）。
+
+- 页面的菜单须用 `.hidden` 类隐藏（`:has(> .game-overlay--menu:not(.hidden))` 依赖它）
+- 当前使用者：gravity-slingshot、needle-awn、lumen、circuit、silk-dew、bond-forge、echo-cave、
+  maxwell-demon、crystal-bloom、flame-verse、ripple-duet
+- 校验：`node scripts/verify-start-menus.mjs`（SUITE 名 `start-menus`）—— 加载时可见、非全屏的舞台内浮层
+  一旦内部溢出即红（新游戏漏加 class 会被抓），菜单里每个数字关卡按钮都必须能滚到并点中
+

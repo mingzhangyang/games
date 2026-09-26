@@ -199,6 +199,42 @@
 
 .game-overlay::-webkit-scrollbar { display: none; }
 
+/* ── 开始菜单（手机 / 平板 < 1024px）：随流撑高舞台，页面自然滚动 ──
+   舞台里的浮层默认 absolute + inset:0，高度被画布卡死；手机上画布只有 280–500px 高，
+   关卡网格被压进一个隐藏了滚动条的小盒子里，看起来就是「只显示了一两行关卡」
+   （电路谜题连一行都看不到）。给开始菜单加 .game-overlay--menu：菜单显示期间把舞台变成
+   单格网格，画布与菜单叠在同一格，格高 = 两者较高者 → 菜单完整铺开、页面整体滚动，
+   顶栏的 Home / 声音始终可用。菜单一隐藏（.hidden），舞台立即回到原来的 flex 布局。 */
+@media (width < 1024px) {
+    .game-stage:has(> .game-overlay--menu:not(.hidden)) {
+        display: grid;
+        justify-items: center;
+        align-items: start;
+        /* 定了 aspect-ratio 的舞台（needle-awn，且 overflow:hidden）高度由宽度反推、不会随菜单长高；
+           菜单期间让高度跟内容走 */
+        aspect-ratio: auto;
+    }
+
+    .game-stage:has(> .game-overlay--menu:not(.hidden)) > * {
+        grid-area: 1 / 1;
+    }
+
+    /* 网格项的百分比高度相对「格」解析 —— height:100% 的画布（needle-awn 的 #na-canvas）
+       会被拉成菜单那么高而变形；菜单期间按画布自身像素比例定高。
+       !important：页面用 ID 选择器定的 height:100%，这条只在菜单显示期间生效 */
+    .game-stage:has(> .game-overlay--menu:not(.hidden)) > canvas {
+        height: auto !important;
+    }
+
+    .game-stage > .game-overlay--menu {
+        position: relative;
+        inset: auto;
+        justify-self: stretch;
+        align-self: stretch;
+        overflow: visible;
+    }
+}
+
 /* ── 舞台内提示条 ──
    注意：这里**不要**加 white-space: nowrap。共享层比页面层先加载，
    一旦加上就会把页面自己的 max-width + text-align:center（意在长文案换行）
