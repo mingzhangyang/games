@@ -3,12 +3,12 @@ import { getLang } from './site-settings.js';
 // registry:begin more-games
 export const MORE_GAMES = [
     { href: 'math-rain.html', emoji: '🔢', en: "Math Rain", zh: "数字雨" },
-    { href: 'tetris.html', emoji: '🟦', en: "Tetris", zh: "俄罗斯方块" },
+    { href: 'tetris.html', emoji: '🟦', en: "Tetris", zh: "俄罗斯方块", light: true },
     { href: 'tank-battle.html', emoji: '🎯', en: "Tank Battle", zh: "坦克大战" },
     { href: 'gomoku.html', emoji: '⚫', en: "Gomoku", zh: "五子棋", light: true },
     { href: 'planet-merge.html', emoji: '🪐', en: "Planet Merge", zh: "星球合成" },
     { href: 'word-daily.html', emoji: '🔤', en: "Word Daily", zh: "每日猜词", light: true },
-    { href: 'hoop-shot.html', emoji: '🏀', en: "Hoop Shot", zh: "街机投篮" },
+    { href: 'hoop-shot.html', emoji: '🏀', en: "Hoop Shot", zh: "街机投篮", light: true },
     { href: 'minesweeper.html', emoji: '💣', en: "Minesweeper", zh: "扫雷", light: true },
     { href: 'reversi.html', emoji: '⚪', en: "Reversi", zh: "黑白棋", light: true },
     { href: 'tower-defense.html', emoji: '🏰', en: "Neon TD", zh: "霓虹塔防" },

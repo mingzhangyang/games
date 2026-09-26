@@ -2,6 +2,84 @@
    Hoop Shot 街机投篮 — arcade flick basketball
    ───────────────────────────────────────────── */
 
+/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+:root {
+    --hs-body-bg: radial-gradient(ellipse 75% 45% at 60% -10%, rgb(255, 140, 58, 0.10), transparent),
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #170f2b 100%);
+    --hs-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
+    --hs-score-value-glow: 0 0 20px rgb(255, 140, 58, 0.45);
+    --hs-score-value-bg: rgb(0, 0, 0, 0.35);
+    --hs-score-value-border: 1px solid rgb(255, 255, 255, 0.09);
+    --hs-score-sub-text: #b8a58c;
+    --hs-streak-bar-text: #ffb03a;
+    --hs-canvas-border: 1px solid rgb(255, 255, 255, 0.14);
+    --hs-canvas-shadow: 0 18px 50px rgb(0, 0, 0, 0.45), 0 0 40px rgb(255, 140, 58, 0.1);
+    --hs-overlay-bg: rgb(8, 10, 26, 0.88);
+    --hs-title-bg: linear-gradient(120deg, var(--tok-gold), #ff8c5a 60%, #ff5a3c);
+    --hs-subtitle-text: #b8a58c;
+    --hs-btn-bg: rgb(255, 255, 255, 0.08);
+    --hs-btn-border: 1px solid rgb(255, 255, 255, 0.14);
+    --hs-btn-hover-bg: rgb(255, 255, 255, 0.14);
+    --hs-btn-primary-bg: linear-gradient(120deg, #f08c3a, #ff5a3c);
+    --hs-btn-primary-shadow: 0 8px 24px rgb(255, 106, 60, 0.4);
+    --hs-btn-ghost-text: #b8a58c;
+    --hs-newbest-glow: 0 0 16px rgb(255, 211, 77, 0.6);
+    --hs-over-score-glow: 0 0 28px rgb(255, 140, 58, 0.5);
+    --hs-over-best-text: #b8a58c;
+    --hs-over-streak-text: #ffb03a;
+    --hs-lb-bg: rgb(255, 255, 255, 0.045);
+    --hs-lb-border: 1px solid rgb(255, 255, 255, 0.1);
+    --hs-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
+    --hs-lb-row-lb-top2-bg: rgb(203, 213, 225, 0.10);
+    --hs-lb-row-lb-top3-bg: rgb(205, 127, 50, 0.12);
+    --hs-lb-rank-text: #b8a58c;
+    --hs-username-label-text: #b8a58c;
+    --hs-username-bg: rgb(255, 255, 255, 0.07);
+    --hs-username-border: 1px solid rgb(255, 255, 255, 0.14);
+    --hs-username-focus-border: rgb(255, 176, 58, 0.5);
+}
+/* theme:end vars */
+
+/* theme:begin light */
+/* 浅色：白天球馆 —— 暖白墙 + 枫木地板；篮球与篮筐是「实物」保持原色，橙色标题 / 主按钮加深以保证浅底可读 */
+:root[data-theme="light"] {
+    --hs-body-bg: radial-gradient(ellipse 75% 45% at 60% -10%, rgb(255, 140, 58, 0.12), transparent),
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #f1e9e1 100%);
+    --hs-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
+    --hs-score-value-glow: none;
+    --hs-score-value-bg: rgb(255, 255, 255, 0.85);
+    --hs-score-value-border: 1px solid rgb(15, 23, 42, 0.12);
+    --hs-score-sub-text: #6e5a40;
+    --hs-streak-bar-text: #a65a00;
+    --hs-canvas-border: 1px solid rgb(15, 23, 42, 0.14);
+    --hs-canvas-shadow: 0 18px 50px rgb(15, 23, 42, 0.16), 0 0 40px rgb(255, 140, 58, 0.08);
+    --hs-overlay-bg: rgb(250, 246, 240, 0.9);
+    --hs-title-bg: linear-gradient(120deg, #c77800, #d9602a 60%, #c7361c);
+    --hs-subtitle-text: #6e5a40;
+    --hs-btn-bg: rgb(255, 255, 255, 0.8);
+    --hs-btn-border: 1px solid rgb(15, 23, 42, 0.15);
+    --hs-btn-hover-bg: rgb(255, 255, 255, 0.95);
+    --hs-btn-primary-bg: linear-gradient(120deg, #c2561a, #c7361c);
+    --hs-btn-primary-shadow: 0 8px 22px rgb(199, 54, 28, 0.25);
+    --hs-btn-primary-text: #fff;
+    --hs-btn-ghost-text: #6e5a40;
+    --hs-newbest-glow: none;
+    --hs-over-score-glow: none;
+    --hs-over-best-text: #6e5a40;
+    --hs-over-streak-text: #a65a00;
+    --hs-lb-bg: rgb(255, 255, 255, 0.7);
+    --hs-lb-border: 1px solid rgb(15, 23, 42, 0.11);
+    --hs-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.22);
+    --hs-lb-row-lb-top2-bg: rgb(148, 163, 184, 0.16);
+    --hs-lb-row-lb-top3-bg: rgb(205, 127, 50, 0.16);
+    --hs-lb-rank-text: #6e5a40;
+    --hs-username-label-text: #6e5a40;
+    --hs-username-bg: rgb(255, 255, 255, 0.8);
+    --hs-username-border: 1px solid rgb(15, 23, 42, 0.15);
+    --hs-username-focus-border: rgb(199, 90, 28, 0.55);
+}
+/* theme:end light */
+
 * {
     margin: 0;
     padding: 0;
@@ -10,8 +88,7 @@
 
 body {
     background:
-        radial-gradient(ellipse 75% 45% at 60% -10%, rgb(255, 140, 58, 0.10), transparent),
-        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #170f2b 100%);
+        var(--hs-body-bg);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
 }
@@ -20,7 +97,7 @@ body {
 
 /* ── 顶栏 ── */
 
-.hs-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.hs-icon-btn:hover { background: var(--hs-icon-btn-hover-bg); }
 .hs-icon-btn:active { transform: scale(0.92); }
 
 /* 中槽对齐参考页（lumen 模式）：单行并排 —— 左侧小文本（Best），
@@ -42,9 +119,9 @@ body {
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 20px rgb(255, 140, 58, 0.45);
-    background: rgb(0, 0, 0, 0.35);
-    border: 1px solid rgb(255, 255, 255, 0.09);
+    text-shadow: var(--hs-score-value-glow);
+    background: var(--hs-score-value-bg);
+    border: var(--hs-score-value-border);
     border-radius: 11px;
     padding: 6px 14px;
 }
@@ -53,7 +130,7 @@ body {
     order: -1;
     margin: 0;
     font-size: 12.5px;
-    color: #b8a58c;
+    color: var(--hs-score-sub-text);
     font-variant-numeric: tabular-nums;
 }
 
@@ -63,7 +140,7 @@ body {
     font-weight: 800;
     text-align: center;
     letter-spacing: 0.06em;
-    color: #ffb03a;
+    color: var(--hs-streak-bar-text);
 }
 
 /* ── 游戏区 ── */
@@ -72,8 +149,8 @@ body {
     display: block;
     width: 100%;
     border-radius: 18px;
-    border: 1px solid rgb(255, 255, 255, 0.14);
-    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.45), 0 0 40px rgb(255, 140, 58, 0.1);
+    border: var(--hs-canvas-border);
+    box-shadow: var(--hs-canvas-shadow);
     touch-action: none;
     cursor: pointer;
 }
@@ -103,7 +180,7 @@ body {
 /* ── 覆盖层 ── */
 
 .hs-overlay {
-    background: rgb(8, 10, 26, 0.88);
+    background: var(--hs-overlay-bg);
     text-align: center;
     backdrop-filter: blur(10px);
 }
@@ -111,7 +188,7 @@ body {
 .hs-title {
     font-size: 36px;
     font-weight: 800;
-    background: linear-gradient(120deg, var(--tok-gold), #ff8c5a 60%, #ff5a3c);
+    background: var(--hs-title-bg);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -119,7 +196,7 @@ body {
 
 .hs-subtitle {
     font-size: 13px;
-    color: #b8a58c;
+    color: var(--hs-subtitle-text);
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-top: -8px;
@@ -148,26 +225,27 @@ body {
     font-size: 15px;
     font-weight: 700;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.08);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--hs-btn-bg);
+    border: var(--hs-btn-border);
     border-radius: 14px;
     padding: 12px 20px;
     cursor: pointer;
     transition: transform 0.12s, background 0.15s;
 }
 
-.hs-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.hs-btn:hover { background: var(--hs-btn-hover-bg); }
 .hs-btn:active { transform: scale(0.96); }
 
 .hs-btn-primary {
-    background: linear-gradient(120deg, #f08c3a, #ff5a3c);
+    color: var(--hs-btn-primary-text, var(--tok-text));
+    background: var(--hs-btn-primary-bg);
     border: none;
-    box-shadow: 0 8px 24px rgb(255, 106, 60, 0.4);
+    box-shadow: var(--hs-btn-primary-shadow);
 }
 
 .hs-btn-ghost {
     background: transparent;
-    color: #b8a58c;
+    color: var(--hs-btn-ghost-text);
 }
 
 .hs-stat-line { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -186,7 +264,7 @@ body {
     font-size: 17px;
     font-weight: 800;
     color: var(--tok-gold);
-    text-shadow: 0 0 16px rgb(255, 211, 77, 0.6);
+    text-shadow: var(--hs-newbest-glow);
 }
 
 .hs-newbest.show { animation: hs-pop 0.5s ease-out; }
@@ -202,11 +280,11 @@ body {
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 28px rgb(255, 140, 58, 0.5);
+    text-shadow: var(--hs-over-score-glow);
 }
 
-.hs-over-best { font-size: 15px; color: #b8a58c; font-variant-numeric: tabular-nums; }
-.hs-over-streak { font-size: 13.5px; color: #ffb03a; }
+.hs-over-best { font-size: 15px; color: var(--hs-over-best-text); font-variant-numeric: tabular-nums; }
+.hs-over-streak { font-size: 13.5px; color: var(--hs-over-streak-text); }
 
 .hs-btn-row {
     display: flex;
@@ -220,8 +298,8 @@ body {
 .hs-lb {
     width: 100%;
     max-width: 340px;
-    background: rgb(255, 255, 255, 0.045);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--hs-lb-bg);
+    border: var(--hs-lb-border);
     border-radius: 14px;
     padding: 12px 14px;
 }
@@ -250,11 +328,11 @@ body {
     border-radius: 7px;
 }
 
-.hs-lb-row.hs-lb-top1 { background: rgb(252, 211, 77, 0.14); }
-.hs-lb-row.hs-lb-top2 { background: rgb(203, 213, 225, 0.10); }
-.hs-lb-row.hs-lb-top3 { background: rgb(205, 127, 50, 0.12); }
+.hs-lb-row.hs-lb-top1 { background: var(--hs-lb-row-lb-top1-bg); }
+.hs-lb-row.hs-lb-top2 { background: var(--hs-lb-row-lb-top2-bg); }
+.hs-lb-row.hs-lb-top3 { background: var(--hs-lb-row-lb-top3-bg); }
 
-.hs-lb-rank { width: 22px; flex-shrink: 0; color: #b8a58c; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hs-lb-rank { width: 22px; flex-shrink: 0; color: var(--hs-lb-rank-text); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .hs-lb-name {
     flex: 1;
@@ -283,7 +361,7 @@ body {
     margin-top: 6px;
 }
 
-.hs-username-label { font-size: 11.5px; color: #b8a58c; flex-shrink: 0; }
+.hs-username-label { font-size: 11.5px; color: var(--hs-username-label-text); flex-shrink: 0; }
 
 .hs-username {
     flex: 1;
@@ -291,14 +369,14 @@ body {
     font-family: inherit;
     font-size: 13px;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--hs-username-bg);
+    border: var(--hs-username-border);
     border-radius: 9px;
     padding: 7px 10px;
     outline: none;
 }
 
-.hs-username:focus { border-color: rgb(255, 176, 58, 0.5); }
+.hs-username:focus { border-color: var(--hs-username-focus-border); }
 
 /* ── 响应式 ── */
 
@@ -342,4 +420,46 @@ body {
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}
+
+/* ── 画布调色板（js/hoop-shot.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
+   深色 = 迁移前 JS 里的字面量，逐字不变；浅色在下方覆盖。*-rgb 为「r, g, b」三元组 */
+:root {
+    --hs-cv-bg-top: #0a0e24;
+    --hs-cv-bg-mid: #101538;
+    --hs-cv-bg-bottom: #161040;
+    --hs-cv-star: #dfe7ff;
+    --hs-cv-floor-top: rgb(216, 150, 84, 0.16);
+    --hs-cv-floor-bottom: rgb(216, 150, 84, 0.34);
+    --hs-cv-court-line: rgb(255, 255, 255, 0.25);
+    --hs-cv-court-key: rgb(255, 140, 90, 0.3);
+    --hs-cv-board-top: rgb(226, 232, 255, 0.85);
+    --hs-cv-board-bottom: rgb(170, 185, 235, 0.7);
+    --hs-cv-board-edge: rgb(255, 255, 255, 0.5);
+    --hs-cv-net-rgb: 230, 236, 255;
+    --hs-cv-aim-rgb: 255, 211, 77;
+    --hs-cv-aim-text: rgb(232, 236, 255, 0.75);
+    --hs-cv-popup: #e8ecff;
+    --hs-cv-popup-big: #ffd34d;
+    --hs-cv-spark: #dfe7ff;
+}
+
+:root[data-theme="light"] {
+    --hs-cv-bg-top: #f7f3ec;
+    --hs-cv-bg-mid: #ece6dc;
+    --hs-cv-bg-bottom: #e4dccf;
+    --hs-cv-star: none;
+    --hs-cv-floor-top: rgb(222, 170, 108, 0.5);
+    --hs-cv-floor-bottom: rgb(214, 156, 92, 0.7);
+    --hs-cv-court-line: rgb(255, 255, 255, 0.85);
+    --hs-cv-court-key: rgb(199, 70, 30, 0.45);
+    --hs-cv-board-top: rgb(255, 255, 255, 0.95);
+    --hs-cv-board-bottom: rgb(214, 224, 242, 0.9);
+    --hs-cv-board-edge: rgb(60, 76, 120, 0.45);
+    --hs-cv-net-rgb: 70, 84, 118;
+    --hs-cv-aim-rgb: 214, 140, 0;
+    --hs-cv-aim-text: rgb(40, 34, 28, 0.8);
+    --hs-cv-popup: #2a2438;
+    --hs-cv-popup-big: #c77800;
+    --hs-cv-spark: #7c8aa8;
 }
