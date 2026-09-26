@@ -94,6 +94,7 @@
 | P3b | tetris、hoop-shot | tetris：棋盘与 Next 预览是「屏幕」保持深色（进 `CANVAS_KEEP`），只换外壳 / 侧栏 / 结算面板，页面语义色（`--primary-color` 等）浅色下加深；彩虹主题（`tetris_rainbow`）与明暗正交，浅色 × 彩虹另有一套加深值，星点浅色下隐藏。hoop-shot：「白天球馆」—— 画布背景、球场线、篮板、球网、瞄准、飘字走 `bindPalette`（背景离屏缓存在 `onChange` 里重建），篮球与篮筐是实物不变；主按钮加深为焦橙配白字 | **已完成**（2026-09-26） |
 | 暂缓 | math-rain | CSS + JS 约 335 处字面色，且在 hex 规则豁免内；先做令牌收敛（`style.md` §2），再评估浅色。未带 `theme-light` = 目前按仅深色处理 | 暂缓，先收敛 |
 | 仅深色 | echo-cave | 「黑暗中靠回声照亮」就是玩法 | 例外 |
+|  | shadow-loom | 黑暗剧场里的人工光：纸幕只有在暗场里才透亮，影子、灯晕、金线都靠暗底成立（设计方案 §3） | 例外 |
 |  | flame-verse | 发射光谱靠加色混合，白底上消失 | 例外 |
 |  | gravity-slingshot、planet-merge | 太空题材 | 例外 |
 |  | tower-defense | 霓虹美术即主题 | 例外 |

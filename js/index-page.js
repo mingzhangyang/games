@@ -137,6 +137,11 @@ const i18n = {
         carrotPullTag: 'Casual',
         carrotPullPlay: 'Play ›',
 
+        shadowLoomName: 'Shadow Loom',
+        shadowLoomDesc: 'Move paper cut-outs hung at different depths — and the lamp — until their scattered shadows weave into a living shape.',
+        shadowLoomTag: 'Shadow Puzzle',
+        shadowLoomPlay: 'Play ›',
+
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
         minecraftTag: 'Sandbox',
@@ -293,6 +298,11 @@ const i18n = {
         carrotPullTag: '休闲街机',
         carrotPullPlay: '开始游戏 ›',
 
+        shadowLoomName: '影织',
+        shadowLoomDesc: '移动悬在不同深度的剪纸和那盏灯，让散乱的影子慢慢重合，织成一个会动的生命。',
+        shadowLoomTag: '纸影解谜',
+        shadowLoomPlay: '开始游戏 ›',
+
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
         minecraftTag: '沙盒游戏',
@@ -448,6 +458,11 @@ function applyLanguage(lang) {
     document.getElementById('carrot-pull-tag').textContent = t.carrotPullTag;
     document.getElementById('carrot-pull-play').textContent = t.carrotPullPlay;
 
+    document.getElementById('shadow-loom-name').textContent = t.shadowLoomName;
+    document.getElementById('shadow-loom-desc').textContent = t.shadowLoomDesc;
+    document.getElementById('shadow-loom-tag').textContent = t.shadowLoomTag;
+    document.getElementById('shadow-loom-play').textContent = t.shadowLoomPlay;
+
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
     document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -545,6 +560,7 @@ function injectStructuredData() {
         { slug: 'flame-verse', name: 'Flame Verse', description: 'Original flame spectroscopy puzzle — throw salts into the burner, read the emission lines each element leaves behind and match the mystery sample\'s barcode of light. 20 unknowns plus a daily sample.' },
         { slug: 'ripple-duet', name: 'Ripple Duet', description: 'Original wave interference puzzle — drag two sources across the sea, set their phase and sculpt the ripple field: flatten the storm at one point, blaze a beacon at another, keep a whole channel calm. 20 wave puzzles plus a daily course.' },
         { slug: 'carrot-pull', name: 'Carrot Pull', description: 'Cute garden rhythm game — hit the sweet spot, pull in rhythm and help a tiny mole harvest six giant carrots before time runs out.' },
+        { slug: 'shadow-loom', name: 'Shadow Loom', description: 'Paper-theatre shadow puzzle — move cut-outs hung at different depths, and the lamp itself, until their shadows weave into a rabbit, a dove, a deer, and the shadow comes alive.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }

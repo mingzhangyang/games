@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-support" content="dark">
+    <meta name="theme-color" content="#0d1226">
+    <script src="/theme-boot.js"></script>
+    <meta name="description" content="影织 Shadow Loom — a quiet paper-theatre puzzle. Move paper cut-outs hung at different depths, and the lamp itself, until their scattered shadows weave into a rabbit, a dove, a deer — and the shadow comes alive.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/shadow-loom.html">
+    <meta property="og:title" content="影织 Shadow Loom — Paper Shadow Puzzle">
+    <meta property="og:description" content="Move paper cut-outs and a lamp until scattered shadows weave into a living shape.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-shadow-loom.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/shadow-loom.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="影织 Shadow Loom — Paper Shadow Puzzle">
+    <meta name="twitter:description" content="A paper-theatre puzzle of light, depth and shadow: weave the pieces into a living silhouette.">
+    <meta name="twitter:image" content="assets/seo/og-shadow-loom.svg">
+    <title>影织 Shadow Loom — Paper Shadow Puzzle</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d1226'/%3E%3Crect x='12' y='10' width='40' height='34' rx='3' fill='%23e9d6b0'/%3E%3Cpath d='M26 40c-6 0-8-8-2-11-2-8 2-15 5-15 2 0 2 6 1 11 5-6 8-8 9-6 1 3-4 8-6 10 5 1 7 5 5 9Z' fill='%234a3325'/%3E%3Ccircle cx='32' cy='54' r='5' fill='%23ffb347'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/shadow-loom.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body>
+    <div class="sl-shell game-shell">
+        <header class="sl-topbar game-topbar">
+            <div class="sl-topbar-lead game-topbar-group">
+                <button data-chrome="home" class="sl-icon-btn game-icon-btn" id="sl-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <!-- 中槽：极简标题 + 目标剪影 + 进度标记（设计方案 §4） -->
+            <div class="sl-topbar-center game-topbar-center">
+                <div class="sl-brand">
+                    <span class="sl-brand-zh" id="sl-brand">影织</span>
+                    <span class="sl-progress" id="sl-progress" aria-label="Progress"></span>
+                </div>
+                <button type="button" class="sl-target-btn" id="sl-target-btn" aria-label="Show the target shape" title="Show the target shape">
+                    <canvas id="sl-target-icon" width="64" height="64" aria-hidden="true"></canvas>
+                </button>
+            </div>
+            <div class="sl-topbar-actions game-topbar-group">
+                <button type="button" class="sl-icon-btn game-icon-btn" id="sl-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button data-chrome="stats" type="button" class="sl-icon-btn game-icon-btn sl-stats-btn game-stats-btn" id="slStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="slStatsDrawer"></button>
+                <button data-chrome="sound" type="button" class="sl-icon-btn game-icon-btn" id="sl-mute-btn" title="Sound" aria-label="Sound"></button>
+            </div>
+        </header>
+
+        <main class="sl-main game-main">
+            <div class="sl-stage game-stage" id="sl-stage">
+                <h1 class="sr-only" id="sl-heading">影织 Shadow Loom</h1>
+                <canvas class="game-canvas" id="sl-canvas" width="480" height="720" role="img" aria-label="Paper theatre: move the paper cut-outs and the lamp until their shadows weave into the shape"></canvas>
+
+                <div class="sl-toast game-toast" id="sl-toast" role="status" aria-live="polite"></div>
+
+                <!-- 开始菜单 -->
+                <div class="sl-overlay game-overlay game-overlay--menu" id="sl-start">
+                    <div class="sl-hero" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+                            <defs>
+                                <radialGradient id="sl-hero-glow" cx="50%" cy="46%" r="55%">
+                                    <stop offset="0" stop-color="#fff1d0"/>
+                                    <stop offset=".7" stop-color="#e2c796"/>
+                                    <stop offset="1" stop-color="#a88559"/>
+                                </radialGradient>
+                            </defs>
+                            <rect x="10" y="6" width="76" height="66" rx="4" fill="url(#sl-hero-glow)"/>
+                            <path d="M40 64c-12 0-16-14-6-20-4-12 2-24 8-24 3 0 4 10 2 18 8-10 14-14 16-10 2 5-7 13-11 16 9 2 13 9 10 17Z" fill="#4a3325" opacity=".85"/>
+                            <circle cx="48" cy="86" r="7" fill="#ffb347"/>
+                            <circle cx="48" cy="86" r="12" fill="#ffb347" opacity=".25"/>
+                        </svg>
+                    </div>
+                    <h2 class="sl-title" id="sl-title">影织</h2>
+                    <p class="sl-subtitle" id="sl-subtitle">Shadow Loom</p>
+                    <p class="sl-copy" id="sl-copy"></p>
+                    <button type="button" class="sl-primary game-btn" id="sl-btn-begin"><span></span></button>
+                    <p class="sl-level-label" id="sl-level-label"></p>
+                    <div class="sl-level-grid" id="sl-level-grid"></div>
+                </div>
+
+                <!-- 完成：安静的结果层，停在舞台下部，活过来的影子仍是焦点（设计方案 §9 / §11） -->
+                <div class="sl-overlay sl-result game-overlay hidden" id="sl-result">
+                    <div class="sl-card">
+                        <p class="sl-card-kicker" id="sl-result-kicker"></p>
+                        <h2 class="sl-card-title" id="sl-result-title"></h2>
+                        <dl class="sl-result-stats" id="sl-result-stats"></dl>
+                        <div class="sl-btn-row">
+                            <button type="button" class="sl-btn sl-btn-primary game-btn" id="sl-btn-next"><span></span></button>
+                            <button type="button" class="sl-btn game-btn" id="sl-btn-replay"><span></span></button>
+                            <button type="button" class="sl-btn sl-btn-ghost game-btn" id="sl-btn-menu"><span></span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="sl-sidebar game-sidebar">
+                <!-- 由 js/game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
+                <div id="slStatsPanels">
+                    <div class="sl-side-card game-side-card">
+                        <div class="sl-side-title game-side-title" id="sl-side-howto-title"></div>
+                        <p class="sl-side-text game-side-text" id="sl-side-howto"></p>
+                    </div>
+                    <div class="sl-side-card game-side-card">
+                        <div class="sl-side-title game-side-title" id="sl-side-records-title"></div>
+                        <div class="sl-side-records" id="sl-side-records"></div>
+                    </div>
+                </div>
+                <!-- 桌面侧栏专属（放在 #slStatsPanels 外，不随抽屉搬移） -->
+                <div class="sl-side-card game-side-card">
+                    <div class="sl-side-title game-side-title" id="sl-side-keys-title"></div>
+                    <div class="sl-side-keys" id="sl-side-keys"></div>
+                </div>
+                <div class="sl-side-card game-side-card">
+                    <nav class="more-games" id="slSideMore"></nav>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="sl-footer game-footer">
+            <p class="sl-footer-hint game-footer-hint" id="sl-hint"></p>
+            <div class="sl-footer-actions game-footer-actions game-topbar-group">
+                <a class="sl-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
+                <button type="button" class="sl-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="slMoreNav" title="More games" aria-label="More games"></button>
+            </div>
+            <nav class="more-games game-footer-nav" id="slMoreNav" hidden></nav>
+        </footer>
+    </div>
+
+    <div class="game-drawer" id="slStatsDrawer" hidden>
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="slStatsDrawerTitle">
+            <div class="game-drawer-handle"></div>
+            <div class="game-drawer-head">
+                <span class="game-drawer-title" id="slStatsDrawerTitle"></span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="slStatsClose" aria-label="Close"></button>
+            </div>
+            <div class="game-drawer-body" id="slStatsDrawerBody"></div>
+        </div>
+    </div>
+
+    <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-shadow-loom.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"影织 Shadow Loom — Paper Shadow Puzzle","url":currentUrl,"description":"影织 Shadow Loom — a quiet paper-theatre puzzle. Move paper cut-outs hung at different depths, and the lamp itself, until their scattered shadows weave into a rabbit, a dove, a deer — and the shadow comes alive.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"影织 Shadow Loom — Paper Shadow Puzzle","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <!-- registry:end seo-script -->
+    <script type="module" src="js/shadow-loom.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

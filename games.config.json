@@ -1092,6 +1092,45 @@
       },
       "themeColor": "#173c3e",
       "themeColorLight": "#f4efe1"
+    },
+    {
+      "id": "shadow-loom",
+      "prefix": "sl",
+      "href": "shadow-loom.html",
+      "entry": "js/shadow-loom.js",
+      "emoji": "🕯️",
+      "title": {
+        "doc": "影织 Shadow Loom — Paper Shadow Puzzle",
+        "seo": "影织 Shadow Loom — Paper Shadow Puzzle"
+      },
+      "name": {
+        "en": "Shadow Loom",
+        "zh": "影织"
+      },
+      "desc": {
+        "meta": "影织 Shadow Loom — a quiet paper-theatre puzzle. Move paper cut-outs hung at different depths, and the lamp itself, until their scattered shadows weave into a rabbit, a dove, a deer — and the shadow comes alive.",
+        "og": "Move paper cut-outs and a lamp until scattered shadows weave into a living shape.",
+        "twitter": "A paper-theatre puzzle of light, depth and shadow: weave the pieces into a living silhouette."
+      },
+      "genre": [
+        "PuzzleGame"
+      ],
+      "caps": [
+        "sidebar",
+        "drawer",
+        "frame-budget",
+        "analytics",
+        "topbar"
+      ],
+      "stage": {
+        "w": 480,
+        "h": 720
+      },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
+      "themeColor": "#0d1226"
     }
   ]
 }

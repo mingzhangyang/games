@@ -30,6 +30,7 @@ const AUGMENT = {
     'flame-verse':       { gameVar: 'fvGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'ripple-duet':       { gameVar: 'rdGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'carrot-pull':       { gameVar: 'cpGame',          runningExpr: 'g.isRunning()', startMethod: 'start' },
+    'shadow-loom':       { gameVar: 'slGame',          runningExpr: 'g.isRunning()', startMethod: 'startLevel', startArgs: [0] },
 };
 // ⚠ 曾经这里写的是 `.filter(g => AUGMENT[g.id])` —— 手工表静默收窄注册表：
 // 新游戏挂了 drawer cap 却忘了补 AUGMENT，校验器当它不存在，抽屉没接也全绿。
