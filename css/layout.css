@@ -210,9 +210,12 @@
         display: grid;
         justify-items: center;
         align-items: start;
-        /* 定了 aspect-ratio 的舞台（needle-awn，且 overflow:hidden）高度由宽度反推、不会随菜单长高；
-           菜单期间让高度跟内容走 */
+        /* 页面给舞台定的尺寸约束在菜单期间一律让位，否则菜单长高了也会被裁掉：
+           aspect-ratio（na 竖屏：高度由宽度反推）、固定 height（na 横屏媒体查询）、
+           overflow:hidden（na）。菜单一 .hidden，这条规则失效，页面原值自动回来 */
         aspect-ratio: auto;
+        height: auto;
+        overflow: visible;
     }
 
     .game-stage:has(> .game-overlay--menu:not(.hidden)) > * {

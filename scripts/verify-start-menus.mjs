@@ -8,8 +8,9 @@
 // 断言（390×844、768×1024，全部注册表页面）：
 //   ① 覆盖：加载时可见、且被困在舞台里（非视口级全屏）的 .game-overlay 不得内部溢出 ——
 //      溢出的必须加 .game-overlay--menu（新游戏漏加 → 红）
-//   ② 可达：带 .game-overlay--menu 的菜单里，每个数字关卡按钮都能滚到视口里、并且中心点命中它自己
-//      （elementFromPoint —— 被盖住 / 被裁掉都算失败）
+//   ② 可达：带 .game-overlay--menu 的菜单里，每个可见按钮都能滚到视口里、并且中心点命中它自己
+//      （elementFromPoint —— 被盖住 / 被裁掉都算失败）；菜单不被 overflow≠visible 的舞台截断
+//   视口含横屏手机 844×390（Copilot 在 PR #15 指出：na 的横屏规则给舞台定了高度 + overflow:hidden）
 //   ③ 无 pageerror
 //
 // 用法：node scripts/verify-start-menus.mjs [baseUrl]（verify-all 自动传入）
@@ -18,7 +19,7 @@ import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
-const VIEWPORTS = [[390, 844], [768, 1024]];
+const VIEWPORTS = [[390, 844], [768, 1024], [844, 390]];   // 含横屏手机：na 的横屏规则给舞台定了高度
 
 const fails = [];
 let passes = 0;
@@ -51,23 +52,31 @@ for (const g of registry.all()) {
             check(o.sh <= o.h + 2, `${g.id}@${w}：#${o.id} 不内部溢出${o.menu ? '' : '（溢出就加 .game-overlay--menu）'}`, `h=${o.h} scrollH=${o.sh}`);
         }
 
-        // ② 可达
+        // ② 可达：菜单里**所有**可见按钮（不只数字关卡 —— na 的模式按钮也曾被裁）都能滚到并点中；
+        //    菜单也不能被裁剪型舞台（overflow ≠ visible）截断
         for (const o of overlays.filter(x => x.menu)) {
+            const clip = await page.evaluate((id) => {
+                const m = document.getElementById(id);
+                const st = m.parentElement;
+                const clips = getComputedStyle(st).overflowY !== 'visible' || getComputedStyle(st).overflowX !== 'visible';
+                return { clips, menuBottom: Math.round(m.getBoundingClientRect().bottom), stageBottom: Math.round(st.getBoundingClientRect().bottom) };
+            }, o.id);
+            check(!clip.clips || clip.menuBottom <= clip.stageBottom + 1, `${g.id}@${w}：#${o.id} 没被舞台裁掉`, JSON.stringify(clip));
             const n = await page.evaluate(id => [...document.getElementById(id).querySelectorAll('button')]
-                .filter(e => e.offsetParent && /^\s*\d+/.test(e.textContent)).length, o.id);
+                .filter(e => e.offsetParent).length, o.id);
             let reachable = 0;
+            const missed = [];
             for (let i = 0; i < n; i++) {
-                const ok = await page.evaluate((id, i) => {
-                    const e = [...document.getElementById(id).querySelectorAll('button')]
-                        .filter(b => b.offsetParent && /^\s*\d+/.test(b.textContent))[i];
+                const r = await page.evaluate((id, i) => {
+                    const e = [...document.getElementById(id).querySelectorAll('button')].filter(b => b.offsetParent)[i];
                     e.scrollIntoView({ block: 'center' });
-                    const r = e.getBoundingClientRect();
-                    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-                    return !!hit && (hit === e || e.contains(hit));
+                    const rc = e.getBoundingClientRect();
+                    const hit = document.elementFromPoint(rc.left + rc.width / 2, rc.top + rc.height / 2);
+                    return { ok: !!hit && (hit === e || e.contains(hit)), name: e.id || e.textContent.trim().slice(0, 10) };
                 }, o.id, i);
-                if (ok) reachable++;
+                if (r.ok) reachable++; else missed.push(r.name);
             }
-            check(reachable === n, `${g.id}@${w}：#${o.id} 的关卡按钮全部可点`, `${reachable}/${n}`);
+            check(reachable === n, `${g.id}@${w}：#${o.id} 的按钮全部可点`, `${reachable}/${n} 点不到：${missed.join(', ')}`);
         }
         check(errors.length === 0, `${g.id}@${w}：无 pageerror`, errors.join(' | '));
         await page.close();

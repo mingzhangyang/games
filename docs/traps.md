@@ -112,6 +112,9 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
   11 个游戏中招。所有几何检查器都是绿的：它们只量「在不在舞台里」，不量「能不能点到」。
   修法见 `layout.md`「开始菜单」（`.game-overlay--menu`）；回归：`node scripts/verify-start-menus.mjs`
   （对 main 跑有 19 项失败，修后全绿）。教训：可达性要用 `scrollIntoView` + `elementFromPoint` 逐个按钮断言。
+  第一版只测竖屏、只点数字关卡按钮，漏了 needle-awn 横屏：它的舞台有固定高度 + `overflow:hidden`，菜单长高后
+  被裁掉，而它的菜单里没有数字按钮、也不「内部溢出」—— 三条断言全部绕过（PR #15 Copilot 评审指出）。
+  现在视口含 844×390，按钮不限数字，并单独断言「菜单没被裁剪型舞台截断」。
 
 - ⚠️ **`scripts/serve-static.mjs` 不回退 `public/`，于是 `public/` 下的一切在校验里都是 404 —— 而且没有任何检查会因此变红。**
   Vite dev 与 `dist/` 都把 `public/` 挂在站点根，但这台校验服务器只认仓库根：`/sw-register.js`、`/analytics.js`、
