@@ -22,8 +22,8 @@ const TAU = Math.PI * 2;
 
 /**
  * 手绘分层素材（assets/firefly-signal/layers/，由原始 PNG 归一化透明度、裁边、转 WebP）。
- * 从远到近：夜空 → 月亮 → 远山 → 湖面（含对岸灯火）→ 中景植被。
- * 前景植被 / 前景照亮版到位后在这里追加。用 new URL(…, import.meta.url) 引用，
+ * 从远到近：夜空 → 月亮 → 远山 → 湖面（含对岸灯火）→ 中景植被 →（远处萤火虫）→ 前景植被 →（近处萤火虫）。
+ * 前景植被（fore）画在远处与近处萤火虫之间，做出「虫在草丛里」的纵深。用 new URL(…, import.meta.url) 引用，
  * Vite 构建时会带上哈希并拷进 dist；源码态的静态服务器按原路径直出。
  */
 const LAYER_URLS = {
@@ -32,7 +32,12 @@ const LAYER_URLS = {
     mountains: new URL('../../assets/firefly-signal/layers/mountains.webp', import.meta.url).href,
     lake: new URL('../../assets/firefly-signal/layers/lake.webp', import.meta.url).href,
     mid: new URL('../../assets/firefly-signal/layers/mid.webp', import.meta.url).href,
+    fore: new URL('../../assets/firefly-signal/layers/fore.webp', import.meta.url).href,
+    // 前景「被照亮版」是加色增量（照亮版 − 原图，已去掉画进去的光球与剪影外的光晕），0.6 倍分辨率存储
+    foreLit: new URL('../../assets/firefly-signal/layers/fore-lit.webp', import.meta.url).href,
 };
+/** 前景剪影上沿（每列首个不透明行）的中位数约在素材高度 39% 处：萤火虫在它下面一点以上的画在草后 */
+const FORE_SPLIT = 0.42;
 /** 素材里的关键行（占素材高度的比例）：湖面图的水线、月亮图里月盘的直径占比 */
 const LAKE_WATERLINE = 0.49;
 const MOON_DISC = 0.87;
@@ -127,6 +132,8 @@ export function createRenderer(canvas, opts = {}) {
     let map = { s: 1, ox: 0, oy: 0 };
     let sceneSeed = 1;
     let bg = null, lit = null, light = null, comp = null;
+    let fg = null;           // 前景植被层（远 / 近萤火虫之间），无手绘素材时为 null
+    let splitY = Infinity;   // 屏幕 y 小于它的萤火虫画在前景之后
     let lakeTop = 0, lakeBottom = 0, meadowTop = 0;
     const sprites = {};
     const far = [];          // 远景装饰萤火虫
@@ -176,11 +183,17 @@ export function createRenderer(canvas, opts = {}) {
         const disc = Math.max(44, Math.min(88, Math.min(W, H) * 0.14));
         // 月盘整个露在最高的山尖之上；上限是 HUD 的下沿（圆环约占舞台顶部 0–110px）
         const cy = Math.max(104 + disc / 2, Math.min(H * 0.24, place.mountains.y - disc * 0.62));
-        place.moon = { cx: W * 0.8, cy, d: disc / MOON_DISC };
+        // x 取 0.64W：远山图最高的峰在约 0.8W，近方形的桌面舞台上月亮放不到它上方
+        place.moon = { cx: W * 0.64, cy, d: disc / MOON_DISC };
         // 中景植被：底边贴舞台底，宽度至少铺满（右侧不留硬边），高度至少占七成
         const md = layers.mid;
         const mds = Math.max((H * 0.72) / md.naturalHeight, (W * 1.04) / md.naturalWidth);
         place.mid = { x: -W * 0.02, y: H - md.naturalHeight * mds, s: mds };
+        // 前景植被：底边贴舞台底，宽度铺满，高度至少占舞台四成出头
+        const fr = layers.fore;
+        const fs = Math.max((W * 1.04) / fr.naturalWidth, (H * 0.44) / fr.naturalHeight);
+        place.fore = { x: (W - fr.naturalWidth * fs) / 2, y: H - fr.naturalHeight * fs, s: fs };
+        splitY = place.fore.y + fr.naturalHeight * fs * FORE_SPLIT;
     }
 
     function drawLayer(g, img, p) {
@@ -227,6 +240,20 @@ export function createRenderer(canvas, opts = {}) {
         if (litTwins.mid) drawLayer(l, litTwins.mid, place.mid);
     }
 
+    /** 前景植被进单独的 fg 层；照亮层同样按它的剪影挖掉后面的内容，再叠它的加色增量 */
+    function drawArtFore(l) {
+        const p = place.fore, fr = layers.fore;
+        const w = fr.naturalWidth * p.s, h = fr.naturalHeight * p.s;
+        fg = makeCanvas(Math.round(W * dpr), Math.round(H * dpr));
+        const g = fg.getContext('2d');
+        g.scale(dpr, dpr);
+        g.drawImage(fr, p.x, p.y, w, h);
+        l.globalCompositeOperation = 'destination-out';
+        l.drawImage(fr, p.x, p.y, w, h);
+        l.globalCompositeOperation = 'source-over';
+        l.drawImage(layers.foreLit, p.x, p.y, w, h);
+    }
+
     for (const [k, t] of Object.entries(TINT)) {
         const [r, g, b] = t.glow;
         const [cr, cg, cb] = t.core;
@@ -267,6 +294,8 @@ export function createRenderer(canvas, opts = {}) {
 
         // 手绘分层素材全部就绪时用素材（湖面位置由素材的水线决定），否则程序绘制兜底
         const art = layersReady ? layers : null;
+        fg = null;
+        splitY = Infinity;
         if (art) placeArt();
         else {
             lakeTop = H * 0.35;
@@ -429,6 +458,7 @@ export function createRenderer(canvas, opts = {}) {
             tree(W * 0.96, lakeBottom, H * 0.16, W * 0.22);
         } else {
             drawArtMid(b, l);
+            drawArtFore(l);
         }
 
         // 程序绘制的前景（石头 / 草 / 野花 / 露珠）：只在没有手绘素材时画 ——
@@ -665,6 +695,37 @@ export function createRenderer(canvas, opts = {}) {
             }
         }
 
+        const brights = new Float32Array(sim.flies.length);
+        for (const f of sim.flies) brights[f.id] = brightness(f, sim.tick);
+        const order = sim.flies.slice().sort((a, c) => a.y - c.y);
+        const behind = f => worldToScreen(f.x, f.y).y < splitY;
+
+        /* ── 湖面倒影：离湖近（远处）的虫闪光时，在水面拉出一道暖色竖影；全场同步时整片湖都是倒影 ── */
+        ctx.globalCompositeOperation = 'lighter';
+        for (const f of sim.flies) {
+            const b = brights[f.id];
+            const near = 1 - f.y / WORLD.h;              // 越靠湖岸越明显
+            const a = (b - 0.12) * (0.25 + 0.75 * near) * 0.55 + climax * 0.25;
+            if (a <= 0.02) continue;
+            const p = worldToScreen(f.x, f.y);
+            const ry = lakeTop + (lakeBottom - lakeTop) * (0.25 + 0.55 * (((f.id * 0.618) % 1)));
+            const w = 5 + 7 * b, h = (lakeBottom - lakeTop) * (0.35 + 0.3 * b);
+            ctx.globalAlpha = Math.min(0.9, a);
+            ctx.drawImage(sprites[f.type] || sprites.normal, p.x - w / 2, ry - h / 2, w, h);
+        }
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+
+        /* ── 远处萤火虫：在前景植被之后，靠近草尖的会被草叶半遮 ── */
+        for (const f of order) if (behind(f)) drawFly(f, brights[f.id], time);
+
+        /* ── 前景植被 ── */
+        if (fg) {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.drawImage(fg, 0, 0);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
         /* ── 环境照明 ── */
         const lg = light.getContext('2d');
         lg.setTransform(1, 0, 0, 1, 0, 0);
@@ -674,10 +735,8 @@ export function createRenderer(canvas, opts = {}) {
         lg.globalCompositeOperation = 'lighter';
         let total = 0;
         const boost = frame.lightBoost || 1;
-        const brights = new Float32Array(sim.flies.length);
         for (const f of sim.flies) {
-            const b = brightness(f, sim.tick);
-            brights[f.id] = b;
+            const b = brights[f.id];
             const e = b - 0.1;
             if (e <= 0.02) continue;
             total += e;
@@ -726,25 +785,8 @@ export function createRenderer(canvas, opts = {}) {
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
-        /* ── 湖面倒影：离湖近（远处）的虫闪光时，在水面拉出一道暖色竖影；全场同步时整片湖都是倒影 ── */
-        ctx.globalCompositeOperation = 'lighter';
-        for (const f of sim.flies) {
-            const b = brights[f.id];
-            const near = 1 - f.y / WORLD.h;              // 越靠湖岸越明显
-            const a = (b - 0.12) * (0.25 + 0.75 * near) * 0.55 + climax * 0.25;
-            if (a <= 0.02) continue;
-            const p = worldToScreen(f.x, f.y);
-            const ry = lakeTop + (lakeBottom - lakeTop) * (0.25 + 0.55 * (((f.id * 0.618) % 1)));
-            const w = 5 + 7 * b, h = (lakeBottom - lakeTop) * (0.35 + 0.3 * b);
-            ctx.globalAlpha = Math.min(0.9, a);
-            ctx.drawImage(sprites[f.type] || sprites.normal, p.x - w / 2, ry - h / 2, w, h);
-        }
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
-
-        /* ── 萤火虫（远的先画） ── */
-        const order = sim.flies.slice().sort((a, c) => a.y - c.y);
-        for (const f of order) drawFly(f, brights[f.id], time);
+        /* ── 近处萤火虫：画在前景植被之前（远的先画） ── */
+        for (const f of order) if (!behind(f)) drawFly(f, brights[f.id], time);
 
         /* ── 干预扩散圆：被点的虫周围两圈快速的小涟漪（概念图）+ 一圈走到真实影响半径的细线 ── */
         for (const pl of frame.pulses || []) {
