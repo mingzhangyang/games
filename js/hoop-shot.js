@@ -1497,9 +1497,15 @@ class HoopShotGame {
 }
 
 onReady(() => {
-    // 背景（场馆 + 星空 + 地板）画在离屏缓存里，主题切换必须重建；持续 rAF 下一帧自动用新色
+    // 背景（场馆 + 星空 + 地板）画在离屏缓存里，主题切换必须重建；
+    // 空闲时（开始菜单 / 暂停 / 结算）rAF 已停，不会有下一帧，所以重建后要主动重画一次
     P = bindPalette(CANVAS_VARS, {
-        onChange: () => window.hoopShotGame && window.hoopShotGame.buildStarfield(),
+        onChange: () => {
+            const game = window.hoopShotGame;
+            if (!game) return;
+            game.buildStarfield();
+            game.render();
+        },
     });
     window.hoopShotGame = new HoopShotGame();
 
