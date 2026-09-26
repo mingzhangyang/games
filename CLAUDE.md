@@ -95,6 +95,15 @@ One implementation each; every module has a `verify-*` checker wired into `npm r
 
 ## Development Workflow
 
+### Branch and PR workflow
+
+- `main` is the only long-lived integration and release branch.
+- Create a topic branch from the latest `main`: `feature/*`, `fix/*`, `docs/*`, or `art/*`.
+- Open a pull request directly from the topic branch to `main`. Do not route changes through or create a permanent `develop` branch.
+- Do not push directly to `main`. Keep unrelated work in separate topic branches.
+- When other pull requests are open, base new work on the latest `main` unless the change intentionally depends on an earlier pull request.
+
+
 ### Running Games
 ```bash
 npm run dev
