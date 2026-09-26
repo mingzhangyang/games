@@ -27,6 +27,7 @@
 - Flame Verse（焰语）
 - Ripple Duet（涟漪双生）
 - Carrot Pull（拔萝卜）
+- Firefly Signal（萤火信号）
 - Shadow Loom（影织）
 <!-- registry:end game-list -->
 

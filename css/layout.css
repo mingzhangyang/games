@@ -689,3 +689,74 @@ body.drawer-locked {
     .game-drawer,
     .game-drawer-panel { transition: none; }
 }
+
+/* ─────────────────────────────────────────────
+   Immersive Stage（2026-09-26，games.config.json 的 "layout": "immersive"）
+   ─────────────────────────────────────────────
+   与标准骨架互斥的第二种布局：保留共享顶栏，顶栏以下的整块视口都交给游戏场景，
+   HUD 是舞台里的浮层而不是面板。首个消费方：firefly-signal。契约见 docs/contracts/layout.md §7。
+
+       <div class="xx-shell game-shell game-shell--immersive">
+         <header class="xx-topbar game-topbar"> …三槽位照旧… </header>
+         <main class="xx-main game-main">
+           <div class="xx-stage game-stage game-stage--immersive"> 场景 + HUD + 浮层 </div>
+         </main>
+         <footer class="game-footer"> 随流在首屏之下（滚动可达），不占场景高度 </footer>
+       </div>
+
+   舞台高度 = 100dvh − 实测 chrome − 底部安全区：
+     --frame-chrome 由 js/game-frame.js 的 bindFrame({ layout: 'immersive' }) 实测
+     （shell 上内距（含顶部安全区）+ 顶栏；**不含页脚** —— 页脚在首屏之下），不是魔数。
+   宽度：手机端贴边铺满（不留 shell 内距与圆角）；≥ --frame-immersive-max 时居中，
+     两侧由页面自己的 body 夜色背景自然延展。
+
+   ⚠️ 只新增选择器、不改任何既有规则：未声明 layout 的页面几何逐像素不变
+      （验证：scripts/layout-metrics.mjs 改动前后逐行一致）。
+   ⚠️ 全部规则放在文件末尾：它们要压过上方 ≥1024px 媒体块里 .game-shell / .game-stage
+      的桌面预算规则，靠的是「同等特异度、后声明者胜」+ shell 上的双类选择器。 */
+:root {
+    --frame-immersive-max: 640px;
+    --frame-immersive-min-h: 300px;
+}
+
+.game-shell.game-shell--immersive {
+    max-width: none;
+    padding: env(safe-area-inset-top, 0) 0 0;
+    min-height: 100dvh;
+}
+
+.game-shell--immersive > .game-topbar {
+    max-width: var(--frame-immersive-max);
+    padding: 6px max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px));
+}
+
+.game-shell--immersive > .game-main {
+    flex: none;
+}
+
+.game-stage.game-stage--immersive {
+    width: 100%;
+    max-width: var(--frame-immersive-max);
+    height: calc(100dvh - var(--frame-chrome) - env(safe-area-inset-bottom, 0px));
+    min-height: var(--frame-immersive-min-h);
+    flex: none;
+    display: block;
+    overflow: hidden;
+    /* 场景是纯手势区：不滚页、不双击缩放、不选字、不弹长按菜单 */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.game-shell--immersive > .game-footer {
+    max-width: var(--frame-immersive-max);
+    padding: 10px max(10px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+}
+
+@media (width >= 1024px) {
+    .game-shell.game-shell--immersive { max-width: none; }
+
+    .game-stage.game-stage--immersive { max-width: var(--frame-immersive-max); }
+}

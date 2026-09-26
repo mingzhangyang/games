@@ -2,9 +2,9 @@
 
 > 状态：Gameplay Prototype 开发方案 · 2026-09-26  
 > Repository: `mingzhangyang/games`  
-> 视觉基准：[`assets/firefly-signal/firefly-signal-concept.jpg`](../assets/firefly-signal/firefly-signal-concept.jpg)
+> 视觉基准：[`assets/firefly-signal/concept-midsummer-harmony.png`](../assets/firefly-signal/concept-midsummer-harmony.png)
 
-![Firefly Signal concept](../assets/firefly-signal/firefly-signal-concept.jpg)
+![Firefly Signal concept](../assets/firefly-signal/concept-midsummer-harmony.png)
 
 ## 1. 目标
 
@@ -217,7 +217,7 @@ css/
   firefly-signal.css
 
 assets/firefly-signal/
-  firefly-signal-concept.jpg
+  concept-midsummer-harmony.png
   ...
 ```
 

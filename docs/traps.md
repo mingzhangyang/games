@@ -106,6 +106,15 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
 
 ## 校验基础设施
 
+- ⚠️ **确定性回放的边界：输入落在「第 N 次 step 之后、第 N+1 次之前」。** 萤火信号的 `replay(level, seed, inputs, ticks)`
+  第一版写成 `while (tick < ticks) { 应用本 tick 输入; step() }` —— 停在 `ticks` 时，恰好属于 `ticks` 的输入被丢掉。
+  浏览器里点完最后一下立即取指纹，与 Node 回放差一个输入，`smoke-firefly-signal` 的「浏览器 == Node」断言红了；
+  模拟本身没有错。修法：循环里先应用输入、再判断是否停。凡是「按 tick 记录输入 + 回放」的游戏都照此写。
+
+- ⚠️ **沉浸舞台里的画布必须包一层 div。** `layout.css`「开始菜单」规则在 < 1024px 菜单显示期间把舞台的**直接子**
+  `canvas` 设为 `height:auto !important`；绝对定位铺满舞台的画布于是按后备缓冲像素（CSS × dpr）撑高。
+  firefly-signal 用 `.fs-scene` 包住画布。见 `layout.md` §7.2。
+
 - ⚠️ **「菜单在舞台里」不代表「菜单看得全」。** 2026-09-26 用户截图发现晶绽手机版只露出 1–2 行关卡：
   舞台内浮层是 `absolute + inset:0 + overflow-y:auto + 隐藏滚动条`，高度等于画布（手机上 280–500px），
   关卡网格被压进一个看不出能滚的盒子 —— 晶绽 / 涟漪 / 焰语 20 关只可点 10 个，电路谜题 0 个，

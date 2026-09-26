@@ -19,6 +19,8 @@ registry.withCap('drawer');      // 具备某能力的游戏
 registry.byId('sword-flight');   // 单个，找不到直接抛错（宁可红不可静默）
 registry.site();                 // 站点级字段（origin / scoresWorker / siteName / publisher / ogImageDir）
 registry.hrefs();                // href 文件名集合（校验器拼 URL 用）
+registry.layoutOf(g);            // 'standard'（缺省）| 'immersive'，见 §2.1
+registry.withLayout('immersive'); // 某布局类型的全部游戏
 registry.assertCovered({ cap, covered, exempt, label });  // 手工表覆盖率守卫，见 §1.2
 ```
 
@@ -76,6 +78,18 @@ caps 是校验器与迁移脚本的唯一判据：
 | `topbar` | 有 `.game-topbar-center`（Header 三槽位契约，见 `chrome.md`） |
 | `theme-light` | 支持浅色模式（页面 CSS 写了 `[data-theme="light"]` 覆盖；与 `themeColorLight` 字段同进同出）。不带即仅深色，见 `theme.md` |
 
+### 2.1 `layout` 字段（不是 cap）
+
+| 值 | 含义 |
+| --- | --- |
+| 缺省 / `standard` | 标准骨架：shell / topbar / main(stage + sidebar) / footer（`layout.md` §1–§6） |
+| `immersive` | Immersive Stage：顶栏以下整块视口归场景，HUD 为浮层（`layout.md` §7） |
+
+布局是**互斥类型**，所以是独立字段而不是 cap（cap 可叠加，会允许 `immersive + sidebar` 这类无意义组合）。
+`verify-registry` §2b 断言：取值合法；`immersive` ⟺ HTML 同时带 `game-shell--immersive` 与
+`game-stage--immersive`（双向）；immersive 页不挂 `sidebar` / `drawer` / `frame-budget`；
+入口里有 `bindFrame({ layout: 'immersive' })`。校验器取页面清单用 `registry.withLayout()`。
+
 ## 3. gen 派生清单
 
 `npm run gen` 从真源就地改写以下登记点（产物入库，非构建期注入）：
@@ -114,6 +128,7 @@ caps 是校验器与迁移脚本的唯一判据：
    ⚠ 探针用 `\.{1,2}\/` 匹配相对路径 —— math-rain 的入口在 `js/math-rain/` 子目录，import 写成 `'../analytics.js'`，只认 `'./'` 会误判。
 3. **scores 块 ⟺ leaderboard cap**：两者必须同进同出。
 4. **themeColorLight ⟺ theme-light cap**：同上。
+5. **layout 字段 ⟺ 页面骨架**（§2.1）。
 
 背景教训：caps 曾实测漂移两处（tetris 缺 `leaderboard`、word-daily 缺 `analytics`），
 当时碰巧无害，但只要哪天有校验器改用 `withCap()`，就会静默漏掉一整页 ——

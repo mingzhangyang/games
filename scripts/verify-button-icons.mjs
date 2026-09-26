@@ -34,6 +34,7 @@ const TARGETS = {
     'flame-verse': ['fv-btn-next', 'fv-btn-replay', 'fv-btn-menu1', 'fv-btn-copy', 'fv-btn-menu2', 'fv-btn-again'],
     'ripple-duet': ['rd-btn-next', 'rd-btn-replay', 'rd-btn-menu1', 'rd-btn-copy', 'rd-btn-menu2', 'rd-btn-again'],
     'carrot-pull': ['cp-start-btn', 'cp-again-btn', 'cp-menu-btn'],
+    'firefly-signal': ['fs-btn-next', 'fs-btn-retry', 'fs-btn-menu'],
     'shadow-loom': ['sl-btn-begin', 'sl-btn-next', 'sl-btn-replay', 'sl-btn-menu'],
 };
 

@@ -4,6 +4,8 @@
 :root {
     --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
     --ix-card-icon--carrot-pull-text: #f08a3c;
+    --ix-card-icon--firefly-signal-bg: rgb(255, 200, 100, 0.14);
+    --ix-card-icon--firefly-signal-text: #ffc864;
     --ix-card-icon--shadow-loom-bg: rgb(255, 179, 71, 0.14);
     --ix-card-icon--shadow-loom-text: #ffc36b;
     --ix-tag--dark-only-text: #e2e8f0;
@@ -86,6 +88,8 @@
 :root[data-theme="light"] {
     --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
     --ix-card-icon--carrot-pull-text: #bd5a0f;
+    --ix-card-icon--firefly-signal-bg: rgb(214, 150, 20, 0.14);
+    --ix-card-icon--firefly-signal-text: #9a6a08;
     --ix-card-icon--shadow-loom-bg: rgb(176, 122, 74, 0.16);
     --ix-card-icon--shadow-loom-text: #8a5424;
     --ix-tag--dark-only-text: #e2e8f0;
@@ -320,6 +324,7 @@
         .card-icon--flame-verse { background: var(--ix-card-icon--flame-verse-bg); color: var(--ix-card-icon--flame-verse-text); }
 .card-icon--ripple-duet { background: var(--ix-card-icon--ripple-duet-bg); color: var(--ix-card-icon--ripple-duet-text); }
 .card-icon--carrot-pull { background: var(--ix-card-icon--carrot-pull-bg); color: var(--ix-card-icon--carrot-pull-text); }
+.card-icon--firefly-signal { background: var(--ix-card-icon--firefly-signal-bg); color: var(--ix-card-icon--firefly-signal-text); }
 .card-icon--shadow-loom { background: var(--ix-card-icon--shadow-loom-bg); color: var(--ix-card-icon--shadow-loom-text); }
 
         .card-title {
@@ -452,11 +457,12 @@
         }
 
         /* ── Daily Hub ─────────────────────────────── */
-        /* 归属 .idx-main（普通块容器，不像 body 那样 flex 居中），
-           max-width 一旦小于可用宽度而左右 margin 对称时块会贴左
-           ⇒ 必须用 auto 外边距自己居中。纵向负 margin 用于把卡片
-           上提贴住 hero。 */
+        /* 归属纵向 flex 的 .idx-main。只写 max-width 时，窄屏会由内容的
+           intrinsic width 决定横向尺寸；一旦出现负自由空间，auto 横向 margin
+           不再平分溢出，320px 下就会形成单侧 9px 偏移。显式给响应式 width，
+           再用 auto margin 居中；纵向负 margin 只负责把卡片上提贴住 hero。 */
         .daily-hub {
+            width: calc(100% - 40px);
             max-width: 640px;
             margin: -24px auto 8px;
             background: var(--ix-daily-hub-bg);
@@ -580,7 +586,11 @@
         }
 
         @media (width <= 600px) {
-            .daily-hub { margin: -16px auto 8px; padding: 13px 14px; }
+            .daily-hub {
+                width: calc(100% - 24px);
+                margin: -16px auto 8px;
+                padding: 13px 14px;
+            }
         }
 
         /* ── Perks strip ───────────────────────────── */

@@ -24,6 +24,14 @@ export const registry = {
     all() { return load().games; },
     /** 具备某个 cap 的游戏 */
     withCap(cap) { return load().games.filter(g => (g.caps || []).includes(cap)); },
+    /**
+     * 页面布局类型：'standard'（缺省）| 'immersive'。
+     * 布局是互斥的「类型」而不是可叠加的能力，所以是独立字段而不是 cap
+     * （docs/contracts/registry.md §2.1）。
+     */
+    layoutOf(g) { return g.layout || 'standard'; },
+    /** 某布局类型的全部游戏 */
+    withLayout(layout) { return load().games.filter(g => (g.layout || 'standard') === layout); },
     /** 按 id 取单个，找不到直接抛错（宁可红不可静默） */
     byId(id) {
         const g = load().games.find(g => g.id === id);
