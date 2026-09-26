@@ -331,8 +331,7 @@
             font-size: 0.84em;
             color: var(--color-text-muted);
             line-height: 1.6;
-            margin: 0;
-            flex: 1;
+            margin: 0 0 auto;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             line-clamp: 2;
@@ -394,12 +393,16 @@
             color: var(--color-text);
         }
 
+        /* 窄卡片（手机两列）里「标签 + 仅深色 + Play」一行放不下时换行，
+           Play 靠 margin-left:auto 贴右，绝不溢出卡片边界 */
         .card-footer {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
+            gap: 6px 8px;
             padding-top: 2px;
+            min-width: 0;
         }
 
         .tag {
@@ -415,8 +418,6 @@
         /* 「仅深色」小标：只在首页为浅色时显示（body.theme-light-active 由 index-page.js 维护） */
         .tag--dark-only {
             display: none;
-            margin-left: auto;
-            margin-right: 6px;
             color: var(--ix-tag--dark-only-text);
             background: var(--ix-tag--dark-only-bg);
         }
@@ -424,6 +425,7 @@
         .theme-light-active .tag--dark-only { display: inline-block; }
 
         .play-btn {
+            margin-left: auto;
             display: inline-flex;
             align-items: center;
             background: var(--color-primary);
