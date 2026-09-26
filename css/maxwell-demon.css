@@ -505,7 +505,7 @@ body {
 .md-legend-fast { background: #ff8a5c; box-shadow: 0 0 8px rgb(255, 138, 92, 0.55); }
 .md-legend-slow { background: #6fd8ff; box-shadow: 0 0 8px rgb(111, 216, 255, 0.55); }
 .md-legend-blind { background: #7d86ad; }
-.md-legend-gate { background: var(--tok-gold); box-shadow: 0 0 8px rgb(255, 211, 77, 0.55); }
+.md-legend-gate { background: #e3aa70; box-shadow: none; }  /* = 画布门洞色 */
 
 /* 「温差」用光谱渐变条表示：不是单色语义，而是冷热两端之间的连续量 */
 .md-legend-band {

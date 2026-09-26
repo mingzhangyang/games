@@ -1066,19 +1066,27 @@ class EchoCaveGame {
     }
 
     drawBackdrop(ctx) {
-        const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, '#04070f');
-        g.addColorStop(0.5, '#071228');
-        g.addColorStop(1, '#04070f');
-        ctx.fillStyle = g;
+        ctx.fillStyle = '#0a151e';
         ctx.fillRect(0, 0, W, H);
+        // Geological strata: a quiet backdrop that gives the pulse something
+        // to reveal without turning the whole cave into a neon gradient.
+        ctx.save();
+        ctx.strokeStyle = 'rgba(121,154,157,0.09)';
+        ctx.lineWidth = 1;
+        for (let y = 58; y < H; y += 48) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.bezierCurveTo(120, y - 10, 250, y + 12, W, y - 5);
+            ctx.stroke();
+        }
+        ctx.restore();
         // 萤光尘埃：黑暗里的空气感
         for (const d of this.dust) {
             const tw = 0.5 + 0.5 * Math.sin(this.time * d.sp * 0.4 + d.ph);
             const yy = (d.y + this.time * d.sp) % H;
             ctx.beginPath();
             ctx.arc(d.x, yy, d.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(180,214,255,${(d.a * tw).toFixed(3)})`;
+            ctx.fillStyle = `rgba(168,205,204,${(d.a * tw * 0.58).toFixed(3)})`;
             ctx.fill();
         }
     }
@@ -1145,12 +1153,22 @@ class EchoCaveGame {
     drawWalls(ctx) {
         const world = this.world;
         const grid = world.grid;
+        const { cols, cell } = GRID;
         for (const idx of world.wallCells) {
             const g = world.glow[idx];
             const m = world.memory[idx];
             const a = Math.min(1, g + m);
             if (a <= 0.015 || g <= 0.01) continue;
-            this.strokeCellEdges(ctx, world, idx, a, grid[idx] === 2 ? '#9fc4ae' : '#bfe3ff');
+            const cx = idx % cols;
+            const cy = (idx - cx) / cols;
+            const x = cx * cell;
+            const y = cy * cell;
+            const rock = grid[idx] === 2;
+            ctx.fillStyle = rock
+                ? `rgba(83,116,103,${(0.20 * a).toFixed(3)})`
+                : `rgba(96,127,139,${(0.24 * a).toFixed(3)})`;
+            ctx.fillRect(x, y, cell, cell);
+            this.strokeCellEdges(ctx, world, idx, a, rock ? '#9fc4ae' : '#b8d7d2');
         }
     }
 
@@ -1221,25 +1239,39 @@ class EchoCaveGame {
             const bob = Math.sin(this.time * 2.1 + c.i) * 1.8;
             const cy = c.y + bob;
             const singGlow = Math.max(0, 1 - c.singT / 0.6) * 0.5;
-            const g = ctx.createRadialGradient(c.x, cy, 1, c.x, cy, 15);
-            g.addColorStop(0, `rgba(255,211,77,${(0.4 + singGlow).toFixed(3)})`);
-            g.addColorStop(1, 'rgba(255,211,77,0)');
-            ctx.beginPath();
-            ctx.arc(c.x, cy, 15, 0, Math.PI * 2);
-            ctx.fillStyle = g;
-            ctx.fill();
-            // 菱形晶
+            // A crystal is drawn as two faces; the amber pulse is reserved for
+            // the instant it sings instead of being a permanent halo.
             ctx.beginPath();
             ctx.moveTo(c.x, cy - 7);
             ctx.lineTo(c.x + 4.6, cy);
             ctx.lineTo(c.x, cy + 7);
             ctx.lineTo(c.x - 4.6, cy);
             ctx.closePath();
-            ctx.fillStyle = '#ffd34d';
+            ctx.fillStyle = '#c29355';
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255,244,214,0.85)';
+            ctx.beginPath();
+            ctx.moveTo(c.x, cy - 7);
+            ctx.lineTo(c.x, cy + 7);
+            ctx.lineTo(c.x + 4.6, cy);
+            ctx.closePath();
+            ctx.fillStyle = '#e7c17e';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(c.x, cy - 7);
+            ctx.lineTo(c.x - 4.6, cy);
+            ctx.lineTo(c.x, cy + 7);
+            ctx.closePath();
+            ctx.fillStyle = '#8a6842';
+            ctx.fill();
+            ctx.strokeStyle = singGlow > 0.01 ? '#f3d59a' : 'rgba(231,193,126,0.72)';
             ctx.lineWidth = 1;
             ctx.stroke();
+            if (singGlow > 0.01) {
+                ctx.strokeStyle = `rgba(226,199,139,${singGlow.toFixed(3)})`;
+                ctx.beginPath();
+                ctx.arc(c.x, cy, 10 + singGlow * 8, 0, Math.PI * 2);
+                ctx.stroke();
+            }
         }
     }
 
@@ -1249,30 +1281,25 @@ class EchoCaveGame {
             ctx.save();
             ctx.translate(t.x, t.y);
             ctx.globalAlpha = a;
-            const g = ctx.createRadialGradient(0, 0, 2, 0, 0, 20);
-            g.addColorStop(0, 'rgba(255,107,122,0.4)');
-            g.addColorStop(1, 'rgba(255,107,122,0)');
-            ctx.beginPath();
-            ctx.arc(0, 0, 20, 0, Math.PI * 2);
-            ctx.fillStyle = g;
-            ctx.fill();
-            ctx.strokeStyle = '#ff6b7a';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            for (let i = 0; i < 7; i++) {
-                const ang = (i / 7) * Math.PI * 2 + 0.35;
+            ctx.fillStyle = '#4b2c30';
+            ctx.strokeStyle = '#bc7770';
+            ctx.lineWidth = 1.4;
+            ctx.lineJoin = 'round';
+            for (let i = 0; i < 5; i++) {
+                const ang = (i / 5) * Math.PI * 2 + 0.25;
+                const len = 8 + (i % 2) * 3;
                 ctx.beginPath();
-                ctx.moveTo(Math.cos(ang) * 4, Math.sin(ang) * 4);
-                ctx.lineTo(Math.cos(ang) * 11, Math.sin(ang) * 11);
+                ctx.moveTo(Math.cos(ang) * 2, Math.sin(ang) * 2);
+                ctx.lineTo(Math.cos(ang - 0.28) * len, Math.sin(ang - 0.28) * len);
+                ctx.lineTo(Math.cos(ang + 0.28) * len, Math.sin(ang + 0.28) * len);
+                ctx.closePath();
+                ctx.fill();
                 ctx.stroke();
             }
             ctx.beginPath();
-            ctx.arc(0, 0, 4.2, 0, Math.PI * 2);
-            ctx.fillStyle = '#3a1220';
+            ctx.arc(0, 0, 3.2, 0, Math.PI * 2);
+            ctx.fillStyle = '#d89a77';
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255,107,122,0.9)';
-            ctx.lineWidth = 1.4;
-            ctx.stroke();
             ctx.restore();
         }
         ctx.globalAlpha = 1;
@@ -1352,11 +1379,12 @@ class EchoCaveGame {
 
     /** 菜单态：缓慢的装饰涟漪（远处未知之声） */
     drawMenuAmbience(ctx) {
+        // 底色、岩层与萤光尘埃已由 drawBackdrop() 画好，这里只叠装饰涟漪
         const t = this.time;
         const rings = [
-            { x: 132, y: 458, per: 4.2, maxR: 96, color: '167,139,250' },
-            { x: 356, y: 210, per: 3.6, maxR: 76, color: '255,211,77' },
-            { x: 250, y: 330, per: 5.4, maxR: 120, color: '111,216,255' },
+            { x: 132, y: 458, per: 4.2, maxR: 96, color: '99,199,200' },
+            { x: 356, y: 210, per: 3.6, maxR: 76, color: '194,147,85' },
+            { x: 250, y: 330, per: 5.4, maxR: 120, color: '137,191,188' },
         ];
         for (const r of rings) {
             const k = (t % r.per) / r.per;
