@@ -36,6 +36,9 @@ const MEASURE = () => {
             attrW: canvas.width, attrH: canvas.height,
             clientW: canvas.clientWidth,
         } : null,
+        // 纯 DOM/SVG 舞台（carrot-pull）没有 canvas：b/c 两条是 canvas 位图专属断言，照常跳过；
+        // d「舞台随视口长大」改量 .game-stage 宽度，否则恒为 0 必然误报。
+        stageW: g('.game-stage') ? Math.round(g('.game-stage').getBoundingClientRect().width) : 0,
         sideBottom: side ? Math.round(side.getBoundingClientRect().bottom) : -1,
         chrome: shell ? shell.style.getPropertyValue('--frame-chrome') : '',
         // bindFrame 量 chrome 靠 shell.querySelector(':scope > .game-topbar'/'.game-footer')。
@@ -79,7 +82,7 @@ for (const lang of LANGS) {
                 await pg.close();
                 continue;
             }
-            const rectW = m1.canvas ? m1.canvas.rectW : 0;
+            const rectW = m1.canvas ? m1.canvas.rectW : m1.stageW;
             widthTable[`${page}|${W}x${H}|${lang}`] = rectW;
             canvasW[`${W}x${H}`] = rectW;
 

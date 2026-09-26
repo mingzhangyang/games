@@ -123,6 +123,11 @@ const i18n = {
         rippleDuetTag: 'Interference',
         rippleDuetPlay: 'Play ›',
 
+        carrotPullName: 'Carrot Pull',
+        carrotPullDesc: 'Find the sweet spot, pull in rhythm, and help a tiny mole harvest six giant carrots before time runs out.',
+        carrotPullTag: 'Casual',
+        carrotPullPlay: 'Play ›',
+
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
         minecraftTag: 'Sandbox',
@@ -267,6 +272,11 @@ const i18n = {
         rippleDuetDesc: '两个波源，一片海。拖动它们、拧动相位，让水听你的话——在一处把风暴抹平，在另一处把波峰叠起来点亮浮标。20 片海 + 每日赛程。',
         rippleDuetTag: '干涉',
         rippleDuetPlay: '开始游戏 ›',
+
+        carrotPullName: '拔萝卜',
+        carrotPullDesc: '看准绿色甜蜜区，跟着节奏用力拔，和小鼹鼠一起在时间结束前收获 6 根大萝卜。',
+        carrotPullTag: '休闲街机',
+        carrotPullPlay: '开始游戏 ›',
 
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -418,6 +428,11 @@ function applyLanguage(lang) {
     document.getElementById('ripple-duet-tag').textContent = t.rippleDuetTag;
     document.getElementById('ripple-duet-play').textContent = t.rippleDuetPlay;
 
+    document.getElementById('carrot-pull-name').textContent = t.carrotPullName;
+    document.getElementById('carrot-pull-desc').textContent = t.carrotPullDesc;
+    document.getElementById('carrot-pull-tag').textContent = t.carrotPullTag;
+    document.getElementById('carrot-pull-play').textContent = t.carrotPullPlay;
+
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
     document.getElementById('minecraft-tag').textContent = t.minecraftTag;
@@ -503,6 +518,7 @@ function injectStructuredData() {
         { slug: 'crystal-bloom', name: 'Crystal Bloom', description: 'Original crystallization puzzle — draw the cooling curve of a saturated bath: quench it for dendrites, ease it down for facets, stir to pack it dense. 20 vessels plus a daily run.' },
         { slug: 'flame-verse', name: 'Flame Verse', description: 'Original flame spectroscopy puzzle — throw salts into the burner, read the emission lines each element leaves behind and match the mystery sample\'s barcode of light. 20 unknowns plus a daily sample.' },
         { slug: 'ripple-duet', name: 'Ripple Duet', description: 'Original wave interference puzzle — drag two sources across the sea, set their phase and sculpt the ripple field: flatten the storm at one point, blaze a beacon at another, keep a whole channel calm. 20 wave puzzles plus a daily course.' },
+        { slug: 'carrot-pull', name: 'Carrot Pull', description: 'Cute garden rhythm game — hit the sweet spot, pull in rhythm and help a tiny mole harvest six giant carrots before time runs out.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
