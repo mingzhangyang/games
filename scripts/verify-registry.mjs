@@ -13,6 +13,7 @@
 //   2) caps ⟺ 代码事实（双向）：声明了必须真有，真有了必须声明。
 //   3) scores 块 ⟺ leaderboard cap（两者必须同进同出）。
 //   4) themeColorLight ⟺ theme-light cap（同上）。
+//   2b) layout 字段（standard | immersive）合法，且与 HTML 骨架 / 入口 bindFrame 双向一致。
 //
 // 用法：node scripts/verify-registry.mjs（无需浏览器/服务器）
 
@@ -78,6 +79,27 @@ for (const [cap, probe] of Object.entries(PROBES)) {
     const stale = [...declared].filter(id => !actual.has(id));     // caps 写了、代码没有
     ok(missing.length === 0, `cap "${cap}"：代码里有的都已声明`, '漏声明 → ' + missing.join(', '));
     ok(stale.length === 0, `cap "${cap}"：声明了的代码里都有`, '空声明 → ' + stale.join(', '));
+}
+
+/* ── 2b) layout 字段 ⟺ 页面骨架 ──
+   layout 是互斥的布局类型（缺省 standard），不是 cap。取值必须合法，且与页面事实双向一致：
+   声明 immersive ⟺ HTML 用了 game-shell--immersive + game-stage--immersive；
+   immersive 页不得同时挂只对标准骨架有意义的 cap（sidebar / drawer / frame-budget）。 */
+console.log('\n▶ layout ⟺ 页面骨架');
+const LAYOUTS = ['standard', 'immersive'];
+const STANDARD_ONLY_CAPS = ['sidebar', 'drawer', 'frame-budget'];
+for (const g of games) {
+    const layout = registry.layoutOf(g);
+    ok(LAYOUTS.includes(layout), `${g.id}: layout "${layout}" 合法`, `允许 ${LAYOUTS.join(' / ')}`);
+    const html = read(g.href);
+    const immersiveHtml = /game-shell--immersive/.test(html) && /game-stage--immersive/.test(html);
+    ok(immersiveHtml === (layout === 'immersive'), `${g.id}: layout=${layout} 与 HTML 骨架一致`,
+        immersiveHtml ? 'HTML 是 immersive 骨架但注册表没声明' : '注册表声明 immersive 但 HTML 缺 game-shell--immersive / game-stage--immersive');
+    if (layout === 'immersive') {
+        const bad = (g.caps || []).filter(c => STANDARD_ONLY_CAPS.includes(c));
+        ok(bad.length === 0, `${g.id}: immersive 页不挂标准骨架专属 cap`, bad.join(', '));
+        ok(/bindFrame\(\{[^}]*layout:\s*'immersive'/.test(read(g.entry)), `${g.id}: 入口以 bindFrame({ layout: 'immersive' }) 实测 chrome`);
+    }
 }
 
 /* ── 3) scores ⟺ leaderboard cap ── */

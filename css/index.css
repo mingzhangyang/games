@@ -4,6 +4,8 @@
 :root {
     --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
     --ix-card-icon--carrot-pull-text: #f08a3c;
+    --ix-card-icon--firefly-signal-bg: rgb(255, 200, 100, 0.14);
+    --ix-card-icon--firefly-signal-text: #ffc864;
     --ix-tag--dark-only-text: #e2e8f0;
     --ix-tag--dark-only-bg: #1e2436;
     --ix-body-bg: radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
@@ -84,6 +86,8 @@
 :root[data-theme="light"] {
     --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
     --ix-card-icon--carrot-pull-text: #bd5a0f;
+    --ix-card-icon--firefly-signal-bg: rgb(214, 150, 20, 0.14);
+    --ix-card-icon--firefly-signal-text: #9a6a08;
     --ix-tag--dark-only-text: #e2e8f0;
     --ix-tag--dark-only-bg: #1e2436;
     --ix-body-bg: radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
@@ -316,6 +320,7 @@
         .card-icon--flame-verse { background: var(--ix-card-icon--flame-verse-bg); color: var(--ix-card-icon--flame-verse-text); }
 .card-icon--ripple-duet { background: var(--ix-card-icon--ripple-duet-bg); color: var(--ix-card-icon--ripple-duet-text); }
 .card-icon--carrot-pull { background: var(--ix-card-icon--carrot-pull-bg); color: var(--ix-card-icon--carrot-pull-text); }
+.card-icon--firefly-signal { background: var(--ix-card-icon--firefly-signal-bg); color: var(--ix-card-icon--firefly-signal-text); }
 
         .card-title {
             font-size: 1em;

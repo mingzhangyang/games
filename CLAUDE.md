@@ -19,6 +19,7 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript, b
 - **Gravity Slingshot** (`gravity-slingshot.html`) - Original orbital physics puzzle: pull-back slingshot launch, softened inverse-square gravity, fixed 1/120s substep integration shared by the trajectory preview and real flight (fully deterministic); 20 handcrafted holes (bodies may carry `tone`/`ring` visual props) with star ratings + a **daily course** (5 holes seeded from the UTC+8 date, generated with a ballistic sampler that verifies solvability and honest par); daily score = total launches, posted to per-day leaderboard keys `gravity-d<YYYYMMDD>` (asc) handled by the shared game-scores Worker
 - **Pinpoint Clash: Needle vs Awn 针尖对麦芒** (`needle-awn.html`) - Cyber-ink martial precision action duel: head-on tip-to-tip clash mechanics with hit-stop time dilation, dual stances (Silver Needle bullet-time thrust vs Golden Awn solar nova sweep), Awakened Lotus ultimate, 10 handcrafted trial stages with bosses, endless survival, seeded daily duel, and 1v1 arena duel (vs AI or 2P local); leaderboard served by the shared `game-scores` Worker as `needle-awn` and `needle-awn-d<YYYYMMDD>`
 - **Sword Flight 御剑飞行** (`sword-flight.html`) - Oriental Xianxia kinetic soaring action: smooth flight physics with aerodynamic banking, multi-segment cloth & tassel simulation, 9 handcrafted celestial stages, endless flight, seeded daily realm, and zen meditation flight; thread celestial rings for pentatonic harmonies, perform invincible sword qi dashes to cleave crags and absorb tribulation thunder, ascend through cultivation realms (炼气 -> 筑基 -> 结丹 -> 元婴 -> 化神 -> 渡劫) to command companion sword formations and unleash the screen-clearing Thousand Swords ultimate; leaderboard served by the shared `game-scores` Worker as `sword-flight` and `sword-flight-d<YYYYMMDD>`
+- **Firefly Signal 萤火信号** (`firefly-signal.html`) - Midsummer-night synchrony puzzle (gameplay prototype, 3 levels: First Light / Two Meadows / Midsummer): tap a firefly to flash it and pull every firefly inside its ring toward "now"; natural pulse coupling only captures near-in-phase neighbours (capture window), so local groups sync on their own but antiphase meadows never merge without the player. Modules in `js/firefly-signal/` — `simulation.js` (pure, fixed 1/60s step, `mulberry32` seed, same seed + same `(tick, id)` inputs = bit-identical result), `renderer.js` (cached scenery + "lit" layer masked by a low-res light buffer = environmental lighting), `levels.js`, `audio.js`, `game.js`, `main.js`. First page on the **Immersive Stage** layout (`"layout": "immersive"` in `games.config.json`, `docs/contracts/layout.md` §7). Dark-only; no leaderboard / daily yet. Level playability (idle never wins, solver wins within budget, rapid random clicking ≤30%) is locked by `scripts/verify-firefly-signal-sim.mjs` using the test-only player models in `scripts/lib/firefly-solver.mjs` — rerun it after touching levels or tuning
 - **index.html** - Game collection landing page (links out to external games too); its Daily Hub shows 3 tasks: Word Daily (`wd_daily_*`), Planet Merge (`pm_daily_*`), Gravity Slingshot (`gs_daily_<YYYYMMDD>`, written when the daily course is finished)
 
 ## Architecture
@@ -35,9 +36,9 @@ npm run verify:quick  # 日常档（15 项：gen-check + lint + 8 个离线校�
 ```
 
 ### Contract docs（docs/contracts/）
-- `layout.md` — 页面骨架契约：shell/topbar/main/stage/sidebar/overlay/toast/footer 几何 + 语义标签 + 桌面舞台纵向预算
+- `layout.md` — 页面骨架契约：shell/topbar/main/stage/sidebar/overlay/toast/footer 几何 + 语义标签 + 桌面舞台纵向预算；§7 Immersive Stage（`layout: "immersive"`：顶栏以下整块视口归场景，`bindFrame({ layout: 'immersive' })`）
 - `chrome.md` — Header 三槽位 / Footer / `bindChrome` 职责边界
-- `registry.md` — `games.config.json` 单一登记源、gen 工具链、caps 语义
+- `registry.md` — `games.config.json` 单一登记源、gen 工具链、caps 语义、`layout` 字段（互斥布局类型，不是 cap；`registry.withLayout()`）
 - `style.md` — 设计令牌表、hex 收敛规则、eslint/stylelint 配置要点
 - `theme.md` — 浅色 / 深色模式：`site_theme` 偏好、`theme-boot.js` 首屏、`theme-light` cap、画布调色板、游戏分类与分期
 
@@ -116,6 +117,7 @@ Puppeteer-core 驱动的真浏览器校验体系；**提交前必须全绿**。�
 - **离线项**（无需浏览器）：`gen-check`（gen 漂移）、`lint`（eslint+stylelint）、`boot`（禁 DOMContentLoaded 复活）、`daily`（时区/哈希黄金值）、`leaderboard`、`i18n`、`sfx`、`registry`（caps ⟺ 代码事实）
 - **在线项**（需服务器 + Chrome）：`fg-audit`、`placeholder-leak`、`chrome`、`desktop-frame`、`stats-drawer`、`gomoku`、`button-icons`、`tetris-topbar-mobile`、`tetris-touch`、`tetris-drawer`、`smoke-index`、`smoke-tank-battle`、`smoke-math-rain`
 - 日常用 `npm run verify:quick`（15 项档）；复验 dist 产物：`node scripts/verify-all.mjs http://127.0.0.1:8901`（先 `npm run build && cd dist` 起服务）
+- 萤火信号专项：`firefly-signal-sim`（离线：模拟单元 + 确定性回放 + 关卡可玩性）、`immersive`（Immersive Stage 几何 × 6 视口）、`smoke-firefly-signal`（真实点击通关 + 浏览器模拟指纹 == Node 回放）
 - 新校验器加进 `scripts/verify-all.mjs` 的 `SUITE`（在线项 `needsServer: true`）；快速档记入 `QUICK_NAMES`
 - 几何检查测不出可玩性：真实验证 = canvas 位图像素 + `elementFromPoint` + 真实点击；结算态与 i18n 文案必须专门断言 + 反向验证（旧版本跑同一断言必须失败）
 

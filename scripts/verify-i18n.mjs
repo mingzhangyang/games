@@ -55,7 +55,8 @@ console.log('\n▶ 源码收敛（防复制粘贴复活）');
 for (const g of PAGES) {
     const src = readFileSync(join(ROOT, g.entry), 'utf8');
     const i18nVar = g.i18nVar || 'LANGUAGES';
-    ok(src.includes("import { makeText } from './i18n.js';"), `${g.entry} import makeText`);
+    // 入口可以在 js/ 顶层（'./i18n.js'）或子目录（js/firefly-signal/main.js → '../i18n.js'）
+    ok(/import \{ makeText \} from '\.{1,2}\/i18n\.js';/.test(src), `${g.entry} import makeText`);
     // 表名由注册表的 i18nVar 决定（缺省 LANGUAGES）—— 与迁移脚本同一判据，
     // 页面改名而注册表没跟着改，这里就会红。
     ok(new RegExp(`const ${i18nVar} = makeText\\(\\{`).test(src),
@@ -65,7 +66,9 @@ const LITS = {
     en: { sound: 'Sound', language: '中文', moreGames: 'More games', close: 'Close', copied: 'Copied!', usernameLabel: 'Username (Enter to save)' },
     zh: { sound: '声音', language: 'English', moreGames: '更多游戏', close: '关闭', copied: '已复制！', usernameLabel: '用户名（回车保存）' },
 };
-for (const f of readdirSync(join(ROOT, 'js')).filter(f => f.endsWith('.js'))) {
+// 扫描范围：js/ 顶层 + 骨架契约页入口所在的子目录（如 js/firefly-signal/）；js/math-rain/ 化外
+const SCAN_DIRS = ['js', ...new Set(PAGES.map(g => dirname(g.entry)).filter(d => d !== 'js'))];
+for (const f of SCAN_DIRS.flatMap(d => readdirSync(join(ROOT, d)).filter(x => x.endsWith('.js')).map(x => (d === 'js' ? x : `${d.slice(3)}/${x}`)))) {
     if (f === 'i18n.js') continue;
     const src = readFileSync(join(ROOT, 'js', f), 'utf8');
     let leaks = [];

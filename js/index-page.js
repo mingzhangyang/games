@@ -136,6 +136,10 @@ const i18n = {
         carrotPullDesc: 'Find the sweet spot, pull in rhythm, and help a tiny mole harvest six giant carrots before time runs out.',
         carrotPullTag: 'Casual',
         carrotPullPlay: 'Play ›',
+        fireflySignalName: 'Firefly Signal',
+        fireflySignalDesc: 'Every firefly blinks alone. Nudge a few and watch whole meadows fall into step until the field lights up as one.',
+        fireflySignalTag: 'Synchrony',
+        fireflySignalPlay: 'Play ›',
 
         minecraftName: '2D Minecraft',
         minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
@@ -292,6 +296,10 @@ const i18n = {
         carrotPullDesc: '看准绿色甜蜜区，跟着节奏用力拔，和小鼹鼠一起在时间结束前收获 6 根大萝卜。',
         carrotPullTag: '休闲街机',
         carrotPullPlay: '开始游戏 ›',
+        fireflySignalName: '萤火信号',
+        fireflySignalDesc: '每只萤火虫都各闪各的。轻轻推动几只，看一片片草地渐渐合拍，直到整片原野同时亮起。',
+        fireflySignalTag: '同步谜题',
+        fireflySignalPlay: '开始游戏 ›',
 
         minecraftName: '2D 我的世界',
         minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
@@ -447,6 +455,10 @@ function applyLanguage(lang) {
     document.getElementById('carrot-pull-desc').textContent = t.carrotPullDesc;
     document.getElementById('carrot-pull-tag').textContent = t.carrotPullTag;
     document.getElementById('carrot-pull-play').textContent = t.carrotPullPlay;
+    document.getElementById('firefly-signal-name').textContent = t.fireflySignalName;
+    document.getElementById('firefly-signal-desc').textContent = t.fireflySignalDesc;
+    document.getElementById('firefly-signal-tag').textContent = t.fireflySignalTag;
+    document.getElementById('firefly-signal-play').textContent = t.fireflySignalPlay;
 
     document.getElementById('minecraft-name').textContent = t.minecraftName;
     document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
@@ -545,6 +557,7 @@ function injectStructuredData() {
         { slug: 'flame-verse', name: 'Flame Verse', description: 'Original flame spectroscopy puzzle — throw salts into the burner, read the emission lines each element leaves behind and match the mystery sample\'s barcode of light. 20 unknowns plus a daily sample.' },
         { slug: 'ripple-duet', name: 'Ripple Duet', description: 'Original wave interference puzzle — drag two sources across the sea, set their phase and sculpt the ripple field: flatten the storm at one point, blaze a beacon at another, keep a whole channel calm. 20 wave puzzles plus a daily course.' },
         { slug: 'carrot-pull', name: 'Carrot Pull', description: 'Cute garden rhythm game — hit the sweet spot, pull in rhythm and help a tiny mole harvest six giant carrots before time runs out.' },
+        { slug: 'firefly-signal', name: 'Firefly Signal', description: 'Midsummer-night synchrony puzzle — nudge a few fireflies and watch whole meadows fall into step until the entire field lights up as one.' },
         { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
         { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
         { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
