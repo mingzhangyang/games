@@ -128,8 +128,8 @@ for (const vp of VIEWPORTS) {
         const where = loc && loc.url ? ` ${loc.url}` : '';
         errs.push(`console${where}: ${m.text().slice(0, 140)}`);
     });
-    // console 的 404/CORS 只会以 "Failed to load resource" 出现（无 URL），
-    // 靠 requestfailed 拿到真实 URL 才能判断是不是本地噪声
+    // console error 尽量带上 DevTools location URL，便于 isNoise 精确识别已知远端噪声；
+    // requestfailed 仍保留真实请求 URL，覆盖没有 location 的网络失败。
     page.on('requestfailed', r => errs.push('reqfail: ' + r.url()));
     await page.setViewport({ width: vp.width, height: vp.height, deviceScaleFactor: 2, hasTouch: vp.touch, isMobile: vp.touch });
     await page.goto(`${BASE}/tetris.html`, { waitUntil: 'networkidle2', timeout: 30000 });
