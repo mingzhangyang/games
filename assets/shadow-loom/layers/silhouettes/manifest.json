@@ -1,0 +1,42 @@
+{
+  "schema": "shadow-loom-silhouette-manifest/v1",
+  "rendering": {
+    "fill": "currentColor",
+    "fillRule": "evenodd",
+    "stroke": "none",
+    "background": "transparent",
+    "note": "Set currentColor from the runtime shadow/backlight renderer. SVG files intentionally contain no fixed palette."
+  },
+  "families": [
+    {
+      "id": "rabbit",
+      "target": "sitting rabbit",
+      "prototypeLevel": "初影",
+      "pieces": ["rabbit/body.svg", "rabbit/ears.svg", "rabbit/tail-grass.svg"]
+    },
+    {
+      "id": "bird",
+      "target": "flying bird",
+      "prototypeLevel": "错层",
+      "pieces": ["bird/body.svg", "bird/wing.svg", "bird/tail.svg"]
+    },
+    {
+      "id": "tree",
+      "target": "flowering tree",
+      "prototypeLevel": "回旋",
+      "pieces": ["tree/trunk-branches.svg", "tree/canopy.svg", "tree/blossom-cluster.svg"]
+    },
+    {
+      "id": "pagoda",
+      "target": "moonlit pagoda",
+      "prototypeLevel": "活影",
+      "pieces": ["pagoda/mountain-base.svg", "pagoda/pavilion.svg", "pagoda/moon.svg"]
+    },
+    {
+      "id": "koi",
+      "target": "swimming koi",
+      "prototypeLevel": "活影",
+      "pieces": ["koi/body.svg", "koi/fins.svg", "koi/tail.svg"]
+    }
+  ]
+}
