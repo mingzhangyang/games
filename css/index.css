@@ -452,10 +452,10 @@
         }
 
         /* ── Daily Hub ─────────────────────────────── */
-        /* 归属 .idx-main（普通块容器，不像 body 那样 flex 居中），
-           max-width 一旦小于可用宽度而左右 margin 对称时块会贴左
-           ⇒ 必须用 auto 外边距自己居中。纵向负 margin 用于把卡片
-           上提贴住 hero。 */
+        /* 归属纵向 flex 的 .idx-main。只写 max-width 时，窄屏会由内容的
+           intrinsic width 决定横向尺寸；一旦出现负自由空间，auto 横向 margin
+           不再平分溢出，320px 下就会形成单侧 9px 偏移。显式给响应式 width，
+           再用 auto margin 居中；纵向负 margin 只负责把卡片上提贴住 hero。 */
         .daily-hub {
             width: calc(100% - 40px);
             max-width: 640px;
