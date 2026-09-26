@@ -498,6 +498,7 @@ body {
     .ec-mode { font-size: 13px; padding: 11px 15px; }
     .ec-level-grid { gap: 5px; }
     .ec-stage { flex-direction: column; align-items: stretch; }
+
     .ec-action-row {
         position: relative;
         inset: auto;

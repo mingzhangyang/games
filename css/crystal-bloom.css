@@ -525,6 +525,7 @@ body {
     .cb-mode { font-size: 13px; padding: 11px 15px; }
     .cb-level-grid { gap: 5px; }
     .cb-stage { flex-direction: column; align-items: stretch; }
+
     .cb-action-row {
         position: relative;
         inset: auto;

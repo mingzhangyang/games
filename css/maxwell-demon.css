@@ -526,6 +526,7 @@ body {
     .md-mode { font-size: 13px; padding: 11px 15px; }
     .md-level-grid { gap: 5px; }
     .md-stage { flex-direction: column; align-items: stretch; }
+
     .md-action-row {
         position: relative;
         inset: auto;
