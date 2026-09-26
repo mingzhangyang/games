@@ -18,14 +18,15 @@
 
 export const STAGE = { w: 480, h: 854 };
 /**
- * 纸幕（可见影子区域 = 判定网格区域）。取自美术分层 manifest 的 paperWindow
- * （1080×1920 下 205,345 起 670×795，÷2.25 → 91,153 起 298×353），向外取整到 4px 网格；
- * 多出的 1–2px 压在木框下面。
+ * 纸幕（可见影子区域 = 判定网格区域）。由木框层的窗口决定：木框位图（paper-frame.webp）
+ * 在 js/shadow-loom-scene.js 里以框脚为锚放大 FRAME_SCALE = 1.2 倍绘制（原尺寸的窗口只有
+ * 298×353，手机上可玩区域太小）。放大后窗口在 1080×1920 下为 138–942 × 163–1117，
+ * ÷2.25 → 61.3–418.7 × 72.3–496.3，取整到 4px 网格；多出的零点几像素压在木框下面。
  */
-export const SCREEN = { x: 90, y: 153, w: 300, h: 356 };
+export const SCREEN = { x: 62, y: 72, w: 356, h: 424 };
 /**
- * 判定网格：4px 一格 → 75 × 89（与旧 400×420 幕、5px 格的 80×84 同量级；
- * 轮廓容差按格计，所以格宽要随纸幕等比缩放，否则判定会相对变松）
+ * 判定网格：4px 一格 → 89 × 106（轮廓容差按格计，格宽要与纸片尺度匹配，
+ * 否则判定会相对变松 / 变紧）
  */
 export const CELL = 4;
 export const COLS = SCREEN.w / CELL;
@@ -36,12 +37,12 @@ export const ROWS = SCREEN.h / CELL;
  * 投影用的灯位 L = lampModel(lamp)：x 相同，y 压到纸幕下沿附近（风格化：真实比例下
  * 影子会整片飞出幕布）。灯的可拖范围在纸幕下沿以下，灯罩不遮挡纸幕。
  */
-export const LAMP_BOX = { x0: 114, x1: 366, y0: 648, y1: 672 };
+export const LAMP_BOX = { x0: 90, x1: 390, y0: 648, y1: 672 };
 export const LAMP_HOME = { x: 240, y: 660 };
-const LAMP_MODEL_Y = 480.5;
-const LAMP_MODEL_K = 1.5;
+const LAMP_MODEL_Y = 462;
+const LAMP_MODEL_K = 1.78;
 /** 纸片中心可活动的范围（悬挂在幕前） */
-export const PIECE_BOX = { x0: 80, x1: 400, y0: 158, y1: 530 };
+export const PIECE_BOX = { x0: 50, x1: 430, y0: 79, y1: 520 };
 
 /** 相似度 → 反馈阶段（设计方案 §8：阈值需试玩调校，这里是唯一出处） */
 export const THRESHOLDS = { faint: 0.70, glow: 0.85, stitch: 0.89, win: 0.925 };

@@ -7,7 +7,7 @@
  * 绘制顺序（由后到前，玩法需要的动态层插在位图层之间）：
  *   stage-background   房间、书架、散景（不透明）
  *   纸幕               纸张纹理平铺 + 灯光透射（动态）+ 目标淡影 / 影子 / 金线（由游戏画）
- *   paper-frame        雕花木框与藤蔓，盖住纸幕的毛边
+ *   paper-frame        雕花木框与藤蔓，盖住纸幕的毛边（以框脚为锚放大 FRAME_SCALE 倍，见下）
  *   desk-back          灯后面的桌面与桌上物件
  *   剪纸纸片            （由游戏画：丝线、纸片本体）
  *   foreground         书、卡片、盆花、花瓣
@@ -24,6 +24,13 @@
 const TAU = Math.PI * 2;
 /** 位图像素 / 逻辑像素 */
 export const ART_SCALE = 2.25;
+/**
+ * 木框层放大倍数与锚点（框脚底边中点，位图像素）。原尺寸的纸幕窗口只有 298×353（逻辑），
+ * 手机上可玩区域太小；木框是独立透明层，外沿宽 892/1080，放大 1.2 倍正好铺满画宽，
+ * 框脚仍立在桌面上，窗口变为 356×424（见 rules 的 SCREEN）。
+ */
+export const FRAME_SCALE = 1.2;
+const FRAME_ANCHOR = { x: 540, y: 1257 };
 
 const url = name => new URL(`../assets/shadow-loom/layers/${name}.webp`, import.meta.url).href;
 const FILES = {
@@ -102,7 +109,15 @@ export function createScene({ W, H, SCREEN }) {
             g.fillRect(0, 0, W, H);
             full('background')(g);
         });
-        layers.frame = makeLayer(full('frame'));
+        layers.frame = makeLayer((g) => {
+            if (!img.frame) return;
+            const ax = FRAME_ANCHOR.x / ART_SCALE;
+            const ay = FRAME_ANCHOR.y / ART_SCALE;
+            g.translate(ax, ay);
+            g.scale(FRAME_SCALE, FRAME_SCALE);
+            g.translate(-ax, -ay);
+            g.drawImage(img.frame, 0, 0, W, H);
+        });
         layers.desk = makeLayer(full('desk'));
         layers.foreground = makeLayer(full('foreground'));
         layers.paper = makeLayer(drawPaperLayer);
@@ -167,7 +182,7 @@ export function createScene({ W, H, SCREEN }) {
             ctx.restore();
         },
 
-        /** 灯：光锥 → 桌面暖光 → 三件位图 → 灯罩透光闪烁 → 大光晕 */
+        /** 灯：桌面暖光 → 三件位图 → 灯罩透光闪烁 → 大光晕（不画光锥：灯与纸幕之间隔着木框下横梁，光锥会压在横梁上） */
         lamp(ctx, lamp, flicker, opts) {
             const { movable, selected, clock } = opts;
             const r = lampRect(lamp);
@@ -175,23 +190,6 @@ export function createScene({ W, H, SCREEN }) {
             const fy = lamp.y;
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
-            // 光锥：只画在灯罩与纸幕下沿之间（压到纸上会留一道硬边）
-            const top = S.y + S.h + 6;
-            const coneTop = r.y + 6;
-            if (coneTop > top) {
-                const cone = ctx.createLinearGradient(0, coneTop, 0, top);
-                cone.addColorStop(0, `rgba(255,190,110,${0.18 * flicker})`);
-                cone.addColorStop(1, 'rgba(255,190,110,0.03)');
-                ctx.fillStyle = cone;
-                const spread = r.w * 0.5 + (coneTop - top) * 1.2;
-                ctx.beginPath();
-                ctx.moveTo(fx - r.w * 0.32, coneTop);
-                ctx.lineTo(fx + r.w * 0.32, coneTop);
-                ctx.lineTo(fx + spread, top);
-                ctx.lineTo(fx - spread, top);
-                ctx.closePath();
-                ctx.fill();
-            }
             // 桌面上的暖光
             const pool = ctx.createRadialGradient(fx, r.y + r.h * 0.55, 4, fx, r.y + r.h * 0.55, 150);
             pool.addColorStop(0, `rgba(255,170,90,${0.22 * flicker})`);
