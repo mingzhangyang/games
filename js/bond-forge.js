@@ -35,6 +35,7 @@ import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
+import { bindPalette } from './theme.js';
 import {
     LEVELS, DAILY_POOL, levelById,
     dailyPicks, DAILY_SEED_PREFIX,
@@ -51,6 +52,30 @@ import {
     allowsBonds, usedBonds,
     maxBondsOf, isIonic, isIonicSelf, bondLength,
 } from './bond-forge-molecules.js';
+
+/* 画布调色板：颜色只在 css/bond-forge.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
+   P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。 */
+const CANVAS_VARS = {
+    bgTop: '--bf-cv-bg-top',
+    bgBottom: '--bf-cv-bg-bottom',
+    ionicBond: '--bf-cv-ionic-bond',
+    bond: '--bf-cv-bond',
+    chargePos: '--bf-cv-charge-pos',
+    chargeNeg: '--bf-cv-charge-neg',
+    chargeRing: '--bf-cv-charge-ring',
+    chargeText: '--bf-cv-charge-text',
+    atomOutline: '--bf-cv-atom-outline',
+    selectRing: '--bf-cv-select-ring',
+    trayBg: '--bf-cv-tray-bg',
+    trayBorder: '--bf-cv-tray-border',
+    traySep: '--bf-cv-tray-sep',
+    tint: '--bf-cv-tint',
+    traySlotBorder: '--bf-cv-tray-slot-border',
+    snap: '--bf-cv-snap',
+    topLight: '--bf-cv-top-light',
+    topLightOut: '--bf-cv-top-light-out',
+};
+let P = null;
 
 /* ────────────────────────── 常量 ────────────────────────── */
 
@@ -1065,8 +1090,8 @@ class BondForgeGame {
 
         // 台面：深靛蓝底 + 冷顶光
         const bg = ctx.createLinearGradient(0, 0, 0, H);
-        bg.addColorStop(0, '#141a38');
-        bg.addColorStop(1, '#0a0c1c');
+        bg.addColorStop(0, P.bgTop);
+        bg.addColorStop(1, P.bgBottom);
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, W, H);
 
@@ -1108,7 +1133,7 @@ class BondForgeGame {
 
             if (ionic) {
                 ctx.save();
-                ctx.strokeStyle = 'rgba(167,139,250,0.55)';
+                ctx.strokeStyle = P.ionicBond;
                 ctx.lineWidth = 2;
                 ctx.setLineDash([5, 5]);
                 ctx.beginPath();
@@ -1128,7 +1153,7 @@ class BondForgeGame {
             const spread = 4.4;
 
             ctx.save();
-            ctx.strokeStyle = 'rgba(200,215,255,0.85)';
+            ctx.strokeStyle = P.bond;
             ctx.lineWidth = order === 1 ? 5 : 3.4;
             ctx.lineCap = 'round';
             // 端点内缩：让键从球体边缘出发，而不是从圆心穿过球面
@@ -1160,13 +1185,13 @@ class BondForgeGame {
         ctx.save();
         ctx.beginPath();
         ctx.arc(x, y, 9, 0, Math.PI * 2);
-        ctx.fillStyle = sign > 0 ? 'rgba(255,159,67,0.95)' : 'rgba(96,165,250,0.95)';
+        ctx.fillStyle = sign > 0 ? P.chargePos : P.chargeNeg;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(10,12,28,0.85)';
+        ctx.strokeStyle = P.chargeRing;
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        ctx.fillStyle = '#10142a';
+        ctx.fillStyle = P.chargeText;
         ctx.font = 'bold 13px system-ui, -apple-system, "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -1193,7 +1218,7 @@ class BondForgeGame {
         // 外描边：把球从台面网格上分出来
         ctx.beginPath();
         ctx.arc(atom.x, atom.y, r, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(8,10,24,0.9)';
+        ctx.strokeStyle = P.atomOutline;
         ctx.lineWidth = 5;
         ctx.stroke();
 
@@ -1221,7 +1246,7 @@ class BondForgeGame {
         if (o.showValence !== false && this.state === 'playing' && left > 0) {
             ctx.beginPath();
             ctx.arc(atom.x, atom.y, r + 4, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(64,216,255,0.5)';
+            ctx.strokeStyle = P.selectRing;
             ctx.lineWidth = 2;
             ctx.setLineDash([3, 4]);
             ctx.stroke();
@@ -1264,9 +1289,9 @@ class BondForgeGame {
 
         ctx.save();
         // 托盘背板
-        ctx.fillStyle = 'rgba(12,16,38,0.72)';
+        ctx.fillStyle = P.trayBg;
         ctx.fillRect(0, TRAY.y - half, W, half * 2);
-        ctx.strokeStyle = 'rgba(120,150,240,0.22)';
+        ctx.strokeStyle = P.trayBorder;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(0, TRAY.y - half - 0.5);
@@ -1281,7 +1306,7 @@ class BondForgeGame {
                 // 空槽：只留一个很淡的坑
                 ctx.beginPath();
                 ctx.arc(x, y, TRAY.slotR, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(120,150,240,0.16)';
+                ctx.strokeStyle = P.traySep;
                 ctx.lineWidth = 2;
                 ctx.setLineDash([3, 5]);
                 ctx.stroke();
@@ -1291,9 +1316,9 @@ class BondForgeGame {
 
             ctx.beginPath();
             ctx.arc(x, y, TRAY.slotR, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(120,150,240,0.10)';
+            ctx.fillStyle = P.tint;
             ctx.fill();
-            ctx.strokeStyle = 'rgba(120,150,240,0.38)';
+            ctx.strokeStyle = P.traySlotBorder;
             ctx.lineWidth = 2;
             ctx.stroke();
 
@@ -1314,7 +1339,7 @@ class BondForgeGame {
                 ctx.save();
                 ctx.beginPath();
                 ctx.arc(t.x, t.y, BOND.previewR, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(52,211,153,0.8)';
+                ctx.strokeStyle = P.snap;
                 ctx.lineWidth = 3;
                 ctx.setLineDash([6, 5]);
                 ctx.stroke();
@@ -1342,7 +1367,7 @@ class BondForgeGame {
     /** 实验台网格 */
     drawBenchGrid(ctx) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(120,150,240,0.10)';
+        ctx.strokeStyle = P.tint;
         ctx.lineWidth = 1;
         const step = 26;
         ctx.beginPath();
@@ -1362,8 +1387,8 @@ class BondForgeGame {
     drawTopLight(ctx) {
         ctx.save();
         const g = ctx.createRadialGradient(W / 2, -70, 20, W / 2, -70, W * 0.95);
-        g.addColorStop(0, 'rgba(150,190,255,0.16)');
-        g.addColorStop(1, 'rgba(150,190,255,0)');
+        g.addColorStop(0, P.topLight);
+        g.addColorStop(1, P.topLightOut);
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, W, H * 0.5);
         ctx.restore();
@@ -1790,6 +1815,7 @@ class BondForgeGame {
 /* ────────────────────────── 启动 ────────────────────────── */
 
 onReady(() => {
+    P = bindPalette(CANVAS_VARS, { onChange: () => window.bfGame && window.bfGame.draw() });
     window.bfGame = new BondForgeGame();
     bindFrame({ logicalWidth: W });
     const more = document.getElementById('bfSideMore');

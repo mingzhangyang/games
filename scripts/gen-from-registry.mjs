@@ -70,7 +70,13 @@ function headBlock(g) {
     L.push(`    <meta name="apple-mobile-web-app-capable" content="yes">`);
     L.push(`    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`);
     L.push(`    <meta name="mobile-web-app-capable" content="yes">`);
-    L.push(`    <meta name="theme-color" content="${g.themeColor}">`);
+    // 主题三行，顺序固定：support meta → theme-color（浅色值挂 data-light）→ 同步 boot 脚本。
+    // boot 必须在任何样式表之前执行，所以放在 head 区域里（区域位于页面 <link> 之前）。
+    // 见 docs/contracts/theme.md §2.2 / §3
+    const light = (g.caps || []).includes('theme-light');
+    L.push(`    <meta name="theme-support" content="${light ? 'light dark' : 'dark'}">`);
+    L.push(`    <meta name="theme-color" content="${g.themeColor}"${light ? ` data-light="${g.themeColorLight}"` : ''}>`);
+    L.push(`    <script src="/theme-boot.js"></script>`);
     L.push(`    <meta name="description" content="${esc(g.desc.meta)}">`);
     // keywords 为可选字段：缺省时直接跳过该行（否则输出字面 "undefined"）
     if (g.keywords) {
@@ -184,7 +190,8 @@ function manifestTransform(src) {
 // ---------- more-games.js ----------
 const moreGamesContent = () =>
     `export const MORE_GAMES = [\n` +
-    GAMES.map(g => `    { href: '${g.href}', emoji: '${g.emoji}', en: ${JSON.stringify(g.name.en)}, zh: ${JSON.stringify(g.name.zh)} },`).join('\n') +
+    // light: true = 支持浅色（theme-light cap）；首页据此给其余卡片标「仅深色」（docs/contracts/theme.md §5）
+    GAMES.map(g => `    { href: '${g.href}', emoji: '${g.emoji}', en: ${JSON.stringify(g.name.en)}, zh: ${JSON.stringify(g.name.zh)}${(g.caps || []).includes('theme-light') ? ', light: true' : ''} },`).join('\n') +
     `\n];`;
 function moreGamesTransform(src) {
     return applyRegion(src, 'more-games', moreGamesContent(), (s, body) => {

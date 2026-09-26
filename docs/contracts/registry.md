@@ -74,6 +74,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | `daily` | 有每日挑战（判据：入口 import `js/daily.js`）。带 `scores` 的另有每日榜键 `<dailyKeyPrefix>-d<YYYYMMDD>`；word-daily 有每日玩法但不用共享榜，故只有本 cap |
 | `analytics` | 客户端调用 `hubTrack`（入口 import `js/analytics.js`） |
 | `topbar` | 有 `.game-topbar-center`（Header 三槽位契约，见 `chrome.md`） |
+| `theme-light` | 支持浅色模式（页面 CSS 写了 `[data-theme="light"]` 覆盖；与 `themeColorLight` 字段同进同出）。不带即仅深色，见 `theme.md` |
 
 ## 3. gen 派生清单
 
@@ -81,7 +82,7 @@ caps 是校验器与迁移脚本的唯一判据：
 
 | 派生点 | 区域哨兵 | 内容 |
 | --- | --- | --- |
-| 各游戏 `<head>` | `head` | viewport / theme-color / description / keywords / canonical / OG / twitter / title |
+| 各游戏 `<head>` | `head` | viewport / theme-support + theme-color（+`data-light`）+ `theme-boot.js` / description / keywords / canonical / OG / twitter / title |
 | 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList） |
 | `public/sitemap.xml` | `games` | 全部 `<url>` 条目 |
 | `public/manifest.json` | （JSON 感知） | `shortcuts` 数组 |
@@ -112,6 +113,7 @@ caps 是校验器与迁移脚本的唯一判据：
    （`import leaderboard.js`、`game-sidebar`、`--frame-shell-max`……），与 caps 声明双向比对。
    ⚠ 探针用 `\.{1,2}\/` 匹配相对路径 —— math-rain 的入口在 `js/math-rain/` 子目录，import 写成 `'../analytics.js'`，只认 `'./'` 会误判。
 3. **scores 块 ⟺ leaderboard cap**：两者必须同进同出。
+4. **themeColorLight ⟺ theme-light cap**：同上。
 
 背景教训：caps 曾实测漂移两处（tetris 缺 `leaderboard`、word-daily 缺 `analytics`），
 当时碰巧无害，但只要哪天有校验器改用 `withCap()`，就会静默漏掉一整页 ——

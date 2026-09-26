@@ -152,7 +152,7 @@ body {
     top: 14px;
     font-size: 13px;
     font-weight: 700;
-    color: var(--tok-bg-2);
+    color: var(--tok-on-accent);
     background: linear-gradient(120deg, #ffe6a8, var(--tok-gold));
     padding: 7px 18px;
     box-shadow: 0 8px 24px rgb(255, 211, 77, 0.35);

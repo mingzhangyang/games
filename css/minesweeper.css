@@ -2,6 +2,136 @@
    Minesweeper 扫雷 — classic logic puzzle
    ───────────────────────────────────────────── */
 
+/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+:root {
+    --ms-body-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.10), transparent),
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #101a2b 100%);
+    --ms-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
+    --ms-counter-bg: rgb(0, 0, 0, 0.35);
+    --ms-counter-border: 1px solid rgb(255, 255, 255, 0.09);
+    --ms-counter-value-glow: 0 0 12px rgb(255, 107, 122, 0.45);
+    --ms-counter-counter-value-glow: 0 0 12px rgb(64, 216, 255, 0.45);
+    --ms-face-bg: rgb(255, 255, 255, 0.07);
+    --ms-face-border: 1px solid rgb(255, 255, 255, 0.14);
+    --ms-face-hover-bg: rgb(255, 255, 255, 0.13);
+    --ms-diff-bg: rgb(255, 255, 255, 0.05);
+    --ms-diff-border: 1px solid rgb(255, 255, 255, 0.1);
+    --ms-diff-hover-bg: rgb(255, 255, 255, 0.1);
+    --ms-diff-active-bg: linear-gradient(120deg, #40b8ff, #40e0ff);
+    --ms-diff-active-shadow: 0 4px 16px rgb(64, 184, 255, 0.35);
+    --ms-flagmode-active-bg: rgb(255, 107, 122, 0.16);
+    --ms-flagmode-active-border: rgb(255, 107, 122, 0.45);
+    --ms-board-wrap-bg: rgb(0, 0, 0, 0.28);
+    --ms-board-wrap-border: 1px solid rgb(255, 255, 255, 0.1);
+    --ms-board-wrap-shadow: 0 14px 40px rgb(0, 0, 0, 0.4), inset 0 0 30px rgb(0, 0, 0, 0.25);
+    --ms-pause-overlay-bg: rgb(5, 8, 20, 0.88);
+    --ms-pause-hint-text: rgb(232, 236, 255, 0.65);
+    --ms-cell-bg: linear-gradient(150deg, #2c3564, #232b52);
+    --ms-cell-shadow: inset 0 1px 0 rgb(255, 255, 255, 0.12), 0 2px 3px rgb(0, 0, 0, 0.3);
+    --ms-cell-revealed-bg: rgb(255, 255, 255, 0.055);
+    --ms-cell-revealed-shadow: inset 0 0 0 1px rgb(255, 255, 255, 0.04);
+    --ms-cell-n1-text: #58a6ff;
+    --ms-cell-n2-text: #3fd97c;
+    --ms-cell-n4-text: #b48cff;
+    --ms-cell-n5-text: #ffb454;
+    --ms-cell-n6-text: #2dd4d4;
+    --ms-cell-flagged-bg: linear-gradient(150deg, #3a3260, #2b2550);
+    --ms-cell-mine-shown-bg: rgb(255, 107, 122, 0.12);
+    --ms-cell-boom-bg: radial-gradient(circle at 50% 45%, #ff5a3c, #b91c2e);
+    --ms-cell-boom-shadow: 0 0 18px rgb(255, 90, 60, 0.75);
+    --ms-cell-wrong-flag-bg: rgb(255, 107, 122, 0.28);
+    --ms-hint-text: #7c88b8;
+    --ms-result-bg: rgb(5, 6, 15, 0.72);
+    --ms-result-card-bg: rgb(13, 17, 38, 0.96);
+    --ms-result-card-border: 1px solid rgb(255, 255, 255, 0.12);
+    --ms-result-card-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    --ms-result-title-win-bg: linear-gradient(120deg, #3fd97c, #40e0ff);
+    --ms-lb-bg: rgb(255, 255, 255, 0.045);
+    --ms-lb-border: 1px solid rgb(255, 255, 255, 0.1);
+    --ms-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
+    --ms-lb-row-lb-top2-bg: rgb(203, 213, 225, 0.10);
+    --ms-lb-row-lb-top3-bg: rgb(64, 184, 255, 0.12);
+    --ms-username-bg: rgb(255, 255, 255, 0.07);
+    --ms-username-border: 1px solid rgb(255, 255, 255, 0.14);
+    --ms-username-focus-border: rgb(64, 184, 255, 0.5);
+    --ms-btn-bg: rgb(255, 255, 255, 0.08);
+    --ms-btn-border: 1px solid rgb(255, 255, 255, 0.14);
+    --ms-btn-hover-bg: rgb(255, 255, 255, 0.14);
+    --ms-btn-primary-bg: linear-gradient(120deg, #40b8ff, #2dd4d4);
+    --ms-btn-primary-shadow: 0 8px 24px rgb(64, 184, 255, 0.35);
+    --ms-start-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.12), transparent),
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #101a2b 100%);
+    --ms-title-bg: linear-gradient(120deg, #40b8ff, #2dd4d4 55%, #3fd97c);
+    --ms-best-chip-bg: rgb(255, 255, 255, 0.05);
+    --ms-best-chip-border: 1px solid rgb(255, 255, 255, 0.1);
+}
+/* theme:end vars */
+
+/* theme:begin light */
+:root[data-theme="light"] {
+    --ms-body-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.1), transparent),
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #ebeef2 100%);
+    --ms-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
+    --ms-counter-bg: rgb(15, 23, 42, 0.087);
+    --ms-counter-border: 1px solid rgb(15, 23, 42, 0.099);
+    --ms-counter-value-glow: none;
+    --ms-counter-counter-value-glow: none;
+    --ms-face-bg: rgb(255, 255, 255, 0.76);
+    --ms-face-border: 1px solid rgb(15, 23, 42, 0.154);
+    --ms-face-hover-bg: rgb(255, 255, 255, 0.94);
+    --ms-diff-bg: rgb(255, 255, 255, 0.7);
+    --ms-diff-border: 1px solid rgb(15, 23, 42, 0.11);
+    --ms-diff-hover-bg: rgb(255, 255, 255, 0.85);
+    --ms-diff-active-bg: linear-gradient(120deg, #40b8ff, #40e0ff);
+    --ms-diff-active-shadow: 0 4px 16px rgb(15, 23, 42, 0.122);
+    --ms-flagmode-active-bg: rgb(255, 107, 122, 0.16);
+    --ms-flagmode-active-border: rgb(255, 107, 122, 0.45);
+    --ms-board-wrap-bg: rgb(15, 23, 42, 0.07);
+    --ms-board-wrap-border: 1px solid rgb(15, 23, 42, 0.11);
+    --ms-board-wrap-shadow: 0 14px 40px rgb(15, 23, 42, 0.14), inset 0 0 30px rgb(15, 23, 42, 0.087);
+    --ms-pause-overlay-bg: rgb(15, 23, 42, 0.32);
+    --ms-pause-hint-text: rgb(15, 23, 42, 0.8);
+    --ms-cell-bg: linear-gradient(150deg, #d4d7e2, #d8dbe5);
+    --ms-cell-shadow: inset 0 1px 0 rgb(15, 23, 42, 0.042), 0 2px 3px rgb(15, 23, 42, 0.105);
+    --ms-cell-revealed-bg: rgb(255, 255, 255, 0.715);
+    --ms-cell-revealed-shadow: inset 0 0 0 1px rgb(15, 23, 42, 0.04);
+    --ms-cell-n1-text: #0f60bd;
+    --ms-cell-n2-text: #22aa58;
+    --ms-cell-n4-text: #4c0fbd;
+    --ms-cell-n5-text: #bd710f;
+    --ms-cell-n6-text: #23a9a9;
+    --ms-cell-flagged-bg: linear-gradient(150deg, #d8d6e1, #dbd9e5);
+    --ms-cell-mine-shown-bg: rgb(255, 107, 122, 0.12);
+    --ms-cell-boom-bg: radial-gradient(circle at 50% 45%, #ff5a3c, #b91c2e);
+    --ms-cell-boom-shadow: 0 0 18px rgb(15, 23, 42, 0.2);
+    --ms-cell-wrong-flag-bg: rgb(255, 107, 122, 0.28);
+    --ms-hint-text: #485484;
+    --ms-result-bg: rgb(15, 23, 42, 0.32);
+    --ms-result-card-bg: rgb(255, 255, 255, 0.98);
+    --ms-result-card-border: 1px solid rgb(15, 23, 42, 0.132);
+    --ms-result-card-shadow: 0 24px 70px rgb(15, 23, 42, 0.2);
+    --ms-result-title-win-bg: linear-gradient(120deg, #3fd97c, #40e0ff);
+    --ms-lb-bg: rgb(255, 255, 255, 0.685);
+    --ms-lb-border: 1px solid rgb(15, 23, 42, 0.11);
+    --ms-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
+    --ms-lb-row-lb-top2-bg: rgb(203, 213, 225, 0.1);
+    --ms-lb-row-lb-top3-bg: rgb(64, 184, 255, 0.12);
+    --ms-username-bg: rgb(255, 255, 255, 0.76);
+    --ms-username-border: 1px solid rgb(15, 23, 42, 0.154);
+    --ms-username-focus-border: rgb(64, 184, 255, 0.5);
+    --ms-btn-bg: rgb(255, 255, 255, 0.79);
+    --ms-btn-border: 1px solid rgb(15, 23, 42, 0.154);
+    --ms-btn-hover-bg: rgb(255, 255, 255, 0.95);
+    --ms-btn-primary-bg: linear-gradient(120deg, #40b8ff, #2dd4d4);
+    --ms-btn-primary-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
+    --ms-start-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.12), transparent),
+        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #ebeef2 100%);
+    --ms-title-bg: linear-gradient(120deg, #40b8ff, #2dd4d4 55%, #3fd97c);
+    --ms-best-chip-bg: rgb(255, 255, 255, 0.7);
+    --ms-best-chip-border: 1px solid rgb(15, 23, 42, 0.11);
+}
+/* theme:end light */
+
 * {
     margin: 0;
     padding: 0;
@@ -10,8 +140,7 @@
 
 body {
     background:
-        radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.10), transparent),
-        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #101a2b 100%);
+        var(--ms-body-bg);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
 }
@@ -20,15 +149,15 @@ body {
 
 /* ── 顶栏 ── */
 
-.ms-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.ms-icon-btn:hover { background: var(--ms-icon-btn-hover-bg); }
 .ms-icon-btn:active { transform: scale(0.92); }
 
 .ms-counter {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgb(0, 0, 0, 0.35);
-    border: 1px solid rgb(255, 255, 255, 0.09);
+    background: var(--ms-counter-bg);
+    border: var(--ms-counter-border);
     border-radius: 11px;
     padding: 6px 12px;
 }
@@ -43,10 +172,10 @@ body {
     font-variant-numeric: tabular-nums;
     min-width: 3ch;
     text-align: center;
-    text-shadow: 0 0 12px rgb(255, 107, 122, 0.45);
+    text-shadow: var(--ms-counter-value-glow);
 }
 
-.ms-counter:last-child .ms-counter-value { color: var(--tok-cyan); text-shadow: 0 0 12px rgb(64, 216, 255, 0.45); }
+.ms-counter:last-child .ms-counter-value { color: var(--tok-cyan); text-shadow: var(--ms-counter-counter-value-glow); }
 
 .ms-face {
     width: 48px;
@@ -56,15 +185,15 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--ms-face-bg);
+    border: var(--ms-face-border);
     border-radius: 13px;
     cursor: pointer;
     transition: transform 0.1s, background 0.15s;
     font-family: inherit;
 }
 
-.ms-face:hover { background: rgb(255, 255, 255, 0.13); }
+.ms-face:hover { background: var(--ms-face-hover-bg); }
 .ms-face:active { transform: scale(0.9); }
 
 /* ── 难度行 ── */
@@ -83,21 +212,21 @@ body {
     font-size: 13px;
     font-weight: 700;
     color: var(--tok-text-dim);
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--ms-diff-bg);
+    border: var(--ms-diff-border);
     border-radius: 10px;
     padding: 8px 6px;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
 }
 
-.ms-diff:hover { background: rgb(255, 255, 255, 0.1); color: var(--tok-text); }
+.ms-diff:hover { background: var(--ms-diff-hover-bg); color: var(--tok-text); }
 
 .ms-diff.active {
-    color: var(--tok-bg-2);
-    background: linear-gradient(120deg, #40b8ff, #40e0ff);
+    color: var(--tok-on-accent);
+    background: var(--ms-diff-active-bg);
     border-color: transparent;
-    box-shadow: 0 4px 16px rgb(64, 184, 255, 0.35);
+    box-shadow: var(--ms-diff-active-shadow);
 }
 
 .ms-flagmode {
@@ -111,8 +240,8 @@ body {
 
 .ms-flagmode.active {
     filter: none;
-    background: rgb(255, 107, 122, 0.16);
-    border-color: rgb(255, 107, 122, 0.45);
+    background: var(--ms-flagmode-active-bg);
+    border-color: var(--ms-flagmode-active-border);
 }
 
 /* ── 棋盘 ── */
@@ -124,9 +253,9 @@ body {
     margin: 0 auto;
     overflow: auto;
     border-radius: 16px;
-    background: rgb(0, 0, 0, 0.28);
-    border: 1px solid rgb(255, 255, 255, 0.1);
-    box-shadow: 0 14px 40px rgb(0, 0, 0, 0.4), inset 0 0 30px rgb(0, 0, 0, 0.25);
+    background: var(--ms-board-wrap-bg);
+    border: var(--ms-board-wrap-border);
+    box-shadow: var(--ms-board-wrap-shadow);
     scrollbar-width: thin;
     -webkit-overflow-scrolling: touch;
 }
@@ -141,7 +270,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: rgb(5, 8, 20, 0.88);
+    background: var(--ms-pause-overlay-bg);
     border-radius: 16px;
     cursor: pointer;
     text-align: center;
@@ -156,7 +285,7 @@ body {
 
 .ms-pause-hint {
     font-size: 13px;
-    color: rgb(232, 236, 255, 0.65);
+    color: var(--ms-pause-hint-text);
 }
 
 .ms-board {
@@ -180,8 +309,8 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    background: linear-gradient(150deg, #2c3564, #232b52);
-    box-shadow: inset 0 1px 0 rgb(255, 255, 255, 0.12), 0 2px 3px rgb(0, 0, 0, 0.3);
+    background: var(--ms-cell-bg);
+    box-shadow: var(--ms-cell-shadow);
     color: transparent;
     user-select: none;
     -webkit-user-select: none;
@@ -197,8 +326,8 @@ body {
 .ms-cell.flagged { color: initial; }
 
 .ms-cell.revealed {
-    background: rgb(255, 255, 255, 0.055);
-    box-shadow: inset 0 0 0 1px rgb(255, 255, 255, 0.04);
+    background: var(--ms-cell-revealed-bg);
+    box-shadow: var(--ms-cell-revealed-shadow);
     cursor: default;
     animation: ms-reveal 0.14s ease-out;
 }
@@ -209,23 +338,23 @@ body {
 }
 
 /* 数字配色（深色主题提亮版） */
-.ms-cell.n1 { color: #58a6ff; }
-.ms-cell.n2 { color: #3fd97c; }
+.ms-cell.n1 { color: var(--ms-cell-n1-text); }
+.ms-cell.n2 { color: var(--ms-cell-n2-text); }
 .ms-cell.n3 { color: var(--tok-danger); }
-.ms-cell.n4 { color: #b48cff; }
-.ms-cell.n5 { color: #ffb454; }
-.ms-cell.n6 { color: #2dd4d4; }
+.ms-cell.n4 { color: var(--ms-cell-n4-text); }
+.ms-cell.n5 { color: var(--ms-cell-n5-text); }
+.ms-cell.n6 { color: var(--ms-cell-n6-text); }
 .ms-cell.n7 { color: var(--tok-text); }
 .ms-cell.n8 { color: var(--tok-text-dim); }
 
-.ms-cell.flagged { background: linear-gradient(150deg, #3a3260, #2b2550); }
+.ms-cell.flagged { background: var(--ms-cell-flagged-bg); }
 
-.ms-cell.mine-shown { color: initial; background: rgb(255, 107, 122, 0.12); }
+.ms-cell.mine-shown { color: initial; background: var(--ms-cell-mine-shown-bg); }
 
 .ms-cell.boom {
     color: initial;
-    background: radial-gradient(circle at 50% 45%, #ff5a3c, #b91c2e);
-    box-shadow: 0 0 18px rgb(255, 90, 60, 0.75);
+    background: var(--ms-cell-boom-bg);
+    box-shadow: var(--ms-cell-boom-shadow);
     animation: ms-boom 0.35s ease-out;
 }
 
@@ -237,7 +366,7 @@ body {
 
 .ms-cell.wrong-flag {
     color: initial;
-    background: rgb(255, 107, 122, 0.28);
+    background: var(--ms-cell-wrong-flag-bg);
     text-decoration: line-through;
 }
 
@@ -245,7 +374,7 @@ body {
     min-height: 18px;
     padding: 8px 0 4px;
     font-size: 11.5px;
-    color: #7c88b8;
+    color: var(--ms-hint-text);
     text-align: center;
     letter-spacing: 0.04em;
 }
@@ -259,7 +388,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgb(5, 6, 15, 0.72);
+    background: var(--ms-result-bg);
     backdrop-filter: blur(8px);
     padding: 16px;
 }
@@ -274,12 +403,12 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    background: rgb(13, 17, 38, 0.96);
-    border: 1px solid rgb(255, 255, 255, 0.12);
+    background: var(--ms-result-card-bg);
+    border: var(--ms-result-card-border);
     border-radius: 20px;
     padding: 22px 18px 18px;
     text-align: center;
-    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    box-shadow: var(--ms-result-card-shadow);
     animation: ms-card-in 0.28s ease-out;
 }
 
@@ -293,7 +422,7 @@ body {
 .ms-result-title { font-size: 26px; font-weight: 800; }
 
 .ms-result-title.win {
-    background: linear-gradient(120deg, #3fd97c, #40e0ff);
+    background: var(--ms-result-title-win-bg);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -314,8 +443,8 @@ body {
 
 .ms-lb {
     width: 100%;
-    background: rgb(255, 255, 255, 0.045);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--ms-lb-bg);
+    border: var(--ms-lb-border);
     border-radius: 14px;
     padding: 12px 14px;
 }
@@ -344,9 +473,9 @@ body {
     border-radius: 7px;
 }
 
-.ms-lb-row.ms-lb-top1 { background: rgb(252, 211, 77, 0.14); }
-.ms-lb-row.ms-lb-top2 { background: rgb(203, 213, 225, 0.10); }
-.ms-lb-row.ms-lb-top3 { background: rgb(64, 184, 255, 0.12); }
+.ms-lb-row.ms-lb-top1 { background: var(--ms-lb-row-lb-top1-bg); }
+.ms-lb-row.ms-lb-top2 { background: var(--ms-lb-row-lb-top2-bg); }
+.ms-lb-row.ms-lb-top3 { background: var(--ms-lb-row-lb-top3-bg); }
 
 .ms-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
 
@@ -385,14 +514,14 @@ body {
     font-family: inherit;
     font-size: 13px;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--ms-username-bg);
+    border: var(--ms-username-border);
     border-radius: 9px;
     padding: 7px 10px;
     outline: none;
 }
 
-.ms-username:focus { border-color: rgb(64, 184, 255, 0.5); }
+.ms-username:focus { border-color: var(--ms-username-focus-border); }
 
 .ms-btn-row {
     display: flex;
@@ -411,24 +540,24 @@ body {
     font-size: 14px;
     font-weight: 700;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.08);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--ms-btn-bg);
+    border: var(--ms-btn-border);
     border-radius: 13px;
     padding: 11px 18px;
     cursor: pointer;
     transition: transform 0.12s, background 0.15s;
 }
 
-.ms-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.ms-btn:hover { background: var(--ms-btn-hover-bg); }
 .ms-btn:active { transform: scale(0.96); }
 
 .ms-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 .ms-btn svg .ic-fill { fill: currentcolor; stroke: none; }
 
 .ms-btn-primary {
-    background: linear-gradient(120deg, #40b8ff, #2dd4d4);
+    background: var(--ms-btn-primary-bg);
     border: none;
-    box-shadow: 0 8px 24px rgb(64, 184, 255, 0.35);
+    box-shadow: var(--ms-btn-primary-shadow);
 }
 
 .ms-btn-ghost { background: transparent; color: var(--tok-text-dim); }
@@ -451,8 +580,7 @@ body {
     scrollbar-width: none;
     text-align: center;
     background:
-        radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.12), transparent),
-        linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #101a2b 100%);
+        var(--ms-start-bg);
 }
 
 .ms-start::-webkit-scrollbar { display: none; }
@@ -460,7 +588,7 @@ body {
 .ms-title {
     font-size: 38px;
     font-weight: 800;
-    background: linear-gradient(120deg, #40b8ff, #2dd4d4 55%, #3fd97c);
+    background: var(--ms-title-bg);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -503,8 +631,8 @@ body {
     font-size: 12px;
     font-weight: 600;
     color: var(--tok-text-dim);
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--ms-best-chip-bg);
+    border: var(--ms-best-chip-border);
     border-radius: 99px;
     padding: 5px 12px;
     font-variant-numeric: tabular-nums;

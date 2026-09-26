@@ -81,8 +81,8 @@
     --frame-stage-h: 960px;
     --frame-chrome: 150px;
     --frame-main-gap: 28px;
-    --frame-scrollbar-thumb: rgb(255, 255, 255, 0.14);
-    --frame-scrollbar-thumb-hover: rgb(255, 255, 255, 0.28);
+    --frame-scrollbar-thumb: var(--tok-scrollbar);
+    --frame-scrollbar-thumb-hover: var(--tok-scrollbar-hover);
 }
 
 /* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */
@@ -319,8 +319,8 @@
 
 /* ── 侧栏卡片族 ── */
 .game-side-card {
-    background: rgb(255, 255, 255, 0.045);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--tok-surface);
+    border: 1px solid var(--tok-border);
     border-radius: 14px;
     padding: 14px 16px;
     text-align: left;
@@ -382,8 +382,8 @@
 }
 
 .game-side-kbd {
-    background: rgb(255, 255, 255, 0.1);
-    border: 1px solid rgb(255, 255, 255, 0.2);
+    background: var(--tok-fill-raised);
+    border: 1px solid var(--tok-border-raised);
     border-radius: 5px;
     padding: 1px 6px;
     font-family: inherit;
@@ -427,7 +427,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    background: rgb(4, 5, 10, 0.62);
+    background: var(--tok-scrim);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     opacity: 0;
@@ -447,10 +447,10 @@
     flex-direction: column;
     min-height: 0;
     border-radius: 20px 20px 0 0;
-    background: rgb(18, 21, 28, 0.98);
+    background: var(--tok-sheet);
     border: 1px solid var(--tok-border, rgb(255, 255, 255, 0.1));
     border-bottom: none;
-    box-shadow: 0 -18px 50px rgb(0, 0, 0, 0.5);
+    box-shadow: 0 -18px 50px var(--tok-shadow-strong);
     transform: translateY(100%);
     transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -464,7 +464,7 @@
     height: 4px;
     margin: 10px auto 2px;
     border-radius: 2px;
-    background: rgb(255, 255, 255, 0.22);
+    background: var(--tok-handle);
 }
 
 .game-drawer-head {

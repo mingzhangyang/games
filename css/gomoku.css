@@ -12,10 +12,49 @@
     --frame-stage: 760px;
 }
 
+/* ── 主题色（docs/contracts/theme.md）：深色为原值，浅色在下方覆盖。
+   木质棋盘与棋子是「实物」，两套主题下保持一致，不进这里。 ── */
+:root {
+    --gk-page-bg: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    --gk-text: #e2e8f0;
+    --gk-title: #63b3ed;
+    --gk-title-glow: 0 0 4px rgb(66, 153, 225, 0.25);
+    --gk-status-bg: rgb(45, 55, 72, 0.8);
+    --gk-status-shadow: 0 4px 6px rgb(0, 0, 0, 0.1);
+    --gk-frame-bg: linear-gradient(145deg, #1a202c, #2d3748);
+    --gk-frame-shadow: 0 10px 25px rgb(0, 0, 0, 0.5);
+    --gk-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    --gk-scrim: rgb(8, 10, 26, 0.9);
+    --gk-modal-bg: rgb(13, 17, 38, 0.96);
+    --gk-modal-border: rgb(255, 255, 255, 0.12);
+    --gk-modal-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] {
+    /* 浅色下主按钮改为深蓝底白字（深色版是亮蓝底深字；亮蓝上的深字在浅底页里只有 4:1） */
+    --tok-accent: #2b6cb0;
+    --tok-accent-2: #2c5282;
+    --tok-on-accent: #fff;
+    --gk-page-bg: linear-gradient(135deg, #f4f6fa 0%, #e4e9f1 100%);
+    --gk-text: #1f2937;
+    --gk-title: #2b6cb0;
+    --gk-title-glow: none;
+    --gk-status-bg: rgb(255, 255, 255, 0.9);
+    /* 细边用 inset 阴影画：真 border 会让状态条在两套主题下差 2px */
+    --gk-status-shadow: inset 0 0 0 1px rgb(15, 23, 42, 0.1), 0 1px 2px rgb(15, 23, 42, 0.06), 0 6px 16px rgb(15, 23, 42, 0.06);
+    --gk-frame-bg: linear-gradient(145deg, #d9dfe8, #c3ccd9);
+    --gk-frame-shadow: 0 10px 28px rgb(15, 23, 42, 0.16);
+    --gk-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    --gk-scrim: rgb(15, 23, 42, 0.35);
+    --gk-modal-bg: rgb(255, 255, 255, 0.98);
+    --gk-modal-border: rgb(15, 23, 42, 0.12);
+    --gk-modal-shadow: 0 24px 60px rgb(15, 23, 42, 0.18);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-    color: #e2e8f0;
+    background: var(--gk-page-bg);
+    color: var(--gk-text);
     margin: 0;
     overflow-x: hidden;
     overflow-y: auto;
@@ -31,8 +70,8 @@ body {
     font-weight: 800;
     letter-spacing: 0.02em;
     margin: 0;
-    color: #63b3ed;
-    text-shadow: 0 0 4px rgb(66, 153, 225, 0.25);
+    color: var(--gk-title);
+    text-shadow: var(--gk-title-glow);
 }
 
 /* 状态条：与其它页顶栏 HUD 同节奏的紧凑胶囊（不再铺满整宽） */
@@ -43,10 +82,10 @@ body {
     width: auto;
     max-width: 100%;
     align-self: center;
-    background: rgb(45, 55, 72, 0.8);
+    background: var(--gk-status-bg);
     padding: 6px 16px;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgb(0, 0, 0, 0.1);
+    box-shadow: var(--gk-status-shadow);
 }
 
 .status-item {
@@ -64,9 +103,9 @@ body {
        而不会穿透到祖先的层叠上下文里去（那样会被容器自己的深色底盖住） */
     isolation: isolate;
     padding: var(--tb-frame);
-    background: linear-gradient(145deg, #1a202c, #2d3748); /* 深色渐变外框，与暗黑 UI 同系 */
+    background: var(--gk-frame-bg); /* 外框随主题；框内木质棋盘两套主题一致 */
     border-radius: var(--frame-radius);
-    box-shadow: 0 10px 25px rgb(0, 0, 0, 0.5);
+    box-shadow: var(--gk-frame-shadow);
 }
 
 /* 木质棋盘本体。⚠️ 必须 z-index: -1：绝对定位的伪元素默认画在**画布之上**，
@@ -124,7 +163,7 @@ button:focus-visible {
     -moz-appearance: none;
     padding-right: 30px;
     background-color: var(--tok-panel, rgb(255, 255, 255, 0.06));
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-image: var(--gk-select-arrow);
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 14px;
@@ -137,7 +176,7 @@ button:focus-visible {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgb(8, 10, 26, 0.9);
+    background-color: var(--gk-scrim);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: 100;
@@ -147,18 +186,18 @@ button:focus-visible {
 }
 
 .modal-content {
-    background-color: rgb(13, 17, 38, 0.96);
+    background-color: var(--gk-modal-bg);
     padding: 22px 18px 18px;
     border-radius: 20px;
     text-align: center;
-    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
-    border: 1px solid rgb(255, 255, 255, 0.12);
+    box-shadow: var(--gk-modal-shadow);
+    border: 1px solid var(--gk-modal-border);
     max-width: 360px;
     width: 100%;
 }
 
 .modal h2 {
-    color: #63b3ed;
+    color: var(--gk-title);
     margin-top: 0;
     font-size: 26px;
 }

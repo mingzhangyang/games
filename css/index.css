@@ -1,4 +1,165 @@
 /* index.html 落地页样式（P4-1 自内联 \3c style> 原样抽离，未改任何规则） */
+
+/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+:root {
+    --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
+    --ix-card-icon--carrot-pull-text: #f08a3c;
+    --ix-tag--dark-only-text: #e2e8f0;
+    --ix-tag--dark-only-bg: #1e2436;
+    --ix-body-bg: radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
+                #0f172a;
+    --ix-game-card-bg: rgb(255, 255, 255, 0.03);
+    --ix-game-card-hover-border: rgb(148, 163, 255, 0.45);
+    --ix-game-card-hover-shadow: 0 12px 28px rgb(0, 0, 0, 0.35), 0 0 22px rgb(99, 102, 241, 0.14);
+    --ix-card-icon--math-bg: rgb(59, 130, 246, 0.15);
+    --ix-card-icon--math-text: #60a5fa;
+    --ix-card-icon--tetris-bg: rgb(139, 92, 246, 0.15);
+    --ix-card-icon--tetris-text: #a78bfa;
+    --ix-card-icon--tank-bg: rgb(16, 185, 129, 0.15);
+    --ix-card-icon--gomoku-bg: rgb(249, 115, 22, 0.15);
+    --ix-card-icon--gomoku-text: #fb923c;
+    --ix-card-icon--planet-bg: rgb(168, 85, 247, 0.15);
+    --ix-card-icon--planet-text: #c084fc;
+    --ix-card-icon--word-bg: rgb(58, 166, 85, 0.15);
+    --ix-card-icon--word-text: #4ade80;
+    --ix-card-icon--hoop-bg: rgb(249, 115, 22, 0.15);
+    --ix-card-icon--hoop-text: #fb923c;
+    --ix-card-icon--mines-bg: rgb(56, 132, 255, 0.15);
+    --ix-card-icon--mines-text: #60a5fa;
+    --ix-card-icon--reversi-bg: rgb(52, 211, 153, 0.15);
+    --ix-card-icon--td-bg: rgb(34, 211, 238, 0.15);
+    --ix-card-icon--td-text: #22d3ee;
+    --ix-card-icon--gravity-bg: rgb(129, 140, 248, 0.15);
+    --ix-card-icon--gravity-text: #818cf8;
+    --ix-card-icon--minecraft-bg: rgb(132, 204, 22, 0.15);
+    --ix-card-icon--minecraft-text: #a3e635;
+    --ix-card-icon--dots-bg: rgb(6, 182, 212, 0.15);
+    --ix-card-icon--dots-text: #22d3ee;
+    --ix-card-icon--stack-bg: rgb(245, 158, 11, 0.15);
+    --ix-card-icon--stack-text: #fbbf24;
+    --ix-card-icon--needle-bg: rgb(56, 189, 248, 0.15);
+    --ix-card-icon--needle-text: #38bdf8;
+    --ix-card-icon--sword-bg: rgb(251, 191, 36, 0.15);
+    --ix-card-icon--sword-text: #fbbf24;
+    --ix-card-icon--lumen-bg: rgb(45, 212, 191, 0.15);
+    --ix-card-icon--lumen-text: #2dd4bf;
+    --ix-card-icon--circuit-bg: rgb(250, 204, 21, 0.15);
+    --ix-card-icon--circuit-text: #facc15;
+    --ix-card-icon--silk-dew-bg: rgb(88, 201, 160, 0.16);
+    --ix-card-icon--silk-dew-text: #58c9a0;
+    --ix-card-icon--bond-forge-bg: rgb(91, 141, 238, 0.16);
+    --ix-card-icon--bond-forge-text: #5b8dee;
+    --ix-card-icon--echo-cave-bg: rgb(111, 216, 255, 0.16);
+    --ix-card-icon--echo-cave-text: #6fd8ff;
+    --ix-card-icon--maxwell-demon-bg: rgb(168, 184, 255, 0.16);
+    --ix-card-icon--maxwell-demon-text: #8ea8ff;
+    --ix-card-icon--crystal-bloom-bg: rgb(126, 224, 165, 0.16);
+    --ix-card-icon--crystal-bloom-text: #7ee0a5;
+    --ix-card-icon--flame-verse-bg: rgb(255, 179, 92, 0.16);
+    --ix-card-icon--flame-verse-text: #ffb35c;
+    --ix-card-icon--ripple-duet-bg: rgb(111, 216, 255, 0.16);
+    --ix-card-icon--ripple-duet-text: #6fd8ff;
+    --ix-card-badge--new-text: #fcd34d;
+    --ix-card-badge--new-bg: rgb(252, 211, 77, 0.13);
+    --ix-card-badge--new-border: 1px solid rgb(252, 211, 77, 0.45);
+    --ix-card-badge--daily-bg: rgb(52, 211, 153, 0.11);
+    --ix-card-badge--daily-border: 1px solid rgb(52, 211, 153, 0.4);
+    --ix-lang-toggle-bg: rgb(255, 255, 255, 0.05);
+    --ix-lang-toggle-hover-bg: rgb(255, 255, 255, 0.12);
+    --ix-tag-bg: rgb(255, 255, 255, 0.06);
+    --ix-play-btn-text: #fff;
+    --ix-play-btn-hover-text: #fff;
+    --ix-daily-hub-bg: rgb(255, 255, 255, 0.03);
+    --ix-daily-hub-progress-bg: rgb(52, 211, 153, 0.12);
+    --ix-daily-hub-progress-all-done-text: #fcd34d;
+    --ix-daily-hub-progress-all-done-bg: rgb(252, 211, 77, 0.12);
+    --ix-daily-task-hover-bg: rgb(255, 255, 255, 0.05);
+    --ix-daily-profile-bg: rgb(255, 255, 255, 0.05);
+    --ix-daily-profile-focus-border: rgb(99, 102, 241, 0.55);
+    --ix-perk-bg: rgb(255, 255, 255, 0.02);
+}
+/* theme:end vars */
+
+/* theme:begin light */
+:root[data-theme="light"] {
+    --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
+    --ix-card-icon--carrot-pull-text: #bd5a0f;
+    --ix-tag--dark-only-text: #e2e8f0;
+    --ix-tag--dark-only-bg: #1e2436;
+    --ix-body-bg: radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
+                #eceef3;
+    --ix-game-card-bg: rgb(255, 255, 255, 0.64);
+    --ix-game-card-hover-border: rgb(148, 163, 255, 0.45);
+    --ix-game-card-hover-shadow: 0 12px 28px rgb(15, 23, 42, 0.122), 0 0 22px rgb(15, 23, 42, 0.049);
+    --ix-card-icon--math-bg: rgb(59, 130, 246, 0.15);
+    --ix-card-icon--math-text: #0f5dbd;
+    --ix-card-icon--tetris-bg: rgb(139, 92, 246, 0.15);
+    --ix-card-icon--tetris-text: #3b0fbd;
+    --ix-card-icon--tank-bg: rgb(16, 185, 129, 0.15);
+    --ix-card-icon--gomoku-bg: rgb(249, 115, 22, 0.15);
+    --ix-card-icon--gomoku-text: #bd5d0f;
+    --ix-card-icon--planet-bg: rgb(168, 85, 247, 0.15);
+    --ix-card-icon--planet-text: #660fbd;
+    --ix-card-icon--word-bg: rgb(58, 166, 85, 0.15);
+    --ix-card-icon--word-text: #1fad53;
+    --ix-card-icon--hoop-bg: rgb(249, 115, 22, 0.15);
+    --ix-card-icon--hoop-text: #bd5d0f;
+    --ix-card-icon--mines-bg: rgb(56, 132, 255, 0.15);
+    --ix-card-icon--mines-text: #0f5dbd;
+    --ix-card-icon--reversi-bg: rgb(52, 211, 153, 0.15);
+    --ix-card-icon--td-bg: rgb(34, 211, 238, 0.15);
+    --ix-card-icon--td-text: #0fa6bd;
+    --ix-card-icon--gravity-bg: rgb(129, 140, 248, 0.15);
+    --ix-card-icon--gravity-text: #0f1fbd;
+    --ix-card-icon--minecraft-bg: rgb(132, 204, 22, 0.15);
+    --ix-card-icon--minecraft-text: #79b616;
+    --ix-card-icon--dots-bg: rgb(6, 182, 212, 0.15);
+    --ix-card-icon--dots-text: #0fa6bd;
+    --ix-card-icon--stack-bg: rgb(245, 158, 11, 0.15);
+    --ix-card-icon--stack-text: #bd8c0f;
+    --ix-card-icon--needle-bg: rgb(56, 189, 248, 0.15);
+    --ix-card-icon--needle-text: #0f87bd;
+    --ix-card-icon--sword-bg: rgb(251, 191, 36, 0.15);
+    --ix-card-icon--sword-text: #bd8c0f;
+    --ix-card-icon--lumen-bg: rgb(45, 212, 191, 0.15);
+    --ix-card-icon--lumen-text: #23a998;
+    --ix-card-icon--circuit-bg: rgb(250, 204, 21, 0.15);
+    --ix-card-icon--circuit-text: #bd9a0f;
+    --ix-card-icon--silk-dew-bg: rgb(88, 201, 160, 0.16);
+    --ix-card-icon--silk-dew-text: #329a74;
+    --ix-card-icon--bond-forge-bg: rgb(91, 141, 238, 0.16);
+    --ix-card-icon--bond-forge-text: #134cb9;
+    --ix-card-icon--echo-cave-bg: rgb(111, 216, 255, 0.16);
+    --ix-card-icon--echo-cave-text: #0f8ebd;
+    --ix-card-icon--maxwell-demon-bg: rgb(168, 184, 255, 0.16);
+    --ix-card-icon--maxwell-demon-text: #0f37bd;
+    --ix-card-icon--crystal-bloom-bg: rgb(126, 224, 165, 0.16);
+    --ix-card-icon--crystal-bloom-text: #28a459;
+    --ix-card-icon--flame-verse-bg: rgb(255, 179, 92, 0.16);
+    --ix-card-icon--flame-verse-text: #bd6c0f;
+    --ix-card-icon--ripple-duet-bg: rgb(111, 216, 255, 0.16);
+    --ix-card-icon--ripple-duet-text: #0f8ebd;
+    --ix-card-badge--new-text: #bd940f;
+    --ix-card-badge--new-bg: rgb(252, 211, 77, 0.13);
+    --ix-card-badge--new-border: 1px solid rgb(252, 211, 77, 0.45);
+    --ix-card-badge--daily-bg: rgb(52, 211, 153, 0.11);
+    --ix-card-badge--daily-border: 1px solid rgb(52, 211, 153, 0.4);
+    --ix-lang-toggle-bg: rgb(255, 255, 255, 0.7);
+    --ix-lang-toggle-hover-bg: rgb(255, 255, 255, 0.91);
+    --ix-tag-bg: rgb(255, 255, 255, 0.73);
+    --ix-play-btn-text: #fff;
+    --ix-play-btn-hover-text: #0f172a;
+    --ix-daily-hub-bg: rgb(255, 255, 255, 0.64);
+    --ix-daily-hub-progress-bg: rgb(52, 211, 153, 0.12);
+    --ix-daily-hub-progress-all-done-text: #bd940f;
+    --ix-daily-hub-progress-all-done-bg: rgb(252, 211, 77, 0.12);
+    --ix-daily-task-hover-bg: rgb(255, 255, 255, 0.7);
+    --ix-daily-profile-bg: rgb(255, 255, 255, 0.7);
+    --ix-daily-profile-focus-border: rgb(99, 102, 241, 0.55);
+    --ix-perk-bg: rgb(255, 255, 255, 0.61);
+}
+/* theme:end light */
+
         :root {
             --color-primary: #6366f1;
             --color-accent: #34d399;
@@ -7,13 +168,21 @@
             --color-border: rgb(255, 255, 255, 0.08);
         }
 
+        /* 浅色调色板（docs/contracts/theme.md）；其余字面色在文件顶部的 theme 区域 */
+        :root[data-theme="light"] {
+            --color-primary: #4f46e5;
+            --color-accent: #047857;
+            --color-text: #182033;
+            --color-text-muted: #56607a;
+            --color-border: rgb(15, 23, 42, 0.12);
+        }
+
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background:
-                radial-gradient(ellipse 60% 30% at 50% -6%, rgb(99, 102, 241, 0.16), transparent),
-                #0f172a;
+                var(--ix-body-bg);
             min-height: 100vh;
             margin: 0;
             color: var(--color-text);
@@ -79,7 +248,7 @@
 
         .game-card {
             position: relative;
-            background: rgb(255, 255, 255, 0.03);
+            background: var(--ix-game-card-bg);
             border: 1px solid var(--color-border);
             border-radius: 14px;
             display: flex;
@@ -90,8 +259,8 @@
 
         .game-card:hover {
             transform: translateY(-3px);
-            border-color: rgb(148, 163, 255, 0.45);
-            box-shadow: 0 12px 28px rgb(0, 0, 0, 0.35), 0 0 22px rgb(99, 102, 241, 0.14);
+            border-color: var(--ix-game-card-hover-border);
+            box-shadow: var(--ix-game-card-hover-shadow);
         }
 
         .game-card:active { transform: translateY(-1px) scale(0.995); }
@@ -121,32 +290,32 @@
             flex-shrink: 0;
         }
 
-        .card-icon--math      { background: rgb(59, 130, 246, 0.15); color: #60a5fa; }
-        .card-icon--tetris    { background: rgb(139, 92, 246, 0.15); color: #a78bfa; }
-        .card-icon--tank      { background: rgb(16, 185, 129, 0.15); color: var(--tok-success); }
-        .card-icon--gomoku    { background: rgb(249, 115, 22, 0.15); color: #fb923c; }
-        .card-icon--planet    { background: rgb(168, 85, 247, 0.15); color: #c084fc; }
-        .card-icon--word      { background: rgb(58, 166, 85, 0.15); color: #4ade80; }
-        .card-icon--hoop      { background: rgb(249, 115, 22, 0.15); color: #fb923c; }
-        .card-icon--mines     { background: rgb(56, 132, 255, 0.15); color: #60a5fa; }
-        .card-icon--reversi   { background: rgb(52, 211, 153, 0.15); color: var(--tok-success); }
-        .card-icon--td        { background: rgb(34, 211, 238, 0.15); color: #22d3ee; }
-        .card-icon--gravity   { background: rgb(129, 140, 248, 0.15); color: #818cf8; }
-        .card-icon--minecraft { background: rgb(132, 204, 22, 0.15); color: #a3e635; }
-        .card-icon--dots      { background: rgb(6, 182, 212, 0.15); color: #22d3ee; }
-        .card-icon--stack     { background: rgb(245, 158, 11, 0.15); color: #fbbf24; }
-        .card-icon--needle    { background: rgb(56, 189, 248, 0.15); color: #38bdf8; }
-        .card-icon--sword     { background: rgb(251, 191, 36, 0.15); color: #fbbf24; }
-        .card-icon--lumen     { background: rgb(45, 212, 191, 0.15); color: #2dd4bf; }
-        .card-icon--circuit   { background: rgb(250, 204, 21, 0.15); color: #facc15; }
-        .card-icon--silk-dew  { background: rgb(88, 201, 160, 0.16); color: #58c9a0; }
-        .card-icon--bond-forge { background: rgb(91, 141, 238, 0.16); color: #5b8dee; }
-        .card-icon--echo-cave { background: rgb(111, 216, 255, 0.16); color: #6fd8ff; }
-        .card-icon--maxwell-demon { background: rgb(168, 184, 255, 0.16); color: #8ea8ff; }
-        .card-icon--crystal-bloom { background: rgb(126, 224, 165, 0.16); color: #7ee0a5; }
-        .card-icon--flame-verse { background: rgb(255, 179, 92, 0.16); color: #ffb35c; }
-.card-icon--ripple-duet { background: rgb(111, 216, 255, 0.16); color: #6fd8ff; }
-.card-icon--carrot-pull { background: rgb(240, 138, 60, 0.16); color: #f08a3c; }
+        .card-icon--math      { background: var(--ix-card-icon--math-bg); color: var(--ix-card-icon--math-text); }
+        .card-icon--tetris    { background: var(--ix-card-icon--tetris-bg); color: var(--ix-card-icon--tetris-text); }
+        .card-icon--tank      { background: var(--ix-card-icon--tank-bg); color: var(--tok-success); }
+        .card-icon--gomoku    { background: var(--ix-card-icon--gomoku-bg); color: var(--ix-card-icon--gomoku-text); }
+        .card-icon--planet    { background: var(--ix-card-icon--planet-bg); color: var(--ix-card-icon--planet-text); }
+        .card-icon--word      { background: var(--ix-card-icon--word-bg); color: var(--ix-card-icon--word-text); }
+        .card-icon--hoop      { background: var(--ix-card-icon--hoop-bg); color: var(--ix-card-icon--hoop-text); }
+        .card-icon--mines     { background: var(--ix-card-icon--mines-bg); color: var(--ix-card-icon--mines-text); }
+        .card-icon--reversi   { background: var(--ix-card-icon--reversi-bg); color: var(--tok-success); }
+        .card-icon--td        { background: var(--ix-card-icon--td-bg); color: var(--ix-card-icon--td-text); }
+        .card-icon--gravity   { background: var(--ix-card-icon--gravity-bg); color: var(--ix-card-icon--gravity-text); }
+        .card-icon--minecraft { background: var(--ix-card-icon--minecraft-bg); color: var(--ix-card-icon--minecraft-text); }
+        .card-icon--dots      { background: var(--ix-card-icon--dots-bg); color: var(--ix-card-icon--dots-text); }
+        .card-icon--stack     { background: var(--ix-card-icon--stack-bg); color: var(--ix-card-icon--stack-text); }
+        .card-icon--needle    { background: var(--ix-card-icon--needle-bg); color: var(--ix-card-icon--needle-text); }
+        .card-icon--sword     { background: var(--ix-card-icon--sword-bg); color: var(--ix-card-icon--sword-text); }
+        .card-icon--lumen     { background: var(--ix-card-icon--lumen-bg); color: var(--ix-card-icon--lumen-text); }
+        .card-icon--circuit   { background: var(--ix-card-icon--circuit-bg); color: var(--ix-card-icon--circuit-text); }
+        .card-icon--silk-dew  { background: var(--ix-card-icon--silk-dew-bg); color: var(--ix-card-icon--silk-dew-text); }
+        .card-icon--bond-forge { background: var(--ix-card-icon--bond-forge-bg); color: var(--ix-card-icon--bond-forge-text); }
+        .card-icon--echo-cave { background: var(--ix-card-icon--echo-cave-bg); color: var(--ix-card-icon--echo-cave-text); }
+        .card-icon--maxwell-demon { background: var(--ix-card-icon--maxwell-demon-bg); color: var(--ix-card-icon--maxwell-demon-text); }
+        .card-icon--crystal-bloom { background: var(--ix-card-icon--crystal-bloom-bg); color: var(--ix-card-icon--crystal-bloom-text); }
+        .card-icon--flame-verse { background: var(--ix-card-icon--flame-verse-bg); color: var(--ix-card-icon--flame-verse-text); }
+.card-icon--ripple-duet { background: var(--ix-card-icon--ripple-duet-bg); color: var(--ix-card-icon--ripple-duet-text); }
+.card-icon--carrot-pull { background: var(--ix-card-icon--carrot-pull-bg); color: var(--ix-card-icon--carrot-pull-text); }
 
         .card-title {
             font-size: 1em;
@@ -188,15 +357,15 @@
         .card-badge ~ .card-body .card-header { padding-right: 48px; }
 
         .card-badge--new {
-            color: #fcd34d;
-            background: rgb(252, 211, 77, 0.13);
-            border: 1px solid rgb(252, 211, 77, 0.45);
+            color: var(--ix-card-badge--new-text);
+            background: var(--ix-card-badge--new-bg);
+            border: var(--ix-card-badge--new-border);
         }
 
         .card-badge--daily {
             color: var(--tok-success);
-            background: rgb(52, 211, 153, 0.11);
-            border: 1px solid rgb(52, 211, 153, 0.4);
+            background: var(--ix-card-badge--daily-bg);
+            border: var(--ix-card-badge--daily-border);
         }
 
         /* 基础形态不含定位 —— 它现在有两个落点：hero 右上角与页脚。
@@ -206,7 +375,7 @@
             font-size: 12px;
             font-weight: 700;
             color: var(--color-text-muted);
-            background: rgb(255, 255, 255, 0.05);
+            background: var(--ix-lang-toggle-bg);
             border: 1px solid var(--color-border);
             border-radius: 99px;
             padding: 5px 12px;
@@ -221,7 +390,7 @@
         }
 
         .lang-toggle:hover {
-            background: rgb(255, 255, 255, 0.12);
+            background: var(--ix-lang-toggle-hover-bg);
             color: var(--color-text);
         }
 
@@ -237,17 +406,28 @@
             font-size: 0.71em;
             font-weight: 600;
             color: var(--color-text-muted);
-            background: rgb(255, 255, 255, 0.06);
+            background: var(--ix-tag-bg);
             border-radius: 6px;
             padding: 3px 8px;
             white-space: nowrap;
         }
 
+        /* 「仅深色」小标：只在首页为浅色时显示（body.theme-light-active 由 index-page.js 维护） */
+        .tag--dark-only {
+            display: none;
+            margin-left: auto;
+            margin-right: 6px;
+            color: var(--ix-tag--dark-only-text);
+            background: var(--ix-tag--dark-only-bg);
+        }
+
+        .theme-light-active .tag--dark-only { display: inline-block; }
+
         .play-btn {
             display: inline-flex;
             align-items: center;
             background: var(--color-primary);
-            color: #fff;
+            color: var(--ix-play-btn-text);
             border-radius: 99px;
             padding: 5px 16px;
             font-size: 0.78em;
@@ -260,7 +440,7 @@
         .play-btn:hover {
             opacity: 0.85;
             transform: scale(1.04);
-            color: #fff;
+            color: var(--ix-play-btn-hover-text);
             text-decoration: none;
         }
 
@@ -272,7 +452,7 @@
         .daily-hub {
             max-width: 640px;
             margin: -24px auto 8px;
-            background: rgb(255, 255, 255, 0.03);
+            background: var(--ix-daily-hub-bg);
             border: 1px solid var(--color-border);
             border-radius: 16px;
             padding: 16px 18px;
@@ -303,7 +483,7 @@
             font-size: 0.78em;
             font-weight: 700;
             color: var(--color-accent);
-            background: rgb(52, 211, 153, 0.12);
+            background: var(--ix-daily-hub-progress-bg);
             border-radius: 99px;
             padding: 3px 10px;
             font-variant-numeric: tabular-nums;
@@ -317,8 +497,8 @@
         }
 
         .daily-hub-progress.all-done {
-            color: #fcd34d;
-            background: rgb(252, 211, 77, 0.12);
+            color: var(--ix-daily-hub-progress-all-done-text);
+            background: var(--ix-daily-hub-progress-all-done-bg);
         }
 
         .daily-task {
@@ -333,7 +513,7 @@
         }
 
         .daily-task + .daily-task { margin-top: 6px; }
-        .daily-task:hover { background: rgb(255, 255, 255, 0.05); }
+        .daily-task:hover { background: var(--ix-daily-task-hover-bg); }
 
         .daily-task-icon { font-size: 1.4em; flex-shrink: 0; }
 
@@ -377,14 +557,14 @@
             font-family: inherit;
             font-size: 0.82em;
             color: var(--color-text);
-            background: rgb(255, 255, 255, 0.05);
+            background: var(--ix-daily-profile-bg);
             border: 1px solid var(--color-border);
             border-radius: 9px;
             padding: 7px 11px;
             outline: none;
         }
 
-        .daily-profile input:focus { border-color: rgb(99, 102, 241, 0.55); }
+        .daily-profile input:focus { border-color: var(--ix-daily-profile-focus-border); }
 
         .daily-profile-hint {
             font-size: 0.7em;
@@ -411,7 +591,7 @@
             display: flex;
             align-items: flex-start;
             gap: 10px;
-            background: rgb(255, 255, 255, 0.02);
+            background: var(--ix-perk-bg);
             border: 1px solid var(--color-border);
             border-radius: 12px;
             padding: 14px 16px;
@@ -448,6 +628,39 @@
 
         #footer-text {
             margin: 0;
+        }
+
+        /* 主题三档：与 .lang-toggle 同一套胶囊语言，按下态用主色描边 */
+        .theme-switch {
+            display: inline-flex;
+            gap: 2px;
+            padding: 2px;
+            border: 1px solid var(--color-border);
+            border-radius: 99px;
+        }
+
+        .theme-switch[hidden] { display: none; }
+
+        .theme-switch-btn {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 99px;
+            padding: 4px 10px;
+            min-height: 28px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+
+        .theme-switch-btn:hover { color: var(--color-text); }
+
+        .theme-switch-btn[aria-pressed="true"] {
+            color: var(--color-text);
+            background: var(--tok-fill-raised);
+            border-color: var(--tok-border-raised);
         }
 
         .game-footer {

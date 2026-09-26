@@ -34,6 +34,10 @@
     --tok-text-soft: #c3cdf2; /* 次级标题文字 */
     --tok-text-faint: #7c89bf;/* 弱化说明文字 */
 
+    /* 亮色强调底（青/金/主色渐变）上的文字：两套主题都用深色 ——
+       以前直接写 var(--tok-bg-2)，浅色下 bg-2 变成浅底色，按钮文字会变白而看不清 */
+    --tok-on-accent: #0b0f26;
+
     /* 主色（各页覆盖 --tok-accent 即可换肤） */
     --tok-accent: #667eea;
     --tok-accent-2: #764ba2;
@@ -45,6 +49,60 @@
     /* 控件尺寸 */
     --tok-btn-size: 40px;   /* 图标按钮视觉尺寸 */
     --tok-hit-pad: -6px;   /* 触控热区外扩（保持视觉尺寸不变） */
+
+    /* 共享层语义色（theme P0：layout.css / more-games.css 的字面色收编于此，深色值与收编前逐字相同） */
+    --tok-surface: rgb(255, 255, 255, 0.045);       /* 侧栏卡片底 */
+    --tok-fill-raised: rgb(255, 255, 255, 0.1);     /* 键帽等凸起小件 */
+    --tok-border-raised: rgb(255, 255, 255, 0.2);
+    --tok-chip-hover: rgb(255, 255, 255, 0.15);     /* 胶囊链接悬停 */
+    --tok-text-strong: #fff;                         /* 悬停 / 强调时的最亮文字 */
+    --tok-handle: rgb(255, 255, 255, 0.22);         /* 抽屉把手 */
+    --tok-scrim: rgb(4, 5, 10, 0.62);               /* 抽屉遮罩 */
+    --tok-sheet: rgb(18, 21, 28, 0.98);             /* 底部抽屉面板 */
+    --tok-shadow-strong: rgb(0, 0, 0, 0.5);
+    --tok-scrollbar: rgb(255, 255, 255, 0.14);
+    --tok-scrollbar-hover: rgb(255, 255, 255, 0.28);
+}
+
+/* ── 浅色覆盖（docs/contracts/theme.md）──
+   只有 <html data-theme="light"> 时生效；该属性由 public/theme-boot.js 写入，
+   且仅在页面声明支持浅色（theme-support 含 light）并且用户选了浅色时才会是 light。
+   ⚠️ 不要改用 @media (prefers-color-scheme)：那会绕过「默认深色」与仅深色例外。
+   这里是 P0 的初版取值，P1 首批页面落地时按实际画面校准并写进 style.md。 */
+:root[data-theme="light"] {
+    /* 底色与面板 */
+    --tok-bg: #f3f5fa;
+    --tok-bg-2: #e8ecf5;
+    --tok-panel: rgb(255, 255, 255, 0.78);
+    --tok-panel-strong: rgb(255, 255, 255, 0.96);
+    --tok-border: rgb(15, 23, 42, 0.12);
+    --tok-border-strong: rgb(15, 23, 42, 0.2);
+
+    /* 文字 */
+    --tok-text: #182033;
+    --tok-text-dim: #3f4a66;
+    --tok-text-mute: #525c78;
+    --tok-text-soft: #2b3552;
+    --tok-text-faint: #4d5873;
+
+    /* 功能语义色：加深以在浅底上保持 ≥4.5:1 */
+    --tok-cyan: #0b84ad;
+    --tok-gold: #a87a0c;
+    --tok-success: #11805a;
+    --tok-danger: #c9364a;
+
+    /* 共享层语义色 */
+    --tok-surface: rgb(255, 255, 255, 0.86);
+    --tok-fill-raised: rgb(15, 23, 42, 0.06);
+    --tok-border-raised: rgb(15, 23, 42, 0.18);
+    --tok-chip-hover: rgb(15, 23, 42, 0.08);
+    --tok-text-strong: #0b1220;
+    --tok-handle: rgb(15, 23, 42, 0.22);
+    --tok-scrim: rgb(15, 23, 42, 0.32);
+    --tok-sheet: rgb(255, 255, 255, 0.98);
+    --tok-shadow-strong: rgb(15, 23, 42, 0.18);
+    --tok-scrollbar: rgb(15, 23, 42, 0.18);
+    --tok-scrollbar-hover: rgb(15, 23, 42, 0.32);
 }
 
 /* ── 图标按钮：玻璃圆角钮（40px 视觉，≥44px 触控热区） ──
@@ -104,7 +162,7 @@
 }
 
 .btn-primary {
-    color: var(--tok-bg-2);
+    color: var(--tok-on-accent);
     background: linear-gradient(120deg, var(--tok-accent), var(--tok-accent-2));
     border: none;
     box-shadow: 0 8px 24px rgb(64, 184, 255, 0.3); /* 回退 */

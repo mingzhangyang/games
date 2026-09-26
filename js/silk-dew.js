@@ -42,6 +42,40 @@ import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
+import { bindPalette } from './theme.js';
+
+/* 画布调色板：颜色只在 css/silk-dew.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
+   P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。 */
+const CANVAS_VARS = {
+    skyTop: '--sd-cv-sky-top',
+    skyMid: '--sd-cv-sky-mid',
+    skyBottom: '--sd-cv-sky-bottom',
+    moonHalo: '--sd-cv-moon-halo',
+    moonHaloOut: '--sd-cv-moon-halo-out',
+    moon: '--sd-cv-moon',
+    hills: '--sd-cv-hills',
+    wind: '--sd-cv-wind',
+    windArrow: '--sd-cv-wind-arrow',
+    vesselStroke: '--sd-cv-vessel-stroke',
+    vesselMouth: '--sd-cv-vessel-mouth',
+    vesselGlow: '--sd-cv-vessel-glow',
+    bubbleIn: '--sd-cv-bubble-in',
+    bubbleMid: '--sd-cv-bubble-mid',
+    bubbleOut: '--sd-cv-bubble-out',
+    bubbleStroke: '--sd-cv-bubble-stroke',
+    bubbleShine: '--sd-cv-bubble-shine',
+    thorn: '--sd-cv-thorn',
+    thornRing: '--sd-cv-thorn-ring',
+    starEdge: '--sd-cv-star-edge',
+    ropeGlow: '--sd-cv-rope-glow',
+    rope: '--sd-cv-rope',
+    pearlTrail: '--sd-cv-pearl-trail',
+    pearlGlow: '--sd-cv-pearl-glow',
+    pearlGlowOut: '--sd-cv-pearl-glow-out',
+    pearlEdge: '--sd-cv-pearl-edge',
+    starDustRgb: '--sd-cv-star-dust-rgb',
+};
+let P = null;
 
 /* ────────────────────────── 常量 ────────────────────────── */
 
@@ -1043,21 +1077,21 @@ class SilkfallGame {
 
     drawBackdrop(ctx) {
         const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, '#0a1712');
-        g.addColorStop(0.55, '#0c1a26');
-        g.addColorStop(1, '#0d1338');
+        g.addColorStop(0, P.skyTop);
+        g.addColorStop(0.55, P.skyMid);
+        g.addColorStop(1, P.skyBottom);
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, W, H);
 
         // 月晕
         const mg = ctx.createRadialGradient(378, 92, 4, 378, 92, 96);
-        mg.addColorStop(0, 'rgba(220,245,235,0.16)');
-        mg.addColorStop(1, 'rgba(220,245,235,0)');
+        mg.addColorStop(0, P.moonHalo);
+        mg.addColorStop(1, P.moonHaloOut);
         ctx.fillStyle = mg;
         ctx.fillRect(280, 0, 200, 200);
         ctx.beginPath();
         ctx.arc(378, 92, 26, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(226,246,236,0.5)';
+        ctx.fillStyle = P.moon;
         ctx.fill();
 
         // 星点
@@ -1065,7 +1099,7 @@ class SilkfallGame {
             const tw = 0.6 + 0.4 * Math.sin(this.time * 1.6 + st.ph);
             ctx.beginPath();
             ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(200,232,220,${(st.a * tw).toFixed(3)})`;
+            ctx.fillStyle = `rgba(${P.starDustRgb}, ${(st.a * tw).toFixed(3)})`;
             ctx.fill();
         }
 
@@ -1077,14 +1111,14 @@ class SilkfallGame {
         ctx.quadraticCurveTo(300, 500, 480, 428);
         ctx.lineTo(W, H);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(8,26,24,0.62)';
+        ctx.fillStyle = P.hills;
         ctx.fill();
     }
 
     drawWinds(ctx) {
         for (const w of this.world.winds) {
             ctx.save();
-            ctx.strokeStyle = 'rgba(159,232,255,0.22)';
+            ctx.strokeStyle = P.wind;
             ctx.lineWidth = 1.4;
             ctx.setLineDash([7, 7]);
             ctx.lineDashOffset = -(this.time * 34) % 14;
@@ -1097,7 +1131,7 @@ class SilkfallGame {
                 const cx = w.x + w.w / 2, cy = w.y + w.h / 2;
                 ctx.translate(cx, cy);
                 ctx.rotate(Math.atan2(ay, ax));
-                ctx.strokeStyle = 'rgba(159,232,255,0.5)';
+                ctx.strokeStyle = P.windArrow;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(-11, 0); ctx.lineTo(11, 0);
@@ -1126,20 +1160,20 @@ class SilkfallGame {
         g.addColorStop(1, 'rgba(31,111,87,0.55)');
         ctx.fillStyle = g;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(168,236,212,0.85)';
+        ctx.strokeStyle = P.vesselStroke;
         ctx.lineWidth = 2.2;
         ctx.stroke();
         // 壶口
         ctx.beginPath();
         ctx.moveTo(v.x - half - 5, top);
         ctx.lineTo(v.x + half + 5, top);
-        ctx.strokeStyle = 'rgba(196,246,228,0.95)';
+        ctx.strokeStyle = P.vesselMouth;
         ctx.lineWidth = 2.6;
         ctx.stroke();
         // 内壁微光
         ctx.beginPath();
         ctx.ellipse(v.x, top + 3, half - 3, 3.4, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(140,236,200,0.16)';
+        ctx.fillStyle = P.vesselGlow;
         ctx.fill();
     }
 
@@ -1149,20 +1183,20 @@ class SilkfallGame {
             const pulse = 1 + 0.03 * Math.sin(this.time * 2.4 + b.i);
             const r = b.r * pulse;
             const g = ctx.createRadialGradient(b.x - r * 0.3, b.y - r * 0.3, r * 0.1, b.x, b.y, r);
-            g.addColorStop(0, 'rgba(223,252,255,0.30)');
-            g.addColorStop(0.7, 'rgba(64,216,255,0.14)');
-            g.addColorStop(1, 'rgba(64,216,255,0.03)');
+            g.addColorStop(0, P.bubbleIn);
+            g.addColorStop(0.7, P.bubbleMid);
+            g.addColorStop(1, P.bubbleOut);
             ctx.beginPath();
             ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
             ctx.fillStyle = g;
             ctx.fill();
-            ctx.strokeStyle = 'rgba(159,232,255,0.6)';
+            ctx.strokeStyle = P.bubbleStroke;
             ctx.lineWidth = 1.5;
             ctx.stroke();
             // 高光
             ctx.beginPath();
             ctx.arc(b.x - r * 0.32, b.y - r * 0.34, r * 0.17, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(240,253,255,0.7)';
+            ctx.fillStyle = P.bubbleShine;
             ctx.fill();
         }
     }
@@ -1179,7 +1213,7 @@ class SilkfallGame {
             ctx.fillStyle = g;
             ctx.fill();
             // 棘刺（8 向）
-            ctx.strokeStyle = '#ff6b7a';
+            ctx.strokeStyle = P.thorn;
             ctx.lineWidth = 2.2;
             ctx.lineCap = 'round';
             for (let i = 0; i < 8; i++) {
@@ -1193,7 +1227,7 @@ class SilkfallGame {
             ctx.arc(0, 0, t.r * 0.55, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(58,18,32,0.9)';
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255,107,122,0.9)';
+            ctx.strokeStyle = P.thornRing;
             ctx.lineWidth = 1.6;
             ctx.stroke();
             ctx.restore();
@@ -1223,7 +1257,7 @@ class SilkfallGame {
             ctx.closePath();
             ctx.fillStyle = '#ffd34d';
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255,247,214,0.9)';
+            ctx.strokeStyle = P.starEdge;
             ctx.lineWidth = 1;
             ctx.stroke();
         }
@@ -1243,11 +1277,11 @@ class SilkfallGame {
                 ctx.quadraticCurveTo(p0.x, p0.y, mx, my);
             }
             ctx.lineTo(ps[ps.length - 1].x, ps[ps.length - 1].y);
-            ctx.strokeStyle = 'rgba(233,228,208,0.20)';
+            ctx.strokeStyle = P.ropeGlow;
             ctx.lineWidth = 6;
             ctx.lineCap = 'round';
             ctx.stroke();
-            ctx.strokeStyle = '#e9e4d0';
+            ctx.strokeStyle = P.rope;
             ctx.lineWidth = 2.2;
             ctx.stroke();
 
@@ -1285,15 +1319,15 @@ class SilkfallGame {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p.x - vx * 5.5, p.y - vy * 5.5);
-            ctx.strokeStyle = 'rgba(64,216,255,0.34)';
+            ctx.strokeStyle = P.pearlTrail;
             ctx.lineWidth = PHYS.pearlR * 1.5;
             ctx.lineCap = 'round';
             ctx.stroke();
         }
         // 外辉光
         const g = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, PHYS.pearlR * 3.4);
-        g.addColorStop(0, 'rgba(64,216,255,0.45)');
-        g.addColorStop(1, 'rgba(64,216,255,0)');
+        g.addColorStop(0, P.pearlGlow);
+        g.addColorStop(1, P.pearlGlowOut);
         ctx.beginPath();
         ctx.arc(p.x, p.y, PHYS.pearlR * 3.4, 0, Math.PI * 2);
         ctx.fillStyle = g;
@@ -1307,7 +1341,7 @@ class SilkfallGame {
         ctx.arc(p.x, p.y, PHYS.pearlR, 0, Math.PI * 2);
         ctx.fillStyle = body;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(234,252,255,0.9)';
+        ctx.strokeStyle = P.pearlEdge;
         ctx.lineWidth = 1.6;
         ctx.stroke();
         // 高光点
@@ -1333,6 +1367,7 @@ class SilkfallGame {
 /* ────────────────────────── 启动 ────────────────────────── */
 
 onReady(() => {
+    P = bindPalette(CANVAS_VARS, { onChange: () => window.sdGame && window.sdGame.draw() });
     window.sdGame = new SilkfallGame();
     bindFrame({ logicalWidth: W });
     const more = document.getElementById('sdSideMore');

@@ -2,6 +2,208 @@
    Word Daily 每日猜词 — bilingual daily word puzzle
    ───────────────────────────────────────────── */
 
+/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+:root {
+    --wd-body-bg: radial-gradient(ellipse 80% 45% at 70% -10%, rgb(99, 102, 241, 0.16), transparent),
+        linear-gradient(165deg, var(--tok-bg) 0%, #0a0e24 55%, #120e2b 100%);
+    --wd-topbar-border-bottom: 1px solid rgb(255, 255, 255, 0.08);
+    --wd-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
+    --wd-icon-btn-hover-border: rgb(255, 255, 255, 0.2);
+    --wd-icon-btn-active-bg: rgb(99, 102, 241, 0.24);
+    --wd-icon-btn-active-border: rgb(148, 163, 255, 0.45);
+    --wd-icon-btn-active-text: #fff;
+    --wd-lang-btn-text: #e0e7ff;
+    --wd-lang-btn-bg: rgb(99, 102, 241, 0.16);
+    --wd-lang-btn-border: 1px solid rgb(148, 163, 255, 0.3);
+    --wd-lang-btn-hover-bg: rgb(99, 102, 241, 0.28);
+    --wd-lang-btn-hover-border: rgb(148, 163, 255, 0.5);
+    --wd-title-bg: linear-gradient(120deg, #a5b4fc, #f0abfc 60%, #fcd34d);
+    --wd-mode-tag-bg: rgb(99, 102, 241, 0.16);
+    --wd-mode-tag-border: 1px solid rgb(148, 163, 255, 0.3);
+    --wd-mode-tag-text: #c7d2fe;
+    --wd-banner-text: #fcd34d;
+    --wd-banner-bg: rgb(252, 211, 77, 0.1);
+    --wd-banner-border: 1px solid rgb(252, 211, 77, 0.3);
+    --wd-banner-btn-bg: rgb(252, 211, 77, 0.2);
+    --wd-banner-btn-border: 1px solid rgb(252, 211, 77, 0.5);
+    --wd-banner-btn-text: #fef08a;
+    --wd-diff-trigger-text: #fff;
+    --wd-diff-trigger-bg: linear-gradient(135deg, rgb(99, 102, 241, 0.38), rgb(168, 85, 247, 0.38));
+    --wd-diff-trigger-border: 1px solid rgb(168, 85, 247, 0.7);
+    --wd-diff-trigger-shadow: 0 4px 14px rgb(99, 102, 241, 0.28), inset 0 1px 0 rgb(255, 255, 255, 0.2);
+    --wd-diff-trigger-hover-border: rgb(192, 132, 252, 0.9);
+    --wd-diff-trigger-hover-shadow: 0 5px 18px rgb(99, 102, 241, 0.38), inset 0 1px 0 rgb(255, 255, 255, 0.25);
+    --wd-diff-menu-border: 1px solid rgb(255, 255, 255, 0.14);
+    --wd-diff-menu-shadow: 0 16px 40px rgb(0, 0, 0, 0.55);
+    --wd-diff-opt-text: #a5b4fc;
+    --wd-diff-opt-hover-bg: rgb(255, 255, 255, 0.09);
+    --wd-diff-opt-hover-text: #fff;
+    --wd-diff-opt-active-text: #fff;
+    --wd-diff-opt-active-bg: rgb(99, 102, 241, 0.32);
+    --wd-diff-tag-bg: rgb(255, 255, 255, 0.08);
+    --wd-diff-trigger-diff-tag-bg: rgb(255, 255, 255, 0.22);
+    --wd-diff-trigger-diff-tag-text: #fff;
+    --wd-diff-status-lost-text: #f87171;
+    --wd-hint-card-text: #e0e7ff;
+    --wd-hint-card-bg: rgb(30, 36, 68, 0.75);
+    --wd-hint-card-border: 1px solid rgb(148, 163, 255, 0.28);
+    --wd-hint-card-shadow: 0 4px 16px rgb(0, 0, 0, 0.25);
+    --wd-hint-label-text: #a5b4fc;
+    --wd-tile-bg: rgb(255, 255, 255, 0.03);
+    --wd-tile-border: 2px solid rgb(255, 255, 255, 0.14);
+    --wd-tile-filled-border: #818cf8;
+    --wd-tile-filled-bg: rgb(99, 102, 241, 0.14);
+    --wd-tile-filled-text: #fff;
+    --wd-tile-filled-shadow: 0 0 10px rgb(99, 102, 241, 0.28);
+    --wd-tile-correct-text: #fff;
+    --wd-tile-correct-shadow: 0 0 14px rgb(58, 166, 85, 0.4);
+    --wd-tile-present-text: #fff;
+    --wd-tile-present-shadow: 0 0 14px rgb(207, 165, 63, 0.4);
+    --wd-tile-absent-text: #8fa0d8;
+    --wd-toast-text: #10142e;
+    --wd-input-bg: rgb(255, 255, 255, 0.06);
+    --wd-input-border: 2px solid rgb(148, 163, 255, 0.38);
+    --wd-input-shadow: inset 0 2px 4px rgb(0, 0, 0, 0.25);
+    --wd-input-text: #717d9f;
+    --wd-input-focus-border: #818cf8;
+    --wd-input-focus-bg: rgb(255, 255, 255, 0.09);
+    --wd-input-focus-shadow: 0 0 0 3px rgb(129, 140, 248, 0.25), inset 0 2px 4px rgb(0, 0, 0, 0.2);
+    --wd-submit-btn-text: #fff;
+    --wd-submit-btn-bg: linear-gradient(135deg, #6366f1, #8b5cf6);
+    --wd-submit-btn-shadow: 0 4px 14px rgb(99, 102, 241, 0.35);
+    --wd-submit-btn-hover-shadow: 0 6px 20px rgb(99, 102, 241, 0.5);
+    --wd-end-panel-bg: rgb(18, 24, 48, 0.92);
+    --wd-end-panel-border: 1px solid rgb(148, 163, 255, 0.25);
+    --wd-end-panel-shadow: 0 10px 32px rgb(0, 0, 0, 0.45);
+    --wd-end-status-lost-text: #f87171;
+    --wd-end-answer-text: #f8fafc;
+    --wd-end-hint-text: #94a3b8;
+    --wd-end-hint-bg: rgb(255, 255, 255, 0.05);
+    --wd-end-hint-border: 1px solid rgb(255, 255, 255, 0.08);
+    --wd-modal-bg: rgb(5, 6, 15, 0.72);
+    --wd-modal-box-border: 1px solid rgb(255, 255, 255, 0.12);
+    --wd-modal-box-shadow: 0 24px 60px rgb(0, 0, 0, 0.5);
+    --wd-mini-tile-correct-text: #fff;
+    --wd-mini-tile-present-text: #fff;
+    --wd-dist-bar-bg: #2a3155;
+    --wd-dist-bar-text: #dfe6ff;
+    --wd-global-text: #93c5fd;
+    --wd-btn-bg: rgb(255, 255, 255, 0.08);
+    --wd-btn-border: 1px solid rgb(255, 255, 255, 0.14);
+    --wd-btn-hover-bg: rgb(255, 255, 255, 0.14);
+    --wd-btn-primary-bg: linear-gradient(120deg, #6366f1, #8b5cf6);
+    --wd-btn-primary-shadow: 0 6px 20px rgb(99, 102, 241, 0.4);
+    --wd-btn-success-bg: linear-gradient(120deg, #10b981, #059669);
+    --wd-btn-success-shadow: 0 6px 20px rgb(16, 185, 129, 0.35);
+    --wd-btn-success-text: #fff;
+    --wd-btn-success-hover-bg: linear-gradient(120deg, var(--tok-success), #10b981);
+    --wd-btn-secondary-bg: rgb(255, 255, 255, 0.08);
+    --wd-btn-secondary-border: 1px solid rgb(255, 255, 255, 0.18);
+    --wd-btn-secondary-hover-bg: rgb(255, 255, 255, 0.15);
+}
+/* theme:end vars */
+
+/* theme:begin light */
+:root[data-theme="light"] {
+    --wd-body-bg: radial-gradient(ellipse 80% 45% at 70% -10%, rgb(99, 102, 241, 0.16), transparent),
+        linear-gradient(165deg, var(--tok-bg) 0%, #eff0f6 55%, #ecebf3 100%);
+    --wd-topbar-border-bottom: 1px solid rgb(15, 23, 42, 0.088);
+    --wd-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
+    --wd-icon-btn-hover-border: rgb(15, 23, 42, 0.2);
+    --wd-icon-btn-active-bg: rgb(99, 102, 241, 0.24);
+    --wd-icon-btn-active-border: rgb(148, 163, 255, 0.45);
+    --wd-icon-btn-active-text: #0f172a;
+    --wd-lang-btn-text: #0f172a;
+    --wd-lang-btn-bg: rgb(99, 102, 241, 0.16);
+    --wd-lang-btn-border: 1px solid rgb(148, 163, 255, 0.3);
+    --wd-lang-btn-hover-bg: rgb(99, 102, 241, 0.28);
+    --wd-lang-btn-hover-border: rgb(148, 163, 255, 0.5);
+    --wd-title-bg: linear-gradient(120deg, #4f46e5, #c026d3 60%, #d97706);
+    --wd-mode-tag-bg: rgb(99, 102, 241, 0.16);
+    --wd-mode-tag-border: 1px solid rgb(148, 163, 255, 0.3);
+    --wd-mode-tag-text: #0f172a;
+    --wd-banner-text: #bd940f;
+    --wd-banner-bg: rgb(252, 211, 77, 0.1);
+    --wd-banner-border: 1px solid rgb(252, 211, 77, 0.3);
+    --wd-banner-btn-bg: rgb(252, 211, 77, 0.2);
+    --wd-banner-btn-border: 1px solid rgb(252, 211, 77, 0.5);
+    --wd-banner-btn-text: #bda80f;
+    --wd-diff-trigger-text: #0f172a;
+    --wd-diff-trigger-bg: linear-gradient(135deg, rgb(99, 102, 241, 0.38), rgb(168, 85, 247, 0.38));
+    --wd-diff-trigger-border: 1px solid rgb(168, 85, 247, 0.7);
+    --wd-diff-trigger-shadow: 0 4px 14px rgb(15, 23, 42, 0.098), inset 0 1px 0 rgb(15, 23, 42, 0.07);
+    --wd-diff-trigger-hover-border: rgb(192, 132, 252, 0.9);
+    --wd-diff-trigger-hover-shadow: 0 5px 18px rgb(15, 23, 42, 0.133), inset 0 1px 0 rgb(15, 23, 42, 0.087);
+    --wd-diff-menu-border: 1px solid rgb(15, 23, 42, 0.154);
+    --wd-diff-menu-shadow: 0 16px 40px rgb(15, 23, 42, 0.193);
+    --wd-diff-opt-text: #0f172a;
+    --wd-diff-opt-hover-bg: rgb(255, 255, 255, 0.82);
+    --wd-diff-opt-hover-text: #0f172a;
+    --wd-diff-opt-active-text: #0f172a;
+    --wd-diff-opt-active-bg: rgb(99, 102, 241, 0.32);
+    --wd-diff-tag-bg: rgb(255, 255, 255, 0.79);
+    --wd-diff-trigger-diff-tag-bg: rgb(255, 255, 255, 0.95);
+    --wd-diff-trigger-diff-tag-text: #0f172a;
+    --wd-diff-status-lost-text: #bd0f0f;
+    --wd-hint-card-text: #0f172a;
+    --wd-hint-card-bg: rgb(223, 224, 233, 0.75);
+    --wd-hint-card-border: 1px solid rgb(148, 163, 255, 0.28);
+    --wd-hint-card-shadow: 0 4px 16px rgb(15, 23, 42, 0.087);
+    --wd-hint-label-text: #0f172a;
+    --wd-tile-bg: rgb(255, 255, 255, 0.64);
+    --wd-tile-border: 2px solid rgb(15, 23, 42, 0.154);
+    --wd-tile-filled-border: #818cf8;
+    --wd-tile-filled-bg: rgb(99, 102, 241, 0.14);
+    --wd-tile-filled-text: #0f172a;
+    --wd-tile-filled-shadow: 0 0 10px rgb(15, 23, 42, 0.098);
+    --wd-tile-correct-text: #fff;
+    --wd-tile-correct-shadow: 0 0 14px rgb(15, 23, 42, 0.14);
+    --wd-tile-present-text: #fff;
+    --wd-tile-present-shadow: 0 0 14px rgb(15, 23, 42, 0.14);
+    --wd-tile-absent-text: #fff;
+    --wd-toast-text: #10142e;
+    --wd-input-bg: rgb(255, 255, 255, 0.73);
+    --wd-input-border: 2px solid rgb(148, 163, 255, 0.38);
+    --wd-input-shadow: inset 0 2px 4px rgb(15, 23, 42, 0.087);
+    --wd-input-text: #525d7a;
+    --wd-input-focus-border: #818cf8;
+    --wd-input-focus-bg: rgb(255, 255, 255, 0.82);
+    --wd-input-focus-shadow: 0 0 0 3px rgb(15, 23, 42, 0.087), inset 0 2px 4px rgb(15, 23, 42, 0.07);
+    --wd-submit-btn-text: #fff;
+    --wd-submit-btn-bg: linear-gradient(135deg, #4f46e5, #7c3aed);
+    --wd-submit-btn-shadow: 0 4px 14px rgb(15, 23, 42, 0.122);
+    --wd-submit-btn-hover-shadow: 0 6px 20px rgb(15, 23, 42, 0.175);
+    --wd-end-panel-bg: rgb(255, 255, 255, 0.98);
+    --wd-end-panel-border: 1px solid rgb(148, 163, 255, 0.25);
+    --wd-end-panel-shadow: 0 10px 32px rgb(15, 23, 42, 0.158);
+    --wd-end-status-lost-text: #bd0f0f;
+    --wd-end-answer-text: #0f172a;
+    --wd-end-hint-text: #51637b;
+    --wd-end-hint-bg: rgb(255, 255, 255, 0.7);
+    --wd-end-hint-border: 1px solid rgb(15, 23, 42, 0.088);
+    --wd-modal-bg: rgb(15, 23, 42, 0.32);
+    --wd-modal-box-border: 1px solid rgb(15, 23, 42, 0.132);
+    --wd-modal-box-shadow: 0 24px 60px rgb(15, 23, 42, 0.175);
+    --wd-mini-tile-correct-text: #fff;
+    --wd-mini-tile-present-text: #fff;
+    --wd-dist-bar-bg: #d6d8e2;
+    --wd-dist-bar-text: #0f172a;
+    --wd-global-text: #0f61bd;
+    --wd-btn-bg: rgb(255, 255, 255, 0.79);
+    --wd-btn-border: 1px solid rgb(15, 23, 42, 0.154);
+    --wd-btn-hover-bg: rgb(255, 255, 255, 0.95);
+    --wd-btn-primary-bg: linear-gradient(120deg, #6366f1, #8b5cf6);
+    --wd-btn-primary-shadow: 0 6px 20px rgb(15, 23, 42, 0.14);
+    --wd-btn-success-bg: linear-gradient(120deg, #10b981, #059669);
+    --wd-btn-success-shadow: 0 6px 20px rgb(15, 23, 42, 0.122);
+    --wd-btn-success-text: #fff;
+    --wd-btn-success-hover-bg: linear-gradient(120deg, var(--tok-success), #10b981);
+    --wd-btn-secondary-bg: rgb(255, 255, 255, 0.79);
+    --wd-btn-secondary-border: 1px solid rgb(15, 23, 42, 0.198);
+    --wd-btn-secondary-hover-bg: rgb(255, 255, 255, 0.95);
+}
+/* theme:end light */
+
 * {
     margin: 0;
     padding: 0;
@@ -23,14 +225,26 @@
     --accent: #6366f1;
 }
 
+/* 浅色调色板（docs/contracts/theme.md）：绿/黄沿用品牌色，灰格改为中灰配白字（与经典浅色 Wordle 同理） */
+:root[data-theme="light"] {
+    --bg: #f3f5fa;
+    --bg-soft: #fff;
+    --tile-border: rgb(15, 23, 42, 0.16);
+    --tile-border-filled: rgb(79, 70, 229, 0.55);
+    --absent: #7a8195;
+    --key-bg: #dde2ee;
+    --text: #182033;
+    --text-dim: #3f4a6b;
+    --accent: #4f46e5;
+}
+
 html, body {
     height: 100%;
 }
 
 body {
     background:
-        radial-gradient(ellipse 80% 45% at 70% -10%, rgb(99, 102, 241, 0.16), transparent),
-        linear-gradient(165deg, var(--tok-bg) 0%, #0a0e24 55%, #120e2b 100%);
+        var(--wd-body-bg);
     touch-action: manipulation;
     font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     color: var(--text);
@@ -41,7 +255,7 @@ body {
 /* ── 顶栏 ── */
 
 .wd-topbar {
-    border-bottom: 1px solid rgb(255, 255, 255, 0.08);
+    border-bottom: var(--wd-topbar-border-bottom);
 }
 
 .wd-icon-btn {
@@ -51,28 +265,28 @@ body {
 }
 
 .wd-icon-btn:hover {
-    background: rgb(255, 255, 255, 0.12);
-    border-color: rgb(255, 255, 255, 0.2);
+    background: var(--wd-icon-btn-hover-bg);
+    border-color: var(--wd-icon-btn-hover-border);
 }
 .wd-icon-btn:active { transform: scale(0.94); }
 
 .wd-icon-btn.active {
-    background: rgb(99, 102, 241, 0.24);
-    border-color: rgb(148, 163, 255, 0.45);
-    color: #fff;
+    background: var(--wd-icon-btn-active-bg);
+    border-color: var(--wd-icon-btn-active-border);
+    color: var(--wd-icon-btn-active-text);
 }
 
 .wd-lang-btn {
     font-size: 12px;
     font-weight: 700;
-    color: #e0e7ff;
-    background: rgb(99, 102, 241, 0.16);
-    border: 1px solid rgb(148, 163, 255, 0.3);
+    color: var(--wd-lang-btn-text);
+    background: var(--wd-lang-btn-bg);
+    border: var(--wd-lang-btn-border);
 }
 
 .wd-lang-btn:hover {
-    background: rgb(99, 102, 241, 0.28);
-    border-color: rgb(148, 163, 255, 0.5);
+    background: var(--wd-lang-btn-hover-bg);
+    border-color: var(--wd-lang-btn-hover-border);
 }
 
 .wd-title-box {
@@ -89,7 +303,7 @@ body {
     font-size: 20px;
     font-weight: 800;
     letter-spacing: 0.04em;
-    background: linear-gradient(120deg, #a5b4fc, #f0abfc 60%, #fcd34d);
+    background: var(--wd-title-bg);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -115,12 +329,12 @@ body {
 .wd-num { font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .wd-mode-tag {
-    background: rgb(99, 102, 241, 0.16);
-    border: 1px solid rgb(148, 163, 255, 0.3);
+    background: var(--wd-mode-tag-bg);
+    border: var(--wd-mode-tag-border);
     border-radius: 999px;
     padding: 1px 7px;
     font-size: 10.5px;
-    color: #c7d2fe;
+    color: var(--wd-mode-tag-text);
 }
 
 /* ── 练习横幅 / 释义卡 ── */
@@ -128,9 +342,9 @@ body {
 .wd-banner {
     margin-top: 8px;
     font-size: 12.5px;
-    color: #fcd34d;
-    background: rgb(252, 211, 77, 0.1);
-    border: 1px solid rgb(252, 211, 77, 0.3);
+    color: var(--wd-banner-text);
+    background: var(--wd-banner-bg);
+    border: var(--wd-banner-border);
     border-radius: 9px;
     padding: 6px 14px;
     text-align: center;
@@ -142,9 +356,9 @@ body {
 }
 
 .wd-banner-btn {
-    background: rgb(252, 211, 77, 0.2);
-    border: 1px solid rgb(252, 211, 77, 0.5);
-    color: #fef08a;
+    background: var(--wd-banner-btn-bg);
+    border: var(--wd-banner-btn-border);
+    color: var(--wd-banner-btn-text);
     font-size: 11.5px;
     font-weight: 700;
     padding: 2px 8px;
@@ -184,20 +398,20 @@ body {
     font-family: inherit;
     font-size: 12.5px;
     font-weight: 700;
-    color: #fff;
-    background: linear-gradient(135deg, rgb(99, 102, 241, 0.38), rgb(168, 85, 247, 0.38));
-    border: 1px solid rgb(168, 85, 247, 0.7);
+    color: var(--wd-diff-trigger-text);
+    background: var(--wd-diff-trigger-bg);
+    border: var(--wd-diff-trigger-border);
     border-radius: 12px;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
     user-select: none;
     white-space: nowrap;
-    box-shadow: 0 4px 14px rgb(99, 102, 241, 0.28), inset 0 1px 0 rgb(255, 255, 255, 0.2);
+    box-shadow: var(--wd-diff-trigger-shadow);
 }
 
 .wd-diff-trigger:hover {
-    border-color: rgb(192, 132, 252, 0.9);
-    box-shadow: 0 5px 18px rgb(99, 102, 241, 0.38), inset 0 1px 0 rgb(255, 255, 255, 0.25);
+    border-color: var(--wd-diff-trigger-hover-border);
+    box-shadow: var(--wd-diff-trigger-hover-shadow);
 }
 
 .wd-diff-trigger:active {
@@ -226,9 +440,9 @@ body {
     gap: 2px;
     padding: 5px;
     background: var(--bg-soft);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    border: var(--wd-diff-menu-border);
     border-radius: 13px;
-    box-shadow: 0 16px 40px rgb(0, 0, 0, 0.55);
+    box-shadow: var(--wd-diff-menu-shadow);
     animation: wd-dd-in 0.14s ease-out;
 }
 
@@ -245,7 +459,7 @@ body {
     font-family: inherit;
     font-size: 12.5px;
     font-weight: 700;
-    color: #a5b4fc;
+    color: var(--wd-diff-opt-text);
     background: transparent;
     border: 0;
     border-radius: 9px;
@@ -257,13 +471,13 @@ body {
 }
 
 .wd-diff-opt:hover {
-    background: rgb(255, 255, 255, 0.09);
-    color: #fff;
+    background: var(--wd-diff-opt-hover-bg);
+    color: var(--wd-diff-opt-hover-text);
 }
 
 .wd-diff-opt.active {
-    color: #fff;
-    background: rgb(99, 102, 241, 0.32);
+    color: var(--wd-diff-opt-active-text);
+    background: var(--wd-diff-opt-active-bg);
 }
 
 .wd-diff-tag {
@@ -273,7 +487,7 @@ body {
     width: 20px;
     height: 20px;
     border-radius: 6px;
-    background: rgb(255, 255, 255, 0.08);
+    background: var(--wd-diff-tag-bg);
     font-size: 11.5px;
     font-weight: 800;
     color: inherit;
@@ -281,8 +495,8 @@ body {
 
 .wd-diff-trigger .wd-diff-tag,
 .wd-diff-opt.active .wd-diff-tag {
-    background: rgb(255, 255, 255, 0.22);
-    color: #fff;
+    background: var(--wd-diff-trigger-diff-tag-bg);
+    color: var(--wd-diff-trigger-diff-tag-text);
 }
 
 .wd-diff-title {
@@ -294,6 +508,9 @@ body {
     font-weight: 600;
     opacity: 0.72;
 }
+
+/* 浅色：淡紫底上 0.72 的透明度只剩 4.4:1，提到 0.85 */
+:root[data-theme="light"] .wd-diff-desc { opacity: 0.85; }
 
 .wd-diff-status {
     display: inline-flex;
@@ -309,7 +526,7 @@ body {
 }
 
 .wd-diff-status.lost {
-    color: #f87171;
+    color: var(--wd-diff-status-lost-text);
 }
 
 /* ── 模式/练习按钮宽度自锁 ──
@@ -348,13 +565,13 @@ body {
     width: 100%;
     font-size: 13.5px;
     line-height: 1.5;
-    color: #e0e7ff;
-    background: rgb(30, 36, 68, 0.75);
-    border: 1px solid rgb(148, 163, 255, 0.28);
+    color: var(--wd-hint-card-text);
+    background: var(--wd-hint-card-bg);
+    border: var(--wd-hint-card-border);
     border-radius: 12px;
     padding: 8px 14px;
     text-align: center;
-    box-shadow: 0 4px 16px rgb(0, 0, 0, 0.25);
+    box-shadow: var(--wd-hint-card-shadow);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     animation: wd-fade-in 0.25s ease-out;
@@ -366,7 +583,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.wd-hint-label { color: #a5b4fc; font-weight: 800; margin-right: 6px; }
+.wd-hint-label { color: var(--wd-hint-label-text); font-weight: 800; margin-right: 6px; }
 
 /* ── 棋盘 ── */
 
@@ -437,18 +654,18 @@ body {
     line-height: 1;
     text-transform: uppercase;
     color: var(--text);
-    background: rgb(255, 255, 255, 0.03);
-    border: 2px solid rgb(255, 255, 255, 0.14);
+    background: var(--wd-tile-bg);
+    border: var(--wd-tile-border);
     border-radius: 10px;
     user-select: none;
     transition: transform 0.1s, border-color 0.15s, background-color 0.2s;
 }
 
 .wd-tile.filled {
-    border-color: #818cf8;
-    background: rgb(99, 102, 241, 0.14);
-    color: #fff;
-    box-shadow: 0 0 10px rgb(99, 102, 241, 0.28);
+    border-color: var(--wd-tile-filled-border);
+    background: var(--wd-tile-filled-bg);
+    color: var(--wd-tile-filled-text);
+    box-shadow: var(--wd-tile-filled-shadow);
     animation: wd-pop-in 0.12s ease-out;
 }
 
@@ -469,23 +686,23 @@ body {
 .wd-tile.correct {
     background: var(--correct);
     border-color: var(--correct);
-    color: #fff;
-    box-shadow: 0 0 14px rgb(58, 166, 85, 0.4);
+    color: var(--wd-tile-correct-text);
+    box-shadow: var(--wd-tile-correct-shadow);
     animation: wd-reveal 0.25s ease-out;
 }
 
 .wd-tile.present {
     background: var(--present);
     border-color: var(--present);
-    color: #fff;
-    box-shadow: 0 0 14px rgb(207, 165, 63, 0.4);
+    color: var(--wd-tile-present-text);
+    box-shadow: var(--wd-tile-present-shadow);
     animation: wd-reveal 0.25s ease-out;
 }
 
 .wd-tile.absent {
     background: var(--absent);
     border-color: var(--absent);
-    color: #8fa0d8;
+    color: var(--wd-tile-absent-text);
     box-shadow: none;
     animation: wd-reveal 0.25s ease-out;
 }
@@ -509,7 +726,7 @@ body {
 .wd-toast {
     top: 74px;
     background: var(--tok-text);
-    color: #10142e;
+    color: var(--wd-toast-text);
     font-size: 13.5px;
     font-weight: 700;
     padding: 9px 18px;
@@ -549,13 +766,13 @@ body {
     text-indent: 0.2em;
     text-transform: uppercase;
     color: var(--text);
-    background: rgb(255, 255, 255, 0.06);
-    border: 2px solid rgb(148, 163, 255, 0.38);
+    background: var(--wd-input-bg);
+    border: var(--wd-input-border);
     border-radius: 12px;
     padding: 0 12px;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    box-shadow: inset 0 2px 4px rgb(0, 0, 0, 0.25);
+    box-shadow: var(--wd-input-shadow);
 }
 
 .wd-input::placeholder {
@@ -564,13 +781,13 @@ body {
     letter-spacing: 0;
     text-indent: 0;
     text-transform: none;
-    color: #717d9f;
+    color: var(--wd-input-text);
 }
 
 .wd-input:focus {
-    border-color: #818cf8;
-    background: rgb(255, 255, 255, 0.09);
-    box-shadow: 0 0 0 3px rgb(129, 140, 248, 0.25), inset 0 2px 4px rgb(0, 0, 0, 0.2);
+    border-color: var(--wd-input-focus-border);
+    background: var(--wd-input-focus-bg);
+    box-shadow: var(--wd-input-focus-shadow);
 }
 
 .wd-submit-btn {
@@ -580,12 +797,12 @@ body {
     font-family: inherit;
     font-size: 15px;
     font-weight: 800;
-    color: #fff;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: var(--wd-submit-btn-text);
+    background: var(--wd-submit-btn-bg);
     border: none;
     border-radius: 12px;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgb(99, 102, 241, 0.35);
+    box-shadow: var(--wd-submit-btn-shadow);
     transition: transform 0.1s, box-shadow 0.15s, opacity 0.15s;
     white-space: nowrap;
     display: flex;
@@ -595,7 +812,7 @@ body {
 }
 
 .wd-submit-btn:hover {
-    box-shadow: 0 6px 20px rgb(99, 102, 241, 0.5);
+    box-shadow: var(--wd-submit-btn-hover-shadow);
     filter: brightness(1.08);
 }
 
@@ -612,10 +829,10 @@ body {
     max-width: calc(var(--cols) * 62px + (var(--cols) - 1) * 8px);
     margin-top: 16px;
     padding: 16px 18px;
-    background: rgb(18, 24, 48, 0.92);
-    border: 1px solid rgb(148, 163, 255, 0.25);
+    background: var(--wd-end-panel-bg);
+    border: var(--wd-end-panel-border);
     border-radius: 16px;
-    box-shadow: 0 10px 32px rgb(0, 0, 0, 0.45);
+    box-shadow: var(--wd-end-panel-shadow);
     animation: wd-fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -638,24 +855,24 @@ body {
     margin-bottom: 4px;
 }
 .wd-end-status.won { color: var(--tok-success); }
-.wd-end-status.lost { color: #f87171; }
+.wd-end-status.lost { color: var(--wd-end-status-lost-text); }
 
 .wd-end-answer {
     font-size: 18px;
     font-weight: 800;
     letter-spacing: 0.12em;
-    color: #f8fafc;
+    color: var(--wd-end-answer-text);
     margin: 4px 0;
 }
 
 .wd-end-hint {
     font-size: 13px;
-    color: #94a3b8;
+    color: var(--wd-end-hint-text);
     line-height: 1.5;
     margin-top: 8px;
     padding: 8px 12px;
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.08);
+    background: var(--wd-end-hint-bg);
+    border: var(--wd-end-hint-border);
     border-radius: 8px;
     max-height: 90px;
     overflow-y: auto;
@@ -689,7 +906,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgb(5, 6, 15, 0.72);
+    background: var(--wd-modal-bg);
     backdrop-filter: blur(8px);
     z-index: 100;
     padding: 18px;
@@ -701,10 +918,10 @@ body {
     max-height: 86vh;
     overflow-y: auto;
     background: var(--bg-soft);
-    border: 1px solid rgb(255, 255, 255, 0.12);
+    border: var(--wd-modal-box-border);
     border-radius: 18px;
     padding: 22px;
-    box-shadow: 0 24px 60px rgb(0, 0, 0, 0.5);
+    box-shadow: var(--wd-modal-box-shadow);
     animation: wd-modal-in 0.22s ease-out;
     display: flex;
     flex-direction: column;
@@ -748,8 +965,8 @@ body {
     border: 2px solid var(--tile-border);
 }
 
-.wd-mini-tile.correct { background: var(--correct); border-color: var(--correct); color: #fff; }
-.wd-mini-tile.present { background: var(--present); border-color: var(--present); color: #fff; }
+.wd-mini-tile.correct { background: var(--correct); border-color: var(--correct); color: var(--wd-mini-tile-correct-text); }
+.wd-mini-tile.present { background: var(--present); border-color: var(--present); color: var(--wd-mini-tile-present-text); }
 .wd-mini-tile.absent { background: var(--absent); border-color: var(--absent); }
 
 .wd-example-note {
@@ -813,8 +1030,8 @@ body {
 .wd-dist-bar {
     height: 20px;
     min-width: 22px;
-    background: #2a3155;
-    color: #dfe6ff;
+    background: var(--wd-dist-bar-bg);
+    color: var(--wd-dist-bar-text);
     font-size: 11.5px;
     font-weight: 700;
     line-height: 20px;
@@ -829,7 +1046,7 @@ body {
     min-height: 18px;
     text-align: center;
     font-size: 12.5px;
-    color: #93c5fd;
+    color: var(--wd-global-text);
 }
 
 .wd-btn {
@@ -837,42 +1054,42 @@ body {
     font-size: 14.5px;
     font-weight: 700;
     color: var(--text);
-    background: rgb(255, 255, 255, 0.08);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--wd-btn-bg);
+    border: var(--wd-btn-border);
     border-radius: 12px;
     padding: 11px 18px;
     cursor: pointer;
     transition: transform 0.1s, background 0.15s;
 }
 
-.wd-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.wd-btn:hover { background: var(--wd-btn-hover-bg); }
 .wd-btn:active { transform: scale(0.97); }
 
 .wd-btn-primary {
-    background: linear-gradient(120deg, #6366f1, #8b5cf6);
+    background: var(--wd-btn-primary-bg);
     border: none;
-    box-shadow: 0 6px 20px rgb(99, 102, 241, 0.4);
+    box-shadow: var(--wd-btn-primary-shadow);
 }
 
 .wd-btn-success {
-    background: linear-gradient(120deg, #10b981, #059669);
+    background: var(--wd-btn-success-bg);
     border: none;
-    box-shadow: 0 6px 20px rgb(16, 185, 129, 0.35);
-    color: #fff;
+    box-shadow: var(--wd-btn-success-shadow);
+    color: var(--wd-btn-success-text);
 }
 
 .wd-btn-success:hover {
-    background: linear-gradient(120deg, var(--tok-success), #10b981);
+    background: var(--wd-btn-success-hover-bg);
 }
 
 .wd-btn-secondary {
-    background: rgb(255, 255, 255, 0.08);
-    border: 1px solid rgb(255, 255, 255, 0.18);
+    background: var(--wd-btn-secondary-bg);
+    border: var(--wd-btn-secondary-border);
     color: var(--text);
 }
 
 .wd-btn-secondary:hover {
-    background: rgb(255, 255, 255, 0.15);
+    background: var(--wd-btn-secondary-hover-bg);
 }
 
 .wd-btn-lg {

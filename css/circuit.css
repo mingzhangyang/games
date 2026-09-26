@@ -3,6 +3,100 @@
    深蓝图纸底 + 导线琥珀（#ffc94d）+ 电蓝（#4dc3ff）双主色
    ───────────────────────────────────────────── */
 
+/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+:root {
+    --cc-body-bg: radial-gradient(ellipse 70% 42% at 50% -8%, rgb(77, 195, 255, 0.10), transparent),
+        radial-gradient(ellipse 50% 30% at 85% 110%, rgb(255, 201, 77, 0.06), transparent),
+        linear-gradient(165deg, #080d24 0%, var(--tok-bg-2) 55%, #0e1a40 100%);
+    --cc-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
+    --cc-hud-level-text: #ffd98a;
+    --cc-move-box-bg: rgb(0, 0, 0, 0.35);
+    --cc-move-box-border: 1px solid rgb(255, 255, 255, 0.09);
+    --cc-canvas-border: 1px solid rgb(255, 201, 77, 0.18);
+    --cc-canvas-shadow: 0 18px 50px rgb(0, 0, 0, 0.5), 0 0 46px rgb(255, 201, 77, 0.10);
+    --cc-toast-text: #1a1405;
+    --cc-toast-bg: linear-gradient(120deg, #ffc94d, #ffaa4d);
+    --cc-toast-shadow: 0 8px 24px rgb(255, 201, 77, 0.35);
+    --cc-toast-warn-bg: linear-gradient(120deg, #e24b4a, #ff8a5c);
+    --cc-toast-warn-text: #fff;
+    --cc-toast-warn-shadow: 0 8px 24px rgb(226, 75, 74, 0.4);
+    --cc-overlay-bg: rgb(8, 13, 36, 0.92);
+    --cc-overlay-dim-bg: rgb(8, 13, 36, 0.72);
+    --cc-title-bg: linear-gradient(120deg, #ffd98a, #ffc94d 55%, #4dc3ff);
+    --cc-mode-bg: rgb(255, 255, 255, 0.07);
+    --cc-mode-border: 1px solid rgb(255, 255, 255, 0.14);
+    --cc-mode-hover-bg: rgb(255, 255, 255, 0.13);
+    --cc-mode-daily-shadow: 0 8px 24px rgb(52, 211, 153, 0.35);
+    --cc-level-chip-bg: rgb(255, 255, 255, 0.05);
+    --cc-level-chip-border: 1px solid rgb(255, 255, 255, 0.1);
+    --cc-level-chip-hover-bg: rgb(255, 255, 255, 0.11);
+    --cc-daily-best-text: #ffd98a;
+    --cc-card-bg: rgb(10, 18, 48, 0.96);
+    --cc-card-border: 1px solid rgb(255, 255, 255, 0.12);
+    --cc-card-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    --cc-over-score-glow: 0 0 26px rgb(255, 201, 77, 0.45);
+    --cc-btn-bg: rgb(255, 255, 255, 0.08);
+    --cc-btn-border: 1px solid rgb(255, 255, 255, 0.14);
+    --cc-btn-hover-bg: rgb(255, 255, 255, 0.14);
+    --cc-btn-primary-shadow: 0 8px 24px rgb(52, 211, 153, 0.4);
+    --cc-lb-bg: rgb(255, 255, 255, 0.045);
+    --cc-lb-border: 1px solid rgb(255, 255, 255, 0.1);
+    --cc-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
+    --cc-lb-row-lb-top2-bg: rgb(203, 213, 225, 0.10);
+    --cc-lb-row-lb-top3-bg: rgb(255, 201, 77, 0.12);
+    --cc-username-bg: rgb(255, 255, 255, 0.07);
+    --cc-username-border: 1px solid rgb(255, 255, 255, 0.14);
+    --cc-username-focus-border: rgb(255, 201, 77, 0.5);
+}
+/* theme:end vars */
+
+/* theme:begin light */
+:root[data-theme="light"] {
+    --cc-body-bg: radial-gradient(ellipse 70% 42% at 50% -8%, rgb(77, 195, 255, 0.1), transparent),
+        radial-gradient(ellipse 50% 30% at 85% 110%, rgb(255, 201, 77, 0.06), transparent),
+        linear-gradient(165deg, #eff0f7 0%, var(--tok-bg-2) 55%, #e3e6f0 100%);
+    --cc-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
+    --cc-hud-level-text: #8a5a00;
+    --cc-move-box-bg: rgb(15, 23, 42, 0.087);
+    --cc-move-box-border: 1px solid rgb(15, 23, 42, 0.099);
+    --cc-canvas-border: 1px solid rgb(255, 201, 77, 0.18);
+    --cc-canvas-shadow: 0 18px 50px rgb(15, 23, 42, 0.175), 0 0 46px rgb(15, 23, 42, 0.04);
+    --cc-toast-text: #1a1405;
+    --cc-toast-bg: linear-gradient(120deg, #ffc94d, #ffaa4d);
+    --cc-toast-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
+    --cc-toast-warn-bg: linear-gradient(120deg, #e24b4a, #ff8a5c);
+    --cc-toast-warn-text: #0f172a;
+    --cc-toast-warn-shadow: 0 8px 24px rgb(15, 23, 42, 0.14);
+    --cc-overlay-bg: rgb(255, 255, 255, 0.98);
+    --cc-overlay-dim-bg: rgb(15, 23, 42, 0.32);
+    --cc-title-bg: linear-gradient(120deg, #a86a00, #c98a00 55%, #0a7ea8);
+    --cc-mode-bg: rgb(255, 255, 255, 0.76);
+    --cc-mode-border: 1px solid rgb(15, 23, 42, 0.154);
+    --cc-mode-hover-bg: rgb(255, 255, 255, 0.94);
+    --cc-mode-daily-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
+    --cc-level-chip-bg: rgb(255, 255, 255, 0.7);
+    --cc-level-chip-border: 1px solid rgb(15, 23, 42, 0.11);
+    --cc-level-chip-hover-bg: rgb(255, 255, 255, 0.88);
+    --cc-daily-best-text: #8a5a00;
+    --cc-card-bg: rgb(255, 255, 255, 0.98);
+    --cc-card-border: 1px solid rgb(15, 23, 42, 0.132);
+    --cc-card-shadow: 0 24px 70px rgb(15, 23, 42, 0.2);
+    --cc-over-score-glow: none;
+    --cc-btn-bg: rgb(255, 255, 255, 0.79);
+    --cc-btn-border: 1px solid rgb(15, 23, 42, 0.154);
+    --cc-btn-hover-bg: rgb(255, 255, 255, 0.95);
+    --cc-btn-primary-shadow: 0 8px 24px rgb(15, 23, 42, 0.14);
+    --cc-lb-bg: rgb(255, 255, 255, 0.685);
+    --cc-lb-border: 1px solid rgb(15, 23, 42, 0.11);
+    --cc-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
+    --cc-lb-row-lb-top2-bg: rgb(203, 213, 225, 0.1);
+    --cc-lb-row-lb-top3-bg: rgb(255, 201, 77, 0.12);
+    --cc-username-bg: rgb(255, 255, 255, 0.76);
+    --cc-username-border: 1px solid rgb(15, 23, 42, 0.154);
+    --cc-username-focus-border: rgb(255, 201, 77, 0.5);
+}
+/* theme:end light */
+
 * {
     margin: 0;
     padding: 0;
@@ -11,9 +105,7 @@
 
 body {
     background:
-        radial-gradient(ellipse 70% 42% at 50% -8%, rgb(77, 195, 255, 0.10), transparent),
-        radial-gradient(ellipse 50% 30% at 85% 110%, rgb(255, 201, 77, 0.06), transparent),
-        linear-gradient(165deg, #080d24 0%, var(--tok-bg-2) 55%, #0e1a40 100%);
+        var(--cc-body-bg);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
 
@@ -25,13 +117,13 @@ body {
 
 /* ── 顶栏 HUD ── */
 
-.cc-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.cc-icon-btn:hover { background: var(--cc-icon-btn-hover-bg); }
 .cc-icon-btn:active { transform: scale(0.92); }
 
 .cc-hud-level {
     font-size: 13.5px;
     font-weight: 800;
-    color: #ffd98a;
+    color: var(--cc-hud-level-text);
     letter-spacing: 0.04em;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
@@ -41,8 +133,8 @@ body {
     display: flex;
     align-items: baseline;
     gap: 5px;
-    background: rgb(0, 0, 0, 0.35);
-    border: 1px solid rgb(255, 255, 255, 0.09);
+    background: var(--cc-move-box-bg);
+    border: var(--cc-move-box-border);
     border-radius: 11px;
     padding: 6px 12px;
 }
@@ -73,8 +165,8 @@ body {
     display: block;
     width: 100%;
     border-radius: 18px;
-    border: 1px solid rgb(255, 201, 77, 0.18);
-    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.5), 0 0 46px rgb(255, 201, 77, 0.10);
+    border: var(--cc-canvas-border);
+    box-shadow: var(--cc-canvas-shadow);
     touch-action: manipulation;
     cursor: pointer;
 }
@@ -85,17 +177,17 @@ body {
     top: 14px;
     font-size: 13px;
     font-weight: 700;
-    color: #1a1405;
-    background: linear-gradient(120deg, #ffc94d, #ffaa4d);
+    color: var(--cc-toast-text);
+    background: var(--cc-toast-bg);
     padding: 7px 18px;
-    box-shadow: 0 8px 24px rgb(255, 201, 77, 0.35);
+    box-shadow: var(--cc-toast-shadow);
     animation: cc-toast-in 0.22s ease-out;
 }
 
 .cc-toast.warn {
-    background: linear-gradient(120deg, #e24b4a, #ff8a5c);
-    color: #fff;
-    box-shadow: 0 8px 24px rgb(226, 75, 74, 0.4);
+    background: var(--cc-toast-warn-bg);
+    color: var(--cc-toast-warn-text);
+    box-shadow: var(--cc-toast-warn-shadow);
 }
 
 @keyframes cc-toast-in {
@@ -106,19 +198,19 @@ body {
 /* ── 覆盖层 ── */
 
 .cc-overlay {
-    background: rgb(8, 13, 36, 0.92);
+    background: var(--cc-overlay-bg);
     text-align: center;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
 
-.cc-overlay-dim { background: rgb(8, 13, 36, 0.72); }
+.cc-overlay-dim { background: var(--cc-overlay-dim-bg); }
 
 .cc-title {
     font-size: 34px;
     font-weight: 800;
     line-height: 1.15;
-    background: linear-gradient(120deg, #ffd98a, #ffc94d 55%, #4dc3ff);
+    background: var(--cc-title-bg);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -161,22 +253,25 @@ body {
     font-size: 14.5px;
     font-weight: 700;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--cc-mode-bg);
+    border: var(--cc-mode-border);
     border-radius: 13px;
     padding: 11px 20px;
     cursor: pointer;
     transition: transform 0.12s, background 0.15s;
 }
 
-.cc-mode:hover { background: rgb(255, 255, 255, 0.13); }
+.cc-mode:hover { background: var(--cc-mode-hover-bg); }
 .cc-mode:active { transform: scale(0.95); }
 
 .cc-mode-daily {
     background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
     border: none;
-    box-shadow: 0 8px 24px rgb(52, 211, 153, 0.35);
+    box-shadow: var(--cc-mode-daily-shadow);
 }
+
+/* 浅色：渐变用的是加深后的 --tok-success / --tok-cyan，深色字只剩 3.5:1，改白字 */
+:root[data-theme="light"] .cc-mode-daily { color: #fff; }
 
 .cc-level-label {
     font-size: 11px;
@@ -200,8 +295,8 @@ body {
     align-items: center;
     gap: 1px;
     font-family: inherit;
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--cc-level-chip-bg);
+    border: var(--cc-level-chip-border);
     border-radius: 10px;
     padding: 6px 2px 4px;
     cursor: pointer;
@@ -209,7 +304,7 @@ body {
     transition: background 0.15s, transform 0.1s;
 }
 
-.cc-level-chip:hover { background: rgb(255, 255, 255, 0.11); }
+.cc-level-chip:hover { background: var(--cc-level-chip-hover-bg); }
 .cc-level-chip:active { transform: scale(0.93); }
 
 .cc-chip-num { font-size: 14px; font-weight: 800; }
@@ -219,7 +314,7 @@ body {
 .cc-daily-best {
     font-size: 12.5px;
     font-weight: 600;
-    color: #ffd98a;
+    color: var(--cc-daily-best-text);
     min-height: 15px;
     font-variant-numeric: tabular-nums;
 }
@@ -239,11 +334,11 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 9px;
-    background: rgb(10, 18, 48, 0.96);
-    border: 1px solid rgb(255, 255, 255, 0.12);
+    background: var(--cc-card-bg);
+    border: var(--cc-card-border);
     border-radius: 20px;
     padding: 20px 22px;
-    box-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
+    box-shadow: var(--cc-card-shadow);
     animation: cc-card-in 0.26s ease-out;
 }
 
@@ -271,7 +366,7 @@ body {
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 26px rgb(255, 201, 77, 0.45);
+    text-shadow: var(--cc-over-score-glow);
 }
 
 .cc-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
@@ -288,21 +383,21 @@ body {
     font-size: 14.5px;
     font-weight: 700;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.08);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--cc-btn-bg);
+    border: var(--cc-btn-border);
     border-radius: 13px;
     padding: 11px 18px;
     cursor: pointer;
     transition: transform 0.12s, background 0.15s;
 }
 
-.cc-btn:hover { background: rgb(255, 255, 255, 0.14); }
+.cc-btn:hover { background: var(--cc-btn-hover-bg); }
 .cc-btn:active { transform: scale(0.96); }
 
 .cc-btn-primary {
     background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
     border: none;
-    box-shadow: 0 8px 24px rgb(52, 211, 153, 0.4);
+    box-shadow: var(--cc-btn-primary-shadow);
 }
 
 .cc-btn-ghost { background: transparent; color: var(--tok-text-dim); }
@@ -312,8 +407,8 @@ body {
 .cc-lb {
     width: 100%;
     max-width: 330px;
-    background: rgb(255, 255, 255, 0.045);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--cc-lb-bg);
+    border: var(--cc-lb-border);
     border-radius: 14px;
     padding: 12px 14px;
 }
@@ -342,9 +437,9 @@ body {
     border-radius: 7px;
 }
 
-.cc-lb-row.cc-lb-top1 { background: rgb(252, 211, 77, 0.14); }
-.cc-lb-row.cc-lb-top2 { background: rgb(203, 213, 225, 0.10); }
-.cc-lb-row.cc-lb-top3 { background: rgb(255, 201, 77, 0.12); }
+.cc-lb-row.cc-lb-top1 { background: var(--cc-lb-row-lb-top1-bg); }
+.cc-lb-row.cc-lb-top2 { background: var(--cc-lb-row-lb-top2-bg); }
+.cc-lb-row.cc-lb-top3 { background: var(--cc-lb-row-lb-top3-bg); }
 
 .cc-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
 
@@ -383,14 +478,14 @@ body {
     font-family: inherit;
     font-size: 13px;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--cc-username-bg);
+    border: var(--cc-username-border);
     border-radius: 9px;
     padding: 7px 10px;
     outline: none;
 }
 
-.cc-username:focus { border-color: rgb(255, 201, 77, 0.5); }
+.cc-username:focus { border-color: var(--cc-username-focus-border); }
 
 /* ── 侧栏：每日记录行 ── */
 
@@ -441,5 +536,60 @@ body {
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
 }
 
+/* ── 画布调色板（js/circuit.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
+   深色 = 迁移前 JS 里的字面量，逐字不变；浅色 = 「蓝图纸」：浅底、深琥珀通电、石板灰断路 */
+:root {
+    --cc-cv-amber-soft: #ffe9b0;
+    --cc-cv-amber: #ffc94d;
+    --cc-cv-dim-wire: #3a4a78;
+    --cc-cv-red: #e24b4a;
+    --cc-cv-bg-a: #0a1230;
+    --cc-cv-bg-b: #0b1436;
+    --cc-cv-bg-c: #0d1a40;
+    --cc-cv-grid: rgb(80, 110, 200, 0.13);
+    --cc-cv-red-glow: rgb(226, 75, 74, 0.9);
+    --cc-cv-amber-glow: rgb(255, 201, 77, 0.75);
+    --cc-cv-amber-glow-soft: rgb(255, 201, 77, 0.55);
+    --cc-cv-amber-glow-strong: rgb(255, 201, 77, 0.85);
+    --cc-cv-bulb-ring: rgb(255, 201, 77, 0.45);
+    --cc-cv-bulb-halo: rgb(255, 217, 138, 0.5);
+    --cc-cv-bulb-halo-out: rgb(255, 217, 138, 0);
+    --cc-cv-bulb-glow: rgb(255, 217, 138, 0.95);
+    --cc-cv-bulb-lit: #ffd98a;
+    --cc-cv-bulb-off: rgb(255, 255, 255, 0.06);
+    --cc-cv-slate: #8b96c4;
+    --cc-cv-bulb-stroke: #55628f;
+    --cc-cv-filament-on: #c98f1d;
+    --cc-cv-filament-off: rgb(139, 150, 196, 0.6);
+    --cc-cv-switch-base: rgb(16, 24, 56, 0.92);
+    --cc-cv-amber-rgb: 255, 201, 77;
+    --cc-cv-red-rgb: 226, 75, 74;
+}
 
-
+:root[data-theme="light"] {
+    --cc-cv-amber-soft: #a86a00;
+    --cc-cv-amber: #e39c00;
+    --cc-cv-dim-wire: #a3aecb;
+    --cc-cv-red: #d43c3b;
+    --cc-cv-bg-a: #f3f7fd;
+    --cc-cv-bg-b: #ebf1fa;
+    --cc-cv-bg-c: #e2eaf7;
+    --cc-cv-grid: rgb(40, 80, 170, 0.13);
+    --cc-cv-red-glow: rgb(212, 60, 59, 0.45);
+    --cc-cv-amber-glow: rgb(227, 156, 0, 0.35);
+    --cc-cv-amber-glow-soft: rgb(227, 156, 0, 0.25);
+    --cc-cv-amber-glow-strong: rgb(227, 156, 0, 0.4);
+    --cc-cv-bulb-ring: rgb(227, 156, 0, 0.5);
+    --cc-cv-bulb-halo: rgb(255, 190, 50, 0.45);
+    --cc-cv-bulb-halo-out: rgb(255, 190, 50, 0);
+    --cc-cv-bulb-glow: rgb(255, 170, 30, 0.6);
+    --cc-cv-bulb-lit: #ffc93d;
+    --cc-cv-bulb-off: rgb(15, 23, 42, 0.05);
+    --cc-cv-slate: #66739e;
+    --cc-cv-bulb-stroke: #8f9abb;
+    --cc-cv-filament-on: #a86a00;
+    --cc-cv-filament-off: rgb(90, 100, 140, 0.6);
+    --cc-cv-switch-base: rgb(255, 255, 255, 0.95);
+    --cc-cv-amber-rgb: 227, 156, 0;
+    --cc-cv-red-rgb: 212, 60, 59;
+}

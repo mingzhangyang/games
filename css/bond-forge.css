@@ -13,6 +13,100 @@
    见 js/bond-forge-molecules.js 的 ELEMENTS.color。
    ═══════════════════════════════════════════════════════════════ */
 
+/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+:root {
+    --bf-body-bg: radial-gradient(1100px 620px at 50% -8%, rgb(91, 141, 238, 0.16), transparent 62%),
+        radial-gradient(760px 520px at 12% 104%, rgb(192, 38, 211, 0.12), transparent 60%),
+        radial-gradient(680px 460px at 92% 88%, rgb(255, 159, 67, 0.09), transparent 60%),
+        linear-gradient(178deg, #0b0e22 0%, #0d1024 46%, #080a17 100%);
+    --bf-drag-box-bg: rgb(91, 141, 238, 0.13);
+    --bf-drag-box-border: 1px solid rgb(91, 141, 238, 0.3);
+    --bf-canvas-border: 1px solid rgb(120, 150, 240, 0.2);
+    --bf-canvas-bg: #0d1024;
+    --bf-canvas-shadow: 0 22px 60px rgb(0, 0, 0, 0.55),
+        inset 0 0 90px rgb(91, 141, 238, 0.07);
+    --bf-toast-bg: rgb(13, 16, 36, 0.94);
+    --bf-toast-border: 1px solid rgb(120, 150, 240, 0.26);
+    --bf-toast-shadow: 0 10px 30px rgb(0, 0, 0, 0.45);
+    --bf-overlay-bg: rgb(8, 10, 23, 0.9);
+    --bf-overlay-dim-bg: rgb(8, 10, 23, 0.78);
+    --bf-mode-bg: rgb(255, 255, 255, 0.06);
+    --bf-mode-border: 1px solid rgb(255, 255, 255, 0.14);
+    --bf-mode-hover-bg: rgb(255, 255, 255, 0.11);
+    --bf-mode-is-active-bg: rgb(91, 141, 238, 0.22);
+    --bf-mode-is-active-border: rgb(91, 141, 238, 0.55);
+    --bf-mode-daily-is-active-bg: rgb(255, 159, 67, 0.2);
+    --bf-mode-daily-is-active-border: rgb(255, 159, 67, 0.5);
+    --bf-chip-bg: rgb(255, 255, 255, 0.05);
+    --bf-chip-border: 1px solid rgb(255, 255, 255, 0.11);
+    --bf-chip-hover-bg: rgb(255, 255, 255, 0.1);
+    --bf-chip-is-done-bg: rgb(52, 211, 153, 0.16);
+    --bf-chip-is-done-border: rgb(52, 211, 153, 0.42);
+    --bf-card-bg: rgb(18, 22, 44, 0.97);
+    --bf-card-border: 1px solid rgb(120, 150, 240, 0.24);
+    --bf-card-shadow: 0 22px 60px rgb(0, 0, 0, 0.55);
+    --bf-btn-bg: rgb(255, 255, 255, 0.07);
+    --bf-btn-border: 1px solid rgb(255, 255, 255, 0.15);
+    --bf-btn-hover-bg: rgb(255, 255, 255, 0.12);
+    --bf-btn-primary-bg: linear-gradient(135deg, #667eea, #764ba2);
+    --bf-btn-primary-border: rgb(255, 255, 255, 0.24);
+    --bf-btn-ghost-border: rgb(255, 255, 255, 0.18);
+    --bf-lb-bg: rgb(255, 255, 255, 0.045);
+    --bf-lb-border: 1px solid rgb(255, 255, 255, 0.1);
+    --bf-username-bg: rgb(255, 255, 255, 0.07);
+    --bf-username-border: 1px solid rgb(255, 255, 255, 0.16);
+    --bf-username-focus-border: rgb(91, 141, 238, 0.65);
+    --bf-username-focus-bg: rgb(255, 255, 255, 0.1);
+}
+/* theme:end vars */
+
+/* theme:begin light */
+:root[data-theme="light"] {
+    --bf-body-bg: radial-gradient(1100px 620px at 50% -8%, rgb(91, 141, 238, 0.16), transparent 62%),
+        radial-gradient(760px 520px at 12% 104%, rgb(192, 38, 211, 0.12), transparent 60%),
+        radial-gradient(680px 460px at 92% 88%, rgb(255, 159, 67, 0.09), transparent 60%),
+        linear-gradient(178deg, #eff0f6 0%, #eeeff5 46%, #f4f5f9 100%);
+    --bf-drag-box-bg: rgb(91, 141, 238, 0.13);
+    --bf-drag-box-border: 1px solid rgb(91, 141, 238, 0.3);
+    --bf-canvas-border: 1px solid rgb(120, 150, 240, 0.2);
+    --bf-canvas-bg: #eeeff5;
+    --bf-canvas-shadow: 0 22px 60px rgb(15, 23, 42, 0.193),
+        inset 0 0 90px rgb(15, 23, 42, 0.04);
+    --bf-toast-bg: rgb(255, 255, 255, 0.98);
+    --bf-toast-border: 1px solid rgb(120, 150, 240, 0.26);
+    --bf-toast-shadow: 0 10px 30px rgb(15, 23, 42, 0.158);
+    --bf-overlay-bg: rgb(255, 255, 255, 0.98);
+    --bf-overlay-dim-bg: rgb(15, 23, 42, 0.32);
+    --bf-mode-bg: rgb(255, 255, 255, 0.73);
+    --bf-mode-border: 1px solid rgb(15, 23, 42, 0.154);
+    --bf-mode-hover-bg: rgb(255, 255, 255, 0.88);
+    --bf-mode-is-active-bg: rgb(91, 141, 238, 0.22);
+    --bf-mode-is-active-border: rgb(91, 141, 238, 0.55);
+    --bf-mode-daily-is-active-bg: rgb(255, 159, 67, 0.2);
+    --bf-mode-daily-is-active-border: rgb(255, 159, 67, 0.5);
+    --bf-chip-bg: rgb(255, 255, 255, 0.7);
+    --bf-chip-border: 1px solid rgb(15, 23, 42, 0.121);
+    --bf-chip-hover-bg: rgb(255, 255, 255, 0.85);
+    --bf-chip-is-done-bg: rgb(52, 211, 153, 0.16);
+    --bf-chip-is-done-border: rgb(52, 211, 153, 0.42);
+    --bf-card-bg: rgb(255, 255, 255, 0.98);
+    --bf-card-border: 1px solid rgb(120, 150, 240, 0.24);
+    --bf-card-shadow: 0 22px 60px rgb(15, 23, 42, 0.193);
+    --bf-btn-bg: rgb(255, 255, 255, 0.76);
+    --bf-btn-border: 1px solid rgb(15, 23, 42, 0.165);
+    --bf-btn-hover-bg: rgb(255, 255, 255, 0.91);
+    --bf-btn-primary-bg: linear-gradient(135deg, #667eea, #764ba2);
+    --bf-btn-primary-border: rgb(15, 23, 42, 0.2);
+    --bf-btn-ghost-border: rgb(15, 23, 42, 0.198);
+    --bf-lb-bg: rgb(255, 255, 255, 0.685);
+    --bf-lb-border: 1px solid rgb(15, 23, 42, 0.11);
+    --bf-username-bg: rgb(255, 255, 255, 0.76);
+    --bf-username-border: 1px solid rgb(15, 23, 42, 0.176);
+    --bf-username-focus-border: rgb(91, 141, 238, 0.65);
+    --bf-username-focus-bg: rgb(255, 255, 255, 0.85);
+}
+/* theme:end light */
+
 * {
     margin: 0;
     padding: 0;
@@ -25,10 +119,7 @@ body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
     background:
-        radial-gradient(1100px 620px at 50% -8%, rgb(91, 141, 238, 0.16), transparent 62%),
-        radial-gradient(760px 520px at 12% 104%, rgb(192, 38, 211, 0.12), transparent 60%),
-        radial-gradient(680px 460px at 92% 88%, rgb(255, 159, 67, 0.09), transparent 60%),
-        linear-gradient(178deg, #0b0e22 0%, #0d1024 46%, #080a17 100%);
+        var(--bf-body-bg);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
@@ -56,8 +147,8 @@ body {
     gap: 5px;
     padding: 4px 13px;
     border-radius: 12px;
-    background: rgb(91, 141, 238, 0.13);
-    border: 1px solid rgb(91, 141, 238, 0.3);
+    background: var(--bf-drag-box-bg);
+    border: var(--bf-drag-box-border);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
@@ -86,11 +177,10 @@ body {
 }
 
 #bf-canvas {
-    border: 1px solid rgb(120, 150, 240, 0.2);
-    background: #0d1024;
+    border: var(--bf-canvas-border);
+    background: var(--bf-canvas-bg);
     box-shadow:
-        0 22px 60px rgb(0, 0, 0, 0.55),
-        inset 0 0 90px rgb(91, 141, 238, 0.07);
+        var(--bf-canvas-shadow);
     touch-action: none;
     cursor: grab;
 }
@@ -107,9 +197,9 @@ body {
     line-height: 1.5;
     text-align: center;
     color: var(--tok-text);
-    background: rgb(13, 16, 36, 0.94);
-    border: 1px solid rgb(120, 150, 240, 0.26);
-    box-shadow: 0 10px 30px rgb(0, 0, 0, 0.45);
+    background: var(--bf-toast-bg);
+    border: var(--bf-toast-border);
+    box-shadow: var(--bf-toast-shadow);
     animation: bf-toast-in 0.24s ease;
 }
 
@@ -120,13 +210,13 @@ body {
 
 /* ── 覆盖层通用 ── */
 .bf-overlay {
-    background: rgb(8, 10, 23, 0.9);
+    background: var(--bf-overlay-bg);
     backdrop-filter: blur(9px);
     -webkit-backdrop-filter: blur(9px);
     text-align: center;
 }
 
-.bf-overlay-dim { background: rgb(8, 10, 23, 0.78); }
+.bf-overlay-dim { background: var(--bf-overlay-dim-bg); }
 
 /* 开始界面 */
 .bf-title {
@@ -181,8 +271,8 @@ body {
     font-weight: 700;
     line-height: 1;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.06);
-    border: 1px solid rgb(255, 255, 255, 0.14);
+    background: var(--bf-mode-bg);
+    border: var(--bf-mode-border);
     border-radius: 12px;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, transform 0.1s;
@@ -190,17 +280,17 @@ body {
 
 .bf-mode > svg { width: 17px; height: 17px; flex: 0 0 auto; }
 
-.bf-mode:hover { background: rgb(255, 255, 255, 0.11); }
+.bf-mode:hover { background: var(--bf-mode-hover-bg); }
 .bf-mode:active { transform: scale(0.97); }
 
 .bf-mode.is-active {
-    background: rgb(91, 141, 238, 0.22);
-    border-color: rgb(91, 141, 238, 0.55);
+    background: var(--bf-mode-is-active-bg);
+    border-color: var(--bf-mode-is-active-border);
 }
 
 .bf-mode-daily.is-active {
-    background: rgb(255, 159, 67, 0.2);
-    border-color: rgb(255, 159, 67, 0.5);
+    background: var(--bf-mode-daily-is-active-bg);
+    border-color: var(--bf-mode-daily-is-active-border);
 }
 
 .bf-level-label {
@@ -237,8 +327,8 @@ body {
     font-weight: 800;
     line-height: 1.1;
     color: var(--tok-text-dim);
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.11);
+    background: var(--bf-chip-bg);
+    border: var(--bf-chip-border);
     border-radius: 10px;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, transform 0.1s;
@@ -251,13 +341,13 @@ body {
     border-radius: inherit;
 }
 
-.bf-chip:hover { background: rgb(255, 255, 255, 0.1); }
+.bf-chip:hover { background: var(--bf-chip-hover-bg); }
 .bf-chip:active { transform: scale(0.95); }
 
 .bf-chip.is-done {
     color: var(--tok-text);
-    background: rgb(52, 211, 153, 0.16);
-    border-color: rgb(52, 211, 153, 0.42);
+    background: var(--bf-chip-is-done-bg);
+    border-color: var(--bf-chip-is-done-border);
 }
 
 .bf-chip.is-locked {
@@ -296,10 +386,10 @@ body {
     width: 100%;
     max-width: 330px;
     padding: 22px 20px;
-    background: rgb(18, 22, 44, 0.97);
-    border: 1px solid rgb(120, 150, 240, 0.24);
+    background: var(--bf-card-bg);
+    border: var(--bf-card-border);
     border-radius: 18px;
-    box-shadow: 0 22px 60px rgb(0, 0, 0, 0.55);
+    box-shadow: var(--bf-card-shadow);
 }
 
 .bf-card-title {
@@ -363,24 +453,24 @@ body {
     font-weight: 700;
     line-height: 1;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.15);
+    background: var(--bf-btn-bg);
+    border: var(--bf-btn-border);
     border-radius: 12px;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 
 .bf-btn > svg { width: 15px; height: 15px; flex: 0 0 auto; }
-.bf-btn:hover { background: rgb(255, 255, 255, 0.12); }
+.bf-btn:hover { background: var(--bf-btn-hover-bg); }
 .bf-btn:active { transform: scale(0.97); }
 
 .bf-btn-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-color: rgb(255, 255, 255, 0.24);
+    background: var(--bf-btn-primary-bg);
+    border-color: var(--bf-btn-primary-border);
 }
 
 .bf-btn-primary:hover { filter: brightness(1.12); }
-.bf-btn-ghost { background: transparent; border-color: rgb(255, 255, 255, 0.18); }
+.bf-btn-ghost { background: transparent; border-color: var(--bf-btn-ghost-border); }
 
 /* ── 排行榜（每日结算内） ── */
 .bf-lb {
@@ -390,8 +480,8 @@ body {
     width: 100%;
     max-width: 330px;
     padding: 13px 15px;
-    background: rgb(255, 255, 255, 0.045);
-    border: 1px solid rgb(255, 255, 255, 0.1);
+    background: var(--bf-lb-bg);
+    border: var(--bf-lb-border);
     border-radius: 14px;
     text-align: left;
 }
@@ -475,15 +565,15 @@ body {
     font-family: inherit;
     font-size: 13px;
     color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.16);
+    background: var(--bf-username-bg);
+    border: var(--bf-username-border);
     border-radius: 9px;
 }
 
 .bf-username:focus {
     outline: none;
-    border-color: rgb(91, 141, 238, 0.65);
-    background: rgb(255, 255, 255, 0.1);
+    border-color: var(--bf-username-focus-border);
+    background: var(--bf-username-focus-bg);
 }
 
 /* ── 侧栏 ── */
@@ -636,4 +726,48 @@ body {
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}
+
+/* ── 画布调色板（js/bond-forge.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
+   深色 = 迁移前 JS 里的字面量，逐字不变；浅色在下方覆盖 */
+:root {
+    --bf-cv-bg-top: #141a38;
+    --bf-cv-bg-bottom: #0a0c1c;
+    --bf-cv-ionic-bond: rgb(167,139,250,0.55);
+    --bf-cv-bond: rgb(200,215,255,0.85);
+    --bf-cv-charge-pos: rgb(255,159,67,0.95);
+    --bf-cv-charge-neg: rgb(96,165,250,0.95);
+    --bf-cv-charge-ring: rgb(10,12,28,0.85);
+    --bf-cv-charge-text: #10142a;
+    --bf-cv-atom-outline: rgb(8,10,24,0.9);
+    --bf-cv-select-ring: rgb(64,216,255,0.5);
+    --bf-cv-tray-bg: rgb(12,16,38,0.72);
+    --bf-cv-tray-border: rgb(120,150,240,0.22);
+    --bf-cv-tray-sep: rgb(120,150,240,0.16);
+    --bf-cv-tint: rgb(120,150,240,0.10);
+    --bf-cv-tray-slot-border: rgb(120,150,240,0.38);
+    --bf-cv-snap: rgb(52,211,153,0.8);
+    --bf-cv-top-light: rgb(150,190,255,0.16);
+    --bf-cv-top-light-out: rgb(150,190,255,0);
+}
+
+:root[data-theme="light"] {
+    --bf-cv-bg-top: #f5f7fc;
+    --bf-cv-bg-bottom: #e5e9f2;
+    --bf-cv-ionic-bond: rgb(124,58,237,0.5);
+    --bf-cv-bond: rgb(40,52,84,0.8);
+    --bf-cv-charge-pos: rgb(245,140,40,0.95);
+    --bf-cv-charge-neg: rgb(70,140,240,0.95);
+    --bf-cv-charge-ring: rgb(15,23,42,0.55);
+    --bf-cv-charge-text: #10142a;
+    --bf-cv-atom-outline: rgb(15,23,42,0.55);
+    --bf-cv-select-ring: rgb(11,132,173,0.55);
+    --bf-cv-tray-bg: rgb(255,255,255,0.82);
+    --bf-cv-tray-border: rgb(60,80,150,0.22);
+    --bf-cv-tray-sep: rgb(60,80,150,0.14);
+    --bf-cv-tint: rgb(60,80,150,0.08);
+    --bf-cv-tray-slot-border: rgb(60,80,150,0.3);
+    --bf-cv-snap: rgb(5,150,105,0.8);
+    --bf-cv-top-light: rgb(255,255,255,0.7);
+    --bf-cv-top-light-out: rgb(255,255,255,0);
 }
