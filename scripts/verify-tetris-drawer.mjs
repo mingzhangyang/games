@@ -76,7 +76,7 @@ const SNAP = () => {
     const sidebar = q('#infoPanel'), panels = q('#statsPanels');
     return {
         view: { w: window.innerWidth, h: window.innerHeight },
-        hudScore: q('#scoreHud') ? q('#scoreHud').textContent.trim() : null,
+        hudScore: q('#scoreHudValue') ? q('#scoreHudValue').textContent.trim() : null,
         hudLabel: q('#scoreHudLabel') ? q('#scoreHudLabel').textContent.trim() : null,
         hudBox: box(q('.game-hud-box')),
         stat: {
@@ -122,7 +122,12 @@ for (const vp of VIEWPORTS) {
     const page = await browser.newPage();
     const errs = [];
     page.on('pageerror', e => errs.push(String(e).slice(0, 140)));
-    page.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text().slice(0, 140)); });
+    page.on('console', m => {
+        if (m.type() !== 'error') return;
+        const loc = m.location();
+        const where = loc && loc.url ? ` ${loc.url}` : '';
+        errs.push(`console${where}: ${m.text().slice(0, 140)}`);
+    });
     // console 的 404/CORS 只会以 "Failed to load resource" 出现（无 URL），
     // 靠 requestfailed 拿到真实 URL 才能判断是不是本地噪声
     page.on('requestfailed', r => errs.push('reqfail: ' + r.url()));
