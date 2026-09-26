@@ -22,19 +22,24 @@
  */
 
 export function bindFrame(opts = {}) {
-    const { logicalWidth = 0, extraChrome = null } = opts;
+    // layout: 'standard'（默认，桌面纵向预算）| 'immersive'（games.config.json 的 layout 字段，
+    // 见 css/layout.css 末尾与 docs/contracts/layout.md §7）。immersive 的页脚在首屏之下，
+    // 不计入 chrome；舞台高度 = 100dvh − chrome − 底部安全区，在所有视口宽度上都生效。
+    const { logicalWidth = 0, extraChrome = null, layout = 'standard' } = opts;
+    const immersive = layout === 'immersive';
 
     const shell = document.querySelector('.game-shell');
     if (!shell) return null;
 
     const topbar = shell.querySelector(':scope > .game-topbar');
-    const footer = shell.querySelector(':scope > .game-footer');
+    const footer = immersive ? null : shell.querySelector(':scope > .game-footer');
 
     // 「本页接入了纵向预算」的标记，供 css/layout.css 的侧栏限高规则判据使用。
     // 判据必须来自不随视口变化的事实（与 game-drawer.js 的 has-stats-drawer 同模式）：
     // 侧栏限高会把它变成 overscroll-behavior:contain 的滚动容器，越界命中未接入的
     // 页面（tetris）会吃掉落在侧栏上的滚轮事件。
-    document.body.classList.add('has-frame-budget');
+    // immersive 页没有侧栏，也不消费桌面预算变量，换一个标记，不去命中侧栏限高规则。
+    document.body.classList.add(immersive ? 'has-immersive-stage' : 'has-frame-budget');
 
     let current = NaN;      // 上一次写入值（NaN = 尚未写过）
     let rafId = 0;
