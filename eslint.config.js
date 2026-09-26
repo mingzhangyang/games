@@ -52,6 +52,7 @@ export default [
                 Image: 'writable',
                 Worker: 'writable',
                 customElements: 'writable',
+                Element: 'writable',
                 HTMLElement: 'writable',
                 HTMLCanvasElement: 'writable',
                 HTMLInputElement: 'writable',
