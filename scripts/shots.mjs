@@ -3,9 +3,11 @@ import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { registry } from './lib/registry.mjs';
 import { mkdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const CHROME = CHROME_PATH;
-const OUT = process.argv[2] || 'C:/Users/mingz/AppData/Local/Temp/shots';
+const OUT = process.argv[2] || join(tmpdir(), 'shots');
 const BASE = process.argv[3] || 'http://127.0.0.1:8899';
 
 const PAGES = (process.env.PAGES || registry.all().map(g => g.id).join(',')).split(',');
