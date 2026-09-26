@@ -63,17 +63,24 @@
                     <canvas class="fs-canvas" id="fs-canvas" role="img" aria-label="A midsummer meadow full of fireflies"></canvas>
                 </div>
 
-                <!-- HUD：悬浮在天空区域，无面板 -->
+                <!-- HUD：悬浮在天空区域，无面板（概念图：左上同步度圆环 / 右上剩余干预） -->
                 <div class="fs-hud hidden" id="fs-hud">
                     <div class="fs-harmony" id="fs-harmony" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Harmony">
-                        <svg class="fs-ring" viewBox="0 0 36 36" aria-hidden="true">
-                            <circle class="fs-ring-track" cx="18" cy="18" r="14"/>
-                            <circle class="fs-ring-fill" id="fs-ring-fill" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="0 100"/>
-                            <line class="fs-ring-target" id="fs-ring-target" x1="18" y1="1.5" x2="18" y2="6.5"/>
+                        <svg class="fs-ring" viewBox="0 0 64 64" aria-hidden="true">
+                            <circle class="fs-ring-track" cx="32" cy="32" r="28"/>
+                            <circle class="fs-ring-fill" id="fs-ring-fill" cx="32" cy="32" r="28" pathLength="100" stroke-dasharray="0 100"/>
+                            <line class="fs-ring-target" id="fs-ring-target" x1="63.5" y1="32" x2="56" y2="32"/>
                         </svg>
-                        <span class="fs-harmony-value" id="fs-harmony-value">0%</span>
+                        <div class="fs-harmony-text">
+                            <span class="fs-harmony-label" id="fs-harmony-label">Harmony</span>
+                            <span class="fs-harmony-value" id="fs-harmony-value">0%</span>
+                        </div>
                     </div>
-                    <div class="fs-dots" id="fs-dots" role="img" aria-label="Interventions"></div>
+                    <div class="fs-signals">
+                        <span class="fs-signals-label" id="fs-signals-label">Signals</span>
+                        <div class="fs-dots" id="fs-dots" role="img" aria-label="Interventions"></div>
+                        <span class="fs-signals-count" id="fs-signals-count">0/0</span>
+                    </div>
                 </div>
                 <p class="fs-coach hidden" id="fs-coach" aria-live="polite"></p>
 

@@ -309,7 +309,9 @@ export function createSimulation(level, opts = {}) {
         for (const f of flies) {
             let d = mean - f.phase;
             d -= Math.round(d);
-            f.phase = wrap01(f.phase + d * amount);
+            // 夹住而不是绕回：刚闪过（相位≈0）的虫若被往「后」拉过 0，绕回会变成 ≈1，
+            // 下一 tick 又闪一次 —— 群体会连续几个 tick 反复闪。往前拉过 1 同理，留给 step() 自然闪光
+            f.phase = Math.min(1 - 1e-9, Math.max(0, f.phase + d * amount));
         }
         updateHarmony();
     };

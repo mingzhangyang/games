@@ -236,8 +236,9 @@ export class FireflyGame {
         e.t += DT;
         e.climax = Math.max(0, e.climax - DT * 1.6);
         e.boost = Math.min(1.9, e.boost + DT * 0.6);
-        // 前 1.2 秒把所有虫（包括独行者）温柔地收拢进同一个节奏
-        if (e.t < 1.2) sim.gather(0.06);
+        // 前 1.2 秒把所有虫（包括独行者）温柔地收拢进同一个节奏，之后轻轻保持，
+        // 免得周期不同的急性子 / 独行者在三次群体闪光之间又漂出去
+        sim.gather(e.t < 1.2 ? 0.06 : 0.02);
         // 群体闪光：最近 5 个 tick（≈83ms，肉眼即「同时」）里有七成以上的虫闪过
         e.recent.push(flashedNow);
         if (e.recent.length > 5) e.recent.shift();
@@ -381,7 +382,7 @@ export class FireflyGame {
             ? t.title
             : `${this.levelIndex + 1} · ${t.levels[level.id].name}`;
         const tgt = this.sim.target || 0.85;
-        this.dom.ringTarget.setAttribute('transform', `rotate(${(tgt * 360).toFixed(1)} 18 18)`);
+        this.dom.ringTarget.setAttribute('transform', `rotate(${(tgt * 360).toFixed(1)} 32 32)`);
         this.dom.harmony.setAttribute('aria-label', t.harmony);
         this.dom.dots.setAttribute('aria-label', t.interventions);
         if (this.state === 'result') this.showResult();
@@ -398,6 +399,10 @@ export class FireflyGame {
         this.dom.ringFill.setAttribute('stroke-dasharray', `${pct} 100`);
         this.dom.harmony.setAttribute('aria-valuenow', String(pct));
         this.dom.harmony.classList.toggle('is-met', raw >= sim.target);
+        // HUD 主色随同步度从冷青过渡到暖金（概念图：28% 青、62% 青金、96% 金）
+        const k = Math.max(0, Math.min(1, (this.displayHarmony - 0.3) / 0.6));
+        const mix = (a, b) => Math.round(a + (b - a) * k);
+        this.dom.hud.style.setProperty('--fs-hud-color', `rgb(${mix(95, 255)}, ${mix(212, 206)}, ${mix(255, 110)})`);
         const used = sim.interventions.length;
         const max = sim.maxInterventions;
         if (this.dom.dots.childElementCount !== max) {
@@ -411,6 +416,7 @@ export class FireflyGame {
         Array.from(this.dom.dots.children).forEach((d, i) => d.classList.toggle('is-used', i >= max - used));
         const t = this.t();
         this.dom.dots.setAttribute('aria-label', `${t.interventions}: ${max - used} / ${max}`);
+        this.dom.signalsCount.textContent = `${max - used}/${max}`;
     }
 
     setCoach(key, silent = false) {

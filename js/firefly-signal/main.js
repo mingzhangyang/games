@@ -25,6 +25,8 @@ const LANGUAGES = makeText({
         startCopy: 'Every firefly blinks to its own rhythm. Nudge just a few, and watch whole meadows fall into step — until the entire field lights up as one.',
         harmony: 'Harmony',
         interventions: 'Signals left',
+        harmonyShort: 'Harmony',
+        signalsLabel: 'Signals',
         restart: 'Restart',
         home: 'Home',
         best: 'Best {used}/{max} · {n}%',
@@ -69,19 +71,21 @@ const LANGUAGES = makeText({
         kicker: '仲夏夜 · 同步谜题',
         startCopy: '每只萤火虫都按自己的节奏闪烁。只轻轻推动其中几只，看一片片草地渐渐合拍——直到整片原野同时亮起。',
         harmony: '同步度',
-        interventions: '剩余信号',
+        interventions: '剩余干预',
+        harmonyShort: '同步度',
+        signalsLabel: '干预',
         restart: '重来',
         home: '首页',
         best: '最佳 {used}/{max} · {n}%',
-        signals: '{max} 次信号 · {n}%',
+        signals: '{max} 次干预 · {n}%',
         resultWin: '{name} · 共鸣',
         resultFail: '草地的节奏又散开了',
         resultHarmony: '同步度 {n}%',
-        resultUsed: '{used} / {max} 次信号',
+        resultUsed: '干预 {used} / {max}',
         next: '继续',
         retry: '重来',
         menu: '返回',
-        hint: '点一只萤火虫发出信号 · 光圈就是会跟随它的范围',
+        hint: '点一只萤火虫进行干预 · 光圈就是会跟随它的范围',
         canvasLabel: '满是萤火虫的仲夏夜草地',
         levels: {
             'first-light': { name: '初光', desc: '两小群，两种节奏。' },
@@ -93,19 +97,19 @@ const LANGUAGES = makeText({
                 intro: '每只萤火虫都按自己的节奏闪。先看一会儿。',
                 howTo: '点一只萤火虫：它立刻闪光，光圈里的同伴会向它的节奏靠拢。',
                 afterFirst: '试试在另一群刚闪亮的那一刻点。',
-                outOfSignals: '信号用完了——点 ↻ 再试一次。',
+                outOfSignals: '干预次数用完了——点 ↻ 再试一次。',
             },
             'two-meadows': {
                 intro: '两片草地，两种节奏。有几只停在中间。',
                 howTo: '找一只光圈能同时碰到两片草地的萤火虫。',
                 afterFirst: '相近的节奏会互相牵引——给它们一点时间。',
-                outOfSignals: '信号用完了——点 ↻ 再试一次。',
+                outOfSignals: '干预次数用完了——点 ↻ 再试一次。',
             },
             midsummer: {
                 intro: '湖边三片草地。急性子领跑，独行者慢慢漂远。',
                 howTo: '找出把草地连在一起的那几只。',
-                afterFirst: '下一次发信号前，先看清哪一片接着闪。',
-                outOfSignals: '信号用完了——点 ↻ 再试一次。',
+                afterFirst: '下一次干预前，先看清哪一片接着闪。',
+                outOfSignals: '干预次数用完了——点 ↻ 再试一次。',
             },
         },
     },
@@ -154,6 +158,8 @@ function applyLanguage(game) {
     $('fs-start-title').textContent = t.title;
     $('fs-start-copy').textContent = t.startCopy;
     $('fs-hint').textContent = t.hint;
+    $('fs-harmony-label').textContent = t.harmonyShort;
+    $('fs-signals-label').textContent = t.signalsLabel;
     $('fs-canvas').setAttribute('aria-label', t.canvasLabel);
     const restart = $('fs-btn-restart');
     restart.title = t.restart;
@@ -174,6 +180,7 @@ onReady(() => {
         ringFill: $('fs-ring-fill'),
         ringTarget: $('fs-ring-target'),
         dots: $('fs-dots'),
+        signalsCount: $('fs-signals-count'),
         coach: $('fs-coach'),
         start: $('fs-start'),
         result: $('fs-result'),

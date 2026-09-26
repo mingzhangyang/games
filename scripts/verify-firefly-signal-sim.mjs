@@ -196,5 +196,18 @@ for (const L of LEVELS) {
     ok(worstSpread < 0.05, 'L3：全体同相后 60 秒内 Normal + Fast 始终锁在一起（同步是稳定的，不会自己散掉）', `1-R 最大 ${worstSpread.toFixed(3)}`);
 }
 
+{
+    // 成功序列的 gather：收拢后每只虫每个周期只闪一次（不会在 0/1 边界被拉回去连闪）
+    const sim = createSimulation(LEVELS[2]);
+    const counts = new Array(sim.flies.length).fill(0);
+    for (let t = 0; t < sec(4); t++) {
+        sim.step();
+        sim.gather(t < sec(1.2) ? 0.06 : 0.02);
+        if (t >= sec(1.5)) for (const id of sim.flashed) counts[id]++;
+    }
+    const worst = Math.max(...counts);
+    ok(worst <= 3 && Math.min(...counts) >= 1, '成功序列：gather 后每只虫约每周期闪一次（2.5 秒内 1–3 次，无连闪）', `最多 ${worst} 次`);
+}
+
 console.log(failed === 0 ? '\nverify-firefly-signal-sim 全部通过 ✅' : `\n${failed} 个失败 ❌`);
 process.exit(failed === 0 ? 0 : 1);

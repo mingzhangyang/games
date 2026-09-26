@@ -43,7 +43,8 @@ function makeSprite(size, stops) {
 const TINT = {
     normal: { core: [255, 236, 170], glow: [255, 196, 92] },
     fast: { core: [236, 255, 178], glow: [214, 240, 110] },
-    solitary: { core: [255, 226, 186], glow: [255, 184, 120] },
+    // 概念图：孤僻虫是紫色的冷光，一眼能和暖金色的群体区分开
+    solitary: { core: [238, 214, 255], glow: [176, 118, 255] },
 };
 
 /** 由相位与「距上次闪光」求亮度：常态微光 → 临近闪光腹部渐强 → 闪光瞬间满亮后快速衰减 */
@@ -143,35 +144,59 @@ export function createRenderer(canvas, opts = {}) {
         b.arc(mx + mr * 0.35, my + mr * 0.3, mr * 0.18, 0, TAU);
         b.fill();
 
-        // 远山两层
-        const ridge = (base, amp, col, k) => {
+        // 远山三层：后层高而冷、带一点月光提亮的山脊，前层低而暗（概念图：层叠的蓝色山峦）
+        const ridge = (base, amp, col, k, sharp) => {
             b.fillStyle = col;
             b.beginPath();
             b.moveTo(0, lakeTop + 4);
-            for (let x = 0; x <= W + 8; x += 8) {
-                const y = base - amp * (0.55 * Math.sin(x * 0.011 * k + 1.3 * k) + 0.3 * Math.sin(x * 0.027 + k * 2) + 0.15 * Math.sin(x * 0.061 + k));
+            for (let x = 0; x <= W + 6; x += 6) {
+                const u = x / W;
+                const peaks = sharp * (1 - Math.abs(Math.sin(u * Math.PI * (2.2 + k) + k)) ** 0.6);
+                const y = base - amp * (0.45 * Math.sin(u * 5.2 * k + 1.3 * k) + 0.25 * Math.sin(u * 13 + k * 2) + 0.1 * Math.sin(u * 37 + k) + peaks);
                 b.lineTo(x, y);
             }
             b.lineTo(W, lakeTop + 4);
             b.closePath();
             b.fill();
         };
-        ridge(H * 0.27, H * 0.06, '#101d3f', 1);
-        ridge(H * 0.31, H * 0.045, '#0b1631', 1.7);
-        // 远岸树线
-        b.fillStyle = '#081226';
+        ridge(H * 0.24, H * 0.07, '#18264f', 1, 0.9);
+        ridge(H * 0.28, H * 0.055, '#111d40', 1.6, 0.6);
+        ridge(H * 0.315, H * 0.035, '#0b1531', 2.3, 0.3);
+        // 远岸树线：针叶林的尖顶剪影
+        b.fillStyle = '#07101f';
         b.beginPath();
         b.moveTo(0, lakeTop + 2);
-        for (let x = 0; x <= W; x += 5) b.lineTo(x, lakeTop - 3 - Math.abs(Math.sin(x * 0.09) * 5) - rng() * 5);
+        for (let x = 0; x <= W; x += 4) {
+            const tall = rng() < 0.3 ? 6 + rng() * 10 : 2 + rng() * 4;
+            b.lineTo(x, lakeTop - 2);
+            b.lineTo(x + 2, lakeTop - 2 - tall);
+        }
         b.lineTo(W, lakeTop + 2);
         b.fill();
 
         // 湖
         const lake = b.createLinearGradient(0, lakeTop, 0, lakeBottom);
-        lake.addColorStop(0, '#132a52');
-        lake.addColorStop(1, '#091a30');
+        lake.addColorStop(0, '#16305c');
+        lake.addColorStop(1, '#0a1c34');
         b.fillStyle = lake;
         b.fillRect(0, lakeTop, W, lakeBottom - lakeTop + 4);
+        // 远岸灯火 + 它们在水里的倒影（概念图里湖对岸的一串暖光）
+        const villages = [[0.34, 0.14], [0.62, 0.1], [0.83, 0.06]];
+        for (const [cx0, spread] of villages) {
+            const n = Math.round(6 + spread * 60);
+            for (let i = 0; i < n; i++) {
+                const x = W * (cx0 + (rng() - 0.5) * spread), y = lakeTop - 1.5 - rng() * 4;
+                const a = 0.45 + rng() * 0.5;
+                b.fillStyle = `rgba(255,206,130,${a})`;
+                b.fillRect(x, y, 1.6, 1.6);
+                const len = 6 + rng() * 16;
+                const g = b.createLinearGradient(0, lakeTop + 2, 0, lakeTop + 2 + len);
+                g.addColorStop(0, `rgba(255,200,120,${a * 0.45})`);
+                g.addColorStop(1, 'rgba(255,200,120,0)');
+                b.fillStyle = g;
+                b.fillRect(x - 0.2, lakeTop + 2, 1.4, len);
+            }
+        }
         // 月影
         for (let i = 0; i < 12; i++) {
             const y = lakeTop + 4 + i * (lakeBottom - lakeTop - 8) / 12;
@@ -180,7 +205,7 @@ export function createRenderer(canvas, opts = {}) {
             b.fillRect(mx - w / 2 + (rng() - 0.5) * 6, y, w, 1.4);
         }
         // 湖面细纹：底层冷色，照亮层暖色（被岸边虫光照到时浮现）
-        for (let i = 0; i < 70; i++) {
+        for (let i = 0; i < 80; i++) {
             const x = rng() * W, y = lakeTop + 6 + rng() * (lakeBottom - lakeTop - 10), w = 6 + rng() * 22;
             b.strokeStyle = 'rgba(150,180,240,0.12)';
             b.lineWidth = 1;
@@ -196,11 +221,11 @@ export function createRenderer(canvas, opts = {}) {
             l.stroke();
         }
 
-        // 近岸：远草地到近草地的暗绿渐变
+        // 近岸：远草地到近草地的暗绿渐变（比夜色更有生气的绿）
         const meadow = b.createLinearGradient(0, lakeBottom - 6, 0, H);
-        meadow.addColorStop(0, '#0d2219');
-        meadow.addColorStop(0.35, '#0a1b13');
-        meadow.addColorStop(1, '#050d09');
+        meadow.addColorStop(0, '#12301f');
+        meadow.addColorStop(0.4, '#0d2616');
+        meadow.addColorStop(1, '#06120a');
         b.fillStyle = meadow;
         b.beginPath();
         b.moveTo(0, lakeBottom);
@@ -209,75 +234,117 @@ export function createRenderer(canvas, opts = {}) {
         b.lineTo(0, H);
         b.fill();
 
-        // 草叶：由远及近画（近的盖远的），同一根草在 lit 层画一条暖色亮边
+        // 岸边的树：左侧一棵大树的剪影伸进夜空，右侧湖岸一丛矮树
+        const tree = (tx, baseY, height, spread) => {
+            b.fillStyle = '#050b12';
+            b.beginPath();
+            b.moveTo(tx - spread * 0.05, baseY);
+            b.quadraticCurveTo(tx - spread * 0.02, baseY - height * 0.5, tx + spread * 0.06, baseY - height * 0.75);
+            b.lineTo(tx + spread * 0.1, baseY - height * 0.72);
+            b.quadraticCurveTo(tx + spread * 0.05, baseY - height * 0.4, tx + spread * 0.08, baseY);
+            b.fill();
+            for (let i = 0; i < 26; i++) {
+                const a = rng() * TAU;
+                const r = spread * (0.12 + rng() * 0.2);
+                const cx = tx + Math.cos(a) * spread * 0.4 * rng();
+                const cy = baseY - height * (0.62 + rng() * 0.36);
+                b.beginPath();
+                b.arc(cx, cy, r, 0, TAU);
+                b.fill();
+            }
+        };
+        tree(W * 0.06, lakeBottom + H * 0.02, H * 0.42, W * 0.36);
+        tree(W * 0.96, lakeBottom, H * 0.16, W * 0.22);
+
+        // 近处的石头（压在草里，草叶之后再画一层盖住它们的底部）
+        const rocks = [[0.86, 0.9, 0.16], [0.18, 0.97, 0.12], [0.5, 1.0, 0.1]];
+        for (const [rx, ry, rs] of rocks) {
+            const cx = W * rx, cy = H * ry, rw = W * rs;
+            const rg = b.createLinearGradient(0, cy - rw * 0.5, 0, cy + rw * 0.3);
+            rg.addColorStop(0, '#26302f');
+            rg.addColorStop(1, '#0b100f');
+            b.fillStyle = rg;
+            b.beginPath();
+            b.ellipse(cx, cy, rw * 0.55, rw * 0.36, 0, 0, TAU);
+            b.fill();
+            l.strokeStyle = 'rgba(255,214,150,0.6)';
+            l.lineWidth = 1.4;
+            l.beginPath();
+            l.ellipse(cx, cy, rw * 0.55, rw * 0.36, 0, Math.PI * 1.08, Math.PI * 1.9);
+            l.stroke();
+        }
+
+        // 草叶：由远及近画（近的盖远的），同一根草在 lit 层画一条暖色亮边；近处的草又高又宽
         const blades = [];
-        const n = Math.round(W * 1.15);
+        const n = Math.round(W * 1.5);
         for (let i = 0; i < n; i++) {
-            const t = rng() ** 0.7;
-            blades.push({ x: rng() * W, y: lakeBottom + 2 + t * (H - lakeBottom), lean: (rng() - 0.5) * 0.9, r: rng() });
+            const t = rng() ** 0.65;
+            blades.push({ x: rng() * W, y: lakeBottom + 2 + t * (H - lakeBottom + 6), lean: (rng() - 0.5) * 0.9, r: rng() });
         }
         blades.sort((a, c) => a.y - c.y);
         const dews = [];
         for (const bl of blades) {
             const depth = 0.3 + 0.7 * (bl.y - lakeBottom) / (H - lakeBottom);
-            const h = (8 + bl.r * 30) * depth;
+            const h = (8 + bl.r * 34) * depth * (depth > 0.85 && bl.r > 0.6 ? 2 : 1);
             const tipX = bl.x + bl.lean * h, tipY = bl.y - h;
             const cx = bl.x + bl.lean * h * 0.2, cy = bl.y - h * 0.6;
-            const g = Math.round(26 + bl.r * 22), rr = Math.round(10 + bl.r * 10);
-            b.strokeStyle = `rgb(${rr},${g + 10},${Math.round(g * 0.75)})`;
-            b.lineWidth = (0.7 + bl.r * 1.3) * depth + 0.3;
+            const g = Math.round(46 + bl.r * 46), rr = Math.round(14 + bl.r * 16);
+            b.strokeStyle = `rgb(${rr},${g},${Math.round(g * 0.55)})`;
+            b.lineWidth = (0.8 + bl.r * 1.6) * depth + 0.3;
             b.beginPath();
             b.moveTo(bl.x, bl.y);
             b.quadraticCurveTo(cx, cy, tipX, tipY);
             b.stroke();
-            l.strokeStyle = `rgba(236,214,128,${0.35 + depth * 0.45})`;
+            l.strokeStyle = `rgba(236,220,128,${0.35 + depth * 0.45})`;
             l.lineWidth = Math.max(0.6, b.lineWidth * 0.55);
             l.beginPath();
             l.moveTo(bl.x + 0.6, bl.y);
             l.quadraticCurveTo(cx + 0.6, cy, tipX + 0.4, tipY);
             l.stroke();
-            if (bl.r > 0.93 && depth > 0.35) dews.push({ x: tipX, y: tipY + 1, r: 0.8 + depth * 1.2 });
+            if (bl.r > 0.92 && depth > 0.35) dews.push({ x: tipX, y: tipY + 1, r: 0.8 + depth * 1.4 });
         }
 
-        // 花：夜里是灰蓝的，被照亮时是暖白的
-        const flowers = Math.round(8 + W / 45);
+        // 野花：白色与紫色混开；夜里偏冷，被照亮时变暖（紫花照亮后是淡紫白）
+        const flowers = Math.round(12 + W / 30);
         for (let i = 0; i < flowers; i++) {
-            const y = meadowTop + 20 + rng() * (H - meadowTop - 30);
+            const y = meadowTop + 16 + rng() * (H - meadowTop - 24);
             const depth = 0.35 + 0.65 * (y - lakeBottom) / (H - lakeBottom);
-            const x = 10 + rng() * (W - 20);
-            const stem = (18 + rng() * 26) * depth;
-            const pr = (2.2 + rng() * 2) * depth + 0.6;
+            const x = 8 + rng() * (W - 16);
+            const purple = rng() < 0.55;
+            const stem = (18 + rng() * 30) * depth;
+            const pr = (2.4 + rng() * 2.6) * depth + 0.6;
             const fx = x + (rng() - 0.5) * 6, fy = y - stem;
-            b.strokeStyle = '#123224';
+            b.strokeStyle = '#1a4128';
             b.lineWidth = 1 * depth + 0.3;
             b.beginPath();
             b.moveTo(x, y);
             b.quadraticCurveTo(x - 2, y - stem * 0.5, fx, fy);
             b.stroke();
-            for (let k = 0; k < 5; k++) {
-                const a = k / 5 * TAU + rng() * 0.3;
+            const petals = purple ? 6 : 5;
+            for (let k = 0; k < petals; k++) {
+                const a = k / petals * TAU + rng() * 0.3;
                 const px = fx + Math.cos(a) * pr, py = fy + Math.sin(a) * pr * 0.8;
-                b.fillStyle = 'rgba(150,164,196,0.55)';
+                b.fillStyle = purple ? 'rgba(128,96,204,0.78)' : 'rgba(186,196,222,0.62)';
                 b.beginPath();
-                b.ellipse(px, py, pr * 0.75, pr * 0.5, a, 0, TAU);
+                b.ellipse(px, py, pr * 0.78, pr * 0.48, a, 0, TAU);
                 b.fill();
-                l.fillStyle = 'rgba(255,240,206,0.95)';
+                l.fillStyle = purple ? 'rgba(196,150,255,0.95)' : 'rgba(255,240,206,0.95)';
                 l.beginPath();
-                l.ellipse(px, py, pr * 0.75, pr * 0.5, a, 0, TAU);
+                l.ellipse(px, py, pr * 0.78, pr * 0.48, a, 0, TAU);
                 l.fill();
             }
-            b.fillStyle = 'rgba(190,176,110,0.6)';
+            b.fillStyle = 'rgba(200,180,110,0.65)';
             l.fillStyle = 'rgba(255,208,96,1)';
             for (const g2 of [b, l]) {
                 g2.beginPath();
-                g2.arc(fx, fy, pr * 0.45, 0, TAU);
+                g2.arc(fx, fy, pr * 0.42, 0, TAU);
                 g2.fill();
             }
         }
 
         // 露珠：底层是一点冷光，照亮层是亮白高光
         for (const d of dews) {
-            b.fillStyle = 'rgba(190,210,255,0.3)';
+            b.fillStyle = 'rgba(190,210,255,0.34)';
             b.beginPath();
             b.arc(d.x, d.y, d.r, 0, TAU);
             b.fill();
@@ -287,10 +354,10 @@ export function createRenderer(canvas, opts = {}) {
             l.fill();
         }
 
-        // 远景装饰萤火虫：远岸与山脚，只做氛围，永不参与模拟
+        // 远景装饰萤火虫：林间、远岸与湖面上空，只做氛围，永不参与模拟
         far.length = 0;
-        for (let i = 0; i < 16; i++) {
-            far.push({ x: rng() * W, y: H * (0.24 + rng() * 0.2), p: rng() * 7, per: 2.2 + rng() * 2.8, dx: rng() * TAU });
+        for (let i = 0; i < 28; i++) {
+            far.push({ x: rng() * W, y: H * (0.2 + rng() * 0.3), p: rng() * 7, per: 2.2 + rng() * 2.8, dx: rng() * TAU, s: 10 + rng() * 12 });
         }
 
         light = makeCanvas(W * LIGHT_SCALE, H * LIGHT_SCALE);
@@ -317,16 +384,20 @@ export function createRenderer(canvas, opts = {}) {
     }
 
     /* ── 每帧 ── */
+    /** 纵深：远（世界 y 小）的更小，近的更大 */
+    const flyDepth = f => 0.55 + 0.6 * (f.y / WORLD.h);
+
     function drawFly(f, b, time) {
         const p = worldToScreen(f.x, f.y);
-        const depth = 0.72 + 0.28 * (f.y / WORLD.h);
-        const len = Math.max(4.2, 10 * map.s * f.size * depth);
+        const depth = flyDepth(f);
+        // 萤火虫是画面焦点（概念图）：近处约 13–16px 的身长，远处只有一半
+        const len = Math.max(5.5, 22 * map.s * f.size * depth);
         const tint = TINT[f.type] || TINT.normal;
         const sprite = sprites[f.type] || sprites.normal;
 
         // 光晕（Solitary 更大更柔）
         const soft = f.type === 'solitary' ? 1.35 : 1;
-        const gs = len * (2.2 + 8.5 * b) * soft;
+        const gs = len * (2.6 + 9 * b) * soft;
         ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = Math.min(1, (0.12 + 0.88 * b) / soft);
         ctx.drawImage(sprite, p.x - gs / 2, p.y + len * 0.25 - gs / 2, gs, gs);
@@ -348,8 +419,11 @@ export function createRenderer(canvas, opts = {}) {
             ctx.save();
             ctx.rotate(side * flap);
             ctx.beginPath();
-            ctx.ellipse(side * len * 0.42, -len * 0.18, len * 0.5, len * 0.2, 0, 0, TAU);
+            ctx.ellipse(side * len * 0.5, -len * 0.2, len * 0.62, len * 0.25, 0, 0, TAU);
             ctx.fill();
+            ctx.strokeStyle = `rgba(230,240,255,${0.18 + 0.3 * b})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
             ctx.restore();
         }
         // 腹部（发光器）
@@ -357,7 +431,7 @@ export function createRenderer(canvas, opts = {}) {
         const ar = Math.round(dim[0] + (cr - dim[0]) * b), ag = Math.round(dim[1] + (cg - dim[1]) * b), ab = Math.round(dim[2] + (cb - dim[2]) * b);
         ctx.fillStyle = `rgb(${ar},${ag},${ab})`;
         ctx.beginPath();
-        ctx.ellipse(0, len * 0.28, len * 0.22, len * 0.32, 0, 0, TAU);
+        ctx.ellipse(0, len * 0.3, len * 0.26, len * 0.38, 0, 0, TAU);
         ctx.fill();
         // 深色头胸
         ctx.fillStyle = '#1d1712';
@@ -394,10 +468,10 @@ export function createRenderer(canvas, opts = {}) {
         ctx.globalCompositeOperation = 'lighter';
         for (const d of far) {
             const ph = ((time + d.p) % d.per) / d.per;
-            const a = ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0;
+            const a = ph < 0.16 ? Math.sin(ph / 0.16 * Math.PI) : 0;
             const x = reduced ? d.x : d.x + Math.sin(time * 0.2 + d.dx) * 6;
-            ctx.globalAlpha = 0.08 + 0.6 * a;
-            ctx.drawImage(sprites.normal, x - 5, d.y - 5, 10, 10);
+            ctx.globalAlpha = 0.14 + 0.75 * a;
+            ctx.drawImage(sprites.normal, x - d.s / 2, d.y - d.s / 2, d.s, d.s);
         }
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
@@ -473,25 +547,47 @@ export function createRenderer(canvas, opts = {}) {
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
+        /* ── 湖面倒影：离湖近（远处）的虫闪光时，在水面拉出一道暖色竖影；全场同步时整片湖都是倒影 ── */
+        ctx.globalCompositeOperation = 'lighter';
+        for (const f of sim.flies) {
+            const b = brights[f.id];
+            const near = 1 - f.y / WORLD.h;              // 越靠湖岸越明显
+            const a = (b - 0.12) * (0.25 + 0.75 * near) * 0.55 + climax * 0.25;
+            if (a <= 0.02) continue;
+            const p = worldToScreen(f.x, f.y);
+            const ry = lakeTop + (lakeBottom - lakeTop) * (0.25 + 0.55 * (((f.id * 0.618) % 1)));
+            const w = 5 + 7 * b, h = (lakeBottom - lakeTop) * (0.35 + 0.3 * b);
+            ctx.globalAlpha = Math.min(0.9, a);
+            ctx.drawImage(sprites[f.type] || sprites.normal, p.x - w / 2, ry - h / 2, w, h);
+        }
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+
         /* ── 萤火虫（远的先画） ── */
         const order = sim.flies.slice().sort((a, c) => a.y - c.y);
         for (const f of order) drawFly(f, brights[f.id], time);
 
-        /* ── 干预扩散圆：非常克制，一圈细线 + 极淡的面 ── */
+        /* ── 干预扩散圆：被点的虫周围两圈快速的小涟漪（概念图）+ 一圈走到真实影响半径的细线 ── */
         for (const pl of frame.pulses || []) {
             const p = worldToScreen(pl.x, pl.y);
             const R = pl.r * map.s;
-            const t = Math.min(1, pl.age / 0.9);
-            const ease = reduced ? 1 : 1 - (1 - t) ** 3;
-            const a = (1 - t) * 0.5;
-            if (a <= 0) continue;
-            ctx.strokeStyle = `rgba(255,232,176,${a})`;
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(1, R * ease), 0, TAU);
-            ctx.stroke();
-            ctx.fillStyle = `rgba(255,226,160,${a * 0.08})`;
-            ctx.fill();
+            for (let k = 0; k < 3; k++) {
+                const outer = k === 2;
+                const t = Math.min(1, Math.max(0, (pl.age - k * 0.1) / (outer ? 0.9 : 0.55)));
+                if (t <= 0 || t >= 1) continue;
+                const ease = reduced ? 1 : 1 - (1 - t) ** 3;
+                const rr = outer ? R * ease : R * (0.16 + 0.14 * k) * (0.4 + 0.6 * ease);
+                const a = (1 - t) * (outer ? 0.5 : 0.75);
+                ctx.strokeStyle = `rgba(255,232,176,${a.toFixed(3)})`;
+                ctx.lineWidth = outer ? 1.2 : 1.6;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, Math.max(1, rr), 0, TAU);
+                ctx.stroke();
+                if (outer) {
+                    ctx.fillStyle = `rgba(255,226,160,${(a * 0.08).toFixed(3)})`;
+                    ctx.fill();
+                }
+            }
         }
     }
 
