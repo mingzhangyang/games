@@ -476,9 +476,9 @@ body {
 
 .ec-legend-wall { background: #8ea0b8; }
 .ec-legend-moss { background: #7fe0b0; }
-.ec-legend-crystal { background: var(--tok-gold); box-shadow: 0 0 8px rgb(255, 211, 77, 0.55); }
+.ec-legend-crystal { background: #c29355; box-shadow: none; }  /* = 画布晶体主面色 */
 .ec-legend-exit { background: #a78bfa; box-shadow: 0 0 8px rgb(167, 139, 250, 0.55); }
-.ec-legend-thorn { background: var(--tok-danger); }
+.ec-legend-thorn { background: #bc7770; }  /* = 画布荆棘描边色 */
 
 /* 「法则」用空心波环表示：不被单色语义绑定的通用声学行为 */
 .ec-legend-law {

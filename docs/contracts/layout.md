@@ -10,6 +10,7 @@
 - 契约文件：`css/layout.css`（骨架与 `--frame-*` 参数）、`css/tokens.css`（颜色/圆角/控件尺寸）
 - 引入顺序（硬性）：`tokens.css → layout.css → <game>.css → more-games.css`
   - 在这之前：gen 的 `head` 区域输出同步脚本 `/theme-boot.js`，必须先于任何样式表（首屏主题，见 `theme.md`）
+  - 五个科学实验室游戏（crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet）在 layout 与页面 CSS 之间多一层 `science-showcase.css`；`shared-css-first` 给它 rank 2，保证产物与源码同序
 - 迁移工具：`scripts/apply-layout-unification.py`（幂等，可重复执行）
 - 校验工具：`scripts/layout-metrics.mjs`、`scripts/shots.mjs`、`scripts/serve-static.mjs`、
   `scripts/verify-desktop-frame.mjs`、`scripts/verify-stats-drawer.mjs`
