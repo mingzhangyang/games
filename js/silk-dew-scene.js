@@ -40,8 +40,35 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
     const light = makeCanvas(W * LIGHT_SCALE, H * LIGHT_SCALE);
     const lit = makeCanvas(W * LIGHT_SCALE, H * LIGHT_SCALE);
     const stamp = makeGlowStamp();
+    let backgroundFarCache = null;
+    let backgroundMidCache = null;
+    let foregroundCache = null;
+    let litDeltaCache = null;
+
+    function buildStaticCaches(state) {
+        backgroundFarCache = makeCanvas(W, H);
+        const far = backgroundFarCache.getContext('2d');
+        drawFull(far, state.layers.sky);
+        drawFull(far, state.layers['moon-mountains']);
+        drawFull(far, state.layers['garden-back']);
+
+        backgroundMidCache = makeCanvas(W, H);
+        drawFull(backgroundMidCache.getContext('2d'), state.layers['garden-mid']);
+
+        foregroundCache = makeCanvas(W, H);
+        drawFull(foregroundCache.getContext('2d'), state.layers.foreground);
+
+        litDeltaCache = makeCanvas(W * LIGHT_SCALE, H * LIGHT_SCALE);
+        const delta = litDeltaCache.getContext('2d');
+        delta.drawImage(state.layers['garden-mid-lit'], 0, 0, litDeltaCache.width, litDeltaCache.height);
+        delta.drawImage(state.layers['foreground-lit'], 0, 0, litDeltaCache.width, litDeltaCache.height);
+    }
+
     const art = loadSilkDewArt({
-        onReady: () => { if (typeof onReady === 'function') onReady(); },
+        onReady: (state) => {
+            buildStaticCaches(state);
+            if (typeof onReady === 'function') onReady();
+        },
         onFallback: () => { if (typeof onReady === 'function') onReady(); },
     });
 
@@ -56,30 +83,28 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
     }
 
     function drawBackground(ctx) {
-        if (art.status !== 'ready') return drawFallback(ctx);
-        drawFull(ctx, art.layers.sky);
-        drawFull(ctx, art.layers['moon-mountains']);
-        drawFull(ctx, art.layers['garden-back']);
+        if (art.status !== 'ready' || !backgroundFarCache || !backgroundMidCache) return drawFallback(ctx);
+        drawFull(ctx, backgroundFarCache);
         if (!reduced) {
             ctx.save();
             ctx.translate(Math.sin(drift * 0.16) * 0.45, Math.cos(drift * 0.11) * 0.32);
-            drawFull(ctx, art.layers['garden-mid']);
+            drawFull(ctx, backgroundMidCache);
             ctx.restore();
         } else {
-            drawFull(ctx, art.layers['garden-mid']);
+            drawFull(ctx, backgroundMidCache);
         }
         return true;
     }
 
     function drawForeground(ctx) {
-        if (art.status !== 'ready') return false;
+        if (art.status !== 'ready' || !foregroundCache) return false;
         if (!reduced) {
             ctx.save();
             ctx.translate(Math.sin(drift * 0.21) * 0.7, Math.cos(drift * 0.14) * 0.28);
-            drawFull(ctx, art.layers.foreground);
+            drawFull(ctx, foregroundCache);
             ctx.restore();
         } else {
-            drawFull(ctx, art.layers.foreground);
+            drawFull(ctx, foregroundCache);
         }
         return true;
     }
@@ -103,8 +128,8 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
 
         cg.setTransform(1, 0, 0, 1, 0, 0);
         cg.clearRect(0, 0, lit.width, lit.height);
-        cg.drawImage(art.layers['garden-mid-lit'], 0, 0, lit.width, lit.height);
-        cg.drawImage(art.layers['foreground-lit'], 0, 0, lit.width, lit.height);
+        if (!litDeltaCache) return false;
+        cg.drawImage(litDeltaCache, 0, 0);
         cg.globalCompositeOperation = 'destination-in';
         cg.drawImage(light, 0, 0);
         cg.globalCompositeOperation = 'source-over';
@@ -140,6 +165,14 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
         drawVessel,
         drawFallback,
         setReducedMotion(value) { reduced = !!value; },
-        get debug() { return { status: art.status, lightWidth: light.width, lightHeight: light.height, reduced }; },
+        get debug() {
+            return {
+                status: art.status,
+                lightWidth: light.width,
+                lightHeight: light.height,
+                cacheReady: !!(backgroundFarCache && backgroundMidCache && foregroundCache && litDeltaCache),
+                reduced,
+            };
+        },
     };
 }
