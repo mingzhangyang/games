@@ -10,6 +10,8 @@ The supplied reference image contains five bottom paper-cut motifs: rabbit, flyi
 - `whale`, `deer`, and `crane` use the generated original paper-cut references in `references/` and their production SVGs are cubic Bézier traces of those references, not procedural fallback geometry.
 - `manifest.json` is the source of truth for the shared coordinate contract, anchors, provenance, and family file names.
 
+Pieces must be a smooth partition of `target.svg`. If a family's pieces were split on a coarse raster (stair-stepped edges or cut lines), re-cut them with `node scripts/shadow-loom-recut-pieces.mjs <family>` (`--dry` to preview). It keeps the old pieces only as a partition hint: blurred label fields give smooth cut lines, each piece is target ∩ its region traced at sub-pixel precision, and each piece reaches 0.5px under the later pieces so the shared seam does not anti-alias into a light hairline. The rabbit pieces were re-cut this way.
+
 Run `npm run build:shadow-loom-silhouettes` after editing an SVG, and
 `npm run check:shadow-loom-silhouettes` to prove the generated runtime cache is synchronized.
 The generator also unions overlapping same-piece outer contours before writing the runtime cache, so evenodd Path2D rendering and judge polygons do not disagree.
