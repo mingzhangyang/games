@@ -24,7 +24,8 @@
     ],
     "method": "thresholded contour tracing with cubic Bézier smoothing",
     "coordinateContract": "Every piece and target uses viewBox 0 0 480 854",
-    "holes": "Real SVG subpaths rendered with fill-rule evenodd"
+    "holes": "Real SVG subpaths rendered with fill-rule evenodd",
+    "judgeContours": "SVG keeps every hole; the low-resolution paired contours retain structural holes only."
   },
   "tracedReferenceFamilies": [
     "rabbit",
@@ -58,7 +59,7 @@
           "id": "body",
           "file": "rabbit/body.svg",
           "anchor": [
-            244.5,
+            253.5,
             347.5
           ]
         },
@@ -66,8 +67,8 @@
           "id": "head",
           "file": "rabbit/head.svg",
           "anchor": [
-            271,
-            311
+            244.5,
+            347
           ]
         },
         {
