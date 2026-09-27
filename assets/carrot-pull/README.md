@@ -6,7 +6,7 @@ The approved visual source is `reference/concept-garden.webp`. Runtime raster la
 
 Layer order is defined by `manifest.json` and is intentionally explicit:
 
-`sky → clouds → hills-farm → garden-mid → soil-back → carrot → mole → girl → leaf stems → girl fists → soil-front → foreground → effects`
+`sky → clouds → hills-farm → garden-mid → soil-back → mole → carrot → girl → leaf stems → girl fists → soil-front → foreground → effects`
 
 Runtime note (2026-09-27): `sky.webp` is already the complete painting. `clouds`, `hills-farm`, `garden-mid` and `soil-back` were exported crowded into the top third of the canvas, out of register with the same content in `sky.webp`, so the game neither draws nor preloads them (they left a ghosted fence and dirt band across the sky). Re-export those layers in register before wiring them back in.
 

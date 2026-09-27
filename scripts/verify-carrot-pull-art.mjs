@@ -93,7 +93,7 @@ if (manifest.coordinateSystem?.width !== 560 || manifest.coordinateSystem?.heigh
 const expectedAnchors = {
     carrot: [316, 506],
     girl: [186, 692],
-    mole: [470, 620],
+    mole: [432, 632],
 };
 Object.entries(expectedAnchors).forEach(([name, point]) => {
     if (!same(manifest.anchors?.[name], point)) fail(`${name} anchor drifted from ${point.join(',')}`);
