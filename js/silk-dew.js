@@ -1061,6 +1061,7 @@ class SilkfallGame {
     }
 
     burst(x, y, color, n) {
+        if (this.reducedMotion) return;
         for (let i = 0; i < n; i++) {
             const a = (i / n) * Math.PI * 2 + Math.random() * 0.3;
             const sp = 60 + Math.random() * 150;
@@ -1147,7 +1148,7 @@ class SilkfallGame {
 
         // 星点
         for (const st of this.starfield) {
-            const tw = 0.6 + 0.4 * Math.sin(this.time * 1.6 + st.ph);
+            const tw = this.reducedMotion ? 1 : 0.6 + 0.4 * Math.sin(this.time * 1.6 + st.ph);
             ctx.beginPath();
             ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(${P.starDustRgb}, ${(st.a * tw).toFixed(3)})`;
@@ -1278,7 +1279,7 @@ class SilkfallGame {
     drawBubbles(ctx) {
         for (const b of this.world.bubbles) {
             if (!b.alive) continue;
-            const pulse = 1 + 0.03 * Math.sin(this.time * 2.4 + b.i);
+            const pulse = this.reducedMotion ? 1 : 1 + 0.03 * Math.sin(this.time * 2.4 + b.i);
             const r = b.r * pulse;
             const g = ctx.createRadialGradient(b.x - r * 0.3, b.y - r * 0.3, r * 0.1, b.x, b.y, r);
             g.addColorStop(0, P.bubbleIn);
@@ -1348,8 +1349,8 @@ class SilkfallGame {
     drawStars(ctx) {
         for (const s of this.world.stars) {
             if (s.taken) continue;
-            const bob = Math.sin(this.time * 2.2 + s.i) * 2.4;
-            const r = 9 + Math.sin(this.time * 3.1 + s.i) * 0.7;
+            const bob = this.reducedMotion ? 0 : Math.sin(this.time * 2.2 + s.i) * 2.4;
+            const r = this.reducedMotion ? 9 : 9 + Math.sin(this.time * 3.1 + s.i) * 0.7;
             const cy = s.y + bob;
             const g = ctx.createRadialGradient(s.x, cy, 1, s.x, cy, r * 2.6);
             g.addColorStop(0, 'rgba(255,211,77,0.42)');
@@ -1405,7 +1406,7 @@ class SilkfallGame {
 
             // 锚结（可拖拽）：金色小环 + 脉动提示
             const a = ps[0];
-            const pulse = 1 + 0.10 * Math.sin(this.time * 3.4 + rope.i);
+            const pulse = this.reducedMotion ? 1 : 1 + 0.10 * Math.sin(this.time * 3.4 + rope.i);
             const isHeld = this.world.dragging && this.world.dragging.kind === 'anchor' && this.world.dragging.rope === rope.i;
             const g = ctx.createRadialGradient(a.x, a.y, 1, a.x, a.y, PHYS.anchorR * 2.0 * pulse);
             g.addColorStop(0, isHeld ? 'rgba(255,232,150,0.52)' : 'rgba(255,211,120,0.34)');
