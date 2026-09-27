@@ -327,7 +327,71 @@ if (mobileAfter.scrollHeight > mobileAfter.viewportHeight) {
 }
 await mobile.close();
 
-/* ── 9. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
+/* ── 9. 浅色主题：生产夜景不得覆盖 theme-light 的亮色画布 ── */
+const lightPage = await browser.newPage();
+await lightPage.setViewport({ width: 480, height: 760 });
+await lightPage.evaluateOnNewDocument(() => {
+    try {
+        localStorage.clear();
+        localStorage.setItem('site_theme', 'light');
+    } catch (e) { /* ignore */ }
+});
+await lightPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 700));
+const lightState = await lightPage.evaluate(() => {
+    const g = window.sdGame;
+    if (!g) return { hasGame: false };
+    g.startLevel(0);
+    try { g.draw(); } catch (e) { return { hasGame: true, error: e.message }; }
+    const c = document.getElementById('sd-canvas');
+    const ctx = c.getContext('2d');
+    const d = ctx.getImageData(0, 0, c.width, Math.max(1, Math.floor(c.height * 0.45))).data;
+    let lum = 0, count = 0;
+    for (let i = 0; i < d.length; i += 16) {
+        if (d[i + 3] === 0) continue;
+        lum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        count++;
+    }
+    return {
+        hasGame: true,
+        theme: document.documentElement.getAttribute('data-theme'),
+        productionArt: g.usesProductionArt(),
+        avgTopLum: count ? lum / count : 0,
+    };
+});
+if (!lightState.hasGame || lightState.error) fail(`浅色主题无法绘制: ${JSON.stringify(lightState)}`);
+else {
+    if (lightState.theme !== 'light' || lightState.productionArt) {
+        fail(`浅色主题仍路由到生产夜景: ${JSON.stringify(lightState)}`);
+    }
+    if (lightState.avgTopLum < 145) {
+        fail(`浅色主题画布亮度过低: ${JSON.stringify(lightState)}`);
+    }
+}
+await lightPage.close();
+
+/* ── 10. reduced-motion：风场相位必须冻结且场景漂移停住 ── */
+const reducedPage = await browser.newPage();
+await reducedPage.setViewport({ width: 480, height: 760 });
+await reducedPage.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+await reducedPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 600));
+const reducedState = await reducedPage.evaluate(() => {
+    const g = window.sdGame;
+    if (!g) return { hasGame: false };
+    g.startLevel(0);
+    return {
+        hasGame: true,
+        reduced: g.reducedMotion,
+        sceneReduced: g.scene?.debug?.reduced,
+    };
+});
+if (!reducedState.hasGame || !reducedState.reduced || !reducedState.sceneReduced) {
+    fail(`reduced-motion 未贯通到游戏/场景: ${JSON.stringify(reducedState)}`);
+}
+await reducedPage.close();
+
+/* ── 11. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
 const fallbackPage = await browser.newPage();
 await fallbackPage.setViewport({ width: 390, height: 844 });
 await fallbackPage.setRequestInterception(true);
@@ -365,7 +429,7 @@ else {
 }
 await fallbackPage.close();
 
-/* ── 10. 噪声过滤后的页面错误 ──
+/* ── 12. 噪声过滤后的页面错误 ──
  * 源码树直跑的已知 404（与既有 smoke 口径一致）。 */
 const IGNORABLE = [/analytics\.js/, /sw-register\.js/, /manifest/i, /CORS/i, /game-scores/i,
     /games-analytics/, /apple-touch-icon/, /favicon/i];
@@ -379,4 +443,4 @@ if (fails.length) {
     for (const f of fails) console.error(`  - ${f}`);
     process.exit(1);
 }
-console.log(`smoke-silk-dew：boot / 渲染 / 启动 / 真实拖拽牵引 / 判胜 / 结算 / 星级 / 全 ${levelCount} 关渲染回归(泡${bubblesSeen} 风${windsSeen} 棘${thornsSeen} 多丝${multiRopeSeen}) / 每日 / 抽屉 / 生产美术 / fallback 全部通过 ✅`);
+console.log(`smoke-silk-dew：boot / 渲染 / 启动 / 真实拖拽牵引 / 判胜 / 结算 / 星级 / 全 ${levelCount} 关渲染回归(泡${bubblesSeen} 风${windsSeen} 棘${thornsSeen} 多丝${multiRopeSeen}) / 每日 / 抽屉 / 浅色主题 / reduced-motion / 生产美术 / fallback 全部通过 ✅`);
