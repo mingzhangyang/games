@@ -2,12 +2,12 @@
 //
 // 范围：js/**/*.js（运行时共享模块 + 各游戏页）与 scripts/*.mjs（校验器）。
 // 豁免：js/math-rain/**（化外页，P4 收编时纳入）、Workers/**（Cloudflare 独立域）、
-//       dist/**、node_modules/**。
+//       dist/**、node_modules/**、以及由 SVG 生成的 shadow-loom 运行时缓存。
 // 原则：正确性规则 error（阻断），风格规则以项目现状为准（4 空格 + 单引号），
 //       拿不准的先 warn 观察，避免首跑百行噪音淹没真问题。
 export default [
     {
-        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js'],
+        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js', 'js/shadow-loom-silhouettes.js'],
     },
     {
         files: ['js/**/*.js'],
@@ -56,6 +56,7 @@ export default [
                 HTMLElement: 'writable',
                 HTMLCanvasElement: 'writable',
                 HTMLInputElement: 'writable',
+                Path2D: 'writable',
                 CSS: 'writable',
                 getSelection: 'writable',
                 scrollTo: 'writable',

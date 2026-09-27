@@ -35,6 +35,7 @@ const TARGETS = {
     'ripple-duet': ['rd-btn-next', 'rd-btn-replay', 'rd-btn-menu1', 'rd-btn-copy', 'rd-btn-menu2', 'rd-btn-again'],
     'carrot-pull': ['cp-start-btn', 'cp-again-btn', 'cp-menu-btn'],
     'firefly-signal': ['fs-btn-next', 'fs-btn-retry', 'fs-btn-menu'],
+    'shadow-loom': ['sl-btn-begin', 'sl-btn-next', 'sl-btn-replay', 'sl-btn-menu'],
 };
 
 // TARGETS 是每页的按钮 id，派生不出来，但漏页必须红：新游戏挂了 topbar cap 却

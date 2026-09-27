@@ -1,0 +1,344 @@
+{
+  "schema": "shadow-loom-silhouette-manifest/v2",
+  "coordinateSystem": {
+    "viewBox": "0 0 480 854",
+    "units": "logical stage pixels",
+    "origin": "top-left",
+    "stage": "480x854"
+  },
+  "rendering": {
+    "fill": "currentColor",
+    "fillRule": "evenodd",
+    "stroke": "none",
+    "background": "transparent",
+    "holes": "additional subpaths in the same path"
+  },
+  "referenceSource": {
+    "description": "The five supplied bottom cut-paper motifs plus generated matching original-art references for whale, deer, and crane.",
+    "families": [
+      "rabbit",
+      "bird",
+      "tree",
+      "pagoda",
+      "koi"
+    ],
+    "method": "Bezier tracing from supplied references and generated original-art references, with shared stage coordinates.",
+    "coordinateContract": "Every piece and target uses viewBox 0 0 480 854",
+    "holes": "Real SVG subpaths rendered with fill-rule evenodd",
+    "judgeContours": "SVG keeps every hole; the low-resolution paired contours retain structural holes only.",
+    "pieceTopology": "Playable families are partitioned along natural anatomy boundaries; pieces share seams but do not contain one another.",
+    "samePieceOuterUnion": "The runtime generator unions overlapping outer contours within each piece before sampling the judge cache.",
+    "sourceReferences": {
+      "whale": "references/whale-reference.webp",
+      "deer": "references/deer-reference.webp",
+      "crane": "references/crane-reference.webp"
+    },
+    "tracing": "Generated original paper-cut references were segmented, simplified, and smoothed into cubic paths; the runtime cache is built from these SVGs.",
+    "generatedReferenceFamilies": [
+      "whale",
+      "deer",
+      "crane"
+    ]
+  },
+  "tracedReferenceFamilies": [
+    "rabbit",
+    "bird",
+    "tree",
+    "pagoda",
+    "koi",
+    "whale",
+    "deer",
+    "crane"
+  ],
+  "playableLevels": [
+    "rabbit",
+    "bird",
+    "whale",
+    "deer",
+    "tree",
+    "crane"
+  ],
+  "playableLevelsUsingTracedReference": [
+    "rabbit",
+    "bird",
+    "whale",
+    "deer",
+    "tree",
+    "crane"
+  ],
+  "families": [
+    {
+      "id": "rabbit",
+      "target": "sitting rabbit",
+      "targetFile": "rabbit/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "rabbit/body.svg",
+          "anchor": [
+            244.5,
+            347.5
+          ]
+        },
+        {
+          "id": "head",
+          "file": "rabbit/head.svg",
+          "anchor": [
+            271,
+            311
+          ]
+        },
+        {
+          "id": "ears",
+          "file": "rabbit/ears.svg",
+          "anchor": [
+            230.5,
+            246
+          ]
+        },
+        {
+          "id": "grass",
+          "file": "rabbit/grass.svg",
+          "anchor": [
+            245,
+            405
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bird",
+      "target": "flying bird",
+      "targetFile": "bird/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "bird/body.svg",
+          "anchor": [
+            276,
+            264.5
+          ]
+        },
+        {
+          "id": "wing",
+          "file": "bird/wing.svg",
+          "anchor": [
+            201,
+            275.5
+          ]
+        },
+        {
+          "id": "wing2",
+          "file": "bird/wing2.svg",
+          "anchor": [
+            250,
+            367.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "whale",
+      "target": "moonlit whale",
+      "targetFile": "whale/target.svg",
+      "sourceReference": "generated-original-paper-cut",
+      "trace": "cubic-bezier",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "whale/body.svg",
+          "anchor": [
+            224,
+            307
+          ]
+        },
+        {
+          "id": "tail",
+          "file": "whale/tail.svg",
+          "anchor": [
+            348.6,
+            301.7
+          ]
+        },
+        {
+          "id": "fin",
+          "file": "whale/fin.svg",
+          "anchor": [
+            183,
+            364
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deer",
+      "target": "standing deer",
+      "targetFile": "deer/target.svg",
+      "sourceReference": "generated-original-paper-cut",
+      "trace": "cubic-bezier",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "deer/body.svg",
+          "anchor": [
+            266.7,
+            365.8
+          ]
+        },
+        {
+          "id": "neck",
+          "file": "deer/neck.svg",
+          "anchor": [
+            215.1,
+            344.4
+          ]
+        },
+        {
+          "id": "antlers",
+          "file": "deer/antlers.svg",
+          "anchor": [
+            195.5,
+            257.2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tree",
+      "target": "flowering tree",
+      "targetFile": "tree/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
+      "pieces": [
+        {
+          "id": "trunk",
+          "file": "tree/trunk.svg",
+          "anchor": [
+            278.5,
+            370
+          ]
+        },
+        {
+          "id": "crownL",
+          "file": "tree/crownL.svg",
+          "anchor": [
+            191,
+            333
+          ]
+        },
+        {
+          "id": "crownR",
+          "file": "tree/crownR.svg",
+          "anchor": [
+            283,
+            310.5
+          ]
+        },
+        {
+          "id": "crownTop",
+          "file": "tree/crownTop.svg",
+          "anchor": [
+            246,
+            230.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crane",
+      "target": "rising crane",
+      "targetFile": "crane/target.svg",
+      "sourceReference": "generated-original-paper-cut",
+      "trace": "cubic-bezier",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "crane/body.svg",
+          "anchor": [
+            244.5,
+            325.8
+          ]
+        },
+        {
+          "id": "neck",
+          "file": "crane/neck.svg",
+          "anchor": [
+            202.2,
+            321.3
+          ]
+        },
+        {
+          "id": "wingL",
+          "file": "crane/wingL.svg",
+          "anchor": [
+            240,
+            315.2
+          ]
+        },
+        {
+          "id": "wingR",
+          "file": "crane/wingR.svg",
+          "anchor": [
+            256.7,
+            313.7
+          ]
+        },
+        {
+          "id": "legs",
+          "file": "crane/legs.svg",
+          "anchor": [
+            256.7,
+            375.8
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pagoda",
+      "target": "moonlit pagoda",
+      "targetFile": "pagoda/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
+      "pieces": [
+        {
+          "id": "mountain-base",
+          "file": "pagoda/mountain-base.svg"
+        },
+        {
+          "id": "pavilion",
+          "file": "pagoda/pavilion.svg"
+        },
+        {
+          "id": "moon",
+          "file": "pagoda/moon.svg"
+        }
+      ]
+    },
+    {
+      "id": "koi",
+      "target": "swimming koi",
+      "targetFile": "koi/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "koi/body.svg"
+        },
+        {
+          "id": "fins",
+          "file": "koi/fins.svg"
+        },
+        {
+          "id": "tail",
+          "file": "koi/tail.svg"
+        }
+      ]
+    }
+  ],
+  "notes": "Whale, deer, and crane were authored from newly generated paper-cut references; these SVGs are the production vector assets, not procedural geometry."
+}

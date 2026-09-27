@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="screen" cx="50%" cy="62%" r="62%">
+      <stop offset="0" stop-color="#fff4dc"/>
+      <stop offset=".55" stop-color="#ecd7b0"/>
+      <stop offset="1" stop-color="#a88559"/>
+    </radialGradient>
+    <radialGradient id="lamp" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff1c8"/>
+      <stop offset=".35" stop-color="#ffb347" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+  <rect width="1200" height="630" fill="#0d1226"/>
+  <rect x="0" y="470" width="1200" height="160" fill="#150f0b"/>
+  <rect x="330" y="36" width="540" height="420" rx="4" fill="#2b1d14"/>
+  <rect x="346" y="52" width="508" height="388" fill="url(#screen)"/>
+  <rect x="316" y="22" width="568" height="10" rx="5" fill="#a57344"/>
+  <g fill="#3a261a" filter="url(#soft)" opacity=".92">
+    <ellipse cx="640" cy="320" rx="110" ry="84" transform="rotate(-10 640 320)"/>
+    <circle cx="752" cy="352" r="20"/>
+    <ellipse cx="566" cy="392" rx="34" ry="12"/>
+    <circle cx="540" cy="238" r="50"/>
+    <ellipse cx="500" cy="254" rx="25" ry="20"/>
+    <ellipse cx="560" cy="150" rx="18" ry="70" transform="rotate(-14 560 150)"/>
+    <ellipse cx="598" cy="160" rx="16" ry="62" transform="rotate(30 598 160)"/>
+  </g>
+  <g fill="none" stroke="#ffc36b" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round" opacity=".85">
+    <ellipse cx="640" cy="320" rx="114" ry="88" transform="rotate(-10 640 320)"/>
+  </g>
+  <line x1="700" y1="32" x2="700" y2="250" stroke="#ecd6ac" stroke-opacity=".4" stroke-width="2"/>
+  <path d="M662 250c30-18 72-14 86 12 12 26-12 56-48 58-40 2-66-18-64-40 1-14 11-24 26-30Z" fill="#5a3d2a" stroke="#ffb86e" stroke-opacity=".6" stroke-width="2"/>
+  <circle cx="600" cy="560" r="150" fill="url(#lamp)"/>
+  <path d="M584 590c-8-20-6-44 16-58 22 14 24 38 16 58Z" fill="#ffc86e" stroke="#b07a4a" stroke-width="4"/>
+  <ellipse cx="600" cy="596" rx="30" ry="8" fill="#5a3b22"/>
+  <text x="90" y="250" fill="#ffd79a" font-family="system-ui, sans-serif" font-size="78" font-weight="600" letter-spacing="18">影织</text>
+  <text x="92" y="312" fill="#f3e9d6" font-family="system-ui, sans-serif" font-size="40" font-weight="700">Shadow Loom</text>
+  <text x="92" y="356" fill="#c9b894" font-family="system-ui, sans-serif" font-size="22">Paper · Light · Depth</text>
+</svg>
