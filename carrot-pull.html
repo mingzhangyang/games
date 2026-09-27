@@ -83,25 +83,18 @@
                                 <g id="cp-carrot" transform="translate(316 506) rotate(-8)">
                                     <image data-art-sprite="carrot" x="-115" y="-24" width="230" height="300" preserveAspectRatio="none"/>
                                 </g>
-                                <g id="cp-stems-mole" fill="none" stroke="#5a9638" stroke-width="7" stroke-linecap="round">
-                                    <path class="cp-stem" d="M316 488Q420 490 412 566"/>
-                                    <path class="cp-stem" d="M316 484Q420 502 428 590"/>
-                                </g>
-                                <g id="cp-mole" transform="translate(482 612) scale(.9)">
+                                <g id="cp-mole" transform="translate(470 620) scale(.68)">
                                     <image class="cp-production-happy" data-art-sprite="mole-happy" x="-125" y="-330" width="250" height="260" preserveAspectRatio="none"/>
                                     <image class="cp-production-oops" data-art-sprite="mole-oops" x="-125" y="-330" width="250" height="260" preserveAspectRatio="none"/>
-                                </g>
-                                <g id="cp-mole-paws" transform="translate(482 612) scale(.9)">
-                                    <image data-art-sprite="mole-paws" x="-90" y="-100" width="250" height="167" preserveAspectRatio="none"/>
                                 </g>
                                 <g id="cp-girl" transform="translate(186 692) rotate(-4) scale(.94)">
                                     <image class="cp-production-happy" data-art-sprite="girl-happy" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none"/>
                                     <image class="cp-production-oops" data-art-sprite="girl-oops" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none"/>
                                 </g>
-                                <g id="cp-stems-girl" fill="none" stroke-linecap="round">
-                                    <path class="cp-stem" d="M316 488Q260 470 214 506" stroke="#5a9638" stroke-width="7"/>
-                                    <path class="cp-stem" d="M316 488Q262 480 212 510" stroke="#6fb046" stroke-width="6"/>
-                                    <path class="cp-stem" d="M316 488Q266 490 206 518" stroke="#83c455" stroke-width="5"/>
+                                <g id="cp-stems-girl" class="cp-leaf-connectors" aria-hidden="true">
+                                    <path class="cp-leaf-stem" d="M316 488C280 470 250 470 224 474" fill="#79ad4d" stroke="#477d38" stroke-width="1.5"/>
+                                    <path class="cp-leaf-stem" d="M316 484C278 474 246 476 218 482" fill="#6b9d43" stroke="#3f7334" stroke-width="1.5"/>
+                                    <path class="cp-leaf-stem" d="M316 488C276 484 242 484 212 490" fill="#8abd56" stroke="#4b8337" stroke-width="1.5"/>
                                 </g>
                                 <g id="cp-girl-hands" transform="translate(186 692) rotate(-4) scale(.94)">
                                     <image data-art-sprite="girl-hands" x="-108" y="-274" width="250" height="167" preserveAspectRatio="none"/>
@@ -163,7 +156,10 @@
                             </div>
                         </div>
                         <button class="cp-pull-btn" id="cp-pull-btn" type="button">
-                            <img class="cp-pull-arrow" data-art-ui="pull-arrow" alt="" aria-hidden="true">
+                            <svg class="cp-pull-arrow" width="24" height="26" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M16 27V7M16 7l-7 7M16 7l7 7"/>
+                                <path d="M7 25h18" opacity=".65"/>
+                            </svg>
                             <span class="cp-pull-text" id="cp-pull-label">用力拔！</span>
                         </button>
                     </div>
@@ -192,7 +188,7 @@
         </main>
 
         <footer class="cp-footer game-footer">
-            <p class="cp-footer-hint game-footer-hint" id="cp-hint">按住按钮或使用 Space / ↑，在绿色区间拔萝卜。</p>
+            <p class="cp-footer-hint game-footer-hint" id="cp-hint">Press Pull, Space, or ↑ when the needle enters the green zone.</p>
             <div class="cp-footer-actions game-footer-actions game-topbar-group">
                 <a class="cp-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>
