@@ -58,6 +58,8 @@ const boot = await page.evaluate(() => ({
     hasLevelGrid: document.querySelectorAll('#sd-level-grid button').length,
     artState: document.getElementById('sd-stage')?.dataset.artState,
     sceneDebug: window.sdGame?.scene?.debug || null,
+    levelsLabel: document.getElementById('sd-btn-levels')?.textContent || '',
+    dailyLabel: document.getElementById('sd-btn-daily')?.textContent || '',
 }));
 if (!boot.hasGame) fail('window.sdGame 未创建（boot 失败）');
 if (!boot.hasDrawer) fail('createStatsDrawer 未初始化');
@@ -71,6 +73,12 @@ if (boot.hasLevelGrid < 20) fail(`关卡格未渲染 20 个（实际 ${boot.hasL
 if (boot.artState !== 'ready') fail(`生产美术未 ready（artState=${boot.artState}）`);
 if (!boot.sceneDebug || boot.sceneDebug.lightWidth !== 240 || boot.sceneDebug.lightHeight !== 320) {
     fail(`局部光半分辨率缓冲异常: ${JSON.stringify(boot.sceneDebug)}`);
+}
+if (!boot.sceneDebug?.cacheReady) {
+    fail(`静态美术缓存未构建: ${JSON.stringify(boot.sceneDebug)}`);
+}
+if (/[🧵📅]/u.test(boot.levelsLabel + boot.dailyLabel)) {
+    fail(`开始菜单仍显示 emoji 占位符: ${boot.levelsLabel} / ${boot.dailyLabel}`);
 }
 
 /* ── 2. canvas 位图非空 ── */
