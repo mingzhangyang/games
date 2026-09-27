@@ -34,19 +34,42 @@ export const SILK_DEW_MANIFEST = {
     runtimeBudgetBytes: { ideal: 350000, hard: 524288 },
 };
 
-const ART_ROOT = new URL('../assets/silk-dew/', import.meta.url);
-export const ART_URLS = Object.fromEntries([
-    ...SILK_DEW_MANIFEST.layers.map(layer => [layer.id, new URL(layer.file, ART_ROOT).href]),
-    ['jade-vessel', new URL(SILK_DEW_MANIFEST.props['jade-vessel'].file, ART_ROOT).href],
-    ['fallback', new URL(SILK_DEW_MANIFEST.support.fallback, ART_ROOT).href],
-]);
+const ART_LOAD_TIMEOUT_MS = 8000;
 
-function loadImage(url) {
+// Keep every production URL statically analyzable so Vite rewrites/copies the
+// asset correctly when import.meta.url moves into dist/assets/js.
+export const ART_URLS = Object.freeze({
+    sky: new URL('../assets/silk-dew/layers/sky.svg', import.meta.url).href,
+    'moon-mountains': new URL('../assets/silk-dew/layers/moon-mountains.svg', import.meta.url).href,
+    'garden-back': new URL('../assets/silk-dew/layers/garden-back.svg', import.meta.url).href,
+    'garden-mid': new URL('../assets/silk-dew/layers/garden-mid.svg', import.meta.url).href,
+    'garden-mid-lit': new URL('../assets/silk-dew/layers/garden-mid-lit.svg', import.meta.url).href,
+    foreground: new URL('../assets/silk-dew/layers/foreground.svg', import.meta.url).href,
+    'foreground-lit': new URL('../assets/silk-dew/layers/foreground-lit.svg', import.meta.url).href,
+    'jade-vessel': new URL('../assets/silk-dew/props/jade-vessel.svg', import.meta.url).href,
+    fallback: new URL('../assets/silk-dew/layers/fallback.svg', import.meta.url).href,
+});
+
+function loadImage(url, timeoutMs = ART_LOAD_TIMEOUT_MS) {
     return new Promise((resolve, reject) => {
         const img = new Image();
+        let settled = false;
+        const finish = (fn, value) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            img.onload = null;
+            img.onerror = null;
+            fn(value);
+        };
+        const timer = setTimeout(() => {
+            finish(reject, new Error(`Silkfall art timed out after ${timeoutMs}ms: ${url}`));
+            // Stop a request that may still be pending after the state has fallen back.
+            img.src = '';
+        }, timeoutMs);
         img.decoding = 'async';
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`Silkfall art failed to load: ${url}`));
+        img.onload = () => finish(resolve, img);
+        img.onerror = () => finish(reject, new Error(`Silkfall art failed to load: ${url}`));
         img.src = url;
     });
 }
