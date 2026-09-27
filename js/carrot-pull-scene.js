@@ -1,7 +1,7 @@
 export const SCENE = Object.freeze({
-    carrot: { x: 316, y: 506 },
-    girl: { x: 186, y: 692, s: 0.94 },
-    mole: { x: 432, y: 632, s: 0.54 },
+    carrot: { x: 352, y: 506 },
+    girl: { x: 172, y: 692, s: 0.94 },
+    mole: { x: 466, y: 632, s: 0.54 },
     // fallback 场景（程序绘制的萝卜 / 圆点手）的叶柄挂点
     girlHands: [[38, -218], [32, -210], [26, -200]],
     crown: [[-8, -22], [0, -24], [8, -22]],
@@ -165,7 +165,8 @@ export function createSceneAnimator({ svg, nodes, reducedMotion, attach, stemPat
 
         const sway = playing && !reduced ? Math.sin(now / 420) : 0;
         const shake = reduced ? 0 : Math.sin(now / 26) * 7 * fx.miss;
-        let girlLean = -3 - progress * 4 - fx.tug * 9 + fx.miss * 5 + sway * 0.8;
+        // 女孩站在萝卜后方、靠近画面左缘：命中时后仰 7°（再多帽檐会出画）
+        let girlLean = -5 - progress * 4 - fx.tug * 7 + fx.miss * 5 + sway * 0.8;
         let moleLean = 2 + progress * 3 + fx.tug * 7 - fx.miss * 3 - sway * 0.8;
         let hop = 0;
         let cx = SCENE.carrot.x - fx.tug * 6;

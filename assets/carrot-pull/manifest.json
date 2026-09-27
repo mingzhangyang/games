@@ -10,9 +10,9 @@
     "rasterScale": 2
   },
   "anchors": {
-    "carrot": [316, 506],
-    "girl": [186, 692],
-    "mole": [432, 632]
+    "carrot": [352, 506],
+    "girl": [172, 692],
+    "mole": [466, 632]
   },
   "layers": [
     { "id": "sky", "file": "layers/sky.webp", "z": 10, "sourceRectRasterPx": [0, 0, 1120, 1440], "destRectLogicalPx": [0, 0, 560, 720], "alphaRequired": false },
@@ -24,11 +24,11 @@
     { "id": "foreground", "file": "layers/foreground.webp", "z": 100, "sourceRectRasterPx": [0, 0, 1120, 1440], "destRectLogicalPx": [0, 0, 560, 720], "alphaRequired": true }
   ],
   "sprites": {
-    "carrot": { "file": "sprites/carrot.webp", "z": 50, "rasterSizePx": [460, 600], "sourceRectRasterPx": [0, 0, 460, 600], "localRectLogicalPx": [-115, -24, 230, 300], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [316, 506], "alphaRequired": true },
-    "girl-happy": { "file": "sprites/girl-happy.webp", "z": 70, "rasterSizePx": [540, 700], "sourceRectRasterPx": [0, 0, 540, 700], "localRectLogicalPx": [-170, -350, 270, 350], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [186, 692], "scale": 0.94, "alphaRequired": true },
-    "girl-oops": { "file": "sprites/girl-oops.webp", "z": 70, "rasterSizePx": [540, 700], "sourceRectRasterPx": [0, 0, 540, 700], "localRectLogicalPx": [-170, -350, 270, 350], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [186, 692], "scale": 0.94, "alphaRequired": true },
-    "mole-happy": { "file": "sprites/mole-happy.webp", "z": 48, "rasterSizePx": [500, 520], "sourceRectRasterPx": [0, 0, 500, 520], "localRectLogicalPx": [-125, -330, 250, 260], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [432, 632], "scale": 0.54, "alphaRequired": true },
-    "mole-oops": { "file": "sprites/mole-oops.webp", "z": 48, "rasterSizePx": [500, 520], "sourceRectRasterPx": [0, 0, 500, 520], "localRectLogicalPx": [-125, -330, 250, 260], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [432, 632], "scale": 0.54, "alphaRequired": true }
+    "carrot": { "file": "sprites/carrot.webp", "z": 50, "rasterSizePx": [460, 600], "sourceRectRasterPx": [0, 0, 460, 600], "localRectLogicalPx": [-115, -24, 230, 300], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [352, 506], "alphaRequired": true },
+    "girl-happy": { "file": "sprites/girl-happy.webp", "z": 70, "rasterSizePx": [540, 700], "sourceRectRasterPx": [0, 0, 540, 700], "localRectLogicalPx": [-170, -350, 270, 350], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [172, 692], "scale": 0.94, "alphaRequired": true },
+    "girl-oops": { "file": "sprites/girl-oops.webp", "z": 70, "rasterSizePx": [540, 700], "sourceRectRasterPx": [0, 0, 540, 700], "localRectLogicalPx": [-170, -350, 270, 350], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [172, 692], "scale": 0.94, "alphaRequired": true },
+    "mole-happy": { "file": "sprites/mole-happy.webp", "z": 48, "rasterSizePx": [500, 520], "sourceRectRasterPx": [0, 0, 500, 520], "localRectLogicalPx": [-125, -330, 250, 260], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [466, 632], "scale": 0.54, "alphaRequired": true },
+    "mole-oops": { "file": "sprites/mole-oops.webp", "z": 48, "rasterSizePx": [500, 520], "sourceRectRasterPx": [0, 0, 500, 520], "localRectLogicalPx": [-125, -330, 250, 260], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [466, 632], "scale": 0.54, "alphaRequired": true }
   },
   "attachments": {
     "carrot.crown": { "sprite": "carrot", "space": "sprite-local-logical-px", "points": [[12, 92], [16, 91], [20, 90], [24, 91], [28, 92]] },
