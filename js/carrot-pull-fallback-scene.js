@@ -67,9 +67,13 @@ function buildFallbackScene(svg) {
     path('M-13-25q13-12 26 0', { fill: 'none', stroke: '#7d302e', 'stroke-width': 4, 'stroke-linecap': 'round' }, moleOops);
 
     const stemsGirl = el('g', { id: 'cp-fallback-stems-girl', class: 'cp-leaf-connectors', 'aria-hidden': 'true' }, root);
-    el('path', {}, stemsGirl);
-    el('path', {}, stemsGirl);
-    el('path', {}, stemsGirl);
+    [
+        { fill: '#79ad4d', stroke: '#477d38' },
+        { fill: '#6b9d43', stroke: '#3f7334' },
+        { fill: '#8abd56', stroke: '#4b8337' },
+    ].forEach((colors) => {
+        el('path', { class: 'cp-leaf-stem', ...colors, 'stroke-width': 1.5 }, stemsGirl);
+    });
 
     const girl = el('g', { id: 'cp-fallback-girl' }, root);
     const girlHappy = el('g', { class: 'cp-fallback-happy' }, girl);
