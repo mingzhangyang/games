@@ -503,18 +503,20 @@ ambientLight = {
 
 ## 14. Theme
 
-游戏世界继续保持其自身天境色彩。
+《御剑飞行》**继续保持 dark-only**。
 
-Light / Dark 主要控制：
+当前 registry 没有 `theme-light` capability，本次选择性美术升级不顺手扩大成 light-theme 迁移，也不修改 registry capability。
 
-- topbar；
-- sidebar；
-- drawer；
-- overlay。
+因此：
 
-不要为 9 个 stage 再做 9 个 light 版本。
+- 游戏场景保持各自九天色彩；
+- topbar / sidebar / drawer / overlay 继续遵循当前 dark-only 契约；
+- 不新增 `theme-light`；
+- 不新增 light `themeColor`；
+- 不为 9 个 stage 制作 light 版本；
+- 如果未来单独做 light-theme migration，必须另开任务，并同时修改 registry、CSS、theme contract 与回归测试。
 
----
+本次 Definition of Done 不包含 Light/Dark 双主题。
 
 ## 15. Art loader 与模块拆分
 
@@ -675,6 +677,17 @@ data-art-state="fallback"
 
 **stage aspect-ratio 不得因固定 height 再次失真。**
 
+### verify-all 注册
+
+新增 `scripts/verify-sword-flight-art.mjs` 与 `scripts/smoke-sword-flight.mjs`，并在 `scripts/verify-all.mjs` 注册：
+
+```js
+{ name: 'sword-flight-art', script: 'scripts/verify-sword-flight-art.mjs', args: [], needsServer: false },
+{ name: 'smoke-sword-flight', script: 'scripts/smoke-sword-flight.mjs', args: [], needsServer: true },
+```
+
+把 `sword-flight-art` 加入 `QUICK_NAMES`；浏览器 smoke 默认只进入 full suite。
+
 ---
 
 ## 20. 截图验收
@@ -718,6 +731,7 @@ js/sword-flight-scene.js
 css/sword-flight.css
 scripts/verify-sword-flight-art.mjs
 scripts/smoke-sword-flight.mjs
+scripts/verify-all.mjs
 ```
 
 非必要不要改：
