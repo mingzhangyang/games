@@ -43,7 +43,8 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
     let backgroundFarCache = null;
     let backgroundMidCache = null;
     let foregroundCache = null;
-    let litDeltaCache = null;
+    let midLitDeltaCache = null;
+    let foregroundLitDeltaCache = null;
 
     function buildStaticCaches(state) {
         backgroundFarCache = makeCanvas(W, H);
@@ -58,10 +59,15 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
         foregroundCache = makeCanvas(W, H);
         drawFull(foregroundCache.getContext('2d'), state.layers.foreground);
 
-        litDeltaCache = makeCanvas(W * LIGHT_SCALE, H * LIGHT_SCALE);
-        const delta = litDeltaCache.getContext('2d');
-        delta.drawImage(state.layers['garden-mid-lit'], 0, 0, litDeltaCache.width, litDeltaCache.height);
-        delta.drawImage(state.layers['foreground-lit'], 0, 0, litDeltaCache.width, litDeltaCache.height);
+        midLitDeltaCache = makeCanvas(W * LIGHT_SCALE, H * LIGHT_SCALE);
+        midLitDeltaCache.getContext('2d').drawImage(
+            state.layers['garden-mid-lit'], 0, 0, midLitDeltaCache.width, midLitDeltaCache.height
+        );
+
+        foregroundLitDeltaCache = makeCanvas(W * LIGHT_SCALE, H * LIGHT_SCALE);
+        foregroundLitDeltaCache.getContext('2d').drawImage(
+            state.layers['foreground-lit'], 0, 0, foregroundLitDeltaCache.width, foregroundLitDeltaCache.height
+        );
     }
 
     const art = loadSilkDewArt({
@@ -76,6 +82,18 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
         if (!reduced) drift = (drift + Math.min(dt, 0.05)) % 1000;
     }
 
+    function midOffset() {
+        return reduced
+            ? { x: 0, y: 0 }
+            : { x: Math.sin(drift * 0.16) * 0.45, y: Math.cos(drift * 0.11) * 0.32 };
+    }
+
+    function foregroundOffset() {
+        return reduced
+            ? { x: 0, y: 0 }
+            : { x: Math.sin(drift * 0.21) * 0.7, y: Math.cos(drift * 0.14) * 0.28 };
+    }
+
     function drawFallback(ctx) {
         if (!art.fallback) return false;
         drawFull(ctx, art.fallback);
@@ -85,27 +103,21 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
     function drawBackground(ctx) {
         if (art.status !== 'ready' || !backgroundFarCache || !backgroundMidCache) return drawFallback(ctx);
         drawFull(ctx, backgroundFarCache);
-        if (!reduced) {
-            ctx.save();
-            ctx.translate(Math.sin(drift * 0.16) * 0.45, Math.cos(drift * 0.11) * 0.32);
-            drawFull(ctx, backgroundMidCache);
-            ctx.restore();
-        } else {
-            drawFull(ctx, backgroundMidCache);
-        }
+        const offset = midOffset();
+        ctx.save();
+        ctx.translate(offset.x, offset.y);
+        drawFull(ctx, backgroundMidCache);
+        ctx.restore();
         return true;
     }
 
     function drawForeground(ctx) {
         if (art.status !== 'ready' || !foregroundCache) return false;
-        if (!reduced) {
-            ctx.save();
-            ctx.translate(Math.sin(drift * 0.21) * 0.7, Math.cos(drift * 0.14) * 0.28);
-            drawFull(ctx, foregroundCache);
-            ctx.restore();
-        } else {
-            drawFull(ctx, foregroundCache);
-        }
+        const offset = foregroundOffset();
+        ctx.save();
+        ctx.translate(offset.x, offset.y);
+        drawFull(ctx, foregroundCache);
+        ctx.restore();
         return true;
     }
 
@@ -128,8 +140,20 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
 
         cg.setTransform(1, 0, 0, 1, 0, 0);
         cg.clearRect(0, 0, lit.width, lit.height);
-        if (!litDeltaCache) return false;
-        cg.drawImage(litDeltaCache, 0, 0);
+        if (!midLitDeltaCache || !foregroundLitDeltaCache) return false;
+
+        const mid = midOffset();
+        cg.save();
+        cg.translate(mid.x * LIGHT_SCALE, mid.y * LIGHT_SCALE);
+        cg.drawImage(midLitDeltaCache, 0, 0);
+        cg.restore();
+
+        const front = foregroundOffset();
+        cg.save();
+        cg.translate(front.x * LIGHT_SCALE, front.y * LIGHT_SCALE);
+        cg.drawImage(foregroundLitDeltaCache, 0, 0);
+        cg.restore();
+
         cg.globalCompositeOperation = 'destination-in';
         cg.drawImage(light, 0, 0);
         cg.globalCompositeOperation = 'source-over';
@@ -170,7 +194,13 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
                 status: art.status,
                 lightWidth: light.width,
                 lightHeight: light.height,
-                cacheReady: !!(backgroundFarCache && backgroundMidCache && foregroundCache && litDeltaCache),
+                cacheReady: !!(
+                    backgroundFarCache &&
+                    backgroundMidCache &&
+                    foregroundCache &&
+                    midLitDeltaCache &&
+                    foregroundLitDeltaCache
+                ),
                 reduced,
             };
         },
