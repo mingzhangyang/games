@@ -249,6 +249,17 @@ Sidebar：
 
 显示 rim collision circles / board rect。
 
+### verify-all 注册
+
+新增 `scripts/smoke-hoop-shot.mjs`，并在 `scripts/verify-all.mjs` 显式注册：
+
+```js
+{ name: 'hoop-shot-art', script: 'scripts/verify-hoop-shot-art.mjs', args: [], needsServer: false },
+{ name: 'smoke-hoop-shot', script: 'scripts/smoke-hoop-shot.mjs', args: [], needsServer: true },
+```
+
+把 `hoop-shot-art` 加入 `QUICK_NAMES`；浏览器 smoke 默认只进入 full suite。
+
 ## 13. 推荐文件变化
 
 ```text
@@ -258,7 +269,8 @@ js/hoop-shot-art.js
 js/hoop-shot-scene.js
 css/hoop-shot.css
 scripts/verify-hoop-shot-art.mjs
-相关 smoke
+scripts/smoke-hoop-shot.mjs
+scripts/verify-all.mjs
 ```
 
 ## 14. 实施顺序
