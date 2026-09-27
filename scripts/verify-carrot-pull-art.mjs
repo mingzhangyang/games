@@ -109,28 +109,37 @@ const zValues = [
     ...Object.values(manifest.sprites || {}).map(sprite => sprite.z),
 ];
 if (zValues.some(value => !Number.isFinite(value))) fail('runtime art z values must be numeric');
-if (!same(manifest.attachments?.['carrot.crown']?.points, [[12, 92], [16, 91], [20, 90], [24, 91], [28, 92]])) fail('carrot crown attachment drifted');
-if (!same(manifest.attachments?.['girl.fists']?.points, [[30, -181], [36, -180], [42, -180], [48, -181], [53, -182]])) fail('girl fist attachment drifted');
+// 挂点坐标只在 manifest 里写一次；这里只校验结构，运行时 / 标记里的副本在下面逐项与 manifest 比对。
+const isPointList = points => Array.isArray(points) && points.length > 0
+    && points.every(pt => Array.isArray(pt) && pt.length === 2 && pt.every(Number.isFinite));
+const crownAttach = manifest.attachments?.['carrot.crown'];
+const fistAttach = manifest.attachments?.['girl.fists'];
+if (crownAttach?.sprite !== 'carrot' || !isPointList(crownAttach?.points)) fail('manifest carrot.crown must be a point list on the carrot sprite');
+if (fistAttach?.sprite !== 'girl-happy' || !isPointList(fistAttach?.points)) fail('manifest girl.fists must be a point list on the girl-happy sprite');
+if (crownAttach?.points?.length !== fistAttach?.points?.length) fail('carrot.crown and girl.fists must pair up one stem per point');
+const fistClip = fistAttach?.overlayClipLocalLogicalPx;
+if (!Array.isArray(fistClip) || fistClip.length !== 4 || !fistClip.every(Number.isFinite) || fistClip[2] <= 0 || fistClip[3] <= 0) {
+    fail('manifest girl.fists.overlayClipLocalLogicalPx must be [x, y, width, height]');
+}
 // 女孩精灵自带双臂；再叠 girl-hands 精灵就是「上下两层、多出两只更粗的胳膊」
 if (manifest.sprites?.['girl-hands'] || manifest.attachments?.['girl.hands']) fail('girl-hands sprite would draw a second pair of arms');
 if (html.includes('data-art-sprite="girl-hands"') || artModule.includes("'girl-hands'")) fail('girl-hands sprite is still drawn or preloaded');
 // 拳头挂点、拳头裁切框、拳头重绘层的变换在 HTML / 运行时各写了一份；全部以 manifest 为准逐项比对，
 // 否则日后改美术坐标时拳头层会与叶柄末端错位（盖不住叶柄），而校验仍然全绿。
 const { PRODUCTION_ATTACH } = await import('../js/carrot-pull-scene.js');
-if (!same(PRODUCTION_ATTACH.crown, manifest.attachments?.['carrot.crown']?.points)) {
+if (!same(PRODUCTION_ATTACH.crown, crownAttach?.points)) {
     fail('PRODUCTION_ATTACH.crown in carrot-pull-scene.js drifted from manifest carrot.crown');
 }
-if (!same(PRODUCTION_ATTACH.hands, manifest.attachments?.['girl.fists']?.points)) {
+if (!same(PRODUCTION_ATTACH.hands, fistAttach?.points)) {
     fail('PRODUCTION_ATTACH.hands in carrot-pull-scene.js drifted from manifest girl.fists');
 }
 const clipRect = html.match(/<clipPath id="cp-girl-fists-clip"[^>]*>\s*<rect ([^>]*)\/>/)?.[1] || '';
 const clipBox = ['x', 'y', 'width', 'height'].map(key => Number(clipRect.match(new RegExp(`\\b${key}="([^"]+)"`))?.[1]));
-if (!same(clipBox, manifest.attachments?.['girl.fists']?.overlayClipLocalLogicalPx)) {
+if (!same(clipBox, fistClip)) {
     fail(`#cp-girl-fists-clip rect ${clipBox.join(',')} drifted from manifest girl.fists.overlayClipLocalLogicalPx`);
 }
-const clipped = manifest.attachments?.['girl.fists']?.overlayClipLocalLogicalPx;
-const fistsInsideClip = Array.isArray(clipped) && (manifest.attachments['girl.fists'].points || []).every(([x, y]) => (
-    x >= clipped[0] && x <= clipped[0] + clipped[2] && y >= clipped[1] && y <= clipped[1] + clipped[3]
+const fistsInsideClip = Array.isArray(fistClip) && isPointList(fistAttach?.points) && fistAttach.points.every(([x, y]) => (
+    x >= fistClip[0] && x <= fistClip[0] + fistClip[2] && y >= fistClip[1] && y <= fistClip[1] + fistClip[3]
 ));
 if (!fistsInsideClip) fail('girl.fists points must lie inside overlayClipLocalLogicalPx, or the fist overlay cannot cover the stem ends');
 const groupTransform = id => html.match(new RegExp(`<g id="${id}" transform="([^"]+)"`))?.[1];
