@@ -93,7 +93,7 @@ if (manifest.coordinateSystem?.width !== 560 || manifest.coordinateSystem?.heigh
 const expectedAnchors = {
     carrot: [316, 506],
     girl: [186, 692],
-    mole: [482, 612],
+    mole: [470, 620],
 };
 Object.entries(expectedAnchors).forEach(([name, point]) => {
     if (!same(manifest.anchors?.[name], point)) fail(`${name} anchor drifted from ${point.join(',')}`);
@@ -111,7 +111,7 @@ const zValues = [
 if (zValues.some(value => !Number.isFinite(value))) fail('runtime art z values must be numeric');
 if (!same(manifest.attachments?.['carrot.crown']?.points, [[-8, -22], [0, -24], [8, -22]])) fail('carrot crown attachment drifted');
 if (!same(manifest.attachments?.['girl.hands']?.points, [[38, -218], [32, -210], [26, -200]])) fail('girl hand attachment drifted');
-if (!same(manifest.attachments?.['mole.paws']?.points, [[-70, -46], [-60, -22]])) fail('mole paw attachment drifted');
+if (manifest.sprites?.['mole-paws'] || manifest.attachments?.['mole.paws']) fail('residual mole paws must not be part of the runtime art contract');
 
 let runtimeBytes = 0;
 layers.forEach((layer) => {
@@ -139,8 +139,17 @@ else pass(`runtime art pack is ${runtimeBytes} bytes`);
 if (!html.includes('data-art-production') || !html.includes('data-art-layer="sky"') || !html.includes('id="cp-fallback-scene"')) {
     fail('carrot-pull.html is missing production/fallback scene hooks');
 }
-if (!html.includes('data-art-ui="carrot-mark"') || !html.includes('data-art-ui="pull-arrow"')) {
-    fail('carrot-pull.html is missing formal UI art hooks');
+if (!html.includes('data-art-ui="carrot-mark"') || !html.includes('<svg class="cp-pull-arrow"') || !html.includes('M16 27V7')) {
+    fail('carrot-pull.html is missing stable inline UI icons');
+}
+if (html.includes('cp-mole-paws') || html.includes('cp-stems-mole') || html.includes('data-art-sprite="mole-paws"')) {
+    fail('carrot-pull.html still contains residual mole overlays');
+}
+if (fallbackModule.includes('cp-fallback-mole-paws') || fallbackModule.includes('cp-fallback-stems-mole')) {
+    fail('fallback scene still contains residual mole overlays');
+}
+if (artModule.includes("'mole-paws'")) {
+    fail('art loader still requests the residual mole paws sprite');
 }
 if (/[🥕↟]/u.test(html)) fail('carrot-pull.html still contains an emoji art placeholder');
 const productionMarkup = html.split('id="cp-art-production"')[1]?.split('id="cp-fallback-scene"')[0] || '';
