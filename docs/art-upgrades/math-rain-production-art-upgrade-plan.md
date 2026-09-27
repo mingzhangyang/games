@@ -292,6 +292,16 @@ Freeze：
 - DOM overlay z-index 不盖住可点击算式；
 - 不重新引入内联大块 style/script。
 
+### verify-all 注册
+
+现有 `smoke-math-rain` 已在 `scripts/verify-all.mjs` 中。新增 art verifier 时必须显式加入：
+
+```js
+{ name: 'math-rain-art', script: 'scripts/verify-math-rain-art.mjs', args: [], needsServer: false },
+```
+
+并把 `math-rain-art` 加入 `QUICK_NAMES`。继续保留现有 `smoke-math-rain` 的 `needsServer: true` 注册。
+
 ## 15. 推荐文件变化
 
 ```text
@@ -303,6 +313,7 @@ js/math-rain/main.js
 相关 UIController / screen style（仅必要）
 scripts/verify-math-rain-art.mjs
 scripts/smoke-math-rain.mjs
+scripts/verify-all.mjs
 ```
 
 不要在美术升级中重写 modular architecture。
