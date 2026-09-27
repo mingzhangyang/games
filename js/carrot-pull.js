@@ -75,7 +75,7 @@ const LANGUAGES = makeText({
         howtoThree: '连续拔出',
         startLabel: '开始拔萝卜',
         keyHint: '按“用力拔”，在指针进入绿色区间时出手。',
-        keyHintTouch: '点击“用力拔”，在指针进入绿色区间时出手。'
+        keyHintTouch: '点击“用力拔”，在指针进入绿色区间时出手。',
         round: '萝卜',
         score: '得分',
         time: '时间',
@@ -95,7 +95,7 @@ const LANGUAGES = makeText({
         sideTipTitle: '小鼹鼠提示',
         sideTip: '不要急着乱拔。把节奏踩在绿色区域，萝卜会自己松土。',
         hint: '按“用力拔”、Space 或 ↑，在指针进入绿色区间时拔萝卜。',
-        hintTouch: '点击“用力拔”，在指针进入绿色区间时拔萝卜。'
+        hintTouch: '点击“用力拔”，在指针进入绿色区间时拔萝卜。',
         harvestedStamp: '大丰收！',
         resultWinTitle: '萝卜大丰收！',
         resultWinCopy: '你和鼹鼠把整座菜园都搬空啦。',
