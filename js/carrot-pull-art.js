@@ -21,7 +21,6 @@ export const ART_URLS = Object.freeze({
         'girl-hands': new URL('../assets/carrot-pull/sprites/girl-hands.webp', import.meta.url).href,
         'mole-happy': new URL('../assets/carrot-pull/sprites/mole-happy.webp', import.meta.url).href,
         'mole-oops': new URL('../assets/carrot-pull/sprites/mole-oops.webp', import.meta.url).href,
-        'mole-paws': new URL('../assets/carrot-pull/sprites/mole-paws.webp', import.meta.url).href,
     }),
 });
 
