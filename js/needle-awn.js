@@ -45,6 +45,7 @@ const I18N = makeText({
     zh: {
         stats: '数据统计',
         gameTitle: '针尖对麦芒',
+        canvasAria: '针尖对麦芒演武场',
         gameSub: '极速破锋 · 针芒毕露 · 刹那生灭',
         badge: '东方赛博交锋',
         trials: '十关演武',
@@ -131,6 +132,7 @@ const I18N = makeText({
     en: {
         stats: 'Stats',
         gameTitle: 'Pinpoint Clash',
+        canvasAria: 'Pinpoint Clash arena',
         gameSub: 'Needle vs Awn · Pierce · Clash · Awaken',
         badge: 'ORIENTAL KINETIC ACTION',
         trials: '10 Trials',
@@ -988,6 +990,7 @@ class GameEngine {
         if (naHint) naHint.textContent = t.hint;
 
         document.getElementById('na-main-title').textContent = t.gameTitle;
+        document.getElementById('na-canvas').setAttribute('aria-label', t.canvasAria);
         document.getElementById('na-main-sub').textContent = t.gameSub;
         document.getElementById('na-howto-box').innerHTML = t.howTo;
 
