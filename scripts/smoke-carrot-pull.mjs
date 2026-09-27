@@ -118,7 +118,7 @@ async function assertNormalPage() {
                 const paths = [...document.querySelectorAll('#cp-stems-girl path')];
                 return {
                     count: paths.length,
-                    clipped: fists ? [...fists.querySelectorAll('image')].every(img => img.getAttribute('clip-path')) : false,
+                    clipped: fists ? [...fists.querySelectorAll('image')].every(img => img.getAttribute('clip-path') === 'url(#cp-girl-fists-clip)') : false,
                     ends: paths.map((path, i) => {
                         const d = path.getAttribute('d') || '';
                         const start = d.match(/^M(-?[\d.]+) (-?[\d.]+)/);
