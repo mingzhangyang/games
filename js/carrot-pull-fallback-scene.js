@@ -93,6 +93,8 @@ function buildFallbackScene(svg) {
     path('M-34-196l16 14M-18-196l-16 14M10-196l16 14M26-196l-16 14', { stroke: '#2e231e', 'stroke-width': 5, 'stroke-linecap': 'round' }, girlOops);
     el('ellipse', { cx: 2, cy: -163, rx: 13, ry: 17, fill: '#b8373a' }, girlOops);
 
+    root.appendChild(stemsGirl);
+
     const girlHands = el('g', { id: 'cp-fallback-girl-hands' }, root);
     el('circle', { cx: 38, cy: -218, r: 14, fill: '#f3c29f', stroke: '#4a2e22', 'stroke-width': 4 }, girlHands);
     el('circle', { cx: 26, cy: -200, r: 13, fill: '#f3c29f', stroke: '#4a2e22', 'stroke-width': 4 }, girlHands);
