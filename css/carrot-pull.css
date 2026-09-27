@@ -829,3 +829,76 @@ body {
     .cp-dirt,
     .cp-spark { display: none; }
 }
+
+/* ── production picture-book art pipeline ── */
+.cp-art-production {
+    opacity: 1;
+    transition: opacity 180ms ease;
+}
+
+.cp-art-production [data-art-preview] {
+    display: block;
+}
+
+.cp-stage[data-art-state="ready"] .cp-art-production [data-art-preview],
+.cp-stage[data-art-state="fallback"] .cp-art-production [data-art-preview] {
+    display: none;
+}
+
+.cp-art-production image[data-art-layer="clouds"] { opacity: 0.2; }
+.cp-art-production image[data-art-layer="hills-farm"] { opacity: 0.16; }
+.cp-art-production image[data-art-layer="garden-mid"] { opacity: 0.12; }
+.cp-art-production image[data-art-layer="soil-back"] { opacity: 0.18; }
+.cp-art-production image[data-art-layer="soil-front"] { opacity: 0.84; }
+.cp-art-production image[data-art-layer="foreground"] { opacity: 0.92; }
+
+.cp-production-oops,
+.cp-fallback-oops {
+    display: none;
+}
+
+.cp-scene.is-oops .cp-production-happy,
+.cp-scene.is-oops .cp-fallback-happy {
+    display: none;
+}
+
+.cp-scene.is-oops .cp-production-oops,
+.cp-scene.is-oops .cp-fallback-oops {
+    display: block;
+}
+
+.cp-mini-carrot {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    transform: rotate(-10deg);
+}
+
+.cp-mini-spark {
+    width: 13px;
+    height: 13px;
+    border-top: 3px solid currentcolor;
+    border-right: 3px solid currentcolor;
+    color: var(--cp-mini-spark-text);
+    transform: rotate(45deg);
+}
+
+.cp-pull-arrow {
+    width: 24px;
+    height: 26px;
+    object-fit: contain;
+}
+
+.cp-progress-dot img {
+    display: block;
+    width: 19px;
+    height: 19px;
+    object-fit: contain;
+    opacity: 0.52;
+}
+
+.cp-progress-dot.is-done img { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    .cp-art-production { transition: none; }
+}
