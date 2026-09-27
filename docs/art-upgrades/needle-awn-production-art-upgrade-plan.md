@@ -289,6 +289,17 @@ Clash 必须拥有最强视觉事件：
 
 显示 radius / tip point，用于人工确认 artwork 没有欺骗判定。
 
+### verify-all 注册
+
+新增 `scripts/smoke-needle-awn.mjs`，并在 `scripts/verify-all.mjs` 显式注册：
+
+```js
+{ name: 'needle-awn-art', script: 'scripts/verify-needle-awn-art.mjs', args: [], needsServer: false },
+{ name: 'smoke-needle-awn', script: 'scripts/smoke-needle-awn.mjs', args: [], needsServer: true },
+```
+
+把 `needle-awn-art` 加入 `QUICK_NAMES`。浏览器 smoke 默认只进入 full suite，不依赖脚本自动发现。
+
 ## 11. 推荐文件变化
 
 ```text
@@ -298,7 +309,8 @@ js/needle-awn-art.js
 js/needle-awn-scene.js
 css/needle-awn.css
 scripts/verify-needle-awn-art.mjs
-相关 smoke / verify
+scripts/smoke-needle-awn.mjs
+scripts/verify-all.mjs
 ```
 
 非必要不要动 shared layout。
