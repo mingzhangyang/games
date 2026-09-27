@@ -124,7 +124,10 @@ for (const needle of [
     'backgroundFarCache',
     'backgroundMidCache',
     'foregroundCache',
-    'litDeltaCache',
+    'midLitDeltaCache',
+    'foregroundLitDeltaCache',
+    'midOffset',
+    'foregroundOffset',
     'drawBackground',
     'drawForeground',
     'drawLocalLight',
@@ -132,8 +135,31 @@ for (const needle of [
 ]) {
     if (!scene.includes(needle)) fail(`scene compositor is missing ${needle}`);
 }
-for (const needle of ['createSilkDewScene', 'collectLightSources', 'drawForeground', 'drawLocalLight', 'prefers-reduced-motion']) {
+if (scene.includes('litDeltaCache =')) fail('lit deltas must remain split so each follows its foliage drift');
+
+for (const needle of [
+    'createSilkDewScene',
+    'collectLightSources',
+    'usesProductionArt',
+    "data-theme') !== 'light'",
+    'windGradientCache',
+    'visualTime = this.reducedMotion ? 0 : this.time',
+    'for (let thornIndex = 0; thornIndex < this.world.thorns.length; thornIndex++)',
+    'drawForeground',
+    'drawLocalLight',
+    'prefers-reduced-motion',
+]) {
     if (!game.includes(needle)) fail(`game runtime is missing ${needle}`);
+}
+if (game.includes('this.time * (22 + speed * 0.015)')) {
+    fail('wind flow must use reduced-motion-aware visualTime');
+}
+if (game.includes('this.time * 1.7 + t.i')) {
+    fail('thorn pulse must not depend on missing runtime t.i');
+}
+const windGradientCreates = game.match(/createLinearGradient\(w\.x, w\.y, w\.x \+ w\.w, w\.y \+ w\.h\)/g) || [];
+if (windGradientCreates.length !== 1 || !game.includes('this.windGradientCache.get(w)')) {
+    fail('wind zone gradient must be cached instead of allocated per frame');
 }
 if (!html.includes('id="sd-stage" data-art-state="loading"')) fail('stage art-state loading hook is missing');
 if (/[💧🧵📅🏆]/u.test(html)) fail('silk-dew.html still contains art emoji placeholders');
