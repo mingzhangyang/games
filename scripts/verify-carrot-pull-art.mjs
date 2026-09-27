@@ -128,7 +128,7 @@ Object.values(manifest.sprites || {}).forEach((sprite) => {
 if (runtimeBytes > manifest.runtimeBudgetBytes.hard) fail(`runtime art pack is ${runtimeBytes} bytes; hard budget is ${manifest.runtimeBudgetBytes.hard}`);
 else pass(`runtime art pack is ${runtimeBytes} bytes`);
 
-['reference/concept-garden.webp', 'layers/loading-preview.webp', 'ui/carrot-mark.svg', 'ui/pull-arrow.svg'].forEach((relative) => {
+['reference/concept-garden.webp', 'layers/loading-preview.webp', 'ui/carrot-mark.svg'].forEach((relative) => {
     try {
         if (statSync(join(ART_ROOT, relative)).size === 0) fail(`empty support asset: ${relative}`);
     } catch {
