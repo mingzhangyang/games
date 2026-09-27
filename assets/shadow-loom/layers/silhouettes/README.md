@@ -1,16 +1,10 @@
 # Shadow Loom silhouette source
 
-Every piece uses the shared `viewBox="0 0 480 854"`, which is the game's logical
-stage coordinate system. A family can therefore be composited by drawing its
-piece files without translating their local viewBoxes.
+Every piece uses the shared `viewBox="0 0 480 854"`, the game's logical stage coordinate system. A family can therefore be composited by drawing its piece files without translating their local viewBoxes.
 
-- `rabbit`, `bird`, `whale`, `deer`, `tree`, and `crane` are the six
-  playable levels.
-- Each family also has a `target.svg` composition proof.
-- Holes are real subpaths in the same `fill-rule="evenodd"` path; there are no
-  checkerboard pixels, white matte, or baked background.
-- `manifest.json` is the source of truth for file names, anchors, and the
-  shared coordinate contract.
-- The runtime imports the same authored path data through
-  `js/shadow-loom-silhouettes.js`: SVG `Path2D` renders the paper and the
-  paired polygon contours drive the target, shadow, and judge.
+The supplied reference image contains five bottom paper-cut motifs: rabbit, flying bird, flowering tree, moonlit pagoda, and koi. Those five families are traced from the raster reference with smooth cubic Bézier contours. Decorative cutouts are real subpaths in the same `fill-rule="evenodd"` path; there is no checkerboard, white matte, `<rect>`, or baked background.
+
+- `rabbit`, `bird`, and `tree` are wired into the current playable levels through `js/shadow-loom-silhouettes.js`; the SVG path and the judge contour data share the same coordinates and anchors.
+- `pagoda` and `koi` are complete traced reference families with target compositions, ready for a matching level mapping.
+- `whale`, `deer`, and `crane` remain the existing procedural fallback families because the supplied source image has no matching original art for them; they are not mislabeled as traced.
+- `manifest.json` is the source of truth for the shared coordinate contract, anchors, provenance, and family file names.

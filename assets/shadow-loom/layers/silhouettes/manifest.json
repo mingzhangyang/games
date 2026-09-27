@@ -13,6 +13,26 @@
     "background": "transparent",
     "holes": "additional subpaths in the same path"
   },
+  "referenceSource": {
+    "description": "The five bottom cut-paper motifs in the supplied reference image",
+    "families": [
+      "rabbit",
+      "bird",
+      "tree",
+      "pagoda",
+      "koi"
+    ],
+    "method": "thresholded contour tracing with cubic Bézier smoothing",
+    "coordinateContract": "Every piece and target uses viewBox 0 0 480 854",
+    "holes": "Real SVG subpaths rendered with fill-rule evenodd"
+  },
+  "tracedReferenceFamilies": [
+    "rabbit",
+    "bird",
+    "tree",
+    "pagoda",
+    "koi"
+  ],
   "playableLevels": [
     "rabbit",
     "bird",
@@ -21,34 +41,41 @@
     "tree",
     "crane"
   ],
+  "playableLevelsUsingTracedReference": [
+    "rabbit",
+    "bird",
+    "tree"
+  ],
   "families": [
     {
       "id": "rabbit",
       "target": "sitting rabbit",
       "targetFile": "rabbit/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
       "pieces": [
         {
           "id": "body",
           "file": "rabbit/body.svg",
           "anchor": [
-            270.3,
-            353.3
+            244.5,
+            347.5
           ]
         },
         {
           "id": "head",
           "file": "rabbit/head.svg",
           "anchor": [
-            199.1,
-            282.1
+            271,
+            311
           ]
         },
         {
           "id": "ears",
           "file": "rabbit/ears.svg",
           "anchor": [
-            209.7,
-            257.2
+            230.5,
+            246
           ]
         }
       ]
@@ -57,29 +84,31 @@
       "id": "bird",
       "target": "flying bird",
       "targetFile": "bird/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
       "pieces": [
         {
           "id": "body",
           "file": "bird/body.svg",
           "anchor": [
-            236.4,
-            323.1
+            276,
+            264.5
           ]
         },
         {
           "id": "wing",
           "file": "bird/wing.svg",
           "anchor": [
-            248.9,
-            307
+            201,
+            275.5
           ]
         },
         {
           "id": "wing2",
           "file": "bird/wing2.svg",
           "anchor": [
-            259.6,
-            307
+            250,
+            367.5
           ]
         }
       ]
@@ -150,37 +179,39 @@
       "id": "tree",
       "target": "flowering tree",
       "targetFile": "tree/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
       "pieces": [
         {
           "id": "trunk",
           "file": "tree/trunk.svg",
           "anchor": [
-            240,
-            360.4
+            278.5,
+            370
           ]
         },
         {
           "id": "crownL",
           "file": "tree/crownL.svg",
           "anchor": [
-            184.8,
-            319.5
+            191,
+            333
           ]
         },
         {
           "id": "crownR",
           "file": "tree/crownR.svg",
           "anchor": [
-            297,
-            321.3
+            283,
+            310.5
           ]
         },
         {
           "id": "crownTop",
           "file": "tree/crownTop.svg",
           "anchor": [
-            240,
-            269.7
+            246,
+            230.5
           ]
         }
       ]
@@ -236,6 +267,8 @@
       "id": "pagoda",
       "target": "moonlit pagoda",
       "targetFile": "pagoda/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
       "pieces": [
         {
           "id": "mountain-base",
@@ -255,6 +288,8 @@
       "id": "koi",
       "target": "swimming koi",
       "targetFile": "koi/target.svg",
+      "sourceReference": "supplied-bottom-five",
+      "trace": "cubic-bezier",
       "pieces": [
         {
           "id": "body",
@@ -271,8 +306,8 @@
       ]
     }
   ],
-  "legacyReferenceFamilies": [
-    "pagoda",
-    "koi"
+  "notes": [
+    "The supplied reference contains five motifs. No unprovided source motif is silently mapped onto whale, deer, or crane.",
+    "Rabbit, bird, and tree use the traced paths in the six-level runtime; pagoda and koi are preserved as traced reference families for their future level mapping."
   ]
 }

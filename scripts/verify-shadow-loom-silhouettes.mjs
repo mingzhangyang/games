@@ -32,6 +32,9 @@ for (const full of svgFiles) {
     ok(/viewBox="0 0 480 854"/.test(src), rel + ': viewBox');
     ok(/<path\b/.test(src) && /fill-rule="evenodd"/.test(src), rel + ': 路径与 evenodd 镂空');
     ok(!/<(rect|image|foreignObject)\b/.test(src), rel + ': 没有烘焙背景');
+    if (['rabbit', 'bird', 'tree', 'pagoda', 'koi'].includes(rel.split('/')[0])) {
+        ok(/[CQ]\s/.test(src), rel + ': 使用曲线路径');
+    }
 }
 for (const level of LEVELS) {
     for (const piece of level.pieces) {
@@ -41,6 +44,9 @@ for (const level of LEVELS) {
         ok(data.anchor?.length === 2 && data.outer?.length, level.id + '/' + piece.id + ': 有共用坐标轮廓');
         ok(data.anchor[0] === piece.sol.x && data.anchor[1] === piece.sol.y, level.id + '/' + piece.id + ': SVG 锚点等于关卡 sol');
         ok(data.d.includes('M '), level.id + '/' + piece.id + ': 有 Path2D 路径');
+        if (['rabbit', 'bird', 'tree'].includes(level.id)) {
+            ok(/[CQ]\s/.test(data.d), level.id + '/' + piece.id + ': authored data 使用曲线路径');
+        }
         const file = path.join(dir, level.id, piece.id + '.svg');
         ok(fs.existsSync(file), level.id + '/' + piece.id + ': SVG 文件存在');
     }

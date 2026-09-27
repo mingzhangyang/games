@@ -36,7 +36,7 @@ export const LEVELS = [
                     { t: 'circle', cx: 78.3, cy: 21.4, r: 15.2 },
                     { t: 'ellipse', cx: -53.4, cy: 55.2, rx: 24.9, ry: 8.9, rot: 4 },
                 ],
-                sol: { x: 270.3, y: 353.3 },
+                sol: { x: 244.5, y: 347.5 },
                 start: { x: 309.4, y: 230.5 },
             },
             {
@@ -45,7 +45,7 @@ export const LEVELS = [
                     { t: 'circle', cx: 0, cy: 0, r: 35.6 },
                     { t: 'ellipse', cx: -29.4, cy: 10.7, rx: 17.8, ry: 14.2, rot: 10 },
                 ],
-                sol: { x: 199.1, y: 282.1 },
+                sol: { x: 271, y: 311 },
                 start: { x: 205, y: 333.7 },
             },
             {
@@ -54,13 +54,13 @@ export const LEVELS = [
                     { t: 'leaf', cx: 3.6, cy: -48.1, len: 99.7, w: 26.7, rot: -76, bend: 3.6 },
                     { t: 'leaf', cx: 24.9, cy: -40.9, len: 89, w: 23.1, rot: -58, bend: 3.6 },
                 ],
-                sol: { x: 209.7, y: 257.2 },
+                sol: { x: 230.5, y: 246 },
                 start: { x: 304.1, y: 360.4 },
             },
         ],
         life: {
             tracks: [
-                { ids: ['ears'], pivot: [209.7, 257.2], amp: 14, freq: 3.2, t0: 0.15, t1: 0.75 },
+                { ids: ['ears'], pivot: [230.5, 246], amp: 14, freq: 3.2, t0: 0.15, t1: 0.75 },
             ],
             group: { kind: 'hop', t0: 0.8, hops: 2, dx: -39.2, height: 30.3, hopDur: 0.45 },
         },
@@ -84,7 +84,7 @@ export const LEVELS = [
                             [-105, 14.2], [-65.9, 16], [-17.8, 24.9], [32, 19.6], [62.3, 5.3], [80.1, -7.1]],
                     },
                 ],
-                sol: { x: 236.4, y: 323.1 },
+                sol: { x: 276, y: 264.5 },
                 start: { x: 259.6, y: 205.6 },
             },
             {
@@ -96,7 +96,7 @@ export const LEVELS = [
                             [-62.3, -71.2], [-81.9, -71.2], [-64.1, -40.9], [-51.6, -16], [-23.1, 5.3]],
                     },
                 ],
-                sol: { x: 248.9, y: 307 },
+                sol: { x: 201, y: 275.5 },
                 start: { x: 188, y: 413.8 },
             },
             {
@@ -108,14 +108,14 @@ export const LEVELS = [
                             [46.3, -53.4], [26.7, -51.6], [7.1, -21.4], [-12.5, 0]],
                     },
                 ],
-                sol: { x: 259.6, y: 307 },
+                sol: { x: 250, y: 367.5 },
                 start: { x: 334.3, y: 397.8 },
             },
         ],
         life: {
             tracks: [
-                { ids: ['wing'], pivot: [240, 307], amp: 26, freq: 2.6, t0: 0.1, t1: 3 },
-                { ids: ['wing2'], pivot: [259.6, 308.8], amp: -20, freq: 2.6, t0: 0.1, t1: 3 },
+                { ids: ['wing'], pivot: [201, 275.5], amp: 26, freq: 2.6, t0: 0.1, t1: 3 },
+                { ids: ['wing2'], pivot: [250, 367.5], amp: -20, freq: 2.6, t0: 0.1, t1: 3 },
             ],
             group: { kind: 'fly', t0: 0.9, vx: 53.4, vy: -30.3 },
         },
@@ -244,7 +244,7 @@ export const LEVELS = [
                             [49.8, -28.5], [19.6, 8.9], [12.5, 40.9], [16, 85.4], [39.2, 97.9]],
                     },
                 ],
-                sol: { x: 240, y: 360.4 },
+                sol: { x: 278.5, y: 370 },
             },
             {
                 id: 'crownL', z: 0.62,
@@ -255,7 +255,7 @@ export const LEVELS = [
                             [39.2, 10.7], [17.8, 23.1], [-8.9, 19.6], [-35.6, 26.7]],
                     },
                 ],
-                sol: { x: 184.8, y: 319.5, rot: -12 },
+                sol: { x: 191, y: 333, rot: 0 },
                 start: { x: 293.4, y: 262.5, rot: 48 },
             },
             {
@@ -267,7 +267,7 @@ export const LEVELS = [
                             [53.4, 14.2], [26.7, 21.4], [0, 16], [-23.1, 24.9]],
                     },
                 ],
-                sol: { x: 297, y: 321.3, rot: 10 },
+                sol: { x: 283, y: 310.5, rot: 0 },
                 start: { x: 177.7, y: 253.6, rot: -50 },
             },
             {
@@ -279,14 +279,14 @@ export const LEVELS = [
                             [44.5, 23.1], [17.8, 30.3], [-17.8, 30.3]],
                     },
                 ],
-                sol: { x: 240, y: 269.7, rot: 0 },
+                sol: { x: 246, y: 230.5, rot: 0 },
                 start: { x: 248.9, y: 378.2, rot: 70 },
             },
         ],
         life: {
             tracks: [
                 { ids: ['crownL', 'crownR', 'crownTop'], pivot: [240, 360.4], amp: 3.5, freq: 0.7, t0: 0.1, t1: 3.4 },
-                { ids: ['crownTop'], pivot: [240, 307], amp: 3, freq: 1.3, t0: 0.4, t1: 3.4 },
+                { ids: ['crownTop'], pivot: [201, 275.5], amp: 3, freq: 1.3, t0: 0.4, t1: 3.4 },
             ],
             group: { kind: 'none' },
             leaves: true,
