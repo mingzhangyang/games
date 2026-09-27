@@ -56,6 +56,8 @@ const boot = await page.evaluate(() => ({
     canvasW: document.getElementById('sd-canvas').width,
     canvasH: document.getElementById('sd-canvas').height,
     hasLevelGrid: document.querySelectorAll('#sd-level-grid button').length,
+    artState: document.getElementById('sd-stage')?.dataset.artState,
+    sceneDebug: window.sdGame?.scene?.debug || null,
 }));
 if (!boot.hasGame) fail('window.sdGame 未创建（boot 失败）');
 if (!boot.hasDrawer) fail('createStatsDrawer 未初始化');
@@ -66,6 +68,10 @@ if (!boot.titleZh.includes('垂丝') && !boot.titleZh.includes('Silk')) fail(`do
 if (boot.lbMoreCards < 1) fail('桌面侧栏「更多游戏」未渲染');
 if (!boot.canvasW || boot.canvasW < 200) fail(`canvas 后端缓冲未按 CSS 尺寸重算: ${boot.canvasW}`);
 if (boot.hasLevelGrid < 20) fail(`关卡格未渲染 20 个（实际 ${boot.hasLevelGrid}）`);
+if (boot.artState !== 'ready') fail(`生产美术未 ready（artState=${boot.artState}）`);
+if (!boot.sceneDebug || boot.sceneDebug.lightWidth !== 240 || boot.sceneDebug.lightHeight !== 320) {
+    fail(`局部光半分辨率缓冲异常: ${JSON.stringify(boot.sceneDebug)}`);
+}
 
 /* ── 2. canvas 位图非空 ── */
 const pixels = await page.evaluate(() => {
@@ -313,7 +319,45 @@ if (mobileAfter.scrollHeight > mobileAfter.viewportHeight) {
 }
 await mobile.close();
 
-/* ── 9. 噪声过滤后的页面错误 ──
+/* ── 9. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
+const fallbackPage = await browser.newPage();
+await fallbackPage.setViewport({ width: 390, height: 844 });
+await fallbackPage.setRequestInterception(true);
+fallbackPage.on('request', request => {
+    if (request.url().includes('/assets/silk-dew/layers/garden-mid.svg')) request.abort();
+    else request.continue();
+});
+await fallbackPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 700));
+const fallbackState = await fallbackPage.evaluate(() => {
+    const g = window.sdGame;
+    if (!g) return { hasGame: false };
+    g.startLevel(0);
+    try { g.draw(); } catch (e) { return { hasGame: true, error: e.message }; }
+    const c = document.getElementById('sd-canvas');
+    const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let opaque = 0;
+    for (let i = 3; i < data.length; i += 4) if (data[i] > 0) opaque++;
+    return {
+        hasGame: true,
+        state: g.state,
+        artState: document.getElementById('sd-stage')?.dataset.artState,
+        sceneState: g.scene?.debug?.status,
+        opaque,
+    };
+});
+if (!fallbackState.hasGame || fallbackState.error) fail(`美术降级路径无法启动: ${JSON.stringify(fallbackState)}`);
+else {
+    if (fallbackState.artState !== 'fallback' || fallbackState.sceneState !== 'fallback') {
+        fail(`生产图层失败后未进入 fallback: ${JSON.stringify(fallbackState)}`);
+    }
+    if (fallbackState.state !== 'playing' || fallbackState.opaque < 5000) {
+        fail(`fallback 未保持可玩/可见: ${JSON.stringify(fallbackState)}`);
+    }
+}
+await fallbackPage.close();
+
+/* ── 10. 噪声过滤后的页面错误 ──
  * 源码树直跑的已知 404（与既有 smoke 口径一致）。 */
 const IGNORABLE = [/analytics\.js/, /sw-register\.js/, /manifest/i, /CORS/i, /game-scores/i,
     /games-analytics/, /apple-touch-icon/, /favicon/i];
@@ -327,4 +371,4 @@ if (fails.length) {
     for (const f of fails) console.error(`  - ${f}`);
     process.exit(1);
 }
-console.log(`smoke-silk-dew：boot / 渲染 / 启动 / 真实拖拽牵引 / 判胜 / 结算 / 星级 / 全 ${levelCount} 关渲染回归(泡${bubblesSeen} 风${windsSeen} 棘${thornsSeen} 多丝${multiRopeSeen}) / 每日 / 抽屉 全部通过 ✅`);
+console.log(`smoke-silk-dew：boot / 渲染 / 启动 / 真实拖拽牵引 / 判胜 / 结算 / 星级 / 全 ${levelCount} 关渲染回归(泡${bubblesSeen} 风${windsSeen} 棘${thornsSeen} 多丝${multiRopeSeen}) / 每日 / 抽屉 / 生产美术 / fallback 全部通过 ✅`);
