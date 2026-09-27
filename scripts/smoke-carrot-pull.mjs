@@ -59,7 +59,8 @@ async function assertNormalPage() {
                 startVisible: !document.getElementById('cp-start')?.hidden,
                 sceneVisible: getComputedStyle(svg?.querySelector('[data-art-production]')).visibility !== 'hidden',
                 layerHrefs: [...document.querySelectorAll('[data-art-layer]')].map(node => node.getAttribute('href') || node.getAttribute('xlink:href')),
-                spriteWidths: [...document.querySelectorAll('[data-art-sprite]')].map(node => node.getBoundingClientRect().width),
+                // oops 精灵在失误前按设计 display:none，只量常驻的那一套
+                spriteWidths: [...document.querySelectorAll('[data-art-sprite]:not(.cp-production-oops)')].map(node => node.getBoundingClientRect().width),
                 progressDots: document.querySelectorAll('#cp-progress-dots .cp-progress-dot').length,
                 progressHasEmoji: document.getElementById('cp-progress-dots')?.textContent.includes('🥕'),
                 miniCarrot: document.querySelector('[data-art-ui="carrot-mark"]')?.getAttribute('src'),
@@ -68,6 +69,14 @@ async function assertNormalPage() {
                     hasPath: Boolean(document.querySelector('#cp-pull-btn .cp-pull-arrow path')),
                 },
                 residualPaws: Boolean(document.querySelector('#cp-mole-paws, [data-art-sprite="mole-paws"]')),
+                // girl-hands.webp 自带叶束；程序叶柄在生产场景里会画成一根横穿女孩脸前的绿条
+                productionStems: Boolean(document.querySelector('#cp-art-production .cp-leaf-connectors')),
+                // 这四层导出错位（全挤在画布顶部），叠上去会在天空里留下重影篱笆 + 土带
+                misregisteredLayers: [...document.querySelectorAll('[data-art-layer]')]
+                    .map(node => node.getAttribute('data-art-layer'))
+                    .filter(id => ['clouds', 'hills-farm', 'garden-mid', 'soil-back'].includes(id)),
+                // 图层透明度 / 预览淡出规则都挂在 .cp-art-production 上，缺 class 就全部失效
+                productionClass: document.getElementById('cp-art-production')?.classList.contains('cp-art-production'),
             };
         });
         if (!boot.hasGame || boot.state !== 'menu') fail(`boot state 异常: ${JSON.stringify(boot)}`);
@@ -78,6 +87,9 @@ async function assertNormalPage() {
         if (boot.progressDots !== 6 || boot.progressHasEmoji) fail('进度萝卜图标未按正式 SVG 渲染');
         if (!boot.miniCarrot || !boot.pullIcon.hasPath || boot.pullIcon.tag !== 'svg') fail('正式 UI 图标没有加载');
         if (boot.residualPaws) fail('production scene contains residual mole paws');
+        if (boot.productionStems) fail('生产场景不应再画程序叶柄连接线（会横穿女孩脸前）');
+        if (boot.misregisteredLayers.length) fail(`错位图层仍在绘制: ${boot.misregisteredLayers.join(', ')}`);
+        if (!boot.productionClass) fail('#cp-art-production 缺少 .cp-art-production class，图层透明度与预览淡出规则失效');
 
         await page.click('#cp-start-btn');
         await page.evaluate(() => {
@@ -132,6 +144,26 @@ async function assertNormalPage() {
             if (layout.bodyWidth > viewport[0] + 1 || layout.stageWidth <= 0 || layout.stageHeight <= 0) {
                 fail(`响应式布局异常 ${viewport.join('×')}: ${JSON.stringify(layout)}`);
             }
+            if (viewport[0] <= 480) {
+                // 高屏手机：卡片被拉满，多出的高度必须先给场景（最多到完整 720 天空），
+                // 指针条与「用力拔」必须贴在一起，不能在按钮下方留一大块空白卡片。
+                const fill = await page.evaluate(() => {
+                    const box = selector => document.querySelector(selector).getBoundingClientRect();
+                    const scene = box('.cp-scene-wrap');
+                    const card = box('.cp-stage-card');
+                    const meter = box('.cp-meter-block');
+                    const pull = box('#cp-pull-btn');
+                    return {
+                        sceneRatio: scene.height / scene.width,
+                        meterToPull: pull.top - meter.bottom,
+                        blankBelowPull: card.bottom - pull.bottom,
+                        blankAboveMeter: meter.top - scene.bottom,
+                    };
+                });
+                if (fill.sceneRatio < 720 / 560 - 0.01) fail(`${viewport.join('×')} 场景没有吃满可用高度: ${JSON.stringify(fill)}`);
+                if (fill.meterToPull > 20) fail(`${viewport.join('×')} 指针条与拔按钮被拉开: ${JSON.stringify(fill)}`);
+                if (Math.abs(fill.blankBelowPull - fill.blankAboveMeter) > 40) fail(`${viewport.join('×')} 控制区空白分布不均: ${JSON.stringify(fill)}`);
+            }
         }
     } catch (error) {
         fail(`正常路径脚本异常: ${error.message}`);
@@ -166,7 +198,9 @@ async function assertFallbackPage() {
         fail(`fallback 路径脚本异常: ${error.message}`);
     } finally {
         for (const message of diagnostics?.pageErrors || []) if (!isIgnorable(message)) fail(`fallback 页面错误: ${message}`);
-        for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message)) fail(`fallback console 错误: ${message}`);
+        // 本用例故意 abort 了全部美术请求，它们的 net::ERR_FAILED 是预期内的
+        const blockedArt = message => /net::ERR_FAILED @ .*\/assets\/carrot-pull\//.test(message);
+        for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message) && !blockedArt(message)) fail(`fallback console 错误: ${message}`);
         await browser.close();
     }
 }

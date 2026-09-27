@@ -190,7 +190,9 @@ export function createCarrotScene({ svg = document.getElementById('cp-scene') } 
             girl: byId('cp-girl'),
             girlHands: byId('cp-girl-hands'),
             mole: byId('cp-mole'),
-            stemsGirl: byId('cp-stems-girl'),
+            // 生产美术不画程序叶柄：girl-hands.webp 自带一整束叶柄连到萝卜冠，
+            // 而 SCENE.crown 在精灵里落在叶尖（不是萝卜冠），画出来是一根横穿女孩脸前的绿条。
+            // 叶柄连接线只留给 fallback 场景（那里的手是圆点、萝卜没有画叶束）。
             tug: byId('cp-tug-lines'),
             particles: byId('cp-particles'),
         },

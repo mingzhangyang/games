@@ -36,7 +36,6 @@
     "girl.hands": { "sprite": "girl-happy", "space": "sprite-local-logical-px", "points": [[38, -218], [32, -210], [26, -200]] }
   },
   "dynamicZ": {
-    "girlStems": 75,
     "girlHands": 80,
     "particles": 110,
     "hitTarget": 120

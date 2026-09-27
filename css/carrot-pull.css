@@ -774,16 +774,24 @@ body {
         container-type: inline-size;
     }
 
+    /* 卡片被拉满到顶栏与页脚之间；多出的高度先给场景（最多露出完整 720 的天空，
+       SVG 始终按宽度铺满、底部对齐，永不裁两侧角色），再有剩余才交给控制区，
+       否则高屏手机上「用力拔」下面会空出一大块白卡片。 */
     .cp-scene-wrap {
-        flex: 0 0 auto;
-        height: calc(100cqw * 520 / 560);
-        min-height: 0;
+        flex: 1000 1 auto;
+        height: auto;
+        min-height: calc(100cqw * 520 / 560);
+        max-height: calc(100cqw * 720 / 560);
         aspect-ratio: auto;
     }
 
-    .cp-stage { max-width: 620px; }
+    .cp-controls {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+    }
 
-    .cp-controls { padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px)); }
+    .cp-stage { max-width: 620px; }
 }
 
 @media (width <= 480px) {
@@ -810,6 +818,9 @@ body {
         gap: 9px;
         padding: 11px 12px 13px;
     }
+
+    /* 纵向排列时 flex: 1 会沿纵轴长高，把指针条和按钮拉开；两者必须贴在一起居中 */
+    .cp-meter-block { flex: 0 0 auto; }
 
     .cp-pull-btn { min-height: 54px; }
 
@@ -862,10 +873,6 @@ body {
     opacity: 1;
 }
 
-.cp-art-production image[data-art-layer="clouds"] { opacity: 0.2; }
-.cp-art-production image[data-art-layer="hills-farm"] { opacity: 0.16; }
-.cp-art-production image[data-art-layer="garden-mid"] { opacity: 0.12; }
-.cp-art-production image[data-art-layer="soil-back"] { opacity: 0.18; }
 .cp-art-production image[data-art-layer="soil-front"] { opacity: 0.84; }
 .cp-art-production image[data-art-layer="foreground"] { opacity: 0.92; }
 

@@ -4,12 +4,11 @@ export const ART_UI = Object.freeze({
 
 export const ART_URLS = Object.freeze({
     preview: new URL('../assets/carrot-pull/layers/loading-preview.webp', import.meta.url).href,
+    // sky.webp 已是完整画作（天空、山、农舍、篱笆、菜畦、土垄）。clouds / hills-farm / garden-mid /
+    // soil-back 四层在导出时全挤在画布顶部 1/3，和 sky 里的同名内容错位；叠上去只会在天空里
+    // 留下一条带硬边的「重影篱笆 + 土带」。它们仍在资源包与 manifest 里，但运行时不绘制也不预载。
     layers: Object.freeze({
         sky: new URL('../assets/carrot-pull/layers/sky.webp', import.meta.url).href,
-        clouds: new URL('../assets/carrot-pull/layers/clouds.webp', import.meta.url).href,
-        'hills-farm': new URL('../assets/carrot-pull/layers/hills-farm.webp', import.meta.url).href,
-        'garden-mid': new URL('../assets/carrot-pull/layers/garden-mid.webp', import.meta.url).href,
-        'soil-back': new URL('../assets/carrot-pull/layers/soil-back.webp', import.meta.url).href,
         'soil-front': new URL('../assets/carrot-pull/layers/soil-front.webp', import.meta.url).href,
         foreground: new URL('../assets/carrot-pull/layers/foreground.webp', import.meta.url).href,
     }),
