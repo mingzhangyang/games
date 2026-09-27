@@ -1,6 +1,5 @@
 export const ART_UI = Object.freeze({
     carrotMark: new URL('../assets/carrot-pull/ui/carrot-mark.svg', import.meta.url).href,
-    pullArrow: new URL('../assets/carrot-pull/ui/pull-arrow.svg', import.meta.url).href,
 });
 
 export const ART_URLS = Object.freeze({
