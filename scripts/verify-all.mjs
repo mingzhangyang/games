@@ -70,11 +70,13 @@ const SUITE = [
     { name: 'firefly-signal-sim', script: 'scripts/verify-firefly-signal-sim.mjs', args: [], needsServer: false },
     { name: 'immersive', script: 'scripts/verify-immersive.mjs', args: [], needsServer: true },
     { name: 'smoke-firefly-signal', script: 'scripts/smoke-firefly-signal.mjs', args: [], needsServer: true },
+    { name: 'shadow-loom-silhouettes', script: 'scripts/verify-shadow-loom-silhouettes.mjs', args: [], needsServer: false },
+    { name: 'shadow-loom-silhouette-build', script: 'scripts/shadow-loom-build-silhouettes.mjs', args: ['--check'], needsServer: false },
     { name: 'shadow-loom-levels', script: 'scripts/verify-shadow-loom-levels.mjs', args: [], needsServer: false },
     { name: 'smoke-shadow-loom', script: 'scripts/smoke-shadow-loom.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'no-game-lang', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'bond-forge-levels', 'echo-cave-levels', 'smoke-echo-cave', 'maxwell-demon-levels', 'smoke-maxwell-demon', 'fg-audit', 'theme', 'start-menus', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'smoke-bond-forge', 'crystal-bloom-levels', 'smoke-crystal-bloom', 'flame-verse-levels', 'smoke-flame-verse', 'ripple-duet-levels', 'smoke-ripple-duet', 'shadow-loom-levels', 'smoke-shadow-loom', 'desktop-frame', 'firefly-signal-sim', 'immersive', 'smoke-firefly-signal'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'no-game-lang', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'bond-forge-levels', 'echo-cave-levels', 'smoke-echo-cave', 'maxwell-demon-levels', 'smoke-maxwell-demon', 'fg-audit', 'theme', 'start-menus', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'smoke-bond-forge', 'crystal-bloom-levels', 'smoke-crystal-bloom', 'flame-verse-levels', 'smoke-flame-verse', 'ripple-duet-levels', 'smoke-ripple-duet', 'shadow-loom-silhouettes', 'shadow-loom-silhouette-build', 'shadow-loom-levels', 'smoke-shadow-loom', 'desktop-frame', 'firefly-signal-sim', 'immersive', 'smoke-firefly-signal'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿

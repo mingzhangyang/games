@@ -26,6 +26,12 @@
     "coordinateContract": "Every piece and target uses viewBox 0 0 480 854",
     "holes": "Real SVG subpaths rendered with fill-rule evenodd",
     "judgeContours": "SVG keeps every hole; the low-resolution paired contours retain structural holes only.",
+    "sourceReferences": {
+      "whale": "references/whale-reference.webp",
+      "deer": "references/deer-reference.webp",
+      "crane": "references/crane-reference.webp"
+    },
+    "tracing": "Generated original paper-cut references were segmented, simplified, and smoothed into cubic paths; the runtime cache is built from these SVGs.",
     "generatedReferenceFamilies": [
       "whale",
       "deer",
@@ -70,7 +76,7 @@
           "id": "body",
           "file": "rabbit/body.svg",
           "anchor": [
-            253.5,
+            244.5,
             347.5
           ]
         },
@@ -78,8 +84,8 @@
           "id": "head",
           "file": "rabbit/head.svg",
           "anchor": [
-            244.5,
-            347
+            271,
+            311
           ]
         },
         {
@@ -129,6 +135,8 @@
       "id": "whale",
       "target": "moonlit whale",
       "targetFile": "whale/target.svg",
+      "sourceReference": "generated-original-paper-cut",
+      "trace": "cubic-bezier",
       "pieces": [
         {
           "id": "body",
@@ -160,6 +168,8 @@
       "id": "deer",
       "target": "standing deer",
       "targetFile": "deer/target.svg",
+      "sourceReference": "generated-original-paper-cut",
+      "trace": "cubic-bezier",
       "pieces": [
         {
           "id": "body",
@@ -232,21 +242,23 @@
       "id": "crane",
       "target": "rising crane",
       "targetFile": "crane/target.svg",
+      "sourceReference": "generated-original-paper-cut",
+      "trace": "cubic-bezier",
       "pieces": [
         {
           "id": "body",
           "file": "crane/body.svg",
           "anchor": [
-            245.3,
-            333.7
+            244.5,
+            325.8
           ]
         },
         {
           "id": "neck",
           "file": "crane/neck.svg",
           "anchor": [
-            195.5,
-            328.4
+            202.2,
+            321.3
           ]
         },
         {
@@ -254,23 +266,23 @@
           "file": "crane/wingL.svg",
           "anchor": [
             240,
-            321.3
+            315.2
           ]
         },
         {
           "id": "wingR",
           "file": "crane/wingR.svg",
           "anchor": [
-            259.6,
-            319.5
+            256.7,
+            313.7
           ]
         },
         {
           "id": "legs",
           "file": "crane/legs.svg",
           "anchor": [
-            259.6,
-            392.5
+            256.7,
+            375.8
           ]
         }
       ]
@@ -318,10 +330,5 @@
       ]
     }
   ],
-  "notes": "Whale, deer, and crane were authored from newly generated paper-cut references; these SVGs are the production vector assets, not procedural geometry.",
-  "generatedReferenceFamilies": [
-    "whale",
-    "deer",
-    "crane"
-  ]
+  "notes": "Whale, deer, and crane were authored from newly generated paper-cut references; these SVGs are the production vector assets, not procedural geometry."
 }

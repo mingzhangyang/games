@@ -957,11 +957,13 @@ class ShadowLoomGame {
         if (a <= 0.001) return;
         const c = R.compileLevel(this.level);
         ctx.save();
-        pathPolys(ctx, c.targetPolys, c.targetHoles);
         // 正片叠底的暖褐：淡影像是纸里透出的旧痕，而不是一层灰雾
         ctx.globalCompositeOperation = 'multiply';
         ctx.fillStyle = `rgba(128,82,44,${Math.min(1, a * 2.8)})`;
-        ctx.fill('nonzero');
+        c.targetSets.forEach(set => {
+            pathPolys(ctx, set.polys, set.holes);
+            ctx.fill('evenodd');
+        });
         ctx.restore();
     }
 
@@ -980,7 +982,7 @@ class ShadowLoomGame {
             ctx.shadowColor = 'rgba(52,32,22,0.55)';
             ctx.shadowBlur = this.blurFor(pc.z) * tighten * this.renderScale;
             ctx.fillStyle = 'rgba(56,36,25,0.5)';
-            ctx.fill('nonzero');
+            ctx.fill('evenodd');
             ctx.restore();
         });
     }
@@ -1081,7 +1083,7 @@ class ShadowLoomGame {
                 : R.shadowHoles(this.level, lamp, this.st.pieces[i], i);
             pathPolys(f, polys, holes);
             f.fillStyle = '#3a261a';
-            f.fill('nonzero');
+            f.fill('evenodd');
             f.restore();
         });
         const solidity = 0.55 + 0.37 * smooth(snapK);
@@ -1323,9 +1325,11 @@ class ShadowLoomGame {
         g.translate(cv.width / 2, cv.height / 2);
         g.scale(s, s);
         g.translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
-        pathPolys(g, c.targetPolys, c.targetHoles);
         g.fillStyle = '#f3e3c3';
-        g.fill('nonzero');
+        c.targetSets.forEach(set => {
+            pathPolys(g, set.polys, set.holes);
+            g.fill('evenodd');
+        });
         g.restore();
     }
 

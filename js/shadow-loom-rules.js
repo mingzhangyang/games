@@ -51,10 +51,13 @@ export const THRESHOLDS = { faint: 0.70, glow: 0.85, stitch: 0.89, win: 0.925 };
 /** 完成需持续的时长（ms） */
 export const WIN_HOLD_MS = 400;
 /** 轮廓距离的容差（格）：≤ FREE 记满分，≥ ZERO 记 0 分，之间线性 */
-const CONTOUR_FREE = 1.2;
-const CONTOUR_ZERO = 3.6;
-const W_IOU = 0.5;
+const CONTOUR_FREE = 1.6;
+const CONTOUR_ZERO = 4.5;
+const ALIGN_FREE = SCREEN.w * 0.012;
+const ALIGN_ZERO = SCREEN.w * 0.05;
+const W_IOU = 0.2;
 const edgeScore = d => (d <= CONTOUR_FREE ? 1 : Math.max(0, 1 - (d - CONTOUR_FREE) / (CONTOUR_ZERO - CONTOUR_FREE)));
+const alignmentScore = d => (d <= ALIGN_FREE ? 1 : Math.max(0, 1 - (d - ALIGN_FREE) / (ALIGN_ZERO - ALIGN_FREE)));
 
 export function lampModel(lamp) {
     return { x: lamp.x, y: LAMP_MODEL_Y + (lamp.y - LAMP_HOME.y) * LAMP_MODEL_K };
@@ -230,11 +233,15 @@ export function compileLevel(level) {
     };
     const targetPolys = [];
     const targetHoles = [];
-    level.pieces.forEach((p, i) => {
-        pieces[i].polys.forEach(poly => targetPolys.push(placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)));
-        pieces[i].holes.forEach(poly => targetHoles.push(placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)));
+    const targetSets = level.pieces.map((p, i) => ({
+        polys: pieces[i].polys.map(poly => placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)),
+        holes: pieces[i].holes.map(poly => placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)),
+    }));
+    targetSets.forEach(set => {
+        set.polys.forEach(poly => targetPolys.push(poly));
+        set.holes.forEach(poly => targetHoles.push(poly));
     });
-    const target = rasterize(targetPolys, targetHoles);
+    const target = rasterizeUnion(targetSets);
     const targetEdge = boundary(target);
     const targetDist = distanceField(targetEdge);
     const edgeOwner = new Int8Array(targetEdge.length).fill(-1);
@@ -245,7 +252,7 @@ export function compileLevel(level) {
         );
         for (let k = 0; k < own.length; k++) if (own[k] && targetEdge[k] && edgeOwner[k] < 0) edgeOwner[k] = i;
     });
-    const out = { pieces, solution, targetPolys, targetHoles, target, targetEdge, targetDist, edgeOwner };
+    const out = { pieces, solution, targetSets, targetPolys, targetHoles, target, targetEdge, targetDist, edgeOwner };
     compiled.set(level, out);
     return out;
 }
@@ -357,6 +364,19 @@ export function rasterize(polys, holes = []) {
     return m;
 }
 
+/**
+ * 多块纸片的影子并集。每块纸片先独立处理自己的镂空，再合并，避免
+ * A 纸片的孔洞把 B 纸片已经投出的影子擦掉。
+ */
+export function rasterizeUnion(sets) {
+    const out = new Uint8Array(COLS * ROWS);
+    for (const set of sets) {
+        const part = rasterize(set.polys, set.holes);
+        for (let i = 0; i < out.length; i++) if (part[i]) out[i] = 1;
+    }
+    return out;
+}
+
 /** 轮廓格：自身为 1 且 4 邻里有 0（出界视为 0） */
 export function boundary(mask) {
     const e = new Uint8Array(mask.length);
@@ -430,7 +450,10 @@ export function allShadowHoles(level, state) {
  */
 export function evaluate(level, state) {
     const c = compileLevel(level);
-    const mask = rasterize(allShadowPolys(level, state), allShadowHoles(level, state));
+    const mask = rasterizeUnion(level.pieces.map((_, i) => ({
+        polys: shadowPolys(level, state.lamp, state.pieces[i], i),
+        holes: shadowHoles(level, state.lamp, state.pieces[i], i),
+    })));
     let inter = 0;
     let uni = 0;
     for (let i = 0; i < mask.length; i++) {
@@ -463,7 +486,15 @@ export function evaluate(level, state) {
     // 轮廓分 = min(当前轮廓贴合目标, 目标每段轮廓都被缝上)
     let worst = na ? sa / na : 0;
     for (let k = 0; k < n; k++) if (nb[k]) worst = Math.min(worst, sb[k] / nb[k]);
-    const contour = worst;
+    // A long, narrow piece can still share a surprising amount of contour with
+    // its target after a large translation. Include the authored anchor alignment
+    // so the 6% tolerance remains a real failure even when silhouettes overlap.
+    let alignment = 1;
+    level.pieces.forEach((piece, i) => {
+        const shadow = shadowCenter(state.lamp, state.pieces[i], piece.z);
+        alignment = Math.min(alignment, alignmentScore(Math.hypot(shadow.x - piece.sol.x, shadow.y - piece.sol.y)));
+    });
+    const contour = Math.min(worst, alignment);
     const sim = W_IOU * iou + (1 - W_IOU) * contour;
     return { sim, iou, contour, mask, matchedEdge };
 }

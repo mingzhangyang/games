@@ -12,6 +12,8 @@
     "verify": "node scripts/verify-all.mjs",
     "verify:quick": "node scripts/verify-all.mjs --quick",
     "verify:daily": "node scripts/verify-daily.mjs",
+    "build:shadow-loom-silhouettes": "node scripts/shadow-loom-build-silhouettes.mjs",
+    "check:shadow-loom-silhouettes": "node scripts/shadow-loom-build-silhouettes.mjs --check",
     "verify:shadow-loom": "node scripts/verify-shadow-loom-silhouettes.mjs"
   },
   "devDependencies": {

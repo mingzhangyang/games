@@ -141,3 +141,9 @@ caps 是校验器与迁移脚本的唯一判据：
 派生文件由 gen 模板产出（双引号 JSON 风格格式化），而 eslint `quotes` 规则强制单引号 ——
 任何 `eslint --fix` 都会破坏 gen 产物 → 下次 `gen --check` 报漂移 → 修复又改回单引号 → **死循环**。
 规则：派生文件 gen 是唯一权威，人（和 linter）不应手改；样式不一致在 gen 模板里改。
+
+Shadow Loom 的 `js/shadow-loom-silhouettes.js` 也属于生成缓存：它由
+`assets/shadow-loom/layers/silhouettes/**/*.svg` 与 `manifest.json` 通过
+`npm run build:shadow-loom-silhouettes` 生成，不能直接编辑。提交前运行
+`npm run check:shadow-loom-silhouettes`；该文件因 SVG 路径 JSON 的双引号格式被
+eslint 忽略，源 SVG、生成器与同步检查才是权威。

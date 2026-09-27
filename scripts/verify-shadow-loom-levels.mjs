@@ -29,7 +29,6 @@ const ok = (cond, label, extra = '') => {
 };
 // 手感阈值按纸幕宽度表示（300px 幕宽下 = 3px / 18px / 12px）
 const TOL_OK = R.SCREEN.w * 0.01;
-const TOL_OK_TRACED = R.SCREEN.w * 0.005;
 const TOL_FAIL = R.SCREEN.w * 0.06;
 const PIN_OFF = R.SCREEN.w * 0.04;
 const inBox = (p, b) => p.x >= b.x0 && p.x <= b.x1 && p.y >= b.y0 && p.y <= b.y1;
@@ -90,8 +89,9 @@ for (const lv of LEVELS) {
         if (p.pinned) return;
         ok(inBox(init.pieces[i], R.PIECE_BOX), `${tag}/${p.id}: 初始位置在可拖动范围内`);
         const polys = R.shadowPolys(lv, init.lamp, init.pieces[i], i);
+        const holes = R.shadowHoles(lv, init.lamp, init.pieces[i], i);
         const full = polys.reduce((s, poly) => s + area(poly), 0);
-        const m = R.rasterize(polys);
+        const m = R.rasterize(polys, holes);
         let on = 0;
         for (let k = 0; k < m.length; k++) on += m[k];
         const frac = (on * R.CELL * R.CELL) / full;
@@ -128,10 +128,9 @@ for (const lv of LEVELS) {
                 st.pieces[i] = { ...st.pieces[i], x: st.pieces[i].x + dx * px * p.z, y: st.pieces[i].y + dy * px * p.z };
                 return R.evaluate(lv, st).sim;
             };
-            const okTolerance = ['rabbit', 'bird', 'tree'].includes(lv.id) ? TOL_OK_TRACED : TOL_OK;
-            const sOk = shift(okTolerance);
+            const sOk = shift(TOL_OK);
             const sFail = shift(TOL_FAIL);
-            ok(sOk >= R.THRESHOLDS.win, `${tag}/${p.id}: 影子偏 ${okTolerance}px 仍可完成`, sOk.toFixed(3));
+            ok(sOk >= R.THRESHOLDS.win, `${tag}/${p.id}: 影子偏 ${TOL_OK}px 仍可完成`, sOk.toFixed(3));
             ok(sFail < R.THRESHOLDS.win, `${tag}/${p.id}: 影子偏 ${TOL_FAIL}px 不可完成`, sFail.toFixed(3));
         }
     });
