@@ -300,6 +300,9 @@ class SilkfallGame {
         this.toastTimer = 0;
         this.particles = [];
         this.starfield = this.buildStarfield();
+        // Wind fills are static for a zone; cache their CanvasGradient instead of
+        // allocating one per zone on every animation frame.
+        this.windGradientCache = new WeakMap();
         this.pointerId = null;
         this.dragInput = null;
         this.isDragging = false;
@@ -995,6 +998,11 @@ class SilkfallGame {
             canvas.width = pw;
             canvas.height = Math.round(H * renderScale);
         }
+        if (this.renderScale !== renderScale) {
+            // CanvasGradient coordinates are tied to the canvas transform used
+            // when created; invalidate zone fills when resize/DPR changes it.
+            this.windGradientCache = new WeakMap();
+        }
         this.renderScale = renderScale;
         this.dpr = dpr;
     }
@@ -1079,6 +1087,13 @@ class SilkfallGame {
 
     /* ---------------------- 渲染 ---------------------- */
 
+    usesProductionArt() {
+        // The painted production plates are intentionally a moonlit/dark scene.
+        // Light theme keeps the existing palette-driven procedural renderer so
+        // theme-light canvas luminance and live theme switching remain correct.
+        return document.documentElement.getAttribute('data-theme') !== 'light';
+    }
+
     draw() {
         const ctx = this.ctx;
         // `renderScale` already contains the CSS scale and device-pixel ratio
@@ -1098,14 +1113,16 @@ class SilkfallGame {
             this.drawStars(ctx);
             this.drawRopes(ctx);
             this.drawPearl(ctx);
-            this.scene?.drawForeground(ctx);
-            this.scene?.drawLocalLight(ctx, this.collectLightSources());
+            if (this.usesProductionArt()) {
+                this.scene?.drawForeground(ctx);
+                this.scene?.drawLocalLight(ctx, this.collectLightSources());
+            }
         }
         this.drawParticles(ctx);
     }
 
     drawBackdrop(ctx) {
-        if (this.scene?.drawBackground(ctx)) return;
+        if (this.usesProductionArt() && this.scene?.drawBackground(ctx)) return;
         this.drawProceduralBackdrop(ctx);
     }
 
@@ -1150,16 +1167,21 @@ class SilkfallGame {
     }
 
     drawWinds(ctx) {
+        const visualTime = this.reducedMotion ? 0 : this.time;
         for (const w of this.world.winds) {
             ctx.save();
             const ax = w.ax || 0;
             const ay = w.ay || 0;
             const angle = Math.atan2(ay, ax || 0.0001);
             const speed = Math.hypot(ax, ay);
-            const fog = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
-            fog.addColorStop(0, 'rgba(112,210,219,0.015)');
-            fog.addColorStop(0.5, 'rgba(112,210,219,0.09)');
-            fog.addColorStop(1, 'rgba(112,210,219,0.015)');
+            let fog = this.windGradientCache.get(w);
+            if (!fog) {
+                fog = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
+                fog.addColorStop(0, 'rgba(112,210,219,0.015)');
+                fog.addColorStop(0.5, 'rgba(112,210,219,0.09)');
+                fog.addColorStop(1, 'rgba(112,210,219,0.015)');
+                this.windGradientCache.set(w, fog);
+            }
             ctx.fillStyle = fog;
             ctx.fillRect(w.x, w.y, w.w, w.h);
 
@@ -1176,7 +1198,7 @@ class SilkfallGame {
             ctx.lineCap = 'round';
             for (let i = -2; i <= 2; i++) {
                 const offset = i * Math.min(13, cross / 6);
-                const phase = this.time * (22 + speed * 0.015) + i * 13;
+                const phase = visualTime * (22 + speed * 0.015) + i * 13;
                 const start = -span * 0.38 + (phase % 28) - 14;
                 ctx.beginPath();
                 ctx.moveTo(start, offset);
@@ -1205,7 +1227,7 @@ class SilkfallGame {
     drawVessel(ctx) {
         const v = this.world.vessel;
         if (!v) return;
-        if (this.scene?.drawVessel(ctx, v)) {
+        if (this.usesProductionArt() && this.scene?.drawVessel(ctx, v)) {
             const half = v.w / 2;
             const top = v.y;
             const mouthGlow = ctx.createRadialGradient(v.x, top + 3, 1, v.x, top + 3, half * 1.18);
@@ -1278,10 +1300,11 @@ class SilkfallGame {
     }
 
     drawThorns(ctx) {
-        for (const t of this.world.thorns) {
+        for (let thornIndex = 0; thornIndex < this.world.thorns.length; thornIndex++) {
+            const t = this.world.thorns[thornIndex];
             ctx.save();
             ctx.translate(t.x, t.y);
-            const pulse = this.reducedMotion ? 1 : 1 + Math.sin(this.time * 1.7 + t.i) * 0.025;
+            const pulse = this.reducedMotion ? 1 : 1 + Math.sin(this.time * 1.7 + thornIndex) * 0.025;
             ctx.scale(pulse, pulse);
 
             const aura = ctx.createRadialGradient(0, 0, t.r * 0.15, 0, 0, t.r * 1.45);
