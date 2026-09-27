@@ -47,7 +47,7 @@ export const LEVELS = [
             {
                 id: 'grass', z: 0.72,
                 sol: { x: 245, y: 405 },
-                start: { x: 355, y: 255 },
+                start: { x: 350, y: 470 },
             },
         ],
         life: {

@@ -536,16 +536,63 @@ class ShadowLoomGame {
     grabPoint(i) {
         const polys = R.piecePolys(this.level, this.effPose(i), i);
         const p = this.effPose(i);
+        const candidates = [];
+        const addCandidate = (x, y) => candidates.push({ x, y });
         for (let r = 0; r < 40; r += 2) {
             for (let k = 0; k < 12; k++) {
                 const a = (k / 12) * Math.PI * 2;
                 const x = p.x + Math.cos(a) * r;
                 const y = p.y + Math.sin(a) * r;
-                if (polys.some(poly => R.pointInPoly(x, y, poly))) return { x, y };
+                addCandidate(x, y);
             }
         }
+
+        // 中心点可能被更靠上的纸片遮住；补充轮廓顶点、边中点和重心，
+        // 让测试与辅助操作找到真正可抓取的可见区域。
+        polys.forEach((poly) => {
+            let cx = 0;
+            let cy = 0;
+            poly.forEach(([x, y]) => { cx += x; cy += y; });
+            cx /= poly.length;
+            cy /= poly.length;
+            addCandidate(cx, cy);
+            poly.forEach(([x0, y0], j) => {
+                const [x1, y1] = poly[(j + 1) % poly.length];
+                addCandidate(x0, y0);
+                addCandidate((x0 + x1) / 2, (y0 + y1) / 2);
+                addCandidate((cx + x0) / 2, (cy + y0) / 2);
+            });
+        });
+
+        for (const candidate of candidates) {
+            if (this.pieceContains(i, candidate.x, candidate.y) && this.pieceAt(candidate.x, candidate.y) === i) {
+                return candidate;
+            }
+        }
+
+        // 极端情况下（细长纸片或几乎完全被遮挡）再做一次低密度扫描。
+        const flat = polys.flat();
+        const minX = Math.min(...flat.map(([x]) => x));
+        const maxX = Math.max(...flat.map(([x]) => x));
+        const minY = Math.min(...flat.map(([, y]) => y));
+        const maxY = Math.max(...flat.map(([, y]) => y));
+        for (let y = minY; y <= maxY; y += 4) {
+            for (let x = minX; x <= maxX; x += 4) {
+                if (this.pieceContains(i, x, y) && this.pieceAt(x, y) === i) return { x, y };
+            }
+        }
+
         const v = polys[0][0];
         return { x: v[0], y: v[1] };
+    }
+
+    /** 判断一点是否落在纸片实体上（镂空区域不可抓取）。 */
+    pieceContains(i, x, y) {
+        const pose = this.effPose(i);
+        const polys = R.piecePolys(this.level, pose, i);
+        if (!polys.some(poly => R.pointInPoly(x, y, poly))) return false;
+        const holes = R.pieceHoles(this.level, pose, i);
+        return !holes.some(poly => R.pointInPoly(x, y, poly));
     }
 
     /** 由近灯到近幕排序（近灯的纸片离观众更近，画在上层） */
@@ -578,13 +625,14 @@ class ShadowLoomGame {
     pieceAt(x, y) {
         const order = this.drawOrder().reverse();
         for (const i of order) {
-            const polys = R.piecePolys(this.level, this.effPose(i), i);
-            if (polys.some(poly => R.pointInPoly(x, y, poly))) return i;
+            if (this.pieceContains(i, x, y)) return i;
         }
         // 细小纸片（鹤腿、鹿角）：放宽到 10px 内的顶点
         for (const i of order) {
             const polys = R.piecePolys(this.level, this.effPose(i), i);
-            if (polys.some(poly => poly.some(([vx, vy]) => Math.hypot(vx - x, vy - y) < 10))) return i;
+            const holes = R.pieceHoles(this.level, this.effPose(i), i);
+            if (!holes.some(poly => R.pointInPoly(x, y, poly))
+                && polys.some(poly => poly.some(([vx, vy]) => Math.hypot(vx - x, vy - y) < 10))) return i;
         }
         return -1;
     }
@@ -1242,31 +1290,33 @@ class ShadowLoomGame {
                 ctx.fillStyle = pg;
                 ctx.fill('evenodd');
             }
-            ctx.save();
-            cut();
-            ctx.clip('evenodd');
-            ctx.strokeStyle = 'rgba(255,214,160,0.07)';
-            ctx.lineWidth = 0.6;
-            const bx = Math.min(...flat.map(v => v[0]));
-            const bw = Math.max(...flat.map(v => v[0])) - bx;
-            for (let k = 0; k < 14; k++) {
-                const y = minY + ((k * 37) % 100) / 100 * (maxY - minY);
-                ctx.beginPath();
-                ctx.moveTo(bx, y);
-                ctx.quadraticCurveTo(bx + bw / 2, y + ((k % 3) - 1) * 4, bx + bw, y + 2);
-                ctx.stroke();
-            }
-            ctx.restore();
-            const outlined = drawAuthoredPath(ctx, svg, pose, pc.z, (path) => {
-                ctx.strokeStyle = selected ? 'rgba(255,220,160,0.95)' : 'rgba(255,178,100,0.55)';
-                ctx.lineWidth = selected ? 1.5 : 0.9;
-                ctx.stroke(path);
-            });
-            if (!outlined) {
+            if (!solving) {
+                ctx.save();
                 cut();
-                ctx.strokeStyle = selected ? 'rgba(255,220,160,0.95)' : 'rgba(255,178,100,0.55)';
-                ctx.lineWidth = selected ? 1.5 : 0.9;
-                ctx.stroke();
+                ctx.clip('evenodd');
+                ctx.strokeStyle = 'rgba(255,214,160,0.07)';
+                ctx.lineWidth = 0.6;
+                const bx = Math.min(...flat.map(v => v[0]));
+                const bw = Math.max(...flat.map(v => v[0])) - bx;
+                for (let k = 0; k < 14; k++) {
+                    const y = minY + ((k * 37) % 100) / 100 * (maxY - minY);
+                    ctx.beginPath();
+                    ctx.moveTo(bx, y);
+                    ctx.quadraticCurveTo(bx + bw / 2, y + ((k % 3) - 1) * 4, bx + bw, y + 2);
+                    ctx.stroke();
+                }
+                ctx.restore();
+                const outlined = drawAuthoredPath(ctx, svg, pose, pc.z, (path) => {
+                    ctx.strokeStyle = selected ? 'rgba(255,220,160,0.95)' : 'rgba(255,178,100,0.55)';
+                    ctx.lineWidth = selected ? 1.5 : 0.9;
+                    ctx.stroke(path);
+                });
+                if (!outlined) {
+                    cut();
+                    ctx.strokeStyle = selected ? 'rgba(255,220,160,0.95)' : 'rgba(255,178,100,0.55)';
+                    ctx.lineWidth = selected ? 1.5 : 0.9;
+                    ctx.stroke();
+                }
             }
             if (pc.pinned) {
                 const pg2 = ctx.createRadialGradient(at[0] - 1, at[1] + 3, 0.5, at[0], at[1] + 4, 5);
