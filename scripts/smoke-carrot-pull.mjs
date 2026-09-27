@@ -63,7 +63,11 @@ async function assertNormalPage() {
                 progressDots: document.querySelectorAll('#cp-progress-dots .cp-progress-dot').length,
                 progressHasEmoji: document.getElementById('cp-progress-dots')?.textContent.includes('🥕'),
                 miniCarrot: document.querySelector('[data-art-ui="carrot-mark"]')?.getAttribute('src'),
-                arrow: document.querySelector('[data-art-ui="pull-arrow"]')?.getAttribute('src'),
+                pullIcon: {
+                    tag: document.querySelector('#cp-pull-btn .cp-pull-arrow')?.tagName,
+                    hasPath: Boolean(document.querySelector('#cp-pull-btn .cp-pull-arrow path')),
+                },
+                residualPaws: Boolean(document.querySelector('#cp-mole-paws, [data-art-sprite="mole-paws"]')),
             };
         });
         if (!boot.hasGame || boot.state !== 'menu') fail(`boot state 异常: ${JSON.stringify(boot)}`);
@@ -72,7 +76,8 @@ async function assertNormalPage() {
         if (boot.layerHrefs.some(href => !href)) fail('有 production 图层没有加载 href');
         if (boot.spriteWidths.some(width => width <= 0)) fail('有角色/萝卜精灵没有可见尺寸');
         if (boot.progressDots !== 6 || boot.progressHasEmoji) fail('进度萝卜图标未按正式 SVG 渲染');
-        if (!boot.miniCarrot || !boot.arrow) fail('正式 UI 图标没有加载');
+        if (!boot.miniCarrot || !boot.pullIcon.hasPath || boot.pullIcon.tag !== 'svg') fail('正式 UI 图标没有加载');
+        if (boot.residualPaws) fail('production scene contains residual mole paws');
 
         await page.click('#cp-start-btn');
         await page.evaluate(() => {
