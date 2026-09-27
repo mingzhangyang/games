@@ -177,6 +177,39 @@ export const LEVELS = [
         },
     },
 
+    {
+        id: 'pagoda',
+        seed: 19,
+        chapter: 3,
+        name: { en: 'Moon Pavilion', zh: '月下亭' },
+        lamp: { start: { x: 160, y: 664 }, sol: { x: 262, y: 656 }, movable: true },
+        rotate: false,
+        pieces: [
+            {
+                // 月亮钉在幕前最靠灯的一层：只能靠移灯把它挂到亭角上方
+                id: 'moon', z: 0.56, pinned: true,
+                sol: { x: 286, y: 183 },
+            },
+            {
+                id: 'pavilion', z: 0.7,
+                sol: { x: 226.5, y: 228.5 },
+                start: { x: 300, y: 380 },
+            },
+            {
+                id: 'mountain-base', z: 0.86,
+                sol: { x: 242.5, y: 360 },
+                start: { x: 200, y: 200 },
+            },
+        ],
+        life: {
+            tracks: [
+                // 支点在月亮右侧同高处：正向转动让月亮沿弧线升起约 8px
+                { ids: ['moon'], pivot: [420, 186], amp: 3.5, freq: 0.25, t0: 0.2, t1: 3.4, hold: true },
+            ],
+            group: { kind: 'none' },
+        },
+    },
+
     /* ── 第四章 回旋：开放旋转 ── */
     {
         id: 'tree',
@@ -242,6 +275,43 @@ export const LEVELS = [
             ],
             group: { kind: 'none' },
             leaves: true,
+        },
+    },
+
+    {
+        id: 'koi',
+        seed: 23,
+        chapter: 4,
+        name: { en: 'Koi', zh: '锦鲤' },
+        lamp: { start: { x: 318, y: 668 }, sol: { x: 214, y: 658 }, movable: true },
+        rotate: true,
+        pieces: [
+            {
+                id: 'body', z: 0.82, pinned: true,
+                sol: { x: 278.5, y: 244.5 },
+            },
+            {
+                id: 'head', z: 0.58,
+                sol: { x: 177.5, y: 204.5, rot: 0 },
+                start: { x: 300, y: 380, rot: 42 },
+            },
+            {
+                id: 'fins', z: 0.68,
+                sol: { x: 207.5, y: 301.5, rot: 0 },
+                start: { x: 160, y: 220, rot: -36 },
+            },
+            {
+                id: 'tail', z: 0.76,
+                sol: { x: 251, y: 363, rot: 0 },
+                start: { x: 330, y: 240, rot: 30 },
+            },
+        ],
+        life: {
+            tracks: [
+                { ids: ['tail'], pivot: [262, 318], amp: 12, freq: 1.4, t0: 0.1, t1: 3.4 },
+                { ids: ['fins'], pivot: [214, 262], amp: -8, freq: 1.4, t0: 0.3, t1: 3.4 },
+            ],
+            group: { kind: 'swim', t0: 0.3, vx: -18, amp: 5, freq: 0.6 },
         },
     },
 

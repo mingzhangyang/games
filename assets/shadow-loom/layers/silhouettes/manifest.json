@@ -55,7 +55,9 @@
     "bird",
     "whale",
     "deer",
+    "pagoda",
     "tree",
+    "koi",
     "crane"
   ],
   "playableLevelsUsingTracedReference": [
@@ -63,7 +65,9 @@
     "bird",
     "whale",
     "deer",
+    "pagoda",
     "tree",
+    "koi",
     "crane"
   ],
   "families": [
@@ -305,16 +309,28 @@
       "trace": "cubic-bezier",
       "pieces": [
         {
-          "id": "mountain-base",
-          "file": "pagoda/mountain-base.svg"
+          "id": "moon",
+          "file": "pagoda/moon.svg",
+          "anchor": [
+            286,
+            183
+          ]
         },
         {
           "id": "pavilion",
-          "file": "pagoda/pavilion.svg"
+          "file": "pagoda/pavilion.svg",
+          "anchor": [
+            226.5,
+            228.5
+          ]
         },
         {
-          "id": "moon",
-          "file": "pagoda/moon.svg"
+          "id": "mountain-base",
+          "file": "pagoda/mountain-base.svg",
+          "anchor": [
+            242.5,
+            360
+          ]
         }
       ]
     },
@@ -326,16 +342,36 @@
       "trace": "cubic-bezier",
       "pieces": [
         {
+          "id": "head",
+          "file": "koi/head.svg",
+          "anchor": [
+            177.5,
+            204.5
+          ]
+        },
+        {
           "id": "body",
-          "file": "koi/body.svg"
+          "file": "koi/body.svg",
+          "anchor": [
+            278.5,
+            244.5
+          ]
         },
         {
           "id": "fins",
-          "file": "koi/fins.svg"
+          "file": "koi/fins.svg",
+          "anchor": [
+            207.5,
+            301.5
+          ]
         },
         {
           "id": "tail",
-          "file": "koi/tail.svg"
+          "file": "koi/tail.svg",
+          "anchor": [
+            251,
+            363
+          ]
         }
       ]
     }

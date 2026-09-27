@@ -4,11 +4,13 @@ Every piece uses the shared `viewBox="0 0 480 854"`, the game's logical stage co
 
 The supplied reference image contains five bottom paper-cut motifs: rabbit, flying bird, flowering tree, moonlit pagoda, and koi. Those five families are traced from the raster reference with smooth cubic Bézier contours. Decorative cutouts are real subpaths in the same `fill-rule="evenodd"` path; there is no checkerboard, white matte, `<rect>`, or baked background.
 
-- All six playable families (`rabbit`, `bird`, `whale`, `deer`, `tree`, and `crane`) are wired through `js/shadow-loom-silhouettes.js`; the SVG path and judge contour data share the same coordinates and anchors.
-- Playable paper pieces are natural, non-containing partitions of their target: rabbit is split into ears, head, body, and grass; whale into body, fin, and tail; deer into body, neck, and antlers; crane into body, neck, wings, and legs. Shared boundaries may touch, but one piece does not carry another piece's silhouette.
-- `pagoda` and `koi` are complete traced reference families with target compositions, ready for a matching level mapping.
+- All eight playable families (`rabbit`, `bird`, `whale`, `deer`, `pagoda`, `tree`, `koi`, and `crane`) are wired through `js/shadow-loom-silhouettes.js`; the SVG path and judge contour data share the same coordinates and anchors.
+- Playable paper pieces are natural, non-containing partitions of their target: rabbit is split into ears, head, body, and grass; whale into body, fin, and tail; deer into body, neck, and antlers; pagoda into moon, pavilion, and mountain; koi into head, body (with the dorsal fin), fins, and tail; crane into body, neck, wings, and legs. Shared boundaries may touch, but one piece does not carry another piece's silhouette.
+- `pagoda` and `koi` targets were scaled up (×1.3 / ×1.45 about their centre) to match the other levels' size in the paper window; their pieces were drawn as coarse region hints and cut from the target with the re-cut tool below.
 - `whale`, `deer`, and `crane` use the generated original paper-cut references in `references/` and their production SVGs are cubic Bézier traces of those references, not procedural fallback geometry.
 - `manifest.json` is the source of truth for the shared coordinate contract, anchors, provenance, and family file names.
+
+Pieces must be a smooth partition of `target.svg`. If a family's pieces were split on a coarse raster (stair-stepped edges or cut lines), re-cut them with `node scripts/shadow-loom-recut-pieces.mjs <family>` (`--dry` to preview, `--overlap=<px>` to tighten a long seam — koi uses 0.35). It keeps the old pieces only as a partition hint: blurred label fields give smooth cut lines, each piece is target ∩ its region traced at sub-pixel precision, and each piece extends 0.5px into the pieces after it in the manifest so the shared seam does not anti-alias into a light hairline. The rabbit, pagoda, and koi pieces were cut this way; to re-partition a family, overwrite its piece SVGs with rough region polygons first — they only need to say which piece owns which area.
 
 Run `npm run build:shadow-loom-silhouettes` after editing an SVG, and
 `npm run check:shadow-loom-silhouettes` to prove the generated runtime cache is synchronized.
