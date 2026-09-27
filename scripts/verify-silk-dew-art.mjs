@@ -95,10 +95,41 @@ if (runtimeBytes > manifest.runtimeBudgetBytes?.hard) {
     pass(`runtime art pack is ${runtimeBytes} bytes`);
 }
 
-for (const needle of ['new URL', 'ART_URLS', 'loadSilkDewArt', 'onFallback']) {
+for (const needle of ['ART_URLS', 'loadSilkDewArt', 'onFallback', 'ART_LOAD_TIMEOUT_MS', 'setTimeout']) {
     if (!art.includes(needle)) fail(`art loader is missing ${needle}`);
 }
-for (const needle of ['createSilkDewScene', 'LIGHT_SCALE = 0.5', 'drawBackground', 'drawForeground', 'drawLocalLight', 'drawVessel']) {
+const literalAssetUrls = [
+    '../assets/silk-dew/layers/sky.svg',
+    '../assets/silk-dew/layers/moon-mountains.svg',
+    '../assets/silk-dew/layers/garden-back.svg',
+    '../assets/silk-dew/layers/garden-mid.svg',
+    '../assets/silk-dew/layers/garden-mid-lit.svg',
+    '../assets/silk-dew/layers/foreground.svg',
+    '../assets/silk-dew/layers/foreground-lit.svg',
+    '../assets/silk-dew/props/jade-vessel.svg',
+    '../assets/silk-dew/layers/fallback.svg',
+];
+for (const assetUrl of literalAssetUrls) {
+    if (!art.includes(`new URL('${assetUrl}', import.meta.url)`)) {
+        fail(`production art URL must stay statically analyzable: ${assetUrl}`);
+    }
+}
+if (art.includes('new URL(layer.file') || art.includes('new URL(SILK_DEW_MANIFEST')) {
+    fail('production art URLs must not be constructed from runtime manifest file values');
+}
+for (const needle of [
+    'createSilkDewScene',
+    'LIGHT_SCALE = 0.5',
+    'buildStaticCaches',
+    'backgroundFarCache',
+    'backgroundMidCache',
+    'foregroundCache',
+    'litDeltaCache',
+    'drawBackground',
+    'drawForeground',
+    'drawLocalLight',
+    'drawVessel',
+]) {
     if (!scene.includes(needle)) fail(`scene compositor is missing ${needle}`);
 }
 for (const needle of ['createSilkDewScene', 'collectLightSources', 'drawForeground', 'drawLocalLight', 'prefers-reduced-motion']) {
@@ -106,6 +137,7 @@ for (const needle of ['createSilkDewScene', 'collectLightSources', 'drawForegrou
 }
 if (!html.includes('id="sd-stage" data-art-state="loading"')) fail('stage art-state loading hook is missing');
 if (/[💧🧵📅🏆]/u.test(html)) fail('silk-dew.html still contains art emoji placeholders');
+if (/[🧵📅]/u.test(game)) fail('localized Silkfall mode labels still contain emoji placeholders');
 if (!css.includes('.sd-stage[data-art-state="loading"]::after')) fail('loading art state has no UI treatment');
 if (!css.includes('@media (prefers-reduced-motion: reduce)')) fail('reduced-motion CSS contract is missing');
 if (!verifyAll.includes("name: 'silk-dew-art'")) fail('verify-all is missing silk-dew-art');
