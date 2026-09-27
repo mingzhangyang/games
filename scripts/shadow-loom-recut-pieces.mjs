@@ -363,17 +363,31 @@ if (unlabelled) {
     console.error(`✗ ${family}: part of the target is not covered by any piece hint — widen the hints`);
     process.exit(1);
 }
-pieces.forEach((p, k) => {
-    const loops = trace(cover[k]).map(simplify).filter(l => l.length >= 3 && Math.abs(area(l)) >= 4) // same floor as the build script;
+const cut = pieces.map((p, k) => {
+    // same area floor as the build script, so the SVG and the runtime cache agree
+    const loops = trace(cover[k]).map(simplify).filter(l => l.length >= 3 && Math.abs(area(l)) >= 4);
     // outer rings first (positive signed area in stage coordinates), then cut-outs
     loops.sort((a, b) => area(b) - area(a));
     const d = loops.map(cubic).join(' ');
     const pieceArea = cover[k].reduce((s, v) => s + v, 0) * GRID * GRID;
     const outers = loops.filter(l => area(l) > 0).length;
     console.log(`  ${p.id.padEnd(8)} ${pieceArea.toFixed(0).padStart(6)} px² · ${outers} outer · ${loops.length - outers} holes · ${d.length} chars`);
-    if (DRY) return;
-    const file = path.join(DIR, p.file);
-    const src = fs.readFileSync(file, 'utf8');
-    fs.writeFileSync(file, src.replace(/(<path\b[^>]*\bd=")[^"]+(")/, `$1${d}$2`));
+    return { p, d, outers, share: pieceArea / totalTarget };
 });
+// a hint that wins (almost) nothing would write an empty or sliver path and
+// silently erase that piece — refuse before touching any file. The smallest
+// real piece (rabbit head) is ~10% of its target.
+const MIN_SHARE = 0.03;
+const empty = cut.filter(c => !c.outers || c.share < MIN_SHARE).map(c => `${c.p.id} (${(c.share * 100).toFixed(1)}%)`);
+if (empty.length) {
+    console.error(`✗ ${family}: ${empty.join(', ')} own less than ${MIN_SHARE * 100}% of the target — check the piece hints`);
+    process.exit(1);
+}
+if (!DRY) {
+    cut.forEach(({ p, d }) => {
+        const file = path.join(DIR, p.file);
+        const src = fs.readFileSync(file, 'utf8');
+        fs.writeFileSync(file, src.replace(/(<path\b[^>]*\bd=")[^"]+(")/, `$1${d}$2`));
+    });
+}
 if (DRY) console.log('(dry run — nothing written)');
