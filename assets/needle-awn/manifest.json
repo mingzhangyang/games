@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "coordinateSystem": {
+    "unit": "logical-px",
+    "origin": "top-left",
+    "xAxis": "right",
+    "yAxis": "down",
+    "width": 480,
+    "height": 640,
+    "rasterScale": 2
+  },
+  "layers": [
+    {
+      "id": "sky-ink",
+      "file": "layers/sky-ink.webp",
+      "z": 10,
+      "sourceRectRasterPx": [0, 0, 960, 1280],
+      "destRectLogicalPx": [0, 0, 480, 640],
+      "alphaRequired": false
+    },
+    {
+      "id": "mountains",
+      "file": "layers/mountains.webp",
+      "z": 20,
+      "sourceRectRasterPx": [0, 0, 960, 1280],
+      "destRectLogicalPx": [0, 0, 480, 640],
+      "alphaRequired": true
+    },
+    {
+      "id": "mist",
+      "file": "layers/mist.webp",
+      "z": 30,
+      "sourceRectRasterPx": [0, 0, 960, 1280],
+      "destRectLogicalPx": [0, 0, 480, 640],
+      "alphaRequired": true
+    },
+    {
+      "id": "arena-floor",
+      "file": "layers/arena-floor.webp",
+      "z": 40,
+      "sourceRectRasterPx": [0, 0, 960, 1280],
+      "destRectLogicalPx": [0, 0, 480, 640],
+      "alphaRequired": true
+    },
+    {
+      "id": "foreground",
+      "file": "layers/foreground.webp",
+      "z": 90,
+      "sourceRectRasterPx": [0, 0, 960, 1280],
+      "destRectLogicalPx": [0, 0, 480, 640],
+      "alphaRequired": true
+    }
+  ],
+  "bosses": {
+    "needle_sovereign": {
+      "file": "bosses/needle-sovereign.webp",
+      "rasterSizePx": [384, 384],
+      "sourceRectRasterPx": [0, 0, 384, 384],
+      "localRectLogicalPx": [-48, -48, 96, 96],
+      "pivotLocalLogicalPx": [0, 0],
+      "alphaRequired": true,
+      "visualRadius": 46
+    },
+    "awn_emperor": {
+      "file": "bosses/awn-emperor.webp",
+      "rasterSizePx": [384, 384],
+      "sourceRectRasterPx": [0, 0, 384, 384],
+      "localRectLogicalPx": [-48, -48, 96, 96],
+      "pivotLocalLogicalPx": [0, 0],
+      "alphaRequired": true,
+      "visualRadius": 46
+    },
+    "grandmaster": {
+      "file": "bosses/grandmaster.webp",
+      "rasterSizePx": [384, 384],
+      "sourceRectRasterPx": [0, 0, 384, 384],
+      "localRectLogicalPx": [-48, -48, 96, 96],
+      "pivotLocalLogicalPx": [0, 0],
+      "alphaRequired": true,
+      "visualRadius": 46
+    }
+  },
+  "support": {
+    "reference": "reference/concept-arena.webp",
+    "fallback": "layers/fallback.webp"
+  },
+  "chapters": {
+    "mist-gate": { "trials": [1, 4], "mistAlpha": 0.72, "floorTint": "#416b78" },
+    "needle-terrace": { "trials": [5, 7], "mistAlpha": 0.58, "floorTint": "#536c87" },
+    "awn-altar": { "trials": [8, 10], "mistAlpha": 0.46, "floorTint": "#876b42" }
+  },
+  "dynamicZ": {
+    "bullets": 50,
+    "enemies": 60,
+    "boss": 70,
+    "players": 80,
+    "particles": 100,
+    "foreground": 110,
+    "debugHitbox": 120
+  },
+  "runtimeBudgetBytes": { "ideal": 2097152, "hard": 2936012 }
+}

@@ -23,6 +23,8 @@ import { submitScore } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
+import { ART_UI, loadNeedleAwnArt } from './needle-awn-art.js';
+import { createNeedleAwnScene } from './needle-awn-scene.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -43,6 +45,7 @@ const I18N = makeText({
     zh: {
         stats: '数据统计',
         gameTitle: '针尖对麦芒',
+        canvasAria: '针尖对麦芒演武场',
         gameSub: '极速破锋 · 针芒毕露 · 刹那生灭',
         badge: '东方赛博交锋',
         trials: '十关演武',
@@ -83,22 +86,22 @@ const I18N = makeText({
         toastZen: '极意·刹那！',
         toastNova: '金芒天爆！',
         toastUlt: '万芒天破！',
-        sideRulesTitle: '⚔️ 针尖对麦芒 · 核心法则',
+        sideRulesTitle: '针尖对麦芒 · 核心法则',
         sideRulesText: '<b>硬碰硬：</b>朝向迎面而来的利刃或尖刺突刺，在毫厘之间触发<b>针尖对麦芒</b>！完美格挡所有伤害并爆发出碎芒反弹。<br><br><b>双锋流转：</b><br>• <b>银针（水蓝）</b>：极速穿云刺，碰撞触发时空凝滞（子弹时间）。<br>• <b>金芒（暖金）</b>：回旋破晓舞，碰撞引发金芒天爆全屏净空。<br><b>逆克爆发：</b>以针刺破麦芒，倍率翻倍！',
-        sideRecordsTitle: '🏆 绝巅战绩',
+        sideRecordsTitle: '绝巅战绩',
         sideEndlessLbl: '无尽争锋最高分',
         sideClashLbl: '单局极致碰撞',
         sideStarsLbl: '演武通关星数',
         sideDailyLbl: '今日论剑状态',
-        sideControlsTitle: '⌨️ 键位与操控',
+        sideControlsTitle: '键位与操控',
         scAim: '瞄准方向',
         scAimKey: '鼠标移动 / 触屏拖拽（右半屏）',
         scDash: '破空突刺 (交锋)',
-        scDashKey: '鼠标左键 / 空格 / ⚡按钮',
+        scDashKey: '鼠标左键 / 空格 / 破空按钮',
         scStance: '转换锋芒姿态',
-        scStanceKey: '鼠标右键 / Q / 🔄按钮',
+        scStanceKey: '鼠标右键 / Q / 转锋按钮',
         scUlt: '万芒天破 (极意)',
-        scUltKey: 'E 键 / 双击 / 🌟按钮',
+        scUltKey: 'E 键 / 双击 / 极意按钮',
         scMove: '身法游走',
         scMoveKey: 'W A S D / 左半屏摇杆',
         dailyDone: '今日已登顶',
@@ -110,7 +113,7 @@ const I18N = makeText({
         touchUlt: '极意',
         ultLabel: '极意',
         namePlaceholder: '输入侠客尊号以登金榜...',
-        duelFinale: '⚔️ 对决终局 ⚔️',
+        duelFinale: '对决终局',
         duelSubResult: '双雄争锋 · 胜负已分',
         victorySub: '演武告捷 · 锋芒初试',
         defeatSub: '胜败常事 · 重整旗鼓',
@@ -129,6 +132,7 @@ const I18N = makeText({
     en: {
         stats: 'Stats',
         gameTitle: 'Pinpoint Clash',
+        canvasAria: 'Pinpoint Clash arena',
         gameSub: 'Needle vs Awn · Pierce · Clash · Awaken',
         badge: 'ORIENTAL KINETIC ACTION',
         trials: '10 Trials',
@@ -169,22 +173,22 @@ const I18N = makeText({
         toastZen: 'BULLET TIME!',
         toastNova: 'SOLAR NOVA!',
         toastUlt: 'AWAKENED LOTUS!',
-        sideRulesTitle: '⚔️ Core Rules: Pinpoint Clash',
+        sideRulesTitle: 'Core Rules: Pinpoint Clash',
         sideRulesText: '<b>Head-on Precision:</b> Thrust directly towards incoming blade tips to trigger <b>Pinpoint Clash</b>! Parries all damage, freeze-frames impact, and fires homing shards.<br><br><b>Dual Stances:</b><br>• <b>Silver Needle (Cyan)</b>: Piercing dash, triggers Bullet Time on clash.<br>• <b>Golden Awn (Gold)</b>: Wide arc sweep, triggers Solar Nova on clash.<br><b>Opposite Clash:</b> Needle vs Awn yields ×2 bonus multiplier!',
-        sideRecordsTitle: '🏆 Grand Records',
+        sideRecordsTitle: 'Grand Records',
         sideEndlessLbl: 'Endless Best Score',
         sideClashLbl: 'Max Tip Clashes',
         sideStarsLbl: 'Total Trial Stars',
         sideDailyLbl: 'Daily Challenge',
-        sideControlsTitle: '⌨️ Controls & Shortcuts',
+        sideControlsTitle: 'Controls & Shortcuts',
         scAim: 'Aim Angle',
         scAimKey: 'Mouse Move / Touch Drag (right half)',
         scDash: 'Thrust (Clash)',
-        scDashKey: 'Left Click / Space / ⚡',
+        scDashKey: 'Left Click / Space / Thrust button',
         scStance: 'Switch Stance',
-        scStanceKey: 'Right Click / Q / 🔄',
+        scStanceKey: 'Right Click / Q / Stance button',
         scUlt: 'Awakened Lotus',
-        scUltKey: 'E / Double Tap / 🌟',
+        scUltKey: 'E / Double Tap / Awaken button',
         scMove: 'Agile Maneuver',
         scMoveKey: 'W A S D / Touch Joystick (left half)',
         dailyDone: 'Completed Today',
@@ -196,7 +200,7 @@ const I18N = makeText({
         touchUlt: 'Awaken',
         ultLabel: 'Awaken',
         namePlaceholder: 'Warrior / Player Name...',
-        duelFinale: '⚔️ DUEL FINALE ⚔️',
+        duelFinale: 'DUEL FINALE',
         duelSubResult: '1v1 Arena Duel Concluded',
         victorySub: 'Trial Accomplished',
         defeatSub: 'Defeated · Strike Again',
@@ -477,13 +481,15 @@ class GameEngine {
         this.dpr = window.devicePixelRatio || 1;
         this.scale = 1;
         this.setupCanvas();
+        this.scene = createNeedleAwnScene({ ctx: this.ctx, width: ARENA_WIDTH, height: ARENA_HEIGHT });
+        this.artReady = false;
+        this.artState = 'loading';
+        this.debugHitbox = new URLSearchParams(window.location.search).get('debug-hitbox') === '1';
         // 本页此前没有任何 resize 监听（画布尺寸恒定），现在舞台尺寸会随
         // --frame-chrome 实测值与视口变化（见 js/game-frame.js），必须跟上；
         // setupCanvas 用 setTransform 幂等重设变换，重复调用安全。
         window.addEventListener('resize', () => this.setupCanvas());
         window.addEventListener('game-frame:changed', () => this.setupCanvas());
-        this._buildBackground();
-
         this.mode = 'levels'; // 'levels' | 'endless' | 'daily' | 'duel'
         this.currentLevel = 1;
         this.unlockedLevel = parseInt(storageGet(STORAGE_KEYS.UNLOCKED_LEVEL) || '1', 10);
@@ -530,6 +536,12 @@ class GameEngine {
         this.initDOM();
         this.initInput();
         this.bindEvents();
+        this.setArtControlsDisabled(true);
+        loadNeedleAwnArt({
+            stage: document.getElementById('na-stage'),
+            onReady: (art) => this.setArtState('ready', art),
+            onFallback: (_error, art) => this.setArtState('fallback', art),
+        });
         this.updateSideRecords();
         this.applyLanguage(getLang());
 
@@ -555,6 +567,30 @@ class GameEngine {
         }
         this.ctx.setTransform(s, 0, 0, s, 0, 0);
         this.dpr = dpr;
+    }
+
+    setArtControlsDisabled(disabled) {
+        document.querySelectorAll('[data-art-gated]').forEach((button) => {
+            button.disabled = disabled;
+        });
+        this.dom?.overlayStart?.toggleAttribute('data-art-loading', disabled);
+    }
+
+    setArtState(state, art) {
+        this.artState = state;
+        this.artReady = true;
+        this.scene?.setArt(art, state);
+        const stage = document.getElementById('na-stage');
+        if (stage) stage.dataset.artState = state;
+        this.setStanceIcon(this.player);
+        this.setArtControlsDisabled(false);
+        this.renderLevelGrid();
+    }
+
+    setStanceIcon(entityOrStance) {
+        const stance = typeof entityOrStance === 'string' ? entityOrStance : entityOrStance?.stance;
+        if (!this.dom?.stanceIcon) return;
+        this.dom.stanceIcon.src = stance === 'awn' ? ART_UI.stanceAwn : ART_UI.stanceNeedle;
     }
 
     createPlayer(x, y, isP2 = false) {
@@ -954,6 +990,7 @@ class GameEngine {
         if (naHint) naHint.textContent = t.hint;
 
         document.getElementById('na-main-title').textContent = t.gameTitle;
+        document.getElementById('na-canvas').setAttribute('aria-label', t.canvasAria);
         document.getElementById('na-main-sub').textContent = t.gameSub;
         document.getElementById('na-howto-box').innerHTML = t.howTo;
 
@@ -1022,8 +1059,9 @@ class GameEngine {
         // 内部 HUD 姿态与极意标签
         const isNeedle = !this.player || this.player.stance === 'needle';
         this.dom.stanceText.textContent = isNeedle ? t.stanceNeedle : t.stanceAwn;
-        this.dom.stanceIcon.textContent = isNeedle ? '⚡' : '🌾';
-        if (this.dom.ultLabel) this.dom.ultLabel.textContent = t.ultLabel;
+        this.setStanceIcon(isNeedle ? 'needle' : 'awn');
+        const ultText = this.dom.ultLabel?.querySelector('[data-ult-text]');
+        if (ultText) ultText.textContent = t.ultLabel;
 
         // 玩家名称输入占位符
         if (this.dom.playerInput) this.dom.playerInput.placeholder = t.namePlaceholder;
@@ -1063,11 +1101,11 @@ class GameEngine {
             const isUnlocked = i <= this.unlockedLevel;
             chip.className = `na-level-chip ${isUnlocked ? 'unlocked' : 'locked'}`;
             const stars = this.levelStars[i] || 0;
-            const starText = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+            const starText = '✦'.repeat(stars) + '·'.repeat(3 - stars);
 
             chip.innerHTML = `
                 <span>${i}</span>
-                <span class="na-level-stars">${isUnlocked ? starText : '🔒'}</span>
+                <span class="na-level-stars">${isUnlocked ? starText : '—'}</span>
             `;
 
             if (isUnlocked) {
@@ -1123,6 +1161,7 @@ class GameEngine {
     }
 
     startLevel(levelNum) {
+        if (!this.artReady) return;
         this.mode = 'levels';
         this.currentLevel = levelNum;
         this.resetGameState();
@@ -1132,6 +1171,7 @@ class GameEngine {
     }
 
     startEndlessMode() {
+        if (!this.artReady) return;
         this.mode = 'endless';
         this.resetGameState();
         this.resumeBattle();
@@ -1139,6 +1179,7 @@ class GameEngine {
     }
 
     startDailyMode() {
+        if (!this.artReady) return;
         this.mode = 'daily';
         this.resetGameState();
         this.resumeBattle();
@@ -1146,6 +1187,7 @@ class GameEngine {
     }
 
     startDuelMode() {
+        if (!this.artReady) return;
         this.mode = 'duel';
         this.resetGameState();
         this.player2 = this.createPlayer(ARENA_WIDTH / 2, ARENA_HEIGHT * 0.28, true);
@@ -1178,15 +1220,17 @@ class GameEngine {
 
         const t = I18N[getLang()] || I18N.zh;
         this.dom.stanceChip.className = 'na-stance-chip needle';
-        this.dom.stanceIcon.textContent = '⚡';
+        this.setStanceIcon('needle');
         this.dom.stanceText.textContent = t.stanceNeedle;
-        if (this.dom.ultLabel) this.dom.ultLabel.textContent = t.ultLabel;
+        const ultText = this.dom.ultLabel?.querySelector('[data-ult-text]');
+        if (ultText) ultText.textContent = t.ultLabel;
 
         this.updateHUD();
         this.updateHUDLabels();
     }
 
     resumeBattle() {
+        if (!this.artReady) return;
         this.state = 'playing';
         this.dom.overlayStart.classList.add('hidden');
         this.dom.overlayPause.classList.add('hidden');
@@ -1245,7 +1289,7 @@ class GameEngine {
             const t = I18N[getLang()] || I18N.zh;
             const isNeedle = entity.stance === 'needle';
             this.dom.stanceChip.className = `na-stance-chip ${isNeedle ? 'needle' : 'awn'}`;
-            this.dom.stanceIcon.textContent = isNeedle ? '⚡' : '🌾';
+            this.setStanceIcon(isNeedle ? 'needle' : 'awn');
             this.dom.stanceText.textContent = isNeedle ? t.stanceNeedle : t.stanceAwn;
         }
     }
@@ -1475,7 +1519,7 @@ class GameEngine {
                 stars = 1;
                 if (this.totalClashes >= 5) stars++;
                 if (this.player.lives === this.player.maxLives) stars++;
-                this.dom.resultStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+                this.dom.resultStars.textContent = '✦'.repeat(stars) + '·'.repeat(3 - stars);
 
                 // 解锁下一关
                 if (this.mode === 'levels') {
@@ -1490,7 +1534,7 @@ class GameEngine {
                     }
                 }
             } else {
-                this.dom.resultStars.textContent = '☆☆☆';
+                this.dom.resultStars.textContent = '···';
             }
         }
 
@@ -1647,6 +1691,7 @@ class GameEngine {
             bossType,
             type: bossType,
             stance,
+            level: this.currentLevel,
             x, y,
             vx: 60,
             vy: 0,
@@ -2099,36 +2144,7 @@ class GameEngine {
     /* ────────────────────────── 渲染层 (赛博水墨画风) ────────────────────────── */
 
     _buildBackground() {
-        // 大半径极弱 radial 墨晕（仅构建一次，运行时只平移 → 零每帧渐变）
-        this.bgBlobs = [
-            this._makeInkBlob('#38bdf8', 0.05),
-            this._makeInkBlob('#fbbf24', 0.045),
-            this._makeInkBlob('#38bdf8', 0.04)
-        ];
-        this.bgBlobInfo = [
-            { x: ARENA_WIDTH * 0.28, y: ARENA_HEIGHT * 0.30, r: 230, sx: 0.18, sy: 0.12, ph: 0.0 },
-            { x: ARENA_WIDTH * 0.72, y: ARENA_HEIGHT * 0.58, r: 270, sx: 0.10, sy: 0.15, ph: 2.1 },
-            { x: ARENA_WIDTH * 0.50, y: ARENA_HEIGHT * 0.82, r: 190, sx: 0.22, sy: 0.14, ph: 4.0 }
-        ];
-    }
-
-    _makeInkBlob(hex, alpha) {
-        const s = 256;
-        const c = document.createElement('canvas');
-        c.width = s;
-        c.height = s;
-        const x = c.getContext('2d');
-        const g = x.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-        g.addColorStop(0, this._hexA(hex, alpha));
-        g.addColorStop(1, this._hexA(hex, 0));
-        x.fillStyle = g;
-        x.fillRect(0, 0, s, s);
-        return c;
-    }
-
-    _hexA(hex, a) {
-        const n = parseInt(hex.slice(1), 16);
-        return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+        // 背景由 NeedleAwnScene 统一管理并缓存；保留空方法兼容旧扩展点。
     }
 
     draw() {
@@ -2142,263 +2158,78 @@ class GameEngine {
             ctx.translate(shakeX, shakeY);
         }
 
-        // 1. 背景绘制 (赛博水墨：漂移斜网格 + 极弱墨晕)
-        ctx.fillStyle = '#02040b';
-        ctx.fillRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
+        const sceneMeta = {
+            mode: this.mode,
+            level: this.currentLevel,
+            waveIndex: this.waveIndex,
+            timeElapsed: this.timeElapsed,
+        };
 
-        // 缓慢漂移的水墨斜网格 (细线 alpha <= 0.06)
-        const gridDrift = (this.timeElapsed * 8) % 46;
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
-        ctx.lineWidth = 1;
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
-        ctx.clip();
-        for (let x = -ARENA_HEIGHT - 46 + gridDrift; x < ARENA_WIDTH; x += 46) {
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x + ARENA_HEIGHT, ARENA_HEIGHT);
-        }
-        for (let x = gridDrift; x < ARENA_WIDTH + ARENA_HEIGHT; x += 46) {
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x - ARENA_HEIGHT, ARENA_HEIGHT);
-        }
-        ctx.stroke();
-        ctx.restore();
+        // 1. 分层水墨背景（静态层缓存，按关卡章节切换色调）
+        this.scene.drawBackground(ctx, sceneMeta);
 
-        // 大半径极弱 radial 墨晕 (预渲染一次，运行时仅平移 → 零每帧渐变)
-        if (this.bgBlobs) {
-            for (let i = 0; i < this.bgBlobs.length; i++) {
-                const info = this.bgBlobInfo[i];
-                const dx = Math.sin(this.timeElapsed * info.sx + info.ph) * info.r * 0.35;
-                const dy = Math.cos(this.timeElapsed * info.sy + info.ph) * info.r * 0.35;
-                ctx.drawImage(this.bgBlobs[i], info.x + dx - info.r, info.y + dy - info.r, info.r * 2, info.r * 2);
-            }
-        }
-
-        // 2. 绘制边界竞技场界圈 (八卦太极微光虚环)
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(16, 16, ARENA_WIDTH - 32, ARENA_HEIGHT - 32);
-
-        // 3. 绘制弹幕与反弹飞芒
+        // 2. 绘制弹幕与反弹飞芒
         this.drawBullets(ctx);
         this.drawRicochets(ctx);
 
-        // 4. 绘制敌人与 Boss
+        // 3. 绘制敌人与 Boss 法相
         this.drawEnemies(ctx);
 
-        // 5. 绘制玩家 1 与 玩家 2
+        // 4. 绘制玩家 1 与 玩家 2
         this.drawEntity(ctx, this.player);
         if (this.player2) {
             this.drawEntity(ctx, this.player2);
         }
 
-        // 6. 绘制粒子与震波
+        // 5. 绘制粒子与震波
         this.fx.draw(ctx);
+
+        // 6. 前景剪影最后压住场景边缘，保留战斗纵深
+        this.scene.drawForeground(ctx, sceneMeta);
+
+        // 7. 调试碰撞层必须位于前景之上，才能准确校对尖端锚点
+        this.drawDebugHitboxes(ctx);
 
         ctx.restore();
     }
 
     drawEntity(ctx, p) {
+        if (!p) return;
         if (p.invulnerable > 0 && Math.floor(performance.now() / 80) % 2 === 0) {
             return; // 无敌状态闪烁
         }
-
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.angle);
-
-        const isNeedle = p.stance === 'needle';
-        const colorCore = isNeedle ? '#f0f9ff' : '#fef08a';
-        const colorGlow = isNeedle ? '#38bdf8' : '#f59e0b';
-
-        ctx.shadowColor = colorGlow;
-        ctx.shadowBlur = p.isDashing ? 20 : 12;
-
-        if (isNeedle) {
-            // 银针形体：冷冽极速棱形针刺
-            ctx.fillStyle = colorGlow;
-            ctx.beginPath();
-            ctx.moveTo(p.tipDistance, 0); // 针尖
-            ctx.lineTo(-p.radius, -p.radius * 0.6);
-            ctx.lineTo(-p.radius * 0.5, 0);
-            ctx.lineTo(-p.radius, p.radius * 0.6);
-            ctx.closePath();
-            ctx.fill();
-
-            // 针身白银辉光
-            ctx.fillStyle = colorCore;
-            ctx.beginPath();
-            ctx.moveTo(p.tipDistance - 2, 0);
-            ctx.lineTo(-p.radius * 0.3, -2);
-            ctx.lineTo(-p.radius * 0.3, 2);
-            ctx.closePath();
-            ctx.fill();
-        } else {
-            // 金麦芒形体：璀璨金色羽状麦穗芒刃
-            ctx.fillStyle = colorGlow;
-            ctx.beginPath();
-            ctx.moveTo(p.tipDistance, 0); // 麦芒尖
-            ctx.lineTo(-p.radius, -p.radius * 0.7);
-            ctx.lineTo(-p.radius * 0.4, 0);
-            ctx.lineTo(-p.radius, p.radius * 0.7);
-            ctx.closePath();
-            ctx.fill();
-
-            // 两侧麦芒绒刺
-            ctx.strokeStyle = colorCore;
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(p.tipDistance * 0.6, 0);
-            ctx.lineTo(p.tipDistance * 0.2, -p.radius * 0.8);
-            ctx.moveTo(p.tipDistance * 0.6, 0);
-            ctx.lineTo(p.tipDistance * 0.2, p.radius * 0.8);
-            ctx.stroke();
-        }
-
-        // 尖端判定光点
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(p.tipDistance, 0, 3, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
+        this.scene.drawPlayer(ctx, p, this.timeElapsed);
     }
 
     drawEnemies(ctx) {
         for (const e of this.enemies) {
-            ctx.save();
-            ctx.translate(e.x, e.y);
-            ctx.rotate(e.angle);
-
-            const isNeedle = e.stance === 'needle';
-            const colorGlow = isNeedle ? '#38bdf8' : '#f59e0b';
-            ctx.shadowColor = colorGlow;
-            ctx.shadowBlur = 10;
-
             if (e.isBoss) {
-                // Boss 多层描边「法相」
-                const R = e.radius;
-                const tB = this.timeElapsed;
-
-                // 内核实心
-                ctx.shadowColor = colorGlow;
-                ctx.shadowBlur = 14;
-                ctx.fillStyle = colorGlow;
-                ctx.beginPath();
-                ctx.arc(0, 0, R * 0.55, 0, Math.PI * 2);
-                ctx.fill();
-
-                // 中层金色虚线环（反向旋转）
-                ctx.shadowBlur = 0;
-                ctx.strokeStyle = '#fbbf24';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([6, 7]);
-                ctx.save();
-                ctx.rotate(-tB * 0.6);
-                ctx.beginPath();
-                ctx.arc(0, 0, R * 0.82, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.restore();
-                ctx.setLineDash([]);
-
-                // 外层青色细环（正向旋转）
-                ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
-                ctx.lineWidth = 1.5;
-                ctx.save();
-                ctx.rotate(tB * 0.9);
-                ctx.beginPath();
-                ctx.arc(0, 0, R * 1.05, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.restore();
-
-                // 6-8 根环绕芒刺（短径向线段）
-                const spikes = 8;
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2;
-                for (let s = 0; s < spikes; s++) {
-                    const a = (s / spikes) * Math.PI * 2 + tB * 0.5;
-                    const r0 = R * 1.12;
-                    const r1 = R * 1.32;
-                    ctx.beginPath();
-                    ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0);
-                    ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
-                    ctx.stroke();
-                }
-
-                // 尖端破阵光标（保留原白三角描边）
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(e.tipDistance, 0);
-                ctx.lineTo(-e.radius * 0.8, -e.radius);
-                ctx.lineTo(-e.radius * 0.8, e.radius);
-                ctx.closePath();
-                ctx.stroke();
-
-                // 绘制 Boss 血条
-                ctx.restore();
-                ctx.save();
-                ctx.translate(e.x, e.y - e.radius - 16);
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(-35, 0, 70, 5);
-                ctx.fillStyle = colorGlow;
-                ctx.fillRect(-35, 0, (e.hp / e.maxHp) * 70, 5);
-                ctx.restore();
-                continue;
+                this.scene.drawBoss(ctx, e, this.timeElapsed);
             } else {
-                // 普通小怪飞刃
-                ctx.fillStyle = colorGlow;
-                ctx.beginPath();
-                ctx.moveTo(e.tipDistance, 0);
-                ctx.lineTo(-e.radius, -e.radius * 0.6);
-                ctx.lineTo(-e.radius, e.radius * 0.6);
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(e.tipDistance, 0, 2.5, 0, Math.PI * 2);
-                ctx.fill();
+                this.scene.drawEnemy(ctx, e, this.timeElapsed);
             }
-
-            ctx.restore();
         }
+    }
+
+    drawDebugHitboxes(ctx) {
+        if (!this.debugHitbox) return;
+        for (const enemy of this.enemies) {
+            this.scene.drawHitbox(ctx, enemy);
+        }
+        if (this.player) this.scene.drawHitbox(ctx, this.player);
+        if (this.player2) this.scene.drawHitbox(ctx, this.player2);
     }
 
     drawBullets(ctx) {
         for (const b of this.bullets) {
-            ctx.save();
-            ctx.translate(b.x, b.y);
-            ctx.rotate(b.angle);
-
-            const isNeedle = b.stance === 'needle';
-            ctx.fillStyle = isNeedle ? '#38bdf8' : '#f59e0b';
-            ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 8;
-
-            ctx.beginPath();
-            ctx.moveTo(b.tipDistance, 0);
-            ctx.lineTo(-b.radius, -b.radius * 0.5);
-            ctx.lineTo(-b.radius, b.radius * 0.5);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.restore();
+            this.scene.drawBullet(ctx, b);
         }
     }
 
     drawRicochets(ctx) {
-        ctx.save();
         for (const r of this.ricochets) {
-            ctx.fillStyle = r.color;
-            ctx.shadowColor = r.color;
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-            ctx.fill();
+            this.scene.drawRicochet(ctx, r);
         }
-        ctx.restore();
     }
 }
 
