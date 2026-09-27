@@ -88,7 +88,8 @@ assets/tank-battle/
 │   └── speed.svg
 └── ui/
     ├── minimap-frame.svg
-    └── weapon-icons.svg
+    ├── weapon-icons.svg
+    └── rotate-device.svg
 ```
 
 ## 4. 关键原则：逻辑矩形仍是真源
@@ -315,7 +316,18 @@ Minimap frame 使用统一边框。
 
 - visual barrel direction = bullet initial direction；
 - sprite 不能改变 collision；
-- virtual controller hit-area 不能缩水。
+- virtual controller hit-area 不能缩水；
+- `assets/tank-battle/ui/rotate-device.svg` 必须进入 manifest，并由 art verifier 检查存在性和 SVG 可解析性。
+
+### verify-all 注册
+
+现有 `smoke-tank-battle` 已在 `scripts/verify-all.mjs` 中。新增 art verifier 时必须显式加入：
+
+```js
+{ name: 'tank-battle-art', script: 'scripts/verify-tank-battle-art.mjs', args: [], needsServer: false },
+```
+
+并把 `tank-battle-art` 加入 `QUICK_NAMES`。继续保留现有 smoke 的 `needsServer: true` 注册。
 
 ## 16. 推荐文件变化
 
@@ -327,6 +339,7 @@ js/tank-battle-art.js
 css/tank-battle.css
 scripts/verify-tank-battle-art.mjs
 scripts/smoke-tank-battle.mjs
+scripts/verify-all.mjs
 ```
 
 ## 17. 实施阶段
