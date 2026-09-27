@@ -1,9 +1,8 @@
 export const SCENE = Object.freeze({
     carrot: { x: 316, y: 506 },
     girl: { x: 186, y: 692, s: 0.94 },
-    mole: { x: 482, y: 612, s: 0.9 },
+    mole: { x: 470, y: 620, s: 0.68 },
     girlHands: [[38, -218], [32, -210], [26, -200]],
-    molePaws: [[-70, -46], [-60, -22]],
     crown: [[-8, -22], [0, -24], [8, -22]],
     maxRise: 92,
     harvestMs: 720,
@@ -20,16 +19,30 @@ function place(point, x, y, deg, scale = 1) {
     return [x + px * Math.cos(rad) - py * Math.sin(rad), y + px * Math.sin(rad) + py * Math.cos(rad)];
 }
 
-function stemPath(from, to, sag) {
-    const mx = (from[0] + to[0]) / 2;
-    const my = (from[1] + to[1]) / 2 - sag;
-    return `M${from[0].toFixed(1)} ${from[1].toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${to[0].toFixed(1)} ${to[1].toFixed(1)}`;
+function organicLeafPath(from, to, index = 0) {
+    const dx = to[0] - from[0];
+    const dy = to[1] - from[1];
+    const length = Math.max(1, Math.hypot(dx, dy));
+    const nx = -dy / length;
+    const ny = dx / length;
+    const lane = (index - 1) * 3.4;
+    const point = (t, normal) => [
+        from[0] + dx * t + nx * normal,
+        from[1] + dy * t + ny * normal,
+    ];
+    const start = point(0, lane);
+    const end = point(1, lane);
+    const c1 = point(0.28, lane + 5.5);
+    const c2 = point(0.72, lane + 4);
+    const b1 = point(0.72, lane - 3.5);
+    const b2 = point(0.28, lane - 4.5);
+    const fmt = ([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+    return `M${fmt(start)}C${fmt(c1)} ${fmt(c2)} ${fmt(end)}C${fmt(b1)} ${fmt(b2)} ${fmt(start)}Z`;
 }
 
 export function createSceneAnimator({ svg, nodes, reducedMotion } = {}) {
     if (!svg || !nodes?.carrot) return null;
     const girlStems = [...(nodes.stemsGirl?.querySelectorAll('path') || [])];
-    const moleStems = [...(nodes.stemsMole?.querySelectorAll('path') || [])];
     const reduced = reducedMotion ?? window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const fx = { rise: 0, tug: 0, miss: 0, harvestAt: -1e9, harvestRise: 0, last: 0 };
     let lastKey = '';
@@ -153,19 +166,13 @@ export function createSceneAnimator({ svg, nodes, reducedMotion } = {}) {
         nodes.girl?.setAttribute('transform', girlTf);
         nodes.girlHands?.setAttribute('transform', girlTf);
         nodes.mole?.setAttribute('transform', moleTf);
-        nodes.molePaws?.setAttribute('transform', moleTf);
 
         const crowns = SCENE.crown.map(pt => place(pt, cx, cy, tilt));
         girlStems.forEach((path, i) => {
             const hand = place(SCENE.girlHands[i], g.x, g.y + hop, girlLean, g.s);
-            path.setAttribute('d', stemPath(crowns[i], hand, 10 - fx.tug * 8));
-        });
-        moleStems.forEach((path, i) => {
-            const paw = place(SCENE.molePaws[i], m.x, m.y + hop * 0.7, moleLean, m.s);
-            path.setAttribute('d', stemPath(crowns[2 - i], paw, 8 - fx.tug * 6));
+            path.setAttribute('d', organicLeafPath(crowns[i], hand, i));
         });
         nodes.stemsGirl?.setAttribute('opacity', stemAlpha.toFixed(2));
-        nodes.stemsMole?.setAttribute('opacity', stemAlpha.toFixed(2));
         nodes.tug?.setAttribute('opacity', (fx.tug * 0.9).toFixed(2));
         return active;
     }
@@ -183,9 +190,7 @@ export function createCarrotScene({ svg = document.getElementById('cp-scene') } 
             girl: byId('cp-girl'),
             girlHands: byId('cp-girl-hands'),
             mole: byId('cp-mole'),
-            molePaws: byId('cp-mole-paws'),
             stemsGirl: byId('cp-stems-girl'),
-            stemsMole: byId('cp-stems-mole'),
             tug: byId('cp-tug-lines'),
             particles: byId('cp-particles'),
         },
