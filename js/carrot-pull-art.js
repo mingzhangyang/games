@@ -95,7 +95,8 @@ export function loadCarrotPullArt({
     setSvgImageSource(preview, ART_URLS.preview);
     document.querySelectorAll('[data-art-ui]').forEach((node) => {
         const name = node.getAttribute('data-art-ui');
-        setImageSource(node, ART_UI[name]);
+        const key = name?.replace(/-([a-z])/g, (_, character) => character.toUpperCase());
+        setImageSource(node, ART_UI[name] ?? ART_UI[key]);
     });
 
     return withTimeout(Promise.all(CRITICAL_URLS.map(loadImage)), ART_LOAD_TIMEOUT_MS)
