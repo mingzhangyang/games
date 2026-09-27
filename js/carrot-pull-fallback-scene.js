@@ -48,9 +48,6 @@ function buildFallbackScene(svg) {
         fill: '#73b84d', stroke: '#3d702d', 'stroke-width': 4, 'stroke-linejoin': 'round',
     }, carrot);
 
-    const stemsMole = el('g', { id: 'cp-fallback-stems-mole', fill: 'none', stroke: '#5a9638', 'stroke-width': 7, 'stroke-linecap': 'round' }, root);
-    el('path', {}, stemsMole);
-    el('path', {}, stemsMole);
 
     const mole = el('g', { id: 'cp-fallback-mole' }, root);
     const moleHappy = el('g', { class: 'cp-fallback-happy' }, mole);
@@ -69,11 +66,7 @@ function buildFallbackScene(svg) {
     el('ellipse', { cx: 0, cy: -29, rx: 25, ry: 19, fill: '#d5a98e', stroke: '#4e332a', 'stroke-width': 3 }, moleOops);
     path('M-13-25q13-12 26 0', { fill: 'none', stroke: '#7d302e', 'stroke-width': 4, 'stroke-linecap': 'round' }, moleOops);
 
-    const molePaws = el('g', { id: 'cp-fallback-mole-paws' }, root);
-    el('ellipse', { cx: -70, cy: -46, rx: 22, ry: 14, fill: '#d5a98e', stroke: '#4e332a', 'stroke-width': 4, transform: 'rotate(-24 -70 -46)' }, molePaws);
-    el('ellipse', { cx: -60, cy: -22, rx: 20, ry: 13, fill: '#d5a98e', stroke: '#4e332a', 'stroke-width': 4, transform: 'rotate(-10 -60 -22)' }, molePaws);
-
-    const stemsGirl = el('g', { id: 'cp-fallback-stems-girl', fill: 'none', stroke: '#5a9638', 'stroke-width': 7, 'stroke-linecap': 'round' }, root);
+    const stemsGirl = el('g', { id: 'cp-fallback-stems-girl', class: 'cp-leaf-connectors', 'aria-hidden': 'true' }, root);
     el('path', {}, stemsGirl);
     el('path', {}, stemsGirl);
     el('path', {}, stemsGirl);
@@ -109,9 +102,7 @@ function buildFallbackScene(svg) {
         girl,
         girlHands,
         mole,
-        molePaws,
         stemsGirl,
-        stemsMole,
         tug,
         particles,
     };
