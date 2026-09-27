@@ -48,9 +48,6 @@ function buildFallbackScene(svg) {
         fill: '#73b84d', stroke: '#3d702d', 'stroke-width': 4, 'stroke-linejoin': 'round',
     }, carrot);
 
-    const stemsMole = el('g', { id: 'cp-fallback-stems-mole', fill: 'none', stroke: '#5a9638', 'stroke-width': 7, 'stroke-linecap': 'round' }, root);
-    el('path', {}, stemsMole);
-    el('path', {}, stemsMole);
 
     const mole = el('g', { id: 'cp-fallback-mole' }, root);
     const moleHappy = el('g', { class: 'cp-fallback-happy' }, mole);
@@ -69,14 +66,14 @@ function buildFallbackScene(svg) {
     el('ellipse', { cx: 0, cy: -29, rx: 25, ry: 19, fill: '#d5a98e', stroke: '#4e332a', 'stroke-width': 3 }, moleOops);
     path('M-13-25q13-12 26 0', { fill: 'none', stroke: '#7d302e', 'stroke-width': 4, 'stroke-linecap': 'round' }, moleOops);
 
-    const molePaws = el('g', { id: 'cp-fallback-mole-paws' }, root);
-    el('ellipse', { cx: -70, cy: -46, rx: 22, ry: 14, fill: '#d5a98e', stroke: '#4e332a', 'stroke-width': 4, transform: 'rotate(-24 -70 -46)' }, molePaws);
-    el('ellipse', { cx: -60, cy: -22, rx: 20, ry: 13, fill: '#d5a98e', stroke: '#4e332a', 'stroke-width': 4, transform: 'rotate(-10 -60 -22)' }, molePaws);
-
-    const stemsGirl = el('g', { id: 'cp-fallback-stems-girl', fill: 'none', stroke: '#5a9638', 'stroke-width': 7, 'stroke-linecap': 'round' }, root);
-    el('path', {}, stemsGirl);
-    el('path', {}, stemsGirl);
-    el('path', {}, stemsGirl);
+    const stemsGirl = el('g', { id: 'cp-fallback-stems-girl', class: 'cp-leaf-connectors', 'aria-hidden': 'true' }, root);
+    [
+        { fill: '#79ad4d', stroke: '#477d38' },
+        { fill: '#6b9d43', stroke: '#3f7334' },
+        { fill: '#8abd56', stroke: '#4b8337' },
+    ].forEach((colors) => {
+        el('path', { class: 'cp-leaf-stem', ...colors, 'stroke-width': 1.5 }, stemsGirl);
+    });
 
     const girl = el('g', { id: 'cp-fallback-girl' }, root);
     const girlHappy = el('g', { class: 'cp-fallback-happy' }, girl);
@@ -96,6 +93,8 @@ function buildFallbackScene(svg) {
     path('M-34-196l16 14M-18-196l-16 14M10-196l16 14M26-196l-16 14', { stroke: '#2e231e', 'stroke-width': 5, 'stroke-linecap': 'round' }, girlOops);
     el('ellipse', { cx: 2, cy: -163, rx: 13, ry: 17, fill: '#b8373a' }, girlOops);
 
+    root.appendChild(stemsGirl);
+
     const girlHands = el('g', { id: 'cp-fallback-girl-hands' }, root);
     el('circle', { cx: 38, cy: -218, r: 14, fill: '#f3c29f', stroke: '#4a2e22', 'stroke-width': 4 }, girlHands);
     el('circle', { cx: 26, cy: -200, r: 13, fill: '#f3c29f', stroke: '#4a2e22', 'stroke-width': 4 }, girlHands);
@@ -109,9 +108,7 @@ function buildFallbackScene(svg) {
         girl,
         girlHands,
         mole,
-        molePaws,
         stemsGirl,
-        stemsMole,
         tug,
         particles,
     };

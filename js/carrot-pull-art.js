@@ -1,6 +1,5 @@
 export const ART_UI = Object.freeze({
     carrotMark: new URL('../assets/carrot-pull/ui/carrot-mark.svg', import.meta.url).href,
-    pullArrow: new URL('../assets/carrot-pull/ui/pull-arrow.svg', import.meta.url).href,
 });
 
 export const ART_URLS = Object.freeze({
@@ -21,7 +20,6 @@ export const ART_URLS = Object.freeze({
         'girl-hands': new URL('../assets/carrot-pull/sprites/girl-hands.webp', import.meta.url).href,
         'mole-happy': new URL('../assets/carrot-pull/sprites/mole-happy.webp', import.meta.url).href,
         'mole-oops': new URL('../assets/carrot-pull/sprites/mole-oops.webp', import.meta.url).href,
-        'mole-paws': new URL('../assets/carrot-pull/sprites/mole-paws.webp', import.meta.url).href,
     }),
 });
 
@@ -95,9 +93,10 @@ export function loadCarrotPullArt({
     if (stage) stage.dataset.artState = 'loading';
     const preview = svg?.querySelector('[data-art-preview]');
     setSvgImageSource(preview, ART_URLS.preview);
-    svg?.querySelectorAll('[data-art-ui]').forEach((node) => {
+    document.querySelectorAll('[data-art-ui]').forEach((node) => {
         const name = node.getAttribute('data-art-ui');
-        setImageSource(node, ART_UI[name]);
+        const key = name?.replace(/-([a-z])/g, (_, character) => character.toUpperCase());
+        setImageSource(node, ART_UI[name] ?? ART_UI[key]);
     });
 
     return withTimeout(Promise.all(CRITICAL_URLS.map(loadImage)), ART_LOAD_TIMEOUT_MS)

@@ -66,8 +66,8 @@
     --cp-sweet-zone-border-left: 1px solid rgb(255, 248, 230, 0.48);
     --cp-sweet-zone-bg: #5fae57;
     --cp-meter-needle-bg: #fff8e6;
-    --cp-meter-needle-shadow: 0 0 0 2px rgb(23, 60, 62, 0.55), 0 0 10px rgb(255, 248, 230, 0.7);
-    --cp-meter-needle-border-bottom: 6px solid #fff8e6;
+    --cp-meter-needle-shadow: 0 0 0 2px rgb(23, 60, 62, 0.55), 0 2px 5px rgb(255, 248, 230, 0.45);
+    --cp-meter-needle-border-bottom: 7px solid #fff8e6;
     --cp-pull-btn-border: 1px solid #ffc778;
     --cp-pull-btn-bg: #f08a3c;
     --cp-pull-btn-text: #fff8e6;
@@ -151,8 +151,8 @@
     --cp-sweet-zone-border-left: 1px solid rgb(23, 60, 62, 0.25);
     --cp-sweet-zone-bg: #6cbb5e;
     --cp-meter-needle-bg: #173c3e;
-    --cp-meter-needle-shadow: 0 0 0 2px rgb(255, 250, 240, 0.9), 0 0 8px rgb(23, 60, 62, 0.35);
-    --cp-meter-needle-border-bottom: 6px solid #173c3e;
+    --cp-meter-needle-shadow: 0 0 0 2px rgb(255, 250, 240, 0.9), 0 2px 5px rgb(23, 60, 62, 0.28);
+    --cp-meter-needle-border-bottom: 7px solid #173c3e;
     --cp-pull-btn-border: 1px solid #d9763a;
     --cp-pull-btn-bg: #bf531b;
     --cp-pull-btn-text: #fffaf0;
@@ -297,9 +297,7 @@ body {
     overflow: hidden;
 }
 
-/* 场景 viewBox 是 560×720：下方 520 为核心画面（桌面正好显示这一段），
-   上方 200 是只在高屏手机上露出的天空。SVG 始终按宽度铺满、底部对齐，
-   多出的高度由与天空顶色相同的背景补齐 —— 任何比例下都不裁掉两侧角色。 */
+/* 场景 viewBox 是 560×720；容器显示底部 520px 的核心画面，顶部由真实天空图层覆盖。 */
 .cp-scene-wrap {
     position: relative;
     width: 100%;
@@ -611,10 +609,10 @@ body {
 
 .cp-meter-needle {
     position: absolute;
-    top: -4px;
-    bottom: -4px;
+    top: -5px;
+    bottom: -5px;
     left: 50%;
-    width: 4px;
+    width: 6px;
     border-radius: 99px;
     background: var(--cp-meter-needle-bg);
     box-shadow: var(--cp-meter-needle-shadow);
@@ -670,8 +668,10 @@ body {
 }
 
 .cp-pull-arrow {
-    font-size: 25px;
-    line-height: 0.65;
+    display: block;
+    flex: 0 0 auto;
+    width: 24px;
+    height: 26px;
 }
 
 .cp-progress-dots {
@@ -719,7 +719,14 @@ body {
 
 .cp-tip-card { border-color: var(--cp-tip-card-border); }
 
-.cp-footer-hint { color: var(--cp-footer-hint-text); }
+.cp-footer-hint {
+    max-width: 100%;
+    color: var(--cp-footer-hint-text);
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
 
 @keyframes cp-float {
     0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -768,8 +775,9 @@ body {
     }
 
     .cp-scene-wrap {
-        flex: 1 1 auto;
-        min-height: calc(100cqw * 520 / 560);
+        flex: 0 0 auto;
+        height: calc(100cqw * 520 / 560);
+        min-height: 0;
         aspect-ratio: auto;
     }
 
@@ -860,6 +868,14 @@ body {
 .cp-art-production image[data-art-layer="soil-back"] { opacity: 0.18; }
 .cp-art-production image[data-art-layer="soil-front"] { opacity: 0.84; }
 .cp-art-production image[data-art-layer="foreground"] { opacity: 0.92; }
+
+.cp-leaf-connectors {
+    pointer-events: none;
+}
+
+.cp-leaf-stem {
+    vector-effect: non-scaling-stroke;
+}
 
 .cp-production-oops,
 .cp-fallback-oops {
