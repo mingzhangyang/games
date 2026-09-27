@@ -176,7 +176,7 @@ assets/carrot-pull/
 ├── reference/
 │   └── concept-garden.webp
 ├── layers/
-│   ├── fallback.webp
+│   ├── loading-preview.webp
 │   ├── sky.webp
 │   ├── clouds.webp
 │   ├── hills-farm.webp
@@ -246,33 +246,145 @@ Codex 应根据现有 SVG 角色实际 bounding box 测量 sprite 的 local rect
 
 ## 7. manifest.json
 
-至少包含：
+这份 manifest 是**运行时坐标契约**，不是仅供参考的素材清单。最终文件必须把单位、层级、裁切矩形、目标矩形、pivot 和 attachment 全部写清楚，禁止让 renderer 自己猜。
 
-```json
+### 7.1 坐标与单位
+
+统一规则：
+
+- `logical-px`：游戏逻辑坐标，原点左上，x 向右，y 向下；场景固定 `560×720`。
+- `raster-px`：源图片像素；production raster 按 `2×` 输出。
+- `sourceRectRasterPx`：在源图片中的裁切框，格式 `[x, y, w, h]`。
+- `destRectLogicalPx`：绘制到逻辑场景中的矩形，格式 `[x, y, w, h]`。
+- `localRectLogicalPx`：sprite 相对其 legacy transform 原点的逻辑包围框，格式 `[minX, minY, w, h]`。
+- `pivotLocalLogicalPx`：sprite 旋转/缩放原点；Carrot Pull 继续使用现有 SVG group 的 transform 原点，因此角色主体默认为 `[0, 0]`。
+- `sceneAnchorLogicalPx`：把 pivot 放到场景中的位置。
+- `z`：严格升序绘制；同 z 禁止依赖对象枚举顺序。
+- attachment 的坐标空间固定写成 `sprite-local-logical-px`，不能混用 raster 坐标。
+
+### 7.2 规范示例
+
+下面是最终 manifest 的**结构性规范**。其中 `MEASURED_*` 表示 Phase 1 必须从现有 SVG 实测后写入的数值；这些占位符不得出现在提交后的正式 `manifest.json`。
+
+```jsonc
 {
-  "logicalWidth": 560,
-  "logicalHeight": 720,
-  "rasterScale": 2,
+  "version": 1,
+  "coordinateSystem": {
+    "unit": "logical-px",
+    "origin": "top-left",
+    "xAxis": "right",
+    "yAxis": "down",
+    "width": 560,
+    "height": 720,
+    "rasterScale": 2
+  },
   "anchors": {
     "carrot": [316, 506],
     "girl": [186, 692],
     "mole": [482, 612]
   },
-  "layers": {},
-  "sprites": {},
-  "attachments": {}
+  "layers": [
+    {
+      "id": "sky",
+      "file": "layers/sky.webp",
+      "z": 10,
+      "sourceRectRasterPx": [0, 0, 1120, 1440],
+      "destRectLogicalPx": [0, 0, 560, 720],
+      "alphaRequired": false
+    },
+    {
+      "id": "soil-front",
+      "file": "layers/soil-front.webp",
+      "z": 90,
+      "sourceRectRasterPx": [0, 0, 1120, 1440],
+      "destRectLogicalPx": [0, 0, 560, 720],
+      "alphaRequired": true
+    },
+    {
+      "id": "foreground",
+      "file": "layers/foreground.webp",
+      "z": 100,
+      "sourceRectRasterPx": [0, 0, 1120, 1440],
+      "destRectLogicalPx": [0, 0, 560, 720],
+      "alphaRequired": true
+    }
+  ],
+  "sprites": {
+    "carrot": {
+      "file": "sprites/carrot.webp",
+      "z": 50,
+      "rasterSizePx": ["MEASURED_W", "MEASURED_H"],
+      "sourceRectRasterPx": [0, 0, "MEASURED_W", "MEASURED_H"],
+      "localRectLogicalPx": ["MEASURED_MIN_X", "MEASURED_MIN_Y", "MEASURED_W_DIV_2", "MEASURED_H_DIV_2"],
+      "pivotLocalLogicalPx": [0, 0],
+      "sceneAnchorLogicalPx": [316, 506],
+      "alphaRequired": true
+    },
+    "girl-happy": {
+      "file": "sprites/girl-happy.webp",
+      "z": 70,
+      "rasterSizePx": ["MEASURED_W", "MEASURED_H"],
+      "sourceRectRasterPx": [0, 0, "MEASURED_W", "MEASURED_H"],
+      "localRectLogicalPx": ["MEASURED_MIN_X", "MEASURED_MIN_Y", "MEASURED_W_DIV_2", "MEASURED_H_DIV_2"],
+      "pivotLocalLogicalPx": [0, 0],
+      "sceneAnchorLogicalPx": [186, 692],
+      "scale": 0.94,
+      "alphaRequired": true
+    },
+    "mole-happy": {
+      "file": "sprites/mole-happy.webp",
+      "z": 60,
+      "rasterSizePx": ["MEASURED_W", "MEASURED_H"],
+      "sourceRectRasterPx": [0, 0, "MEASURED_W", "MEASURED_H"],
+      "localRectLogicalPx": ["MEASURED_MIN_X", "MEASURED_MIN_Y", "MEASURED_W_DIV_2", "MEASURED_H_DIV_2"],
+      "pivotLocalLogicalPx": [0, 0],
+      "sceneAnchorLogicalPx": [482, 612],
+      "scale": 0.9,
+      "alphaRequired": true
+    }
+  },
+  "attachments": {
+    "carrot.crown": {
+      "sprite": "carrot",
+      "space": "sprite-local-logical-px",
+      "points": [[-8, -22], [0, -24], [8, -22]]
+    },
+    "girl.hands": {
+      "sprite": "girl-happy",
+      "space": "sprite-local-logical-px",
+      "points": [[38, -218], [32, -210], [26, -200]]
+    },
+    "mole.paws": {
+      "sprite": "mole-happy",
+      "space": "sprite-local-logical-px",
+      "points": [[-70, -46], [-60, -22]]
+    }
+  },
+  "dynamicZ": {
+    "moleStems": 55,
+    "molePaws": 65,
+    "girlStems": 75,
+    "girlHands": 80,
+    "particles": 110,
+    "hitTarget": 120
+  }
 }
 ```
 
-每个 sprite 记录：
+### 7.3 测量规则
 
-- 文件
-- raster size
-- logical local rect
-- pivot
-- transparency requirement
+Phase 1 必须从现有 SVG 实测每个角色 group 的 local bounds，并把实际数字写入最终 manifest。严禁手工“目测”或通过导出图片尺寸反推。
 
-这份 manifest 是以后换美术的坐标契约，不要把坐标散落在 HTML 里。
+Verifier 必须检查：
+
+- 所有 `MEASURED_*` 占位符已经消失；
+- `rasterSizePx = localRectLogicalPx.size × rasterScale`，允许因像素取整有 ±1 px；
+- 所有 full-scene layer 的 source/dest 比例一致；
+- `sceneAnchorLogicalPx` 与现有三个 anchor 完全相同；
+- attachment points 与当前 `SCENE` 常量完全相同；
+- z-order 无冲突且符合本节约定。
+
+不要把任何这些坐标重新散落到 HTML。
 
 ## 8. 各美术层职责
 
@@ -403,31 +515,44 @@ scene.tick(now, progress, playing);
 
 ```text
 js/carrot-pull-art.js
+js/carrot-pull-fallback-scene.js
 ```
 
-使用静态：
+生产素材使用：
 
 ```js
 new URL('../assets/carrot-pull/...', import.meta.url)
 ```
 
-得到 production URL，确保 Vite 正确打包并 hash。
+确保 Vite 正确打包并 hash；不要在 JS 里拼裸相对字符串。
 
-不要在 JS 里拼相对字符串。
+### 11.1 正常加载
 
-加载策略：
-
-1. 页面先显示 `fallback.webp`；
-2. 并行 preload 所有关键层；
-3. 全部关键素材 ready 后：
-   - live scene opacity → 1
-   - fallback opacity → 0
-4. 过渡时间约 150–200ms；
+1. 页面初始只显示 `layers/loading-preview.webp`，它只是短暂 loading placeholder，**不是故障 fallback**；
+2. 并行 preload 所有 critical production layers / sprites；
+3. 全部 critical 资源成功后初始化 production scene；
+4. production scene ready 后 150–200ms crossfade 掉 loading preview；
 5. reduced motion 下直接切换；
-6. 如果任何关键素材加载失败：
-   - 保留 fallback；
-   - 游戏本身仍可操作；
-   - 不抛 uncaught error。
+6. 设置 `data-art-state="ready"`。
+
+### 11.2 故障 fallback 必须仍可动画
+
+如果任何 critical production asset 加载失败：
+
+- **不能**只留下静态 `loading-preview.webp`；
+- 切换到 `js/carrot-pull-fallback-scene.js`；
+- 该模块保留当前 SVG renderer 的女孩、鼹鼠、萝卜、手/爪、叶茎和 harvest 动画；
+- fallback scene 必须实现与 production scene 相同的：
+  - `hit()`
+  - `miss()`
+  - `harvest(now)`
+  - `reset()`
+  - `tick(now, progress, playing)`
+- 游戏输入、得分、计时和关卡逻辑不需要知道当前使用哪个 renderer；
+- 不抛 uncaught error；
+- 设置 `data-art-state="fallback"`。
+
+这意味着“删除大型内联 SVG”是把旧 renderer 从 HTML **迁出并模块化为 fallback**，而不是彻底删除其动画能力。
 
 暴露：
 
@@ -653,18 +778,30 @@ scripts/verify-carrot-pull-art.mjs
 - full-scene layer 尺寸符合契约；
 - sprite 尺寸与 manifest 一致；
 - 所需透明层具备 alpha；
-- 没有遗漏 happy/oops/hands/paws；
+- happy/oops/hands/paws 齐全；
+- manifest 中不存在 `MEASURED_*` 占位符；
+- anchors / attachments / z-order 符合 §7；
 - runtime art 总字节数不超过硬上限；
 - HTML / JS 没有引用不存在的 asset；
-- 不允许重新出现大量内联角色 path。
+- production HTML 不再包含大型旧插画 path；
+- legacy SVG renderer 仅存在于明确的 fallback 模块。
 
-加入：
+### 18.1 必须注册到 verify-all
 
-```text
-npm run verify
+`scripts/verify-all.mjs` 使用固定 `SUITE`，不会自动发现新脚本。实现时必须显式加入：
+
+```js
+{ name: 'carrot-pull-art', script: 'scripts/verify-carrot-pull-art.mjs', args: [], needsServer: false },
+{ name: 'smoke-carrot-pull', script: 'scripts/smoke-carrot-pull.mjs', args: [], needsServer: true },
 ```
 
-可以进入 quick，因为它是离线、低成本校验。
+并把：
+
+```text
+carrot-pull-art
+```
+
+加入 `QUICK_NAMES`。Art verifier 是纯离线低成本检查，应进入 quick；浏览器 smoke 保留在 full suite，除非实测运行成本足够低后再单独决定是否进入 quick。
 
 不要为此引入重量级 npm 图片依赖；必要时实现小型 WebP header reader。
 
@@ -684,10 +821,23 @@ scripts/smoke-carrot-pull.mjs
 
 ### 资源
 
+正常路径：
+
 - `data-art-state === "ready"`
 - 没有 404
 - 没有 pageerror
 - production layers 已加载
+
+故障路径必须单独跑一次：
+
+- 使用 Puppeteer request interception 主动 abort 一个 critical production asset；
+- 断言 `data-art-state === "fallback"`；
+- 没有 unhandled `pageerror`；
+- Start 仍可点击；
+- 正确 pull 仍能让萝卜上移；
+- miss 仍能进入 oops；
+- harvest 仍能完成“出土 → 飞起 → 下一根出现”；
+- fallback renderer 与 production renderer 共用同一 gameplay state，不允许重新实现计分逻辑。
 
 ### Start
 
@@ -823,6 +973,7 @@ css/carrot-pull.css
 js/carrot-pull.js
 js/carrot-pull-art.js
 js/carrot-pull-scene.js
+js/carrot-pull-fallback-scene.js
 scripts/verify-carrot-pull-art.mjs
 scripts/smoke-carrot-pull.mjs
 scripts/verify-all.mjs
@@ -864,8 +1015,9 @@ js/game-chrome.js
 
 - 新建 `carrot-pull-art.js`
 - 新建 `carrot-pull-scene.js`
-- 把 SVG path 场景换成 image layer
-- 保持现有 scene animation API
+- 把 production scene 的 SVG path 插画换成 image layer
+- 把现有 SVG scene renderer 迁到 `carrot-pull-fallback-scene.js`
+- production / fallback 两个 renderer 保持同一 scene animation API
 
 ### Phase 4 — UI polish
 
@@ -917,13 +1069,22 @@ art(carrot-pull): production storybook scene and sprite pipeline
 
 ## 24. 提交前必须运行
 
+源码态：
+
 ```bash
 npm run gen -- --check
-npm run build
 node scripts/verify-carrot-pull-art.mjs
-node scripts/smoke-carrot-pull.mjs
 npm run verify
 ```
+
+构建产物：
+
+```bash
+npm run build
+node scripts/run-smoke-dist.mjs scripts/smoke-carrot-pull.mjs
+```
+
+`run-smoke-dist.mjs` 会从 `dist/` 启动临时 HTTP server，并把 base URL 传给 Puppeteer smoke；不要在 build 后直接裸跑 `node scripts/smoke-carrot-pull.mjs`，否则没有 server 时会得到假失败，也无法确认真正测试的是 dist 产物。
 
 所有由本次 PR 新增或导致的失败必须修复。
 
