@@ -203,7 +203,8 @@ export const LEVELS = [
         ],
         life: {
             tracks: [
-                { ids: ['moon'], pivot: [226.5, 330], amp: -3, freq: 0.25, t0: 0.2, t1: 3.4, hold: true },
+                // 支点在月亮右侧同高处：正向转动让月亮沿弧线升起约 8px
+                { ids: ['moon'], pivot: [420, 186], amp: 3.5, freq: 0.25, t0: 0.2, t1: 3.4, hold: true },
             ],
             group: { kind: 'none' },
         },

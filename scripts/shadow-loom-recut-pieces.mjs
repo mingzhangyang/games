@@ -18,7 +18,7 @@
  * never contain one another. Run the silhouette build afterwards.
  *
  * Usage: node scripts/shadow-loom-recut-pieces.mjs <family> [--overlap=<px>] [--dry]
- *   --overlap  how far a piece reaches under later pieces (default 0.5px); lower it
+ *   --overlap  how far a piece extends into later pieces (manifest order; default 0.5px); lower it
  *              when a long seam trips the levels verifier's piece-overlap limit
  */
 import fs from 'node:fs';
@@ -38,6 +38,10 @@ const MARGIN = 4;
 
 const manifest = JSON.parse(fs.readFileSync(path.join(DIR, 'manifest.json'), 'utf8'));
 const fam = manifest.families.find(f => f.id === family);
+if (!Number.isFinite(OVERLAP) || OVERLAP < 0 || OVERLAP > 2) {
+    console.error('--overlap must be a number of px between 0 and 2');
+    process.exit(1);
+}
 if (!fam) {
     console.error('usage: node scripts/shadow-loom-recut-pieces.mjs <family> [--dry]');
     process.exit(1);
@@ -216,8 +220,10 @@ function region(k) {
         return out;
     };
     const grown = grow(grow(own, 1, TW, TH, TW), TW, TH, TW, 1);
-    // one-sided: a piece only reaches under later pieces, so each seam is
-    // covered once and pairwise overlap stays a hairline band
+    // one-sided: a piece only extends into pieces later in the manifest, so
+    // each seam is covered once and pairwise overlap stays a hairline band.
+    // Stacking order does not matter: seams only meet in the shadows, which
+    // all share one colour (the paper pieces hang at different depths).
     for (let i = 0; i < grown.length; i++) grown[i] &= target.m[i] && (label[i] === k || label[i] > k) ? 1 : 0;
     return grown;
 }
@@ -352,6 +358,11 @@ function cubic(ring) {
 
 const totalTarget = target.m.reduce((s, v) => s + v, 0) / (FINE * FINE);
 console.log(`${family}: target ${totalTarget.toFixed(0)} px², unlabelled ${(unlabelled / (FINE * FINE)).toFixed(1)} px²`);
+if (unlabelled) {
+    // a target area no hint reaches would silently vanish from every piece
+    console.error(`✗ ${family}: part of the target is not covered by any piece hint — widen the hints`);
+    process.exit(1);
+}
 pieces.forEach((p, k) => {
     const loops = trace(cover[k]).map(simplify).filter(l => l.length >= 3 && Math.abs(area(l)) >= 4) // same floor as the build script;
     // outer rings first (positive signed area in stage coordinates), then cut-outs
