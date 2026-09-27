@@ -1,6 +1,6 @@
 export const SCENE = Object.freeze({
     carrot: { x: 352, y: 506 },
-    girl: { x: 172, y: 692, s: 0.94 },
+    girl: { x: 250, y: 664, s: 0.94 },
     mole: { x: 466, y: 632, s: 0.54 },
     // fallback 场景（程序绘制的萝卜 / 圆点手）的叶柄挂点
     girlHands: [[38, -218], [32, -210], [26, -200]],

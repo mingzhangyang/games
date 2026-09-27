@@ -102,7 +102,7 @@ function buildFallbackScene(svg) {
     el('circle', { cx: 26, cy: -200, r: 13, fill: '#f3c29f', stroke: '#4a2e22', 'stroke-width': 4 }, girlHands);
 
     const tug = el('g', { id: 'cp-fallback-tug-lines', fill: 'none', stroke: '#f7d36e', 'stroke-width': 5, 'stroke-linecap': 'round', opacity: 0 }, root);
-    el('path', { d: 'M38 540l-24-10M32 562l-28 0M36 584l-24 10' }, tug);
+    el('path', { d: 'M116 512l-24-10M110 534l-28 0M114 556l-24 10' }, tug);
     const particles = el('g', { id: 'cp-fallback-particles' }, root);
 
     return {

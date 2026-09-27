@@ -11,7 +11,7 @@
   },
   "anchors": {
     "carrot": [352, 506],
-    "girl": [172, 692],
+    "girl": [250, 664],
     "mole": [466, 632]
   },
   "layers": [
@@ -25,8 +25,8 @@
   ],
   "sprites": {
     "carrot": { "file": "sprites/carrot.webp", "z": 50, "rasterSizePx": [460, 600], "sourceRectRasterPx": [0, 0, 460, 600], "localRectLogicalPx": [-115, -24, 230, 300], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [352, 506], "alphaRequired": true },
-    "girl-happy": { "file": "sprites/girl-happy.webp", "z": 70, "rasterSizePx": [540, 700], "sourceRectRasterPx": [0, 0, 540, 700], "localRectLogicalPx": [-170, -350, 270, 350], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [172, 692], "scale": 0.94, "alphaRequired": true },
-    "girl-oops": { "file": "sprites/girl-oops.webp", "z": 70, "rasterSizePx": [540, 700], "sourceRectRasterPx": [0, 0, 540, 700], "localRectLogicalPx": [-170, -350, 270, 350], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [172, 692], "scale": 0.94, "alphaRequired": true },
+    "girl-happy": { "file": "sprites/girl-happy.webp", "z": 70, "rasterSizePx": [540, 700], "sourceRectRasterPx": [0, 0, 540, 700], "localRectLogicalPx": [-170, -350, 270, 350], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [250, 664], "scale": 0.94, "alphaRequired": true },
+    "girl-oops": { "file": "sprites/girl-oops.webp", "z": 70, "rasterSizePx": [540, 700], "sourceRectRasterPx": [0, 0, 540, 700], "localRectLogicalPx": [-170, -350, 270, 350], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [250, 664], "scale": 0.94, "alphaRequired": true },
     "mole-happy": { "file": "sprites/mole-happy.webp", "z": 48, "rasterSizePx": [500, 520], "sourceRectRasterPx": [0, 0, 500, 520], "localRectLogicalPx": [-125, -330, 250, 260], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [466, 632], "scale": 0.54, "alphaRequired": true },
     "mole-oops": { "file": "sprites/mole-oops.webp", "z": 48, "rasterSizePx": [500, 520], "sourceRectRasterPx": [0, 0, 500, 520], "localRectLogicalPx": [-125, -330, 250, 260], "pivotLocalLogicalPx": [0, 0], "sceneAnchorLogicalPx": [466, 632], "scale": 0.54, "alphaRequired": true }
   },
@@ -35,7 +35,7 @@
     "girl.fists": { "sprite": "girl-happy", "space": "sprite-local-logical-px", "points": [[30, -181], [36, -180], [42, -180], [48, -181], [53, -182]], "overlayClipLocalLogicalPx": [12, -200, 52, 40] }
   },
   "dynamicZ": {
-    "leafStems": 75,
+    "leafStems": 49,
     "girlFists": 80,
     "particles": 110,
     "hitTarget": 120

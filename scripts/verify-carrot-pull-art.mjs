@@ -92,7 +92,7 @@ if (manifest.coordinateSystem?.width !== 560 || manifest.coordinateSystem?.heigh
 
 const expectedAnchors = {
     carrot: [352, 506],
-    girl: [172, 692],
+    girl: [250, 664],
     mole: [466, 632],
 };
 Object.entries(expectedAnchors).forEach(([name, point]) => {
