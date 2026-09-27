@@ -141,7 +141,7 @@ check(await game(() => !document.getElementById('sl-result').classList.contains(
 console.log('▶ 鹿：拖灯');
 {
     const li = LEVELS.findIndex(l => l.id === 'deer');
-    await game(() => window.slGame.startLevel(3));
+    await page.evaluate(n => window.slGame.startLevel(n), li);
     await wait(200);
     check(await game(() => window.slGame.level.id === 'deer'), '进入鹿');
     const pin = LEVELS[li].pieces.findIndex(p => p.pinned);
@@ -164,7 +164,7 @@ console.log('▶ 鹿：拖灯');
 console.log('▶ 树：旋转');
 {
     const li = LEVELS.findIndex(l => l.id === 'tree');
-    await game(() => window.slGame.startLevel(4));
+    await page.evaluate(n => window.slGame.startLevel(n), li);
     await wait(200);
     const sol = R.compileLevel(LEVELS[li]).solution;
     const lamp = await game(() => ({ ...window.slGame.st.lamp }));

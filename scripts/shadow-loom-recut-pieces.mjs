@@ -17,7 +17,9 @@
  * The result is a true partition of target.svg: pieces share their seams and
  * never contain one another. Run the silhouette build afterwards.
  *
- * Usage: node scripts/shadow-loom-recut-pieces.mjs <family> [--dry]
+ * Usage: node scripts/shadow-loom-recut-pieces.mjs <family> [--overlap=<px>] [--dry]
+ *   --overlap  how far a piece reaches under later pieces (default 0.5px); lower it
+ *              when a long seam trips the levels verifier's piece-overlap limit
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,7 +33,7 @@ const FINE = 8; // target samples per px
 const GRID = 0.5; // marching-squares cell (px)
 const SIGMA = 3; // cut-line smoothing (px)
 const EPS = 0.18; // simplification tolerance (px)
-const OVERLAP = 0.5; // pieces overlap this far across a shared cut (px)
+const OVERLAP = Number(process.argv.find(a => a.startsWith('--overlap='))?.slice(10) ?? 0.5); // pieces overlap this far across a shared cut (px)
 const MARGIN = 4;
 
 const manifest = JSON.parse(fs.readFileSync(path.join(DIR, 'manifest.json'), 'utf8'));
