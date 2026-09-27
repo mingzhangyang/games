@@ -200,7 +200,7 @@ assets/echo-cave/
 注意：
 
 - 不制作“整张关卡地图背景”；
-- 不把 17 关分别烘焙成图片；
+- 不把 20 关分别烘焙成图片；
 - 地图仍由关卡 grid 动态决定。
 
 ---
@@ -444,7 +444,7 @@ data-art-state="fallback"
 要求：
 
 - rock texture 小尺寸可平铺；
-- 无 17 套完整关卡位图；
+- 无 20 套完整关卡位图；
 - wall surface 每关只构建一次；
 - reveal mask 增量更新；
 - memory canvas 机制保留；
@@ -521,6 +521,16 @@ pulse 结束后：
 - level result；
 - daily。
 
+### verify-all 注册
+
+现有 `echo-cave-levels` 与 `smoke-echo-cave` 已在 `scripts/verify-all.mjs` 中。新增 art verifier 时必须显式加入：
+
+```js
+{ name: 'echo-cave-art', script: 'scripts/verify-echo-cave-art.mjs', args: [], needsServer: false },
+```
+
+并把 `echo-cave-art` 加入 `QUICK_NAMES`。不得降低或替换现有 level verifier / smoke。
+
 视口：
 
 - 390×844；
@@ -541,6 +551,7 @@ js/echo-cave-materials.js
 css/echo-cave.css
 scripts/verify-echo-cave-art.mjs
 scripts/smoke-echo-cave.mjs
+scripts/verify-all.mjs
 ```
 
 除非确有必要，不修改：
@@ -575,7 +586,7 @@ css/layout.css
 - moss 的吸音在视觉上成立；
 - memory 机制完整；
 - crystal / thorn / exit 不再只是简单几何；
-- 17 关几何和 par 完全不变；
+- 20 关几何和 par 完全不变；
 - level verifier 全绿；
 - smoke 的真实可玩路径全绿；
 - build / verify 全绿；
