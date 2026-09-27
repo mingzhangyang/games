@@ -199,17 +199,22 @@ Pause / Game Over / Session Complete：
 统计采用紧凑数据表；
 去掉标题里的 emoji。
 
-## 10. Light / Dark
+## 10. Theme
 
-Math Rain 的核心游戏世界建议 dark-only。
+《数字雨》本次美术升级**继续保持 dark-only**。
 
-如果全站 theme 要求页面响应 light：
+当前 registry 没有 `theme-light` capability，且主题契约已明确将 Math Rain 的浅色主题迁移暂缓到颜色令牌收敛之后。因此本任务：
 
-- 只调整 menu / dialog / chrome；
-- game-area 仍保持暗天文台；
-- 保证 contrast。
+- 不新增 `theme-light`；
+- 不新增 `themeColorLight`；
+- 不修改 registry 的主题能力声明；
+- 不让 menu / dialog / header / toolbar 在 light preference 下切换到浅色外观；
+- game-area、HUD、overlay、shop 全部继续遵循当前 dark-only 契约；
+- 只在现有深色世界内完成“数学天文台”视觉统一。
 
-不要做白底数字雨。
+如果未来单独实施 Math Rain 浅色主题，必须另开任务，并先完成 `docs/contracts/theme.md` 中要求的颜色令牌收敛，再同步修改 registry、CSS、Canvas palette 与主题回归测试。
+
+本次 Definition of Done **不包含 Light/Dark 双主题**。
 
 ## 11. 商店视觉
 
