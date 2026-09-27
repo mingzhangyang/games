@@ -1,3 +1,5 @@
+import { getSilhouette } from './shadow-loom-silhouettes.js';
+
 /**
  * 影织 Shadow Loom — 纯几何内核（无 DOM，Node 与浏览器共用）
  * =============================================================
@@ -195,8 +197,16 @@ const compiled = new WeakMap();
 export function compileLevel(level) {
     if (compiled.has(level)) return compiled.get(level);
     const pieces = level.pieces.map((p, i) => {
-        const polys = shapeToPolys(p.shape, (level.seed || 1) * 13 + i);
-        // 悬挂点：默认取包围盒顶边中点（本地坐标，影子尺度）
+        const svg = getSilhouette(level.id, p.id);
+        const sourcePolys = svg ? svg.outer : shapeToPolys(p.shape, (level.seed || 1) * 13 + i);
+        const sourceHoles = svg ? svg.holes : [];
+        // Authored SVG paths use absolute stage coordinates. The level's sol point
+        // is the shared anchor; converting to local coordinates keeps the existing
+        // projection math and makes target/paper/shadow transforms identical.
+        const ax = svg ? svg.anchor[0] : 0;
+        const ay = svg ? svg.anchor[1] : 0;
+        const polys = sourcePolys.map(poly => poly.map(([x, y]) => [x - ax, y - ay]));
+        const holes = sourceHoles.map(poly => poly.map(([x, y]) => [x - ax, y - ay]));
         let minY = Infinity;
         let minX = Infinity;
         let maxX = -Infinity;
@@ -206,7 +216,7 @@ export function compileLevel(level) {
             if (x > maxX) maxX = x;
         }));
         const attach = p.attach || [(minX + maxX) / 2, minY];
-        return { polys, attach };
+        return { polys, holes, svg, attach };
     });
     const solLamp = level.lamp.sol || level.lamp.start;
     const Lsol = lampModel(solLamp);
@@ -219,19 +229,23 @@ export function compileLevel(level) {
         })),
     };
     const targetPolys = [];
+    const targetHoles = [];
     level.pieces.forEach((p, i) => {
         pieces[i].polys.forEach(poly => targetPolys.push(placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)));
+        pieces[i].holes.forEach(poly => targetHoles.push(placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)));
     });
-    const target = rasterize(targetPolys);
+    const target = rasterize(targetPolys, targetHoles);
     const targetEdge = boundary(target);
     const targetDist = distanceField(targetEdge);
-    // 目标轮廓按纸片分段：每段轮廓都要「缝上」，小纸片错位不会被大纸片的面积淹没
     const edgeOwner = new Int8Array(targetEdge.length).fill(-1);
     level.pieces.forEach((p, i) => {
-        const own = rasterize(pieces[i].polys.map(poly => placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)));
+        const own = rasterize(
+            pieces[i].polys.map(poly => placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)),
+            pieces[i].holes.map(poly => placePoly(poly, p.sol.x, p.sol.y, p.sol.rot || 0)),
+        );
         for (let k = 0; k < own.length; k++) if (own[k] && targetEdge[k] && edgeOwner[k] < 0) edgeOwner[k] = i;
     });
-    const out = { pieces, solution, targetPolys, target, targetEdge, targetDist, edgeOwner };
+    const out = { pieces, solution, targetPolys, targetHoles, target, targetEdge, targetDist, edgeOwner };
     compiled.set(level, out);
     return out;
 }
@@ -275,11 +289,24 @@ export function shadowPolys(level, lamp, pose, i) {
     return c.pieces[i].polys.map(poly => placePoly(poly, S.x, S.y, pose.rot || 0));
 }
 
+export function shadowHoles(level, lamp, pose, i) {
+    const c = compileLevel(level);
+    const z = level.pieces[i].z;
+    const S = shadowCenter(lamp, pose, z);
+    return c.pieces[i].holes.map(poly => placePoly(poly, S.x, S.y, pose.rot || 0));
+}
+
 /** 纸片本体多边形（画在幕前的剪纸，尺寸 = 影子 × z） */
 export function piecePolys(level, pose, i) {
     const c = compileLevel(level);
     const z = level.pieces[i].z;
     return c.pieces[i].polys.map(poly => placePoly(poly, pose.x, pose.y, pose.rot || 0, z));
+}
+
+export function pieceHoles(level, pose, i) {
+    const c = compileLevel(level);
+    const z = level.pieces[i].z;
+    return c.pieces[i].holes.map(poly => placePoly(poly, pose.x, pose.y, pose.rot || 0, z));
 }
 
 /** 悬挂点的世界坐标（绳子的下端） */
@@ -303,9 +330,9 @@ export function pointInPoly(x, y, poly) {
 /* ───────────────────────── 判定 ───────────────────────── */
 
 /** 多边形集合 → 低分辨率 mask（格中心采样，子形状取并集） */
-export function rasterize(polys) {
+export function rasterize(polys, holes = []) {
     const m = new Uint8Array(COLS * ROWS);
-    for (const poly of polys) {
+    const paint = (poly, value) => {
         let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
         for (const [x, y] of poly) {
             if (x < x0) x0 = x;
@@ -321,11 +348,12 @@ export function rasterize(polys) {
             const cy = SCREEN.y + (r + 0.5) * CELL;
             for (let c = c0; c <= c1; c++) {
                 const idx = r * COLS + c;
-                if (m[idx]) continue;
-                if (pointInPoly(SCREEN.x + (c + 0.5) * CELL, cy, poly)) m[idx] = 1;
+                if (pointInPoly(SCREEN.x + (c + 0.5) * CELL, cy, poly)) m[idx] = value;
             }
         }
-    }
+    };
+    polys.forEach(poly => paint(poly, 1));
+    holes.forEach(poly => paint(poly, 0));
     return m;
 }
 
@@ -387,6 +415,14 @@ export function allShadowPolys(level, state) {
     return out;
 }
 
+export function allShadowHoles(level, state) {
+    const out = [];
+    level.pieces.forEach((_, i) => {
+        shadowHoles(level, state.lamp, state.pieces[i], i).forEach(p => out.push(p));
+    });
+    return out;
+}
+
 /**
  * 相似度 = 区域重合度（IoU）与轮廓距离（双向倒角，容差 CONTOUR_D 格）的加权。
  * 返回 sim ∈ [0,1] 与渲染需要的中间量：
@@ -394,7 +430,7 @@ export function allShadowPolys(level, state) {
  */
 export function evaluate(level, state) {
     const c = compileLevel(level);
-    const mask = rasterize(allShadowPolys(level, state));
+    const mask = rasterize(allShadowPolys(level, state), allShadowHoles(level, state));
     let inter = 0;
     let uni = 0;
     for (let i = 0; i < mask.length; i++) {

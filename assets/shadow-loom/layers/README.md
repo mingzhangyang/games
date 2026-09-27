@@ -31,3 +31,7 @@ checkerboard pattern baked into any layer.
 The `silhouettes/` subdirectory is part of this same asset drop. It contains one
 uncoloured, transparent SVG per movable paper piece, with its family and level mapping
 in `silhouettes/manifest.json`.
+
+## SVG silhouette source
+
+The authored cut-paper pieces live in `silhouettes/`. All use the same `0 0 480 854` stage viewBox; `target.svg` files document each assembled silhouette, and holes are evenodd path subpaths.

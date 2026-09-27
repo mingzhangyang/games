@@ -46,7 +46,7 @@ export const LEVELS = [
                     { t: 'ellipse', cx: -29.4, cy: 10.7, rx: 17.8, ry: 14.2, rot: 10 },
                 ],
                 sol: { x: 199.1, y: 282.1 },
-                start: { x: 159.9, y: 333.7 },
+                start: { x: 205, y: 333.7 },
             },
             {
                 id: 'ears', z: 0.6,
@@ -97,7 +97,7 @@ export const LEVELS = [
                     },
                 ],
                 sol: { x: 248.9, y: 307 },
-                start: { x: 177.7, y: 413.8 },
+                start: { x: 188, y: 413.8 },
             },
             {
                 id: 'wing2', z: 0.7,

@@ -1,16 +1,16 @@
-# Shadow Loom silhouette pieces
+# Shadow Loom silhouette source
 
-Each SVG is one independently movable paper piece. The files contain only paths on a
-transparent SVG canvas; there is no painted background and no baked colour. Apply a
-runtime colour through `currentColor`, then use the same projected geometry for the
-visible shadow and the level mask.
+Every piece uses the shared `viewBox="0 0 480 854"`, which is the game's logical
+stage coordinate system. A family can therefore be composited by drawing its
+piece files without translating their local viewBoxes.
 
-The initial asset set covers five target families from the visual direction:
-
-- `rabbit/` — three pieces for the first fixed-lamp teaching level;
-- `bird/` — three pieces for the first depth/parallax level;
-- `tree/` — three pieces for rotation and branch alignment;
-- `pagoda/` — mountain, pavilion and moon pieces;
-- `koi/` — body, fins and tail pieces.
-
-`manifest.json` is the authoritative list of pieces and the rendering contract.
+- `rabbit`, `bird`, `whale`, `deer`, `tree`, and `crane` are the six
+  playable levels.
+- Each family also has a `target.svg` composition proof.
+- Holes are real subpaths in the same `fill-rule="evenodd"` path; there are no
+  checkerboard pixels, white matte, or baked background.
+- `manifest.json` is the source of truth for file names, anchors, and the
+  shared coordinate contract.
+- The runtime imports the same authored path data through
+  `js/shadow-loom-silhouettes.js`: SVG `Path2D` renders the paper and the
+  paired polygon contours drive the target, shadow, and judge.

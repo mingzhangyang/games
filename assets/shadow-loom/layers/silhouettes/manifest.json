@@ -1,42 +1,278 @@
 {
-  "schema": "shadow-loom-silhouette-manifest/v1",
+  "schema": "shadow-loom-silhouette-manifest/v2",
+  "coordinateSystem": {
+    "viewBox": "0 0 480 854",
+    "units": "logical stage pixels",
+    "origin": "top-left",
+    "stage": "480x854"
+  },
   "rendering": {
     "fill": "currentColor",
     "fillRule": "evenodd",
     "stroke": "none",
     "background": "transparent",
-    "note": "Set currentColor from the runtime shadow/backlight renderer. SVG files intentionally contain no fixed palette."
+    "holes": "additional subpaths in the same path"
   },
+  "playableLevels": [
+    "rabbit",
+    "bird",
+    "whale",
+    "deer",
+    "tree",
+    "crane"
+  ],
   "families": [
     {
       "id": "rabbit",
       "target": "sitting rabbit",
-      "prototypeLevel": "初影",
-      "pieces": ["rabbit/body.svg", "rabbit/ears.svg", "rabbit/tail-grass.svg"]
+      "targetFile": "rabbit/target.svg",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "rabbit/body.svg",
+          "anchor": [
+            270.3,
+            353.3
+          ]
+        },
+        {
+          "id": "head",
+          "file": "rabbit/head.svg",
+          "anchor": [
+            199.1,
+            282.1
+          ]
+        },
+        {
+          "id": "ears",
+          "file": "rabbit/ears.svg",
+          "anchor": [
+            209.7,
+            257.2
+          ]
+        }
+      ]
     },
     {
       "id": "bird",
       "target": "flying bird",
-      "prototypeLevel": "错层",
-      "pieces": ["bird/body.svg", "bird/wing.svg", "bird/tail.svg"]
+      "targetFile": "bird/target.svg",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "bird/body.svg",
+          "anchor": [
+            236.4,
+            323.1
+          ]
+        },
+        {
+          "id": "wing",
+          "file": "bird/wing.svg",
+          "anchor": [
+            248.9,
+            307
+          ]
+        },
+        {
+          "id": "wing2",
+          "file": "bird/wing2.svg",
+          "anchor": [
+            259.6,
+            307
+          ]
+        }
+      ]
+    },
+    {
+      "id": "whale",
+      "target": "moonlit whale",
+      "targetFile": "whale/target.svg",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "whale/body.svg",
+          "anchor": [
+            224,
+            307
+          ]
+        },
+        {
+          "id": "tail",
+          "file": "whale/tail.svg",
+          "anchor": [
+            348.6,
+            301.7
+          ]
+        },
+        {
+          "id": "fin",
+          "file": "whale/fin.svg",
+          "anchor": [
+            183,
+            364
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deer",
+      "target": "standing deer",
+      "targetFile": "deer/target.svg",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "deer/body.svg",
+          "anchor": [
+            266.7,
+            365.8
+          ]
+        },
+        {
+          "id": "neck",
+          "file": "deer/neck.svg",
+          "anchor": [
+            215.1,
+            344.4
+          ]
+        },
+        {
+          "id": "antlers",
+          "file": "deer/antlers.svg",
+          "anchor": [
+            195.5,
+            257.2
+          ]
+        }
+      ]
     },
     {
       "id": "tree",
       "target": "flowering tree",
-      "prototypeLevel": "回旋",
-      "pieces": ["tree/trunk-branches.svg", "tree/canopy.svg", "tree/blossom-cluster.svg"]
+      "targetFile": "tree/target.svg",
+      "pieces": [
+        {
+          "id": "trunk",
+          "file": "tree/trunk.svg",
+          "anchor": [
+            240,
+            360.4
+          ]
+        },
+        {
+          "id": "crownL",
+          "file": "tree/crownL.svg",
+          "anchor": [
+            184.8,
+            319.5
+          ]
+        },
+        {
+          "id": "crownR",
+          "file": "tree/crownR.svg",
+          "anchor": [
+            297,
+            321.3
+          ]
+        },
+        {
+          "id": "crownTop",
+          "file": "tree/crownTop.svg",
+          "anchor": [
+            240,
+            269.7
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crane",
+      "target": "rising crane",
+      "targetFile": "crane/target.svg",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "crane/body.svg",
+          "anchor": [
+            245.3,
+            333.7
+          ]
+        },
+        {
+          "id": "neck",
+          "file": "crane/neck.svg",
+          "anchor": [
+            195.5,
+            328.4
+          ]
+        },
+        {
+          "id": "wingL",
+          "file": "crane/wingL.svg",
+          "anchor": [
+            240,
+            321.3
+          ]
+        },
+        {
+          "id": "wingR",
+          "file": "crane/wingR.svg",
+          "anchor": [
+            259.6,
+            319.5
+          ]
+        },
+        {
+          "id": "legs",
+          "file": "crane/legs.svg",
+          "anchor": [
+            259.6,
+            392.5
+          ]
+        }
+      ]
     },
     {
       "id": "pagoda",
       "target": "moonlit pagoda",
-      "prototypeLevel": "活影",
-      "pieces": ["pagoda/mountain-base.svg", "pagoda/pavilion.svg", "pagoda/moon.svg"]
+      "targetFile": "pagoda/target.svg",
+      "pieces": [
+        {
+          "id": "mountain-base",
+          "file": "pagoda/mountain-base.svg"
+        },
+        {
+          "id": "pavilion",
+          "file": "pagoda/pavilion.svg"
+        },
+        {
+          "id": "moon",
+          "file": "pagoda/moon.svg"
+        }
+      ]
     },
     {
       "id": "koi",
       "target": "swimming koi",
-      "prototypeLevel": "活影",
-      "pieces": ["koi/body.svg", "koi/fins.svg", "koi/tail.svg"]
+      "targetFile": "koi/target.svg",
+      "pieces": [
+        {
+          "id": "body",
+          "file": "koi/body.svg"
+        },
+        {
+          "id": "fins",
+          "file": "koi/fins.svg"
+        },
+        {
+          "id": "tail",
+          "file": "koi/tail.svg"
+        }
+      ]
     }
+  ],
+  "legacyReferenceFamilies": [
+    "pagoda",
+    "koi"
   ]
 }

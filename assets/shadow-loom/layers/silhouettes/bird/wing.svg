@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 540" role="img" aria-labelledby="title">
-  <title id="title">Bird wing shadow piece</title>
-  <path fill="currentColor" fill-rule="evenodd" d="M65 449c34-85 77-166 129-242 44-63 91-119 145-164 19-16 45-33 64-25 20 8 17 37 10 60-21 66-65 121-110 170 35-17 67-29 96-27 22 1 38 13 37 31-2 22-33 44-58 57-52 27-105 50-151 85-37 28-71 62-103 99l-59-44Zm118-67c40-38 83-68 131-94 31-17 62-31 76-48-25 1-60 20-89 36-15 8-33 20-51 29 22-25 48-51 69-80 30-41 54-84 66-123-40 33-80 82-116 137-35 54-62 106-86 160Z"/>
-  <path fill="currentColor" d="M222 338c-18 29-35 59-51 91l-28-21c15-30 34-59 52-86l27 16Zm58-83c-18 25-35 52-51 80l-27-15c17-30 35-57 53-82l25 17Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 854" role="img" aria-labelledby="title" data-coordinate-system="shadow-loom-stage-480x854">
+  <title id="title">Bird — Wing</title>
+  <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M 248.9 329 L 233.9 321 L 218.9 302 L 209.9 281 L 199.9 254 L 196.9 225 L 206.9 232 L 213.9 203 L 227.9 228 L 233.9 193 L 245.9 225 L 260.9 199 L 258.9 233 L 277.9 214 L 272.9 246 L 293.9 237 L 278.9 268 L 296.9 266 L 277.9 290 L 263.9 312 Z M 221.9 261 L 225.9 243 L 230.9 233 L 234.9 243 L 230.9 260 Z M 240.9 252 L 244.9 232 L 250.9 220 L 253.9 233 L 248.9 253 Z M 259.9 265 L 266.9 248 L 273.9 238 L 272.9 253 L 266.9 267 Z"/>
 </svg>

@@ -23,7 +23,7 @@ import { track } from './analytics.js';
 import { renderMoreGames } from './more-games.js';
 import * as R from './shadow-loom-rules.js';
 import { LEVELS, CHAPTERS } from './shadow-loom-levels.js';
-import { createScene, fretwork } from './shadow-loom-scene.js';
+import { createScene } from './shadow-loom-scene.js';
 
 const LANGUAGES = makeText({
     en: {
@@ -133,13 +133,34 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ease = t => 1 - (1 - t) ** 3;
 const smooth = t => t * t * (3 - 2 * t);
 
-function pathPolys(ctx, polys) {
+function pathPolys(ctx, polys, holes = []) {
     ctx.beginPath();
-    for (const poly of polys) {
+    for (const poly of [...polys, ...holes]) {
         ctx.moveTo(poly[0][0], poly[0][1]);
         for (let k = 1; k < poly.length; k++) ctx.lineTo(poly[k][0], poly[k][1]);
         ctx.closePath();
     }
+}
+
+function getAuthoredPath(svg) {
+    if (!svg?.d || typeof Path2D !== 'function') return null;
+    if (svg._path2d === undefined) {
+        try { svg._path2d = new Path2D(svg.d); } catch (e) { svg._path2d = null; }
+    }
+    return svg._path2d;
+}
+
+function drawAuthoredPath(ctx, svg, pose, scale, draw) {
+    const path = getAuthoredPath(svg);
+    if (!path) return false;
+    ctx.save();
+    ctx.translate(pose.x, pose.y);
+    ctx.rotate((pose.rot || 0) * Math.PI / 180);
+    ctx.scale(scale, scale);
+    ctx.translate(-svg.anchor[0], -svg.anchor[1]);
+    draw(path);
+    ctx.restore();
+    return true;
 }
 
 function fmtTime(ms) {
@@ -392,7 +413,7 @@ class ShadowLoomGame {
         this.st = R.initialState(this.level);
         this.sway = this.level.pieces.map(() => ({ a: 0, v: 0 }));
         const compiled = R.compileLevel(this.level);
-        this.fret = compiled.pieces.map(pc => fretwork(pc.polys, R.pointInPoly));
+        this.fret = compiled.pieces.map(pc => pc.holes || []);
         this.sel = -1;
         this.drag = null;
         this.dirty = true;
@@ -936,7 +957,7 @@ class ShadowLoomGame {
         if (a <= 0.001) return;
         const c = R.compileLevel(this.level);
         ctx.save();
-        pathPolys(ctx, c.targetPolys);
+        pathPolys(ctx, c.targetPolys, c.targetHoles);
         // 正片叠底的暖褐：淡影像是纸里透出的旧痕，而不是一层灰雾
         ctx.globalCompositeOperation = 'multiply';
         ctx.fillStyle = `rgba(128,82,44,${Math.min(1, a * 2.8)})`;
@@ -953,8 +974,9 @@ class ShadowLoomGame {
         const tighten = stage >= 3 ? 0.55 : stage >= 2 ? 0.8 : 1;
         this.level.pieces.forEach((pc, i) => {
             const polys = R.shadowPolys(this.level, lamp, this.effPose(i), i);
+            const holes = R.shadowHoles(this.level, lamp, this.effPose(i), i);
             ctx.save();
-            pathPolys(ctx, polys);
+            pathPolys(ctx, polys, holes);
             ctx.shadowColor = 'rgba(52,32,22,0.55)';
             ctx.shadowBlur = this.blurFor(pc.z) * tighten * this.renderScale;
             ctx.fillStyle = 'rgba(56,36,25,0.5)';
@@ -1050,10 +1072,14 @@ class ShadowLoomGame {
                     f.translate(-pivot[0], -pivot[1]);
                 });
             }
-            const polys = inLife || snapK >= 1
+            const solved = inLife || snapK >= 1;
+            const polys = solved
                 ? c.pieces[i].polys.map(poly => R.placePoly(poly, pc.sol.x, pc.sol.y, pc.sol.rot || 0))
                 : R.shadowPolys(this.level, lamp, this.st.pieces[i], i);
-            pathPolys(f, polys);
+            const holes = solved
+                ? c.pieces[i].holes.map(poly => R.placePoly(poly, pc.sol.x, pc.sol.y, pc.sol.rot || 0))
+                : R.shadowHoles(this.level, lamp, this.st.pieces[i], i);
+            pathPolys(f, polys, holes);
             f.fillStyle = '#3a261a';
             f.fill('nonzero');
             f.restore();
@@ -1140,16 +1166,17 @@ class ShadowLoomGame {
     drawPieces(ctx, dim) {
         const solving = this.state === 'solving' || this.state === 'done';
         const depths = [...new Set(this.level.pieces.map(p => p.z))].sort((a, b) => b - a);
+        const compiled = R.compileLevel(this.level);
         this.drawOrder().forEach((i) => {
             const pc = this.level.pieces[i];
             const pose = this.effPose(i);
             const polys = R.piecePolys(this.level, pose, i);
-            const holes = (this.fret[i] || []).map(h => R.placePoly(h, pose.x, pose.y, pose.rot || 0, pc.z));
+            const holes = R.pieceHoles(this.level, pose, i);
+            const svg = compiled.pieces[i].svg;
             const at = R.attachPoint(this.level, pose, i);
             const selected = this.sel === i && !solving;
             ctx.save();
             ctx.globalAlpha = 1 - dim * 0.82;
-            // 丝线：从横杆垂到悬挂点，受光的一侧发亮
             ctx.strokeStyle = 'rgba(246,222,176,0.5)';
             ctx.lineWidth = 0.8;
             ctx.beginPath();
@@ -1160,7 +1187,6 @@ class ShadowLoomGame {
             ctx.beginPath();
             ctx.arc(at[0], RAIL_Y + 3, 2.4, 0, Math.PI * 2);
             ctx.fill();
-            // 深度珠：离灯越近珠子越多（一眼读出层次）
             const layer = depths.indexOf(pc.z) + 1;
             ctx.fillStyle = 'rgba(255,215,154,0.8)';
             for (let b = 0; b < layer; b++) {
@@ -1168,31 +1194,23 @@ class ShadowLoomGame {
                 ctx.arc(at[0], RAIL_Y + 13 + b * 6, 1.7, 0, Math.PI * 2);
                 ctx.fill();
             }
-            // 纸片路径：外轮廓 + 镂空孔（evenodd，孔里透出后面的亮纸幕）
-            const cut = () => {
-                ctx.beginPath();
-                for (const poly of polys) {
-                    ctx.moveTo(poly[0][0], poly[0][1]);
-                    for (let k = 1; k < poly.length; k++) ctx.lineTo(poly[k][0], poly[k][1]);
-                    ctx.closePath();
-                }
-                for (const h of holes) {
-                    ctx.moveTo(h[0][0], h[0][1]);
-                    for (let k = 1; k < h.length; k++) ctx.lineTo(h[k][0], h[k][1]);
-                    ctx.closePath();
-                }
-            };
-            // 纸的厚度：先在右下错开一点画暗边
+            const cut = () => pathPolys(ctx, polys, holes);
             ctx.save();
-            ctx.translate(0.9, 1.1);
-            cut();
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.shadowBlur = 6 * this.renderScale;
-            ctx.shadowOffsetY = 3 * this.renderScale;
-            ctx.fillStyle = '#140c07';
-            ctx.fill('evenodd');
+            const thickPose = { ...pose, x: pose.x + 0.9, y: pose.y + 1.1 };
+            if (!drawAuthoredPath(ctx, svg, thickPose, pc.z, (path) => {
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 6 * this.renderScale;
+                ctx.fillStyle = '#140c07';
+                ctx.fill(path, 'evenodd');
+            })) {
+                ctx.translate(0.9, 1.1);
+                cut();
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 6 * this.renderScale;
+                ctx.fillStyle = '#140c07';
+                ctx.fill('evenodd');
+            }
             ctx.restore();
-            // 本体：顶部背光暗、底部被灯照亮
             const flat = polys.flat();
             const minY = Math.min(...flat.map(v => v[1]));
             const maxY = Math.max(...flat.map(v => v[1]));
@@ -1205,17 +1223,25 @@ class ShadowLoomGame {
                 pg.addColorStop(0.6, '#4a301d');
                 pg.addColorStop(1, '#7a4e2c');
             }
-            cut();
-            if (selected) {
-                ctx.shadowColor = 'rgba(255,190,100,0.9)';
-                ctx.shadowBlur = 16 * this.renderScale;
+            const painted = drawAuthoredPath(ctx, svg, pose, pc.z, (path) => {
+                if (selected) {
+                    ctx.shadowColor = 'rgba(255,190,100,0.9)';
+                    ctx.shadowBlur = 16 * this.renderScale;
+                }
+                ctx.fillStyle = pg;
+                ctx.fill(path, 'evenodd');
+            });
+            if (!painted) {
+                cut();
+                if (selected) {
+                    ctx.shadowColor = 'rgba(255,190,100,0.9)';
+                    ctx.shadowBlur = 16 * this.renderScale;
+                }
+                ctx.fillStyle = pg;
+                ctx.fill('evenodd');
             }
-            ctx.fillStyle = pg;
-            ctx.fill('evenodd');
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            // 纸纤维（极淡）
             ctx.save();
+            cut();
             ctx.clip('evenodd');
             ctx.strokeStyle = 'rgba(255,214,160,0.07)';
             ctx.lineWidth = 0.6;
@@ -1229,12 +1255,17 @@ class ShadowLoomGame {
                 ctx.stroke();
             }
             ctx.restore();
-            // 背光暖边：外轮廓与每个镂空孔都描一圈
-            // （save/restore 不保存路径：纤维循环之后必须重建剪纸路径再描边）
-            cut();
-            ctx.strokeStyle = selected ? 'rgba(255,220,160,0.95)' : 'rgba(255,178,100,0.55)';
-            ctx.lineWidth = selected ? 1.5 : 0.9;
-            ctx.stroke();
+            const outlined = drawAuthoredPath(ctx, svg, pose, pc.z, (path) => {
+                ctx.strokeStyle = selected ? 'rgba(255,220,160,0.95)' : 'rgba(255,178,100,0.55)';
+                ctx.lineWidth = selected ? 1.5 : 0.9;
+                ctx.stroke(path);
+            });
+            if (!outlined) {
+                cut();
+                ctx.strokeStyle = selected ? 'rgba(255,220,160,0.95)' : 'rgba(255,178,100,0.55)';
+                ctx.lineWidth = selected ? 1.5 : 0.9;
+                ctx.stroke();
+            }
             if (pc.pinned) {
                 const pg2 = ctx.createRadialGradient(at[0] - 1, at[1] + 3, 0.5, at[0], at[1] + 4, 5);
                 pg2.addColorStop(0, '#ffe2a8');
@@ -1292,7 +1323,7 @@ class ShadowLoomGame {
         g.translate(cv.width / 2, cv.height / 2);
         g.scale(s, s);
         g.translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
-        pathPolys(g, c.targetPolys);
+        pathPolys(g, c.targetPolys, c.targetHoles);
         g.fillStyle = '#f3e3c3';
         g.fill('nonzero');
         g.restore();

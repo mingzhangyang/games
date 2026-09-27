@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 480" role="img" aria-labelledby="title">
-  <title id="title">Pagoda pavilion shadow piece</title>
-  <path fill="currentColor" fill-rule="evenodd" d="M62 442v-24h35V281H64l-29-25 72-44 34-84 34 84 72 44-29 25h-33v137h42v24H62Zm111-161h27v137h-27V281Zm-50 0h27v137h-27V281ZM67 259l74-46 74 46-13 10H80l-13-10Zm27-42 47-29 47 29H94Zm20-87 27-55 27 55-27 67-27-67Z"/>
-  <path fill="currentColor" d="M72 367h182v23H72v-23Zm-26-114 95-58 95 58-15 24H61l-15-24Zm95-64 37-22 38 22-38 24-37-24Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 854" role="img" aria-labelledby="title" data-coordinate-system="shadow-loom-stage-480x854">
+  <title id="title">Pagoda — Pavilion</title>
+  <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M 162 408 L 162 394 L 183 394 L 183 329 L 161 319 L 150 309 L 159 301 L 207 276 L 222 238 L 237 276 L 285 301 L 295 309 L 283 319 L 264 329 L 264 394 L 285 394 L 285 408 Z M 193 329 L 206 329 L 206 393 L 193 393 Z M 228 329 L 241 329 L 241 393 L 228 393 Z M 177 314 L 223 290 L 271 314 L 260 322 L 188 322 Z M 209 276 L 222 255 L 234 276 L 230 291 L 214 291 Z"/>
 </svg>

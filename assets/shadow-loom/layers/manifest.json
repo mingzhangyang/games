@@ -12,22 +12,42 @@
       "file": "stage-background.webp",
       "z": 0,
       "alpha": false,
-      "placement": { "x": 0, "y": 0, "width": 1080, "height": 1920 }
+      "placement": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920
+      }
     },
     {
       "id": "paper-frame",
       "file": "paper-frame.webp",
       "z": 10,
       "alpha": true,
-      "placement": { "x": 0, "y": 0, "width": 1080, "height": 1920 },
-      "paperWindow": { "x": 205, "y": 345, "width": 670, "height": 795 }
+      "placement": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920
+      },
+      "paperWindow": {
+        "x": 205,
+        "y": 345,
+        "width": 670,
+        "height": 795
+      }
     },
     {
       "id": "desk-back",
       "file": "desk-back.webp",
       "z": 20,
       "alpha": true,
-      "placement": { "x": 0, "y": 0, "width": 1080, "height": 1920 },
+      "placement": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920
+      },
       "surfaceTopY": 1175
     },
     {
@@ -35,33 +55,78 @@
       "file": "lamp-base.webp",
       "z": 30,
       "alpha": true,
-      "placement": { "x": 0, "y": 0, "width": 1080, "height": 1920 },
-      "visibleBounds": { "x": 405, "y": 1300, "width": 270, "height": 610 }
+      "placement": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920
+      },
+      "visibleBounds": {
+        "x": 405,
+        "y": 1300,
+        "width": 270,
+        "height": 610
+      }
     },
     {
       "id": "lamp-glass",
       "file": "lamp-glass.webp",
       "z": 35,
       "alpha": true,
-      "placement": { "x": 0, "y": 0, "width": 1080, "height": 1920 },
-      "visibleBounds": { "x": 445, "y": 1100, "width": 190, "height": 505 }
+      "placement": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920
+      },
+      "visibleBounds": {
+        "x": 445,
+        "y": 1100,
+        "width": 190,
+        "height": 505
+      }
     },
     {
       "id": "lamp-shade",
       "file": "lamp-shade.webp",
       "z": 40,
       "alpha": true,
-      "placement": { "x": 0, "y": 0, "width": 1080, "height": 1920 },
-      "visibleBounds": { "x": 320, "y": 845, "width": 420, "height": 710 },
-      "flameSlot": { "x": 415, "y": 1220, "width": 250, "height": 155 }
+      "placement": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920
+      },
+      "visibleBounds": {
+        "x": 320,
+        "y": 845,
+        "width": 420,
+        "height": 710
+      },
+      "flameSlot": {
+        "x": 415,
+        "y": 1220,
+        "width": 250,
+        "height": 155
+      }
     },
     {
       "id": "foreground",
       "file": "foreground.webp",
       "z": 50,
       "alpha": true,
-      "placement": { "x": 0, "y": 0, "width": 1080, "height": 1920 },
-      "lampClearCorridor": { "x": 385, "y": 1040, "width": 310, "height": 640 }
+      "placement": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920
+      },
+      "lampClearCorridor": {
+        "x": 385,
+        "y": 1040,
+        "width": 310,
+        "height": 640
+      }
     }
   ],
   "texture": {
@@ -74,7 +139,15 @@
   },
   "silhouettes": {
     "manifest": "silhouettes/manifest.json",
-    "directory": "silhouettes/",
-    "note": "Each listed SVG is an independently movable paper piece."
+    "coordinateSystem": "shadow-loom-stage-480x854",
+    "viewBox": "0 0 480 854",
+    "playableLevels": [
+      "rabbit",
+      "bird",
+      "whale",
+      "deer",
+      "tree",
+      "crane"
+    ]
   }
 }
