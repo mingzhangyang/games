@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 // 拔萝卜生产美术烟测：加载状态、真实点击、结算、响应式比例与资源失败 fallback。
 import puppeteer from 'puppeteer-core';
+import { readFileSync } from 'node:fs';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+
+// 挂点契约只认 manifest：叶柄数量 = 挂点数，第 i 根从 carrot.crown[i] 出发、止于 girl.fists[i]
+const MANIFEST = JSON.parse(readFileSync(new URL('../assets/carrot-pull/manifest.json', import.meta.url), 'utf8'));
+const STEM_CONTRACT = {
+    crown: MANIFEST.attachments['carrot.crown'].points,
+    fists: MANIFEST.attachments['girl.fists'].points,
+    clip: MANIFEST.attachments['girl.fists'].overlayClipLocalLogicalPx,
+};
 
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
@@ -97,7 +106,7 @@ async function assertNormalPage() {
         for (const pulls of [0, 3]) {
             await page.evaluate((n) => { window.cpGame.state.pulls = n; }, pulls);
             await wait(900);
-            const stems = await page.evaluate(() => {
+            const stems = await page.evaluate(({ crown, fists: fistPoints, clip: box }) => {
                 const svg = document.getElementById('cp-scene');
                 const toLocal = (node, x, y) => {
                     const pt = svg.createSVGPoint();
@@ -106,26 +115,26 @@ async function assertNormalPage() {
                 };
                 const fists = document.getElementById('cp-girl-fists');
                 const carrot = document.getElementById('cp-carrot');
-                const clip = document.querySelector('#cp-girl-fists-clip rect');
-                const box = clip && ['x', 'y', 'width', 'height'].map(k => Number(clip.getAttribute(k)));
                 const paths = [...document.querySelectorAll('#cp-stems-girl path')];
                 return {
                     count: paths.length,
                     clipped: fists ? [...fists.querySelectorAll('image')].every(img => img.getAttribute('clip-path')) : false,
-                    ends: paths.map((path) => {
+                    ends: paths.map((path, i) => {
                         const d = path.getAttribute('d') || '';
                         const start = d.match(/^M(-?[\d.]+) (-?[\d.]+)/);
                         const end = d.match(/L(-?[\d.]+) (-?[\d.]+)/);
-                        if (!start || !end || !box) return { ok: false, d };
+                        if (!start || !end || !crown[i] || !fistPoints[i]) return { ok: false, d };
                         const s = toLocal(carrot, Number(start[1]), Number(start[2]));
                         const e = toLocal(fists, Number(end[1]), Number(end[2]));
                         const inFist = e.x >= box[0] && e.x <= box[0] + box[2] && e.y >= box[1] && e.y <= box[1] + box[3];
-                        const atCrown = Math.hypot(s.x - 20, s.y - 91) < 18;
-                        return { ok: inFist && atCrown, start: [s.x, s.y].map(Math.round), end: [e.x, e.y].map(Math.round) };
+                        // 起点允许叶柄在萝卜冠处散开（车道偏移 + 半宽），终点收拢到拳头挂点附近
+                        const atCrown = Math.hypot(s.x - crown[i][0], s.y - crown[i][1]) < 12;
+                        const atFist = Math.hypot(e.x - fistPoints[i][0], e.y - fistPoints[i][1]) < 6;
+                        return { ok: inFist && atCrown && atFist, start: [s.x, s.y].map(Math.round), end: [e.x, e.y].map(Math.round) };
                     }),
                 };
-            });
-            if (stems.count < 3 || !stems.clipped || stems.ends.some(end => !end.ok)) {
+            }, STEM_CONTRACT);
+            if (stems.count !== STEM_CONTRACT.crown.length || !stems.clipped || stems.ends.some(end => !end.ok)) {
                 fail(`叶柄没有从萝卜冠连进拳头 (pulls=${pulls}): ${JSON.stringify(stems)}`);
             }
         }
