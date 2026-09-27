@@ -23,7 +23,8 @@ const LANGUAGES = makeText({
         howtoTwo: 'Hit the sweet spot',
         howtoThree: 'Keep the streak',
         startLabel: 'Start pulling',
-        keyHint: 'Space / ↑ also pulls',
+        keyHint: 'Press Pull when the needle enters the green zone.',
+        keyHintTouch: 'Tap Pull when the needle enters the green zone.',
         round: 'Round',
         score: 'Score',
         time: 'Time',
@@ -42,7 +43,8 @@ const LANGUAGES = makeText({
         sideBest: 'Best score',
         sideTipTitle: 'Mole tip',
         sideTip: 'Don’t panic-pull. Find the green beat and the carrot will loosen itself.',
-        hint: 'Press the button or use Space / ↑ when the needle is in the green zone.',
+        hint: 'Press Pull, Space, or ↑ when the needle enters the green zone.',
+        hintTouch: 'Tap Pull when the needle enters the green zone.',
         harvestedStamp: 'HARVESTED!',
         resultWinTitle: 'A bumper harvest!',
         resultWinCopy: 'You and the mole cleared the whole garden.',
@@ -72,7 +74,8 @@ const LANGUAGES = makeText({
         howtoTwo: '落在甜蜜区',
         howtoThree: '连续拔出',
         startLabel: '开始拔萝卜',
-        keyHint: 'Space / ↑ 也可以用力拔',
+        keyHint: '按“用力拔”，在指针进入绿色区间时出手。',
+        keyHintTouch: '点击“用力拔”，在指针进入绿色区间时出手。'
         round: '萝卜',
         score: '得分',
         time: '时间',
@@ -91,7 +94,8 @@ const LANGUAGES = makeText({
         sideBest: '最佳记录',
         sideTipTitle: '小鼹鼠提示',
         sideTip: '不要急着乱拔。把节奏踩在绿色区域，萝卜会自己松土。',
-        hint: '按住按钮或使用 Space / ↑，在绿色区间拔萝卜。',
+        hint: '按“用力拔”、Space 或 ↑，在指针进入绿色区间时拔萝卜。',
+        hintTouch: '点击“用力拔”，在指针进入绿色区间时拔萝卜。'
         harvestedStamp: '大丰收！',
         resultWinTitle: '萝卜大丰收！',
         resultWinCopy: '你和鼹鼠把整座菜园都搬空啦。',
@@ -122,6 +126,13 @@ const BEST_KEY = 'cp_best_score';
 
 function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+}
+
+function usesTouchInput() {
+    return Boolean(
+        window.matchMedia?.('(pointer: coarse)').matches
+        || navigator.maxTouchPoints > 0
+    );
 }
 
 function createGame() {
@@ -196,6 +207,7 @@ function createGame() {
     function applyLanguage(nextLang = getLang()) {
         lang = nextLang === 'zh' ? 'zh' : 'en';
         const t = text();
+        const touchInput = usesTouchInput();
         document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
         const labels = {
             'cp-brand-zh': t.brand,
@@ -206,7 +218,7 @@ function createGame() {
             'cp-howto-two': t.howtoTwo,
             'cp-howto-three': t.howtoThree,
             'cp-start-label': t.startLabel,
-            'cp-key-hint': t.keyHint,
+            'cp-key-hint': touchInput ? t.keyHintTouch : t.keyHint,
             'cp-again-label': t.again,
             'cp-menu-label': t.menu,
             'cp-round-label': t.round,
@@ -222,7 +234,7 @@ function createGame() {
             'cp-side-best-label': t.sideBest,
             'cp-side-tip-title': t.sideTipTitle,
             'cp-side-tip': t.sideTip,
-            'cp-hint': t.hint,
+            'cp-hint': touchInput ? t.hintTouch : t.hint,
             'cp-result-score-label': t.finalScore,
         };
         Object.entries(labels).forEach(([id, value]) => {
