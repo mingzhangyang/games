@@ -114,10 +114,35 @@ if (!same(manifest.attachments?.['girl.fists']?.points, [[30, -181], [36, -180],
 // 女孩精灵自带双臂；再叠 girl-hands 精灵就是「上下两层、多出两只更粗的胳膊」
 if (manifest.sprites?.['girl-hands'] || manifest.attachments?.['girl.hands']) fail('girl-hands sprite would draw a second pair of arms');
 if (html.includes('data-art-sprite="girl-hands"') || artModule.includes("'girl-hands'")) fail('girl-hands sprite is still drawn or preloaded');
-if (!sceneModule.includes('crown: [[12, 92], [16, 91], [20, 90], [24, 91], [28, 92]]')
-    || !sceneModule.includes('hands: [[30, -181], [36, -180], [42, -180], [48, -181], [53, -182]]')) {
-    fail('PRODUCTION_ATTACH in carrot-pull-scene.js drifted from manifest attachments');
+// 拳头挂点、拳头裁切框、拳头重绘层的变换在 HTML / 运行时各写了一份；全部以 manifest 为准逐项比对，
+// 否则日后改美术坐标时拳头层会与叶柄末端错位（盖不住叶柄），而校验仍然全绿。
+const { PRODUCTION_ATTACH } = await import('../js/carrot-pull-scene.js');
+if (!same(PRODUCTION_ATTACH.crown, manifest.attachments?.['carrot.crown']?.points)) {
+    fail('PRODUCTION_ATTACH.crown in carrot-pull-scene.js drifted from manifest carrot.crown');
 }
+if (!same(PRODUCTION_ATTACH.hands, manifest.attachments?.['girl.fists']?.points)) {
+    fail('PRODUCTION_ATTACH.hands in carrot-pull-scene.js drifted from manifest girl.fists');
+}
+const clipRect = html.match(/<clipPath id="cp-girl-fists-clip"[^>]*>\s*<rect ([^>]*)\/>/)?.[1] || '';
+const clipBox = ['x', 'y', 'width', 'height'].map(key => Number(clipRect.match(new RegExp(`\\b${key}="([^"]+)"`))?.[1]));
+if (!same(clipBox, manifest.attachments?.['girl.fists']?.overlayClipLocalLogicalPx)) {
+    fail(`#cp-girl-fists-clip rect ${clipBox.join(',')} drifted from manifest girl.fists.overlayClipLocalLogicalPx`);
+}
+const clipped = manifest.attachments?.['girl.fists']?.overlayClipLocalLogicalPx;
+const fistsInsideClip = Array.isArray(clipped) && (manifest.attachments['girl.fists'].points || []).every(([x, y]) => (
+    x >= clipped[0] && x <= clipped[0] + clipped[2] && y >= clipped[1] && y <= clipped[1] + clipped[3]
+));
+if (!fistsInsideClip) fail('girl.fists points must lie inside overlayClipLocalLogicalPx, or the fist overlay cannot cover the stem ends');
+const groupTransform = id => html.match(new RegExp(`<g id="${id}" transform="([^"]+)"`))?.[1];
+const girlSprite = manifest.sprites?.['girl-happy'];
+const girlTransform = groupTransform('cp-girl');
+if (!girlTransform || groupTransform('cp-girl-fists') !== girlTransform) {
+    fail('#cp-girl-fists must share #cp-girl\'s transform so the clipped fists sit on her own hands');
+} else if (!girlTransform.includes(`translate(${girlSprite.sceneAnchorLogicalPx.join(' ')})`)
+    || !girlTransform.includes(`scale(${String(girlSprite.scale).replace(/^0\./, '.')})`)) {
+    fail(`#cp-girl transform "${girlTransform}" drifted from manifest girl-happy anchor/scale`);
+}
+if (!errors.length) pass('runtime attach points, fist clip and fist overlay transform match manifest');
 if (manifest.sprites?.['mole-paws'] || manifest.attachments?.['mole.paws']) fail('residual mole paws must not be part of the runtime art contract');
 
 let runtimeBytes = 0;
