@@ -217,6 +217,33 @@ if (artModule.includes("'mole-paws'")) {
 if (/[🥕↟]/u.test(html)) fail('carrot-pull.html still contains an emoji art placeholder');
 const productionMarkup = html.split('id="cp-art-production"')[1]?.split('id="cp-fallback-scene"')[0] || '';
 const inlinePathCount = (productionMarkup.match(/<path\b/g) || []).length;
+// 生产场景的绘制顺序（SVG 文档序）必须严格按 manifest 的 z 升序（计划 §7.1「严格升序绘制」）：
+// 手改 HTML 把鼹鼠挪到萝卜前、或把叶柄挪到女孩身上时，这里直接变红。
+const layerZ = Object.fromEntries(layers.map(layer => [layer.id, layer.z]));
+const GROUP_Z = {
+    'cp-mole': manifest.sprites?.['mole-happy']?.z,
+    'cp-stems-girl': manifest.dynamicZ?.leafStems,
+    'cp-carrot': manifest.sprites?.carrot?.z,
+    'cp-girl': manifest.sprites?.['girl-happy']?.z,
+    'cp-girl-fists': manifest.dynamicZ?.girlFists,
+    'cp-particles': manifest.dynamicZ?.particles,
+};
+const drawOrder = [...productionMarkup.matchAll(/data-art-layer="([^"]+)"|<g id="([^"]+)"/g)]
+    .map(([, layer, group]) => (layer ? { name: layer, z: layerZ[layer] } : { name: `#${group}`, z: GROUP_Z[group] }))
+    .filter(entry => !entry.name.startsWith('#') || entry.name.slice(1) in GROUP_Z);
+const unknownLayer = drawOrder.find(entry => !Number.isFinite(entry.z));
+if (unknownLayer) fail(`production scene draws ${unknownLayer.name}, which has no z in manifest.json`);
+Object.keys(GROUP_Z).forEach((group) => {
+    if (!drawOrder.some(entry => entry.name === `#${group}`)) fail(`production scene is missing #${group}`);
+});
+const outOfOrder = drawOrder.findIndex((entry, i) => i > 0 && !(entry.z > drawOrder[i - 1].z));
+if (outOfOrder > 0) {
+    fail(`production draw order breaks manifest z: ${drawOrder[outOfOrder - 1].name} (z ${drawOrder[outOfOrder - 1].z}) → ${drawOrder[outOfOrder].name} (z ${drawOrder[outOfOrder].z})`);
+}
+if (html.indexOf('id="cp-carrot-hit"') < html.indexOf('id="cp-fallback-scene"')) {
+    fail(`#cp-carrot-hit (z ${manifest.dynamicZ?.hitTarget}) must be drawn after both scenes`);
+}
+if (!unknownLayer && outOfOrder <= 0) pass(`production draw order follows manifest z: ${drawOrder.map(entry => `${entry.name}(${entry.z})`).join(' → ')}`);
 if (inlinePathCount > 12) fail(`production scene has ${inlinePathCount} inline paths; storybook art should live in assets`);
 else pass(`${inlinePathCount} inline paths remain for interaction scaffolding`);
 

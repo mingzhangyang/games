@@ -118,7 +118,13 @@ async function assertNormalPage() {
                 const paths = [...document.querySelectorAll('#cp-stems-girl path')];
                 return {
                     count: paths.length,
-                    clipped: fists ? [...fists.querySelectorAll('image')].every(img => img.getAttribute('clip-path') === 'url(#cp-girl-fists-clip)') : false,
+                    // 空集合的 every() 恒为 true：必须恰好是 happy / oops 两张女孩精灵，且都裁到拳头
+                    clipped: (() => {
+                        const images = fists ? [...fists.querySelectorAll('image')] : [];
+                        const sprites = images.map(img => img.getAttribute('data-art-sprite')).sort().join(',');
+                        return sprites === 'girl-happy,girl-oops'
+                            && images.every(img => img.getAttribute('clip-path') === 'url(#cp-girl-fists-clip)');
+                    })(),
                     ends: paths.map((path, i) => {
                         const d = path.getAttribute('d') || '';
                         const start = d.match(/^M(-?[\d.]+) (-?[\d.]+)/);
