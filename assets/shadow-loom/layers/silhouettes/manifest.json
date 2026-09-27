@@ -14,7 +14,7 @@
     "holes": "additional subpaths in the same path"
   },
   "referenceSource": {
-    "description": "The five bottom cut-paper motifs in the supplied reference image",
+    "description": "The five supplied bottom cut-paper motifs plus generated matching original-art references for whale, deer, and crane.",
     "families": [
       "rabbit",
       "bird",
@@ -22,17 +22,25 @@
       "pagoda",
       "koi"
     ],
-    "method": "thresholded contour tracing with cubic Bézier smoothing",
+    "method": "Bezier tracing from supplied references and generated original-art references, with shared stage coordinates.",
     "coordinateContract": "Every piece and target uses viewBox 0 0 480 854",
     "holes": "Real SVG subpaths rendered with fill-rule evenodd",
-    "judgeContours": "SVG keeps every hole; the low-resolution paired contours retain structural holes only."
+    "judgeContours": "SVG keeps every hole; the low-resolution paired contours retain structural holes only.",
+    "generatedReferenceFamilies": [
+      "whale",
+      "deer",
+      "crane"
+    ]
   },
   "tracedReferenceFamilies": [
     "rabbit",
     "bird",
     "tree",
     "pagoda",
-    "koi"
+    "koi",
+    "whale",
+    "deer",
+    "crane"
   ],
   "playableLevels": [
     "rabbit",
@@ -45,7 +53,10 @@
   "playableLevelsUsingTracedReference": [
     "rabbit",
     "bird",
-    "tree"
+    "whale",
+    "deer",
+    "tree",
+    "crane"
   ],
   "families": [
     {
@@ -307,8 +318,10 @@
       ]
     }
   ],
-  "notes": [
-    "The supplied reference contains five motifs. No unprovided source motif is silently mapped onto whale, deer, or crane.",
-    "Rabbit, bird, and tree use the traced paths in the six-level runtime; pagoda and koi are preserved as traced reference families for their future level mapping."
+  "notes": "Whale, deer, and crane were authored from newly generated paper-cut references; these SVGs are the production vector assets, not procedural geometry.",
+  "generatedReferenceFamilies": [
+    "whale",
+    "deer",
+    "crane"
   ]
 }
