@@ -94,7 +94,7 @@ export function loadCarrotPullArt({
     if (stage) stage.dataset.artState = 'loading';
     const preview = svg?.querySelector('[data-art-preview]');
     setSvgImageSource(preview, ART_URLS.preview);
-    svg?.querySelectorAll('[data-art-ui]').forEach((node) => {
+    document.querySelectorAll('[data-art-ui]').forEach((node) => {
         const name = node.getAttribute('data-art-ui');
         setImageSource(node, ART_UI[name]);
     });
