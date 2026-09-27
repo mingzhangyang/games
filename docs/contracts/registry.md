@@ -147,3 +147,5 @@ Shadow Loom 的 `js/shadow-loom-silhouettes.js` 也属于生成缓存：它由
 `npm run build:shadow-loom-silhouettes` 生成，不能直接编辑。提交前运行
 `npm run check:shadow-loom-silhouettes`；该文件因 SVG 路径 JSON 的双引号格式被
 eslint 忽略，源 SVG、生成器与同步检查才是权威。
+生成器会先合并同一纸片内重叠的外轮廓，再输出 Path2D 与 judge 共用的轮廓缓存；不同纸片的拆分由 SVG 源文件负责，
+应沿自然结构形成相邻边界，不得用包含式矩形裁切。

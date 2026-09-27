@@ -31,31 +31,23 @@ export const LEVELS = [
         pieces: [
             {
                 id: 'body', z: 0.8,
-                shape: [
-                    { t: 'ellipse', cx: 0, cy: 0, rx: 78.3, ry: 60.5, rot: -10 },
-                    { t: 'circle', cx: 78.3, cy: 21.4, r: 15.2 },
-                    { t: 'ellipse', cx: -53.4, cy: 55.2, rx: 24.9, ry: 8.9, rot: 4 },
-                ],
                 sol: { x: 244.5, y: 347.5 },
                 start: { x: 309.4, y: 230.5 },
             },
             {
                 id: 'head', z: 0.6,
-                shape: [
-                    { t: 'circle', cx: 0, cy: 0, r: 35.6 },
-                    { t: 'ellipse', cx: -29.4, cy: 10.7, rx: 17.8, ry: 14.2, rot: 10 },
-                ],
                 sol: { x: 271, y: 311 },
                 start: { x: 205, y: 333.7 },
             },
             {
                 id: 'ears', z: 0.6,
-                shape: [
-                    { t: 'leaf', cx: 3.6, cy: -48.1, len: 99.7, w: 26.7, rot: -76, bend: 3.6 },
-                    { t: 'leaf', cx: 24.9, cy: -40.9, len: 89, w: 23.1, rot: -58, bend: 3.6 },
-                ],
                 sol: { x: 230.5, y: 246 },
                 start: { x: 304.1, y: 360.4 },
+            },
+            {
+                id: 'grass', z: 0.72,
+                sol: { x: 245, y: 405 },
+                start: { x: 355, y: 255 },
             },
         ],
         life: {
@@ -270,7 +262,7 @@ export const LEVELS = [
             {
                 id: 'neck', z: 0.62,
                 sol: { x: 202.2, y: 321.3, rot: 0 },
-                start: { x: 300, y: 307, rot: 34 },
+                start: { x: 240, y: 350, rot: 34 },
             },
             {
                 id: 'wingL', z: 0.5,

@@ -26,6 +26,8 @@
     "coordinateContract": "Every piece and target uses viewBox 0 0 480 854",
     "holes": "Real SVG subpaths rendered with fill-rule evenodd",
     "judgeContours": "SVG keeps every hole; the low-resolution paired contours retain structural holes only.",
+    "pieceTopology": "Playable families are partitioned along natural anatomy boundaries; pieces share seams but do not contain one another.",
+    "samePieceOuterUnion": "The runtime generator unions overlapping outer contours within each piece before sampling the judge cache.",
     "sourceReferences": {
       "whale": "references/whale-reference.webp",
       "deer": "references/deer-reference.webp",
@@ -94,6 +96,14 @@
           "anchor": [
             230.5,
             246
+          ]
+        },
+        {
+          "id": "grass",
+          "file": "rabbit/grass.svg",
+          "anchor": [
+            245,
+            405
           ]
         }
       ]

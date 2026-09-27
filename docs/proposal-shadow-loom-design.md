@@ -391,5 +391,8 @@ Prototype 成立后再扩展正式关卡。
   （否则拖到两侧会钻到书堆 / 盆花后面）。灯与纸幕之间隔着木框下横梁，因此不画光锥。`lamp.x/lamp.y` 现在是火焰位置，位图按 flameSlot 中心对齐。
 - **剪纸 SVG 已接入**：六关的目标与纸片 SVG 共用 `0 0 480 854` 舞台坐标，孔洞是同一路径中的
   `fill-rule="evenodd"` 子路径；鲸、鹿、鹤来自随 PR 生成的原创纸剪参考图并以曲线轮廓描摹，
-  不是程序几何替代物。`scripts/shadow-loom-build-silhouettes.mjs` 将 SVG 采样为运行时缓存，
-  `--check` 防止 SVG 与缓存漂移，`verify-shadow-loom-silhouettes.mjs` 检查坐标、锚点、镂空与引用完整性。
+  不是程序几何替代物。每关的纸片沿自然结构拆分为互不包含的区域（兔子的耳朵 / 头 / 身体 / 草，
+  鲸的身体 / 鳍 / 尾，鹿的身体 / 颈 / 鹿角，鹤的身体 / 颈 / 双翼 / 腿），只在接缝处相邻。
+  `scripts/shadow-loom-build-silhouettes.mjs` 将 SVG 采样为运行时缓存，并在同一纸片内先合并重叠外轮廓，
+  让 evenodd Path2D 与 judge 使用同一几何；`--check` 防止 SVG 与缓存漂移，
+  `verify-shadow-loom-silhouettes.mjs` 与关卡校验检查坐标、锚点、镂空、引用和纸片拓扑。

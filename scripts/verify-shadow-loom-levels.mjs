@@ -80,6 +80,19 @@ for (const lv of LEVELS) {
     const edgeTouch = [...Array(R.COLS).keys()].some(col => c.target[col] || c.target[(R.ROWS - 1) * R.COLS + col])
         || [...Array(R.ROWS).keys()].some(row => c.target[row * R.COLS] || c.target[row * R.COLS + R.COLS - 1]);
     ok(!edgeTouch && targetArea > 0, `${tag}: 目标剪影完整落在纸幕内`);
+    // Natural paper cuts should meet at anatomy boundaries, not contain one
+    // another. A few shared low-resolution seam cells are tolerated because
+    // the judge samples a 4px grid while the authored SVG curves are antialiased.
+    const pieceMasks = c.targetSets.map(set => R.rasterize(set.polys, set.holes));
+    let maxPieceOverlap = 0;
+    for (let i = 0; i < pieceMasks.length; i++) {
+        for (let j = i + 1; j < pieceMasks.length; j++) {
+            let overlap = 0;
+            for (let cell = 0; cell < pieceMasks[i].length; cell++) overlap += pieceMasks[i][cell] & pieceMasks[j][cell];
+            maxPieceOverlap = Math.max(maxPieceOverlap, overlap);
+        }
+    }
+    ok(maxPieceOverlap <= 4, `${tag}: 纸片按自然结构拆分且没有大面积重叠`, `${maxPieceOverlap} 个边界格`);
 
     /* ② 初始 */
     const init = R.initialState(lv);
