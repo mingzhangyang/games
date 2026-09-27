@@ -87,8 +87,20 @@
                                     <image class="cp-production-happy" data-art-sprite="girl-happy" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none"/>
                                     <image class="cp-production-oops" data-art-sprite="girl-oops" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none"/>
                                 </g>
-                                <g id="cp-girl-hands" transform="translate(186 692) rotate(-4) scale(.94)">
-                                    <image data-art-sprite="girl-hands" x="-108" y="-274" width="250" height="167" preserveAspectRatio="none"/>
+                                <g id="cp-stems-girl" class="cp-leaf-connectors" aria-hidden="true">
+                                    <path class="cp-leaf-stem" fill="#a9b94e" stroke="#6f7f2c" stroke-width="0.9"/>
+                                    <path class="cp-leaf-stem" fill="#c3cc68" stroke="#6f7f2c" stroke-width="0.9"/>
+                                    <path class="cp-leaf-stem" fill="#98ad42" stroke="#6f7f2c" stroke-width="0.9"/>
+                                    <path class="cp-leaf-stem" fill="#b7c55c" stroke="#6f7f2c" stroke-width="0.9"/>
+                                    <path class="cp-leaf-stem" fill="#cbd47a" stroke="#6f7f2c" stroke-width="0.9"/>
+                                </g>
+                                <!-- 只重绘女孩自己的拳头（同一张精灵，裁到拳头），盖住叶柄末端 = 她握着叶柄 -->
+                                <clipPath id="cp-girl-fists-clip" clipPathUnits="userSpaceOnUse">
+                                    <rect x="12" y="-200" width="52" height="40"/>
+                                </clipPath>
+                                <g id="cp-girl-fists" transform="translate(186 692) rotate(-4) scale(.94)" aria-hidden="true">
+                                    <image class="cp-production-happy" data-art-sprite="girl-happy" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none" clip-path="url(#cp-girl-fists-clip)"/>
+                                    <image class="cp-production-oops" data-art-sprite="girl-oops" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none" clip-path="url(#cp-girl-fists-clip)"/>
                                 </g>
                                 <image data-art-layer="soil-front" x="0" y="0" width="560" height="720" preserveAspectRatio="none"/>
                                 <image data-art-layer="foreground" x="0" y="0" width="560" height="720" preserveAspectRatio="none"/>

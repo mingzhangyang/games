@@ -69,8 +69,8 @@ async function assertNormalPage() {
                     hasPath: Boolean(document.querySelector('#cp-pull-btn .cp-pull-arrow path')),
                 },
                 residualPaws: Boolean(document.querySelector('#cp-mole-paws, [data-art-sprite="mole-paws"]')),
-                // girl-hands.webp 自带叶束；程序叶柄在生产场景里会画成一根横穿女孩脸前的绿条
-                productionStems: Boolean(document.querySelector('#cp-art-production .cp-leaf-connectors')),
+                // 女孩精灵自带双臂；再叠 girl-hands 精灵就是上下两层、多出一双更粗的胳膊
+                extraArms: Boolean(document.querySelector('[data-art-sprite="girl-hands"]')),
                 // 这四层导出错位（全挤在画布顶部），叠上去会在天空里留下重影篱笆 + 土带
                 misregisteredLayers: [...document.querySelectorAll('[data-art-layer]')]
                     .map(node => node.getAttribute('data-art-layer'))
@@ -87,11 +87,49 @@ async function assertNormalPage() {
         if (boot.progressDots !== 6 || boot.progressHasEmoji) fail('进度萝卜图标未按正式 SVG 渲染');
         if (!boot.miniCarrot || !boot.pullIcon.hasPath || boot.pullIcon.tag !== 'svg') fail('正式 UI 图标没有加载');
         if (boot.residualPaws) fail('production scene contains residual mole paws');
-        if (boot.productionStems) fail('生产场景不应再画程序叶柄连接线（会横穿女孩脸前）');
+        if (boot.extraArms) fail('生产场景仍叠了 girl-hands 精灵：女孩会有两双胳膊');
         if (boot.misregisteredLayers.length) fail(`错位图层仍在绘制: ${boot.misregisteredLayers.join(', ')}`);
         if (!boot.productionClass) fail('#cp-art-production 缺少 .cp-art-production class，图层透明度与预览淡出规则失效');
 
         await page.click('#cp-start-btn');
+        // 叶柄必须从萝卜冠出发、终点落进女孩自己的拳头（被拳头重绘层盖住），
+        // 而不是悬在半空 —— 旧版的挂点在叶尖，画成了一根横穿脸前的绿条。
+        for (const pulls of [0, 3]) {
+            await page.evaluate((n) => { window.cpGame.state.pulls = n; }, pulls);
+            await wait(900);
+            const stems = await page.evaluate(() => {
+                const svg = document.getElementById('cp-scene');
+                const toLocal = (node, x, y) => {
+                    const pt = svg.createSVGPoint();
+                    pt.x = x; pt.y = y;
+                    return pt.matrixTransform(node.getCTM().inverse().multiply(svg.getCTM()));
+                };
+                const fists = document.getElementById('cp-girl-fists');
+                const carrot = document.getElementById('cp-carrot');
+                const clip = document.querySelector('#cp-girl-fists-clip rect');
+                const box = clip && ['x', 'y', 'width', 'height'].map(k => Number(clip.getAttribute(k)));
+                const paths = [...document.querySelectorAll('#cp-stems-girl path')];
+                return {
+                    count: paths.length,
+                    clipped: fists ? [...fists.querySelectorAll('image')].every(img => img.getAttribute('clip-path')) : false,
+                    ends: paths.map((path) => {
+                        const d = path.getAttribute('d') || '';
+                        const start = d.match(/^M(-?[\d.]+) (-?[\d.]+)/);
+                        const end = d.match(/L(-?[\d.]+) (-?[\d.]+)/);
+                        if (!start || !end || !box) return { ok: false, d };
+                        const s = toLocal(carrot, Number(start[1]), Number(start[2]));
+                        const e = toLocal(fists, Number(end[1]), Number(end[2]));
+                        const inFist = e.x >= box[0] && e.x <= box[0] + box[2] && e.y >= box[1] && e.y <= box[1] + box[3];
+                        const atCrown = Math.hypot(s.x - 20, s.y - 91) < 18;
+                        return { ok: inFist && atCrown, start: [s.x, s.y].map(Math.round), end: [e.x, e.y].map(Math.round) };
+                    }),
+                };
+            });
+            if (stems.count < 3 || !stems.clipped || stems.ends.some(end => !end.ok)) {
+                fail(`叶柄没有从萝卜冠连进拳头 (pulls=${pulls}): ${JSON.stringify(stems)}`);
+            }
+        }
+        await page.evaluate(() => { window.cpGame.state.pulls = 0; });
         await page.evaluate(() => {
             window.cpGame.state.needle = window.cpGame.state.target;
         });

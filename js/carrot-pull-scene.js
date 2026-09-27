@@ -2,11 +2,21 @@ export const SCENE = Object.freeze({
     carrot: { x: 316, y: 506 },
     girl: { x: 186, y: 692, s: 0.94 },
     mole: { x: 470, y: 620, s: 0.68 },
+    // fallback 场景（程序绘制的萝卜 / 圆点手）的叶柄挂点
     girlHands: [[38, -218], [32, -210], [26, -200]],
     crown: [[-8, -22], [0, -24], [8, -22]],
     maxRise: 92,
     harvestMs: 720,
     emergeMs: 460,
+});
+
+// 生产美术的挂点（精灵局部坐标，与 manifest attachments 同步）：
+// crown = carrot.webp 橙色根体顶端（叶柄基部），fists = girl-happy/oops.webp 里她自己握拳的位置。
+// 女孩精灵本来就画了双臂和拳头，所以不再叠 girl-hands.webp（那会多出一双更粗的胳膊）；
+// 叶柄从萝卜冠拉进她的拳头，再由 #cp-girl-fists 只重绘拳头盖住叶柄末端。
+export const PRODUCTION_ATTACH = Object.freeze({
+    crown: [[12, 92], [16, 91], [20, 90], [24, 91], [28, 92]],
+    hands: [[30, -181], [36, -180], [42, -180], [48, -181], [53, -182]],
 });
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -40,8 +50,36 @@ function organicLeafPath(from, to, index = 0) {
     return `M${fmt(start)}C${fmt(c1)} ${fmt(c2)} ${fmt(end)}C${fmt(b1)} ${fmt(b2)} ${fmt(start)}Z`;
 }
 
-export function createSceneAnimator({ svg, nodes, reducedMotion } = {}) {
+// 一根有粗细变化的叶柄：萝卜冠处散开、略粗，进拳头处收拢、略细；每根下垂量不同（受重力向下弯），
+// 避免整束变成一块平行的「绿木板」。
+const STEM_SAG = [4.5, 7.5, 5.5, 9, 6.5];
+const STEM_WIDTH = [2.2, 1.8, 2.4, 1.7, 2];
+
+function taperedStemPath(from, to, index = 0, count = 1) {
+    const dx = to[0] - from[0];
+    const dy = to[1] - from[1];
+    const length = Math.max(1, Math.hypot(dx, dy));
+    let nx = -dy / length;
+    let ny = dx / length;
+    if (ny < 0) { nx = -nx; ny = -ny; } // 法线统一朝下，下垂才是「往地上坠」
+    const lane = (index - (count - 1) / 2) * 3.4;
+    const sag = STEM_SAG[index % STEM_SAG.length];
+    const width = STEM_WIDTH[index % STEM_WIDTH.length];
+    const point = (t, side) => {
+        const half = width * (1 - 0.35 * t);
+        const offset = lane * (1 - 0.8 * t) + sag * Math.sin(Math.PI * t) * 1.15 + side * half;
+        return [from[0] + dx * t + nx * offset, from[1] + dy * t + ny * offset];
+    };
+    const fmt = ([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+    return `M${fmt(point(0, 1))}C${fmt(point(0.33, 1))} ${fmt(point(0.66, 1))} ${fmt(point(1, 1))}`
+        + `L${fmt(point(1, -1))}C${fmt(point(0.66, -1))} ${fmt(point(0.33, -1))} ${fmt(point(0, -1))}Z`;
+}
+
+export function createSceneAnimator({ svg, nodes, reducedMotion, attach, stemPath } = {}) {
     if (!svg || !nodes?.carrot) return null;
+    const crownPoints = attach?.crown || SCENE.crown;
+    const handPoints = attach?.hands || SCENE.girlHands;
+    const drawStem = stemPath || organicLeafPath;
     const girlStems = [...(nodes.stemsGirl?.querySelectorAll('path') || [])];
     const reduced = reducedMotion ?? window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const fx = { rise: 0, tug: 0, miss: 0, harvestAt: -1e9, harvestRise: 0, last: 0 };
@@ -167,10 +205,10 @@ export function createSceneAnimator({ svg, nodes, reducedMotion } = {}) {
         nodes.girlHands?.setAttribute('transform', girlTf);
         nodes.mole?.setAttribute('transform', moleTf);
 
-        const crowns = SCENE.crown.map(pt => place(pt, cx, cy, tilt));
         girlStems.forEach((path, i) => {
-            const hand = place(SCENE.girlHands[i], g.x, g.y + hop, girlLean, g.s);
-            path.setAttribute('d', organicLeafPath(crowns[i], hand, i));
+            const crown = place(crownPoints[i % crownPoints.length], cx, cy, tilt);
+            const hand = place(handPoints[i % handPoints.length], g.x, g.y + hop, girlLean, g.s);
+            path.setAttribute('d', drawStem(crown, hand, i, girlStems.length));
         });
         nodes.stemsGirl?.setAttribute('opacity', stemAlpha.toFixed(2));
         nodes.tug?.setAttribute('opacity', (fx.tug * 0.9).toFixed(2));
@@ -188,13 +226,13 @@ export function createCarrotScene({ svg = document.getElementById('cp-scene') } 
         nodes: {
             carrot: byId('cp-carrot'),
             girl: byId('cp-girl'),
-            girlHands: byId('cp-girl-hands'),
+            girlHands: byId('cp-girl-fists'),
             mole: byId('cp-mole'),
-            // 生产美术不画程序叶柄：girl-hands.webp 自带一整束叶柄连到萝卜冠，
-            // 而 SCENE.crown 在精灵里落在叶尖（不是萝卜冠），画出来是一根横穿女孩脸前的绿条。
-            // 叶柄连接线只留给 fallback 场景（那里的手是圆点、萝卜没有画叶束）。
+            stemsGirl: byId('cp-stems-girl'),
             tug: byId('cp-tug-lines'),
             particles: byId('cp-particles'),
         },
+        attach: PRODUCTION_ATTACH,
+        stemPath: taperedStemPath,
     });
 }

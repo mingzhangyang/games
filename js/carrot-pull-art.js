@@ -16,7 +16,6 @@ export const ART_URLS = Object.freeze({
         carrot: new URL('../assets/carrot-pull/sprites/carrot.webp', import.meta.url).href,
         'girl-happy': new URL('../assets/carrot-pull/sprites/girl-happy.webp', import.meta.url).href,
         'girl-oops': new URL('../assets/carrot-pull/sprites/girl-oops.webp', import.meta.url).href,
-        'girl-hands': new URL('../assets/carrot-pull/sprites/girl-hands.webp', import.meta.url).href,
         'mole-happy': new URL('../assets/carrot-pull/sprites/mole-happy.webp', import.meta.url).href,
         'mole-oops': new URL('../assets/carrot-pull/sprites/mole-oops.webp', import.meta.url).href,
     }),

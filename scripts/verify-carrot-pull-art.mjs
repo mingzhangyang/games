@@ -109,8 +109,15 @@ const zValues = [
     ...Object.values(manifest.sprites || {}).map(sprite => sprite.z),
 ];
 if (zValues.some(value => !Number.isFinite(value))) fail('runtime art z values must be numeric');
-if (!same(manifest.attachments?.['carrot.crown']?.points, [[-8, -22], [0, -24], [8, -22]])) fail('carrot crown attachment drifted');
-if (!same(manifest.attachments?.['girl.hands']?.points, [[38, -218], [32, -210], [26, -200]])) fail('girl hand attachment drifted');
+if (!same(manifest.attachments?.['carrot.crown']?.points, [[12, 92], [16, 91], [20, 90], [24, 91], [28, 92]])) fail('carrot crown attachment drifted');
+if (!same(manifest.attachments?.['girl.fists']?.points, [[30, -181], [36, -180], [42, -180], [48, -181], [53, -182]])) fail('girl fist attachment drifted');
+// 女孩精灵自带双臂；再叠 girl-hands 精灵就是「上下两层、多出两只更粗的胳膊」
+if (manifest.sprites?.['girl-hands'] || manifest.attachments?.['girl.hands']) fail('girl-hands sprite would draw a second pair of arms');
+if (html.includes('data-art-sprite="girl-hands"') || artModule.includes("'girl-hands'")) fail('girl-hands sprite is still drawn or preloaded');
+if (!sceneModule.includes('crown: [[12, 92], [16, 91], [20, 90], [24, 91], [28, 92]]')
+    || !sceneModule.includes('hands: [[30, -181], [36, -180], [42, -180], [48, -181], [53, -182]]')) {
+    fail('PRODUCTION_ATTACH in carrot-pull-scene.js drifted from manifest attachments');
+}
 if (manifest.sprites?.['mole-paws'] || manifest.attachments?.['mole.paws']) fail('residual mole paws must not be part of the runtime art contract');
 
 let runtimeBytes = 0;
