@@ -477,16 +477,22 @@ ambientLight = {
 
 ### 字体
 
-历史评审指出 `Noto Serif SC` 没有可靠加载。
+当前 `sword-flight.html` 仍包含 Google Fonts 依赖：
 
-不要依赖网络字体。
+- `https://fonts.gstatic.com` preconnect；
+- `https://fonts.googleapis.com/css2?family=Noto+Serif+SC...` stylesheet。
 
-选择：
+本次升级必须**明确删除这两个外部依赖**，而不是只在 CSS 里换一个 fallback。
 
-- 明确的系统中文衬线 fallback；
-- 或仓库已经允许的本地/系统字体栈。
+实施要求：
 
-重点是跨平台一致性，不新增外部 CDN 依赖。
+1. 修改 `sword-flight.html`，删除 Google Fonts stylesheet；
+2. 删除只为该字体存在的 `fonts.gstatic.com` preconnect；
+3. `css/sword-flight.css` 改用本地/系统中文字体栈；
+4. 不新增其他外部字体 CDN；
+5. 首选使用稳定的系统中文衬线 fallback；如果仓库已有批准的本地字体资产，可使用已有资产，但本任务不引入新的字体二进制。
+
+重点是跨平台可用、离线可用，并消除现有网络字体依赖。
 
 ### 模式菜单
 
@@ -725,6 +731,7 @@ data-art-state="fallback"
 
 ```text
 assets/sword-flight/**
+sword-flight.html
 js/sword-flight.js
 js/sword-flight-art.js
 js/sword-flight-scene.js
