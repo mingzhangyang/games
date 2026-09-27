@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "format": "svg",
+  "coordinateSystem": {
+    "unit": "logical-px",
+    "origin": "top-left",
+    "width": 480,
+    "height": 640
+  },
+  "layers": [
+    {"id":"sky","file":"layers/sky.svg","z":0,"viewBox":[0,0,480,640]},
+    {"id":"moon-mountains","file":"layers/moon-mountains.svg","z":10,"viewBox":[0,0,480,640]},
+    {"id":"garden-back","file":"layers/garden-back.svg","z":20,"viewBox":[0,0,480,640]},
+    {"id":"garden-mid","file":"layers/garden-mid.svg","z":30,"viewBox":[0,0,480,640]},
+    {"id":"garden-mid-lit","file":"layers/garden-mid-lit.svg","z":31,"viewBox":[0,0,480,640],"litDelta":true},
+    {"id":"foreground","file":"layers/foreground.svg","z":90,"viewBox":[0,0,480,640],"foreground":true},
+    {"id":"foreground-lit","file":"layers/foreground-lit.svg","z":91,"viewBox":[0,0,480,640],"foreground":true,"litDelta":true}
+  ],
+  "props": {
+    "jade-vessel": {
+      "file": "props/jade-vessel.svg",
+      "viewBox": [0,0,128,100],
+      "mouthAnchor": [64,23],
+      "mouthUnits": 92,
+      "logicalMouthWidth": 91,
+      "logicalBodyHeight": 76
+    }
+  },
+  "support": {
+    "reference": "reference/concept-night-garden.svg",
+    "fallback": "layers/fallback.svg"
+  },
+  "runtimeBudgetBytes": {"ideal":350000,"hard":524288}
+}
