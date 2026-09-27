@@ -58,6 +58,7 @@ const SUITE = [
     { name: 'circuit-levels', script: 'scripts/verify-circuit-levels.mjs', args: [], needsServer: false },
     { name: 'smoke-circuit', script: 'scripts/smoke-circuit.mjs', args: [], needsServer: true },
     { name: 'silk-dew-levels', script: 'scripts/verify-silk-dew-levels.mjs', args: [], needsServer: false },
+    { name: 'silk-dew-art', script: 'scripts/verify-silk-dew-art.mjs', args: [], needsServer: false },
     { name: 'smoke-silk-dew', script: 'scripts/smoke-silk-dew.mjs', args: [], needsServer: true },
     { name: 'echo-cave-levels', script: 'scripts/verify-echo-cave-levels.mjs', args: [], needsServer: false },
     { name: 'smoke-echo-cave', script: 'scripts/smoke-echo-cave.mjs', args: [], needsServer: true },
@@ -80,7 +81,7 @@ const SUITE = [
     { name: 'smoke-shadow-loom', script: 'scripts/smoke-shadow-loom.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'no-game-lang', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'bond-forge-levels', 'echo-cave-levels', 'smoke-echo-cave', 'maxwell-demon-levels', 'smoke-maxwell-demon', 'fg-audit', 'theme', 'start-menus', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'carrot-pull-art', 'needle-awn-art', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'smoke-bond-forge', 'crystal-bloom-levels', 'smoke-crystal-bloom', 'flame-verse-levels', 'smoke-flame-verse', 'ripple-duet-levels', 'smoke-ripple-duet', 'shadow-loom-silhouettes', 'shadow-loom-silhouette-build', 'shadow-loom-levels', 'smoke-shadow-loom', 'desktop-frame', 'firefly-signal-sim', 'immersive', 'smoke-firefly-signal'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'no-game-lang', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'silk-dew-art', 'bond-forge-levels', 'echo-cave-levels', 'smoke-echo-cave', 'maxwell-demon-levels', 'smoke-maxwell-demon', 'fg-audit', 'theme', 'start-menus', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'carrot-pull-art', 'needle-awn-art', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'smoke-bond-forge', 'crystal-bloom-levels', 'smoke-crystal-bloom', 'flame-verse-levels', 'smoke-flame-verse', 'ripple-duet-levels', 'smoke-ripple-duet', 'shadow-loom-silhouettes', 'shadow-loom-silhouette-build', 'shadow-loom-levels', 'smoke-shadow-loom', 'desktop-frame', 'firefly-signal-sim', 'immersive', 'smoke-firefly-signal'];
 
 let suite = QUICK ? SUITE.filter(s => QUICK_NAMES.includes(s.name)) : SUITE;
 // 还没落地的校验器（后续阶段补）先跳过并提示，不让整个 verify 假红/假绿
