@@ -32,6 +32,12 @@ export const ART_UI = Object.freeze({
     lotusMark: new URL('../assets/needle-awn/ui/lotus-mark.svg', import.meta.url).href,
 });
 
+const ART_UI_ATTRIBUTE_KEYS = Object.freeze({
+    'stance-needle': 'stanceNeedle',
+    'stance-awn': 'stanceAwn',
+    'lotus-mark': 'lotusMark',
+});
+
 export const ART_URLS = Object.freeze({
     // 保持显式 new URL：Vite 只能可靠地把静态资源路径复制进 dist，不能推断模板字符串路径。
     layers: Object.freeze({
@@ -57,6 +63,7 @@ const CRITICAL_URLS = Object.freeze([
     ...Object.values(ART_UI),
 ]);
 const ART_LOAD_TIMEOUT_MS = 8000;
+const ART_FALLBACK_TIMEOUT_MS = 2500;
 
 function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -95,7 +102,8 @@ function setImageSource(node, src) {
 
 function setArtUiSources() {
     document.querySelectorAll('[data-art-ui]').forEach((node) => {
-        setImageSource(node, ART_UI[node.getAttribute('data-art-ui')]);
+        const key = ART_UI_ATTRIBUTE_KEYS[node.getAttribute('data-art-ui')];
+        setImageSource(node, ART_UI[key]);
     });
 }
 
@@ -111,7 +119,7 @@ export function loadNeedleAwnArt({
     if (stage) stage.dataset.artState = 'loading';
     setArtUiSources();
 
-    const fallbackPromise = loadImage(ART_URLS.fallback).catch(() => null);
+    const fallbackPromise = withTimeout(loadImage(ART_URLS.fallback), ART_FALLBACK_TIMEOUT_MS).catch(() => null);
     const sources = [...CRITICAL_URLS];
     return withTimeout(Promise.all(sources.map(src => loadImage(src))), ART_LOAD_TIMEOUT_MS)
         .then((loaded) => {

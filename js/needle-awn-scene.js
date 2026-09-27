@@ -261,13 +261,15 @@ export function createNeedleAwnScene({
     function drawBoss(targetCtx, boss, time = 0) {
         const chapter = CHAPTERS[chapterFor({ mode: 'levels', level: boss.level || 10 })] || CHAPTERS[0];
         const image = art?.bosses?.[boss.bossType];
-        const size = boss.radius * 4.8;
+        const localRect = NEEDLE_AWN_MANIFEST.bosses?.[boss.bossType]?.localRectLogicalPx || [-48, -48, 96, 96];
+        const [localX, localY, localWidth, localHeight] = localRect;
         targetCtx.save();
         targetCtx.translate(boss.x, boss.y);
+        targetCtx.rotate(boss.angle || 0);
         targetCtx.rotate(Math.sin(time * 0.7) * 0.025);
         targetCtx.globalAlpha = boss.stunTimer > 0 ? 0.98 : 0.88;
         if (image && artState === 'ready') {
-            targetCtx.drawImage(image, -size / 2, -size / 2, size, size);
+            targetCtx.drawImage(image, localX, localY, localWidth, localHeight);
         } else {
             drawFallbackBoss(targetCtx, boss, chapter);
         }

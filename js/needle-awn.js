@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 22215)
+Total output lines: 2270
+
 /**
  * 针尖对麦芒 (Pinpoint Clash: Needle vs Awn)
  * Cyber-Ink Martial Precision Action Game
@@ -993,190 +996,7 @@ class GameEngine {
 
         document.getElementById('na-lbl-mode-levels').textContent = t.trials;
         document.getElementById('na-sub-mode-levels').textContent = t.trialsSub;
-        document.getElementById('na-lbl-mode-endless').textContent = t.endless;
-        document.getElementById('na-sub-mode-endless').textContent = t.endlessSub;
-        document.getElementById('na-lbl-mode-daily').textContent = t.daily;
-        document.getElementById('na-sub-mode-daily').textContent = t.dailySub;
-        document.getElementById('na-lbl-mode-duel').textContent = t.duel;
-        document.getElementById('na-sub-mode-duel').textContent = t.duelSub;
-
-        document.getElementById('na-level-title').textContent = t.selectLevel;
-        document.getElementById('na-duel-mode-lbl').textContent = t.duelModeLbl;
-        document.getElementById('na-duel-type-ai').textContent = t.duelTypeAi;
-        document.getElementById('na-duel-type-2p').textContent = t.duelType2P;
-        document.getElementById('na-ai-diff-lbl').textContent = t.aiDiffLbl;
-        document.getElementById('na-diff-easy').textContent = t.diffEasy;
-        document.getElementById('na-diff-medium').textContent = t.diffMedium;
-        document.getElementById('na-diff-hard').textContent = t.diffHard;
-        document.getElementById('na-btn-start-duel').textContent = t.startDuel;
-
-        document.getElementById('na-pause-title').textContent = t.pauseTitle;
-        document.getElementById('na-pause-sub').textContent = t.pauseSub;
-        document.getElementById('na-btn-resume').textContent = t.resume;
-        document.getElementById('na-btn-restart').textContent = t.restart;
-        document.getElementById('na-btn-pause-home').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
-
-        document.getElementById('na-stat-score-lbl').textContent = t.scoreLbl;
-        document.getElementById('na-stat-clashes-lbl').textContent = t.clashesLbl;
-        document.getElementById('na-stat-combo-lbl').textContent = t.comboLbl;
-        document.getElementById('na-stat-extra-lbl').textContent = t.extraLbl;
-        document.getElementById('na-btn-next-stage').textContent = t.nextStage;
-        document.getElementById('na-btn-replay').textContent = t.replay;
-        document.getElementById('na-btn-result-home').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
-
-        document.getElementById('na-side-rules-title').textContent = t.sideRulesTitle;
-        document.getElementById('na-side-rules-text').innerHTML = t.sideRulesText;
-        document.getElementById('na-side-records-title').textContent = t.sideRecordsTitle;
-        document.getElementById('na-side-rec-endless-lbl').textContent = t.sideEndlessLbl;
-        document.getElementById('na-side-rec-clash-lbl').textContent = t.sideClashLbl;
-        document.getElementById('na-side-rec-stars-lbl').textContent = t.sideStarsLbl;
-        document.getElementById('na-side-rec-daily-lbl').textContent = t.sideDailyLbl;
-        document.getElementById('na-side-controls-title').textContent = t.sideControlsTitle;
-
-        document.getElementById('na-sc-aim').textContent = t.scAim;
-        const scAimKeyEl = document.getElementById('na-sc-aim-key');
-        if (scAimKeyEl) scAimKeyEl.textContent = t.scAimKey;
-        document.getElementById('na-sc-dash').textContent = t.scDash;
-        const scDashKeyEl = document.getElementById('na-sc-dash-key');
-        if (scDashKeyEl) scDashKeyEl.textContent = t.scDashKey;
-        document.getElementById('na-sc-stance').textContent = t.scStance;
-        const scStanceKeyEl = document.getElementById('na-sc-stance-key');
-        if (scStanceKeyEl) scStanceKeyEl.textContent = t.scStanceKey;
-        document.getElementById('na-sc-ult').textContent = t.scUlt;
-        const scUltKeyEl = document.getElementById('na-sc-ult-key');
-        if (scUltKeyEl) scUltKeyEl.textContent = t.scUltKey;
-        document.getElementById('na-sc-move').textContent = t.scMove;
-        const scMoveKeyEl = document.getElementById('na-sc-move-key');
-        if (scMoveKeyEl) scMoveKeyEl.textContent = t.scMoveKey;
-
-        document.getElementById('na-touch-dash-lbl').textContent = t.touchDash;
-        document.getElementById('na-touch-stance-lbl').textContent = t.touchStance;
-        document.getElementById('na-touch-ult-lbl').textContent = t.touchUlt;
-
-        // 内部 HUD 姿态与极意标签
-        const isNeedle = !this.player || this.player.stance === 'needle';
-        this.dom.stanceText.textContent = isNeedle ? t.stanceNeedle : t.stanceAwn;
-        this.setStanceIcon(isNeedle ? 'needle' : 'awn');
-        const ultText = this.dom.ultLabel?.querySelector('[data-ult-text]');
-        if (ultText) ultText.textContent = t.ultLabel;
-
-        // 玩家名称输入占位符
-        if (this.dom.playerInput) this.dom.playerInput.placeholder = t.namePlaceholder;
-
-        this.updateHUDLabels();
-        this.updateSideRecords();
-        updateMoreGames(lang);
-    }
-
-    updateHUDLabels() {
-        const t = I18N[getLang()] || I18N.zh;
-        if (this.state === 'menu') {
-            this.dom.stageLabel.textContent = t.gameTitle;
-            this.dom.modeBadge.textContent = t.modeBadgeMenu;
-            return;
-        }
-        if (this.mode === 'levels') {
-            const lvlName = (t.levelNames && t.levelNames[this.currentLevel - 1]) || this.currentLevel;
-            this.dom.stageLabel.textContent = `${t.trials} · ${lvlName}`;
-            this.dom.modeBadge.textContent = (t.badgeStage || 'Stage {n}/10').replace('{n}', this.currentLevel);
-        } else if (this.mode === 'endless') {
-            this.dom.stageLabel.textContent = t.endless;
-            this.dom.modeBadge.textContent = (t.badgeWave || 'Wave {n}').replace('{n}', this.waveIndex + 1);
-        } else if (this.mode === 'daily') {
-            this.dom.stageLabel.textContent = t.daily;
-            this.dom.modeBadge.textContent = t.badgeDaily || 'Daily Run';
-        } else if (this.mode === 'duel') {
-            this.dom.stageLabel.textContent = t.duel;
-            this.dom.modeBadge.textContent = this.duelMode === 'ai' ? 'vs AI' : '1v1 2P';
-        }
-    }
-
-    renderLevelGrid() {
-        this.dom.levelGrid.innerHTML = '';
-        for (let i = 1; i <= 10; i++) {
-            const chip = document.createElement('div');
-            const isUnlocked = i <= this.unlockedLevel;
-            chip.className = `na-level-chip ${isUnlocked ? 'unlocked' : 'locked'}`;
-            const stars = this.levelStars[i] || 0;
-            const starText = '✦'.repeat(stars) + '·'.repeat(3 - stars);
-
-            chip.innerHTML = `
-                <span>${i}</span>
-                <span class="na-level-stars">${isUnlocked ? starText : '—'}</span>
-            `;
-
-            if (isUnlocked) {
-                chip.addEventListener('click', () => {
-                    this.startLevel(i);
-                });
-            }
-            this.dom.levelGrid.appendChild(chip);
-        }
-    }
-
-    showToast(msg) {
-        this.dom.toast.textContent = msg;
-        this.dom.toast.classList.remove('hidden');
-        clearTimeout(this.toastTimer);
-        this.toastTimer = setTimeout(() => {
-            this.dom.toast.classList.add('hidden');
-        }, 1400);
-    }
-
-    updateSideRecords() {
-        this.dom.recEndless.textContent = this.endlessBest.toLocaleString();
-        this.dom.recClash.textContent = this.clashMax.toLocaleString();
-
-        let totalStars = 0;
-        for (let i = 1; i <= 10; i++) {
-            totalStars += (this.levelStars[i] || 0);
-        }
-        this.dom.recStars.textContent = `${totalStars} / 30`;
-
-        const todayKey = this.getTodayDateString();
-        const dailyRecord = storageGet(`${STORAGE_KEYS.DAILY_PREFIX}${todayKey}`);
-        const t = I18N[getLang()] || I18N.zh;
-        this.dom.recDaily.textContent = dailyRecord ? t.dailyDone : t.dailyNotDone;
-    }
-
-    getTodayDateString() {
-        // UTC+8 唯一口径已收敛到 js/daily.js（原 getTimezoneOffset 手写版退役）
-        return todayKey();
-    }
-
-    /* ────────────────────────── 游戏流程启动 ────────────────────────── */
-
-    showMenu() {
-        this.state = 'menu';
-        this.dom.overlayStart.classList.remove('hidden');
-        this.dom.overlayPause.classList.add('hidden');
-        this.dom.overlayResult.classList.add('hidden');
-        this.renderLevelGrid();
-        this.updateHUDLabels();
-        this.updateSideRecords();
-        SoundEngine.stopAmbientMusic();
-    }
-
-    startLevel(levelNum) {
-        if (!this.artReady) return;
-        this.mode = 'levels';
-        this.currentLevel = levelNum;
-        this.resetGameState();
-        this.loadStageWave(levelNum);
-        this.resumeBattle();
-        track('needle-awn', 'play');
-    }
-
-    startEndlessMode() {
-        if (!this.artReady) return;
-        this.mode = 'endless';
-        this.resetGameState();
-        this.resumeBattle();
-        track('needle-awn', 'play');
-    }
-
-    startDailyMode() {
-        if (!this.artReady) return;
+        document.getEle…2215 tokens truncated…(!this.artReady) return;
         this.mode = 'daily';
         this.resetGameState();
         this.resumeBattle();
@@ -2184,6 +2004,9 @@ class GameEngine {
         // 6. 前景剪影最后压住场景边缘，保留战斗纵深
         this.scene.drawForeground(ctx, sceneMeta);
 
+        // 7. 调试碰撞层必须位于前景之上，才能准确校对尖端锚点
+        this.drawDebugHitboxes(ctx);
+
         ctx.restore();
     }
 
@@ -2193,7 +2016,6 @@ class GameEngine {
             return; // 无敌状态闪烁
         }
         this.scene.drawPlayer(ctx, p, this.timeElapsed);
-        if (this.debugHitbox) this.scene.drawHitbox(ctx, p);
     }
 
     drawEnemies(ctx) {
@@ -2203,8 +2025,16 @@ class GameEngine {
             } else {
                 this.scene.drawEnemy(ctx, e, this.timeElapsed);
             }
-            if (this.debugHitbox) this.scene.drawHitbox(ctx, e);
         }
+    }
+
+    drawDebugHitboxes(ctx) {
+        if (!this.debugHitbox) return;
+        for (const enemy of this.enemies) {
+            this.scene.drawHitbox(ctx, enemy);
+        }
+        if (this.player) this.scene.drawHitbox(ctx, this.player);
+        if (this.player2) this.scene.drawHitbox(ctx, this.player2);
     }
 
     drawBullets(ctx) {

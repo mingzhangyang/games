@@ -94,18 +94,32 @@ body {
 }
 
 .na-stage[data-art-state="loading"]::after {
-    content: "墨境载入中";
+    content: "";
     position: absolute;
-    inset: auto 14px 12px auto;
-    padding: 4px 8px;
+    right: 14px;
+    bottom: 14px;
+    width: 14px;
+    height: 14px;
+    box-sizing: border-box;
     border: 1px solid rgb(224, 251, 255, 0.22);
-    border-radius: 999px;
+    border-top-color: rgb(224, 251, 255, 0.82);
+    border-radius: 50%;
     background: rgb(4, 15, 21, 0.72);
-    color: rgb(228, 251, 255, 0.72);
-    font-size: 10px;
-    letter-spacing: 0.08em;
     pointer-events: none;
     z-index: 8;
+    animation: na-art-loading-spin 0.8s linear infinite;
+}
+
+@keyframes na-art-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .na-stage[data-art-state="loading"]::after {
+        animation-duration: 1.6s;
+    }
 }
 
 /* 手机横屏：改为按视口高度定尺寸，避免画布纵向溢出、边玩边滚 */

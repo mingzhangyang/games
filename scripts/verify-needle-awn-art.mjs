@@ -85,6 +85,22 @@ function inspectFile(relative, expectedSize, alphaRequired) {
     return stat.size;
 }
 
+function inspectSupportFile(relative) {
+    if (!relative) {
+        fail('support asset path is missing');
+        return 0;
+    }
+    const absolute = join(ART_ROOT, relative);
+    try {
+        const stat = statSync(absolute);
+        if (!stat.isFile() || stat.size === 0) fail(`empty support asset: ${relative}`);
+        return stat.size;
+    } catch {
+        fail(`missing support asset: ${relative}`);
+        return 0;
+    }
+}
+
 if (!same([manifest.coordinateSystem?.width, manifest.coordinateSystem?.height], [480, 640])) {
     fail('coordinate system must remain 480×640 logical px');
 } else if (manifest.coordinateSystem?.rasterScale !== 2) {
@@ -122,26 +138,24 @@ for (const [id, boss] of Object.entries(manifest.bosses || {})) {
     }
 }
 
+// These files are loaded by loadNeedleAwnArt at runtime as well. The reference
+// image is documentation-only and must stay outside the runtime budget.
+runtimeBytes += inspectSupportFile(manifest.support?.fallback);
+for (const relative of [
+    'ui/stance-needle.svg',
+    'ui/stance-awn.svg',
+    'ui/lotus-mark.svg',
+]) {
+    runtimeBytes += inspectSupportFile(relative);
+}
+inspectSupportFile(manifest.support?.reference);
+
 if (runtimeBytes > manifest.runtimeBudgetBytes?.hard) {
     fail(`runtime art pack is ${runtimeBytes} bytes; hard budget is ${manifest.runtimeBudgetBytes?.hard}`);
 } else {
     pass(`runtime art pack is ${runtimeBytes} bytes`);
 }
 if (runtimeBytes > manifest.runtimeBudgetBytes?.ideal) pass('runtime art pack stays below the hard cap; ideal budget note recorded');
-
-for (const relative of [
-    manifest.support?.reference,
-    manifest.support?.fallback,
-    'ui/stance-needle.svg',
-    'ui/stance-awn.svg',
-    'ui/lotus-mark.svg',
-]) {
-    try {
-        if (statSync(join(ART_ROOT, relative)).size === 0) fail(`empty support asset: ${relative}`);
-    } catch {
-        fail(`missing support asset: ${relative}`);
-    }
-}
 
 if (!html.includes('id="na-stage"') || !html.includes('data-art-state="loading"') || !html.includes('id="na-canvas"')) {
     fail('needle-awn.html is missing stage/canvas art hooks');

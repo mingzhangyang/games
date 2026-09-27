@@ -37,13 +37,16 @@ async function setupPage(page, { blockArt = false } = {}) {
     await page.goto(`${BASE}/needle-awn.html`, { waitUntil: 'networkidle0', timeout: 45000 });
     await page.waitForFunction(() => window.gameEngine && ['ready', 'fallback'].includes(document.getElementById('na-stage')?.dataset.artState), { timeout: 15000 });
     await wait(180);
-    return { pageErrors, consoleErrors, failedRequests };
+    return { pageErrors, consoleErrors, failedRequests, blockArt };
 }
 
 async function collectDiagnostics(diagnostics, label) {
     for (const message of diagnostics?.pageErrors || []) if (!isIgnorable(message)) fail(`${label} 页面错误: ${message}`);
     for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message)) fail(`${label} console 错误: ${message}`);
-    for (const url of diagnostics?.failedRequests || []) if (!isIgnorable(url)) fail(`${label} 请求失败: ${url}`);
+    for (const url of diagnostics?.failedRequests || []) {
+        const expectedBlockedArt = diagnostics?.blockArt && url.includes('/assets/needle-awn/');
+        if (!expectedBlockedArt && !isIgnorable(url)) fail(`${label} 请求失败: ${url}`);
+    }
 }
 
 async function assertNormalPage() {
