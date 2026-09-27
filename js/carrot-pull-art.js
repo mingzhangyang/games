@@ -29,6 +29,7 @@ const CRITICAL_URLS = Object.freeze([
     ...Object.values(ART_URLS.layers),
     ...Object.values(ART_URLS.sprites),
 ]);
+const ART_LOAD_TIMEOUT_MS = 8000;
 
 function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -42,6 +43,14 @@ function loadImage(src) {
         image.onerror = () => reject(new Error(`Carrot Pull art failed to load: ${src}`));
         image.src = src;
     });
+}
+
+function withTimeout(promise, timeoutMs) {
+    let timeoutId;
+    const timeout = new Promise((resolve, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error(`Carrot Pull art timed out after ${timeoutMs}ms`)), timeoutMs);
+    });
+    return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
 }
 
 function setSvgImageSource(node, src) {
@@ -91,7 +100,7 @@ export function loadCarrotPullArt({
         setImageSource(node, ART_UI[name]);
     });
 
-    return Promise.all(CRITICAL_URLS.map(loadImage))
+    return withTimeout(Promise.all(CRITICAL_URLS.map(loadImage)), ART_LOAD_TIMEOUT_MS)
         .then(() => {
             svg?.querySelectorAll('[data-art-layer]').forEach((node) => {
                 setSvgImageSource(node, ART_URLS.layers[node.getAttribute('data-art-layer')]);

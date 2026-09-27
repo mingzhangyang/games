@@ -288,6 +288,9 @@ function createGame() {
             refs['cp-sweet-zone'].style.left = `${clamp((state.target - 0.12) * 100, 0, 76)}%`;
         }
         if (refs['cp-pull-btn']) refs['cp-pull-btn'].disabled = state.mode !== 'playing' || state.paused;
+        const artAvailable = ['ready', 'fallback'].includes(refs['cp-stage']?.dataset.artState);
+        if (refs['cp-start-btn']) refs['cp-start-btn'].disabled = state.mode !== 'menu' || !artAvailable;
+        if (refs['cp-again-btn']) refs['cp-again-btn'].disabled = !artAvailable;
         if (refs['cp-final-score']) refs['cp-final-score'].textContent = String(state.score);
         updateProgressDots();
         updateFrameUi();
@@ -337,6 +340,7 @@ function createGame() {
     }
 
     function start() {
+        if (!['ready', 'fallback'].includes(refs['cp-stage']?.dataset.artState)) return;
         state.mode = 'playing';
         state.paused = false;
         state.round = 0;
@@ -516,11 +520,13 @@ function createGame() {
             onReady: () => {
                 scene = productionScene || fallbackScene;
                 scene?.reset();
+                updateUi();
                 ensureLoop();
             },
             onFallback: () => {
                 scene = fallbackScene || productionScene;
                 scene?.reset();
+                updateUi();
                 ensureLoop();
             },
         });

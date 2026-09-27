@@ -833,16 +833,25 @@ body {
 /* ── production picture-book art pipeline ── */
 .cp-art-production {
     opacity: 1;
-    transition: opacity 180ms ease;
 }
 
 .cp-art-production [data-art-preview] {
     display: block;
+    opacity: 1;
+    transition: opacity 180ms ease;
 }
 
-.cp-stage[data-art-state="ready"] .cp-art-production [data-art-preview],
-.cp-stage[data-art-state="fallback"] .cp-art-production [data-art-preview] {
-    display: none;
+.cp-art-production [data-art-render] {
+    opacity: 0;
+    transition: opacity 180ms ease;
+}
+
+.cp-stage[data-art-state="ready"] .cp-art-production [data-art-preview] {
+    opacity: 0;
+}
+
+.cp-stage[data-art-state="ready"] .cp-art-production [data-art-render] {
+    opacity: 1;
 }
 
 .cp-art-production image[data-art-layer="clouds"] { opacity: 0.2; }
@@ -900,5 +909,6 @@ body {
 .cp-progress-dot.is-done img { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-    .cp-art-production { transition: none; }
+    .cp-art-production [data-art-preview],
+    .cp-art-production [data-art-render] { transition: none; }
 }

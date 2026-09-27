@@ -73,6 +73,7 @@
 
                             <g id="cp-art-production" data-art-production visibility="visible">
                                 <image data-art-preview x="0" y="0" width="560" height="720" preserveAspectRatio="none" aria-hidden="true"/>
+                                <g data-art-render>
                                 <image data-art-layer="sky" x="0" y="0" width="560" height="720" preserveAspectRatio="none"/>
                                 <image data-art-layer="clouds" x="0" y="0" width="560" height="720" preserveAspectRatio="none"/>
                                 <image data-art-layer="hills-farm" x="0" y="0" width="560" height="720" preserveAspectRatio="none"/>
@@ -93,14 +94,14 @@
                                 <g id="cp-mole-paws" transform="translate(482 612) scale(.9)">
                                     <image data-art-sprite="mole-paws" x="-90" y="-100" width="250" height="167" preserveAspectRatio="none"/>
                                 </g>
+                                <g id="cp-girl" transform="translate(186 692) rotate(-4) scale(.94)">
+                                    <image class="cp-production-happy" data-art-sprite="girl-happy" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none"/>
+                                    <image class="cp-production-oops" data-art-sprite="girl-oops" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none"/>
+                                </g>
                                 <g id="cp-stems-girl" fill="none" stroke-linecap="round">
                                     <path class="cp-stem" d="M316 488Q260 470 214 506" stroke="#5a9638" stroke-width="7"/>
                                     <path class="cp-stem" d="M316 488Q262 480 212 510" stroke="#6fb046" stroke-width="6"/>
                                     <path class="cp-stem" d="M316 488Q266 490 206 518" stroke="#83c455" stroke-width="5"/>
-                                </g>
-                                <g id="cp-girl" transform="translate(186 692) rotate(-4) scale(.94)">
-                                    <image class="cp-production-happy" data-art-sprite="girl-happy" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none"/>
-                                    <image class="cp-production-oops" data-art-sprite="girl-oops" x="-170" y="-350" width="270" height="350" preserveAspectRatio="none"/>
                                 </g>
                                 <g id="cp-girl-hands" transform="translate(186 692) rotate(-4) scale(.94)">
                                     <image data-art-sprite="girl-hands" x="-108" y="-274" width="250" height="167" preserveAspectRatio="none"/>
@@ -111,6 +112,7 @@
                                 <g id="cp-particles" aria-hidden="true"></g>
                                 <g id="cp-tug-lines" fill="none" stroke="#f7d36e" stroke-width="5" stroke-linecap="round" opacity="0">
                                     <path d="M52 540l-24-10"/><path d="M46 562l-28 0"/><path d="M50 584l-24 10"/>
+                                </g>
                                 </g>
                             </g>
 
@@ -133,7 +135,7 @@
                                 <span class="cp-howto-chip"><b>2</b><span id="cp-howto-two">落在甜蜜区</span></span>
                                 <span class="cp-howto-chip"><b>3</b><span id="cp-howto-three">连续拔出</span></span>
                             </div>
-                            <button class="cp-primary game-btn" id="cp-start-btn" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span id="cp-start-label">开始拔萝卜</span></button>
+                            <button class="cp-primary game-btn" id="cp-start-btn" type="button" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span id="cp-start-label">开始拔萝卜</span></button>
                             <p class="cp-key-hint" id="cp-key-hint">Space / ↑ 也可以用力拔</p>
                         </div>
 

@@ -161,6 +161,7 @@ async function assertFallbackPage() {
         fail(`fallback 路径脚本异常: ${error.message}`);
     } finally {
         for (const message of diagnostics?.pageErrors || []) if (!isIgnorable(message)) fail(`fallback 页面错误: ${message}`);
+        for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message)) fail(`fallback console 错误: ${message}`);
         await browser.close();
     }
 }
