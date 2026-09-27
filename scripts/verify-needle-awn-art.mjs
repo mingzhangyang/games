@@ -12,12 +12,40 @@ const gameModule = readFileSync(join(ROOT, 'js', 'needle-awn.js'), 'utf8');
 const artModule = readFileSync(join(ROOT, 'js', 'needle-awn-art.js'), 'utf8');
 const sceneModule = readFileSync(join(ROOT, 'js', 'needle-awn-scene.js'), 'utf8');
 const verifyAll = readFileSync(join(ROOT, 'scripts', 'verify-all.mjs'), 'utf8');
+const { NEEDLE_AWN_MANIFEST: runtimeManifest } = await import('../js/needle-awn-art.js');
 
 const errors = [];
 const checks = [];
 const fail = message => errors.push(message);
 const pass = message => checks.push(message);
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+const expectedRuntimeManifest = {
+    version: manifest.version,
+    coordinateSystem: {
+        width: manifest.coordinateSystem?.width,
+        height: manifest.coordinateSystem?.height,
+        rasterScale: manifest.coordinateSystem?.rasterScale,
+    },
+    layers: (manifest.layers || []).map(({ id, file, z, alphaRequired }) => ({ id, file, z, alphaRequired })),
+    bosses: Object.fromEntries(Object.entries(manifest.bosses || {}).map(([id, boss]) => [id, {
+        file: boss.file,
+        localRectLogicalPx: boss.localRectLogicalPx,
+        pivotLocalLogicalPx: boss.pivotLocalLogicalPx,
+    }])),
+    support: {
+        reference: manifest.support?.reference,
+        fallback: manifest.support?.fallback,
+    },
+    dynamicZ: manifest.dynamicZ,
+    runtimeBudgetBytes: manifest.runtimeBudgetBytes,
+};
+
+if (!same(runtimeManifest, expectedRuntimeManifest)) {
+    fail('js/needle-awn-art.js runtime manifest is out of sync with assets/needle-awn/manifest.json');
+} else {
+    pass('runtime manifest matches the source manifest');
+}
 
 function readAscii(buffer, offset, length) {
     return buffer.toString('ascii', offset, offset + length);
