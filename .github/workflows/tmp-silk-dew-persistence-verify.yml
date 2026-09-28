@@ -1,0 +1,27 @@
+name: Temporary Silk Dew Persistence Verify
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: node scripts/verify-silk-dew-levels.mjs
+      - name: Smoke Silk Dew
+        run: |
+          node scripts/serve-static.mjs 8899 > /tmp/silk-dew-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          sleep 1
+          node scripts/smoke-silk-dew.mjs http://127.0.0.1:8899
