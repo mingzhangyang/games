@@ -253,7 +253,12 @@ new URL('../assets/tower-defense/production/...', import.meta.url).href
   }
   ```
 - 共享 `css/layout.css` 继续通过 `var(--frame-immersive-max)` 控制 immersive 的 topbar / stage / footer，因此该变量会从 `.td-shell` 继承到三个区域；**不要把 `:root` 默认 640px 直接改成 800px**，避免 Firefly Signal 等现有竖向 immersive 页面一起变宽；
-- `docs/contracts/layout.md` 补充：immersive 默认上限仍为 640px，但页面可在 shell 上覆盖 `--frame-immersive-max`；当 registry 的 stage 宽度大于默认上限时，页面必须显式提供对应 override，并由 verifier 校验；
+- `docs/contracts/layout.md` 必须同时更新**旧 standard 参数表和 immersive 契约**，不能只补 §7：
+  - 在 §2「各页参数现状」中删除当前这条旧记录：`tower-defense | 520 / 940 | 460 | 300 | ...`；
+  - §2 不再把 tower-defense 列为 standard shell / sidebar 页面；
+  - 在 §7 Immersive Stage 中新增“页面级参数 / 消费方”记录，明确 tower-defense：registry stage = `800×600`、`--frame-immersive-max: 800px`、无 sidebar / drawer / frame-budget、landscape-first；
+  - 同时写明 immersive 默认上限仍为 640px，但页面可在 shell 上覆盖 `--frame-immersive-max`；当 registry 的 stage 宽度大于默认上限时，页面必须显式提供对应 override，并由 verifier 校验；
+  - 文档验收时全文搜索 `tower-defense`，不得再出现把它描述为 `460px stage + 300px sidebar` 的现行契约；历史 archive 可以保留历史事实，但必须明确是 archive。
 - `verify-immersive.mjs` 不再对所有 immersive 页硬编码 600–640px 宽；对 tower-defense 读取 registry `stage.w=800` 与计算后的 `--frame-immersive-max`，断言 desktop 可达 800px，同时保持其它 immersive 页原来的 640px 上限；
 - 保持 Firefly Signal 等既有竖向 immersive 页面零回归；
 - `verify-registry.mjs` 继续要求 `layout="immersive"` 与 `game-shell--immersive`、`game-stage--immersive`、`bindFrame({ layout: 'immersive' })` 双向一致；
@@ -267,7 +272,7 @@ new URL('../assets/tower-defense/production/...', import.meta.url).href
 - desktop 以 800×600 为逻辑基线，在可用空间内等比显示；
 - phone landscape 让 Canvas 尽可能吃满短边高度并遵守 safe-area；
 - phone portrait 尺寸不足时显示旋转提示；
-- 同步更新 `CLAUDE.md` 中把 tower-defense 归为 portrait-canvas game 的旧说明。
+- 同步更新 `CLAUDE.md` 中把 tower-defense 归为 portrait-canvas game 的旧说明；并与 `docs/contracts/layout.md` §2 / §7 保持一致，不能一个说 standard/sidebar、另一个说 immersive。
 
 #### Stats / Drawer 迁移决策
 
@@ -908,17 +913,18 @@ ui/
 
 1. 先迁移 registry：`stage=800×600`、`layout="immersive"`、移除标准布局专属 caps，执行 `npm run gen`；
 2. 在 `.td-shell.game-shell--immersive` 上显式覆盖 `--frame-immersive-max: 800px`，并更新 immersive verifier；
-3. 移除 TD 对共享 stats drawer 的 markup / import / init，改用舞台内 `#tdTacticalPanel`，保留单一 `#tdStatsPanels` 内容节点；
-4. 把逻辑战场从 480×640 迁移到 800×600；
-5. 继续保留 `CELL=40` 时，将网格调整为 20×15；
-6. 把地图数据正式下沉到每个 level：建议 `level.map = { cols, rows, cell, groundWaypoints, airWaypoints? }`；
-7. 新增 `compileLevelMap(level.map)`（或等价函数），一次生成当前关卡的 `groundPath`、`airPath`、`pathGrid`、buildable cell 统计和尺寸信息；
-8. **移除 module-global 的 `WAYPOINTS` / `AIR_WAYPOINTS`、`GROUND_PATH` / `AIR_PATH`、`pathGrid` 作为运行时真源**；切关 / `resetRun()` 时设置唯一的 active map；
-9. 将所有消费者迁移到 active map：敌人 spawn/path、`pointAtDist`、renderBackground、buildability、towerGrid 尺寸、flyer 路径、攻击 / 治疗测试构造、debug / verifier hooks；
-10. 重做 6 关独立的 ground waypoints，并按关卡需要提供 air waypoints；
-11. 实装新背景、实体路径和可建造区域；
-12. 加中 / 前景层；
-13. 更新坐标相关 verifier，确保渲染、spawn、build、测试 hook 全部读取同一 active map，不能存在“UI 已切关但路径仍是上一关”的双真源。
+3. 同步清理 `docs/contracts/layout.md`：从 §2 standard 参数表删除 tower-defense 的 `520/940 · 460 · 300 sidebar` 旧行，并在 §7 immersive 参数/消费方记录中新增 TD 的 `800×600 / 800px max / landscape-first / no sidebar-drawer-frame-budget`；
+4. 移除 TD 对共享 stats drawer 的 markup / import / init，改用舞台内 `#tdTacticalPanel`，保留单一 `#tdStatsPanels` 内容节点；
+5. 把逻辑战场从 480×640 迁移到 800×600；
+6. 继续保留 `CELL=40` 时，将网格调整为 20×15；
+7. 把地图数据正式下沉到每个 level：建议 `level.map = { cols, rows, cell, groundWaypoints, airWaypoints? }`；
+8. 新增 `compileLevelMap(level.map)`（或等价函数），一次生成当前关卡的 `groundPath`、`airPath`、`pathGrid`、buildable cell 统计和尺寸信息；
+9. **移除 module-global 的 `WAYPOINTS` / `AIR_WAYPOINTS`、`GROUND_PATH` / `AIR_PATH`、`pathGrid` 作为运行时真源**；切关 / `resetRun()` 时设置唯一的 active map；
+10. 将所有消费者迁移到 active map：敌人 spawn/path、`pointAtDist`、renderBackground、buildability、towerGrid 尺寸、flyer 路径、攻击 / 治疗测试构造、debug / verifier hooks；
+11. 重做 6 关独立的 ground waypoints，并按关卡需要提供 air waypoints；
+12. 实装新背景、实体路径和可建造区域；
+13. 加中 / 前景层；
+14. 更新坐标相关 verifier，确保渲染、spawn、build、测试 hook 全部读取同一 active map，不能存在“UI 已切关但路径仍是上一关”的双真源。
 
 重点验证：
 
