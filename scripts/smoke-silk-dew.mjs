@@ -259,24 +259,69 @@ if (thornsSeen === 0) levelErrors.push('遍历中未遇到任何荆棘 ⇒ drawT
 if (multiRopeSeen === 0) levelErrors.push('遍历中未遇到多丝关卡 ⇒ 多丝绘制路径未覆盖');
 for (const e of levelErrors) fail(`关卡渲染回归 — ${e}`);
 
-/* ── 6. 每日模式可用 ── */
+/* ── 6. 每日模式可用 + 重试覆盖当前关结果 ── */
 await page.evaluate(() => window.sdGame.toMenu());
 await new Promise(r => setTimeout(r, 200));
 const dailyOk = await page.evaluate(async () => {
     try {
-        window.sdGame.startDaily();
-        return {
-            state: window.sdGame.state,
-            mode: window.sdGame.mode,
-            course: (window.sdGame.daily && window.sdGame.daily.course || []).length,
+        const g = window.sdGame;
+        g.startDaily();
+        const base = {
+            state: g.state,
+            mode: g.mode,
+            course: (g.daily && g.daily.course || []).length,
         };
+
+        // 第一次：当前关拿 2 星。
+        g.world.starsTaken = g.world.stars.length;
+        g.drags = g.par + 1;
+        g.onLevelWon();
+        const first = {
+            stars: g.daily.stars,
+            drags: g.daily.totalDrags,
+            result: g.daily.results[0],
+        };
+
+        // 重试同一关：改成 1 星。旧实现会累计成 3 星；正确实现应覆盖为 1 星。
+        g.restartLevel();
+        g.world.starsTaken = 0;
+        g.drags = 1;
+        g.onLevelWon();
+        const second = {
+            stars: g.daily.stars,
+            drags: g.daily.totalDrags,
+            result: g.daily.results[0],
+        };
+
+        // 再重试并拿三星，最终只保留这一版成绩。
+        g.restartLevel();
+        g.world.starsTaken = g.world.stars.length;
+        g.drags = g.par;
+        g.onLevelWon();
+        const third = {
+            stars: g.daily.stars,
+            drags: g.daily.totalDrags,
+            result: g.daily.results[0],
+        };
+
+        return { ...base, first, second, third };
     } catch (e) { return { error: String(e.message) }; }
 });
-if (dailyOk.error) fail(`每日模式启动抛错: ${dailyOk.error}`);
+if (dailyOk.error) fail(`每日模式启动/重试抛错: ${dailyOk.error}`);
 else {
     if (dailyOk.state !== 'playing') fail(`每日模式 state=${dailyOk.state}`);
     if (dailyOk.mode !== 'daily') fail(`每日模式 mode=${dailyOk.mode}`);
     if (dailyOk.course !== 5) fail(`每日课程应为 5 关，实际 ${dailyOk.course}`);
+    if (dailyOk.first.stars !== 2 || dailyOk.first.result?.stars !== 2) {
+        fail(`每日首次成绩应记录为 2 星: ${JSON.stringify(dailyOk.first)}`);
+    }
+    if (dailyOk.second.stars !== 1 || dailyOk.second.drags !== 1 || dailyOk.second.result?.stars !== 1) {
+        fail(`每日重试后应覆盖而非累计当前关成绩: ${JSON.stringify(dailyOk.second)}`);
+    }
+    if (dailyOk.third.stars !== 3 || dailyOk.third.result?.stars !== 3 ||
+        dailyOk.third.drags !== dailyOk.third.result?.drags) {
+        fail(`每日再次重试三星后汇总应只保留最终当前关结果: ${JSON.stringify(dailyOk.third)}`);
+    }
 }
 
 /* ── 7. 抽屉开关（mobile 契约已由 verify-stats-drawer 覆盖，这里只验可用性） ── */
@@ -414,7 +459,43 @@ try {
 }
 await migrationRetryPage.close();
 
-/* ── 10. 浅色主题：生产夜景不得覆盖 theme-light 的亮色画布 ── */
+/* ── 10. 普通保存：payload 写失败不得抢先更新版本标记 ── */
+const saveFailPage = await browser.newPage();
+attachDiagnostics(saveFailPage, 'save-fail');
+await saveFailPage.setViewport({ width: 480, height: 760 });
+await saveFailPage.evaluateOnNewDocument(() => {
+    try {
+        localStorage.clear();
+        localStorage.setItem('sd_progress_version', '2');
+        localStorage.setItem('sd_progress', JSON.stringify({ S1: { stars: 1, bestDrags: 4 } }));
+    } catch (e) { /* ignore */ }
+});
+await saveFailPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 400));
+const saveFailed = await saveFailPage.evaluate(() => {
+    // 将 marker 临时退回 1，模拟“版本写入是否会抢跑”的可观察条件。
+    localStorage.setItem('sd_progress_version', '1');
+    const before = localStorage.getItem('sd_progress');
+    const nativeSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+        if (key === 'sd_progress') throw new DOMException('simulated quota failure', 'QuotaExceededError');
+        return nativeSetItem.call(this, key, value);
+    };
+    window.sdGame.progress.S1 = { stars: 3, bestDrags: 1 };
+    const ok = window.sdGame.saveProgress();
+    return {
+        ok,
+        version: localStorage.getItem('sd_progress_version'),
+        before,
+        after: localStorage.getItem('sd_progress'),
+    };
+});
+if (saveFailed.ok !== false || saveFailed.version !== '1' || saveFailed.after !== saveFailed.before) {
+    fail(`普通保存写失败时不应更新版本标记或覆盖旧 payload: ${JSON.stringify(saveFailed)}`);
+}
+await saveFailPage.close();
+
+/* ── 11. 浅色主题：生产夜景不得覆盖 theme-light 的亮色画布 ── */
 const lightPage = await browser.newPage();
 attachDiagnostics(lightPage, 'light');
 await lightPage.setViewport({ width: 480, height: 760 });
@@ -458,7 +539,7 @@ else {
 }
 await lightPage.close();
 
-/* ── 11. reduced-motion：风场相位必须冻结且场景漂移停住 ── */
+/* ── 12. reduced-motion：风场相位必须冻结且场景漂移停住 ── */
 const reducedPage = await browser.newPage();
 attachDiagnostics(reducedPage, 'reduced-motion');
 await reducedPage.setViewport({ width: 480, height: 760 });
@@ -486,7 +567,7 @@ if (!reducedState.hasGame || !reducedState.reduced || !reducedState.sceneReduced
 }
 await reducedPage.close();
 
-/* ── 12. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
+/* ── 13. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
 const fallbackPage = await browser.newPage();
 attachDiagnostics(fallbackPage, 'fallback', { allowRequestFailure: isGardenMidProductionUrl });
 await fallbackPage.setViewport({ width: 390, height: 844 });
@@ -551,7 +632,7 @@ else {
 }
 await fallbackPage.close();
 
-/* ── 13. 噪声过滤后的页面错误 ──
+/* ── 14. 噪声过滤后的页面错误 ──
  * 源码树直跑的已知 404（与既有 smoke 口径一致）。 */
 const IGNORABLE = [/analytics\.js/, /sw-register\.js/, /manifest/i, /CORS/i, /game-scores/i,
     /games-analytics/, /apple-touch-icon/, /favicon/i];
