@@ -191,6 +191,8 @@ for (let li = 0; li < LEVELS.length; li++) {
     let fullStar = 0;
     let singleDrag = 0;
     let minFullStarDrags = Infinity;
+    let maxWinStars = -1;
+    let bestPartial = null;
     let best = null;
 
     for (let ri = 0; ri < ropeCount; ri++) {
@@ -204,7 +206,13 @@ for (let li = 0; li < LEVELS.length; li++) {
                 // budget 会改变最后一段的 hold/settle，因此每个预算必须独立跑。
                 for (let budget = 1; budget <= lv.par; budget++) {
                     const res = attempt(lv, tx, ty, ri, budget);
-                    if (res.won) candidateWon = true;
+                    if (res.won) {
+                        candidateWon = true;
+                        if (res.stars > maxWinStars) {
+                            maxWinStars = res.stars;
+                            bestPartial = { tx, ty, ri, budget, drags: res.drags, stars: res.stars };
+                        }
+                    }
                     if (res.won && res.stars === res.starsTotal) {
                         candidateFull = true;
                         candidateMin = Math.min(candidateMin, res.drags);
@@ -221,7 +229,7 @@ for (let li = 0; li < LEVELS.length; li++) {
         }
     }
 
-    report.push({ id: lv.id, par: lv.par, pullMax: lv.pullMax, solvable, fullStar, singleDrag, minFullStarDrags, best });
+    report.push({ id: lv.id, par: lv.par, pullMax: lv.pullMax, solvable, fullStar, singleDrag, minFullStarDrags, maxWinStars, bestPartial, best });
     ok(solvable > 0, `${lv.id} par 内可解`, `搜到 ${solvable} 位`);
     ok(fullStar > 0, `${lv.id} par 内满星可解`, `满星位 ${fullStar}/${solvable}`);
     const minTargets = li < 4 ? 1 : 2;
@@ -239,7 +247,7 @@ const solvableAll = report.filter(r => r.fullStar > 0).length;
 console.log(`  par 内满星可解: ${solvableAll}/${LEVELS.length}`);
 for (const r of report) {
     const min = Number.isFinite(r.minFullStarDrags) ? r.minFullStarDrags : '—';
-    console.log(`  ${r.id.padEnd(4)} par=${r.par} pull=${String(r.pullMax).padStart(3)}  可解=${String(r.solvable).padStart(3)}  满星=${String(r.fullStar).padStart(3)}  最少牵拉=${String(min).padStart(2)}  一拉满星=${String(r.singleDrag).padStart(3)}${r.best ? `  最佳(${r.best.tx},${r.best.ty}) rope[${r.best.ri}]` : ''}`);
+    console.log(`  ${r.id.padEnd(4)} par=${r.par} pull=${String(r.pullMax).padStart(3)}  可解=${String(r.solvable).padStart(3)}  满星=${String(r.fullStar).padStart(3)}  最少牵拉=${String(min).padStart(2)}  一拉满星=${String(r.singleDrag).padStart(3)}${r.best ? `  最佳(${r.best.tx},${r.best.ty}) rope[${r.best.ri}]` : ''}${r.bestPartial && r.fullStar === 0 ? `  最多星=${r.maxWinStars}/${LEVELS.find(x => x.id === r.id).stars.length} @(${r.bestPartial.tx},${r.bestPartial.ty}) budget=${r.bestPartial.budget}` : ''}`);
 }
 ok(solvableAll === LEVELS.length, `全部 ${LEVELS.length} 关在 par 内满星可解`, `${solvableAll} 关通过`);
 
