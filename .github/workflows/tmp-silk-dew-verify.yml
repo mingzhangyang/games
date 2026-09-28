@@ -8,7 +8,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,14 +16,33 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+
       - name: Build
         run: npm run build
-      - name: Verify Silk Dew difficulty
-        run: node scripts/verify-silk-dew-levels.mjs
-      - name: Smoke Silk Dew in Chrome
+
+      - name: Offline Silk Dew contracts
+        run: |
+          node scripts/run-lint.mjs
+          node scripts/verify-i18n.mjs
+          node scripts/verify-leaderboard.mjs
+          node scripts/verify-silk-dew-art.mjs
+          node scripts/verify-silk-dew-levels.mjs
+
+      - name: Browser Silk Dew contracts
+        env:
+          VERIFY_PAGES: silk-dew
         run: |
           node scripts/serve-static.mjs 8899 > /tmp/silk-dew-server.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
           sleep 1
-          node scripts/smoke-silk-dew.mjs
+          BASE=http://127.0.0.1:8899
+          node scripts/smoke-silk-dew.mjs "$BASE"
+          node scripts/fg-audit.mjs "$BASE"
+          node scripts/verify-theme.mjs "$BASE"
+          node scripts/verify-start-menus.mjs "$BASE"
+          node scripts/placeholder-leak-check.mjs "$BASE"
+          node scripts/verify-chrome.mjs "$BASE"
+          node scripts/verify-desktop-frame.mjs "$BASE"
+          node scripts/verify-stats-drawer.mjs "$BASE"
+          node scripts/verify-button-icons.mjs "$BASE"
