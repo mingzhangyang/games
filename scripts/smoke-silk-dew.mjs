@@ -25,16 +25,24 @@ const browser = await puppeteer.launch({
     args: LAUNCH_ARGS,
 });
 
-const page = await browser.newPage();
-await page.setViewport({ width: 1280, height: 900 });
 const errs = [];
 const consoleErrors = [];
-page.on('pageerror', e => errs.push(String(e.message || e).split('\n')[0]));
-page.on('console', msg => {
-    if (msg.type() !== 'error') return;
-    const url = (msg.location() && msg.location().url) || '';
-    consoleErrors.push(`${msg.text().split('\n')[0]} @ ${url}`);
-});
+
+function attachDiagnostics(target, label, { ignoreConsoleUrl } = {}) {
+    target.on('pageerror', e => {
+        errs.push(`[${label}] ${String(e.message || e).split('\n')[0]}`);
+    });
+    target.on('console', msg => {
+        if (msg.type() !== 'error') return;
+        const url = (msg.location() && msg.location().url) || '';
+        if (ignoreConsoleUrl && ignoreConsoleUrl.test(url)) return;
+        consoleErrors.push(`[${label}] ${msg.text().split('\n')[0]} @ ${url}`);
+    });
+}
+
+const page = await browser.newPage();
+attachDiagnostics(page, 'main');
+await page.setViewport({ width: 1280, height: 900 });
 await page.evaluateOnNewDocument(() => {
     try {
         localStorage.clear();
@@ -273,6 +281,7 @@ else if (!drawerOk.open) fail('点击 Stats 后抽屉未打开');
  * page.mouse 会产生 pointerType=mouse，无法覆盖手机上「按住锚结 → 滑动」的路径。
  * 这里用 CDP touch events，让 Chromium 走真实的 touch/pointer 兼容链。 */
 const mobile = await browser.newPage();
+attachDiagnostics(mobile, 'mobile');
 await mobile.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
 await mobile.evaluateOnNewDocument(() => {
     try { localStorage.clear(); } catch (e) { /* ignore */ }
@@ -329,6 +338,7 @@ await mobile.close();
 
 /* ── 9. 浅色主题：生产夜景不得覆盖 theme-light 的亮色画布 ── */
 const lightPage = await browser.newPage();
+attachDiagnostics(lightPage, 'light');
 await lightPage.setViewport({ width: 480, height: 760 });
 await lightPage.evaluateOnNewDocument(() => {
     try {
@@ -372,8 +382,15 @@ await lightPage.close();
 
 /* ── 10. reduced-motion：风场相位必须冻结且场景漂移停住 ── */
 const reducedPage = await browser.newPage();
+attachDiagnostics(reducedPage, 'reduced-motion');
 await reducedPage.setViewport({ width: 480, height: 760 });
 await reducedPage.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+await reducedPage.evaluateOnNewDocument(() => {
+    try {
+        localStorage.clear();
+        localStorage.setItem('site_theme', 'dark');
+    } catch (e) { /* ignore */ }
+});
 await reducedPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
 await new Promise(r => setTimeout(r, 600));
 const reducedState = await reducedPage.evaluate(() => {
@@ -393,10 +410,23 @@ await reducedPage.close();
 
 /* ── 11. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
 const fallbackPage = await browser.newPage();
+attachDiagnostics(fallbackPage, 'fallback', { ignoreConsoleUrl: /garden-mid(?:-[^/?]+)?\.svg(?:\?|$)/ });
 await fallbackPage.setViewport({ width: 390, height: 844 });
+await fallbackPage.evaluateOnNewDocument(() => {
+    try {
+        // The light-theme smoke runs immediately before this page in the same
+        // browser context. Reset explicitly so this test cannot silently bypass
+        // production art through the procedural light-theme renderer.
+        localStorage.clear();
+        localStorage.setItem('site_theme', 'dark');
+    } catch (e) { /* ignore */ }
+});
 await fallbackPage.setRequestInterception(true);
 fallbackPage.on('request', request => {
-    if (request.url().includes('/assets/silk-dew/layers/garden-mid.svg')) request.abort();
+    const pathname = (() => {
+        try { return new URL(request.url()).pathname; } catch { return request.url(); }
+    })();
+    if (/\/garden-mid(?:-[^/?]+)?\.svg$/.test(pathname)) request.abort();
     else request.continue();
 });
 await fallbackPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
@@ -413,6 +443,8 @@ const fallbackState = await fallbackPage.evaluate(() => {
     return {
         hasGame: true,
         state: g.state,
+        theme: document.documentElement.getAttribute('data-theme'),
+        productionArt: g.usesProductionArt(),
         artState: document.getElementById('sd-stage')?.dataset.artState,
         sceneState: g.scene?.debug?.status,
         opaque,
@@ -420,6 +452,9 @@ const fallbackState = await fallbackPage.evaluate(() => {
 });
 if (!fallbackState.hasGame || fallbackState.error) fail(`美术降级路径无法启动: ${JSON.stringify(fallbackState)}`);
 else {
+    if (fallbackState.theme !== 'dark' || !fallbackState.productionArt) {
+        fail(`fallback 测试未在生产美术启用状态运行: ${JSON.stringify(fallbackState)}`);
+    }
     if (fallbackState.artState !== 'fallback' || fallbackState.sceneState !== 'fallback') {
         fail(`生产图层失败后未进入 fallback: ${JSON.stringify(fallbackState)}`);
     }
