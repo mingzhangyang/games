@@ -157,6 +157,45 @@ check(
     '战斗 HUD 悬浮且页脚不再占用手机首屏',
     JSON.stringify(gameplayLayout),
 );
+
+// Prove that fullscreen positioning did not break pointer -> logical-grid mapping.
+// Pick a buildable cell whose screen center is clear of the floating top HUD and
+// bottom controls, issue a real touchscreen tap, then assert the game selected
+// exactly that logical cell.
+const tapTarget = await menuPage.evaluate(() => {
+    const g = window.tdGame;
+    const canvas = document.querySelector('#td-canvas');
+    const controls = document.querySelector('#td-bottom-controls');
+    const topbar = document.querySelector('.td-topbar');
+    const rect = canvas.getBoundingClientRect();
+    const topbarBottom = topbar.getBoundingClientRect().bottom;
+    const controlsTop = controls.getBoundingClientRect().top;
+    for (let r = 0; r < g.map.rows; r++) {
+        for (let c = 0; c < g.map.cols; c++) {
+            if (g.map.pathGrid[r * g.map.cols + c] || g.towerAt(c, r) >= 0) continue;
+            const x = rect.left + ((c + 0.5) * g.map.cell / 800) * rect.width;
+            const y = rect.top + ((r + 0.5) * g.map.cell / 600) * rect.height;
+            if (y > topbarBottom + 12 && y < controlsTop - 12) return { c, r, x, y };
+        }
+    }
+    return null;
+});
+check(!!tapTarget, '横屏全屏战场存在未被 HUD 遮挡的可建造触控格', JSON.stringify(tapTarget));
+if (tapTarget) {
+    await menuPage.touchscreen.tap(tapTarget.x, tapTarget.y);
+    await wait(120);
+    const tappedCell = await menuPage.evaluate(() => ({
+        selected: window.tdGame?.selectedCell,
+        panelVisible: !document.querySelector('#td-panel')?.classList.contains('hidden'),
+    }));
+    check(
+        tappedCell.selected?.c === tapTarget.c
+            && tappedCell.selected?.r === tapTarget.r
+            && tappedCell.panelVisible,
+        '真实触控仍准确映射到 800×600 逻辑网格',
+        JSON.stringify({ tapTarget, tappedCell }),
+    );
+}
 check(menuErrors.length === 0, '横屏开始菜单无 pageerror', menuErrors.join(' | '));
 await menuPage.close();
 
