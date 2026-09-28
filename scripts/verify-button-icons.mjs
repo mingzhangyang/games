@@ -6,6 +6,7 @@
 // → 收一张该按钮的元素级截图，供人工目视。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 import { mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -26,7 +27,8 @@ const TARGETS = {
     'word-daily': ['wd-btn-next', 'wd-btn-stats-inline', 'wd-btn-share-inline', 'wd-modal-next', 'wd-share'],
     'lumen': ['lm-btn-next', 'lm-btn-replay', 'lm-btn-menu1', 'lm-btn-copy', 'lm-btn-menu2', 'lm-btn-again'],
     'circuit': ['cc-btn-next', 'cc-btn-replay', 'cc-btn-menu1', 'cc-btn-copy', 'cc-btn-menu2', 'cc-btn-again'],
-    'silk-dew': ['sd-btn-next', 'sd-btn-replay', 'sd-btn-menu1', 'sd-btn-copy', 'sd-btn-menu2', 'sd-btn-again'],
+    // sd-btn-levels / sd-btn-daily：开始菜单的模式钮（缺 game-btn 时图标比文字高 6.5px，PR #33）
+    'silk-dew': ['sd-btn-levels', 'sd-btn-daily', 'sd-btn-next', 'sd-btn-replay', 'sd-btn-menu1', 'sd-btn-copy', 'sd-btn-menu2', 'sd-btn-again'],
     'bond-forge': ['bf-btn-next', 'bf-btn-replay', 'bf-btn-menu1', 'bf-btn-copy', 'bf-btn-menu2', 'bf-btn-again'],
     'echo-cave': ['ec-btn-next', 'ec-btn-replay', 'ec-btn-menu1', 'ec-btn-copy', 'ec-btn-menu2', 'ec-btn-again'],
     'maxwell-demon': ['md-btn-next', 'md-btn-replay', 'md-btn-menu1', 'md-btn-copy', 'md-btn-menu2', 'md-btn-again'],
@@ -92,6 +94,9 @@ const MEASURE = (ids) => ids.map(id => {
     };
 });
 
+const RUN = Object.entries(TARGETS).filter(([n]) => keepPage(n));
+exitIfNoPages(RUN, 'verify-button-icons');
+
 await mkdir(OUT, { recursive: true });
 const browser = await puppeteer.launch({
     executablePath: CHROME, headless: 'new',
@@ -99,7 +104,7 @@ const browser = await puppeteer.launch({
 });
 
 let bad = 0;
-for (const [name, ids] of Object.entries(TARGETS)) {
+for (const [name, ids] of RUN) {
     const page = await browser.newPage();
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
     await page.goto(`${BASE}/${name}.html`, { waitUntil: 'networkidle2', timeout: 20000 }).catch(() => { });

@@ -150,6 +150,18 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
   报「fetching the script 404」console 错误，smoke-circuit / smoke-silk-dew 因此红过）。回归：`node scripts/verify-theme.mjs` 的「真实页面」段断言每页 `data-theme`
   必须存在，回退一失效就红。教训：任何「依赖 `public/` 资源」的新校验，先 `curl` 一下它在校验服务器上是不是 200。
 
+- ⚠️ **`networkidle2` + 固定 sleep 当就绪条件，是 verify 慢的主因；而「快」不能靠改测法换。** 2026-09-28 实测
+  `verify:quick` 串行 1207s，其中 `desktop-frame` 一项 563s：180 次访问（18 页 × 5 视口 × 2 语言）每次
+  `goto` + 写语言后 `reload` 两次 `networkidle2`（本地页 `load` ~100ms，`networkidle2` ~850ms —— 它要等 500ms
+  网络静默），再固定 sleep 1.1s。改法：`evaluateOnNewDocument` 预写 `site_lang` 省掉 reload；`waitUntil: 'load'`
+  + 显式就绪（`document.fonts.ready`、`--frame-chrome` 已写入、连续两帧布局不变）；4 标签页并发 → 71s，
+  180 个画布宽读数与旧版**逐字节一致**，注入溢出仍 10 项全红。
+  ⚠️ 两个没采用的「更快」写法：一是同页 `setViewport` 连测五档视口 —— 那测的是 resize 路径而不是首屏，
+  hs/pm 的 inline-width 自锁（见「桌面舞台预算」）只在首屏暴露；二是并发标签页不加
+  `--disable-background-timer-throttling` / `--disable-renderer-backgrounding` —— 后台页 rAF 被节流，就绪判定等不到新帧。
+  提速后必须拿新旧版本跑同一批页做全量读数比对 + 注入缺陷反向验证，不能只看「还是绿的」。
+  编排层同步改了：`verify-all` 离线项全并发、浏览器项 `--jobs` 池（并发输出缓冲成整块），`--changed` 按 diff 选项。
+
 ## codegen 脚本
 
 - ⚠️ **Never mutate a string while iterating its own match offsets.** The dedupe pass in `add-drawer-i18n.py` sliced `block` inside a loop over `finditer(block)` — the offsets are relative to the *original* string, so once the first removal shifts them, every later cut lands on arbitrary characters (it split `'开始新的每日挑战？…'` mid-string), and reassembling with `tail[len(block):]` reused an already-shortened length. All six JS files became syntax errors and had to be hand-repaired, because the damage spanned entire i18n tables and `git checkout` would have discarded the session's real work. Safe form: collect every hit's **absolute** `(start, end)`, delete **backwards on the whole `src`**, return once. Pair it with: `--dry` support, a `cp`'d scratch copy + `node --check` before touching real files, and **`md5sum` twice** to prove idempotence — never trust the script's own printed "skipped" report, since `tail -N` truncates lines and misleads. Related: a dedupe window that starts at `pos` can never see the key it is looking for, because `pos` points at that key's own indentation and the slice has no leading `\n` for `r'\n[ \t]*key:'` to match — start the preview at `pos - 1`

@@ -5,11 +5,12 @@
 //   c. 不糊：canvas.width >= canvas.clientWidth（border-box 下 rect 含 border）
 //   d. 舞台随视口长大：1920x1080 档画布宽 > 1280x900 档
 //   e. 侧栏在屏内：sidebar bottom <= innerHeight + 2
-//   f. --frame-chrome 收敛：间隔 500ms 两次读数相等（js/game-frame.js 反馈环护栏）
+//   f. --frame-chrome 收敛：就绪后间隔 250ms 两次读数相等（js/game-frame.js 反馈环护栏）
 //   g. 无 pageerror
 // 用法：node scripts/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 
 const CHROME = CHROME_PATH;
@@ -17,8 +18,9 @@ const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
 // 画幅预算页 = 挂 frame-budget cap 的游戏；ratio 由注册表 stage.w/h 派生（不再手写 0.75）
 const PAGES = Object.fromEntries(
-    registry.withCap('frame-budget').map(g => [g.id, g.stage.w / g.stage.h]),
+    registry.withCap('frame-budget').filter(g => keepPage(g.id)).map(g => [g.id, g.stage.w / g.stage.h]),
 );
+exitIfNoPages(Object.keys(PAGES), 'verify-desktop-frame');
 const VIEWPORTS = [[1280, 800], [1280, 900], [1440, 900], [1920, 1080], [2560, 1440]];
 const LANGS = ['en', 'zh'];
 
@@ -50,9 +52,25 @@ const MEASURE = () => {
     };
 };
 
+// 提速（2026-09-28，563s → 见 docs/traps.md「校验基础设施」）：
+//   - 语言用 evaluateOnNewDocument 在首个脚本前写入，省掉原来的 goto + reload 两次加载；
+//   - waitUntil 'load' + 显式就绪条件（字体就绪、--frame-chrome 已写入且连续两帧布局不变），
+//     替代 networkidle2（每次白等 ~750ms）与固定 600ms sleep；
+//   - 每个 (页, 视口, 语言) 仍是一次全新加载（不用 setViewport 复用页面 —— 那测的是 resize 路径，
+//     不是首屏，hs/pm 的 inline-width 自锁只在首屏暴露），但用 JOBS 个标签页并发跑；
+//   - 每个用例一个独立 browser context：同源标签页共享 localStorage，en/zh 用例并发写 site_lang
+//     会互相覆盖，site-settings 还会经 storage 事件把别的标签页的语言实时切过来（PR #33 评审）。
+// f 条收敛检查仍是「就绪后隔一段时间再读一次」：反馈环是逐帧振荡的，250ms（~15 帧）足以暴露。
+// 标签页并发：VERIFY_FRAME_JOBS 显式指定；否则跟随 verify-all 下发的 VERIFY_JOBS（上限 4），
+// 这样 `verify-all --jobs=1` 排查时本项也退回串行
+const JOBS = Math.max(1, Number(process.env.VERIFY_FRAME_JOBS
+    || (process.env.VERIFY_JOBS ? Math.min(4, Number(process.env.VERIFY_JOBS)) : 4)) || 1);
+const CONVERGE_GAP_MS = 250;
+
 const browser = await puppeteer.launch({
     executablePath: CHROME, headless: 'new',
-    args: LAUNCH_ARGS,
+    // 并发标签页不能被当成后台页节流 rAF / 定时器，否则就绪判定会一直等不到新帧
+    args: [...LAUNCH_ARGS, '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'],
 });
 
 const failures = [];
@@ -60,26 +78,71 @@ const failures = [];
 const knownGaps = [];
 const widthTable = {}; // page -> "WxH/lang" -> canvas rectW
 
+// 就绪：字体加载完、bindFrame 已写 --frame-chrome、且连续两帧舞台尺寸与 chrome 不变
+const WAIT_STABLE = () => new Promise(resolve => {
+    const t0 = performance.now();
+    const snap = () => {
+        const shell = document.querySelector('.game-shell');
+        const st = document.querySelector('.game-stage canvas') || document.querySelector('canvas') || document.querySelector('.game-stage');
+        const r = st ? st.getBoundingClientRect() : { width: 0, height: 0 };
+        return [shell ? shell.style.getPropertyValue('--frame-chrome') : '', r.width, r.height, st && st.width, document.scrollingElement.scrollHeight].join('|');
+    };
+    let prev = null, same = 0;
+    const tick = () => {
+        const cur = snap();
+        same = (cur === prev && !cur.startsWith('|')) ? same + 1 : 0;
+        prev = cur;
+        if (same >= 2 || performance.now() - t0 > 4000) resolve();
+        else requestAnimationFrame(tick);
+    };
+    document.fonts.ready.then(() => requestAnimationFrame(tick));
+});
+
+async function measureOne(page, W, H, lang) {
+    const ctx = await browser.createBrowserContext();
+    const pg = await ctx.newPage();
+    try {
+        await pg.setViewport({ width: W, height: H });
+        await pg.evaluateOnNewDocument(l => { try { localStorage.setItem('site_lang', l); } catch (e) { } }, lang);
+        const errors = [];
+        pg.on('pageerror', e => errors.push(e.message));
+        await pg.goto(`${BASE}/${page}.html`, { waitUntil: 'load', timeout: 20000 }).catch(() => { });
+        await pg.evaluate(WAIT_STABLE).catch(() => { });
+        const m1 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
+        await new Promise(r => setTimeout(r, CONVERGE_GAP_MS));
+        const m2 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
+        return { m1, m2, errors };
+    } finally {
+        await ctx.close();
+    }
+}
+
+const jobs = [];
+for (const lang of LANGS) {
+    for (const [page, ratio] of Object.entries(PAGES)) {
+        for (const [W, H] of VIEWPORTS) jobs.push({ page, ratio, W, H, lang });
+    }
+}
+const measured = new Map();
+let next = 0;
+await Promise.all(Array.from({ length: Math.min(JOBS, jobs.length) }, async () => {
+    while (next < jobs.length) {
+        const job = jobs[next++];
+        measured.set(job, await measureOne(job.page, job.W, job.H, job.lang));
+    }
+}));
+
+// 断言按原顺序逐条跑，保证失败列表与串行版本一致
 for (const lang of LANGS) {
     for (const [page, ratio] of Object.entries(PAGES)) {
         const canvasW = {};
-        for (const [W, H] of VIEWPORTS) {
-            const pg = await browser.newPage();
-            await pg.setViewport({ width: W, height: H });
-            const errors = [];
-            pg.on('pageerror', e => errors.push(e.message));
-            await pg.goto(`${BASE}/${page}.html`, { waitUntil: 'networkidle2', timeout: 20000 }).catch(() => { });
-            await pg.evaluate(l => { try { localStorage.setItem('site_lang', l); } catch (e) { } }, lang);
-            await pg.reload({ waitUntil: 'networkidle2', timeout: 20000 }).catch(() => { });
-            await new Promise(r => setTimeout(r, 600));
-            const m1 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
-            await new Promise(r => setTimeout(r, 500));
-            const m2 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
+        for (const job of jobs.filter(j => j.page === page && j.lang === lang)) {
+            const { W, H } = job;
+            const { m1, m2, errors } = measured.get(job);
             const tag = `${page} ${W}x${H} ${lang}`;
 
             if (m1.err) {
                 failures.push(`${tag}: measure 失败 ${m1.err}`);
-                await pg.close();
                 continue;
             }
             const rectW = m1.canvas ? m1.canvas.rectW : m1.stageW;
@@ -120,13 +183,13 @@ for (const lang of LANGS) {
             // g. 无 pageerror
             if (errors.length) failures.push(`${tag}: pageerror ${errors.join(' | ')}`);
 
-            await pg.close();
         }
         // d. 舞台确实随视口长大
         const w1280 = canvasW['1280x900'], w1920 = canvasW['1920x1080'];
         if (!(w1920 > w1280)) failures.push(`${page}: 1920 档画布宽 ${w1920} 未大于 1280x900 档 ${w1280}`);
     }
 }
+
 await browser.close();
 
 // 画布宽一览（1920 档，中文）

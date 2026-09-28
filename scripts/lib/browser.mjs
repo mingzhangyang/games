@@ -52,11 +52,22 @@ const systemChromePaths = process.platform === 'win32'
             '/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe',
         ];
 
+// Playwright 预装的 Chromium（云端容器等：PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers）
+function playwrightChromePaths() {
+    const root = process.env.PLAYWRIGHT_BROWSERS_PATH;
+    if (!root || !existsSync(root)) return [];
+    return readdirSync(root, { withFileTypes: true })
+        .filter(e => e.isDirectory() && /^chromium-\d+$/.test(e.name))
+        .sort((a, b) => Number(b.name.split('-')[1]) - Number(a.name.split('-')[1]))
+        .map(e => join(root, e.name, 'chrome-linux', 'chrome'));
+}
+
 const CANDIDATES = [
     normaliseCandidate(process.env.CHROME_BIN),
     normaliseCandidate(process.env.PUPPETEER_EXECUTABLE_PATH),
     ...systemChromePaths,
     ...cachedChromePaths(),
+    ...playwrightChromePaths(),
 ].filter(Boolean);
 
 export const CHROME_PATH = CANDIDATES.find(existsSync);

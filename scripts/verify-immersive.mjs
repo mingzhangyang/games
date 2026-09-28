@@ -18,6 +18,7 @@
 // 用法：node scripts/verify-immersive.mjs [baseUrl]（verify-all 自动传入）
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
@@ -34,6 +35,10 @@ if (!PAGES.length) {
     console.error('✗ 注册表里没有 layout: "immersive" 的页面 —— 契约无人使用，校验器无事可做');
     process.exit(1);
 }
+// 按页过滤（VERIFY_PAGES）放在「契约无人使用」守卫之后，不让过滤把那条守卫变绿
+const RUN_PAGES = PAGES.filter(g => keepPage(g.id));
+const STANDARD_SAMPLE = registry.withLayout('standard').filter(g => keepPage(g.id));
+exitIfNoPages([...RUN_PAGES, ...STANDARD_SAMPLE], 'verify-immersive');
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
@@ -73,7 +78,7 @@ const measure = page => page.evaluate(() => {
     };
 });
 
-for (const g of PAGES) {
+for (const g of RUN_PAGES) {
     for (const [w, h, dpr] of VIEWPORTS) {
         const tag = `${g.id}@${w}×${h}`;
         const page = await browser.newPage();
@@ -134,7 +139,7 @@ for (const g of PAGES) {
 {
     const page = await browser.newPage();
     await page.setViewport({ width: 390, height: 844 });
-    for (const g of registry.withLayout('standard')) {
+    for (const g of STANDARD_SAMPLE) {
         if (!(g.caps || []).includes('topbar')) continue;
         await page.goto(`${BASE}/${g.href}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await new Promise(r => setTimeout(r, 250));
@@ -153,4 +158,4 @@ if (fails.length) {
     console.error(`\nverify-immersive：${fails.length} 项失败（${passes} 项通过）❌`);
     process.exit(1);
 }
-console.log(`verify-immersive 全部通过 ✅（${passes} 项断言，${PAGES.length} 页 × ${VIEWPORTS.length} 视口 + 标准页抽查）`);
+console.log(`verify-immersive 全部通过 ✅（${passes} 项断言，${RUN_PAGES.length} 页 × ${VIEWPORTS.length} 视口 + 标准页抽查）`);
