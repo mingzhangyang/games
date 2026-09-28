@@ -236,6 +236,9 @@ for (let li = 0; li < LEVELS.length; li++) {
     ok(fullStar > 0, `${lv.id} par 内满星可解`, `满星位 ${fullStar}/${solvable}`);
     const minTargets = li < 4 ? 1 : 2;
     ok(fullStar >= minTargets, `${lv.id} 至少有 ${minTargets} 个满星目标位（避免像素级唯一解）`, String(fullStar));
+    if (lv.id === 'S14') {
+        ok(fullStar === 2, 'S14 精度关恰有 2 个粗网格满星目标位', String(fullStar));
+    }
     ok(minFullStarDrags <= lv.par, `${lv.id} 最少满星牵拉 ≤ par`, `${minFullStarDrags} ≤ ${lv.par}`);
     ok(minFullStarDrags >= MIN_FULL_STAR_DRAGS[li],
         `${lv.id} 达到章节最低难度（满星至少 ${MIN_FULL_STAR_DRAGS[li]} 拉）`,
