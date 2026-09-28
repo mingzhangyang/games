@@ -19,6 +19,7 @@ import {
     STAGE,
     PHYS,
     LEVELS,
+    scoreStars,
     createWorld,
     stepWorld,
     beginDrag,
@@ -647,7 +648,7 @@ class SilkfallGame {
         vibrate(30);
         const starsTaken = this.world ? this.world.starsTaken : 0;
         const starsTotal = this.world ? this.world.stars.length : 0;
-        const stars = this.starsForLevel(this.drags, this.par, starsTaken, starsTotal);
+        const stars = scoreStars(this.drags, this.par, starsTaken, starsTotal);
         const p = this.progress[this.spec.id] || { stars: 0, bestDrags: 0 };
         const improved = stars > p.stars || (p.bestDrags === 0 || this.drags < p.bestDrags);
         if (stars > p.stars) p.stars = stars;
@@ -666,17 +667,6 @@ class SilkfallGame {
         }
         if (stars === 3) Sfx.star3();
         track('silk-dew', 'level_win', stars);
-    }
-
-    starsForLevel(drags, par, starsTaken, starsTotal) {
-        // 三星必须同时证明“路线完整”和“牵拉高效”：
-        // 收齐场上星芒 + 在 par 内完成。只入壶、不拾星不再能拿三星。
-        if (starsTotal <= 0) return drags <= par ? 3 : (drags <= par + 2 ? 2 : 1);
-        const all = starsTaken >= starsTotal;
-        const nearAll = starsTotal > 1 && starsTaken >= starsTotal - 1;
-        if (all && drags <= par) return 3;
-        if (all || (nearAll && drags <= par)) return 2;
-        return 1;
     }
 
     showClearPanel(stars, improved) {
