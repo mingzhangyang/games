@@ -1580,6 +1580,70 @@ body {
 .td-rotate-prompt strong { font-size: 19px; }
 .td-rotate-prompt span:last-child { max-width: 260px; color: #9bb8b8; font-size: 12px; line-height: 1.5; }
 
+/* Mobile landscape battle mode: once the menu is dismissed, the battlefield
+   becomes the viewport instead of merely filling the space below the header.
+   The top HUD floats over the scene (only its actual controls receive pointer
+   events), while the 800×600 canvas keeps its aspect ratio and can therefore
+   use the phone's full physical height without stretching the grid. */
+@media (width < 1024px) and (orientation: landscape) {
+    body:has(.td-shell.game-shell--immersive > .td-main > .td-stage > .game-overlay--menu.hidden) {
+        overflow: hidden;
+    }
+
+    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) {
+        min-height: 100dvh;
+        padding: 0;
+    }
+
+    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar {
+        position: fixed;
+        z-index: 30;
+        top: max(6px, env(safe-area-inset-top, 0px));
+        left: max(6px, env(safe-area-inset-left, 0px));
+        right: max(6px, env(safe-area-inset-right, 0px));
+        width: auto;
+        max-width: none;
+        padding: 0;
+        gap: 4px;
+        pointer-events: none;
+    }
+
+    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar .game-topbar-group {
+        pointer-events: auto;
+    }
+
+    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar .game-topbar-center {
+        pointer-events: none;
+        gap: 4px;
+    }
+
+    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar .td-stat {
+        padding: 4px 7px;
+        border-radius: 6px;
+        background: rgb(11, 22, 37, 0.82);
+    }
+
+    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-main {
+        width: 100vw;
+        height: 100dvh;
+    }
+
+    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-stage {
+        position: fixed;
+        z-index: 1;
+        inset: 0;
+        width: 100vw;
+        max-width: none;
+        height: 100dvh;
+        min-height: 0;
+        margin: 0;
+    }
+
+    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-footer {
+        display: none;
+    }
+}
+
 @media (width < 1024px) {
     .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) {
         display: grid;
