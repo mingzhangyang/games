@@ -650,9 +650,17 @@ class SilkfallGame {
         const starsTotal = this.world ? this.world.stars.length : 0;
         const stars = scoreStars(this.drags, this.par, starsTaken, starsTotal);
         const p = this.progress[this.spec.id] || { stars: 0, bestDrags: 0 };
-        const improved = stars > p.stars || (p.bestDrags === 0 || this.drags < p.bestDrags);
-        if (stars > p.stars) p.stars = stars;
-        if (p.bestDrags === 0 || this.drags < p.bestDrags) p.bestDrags = this.drags;
+        const oldStars = p.stars || 0;
+        const improved = stars > oldStars ||
+            (stars === oldStars && (p.bestDrags === 0 || this.drags < p.bestDrags));
+        // bestDrags 必须属于“当前最高星级”的成绩。低星捷径不能覆盖三星记录，
+        // 否则侧栏会展示一个实际上拿不到该星级的虚假最佳次数。
+        if (stars > oldStars) {
+            p.stars = stars;
+            p.bestDrags = this.drags;
+        } else if (stars === oldStars && (p.bestDrags === 0 || this.drags < p.bestDrags)) {
+            p.bestDrags = this.drags;
+        }
         this.progress[this.spec.id] = p;
         this.saveProgress();
         this.renderLevelGrid();
@@ -770,9 +778,12 @@ class SilkfallGame {
     }
 
     copyResult() {
+        const taken = this.world ? this.world.starsTaken : 0;
+        const total = this.world ? this.world.stars.length : 0;
+        const levelStars = scoreStars(this.drags, this.par, taken, total);
         const text = this.mode === 'daily' && this.daily
             ? `${this.t('title')} · ${this.daily.display} · ${this.t('drags')} ${this.daily.totalDrags} · ★${this.daily.stars}`
-            : `${this.t('title')} · ${this.t('level')} ${this.levelIdx + 1} · ${this.t('drags')} ${this.drags} · ` + '★'.repeat(this.starsForLevel(this.drags, this.par));
+            : `${this.t('title')} · ${this.t('level')} ${this.levelIdx + 1} · ${this.t('drags')} ${this.drags} · ` + '★'.repeat(levelStars);
         const done = () => this.showToast(this.t('copyResult') + ' ✓');
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(done).catch(done);
