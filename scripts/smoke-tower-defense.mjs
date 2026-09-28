@@ -100,20 +100,61 @@ await menuPage.click('#td-btn-play');
 await menuPage.waitForFunction(() => window.tdGame?.state === 'playing', { timeout: 5000 });
 const gameplayLayout = await menuPage.evaluate(() => {
     const stage = document.querySelector('.td-stage');
+    const canvas = document.querySelector('#td-canvas');
+    const topbar = document.querySelector('.td-topbar');
+    const footer = document.querySelector('.td-footer');
     const style = getComputedStyle(stage);
+    const stageRect = stage.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
     return {
         display: style.display,
+        position: style.position,
         height: style.height,
         overflow: style.overflow,
         touchAction: style.touchAction,
+        stageRect: {
+            top: stageRect.top,
+            left: stageRect.left,
+            right: stageRect.right,
+            bottom: stageRect.bottom,
+            width: stageRect.width,
+            height: stageRect.height,
+        },
+        canvasRect: { width: canvasRect.width, height: canvasRect.height },
+        viewport: { width: globalThis.innerWidth, height: globalThis.innerHeight },
+        topbarPosition: getComputedStyle(topbar).position,
+        bodyOverflow: getComputedStyle(document.body).overflow,
+        footerDisplay: getComputedStyle(footer).display,
     };
 });
 check(
     gameplayLayout.display === 'block'
+        && gameplayLayout.position === 'fixed'
         && gameplayLayout.height !== 'auto'
         && gameplayLayout.overflow === 'hidden'
         && gameplayLayout.touchAction === 'none',
-    '横屏点击 Deploy 后恢复沉浸式战场布局',
+    '横屏点击 Deploy 后进入全视口沉浸式战场',
+    JSON.stringify(gameplayLayout),
+);
+check(
+    Math.abs(gameplayLayout.stageRect.top) <= 1
+        && Math.abs(gameplayLayout.stageRect.left) <= 1
+        && Math.abs(gameplayLayout.stageRect.right - gameplayLayout.viewport.width) <= 1
+        && Math.abs(gameplayLayout.stageRect.bottom - gameplayLayout.viewport.height) <= 1,
+    '844×390 战斗舞台铺满整个可视口',
+    JSON.stringify(gameplayLayout.stageRect),
+);
+check(
+    gameplayLayout.canvasRect.height >= gameplayLayout.viewport.height - 1
+        && Math.abs(gameplayLayout.canvasRect.width / gameplayLayout.canvasRect.height - 4 / 3) < 0.01,
+    '横屏战场用满手机高度且保持 800×600 比例',
+    JSON.stringify(gameplayLayout.canvasRect),
+);
+check(
+    gameplayLayout.topbarPosition === 'fixed'
+        && gameplayLayout.bodyOverflow === 'hidden'
+        && gameplayLayout.footerDisplay === 'none',
+    '战斗 HUD 悬浮且页脚不再占用手机首屏',
     JSON.stringify(gameplayLayout),
 );
 check(menuErrors.length === 0, '横屏开始菜单无 pageerror', menuErrors.join(' | '));
