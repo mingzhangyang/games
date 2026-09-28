@@ -30,6 +30,27 @@ async function loadPage(lang) {
     return { page, errs };
 }
 
+async function getBadgeSnapshot(page) {
+    return page.evaluate(() => [...document.querySelectorAll('.card-badge')].map(el => {
+        const title = el.closest('.game-card')?.querySelector('.card-title');
+        const badgeRect = el.getBoundingClientRect();
+        const titleRect = title?.getBoundingClientRect();
+        const intersectsTitle = Boolean(titleRect
+            && titleRect.left < badgeRect.right
+            && titleRect.right > badgeRect.left
+            && titleRect.top < badgeRect.bottom
+            && titleRect.bottom > badgeRect.top);
+        return {
+            text: el.textContent.trim(),
+            tooltip: el.getAttribute('data-tooltip') || '',
+            title: el.getAttribute('title') || '',
+            aria: el.getAttribute('aria-label') || '',
+            icon: Boolean(el.querySelector('svg')),
+            intersectsTitle,
+        };
+    }));
+}
+
 // ── zh ──
 {
     const { page, errs } = await loadPage('zh');
@@ -42,6 +63,7 @@ async function loadPage(lang) {
         bodyBg: getComputedStyle(document.body).backgroundColor,
         badges: document.querySelectorAll('.card-badge--daily, .card-badge--new').length,
     }));
+    const badgeDetails = await getBadgeSnapshot(page);
 
     if (errs.length) fail(`zh 页面错误: ${errs.join(' | ')}`);
     if (snap.title !== '单页游戏合集') fail(`zh i18n 注入未生效: main-title="${snap.title}"`);
@@ -52,6 +74,14 @@ async function loadPage(lang) {
     if (snap.bodyBg === 'rgba(0, 0, 0, 0)' || snap.bodyBg === 'rgb(255, 255, 255)') {
         fail(`zh CSS 疑似未生效: body 背景=${snap.bodyBg}`);
     }
+    if (snap.badges < 1) fail('zh 首页没有状态书签');
+    if (badgeDetails.some(b => b.text || !b.icon || !b.tooltip || b.tooltip !== b.title || b.tooltip !== b.aria)) {
+        fail('zh 状态书签缺图标或 tooltip / aria-label 不一致');
+    }
+    if (badgeDetails.some(b => b.intersectsTitle)) fail('zh 状态书签仍与游戏标题重叠');
+    if (!badgeDetails.some(b => b.tooltip === '今日挑战') || !badgeDetails.some(b => b.tooltip === '新上线')) {
+        fail('zh 状态书签没有完成双语文案注入');
+    }
 
     // 语言切换交互：zh → en
     if (snap.langBtn) {
@@ -59,6 +89,10 @@ async function loadPage(lang) {
         await new Promise(r => setTimeout(r, 200));
         const titleEn = await page.evaluate(() => document.getElementById('main-title')?.textContent || '');
         if (titleEn !== 'Mini Games Collection') fail(`语言切换未生效: main-title="${titleEn}"`);
+        const switchedBadges = await getBadgeSnapshot(page);
+        if (!switchedBadges.some(b => b.tooltip === 'Daily') || !switchedBadges.some(b => b.tooltip === 'New')) {
+            fail('zh → en 后状态书签 tooltip 未切换回英文');
+        }
     }
     await page.close();
 }
@@ -71,9 +105,17 @@ async function loadPage(lang) {
         hubWordStatus: document.getElementById('hub-task-word-status')?.textContent || '',
         badges: [...document.querySelectorAll('.card-badge--daily, .card-badge--new')].map(el => el.textContent),
     }));
+    const badgeDetails = await getBadgeSnapshot(page);
     if (errs.length) fail(`en 页面错误: ${errs.join(' | ')}`);
     if (snap.title !== 'Mini Games Collection') fail(`en i18n 注入未生效: main-title="${snap.title}"`);
-    if (snap.badges.includes('')) fail('en 卡片徽章有空白（card-badge 注入缺失）');
+    if (snap.badges.some(text => text !== '')) fail('en 状态书签仍包含可见文字');
+    if (badgeDetails.some(b => !b.icon || !b.tooltip || b.tooltip !== b.title || b.tooltip !== b.aria || b.intersectsTitle)) {
+        fail('en 状态书签图标、tooltip、无障碍文案或标题避让异常');
+    }
+    await page.setViewport({ width: 390, height: 844 });
+    await page.reload({ waitUntil: 'networkidle0', timeout: 30000 });
+    const narrowBadges = await getBadgeSnapshot(page);
+    if (narrowBadges.some(b => b.intersectsTitle)) fail('390px 首页状态书签仍与游戏标题重叠');
     await page.close();
 }
 

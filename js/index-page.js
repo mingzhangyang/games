@@ -524,9 +524,13 @@ function applyLanguage(lang) {
     document.getElementById('hub-profile-hint').textContent = t.hubProfileHint;
     document.getElementById('player-name').placeholder = t.hubProfilePlaceholder;
 
-    // 徽章
-    document.querySelectorAll('.card-badge--daily').forEach(el => { el.textContent = t.badgeDaily; });
-    document.querySelectorAll('.card-badge--new').forEach(el => { el.textContent = t.badgeNew; });
+    // 卡片状态书签：图标保持无文字，语义文案同步到 tooltip 与读屏属性。
+    document.querySelectorAll('.card-badge').forEach(el => {
+        const label = el.classList.contains('card-badge--daily') ? t.badgeDaily : t.badgeNew;
+        el.dataset.tooltip = label;
+        el.title = label;
+        el.setAttribute('aria-label', label);
+    });
 }
 
 function setCanonicalAndSocialMeta() {

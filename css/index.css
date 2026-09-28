@@ -351,30 +351,72 @@
 
         .card-badge {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 0.62em;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            padding: 3px 9px;
-            border-radius: 99px;
-            pointer-events: none;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            color: var(--color-text-muted);
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            cursor: help;
+            pointer-events: auto;
+            z-index: 2;
         }
 
-        /* 有徽章的卡片为标题留出右侧空间，避免长标题被徽章遮挡 */
-        .card-badge ~ .card-body .card-header { padding-right: 48px; }
+        .card-badge svg {
+            display: block;
+            width: 24px;
+            height: 28px;
+        }
+
+        /* 为右上角书签留出空间，避免长标题进入图标的视觉区域 */
+        .card-badge ~ .card-body .card-header { padding-right: 38px; }
 
         .card-badge--new {
             color: var(--ix-card-badge--new-text);
-            background: var(--ix-card-badge--new-bg);
-            border: var(--ix-card-badge--new-border);
         }
 
         .card-badge--daily {
             color: var(--tok-success);
-            background: var(--ix-card-badge--daily-bg);
-            border: var(--ix-card-badge--daily-border);
+        }
+
+        /* 图标本身保持无文字；data-tooltip 负责鼠标悬停时的解释文案，
+           title / aria-label 则覆盖原生提示与读屏场景。 */
+        .card-badge::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            padding: 6px 8px;
+            border: 1px solid var(--tok-border-raised);
+            border-radius: 6px;
+            background: var(--tok-sheet);
+            color: var(--tok-text-strong);
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: normal;
+            text-transform: none;
+            white-space: nowrap;
+            box-shadow: 0 5px 14px rgb(0, 0, 0, 0.25);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-3px);
+            transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+            pointer-events: none;
+        }
+
+        .card-badge:hover::after,
+        .card-badge:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
         /* 基础形态不含定位 —— 它现在有两个落点：hero 右上角与页脚。
@@ -699,6 +741,7 @@
         @media (prefers-reduced-motion: reduce) {
             .game-card { transition: none; }
             .game-card:hover { transform: none; }
+            .card-badge::after { transition: none; }
         }
 
         @media (width <= 380px) {
