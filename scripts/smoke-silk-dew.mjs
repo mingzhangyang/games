@@ -28,15 +28,28 @@ const browser = await puppeteer.launch({
 const errs = [];
 const consoleErrors = [];
 
-function attachDiagnostics(target, label, { ignoreConsoleUrl } = {}) {
+function isGardenMidProductionUrl(url) {
+    let pathname = url;
+    try { pathname = new URL(url).pathname; } catch { /* keep original */ }
+    // Match garden-mid.svg and Vite-style garden-mid-<hash>.svg, but never
+    // garden-mid-lit(.|-) so the test fails if an unrelated production layer breaks.
+    return /\/garden-mid(?:-(?!lit(?:\.|-))[A-Za-z0-9_-]+)?\.svg$/.test(pathname);
+}
+
+function attachDiagnostics(target, label, { allowRequestFailure } = {}) {
     target.on('pageerror', e => {
         errs.push(`[${label}] ${String(e.message || e).split('\n')[0]}`);
     });
     target.on('console', msg => {
         if (msg.type() !== 'error') return;
         const url = (msg.location() && msg.location().url) || '';
-        if (ignoreConsoleUrl && ignoreConsoleUrl.test(url)) return;
+        if (allowRequestFailure && allowRequestFailure(url)) return;
         consoleErrors.push(`[${label}] ${msg.text().split('\n')[0]} @ ${url}`);
+    });
+    target.on('requestfailed', request => {
+        if (allowRequestFailure && allowRequestFailure(request.url())) return;
+        const reason = request.failure()?.errorText || 'unknown';
+        errs.push(`[${label}] request failed: ${request.url()} (${reason})`);
     });
 }
 
@@ -410,24 +423,25 @@ await reducedPage.close();
 
 /* ── 11. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
 const fallbackPage = await browser.newPage();
-attachDiagnostics(fallbackPage, 'fallback', { ignoreConsoleUrl: /garden-mid(?:-[^/?]+)?\.svg(?:\?|$)/ });
+attachDiagnostics(fallbackPage, 'fallback', { allowRequestFailure: isGardenMidProductionUrl });
 await fallbackPage.setViewport({ width: 390, height: 844 });
 await fallbackPage.evaluateOnNewDocument(() => {
     try {
-        // The light-theme smoke runs immediately before this page in the same
-        // browser context. Reset explicitly so this test cannot silently bypass
-        // production art through the procedural light-theme renderer.
+        // Earlier smoke pages share this browser context. Reset explicitly so
+        // this test cannot inherit light theme and bypass production art.
         localStorage.clear();
         localStorage.setItem('site_theme', 'dark');
     } catch (e) { /* ignore */ }
 });
+let interceptedGardenMid = 0;
 await fallbackPage.setRequestInterception(true);
 fallbackPage.on('request', request => {
-    const pathname = (() => {
-        try { return new URL(request.url()).pathname; } catch { return request.url(); }
-    })();
-    if (/\/garden-mid(?:-[^/?]+)?\.svg$/.test(pathname)) request.abort();
-    else request.continue();
+    if (isGardenMidProductionUrl(request.url())) {
+        interceptedGardenMid++;
+        request.abort();
+    } else {
+        request.continue();
+    }
 });
 await fallbackPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
 await new Promise(r => setTimeout(r, 700));
@@ -447,16 +461,24 @@ const fallbackState = await fallbackPage.evaluate(() => {
         productionArt: g.usesProductionArt(),
         artState: document.getElementById('sd-stage')?.dataset.artState,
         sceneState: g.scene?.debug?.status,
+        fallbackReady: g.scene?.debug?.fallbackReady,
+        fallbackDrawCount: g.scene?.debug?.fallbackDrawCount || 0,
         opaque,
     };
 });
 if (!fallbackState.hasGame || fallbackState.error) fail(`美术降级路径无法启动: ${JSON.stringify(fallbackState)}`);
 else {
+    if (interceptedGardenMid !== 1) {
+        fail(`fallback 应只拦截 1 个 garden-mid 生产资源，实际 ${interceptedGardenMid}`);
+    }
     if (fallbackState.theme !== 'dark' || !fallbackState.productionArt) {
         fail(`fallback 测试未在生产美术启用状态运行: ${JSON.stringify(fallbackState)}`);
     }
     if (fallbackState.artState !== 'fallback' || fallbackState.sceneState !== 'fallback') {
         fail(`生产图层失败后未进入 fallback: ${JSON.stringify(fallbackState)}`);
+    }
+    if (!fallbackState.fallbackReady || fallbackState.fallbackDrawCount < 1) {
+        fail(`fallback 状态成立但 fallback 画板未实际绘制: ${JSON.stringify(fallbackState)}`);
     }
     if (fallbackState.state !== 'playing' || fallbackState.opaque < 5000) {
         fail(`fallback 未保持可玩/可见: ${JSON.stringify(fallbackState)}`);
