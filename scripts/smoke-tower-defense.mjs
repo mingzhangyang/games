@@ -98,7 +98,24 @@ check(menuAfterScroll.scrollY > 0 || menuLayout.playBottom <= menuLayout.viewpor
 check(menuAfterScroll.visible && menuAfterScroll.hitPlay, '滚动后 Deploy 按钮可命中', JSON.stringify(menuAfterScroll));
 await menuPage.click('#td-btn-play');
 await menuPage.waitForFunction(() => window.tdGame?.state === 'playing', { timeout: 5000 });
-check(true, '横屏开始菜单点击 Deploy 后进入游戏');
+const gameplayLayout = await menuPage.evaluate(() => {
+    const stage = document.querySelector('.td-stage');
+    const style = getComputedStyle(stage);
+    return {
+        display: style.display,
+        height: style.height,
+        overflow: style.overflow,
+        touchAction: style.touchAction,
+    };
+});
+check(
+    gameplayLayout.display === 'block'
+        && gameplayLayout.height !== 'auto'
+        && gameplayLayout.overflow === 'hidden'
+        && gameplayLayout.touchAction === 'none',
+    '横屏点击 Deploy 后恢复沉浸式战场布局',
+    JSON.stringify(gameplayLayout),
+);
 check(menuErrors.length === 0, '横屏开始菜单无 pageerror', menuErrors.join(' | '));
 await menuPage.close();
 

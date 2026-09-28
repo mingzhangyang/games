@@ -149,8 +149,34 @@ if (css.includes('--frame-shell-max')) fail('tower-defense CSS still carries the
 if (!css.includes('--frame-immersive-max: 800px')) fail('tower-defense CSS does not override immersive max width to 800px');
 if (!css.includes('.td-shell.game-shell--immersive #td-canvas') || !css.includes('pointer-events: auto')) fail('immersive canvas must explicitly restore pointer input inside the non-interactive scene wrapper');
 const mobileMenuSelector = '.td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden))';
-if (!css.includes(mobileMenuSelector) || !css.includes(mobileMenuSelector + ' > .td-overlay--menu')) fail('mobile immersive start menu needs a page-scrollable flow override');
-if (!css.includes('height: auto;') || !css.includes('overflow: visible;') || !css.includes('touch-action: auto;')) fail('mobile immersive start menu must release fixed-stage clipping and touch-action:none');
+const cssRuleBody = selector => {
+    const start = css.indexOf(`${selector} {`);
+    if (start < 0) return '';
+    const open = css.indexOf('{', start);
+    let depth = 0;
+    for (let index = open; index < css.length; index++) {
+        if (css[index] === '{') depth++;
+        if (css[index] === '}' && --depth === 0) return css.slice(open + 1, index);
+    }
+    return '';
+};
+const mobileMenuRule = cssRuleBody(mobileMenuSelector);
+const mobileMenuOverlayRule = cssRuleBody(`${mobileMenuSelector} > .td-overlay--menu`);
+const requiredMenuStageDeclarations = [
+    'display: grid;', 'height: auto;', 'min-height: 0;',
+    'overflow: visible;', 'touch-action: auto;',
+    'user-select: auto;', '-webkit-user-select: auto;'
+];
+const missingMenuStageDeclarations = requiredMenuStageDeclarations.filter(declaration => !mobileMenuRule.includes(declaration));
+if (!mobileMenuRule || missingMenuStageDeclarations.length) {
+    fail(`mobile immersive start menu stage rule is incomplete: ${missingMenuStageDeclarations.join(', ') || 'missing selector'}`);
+} else if (!mobileMenuOverlayRule.includes('position: relative;')
+    || !mobileMenuOverlayRule.includes('overflow: visible;')
+    || !mobileMenuOverlayRule.includes('touch-action: auto;')) {
+    fail('mobile immersive start menu overlay rule must stay in normal scrollable flow');
+} else {
+    pass('mobile immersive start menu flow declarations are scoped to their rules');
+}
 if (!game.includes('heroLabel:') || !game.includes("setAttribute('aria-label', t.heroLabel)")) fail('start hero accessible label must be localized during applyLanguage');
 for (const source of [landingScript, landingHtml, socialPreview]) {
     if (source.includes('25 waves') || source.includes('25 波') || source.includes('neon grid') || source.includes('霓虹网格')) fail('landing/preview copy still advertises the retired 25-wave neon-grid contract');
