@@ -351,7 +351,70 @@ if (mobileAfter.scrollHeight > mobileAfter.viewportHeight) {
 }
 await mobile.close();
 
-/* ── 9. 浅色主题：生产夜景不得覆盖 theme-light 的亮色画布 ── */
+/* ── 9. 旧进度迁移：写失败不得提前打 v2 标记，下一次加载必须可重试 ── */
+const migrationFailPage = await browser.newPage();
+attachDiagnostics(migrationFailPage, 'migration-fail');
+await migrationFailPage.setViewport({ width: 480, height: 760 });
+await migrationFailPage.evaluateOnNewDocument(() => {
+    try {
+        localStorage.clear();
+        localStorage.setItem('sd_progress', JSON.stringify({
+            S1: { stars: 3, bestDrags: 1 },
+            S2: { stars: 2, bestDrags: 4 },
+        }));
+        const nativeSetItem = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (key, value) {
+            if (key === 'sd_progress') {
+                throw new DOMException('simulated quota failure', 'QuotaExceededError');
+            }
+            return nativeSetItem.call(this, key, value);
+        };
+    } catch (e) { /* ignore */ }
+});
+await migrationFailPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 500));
+const migrationFailed = await migrationFailPage.evaluate(() => ({
+    version: localStorage.getItem('sd_progress_version'),
+    raw: localStorage.getItem('sd_progress'),
+    progress: window.sdGame?.progress || null,
+}));
+if (migrationFailed.version !== null) {
+    fail(`迁移写失败后不应提前写 sd_progress_version: ${JSON.stringify(migrationFailed)}`);
+}
+if (migrationFailed.progress?.S1?.stars !== 1 || migrationFailed.progress?.S1?.bestDrags !== 0) {
+    fail(`迁移写失败时当前会话仍应使用安全降级后的内存进度: ${JSON.stringify(migrationFailed)}`);
+}
+await migrationFailPage.close();
+
+const migrationRetryPage = await browser.newPage();
+attachDiagnostics(migrationRetryPage, 'migration-retry');
+await migrationRetryPage.setViewport({ width: 480, height: 760 });
+await migrationRetryPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 500));
+const migrationRetried = await migrationRetryPage.evaluate(() => ({
+    version: localStorage.getItem('sd_progress_version'),
+    raw: localStorage.getItem('sd_progress'),
+    progress: window.sdGame?.progress || null,
+}));
+if (migrationRetried.version !== '2') {
+    fail(`下一次正常加载应重试并完成 v2 迁移: ${JSON.stringify(migrationRetried)}`);
+}
+if (migrationRetried.progress?.S1?.stars !== 1 || migrationRetried.progress?.S1?.bestDrags !== 0 ||
+    migrationRetried.progress?.S2?.stars !== 1 || migrationRetried.progress?.S2?.bestDrags !== 0) {
+    fail(`重试迁移后的进度不符合 v2 降级语义: ${JSON.stringify(migrationRetried)}`);
+}
+try {
+    const stored = JSON.parse(migrationRetried.raw || '{}');
+    if (stored.S1?.stars !== 1 || stored.S1?.bestDrags !== 0 ||
+        stored.S2?.stars !== 1 || stored.S2?.bestDrags !== 0) {
+        fail(`重试迁移后 localStorage 未持久化 v2 进度: ${migrationRetried.raw}`);
+    }
+} catch {
+    fail(`重试迁移后的 sd_progress 不是合法 JSON: ${migrationRetried.raw}`);
+}
+await migrationRetryPage.close();
+
+/* ── 10. 浅色主题：生产夜景不得覆盖 theme-light 的亮色画布 ── */
 const lightPage = await browser.newPage();
 attachDiagnostics(lightPage, 'light');
 await lightPage.setViewport({ width: 480, height: 760 });
@@ -395,7 +458,7 @@ else {
 }
 await lightPage.close();
 
-/* ── 10. reduced-motion：风场相位必须冻结且场景漂移停住 ── */
+/* ── 11. reduced-motion：风场相位必须冻结且场景漂移停住 ── */
 const reducedPage = await browser.newPage();
 attachDiagnostics(reducedPage, 'reduced-motion');
 await reducedPage.setViewport({ width: 480, height: 760 });
@@ -423,7 +486,7 @@ if (!reducedState.hasGame || !reducedState.reduced || !reducedState.sceneReduced
 }
 await reducedPage.close();
 
-/* ── 11. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
+/* ── 12. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
 const fallbackPage = await browser.newPage();
 attachDiagnostics(fallbackPage, 'fallback', { allowRequestFailure: isGardenMidProductionUrl });
 await fallbackPage.setViewport({ width: 390, height: 844 });
@@ -488,7 +551,7 @@ else {
 }
 await fallbackPage.close();
 
-/* ── 12. 噪声过滤后的页面错误 ──
+/* ── 13. 噪声过滤后的页面错误 ──
  * 源码树直跑的已知 404（与既有 smoke 口径一致）。 */
 const IGNORABLE = [/analytics\.js/, /sw-register\.js/, /manifest/i, /CORS/i, /game-scores/i,
     /games-analytics/, /apple-touch-icon/, /favicon/i];
