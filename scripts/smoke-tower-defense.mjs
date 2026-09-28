@@ -42,6 +42,66 @@ check(boot.map.buildableCount >= 190, '运行时 active map 保留 ≥190 个可
 check(!boot.legacyDrawer, '不存在旧 stats drawer / tdDrawer');
 check(requestFailures.length === 0, '启动阶段无资源请求失败', requestFailures.join(' | '));
 
+// Mobile landscape must keep the long start menu in normal document flow.
+// The immersive battlefield is fixed-height only after the player starts;
+// before that, the page needs to release clipping and allow a vertical swipe
+// to reach the Deploy button.
+const menuPage = await browser.newPage();
+const menuErrors = [];
+menuPage.on('pageerror', error => menuErrors.push(String(error.stack || error.message || error).split('\\n')[0]));
+await menuPage.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+await menuPage.goto(`${BASE}/tower-defense.html`, { waitUntil: 'networkidle2', timeout: 30000 });
+await menuPage.waitForFunction(() => window.tdGame?.state === 'menu', { timeout: 15000 });
+const menuLayout = await menuPage.evaluate(() => {
+    const stage = document.querySelector('.td-stage');
+    const overlay = document.querySelector('#td-start');
+    const play = document.querySelector('#td-btn-play');
+    const stageStyle = getComputedStyle(stage);
+    const overlayStyle = getComputedStyle(overlay);
+    const rect = play.getBoundingClientRect();
+    return {
+        stageHeight: stage.getBoundingClientRect().height,
+        viewportHeight: globalThis.innerHeight,
+        documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
+        stageOverflow: stageStyle.overflow,
+        stageTouchAction: stageStyle.touchAction,
+        overlayPosition: overlayStyle.position,
+        overlayOverflow: overlayStyle.overflow,
+        playTop: rect.top + globalThis.scrollY,
+        playBottom: rect.bottom + globalThis.scrollY,
+    };
+});
+check(menuLayout.stageOverflow === 'visible', '844×390 横屏开始菜单释放舞台裁剪', menuLayout.stageOverflow);
+check(menuLayout.stageTouchAction === 'auto', '844×390 横屏开始菜单允许页面滚动', menuLayout.stageTouchAction);
+check(menuLayout.overlayPosition === 'relative' && menuLayout.overlayOverflow === 'visible',
+    '横屏开始菜单进入正常文档流', `${menuLayout.overlayPosition}/${menuLayout.overlayOverflow}`);
+check(menuLayout.documentHeight >= menuLayout.playBottom - 1, '开始按钮位于可滚动文档范围内',
+    `${menuLayout.documentHeight} >= ${menuLayout.playBottom}`);
+await menuPage.evaluate(() => {
+    const play = document.querySelector('#td-btn-play');
+    const rect = play.getBoundingClientRect();
+    window.scrollTo(0, Math.max(0, rect.top + globalThis.scrollY - globalThis.innerHeight * 0.6));
+});
+await wait(120);
+const menuAfterScroll = await menuPage.evaluate(() => {
+    const play = document.querySelector('#td-btn-play');
+    const rect = play.getBoundingClientRect();
+    const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return {
+        scrollY: globalThis.scrollY,
+        visible: rect.top >= 0 && rect.bottom <= globalThis.innerHeight,
+        hitPlay: hit === play || !!hit?.closest?.('#td-btn-play'),
+    };
+});
+check(menuAfterScroll.scrollY > 0 || menuLayout.playBottom <= menuLayout.viewportHeight,
+    '横屏开始菜单可以滚动到 Deploy 按钮', `scrollY=${menuAfterScroll.scrollY}`);
+check(menuAfterScroll.visible && menuAfterScroll.hitPlay, '滚动后 Deploy 按钮可命中', JSON.stringify(menuAfterScroll));
+await menuPage.click('#td-btn-play');
+await menuPage.waitForFunction(() => window.tdGame?.state === 'playing', { timeout: 5000 });
+check(true, '横屏开始菜单点击 Deploy 后进入游戏');
+check(menuErrors.length === 0, '横屏开始菜单无 pageerror', menuErrors.join(' | '));
+await menuPage.close();
+
 await page.click('#td-btn-play');
 await page.waitForFunction(() => window.tdGame?.state === 'playing', { timeout: 5000 });
 
