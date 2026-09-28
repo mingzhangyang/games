@@ -1,0 +1,19 @@
+{
+  "id": "math-rain-observatory",
+  "version": 1,
+  "theme": "mathematical observatory",
+  "darkOnly": true,
+  "backgrounds": {
+    "fallback": "backgrounds/fallback.webp",
+    "wide": "backgrounds/observatory-wide.webp",
+    "mobile": "backgrounds/observatory-mobile.webp"
+  },
+  "reference": "reference/concept-observatory.webp",
+  "icons": {
+    "target": "ui/target-reticle.svg",
+    "freeze": "ui/freeze.svg",
+    "bomb": "ui/bomb.svg",
+    "shield": "ui/shield.svg",
+    "coin": "ui/coin.svg"
+  }
+}

@@ -69,6 +69,7 @@ class LanguageManager {
         this.updateButtonWithIcon('help-btn', null, texts.helpButton);
         this.updateElement('difficulty-title', texts.difficulty);
         this.updateButtonWithIcon('start-home-btn', null, texts.home || 'Home');
+        this.updateButtonWithIcon('home-exit-btn', null, texts.home || 'Home');
 
         // Game stats labels
         this.updateElement('score-label', texts.score);
@@ -78,6 +79,8 @@ class LanguageManager {
         this.updateElement('lives-label', texts.lives);
         this.updateElement('target-label', texts.targetNumber);
         this.updateElement('target-hint', texts.clickHint);
+        this.updateElement('target-kicker', texts.observationCore);
+        this.updateElement('target-state-text', texts.live);
 
         // Tool buttons
         this.updateToolButton('freeze-btn', texts.freeze, texts.freezeTitle);
@@ -85,9 +88,9 @@ class LanguageManager {
         this.updateToolButton('shield-btn', texts.shield, texts.shieldTitle);
 
         // Control buttons
-        this.updateButtonWithIcon('pause-btn', '⏸️', texts.pause);
-        this.updateButtonWithIcon('settings-btn', '⚙️', texts.settings);
-        this.updateButtonWithIcon('shop-btn', '🛒', texts.shop);
+        this.updateButtonWithIcon('pause-btn', null, texts.pause);
+        this.updateButtonWithIcon('settings-btn', null, texts.settings);
+        this.updateButtonWithIcon('shop-btn', null, texts.shop);
 
         // Session display
         this.updateElement('session-time-label', texts.sessionTime);
@@ -95,14 +98,14 @@ class LanguageManager {
         
         // Level up indicator
         const levelUpIndicator = document.querySelector('.level-up-indicator span');
-        if (levelUpIndicator) levelUpIndicator.textContent = `🎯 ${texts.canLevelUp}`;
+        if (levelUpIndicator) levelUpIndicator.textContent = texts.canLevelUp;
 
         // Screen titles
-        this.updateElementWithIcon('game-over-title', '🎮', texts.gameOver);
-        this.updateElementWithIcon('session-complete-title', '🎯', texts.sessionComplete);
-        this.updateElementWithIcon('pause-title', '⏸️', texts.gamePaused);
-        this.updateElementWithIcon('settings-title', '⚙️', texts.gameSettings);
-        this.updateElementWithIcon('help-title', '❓', texts.gameHelp);
+        this.updateElementWithIcon('game-over-title', null, texts.gameOver);
+        this.updateElementWithIcon('session-complete-title', null, texts.sessionComplete);
+        this.updateElementWithIcon('pause-title', null, texts.gamePaused);
+        this.updateElementWithIcon('settings-title', null, texts.gameSettings);
+        this.updateElementWithIcon('help-title', null, texts.gameHelp);
         this.updateElement('shop-title', texts.shopTitle);
 
         // Buttons
@@ -181,7 +184,12 @@ class LanguageManager {
     updateElement(id, content) {
         const element = document.getElementById(id);
         if (element && content) {
-            element.textContent = content;
+            const textSpan = element.querySelector('.heading-text');
+            if (textSpan) {
+                textSpan.textContent = content;
+            } else {
+                element.textContent = content;
+            }
         }
     }
 
@@ -191,7 +199,12 @@ class LanguageManager {
     updateElementWithIcon(id, icon, text) {
         const element = document.getElementById(id);
         if (element && text) {
-            element.innerHTML = `${icon} ${text}`;
+            const textSpan = element.querySelector('.heading-text');
+            if (textSpan) {
+                textSpan.textContent = text;
+            } else {
+                element.textContent = text;
+            }
         }
     }
 

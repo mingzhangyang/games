@@ -21,6 +21,8 @@ import ParticleSystem from './particle-effects.js';
 import { getLocalizedText } from './i18n/language-manager.js';
 import { storageGet } from '../safe-storage.js';
 
+const MIN_EXPRESSION_TOUCH_TARGET = 44;
+
 /**
  * Math Rain Game Class
  * Orchestrator that uses modular component architecture
@@ -636,7 +638,9 @@ class MathRainGame {
         const width = this.canvasCssWidth || this.canvas?.clientWidth || window.innerWidth;
         const height = this.canvasCssHeight || this.canvas?.clientHeight || window.innerHeight;
 
-        // Clear and setup canvas (使用逻辑尺寸，与 scale(dpr, dpr) 保持一致)
+        // The observatory art is a DOM background. The canvas only clears its
+        // transparent layer and paints a very low-alpha veil, so the scene is
+        // never redrawn as a large bitmap on every frame.
         this.ctx.clearRect(0, 0, width, height);
         this.ctx.fillStyle = this.getCanvasBackgroundColor();
         this.ctx.fillRect(0, 0, width, height);
@@ -659,10 +663,62 @@ class MathRainGame {
      */
     getExpressionFontSize() {
         const width = this.canvasCssWidth || this.canvas?.clientWidth || window.innerWidth;
-        if (width < 420) return 22;
-        if (width < 600) return 26;
-        if (width < 768) return 30;
-        return 36;
+        if (width < 420) return 21;
+        if (width < 600) return 24;
+        if (width < 768) return 28;
+        return 32;
+    }
+
+    /**
+     * Measure the exact observation label used by both rendering and hit
+     * testing. Keeping one geometry source prevents invisible oversized hit
+     * boxes from drifting away from the label the player sees.
+     */
+    getExpressionCardMetrics(text, fontSize = this.getExpressionFontSize()) {
+        this.ctx.font = `600 ${fontSize}px "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif`;
+        const metrics = this.ctx.measureText(text);
+        const padX = Math.max(10, Math.round(fontSize * 0.48));
+        const padY = Math.max(8, Math.round(fontSize * 0.34));
+        return {
+            width: metrics.width + padX * 2,
+            height: fontSize + padY * 2,
+            radius: Math.min(10, Math.round(fontSize * 0.34))
+        };
+    }
+
+    getExpressionBounds(expression) {
+        const metrics = this.getExpressionCardMetrics(expression?.data?.expression || '');
+        return {
+            ...metrics,
+            left: expression.position.x - metrics.width / 2,
+            right: expression.position.x + metrics.width / 2,
+            top: expression.position.y - metrics.height / 2,
+            bottom: expression.position.y + metrics.height / 2
+        };
+    }
+
+    /**
+     * Keep the visual card geometry exact while giving touch input a usable
+     * minimum target. The expanded bounds are used only by hit testing.
+     */
+    getExpressionHitBounds(expression) {
+        // `legacyBounds` is the original rendered/click geometry. Never
+        // shrink it: the minimum target is an additive touch affordance.
+        const legacyBounds = this.getExpressionBounds(expression);
+        const hitWidth = Math.max(legacyBounds.width, MIN_EXPRESSION_TOUCH_TARGET);
+        const hitHeight = Math.max(legacyBounds.height, MIN_EXPRESSION_TOUCH_TARGET);
+        const extraX = (hitWidth - legacyBounds.width) / 2;
+        const extraY = (hitHeight - legacyBounds.height) / 2;
+
+        return {
+            ...legacyBounds,
+            left: legacyBounds.left - extraX,
+            right: legacyBounds.right + extraX,
+            top: legacyBounds.top - extraY,
+            bottom: legacyBounds.bottom + extraY,
+            hitWidth,
+            hitHeight
+        };
     }
 
     /**
@@ -676,39 +732,62 @@ class MathRainGame {
         this.ctx.font = `600 ${fontSize}px "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
+        this.ctx.shadowBlur = 0;
 
         this.expressions.forEach((expr) => {
             if (expr?.data?.expression && expr?.position) {
                 const { x, y } = expr.position;
                 const text = expr.data.expression;
+                const metrics = this.getExpressionCardMetrics(text, fontSize);
+                const feedbackAge = expr.feedbackAt ? performance.now() - expr.feedbackAt : Infinity;
+                const feedbackProgress = Math.max(0, 1 - feedbackAge / 460);
+                const isCorrect = expr.answered === true;
+                const isIncorrect = expr.answered === false;
+                const fill = isCorrect ? '#b1f0c9' : isIncorrect ? '#ffc0bd' : '#e7f1fb';
+                const border = isCorrect ? '#72d5a4' : isIncorrect ? '#f08a89' : '#7ea9c6';
+                const surface = isCorrect
+                    ? 'rgba(44, 117, 82, 0.42)'
+                    : isIncorrect
+                        ? 'rgba(125, 54, 61, 0.42)'
+                        : 'rgba(7, 25, 45, 0.9)';
 
-                // 颜色语义化：已答对=绿、已答错=红、普通=浅灰白
-                let fill = '#dbe4ff';
-                if (expr.answered === true) fill = '#4ade80';
-                else if (expr.answered === false) fill = '#f87171';
-
-                // 圆角底牌：半透明深色背景 + 细描边
-                const metrics = this.ctx.measureText(text);
-                const padX = 12;
-                const padY = 8;
-                const cardW = metrics.width + padX * 2;
-                const cardH = fontSize + padY * 2;
+                // Observation tag: quiet dark-blue surface, one calibrated
+                // outline, and transient feedback only after an answer.
                 this.ctx.beginPath();
-                this.roundRectPath(x - cardW / 2, y - cardH / 2, cardW, cardH, 12);
-                this.ctx.fillStyle = 'rgba(10, 10, 30, 0.55)';
+                this.roundRectPath(x - metrics.width / 2, y - metrics.height / 2, metrics.width, metrics.height, metrics.radius);
+                this.ctx.fillStyle = surface;
                 this.ctx.fill();
-                this.ctx.lineWidth = 1;
-                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                this.ctx.lineWidth = isCorrect || isIncorrect ? 1.4 : 1;
+                this.ctx.strokeStyle = border;
                 this.ctx.stroke();
 
-                // 文字（浅色 + 微弱 glow）
+                // Small corner ticks reinforce the instrument-label language
+                // without adding permanent glow or visual noise.
+                this.ctx.strokeStyle = isCorrect || isIncorrect ? border : 'rgba(193, 232, 255, 0.56)';
+                this.ctx.lineWidth = 1;
+                const tick = Math.min(5, metrics.height * 0.14);
+                this.ctx.beginPath();
+                this.ctx.moveTo(x - metrics.width / 2, y - metrics.height / 2 + tick);
+                this.ctx.lineTo(x - metrics.width / 2, y - metrics.height / 2);
+                this.ctx.lineTo(x - metrics.width / 2 + tick, y - metrics.height / 2);
+                this.ctx.moveTo(x + metrics.width / 2 - tick, y + metrics.height / 2);
+                this.ctx.lineTo(x + metrics.width / 2, y + metrics.height / 2);
+                this.ctx.lineTo(x + metrics.width / 2, y + metrics.height / 2 - tick);
+                this.ctx.stroke();
+
+                if (feedbackProgress > 0 && (isCorrect || isIncorrect)) {
+                    this.ctx.globalAlpha = feedbackProgress * 0.7;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, Math.max(metrics.width, metrics.height) * (0.48 + (1 - feedbackProgress) * 0.22), 0, Math.PI * 2);
+                    this.ctx.strokeStyle = border;
+                    this.ctx.lineWidth = 1.5;
+                    this.ctx.stroke();
+                    this.ctx.globalAlpha = 1;
+                }
+
+                // Text remains a live system font; never rasterize the math.
                 this.ctx.fillStyle = fill;
-                this.ctx.shadowColor = fill;
-                this.ctx.shadowBlur = 6;
-                this.ctx.shadowOffsetX = 0;
-                this.ctx.shadowOffsetY = 0;
                 this.ctx.fillText(text, x, y);
-                this.ctx.shadowBlur = 0;
             }
         });
     }
@@ -908,20 +987,11 @@ class MathRainGame {
      * Check if click hit an expression
      */
     checkExpressionClick(clickX, clickY) {
-        const fontSize = this.getExpressionFontSize();
         for (let i = this.expressions.length - 1; i >= 0; i--) {
             const expr = this.expressions[i];
             if (!expr?.position || expr.isClicked) continue;
-            
-            const text = expr.data?.expression || '';
-            // 胶囊形包围盒：基于字符长度与当前字号动态计算命中区域（宽 ±半宽+22px，高 ±28px）
-            const halfWidth = Math.max(48, (text.length * fontSize * 0.35) + 22);
-            const halfHeight = Math.max(34, fontSize * 0.85);
-            
-            const dx = Math.abs(clickX - expr.position.x);
-            const dy = Math.abs(clickY - expr.position.y);
-            
-            if (dx <= halfWidth && dy <= halfHeight) {
+            const bounds = this.getExpressionHitBounds(expr);
+            if (clickX >= bounds.left && clickX <= bounds.right && clickY >= bounds.top && clickY <= bounds.bottom) {
                 this.handleExpressionClick(expr);
                 break;
             }
@@ -939,6 +1009,7 @@ class MathRainGame {
         const gameState = this.gameStateManager?.getState();
         const isCorrect = !!(expression.isMatched && expression.isMatched(gameState?.targetNumber));
         expression.answered = isCorrect;
+        expression.feedbackAt = performance.now();
 
         if (isCorrect) {
             this.gameStateManager?.handleCorrectAnswer({
@@ -965,8 +1036,9 @@ class MathRainGame {
     
     // Utility methods
     getCanvasBackgroundColor() {
-        // 半透明深色底：让 #game-area 的径向渐变透出，避免画布被纯色盖死
-        return 'rgba(10, 10, 30, 0.35)';
+        // The background image belongs to #game-area; this is only a subtle
+        // canvas veil under live expressions and particles.
+        return 'rgba(4, 12, 24, 0.035)';
     }
 
     /**

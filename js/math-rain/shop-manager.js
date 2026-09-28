@@ -239,7 +239,7 @@ class ShopManager {
             const purchasedMsg = getLocalizedText('itemPurchased') || '道具已购买！';
             const itemName = this.getItemName(itemType);
             
-            this.showNotification(`${purchasedMsg} ${itemName} (-${price}🪙)`, 'success');
+            this.showNotification(`${purchasedMsg} ${itemName} (-${price})`, 'success');
             
             // Update shop interface
             this.updateShopInterface();
@@ -305,9 +305,9 @@ class ShopManager {
      */
     showNotification(message, type = 'info') {
         const colors = {
-            success: '#4CAF50',
-            error: '#f44336',
-            info: '#2196F3'
+            success: '#2d8c67',
+            error: '#b7555d',
+            info: '#397da4'
         };
         
         const popup = this.createNotificationPopup(message, colors[type] || colors.info);
