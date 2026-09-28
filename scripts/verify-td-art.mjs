@@ -148,6 +148,9 @@ if (!html.includes('id="tdTacticalPanel"') || !html.includes('id="tdStatsPanels"
 if (css.includes('--frame-shell-max')) fail('tower-defense CSS still carries the standard frame-budget shell cap');
 if (!css.includes('--frame-immersive-max: 800px')) fail('tower-defense CSS does not override immersive max width to 800px');
 if (!css.includes('.td-shell.game-shell--immersive #td-canvas') || !css.includes('pointer-events: auto')) fail('immersive canvas must explicitly restore pointer input inside the non-interactive scene wrapper');
+const mobileMenuSelector = '.td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden))';
+if (!css.includes(mobileMenuSelector) || !css.includes(`${mobileMenuSelector} > .td-overlay--menu`)) fail('mobile immersive start menu needs a page-scrollable flow override');
+if (!css.includes('height: auto;') || !css.includes('overflow: visible;') || !css.includes('touch-action: auto;')) fail('mobile immersive start menu must release fixed-stage clipping and touch-action:none');
 if (!game.includes('heroLabel:') || !game.includes("setAttribute('aria-label', t.heroLabel)")) fail('start hero accessible label must be localized during applyLanguage');
 for (const source of [landingScript, landingHtml, socialPreview]) {
     if (source.includes('25 waves') || source.includes('25 波') || source.includes('neon grid') || source.includes('霓虹网格')) fail('landing/preview copy still advertises the retired 25-wave neon-grid contract');

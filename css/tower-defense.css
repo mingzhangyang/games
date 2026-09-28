@@ -1582,7 +1582,28 @@ body {
 
 @media (width < 1024px) {
     .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) {
+        display: grid;
+        justify-items: center;
+        align-items: start;
+        height: auto;
         min-height: 0;
+        overflow: visible;
+        touch-action: auto;
+        user-select: auto;
+        -webkit-user-select: auto;
+    }
+
+    .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) > * {
+        grid-area: 1 / 1;
+    }
+
+    .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) > .td-overlay--menu {
+        position: relative;
+        inset: auto;
+        justify-self: stretch;
+        align-self: stretch;
+        overflow: visible;
+        touch-action: auto;
     }
 
     .td-shell.game-shell--immersive .td-tactical-panel {
