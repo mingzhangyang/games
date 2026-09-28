@@ -142,7 +142,7 @@ export const LEVELS = [
     {
         id: 'S7', par: 4, pullMax: 145, tipKey: 'tipBreeze',
         ropes: [rope(180, 110, 19, 0, 0, 0)],
-        stars: [{ x: 270, y: 350 }, { x: 340, y: 430 }],
+        stars: [{ x: 300, y: 365 }, { x: 340, y: 445 }],
         winds: [{ x: 270, y: 330, w: 160, h: 130, ax: 760, ay: 0 }, { x: 330, y: 440, w: 130, h: 110, ax: -700, ay: 0 }],
         vessel: { x: 340, y: 480, w: 86 },
     },
@@ -196,7 +196,7 @@ export const LEVELS = [
         vessel: { x: 400, y: 480, w: 86 },
     },
     {
-        id: 'S14', par: 5, pullMax: 85, tipKey: 'tipBubble',
+        id: 'S14', par: 5, pullMax: 92, tipKey: 'tipBubble',
         ropes: [rope(240, 150, 17, 0, 0, 0)],
         stars: [{ x: 261, y: 368 }, { x: 295, y: 430 }],
         thorns: [{ x: 130, y: 280, r: 20 }, { x: 310, y: 380, r: 20 }],
