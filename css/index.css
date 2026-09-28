@@ -385,8 +385,8 @@
             color: var(--tok-success);
         }
 
-        /* 图标本身保持无文字；data-tooltip 负责鼠标悬停时的解释文案，
-           title / aria-label 则覆盖原生提示与读屏场景。 */
+        /* 图标本身保持无文字；data-tooltip 负责自定义悬停提示，
+           aria-label 负责读屏场景。 */
         .card-badge::after {
             content: attr(data-tooltip);
             position: absolute;

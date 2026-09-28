@@ -528,7 +528,6 @@ function applyLanguage(lang) {
     document.querySelectorAll('.card-badge').forEach(el => {
         const label = el.classList.contains('card-badge--daily') ? t.badgeDaily : t.badgeNew;
         el.dataset.tooltip = label;
-        el.title = label;
         el.setAttribute('aria-label', label);
     });
 }

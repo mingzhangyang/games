@@ -75,8 +75,8 @@ async function getBadgeSnapshot(page) {
         fail(`zh CSS 疑似未生效: body 背景=${snap.bodyBg}`);
     }
     if (snap.badges < 1) fail('zh 首页没有状态书签');
-    if (badgeDetails.some(b => b.text || !b.icon || !b.tooltip || b.tooltip !== b.title || b.tooltip !== b.aria)) {
-        fail('zh 状态书签缺图标或 tooltip / aria-label 不一致');
+    if (badgeDetails.some(b => b.text || !b.icon || !b.tooltip || b.title || b.tooltip !== b.aria)) {
+        fail('zh 状态书签缺图标、自定义 tooltip / aria-label 不一致或仍存在原生 title');
     }
     if (badgeDetails.some(b => b.intersectsTitle)) fail('zh 状态书签仍与游戏标题重叠');
     if (!badgeDetails.some(b => b.tooltip === '今日挑战') || !badgeDetails.some(b => b.tooltip === '新上线')) {
@@ -109,8 +109,8 @@ async function getBadgeSnapshot(page) {
     if (errs.length) fail(`en 页面错误: ${errs.join(' | ')}`);
     if (snap.title !== 'Mini Games Collection') fail(`en i18n 注入未生效: main-title="${snap.title}"`);
     if (snap.badges.some(text => text !== '')) fail('en 状态书签仍包含可见文字');
-    if (badgeDetails.some(b => !b.icon || !b.tooltip || b.tooltip !== b.title || b.tooltip !== b.aria || b.intersectsTitle)) {
-        fail('en 状态书签图标、tooltip、无障碍文案或标题避让异常');
+    if (badgeDetails.some(b => !b.icon || !b.tooltip || b.title || b.tooltip !== b.aria || b.intersectsTitle)) {
+        fail('en 状态书签图标、自定义 tooltip、无障碍文案、原生 title 或标题避让异常');
     }
     await page.setViewport({ width: 390, height: 844 });
     await page.reload({ waitUntil: 'networkidle0', timeout: 30000 });
