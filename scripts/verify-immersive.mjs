@@ -4,10 +4,10 @@
 // 页面清单：registry.withLayout('immersive')（games.config.json 的 layout 字段），新页自动纳入。
 // 视口：390×844 / 393×852 / 430×932（竖屏手机）· 844×390（横屏手机）· 1280×800 / 1440×900（桌面）
 // 断言（每页 × 每视口）：
-//   ① 舞台顶边 = 顶栏底边，舞台底边 = 视口底边（− 底部安全区，无头环境为 0）：顶栏以下整块视口归场景
+//   ① 默认：舞台顶边 = 顶栏底边、底边 = 视口底边；TD 手机横屏战斗例外：舞台 = 整个视口，顶栏悬浮
 //   ② --frame-chrome 是实测值：= shell 上内距 + 顶栏高（不是 CSS 里 150px 的兜底）
 //   ③ 宽度：窄于 --frame-immersive-max 时贴边铺满；更宽时居中，按页面上限（TD 为 800px，其它为 640px）
-//   ④ 无横向滚动；首屏内没有页脚（页脚随流在首屏之下）但页脚存在且可滚到
+//   ④ 默认：无横向滚动且页脚在首屏之下可滚到；TD 手机横屏战斗例外：页脚 display:none
 //   ⑤ 场景是纯手势区：touch-action:none、user-select:none
 //   ⑥ 画布后备缓冲 = CSS 尺寸 × min(dpr, 2)（高清且有上限），画面非空
 //   ⑦ HUD 在舞台上部 25% 以内（悬浮在天空区域），不是独立面板
@@ -77,6 +77,8 @@ const measure = page => page.evaluate(() => {
         rootMax,
         immersiveMax,
         bodyClass: document.body.className,
+        topbarPosition: getComputedStyle(topbar).position,
+        footerDisplay: footer ? getComputedStyle(footer).display : null,
     };
 });
 
@@ -100,10 +102,20 @@ for (const g of RUN_PAGES) {
         await new Promise(r => setTimeout(r, 400));
         const m = await measure(page);
 
-        check(Math.abs(m.stage.top - m.topbarBottom) <= 1, `① ${tag}：舞台紧贴顶栏`, `stage.top=${m.stage.top} topbar.bottom=${m.topbarBottom}`);
-        check(Math.abs(m.stage.bottom - m.vh) <= 1, `① ${tag}：舞台底边 = 视口底边`, `stage.bottom=${m.stage.bottom} vh=${m.vh}`);
+        const tdLandscapeFullscreen = g.id === 'tower-defense' && w < 1024 && w > h;
+        if (tdLandscapeFullscreen) {
+            check(Math.abs(m.stage.top) <= 1 && Math.abs(m.stage.bottom - m.vh) <= 1,
+                `① ${tag}：TD 横屏战斗舞台覆盖整个视口`, JSON.stringify(m.stage));
+            check(m.topbarPosition === 'fixed', `① ${tag}：TD 横屏顶栏悬浮`, m.topbarPosition);
+        } else {
+            check(Math.abs(m.stage.top - m.topbarBottom) <= 1, `① ${tag}：舞台紧贴顶栏`, `stage.top=${m.stage.top} topbar.bottom=${m.topbarBottom}`);
+            check(Math.abs(m.stage.bottom - m.vh) <= 1, `① ${tag}：舞台底边 = 视口底边`, `stage.bottom=${m.stage.bottom} vh=${m.vh}`);
+        }
         check(Math.abs(m.chromeVar - Math.round(m.padTop + m.topbarH)) <= 1, `② ${tag}：--frame-chrome 为实测值`, `${m.chromeVar} vs ${m.padTop}+${m.topbarH}`);
-        if (m.vw <= m.immersiveMax) {
+        if (tdLandscapeFullscreen) {
+            check(Math.abs(m.stage.width - m.vw) <= 1 && Math.abs(m.stage.left) <= 1,
+                `③ ${tag}：TD 横屏战斗舞台横向铺满视口`, `${m.stage.left}/${m.stage.width}`);
+        } else if (m.vw <= m.immersiveMax) {
             check(Math.abs(m.stage.width - m.vw) <= 1 && Math.abs(m.stage.left) <= 1, `③ ${tag}：窄屏贴边铺满`, `${m.stage.left}/${m.stage.width}`);
         } else {
             const max = g.id === 'tower-defense' ? m.immersiveMax : 640;
@@ -111,8 +123,12 @@ for (const g of RUN_PAGES) {
             check(Math.abs(m.stage.left - (m.vw - m.stage.width) / 2) <= 1, `③ ${tag}：宽屏舞台居中`, m.stage.left);
         }
         check(m.scrollW <= m.vw, `④ ${tag}：无横向滚动`, `${m.scrollW} > ${m.vw}`);
-        check(m.footerTop !== null && m.footerTop >= m.vh - 1, `④ ${tag}：页脚在首屏之下`, m.footerTop);
-        check(m.footerTop !== null && m.scrollH >= m.footerTop + m.footerH - 1, `④ ${tag}：页脚可滚到`);
+        if (tdLandscapeFullscreen) {
+            check(m.footerDisplay === 'none', `④ ${tag}：TD 横屏战斗隐藏页脚`, m.footerDisplay);
+        } else {
+            check(m.footerTop !== null && m.footerTop >= m.vh - 1, `④ ${tag}：页脚在首屏之下`, m.footerTop);
+            check(m.footerTop !== null && m.scrollH >= m.footerTop + m.footerH - 1, `④ ${tag}：页脚可滚到`);
+        }
         check(m.touchAction === 'none', `⑤ ${tag}：舞台 touch-action:none`, m.touchAction);
         check(m.userSelect === 'none', `⑤ ${tag}：舞台 user-select:none`, m.userSelect);
         if (m.canvas) {
@@ -131,8 +147,16 @@ for (const g of RUN_PAGES) {
             await page.setViewport({ width: h, height: w, deviceScaleFactor: dpr, isMobile: true, hasTouch: true });
             await new Promise(r => setTimeout(r, 450));
             const r = await measure(page);
-            check(Math.abs(r.stage.top - r.topbarBottom) <= 1 && Math.abs(r.stage.bottom - r.vh) <= 1,
-                `⑧ ${tag} → 转屏：舞台重新填满顶栏以下`, JSON.stringify(r.stage));
+            const rotatedTdLandscapeFullscreen = g.id === 'tower-defense' && h < 1024 && h > w;
+            if (rotatedTdLandscapeFullscreen) {
+                check(Math.abs(r.stage.top) <= 1 && Math.abs(r.stage.bottom - r.vh) <= 1
+                    && Math.abs(r.stage.width - r.vw) <= 1 && r.topbarPosition === 'fixed'
+                    && r.footerDisplay === 'none',
+                    `⑧ ${tag} → 转屏：TD 横屏切换为全视口战场`, JSON.stringify(r.stage));
+            } else {
+                check(Math.abs(r.stage.top - r.topbarBottom) <= 1 && Math.abs(r.stage.bottom - r.vh) <= 1,
+                    `⑧ ${tag} → 转屏：舞台重新填满顶栏以下`, JSON.stringify(r.stage));
+            }
             if (r.canvas) check(Math.abs(r.canvas.h - r.canvas.ch * Math.min(2, r.dpr)) <= 1, `⑧ ${tag} → 转屏：画布缓冲跟随`);
         }
         check(errs.length === 0, `⑩ ${tag}：无 pageerror`, errs.join(' | '));

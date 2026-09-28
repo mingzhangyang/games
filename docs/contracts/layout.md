@@ -284,11 +284,11 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 
 | 量 | 取值 |
 | --- | --- |
-| 舞台高度 | `calc(100dvh − var(--frame-chrome) − env(safe-area-inset-bottom))`，下限 `--frame-immersive-min-h`（300px，极矮横屏兜底） |
+| 舞台高度 | 默认：`calc(100dvh − var(--frame-chrome) − env(safe-area-inset-bottom))`，下限 `--frame-immersive-min-h`（300px，极矮横屏兜底）。**tower-defense 手机横屏进入战斗后例外：舞台固定为整个 `100vw × 100dvh`，顶栏悬浮覆盖，不再扣除 chrome** |
 | `--frame-chrome` | `bindFrame({ layout: 'immersive' })` **实测** = shell 上内距（= 顶部安全区）+ 顶栏高；**不含页脚**（页脚在首屏之下）。不是魔数 |
 | 宽度 | 默认视口 ≤ `--frame-immersive-max`（640px）时贴边铺满；tower-defense 在 shell 上覆盖为 800px；更宽时按页面上限居中 |
-| 顶栏 | 最大宽度同舞台；左右内距 `max(10px, 安全区)` |
-| 页面级参数 | tower-defense：registry stage = `800×600`、`--frame-immersive-max: 800px`、landscape-first、无 sidebar / drawer / frame-budget；默认 immersive 页仍为 640px |
+| 顶栏 | 默认最大宽度同舞台；左右内距 `max(10px, 安全区)`。tower-defense 手机横屏战斗时改为 fixed 悬浮 HUD，避免占用战场高度 |
+| 页面级参数 | tower-defense：registry stage = `800×600`、`--frame-immersive-max: 800px`、landscape-first、无 sidebar / drawer / frame-budget；手机横屏战斗隐藏随流页脚并把 4:3 canvas 等比放大到完整视口高度；默认 immersive 页仍为 640px |
 | 两侧延展 | 舞台窄于视口时，页面自己负责把夜色 / 场景横向延展（firefly-signal：背景层列平均成 1px 竖条铺在 fixed 背景层上；tower-defense：深石墨蓝场外延展） |
 | 手势 | 舞台 `touch-action:none` + `user-select:none` + 禁长按菜单 / 点击高亮：不滚页、不双击缩放、不选字 |
 | body 标记 | `has-immersive-stage`（**不打** `has-frame-budget`，因此不会命中侧栏限高规则） |
@@ -307,6 +307,7 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 ### 7.4 校验
 
 `node scripts/verify-immersive.mjs`（SUITE 名 `immersive`）：页面清单 = `registry.withLayout('immersive')`；
-视口 390×844 / 393×852 / 430×932 / 844×390 / 1280×800 / 1440×900；断言舞台贴顶栏且到视口底、
-`--frame-chrome` 为实测值、默认页窄屏贴边 / 宽屏 600–640 居中、tower-defense 宽屏可达 800、无横向滚动、页脚在首屏之下且可滚到、
-手势属性、画布后备缓冲 = CSS × min(dpr, 2)、HUD 在舞台上部 25%、转屏后重新贴合、无 pageerror。
+视口 390×844 / 393×852 / 430×932 / 844×390 / 1280×800 / 1440×900；默认 immersive 页断言舞台贴顶栏且到视口底、
+`--frame-chrome` 为实测值、窄屏贴边 / 宽屏 600–640 居中、无横向滚动、页脚在首屏之下且可滚到。
+tower-defense 在 <1024px 手机横屏战斗态采用显式例外：舞台四边贴合整个视口、顶栏 fixed 悬浮、页脚隐藏；
+其余仍校验 4:3 canvas 后备缓冲 = CSS × min(dpr, 2)、手势属性、转屏后几何恢复及无 pageerror。
