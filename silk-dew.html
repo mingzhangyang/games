@@ -60,7 +60,7 @@
 
         <!-- 舞台 -->
         <main class="sd-main game-main">
-        <div class="sd-stage game-stage" id="sd-stage">
+        <div class="sd-stage game-stage" id="sd-stage" data-art-state="loading">
             <canvas class="game-canvas" id="sd-canvas" width="480" height="640"></canvas>
 
             <!-- 提示 -->
@@ -70,11 +70,16 @@
             <div class="sd-overlay game-overlay game-overlay--menu" id="sd-start">
                 <h1 class="sd-title" id="sd-title">Silkfall</h1>
                 <p class="sd-subtitle" id="sd-subtitle">Cut · Swing · Catch</p>
-                <div class="sd-hero">💧</div>
+                <div class="sd-hero" aria-hidden="true">
+                    <svg viewBox="0 0 72 88">
+                        <path d="M36 5C25 23 11 38 11 56c0 15 11 27 25 27s25-12 25-27C61 38 47 23 36 5Z" fill="currentColor"/>
+                        <path d="M26 58c2 8 7 12 15 13" fill="none" stroke="rgba(255,255,255,.72)" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
                 <p class="sd-howto" id="sd-howto"></p>
                 <div class="sd-mode-row">
-                    <button class="sd-mode" id="sd-btn-levels">🧵 Levels</button>
-                    <button class="sd-mode sd-mode-daily" id="sd-btn-daily">📅 Daily</button>
+                    <button class="sd-mode" id="sd-btn-levels">Levels</button>
+                    <button class="sd-mode sd-mode-daily" id="sd-btn-daily">Daily</button>
                 </div>
                 <p class="sd-level-label" id="sd-level-label">Select level</p>
                 <div class="sd-level-grid" id="sd-level-grid"></div>
@@ -87,7 +92,7 @@
             <!-- 过关面板 -->
             <div class="sd-overlay sd-overlay-dim hidden game-overlay" id="sd-clear">
                 <div class="sd-card">
-                    <h2 class="sd-card-title" id="sd-clear-stars">⭐⭐⭐</h2>
+                    <h2 class="sd-card-title" id="sd-clear-stars">★★★</h2>
                     <div class="sd-card-line" id="sd-clear-line">Cuts 0 · Par 0</div>
                     <div class="sd-btn-row">
                         <button class="sd-btn sd-btn-primary game-btn" id="sd-btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/></svg><span>Next</span></button>
@@ -107,7 +112,7 @@
                     <button class="sd-btn sd-btn-ghost game-btn" id="sd-btn-menu2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
                 </div>
                 <div class="sd-lb">
-                    <div class="sd-lb-title" id="sd-lb-title">🏆 Global · Today's Course</div>
+                    <div class="sd-lb-title" id="sd-lb-title">Global · Today's Course</div>
                     <div class="sd-lb-list" id="sd-lb-list"></div>
                     <div class="sd-lb-status" id="sd-lb-status"></div>
                     <div class="sd-username-row">

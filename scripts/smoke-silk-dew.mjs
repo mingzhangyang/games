@@ -25,16 +25,37 @@ const browser = await puppeteer.launch({
     args: LAUNCH_ARGS,
 });
 
-const page = await browser.newPage();
-await page.setViewport({ width: 1280, height: 900 });
 const errs = [];
 const consoleErrors = [];
-page.on('pageerror', e => errs.push(String(e.message || e).split('\n')[0]));
-page.on('console', msg => {
-    if (msg.type() !== 'error') return;
-    const url = (msg.location() && msg.location().url) || '';
-    consoleErrors.push(`${msg.text().split('\n')[0]} @ ${url}`);
-});
+
+function isGardenMidProductionUrl(url) {
+    let pathname = url;
+    try { pathname = new URL(url).pathname; } catch { /* keep original */ }
+    // Match garden-mid.svg and Vite-style garden-mid-<hash>.svg, but never
+    // garden-mid-lit(.|-) so the test fails if an unrelated production layer breaks.
+    return /\/garden-mid(?:-(?!lit(?:\.|-))[A-Za-z0-9_-]+)?\.svg$/.test(pathname);
+}
+
+function attachDiagnostics(target, label, { allowRequestFailure } = {}) {
+    target.on('pageerror', e => {
+        errs.push(`[${label}] ${String(e.message || e).split('\n')[0]}`);
+    });
+    target.on('console', msg => {
+        if (msg.type() !== 'error') return;
+        const url = (msg.location() && msg.location().url) || '';
+        if (allowRequestFailure && allowRequestFailure(url)) return;
+        consoleErrors.push(`[${label}] ${msg.text().split('\n')[0]} @ ${url}`);
+    });
+    target.on('requestfailed', request => {
+        if (allowRequestFailure && allowRequestFailure(request.url())) return;
+        const reason = request.failure()?.errorText || 'unknown';
+        errs.push(`[${label}] request failed: ${request.url()} (${reason})`);
+    });
+}
+
+const page = await browser.newPage();
+attachDiagnostics(page, 'main');
+await page.setViewport({ width: 1280, height: 900 });
 await page.evaluateOnNewDocument(() => {
     try {
         localStorage.clear();
@@ -56,6 +77,10 @@ const boot = await page.evaluate(() => ({
     canvasW: document.getElementById('sd-canvas').width,
     canvasH: document.getElementById('sd-canvas').height,
     hasLevelGrid: document.querySelectorAll('#sd-level-grid button').length,
+    artState: document.getElementById('sd-stage')?.dataset.artState,
+    sceneDebug: window.sdGame?.scene?.debug || null,
+    levelsLabel: document.getElementById('sd-btn-levels')?.textContent || '',
+    dailyLabel: document.getElementById('sd-btn-daily')?.textContent || '',
 }));
 if (!boot.hasGame) fail('window.sdGame 未创建（boot 失败）');
 if (!boot.hasDrawer) fail('createStatsDrawer 未初始化');
@@ -66,6 +91,16 @@ if (!boot.titleZh.includes('垂丝') && !boot.titleZh.includes('Silk')) fail(`do
 if (boot.lbMoreCards < 1) fail('桌面侧栏「更多游戏」未渲染');
 if (!boot.canvasW || boot.canvasW < 200) fail(`canvas 后端缓冲未按 CSS 尺寸重算: ${boot.canvasW}`);
 if (boot.hasLevelGrid < 20) fail(`关卡格未渲染 20 个（实际 ${boot.hasLevelGrid}）`);
+if (boot.artState !== 'ready') fail(`生产美术未 ready（artState=${boot.artState}）`);
+if (!boot.sceneDebug || boot.sceneDebug.lightWidth !== 240 || boot.sceneDebug.lightHeight !== 320) {
+    fail(`局部光半分辨率缓冲异常: ${JSON.stringify(boot.sceneDebug)}`);
+}
+if (!boot.sceneDebug?.cacheReady) {
+    fail(`静态美术缓存未构建: ${JSON.stringify(boot.sceneDebug)}`);
+}
+if (/[🧵📅]/u.test(boot.levelsLabel + boot.dailyLabel)) {
+    fail(`开始菜单仍显示 emoji 占位符: ${boot.levelsLabel} / ${boot.dailyLabel}`);
+}
 
 /* ── 2. canvas 位图非空 ── */
 const pixels = await page.evaluate(() => {
@@ -259,6 +294,7 @@ else if (!drawerOk.open) fail('点击 Stats 后抽屉未打开');
  * page.mouse 会产生 pointerType=mouse，无法覆盖手机上「按住锚结 → 滑动」的路径。
  * 这里用 CDP touch events，让 Chromium 走真实的 touch/pointer 兼容链。 */
 const mobile = await browser.newPage();
+attachDiagnostics(mobile, 'mobile');
 await mobile.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
 await mobile.evaluateOnNewDocument(() => {
     try { localStorage.clear(); } catch (e) { /* ignore */ }
@@ -313,7 +349,144 @@ if (mobileAfter.scrollHeight > mobileAfter.viewportHeight) {
 }
 await mobile.close();
 
-/* ── 9. 噪声过滤后的页面错误 ──
+/* ── 9. 浅色主题：生产夜景不得覆盖 theme-light 的亮色画布 ── */
+const lightPage = await browser.newPage();
+attachDiagnostics(lightPage, 'light');
+await lightPage.setViewport({ width: 480, height: 760 });
+await lightPage.evaluateOnNewDocument(() => {
+    try {
+        localStorage.clear();
+        localStorage.setItem('site_theme', 'light');
+    } catch (e) { /* ignore */ }
+});
+await lightPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 700));
+const lightState = await lightPage.evaluate(() => {
+    const g = window.sdGame;
+    if (!g) return { hasGame: false };
+    g.startLevel(0);
+    try { g.draw(); } catch (e) { return { hasGame: true, error: e.message }; }
+    const c = document.getElementById('sd-canvas');
+    const ctx = c.getContext('2d');
+    const d = ctx.getImageData(0, 0, c.width, Math.max(1, Math.floor(c.height * 0.45))).data;
+    let lum = 0, count = 0;
+    for (let i = 0; i < d.length; i += 16) {
+        if (d[i + 3] === 0) continue;
+        lum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        count++;
+    }
+    return {
+        hasGame: true,
+        theme: document.documentElement.getAttribute('data-theme'),
+        productionArt: g.usesProductionArt(),
+        avgTopLum: count ? lum / count : 0,
+    };
+});
+if (!lightState.hasGame || lightState.error) fail(`浅色主题无法绘制: ${JSON.stringify(lightState)}`);
+else {
+    if (lightState.theme !== 'light' || lightState.productionArt) {
+        fail(`浅色主题仍路由到生产夜景: ${JSON.stringify(lightState)}`);
+    }
+    if (lightState.avgTopLum < 145) {
+        fail(`浅色主题画布亮度过低: ${JSON.stringify(lightState)}`);
+    }
+}
+await lightPage.close();
+
+/* ── 10. reduced-motion：风场相位必须冻结且场景漂移停住 ── */
+const reducedPage = await browser.newPage();
+attachDiagnostics(reducedPage, 'reduced-motion');
+await reducedPage.setViewport({ width: 480, height: 760 });
+await reducedPage.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+await reducedPage.evaluateOnNewDocument(() => {
+    try {
+        localStorage.clear();
+        localStorage.setItem('site_theme', 'dark');
+    } catch (e) { /* ignore */ }
+});
+await reducedPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 600));
+const reducedState = await reducedPage.evaluate(() => {
+    const g = window.sdGame;
+    if (!g) return { hasGame: false };
+    g.startLevel(0);
+    return {
+        hasGame: true,
+        reduced: g.reducedMotion,
+        sceneReduced: g.scene?.debug?.reduced,
+    };
+});
+if (!reducedState.hasGame || !reducedState.reduced || !reducedState.sceneReduced) {
+    fail(`reduced-motion 未贯通到游戏/场景: ${JSON.stringify(reducedState)}`);
+}
+await reducedPage.close();
+
+/* ── 11. 生产图层故障降级：拦截一个正式层，完整 fallback 仍应可绘制、可启动 ── */
+const fallbackPage = await browser.newPage();
+attachDiagnostics(fallbackPage, 'fallback', { allowRequestFailure: isGardenMidProductionUrl });
+await fallbackPage.setViewport({ width: 390, height: 844 });
+await fallbackPage.evaluateOnNewDocument(() => {
+    try {
+        // Earlier smoke pages share this browser context. Reset explicitly so
+        // this test cannot inherit light theme and bypass production art.
+        localStorage.clear();
+        localStorage.setItem('site_theme', 'dark');
+    } catch (e) { /* ignore */ }
+});
+let interceptedGardenMid = 0;
+await fallbackPage.setRequestInterception(true);
+fallbackPage.on('request', request => {
+    if (isGardenMidProductionUrl(request.url())) {
+        interceptedGardenMid++;
+        request.abort();
+    } else {
+        request.continue();
+    }
+});
+await fallbackPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+await new Promise(r => setTimeout(r, 700));
+const fallbackState = await fallbackPage.evaluate(() => {
+    const g = window.sdGame;
+    if (!g) return { hasGame: false };
+    g.startLevel(0);
+    try { g.draw(); } catch (e) { return { hasGame: true, error: e.message }; }
+    const c = document.getElementById('sd-canvas');
+    const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let opaque = 0;
+    for (let i = 3; i < data.length; i += 4) if (data[i] > 0) opaque++;
+    return {
+        hasGame: true,
+        state: g.state,
+        theme: document.documentElement.getAttribute('data-theme'),
+        productionArt: g.usesProductionArt(),
+        artState: document.getElementById('sd-stage')?.dataset.artState,
+        sceneState: g.scene?.debug?.status,
+        fallbackReady: g.scene?.debug?.fallbackReady,
+        fallbackDrawCount: g.scene?.debug?.fallbackDrawCount || 0,
+        opaque,
+    };
+});
+if (!fallbackState.hasGame || fallbackState.error) fail(`美术降级路径无法启动: ${JSON.stringify(fallbackState)}`);
+else {
+    if (interceptedGardenMid !== 1) {
+        fail(`fallback 应只拦截 1 个 garden-mid 生产资源，实际 ${interceptedGardenMid}`);
+    }
+    if (fallbackState.theme !== 'dark' || !fallbackState.productionArt) {
+        fail(`fallback 测试未在生产美术启用状态运行: ${JSON.stringify(fallbackState)}`);
+    }
+    if (fallbackState.artState !== 'fallback' || fallbackState.sceneState !== 'fallback') {
+        fail(`生产图层失败后未进入 fallback: ${JSON.stringify(fallbackState)}`);
+    }
+    if (!fallbackState.fallbackReady || fallbackState.fallbackDrawCount < 1) {
+        fail(`fallback 状态成立但 fallback 画板未实际绘制: ${JSON.stringify(fallbackState)}`);
+    }
+    if (fallbackState.state !== 'playing' || fallbackState.opaque < 5000) {
+        fail(`fallback 未保持可玩/可见: ${JSON.stringify(fallbackState)}`);
+    }
+}
+await fallbackPage.close();
+
+/* ── 12. 噪声过滤后的页面错误 ──
  * 源码树直跑的已知 404（与既有 smoke 口径一致）。 */
 const IGNORABLE = [/analytics\.js/, /sw-register\.js/, /manifest/i, /CORS/i, /game-scores/i,
     /games-analytics/, /apple-touch-icon/, /favicon/i];
@@ -327,4 +500,4 @@ if (fails.length) {
     for (const f of fails) console.error(`  - ${f}`);
     process.exit(1);
 }
-console.log(`smoke-silk-dew：boot / 渲染 / 启动 / 真实拖拽牵引 / 判胜 / 结算 / 星级 / 全 ${levelCount} 关渲染回归(泡${bubblesSeen} 风${windsSeen} 棘${thornsSeen} 多丝${multiRopeSeen}) / 每日 / 抽屉 全部通过 ✅`);
+console.log(`smoke-silk-dew：boot / 渲染 / 启动 / 真实拖拽牵引 / 判胜 / 结算 / 星级 / 全 ${levelCount} 关渲染回归(泡${bubblesSeen} 风${windsSeen} 棘${thornsSeen} 多丝${multiRopeSeen}) / 每日 / 抽屉 / 浅色主题 / reduced-motion / 生产美术 / fallback 全部通过 ✅`);

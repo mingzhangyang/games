@@ -43,6 +43,7 @@ import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
 import { bindPalette } from './theme.js';
+import { createSilkDewScene } from './silk-dew-scene.js';
 
 /* 画布调色板：颜色只在 css/silk-dew.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
    P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。 */
@@ -100,15 +101,15 @@ const LANGUAGES = makeText({
         title: 'Silkfall',
         subtitle: 'Drag · Guide · Gather',
         howto: 'Drag the golden anchor knots to swing the silk. Your dew pearl follows the thread — steer it past the thorns, pop bubbles to ride them upward, and let the breezes carry you into the jade vessel. Fewer drags, more stars!',
-        playLevels: '🧵 Levels',
-        playDaily: '📅 Daily',
+        playLevels: 'Levels',
+        playDaily: 'Daily',
         level: 'Level',
         daily: 'Daily',
         levelSelect: 'Select level',
         drags: 'Drags',
         dragsWord: 'drags',
         par: 'Par',
-        dailyStartToast: '📅 Daily course — 5 stages · fewest drags wins',
+        dailyStartToast: 'Daily course — 5 stages · fewest drags wins',
         retry: 'Retry',
         next: 'Next',
         menu: 'Home',
@@ -150,15 +151,15 @@ const LANGUAGES = makeText({
         title: '垂丝引露',
         subtitle: '牵丝 · 引露 · 拾星',
         howto: '拖动金色的锚结牵引丝线，丝尾的露珠会随之摆动。引它绕过荆棘、点破气泡借浮力上浮、顺气旋横渡夜庭，最终坠入玉壶。拖拽次数越少，星星越多！',
-        playLevels: '🧵 关卡模式',
-        playDaily: '📅 每日挑战',
+        playLevels: '关卡模式',
+        playDaily: '每日挑战',
         level: '关卡',
         daily: '每日',
         levelSelect: '选择关卡',
         drags: '拖拽',
         dragsWord: '次拖拽',
         par: '目标',
-        dailyStartToast: '📅 每日课程——5 个关卡 · 拖拽次数越少越好',
+        dailyStartToast: '每日课程——5 个关卡 · 拖拽次数越少越好',
         retry: '重试',
         next: '下一关',
         menu: '返回主页',
@@ -299,6 +300,9 @@ class SilkfallGame {
         this.toastTimer = 0;
         this.particles = [];
         this.starfield = this.buildStarfield();
+        // Wind fills are static for a zone; cache their CanvasGradient instead of
+        // allocating one per zone on every animation frame.
+        this.windGradientCache = new WeakMap();
         this.pointerId = null;
         this.dragInput = null;
         this.isDragging = false;
@@ -306,6 +310,20 @@ class SilkfallGame {
 
         this.animationId = null;
         this.lastFrame = 0;
+
+        this.stageEl = document.getElementById('sd-stage');
+        this.reducedMotionQuery = typeof window.matchMedia === 'function'
+            ? window.matchMedia('(prefers-reduced-motion: reduce)')
+            : null;
+        this.reducedMotion = !!this.reducedMotionQuery?.matches;
+        if (this.stageEl) this.stageEl.dataset.artState = 'loading';
+        this.scene = createSilkDewScene({
+            reducedMotion: this.reducedMotion,
+            onReady: () => {
+                if (this.stageEl) this.stageEl.dataset.artState = this.scene?.artState?.status || 'fallback';
+                this.draw();
+            },
+        });
 
         this.feedback = [];
         this.initUI();
@@ -942,6 +960,17 @@ class SilkfallGame {
             }
         });
         window.addEventListener('resize', () => this.resize());
+        const onReducedMotion = () => {
+            this.reducedMotion = !!this.reducedMotionQuery?.matches;
+            this.scene?.setReducedMotion(this.reducedMotion);
+        };
+        if (this.reducedMotionQuery) {
+            if (typeof this.reducedMotionQuery.addEventListener === 'function') {
+                this.reducedMotionQuery.addEventListener('change', onReducedMotion);
+            } else if (typeof this.reducedMotionQuery.addListener === 'function') {
+                this.reducedMotionQuery.addListener(onReducedMotion);
+            }
+        }
         // 桌面端 --frame-chrome 写入会改变舞台宽度 → 必须在 CSS 尺寸定下后重算后端缓冲区
         window.addEventListener('game-frame:changed', () => this.resize());
     }
@@ -969,6 +998,11 @@ class SilkfallGame {
             canvas.width = pw;
             canvas.height = Math.round(H * renderScale);
         }
+        if (this.renderScale !== renderScale) {
+            // CanvasGradient coordinates are tied to the canvas transform used
+            // when created; invalidate zone fills when resize/DPR changes it.
+            this.windGradientCache = new WeakMap();
+        }
         this.renderScale = renderScale;
         this.dpr = dpr;
     }
@@ -985,6 +1019,7 @@ class SilkfallGame {
             dt = Math.min(dt, 0.05);
             this.time += dt;
             this.frameDt = dt;
+            this.scene?.tick(dt);
             if (this.state === 'playing' && this.world) {
                 stepWorld(this.world, dt);
                 this.consumeEvents();
@@ -1026,6 +1061,7 @@ class SilkfallGame {
     }
 
     burst(x, y, color, n) {
+        if (this.reducedMotion) return;
         for (let i = 0; i < n; i++) {
             const a = (i / n) * Math.PI * 2 + Math.random() * 0.3;
             const sp = 60 + Math.random() * 150;
@@ -1052,6 +1088,13 @@ class SilkfallGame {
 
     /* ---------------------- 渲染 ---------------------- */
 
+    usesProductionArt() {
+        // The painted production plates are intentionally a moonlit/dark scene.
+        // Light theme keeps the existing palette-driven procedural renderer so
+        // theme-light canvas luminance and live theme switching remain correct.
+        return document.documentElement.getAttribute('data-theme') !== 'light';
+    }
+
     draw() {
         const ctx = this.ctx;
         // `renderScale` already contains the CSS scale and device-pixel ratio
@@ -1071,11 +1114,20 @@ class SilkfallGame {
             this.drawStars(ctx);
             this.drawRopes(ctx);
             this.drawPearl(ctx);
+            if (this.usesProductionArt()) {
+                this.scene?.drawForeground(ctx);
+                this.scene?.drawLocalLight(ctx, this.collectLightSources());
+            }
         }
         this.drawParticles(ctx);
     }
 
     drawBackdrop(ctx) {
+        if (this.usesProductionArt() && this.scene?.drawBackground(ctx)) return;
+        this.drawProceduralBackdrop(ctx);
+    }
+
+    drawProceduralBackdrop(ctx) {
         const g = ctx.createLinearGradient(0, 0, 0, H);
         g.addColorStop(0, P.skyTop);
         g.addColorStop(0.55, P.skyMid);
@@ -1096,7 +1148,7 @@ class SilkfallGame {
 
         // 星点
         for (const st of this.starfield) {
-            const tw = 0.6 + 0.4 * Math.sin(this.time * 1.6 + st.ph);
+            const tw = this.reducedMotion ? 1 : 0.6 + 0.4 * Math.sin(this.time * 1.6 + st.ph);
             ctx.beginPath();
             ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(${P.starDustRgb}, ${(st.a * tw).toFixed(3)})`;
@@ -1116,28 +1168,59 @@ class SilkfallGame {
     }
 
     drawWinds(ctx) {
+        const visualTime = this.reducedMotion ? 0 : this.time;
         for (const w of this.world.winds) {
             ctx.save();
-            ctx.strokeStyle = P.wind;
-            ctx.lineWidth = 1.4;
-            ctx.setLineDash([7, 7]);
-            ctx.lineDashOffset = -(this.time * 34) % 14;
-            ctx.strokeRect(w.x, w.y, w.w, w.h);
-            ctx.setLineDash([]);
-            // 流向箭头
-            const ax = Math.sign(w.ax || 0);
-            const ay = Math.sign(w.ay || 0);
-            if (ax || ay) {
-                const cx = w.x + w.w / 2, cy = w.y + w.h / 2;
-                ctx.translate(cx, cy);
-                ctx.rotate(Math.atan2(ay, ax));
-                ctx.strokeStyle = P.windArrow;
-                ctx.lineWidth = 2;
+            const ax = w.ax || 0;
+            const ay = w.ay || 0;
+            const angle = Math.atan2(ay, ax || 0.0001);
+            const speed = Math.hypot(ax, ay);
+            let fog = this.windGradientCache.get(w);
+            if (!fog) {
+                fog = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
+                fog.addColorStop(0, 'rgba(112,210,219,0.015)');
+                fog.addColorStop(0.5, 'rgba(112,210,219,0.09)');
+                fog.addColorStop(1, 'rgba(112,210,219,0.015)');
+                this.windGradientCache.set(w, fog);
+            }
+            ctx.fillStyle = fog;
+            ctx.fillRect(w.x, w.y, w.w, w.h);
+
+            ctx.beginPath();
+            ctx.roundRect(w.x + 1, w.y + 1, Math.max(0, w.w - 2), Math.max(0, w.h - 2), 12);
+            ctx.strokeStyle = 'rgba(159,232,255,0.10)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.translate(w.x + w.w / 2, w.y + w.h / 2);
+            ctx.rotate(angle);
+            const span = Math.max(w.w, w.h);
+            const cross = Math.min(w.w, w.h);
+            ctx.lineCap = 'round';
+            for (let i = -2; i <= 2; i++) {
+                const offset = i * Math.min(13, cross / 6);
+                const phase = visualTime * (22 + speed * 0.015) + i * 13;
+                const start = -span * 0.38 + (phase % 28) - 14;
                 ctx.beginPath();
-                ctx.moveTo(-11, 0); ctx.lineTo(11, 0);
-                ctx.moveTo(5, -5); ctx.lineTo(11, 0); ctx.lineTo(5, 5);
+                ctx.moveTo(start, offset);
+                ctx.bezierCurveTo(
+                    start + span * 0.20, offset - 5,
+                    start + span * 0.40, offset + 5,
+                    start + span * 0.62, offset
+                );
+                ctx.strokeStyle = i === 0 ? P.windArrow : P.wind;
+                ctx.lineWidth = i === 0 ? 1.8 : 1.15;
                 ctx.stroke();
             }
+            ctx.beginPath();
+            ctx.moveTo(-8, 0);
+            ctx.lineTo(10, 0);
+            ctx.moveTo(5, -4);
+            ctx.lineTo(10, 0);
+            ctx.lineTo(5, 4);
+            ctx.strokeStyle = P.windArrow;
+            ctx.lineWidth = 1.7;
+            ctx.stroke();
             ctx.restore();
         }
     }
@@ -1145,6 +1228,22 @@ class SilkfallGame {
     drawVessel(ctx) {
         const v = this.world.vessel;
         if (!v) return;
+        if (this.usesProductionArt() && this.scene?.drawVessel(ctx, v)) {
+            const half = v.w / 2;
+            const top = v.y;
+            const mouthGlow = ctx.createRadialGradient(v.x, top + 3, 1, v.x, top + 3, half * 1.18);
+            mouthGlow.addColorStop(0, 'rgba(181,245,215,0.24)');
+            mouthGlow.addColorStop(1, 'rgba(88,201,160,0)');
+            ctx.fillStyle = mouthGlow;
+            ctx.fillRect(v.x - half * 1.25, top - 10, half * 2.5, 28);
+            ctx.beginPath();
+            ctx.moveTo(v.x - half - 3, top);
+            ctx.lineTo(v.x + half + 3, top);
+            ctx.strokeStyle = P.vesselMouth;
+            ctx.lineWidth = 1.6;
+            ctx.stroke();
+            return;
+        }
         const half = v.w / 2;
         const top = v.y;
         const bot = v.y + PHYS.vesselH;
@@ -1180,7 +1279,7 @@ class SilkfallGame {
     drawBubbles(ctx) {
         for (const b of this.world.bubbles) {
             if (!b.alive) continue;
-            const pulse = 1 + 0.03 * Math.sin(this.time * 2.4 + b.i);
+            const pulse = this.reducedMotion ? 1 : 1 + 0.03 * Math.sin(this.time * 2.4 + b.i);
             const r = b.r * pulse;
             const g = ctx.createRadialGradient(b.x - r * 0.3, b.y - r * 0.3, r * 0.1, b.x, b.y, r);
             g.addColorStop(0, P.bubbleIn);
@@ -1202,33 +1301,46 @@ class SilkfallGame {
     }
 
     drawThorns(ctx) {
-        for (const t of this.world.thorns) {
+        for (let thornIndex = 0; thornIndex < this.world.thorns.length; thornIndex++) {
+            const t = this.world.thorns[thornIndex];
             ctx.save();
             ctx.translate(t.x, t.y);
-            const g = ctx.createRadialGradient(0, 0, t.r * 0.2, 0, 0, t.r * 1.35);
-            g.addColorStop(0, 'rgba(255,107,122,0.34)');
-            g.addColorStop(1, 'rgba(255,107,122,0)');
+            const pulse = this.reducedMotion ? 1 : 1 + Math.sin(this.time * 1.7 + thornIndex) * 0.025;
+            ctx.scale(pulse, pulse);
+
+            const aura = ctx.createRadialGradient(0, 0, t.r * 0.15, 0, 0, t.r * 1.45);
+            aura.addColorStop(0, 'rgba(112,31,52,0.34)');
+            aura.addColorStop(0.58, 'rgba(94,24,45,0.18)');
+            aura.addColorStop(1, 'rgba(94,24,45,0)');
+            ctx.fillStyle = aura;
             ctx.beginPath();
-            ctx.arc(0, 0, t.r * 1.35, 0, Math.PI * 2);
-            ctx.fillStyle = g;
+            ctx.arc(0, 0, t.r * 1.45, 0, Math.PI * 2);
             ctx.fill();
-            // 棘刺（8 向）
+
             ctx.strokeStyle = P.thorn;
-            ctx.lineWidth = 2.2;
+            ctx.lineWidth = 2.1;
             ctx.lineCap = 'round';
-            for (let i = 0; i < 8; i++) {
-                const a = (i / 8) * Math.PI * 2 + 0.2;
+            for (let i = 0; i < 9; i++) {
+                const a = (i / 9) * Math.PI * 2 + 0.16;
+                const inner = t.r * (0.30 + (i % 3) * 0.05);
+                const outer = t.r * (0.90 + (i % 2) * 0.20);
+                const bend = 0.16 * (i % 2 ? 1 : -1);
                 ctx.beginPath();
-                ctx.moveTo(Math.cos(a) * t.r * 0.55, Math.sin(a) * t.r * 0.55);
-                ctx.lineTo(Math.cos(a) * t.r * 1.12, Math.sin(a) * t.r * 1.12);
+                ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
+                ctx.quadraticCurveTo(
+                    Math.cos(a + bend) * t.r * 0.64,
+                    Math.sin(a + bend) * t.r * 0.64,
+                    Math.cos(a) * outer,
+                    Math.sin(a) * outer
+                );
                 ctx.stroke();
             }
             ctx.beginPath();
-            ctx.arc(0, 0, t.r * 0.55, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(58,18,32,0.9)';
+            ctx.arc(0, 0, t.r * 0.47, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(38,22,35,0.95)';
             ctx.fill();
             ctx.strokeStyle = P.thornRing;
-            ctx.lineWidth = 1.6;
+            ctx.lineWidth = 1.2;
             ctx.stroke();
             ctx.restore();
         }
@@ -1237,8 +1349,8 @@ class SilkfallGame {
     drawStars(ctx) {
         for (const s of this.world.stars) {
             if (s.taken) continue;
-            const bob = Math.sin(this.time * 2.2 + s.i) * 2.4;
-            const r = 9 + Math.sin(this.time * 3.1 + s.i) * 0.7;
+            const bob = this.reducedMotion ? 0 : Math.sin(this.time * 2.2 + s.i) * 2.4;
+            const r = this.reducedMotion ? 9 : 9 + Math.sin(this.time * 3.1 + s.i) * 0.7;
             const cy = s.y + bob;
             const g = ctx.createRadialGradient(s.x, cy, 1, s.x, cy, r * 2.6);
             g.addColorStop(0, 'rgba(255,211,77,0.42)');
@@ -1268,7 +1380,12 @@ class SilkfallGame {
             if (!rope.alive) continue;
             const ps = rope.particles;
             if (ps.length < 2) continue;
-            // 丝线：外层微光 + 内层实体
+            // 丝线：拉伸越明显，丝芯越亮、越细，张力变化更容易读懂。
+            let stretchSum = 0;
+            for (let i = 1; i < ps.length; i++) {
+                stretchSum += Math.hypot(ps[i].x - ps[i - 1].x, ps[i].y - ps[i - 1].y) / rope.segLen;
+            }
+            const tension = Math.max(0, Math.min(1, stretchSum / Math.max(1, ps.length - 1) - 0.92));
             ctx.beginPath();
             ctx.moveTo(ps[0].x, ps[0].y);
             for (let i = 1; i < ps.length; i++) {
@@ -1278,16 +1395,18 @@ class SilkfallGame {
             }
             ctx.lineTo(ps[ps.length - 1].x, ps[ps.length - 1].y);
             ctx.strokeStyle = P.ropeGlow;
-            ctx.lineWidth = 6;
+            ctx.globalAlpha = 0.65 + tension * 0.35;
+            ctx.lineWidth = 5.5 - tension * 1.5;
             ctx.lineCap = 'round';
             ctx.stroke();
             ctx.strokeStyle = P.rope;
-            ctx.lineWidth = 2.2;
+            ctx.lineWidth = 2.35 - tension * 0.55;
             ctx.stroke();
+            ctx.globalAlpha = 1;
 
             // 锚结（可拖拽）：金色小环 + 脉动提示
             const a = ps[0];
-            const pulse = 1 + 0.10 * Math.sin(this.time * 3.4 + rope.i);
+            const pulse = this.reducedMotion ? 1 : 1 + 0.10 * Math.sin(this.time * 3.4 + rope.i);
             const isHeld = this.world.dragging && this.world.dragging.kind === 'anchor' && this.world.dragging.rope === rope.i;
             const g = ctx.createRadialGradient(a.x, a.y, 1, a.x, a.y, PHYS.anchorR * 2.0 * pulse);
             g.addColorStop(0, isHeld ? 'rgba(255,232,150,0.52)' : 'rgba(255,211,120,0.34)');
@@ -1349,6 +1468,22 @@ class SilkfallGame {
         ctx.arc(p.x - PHYS.pearlR * 0.33, p.y - PHYS.pearlR * 0.38, PHYS.pearlR * 0.24, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255,255,255,0.88)';
         ctx.fill();
+    }
+
+    collectLightSources() {
+        if (!this.world) return [];
+        const sources = [];
+        const p = this.world.pearl;
+        if (p) sources.push({ x: p.x, y: p.y, radius: 112, alpha: 0.92 });
+        const v = this.world.vessel;
+        if (v) sources.push({ x: v.x, y: v.y + 10, radius: Math.max(86, v.w * 1.25), alpha: 0.52 });
+        for (const s of this.world.stars || []) {
+            if (!s.taken) sources.push({ x: s.x, y: s.y, radius: 48, alpha: 0.22 });
+        }
+        for (const b of this.world.bubbles || []) {
+            if (b.alive) sources.push({ x: b.x, y: b.y, radius: b.r * 2.2, alpha: 0.13 });
+        }
+        return sources;
     }
 
     drawParticles(ctx) {
