@@ -14,6 +14,7 @@ const art = readFileSync(join(ROOT, 'js', 'silk-dew-art.js'), 'utf8');
 const scene = readFileSync(join(ROOT, 'js', 'silk-dew-scene.js'), 'utf8');
 const levels = readFileSync(join(ROOT, 'js', 'silk-dew-levels.js'), 'utf8');
 const verifyAll = readFileSync(join(ROOT, 'scripts', 'verify-all.mjs'), 'utf8');
+const smoke = readFileSync(join(ROOT, 'scripts', 'smoke-silk-dew.mjs'), 'utf8');
 const { SILK_DEW_MANIFEST: runtimeManifest } = await import('../js/silk-dew-art.js');
 
 const errors = [];
@@ -167,6 +168,18 @@ if (/[🧵📅]/u.test(game)) fail('localized Silkfall mode labels still contain
 if (!css.includes('.sd-stage[data-art-state="loading"]::after')) fail('loading art state has no UI treatment');
 if (!css.includes('@media (prefers-reduced-motion: reduce)')) fail('reduced-motion CSS contract is missing');
 if (!verifyAll.includes("name: 'silk-dew-art'")) fail('verify-all is missing silk-dew-art');
+for (const needle of [
+    "attachDiagnostics(page, 'main')",
+    "attachDiagnostics(mobile, 'mobile')",
+    "attachDiagnostics(lightPage, 'light')",
+    "attachDiagnostics(reducedPage, 'reduced-motion')",
+    "attachDiagnostics(fallbackPage, 'fallback'",
+    "localStorage.setItem('site_theme', 'dark')",
+    'productionArt: g.usesProductionArt()',
+    'fallback 测试未在生产美术启用状态运行',
+]) {
+    if (!smoke.includes(needle)) fail(`smoke diagnostics/fallback contract is missing ${needle}`);
+}
 if (!levels.includes('export const LEVELS') || !levels.includes('export function stepWorld')) fail('physics source contract unexpectedly changed shape');
 
 if (errors.length) {
