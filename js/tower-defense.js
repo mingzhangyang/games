@@ -1,11 +1,11 @@
 /**
  * Neon Tower Defense 霓虹塔防
- * Canvas 塔防：脉冲 / 冰霜 / 加农 / 电磁四类塔，25 波敌人，
+ * Canvas 塔防：脉冲 / 冰霜 / 加农 / 电磁四类塔，六个 15–40 波作战行动，
  * 目标集火策略、战术指挥技能、提前发波奖励、4阶觉醒形态、×1/×2/×3倍速、全球排行榜。
  *
- * 逻辑坐标固定 480×640（12×16 格，格宽 40），渲染时按容器宽度
- * 等比缩放并乘 devicePixelRatio；背景静态层离屏预渲染；
- * 敌人/塔的光晕用预渲染精灵，避免逐帧 shadowBlur。
+ * 逻辑坐标固定 800×600（20×15 格，格宽 40），每个行动拥有自己的路径地图。
+ * 渲染时按 4:3 舞台等比缩放并乘 devicePixelRatio；背景静态层离屏预渲染；
+ * 生产 SVG atlas 加载失败时回退到程序绘制。
  *
  * Vanilla JS. No runtime dependencies.
  */
@@ -14,7 +14,6 @@ import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
@@ -24,6 +23,7 @@ import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
 import { LEVELS } from './tower-levels.js';
+import { createTowerDefenseArt, TD_ART_FRAMES } from './tower-defense-art.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -40,13 +40,18 @@ function formatNumber(n) {
 const LANGUAGES = makeText({
     en: {
         stats: 'Stats',
+        tacticalOverview: 'Tactical overview',
+        closeTactical: 'Close tactical overview',
+        rotateTitle: 'Rotate device',
+        rotateCopy: 'Landscape view gives the defense line room to breathe.',
+        heroLabel: 'Future-city energy defense platform',
         title: 'Neon Tower Defense',
         subtitle: 'Build · Upgrade · Survive',
         howto: 'Tap a cell to build towers, tap a tower to upgrade, sell or set targeting priority. Watch out for healers, armored units, flyers and tower-breakers — pick the right counter. Use commander skills (EMP & Overdrive) to hold every line.',
         play: 'Play',
         pulse: 'Pulse', frost: 'Frost', cannon: 'Cannon', tesla: 'Tesla',
         pulseDesc: 'rapid single laser', frostDesc: 'slows & freezes creeps', cannonDesc: 'splash damage & napalm', teslaDesc: 'chain lightning & shock',
-        towerIntro: '🔹 Pulse · ❄️ Frost · 💥 Cannon · ⚡ Tesla',
+        towerIntro: 'PULSE · FROST · CANNON · TESLA',
         towerLegend: 'Towers & Awakenings',
         sideHowTo: 'How to Play',
         sideSkillsTitle: 'Tactical Skills',
@@ -67,10 +72,10 @@ const LANGUAGES = makeText({
         best: 'Best',
         newBest: 'NEW BEST!',
         waveCleared: 'Wave {n} cleared! +{g} gold',
-        bossIncoming: '⚠️ BOSS INCOMING',
-        overlordIncoming: '💀 OVERLORD INCOMING',
-        bossDefeated: '👑 BOSS ELIMINATED!',
-        towerLost: '⚠️ A tower was destroyed!',
+        bossIncoming: 'ALERT · BOSS INCOMING',
+        overlordIncoming: 'ALERT · OVERLORD INCOMING',
+        bossDefeated: 'BOSS ELIMINATED',
+        towerLost: 'A tower was destroyed',
         splitToast: 'SPLIT!',
         notEnoughGold: 'Not enough gold',
         cantBuild: 'Can\'t build here',
@@ -82,15 +87,15 @@ const LANGUAGES = makeText({
         prioFirst: 'First', prioLast: 'Last', prioStrong: 'Strong', prioWeak: 'Weak', prioClose: 'Close', prioHealer: 'Healer',
         emp: 'EMP Shockwave',
         empDesc: 'Stuns all creeps 2.4s + electric damage [Q]',
-        empCast: '⚡ EMP Shockwave Triggered!',
+        empCast: 'EMP SHOCKWAVE TRIGGERED',
         overdrive: 'Overdrive',
         overdriveDesc: '+50% fire rate & +20% range for 6s [E]',
-        overdriveCast: '🔥 Overdrive Activated!',
-        earlyCall: '⚡ Rush Wave {n}',
+        overdriveCast: 'OVERDRIVE ACTIVATED',
+        earlyCall: 'RUSH WAVE {n}',
         earlyCallBonus: 'Early Call',
-        earlyCallToast: '⚡ Early Wave Bonus: +{g} Gold!',
-        stackToast: '⚡ Wave rushed! Stack ×{n} — enemies +{hp}% HP, +{g}% gold',
-        stackMax: '⚠️ Stack limit reached — clear the wave first!',
+        earlyCallToast: 'EARLY WAVE BONUS: +{g} GOLD',
+        stackToast: 'WAVE RUSHED · STACK ×{n} — ENEMIES +{hp}% HP, +{g}% GOLD',
+        stackMax: 'STACK LIMIT REACHED — CLEAR THE WAVE FIRST',
         stackLabel: 'Rush',
         ultimate: 'AWAKENING',
         damageDealt: 'DMG',
@@ -128,7 +133,7 @@ const LANGUAGES = makeText({
         levelStart: '▶ Deploy',
         back: 'Back',
         finalWave: 'FINAL SHOWDOWN',
-        bossWave: '⚠️ BOSS INCOMING ⚠️',
+        bossWave: 'BOSS INCOMING',
         levels: {
             outpost: { name: 'Neon Outpost', tag: 'Recruit', desc: 'A calm perimeter run. Learn the grid and the four towers.' },
             vanguard: { name: 'Vanguard Line', tag: 'Standard', desc: 'Field medics appear. Kill them first or nothing dies.' },
@@ -142,13 +147,18 @@ const LANGUAGES = makeText({
     },
     zh: {
         stats: '数据统计',
+        tacticalOverview: '战术总览',
+        closeTactical: '关闭战术总览',
+        rotateTitle: '请横屏作战',
+        rotateCopy: '横屏可以完整展开能源防线与部署空间。',
+        heroLabel: '未来城市能源防线平台',
         title: '霓虹塔防',
         subtitle: '建造 · 升级 · 守护',
         howto: '点击空格子建塔，点击塔升级、出售或切换集火策略。当心治疗兵、装甲兵、飞行兵和攻城兵——用对克制手段。合理运用指挥官技能（EMP震荡与超频加速），守住每一道防线。',
         play: '开始游戏',
         pulse: '脉冲塔', frost: '冰霜塔', cannon: '加农炮', tesla: '电磁塔',
         pulseDesc: '高速单体激光', frostDesc: '减速与冰冻急冻', cannonDesc: '范围溅射与火海', teslaDesc: '闪电连锁与感电',
-        towerIntro: '🔹 脉冲 · ❄️ 冰霜 · 💥 加农 · ⚡ 电磁',
+        towerIntro: '脉冲 · 冰霜 · 加农 · 电磁',
         towerLegend: '防御塔与觉醒',
         sideHowTo: '玩法说明',
         sideSkillsTitle: '指挥官技能',
@@ -169,10 +179,10 @@ const LANGUAGES = makeText({
         best: '最佳',
         newBest: '新纪录！',
         waveCleared: '第 {n} 波守住！+{g} 金币',
-        bossIncoming: '⚠️ BOSS 来袭',
-        overlordIncoming: '💀 霸主降临',
-        bossDefeated: '👑 BOSS 已歼灭！',
-        towerLost: '⚠️ 一座防御塔被摧毁！',
+        bossIncoming: '警报 · BOSS 来袭',
+        overlordIncoming: '警报 · 霸主降临',
+        bossDefeated: 'BOSS 已歼灭',
+        towerLost: '一座防御塔被摧毁',
         splitToast: '分裂！',
         notEnoughGold: '金币不足',
         cantBuild: '这里不能建造',
@@ -184,15 +194,15 @@ const LANGUAGES = makeText({
         prioFirst: '首位', prioLast: '末位', prioStrong: '强敌', prioWeak: '残血', prioClose: '最近', prioHealer: '治疗兵',
         emp: 'EMP 震荡',
         empDesc: '全屏瘫痪 2.4 秒并造成高额电击伤害 [Q]',
-        empCast: '⚡ EMP 电磁脉冲已释放！',
+        empCast: 'EMP 电磁脉冲已释放',
         overdrive: '战术超频',
         overdriveDesc: '全塔攻速提升 50%，射程提升 20%，持续 6 秒 [E]',
-        overdriveCast: '🔥 全塔超频启动！',
-        earlyCall: '⚡ 抢发第 {n} 波',
+        overdriveCast: '全塔超频启动',
+        earlyCall: '抢发第 {n} 波',
         earlyCallBonus: '提前迎击',
-        earlyCallToast: '⚡ 提前迎击奖励：+{g} 金币！',
-        stackToast: '⚡ 已抢发！堆叠 ×{n} —— 敌人血量 +{hp}%、金币 +{g}%',
-        stackMax: '⚠️ 已达堆叠上限，先清完这波！',
+        earlyCallToast: '提前迎击奖励：+{g} 金币',
+        stackToast: '已抢发 · 堆叠 ×{n} —— 敌人血量 +{hp}%、金币 +{g}%',
+        stackMax: '已达堆叠上限，先清完这波',
         stackLabel: '堆叠',
         ultimate: '觉醒形态',
         damageDealt: '总伤',
@@ -230,7 +240,7 @@ const LANGUAGES = makeText({
         levelStart: '▶ 出击',
         back: '返回',
         finalWave: '终极决战',
-        bossWave: '⚠️ BOSS 降临 ⚠️',
+        bossWave: 'BOSS 降临',
         levels: {
             outpost: { name: '霓虹哨站', tag: '新兵', desc: '一段平静的外围巡逻，用来熟悉棋盘与四种塔。' },
             vanguard: { name: '先锋防线', tag: '标准', desc: '战地医师登场——不先切掉它，其他敌人根本打不死。' },
@@ -316,8 +326,8 @@ const Sfx = {
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
-const W = 480, H = 640;
-const COLS = 12, ROWS = 16, CELL = 40;
+const W = 800, H = 600;
+const COLS = 20, ROWS = 15, CELL = 40;
 const SELL_RATIO = 0.7;
 const MAX_PARTICLES = 160;
 const MAX_FLOATERS = 40;
@@ -332,15 +342,8 @@ const STACK_MAX = 6;
 const LEVEL_BY_ID = {};
 LEVELS.forEach(lv => { LEVEL_BY_ID[lv.id] = lv; });
 
-// 敌人路径（格子坐标，起点在画布上方之外）
-const WAYPOINTS = [
-    [5, -1], [5, 3], [9, 3], [9, 6], [2, 6], [2, 10], [8, 10], [8, 13], [3, 13], [3, 15]
-];
-
-// 飞行单位的空中捷径：几乎直线插到底，不再绕行
-const AIR_WAYPOINTS = [
-    [5, -1], [6, 2], [4, 5], [7, 8], [5, 11], [3, 15]
-];
+// 关卡路径由 LEVELS.map 编译为 activeMap；运行时只消费这一份真源。
+let activeMap;
 
 /*
  * 敌人类型。
@@ -354,65 +357,65 @@ const AIR_WAYPOINTS = [
 const ENEMY_TYPES = {
     normal: {
         hp: 34, speed: 55, gold: 6, dmg: 1, r: 9, sides: 8,
-        color: '#ff6b7a', icon: '👾'
+        color: '#ff6b7a', icon: 'N'
     },
     fast: {
         hp: 20, speed: 98, gold: 5, dmg: 1, r: 7, sides: 3,
-        color: '#ffd34d', icon: '⚡'
+        color: '#ffd34d', icon: 'F'
     },
     tank: {
         hp: 135, speed: 33, gold: 14, dmg: 2, r: 12, sides: 6,
-        color: '#a78bfa', icon: '🛡️'
+        color: '#a78bfa', icon: 'T'
     },
     swarm: {
         hp: 16, speed: 108, gold: 3, dmg: 1, r: 6.5, sides: 4,
-        color: '#34d399', icon: '🐝'
+        color: '#34d399', icon: 'S'
     },
     shield: {
         hp: 75, speed: 48, gold: 10, dmg: 1, r: 10, sides: 7,
-        color: '#38bdf8', icon: '💠', maxShield: 50
+        color: '#38bdf8', icon: 'SH', maxShield: 50
     },
     // 治疗兵：自身脆，但持续给周围友军回血，不管它就永远打不完
     healer: {
         hp: 90, speed: 44, gold: 16, dmg: 1, r: 11, sides: 6,
-        color: '#86efac', icon: '💚', healer: { radius: 90, hps: 14 }
+        color: '#86efac', icon: 'H', healer: { radius: 90, hps: 14 }
     },
     // 装甲兵：减免 60% 物理伤害，脉冲/加农打得动但极慢，要靠电磁或火海
     armor: {
         hp: 170, speed: 40, gold: 18, dmg: 2, r: 12, sides: 5,
-        color: '#cbd5e1', icon: '🪨', armor: 0.6
+        color: '#cbd5e1', icon: 'A', armor: 0.6
     },
     // 飞行兵：走空中捷径，路线短、不绕路，塔位覆盖不到就必漏
     flyer: {
         hp: 60, speed: 88, gold: 11, dmg: 1, r: 8.5, sides: 3,
-        color: '#f0abfc', icon: '🦇', flying: true
+        color: '#f0abfc', icon: 'FL', flying: true
     },
     // 分裂兵：死亡裂成 3 只小怪，溅射清不干净就雪崩
     splitter: {
         hp: 120, speed: 52, gold: 15, dmg: 1, r: 10.5, sides: 4,
-        color: '#fdba74', icon: '🧬', split: { type: 'swarm', count: 3 }
+        color: '#fdba74', icon: 'SP', split: { type: 'swarm', count: 3 }
     },
     // 攻城兵：远程攻击防御塔，会把你辛苦建的塔一座座拆掉
     attacker: {
         hp: 200, speed: 38, gold: 22, dmg: 2, r: 12, sides: 6,
-        color: '#fb7185', icon: '🔨',
+        color: '#fb7185', icon: 'SG',
         attacker: { range: 130, dps: 16, rate: 0.9 }
     },
     boss: {
         hp: 950, speed: 25, gold: 90, dmg: 4, r: 17, sides: 5,
-        color: '#ff5a3c', icon: '👑'
+        color: '#ff5a3c', icon: 'B'
     },
     // 终局 BOSS：带回血光环 + 40% 物理减伤，是最硬的一道墙
     overlord: {
         hp: 1600, speed: 22, gold: 200, dmg: 6, r: 20, sides: 8,
-        color: '#e11d48', icon: '💀', armor: 0.4,
+        color: '#e11d48', icon: 'Ω', armor: 0.4,
         healer: { radius: 110, hps: 22 }
     }
 };
 
 const TOWER_TYPES = {
     pulse: {
-        icon: '🔹', color: '#40d8ff', cost: 50,
+        icon: 'P', color: '#40d8ff', cost: 50,
         levels: [
             { dmg: 9,   range: 105, rate: 2.2 },
             { dmg: 16,  range: 115, rate: 2.6, cost: 40 },
@@ -421,7 +424,7 @@ const TOWER_TYPES = {
         ]
     },
     frost: {
-        icon: '❄️', color: '#7dd3fc', cost: 70,
+        icon: 'F', color: '#7dd3fc', cost: 70,
         levels: [
             { dmg: 4,   range: 95,  rate: 1.1, slow: 0.42, slowDur: 1.3 },
             { dmg: 7,   range: 105, rate: 1.3, slow: 0.52, slowDur: 1.6, cost: 55 },
@@ -430,7 +433,7 @@ const TOWER_TYPES = {
         ]
     },
     cannon: {
-        icon: '💥', color: '#ff9f43', cost: 100,
+        icon: 'C', color: '#ff9f43', cost: 100,
         levels: [
             { dmg: 24,  range: 110, rate: 0.75, splash: 55 },
             { dmg: 40,  range: 120, rate: 0.85, splash: 62, cost: 80 },
@@ -439,7 +442,7 @@ const TOWER_TYPES = {
         ]
     },
     tesla: {
-        icon: '⚡', color: '#c084fc', cost: 140,
+        icon: 'T', color: '#c084fc', cost: 140,
         levels: [
             { dmg: 15,  range: 100, rate: 1.3, chain: 3 },
             { dmg: 25,  range: 110, rate: 1.5, chain: 4, cost: 110 },
@@ -454,8 +457,8 @@ const TARGET_PRIORITIES = ['first', 'strong', 'weak', 'close', 'healer', 'last']
 /* ────────────────────────── 路径几何 ────────────────────────── */
 
 /** 把格子路径编译成可沿着走的折线（累计长度 + 按距离取点） */
-function compilePath(waypoints) {
-    const pts = waypoints.map(([c, r]) => ({ x: (c + 0.5) * CELL, y: (r + 0.5) * CELL }));
+function compilePath(waypoints, cell = CELL) {
+    const pts = waypoints.map(([c, r]) => ({ x: (c + 0.5) * cell, y: (r + 0.5) * cell }));
     const segs = [];
     let total = 0;
     for (let i = 0; i < pts.length - 1; i++) {
@@ -480,32 +483,61 @@ function compilePath(waypoints) {
     return { pts, segs, total, pointAt };
 }
 
-const GROUND_PATH = compilePath(WAYPOINTS);
-const AIR_PATH = compilePath(AIR_WAYPOINTS);
-
-const pathPts = GROUND_PATH.pts;
-const PATH_TOTAL = GROUND_PATH.total;
-
-function pointAtDist(d) {
-    return GROUND_PATH.pointAt(d);
+function compilePathGrid(waypoints, cols, rows) {
+    const grid = new Uint8Array(cols * rows);
+    for (let i = 0; i < waypoints.length - 1; i++) {
+        const [c0, r0] = waypoints[i];
+        const [c1, r1] = waypoints[i + 1];
+        const dc = Math.sign(c1 - c0), dr = Math.sign(r1 - r0);
+        if (dc !== 0 && dr !== 0) throw new Error('Tower defense maps must use orthogonal segments');
+        let c = c0, r = r0;
+        while (true) {
+            if (c >= 0 && c < cols && r >= 0 && r < rows) grid[r * cols + c] = 1;
+            if (c === c1 && r === r1) break;
+            c += dc;
+            r += dr;
+        }
+    }
+    return grid;
 }
 
-// 路径覆盖的格子（禁止建造）
-const pathGrid = new Uint8Array(COLS * ROWS);
-for (let i = 0; i < WAYPOINTS.length - 1; i++) {
-    const [c0, r0] = WAYPOINTS[i];
-    const [c1, r1] = WAYPOINTS[i + 1];
-    const dc = Math.sign(c1 - c0), dr = Math.sign(r1 - r0);
-    let c = c0, r = r0;
-    while (true) {
-        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) pathGrid[r * COLS + c] = 1;
-        if (c === c1 && r === r1) break;
-        c += dc; r += dr;
-    }
+function compileLevelMap(levelMap) {
+    const map = levelMap || { cols: COLS, rows: ROWS, cell: CELL, groundWaypoints: [] };
+    const groundWaypoints = map.groundWaypoints || [];
+    const airWaypoints = map.airWaypoints || groundWaypoints;
+    const groundPath = compilePath(groundWaypoints, map.cell);
+    const airPath = compilePath(airWaypoints, map.cell);
+    const pathGrid = compilePathGrid(groundWaypoints, map.cols, map.rows);
+    let buildableCount = 0;
+    for (let i = 0; i < pathGrid.length; i++) if (!pathGrid[i]) buildableCount++;
+    return {
+        cols: map.cols,
+        rows: map.rows,
+        cell: map.cell,
+        variant: map.variant || 'outpost',
+        groundWaypoints,
+        airWaypoints,
+        groundPath,
+        airPath,
+        pathGrid,
+        buildableCount,
+        signature: groundWaypoints.map(([c, r]) => `${c},${r}`).join(';')
+    };
+}
+
+function setActiveMap(level) {
+    activeMap = compileLevelMap(level && level.map);
+    return activeMap;
+}
+
+setActiveMap(LEVELS[0]);
+
+function pointAtDist(d) {
+    return activeMap.groundPath.pointAt(d);
 }
 
 function isBuildable(c, r) {
-    return c >= 0 && c < COLS && r >= 0 && r < ROWS && !pathGrid[r * COLS + c];
+    return c >= 0 && c < activeMap.cols && r >= 0 && r < activeMap.rows && !activeMap.pathGrid[r * activeMap.cols + c];
 }
 
 /* ────────────────────────── 预渲染精灵 ────────────────────────── */
@@ -675,6 +707,7 @@ class TowerDefenseGame {
             'td-lb-title', 'td-lb-list', 'td-lb-status', 'td-username', 'td-username-label',
             'td-btn-home', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn', 'td-range-btn', 'td-hint',
             'td-skill-emp', 'td-emp-timer', 'td-emp-ring', 'td-skill-boost', 'td-boost-timer', 'td-boost-ring',
+            'td-start-hero', 'td-rotate-prompt', 'td-rotate-title', 'td-rotate-copy', 'tdTacticalPanel', 'tdTacticalClose', 'tdTacticalPanelTitle', 'tdStatsToggle',
             'td-side-howto-title', 'td-side-howto', 'td-side-skills-title', 'td-side-skills',
             'td-side-towers-title', 'td-side-towers', 'td-side-shortcuts-title', 'td-side-shortcuts',
             'td-side-records-title', 'td-side-records'
@@ -683,11 +716,26 @@ class TowerDefenseGame {
             if (el) this.el[id.replace(/^td-/, '')] = el;
         });
 
+        this.el.tacticalPanel = document.getElementById('tdTacticalPanel');
+        this.el.tacticalClose = document.getElementById('tdTacticalClose');
+        this.el.tacticalTitle = document.getElementById('tdTacticalPanelTitle');
+        this.el.statsToggle = document.getElementById('tdStatsToggle');
+
         this.lang = this.readLang();
+        this.art = createTowerDefenseArt();
+        this.artReady = this.art.ready.then(result => {
+            this.artStatus = result.status;
+            this.applyArtBindings();
+            this.renderBackground(this.canvas.width, this.canvas.height);
+            this.drawFrame();
+            return result;
+        });
+        this.artStatus = 'loading';
+        window.__TD_CREATE_ART__ = createTowerDefenseArt;
+        this.bgCanvas = document.createElement('canvas');
         this.resetRun();
         this.applyLanguage();
 
-        this.bgCanvas = document.createElement('canvas');
         this.state = 'menu'; // menu | playing | paused | over
         this.animationId = null;
         this.lastFrameTime = 0;
@@ -714,10 +762,82 @@ class TowerDefenseGame {
 
     get TEXT() { return LANGUAGES[this.lang]; }
 
+    applyArtBindings() {
+        const hero = this.el['start-hero'];
+        if (hero) {
+            const heroArt = this.art.get('ui.startHero');
+            const production = !!heroArt;
+            hero.dataset.art = production ? 'production' : 'fallback';
+            hero.classList.toggle('td-hero--production', production);
+            if (production) hero.style.backgroundImage = `url("${heroArt.src}")`;
+            else hero.style.removeProperty('background-image');
+        }
+        document.documentElement.dataset.tdArt = this.artStatus;
+        window.__TD_ART__ = {
+            status: this.artStatus,
+            loaded: this.art.loadedCount,
+            failed: this.art.failedKeys,
+            keys: this.art.keyStatus
+        };
+    }
+
+    updateRotationPrompt() {
+        const prompt = this.el['rotate-prompt'];
+        if (!prompt) return;
+        const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+        const shouldPrompt = portrait && window.innerWidth < 900;
+        prompt.classList.toggle('is-active', shouldPrompt);
+        prompt.setAttribute('aria-hidden', shouldPrompt ? 'false' : 'true');
+    }
+
+    toggleTacticalPanel() {
+        const panel = this.el.tacticalPanel;
+        if (!panel) return;
+        const open = panel.classList.contains('hidden');
+        if (open) {
+            panel.classList.remove('hidden');
+            this.renderTacticalPanel();
+        } else {
+            this.closeTacticalPanel();
+        }
+    }
+
+    closeTacticalPanel() {
+        if (this.el.tacticalPanel) this.el.tacticalPanel.classList.add('hidden');
+        if (this.el.statsToggle) {
+            this.el.statsToggle.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    renderTacticalPanel() {
+        if (this.el.statsToggle) this.el.statsToggle.setAttribute('aria-expanded', 'true');
+        // The panel owns the single #tdStatsPanels node; re-running the language
+        // pass is enough to keep it current without cloning any statistics DOM.
+        this.updateSideSkills();
+        this.updateSideTowers();
+        this.updateSideShortcuts();
+        this.updateSideRecords();
+    }
+
+    exposeActiveMap() {
+        window.__TD_ACTIVE_MAP__ = this.map;
+        window.__TD_AIR_PATH__ = this.map.airPath;
+        window.__TD_GROUND_PATH__ = this.map.groundPath;
+        window.__TD_GRID__ = {
+            COLS: this.map.cols,
+            ROWS: this.map.rows,
+            CELL: this.map.cell,
+            pathGrid: this.map.pathGrid,
+            buildableCount: this.map.buildableCount,
+            signature: this.map.signature
+        };
+    }
+
     /* ── 一局的初始状态 ── */
 
     resetRun() {
         this.level = this.level || LEVELS[0];
+        this.map = setActiveMap(this.level);
         this.gold = this.level.gold;
         this.lives = this.level.lives;
         this.wave = 0;
@@ -727,7 +847,7 @@ class TowerDefenseGame {
         this.time = 0;
 
         this.towers = [];
-        this.towerGrid = new Int16Array(COLS * ROWS).fill(-1);
+        this.towerGrid = new Int16Array(this.map.cols * this.map.rows).fill(-1);
         this.enemies = [];
         this.projectiles = [];
         this.particles = [];
@@ -769,6 +889,9 @@ class TowerDefenseGame {
         this.renderWaveButton();
         this.updateSkillButtons();
         this.closePanel();
+        this.closeTacticalPanel();
+        this.updateRotationPrompt();
+        this.exposeActiveMap();
     }
 
     /* ── 震屏特效 ── */
@@ -797,7 +920,7 @@ class TowerDefenseGame {
         if (this.el['btn-menu2']) this.el['btn-menu2'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
-        if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
+        if (this.el['lb-title']) this.el['lb-title'].textContent = `LEADERBOARD · ${t.leaderboard}`;
         if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
         if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
@@ -807,7 +930,7 @@ class TowerDefenseGame {
         if (this.el['brief-lbl-lives']) this.el['brief-lbl-lives'].textContent = t.statLives;
         if (this.el['best-line']) {
             const best = Number(storageGet(`td_best_${this.level.id}`)) || 0;
-            this.el['best-line'].textContent = best ? `🏆 ${t.best}: ${formatNumber(best)}` : '';
+            this.el['best-line'].textContent = best ? `${t.best}: ${formatNumber(best)}` : '';
         }
         if (this.el['over-lbl-waves']) this.el['over-lbl-waves'].textContent = t.waveStat;
         if (this.el['over-lbl-kills']) this.el['over-lbl-kills'].textContent = t.kills;
@@ -828,6 +951,11 @@ class TowerDefenseGame {
             this.el['mute-btn'].title = t.muteBtnTitle;
             this.el['mute-btn'].setAttribute('aria-label', t.muteBtnTitle);
         }
+        if (this.el.statsToggle) {
+            this.el.statsToggle.innerHTML = ICONS.stats;
+            this.el.statsToggle.title = t.stats;
+            this.el.statsToggle.setAttribute('aria-label', t.stats);
+        }
         if (this.el['btn-home']) {
             this.el['btn-home'].title = t.homeBtnTitle;
             this.el['btn-home'].setAttribute('aria-label', t.homeBtnTitle);
@@ -841,16 +969,24 @@ class TowerDefenseGame {
             this.el['skill-boost'].setAttribute('aria-label', t.overdriveBtnTitle);
         }
 
+        if (this.el.tacticalTitle) this.el.tacticalTitle.textContent = t.tacticalOverview;
+        if (this.el.tacticalClose) {
+            this.el.tacticalClose.setAttribute('aria-label', t.closeTactical);
+        }
+        if (this.el['rotate-title']) this.el['rotate-title'].textContent = t.rotateTitle;
+        if (this.el['rotate-copy']) this.el['rotate-copy'].textContent = t.rotateCopy;
+        if (this.el['start-hero']) this.el['start-hero'].setAttribute('aria-label', t.heroLabel);
+
         // 侧栏
-        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
+        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `01 · ${t.sideHowTo}`;
         if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
-        if (this.el['side-skills-title']) this.el['side-skills-title'].textContent = `⚡ ${t.sideSkillsTitle}`;
+        if (this.el['side-skills-title']) this.el['side-skills-title'].textContent = `02 · ${t.sideSkillsTitle}`;
         this.updateSideSkills();
-        if (this.el['side-towers-title']) this.el['side-towers-title'].textContent = `🗼 ${t.towerLegend}`;
+        if (this.el['side-towers-title']) this.el['side-towers-title'].textContent = `03 · ${t.towerLegend}`;
         this.updateSideTowers();
-        if (this.el['side-shortcuts-title']) this.el['side-shortcuts-title'].textContent = `⌨️ ${t.sideShortcutsTitle}`;
+        if (this.el['side-shortcuts-title']) this.el['side-shortcuts-title'].textContent = `04 · ${t.sideShortcutsTitle}`;
         this.updateSideShortcuts();
-        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
+        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `05 · ${t.sideRecords}`;
         this.updateSideRecords();
 
         this.renderPanel();
@@ -865,8 +1001,8 @@ class TowerDefenseGame {
         if (!box) return;
         const t = this.TEXT;
         const skills = [
-            ['⚡ ' + t.emp, t.empDesc],
-            ['🔥 ' + t.overdrive, t.overdriveDesc]
+            ['EMP · ' + t.emp, t.empDesc],
+            ['OD · ' + t.overdrive, t.overdriveDesc]
         ];
         box.textContent = '';
         skills.forEach(([name, desc]) => {
@@ -948,9 +1084,9 @@ class TowerDefenseGame {
 
             const stats = document.createElement('div');
             stats.className = 'td-level-stats';
-            [`🌊 ${t.levelWaves.replace('{n}', level.waves)}`,
-                `💰 ${t.levelGold.replace('{n}', level.gold)}`,
-                `❤️ ${t.levelLives.replace('{n}', level.lives)}`].forEach(txt => {
+            [`W · ${t.levelWaves.replace('{n}', level.waves)}`,
+                `CR · ${t.levelGold.replace('{n}', level.gold)}`,
+                `HP · ${t.levelLives.replace('{n}', level.lives)}`].forEach(txt => {
                 const chip = document.createElement('span');
                 chip.className = 'td-level-chip';
                 chip.textContent = txt;
@@ -980,12 +1116,12 @@ class TowerDefenseGame {
             if (best) {
                 const bestEl = document.createElement('span');
                 bestEl.className = 'td-level-best';
-                bestEl.textContent = `🏆 ${t.levelBest} ${formatNumber(best)}`;
+                bestEl.textContent = `BEST · ${t.levelBest} ${formatNumber(best)}`;
                 card.appendChild(bestEl);
             } else if (!isUnlocked) {
                 const lockEl = document.createElement('span');
                 lockEl.className = 'td-level-best locked';
-                lockEl.textContent = `🔒 ${t.levelLocked}`;
+                lockEl.textContent = `LOCKED · ${t.levelLocked}`;
                 card.appendChild(lockEl);
             }
 
@@ -1062,7 +1198,7 @@ class TowerDefenseGame {
             chEl.textContent = channel;
             const perkEl = document.createElement('span');
             perkEl.className = 'td-perk';
-            perkEl.textContent = `⭐ ${perk}`;
+            perkEl.textContent = `AWAKENING · ${perk}`;
             row.append(nameEl, descEl, chEl, perkEl);
             box.appendChild(row);
         });
@@ -1096,11 +1232,10 @@ class TowerDefenseGame {
     updateSideRecords() {
         const box = this.el['side-records'];
         if (!box) return;
-        const t = this.TEXT;
         const best = Number(storageGet('td_best')) || 0;
         const rows = [
-            [`🏆 ${t.best}`, best ? formatNumber(best) : '—'],
-            [`💀 ${t.kills}`, formatNumber(this.totalKills || 0)]
+            [`BEST`, best ? formatNumber(best) : '—'],
+            [`KILLS`, formatNumber(this.totalKills || 0)]
         ];
         box.textContent = '';
         rows.forEach(([label, value]) => {
@@ -1118,17 +1253,32 @@ class TowerDefenseGame {
     /* ── 尺寸与离屏背景 ── */
 
     resize() {
-        const cssW = this.canvas.clientWidth || 300;
-        const scale = cssW / W;
+        const stage = document.querySelector('.td-stage');
+        if (this.state === 'menu') {
+            this.canvas.style.removeProperty('width');
+            this.canvas.style.removeProperty('height');
+        } else if (stage && stage.clientWidth > 0 && stage.clientHeight > 0) {
+            // The immersive stage can be shorter than the logical scene on a
+            // phone in landscape. Keep the full 4:3 battlefield visible and
+            // center it inside the stage instead of letting CSS stretch it.
+            const sceneScale = Math.min(stage.clientWidth / W, stage.clientHeight / H);
+            this.canvas.style.width = `${Math.round(W * sceneScale)}px`;
+            this.canvas.style.height = `${Math.round(H * sceneScale)}px`;
+        }
+        const rect = this.canvas.getBoundingClientRect();
+        const cssW = rect.width || this.canvas.clientWidth || W;
+        const cssH = rect.height || this.canvas.clientHeight || H;
+        const scale = Math.min(cssW / W, cssH / H);
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         this.renderScale = scale * dpr;
         const pw = Math.round(W * this.renderScale);
         const ph = Math.round(H * this.renderScale);
-        if (this.canvas.width !== pw) {
+        if (this.canvas.width !== pw || this.canvas.height !== ph) {
             this.canvas.width = pw;
             this.canvas.height = ph;
         }
         this.renderBackground(pw, ph);
+        this.updateRotationPrompt();
         if (this.state === 'menu') this.drawFrame();
     }
 
@@ -1138,76 +1288,114 @@ class TowerDefenseGame {
         const ctx = this.bgCanvas.getContext('2d');
         ctx.setTransform(this.renderScale, 0, 0, this.renderScale, 0, 0);
 
-        // 底色渐变
-        const bg = ctx.createLinearGradient(0, 0, W, H);
-        bg.addColorStop(0, '#0a0e24');
-        bg.addColorStop(1, '#0c132c');
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, W, H);
+        const base = this.art && this.art.get('environment.battlefield');
+        if (base) {
+            ctx.drawImage(base, 0, 0, W, H);
+        } else {
+            // Reliable fallback: the game remains fully playable without art.
+            const bg = ctx.createLinearGradient(0, 0, W, H);
+            bg.addColorStop(0, '#0b1427');
+            bg.addColorStop(0.55, '#101e32');
+            bg.addColorStop(1, '#0d1828');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#20394b';
+            ctx.globalAlpha = 0.8;
+            for (let i = 0; i < 11; i++) {
+                const bw = 28 + (i % 4) * 15;
+                const bh = 26 + (i % 5) * 17;
+                ctx.fillRect(i * 78 - 20, 238 - bh, bw, bh);
+            }
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#172a3d';
+            ctx.fillRect(0, 245, W, H - 245);
+        }
 
-        // 可建网格
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                if (pathGrid[r * COLS + c]) continue;
+        const variantKey = this.map.variant === 'singularity'
+            ? 'environment.singularity'
+            : this.map.variant === 'citadel' || this.map.variant === 'skyfall'
+                ? 'environment.reactor'
+                : this.map.variant === 'vanguard' || this.map.variant === 'juggernaut'
+                    ? 'environment.platform'
+                    : null;
+        const variant = variantKey && this.art && this.art.get(variantKey);
+        if (variant) ctx.drawImage(variant, 0, 0, W, H);
+
+        // Deployment cells are matte metal plates, not a permanently glowing grid.
+        for (let r = 0; r < this.map.rows; r++) {
+            for (let c = 0; c < this.map.cols; c++) {
+                if (this.map.pathGrid[r * this.map.cols + c]) continue;
                 const x = c * CELL, y = r * CELL;
-                ctx.fillStyle = 'rgba(255,255,255,0.026)';
-                ctx.beginPath();
-                ctx.roundRect(x + 2, y + 2, CELL - 4, CELL - 4, 7);
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(64,216,255,0.055)';
+                ctx.fillStyle = (c + r) % 2 ? 'rgba(203, 232, 231, 0.025)' : 'rgba(8, 17, 30, 0.08)';
+                ctx.fillRect(x + 2, y + 2, CELL - 4, CELL - 4);
+                ctx.strokeStyle = 'rgba(135, 190, 188, 0.10)';
                 ctx.lineWidth = 1;
-                ctx.stroke();
+                ctx.strokeRect(x + 3.5, y + 3.5, CELL - 7, CELL - 7);
+                ctx.fillStyle = 'rgba(154, 222, 213, 0.24)';
+                ctx.fillRect(x + 6, y + 6, 3, 3);
             }
         }
 
-        // 道路底层
+        const pathPts = this.map.groundPath.pts;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
         ctx.moveTo(pathPts[0].x, pathPts[0].y);
         for (let i = 1; i < pathPts.length; i++) ctx.lineTo(pathPts[i].x, pathPts[i].y);
-        ctx.strokeStyle = '#12183e';
-        ctx.lineWidth = CELL - 8;
+        ctx.strokeStyle = '#0a1523';
+        ctx.lineWidth = CELL - 5;
         ctx.stroke();
-        ctx.strokeStyle = 'rgba(64,216,255,0.12)';
-        ctx.lineWidth = CELL - 8;
+        ctx.strokeStyle = '#213b4a';
+        ctx.lineWidth = CELL - 10;
         ctx.stroke();
-
-        // 道路中心虚线
-        ctx.beginPath();
-        ctx.moveTo(pathPts[0].x, pathPts[0].y);
-        for (let i = 1; i < pathPts.length; i++) ctx.lineTo(pathPts[i].x, pathPts[i].y);
-        ctx.strokeStyle = 'rgba(64,216,255,0.24)';
+        ctx.strokeStyle = 'rgba(116, 223, 210, 0.42)';
         ctx.lineWidth = 2;
-        ctx.setLineDash([9, 11]);
+        ctx.setLineDash([8, 13]);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // 空中航线：飞行兵走的直线捷径。
-        // ⚠️ 只在「本关真的会出飞行兵」时才画（modifiers.flyers）。
-        // 否则新手关会平白多出一条斜穿棋盘的紫色宽带，玩家会以为路画糊了；
-        // 宽度也从 CELL-16(24px) 收到 12px、透明度 0.20→0.10 —— 它只是提示，
-        // 不该抢地面主路的视觉权重。
-        if (this.level && this.level.modifiers && this.level.modifiers.flyers) {
-            const air = AIR_PATH.pts;
+        // Track bolts and junction markers add material definition without
+        // taking over the gameplay silhouette.
+        for (let i = 1; i < pathPts.length - 1; i++) {
+            ctx.fillStyle = 'rgba(173, 228, 219, 0.55)';
             ctx.beginPath();
-            ctx.moveTo(air[0].x, air[0].y);
-            for (let i = 1; i < air.length; i++) ctx.lineTo(air[i].x, air[i].y);
-            ctx.strokeStyle = 'rgba(240,171,252,0.10)';
-            ctx.lineWidth = 12;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
+            ctx.arc(pathPts[i].x, pathPts[i].y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(104, 191, 188, 0.22)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(pathPts[i].x, pathPts[i].y, 8, 0, Math.PI * 2);
             ctx.stroke();
+        }
 
+        // Aerial route is a sparse beacon line and only exists in operations
+        // that actually deploy flyers.
+        if (this.level && this.level.modifiers && this.level.modifiers.flyers) {
+            const air = this.map.airPath.pts;
             ctx.beginPath();
             ctx.moveTo(air[0].x, air[0].y);
             for (let i = 1; i < air.length; i++) ctx.lineTo(air[i].x, air[i].y);
-            ctx.strokeStyle = 'rgba(240,171,252,0.42)';
+            ctx.strokeStyle = 'rgba(213, 165, 246, 0.11)';
             ctx.lineWidth = 1.5;
-            ctx.setLineDash([5, 9]);
+            ctx.setLineDash([3, 12]);
             ctx.stroke();
             ctx.setLineDash([]);
+            for (let i = 1; i < air.length - 1; i++) {
+                ctx.fillStyle = 'rgba(234, 192, 255, 0.42)';
+                ctx.beginPath();
+                ctx.arc(air[i].x, air[i].y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
+
+        // Facility edge labels and a restrained scan line make the arena feel
+        // authored even when all optional production art is unavailable.
+        ctx.fillStyle = 'rgba(174, 224, 218, 0.42)';
+        ctx.font = '700 8px ui-monospace, SFMono-Regular, Menlo, monospace';
+        ctx.letterSpacing = '0.14em';
+        ctx.fillText(`${String(this.map.variant).toUpperCase()} / GRID ${this.map.cols}×${this.map.rows}`, 18, H - 14);
+        ctx.fillStyle = 'rgba(235, 191, 111, 0.48)';
+        ctx.fillText('CORE ACCESS', W - 88, H - 14);
     }
 
     /* ── 输入与快捷键 ── */
@@ -1245,7 +1433,7 @@ class TowerDefenseGame {
             if (this.state !== 'playing') return;
             const p = this.toLogical(e);
             const c = Math.floor(p.x / CELL), r = Math.floor(p.y / CELL);
-            this.hoverCell = (c >= 0 && c < COLS && r >= 0 && r < ROWS) ? { c, r } : null;
+            this.hoverCell = (c >= 0 && c < this.map.cols && r >= 0 && r < this.map.rows) ? { c, r } : null;
         });
         this.canvas.addEventListener('pointerleave', () => { this.hoverCell = null; });
 
@@ -1289,7 +1477,8 @@ class TowerDefenseGame {
             } else if (e.key === 'r' || e.key === 'R') {
                 this.toggleShowAllRanges();
             } else if (e.code === 'Escape') {
-                this.closePanel();
+                if (this.el.tacticalPanel && !this.el.tacticalPanel.classList.contains('hidden')) this.closeTacticalPanel();
+                else this.closePanel();
             } else if (e.key === 'p' || e.key === 'P') {
                 this.pause();
             }
@@ -1297,8 +1486,8 @@ class TowerDefenseGame {
     }
 
     towerAt(c, r) {
-        if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return -1;
-        return this.towerGrid[r * COLS + c];
+        if (c < 0 || c >= this.map.cols || r < 0 || r >= this.map.rows) return -1;
+        return this.towerGrid[r * this.map.cols + c];
     }
 
     /* ── 建造 / 升级 / 出售 / 集火策略 ── */
@@ -1328,7 +1517,7 @@ class TowerDefenseGame {
             hurtFlash: 0
         };
         this.towers.push(tower);
-        this.towerGrid[r * COLS + c] = this.towers.length - 1;
+        this.towerGrid[r * this.map.cols + c] = this.towers.length - 1;
         this.gold -= cfg.cost;
         this.selectedTowerIdx = this.towers.length - 1;
         Sfx.place();
@@ -1356,7 +1545,7 @@ class TowerDefenseGame {
         this.burst(tower.x, tower.y, tower.level === 3 ? '#ffd34d' : cfg.color, tower.level === 3 ? 24 : 14);
         if (tower.level === 3) {
             this.shake(3, 0.2);
-            this.floater(tower.x, tower.y - 16, `⭐ ${this.TEXT.ultimate}!`, '#ffd34d', 1.3);
+            this.floater(tower.x, tower.y - 16, `${this.TEXT.ultimate}!`, '#ffd34d', 1.3);
         }
         this.updateHud();
         this.renderPanel();
@@ -1380,7 +1569,7 @@ class TowerDefenseGame {
         this.sellConfirming = false;
         const refund = Math.round(tower.invested * SELL_RATIO);
         this.gold += refund;
-        this.towerGrid[tower.r * COLS + tower.c] = -1;
+        this.towerGrid[tower.r * this.map.cols + tower.c] = -1;
         this.towers[this.selectedTowerIdx] = null;
         Sfx.sell();
         this.closePanel();
@@ -1456,7 +1645,7 @@ class TowerDefenseGame {
 
             const mvpTag = document.createElement('span');
             mvpTag.className = 'td-mvp-tag';
-            mvpTag.textContent = `💥 ${formatNumber(tower.damageDealt || 0)} · 💀 ${tower.kills || 0}`;
+            mvpTag.textContent = `DMG ${formatNumber(tower.damageDealt || 0)} · K ${tower.kills || 0}`;
 
             const closeBtn = document.createElement('button');
             closeBtn.type = 'button';
@@ -1474,7 +1663,7 @@ class TowerDefenseGame {
             const prioBtn = document.createElement('button');
             prioBtn.type = 'button';
             prioBtn.className = 'td-action-card priority';
-            prioBtn.innerHTML = `<span class="td-act-label">🎯 ${t.priority} [T]</span><b class="td-act-val">${prioName}</b><span class="td-act-diff">Tap to switch</span>`;
+            prioBtn.innerHTML = `<span class="td-act-label">TARGET · ${t.priority} [T]</span><b class="td-act-val">${prioName}</b><span class="td-act-diff">Tap to switch</span>`;
             prioBtn.addEventListener('click', () => this.cycleTargetPriority());
 
             // 2. 升级按钮
@@ -1483,11 +1672,11 @@ class TowerDefenseGame {
             if (next) {
                 const isNextUlt = (tower.level + 1) === 3;
                 upBtn.className = `td-action-card upgrade ${isNextUlt ? 'ultimate' : ''} ${next.cost > this.gold ? 'poor' : ''}`;
-                upBtn.innerHTML = `<span class="td-act-label">${isNextUlt ? '⭐ ' + t.ultimate : '⬆️ ' + t.upgrade + ' [U]'}</span><b class="td-act-val">${next.cost} 💰</b><span class="td-act-diff">${t.dmg} ${lv.dmg}→${next.dmg} · ${t.range} ${lv.range}→${next.range}</span>`;
+                upBtn.innerHTML = `<span class="td-act-label">${isNextUlt ? 'AWAKENING · ' + t.ultimate : 'UPGRADE · ' + t.upgrade + ' [U]'}</span><b class="td-act-val">${next.cost} CR</b><span class="td-act-diff">${t.dmg} ${lv.dmg}→${next.dmg} · ${t.range} ${lv.range}→${next.range}</span>`;
                 upBtn.addEventListener('click', () => this.tryUpgrade());
             } else {
                 upBtn.className = 'td-action-card maxed';
-                upBtn.innerHTML = `<span class="td-act-label">⭐ ${t.maxLevel}</span><b class="td-act-val">MAXED</b><span class="td-act-diff">${lv.perkName || ''}</span>`;
+                upBtn.innerHTML = `<span class="td-act-label">AWAKENING · ${t.maxLevel}</span><b class="td-act-val">MAXED</b><span class="td-act-diff">${lv.perkName || ''}</span>`;
             }
 
             // 3. 出售按钮
@@ -1496,10 +1685,10 @@ class TowerDefenseGame {
             sellBtn.type = 'button';
             if (this.sellConfirming) {
                 sellBtn.className = 'td-action-card sell confirming';
-                sellBtn.innerHTML = `<span class="td-act-label">⚠️ ${this.lang === 'zh' ? '确认出售?' : 'Confirm?'} [S]</span><b class="td-act-val">+${refund} 💰</b><span class="td-act-diff">${this.lang === 'zh' ? '再次点击确认' : 'Tap again'}</span>`;
+                sellBtn.innerHTML = `<span class="td-act-label">CONFIRM · ${this.lang === 'zh' ? '确认出售?' : 'Confirm?'} [S]</span><b class="td-act-val">+${refund} CR</b><span class="td-act-diff">${this.lang === 'zh' ? '再次点击确认' : 'Tap again'}</span>`;
             } else {
                 sellBtn.className = 'td-action-card sell';
-                sellBtn.innerHTML = `<span class="td-act-label">💰 ${t.sell} [S]</span><b class="td-act-val">+${refund}</b><span class="td-act-diff">70% refund</span>`;
+                sellBtn.innerHTML = `<span class="td-act-label">CREDIT · ${t.sell} [S]</span><b class="td-act-val">+${refund}</b><span class="td-act-diff">70% refund</span>`;
             }
             sellBtn.addEventListener('click', () => this.trySell());
 
@@ -1517,7 +1706,7 @@ class TowerDefenseGame {
 
             const header = document.createElement('div');
             header.className = 'td-panel-header';
-            header.innerHTML = `<div class="td-panel-title-row"><span>🏗️</span> <b>${this.lang === 'zh' ? '建造防御塔' : 'Build Tower'}</b></div>`;
+            header.innerHTML = `<div class="td-panel-title-row"><span>DEPLOY</span> <b>${this.lang === 'zh' ? '建造防御塔' : 'Build Tower'}</b></div>`;
             const closeBtn = document.createElement('button');
             closeBtn.type = 'button';
             closeBtn.className = 'td-close-btn';
@@ -1539,8 +1728,8 @@ class TowerDefenseGame {
                     <span class="td-card-hotkey">[${hotkeys[type]}]</span>
                     <span class="td-card-icon">${cfg.icon}</span>
                     <span class="td-card-name">${t[type]}</span>
-                    <span class="td-card-cost">${cfg.cost} 💰</span>
-                    <span class="td-card-stats">${lv.dmg}⚔️ · ${lv.range}🎯</span>
+                    <span class="td-card-cost">${cfg.cost} CR</span>
+                    <span class="td-card-stats">${lv.dmg} DMG · ${lv.range} RNG</span>
                 `;
                 card.addEventListener('mouseenter', () => {
                     this.preview = { x: (c + 0.5) * CELL, y: (r + 0.5) * CELL, range: lv.range, color: cfg.color };
@@ -1769,6 +1958,11 @@ class TowerDefenseGame {
         if (dmg > 0) {
             e.hp -= dmg;
             e.hitFlash = 0.08;
+            this.effects.push({
+                kind: 'impact', x: e.x, y: e.y,
+                frame: channel === 'energy' ? TD_ART_FRAMES.fx.pulse : TD_ART_FRAMES.fx.damage,
+                age: 0, life: 0.16
+            });
             if (killerTower) killerTower.damageDealt = (killerTower.damageDealt || 0) + dmg;
             if (isCrit) {
                 this.floater(e.x, e.y - 12, `CRIT ${dmg}!`, '#ffd34d', 1.25);
@@ -1832,7 +2026,7 @@ class TowerDefenseGame {
         const cfg = ENEMY_TYPES[type];
         const hp = cfg.hp * this.hpMul * this.stackHp * (isSplitChild ? 0.55 : 1);
         const maxShield = (cfg.maxShield || 0) * this.hpMul * this.stackHp;
-        const path = cfg.flying ? AIR_PATH : GROUND_PATH;
+        const path = cfg.flying ? this.map.airPath : this.map.groundPath;
         const start = path.pointAt(overrideDist);
         const bounty = this.stackGold * (this.level ? this.level.bounty : 1);
 
@@ -2004,7 +2198,7 @@ class TowerDefenseGame {
         this.showToast(this.TEXT.towerLost, 1800);
         const idx = this.towers.indexOf(tower);
         if (idx >= 0) {
-            this.towerGrid[tower.r * COLS + tower.c] = -1;
+            this.towerGrid[tower.r * this.map.cols + tower.c] = -1;
             this.towers[idx] = null;
         }
         if (this.selectedTowerIdx === idx) {
@@ -2423,9 +2617,10 @@ class TowerDefenseGame {
 
         // 赛博光脉冲沿路径流动
         if (this.state === 'playing') {
-            const pulseDist = (this.time * 95) % PATH_TOTAL;
+            const pathTotal = this.map.groundPath.total;
+            const pulseDist = (this.time * 95) % pathTotal;
             const pt1 = pointAtDist(pulseDist);
-            const pt2 = pointAtDist((pulseDist + PATH_TOTAL * 0.5) % PATH_TOTAL);
+            const pt2 = pointAtDist((pulseDist + pathTotal * 0.5) % pathTotal);
             [pt1, pt2].forEach(p => {
                 ctx.fillStyle = 'rgba(64,216,255,0.7)';
                 ctx.beginPath();
@@ -2449,9 +2644,10 @@ class TowerDefenseGame {
         ctx.restore();
 
         // 核心基地（旋转防护六角形）
+        const pathPts = this.map.groundPath.pts;
         const core = pathPts[pathPts.length - 1];
         ctx.save();
-        ctx.translate(core.x, core.y - 14);
+        ctx.translate(core.x, Math.min(H - 24, core.y - 14));
         ctx.rotate(-this.time * 0.9);
         ctx.beginPath();
         for (let i = 0; i < 6; i++) {
@@ -2587,9 +2783,14 @@ class TowerDefenseGame {
                 ctx.globalAlpha = 1;
             }
 
-            const sprite = enemySprites[e.type];
-            if (sprite) {
-                ctx.drawImage(sprite, e.x - sprite.width / 2, e.y - sprite.height / 2);
+            const enemyFrame = TD_ART_FRAMES.enemies[e.type];
+            const hasProductionEnemy = enemyFrame !== undefined && this.art && this.art.has('enemies.atlas');
+            if (hasProductionEnemy) {
+                const enemySize = clamp(e.r * 3.35, 22, e.type === 'overlord' ? 68 : 58);
+                this.art.drawAtlas(ctx, 'enemies.atlas', enemyFrame, e.x, e.y, enemySize);
+            } else {
+                const sprite = enemySprites[e.type];
+                if (sprite) ctx.drawImage(sprite, e.x - sprite.width / 2, e.y - sprite.height / 2);
             }
 
             // 治疗兵：脉动的治疗光环 + 与受疗目标的连线
@@ -2685,19 +2886,32 @@ class TowerDefenseGame {
             }
         }
 
-        // 子弹渲染
+        // 子弹渲染：不同武器使用不同材质语言，光效只在弹体/命中瞬间出现。
         ctx.globalCompositeOperation = 'lighter';
         for (const p of this.projectiles) {
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fill();
+            const tx = p.target && !p.target.dead ? p.target.x : p.lastX;
+            const ty = p.target && !p.target.dead ? p.target.y : p.lastY;
+            const angle = Math.atan2(ty - p.y, tx - p.x);
             if (p.kind === 'shell') {
-                ctx.globalAlpha = 0.45;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(angle);
+                ctx.fillStyle = '#e6b873';
+                ctx.fillRect(-5, -3, 10, 6);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-1, -2, 7, 4);
+                ctx.restore();
+            } else {
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = p.isCrit ? 3 : 1.8;
+                ctx.globalAlpha = 0.38;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.moveTo(p.x - Math.cos(angle) * 12, p.y - Math.sin(angle) * 12);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
                 ctx.globalAlpha = 1;
+                ctx.fillStyle = p.isCrit ? '#fff0ae' : p.color;
+                ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
             }
         }
 
@@ -2705,7 +2919,18 @@ class TowerDefenseGame {
         for (const fx of this.effects) {
             const t = fx.age / fx.life;
             ctx.globalAlpha = 1 - t;
-            if (fx.kind === 'ring' || fx.kind === 'emp_wave') {
+            if (fx.kind === 'impact') {
+                const size = 22 + t * 12;
+                if (this.art && this.art.has('fx.atlas')) {
+                    this.art.drawAtlas(ctx, 'fx.atlas', fx.frame, fx.x, fx.y, size, 1 - t);
+                } else {
+                    ctx.strokeStyle = '#d7fff7';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(fx.x, fx.y, size * 0.4, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            } else if (fx.kind === 'ring' || fx.kind === 'emp_wave') {
                 ctx.strokeStyle = fx.kind === 'emp_wave' ? '#40d8ff' : fx.color;
                 ctx.lineWidth = fx.kind === 'emp_wave' ? 4 : 2.5;
                 ctx.beginPath();
@@ -2774,7 +2999,7 @@ class TowerDefenseGame {
             ctx.font = '800 10px "Segoe UI", system-ui, sans-serif';
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
-            const tag = isOverlord ? '💀 OVERLORD' : '👑 BOSS';
+            const tag = isOverlord ? 'OVERLORD' : 'BOSS';
             ctx.fillText(`${tag} · ${Math.ceil(boss.hp)} / ${Math.ceil(boss.maxHp)}`, W / 2, by + 11);
         }
 
@@ -2821,8 +3046,15 @@ class TowerDefenseGame {
 
     drawTower(ctx, tower) {
         const cfg = TOWER_TYPES[tower.type];
-        ctx.drawImage(towerBaseSprite, tower.c * CELL, tower.r * CELL);
         const cx = tower.x, cy = tower.y;
+
+        const productionFrame = TD_ART_FRAMES.towers[tower.type];
+        const hasProductionSprite = productionFrame !== undefined
+            && this.art
+            && this.art.has('towers.atlas');
+        if (!hasProductionSprite) {
+            ctx.drawImage(towerBaseSprite, tower.c * CELL, tower.r * CELL);
+        }
 
         // 战术超频高能光环
         if (this.time < this.overdriveUntil) {
@@ -2846,7 +3078,9 @@ class TowerDefenseGame {
         ctx.translate(cx, cy);
         ctx.rotate(tower.angle);
 
-        if (tower.type === 'pulse') {
+        if (hasProductionSprite) {
+            this.art.drawAtlas(ctx, 'towers.atlas', productionFrame, 0, 0, 56);
+        } else if (tower.type === 'pulse') {
             ctx.fillStyle = cfg.color;
             ctx.fillRect(0, -3.5, 16, 7);
             ctx.beginPath();
@@ -2954,6 +3188,7 @@ class TowerDefenseGame {
     startGame() {
         this.resetRun();
         this.state = 'playing';
+        this.closeTacticalPanel();
         if (this.el.start) this.el.start.classList.add('hidden');
         if (this.el.over) this.el.over.classList.add('hidden');
         if (this.el.pause) this.el.pause.classList.add('hidden');
@@ -2971,13 +3206,16 @@ class TowerDefenseGame {
         if (this.el.over) this.el.over.classList.add('hidden');
         if (this.el.start) this.el.start.classList.remove('hidden');
         this.closePanel();
+        this.closeTacticalPanel();
         this.renderLevelCards();
+        this.resize();
         this.drawFrame();
     }
 
     pause() {
         if (this.state !== 'playing') return;
         this.state = 'paused';
+        this.closeTacticalPanel();
         if (this.el.pause) this.el.pause.classList.remove('hidden');
         Sfx.click();
     }
@@ -3016,6 +3254,7 @@ class TowerDefenseGame {
         this.state = 'over';
         this.stopLoop();
         this.closePanel();
+        this.closeTacticalPanel();
 
         if (victory) {
             // 越难的关卡，通关奖励越高；提前压波也折算成额外分数
@@ -3035,7 +3274,7 @@ class TowerDefenseGame {
             this.el['over-title'].textContent = victory ? t.victory : t.gameOver;
         }
         if (this.el['over-verdict']) {
-            this.el['over-verdict'].textContent = victory ? '🏆' : '💀';
+            this.el['over-verdict'].textContent = victory ? 'DEFENSE SECURED' : 'CORE LOST';
         }
         if (this.el['over-score']) this.el['over-score'].textContent = formatNumber(this.score);
         if (this.el['over-sub']) {
@@ -3069,8 +3308,8 @@ class TowerDefenseGame {
         }
         this.updateSideRecords();
         if (this.el['best-line']) {
-            this.el['best-line'].textContent = `🏆 ${t.best}: ${formatNumber(Math.max(prevBest, this.score))}` +
-                (isBest ? `  🌟 ${t.newBest}` : '');
+            this.el['best-line'].textContent = `BEST · ${t.best}: ${formatNumber(Math.max(prevBest, this.score))}` +
+                (isBest ? ` · ${t.newBest}` : '');
         }
         this.renderLevelCards();
 
@@ -3178,7 +3417,7 @@ class TowerDefenseGame {
 
     async copyResult() {
         const t = this.TEXT;
-        const text = `🏰 ${t.title} · ${this.levelName(this.level)}\n${t.score}: ${formatNumber(this.score)} · ${t.wave} ${this.wave}/${this.level.waves}\nhttps://games.orangely.xyz/tower-defense.html`;
+        const text = `[NEON DEFENSE] ${t.title} · ${this.levelName(this.level)}\n${t.score}: ${formatNumber(this.score)} · ${t.wave} ${this.wave}/${this.level.waves}\nhttps://games.orangely.xyz/tower-defense.html`;
         let ok = false;
         try {
             await navigator.clipboard.writeText(text);
@@ -3229,6 +3468,15 @@ class TowerDefenseGame {
         });
         if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());
 
+        if (this.el.statsToggle) this.el.statsToggle.addEventListener('click', () => {
+            Sfx.click();
+            this.toggleTacticalPanel();
+        });
+        if (this.el.tacticalClose) this.el.tacticalClose.addEventListener('click', () => {
+            Sfx.click();
+            this.closeTacticalPanel();
+        });
+
         // 战术技能
         if (this.el['skill-emp']) this.el['skill-emp'].addEventListener('click', () => this.castEmp());
         if (this.el['skill-boost']) this.el['skill-boost'].addEventListener('click', () => this.castOverdrive());
@@ -3260,6 +3508,7 @@ class TowerDefenseGame {
             this.lang = this.readLang();
             this.applyLanguage();
         });
+        window.addEventListener('resize', () => this.updateRotationPrompt());
     }
 
     updateMuteButtons() {
@@ -3287,46 +3536,15 @@ window.__TD_TARGET_PRIORITIES__ = TARGET_PRIORITIES;
 window.__TD_STACK_MAX__ = STACK_MAX;
 window.__TD_STACK_HP_PER__ = STACK_HP_PER;
 window.__TD_STACK_GOLD_PER__ = STACK_GOLD_PER;
-window.__TD_AIR_PATH__ = AIR_PATH;
-window.__TD_GROUND_PATH__ = GROUND_PATH;
-// 网格维度是模块常量（不在实例上），回归脚本按坐标反查格子时需要它；
-// pathGrid 同理——不导出的话脚本会挑到路径格，tryBuild 静默失败。
-window.__TD_GRID__ = { COLS, ROWS, CELL, pathGrid };
+window.__TD_COMPILE_MAP__ = compileLevelMap;
 
 onReady(() => {
     window.tdGame = new TowerDefenseGame();
 
-    // 桌面端舞台纵向预算：td 的技能条在 .game-main 内部（桌面网格第二行），
-    // bindFrame 量的顶栏/页脚不含它，用 extraChrome 并入。只量技能条自身高度 +
-    // 外边距——不能量 main 总高减 stage 高：桌面网格里侧栏跨两行会把行高撑到
-    // 侧栏自身高度，量出来是「侧栏-舞台」的差值，形成 chrome↑→stage-w↓→差值↑
-    // 的反馈环，舞台会收敛到 0
     bindFrame({
         logicalWidth: W,
-        extraChrome: () => {
-            const c = document.querySelector('.td-bottom-controls');
-            if (!c) return 0;
-            const cs = getComputedStyle(c);
-            return c.getBoundingClientRect().height
-                + parseFloat(cs.marginTop || '0')
-                + parseFloat(cs.marginBottom || '0');
-        },
+        layout: 'immersive',
     });
-
-    // 移动端底部统计抽屉
-    window.tdDrawer = createStatsDrawer({
-        idPrefix: 'td',
-        getGame: () => window.tdGame,
-        onPause: (g) => g && g.pauseQuiet(),
-        onResume: (g) => g && g.resumeQuiet(),
-        isBusy: () => {
-            const g = window.tdGame;
-            return !!g && typeof g.isRunning === 'function' && g.isRunning();
-        },
-        ICONS,
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-    });
-    if (window.tdDrawer) window.tdDrawer.init();
 });
 
 /* ── 顶栏 / 页脚通用控件：Home · Sound · More ──

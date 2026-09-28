@@ -66,7 +66,10 @@ const SUITE = [
     { name: 'tetris-topbar-mobile', script: 'scripts/verify-tetris-topbar-mobile.mjs', args: [], needsServer: true },
     { name: 'tetris-touch', script: 'scripts/verify-tetris-touch.mjs', args: [], needsServer: true },
     { name: 'tetris-drawer', script: 'scripts/verify-tetris-drawer.mjs', args: [], needsServer: true },
+    { name: 'td-art', script: 'scripts/verify-td-art.mjs', args: [], needsServer: false, games: ['tower-defense'] },
     { name: 'td-topbar', script: 'scripts/verify-td-topbar.mjs', args: [], needsServer: true, games: ['tower-defense'] },
+    { name: 'td-difficulty', script: 'scripts/verify-td-difficulty.mjs', args: [], needsServer: true, games: ['tower-defense'] },
+    { name: 'smoke-tower-defense', script: 'scripts/smoke-tower-defense.mjs', args: [], needsServer: true, games: ['tower-defense'] },
     { name: 'smoke-index', script: 'scripts/smoke-index.mjs', args: [], needsServer: true },
     { name: 'index-layout', script: 'scripts/verify-index-layout.mjs', args: [], needsServer: true },
     { name: 'smoke-tank-battle', script: 'scripts/smoke-tank-battle.mjs', args: [], needsServer: true },
@@ -104,7 +107,7 @@ const SUITE = [
     { name: 'smoke-shadow-loom', script: 'scripts/smoke-shadow-loom.mjs', args: [], needsServer: true },
 ];
 
-const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'no-game-lang', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'silk-dew-art', 'bond-forge-levels', 'echo-cave-levels', 'smoke-echo-cave', 'maxwell-demon-levels', 'smoke-maxwell-demon', 'fg-audit', 'theme', 'start-menus', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'math-rain-art', 'carrot-pull-art', 'needle-awn-art', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'smoke-bond-forge', 'crystal-bloom-levels', 'smoke-crystal-bloom', 'flame-verse-levels', 'smoke-flame-verse', 'ripple-duet-levels', 'smoke-ripple-duet', 'shadow-loom-silhouettes', 'shadow-loom-silhouette-build', 'shadow-loom-levels', 'smoke-shadow-loom', 'desktop-frame', 'firefly-signal-sim', 'immersive', 'smoke-firefly-signal'];
+const QUICK_NAMES = ['gen-check', 'lint', 'boot', 'chunk-isolation', 'daily', 'leaderboard', 'i18n', 'sfx', 'registry', 'index-cards', 'no-game-lang', 'lumen-levels', 'circuit-levels', 'silk-dew-levels', 'silk-dew-art', 'bond-forge-levels', 'echo-cave-levels', 'smoke-echo-cave', 'maxwell-demon-levels', 'smoke-maxwell-demon', 'fg-audit', 'theme', 'start-menus', 'placeholder-leak', 'chrome', 'smoke-index', 'index-layout', 'smoke-tank-battle', 'smoke-math-rain', 'math-rain-art', 'carrot-pull-art', 'needle-awn-art', 'smoke-lumen', 'smoke-circuit', 'smoke-silk-dew', 'smoke-bond-forge', 'crystal-bloom-levels', 'smoke-crystal-bloom', 'flame-verse-levels', 'smoke-flame-verse', 'ripple-duet-levels', 'smoke-ripple-duet', 'shadow-loom-silhouettes', 'shadow-loom-silhouette-build', 'shadow-loom-levels', 'smoke-shadow-loom', 'desktop-frame', 'firefly-signal-sim', 'immersive', 'smoke-firefly-signal', 'td-art', 'td-topbar', 'td-difficulty', 'smoke-tower-defense'];
 
 // ── --changed：按 git diff 选择要跑的项 ──
 // 核心离线项：秒级、覆盖全站共享事实（codegen / lint / 注册表 / i18n …），--changed 下永远跑

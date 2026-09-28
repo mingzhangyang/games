@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="180" viewBox="0 0 360 180">
+  <defs><linearGradient id="b" x2="0" y2="1"><stop stop-color="#1d3d4c"/><stop offset="1" stop-color="#0b1726"/></linearGradient><radialGradient id="e"><stop stop-color="#aef9e9" stop-opacity=".35"/><stop offset="1" stop-color="#aef9e9" stop-opacity="0"/></radialGradient></defs>
+  <rect x="12" y="22" width="336" height="136" rx="10" fill="url(#b)" stroke="#6fc3be" stroke-opacity=".5"/>
+  <path d="M26 125h308M34 48h292M68 36v100M142 36v100M218 36v100M292 36v100" stroke="#7ce4d5" stroke-opacity=".14"/>
+  <path d="M32 94h90l24-36h58l30 35h94" fill="none" stroke="#75f2e0" stroke-opacity=".6" stroke-width="3"/>
+  <circle cx="178" cy="93" r="66" fill="url(#e)"/>
+  <path d="M160 115h40l-5 12h-30zM166 105h28v10h-28zM173 67h14v38h-14z" fill="#172b39" stroke="#b9fff0" stroke-width="2"/><circle cx="180" cy="65" r="7" fill="#b9fff0"/>
+  <g fill="#e1ba73"><circle cx="48" cy="88" r="3"/><circle cx="306" cy="88" r="3"/></g>
+  <text x="180" y="151" text-anchor="middle" fill="#a8d4d3" font-family="system-ui,sans-serif" font-size="9" letter-spacing="2">ENERGY DEFENSE NETWORK</text>
+</svg>

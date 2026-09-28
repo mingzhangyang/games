@@ -390,7 +390,7 @@
       "prefix": "td",
       "href": "tower-defense.html",
       "entry": "js/tower-defense.js",
-      "emoji": "🏰",
+      "emoji": "◈",
       "title": {
         "doc": "Neon Tower Defense — Strategy TD",
         "seo": "Neon Tower Defense 霓虹塔防 — Strategy TD"
@@ -400,21 +400,19 @@
         "zh": "霓虹塔防"
       },
       "desc": {
-        "meta": "Neon Tower Defense 霓虹塔防 — build pulse, frost, cannon and tesla towers along the neon grid, survive 25 waves and top the global leaderboard.",
-        "og": "Four tower types, 25 escalating waves, endless neon glow. Build, upgrade and defend the core!",
-        "twitter": "Build, upgrade and survive 25 waves on the neon grid."
+        "meta": "Neon Tower Defense 霓虹塔防 — deploy four specialist towers across six future-city operations, survive 15 to 40 escalating waves and defend the energy core.",
+        "og": "Four specialist towers. Six tactical operations. Build, upgrade and defend a future-city energy core.",
+        "twitter": "Build, upgrade and defend the energy core across six tactical operations."
       },
       "genre": [
         "StrategyGame"
       ],
       "caps": [
-        "sidebar",
-        "drawer",
-        "frame-budget",
         "leaderboard",
         "analytics",
         "topbar"
       ],
+      "layout": "immersive",
       "scores": {
         "key": "tower-defense",
         "order": "desc",
@@ -422,8 +420,8 @@
         "maxEntries": 50
       },
       "stage": {
-        "w": 480,
-        "h": 640
+        "w": 800,
+        "h": 600
       },
       "sitemap": {
         "changefreq": "monthly",

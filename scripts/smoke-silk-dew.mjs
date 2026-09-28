@@ -407,10 +407,10 @@ await migrationFailPage.evaluateOnNewDocument(() => {
             S1: { stars: 3, bestDrags: 1 },
             S2: { stars: 2, bestDrags: 4 },
         }));
-        const nativeSetItem = Storage.prototype.setItem;
-        Storage.prototype.setItem = function (key, value) {
+        const nativeSetItem = globalThis.Storage.prototype.setItem;
+        globalThis.Storage.prototype.setItem = function (key, value) {
             if (key === 'sd_progress') {
-                throw new DOMException('simulated quota failure', 'QuotaExceededError');
+                throw new globalThis.DOMException('simulated quota failure', 'QuotaExceededError');
             }
             return nativeSetItem.call(this, key, value);
         };
@@ -476,9 +476,9 @@ const saveFailed = await saveFailPage.evaluate(() => {
     // 将 marker 临时退回 1，模拟“版本写入是否会抢跑”的可观察条件。
     localStorage.setItem('sd_progress_version', '1');
     const before = localStorage.getItem('sd_progress');
-    const nativeSetItem = Storage.prototype.setItem;
-    Storage.prototype.setItem = function (key, value) {
-        if (key === 'sd_progress') throw new DOMException('simulated quota failure', 'QuotaExceededError');
+    const nativeSetItem = globalThis.Storage.prototype.setItem;
+    globalThis.Storage.prototype.setItem = function (key, value) {
+        if (key === 'sd_progress') throw new globalThis.DOMException('simulated quota failure', 'QuotaExceededError');
         return nativeSetItem.call(this, key, value);
     };
     window.sdGame.progress.S1 = { stars: 3, bestDrags: 1 };

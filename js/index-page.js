@@ -74,7 +74,7 @@ const i18n = {
         reversiPlay: 'Play ›',
 
         tdName: 'Neon Tower Defense',
-        tdDesc: 'Build pulse, frost, cannon and tesla towers on the neon grid. Survive 25 waves and top the leaderboard.',
+        tdDesc: 'Deploy pulse, frost, cannon and tesla towers across six future-city operations. Survive 15 to 40 escalating waves and defend the energy core.',
         tdTag: 'Strategy',
         tdPlay: 'Play ›',
 
@@ -239,7 +239,7 @@ const i18n = {
         reversiPlay: '开始游戏 ›',
 
         tdName: '霓虹塔防',
-        tdDesc: '在霓虹网格上建造脉冲、冰霜、加农、电磁四类塔，守住 25 波进攻，冲击全球排行榜！',
+        tdDesc: '在六个未来城市作战行动中部署脉冲、冰霜、加农、电磁四类塔，守住能源核心，迎战 15–40 波逐步升级的攻势！',
         tdTag: '策略塔防',
         tdPlay: '开始游戏 ›',
 
@@ -558,7 +558,7 @@ function injectStructuredData() {
         { slug: 'hoop-shot', name: 'Hoop Shot', description: 'Flick basketball arcade — one miss ends the run, chain streaks for fire mode.' },
         { slug: 'minesweeper', name: 'Minesweeper', description: 'Classic Minesweeper logic puzzle — safe first click, chording, three difficulties, global fastest clears.' },
         { slug: 'reversi', name: 'Reversi', description: 'Classic Othello strategy board game — three AI levels or pass-and-play with a friend.' },
-        { slug: 'tower-defense', name: 'Neon Tower Defense', description: 'Neon-themed tower defense — four tower types, 25 escalating waves, upgrades and a global leaderboard.' },
+        { slug: 'tower-defense', name: 'Neon Tower Defense', description: 'Future-city tower defense — four specialist tower types across six operations with 15 to 40 escalating waves and an energy core to defend.' },
         { slug: 'gravity-slingshot', name: 'Gravity Slingshot', description: 'Original orbital physics puzzle — slingshot your probe around planets into the wormhole, 20 holes plus a daily course.' },
         { slug: 'needle-awn', name: 'Pinpoint Clash', description: 'Original cyber-ink martial precision action duel — clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm.' },
         { slug: 'sword-flight', name: 'Sword Flight', description: 'Oriental xianxia kinetic flight action — soar through nine celestial realms, summon companion sword arrays, thread spiritual rings, and ascend to immortality.' },

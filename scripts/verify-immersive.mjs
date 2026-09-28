@@ -6,7 +6,7 @@
 // 断言（每页 × 每视口）：
 //   ① 舞台顶边 = 顶栏底边，舞台底边 = 视口底边（− 底部安全区，无头环境为 0）：顶栏以下整块视口归场景
 //   ② --frame-chrome 是实测值：= shell 上内距 + 顶栏高（不是 CSS 里 150px 的兜底）
-//   ③ 宽度：窄于 --frame-immersive-max 时贴边铺满；更宽时居中且 600–640px
+//   ③ 宽度：窄于 --frame-immersive-max 时贴边铺满；更宽时居中，按页面上限（TD 为 800px，其它为 640px）
 //   ④ 无横向滚动；首屏内没有页脚（页脚随流在首屏之下）但页脚存在且可滚到
 //   ⑤ 场景是纯手势区：touch-action:none、user-select:none
 //   ⑥ 画布后备缓冲 = CSS 尺寸 × min(dpr, 2)（高清且有上限），画面非空
@@ -55,6 +55,7 @@ const measure = page => page.evaluate(() => {
     const ft = footer ? footer.getBoundingClientRect() : null;
     const scs = getComputedStyle(stage);
     const rootMax = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--frame-immersive-max')) || 640;
+    const immersiveMax = parseFloat(cs.getPropertyValue('--frame-immersive-max')) || rootMax;
     let lit = 0;
     if (canvas && canvas.width) {
         const g = canvas.getContext('2d');
@@ -74,6 +75,7 @@ const measure = page => page.evaluate(() => {
         canvas: canvas ? { w: canvas.width, h: canvas.height, cw: canvas.clientWidth, ch: canvas.clientHeight, lit } : null,
         hud: hud ? { top: hud.getBoundingClientRect().top, bottom: hud.getBoundingClientRect().bottom } : null,
         rootMax,
+        immersiveMax,
         bodyClass: document.body.className,
     };
 });
@@ -90,7 +92,9 @@ for (const g of RUN_PAGES) {
         // 进入游戏态再量：开始菜单期间舞台按 layout.md「开始菜单」契约让位给菜单高度（< 1024px）
         await page.evaluate(() => {
             const menu = document.querySelector('.game-overlay--menu:not(.hidden)');
-            const first = menu && menu.querySelector('button');
+            const first = menu && (menu.querySelector('[data-immersive-start]')
+                || menu.querySelector('#td-btn-play')
+                || menu.querySelector('button'));
             if (first) first.click();
         });
         await new Promise(r => setTimeout(r, 400));
@@ -99,10 +103,11 @@ for (const g of RUN_PAGES) {
         check(Math.abs(m.stage.top - m.topbarBottom) <= 1, `① ${tag}：舞台紧贴顶栏`, `stage.top=${m.stage.top} topbar.bottom=${m.topbarBottom}`);
         check(Math.abs(m.stage.bottom - m.vh) <= 1, `① ${tag}：舞台底边 = 视口底边`, `stage.bottom=${m.stage.bottom} vh=${m.vh}`);
         check(Math.abs(m.chromeVar - Math.round(m.padTop + m.topbarH)) <= 1, `② ${tag}：--frame-chrome 为实测值`, `${m.chromeVar} vs ${m.padTop}+${m.topbarH}`);
-        if (m.vw <= m.rootMax) {
+        if (m.vw <= m.immersiveMax) {
             check(Math.abs(m.stage.width - m.vw) <= 1 && Math.abs(m.stage.left) <= 1, `③ ${tag}：窄屏贴边铺满`, `${m.stage.left}/${m.stage.width}`);
         } else {
-            check(m.stage.width >= 600 && m.stage.width <= 640, `③ ${tag}：宽屏舞台 600–640px`, m.stage.width);
+            const max = g.id === 'tower-defense' ? m.immersiveMax : 640;
+            check(m.stage.width >= (g.id === 'tower-defense' ? 760 : 600) && m.stage.width <= max, `③ ${tag}：宽屏舞台达到页面上限`, `${m.stage.width} ≤ ${max}`);
             check(Math.abs(m.stage.left - (m.vw - m.stage.width) / 2) <= 1, `③ ${tag}：宽屏舞台居中`, m.stage.left);
         }
         check(m.scrollW <= m.vw, `④ ${tag}：无横向滚动`, `${m.scrollW} > ${m.vw}`);

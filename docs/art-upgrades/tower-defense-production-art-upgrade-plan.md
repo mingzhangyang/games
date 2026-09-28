@@ -1,7 +1,9 @@
 # 《霓虹塔防 Neon Tower Defense》完整美术升级实施计划
 
 > 目标执行者：Codex  
-> 状态：待实施  
+> 状态：已实现（源代码、构建与静态验收通过；浏览器 smoke 需在有 Chrome/Chromium 的环境补跑）
+>
+> 本轮验收记录：`npm run build`、`node scripts/run-lint.mjs`、`npm run gen -- --check`、`node scripts/verify-registry.mjs`、`node scripts/verify-td-art.mjs` 已通过；当前执行容器未提供 Chrome/Chromium，因此 `td-topbar`、`td-difficulty`、`smoke-tower-defense` 与 immersive 浏览器几何验收暂未执行。
 > 目标：保留当前成熟的塔防核心玩法、6 个战役关卡（分别为 15 / 20 / 25 / 30 / 35 / 40 波）、敌人机制与技能系统，同时把当前 480×640 竖向小战场升级为**800×600 横屏沉浸式未来都市防线**，让路径长度、部署空间和战术纵深真正扩大，而不是只把现有画布放大显示。
 
 ## 0. 升级原则
@@ -1261,22 +1263,22 @@ Vite hashed asset 的实际可加载性必须单独在**构建产物**上验证�
 
 以下全部满足才视为本轮美术升级完成：
 
-- [ ] 有正式生产战场背景；
-- [ ] 地面、路径、建造区形成统一场景；
-- [ ] 四种防御塔完成正式视觉资源接入；
-- [ ] 主要敌人完成正式视觉资源接入；
-- [ ] Boss / Overlord 不再只是普通单位放大；
-- [ ] Pulse / Cannon / Tesla / Frost 的攻击反馈明显区分；
-- [ ] 护盾、治疗、冻结、眩晕机制视觉清晰；
-- [ ] EMP / 技能特效升级；
-- [ ] 开始页主视觉不再使用 emoji；
-- [ ] HUD / build panel / result overlay 风格统一；
-- [ ] 永久性大面积 glow 明显减少；
-- [ ] production art 加载失败时游戏仍可完整游玩；
+- [x] 有正式生产战场背景；
+- [x] 地面、路径、建造区形成统一场景；
+- [x] 四种防御塔完成正式视觉资源接入；
+- [x] 主要敌人完成正式视觉资源接入；
+- [x] Boss / Overlord 不再只是普通单位放大；
+- [x] Pulse / Cannon / Tesla / Frost 的攻击反馈明显区分；
+- [x] 护盾、治疗、冻结、眩晕机制视觉清晰；
+- [x] EMP / 技能特效升级；
+- [x] 开始页主视觉不再使用 emoji；
+- [x] HUD / build panel / result overlay 风格统一；
+- [x] 永久性大面积 glow 明显减少；
+- [x] production art 加载失败时游戏仍可完整游玩；
 - [ ] mobile / desktop / landscape / DPR 2 验证通过；
-- [ ] `verify-td-art.mjs` 加入 verify-all；
+- [x] `verify-td-art.mjs` 加入 verify-all；
 - [ ] 现有 tower-defense gameplay / difficulty 测试不退化；
-- [ ] 生产美术包未超过硬预算。
+- [x] 生产美术包未超过硬预算。
 
 ---
 

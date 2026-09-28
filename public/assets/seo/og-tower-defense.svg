@@ -32,7 +32,7 @@
 
   <text x="88" y="165" fill="#f4f6ff" font-size="74" font-weight="800" font-family="Segoe UI, system-ui, sans-serif">Neon Tower Defense</text>
   <text x="88" y="228" fill="#40d8ff" font-size="38" font-weight="600" font-family="PingFang SC, Microsoft YaHei, sans-serif">霓虹塔防 · 建造升级守护核心</text>
-  <text x="88" y="290" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Pulse · Frost · Cannon · Tesla — four towers, 25 waves.</text>
+  <text x="88" y="290" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Four specialist towers · six operations · 15–40 waves.</text>
   <text x="88" y="334" fill="#8fa0d8" font-size="28" font-family="Segoe UI, system-ui, sans-serif">Upgrade your turrets and defend the neon core!</text>
 
   <!-- 小地图示意 -->

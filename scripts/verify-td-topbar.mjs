@@ -170,8 +170,11 @@ const airPixels = await page.evaluate(async () => {
     const sampleMid = () => {
         const air = window.__TD_AIR_PATH__;
         const pt = air.pointAt(air.total * 0.5);
-        const px = Math.round(pt.x * (cv.width / 480));
-        const py = Math.round(pt.y * (cv.height / 640));
+        const grid = window.__TD_GRID__;
+        const logicalW = grid.COLS * grid.CELL;
+        const logicalH = grid.ROWS * grid.CELL;
+        const px = Math.round(pt.x * (cv.width / logicalW));
+        const py = Math.round(pt.y * (cv.height / logicalH));
         const o = (py * cv.width + px) * 4;
         const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
         return [d[o], d[o + 1], d[o + 2]];
