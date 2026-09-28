@@ -20,6 +20,7 @@ import {
     PHYS,
     LEVELS,
     scoreStars,
+    dailyQualifies,
     createWorld,
     stepWorld,
     beginDrag,
@@ -734,7 +735,7 @@ class SilkfallGame {
         const el = this.el;
         this.showClearPanelSilent();
         const maxStars = this.daily.course.length * 3;
-        const mastered = this.daily.stars === maxStars;
+        const mastered = dailyQualifies(this.daily.stars, this.daily.course.length);
         if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
         if (el['over-score']) el['over-score'].textContent = `${this.t('drags')} ${this.daily.totalDrags} · ★ ${this.daily.stars}/${maxStars}`;
         if (el['over-sub']) {
