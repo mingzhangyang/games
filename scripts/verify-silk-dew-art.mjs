@@ -173,12 +173,29 @@ for (const needle of [
     "attachDiagnostics(mobile, 'mobile')",
     "attachDiagnostics(lightPage, 'light')",
     "attachDiagnostics(reducedPage, 'reduced-motion')",
-    "attachDiagnostics(fallbackPage, 'fallback'",
-    "localStorage.setItem('site_theme', 'dark')",
-    'productionArt: g.usesProductionArt()',
-    'fallback 测试未在生产美术启用状态运行',
+    "target.on('requestfailed'",
+    'isGardenMidProductionUrl',
 ]) {
-    if (!smoke.includes(needle)) fail(`smoke diagnostics/fallback contract is missing ${needle}`);
+    if (!smoke.includes(needle)) fail(`smoke diagnostics contract is missing ${needle}`);
+}
+const fallbackBlock = smoke.slice(
+    smoke.indexOf('/* ── 11. 生产图层故障降级'),
+    smoke.indexOf('/* ── 12. 噪声过滤后的页面错误')
+);
+for (const needle of [
+    "attachDiagnostics(fallbackPage, 'fallback', { allowRequestFailure: isGardenMidProductionUrl })",
+    "localStorage.setItem('site_theme', 'dark')",
+    'interceptedGardenMid !== 1',
+    'productionArt: g.usesProductionArt()',
+    'fallbackReady: g.scene?.debug?.fallbackReady',
+    'fallbackDrawCount: g.scene?.debug?.fallbackDrawCount || 0',
+    'fallback 测试未在生产美术启用状态运行',
+    'fallback 状态成立但 fallback 画板未实际绘制',
+]) {
+    if (!fallbackBlock.includes(needle)) fail(`fallback smoke contract is missing ${needle}`);
+}
+if (!scene.includes('fallbackDrawCount++') || !scene.includes('fallbackReady: !!art.fallback')) {
+    fail('scene debug must prove that the fallback plate actually rendered');
 }
 if (!levels.includes('export const LEVELS') || !levels.includes('export function stepWorld')) fail('physics source contract unexpectedly changed shape');
 
