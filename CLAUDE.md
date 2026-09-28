@@ -32,8 +32,9 @@ npm run build       # Vite production build -> dist/ (multi-entry, legacy plugin
 npm run deploy      # vite build && wrangler deploy
 npm run preview     # wrangler dev (serves dist/ + src/index.js worker)
 npm run gen         # 由 games.config.json 重新生成全部登记点（见 registry 契约）
-npm run verify      # 全量校验体系（21 项，见 Testing）
-npm run verify:quick  # 日常档（15 项：gen-check + lint + 8 个离线校验器 + 5 个关键在线项）
+npm run verify      # 全量校验体系（SUITE 全部项，见 Testing）
+npm run verify:quick  # 日常档（QUICK_NAMES）
+npm run verify:changed  # 按 git diff 只跑相关项（单页改动约 40s；动了共享文件自动退回全量）
 ```
 
 ### Contract docs（docs/contracts/）
@@ -112,14 +113,16 @@ npm run dev
 # or serve dist/ after a build with any static server
 ```
 
-### Testing — `npm run verify`（verify-all.mjs，21 项）
-Puppeteer-core 驱动的真浏览器校验体系；**提交前必须全绿**。编排器自动起静态服务器 → 顺序跑 → 汇总 → kill。
+### Testing — `npm run verify`（verify-all.mjs）
+Puppeteer-core 驱动的真浏览器校验体系；**提交前必须全绿**。编排器自动起静态服务器 → 并发跑 → 汇总 → kill。项目清单以 `scripts/verify-all.mjs` 的 `SUITE` / `QUICK_NAMES` 为准（本文件不再抄数目）。
 
 - **离线项**（无需浏览器）：`gen-check`（gen 漂移）、`lint`（eslint+stylelint）、`boot`（禁 DOMContentLoaded 复活）、`daily`（时区/哈希黄金值）、`leaderboard`、`i18n`、`sfx`、`registry`（caps ⟺ 代码事实）
 - **在线项**（需服务器 + Chrome）：`fg-audit`、`placeholder-leak`、`chrome`、`desktop-frame`、`stats-drawer`、`gomoku`、`button-icons`、`tetris-topbar-mobile`、`tetris-touch`、`tetris-drawer`、`smoke-index`、`smoke-tank-battle`、`smoke-math-rain`
-- 日常用 `npm run verify:quick`（15 项档）；复验 dist 产物：`node scripts/verify-all.mjs http://127.0.0.1:8901`（先 `npm run build && cd dist` 起服务）
+- 三档：`verify:changed`（改动相关项，日常首选）→ `verify:quick` → `verify`（PR 前 / 动了共享层）；复验 dist 产物：`node scripts/verify-all.mjs http://127.0.0.1:8901`（先 `npm run build && cd dist` 起服务）
 - 萤火信号专项：`firefly-signal-sim`（离线：模拟单元 + 确定性回放 + 关卡可玩性）、`immersive`（Immersive Stage 几何 × 6 视口）、`smoke-firefly-signal`（真实点击通关 + 浏览器模拟指纹 == Node 回放）
-- 新校验器加进 `scripts/verify-all.mjs` 的 `SUITE`（在线项 `needsServer: true`）；快速档记入 `QUICK_NAMES`
+- 新校验器加进 `scripts/verify-all.mjs` 的 `SUITE`（在线项 `needsServer: true`）；快速档记入 `QUICK_NAMES`。**逐页循环的跨页校验器必须接 `scripts/lib/page-filter.mjs`（`keepPage` / `exitIfNoPages`）并标 `pages: true`**，否则 `--changed` 下它要么全页跑（慢），要么被漏掉；页专属校验器名字里带页 id（`smoke-<id>` / `<id>-levels`），`--changed` 靠名字归属，带不了就写 `games: [...]`
+- 并发与提速：离线项全并发，浏览器项 `--jobs=N`（默认 `min(3, CPU/2)`，`VERIFY_JOBS` 可覆盖）；并发时每项输出缓冲成整块打印，排查单项用 `--jobs=1` 回到串行直通。新写在线校验器别用 `networkidle2` + 固定 sleep 当就绪条件 —— 用 `waitUntil: 'load'` + 显式条件（见 `docs/traps.md`「校验基础设施」）。单个跨页校验器可直接 `VERIFY_PAGES=silk-dew,index node scripts/verify-theme.mjs <base>`
+- Chrome 查找（`scripts/lib/browser.mjs`）：`CHROME_BIN` → 系统路径 → puppeteer 缓存 → `PLAYWRIGHT_BROWSERS_PATH` 下的 Chromium（云端容器无需手设）
 - 几何检查测不出可玩性：真实验证 = canvas 位图像素 + `elementFromPoint` + 真实点击；结算态与 i18n 文案必须专门断言 + 反向验证（旧版本跑同一断言必须失败）
 
 ## Code Patterns
