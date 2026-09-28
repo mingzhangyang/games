@@ -100,7 +100,7 @@ const LANGUAGES = makeText({
         stats: 'Stats',
         title: 'Silkfall',
         subtitle: 'Drag · Guide · Gather',
-        howto: 'Drag the golden anchor knots to swing the silk. Your dew pearl follows the thread — steer it past the thorns, pop bubbles to ride them upward, and let the breezes carry you into the jade vessel. Fewer drags, more stars!',
+        howto: 'Pull the golden anchor knots to guide the silk. Each pull has limited reach, so release and grab again to plan a route past thorns, bubbles and breezes. Collect every starburst and finish within par for three stars.',
         playLevels: 'Levels',
         playDaily: 'Daily',
         level: 'Level',
@@ -125,32 +125,32 @@ const LANGUAGES = makeText({
         copyResult: 'Copy',
         resetTitle: 'Restart level',
         home: 'Home',
-        hint: 'Drag the anchor to swing the silk · guide the dew into the jade vessel',
+        hint: 'Pull the anchor in short stages · collect the starbursts · guide the dew into the jade vessel',
         sideHowTo: 'How to play',
         sideRecords: 'Records',
         tipCut: 'Drag the anchor knot to swing the thread',
-        tipSwing: 'Longer drags give a wider reach',
+        tipSwing: 'Each pull has limited reach — release and grab again'
         tipTwoRopes: 'You can drag any anchor — pick the right thread',
         tipThorn: 'Thorns shatter the pearl — keep clear',
         tipThread: 'Thread the gap carefully',
         tipBreeze: 'Breezes push the pearl — use them',
         tipBubble: 'Pop a bubble to ride it up, or let it carry you',
-        tipTiming: 'Reach matters — plan the swing',
-        tipAll: 'Everything at once — take your time',
-        tipFinal: 'The last drop of dew',
+        tipTiming: 'Plan where each pull ends before you commit'
+        tipAll: 'Chain short pulls: route first, timing second'
+        tipFinal: 'Final garden — every pull and every starburst counts'
         stage: 'Stage',
         stageOf: '{a} / {b}',
         failThorn: 'The thorns shattered your pearl',
         failOut: 'Your pearl fell out of the garden',
-        noteDrag: 'Hold and drag the golden anchor',
-        notePearl: 'Or drag the pearl itself (the thread limits its reach)',
+        noteDrag: 'Pull the golden anchor; release to start the next pull'
+        notePearl: 'The dew pearl cannot be dragged directly — steer it through the silk'
         noteBubble: 'Tap a bubble to pop it',
     },
     zh: {
         stats: '数据统计',
         title: '垂丝引露',
         subtitle: '牵丝 · 引露 · 拾星',
-        howto: '拖动金色的锚结牵引丝线，丝尾的露珠会随之摆动。引它绕过荆棘、点破气泡借浮力上浮、顺气旋横渡夜庭，最终坠入玉壶。拖拽次数越少，星星越多！',
+        howto: '牵动金色锚结引导丝线。每次牵拉都有有限行程，需要松手再抓来分步规划路线，绕过荆棘、利用气泡与气旋。收齐星芒并在目标牵拉次数内入壶，才能获得三星。'
         playLevels: '关卡模式',
         playDaily: '每日挑战',
         level: '关卡',
@@ -175,25 +175,25 @@ const LANGUAGES = makeText({
         copyResult: '复制',
         resetTitle: '重开本关',
         home: '主页',
-        hint: '拖动锚结牵引丝线 · 引露珠入玉壶',
+        hint: '分段牵动锚结 · 收齐星芒 · 引露珠入玉壶'
         sideHowTo: '玩法说明',
         sideRecords: '战绩',
         tipCut: '拖动金色锚结，丝线随之摆荡',
-        tipSwing: '拖得越远，露珠可达范围越大',
+        tipSwing: '每次牵拉行程有限——松手再抓才能继续'
         tipTwoRopes: '多根丝都可拖——选对那一根',
         tipThorn: '荆棘会击碎露珠，务必绕开',
         tipThread: '小心穿过缝隙',
         tipBreeze: '气旋会推动露珠，善加利用',
         tipBubble: '点破气泡上浮，或让它载你一程',
-        tipTiming: '够不够得着，全看这一荡',
-        tipAll: '元素齐全——慢慢来',
-        tipFinal: '最后一滴露水',
+        tipTiming: '先想好这一拉停在哪里，再出手'
+        tipAll: '把路线拆成短牵拉：先规划，再抓时机'
+        tipFinal: '终庭——每次牵拉、每枚星芒都算数'
         stage: '关卡',
         stageOf: '{a} / {b}',
         failThorn: '露珠撞上了荆棘',
         failOut: '露珠掉出了夜庭',
-        noteDrag: '按住并拖动金色锚结',
-        notePearl: '也可直接拖露珠（受丝长限制）',
+        noteDrag: '牵动金色锚结；松手后才能开始下一次牵拉'
+        notePearl: '露珠不能直接拖动——必须通过丝线来引导'
         noteBubble: '点击气泡可以点破它',
     }
 });
@@ -645,7 +645,9 @@ class SilkfallGame {
     onLevelWon() {
         Sfx.win();
         vibrate(30);
-        const stars = this.starsForLevel(this.drags, this.par);
+        const starsTaken = this.world ? this.world.starsTaken : 0;
+        const starsTotal = this.world ? this.world.stars.length : 0;
+        const stars = this.starsForLevel(this.drags, this.par, starsTaken, starsTotal);
         const p = this.progress[this.spec.id] || { stars: 0, bestDrags: 0 };
         const improved = stars > p.stars || (p.bestDrags === 0 || this.drags < p.bestDrags);
         if (stars > p.stars) p.stars = stars;
@@ -666,9 +668,14 @@ class SilkfallGame {
         track('silk-dew', 'level_win', stars);
     }
 
-    starsForLevel(drags, par) {
-        if (drags <= par) return 3;
-        if (drags <= par + 2) return 2;
+    starsForLevel(drags, par, starsTaken, starsTotal) {
+        // 三星必须同时证明“路线完整”和“牵拉高效”：
+        // 收齐场上星芒 + 在 par 内完成。只入壶、不拾星不再能拿三星。
+        if (starsTotal <= 0) return drags <= par ? 3 : (drags <= par + 2 ? 2 : 1);
+        const all = starsTaken >= starsTotal;
+        const nearAll = starsTotal > 1 && starsTaken >= starsTotal - 1;
+        if (all && drags <= par) return 3;
+        if (all || (nearAll && drags <= par)) return 2;
         return 1;
     }
 
@@ -677,10 +684,10 @@ class SilkfallGame {
         this.state = 'won-level';
         if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         if (el['clear-line']) {
-            const rest = 3 - stars;
-            el['clear-line'].textContent = rest > 0
-                ? `${this.t('drags')} ${this.drags} · ${this.t('par')} ${this.par}`
-                : `${this.t('drags')} ${this.drags}`;
+            const taken = this.world ? this.world.starsTaken : 0;
+            const total = this.world ? this.world.stars.length : 0;
+            const starPart = total ? ` · ★ ${taken}/${total}` : '';
+            el['clear-line'].textContent = `${this.t('drags')} ${this.drags} · ${this.t('par')} ${this.par}${starPart}`;
         }
         const isLast = this.mode === 'levels' && this.levelIdx + 1 >= LEVELS.length;
         if (el['btn-next']) {
@@ -1408,6 +1415,24 @@ class SilkfallGame {
             const a = ps[0];
             const pulse = this.reducedMotion ? 1 : 1 + 0.10 * Math.sin(this.time * 3.4 + rope.i);
             const isHeld = this.world.dragging && this.world.dragging.kind === 'anchor' && this.world.dragging.rope === rope.i;
+            if (isHeld) {
+                const d = this.world.dragging;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(d.originX, d.originY, d.maxDistance, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255,211,120,0.16)';
+                ctx.lineWidth = 1.2;
+                ctx.setLineDash([5, 7]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.moveTo(d.originX, d.originY);
+                ctx.lineTo(a.x, a.y);
+                ctx.strokeStyle = 'rgba(255,232,150,0.32)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
             const g = ctx.createRadialGradient(a.x, a.y, 1, a.x, a.y, PHYS.anchorR * 2.0 * pulse);
             g.addColorStop(0, isHeld ? 'rgba(255,232,150,0.52)' : 'rgba(255,211,120,0.34)');
             g.addColorStop(1, 'rgba(255,211,120,0)');
