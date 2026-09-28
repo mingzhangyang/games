@@ -196,7 +196,7 @@ export const LEVELS = [
         vessel: { x: 400, y: 480, w: 86 },
     },
     {
-        id: 'S14', par: 5, pullMax: 89, tipKey: 'tipBubble',
+        id: 'S14', par: 5, pullMax: 90, tipKey: 'tipBubble',
         ropes: [rope(240, 150, 17, 0, 0, 0)],
         stars: [{ x: 261, y: 368 }, { x: 295, y: 430 }],
         thorns: [{ x: 130, y: 280, r: 20 }, { x: 310, y: 380, r: 20 }],
