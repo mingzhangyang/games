@@ -21,7 +21,7 @@ class ParticleSystem {
         this.presets = {
             correct: {
                 count: 20,
-                colors: ['#48bb78', '#68d391', '#9ae6b4', '#c6f6d5'],
+                colors: ['#72d5a4', '#9be6be', '#c6f0d9', '#e4faee'],
                 size: { min: 2, max: 8 },
                 speed: { min: 2, max: 8 },
                 life: { min: 800, max: 1500 },
@@ -31,7 +31,7 @@ class ParticleSystem {
             },
             incorrect: {
                 count: 15,
-                colors: ['#e53e3e', '#fc8181', '#feb2b2', '#fed7d7'],
+                colors: ['#f08a89', '#f5aaa8', '#ffc0bd', '#ffe0dc'],
                 size: { min: 1, max: 6 },
                 speed: { min: 1, max: 5 },
                 life: { min: 600, max: 1000 },
@@ -41,7 +41,7 @@ class ParticleSystem {
             },
             combo: {
                 count: 30,
-                colors: ['#ed8936', '#f6ad55', '#fbd38d', '#feebc8'],
+                colors: ['#d9b875', '#e8ce91', '#b8d7ed', '#eef8ff'],
                 size: { min: 3, max: 10 },
                 speed: { min: 3, max: 10 },
                 life: { min: 1000, max: 2000 },
@@ -51,7 +51,7 @@ class ParticleSystem {
             },
             explosion: {
                 count: 40,
-                colors: ['#667eea', '#764ba2', '#a78bfa', '#c4b5fd'],
+                colors: ['#8bc7ee', '#5d94bb', '#d9b875', '#c1e8ff'],
                 size: { min: 2, max: 12 },
                 speed: { min: 5, max: 15 },
                 life: { min: 500, max: 1200 },
@@ -462,7 +462,7 @@ class ParticleSystem {
         // 添加文字效果（如果需要）
         const comboText = this.getLocalizedComboText(comboCount);
         this.createTextEffect(x, y - 30, comboText, {
-            color: '#ed8936',
+            color: '#d9b875',
             size: 16 + comboCount * 2,
             duration: 1500
         });
@@ -501,7 +501,7 @@ class ParticleSystem {
         
         // 添加震动效果的视觉反馈
         this.createShockWave(x, y, {
-            color: '#e53e3e',
+            color: '#f08a89',
             maxRadius: 50,
             duration: 300
         });
@@ -516,7 +516,7 @@ class ParticleSystem {
             y: y,
             radius: 0,
             maxRadius: options.maxRadius || 100,
-            color: options.color || '#667eea',
+            color: options.color || '#8bc7ee',
             alpha: 1,
             life: options.duration || 500,
             age: 0,

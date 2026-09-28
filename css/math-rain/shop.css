@@ -1,131 +1,169 @@
-/*
- * math-rain 商店/语言选择皮肤（2026-09-20 自 math-rain.html 内联 \3c style> 原样抽离，
- * B 批次收编残留内联块；规则内容与顺序保持原样——.buy-btn:disabled 与 :hover
- * 同特异性靠顺序定胜负，不得重排）。
- * 注意：本文件内的 hex 不在 p3-token-swap 的 11 个映射表内，故意保留 math-rain
- * 自有色板（如 #667eea 主紫、#ffd166 金币）；令牌化属 math-rain 皮肤重制，另行立项。
- */
+/* Math Rain shop — instrument console skin. */
 
-.language-selector {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    justify-content: center;
+#shop-screen .screen-content {
+    max-width: 640px;
 }
 
-.lang-btn {
-    padding: 8px 16px;
-    border: 2px solid #667eea;
-    background: rgb(102, 126, 234, 0.1);
-    color: #667eea;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.lang-btn:hover {
-    background: rgb(102, 126, 234, 0.2);
-    transform: translateY(-1px);
-}
-
-.lang-btn.active {
-    background: #667eea;
-    color: white;
-    box-shadow: 0 4px 12px rgb(102, 126, 234, 0.3);
-}
-
-.setting-item .language-selector {
-    margin-bottom: 0;
-}
-
-/* Shop styles */
 .current-coins {
-    text-align: center;
-    font-size: 18px;
-    margin-bottom: 20px;
-    color: #ffd166;
-    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 auto 18px;
+    padding: 7px 12px;
+    color: var(--mr-gold);
+    background: rgb(217, 184, 117, 0.09);
+    border: 1px solid rgb(217, 184, 117, 0.3);
+    border-radius: 999px;
+    font-family: var(--mr-mono);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.current-coins .coins-icon svg {
+    width: 18px;
+    height: 18px;
 }
 
 .shop-items {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 30px;
+    display: grid;
+    gap: 9px;
+    margin-bottom: 18px;
 }
 
 .shop-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: rgb(102, 126, 234, 0.1);
-    border: 2px solid #667eea;
-    border-radius: 12px;
-    transition: all 0.2s;
+    gap: 12px;
+    padding: 12px;
+    text-align: left;
+    background: rgb(5, 18, 31, 0.66);
+    border: 1px solid rgb(153, 191, 221, 0.18);
+    border-radius: 9px;
 }
 
 .shop-item:hover {
-    background: rgb(102, 126, 234, 0.15);
-    transform: translateY(-2px);
+    background: rgb(13, 35, 57, 0.84);
+    border-color: rgb(153, 191, 221, 0.36);
 }
 
 .item-info {
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex: 1;
+    gap: 10px;
 }
 
 .item-icon {
-    font-size: 28px;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mr-blue);
+    background: rgb(139, 199, 238, 0.1);
+    border: 1px solid rgb(139, 199, 238, 0.24);
+    border-radius: 8px;
+}
+
+.shop-item:nth-child(2) .item-icon {
+    color: var(--mr-danger);
+    background: rgb(240, 138, 137, 0.1);
+    border-color: rgb(240, 138, 137, 0.25);
+}
+
+.shop-item:nth-child(3) .item-icon {
+    color: var(--mr-success);
+    background: rgb(114, 213, 164, 0.1);
+    border-color: rgb(114, 213, 164, 0.25);
+}
+
+.item-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+.item-details {
+    min-width: 0;
 }
 
 .item-details h3 {
-    margin: 0 0 4px 0;
-    font-size: 16px;
-    color: #f7fafc;
+    overflow: hidden;
+    color: var(--mr-text);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .item-details p {
-    margin: 0;
-    font-size: 13px;
-    color: #a0aec0;
+    overflow: hidden;
+    margin-top: 3px;
+    color: var(--mr-text-muted);
+    font-size: 11px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .item-price {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 16px;
-    font-weight: bold;
-    color: #ffd166;
+    color: var(--mr-gold);
+    font-family: var(--mr-mono);
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.item-price .coins-icon svg {
+    width: 15px;
+    height: 15px;
 }
 
 .buy-btn {
-    padding: 8px 16px;
-    background: #48bb78;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.2s;
+    min-width: 60px;
+    min-height: 38px;
+    padding: 8px 10px;
+    color: #06101b;
+    background: var(--mr-blue);
+    border-color: var(--mr-blue);
+    font-size: 11px;
 }
 
-.buy-btn:hover {
-    background: #38a169;
-    transform: scale(1.05);
-}
-
-.buy-btn:disabled {
-    background: #4a5568;
+.buy-btn:disabled,
+.buy-btn:disabled:hover {
+    color: var(--mr-text-muted);
+    background: rgb(20, 37, 53, 0.84);
+    border-color: rgb(153, 191, 221, 0.16);
     cursor: not-allowed;
+    opacity: 0.7;
     transform: none;
 }
 
-.buy-btn:disabled:hover {
-    background: #4a5568;
+@media (width <= 480px) {
+    .shop-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 7px 9px;
+        padding: 9px;
+    }
+
+    .item-price {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .buy-btn {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+    }
+
+    .item-details p {
+        white-space: normal;
+    }
 }
