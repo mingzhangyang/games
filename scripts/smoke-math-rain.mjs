@@ -52,11 +52,21 @@ async function createFixedExpression(page, result, expressionText) {
         expression.speed = 0;
         expression.startTime = Date.now();
         const bounds = game.getExpressionBounds(expression);
+        const hitBounds = game.getExpressionHitBounds(expression);
         const canvasRect = game.canvas.getBoundingClientRect();
+        const centerX = (bounds.left + bounds.right) / 2;
+        const centerY = (bounds.top + bounds.bottom) / 2;
+        const expandedTouchY = hitBounds.bottom > bounds.bottom
+            ? bounds.bottom + (hitBounds.bottom - bounds.bottom) / 2
+            : centerY;
         return {
             id: expression.id,
-            x: canvasRect.left + (bounds.left + bounds.right) / 2,
-            y: canvasRect.top + (bounds.top + bounds.bottom) / 2,
+            x: canvasRect.left + centerX,
+            y: canvasRect.top + centerY,
+            expandedTouchX: canvasRect.left + centerX,
+            expandedTouchY: canvasRect.top + expandedTouchY,
+            visualHeight: bounds.height,
+            hitHeight: hitBounds.hitHeight,
         };
     }, { result, expressionText });
 }
@@ -257,6 +267,22 @@ if (!portrait.targetInside || !portrait.toolbarInside) fail('portrait 目标区�
 
 await page.click('#start-game-btn');
 await waitFor(page, () => window.mathRainGame?.gameStateManager?.getState()?.gameState === 'playing', '移动端 portrait 无法开始');
+
+// 触控命中：视觉卡片保持原尺寸，但移动端卡片外沿的最小热区应达到 44px。
+const mobileBeforeTouch = await gameState(page);
+const mobileTarget = mobileBeforeTouch?.targetNumber;
+const mobileTouchPoint = await createFixedExpression(page, mobileTarget, `${mobileTarget}`);
+if (mobileTouchPoint.hitHeight < 44 || mobileTouchPoint.visualHeight >= 44) {
+    fail(`mobile 表达式热区契约异常：visual=${mobileTouchPoint.visualHeight}px hit=${mobileTouchPoint.hitHeight}px`);
+}
+await page.touchscreen.tap(mobileTouchPoint.expandedTouchX, mobileTouchPoint.expandedTouchY);
+await waitFor(
+    page,
+    previous => (window.mathRainGame?.gameStateManager?.getState()?.correctClicks || 0) > previous,
+    '移动端 44px 扩展热区未命中正确表达式',
+    mobileBeforeTouch?.correctClicks || 0
+);
+
 await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
 await new Promise(resolve => setTimeout(resolve, 180));
 const landscape = await page.evaluate(() => ({

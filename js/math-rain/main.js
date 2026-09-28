@@ -21,6 +21,8 @@ import ParticleSystem from './particle-effects.js';
 import { getLocalizedText } from './i18n/language-manager.js';
 import { storageGet } from '../safe-storage.js';
 
+const MIN_EXPRESSION_TOUCH_TARGET = 44;
+
 /**
  * Math Rain Game Class
  * Orchestrator that uses modular component architecture
@@ -696,6 +698,28 @@ class MathRainGame {
     }
 
     /**
+     * Keep the visual card geometry exact while giving touch input a usable
+     * minimum target. The expanded bounds are used only by hit testing.
+     */
+    getExpressionHitBounds(expression) {
+        const visualBounds = this.getExpressionBounds(expression);
+        const hitWidth = Math.max(visualBounds.width, MIN_EXPRESSION_TOUCH_TARGET);
+        const hitHeight = Math.max(visualBounds.height, MIN_EXPRESSION_TOUCH_TARGET);
+        const extraX = (hitWidth - visualBounds.width) / 2;
+        const extraY = (hitHeight - visualBounds.height) / 2;
+
+        return {
+            ...visualBounds,
+            left: visualBounds.left - extraX,
+            right: visualBounds.right + extraX,
+            top: visualBounds.top - extraY,
+            bottom: visualBounds.bottom + extraY,
+            hitWidth,
+            hitHeight
+        };
+    }
+
+    /**
      * Render all expressions on canvas
      */
     renderExpressions() {
@@ -964,7 +988,7 @@ class MathRainGame {
         for (let i = this.expressions.length - 1; i >= 0; i--) {
             const expr = this.expressions[i];
             if (!expr?.position || expr.isClicked) continue;
-            const bounds = this.getExpressionBounds(expr);
+            const bounds = this.getExpressionHitBounds(expr);
             if (clickX >= bounds.left && clickX <= bounds.right && clickY >= bounds.top && clickY <= bounds.bottom) {
                 this.handleExpressionClick(expr);
                 break;

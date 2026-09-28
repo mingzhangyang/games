@@ -102,6 +102,10 @@ assert(shopCss.includes('.shop-item') && shopCss.includes('.current-coins'), '�
 
 assert(mainJs.includes('getExpressionCardMetrics'), '表达式渲染缺少共享卡片几何');
 assert(mainJs.includes('getExpressionBounds'), '表达式命中检测未复用共享几何');
+assert(mainJs.includes('getExpressionHitBounds'), '表达式触控命中缺少独立热区几何');
+assert(mainJs.includes('MIN_EXPRESSION_TOUCH_TARGET = 44'), '表达式触控热区下限必须为 44px');
+assert(mainJs.includes('Math.max(visualBounds.width, MIN_EXPRESSION_TOUCH_TARGET)'), '表达式触控宽度未设置最小值');
+assert(mainJs.includes('Math.max(visualBounds.height, MIN_EXPRESSION_TOUCH_TARGET)'), '表达式触控高度未设置最小值');
 assert(mainJs.includes('rgba(4, 12, 24, 0.035)'), 'Canvas 背景填充必须保持低透明度');
 assert(!/shadowBlur\s*=\s*(?!0\b)[1-9]/.test(mainJs), '数字雨表达式禁止使用持续性 shadowBlur');
 assert(mainJs.includes('feedbackAt'), '正确/错误点击反馈没有绑定到表达式状态');
