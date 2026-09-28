@@ -34,8 +34,8 @@
 | §8 `girl-hands.webp` 独立盖住叶茎 | 删除；改为同一张女孩精灵裁到拳头重绘（`#cp-girl-fists` + `#cp-girl-fists-clip`） | 女孩精灵自带双臂和握拳，再叠一层就是两双胳膊 |
 | §6 / §8 `mole.paws` / `mole-paws.webp` / 鼹鼠叶茎 | 不存在 | #27 上线过，#28 作为残留叠层删除；verifier 禁止其回到运行时契约 |
 | §8 `clouds` / `hills-farm` / `garden-mid` / `soil-back` 参与绘制 | 仍在资源包与 manifest，但运行时不绘制也不预载 | 导出错位（挤在画布顶部 1/3），`sky.webp` 已是完整画作 |
-| §7.2 `dynamicZ`：`moleStems 55` / `molePaws 65` / `girlStems 75` / `girlHands 80` | `leafStems 49` / `girlFists 80`；鼹鼠 z `48` | 叶柄画在萝卜下面，只露出拳头到叶缘一段 |
-| §9 SVG 骨架：carrot → stems-mole → mole → girl → stems-girl → girl-hands | sky → mole(48) → stems-girl(49) → carrot(50) → girl(70) → girl-fists(80) → soil-front(90) → foreground(100) → particles(110) → hit(120) | 同上；顺序由 verifier 按 z 严格升序校验 |
+| §7.2 `dynamicZ`：`moleStems 55` / `molePaws 65` / `girlStems 75` / `girlHands 80` | `leafStems 49` / `girlFists 80` / `tugLines 115`；鼹鼠 z `48` | 叶柄画在萝卜下面，只露出拳头到叶缘一段 |
+| §9 SVG 骨架：carrot → stems-mole → mole → girl → stems-girl → girl-hands | sky → mole(48) → stems-girl(49) → carrot(50) → girl(70) → girl-fists(80) → soil-front(90) → foreground(100) → particles(110) → tug-lines(115) → hit(120) | 同上；顺序由 verifier 按 z 严格升序校验 |
 
 事故经过见 `docs/traps.md`「拔萝卜手机版」条目。
 

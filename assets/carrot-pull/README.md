@@ -4,9 +4,11 @@ This is the production art pack for `拔萝卜 / Carrot Pull`.
 
 The approved visual source is `reference/concept-garden.webp`. Runtime raster layers are rendered at 2× (`1120×1440`) for the logical `560×720` SVG scene. Transparent layers are real RGBA WebP files; the renderer keeps the gameplay coordinate contract and animates the production sprites through the same attachment points as the dynamic fallback.
 
-Layer order is defined by `manifest.json` and is intentionally explicit:
+Layer order is defined by the `z` values in `manifest.json` and is intentionally explicit. The production scene currently draws, bottom to top:
 
-`sky → clouds → hills-farm → garden-mid → soil-back → mole → leaf stems → carrot → girl → girl fists → soil-front → foreground → effects`
+`sky → mole → leaf stems → carrot → girl → girl fists → soil-front → foreground → particles → tug lines`
+
+`scripts/verify-carrot-pull-art.mjs` fails if that draw order stops following manifest `z` or if the scene draws anything without a `z`. The manifest also registers `clouds` (20), `hills-farm` (30), `garden-mid` (40) and `soil-back` (45) between the sky and the mole, but they are not drawn at the moment (see the runtime note below).
 
 Runtime note (2026-09-27): `sky.webp` is already the complete painting. `clouds`, `hills-farm`, `garden-mid` and `soil-back` were exported crowded into the top third of the canvas, out of register with the same content in `sky.webp`, so the game neither draws nor preloads them (they left a ghosted fence and dirt band across the sky). Re-export those layers in register before wiring them back in.
 

@@ -38,6 +38,7 @@
     "leafStems": 49,
     "girlFists": 80,
     "particles": 110,
+    "tugLines": 115,
     "hitTarget": 120
   },
   "runtimeBudgetBytes": { "ideal": 2097152, "hard": 2621440 }
