@@ -1,8 +1,8 @@
 name: Temporary Silk Dew Verify
 on:
-  push:
+  pull_request:
     branches:
-      - feat/silk-dew-difficulty-rework
+      - main
   workflow_dispatch:
 
 jobs:
