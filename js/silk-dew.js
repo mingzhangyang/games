@@ -130,28 +130,28 @@ const LANGUAGES = makeText({
         sideHowTo: 'How to play',
         sideRecords: 'Records',
         tipCut: 'Drag the anchor knot to swing the thread',
-        tipSwing: 'Each pull has limited reach — release and grab again'
+        tipSwing: 'Each pull has limited reach — release and grab again',
         tipTwoRopes: 'You can drag any anchor — pick the right thread',
         tipThorn: 'Thorns shatter the pearl — keep clear',
         tipThread: 'Thread the gap carefully',
         tipBreeze: 'Breezes push the pearl — use them',
         tipBubble: 'Pop a bubble to ride it up, or let it carry you',
-        tipTiming: 'Plan where each pull ends before you commit'
-        tipAll: 'Chain short pulls: route first, timing second'
-        tipFinal: 'Final garden — every pull and every starburst counts'
+        tipTiming: 'Plan where each pull ends before you commit',
+        tipAll: 'Chain short pulls: route first, timing second',
+        tipFinal: 'Final garden — every pull and every starburst counts',
         stage: 'Stage',
         stageOf: '{a} / {b}',
         failThorn: 'The thorns shattered your pearl',
         failOut: 'Your pearl fell out of the garden',
-        noteDrag: 'Pull the golden anchor; release to start the next pull'
-        notePearl: 'The dew pearl cannot be dragged directly — steer it through the silk'
+        noteDrag: 'Pull the golden anchor; release to start the next pull',
+        notePearl: 'The dew pearl cannot be dragged directly — steer it through the silk',
         noteBubble: 'Tap a bubble to pop it',
     },
     zh: {
         stats: '数据统计',
         title: '垂丝引露',
         subtitle: '牵丝 · 引露 · 拾星',
-        howto: '牵动金色锚结引导丝线。每次牵拉都有有限行程，需要松手再抓来分步规划路线，绕过荆棘、利用气泡与气旋。收齐星芒并在目标牵拉次数内入壶，才能获得三星。'
+        howto: '牵动金色锚结引导丝线。每次牵拉都有有限行程，需要松手再抓来分步规划路线，绕过荆棘、利用气泡与气旋。收齐星芒并在目标牵拉次数内入壶，才能获得三星。',
         playLevels: '关卡模式',
         playDaily: '每日挑战',
         level: '关卡',
@@ -176,25 +176,25 @@ const LANGUAGES = makeText({
         copyResult: '复制',
         resetTitle: '重开本关',
         home: '主页',
-        hint: '分段牵动锚结 · 收齐星芒 · 引露珠入玉壶'
+        hint: '分段牵动锚结 · 收齐星芒 · 引露珠入玉壶',
         sideHowTo: '玩法说明',
         sideRecords: '战绩',
         tipCut: '拖动金色锚结，丝线随之摆荡',
-        tipSwing: '每次牵拉行程有限——松手再抓才能继续'
+        tipSwing: '每次牵拉行程有限——松手再抓才能继续',
         tipTwoRopes: '多根丝都可拖——选对那一根',
         tipThorn: '荆棘会击碎露珠，务必绕开',
         tipThread: '小心穿过缝隙',
         tipBreeze: '气旋会推动露珠，善加利用',
         tipBubble: '点破气泡上浮，或让它载你一程',
-        tipTiming: '先想好这一拉停在哪里，再出手'
-        tipAll: '把路线拆成短牵拉：先规划，再抓时机'
-        tipFinal: '终庭——每次牵拉、每枚星芒都算数'
+        tipTiming: '先想好这一拉停在哪里，再出手',
+        tipAll: '把路线拆成短牵拉：先规划，再抓时机',
+        tipFinal: '终庭——每次牵拉、每枚星芒都算数',
         stage: '关卡',
         stageOf: '{a} / {b}',
         failThorn: '露珠撞上了荆棘',
         failOut: '露珠掉出了夜庭',
-        noteDrag: '牵动金色锚结；松手后才能开始下一次牵拉'
-        notePearl: '露珠不能直接拖动——必须通过丝线来引导'
+        noteDrag: '牵动金色锚结；松手后才能开始下一次牵拉',
+        notePearl: '露珠不能直接拖动——必须通过丝线来引导',
         noteBubble: '点击气泡可以点破它',
     }
 });
