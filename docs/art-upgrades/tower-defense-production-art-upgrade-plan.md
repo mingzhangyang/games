@@ -177,7 +177,7 @@ assets/tower-defense/production/manifest.json
 - 战场始终使用现有固定 `480×640` 逻辑坐标；desktop / mobile 只改变显示缩放与外围布局，不制作改变 gameplay 构图的“宽屏战场版”；
 - 大背景不要每帧全尺寸复杂重绘；
 - 优先：
-  - DOM 背景图；
+  - 与现有 `bgCanvas` 同坐标系的预加载背景资源；
   - 预渲染 sprite；
   - 离屏缓存；
   - 低成本粒子；
