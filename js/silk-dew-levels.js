@@ -289,8 +289,8 @@ export function createWorld(spec) {
         ropes,
         pearl,
         pearlRope: linkIdx,
-        dragging: null,          // { kind:'anchor'|'pearl', rope:i, x, y } —— 当前拖拽目标
-        drags: 0,                // 拖拽次数（计分：离散，asc 越少越好）
+        dragging: null,          // { kind:'anchor', rope, x, y, originX, originY, maxDistance }
+        drags: 0,                // 牵拉次数（计分：离散，asc 越少越好）
         wasDragging: false,
         stars: (spec.stars || []).map((s, i) => ({ i, x: s.x, y: s.y, taken: false, pop: 0 })),
         thorns: (spec.thorns || []).map((t) => ({ x: t.x, y: t.y, r: t.r })),
