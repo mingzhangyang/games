@@ -148,6 +148,23 @@ if (!html.includes('id="tdTacticalPanel"') || !html.includes('id="tdStatsPanels"
 if (css.includes('--frame-shell-max')) fail('tower-defense CSS still carries the standard frame-budget shell cap');
 if (!css.includes('--frame-immersive-max: 800px')) fail('tower-defense CSS does not override immersive max width to 800px');
 if (!css.includes('.td-shell.game-shell--immersive #td-canvas') || !css.includes('pointer-events: auto')) fail('immersive canvas must explicitly restore pointer input inside the non-interactive scene wrapper');
+const mobileBattleSelector = '.td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-stage';
+const mobileBattleRule = cssRuleBody(mobileBattleSelector);
+const requiredBattleDeclarations = [
+    'position: fixed;', 'inset: 0;', 'width: 100vw;', 'max-width: none;',
+    'height: 100dvh;', 'min-height: 0;'
+];
+const missingBattleDeclarations = requiredBattleDeclarations.filter(declaration => !mobileBattleRule.includes(declaration));
+if (!mobileBattleRule || missingBattleDeclarations.length) {
+    fail(`mobile landscape battle stage must fill the viewport: ${missingBattleDeclarations.join(', ') || 'missing selector'}`);
+} else if (!css.includes('@media (width < 1024px) and (orientation: landscape)')) {
+    fail('mobile fullscreen battle rule must stay scoped to landscape under 1024px');
+} else if (!css.includes('> .td-footer {\n        display: none;')) {
+    fail('mobile fullscreen battle must remove the persistent footer from the active viewport');
+} else {
+    pass('mobile landscape battle expands to the full viewport without stretching the logical scene');
+}
+
 const mobileMenuSelector = '.td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden))';
 const cssRuleBody = selector => {
     const start = css.indexOf(`${selector} {`);
