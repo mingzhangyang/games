@@ -3,8 +3,8 @@
 //
 // 锁定五件事：
 //   1) 20 手工关卡 schema：id/par/tipKey/绳段长/玉壶几何/元素在舞台内，互不退化；
-//   2) 每关「满星可解」：网格搜锚点目标位，要求 state==='won' 且星芒全收；
-//      同时要求「单次牵拉可解」比例 < 100%（否则 par 形同虚设）；
+//   2) 每关「par 内满星可解」：把长路线拆成有限行程的多次牵拉；
+//      S5 起禁止一拉满星，确保 par 与重新落手决策都是真实玩法；
 //   3) 物理确定性：同一输入脚本两次模拟，露珠轨迹与结果位完全一致；
 //   4) dailyCourse 全日期扫描（2026-01-01 → 2027-12-31）：确定性、5 关、par 升序、
 //      每日内不重复；
@@ -16,7 +16,7 @@
 // 用法：node scripts/verify-silk-dew-levels.mjs
 
 import {
-    STAGE, PHYS, LEVELS, DAILY_COUNT,
+    STAGE, PHYS, LEVELS, DAILY_COUNT, scoreStars,
     createWorld, beginDrag, moveDrag, endDrag, popBubble, bubbleAt,
     stepWorld, simulate, dailyCourse,
 } from '../js/silk-dew-levels.js';
@@ -29,39 +29,52 @@ const ok = (cond, label, extra) => {
     console.error(`✗ ${label}${extra !== undefined ? ' —— ' + extra : ''}`);
 };
 
-/* ── 工具：一次「抓取→拖到目标→保持→松手」的模拟 ── */
-// ⚠️ 口径铁律：指针沿直线「渐进」移向目标（1.0s 走完全程）。
-// 绝不允许把指针瞬移到目标位——瞬移会让露珠跳过整条路径上所有星芒，
-// 从而「赢了但没吃到星」，把不可满星的关卡误判为可满星。
-// （scripts/tmp-sd-redesign.mjs 早期版本就踩了这个坑，多报了 5 关。）
-function attempt(spec, tx, ty, ropeIdx = 0, holdSec = 3.4, settleSec = 3.0) {
+/* ── 工具：把一个最终锚点目标拆成若干次有限行程牵拉 ── */
+// 每次牵拉都从锚结的实时位置重新抓取；指针仍按帧渐进移动，绝不瞬移。
+// 这对应真实玩家“拉一段 → 松手 → 再抓”的操作，也是新版 par 的含义。
+function attempt(spec, tx, ty, ropeIdx = 0, maxDrags = spec.par) {
     const world = createWorld(spec);
     const r = world.ropes[ropeIdx];
     if (!r || !r.alive) return { won: false, reason: 'no-rope', stars: 0, starsTotal: 0, drags: 0 };
-    const a = r.particles[0];
-    const grabbed = beginDrag(world, a.x, a.y);
-    if (!grabbed) return { won: false, reason: 'grab-miss', stars: 0, starsTotal: 0, drags: 0 };
     const dt = 1 / 60;
-    const moveSteps = Math.max(2, Math.round(1.0 / dt));
-    const steps = Math.max(4, Math.round(holdSec / dt));
-    const fromX = a.x, fromY = a.y;
-    for (let i = 1; i <= moveSteps; i++) {
-        const k = i / moveSteps;
-        moveDrag(world, fromX + (tx - fromX) * k, fromY + (ty - fromY) * k);
-        stepWorld(world, dt);
-        if (world.state !== 'playing') break;
+
+    const advance = (seconds) => {
+        const steps = Math.max(1, Math.round(seconds / dt));
+        for (let i = 0; i < steps && world.state === 'playing'; i++) stepWorld(world, dt);
+    };
+
+    for (let drag = 0; drag < maxDrags && world.state === 'playing'; drag++) {
+        const rope = world.ropes[ropeIdx];
+        const a = rope.particles[0];
+        const fromX = a.x, fromY = a.y;
+        const dx = tx - fromX, dy = ty - fromY;
+        const dist = Math.hypot(dx, dy);
+        const pullMax = spec.pullMax || PHYS.pullMax;
+        const stepDist = Math.min(pullMax, dist);
+        const k = dist > 1e-9 ? stepDist / dist : 0;
+        const destX = fromX + dx * k;
+        const destY = fromY + dy * k;
+
+        if (!beginDrag(world, fromX, fromY)) break;
+
+        const moveSteps = Math.max(2, Math.round(0.65 / dt));
+        for (let i = 1; i <= moveSteps && world.state === 'playing'; i++) {
+            const t = i / moveSteps;
+            moveDrag(world, fromX + (destX - fromX) * t, fromY + (destY - fromY) * t);
+            stepWorld(world, dt);
+        }
+
+        // 到达最终目标时多保持一会，让摆动/风/重力有时间完成入壶；
+        // 中间牵拉只短暂停顿，避免把“等待”误当成新的操作技巧。
+        const finalSegment = dist <= pullMax + 2 || drag === maxDrags - 1;
+        advance(finalSegment ? 2.2 : 0.30);
+        endDrag(world);
+        advance(finalSegment ? 0.85 : 0.18);
     }
-    for (let i = moveSteps; i < steps; i++) {
-        moveDrag(world, tx, ty);
-        stepWorld(world, dt);
-        if (world.state !== 'playing') break;
-    }
-    endDrag(world);
-    const settle = Math.max(1, Math.round(settleSec / dt));
-    for (let i = 0; i < settle; i++) {
-        stepWorld(world, dt);
-        if (world.state !== 'playing') break;
-    }
+
+    // par 用尽后再给自然摆动一个短收敛窗口。
+    if (world.state === 'playing') advance(1.2);
+
     const ev = world.events.find(e => e.type === 'fail');
     return {
         won: world.state === 'won',
@@ -86,6 +99,7 @@ for (const lv of LEVELS) {
     ids.add(lv.id);
     ok(/^S\d+$/.test(lv.id), `${tag} id 形如 S<n>`, lv.id);
     ok(Number.isInteger(lv.par) && lv.par >= 1 && lv.par <= 8, `${tag} par ∈ [1,8]`, String(lv.par));
+    ok(Number.isFinite(lv.pullMax) && lv.pullMax >= 90 && lv.pullMax <= 300, `${tag} pullMax ∈ [90,300]`, String(lv.pullMax));
     ok(typeof lv.tipKey === 'string' && lv.tipKey.length > 0, `${tag} tipKey 非空`);
     ok(Array.isArray(lv.ropes) && lv.ropes.length >= 1, `${tag} 至少 1 根丝`);
     for (const r of lv.ropes) {
@@ -128,49 +142,83 @@ for (const lv of LEVELS) {
     ok((lv.stars || []).length >= 1, `${tag} 至少 1 个星芒`);
 }
 
-/* ── 2) 满星可解 + par 非虚设 ── */
-console.log('▶ 逐关可解性扫描（网格搜锚点目标位）');
+for (let i = 1; i < LEVELS.length; i++) {
+    ok(LEVELS[i].par >= LEVELS[i - 1].par,
+        `${LEVELS[i].id} par 不低于前一关`, `${LEVELS[i - 1].par} → ${LEVELS[i].par}`);
+    ok(LEVELS[i].pullMax <= LEVELS[i - 1].pullMax,
+        `${LEVELS[i].id} 单次牵拉行程不高于前一关`, `${LEVELS[i - 1].pullMax} → ${LEVELS[i].pullMax}`);
+}
+
+// 评分契约：星芒现在是三星的硬条件，不再只是画面收集物。
+ok(scoreStars(3, 3, 2, 2) === 3, '收齐星芒且不超 par → 3 星');
+ok(scoreStars(3, 3, 1, 2) === 2, '少 1 星但不超 par → 2 星');
+ok(scoreStars(5, 3, 2, 2) === 2, '收齐星芒但超 par → 2 星');
+ok(scoreStars(3, 3, 0, 2) === 1, '跳过星芒直接入壶 → 1 星');
+
+// 交互契约：露珠不能被直接抓取；锚结有更大的触控热区且单次目标受 pullMax 限制。
+{
+    const w = createWorld(LEVELS[0]);
+    const p = w.pearl;
+    ok(beginDrag(w, p.x, p.y) === false, '露珠不可直接拖动');
+    const a = w.ropes[0].particles[0];
+    ok(beginDrag(w, a.x + PHYS.anchorR + 4, a.y) === true, '锚结触控热区大于视觉半径');
+    moveDrag(w, a.x + 1000, a.y + 1000);
+    const d = w.dragging;
+    const used = Math.hypot(d.x - d.originX, d.y - d.originY);
+    ok(used <= LEVELS[0].pullMax + 1e-6, '单次牵拉目标受 pullMax 限制', used.toFixed(2));
+    endDrag(w);
+}
+
+/* ── 2) par 内满星可解 + 中后期禁止一拉通关 ── */
+console.log('▶ 逐关可解性扫描（有限行程、多次牵拉）');
 const GRID_X = [];
 const GRID_Y = [];
 for (let x = 60; x <= 420; x += 40) GRID_X.push(x);
 for (let y = 120; y <= 460; y += 40) GRID_Y.push(y);
 
 const report = [];
-for (const lv of LEVELS) {
+for (let li = 0; li < LEVELS.length; li++) {
+    const lv = LEVELS[li];
     const ropeCount = lv.ropes.length;
     let solvable = 0;
     let fullStar = 0;
     let singleDrag = 0;
+    let minFullStarDrags = Infinity;
     let best = null;
+
     for (let ri = 0; ri < ropeCount; ri++) {
         for (const tx of GRID_X) {
             for (const ty of GRID_Y) {
-                const res = attempt(lv, tx, ty, ri);
+                const res = attempt(lv, tx, ty, ri, lv.par);
                 if (!res.won) continue;
                 solvable++;
-                if (res.stars === res.starsTotal) {
-                    fullStar++;
-                    if (res.drags <= 1) singleDrag++;
-                    if (!best) best = { tx, ty, ri };
-                }
+                if (res.stars !== res.starsTotal) continue;
+                fullStar++;
+                minFullStarDrags = Math.min(minFullStarDrags, res.drags);
+                if (res.drags <= 1) singleDrag++;
+                if (!best || res.drags < best.drags) best = { tx, ty, ri, drags: res.drags };
             }
         }
     }
-    report.push({ id: lv.id, par: lv.par, solvable, fullStar, singleDrag, best });
-    ok(solvable > 0, `${lv.id} 可解（存在获胜锚点位）`, `搜到 ${solvable} 位`);
-    ok(fullStar > 0, `${lv.id} 满星可解`, `满星位 ${fullStar}/${solvable}`);
-    // par 非虚设：低 par 关（1-2）允许单次牵拉满星（新手友好）；
-    // par ≥3 的关必须存在「无法一次牵拉完成」的满星解，否则 par 是假的
-    if (lv.par >= 3) {
-        ok(fullStar > 0, `${lv.id} par=${lv.par} 满星解存在`, `满星位 ${fullStar}`);
+
+    report.push({ id: lv.id, par: lv.par, pullMax: lv.pullMax, solvable, fullStar, singleDrag, minFullStarDrags, best });
+    ok(solvable > 0, `${lv.id} par 内可解`, `搜到 ${solvable} 位`);
+    ok(fullStar > 0, `${lv.id} par 内满星可解`, `满星位 ${fullStar}/${solvable}`);
+    ok(minFullStarDrags <= lv.par, `${lv.id} 最少满星牵拉 ≤ par`, `${minFullStarDrags} ≤ ${lv.par}`);
+
+    // 前四关保留教学宽容；S5 起必须至少重新落手一次。
+    if (li >= 4) {
+        ok(singleDrag === 0, `${lv.id} 不存在一拉满星解`, `单牵拉满星位=${singleDrag}`);
+        ok(minFullStarDrags >= 2, `${lv.id} 满星至少需要 2 次牵拉`, String(minFullStarDrags));
     }
 }
 const solvableAll = report.filter(r => r.fullStar > 0).length;
-console.log(`  满星可解: ${solvableAll}/${LEVELS.length}`);
+console.log(`  par 内满星可解: ${solvableAll}/${LEVELS.length}`);
 for (const r of report) {
-    console.log(`  ${r.id.padEnd(4)} par=${r.par}  可解位=${String(r.solvable).padStart(3)}  满星位=${String(r.fullStar).padStart(3)}  单牵拉满星=${String(r.singleDrag).padStart(3)}${r.best ? `  最佳(${r.best.tx},${r.best.ty}) rope[${r.best.ri}]` : ''}`);
+    const min = Number.isFinite(r.minFullStarDrags) ? r.minFullStarDrags : '—';
+    console.log(`  ${r.id.padEnd(4)} par=${r.par} pull=${String(r.pullMax).padStart(3)}  可解=${String(r.solvable).padStart(3)}  满星=${String(r.fullStar).padStart(3)}  最少牵拉=${String(min).padStart(2)}  一拉满星=${String(r.singleDrag).padStart(3)}${r.best ? `  最佳(${r.best.tx},${r.best.ty}) rope[${r.best.ri}]` : ''}`);
 }
-ok(solvableAll === LEVELS.length, `全部 ${LEVELS.length} 关满星可解`, `${solvableAll} 关通过`);
+ok(solvableAll === LEVELS.length, `全部 ${LEVELS.length} 关在 par 内满星可解`, `${solvableAll} 关通过`);
 
 /* ── 3) 物理确定性 ── */
 console.log('▶ 物理确定性');
@@ -207,7 +255,7 @@ console.log('▶ 失败路径与判胜');
     // ⚠️ 不能只看「自然悬垂撞荆棘」：露珠静止在绳上会先触发 stall 判负，
     // 那样测不到 thorn 分支。这里用拖拽把露珠主动压向荆棘。
     const spec = {
-        id: 'X1', par: 1, tipKey: 'tipThorn',
+        id: 'X1', par: 1, pullMax: 360, tipKey: 'tipThorn',
         ropes: [{ ax: 240, ay: 110, count: 18, dir: 0, spread: 0, kick: 0 }],
         stars: [], thorns: [{ x: 240, y: 400, r: 22 }],
         vessel: { x: 60, y: 480, w: 70 },
