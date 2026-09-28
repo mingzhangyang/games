@@ -48,7 +48,7 @@ check(requestFailures.length === 0, '启动阶段无资源请求失败', request
 // to reach the Deploy button.
 const menuPage = await browser.newPage();
 const menuErrors = [];
-menuPage.on('pageerror', error => menuErrors.push(String(error.stack || error.message || error).split('\\n')[0]));
+menuPage.on('pageerror', error => menuErrors.push(String(error.stack || error.message || error).split('\n')[0]));
 await menuPage.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 await menuPage.goto(`${BASE}/tower-defense.html`, { waitUntil: 'networkidle2', timeout: 30000 });
 await menuPage.waitForFunction(() => window.tdGame?.state === 'menu', { timeout: 15000 });
