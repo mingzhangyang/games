@@ -16,7 +16,7 @@
 // 用法：node scripts/verify-silk-dew-levels.mjs
 
 import {
-    STAGE, PHYS, LEVELS, DAILY_COUNT, scoreStars, dailyQualifies,
+    STAGE, PHYS, LEVELS, DAILY_COUNT, scoreStars, dailyQualifies, summarizeDailyResults,
     createWorld, beginDrag, moveDrag, endDrag, popBubble, bubbleAt,
     stepWorld, simulate, dailyCourse,
 } from '../js/silk-dew-levels.js';
@@ -152,8 +152,28 @@ ok(scoreStars(3, 3, 2, 2) === 3, '收齐星芒且不超 par → 3 星');
 ok(scoreStars(3, 3, 1, 2) === 2, '少 1 星但不超 par → 2 星');
 ok(scoreStars(5, 3, 2, 2) === 2, '收齐星芒但超 par → 2 星');
 ok(scoreStars(3, 3, 0, 2) === 1, '跳过星芒直接入壶 → 1 星');
-ok(dailyQualifies(15, 5) === true, '每日 5 关全部三星 → 获得榜单资格');
-ok(dailyQualifies(14, 5) === false, '每日少任意一星 → 不提交榜单');
+{
+    const perfect = [
+        { stars: 3, drags: 2 },
+        { stars: 3, drags: 3 },
+        { stars: 3, drags: 3 },
+        { stars: 3, drags: 4 },
+        { stars: 3, drags: 5 },
+    ];
+    const mixed = perfect.map(x => ({ ...x }));
+    mixed[2] = { stars: 2, drags: 2 };
+    ok(dailyQualifies(perfect, 5) === true, '每日 5 关逐关三星 → 获得榜单资格');
+    ok(dailyQualifies(mixed, 5) === false, '任意一关未三星 → 不提交榜单');
+    ok(dailyQualifies([...perfect, { stars: 3, drags: 1 }], 5) === true,
+        '额外历史结果不会把 5 关资格算坏');
+
+    const replayed = perfect.map(x => ({ ...x }));
+    replayed[0] = { stars: 1, drags: 1 };
+    const summary = summarizeDailyResults(replayed, 5);
+    ok(summary.totalStars === 13 && summary.totalDrags === 16,
+        '每日汇总按每关当前结果计算，重试会覆盖而非累加',
+        JSON.stringify(summary));
+}
 
 // 交互契约：露珠不能被直接抓取；锚结有更大的触控热区且单次目标受 pullMax 限制。
 {
