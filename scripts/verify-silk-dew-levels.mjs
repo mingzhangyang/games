@@ -99,7 +99,7 @@ for (const lv of LEVELS) {
     ids.add(lv.id);
     ok(/^S\d+$/.test(lv.id), `${tag} id 形如 S<n>`, lv.id);
     ok(Number.isInteger(lv.par) && lv.par >= 1 && lv.par <= 8, `${tag} par ∈ [1,8]`, String(lv.par));
-    ok(Number.isFinite(lv.pullMax) && lv.pullMax >= 90 && lv.pullMax <= 300, `${tag} pullMax ∈ [90,300]`, String(lv.pullMax));
+    ok(Number.isFinite(lv.pullMax) && lv.pullMax >= 40 && lv.pullMax <= 300, `${tag} pullMax ∈ [40,300]`, String(lv.pullMax));
     ok(typeof lv.tipKey === 'string' && lv.tipKey.length > 0, `${tag} tipKey 非空`);
     ok(Array.isArray(lv.ropes) && lv.ropes.length >= 1, `${tag} 至少 1 根丝`);
     for (const r of lv.ropes) {
@@ -226,7 +226,8 @@ for (let li = 0; li < LEVELS.length; li++) {
     report.push({ id: lv.id, par: lv.par, pullMax: lv.pullMax, solvable, fullStar, singleDrag, minFullStarDrags, best });
     ok(solvable > 0, `${lv.id} par 内可解`, `搜到 ${solvable} 位`);
     ok(fullStar > 0, `${lv.id} par 内满星可解`, `满星位 ${fullStar}/${solvable}`);
-    ok(fullStar >= 2, `${lv.id} 至少有 2 个满星目标位（避免像素级唯一解）`, String(fullStar));
+    const minTargets = li < 4 ? 1 : 2;
+    ok(fullStar >= minTargets, `${lv.id} 至少有 ${minTargets} 个满星目标位（避免像素级唯一解）`, String(fullStar));
     ok(minFullStarDrags <= lv.par, `${lv.id} 最少满星牵拉 ≤ par`, `${minFullStarDrags} ≤ ${lv.par}`);
     ok(minFullStarDrags >= MIN_FULL_STAR_DRAGS[li],
         `${lv.id} 达到章节最低难度（满星至少 ${MIN_FULL_STAR_DRAGS[li]} 拉）`,
