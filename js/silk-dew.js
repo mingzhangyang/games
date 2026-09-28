@@ -110,7 +110,9 @@ const LANGUAGES = makeText({
         drags: 'Drags',
         dragsWord: 'drags',
         par: 'Par',
-        dailyStartToast: 'Daily course — 5 stages · fewest drags wins',
+        dailyStartToast: 'Daily course — earn 3 stars on all 5 stages to qualify · then fewest pulls wins',
+        dailyQualified: 'Leaderboard qualified',
+        dailyNeedsMastery: 'Earn 3 stars on all 5 stages to enter today\'s leaderboard',
         retry: 'Retry',
         next: 'Next',
         menu: 'Home',
@@ -160,7 +162,9 @@ const LANGUAGES = makeText({
         drags: '拖拽',
         dragsWord: '次拖拽',
         par: '目标',
-        dailyStartToast: '每日课程——5 个关卡 · 拖拽次数越少越好',
+        dailyStartToast: '每日课程——5 关全部三星才进入榜单 · 合格后牵拉越少越好',
+        dailyQualified: '已获得今日榜单资格',
+        dailyNeedsMastery: '5 关全部三星后才会提交今日榜单',
         retry: '重试',
         next: '下一关',
         menu: '返回主页',
@@ -729,14 +733,21 @@ class SilkfallGame {
         this.state = 'won-daily';
         const el = this.el;
         this.showClearPanelSilent();
+        const maxStars = this.daily.course.length * 3;
+        const mastered = this.daily.stars === maxStars;
         if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
-        if (el['over-score']) el['over-score'].textContent = `${this.t('drags')} ${this.daily.totalDrags} · ★ ${this.daily.stars}`;
-        if (el['over-sub']) el['over-sub'].textContent = `${this.t('bestToday')}: ${this.daily.display}`;
+        if (el['over-score']) el['over-score'].textContent = `${this.t('drags')} ${this.daily.totalDrags} · ★ ${this.daily.stars}/${maxStars}`;
+        if (el['over-sub']) {
+            el['over-sub'].textContent = `${this.daily.display} · ${this.t(mastered ? 'dailyQualified' : 'dailyNeedsMastery')}`;
+        }
         this.show(el['over']);
         this.computeStars = null;
-        // 提交每日成绩（asc：越少越好）
-        const game = `silk-dew-d${this.daily.key.replace(/-/g, '')}`;
-        this.submit(game, this.daily.totalDrags);
+        // 榜单只比较“完整掌握”后的牵拉效率：五关必须全部三星。
+        // 否则跳过星芒会用更少牵拉得到更高名次，反向激励绕过谜题。
+        if (mastered) {
+            const game = `silk-dew-d${this.daily.key.replace(/-/g, '')}`;
+            this.submit(game, this.daily.totalDrags);
+        }
     }
 
     showClearPanelSilent() {
