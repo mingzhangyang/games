@@ -164,13 +164,16 @@ const cssRuleBody = (selector, source = css) => blockBodyAt(source, source.index
 const landscapeMediaHeader = '@media (width < 1024px) and (orientation: landscape)';
 const landscapeMediaBody = blockBodyAt(css, css.indexOf(landscapeMediaHeader));
 const mobileBattleSelector = '.td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-stage';
+const mobileBattleSelectorCount = css.split(`${mobileBattleSelector} {`).length - 1;
 const mobileBattleRule = cssRuleBody(mobileBattleSelector, landscapeMediaBody);
 const requiredBattleDeclarations = [
     'position: fixed;', 'inset: 0;', 'width: 100vw;', 'max-width: none;',
     'height: 100dvh;', 'min-height: 0;'
 ];
 const missingBattleDeclarations = requiredBattleDeclarations.filter(declaration => !mobileBattleRule.includes(declaration));
-if (!mobileBattleRule || missingBattleDeclarations.length) {
+if (mobileBattleSelectorCount !== 1 || !landscapeMediaBody.includes(`${mobileBattleSelector} {`)) {
+    fail('mobile fullscreen battle selector must exist exactly once inside the landscape media block');
+} else if (!mobileBattleRule || missingBattleDeclarations.length) {
     fail(`mobile landscape battle stage must fill the viewport: ${missingBattleDeclarations.join(', ') || 'missing selector'}`);
 } else if (!landscapeMediaBody) {
     fail('mobile fullscreen battle landscape media block is missing');
