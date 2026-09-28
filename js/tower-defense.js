@@ -44,6 +44,7 @@ const LANGUAGES = makeText({
         closeTactical: 'Close tactical overview',
         rotateTitle: 'Rotate device',
         rotateCopy: 'Landscape view gives the defense line room to breathe.',
+        heroLabel: 'Future-city energy defense platform',
         title: 'Neon Tower Defense',
         subtitle: 'Build · Upgrade · Survive',
         howto: 'Tap a cell to build towers, tap a tower to upgrade, sell or set targeting priority. Watch out for healers, armored units, flyers and tower-breakers — pick the right counter. Use commander skills (EMP & Overdrive) to hold every line.',
@@ -150,6 +151,7 @@ const LANGUAGES = makeText({
         closeTactical: '关闭战术总览',
         rotateTitle: '请横屏作战',
         rotateCopy: '横屏可以完整展开能源防线与部署空间。',
+        heroLabel: '未来城市能源防线平台',
         title: '霓虹塔防',
         subtitle: '建造 · 升级 · 守护',
         howto: '点击空格子建塔，点击塔升级、出售或切换集火策略。当心治疗兵、装甲兵、飞行兵和攻城兵——用对克制手段。合理运用指挥官技能（EMP震荡与超频加速），守住每一道防线。',
@@ -973,6 +975,7 @@ class TowerDefenseGame {
         }
         if (this.el['rotate-title']) this.el['rotate-title'].textContent = t.rotateTitle;
         if (this.el['rotate-copy']) this.el['rotate-copy'].textContent = t.rotateCopy;
+        if (this.el['start-hero']) this.el['start-hero'].setAttribute('aria-label', t.heroLabel);
 
         // 侧栏
         if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `01 · ${t.sideHowTo}`;

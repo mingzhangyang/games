@@ -1313,6 +1313,7 @@ body {
     border: 0;
     border-radius: 0;
     box-shadow: none;
+    pointer-events: auto;
     touch-action: none;
 }
 

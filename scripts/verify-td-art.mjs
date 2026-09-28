@@ -13,6 +13,9 @@ const art = readFileSync(join(ROOT, 'js', 'tower-defense-art.js'), 'utf8');
 const game = readFileSync(join(ROOT, 'js', 'tower-defense.js'), 'utf8');
 const html = readFileSync(join(ROOT, 'tower-defense.html'), 'utf8');
 const css = readFileSync(join(ROOT, 'css', 'tower-defense.css'), 'utf8');
+const landingScript = readFileSync(join(ROOT, 'js', 'index-page.js'), 'utf8');
+const landingHtml = readFileSync(join(ROOT, 'index.html'), 'utf8');
+const socialPreview = readFileSync(join(ROOT, 'public', 'assets', 'seo', 'og-tower-defense.svg'), 'utf8');
 const verifyAll = readFileSync(join(ROOT, 'scripts', 'verify-all.mjs'), 'utf8');
 
 const failures = [];
@@ -144,6 +147,13 @@ for (const forbidden of ['game-sidebar', 'tdStatsDrawer', 'game-drawer-panel', '
 if (!html.includes('id="tdTacticalPanel"') || !html.includes('id="tdStatsPanels"')) fail('immersive tactical panel or single stats node is missing');
 if (css.includes('--frame-shell-max')) fail('tower-defense CSS still carries the standard frame-budget shell cap');
 if (!css.includes('--frame-immersive-max: 800px')) fail('tower-defense CSS does not override immersive max width to 800px');
+if (!css.includes('.td-shell.game-shell--immersive #td-canvas') || !css.includes('pointer-events: auto')) fail('immersive canvas must explicitly restore pointer input inside the non-interactive scene wrapper');
+if (!game.includes('heroLabel:') || !game.includes("setAttribute('aria-label', t.heroLabel)")) fail('start hero accessible label must be localized during applyLanguage');
+for (const source of [landingScript, landingHtml, socialPreview]) {
+    if (source.includes('25 waves') || source.includes('25 波') || source.includes('neon grid') || source.includes('霓虹网格')) fail('landing/preview copy still advertises the retired 25-wave neon-grid contract');
+}
+if (!landingScript.includes('six future-city operations') || !landingScript.includes('六个未来城市作战行动')) fail('landing translations must describe the six-operation future-city contract');
+if (!socialPreview.includes('six operations') || !socialPreview.includes('15–40 waves')) fail('social preview must describe the six-operation 15–40-wave contract');
 if (!verifyAll.includes("name: 'td-art'")) fail('verify-all is missing td-art');
 
 if (failures.length) {
