@@ -45,6 +45,7 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
     let foregroundCache = null;
     let midLitDeltaCache = null;
     let foregroundLitDeltaCache = null;
+    let fallbackDrawCount = 0;
 
     function buildStaticCaches(state) {
         backgroundFarCache = makeCanvas(W, H);
@@ -97,6 +98,7 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
     function drawFallback(ctx) {
         if (!art.fallback) return false;
         drawFull(ctx, art.fallback);
+        fallbackDrawCount++;
         return true;
     }
 
@@ -201,6 +203,8 @@ export function createSilkDewScene({ reducedMotion = false, onReady } = {}) {
                     midLitDeltaCache &&
                     foregroundLitDeltaCache
                 ),
+                fallbackReady: !!art.fallback,
+                fallbackDrawCount,
                 reduced,
             };
         },
