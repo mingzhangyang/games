@@ -65,6 +65,8 @@ function buildFallbackScene(svg) {
     path('M-36-64l16 14M-20-64l-16 14M20-64l16 14M36-64l-16 14', { stroke: '#2e231e', 'stroke-width': 5, 'stroke-linecap': 'round' }, moleOops);
     el('ellipse', { cx: 0, cy: -29, rx: 25, ry: 19, fill: '#d5a98e', stroke: '#4e332a', 'stroke-width': 3 }, moleOops);
     path('M-13-25q13-12 26 0', { fill: 'none', stroke: '#7d302e', 'stroke-width': 4, 'stroke-linecap': 'round' }, moleOops);
+    // 与生产场景一致：鼹鼠在萝卜后面，萝卜拔高时从它身前经过
+    root.insertBefore(mole, carrot);
 
     const stemsGirl = el('g', { id: 'cp-fallback-stems-girl', class: 'cp-leaf-connectors', 'aria-hidden': 'true' }, root);
     [
@@ -100,7 +102,7 @@ function buildFallbackScene(svg) {
     el('circle', { cx: 26, cy: -200, r: 13, fill: '#f3c29f', stroke: '#4a2e22', 'stroke-width': 4 }, girlHands);
 
     const tug = el('g', { id: 'cp-fallback-tug-lines', fill: 'none', stroke: '#f7d36e', 'stroke-width': 5, 'stroke-linecap': 'round', opacity: 0 }, root);
-    el('path', { d: 'M52 540l-24-10M46 562l-28 0M50 584l-24 10' }, tug);
+    el('path', { d: 'M116 512l-24-10M110 534l-28 0M114 556l-24 10' }, tug);
     const particles = el('g', { id: 'cp-fallback-particles' }, root);
 
     return {

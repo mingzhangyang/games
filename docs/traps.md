@@ -20,6 +20,22 @@
 
 - A playfield (canvas/board) is an **operating surface, not a button** — never give it `:active`/`:hover` transforms or transitions. `#tetris:active { transform: scale(0.99) }` (removed 2026-09-18) made the board shrink-and-spring on every finger touch, and since `#particleCanvas`/`#lineClearCanvas` are absolutely-positioned *siblings* they do not scale with it, so board and effects drifted apart for the length of the transition (measured: 280×560 → 277.2×554.4, overlays off by 1.4px/2.8px). Keep `transition: none` on the canvas as a guard, keep `touch-action: none` on it, and set `touch-action: manipulation` on `html, body` so a fast double-tap on the surrounding area cannot zoom the page (pinch-zoom stays available — don't use `user-scalable=no`). Regression: `node scripts/verify-tetris-touch.mjs` — it must press and hold the board, because the rule only applies while `:active` is live, and a plain "measure the initial layout" check passes on the broken build
 
+- ⚠️ **拔萝卜手机版「用力拔」下方空出 ~280px 白卡片，同时场景里有一根横穿女孩脸前的绿条（2026-09-27 用户截图）。** 三个互相牵连的坑：
+  ① `#cp-art-production` 只有 `id`，而图层透明度与预览淡出规则全挂在 `.cp-art-production` 上 —— 整组规则从未生效，
+  错位导出的 clouds / hills-farm / garden-mid / soil-back（全挤在画布顶部 1/3，与 `sky.webp` 这幅完整画作里的同名内容错位）
+  以 100% 不透明度叠在天空上；② 于是 #28 只好把场景写死成底部 520 的裁切，而卡片被 `align-self: stretch` 拉满，
+  多出的高度全落在控制区下方；③ 生产场景沿用了 fallback 的程序叶柄，但 `SCENE.crown` 在萝卜精灵里落在**叶尖**而不是萝卜冠，
+  `girl-hands.webp` 又自带整束叶柄 —— 连接线就成了一根悬空绿条。所有检查都绿：smoke 只量「宽度 > 0 / 不横向溢出」。
+  修法：补 class、运行时不绘制也不预载这四层、场景 `flex: 1000` 在 520–720 之间吃满剩余高度（永不裁两侧角色）、
+  余量交给控制区并居中（纵向排列时 `.cp-meter-block` 必须 `flex: 0 0 auto`，否则它沿纵轴长高、把指针条和按钮拉开）、
+  生产场景去掉那根挂在叶尖、悬空的叶柄连线（④ 又把它换成从真实萝卜冠拉进拳头的锥形程序叶柄）。回归：`node scripts/smoke-carrot-pull.mjs`（对修前版本 7 项失败）。
+  ④ 同日用户追加：女孩胳膊「上下两层、粗得不成比例」。`girl-happy/oops.webp` 本身就画了双臂和握拳，
+  `girl-hands.webp` 又叠了一双更大的胳膊 + 叶束 —— 两双胳膊错位半个身位。第一轮只修了绿条、没修这个：
+  **分层美术上线时要逐个隐藏精灵对照看，而不是只看合成图。** 修法：删 girl-hands；叶柄改为从真实萝卜冠
+  （`carrot.crown`，橙色根体顶端）拉进她自己的拳头（`girl.fists`），再用同一张女孩精灵裁到拳头
+  （`#cp-girl-fists` + clipPath）盖在叶柄上 = 握住。回归：smoke 断言「无 girl-hands 精灵」「叶柄数 = manifest 挂点数，第 i 根
+  起点在 carrot.crown[i] 12 单位内、终点在 girl.fists[i] 6 单位内且落进拳头裁切框（静止与拔高两种姿态）」，对修前版本 3 项失败。
+
 ## 共享层迁移与剪枝
 
 - Pruning shared-layer duplicates must never drop `color` / `font-family` / `backdrop-filter`: they are the page's own palette, font and material, and `css/layout.css` provides no replacement. Removing them once turned every topbar icon pure black and dropped the pages onto the browser's default serif font. The migration script's `BODY_STRIP` / `ROLE_SPECS` lists now exclude them, and `scripts/fg-audit.mjs` guards the regression

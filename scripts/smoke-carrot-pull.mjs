@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 // 拔萝卜生产美术烟测：加载状态、真实点击、结算、响应式比例与资源失败 fallback。
 import puppeteer from 'puppeteer-core';
+import { readFileSync } from 'node:fs';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+
+// 挂点契约只认 manifest：叶柄数量 = 挂点数，第 i 根从 carrot.crown[i] 出发、止于 girl.fists[i]
+const MANIFEST = JSON.parse(readFileSync(new URL('../assets/carrot-pull/manifest.json', import.meta.url), 'utf8'));
+const STEM_CONTRACT = {
+    crown: MANIFEST.attachments['carrot.crown'].points,
+    fists: MANIFEST.attachments['girl.fists'].points,
+    clip: MANIFEST.attachments['girl.fists'].overlayClipLocalLogicalPx,
+};
 
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
@@ -59,7 +68,8 @@ async function assertNormalPage() {
                 startVisible: !document.getElementById('cp-start')?.hidden,
                 sceneVisible: getComputedStyle(svg?.querySelector('[data-art-production]')).visibility !== 'hidden',
                 layerHrefs: [...document.querySelectorAll('[data-art-layer]')].map(node => node.getAttribute('href') || node.getAttribute('xlink:href')),
-                spriteWidths: [...document.querySelectorAll('[data-art-sprite]')].map(node => node.getBoundingClientRect().width),
+                // oops 精灵在失误前按设计 display:none，只量常驻的那一套
+                spriteWidths: [...document.querySelectorAll('[data-art-sprite]:not(.cp-production-oops)')].map(node => node.getBoundingClientRect().width),
                 progressDots: document.querySelectorAll('#cp-progress-dots .cp-progress-dot').length,
                 progressHasEmoji: document.getElementById('cp-progress-dots')?.textContent.includes('🥕'),
                 miniCarrot: document.querySelector('[data-art-ui="carrot-mark"]')?.getAttribute('src'),
@@ -68,6 +78,14 @@ async function assertNormalPage() {
                     hasPath: Boolean(document.querySelector('#cp-pull-btn .cp-pull-arrow path')),
                 },
                 residualPaws: Boolean(document.querySelector('#cp-mole-paws, [data-art-sprite="mole-paws"]')),
+                // 女孩精灵自带双臂；再叠 girl-hands 精灵就是上下两层、多出一双更粗的胳膊
+                extraArms: Boolean(document.querySelector('[data-art-sprite="girl-hands"]')),
+                // 这四层导出错位（全挤在画布顶部），叠上去会在天空里留下重影篱笆 + 土带
+                misregisteredLayers: [...document.querySelectorAll('[data-art-layer]')]
+                    .map(node => node.getAttribute('data-art-layer'))
+                    .filter(id => ['clouds', 'hills-farm', 'garden-mid', 'soil-back'].includes(id)),
+                // 图层透明度 / 预览淡出规则都挂在 .cp-art-production 上，缺 class 就全部失效
+                productionClass: document.getElementById('cp-art-production')?.classList.contains('cp-art-production'),
             };
         });
         if (!boot.hasGame || boot.state !== 'menu') fail(`boot state 异常: ${JSON.stringify(boot)}`);
@@ -78,8 +96,55 @@ async function assertNormalPage() {
         if (boot.progressDots !== 6 || boot.progressHasEmoji) fail('进度萝卜图标未按正式 SVG 渲染');
         if (!boot.miniCarrot || !boot.pullIcon.hasPath || boot.pullIcon.tag !== 'svg') fail('正式 UI 图标没有加载');
         if (boot.residualPaws) fail('production scene contains residual mole paws');
+        if (boot.extraArms) fail('生产场景仍叠了 girl-hands 精灵：女孩会有两双胳膊');
+        if (boot.misregisteredLayers.length) fail(`错位图层仍在绘制: ${boot.misregisteredLayers.join(', ')}`);
+        if (!boot.productionClass) fail('#cp-art-production 缺少 .cp-art-production class，图层透明度与预览淡出规则失效');
 
         await page.click('#cp-start-btn');
+        // 叶柄必须从萝卜冠出发、终点落进女孩自己的拳头（被拳头重绘层盖住），
+        // 而不是悬在半空 —— 旧版的挂点在叶尖，画成了一根横穿脸前的绿条。
+        for (const pulls of [0, 3]) {
+            await page.evaluate((n) => { window.cpGame.state.pulls = n; }, pulls);
+            await wait(900);
+            const stems = await page.evaluate(({ crown, fists: fistPoints, clip: box }) => {
+                const svg = document.getElementById('cp-scene');
+                const toLocal = (node, x, y) => {
+                    const pt = svg.createSVGPoint();
+                    pt.x = x; pt.y = y;
+                    return pt.matrixTransform(node.getCTM().inverse().multiply(svg.getCTM()));
+                };
+                const fists = document.getElementById('cp-girl-fists');
+                const carrot = document.getElementById('cp-carrot');
+                const paths = [...document.querySelectorAll('#cp-stems-girl path')];
+                return {
+                    count: paths.length,
+                    // 空集合的 every() 恒为 true：必须恰好是 happy / oops 两张女孩精灵，且都裁到拳头
+                    clipped: (() => {
+                        const images = fists ? [...fists.querySelectorAll('image')] : [];
+                        const sprites = images.map(img => img.getAttribute('data-art-sprite')).sort().join(',');
+                        return sprites === 'girl-happy,girl-oops'
+                            && images.every(img => img.getAttribute('clip-path') === 'url(#cp-girl-fists-clip)');
+                    })(),
+                    ends: paths.map((path, i) => {
+                        const d = path.getAttribute('d') || '';
+                        const start = d.match(/^M(-?[\d.]+) (-?[\d.]+)/);
+                        const end = d.match(/L(-?[\d.]+) (-?[\d.]+)/);
+                        if (!start || !end || !crown[i] || !fistPoints[i]) return { ok: false, d };
+                        const s = toLocal(carrot, Number(start[1]), Number(start[2]));
+                        const e = toLocal(fists, Number(end[1]), Number(end[2]));
+                        const inFist = e.x >= box[0] && e.x <= box[0] + box[2] && e.y >= box[1] && e.y <= box[1] + box[3];
+                        // 起点允许叶柄在萝卜冠处散开（车道偏移 + 半宽），终点收拢到拳头挂点附近
+                        const atCrown = Math.hypot(s.x - crown[i][0], s.y - crown[i][1]) < 12;
+                        const atFist = Math.hypot(e.x - fistPoints[i][0], e.y - fistPoints[i][1]) < 6;
+                        return { ok: inFist && atCrown && atFist, start: [s.x, s.y].map(Math.round), end: [e.x, e.y].map(Math.round) };
+                    }),
+                };
+            }, STEM_CONTRACT);
+            if (stems.count !== STEM_CONTRACT.crown.length || !stems.clipped || stems.ends.some(end => !end.ok)) {
+                fail(`叶柄没有从萝卜冠连进拳头 (pulls=${pulls}): ${JSON.stringify(stems)}`);
+            }
+        }
+        await page.evaluate(() => { window.cpGame.state.pulls = 0; });
         await page.evaluate(() => {
             window.cpGame.state.needle = window.cpGame.state.target;
         });
@@ -132,6 +197,26 @@ async function assertNormalPage() {
             if (layout.bodyWidth > viewport[0] + 1 || layout.stageWidth <= 0 || layout.stageHeight <= 0) {
                 fail(`响应式布局异常 ${viewport.join('×')}: ${JSON.stringify(layout)}`);
             }
+            if (viewport[0] <= 480) {
+                // 高屏手机：卡片被拉满，多出的高度必须先给场景（最多到完整 720 天空），
+                // 指针条与「用力拔」必须贴在一起，不能在按钮下方留一大块空白卡片。
+                const fill = await page.evaluate(() => {
+                    const box = selector => document.querySelector(selector).getBoundingClientRect();
+                    const scene = box('.cp-scene-wrap');
+                    const card = box('.cp-stage-card');
+                    const meter = box('.cp-meter-block');
+                    const pull = box('#cp-pull-btn');
+                    return {
+                        sceneRatio: scene.height / scene.width,
+                        meterToPull: pull.top - meter.bottom,
+                        blankBelowPull: card.bottom - pull.bottom,
+                        blankAboveMeter: meter.top - scene.bottom,
+                    };
+                });
+                if (fill.sceneRatio < 720 / 560 - 0.01) fail(`${viewport.join('×')} 场景没有吃满可用高度: ${JSON.stringify(fill)}`);
+                if (fill.meterToPull > 20) fail(`${viewport.join('×')} 指针条与拔按钮被拉开: ${JSON.stringify(fill)}`);
+                if (Math.abs(fill.blankBelowPull - fill.blankAboveMeter) > 40) fail(`${viewport.join('×')} 控制区空白分布不均: ${JSON.stringify(fill)}`);
+            }
         }
     } catch (error) {
         fail(`正常路径脚本异常: ${error.message}`);
@@ -166,7 +251,9 @@ async function assertFallbackPage() {
         fail(`fallback 路径脚本异常: ${error.message}`);
     } finally {
         for (const message of diagnostics?.pageErrors || []) if (!isIgnorable(message)) fail(`fallback 页面错误: ${message}`);
-        for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message)) fail(`fallback console 错误: ${message}`);
+        // 本用例故意 abort 了全部美术请求，它们的 net::ERR_FAILED 是预期内的
+        const blockedArt = message => /net::ERR_FAILED @ .*\/assets\/carrot-pull\//.test(message);
+        for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message) && !blockedArt(message)) fail(`fallback console 错误: ${message}`);
         await browser.close();
     }
 }

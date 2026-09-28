@@ -2,7 +2,7 @@
 
 > 目标执行者：Codex  
 > 仓库：`mingzhangyang/games`  
-> 状态：待实施  
+> 状态：已实施（#27 / #28 / #30）；实际落地的运行时契约与本计划有偏差，见 §0.1。**冲突时以 `assets/carrot-pull/manifest.json` 为准**  
 > 目标：把《拔萝卜》从当前大型内联 SVG 卡通场景升级为与《萤火信号》《影织》同一完成度等级的正式分层美术管线。
 
 ## 0. 任务目标
@@ -20,6 +20,24 @@
 - 保留已有拔萝卜节奏玩法、得分、计时、音效、响应式结构、统计抽屉、主题和可访问性。
 
 这次升级完成后，《拔萝卜》应成为旧游戏美术升级的范本。
+
+## 0.1 实施后偏差（as-built，2026-09-27）
+
+本文是实施前的计划，下文的锚点、挂点、图层清单与 SVG 骨架保留原样以便对照；**当前运行时契约是 `assets/carrot-pull/manifest.json`**，
+由 `scripts/verify-carrot-pull-art.mjs` 与 `scripts/smoke-carrot-pull.mjs` 双向锁定（HTML 初始变换、`SCENE`、`PRODUCTION_ATTACH`、
+拳头裁切框、绘制顺序都逐项与 manifest 比对）。与计划不同之处：
+
+| 计划 | 实际落地 | 原因 |
+| --- | --- | --- |
+| §6 锚点 carrot `316,506` / girl `186,692` / mole `482,612 ×0.90` | carrot `352,506` / girl `250,664 ×0.94` / mole `466,632 ×0.54` | 女孩站到萝卜后方、手伸进叶丛；鼹鼠贴着萝卜并缩小 |
+| §6 / §7.2 `girl.hands` 三点、`carrot.crown` 三点 | `girl.fists` 五点（带 `overlayClipLocalLogicalPx`）、`carrot.crown` 五点（橙色根体顶端） | 旧挂点落在萝卜精灵的叶尖，连线成了横穿女孩脸前的绿条 |
+| §8 `girl-hands.webp` 独立盖住叶茎 | 删除；改为同一张女孩精灵裁到拳头重绘（`#cp-girl-fists` + `#cp-girl-fists-clip`） | 女孩精灵自带双臂和握拳，再叠一层就是两双胳膊 |
+| §6 / §8 `mole.paws` / `mole-paws.webp` / 鼹鼠叶茎 | 不存在 | #27 上线过，#28 作为残留叠层删除；verifier 禁止其回到运行时契约 |
+| §8 `clouds` / `hills-farm` / `garden-mid` / `soil-back` 参与绘制 | 仍在资源包与 manifest，但运行时不绘制也不预载 | 导出错位（挤在画布顶部 1/3），`sky.webp` 已是完整画作 |
+| §7.2 `dynamicZ`：`moleStems 55` / `molePaws 65` / `girlStems 75` / `girlHands 80` | `leafStems 49` / `girlFists 80` / `tugLines 115`；鼹鼠 z `48` | 叶柄画在萝卜下面，只露出拳头到叶缘一段 |
+| §9 SVG 骨架：carrot → stems-mole → mole → girl → stems-girl → girl-hands | sky → mole(48) → stems-girl(49) → carrot(50) → girl(70) → girl-fists(80) → soil-front(90) → foreground(100) → particles(110) → tug-lines(115) → hit(120) | 同上；顺序由 verifier 按 z 严格升序校验 |
+
+事故经过见 `docs/traps.md`「拔萝卜手机版」条目。
 
 ## 1. 硬性范围
 
@@ -199,6 +217,8 @@ assets/carrot-pull/
 
 ## 6. 场景坐标契约
 
+> ⚠️ 本节的锚点与挂点已被 §0.1 取代（实施前数值，仅供对照）。
+
 **不得改变现有逻辑坐标系。**
 
 继续使用：
@@ -263,6 +283,8 @@ Codex 应根据现有 SVG 角色实际 bounding box 测量 sprite 的 local rect
 - attachment 的坐标空间固定写成 `sprite-local-logical-px`，不能混用 raster 坐标。
 
 ### 7.2 规范示例
+
+> ⚠️ 示例里的 anchors / attachments / dynamicZ 是实施前的数值，现行值见 §0.1 与 `manifest.json`。
 
 下面是最终 manifest 的**结构性规范**。其中 `MEASURED_*` 表示 Phase 1 必须从现有 SVG 实测后写入的数值；这些占位符不得出现在提交后的正式 `manifest.json`。
 
@@ -388,6 +410,8 @@ Verifier 必须检查：
 
 ## 8. 各美术层职责
 
+> ⚠️ `girl-hands.webp` / `mole-paws.webp` 未采用；clouds / hills-farm / garden-mid / soil-back 当前不绘制。见 §0.1。
+
 | 素材 | 内容 |
 | --- | --- |
 | `sky.webp` | 天空、柔和阳光和空气色 |
@@ -412,6 +436,8 @@ Verifier 必须检查：
 - 所有素材光源一致。
 
 ## 9. 保留 SVG 作为“场景合成器”
+
+> ⚠️ 下方 SVG 骨架是实施前的层序；现行层序见 §0.1 最后一行。
 
 不要切到 Canvas。
 
