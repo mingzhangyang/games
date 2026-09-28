@@ -1239,19 +1239,363 @@ body {
 .td-icon-btn, .td-skill-btn { position: relative; }
 .td-icon-btn::after, .td-skill-btn::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; }
 
-/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ── */
-.td-shell {
-    --frame-max-wide: 940px;
-    --frame-stage: 460px;
-    --frame-side: 300px;
-    /* 桌面纵向预算（2026-09-19）：480×640 逻辑场 → 0.75 画幅；
-       舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
-    --frame-ratio: 0.75;
-    --frame-stage-h: 960px;
-    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
-    /* td 桌面是固定列网格：.td-stage 的包含块就是列轨道本身，
-       --frame-stage-cap 里的 calc(100% - gap - side) 会解析成「列宽-328px」
-       把舞台压瘪（2026-09-19 实测 594.75→266.75）。列宽已由 --stage-w 定死，
-       cap 无需二次限制 */
-    --frame-stage-cap: var(--stage-w);
+/* ─────────────────────────────────────────────
+   Future-city defense pass
+   ─────────────────────────────────────────────
+   Tower Defense is now an immersive 800×600 battlefield.  The shared
+   immersive shell owns the viewport budget; this page only sets its 800px
+   maximum and keeps all tactical controls inside the scene.
+*/
+.td-shell.game-shell--immersive {
+    --frame-immersive-max: 800px;
+    --td-matte: #111d2d;
+    --td-matte-strong: #17283a;
+    --td-line: rgb(139, 196, 193, 0.24);
+    --td-energy: #75e1d2;
+
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+    background: #091321;
+}
+
+.td-shell.game-shell--immersive > .td-topbar,
+.td-shell.game-shell--immersive > .td-footer {
+    max-width: 800px;
+}
+
+.td-shell.game-shell--immersive .td-main {
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+.td-shell.game-shell--immersive .td-stage {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    height: calc(100dvh - var(--frame-chrome) - env(safe-area-inset-bottom, 0px));
+    min-height: var(--frame-immersive-min-h);
+    margin: 0 auto;
+    display: block;
+    overflow: hidden;
+    background: #0b1625;
+    border: 0;
+    border-radius: 0;
+    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.4);
+}
+
+.td-shell.game-shell--immersive .td-stage::before,
+.td-shell.game-shell--immersive .td-stage::after {
+    z-index: 4;
+    opacity: 0.42;
+}
+
+.td-scene-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    background: #0b1625;
+}
+
+.td-shell.game-shell--immersive #td-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    touch-action: none;
+}
+
+.td-shell.game-shell--immersive .td-bottom-controls {
+    position: absolute;
+    z-index: 9;
+    left: 50%;
+    bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    width: min(360px, calc(100% - 24px));
+    margin: 0;
+    transform: translateX(-50%);
+    padding: 6px;
+    border: 1px solid rgb(151, 210, 205, 0.24);
+    border-radius: 13px;
+    background: rgb(11, 22, 37, 0.9);
+    box-shadow: 0 12px 28px rgb(0, 0, 0, 0.36);
+    backdrop-filter: blur(10px);
+}
+
+.td-shell.game-shell--immersive .td-sidebar { display: none; }
+.td-shell.game-shell--immersive .game-stats-btn { display: inline-flex; }
+
+.td-shell.game-shell--immersive .td-stat {
+    background: rgb(17, 29, 45, 0.92);
+    border-color: var(--td-line);
+    border-radius: 7px;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.td-shell.game-shell--immersive .td-stat b,
+.td-shell.game-shell--immersive #td-lives,
+.td-shell.game-shell--immersive #td-gold,
+.td-shell.game-shell--immersive #td-wave {
+    text-shadow: none;
+}
+
+.td-shell.game-shell--immersive .td-icon-btn:hover,
+.td-shell.game-shell--immersive #td-range-btn.active {
+    box-shadow: none;
+}
+
+.td-shell.game-shell--immersive .td-wave-btn {
+    height: 42px;
+    border-radius: 7px;
+    background: #75e1d2;
+    box-shadow: 0 5px 12px rgb(117, 225, 210, 0.18);
+}
+
+.td-shell.game-shell--immersive .td-wave-btn:hover {
+    box-shadow: 0 6px 14px rgb(117, 225, 210, 0.26);
+}
+
+.td-shell.game-shell--immersive .td-wave-btn.early-call {
+    background: #e6b873;
+    box-shadow: 0 5px 14px rgb(230, 184, 115, 0.24);
+}
+
+.td-shell.game-shell--immersive .td-skill-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: #15263a;
+    border-color: var(--td-line);
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.td-shell.game-shell--immersive .td-skill-btn.ready#td-skill-emp,
+.td-shell.game-shell--immersive .td-skill-btn.ready#td-skill-boost {
+    animation: none;
+    box-shadow: inset 0 0 0 1px currentcolor;
+}
+
+.td-shell.game-shell--immersive .td-panel {
+    left: 12px;
+    right: 12px;
+    bottom: 76px;
+    z-index: 12;
+    background: rgb(15, 28, 43, 0.97);
+    border-color: var(--td-line);
+    border-radius: 10px;
+    box-shadow: 0 18px 36px rgb(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+}
+
+.td-shell.game-shell--immersive .td-tactical-panel {
+    position: absolute;
+    z-index: 18;
+    top: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: min(330px, calc(100% - 24px));
+    overflow: hidden;
+    padding: 14px;
+    border: 1px solid var(--td-line);
+    border-radius: 10px;
+    background: rgb(12, 24, 38, 0.98);
+    box-shadow: 0 20px 48px rgb(0, 0, 0, 0.58);
+    backdrop-filter: blur(14px);
+}
+
+.td-tactical-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--td-line);
+}
+
+.td-tactical-kicker {
+    display: block;
+    color: var(--td-energy);
+    font: 800 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.15em;
+}
+
+.td-tactical-head h2 {
+    margin-top: 4px;
+    color: #e4f3f0;
+    font-size: 17px;
+}
+
+.td-tactical-panel #tdStatsPanels {
+    height: calc(100% - 58px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding-top: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(151, 210, 205, 0.35) transparent;
+}
+
+.td-tactical-panel .td-side-card {
+    padding: 11px 12px;
+    border-radius: 7px;
+    background: rgb(21, 38, 58, 0.82);
+    border-color: rgb(151, 210, 205, 0.16);
+}
+
+.td-tactical-panel .td-side-title { color: #d8ece9; }
+
+.td-shell.game-shell--immersive .td-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: rgb(5, 13, 23, 0.91);
+    backdrop-filter: blur(8px);
+}
+
+.td-shell.game-shell--immersive .td-title {
+    color: #dff7f2;
+    background: none;
+    -webkit-text-fill-color: initial;
+    text-shadow: none;
+    letter-spacing: 0.03em;
+}
+
+.td-shell.game-shell--immersive .td-btn,
+.td-shell.game-shell--immersive .td-level-card,
+.td-shell.game-shell--immersive .td-level-brief,
+.td-shell.game-shell--immersive .td-brief-stat,
+.td-shell.game-shell--immersive .td-lb {
+    background: #14263a;
+    border-color: rgb(151, 210, 205, 0.22);
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.td-shell.game-shell--immersive .td-level-card.active {
+    background: #193649;
+    border-color: var(--td-energy);
+    box-shadow: inset 0 0 0 1px rgb(117, 225, 210, 0.2);
+}
+
+.td-shell.game-shell--immersive .td-btn-primary {
+    background: #75e1d2;
+    box-shadow: 0 6px 16px rgb(117, 225, 210, 0.2);
+}
+
+.td-hero {
+    position: relative;
+    width: min(360px, 92vw);
+    height: 154px;
+    overflow: hidden;
+    border: 1px solid rgb(117, 225, 210, 0.32);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #193646, #0c1929);
+    box-shadow: inset 0 0 0 1px rgb(255, 255, 255, 0.03);
+    animation: td-bob 3.4s ease-in-out infinite;
+}
+
+.td-hero-grid {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgb(117, 225, 210, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgb(117, 225, 210, 0.08) 1px, transparent 1px);
+    background-size: 36px 36px;
+}
+
+.td-hero--production {
+    background: #0c1929 center / cover no-repeat;
+}
+
+.td-hero--production .td-hero-grid,
+.td-hero--production .td-hero-caption {
+    display: none;
+}
+
+.td-hero-core {
+    position: absolute;
+    left: calc(50% - 24px);
+    top: 45px;
+    width: 48px;
+    height: 48px;
+    border: 2px solid #b9fff0;
+    background: #1e4851;
+    transform: rotate(45deg);
+    box-shadow: 0 0 0 8px rgb(117, 225, 210, 0.07);
+}
+
+.td-hero-rail {
+    position: absolute;
+    height: 2px;
+    background: #75e1d2;
+    opacity: 0.7;
+}
+
+.td-hero-rail--one { left: 25px; right: 50%; top: 92px; transform: rotate(-14deg); transform-origin: right; }
+.td-hero-rail--two { left: 50%; right: 25px; top: 92px; transform: rotate(14deg); transform-origin: left; }
+
+.td-hero-node { position: absolute; width: 8px; height: 8px; border: 1px solid #e6b873; border-radius: 50%; background: #253a43; }
+.td-hero-node--one { left: 47px; top: 85px; }
+.td-hero-node--two { right: 47px; top: 85px; }
+
+.td-hero-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    color: rgb(211, 239, 235, 0.68);
+    font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.18em;
+}
+
+.td-rotate-prompt {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 9px;
+    padding: 24px;
+    text-align: center;
+    color: #e5f6f2;
+    background: rgb(7, 17, 29, 0.92);
+}
+
+.td-rotate-prompt.is-active { display: flex; }
+.td-rotate-glyph { color: var(--td-energy); font-size: 44px; line-height: 1; }
+.td-rotate-prompt strong { font-size: 19px; }
+.td-rotate-prompt span:last-child { max-width: 260px; color: #9bb8b8; font-size: 12px; line-height: 1.5; }
+
+@media (width < 1024px) {
+    .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) {
+        min-height: 0;
+    }
+
+    .td-shell.game-shell--immersive .td-tactical-panel {
+        top: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: calc(100% - 16px);
+    }
+}
+
+@media (orientation: portrait) and (width < 900px) {
+    .td-shell.game-shell--immersive .td-scene-frame { opacity: 0.22; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .td-hero { animation: none; }
 }

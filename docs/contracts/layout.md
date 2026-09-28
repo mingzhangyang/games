@@ -101,8 +101,8 @@ overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` �
 的滚动容器，鼠标落在侧栏上滚轮就再也传不到主文档，`verify-tetris-topbar-mobile`
 的「滚轮下滚能滚起来」因此变红（实测 scrollTop=0 / 上限 53）。判据取
 「本页接没接纵向预算」这种不随视口变化的事实，与 `game-drawer.js` 的
-`has-stats-drawer` 同模式。tower-defense 另有桌面两列网格
-（`.td-main` grid，技能条回画布列下方，`extraChrome` 把技能条高度并入 chrome）。
+`has-stats-drawer` 同模式。tower-defense 已迁移到 §7 的 immersive 舞台：技能条、
+战术面板和所有战斗控件都属于 800×600 场景，不再接入桌面纵向预算。
 校验：`node scripts/verify-desktop-frame.mjs`（六页 × 五档视口 × 双语，
 断言整页不滚 / 画幅 / 不糊 / 随视口长大 / 侧栏屏内 / chrome 收敛 / 无 pageerror）。
 
@@ -145,7 +145,6 @@ overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` �
 | planet-merge | 520 / 940 | 440 | 300 | `game-stage--fill` |
 | sword-flight | 520 / 960 | 480 | 320 | `game-stage--fill`；竖屏移动端填充顶栏与页脚之间的剩余高度 |
 | needle-awn | 520 / 960 | 480 | 320 | 同 sf |
-| tower-defense | 520 / 940 | 460 | 300 | 舞台宽度保留按视口高度自适应的表达式 |
 | reversi | 560 / 820 | 460 | — | DOM 棋盘 |
 | minesweeper | 640 / 780 | — | — | 格子尺寸由 `layoutCells()` 决定 |
 | word-daily | 520 / 600 | — | — | 单词方块宽度受限 |
@@ -259,8 +258,8 @@ CSS 契约顺序 + `<main>` 语义 + h1，**不套** shell/topbar/sidebar 几何
 
 ## 7. Immersive Stage（2026-09-26，`games.config.json` 的 `"layout": "immersive"`）
 
-与标准骨架（§1–§6）**互斥**的第二种页面布局，给「场景就是游戏」的重场景游戏用（首个消费方
-firefly-signal；未来《影织》等可复用）。**保留共享顶栏**，顶栏以下的整块视口都属于游戏场景；
+与标准骨架（§1–§6）**互斥**的第二种页面布局，给「场景就是游戏」的重场景游戏用（消费方包括
+firefly-signal 与 tower-defense；未来《影织》等可复用）。**保留共享顶栏**，顶栏以下的整块视口都属于游戏场景；
 HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向预算。
 
 **为什么是字段不是 cap**：caps 是可以叠加的能力（sidebar + drawer + leaderboard…），布局类型是互斥的
@@ -287,9 +286,10 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 | --- | --- |
 | 舞台高度 | `calc(100dvh − var(--frame-chrome) − env(safe-area-inset-bottom))`，下限 `--frame-immersive-min-h`（300px，极矮横屏兜底） |
 | `--frame-chrome` | `bindFrame({ layout: 'immersive' })` **实测** = shell 上内距（= 顶部安全区）+ 顶栏高；**不含页脚**（页脚在首屏之下）。不是魔数 |
-| 宽度 | 视口 ≤ `--frame-immersive-max`（640px）时贴边铺满（无 shell 内距、无圆角）；更宽时居中，宽 640px |
+| 宽度 | 默认视口 ≤ `--frame-immersive-max`（640px）时贴边铺满；tower-defense 在 shell 上覆盖为 800px；更宽时按页面上限居中 |
 | 顶栏 | 最大宽度同舞台；左右内距 `max(10px, 安全区)` |
-| 两侧延展 | 舞台窄于视口时，页面自己负责把夜色 / 场景横向延展（firefly-signal：背景层列平均成 1px 竖条铺在 fixed 背景层上，舞台边缘 mask 渐隐） |
+| 页面级参数 | tower-defense：registry stage = `800×600`、`--frame-immersive-max: 800px`、landscape-first、无 sidebar / drawer / frame-budget；默认 immersive 页仍为 640px |
+| 两侧延展 | 舞台窄于视口时，页面自己负责把夜色 / 场景横向延展（firefly-signal：背景层列平均成 1px 竖条铺在 fixed 背景层上；tower-defense：深石墨蓝场外延展） |
 | 手势 | 舞台 `touch-action:none` + `user-select:none` + 禁长按菜单 / 点击高亮：不滚页、不双击缩放、不选字 |
 | body 标记 | `has-immersive-stage`（**不打** `has-frame-budget`，因此不会命中侧栏限高规则） |
 
@@ -308,5 +308,5 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 
 `node scripts/verify-immersive.mjs`（SUITE 名 `immersive`）：页面清单 = `registry.withLayout('immersive')`；
 视口 390×844 / 393×852 / 430×932 / 844×390 / 1280×800 / 1440×900；断言舞台贴顶栏且到视口底、
-`--frame-chrome` 为实测值、窄屏贴边 / 宽屏 600–640 居中、无横向滚动、页脚在首屏之下且可滚到、
+`--frame-chrome` 为实测值、默认页窄屏贴边 / 宽屏 600–640 居中、tower-defense 宽屏可达 800、无横向滚动、页脚在首屏之下且可滚到、
 手势属性、画布后备缓冲 = CSS × min(dpr, 2)、HUD 在舞台上部 25%、转屏后重新贴合、无 pageerror。

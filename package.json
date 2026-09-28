@@ -13,6 +13,7 @@
     "verify:quick": "node scripts/verify-all.mjs --quick",
     "verify:changed": "node scripts/verify-all.mjs --changed",
     "verify:daily": "node scripts/verify-daily.mjs",
+    "verify:tower-defense-dist": "npm run build && node scripts/run-smoke-dist.mjs scripts/smoke-tower-defense.mjs",
     "build:shadow-loom-silhouettes": "node scripts/shadow-loom-build-silhouettes.mjs",
     "check:shadow-loom-silhouettes": "node scripts/shadow-loom-build-silhouettes.mjs --check",
     "verify:shadow-loom": "node scripts/verify-shadow-loom-silhouettes.mjs"

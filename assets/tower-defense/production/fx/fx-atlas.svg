@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="64" viewBox="0 0 384 64">
+  <g fill="none" stroke-linecap="round"><path d="M12 32h40" stroke="#bdfcf2" stroke-width="3"/><path d="M18 32h28" stroke="#4de0d0" stroke-width="8" stroke-opacity=".28"/><path d="M32 12v40M12 32h40" stroke="#75f2e0" stroke-width="1" stroke-opacity=".6"/></g>
+  <g transform="translate(64)"><circle cx="32" cy="32" r="20" fill="#ed8b52" fill-opacity=".16" stroke="#f3c27d" stroke-width="2"/><path d="M32 13v38M13 32h38M19 19l26 26M45 19L19 45" stroke="#ffe2aa" stroke-width="2"/></g>
+  <g transform="translate(128)"><circle cx="32" cy="32" r="18" fill="#8ee7f0" fill-opacity=".12" stroke="#bff9ff" stroke-width="2"/><path d="M32 10v44M10 32h44" stroke="#bff9ff" stroke-width="2" stroke-dasharray="3 5"/></g>
+  <g transform="translate(192)"><circle cx="32" cy="32" r="20" fill="#ff9f43" fill-opacity=".16" stroke="#ffd18b" stroke-width="2"/><circle cx="32" cy="32" r="9" fill="#fff1bd"/><path d="M32 8v12M32 44v12M8 32h12M44 32h12" stroke="#ffbd65" stroke-width="3"/></g>
+  <g transform="translate(256)"><circle cx="32" cy="32" r="18" fill="#8fe6ff" fill-opacity=".12" stroke="#bff9ff" stroke-width="2"/><path d="M16 40c11-17 21-17 32-32M16 24c11 17 21 17 32 32" stroke="#e4ffff" stroke-width="2"/></g>
+  <g transform="translate(320)"><path d="M32 8v48M8 32h48" stroke="#ff7184" stroke-width="2" stroke-opacity=".7"/><circle cx="32" cy="32" r="8" fill="#fff"/></g>
+</svg>

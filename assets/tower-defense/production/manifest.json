@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "coordinateSpace": "800x600",
+  "budgetBytes": 3145728,
+  "assets": {
+    "environment.battlefield": { "file": "environment/battlefield-base.svg", "kind": "background", "fallback": "procedural" },
+    "environment.platform": { "file": "environment/platform-variant.svg", "kind": "overlay", "fallback": "procedural" },
+    "environment.reactor": { "file": "environment/reactor-variant.svg", "kind": "overlay", "fallback": "procedural" },
+    "environment.singularity": { "file": "environment/singularity-variant.svg", "kind": "overlay", "fallback": "procedural" },
+    "towers.atlas": { "file": "towers/tower-atlas.svg", "kind": "atlas", "frame": "64x64", "fallback": "program" },
+    "enemies.atlas": { "file": "enemies/enemy-atlas.svg", "kind": "atlas", "frame": "64x64", "fallback": "program" },
+    "fx.atlas": { "file": "fx/fx-atlas.svg", "kind": "atlas", "frame": "64x64", "fallback": "program" },
+    "ui.startHero": { "file": "ui/start-hero.svg", "kind": "illustration", "fallback": "css" }
+  }
+}
