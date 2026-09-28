@@ -210,6 +210,7 @@ for (let li = 0; li < LEVELS.length; li++) {
     report.push({ id: lv.id, par: lv.par, pullMax: lv.pullMax, solvable, fullStar, singleDrag, minFullStarDrags, best });
     ok(solvable > 0, `${lv.id} par 内可解`, `搜到 ${solvable} 位`);
     ok(fullStar > 0, `${lv.id} par 内满星可解`, `满星位 ${fullStar}/${solvable}`);
+    ok(fullStar >= 2, `${lv.id} 至少有 2 个满星目标位（避免像素级唯一解）`, String(fullStar));
     ok(minFullStarDrags <= lv.par, `${lv.id} 最少满星牵拉 ≤ par`, `${minFullStarDrags} ≤ ${lv.par}`);
 
     // 前四关保留教学宽容；S5 起必须至少重新落手一次。
