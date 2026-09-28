@@ -2,7 +2,7 @@
 
 > 目标执行者：Codex  
 > 状态：待实施  
-> 目标：保留当前成熟的塔防玩法、25 波结构、敌人机制、技能系统与响应式布局，把“程序绘制的霓虹网格小游戏”升级为**具有真实战场氛围的未来都市防线**。
+> 目标：保留当前成熟的塔防玩法、6 个战役关卡（分别为 15 / 20 / 25 / 30 / 35 / 40 波）、敌人机制、技能系统与响应式布局，把“程序绘制的霓虹网格小游戏”升级为**具有真实战场氛围的未来都市防线**。
 
 ## 0. 升级原则
 
@@ -22,7 +22,7 @@
 - 路径点与敌人行进判定；
 - 建塔、升级、出售、选中逻辑；
 - 射程、伤害、攻速、减速、连锁、投射物等数值；
-- 波次构成与关卡难度；
+- 波次构成与关卡难度；当前 `js/tower-levels.js` 是战役波次数的真源：`outpost=15`、`vanguard=20`、`citadel=25`、`skyfall=30`、`juggernaut=35`、`singularity=40`，其中只有 `citadel` 是 25 波；
 - 技能按钮、快捷键、暂停与速度切换；
 - 现有 smoke / verify 通过条件。
 
@@ -135,10 +135,11 @@
 
 推荐采用：
 
-- **静态背景层**：资源图或离屏缓存；
-- **中景 / 前景点缀层**：静态或低频微动；
+- **静态战场层**：继续进入现有 `bgCanvas` / 离屏缓存，并与路径、建造格共享 `480×640` 逻辑坐标；
+- **环境中景层**：可静态或低频微动，但必须在 gameplay 实体之后/之前的顺序上明确，不得改变路径与命中几何；
 - **gameplay 真源层**：塔、敌人、弹丸、特效继续程序 / sprite 绘制；
-- **DOM HUD / UI 层**：继续 HTML/CSS。
+- **可选前景遮挡层**：仅允许出现在战场边缘的非交互区域，不得盖住可建格、敌人、塔、射程和状态提示；
+- **DOM HUD / UI 层**：继续 HTML/CSS；DOM 背景最多用于页面壳体氛围，不作为战场路径或格子的视觉真源。
 
 不建议为了美术重写现有画布架构。
 
@@ -173,6 +174,7 @@ assets/tower-defense/production/manifest.json
 
 ### 3.4 性能原则
 
+- 战场始终使用现有固定 `480×640` 逻辑坐标；desktop / mobile 只改变显示缩放与外围布局，不制作改变 gameplay 构图的“宽屏战场版”；
 - 大背景不要每帧全尺寸复杂重绘；
 - 优先：
   - DOM 背景图；
@@ -184,11 +186,23 @@ assets/tower-defense/production/manifest.json
 - 不在主循环中频繁创建大 gradient / canvas；
 - 不将所有光效改成实时 blur。
 
+
+### 3.5 主题契约：继续保持 dark-only
+
+根据 `docs/contracts/theme.md`，`tower-defense` 当前是**仅深色**游戏，霓虹 / 加色混合与暗场可读性属于主题本身。本轮美术升级必须保持这一契约：
+
+- 不给 `tower-defense` 增加 `theme-light` cap；
+- 不新增浅色战场变体；
+- 不因为新版材质更克制就把页面迁移成 light / system 可切换；
+- `site_theme=light` 或系统浅色时，该游戏仍应由现有 theme boot 解析为 `data-theme="dark"`；
+- 新增 art verifier / smoke 时应保留对 dark-only 行为的验证，避免美术改造意外改变主题能力声明。
+
+
 ---
 
 ## 4. 战场场景升级方案
 
-## 4.1 目标
+### 4.1 目标
 
 把当前 `renderBackground()` 的纯程序化棋盘升级成：
 
@@ -693,22 +707,16 @@ Victory / Defeat 明确区分：
 
 ```text
 environment/
-  bg-battlefield-wide.webp
-  bg-battlefield-mobile.webp
-  bg-reactor-variant.webp
-  bg-platform-variant.webp
-  bg-singularity-variant.webp
-```
-
-如需拆层：
-
-```text
-environment/
+  battlefield-base.webp
   far-skyline.webp
   mid-structures.webp
-  battlefield-base.webp
-  foreground-rails.webp
+  foreground-edge.webp
+  reactor-variant.webp
+  platform-variant.webp
+  singularity-variant.webp
 ```
+
+以上战场资源全部以同一个 `480×640` 逻辑舞台为构图基准；若输出 2× 栅格资源，统一按 `960×1280` 对齐。不要按 desktop / mobile 分别改战场透视、路径位置或可建区构图。
 
 ### 10.2 塔资源
 
@@ -784,7 +792,7 @@ ui/
 
 ## 11. 实施步骤
 
-## Phase 1：视觉系统定调
+### Phase 1：视觉系统定调
 
 1. 明确配色体系；
 2. 出一张整体概念图 / 冻结稿；
@@ -799,7 +807,7 @@ ui/
 - 资源目录；
 - manifest 草案。
 
-## Phase 2：战场环境升级
+### Phase 2：战场环境升级
 
 1. 实装新背景；
 2. 改造路径；
@@ -815,7 +823,7 @@ ui/
 - flyer 路线不抢眼；
 - 场景不遮挡塔与敌人。
 
-## Phase 3：塔资源升级
+### Phase 3：塔资源升级
 
 1. 用正式 sprite 替换主要几何绘制；
 2. 保留旋转；
@@ -829,7 +837,7 @@ ui/
 - 高等级不糊；
 - 点击命中与格子坐标不变。
 
-## Phase 4：敌人与弹丸升级
+### Phase 4：敌人与弹丸升级
 
 1. 替换敌人 sprite；
 2. 升级投射物；
@@ -843,7 +851,7 @@ ui/
 - hitbox 理解不受影响；
 - swarm 性能可接受。
 
-## Phase 5：UI / Overlay 升级
+### Phase 5：UI / Overlay 升级
 
 1. 替换开始页主视觉；
 2. 建造面板升级；
@@ -858,7 +866,7 @@ ui/
 - 窄屏不挤压；
 - topbar 当前布局契约不破坏。
 
-## Phase 6：收尾与验证
+### Phase 6：收尾与验证
 
 1. 亮度审计；
 2. 前景可读性审计；
