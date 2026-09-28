@@ -176,6 +176,15 @@ const GRID_Y = [];
 for (let x = 60; x <= 420; x += 40) GRID_X.push(x);
 for (let y = 120; y <= 460; y += 40) GRID_Y.push(y);
 
+const MIN_FULL_STAR_DRAGS = [
+    1, 2, 2, 2,   // S1-S4: 教学 / 基础
+    2, 2, 2, 2,   // S5-S8: 基础机制组合
+    3, 3, 3, 3,   // S9-S12: 中盘，至少三次重新落手
+    3, 3, 3, 3,   // S13-S16: 中高级组合
+    4, 4, 4,      // S17-S19: 后盘综合
+    5,             // S20: 终局
+];
+
 const report = [];
 for (let li = 0; li < LEVELS.length; li++) {
     const lv = LEVELS[li];
@@ -189,20 +198,27 @@ for (let li = 0; li < LEVELS.length; li++) {
     for (let ri = 0; ri < ropeCount; ri++) {
         for (const tx of GRID_X) {
             for (const ty of GRID_Y) {
-                // 单拉预算独立模拟：不能从多拉模拟的首段推断，因为首段的
-                // hold/settle 时长不同，可能漏掉“拉到边界后等一会就能赢”的捷径。
-                if (li >= 4) {
-                    const one = attempt(lv, tx, ty, ri, 1);
-                    if (one.won && one.stars === one.starsTotal) singleDrag++;
+                let candidateWon = false;
+                let candidateFull = false;
+                let candidateMin = Infinity;
+
+                // 真正扫描 1..par 的预算，而不是只从 par 解里读取实际 drags。
+                // budget 会改变最后一段的 hold/settle，因此每个预算必须独立跑。
+                for (let budget = 1; budget <= lv.par; budget++) {
+                    const res = attempt(lv, tx, ty, ri, budget);
+                    if (res.won) candidateWon = true;
+                    if (res.won && res.stars === res.starsTotal) {
+                        candidateFull = true;
+                        candidateMin = Math.min(candidateMin, res.drags);
+                        if (budget === 1) singleDrag++;
+                    }
                 }
 
-                const res = attempt(lv, tx, ty, ri, lv.par);
-                if (!res.won) continue;
-                solvable++;
-                if (res.stars !== res.starsTotal) continue;
+                if (candidateWon) solvable++;
+                if (!candidateFull) continue;
                 fullStar++;
-                minFullStarDrags = Math.min(minFullStarDrags, res.drags);
-                if (!best || res.drags < best.drags) best = { tx, ty, ri, drags: res.drags };
+                minFullStarDrags = Math.min(minFullStarDrags, candidateMin);
+                if (!best || candidateMin < best.drags) best = { tx, ty, ri, drags: candidateMin };
             }
         }
     }
@@ -212,11 +228,12 @@ for (let li = 0; li < LEVELS.length; li++) {
     ok(fullStar > 0, `${lv.id} par 内满星可解`, `满星位 ${fullStar}/${solvable}`);
     ok(fullStar >= 2, `${lv.id} 至少有 2 个满星目标位（避免像素级唯一解）`, String(fullStar));
     ok(minFullStarDrags <= lv.par, `${lv.id} 最少满星牵拉 ≤ par`, `${minFullStarDrags} ≤ ${lv.par}`);
+    ok(minFullStarDrags >= MIN_FULL_STAR_DRAGS[li],
+        `${lv.id} 达到章节最低难度（满星至少 ${MIN_FULL_STAR_DRAGS[li]} 拉）`,
+        String(minFullStarDrags));
 
-    // 前四关保留教学宽容；S5 起必须至少重新落手一次。
     if (li >= 4) {
         ok(singleDrag === 0, `${lv.id} 不存在一拉满星解`, `单牵拉满星位=${singleDrag}`);
-        ok(minFullStarDrags >= 2, `${lv.id} 满星至少需要 2 次牵拉`, String(minFullStarDrags));
     }
 }
 const solvableAll = report.filter(r => r.fullStar > 0).length;
