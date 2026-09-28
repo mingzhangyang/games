@@ -7,8 +7,8 @@
 //   绕荆棘、穿气泡借浮力、顺气旋横渡、最终入玉壶。
 //   - 锚点拖拽位移直接决定露珠位移（实测可达 300px+），远优于「剪断自由落体」的 47px 散布。
 //   - 丝线仍是 verlet 链（重力 + 距离约束 + 松弛迭代），拖拽时自然下垂、甩动。
-//   - 可拖拽对象：锚结（拖拽牵丝）、露珠（直接拖，但绳长限制其活动范围）。
-//   - 计分：**拖拽次数**（离散量，asc 越少越好）——同一次按住拖动算 1 次。
+//   - 可拖拽对象：仅锚结。每次牵拉有有限行程，必须松手再抓，避免一次长按绕完整张图。
+//   - 计分：**牵拉次数**（离散量，asc 越少越好）——同一次按住拖动算 1 次。
 //
 // 物理口径（与引力弹弓同族）：
 //   verlet  p += (p - prev) * damp + a * dt^2
@@ -17,6 +17,45 @@
 import { hashStringFNV, mulberry32 } from './daily.js';
 
 export const STAGE = { w: 480, h: 640 };
+
+/**
+ * 关卡星级：三星同时要求路线完整（收齐星芒）与牵拉高效（不超过 par）。
+ * 保持为纯函数，运行时与离线校验器共用，避免 UI 评分口径漂移。
+ */
+export function scoreStars(drags, par, starsTaken, starsTotal) {
+    if (starsTotal <= 0) return drags <= par ? 3 : (drags <= par + 2 ? 2 : 1);
+    const all = starsTaken >= starsTotal;
+    const nearAll = starsTotal > 1 && starsTaken >= starsTotal - 1;
+    if (all && drags <= par) return 3;
+    if (all || (nearAll && drags <= par)) return 2;
+    return 1;
+}
+
+export function summarizeDailyResults(results, stageCount) {
+    const count = Number.isInteger(stageCount) && stageCount > 0 ? stageCount : 0;
+    const rows = Array.isArray(results) ? results.slice(0, count) : [];
+    let totalStars = 0;
+    let totalDrags = 0;
+    let completed = 0;
+    for (let i = 0; i < count; i++) {
+        const row = rows[i];
+        if (!row) continue;
+        completed++;
+        totalStars += Math.max(0, Math.min(3, row.stars | 0));
+        totalDrags += Math.max(0, row.drags | 0);
+    }
+    return { totalStars, totalDrags, completed };
+}
+
+export function dailyQualifies(results, stageCount) {
+    if (!Number.isInteger(stageCount) || stageCount <= 0 || !Array.isArray(results)) return false;
+    if (results.length < stageCount) return false;
+    for (let i = 0; i < stageCount; i++) {
+        if (!results[i] || (results[i].stars | 0) !== 3) return false;
+    }
+    return true;
+}
+
 
 // ---- 物理常量 ----
 export const PHYS = {
@@ -27,7 +66,8 @@ export const PHYS = {
     pearlDamp: 0.998,     // 露珠阻尼
     iters: 4,             // 距离约束松弛迭代
     pearlR: 9,            // 露珠半径
-    anchorR: 14,          // 锚结可拖拽半径
+    anchorR: 14,          // 锚结视觉半径
+    anchorHitR: 24,       // 锚结触控热区（移动端友好，不放大视觉）
     seg: 10,              // 丝线相邻粒点初距
     buoyancy: -1200,      // 气泡内净浮力（负 = 向上）
     grazeR: 16,           // 星芒感应半径
@@ -38,8 +78,8 @@ export const PHYS = {
     vesselInset: 2,       // 玉壶内收（捕获宽度 = w/2 - inset）
     // 拖拽约束：锚点跟手，但有最大跟随速度（否则瞬移会扯断数值稳定性）
     anchorFollow: 0.45,   // 锚点向指针插值系数（每子步）
-    pearlDragFollow: 0.35,// 直接拖露珠时的插值系数
     dragMaxSpeed: 2400,   // 锚点每子步最大位移（px/s 上限）
+    pullMax: 150,         // 默认单次牵拉最大锚点位移；关卡可用 pullMax 覆盖
 };
 
 const D2R = Math.PI / 180;
@@ -78,6 +118,7 @@ function buildRopeParticles(r) {
 //   bubbles[] 气泡 { x, y, r }（破泡后露珠获得浮力）
 //   vessel    玉壶 { x, y, w }
 //   par       设计师目标牵拉次数
+//   pullMax   单次牵拉最大锚点位移（px），后期逐步收紧以形成多步决策
 export const LEVELS = [
     // ⚠️ 本表由 scripts/tmp-sd-final3.mjs 生成并逐关验证（拖拽机制，20/20 满星可解）。
     // 几何约束（实测）：绳 17–21 段（170–210px）+ 玉壶 y≈480 + 锚点起始 y≈100–150。
@@ -85,60 +126,60 @@ export const LEVELS = [
     // 造成「赢了却没吃星」的假可解（早期 tmp-sd-redesign.mjs 就因此多报 5 关）。
     // 改任何元素位置后必须重跑 scripts/verify-silk-dew-levels.mjs 确认。
     {
-        id: 'S1', par: 1, tipKey: 'tipCut',
+        id: 'S1', par: 1, pullMax: 260, tipKey: 'tipCut',
         ropes: [rope(240, 110, 18, 0, 0, 0)],
         stars: [{ x: 240, y: 371 }],
         vessel: { x: 240, y: 480, w: 92 },
     },
     {
-        id: 'S2', par: 1, tipKey: 'tipSwing',
+        id: 'S2', par: 2, pullMax: 170, tipKey: 'tipSwing',
         ropes: [rope(180, 110, 18, 0, 0, 0)],
         stars: [{ x: 182, y: 346 }, { x: 252, y: 365 }],
         vessel: { x: 340, y: 480, w: 90 },
     },
     {
-        id: 'S3', par: 2, tipKey: 'tipTwoRopes',
+        id: 'S3', par: 2, pullMax: 170, tipKey: 'tipTwoRopes',
         ropes: [rope(160, 110, 18, 0, 0, 0), rope(320, 110, 18, 0, 0, 0)],
         stars: [{ x: 162, y: 346 }, { x: 232, y: 365 }],
         vessel: { x: 320, y: 480, w: 90 },
     },
     {
-        id: 'S4', par: 2, tipKey: 'tipThorn',
+        id: 'S4', par: 2, pullMax: 160, tipKey: 'tipThorn',
         ropes: [rope(150, 110, 19, 0, 0, 0)],
         stars: [{ x: 151, y: 344 }, { x: 226, y: 358 }],
         thorns: [{ x: 300, y: 300, r: 20 }],
         vessel: { x: 300, y: 480, w: 88 },
     },
     {
-        id: 'S5', par: 2, tipKey: 'tipThread',
+        id: 'S5', par: 3, pullMax: 150, tipKey: 'tipThread',
         ropes: [rope(360, 110, 19, 0, 0, 0)],
         stars: [{ x: 354, y: 371 }, { x: 285, y: 395 }],
         thorns: [{ x: 300, y: 260, r: 20 }, { x: 180, y: 300, r: 20 }],
         vessel: { x: 250, y: 480, w: 90 },
     },
     {
-        id: 'S6', par: 2, tipKey: 'tipBreeze',
+        id: 'S6', par: 3, pullMax: 150, tipKey: 'tipBreeze',
         ropes: [rope(200, 110, 18, 0, 0, 0)],
         stars: [{ x: 200, y: 429 }, { x: 377, y: 402 }],
         winds: [{ x: 280, y: 320, w: 170, h: 190, ax: 700, ay: 0 }],
         vessel: { x: 390, y: 480, w: 86 },
     },
     {
-        id: 'S7', par: 3, tipKey: 'tipBreeze',
+        id: 'S7', par: 4, pullMax: 145, tipKey: 'tipBreeze',
         ropes: [rope(180, 110, 19, 0, 0, 0)],
-        stars: [{ x: 418, y: 443 }, { x: 332, y: 353 }],
+        stars: [{ x: 180, y: 330 }, { x: 340, y: 445 }],
         winds: [{ x: 270, y: 330, w: 160, h: 130, ax: 760, ay: 0 }, { x: 330, y: 440, w: 130, h: 110, ax: -700, ay: 0 }],
         vessel: { x: 340, y: 480, w: 86 },
     },
     {
-        id: 'S8', par: 2, tipKey: 'tipTiming',
+        id: 'S8', par: 4, pullMax: 140, tipKey: 'tipTiming',
         ropes: [rope(120, 100, 21, 0, 0, 0)],
         stars: [{ x: 130, y: 365 }, { x: 198, y: 388 }],
         thorns: [{ x: 350, y: 350, r: 20 }],
         vessel: { x: 280, y: 480, w: 90 },
     },
     {
-        id: 'S9', par: 3, tipKey: 'tipBubble',
+        id: 'S9', par: 4, pullMax: 70, tipKey: 'tipBubble',
         ropes: [rope(240, 130, 17, 0, 0, 0)],
         stars: [{ x: 254, y: 343 }, { x: 282, y: 409 }],
         thorns: [{ x: 110, y: 370, r: 22 }, { x: 372, y: 370, r: 22 }],
@@ -147,7 +188,7 @@ export const LEVELS = [
         vessel: { x: 240, y: 480, w: 58 },
     },
     {
-        id: 'S10', par: 3, tipKey: 'tipBubble',
+        id: 'S10', par: 4, pullMax: 80, tipKey: 'tipBubble',
         ropes: [rope(190, 140, 17, 0, 0, 0)],
         stars: [{ x: 190, y: 350 }, { x: 190, y: 420 }],
         thorns: [{ x: 130, y: 250, r: 20 }],
@@ -156,7 +197,7 @@ export const LEVELS = [
         vessel: { x: 360, y: 480, w: 86 },
     },
     {
-        id: 'S11', par: 2, tipKey: 'tipTwoRopes',
+        id: 'S11', par: 4, pullMax: 65, tipKey: 'tipTwoRopes',
         ropes: [rope(150, 110, 18, 0, 0, 0), rope(260, 110, 18, 0, 0, 0), rope(360, 110, 18, 0, 0, 0)],
         pearl: { rope: 1 },
         stars: [{ x: 248, y: 334 }, { x: 219, y: 406 }],
@@ -165,14 +206,14 @@ export const LEVELS = [
         vessel: { x: 300, y: 480, w: 58 },
     },
     {
-        id: 'S12', par: 3, tipKey: 'tipBreeze',
+        id: 'S12', par: 4, pullMax: 55, tipKey: 'tipBreeze',
         ropes: [rope(240, 110, 18, 0, 0, 0)],
         stars: [{ x: 240, y: 355 }],
         winds: [{ x: 310, y: 300, w: 160, h: 180, ax: 720, ay: -260 }],
         vessel: { x: 400, y: 420, w: 86 },
     },
     {
-        id: 'S13', par: 3, tipKey: 'tipSwing',
+        id: 'S13', par: 5, pullMax: 80, tipKey: 'tipSwing',
         ropes: [rope(110, 120, 20, 0, 0, 0)],
         stars: [{ x: 113, y: 359 }, { x: 184, y: 372 }],
         thorns: [{ x: 160, y: 500, r: 20 }],
@@ -180,7 +221,7 @@ export const LEVELS = [
         vessel: { x: 400, y: 480, w: 86 },
     },
     {
-        id: 'S14', par: 4, tipKey: 'tipBubble',
+        id: 'S14', par: 5, pullMax: 90, tipKey: 'tipBubble',
         ropes: [rope(240, 150, 17, 0, 0, 0)],
         stars: [{ x: 261, y: 368 }, { x: 295, y: 430 }],
         thorns: [{ x: 130, y: 280, r: 20 }, { x: 310, y: 380, r: 20 }],
@@ -189,15 +230,15 @@ export const LEVELS = [
         vessel: { x: 240, y: 480, w: 60 },
     },
     {
-        id: 'S15', par: 4, tipKey: 'tipThread',
+        id: 'S15', par: 6, pullMax: 90, tipKey: 'tipThread',
         ropes: [rope(120, 130, 20, 0, 0, 0)],
-        stars: [{ x: 121, y: 361 }, { x: 194, y: 368 }],
+        stars: [{ x: 140, y: 350 }, { x: 260, y: 390 }],
         thorns: [{ x: 190, y: 300, r: 22 }, { x: 330, y: 400, r: 22 }],
         winds: [{ x: 210, y: 360, w: 150, h: 130, ax: 620, ay: 0 }],
         vessel: { x: 400, y: 480, w: 86 },
     },
     {
-        id: 'S16', par: 4, tipKey: 'tipBubble',
+        id: 'S16', par: 6, pullMax: 70, tipKey: 'tipBubble',
         ropes: [rope(140, 150, 18, 0, 0, 0)],
         stars: [{ x: 140, y: 393 }],
         thorns: [{ x: 260, y: 220, r: 20 }],
@@ -206,7 +247,7 @@ export const LEVELS = [
         vessel: { x: 400, y: 480, w: 86 },
     },
     {
-        id: 'S17', par: 4, tipKey: 'tipAll',
+        id: 'S17', par: 6, pullMax: 45, tipKey: 'tipAll',
         ropes: [rope(120, 120, 19, 0, 0, 0)],
         stars: [{ x: 120, y: 395 }],
         thorns: [{ x: 190, y: 500, r: 20 }],
@@ -215,14 +256,14 @@ export const LEVELS = [
         vessel: { x: 210, y: 480, w: 90 },
     },
     {
-        id: 'S18', par: 4, tipKey: 'tipTiming',
+        id: 'S18', par: 6, pullMax: 55, tipKey: 'tipTiming',
         ropes: [rope(120, 110, 19, 0, 0, 0), rope(360, 110, 19, 0, 0, 0)],
         stars: [{ x: 226, y: 410 }],
         thorns: [{ x: 240, y: 260, r: 22 }],
         vessel: { x: 240, y: 480, w: 90 },
     },
     {
-        id: 'S19', par: 5, tipKey: 'tipAll',
+        id: 'S19', par: 6, pullMax: 55, tipKey: 'tipAll',
         ropes: [rope(140, 130, 20, 0, 0, 0)],
         stars: [{ x: 140, y: 358 }],
         thorns: [{ x: 170, y: 520, r: 20 }, { x: 96, y: 300, r: 20 }],
@@ -231,7 +272,7 @@ export const LEVELS = [
         vessel: { x: 410, y: 480, w: 86 },
     },
     {
-        id: 'S20', par: 3, tipKey: 'tipFinal',
+        id: 'S20', par: 7, pullMax: 35, tipKey: 'tipFinal',
         ropes: [rope(240, 100, 20, 0, 0, 0)],
         stars: [{ x: 240, y: 389 }],
         thorns: [{ x: 230, y: 560, r: 20 }],
@@ -273,8 +314,8 @@ export function createWorld(spec) {
         ropes,
         pearl,
         pearlRope: linkIdx,
-        dragging: null,          // { kind:'anchor'|'pearl', rope:i, x, y } —— 当前拖拽目标
-        drags: 0,                // 拖拽次数（计分：离散，asc 越少越好）
+        dragging: null,          // { kind:'anchor', rope, x, y, originX, originY, maxDistance }
+        drags: 0,                // 牵拉次数（计分：离散，asc 越少越好）
         wasDragging: false,
         stars: (spec.stars || []).map((s, i) => ({ i, x: s.x, y: s.y, taken: false, pop: 0 })),
         thorns: (spec.thorns || []).map((t) => ({ x: t.x, y: t.y, r: t.r })),
@@ -290,38 +331,45 @@ export function createWorld(spec) {
 }
 
 // ---- 拖拽接口 ----
-// 拖拽起点命中检测：优先锚结（大热区），其次露珠。返回是否抓住。
+// 牵拉起点只命中锚结。露珠本身不再可直接拖动，避免绕过绳索物理。
 export function beginDrag(world, x, y) {
     if (world.state !== 'playing') return false;
-    let hit = null;
-    // 锚结优先（可拖拽 = 玩法核心）
     for (const rope of world.ropes) {
         const a = rope.particles[0];
         const dx = x - a.x, dy = y - a.y;
-        if (dx * dx + dy * dy <= PHYS.anchorR * PHYS.anchorR) {
-            hit = { kind: 'anchor', rope: rope.i, x, y };
-            break;
-        }
+        if (dx * dx + dy * dy > PHYS.anchorHitR * PHYS.anchorHitR) continue;
+        const maxDistance = world.spec.pullMax || PHYS.pullMax;
+        world.dragging = {
+            kind: 'anchor',
+            rope: rope.i,
+            x: a.x,
+            y: a.y,
+            originX: a.x,
+            originY: a.y,
+            maxDistance,
+        };
+        world.drags++;
+        world.events.push({ type: 'grab', kind: 'anchor', x: a.x, y: a.y, t: world.time });
+        return true;
     }
-    if (!hit) {
-        const p = world.pearl;
-        const dx = x - p.x, dy = y - p.y;
-        const r = PHYS.pearlR + 14;
-        if (dx * dx + dy * dy <= r * r) hit = { kind: 'pearl', rope: world.pearlRope, x, y };
-    }
-    if (!hit) return false;
-    world.dragging = hit;
-    world.drags++;
-    world.events.push({ type: 'grab', kind: hit.kind, x, y, t: world.time });
-    return true;
+    return false;
 }
 
-// 更新拖拽目标位置（指针移动）
+// 更新牵拉目标。目标被限制在本次抓取起点周围的 pullMax 圆内：
+// 一次按住无法在全场无限绕路，par 才真正代表需要几次重新落手。
 export function moveDrag(world, x, y) {
-    if (world.dragging) {
-        world.dragging.x = x;
-        world.dragging.y = y;
+    const d = world.dragging;
+    if (!d) return;
+    let dx = x - d.originX;
+    let dy = y - d.originY;
+    const dist = Math.hypot(dx, dy);
+    if (dist > d.maxDistance && dist > 1e-9) {
+        const k = d.maxDistance / dist;
+        dx *= k;
+        dy *= k;
     }
+    d.x = d.originX + dx;
+    d.y = d.originY + dy;
 }
 
 // 松开
@@ -467,29 +515,19 @@ function clampAnchor(p) {
 function substep(world, dt) {
     const { pearl: p } = world;
 
-    // 1) 拖拽：把被拖对象拉向指针（限速插值，避免瞬移破坏稳定性）
+    // 1) 牵拉：锚点追随已经过 pullMax 限制的目标。
     if (world.dragging) {
         const d = world.dragging;
-        if (d.kind === 'anchor') {
-            const a = world.ropes[d.rope].particles[0];
-            const tx = Math.max(PHYS.anchorR, Math.min(STAGE.w - PHYS.anchorR, d.x));
-            const ty = Math.max(PHYS.anchorR, Math.min(STAGE.h - PHYS.anchorR, d.y));
-            const maxStep = PHYS.dragMaxSpeed * dt;
-            let sx = (tx - a.x) * PHYS.anchorFollow;
-            let sy = (ty - a.y) * PHYS.anchorFollow;
-            const sd = Math.sqrt(sx * sx + sy * sy);
-            if (sd > maxStep) { sx = sx / sd * maxStep; sy = sy / sd * maxStep; }
-            a.x += sx; a.y += sy;
-            clampAnchor(a);
-        } else {
-            // 直接拖露珠：给一个朝指针的强牵引
-            const maxStep = PHYS.dragMaxSpeed * dt;
-            let sx = (d.x - p.x) * PHYS.pearlDragFollow;
-            let sy = (d.y - p.y) * PHYS.pearlDragFollow;
-            const sd = Math.sqrt(sx * sx + sy * sy);
-            if (sd > maxStep) { sx = sx / sd * maxStep; sy = sy / sd * maxStep; }
-            p.x += sx; p.y += sy;
-        }
+        const a = world.ropes[d.rope].particles[0];
+        const tx = Math.max(PHYS.anchorR, Math.min(STAGE.w - PHYS.anchorR, d.x));
+        const ty = Math.max(PHYS.anchorR, Math.min(STAGE.h - PHYS.anchorR, d.y));
+        const maxStep = PHYS.dragMaxSpeed * dt;
+        let sx = (tx - a.x) * PHYS.anchorFollow;
+        let sy = (ty - a.y) * PHYS.anchorFollow;
+        const sd = Math.hypot(sx, sy);
+        if (sd > maxStep) { sx = sx / sd * maxStep; sy = sy / sd * maxStep; }
+        a.x += sx; a.y += sy;
+        clampAnchor(a);
     }
 
     // 2) 受力：重力 + 气泡浮力 + 气旋
