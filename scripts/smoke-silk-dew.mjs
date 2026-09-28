@@ -195,10 +195,12 @@ if (after.state !== 'won-level') {
     fail(`拖拽后 state=${after.state}（期望 won-level；露珠在 ${after.pearl.x},${after.pearl.y}，壶口 ${started.vessel.x},${started.vessel.y}）`);
 } else {
     if (!after.clearVisible) fail('过关面板未显示');
-    if (!after.clearStars.includes('★') && !after.clearStars.includes('⭐')) fail(`星级未渲染: ${after.clearStars}`);
-    if (after.starsTaken < 1) fail(`应收满 L1 星芒，实际 ${after.starsTaken}/${started.starCount}`);
+    if (after.starsTaken !== started.starCount) fail(`L1 教学路线应收齐星芒，实际 ${after.starsTaken}/${started.starCount}`);
+    if (after.clearStars !== '★★★') fail(`L1 收齐星芒且 1 次牵拉应为三星，实际: ${after.clearStars}`);
     const p = after.progress['S1'];
-    if (!p || !(p.stars >= 1)) fail(`sd_progress 未写入 S1 星级: ${JSON.stringify(after.progress)}`);
+    if (!p || p.stars !== 3 || p.bestDrags !== 1) {
+        fail(`sd_progress 应记录 S1 三星 / 1 次最佳牵拉: ${JSON.stringify(after.progress)}`);
+    }
 }
 
 /* ── 5. 全关卡渲染回归：逐关 startLevel + 强制 draw，捕获绘制期异常 ──
