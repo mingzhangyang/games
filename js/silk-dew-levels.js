@@ -31,8 +31,29 @@ export function scoreStars(drags, par, starsTaken, starsTotal) {
     return 1;
 }
 
-export function dailyQualifies(totalStars, stageCount) {
-    return Number.isInteger(stageCount) && stageCount > 0 && totalStars === stageCount * 3;
+export function summarizeDailyResults(results, stageCount) {
+    const count = Number.isInteger(stageCount) && stageCount > 0 ? stageCount : 0;
+    const rows = Array.isArray(results) ? results.slice(0, count) : [];
+    let totalStars = 0;
+    let totalDrags = 0;
+    let completed = 0;
+    for (let i = 0; i < count; i++) {
+        const row = rows[i];
+        if (!row) continue;
+        completed++;
+        totalStars += Math.max(0, Math.min(3, row.stars | 0));
+        totalDrags += Math.max(0, row.drags | 0);
+    }
+    return { totalStars, totalDrags, completed };
+}
+
+export function dailyQualifies(results, stageCount) {
+    if (!Number.isInteger(stageCount) || stageCount <= 0 || !Array.isArray(results)) return false;
+    if (results.length < stageCount) return false;
+    for (let i = 0; i < stageCount; i++) {
+        if (!results[i] || (results[i].stars | 0) !== 3) return false;
+    }
+    return true;
 }
 
 
