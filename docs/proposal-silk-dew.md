@@ -61,7 +61,7 @@
 
 ### 2.4 模式
 
-1. **闯关**：20 手工关，进度存 `sd_progress`（`safe-storage`，每关 `{stars, bestDrags}`）。 新评分上线时用 `sd_progress_version = 2` 一次性失效旧版成绩，避免旧规则下“未收星的三星”冒充新版 mastery。
+1. **闯关**：20 手工关，进度存 `sd_progress`（`safe-storage`，每关 `{stars, bestDrags}`）。 新评分上线时用 `sd_progress_version = 2` 迁移旧版成绩：已通关关卡保留为 1 星，旧 `bestDrags` 清零；2/3 星与最佳牵拉必须在新版有限行程规则下重新取得。
 2. **每日挑战**：当天 5 关，完成标记 `sd_daily_<YYYYMMDD>`。
 3. **自由重玩**：已通关卡随时回放刷次数，不产生新榜单提交。
 
