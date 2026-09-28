@@ -31,6 +31,10 @@ export function scoreStars(drags, par, starsTaken, starsTotal) {
     return 1;
 }
 
+export function dailyQualifies(totalStars, stageCount) {
+    return Number.isInteger(stageCount) && stageCount > 0 && totalStars === stageCount * 3;
+}
+
 
 // ---- 物理常量 ----
 export const PHYS = {
