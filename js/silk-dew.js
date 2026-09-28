@@ -242,15 +242,27 @@ const PROGRESS_VERSION = '2';
 
 function storageParseProgress() {
     try {
-        // v1 的三星只看牵拉次数，允许跳过全部星芒；把它沿用到 v2 会把旧的
-        // 宽松成绩伪装成新版 mastery。难度规则变更时明确重置一次。
-        if (storageGet('sd_progress_version') !== PROGRESS_VERSION) {
-            storageSet('sd_progress_version', PROGRESS_VERSION);
-            storageSet('sd_progress', '{}');
-            return {};
-        }
-        const obj = JSON.parse(storageGet('sd_progress'));
+        const raw = storageGet('sd_progress');
+        const obj = JSON.parse(raw || '{}');
         const out = {};
+
+        if (storageGet('sd_progress_version') !== PROGRESS_VERSION) {
+            // v1 的三星只看牵拉次数，允许跳过全部星芒，而且旧 bestDrags 也来自
+            // “无限行程/可直接拖露珠”的规则，不能和 v2 比较。
+            // 保留“已通关”事实为 1 星，但要求 2/3 星与最佳牵拉在新规则下重打。
+            if (obj && typeof obj === 'object') {
+                for (const k of Object.keys(obj)) {
+                    const v = obj[k];
+                    if (v && typeof v === 'object' && (v.stars | 0) > 0) {
+                        out[k] = { stars: 1, bestDrags: 0 };
+                    }
+                }
+            }
+            storageSet('sd_progress_version', PROGRESS_VERSION);
+            storageSet('sd_progress', JSON.stringify(out));
+            return out;
+        }
+
         if (obj && typeof obj === 'object') {
             for (const k of Object.keys(obj)) {
                 const v = obj[k];
