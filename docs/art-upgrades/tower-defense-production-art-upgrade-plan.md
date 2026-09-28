@@ -141,7 +141,9 @@
 
 - `tower-defense.html`
 - `css/tower-defense.css`
+- `css/layout.css`（共享 immersive 变量消费规则保持兼容；TD 使用页面级变量覆盖，不修改全站默认 640px）
 - `js/tower-defense.js`
+- `js/game-drawer.js`（仅用于确认 TD 迁移后不再依赖共享 stats drawer；不要求修改共享实现）
 - `js/tower-levels.js`
 - `games.config.json`
 - `scripts/gen-from-registry.mjs`
@@ -242,10 +244,17 @@ new URL('../assets/tower-defense/production/...', import.meta.url).href
 - 同步把 registry 中仍写“25 waves / neon grid”的 SEO 描述改成准确的六关战役表述；
 - 执行 `npm run gen`，提交所有生成结果；最后以 `npm run gen -- --check` 锁住无漂移状态。
 
-由于现有 immersive 契约最初为 640px 以内的竖向场景设计，本次还必须把“宽屏 immersive”变成正式受支持的变体，而不是页面私自绕过共享层：
+由于现有 immersive 契约默认 `--frame-immersive-max: 640px`，仅修改 registry 不会让塔防真正显示到 800px。本轮采用**页面级变量覆盖**，不改变其它 immersive 页的全站默认值：
 
-- `docs/contracts/layout.md` 补充 landscape / 4:3 immersive 几何；
-- `verify-immersive.mjs` 不再对所有 immersive 页硬编码 600–640px 宽，而是依据 registry `stage.w / stage.h` 和页面声明验证对应纵横比与最大舞台尺寸；
+- 在 `css/tower-defense.css` 的 immersive shell 上显式声明：
+  ```css
+  .td-shell.game-shell--immersive {
+      --frame-immersive-max: 800px;
+  }
+  ```
+- 共享 `css/layout.css` 继续通过 `var(--frame-immersive-max)` 控制 immersive 的 topbar / stage / footer，因此该变量会从 `.td-shell` 继承到三个区域；**不要把 `:root` 默认 640px 直接改成 800px**，避免 Firefly Signal 等现有竖向 immersive 页面一起变宽；
+- `docs/contracts/layout.md` 补充：immersive 默认上限仍为 640px，但页面可在 shell 上覆盖 `--frame-immersive-max`；当 registry 的 stage 宽度大于默认上限时，页面必须显式提供对应 override，并由 verifier 校验；
+- `verify-immersive.mjs` 不再对所有 immersive 页硬编码 600–640px 宽；对 tower-defense 读取 registry `stage.w=800` 与计算后的 `--frame-immersive-max`，断言 desktop 可达 800px，同时保持其它 immersive 页原来的 640px 上限；
 - 保持 Firefly Signal 等既有竖向 immersive 页面零回归；
 - `verify-registry.mjs` 继续要求 `layout="immersive"` 与 `game-shell--immersive`、`game-stage--immersive`、`bindFrame({ layout: 'immersive' })` 双向一致；
 - `tower-defense` 进入 immersive 后不得再残留标准布局专属 cap。
@@ -254,11 +263,24 @@ new URL('../assets/tower-defense/production/...', import.meta.url).href
 
 - 战场是视觉主体，优先获得视口面积；
 - HUD 改为覆盖式或贴边式，不再靠 300px sidebar；
-- 建造 / 升级面板使用底部抽屉、侧边浮层或局部战术面板，但不能永久占掉大块战场；
+- 建造 / 升级面板使用 TD 自己的战术浮层 / 面板，不能永久占掉大块战场；
 - desktop 以 800×600 为逻辑基线，在可用空间内等比显示；
 - phone landscape 让 Canvas 尽可能吃满短边高度并遵守 safe-area；
 - phone portrait 尺寸不足时显示旋转提示；
 - 同步更新 `CLAUDE.md` 中把 tower-defense 归为 portrait-canvas game 的旧说明。
+
+#### Stats / Drawer 迁移决策
+
+**不保留共享 stats drawer。** 既然 registry 移除 `drawer` cap，TD 也必须彻底退出 `game-drawer.js` 契约，避免出现“cap 已移除但旧 drawer 仍在运行”的半迁移状态。
+
+实施要求：
+
+- 从 `js/tower-defense.js` 移除 `createStatsDrawer` import、`window.tdDrawer = createStatsDrawer(...)` 和对应 `.init()`；
+- 从 `tower-defense.html` 删除 `#tdStatsDrawer`、`.game-drawer-panel`、`#tdStatsDrawerBody` 等共享 drawer markup；
+- `#tdStatsToggle` 可以保留为 Stats 入口，但改为控制 TD 自己的 immersive 战术信息面板（建议 `#tdTacticalPanel`），更新 `aria-controls` / `aria-expanded`；
+- 现有 `#tdStatsPanels` 作为**唯一一份**统计内容节点迁入 `#tdTacticalPanel`，不要复制 DOM；
+- 新面板由 tower-defense 自己的逻辑打开 / 关闭，并在 pause / overlay 状态下遵守现有暂停语义；
+- TD 移除 `drawer` cap 后，registry 驱动的 `verify-stats-drawer.mjs` 应自动不再包含 TD；新的 `smoke-tower-defense.mjs` 负责验证 Stats 按钮、新战术面板、Esc / close、ARIA 状态与“页面中不存在 `#tdStatsDrawer` / 不初始化 `window.tdDrawer`”。
 
 ### 3.6 主题契约：继续保持 dark-only
 
@@ -885,16 +907,18 @@ ui/
 ### Phase 2：战场环境升级
 
 1. 先迁移 registry：`stage=800×600`、`layout="immersive"`、移除标准布局专属 caps，执行 `npm run gen`；
-2. 把逻辑战场从 480×640 迁移到 800×600；
-3. 继续保留 `CELL=40` 时，将网格调整为 20×15；
-4. 把地图数据正式下沉到每个 level：建议 `level.map = { cols, rows, cell, groundWaypoints, airWaypoints? }`；
-5. 新增 `compileLevelMap(level.map)`（或等价函数），一次生成当前关卡的 `groundPath`、`airPath`、`pathGrid`、buildable cell 统计和尺寸信息；
-6. **移除 module-global 的 `WAYPOINTS` / `AIR_WAYPOINTS`、`GROUND_PATH` / `AIR_PATH`、`pathGrid` 作为运行时真源**；切关 / `resetRun()` 时设置唯一的 active map；
-7. 将所有消费者迁移到 active map：敌人 spawn/path、`pointAtDist`、renderBackground、buildability、towerGrid 尺寸、flyer 路径、攻击 / 治疗测试构造、debug / verifier hooks；
-8. 重做 6 关独立的 ground waypoints，并按关卡需要提供 air waypoints；
-9. 实装新背景、实体路径和可建造区域；
-10. 加中 / 前景层；
-11. 更新坐标相关 verifier，确保渲染、spawn、build、测试 hook 全部读取同一 active map，不能存在“UI 已切关但路径仍是上一关”的双真源。
+2. 在 `.td-shell.game-shell--immersive` 上显式覆盖 `--frame-immersive-max: 800px`，并更新 immersive verifier；
+3. 移除 TD 对共享 stats drawer 的 markup / import / init，改用舞台内 `#tdTacticalPanel`，保留单一 `#tdStatsPanels` 内容节点；
+4. 把逻辑战场从 480×640 迁移到 800×600；
+5. 继续保留 `CELL=40` 时，将网格调整为 20×15；
+6. 把地图数据正式下沉到每个 level：建议 `level.map = { cols, rows, cell, groundWaypoints, airWaypoints? }`；
+7. 新增 `compileLevelMap(level.map)`（或等价函数），一次生成当前关卡的 `groundPath`、`airPath`、`pathGrid`、buildable cell 统计和尺寸信息；
+8. **移除 module-global 的 `WAYPOINTS` / `AIR_WAYPOINTS`、`GROUND_PATH` / `AIR_PATH`、`pathGrid` 作为运行时真源**；切关 / `resetRun()` 时设置唯一的 active map；
+9. 将所有消费者迁移到 active map：敌人 spawn/path、`pointAtDist`、renderBackground、buildability、towerGrid 尺寸、flyer 路径、攻击 / 治疗测试构造、debug / verifier hooks；
+10. 重做 6 关独立的 ground waypoints，并按关卡需要提供 air waypoints；
+11. 实装新背景、实体路径和可建造区域；
+12. 加中 / 前景层；
+13. 更新坐标相关 verifier，确保渲染、spawn、build、测试 hook 全部读取同一 active map，不能存在“UI 已切关但路径仍是上一关”的双真源。
 
 重点验证：
 
@@ -1065,7 +1089,8 @@ scripts/verify-td-art.mjs
 - alpha 合法；
 - manifest metadata 合法；
 - manifest runtime keys 与 `tower-defense-art.js` 的字面 URL map 双向完全一致；
-- `npm run build` 后对应 hashed assets 实际存在并能被页面加载；
+- 源资源文件全部存在、尺寸 / alpha / 体积符合预算；
+- **offline `td-art` 不承担 dist 加载证明**；built asset 是否真正被 Vite hash、输出并由页面加载，放到 14.5 的 dist smoke；
 - 运行时体积未超预算。
 
 ### 14.2 代码约束
@@ -1099,6 +1124,8 @@ scripts/verify-td-art.mjs
 - 技能；
 - 暂停 / 恢复；
 - 结算；
+- Stats 按钮打开 / 关闭新的 `#tdTacticalPanel`，ARIA 状态正确；
+- 页面不存在旧 `#tdStatsDrawer`，运行时不存在已初始化的 `window.tdDrawer`；
 - 资源失败 fallback；
 - 390×844 / 430×932 竖屏：验证旋转提示不会把小战场硬塞进页面；
 - 844×390 / 932×430 横屏：验证完整 4:3 战场和触控命中；
@@ -1111,13 +1138,46 @@ scripts/verify-td-art.mjs
 
 必须显式注册进 `scripts/verify-all.mjs`，不要依赖自动发现：
 
-- `td-art` → `scripts/verify-td-art.mjs`，offline；
+- `td-art` → `scripts/verify-td-art.mjs`，offline，仅验证源资源 / manifest / 字面 URL map / 静态预算，不声称验证 dist；
 - `td-difficulty` → 现有 `scripts/verify-td-difficulty.mjs`，`needsServer: true`、`games: ['tower-defense']`；
 - `smoke-tower-defense` → 新增完整 runtime smoke，`needsServer: true`；
 - 保留现有 `td-topbar`，但将其中锁定旧 portrait 几何的断言更新为新 landscape / rotation 契约；
 - 评估 `verify-td-btn-hover.mjs`：若仍是有效 UI 契约则一并注册；若被新 UI 明确取代，则删除 / 重写并在 PR 说明原因，不能留下无人运行的旧测试。
 
 同时把以上 TD 关键项加入 `QUICK_NAMES`（至少 `td-art`、`td-difficulty`、`smoke-tower-defense`、`td-topbar`），保证日常验证不会只跑到顶栏而漏掉难度和地图机制。
+
+### 14.5 构建产物（dist）验证
+
+Vite hashed asset 的实际可加载性必须单独在**构建产物**上验证，不能由 offline `td-art` 冒充。
+
+实施要求：
+
+1. 新增 `scripts/smoke-tower-defense.mjs`，其生产美术断言必须检查：
+   - art loader 进入 `ready`；
+   - 关键 environment / tower / enemy（包括 attacker）图片 `complete && naturalWidth > 0`；
+   - 无关键资源 404 / decode error；
+   - 页面没有偷偷落入 fallback；
+2. 源码 smoke 仍由 `verify-all` 以普通静态服务器运行；
+3. **dist smoke 使用仓库现有编排器：**
+   ```bash
+   npm run build
+   node scripts/run-smoke-dist.mjs scripts/smoke-tower-defense.mjs
+   ```
+4. 为避免 CI / 人工验收漏跑，建议在 `package.json` 增加：
+   ```json
+   "verify:tower-defense-dist": "npm run build && node scripts/run-smoke-dist.mjs scripts/smoke-tower-defense.mjs"
+   ```
+5. 本轮实施 PR 的验收记录必须同时包含：
+   - `npm run verify:quick`（或 full verify）；
+   - `npm run verify:tower-defense-dist`；
+6. 如果后续全站已有统一 build+dist smoke CI，再把这条接入统一入口；在此之前，不把需要 build 的 dist 检查硬塞进 `verify-all` 的 `needsServer:false` step。
+
+这样分工明确：
+
+- `verify-td-art.mjs`：源文件和注册关系；
+- `smoke-tower-defense.mjs`（source server）：运行时 gameplay / production / fallback；
+- 同一个 `smoke-tower-defense.mjs` 经 `run-smoke-dist.mjs`：真正验证 Vite 构建产物和 hashed asset URL。
+
 
 ---
 
