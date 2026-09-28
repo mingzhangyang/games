@@ -140,21 +140,21 @@ export const LEVELS = [
         vessel: { x: 390, y: 480, w: 86 },
     },
     {
-        id: 'S7', par: 3, pullMax: 145, tipKey: 'tipBreeze',
+        id: 'S7', par: 4, pullMax: 145, tipKey: 'tipBreeze',
         ropes: [rope(180, 110, 19, 0, 0, 0)],
         stars: [{ x: 418, y: 443 }, { x: 332, y: 353 }],
         winds: [{ x: 270, y: 330, w: 160, h: 130, ax: 760, ay: 0 }, { x: 330, y: 440, w: 130, h: 110, ax: -700, ay: 0 }],
         vessel: { x: 340, y: 480, w: 86 },
     },
     {
-        id: 'S8', par: 3, pullMax: 145, tipKey: 'tipTiming',
+        id: 'S8', par: 4, pullMax: 140, tipKey: 'tipTiming',
         ropes: [rope(120, 100, 21, 0, 0, 0)],
         stars: [{ x: 130, y: 365 }, { x: 198, y: 388 }],
         thorns: [{ x: 350, y: 350, r: 20 }],
         vessel: { x: 280, y: 480, w: 90 },
     },
     {
-        id: 'S9', par: 4, pullMax: 140, tipKey: 'tipBubble',
+        id: 'S9', par: 4, pullMax: 100, tipKey: 'tipBubble',
         ropes: [rope(240, 130, 17, 0, 0, 0)],
         stars: [{ x: 254, y: 343 }, { x: 282, y: 409 }],
         thorns: [{ x: 110, y: 370, r: 22 }, { x: 372, y: 370, r: 22 }],
@@ -163,7 +163,7 @@ export const LEVELS = [
         vessel: { x: 240, y: 480, w: 58 },
     },
     {
-        id: 'S10', par: 4, pullMax: 140, tipKey: 'tipBubble',
+        id: 'S10', par: 4, pullMax: 95, tipKey: 'tipBubble',
         ropes: [rope(190, 140, 17, 0, 0, 0)],
         stars: [{ x: 190, y: 350 }, { x: 190, y: 420 }],
         thorns: [{ x: 130, y: 250, r: 20 }],
@@ -172,7 +172,7 @@ export const LEVELS = [
         vessel: { x: 360, y: 480, w: 86 },
     },
     {
-        id: 'S11', par: 4, pullMax: 140, tipKey: 'tipTwoRopes',
+        id: 'S11', par: 4, pullMax: 90, tipKey: 'tipTwoRopes',
         ropes: [rope(150, 110, 18, 0, 0, 0), rope(260, 110, 18, 0, 0, 0), rope(360, 110, 18, 0, 0, 0)],
         pearl: { rope: 1 },
         stars: [{ x: 248, y: 334 }, { x: 219, y: 406 }],
@@ -181,14 +181,14 @@ export const LEVELS = [
         vessel: { x: 300, y: 480, w: 58 },
     },
     {
-        id: 'S12', par: 4, pullMax: 135, tipKey: 'tipBreeze',
+        id: 'S12', par: 4, pullMax: 80, tipKey: 'tipBreeze',
         ropes: [rope(240, 110, 18, 0, 0, 0)],
         stars: [{ x: 240, y: 355 }],
         winds: [{ x: 310, y: 300, w: 160, h: 180, ax: 720, ay: -260 }],
         vessel: { x: 400, y: 420, w: 86 },
     },
     {
-        id: 'S13', par: 4, pullMax: 135, tipKey: 'tipSwing',
+        id: 'S13', par: 5, pullMax: 80, tipKey: 'tipSwing',
         ropes: [rope(110, 120, 20, 0, 0, 0)],
         stars: [{ x: 113, y: 359 }, { x: 184, y: 372 }],
         thorns: [{ x: 160, y: 500, r: 20 }],
@@ -196,7 +196,7 @@ export const LEVELS = [
         vessel: { x: 400, y: 480, w: 86 },
     },
     {
-        id: 'S14', par: 5, pullMax: 130, tipKey: 'tipBubble',
+        id: 'S14', par: 5, pullMax: 75, tipKey: 'tipBubble',
         ropes: [rope(240, 150, 17, 0, 0, 0)],
         stars: [{ x: 261, y: 368 }, { x: 295, y: 430 }],
         thorns: [{ x: 130, y: 280, r: 20 }, { x: 310, y: 380, r: 20 }],
@@ -205,7 +205,7 @@ export const LEVELS = [
         vessel: { x: 240, y: 480, w: 60 },
     },
     {
-        id: 'S15', par: 5, pullMax: 130, tipKey: 'tipThread',
+        id: 'S15', par: 6, pullMax: 75, tipKey: 'tipThread',
         ropes: [rope(120, 130, 20, 0, 0, 0)],
         stars: [{ x: 121, y: 361 }, { x: 194, y: 368 }],
         thorns: [{ x: 190, y: 300, r: 22 }, { x: 330, y: 400, r: 22 }],
@@ -213,7 +213,7 @@ export const LEVELS = [
         vessel: { x: 400, y: 480, w: 86 },
     },
     {
-        id: 'S16', par: 5, pullMax: 125, tipKey: 'tipBubble',
+        id: 'S16', par: 6, pullMax: 70, tipKey: 'tipBubble',
         ropes: [rope(140, 150, 18, 0, 0, 0)],
         stars: [{ x: 140, y: 393 }],
         thorns: [{ x: 260, y: 220, r: 20 }],
@@ -222,7 +222,7 @@ export const LEVELS = [
         vessel: { x: 400, y: 480, w: 86 },
     },
     {
-        id: 'S17', par: 5, pullMax: 125, tipKey: 'tipAll',
+        id: 'S17', par: 6, pullMax: 60, tipKey: 'tipAll',
         ropes: [rope(120, 120, 19, 0, 0, 0)],
         stars: [{ x: 120, y: 395 }],
         thorns: [{ x: 190, y: 500, r: 20 }],
@@ -231,14 +231,14 @@ export const LEVELS = [
         vessel: { x: 210, y: 480, w: 90 },
     },
     {
-        id: 'S18', par: 6, pullMax: 120, tipKey: 'tipTiming',
+        id: 'S18', par: 6, pullMax: 55, tipKey: 'tipTiming',
         ropes: [rope(120, 110, 19, 0, 0, 0), rope(360, 110, 19, 0, 0, 0)],
         stars: [{ x: 226, y: 410 }],
         thorns: [{ x: 240, y: 260, r: 22 }],
         vessel: { x: 240, y: 480, w: 90 },
     },
     {
-        id: 'S19', par: 6, pullMax: 120, tipKey: 'tipAll',
+        id: 'S19', par: 6, pullMax: 55, tipKey: 'tipAll',
         ropes: [rope(140, 130, 20, 0, 0, 0)],
         stars: [{ x: 140, y: 358 }],
         thorns: [{ x: 170, y: 520, r: 20 }, { x: 96, y: 300, r: 20 }],
@@ -247,7 +247,7 @@ export const LEVELS = [
         vessel: { x: 410, y: 480, w: 86 },
     },
     {
-        id: 'S20', par: 6, pullMax: 115, tipKey: 'tipFinal',
+        id: 'S20', par: 7, pullMax: 45, tipKey: 'tipFinal',
         ropes: [rope(240, 100, 20, 0, 0, 0)],
         stars: [{ x: 240, y: 389 }],
         thorns: [{ x: 230, y: 560, r: 20 }],
