@@ -16,6 +16,7 @@
 // 用法：node scripts/verify-start-menus.mjs [baseUrl]（verify-all 自动传入）
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
@@ -27,7 +28,9 @@ const check = (cond, label, extra = '') => { if (cond) passes++; else fails.push
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
-for (const g of registry.all()) {
+const GAMES = registry.all().filter(g => keepPage(g.id));
+exitIfNoPages(GAMES, 'verify-start-menus');
+for (const g of GAMES) {
     for (const [w, h] of VIEWPORTS) {
         const page = await browser.newPage();
         const errors = [];
@@ -89,4 +92,4 @@ if (fails.length) {
     console.error(`\nverify-start-menus：${fails.length} 项失败（${passes} 项通过）❌`);
     process.exit(1);
 }
-console.log(`verify-start-menus 全部通过 ✅（${passes} 项断言，${registry.all().length} 页 × ${VIEWPORTS.length} 视口）`);
+console.log(`verify-start-menus 全部通过 ✅（${passes} 项断言，${GAMES.length} 页 × ${VIEWPORTS.length} 视口）`);

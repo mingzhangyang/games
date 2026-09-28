@@ -20,6 +20,7 @@ import puppeteer from 'puppeteer-core';
 import { inflateSync } from 'node:zlib';
 import { Buffer } from 'node:buffer';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
@@ -162,7 +163,7 @@ async function gotoWithPref(page, path, pref) {
 }
 
 /* ── ② 真实页面 ── */
-for (const p of PAGES) {
+for (const p of PAGES.filter(x => keepPage(x.id))) {
     const html = await fetch(`${BASE}/${p.href}`).then(r => r.text()).catch(() => '');
     const support = (html.match(/<meta name="theme-support" content="([^"]*)">/) || [])[1];
     check(support === (p.light ? 'light dark' : 'dark'), `${p.id}：theme-support meta 与 cap 一致`, `got ${support}`);
@@ -409,7 +410,7 @@ const canvasLuminance = page => page.evaluate(() => {
     return alpha / n < 0.5 ? null : sum / n;
 });
 const darkContrast = [];
-for (const p of PAGES.filter(x => x.light)) {
+for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
     for (const [w, h] of [[390, 844], [1280, 900]]) {
         const ctx = await browser.createBrowserContext();
         const { page, errors } = await openPage(ctx);

@@ -2,6 +2,7 @@
 // 用法：node scripts/verify-stats-drawer.mjs <baseUrl> [outDir]
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 import { mkdirSync } from 'node:fs';
 
@@ -37,8 +38,9 @@ const AUGMENT = {
 // 现在缺条目直接抛错。tetris 是唯一豁免，理由见上。
 registry.assertCovered({ cap: 'drawer', covered: Object.keys(AUGMENT), exempt: ['tetris'], label: 'AUGMENT' });
 const PAGES = registry.withCap('drawer')
-    .filter(g => AUGMENT[g.id])
+    .filter(g => AUGMENT[g.id] && keepPage(g.id))
     .map(g => ({ name: g.id, pre: g.prefix, ...AUGMENT[g.id] }));
+exitIfNoPages(PAGES, 'verify-stats-drawer');
 
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true };
 const DESKTOP = { width: 1280, height: 900, deviceScaleFactor: 1, hasTouch: false };

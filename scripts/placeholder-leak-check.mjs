@@ -5,6 +5,7 @@
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -13,8 +14,9 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const EXE = CHROME_PATH;
 
 const pages = (await readdir(ROOT))
-    .filter(f => f.endsWith('.html') && f !== 'index.html')
+    .filter(f => f.endsWith('.html') && f !== 'index.html' && keepPage(f))
     .sort();
+exitIfNoPages(pages, 'placeholder-leak');
 
 const browser = await puppeteer.launch({
     executablePath: EXE,

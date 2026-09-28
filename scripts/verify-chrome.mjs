@@ -19,6 +19,7 @@
 //    游戏页只读不写：语言切换入口只在首页，boot 时的 site_lang 决定本页初始语言。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 
 const CHROME = CHROME_PATH;
@@ -26,7 +27,8 @@ const args = process.argv.slice(2);
 const BASE = args.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 
 // 顶栏契约页 = 挂了 topbar cap 的游戏（tank-battle / math-rain 化外，见 docs/backlog）
-const PAGES = registry.withCap('topbar').map(g => g.id);
+const PAGES = registry.withCap('topbar').map(g => g.id).filter(keepPage);
+exitIfNoPages(PAGES, 'verify-chrome');
 const CANON = ['stats', 'pause', 'sound'];
 
 // 共享层（bindChrome / createStatsDrawer）在这些钮上消耗的**公共**键，
