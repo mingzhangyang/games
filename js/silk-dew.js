@@ -238,8 +238,17 @@ const Sfx = {
 
 /* ────────────────────────── 存储 ────────────────────────── */
 
+const PROGRESS_VERSION = '2';
+
 function storageParseProgress() {
     try {
+        // v1 的三星只看牵拉次数，允许跳过全部星芒；把它沿用到 v2 会把旧的
+        // 宽松成绩伪装成新版 mastery。难度规则变更时明确重置一次。
+        if (storageGet('sd_progress_version') !== PROGRESS_VERSION) {
+            storageSet('sd_progress_version', PROGRESS_VERSION);
+            storageSet('sd_progress', '{}');
+            return {};
+        }
         const obj = JSON.parse(storageGet('sd_progress'));
         const out = {};
         if (obj && typeof obj === 'object') {
@@ -802,6 +811,7 @@ class SilkfallGame {
 
     saveProgress() {
         try {
+            storageSet('sd_progress_version', PROGRESS_VERSION);
             storageSet('sd_progress', JSON.stringify(this.progress));
         } catch (e) { /* 忽略 */ }
     }
