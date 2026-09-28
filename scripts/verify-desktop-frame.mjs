@@ -57,9 +57,14 @@ const MEASURE = () => {
 //   - waitUntil 'load' + 显式就绪条件（字体就绪、--frame-chrome 已写入且连续两帧布局不变），
 //     替代 networkidle2（每次白等 ~750ms）与固定 600ms sleep；
 //   - 每个 (页, 视口, 语言) 仍是一次全新加载（不用 setViewport 复用页面 —— 那测的是 resize 路径，
-//     不是首屏，hs/pm 的 inline-width 自锁只在首屏暴露），但用 JOBS 个标签页并发跑。
+//     不是首屏，hs/pm 的 inline-width 自锁只在首屏暴露），但用 JOBS 个标签页并发跑；
+//   - 每个用例一个独立 browser context：同源标签页共享 localStorage，en/zh 用例并发写 site_lang
+//     会互相覆盖，site-settings 还会经 storage 事件把别的标签页的语言实时切过来（PR #33 评审）。
 // f 条收敛检查仍是「就绪后隔一段时间再读一次」：反馈环是逐帧振荡的，250ms（~15 帧）足以暴露。
-const JOBS = Math.max(1, Number(process.env.VERIFY_FRAME_JOBS || 4));
+// 标签页并发：VERIFY_FRAME_JOBS 显式指定；否则跟随 verify-all 下发的 VERIFY_JOBS（上限 4），
+// 这样 `verify-all --jobs=1` 排查时本项也退回串行
+const JOBS = Math.max(1, Number(process.env.VERIFY_FRAME_JOBS
+    || (process.env.VERIFY_JOBS ? Math.min(4, Number(process.env.VERIFY_JOBS)) : 4)) || 1);
 const CONVERGE_GAP_MS = 250;
 
 const browser = await puppeteer.launch({
@@ -94,7 +99,8 @@ const WAIT_STABLE = () => new Promise(resolve => {
 });
 
 async function measureOne(page, W, H, lang) {
-    const pg = await browser.newPage();
+    const ctx = await browser.createBrowserContext();
+    const pg = await ctx.newPage();
     try {
         await pg.setViewport({ width: W, height: H });
         await pg.evaluateOnNewDocument(l => { try { localStorage.setItem('site_lang', l); } catch (e) { } }, lang);
@@ -107,7 +113,7 @@ async function measureOne(page, W, H, lang) {
         const m2 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
         return { m1, m2, errors };
     } finally {
-        await pg.close();
+        await ctx.close();
     }
 }
 

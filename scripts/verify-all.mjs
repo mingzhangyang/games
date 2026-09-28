@@ -222,7 +222,8 @@ function runStep(step, base, buffered) {
         if (step.needsServer) args.push(base);
         const child = spawn(process.execPath, args, {
             cwd: ROOT,
-            env: { ...process.env, ...step.env },
+            // VERIFY_JOBS 下发给子项：自带并发的校验器（desktop-frame）据此收敛，--jobs=1 时全链路串行
+            env: { ...process.env, VERIFY_JOBS: String(JOBS), ...step.env },
             stdio: buffered ? ['ignore', 'pipe', 'pipe'] : 'inherit',
         });
         const chunks = [];

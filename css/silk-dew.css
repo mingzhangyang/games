@@ -464,6 +464,10 @@ body {
     filter: brightness(1.08);
 }
 
+/* 浅色是白字压深底：提亮会把青端对比度从 4.27 拉到 3.71，悬停改为压暗（→ 4.94+） */
+:root[data-theme="light"] .sd-mode-daily:hover,
+:root[data-theme="light"] .sd-btn-primary:hover { filter: brightness(0.92); }
+
 .sd-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 /* ── 排行榜 ── */
