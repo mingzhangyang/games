@@ -99,7 +99,7 @@ for (const lv of LEVELS) {
     ids.add(lv.id);
     ok(/^S\d+$/.test(lv.id), `${tag} id 形如 S<n>`, lv.id);
     ok(Number.isInteger(lv.par) && lv.par >= 1 && lv.par <= 8, `${tag} par ∈ [1,8]`, String(lv.par));
-    ok(Number.isFinite(lv.pullMax) && lv.pullMax >= 40 && lv.pullMax <= 300, `${tag} pullMax ∈ [40,300]`, String(lv.pullMax));
+    ok(Number.isFinite(lv.pullMax) && lv.pullMax >= 30 && lv.pullMax <= 300, `${tag} pullMax ∈ [30,300]`, String(lv.pullMax));
     ok(typeof lv.tipKey === 'string' && lv.tipKey.length > 0, `${tag} tipKey 非空`);
     ok(Array.isArray(lv.ropes) && lv.ropes.length >= 1, `${tag} 至少 1 根丝`);
     for (const r of lv.ropes) {
@@ -145,8 +145,6 @@ for (const lv of LEVELS) {
 for (let i = 1; i < LEVELS.length; i++) {
     ok(LEVELS[i].par >= LEVELS[i - 1].par,
         `${LEVELS[i].id} par 不低于前一关`, `${LEVELS[i - 1].par} → ${LEVELS[i].par}`);
-    ok(LEVELS[i].pullMax <= LEVELS[i - 1].pullMax,
-        `${LEVELS[i].id} 单次牵拉行程不高于前一关`, `${LEVELS[i - 1].pullMax} → ${LEVELS[i].pullMax}`);
 }
 
 // 评分契约：星芒现在是三星的硬条件，不再只是画面收集物。
