@@ -18,6 +18,20 @@ import { hashStringFNV, mulberry32 } from './daily.js';
 
 export const STAGE = { w: 480, h: 640 };
 
+/**
+ * 关卡星级：三星同时要求路线完整（收齐星芒）与牵拉高效（不超过 par）。
+ * 保持为纯函数，运行时与离线校验器共用，避免 UI 评分口径漂移。
+ */
+export function scoreStars(drags, par, starsTaken, starsTotal) {
+    if (starsTotal <= 0) return drags <= par ? 3 : (drags <= par + 2 ? 2 : 1);
+    const all = starsTaken >= starsTotal;
+    const nearAll = starsTotal > 1 && starsTaken >= starsTotal - 1;
+    if (all && drags <= par) return 3;
+    if (all || (nearAll && drags <= par)) return 2;
+    return 1;
+}
+
+
 // ---- 物理常量 ----
 export const PHYS = {
     dt: 1 / 120,          // 子步长（秒）
