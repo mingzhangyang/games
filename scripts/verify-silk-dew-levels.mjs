@@ -189,13 +189,19 @@ for (let li = 0; li < LEVELS.length; li++) {
     for (let ri = 0; ri < ropeCount; ri++) {
         for (const tx of GRID_X) {
             for (const ty of GRID_Y) {
+                // 单拉预算独立模拟：不能从多拉模拟的首段推断，因为首段的
+                // hold/settle 时长不同，可能漏掉“拉到边界后等一会就能赢”的捷径。
+                if (li >= 4) {
+                    const one = attempt(lv, tx, ty, ri, 1);
+                    if (one.won && one.stars === one.starsTotal) singleDrag++;
+                }
+
                 const res = attempt(lv, tx, ty, ri, lv.par);
                 if (!res.won) continue;
                 solvable++;
                 if (res.stars !== res.starsTotal) continue;
                 fullStar++;
                 minFullStarDrags = Math.min(minFullStarDrags, res.drags);
-                if (res.drags <= 1) singleDrag++;
                 if (!best || res.drags < best.drags) best = { tx, ty, ri, drags: res.drags };
             }
         }
