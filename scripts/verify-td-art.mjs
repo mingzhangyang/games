@@ -148,6 +148,18 @@ if (!html.includes('id="tdTacticalPanel"') || !html.includes('id="tdStatsPanels"
 if (css.includes('--frame-shell-max')) fail('tower-defense CSS still carries the standard frame-budget shell cap');
 if (!css.includes('--frame-immersive-max: 800px')) fail('tower-defense CSS does not override immersive max width to 800px');
 if (!css.includes('.td-shell.game-shell--immersive #td-canvas') || !css.includes('pointer-events: auto')) fail('immersive canvas must explicitly restore pointer input inside the non-interactive scene wrapper');
+const mobileMenuSelector = '.td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden))';
+const cssRuleBody = selector => {
+    const start = css.indexOf(`${selector} {`);
+    if (start < 0) return '';
+    const open = css.indexOf('{', start);
+    let depth = 0;
+    for (let index = open; index < css.length; index++) {
+        if (css[index] === '{') depth++;
+        if (css[index] === '}' && --depth === 0) return css.slice(open + 1, index);
+    }
+    return '';
+};
 const mobileBattleSelector = '.td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-stage';
 const mobileBattleRule = cssRuleBody(mobileBattleSelector);
 const requiredBattleDeclarations = [
@@ -165,18 +177,6 @@ if (!mobileBattleRule || missingBattleDeclarations.length) {
     pass('mobile landscape battle expands to the full viewport without stretching the logical scene');
 }
 
-const mobileMenuSelector = '.td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden))';
-const cssRuleBody = selector => {
-    const start = css.indexOf(`${selector} {`);
-    if (start < 0) return '';
-    const open = css.indexOf('{', start);
-    let depth = 0;
-    for (let index = open; index < css.length; index++) {
-        if (css[index] === '{') depth++;
-        if (css[index] === '}' && --depth === 0) return css.slice(open + 1, index);
-    }
-    return '';
-};
 const mobileMenuRule = cssRuleBody(mobileMenuSelector);
 const mobileMenuOverlayRule = cssRuleBody(`${mobileMenuSelector} > .td-overlay--menu`);
 const requiredMenuStageDeclarations = [
