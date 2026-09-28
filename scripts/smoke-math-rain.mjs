@@ -65,7 +65,9 @@ async function createFixedExpression(page, result, expressionText) {
             y: canvasRect.top + centerY,
             expandedTouchX: canvasRect.left + centerX,
             expandedTouchY: canvasRect.top + expandedTouchY,
+            visualWidth: bounds.width,
             visualHeight: bounds.height,
+            hitWidth: hitBounds.hitWidth,
             hitHeight: hitBounds.hitHeight,
         };
     }, { result, expressionText });
@@ -170,6 +172,9 @@ if (!running.toolbar) fail('缺 #tool-bar');
 const beforeCorrect = await gameState(page);
 const target = beforeCorrect?.targetNumber;
 const correctPoint = await createFixedExpression(page, target, `${target} + 0`);
+if (correctPoint.hitWidth < correctPoint.visualWidth || correctPoint.hitHeight < correctPoint.visualHeight) {
+    fail(`desktop 表达式热区缩小了旧命中区域：visual=${correctPoint.visualWidth}x${correctPoint.visualHeight} hit=${correctPoint.hitWidth}x${correctPoint.hitHeight}`);
+}
 await page.mouse.click(correctPoint.x, correctPoint.y);
 await waitFor(
     page,
@@ -272,8 +277,13 @@ await waitFor(page, () => window.mathRainGame?.gameStateManager?.getState()?.gam
 const mobileBeforeTouch = await gameState(page);
 const mobileTarget = mobileBeforeTouch?.targetNumber;
 const mobileTouchPoint = await createFixedExpression(page, mobileTarget, `${mobileTarget}`);
-if (mobileTouchPoint.hitHeight < 44 || mobileTouchPoint.visualHeight >= 44) {
-    fail(`mobile 表达式热区契约异常：visual=${mobileTouchPoint.visualHeight}px hit=${mobileTouchPoint.hitHeight}px`);
+if (
+    mobileTouchPoint.hitWidth < 44 ||
+    mobileTouchPoint.hitHeight < 44 ||
+    mobileTouchPoint.hitWidth < mobileTouchPoint.visualWidth ||
+    mobileTouchPoint.hitHeight < mobileTouchPoint.visualHeight
+) {
+    fail(`mobile 表达式热区契约异常：visual=${mobileTouchPoint.visualWidth}x${mobileTouchPoint.visualHeight} hit=${mobileTouchPoint.hitWidth}x${mobileTouchPoint.hitHeight}`);
 }
 await page.touchscreen.tap(mobileTouchPoint.expandedTouchX, mobileTouchPoint.expandedTouchY);
 await waitFor(
@@ -301,12 +311,26 @@ await fallbackPage.evaluateOnNewDocument(() => {
 await fallbackPage.setRequestInterception(true);
 let wideAborted = false;
 const fallbackResponses = [];
+const fallbackBackgroundFailures = [];
+const fallbackPageErrors = [];
+const fallbackConsoleErrors = [];
+fallbackPage.on('pageerror', error => fallbackPageErrors.push(String(error.message || error).split('\n')[0]));
+fallbackPage.on('console', message => {
+    const text = message.text().split('\n')[0];
+    if (message.type() === 'error' && !text.includes('observatory-wide')) fallbackConsoleErrors.push(text);
+});
 fallbackPage.on('request', request => {
     if (request.url().includes('observatory-wide')) {
         wideAborted = true;
         request.abort();
     } else {
         request.continue();
+    }
+});
+fallbackPage.on('requestfailed', request => {
+    const url = request.url();
+    if (url.includes('/assets/math-rain/backgrounds/') && !url.includes('observatory-wide')) {
+        fallbackBackgroundFailures.push(`${url} (${request.failure()?.errorText || 'unknown'})`);
     }
 });
 fallbackPage.on('response', response => {
@@ -316,12 +340,30 @@ await fallbackPage.goto(`${BASE}/math-rain.html`, { waitUntil: 'networkidle0', t
 await waitFor(fallbackPage, () => !!window.mathRainGame?.gameStateManager, 'fallback 页面核心组件未就位');
 const fallbackSnapshot = await fallbackPage.evaluate(() => ({
     background: getComputedStyle(document.getElementById('game-area')).backgroundImage,
+    productionArtEnabled: getComputedStyle(document.getElementById('game-area')).backgroundImage.includes('observatory-wide'),
     overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+}));
+const fallbackAsset = await fallbackPage.evaluate(() => new Promise(resolve => {
+    const image = document.createElement('img');
+    const timeout = setTimeout(() => resolve({ ok: false, error: 'timeout' }), 8000);
+    image.onload = () => {
+        clearTimeout(timeout);
+        resolve({ ok: image.naturalWidth > 0 && image.naturalHeight > 0, width: image.naturalWidth, height: image.naturalHeight });
+    };
+    image.onerror = () => {
+        clearTimeout(timeout);
+        resolve({ ok: false, error: 'load' });
+    };
+    image.src = new URL('assets/math-rain/backgrounds/fallback.webp', document.baseURI).href;
 }));
 if (!wideAborted) fail('fallback 测试没有阻断 wide 生产背景');
 if (!fallbackResponses.some(status => status >= 200 && status < 400)) fail('fallback 背景请求未成功');
-if (!fallbackSnapshot.background.includes('fallback')) fail('fallback 页面未保留 fallback 背景层');
+if (fallbackBackgroundFailures.length) fail(`fallback 背景资源请求失败：${fallbackBackgroundFailures.join(' | ')}`);
+if (!fallbackAsset.ok) fail(`fallback 资源未能实际加载：${fallbackAsset.error || 'unknown'}`);
+if (!fallbackSnapshot.productionArtEnabled || !fallbackSnapshot.background.includes('fallback')) fail('fallback 测试未在生产美术背景契约下运行');
 if (fallbackSnapshot.overflow) fail('fallback 页面存在横向溢出');
+if (fallbackPageErrors.length) fail(`fallback 页面错误：${fallbackPageErrors.join(' | ')}`);
+if (fallbackConsoleErrors.length) fail(`fallback 控制台错误：${fallbackConsoleErrors.join(' | ')}`);
 await fallbackPage.close();
 
 if (consoleErrors.some(text => text.includes('Failed to bootstrap Math Rain'))) {

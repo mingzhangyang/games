@@ -87,6 +87,7 @@ const html = read(join(ROOT, 'math-rain.html'));
 const css = read(join(ROOT, 'css/math-rain/math-rain.css'));
 const shopCss = read(join(ROOT, 'css/math-rain/shop.css'));
 const mainJs = read(join(ROOT, 'js/math-rain/main.js'));
+const smoke = read(join(ROOT, 'scripts/smoke-math-rain.mjs'));
 
 for (const id of ['game-area', 'game-canvas', 'target-area', 'target-number', 'tool-bar', 'shop-screen']) {
     assert(html.includes(`id="${id}"`), `math-rain.html 缺少 #${id}`);
@@ -104,8 +105,15 @@ assert(mainJs.includes('getExpressionCardMetrics'), '表达式渲染缺少共享
 assert(mainJs.includes('getExpressionBounds'), '表达式命中检测未复用共享几何');
 assert(mainJs.includes('getExpressionHitBounds'), '表达式触控命中缺少独立热区几何');
 assert(mainJs.includes('MIN_EXPRESSION_TOUCH_TARGET = 44'), '表达式触控热区下限必须为 44px');
-assert(mainJs.includes('Math.max(visualBounds.width, MIN_EXPRESSION_TOUCH_TARGET)'), '表达式触控宽度未设置最小值');
-assert(mainJs.includes('Math.max(visualBounds.height, MIN_EXPRESSION_TOUCH_TARGET)'), '表达式触控高度未设置最小值');
+assert(mainJs.includes('const legacyBounds = this.getExpressionBounds(expression)'), '表达式触控热区未保留旧命中边界');
+assert(mainJs.includes('Math.max(legacyBounds.width, MIN_EXPRESSION_TOUCH_TARGET)'), '表达式触控宽度未设置最小值');
+assert(mainJs.includes('Math.max(legacyBounds.height, MIN_EXPRESSION_TOUCH_TARGET)'), '表达式触控高度未设置最小值');
+assert(/\.lang-btn\s*\{[\s\S]*?min-height:\s*44px/.test(css), '开始页 Home 热区必须至少为 44px');
+assert(/@media \(max-width: 480px\)[\s\S]*?\.control-btn\s*\{[\s\S]*?width:\s*44px[\s\S]*?min-width:\s*44px[\s\S]*?height:\s*44px/.test(css), '移动端控制按钮热区必须至少为 44px');
+assert(smoke.includes('desktop 表达式热区缩小了旧命中区域'), '冒烟测试缺少旧表达式命中区域回归诊断');
+assert(smoke.includes('fallbackBackgroundFailures'), 'fallback 冒烟缺少资源失败诊断');
+assert(smoke.includes('fallbackAsset'), 'fallback 冒烟缺少资源实际加载诊断');
+assert(smoke.includes('productionArtEnabled'), 'fallback 冒烟未确认生产美术背景契约仍启用');
 assert(mainJs.includes('rgba(4, 12, 24, 0.035)'), 'Canvas 背景填充必须保持低透明度');
 assert(!/shadowBlur\s*=\s*(?!0\b)[1-9]/.test(mainJs), '数字雨表达式禁止使用持续性 shadowBlur');
 assert(mainJs.includes('feedbackAt'), '正确/错误点击反馈没有绑定到表达式状态');

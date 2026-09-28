@@ -702,18 +702,20 @@ class MathRainGame {
      * minimum target. The expanded bounds are used only by hit testing.
      */
     getExpressionHitBounds(expression) {
-        const visualBounds = this.getExpressionBounds(expression);
-        const hitWidth = Math.max(visualBounds.width, MIN_EXPRESSION_TOUCH_TARGET);
-        const hitHeight = Math.max(visualBounds.height, MIN_EXPRESSION_TOUCH_TARGET);
-        const extraX = (hitWidth - visualBounds.width) / 2;
-        const extraY = (hitHeight - visualBounds.height) / 2;
+        // `legacyBounds` is the original rendered/click geometry. Never
+        // shrink it: the minimum target is an additive touch affordance.
+        const legacyBounds = this.getExpressionBounds(expression);
+        const hitWidth = Math.max(legacyBounds.width, MIN_EXPRESSION_TOUCH_TARGET);
+        const hitHeight = Math.max(legacyBounds.height, MIN_EXPRESSION_TOUCH_TARGET);
+        const extraX = (hitWidth - legacyBounds.width) / 2;
+        const extraY = (hitHeight - legacyBounds.height) / 2;
 
         return {
-            ...visualBounds,
-            left: visualBounds.left - extraX,
-            right: visualBounds.right + extraX,
-            top: visualBounds.top - extraY,
-            bottom: visualBounds.bottom + extraY,
+            ...legacyBounds,
+            left: legacyBounds.left - extraX,
+            right: legacyBounds.right + extraX,
+            top: legacyBounds.top - extraY,
+            bottom: legacyBounds.bottom + extraY,
             hitWidth,
             hitHeight
         };
