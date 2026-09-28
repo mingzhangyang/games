@@ -263,8 +263,14 @@ function storageParseProgress() {
                     }
                 }
             }
-            storageSet('sd_progress_version', PROGRESS_VERSION);
-            storageSet('sd_progress', JSON.stringify(out));
+            const migratedRaw = JSON.stringify(out);
+            storageSet('sd_progress', migratedRaw);
+            // safe-storage intentionally swallows write errors. Only mark v2 after a
+            // read-back proves the migrated payload actually landed; otherwise the
+            // next load must retry migration instead of trusting a stale v1 payload.
+            if (storageGet('sd_progress') === migratedRaw) {
+                storageSet('sd_progress_version', PROGRESS_VERSION);
+            }
             return out;
         }
 
