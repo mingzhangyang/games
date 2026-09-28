@@ -21,6 +21,7 @@ import {
     LEVELS,
     scoreStars,
     dailyQualifies,
+    summarizeDailyResults,
     createWorld,
     stepWorld,
     beginDrag,
@@ -245,6 +246,17 @@ const Sfx = {
 
 const PROGRESS_VERSION = '2';
 
+function persistProgressPayload(progress) {
+    const raw = JSON.stringify(progress || {});
+    storageSet('sd_progress', raw);
+    // safe-storage deliberately swallows localStorage exceptions. The read-back is
+    // therefore the transaction boundary: never advance the schema marker unless
+    // the v2 payload is demonstrably present.
+    if (storageGet('sd_progress') !== raw) return false;
+    storageSet('sd_progress_version', PROGRESS_VERSION);
+    return storageGet('sd_progress_version') === PROGRESS_VERSION;
+}
+
 function storageParseProgress() {
     try {
         const raw = storageGet('sd_progress');
@@ -263,14 +275,7 @@ function storageParseProgress() {
                     }
                 }
             }
-            const migratedRaw = JSON.stringify(out);
-            storageSet('sd_progress', migratedRaw);
-            // safe-storage intentionally swallows write errors. Only mark v2 after a
-            // read-back proves the migrated payload actually landed; otherwise the
-            // next load must retry migration instead of trusting a stale v1 payload.
-            if (storageGet('sd_progress') === migratedRaw) {
-                storageSet('sd_progress_version', PROGRESS_VERSION);
-            }
+            persistProgressPayload(out);
             return out;
         }
 
@@ -323,7 +328,7 @@ class SilkfallGame {
         this.par = 1;
         this.world = null;
         this.spec = null;
-        this.daily = null;         // { key, display, course:[idx], cursor, totalDrags }
+        this.daily = null;         // { key, display, course:[spec], cursor, results:[{stars,drags}|null], totalDrags, stars }
         this.failReason = null;
         this.failTimer = 0;
 
@@ -606,7 +611,15 @@ class SilkfallGame {
         const key = todayKey();
         const course = dailyCourse(key);
         this.mode = 'daily';
-        this.daily = { key, display: todayKeyDisplay(), course, cursor: 0, totalDrags: 0, stars: 0 };
+        this.daily = {
+            key,
+            display: todayKeyDisplay(),
+            course,
+            cursor: 0,
+            results: Array(course.length).fill(null),
+            totalDrags: 0,
+            stars: 0,
+        };
         track('silk-dew', 'start_daily');
         this.startLevel(course[0]);
         this.showToast(this.t('dailyStartToast'));
@@ -699,8 +712,12 @@ class SilkfallGame {
         this.renderSideRecords();
 
         if (this.mode === 'daily' && this.daily) {
-            this.daily.totalDrags += this.drags;
-            this.daily.stars += stars;
+            // Daily scoring is per stage, not per completion event. Replaying the
+            // current stage replaces its result instead of double-counting it.
+            this.daily.results[this.daily.cursor] = { stars, drags: this.drags };
+            const summary = summarizeDailyResults(this.daily.results, this.daily.course.length);
+            this.daily.totalDrags = summary.totalDrags;
+            this.daily.stars = summary.totalStars;
             this.showClearPanel(stars, improved);
         } else {
             this.showClearPanel(stars, improved);
@@ -741,7 +758,7 @@ class SilkfallGame {
         const el = this.el;
         this.showClearPanelSilent();
         const maxStars = this.daily.course.length * 3;
-        const mastered = dailyQualifies(this.daily.stars, this.daily.course.length);
+        const mastered = dailyQualifies(this.daily.results, this.daily.course.length);
         if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
         if (el['over-score']) el['over-score'].textContent = `${this.t('drags')} ${this.daily.totalDrags} · ★ ${this.daily.stars}/${maxStars}`;
         if (el['over-sub']) {
@@ -841,9 +858,10 @@ class SilkfallGame {
 
     saveProgress() {
         try {
-            storageSet('sd_progress_version', PROGRESS_VERSION);
-            storageSet('sd_progress', JSON.stringify(this.progress));
-        } catch (e) { /* 忽略 */ }
+            return persistProgressPayload(this.progress);
+        } catch (e) {
+            return false;
+        }
     }
 
     /* ---------------------- HUD / Toast ---------------------- */
