@@ -143,6 +143,14 @@
 - `css/tower-defense.css`
 - `js/tower-defense.js`
 - `js/tower-levels.js`
+- `games.config.json`
+- `scripts/gen-from-registry.mjs`
+- `scripts/verify-registry.mjs`
+- `scripts/verify-immersive.mjs`
+- `scripts/verify-all.mjs`
+- `docs/contracts/layout.md`
+- `docs/contracts/registry.md`
+- `CLAUDE.md`
 
 ### 3.2 保留的技术路线
 
@@ -179,13 +187,29 @@ assets/tower-defense/production/manifest.json
 
 用于声明：
 
-- 文件路径；
+- 资源 key 与语义；
 - 逻辑尺寸；
 - alpha 需求；
 - 加载分组；
 - fallback；
 - 运行时体积预算；
 - 场景 variant。
+
+**manifest 只做 metadata，不作为 Vite 运行时资源发现机制。**
+
+必须新增类似 `js/tower-defense-art.js` 的字面量 URL 注册表，例如每个运行时资源都用静态可分析的：
+
+```js
+new URL('../assets/tower-defense/production/...', import.meta.url).href
+```
+
+要求：
+
+- 不允许只从 `manifest.json` 读字符串后动态拼 `new URL(path, import.meta.url)`；
+- `ASSET_URLS` / 等价常量必须逐项以字面路径注册所有运行时生产资源，使 Vite 能发现、hash、复制到 `dist`；
+- `manifest.json` 与字面 URL map 使用同一资源 key，`verify-td-art.mjs` 双向检查 key 集合一致；
+- build 后 verifier / smoke 必须确认生产资源实际能从 `dist` 加载，而不是只验证源目录存在；
+- 若极少数资源选择放入 `public/`，必须在文档和 manifest 中显式标为 public asset；不要混用动态猜测路径。
 
 ### 3.4 性能原则
 
@@ -205,17 +229,36 @@ assets/tower-defense/production/manifest.json
 - 不将所有光效改成实时 blur。
 
 
-### 3.5 页面布局：从 portrait shell 转为沉浸式横屏战场
+### 3.5 页面布局与 registry 迁移：从 portrait shell 转为宽屏 immersive
 
-当前 `tower-defense` 被列入“portrait canvas + desktop sidebar”一类，这正是旧 480×640 战场持续偏小的原因之一。本轮应把它从该假设中移出，采用与 `tank-battle` 类似的特殊横屏布局：
+当前 `tower-defense` 在 `games.config.json` 中是标准布局，并声明了 `sidebar` / `drawer` / `frame-budget`，`stage` 仍是 `480×640`。这些是生成器和校验器的真源，不能只改 CSS / HTML。
 
-- 战场是页面视觉主体，优先获得视口面积；
-- HUD 改为覆盖式或贴边式，不再靠 300px sidebar 换取信息展示；
-- 建造 / 升级面板可使用底部抽屉、侧边浮层或选中塔附近的战术面板，但不能永久占掉大块战场；
-- desktop 允许在 800×600 基础上等比放大到可用空间；
-- phone landscape 让 Canvas 尽可能吃满短边高度，并使用 safe-area；
-- phone portrait 在尺寸不足时显示旋转提示；
-- 实施时同步更新 `docs/contracts/layout.md` 和 `CLAUDE.md` 中把 tower-defense 归为 portrait-canvas game 的旧说明，避免后续校验或维护者把它再次缩回旧布局。
+实施时必须先改 registry：
+
+- `stage: { w: 800, h: 600 }`；
+- `layout: "immersive"`；
+- 从 `caps` 移除 `sidebar`、`drawer`、`frame-budget`；
+- 保留 `leaderboard`、`analytics`、`topbar`；
+- 同步把 registry 中仍写“25 waves / neon grid”的 SEO 描述改成准确的六关战役表述；
+- 执行 `npm run gen`，提交所有生成结果；最后以 `npm run gen -- --check` 锁住无漂移状态。
+
+由于现有 immersive 契约最初为 640px 以内的竖向场景设计，本次还必须把“宽屏 immersive”变成正式受支持的变体，而不是页面私自绕过共享层：
+
+- `docs/contracts/layout.md` 补充 landscape / 4:3 immersive 几何；
+- `verify-immersive.mjs` 不再对所有 immersive 页硬编码 600–640px 宽，而是依据 registry `stage.w / stage.h` 和页面声明验证对应纵横比与最大舞台尺寸；
+- 保持 Firefly Signal 等既有竖向 immersive 页面零回归；
+- `verify-registry.mjs` 继续要求 `layout="immersive"` 与 `game-shell--immersive`、`game-stage--immersive`、`bindFrame({ layout: 'immersive' })` 双向一致；
+- `tower-defense` 进入 immersive 后不得再残留标准布局专属 cap。
+
+页面表现：
+
+- 战场是视觉主体，优先获得视口面积；
+- HUD 改为覆盖式或贴边式，不再靠 300px sidebar；
+- 建造 / 升级面板使用底部抽屉、侧边浮层或局部战术面板，但不能永久占掉大块战场；
+- desktop 以 800×600 为逻辑基线，在可用空间内等比显示；
+- phone landscape 让 Canvas 尽可能吃满短边高度并遵守 safe-area；
+- phone portrait 尺寸不足时显示旋转提示；
+- 同步更新 `CLAUDE.md` 中把 tower-defense 归为 portrait-canvas game 的旧说明。
 
 ### 3.6 主题契约：继续保持 dark-only
 
@@ -782,11 +825,12 @@ enemies/
   healer.webp
   splitter.webp
   flyer.webp
+  attacker.webp
   boss.webp
   overlord.webp
 ```
 
-状态效果（护盾、治疗、冻结、受击）优先程序叠加，不为每个状态重复整套位图。
+状态效果（护盾、治疗、冻结、受击）优先程序叠加，不为每个状态重复整套位图。`attacker.webp` 必须是独立生产资源，因为攻城兵有“拆塔”机制和独立轮廓；资源失败时回退到现有 `attacker` 程序 sprite，而不是借用 boss / tank 贴图。
 
 ### 10.4 特效资源
 
@@ -827,8 +871,9 @@ ui/
 1. 明确配色体系；
 2. 出一张整体概念图 / 冻结稿；
 3. 确定塔、敌人、场景统一风格；
-4. 建立资源目录和 manifest；
-5. 暂不修改 gameplay。
+4. 建立资源目录和 metadata-only manifest；
+5. 新增字面量 `new URL(..., import.meta.url)` 的运行时 URL map，确保 Vite 能收集生产资源；
+6. 暂不修改 gameplay。
 
 交付：
 
@@ -839,22 +884,56 @@ ui/
 
 ### Phase 2：战场环境升级
 
-1. 把逻辑战场从 480×640 迁移到 800×600；
-2. 继续保留 `CELL=40` 时，将网格调整为 20×15；
-3. 将关卡路径几何扩展为每关独立的大地图路径；
-4. 重做 6 关的 ground waypoints，并按关卡需要提供 air waypoints；
-5. 实装新背景、实体路径和可建造区域；
-6. 加中 / 前景层；
-7. 更新坐标相关 verifier，确保视觉和 gameplay 使用同一份新地图数据。
+1. 先迁移 registry：`stage=800×600`、`layout="immersive"`、移除标准布局专属 caps，执行 `npm run gen`；
+2. 把逻辑战场从 480×640 迁移到 800×600；
+3. 继续保留 `CELL=40` 时，将网格调整为 20×15；
+4. 把地图数据正式下沉到每个 level：建议 `level.map = { cols, rows, cell, groundWaypoints, airWaypoints? }`；
+5. 新增 `compileLevelMap(level.map)`（或等价函数），一次生成当前关卡的 `groundPath`、`airPath`、`pathGrid`、buildable cell 统计和尺寸信息；
+6. **移除 module-global 的 `WAYPOINTS` / `AIR_WAYPOINTS`、`GROUND_PATH` / `AIR_PATH`、`pathGrid` 作为运行时真源**；切关 / `resetRun()` 时设置唯一的 active map；
+7. 将所有消费者迁移到 active map：敌人 spawn/path、`pointAtDist`、renderBackground、buildability、towerGrid 尺寸、flyer 路径、攻击 / 治疗测试构造、debug / verifier hooks；
+8. 重做 6 关独立的 ground waypoints，并按关卡需要提供 air waypoints；
+9. 实装新背景、实体路径和可建造区域；
+10. 加中 / 前景层；
+11. 更新坐标相关 verifier，确保渲染、spawn、build、测试 hook 全部读取同一 active map，不能存在“UI 已切关但路径仍是上一关”的双真源。
 
 重点验证：
 
 - 800×600 desktop / tablet / mobile landscape 不糊；
 - 手机横屏时战场尽可能占据可用视口，而不是被外围 UI 挤回小尺寸；
-- 路径清晰且明显比旧版拥有更长行进距离；
-- 建造格可读，且可部署空间显著大于旧 12×16 地图；
 - flyer 路线不抢眼；
-- 场景不遮挡塔与敌人。
+- 场景不遮挡塔与敌人；
+- 大地图扩张必须满足下面的机器可验证阈值。
+
+#### 旧地图基线与新地图最低阈值
+
+当前 6 关实际上共用同一张 `12×16` 地图，因此旧基线对六关相同：
+
+- 总格数：192；
+- ground path 总长度：1520 logical px = 38 × CELL；
+- ground path 占用地图内格：38；
+- buildable cells：154。
+
+新 `20×15` 地图的最低验收值：
+
+| Level | 旧 ground length | 新 ground length 最低值 | 旧 buildable | 新 buildable 最低值 |
+| --- | ---: | ---: | ---: | ---: |
+| outpost | 1520 | **1840 px（46 CELL）** | 154 | **190** |
+| vanguard | 1520 | **1840 px（46 CELL）** | 154 | **190** |
+| citadel | 1520 | **1840 px（46 CELL）** | 154 | **190** |
+| skyfall | 1520 | **1840 px（46 CELL）** | 154 | **190** |
+| juggernaut | 1520 | **1840 px（46 CELL）** | 154 | **190** |
+| singularity | 1520 | **1840 px（46 CELL）** | 154 | **190** |
+
+Verifier 必须逐关编译 active map 后断言：
+
+- `groundPath.total >= 1840`；
+- `buildableCount >= 190`；
+- 六关 ground waypoint 序列 / 标准化 path signature **六个全部唯一**，禁止“六个 level 指向同一 map”；
+- 有 flyer 的关卡（至少 skyfall / juggernaut / singularity）必须拥有独立 `airPath`，并继续满足 `airPath.total < groundPath.total`；
+- 所有 waypoint 在允许的入口 / 出口越界规则之外必须落在 `20×15` 地图有效范围；
+- 路径不能自相矛盾地产生 diagonal segment，除非同时修改 pathGrid 编译算法并加入对应测试。
+
+这组阈值让“不是只做 CSS 放大”变成自动化事实：ground route 至少比旧图长约 21%，可建格至少比旧图多约 23%。
 
 ### Phase 3：塔资源升级
 
@@ -941,7 +1020,7 @@ ui/
 
 例如：
 
-- 路径仍来自代码 / 关卡数据中的 waypoint，但允许为新的 20×15 大地图重新设计每关 waypoint；
+- 路径仍来自代码 / 关卡数据中的 waypoint；每个 `LEVELS[i].map` 是地图真源，运行时只通过当前 active map 的 compiled paths / pathGrid 消费它，不保留第二套 module-global waypoint 真源；
 - 塔仍落在现有 cell；
 - enemy sprite 只围绕当前 `e.x / e.y / e.r` 绘制；
 - tower sprite 只围绕现有塔中心和角度绘制；
@@ -984,7 +1063,9 @@ scripts/verify-td-art.mjs
 - 关键敌人资源存在；
 - 尺寸合理；
 - alpha 合法；
-- manifest 路径有效；
+- manifest metadata 合法；
+- manifest runtime keys 与 `tower-defense-art.js` 的字面 URL map 双向完全一致；
+- `npm run build` 后对应 hashed assets 实际存在并能被页面加载；
 - 运行时体积未超预算。
 
 ### 14.2 代码约束
@@ -995,12 +1076,14 @@ scripts/verify-td-art.mjs
 - 关键 DOM ID / class 未被破坏；
 - HUD 数字继续使用 tabular；
 - Canvas hit geometry 没有改成依赖图片；
+- 6 个 level 都有独立 map 定义，active map 切换后 groundPath / airPath / pathGrid / towerGrid / renderBackground / spawn 全部同步；
+- 大地图阈值：每关 groundPath ≥1840px、buildable ≥190、六个 ground path signature 唯一；
 - production art 与 fallback 两条路径都可初始化；
 - 背景装饰不会拦截 pointer。
 
 ### 14.3 smoke 扩展
 
-现有 tower-defense smoke / difficulty / topbar 验证继续保留，并扩展：
+现有 `td-topbar` 与独立的 `verify-td-difficulty.mjs` 继续保留；同时新增 `smoke-tower-defense.mjs` 覆盖完整生产美术 / fallback 流程：
 
 - 开始页显示；
 - 关卡选择；
@@ -1026,7 +1109,15 @@ scripts/verify-td-art.mjs
 
 ### 14.4 verify-all
 
-新增 `verify-td-art.mjs` 时必须显式注册进 `scripts/verify-all.mjs`，不要依赖自动发现。
+必须显式注册进 `scripts/verify-all.mjs`，不要依赖自动发现：
+
+- `td-art` → `scripts/verify-td-art.mjs`，offline；
+- `td-difficulty` → 现有 `scripts/verify-td-difficulty.mjs`，`needsServer: true`、`games: ['tower-defense']`；
+- `smoke-tower-defense` → 新增完整 runtime smoke，`needsServer: true`；
+- 保留现有 `td-topbar`，但将其中锁定旧 portrait 几何的断言更新为新 landscape / rotation 契约；
+- 评估 `verify-td-btn-hover.mjs`：若仍是有效 UI 契约则一并注册；若被新 UI 明确取代，则删除 / 重写并在 PR 说明原因，不能留下无人运行的旧测试。
+
+同时把以上 TD 关键项加入 `QUICK_NAMES`（至少 `td-art`、`td-difficulty`、`smoke-tower-defense`、`td-topbar`），保证日常验证不会只跑到顶栏而漏掉难度和地图机制。
 
 ---
 
