@@ -32,6 +32,28 @@ const TANK_ASSET_KEYS = {
     boss: 'tanks.boss',
 };
 
+// Authored tank SVGs face upward at direction 0. Canvas rotation is clockwise,
+// matching Bullet.update(): 0=up, 1=right, 2=down, 3=left.
+const TANK_DIRECTION_ROTATIONS = Object.freeze([
+    0,
+    Math.PI / 2,
+    Math.PI,
+    Math.PI * 1.5,
+]);
+const TANK_DIRECTION_VECTORS = Object.freeze([
+    Object.freeze({ x: 0, y: -1 }),
+    Object.freeze({ x: 1, y: 0 }),
+    Object.freeze({ x: 0, y: 1 }),
+    Object.freeze({ x: -1, y: 0 }),
+]);
+
+function normalizeDirection(direction) {
+    const value = Number(direction);
+    if (!Number.isFinite(value)) return 0;
+    const integer = Math.trunc(value);
+    return ((integer % 4) + 4) % 4;
+}
+
 function loadImage(url) {
     return new Promise((resolve, reject) => {
         const image = new Image();
@@ -62,22 +84,76 @@ function setArtState(state) {
 
 export function createTankBattleArt() {
     const images = new Map();
-    const patterns = new Map();
+    const terrainCache = {
+        canvas: null,
+        width: 0,
+        height: 0,
+    };
+
+    const drawStaticTerrain = (ctx, width, height) => {
+        ctx.fillStyle = '#2b4334';
+        ctx.fillRect(0, 0, width, height);
+
+        const ground = images.get('terrain.ground');
+        if (ground) {
+            const pattern = ctx.createPattern(ground, 'repeat');
+            if (pattern) {
+                ctx.fillStyle = pattern;
+                ctx.fillRect(0, 0, width, height);
+            }
+        }
+
+        const detail = images.get('terrain.detail');
+        if (detail) {
+            ctx.globalAlpha = 0.9;
+            ctx.drawImage(detail, 0, 0, width, height);
+            ctx.globalAlpha = 1;
+        }
+
+        // Deterministic field marks add depth without changing the gameplay seed.
+        ctx.save();
+        ctx.strokeStyle = 'rgba(208, 190, 132, 0.14)';
+        ctx.lineWidth = 2;
+        for (const [x, y, length] of [[82, 126, 38], [612, 124, 44], [116, 472, 42], [548, 472, 48]]) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + length, y + 8);
+            ctx.stroke();
+        }
+        ctx.restore();
+    };
+
+    const buildTerrainCache = (width, height) => {
+        if (typeof document === 'undefined') return null;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const cacheCtx = canvas.getContext('2d');
+        if (!cacheCtx) return null;
+        drawStaticTerrain(cacheCtx, width, height);
+        return canvas;
+    };
+
     const api = {
         state: 'loading',
         ready: false,
         failed: false,
         load() {
+            terrainCache.canvas = null;
+            terrainCache.width = 0;
+            terrainCache.height = 0;
             setArtState('loading');
             const entries = Object.entries(TANK_BATTLE_ART_URLS);
             Promise.all(entries.map(async ([key, url]) => {
                 const image = await loadImage(url);
                 images.set(key, image);
             })).then(() => {
+                terrainCache.canvas = null;
                 api.ready = true;
                 api.state = 'ready';
                 setArtState('ready');
             }).catch(() => {
+                terrainCache.canvas = null;
                 api.failed = true;
                 api.state = 'fallback';
                 setArtState('fallback');
@@ -86,41 +162,42 @@ export function createTankBattleArt() {
         has(key) {
             return images.has(key);
         },
+        getTerrainCacheStatus() {
+            return {
+                ready: Boolean(terrainCache.canvas),
+                width: terrainCache.width,
+                height: terrainCache.height,
+            };
+        },
+        getTankRotation(direction) {
+            return TANK_DIRECTION_ROTATIONS[normalizeDirection(direction)];
+        },
+        getTankDirectionVector(direction) {
+            return TANK_DIRECTION_VECTORS[normalizeDirection(direction)];
+        },
         drawGround(ctx, width, height) {
-            ctx.fillStyle = '#2b4334';
-            ctx.fillRect(0, 0, width, height);
-
-            const ground = images.get('terrain.ground');
-            if (ground) {
-                let pattern = patterns.get('terrain.ground');
-                if (!pattern) {
-                    pattern = ctx.createPattern(ground, 'repeat');
-                    patterns.set('terrain.ground', pattern);
+            if (
+                !terrainCache.canvas
+                || terrainCache.width !== width
+                || terrainCache.height !== height
+            ) {
+                if (api.ready || api.failed) {
+                    const cache = buildTerrainCache(width, height);
+                    if (cache) {
+                        terrainCache.canvas = cache;
+                        terrainCache.width = width;
+                        terrainCache.height = height;
+                    }
                 }
-                if (pattern) {
-                    ctx.fillStyle = pattern;
-                    ctx.fillRect(0, 0, width, height);
-                }
             }
 
-            const detail = images.get('terrain.detail');
-            if (detail) {
-                ctx.globalAlpha = 0.9;
-                ctx.drawImage(detail, 0, 0, width, height);
-                ctx.globalAlpha = 1;
+            if (terrainCache.canvas) {
+                ctx.drawImage(terrainCache.canvas, 0, 0, width, height);
+                return;
             }
 
-            // Deterministic field marks add depth without changing the gameplay seed.
-            ctx.save();
-            ctx.strokeStyle = 'rgba(208, 190, 132, 0.14)';
-            ctx.lineWidth = 2;
-            for (const [x, y, length] of [[82, 126, 38], [612, 124, 44], [116, 472, 42], [548, 472, 48]]) {
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + length, y + 8);
-                ctx.stroke();
-            }
-            ctx.restore();
+            // Keep the procedural fallback available while authored images load.
+            drawStaticTerrain(ctx, width, height);
         },
         drawWall(ctx, wall) {
             const key = wall.type === 'steel'
@@ -140,7 +217,7 @@ export function createTankBattleArt() {
 
             ctx.save();
             ctx.translate(tank.x + tank.width / 2, tank.y + tank.height / 2);
-            ctx.rotate(tank.direction * Math.PI / 2);
+            ctx.rotate(api.getTankRotation(tank.direction));
             ctx.drawImage(image, -tank.width / 2, -tank.height / 2, tank.width, tank.height);
             ctx.restore();
             return true;

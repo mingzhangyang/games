@@ -93,6 +93,7 @@ for (const needle of [
     'this.player.render(this.ctx, this.art)',
     'this.renderDebugHitboxes()',
     'this.art.drawMiniMapFrame(this.miniMapCtx, 120, 90)',
+    'bindOrientationArtFallback()',
     'this.updateWeaponIcons()',
     'debug-hitbox',
     ' BOSS'
@@ -109,11 +110,16 @@ for (const forbidden of ['❤', '🔫', '🛡', '⚡', '👑']) {
 if (!html.includes('id="gameCanvas" width="800" height="600"')) fail('HTML canvas must keep the 800x600 logical contract');
 if (!html.includes('data-tb-art-state="loading"')) fail('HTML must expose the art loading state');
 if (!html.includes('rotate-device.svg') || html.includes('class="phone-frame"')) fail('authored orientation art is not wired');
+if (!html.includes('rotate-device-fallback')) fail('orientation fallback markup is missing');
 if (!css.includes("background-image: url('../assets/tank-battle/ui/minimap-frame.svg')")) fail('minimap frame asset is not wired');
 if (!css.includes('.rotate-device-illustration')) fail('orientation illustration styling is missing');
+if (!css.includes('.rotate-device-fallback')) fail('orientation fallback styling is missing');
 if (!html.includes('id="weaponHudIcon"') || !html.includes('id="vWeaponIcon"')) fail('weapon atlas targets are missing');
 if (!art.includes('setWeaponIcon(element, index)')) fail('weapon icon atlas is not wired to a renderer');
+if (!art.includes('drawStaticTerrain') || !art.includes('getTerrainCacheStatus')) fail('terrain cache is not wired to the art renderer');
 if (!smoke.includes('844') || !smoke.includes('932') || !smoke.includes('production art state')) fail('smoke does not cover both landscape phone sizes and art readiness');
+if (!smoke.includes('waitForFunction') || !smoke.includes('srOnlyHeading') || !smoke.includes('barrelOrientation')) fail('smoke is missing explicit readiness, semantic, or direction coverage');
+if (!smoke.includes('orientationFallback')) fail('smoke does not exercise the orientation fallback path');
 
 if (!verifyAll.includes("{ name: 'tank-battle-art', script: 'scripts/verify-tank-battle-art.mjs', args: [], needsServer: false }")) {
     fail('verify-all is missing tank-battle-art');

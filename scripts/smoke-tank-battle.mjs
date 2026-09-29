@@ -31,8 +31,22 @@ for (const testCase of cases) {
     await page.evaluateOnNewDocument(() => {
         try { localStorage.setItem('site_lang', 'zh'); } catch { /* ignore */ }
     });
-    await page.goto(BASE + '/tank-battle.html', { waitUntil: 'networkidle0', timeout: 30000 });
-    await new Promise(resolve => setTimeout(resolve, 900));
+    await page.goto(BASE + '/tank-battle.html', { waitUntil: 'load', timeout: 30000 });
+    try {
+        await page.waitForFunction(() => {
+            const game = window.tankBattleInstance;
+            const container = document.getElementById('gameContainer');
+            const cache = game?.art?.getTerrainCacheStatus?.();
+            return Boolean(
+                game
+                && game.art?.ready === true
+                && container?.dataset.tbArtState === 'ready'
+                && cache?.ready === true
+            );
+        }, { timeout: 10000 });
+    } catch (error) {
+        fail(testCase.name + ': art readiness wait failed: ' + String(error.message || error));
+    }
 
     const snap = await page.evaluate(() => {
         const canvas = document.getElementById('gameCanvas');
@@ -46,14 +60,33 @@ for (const testCase of cases) {
         return {
             mainTag: !!document.querySelector('main.tb-main'),
             h1: document.querySelector('h1.sr-only')?.textContent || '',
+            srOnlyHeading: (() => {
+                const heading = document.querySelector('h1.sr-only');
+                if (!heading) return false;
+                const box = heading.getBoundingClientRect();
+                return box.width <= 1 && box.height <= 1;
+            })(),
             canvasSize: canvas ? canvas.width + 'x' + canvas.height : 'missing',
             canvasVisible: !!rect && rect.width > 100 && rect.height > 100,
             containerCentered: !!containerRect
                 && Math.abs((window.innerWidth - containerRect.width) / 2 - containerRect.left) < 60,
             artState: container?.dataset.tbArtState || 'missing',
             loaderReady: instance?.art?.ready === true,
+            terrainCache: instance?.art?.getTerrainCacheStatus?.().ready === true,
             noLegacyPhone: !document.querySelector('.phone-frame, .phone-screen'),
             orientationArt: !!document.querySelector('.rotate-device-illustration[src*="rotate-device.svg"]'),
+            orientationFallback: (() => {
+                const image = document.querySelector('.rotate-device-illustration');
+                const fallback = document.querySelector('.rotate-device-fallback');
+                if (!image || !fallback) return false;
+                const imageHidden = image.hidden;
+                const fallbackHidden = fallback.hidden;
+                image.dispatchEvent(new Event('error'));
+                const works = image.hidden && !fallback.hidden;
+                image.hidden = imageHidden;
+                fallback.hidden = fallbackHidden;
+                return works;
+            })(),
             hud: !!document.getElementById('gameInfo'),
             weaponIconAtlas: document.getElementById('weaponHudIcon')?.dataset.tbWeaponIcon === 'atlas'
                 && document.getElementById('vWeaponIcon')?.dataset.tbWeaponIcon === 'atlas',
@@ -74,8 +107,11 @@ for (const testCase of cases) {
     if (snap.canvasSize !== '800x600') fail(testCase.name + ': canvas size ' + snap.canvasSize);
     if (!snap.canvasVisible) fail(testCase.name + ': canvas is not visible');
     if (!snap.containerCentered) fail(testCase.name + ': game container is not centered');
+    if (!snap.mainTag || !snap.h1) fail(testCase.name + ': semantic main/heading is missing');
+    if (!snap.srOnlyHeading) fail(testCase.name + ': h1.sr-only is not visually hidden');
     if (snap.artState !== 'ready' || !snap.loaderReady) fail(testCase.name + ': production art state is ' + snap.artState);
-    if (!snap.noLegacyPhone || !snap.orientationArt) fail(testCase.name + ': authored orientation art is not wired');
+    if (!snap.terrainCache) fail(testCase.name + ': terrain cache was not built');
+    if (!snap.noLegacyPhone || !snap.orientationArt || !snap.orientationFallback) fail(testCase.name + ': authored orientation art or fallback is not wired');
     if (!snap.hud) fail(testCase.name + ': HUD is missing');
     if (!snap.weaponIconAtlas) fail(testCase.name + ': weapon icon atlas is not visible');
     if (testCase.isMobile && (!snap.dpadHitArea || !snap.fireHitArea)) fail(testCase.name + ': virtual-controller hit area shrank');
@@ -114,6 +150,60 @@ for (const testCase of cases) {
             'powerups.health', 'ui.minimapFrame', 'ui.weaponIcons'
         ].every(key => game.art.has(key));
         result.spriteHitbox = game.player.width === 30 && game.player.height === 30;
+
+        const recordingContext = {
+            rotations: [],
+            save() {},
+            restore() {},
+            translate() {},
+            rotate(value) { this.rotations.push(value); },
+            drawImage() {},
+        };
+        const expectedVectors = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+        const originalDirection = game.player.direction;
+        const bulletVectors = expectedVectors.map(([expectedX, expectedY], direction) => {
+            game.player.direction = direction;
+            game.bullets = [];
+            game.shoot(game.player);
+            const bullet = game.bullets[0];
+            const startX = bullet.x;
+            const startY = bullet.y;
+            bullet.update(1);
+            return {
+                direction: bullet.direction,
+                x: Math.sign(bullet.x - startX),
+                y: Math.sign(bullet.y - startY),
+                expectedX,
+                expectedY,
+            };
+        });
+        game.bullets = [];
+        game.player.direction = originalDirection;
+        const barrelDirections = expectedVectors.map(([expectedX, expectedY], direction) => {
+            recordingContext.rotations = [];
+            const rendered = game.art.drawTank(recordingContext, {
+                x: 0,
+                y: 0,
+                width: 30,
+                height: 30,
+                direction,
+                isPlayer: true,
+                isBoss: false,
+            });
+            const vector = game.art.getTankDirectionVector(direction);
+            return rendered
+                && recordingContext.rotations.length === 1
+                && Math.abs(recordingContext.rotations[0] - game.art.getTankRotation(direction)) < 0.0001
+                && vector.x === expectedX
+                && vector.y === expectedY;
+        });
+        result.barrelOrientation = barrelDirections.every(Boolean)
+            && bulletVectors.every(({ direction, x, y, expectedX, expectedY }) =>
+                direction >= 0
+                && direction <= 3
+                && x === expectedX
+                && y === expectedY
+            );
 
         game.walls = [{ x: 100, y: 100, width: 20, height: 20, destructible: true, type: 'brick' }];
         game.bullets = [makeBullet(96)];
@@ -195,7 +285,7 @@ for (const testCase of cases) {
         return result;
     });
     for (const check of [
-        'authoredSprites', 'spriteHitbox', 'brickCollision', 'steelCollision',
+        'authoredSprites', 'spriteHitbox', 'barrelOrientation', 'brickCollision', 'steelCollision',
         'pickupCollision', 'enemyAndBoss', 'weaponSwitch', 'pause', 'minimap',
         'gameOver', 'victory'
     ]) {

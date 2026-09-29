@@ -126,6 +126,20 @@ function isTouchDevice() {
     return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
 }
 
+function bindOrientationArtFallback() {
+    const illustration = document.querySelector('.rotate-device-illustration');
+    const fallback = document.querySelector('.rotate-device-fallback');
+    if (!illustration || !fallback) return;
+
+    const showFallback = () => {
+        illustration.hidden = true;
+        fallback.hidden = false;
+    };
+
+    illustration.addEventListener('error', showFallback, { once: true });
+    if (illustration.complete && illustration.naturalWidth === 0) showFallback();
+}
+
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError，必须兜底，
 // 否则模块顶层抛错会让整个游戏黑屏
 let currentLanguage = getLang();
@@ -1198,6 +1212,7 @@ class TankBattle {
 // 启动游戏
 window.addEventListener('load', () => {
     updateUILabels(); // 初始化UI标签
+    bindOrientationArtFallback();
     window.tankBattleInstance = new TankBattle();
 });
 window.addEventListener('site-settings:changed', () => {
