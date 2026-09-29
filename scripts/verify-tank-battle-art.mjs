@@ -26,7 +26,6 @@ const powerUpRenderBody = entities.match(
 const expected = {
     'terrain.ground': ['terrain/ground.svg', '0 0 40 40'],
     'terrain.detail': ['terrain/ground-detail.svg', '0 0 800 600'],
-    'terrain.border': ['terrain/border.svg', '0 0 40 40'],
     'tiles.brick': ['tiles/brick.svg', '0 0 20 20'],
     'tiles.steel': ['tiles/steel.svg', '0 0 20 20'],
     'tiles.boundary': ['tiles/boundary.svg', '0 0 20 20'],
@@ -57,6 +56,14 @@ if (JSON.stringify(manifestKeys) !== JSON.stringify(expectedKeys)) {
     fail('manifest asset keys do not match the complete Tank Battle pack');
 } else {
     pass('manifest contains terrain, walls, tanks, power-ups, and UI assets');
+}
+const runtimeKeys = [...art.matchAll(/^\s*'([^']+)': new URL\(/gm)]
+    .map(match => match[1])
+    .sort();
+if (JSON.stringify(runtimeKeys) !== JSON.stringify(expectedKeys)) {
+    fail('runtime art URL keys do not match the manifest asset keys');
+} else {
+    pass('runtime art URL map matches the manifest asset keys');
 }
 
 let totalBytes = 0;

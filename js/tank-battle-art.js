@@ -3,7 +3,6 @@
 export const TANK_BATTLE_ART_URLS = {
     'terrain.ground': new URL('../assets/tank-battle/terrain/ground.svg', import.meta.url).href,
     'terrain.detail': new URL('../assets/tank-battle/terrain/ground-detail.svg', import.meta.url).href,
-    'terrain.border': new URL('../assets/tank-battle/terrain/border.svg', import.meta.url).href,
     'tiles.brick': new URL('../assets/tank-battle/tiles/brick.svg', import.meta.url).href,
     'tiles.steel': new URL('../assets/tank-battle/tiles/steel.svg', import.meta.url).href,
     'tiles.boundary': new URL('../assets/tank-battle/tiles/boundary.svg', import.meta.url).href,

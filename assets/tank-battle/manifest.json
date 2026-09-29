@@ -5,7 +5,6 @@
   "assets": {
     "terrain.ground": { "file": "terrain/ground.svg", "kind": "tile", "fallback": "procedural" },
     "terrain.detail": { "file": "terrain/ground-detail.svg", "kind": "overlay", "fallback": "procedural" },
-    "terrain.border": { "file": "terrain/border.svg", "kind": "tile", "fallback": "procedural" },
     "tiles.brick": { "file": "tiles/brick.svg", "kind": "tile", "fallback": "procedural" },
     "tiles.steel": { "file": "tiles/steel.svg", "kind": "tile", "fallback": "procedural" },
     "tiles.boundary": { "file": "tiles/boundary.svg", "kind": "tile", "fallback": "procedural" },
