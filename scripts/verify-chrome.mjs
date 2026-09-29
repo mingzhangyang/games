@@ -14,6 +14,8 @@
 //      <button>，跳转完全依赖 chrome（owns 含 'home'）或页面自绑 —— §② 只查标签，
 //      查不出「按钮是死的」。bond-forge / silk-dew 曾双双中招（footer 的 <a> 天然
 //      可用，所以用户只见顶栏坏）。每页只测一次、且是本轮最后一个操作（会真的离开页面）。
+//   ⑨ 首屏可见的 game overlay 不得再塞一个 Home 链接。持久页脚已经提供 Home，
+//      两者叠在同一屏会出现 tower-defense / reversi / minesweeper / needle-awn 的重复 Home。
 //
 // ⚠️ 语言存储键是 site_lang（js/site-settings.js 的 LANG_KEY），不是 'lang'。
 //    游戏页只读不写：语言切换入口只在首页，boot 时的 site_lang 决定本页初始语言。
@@ -120,6 +122,8 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     htmlLang: document.documentElement.lang,
                     docTitle: document.title,
                     muted: (() => { try { return localStorage.getItem('site_muted'); } catch (e) { return null; } })(),
+                    visibleOverlayHomeCount: Array.from(document.querySelectorAll('.game-overlay a[href="index.html"]'))
+                        .filter(vis).length,
                 };
             });
 
@@ -175,6 +179,8 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
 
             if (!snap.footerVisible) fail(name, vp.tag, lang, '页脚不可见');
             if (!snap.hintText) fail(name, vp.tag, lang, '页脚提示为空');
+            if (snap.visibleOverlayHomeCount > 0)
+                fail(name, vp.tag, lang, `首屏 overlay 内还有 ${snap.visibleOverlayHomeCount} 个 Home 链接，会与持久页脚 Home 重复`);
             if (snap.htmlLang && !snap.htmlLang.startsWith(lang))
                 warns.push(`${name} @${vp.tag}/${lang}: <html lang="${snap.htmlLang}">`);
 
