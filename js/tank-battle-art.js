@@ -175,6 +175,20 @@ export function createTankBattleArt() {
             ctx.restore();
             return true;
         },
+        setWeaponIcon(element, index) {
+            if (!element) return;
+            const slot = Math.max(0, Math.min(2, Number(index) || 0));
+            const image = images.get('ui.weaponIcons');
+            if (image) {
+                element.style.backgroundImage = `url("${TANK_BATTLE_ART_URLS['ui.weaponIcons']}")`;
+                element.style.backgroundPosition = `${slot * -22.5}px 0`;
+                element.dataset.tbWeaponIcon = 'atlas';
+            } else {
+                element.style.backgroundImage = 'none';
+                element.style.backgroundPosition = '0 0';
+                element.dataset.tbWeaponIcon = 'fallback';
+            }
+        },
         drawMiniMapBase(ctx, width, height) {
             ctx.fillStyle = '#17251f';
             ctx.fillRect(0, 0, width, height);
@@ -190,6 +204,12 @@ export function createTankBattleArt() {
             ctx.moveTo(width - 20, height - 10); ctx.lineTo(width - 7, height - 10);
             ctx.stroke();
             ctx.globalAlpha = 1;
+        },
+        drawMiniMapFrame(ctx, width, height) {
+            const image = images.get('ui.minimapFrame');
+            if (!image) return false;
+            ctx.drawImage(image, 0, 0, width, height);
+            return true;
         },
     };
 
