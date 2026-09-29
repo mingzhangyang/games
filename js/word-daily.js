@@ -19,6 +19,7 @@ import { hashString, todayKeyDisplay, msUntilNextDay } from './daily.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
 import { createSfxEngine } from './game-sfx.js';
+import { createGameStorage } from '../src/platform/storage/game-storage.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -37,6 +38,11 @@ function storageParse(key, fallback) {
 // UTC+8 16:00 之后倒计时整整多报 24 小时）
 
 // 每日谜题编号（自 2026-01-01 UTC+8 起）
+const WORD_STORE = createGameStorage('word-daily', {
+    version: 1,
+    legacy: { seenHelp: 'wd_seen_help' },
+});
+
 const EPOCH = Date.UTC(2026, 0, 1) - 8 * 3600 * 1000;
 function dailyNumber() {
     return Math.floor((Date.now() - EPOCH) / (24 * 3600 * 1000)) + 1;
@@ -1427,12 +1433,9 @@ class WordDailyGame {
 
     /* 首次访问自动展示玩法说明（只弹一次） */
     maybeShowFirstRunHelp() {
-        try {
-            if (localStorage.getItem('wd_seen_help') === '1') return;
-            localStorage.setItem('wd_seen_help', '1');
-        } catch (e) {
-            return; // 存储不可用时不弹，避免每次刷新打扰
-        }
+        const seen = WORD_STORE.get('seenHelp', false);
+        if (seen === true || seen === 1 || seen === '1') return;
+        WORD_STORE.set('seenHelp', true);
         this.openHelp();
     }
 

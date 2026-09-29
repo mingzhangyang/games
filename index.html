@@ -25,7 +25,7 @@
     <script src="/theme-boot.js"></script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-    <title id="page-title">Mini Games Collection</title>
+    <title id="page-title" data-i18n="pageTitle">Mini Games Collection</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Crect x='12' y='22' width='40' height='22' rx='11' fill='white'/%3E%3Cpath d='M22 27v12M16 33h12' stroke='%23667eea' stroke-width='3.4' stroke-linecap='round'/%3E%3Ccircle cx='39' cy='29' r='3' fill='%23667eea'/%3E%3Ccircle cx='45' cy='36' r='3' fill='%23667eea'/%3E%3C/svg%3E">
     <!-- 共享骨架：必须排在下面的内联样式之前 —— 内联样式在后，冲突时落地页仍胜。
          index 自己的 54 个类名与共享层的 38 个选择器零交集（已核对），
@@ -39,492 +39,86 @@
 
     <!-- Hero -->
     <header class="hero">
-        <button class="lang-toggle" id="lang-toggle" title="Language">中文</button>
+        <button class="lang-toggle" id="lang-toggle" title="Language" data-i18n="langToggle">中文</button>
         <div class="hero-logo">🎮</div>
-        <h1 id="main-title">Mini Games Collection</h1>
-        <p class="hero-sub" id="main-desc">Play instantly · No downloads · No accounts · No ads</p>
+        <h1 id="main-title" data-i18n="mainTitle">Mini Games Collection</h1>
+        <p class="hero-sub" id="main-desc" data-i18n="mainDesc">Play instantly · No downloads · No accounts · No ads</p>
     </header>
 
     <!-- Daily Hub -->
     <main class="idx-main">
     <section class="daily-hub" aria-label="Daily challenges">
         <div class="daily-hub-head">
-            <span class="daily-hub-title" id="hub-title">⚡ Daily Challenges</span>
+            <span class="daily-hub-title" id="hub-title" data-i18n="hubTitle">⚡ Daily Challenges</span>
             <span class="daily-hub-progress" id="hub-progress">0/3</span>
             <span class="hub-total" id="hub-total" hidden></span>
         </div>
         <a class="daily-task" id="hub-task-word" href="word-daily.html">
             <span class="daily-task-icon">🔤</span>
             <div class="daily-task-body">
-                <div class="daily-task-name" id="hub-task-word-name">Word Daily</div>
-                <div class="daily-task-sub" id="hub-task-word-sub">Guess in 6 tries</div>
+                <div class="daily-task-name" id="hub-task-word-name" data-i18n="word-daily.name">Word Daily</div>
+                <div class="daily-task-sub" id="hub-task-word-sub" data-i18n="hubTaskWordSub">Guess in 6 tries</div>
             </div>
             <span class="daily-task-status" id="hub-task-word-status">⚪</span>
         </a>
         <a class="daily-task" id="hub-task-merge" href="planet-merge.html">
             <span class="daily-task-icon">🪐</span>
             <div class="daily-task-body">
-                <div class="daily-task-name" id="hub-task-merge-name">Planet Merge</div>
-                <div class="daily-task-sub" id="hub-task-merge-sub">Daily challenge</div>
+                <div class="daily-task-name" id="hub-task-merge-name" data-i18n="planet-merge.name">Planet Merge</div>
+                <div class="daily-task-sub" id="hub-task-merge-sub" data-i18n="hubTaskMergeSub">Daily challenge</div>
             </div>
             <span class="daily-task-status" id="hub-task-merge-status">⚪</span>
         </a>
         <a class="daily-task" id="hub-task-gravity" href="gravity-slingshot.html">
             <span class="daily-task-icon">🚀</span>
             <div class="daily-task-body">
-                <div class="daily-task-name" id="hub-task-gravity-name">Gravity Slingshot</div>
-                <div class="daily-task-sub" id="hub-task-gravity-sub">Daily course · 5 holes</div>
+                <div class="daily-task-name" id="hub-task-gravity-name" data-i18n="gravity-slingshot.name">Gravity Slingshot</div>
+                <div class="daily-task-sub" id="hub-task-gravity-sub" data-i18n="hubTaskGravitySub">Daily course · 5 holes</div>
             </div>
             <span class="daily-task-status" id="hub-task-gravity-status">⚪</span>
         </a>
         <div class="daily-profile">
             <span class="daily-profile-icon">👤</span>
-            <input id="player-name" maxlength="20" autocomplete="off">
-            <span class="daily-profile-hint" id="hub-profile-hint">Used on all leaderboards</span>
+            <input id="player-name" maxlength="20" autocomplete="off" placeholder="Your name" data-i18n-placeholder="hubProfilePlaceholder">
+            <span class="daily-profile-hint" id="hub-profile-hint" data-i18n="hubProfileHint">Used on all leaderboards</span>
         </div>
     </section>
 
     <!-- Games -->
     <section class="games-section" aria-label="Games">
-        <p class="section-label" id="section-label">Choose a game</p>
+        <p class="section-label" id="section-label" data-i18n="sectionLabel">Choose a game</p>
         <div class="games-grid">
 
-            <!-- Math Rain -->
-            <article class="game-card" onclick="location.href='math-rain.html'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--math"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="11" width="10" height="10" rx="2"/><path d="M12 14v4M10 16h4"/><circle cx="7" cy="5" r="1"/><circle cx="14" cy="7" r="1"/><circle cx="18" cy="4" r="1"/></svg></span>
-                        <a class="card-title" href="math-rain.html" id="math-rain-name">Math Rain</a>
-                    </div>
-                    <p class="card-desc" id="math-rain-desc">Catch falling equations before they hit the ground. Practice arithmetic under pressure.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="math-rain-tag">Educational</span>
-                        <a class="play-btn" href="math-rain.html" id="math-rain-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Tetris -->
-            <article class="game-card" onclick="location.href='tetris.html'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--tetris"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></span>
-                        <a class="card-title" href="tetris.html" id="tetris-name">Tetris</a>
-                    </div>
-                    <p class="card-desc" id="tetris-desc">Modern Tetris with SRS rotation, combo system, multiple themes, and global high scores.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="tetris-tag">Classic</span>
-                        <a class="play-btn" href="tetris.html" id="tetris-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Tank Battle -->
-            <article class="game-card" onclick="location.href='tank-battle.html'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--tank"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h16v4H4z"/><path d="M9 14v-4h6v4"/><path d="M15 12h6"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/></svg></span>
-                        <a class="card-title" href="tank-battle.html" id="tank-name">Tank Battle</a>
-                    </div>
-                    <p class="card-desc" id="tank-desc">Retro arcade tank shooter. Defend your base, blast enemies, and survive wave after wave.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="tank-tag">Arcade</span>
-                        <a class="play-btn" href="tank-battle.html" id="tank-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Gomoku -->
-            <article class="game-card" onclick="location.href='gomoku.html'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--gomoku"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M12 4v16"/><circle cx="8.5" cy="8.5" r="3"/><circle cx="15.5" cy="15.5" r="3" fill="currentColor"/></svg></span>
-                        <a class="card-title" href="gomoku.html" id="gomoku-name">Gomoku</a>
-                    </div>
-                    <p class="card-desc" id="gomoku-desc">Five in a Row. Challenge the AI or play with a friend on the classic strategy board.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="gomoku-tag">Strategy</span>
-                        <a class="play-btn" href="gomoku.html" id="gomoku-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Planet Merge -->
-            <article class="game-card" onclick="location.href='planet-merge.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--planet"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="10" ry="3.5" transform="rotate(-20 12 12)"/></svg></span>
-                        <a class="card-title" href="planet-merge.html" id="planet-merge-name">Planet Merge</a>
-                    </div>
-                    <p class="card-desc" id="planet-merge-desc">Drop planets, merge identical ones, chain combos and forge a sun. Daily challenge with a global leaderboard.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="planet-merge-tag">Casual</span>
-                        <a class="play-btn" href="planet-merge.html" id="planet-merge-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Word Daily -->
-            <article class="game-card" onclick="location.href='word-daily.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--word"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="9" width="5.5" height="5.5" rx="1"/><rect x="9.25" y="9" width="5.5" height="5.5" rx="1" fill="currentColor"/><rect x="15.5" y="9" width="5.5" height="5.5" rx="1"/></svg></span>
-                        <a class="card-title" href="word-daily.html" id="word-daily-name">Word Daily</a>
-                    </div>
-                    <p class="card-desc" id="word-daily-desc">One puzzle a day for the whole world — guess the English word or the Chinese idiom in 6 tries. Keep your streak!</p>
-                    <div class="card-footer">
-                        <span class="tag" id="word-daily-tag">Daily</span>
-                        <a class="play-btn" href="word-daily.html" id="word-daily-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Hoop Shot -->
-            <article class="game-card" onclick="location.href='hoop-shot.html'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--hoop"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4v16"/><path d="M6.2 6.5c2.8 2.8 2.8 8.2 0 11M17.8 6.5c-2.8 2.8-2.8 8.2 0 11"/></svg></span>
-                        <a class="card-title" href="hoop-shot.html" id="hoop-shot-name">Hoop Shot</a>
-                    </div>
-                    <p class="card-desc" id="hoop-shot-desc">Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!</p>
-                    <div class="card-footer">
-                        <span class="tag" id="hoop-shot-tag">Sports</span>
-                        <a class="play-btn" href="hoop-shot.html" id="hoop-shot-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Minesweeper -->
-            <article class="game-card" onclick="location.href='minesweeper.html'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--mines"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="5.5"/><path d="M12 4.5v3M12 18.5v3M3.5 13h3M17.5 13h3M6.3 7.3l2.1 2.1M17.7 7.3l-2.1 2.1M6.3 18.7l2.1-2.1M17.7 18.7l-2.1-2.1"/></svg></span>
-                        <a class="card-title" href="minesweeper.html" id="minesweeper-name">Minesweeper</a>
-                    </div>
-                    <p class="card-desc" id="minesweeper-desc">The classic logic puzzle. Safe first click, chording, three difficulties, global fastest clears.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="minesweeper-tag">Puzzle</span>
-                        <a class="play-btn" href="minesweeper.html" id="minesweeper-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Reversi -->
-            <article class="game-card" onclick="location.href='reversi.html'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--reversi"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5" fill="currentColor"/></svg></span>
-                        <a class="card-title" href="reversi.html" id="reversi-name">Reversi</a>
-                    </div>
-                    <p class="card-desc" id="reversi-desc">Classic Othello strategy. Outsmart a tuned AI on three levels or pass-and-play with a friend.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="reversi-tag">Strategy</span>
-                        <a class="play-btn" href="reversi.html" id="reversi-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Tower Defense -->
-            <article class="game-card" onclick="location.href='tower-defense.html'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--td"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21V8h10v13"/><path d="M7 8V5h2.5v2h2V5h2v2h2V5H18v3"/><path d="M4 21h16"/><path d="M10.5 21v-3.5a1.5 1.5 0 0 1 3 0V21"/></svg></span>
-                        <a class="card-title" href="tower-defense.html" id="td-name">Neon Tower Defense</a>
-                    </div>
-                    <p class="card-desc" id="td-desc">Deploy pulse, frost, cannon and tesla towers across six future-city operations. Survive 15 to 40 escalating waves and defend the energy core.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="td-tag">Strategy</span>
-                        <a class="play-btn" href="tower-defense.html" id="td-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Gravity Slingshot -->
-            <article class="game-card" onclick="location.href='gravity-slingshot.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--gravity"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3a9 9 0 0 1 9 9"/><path d="M12 21a9 9 0 0 1-9-9"/><circle cx="21" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></span>
-                        <a class="card-title" href="gravity-slingshot.html" id="gravity-name">Gravity Slingshot</a>
-                    </div>
-                    <p class="card-desc" id="gravity-desc">Original orbital physics — slingshot your probe around planets into the wormhole. 20 holes plus a daily course.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="gravity-tag">Physics</span>
-                        <a class="play-btn" href="gravity-slingshot.html" id="gravity-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Pinpoint Clash: Needle vs Awn 针尖对麦芒 -->
-            <article class="game-card" onclick="location.href='needle-awn.html'">
-                <span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--needle"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/><circle cx="6" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg></span>
-                        <a class="card-title" href="needle-awn.html" id="needle-awn-name">Pinpoint Clash</a>
-                    </div>
-                    <p class="card-desc" id="needle-awn-desc">Kinetic martial precision duel. Clash tip-to-tip, weave Silver Needle and Golden Awn stances, freeze time and awaken supreme prowess.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="needle-awn-tag">Action</span>
-                        <a class="play-btn" href="needle-awn.html" id="needle-awn-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Sword Flight: Soaring Heavens 御剑飞行 -->
-            <article class="game-card" onclick="location.href='sword-flight.html'">
-                <span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--sword"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg></span>
-                        <a class="card-title" href="sword-flight.html" id="sword-flight-name">Sword Flight</a>
-                    </div>
-                    <p class="card-desc" id="sword-flight-desc">Soar through the Nine Heavens on a flying sword. Thread celestial rings, cleave crags, summon companion sword arrays, and ascend to immortality.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="sword-flight-tag">Action</span>
-                        <a class="play-btn" href="sword-flight.html" id="sword-flight-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Lumen: Beam Refraction 折光 -->
-            <article class="game-card" onclick="location.href='lumen.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--lumen"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h7"/><path d="M14 12h7"/><path d="M10 12l4-4"/><path d="M10 12l4 4" opacity="0.45"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M19 9l1.6 3-1.6 3h-3.4"/></svg></span>
-                        <a class="card-title" href="lumen.html" id="lumen-name">Lumen</a>
-                    </div>
-                    <p class="card-desc" id="lumen-desc">Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="lumen-tag">Puzzle</span>
-                        <a class="play-btn" href="lumen.html" id="lumen-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Circuit: Light It Up 电路谜题 -->
-            <article class="game-card" onclick="location.href='circuit.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--circuit"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v4M15 3v4"/><rect x="7" y="7" width="10" height="7" rx="1.5"/><path d="M12 14v3"/><circle cx="12" cy="19" r="2.2" fill="currentColor" stroke="none"/></svg></span>
-                        <a class="card-title" href="circuit.html" id="circuit-name">Circuit</a>
-                    </div>
-                    <p class="card-desc" id="circuit-desc">Flip switches, route the current, light every bulb — and dodge the short circuit. 20 levels plus a daily puzzle.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="circuit-tag">Puzzle</span>
-                        <a class="play-btn" href="circuit.html" id="circuit-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Silkfall（垂丝引露） -->
-            <article class="game-card" onclick="location.href='silk-dew.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--silk-dew"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v5"/><path d="M12 7c0 4-3 5-3 9a3 3 0 0 0 6 0c0-4-3-5-3-9Z"/><circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none"/></svg></span>
-                        <a class="card-title" href="silk-dew.html" id="silk-dew-name">Silkfall</a>
-                    </div>
-                    <p class="card-desc" id="silk-dew-desc">Drag the anchor knot to thread a silken strand, guide the dew pearl past thorns and gales, and let it fall into the jade vessel. 20 levels plus a daily course.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="silk-dew-tag">Physics</span>
-                        <a class="play-btn" href="silk-dew.html" id="silk-dew-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Bond Forge（键合工坊） -->
-            <article class="game-card" onclick="location.href='bond-forge.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--bond-forge"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.5v15"/><circle cx="12" cy="4.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="6.5" cy="18" r="1.9" fill="currentColor" stroke="none"/><circle cx="17.5" cy="18" r="1.9" fill="currentColor" stroke="none"/><path d="M7.8 16.4 10.8 6.6M16.2 16.4 13.2 6.6"/></svg></span>
-                        <a class="card-title" href="bond-forge.html" id="bond-forge-name">Bond Forge</a>
-                    </div>
-                    <p class="card-desc" id="bond-forge-desc">Drag atoms from the tray, snap them into bonds, and satisfy every valence shell to forge the target formula. 20 levels plus a daily challenge, with real chemistry along the way.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="bond-forge-tag">Chemistry</span>
-                        <a class="play-btn" href="bond-forge.html" id="bond-forge-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Echo Cave（回声洞窟） -->
-            <article class="game-card" onclick="location.href='echo-cave.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--echo-cave"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M7.8 16.2a6.3 6.3 0 0 1 0-8.4M16.2 7.8a6.3 6.3 0 0 1 0 8.4"/><path d="M5.2 18.8a9.9 9.9 0 0 1 0-13.6M18.8 5.2a9.9 9.9 0 0 1 0 13.6"/></svg></span>
-                        <a class="card-title" href="echo-cave.html" id="echo-cave-name">Echo Cave</a>
-                    </div>
-                    <p class="card-desc" id="echo-cave-desc">The cave is pitch dark until you sing: send out pulses, read the echoes bouncing off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily course.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="echo-cave-tag">Physics</span>
-                        <a class="play-btn" href="echo-cave.html" id="echo-cave-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Maxwell's Demon（麦克斯韦妖） -->
-            <article class="game-card" onclick="location.href='maxwell-demon.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--maxwell-demon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v18M20 3v18"/><rect x="9.4" y="9.4" width="5.2" height="5.2" rx="1.6" fill="currentColor" stroke="none"/><circle cx="6.8" cy="6.8" r="1.5" fill="currentColor" stroke="none"/><circle cx="6.8" cy="17.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="17.2" cy="8.6" r="1.5" fill="currentColor" stroke="none"/><circle cx="17.2" cy="15.4" r="1.5" fill="currentColor" stroke="none"/></svg></span>
-                        <a class="card-title" href="maxwell-demon.html" id="maxwell-demon-name">Maxwell's Demon</a>
-                    </div>
-                    <p class="card-desc" id="maxwell-demon-desc">Two chambers, one tiny door. Pay to see which molecules are fast, pay again to open it — sort the gas until a temperature gap appears out of nowhere. 20 vessels plus a daily run.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="maxwell-demon-tag">Physics</span>
-                        <a class="play-btn" href="maxwell-demon.html" id="maxwell-demon-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Crystal Bloom（晶绽） -->
-            <article class="game-card" onclick="location.href='crystal-bloom.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--crystal-bloom"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 19 9.5 12 21.5 5 9.5z"/><path d="M5 9.5h14M12 2.5v19"/></svg></span>
-                        <a class="card-title" href="crystal-bloom.html" id="crystal-bloom-name">Crystal Bloom</a>
-                    </div>
-                    <p class="card-desc" id="crystal-bloom-desc">A hot saturated bath cools along the curve you draw. Drop the temperature fast and supersaturation spikes — tips race into ferns; ease it down and only the facets advance. 20 vessels plus a daily run.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="crystal-bloom-tag">Crystallization</span>
-                        <a class="play-btn" href="crystal-bloom.html" id="crystal-bloom-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Flame Verse（焰语） -->
-            <article class="game-card" onclick="location.href='flame-verse.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--flame-verse"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5c3.4 4.2 6 6.8 6 11a6 6 0 1 1-12 0c0-3 1.5-4.8 3-6.8.3 2.2 1 3.7 2.4 4.5C10.9 8.3 11.4 5 12 2.5z"/><path d="M4 21h16"/></svg></span>
-                        <a class="card-title" href="flame-verse.html" id="flame-verse-name">Flame Verse</a>
-                    </div>
-                    <p class="card-desc" id="flame-verse-desc">Throw salt into a burner and the flame speaks: every element answers with its own fixed set of light lines. Read the unknown sample's barcode of light — position names the element, brightness names the dose. 20 unknowns plus a daily sample.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="flame-verse-tag">Spectroscopy</span>
-                        <a class="play-btn" href="flame-verse.html" id="flame-verse-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Ripple Duet（涟漪双生） -->
-            <article class="game-card" onclick="location.href='ripple-duet.html'">
-                <span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--ripple-duet"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="12" r="2"/><circle cx="8" cy="12" r="5.5"/><circle cx="16" cy="12" r="2"/><circle cx="16" cy="12" r="5.5"/></svg></span>
-                        <a class="card-title" href="ripple-duet.html" id="ripple-duet-name">Ripple Duet</a>
-                    </div>
-                    <p class="card-desc" id="ripple-duet-desc">Two sources, one sea. Drag them and turn their phase until the water obeys — flatten the storm at one point, pile the crests up to light a beacon at another. 20 wave puzzles plus a daily course.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="ripple-duet-tag">Interference</span>
-                        <a class="play-btn" href="ripple-duet.html" id="ripple-duet-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Carrot Pull（拔萝卜） -->
-            <article class="game-card" onclick="location.href='carrot-pull.html'">
-                <span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--carrot-pull"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12c-3-3-3-6-1-8 2 1 3 3 3 6 1-3 3-5 6-5 0 4-2 6-6 7v8h-4c-2-2-2-5-2-8 0-2 1-3 4-4Z" fill="currentColor" stroke="none"/><path d="M12 12c-3-3-3-6-1-8 2 1 3 3 3 6 1-3 3-5 6-5 0 4-2 6-6 7v8h-4c-2-2-2-5-2-8 0-2 1-3 4-4Z"/></svg></span>
-                        <a class="card-title" href="carrot-pull.html" id="carrot-pull-name">Carrot Pull</a>
-                    </div>
-                    <p class="card-desc" id="carrot-pull-desc">Find the sweet spot, pull in rhythm, and help a tiny mole harvest six giant carrots before time runs out.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="carrot-pull-tag">Casual</span>
-                        <a class="play-btn" href="carrot-pull.html" id="carrot-pull-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Firefly Signal（萤火信号） -->
-            <article class="game-card" onclick="location.href='firefly-signal.html'">
-                <span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--firefly-signal"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="15" r="3.2" fill="currentColor" stroke="none"/><path d="M12 11.8V9.5"/><path d="M9.8 10.4C7 8.6 5 9.3 4.5 11c1.6 1.2 3.6 1.1 5.3-.6Z"/><path d="M14.2 10.4c2.8-1.8 4.8-1.1 5.3.6-1.6 1.2-3.6 1.1-5.3-.6Z"/><path d="M6 19.5l.01 0M18 4.5l.01 0M20 16l.01 0M4 5.5l.01 0"/></svg></span>
-                        <a class="card-title" href="firefly-signal.html" id="firefly-signal-name">Firefly Signal</a>
-                    </div>
-                    <p class="card-desc" id="firefly-signal-desc">Every firefly blinks alone. Nudge a few and watch whole meadows fall into step until the field lights up as one.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="firefly-signal-tag">Synchrony</span>
-                        <a class="play-btn" href="firefly-signal.html" id="firefly-signal-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Shadow Loom（影织） -->
-            <article class="game-card" onclick="location.href='shadow-loom.html'">
-                <span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z" fill="currentColor" fill-opacity="0.16"/><path d="M6 3.5h12v17l-6-3.8-6 3.8v-17Z"/></svg></span>
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--shadow-loom"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="13" rx="1.5"/><path d="M10.5 13.5c-2 0-2.6-2.4-1-3.4-.6-2 .4-4 1.4-4 .5 0 .7 1.6.3 3 1.3-1.6 2.3-2.2 2.6-1.6.3.8-1.1 2.1-1.8 2.6 1.5.3 2 1.5 1.6 2.8Z" fill="currentColor" stroke="none"/><path d="M12 19.5v1.5"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></span>
-                        <a class="card-title" href="shadow-loom.html" id="shadow-loom-name">Shadow Loom</a>
-                    </div>
-                    <p class="card-desc" id="shadow-loom-desc">Move paper cut-outs hung at different depths — and the lamp — until their scattered shadows weave into a living shape.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="shadow-loom-tag">Shadow Puzzle</span>
-                        <a class="play-btn" href="shadow-loom.html" id="shadow-loom-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- 2D Minecraft -->
-            <article class="game-card" onclick="location.href='https://2d-minecraft.orangely.xyz'">                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--minecraft"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20L16 9"/><path d="M10 4a10 10 0 0 1 10 10"/><path d="M10 4l3.2 3.2M20 14l-3.2-3.2"/></svg></span>
-                        <a class="card-title" href="https://2d-minecraft.orangely.xyz" id="minecraft-name">2D Minecraft</a>
-                    </div>
-                    <p class="card-desc" id="minecraft-desc">A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="minecraft-tag">Sandbox</span>
-                        <a class="play-btn" href="https://2d-minecraft.orangely.xyz" id="minecraft-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Dots and Boxes -->
-            <article class="game-card" onclick="location.href='https://dots-and-boxes.orangely.xyz'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--dots"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h12M6 6v12"/><circle cx="6" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="18" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="6" cy="18" r="1.6" fill="currentColor" stroke="none"/><circle cx="18" cy="18" r="1.6" fill="currentColor" stroke="none"/></svg></span>
-                        <a class="card-title" href="https://dots-and-boxes.orangely.xyz" id="dots-name">Dots and Boxes</a>
-                    </div>
-                    <p class="card-desc" id="dots-desc">Take turns drawing lines between dots. Complete a box to score a point and go again. Outsmart your opponent!</p>
-                    <div class="card-footer">
-                        <span class="tag" id="dots-tag">Multiplayer</span>
-                        <a class="play-btn" href="https://dots-and-boxes.orangely.xyz" id="dots-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- The Stack -->
-            <article class="game-card" onclick="location.href='https://steady-hand.orangely.xyz'">
-                <div class="card-body">
-                    <div class="card-header">
-                        <span class="card-icon card-icon--stack"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h14"/><path d="M7 12h14"/><path d="M3 17h10"/></svg></span>
-                        <a class="card-title" href="https://steady-hand.orangely.xyz" id="stack-name">The Stack</a>
-                    </div>
-                    <p class="card-desc" id="stack-desc">Pick-up sticks, digitized. Lift each stick without disturbing the pile — thirty sticks, three lives, one steady hand.</p>
-                    <div class="card-footer">
-                        <span class="tag" id="stack-tag">Puzzle</span>
-                        <a class="play-btn" href="https://steady-hand.orangely.xyz" id="stack-play">Play ›</a>
-                    </div>
-                </div>
-            </article>
-
+            <!-- registry:begin home-cards -->
+<article class="game-card" data-game-id="math-rain" data-dark-only="1" onclick="location.href='math-rain.html'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--math"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#math-rain"></use></svg></span><a class="card-title" href="math-rain.html" id="math-rain-name">Math Rain</a></div><p class="card-desc" id="math-rain-desc">Catch falling equations before they hit the ground. Practice arithmetic under pressure.</p><div class="card-footer"><span class="tag" id="math-rain-tag">Educational</span><a class="play-btn" href="math-rain.html" id="math-rain-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="tetris" onclick="location.href='tetris.html'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--tetris"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#tetris"></use></svg></span><a class="card-title" href="tetris.html" id="tetris-name">Tetris</a></div><p class="card-desc" id="tetris-desc">Modern Tetris with SRS rotation, combo system, multiple themes, and global high scores.</p><div class="card-footer"><span class="tag" id="tetris-tag">Classic</span><a class="play-btn" href="tetris.html" id="tetris-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="tank-battle" data-dark-only="1" onclick="location.href='tank-battle.html'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--tank"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#tank-battle"></use></svg></span><a class="card-title" href="tank-battle.html" id="tank-name">Tank Battle</a></div><p class="card-desc" id="tank-desc">Retro arcade tank shooter. Defend your base, blast enemies, and survive wave after wave.</p><div class="card-footer"><span class="tag" id="tank-tag">Arcade</span><a class="play-btn" href="tank-battle.html" id="tank-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="gomoku" onclick="location.href='gomoku.html'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--gomoku"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#gomoku"></use></svg></span><a class="card-title" href="gomoku.html" id="gomoku-name">Gomoku</a></div><p class="card-desc" id="gomoku-desc">Five in a Row. Challenge the AI or play with a friend on the classic strategy board.</p><div class="card-footer"><span class="tag" id="gomoku-tag">Strategy</span><a class="play-btn" href="gomoku.html" id="gomoku-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="planet-merge" data-dark-only="1" onclick="location.href='planet-merge.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--planet"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#planet-merge"></use></svg></span><a class="card-title" href="planet-merge.html" id="planet-merge-name">Planet Merge</a></div><p class="card-desc" id="planet-merge-desc">Drop planets, merge identical ones, chain combos and forge a sun. Daily challenge with a global leaderboard.</p><div class="card-footer"><span class="tag" id="planet-merge-tag">Casual</span><a class="play-btn" href="planet-merge.html" id="planet-merge-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="word-daily" onclick="location.href='word-daily.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--word"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#word-daily"></use></svg></span><a class="card-title" href="word-daily.html" id="word-daily-name">Word Daily</a></div><p class="card-desc" id="word-daily-desc">One puzzle a day for the whole world — guess the English word or the Chinese idiom in 6 tries. Keep your streak!</p><div class="card-footer"><span class="tag" id="word-daily-tag">Daily</span><a class="play-btn" href="word-daily.html" id="word-daily-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="hoop-shot" onclick="location.href='hoop-shot.html'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--hoop"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#hoop-shot"></use></svg></span><a class="card-title" href="hoop-shot.html" id="hoop-shot-name">Hoop Shot</a></div><p class="card-desc" id="hoop-shot-desc">Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!</p><div class="card-footer"><span class="tag" id="hoop-shot-tag">Sports</span><a class="play-btn" href="hoop-shot.html" id="hoop-shot-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="minesweeper" onclick="location.href='minesweeper.html'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--mines"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#minesweeper"></use></svg></span><a class="card-title" href="minesweeper.html" id="minesweeper-name">Minesweeper</a></div><p class="card-desc" id="minesweeper-desc">The classic logic puzzle. Safe first click, chording, three difficulties, global fastest clears.</p><div class="card-footer"><span class="tag" id="minesweeper-tag">Puzzle</span><a class="play-btn" href="minesweeper.html" id="minesweeper-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="reversi" onclick="location.href='reversi.html'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--reversi"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#reversi"></use></svg></span><a class="card-title" href="reversi.html" id="reversi-name">Reversi</a></div><p class="card-desc" id="reversi-desc">Classic Othello strategy. Outsmart a tuned AI on three levels or pass-and-play with a friend.</p><div class="card-footer"><span class="tag" id="reversi-tag">Strategy</span><a class="play-btn" href="reversi.html" id="reversi-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="tower-defense" data-dark-only="1" onclick="location.href='tower-defense.html'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--td"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#tower-defense"></use></svg></span><a class="card-title" href="tower-defense.html" id="td-name">Neon TD</a></div><p class="card-desc" id="td-desc">Defend the energy core with four tower types across six future-city operations and 15–40 escalating waves.</p><div class="card-footer"><span class="tag" id="td-tag">Strategy</span><a class="play-btn" href="tower-defense.html" id="td-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="gravity-slingshot" data-dark-only="1" onclick="location.href='gravity-slingshot.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--gravity"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#gravity-slingshot"></use></svg></span><a class="card-title" href="gravity-slingshot.html" id="gravity-name">Gravity Slingshot</a></div><p class="card-desc" id="gravity-desc">Original orbital physics — slingshot your probe around planets into the wormhole. 20 holes plus a daily course.</p><div class="card-footer"><span class="tag" id="gravity-tag">Physics</span><a class="play-btn" href="gravity-slingshot.html" id="gravity-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="needle-awn" data-dark-only="1" onclick="location.href='needle-awn.html'"><span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--needle"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#needle-awn"></use></svg></span><a class="card-title" href="needle-awn.html" id="needle-awn-name">Pinpoint Clash</a></div><p class="card-desc" id="needle-awn-desc">Clash tip-to-tip, switch stances, freeze time, and counter with pinpoint martial precision.</p><div class="card-footer"><span class="tag" id="needle-awn-tag">Action</span><a class="play-btn" href="needle-awn.html" id="needle-awn-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="sword-flight" data-dark-only="1" onclick="location.href='sword-flight.html'"><span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--sword"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#sword-flight"></use></svg></span><a class="card-title" href="sword-flight.html" id="sword-flight-name">Sword Flight</a></div><p class="card-desc" id="sword-flight-desc">Ride a flying sword through celestial rings, cleave crags, summon sword arrays, and ascend.</p><div class="card-footer"><span class="tag" id="sword-flight-tag">Action</span><a class="play-btn" href="sword-flight.html" id="sword-flight-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="lumen" data-dark-only="1" onclick="location.href='lumen.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--lumen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#lumen"></use></svg></span><a class="card-title" href="lumen.html" id="lumen-name">Lumen</a></div><p class="card-desc" id="lumen-desc">Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle.</p><div class="card-footer"><span class="tag" id="lumen-tag">Puzzle</span><a class="play-btn" href="lumen.html" id="lumen-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="circuit" onclick="location.href='circuit.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--circuit"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#circuit"></use></svg></span><a class="card-title" href="circuit.html" id="circuit-name">Circuit</a></div><p class="card-desc" id="circuit-desc">Flip switches, route the current, light every bulb — and dodge the short circuit. 20 levels plus a daily puzzle.</p><div class="card-footer"><span class="tag" id="circuit-tag">Puzzle</span><a class="play-btn" href="circuit.html" id="circuit-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="silk-dew" onclick="location.href='silk-dew.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--silk-dew"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#silk-dew"></use></svg></span><a class="card-title" href="silk-dew.html" id="silk-dew-name">Silkfall</a></div><p class="card-desc" id="silk-dew-desc">Thread a silk line, guide the dew pearl past thorns and gales, and drop it into the jade vessel. 20 levels + daily.</p><div class="card-footer"><span class="tag" id="silk-dew-tag">Physics</span><a class="play-btn" href="silk-dew.html" id="silk-dew-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="bond-forge" onclick="location.href='bond-forge.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--bond-forge"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#bond-forge"></use></svg></span><a class="card-title" href="bond-forge.html" id="bond-forge-name">Bond Forge</a></div><p class="card-desc" id="bond-forge-desc">Build target molecules by dragging atoms into bonds and satisfying every valence shell. 20 levels + daily.</p><div class="card-footer"><span class="tag" id="bond-forge-tag">Chemistry</span><a class="play-btn" href="bond-forge.html" id="bond-forge-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="echo-cave" data-dark-only="1" onclick="location.href='echo-cave.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--echo-cave"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#echo-cave"></use></svg></span><a class="card-title" href="echo-cave.html" id="echo-cave-name">Echo Cave</a></div><p class="card-desc" id="echo-cave-desc">Navigate a dark cave by reading echoes, collecting singing crystals, and finding the moonlit exit. 20 caves + daily.</p><div class="card-footer"><span class="tag" id="echo-cave-tag">Physics</span><a class="play-btn" href="echo-cave.html" id="echo-cave-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="maxwell-demon" onclick="location.href='maxwell-demon.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--maxwell-demon"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#maxwell-demon"></use></svg></span><a class="card-title" href="maxwell-demon.html" id="maxwell-demon-name">Maxwell's Demon</a></div><p class="card-desc" id="maxwell-demon-desc">Sort fast and slow molecules through one tiny door until a temperature gap appears. 20 vessels + daily.</p><div class="card-footer"><span class="tag" id="maxwell-demon-tag">Physics</span><a class="play-btn" href="maxwell-demon.html" id="maxwell-demon-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="crystal-bloom" onclick="location.href='crystal-bloom.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--crystal-bloom"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#crystal-bloom"></use></svg></span><a class="card-title" href="crystal-bloom.html" id="crystal-bloom-name">Crystal Bloom</a></div><p class="card-desc" id="crystal-bloom-desc">Draw a cooling curve: quench for dendrites, cool gently for facets. 20 crystallization vessels + daily.</p><div class="card-footer"><span class="tag" id="crystal-bloom-tag">Crystallization</span><a class="play-btn" href="crystal-bloom.html" id="crystal-bloom-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="flame-verse" data-dark-only="1" onclick="location.href='flame-verse.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--flame-verse"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#flame-verse"></use></svg></span><a class="card-title" href="flame-verse.html" id="flame-verse-name">Flame Verse</a></div><p class="card-desc" id="flame-verse-desc">Read each salt's emission-line barcode to identify the element and its dose. 20 samples + daily.</p><div class="card-footer"><span class="tag" id="flame-verse-tag">Spectroscopy</span><a class="play-btn" href="flame-verse.html" id="flame-verse-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="ripple-duet" onclick="location.href='ripple-duet.html'"><span class="card-badge card-badge--daily" data-tooltip="Daily" aria-label="Daily" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--ripple-duet"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#ripple-duet"></use></svg></span><a class="card-title" href="ripple-duet.html" id="ripple-duet-name">Ripple Duet</a></div><p class="card-desc" id="ripple-duet-desc">Move two wave sources and tune phase to cancel waves here and reinforce them there. 20 puzzles + daily.</p><div class="card-footer"><span class="tag" id="ripple-duet-tag">Interference</span><a class="play-btn" href="ripple-duet.html" id="ripple-duet-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="carrot-pull" onclick="location.href='carrot-pull.html'"><span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--carrot-pull"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#carrot-pull"></use></svg></span><a class="card-title" href="carrot-pull.html" id="carrot-pull-name">Carrot Pull</a></div><p class="card-desc" id="carrot-pull-desc">Find the sweet spot, pull in rhythm, and help a tiny mole harvest six giant carrots before time runs out.</p><div class="card-footer"><span class="tag" id="carrot-pull-tag">Casual</span><a class="play-btn" href="carrot-pull.html" id="carrot-pull-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="firefly-signal" data-dark-only="1" onclick="location.href='firefly-signal.html'"><span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--firefly-signal"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#firefly-signal"></use></svg></span><a class="card-title" href="firefly-signal.html" id="firefly-signal-name">Firefly Signal</a></div><p class="card-desc" id="firefly-signal-desc">Every firefly blinks alone. Nudge a few and watch whole meadows fall into step until the field lights up as one.</p><div class="card-footer"><span class="tag" id="firefly-signal-tag">Synchrony</span><a class="play-btn" href="firefly-signal.html" id="firefly-signal-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="shadow-loom" data-dark-only="1" onclick="location.href='shadow-loom.html'"><span class="card-badge card-badge--new" data-tooltip="New" aria-label="New" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span><div class="card-body"><div class="card-header"><span class="card-icon card-icon--shadow-loom"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#shadow-loom"></use></svg></span><a class="card-title" href="shadow-loom.html" id="shadow-loom-name">Shadow Loom</a></div><p class="card-desc" id="shadow-loom-desc">Move paper cut-outs hung at different depths — and the lamp — until their scattered shadows weave into a living shape.</p><div class="card-footer"><span class="tag" id="shadow-loom-tag">Shadow Puzzle</span><a class="play-btn" href="shadow-loom.html" id="shadow-loom-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="minecraft" data-external="1" onclick="location.href='https://2d-minecraft.orangely.xyz'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--minecraft"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#minecraft"></use></svg></span><a class="card-title" href="https://2d-minecraft.orangely.xyz" id="minecraft-name">2D Minecraft</a></div><p class="card-desc" id="minecraft-desc">A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.</p><div class="card-footer"><span class="tag" id="minecraft-tag">Sandbox</span><a class="play-btn" href="https://2d-minecraft.orangely.xyz" id="minecraft-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="dots" data-external="1" onclick="location.href='https://dots-and-boxes.orangely.xyz'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--dots"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#dots"></use></svg></span><a class="card-title" href="https://dots-and-boxes.orangely.xyz" id="dots-name">Dots and Boxes</a></div><p class="card-desc" id="dots-desc">Take turns drawing lines between dots. Complete a box to score a point and go again. Outsmart your opponent!</p><div class="card-footer"><span class="tag" id="dots-tag">Multiplayer</span><a class="play-btn" href="https://dots-and-boxes.orangely.xyz" id="dots-play">Play ›</a></div></div></article>
+<article class="game-card" data-game-id="stack" data-external="1" onclick="location.href='https://steady-hand.orangely.xyz'"><div class="card-body"><div class="card-header"><span class="card-icon card-icon--stack"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#stack"></use></svg></span><a class="card-title" href="https://steady-hand.orangely.xyz" id="stack-name">The Stack</a></div><p class="card-desc" id="stack-desc">Pick-up sticks, digitized. Lift each stick without disturbing the pile — thirty sticks, three lives, one steady hand.</p><div class="card-footer"><span class="tag" id="stack-tag">Puzzle</span><a class="play-btn" href="https://steady-hand.orangely.xyz" id="stack-play">Play ›</a></div></div></article>
+            <!-- registry:end home-cards -->
         </div>
     </section>
 
@@ -533,22 +127,22 @@
         <div class="perk">
             <div class="perk-icon">⚡</div>
             <div>
-                <div class="perk-title" id="perk1-title">Instant play</div>
-                <p class="perk-body" id="perk1-body">Single-file builds load fast and cache well. No install, no login.</p>
+                <div class="perk-title" id="perk1-title" data-i18n="perk1Title">Instant play</div>
+                <p class="perk-body" id="perk1-body" data-i18n="perk1Body">Single-file builds load fast and cache well. No install, no login.</p>
             </div>
         </div>
         <div class="perk">
             <div class="perk-icon">📱</div>
             <div>
-                <div class="perk-title" id="perk2-title">Keyboard &amp; touch</div>
-                <p class="perk-body" id="perk2-body">Every game is tuned for laptop keyboards and mobile touch controls.</p>
+                <div class="perk-title" id="perk2-title" data-i18n="perk2Title">Keyboard &amp; touch</div>
+                <p class="perk-body" id="perk2-body" data-i18n="perk2Body">Every game is tuned for laptop keyboards and mobile touch controls.</p>
             </div>
         </div>
         <div class="perk">
             <div class="perk-icon">🌐</div>
             <div>
-                <div class="perk-title" id="perk3-title">Bilingual</div>
-                <p class="perk-body" id="perk3-body">English and Chinese — auto-detected from your browser language.</p>
+                <div class="perk-title" id="perk3-title" data-i18n="perk3Title">Bilingual</div>
+                <p class="perk-body" id="perk3-body" data-i18n="perk3Body">English and Chinese — auto-detected from your browser language.</p>
             </div>
         </div>
     </aside>
@@ -560,13 +154,13 @@
     <footer class="game-footer">
         <p id="footer-text">© 2026 orangely.xyz</p>
         <div class="game-footer-actions">
-            <button type="button" class="lang-toggle" id="footer-lang-toggle" title="Language" aria-label="Language">中文</button>
+            <button type="button" class="lang-toggle" id="footer-lang-toggle" title="Language" aria-label="Language" data-i18n="langToggle">中文</button>
             <!-- 主题三档（全站唯一写 site_theme 的地方，见 docs/contracts/theme.md）。
                  首页声明支持浅色之前保持 hidden，由 js/index-page.js 按 theme-support 显现。 -->
-            <div class="theme-switch" id="theme-switch" role="group" aria-label="Theme" hidden>
-                <button type="button" class="theme-switch-btn" data-theme-pref="dark" aria-pressed="true">Dark</button>
-                <button type="button" class="theme-switch-btn" data-theme-pref="light" aria-pressed="false">Light</button>
-                <button type="button" class="theme-switch-btn" data-theme-pref="system" aria-pressed="false">System</button>
+            <div class="theme-switch" id="theme-switch" role="group" aria-label="Theme" data-i18n-label="themeLabel" hidden>
+                <button type="button" class="theme-switch-btn" data-theme-pref="dark" aria-pressed="true" data-i18n="themeDark">Dark</button>
+                <button type="button" class="theme-switch-btn" data-theme-pref="light" aria-pressed="false" data-i18n="themeLight">Light</button>
+                <button type="button" class="theme-switch-btn" data-theme-pref="system" aria-pressed="false" data-i18n="themeSystem">System</button>
             </div>
         </div>
     </footer>

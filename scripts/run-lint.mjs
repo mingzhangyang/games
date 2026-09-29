@@ -37,7 +37,7 @@ if (existsSync(STYLELINT_BIN)) {
 // css/index.css 带着 3 处 #34d399 进了仓库（P3-4 收敛只扫 css/，那时它们还在
 // index.html 的内联 <style> 里；P4-1 抽离后才落进 CSS 树，再没人复扫）。
 // 这里把它变成机器约束。--fix 档顺带真的替换掉。
-const TOKEN_SWAP = join(ROOT, 'scripts', 'p3-token-swap.mjs');
+const TOKEN_SWAP = join(ROOT, 'tools', 'checks', 'token-swap.mjs');
 if (existsSync(TOKEN_SWAP)) {
     steps.push({ name: 'token-swap', args: FIX ? [TOKEN_SWAP] : [TOKEN_SWAP, '--check'] });
 }

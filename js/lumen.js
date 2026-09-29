@@ -22,16 +22,14 @@ import {
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { updateMoreGames, renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
+import { updateMoreGames } from './more-games.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── 常量 ────────────────────────── */
@@ -1096,39 +1094,23 @@ class LumenGame {
 /* ────────────────────────── boot ────────────────────────── */
 
 onReady(() => {
-    const game = new LumenGame();
-    window.lmGame = game; // 调试/测试句柄（AUGMENT startLevel 启动点）
+    window.lmGame = new LumenGame();
 
-    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell，变化后驱动 resize()
-    bindFrame({ logicalWidth: W });
-
-    // 桌面侧栏「更多游戏」卡（语言切换由 more-games.js 的全局 updateMoreGames 自动同步）
-    const lmSideMore = document.getElementById('lmSideMore');
-    if (lmSideMore) renderMoreGames(lmSideMore, { exclude: 'lumen.html' });
-
-    // 移动端底部统计抽屉
-    window.lmDrawer = createStatsDrawer({
-        idPrefix: 'lm',
-        getGame: () => window.lmGame,
-        onPause: (g) => g && g.pauseQuiet(),
-        onResume: (g) => g && g.resumeQuiet(),
-        isBusy: () => {
-            const g = window.lmGame;
-            return !!g && typeof g.isRunning === 'function' && g.isRunning();
-        },
-        ICONS,
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-    });
-    if (window.lmDrawer) window.lmDrawer.init();
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   owns 默认只含 more：静音钮在本页有自己的 handler（要同步开始界面的
-   静音钮与音效实例），Home 是页面自己绑的 button（与 gravity 同款）。 */
-onReady(() => {
-    bindChrome({
+    window.lmRuntime = mountGameRuntime({
         self: 'lumen.html',
-        owns: ['more'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        game: window.lmGame,
+        frame: { logicalWidth: W },
+        more: '#lmSideMore',
+        drawer: {
+            idPrefix: 'lm',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.lmGame && typeof window.lmGame.isRunning === 'function' && window.lmGame.isRunning()),
+            ICONS,
+            getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        },
+        chrome: { owns: ['more'], getText: () => LANGUAGES[getLang()] || LANGUAGES.en },
     });
+
+    window.lmDrawer = window.lmRuntime.drawer;
 });

@@ -5,7 +5,172 @@
     "scoresWorker": "https://game-scores.orangely.workers.dev",
     "siteName": "Mini Games Collection",
     "publisher": "Orangely",
-    "ogImageDir": "assets/seo"
+    "ogImageDir": "assets/seo",
+    "home": {
+      "ui": {
+        "pageTitle": {
+          "en": "Mini Games Collection",
+          "zh": "单页游戏合集"
+        },
+        "mainTitle": {
+          "en": "Mini Games Collection",
+          "zh": "单页游戏合集"
+        },
+        "mainDesc": {
+          "en": "Play instantly · No downloads · No accounts · No ads",
+          "zh": "即点即玩 · 无需下载 · 无需注册 · 无广告"
+        },
+        "sectionLabel": {
+          "en": "Choose a game",
+          "zh": "选择游戏"
+        },
+        "hubTitle": {
+          "en": "⚡ Daily Challenges",
+          "zh": "⚡ 今日挑战"
+        },
+        "hubTaskWordSub": {
+          "en": "Guess the word in 6 tries",
+          "zh": "6 次机会猜出今天的词语"
+        },
+        "hubTaskMergeSub": {
+          "en": "Daily challenge — chase the high score",
+          "zh": "每日固定序列，冲击高分"
+        },
+        "hubTaskGravitySub": {
+          "en": "Daily course — 5 holes, fewest launches",
+          "zh": "每日赛程 5 洞，杆数越少越强"
+        },
+        "hubProfileHint": {
+          "en": "Leaderboard name",
+          "zh": "全站排行榜昵称"
+        },
+        "hubProfilePlaceholder": {
+          "en": "Your name",
+          "zh": "你的昵称"
+        },
+        "langToggle": {
+          "en": "中文",
+          "zh": "English"
+        },
+        "themeLabel": {
+          "en": "Theme",
+          "zh": "主题"
+        },
+        "themeDark": {
+          "en": "Dark",
+          "zh": "深色"
+        },
+        "themeLight": {
+          "en": "Light",
+          "zh": "浅色"
+        },
+        "themeSystem": {
+          "en": "System",
+          "zh": "跟随系统"
+        },
+        "darkOnly": {
+          "en": "Dark only",
+          "zh": "仅深色"
+        },
+        "darkOnlyTitle": {
+          "en": "This game is designed for dark mode and always opens dark",
+          "zh": "这款游戏按深色设计，总是以深色打开"
+        },
+        "hubTotalPlayed": {
+          "en": "plays today",
+          "zh": "次今日对局"
+        },
+        "badgeDaily": {
+          "en": "Daily",
+          "zh": "今日挑战"
+        },
+        "badgeNew": {
+          "en": "New",
+          "zh": "新上线"
+        },
+        "perk1Title": {
+          "en": "Instant play",
+          "zh": "即点即玩"
+        },
+        "perk1Body": {
+          "en": "Single-file builds load fast and cache well. No install, no login.",
+          "zh": "单文件构建，加载迅速，无需安装，无需登录。"
+        },
+        "perk2Title": {
+          "en": "Keyboard & touch",
+          "zh": "键盘 & 触控"
+        },
+        "perk2Body": {
+          "en": "Every game is tuned for laptop keyboards and mobile touch controls.",
+          "zh": "每款游戏均为键盘和移动端触控精心优化。"
+        },
+        "perk3Title": {
+          "en": "Bilingual",
+          "zh": "双语支持"
+        },
+        "perk3Body": {
+          "en": "English and Chinese — auto-detected from your browser language.",
+          "zh": "英文与中文，根据浏览器语言自动切换。"
+        },
+        "play": {
+          "en": "Play ›",
+          "zh": "开始游戏 ›"
+        }
+      },
+      "externalGames": [
+        {
+          "id": "minecraft",
+          "url": "https://2d-minecraft.orangely.xyz",
+          "iconClass": "minecraft",
+          "name": {
+            "en": "2D Minecraft",
+            "zh": "2D 我的世界"
+          },
+          "desc": {
+            "en": "A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.",
+            "zh": "浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。"
+          },
+          "tag": {
+            "en": "Sandbox",
+            "zh": "沙盒游戏"
+          }
+        },
+        {
+          "id": "dots",
+          "url": "https://dots-and-boxes.orangely.xyz",
+          "iconClass": "dots",
+          "name": {
+            "en": "Dots and Boxes",
+            "zh": "点格棋"
+          },
+          "desc": {
+            "en": "Take turns drawing lines between dots. Complete a box to score a point and go again. Outsmart your opponent!",
+            "zh": "轮流在相邻的点之间画线，围成方格得分，得分后可再画一条线，最终方格多者获胜！"
+          },
+          "tag": {
+            "en": "Multiplayer",
+            "zh": "双人对战"
+          }
+        },
+        {
+          "id": "stack",
+          "url": "https://steady-hand.orangely.xyz",
+          "iconClass": "stack",
+          "name": {
+            "en": "The Stack",
+            "zh": "挑棒"
+          },
+          "desc": {
+            "en": "Pick-up sticks, digitized. Lift each stick without disturbing the pile — thirty sticks, three lives, one steady hand.",
+            "zh": "经典挑棒游戏的数字版。逐根挑起木棒，别碰动压在上面的那些——三十根木棒，三条命，全看你的手稳不稳。"
+          },
+          "tag": {
+            "en": "Puzzle",
+            "zh": "休闲益智"
+          }
+        }
+      ]
+    }
   },
   "games": [
     {
@@ -38,7 +203,18 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#0b1020"
+      "themeColor": "#0b1020",
+      "home": {
+        "iconClass": "math",
+        "desc": {
+          "en": "Catch falling equations before they hit the ground. Practice arithmetic under pressure.",
+          "zh": "在等式落地前答对它。在压力下练习算术运算。"
+        },
+        "tag": {
+          "en": "Educational",
+          "zh": "益智教育"
+        }
+      }
     },
     {
       "id": "tetris",
@@ -86,7 +262,18 @@
         "priority": "0.8"
       },
       "themeColor": "#667eea",
-      "themeColorLight": "#eef1f8"
+      "themeColorLight": "#eef1f8",
+      "home": {
+        "iconClass": "tetris",
+        "desc": {
+          "en": "Modern Tetris with SRS rotation, combo system, multiple themes, and global high scores.",
+          "zh": "现代俄罗斯方块，支持 SRS 旋转、连击系统、多种主题与全球排行榜。"
+        },
+        "tag": {
+          "en": "Classic",
+          "zh": "经典游戏"
+        }
+      }
     },
     {
       "id": "tank-battle",
@@ -119,7 +306,18 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#1a2f1a"
+      "themeColor": "#1a2f1a",
+      "home": {
+        "iconClass": "tank",
+        "desc": {
+          "en": "Retro arcade tank shooter. Defend your base, blast enemies, and survive wave after wave.",
+          "zh": "复古街机坦克射击。保卫基地，消灭敌人，坚持更多回合。"
+        },
+        "tag": {
+          "en": "Arcade",
+          "zh": "街机竞技"
+        }
+      }
     },
     {
       "id": "gomoku",
@@ -153,7 +351,18 @@
         "priority": "0.8"
       },
       "themeColor": "#151009",
-      "themeColorLight": "#eef1f6"
+      "themeColorLight": "#eef1f6",
+      "home": {
+        "iconClass": "gomoku",
+        "desc": {
+          "en": "Five in a Row. Challenge the AI or play with a friend on the classic strategy board.",
+          "zh": "五子连珠。与 AI 对决或和朋友在经典棋盘上一较高下。"
+        },
+        "tag": {
+          "en": "Strategy",
+          "zh": "策略棋牌"
+        }
+      }
     },
     {
       "id": "planet-merge",
@@ -204,7 +413,19 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#0a0e24"
+      "themeColor": "#0a0e24",
+      "home": {
+        "iconClass": "planet",
+        "desc": {
+          "en": "Drop planets, merge identical ones, chain combos and forge a sun. Daily challenge with a global leaderboard.",
+          "zh": "投放星球，相同合成，连锁 COMBO 造出太阳。每日挑战 + 全球排行榜，看你今天能冲多高！"
+        },
+        "tag": {
+          "en": "Casual",
+          "zh": "休闲爆款"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "word-daily",
@@ -243,7 +464,19 @@
         "shortcut": true
       },
       "themeColor": "#0a0e24",
-      "themeColorLight": "#f3f5fa"
+      "themeColorLight": "#f3f5fa",
+      "home": {
+        "iconClass": "word",
+        "desc": {
+          "en": "One puzzle a day for the whole world — guess the English word or the Chinese idiom in 6 tries. Keep your streak!",
+          "zh": "全球每天同一道题——英文单词或中文成语，6 次机会。连胜打卡，emoji 晒图，快来挑战！"
+        },
+        "tag": {
+          "en": "Daily",
+          "zh": "每日智力"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "hoop-shot",
@@ -295,7 +528,18 @@
         "shortcut": true
       },
       "themeColor": "#0a0e24",
-      "themeColorLight": "#f4eee6"
+      "themeColorLight": "#f4eee6",
+      "home": {
+        "iconClass": "hoop",
+        "desc": {
+          "en": "Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!",
+          "zh": "一指甩投，一球定胜负！连中 3 球点燃火球模式分数翻倍，冲击全球前 10！"
+        },
+        "tag": {
+          "en": "Sports",
+          "zh": "运动街机"
+        }
+      }
     },
     {
       "id": "minesweeper",
@@ -341,7 +585,18 @@
         "priority": "0.8"
       },
       "themeColor": "#0a0e24",
-      "themeColorLight": "#f3f5fa"
+      "themeColorLight": "#f3f5fa",
+      "home": {
+        "iconClass": "mines",
+        "desc": {
+          "en": "The classic logic puzzle. Safe first click, chording, three difficulties, global fastest clears.",
+          "zh": "经典逻辑推理。首次点击必安全，支持快开与插旗，三档难度，冲击全球最快榜！"
+        },
+        "tag": {
+          "en": "Puzzle",
+          "zh": "益智经典"
+        }
+      }
     },
     {
       "id": "reversi",
@@ -383,7 +638,18 @@
         "priority": "0.8"
       },
       "themeColor": "#0a0e24",
-      "themeColorLight": "#f3f5fa"
+      "themeColorLight": "#f3f5fa",
+      "home": {
+        "iconClass": "reversi",
+        "desc": {
+          "en": "Classic Othello strategy. Outsmart a tuned AI on three levels or pass-and-play with a friend.",
+          "zh": "经典奥赛罗策略棋。三档 AI 随你挑战，也可与好友双人同屏，冲击全球连胜榜！"
+        },
+        "tag": {
+          "en": "Strategy",
+          "zh": "策略棋牌"
+        }
+      }
     },
     {
       "id": "tower-defense",
@@ -427,7 +693,18 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#0a0e24"
+      "themeColor": "#0a0e24",
+      "home": {
+        "iconClass": "td",
+        "desc": {
+          "en": "Defend the energy core with four tower types across six future-city operations and 15–40 escalating waves.",
+          "zh": "在六个未来城市作战行动中布置四类防御塔，守住能源核心，迎战 15–40 波升级攻势。"
+        },
+        "tag": {
+          "en": "Strategy",
+          "zh": "策略塔防"
+        }
+      }
     },
     {
       "id": "gravity-slingshot",
@@ -477,7 +754,19 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#0a0e24"
+      "themeColor": "#0a0e24",
+      "home": {
+        "iconClass": "gravity",
+        "desc": {
+          "en": "Original orbital physics — slingshot your probe around planets into the wormhole. 20 holes plus a daily course.",
+          "zh": "原创轨道物理——拖拽弹弓发射探测器，借行星引力甩尾进虫洞。20 个手工洞口 + 每日赛程！"
+        },
+        "tag": {
+          "en": "Physics",
+          "zh": "物理弹道"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "needle-awn",
@@ -531,7 +820,19 @@
         "changefreq": "weekly",
         "priority": "0.9"
       },
-      "themeColor": "#030712"
+      "themeColor": "#030712",
+      "home": {
+        "iconClass": "needle",
+        "desc": {
+          "en": "Clash tip-to-tip, switch stances, freeze time, and counter with pinpoint martial precision.",
+          "zh": "针尖对麦芒，双姿态切换、冻结时间，以毫厘精度完成极限弹反。"
+        },
+        "tag": {
+          "en": "Action",
+          "zh": "硬核动作"
+        },
+        "badge": "new"
+      }
     },
     {
       "id": "sword-flight",
@@ -585,7 +886,19 @@
         "changefreq": "weekly",
         "priority": "0.9"
       },
-      "themeColor": "#030816"
+      "themeColor": "#030816",
+      "home": {
+        "iconClass": "sword",
+        "desc": {
+          "en": "Ride a flying sword through celestial rings, cleave crags, summon sword arrays, and ascend.",
+          "zh": "踏剑穿越仙环与云海，斩开山岩，召出剑阵，一路破境飞升。"
+        },
+        "tag": {
+          "en": "Action",
+          "zh": "国风仙侠"
+        },
+        "badge": "new"
+      }
     },
     {
       "id": "lumen",
@@ -635,7 +948,19 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#070b22"
+      "themeColor": "#070b22",
+      "home": {
+        "iconClass": "lumen",
+        "desc": {
+          "en": "Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle.",
+          "zh": "翻转镜面，偏折光束，点亮全部水晶。20 关手工关卡 + 每日谜题，用最少翻转通关！"
+        },
+        "tag": {
+          "en": "Puzzle",
+          "zh": "光路解谜"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "circuit",
@@ -687,7 +1012,19 @@
         "priority": "0.8"
       },
       "themeColor": "#0a1230",
-      "themeColorLight": "#f3f7fd"
+      "themeColorLight": "#f3f7fd",
+      "home": {
+        "iconClass": "circuit",
+        "desc": {
+          "en": "Flip switches, route the current, light every bulb — and dodge the short circuit. 20 levels plus a daily puzzle.",
+          "zh": "拨动开关，接通电流，点亮全部目标灯泡——小心短路！20 关手工关卡 + 每日谜题。"
+        },
+        "tag": {
+          "en": "Puzzle",
+          "zh": "电路解谜"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "silk-dew",
@@ -739,7 +1076,19 @@
         "priority": "0.8"
       },
       "themeColor": "#0a1712",
-      "themeColorLight": "#eaf6f0"
+      "themeColorLight": "#eaf6f0",
+      "home": {
+        "iconClass": "silk-dew",
+        "desc": {
+          "en": "Thread a silk line, guide the dew pearl past thorns and gales, and drop it into the jade vessel. 20 levels + daily.",
+          "zh": "牵引丝线，带露珠穿过荆棘与气旋，落入玉壶。20 关 + 每日挑战。"
+        },
+        "tag": {
+          "en": "Physics",
+          "zh": "绳物理"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "bond-forge",
@@ -791,7 +1140,19 @@
         "priority": "0.8"
       },
       "themeColor": "#0d1024",
-      "themeColorLight": "#f4f6fb"
+      "themeColorLight": "#f4f6fb",
+      "home": {
+        "iconClass": "bond-forge",
+        "desc": {
+          "en": "Build target molecules by dragging atoms into bonds and satisfying every valence shell. 20 levels + daily.",
+          "zh": "拖动原子成键，填满价键并拼出目标分子。20 关 + 每日挑战。"
+        },
+        "tag": {
+          "en": "Chemistry",
+          "zh": "化学"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "echo-cave",
@@ -841,7 +1202,19 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#050810"
+      "themeColor": "#050810",
+      "home": {
+        "iconClass": "echo-cave",
+        "desc": {
+          "en": "Navigate a dark cave by reading echoes, collecting singing crystals, and finding the moonlit exit. 20 caves + daily.",
+          "zh": "在黑暗洞窟中读回声、收集声晶并找到月光出口。20 关 + 每日挑战。"
+        },
+        "tag": {
+          "en": "Physics",
+          "zh": "声学"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "maxwell-demon",
@@ -893,7 +1266,19 @@
         "priority": "0.8"
       },
       "themeColor": "#070a18",
-      "themeColorLight": "#eef3f5"
+      "themeColorLight": "#eef3f5",
+      "home": {
+        "iconClass": "maxwell-demon",
+        "desc": {
+          "en": "Sort fast and slow molecules through one tiny door until a temperature gap appears. 20 vessels + daily.",
+          "zh": "通过一扇小门分拣快慢分子，直到两侧出现温差。20 个容器 + 每日挑战。"
+        },
+        "tag": {
+          "en": "Physics",
+          "zh": "热力学"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "crystal-bloom",
@@ -945,7 +1330,19 @@
         "priority": "0.8"
       },
       "themeColor": "#070a18",
-      "themeColorLight": "#eef3f5"
+      "themeColorLight": "#eef3f5",
+      "home": {
+        "iconClass": "crystal-bloom",
+        "desc": {
+          "en": "Draw a cooling curve: quench for dendrites, cool gently for facets. 20 crystallization vessels + daily.",
+          "zh": "画出降温曲线：急冷长枝晶，缓冷推晶面。20 个结晶皿 + 每日挑战。"
+        },
+        "tag": {
+          "en": "Crystallization",
+          "zh": "结晶"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "flame-verse",
@@ -995,7 +1392,19 @@
         "changefreq": "daily",
         "priority": "0.8"
       },
-      "themeColor": "#0c0612"
+      "themeColor": "#0c0612",
+      "home": {
+        "iconClass": "flame-verse",
+        "desc": {
+          "en": "Read each salt's emission-line barcode to identify the element and its dose. 20 samples + daily.",
+          "zh": "读取盐样的发射谱线条码，判断元素与含量。20 份样品 + 每日挑战。"
+        },
+        "tag": {
+          "en": "Spectroscopy",
+          "zh": "光谱"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "ripple-duet",
@@ -1047,7 +1456,19 @@
         "priority": "0.8"
       },
       "themeColor": "#041826",
-      "themeColorLight": "#eef3f5"
+      "themeColorLight": "#eef3f5",
+      "home": {
+        "iconClass": "ripple-duet",
+        "desc": {
+          "en": "Move two wave sources and tune phase to cancel waves here and reinforce them there. 20 puzzles + daily.",
+          "zh": "移动两个波源并调节相位，让这里相消、那里相长。20 个干涉谜题 + 每日挑战。"
+        },
+        "tag": {
+          "en": "Interference",
+          "zh": "干涉"
+        },
+        "badge": "daily"
+      }
     },
     {
       "id": "carrot-pull",
@@ -1089,7 +1510,19 @@
         "priority": "0.8"
       },
       "themeColor": "#173c3e",
-      "themeColorLight": "#f4efe1"
+      "themeColorLight": "#f4efe1",
+      "home": {
+        "iconClass": "carrot-pull",
+        "desc": {
+          "en": "Find the sweet spot, pull in rhythm, and help a tiny mole harvest six giant carrots before time runs out.",
+          "zh": "看准绿色甜蜜区，跟着节奏用力拔，和小鼹鼠一起在时间结束前收获 6 根大萝卜。"
+        },
+        "tag": {
+          "en": "Casual",
+          "zh": "休闲街机"
+        },
+        "badge": "new"
+      }
     },
     {
       "id": "firefly-signal",
@@ -1123,7 +1556,19 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#060b1a"
+      "themeColor": "#060b1a",
+      "home": {
+        "iconClass": "firefly-signal",
+        "desc": {
+          "en": "Every firefly blinks alone. Nudge a few and watch whole meadows fall into step until the field lights up as one.",
+          "zh": "每只萤火虫都各闪各的。轻轻推动几只，看一片片草地渐渐合拍，直到整片原野同时亮起。"
+        },
+        "tag": {
+          "en": "Synchrony",
+          "zh": "同步谜题"
+        },
+        "badge": "new"
+      }
     },
     {
       "id": "shadow-loom",
@@ -1162,7 +1607,20 @@
         "changefreq": "monthly",
         "priority": "0.8"
       },
-      "themeColor": "#0d1226"
+      "themeColor": "#0d1226",
+      "home": {
+        "iconClass": "shadow-loom",
+        "desc": {
+          "en": "Move paper cut-outs hung at different depths — and the lamp — until their scattered shadows weave into a living shape.",
+          "zh": "移动悬在不同深度的剪纸和那盏灯，让散乱的影子慢慢重合，织成一个会动的生命。"
+        },
+        "tag": {
+          "en": "Shadow Puzzle",
+          "zh": "纸影解谜"
+        },
+        "badge": "new"
+      }
     }
-  ]
+  ],
+  "$schema": "./games.schema.json"
 }

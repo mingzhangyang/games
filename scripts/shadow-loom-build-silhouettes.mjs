@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SILHOUETTE_DIR = path.join(ROOT, 'assets/shadow-loom/layers/silhouettes');
 const MANIFEST_FILE = path.join(SILHOUETTE_DIR, 'manifest.json');
-const OUTPUT_FILE = path.join(ROOT, 'js/shadow-loom-silhouettes.js');
+const OUTPUT_FILE = path.join(ROOT, 'src/generated/shadow-loom/silhouettes.js');
 const VIEWBOX = '0 0 480 854';
 const COORDINATE_SYSTEM = 'shadow-loom-stage-480x854';
 const CHECK = process.argv.includes('--check');
@@ -319,11 +319,11 @@ const generated = build();
 if (CHECK) {
     const current = fs.readFileSync(OUTPUT_FILE, 'utf8');
     if (current !== generated) {
-        console.error('✗ js/shadow-loom-silhouettes.js 与 SVG 来源不一致，请运行 npm run build:shadow-loom-silhouettes');
+        console.error('✗ src/generated/shadow-loom/silhouettes.js 与 SVG 来源不一致，请运行 npm run build:shadow-loom-silhouettes');
         process.exit(1);
     }
     console.log('✓ shadow-loom silhouettes: SVG 与 runtime 同步');
 } else {
     fs.writeFileSync(OUTPUT_FILE, generated);
-    console.log('✓ wrote js/shadow-loom-silhouettes.js');
+    console.log('✓ wrote src/generated/shadow-loom/silhouettes.js');
 }

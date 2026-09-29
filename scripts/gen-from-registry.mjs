@@ -61,6 +61,66 @@ function applyRegion(src, name, content, installer, style = 'js') {
     return { src: installed, state: 'written' };
 }
 
+// ---------- 首页卡片 + 懒加载中文 ----------
+const HOME_DOM_ALIAS = { 'tank-battle': 'tank', 'tower-defense': 'td', 'gravity-slingshot': 'gravity' };
+const homeDomPrefix = id => HOME_DOM_ALIAS[id] || id;
+const jsq = s => `'${String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r/g, '\\r').replace(/\n/g, '\\n')}'`;
+
+function homeCardLine(g, external = false) {
+    const id = g.id;
+    const href = external ? g.url : g.href;
+    const name = external ? g.name : g.name;
+    const home = external ? g : g.home;
+    const prefix = external ? id : homeDomPrefix(id);
+    const darkOnly = !external && !(g.caps || []).includes('theme-light');
+    const badge = home.badge;
+    const badgeHtml = badge
+        ? `<span class="card-badge card-badge--${badge}" data-tooltip="${badge === 'daily' ? 'Daily' : 'New'}" aria-label="${badge === 'daily' ? 'Daily' : 'New'}" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span>`
+        : '';
+    return `<article class="game-card" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''} onclick="location.href='${esc(href)}'">${badgeHtml}<div class="card-body"><div class="card-header"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><a class="card-title" href="${esc(href)}" id="${prefix}-name">${esc(name.en)}</a></div><p class="card-desc" id="${prefix}-desc">${esc(home.desc.en)}</p><div class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span><a class="play-btn" href="${esc(href)}" id="${prefix}-play">${esc(SITE.home.ui.play.en)}</a></div></div></article>`;
+}
+
+function homeCardsContent() {
+    const local = GAMES.map(g => homeCardLine(g));
+    const external = (SITE.home.externalGames || []).map(g => homeCardLine(g, true));
+    return [...local, ...external].join('\n');
+}
+
+function homeCardsTransform(src) {
+    return applyRegion(src, 'home-cards', homeCardsContent(), (s, body) => {
+        const start = s.indexOf('            <!-- Math Rain -->');
+        const end = s.indexOf('\n        </div>\n    </section>\n\n    <!-- Perks -->', start);
+        if (start < 0 || end < 0) return null;
+        return s.slice(0, start)
+            + `            <!-- registry:begin home-cards -->\n${body}\n            <!-- registry:end home-cards -->`
+            + s.slice(end);
+    }, 'html');
+}
+
+function homeZhMap() {
+    const out = new Map();
+    for (const [key, value] of Object.entries(SITE.home.ui)) out.set(key, value.zh);
+    for (const g of GAMES) {
+        out.set(`${g.id}.name`, g.name.zh);
+        out.set(`${g.id}.desc`, g.home.desc.zh);
+        out.set(`${g.id}.tag`, g.home.tag.zh);
+    }
+    for (const g of SITE.home.externalGames || []) {
+        out.set(`${g.id}.name`, g.name.zh);
+        out.set(`${g.id}.desc`, g.desc.zh);
+        out.set(`${g.id}.tag`, g.tag.zh);
+    }
+    return out;
+}
+
+function homeZhContent() {
+    return `export default new Map([\n${[...homeZhMap()].map(([k, v]) => `    [${jsq(k)}, ${jsq(v)}],`).join('\n')}\n]);`;
+}
+
+function homeZhTransform(src) {
+    return applyRegion(src, 'home-i18n-zh', homeZhContent(), null);
+}
+
 // ---------- 每页 <head> 生成 ----------
 function headBlock(g) {
     const u = `${ORIGIN}/${g.href}`;
@@ -316,9 +376,11 @@ for (const g of GAMES) {
         s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c), 'html'),
     ]);
 }
+processFile('index.html', [homeCardsTransform]);
+processFile('js/index-i18n-zh.js', [homeZhTransform]);
 processFile('public/sitemap.xml', [sitemapTransform]);
 processFile('public/manifest.json', [manifestTransform]);
-processFile('js/more-games.js', [moreGamesTransform]);
+processFile('src/platform/more-games.js', [moreGamesTransform]);
 processFile('vite.config.js', [viteTransform]);
 processFile('Workers/game-scores.js', [scoresTransform]);
 processFile('Workers/games-analytics.js', [analyticsTransform]);

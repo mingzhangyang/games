@@ -1,0 +1,353 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://games.orangely.xyz/games.schema.json",
+  "title": "Mini Games Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "site",
+    "games"
+  ],
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "$schema": {
+      "const": "./games.schema.json"
+    },
+    "site": {
+      "type": "object",
+      "required": [
+        "origin",
+        "siteName",
+        "publisher"
+      ],
+      "properties": {
+        "origin": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "siteName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scoresWorker": {
+          "type": "string"
+        },
+        "analyticsWorker": {
+          "type": "string"
+        },
+        "ogImageDir": {
+          "type": "string"
+        },
+        "home": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "games": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "prefix",
+          "href",
+          "entry",
+          "emoji",
+          "title",
+          "name",
+          "desc",
+          "genre",
+          "caps",
+          "sitemap",
+          "themeColor",
+          "home"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "prefix": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*$"
+          },
+          "href": {
+            "type": "string",
+            "pattern": "^[^/]+\\.html$"
+          },
+          "entry": {
+            "type": "string",
+            "pattern": "\\.js$"
+          },
+          "emoji": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "$ref": "#/$defs/title"
+          },
+          "name": {
+            "$ref": "#/$defs/bilingual"
+          },
+          "desc": {
+            "$ref": "#/$defs/descriptions"
+          },
+          "genre": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "caps": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "sidebar",
+                "drawer",
+                "frame-budget",
+                "leaderboard",
+                "daily",
+                "analytics",
+                "topbar",
+                "theme-light"
+              ]
+            }
+          },
+          "layout": {
+            "enum": [
+              "standard",
+              "immersive"
+            ]
+          },
+          "i18nVar": {
+            "type": "string",
+            "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"
+          },
+          "scores": {
+            "$ref": "#/$defs/scores"
+          },
+          "stage": {
+            "$ref": "#/$defs/stage"
+          },
+          "sitemap": {
+            "$ref": "#/$defs/sitemap"
+          },
+          "themeColor": {
+            "$ref": "#/$defs/hexColor"
+          },
+          "themeColorLight": {
+            "$ref": "#/$defs/hexColor"
+          },
+          "home": {
+            "$ref": "#/$defs/home"
+          },
+          "manifest": {
+            "type": "object",
+            "properties": {
+              "shortcut": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "$defs": {
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "bilingual": {
+      "type": "object",
+      "required": [
+        "en",
+        "zh"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zh": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "title": {
+      "type": "object",
+      "required": [
+        "doc",
+        "seo"
+      ],
+      "properties": {
+        "doc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seo": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "descriptions": {
+      "type": "object",
+      "required": [
+        "meta"
+      ],
+      "properties": {
+        "meta": {
+          "type": "string",
+          "minLength": 1
+        },
+        "og": {
+          "type": "string",
+          "minLength": 1
+        },
+        "twitter": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "stage": {
+      "type": "object",
+      "required": [
+        "w",
+        "h"
+      ],
+      "properties": {
+        "w": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "h": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "scores": {
+      "type": "object",
+      "required": [
+        "order",
+        "maxScore",
+        "maxEntries"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keys": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "order": {
+          "enum": [
+            "asc",
+            "desc"
+          ]
+        },
+        "maxScore": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxEntries": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "daily": {
+          "type": "boolean"
+        },
+        "dailyKeyPrefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dailyTtlDays": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "sitemap": {
+      "type": "object",
+      "required": [
+        "changefreq",
+        "priority"
+      ],
+      "properties": {
+        "changefreq": {
+          "enum": [
+            "always",
+            "hourly",
+            "daily",
+            "weekly",
+            "monthly",
+            "yearly",
+            "never"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "pattern": "^(?:0(?:\\.\\d)?|1(?:\\.0)?)$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "home": {
+      "type": "object",
+      "required": [
+        "iconClass",
+        "desc",
+        "tag"
+      ],
+      "properties": {
+        "iconClass": {
+          "type": "string",
+          "minLength": 1
+        },
+        "desc": {
+          "$ref": "#/$defs/bilingual"
+        },
+        "tag": {
+          "$ref": "#/$defs/bilingual"
+        },
+        "badge": {
+          "enum": [
+            "daily",
+            "new"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

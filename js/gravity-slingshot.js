@@ -19,7 +19,7 @@ import { updateMoreGames, renderMoreGames } from './more-games.js';
 import { createStatsDrawer } from './game-drawer.js';
 import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
-import { storageGet, storageSet } from './safe-storage.js';
+import { storageGet, storageSet, storageKeys, storageRemove } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey as todayCompact, mulberry32, hashStringFNV as hashStr } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
@@ -400,15 +400,8 @@ function buildDailyCourse() {
     }
     storageSet('gd_course_' + date, JSON.stringify(holes));
     // 清理往日赛程缓存（纯缓存非战绩，可安全删除）
-    try {
-        const stale = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith('gd_course_') && k !== 'gd_course_' + date) stale.push(k);
-        }
-        for (const k of stale) localStorage.removeItem(k);
-    } catch (e) {
-        // 存储不可用时跳过清理
+    for (const key of storageKeys('gd_course_')) {
+        if (key !== 'gd_course_' + date) storageRemove(key);
     }
     return holes;
 }

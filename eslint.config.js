@@ -7,10 +7,10 @@
 //       拿不准的先 warn 观察，避免首跑百行噪音淹没真问题。
 export default [
     {
-        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js', 'js/shadow-loom-silhouettes.js'],
+        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js', 'src/generated/**'],
     },
     {
-        files: ['js/**/*.js'],
+        files: ['js/**/*.js', 'src/platform/**/*.js', 'src/games/**/*.js'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',
@@ -92,7 +92,7 @@ export default [
         },
     },
     {
-        files: ['scripts/**/*.mjs'],
+        files: ['scripts/**/*.mjs', 'tests/**/*.mjs'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',

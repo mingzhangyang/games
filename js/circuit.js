@@ -28,16 +28,14 @@ import {
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { updateMoreGames, renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
+import { updateMoreGames } from './more-games.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 import { bindPalette } from './theme.js';
 
@@ -1278,38 +1276,23 @@ function initStatesLocal(spec) {
 
 onReady(() => {
     P = bindPalette(CANVAS_VARS, { onChange: () => window.ccGame && window.ccGame.draw() });
-    const game = new CircuitGame();
-    window.ccGame = game; // 调试/测试句柄（AUGMENT startLevel 启动点）
+    window.ccGame = new CircuitGame();
 
-    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell，变化后驱动 resize()
-    bindFrame({ logicalWidth: W });
-
-    // 桌面侧栏「更多游戏」卡（语言切换由 more-games.js 的全局 updateMoreGames 自动同步）
-    const ccSideMore = document.getElementById('ccSideMore');
-    if (ccSideMore) renderMoreGames(ccSideMore, { exclude: 'circuit.html' });
-
-    // 移动端底部统计抽屉
-    window.ccDrawer = createStatsDrawer({
-        idPrefix: 'cc',
-        getGame: () => window.ccGame,
-        onPause: (g) => g && g.pauseQuiet(),
-        onResume: (g) => g && g.resumeQuiet(),
-        isBusy: () => {
-            const g = window.ccGame;
-            return !!g && typeof g.isRunning === 'function' && g.isRunning();
-        },
-        ICONS,
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-    });
-    if (window.ccDrawer) window.ccDrawer.init();
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   owns 默认只含 more：静音钮在本页有自己的 handler，Home 是页面自己绑的 button。 */
-onReady(() => {
-    bindChrome({
+    window.ccRuntime = mountGameRuntime({
         self: 'circuit.html',
-        owns: ['more'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        game: window.ccGame,
+        frame: { logicalWidth: W },
+        more: '#ccSideMore',
+        drawer: {
+            idPrefix: 'cc',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.ccGame && typeof window.ccGame.isRunning === 'function' && window.ccGame.isRunning()),
+            ICONS,
+            getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        },
+        chrome: { owns: ['more'], getText: () => LANGUAGES[getLang()] || LANGUAGES.en },
     });
+
+    window.ccDrawer = window.ccRuntime.drawer;
 });
