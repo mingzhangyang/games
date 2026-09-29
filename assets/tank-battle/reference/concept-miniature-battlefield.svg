@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#2b4334"/>
+  <path d="M0 0h800v30H0zM0 570h800v30H0zM0 0h30v600H0zM770 0h30v600H770z" fill="#263239"/>
+  <g fill="#8b5a47" stroke="#d19a71" stroke-width="3"><rect x="250" y="180" width="80" height="20" rx="3"/><rect x="470" y="300" width="20" height="100" rx="3"/></g>
+  <g fill="#45585b" stroke="#b8c5bd" stroke-width="3"><rect x="370" y="230" width="60" height="20" rx="3"/><rect x="560" y="150" width="20" height="80" rx="3"/></g>
+  <g transform="translate(145 440) scale(1.5)"><use href="#playerTank"/></g>
+  <g id="playerTank"><rect x="-10" y="-14" width="20" height="28" rx="4" fill="#286b56" stroke="#c5e5d1" stroke-width="2"/><circle r="7" fill="#3b896c" stroke="#b9f4d2" stroke-width="1.5"/><path d="M-2-7h4v-13h-4z" fill="#1a2e2a"/></g>
+  <g transform="translate(630 120)"><rect x="-10" y="-14" width="20" height="28" rx="4" fill="#8c493f" stroke="#efb39c" stroke-width="2"/><circle r="7" fill="#963f3f" stroke="#f0b19b"/></g>
+</svg>
