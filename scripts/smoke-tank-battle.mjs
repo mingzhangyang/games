@@ -55,6 +55,8 @@ for (const testCase of cases) {
             noLegacyPhone: !document.querySelector('.phone-frame, .phone-screen'),
             orientationArt: !!document.querySelector('.rotate-device-illustration[src*="rotate-device.svg"]'),
             hud: !!document.getElementById('gameInfo'),
+            weaponIconAtlas: document.getElementById('weaponHudIcon')?.dataset.tbWeaponIcon === 'atlas'
+                && document.getElementById('vWeaponIcon')?.dataset.tbWeaponIcon === 'atlas',
             virtualControllerVisible: (() => {
                 const el = document.getElementById('virtualController');
                 return el ? getComputedStyle(el).display !== 'none' : false;
@@ -75,12 +77,130 @@ for (const testCase of cases) {
     if (snap.artState !== 'ready' || !snap.loaderReady) fail(testCase.name + ': production art state is ' + snap.artState);
     if (!snap.noLegacyPhone || !snap.orientationArt) fail(testCase.name + ': authored orientation art is not wired');
     if (!snap.hud) fail(testCase.name + ': HUD is missing');
+    if (!snap.weaponIconAtlas) fail(testCase.name + ': weapon icon atlas is not visible');
     if (testCase.isMobile && (!snap.dpadHitArea || !snap.fireHitArea)) fail(testCase.name + ': virtual-controller hit area shrank');
     if (testCase.isMobile && !snap.virtualControllerVisible) fail(testCase.name + ': virtual controller is hidden');
     if (!testCase.isMobile && snap.virtualControllerVisible) fail(testCase.name + ': desktop virtual controller is visible');
     if (!snap.bodyFlex) fail(testCase.name + ': body flex centering was lost');
     if (!snap.layoutVarApplied) fail(testCase.name + ': layout.css variable is missing');
     if (snap.pixels.length !== 4 || snap.pixels.every(value => value === 0)) fail(testCase.name + ': canvas appears blank');
+
+    const gameplay = await page.evaluate(() => {
+        const game = window.tankBattleInstance;
+        if (!game) return { error: 'instance missing' };
+
+        const result = {};
+        const makeBullet = y => ({
+            x: 100,
+            y,
+            width: 4,
+            height: 4,
+            direction: 2,
+            speed: 6,
+            isPlayer: true,
+            update(dt) {
+                this.y += this.speed * dt;
+                return true;
+            },
+        });
+
+        game.gameState = 'playing';
+        game.paused = true;
+        game.enemies = [];
+        game.powerUps = [];
+        game.bullets = [];
+        result.authoredSprites = [
+            'tanks.player', 'tanks.enemy', 'tanks.boss',
+            'powerups.health', 'ui.minimapFrame', 'ui.weaponIcons'
+        ].every(key => game.art.has(key));
+        result.spriteHitbox = game.player.width === 30 && game.player.height === 30;
+
+        game.walls = [{ x: 100, y: 100, width: 20, height: 20, destructible: true, type: 'brick' }];
+        game.bullets = [makeBullet(96)];
+        game.updateBullets(1);
+        result.brickCollision = game.walls.length === 0 && game.bullets.length === 0;
+
+        game.walls = [{ x: 100, y: 100, width: 20, height: 20, destructible: false, type: 'steel' }];
+        game.bullets = [makeBullet(96)];
+        const particlesBeforeSteel = game.particles.length;
+        game.updateBullets(1);
+        result.steelCollision = game.walls.length === 1
+            && game.bullets.length === 0
+            && game.particles.length > particlesBeforeSteel;
+
+        game.walls = [];
+        game.score = 0;
+        game.player.health = game.player.maxHealth - 1;
+        const pickup = {
+            x: game.player.x,
+            y: game.player.y,
+            width: 20,
+            height: 20,
+            type: 'health',
+            collected: false,
+            update() {},
+            getColor() { return '#ff4444'; },
+        };
+        game.powerUps = [pickup];
+        game.updatePowerUps(1);
+        result.pickupCollision = game.powerUps.length === 0
+            && game.player.health === game.player.maxHealth
+            && game.score === 50;
+
+        game.level = 5;
+        game.createEnemies();
+        result.enemyAndBoss = game.enemies.length >= 3 && game.enemies.some(enemy => enemy.isBoss);
+        game.enemies = [];
+
+        game.switchWeapon(1);
+        result.weaponSwitch = game.currentWeaponIndex === 1
+            && game.player.weapon?.nameKey === 'weapons.rapid'
+            && document.getElementById('weaponHudIcon')?.dataset.tbWeaponIcon === 'atlas';
+
+        game.paused = false;
+        game.togglePause();
+        result.pause = game.paused === true;
+        game.togglePause();
+
+        game.renderMiniMap();
+        const beforeMap = new Uint8ClampedArray(game.miniMapCtx.getImageData(0, 0, 120, 90).data);
+        const originalX = game.player.x;
+        game.player.x = originalX + 100;
+        game.renderMiniMap();
+        const afterMap = game.miniMapCtx.getImageData(0, 0, 120, 90).data;
+        result.minimap = beforeMap.some((value, index) => value !== afterMap[index]);
+        game.player.x = originalX;
+
+        game.gameState = 'playing';
+        game.lives = 1;
+        game.player.health = 1;
+        game.player.invulnerable = 0;
+        game.bullets = [{ x: game.player.x, y: game.player.y, width: 4, height: 4, isPlayer: false }];
+        game.checkCollisions();
+        result.gameOver = game.gameState === 'gameOver';
+
+        game.gameState = 'playing';
+        game.level = 10;
+        game.enemies = [];
+        game.checkWinCondition();
+        result.victory = game.gameState === 'victory';
+
+        game.gameState = 'playing';
+        game.paused = true;
+        game.bullets = [];
+        game.powerUps = [];
+        game.enemies = [];
+        game.walls = [];
+        game.render();
+        return result;
+    });
+    for (const check of [
+        'authoredSprites', 'spriteHitbox', 'brickCollision', 'steelCollision',
+        'pickupCollision', 'enemyAndBoss', 'weaponSwitch', 'pause', 'minimap',
+        'gameOver', 'victory'
+    ]) {
+        if (!gameplay[check]) fail(testCase.name + ': gameplay integration check failed: ' + check);
+    }
 
     await page.close();
 }
