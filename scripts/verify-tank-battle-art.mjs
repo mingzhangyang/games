@@ -92,6 +92,8 @@ for (const needle of [
     'powerUp.render(this.ctx, this.art)',
     'this.player.render(this.ctx, this.art)',
     'this.renderDebugHitboxes()',
+    'this.art.drawMiniMapFrame(this.miniMapCtx, 120, 90)',
+    'this.updateWeaponIcons()',
     'debug-hitbox',
     ' BOSS'
 ]) {
@@ -109,12 +111,17 @@ if (!html.includes('data-tb-art-state="loading"')) fail('HTML must expose the ar
 if (!html.includes('rotate-device.svg') || html.includes('class="phone-frame"')) fail('authored orientation art is not wired');
 if (!css.includes("background-image: url('../assets/tank-battle/ui/minimap-frame.svg')")) fail('minimap frame asset is not wired');
 if (!css.includes('.rotate-device-illustration')) fail('orientation illustration styling is missing');
+if (!html.includes('id="weaponHudIcon"') || !html.includes('id="vWeaponIcon"')) fail('weapon atlas targets are missing');
+if (!art.includes('setWeaponIcon(element, index)')) fail('weapon icon atlas is not wired to a renderer');
 if (!smoke.includes('844') || !smoke.includes('932') || !smoke.includes('production art state')) fail('smoke does not cover both landscape phone sizes and art readiness');
 
 if (!verifyAll.includes("{ name: 'tank-battle-art', script: 'scripts/verify-tank-battle-art.mjs', args: [], needsServer: false }")) {
     fail('verify-all is missing tank-battle-art');
 }
-if (!verifyAll.includes("'tank-battle-art'")) fail('tank-battle-art is not included in QUICK_NAMES');
+const quickNames = verifyAll.match(/const QUICK_NAMES = \[(.*?)\];/s)?.[1] || '';
+if (!quickNames.split(',').some(token => token.trim().replace(/^['\"]|['\"]$/g, '') === 'tank-battle-art')) {
+    fail('tank-battle-art is not included in QUICK_NAMES');
+}
 
 if (failures.length) {
     console.error(failures.map(item => '✗ ' + item).join('\n'));
