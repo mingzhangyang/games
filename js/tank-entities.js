@@ -84,7 +84,8 @@ export class PowerUp {
         this.time += 0.1 * dt;
     }
 
-    render(ctx) {
+    render(ctx, art) {
+        if (art?.drawPowerUp?.(ctx, this)) return;
         const bobY = this.y + Math.sin(this.time + this.bobOffset) * 2;
 
         ctx.save();
@@ -633,7 +634,7 @@ export class Tank {
         return this.health <= 0;
     }
 
-    render(ctx) {
+    render(ctx, art) {
         ctx.save();
 
         // 无敌闪烁效果
@@ -650,11 +651,14 @@ export class Tank {
             ctx.stroke();
         }
 
-        ctx.translate(this.x + this.width/2, this.y + this.height/2);
-        ctx.rotate(this.direction * Math.PI / 2);
+        const productionSprite = art?.drawTank?.(ctx, this);
+        if (!productionSprite) {
+            ctx.translate(this.x + this.width/2, this.y + this.height/2);
+            ctx.rotate(this.direction * Math.PI / 2);
 
-        // 绘制更逼真的坦克
-        this.drawDetailedTank(ctx);
+            // Procedural drawing remains the playable fallback.
+            this.drawDetailedTank(ctx);
+        }
 
         ctx.restore();
 
