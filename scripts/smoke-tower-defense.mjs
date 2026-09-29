@@ -42,6 +42,19 @@ check(boot.map.buildableCount >= 190, '运行时 active map 保留 ≥190 个可
 check(!boot.legacyDrawer, '不存在旧 stats drawer / tdDrawer');
 check(requestFailures.length === 0, '启动阶段无资源请求失败', requestFailures.join(' | '));
 
+const menuNavControls = await page.evaluate(() => ({
+    startFooterHomeCount: document.querySelectorAll('#td-start .td-start-footer a[href="index.html"], #td-start .td-start-footer [data-chrome="home"]').length,
+    startFooterSoundCount: document.querySelectorAll('#td-start #td-start-mute').length,
+    persistentFooterHomeCount: document.querySelectorAll('.td-footer [data-chrome="home"]').length,
+}));
+check(
+    menuNavControls.startFooterHomeCount === 0
+        && menuNavControls.startFooterSoundCount === 1
+        && menuNavControls.persistentFooterHomeCount === 1,
+    '开始菜单不重复渲染 Home，底部导航只保留一个 Home',
+    JSON.stringify(menuNavControls),
+);
+
 // Mobile landscape must keep the long start menu in normal document flow.
 // The immersive battlefield is fixed-height only after the player starts;
 // before that, the page needs to release clipping and allow a vertical swipe
