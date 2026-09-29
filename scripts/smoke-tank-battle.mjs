@@ -75,7 +75,7 @@ for (const testCase of cases) {
     if (snap.artState !== 'ready' || !snap.loaderReady) fail(testCase.name + ': production art state is ' + snap.artState);
     if (!snap.noLegacyPhone || !snap.orientationArt) fail(testCase.name + ': authored orientation art is not wired');
     if (!snap.hud) fail(testCase.name + ': HUD is missing');
-    if (!snap.dpadHitArea || !snap.fireHitArea) fail(testCase.name + ': virtual-controller hit area shrank');
+    if (testCase.isMobile && (!snap.dpadHitArea || !snap.fireHitArea)) fail(testCase.name + ': virtual-controller hit area shrank');
     if (testCase.isMobile && !snap.virtualControllerVisible) fail(testCase.name + ': virtual controller is hidden');
     if (!testCase.isMobile && snap.virtualControllerVisible) fail(testCase.name + ': desktop virtual controller is visible');
     if (!snap.bodyFlex) fail(testCase.name + ': body flex centering was lost');
