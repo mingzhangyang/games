@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "coordinateSpace": "800x600",
+  "budgetBytes": 2621440,
+  "assets": {
+    "terrain.ground": { "file": "terrain/ground.svg", "kind": "tile", "fallback": "procedural" },
+    "terrain.detail": { "file": "terrain/ground-detail.svg", "kind": "overlay", "fallback": "procedural" },
+    "terrain.border": { "file": "terrain/border.svg", "kind": "tile", "fallback": "procedural" },
+    "tiles.brick": { "file": "tiles/brick.svg", "kind": "tile", "fallback": "procedural" },
+    "tiles.steel": { "file": "tiles/steel.svg", "kind": "tile", "fallback": "procedural" },
+    "tiles.boundary": { "file": "tiles/boundary.svg", "kind": "tile", "fallback": "procedural" },
+    "tanks.player": { "file": "tanks/player.svg", "kind": "sprite", "fallback": "program" },
+    "tanks.enemy": { "file": "tanks/enemy.svg", "kind": "sprite", "fallback": "program" },
+    "tanks.boss": { "file": "tanks/boss.svg", "kind": "sprite", "fallback": "program" },
+    "powerups.health": { "file": "powerups/health.svg", "kind": "icon", "fallback": "program" },
+    "powerups.weapon": { "file": "powerups/weapon.svg", "kind": "icon", "fallback": "program" },
+    "powerups.shield": { "file": "powerups/shield.svg", "kind": "icon", "fallback": "program" },
+    "powerups.speed": { "file": "powerups/speed.svg", "kind": "icon", "fallback": "program" },
+    "ui.minimapFrame": { "file": "ui/minimap-frame.svg", "kind": "frame", "fallback": "css" },
+    "ui.weaponIcons": { "file": "ui/weapon-icons.svg", "kind": "atlas", "fallback": "program" },
+    "ui.rotateDevice": { "file": "ui/rotate-device.svg", "kind": "illustration", "fallback": "css" }
+  }
+}
