@@ -63,10 +63,10 @@ const LANGUAGES = {
         
         // 道具图标
         powerUpIcons: {
-            health: 'health',
-            weapon: 'weapon',
-            shield: 'shield',
-            speed: 'speed'
+            health: '+',
+            weapon: 'W',
+            shield: 'S',
+            speed: '»'
         }
     },
     en: {
@@ -113,10 +113,10 @@ const LANGUAGES = {
         
         // Power-up Icons
         powerUpIcons: {
-            health: 'health',
-            weapon: 'weapon',
-            shield: 'shield',
-            speed: 'speed'
+            health: '+',
+            weapon: 'W',
+            shield: 'S',
+            speed: '»'
         }
     }
 };
@@ -199,6 +199,7 @@ class TankBattle {
         this.miniMapCanvas = document.getElementById('miniMap');
         this.miniMapCtx = this.miniMapCanvas.getContext('2d');
         this.art = createTankBattleArt();
+        document.addEventListener('tank-battle-art-state', () => this.updateWeaponIcons());
         this.debugHitbox = new URLSearchParams(window.location.search).get('debug-hitbox') === '1';
         
         this.width = CONFIG.CANVAS_WIDTH;
@@ -941,6 +942,7 @@ class TankBattle {
         if (this.player) rect(this.player, '#d6c17b');
         this.enemies.forEach(enemy => rect(enemy, enemy.isBoss ? '#f3b36e' : '#f39b91'));
         this.bullets.forEach(bullet => rect(bullet, bullet.isPlayer ? '#b9f4d2' : '#f39b91'));
+        this.powerUps.forEach(powerUp => rect(powerUp, '#d6c17b'));
         ctx.restore();
     }
 
@@ -1080,6 +1082,9 @@ class TankBattle {
                 2, 2
             );
         });
+
+        // The canvas owns the minimap pixels, so the authored frame must be composited last.
+        this.art.drawMiniMapFrame(this.miniMapCtx, 120, 90);
     }
 
     renderGameOver() {
@@ -1144,6 +1149,12 @@ class TankBattle {
         if (vWeaponBadge) {
             vWeaponBadge.textContent = `${this.currentWeaponIndex + 1}`;
         }
+        this.updateWeaponIcons();
+    }
+
+    updateWeaponIcons() {
+        this.art.setWeaponIcon(document.getElementById('weaponHudIcon'), this.currentWeaponIndex);
+        this.art.setWeaponIcon(document.getElementById('vWeaponIcon'), this.currentWeaponIndex);
     }
 
     restart() {
