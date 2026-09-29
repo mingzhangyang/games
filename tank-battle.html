@@ -37,7 +37,7 @@
     <!-- P4-2 最小接骨架：main 语义 + sr-only h1（横屏掌机形态保持覆盖式 HUD，不套竖屏 topbar/sidebar） -->
     <main class="tb-main">
         <h1 class="sr-only">Tank Battle - 坦克大战</h1>
-    <div id="gameContainer">
+    <div id="gameContainer" data-tb-art-state="loading">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="gameUI">
             <button class="icon-btn tb-home-btn" onclick="location.href='index.html'" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
@@ -100,12 +100,7 @@
     <div id="orientationOverlay" class="orientation-overlay" aria-live="polite">
         <div class="orientation-modal">
             <div class="rotate-device-anim">
-                <div class="phone-frame">
-                    <div class="phone-screen"></div>
-                </div>
-                <div class="rotate-curve-arrow">
-                    <svg viewBox="0 0 36 36" width="38" height="38" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"><path d="M28 14 A 12 12 0 0 0 8 18"/><polyline points="28,8 28,14 22,14"/></svg>
-                </div>
+                <img class="rotate-device-illustration" src="assets/tank-battle/ui/rotate-device.svg" width="160" height="120" alt="" aria-hidden="true">
             </div>
             <h2 id="orientTitle">请旋转手机横屏游玩</h2>
             <p id="orientSub">专为横屏掌机体验深度优化</p>
