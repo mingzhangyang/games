@@ -265,7 +265,7 @@ for (const testCase of cases) {
         game.lives = 1;
         game.player.health = 1;
         game.player.invulnerable = 0;
-        game.bullets = [{ x: game.player.x, y: game.player.y, width: 4, height: 4, isPlayer: false }];
+        game.bullets = [{ x: game.player.x, y: game.player.y, width: 4, height: 4, damage: 1, isPlayer: false }];
         game.checkCollisions();
         result.gameOver = game.gameState === 'gameOver';
 
