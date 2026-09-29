@@ -1,10 +1,10 @@
-// tank-battle P4-2 冒烟：main/h1 语义 + 横屏布局未被 layout.css 破坏 + canvas 渲染
+// Tank Battle production-art smoke: landscape shell, art readiness, controls, and canvas render.
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8895';
 const fails = [];
-const fail = m => fails.push(m);
+const fail = message => fails.push(message);
 
 const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
@@ -12,65 +12,83 @@ const browser = await puppeteer.launch({
     args: [...LAUNCH_ARGS, '--auto-accept-this-tab-capture'],
 });
 
-const page = await browser.newPage();
-await page.setViewport({ width: 1280, height: 720 }); // 桌面横屏
-const errs = [];
-page.on('pageerror', e => errs.push(String(e.message || e).split('\n')[0]));
-await page.evaluateOnNewDocument(() => {
-    try { localStorage.setItem('site_lang', 'zh'); } catch (e) { /* ignore */ }
-});
-await page.goto(`${BASE}/tank-battle.html`, { waitUntil: 'networkidle0', timeout: 30000 });
-await new Promise(r => setTimeout(r, 800)); // 等游戏初始化
+const cases = [
+    { name: 'desktop', width: 1280, height: 720, isMobile: false, hasTouch: false },
+    { name: 'landscape-small', width: 844, height: 390, isMobile: true, hasTouch: true },
+    { name: 'landscape-wide', width: 932, height: 430, isMobile: true, hasTouch: true },
+];
 
-const snap = await page.evaluate(() => {
-    const cv = document.getElementById('gameCanvas');
-    const r = cv ? cv.getBoundingClientRect() : null;
-    const container = document.getElementById('gameContainer');
-    const cr = container ? container.getBoundingClientRect() : null;
-    return {
-        mainTag: !!document.querySelector('main.tb-main'),
-        h1: document.querySelector('h1.sr-only')?.textContent || '',
-        h1Hidden: (() => {
-            const el = document.querySelector('h1.sr-only');
-            if (!el) return false;
-            const rect = el.getBoundingClientRect();
-            return rect.width <= 2 && rect.height <= 2;
-        })(),
-        canvasSize: cv ? `${cv.width}x${cv.height}` : 'missing',
-        canvasVisible: r ? (r.width > 100 && r.height > 100) : false,
-        containerCentered: cr ? Math.abs((window.innerWidth - cr.width) / 2 - cr.left) < 60 : false,
-        hud: !!document.getElementById('gameInfo'),
-        virtualControllerHidden: (() => {
-            const vc = document.getElementById('virtualController');
-            return vc ? getComputedStyle(vc).display === 'none' : false;
-        })(),
-        layoutVarApplied: (() => {
-            // ⚠ 必须读 layout.css **独有**的变量。这里原本读的是 --tok-bg，
-            //   但那是 css/tokens.css 定义的，而 tank-battle 在接骨架之前就已经引了
-            //   tokens.css —— 把新加的 layout.css <link> 删掉，断言照样绿，
-            //   等于没测。--frame-max 只在 css/layout.css 的 :root 里定义。
-            return getComputedStyle(document.documentElement).getPropertyValue('--frame-max').trim() !== '';
-        })(),
-        bodyFlex: getComputedStyle(document.body).display === 'flex',
-    };
-});
+for (const testCase of cases) {
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: testCase.width,
+        height: testCase.height,
+        isMobile: testCase.isMobile,
+        hasTouch: testCase.hasTouch,
+    });
+    const errs = [];
+    page.on('pageerror', error => errs.push(String(error.message || error).split('\n')[0]));
+    await page.evaluateOnNewDocument(() => {
+        try { localStorage.setItem('site_lang', 'zh'); } catch { /* ignore */ }
+    });
+    await page.goto(BASE + '/tank-battle.html', { waitUntil: 'networkidle0', timeout: 30000 });
+    await new Promise(resolve => setTimeout(resolve, 900));
 
-if (errs.length) fail(`页面错误: ${errs.join(' | ')}`);
-if (!snap.mainTag) fail('缺 <main class="tb-main">');
-if (!snap.h1) fail('缺 h1.sr-only');
-if (!snap.h1Hidden) fail('h1 未被视觉隐藏');
-if (snap.canvasSize !== '800x600') fail(`canvas 尺寸异常: ${snap.canvasSize}`);
-if (!snap.canvasVisible) fail('canvas 不可见（布局被破坏？）');
-if (!snap.containerCentered) fail('游戏容器未居中（body flex 被破坏？）');
-if (!snap.hud) fail('缺 HUD (#gameInfo)');
-if (!snap.virtualControllerHidden) fail('桌面端虚拟手柄应为 display:none');
-if (!snap.layoutVarApplied) fail('--frame-max 未定义（css/layout.css 未生效）');
-if (!snap.bodyFlex) fail('body flex 居中被 layout.css 破坏');
+    const snap = await page.evaluate(() => {
+        const canvas = document.getElementById('gameCanvas');
+        const rect = canvas?.getBoundingClientRect();
+        const container = document.getElementById('gameContainer');
+        const containerRect = container?.getBoundingClientRect();
+        const instance = window.tankBattleInstance;
+        const dpad = document.getElementById('dpad')?.getBoundingClientRect();
+        const fire = document.getElementById('btnFire')?.getBoundingClientRect();
+        const pixels = canvas?.getContext('2d')?.getImageData(2, 2, 1, 1).data || [];
+        return {
+            mainTag: !!document.querySelector('main.tb-main'),
+            h1: document.querySelector('h1.sr-only')?.textContent || '',
+            canvasSize: canvas ? canvas.width + 'x' + canvas.height : 'missing',
+            canvasVisible: !!rect && rect.width > 100 && rect.height > 100,
+            containerCentered: !!containerRect
+                && Math.abs((window.innerWidth - containerRect.width) / 2 - containerRect.left) < 60,
+            artState: container?.dataset.tbArtState || 'missing',
+            loaderReady: instance?.art?.ready === true,
+            noLegacyPhone: !document.querySelector('.phone-frame, .phone-screen'),
+            orientationArt: !!document.querySelector('.rotate-device-illustration[src*="rotate-device.svg"]'),
+            hud: !!document.getElementById('gameInfo'),
+            virtualControllerVisible: (() => {
+                const el = document.getElementById('virtualController');
+                return el ? getComputedStyle(el).display !== 'none' : false;
+            })(),
+            dpadHitArea: !!dpad && dpad.width >= 100 && dpad.height >= 100,
+            fireHitArea: !!fire && fire.width >= 60 && fire.height >= 60,
+            pixels: [...pixels],
+            bodyFlex: getComputedStyle(document.body).display === 'flex',
+            layoutVarApplied: getComputedStyle(document.documentElement)
+                .getPropertyValue('--frame-max').trim() !== '',
+        };
+    });
+
+    if (errs.length) fail(testCase.name + ': page errors: ' + errs.join(' | '));
+    if (snap.canvasSize !== '800x600') fail(testCase.name + ': canvas size ' + snap.canvasSize);
+    if (!snap.canvasVisible) fail(testCase.name + ': canvas is not visible');
+    if (!snap.containerCentered) fail(testCase.name + ': game container is not centered');
+    if (snap.artState !== 'ready' || !snap.loaderReady) fail(testCase.name + ': production art state is ' + snap.artState);
+    if (!snap.noLegacyPhone || !snap.orientationArt) fail(testCase.name + ': authored orientation art is not wired');
+    if (!snap.hud) fail(testCase.name + ': HUD is missing');
+    if (!snap.dpadHitArea || !snap.fireHitArea) fail(testCase.name + ': virtual-controller hit area shrank');
+    if (testCase.isMobile && !snap.virtualControllerVisible) fail(testCase.name + ': virtual controller is hidden');
+    if (!testCase.isMobile && snap.virtualControllerVisible) fail(testCase.name + ': desktop virtual controller is visible');
+    if (!snap.bodyFlex) fail(testCase.name + ': body flex centering was lost');
+    if (!snap.layoutVarApplied) fail(testCase.name + ': layout.css variable is missing');
+    if (snap.pixels.length !== 4 || snap.pixels.every(value => value === 0)) fail(testCase.name + ': canvas appears blank');
+
+    await page.close();
+}
 
 await browser.close();
 if (fails.length) {
     console.error('✗ smoke-tank-battle');
-    for (const f of fails) console.error(`  - ${f}`);
+    for (const message of fails) console.error('  - ' + message);
     process.exit(1);
 }
-console.log('smoke-tank-battle：main/h1 语义 + 横屏布局 + canvas/HUD 全部通过 ✅');
+console.log('smoke-tank-battle：production art + desktop/landscape controls + canvas 全部通过 ✅');
