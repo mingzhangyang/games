@@ -131,6 +131,24 @@ body {
 /* HUD 图标基线对齐 */
 .tb-hud-ico { vertical-align: -2px; }
 
+.tb-weapon-icon {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    vertical-align: -3px;
+    background-repeat: no-repeat;
+    background-size: 60px 15px;
+}
+
+.tb-weapon-icon[data-tb-weapon-icon="fallback"]::before {
+    content: '•';
+    display: block;
+    color: currentcolor;
+    font-size: 15px;
+    line-height: 15px;
+    text-align: center;
+}
+
 .overlay {
     position: absolute;
     top: 0;
