@@ -3,6 +3,7 @@ import { getLang } from './site-settings.js';
 import { createSfx } from './game-sfx.js';
 import { track } from './analytics.js';
 import { CONFIG, WEAPONS, Particle, PowerUp, Bullet, Tank, BossTank, bindTankI18n } from './tank-entities.js';
+import { createTankBattleArt } from './tank-battle-art.js';
 
 // 音效：射击/爆炸/受伤/道具/胜负
 const sfx = createSfx({
@@ -59,13 +60,14 @@ const LANGUAGES = {
         fire: '开火',
         pauseTitle: '暂停/继续',
         weaponTitle: '切换武器',
+        orientationFallbackLabel: '横屏',
         
         // 道具图标
         powerUpIcons: {
-            health: '❤',
-            weapon: '🔫',
-            shield: '🛡',
-            speed: '⚡'
+            health: '+',
+            weapon: 'W',
+            shield: 'S',
+            speed: '»'
         }
     },
     en: {
@@ -109,13 +111,14 @@ const LANGUAGES = {
         fire: 'FIRE',
         pauseTitle: 'Pause / Resume',
         weaponTitle: 'Switch Weapon',
+        orientationFallbackLabel: 'Landscape',
         
         // Power-up Icons
         powerUpIcons: {
-            health: '❤',
-            weapon: '🔫',
-            shield: '🛡',
-            speed: '⚡'
+            health: '+',
+            weapon: 'W',
+            shield: 'S',
+            speed: '»'
         }
     }
 };
@@ -123,6 +126,20 @@ const LANGUAGES = {
 // 触控设备检测辅助
 function isTouchDevice() {
     return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+}
+
+function bindOrientationArtFallback() {
+    const illustration = document.querySelector('.rotate-device-illustration');
+    const fallback = document.querySelector('.rotate-device-fallback');
+    if (!illustration || !fallback) return;
+
+    const showFallback = () => {
+        illustration.hidden = true;
+        fallback.hidden = false;
+    };
+
+    illustration.addEventListener('error', showFallback, { once: true });
+    if (illustration.complete && illustration.naturalWidth === 0) showFallback();
 }
 
 // 隐私模式/禁用存储时 localStorage 会抛 SecurityError，必须兜底，
@@ -166,6 +183,7 @@ function updateUILabels() {
         orientEn.style.display = currentLanguage === 'zh' ? '' : 'none';
     }
     setElemText('orientHomeText', t('orientHomeText'));
+    setElemText('rotateDeviceFallbackLabel', t('orientationFallbackLabel'));
     const vFireLabel = document.getElementById('vFireLabel');
     if (vFireLabel) vFireLabel.textContent = t('fire');
 
@@ -197,6 +215,9 @@ class TankBattle {
         this.ctx = this.canvas.getContext('2d');
         this.miniMapCanvas = document.getElementById('miniMap');
         this.miniMapCtx = this.miniMapCanvas.getContext('2d');
+        this.art = createTankBattleArt();
+        document.addEventListener('tank-battle-art-state', () => this.updateWeaponIcons());
+        this.debugHitbox = new URLSearchParams(window.location.search).get('debug-hitbox') === '1';
         
         this.width = CONFIG.CANVAS_WIDTH;
         this.height = CONFIG.CANVAS_HEIGHT;
@@ -889,30 +910,27 @@ class TankBattle {
             this.ctx.translate(shakeX, shakeY);
         }
         
-        // 清空画布
-        this.ctx.fillStyle = '#1a1a1a';
-        this.ctx.fillRect(0, 0, this.width, this.height);
+        // Authored terrain is the primary visual; the art module supplies a safe fallback.
+        this.art.drawGround(this.ctx, this.width, this.height);
         
-        // 绘制网格背景
-        this.renderGrid();
-        
-        // 绘制墙壁
+        // Wall textures follow the unchanged collision rectangles.
         this.walls.forEach(wall => {
-            this.renderWall(wall);
+            if (!this.art.drawWall(this.ctx, wall)) this.renderWall(wall);
         });
         
-        // 绘制道具
-        this.powerUps.forEach(powerUp => powerUp.render(this.ctx));
+        // Production pickup icons replace emoji while preserving the same hit boxes.
+        this.powerUps.forEach(powerUp => powerUp.render(this.ctx, this.art));
         
-        // 绘制坦克
-        this.player.render(this.ctx);
-        this.enemies.forEach(enemy => enemy.render(this.ctx));
+        // Sprites are rotated from the same integer direction used by bullets.
+        this.player.render(this.ctx, this.art);
+        this.enemies.forEach(enemy => enemy.render(this.ctx, this.art));
         
         // 绘制子弹
         this.bullets.forEach(bullet => bullet.render(this.ctx));
         
         // 绘制粒子效果
         this.particles.forEach(particle => particle.render(this.ctx));
+        if (this.debugHitbox) this.renderDebugHitboxes();
         
         this.ctx.restore();
         
@@ -929,24 +947,23 @@ class TankBattle {
         }
     }
 
-    renderGrid() {
-        this.ctx.strokeStyle = '#333';
-        this.ctx.lineWidth = 0.5;
-        // 单一路径批量绘制所有网格线，替代每条线一次 beginPath/stroke
-        this.ctx.beginPath();
-
-        for (let x = 0; x < this.width; x += 40) {
-            this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, this.height);
-        }
-
-        for (let y = 0; y < this.height; y += 40) {
-            this.ctx.moveTo(0, y);
-            this.ctx.lineTo(this.width, y);
-        }
-
-        this.ctx.stroke();
+    renderDebugHitboxes() {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.lineWidth = 1;
+        const rect = (object, color) => {
+            ctx.strokeStyle = color;
+            ctx.strokeRect(object.x, object.y, object.width, object.height);
+        };
+        this.walls.forEach(wall => rect(wall, wall.type === 'steel' ? '#b9d2cc' : '#e9b08a'));
+        if (this.player) rect(this.player, '#d6c17b');
+        this.enemies.forEach(enemy => rect(enemy, enemy.isBoss ? '#f3b36e' : '#f39b91'));
+        this.bullets.forEach(bullet => rect(bullet, bullet.isPlayer ? '#b9f4d2' : '#f39b91'));
+        this.powerUps.forEach(powerUp => rect(powerUp, '#d6c17b'));
+        ctx.restore();
     }
+
+    renderGrid() {}
 
     renderWall(wall) {
         const ctx = this.ctx;
@@ -1037,17 +1054,16 @@ class TankBattle {
     renderMiniMap() {
         const scale = 0.15;
         
-        this.miniMapCtx.fillStyle = '#000';
-        this.miniMapCtx.fillRect(0, 0, 120, 90);
+        this.art.drawMiniMapBase(this.miniMapCtx, 120, 90);
         
         // 绘制墙壁
         this.walls.forEach(wall => {
             if (wall.type === 'steel') {
-                this.miniMapCtx.fillStyle = '#C0C0C0'; // 钢板墙 - 银色
+                this.miniMapCtx.fillStyle = '#7b9290'; // steel
             } else if (wall.type === 'brick' || wall.destructible) {
-                this.miniMapCtx.fillStyle = '#8B4513'; // 砖墙 - 棕色
+                this.miniMapCtx.fillStyle = '#b66f56'; // brick
             } else {
-                this.miniMapCtx.fillStyle = '#666'; // 边界墙 - 灰色
+                this.miniMapCtx.fillStyle = '#496066'; // boundary
             }
             this.miniMapCtx.fillRect(
                 wall.x * scale, wall.y * scale,
@@ -1056,7 +1072,7 @@ class TankBattle {
         });
         
         // 绘制玩家
-        this.miniMapCtx.fillStyle = '#00ff00';
+        this.miniMapCtx.fillStyle = '#5fe0aa';
         this.miniMapCtx.fillRect(
             this.player.x * scale, this.player.y * scale,
             this.player.width * scale, this.player.height * scale
@@ -1065,9 +1081,9 @@ class TankBattle {
         // 绘制敌人
         this.enemies.forEach(enemy => {
             if (enemy.isBoss) {
-                this.miniMapCtx.fillStyle = '#ffd700'; // Boss坦克 - 金色
+                this.miniMapCtx.fillStyle = '#d6c17b'; // boss
             } else {
-                this.miniMapCtx.fillStyle = '#ff4444'; // 普通敌人 - 红色
+                this.miniMapCtx.fillStyle = '#d36b61'; // enemy
             }
             this.miniMapCtx.fillRect(
                 enemy.x * scale, enemy.y * scale,
@@ -1075,14 +1091,17 @@ class TankBattle {
             );
         });
         
-        // 绘制道具
-        this.miniMapCtx.fillStyle = '#ffff00';
+        // Power-ups stay flat on the minimap for a fast, readable overview.
+        this.miniMapCtx.fillStyle = '#d6c17b';
         this.powerUps.forEach(powerUp => {
             this.miniMapCtx.fillRect(
                 powerUp.x * scale, powerUp.y * scale,
                 2, 2
             );
         });
+
+        // The canvas owns the minimap pixels, so the authored frame must be composited last.
+        this.art.drawMiniMapFrame(this.miniMapCtx, 120, 90);
     }
 
     renderGameOver() {
@@ -1132,7 +1151,7 @@ class TankBattle {
         
         // Boss关卡特殊显示
         const isBossLevel = this.level % 5 === 0;
-        const levelText = isBossLevel ? `${this.level} 👑` : this.level;
+        const levelText = isBossLevel ? `${this.level} BOSS` : this.level;
         document.getElementById('level').textContent = levelText;
         
         document.getElementById('enemies').textContent = this.enemies.length;
@@ -1147,6 +1166,12 @@ class TankBattle {
         if (vWeaponBadge) {
             vWeaponBadge.textContent = `${this.currentWeaponIndex + 1}`;
         }
+        this.updateWeaponIcons();
+    }
+
+    updateWeaponIcons() {
+        this.art.setWeaponIcon(document.getElementById('weaponHudIcon'), this.currentWeaponIndex);
+        this.art.setWeaponIcon(document.getElementById('vWeaponIcon'), this.currentWeaponIndex);
     }
 
     restart() {
@@ -1190,6 +1215,7 @@ class TankBattle {
 // 启动游戏
 window.addEventListener('load', () => {
     updateUILabels(); // 初始化UI标签
+    bindOrientationArtFallback();
     window.tankBattleInstance = new TankBattle();
 });
 window.addEventListener('site-settings:changed', () => {

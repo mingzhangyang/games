@@ -14,6 +14,7 @@
     "verify:changed": "node scripts/verify-all.mjs --changed",
     "verify:daily": "node scripts/verify-daily.mjs",
     "verify:tower-defense-dist": "npm run build && node scripts/run-smoke-dist.mjs scripts/smoke-tower-defense.mjs",
+    "verify:tank-battle-art": "node scripts/verify-tank-battle-art.mjs",
     "build:shadow-loom-silhouettes": "node scripts/shadow-loom-build-silhouettes.mjs",
     "check:shadow-loom-silhouettes": "node scripts/shadow-loom-build-silhouettes.mjs --check",
     "verify:shadow-loom": "node scripts/verify-shadow-loom-silhouettes.mjs"
