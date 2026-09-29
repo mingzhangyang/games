@@ -151,6 +151,14 @@ for (const testCase of cases) {
         ].every(key => game.art.has(key));
         result.spriteHitbox = game.player.width === 30 && game.player.height === 30;
 
+        const wallContext = { drawImage() {} };
+        const wallProbe = { x: 0, y: 0, width: 20, height: 20, type: 'brick', destructible: true };
+        game.art.drawWall(wallContext, wallProbe);
+        const wallCacheAfterFirstDraw = game.art.getWallTileCacheStatus().size;
+        game.art.drawWall(wallContext, wallProbe);
+        result.wallTileCache = wallCacheAfterFirstDraw === game.art.getWallTileCacheStatus().size
+            && wallCacheAfterFirstDraw >= 1;
+
         let powerUpProbe;
         const originalRandom = Math.random;
         try {
@@ -304,7 +312,7 @@ for (const testCase of cases) {
         return result;
     });
     for (const check of [
-        'authoredSprites', 'spriteHitbox', 'powerUpRendererDelegation', 'barrelOrientation', 'brickCollision', 'steelCollision',
+        'authoredSprites', 'spriteHitbox', 'wallTileCache', 'powerUpRendererDelegation', 'barrelOrientation', 'brickCollision', 'steelCollision',
         'pickupCollision', 'enemyAndBoss', 'weaponSwitch', 'pause', 'minimap',
         'gameOver', 'victory'
     ]) {

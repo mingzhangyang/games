@@ -60,6 +60,7 @@ const LANGUAGES = {
         fire: '开火',
         pauseTitle: '暂停/继续',
         weaponTitle: '切换武器',
+        orientationFallbackLabel: '横屏',
         
         // 道具图标
         powerUpIcons: {
@@ -110,6 +111,7 @@ const LANGUAGES = {
         fire: 'FIRE',
         pauseTitle: 'Pause / Resume',
         weaponTitle: 'Switch Weapon',
+        orientationFallbackLabel: 'Landscape',
         
         // Power-up Icons
         powerUpIcons: {
@@ -181,6 +183,7 @@ function updateUILabels() {
         orientEn.style.display = currentLanguage === 'zh' ? '' : 'none';
     }
     setElemText('orientHomeText', t('orientHomeText'));
+    setElemText('rotateDeviceFallbackLabel', t('orientationFallbackLabel'));
     const vFireLabel = document.getElementById('vFireLabel');
     if (vFireLabel) vFireLabel.textContent = t('fire');
 

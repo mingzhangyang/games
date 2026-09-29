@@ -139,7 +139,19 @@ if (!css.includes('.rotate-device-fallback')) fail('orientation fallback styling
 if (!html.includes('id="weaponHudIcon"') || !html.includes('id="vWeaponIcon"')) fail('weapon atlas targets are missing');
 if (!art.includes('setWeaponIcon(element, index)')) fail('weapon icon atlas is not wired to a renderer');
 if (!art.includes('drawStaticTerrain') || !art.includes('getTerrainCacheStatus')) fail('terrain cache is not wired to the art renderer');
+if (!art.includes('wallTileCache') || !art.includes('getWallTileCacheStatus') || !art.includes('buildWallTile')) {
+    fail('wall tile cache is not wired to the art renderer');
+} else {
+    pass('wall textures are pre-rasterized and cached per tile type');
+}
+if (!css.includes('color: #fff;')) fail('pressed FIRE state does not provide a high-contrast label color');
+if (!html.includes('id="rotateDeviceFallbackLabel"') || !game.includes("setElemText('rotateDeviceFallbackLabel'")) {
+    fail('orientation fallback label is not localized');
+} else {
+    pass('orientation fallback label is localized through the active language');
+}
 if (!smoke.includes('844') || !smoke.includes('932') || !smoke.includes('production art state')) fail('smoke does not cover both landscape phone sizes and art readiness');
+if (!smoke.includes('wallTileCache')) fail('smoke does not cover wall tile caching');
 if (!smoke.includes('waitForFunction') || !smoke.includes('srOnlyHeading') || !smoke.includes('barrelOrientation')) fail('smoke is missing explicit readiness, semantic, or direction coverage');
 if (!smoke.includes('powerUpRendererDelegation')) fail('smoke does not verify PowerUp renderer delegation');
 if (!smoke.includes('orientationFallback')) fail('smoke does not exercise the orientation fallback path');

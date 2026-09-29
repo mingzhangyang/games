@@ -88,6 +88,7 @@ export function createTankBattleArt() {
         width: 0,
         height: 0,
     };
+    const wallTileCache = new Map();
 
     const drawStaticTerrain = (ctx, width, height) => {
         ctx.fillStyle = '#2b4334';
@@ -133,6 +134,20 @@ export function createTankBattleArt() {
         return canvas;
     };
 
+    const buildWallTile = key => {
+        if (typeof document === 'undefined') return null;
+        const image = images.get(key);
+        if (!image) return null;
+        const canvas = document.createElement('canvas');
+        canvas.width = 20;
+        canvas.height = 20;
+        const tileCtx = canvas.getContext('2d');
+        if (!tileCtx) return null;
+        tileCtx.drawImage(image, 0, 0, 20, 20);
+        wallTileCache.set(key, canvas);
+        return canvas;
+    };
+
     const api = {
         state: 'loading',
         ready: false,
@@ -141,6 +156,7 @@ export function createTankBattleArt() {
             terrainCache.canvas = null;
             terrainCache.width = 0;
             terrainCache.height = 0;
+            wallTileCache.clear();
             api.ready = false;
             api.failed = false;
             images.clear();
@@ -155,6 +171,7 @@ export function createTankBattleArt() {
                 terrainCache.canvas = null;
                 terrainCache.width = 0;
                 terrainCache.height = 0;
+                wallTileCache.clear();
 
                 if (hasFailure) {
                     api.failed = true;
@@ -181,6 +198,9 @@ export function createTankBattleArt() {
                 width: terrainCache.width,
                 height: terrainCache.height,
             };
+        },
+        getWallTileCacheStatus() {
+            return { size: wallTileCache.size };
         },
         getTankRotation(direction) {
             return TANK_DIRECTION_ROTATIONS[normalizeDirection(direction)];
@@ -218,9 +238,15 @@ export function createTankBattleArt() {
                 : wall.type === 'brick' || wall.destructible
                     ? 'tiles.brick'
                     : 'tiles.boundary';
-            const image = images.get(key);
-            if (!image) return false;
-            ctx.drawImage(image, wall.x, wall.y, wall.width, wall.height);
+            const tile = wallTileCache.get(key) || buildWallTile(key);
+            if (!tile) return false;
+            for (let y = wall.y; y < wall.y + wall.height; y += 20) {
+                for (let x = wall.x; x < wall.x + wall.width; x += 20) {
+                    const width = Math.min(20, wall.x + wall.width - x);
+                    const height = Math.min(20, wall.y + wall.height - y);
+                    ctx.drawImage(tile, 0, 0, width, height, x, y, width, height);
+                }
+            }
             return true;
         },
         drawTank(ctx, tank) {
