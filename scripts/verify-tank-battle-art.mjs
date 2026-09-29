@@ -19,6 +19,9 @@ const failures = [];
 const passes = [];
 const fail = message => failures.push(message);
 const pass = message => passes.push(message);
+const powerUpRenderBody = entities.match(
+    /export class PowerUp[\s\S]*?render\(ctx, art\) \{([\s\S]*?)\n    \}\n\n    getColor\(\) \{/
+)?.[1] || '';
 
 const expected = {
     'terrain.ground': ['terrain/ground.svg', '0 0 40 40'],
@@ -102,6 +105,18 @@ for (const needle of [
 }
 if (game.includes('this.renderGrid();')) fail('black grid renderer is still used as the primary scene');
 if (entities.includes('fillText(this.getIcon())')) fail('emoji power-up renderer is still active');
+if (!powerUpRenderBody.includes('if (art?.drawPowerUp?.(ctx, this)) return;')) {
+    fail('PowerUp.render does not delegate to the authored renderer before fallback');
+} else {
+    pass('PowerUp.render delegates to the authored renderer before fallback');
+}
+if (!art.includes('Promise.allSettled')
+    || !art.includes("result.status === 'rejected'")
+    || !art.includes('images.clear()')) {
+    fail('asset loading does not settle all requests before committing or clearing art');
+} else {
+    pass('asset loading settles all requests before committing or clearing art');
+}
 for (const forbidden of ['❤', '🔫', '🛡', '⚡', '👑']) {
     if (game.includes(forbidden) || entities.includes(forbidden) || html.includes(forbidden)) {
         fail('legacy emoji remains: ' + forbidden);
@@ -119,6 +134,7 @@ if (!art.includes('setWeaponIcon(element, index)')) fail('weapon icon atlas is n
 if (!art.includes('drawStaticTerrain') || !art.includes('getTerrainCacheStatus')) fail('terrain cache is not wired to the art renderer');
 if (!smoke.includes('844') || !smoke.includes('932') || !smoke.includes('production art state')) fail('smoke does not cover both landscape phone sizes and art readiness');
 if (!smoke.includes('waitForFunction') || !smoke.includes('srOnlyHeading') || !smoke.includes('barrelOrientation')) fail('smoke is missing explicit readiness, semantic, or direction coverage');
+if (!smoke.includes('powerUpRendererDelegation')) fail('smoke does not verify PowerUp renderer delegation');
 if (!smoke.includes('orientationFallback')) fail('smoke does not exercise the orientation fallback path');
 
 if (!verifyAll.includes("{ name: 'tank-battle-art', script: 'scripts/verify-tank-battle-art.mjs', args: [], needsServer: false }")) {

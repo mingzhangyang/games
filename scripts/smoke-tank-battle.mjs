@@ -151,6 +151,25 @@ for (const testCase of cases) {
         ].every(key => game.art.has(key));
         result.spriteHitbox = game.player.width === 30 && game.player.height === 30;
 
+        let powerUpProbe;
+        const originalRandom = Math.random;
+        try {
+            Math.random = () => 0.1;
+            game.spawnPowerUps();
+            powerUpProbe = game.powerUps[0];
+        } finally {
+            Math.random = originalRandom;
+        }
+        let powerUpRendererDelegation = false;
+        powerUpProbe?.render({}, {
+            drawPowerUp(_ctx, powerUp) {
+                powerUpRendererDelegation = powerUp === powerUpProbe;
+                return true;
+            },
+        });
+        result.powerUpRendererDelegation = powerUpRendererDelegation;
+        game.powerUps = [];
+
         const recordingContext = {
             rotations: [],
             save() {},
@@ -285,7 +304,7 @@ for (const testCase of cases) {
         return result;
     });
     for (const check of [
-        'authoredSprites', 'spriteHitbox', 'barrelOrientation', 'brickCollision', 'steelCollision',
+        'authoredSprites', 'spriteHitbox', 'powerUpRendererDelegation', 'barrelOrientation', 'brickCollision', 'steelCollision',
         'pickupCollision', 'enemyAndBoss', 'weaponSwitch', 'pause', 'minimap',
         'gameOver', 'victory'
     ]) {

@@ -142,21 +142,35 @@ export function createTankBattleArt() {
             terrainCache.canvas = null;
             terrainCache.width = 0;
             terrainCache.height = 0;
+            api.ready = false;
+            api.failed = false;
+            images.clear();
             setArtState('loading');
             const entries = Object.entries(TANK_BATTLE_ART_URLS);
-            Promise.all(entries.map(async ([key, url]) => {
+            Promise.allSettled(entries.map(async ([key, url]) => {
                 const image = await loadImage(url);
-                images.set(key, image);
-            })).then(() => {
+                return [key, image];
+            })).then(results => {
+                const hasFailure = results.some(result => result.status === 'rejected');
+                images.clear();
                 terrainCache.canvas = null;
+                terrainCache.width = 0;
+                terrainCache.height = 0;
+
+                if (hasFailure) {
+                    api.failed = true;
+                    api.state = 'fallback';
+                    setArtState('fallback');
+                    return;
+                }
+
+                results.forEach(result => {
+                    const [key, image] = result.value;
+                    images.set(key, image);
+                });
                 api.ready = true;
                 api.state = 'ready';
                 setArtState('ready');
-            }).catch(() => {
-                terrainCache.canvas = null;
-                api.failed = true;
-                api.state = 'fallback';
-                setArtState('fallback');
             });
         },
         has(key) {
