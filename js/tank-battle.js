@@ -113,10 +113,10 @@ const LANGUAGES = {
         
         // Power-up Icons
         powerUpIcons: {
-            health: '❤',
-            weapon: '🔫',
-            shield: '🛡',
-            speed: '⚡'
+            health: 'health',
+            weapon: 'weapon',
+            shield: 'shield',
+            speed: 'speed'
         }
     }
 };
