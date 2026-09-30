@@ -9,6 +9,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
     compareDebt,
+    compareBaselineGrowth,
     loadDebtBaseline,
     ROOT,
     RATCHET_CATEGORIES,
@@ -34,6 +35,10 @@ const baseline = loadDebtBaseline();
 const current = scanArchitectureDebt();
 
 console.log('▶ Architecture debt ratchet');
+const baselineGuard = compareBaselineGrowth(baseline);
+ok(baselineGuard.issues.length === 0,
+    `baseline integrity (${baselineGuard.source})`,
+    baselineGuard.issues.join(', '));
 for (const category of RATCHET_CATEGORIES) {
     const result = compareDebt(current, baseline, category);
     ok(result.added.length === 0,
@@ -44,6 +49,8 @@ for (const category of RATCHET_CATEGORIES) {
         `${result.current.length} > ${result.baseline.length}`);
     if (result.removed.length) console.log(`  ↓ removed from baseline: ${result.removed.join(', ')}`);
 }
+ok(current['platform-shim-consumers'].every(item => /:\d+:[a-z0-9-]+$/.test(item)),
+    'shim debt keys preserve call-site line identity');
 
 console.log('\n▶ strict Architecture v2 boundaries');
 for (const category of STRICT_ZERO_CATEGORIES) {
@@ -73,6 +80,8 @@ ok(self?.script === 'tests/verify-architecture-boundaries.mjs',
 const probeImports = importedSpecifiers(`import('@js/theme.js'); require('../js/daily.js');`);
 ok(probeImports.length === 2 && probeImports.every(ref => shimName(ref.specifier)),
     'shim scanner recognizes alias, dynamic import, and require specifiers');
+ok(shimName('./i18n.js', join(ROOT, 'src/games/example/index.js')) === null,
+    'shim scanner leaves local game-relative modules unclassified');
 
 console.log(failed ? `\n${failed} architecture boundary failure(s) ❌` : '\narchitecture boundary contract passed ✅');
 process.exit(failed ? 1 : 0);

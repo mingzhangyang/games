@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {
+    compareBaselineGrowth,
     compareDebt,
     loadDebtBaseline,
     RATCHET_CATEGORIES,
@@ -9,6 +10,7 @@ import {
 
 const baseline = loadDebtBaseline();
 const current = scanArchitectureDebt();
+const baselineGuard = compareBaselineGrowth(baseline);
 const categories = [
     ...RATCHET_CATEGORIES,
     'oversized-composition-entries',
@@ -17,6 +19,7 @@ const categories = [
 
 console.log('Architecture v2 debt report');
 console.log(`baseline: ${baseline.generatedFrom || 'unknown'}`);
+console.log(`baseline integrity: ${baselineGuard.source}${baselineGuard.issues.length ? ` — ${baselineGuard.issues.join(', ')}` : ' — ok'}`);
 for (const category of categories) {
     const result = compareDebt(current, baseline, category);
     const mode = baseline.categories?.[category]?.mode || 'ratchet';
@@ -33,7 +36,7 @@ for (const category of categories) {
         for (const item of result.removed.slice(0, 12)) console.log(`    - ${item}`);
         if (result.removed.length > 12) console.log(`    … ${result.removed.length - 12} more`);
     }
-    if (!result.added.length && !result.removed.length && result.current.length) {
+    if (result.current.length) {
         console.log('  top:');
         for (const item of result.current.slice(0, 8)) console.log(`    • ${item}`);
     }

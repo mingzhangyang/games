@@ -1,10 +1,13 @@
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, extname, join, relative } from 'node:path';
+import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registry } from './registry.mjs';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const BASELINE_PATH = join(ROOT, 'tests', 'architecture-v2-debt-baseline.json');
+const BASELINE_RELATIVE_PATH = 'tests/architecture-v2-debt-baseline.json';
 
 export const PLATFORM_SHIMS = [
     'analytics', 'boot', 'daily', 'game-chrome', 'game-drawer', 'game-frame',
@@ -26,8 +29,49 @@ const SELF_SCAN_FILES = new Set([
     'tests/architecture-report.mjs',
 ]);
 
+// The first baseline is introduced by this PR, so the merge-base has no JSON
+// file to compare against. Keep an immutable fingerprint for that bootstrap
+// snapshot; once the file exists on main, compare future PRs with its merge
+// base instead. The fingerprints are deliberately checked in here rather than
+// derived from the current JSON, otherwise a PR could raise both together.
+export const BOOTSTRAP_BASELINE = Object.freeze({
+    'registry-entry-in-js': Object.freeze({ count: 25, sha256: '43b0ace9e98c38c103bfff58c51f6bf8eb93200d18a3686da3d9e5bab503f412' }),
+    'platform-shim-consumers': Object.freeze({ count: 246, sha256: '2bd7621cb999ba3297518e3889e699ea95f5f09c1e90e8c4186c911c420cc04a' }),
+    'legacy-shell-pages': Object.freeze({ count: 4, sha256: '4556ab7c3267d50001f96df9312769c875d2ae13d86689efacc3cb87a67a0c88' }),
+    'legacy-shell-page-missing': Object.freeze({ count: 5, sha256: '11bd82dc762a1b5f4fab1d5d43891eff3cc49cf44469b00264817b89ed0eb158' }),
+    'active-scripts-references': Object.freeze({ count: 0, sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }),
+});
+
 function rel(abs) {
     return relative(ROOT, abs).replaceAll('\\', '/');
+}
+
+function gitOutput(...args) {
+    try {
+        return execFileSync('git', args, {
+            cwd: ROOT,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim();
+    } catch {
+        return '';
+    }
+}
+
+function mergeBaseCommit() {
+    const candidates = [];
+    for (const ref of [process.env.ARCHITECTURE_BASE_SHA, process.env.GITHUB_BASE_SHA]) {
+        if (ref) candidates.push(ref);
+    }
+    if (process.env.GITHUB_BASE_REF) candidates.push(`origin/${process.env.GITHUB_BASE_REF}`);
+    candidates.push('origin/main', 'main');
+    for (const candidate of candidates) {
+        const resolved = gitOutput('rev-parse', '--verify', candidate);
+        if (!resolved) continue;
+        const mergeBase = gitOutput('merge-base', 'HEAD', resolved);
+        if (mergeBase) return mergeBase;
+    }
+    return '';
 }
 
 function walk(abs, out = []) {
@@ -130,10 +174,15 @@ function tokenize(source) {
     return tokens;
 }
 
-export function shimName(specifier) {
+export function shimName(specifier, importerPath = null) {
     const raw = String(specifier).replaceAll('\\', '/');
     const value = raw.startsWith('@js/') ? `/js/${raw.slice('@js/'.length)}` : raw;
     if (value.includes('/src/platform/') || value.includes('/platform/')) return null;
+    if (importerPath && /^\.\.?\//.test(raw)) {
+        const resolvedTarget = relative(ROOT, resolve(dirname(importerPath), raw)).replaceAll('\\', '/');
+        const match = /^js\/([^/]+)\.js$/.exec(resolvedTarget);
+        return match && PLATFORM_SHIMS.includes(match[1]) ? match[1] : null;
+    }
     for (const name of PLATFORM_SHIMS) {
         if (value === `/js/${name}.js` || value.endsWith(`/js/${name}.js`)) return name;
         if (/^(?:\.\.\/|\.\/)/.test(value)
@@ -199,8 +248,8 @@ function platformShimConsumers(files) {
         const source = fileText(path);
         const refs = isJavaScript(path) ? importedSpecifiers(source) : isHtml(path) ? htmlSpecifiers(source) : [];
         for (const ref of refs) {
-            const shim = shimName(ref.specifier);
-            if (shim) consumers.push(`${name}:${shim}`);
+            const shim = shimName(ref.specifier, path);
+            if (shim) consumers.push(`${name}:${ref.line}:${shim}`);
         }
     }
     return sorted(consumers);
@@ -354,6 +403,7 @@ export function scanArchitectureDebt() {
         'game-localstorage': gameLocalStorage(files),
         'legacy-shell-pages': shellPages.map(page => page.key),
         'legacy-shell-page-details': shellPages.map(page => `${page.key}:${page.missing.join(',')}`),
+        'legacy-shell-page-missing': shellPages.flatMap(page => page.missing.map(className => `${page.key}:${className}`)),
         'active-scripts-references': activeScriptsReferences(files),
         'oversized-composition-entries': oversizedCompositionEntries(),
         'src-game-shim-imports': platformShimConsumers(files)
@@ -370,7 +420,72 @@ export function loadDebtBaseline() {
 }
 
 export function baselineItems(baseline, category) {
-    return [...(baseline.categories?.[category]?.items || [])].sort();
+    return [...(baseline.categories?.[category]?.items || [])].sort((a, b) => a.localeCompare(b));
+}
+
+function baselineFingerprint(items) {
+    return createHash('sha256').update([...items].sort((a, b) => a.localeCompare(b)).join('\n')).digest('hex');
+}
+
+function loadBaselineAtMergeBase() {
+    const mergeBase = mergeBaseCommit();
+    if (!mergeBase) return { baseline: null, ref: null };
+    const raw = gitOutput('show', `${mergeBase}:${BASELINE_RELATIVE_PATH}`);
+    if (!raw) return { baseline: null, ref: mergeBase };
+    try {
+        return { baseline: JSON.parse(raw), ref: mergeBase };
+    } catch {
+        return { baseline: null, ref: mergeBase };
+    }
+}
+
+function baselineMode(baseline, category) {
+    return baseline.categories?.[category]?.mode || '';
+}
+
+const MODE_RANK = { warning: 0, ratchet: 1, 'strict-zero': 2 };
+
+export function compareBaselineGrowth(baseline) {
+    const base = loadBaselineAtMergeBase();
+    const issues = [];
+    if (base.baseline) {
+        for (const category of RATCHET_CATEGORIES) {
+            const previousItems = baselineItems(base.baseline, category);
+            const currentItems = baselineItems(baseline, category);
+            const added = currentItems.filter(item => !previousItems.includes(item));
+            if (added.length) issues.push(`${category}: ${added.join(', ')}`);
+            const previousRank = MODE_RANK[baselineMode(base.baseline, category)] ?? 0;
+            const currentRank = MODE_RANK[baselineMode(baseline, category)] ?? 0;
+            if (currentRank < previousRank) {
+                issues.push(`${category}: mode weakened from ${baselineMode(base.baseline, category)} to ${baselineMode(baseline, category)}`);
+            }
+        }
+        for (const category of STRICT_ZERO_CATEGORIES) {
+            const items = baselineItems(baseline, category);
+            if (items.length) issues.push(`${category}: baseline must remain empty`);
+        }
+        return { source: `merge-base ${base.ref}`, issues };
+    }
+
+    for (const category of RATCHET_CATEGORIES) {
+        const expected = BOOTSTRAP_BASELINE[category];
+        const actual = baselineItems(baseline, category);
+        if (!expected) {
+            issues.push(`${category}: no bootstrap ceiling is defined`);
+            continue;
+        }
+        if (actual.length > expected.count) {
+            issues.push(`${category}: ${actual.length} baseline items exceed bootstrap ceiling ${expected.count}`);
+        }
+        if (baselineFingerprint(actual) !== expected.sha256) {
+            issues.push(`${category}: bootstrap fingerprint changed`);
+        }
+    }
+    for (const category of STRICT_ZERO_CATEGORIES) {
+        const items = baselineItems(baseline, category);
+        if (items.length) issues.push(`${category}: baseline must remain empty`);
+    }
+    return { source: 'immutable bootstrap ceiling', issues };
 }
 
 export function compareDebt(current, baseline, category) {
@@ -389,6 +504,7 @@ export const RATCHET_CATEGORIES = [
     'registry-entry-in-js',
     'platform-shim-consumers',
     'legacy-shell-pages',
+    'legacy-shell-page-missing',
     'active-scripts-references',
 ];
 
