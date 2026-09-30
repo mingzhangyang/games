@@ -1,7 +1,7 @@
 // 探测各页移动端「内容超出视口但仍不可滚」的情况（body 脱流 / html 无滚动盒）
-// 用法: node scripts/probe-reach.mjs <baseUrl>
+// 用法: node tools/dev/probe-reach.mjs <baseUrl>
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from '../lib/browser.mjs';
 
 const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8900';

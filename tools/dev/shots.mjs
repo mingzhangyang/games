@@ -1,7 +1,7 @@
-// 布局截图 + 控制台错误巡检：node scripts/shots.mjs [outDir] [baseUrl]
+// 布局截图 + 控制台错误巡检：node tools/dev/shots.mjs [outDir] [baseUrl]
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import { registry } from './lib/registry.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from '../lib/browser.mjs';
+import { registry } from '../lib/registry.mjs';
 import { mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

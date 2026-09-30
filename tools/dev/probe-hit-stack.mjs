@@ -1,8 +1,8 @@
 // 命中栈探针：确认 .theme-toggle::after（position: absolute，但 .theme-toggle 是 static）
 // 是否把热区外扩解析成了整个 .game-container，从而盖住同排更早出现的 Home 钮。
-// 用法：node scripts/probe-hit-stack.mjs http://127.0.0.1:8921
+// 用法：node tools/dev/probe-hit-stack.mjs http://127.0.0.1:8921
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from '../lib/browser.mjs';
 
 const EXE = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8921';

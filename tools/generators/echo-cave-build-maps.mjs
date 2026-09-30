@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// scripts/echo-cave-build-maps.mjs — 回声洞窟关卡生成器
+// tools/generators/echo-cave-build-maps.mjs — 回声洞窟关卡生成器
 //
 // 为什么这么绕：
 //  · 24 列 × 32 行 × 17 张图，手敲 ASCII 必然数错字符；
-//  · par 必须等于求解器算出来的值（手填会被 scripts/verify-echo-cave-levels.mjs 判错）；
+//  · par 必须等于求解器算出来的值（手填会被 tests/verify-echo-cave-levels.mjs 判错）；
 //  · 声晶必须摆在「par 脉冲链的安全圈内」三星才可达 —— 手挑几乎必错。
 // 于是这里：1) 用坐标画结构；2) 本地跑同一套 hop-BFS 求 par 与脉冲链；
 // 3) 声晶只从「链上节点 ball(safeR) 内、且离主路径 ≥3 格」的候选里挑 → 三星可达性天然成立；
@@ -14,12 +14,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mulberry32 } from '../js/daily.js';
-import { GRID, RULES, computeField } from '../js/echo-cave-caves.js';
+import { mulberry32 } from '../../js/daily.js';
+import { GRID, RULES, computeField } from '../../js/echo-cave-caves.js';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 // ⚠️ 默认只报告不改文件：万一有人手调了 LEVELS，跑一遍生成器会静默覆盖。
-// 确认要写盘必须显式加 --write（写完记得跑 scripts/verify-echo-cave-levels.mjs）。
+// 确认要写盘必须显式加 --write（写完记得跑 tests/verify-echo-cave-levels.mjs）。
 const WRITE = process.argv.includes('--write');
 
 const { cols: COLS, rows: ROWS } = GRID;

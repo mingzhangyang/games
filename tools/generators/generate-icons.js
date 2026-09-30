@@ -1,6 +1,6 @@
 /**
  * PWA 图标生成器 — 无第三方依赖，纯 Node 生成 PNG
- * 运行：node scripts/generate-icons.js
+ * 运行：node tools/generators/generate-icons.js
  * 输出到 public/icons/：
  *   icon-192.png / icon-512.png        （任意用途，圆角卡通风）
  *   icon-maskable-512.png              （可遮罩用途，内容缩放在安全区内）
@@ -14,7 +14,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const outDir = join(root, 'public', 'icons');
 mkdirSync(outDir, { recursive: true });
 

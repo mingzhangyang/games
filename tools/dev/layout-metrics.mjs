@@ -1,9 +1,9 @@
-// 布局几何度量：node scripts/layout-metrics.mjs [baseUrl]
+// 布局几何度量：node tools/dev/layout-metrics.mjs [baseUrl]
 // 输出各页 shell/topbar/icon-btn/stage/canvas/sidebar/footer-hint 的实际计算值，
 // 用于检查跨页一致性（触控热区 ≥44px、顶栏高度、容器宽度等）。
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import { registry } from './lib/registry.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from '../lib/browser.mjs';
+import { registry } from '../lib/registry.mjs';
 
 const PAGES = registry.all().map(g => g.id);
 

@@ -11,12 +11,12 @@
  * 关卡难度靠 parBand 拒绝采样来卡。
  */
 
-import * as R from '../js/ripple-duet-rules.js';
+import * as R from '../../js/ripple-duet-rules.js';
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = join(ROOT, 'js', 'ripple-duet-levels.js');
 const WRITE = process.argv.includes('--write');
 
@@ -319,10 +319,10 @@ function emit(v, ind) {
 }
 
 const body = `/**
- * 涟漪双生 — 20 关（由 scripts/ripple-build-levels.mjs 生成，勿手改）
+ * 涟漪双生 — 20 关（由 tools/generators/ripple-build-levels.mjs 生成，勿手改）
  *
  * par 全部由 solvePar() 按成本分层穷举现算（构造式出题保证有解，par 取真最小值）。
- * 复核：scripts/verify-ripple-duet-levels.mjs
+ * 复核：tests/verify-ripple-duet-levels.mjs
  */
 
 export const LEVELS = ${emit(levels, 0)};

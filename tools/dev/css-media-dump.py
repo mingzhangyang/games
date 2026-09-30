@@ -1,6 +1,6 @@
 """Print full @media blocks whose body matches a selector regex.
 
-Usage: python scripts/css-media-dump.py <file> <selector-regex>
+Usage: python tools/dev/css-media-dump.py <file> <selector-regex>
 """
 import re
 import sys

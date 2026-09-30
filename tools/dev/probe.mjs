@@ -1,6 +1,6 @@
-// 单页布局探针：node scripts/probe.mjs <page> [w] [h] [selector]
+// 单页布局探针：node tools/dev/probe.mjs <page> [w] [h] [selector]
 import puppeteer from 'puppeteer-core';
-import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { CHROME_PATH, LAUNCH_ARGS } from '../lib/browser.mjs';
 const CHROME = CHROME_PATH;
 const [page_, w = 1280, h = 900, sel = '.game-shell', shot = ''] = process.argv.slice(2);
 const b = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: LAUNCH_ARGS });

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // theme-varize.mjs — 把页面 CSS 的字面色收编成页面变量，并生成浅色覆盖的初稿（docs/contracts/theme.md §2.3）
 //
-//   node scripts/theme-varize.mjs css/minesweeper.css ms --dry   只打印将要做什么
-//   node scripts/theme-varize.mjs css/minesweeper.css ms         就地改写
+//   node tools/generators/theme-varize.mjs css/minesweeper.css ms --dry   只打印将要做什么
+//   node tools/generators/theme-varize.mjs css/minesweeper.css ms         就地改写
 //   … --reset-light                                             浅色区域按启发式重出（丢弃已校准值，慎用）
 //
 // 做法：
@@ -21,13 +21,13 @@ const DRY = process.argv.includes('--dry');
 // --reset-light：丢弃已有浅色区域、全部按启发式重出初稿（只在还没人工校准时用）
 const RESET_LIGHT = process.argv.includes('--reset-light');
 if (!file || !prefix) {
-    console.error('用法：node scripts/theme-varize.mjs <css 文件> <前缀> [--dry]');
+    console.error('用法：node tools/generators/theme-varize.mjs <css 文件> <前缀> [--dry]');
     process.exit(2);
 }
 
 const COLOR_PROPS = /^(color|background(-color|-image)?|border(-(top|right|bottom|left))?(-color)?|box-shadow|text-shadow|outline(-color)?|fill|stroke|caret-color|text-decoration-color)$/;
 const LITERAL = /#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g;
-const BEGIN_DARK = '/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */';
+const BEGIN_DARK = '/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */';
 const END_DARK = '/* theme:end vars */';
 const BEGIN_LIGHT = '/* theme:begin light */';
 const END_LIGHT = '/* theme:end light */';

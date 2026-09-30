@@ -1,7 +1,7 @@
 """Print exact raw text (with line numbers) of selected CSS rules, so they can be
 edited or deleted precisely.
 
-Usage: python scripts/css-rule-dump.py <file> <selector-regex>
+Usage: python tools/dev/css-rule-dump.py <file> <selector-regex>
 """
 import re
 import sys

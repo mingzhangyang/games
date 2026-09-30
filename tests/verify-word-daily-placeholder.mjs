@@ -2,7 +2,7 @@
  * Word Daily 输入框占位文案校验：
  * 覆盖 UI 语言(en/zh) × 词库模式(单词/成语) × 字数(4/5/6)，断言 placeholder 不残留未展开的 {n}。
  * 走真实路径：localStorage site_lang + site-settings:changed 事件、setWordLength()、wd-btn-lang 点击。
- * 用法：node scripts/wd-placeholder-check.mjs [baseUrl]
+ * 用法：node tests/verify-word-daily-placeholder.mjs [baseUrl]
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
