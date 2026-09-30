@@ -874,17 +874,14 @@ class BondForgeGame {
         this.clearTimer = setTimeout(() => {
             this.clearTimer = 0;
             if (this.state !== 'clear' || (this.level && this.level.id !== levelId)) return;
-            this.showClearOverlay();
+            if (this.el['clear']) {
+                this.el['clear'].classList.remove('hidden');
+                this.fitCompletionMolecule();
+                this.draw();
+            }
         }, CLEAR_PREVIEW_MS);
     }
 
-    /**
-     * 显示结算卡片时，把完成的分子放进卡片上方的安全区域。
-     *
-     * 玩家可以在成键过程中把整组原子拖到舞台下方；固定卡片位置并不能
-     * 覆盖这种情况。这里用卡片的实际 DOM 高度反推可用区域，再整体平移，
-     * 必要时压缩原子中心间距。通关后已经禁止输入，所以不会改变后续判定。
-     */
     fitCompletionMolecule() {
         const card = this.el['clear']?.querySelector('.bf-card');
         const canvas = this.canvas;
@@ -894,56 +891,31 @@ class BondForgeGame {
         const cardRect = card.getBoundingClientRect();
         if (!canvasRect.width || !canvasRect.height || !cardRect.width || !cardRect.height) return;
 
-        let minCenterX = Infinity, maxCenterX = -Infinity;
-        let minCenterY = Infinity, maxCenterY = -Infinity;
-        let maxRadius = 0;
-        this.atoms.forEach(atom => {
-            const radius = this.elemOf(atom.sym).radius + 6;
-            minCenterX = Math.min(minCenterX, atom.x);
-            maxCenterX = Math.max(maxCenterX, atom.x);
-            minCenterY = Math.min(minCenterY, atom.y);
-            maxCenterY = Math.max(maxCenterY, atom.y);
-            maxRadius = Math.max(maxRadius, radius);
-        });
+        const xs = this.atoms.map(atom => atom.x);
+        const ys = this.atoms.map(atom => atom.y);
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+        const radius = Math.max(...this.atoms.map(atom => this.elemOf(atom.sym).radius + 6));
 
-        const safeTop = 22;
-        // Leave a physical gap for the card's entrance animation and the canvas
-        // stroke. The card's actual top already includes any narrow-screen wrap.
-        const cardGapPx = 24;
-        const safeBottom = Math.max(
-            safeTop + 1,
-            Math.min(
-                H - maxRadius,
-                ((cardRect.top - canvasRect.top - cardGapPx) / canvasRect.height) * H,
-            ),
+        const top = 22;
+        const bottom = Math.max(
+            top + 1,
+            Math.min(H - radius, ((cardRect.top - canvasRect.top - 24) / canvasRect.height) * H),
         );
-        const safeLeft = 22;
-        const safeRight = W - 22;
-        const centerSpanX = maxCenterX - minCenterX;
-        const centerSpanY = maxCenterY - minCenterY;
-        const availableSpanX = Math.max(1, safeRight - safeLeft - maxRadius * 2);
-        const availableSpanY = Math.max(1, safeBottom - safeTop - maxRadius * 2);
         const scale = Math.min(
             1,
-            centerSpanX ? availableSpanX / centerSpanX : 1,
-            centerSpanY ? availableSpanY / centerSpanY : 1,
+            (W - 44 - radius * 2) / Math.max(1, maxX - minX),
+            Math.max(1, bottom - top - radius * 2) / Math.max(1, maxY - minY),
         );
-        const targetX = (safeLeft + safeRight) / 2;
-        const targetY = (safeTop + safeBottom) / 2;
-        const sourceX = (minCenterX + maxCenterX) / 2;
-        const sourceY = (minCenterY + maxCenterY) / 2;
+        const targetX = W / 2;
+        const targetY = (top + bottom) / 2;
+        const sourceX = (minX + maxX) / 2;
+        const sourceY = (minY + maxY) / 2;
 
         this.atoms.forEach(atom => {
             atom.x = targetX + (atom.x - sourceX) * scale;
             atom.y = targetY + (atom.y - sourceY) * scale;
         });
-    }
-
-    showClearOverlay() {
-        if (!this.el['clear']) return;
-        this.el['clear'].classList.remove('hidden');
-        this.fitCompletionMolecule();
-        this.draw();
     }
 
     /* ---------------------- 结算 ---------------------- */
