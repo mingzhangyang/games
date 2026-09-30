@@ -3,8 +3,7 @@
    ─────────────────────────────────────────────
    引入顺序（每页固定）：
        css/tokens.css → css/layout.css → css/<game>.css → css/more-games.css
-   共享几何放在 @layer layout 中；未分层的页面 CSS 自然拥有更高优先级，
-   因此各页仍可用自己的规则/变量覆盖，不依赖构建后的 link 重排。
+   layout.css 在前，因此各页仍可用自己的规则/变量覆盖。
 
    用法：在原有类名上追加通用类，不动 JS 选择器、不改原有命名。
        <div class="xx-shell game-shell">        页面容器
@@ -70,7 +69,6 @@
        未覆盖的页面回落 --frame-max-wide / --frame-stage，行为不变。
    ───────────────────────────────────────────── */
 
-@layer layout {
 :root {
     --frame-max: 520px;
     --frame-max-wide: 940px;
@@ -761,5 +759,4 @@ body.drawer-locked {
     .game-shell.game-shell--immersive { max-width: none; }
 
     .game-stage.game-stage--immersive { max-width: var(--frame-immersive-max); }
-}
 }
