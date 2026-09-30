@@ -59,9 +59,9 @@ function discover() {
 }
 
 const INFRA = [
-    { name: 'gen-check', script: 'scripts/gen-from-registry.mjs', args: ['--check'], needsServer: false, games: [] },
-    { name: 'lint', script: 'scripts/run-lint.mjs', args: [], needsServer: false, games: [] },
-    { name: 'shadow-generated', script: 'scripts/shadow-loom-build-silhouettes.mjs', args: ['--check'], needsServer: false, games: ['shadow-loom'] },
+    { name: 'gen-check', script: 'tools/generators/gen-from-registry.mjs', args: ['--check'], needsServer: false, games: [] },
+    { name: 'lint', script: 'tools/checks/run-lint.mjs', args: [], needsServer: false, games: [] },
+    { name: 'shadow-generated', script: 'tools/generators/shadow-loom-build-silhouettes.mjs', args: ['--check'], needsServer: false, games: ['shadow-loom'] },
 ];
 
 const discovered = discover();
@@ -132,7 +132,7 @@ function selectSuite() {
 }
 
 function startServer() {
-    return spawn(process.execPath, [join(ROOT, 'scripts', 'serve-static.mjs'), String(PORT)], {
+    return spawn(process.execPath, [join(ROOT, 'tests', 'lib', 'serve-static.mjs'), String(PORT)], {
         cwd: ROOT,
         stdio: ['ignore', 'pipe', 'pipe'],
     });

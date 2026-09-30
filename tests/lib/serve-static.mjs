@@ -1,4 +1,4 @@
-// 本地静态服务器（仅用于布局截图验证）：node scripts/serve-static.mjs [port]
+// 本地静态服务器（仅用于布局截图验证）：node tests/lib/serve-static.mjs [port]
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';

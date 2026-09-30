@@ -7,7 +7,7 @@
  * 目的：捕捉「dev 全绿、build 才炸」这类问题（顶层 await、drop_console 后
  * 断言失效、chunk 共享失败等）。
  *
- * 用法：node scripts/run-smoke-dist.mjs <smoke-script.mjs>
+ * 用法：node tests/lib/run-smoke-dist.mjs <smoke-script.mjs>
  *  ⚠ 跑之前先 build（vite build），否则冒的是上一版 dist。
  */
 import { spawn } from 'node:child_process';
@@ -15,11 +15,11 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const NODE = process.execPath;
 const target = process.argv[2];
 if (!target) {
-    console.error('用法: node scripts/run-smoke-dist.mjs <smoke-script.mjs>');
+    console.error('用法: node tests/lib/run-smoke-dist.mjs <smoke-script.mjs>');
     process.exit(2);
 }
 
@@ -30,7 +30,7 @@ if (!existsSync(join(DIST, 'index.html'))) {
 }
 
 const PORT = 8952;
-const server = spawn(NODE, [join(ROOT, 'scripts', 'serve-static.mjs'), String(PORT)], {
+const server = spawn(NODE, [join(ROOT, 'tests', 'lib', 'serve-static.mjs'), String(PORT)], {
     cwd: DIST, stdio: 'ignore',
 });
 

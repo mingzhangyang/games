@@ -2,7 +2,7 @@
 /**
  * run-lint — P3-2 lint 编排器：串行跑 ESLint（js/）、Stylelint（css/）
  * 与令牌收敛检查（p3-token-swap --check）。
- * 用法：node scripts/run-lint.mjs [--fix]
+ * 用法：node tools/checks/run-lint.mjs [--fix]
  * 退出码：两器全 0 才 0。warn 不阻断（error 阻断）。
  */
 import { spawn } from 'node:child_process';
@@ -10,7 +10,7 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FIX = process.argv.includes('--fix');
 const NODE = process.execPath;
 
