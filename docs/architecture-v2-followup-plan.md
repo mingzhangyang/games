@@ -1,0 +1,948 @@
+# Architecture v2 收尾与 Legacy 清退执行计划
+
+> 面向 Codex 的实施手册。  
+> 基线：PR #43 `refactor: establish platform architecture v2` 的 head。  
+> 本文描述 **Architecture v2 平台落地之后仍未完成的历史代码迁移**，不是重新设计平台。
+>
+> 核心原则：**先建立边界守卫，再迁移；小 PR、可回滚；默认跑 changed/targeted tests，只有候选 PR 才跑 full verify。**
+
+---
+
+## 0. 目标与完成定义
+
+Architecture v2 的平台基础已经建立：
+
+- `src/platform/`：共享运行时能力；
+- `src/games/`：游戏专属模块；
+- `src/generated/`：生成代码；
+- `worker/`：Cloudflare Worker；
+- `tests/`：自动发现的 contract / smoke tests；
+- `tools/`：生成器、检查器、开发工具、归档迁移；
+- `GameRuntime`、`GameStorage`、declarative i18n、标准 shell、registry schema 已可用于新游戏；
+- 大多数现代游戏已使用 `GameRuntime`。
+
+本计划完成时，应满足以下 **最终状态**：
+
+1. **注册游戏入口默认全部位于 `src/games/<id>/index.js`**。
+   - 只有明确记录的特殊架构可以例外。
+   - 例外必须写在本文“长期例外”表中，并有对应测试/契约理由。
+2. **游戏代码不得再通过 `js/analytics.js`、`js/game-chrome.js` 等兼容 shim 引入平台能力**。
+   - 统一直接从 `src/platform/` 导入。
+   - shim 在无调用者后删除。
+3. **大型游戏入口只做 composition / bootstrap**。
+   - 规则、状态、渲染、输入、UI、音频、数据分别进入模块。
+   - 非数据/生成文件原则上不再出现 80 KB 以上单文件。
+4. **GameStorage 成为游戏私有持久化的默认入口**。
+   - 全局站点设置、玩家名、排行榜/每日服务数据不强行塞进 GameStorage。
+5. **旧页面达到标准 shell 的结构契约**。
+   - 不要求为了“统一”把 SEO/可访问性需要的静态 HTML 改成运行时字符串。
+   - 标准页必须符合 shell/topbar/main/stage/sidebar/footer contract。
+6. **i18n 新写法成为默认，旧 makeText 逐步收口**。
+   - DOM 静态文案优先 declarative binder；
+   - 大型动态文本表可保留表驱动，但不得复制平台公共文案。
+7. **`scripts/` 不再承担“所有工具都往这里扔”的角色**。
+   - 生成器 → `tools/generators/`
+   - 静态检查 → `tools/checks/`
+   - 开发诊断 → `tools/dev/`
+   - 测试 runner/helper → `tests/lib/`
+   - 一次性迁移 → `tools/archive/migrations/`
+8. **Architecture v2 边界由机器检查锁定**，防止新代码退回旧结构。
+
+---
+
+## 1. 当前基线与优先级
+
+PR #43 基线中，平台能力已经可用，但历史入口仍然偏大。
+
+当前大文件优先级（约值，仅用于确定实施顺序）：
+
+| 优先级 | 文件 | 当前规模 | 处理策略 |
+|---|---|---:|---|
+| P0 | `js/tower-defense.js` | ~135 KB | 首批拆分 |
+| P0 | `js/sword-flight.js` | ~110 KB | 首批拆分 |
+| P1 | `js/gravity-slingshot.js` | ~73 KB | 第二批拆分 |
+| P1 | `js/bond-forge.js` | ~72 KB | 第二批拆分 |
+| P1 | `js/needle-awn.js` | ~72 KB | 第二批拆分 |
+| P2 | `js/silk-dew.js` | ~67 KB | 迁目录时拆 |
+| P2 | `js/planet-merge.js` | ~66 KB | 迁目录时拆 |
+| P2 | `js/word-daily.js` | ~64 KB | 迁目录时拆 |
+| P2 | `js/shadow-loom.js` | ~61 KB | 迁目录时拆 |
+| P2 | `js/maxwell-demon.js` 等 | ~55–59 KB | 批量轻拆 |
+
+目前已有 `src/games/` 包：
+
+- `bond-forge`
+- `needle-awn`
+- `sword-flight`
+- `tetris`
+- `tower-defense`
+
+但多数游戏的主入口仍位于 `js/`。
+
+### 长期允许的架构例外
+
+| 游戏 | 允许例外 | 原因 |
+|---|---|---|
+| Math Rain | 可保留自己内部的多模块系统组织方式 | 已有独立 core/systems/i18n 架构，强制改成普通单游戏模板收益低、风险高 |
+| Tank Battle | 可保留专用横屏/全屏架构 | 控件、画布和布局与标准 shell 差异大 |
+
+**注意：例外只表示“不强制采用同一内部模块形状”，不表示可以继续依赖旧平台 shim。**
+只要使用平台服务，仍应直接导入 `src/platform/`。
+
+---
+
+# 2. Codex 执行总规则
+
+Codex 每次开始一个阶段，都必须遵守以下规则。
+
+## 2.1 禁止事项
+
+- 不要一次重写多个游戏的玩法状态机。
+- 不要把“重构”与“玩法调整 / 数值平衡 / 美术升级”混在同一个 PR。
+- 不要为了减少文件数量，把平台代码复制回游戏目录。
+- 不要新建第二套 storage / i18n / chrome / frame helper。
+- 不要手改 `src/generated/`。
+- 不要为了迁目录顺便改变 URL、DOM id、localStorage key、排行榜 key。
+- 不要把现有静态 HTML 全部改成 JS 动态生成；SEO 与 accessibility 结构优先保持静态。
+- 不要在普通开发 push 上增加新的 full-CI workflow。
+
+## 2.2 兼容性要求
+
+以下均视为公共兼容面：
+
+- 游戏 URL（`*.html`）；
+- registry `id/prefix/href`；
+- 既有 leaderboard / daily key；
+- 用户已有 localStorage 数据；
+- smoke tests 使用的 `window.*Game` / debug hook；
+- 现有 DOM id（除非单独 PR 明确迁移）；
+- analytics game id；
+- Service Worker / Worker 路径。
+
+迁移过程中必须保持上述行为。
+
+## 2.3 每个 PR 的最小验证
+
+普通开发 PR / push：
+
+```bash
+npm run gen -- --check
+npm run verify:changed
+```
+
+若只改一个游戏，优先再跑定向 smoke：
+
+```bash
+node tests/lib/run-smoke-one.mjs tests/smoke-<game>.mjs
+```
+
+涉及 build graph / registry entry / Vite input：
+
+```bash
+npm run build
+npm run verify:changed
+```
+
+只有阶段候选 / 合并前：
+
+```bash
+npm run build
+npm run verify
+npx wrangler deploy --dry-run
+```
+
+CI 资源原则见 `docs/architecture-v2.md#ci-resource-policy`。
+
+---
+
+# 3. Phase 0 — 先锁死 Architecture v2 边界
+
+**目标：在大规模迁移前，先让“退回旧结构”变成测试失败。**
+
+建议 PR：
+
+`refactor/architecture-v2-boundary-guards`
+
+## 3.1 新增 architecture boundary verifier
+
+新增：
+
+`tests/verify-architecture-boundaries.mjs`
+
+至少检查：
+
+1. 新增的注册游戏 entry 必须满足：
+   - 默认：`src/games/<id>/index.js`
+   - 或出现在明确的 exception 表中。
+2. `src/games/**` 不得 import：
+   - `/js/game-chrome.js`
+   - `/js/game-frame.js`
+   - `/js/game-drawer.js`
+   - `/js/site-settings.js`
+   - `/js/safe-storage.js`
+   - `/js/i18n.js`
+   - `/js/analytics.js`
+   - 以及其它已被 `src/platform` 接管的 shared shim。
+3. 新代码不得在游戏模块里直接调用 `localStorage.*`。
+   - 白名单：测试、首页用户 profile、平台 storage implementation。
+4. `src/generated/**` 不应被普通源码直接编辑/重新导出到错误目录。
+5. `worker/**` 不得 import 浏览器平台代码。
+6. `tools/archive/**` 不得被 package scripts / runtime / tests 调用。
+7. 新增 verify/smoke 文件无需手动登记，确保 auto-discovery 生效。
+
+## 3.2 更新过期文档路径
+
+PR #43 后，部分文档仍可能引用旧路径，例如：
+
+- `scripts/lib/registry.mjs`
+- `scripts/gen-from-registry.mjs`
+- `scripts/verify-*.mjs`
+- 旧迁移脚本位置
+
+统一更新为当前：
+
+- `tools/lib/registry.mjs`
+- `tools/generators/gen-from-registry.mjs`
+- `tests/verify-*.mjs`
+- `tools/archive/migrations/`
+
+重点检查：
+
+- `docs/contracts/registry.md`
+- `docs/contracts/chrome.md`
+- `docs/contracts/theme.md`
+- `docs/contracts/layout.md`
+- `docs/contracts/style.md`
+- `CLAUDE.md`
+- `README.md`
+
+## Phase 0 验收
+
+- architecture verifier 被 auto-discovery 自动发现；
+- 不新增 workflow；
+- `npm run verify:changed` 通过；
+- 文档不再把 archived migration 写成日常操作。
+
+---
+
+# 4. Phase 1 — Tower Defense 大文件拆分
+
+建议 **单独一个 PR**，不要与 Sword Flight 同 PR。
+
+分支：
+
+`refactor/tower-defense-modules`
+
+目标目录：
+
+```
+src/games/tower-defense/
+  index.js
+  i18n.js                 # 已有
+  config.js               # 常量 / shared configuration
+  model/
+    level-runtime.js
+    entities.js
+    wave-runtime.js
+  systems/
+    combat.js
+    targeting.js
+    economy.js
+  render/
+    scene-renderer.js
+    hud-renderer.js
+  input/
+    pointer.js
+    keyboard.js
+  ui/
+    overlays.js
+    controls.js
+  audio.js                # 如值得拆
+```
+
+**不要机械照目录名拆。按真实依赖图调整，但必须做到职责单向。**
+
+## 4.1 拆分顺序
+
+1. 先抽纯常量 / pure helpers；
+2. 再抽无 DOM 的规则与计算；
+3. 再抽 renderer；
+4. 再抽输入；
+5. 最后让 `index.js` 负责 composition / GameRuntime / debug hooks。
+
+不要第一步就拆 class state，因为容易产生循环依赖。
+
+## 4.2 必须保留
+
+- `window.tdGame`
+- 所有 `window.__TD_*` QA hooks
+- existing `LEVELS`
+- target priority / stack 语义
+- immersive layout
+- mobile landscape behavior
+- existing smoke selectors
+
+## 4.3 结构目标
+
+- `src/games/tower-defense/index.js`：建议 < 30 KB；
+- 单个非数据模块建议 < 45 KB；
+- 禁止出现 renderer → UI → model → renderer 循环依赖；
+- `games.config.json.entry` 改为 `src/games/tower-defense/index.js`；
+- `npm run gen` 更新 Vite input；
+- 原 `js/tower-defense.js`：
+  - 第一 PR 可保留一行 compatibility import；
+  - 确认无消费者后在 Phase 5 删除。
+
+## 4.4 测试
+
+必须跑：
+
+- `tests/smoke-tower-defense.mjs`
+- TD level/difficulty/art 相关 verify
+- `npm run verify:tower-defense-dist`
+- `npm run build`
+- `npm run verify:changed`
+
+## Phase 1 退出条件
+
+- build/smoke 行为不变；
+- TD entry 已在 `src/games`；
+- 主文件显著缩小；
+- 无新 global mutable singleton；
+- 无兼容 key 变化。
+
+---
+
+# 5. Phase 2 — Sword Flight 大文件拆分
+
+分支：
+
+`refactor/sword-flight-modules`
+
+建议目录：
+
+```
+src/games/sword-flight/
+  index.js
+  i18n.js                 # 已有
+  audio.js                # 已有
+  config.js
+  model/
+    run-state.js
+    realm.js
+    daily.js
+  systems/
+    movement.js
+    combat.js
+    spawn.js
+    scoring.js
+  render/
+    world.js
+    effects.js
+    hud.js
+  input/
+    keyboard.js
+    touch.js
+  ui/
+    menus.js
+    stage-select.js
+```
+
+## 5.1 特别注意
+
+Sword Flight 当前类很大，但不要为了“类变小”把所有字段塞进一个巨型 `state.js`。
+
+优先拆：
+
+- stateless computation；
+- spawn / collision helpers；
+- rendering；
+- input mapping；
+- DOM-heavy menus。
+
+保留：
+
+- `window.game`
+- `swordFlightChrome` 等现有测试/运行句柄需要的行为
+- daily key 与 score semantics
+- realm progression
+- SFX public surface
+
+## 5.2 目标
+
+- registry entry → `src/games/sword-flight/index.js`
+- 主 entry < 30 KB 为目标
+- 已有 `i18n.js`、`audio.js` 不复制
+- 任何新 shared helper 必须先判断是否属于 platform；游戏专属则留 game package
+
+## 5.3 测试
+
+- Sword Flight smoke / verify
+- mobile touch regression
+- desktop frame regression
+- daily / score regression
+- build + changed verify
+
+---
+
+# 6. Phase 3 — 第二梯队模块化
+
+这一阶段拆成 **两个 PR**，不要一次迁十个游戏。
+
+## PR 3A
+
+`refactor/game-packages-wave-1`
+
+优先：
+
+- gravity-slingshot
+- bond-forge
+- needle-awn
+
+目标：
+
+- entry → `src/games/<id>/index.js`
+- 复用已有 `bond-forge/i18n.js`、`needle-awn/{i18n,audio,effects}.js`
+- 将纯规则 / renderer / input 从 root entry 中抽出
+- GameRuntime 初始化留在 package index
+
+特别要求：
+
+- Gravity 的 solver / daily course 纯函数要单独模块化，保留 `window.__gravityDebug`
+- Bond Forge 分子数据与运行时逻辑分离
+- Needle Awn 不重复实现已有 audio/effects
+
+## PR 3B
+
+`refactor/game-packages-wave-2`
+
+迁移：
+
+- silk-dew
+- planet-merge
+- word-daily
+- shadow-loom
+- maxwell-demon
+- crystal-bloom
+- flame-verse
+- echo-cave
+- ripple-duet
+- hoop-shot
+- carrot-pull
+- lumen
+- circuit
+- tetris
+
+这批以 **迁目录 + 轻拆** 为主，不要求每款都重新设计内部架构。
+
+每款至少做到：
+
+```
+src/games/<id>/
+  index.js
+  ...existing special modules
+```
+
+若单文件仍 > 60–80 KB，再拆 renderer/rules/input。
+
+### 数据文件例外
+
+大数据表可以大：
+
+- word daily dictionary
+- level tables
+- generated assets
+
+**数据文件大小不作为模块化失败。**
+
+---
+
+# 7. Phase 4 — 平台 shim 清退
+
+分支：
+
+`refactor/remove-platform-shims`
+
+当前 `js/` 下若存在类似：
+
+```js
+export * from '../src/platform/foo.js';
+```
+
+它们只是 Architecture v2 过渡兼容层。
+
+## 7.1 第一步：更新所有 import
+
+把游戏代码中的：
+
+```js
+import { bindChrome } from './game-chrome.js';
+```
+
+改成对应的：
+
+```js
+import { bindChrome } from '../../platform/game-chrome.js';
+```
+
+或通过 package 内正确的相对路径 / alias。
+
+建议原则：
+
+- runtime browser source：直接相对 import；
+- Vite-only authoring 如使用 alias，先确认测试静态服务器与浏览器原生 module path 能处理；
+- **不要只为了好看引入依赖 Vite resolver、但源码静态服务器无法运行的 import。**
+
+## 7.2 第二步：静态检查 0 consumer
+
+删除 shim 前：
+
+```bash
+git grep "js/game-chrome"
+git grep "./game-chrome.js"
+...
+```
+
+对应 Architecture verifier 应为 green。
+
+## 7.3 第三步：删除 shim
+
+候选删除：
+
+- `js/analytics.js`
+- `js/boot.js`
+- `js/daily.js`
+- `js/game-chrome.js`
+- `js/game-drawer.js`
+- `js/game-frame.js`
+- `js/game-sfx.js`
+- `js/i18n.js`
+- `js/icons.js`
+- `js/leaderboard.js`
+- `js/more-games.js`（注意这是 registry generated data，需要先决定 canonical output）
+- `js/player.js`
+- `js/safe-storage.js`
+- `js/site-settings.js`
+- `js/theme.js`
+
+### more-games 特例
+
+如果 `src/platform/more-games.js` 已是 canonical generated output：
+
+- gen 只写 `src/platform/more-games.js`
+- 不再生成 `js/more-games.js`
+- 所有 runtime import 指向 platform
+
+## Phase 4 退出条件
+
+- 平台 shim consumer = 0
+- shims 删除
+- architecture verifier 禁止重新引入
+- build / quick / changed verify 全绿
+
+---
+
+# 8. Phase 5 — GameStorage 全面收敛
+
+分支：
+
+`refactor/game-storage-migration`
+
+## 8.1 先做 inventory
+
+扫描所有游戏代码：
+
+```
+localStorage.
+storageGet(
+storageSet(
+storageRemove(
+```
+
+分类：
+
+### A. 必须继续走全局 platform setting
+
+不要迁到 GameStorage：
+
+- `site_lang`
+- `site_theme`
+- `site_muted`
+- `player_name`
+- 全局 profile
+
+### B. 服务协议 key
+
+谨慎处理，不直接改 key：
+
+- leaderboard
+- daily leaderboard
+- analytics
+- server/API contract
+
+### C. 游戏私有状态
+
+应迁到 GameStorage：
+
+- best score cache
+- stars/progression
+- tutorial seen
+- mode preference
+- unlocked content
+- per-game local settings
+
+## 8.2 迁移策略
+
+使用：
+
+`createGameStorage({ id, version, legacy, migrations })`
+
+要求：
+
+1. 旧用户数据无损读取；
+2. migration 幂等；
+3. legacy key 不要第一版就删除；
+4. 先读新 key；无新 key 时 migrate；
+5. 至少跨一个版本 migration 有单测。
+
+## 8.3 新增 verifier
+
+建议：
+
+`tests/verify-game-storage-usage.mjs`
+
+规则：
+
+- `src/games/**` 禁止 `localStorage.*`
+- 游戏私有持久化不得直接使用 platform `storageSet('随机旧key')`
+- global keys / protocol keys whitelist 写在 verifier 内并说明原因
+
+## Phase 5 退出条件
+
+- 游戏私有状态统一 GameStorage
+- 旧存档 regression tests 通过
+- 不改变 leaderboard/daily/global keys
+
+---
+
+# 9. Phase 6 — i18n 收敛
+
+分支：
+
+`refactor/declarative-i18n-migration`
+
+这不是把所有翻译表重写一遍。
+
+## 9.1 适合 declarative binder 的内容
+
+优先迁：
+
+- 静态按钮 label
+- title
+- aria-label
+- placeholder
+- tooltip
+- 固定菜单文字
+- 固定 overlay 文案
+
+HTML 使用：
+
+```html
+data-i18n="..."
+data-i18n-title="..."
+data-i18n-label="..."
+data-i18n-placeholder="..."
+data-i18n-tooltip="..."
+```
+
+JS 使用 `createI18nBinder`。
+
+## 9.2 暂时可保留 table-driven 的内容
+
+- 动态复数 / 参数插值
+- 运行时生成的大段说明
+- 关卡数据中的双语名称
+- canvas 文本
+- 复杂状态文案
+
+目标是消除 **重复 DOM 赋值和公共键复制**，不是为了追求一种语法。
+
+## 9.3 迁移批次
+
+先选择 3–5 个简单页面验证模式：
+
+- minesweeper
+- reversi
+- tetris
+- carrot-pull
+- circuit
+
+模式稳定后再推广。
+
+## 9.4 验收
+
+- language behavior 不变
+- accessibility label 有覆盖
+- verify-i18n 同时支持 legacy 与 declarative 的过渡期
+- 最后一批 legacy 页面迁完后，再考虑删除 legacy-only verifier 分支
+
+---
+
+# 10. Phase 7 — HTML Shell 收敛
+
+分支：
+
+`refactor/legacy-shell-convergence`
+
+**不要把所有静态 HTML 改成 JS 动态 render。**
+
+目标是让旧页面满足标准结构，而不是让文件长得逐字一样。
+
+## 10.1 Standard 页面
+
+应具备：
+
+- `.game-shell`
+- `.game-topbar`
+- `.game-main`
+- `.game-stage`
+- 可选 `.game-sidebar`
+- `.game-footer`
+
+并由现有 contract tests 验证。
+
+## 10.2 Immersive 页面
+
+继续使用 immersive contract：
+
+- Tower Defense
+- Firefly Signal
+- 其它 registry layout=immersive 页面
+
+## 10.3 特殊页
+
+Math Rain / Tank Battle 可以保留专用 shell，但必须：
+
+- 有语义主区域；
+- 有可访问标题；
+- 不引入第二套全站 navigation / settings 实现；
+- architecture verifier 中明确 exception。
+
+## 10.4 render-game-shell.js 的定位
+
+`render-game-shell.js`：
+
+- **新游戏 scaffold 默认使用**
+- 测试 fixture 可使用
+- 不强制 retroactively runtime-render 所有旧页面
+
+这样避免 SEO / 首屏 / accessibility 回归。
+
+---
+
+# 11. Phase 8 — scripts/ 与 tools/ 最终清理
+
+分支：
+
+`chore/tooling-layout-cleanup`
+
+目标目录：
+
+```
+tools/
+  generators/
+  checks/
+  dev/
+  lib/
+  archive/
+tests/
+  lib/
+```
+
+## 11.1 迁移
+
+将剩余：
+
+- layout-metrics
+- shots
+- probe-*
+- css dump
+- icon generation
+- theme-varize
+- shadow-loom recut
+- echo/ripple level builders
+
+按用途迁到 `tools/dev` / `tools/generators` / `tools/checks`。
+
+## 11.2 Python helpers
+
+检查 `scripts/lib/*.py`：
+
+- 如果只服务 archived migrations → 一起移入 archive；
+- 如果仍被 active generator 使用 → 移入 `tools/lib/`。
+
+## 11.3 删除重复 helper
+
+目标：
+
+- browser helper 单一 canonical implementation；
+- registry helper 单一 canonical implementation；
+- tests 可保留一行 re-export shim，但不要复制实现。
+
+## 11.4 文档 / package scripts 同步
+
+任何路径迁移必须同 commit 更新：
+
+- package.json
+- docs
+- tests
+- workflow
+- comments 中的命令示例
+
+---
+
+# 12. Phase 9 — Legacy `js/` 清退完成
+
+最终目标不是“删除整个 js 目录”，而是 **删除历史职责混杂**。
+
+理想最终形态：
+
+```
+src/
+  platform/
+  games/
+  generated/
+worker/
+tests/
+tools/
+public/
+css/
+```
+
+`js/` 若仍存在，只允许明确的兼容/特殊内容，并应很小。
+
+### 最终 registry entry 规则
+
+- 默认：`src/games/<id>/index.js`
+- Math Rain 可根据其最终结构使用 `src/games/math-rain/index.js`，内部继续保留 core/systems
+- Tank Battle 同理可迁 package，但保留其专用 runtime/layout
+
+**“特殊架构”不等于“永远留在 js 目录”。**
+
+---
+
+# 13. 推荐 PR 顺序
+
+Codex 不要做一个 200-file 超大 PR。按以下顺序：
+
+1. **PR A — architecture boundary guards + stale docs**
+2. **PR B — Tower Defense modules**
+3. **PR C — Sword Flight modules**
+4. **PR D — Gravity / Bond Forge / Needle Awn packages**
+5. **PR E — remaining standard game packages wave 1**
+6. **PR F — remaining standard game packages wave 2**
+7. **PR G — platform shim removal**
+8. **PR H — GameStorage migration**
+9. **PR I — declarative i18n migration**
+10. **PR J — shell convergence + tooling cleanup**
+11. **PR K — final legacy js cleanup / architecture lock**
+
+每个 PR 都必须可独立回滚。
+
+### 不要同时开启太多 PR
+
+推荐最多：
+
+- 1 个 active implementation PR
+- 1 个等待 review 的 PR
+
+避免 Codex 在多个分支重复碰同一入口造成 merge conflict。
+
+---
+
+# 14. Codex 每个 PR 的工作模板
+
+Codex 开始工作前，先输出：
+
+```
+Scope
+- ...
+
+Files expected to move/change
+- ...
+
+Compatibility surfaces
+- ...
+
+Tests to run
+- ...
+
+Out of scope
+- ...
+```
+
+完成后必须给：
+
+```
+Implemented
+- ...
+
+Compatibility preserved
+- ...
+
+Verification
+- command: result
+
+Remaining risks
+- ...
+
+Next recommended PR
+- ...
+```
+
+---
+
+# 15. Codex 任务提示词（可直接交接）
+
+下面这段可直接作为 Codex 的总任务说明：
+
+> 你正在完成 games 仓库的 Architecture v2 收尾迁移。  
+> 先阅读 `docs/architecture-v2.md`、本文件、`docs/contracts/*` 和当前 `games.config.json`。  
+> 不要重新设计 Architecture v2，也不要修改玩法/美术/数值。你的任务是把历史代码迁入已经建立的平台结构。
+>
+> 按本文 Phase 0 → Phase 9 顺序工作，每次只做一个明确 PR。先建立 architecture boundary guards，再迁移大文件和游戏 package，之后清退 platform shim，最后收敛 GameStorage/i18n/shell/tooling。
+>
+> 所有迁移必须保持 URL、DOM id、localStorage legacy data、leaderboard/daily key、debug hook 和已有 smoke tests 的兼容。  
+> 任何一个游戏迁移时，先画出它的 import/dependency 边界；优先抽 pure helpers、rules、renderer、input，避免循环依赖。
+>
+> CI 资源有限。普通开发只跑 `npm run verify:changed` 和目标 smoke；不要新增 always-on full workflow。Full `npm run verify` 只在候选 PR/合并前运行。
+>
+> 如果发现本文计划与仓库真实代码冲突，以“保持现有行为 + Architecture v2 边界”为最高优先级；在 PR 描述中记录偏差，不要擅自扩大范围。
+
+---
+
+# 16. 最终验收清单
+
+Architecture v2 legacy migration 只有在以下全部成立时才算真正完成：
+
+- [ ] 所有非例外 registry entry 指向 `src/games/<id>/index.js`
+- [ ] Math Rain / Tank Battle 的特殊结构有明确 contract 与测试
+- [ ] 无游戏代码从旧 platform shim 导入
+- [ ] platform shim 删除或只剩明确、临时且有删除日期/issue 的例外
+- [ ] 游戏私有 persistence 不直接使用 localStorage
+- [ ] GameStorage legacy migrations 有测试
+- [ ] 大型入口已拆，composition entry 保持轻量
+- [ ] standard 页面符合 shell contract
+- [ ] i18n 静态 DOM 文案默认 declarative binding
+- [ ] `scripts/` 不再是 active tooling 杂物目录
+- [ ] docs 不再引用已移动/归档的脚本路径
+- [ ] architecture boundary verifier 全绿
+- [ ] `npm run gen -- --check` 通过
+- [ ] `npm run build` 通过
+- [ ] `npm run verify` 通过
+- [ ] Tower Defense dist smoke 通过
+- [ ] `wrangler deploy --dry-run` 通过
+- [ ] 无 unresolved Copilot review comments
+- [ ] main 合并后 Workers build 通过
+
+完成这些后，Architecture v2 才从“平台已经建立”进入“历史代码也完成迁移”的最终状态。
