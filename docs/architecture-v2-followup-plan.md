@@ -4,7 +4,9 @@
 > 基线：PR #43 `refactor: establish platform architecture v2` 的 head。  
 > 本文描述 **Architecture v2 平台落地之后仍未完成的历史代码迁移**，不是重新设计平台。
 >
-> 核心原则：**先建立边界守卫，再迁移；小 PR、可回滚；默认跑 changed/targeted tests，只有候选 PR 才跑 full verify。**
+> 核心原则：**先建立边界守卫，再迁移；用 architecture debt ratchet 保证历史债务只能下降不能反弹；小 PR、可回滚；默认跑 changed/targeted tests，只有候选 PR 才跑 full verify。**
+>
+> 与 CSS Cascade Layers 的关系：本计划优先执行。`docs/architecture-v2-css-layer-migration-plan-2026-09.md` 的 P0/P1 可提前做只读盘点，但在本文第 13 节 handoff gate 满足前，不进入会改变 cascade 语义的 CSS P2+。
 
 ---
 
@@ -53,6 +55,39 @@ Architecture v2 的平台基础已经建立：
 ## 1. 当前基线与优先级
 
 PR #43 基线中，平台能力已经可用，但历史入口仍然偏大。
+
+### 1.1 Architecture debt ratchet（迁移期必须启用）
+
+Architecture v2 的最终规则不能等到“所有历史代码都迁完”才开始生效。迁移期间应建立一个
+**只降不升的技术债务基线**：已有 legacy 可以暂时存在，但任何 PR 都不得新增同类债务。
+
+建议新增机器可读基线，例如：
+
+- `tests/architecture-v2-debt-baseline.json`
+- `tests/verify-architecture-debt.mjs`（也可与 boundary verifier 合并）
+- package script：`npm run architecture:report`
+
+至少统计并输出：
+
+| 指标 | 说明 | Gate |
+|---|---|---|
+| registry entry 仍位于 `js/` 的数量 | 尚未迁入 `src/games/<id>/index.js` | 只能下降 |
+| platform shim consumer 数量 | JS import、HTML script、registry/generated/build/test 引用都计入 | 只能下降 |
+| 游戏代码直接 `localStorage.*` 数量 | 不含明确的 global/protocol allowlist | 只能下降 |
+| legacy shell 页面数量 | 尚未满足 standard/immersive/special contract | 只能下降 |
+| active `scripts/` 工具引用数量 | package scripts / runtime / tests 仍使用旧工具路径 | 只能下降 |
+| oversized composition entry 数量 | 用于发现拆分候选，不作为单独失败条件 | warning |
+
+执行规则：
+
+1. 第一次落地时记录**精确路径/调用点**，不要只记录一个总数；
+2. 后续 PR 可以保持或减少既有债务，但不得新增新的 violation；
+3. 某一类别降到 0 后立即切换为 strict-zero，不允许“重新抬高 baseline”；
+4. 只有本文“长期例外”中的明确架构例外才能进入 allowlist，并写明原因与测试；
+5. `architecture:report` 应同时输出“当前值 / 基线值 / 本 PR delta / top offenders”，让每个迁移 PR 都能说明自己消除了多少债务；
+6. baseline 只允许**向下更新**。若确需增加例外，必须单独 PR 并在 review 中解释，不能把 rebaseline 当作修测试的方法。
+
+> 这套 ratchet 是迁移期的保护网；最终 Phase 9 结束后应切换为 strict architecture contract，而不是永久保留高额 baseline。
 
 当前大文件优先级（约值，仅用于确定实施顺序）：
 
@@ -189,6 +224,11 @@ CI 资源原则见 `docs/architecture-v2.md#ci-resource-policy`。
 5. `worker/**` 不得 import 浏览器平台代码。
 6. `tools/archive/**` 不得被 package scripts / runtime / tests 调用。
 7. 新增 verify/smoke 文件无需手动登记，确保 auto-discovery 生效。
+8. 对尚未迁完的历史 violation 使用第 1.1 节 debt baseline 做 ratchet；**新文件/新调用点不享受 grandfathering**。
+9. verifier 必须能区分：
+   - 既有 debt（允许保持或减少）；
+   - 新增 debt（立即失败）；
+   - documented exception（长期允许）。
 
 ## 3.2 更新过期文档路径
 
@@ -216,9 +256,29 @@ PR #43 后，部分文档仍可能引用旧路径，例如：
 - `CLAUDE.md`
 - `README.md`
 
+## 3.3 Architecture report
+
+Phase 0 同时新增只读报告入口，例如：
+
+```bash
+npm run architecture:report
+```
+
+报告至少展示：
+
+- 当前 debt counters；
+- 相对 baseline 的 delta；
+- 仍未迁移的 top offenders；
+- strict-zero 已锁定的类别；
+- allowlist/exception 及理由。
+
+报告本身不替代 verifier；CI 由 verifier 判定“是否反弹”，report 用于 review 和阶段追踪。
+
 ## Phase 0 验收
 
 - architecture verifier 被 auto-discovery 自动发现；
+- debt ratchet 已生效，新增 legacy violation 会失败；
+- `architecture:report` 可复现地输出当前债务与 delta；
 - 不新增 workflow；
 - `npm run verify:changed` 通过；
 - 文档不再把 archived migration 写成日常操作。
@@ -284,8 +344,9 @@ src/games/tower-defense/
 
 ## 4.3 结构目标
 
-- `src/games/tower-defense/index.js`：建议 < 30 KB；
-- 单个非数据模块建议 < 45 KB；
+- `src/games/tower-defense/index.js`：**目标** < 30 KB；超过目标只触发 warning，不单独判定重构失败；
+- 单个非数据模块建议 < 45 KB，同样作为 review signal，不是机械 hard gate；
+- 真正的 hard gate 是：entry 只负责 bootstrap/composition、规则/渲染/输入职责清晰、无循环依赖；
 - 禁止出现 renderer → UI → model → renderer 循环依赖；
 - `games.config.json.entry` 改为 `src/games/tower-defense/index.js`；
 - `npm run gen` 更新 Vite input；
@@ -371,7 +432,8 @@ Sword Flight 当前类很大，但不要为了“类变小”把所有字段塞�
 ## 5.2 目标
 
 - registry entry → `src/games/sword-flight/index.js`
-- 主 entry < 30 KB 为目标
+- 主 entry < 30 KB 为目标；超过目标只作为 warning，不能为了“达标”制造无意义文件切分
+- hard gate：entry 只做 composition/bootstrap，模块依赖方向清楚，无循环依赖
 - 已有 `i18n.js`、`audio.js` 不复制
 - 任何新 shared helper 必须先判断是否属于 platform；游戏专属则留 game package
 
@@ -412,28 +474,47 @@ Sword Flight 当前类很大，但不要为了“类变小”把所有字段塞�
 - Bond Forge 分子数据与运行时逻辑分离
 - Needle Awn 不重复实现已有 audio/effects
 
-## PR 3B
+## PR 3B–3E — remaining standard packages 分小批迁移
 
-`refactor/game-packages-wave-2`
+原先把十几款游戏放进一个 PR 的做法与“小 PR、可独立回滚”原则冲突。改为每个 PR **2–4 款游戏**；
+如果其中某款在迁移时暴露出高耦合或需要玩法状态机调整，则立刻把它拆成单独 PR。
 
-迁移：
+### PR 3B
+
+`refactor/game-packages-wave-2a`
 
 - silk-dew
 - planet-merge
 - word-daily
 - shadow-loom
+
+### PR 3C
+
+`refactor/game-packages-wave-2b`
+
 - maxwell-demon
 - crystal-bloom
 - flame-verse
 - echo-cave
+
+### PR 3D
+
+`refactor/game-packages-wave-2c`
+
 - ripple-duet
 - hoop-shot
 - carrot-pull
 - lumen
+
+### PR 3E
+
+`refactor/game-packages-wave-2d`
+
 - circuit
 - tetris
+- 执行时 inventory 新发现、且风险较低的剩余 standard package（最多补到 4 款）
 
-这批以 **迁目录 + 轻拆** 为主，不要求每款都重新设计内部架构。
+这些批次以 **迁目录 + 轻拆** 为主，不要求每款都重新设计内部架构。
 
 每款至少做到：
 
@@ -443,7 +524,8 @@ src/games/<id>/
   ...existing special modules
 ```
 
-若单文件仍 > 60–80 KB，再拆 renderer/rules/input。
+若单文件仍 > 60–80 KB，将其列为拆分候选并优先抽 renderer/rules/input；文件大小本身只触发 warning。
+**不要为了压缩 KB 数量而制造人工分片，依赖方向与职责边界优先。**
 
 ### 数据文件例外
 
@@ -495,7 +577,15 @@ import { bindChrome } from '../../platform/game-chrome.js';
 
 ## 7.2 第二步：静态检查 0 consumer
 
-删除 shim 前：
+删除 shim 前，不能只依赖人工 `git grep`。Architecture verifier 必须覆盖：
+
+- ESM/static/dynamic import；
+- HTML `<script src>`；
+- registry 与 generated runtime references；
+- package scripts / Vite / Worker build graph；
+- tests / smoke / tooling 中仍会执行的引用。
+
+`git grep` 仍可作为人工复核：
 
 ```bash
 git grep "js/game-chrome"
@@ -503,7 +593,7 @@ git grep "./game-chrome.js"
 ...
 ```
 
-对应 Architecture verifier 应为 green。
+只有 verifier 证明对应 shim **effective consumer = 0** 才允许删除。
 
 ## 7.3 第三步：删除 shim
 
@@ -544,9 +634,16 @@ git grep "./game-chrome.js"
 
 # 8. Phase 5 — GameStorage 全面收敛
 
-分支：
+不要把所有游戏的持久化迁移塞进一个巨型 PR。先做 inventory，然后按 **2–4 款游戏/PR** 迁移；
+任何包含复杂 legacy migration 或跨版本兼容的游戏应单独 PR。
 
-`refactor/game-storage-migration`
+建议分支按批次命名：
+
+- `refactor/game-storage-migration-a`
+- `refactor/game-storage-migration-b`
+- ...
+
+每批都必须有旧数据 fixture / migration regression，不允许等最后一批才补兼容测试。
 
 ## 8.1 先做 inventory
 
@@ -831,21 +928,50 @@ css/
 
 ---
 
-# 13. 推荐 PR 顺序
+# 13. Architecture → CSS Cascade Layers handoff gate
+
+`docs/architecture-v2-css-layer-migration-plan-2026-09.md` 的 P0/P1 盘点可以提前做，但只有以下条件全部满足，
+才允许进入会改变 CSS cascade 语义的 P2+：
+
+- [ ] Architecture boundary verifier + debt ratchet 已稳定运行；
+- [ ] registry/game package 的主要 legacy 迁移完成，剩余项只有明确例外；
+- [ ] platform shim consumer 为 0，或只剩有删除 issue/理由的临时例外；
+- [ ] GameStorage/i18n/shell 的结构性迁移已完成到不会再大规模改 DOM/class contract 的状态；
+- [ ] HTML shell convergence 已完成；
+- [ ] 没有正在进行的大规模 shared DOM / class / layout 重构 PR；
+- [ ] `shared-css-first` 仍被视为当前生产契约，并有 build/contract 测试保护；
+- [ ] `npm run build`、Architecture v2 candidate CI、关键 smoke 全绿；
+- [ ] CSS 方案 P0 的 computed-style / geometry baseline 已记录。
+
+handoff 通过后，CSS layer 迁移期间进入一个临时 **layout freeze**：
+
+- 可以继续做独立游戏逻辑、内容和不触及 shared cascade 的工作；
+- 不并行进行 shell redesign、全站 class 重命名、共享布局重构；
+- 必须修改共享 DOM/CSS contract 的工作单独排队，等 CSS migration 完成或显式协调。
+
+这样可确保 CSS 回归出现时，原因集中在 cascade migration，而不是 DOM 与 cascade 同时变化。
+
+---
+
+# 14. 推荐 PR 顺序
 
 Codex 不要做一个 200-file 超大 PR。按以下顺序：
 
-1. **PR A — architecture boundary guards + stale docs**
+1. **PR A — architecture boundary guards + debt ratchet + stale docs**
 2. **PR B — Tower Defense modules**
 3. **PR C — Sword Flight modules**
 4. **PR D — Gravity / Bond Forge / Needle Awn packages**
-5. **PR E — remaining standard game packages wave 1**
-6. **PR F — remaining standard game packages wave 2**
-7. **PR G — platform shim removal**
-8. **PR H — GameStorage migration**
-9. **PR I — declarative i18n migration**
-10. **PR J — shell convergence + tooling cleanup**
-11. **PR K — final legacy js cleanup / architecture lock**
+5. **PR E — standard packages wave 2A（最多 4 款）**
+6. **PR F — standard packages wave 2B（最多 4 款）**
+7. **PR G — standard packages wave 2C（最多 4 款）**
+8. **PR H — standard packages wave 2D（最多 4 款）**
+9. **PR I — platform shim removal**
+10. **PR J1/J2/... — GameStorage migration（每批 2–4 款；复杂迁移单独 PR）**
+11. **PR K1/K2/... — declarative i18n migration（小批推广）**
+12. **PR L — shell convergence**
+13. **PR M — tooling layout cleanup**
+14. **PR N — final legacy js cleanup / strict architecture lock**
+15. **Handoff — 满足第 13 节 gate 后，再进入 CSS layer P2+**
 
 每个 PR 都必须可独立回滚。
 
@@ -860,7 +986,7 @@ Codex 不要做一个 200-file 超大 PR。按以下顺序：
 
 ---
 
-# 14. Codex 每个 PR 的工作模板
+# 15. Codex 每个 PR 的工作模板
 
 Codex 开始工作前，先输出：
 
@@ -902,7 +1028,7 @@ Next recommended PR
 
 ---
 
-# 15. Codex 任务提示词（可直接交接）
+# 16. Codex 任务提示词（可直接交接）
 
 下面这段可直接作为 Codex 的总任务说明：
 
@@ -921,7 +1047,7 @@ Next recommended PR
 
 ---
 
-# 16. 最终验收清单
+# 17. 最终验收清单
 
 Architecture v2 legacy migration 只有在以下全部成立时才算真正完成：
 
@@ -937,6 +1063,9 @@ Architecture v2 legacy migration 只有在以下全部成立时才算真正完�
 - [ ] `scripts/` 不再是 active tooling 杂物目录
 - [ ] docs 不再引用已移动/归档的脚本路径
 - [ ] architecture boundary verifier 全绿
+- [ ] architecture debt counters 已清零，或只剩文档化长期例外；无类别通过向上 rebaseline “解决”
+- [ ] `architecture:report` 显示最终 strict-zero/allowlist 状态，且本阶段无 debt 反弹
+- [ ] 第 13 节 Architecture → CSS handoff gate 满足
 - [ ] `npm run gen -- --check` 通过
 - [ ] `npm run build` 通过
 - [ ] `npm run verify` 通过
