@@ -190,9 +190,10 @@ function runStep(step, base, buffered) {
         const timer = setTimeout(() => {
             try { child.kill('SIGTERM'); } catch {}
             setTimeout(() => {
-                if (!settled) {
-                    try { child.kill('SIGKILL'); } catch {}
-                }
+                // `done()` marks the step settled immediately, but a child may
+                // ignore SIGTERM.  The hard kill must therefore not depend on
+                // the parent promise still being unsettled.
+                try { child.kill('SIGKILL'); } catch {}
             }, 3000).unref?.();
             done(false, 124, `timeout after ${timeoutMs}ms`);
         }, timeoutMs);
