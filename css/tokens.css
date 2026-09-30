@@ -1,3 +1,6 @@
+@layer tokens, layout, components;
+
+@layer tokens {
 /* ─────────────────────────────────────────────
    Shared design tokens — 全仓统一设计系统（唯一新增公共文件）
    ─────────────────────────────────────────────
@@ -188,4 +191,6 @@
     border-radius: var(--tok-radius-btn);
     transition: transform 0.12s, background 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s;
     -webkit-tap-highlight-color: transparent;
+}
+
 }

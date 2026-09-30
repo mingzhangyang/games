@@ -1,3 +1,4 @@
+@layer components {
 /* ─────────────────────────────────────────────
    交叉推荐条 — 所有游戏页共用的"更多游戏"导航
    放置在各游戏的开始界面/结算弹窗内（flow 布局，自适应宽度）
@@ -45,4 +46,6 @@
 
 @media (prefers-reduced-motion: reduce) {
     .more-games-links a { transition: none; }
+}
+
 }

@@ -12,13 +12,14 @@ import { ZH_IDIOMS } from './word-daily-data-zh.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
-import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { hashString, todayKeyDisplay, msUntilNextDay } from './daily.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
+import { createGameStorage } from '../src/platform/storage/game-storage.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -37,6 +38,11 @@ function storageParse(key, fallback) {
 // UTC+8 16:00 之后倒计时整整多报 24 小时）
 
 // 每日谜题编号（自 2026-01-01 UTC+8 起）
+const WORD_STORE = createGameStorage('word-daily', {
+    version: 1,
+    legacy: { seenHelp: 'wd_seen_help' },
+});
+
 const EPOCH = Date.UTC(2026, 0, 1) - 8 * 3600 * 1000;
 function dailyNumber() {
     return Math.floor((Date.now() - EPOCH) / (24 * 3600 * 1000)) + 1;
@@ -1427,12 +1433,9 @@ class WordDailyGame {
 
     /* 首次访问自动展示玩法说明（只弹一次） */
     maybeShowFirstRunHelp() {
-        try {
-            if (localStorage.getItem('wd_seen_help') === '1') return;
-            localStorage.setItem('wd_seen_help', '1');
-        } catch (e) {
-            return; // 存储不可用时不弹，避免每次刷新打扰
-        }
+        const seen = WORD_STORE.get('seenHelp', false);
+        if (seen === true || seen === 1 || seen === '1') return;
+        if (!WORD_STORE.trySet('seenHelp', true)) return;
         this.openHelp();
     }
 
@@ -1624,10 +1627,14 @@ onReady(() => {
    owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
-    bindChrome({
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
+    window.wordDailyRuntime = mountGameRuntime({
         self: 'word-daily.html',
-        owns: ['more'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        frame: false,
+        chrome: {
+            owns: ['more'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
     });
 });

@@ -328,6 +328,8 @@
 .card-icon--shadow-loom { background: var(--ix-card-icon--shadow-loom-bg); color: var(--ix-card-icon--shadow-loom-text); }
 
         .card-title {
+            min-width: 0;
+            overflow-wrap: anywhere;
             font-size: 1em;
             font-weight: 700;
             color: var(--color-text);

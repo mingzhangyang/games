@@ -3,7 +3,7 @@ import legacy from '@vitejs/plugin-legacy';
 import { resolve } from 'path';
 
 // dev / prod 单文件按 mode 分支：保证两边插件、别名、assetsInclude 完全一致。
-// 旧 vite.config.dev.js 已删除（它没有 shared-css-first 插件，且引用了不存在的 ./config 别名）。
+// 共享 CSS 的源码顺序由 shared-css-first 在产物 HTML 中保持。
 export default defineConfig(({ mode }) => {
   const isDev = mode === 'development';
 
@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => {
         '@js': resolve(__dirname, './js'),
         '@css': resolve(__dirname, './css'),
         '@assets': resolve(__dirname, './assets'),
+        '@platform': resolve(__dirname, './src/platform'),
+        '@generated': resolve(__dirname, './src/generated'),
+        '@games': resolve(__dirname, './src/games'),
       },
     },
 
@@ -125,14 +128,8 @@ main: resolve(__dirname, 'index.html'),
             }
             if (!links.length) return html;
 
-            // ② 外链还必须排在**内联 <style> 之前**。
-            //    Vite 把注入的 <link> 追加到 </head> 末尾，对有内联样式的页面
-            //    （index.html 的落地页样式、math-rain.html）等于把共享层放到了内联样式**之后**，
-            //    层叠关系与源码态相反：源码里 index 的 .game-footer{padding:20px 0 28px}
-            //    胜出，产物里却变成 layout.css 的 {padding:6px 0 2px} 胜出（同权重，后来者赢）。
-            //    只排 link 之间的顺序抓不到这一类，必须整体搬到第一个内联样式前面。
-            //    ⚠️ 定位内联样式前要先把 HTML 注释抹掉 —— index 的说明注释里就写着
-            //    这个标签名，裸搜会命中注释、把 link 插到注释里去。用等长空格替换以保持下标有效。
+            // ② 外链还必须排在内联 <style> 之前。
+            //    定位内联样式前先把 HTML 注释抹掉，避免说明文字里的标签名干扰匹配。
             const masked = html.replace(/<!--[\s\S]*?-->/g, m => ' '.repeat(m.length));
             const styleAt = masked.search(/<style[\s>]/);
             if (styleAt < 0) return html;
@@ -146,7 +143,6 @@ main: resolve(__dirname, 'index.html'),
               prev = m.index + m[0].length;
             }
             stripped += html.slice(prev);
-
             const maskedOut = stripped.replace(/<!--[\s\S]*?-->/g, m => ' '.repeat(m.length));
             const si = maskedOut.search(/<style[\s>]/);
             const lineStart = stripped.lastIndexOf('\n', si) + 1;

@@ -17,7 +17,7 @@ import { registry } from './lib/registry.mjs';
 registry.all();                  // 全部游戏（按配置顺序）
 registry.withCap('drawer');      // 具备某能力的游戏
 registry.byId('sword-flight');   // 单个，找不到直接抛错（宁可红不可静默）
-registry.site();                 // 站点级字段（origin / scoresWorker / siteName / publisher / ogImageDir）
+registry.site();                 // 站点级字段（含 home 首页 UI / 外链卡片配置）
 registry.hrefs();                // href 文件名集合（校验器拼 URL 用）
 registry.layoutOf(g);            // 'standard'（缺省）| 'immersive'，见 §2.1
 registry.withLayout('immersive'); // 某布局类型的全部游戏
@@ -92,7 +92,7 @@ caps 是校验器与迁移脚本的唯一判据：
 
 ## 3. gen 派生清单
 
-`npm run gen` 从真源就地改写以下登记点（产物入库，非构建期注入）：
+`npm run gen` 从真源就地改写以下登记点（产物入库，非构建期注入）。首页运行时不再维护第二份游戏数组：JSON-LD 直接从生成卡片 DOM 派生，中文翻译通过动态 import 按需下载：
 
 | 派生点 | 区域哨兵 | 内容 |
 | --- | --- | --- |
@@ -100,7 +100,9 @@ caps 是校验器与迁移脚本的唯一判据：
 | 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList） |
 | `public/sitemap.xml` | `games` | 全部 `<url>` 条目 |
 | `public/manifest.json` | （JSON 感知） | `shortcuts` 数组 |
-| `js/more-games.js` | `more-games` | `export const MORE_GAMES = [...]`（index 卡片与各页「更多游戏」的运行时数据源） |
+| `index.html` | `home-cards` | 首页卡片（紧凑静态 HTML；名称/描述/标签来自 registry，图标引用外部 sprite） |
+| `js/index-i18n-zh.js` | `home-i18n-zh` | 首页中文翻译懒加载块；英语直接使用静态 HTML，不重复下载 |
+| `js/more-games.js` | `more-games` | `export const MORE_GAMES = [...]`（各游戏页「更多游戏」运行时数据源） |
 | `vite.config.js` | `inputs` | 多页构建入口 `input: { main, tetris, ... }` |
 | `Workers/game-scores.js` | `games-scores` | `GAMES` 白名单 + `DAILY_PATTERNS` 正则 |
 | `Workers/games-analytics.js` | `games-analytics` | `GAMES = [...]` 白名单 |

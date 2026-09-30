@@ -13,16 +13,13 @@ import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey } from './daily.js';
 import { submitScore } from './leaderboard.js';
-import { makeText } from './i18n.js';
+import { I18N } from '../src/games/needle-awn/i18n.js';
 import { onReady } from './boot.js';
-import { createSfxEngine } from './game-sfx.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { ART_UI, loadNeedleAwnArt } from './needle-awn-art.js';
 import { createNeedleAwnScene } from './needle-awn-scene.js';
 
@@ -41,434 +38,11 @@ const STORAGE_KEYS = {
 
 /* ────────────────────────── 国际化 i18n ────────────────────────── */
 
-const I18N = makeText({
-    zh: {
-        stats: '数据统计',
-        gameTitle: '针尖对麦芒',
-        canvasAria: '针尖对麦芒演武场',
-        gameSub: '极速破锋 · 针芒毕露 · 刹那生灭',
-        badge: '东方赛博交锋',
-        trials: '十关演武',
-        trialsSub: '10 Trials & Bosses',
-        endless: '无尽争锋',
-        endlessSub: '极限冲分 生存挑战',
-        daily: '每日论剑',
-        dailySub: '全球同谱 每日一局',
-        duel: '双雄对决',
-        duelSub: '1v1 AI人机 / 双人同屏',
-        howTo: '<b>核心玩法：</b>敌来刺我，非退即进！正对敌方锋芒<b>破空突刺</b>触发<b>【针尖对麦芒】</b>极致弹反！<br>破空瞬息定格时空，震落碎芒反弹追击。流转<b>银针</b>与<b>金芒</b>双姿态，聚极意，斩乾坤！',
-        selectLevel: '选择演武关卡',
-        duelModeLbl: '对决模式',
-        duelTypeAi: 'vs AI 人机',
-        duelType2P: '双人同屏 2P',
-        aiDiffLbl: 'AI 宗师造诣',
-        diffEasy: '剑徒',
-        diffMedium: '宗师',
-        diffHard: '剑圣',
-        startDuel: '开始对决 ▶',
-        pauseTitle: '凝神静思 · 暂停',
-        pauseSub: '调息片刻，蓄势待发',
-        resume: '继续战斗 ▶',
-        restart: '重新挑战 ⟲',
-        home: '返回菜单',
-        victoryTitle: '大获全胜 · 锋芒毕露',
-        defeatTitle: '气力耗尽 · 胜败常事',
-        duelP1Win: '银针破阵 · P1 胜出！',
-        duelP2Win: '金芒贯日 · P2 胜出！',
-        duelAiWin: '宗师破极 · AI 胜出！',
-        scoreLbl: '交锋得分',
-        clashesLbl: '针尖麦芒碰撞',
-        comboLbl: '最高连击',
-        extraLbl: '用时 / 关卡',
-        nextStage: '下一关卡 ▶',
-        replay: '再战一局 ⟲',
-        toastClash: '针尖对麦芒！',
-        toastZen: '极意·刹那！',
-        toastNova: '金芒天爆！',
-        toastUlt: '万芒天破！',
-        sideRulesTitle: '针尖对麦芒 · 核心法则',
-        sideRulesText: '<b>硬碰硬：</b>朝向迎面而来的利刃或尖刺突刺，在毫厘之间触发<b>针尖对麦芒</b>！完美格挡所有伤害并爆发出碎芒反弹。<br><br><b>双锋流转：</b><br>• <b>银针（水蓝）</b>：极速穿云刺，碰撞触发时空凝滞（子弹时间）。<br>• <b>金芒（暖金）</b>：回旋破晓舞，碰撞引发金芒天爆全屏净空。<br><b>逆克爆发：</b>以针刺破麦芒，倍率翻倍！',
-        sideRecordsTitle: '绝巅战绩',
-        sideEndlessLbl: '无尽争锋最高分',
-        sideClashLbl: '单局极致碰撞',
-        sideStarsLbl: '演武通关星数',
-        sideDailyLbl: '今日论剑状态',
-        sideControlsTitle: '键位与操控',
-        scAim: '瞄准方向',
-        scAimKey: '鼠标移动 / 触屏拖拽（右半屏）',
-        scDash: '破空突刺 (交锋)',
-        scDashKey: '鼠标左键 / 空格 / 破空按钮',
-        scStance: '转换锋芒姿态',
-        scStanceKey: '鼠标右键 / Q / 转锋按钮',
-        scUlt: '万芒天破 (极意)',
-        scUltKey: 'E 键 / 双击 / 极意按钮',
-        scMove: '身法游走',
-        scMoveKey: 'W A S D / 左半屏摇杆',
-        dailyDone: '今日已登顶',
-        dailyNotDone: '今日未挑战',
-        stanceNeedle: '银针态',
-        stanceAwn: '金芒态',
-        touchDash: '破空刺',
-        touchStance: '转锋',
-        touchUlt: '极意',
-        ultLabel: '极意',
-        namePlaceholder: '输入侠客尊号以登金榜...',
-        duelFinale: '对决终局',
-        duelSubResult: '双雄争锋 · 胜负已分',
-        victorySub: '演武告捷 · 锋芒初试',
-        defeatSub: '胜败常事 · 重整旗鼓',
-        modeBadgeMenu: '演武',
-        badgeStage: '第 {n} / 10 关',
-        badgeWave: '第 {n} 波',
-        badgeDaily: '每日挑战',
-        lbSubmitFail: '金榜上传失败——战绩已存本地',
-        duel2pTouchWarn: '双人同屏 2P 需要实体键盘，触屏设备建议选择 vs AI',
-        levelNames: [
-            '初试锋芒', '飞针入微', '芒刺在背', '阴阳交错', '灵虚针尊',
-            '暴雨梨花', '麦浪连天', '扶摇麦皇', '绝命千本', '针尖麦芒'
-        ],
-        hint: '移动即突刺 · Q 转锋 · E 极意 · P 暂停',
-    },
-    en: {
-        stats: 'Stats',
-        gameTitle: 'Pinpoint Clash',
-        canvasAria: 'Pinpoint Clash arena',
-        gameSub: 'Needle vs Awn · Pierce · Clash · Awaken',
-        badge: 'ORIENTAL KINETIC ACTION',
-        trials: '10 Trials',
-        trialsSub: 'Handcrafted Stages & Bosses',
-        endless: 'Endless Duel',
-        endlessSub: 'Survive & Rank Globally',
-        daily: 'Daily Duel',
-        dailySub: 'World-shared Seeded Run',
-        duel: '1v1 Arena',
-        duelSub: 'vs AI or 2-Player Pass & Play',
-        howTo: '<b>Core Mechanic:</b> Dodge less, clash more! Thrust head-on into enemy tips to trigger <b>【Pinpoint Clash】</b>!<br>Freeze time, detonate homing ricochets, and fluidly weave between <b>Silver Needle</b> &amp; <b>Golden Awn</b> stances to unleash Awakening!',
-        selectLevel: 'Select Trial Stage',
-        duelModeLbl: 'Duel Mode',
-        duelTypeAi: 'vs AI Bot',
-        duelType2P: '2-Player (Same Screen)',
-        aiDiffLbl: 'AI Grandmaster Skill',
-        diffEasy: 'Apprentice',
-        diffMedium: 'Master',
-        diffHard: 'Sword Saint',
-        startDuel: 'Start Duel ▶',
-        pauseTitle: 'Focused Pause',
-        pauseSub: 'Catch your breath and prepare to clash',
-        resume: 'Resume Battle ▶',
-        restart: 'Restart ⟲',
-        home: 'Menu',
-        victoryTitle: 'VICTORY · Sharp & Radiant',
-        defeatTitle: 'DEFEAT · The Blade Broke',
-        duelP1Win: 'Silver Needle Strikes · P1 Wins!',
-        duelP2Win: 'Golden Awn Radiates · P2 Wins!',
-        duelAiWin: 'Master Deflects · AI Wins!',
-        scoreLbl: 'Clash Score',
-        clashesLbl: 'Tip-to-Tip Clashes',
-        comboLbl: 'Max Combo',
-        extraLbl: 'Time / Wave',
-        nextStage: 'Next Stage ▶',
-        replay: 'Play Again ⟲',
-        toastClash: 'PINPOINT CLASH!',
-        toastZen: 'BULLET TIME!',
-        toastNova: 'SOLAR NOVA!',
-        toastUlt: 'AWAKENED LOTUS!',
-        sideRulesTitle: 'Core Rules: Pinpoint Clash',
-        sideRulesText: '<b>Head-on Precision:</b> Thrust directly towards incoming blade tips to trigger <b>Pinpoint Clash</b>! Parries all damage, freeze-frames impact, and fires homing shards.<br><br><b>Dual Stances:</b><br>• <b>Silver Needle (Cyan)</b>: Piercing dash, triggers Bullet Time on clash.<br>• <b>Golden Awn (Gold)</b>: Wide arc sweep, triggers Solar Nova on clash.<br><b>Opposite Clash:</b> Needle vs Awn yields ×2 bonus multiplier!',
-        sideRecordsTitle: 'Grand Records',
-        sideEndlessLbl: 'Endless Best Score',
-        sideClashLbl: 'Max Tip Clashes',
-        sideStarsLbl: 'Total Trial Stars',
-        sideDailyLbl: 'Daily Challenge',
-        sideControlsTitle: 'Controls & Shortcuts',
-        scAim: 'Aim Angle',
-        scAimKey: 'Mouse Move / Touch Drag (right half)',
-        scDash: 'Thrust (Clash)',
-        scDashKey: 'Left Click / Space / Thrust button',
-        scStance: 'Switch Stance',
-        scStanceKey: 'Right Click / Q / Stance button',
-        scUlt: 'Awakened Lotus',
-        scUltKey: 'E / Double Tap / Awaken button',
-        scMove: 'Agile Maneuver',
-        scMoveKey: 'W A S D / Touch Joystick (left half)',
-        dailyDone: 'Completed Today',
-        dailyNotDone: 'Unattempted',
-        stanceNeedle: 'Needle Stance',
-        stanceAwn: 'Awn Stance',
-        touchDash: 'Thrust',
-        touchStance: 'Stance',
-        touchUlt: 'Awaken',
-        ultLabel: 'Awaken',
-        namePlaceholder: 'Warrior / Player Name...',
-        duelFinale: 'DUEL FINALE',
-        duelSubResult: '1v1 Arena Duel Concluded',
-        victorySub: 'Trial Accomplished',
-        defeatSub: 'Defeated · Strike Again',
-        modeBadgeMenu: 'Trials',
-        badgeStage: 'Stage {n}/10',
-        badgeWave: 'Wave {n}',
-        badgeDaily: 'Daily Run',
-        lbSubmitFail: 'Score upload failed — saved locally',
-        duel2pTouchWarn: '2P mode needs a physical keyboard; on touch devices try vs AI',
-        levelNames: [
-            'First Spark', 'Needle Stream', 'Awn Swarm', 'Dual Weaving', 'Needle Sovereign',
-            'Blossom Rain', 'Golden Surge', 'Awn Emperor', 'Thousand Needles', 'Grandmaster Duel'
-        ],
-        hint: 'Move to thrust · Q switch stance · E ultimate · P pause',
-    }
-});
+// I18N moved to src/games/needle-awn/i18n.js.
 
-/* ────────────────────────── Web Audio 音频引擎 ────────────────────────── */
 
-const sfxEngine = createSfxEngine();
-
-const SoundEngine = {
-    bgmInterval: null,
-    pentatonic: [220, 246.94, 277.18, 329.63, 369.99, 440, 493.88, 554.37, 659.25],
-
-    init() {
-        if (getMuted()) return null;
-        return sfxEngine.ensure();
-    },
-
-    playTone(freq, duration, type = 'sine', vol = 0.12, endFreq = null) {
-        sfxEngine.tone({ freq, dur: duration, type, vol, slideTo: endFreq || undefined });
-    },
-
-    clashPing() {
-        // 银针碰撞：高频金属脆响 + 泛音
-        const ctx = this.init();
-        if (!ctx) return;
-        this.playTone(1320, 0.28, 'triangle', 0.16, 2640);
-        this.playTone(2640, 0.18, 'sine', 0.12);
-        this.playTone(90, 0.12, 'triangle', 0.2, 45); // 顿击低音
-    },
-
-    awnBurst() {
-        // 金麦芒爆：洪厚青铜钟鸣 + 暖音低破
-        const ctx = this.init();
-        if (!ctx) return;
-        this.playTone(440, 0.35, 'triangle', 0.18, 220);
-        this.playTone(880, 0.25, 'sine', 0.14);
-        this.playTone(65, 0.22, 'sawtooth', 0.18, 30);
-    },
-
-    dashWhoosh() {
-        // 破空急啸
-        const ctx = this.init();
-        if (!ctx) return;
-        const now = ctx.currentTime;
-        const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.16), ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i++) {
-            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 1.8);
-        }
-        const src = ctx.createBufferSource();
-        const filter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(800, now);
-        filter.frequency.exponentialRampToValueAtTime(2400, now + 0.08);
-        filter.frequency.exponentialRampToValueAtTime(600, now + 0.16);
-        filter.Q.value = 3.0;
-
-        gain.gain.setValueAtTime(0.18, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-
-        src.buffer = buffer;
-        src.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-        src.start(now);
-    },
-
-    stanceSwitch() {
-        this.playTone(620, 0.08, 'sine', 0.09, 880);
-    },
-
-    hurt() {
-        this.playTone(220, 0.25, 'sawtooth', 0.22, 60);
-    },
-
-    awaken() {
-        const ctx = this.init();
-        if (!ctx) return;
-        // 琴音拂弦升调 + 爆鸣
-        [329.63, 440, 493.88, 659.25, 880].forEach((freq, idx) => {
-            setTimeout(() => {
-                this.playTone(freq, 0.35, 'triangle', 0.15);
-            }, idx * 45);
-        });
-        setTimeout(() => {
-            this.playTone(60, 0.5, 'triangle', 0.25, 20);
-        }, 220);
-    },
-
-    startAmbientMusic() {
-        if (this.bgmInterval) return;
-        this.bgmInterval = setInterval(() => {
-            if (getMuted()) return;
-            // 随机弹拨五声音阶
-            if (Math.random() < 0.6) {
-                const note = this.pentatonic[Math.floor(Math.random() * this.pentatonic.length)];
-                this.playTone(note, 0.6, 'sine', 0.04);
-            }
-        }, 1200);
-    },
-
-    stopAmbientMusic() {
-        if (this.bgmInterval) {
-            clearInterval(this.bgmInterval);
-            this.bgmInterval = null;
-        }
-    }
-};
-
-/* ────────────────────────── 粒子与特效系统 ────────────────────────── */
-
-class ParticleSystem {
-    constructor() {
-        this.particles = [];
-        this.shockwaves = [];
-        this.popups = [];
-        this.screenShake = 0;
-    }
-
-    addSpark(x, y, vx, vy, color, size, life) {
-        if (this.particles.length > 240) return;
-        this.particles.push({
-            x, y, vx, vy, color, size,
-            maxLife: life,
-            life: life
-        });
-    }
-
-    addShockwave(x, y, color, maxRadius = 120, speed = 320) {
-        this.shockwaves.push({
-            x, y, color,
-            radius: 5,
-            maxRadius,
-            speed,
-            alpha: 1
-        });
-    }
-
-    addPopup(text, x, y, color = '#ffffff') {
-        this.popups.push({
-            text, x, y, color,
-            alpha: 1,
-            scale: 0.7,
-            life: 0.8
-        });
-    }
-
-    burst(x, y, color1, color2, count = 28, speedMul = 1) {
-        for (let i = 0; i < count; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = (120 + Math.random() * 260) * speedMul;
-            const col = Math.random() < 0.5 ? color1 : color2;
-            this.addSpark(
-                x, y,
-                Math.cos(angle) * speed,
-                Math.sin(angle) * speed,
-                col,
-                2 + Math.random() * 3,
-                0.3 + Math.random() * 0.4
-            );
-        }
-    }
-
-    shake(intensity = 8) {
-        this.screenShake = Math.max(this.screenShake, intensity);
-    }
-
-    update(dt) {
-        // 震屏阻尼衰减
-        if (this.screenShake > 0) {
-            this.screenShake = Math.max(0, this.screenShake - dt * 25);
-        }
-
-        // 粒子更新
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            const p = this.particles[i];
-            p.x += p.vx * dt;
-            p.y += p.vy * dt;
-            p.vx *= 0.95;
-            p.vy *= 0.95;
-            p.life -= dt;
-            if (p.life <= 0) {
-                this.particles.splice(i, 1);
-            }
-        }
-
-        // 冲击波更新
-        for (let i = this.shockwaves.length - 1; i >= 0; i--) {
-            const s = this.shockwaves[i];
-            s.radius += s.speed * dt;
-            s.alpha = Math.max(0, 1 - s.radius / s.maxRadius);
-            if (s.radius >= s.maxRadius) {
-                this.shockwaves.splice(i, 1);
-            }
-        }
-
-        // 文字弹出特效更新
-        for (let i = this.popups.length - 1; i >= 0; i--) {
-            const pop = this.popups[i];
-            pop.life -= dt;
-            pop.y -= dt * 45;
-            pop.scale = Math.min(1.2, pop.scale + dt * 2.5);
-            pop.alpha = Math.max(0, pop.life / 0.8);
-            if (pop.life <= 0) {
-                this.popups.splice(i, 1);
-            }
-        }
-    }
-
-    draw(ctx) {
-        // 绘制冲击波
-        ctx.save();
-        for (const s of this.shockwaves) {
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = s.color;
-            ctx.globalAlpha = s.alpha * 0.85;
-            ctx.lineWidth = 3;
-            ctx.stroke();
-        }
-        ctx.restore();
-
-        // 绘制火花粒子
-        ctx.save();
-        for (const p of this.particles) {
-            const alpha = Math.max(0, p.life / p.maxLife);
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = alpha;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.restore();
-
-        // 绘制书法飘字
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        for (const pop of this.popups) {
-            ctx.save();
-            ctx.translate(pop.x, pop.y);
-            ctx.scale(pop.scale, pop.scale);
-            ctx.globalAlpha = pop.alpha;
-            ctx.font = 'bold 20px "Segoe UI", "PingFang SC", system-ui, sans-serif';
-            ctx.shadowColor = pop.color;
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = pop.color;
-            ctx.fillText(pop.text, 0, 0);
-            ctx.restore();
-        }
-        ctx.restore();
-    }
-}
+import { SoundEngine } from '../src/games/needle-awn/audio.js';
+import { ParticleSystem } from '../src/games/needle-awn/effects.js';
 
 /* ────────────────────────── 游戏主状态机 ────────────────────────── */
 
@@ -2236,38 +1810,26 @@ class GameEngine {
 // 页面加载完成后实例化
 onReady(() => {
     window.gameEngine = new GameEngine();
+    const getText = () => I18N[getLang()] || I18N.zh;
 
-    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
-    // 变化后经 game-frame:changed 驱动上面的 setupCanvas()
-    bindFrame({ logicalWidth: ARENA_WIDTH });
-
-    // 移动端底部统计抽屉
-    window.naDrawer = createStatsDrawer({
-        idPrefix: 'na',
-        getGame: () => window.gameEngine,
-        onPause: (g) => g && g.pauseQuiet(),
-        onResume: (g) => g && g.resumeQuiet(),
-        isBusy: () => {
-            const g = window.gameEngine;
-            return !!g && typeof g.isRunning === 'function' && g.isRunning();
-        },
-        ICONS,
-        getText: () => I18N[getLang()] || I18N.zh,
-    });
-    if (window.naDrawer) window.naDrawer.init();
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
-       na-btn-home 历史上只被 cache、从未绑过点击（HEAD 即如此），
-       顺手交给 chrome 接管。 */
-onReady(() => {
-    bindChrome({
+    window.naRuntime = mountGameRuntime({
         self: 'needle-awn.html',
-        owns: ['more', 'home'],
-        getText: () => I18N[getLang()] || I18N.zh,
-        labels: { pause: () => (I18N[getLang()] || {}).pause },
+        game: window.gameEngine,
+        frame: { logicalWidth: ARENA_WIDTH },
+        drawer: {
+            idPrefix: 'na',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.gameEngine && window.gameEngine.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText,
+            labels: { pause: () => (I18N[getLang()] || {}).pause },
+        },
     });
+
+    window.naDrawer = window.naRuntime.drawer;
 });

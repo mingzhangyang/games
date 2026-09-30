@@ -1,4 +1,4 @@
-import { getSilhouette } from './shadow-loom-silhouettes.js';
+import { getSilhouette } from '../src/generated/shadow-loom/silhouettes.js';
 
 /**
  * 影织 Shadow Loom — 纯几何内核（无 DOM，Node 与浏览器共用）

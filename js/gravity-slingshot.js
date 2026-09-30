@@ -15,16 +15,14 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { updateMoreGames, renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
-import { storageGet, storageSet } from './safe-storage.js';
+import { updateMoreGames } from './more-games.js';
+import { storageGet, storageSet, storageKeys, storageRemove } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey as todayCompact, mulberry32, hashStringFNV as hashStr } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
@@ -400,15 +398,8 @@ function buildDailyCourse() {
     }
     storageSet('gd_course_' + date, JSON.stringify(holes));
     // 清理往日赛程缓存（纯缓存非战绩，可安全删除）
-    try {
-        const stale = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith('gd_course_') && k !== 'gd_course_' + date) stale.push(k);
-        }
-        for (const k of stale) localStorage.removeItem(k);
-    } catch (e) {
-        // 存储不可用时跳过清理
+    for (const key of storageKeys('gd_course_')) {
+        if (key !== 'gd_course_' + date) storageRemove(key);
     }
     return holes;
 }
@@ -1743,43 +1734,29 @@ function storageParseStars() {
 
 onReady(() => {
     const game = new GravityGame();
-    window.gdGame = game; // 调试/测试句柄
-    window.__gravityDebug = { LEVELS, simulate, solvePar, buildDailyCourse, DT, SPEED_CAP }; // QA 用
+    window.gdGame = game;
+    window.__gravityDebug = { LEVELS, simulate, solvePar, buildDailyCourse, DT, SPEED_CAP };
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 
-    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
-    // 变化后经 game-frame:changed 驱动上面的 resize()
-    bindFrame({ logicalWidth: W });
-
-    // 桌面侧栏「更多游戏」卡（P3）：语言切换由 more-games.js 的全局
-    // updateMoreGames 监听自动同步（id 不以 MoreNav 结尾）
-    const gdSideMore = document.getElementById('gdSideMore');
-    if (gdSideMore) renderMoreGames(gdSideMore, { exclude: 'gravity-slingshot.html' });
-
-    // 移动端底部统计抽屉
-    window.gdDrawer = createStatsDrawer({
-        idPrefix: 'gd',
-        getGame: () => window.gdGame,
-        onPause: (g) => g && g.pauseQuiet(),
-        onResume: (g) => g && g.resumeQuiet(),
-        isBusy: () => {
-            const g = window.gdGame;
-            return !!g && typeof g.isRunning === 'function' && g.isRunning();
-        },
-        ICONS,
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-    });
-    if (window.gdDrawer) window.gdDrawer.init();
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-onReady(() => {
-    bindChrome({
+    window.gdRuntime = mountGameRuntime({
         self: 'gravity-slingshot.html',
-        owns: ['more'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        game,
+        frame: { logicalWidth: W },
+        more: '#gdSideMore',
+        drawer: {
+            idPrefix: 'gd',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.gdGame && window.gdGame.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
     });
+
+    window.gdDrawer = window.gdRuntime.drawer;
 });

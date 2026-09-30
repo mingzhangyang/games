@@ -14,13 +14,12 @@ import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
-import { makeText } from './i18n.js';
+import { LANGUAGES } from '../src/games/tower-defense/i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 import { LEVELS } from './tower-levels.js';
 import { createTowerDefenseArt, TD_ART_FRAMES } from './tower-defense-art.js';
@@ -37,222 +36,8 @@ function formatNumber(n) {
 
 /* ────────────────────────── i18n ────────────────────────── */
 
-const LANGUAGES = makeText({
-    en: {
-        stats: 'Stats',
-        tacticalOverview: 'Tactical overview',
-        closeTactical: 'Close tactical overview',
-        rotateTitle: 'Rotate device',
-        rotateCopy: 'Landscape view gives the defense line room to breathe.',
-        heroLabel: 'Future-city energy defense platform',
-        title: 'Neon Tower Defense',
-        subtitle: 'Build · Upgrade · Survive',
-        howto: 'Tap a cell to build towers, tap a tower to upgrade, sell or set targeting priority. Watch out for healers, armored units, flyers and tower-breakers — pick the right counter. Use commander skills (EMP & Overdrive) to hold every line.',
-        play: 'Play',
-        pulse: 'Pulse', frost: 'Frost', cannon: 'Cannon', tesla: 'Tesla',
-        pulseDesc: 'rapid single laser', frostDesc: 'slows & freezes creeps', cannonDesc: 'splash damage & napalm', teslaDesc: 'chain lightning & shock',
-        towerIntro: 'PULSE · FROST · CANNON · TESLA',
-        towerLegend: 'Towers & Awakenings',
-        sideHowTo: 'How to Play',
-        sideSkillsTitle: 'Tactical Skills',
-        sideShortcutsTitle: 'Shortcuts',
-        sideRecords: 'Records',
-        wave: 'Wave',
-        startWave: '▶ Wave {n}',
-        waveRunning: 'Wave {n}',
-        paused: 'Paused',
-        resume: 'Resume',
-        home: 'Home',
-        again: 'Play Again',
-        gameOver: 'Base Destroyed',
-        victory: 'VICTORY!',
-        defeatSub: 'You reached wave {n} of {total}',
-        victorySub: '{lv} cleared — {lives} lives left',
-        score: 'Score',
-        best: 'Best',
-        newBest: 'NEW BEST!',
-        waveCleared: 'Wave {n} cleared! +{g} gold',
-        bossIncoming: 'ALERT · BOSS INCOMING',
-        overlordIncoming: 'ALERT · OVERLORD INCOMING',
-        bossDefeated: 'BOSS ELIMINATED',
-        towerLost: 'A tower was destroyed',
-        splitToast: 'SPLIT!',
-        notEnoughGold: 'Not enough gold',
-        cantBuild: 'Can\'t build here',
-        maxLevel: 'MAX',
-        upgrade: 'Upgrade',
-        sell: 'Sell',
-        dmg: 'DMG', range: 'RNG', rate: 'RATE',
-        priority: 'Priority',
-        prioFirst: 'First', prioLast: 'Last', prioStrong: 'Strong', prioWeak: 'Weak', prioClose: 'Close', prioHealer: 'Healer',
-        emp: 'EMP Shockwave',
-        empDesc: 'Stuns all creeps 2.4s + electric damage [Q]',
-        empCast: 'EMP SHOCKWAVE TRIGGERED',
-        overdrive: 'Overdrive',
-        overdriveDesc: '+50% fire rate & +20% range for 6s [E]',
-        overdriveCast: 'OVERDRIVE ACTIVATED',
-        earlyCall: 'RUSH WAVE {n}',
-        earlyCallBonus: 'Early Call',
-        earlyCallToast: 'EARLY WAVE BONUS: +{g} GOLD',
-        stackToast: 'WAVE RUSHED · STACK ×{n} — ENEMIES +{hp}% HP, +{g}% GOLD',
-        stackMax: 'STACK LIMIT REACHED — CLEAR THE WAVE FIRST',
-        stackLabel: 'Rush',
-        ultimate: 'AWAKENING',
-        damageDealt: 'DMG',
-        kills: 'Kills',
-        lives: 'Lives',
-        waveStat: 'Wave',
-        toggleRanges: 'Ranges',
-        leaderboard: 'Global Top 10',
-        loadingScores: 'Loading…',
-        noScores: 'No scores yet',
-        lbOffline: 'Leaderboard offline',
-        copyResult: 'Copy',
-        statLives: 'Lives',
-        statGold: 'Gold',
-        statWave: 'Wave',
-        rangeBtnTitle: 'Toggle Ranges (R)',
-        speedBtnTitle: 'Speed',
-        pauseBtnTitle: 'Pause',
-        muteBtnTitle: 'Sound',
-        homeBtnTitle: 'Home',
-        empBtnTitle: 'EMP Shockwave (Q)',
-        overdriveBtnTitle: 'Overdrive (E)',
-        hint: 'Click cell to build · Click tower to upgrade · Space to start wave',
+// LANGUAGES moved to src/games/tower-defense/i18n.js.
 
-        // 关卡选择
-        selectLevel: 'Select Operation',
-        levelBest: 'Best',
-        levelLocked: 'Locked',
-        levelLockHint: 'Clear {name} to unlock',
-        levelWaves: '{n} waves',
-        levelGold: '{n} gold',
-        levelLives: '{n} lives',
-        difficulty: 'Difficulty',
-        enemyTeaches: 'New threats',
-        levelStart: '▶ Deploy',
-        back: 'Back',
-        finalWave: 'FINAL SHOWDOWN',
-        bossWave: 'BOSS INCOMING',
-        levels: {
-            outpost: { name: 'Neon Outpost', tag: 'Recruit', desc: 'A calm perimeter run. Learn the grid and the four towers.' },
-            vanguard: { name: 'Vanguard Line', tag: 'Standard', desc: 'Field medics appear. Kill them first or nothing dies.' },
-            citadel: { name: 'Iron Citadel', tag: 'Hard', desc: 'Armored columns soak physical hits — bring Tesla or napalm.' },
-            skyfall: { name: 'Skyfall', tag: 'Brutal', desc: 'Flyers cut straight across the map. Cover the middle, not the road.' },
-            juggernaut: { name: 'Juggernaut', tag: 'Extreme', desc: 'Splitters and siege hammers. Rebuild as your towers fall.' },
-            singularity: { name: 'Singularity', tag: 'Nightmare', desc: 'Every threat at once, and the Overlord heals its own army.' }
-        },
-        threatHealer: 'Healer', threatArmor: 'Armored', threatFlyer: 'Flying',
-        threatSplitter: 'Splitter', threatAttacker: 'Siege', threatOverlord: 'Overlord',
-    },
-    zh: {
-        stats: '数据统计',
-        tacticalOverview: '战术总览',
-        closeTactical: '关闭战术总览',
-        rotateTitle: '请横屏作战',
-        rotateCopy: '横屏可以完整展开能源防线与部署空间。',
-        heroLabel: '未来城市能源防线平台',
-        title: '霓虹塔防',
-        subtitle: '建造 · 升级 · 守护',
-        howto: '点击空格子建塔，点击塔升级、出售或切换集火策略。当心治疗兵、装甲兵、飞行兵和攻城兵——用对克制手段。合理运用指挥官技能（EMP震荡与超频加速），守住每一道防线。',
-        play: '开始游戏',
-        pulse: '脉冲塔', frost: '冰霜塔', cannon: '加农炮', tesla: '电磁塔',
-        pulseDesc: '高速单体激光', frostDesc: '减速与冰冻急冻', cannonDesc: '范围溅射与火海', teslaDesc: '闪电连锁与感电',
-        towerIntro: '脉冲 · 冰霜 · 加农 · 电磁',
-        towerLegend: '防御塔与觉醒',
-        sideHowTo: '玩法说明',
-        sideSkillsTitle: '指挥官技能',
-        sideShortcutsTitle: '键盘快捷键',
-        sideRecords: '战绩',
-        wave: '第',
-        startWave: '▶ 第 {n} 波',
-        waveRunning: '第 {n} 波',
-        paused: '已暂停',
-        resume: '继续游戏',
-        home: '返回主页',
-        again: '再来一局',
-        gameOver: '核心被摧毁',
-        victory: '胜利！',
-        defeatSub: '你到达了第 {n} / {total} 波',
-        victorySub: '{lv} 已攻陷——剩余 {lives} 条生命',
-        score: '得分',
-        best: '最佳',
-        newBest: '新纪录！',
-        waveCleared: '第 {n} 波守住！+{g} 金币',
-        bossIncoming: '警报 · BOSS 来袭',
-        overlordIncoming: '警报 · 霸主降临',
-        bossDefeated: 'BOSS 已歼灭',
-        towerLost: '一座防御塔被摧毁',
-        splitToast: '分裂！',
-        notEnoughGold: '金币不足',
-        cantBuild: '这里不能建造',
-        maxLevel: '满级',
-        upgrade: '升级',
-        sell: '出售',
-        dmg: '攻击', range: '射程', rate: '攻速',
-        priority: '集火目标',
-        prioFirst: '首位', prioLast: '末位', prioStrong: '强敌', prioWeak: '残血', prioClose: '最近', prioHealer: '治疗兵',
-        emp: 'EMP 震荡',
-        empDesc: '全屏瘫痪 2.4 秒并造成高额电击伤害 [Q]',
-        empCast: 'EMP 电磁脉冲已释放',
-        overdrive: '战术超频',
-        overdriveDesc: '全塔攻速提升 50%，射程提升 20%，持续 6 秒 [E]',
-        overdriveCast: '全塔超频启动',
-        earlyCall: '抢发第 {n} 波',
-        earlyCallBonus: '提前迎击',
-        earlyCallToast: '提前迎击奖励：+{g} 金币',
-        stackToast: '已抢发 · 堆叠 ×{n} —— 敌人血量 +{hp}%、金币 +{g}%',
-        stackMax: '已达堆叠上限，先清完这波',
-        stackLabel: '堆叠',
-        ultimate: '觉醒形态',
-        damageDealt: '总伤',
-        kills: '击杀',
-        lives: '生命',
-        waveStat: '波次',
-        toggleRanges: '射程',
-        leaderboard: '全球前 10',
-        loadingScores: '加载中…',
-        noScores: '暂无分数',
-        lbOffline: '榜单离线',
-        copyResult: '复制',
-        statLives: '生命',
-        statGold: '金币',
-        statWave: '波次',
-        rangeBtnTitle: '切换射程圈 (R)',
-        speedBtnTitle: '游戏速度',
-        pauseBtnTitle: '暂停',
-        muteBtnTitle: '声音',
-        homeBtnTitle: '返回主页',
-        empBtnTitle: 'EMP 电磁震荡 (Q)',
-        overdriveBtnTitle: '战术超频 (E)',
-        hint: '点空格建塔 · 点塔升级/集火 · 空格发波',
-
-        // 关卡选择
-        selectLevel: '选择作战行动',
-        levelBest: '最佳',
-        levelLocked: '未解锁',
-        levelLockHint: '通关「{name}」后解锁',
-        levelWaves: '{n} 波',
-        levelGold: '{n} 金币',
-        levelLives: '{n} 生命',
-        difficulty: '难度',
-        enemyTeaches: '新增威胁',
-        levelStart: '▶ 出击',
-        back: '返回',
-        finalWave: '终极决战',
-        bossWave: 'BOSS 降临',
-        levels: {
-            outpost: { name: '霓虹哨站', tag: '新兵', desc: '一段平静的外围巡逻，用来熟悉棋盘与四种塔。' },
-            vanguard: { name: '先锋防线', tag: '标准', desc: '战地医师登场——不先切掉它，其他敌人根本打不死。' },
-            citadel: { name: '钢铁堡垒', tag: '困难', desc: '装甲纵队硬吃物理伤害，请带上电磁塔或加农火海破甲。' },
-            skyfall: { name: '天穹坠落', tag: '残酷', desc: '飞行兵直线穿越地图。要守住中路，而不是守那条路。' },
-            juggernaut: { name: '重装军团', tag: '极限', desc: '分裂兵与攻城锤齐上。塔倒了就得边打边重建。' },
-            singularity: { name: '奇点终局', tag: '噩梦', desc: '所有威胁同时压上，霸主还会给整支军队回血。' }
-        },
-        threatHealer: '治疗兵', threatArmor: '装甲兵', threatFlyer: '飞行兵',
-        threatSplitter: '分裂兵', threatAttacker: '攻城兵', threatOverlord: '霸主',
-    }
-});
 
 /* ────────────────────────── audio ────────────────────────── */
 
@@ -3540,22 +3325,16 @@ window.__TD_COMPILE_MAP__ = compileLevelMap;
 
 onReady(() => {
     window.tdGame = new TowerDefenseGame();
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 
-    bindFrame({
-        logicalWidth: W,
-        layout: 'immersive',
-    });
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-onReady(() => {
-    bindChrome({
+    window.tdRuntime = mountGameRuntime({
         self: 'tower-defense.html',
-        owns: ['more'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        game: window.tdGame,
+        frame: { logicalWidth: W, layout: 'immersive' },
+        chrome: {
+            owns: ['more'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
     });
 });

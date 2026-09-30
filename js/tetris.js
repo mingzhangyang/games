@@ -2,13 +2,13 @@ import { getLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
 import { ICONS } from './icons.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet as safeGetItem, storageSet as safeSetItem } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
-import { makeText } from './i18n.js';
+import { LANGUAGES } from '../src/games/tetris/i18n.js';
+import { createGameStorage } from '../src/platform/storage/game-storage.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -24,70 +24,13 @@ const sfx = createSfx({
 
 // escapeHTML 已收敛到 js/leaderboard.js（本地重复实现退役）
 
-// 隐私模式/禁用存储时 localStorage 会抛 SecurityError
-function safeParseJSON(text, fallback) {
-    try {
-        return JSON.parse(text);
-    } catch (e) {
-        return fallback;
-    }
-}
+const TETRIS_STORE = createGameStorage('tetris', {
+    version: 1,
+    legacy: { scores: 'tetris_scores', rainbow: 'tetris_rainbow' },
+});
 
 // 多语言支持
-const LANGUAGES = makeText({
-    en: {
-        title: 'Tetris - Cool Edition',
-        themeToggle: 'Theme',
-        stats: 'Stats',
-        best: 'Best',
-        lv: 'Lv',
-        gameOver: 'Game Over!',
-        finalScore: 'Final Score: ',
-        restart: 'Restart',
-        score: 'Score',
-        level: 'Level',
-        lines: 'Lines',
-        combo: 'Combo',
-        globalScoresHeader: 'Global Top 5',
-        loadingScores: 'Loading...',
-        noScores: 'No scores yet',
-        failedToLoad: 'Failed to load scores',
-        next: 'Next Piece',
-        start: 'Start',
-        pause: 'Pause',
-        resume: 'Resume',
-        levelUp: 'LEVEL UP!',
-        comboDisplay: x => `${x}x Combo!`,
-        home: 'Home',
-        hint: 'Arrows move · Space hard drop · P pause · M mute',
-    },
-    zh: {
-        title: '俄罗斯方块 - 酷炫版',
-        themeToggle: '切换主题',
-        stats: '统计与排名',
-        best: '最高',
-        lv: '等级',
-        gameOver: '游戏结束！',
-        finalScore: '最终得分: ',
-        restart: '重新开始',
-        score: '得分',
-        level: '等级',
-        lines: '消除行数',
-        combo: '连击',
-        globalScoresHeader: '全球前5名',
-        loadingScores: '加载中...',
-        noScores: '暂无分数',
-        failedToLoad: '加载失败',
-        next: '下一个方块',
-        start: '开始游戏',
-        pause: '暂停',
-        resume: '继续',
-        levelUp: '升级！',
-        comboDisplay: x => `${x}x 连击!`,
-        home: '返回主页',
-        hint: '方向键移动 · 空格瞬降 · P 暂停 · M 静音',
-    }
-});
+// LANGUAGES moved to src/games/tetris/i18n.js.
 
 function getUserLang() {
     // 全站统一语言设置（site_lang，含浏览器语言兜底）
@@ -224,7 +167,7 @@ function setText(id, value) {
 
 function getBestScore() {
     try {
-        const local = safeParseJSON(safeGetItem('tetris_scores') || '[]', []);
+        const local = TETRIS_STORE.get('scores', []);
         return local.reduce((max, s) => Math.max(max, Number(s.score) || 0), 0);
     } catch (e) {
         return 0;
@@ -315,7 +258,7 @@ async function fetchAndDisplayGlobalScores() {
 
 function showLocalScores(listElement, loadingElement) {
     try {
-        const localScores = JSON.parse(localStorage.getItem('tetris_scores') || '[]');
+        const localScores = TETRIS_STORE.get('scores', []);
         if (localScores.length > 0) {
             const sortedScores = localScores.sort((a, b) => b.score - a.score).slice(0, 5);
             listElement.innerHTML = '';
@@ -634,13 +577,7 @@ class Tetris {
         this.particles = [];
         this.shakeAmount = 0;
         this.lastClearTime = 0;
-        this.isRainbowTheme = (function () {
-            try {
-                return localStorage.getItem('tetris_rainbow') === '1';
-            } catch (e) {
-                return false;
-            }
-        })();
+        this.isRainbowTheme = [true, 1, '1'].includes(TETRIS_STORE.get('rainbow', false));
         if (this.isRainbowTheme) {
             document.body.classList.add('rainbow-theme');
         }
@@ -1217,11 +1154,11 @@ class Tetris {
         // 上传分数到 Cloudflare Worker
         const username = getGlobalUsername();
         // 本地分数记录
-        let localScores = safeParseJSON(safeGetItem('tetris_scores'), []);
+        let localScores = TETRIS_STORE.get('scores', []);
         if (!Array.isArray(localScores)) localScores = [];
         localScores.push({ score: this.score, time: Date.now() });
         localScores = localScores.slice(-20); // 只保留最近20条
-        safeSetItem('tetris_scores', JSON.stringify(localScores));
+        TETRIS_STORE.set('scores', localScores);
 
         // 网络层收敛到 js/leaderboard.js（false=仅存本地）
         const ok = await submitScore({ game: 'tetris', name: username, score: this.score });
@@ -1252,7 +1189,7 @@ class Tetris {
         }
         if (!isGlobalScores) {
             // 使用本地分数
-            const localScores = safeParseJSON(safeGetItem('tetris_scores'), []);
+            const localScores = TETRIS_STORE.get('scores', []);
             leaderboard = (Array.isArray(localScores) ? localScores : [])
                 .sort((a, b) => b.score - a.score).slice(0, 5)
                 .map(score => ({ name: currentLang === 'zh' ? '本地记录' : 'Local', score: score.score }));
@@ -1269,7 +1206,7 @@ class Tetris {
         });
         html += '</ol></div>';
         // 展示本地分数记录
-        const recentScores = safeParseJSON(safeGetItem('tetris_scores'), []);
+        const recentScores = TETRIS_STORE.get('scores', []);
         if (Array.isArray(recentScores) && recentScores.length) {
             html += '<div style="margin-top:12px;font-size:15px;color:#aaa;">';
             html += currentLang === 'zh' ? '你的最近得分：' : 'Your Recent Scores:';
@@ -1361,11 +1298,7 @@ class Tetris {
     toggleTheme() {
         this.isRainbowTheme = !this.isRainbowTheme;
         document.body.classList.toggle('rainbow-theme', this.isRainbowTheme);
-        try {
-            localStorage.setItem('tetris_rainbow', this.isRainbowTheme ? '1' : '0');
-        } catch (e) {
-            // 存储不可用时仅切换当前会话主题
-        }
+        TETRIS_STORE.set('rainbow', this.isRainbowTheme ? '1' : '0');
         renderThemeToggle(this.isRainbowTheme);
     }
 
@@ -1455,7 +1388,17 @@ window.game = game;
 // 三张画布（主/粒子/消行）后端缓冲区都固定 400×800、靠 CSS 等比缩放，
 // 三者用同一组 CSS 规则，缩放后天然对齐 —— 手机上本来就是这么跑的（280/400）。
 onReady(() => {
-    bindFrame({ logicalWidth: 400 });
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
+    window.tetrisRuntime = mountGameRuntime({
+        self: 'tetris.html',
+        game,
+        frame: { logicalWidth: 400 },
+        chrome: {
+            owns: ['more', 'sound'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
+    });
 });
 
 // 按钮事件绑定
@@ -1530,20 +1473,5 @@ onReady(() => {
     // Prevent context menu on long press
     canvas.addEventListener('contextmenu', function(e) {
         e.preventDefault();
-    });
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
-       本页的静音钮是随槽位契约新增的，页面自身没有 handler，
-       所以显式把 sound 交给 chrome 接管。 */
-onReady(() => {
-    bindChrome({
-        self: 'tetris.html',
-        owns: ['more', 'sound'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });
 });

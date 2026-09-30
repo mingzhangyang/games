@@ -10,11 +10,9 @@
  *   main.js        本文件：文案、菜单、共享 chrome 与 Immersive Stage 的接线
  */
 import { onReady } from '../boot.js';
+import { mountGameRuntime } from '../../src/platform/runtime/game-runtime.js';
 import { makeText } from '../i18n.js';
-import { bindChrome } from '../game-chrome.js';
-import { bindFrame } from '../game-frame.js';
 import { getLang, getMuted, setMuted } from '../site-settings.js';
-import { renderMoreGames } from '../more-games.js';
 import { track } from '../analytics.js';
 import { FireflyGame, LEVELS, loadBest } from './game.js';
 
@@ -233,33 +231,25 @@ onReady(() => {
     $('fs-btn-retry').addEventListener('click', () => game.restart());
     $('fs-btn-menu').addEventListener('click', () => { game.toMenu(); renderLevelList(game); });
 
-    const startMore = $('fsStartMore');
-    if (startMore) renderMoreGames(startMore, { exclude: 'firefly-signal.html' });
-
     applyLanguage(game);
     window.addEventListener('site-settings:changed', () => applyLanguage(game));
 
-    // 切到后台：停循环（同时就是暂停）；回来只恢复因切后台而停的那一次
-    let pausedByHidden = false;
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            if (!game.paused) { game.pauseQuiet(); pausedByHidden = true; }
-        } else if (pausedByHidden) {
-            pausedByHidden = false;
-            game.resumeQuiet();
-        }
-    });
-
-    // 顶栏首页钮是无 href 的 <button>，跳转交给 chrome（owns 含 'home'）；
-    // 静音钮本页不自绑 handler，也交给 chrome，并在切换时预热音频上下文。
-    bindChrome({
+    window.fsRuntime = mountGameRuntime({
         self: 'firefly-signal.html',
-        getText,
-        owns: ['more', 'home', 'sound'],
-        isMuted: getMuted,
-        onToggleMute: m => { setMuted(m); if (!m) game.audio.prime(); },
+        game,
+        frame: { layout: 'immersive' },
+        more: '#fsStartMore',
+        chrome: {
+            getText,
+            owns: ['more', 'home', 'sound'],
+            isMuted: getMuted,
+            onToggleMute: m => { setMuted(m); if (!m) game.audio.prime(); },
+        },
+        visibility: {
+            isBusy: g => !g.paused,
+            pause: g => g.pauseQuiet(),
+            resume: g => g.resumeQuiet(),
+        },
     });
-    // Immersive Stage：实测「shell 上内距 + 顶栏」写入 --frame-chrome，舞台高度 = 100dvh − chrome − 安全区
-    bindFrame({ layout: 'immersive' });
     game.toMenu();
 });

@@ -1,14 +1,11 @@
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { makeText } from './i18n.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
-import { createStatsDrawer } from './game-drawer.js';
 import { ICONS } from './icons.js';
 import { createSfxEngine } from './game-sfx.js';
 import { getLang } from './site-settings.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
-import { renderMoreGames } from './more-games.js';
 import { ART_UI, loadCarrotPullArt } from './carrot-pull-art.js';
 import { createCarrotScene } from './carrot-pull-scene.js';
 import { createCarrotPullFallbackScene } from './carrot-pull-fallback-scene.js';
@@ -558,22 +555,25 @@ function createGame() {
 onReady(() => {
     const game = createGame();
     window.cpGame = game;
-    const more = document.getElementById('cpSideMore');
-    if (more) renderMoreGames(more, { exclude: 'carrot-pull.html' });
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
-    const drawer = createStatsDrawer({
-        idPrefix: 'cp',
-        getGame: () => game.state,
-        isBusy: () => game.isRunning(),
-        onPause: () => game.pauseQuiet(),
-        onResume: () => game.resumeQuiet(),
-        ICONS,
-        getText,
+
+    window.cpRuntime = mountGameRuntime({
+        self: 'carrot-pull.html',
+        game,
+        frame: { logicalWidth: 560 },
+        more: '#cpSideMore',
+        drawer: {
+            idPrefix: 'cp',
+            getGame: () => game.state,
+            isBusy: () => game.isRunning(),
+            onPause: () => game.pauseQuiet(),
+            onResume: () => game.resumeQuiet(),
+            ICONS,
+            getText,
+        },
+        chrome: { getText, owns: ['more', 'home', 'sound'] },
     });
-    if (drawer) drawer.init();
-    // 顶栏首页钮是无 href 的 <button>，跳转靠 chrome 接管，所以 owns 必须含 'home'；
-    // 本页静音钮没有自己的 handler，交给 chrome（见 docs/contracts/chrome.md §1.3）。
-    bindChrome({ self: 'carrot-pull.html', getText, owns: ['more', 'home', 'sound'] });
-    bindFrame({ logicalWidth: 560 });
+
+    window.cpDrawer = window.cpRuntime.drawer;
     game.init();
 });

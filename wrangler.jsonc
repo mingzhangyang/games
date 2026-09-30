@@ -1,6 +1,6 @@
 {
 	"name": "games",
-	"main": "src/index.js",
+	"main": "worker/index.js",
 	"compatibility_date": "2025-04-01",
 	"assets": {
 		"directory": "./dist",

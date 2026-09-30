@@ -31,16 +31,13 @@ import {
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 import { bindPalette } from './theme.js';
 
@@ -1388,30 +1385,26 @@ class MaxwellDemonGame {
 onReady(() => {
     P = bindPalette(CANVAS_VARS, { onChange: () => window.mdGame && window.mdGame.draw() });
     window.mdGame = new MaxwellDemonGame();
-    bindFrame({ logicalWidth: W });
-    const more = document.getElementById('mdSideMore');
-    if (more) renderMoreGames(more, { exclude: 'maxwell-demon.html' });
-    window.mdDrawer = createStatsDrawer({
-        idPrefix: 'md',
-        getGame: () => window.mdGame,
-        onPause: () => window.mdGame && window.mdGame.pauseQuiet(),
-        onResume: () => window.mdGame && window.mdGame.resumeQuiet(),
-        isBusy: () => !!(window.mdGame && window.mdGame.isRunning()),
-        ICONS,
-        // ⚠️ 契约是 () => object（整表），不是 (key) => string。
-        getText: () => (window.mdGame ? window.mdGame.textTable() : LANGUAGES.en),
-    });
-    window.mdDrawer.init();
-});
+    const getText = () => (window.mdGame ? window.mdGame.textTable() : LANGUAGES.en);
 
-onReady(() => {
-    bindChrome({
+    window.mdRuntime = mountGameRuntime({
         self: 'maxwell-demon.html',
-        // ⚠️ 必须含 'more'：页脚「更多游戏」的展开行为归 chrome。
-        // ⚠️ 必须含 'home'：顶栏首页钮是无 href 的 <button>，跳转完全靠 chrome 接管
-        //（owns 默认只含 more，漏掉 'home' = 死按钮，verify-chrome §⑧ 会抓）。
-        owns: ['more', 'home'],
-        // ⚠️ 共享层要的是整表。
-        getText: () => (window.mdGame ? window.mdGame.textTable() : LANGUAGES.en),
+        game: window.mdGame,
+        frame: { logicalWidth: W },
+        more: '#mdSideMore',
+        drawer: {
+            idPrefix: 'md',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.mdGame && window.mdGame.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText,
+        },
     });
+
+    window.mdDrawer = window.mdRuntime.drawer;
 });

@@ -178,6 +178,7 @@ Vite 会把**页面自己的 CSS chunk 排在共享 CSS 之前**，构建后 HTM
 
 - 已在 `vite.config.js` 加入 `shared-css-first` 插件，在 `transformIndexHtml` 阶段把产物里的
   `<link rel="stylesheet">` 重排为 `tokens → layout → 页面 → more-games`。**不要删除该插件。**
+
 - 修改布局后需在实际产物上复验，而不只是 dev 服务器：
   ```bash
   npm run build

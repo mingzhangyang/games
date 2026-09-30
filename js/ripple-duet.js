@@ -41,16 +41,13 @@ import { LEVELS } from './ripple-duet-levels.js';
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 import { bindPalette } from './theme.js';
 
@@ -1369,32 +1366,27 @@ function clipLineToBox(w, box) {
 
 onReady(() => {
     P = bindPalette(CANVAS_VARS, { onChange: () => window.rdGame && window.rdGame.render() });
-    const game = new RippleDuetGame();
-    window.rdGame = game;
+    window.rdGame = new RippleDuetGame();
+    const getText = () => (window.rdGame ? window.rdGame.textTable() : LANGUAGES.en);
 
-    // bindFrame 只认 logicalWidth / extraChrome（传 canvas/ratio/onResize 会被静默忽略）
-    bindFrame({ logicalWidth: W });
-    // ⚠️ renderMoreGames 必须传容器 + exclude（不传就静默返回 0，侧栏「更多游戏」是空的且无任何报错）
-    const more = document.getElementById('rdSideMore');
-    if (more) renderMoreGames(more, { exclude: 'ripple-duet.html' });
-
-    window.rdDrawer = createStatsDrawer({
-        idPrefix: 'rd',
-        getGame: () => game,
-        onPause: () => game.pauseQuiet(),
-        onResume: () => game.resumeQuiet(),
-        isBusy: () => game.isRunning(),
-        ICONS,
-        getText: () => game.textTable(),
-    });
-    // ⚠️ 必须显式 init()：① 给 stats 钮补 title/aria-label（verify-chrome 会因为
-    //    缺 title 报红）；② 打上 body.has-stats-drawer —— layout.css 靠它决定窄屏
-    //    是否隐藏侧栏，漏掉会让舞台宽算错 ⇒ canvas 缓冲比 CSS 宽小几像素变糊。
-    window.rdDrawer.init();
-
-    bindChrome({
+    window.rdRuntime = mountGameRuntime({
         self: 'ripple-duet.html',
-        owns: ['more', 'home'],
-        getText: () => game.textTable(),
+        game: window.rdGame,
+        frame: { logicalWidth: W },
+        more: '#rdSideMore',
+        drawer: {
+            idPrefix: 'rd',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.rdGame && window.rdGame.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText,
+        },
     });
+
+    window.rdDrawer = window.rdRuntime.drawer;
 });

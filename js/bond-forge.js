@@ -24,16 +24,13 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay, dailyKey, hashStringFNV, mulberry32 } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
-import { makeText } from './i18n.js';
+import { LANGUAGES } from '../src/games/bond-forge/i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 import { bindPalette } from './theme.js';
 import {
@@ -152,104 +149,8 @@ function sfxTone(freq, dur, type, vol) {
  *    copied / usernameLabel）—— 它们由 makeText 经 COMMON_TEXT 原型链兜底，
  *    重复写出会被 scripts/verify-i18n.mjs 判为「字面量重复」硬失败。 */
 
-const LANGUAGES = makeText({
-    en: {
-        stats: 'Stats',
-        title: 'Bond Forge',
-        subtitle: 'Drag · Snap · Forge',
-        howto: 'Drag atoms out of the tray and bring them close — when two valence shells line up, a bond snaps into place. Fill every valence and forge the target formula. Stuck on a wrong molecule? It is still real chemistry; just build the one on the card.',
-        playLevels: 'Levels',
-        playDaily: 'Daily',
-        playSandbox: 'Sandbox',
-        level: 'Level',
-        daily: 'Daily',
-        sandbox: 'Sandbox',
-        levelSelect: 'Select level',
-        drags: 'Drags',
-        dragsWord: 'drags',
-        par: 'Par',
-        dailyStartToast: 'Daily challenge — 5 molecules · fewest drags wins',
-        sandboxHint: 'Open bench — build anything you like, no goal',
-        retry: 'Retry',
-        next: 'Next',
-        menu: 'Home',
-        again: 'Again',
-        levelCleared: 'Molecule forged!',
-        levelDone: 'All molecules forged!',
-        dailyDone: 'Daily complete!',
-        bestToday: 'Your best today',
-        stars: 'Stars',
-        leaderboard: 'Global · Today\'s Challenge',
-        noScores: 'No scores yet',
-        lbOffline: 'Leaderboard offline',
-        copyResult: 'Copy',
-        resetTitle: 'Restart level',
-        home: 'Home',
-        hint: 'Drag atoms from the tray · snap them into bonds · fill every valence',
-        sideHowTo: 'How to play',
-        sideRecords: 'Records',
-        sideCheat: 'Element cheat sheet',
-        cheatSymbol: 'Sym',
-        cheatName: 'Element',
-        cheatValence: 'Bonds',
-        clearNote: 'Fewer drags, more stars.',
-        wrongMolecule: 'Real chemistry — just not this level\'s target',
-        toastOverValence: '{sym} can only take {n} bond(s)',
-        toastAngle: 'Try to spread the bonds out — {deg}° is the ideal angle',
-        toastNoSolution: 'That will not close up — try another position',
-        toastBonded: 'Bond formed',
-        toastWrongTarget: 'True molecule, wrong target',
-        toastLevelDone: 'Every valence is satisfied',
-    },
-    zh: {
-        stats: '数据统计',
-        title: '键合工坊',
-        subtitle: '拖动 · 吸附 · 成键',
-        howto: '从底部原子盘拖出原子，靠近另一个原子——当两个价键壳层对齐时，键会自动吸附成键。把所有价键填满、拼出卡片上的目标分子即可通关。拼错了也别慌：那仍是真实存在的分子，只要拼出卡片要的那个就好。',
-        playLevels: '关卡模式',
-        playDaily: '每日挑战',
-        playSandbox: '自由搭建',
-        level: '关卡',
-        daily: '每日',
-        sandbox: '自由搭建',
-        levelSelect: '选择关卡',
-        drags: '拖拽',
-        dragsWord: '次拖拽',
-        par: '目标',
-        dailyStartToast: '每日挑战——5 个分子 · 拖拽次数越少越好',
-        sandboxHint: '自由盘——随便拼，没有目标分子',
-        retry: '重试',
-        next: '下一关',
-        menu: '返回主页',
-        again: '再来一次',
-        levelCleared: '分子成型！',
-        levelDone: '全部分子都已成型！',
-        dailyDone: '每日挑战完成！',
-        bestToday: '今日最好成绩',
-        stars: '星星',
-        leaderboard: '全球榜 · 今日挑战',
-        noScores: '暂无成绩',
-        lbOffline: '榜单离线',
-        copyResult: '复制',
-        resetTitle: '重开本关',
-        home: '主页',
-        hint: '从原子盘拖出原子 · 靠近即成键 · 填满所有价键',
-        sideHowTo: '玩法说明',
-        sideRecords: '战绩',
-        sideCheat: '元素小抄',
-        cheatSymbol: '符号',
-        cheatName: '元素',
-        cheatValence: '键数',
-        clearNote: '拖拽次数越少，星星越多。',
-        wrongMolecule: '这也是真实分子——只是不是本题要的',
-        toastOverValence: '{sym} 只能接 {n} 根键',
-        toastAngle: '试着把键角打开一些——理想角约 {deg}°',
-        toastNoSolution: '这样接不太合适——换个位置试试',
-        toastBonded: '成键',
-        toastWrongTarget: '真实分子，但不是本题目标',
-        toastLevelDone: '所有价键都填满了',
-    },
-});
+// LANGUAGES moved to src/games/bond-forge/i18n.js.
+
 
 /* ────────────────────────── 元素小抄 ──────────────────────────
  * 由 js/bond-forge-molecules.js 的 ELEMENTS 驱动，**不手写元素名** ——
@@ -1817,42 +1718,26 @@ class BondForgeGame {
 onReady(() => {
     P = bindPalette(CANVAS_VARS, { onChange: () => window.bfGame && window.bfGame.draw() });
     window.bfGame = new BondForgeGame();
-    bindFrame({ logicalWidth: W });
-    const more = document.getElementById('bfSideMore');
-    if (more) renderMoreGames(more, { exclude: 'bond-forge.html' });
-    window.bfDrawer = createStatsDrawer({
-        idPrefix: 'bf',
-        getGame: () => window.bfGame,
-        onPause: () => window.bfGame && window.bfGame.pauseQuiet(),
-        onResume: () => window.bfGame && window.bfGame.resumeQuiet(),
-        isBusy: () => !!(window.bfGame && window.bfGame.isRunning()),
-        ICONS,
-        // ⚠️ 契约是 () => object（整表），不是 (key) => string。见 textTable 的注释。
-        getText: () => (window.bfGame ? window.bfGame.textTable() : LANGUAGES.en),
-    });
-    window.bfDrawer.init();
 
-    // 画布后端缓冲区必须在 CSS 尺寸变化之后重算（bindFrame 每次写入都会派发此事件）
-    window.addEventListener('game-frame:changed', () => {
-        if (window.bfGame) window.bfGame.resize();
-    });
-    window.addEventListener('resize', () => {
-        if (window.bfGame) window.bfGame.resize();
-    });
-});
-
-onReady(() => {
-    bindChrome({
+    window.bfRuntime = mountGameRuntime({
         self: 'bond-forge.html',
-        // ⚠️ 必须含 'more'：页脚「更多游戏」的展开行为归 chrome，owns 里漏掉
-        // 就等于按钮是死的（chrome 校验器会报 aria-expanded 未置 true / 列表为空）。
-        // ⚠️ 必须含 'home'：本页顶栏首页钮是无 href 的 <button>，点击跳转完全靠
-        // chrome 接管 —— 而 owns 默认只含 more，漏掉 'home' = 按钮是死的
-        // （页脚 home 是原生 <a> 天然可用，所以症状只出现在顶栏）。
-        // sound 不在 owns 里：顶栏静音钮已有自己的 handler（还要同步刷图标）。
-        owns: ['more', 'home'],
-        // ⚠️ 同抽屉：共享层要的是整表。返回 (key)=>string 会让顶栏的
-        // sound / moreGames / language 永远停在英文兜底。
-        getText: () => (window.bfGame ? window.bfGame.textTable() : LANGUAGES.en),
+        game: window.bfGame,
+        frame: { logicalWidth: W },
+        more: '#bfSideMore',
+        drawer: {
+            idPrefix: 'bf',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.bfGame && window.bfGame.isRunning()),
+            ICONS,
+            getText: () => (window.bfGame ? window.bfGame.textTable() : LANGUAGES.en),
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText: () => (window.bfGame ? window.bfGame.textTable() : LANGUAGES.en),
+        },
+        resize: g => g && g.resize(),
     });
+
+    window.bfDrawer = window.bfRuntime.drawer;
 });

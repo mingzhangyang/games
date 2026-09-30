@@ -7,10 +7,10 @@
 //       拿不准的先 warn 观察，避免首跑百行噪音淹没真问题。
 export default [
     {
-        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js', 'js/shadow-loom-silhouettes.js'],
+        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js', 'src/platform/more-games.js', 'src/generated/**'],
     },
     {
-        files: ['js/**/*.js'],
+        files: ['js/**/*.js', 'src/platform/**/*.js', 'src/games/**/*.js', 'worker/**/*.js'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',
@@ -92,7 +92,7 @@ export default [
         },
     },
     {
-        files: ['scripts/**/*.mjs'],
+        files: ['scripts/**/*.mjs', 'tests/**/*.mjs', 'tools/generators/**/*.mjs', 'tools/checks/**/*.mjs'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',
@@ -108,6 +108,7 @@ export default [
                 AbortController: 'writable',
                 URL: 'writable',
                 performance: 'writable',
+                Buffer: 'readonly',
                 // 校验器在 page.evaluate 回调里静态引用浏览器 API
                 document: 'writable',
                 window: 'writable',

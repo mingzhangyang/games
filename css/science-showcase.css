@@ -1,3 +1,4 @@
+@layer components {
 /*
  * Modern science showcase
  * ------------------------
@@ -373,4 +374,6 @@ body.science-theme-ripple {
         max-width: 34rem;
         line-height: 1.55;
     }
+}
+
 }

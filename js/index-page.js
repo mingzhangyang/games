@@ -1,636 +1,136 @@
-// index.html 落地页脚本（P4-1 自内联 <script> 原样抽离，module 化：执行时机等价——原脚本在 body 尾同步执行，module 为 DOM 就绪后执行）
+// 首页运行时：英语来自静态 HTML；中文翻译按需加载，卡片数据由 registry 生成。
 import { onReady } from './boot.js';
-import { getThemePref, setThemePref } from './site-settings.js';
+import { getLang, setLang, getThemePref, setThemePref } from './site-settings.js';
 import { supportsLight, getTheme, onThemeChange } from './theme.js';
-import { MORE_GAMES } from './more-games.js';
 
-const i18n = {
-    en: {
-        pageTitle: 'Mini Games Collection',
-        mainTitle: 'Mini Games Collection',
-        mainDesc: 'Play instantly · No downloads · No accounts · No ads',
-        sectionLabel: 'Choose a game',
-
-        mathRainName: 'Math Rain',
-        mathRainDesc: 'Catch falling equations before they hit the ground. Practice arithmetic under pressure.',
-        mathRainTag: 'Educational',
-        mathRainPlay: 'Play ›',
-
-        tetrisName: 'Tetris',
-        tetrisDesc: 'Modern Tetris with SRS rotation, combo system, multiple themes, and global high scores.',
-        tetrisTag: 'Classic',
-        tetrisPlay: 'Play ›',
-
-        tankName: 'Tank Battle',
-        tankDesc: 'Retro arcade tank shooter. Defend your base, blast enemies, and survive wave after wave.',
-        tankTag: 'Arcade',
-        tankPlay: 'Play ›',
-
-        gomokuName: 'Gomoku',
-        gomokuDesc: 'Five in a Row. Challenge the AI or play with a friend on the classic strategy board.',
-        gomokuTag: 'Strategy',
-        gomokuPlay: 'Play ›',
-
-        planetMergeName: 'Planet Merge',
-        planetMergeDesc: 'Drop planets, merge identical ones, chain combos and forge a sun. Daily challenge with a global leaderboard.',
-        planetMergeTag: 'Casual',
-        planetMergePlay: 'Play ›',
-
-        wordDailyName: 'Word Daily',
-        wordDailyDesc: 'One puzzle a day for the whole world — guess the English word or the Chinese idiom in 6 tries. Keep your streak!',
-        wordDailyTag: 'Daily',
-        wordDailyPlay: 'Play ›',
-
-        hubTitle: '⚡ Daily Challenges',
-        hubTaskWordSub: 'Guess the word in 6 tries',
-        hubTaskMergeSub: 'Daily challenge — chase the high score',
-        hubTaskGravitySub: 'Daily course — 5 holes, fewest launches',
-        hubProfileHint: 'Leaderboard name',
-        hubProfilePlaceholder: 'Your name',
-        langToggle: '中文',
-        themeLabel: 'Theme',
-        themeDark: 'Dark',
-        themeLight: 'Light',
-        themeSystem: 'System',
-        darkOnly: 'Dark only',
-        darkOnlyTitle: 'This game is designed for dark mode and always opens dark',
-        hubTotalPlayed: 'plays today',
-        badgeDaily: 'Daily',
-        badgeNew: 'New',
-
-        hoopShotName: 'Hoop Shot',
-        hoopShotDesc: 'Flick basketball, one miss ends the run. Chain 3 makes to catch fire for double points. Global top 10!',
-        hoopShotTag: 'Sports',
-        hoopShotPlay: 'Play ›',
-
-        minesweeperName: 'Minesweeper',
-        minesweeperDesc: 'The classic logic puzzle. Safe first click, chording, three difficulties, global fastest clears.',
-        minesweeperTag: 'Puzzle',
-        minesweeperPlay: 'Play ›',
-
-        reversiName: 'Reversi',
-        reversiDesc: 'Classic Othello strategy. Outsmart a tuned AI on three levels or pass-and-play with a friend.',
-        reversiTag: 'Strategy',
-        reversiPlay: 'Play ›',
-
-        tdName: 'Neon Tower Defense',
-        tdDesc: 'Deploy pulse, frost, cannon and tesla towers across six future-city operations. Survive 15 to 40 escalating waves and defend the energy core.',
-        tdTag: 'Strategy',
-        tdPlay: 'Play ›',
-
-        gravityName: 'Gravity Slingshot',
-        gravityDesc: 'Original orbital physics — slingshot your probe around planets into the wormhole. 20 holes plus a daily course.',
-        gravityTag: 'Physics',
-        gravityPlay: 'Play ›',
-
-        needleAwnName: 'Pinpoint Clash',
-        needleAwnDesc: 'Kinetic martial precision duel. Clash tip-to-tip, weave Silver Needle and Golden Awn stances, freeze time and awaken supreme prowess.',
-        needleAwnTag: 'Action',
-        needleAwnPlay: 'Play ›',
-
-        swordFlightName: 'Sword Flight',
-        swordFlightDesc: 'Soar through the Nine Heavens on a flying sword. Thread celestial rings, cleave crags, summon companion sword arrays, and ascend to immortality.',
-        swordFlightTag: 'Action',
-        swordFlightPlay: 'Play ›',
-
-        lumenName: 'Lumen',
-        lumenDesc: 'Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle.',
-        lumenTag: 'Puzzle',
-        lumenPlay: 'Play ›',
-
-        circuitName: 'Circuit',
-        circuitDesc: 'Flip switches, route the current, light every bulb — and dodge the short circuit. 20 levels plus a daily puzzle.',
-        circuitTag: 'Puzzle',
-        circuitPlay: 'Play ›',
-
-        silkDewName: 'Silkfall',
-        silkDewDesc: 'Drag the anchor knot to thread a silken strand, guide the dew pearl past thorns and gales, and let it fall into the jade vessel. 20 levels plus a daily course.',
-        silkDewTag: 'Physics',
-        silkDewPlay: 'Play ›',
-        bondForgeName: 'Bond Forge',
-        bondForgeDesc: 'Drag atoms from the tray, snap them into bonds, and satisfy every valence shell to forge the target formula. 20 levels plus a daily challenge, with real chemistry along the way.',
-        bondForgeTag: 'Chemistry',
-        bondForgePlay: 'Play ›',
-        echoCaveName: 'Echo Cave',
-        echoCaveDesc: 'The cave is pitch dark until you sing: send out pulses, read the echoes bouncing off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily course.',
-        echoCaveTag: 'Physics',
-        echoCavePlay: 'Play ›',
-        maxwellDemonName: 'Maxwell\'s Demon',
-        maxwellDemonDesc: 'Two chambers, one tiny door. Pay to see which molecules are fast, pay again to open it — sort the gas until a temperature gap appears out of nowhere. 20 vessels plus a daily run.',
-        maxwellDemonTag: 'Physics',
-        maxwellDemonPlay: 'Play ›',
-        crystalBloomName: 'Crystal Bloom',
-        crystalBloomDesc: 'A hot saturated bath cools along the curve you draw. Drop the temperature fast and supersaturation spikes — tips race into ferns; ease it down and only the facets advance. 20 vessels plus a daily run.',
-        crystalBloomTag: 'Crystallization',
-        crystalBloomPlay: 'Play ›',
-        flameVerseName: 'Flame Verse',
-        flameVerseDesc: 'Throw salt into a burner and the flame speaks: every element answers with its own fixed set of light lines. Read the unknown sample\'s barcode of light — position names the element, brightness names the dose. 20 unknowns plus a daily sample.',
-        flameVerseTag: 'Spectroscopy',
-        flameVersePlay: 'Play ›',
-        rippleDuetName: 'Ripple Duet',
-        rippleDuetDesc: 'Two sources, one sea. Drag them and turn their phase until the water obeys — flatten the storm at one point, pile the crests up to light a beacon at another. 20 wave puzzles plus a daily course.',
-        rippleDuetTag: 'Interference',
-        rippleDuetPlay: 'Play ›',
-
-        carrotPullName: 'Carrot Pull',
-        carrotPullDesc: 'Find the sweet spot, pull in rhythm, and help a tiny mole harvest six giant carrots before time runs out.',
-        carrotPullTag: 'Casual',
-        carrotPullPlay: 'Play ›',
-        fireflySignalName: 'Firefly Signal',
-        fireflySignalDesc: 'Every firefly blinks alone. Nudge a few and watch whole meadows fall into step until the field lights up as one.',
-        fireflySignalTag: 'Synchrony',
-        fireflySignalPlay: 'Play ›',
-
-        shadowLoomName: 'Shadow Loom',
-        shadowLoomDesc: 'Move paper cut-outs hung at different depths — and the lamp — until their scattered shadows weave into a living shape.',
-        shadowLoomTag: 'Shadow Puzzle',
-        shadowLoomPlay: 'Play ›',
-
-        minecraftName: '2D Minecraft',
-        minecraftDesc: 'A 2D take on Minecraft. Mine blocks, craft tools, and build your world in the browser.',
-        minecraftTag: 'Sandbox',
-        minecraftPlay: 'Play ›',
-
-        dotsName: 'Dots and Boxes',
-        dotsDesc: 'Take turns drawing lines between dots. Complete a box to score a point and go again. Outsmart your opponent!',
-        dotsTag: 'Multiplayer',
-        dotsPlay: 'Play ›',
-
-        stackName: 'The Stack',
-        stackDesc: 'Pick-up sticks, digitized. Lift each stick without disturbing the pile — thirty sticks, three lives, one steady hand.',
-        stackTag: 'Puzzle',
-        stackPlay: 'Play ›',
-
-        perk1Title: 'Instant play',
-        perk1Body: 'Single-file builds load fast and cache well. No install, no login.',
-        perk2Title: 'Keyboard & touch',
-        perk2Body: 'Every game is tuned for laptop keyboards and mobile touch controls.',
-        perk3Title: 'Bilingual',
-        perk3Body: 'English and Chinese — auto-detected from your browser language.',
-
-        footer: '© 2026 orangely.xyz'
-    },
-    zh: {
-        pageTitle: '单页游戏合集',
-        mainTitle: '单页游戏合集',
-        mainDesc: '即点即玩 · 无需下载 · 无需注册 · 无广告',
-        sectionLabel: '选择游戏',
-
-        mathRainName: '数字雨',
-        mathRainDesc: '在等式落地前答对它。在压力下练习算术运算。',
-        mathRainTag: '益智教育',
-        mathRainPlay: '开始游戏 ›',
-
-        tetrisName: '俄罗斯方块',
-        tetrisDesc: '现代俄罗斯方块，支持 SRS 旋转、连击系统、多种主题与全球排行榜。',
-        tetrisTag: '经典游戏',
-        tetrisPlay: '开始游戏 ›',
-
-        tankName: '坦克大战',
-        tankDesc: '复古街机坦克射击。保卫基地，消灭敌人，坚持更多回合。',
-        tankTag: '街机竞技',
-        tankPlay: '开始游戏 ›',
-
-        gomokuName: '五子棋',
-        gomokuDesc: '五子连珠。与 AI 对决或和朋友在经典棋盘上一较高下。',
-        gomokuTag: '策略棋牌',
-        gomokuPlay: '开始游戏 ›',
-
-        planetMergeName: '星球合成',
-        planetMergeDesc: '投放星球，相同合成，连锁 COMBO 造出太阳。每日挑战 + 全球排行榜，看你今天能冲多高！',
-        planetMergeTag: '休闲爆款',
-        planetMergePlay: '开始游戏 ›',
-
-        wordDailyName: '每日猜词',
-        wordDailyDesc: '全球每天同一道题——英文单词或中文成语，6 次机会。连胜打卡，emoji 晒图，快来挑战！',
-        wordDailyTag: '每日智力',
-        wordDailyPlay: '开始游戏 ›',
-
-        hubTitle: '⚡ 今日挑战',
-        hubTaskWordSub: '6 次机会猜出今天的词语',
-        hubTaskMergeSub: '每日固定序列，冲击高分',
-        hubTaskGravitySub: '每日赛程 5 洞，杆数越少越强',
-        hubProfileHint: '全站排行榜昵称',
-        hubProfilePlaceholder: '你的昵称',
-        langToggle: 'English',
-        themeLabel: '主题',
-        themeDark: '深色',
-        themeLight: '浅色',
-        themeSystem: '跟随系统',
-        darkOnly: '仅深色',
-        darkOnlyTitle: '这款游戏按深色设计，总是以深色打开',
-        hubTotalPlayed: '次今日对局',
-        badgeDaily: '今日挑战',
-        badgeNew: '新上线',
-
-        hoopShotName: '街机投篮',
-        hoopShotDesc: '一指甩投，一球定胜负！连中 3 球点燃火球模式分数翻倍，冲击全球前 10！',
-        hoopShotTag: '运动街机',
-        hoopShotPlay: '开始游戏 ›',
-
-        minesweeperName: '扫雷',
-        minesweeperDesc: '经典逻辑推理。首次点击必安全，支持快开与插旗，三档难度，冲击全球最快榜！',
-        minesweeperTag: '益智经典',
-        minesweeperPlay: '开始游戏 ›',
-
-        reversiName: '黑白棋',
-        reversiDesc: '经典奥赛罗策略棋。三档 AI 随你挑战，也可与好友双人同屏，冲击全球连胜榜！',
-        reversiTag: '策略棋牌',
-        reversiPlay: '开始游戏 ›',
-
-        tdName: '霓虹塔防',
-        tdDesc: '在六个未来城市作战行动中部署脉冲、冰霜、加农、电磁四类塔，守住能源核心，迎战 15–40 波逐步升级的攻势！',
-        tdTag: '策略塔防',
-        tdPlay: '开始游戏 ›',
-
-        gravityName: '引力弹弓',
-        gravityDesc: '原创轨道物理——拖拽弹弓发射探测器，借行星引力甩尾进虫洞。20 个手工洞口 + 每日赛程！',
-        gravityTag: '物理弹道',
-        gravityPlay: '开始游戏 ›',
-
-        needleAwnName: '针尖对麦芒',
-        needleAwnDesc: '极速破锋，毫厘交错！正对敌方锋芒冲刺触发【针尖对麦芒】极致弹反，双姿态流转，斩破万芒！',
-        needleAwnTag: '硬核动作',
-        needleAwnPlay: '开始游戏 ›',
-
-        swordFlightName: '御剑飞行',
-        swordFlightDesc: '扶摇直上九重天，踏剑破云海。穿梭玄天仙环，引雷淬剑，御剑化阵，突破境界，凝万剑归宗！',
-        swordFlightTag: '国风仙侠',
-        swordFlightPlay: '开始游戏 ›',
-
-        lumenName: '折光',
-        lumenDesc: '翻转镜面，偏折光束，点亮全部水晶。20 关手工关卡 + 每日谜题，用最少翻转通关！',
-        lumenTag: '光路解谜',
-        lumenPlay: '开始游戏 ›',
-
-        circuitName: '电路谜题',
-        circuitDesc: '拨动开关，接通电流，点亮全部目标灯泡——小心短路！20 关手工关卡 + 每日谜题。',
-        circuitTag: '电路解谜',
-        circuitPlay: '开始游戏 ›',
-
-        silkDewName: '垂丝引露',
-        silkDewDesc: '拖动丝线顶端的锚结，牵引露珠穿过荆棘与气旋，让它坠入玉壶。20 关手工关卡 + 每日挑战。',
-        silkDewTag: '绳物理',
-        silkDewPlay: '开始游戏 ›',
-        bondForgeName: '键合工坊',
-        bondForgeDesc: '从原子盘拖出原子，靠近即成键，把所有价键填满、拼出目标分子。20 关手工关卡 + 每日挑战，一路都是真实化学。',
-        bondForgeTag: '化学',
-        bondForgePlay: '开始游戏 ›',
-        echoCaveName: '回声洞窟',
-        echoCaveDesc: '洞窟伸手不见五指，直到你开口：发出声波脉冲，读着看不见的岩壁传回的回声，收齐鸣唱的声晶，找到月光洞口。20 关手工洞穴 + 每日挑战。',
-        echoCaveTag: '声学',
-        echoCavePlay: '开始游戏 ›',
-        maxwellDemonName: '麦克斯韦妖',
-        maxwellDemonDesc: '两个腔室，一扇小门。花钱看清哪些分子是快的，再花钱开门——把气体分拣到温差凭空出现。20 个容器 + 每日挑战。',
-        maxwellDemonTag: '热力学',
-        maxwellDemonPlay: '开始游戏 ›',
-        crystalBloomName: '晶绽',
-        crystalBloomDesc: '一锅热饱和溶液，照着你在图上画出的曲线降温。降得猛，过饱和度冲高，尖端窜成霜蕨；降得缓，只有晶面在推进。20 个皿 + 每日挑战。',
-        crystalBloomTag: '结晶',
-        crystalBloomPlay: '开始游戏 ›',
-        flameVerseName: '焰语',
-        flameVerseDesc: '往本生灯里投一撮盐，火焰就开始说话：每种元素都用自己那几条固定的谱线作答。读懂未知样品的光之条码——谱线位置说出元素，亮度说出含量。20 份未知样品 + 每日挑战。',
-        flameVerseTag: '光谱',
-        flameVersePlay: '开始游戏 ›',
-        rippleDuetName: '涟漪双生',
-        rippleDuetDesc: '两个波源，一片海。拖动它们、拧动相位，让水听你的话——在一处把风暴抹平，在另一处把波峰叠起来点亮浮标。20 片海 + 每日赛程。',
-        rippleDuetTag: '干涉',
-        rippleDuetPlay: '开始游戏 ›',
-
-        carrotPullName: '拔萝卜',
-        carrotPullDesc: '看准绿色甜蜜区，跟着节奏用力拔，和小鼹鼠一起在时间结束前收获 6 根大萝卜。',
-        carrotPullTag: '休闲街机',
-        carrotPullPlay: '开始游戏 ›',
-        fireflySignalName: '萤火信号',
-        fireflySignalDesc: '每只萤火虫都各闪各的。轻轻推动几只，看一片片草地渐渐合拍，直到整片原野同时亮起。',
-        fireflySignalTag: '同步谜题',
-        fireflySignalPlay: '开始游戏 ›',
-
-        shadowLoomName: '影织',
-        shadowLoomDesc: '移动悬在不同深度的剪纸和那盏灯，让散乱的影子慢慢重合，织成一个会动的生命。',
-        shadowLoomTag: '纸影解谜',
-        shadowLoomPlay: '开始游戏 ›',
-
-        minecraftName: '2D 我的世界',
-        minecraftDesc: '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。',
-        minecraftTag: '沙盒游戏',
-        minecraftPlay: '开始游戏 ›',
-
-        dotsName: '点格棋',
-        dotsDesc: '轮流在相邻的点之间画线，围成方格得分，得分后可再画一条线，最终方格多者获胜！',
-        dotsTag: '双人对战',
-        dotsPlay: '开始游戏 ›',
-
-        stackName: '挑棒',
-        stackDesc: '经典挑棒游戏的数字版。逐根挑起木棒，别碰动压在上面的那些——三十根木棒，三条命，全看你的手稳不稳。',
-        stackTag: '休闲益智',
-        stackPlay: '开始游戏 ›',
-
-        perk1Title: '即点即玩',
-        perk1Body: '单文件构建，加载迅速，无需安装，无需登录。',
-        perk2Title: '键盘 & 触控',
-        perk2Body: '每款游戏均为键盘和移动端触控精心优化。',
-        perk3Title: '双语支持',
-        perk3Body: '英文与中文，根据浏览器语言自动切换。',
-
-        footer: '© 2026 orangely.xyz'
-    }
-};
-
-function detectLanguage() {
-    let saved = null;
-    try {
-        saved = localStorage.getItem('site_lang');
-    } catch (e) { /* ignore */ }
-    if (saved === 'zh' || saved === 'en') return saved;
-    const lang = navigator.language || navigator.userLanguage || 'en';
-    return lang.startsWith('zh') ? 'zh' : 'en';
-}
-
-function applyLanguage(lang) {
-    const t = i18n[lang];
-    if (!t) return;
-
-    document.getElementById('html-root').lang = lang;
-    document.getElementById('page-title').textContent = t.pageTitle;
-    document.getElementById('main-title').textContent = t.mainTitle;
-    document.getElementById('main-desc').textContent = t.mainDesc;
-    document.getElementById('section-label').textContent = t.sectionLabel;
-
-    document.getElementById('math-rain-name').textContent = t.mathRainName;
-    document.getElementById('math-rain-desc').textContent = t.mathRainDesc;
-    document.getElementById('math-rain-tag').textContent = t.mathRainTag;
-    document.getElementById('math-rain-play').textContent = t.mathRainPlay;
-
-    document.getElementById('tetris-name').textContent = t.tetrisName;
-    document.getElementById('tetris-desc').textContent = t.tetrisDesc;
-    document.getElementById('tetris-tag').textContent = t.tetrisTag;
-    document.getElementById('tetris-play').textContent = t.tetrisPlay;
-
-    document.getElementById('tank-name').textContent = t.tankName;
-    document.getElementById('tank-desc').textContent = t.tankDesc;
-    document.getElementById('tank-tag').textContent = t.tankTag;
-    document.getElementById('tank-play').textContent = t.tankPlay;
-
-    document.getElementById('gomoku-name').textContent = t.gomokuName;
-    document.getElementById('gomoku-desc').textContent = t.gomokuDesc;
-    document.getElementById('gomoku-tag').textContent = t.gomokuTag;
-    document.getElementById('gomoku-play').textContent = t.gomokuPlay;
-
-    document.getElementById('planet-merge-name').textContent = t.planetMergeName;
-    document.getElementById('planet-merge-desc').textContent = t.planetMergeDesc;
-    document.getElementById('planet-merge-tag').textContent = t.planetMergeTag;
-    document.getElementById('planet-merge-play').textContent = t.planetMergePlay;
-
-    document.getElementById('word-daily-name').textContent = t.wordDailyName;
-    document.getElementById('word-daily-desc').textContent = t.wordDailyDesc;
-    document.getElementById('word-daily-tag').textContent = t.wordDailyTag;
-    document.getElementById('word-daily-play').textContent = t.wordDailyPlay;
-
-    document.getElementById('hoop-shot-name').textContent = t.hoopShotName;
-    document.getElementById('hoop-shot-desc').textContent = t.hoopShotDesc;
-    document.getElementById('hoop-shot-tag').textContent = t.hoopShotTag;
-    document.getElementById('hoop-shot-play').textContent = t.hoopShotPlay;
-
-    document.getElementById('minesweeper-name').textContent = t.minesweeperName;
-    document.getElementById('minesweeper-desc').textContent = t.minesweeperDesc;
-    document.getElementById('minesweeper-tag').textContent = t.minesweeperTag;
-    document.getElementById('minesweeper-play').textContent = t.minesweeperPlay;
-
-    document.getElementById('reversi-name').textContent = t.reversiName;
-    document.getElementById('reversi-desc').textContent = t.reversiDesc;
-    document.getElementById('reversi-tag').textContent = t.reversiTag;
-    document.getElementById('reversi-play').textContent = t.reversiPlay;
-
-    document.getElementById('td-name').textContent = t.tdName;
-    document.getElementById('td-desc').textContent = t.tdDesc;
-    document.getElementById('td-tag').textContent = t.tdTag;
-    document.getElementById('td-play').textContent = t.tdPlay;
-
-    document.getElementById('gravity-name').textContent = t.gravityName;
-    document.getElementById('gravity-desc').textContent = t.gravityDesc;
-    document.getElementById('gravity-tag').textContent = t.gravityTag;
-    document.getElementById('gravity-play').textContent = t.gravityPlay;
-
-    document.getElementById('needle-awn-name').textContent = t.needleAwnName;
-    document.getElementById('needle-awn-desc').textContent = t.needleAwnDesc;
-    document.getElementById('needle-awn-tag').textContent = t.needleAwnTag;
-    document.getElementById('needle-awn-play').textContent = t.needleAwnPlay;
-
-    document.getElementById('sword-flight-name').textContent = t.swordFlightName;
-    document.getElementById('sword-flight-desc').textContent = t.swordFlightDesc;
-    document.getElementById('sword-flight-tag').textContent = t.swordFlightTag;
-    document.getElementById('sword-flight-play').textContent = t.swordFlightPlay;
-
-    document.getElementById('lumen-name').textContent = t.lumenName;
-    document.getElementById('lumen-desc').textContent = t.lumenDesc;
-    document.getElementById('lumen-tag').textContent = t.lumenTag;
-    document.getElementById('lumen-play').textContent = t.lumenPlay;
-
-    document.getElementById('circuit-name').textContent = t.circuitName;
-    document.getElementById('circuit-desc').textContent = t.circuitDesc;
-    document.getElementById('circuit-tag').textContent = t.circuitTag;
-    document.getElementById('circuit-play').textContent = t.circuitPlay;
-
-    document.getElementById('silk-dew-name').textContent = t.silkDewName;
-    document.getElementById('silk-dew-desc').textContent = t.silkDewDesc;
-    document.getElementById('silk-dew-tag').textContent = t.silkDewTag;
-    document.getElementById('silk-dew-play').textContent = t.silkDewPlay;
-    document.getElementById('bond-forge-name').textContent = t.bondForgeName;
-    document.getElementById('bond-forge-desc').textContent = t.bondForgeDesc;
-    document.getElementById('bond-forge-tag').textContent = t.bondForgeTag;
-    document.getElementById('bond-forge-play').textContent = t.bondForgePlay;
-    document.getElementById('echo-cave-name').textContent = t.echoCaveName;
-    document.getElementById('echo-cave-desc').textContent = t.echoCaveDesc;
-    document.getElementById('echo-cave-tag').textContent = t.echoCaveTag;
-    document.getElementById('echo-cave-play').textContent = t.echoCavePlay;
-    document.getElementById('maxwell-demon-name').textContent = t.maxwellDemonName;
-    document.getElementById('maxwell-demon-desc').textContent = t.maxwellDemonDesc;
-    document.getElementById('maxwell-demon-tag').textContent = t.maxwellDemonTag;
-    document.getElementById('maxwell-demon-play').textContent = t.maxwellDemonPlay;
-    document.getElementById('crystal-bloom-name').textContent = t.crystalBloomName;
-    document.getElementById('crystal-bloom-desc').textContent = t.crystalBloomDesc;
-    document.getElementById('crystal-bloom-tag').textContent = t.crystalBloomTag;
-    document.getElementById('crystal-bloom-play').textContent = t.crystalBloomPlay;
-    document.getElementById('flame-verse-name').textContent = t.flameVerseName;
-    document.getElementById('flame-verse-desc').textContent = t.flameVerseDesc;
-    document.getElementById('flame-verse-tag').textContent = t.flameVerseTag;
-    document.getElementById('flame-verse-play').textContent = t.flameVersePlay;
-    document.getElementById('ripple-duet-name').textContent = t.rippleDuetName;
-    document.getElementById('ripple-duet-desc').textContent = t.rippleDuetDesc;
-    document.getElementById('ripple-duet-tag').textContent = t.rippleDuetTag;
-    document.getElementById('ripple-duet-play').textContent = t.rippleDuetPlay;
-
-    document.getElementById('carrot-pull-name').textContent = t.carrotPullName;
-    document.getElementById('carrot-pull-desc').textContent = t.carrotPullDesc;
-    document.getElementById('carrot-pull-tag').textContent = t.carrotPullTag;
-    document.getElementById('carrot-pull-play').textContent = t.carrotPullPlay;
-    document.getElementById('firefly-signal-name').textContent = t.fireflySignalName;
-    document.getElementById('firefly-signal-desc').textContent = t.fireflySignalDesc;
-    document.getElementById('firefly-signal-tag').textContent = t.fireflySignalTag;
-    document.getElementById('firefly-signal-play').textContent = t.fireflySignalPlay;
-
-    document.getElementById('shadow-loom-name').textContent = t.shadowLoomName;
-    document.getElementById('shadow-loom-desc').textContent = t.shadowLoomDesc;
-    document.getElementById('shadow-loom-tag').textContent = t.shadowLoomTag;
-    document.getElementById('shadow-loom-play').textContent = t.shadowLoomPlay;
-
-    document.getElementById('minecraft-name').textContent = t.minecraftName;
-    document.getElementById('minecraft-desc').textContent = t.minecraftDesc;
-    document.getElementById('minecraft-tag').textContent = t.minecraftTag;
-    document.getElementById('minecraft-play').textContent = t.minecraftPlay;
-
-    document.getElementById('dots-name').textContent = t.dotsName;
-    document.getElementById('dots-desc').textContent = t.dotsDesc;
-    document.getElementById('dots-tag').textContent = t.dotsTag;
-    document.getElementById('dots-play').textContent = t.dotsPlay;
-
-    document.getElementById('stack-name').textContent = t.stackName;
-    document.getElementById('stack-desc').textContent = t.stackDesc;
-    document.getElementById('stack-tag').textContent = t.stackTag;
-    document.getElementById('stack-play').textContent = t.stackPlay;
-
-    document.getElementById('perk1-title').textContent = t.perk1Title;
-    document.getElementById('perk1-body').textContent = t.perk1Body;
-    document.getElementById('perk2-title').textContent = t.perk2Title;
-    document.getElementById('perk2-body').textContent = t.perk2Body;
-    document.getElementById('perk3-title').textContent = t.perk3Title;
-    document.getElementById('perk3-body').textContent = t.perk3Body;
-
-    document.getElementById('footer-text').textContent = t.footer;
-    // 两颗语言钮共用同一个写入者：applyLanguage 是唯一改它们文案的地方
-    document.querySelectorAll('#lang-toggle, #footer-lang-toggle')
-        .forEach(btn => { btn.textContent = t.langToggle; });
-    document.querySelectorAll('.tag--dark-only').forEach(el => {
-        el.textContent = t.darkOnly;
-        el.title = t.darkOnlyTitle;
+const selectors = '[data-i18n], [data-i18n-placeholder], [data-i18n-label]';
+const defaults = new WeakMap();
+let currentLang = 'en';
+let translations = new Map();
+
+function rememberDefaults() {
+    document.querySelectorAll(selectors).forEach(el => {
+        if (defaults.has(el)) return;
+        defaults.set(el, {
+            text: el.textContent,
+            placeholder: el.getAttribute('placeholder'),
+            label: el.getAttribute('aria-label'),
+        });
     });
-    const themeSwitch = document.getElementById('theme-switch');
-    if (themeSwitch) {
-        themeSwitch.setAttribute('aria-label', t.themeLabel);
-        const THEME_TEXT = { dark: t.themeDark, light: t.themeLight, system: t.themeSystem };
-        themeSwitch.querySelectorAll('[data-theme-pref]')
-            .forEach(btn => { btn.textContent = THEME_TEXT[btn.dataset.themePref]; });
-    }
-
-    // Daily Hub 文案
-    document.getElementById('hub-title').textContent = t.hubTitle;
-    document.getElementById('hub-task-word-name').textContent = t.wordDailyName;
-    document.getElementById('hub-task-word-sub').textContent = t.hubTaskWordSub;
-    document.getElementById('hub-task-merge-name').textContent = t.planetMergeName;
-    document.getElementById('hub-task-merge-sub').textContent = t.hubTaskMergeSub;
-    document.getElementById('hub-task-gravity-name').textContent = t.gravityName;
-    document.getElementById('hub-task-gravity-sub').textContent = t.hubTaskGravitySub;
-    document.getElementById('hub-profile-hint').textContent = t.hubProfileHint;
-    document.getElementById('player-name').placeholder = t.hubProfilePlaceholder;
-
-    // 卡片状态书签：图标保持无文字，语义文案同步到 tooltip 与读屏属性。
-    document.querySelectorAll('.card-badge').forEach(el => {
-        const label = el.classList.contains('card-badge--daily') ? t.badgeDaily : t.badgeNew;
-        el.dataset.tooltip = label;
-        el.setAttribute('aria-label', label);
+    document.querySelectorAll('.game-card[data-game-id]').forEach(card => {
+        if (defaults.has(card)) return;
+        defaults.set(card, {
+            name: card.querySelector('.card-title')?.textContent || '',
+            desc: card.querySelector('.card-desc')?.textContent || '',
+            tag: card.querySelector('.tag:not(.tag--dark-only)')?.textContent || '',
+        });
     });
 }
 
-function setCanonicalAndSocialMeta() {
+async function loadTranslations(lang) {
+    if (lang !== 'zh') return new Map();
+    try { return (await import('./index-i18n-zh.js')).default; }
+    catch (e) { return new Map(); }
+}
+
+function setText(el, key, fallback) {
+    if (el) el.textContent = translations.get(key) ?? fallback;
+}
+
+async function applyLanguage(lang) {
+    rememberDefaults();
+    const wanted = lang === 'zh' ? 'zh' : 'en';
+    const next = await loadTranslations(wanted);
+    currentLang = wanted === 'zh' && next.size ? 'zh' : 'en';
+    translations = currentLang === 'zh' ? next : new Map();
+    document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+
+    document.querySelectorAll(selectors).forEach(el => {
+        const base = defaults.get(el);
+        const key = el.dataset.i18n;
+        if (key) el.textContent = translations.get(key) ?? base.text;
+        if (el.dataset.i18nPlaceholder) el.setAttribute('placeholder', translations.get(el.dataset.i18nPlaceholder) ?? base.placeholder ?? '');
+        if (el.dataset.i18nLabel) el.setAttribute('aria-label', translations.get(el.dataset.i18nLabel) ?? base.label ?? '');
+    });
+
+    document.querySelectorAll('.game-card[data-game-id]').forEach(card => {
+        const id = card.dataset.gameId;
+        const base = defaults.get(card);
+        setText(card.querySelector('.card-title'), `${id}.name`, base.name);
+        setText(card.querySelector('.card-desc'), `${id}.desc`, base.desc);
+        setText(card.querySelector('.tag:not(.tag--dark-only)'), `${id}.tag`, base.tag);
+        setText(card.querySelector('.play-btn'), 'play', 'Play ›');
+        const dark = card.querySelector('.tag--dark-only');
+        if (dark) {
+            dark.textContent = translations.get('darkOnly') || 'Dark only';
+            dark.title = translations.get('darkOnlyTitle') || 'This game is designed for dark mode and always opens dark';
+        }
+        const badge = card.querySelector('.card-badge');
+        if (badge) {
+            const badgeKey = badge.classList.contains('card-badge--daily') ? 'badgeDaily' : 'badgeNew';
+            const label = translations.get(badgeKey) || (badgeKey === 'badgeDaily' ? 'Daily' : 'New');
+            badge.dataset.tooltip = label;
+            badge.setAttribute('aria-label', label);
+        }
+    });
+}
+
+function syncSocialMeta() {
     const currentUrl = window.location.href.split('#')[0];
-    const canonicalLink = document.getElementById('canonical-link');
-    if (canonicalLink) canonicalLink.setAttribute('href', currentUrl);
-
-    const ogUrl = document.querySelector('meta[property="og:url"]');
-    if (ogUrl) ogUrl.setAttribute('content', currentUrl);
-
+    document.getElementById('canonical-link')?.setAttribute('href', currentUrl);
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', currentUrl);
     const baseUrl = new URL('.', currentUrl).href;
-    const imagePath = new URL('assets/seo/og-collection.svg', baseUrl).href;
-    const ogImage = document.querySelector('meta[property="og:image"]');
-    if (ogImage) ogImage.setAttribute('content', imagePath);
-    const twitterImage = document.querySelector('meta[name="twitter:image"]');
-    if (twitterImage) twitterImage.setAttribute('content', imagePath);
+    const imageUrl = new URL('assets/seo/og-collection.svg', baseUrl).href;
+    document.querySelector('meta[property="og:image"]')?.setAttribute('content', imageUrl);
+    document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', imageUrl);
 }
 
 function injectStructuredData() {
     const currentUrl = window.location.href.split('#')[0];
     const baseUrl = new URL('.', currentUrl).href;
-    const games = [
-        { slug: 'math-rain',   name: 'Math Rain',    description: 'Timed arithmetic practice game with falling equations.' },
-        { slug: 'tetris',      name: 'Tetris',        description: 'Modernized Tetris with particles, keyboard, and mobile controls.' },
-        { slug: 'tank-battle', name: 'Tank Battle',   description: 'Retro arcade tank shooter with base defense.' },
-        { slug: 'gomoku',      name: 'Gomoku',        description: 'Five in a Row board game versus AI or a friend.' },
-        { slug: 'planet-merge', name: 'Planet Merge', description: 'Suika-style physics merge game — drop planets, forge suns, chase combo high scores.' },
-        { slug: 'word-daily', name: 'Word Daily', description: 'Daily bilingual word puzzle — guess the English word or the Chinese idiom in 6 tries.' },
-        { slug: 'hoop-shot', name: 'Hoop Shot', description: 'Flick basketball arcade — one miss ends the run, chain streaks for fire mode.' },
-        { slug: 'minesweeper', name: 'Minesweeper', description: 'Classic Minesweeper logic puzzle — safe first click, chording, three difficulties, global fastest clears.' },
-        { slug: 'reversi', name: 'Reversi', description: 'Classic Othello strategy board game — three AI levels or pass-and-play with a friend.' },
-        { slug: 'tower-defense', name: 'Neon Tower Defense', description: 'Future-city tower defense — four specialist tower types across six operations with 15 to 40 escalating waves and an energy core to defend.' },
-        { slug: 'gravity-slingshot', name: 'Gravity Slingshot', description: 'Original orbital physics puzzle — slingshot your probe around planets into the wormhole, 20 holes plus a daily course.' },
-        { slug: 'needle-awn', name: 'Pinpoint Clash', description: 'Original cyber-ink martial precision action duel — clash tip-to-tip, weave dual stances, freeze time and awaken the thousand-awn storm.' },
-        { slug: 'sword-flight', name: 'Sword Flight', description: 'Oriental xianxia kinetic flight action — soar through nine celestial realms, summon companion sword arrays, thread spiritual rings, and ascend to immortality.' },
-        { slug: 'lumen', name: 'Lumen', description: 'Original beam refraction puzzle — flip mirrors, bend the beam and light every crystal. 20 handcrafted levels plus a daily puzzle.' },
-        { slug: 'circuit', name: 'Circuit', description: 'Physics puzzle of switches and circuits — route the current, light every target bulb and dodge the short circuit. 20 levels plus a daily puzzle.' },
-        { slug: 'silk-dew', name: 'Silkfall', description: 'Rope-physics puzzle — drag the anchor knot to thread a silken strand, steer the dew pearl past thorns and gales and let it fall into the jade vessel. 20 levels plus a daily course.' },
-        { slug: 'bond-forge', name: 'Bond Forge', description: 'Molecule-building chemistry puzzle — drag atoms from the tray, snap them into bonds and satisfy every valence shell to forge the target formula. 20 levels plus a daily challenge.' },
-        { slug: 'echo-cave', name: 'Echo Cave', description: 'Original sonar puzzle — the cave is pitch dark until you sing: emit pulses, read the echoes off unseen walls, gather singing crystals and find the moonlit exit. 20 handcrafted caves plus a daily course.' },
-        { slug: 'maxwell-demon', name: 'Maxwell\'s Demon', description: 'Original thermodynamics puzzle — keep the tiny door between two chambers, sort fast molecules from slow ones and build a temperature gap out of nothing. Every bit you learn is paid for. 20 vessels plus a daily run.' },
-        { slug: 'crystal-bloom', name: 'Crystal Bloom', description: 'Original crystallization puzzle — draw the cooling curve of a saturated bath: quench it for dendrites, ease it down for facets, stir to pack it dense. 20 vessels plus a daily run.' },
-        { slug: 'flame-verse', name: 'Flame Verse', description: 'Original flame spectroscopy puzzle — throw salts into the burner, read the emission lines each element leaves behind and match the mystery sample\'s barcode of light. 20 unknowns plus a daily sample.' },
-        { slug: 'ripple-duet', name: 'Ripple Duet', description: 'Original wave interference puzzle — drag two sources across the sea, set their phase and sculpt the ripple field: flatten the storm at one point, blaze a beacon at another, keep a whole channel calm. 20 wave puzzles plus a daily course.' },
-        { slug: 'carrot-pull', name: 'Carrot Pull', description: 'Cute garden rhythm game — hit the sweet spot, pull in rhythm and help a tiny mole harvest six giant carrots before time runs out.' },
-        { slug: 'firefly-signal', name: 'Firefly Signal', description: 'Midsummer-night synchrony puzzle — nudge a few fireflies and watch whole meadows fall into step until the entire field lights up as one.' },
-        { slug: 'shadow-loom', name: 'Shadow Loom', description: 'Paper-theatre shadow puzzle — move cut-outs hung at different depths, and the lamp itself, until their shadows weave into a rabbit, a dove, a deer, and the shadow comes alive.' },
-        { url: 'https://2d-minecraft.orangely.xyz', name: '2D Minecraft', description: 'A 2D browser take on Minecraft — mine blocks, craft tools, and build your world.' },
-        { url: 'https://dots-and-boxes.orangely.xyz', name: 'Dots and Boxes', description: 'Turn-based line-drawing game. Complete boxes to score points.' },
-        { url: 'https://steady-hand.orangely.xyz', name: 'The Stack', description: 'Digital pick-up sticks — lift each stick without disturbing the pile.' }
-    ];
-
-    const siteData = {
+    const items = [...document.querySelectorAll('.game-card[data-game-id]')].map((card, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: defaults.get(card)?.name || card.querySelector('.card-title')?.textContent || '',
+        description: defaults.get(card)?.desc || card.querySelector('.card-desc')?.textContent || '',
+        url: new URL(card.querySelector('.card-title')?.getAttribute('href') || '', baseUrl).href,
+    }));
+    const graph = {
         '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        'name': 'Mini Games Collection',
-        'url': currentUrl,
-        'description': 'Play lightweight browser games including Math Rain, Tetris, Tank Battle, and Gomoku.',
-        'inLanguage': document.documentElement.lang || 'en',
-        'publisher': { '@type': 'Organization', 'name': 'Orangely' }
+        '@graph': [
+            { '@type': 'WebSite', name: 'Mini Games Collection', url: currentUrl, publisher: { '@type': 'Organization', name: 'Orangely' } },
+            { '@type': 'ItemList', name: 'Mini Games Collection', itemListElement: items },
+        ],
     };
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(graph);
+    document.head.appendChild(script);
+}
 
-    const itemList = {
-        '@context': 'https://schema.org',
-        '@type': 'ItemList',
-        'name': 'Mini Games Collection',
-        'itemListElement': games.map((g, i) => ({
-            '@type': 'ListItem',
-            'position': i + 1,
-            'name': g.name,
-            'description': g.description,
-            'url': g.url || `${baseUrl}${g.slug}.html`
-        }))
-    };
-
-    [siteData, itemList].forEach(data => {
-        const s = document.createElement('script');
-        s.type = 'application/ld+json';
-        s.textContent = JSON.stringify(data);
-        document.head.appendChild(s);
+function markDarkOnlyCards() {
+    document.querySelectorAll('.game-card[data-dark-only]').forEach(card => {
+        const footer = card.querySelector('.card-footer');
+        const play = footer?.querySelector('.play-btn');
+        if (!footer || !play || footer.querySelector('.tag--dark-only')) return;
+        const tag = document.createElement('span');
+        tag.className = 'tag tag--dark-only';
+        play.before(tag);
     });
+    const sync = () => document.body.classList.toggle('theme-light-active', getTheme() === 'light');
+    onThemeChange(sync);
+    sync();
 }
 
 function updateDailyHub() {
-    // 与各游戏一致的 UTC+8 日期键
     const d = new Date(Date.now() + 8 * 3600 * 1000);
     const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
     const compact = iso.replace(/-/g, '');
-    const ls = (k) => {
-        try {
-            return localStorage.getItem(k);
-        } catch (e) {
-            return null;
-        }
-    };
-
+    const ls = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
     const wordDone = !!(ls(`wd_daily_${iso}_en`) || ls(`wd_daily_${iso}_en_4`) || ls(`wd_daily_${iso}_en_5`) || ls(`wd_daily_${iso}_en_6`) || ls(`wd_daily_${iso}_zh`));
     const mergeDone = !!ls(`pm_daily_${compact}`);
     const gravityDone = !!ls(`gs_daily_${compact}`);
     const doneCount = (wordDone ? 1 : 0) + (mergeDone ? 1 : 0) + (gravityDone ? 1 : 0);
-
     const setTask = (id, done) => {
         const task = document.getElementById(id);
         if (!task) return;
@@ -641,53 +141,36 @@ function updateDailyHub() {
     setTask('hub-task-word', wordDone);
     setTask('hub-task-merge', mergeDone);
     setTask('hub-task-gravity', gravityDone);
-
     const progress = document.getElementById('hub-progress');
     if (progress) {
         progress.textContent = `${doneCount}/3`;
         progress.classList.toggle('all-done', doneCount === 3);
     }
-
-    // 全站玩家昵称
     const nameInput = document.getElementById('player-name');
     if (nameInput && document.activeElement !== nameInput) {
-        let name = null;
-        try {
-            name = localStorage.getItem('player_name');
-        } catch (e) { /* ignore */ }
+        let name = ls('player_name');
         if (!name) {
             for (const k of ['tetris_username', 'pm_username', 'hs_username']) {
-                try {
-                    name = localStorage.getItem(k);
-                } catch (e) { /* ignore */ }
+                name = ls(k);
                 if (name) break;
             }
         }
         nameInput.value = name || '';
     }
-
-    // 今日全站战绩（统计 Worker 不可达时保持隐藏）
     fetch('https://games-analytics.orangely.workers.dev/stats?day=' + compact)
         .then(r => r.ok ? r.json() : Promise.reject(new Error('offline')))
         .then(s => {
             const el = document.getElementById('hub-total');
-            const curLang = detectLanguage();
-            if (el && s && s.total && s.total.p > 0) {
-                el.textContent = curLang === 'zh'
-                    ? ('🔥 今日已玩 ' + s.total.p + ' 次')
-                    : ('🔥 ' + s.total.p + ' ' + i18n.en.hubTotalPlayed);
+            if (el && s?.total?.p > 0) {
+                el.textContent = currentLang === 'zh'
+                    ? ('🔥 今日已玩 ' + s.total.p + ' ' + (translations.get('hubTotalPlayed') || '次今日对局'))
+                    : ('🔥 ' + s.total.p + ' plays today');
                 el.hidden = false;
             }
         })
-        .catch(() => { /* 静默 */ });
+        .catch(() => {});
 }
 
-/**
- * 主题三档开关：全站唯一写 site_theme 的地方（游戏页只读）。
- * 写入后 setThemePref 派发 site-settings:changed，本页的 theme-boot 据此即时换主题；
- * 其它已打开的游戏页由 storage 事件同步。首页自己不支持浅色时开关保持隐藏 ——
- * P0 阶段即如此（见 docs/contracts/theme.md §6）。
- */
 function bindThemeSwitch() {
     const box = document.getElementById('theme-switch');
     if (!box) return;
@@ -701,66 +184,32 @@ function bindThemeSwitch() {
         setThemePref(btn.dataset.themePref);
         sync();
     }));
-    window.addEventListener('storage', (e) => { if (!e.key || e.key === 'site_theme') sync(); });
+    window.addEventListener('storage', e => { if (!e.key || e.key === 'site_theme') sync(); });
     sync();
 }
 
-/**
- * 「仅深色」标记：不支持浅色的游戏卡片上加一枚小标（数据来自 gen 派生的 MORE_GAMES.light）。
- * 只在首页处于浅色时显示 —— 深色下所有游戏看上去都一样，这枚标就是噪音。
- * 必须在 applyLanguage 之前调用，文案由 applyLanguage 统一写入。
- */
-function markDarkOnlyCards() {
-    const lightHrefs = new Set(MORE_GAMES.filter(g => g.light).map(g => g.href));
-    const known = new Set(MORE_GAMES.map(g => g.href));
-    document.querySelectorAll('.game-card').forEach(card => {
-        const href = card.querySelector('.card-title')?.getAttribute('href');
-        // 外链游戏（dots-and-boxes 等）不在注册表里，不做判断
-        if (!href || !known.has(href) || lightHrefs.has(href)) return;
-        const footer = card.querySelector('.card-footer');
-        const play = footer && footer.querySelector('.play-btn');
-        if (!play || footer.querySelector('.tag--dark-only')) return;
-        const note = document.createElement('span');
-        note.className = 'tag tag--dark-only';
-        play.before(note);
-    });
-    const sync = () => document.body.classList.toggle('theme-light-active', getTheme() === 'light');
-    onThemeChange(sync);
-    sync();
-}
-
-onReady(() => {
+onReady(async () => {
+    rememberDefaults();
+    syncSocialMeta();
+    injectStructuredData();
     markDarkOnlyCards();
-    const lang = detectLanguage();
-    applyLanguage(lang);
-    // 两颗钮共用同一个 handler，避免两份逻辑各自漂移
-    const toggleLang = () => {
-        const next = document.getElementById('html-root').lang === 'zh' ? 'en' : 'zh';
-        try {
-            localStorage.setItem('site_lang', next);
-            window.dispatchEvent(new CustomEvent('site-settings:changed'));
-        } catch (e) { /* ignore */ }
-        applyLanguage(next);
+    await applyLanguage(getLang());
+    const toggleLang = async () => {
+        const next = currentLang === 'zh' ? 'en' : 'zh';
+        setLang(next);
+        await applyLanguage(next);
         updateDailyHub();
     };
-    document.querySelectorAll('#lang-toggle, #footer-lang-toggle')
-        .forEach(btn => btn.addEventListener('click', toggleLang));
+    document.querySelectorAll('#lang-toggle, #footer-lang-toggle').forEach(btn => btn.addEventListener('click', toggleLang));
     bindThemeSwitch();
-    setCanonicalAndSocialMeta();
-    injectStructuredData();
     updateDailyHub();
-
     const nameInput = document.getElementById('player-name');
     if (nameInput) {
         nameInput.addEventListener('change', () => {
             const clean = String(nameInput.value).replace(/[\u0000-\u001f\u007f-\u009f]/g, '').trim().slice(0, 20);
             nameInput.value = clean;
-            try {
-                localStorage.setItem('player_name', clean);
-            } catch (e) { /* ignore */ }
+            try { localStorage.setItem('player_name', clean); } catch (e) { /* ignore */ }
         });
-        nameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') nameInput.blur();
-        });
+        nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') nameInput.blur(); });
     }
 });

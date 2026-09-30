@@ -1,11 +1,11 @@
 import { getLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
-import { bindChrome } from './game-chrome.js';
 import { bindFrame } from './game-frame.js';
 import { track } from './analytics.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 
 // 音效：落子/胜利/失败/平局
 const sfx = createSfx({
@@ -904,10 +904,14 @@ init();
        本页的静音钮是随槽位契约新增的，页面自身没有 handler，
        所以显式把 sound 交给 chrome 接管。 */
 onReady(() => {
-    bindChrome({
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
+    window.gomokuRuntime = mountGameRuntime({
         self: 'gomoku.html',
-        owns: ['more', 'sound'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        frame: false,
+        chrome: {
+            owns: ['more', 'sound'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
     });
 });

@@ -964,10 +964,20 @@ class MathRainGame {
     }
 
     // Canvas interaction handlers
-    handleCanvasClick(event) {
+    clientToCanvasPoint(clientX, clientY) {
         const rect = this.canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const logicalWidth = this.canvasCssWidth || rect.width;
+        const logicalHeight = this.canvasCssHeight || rect.height;
+        const scaleX = rect.width > 0 ? logicalWidth / rect.width : 1;
+        const scaleY = rect.height > 0 ? logicalHeight / rect.height : 1;
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        };
+    }
+
+    handleCanvasClick(event) {
+        const { x, y } = this.clientToCanvasPoint(event.clientX, event.clientY);
         this.checkExpressionClick(x, y);
     }
     
@@ -976,10 +986,8 @@ class MathRainGame {
         if (event.cancelable) {
             event.preventDefault();
         }
-        const rect = this.canvas.getBoundingClientRect();
         const touch = event.touches[0];
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
+        const { x, y } = this.clientToCanvasPoint(touch.clientX, touch.clientY);
         this.checkExpressionClick(x, y);
     }
     
