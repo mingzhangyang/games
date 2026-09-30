@@ -1,0 +1,59 @@
+name: Architecture v2 candidate
+
+on:
+  push:
+    branches:
+      - feat/platform-architecture-v2
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'js/**'
+      - 'tests/**'
+      - 'tools/**'
+      - 'scripts/**'
+      - 'css/**'
+      - '*.html'
+      - 'games.config.json'
+      - 'games.schema.json'
+      - 'vite.config.js'
+      - 'wrangler.jsonc'
+      - 'package*.json'
+      - '.github/workflows/architecture-v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: '1'
+      VERIFY_JOBS: '2'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Full verification suite
+        run: npm run verify -- --jobs=2
+
+      - name: Built-output Tower Defense smoke
+        run: node scripts/run-smoke-dist.mjs tests/smoke-tower-defense.mjs
+
+      - name: Cloudflare Worker dry run
+        run: npx wrangler deploy --dry-run --outdir .wrangler-dry-run
