@@ -172,13 +172,38 @@ if (after.atomSyms !== 'H,H,O') fail(`画布原子应为 H,H,O，got ${after.ato
 if (after.bonds !== 2) fail(`水应有 2 根键，got ${after.bonds}`);
 if (after.bondOrders.some(o => o !== 1)) fail(`水的键都应是单键，got ${after.bondOrders.join(',')}`);
 if (after.drags !== 2) fail(`拖拽数应为 2，got ${after.drags}`);
-if (!after.cleared) fail('拼出 H₂O 后未弹出结算面板');
+if (after.cleared) fail('拼出 H₂O 后结算面板立即遮住结果');
 if (after.state !== 'clear') fail(`通关后 state 应为 clear，got ${after.state}`);
 if (after.stars !== '★★★') fail(`drags=par 应给 3 星，got "${after.stars}"`);
 if (!after.progress || !after.progress['bf-01-water']) fail('星级未写入 bf_progress');
 else if (after.progress['bf-01-water'].stars !== 3) fail(`存档星级应为 3，got ${after.progress['bf-01-water'].stars}`);
 if (errs.length) fail(`对局中 JS 运行时错误: ${errs.slice(0, 2).join(' | ')}`);
-else pass('L1 通关：拖 2 个 H 接 O → 2 根单键 → 3 星 → 结算 → 存档');
+else pass('L1 通关：先保留 H₂O 结果，再显示结算卡片 → 3 星 → 存档');
+
+// 结算卡片出现后也不能盖住刚刚拼好的分子；按钮文字需要在渐变背景上保持高对比度。
+await new Promise(r => setTimeout(r, 1600));
+const clearPresentation = await page.evaluate(() => {
+    const g = window.bfGame;
+    const canvas = document.getElementById('bf-canvas');
+    const rect = canvas.getBoundingClientRect();
+    const moleculeBottom = Math.max(...g.atoms.map(a => (
+        rect.top + ((a.y + g.elemOf(a.sym).radius + 6) / 680) * rect.height
+    )));
+    const card = document.querySelector('#bf-clear .bf-card').getBoundingClientRect();
+    return {
+        clearVisible: !document.getElementById('bf-clear').classList.contains('hidden'),
+        moleculeBottom,
+        cardTop: card.top,
+        primaryColor: getComputedStyle(document.getElementById('bf-btn-next')).color,
+    };
+});
+if (!clearPresentation.clearVisible) fail('结果展示窗口结束后仍未显示结算卡片');
+if (clearPresentation.cardTop <= clearPresentation.moleculeBottom) {
+    fail(`结算卡片仍遮挡分子（cardTop=${clearPresentation.cardTop.toFixed(1)}, moleculeBottom=${clearPresentation.moleculeBottom.toFixed(1)}）`);
+}
+if (clearPresentation.primaryColor !== 'rgb(255, 255, 255)') {
+    fail(`Next 按钮文字颜色应为高对比白色，got ${clearPresentation.primaryColor}`);
+}
 
 /* ── 5. 价键上限：碳不能接第 5 根键 ──
  *
