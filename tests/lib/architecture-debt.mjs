@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registry } from './registry.mjs';
+import { parse } from 'acorn';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const BASELINE_PATH = join(ROOT, 'tests', 'architecture-v2-debt-baseline.json');
@@ -36,7 +37,7 @@ const SELF_SCAN_FILES = new Set([
 // derived from the current JSON, otherwise a PR could raise both together.
 export const BOOTSTRAP_BASELINE = Object.freeze({
     'registry-entry-in-js': Object.freeze({ count: 25, sha256: '43b0ace9e98c38c103bfff58c51f6bf8eb93200d18a3686da3d9e5bab503f412' }),
-    'platform-shim-consumers': Object.freeze({ count: 246, sha256: '0d590a9ca2cbbc9185096ac8eb69394e8c3cb5aad5b11fa9311391903410fdaf' }),
+    'platform-shim-consumers': Object.freeze({ count: 246, sha256: '95ad35c7e5bcb31fbf5887f005e8c10742097071aa40b30a4c149d004f4afa43' }),
     'legacy-shell-pages': Object.freeze({ count: 4, sha256: '4556ab7c3267d50001f96df9312769c875d2ae13d86689efacc3cb87a67a0c88' }),
     'legacy-shell-page-missing': Object.freeze({ count: 5, sha256: '11bd82dc762a1b5f4fab1d5d43891eff3cc49cf44469b00264817b89ed0eb158' }),
     'active-scripts-references': Object.freeze({ count: 0, sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }),
@@ -203,7 +204,7 @@ export function importedSpecifiers(source) {
         const isCallSpecifier = previous === '('
             && (tokens[i - 2]?.value === 'import' || tokens[i - 2]?.value === 'require');
         if (!isCallSpecifier && previous !== 'import' && previous !== 'from' && previous !== 'require') continue;
-        imports.push({ specifier: token.value, line: token.line });
+        imports.push({ specifier: token.value, line: token.line, index: token.index });
     }
     return imports;
 }
@@ -212,7 +213,7 @@ function htmlSpecifiers(source) {
     const out = [];
     const re = /\b(?:src|href)\s*=\s*(["'])(.*?)\1/g;
     for (const match of source.matchAll(re)) {
-        out.push({ specifier: match[2], line: lineAt(source, match.index) });
+        out.push({ specifier: match[2], line: lineAt(source, match.index), index: match.index });
     }
     return out;
 }
@@ -249,14 +250,96 @@ export function resolveRepositoryImport(specifier, importerPath) {
     return value;
 }
 
+// Compare syntax and enclosing semantic scopes, never source offsets or line
+// numbers. Moving a call into another function/branch is new debt; formatting,
+// comments and unrelated sibling statements leave the fingerprint unchanged.
+function importContexts(source, path, refs) {
+    const wanted = new Map(refs.filter(ref => shimName(ref.specifier, path))
+        .map(ref => [ref.index, ref]));
+    const contexts = new Map();
+    if (!wanted.size) return contexts;
+    const ast = parse(source, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true });
+    const canonical = (value, ref) => {
+        if (Array.isArray(value)) return value.map(item => canonical(item, ref));
+        if (!value || typeof value !== 'object') return typeof value === 'bigint' ? String(value) : value;
+        if (value.start === ref.index && value.type === 'Literal') {
+            return { type: 'Literal', value: resolveRepositoryImport(ref.specifier, path) };
+        }
+        return Object.fromEntries(Object.entries(value)
+            .filter(([key]) => !['start', 'end', 'loc', 'range', 'raw'].includes(key))
+            .map(([key, item]) => [key, canonical(item, ref)]));
+    };
+    const visit = (node, ancestors) => {
+        if (!node || typeof node !== 'object') return;
+        const ref = wanted.get(node.start);
+        if (ref && node.type === 'Literal') {
+            const statement = [...ancestors].reverse().find(parent =>
+                parent.type === 'VariableDeclarator' || parent.type === 'ImportDeclaration'
+                || parent.type.startsWith('Export') || (parent.type.endsWith('Statement')
+                    && parent.type !== 'BlockStatement')) || node;
+            const scopes = ancestors.flatMap((parent, index) => {
+                const child = ancestors[index + 1] || node;
+                if (/Function/.test(parent.type) || parent.type === 'ArrowFunctionExpression') {
+                    return [{ type: parent.type, id: parent.id, params: parent.params,
+                        async: parent.async, generator: parent.generator }];
+                }
+                if (parent.type === 'VariableDeclarator') return [{ type: parent.type, id: parent.id }];
+                if (parent.type === 'ClassDeclaration' || parent.type === 'ClassExpression') {
+                    return [{ type: parent.type, id: parent.id, superClass: parent.superClass }];
+                }
+                if (parent.type === 'CallExpression') {
+                    return [{ type: parent.type, callee: parent.callee, argument: parent.arguments.indexOf(child) }];
+                }
+                if (parent.type === 'Property' || parent.type === 'MethodDefinition') {
+                    return [{ type: parent.type, key: parent.key, kind: parent.kind, computed: parent.computed }];
+                }
+                if (parent.type === 'IfStatement') {
+                    return [{ type: parent.type, test: parent.test, branch: child === parent.consequent ? 'then' : 'else' }];
+                }
+                if (/^(For|While|DoWhile)/.test(parent.type)) {
+                    return [{ type: parent.type, init: parent.init, test: parent.test,
+                        update: parent.update, left: parent.left, right: parent.right }];
+                }
+                if (parent.type === 'CatchClause') return [{ type: parent.type, param: parent.param }];
+                if (parent.type === 'TryStatement') {
+                    return [{ type: parent.type, branch: child === parent.block ? 'try'
+                        : child === parent.handler ? 'catch' : 'finally' }];
+                }
+                if (parent.type === 'SwitchCase') return [{ type: parent.type, test: parent.test }];
+                return [];
+            });
+            contexts.set(ref.index, JSON.stringify(canonical({ statement, scopes }, ref)));
+        }
+        for (const value of Object.values(node)) {
+            if (Array.isArray(value)) value.forEach(item => visit(item, [...ancestors, node]));
+            else if (value && typeof value === 'object') visit(value, [...ancestors, node]);
+        }
+    };
+    visit(ast, []);
+    return contexts;
+}
+
+function htmlImportContext(source, ref, target) {
+    const start = source.lastIndexOf('<', ref.index);
+    const end = source.indexOf('>', ref.index);
+    const tag = source.slice(start, end + 1);
+    const attributes = [...tag.matchAll(/([\w:-]+)\s*=\s*(["'])(.*?)\2/g)]
+        .map(match => [match[1].toLowerCase(), match[3] === ref.specifier ? target : match[3]])
+        .sort(([a], [b]) => a.localeCompare(b));
+    return JSON.stringify({ tag: /^<\s*([\w-]+)/.exec(tag)?.[1]?.toLowerCase(), attributes });
+}
+
 export function shimCallSites(source, path, html = false) {
     const counts = new Map();
     const refs = html ? htmlSpecifiers(source) : importedSpecifiers(source);
+    const contexts = html ? null : importContexts(source, path, refs);
     return refs.flatMap(ref => {
         const target = resolveRepositoryImport(ref.specifier, path);
         const match = /^js\/([^/]+)\.js$/.exec(target);
         if (!match || !PLATFORM_SHIMS.includes(match[1])) return [];
-        const identity = `${rel(path)}:${match[1]}`;
+        const context = html ? htmlImportContext(source, ref, target) : contexts.get(ref.index);
+        const fingerprint = createHash('sha256').update(context).digest('hex').slice(0, 20);
+        const identity = `${rel(path)}:${match[1]}@${fingerprint}`;
         const occurrence = (counts.get(identity) || 0) + 1;
         counts.set(identity, occurrence);
         return [{ key: `${identity}#${occurrence}`, line: ref.line }];

@@ -5,7 +5,7 @@
 // baseline. New debt is a failure, and categories that have reached zero stay
 // strict-zero. This keeps migration work incremental without allowing the
 // repository to regress while the legacy tree is being removed.
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
     compareDebt,
@@ -25,7 +25,7 @@ import {
     STRICT_ZERO_CATEGORIES,
 } from './lib/architecture-debt.mjs';
 import { registry } from './lib/registry.mjs';
-import { discover } from './verify-all.mjs';
+import { discover, selectChangedSuite } from './verify-all.mjs';
 
 let failed = 0;
 const ok = (condition, label, detail = '') => {
@@ -55,8 +55,8 @@ for (const category of RATCHET_CATEGORIES) {
         `${result.current.length} > ${result.baseline.length}`);
     if (result.removed.length) console.log(`  ↓ removed from baseline: ${result.removed.join(', ')}`);
 }
-ok(current['platform-shim-consumers'].every(item => /:[a-z0-9-]+#\d+$/.test(item)),
-    'shim debt keys preserve stable occurrence identity');
+ok(current['platform-shim-consumers'].every(item => /:[a-z0-9-]+@[a-f0-9]{20}#\d+$/.test(item)),
+    'shim debt keys preserve semantic call-site identity');
 
 console.log('\n▶ strict Architecture v2 boundaries');
 for (const category of STRICT_ZERO_CATEGORIES) {
@@ -99,6 +99,30 @@ const repeated = shimCallSites("import './theme.js'; import('./theme.js'); requi
 ok(new Set(repeated.map(ref => ref.key)).size === 3,
     'same-line repeated shim imports remain distinct');
 const fixtureBaseline = { categories: { shim: { items: original.map(ref => ref.key) } } };
+const replacement = shimCallSites("import('./theme.js');", consumer);
+ok(compareDebt({ shim: replacement.map(ref => ref.key) }, fixtureBaseline, 'shim').added.length === 1,
+    'replacing a static import with a dynamic call is new debt');
+const bound = shimCallSites("import { applyTheme } from './theme.js';", consumer);
+const rebound = shimCallSites("import { applyTheme as changeTheme } from './theme.js';", consumer);
+ok(bound[0].key !== rebound[0].key, 'changing import bindings is new debt');
+const inFunction = shimCallSites("function first() { import('./theme.js'); }", consumer);
+const movedFunction = shimCallSites("function second() { import('./theme.js'); }", consumer);
+ok(inFunction[0].key !== movedFunction[0].key, 'moving a call to another function is new debt');
+const branched = shimCallSites("if (ready) { import('./theme.js'); }", consumer);
+const movedBranch = shimCallSites("if (ready) {} else { import('./theme.js'); }", consumer);
+ok(branched[0].key !== movedBranch[0].key, 'moving a call to another branch is new debt');
+const formatted = shimCallSites('import /* comment */ "./theme.js" ;', consumer);
+ok(original[0].key === formatted[0].key, 'formatting, comments and quote changes preserve call identity');
+const sibling = shimCallSites("function first() { const unrelated = 1; import('./theme.js'); }", consumer);
+ok(inFunction[0].key === sibling[0].key, 'unrelated sibling statements preserve call identity');
+for (const file of ['docs/example.md', 'CLAUDE.md', 'README.md']) {
+    ok(selectChangedSuite([file]).some(step => step.name === 'verify-architecture-boundaries'),
+        `${file} selects the architecture verifier in changed mode`);
+}
+const workflow = readFileSync(join(ROOT, '.github/workflows/architecture-v2.yml'), 'utf8');
+const pathFilter = workflow.split('    paths:\n')[1]?.split('\npermissions:')[0] || '';
+ok(['docs/**', 'CLAUDE.md', 'README.md'].every(path => pathFilter.includes(`- '${path}'`)),
+    'architecture CI triggers on all scanned documentation roots');
 ok(compareDebt({ shim: repeated.map(ref => ref.key) }, fixtureBaseline, 'shim').added.length === 2,
     'extra call sites fail even when the shim already exists');
 ok(shimCallSites("import './i18n.js';", join(ROOT, 'src/games/example/index.js')).length === 0,

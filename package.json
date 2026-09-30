@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^7.0.0",
+    "acorn": "8.18.0",
     "eslint": "^10.11.0",
     "puppeteer-core": "^25.10.0",
     "rollup-plugin-copy": "^3.5.0",
