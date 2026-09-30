@@ -17,7 +17,13 @@ export async function launchGame(path, {
     const page = await browser.newPage();
     await page.setViewport(viewport);
     const errors = [];
+    const consoleErrors = [];
     page.on('pageerror', error => errors.push(String(error?.message || error).split('\n')[0]));
+    page.on('console', msg => {
+        if (msg.type() !== 'error') return;
+        const url = (msg.location() && msg.location().url) || '';
+        consoleErrors.push(`${msg.text().split('\n')[0]} @ ${url}`);
+    });
     await page.evaluateOnNewDocument(({ lang, clearStorage }) => {
         try {
             if (clearStorage) localStorage.clear();
@@ -30,6 +36,7 @@ export async function launchGame(path, {
         browser,
         page,
         errors,
+        consoleErrors,
         async close() { await browser.close(); },
         async expectNoPageErrors() {
             if (errors.length) throw new Error(`page errors: ${errors.join(' | ')}`);
