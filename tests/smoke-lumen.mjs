@@ -9,37 +9,18 @@
  *
  * 语言态显式 setItem('site_lang', 'zh')（headless 默认 en-US 教训）。
  */
-import puppeteer from 'puppeteer-core';
-import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { launchGame } from './lib/game-test.mjs';
 
 const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
 const fail = m => fails.push(m);
 
-const browser = await puppeteer.launch({
-    executablePath: CHROME_PATH,
-    headless: 'new',
-    args: LAUNCH_ARGS,
+const session = await launchGame('lumen.html', {
+    base: BASE,
+    lang: 'zh',
+    viewport: { width: 1280, height: 900 },
 });
-
-const page = await browser.newPage();
-await page.setViewport({ width: 1280, height: 900 });
-const errs = [];
-const consoleErrors = [];
-page.on('pageerror', e => errs.push(String(e.message || e).split('\n')[0]));
-page.on('console', msg => {
-    if (msg.type() !== 'error') return;
-    // 资源加载失败的 console 文本不带 URL，拼上 location.url 供白名单精确匹配
-    const url = (msg.location() && msg.location().url) || '';
-    consoleErrors.push(`${msg.text().split('\n')[0]} @ ${url}`);
-});
-await page.evaluateOnNewDocument(() => {
-    try {
-        localStorage.clear();
-        localStorage.setItem('site_lang', 'zh');
-    } catch (e) { /* ignore */ }
-});
-await page.goto(`${BASE}/lumen.html`, { waitUntil: 'networkidle0', timeout: 45000 });
+const { browser, page, errors: errs, consoleErrors } = session;
 await new Promise(r => setTimeout(r, 900)); // 等模块图 + 首帧渲染
 
 /* ── 1. bootstrap：句柄 / 初始态 ── */
@@ -117,7 +98,7 @@ const noise = m => IGNORABLE.some(re => re.test(m));
 for (const e of errs) if (!noise(e)) fail(`页面错误: ${e}`);
 for (const c of consoleErrors) if (!noise(c)) fail(`console 错误: ${c}`);
 
-await browser.close();
+await session.close();
 if (fails.length) {
     console.error('✗ smoke-lumen');
     for (const f of fails) console.error(`  - ${f}`);
