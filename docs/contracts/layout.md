@@ -170,14 +170,13 @@ overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` �
 2. **HTML 类名注入必须判重**：`game-body` 死类曾累积 5 层、`game-canvas` 累积 3 层。
    迁移脚本的注入逻辑必须幂等。
 
-## 4. 生产构建的样式顺序陷阱（重要）
+## 4. 生产构建的样式层级契约（重要）
 
-Vite 会把**页面自己的 CSS chunk 排在共享 CSS 之前**，构建后 HTML 形如
-`gomoku.css → tokens.css → layout.css`，于是 `layout.css` 的默认值反而覆盖页面覆盖值
-（实测 gomoku 的 `--frame-stage: 760px` 失效，棋盘缩到 444px）。
+共享 CSS 使用原生 cascade layers 表达优先级：`tokens.css` 声明
+`tokens → layout → components`，`layout.css` 必须完整放在 `@layer layout` 内，
+页面自己的未分层 CSS 因而可以稳定覆盖共享几何。这个契约不依赖 Vite 在构建后
+重排 stylesheet link，也不应重新引入 CSS 重排插件。
 
-- 已在 `vite.config.js` 加入 `shared-css-first` 插件，在 `transformIndexHtml` 阶段把产物里的
-  `<link rel="stylesheet">` 重排为 `tokens → layout → 页面 → more-games`。**不要删除该插件。**
 - 修改布局后需在实际产物上复验，而不只是 dev 服务器：
   ```bash
   npm run build

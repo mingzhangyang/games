@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { registry } from './lib/registry.mjs';
+import { renderGameShell } from '../src/platform/shell/render-game-shell.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 let failed = 0;
@@ -69,6 +70,23 @@ for (const rel of [
 ]) {
     ok(existsSync(join(ROOT, rel)), 'architecture path exists: ' + rel);
 }
+
+const scaffold = renderGameShell({
+    id: 'fixture-game',
+    prefix: 'fg',
+    entry: 'src/games/fixture-game/main.js',
+    name: { en: 'Fixture Game', zh: '示例游戏' },
+    caps: ['theme-light'],
+    themeColor: '#101820',
+    themeColorLight: '#eef4f8',
+});
+ok(scaffold.includes('aria-haspopup="dialog"')
+    && scaffold.includes('aria-controls="fgStatsDrawer"')
+    && scaffold.includes('aria-expanded="false"'),
+'generated shell stats trigger exposes its drawer relationship');
+ok(scaffold.includes('data-light="#eef4f8"'), 'generated shell emits light theme color');
+ok(scaffold.includes('registry:begin seo-script') && scaffold.includes('registry:end seo-script'),
+    'generated shell seeds the SEO generation region');
 
 console.log(failed ? '\n' + failed + ' architecture contract failure(s) ❌' : '\narchitecture-v2 contract passed ✅');
 process.exit(failed ? 1 : 0);

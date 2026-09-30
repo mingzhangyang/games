@@ -10,6 +10,8 @@
  * 跨标签页由浏览器原生 storage 事件自然同步。
  */
 
+import { storageGet as read, storageSet as write } from './safe-storage.js';
+
 const LANG_KEY = 'site_lang';
 const MUTED_KEY = 'site_muted';
 const THEME_KEY = 'site_theme';
@@ -24,22 +26,6 @@ const LEGACY_MUTED_KEYS = [
     'pm_muted', 'hs_muted', 'wd_muted', 'ms_muted',
     'rv_muted', 'td_muted', 'gd_muted'
 ];
-
-function read(key) {
-    try {
-        return localStorage.getItem(key);
-    } catch (e) {
-        return null;
-    }
-}
-
-function write(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch (e) {
-        // 隐私模式下存储不可用：静默降级为会话内默认值
-    }
-}
 
 function emitChanged() {
     try {

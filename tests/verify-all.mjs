@@ -19,7 +19,12 @@ const DIFF_BASE = flag('base') || '';
 const JOBS = Math.max(1, Number(flag('jobs') || process.env.VERIFY_JOBS || Math.min(3, Math.floor(cpus().length / 2))) || 1);
 const BASE_URL = argv.find(a => !a.startsWith('--')) || '';
 
-const PAGE_IDS = ['index', ...registry.all().map(g => g.id)].sort((a, b) => b.length - a.length);
+const REGISTERED_GAMES = registry.all();
+const PAGE_IDS = ['index', ...REGISTERED_GAMES.map(g => g.id)].sort((a, b) => b.length - a.length);
+const GAME_ALIASES = REGISTERED_GAMES.map(game => ({
+    id: game.id,
+    aliases: [game.id, game.prefix].filter(Boolean).map(alias => alias.split('-')),
+}));
 const CORE = new Set([
     'verify-boot', 'verify-chunk-isolation', 'verify-daily', 'verify-i18n',
     'verify-index-cards', 'verify-leaderboard', 'verify-no-game-lang',
@@ -29,13 +34,13 @@ const QUICK_BROWSER = new Set(['smoke-index', 'verify-chrome', 'verify-theme', '
 
 function inferGames(name) {
     const parts = name.replace(/^(verify|smoke)-/, '').split('-');
-    return PAGE_IDS.filter(id => {
-        const idParts = id.split('-');
-        for (let i = 0; i + idParts.length <= parts.length; i++) {
-            if (parts.slice(i, i + idParts.length).join('-') === id) return true;
+    const contains = aliasParts => {
+        for (let i = 0; i + aliasParts.length <= parts.length; i++) {
+            if (parts.slice(i, i + aliasParts.length).join('-') === aliasParts.join('-')) return true;
         }
         return false;
-    });
+    };
+    return GAME_ALIASES.filter(game => game.aliases.some(contains)).map(game => game.id);
 }
 
 function discover() {

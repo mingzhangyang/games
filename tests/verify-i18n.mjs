@@ -34,6 +34,8 @@ const i18n = await import(pathToFileURL(join(ROOT, 'js', 'i18n.js')).href);
 const { COMMON_TEXT, makeText } = i18n;
 
 ok(COMMON_TEXT.en.sound === 'Sound' && COMMON_TEXT.zh.sound === '声音', 'COMMON_TEXT.sound 黄金值');
+ok(COMMON_TEXT.en.home === 'Home' && COMMON_TEXT.zh.home === '返回主页', 'COMMON_TEXT.home 黄金值');
+ok(COMMON_TEXT.en.stats === 'Stats' && COMMON_TEXT.zh.stats === '数据统计', 'COMMON_TEXT.stats 黄金值');
 ok(COMMON_TEXT.en.language === '中文' && COMMON_TEXT.zh.language === 'English', 'COMMON_TEXT.language 黄金值（按钮显示切换目标）');
 ok(COMMON_TEXT.en.copied === 'Copied!' && COMMON_TEXT.zh.copied === '已复制！', 'COMMON_TEXT.copied 黄金值');
 ok(COMMON_TEXT.en.moreGames === 'More games' && COMMON_TEXT.zh.moreGames === '更多游戏', 'COMMON_TEXT.moreGames 黄金值');

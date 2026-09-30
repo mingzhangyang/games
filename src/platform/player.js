@@ -1,27 +1,13 @@
 /**
  * 统一玩家身份 — 全站共享的排行榜昵称
- * 所有游戏读写同一个 localStorage 键 player_name；
+ * 所有游戏读写同一个持久化键 player_name；
  * 首次使用时自动从旧的游戏专属键迁移（tetris/pm/hs_username）。
  */
 
+import { storageGet, storageSet } from './safe-storage.js';
+
 const GLOBAL_KEY = 'player_name';
 const LEGACY_KEYS = ['tetris_username', 'pm_username', 'hs_username'];
-
-function read(key) {
-    try {
-        return localStorage.getItem(key);
-    } catch (e) {
-        return null;
-    }
-}
-
-function write(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch (e) {
-        // 存储不可用时静默降级
-    }
-}
 
 function sanitize(raw) {
     return String(raw ?? '')
@@ -34,12 +20,12 @@ function sanitize(raw) {
  * 读取玩家名；不存在时尝试从旧键迁移；都没有返回 null
  */
 export function getPlayerName() {
-    const current = sanitize(read(GLOBAL_KEY));
+    const current = sanitize(storageGet(GLOBAL_KEY));
     if (current) return current;
     for (const key of LEGACY_KEYS) {
-        const legacy = sanitize(read(key));
+        const legacy = sanitize(storageGet(key));
         if (legacy) {
-            write(GLOBAL_KEY, legacy);
+            storageSet(GLOBAL_KEY, legacy);
             return legacy;
         }
     }
@@ -63,6 +49,6 @@ export function ensurePlayerName() {
  */
 export function setPlayerName(raw) {
     const name = sanitize(raw) || ('Anonymous' + Math.floor(1000 + Math.random() * 9000));
-    write(GLOBAL_KEY, name);
+    storageSet(GLOBAL_KEY, name);
     return name;
 }

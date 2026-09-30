@@ -32,15 +32,17 @@ if (!entry.startsWith(`src/games/${id}/`)) {
 }
 
 const prefix = game.prefix || id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-const entrySource = `import { onReady } from '../../platform/boot.js';
+const entrySource = `import { makeText } from '../../platform/i18n.js';
+import { ICONS } from '../../platform/icons.js';
+import { onReady } from '../../platform/boot.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { getLang } from '../../platform/site-settings.js';
 
-const TEXT = {
-    en: { title: ${JSON.stringify(game.name.en)}, titleZh: ${JSON.stringify(game.name.zh)}, hint: 'Tap or use the keyboard to play.' },
-    zh: { title: ${JSON.stringify(game.name.zh)}, titleZh: ${JSON.stringify(game.name.en)}, hint: '点击或使用键盘开始游戏。' },
-};
+const TEXT = makeText({
+    en: { title: ${JSON.stringify(game.name.en)}, titleZh: ${JSON.stringify(game.name.zh)}, stats: 'Stats', hint: 'Tap or use the keyboard to play.' },
+    zh: { title: ${JSON.stringify(game.name.zh)}, titleZh: ${JSON.stringify(game.name.en)}, stats: '统计', hint: '点击或使用键盘开始游戏。' },
+});
 
 class Game {
     pauseQuiet() {}
@@ -60,6 +62,7 @@ onReady(() => {
         frame: {},
         more: '#${prefix}SideMore',
         drawer: {
+            ICONS,
             idPrefix: ${JSON.stringify(prefix)},
             onPause: g => g.pauseQuiet(),
             onResume: g => g.resumeQuiet(),

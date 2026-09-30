@@ -8,6 +8,9 @@ on:
     paths:
       - 'src/**'
       - 'worker/**'
+      - 'Workers/**'
+      - 'public/**'
+      - 'assets/**'
       - 'js/**'
       - 'tests/**'
       - 'tools/**'
@@ -17,6 +20,7 @@ on:
       - 'games.config.json'
       - 'games.schema.json'
       - 'vite.config.js'
+      - 'eslint.config.js'
       - 'wrangler.jsonc'
       - 'package*.json'
       - '.github/workflows/architecture-v2.yml'

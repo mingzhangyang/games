@@ -1,6 +1,6 @@
 // 全站唯一的 chrome 级公共文案（P2-5 收敛）。
 //
-// 这 6 个键在 9~11 个游戏页语言表中原先逐字重复（实测 2026-09：sound×11、
+// 这些键在 9~11 个游戏页语言表中原先逐字重复（实测 2026-09：sound×11、
 // moreGames×11、close×9、copied×7、usernameLabel×6、language×6，en/zh 值
 // 全站一致），由顶栏 / 抽屉 / 分享等共享 UI 消费。收敛后单一来源，改一处全局生效。
 //
@@ -10,6 +10,8 @@
 
 export const COMMON_TEXT = {
     en: {
+        home: 'Home',
+        stats: 'Stats',
         sound: 'Sound',
         language: '中文', // 语言按钮上显示的切换目标
         moreGames: 'More games',
@@ -18,6 +20,8 @@ export const COMMON_TEXT = {
         usernameLabel: 'Username (Enter to save)',
     },
     zh: {
+        home: '返回主页',
+        stats: '数据统计',
         sound: '声音',
         language: 'English',
         moreGames: '更多游戏',

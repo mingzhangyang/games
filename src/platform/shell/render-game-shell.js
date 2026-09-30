@@ -19,13 +19,14 @@ export function renderGameShell(game, {
     const light = (game.caps || []).includes('theme-light');
     const themeSupport = light ? 'dark light' : 'dark';
     const themeColor = game.themeColor || '#0b0f26';
+    const themeColorLight = game.themeColorLight || themeColor;
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-support" content="${themeSupport}">
-    <meta name="theme-color" content="${esc(themeColor)}">
+    <meta name="theme-color" content="${esc(themeColor)}"${light ? ` data-light="${esc(themeColorLight)}"` : ''}>
     <script src="/theme-boot.js"></script>
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -44,7 +45,7 @@ export function renderGameShell(game, {
                 <span class="sr-only" data-i18n="titleZh">${esc(zh)}</span>
             </div>
             <div class="game-topbar-actions game-topbar-group">
-                <button class="game-icon-btn game-stats-btn" id="${prefix}StatsToggle" data-chrome="stats" type="button"></button>
+                <button class="game-icon-btn game-stats-btn" id="${prefix}StatsToggle" data-chrome="stats" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="${prefix}StatsDrawer"></button>
                 <button class="game-icon-btn" data-chrome="sound" type="button"></button>
             </div>
         </header>
@@ -68,14 +69,16 @@ export function renderGameShell(game, {
         </footer>
     </div>
     <div class="game-drawer" id="${prefix}StatsDrawer" hidden>
-        <div class="game-drawer-panel">
+        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="${prefix}StatsDrawerTitle">
             <div class="game-drawer-head">
                 <strong id="${prefix}StatsDrawerTitle">Stats</strong>
-                <button class="game-icon-btn" id="${prefix}StatsClose" type="button"></button>
+                <button class="game-icon-btn" id="${prefix}StatsClose" type="button" aria-label="Close"></button>
             </div>
             <div class="game-drawer-body" id="${prefix}StatsDrawerBody"></div>
         </div>
     </div>
+    <!-- registry:begin seo-script -->
+    <!-- registry:end seo-script -->
     <script type="module" src="${esc(game.entry)}"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>

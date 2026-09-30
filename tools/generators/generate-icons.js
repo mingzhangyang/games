@@ -74,12 +74,13 @@ function makeCanvas(size) {
 function blendPx(canvas, x, y, r, g, b, a) {
     if (x < 0 || y < 0 || x >= canvas.size || y >= canvas.size || a <= 0) return;
     const i = (y * canvas.size + x) * 4;
-    const na = a + canvas.data[i + 3] * (1 - a);
+    const dstA = canvas.data[i + 3] / 255;
+    const na = a + dstA * (1 - a);
     if (na <= 0) return;
-    canvas.data[i] = (r * a + canvas.data[i] * canvas.data[i + 3] * (1 - a)) / na;
-    canvas.data[i + 1] = (g * a + canvas.data[i + 1] * canvas.data[i + 3] * (1 - a)) / na;
-    canvas.data[i + 2] = (b * a + canvas.data[i + 2] * canvas.data[i + 3] * (1 - a)) / na;
-    canvas.data[i + 3] = na;
+    canvas.data[i] = (r * a + canvas.data[i] * dstA * (1 - a)) / na;
+    canvas.data[i + 1] = (g * a + canvas.data[i + 1] * dstA * (1 - a)) / na;
+    canvas.data[i + 2] = (b * a + canvas.data[i + 2] * dstA * (1 - a)) / na;
+    canvas.data[i + 3] = Math.round(na * 255);
 }
 
 function inRoundedRect(x, y, rx, ry, rw, rh, rad) {
