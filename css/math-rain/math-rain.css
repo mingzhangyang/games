@@ -579,7 +579,10 @@ input:focus-visible {
     padding: clamp(14px, 4vh, 42px) 14px;
     background: rgba(2, 7, 14, 0.78);
     backdrop-filter: blur(10px);
-    transition: opacity 180ms ease, visibility 180ms ease;
+    /* Visibility must switch immediately: a newly opened modal owns the
+       pointer before its opacity fade completes, so clicks cannot fall
+       through to the canvas underneath. */
+    transition: opacity 180ms ease, visibility 0s;
     -webkit-overflow-scrolling: touch;
 }
 
