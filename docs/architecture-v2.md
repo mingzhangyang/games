@@ -36,3 +36,10 @@ CI minutes are treated as a constrained project resource.
 - Add new checks to the auto-discovered test suite instead of creating extra always-on workflows.
 
 This keeps feedback fast while preserving one authoritative full validation before merge.
+
+## CSS cascade migration
+
+The current production contract intentionally retains Vite's `shared-css-first` ordering plugin:
+the repository has not completed the all-files `@layer` migration yet. The rationale, target layer
+taxonomy, staged migration plan, canary procedure, and rollback criteria are recorded in
+[`docs/architecture-v2-css-layer-migration-plan-2026-09.md`](architecture-v2-css-layer-migration-plan-2026-09.md).
