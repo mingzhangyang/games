@@ -153,6 +153,9 @@ async function waitForServer(base, timeoutMs = 8000) {
 function runStep(step, base, buffered) {
     return new Promise(resolve => {
         const started = Date.now();
+        const timeoutMs = Number(step.timeoutMs
+            || process.env.VERIFY_STEP_TIMEOUT
+            || (step.needsServer ? 180000 : 60000));
         const args = [join(ROOT, step.script), ...(step.args || [])];
         if (step.needsServer) args.push(base);
         const child = spawn(process.execPath, args, {
@@ -172,8 +175,26 @@ function runStep(step, base, buffered) {
             }
             resolve({ ...step, ok, code, error, ms });
         };
-        child.on('exit', code => finish(code === 0, code));
-        child.on('error', error => finish(false, -1, error.message));
+        let settled = false;
+        const done = (ok, code, error = '') => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            finish(ok, code, error);
+        };
+        const timer = setTimeout(() => {
+            try { child.kill('SIGTERM'); } catch {}
+            setTimeout(() => {
+                if (!settled) {
+                    try { child.kill('SIGKILL'); } catch {}
+                }
+            }, 3000).unref?.();
+            done(false, 124, `timeout after ${timeoutMs}ms`);
+        }, timeoutMs);
+        timer.unref?.();
+
+        child.on('exit', code => done(code === 0, code));
+        child.on('error', error => done(false, -1, error.message));
     });
 }
 
