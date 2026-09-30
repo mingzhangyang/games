@@ -48,16 +48,13 @@ import {
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── 常量 ────────────────────────── */
@@ -1377,27 +1374,26 @@ class FlameVerseGame {
 
 onReady(() => {
     window.fvGame = new FlameVerseGame();
-    bindFrame({ logicalWidth: W });
-    const more = document.getElementById('fvSideMore');
-    if (more) renderMoreGames(more, { exclude: 'flame-verse.html' });
-    window.fvDrawer = createStatsDrawer({
-        idPrefix: 'fv',
-        getGame: () => window.fvGame,
-        onPause: () => window.fvGame && window.fvGame.pauseQuiet(),
-        onResume: () => window.fvGame && window.fvGame.resumeQuiet(),
-        isBusy: () => !!(window.fvGame && window.fvGame.isRunning()),
-        ICONS,
-        // ⚠️ 契约是 () => object（整表），不是 (key) => string。
-        getText: () => (window.fvGame ? window.fvGame.textTable() : LANGUAGES.en),
-    });
-    window.fvDrawer.init();
-});
+    const getText = () => (window.fvGame ? window.fvGame.textTable() : LANGUAGES.en);
 
-onReady(() => {
-    bindChrome({
+    window.fvRuntime = mountGameRuntime({
         self: 'flame-verse.html',
-        // ⚠️ 必须含 'more' 与 'home'：owns 默认只含 more，漏掉 'home' = 死按钮。
-        owns: ['more', 'home'],
-        getText: () => (window.fvGame ? window.fvGame.textTable() : LANGUAGES.en),
+        game: window.fvGame,
+        frame: { logicalWidth: W },
+        more: '#fvSideMore',
+        drawer: {
+            idPrefix: 'fv',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.fvGame && window.fvGame.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText,
+        },
     });
+
+    window.fvDrawer = window.fvRuntime.drawer;
 });

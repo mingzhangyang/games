@@ -34,16 +34,13 @@ import {
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 import { bindPalette } from './theme.js';
 import { createSilkDewScene } from './silk-dew-scene.js';
@@ -1588,33 +1585,26 @@ class SilkfallGame {
 onReady(() => {
     P = bindPalette(CANVAS_VARS, { onChange: () => window.sdGame && window.sdGame.draw() });
     window.sdGame = new SilkfallGame();
-    bindFrame({ logicalWidth: W });
-    const more = document.getElementById('sdSideMore');
-    if (more) renderMoreGames(more, { exclude: 'silk-dew.html' });
-    window.sdDrawer = createStatsDrawer({
-        idPrefix: 'sd',
-        getGame: () => window.sdGame,
-        onPause: () => window.sdGame && window.sdGame.pauseQuiet(),
-        onResume: () => window.sdGame && window.sdGame.resumeQuiet(),
-        isBusy: () => !!(window.sdGame && window.sdGame.isRunning()),
-        ICONS,
-        // ⚠️ 契约是 () => object（整表），不是 (key) => string。见 SilkfallGame.textTable 的注释。
-        getText: () => (window.sdGame ? window.sdGame.textTable() : LANGUAGES.en),
-    });
-    window.sdDrawer.init();
-});
+    const getText = () => (window.sdGame ? window.sdGame.textTable() : LANGUAGES.en);
 
-onReady(() => {
-    bindChrome({
+    window.sdRuntime = mountGameRuntime({
         self: 'silk-dew.html',
-        // ⚠️ 必须含 'more'：页脚「更多游戏」的展开行为归 chrome，owns 里漏掉
-        // 就等于按钮是死的（chrome 校验器会报 aria-expanded 未置 true / 列表为空）。
-        // ⚠️ 必须含 'home'：本页顶栏首页钮是无 href 的 <button>，点击跳转完全靠
-        // chrome 接管 —— 而 owns 默认只含 more，漏掉 'home' = 按钮是死的
-        // （页脚 home 是原生 <a> 天然可用，所以症状只出现在顶栏）。
-        owns: ['more', 'home'],
-        // ⚠️ 同抽屉：共享层要的是整表。返回 (key)=>string 会让顶栏的
-        // sound / moreGames / language 永远停在英文兜底。
-        getText: () => (window.sdGame ? window.sdGame.textTable() : LANGUAGES.en),
+        game: window.sdGame,
+        frame: { logicalWidth: W },
+        more: '#sdSideMore',
+        drawer: {
+            idPrefix: 'sd',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.sdGame && window.sdGame.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText,
+        },
     });
+
+    window.sdDrawer = window.sdRuntime.drawer;
 });

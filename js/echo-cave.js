@@ -26,16 +26,13 @@ import {
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── 常量 ────────────────────────── */
@@ -1414,30 +1411,26 @@ class EchoCaveGame {
 
 onReady(() => {
     window.ecGame = new EchoCaveGame();
-    bindFrame({ logicalWidth: W });
-    const more = document.getElementById('ecSideMore');
-    if (more) renderMoreGames(more, { exclude: 'echo-cave.html' });
-    window.ecDrawer = createStatsDrawer({
-        idPrefix: 'ec',
-        getGame: () => window.ecGame,
-        onPause: () => window.ecGame && window.ecGame.pauseQuiet(),
-        onResume: () => window.ecGame && window.ecGame.resumeQuiet(),
-        isBusy: () => !!(window.ecGame && window.ecGame.isRunning()),
-        ICONS,
-        // ⚠️ 契约是 () => object（整表），不是 (key) => string。
-        getText: () => (window.ecGame ? window.ecGame.textTable() : LANGUAGES.en),
-    });
-    window.ecDrawer.init();
-});
+    const getText = () => (window.ecGame ? window.ecGame.textTable() : LANGUAGES.en);
 
-onReady(() => {
-    bindChrome({
+    window.ecRuntime = mountGameRuntime({
         self: 'echo-cave.html',
-        // ⚠️ 必须含 'more'：页脚「更多游戏」的展开行为归 chrome。
-        // ⚠️ 必须含 'home'：顶栏首页钮是无 href 的 <button>，跳转完全靠 chrome 接管
-        //（owns 默认只含 more，漏掉 'home' = 死按钮，verify-chrome §⑧ 会抓）。
-        owns: ['more', 'home'],
-        // ⚠️ 共享层要的是整表。
-        getText: () => (window.ecGame ? window.ecGame.textTable() : LANGUAGES.en),
+        game: window.ecGame,
+        frame: { logicalWidth: W },
+        more: '#ecSideMore',
+        drawer: {
+            idPrefix: 'ec',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.ecGame && window.ecGame.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText,
+        },
     });
+
+    window.ecDrawer = window.ecRuntime.drawer;
 });

@@ -40,16 +40,13 @@ import {
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 import { bindPalette } from './theme.js';
 
@@ -1381,28 +1378,26 @@ class CrystalBloomGame {
 onReady(() => {
     P = bindPalette(CANVAS_VARS, { onChange: () => window.cbGame && window.cbGame.draw() });
     window.cbGame = new CrystalBloomGame();
-    bindFrame({ logicalWidth: W });
-    const more = document.getElementById('cbSideMore');
-    if (more) renderMoreGames(more, { exclude: 'crystal-bloom.html' });
-    window.cbDrawer = createStatsDrawer({
-        idPrefix: 'cb',
-        getGame: () => window.cbGame,
-        onPause: () => window.cbGame && window.cbGame.pauseQuiet(),
-        onResume: () => window.cbGame && window.cbGame.resumeQuiet(),
-        isBusy: () => !!(window.cbGame && window.cbGame.isRunning()),
-        ICONS,
-        // ⚠️ 契约是 () => object（整表），不是 (key) => string。
-        getText: () => (window.cbGame ? window.cbGame.textTable() : LANGUAGES.en),
-    });
-    window.cbDrawer.init();
-});
+    const getText = () => (window.cbGame ? window.cbGame.textTable() : LANGUAGES.en);
 
-onReady(() => {
-    bindChrome({
+    window.cbRuntime = mountGameRuntime({
         self: 'crystal-bloom.html',
-        // ⚠️ 必须含 'more' 与 'home'：owns 默认只含 more，漏掉 'home' = 死按钮。
-        owns: ['more', 'home'],
-        // ⚠️ 共享层要的是整表。
-        getText: () => (window.cbGame ? window.cbGame.textTable() : LANGUAGES.en),
+        game: window.cbGame,
+        frame: { logicalWidth: W },
+        more: '#cbSideMore',
+        drawer: {
+            idPrefix: 'cb',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.cbGame && window.cbGame.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText,
+        },
     });
+
+    window.cbDrawer = window.cbRuntime.drawer;
 });
