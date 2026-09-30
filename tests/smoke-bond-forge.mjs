@@ -172,13 +172,113 @@ if (after.atomSyms !== 'H,H,O') fail(`画布原子应为 H,H,O，got ${after.ato
 if (after.bonds !== 2) fail(`水应有 2 根键，got ${after.bonds}`);
 if (after.bondOrders.some(o => o !== 1)) fail(`水的键都应是单键，got ${after.bondOrders.join(',')}`);
 if (after.drags !== 2) fail(`拖拽数应为 2，got ${after.drags}`);
-if (!after.cleared) fail('拼出 H₂O 后未弹出结算面板');
+if (after.cleared) fail('拼出 H₂O 后结算面板立即遮住结果');
 if (after.state !== 'clear') fail(`通关后 state 应为 clear，got ${after.state}`);
 if (after.stars !== '★★★') fail(`drags=par 应给 3 星，got "${after.stars}"`);
 if (!after.progress || !after.progress['bf-01-water']) fail('星级未写入 bf_progress');
 else if (after.progress['bf-01-water'].stars !== 3) fail(`存档星级应为 3，got ${after.progress['bf-01-water'].stars}`);
 if (errs.length) fail(`对局中 JS 运行时错误: ${errs.slice(0, 2).join(' | ')}`);
-else pass('L1 通关：拖 2 个 H 接 O → 2 根单键 → 3 星 → 结算 → 存档');
+else pass('L1 通关：先保留 H₂O 结果，再显示结算卡片 → 3 星 → 存档');
+
+// 即使玩家把刚完成的分子拖到舞台下方，结算卡片出现后也不能盖住它。
+// 计时器尚未结束时把分子压到台面底部，覆盖动态安全区逻辑，而不是只测默认布局。
+await page.evaluate(() => {
+    const g = window.bfGame;
+    const maxY = Math.max(...g.atoms.map(a => a.y));
+    const delta = Math.max(0, 560 - maxY);
+    g.atoms.forEach(a => { a.y += delta; });
+});
+
+// 结算卡片出现后也不能盖住刚刚拼好的分子；按钮文字需要在渐变背景上保持高对比度。
+try {
+    await page.waitForFunction(
+        () => {
+            const el = document.getElementById('bf-clear');
+            return el && !el.classList.contains('hidden');
+        },
+        { timeout: 4000, polling: 50 },
+    );
+} catch (error) {
+    fail(`结算卡片在超时内未显示: ${String(error.message || error)}`);
+}
+const clearPresentation = await page.evaluate(() => {
+    const g = window.bfGame;
+    const canvas = document.getElementById('bf-canvas');
+    const rect = canvas.getBoundingClientRect();
+    const moleculeBottom = Math.max(...g.atoms.map(a => (
+        rect.top + ((a.y + g.elemOf(a.sym).radius + 6) / 680) * rect.height
+    )));
+    const card = document.querySelector('#bf-clear .bf-card').getBoundingClientRect();
+    const root = document.documentElement;
+    const next = document.getElementById('bf-btn-next');
+    const originalTheme = root.getAttribute('data-theme');
+    const readPrimaryStyle = () => {
+        const button = getComputedStyle(next);
+        const rootStyle = getComputedStyle(root);
+        return {
+            color: button.color,
+            backgroundImage: button.backgroundImage,
+            backgroundToken: rootStyle.getPropertyValue('--bf-btn-primary-bg').trim(),
+        };
+    };
+    root.removeAttribute('data-theme');
+    const dark = readPrimaryStyle();
+    root.setAttribute('data-theme', 'light');
+    const light = readPrimaryStyle();
+    if (originalTheme) root.setAttribute('data-theme', originalTheme);
+    else root.removeAttribute('data-theme');
+    return {
+        clearVisible: !document.getElementById('bf-clear').classList.contains('hidden'),
+        canvasWidth: rect.width,
+        moleculeBottom,
+        cardTop: card.top,
+        dark,
+        light,
+    };
+});
+if (!clearPresentation.clearVisible) fail('结果展示窗口结束后仍未显示结算卡片');
+if (clearPresentation.cardTop <= clearPresentation.moleculeBottom) {
+    fail(`结算卡片仍遮挡分子（cardTop=${clearPresentation.cardTop.toFixed(1)}, moleculeBottom=${clearPresentation.moleculeBottom.toFixed(1)}）`);
+}
+for (const [theme, style] of [['dark', clearPresentation.dark], ['light', clearPresentation.light]]) {
+    if (style.color !== 'rgb(255, 255, 255)') {
+        fail(`${theme} 主题 Next 按钮文字颜色应为高对比白色，got ${style.color}`);
+    }
+    const gradient = `${style.backgroundImage} ${style.backgroundToken}`;
+    if (!/405ecb|64,\s*94,\s*203/i.test(gradient)
+        || !/66368e|102,\s*54,\s*142/i.test(gradient)) {
+        fail(`${theme} 主题 Next 按钮未使用预期的蓝紫渐变，got ${gradient}`);
+    }
+}
+
+// 旋转/缩放视口后，卡片会因换行变高并向上移动；下一帧必须重新适配分子。
+await page.setViewport({ width: 390, height: 844 });
+await page.evaluate(() => new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+}));
+const mobilePresentation = await page.evaluate(() => {
+    const g = window.bfGame;
+    const canvas = document.getElementById('bf-canvas');
+    const rect = canvas.getBoundingClientRect();
+    const moleculeBottom = Math.max(...g.atoms.map(a => (
+        rect.top + ((a.y + g.elemOf(a.sym).radius + 6) / 680) * rect.height
+    )));
+    const card = document.querySelector('#bf-clear .bf-card').getBoundingClientRect();
+    return { canvasWidth: rect.width, moleculeBottom, cardTop: card.top };
+});
+if (mobilePresentation.canvasWidth >= clearPresentation.canvasWidth) {
+    fail(`视口缩小后画布宽度未更新（desktop=${clearPresentation.canvasWidth.toFixed(1)}, mobile=${mobilePresentation.canvasWidth.toFixed(1)}）`);
+}
+if (mobilePresentation.cardTop <= mobilePresentation.moleculeBottom) {
+    fail(`移动端结算卡片仍遮挡分子（cardTop=${mobilePresentation.cardTop.toFixed(1)}, moleculeBottom=${mobilePresentation.moleculeBottom.toFixed(1)}）`);
+} else {
+    pass('结算态桌面→移动端缩放后仍保持分子与卡片不重叠');
+}
+
+await page.setViewport({ width: 1280, height: 900 });
+await page.evaluate(() => new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+}));
 
 /* ── 5. 价键上限：碳不能接第 5 根键 ──
  *
