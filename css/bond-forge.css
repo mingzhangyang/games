@@ -30,6 +30,7 @@
     --bf-toast-shadow: 0 10px 30px rgb(0, 0, 0, 0.45);
     --bf-overlay-bg: rgb(8, 10, 23, 0.9);
     --bf-overlay-dim-bg: rgb(8, 10, 23, 0.78);
+    --bf-clear-veil: linear-gradient(to top, rgb(8, 10, 23, 0.94) 0%, rgb(8, 10, 23, 0.56) 32%, rgb(8, 10, 23, 0) 72%);
     --bf-mode-bg: rgb(255, 255, 255, 0.06);
     --bf-mode-border: 1px solid rgb(255, 255, 255, 0.14);
     --bf-mode-hover-bg: rgb(255, 255, 255, 0.11);
@@ -48,7 +49,8 @@
     --bf-btn-bg: rgb(255, 255, 255, 0.07);
     --bf-btn-border: 1px solid rgb(255, 255, 255, 0.15);
     --bf-btn-hover-bg: rgb(255, 255, 255, 0.12);
-    --bf-btn-primary-bg: linear-gradient(135deg, #667eea, #764ba2);
+    --bf-btn-primary-bg: linear-gradient(135deg, #405ecb, #66368e);
+    --bf-btn-primary-text: #fff;
     --bf-btn-primary-border: rgb(255, 255, 255, 0.24);
     --bf-btn-ghost-border: rgb(255, 255, 255, 0.18);
     --bf-lb-bg: rgb(255, 255, 255, 0.045);
@@ -77,6 +79,7 @@
     --bf-toast-shadow: 0 10px 30px rgb(15, 23, 42, 0.158);
     --bf-overlay-bg: rgb(255, 255, 255, 0.98);
     --bf-overlay-dim-bg: rgb(15, 23, 42, 0.32);
+    --bf-clear-veil: linear-gradient(to top, rgb(255, 255, 255, 0.9) 0%, rgb(255, 255, 255, 0.48) 32%, rgb(255, 255, 255, 0) 72%);
     --bf-mode-bg: rgb(255, 255, 255, 0.73);
     --bf-mode-border: 1px solid rgb(15, 23, 42, 0.154);
     --bf-mode-hover-bg: rgb(255, 255, 255, 0.88);
@@ -95,7 +98,8 @@
     --bf-btn-bg: rgb(255, 255, 255, 0.76);
     --bf-btn-border: 1px solid rgb(15, 23, 42, 0.165);
     --bf-btn-hover-bg: rgb(255, 255, 255, 0.91);
-    --bf-btn-primary-bg: linear-gradient(135deg, #667eea, #764ba2);
+    --bf-btn-primary-bg: linear-gradient(135deg, #405ecb, #66368e);
+    --bf-btn-primary-text: #fff;
     --bf-btn-primary-border: rgb(15, 23, 42, 0.2);
     --bf-btn-ghost-border: rgb(15, 23, 42, 0.198);
     --bf-lb-bg: rgb(255, 255, 255, 0.685);
@@ -217,6 +221,28 @@ body {
 }
 
 .bf-overlay-dim { background: var(--bf-overlay-dim-bg); }
+
+/* 通关结果：让分子保持在视觉中心，结算卡片退到舞台底部。
+   遮罩只给卡片提供一块轻微的落底渐变，不再用全屏 blur 把刚完成的结构抹掉。 */
+#bf-clear {
+    justify-content: flex-end;
+    padding: 16px 18px 22px;
+    background: var(--bf-clear-veil);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+}
+
+#bf-clear .bf-card { pointer-events: auto; }
+
+@keyframes bf-clear-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#bf-clear:not(.hidden) .bf-card {
+    animation: bf-clear-in 0.24s ease-out both;
+}
 
 /* 开始界面 */
 .bf-title {
@@ -467,6 +493,7 @@ body {
 .bf-btn-primary {
     background: var(--bf-btn-primary-bg);
     border-color: var(--bf-btn-primary-border);
+    color: var(--bf-btn-primary-text);
 }
 
 .bf-btn-primary:hover { filter: brightness(1.12); }
@@ -708,6 +735,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
     .bf-toast { animation: none; }
+    #bf-clear:not(.hidden) .bf-card { animation: none; }
     .bf-mode, .bf-btn, .bf-chip, .bf-cheat-caret { transition: none; }
     .bf-mode:active, .bf-btn:active, .bf-chip:active { transform: none; }
 }
