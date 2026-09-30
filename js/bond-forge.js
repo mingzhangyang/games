@@ -91,6 +91,8 @@ const H = STAGE.h;
 
 const PROGRESS_KEY = 'bf_progress';
 const DAILY_KEY_PREFIX = 'bf_daily_';
+// 通关后先让玩家看清刚刚完成的分子，再显示操作卡片。
+const CLEAR_PREVIEW_MS = 1400;
 
 // 关卡表（20 关）来自 js/bond-forge-levels.js —— 与 tower-levels / circuit-levels
 // 同构：数据在独立模块，本文件只管渲染与交互。
@@ -231,6 +233,7 @@ class BondForgeGame {
         this.time = 0;
         this.lastFrame = 0;
         this.rafId = 0;
+        this.clearTimer = 0;
 
         this.bindElements();
         this.initUI();
@@ -838,15 +841,41 @@ class BondForgeGame {
     }
 
     hideOverlays() {
+        this.cancelClearPreview();
         ['start', 'clear', 'over'].forEach(k => {
             if (this.el[k]) this.el[k].classList.add('hidden');
         });
     }
 
     finishDaily() {
+        this.cancelClearPreview();
+        if (this.el['clear']) this.el['clear'].classList.add('hidden');
         this.state = 'over';
         if (this.el['over']) this.el['over'].classList.remove('hidden');
         this.submitDailyScore();
+    }
+
+    /**
+     * 取消尚未显示的通关卡片。
+     *
+     * 通关后的分子仍留在 canvas 上，但玩家可以在卡片出现前点击重开、回首页
+     * 或进入下一条流程；旧计时器不能把上一关的结算层重新带回来。
+     */
+    cancelClearPreview() {
+        if (!this.clearTimer) return;
+        clearTimeout(this.clearTimer);
+        this.clearTimer = 0;
+    }
+
+    /** 在结果展示窗口结束后显示底部结算卡片。 */
+    scheduleClearOverlay() {
+        this.cancelClearPreview();
+        const levelId = this.level ? this.level.id : null;
+        this.clearTimer = setTimeout(() => {
+            this.clearTimer = 0;
+            if (this.state !== 'clear' || (this.level && this.level.id !== levelId)) return;
+            if (this.el['clear']) this.el['clear'].classList.remove('hidden');
+        }, CLEAR_PREVIEW_MS);
     }
 
     /* ---------------------- 结算 ---------------------- */
@@ -1296,6 +1325,7 @@ class BondForgeGame {
     }
 
     destroy() {
+        this.cancelClearPreview();
         if (this.rafId) cancelAnimationFrame(this.rafId);
         this.rafId = 0;
         this.unbindPointer();
@@ -1651,7 +1681,7 @@ class BondForgeGame {
     }
 
     /**
-     * 通关：算星级、存档、弹结算。
+     * 通关：算星级、存档，先展示完成的分子，再弹结算卡片。
      *
      * 星级口径（提案 §2.6）：拖拽数 = par 给 3 星，多 1 次给 2 星，再多给 1 星。
      * 下限 1 星 —— 通关就该有星，不做"0 星通关"这种挫败设计。
@@ -1708,7 +1738,10 @@ class BondForgeGame {
             void all;
         }
 
-        if (this.el['clear']) this.el['clear'].classList.remove('hidden');
+        // `state = clear` 会停止继续拖拽，但 draw() 仍会保留刚刚拼好的分子。
+        // 结算卡片延迟出现，避免把结果瞬间盖住。
+        if (this.el['clear']) this.el['clear'].classList.add('hidden');
+        this.scheduleClearOverlay();
         track('bond-forge', 'level_clear', { stars });
     }
 }
