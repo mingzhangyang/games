@@ -8,7 +8,7 @@
 - 运行时：`js/theme.js`（`getTheme` / `onThemeChange` / `readPalette`）
 - 令牌：`css/tokens.css` 的 `:root[data-theme="light"]` 覆盖块
 - 登记：`games.config.json` 的 cap `theme-light` 与字段 `themeColorLight`
-- 校验：`scripts/verify-theme.mjs`（SUITE 名 `theme`）
+- 校验：`tests/verify-theme.mjs`（SUITE 名 `theme`）
 
 ---
 
@@ -72,7 +72,7 @@
 - gen 的 `head` 区域输出：`theme-support` meta → `theme-color` meta（`data-light`）→
   `<script src="/theme-boot.js">`，三者顺序固定。首页不在注册表里，手写同样三行。
 
-## 4. 校验：`scripts/verify-theme.mjs`
+## 4. 校验：`tests/verify-theme.mjs`
 
 | 对象 | 断言 |
 | --- | --- |
@@ -122,7 +122,7 @@
 - **Vite 不处理 `public/` 下的经典脚本**：`/theme-boot.js` 原样拷进 `dist/`，与 `sw-register.js` 同理；
   `public/sw.js` 对它走「缓存优先 + 后台刷新」，所以改了它要到用户**下一次**加载才生效。
   它的逻辑要能容忍新旧 CSS 混搭一次（只读写 `data-theme`，不依赖具体样式）。
-- **`scripts/serve-static.mjs` 曾不回退 `public/`**：`/theme-boot.js`（以及 `sw-register.js`、`analytics.js`）
+- **`tests/lib/serve-static.mjs` 曾不回退 `public/`**：`/theme-boot.js`（以及 `sw-register.js`、`analytics.js`）
   在校验服务器上一律 404，boot 根本不执行而校验照样能「通过」其它项。P0 给它加了与 Vite 一致的
   `public/` 回退（`sw.js` 除外）；`verify-theme` 的真实页面断言会在它失效时变红。
 - **`var(--tok-bg-2)` 曾被当作「亮色按钮上的深色文字」用了 15 处**：浅色下 bg-2 是浅底色，按钮字全变白。

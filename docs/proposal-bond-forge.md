@@ -82,7 +82,7 @@
 4. **par 可达性**：校验器用脚本模拟「最优拖拽序列」，断言 `bestDrags <= par`。par 由模拟得出，**不是手填的估计值**。
 5. **至少存在一条满星路径**：无撤销 + 无催化剂 + 一次成型三条同时满足的解法必须存在。
 
-校验器 `scripts/verify-bond-forge-levels.mjs`。
+校验器 `tests/verify-bond-forge-levels.mjs`。
 
 ### 2.6 反馈诚实原则（教育产品的底线）
 
@@ -157,8 +157,8 @@
 | `js/bond-forge.js` | 入口：拖拽交互、成键判定、渲染、模式编排 |
 | `js/bond-forge-molecules.js` | `ELEMENTS` / `MOLECULES` / `canonicalize` / `solveBest` —— 规则与数据单一来源 |
 | `js/bond-forge-levels.js` | 20 关定义（原子盘配置 + 目标 + par + isomers） |
-| `scripts/verify-bond-forge-levels.mjs` | 离线校验：元素表一致、原子守恒、isomers 完整、par 可达、满星路径存在 |
-| `scripts/smoke-bond-forge.mjs` | 在线校验：开始菜单→开局→真实拖拽原子→成键→结算，含非法键弹回断言 |
+| `tests/verify-bond-forge-levels.mjs` | 离线校验：元素表一致、原子守恒、isomers 完整、par 可达、满星路径存在 |
+| `tests/smoke-bond-forge.mjs` | 在线校验：开始菜单→开局→真实拖拽原子→成键→结算，含非法键弹回断言 |
 
 ### 5.2 复用共享层（一个都不新写）
 

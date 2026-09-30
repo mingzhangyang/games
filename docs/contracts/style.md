@@ -1,6 +1,6 @@
 # Style 契约：设计令牌 / hex 收敛 / lint 基建
 
-> 视觉与代码风格的单一规则集。令牌定义在 `css/tokens.css`，linter 入口 `node scripts/run-lint.mjs`
+> 视觉与代码风格的单一规则集。令牌定义在 `css/tokens.css`，linter 入口 `node tools/checks/run-lint.mjs`
 > （eslint + stylelint + 令牌残留检查 一键，已并入 `npm run verify`，SUITE 名 `lint`）。
 
 ---
@@ -70,7 +70,7 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 | 遮罩 / 浮层 | 遮罩 `rgb(15 23 42 / 0.32)`，浮层卡片白色 0.98 |
 | 游戏实物 | 棋盘、棋子、牌面等「桌上的东西」两套主题一致（五子棋木盘、黑白棋的黑子白子、猜词的绿黄格）；棋盘可改为同一实物的另一种材质（黑白棋深色版的夜蓝盘 → 浅色版的绿色台呢） |
 
-页面 CSS 迁移用 `node scripts/theme-varize.mjs css/<page>.css <prefix> [--dry]`：把字面色收编成
+页面 CSS 迁移用 `node tools/generators/theme-varize.mjs css/<page>.css <prefix> [--dry]`：把字面色收编成
 `--<prefix>-*` 变量（深色 = 原值，外观零变化），并生成浅色初稿区域；初稿**必须**截图校准，
 重跑时已校准的浅色值原样保留。页面自己早已有的自定义属性调色板（如 word-daily 的 `--bg` / `--text`）
 不在工具范围内，手写一个 `:root[data-theme="light"]` 覆盖块。
@@ -88,9 +88,9 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 
 **新代码禁止再写上表 11 个值的字面 hex，一律 `var(--tok-*)`。**
 
-这条规则由 `node scripts/p3-token-swap.mjs --check` 执行（已并入 `run-lint.mjs`，
+这条规则由 `node tools/checks/token-swap.mjs --check` 执行（已并入 `run-lint.mjs`，
 即 `npm run verify` 的 `lint` 档）：发现残留即退出码 1 并列出文件。
-`node scripts/run-lint.mjs --fix` 会真的替换掉。
+`node tools/checks/run-lint.mjs --fix` 会真的替换掉。
 
 ⚠️ stylelint 的 `color-no-hex` **不适用** —— 它禁的是所有 hex，而本契约
 只禁"已映射的 11 个值"，页面专属美术色仍然允许写字面量（见本节末例外）。
@@ -101,7 +101,7 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 `index.html` 的内联 `<style>` 里；P4-1 抽离后它们才落进 CSS 树，而没有任何
 东西会复扫。**契约没有执行器就不是契约。**
 
-一次性迁移脚本 `scripts/p3-token-swap.mjs`（值精确映射，幂等）已完成全仓收敛：
+一次性迁移脚本 `tools/checks/token-swap.mjs`（值精确映射，幂等）已完成全仓收敛：
 
 - 11 个值精确映射（大小写不敏感，`\b` 边界防 `#e8ecffaa` 这类 8 位 hex 误伤）
 - 跳过 custom property **定义行**（`/^\s*--[\w-]+\s*:/`）—— 定义收敛另行处理
@@ -119,7 +119,7 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 
 ### 3.1 范围与豁免
 
-- 覆盖：`js/**/*.js`（运行时共享模块 + 各游戏页）、`scripts/**/*.mjs`（校验器）、
+- 覆盖：`js/**/*.js`（运行时共享模块 + 各游戏页）、`tests/**/*.mjs` 与 `tools/**/*.mjs`（校验器/工具）、
   `js/reversi-worker.js`（Worker 环境单独块）。
 - ignores：`dist/**`、`node_modules/**`、`Workers/**`（Cloudflare 独立域）、
   `js/math-rain/**`（化外页）、`public/**`、`js/more-games.js`
@@ -168,9 +168,9 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 ## 5. 运行
 
 ```bash
-node scripts/run-lint.mjs          # eslint + stylelint + 令牌残留检查 一键
-node scripts/run-lint.mjs --fix    # 同上，且真的替换令牌字面量
-node scripts/p3-token-swap.mjs --check   # 只查令牌残留
+node tools/checks/run-lint.mjs          # eslint + stylelint + 令牌残留检查 一键
+node tools/checks/run-lint.mjs --fix    # 同上，且真的替换令牌字面量
+node tools/checks/token-swap.mjs --check   # 只查令牌残留
 npx eslint js scripts --fix        # 修 JS（勿碰 js/more-games.js —— 已 ignores 保护）
 npx stylelint "css/**/*.css" --fix # 修 CSS（避开 math-rain；产物要烟测）
 ```

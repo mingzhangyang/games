@@ -619,7 +619,7 @@ data-art-state="fallback"
 
 新增：
 
-`scripts/verify-sword-flight-art.mjs`
+`tests/verify-sword-flight-art.mjs`
 
 检查：
 
@@ -685,11 +685,11 @@ data-art-state="fallback"
 
 ### verify-all 注册
 
-新增 `scripts/verify-sword-flight-art.mjs` 与 `scripts/smoke-sword-flight.mjs`，并在 `scripts/verify-all.mjs` 注册：
+新增 `tests/verify-sword-flight-art.mjs` 与 `tests/smoke-sword-flight.mjs`，并在 `tests/verify-all.mjs` 注册：
 
 ```js
-{ name: 'sword-flight-art', script: 'scripts/verify-sword-flight-art.mjs', args: [], needsServer: false },
-{ name: 'smoke-sword-flight', script: 'scripts/smoke-sword-flight.mjs', args: [], needsServer: true },
+{ name: 'sword-flight-art', script: 'tests/verify-sword-flight-art.mjs', args: [], needsServer: false },
+{ name: 'smoke-sword-flight', script: 'tests/smoke-sword-flight.mjs', args: [], needsServer: true },
 ```
 
 把 `sword-flight-art` 加入 `QUICK_NAMES`；浏览器 smoke 默认只进入 full suite。
@@ -736,9 +736,9 @@ js/sword-flight.js
 js/sword-flight-art.js
 js/sword-flight-scene.js
 css/sword-flight.css
-scripts/verify-sword-flight-art.mjs
-scripts/smoke-sword-flight.mjs
-scripts/verify-all.mjs
+tests/verify-sword-flight-art.mjs
+tests/smoke-sword-flight.mjs
+tests/verify-all.mjs
 ```
 
 非必要不要改：

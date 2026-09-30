@@ -289,7 +289,7 @@ Minimap frame 使用统一边框。
 
 新增：
 
-`scripts/verify-tank-battle-art.mjs`
+`tests/verify-tank-battle-art.mjs`
 
 测试：
 
@@ -321,10 +321,10 @@ Minimap frame 使用统一边框。
 
 ### verify-all 注册
 
-现有 `smoke-tank-battle` 已在 `scripts/verify-all.mjs` 中。新增 art verifier 时必须显式加入：
+现有 `smoke-tank-battle` 已在 `tests/verify-all.mjs` 中。新增 art verifier 时必须显式加入：
 
 ```js
-{ name: 'tank-battle-art', script: 'scripts/verify-tank-battle-art.mjs', args: [], needsServer: false },
+{ name: 'tank-battle-art', script: 'tests/verify-tank-battle-art.mjs', args: [], needsServer: false },
 ```
 
 并把 `tank-battle-art` 加入 `QUICK_NAMES`。继续保留现有 smoke 的 `needsServer: true` 注册。
@@ -337,9 +337,9 @@ js/tank-battle.js
 js/tank-entities.js
 js/tank-battle-art.js
 css/tank-battle.css
-scripts/verify-tank-battle-art.mjs
-scripts/smoke-tank-battle.mjs
-scripts/verify-all.mjs
+tests/verify-tank-battle-art.mjs
+tests/smoke-tank-battle.mjs
+tests/verify-all.mjs
 ```
 
 ## 17. 实施阶段

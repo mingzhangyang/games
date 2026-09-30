@@ -259,7 +259,7 @@ Clash 必须拥有最强视觉事件：
 
 新增：
 
-`scripts/verify-needle-awn-art.mjs`
+`tests/verify-needle-awn-art.mjs`
 
 检查：
 
@@ -291,11 +291,11 @@ Clash 必须拥有最强视觉事件：
 
 ### verify-all 注册
 
-新增 `scripts/smoke-needle-awn.mjs`，并在 `scripts/verify-all.mjs` 显式注册：
+新增 `tests/smoke-needle-awn.mjs`，并在 `tests/verify-all.mjs` 显式注册：
 
 ```js
-{ name: 'needle-awn-art', script: 'scripts/verify-needle-awn-art.mjs', args: [], needsServer: false },
-{ name: 'smoke-needle-awn', script: 'scripts/smoke-needle-awn.mjs', args: [], needsServer: true },
+{ name: 'needle-awn-art', script: 'tests/verify-needle-awn-art.mjs', args: [], needsServer: false },
+{ name: 'smoke-needle-awn', script: 'tests/smoke-needle-awn.mjs', args: [], needsServer: true },
 ```
 
 把 `needle-awn-art` 加入 `QUICK_NAMES`。浏览器 smoke 默认只进入 full suite，不依赖脚本自动发现。
@@ -308,9 +308,9 @@ js/needle-awn.js
 js/needle-awn-art.js
 js/needle-awn-scene.js
 css/needle-awn.css
-scripts/verify-needle-awn-art.mjs
-scripts/smoke-needle-awn.mjs
-scripts/verify-all.mjs
+tests/verify-needle-awn-art.mjs
+tests/smoke-needle-awn.mjs
+tests/verify-all.mjs
 ```
 
 非必要不要动 shared layout。

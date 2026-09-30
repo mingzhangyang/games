@@ -222,7 +222,7 @@ Sidebar：
 
 新增：
 
-`scripts/verify-hoop-shot-art.mjs`
+`tests/verify-hoop-shot-art.mjs`
 
 扩展 smoke：
 
@@ -251,11 +251,11 @@ Sidebar：
 
 ### verify-all 注册
 
-新增 `scripts/smoke-hoop-shot.mjs`，并在 `scripts/verify-all.mjs` 显式注册：
+新增 `tests/smoke-hoop-shot.mjs`，并在 `tests/verify-all.mjs` 显式注册：
 
 ```js
-{ name: 'hoop-shot-art', script: 'scripts/verify-hoop-shot-art.mjs', args: [], needsServer: false },
-{ name: 'smoke-hoop-shot', script: 'scripts/smoke-hoop-shot.mjs', args: [], needsServer: true },
+{ name: 'hoop-shot-art', script: 'tests/verify-hoop-shot-art.mjs', args: [], needsServer: false },
+{ name: 'smoke-hoop-shot', script: 'tests/smoke-hoop-shot.mjs', args: [], needsServer: true },
 ```
 
 把 `hoop-shot-art` 加入 `QUICK_NAMES`；浏览器 smoke 默认只进入 full suite。
@@ -268,9 +268,9 @@ js/hoop-shot.js
 js/hoop-shot-art.js
 js/hoop-shot-scene.js
 css/hoop-shot.css
-scripts/verify-hoop-shot-art.mjs
-scripts/smoke-hoop-shot.mjs
-scripts/verify-all.mjs
+tests/verify-hoop-shot-art.mjs
+tests/smoke-hoop-shot.mjs
+tests/verify-all.mjs
 ```
 
 ## 14. 实施顺序
