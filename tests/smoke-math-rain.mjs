@@ -52,49 +52,28 @@ async function createFixedExpression(page, result, expressionText) {
             x: canvasRect.left + x * (canvasRect.width / logicalWidth),
             y: canvasRect.top + y * (canvasRect.height / logicalHeight),
         });
-        const candidates = [
-            [0.5, 0.46], [0.35, 0.5], [0.65, 0.5],
-            [0.5, 0.62], [0.3, 0.66], [0.7, 0.66],
-        ];
-        let chosen = null;
-        for (const [fx, fy] of candidates) {
-            const client = {
-                x: canvasRect.left + canvasRect.width * fx,
-                y: canvasRect.top + canvasRect.height * fy,
-            };
-            const hit = document.elementFromPoint(client.x, client.y);
-            if (hit === game.canvas || game.canvas.contains(hit)) {
-                chosen = client;
-                break;
-            }
-        }
-        chosen ||= {
-            x: canvasRect.left + canvasRect.width / 2,
-            y: canvasRect.top + canvasRect.height / 2,
-        };
+
+        // Keep the synthetic expression at the same deterministic safe point
+        // used by the long-standing smoke test. Converting only at the DOM
+        // boundary avoids mixing client-space hit probing with game-space
+        // expression geometry.
         expression.position = {
-            x: (chosen.x - canvasRect.left) * (logicalWidth / canvasRect.width),
-            y: (chosen.y - canvasRect.top) * (logicalHeight / canvasRect.height),
+            x: logicalWidth / 2,
+            y: Math.max(100, logicalHeight * 0.42),
         };
         expression.speed = 0;
         expression.startTime = Date.now();
 
         const bounds = game.getExpressionBounds(expression);
         const hitBounds = game.getExpressionHitBounds(expression);
-        const center = toClient((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
-        const expandedLogical = [
-            [(bounds.left + bounds.right) / 2, bounds.bottom + (hitBounds.bottom - bounds.bottom) / 2],
-            [(bounds.left + bounds.right) / 2, bounds.top - (bounds.top - hitBounds.top) / 2],
-        ];
-        let expanded = center;
-        for (const [x, y] of expandedLogical) {
-            const point = toClient(x, y);
-            const hit = document.elementFromPoint(point.x, point.y);
-            if (hit === game.canvas || game.canvas.contains(hit)) {
-                expanded = point;
-                break;
-            }
-        }
+        const centerX = (bounds.left + bounds.right) / 2;
+        const centerY = (bounds.top + bounds.bottom) / 2;
+        const expandedTouchY = hitBounds.bottom > bounds.bottom
+            ? bounds.bottom + (hitBounds.bottom - bounds.bottom) / 2
+            : centerY;
+        const center = toClient(centerX, centerY);
+        const expanded = toClient(centerX, expandedTouchY);
+
         return {
             id: expression.id,
             x: center.x,
