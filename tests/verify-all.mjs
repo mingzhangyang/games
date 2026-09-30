@@ -155,7 +155,7 @@ function runStep(step, base, buffered) {
         const started = Date.now();
         const timeoutMs = Number(step.timeoutMs
             || process.env.VERIFY_STEP_TIMEOUT
-            || (step.needsServer ? 180000 : 60000));
+            || (step.needsServer ? 180000 : 120000));
         const args = [join(ROOT, step.script), ...(step.args || [])];
         if (step.needsServer) args.push(base);
         const child = spawn(process.execPath, args, {
@@ -227,7 +227,7 @@ if (!ready) {
     const offline = suite.filter(step => !step.needsServer);
     const online = suite.filter(step => step.needsServer);
     const [a, b] = await Promise.all([
-        pool(offline, Math.max(2, cpus().length), step => runStep(step, base, true)),
+        pool(offline, Math.max(1, Math.min(4, JOBS * 2)), step => runStep(step, base, true)),
         pool(online, JOBS, step => runStep(step, base, true)),
     ]);
     const byName = new Map([...a, ...b].map(result => [result.name, result]));

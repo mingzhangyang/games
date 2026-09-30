@@ -1435,7 +1435,7 @@ class WordDailyGame {
     maybeShowFirstRunHelp() {
         const seen = WORD_STORE.get('seenHelp', false);
         if (seen === true || seen === 1 || seen === '1') return;
-        WORD_STORE.set('seenHelp', true);
+        if (!WORD_STORE.trySet('seenHelp', true)) return;
         this.openHelp();
     }
 

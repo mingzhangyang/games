@@ -42,7 +42,10 @@ async function setupPage(page, { blockArt = false } = {}) {
 
 async function collectDiagnostics(diagnostics, label) {
     for (const message of diagnostics?.pageErrors || []) if (!isIgnorable(message)) fail(`${label} 页面错误: ${message}`);
-    for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message)) fail(`${label} console 错误: ${message}`);
+    for (const message of diagnostics?.consoleErrors || []) {
+        const expectedBlockedArt = diagnostics?.blockArt && message.includes('/assets/needle-awn/');
+        if (!expectedBlockedArt && !isIgnorable(message)) fail(`${label} console 错误: ${message}`);
+    }
     for (const url of diagnostics?.failedRequests || []) {
         const expectedBlockedArt = diagnostics?.blockArt && url.includes('/assets/needle-awn/');
         if (!expectedBlockedArt && !isIgnorable(url)) fail(`${label} 请求失败: ${url}`);

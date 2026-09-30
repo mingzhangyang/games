@@ -24,15 +24,6 @@ const sfx = createSfx({
 
 // escapeHTML 已收敛到 js/leaderboard.js（本地重复实现退役）
 
-// 隐私模式/禁用存储时 localStorage 会抛 SecurityError
-function safeParseJSON(text, fallback) {
-    try {
-        return JSON.parse(text);
-    } catch (e) {
-        return fallback;
-    }
-}
-
 const TETRIS_STORE = createGameStorage('tetris', {
     version: 1,
     legacy: { scores: 'tetris_scores', rainbow: 'tetris_rainbow' },

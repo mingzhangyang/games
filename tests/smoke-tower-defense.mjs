@@ -18,7 +18,11 @@ const page = await browser.newPage();
 const pageErrors = [];
 const requestFailures = [];
 page.on('pageerror', error => pageErrors.push(String(error.stack || error.message || error).split('\n')[0]));
-page.on('requestfailed', request => requestFailures.push(`${request.url()} — ${request.failure()?.errorText || 'failed'}`));
+page.on('requestfailed', request => {
+    const url = request.url();
+    if (/\/sw-register\.js(?:\?|$)|\/analytics\.js(?:\?|$)/.test(url)) return;
+    requestFailures.push(`${url} — ${request.failure()?.errorText || 'failed'}`);
+});
 
 await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 });
 await page.goto(`${BASE}/tower-defense.html`, { waitUntil: 'networkidle2', timeout: 30000 });

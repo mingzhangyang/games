@@ -7,7 +7,7 @@
 //       拿不准的先 warn 观察，避免首跑百行噪音淹没真问题。
 export default [
     {
-        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js', 'src/generated/**'],
+        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js', 'src/platform/more-games.js', 'src/generated/**'],
     },
     {
         files: ['js/**/*.js', 'src/platform/**/*.js', 'src/games/**/*.js', 'worker/**/*.js'],

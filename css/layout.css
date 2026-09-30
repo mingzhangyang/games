@@ -1,4 +1,3 @@
-@layer layout {
 /* ─────────────────────────────────────────────
    共享页面骨架 — 全站游戏页统一的布局契约
    ─────────────────────────────────────────────
@@ -760,6 +759,4 @@ body.drawer-locked {
     .game-shell.game-shell--immersive { max-width: none; }
 
     .game-stage.game-stage--immersive { max-width: var(--frame-immersive-max); }
-}
-
 }

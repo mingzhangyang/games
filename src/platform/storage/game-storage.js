@@ -66,6 +66,9 @@ export function createGameStorage(gameId, {
             storageSet(key(slot), encode(value));
             return value;
         },
+        trySet(slot, value) {
+            return storageSet(key(slot), encode(value));
+        },
         update(slot, updater, fallback = null) {
             const next = updater(this.get(slot, fallback));
             this.set(slot, next);

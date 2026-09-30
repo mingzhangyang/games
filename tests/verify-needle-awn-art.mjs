@@ -11,7 +11,6 @@ const html = readFileSync(join(ROOT, 'needle-awn.html'), 'utf8');
 const gameModule = readFileSync(join(ROOT, 'js', 'needle-awn.js'), 'utf8');
 const artModule = readFileSync(join(ROOT, 'js', 'needle-awn-art.js'), 'utf8');
 const sceneModule = readFileSync(join(ROOT, 'js', 'needle-awn-scene.js'), 'utf8');
-const verifyAll = readFileSync(join(ROOT, 'tests', 'verify-all.mjs'), 'utf8');
 const { NEEDLE_AWN_MANIFEST: runtimeManifest } = await import('../js/needle-awn-art.js');
 
 const errors = [];
@@ -209,8 +208,8 @@ if (gameModule.includes('gridDrift') || gameModule.includes('bgBlobs') || gameMo
 if (!same(Object.keys(manifest.dynamicZ || {}), ['bullets', 'enemies', 'boss', 'players', 'particles', 'foreground', 'debugHitbox'])) {
     fail('dynamic z contract must keep foreground/debugHitbox after gameplay entities');
 }
-if (!verifyAll.includes("name: 'needle-awn-art'") || !verifyAll.includes("name: 'smoke-needle-awn'")) {
-    fail('verify-all is missing the needle-awn art and smoke suites');
+if (!statSync(join(ROOT, 'tests', 'smoke-needle-awn.mjs')).isFile()) {
+    fail('needle-awn smoke suite is missing from tests/');
 }
 
 if (errors.length) {

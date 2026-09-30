@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// verify-daily.mjs — js/daily.js 唯一日期/哈希口径回归防线（P2-3）
+// verify-daily.mjs — src/platform/daily.js 唯一日期/哈希口径回归防线（P2-3）
 //
 // 三层断言：
 //   1) 矩阵真实性：三时区（America/New_York / Asia/Shanghai / Pacific/Auckland）
@@ -26,10 +26,10 @@ const TIMEZONES = ['America/New_York', 'Asia/Shanghai', 'Pacific/Auckland'];
 // 冻结时刻：2026-01-01T16:00:00Z = UTC+8 的 2026-01-02 00:00:00（纽约 11:00 / 奥克兰 05:00）
 const FROZEN_MS = Date.UTC(2026, 0, 1, 16, 0, 0);
 
-const DAILY_JS = join(ROOT, 'js', 'daily.js');
+const DAILY_JS = join(ROOT, 'src', 'platform', 'daily.js');
 const DAILY_SRC = readFileSync(DAILY_JS, 'utf8');
 if (!DAILY_SRC.includes('export function todayKey')) {
-    console.error('✗ js/daily.js 缺少 todayKey 导出——文件被改名/移动？');
+    console.error('✗ src/platform/daily.js 缺少 todayKey 导出——平台实现异常');
     process.exit(1);
 }
 

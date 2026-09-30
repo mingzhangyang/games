@@ -34,7 +34,7 @@ export function renderGameShell(game, {
     <title>${esc(title)}</title>
 </head>
 <body>
-    <main class="game-shell" data-game="${esc(game.id)}">
+    <div class="game-shell" data-game="${esc(game.id)}">
         <header class="game-topbar">
             <div class="game-topbar-group">
                 <a class="game-icon-btn" data-chrome="home" href="index.html" aria-label="Home"></a>
@@ -48,7 +48,7 @@ export function renderGameShell(game, {
                 <button class="game-icon-btn" data-chrome="sound" type="button"></button>
             </div>
         </header>
-        <div class="game-main">
+        <main class="game-main">
             <section class="game-stage" id="${prefix}Stage">
                 ${stageHtml}
                 ${startHtml}
@@ -57,7 +57,7 @@ export function renderGameShell(game, {
                 <div id="${prefix}StatsPanels">${sidebarHtml}</div>
                 <div class="game-side-card" id="${prefix}SideMore"></div>
             </aside>
-        </div>
+        </main>
         <footer class="game-footer">
             <p class="game-footer-hint" data-i18n="hint"></p>
             <div class="game-topbar-group">
@@ -66,7 +66,7 @@ export function renderGameShell(game, {
             </div>
             <nav class="more-games game-footer-nav" id="${prefix}MoreNav" hidden></nav>
         </footer>
-    </main>
+    </div>
     <div class="game-drawer" id="${prefix}StatsDrawer" hidden>
         <div class="game-drawer-panel">
             <div class="game-drawer-head">

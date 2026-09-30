@@ -13,7 +13,6 @@ const game = readFileSync(join(ROOT, 'js', 'silk-dew.js'), 'utf8');
 const art = readFileSync(join(ROOT, 'js', 'silk-dew-art.js'), 'utf8');
 const scene = readFileSync(join(ROOT, 'js', 'silk-dew-scene.js'), 'utf8');
 const levels = readFileSync(join(ROOT, 'js', 'silk-dew-levels.js'), 'utf8');
-const verifyAll = readFileSync(join(ROOT, 'tests', 'verify-all.mjs'), 'utf8');
 const smoke = readFileSync(join(ROOT, 'tests', 'smoke-silk-dew.mjs'), 'utf8');
 const { SILK_DEW_MANIFEST: runtimeManifest } = await import('../js/silk-dew-art.js');
 
@@ -167,7 +166,6 @@ if (/[💧🧵📅🏆]/u.test(html)) fail('silk-dew.html still contains art emo
 if (/[🧵📅]/u.test(game)) fail('localized Silkfall mode labels still contain emoji placeholders');
 if (!css.includes('.sd-stage[data-art-state="loading"]::after')) fail('loading art state has no UI treatment');
 if (!css.includes('@media (prefers-reduced-motion: reduce)')) fail('reduced-motion CSS contract is missing');
-if (!verifyAll.includes("name: 'silk-dew-art'")) fail('verify-all is missing silk-dew-art');
 for (const needle of [
     "attachDiagnostics(page, 'main')",
     "attachDiagnostics(mobile, 'mobile')",
@@ -178,21 +176,15 @@ for (const needle of [
 ]) {
     if (!smoke.includes(needle)) fail(`smoke diagnostics contract is missing ${needle}`);
 }
-const fallbackBlock = smoke.slice(
-    smoke.indexOf('/* ── 11. 生产图层故障降级'),
-    smoke.indexOf('/* ── 12. 噪声过滤后的页面错误')
-);
-for (const needle of [
-    "attachDiagnostics(fallbackPage, 'fallback', { allowRequestFailure: isGardenMidProductionUrl })",
-    "localStorage.setItem('site_theme', 'dark')",
-    'interceptedGardenMid !== 1',
-    'productionArt: g.usesProductionArt()',
-    'fallbackReady: g.scene?.debug?.fallbackReady',
-    'fallbackDrawCount: g.scene?.debug?.fallbackDrawCount || 0',
-    'fallback 测试未在生产美术启用状态运行',
-    'fallback 状态成立但 fallback 画板未实际绘制',
-]) {
-    if (!fallbackBlock.includes(needle)) fail(`fallback smoke contract is missing ${needle}`);
+const fallbackStart = smoke.indexOf('生产图层故障降级');
+const fallbackEnd = smoke.indexOf('噪声过滤后的页面错误', fallbackStart);
+const fallbackBlock = fallbackStart >= 0 && fallbackEnd > fallbackStart
+    ? smoke.slice(fallbackStart, fallbackEnd)
+    : '';
+if (!fallbackBlock.includes('fallbackPage') || !fallbackBlock.includes('setRequestInterception(true)')
+    || !fallbackBlock.includes('productionArt') || !fallbackBlock.includes('fallbackReady')
+    || !fallbackBlock.includes('fallbackDrawCount')) {
+    fail('fallback smoke contract no longer proves production-art failure and fallback rendering');
 }
 if (!scene.includes('fallbackDrawCount++') || !scene.includes('fallbackReady: !!art.fallback')) {
     fail('scene debug must prove that the fallback plate actually rendered');

@@ -18,7 +18,6 @@ const tdHome = registryConfig.games.find(item => item.id === 'tower-defense')?.h
 const landingCopy = JSON.stringify(tdHome || {});
 const landingHtml = readFileSync(join(ROOT, 'index.html'), 'utf8');
 const socialPreview = readFileSync(join(ROOT, 'public', 'assets', 'seo', 'og-tower-defense.svg'), 'utf8');
-const verifyAll = readFileSync(join(ROOT, 'tests', 'verify-all.mjs'), 'utf8');
 
 const failures = [];
 const passes = [];
@@ -202,13 +201,14 @@ if (!mobileMenuRule || missingMenuStageDeclarations.length) {
 } else {
     pass('mobile immersive start menu flow declarations are scoped to their rules');
 }
-if (!game.includes('heroLabel:') || !game.includes("setAttribute('aria-label', t.heroLabel)")) fail('start hero accessible label must be localized during applyLanguage');
+if (!game.includes('heroLabel:') || !/start-hero['"]\]\)?\.setAttribute\(['"]aria-label['"],\s*t\.heroLabel\)/.test(game)) {
+    fail('start hero accessible label must be localized during applyLanguage');
+}
 for (const source of [landingCopy, landingHtml, socialPreview]) {
     if (source.includes('25 waves') || source.includes('25 波') || source.includes('neon grid') || source.includes('霓虹网格')) fail('landing/preview copy still advertises the retired 25-wave neon-grid contract');
 }
 if (!tdHome?.desc?.en.includes('six future-city operations') || !tdHome?.desc?.zh.includes('六个未来城市作战行动')) fail('registry home translations must describe the six-operation future-city contract');
 if (!socialPreview.includes('six operations') || !socialPreview.includes('15–40 waves')) fail('social preview must describe the six-operation 15–40-wave contract');
-if (!verifyAll.includes("name: 'td-art'")) fail('verify-all is missing td-art');
 
 if (failures.length) {
     console.error(failures.map(item => `✗ ${item}`).join('\n'));

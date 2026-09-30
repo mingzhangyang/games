@@ -14,8 +14,10 @@ export function storageGet(key) {
 export function storageSet(key, value) {
     try {
         localStorage.setItem(key, value);
+        return true;
     } catch (e) {
         // 存储不可用时静默降级
+        return false;
     }
 }
 

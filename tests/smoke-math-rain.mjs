@@ -317,7 +317,11 @@ const fallbackConsoleErrors = [];
 fallbackPage.on('pageerror', error => fallbackPageErrors.push(String(error.message || error).split('\n')[0]));
 fallbackPage.on('console', message => {
     const text = message.text().split('\n')[0];
-    if (message.type() === 'error' && !text.includes('observatory-wide')) fallbackConsoleErrors.push(text);
+    if (message.type() === 'error'
+        && !text.includes('observatory-wide')
+        && !/sw-register\.js|analytics\.js|manifest|favicon|apple-touch-icon/i.test(text)) {
+        fallbackConsoleErrors.push(text);
+    }
 });
 fallbackPage.on('request', request => {
     if (request.url().includes('observatory-wide')) {

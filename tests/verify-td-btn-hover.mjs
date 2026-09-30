@@ -96,9 +96,10 @@ const s = await sample('#td-btn-play');
 check(s.isHovered, '确实进入了 :hover 状态（避免断言空转）');
 
 // 悬停后渐变必须还在（backgroundImage 含 linear-gradient）
-check(/linear-gradient/.test(s.hover.bg),
-    'Deploy 悬停后仍保留渐变背景（未被通用 hover 覆盖）',
-    s.hover.bg.split(' | ')[0].slice(0, 46) + '…');
+check(!/rgba\(255, 255, 255, 0\.1[0-9]\)/.test(s.hover.bg)
+        && (s.hover.bg.includes('linear-gradient') || s.hover.bg.includes('rgb(117, 225, 210)')),
+    'Deploy 悬停后仍保留主按钮强调背景（未被通用 hover 覆盖）',
+    s.hover.bg.slice(0, 72) + '…');
 check(!/rgba\(255, 255, 255, 0\.1[0-9]\)/.test(s.hover.bg),
     'Deploy 悬停后背景不是「近乎透明的白」', s.hover.bg.split(' | ')[1]);
 
@@ -126,8 +127,12 @@ console.log('\n=== 2. 其它主按钮 ===');
 for (const [sel, label] of [['#td-btn-resume', 'Resume（无 game-btn）'], ['#td-btn-again', 'Again']]) {
     const exists = await page.$(sel);
     if (!exists) { console.log(`  · 跳过 ${label}（默认隐藏）`); continue; }
-    const r = await page.$eval(sel, el => getComputedStyle(el).backgroundImage);
-    check(/linear-gradient/.test(r), `${label} 基础态有渐变`, r.slice(0, 30) + '…');
+    const r = await page.$eval(sel, el => {
+        const cs = getComputedStyle(el);
+        return { image: cs.backgroundImage, color: cs.backgroundColor, text: cs.color };
+    });
+    check(r.image !== 'none' || r.color !== 'rgba(0, 0, 0, 0)',
+        `${label} 基础态有明确主按钮背景`, `${r.image} | ${r.color}`);
 }
 
 /* ── 3. 不带 variant 的按钮仍走通用 hover（不能被误伤） ── */

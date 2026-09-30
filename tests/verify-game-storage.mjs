@@ -31,4 +31,13 @@ const v2 = createGameStorage('versioned', {
 });
 assert.deepEqual(v2.get('state', null), { n: 3 });
 
+
+const originalSetItem = localStorage.setItem.bind(localStorage);
+localStorage.setItem = () => { throw new Error('storage disabled'); };
+const blockedStore = createGameStorage('blocked', { version: 1 });
+if (blockedStore.trySet('seen', true) !== false) {
+    throw new Error('trySet must report false when storage writes fail');
+}
+localStorage.setItem = originalSetItem;
+
 console.log('✓ versioned game storage legacy + schema migration');

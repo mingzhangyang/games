@@ -86,7 +86,7 @@ if (CHECK) {
     }
     console.error(`\n✗ 发现 ${total} 处应为 var(--tok-*) 的字面 hex：`);
     offenders.forEach(o => console.error('  ✗ ' + o));
-    console.error('  修复：node scripts/p3-token-swap.mjs（幂等，可反复跑）');
+    console.error('  修复：node tools/checks/token-swap.mjs（幂等，可反复跑）');
     console.error('  规则见 docs/contracts/style.md §2');
     process.exit(1);
 }
