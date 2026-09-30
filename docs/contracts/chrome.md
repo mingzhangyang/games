@@ -5,7 +5,7 @@
 
 - 契约文件：`css/layout.css`（`.game-topbar-center` / `.game-footer` 系列）
 - 行为实现：`js/game-chrome.js`（`bindChrome`）
-- 迁移工具：`tools/archive/migrations/apply-header-footer.py`、`tools/archive/migrations/add-chrome-i18n.py`（均幂等，支持 `--dry`）
+- 历史参考：`tools/archive/migrations/apply-header-footer.py`、`tools/archive/migrations/add-chrome-i18n.py` 已归档，不用于日常开发。当前流程是按本文直接实现 markup、i18n 与 `bindChrome` 接入，再运行现行校验。
 - 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
 
 ---
@@ -160,9 +160,8 @@ bindChrome({
 npm run serve:static &        # 或 node tests/verify-chrome.mjs（verify-all 自动起服务）
 node tests/verify-chrome.mjs http://127.0.0.1:8899
 
-# 迁移脚本幂等性（两者都应报「无改动」）
-python tools/archive/migrations/apply-header-footer.py --dry
-python tools/archive/migrations/add-chrome-i18n.py --dry
+# 校验当前 markup / runtime 接入，不运行归档迁移器
+node tests/verify-registry.mjs
 ```
 
 > `tools/lib/browser.mjs` 会按「环境变量 → 系统 Chrome/Chromium → Puppeteer 缓存」解析路径，

@@ -44,6 +44,10 @@ for (const category of categories) {
         console.log('  details:');
         for (const item of current['legacy-shell-page-details']) console.log(`    • ${item}`);
     }
+    if (category === 'platform-shim-consumers') {
+        console.log('  call-site locations:');
+        for (const item of current['platform-shim-consumer-details'].slice(0, 8)) console.log(`    • ${item}`);
+    }
 }
 
 console.log('\nDocumented exceptions / allowlist');

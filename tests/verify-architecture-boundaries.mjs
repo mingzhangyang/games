@@ -14,6 +14,12 @@ import {
     ROOT,
     RATCHET_CATEGORIES,
     importedSpecifiers,
+    shimCallSites,
+    resolveRepositoryImport,
+    isBrowserPlatformImport,
+    generatedContractViolations,
+    workerPlatformImports,
+    archivedToolReferences,
     shimName,
     scanArchitectureDebt,
     STRICT_ZERO_CATEGORIES,
@@ -49,8 +55,8 @@ for (const category of RATCHET_CATEGORIES) {
         `${result.current.length} > ${result.baseline.length}`);
     if (result.removed.length) console.log(`  ↓ removed from baseline: ${result.removed.join(', ')}`);
 }
-ok(current['platform-shim-consumers'].every(item => /:\d+:[a-z0-9-]+$/.test(item)),
-    'shim debt keys preserve call-site line identity');
+ok(current['platform-shim-consumers'].every(item => /:[a-z0-9-]+#\d+$/.test(item)),
+    'shim debt keys preserve stable occurrence identity');
 
 console.log('\n▶ strict Architecture v2 boundaries');
 for (const category of STRICT_ZERO_CATEGORIES) {
@@ -82,6 +88,49 @@ ok(probeImports.length === 2 && probeImports.every(ref => shimName(ref.specifier
     'shim scanner recognizes alias, dynamic import, and require specifiers');
 ok(shimName('./i18n.js', join(ROOT, 'src/games/example/index.js')) === null,
     'shim scanner leaves local game-relative modules unclassified');
+
+console.log('\n▶ guard regression cases');
+const consumer = join(ROOT, 'js/example.js');
+const original = shimCallSites("import './theme.js';", consumer);
+const shifted = shimCallSites("// unrelated edit\n\nimport './theme.js';", consumer);
+ok(original[0].key === shifted[0].key && original[0].line !== shifted[0].line,
+    'unrelated line insertions preserve debt identity and update diagnostics');
+const repeated = shimCallSites("import './theme.js'; import('./theme.js'); require('./theme.js');", consumer);
+ok(new Set(repeated.map(ref => ref.key)).size === 3,
+    'same-line repeated shim imports remain distinct');
+const fixtureBaseline = { categories: { shim: { items: original.map(ref => ref.key) } } };
+ok(compareDebt({ shim: repeated.map(ref => ref.key) }, fixtureBaseline, 'shim').added.length === 2,
+    'extra call sites fail even when the shim already exists');
+ok(shimCallSites("import './i18n.js';", join(ROOT, 'src/games/example/index.js')).length === 0,
+    'local game modules are allowed');
+const workerPath = join(ROOT, 'worker/index.js');
+ok(['@js/theme.js', '@platform/theme.js', '../src/platform/theme.js', '../js/theme.js']
+    .every(specifier => isBrowserPlatformImport(specifier, workerPath)), 'worker guard catches aliases and relative paths');
+ok(!isBrowserPlatformImport('./rules.js', workerPath), 'worker-local modules are allowed');
+ok(workerPlatformImports([workerPath], () => "import('@js/theme.js'); require('@platform/boot.js');").length === 2,
+    'worker scanner catches executable dynamic alias imports');
+ok(workerPlatformImports([workerPath], () => "// import('@js/theme.js')\nimport './rules.js';").length === 0,
+    'worker scanner ignores comments and permits local modules');
+ok(resolveRepositoryImport('../archive/migrations/x.mjs', join(ROOT, 'tools/checks/x.mjs')).startsWith('tools/archive/'),
+    'relative archived tooling imports resolve to the forbidden subtree');
+ok(!resolveRepositoryImport('../lib/x.mjs', join(ROOT, 'tools/checks/x.mjs')).startsWith('tools/archive/'),
+    'active tooling imports remain allowed');
+const toolPath = join(ROOT, 'tools/checks/example.mjs');
+ok(archivedToolReferences([toolPath], () => "import('../archive/migrations/x.mjs'); require('../archive/y.mjs');").length === 2,
+    'archive scanner catches executable relative imports and requires');
+ok(archivedToolReferences([toolPath], () => "// import('../archive/x.mjs')\nimport '../lib/helper.mjs';").length === 0,
+    'archive scanner ignores comments and allows active helpers');
+ok(generatedContractViolations([join(ROOT, 'src/generated/unknown/cache.js')])
+    .some(item => item.endsWith(':no-reproducibility-contract')), 'unknown generated files cannot pass with a stamp alone');
+const raised = JSON.parse(JSON.stringify(baseline));
+raised.categories['registry-entry-in-js'].items.push('example:js/example.js');
+ok(compareBaselineGrowth(raised).issues.length > 0, 'raising the baseline is rejected');
+const partialShell = compareDebt({ shell: ['minesweeper:game-main'] },
+    { categories: { shell: { items: ['minesweeper:game-main', 'minesweeper:game-stage'] } } }, 'shell');
+ok(partialShell.added.length === 0 && partialShell.delta === -1, 'partial shell repairs are allowed');
+const regressedShell = compareDebt({ shell: ['minesweeper:game-footer'] },
+    { categories: { shell: { items: ['minesweeper:game-main'] } } }, 'shell');
+ok(regressedShell.added.length === 1, 'new shell class regressions are rejected');
 
 console.log(failed ? `\n${failed} architecture boundary failure(s) ❌` : '\narchitecture boundary contract passed ✅');
 process.exit(failed ? 1 : 0);
