@@ -812,22 +812,9 @@ tests/verify-carrot-pull-art.mjs
 - production HTML 不再包含大型旧插画 path；
 - legacy SVG renderer 仅存在于明确的 fallback 模块。
 
-### 18.1 必须注册到 verify-all
+### 18.1 verify-all 自动发现
 
-`tests/verify-all.mjs` 使用固定 `SUITE`，不会自动发现新脚本。实现时必须显式加入：
-
-```js
-{ name: 'carrot-pull-art', script: 'tests/verify-carrot-pull-art.mjs', args: [], needsServer: false },
-{ name: 'smoke-carrot-pull', script: 'tests/smoke-carrot-pull.mjs', args: [], needsServer: true },
-```
-
-并把：
-
-```text
-carrot-pull-art
-```
-
-加入 `QUICK_NAMES`。Art verifier 是纯离线低成本检查，应进入 quick；浏览器 smoke 保留在 full suite，除非实测运行成本足够低后再单独决定是否进入 quick。
+`tests/verify-all.mjs` 按 `verify-*.mjs` / `smoke-*.mjs` 文件名自动发现校验器，并根据导入推断是否需要服务器。`verify-carrot-pull-art.mjs` 是离线校验器，会自动进入 quick；`smoke-carrot-pull.mjs` 是浏览器 smoke，默认保留在 full suite。只有需要把浏览器检查加入 quick 时，才更新 `QUICK_BROWSER`。
 
 不要为此引入重量级 npm 图片依赖；必要时实现小型 WebP header reader。
 

@@ -280,15 +280,9 @@ Light / Dark 只改变页面 chrome、sidebar、overlay。
 - DPR 2 不裁切；
 - reduced motion。
 
-### verify-all 注册
+### verify-all 自动发现
 
-现有 `smoke-silk-dew` 已在 `tests/verify-all.mjs` 的 `SUITE` 中，继续保留。新增 art verifier 时必须显式加入：
-
-```js
-{ name: 'silk-dew-art', script: 'tests/verify-silk-dew-art.mjs', args: [], needsServer: false },
-```
-
-并把 `silk-dew-art` 加入 `QUICK_NAMES`。不要依赖脚本自动发现。
+`tests/verify-all.mjs` 按 `verify-*.mjs` / `smoke-*.mjs` 文件名自动发现校验器，并根据导入推断服务器需求。`verify-silk-dew-art.mjs` 是离线校验器，会自动进入 quick；现有 browser smoke 默认只进入 full suite。
 
 ## 12. 推荐文件变化
 

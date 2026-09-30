@@ -130,8 +130,9 @@ function tokenize(source) {
     return tokens;
 }
 
-function shimName(specifier) {
-    const value = String(specifier).replaceAll('\\', '/');
+export function shimName(specifier) {
+    const raw = String(specifier).replaceAll('\\', '/');
+    const value = raw.startsWith('@js/') ? `/js/${raw.slice('@js/'.length)}` : raw;
     if (value.includes('/src/platform/') || value.includes('/platform/')) return null;
     for (const name of PLATFORM_SHIMS) {
         if (value === `/js/${name}.js` || value.endsWith(`/js/${name}.js`)) return name;
@@ -143,14 +144,16 @@ function shimName(specifier) {
     return null;
 }
 
-function importedSpecifiers(source) {
+export function importedSpecifiers(source) {
     const tokens = tokenize(source);
     const imports = [];
     for (let i = 1; i < tokens.length; i++) {
         const token = tokens[i];
         if (token.type !== 'string') continue;
         const previous = tokens[i - 1]?.value;
-        if (previous !== 'import' && previous !== 'from' && previous !== 'require') continue;
+        const isCallSpecifier = previous === '('
+            && (tokens[i - 2]?.value === 'import' || tokens[i - 2]?.value === 'require');
+        if (!isCallSpecifier && previous !== 'import' && previous !== 'from' && previous !== 'require') continue;
         imports.push({ specifier: token.value, line: token.line });
     }
     return imports;
@@ -302,9 +305,9 @@ function legacyShellPages() {
             ? ['game-shell', 'game-shell--immersive', 'game-topbar', 'game-stage']
             : ['game-shell', 'game-topbar', 'game-main', 'game-stage', 'game-footer'];
         const missing = required.filter(className => !source.includes(className));
-        if (missing.length) findings.push(`${game.id}:${missing.join(',')}`);
+        if (missing.length) findings.push({ key: game.id, missing });
     }
-    return sorted(findings);
+    return findings.sort((a, b) => a.key.localeCompare(b.key));
 }
 
 function oversizedCompositionEntries() {
@@ -344,11 +347,13 @@ function staleDocumentationPaths() {
 
 export function scanArchitectureDebt() {
     const files = activeFiles();
+    const shellPages = legacyShellPages();
     return {
         'registry-entry-in-js': registryEntryDebt(),
         'platform-shim-consumers': platformShimConsumers(files),
         'game-localstorage': gameLocalStorage(files),
-        'legacy-shell-pages': legacyShellPages(),
+        'legacy-shell-pages': shellPages.map(page => page.key),
+        'legacy-shell-page-details': shellPages.map(page => `${page.key}:${page.missing.join(',')}`),
         'active-scripts-references': activeScriptsReferences(files),
         'oversized-composition-entries': oversizedCompositionEntries(),
         'src-game-shim-imports': platformShimConsumers(files)
@@ -383,12 +388,12 @@ export function compareDebt(current, baseline, category) {
 export const RATCHET_CATEGORIES = [
     'registry-entry-in-js',
     'platform-shim-consumers',
-    'game-localstorage',
     'legacy-shell-pages',
     'active-scripts-references',
 ];
 
 export const STRICT_ZERO_CATEGORIES = [
+    'game-localstorage',
     'src-game-shim-imports',
     'worker-platform-imports',
     'archived-tool-references',

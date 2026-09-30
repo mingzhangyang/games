@@ -6,7 +6,7 @@
 - 契约文件：`css/layout.css`（`.game-topbar-center` / `.game-footer` 系列）
 - 行为实现：`js/game-chrome.js`（`bindChrome`）
 - 迁移工具：`tools/archive/migrations/apply-header-footer.py`、`tools/archive/migrations/add-chrome-i18n.py`（均幂等，支持 `--dry`）
-- 校验工具：`tests/verify-chrome.mjs`（已并入 `npm run verify`，SUITE 名 `chrome`）
+- 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
 
 ---
 

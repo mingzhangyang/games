@@ -1142,17 +1142,15 @@ tests/verify-td-art.mjs
 - DPR 2；
 - reduced motion。
 
-### 14.4 verify-all
+### 14.4 verify-all 自动发现
 
-必须显式注册进 `tests/verify-all.mjs`，不要依赖自动发现：
+`tests/verify-all.mjs` 按 `verify-*.mjs` / `smoke-*.mjs` 文件名自动发现这些校验器，并根据导入推断服务器需求：
 
-- `td-art` → `tests/verify-td-art.mjs`，offline，仅验证源资源 / manifest / 字面 URL map / 静态预算，不声称验证 dist；
-- `td-difficulty` → 现有 `tests/verify-td-difficulty.mjs`，`needsServer: true`、`games: ['tower-defense']`；
-- `smoke-tower-defense` → 新增完整 runtime smoke，`needsServer: true`；
-- 保留现有 `td-topbar`，但将其中锁定旧 portrait 几何的断言更新为新 landscape / rotation 契约；
-- 评估 `verify-td-btn-hover.mjs`：若仍是有效 UI 契约则一并注册；若被新 UI 明确取代，则删除 / 重写并在 PR 说明原因，不能留下无人运行的旧测试。
+- `verify-td-art.mjs` 是 offline 源资源 / manifest / 字面 URL map / 静态预算检查，不声称验证 dist，自动进入 quick；
+- `verify-td-difficulty.mjs`、`smoke-tower-defense.mjs`、`verify-td-topbar.mjs` 等浏览器检查默认进入 full suite；
+- `verify-td-btn-hover.mjs` 如仍是有效 UI 契约就保留，否则删除 / 重写并在 PR 说明原因，不能留下无人运行的旧测试。
 
-同时把以上 TD 关键项加入 `QUICK_NAMES`（至少 `td-art`、`td-difficulty`、`smoke-tower-defense`、`td-topbar`），保证日常验证不会只跑到顶栏而漏掉难度和地图机制。
+无需手动维护 `SUITE` / `QUICK_NAMES`；只有需要把浏览器检查加入 quick 时，才更新 `QUICK_BROWSER`。
 
 ### 14.5 构建产物（dist）验证
 

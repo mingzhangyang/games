@@ -521,15 +521,9 @@ pulse 结束后：
 - level result；
 - daily。
 
-### verify-all 注册
+### verify-all 自动发现
 
-现有 `echo-cave-levels` 与 `smoke-echo-cave` 已在 `tests/verify-all.mjs` 中。新增 art verifier 时必须显式加入：
-
-```js
-{ name: 'echo-cave-art', script: 'tests/verify-echo-cave-art.mjs', args: [], needsServer: false },
-```
-
-并把 `echo-cave-art` 加入 `QUICK_NAMES`。不得降低或替换现有 level verifier / smoke。
+`tests/verify-all.mjs` 按 `verify-*.mjs` / `smoke-*.mjs` 文件名自动发现校验器，并根据导入推断是否需要服务器。`verify-echo-cave-art.mjs` 是离线校验器，会自动进入 quick；现有 level verifier 和 browser smoke 无需手动登记，也不得降低或替换。
 
 视口：
 

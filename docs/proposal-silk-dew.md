@@ -175,7 +175,7 @@ gen 自动改写 9 处派生点（vite inputs / sitemap / manifest / more-games 
 | **M1 物理核心** | verlet 绳 + **锚结拖拽**交互 + 8 元素 + 单关可玩 | dev 手测：60fps；拖拽牵引/落壶/触荆/出界判负全部正确 | ✅（机制替换） |
 | **M2 内容** | 20 生成关（`silk-dew-levels.js`）+ 星级/进度存储 + 选关 + 结算面板（ICONS 按钮） | `verify-silk-dew-levels` 绿；进度刷新/重开计分正确 | ✅ |
 | **M3 系统** | 每日 5 关采样器 + 榜单提交（战役/每日）+ i18n en/zh 全量 + 五声音阶 sfx + hubTrack | `daily / i18n / leaderboard / placeholder-leak` 绿 | ✅ |
-| **M4 收口** | `smoke-silk-dew`（在线）+ SUITE/QUICK_NAMES 注册 + dist 复验 | **`npm run verify` 全绿**；`npm run build` 后 dist 复跑 | 进行中 |
+| **M4 收口** | `smoke-silk-dew`（在线，按文件名自动发现）+ dist 复验 | **`npm run verify` 全绿**；`npm run build` 后 dist 复跑 | 进行中 |
 
 ## 7. 风险与规避
 

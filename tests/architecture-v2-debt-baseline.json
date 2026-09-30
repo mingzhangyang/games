@@ -289,16 +289,16 @@
       ]
     },
     "game-localstorage": {
-      "mode": "ratchet",
+      "mode": "strict-zero",
       "items": []
     },
     "legacy-shell-pages": {
       "mode": "ratchet",
       "items": [
-        "gomoku:game-main",
-        "minesweeper:game-main,game-stage",
-        "reversi:game-main",
-        "word-daily:game-stage"
+        "gomoku",
+        "minesweeper",
+        "reversi",
+        "word-daily"
       ]
     },
     "active-scripts-references": {

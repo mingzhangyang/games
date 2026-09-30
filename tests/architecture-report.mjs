@@ -37,6 +37,18 @@ for (const category of categories) {
         console.log('  top:');
         for (const item of result.current.slice(0, 8)) console.log(`    • ${item}`);
     }
+    if (category === 'legacy-shell-pages' && current['legacy-shell-page-details']?.length) {
+        console.log('  details:');
+        for (const item of current['legacy-shell-page-details']) console.log(`    • ${item}`);
+    }
 }
+
+console.log('\nDocumented exceptions / allowlist');
+const exceptions = baseline.exceptions || {};
+for (const [group, entries] of Object.entries(exceptions)) {
+    console.log(`  ${group}:`);
+    for (const [key, reason] of Object.entries(entries || {})) console.log(`    • ${key}: ${reason}`);
+}
+if (!Object.keys(exceptions).length) console.log('  none');
 
 console.log('\nstrict-zero categories must remain empty; ratchet categories may only decrease.');

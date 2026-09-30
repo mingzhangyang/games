@@ -252,7 +252,7 @@ CSS 契约顺序 + `<main>` 语义 + h1，**不套** shell/topbar/sidebar 几何
 - 页面的菜单须用 `.hidden` 类隐藏（`:has(> .game-overlay--menu:not(.hidden))` 依赖它）
 - 当前使用者：gravity-slingshot、needle-awn、lumen、circuit、silk-dew、bond-forge、echo-cave、
   maxwell-demon、crystal-bloom、flame-verse、ripple-duet，以及 planet-merge、hoop-shot（只在横屏手机上溢出）
-- 校验：`node tests/verify-start-menus.mjs`（SUITE 名 `start-menus`，390×844 / 768×1024 / 844×390 横屏）——
+- 校验：`node tests/verify-start-menus.mjs`（verify-all 校验项 `verify-start-menus`，390×844 / 768×1024 / 844×390 横屏）——
   加载时可见、非全屏的舞台内浮层一旦内部溢出即红（新游戏漏加 class 会被抓）；菜单里**每个可见按钮**都必须能
   滚到并点中；菜单不得被 `overflow≠visible` 的舞台截断
 
@@ -307,7 +307,7 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 
 ### 7.4 校验
 
-`node tests/verify-immersive.mjs`（SUITE 名 `immersive`）：页面清单 = `registry.withLayout('immersive')`；
+`node tests/verify-immersive.mjs`（verify-all 校验项 `verify-immersive`）：页面清单 = `registry.withLayout('immersive')`；
 视口 390×844 / 393×852 / 430×932 / 844×390 / 1280×800 / 1440×900；默认 immersive 页断言舞台贴顶栏且到视口底、
 `--frame-chrome` 为实测值、窄屏贴边 / 宽屏 600–640 居中、无横向滚动、页脚在首屏之下且可滚到。
 tower-defense 在 <1024px 手机横屏战斗态采用显式例外：舞台四边贴合整个视口、顶栏 fixed 悬浮、页脚隐藏；

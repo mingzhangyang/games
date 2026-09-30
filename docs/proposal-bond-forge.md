@@ -199,7 +199,7 @@ gen 自动改写 9 处派生点。**手工表兜底**：`verify-stats-drawer.mjs
 | **M1 化学内核** | `ELEMENTS` + `canonicalize` + `solveBest`；拖拽吸附 + 价态校验 + 键角分布；单关可玩 | `verify-bond-forge-levels` 通过 schema 段；手测：合法键吸附、非法键弹回、键角正确 |
 | **M2 内容** | 20 手工关 + 星级/进度存储 + 选关 + 结算面板 | `verify-bond-forge-levels` 全绿（含 par 可达、满星路径） |
 | **M3 系统** | 每日 5 关 + 榜单提交 + i18n en/zh 全量（含全部化学名词）+ sfx 和声音程 + hubTrack | `daily / i18n / leaderboard / placeholder-leak` 绿 |
-| **M4 收口** | `smoke-bond-forge`（在线）+ SUITE/QUICK_NAMES 注册 + dist 复验 | 全套 verify 全绿；`npm run build` 后 dist 复跑 |
+| **M4 收口** | `smoke-bond-forge`（在线，按文件名自动发现）+ dist 复验 | 全套 verify 全绿；`npm run build` 后 dist 复跑 |
 
 ---
 

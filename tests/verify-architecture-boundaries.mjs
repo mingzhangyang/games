@@ -5,17 +5,20 @@
 // baseline. New debt is a failure, and categories that have reached zero stay
 // strict-zero. This keeps migration work incremental without allowing the
 // repository to regress while the legacy tree is being removed.
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
     compareDebt,
     loadDebtBaseline,
     ROOT,
     RATCHET_CATEGORIES,
+    importedSpecifiers,
+    shimName,
     scanArchitectureDebt,
     STRICT_ZERO_CATEGORIES,
 } from './lib/architecture-debt.mjs';
 import { registry } from './lib/registry.mjs';
+import { discover } from './verify-all.mjs';
 
 let failed = 0;
 const ok = (condition, label, detail = '') => {
@@ -62,12 +65,14 @@ for (const game of registry.all()) {
 }
 
 console.log('\n▶ generated source and discovery contracts');
-const generatedFiles = readdirSync(join(ROOT, 'tests'))
-    .filter(name => /^verify-architecture-boundaries\.mjs$/.test(name));
-ok(generatedFiles.length === 1, 'boundary verifier is auto-discoverable by verify-all');
-const verifyAll = readFileSync(join(ROOT, 'tests', 'verify-all.mjs'), 'utf8');
-ok(verifyAll.includes('.filter(file => /^(verify-|smoke-'),
-    'verify-all keeps filename-based auto-discovery');
+const discovered = discover();
+const self = discovered.find(step => step.name === 'verify-architecture-boundaries');
+ok(Boolean(self), 'boundary verifier is auto-discovered by verify-all');
+ok(self?.script === 'tests/verify-architecture-boundaries.mjs',
+    'boundary verifier uses the expected discovered script path', self?.script || 'missing');
+const probeImports = importedSpecifiers(`import('@js/theme.js'); require('../js/daily.js');`);
+ok(probeImports.length === 2 && probeImports.every(ref => shimName(ref.specifier)),
+    'shim scanner recognizes alias, dynamic import, and require specifiers');
 
 console.log(failed ? `\n${failed} architecture boundary failure(s) ❌` : '\narchitecture boundary contract passed ✅');
 process.exit(failed ? 1 : 0);

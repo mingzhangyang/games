@@ -249,16 +249,9 @@ Sidebar：
 
 显示 rim collision circles / board rect。
 
-### verify-all 注册
+### verify-all 自动发现
 
-新增 `tests/smoke-hoop-shot.mjs`，并在 `tests/verify-all.mjs` 显式注册：
-
-```js
-{ name: 'hoop-shot-art', script: 'tests/verify-hoop-shot-art.mjs', args: [], needsServer: false },
-{ name: 'smoke-hoop-shot', script: 'tests/smoke-hoop-shot.mjs', args: [], needsServer: true },
-```
-
-把 `hoop-shot-art` 加入 `QUICK_NAMES`；浏览器 smoke 默认只进入 full suite。
+新增的 `verify-hoop-shot-art.mjs` 与 `smoke-hoop-shot.mjs` 会由 `tests/verify-all.mjs` 按文件名自动发现，并根据导入推断是否需要服务器。art verifier 自动进入 quick；浏览器 smoke 默认只进入 full suite。
 
 ## 13. 推荐文件变化
 

@@ -1,7 +1,7 @@
 # Style 契约：设计令牌 / hex 收敛 / lint 基建
 
 > 视觉与代码风格的单一规则集。令牌定义在 `css/tokens.css`，linter 入口 `node tools/checks/run-lint.mjs`
-> （eslint + stylelint + 令牌残留检查 一键，已并入 `npm run verify`，SUITE 名 `lint`）。
+> （eslint + stylelint + 令牌残留检查一键，verify-all 基础校验项名为 `lint`）。
 
 ---
 
@@ -171,6 +171,6 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 node tools/checks/run-lint.mjs          # eslint + stylelint + 令牌残留检查 一键
 node tools/checks/run-lint.mjs --fix    # 同上，且真的替换令牌字面量
 node tools/checks/token-swap.mjs --check   # 只查令牌残留
-npx eslint js scripts --fix        # 修 JS（勿碰 js/more-games.js —— 已 ignores 保护）
+npx eslint js tests tools --fix    # 修 JS（勿碰 js/more-games.js —— 已 ignores 保护）
 npx stylelint "css/**/*.css" --fix # 修 CSS（避开 math-rain；产物要烟测）
 ```

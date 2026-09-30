@@ -8,7 +8,7 @@
 - 运行时：`js/theme.js`（`getTheme` / `onThemeChange` / `readPalette`）
 - 令牌：`css/tokens.css` 的 `:root[data-theme="light"]` 覆盖块
 - 登记：`games.config.json` 的 cap `theme-light` 与字段 `themeColorLight`
-- 校验：`tests/verify-theme.mjs`（SUITE 名 `theme`）
+- 校验：`tests/verify-theme.mjs`（按文件名自动发现，verify-all 校验项 `verify-theme`）
 
 ---
 

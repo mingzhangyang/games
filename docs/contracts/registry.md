@@ -6,7 +6,7 @@
 - 真源：`games.config.json`（全站游戏元数据唯一真源）
 - 读取器：`tools/lib/registry.mjs`（Node 侧唯一入口）
 - 生成器：`tools/generators/gen-from-registry.mjs`（`npm run gen` / `npm run gen -- --check`）
-- 校验：`tests/verify-registry.mjs`（已并入 `npm run verify`，SUITE 名 `registry`）
+- 校验：`tests/verify-registry.mjs`（按文件名自动发现，verify-all 校验项 `verify-registry`）
 
 ---
 
