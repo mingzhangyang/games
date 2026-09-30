@@ -10,7 +10,7 @@ export default [
         ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'js/more-games.js', 'src/generated/**'],
     },
     {
-        files: ['js/**/*.js', 'src/platform/**/*.js', 'src/games/**/*.js'],
+        files: ['js/**/*.js', 'src/platform/**/*.js', 'src/games/**/*.js', 'worker/**/*.js'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',
@@ -92,7 +92,7 @@ export default [
         },
     },
     {
-        files: ['scripts/**/*.mjs', 'tests/**/*.mjs'],
+        files: ['scripts/**/*.mjs', 'tests/**/*.mjs', 'tools/generators/**/*.mjs', 'tools/checks/**/*.mjs'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',
