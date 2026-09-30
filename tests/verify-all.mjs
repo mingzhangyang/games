@@ -51,7 +51,7 @@ function discover() {
                 name,
                 script,
                 args: [],
-                needsServer: /puppeteer-core|\.\/lib\/browser\.mjs/.test(source),
+                needsServer: /puppeteer-core|\.\/lib\/(?:browser|game-test)\.mjs/.test(source),
                 pages: /\.\/lib\/page-filter\.mjs/.test(source),
                 games: inferGames(name),
             };
