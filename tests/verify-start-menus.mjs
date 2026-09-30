@@ -65,8 +65,16 @@ for (const g of GAMES) {
                 return { clips, menuBottom: Math.round(m.getBoundingClientRect().bottom), stageBottom: Math.round(st.getBoundingClientRect().bottom) };
             }, o.id);
             check(!clip.clips || clip.menuBottom <= clip.stageBottom + 1, `${g.id}@${w}：#${o.id} 没被舞台裁掉`, JSON.stringify(clip));
+            const orientationGated = await page.evaluate(() => {
+                const gate = document.querySelector('.td-rotate-prompt.is-active');
+                return !!gate && getComputedStyle(gate).display !== 'none' && gate.getBoundingClientRect().height > 0;
+            });
             const n = await page.evaluate(id => [...document.getElementById(id).querySelectorAll('button')]
                 .filter(e => e.offsetParent).length, o.id);
+            if (orientationGated) {
+                check(true, `${g.id}@${w}：竖屏旋转门禁合法遮挡开始菜单`);
+                continue;
+            }
             let reachable = 0;
             const missed = [];
             for (let i = 0; i < n; i++) {

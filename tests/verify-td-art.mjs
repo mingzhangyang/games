@@ -201,7 +201,7 @@ if (!mobileMenuRule || missingMenuStageDeclarations.length) {
 } else {
     pass('mobile immersive start menu flow declarations are scoped to their rules');
 }
-if (!game.includes('heroLabel:') || !/start-hero['"]\]\)?\.setAttribute\(['"]aria-label['"],\s*t\.heroLabel\)/.test(game)) {
+if (!game.includes('heroLabel:') || !game.includes("setAttribute('aria-label', t.heroLabel)")) {
     fail('start hero accessible label must be localized during applyLanguage');
 }
 for (const source of [landingCopy, landingHtml, socialPreview]) {

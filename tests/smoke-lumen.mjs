@@ -20,7 +20,7 @@ const session = await launchGame('lumen.html', {
     lang: 'zh',
     viewport: { width: 1280, height: 900 },
 });
-const { browser, page, errors: errs, consoleErrors } = session;
+const { page, errors: errs, consoleErrors } = session;
 await new Promise(r => setTimeout(r, 900)); // 等模块图 + 首帧渲染
 
 /* ── 1. bootstrap：句柄 / 初始态 ── */

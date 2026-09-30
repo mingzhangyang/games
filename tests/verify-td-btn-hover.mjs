@@ -96,9 +96,9 @@ const s = await sample('#td-btn-play');
 check(s.isHovered, '确实进入了 :hover 状态（避免断言空转）');
 
 // 悬停后渐变必须还在（backgroundImage 含 linear-gradient）
-check(!/rgba\(255, 255, 255, 0\.1[0-9]\)/.test(s.hover.bg)
-        && (s.hover.bg.includes('linear-gradient') || s.hover.bg.includes('rgb(117, 225, 210)')),
-    'Deploy 悬停后仍保留主按钮强调背景（未被通用 hover 覆盖）',
+const hasPrimaryAccent = !/rgba\(255, 255, 255, 0\.1[0-9]\)/.test(s.hover.bg)
+    && (s.hover.bg.includes('linear-gradient') || s.hover.bg.includes('rgb(117, 225, 210)'));
+check(hasPrimaryAccent, 'Deploy 悬停后仍保留主按钮强调背景（未被通用 hover 覆盖）',
     s.hover.bg.slice(0, 72) + '…');
 check(!/rgba\(255, 255, 255, 0\.1[0-9]\)/.test(s.hover.bg),
     'Deploy 悬停后背景不是「近乎透明的白」', s.hover.bg.split(' | ')[1]);

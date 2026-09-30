@@ -45,26 +45,62 @@ async function createFixedExpression(page, result, expressionText) {
             160
         );
         const expression = game.expressions[0];
+        const canvasRect = game.canvas.getBoundingClientRect();
+        const logicalWidth = game.canvasCssWidth || canvasRect.width;
+        const logicalHeight = game.canvasCssHeight || canvasRect.height;
+        const toClient = (x, y) => ({
+            x: canvasRect.left + x * (canvasRect.width / logicalWidth),
+            y: canvasRect.top + y * (canvasRect.height / logicalHeight),
+        });
+        const candidates = [
+            [0.5, 0.46], [0.35, 0.5], [0.65, 0.5],
+            [0.5, 0.62], [0.3, 0.66], [0.7, 0.66],
+        ];
+        let chosen = null;
+        for (const [fx, fy] of candidates) {
+            const client = {
+                x: canvasRect.left + canvasRect.width * fx,
+                y: canvasRect.top + canvasRect.height * fy,
+            };
+            const hit = document.elementFromPoint(client.x, client.y);
+            if (hit === game.canvas || game.canvas.contains(hit)) {
+                chosen = client;
+                break;
+            }
+        }
+        chosen ||= {
+            x: canvasRect.left + canvasRect.width / 2,
+            y: canvasRect.top + canvasRect.height / 2,
+        };
         expression.position = {
-            x: game.canvasCssWidth / 2,
-            y: Math.max(100, game.canvasCssHeight * 0.42),
+            x: (chosen.x - canvasRect.left) * (logicalWidth / canvasRect.width),
+            y: (chosen.y - canvasRect.top) * (logicalHeight / canvasRect.height),
         };
         expression.speed = 0;
         expression.startTime = Date.now();
+
         const bounds = game.getExpressionBounds(expression);
         const hitBounds = game.getExpressionHitBounds(expression);
-        const canvasRect = game.canvas.getBoundingClientRect();
-        const centerX = (bounds.left + bounds.right) / 2;
-        const centerY = (bounds.top + bounds.bottom) / 2;
-        const expandedTouchY = hitBounds.bottom > bounds.bottom
-            ? bounds.bottom + (hitBounds.bottom - bounds.bottom) / 2
-            : centerY;
+        const center = toClient((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
+        const expandedLogical = [
+            [(bounds.left + bounds.right) / 2, bounds.bottom + (hitBounds.bottom - bounds.bottom) / 2],
+            [(bounds.left + bounds.right) / 2, bounds.top - (bounds.top - hitBounds.top) / 2],
+        ];
+        let expanded = center;
+        for (const [x, y] of expandedLogical) {
+            const point = toClient(x, y);
+            const hit = document.elementFromPoint(point.x, point.y);
+            if (hit === game.canvas || game.canvas.contains(hit)) {
+                expanded = point;
+                break;
+            }
+        }
         return {
             id: expression.id,
-            x: canvasRect.left + centerX,
-            y: canvasRect.top + centerY,
-            expandedTouchX: canvasRect.left + centerX,
-            expandedTouchY: canvasRect.top + expandedTouchY,
+            x: center.x,
+            y: center.y,
+            expandedTouchX: expanded.x,
+            expandedTouchY: expanded.y,
             visualWidth: bounds.width,
             visualHeight: bounds.height,
             hitWidth: hitBounds.hitWidth,
@@ -317,10 +353,11 @@ const fallbackConsoleErrors = [];
 fallbackPage.on('pageerror', error => fallbackPageErrors.push(String(error.message || error).split('\n')[0]));
 fallbackPage.on('console', message => {
     const text = message.text().split('\n')[0];
-    if (message.type() === 'error'
-        && !text.includes('observatory-wide')
-        && !/sw-register\.js|analytics\.js|manifest|favicon|apple-touch-icon/i.test(text)) {
-        fallbackConsoleErrors.push(text);
+    const url = message.location()?.url || '';
+    const expectedWideFailure = url.includes('observatory-wide');
+    const platformNoise = /sw-register\.js|analytics\.js|manifest|favicon|apple-touch-icon/i.test(`${text} ${url}`);
+    if (message.type() === 'error' && !expectedWideFailure && !platformNoise) {
+        fallbackConsoleErrors.push(`${text}${url ? ` @ ${url}` : ''}`);
     }
 });
 fallbackPage.on('request', request => {

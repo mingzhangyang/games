@@ -108,6 +108,7 @@ export default [
                 AbortController: 'writable',
                 URL: 'writable',
                 performance: 'writable',
+                Buffer: 'readonly',
                 // 校验器在 page.evaluate 回调里静态引用浏览器 API
                 document: 'writable',
                 window: 'writable',

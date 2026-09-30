@@ -156,9 +156,9 @@ if (!smoke.includes('waitForFunction') || !smoke.includes('srOnlyHeading') || !s
 if (!smoke.includes('powerUpRendererDelegation')) fail('smoke does not verify PowerUp renderer delegation');
 if (!smoke.includes('orientationFallback')) fail('smoke does not exercise the orientation fallback path');
 
-if (!verifyAll.includes("readdirSync(TEST_ROOT)")
-    || !verifyAll.includes("verify-")
-    || !verifyAll.includes("!step.needsServer")) {
+if (!verifyAll.includes('readdirSync(TEST_ROOT)')
+    || !verifyAll.includes('verify-')
+    || !verifyAll.includes('!step.needsServer')) {
     fail('verify-all no longer auto-discovers offline verify tests');
 } else {
     pass('verify-all auto-discovers tank-battle-art and includes offline tests in quick mode');

@@ -152,7 +152,7 @@ for (const g of RUN_PAGES) {
                 check(Math.abs(r.stage.top) <= 1 && Math.abs(r.stage.bottom - r.vh) <= 1
                     && Math.abs(r.stage.width - r.vw) <= 1 && r.topbarPosition === 'fixed'
                     && r.footerDisplay === 'none',
-                    `⑧ ${tag} → 转屏：TD 横屏切换为全视口战场`, JSON.stringify(r.stage));
+                `⑧ ${tag} → 转屏：TD 横屏切换为全视口战场`, JSON.stringify(r.stage));
             } else {
                 check(Math.abs(r.stage.top - r.topbarBottom) <= 1 && Math.abs(r.stage.bottom - r.vh) <= 1,
                     `⑧ ${tag} → 转屏：舞台重新填满顶栏以下`, JSON.stringify(r.stage));
