@@ -4,7 +4,9 @@
 >
 > 记录日期：2026-09-30
 >
-> 关联：`docs/contracts/layout.md`、`vite.config.js`、`css/tokens.css`
+> 关联：`docs/contracts/layout.md`、`vite.config.js`、`css/tokens.css`、`docs/architecture-v2-followup-plan.md`
+>
+> 前置关系：本计划的 P0/P1 可提前进行只读盘点；**P2 及以后会改变 cascade 语义，只有 Architecture v2 follow-up 的 handoff gate 全部满足后才允许开始。**
 
 ## 1. 结论先行
 
@@ -18,6 +20,14 @@
    再移除 `shared-css-first`。
 
 迁移完成前，`shared-css-first` 是有效的构建契约，不是临时的无效代码。
+
+此外，迁移期间采用与 Architecture v2 相同的 **debt ratchet** 原则：
+
+- 已有未分层 CSS 可以在 baseline 中暂时存在；
+- 新增普通 CSS 默认必须进入明确 layer；
+- 未分层文件/规则数量只能下降不能上升；
+- 某一类别降到 0 后切换为 strict-zero；
+- 禁止通过向上调整 baseline 来“修复”检查失败。
 
 ## 2. 为什么不能直接移除插件
 
@@ -68,11 +78,32 @@ candidate CI #19 和 #20 均通过。这说明当前页面仍依赖既有的生�
 最终目标是：所有普通 CSS 都进入显式 cascade layer，生产页面不再依赖 Vite 重排 stylesheet
 link；同时保持现有页面的视觉、几何、响应式和交互行为不变。
 
-建议的目标层级顺序为：
+建议的**候选**层级顺序为：
 
 ```css
 @layer tokens, layout, showcase, components, pages;
 ```
+
+但该顺序在 P1 审计完成前**不得视为最终契约**。
+
+当前生产 link 顺序是：
+
+```
+tokens → layout → science-showcase → page → more-games
+```
+
+而候选 layer 顺序会让普通声明的 `pages` 优先级高于 `components`。如果 `more-games.css` 与页面 CSS 存在相同 specificity 的冲突，这两种顺序并不天然等价。
+
+因此 P1 必须先审计以下跨文件冲突：
+
+- `layout.css` ↔ page CSS；
+- `science-showcase.css` ↔ page CSS；
+- page CSS ↔ `more-games.css`；
+- 跨层 custom properties；
+- 相同 specificity 的共享 selector；
+- `!important` 规则的反向 layer 优先级。
+
+只有证明候选顺序行为等价，或根据真实生产 cascade 修正顺序后，才冻结最终 layer taxonomy。
 
 层级职责：
 
@@ -90,13 +121,20 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 
 ## 4. 分阶段实施方案
 
-### P0：冻结现状和建立基线
+### P0：冻结现状、建立行为基线和 CSS debt baseline
 
-目标：在开始迁移前，把当前正确行为记录成可重复的基线。
+目标：在开始迁移前，把当前正确行为记录成可重复的基线，并从第一天起阻止新的未分层 CSS 债务。
 
 工作项：
 
 - 保留 `shared-css-first`，不改变当前生产路径；
+- 建立 CSS debt baseline，至少记录：
+  - 未进入明确 layer 的普通 CSS 文件/顶层规则；
+  - HTML `<style>` 与 `style=""` 例外；
+  - `!important` 与特殊 at-rule 例外；
+  - 仍依赖 stylesheet link 顺序的页面；
+- 新增迁移期静态检查：已有 debt 可保持/减少，但**禁止新增未分层普通 CSS**；
+- baseline 记录具体文件/规则，不只记录总数；任何向上 rebaseline 需单独 review；
 - 记录所有 CSS 文件的入口、页面归属和当前层级；
 - 记录关键页面的 computed style、frame 尺寸、侧栏显示状态和 drawer 挂载位置；
 - 运行并保存基线结果：
@@ -112,7 +150,12 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
   - `node tests/verify-desktop-frame.mjs`
   - carrot-pull / needle-awn smoke
 
-验收门槛：基线全部通过；如果基线本身有已知缺口，必须在文档中列出并与迁移回归分开。
+验收门槛：
+
+- 行为基线全部通过；
+- CSS debt baseline 可复现；
+- 新增未分层普通 CSS 会失败；
+- 如果基线本身有已知缺口，必须在文档中列出并与迁移回归分开。
 
 ### P1：CSS 层级盘点和规则清理
 
@@ -131,17 +174,22 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 交付物：
 
 - CSS 文件到目标 layer 的清单；
+- 跨 `layout/showcase/page/components` 的 selector/custom-property 冲突矩阵；
+- 对“当前 link 顺序”与“候选 layer 顺序”是否等价的书面结论；
+- 若不等价，给出修正后的最终 layer order；
 - `!important` 和内联 CSS 的例外清单；
 - 每个例外的替代方案和回归测试；
-- 一份“禁止新增非分层 CSS”的检查规则草案。
+- 已落地的“禁止新增非分层 CSS”迁移期检查，而不是只停留在草案。
 
 ### P2：建立层级声明和迁移工具
+
+**前置：Architecture v2 follow-up handoff gate 必须全部满足。**
 
 目标：先建立统一入口，再用机械、可审查的方式完成文件包裹。
 
 实施顺序：
 
-1. 将 `css/tokens.css` 的层级声明扩展为 `tokens, layout, showcase, components, pages`；
+1. 将 `css/tokens.css` 的层级声明扩展为 **P1 审计后冻结的最终顺序**；若审计确认候选顺序正确，则为 `tokens, layout, showcase, components, pages`；
 2. 将 `science-showcase.css` 从 `components` 调整为 `showcase`；
 3. 保持 `more-games.css` 在 `components`；
 4. 编写一次性迁移工具，能够：
@@ -178,6 +226,8 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 
 目标：证明 CSS 已经不再依赖 `shared-css-first`。
 
+这一阶段仍然**不删除插件**。迁移后的 layer 架构应先在“插件仍存在”的正常生产路径下稳定，再用 canary 证明关闭插件也等价。这样可以把“layer 迁移问题”和“删除构建插件问题”拆开诊断。
+
 建议临时加入一个仅供迁移期间使用的构建开关，例如 `CSS_LAYER_CANARY=1`，让构建可以
 在不加载插件的情况下生成产物。此开关只用于验证，不作为永久运行模式。
 
@@ -196,9 +246,25 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 
 只有当两种模式在契约指标上等价，才允许进入插件删除阶段。
 
-### P5：移除插件并更新契约
+### P5：冻结 layer 架构并完成稳定性验证
 
-目标：完成真实的 source-level cascade layer 架构。
+目标：在插件仍存在的生产路径下确认 layer 架构已经稳定，且 P4 canary 等价。
+
+工作项：
+
+- 完成所有批次回归；
+- CSS debt ratchet 中未分层普通规则清零或只剩文档化例外；
+- 正常模式与 canary 模式契约指标等价；
+- 至少一次完整 Architecture v2 candidate CI 通过；
+- 在这一阶段**仍不删除** `shared-css-first`。
+
+### P6：单独 PR 删除 `shared-css-first`
+
+目标：把最后的构建契约切换做成一个极小、极易回滚的 PR。
+
+建议分支：
+
+`refactor/remove-shared-css-first`
 
 工作项：
 
@@ -210,9 +276,25 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 - 更新 PR / architecture-v2 描述，说明迁移已真正完成；
 - 运行一次完整 Architecture v2 candidate CI。
 
+P6 PR 不应顺便迁移 CSS、改选择器、重做页面视觉或改变 shell；如果删除插件后出现回归，应优先回滚该 PR，而不是在同一个 PR 继续堆叠 `!important` 或 selector 修补。
+
 ## 5. 必须新增的自动守卫
 
-迁移完成后，不能只依赖人工 review。建议新增 `tools/checks/verify-css-layers.mjs`，至少检查：
+自动守卫应分两个阶段启用，而不是等迁移完成后才开始。
+
+### 5.1 迁移期 ratchet
+
+P0 就启用：
+
+- 禁止新增未分层普通 CSS；
+- 未分层 debt 只能保持或下降；
+- 已清零类别自动 strict-zero；
+- baseline 只能向下更新；
+- 输出当前 debt、相对 baseline delta 和 top offenders。
+
+### 5.2 最终 strict verifier
+
+随着批次迁移完成，把同一 verifier 逐步收紧为 strict contract。建议新增 `tools/checks/verify-css-layers.mjs`，至少检查：
 
 1. `css/tokens.css` 声明完整且顺序正确；
 2. `layout.css` 位于 `layout` 层；
@@ -221,7 +303,9 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 5. 共享组件位于 `components` 层；
 6. 未列入 allowlist 的顶层普通 CSS 不得脱离 layer；
 7. 不得重新引入依赖 link 重排的构建逻辑；
-8. 迁移工具重复运行不会产生 diff。
+8. 迁移工具重复运行不会产生 diff；
+9. 最终 layer order 与 P1 审计结论一致；
+10. `shared-css-first` 删除后不得重新引入同类 link-reordering 构建逻辑。
 
 该检查应加入日常 changed verification；完整浏览器回归仍只在 PR candidate / 手动运行时执行，
 以符合项目的 CI 资源约束。
@@ -230,6 +314,9 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 
 ### 完成标准
 
+- Architecture v2 follow-up handoff gate 已满足并保持；
+- CSS debt baseline 已收敛为 strict-zero 或明确 allowlist；
+- P1 已证明最终 layer order 与现有生产 cascade 等价；
 - `vite.config.js` 中不再存在 `shared-css-first`；
 - 所有普通 CSS 规则均属于明确 layer，例外有书面理由；
 - 不依赖 HTML 中 link 的排列来决定跨层级优先级；
@@ -249,17 +336,36 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 - 需要大量新增 `!important` 才能恢复页面；
 - 迁移工具产生大规模与 CSS 语义无关的换行或编码 diff。
 
-## 7. 当前待办清单
+## 7. 与 Architecture v2 follow-up 的正式交接
 
+在 `docs/architecture-v2-followup-plan.md` 的 handoff gate 未满足前：
+
+- 可以执行本计划 P0/P1：盘点、baseline、冲突审计、静态检查；
+- 不执行 P2+ 的 layer 包裹、cascade 语义切换或插件 canary；
+- 不把 CSS migration 与 shell/DOM 大改并行。
+
+handoff 通过后进入临时 layout freeze：
+
+- 不并行进行 shell redesign、共享 class 重命名、全站 layout 重构；
+- 游戏逻辑/内容开发可以继续，只要不改变 shared cascade contract；
+- 如必须修改共享 DOM/CSS contract，应单独排队或显式协调。
+
+---
+
+## 8. 当前待办清单
+
+- [ ] 建立 CSS debt baseline + migration ratchet
 - [ ] 完成全部 CSS 文件的 layer 归属盘点
 - [ ] 盘点 `!important`、内联样式、特殊 at-rule 和自定义属性覆盖
+- [ ] 审计当前 link 顺序与候选 layer 顺序的 selector/custom-property 冲突，并冻结最终 layer order
 - [ ] 编写幂等的 layer 包裹迁移工具
 - [ ] 建立 layer 结构静态检查
 - [ ] 完成页面 CSS 的统一 `pages` 包裹
 - [ ] 完成 `layout` / `showcase` / `components` 的归位
 - [ ] 运行插件保留模式下的分批回归
 - [ ] 运行禁用插件的 canary 对比
-- [ ] 移除 `shared-css-first`
+- [ ] 在插件仍存在的生产路径下完成稳定性验证
+- [ ] 用独立小 PR 移除 `shared-css-first`
 - [ ] 更新现行契约与 PR 描述
 - [ ] 触发一次最终完整 CI
 
