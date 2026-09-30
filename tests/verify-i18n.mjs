@@ -55,6 +55,15 @@ console.log('\n▶ 源码收敛（防复制粘贴复活）');
 for (const g of PAGES) {
     const src = readFileSync(join(ROOT, g.entry), 'utf8');
     const i18nVar = g.i18nVar || 'LANGUAGES';
+    const declarative = /createI18nBinder/.test(src);
+    if (declarative) {
+        ok(/import \{ createI18nBinder \} from ['"][^'"]*platform\/i18n\/bindings\.js['"];/.test(src),
+            `${g.entry}: declarative i18n imports platform binder`);
+        ok(/createI18nBinder\s*\(\s*\{/.test(src),
+            `${g.entry}: declarative i18n creates binder`);
+        continue;
+    }
+
     const extracted = join(ROOT, 'src', 'games', g.id, 'i18n.js');
     const hasExtracted = existsSync(extracted);
     if (hasExtracted) {
