@@ -11,6 +11,7 @@ const ART_ROOT = join(ROOT, 'assets', 'tower-defense', 'production');
 const manifest = JSON.parse(readFileSync(join(ART_ROOT, 'manifest.json'), 'utf8'));
 const art = readFileSync(join(ROOT, 'js', 'tower-defense-art.js'), 'utf8');
 const game = readFileSync(join(ROOT, 'js', 'tower-defense.js'), 'utf8');
+const i18n = readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'i18n.js'), 'utf8');
 const html = readFileSync(join(ROOT, 'tower-defense.html'), 'utf8');
 const css = readFileSync(join(ROOT, 'css', 'tower-defense.css'), 'utf8');
 const registryConfig = JSON.parse(readFileSync(join(ROOT, 'games.config.json'), 'utf8'));
@@ -201,8 +202,8 @@ if (!mobileMenuRule || missingMenuStageDeclarations.length) {
 } else {
     pass('mobile immersive start menu flow declarations are scoped to their rules');
 }
-if (!game.includes('heroLabel:') || !game.includes("setAttribute('aria-label', t.heroLabel)")) {
-    fail('start hero accessible label must be localized during applyLanguage');
+if (!i18n.includes('heroLabel:') || !game.includes("setAttribute('aria-label', t.heroLabel)")) {
+    fail('start hero accessible label must be defined in game i18n and applied during applyLanguage');
 }
 for (const source of [landingCopy, landingHtml, socialPreview]) {
     if (source.includes('25 waves') || source.includes('25 波') || source.includes('neon grid') || source.includes('霓虹网格')) fail('landing/preview copy still advertises the retired 25-wave neon-grid contract');
