@@ -2,14 +2,13 @@ import { getLang } from './site-settings.js';
 import { updateMoreGames } from './more-games.js';
 import { createSfx } from './game-sfx.js';
 import { ICONS } from './icons.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet as safeGetItem, storageSet as safeSetItem } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
 import { LANGUAGES } from '../src/games/tetris/i18n.js';
 import { createGameStorage } from '../src/platform/storage/game-storage.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 
 // 音效：移动/旋转/锁定/消行/升级/结束
 const sfx = createSfx({
@@ -1398,7 +1397,17 @@ window.game = game;
 // 三张画布（主/粒子/消行）后端缓冲区都固定 400×800、靠 CSS 等比缩放，
 // 三者用同一组 CSS 规则，缩放后天然对齐 —— 手机上本来就是这么跑的（280/400）。
 onReady(() => {
-    bindFrame({ logicalWidth: 400 });
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
+    window.tetrisRuntime = mountGameRuntime({
+        self: 'tetris.html',
+        game,
+        frame: { logicalWidth: 400 },
+        chrome: {
+            owns: ['more', 'sound'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
+    });
 });
 
 // 按钮事件绑定
@@ -1473,20 +1482,5 @@ onReady(() => {
     // Prevent context menu on long press
     canvas.addEventListener('contextmenu', function(e) {
         e.preventDefault();
-    });
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
-       本页的静音钮是随槽位契约新增的，页面自身没有 handler，
-       所以显式把 sound 交给 chrome 接管。 */
-onReady(() => {
-    bindChrome({
-        self: 'tetris.html',
-        owns: ['more', 'sound'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });
 });

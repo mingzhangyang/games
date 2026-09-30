@@ -13,15 +13,13 @@ import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey } from './daily.js';
 import { submitScore } from './leaderboard.js';
 import { I18N } from '../src/games/needle-awn/i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { ART_UI, loadNeedleAwnArt } from './needle-awn-art.js';
 import { createNeedleAwnScene } from './needle-awn-scene.js';
 
@@ -1812,38 +1810,26 @@ class GameEngine {
 // 页面加载完成后实例化
 onReady(() => {
     window.gameEngine = new GameEngine();
+    const getText = () => I18N[getLang()] || I18N.zh;
 
-    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
-    // 变化后经 game-frame:changed 驱动上面的 setupCanvas()
-    bindFrame({ logicalWidth: ARENA_WIDTH });
-
-    // 移动端底部统计抽屉
-    window.naDrawer = createStatsDrawer({
-        idPrefix: 'na',
-        getGame: () => window.gameEngine,
-        onPause: (g) => g && g.pauseQuiet(),
-        onResume: (g) => g && g.resumeQuiet(),
-        isBusy: () => {
-            const g = window.gameEngine;
-            return !!g && typeof g.isRunning === 'function' && g.isRunning();
-        },
-        ICONS,
-        getText: () => I18N[getLang()] || I18N.zh,
-    });
-    if (window.naDrawer) window.naDrawer.init();
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
-       na-btn-home 历史上只被 cache、从未绑过点击（HEAD 即如此），
-       顺手交给 chrome 接管。 */
-onReady(() => {
-    bindChrome({
+    window.naRuntime = mountGameRuntime({
         self: 'needle-awn.html',
-        owns: ['more', 'home'],
-        getText: () => I18N[getLang()] || I18N.zh,
-        labels: { pause: () => (I18N[getLang()] || {}).pause },
+        game: window.gameEngine,
+        frame: { logicalWidth: ARENA_WIDTH },
+        drawer: {
+            idPrefix: 'na',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.gameEngine && window.gameEngine.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home'],
+            getText,
+            labels: { pause: () => (I18N[getLang()] || {}).pause },
+        },
     });
+
+    window.naDrawer = window.naRuntime.drawer;
 });

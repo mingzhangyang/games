@@ -14,13 +14,12 @@ import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { LANGUAGES } from '../src/games/tower-defense/i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 import { LEVELS } from './tower-levels.js';
 import { createTowerDefenseArt, TD_ART_FRAMES } from './tower-defense-art.js';
@@ -3326,22 +3325,16 @@ window.__TD_COMPILE_MAP__ = compileLevelMap;
 
 onReady(() => {
     window.tdGame = new TowerDefenseGame();
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 
-    bindFrame({
-        logicalWidth: W,
-        layout: 'immersive',
-    });
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-onReady(() => {
-    bindChrome({
+    window.tdRuntime = mountGameRuntime({
         self: 'tower-defense.html',
-        owns: ['more'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        game: window.tdGame,
+        frame: { logicalWidth: W, layout: 'immersive' },
+        chrome: {
+            owns: ['more'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
     });
 });

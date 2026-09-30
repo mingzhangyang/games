@@ -12,12 +12,12 @@ import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
 import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from './reversi-ai.js';
-import { bindChrome } from './game-chrome.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
@@ -714,10 +714,14 @@ onReady(() => {
    owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {
-    bindChrome({
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
+    window.reversiRuntime = mountGameRuntime({
         self: 'reversi.html',
-        owns: ['more'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        frame: false,
+        chrome: {
+            owns: ['more'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
     });
 });

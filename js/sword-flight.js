@@ -12,15 +12,13 @@ import { getPlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 import { updateMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey as dailyDateKey, todayKeyDisplay as dailyDateStr } from './daily.js';
 import { submitScore, fetchBoard, escapeHTML } from './leaderboard.js';
 import { I18N } from '../src/games/sword-flight/i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -2942,41 +2940,32 @@ class SwordFlightGame {
 // 启动游戏实例
 onReady(() => {
     window.game = new SwordFlightGame();
+    const getText = () => I18N[getLang()] || I18N.zh;
 
-    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
-    // 变化后经 game-frame:changed 驱动上面的 resizeCanvas()
-    bindFrame({ logicalWidth: CANVAS_WIDTH });
-
-    // 移动端底部统计抽屉
-    window.sfDrawer = createStatsDrawer({
-        idPrefix: 'sf',
-        getGame: () => window.game,
-        onPause: (g) => g && g.pauseQuiet(),
-        onResume: (g) => g && g.resumeQuiet(),
-        isBusy: () => {
-            const g = window.game;
-            return !!g && typeof g.isRunning === 'function' && g.isRunning();
-        },
-        ICONS,
-        getText: () => I18N[getLang()] || I18N.zh,
-    });
-    if (window.sfDrawer) window.sfDrawer.init();
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-onReady(() => {
-    swordFlightChrome = bindChrome({
+    window.sfRuntime = mountGameRuntime({
         self: 'sword-flight.html',
-        owns: ['more'],
-        getText: () => I18N[getLang()] || I18N.zh,
-        labels: {
-            pause: () => {
-                const t = I18N[getLang()] || I18N.zh;
-                return window.game?.isPaused ? t.resume : t.pause;
+        game: window.game,
+        frame: { logicalWidth: CANVAS_WIDTH },
+        drawer: {
+            idPrefix: 'sf',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.game && window.game.isRunning()),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more'],
+            getText,
+            labels: {
+                pause: () => {
+                    const t = I18N[getLang()] || I18N.zh;
+                    return window.game?.isPaused ? t.resume : t.pause;
+                },
             },
         },
     });
+
+    window.sfDrawer = window.sfRuntime.drawer;
+    swordFlightChrome = window.sfRuntime.chrome;
 });
