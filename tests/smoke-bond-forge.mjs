@@ -229,6 +229,7 @@ const clearPresentation = await page.evaluate(() => {
     else root.removeAttribute('data-theme');
     return {
         clearVisible: !document.getElementById('bf-clear').classList.contains('hidden'),
+        canvasWidth: rect.width,
         moleculeBottom,
         cardTop: card.top,
         dark,
@@ -249,6 +250,35 @@ for (const [theme, style] of [['dark', clearPresentation.dark], ['light', clearP
         fail(`${theme} 主题 Next 按钮未使用预期的蓝紫渐变，got ${gradient}`);
     }
 }
+
+// 旋转/缩放视口后，卡片会因换行变高并向上移动；下一帧必须重新适配分子。
+await page.setViewport({ width: 390, height: 844 });
+await page.evaluate(() => new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+}));
+const mobilePresentation = await page.evaluate(() => {
+    const g = window.bfGame;
+    const canvas = document.getElementById('bf-canvas');
+    const rect = canvas.getBoundingClientRect();
+    const moleculeBottom = Math.max(...g.atoms.map(a => (
+        rect.top + ((a.y + g.elemOf(a.sym).radius + 6) / 680) * rect.height
+    )));
+    const card = document.querySelector('#bf-clear .bf-card').getBoundingClientRect();
+    return { canvasWidth: rect.width, moleculeBottom, cardTop: card.top };
+});
+if (mobilePresentation.canvasWidth >= clearPresentation.canvasWidth) {
+    fail(`视口缩小后画布宽度未更新（desktop=${clearPresentation.canvasWidth.toFixed(1)}, mobile=${mobilePresentation.canvasWidth.toFixed(1)}）`);
+}
+if (mobilePresentation.cardTop <= mobilePresentation.moleculeBottom) {
+    fail(`移动端结算卡片仍遮挡分子（cardTop=${mobilePresentation.cardTop.toFixed(1)}, moleculeBottom=${mobilePresentation.moleculeBottom.toFixed(1)}）`);
+} else {
+    pass('结算态桌面→移动端缩放后仍保持分子与卡片不重叠');
+}
+
+await page.setViewport({ width: 1280, height: 900 });
+await page.evaluate(() => new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+}));
 
 /* ── 5. 价键上限：碳不能接第 5 根键 ──
  *
