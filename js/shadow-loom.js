@@ -11,16 +11,13 @@
  * 状态机：menu → playing → solving（收紧 → 金线 → 活影）→ done（结果层）
  */
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { makeText } from './i18n.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
-import { createStatsDrawer } from './game-drawer.js';
 import { ICONS } from './icons.js';
 import { createSfxEngine } from './game-sfx.js';
 import { getLang } from './site-settings.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
-import { renderMoreGames } from './more-games.js';
 import * as R from './shadow-loom-rules.js';
 import { LEVELS, CHAPTERS } from './shadow-loom-levels.js';
 import { createScene } from './shadow-loom-scene.js';
@@ -1442,20 +1439,26 @@ class ShadowLoomGame {
 onReady(() => {
     const game = new ShadowLoomGame();
     window.slGame = game;
-    bindFrame({ logicalWidth: W });
-    const more = document.getElementById('slSideMore');
-    if (more) renderMoreGames(more, { exclude: 'shadow-loom.html' });
-    window.slDrawer = createStatsDrawer({
-        idPrefix: 'sl',
-        getGame: () => game,
-        onPause: () => game.pauseQuiet(),
-        onResume: () => game.resumeQuiet(),
-        isBusy: () => game.isRunning(),
-        ICONS,
-        getText: () => game.textTable(),
+    const getText = () => game.textTable();
+
+    window.slRuntime = mountGameRuntime({
+        self: 'shadow-loom.html',
+        game,
+        frame: { logicalWidth: W },
+        more: '#slSideMore',
+        drawer: {
+            idPrefix: 'sl',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => game.isRunning(),
+            ICONS,
+            getText,
+        },
+        chrome: {
+            owns: ['more', 'home', 'sound'],
+            getText,
+        },
     });
-    // 必须显式 init()：补 stats 钮的 title/aria，并打上 body.has-stats-drawer
-    window.slDrawer.init();
-    // 顶栏 Home 是无 href 的 <button>，静音钮没有页面自己的 handler：都交给 chrome
-    bindChrome({ self: 'shadow-loom.html', owns: ['more', 'home', 'sound'], getText: () => game.textTable() });
+
+    window.slDrawer = window.slRuntime.drawer;
 });

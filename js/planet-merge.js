@@ -9,16 +9,14 @@
 import { ensurePlayerName, setPlayerName } from './player.js';
 import { getLang, getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
-import { updateMoreGames, renderMoreGames } from './more-games.js';
-import { createStatsDrawer } from './game-drawer.js';
-import { bindChrome } from './game-chrome.js';
-import { bindFrame } from './game-frame.js';
+import { updateMoreGames } from './more-games.js';
 import { storageGet, storageSet } from './safe-storage.js';
 import { track } from './analytics.js';
 import { todayKey, todayKeyDisplay, hashString, mulberry32 } from './daily.js';
 import { submitScore, fetchBoard } from './leaderboard.js';
 import { makeText } from './i18n.js';
 import { onReady } from './boot.js';
+import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from './game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
@@ -1702,47 +1700,30 @@ class PlanetMergeGame {
 
 onReady(() => {
     window.planetMergeGame = new PlanetMergeGame();
+    const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 
-    // 桌面端舞台纵向预算：实测 --frame-chrome 写入 shell（首帧兜底 150px），
-    // 变化后经 game-frame:changed 驱动上面的 resize()
-    bindFrame({ logicalWidth: WORLD_W });
-
-    // 桌面侧栏「更多游戏」卡（P3）：语言切换由 more-games.js 的全局
-    // updateMoreGames 监听自动同步（id 不以 MoreNav 结尾）
-    const pmSideMore = document.getElementById('pmSideMore');
-    if (pmSideMore) renderMoreGames(pmSideMore, { exclude: 'planet-merge.html' });
-
-    // 移动端底部统计抽屉：把侧栏面板收进抽屉，顶栏 Stats 钮开合
-    window.pmDrawer = createStatsDrawer({
-        idPrefix: 'pm',
-        getGame: () => window.planetMergeGame,
-        onPause: (g) => g && g.pauseQuiet(),
-        onResume: (g) => g && g.resumeQuiet(),
-        isBusy: () => {
-            const g = window.planetMergeGame;
-            return !!g && typeof g.isRunning === 'function' && g.isRunning();
+    window.pmRuntime = mountGameRuntime({
+        self: 'planet-merge.html',
+        game: window.planetMergeGame,
+        frame: { logicalWidth: WORLD_W },
+        more: '#pmSideMore',
+        drawer: {
+            idPrefix: 'pm',
+            onPause: g => g && g.pauseQuiet(),
+            onResume: g => g && g.resumeQuiet(),
+            isBusy: () => !!(window.planetMergeGame && window.planetMergeGame.isRunning()),
+            ICONS,
+            getText,
         },
-        ICONS,
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
+        chrome: {
+            owns: ['more'],
+            getText,
+            labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
+        },
     });
-    if (window.pmDrawer) window.pmDrawer.init();
 
-    // 顶栏语言钮由 chrome 接管后，切换只派发 site-settings:changed —— 本页此前没有
-    // 监听它（语言只在开始浮层里切，切完自己调 applyLanguage），补上才会真正刷新。
+    window.pmDrawer = window.pmRuntime.drawer;
     window.addEventListener('site-settings:changed', () => {
         if (window.planetMergeGame) window.planetMergeGame.applyLanguage();
-    });
-});
-
-/* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
-   owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
-   SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
-onReady(() => {
-    bindChrome({
-        self: 'planet-merge.html',
-        owns: ['more'],
-        getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
-        labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
     });
 });
