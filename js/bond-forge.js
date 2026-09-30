@@ -1042,6 +1042,12 @@ class BondForgeGame {
         }
         const scale = targetW / W;
         this.ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        const clear = this.el['clear'];
+        requestAnimationFrame(() => {
+            if (this.state !== 'clear' || !clear || clear.classList.contains('hidden')) return;
+            this.fitCompletionMolecule();
+            this.draw();
+        });
     }
 
     loop(ts) {
