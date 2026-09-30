@@ -22,3 +22,17 @@ Legacy `js/*.js` shared-module paths are compatibility shims only. New code impo
 
 The scaffold uses the standard shell, GameRuntime, versioned platform services, and declarative
 i18n bindings. It deliberately keeps game rules out of platform code.
+
+
+## CI resource policy
+
+CI minutes are treated as a constrained project resource.
+
+- During normal development, prefer `npm run verify:changed` and targeted smoke tests.
+- Full `npm run verify` is reserved for pull-request candidates or an explicit manual run.
+- The Architecture v2 workflow runs on pull requests or `workflow_dispatch`, not on every push.
+- Workflow concurrency cancels stale runs for the same ref.
+- Browser tests have per-step timeouts so one hung smoke test cannot consume the whole job budget.
+- Add new checks to the auto-discovered test suite instead of creating extra always-on workflows.
+
+This keeps feedback fast while preserving one authoritative full validation before merge.
