@@ -33,6 +33,8 @@ export class SwordFlightGame {
         this.currentStageIndex = 0; // 0 to 8
         this.isPlaying = false;
         this.isPaused = false;
+        this.random = Math.random;
+        this.dailyModifiers = null;
 
         // 玩家实体
         this.player = createPlayerState();

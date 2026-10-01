@@ -3,6 +3,7 @@ import { storageGet, storageSet } from '../../../platform/safe-storage.js';
 import { track } from '../../../platform/analytics.js';
 import { SFX } from '../audio.js';
 import { CANVAS_HEIGHT, CANVAS_WIDTH, STORAGE_KEYS } from '../config.js';
+import { createDailyRandom, DAILY_MODIFIERS, getDailyDateKey } from './daily.js';
 
 export function loadRecords(game) {
     game.unlockedStage = parseInt(storageGet(STORAGE_KEYS.UNLOCKED_STAGE) || '1', 10);
@@ -33,6 +34,8 @@ export function startFlight(game, mode = 'stages', stageIndex = 0) {
     game.currentStageIndex = stageIndex;
     game.isPlaying = true;
     game.isPaused = false;
+    game.random = mode === 'daily' ? createDailyRandom(getDailyDateKey()) : Math.random;
+    game.dailyModifiers = mode === 'daily' ? DAILY_MODIFIERS : null;
     game.setGameplayHudVisible(true);
     game.setTouchControlsVisible(true);
     game.refreshPauseButton();

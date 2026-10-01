@@ -1,6 +1,8 @@
 /** Entity generation and pool maintenance. */
 import { CANVAS_WIDTH } from '../config.js';
 
+const random = game => (typeof game.random === 'function' ? game.random() : Math.random());
+
 export function seedStageEntities(game) {
     // 仙环 (按优雅的正弦波或连环曲线分布)
     const ringSpacing = 160;
@@ -11,7 +13,7 @@ export function seedStageEntities(game) {
 
     // 灵石散点
     for (let i = 0; i < 15; i++) {
-        game.spawnSpiritStone(-Math.random() * 1200);
+        game.spawnSpiritStone(-random(game) * 1200);
     }
 
     // 障碍绝壁
@@ -34,7 +36,7 @@ export function spawnRing(game, y) {
         angle: Math.sin(y * 0.003) * 0.35,
         passed: false,
         missed: false,
-        pulse: Math.random() * Math.PI * 2
+        pulse: random(game) * Math.PI * 2
     });
     game.totalRingsInStage++;
 
@@ -42,7 +44,7 @@ export function spawnRing(game, y) {
 
 export function spawnSpiritStone(game, y) {
     game.spiritStones.push({
-        x: 50 + Math.random() * (CANVAS_WIDTH - 100),
+        x: 50 + random(game) * (CANVAS_WIDTH - 100),
         y,
         size: 8,
         rotation: 0,
@@ -54,23 +56,23 @@ export function spawnSpiritStone(game, y) {
 
 export function spawnHazard(game, y) {
     // 浮空绝壁 / 太古神剑 / 阵眼
-    const isLeft = Math.random() > 0.5;
-    const width = 100 + Math.random() * 80;
-    const height = 45 + Math.random() * 30;
+    const isLeft = random(game) > 0.5;
+    const width = 100 + random(game) * 80;
+    const height = 45 + random(game) * 30;
     game.hazards.push({
         x: isLeft ? width / 2 : CANVAS_WIDTH - width / 2,
         y,
         width,
         height,
         broken: false,
-        type: Math.random() > 0.4 ? 'cliff' : 'giant-sword'
+        type: random(game) > 0.4 ? 'cliff' : 'giant-sword'
     });
 
 }
 
 export function spawnThunder(game, y) {
     game.thunders.push({
-        x: 60 + Math.random() * (CANVAS_WIDTH - 120),
+        x: 60 + random(game) * (CANVAS_WIDTH - 120),
         y,
         radius: 50,
         active: false,
@@ -82,10 +84,10 @@ export function spawnThunder(game, y) {
 
 export function spawnFiendBird(game, y) {
     game.fiendBirds.push({
-        x: Math.random() * CANVAS_WIDTH,
+        x: random(game) * CANVAS_WIDTH,
         y,
-        vx: (Math.random() - 0.5) * 3,
-        vy: 3 + Math.random() * 2,
+        vx: (random(game) - 0.5) * 3,
+        vy: 3 + random(game) * 2,
         wingAngle: 0,
         slain: false
     });
@@ -129,19 +131,19 @@ export function updateSpawners(game, traveled) {
     }
 
     // 生成灵石
-    if (Math.random() < 0.05) {
+    if (random(game) < 0.05) {
         game.spawnSpiritStone(-50);
     }
 
     // 生成障碍
-    if (game.mode !== 'zen' && Math.random() < 0.02) {
+    if (game.mode !== 'zen' && random(game) < 0.02) {
         game.spawnHazard(-80);
     }
 
     // 高阶关卡生成玄雷与妖禽
     if (game.mode !== 'zen' && (game.currentStageIndex >= 3 || game.mode === 'endless')) {
-        if (Math.random() < 0.012) game.spawnThunder(-100);
-        if (Math.random() < 0.015) game.spawnFiendBird(-100);
+        if (random(game) < 0.012) game.spawnThunder(-100);
+        if (random(game) < 0.015) game.spawnFiendBird(-100);
     }
 
 }

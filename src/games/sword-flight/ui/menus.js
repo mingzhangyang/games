@@ -140,6 +140,10 @@ export function applyLanguage(game) {
 
     document.getElementById('sf-btn-start-daily').textContent = t.dailyStart;
     document.getElementById('sf-lbl-open-rank').textContent = t.openRank;
+    document.getElementById('sf-stage-select-title').textContent = t.selectStage;
+    document.getElementById('sf-rank-title').textContent = t.rankTitle;
+    document.getElementById('sf-tab-endless').textContent = t.tabEndless;
+    document.getElementById('sf-tab-daily').textContent = t.tabDaily;
 
     document.getElementById('sf-pause-title').textContent = t.pauseTitle;
     document.getElementById('sf-pause-sub').textContent = t.pauseSub;

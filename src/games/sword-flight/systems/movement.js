@@ -44,7 +44,8 @@ export function update(game, dt) {
     // 俯冲与翱翔速度调制
     const isDashing = game.player.dashTimer > 0;
     const diveBonus = Math.max(0, (game.player.y - CANVAS_HEIGHT * 0.5) / (CANVAS_HEIGHT * 0.5)) * 4;
-    game.worldSpeed = isDashing ? 14 : (game.player.baseSpeed + diveBonus);
+    const speedMultiplier = game.dailyModifiers?.speedMultiplier ?? 1;
+    game.worldSpeed = (isDashing ? 14 : (game.player.baseSpeed + diveBonus)) * speedMultiplier;
 
     // 更新风声
     SFX.updateWind(game.worldSpeed / 14);
@@ -88,7 +89,9 @@ export function update(game, dt) {
 
     // 飞行里程与卷轴
     const traveled = game.worldSpeed * dt * 25;
-    game.distanceSoared += Math.floor(traveled * 0.1);
+    // Keep sub-meter progress between frames; flooring here makes a normal 60 Hz
+    // frame contribute zero and prevents stage mode from ever reaching its goal.
+    game.distanceSoared += traveled * 0.1;
     game.scrollOffset += traveled;
 
     // 实体生成调度

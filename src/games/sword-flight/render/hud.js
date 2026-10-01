@@ -98,8 +98,8 @@ export function updateSideRecords(game) {
     const dailyRecord = storageGet(`${STORAGE_KEYS.DAILY_PREFIX}${dateKey}`);
     const isZh = getLang() === 'zh';
     document.getElementById('sf-rec-daily').textContent = dailyRecord
-        ? (isZh ? '今日已飞升' : 'Ascended Today')
-        : (isZh ? '未涉足' : 'Untraveled');
+        ? (isZh ? I18N.zh.dailyStatusDone : I18N.en.dailyStatusDone)
+        : (isZh ? I18N.zh.dailyStatusUndone : I18N.en.dailyStatusUndone);
 
 }
 

@@ -300,7 +300,7 @@ export function handleRingThreaded(game, ring) {
         storageSet(STORAGE_KEYS.MAX_COMBO, game.maxComboRecord.toString());
     }
 
-    const ringScore = 100 * game.combo;
+    const ringScore = 100 * game.combo * (game.dailyModifiers?.ringScoreMultiplier ?? 1);
     game.score += ringScore;
     game.player.qi = Math.min(game.player.maxQi, game.player.qi + 18);
     game.player.ultEnergy = Math.min(100, game.player.ultEnergy + 8);

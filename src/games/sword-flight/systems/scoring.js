@@ -67,7 +67,7 @@ export function handleGameOver(game) {
     overlay.classList.remove('hidden');
 
     document.getElementById('sf-go-score').textContent = game.score.toLocaleString();
-    document.getElementById('sf-go-distance').textContent = `${game.distanceSoared} 里`;
+    document.getElementById('sf-go-distance').textContent = `${Math.round(game.distanceSoared)} 里`;
     document.getElementById('sf-go-realm').textContent = game.getRealmName(game.player.realmIndex);
     document.getElementById('sf-go-rings').textContent = game.ringsThreaded.toString();
 
