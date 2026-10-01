@@ -4,13 +4,18 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LEVELS } from '../js/tower-levels.js';
+import { LEVELS } from '../src/games/tower-defense/levels.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ART_ROOT = join(ROOT, 'assets', 'tower-defense', 'production');
 const manifest = JSON.parse(readFileSync(join(ART_ROOT, 'manifest.json'), 'utf8'));
-const art = readFileSync(join(ROOT, 'js', 'tower-defense-art.js'), 'utf8');
-const game = readFileSync(join(ROOT, 'js', 'tower-defense.js'), 'utf8');
+const art = readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'art.js'), 'utf8');
+const game = [
+    readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'index.js'), 'utf8'),
+    readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'runtime.js'), 'utf8'),
+    readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'render', 'scene-renderer.js'), 'utf8'),
+    readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'ui', 'overlays.js'), 'utf8'),
+].join('\n');
 const i18n = readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'i18n.js'), 'utf8');
 const html = readFileSync(join(ROOT, 'tower-defense.html'), 'utf8');
 const css = readFileSync(join(ROOT, 'css', 'tower-defense.css'), 'utf8');
@@ -76,7 +81,7 @@ if (!same([...urlKeys].sort(), [...expectedKeys].sort())) fail('literal TD_ART_U
 else pass('Vite-discoverable literal URL map matches manifest');
 for (const key of expectedKeys) {
     const entry = manifest.assets[key];
-    const literal = `../assets/tower-defense/production/${entry.file}?no-inline`;
+    const literal = `../../../assets/tower-defense/production/${entry.file}?no-inline`;
     if (!art.includes(`new URL('${literal}', import.meta.url)`)) fail(`${key}: literal import.meta.url path is missing`);
 }
 if (/new URL\([^']*manifest|new URL\([^']*\.file/.test(art)) fail('runtime art URLs must not be assembled from manifest values');

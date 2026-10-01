@@ -28,7 +28,6 @@
         "sword-flight:js/sword-flight.js",
         "tank-battle:js/tank-battle.js",
         "tetris:js/tetris.js",
-        "tower-defense:js/tower-defense.js",
         "word-daily:js/word-daily.js"
       ]
     },
@@ -260,15 +259,6 @@
         "js/tetris.js:more-games@0b1e85ad93ae723317e6#1",
         "js/tetris.js:safe-storage@1c8dc4b82a886192bba7#1",
         "js/tetris.js:site-settings@efae017241a274d31e0c#1",
-        "js/tower-defense.js:analytics@ea78fdd73484e23d1148#1",
-        "js/tower-defense.js:boot@edb0536663e0144a21e2#1",
-        "js/tower-defense.js:game-sfx@07e917fba1a991af01fe#1",
-        "js/tower-defense.js:icons@f890f34c29ad37dda903#1",
-        "js/tower-defense.js:leaderboard@862b9f90af1ec7d323cc#1",
-        "js/tower-defense.js:more-games@0b1e85ad93ae723317e6#1",
-        "js/tower-defense.js:player@f3981b633ded2978b617#1",
-        "js/tower-defense.js:safe-storage@57a21911f03ddd4271c6#1",
-        "js/tower-defense.js:site-settings@50f479193995f5c86294#1",
         "js/word-daily.js:analytics@ea78fdd73484e23d1148#1",
         "js/word-daily.js:boot@edb0536663e0144a21e2#1",
         "js/word-daily.js:daily@20df390c3d4449382d55#1",
@@ -303,8 +293,7 @@
     "oversized-composition-entries": {
       "mode": "warning",
       "items": [
-        "sword-flight:js/sword-flight.js:109546",
-        "tower-defense:js/tower-defense.js:134766"
+        "sword-flight:js/sword-flight.js:109546"
       ]
     },
     "src-game-shim-imports": {

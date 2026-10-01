@@ -66,12 +66,19 @@ function audibleBoilerplate(rel, src) {
 /* ── 1. 迁移页 import createSfxEngine ── */
 const MIGRATED = [
     'gravity-slingshot.js', 'hoop-shot.js', 'minesweeper.js',
-    'planet-merge.js', 'reversi.js', 'tower-defense.js', 'word-daily.js',
+    'planet-merge.js', 'reversi.js', 'word-daily.js',
 ];
 for (const rel of MIGRATED) {
     const src = readFileSync(join(JS_DIR, rel), 'utf8');
     check(`${rel}: import createSfxEngine`, src.includes("import { createSfxEngine } from './game-sfx.js'"));
     check(`${rel}: 无 createSfxEngine 之外的自造样板`, !audibleBoilerplate(rel, src));
+}
+
+{
+    const tdAudio = readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'audio.js'), 'utf8');
+    check('tower-defense/audio: import createSfxEngine',
+        tdAudio.includes("import { createSfxEngine } from '../../platform/game-sfx.js'"));
+    check('tower-defense/audio: 无自造音频样板', !audibleBoilerplate('src/games/tower-defense/audio.js', tdAudio));
 }
 
 /* ── 2. 表驱动页 import createSfx ── */

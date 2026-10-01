@@ -6,7 +6,10 @@ import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const budgets = {
-    'js/tower-defense.js': 134 * 1024,
+    'js/tower-defense.js': 4 * 1024,
+    'src/games/tower-defense/index.js': 30 * 1024,
+    'src/games/tower-defense/runtime.js': 45 * 1024,
+    'src/games/tower-defense/render/scene-renderer.js': 45 * 1024,
     'js/sword-flight.js': 110 * 1024,
     'js/needle-awn.js': 74 * 1024,
     'js/bond-forge.js': 74 * 1024,
