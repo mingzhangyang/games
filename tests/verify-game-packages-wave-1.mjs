@@ -84,6 +84,11 @@ const bondUsesCanonicalAnalytics = bondRuntime.includes("track('bond-forge', 'pl
     && bondRuntime.includes("track('bond-forge', 'finish')")
     && !/track\('bond-forge',\s*['"](?:daily_start|level_start)['"]/.test(bondRuntime);
 check(bondUsesCanonicalAnalytics, 'bond-forge: emits canonical analytics play events');
+const bondDailyRetryContract = bondRuntime.includes("el['btn-again'].addEventListener('click', () => { sfxTone(660, 0.09, 'triangle', 0.12); this.startDaily(); });")
+    && bondRuntime.includes('this.dailyIndex >= this.dailyCourse.length')
+    && bondRuntime.includes("if (this.state === 'clear')")
+    && bondRuntime.includes('this.dailyTotalDrags = Math.max(0, this.dailyTotalDrags - this.drags);');
+check(bondDailyRetryContract, 'bond-forge: Daily Retry replaces the current attempt and Again starts a fresh run');
 
 const needleControls = read('src/games/needle-awn/input/controls.js');
 const needlePauseShortcuts = needleControls.includes("event.code === 'KeyP'")

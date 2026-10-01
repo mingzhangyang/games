@@ -409,7 +409,7 @@ class BondForgeGame {
         }
         if (el['btn-again']) {
             el['btn-again'].innerHTML = `${ICONS.retry}<span class="bf-btn-text">${this.t('again')}</span>`;
-            el['btn-again'].addEventListener('click', () => { sfxTone(660, 0.09, 'triangle', 0.12); this.restartLevel(); });
+            el['btn-again'].addEventListener('click', () => { sfxTone(660, 0.09, 'triangle', 0.12); this.startDaily(); });
         }
         if (el['btn-copy']) {
             el['btn-copy'].innerHTML = `${ICONS.copy}<span class="bf-btn-text">${this.t('copyResult')}</span>`;
@@ -818,6 +818,18 @@ class BondForgeGame {
 
     restartLevel() {
         if (this.mode === 'daily' && this.dailyCourse.length) {
+            // A completed Daily level has already contributed its drag count.
+            // Retrying that level replaces the attempt, so remove the committed
+            // contribution before resetting the board. If the index is already
+            // past the course (for example from a stale result action), start a
+            // fresh Daily instead of falling through to level 1.
+            if (this.dailyIndex < 0 || this.dailyIndex >= this.dailyCourse.length) {
+                this.startDaily();
+                return;
+            }
+            if (this.state === 'clear') {
+                this.dailyTotalDrags = Math.max(0, this.dailyTotalDrags - this.drags);
+            }
             this.startLevel(this.dailyCourse[this.dailyIndex]);
         } else {
             this.startLevel(this.levelIndex);
