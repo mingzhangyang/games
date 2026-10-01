@@ -25,7 +25,6 @@
         "ripple-duet:js/ripple-duet.js",
         "shadow-loom:js/shadow-loom.js",
         "silk-dew:js/silk-dew.js",
-        "sword-flight:js/sword-flight.js",
         "tank-battle:js/tank-battle.js",
         "tetris:js/tetris.js",
         "word-daily:js/word-daily.js"
@@ -239,15 +238,6 @@
         "js/silk-dew.js:safe-storage@57a21911f03ddd4271c6#1",
         "js/silk-dew.js:site-settings@50f479193995f5c86294#1",
         "js/silk-dew.js:theme@114207168b3bc2343957#1",
-        "js/sword-flight.js:analytics@ea78fdd73484e23d1148#1",
-        "js/sword-flight.js:boot@edb0536663e0144a21e2#1",
-        "js/sword-flight.js:daily@0d025791d62f23ba9b0e#1",
-        "js/sword-flight.js:icons@f890f34c29ad37dda903#1",
-        "js/sword-flight.js:leaderboard@431d30f5b29df6811d63#1",
-        "js/sword-flight.js:more-games@0b1e85ad93ae723317e6#1",
-        "js/sword-flight.js:player@f7ac736fb508e8810460#1",
-        "js/sword-flight.js:safe-storage@57a21911f03ddd4271c6#1",
-        "js/sword-flight.js:site-settings@50f479193995f5c86294#1",
         "js/tank-battle.js:analytics@ea78fdd73484e23d1148#1",
         "js/tank-battle.js:game-sfx@c3f4ed7bbeebc901cfce#1",
         "js/tank-battle.js:site-settings@efae017241a274d31e0c#1",
@@ -292,9 +282,7 @@
     },
     "oversized-composition-entries": {
       "mode": "warning",
-      "items": [
-        "sword-flight:js/sword-flight.js:109546"
-      ]
+      "items": []
     },
     "src-game-shim-imports": {
       "mode": "strict-zero",

@@ -7,7 +7,7 @@
 //   2) 行为：冻结 Date 后调无参 todayKey/todayKeyDisplay/dailyKey，跨时区结果一致；
 //      显式时刻断言 UTC 16:00 跨日翻转点；黄金哈希值防算法漂移（FNV-1a / 自研
 //      hashString / mulberry32 任一改动都会让已发布的每日序列变脸）。
-//   3) 收敛：5 个游戏文件均 import ./daily.js，且 js/ 下除 daily.js 外不再存在
+//   3) 收敛：5 个目标入口均到达共享 daily 模块，且 js/ 下除 daily.js 外不再存在
 //      哈希常数、getTimezoneOffset( 调用（防复制粘贴复活）。
 //
 // 用法：node scripts/verify-daily.mjs
@@ -16,6 +16,8 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
+import { registry } from './lib/registry.mjs';
+import { collectStaticModuleGraph } from './lib/static-module-graph.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const node = process.execPath;
@@ -155,13 +157,14 @@ okp(distinct.size === TIMEZONES.length,
     distinct.size === 1 ? '全部相同——TZ 环境变量未生效，测试环境问题' : [...distinct].join(' | '));
 
 console.log('\n▶ 源码收敛（防复制粘贴复活）');
-const GAME_FILES = ['planet-merge', 'word-daily', 'gravity-slingshot', 'sword-flight', 'needle-awn'];
+const GAME_IDS = ['planet-merge', 'word-daily', 'gravity-slingshot', 'sword-flight', 'needle-awn'];
 okp(!/function msUntilNextDay/.test(readFileSync(join(ROOT, 'js', 'word-daily.js'), 'utf8')),
     'word-daily.js 不再自带 msUntilNextDay（收敛到 daily.js）');
-for (const g of GAME_FILES) {
-    const p = join(ROOT, 'js', `${g}.js`);
-    const src = readFileSync(p, 'utf8');
-    okp(src.includes("from './daily.js'"), `${g}.js import ./daily.js`);
+for (const g of GAME_IDS) {
+    const entry = registry.all().find(game => game.id === g);
+    const graph = entry ? collectStaticModuleGraph(entry.entry, ROOT) : new Map();
+    okp(graph.has('js/daily.js') || graph.has('src/platform/daily.js'),
+        `${entry?.entry || g} reaches the shared daily module`);
 }
 for (const f of readdirSync(join(ROOT, 'js')).filter(f => f.endsWith('.js'))) {
     if (f === 'daily.js') continue;

@@ -846,7 +846,7 @@
       "id": "sword-flight",
       "prefix": "sf",
       "href": "sword-flight.html",
-      "entry": "js/sword-flight.js",
+      "entry": "src/games/sword-flight/index.js",
       "emoji": "🗡️",
       "title": {
         "doc": "御剑飞行 — Sword Flight",

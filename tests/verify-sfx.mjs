@@ -11,7 +11,7 @@
  *
  * 豁免（自治音频）：
  *  - js/game-sfx.js（引擎本体）
- *  - js/sword-flight.js（双振荡器和声/多段包络/持续风声，超出引擎表达域）
+ *  - src/games/sword-flight/audio.js（双振荡器和声/多段包络/持续风声，超出引擎表达域）
  *  - js/math-rain/**（化外页，P4 收编对象）
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';

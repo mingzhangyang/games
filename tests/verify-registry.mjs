@@ -72,7 +72,17 @@ const PROBES = {
         const graph = graphFor(g);
         return graph.has('js/analytics.js') || graph.has('src/platform/analytics.js');
     },
-    daily: g => /from '\.{1,2}\/daily\.js'/.test(read(g.entry)),
+    daily: g => {
+        // Legacy pages historically declare the daily contract at their entry;
+        // some newer games use the shared date helper for deterministic level
+        // generation without exposing a daily challenge.  Canonical game
+        // packages are the ones whose full graph carries this capability.
+        if (g.entry === `src/games/${g.id}/index.js`) {
+            const graph = graphFor(g);
+            return graph.has('js/daily.js') || graph.has('src/platform/daily.js');
+        }
+        return /from '\.{1,2}\/daily\.js'/.test(read(g.entry));
+    },
     drawer: g => /game-drawer-panel/.test(read(g.href)),
     sidebar: g => /game-sidebar/.test(read(g.href)),
     topbar: g => /game-topbar-center/.test(read(g.href)),
