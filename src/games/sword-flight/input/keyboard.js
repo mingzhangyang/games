@@ -33,6 +33,12 @@ export function bindKeyboardInput(game) {
             return;
         }
 
+        if (e.code === 'KeyM') {
+            document.getElementById('sf-btn-sound')?.click();
+            e.preventDefault();
+            return;
+        }
+
         if (!game.isPlaying || game.isPaused) return;
         SFX.init();
 

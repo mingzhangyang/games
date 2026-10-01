@@ -189,6 +189,17 @@ export function applyLanguage(game) {
     document.getElementById('sf-sc-array').textContent = t.scArray;
     document.getElementById('sf-sc-ult').textContent = t.scUlt;
     document.getElementById('sf-sc-pause').textContent = t.scPause;
+    [
+        ['sf-sc-steer-key', t.scSteerKey],
+        ['sf-sc-keyboard-key', t.scKeybKey],
+        ['sf-sc-dash-key', t.scDashKey],
+        ['sf-sc-array-key', t.scArrayKey],
+        ['sf-sc-ult-key', t.scUltKey],
+        ['sf-sc-pause-key', t.scPauseKey],
+    ].forEach(([id, text]) => {
+        const node = document.getElementById(id);
+        if (node) node.textContent = text;
+    });
 
     updateMoreGames(lang);
 

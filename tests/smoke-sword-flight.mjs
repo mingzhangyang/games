@@ -86,6 +86,21 @@ try {
     check(keyboardAction.dashTimer > 0 && keyboardAction.qi < 100, '桌面端空格仍触发破空与真气消耗', JSON.stringify(keyboardAction));
     check(Boolean(keyboardAction.chromePause), 'swordFlightChrome 仍驱动暂停按钮文案');
 
+    await desktop.evaluate(() => {
+        localStorage.setItem('site_muted', '0');
+        localStorage.setItem('site_lang', 'en');
+        window.game.applyLanguage();
+    });
+    await desktop.keyboard.press('m');
+    const desktopInput = await desktop.evaluate(() => ({
+        mutedAfterM: localStorage.getItem('site_muted'),
+        controlKeys: ['sf-sc-steer-key', 'sf-sc-keyboard-key', 'sf-sc-dash-key', 'sf-sc-array-key', 'sf-sc-ult-key', 'sf-sc-pause-key']
+            .map(id => document.getElementById(id)?.textContent),
+    }));
+    check(desktopInput.mutedAfterM === '1', '桌面端 M 键仍切换静音状态', desktopInput.mutedAfterM);
+    check(desktopInput.controlKeys.every(text => text && !/[鼠标触控方向键空格按钮双击]/.test(text)),
+        '英文控制卡同步本地化右侧按键提示', JSON.stringify(desktopInput.controlKeys));
+
     const scoring = await desktop.evaluate(() => {
         const g = window.game;
         g.isPlaying = false;
@@ -162,6 +177,18 @@ try {
         qi: window.game.player.qi,
     }));
     check(touchAction.dashTimer > 0 && touchAction.qi < 100, '移动端破空按钮仍触发动作与真气消耗', JSON.stringify(touchAction));
+
+    await mobile.evaluate(() => { window.game.player.ultEnergy = 100; });
+    await mobile.touchscreen.touchStart(startX, startY);
+    await mobile.touchscreen.touchEnd();
+    await mobile.touchscreen.touchStart(startX + 2, startY + 2);
+    await mobile.touchscreen.touchEnd();
+    const doubleTap = await mobile.evaluate(() => ({
+        ultEnergy: window.game.player.ultEnergy,
+        qi: window.game.player.qi,
+    }));
+    check(doubleTap.ultEnergy === 0 && doubleTap.qi === 100,
+        '移动端画布双击仍触发万剑归宗', JSON.stringify(doubleTap));
 
     await mobile.evaluate(() => window.game.returnToMenu());
     await mobile.waitForFunction(() => !window.game.isPlaying && !document.getElementById('sf-overlay-start').classList.contains('hidden'), { timeout: 5000 });
