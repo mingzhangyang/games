@@ -24,6 +24,12 @@ const GAMES = {
   'minesweeper-hard': { order: 'asc', maxScore: 9999, maxEntries: 50 },
   'reversi': { order: 'desc', maxScore: 9999, maxEntries: 50 },
   'tower-defense': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'tower-defense-outpost': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'tower-defense-vanguard': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'tower-defense-citadel': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'tower-defense-skyfall': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'tower-defense-juggernaut': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'tower-defense-singularity': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'needle-awn': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'sword-flight': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
 };

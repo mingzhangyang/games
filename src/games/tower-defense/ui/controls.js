@@ -312,7 +312,6 @@ export function bindUI(game) {
         game.startGame();
     });
     if (game.el['wave-btn']) game.el['wave-btn'].addEventListener('click', () => game.startWave());
-    if (game.el['btn-home']) game.el['btn-home'].addEventListener('click', () => { window.location.href = 'index.html'; });
     if (game.el['pause-btn']) game.el['pause-btn'].addEventListener('click', () => {
         if (game.state === 'playing') game.pause();
         else if (game.state === 'paused') game.resume();
