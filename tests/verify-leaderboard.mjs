@@ -5,7 +5,7 @@
 //   1) 行为：mock globalThis.fetch，验证 submitScore / fetchBoard 的
 //      请求 URL、方法、请求体、ok 判定、超时兜底、escapeHTML 黄金值。
 //      （submitScore 绝不抛出；fetchBoard 失败抛出由页面兜底——契约不变。）
-//   2) 收敛：注册表里挂 leaderboard cap 的游戏均 import ./leaderboard.js，且不再存在
+//   2) 收敛：注册表里挂 leaderboard cap 的游戏均到达共享 leaderboard 模块，且不再存在
 //      硬编码 Workers URL、本地 escapeHTML 定义、榜单 AbortController 样板。
 //
 // 用法：node scripts/verify-leaderboard.mjs（无需浏览器/服务器）
@@ -14,9 +14,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from './lib/registry.mjs';
+import { collectStaticModuleGraph } from './lib/static-module-graph.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LB_PATH = join(ROOT, 'js', 'leaderboard.js');
+const WORKER_PATH = join(ROOT, 'Workers', 'game-scores.js');
 // 清单来自注册表：挂 leaderboard cap 的游戏。此前是手写的 9 个，lumen 上线后
 // 漏在外面（verify-registry 只校验 cap ⟺ 代码事实，管不到别的脚本的手写数组）。
 const GAMES = registry.withCap('leaderboard');
@@ -110,8 +112,27 @@ try {
 
 console.log('\n▶ 源码收敛（防复制粘贴复活）');
 for (const g of GAMES) {
-    const src = readFileSync(join(ROOT, g.entry), 'utf8');
-    ok(src.includes("from './leaderboard.js'"), `${g.entry} import ./leaderboard.js`);
+    const graph = collectStaticModuleGraph(g.entry, ROOT);
+    ok(graph.has('js/leaderboard.js') || graph.has('src/platform/leaderboard.js'),
+        `${g.entry} reaches the shared leaderboard module`);
+}
+
+/* Tower Defense keeps a separate global board for each operation. Ensure every
+   runtime key is both declared in the registry and accepted by the generated Worker. */
+const towerDefense = GAMES.find(g => g.id === 'tower-defense');
+if (towerDefense) {
+    const { LEVELS } = await import(pathToFileURL(join(ROOT, 'src', 'games', 'tower-defense', 'levels.js')).href);
+    const worker = readFileSync(WORKER_PATH, 'utf8');
+    const runtime = readFileSync(join(ROOT, 'src', 'games', 'tower-defense', 'runtime.js'), 'utf8');
+    ok(towerDefense.scores?.keys?.includes('tower-defense'), 'registry preserves the legacy Tower Defense score key');
+    ok(/['"]tower-defense['"]\s*:/.test(worker), 'score Worker preserves the legacy Tower Defense key');
+    ok(runtime.includes('tower-defense-${this.level.id}'),
+        'Tower Defense keeps per-operation leaderboard IDs');
+    for (const level of LEVELS) {
+        const key = `tower-defense-${level.id}`;
+        ok(towerDefense.scores?.keys?.includes(key), `registry allows ${key}`);
+        ok(new RegExp(`['"]${key}['"]\\s*:`).test(worker), `score Worker allows ${key}`);
+    }
 }
 for (const f of readdirSync(join(ROOT, 'js')).filter(f => f.endsWith('.js'))) {
     if (f === 'leaderboard.js') continue;

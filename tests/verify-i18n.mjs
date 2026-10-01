@@ -4,7 +4,7 @@
 // 断言：
 //   1) 行为：makeText 原型链兜底（缺失键落 COMMON）、own 键优先覆盖、
 //      COMMON_TEXT 黄金值（改文案须有意识地在 i18n.js 改一处）。
-//   2) 收敛：11 个 shell-family 页均 import ./i18n.js 且语言表经 makeText 包装；
+//   2) 收敛：11 个 shell-family 页均通过入口图使用提取的 i18n 模块且语言表经 makeText 包装；
 //      js/ 下除 i18n.js 外不再存在 6 个公共键的字面量副本（防复制复活）。
 //   3) 语言键：site_lang 仍由 js/site-settings.js 管理（历史教训：键名曾写错）。
 //
@@ -14,6 +14,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from './lib/registry.mjs';
+import { graphIncludes } from './lib/static-module-graph.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 // 页面清单来自注册表：骨架契约内的页面（caps:topbar）。新游戏自动纳入。
@@ -74,7 +75,9 @@ for (const g of PAGES) {
             `${g.id}: extracted i18n imports platform makeText`);
         ok(new RegExp(`export const ${i18nVar} = makeText\\(\\{`).test(moduleSrc),
             `${g.id}: extracted table ${i18nVar} uses makeText`);
-        ok(new RegExp(`import \\{ ${i18nVar} \\} from ['"][^'"]*src/games/${g.id}/i18n\\.js['"];`).test(src),
+        const namedImport = new RegExp(`import \\{\\s*${i18nVar}\\s*\\} from ['"][^'"]+['"];`).test(src);
+        const extractedInGraph = graphIncludes(g.entry, `src/games/${g.id}/i18n.js`, ROOT);
+        ok(namedImport && extractedInGraph,
             `${g.entry}: imports extracted ${i18nVar}`);
     } else {
         ok(/import \{ makeText \} from ['"][^'"]*i18n\.js['"];/.test(src), `${g.entry} import makeText`);

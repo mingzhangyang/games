@@ -655,7 +655,7 @@
       "id": "tower-defense",
       "prefix": "td",
       "href": "tower-defense.html",
-      "entry": "js/tower-defense.js",
+      "entry": "src/games/tower-defense/index.js",
       "emoji": "◈",
       "title": {
         "doc": "Neon Tower Defense — Strategy TD",
@@ -680,7 +680,15 @@
       ],
       "layout": "immersive",
       "scores": {
-        "key": "tower-defense",
+        "keys": [
+          "tower-defense",
+          "tower-defense-outpost",
+          "tower-defense-vanguard",
+          "tower-defense-citadel",
+          "tower-defense-skyfall",
+          "tower-defense-juggernaut",
+          "tower-defense-singularity"
+        ],
         "order": "desc",
         "maxScore": 5000000,
         "maxEntries": 50

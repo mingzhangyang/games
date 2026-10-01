@@ -21,6 +21,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from './lib/registry.mjs';
+import { collectStaticModuleGraph } from './lib/static-module-graph.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = p => (existsSync(join(ROOT, p)) ? readFileSync(join(ROOT, p), 'utf8') : '');
@@ -33,6 +34,7 @@ const ok = (cond, label, extra) => {
 };
 
 const games = registry.all();
+const graphFor = g => collectStaticModuleGraph(g.entry, ROOT);
 ok(registry.config.$schema === './games.schema.json', 'registry 指向 ./games.schema.json', registry.config.$schema);
 ok(existsSync(join(ROOT, 'games.schema.json')), 'games.schema.json 存在');
 
@@ -60,10 +62,16 @@ const pageCss = g => [...read(g.href).matchAll(/<link rel="stylesheet" href="([^
     .map(m => m[1]).filter(h => !SHARED_CSS.test(h)).map(read).join('\n');
 
 const PROBES = {
-    // ⚠ 入口不都在 js/ 顶层：math-rain 是 js/math-rain/main.js，import 写成 '../analytics.js'。
-    //   只认 './' 会把它误判成「声明了却没有」。
-    leaderboard: g => /from '\.{1,2}\/leaderboard\.js'/.test(read(g.entry)),
-    analytics: g => /from '\.{1,2}\/analytics\.js'/.test(read(g.entry)),
+    // Follow each entry's local static-import graph: entries may be nested or may
+    // delegate platform wiring to package modules (as Tower Defense now does).
+    leaderboard: g => {
+        const graph = graphFor(g);
+        return graph.has('js/leaderboard.js') || graph.has('src/platform/leaderboard.js');
+    },
+    analytics: g => {
+        const graph = graphFor(g);
+        return graph.has('js/analytics.js') || graph.has('src/platform/analytics.js');
+    },
     daily: g => /from '\.{1,2}\/daily\.js'/.test(read(g.entry)),
     drawer: g => /game-drawer-panel/.test(read(g.href)),
     sidebar: g => /game-sidebar/.test(read(g.href)),
