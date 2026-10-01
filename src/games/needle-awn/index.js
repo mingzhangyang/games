@@ -11,6 +11,12 @@ export { GameEngine } from './runtime.js';
 onReady(() => {
     window.gameEngine = new GameEngine();
     const getText = () => I18N[getLang()] || I18N.zh;
+    const getPauseLabel = () => {
+        const text = getText();
+        return window.gameEngine && window.gameEngine.state === 'paused'
+            ? text.resume
+            : text.pauseTitle;
+    };
 
     window.naRuntime = mountGameRuntime({
         self: 'needle-awn.html',
@@ -27,7 +33,7 @@ onReady(() => {
         chrome: {
             owns: ['more', 'home'],
             getText,
-            labels: { pause: () => (I18N[getLang()] || {}).pause },
+            labels: { pause: getPauseLabel },
         },
     });
 

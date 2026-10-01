@@ -634,15 +634,22 @@ class GameEngine {
         SoundEngine.startAmbientMusic();
     }
 
+    refreshPauseLabel() {
+        const chrome = window.naRuntime && window.naRuntime.chrome;
+        if (chrome && typeof chrome.renderPause === 'function') chrome.renderPause();
+    }
+
     togglePause() {
         if (this.state === 'playing') {
             this.state = 'paused';
             this.dom.overlayPause.classList.remove('hidden');
             this.dom.btnPause.innerHTML = ICONS.play;
+            this.refreshPauseLabel();
         } else if (this.state === 'paused') {
             this.state = 'playing';
             this.dom.overlayPause.classList.add('hidden');
             this.dom.btnPause.innerHTML = ICONS.pause;
+            this.refreshPauseLabel();
         }
     }
 
@@ -659,6 +666,7 @@ class GameEngine {
         this.state = 'paused';
         // 按钮图标要跟着切（暂停中显示"播放"），否则关掉抽屉后图标与状态不符
         if (this.dom.btnPause) this.dom.btnPause.innerHTML = ICONS.play;
+        this.refreshPauseLabel();
     }
 
     resumeQuiet() {
@@ -666,6 +674,7 @@ class GameEngine {
         this.state = 'playing';
         this.lastTime = performance.now();   // 丢掉暂停期间的时间跳跃，避免恢复瞬间 dt 爆炸
         if (this.dom.btnPause) this.dom.btnPause.innerHTML = ICONS.pause;
+        this.refreshPauseLabel();
     }
 
     /** 抽屉判据 */

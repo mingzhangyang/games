@@ -12,7 +12,7 @@ const specs = [
         files: ['index.js', 'runtime.js', 'config.js', 'model/course.js', 'model/physics.js', 'render/scene.js', 'input/pointer.js'],
         indexNeedles: ["from './runtime.js'", 'mountGameRuntime', 'window.__gravityDebug'],
         runtimeNeedles: ["from './model/course.js'", "from './model/physics.js'", "from './render/scene.js'", "from './input/pointer.js"],
-        shim: "import '../src/games/gravity-slingshot/index.js';",
+        shim: "import '../src/games/gravity-slingshot/index.js';\nexport * from '../src/games/gravity-slingshot/runtime.js';",
     },
     {
         id: 'bond-forge',
@@ -20,14 +20,14 @@ const specs = [
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'mountGameRuntime'],
         runtimeNeedles: ["from './model/molecules.js'", "from './model/levels.js'", "from './render/scene.js'", "from './input/pointer.js"],
         modelNeedles: ["from './molecules.js'"],
-        shim: "import '../src/games/bond-forge/index.js';",
+        shim: "import '../src/games/bond-forge/index.js';\nexport * from '../src/games/bond-forge/runtime.js';",
     },
     {
         id: 'needle-awn',
         files: ['index.js', 'runtime.js', 'config.js', 'input/controls.js', 'render/art.js', 'render/scene.js', 'i18n.js', 'audio.js', 'effects.js'],
         indexNeedles: ["from './runtime.js'", 'mountGameRuntime'],
         runtimeNeedles: ["from './i18n.js'", "from './audio.js'", "from './effects.js'", "from './input/controls.js"],
-        shim: "import '../src/games/needle-awn/index.js';",
+        shim: "import '../src/games/needle-awn/index.js';\nexport * from '../src/games/needle-awn/runtime.js';",
     },
 ];
 
@@ -76,13 +76,24 @@ check(bondRuntime.includes('this.dailyTotalDrags += this.drags'),
 check(bondRuntime.includes('DAILY_COMPLETION_KEY_PREFIX}${todayKey()'),
     'bond-forge: persists the UTC+8 daily completion marker');
 const bondUsesCanonicalAnalytics = bondRuntime.includes("track('bond-forge', 'play')")
+    && bondRuntime.includes("track('bond-forge', 'finish')")
     && !/track\('bond-forge',\s*['"](?:daily_start|level_start)['"]/.test(bondRuntime);
 check(bondUsesCanonicalAnalytics, 'bond-forge: emits canonical analytics play events');
 
 const needleControls = read('src/games/needle-awn/input/controls.js');
 const needlePauseShortcuts = needleControls.includes("event.code === 'KeyP'")
+    && needleControls.includes("event.code === 'Escape'")
     && needleControls.includes("game.state === 'paused'");
 check(needlePauseShortcuts, 'needle-awn: P and Escape toggle pause and resume');
+
+const needleIndex = read('src/games/needle-awn/index.js');
+const needleRuntime = read('src/games/needle-awn/runtime.js');
+const needlePauseLabelContract = needleIndex.includes("window.gameEngine.state === 'paused'")
+    && needleIndex.includes('text.resume')
+    && needleIndex.includes('text.pauseTitle')
+    && needleRuntime.includes("typeof chrome.renderPause === 'function'")
+    && (needleRuntime.match(/this\.refreshPauseLabel\(\);/g) || []).length >= 4;
+check(needlePauseLabelContract, 'needle-awn: chrome pause label follows localized engine state');
 
 if (failures.length) {
     console.error(`\nverify-game-packages-wave-1: ${failures.length} failure(s)`);
