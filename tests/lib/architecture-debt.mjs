@@ -195,17 +195,28 @@ export function shimName(specifier, importerPath = null) {
 }
 
 export function importedSpecifiers(source) {
-    const tokens = tokenize(source);
     const imports = [];
-    for (let i = 1; i < tokens.length; i++) {
-        const token = tokens[i];
-        if (token.type !== 'string') continue;
-        const previous = tokens[i - 1]?.value;
-        const isCallSpecifier = previous === '('
-            && (tokens[i - 2]?.value === 'import' || tokens[i - 2]?.value === 'require');
-        if (!isCallSpecifier && previous !== 'import' && previous !== 'from' && previous !== 'require') continue;
-        imports.push({ specifier: token.value, line: token.line, index: token.index });
-    }
+    const ast = parse(source, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true });
+    const visit = (node, ancestors) => {
+        if (!node || typeof node.type !== 'string') return;
+        let specifier;
+        if (['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration', 'ImportExpression'].includes(node.type)) {
+            specifier = node.source;
+        } else if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'require') {
+            specifier = node.arguments[0];
+        }
+        const value = specifier?.type === 'Literal' && typeof specifier.value === 'string' ? specifier.value
+            : specifier?.type === 'TemplateLiteral' && specifier.expressions.length === 0 ? specifier.quasis[0].value.cooked : null;
+        if (value !== null) {
+            imports.push({ specifier: value, line: lineAt(source, specifier.start), index: specifier.start,
+                node: specifier, ancestors: [...ancestors, node] });
+        }
+        for (const value of Object.values(node)) {
+            if (Array.isArray(value)) value.forEach(child => visit(child, [...ancestors, node]));
+            else if (value && typeof value === 'object') visit(value, [...ancestors, node]);
+        }
+    };
+    visit(ast, []);
     return imports;
 }
 
@@ -253,69 +264,57 @@ export function resolveRepositoryImport(specifier, importerPath) {
 // Compare syntax and enclosing semantic scopes, never source offsets or line
 // numbers. Moving a call into another function/branch is new debt; formatting,
 // comments and unrelated sibling statements leave the fingerprint unchanged.
-function importContexts(source, path, refs) {
-    const wanted = new Map(refs.filter(ref => shimName(ref.specifier, path))
-        .map(ref => [ref.index, ref]));
+function importContexts(path, refs) {
     const contexts = new Map();
-    if (!wanted.size) return contexts;
-    const ast = parse(source, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true });
     const canonical = (value, ref) => {
         if (Array.isArray(value)) return value.map(item => canonical(item, ref));
         if (!value || typeof value !== 'object') return typeof value === 'bigint' ? String(value) : value;
-        if (value.start === ref.index && value.type === 'Literal') {
+        if (value === ref.node) {
             return { type: 'Literal', value: resolveRepositoryImport(ref.specifier, path) };
         }
         return Object.fromEntries(Object.entries(value)
             .filter(([key]) => !['start', 'end', 'loc', 'range', 'raw'].includes(key))
             .map(([key, item]) => [key, canonical(item, ref)]));
     };
-    const visit = (node, ancestors) => {
-        if (!node || typeof node !== 'object') return;
-        const ref = wanted.get(node.start);
-        if (ref && node.type === 'Literal') {
-            const statement = [...ancestors].reverse().find(parent =>
-                parent.type === 'VariableDeclarator' || parent.type === 'ImportDeclaration'
+    for (const ref of refs) {
+        const { node, ancestors } = ref;
+        const statement = [...ancestors].reverse().find(parent =>
+            parent.type === 'VariableDeclarator' || parent.type === 'ImportDeclaration'
                 || parent.type.startsWith('Export') || (parent.type.endsWith('Statement')
                     && parent.type !== 'BlockStatement')) || node;
-            const scopes = ancestors.flatMap((parent, index) => {
-                const child = ancestors[index + 1] || node;
-                if (/Function/.test(parent.type) || parent.type === 'ArrowFunctionExpression') {
-                    return [{ type: parent.type, id: parent.id, params: parent.params,
-                        async: parent.async, generator: parent.generator }];
-                }
-                if (parent.type === 'VariableDeclarator') return [{ type: parent.type, id: parent.id }];
-                if (parent.type === 'ClassDeclaration' || parent.type === 'ClassExpression') {
-                    return [{ type: parent.type, id: parent.id, superClass: parent.superClass }];
-                }
-                if (parent.type === 'CallExpression') {
-                    return [{ type: parent.type, callee: parent.callee, argument: parent.arguments.indexOf(child) }];
-                }
-                if (parent.type === 'Property' || parent.type === 'MethodDefinition') {
-                    return [{ type: parent.type, key: parent.key, kind: parent.kind, computed: parent.computed }];
-                }
-                if (parent.type === 'IfStatement') {
-                    return [{ type: parent.type, test: parent.test, branch: child === parent.consequent ? 'then' : 'else' }];
-                }
-                if (/^(For|While|DoWhile)/.test(parent.type)) {
-                    return [{ type: parent.type, init: parent.init, test: parent.test,
-                        update: parent.update, left: parent.left, right: parent.right }];
-                }
-                if (parent.type === 'CatchClause') return [{ type: parent.type, param: parent.param }];
-                if (parent.type === 'TryStatement') {
-                    return [{ type: parent.type, branch: child === parent.block ? 'try'
-                        : child === parent.handler ? 'catch' : 'finally' }];
-                }
-                if (parent.type === 'SwitchCase') return [{ type: parent.type, test: parent.test }];
-                return [];
-            });
-            contexts.set(ref.index, JSON.stringify(canonical({ statement, scopes }, ref)));
-        }
-        for (const value of Object.values(node)) {
-            if (Array.isArray(value)) value.forEach(item => visit(item, [...ancestors, node]));
-            else if (value && typeof value === 'object') visit(value, [...ancestors, node]);
-        }
-    };
-    visit(ast, []);
+        const scopes = ancestors.flatMap((parent, index) => {
+            const child = ancestors[index + 1] || node;
+            if (/Function/.test(parent.type) || parent.type === 'ArrowFunctionExpression') {
+                return [{ type: parent.type, id: parent.id, params: parent.params,
+                    async: parent.async, generator: parent.generator }];
+            }
+            if (parent.type === 'VariableDeclarator') return [{ type: parent.type, id: parent.id }];
+            if (parent.type === 'ClassDeclaration' || parent.type === 'ClassExpression') {
+                return [{ type: parent.type, id: parent.id, superClass: parent.superClass }];
+            }
+            if (parent.type === 'CallExpression') {
+                return [{ type: parent.type, callee: parent.callee, argument: parent.arguments.indexOf(child) }];
+            }
+            if (parent.type === 'Property' || parent.type === 'MethodDefinition') {
+                return [{ type: parent.type, key: parent.key, kind: parent.kind, computed: parent.computed }];
+            }
+            if (parent.type === 'IfStatement') {
+                return [{ type: parent.type, test: parent.test, branch: child === parent.consequent ? 'then' : 'else' }];
+            }
+            if (/^(For|While|DoWhile)/.test(parent.type)) {
+                return [{ type: parent.type, init: parent.init, test: parent.test,
+                    update: parent.update, left: parent.left, right: parent.right }];
+            }
+            if (parent.type === 'CatchClause') return [{ type: parent.type, param: parent.param }];
+            if (parent.type === 'TryStatement') {
+                return [{ type: parent.type, branch: child === parent.block ? 'try'
+                    : child === parent.handler ? 'catch' : 'finally' }];
+            }
+            if (parent.type === 'SwitchCase') return [{ type: parent.type, test: parent.test }];
+            return [];
+        });
+        contexts.set(ref.index, JSON.stringify(canonical({ statement, scopes }, ref)));
+    }
     return contexts;
 }
 
@@ -332,7 +331,7 @@ function htmlImportContext(source, ref, target) {
 export function shimCallSites(source, path, html = false) {
     const counts = new Map();
     const refs = html ? htmlSpecifiers(source) : importedSpecifiers(source);
-    const contexts = html ? null : importContexts(source, path, refs);
+    const contexts = html ? null : importContexts(path, refs);
     return refs.flatMap(ref => {
         const target = resolveRepositoryImport(ref.specifier, path);
         const match = /^js\/([^/]+)\.js$/.exec(target);
@@ -573,8 +572,7 @@ function baselineMode(baseline, category) {
 
 const MODE_RANK = { warning: 0, ratchet: 1, 'strict-zero': 2 };
 
-export function compareBaselineGrowth(baseline) {
-    const base = loadBaselineAtMergeBase();
+export function compareBaselineGrowth(baseline, base = loadBaselineAtMergeBase()) {
     const issues = [];
     if (base.baseline) {
         for (const category of RATCHET_CATEGORIES) {
@@ -619,11 +617,14 @@ export function compareBaselineGrowth(baseline) {
 export function compareDebt(current, baseline, category) {
     const currentItems = [...(current[category] || [])].sort();
     const baselineValues = baselineItems(baseline, category);
+    const added = currentItems.filter(item => !baselineValues.includes(item));
+    const removed = baselineValues.filter(item => !currentItems.includes(item));
     return {
         current: currentItems,
         baseline: baselineValues,
-        added: currentItems.filter(item => !baselineValues.includes(item)),
-        removed: baselineValues.filter(item => !currentItems.includes(item)),
+        added,
+        removed,
+        synchronized: added.length === 0 && removed.length === 0,
         delta: currentItems.length - baselineValues.length,
     };
 }

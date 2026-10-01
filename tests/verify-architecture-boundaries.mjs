@@ -53,7 +53,9 @@ for (const category of RATCHET_CATEGORIES) {
     ok(result.delta <= 0,
         `${category}: current count does not exceed baseline`,
         `${result.current.length} > ${result.baseline.length}`);
-    if (result.removed.length) console.log(`  ↓ removed from baseline: ${result.removed.join(', ')}`);
+    ok(result.synchronized,
+        `${category}: baseline matches current debt`,
+        result.removed.length ? `remove fixed debt from the baseline: ${result.removed.join(', ')}` : 'new debt must be fixed');
 }
 ok(current['platform-shim-consumers'].every(item => /:[a-z0-9-]+@[a-f0-9]{20}#\d+$/.test(item)),
     'shim debt keys preserve semantic call-site identity');
@@ -91,6 +93,21 @@ ok(shimName('./i18n.js', join(ROOT, 'src/games/example/index.js')) === null,
 
 console.log('\n▶ guard regression cases');
 const consumer = join(ROOT, 'js/example.js');
+const regexOnly = String.raw`const re = /import '.\/theme\.js'/;`;
+ok(importedSpecifiers(regexOnly).length === 0 && shimCallSites(regexOnly, consumer).length === 0,
+    'import-like regex literals are ignored without crashing');
+const regexAndImport = regexOnly + "\nimport './theme.js';";
+ok(shimCallSites(regexAndImport, consumer).length === 1,
+    'real imports beside regex literals are still checked');
+ok(importedSpecifiers(`const text = "import './theme.js'"; const object = { from: './theme.js' }; object.require('./theme.js');`).length === 0,
+    'strings, object properties and member calls are not module imports');
+const exportRefs = importedSpecifiers("export { theme } from './theme.js'; export * from './daily.js';");
+ok(exportRefs.length === 2 && shimCallSites("export * from './theme.js';", consumer).length === 1,
+    're-exports remain guarded by AST import discovery');
+ok(shimCallSites('import(`./theme.js`);', consumer).length === 1,
+    'literal template imports are guarded');
+ok(shimCallSites('const text = `${import("./theme.js")}`;', consumer).length === 1,
+    'executable imports inside template expressions are guarded');
 const original = shimCallSites("import './theme.js';", consumer);
 const shifted = shimCallSites("// unrelated edit\n\nimport './theme.js';", consumer);
 ok(original[0].key === shifted[0].key && original[0].line !== shifted[0].line,
@@ -149,6 +166,27 @@ ok(generatedContractViolations([join(ROOT, 'src/generated/unknown/cache.js')])
 const raised = JSON.parse(JSON.stringify(baseline));
 raised.categories['registry-entry-in-js'].items.push('example:js/example.js');
 ok(compareBaselineGrowth(raised).issues.length > 0, 'raising the baseline is rejected');
+// Model two consecutive PRs: first remove debt and lower the baseline, then
+// attempt to restore it, with and without raising the JSON alongside the code.
+const lower = JSON.parse(JSON.stringify(baseline));
+const category = 'registry-entry-in-js';
+const previousItems = baseline.categories[category].items;
+lower.categories[category].items = previousItems.slice(1);
+const reduced = { [category]: lower.categories[category].items };
+ok(!compareDebt(reduced, baseline, category).synchronized,
+    'removing debt without trimming the checked-in baseline fails');
+ok(compareDebt(reduced, lower, category).synchronized
+    && compareBaselineGrowth(lower, { baseline, ref: 'fixture-before-removal' }).issues.length === 0,
+'removing debt and its baseline entry together passes');
+ok(!compareDebt({ [category]: previousItems }, lower, category).synchronized,
+    'restoring removed debt against the lowered baseline fails');
+ok(compareBaselineGrowth(baseline, { baseline: lower, ref: 'fixture-after-removal' }).issues.length > 0,
+    'restoring debt together with its old baseline entry also fails');
+const zero = JSON.parse(JSON.stringify(lower));
+zero.categories[category].items = [];
+ok(compareDebt({ [category]: [] }, zero, category).synchronized
+    && compareBaselineGrowth(zero, { baseline: lower, ref: 'fixture-before-zero' }).issues.length === 0,
+'removing the final debt and emptying its baseline passes');
 const partialShell = compareDebt({ shell: ['minesweeper:game-main'] },
     { categories: { shell: { items: ['minesweeper:game-main', 'minesweeper:game-stage'] } } }, 'shell');
 ok(partialShell.added.length === 0 && partialShell.delta === -1, 'partial shell repairs are allowed');

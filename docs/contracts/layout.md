@@ -182,7 +182,10 @@ Vite 会把**页面自己的 CSS chunk 排在共享 CSS 之前**，构建后 HTM
 - 修改布局后需在实际产物上复验，而不只是 dev 服务器：
   ```bash
   npm run build
-  node tests/lib/serve-static.mjs 8900   # 需在 dist/ 目录下运行
+  (cd dist && node ../tests/lib/serve-static.mjs 8900)
+  ```
+  保持服务器运行，在另一个终端从仓库根目录执行：
+  ```bash
   node tools/dev/layout-metrics.mjs http://127.0.0.1:8900
   ```
 - ⚠️ `vite build` 与 `npm install` 并发会间歇性失败（`No matching HTML proxy module

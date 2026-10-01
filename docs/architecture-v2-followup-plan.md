@@ -85,7 +85,7 @@ Architecture v2 的最终规则不能等到“所有历史代码都迁完”才�
 3. 某一类别降到 0 后立即切换为 strict-zero，不允许“重新抬高 baseline”；
 4. 只有本文“长期例外”中的明确架构例外才能进入 allowlist，并写明原因与测试；
 5. `architecture:report` 应同时输出“当前值 / 基线值 / 本 PR delta / top offenders”，让每个迁移 PR 都能说明自己消除了多少债务；
-6. baseline 只允许**向下更新**。若确需增加例外，必须单独 PR 并在 review 中解释，不能把 rebaseline 当作修测试的方法。
+6. baseline 只允许**向下更新**；消除债务的同一个 PR 必须从基线删除对应条目，使基线与当前债务精确一致。保留已消除条目会导致检查失败，避免后续恢复旧债务时沿用豁免。若确需增加例外，必须单独 PR 并在 review 中解释，不能把 rebaseline 当作修测试的方法。
 
 > 这套 ratchet 是迁移期的保护网；最终 Phase 9 结束后应切换为 strict architecture contract，而不是永久保留高额 baseline。
 
