@@ -2,23 +2,34 @@ import { ARENA_HEIGHT, ARENA_WIDTH } from '../config.js';
 
 /** Bind keyboard, pointer and touch controls without owning game rules. */
 export function bindNeedleAwnInput(game) {
+    const isInteractiveTarget = target => !!(target && target.closest && target.closest(
+        'button, a, input, textarea, select, [contenteditable="true"], [role="button"], [role="link"]',
+    ));
+
     window.addEventListener('keydown', event => {
-        game.keys[event.code] = true;
-        if (event.code === 'KeyQ' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') game.toggleStance(game.player);
-        if (event.code === 'Space') {
-            event.preventDefault();
-            game.triggerDash(game.player);
+        // Preserve native keyboard activation/editing when focus is on UI controls.
+        // Gameplay shortcuts only own keys while the arena itself has keyboard focus.
+        if (isInteractiveTarget(event.target)) return;
+
+        if (game.state === 'playing') {
+            game.keys[event.code] = true;
+            if (event.code === 'KeyQ' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') game.toggleStance(game.player);
+            if (event.code === 'Space') {
+                event.preventDefault();
+                game.triggerDash(game.player);
+            }
+            if (event.code === 'KeyE') game.triggerUltimate(game.player);
+            if (game.mode === 'duel' && game.duelMode === '2p' && game.player2) {
+                if (event.code === 'Enter') game.triggerDash(game.player2);
+                if (event.code === 'Slash' || event.code === 'Numpad0') game.toggleStance(game.player2);
+            }
         }
-        if (event.code === 'KeyE') game.triggerUltimate(game.player);
+
         if ((event.code === 'KeyP' || event.code === 'Escape')
             && !event.repeat
             && (game.state === 'playing' || game.state === 'paused')) {
             event.preventDefault();
             game.togglePause();
-        }
-        if (game.mode === 'duel' && game.duelMode === '2p' && game.player2) {
-            if (event.code === 'Enter') game.triggerDash(game.player2);
-            if (event.code === 'Slash' || event.code === 'Numpad0') game.toggleStance(game.player2);
         }
     });
     window.addEventListener('keyup', event => { game.keys[event.code] = false; });
@@ -115,10 +126,7 @@ export function bindNeedleAwnInput(game) {
         event.preventDefault();
         game.triggerDash(game.player);
     });
-    game.dom.touchDash.addEventListener('mousedown', event => {
-        event.preventDefault();
-        game.triggerDash(game.player);
-    });
+    game.dom.touchDash.addEventListener('click', () => game.triggerDash(game.player));
     game.dom.touchStance.addEventListener('touchstart', event => {
         event.preventDefault();
         game.toggleStance(game.player);

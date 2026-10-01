@@ -96,6 +96,11 @@ const needlePauseShortcuts = needleControls.includes("event.code === 'KeyP'")
     && needleControls.includes('!event.repeat')
     && needleControls.includes("game.state === 'paused'");
 check(needlePauseShortcuts, 'needle-awn: P and Escape toggle pause and resume');
+const needleKeyboardAccessibility = needleControls.includes('isInteractiveTarget(event.target)')
+    && needleControls.includes("game.state === 'playing'")
+    && needleControls.includes("game.dom.touchDash.addEventListener('click'")
+    && !needleControls.includes("game.dom.touchDash.addEventListener('mousedown'");
+check(needleKeyboardAccessibility, 'needle-awn: gameplay shortcuts preserve native keyboard control activation');
 
 const needleIndex = read('src/games/needle-awn/index.js');
 const needleRuntime = read('src/games/needle-awn/runtime.js');
