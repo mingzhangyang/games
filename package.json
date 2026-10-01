@@ -14,6 +14,7 @@
     "verify:changed": "node tests/verify-all.mjs --changed",
     "architecture:report": "node tests/architecture-report.mjs",
     "verify:daily": "node tests/verify-daily.mjs",
+    "verify:sword-flight-dist": "npm run build && node tests/lib/run-smoke-dist.mjs tests/smoke-sword-flight.mjs",
     "verify:tower-defense-dist": "npm run build && node tests/lib/run-smoke-dist.mjs tests/smoke-tower-defense.mjs",
     "build:shadow-loom-silhouettes": "node tools/generators/shadow-loom-build-silhouettes.mjs",
     "check:shadow-loom-silhouettes": "node tools/generators/shadow-loom-build-silhouettes.mjs --check",

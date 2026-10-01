@@ -42,6 +42,8 @@ export const I18N = makeText({
         comboLbl: '最高连环合鸣',
         realmResultLbl: '修得道果',
         distLbl: '翱翔万里长空',
+        unitLi: '里',
+        unitRings: '环',
         nextStage: '下一重天 ▶',
         replayStage: '再战此境 ⟲',
         replayEndless: '再次御剑 ⟲',
@@ -82,6 +84,7 @@ export const I18N = makeText({
         toastUlt: '万剑归宗！',
         toastHurt: '灵气涣散！',
         submitting: '正在沟通天地灵脉...',
+        dailyModifier: '天象奇观：【罡风浩荡】飞行速度提升 30%，仙环灵韵翻倍！',
         dailyStatusDone: '今日已飞升',
         dailyStatusUndone: '未涉足',
         realms: [
