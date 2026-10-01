@@ -84,12 +84,15 @@ export function renderLeaderboardList(game, data) {
 }
 
 export async function submitScoreToLeaderboard(game, name, score) {
+    if (game.mode !== 'endless' && game.mode !== 'daily') return false;
+
     const fb = document.getElementById('sf-submit-feedback');
     fb.classList.remove('hidden');
     fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].submitting;
 
-    const dateKey = dailyDateKey();
-    const gameKey = (game.mode === 'daily') ? getDailyLeaderboardKey(dateKey) : 'sword-flight';
+    const gameKey = game.mode === 'daily'
+        ? getDailyLeaderboardKey(game.dailyDateKey || dailyDateKey())
+        : 'sword-flight';
 
     // 网络层收敛到 js/leaderboard.js（原无超时，统一补齐；false=未进全球榜）
     const ok = await submitScore({ game: gameKey, name, score });
@@ -98,6 +101,7 @@ export async function submitScoreToLeaderboard(game, name, score) {
     } else {
         fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].scoreSubmitFailed;
     }
+    return ok;
 
 }
 

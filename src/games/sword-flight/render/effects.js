@@ -145,7 +145,8 @@ export function spawnLotusAscension(game, x, y) {
             speedY: Math.sin(ang) * spd,
             size: 4 + Math.random() * 3,
             angle: Math.random() * Math.PI * 2,
-            rotSpeed: 0.1
+            rotSpeed: 0.1,
+            ttl: 1.5
         });
     }
 

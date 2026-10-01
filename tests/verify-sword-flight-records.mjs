@@ -13,6 +13,9 @@ import { SFX } from '../src/games/sword-flight/audio.js';
 const globals = ['document', 'localStorage', 'fetch', 'Date'];
 const originals = new Map(globals.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
 const originalInit = SFX.init;
+const originalPlayUltimate = SFX.playUltimate;
+const NativeDate = originals.get('Date')?.value ?? Date;
+let nowIso = '2026-01-01T16:00:00.000Z';
 const values = new Map();
 const nodes = new Map();
 const requests = [];
@@ -63,9 +66,10 @@ try {
         activeElement: null,
     };
     SFX.init = () => {};
-    globalThis.Date = class extends Date {
-        constructor(...args) { super(...(args.length ? args : ['2026-01-01T16:00:00.000Z'])); }
-        static now() { return 1767283200000; }
+    SFX.playUltimate = () => {};
+    globalThis.Date = class extends NativeDate {
+        constructor(...args) { super(...(args.length ? args : [nowIso])); }
+        static now() { return NativeDate.parse(nowIso); }
     };
     globalThis.fetch = async (url, options = {}) => {
         requests.push({ url, options });
@@ -137,6 +141,8 @@ try {
         assert.equal(values.get(STORAGE_KEYS.ENDLESS_BEST), mode === 'endless' ? '2000' : '900');
         assert.equal(g.isPlaying, false);
         assert.equal(node('sf-go-score').textContent, (2000).toLocaleString());
+        const eligible = mode === 'endless' || mode === 'daily';
+        assert.equal(node('sf-name-box').classList.contains('hidden'), !eligible);
     }
     game('endless', 100).handleGameOver();
     assert.equal(values.get(STORAGE_KEYS.ENDLESS_BEST), '2000');
@@ -198,6 +204,34 @@ try {
     assert.equal(lastStep.player.realmIndex, 0, 'no breakthrough after the run ended');
     console.log('✓ a fatal hit stops entity scoring, stage victory and breakthroughs for that step');
 
+    const thunderScore = game('endless', 100);
+    Object.assign(thunderScore, {
+        hazards: [], fiendBirds: [],
+        thunders: [
+            { discharged: true },
+            { discharged: false },
+        ],
+        particles: [], petals: [], screenShakes: 0, hitStopFrames: 0,
+    });
+    thunderScore.player.ultEnergy = 100;
+    thunderScore.triggerUltimate();
+    assert.equal(thunderScore.score, 250);
+    assert(thunderScore.thunders.every(th => th.discharged));
+    console.log('✓ ultimate only awards thunder score once per entity');
+
+    const petalRun = game('endless');
+    Object.assign(petalRun, {
+        rings: [], spiritStones: [], hazards: [], thunders: [], fiendBirds: [],
+        particles: [], clouds: [],
+        petals: [{ x: 10, y: 10, speedX: 0, speedY: 0, size: 2, angle: 0, rotSpeed: 0 }],
+    });
+    petalRun.spawnLotusAscension(20, 20);
+    assert.equal(petalRun.petals.length, 25);
+    petalRun.updateEntities(2, 0);
+    assert.equal(petalRun.petals.length, 1);
+    assert.equal(Number.isFinite(petalRun.petals[0].ttl), false);
+    console.log('✓ ultimate petals expire while ambient petals remain bounded');
+
     const dailyKey = `${STORAGE_KEYS.DAILY_PREFIX}${getDailyDateKey()}`;
     assert.equal(dailyKey, 'sf_daily_20260102');
     values.delete(dailyKey);
@@ -225,6 +259,27 @@ try {
     assert.equal(new URL(requests.at(-1).url).searchParams.get('game'), getDailyLeaderboardKey());
     await game('endless').submitScoreToLeaderboard('MZ', 200);
     assert.equal(JSON.parse(requests.at(-1).options.body).game, 'sword-flight');
+
+    const requestCount = requests.length;
+    assert.equal(await game('stages').submitScoreToLeaderboard('MZ', 9999), false);
+    assert.equal(await game('zen').submitScoreToLeaderboard('MZ', 9999), false);
+    assert.equal(requests.length, requestCount);
+    console.log('✓ leaderboard submission is restricted to endless and daily modes');
+
+    nowIso = '2026-01-01T15:59:30.000Z';
+    const crossingDaily = game('daily');
+    crossingDaily.startFlight('daily');
+    assert.equal(crossingDaily.dailyDateKey, '20260101');
+    nowIso = '2026-01-01T16:00:30.000Z';
+    crossingDaily.score = 900;
+    crossingDaily.handleGameOver();
+    assert.equal(values.get(`${STORAGE_KEYS.DAILY_PREFIX}20260101`), '900');
+    assert.equal(values.get(dailyKey), '800');
+    await crossingDaily.submitScoreToLeaderboard('MZ', 900);
+    assert.equal(JSON.parse(requests.at(-1).options.body).game, 'sword-flight-d20260101');
+    nowIso = '2026-01-01T16:00:00.000Z';
+    console.log('✓ daily result and leaderboard attribution stay pinned to the run date across UTC+8 midnight');
+
     console.log('✓ failed/successful leaderboard submissions do not overwrite local daily best; board keys stay unchanged');
 
     const stages = game('stages', 5000);
@@ -237,6 +292,7 @@ try {
     console.log('✓ stage victory still saves stars/unlock without contaminating daily or endless records');
 } finally {
     SFX.init = originalInit;
+    SFX.playUltimate = originalPlayUltimate;
     for (const [key, descriptor] of originals) {
         if (descriptor) Object.defineProperty(globalThis, key, descriptor);
         else delete globalThis[key];

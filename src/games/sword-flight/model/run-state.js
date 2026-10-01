@@ -34,7 +34,8 @@ export function startFlight(game, mode = 'stages', stageIndex = 0) {
     game.currentStageIndex = stageIndex;
     game.isPlaying = true;
     game.isPaused = false;
-    game.random = mode === 'daily' ? createDailyRandom(getDailyDateKey()) : Math.random;
+    game.dailyDateKey = mode === 'daily' ? getDailyDateKey() : null;
+    game.random = game.dailyDateKey ? createDailyRandom(game.dailyDateKey) : Math.random;
     game.dailyModifiers = mode === 'daily' ? DAILY_MODIFIERS : null;
     game.setGameplayHudVisible(true);
     game.setTouchControlsVisible(true);

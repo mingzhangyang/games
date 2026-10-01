@@ -62,8 +62,14 @@ export function handleGameOver(game) {
         game.endlessBest = game.score;
         storageSet(STORAGE_KEYS.ENDLESS_BEST, game.endlessBest.toString());
     }
-    if (game.mode === 'daily') saveDailyResult(game.score);
+    if (game.mode === 'daily') saveDailyResult(game.score, game.dailyDateKey || undefined);
     game.saveRecords();
+
+    const leaderboardEligible = game.mode === 'endless' || game.mode === 'daily';
+    document.getElementById('sf-name-box').classList.toggle('hidden', !leaderboardEligible);
+    const submitFeedback = document.getElementById('sf-submit-feedback');
+    submitFeedback.classList.add('hidden');
+    submitFeedback.textContent = '';
 
     const overlay = document.getElementById('sf-overlay-gameover');
     overlay.classList.remove('hidden');

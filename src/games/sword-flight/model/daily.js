@@ -18,8 +18,8 @@ export function createDailyRandom(seed = todayKey()) {
 }
 
 /** Local completion is independent of network submission, including 0 points. */
-export function saveDailyResult(score) {
-    const key = `${STORAGE_KEYS.DAILY_PREFIX}${todayKey()}`;
+export function saveDailyResult(score, dateKey = todayKey()) {
+    const key = `${STORAGE_KEYS.DAILY_PREFIX}${dateKey}`;
     const previous = Number(storageGet(key));
     const best = Number.isFinite(previous) ? Math.max(previous, score) : score;
     storageSet(key, best.toString());

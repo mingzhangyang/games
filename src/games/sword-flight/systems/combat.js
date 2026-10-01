@@ -70,8 +70,10 @@ export function triggerUltimate(game) {
         }
     });
     game.thunders.forEach((th) => {
-        th.discharged = true;
-        game.score += 150;
+        if (!th.discharged) {
+            th.discharged = true;
+            game.score += 150;
+        }
     });
 
     // 奖励真气全满
@@ -285,15 +287,23 @@ export function updateEntities(game, dt, traveled) {
         }
     });
 
-    game.petals.forEach((pt) => {
+    for (let i = game.petals.length - 1; i >= 0; i--) {
+        const pt = game.petals[i];
         pt.x += pt.speedX;
         pt.y += pt.speedY + traveled * 0.4;
         pt.angle += pt.rotSpeed;
+        if (Number.isFinite(pt.ttl)) {
+            pt.ttl -= dt;
+            if (pt.ttl <= 0) {
+                game.petals.splice(i, 1);
+                continue;
+            }
+        }
         if (pt.y > CANVAS_HEIGHT + 20) {
             pt.y = -20;
             pt.x = Math.random() * CANVAS_WIDTH;
         }
-    });
+    }
 
 }
 
