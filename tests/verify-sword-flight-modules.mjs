@@ -85,8 +85,13 @@ check(cycles.length === 0, 'module graph has no cycles', cycles.join(' | '));
 check(upwardEdges.length === 0, 'module dependencies flow from assembly to lower layers', upwardEdges.join(' | '));
 
 const entry = readFileSync(join(ROOT, 'js', 'sword-flight.js'), 'utf8').trim();
-check(/^\/\/ Compatibility entry[\s\S]*import ['"]\.\.\/src\/games\/sword-flight\/index\.js['"];?$/.test(entry),
+const isThinShim = source => /^\/\/ Compatibility entry[^\r\n]*\r?\nimport ['"]\.\.\/src\/games\/sword-flight\/index\.js['"];?$/.test(source.trim());
+check(isThinShim(entry),
     'legacy sword-flight entry is a thin compatibility shim');
+check(!isThinShim(entry.replace('\nimport', '\nwindow.game = {};\nimport')),
+    'shim guard rejects inserted game logic before the import');
+check(!isThinShim(`${entry}\nwindow.game = {};`),
+    'shim guard rejects inserted game logic after the import');
 const composition = readFileSync(join(PACKAGE, 'index.js'), 'utf8');
 check(!/from ['"]\.\/(?:systems\/|render\/(?:world|effects)\.js|input\/|ui\/)/.test(composition),
     'composition root does not import gameplay/render/input/menu implementation directly');

@@ -156,7 +156,7 @@ try {
         '移动端真实触摸拖动仍映射到逻辑坐标', JSON.stringify(steered));
     check(steered.scrollY === 0, '移动端御剑拖动不滚动页面', `scrollY=${steered.scrollY}`);
 
-    await mobile.$eval('#sf-touch-dash', button => button.click());
+    await mobile.tap('#sf-touch-dash');
     const touchAction = await mobile.evaluate(() => ({
         dashTimer: window.game.player.dashTimer,
         qi: window.game.player.qi,
@@ -174,7 +174,9 @@ try {
     const daily = await mobile.evaluate(() => ({
         mode: window.game.mode,
         startHidden: document.getElementById('sf-overlay-start').classList.contains('hidden'),
-        dailyCardHidden: document.getElementById('sf-daily-card').classList.contains('hidden'),
+        // The card remains inside the start overlay. Assert effective visibility,
+        // not a hidden class on this child that the original game never added.
+        dailyCardHidden: document.getElementById('sf-daily-card').getClientRects().length === 0,
     }));
     check(daily.mode === 'daily' && daily.startHidden && daily.dailyCardHidden,
         '每日挑战按钮仍进入 daily 模式', JSON.stringify(daily));

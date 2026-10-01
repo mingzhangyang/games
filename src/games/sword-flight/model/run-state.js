@@ -53,7 +53,8 @@ export function startFlight(game, mode = 'stages', stageIndex = 0) {
     game.player.angle = 0;
     game.player.tilt = 0;
     game.player.lives = (mode === 'zen') ? 99 : 3;
-    game.player.qi = 100;
+    game.player.maxQi = 100;
+    game.player.qi = game.player.maxQi;
     game.player.ultEnergy = 0;
     game.player.dashTimer = 0;
     game.player.invincibleTimer = 0;

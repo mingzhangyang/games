@@ -2,14 +2,12 @@
 import { getLang } from '../../../platform/site-settings.js';
 import { ICONS } from '../../../platform/icons.js';
 import { updateMoreGames } from '../../../platform/more-games.js';
-import { storageSet } from '../../../platform/safe-storage.js';
 import { submitScore, fetchBoard, escapeHTML } from '../../../platform/leaderboard.js';
 import { I18N } from '../i18n.js';
 import {
     getDailyDateKey as dailyDateKey,
     getDailyLeaderboardKey,
 } from '../model/daily.js';
-import { STORAGE_KEYS } from '../config.js';
 
 export function returnToMenu(game) {
     game.isPlaying = false;
@@ -97,9 +95,6 @@ export async function submitScoreToLeaderboard(game, name, score) {
     const ok = await submitScore({ game: gameKey, name, score });
     if (ok) {
         fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].scoreSubmitted;
-        if (game.mode === 'daily') {
-            storageSet(`${STORAGE_KEYS.DAILY_PREFIX}${dateKey}`, score.toString());
-        }
     } else {
         fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].scoreSubmitFailed;
     }

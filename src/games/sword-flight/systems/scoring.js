@@ -3,6 +3,7 @@ import { storageSet } from '../../../platform/safe-storage.js';
 import { track } from '../../../platform/analytics.js';
 import { SFX } from '../audio.js';
 import { STORAGE_KEYS } from '../config.js';
+import { saveDailyResult } from '../model/daily.js';
 
 export function handleStageVictory(game) {
     game.isPlaying = false;
@@ -55,10 +56,11 @@ export function handleGameOver(game) {
     game.setGameplayHudVisible(false);
     game.setTouchControlsVisible(false);
     game.refreshPauseButton();
-    if (game.score > game.endlessBest) {
+    if (game.mode === 'endless' && game.score > game.endlessBest) {
         game.endlessBest = game.score;
         storageSet(STORAGE_KEYS.ENDLESS_BEST, game.endlessBest.toString());
     }
+    if (game.mode === 'daily') saveDailyResult(game.score);
     game.saveRecords();
 
     const overlay = document.getElementById('sf-overlay-gameover');

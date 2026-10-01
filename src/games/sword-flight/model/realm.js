@@ -5,6 +5,12 @@ import { I18N } from '../i18n.js';
 import { SFX } from '../audio.js';
 import { REALM_THRESHOLDS, STORAGE_KEYS } from '../config.js';
 
+// Records keep their legacy localized strings; recognize either locale without
+// changing the storage schema when the site language changes.
+export function getRealmIndex(name) {
+    return Math.max(0, I18N.zh.realms.indexOf(name), I18N.en.realms.indexOf(name));
+}
+
 export function checkCultivationBreakthrough(game) {
     const realmThresholds = REALM_THRESHOLDS;
     const nextRealm = game.player.realmIndex + 1;
@@ -21,8 +27,10 @@ export function checkCultivationBreakthrough(game) {
 
         // 升级记录
         const rName = game.getRealmName(nextRealm);
-        game.maxRealm = rName;
-        storageSet(STORAGE_KEYS.MAX_REALM, rName);
+        if (nextRealm > getRealmIndex(game.maxRealm)) {
+            game.maxRealm = rName;
+            storageSet(STORAGE_KEYS.MAX_REALM, rName);
+        }
     }
 
 }
