@@ -1,5 +1,4 @@
 import { mulberry32, todayKey as todayCompact, hashStringFNV as hashStr } from '../../../platform/daily.js';
-import { storageGet, storageKeys, storageRemove, storageSet } from '../../../platform/safe-storage.js';
 import { CAPTURE_R, H, W } from '../config.js';
 import { simulate } from './physics.js';
 
@@ -98,29 +97,22 @@ export function solvePar(level) {
     return 3;
 }
 
-function cachedDailyCourse(date) {
-    try {
-        const course = JSON.parse(storageGet(`gd_course_${date}`));
-        if (!Array.isArray(course) || course.length !== 5) return null;
-        for (const level of course) {
-            if (!level || typeof level.par !== 'number' || !level.pad || !level.target
-                || typeof level.pad.x !== 'number' || typeof level.pad.y !== 'number'
-                || typeof level.target.x !== 'number' || typeof level.target.y !== 'number'
-                || !Array.isArray(level.bodies)) return null;
-            for (const body of level.bodies) {
-                if (!body || typeof body.x !== 'number' || typeof body.y !== 'number' || typeof body.r !== 'number') return null;
-            }
+export function isValidDailyCourse(course) {
+    if (!Array.isArray(course) || course.length !== 5) return false;
+    for (const level of course) {
+        if (!level || typeof level.par !== 'number' || !level.pad || !level.target
+            || typeof level.pad.x !== 'number' || typeof level.pad.y !== 'number'
+            || typeof level.target.x !== 'number' || typeof level.target.y !== 'number'
+            || !Array.isArray(level.bodies)) return false;
+        for (const body of level.bodies) {
+            if (!body || typeof body.x !== 'number' || typeof body.y !== 'number' || typeof body.r !== 'number') return false;
         }
-        return course;
-    } catch {
-        return null;
     }
+    return true;
 }
 
 export function buildDailyCourse(now = Date.now()) {
     const date = todayCompact(now);
-    const cached = cachedDailyCourse(date);
-    if (cached) return cached;
     const rng = mulberry32(hashStr(`gravity-daily-${date}`));
     const holes = [];
     for (let index = 0; index < 5; index++) {
@@ -141,10 +133,6 @@ export function buildDailyCourse(now = Date.now()) {
         }
         level.par = par;
         holes.push(level);
-    }
-    storageSet(`gd_course_${date}`, JSON.stringify(holes));
-    for (const key of storageKeys('gd_course_')) {
-        if (key !== `gd_course_${date}`) storageRemove(key);
     }
     return holes;
 }

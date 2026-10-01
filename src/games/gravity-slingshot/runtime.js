@@ -35,6 +35,7 @@ import {
     WARP_2,
 } from './config.js';
 import { buildDailyCourse, LEVELS } from './model/course.js';
+import { loadDailyCourse } from './storage.js';
 import { accelAt, bodyScratch, bodiesAt, collisionAt, simulate } from './model/physics.js';
 import { bgCanvas, buildStarLayer, planetSprite, PLANET_TONES, renderBackground, starLayer } from './render/scene.js';
 import { aimVector, bindGravityInput, toLogical } from './input/pointer.js';
@@ -296,7 +297,7 @@ class GravityGame {
         this.mode = 'daily';
         this.dailyStartedAt = Date.now();
         this.dailyDateKey = todayCompact(this.dailyStartedAt);
-        this.course = buildDailyCourse(this.dailyStartedAt);
+        this.course = loadDailyCourse(this.dailyStartedAt);
         this.holeIdx = 0;
         this.totalLaunches = 0;
         this.enterMenu(false);
@@ -531,6 +532,8 @@ class GravityGame {
         const prev = Number(storageGet('gd_daily_' + date)) || 0;
         const isBest = !prev || this.totalLaunches < prev;
         if (isBest) storageSet('gd_daily_' + date, String(this.totalLaunches));
+        // The landing Daily Hub tracks completion separately from this game's best score.
+        storageSet('gs_daily_' + date, '1');
         this.updateDailyBest(date);
         this.updateSideRecords(date);
 

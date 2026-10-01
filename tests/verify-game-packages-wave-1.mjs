@@ -9,9 +9,9 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const specs = [
     {
         id: 'gravity-slingshot',
-        files: ['index.js', 'runtime.js', 'config.js', 'model/course.js', 'model/physics.js', 'render/scene.js', 'input/pointer.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'config.js', 'model/course.js', 'model/physics.js', 'render/scene.js', 'input/pointer.js'],
         indexNeedles: ["from './runtime.js'", 'mountGameRuntime', 'window.__gravityDebug'],
-        runtimeNeedles: ["from './model/course.js'", "from './model/physics.js'", "from './render/scene.js'", "from './input/pointer.js"],
+        runtimeNeedles: ["from './model/course.js'", "from './storage.js'", "from './model/physics.js'", "from './render/scene.js'", "from './input/pointer.js"],
         shim: "import '../src/games/gravity-slingshot/index.js';\nexport * from '../src/games/gravity-slingshot/runtime.js';",
     },
     {
@@ -122,13 +122,22 @@ check(needlePauseLabelContract, 'needle-awn: chrome pause label follows localize
 
 const gravityRuntime = read('src/games/gravity-slingshot/runtime.js');
 const gravityCourse = read('src/games/gravity-slingshot/model/course.js');
+const gravityStorage = read('src/games/gravity-slingshot/storage.js');
+const gravityPureCourseModel = !gravityCourse.includes('safe-storage.js')
+    && !gravityCourse.includes('storageGet(')
+    && !gravityCourse.includes('storageSet(')
+    && gravityStorage.includes("from '../../platform/safe-storage.js'")
+    && gravityStorage.includes("from './model/course.js'");
+check(gravityPureCourseModel, 'gravity-slingshot: daily course model stays pure and storage lives in an adapter');
 const gravityPinsDailyDate = gravityRuntime.includes('this.dailyStartedAt = Date.now();')
     && gravityRuntime.includes('this.dailyDateKey = todayCompact(this.dailyStartedAt);')
-    && gravityRuntime.includes('buildDailyCourse(this.dailyStartedAt)')
+    && gravityRuntime.includes('loadDailyCourse(this.dailyStartedAt)')
     && gravityRuntime.includes('const date = this.dailyDateKey || todayCompact(this.dailyStartedAt || Date.now());')
     && gravityCourse.includes('buildDailyCourse(now = Date.now())')
     && gravityCourse.includes('const date = todayCompact(now);');
 check(gravityPinsDailyDate, 'gravity-slingshot: Daily result and board stay pinned to the UTC+8 start date');
+check(gravityRuntime.includes("storageSet('gs_daily_' + date, '1')"),
+    'gravity-slingshot: Daily completion writes the landing hub marker');
 
 const needlePinsDailyDate = needleRuntime.includes('this.dailyDateKey = this.getTodayDateString();')
     && needleRuntime.includes("const dailyDate = this.mode === 'daily'")

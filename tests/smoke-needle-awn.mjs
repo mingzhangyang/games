@@ -97,6 +97,48 @@ async function assertNormalPage() {
             fail(`关卡 1 启动或碰撞几何异常: ${JSON.stringify(levelOne)}`);
         }
 
+        await page.evaluate(() => document.activeElement?.blur());
+        await page.keyboard.press('p');
+        const pausedByP = await page.evaluate(() => ({
+            state: window.gameEngine.state,
+            overlayVisible: !document.getElementById('na-overlay-pause')?.classList.contains('hidden'),
+            chromeLabel: document.getElementById('na-btn-pause')?.getAttribute('aria-label'),
+        }));
+        if (pausedByP.state !== 'paused' || !pausedByP.overlayVisible || !pausedByP.chromeLabel?.includes('继续')) {
+            fail(`P 暂停或暂停 UI/标签未同步: ${JSON.stringify(pausedByP)}`);
+        }
+
+        await page.keyboard.press('Escape');
+        const resumedByEscape = await page.evaluate(() => ({
+            state: window.gameEngine.state,
+            overlayHidden: document.getElementById('na-overlay-pause')?.classList.contains('hidden'),
+            chromeLabel: document.getElementById('na-btn-pause')?.getAttribute('aria-label'),
+        }));
+        if (resumedByEscape.state !== 'playing' || !resumedByEscape.overlayHidden || !resumedByEscape.chromeLabel?.includes('暂停')) {
+            fail(`Escape 恢复或暂停 UI/标签未同步: ${JSON.stringify(resumedByEscape)}`);
+        }
+
+        await page.click('#na-btn-pause');
+        const focusedPause = await page.evaluate(() => ({
+            state: window.gameEngine.state,
+            activeId: document.activeElement?.id,
+            overlayVisible: !document.getElementById('na-overlay-pause')?.classList.contains('hidden'),
+        }));
+        if (focusedPause.state !== 'paused' || focusedPause.activeId !== 'na-btn-pause' || !focusedPause.overlayVisible) {
+            fail(`顶栏暂停按钮未留下可复现的聚焦暂停态: ${JSON.stringify(focusedPause)}`);
+        }
+
+        await page.keyboard.press('Escape');
+        const focusedEscapeResume = await page.evaluate(() => ({
+            state: window.gameEngine.state,
+            activeId: document.activeElement?.id,
+            overlayHidden: document.getElementById('na-overlay-pause')?.classList.contains('hidden'),
+            chromeLabel: document.getElementById('na-btn-pause')?.getAttribute('aria-label'),
+        }));
+        if (focusedEscapeResume.state !== 'playing' || !focusedEscapeResume.overlayHidden || !focusedEscapeResume.chromeLabel?.includes('暂停')) {
+            fail(`控件保留焦点时 Escape 无法恢复: ${JSON.stringify(focusedEscapeResume)}`);
+        }
+
         const clash = await page.evaluate(() => {
             const game = window.gameEngine;
             game.state = 'paused';
