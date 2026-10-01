@@ -65,13 +65,23 @@ function audibleBoilerplate(rel, src) {
 
 /* ── 1. 迁移页 import createSfxEngine ── */
 const MIGRATED = [
-    'gravity-slingshot.js', 'hoop-shot.js', 'minesweeper.js',
-    'planet-merge.js', 'reversi.js', 'word-daily.js',
+    { rel: 'src/games/gravity-slingshot/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'js/hoop-shot.js', root: JS_DIR, importPath: './game-sfx.js' },
+    { rel: 'js/minesweeper.js', root: JS_DIR, importPath: './game-sfx.js' },
+    { rel: 'js/planet-merge.js', root: JS_DIR, importPath: './game-sfx.js' },
+    { rel: 'js/reversi.js', root: JS_DIR, importPath: './game-sfx.js' },
+    { rel: 'js/word-daily.js', root: JS_DIR, importPath: './game-sfx.js' },
 ];
-for (const rel of MIGRATED) {
-    const src = readFileSync(join(JS_DIR, rel), 'utf8');
-    check(`${rel}: import createSfxEngine`, src.includes("import { createSfxEngine } from './game-sfx.js'"));
-    check(`${rel}: 无 createSfxEngine 之外的自造样板`, !audibleBoilerplate(rel, src));
+for (const item of MIGRATED) {
+    const src = readFileSync(join(item.root, item.rel.replace(/^src\/games\//, '').replace(/^js\//, '')), 'utf8');
+    check(`${item.rel}: import createSfxEngine`, src.includes(`import { createSfxEngine } from '${item.importPath}'`));
+    check(`${item.rel}: 无 createSfxEngine 之外的自造样板`, !audibleBoilerplate(item.rel, src));
+}
+for (const item of MIGRATED) {
+    const src = readFileSync(join(item.root, item.rel.replace(/^src\/games\//, '').replace(/^js\//, '')), 'utf8');
+    check(`${item.rel}: 无旧 toggleMuted 样板（this.muted = !this.muted）`, !src.includes('this.muted = !this.muted'));
+    // endFreq 作为形参名的桥接（needle-awn playTone 位置传参包装）允许；作为实参键传递禁止
+    check(`${item.rel}: 无旧实参键 endFreq:`, !/endFreq\s*:/.test(src));
 }
 
 {
@@ -104,12 +114,6 @@ check('运行时代码无自造 AudioContext 样板残留（显式音频模块�
 }
 
 /* ── 4. 旧样板/旧实参键清零 ── */
-for (const rel of MIGRATED) {
-    const src = readFileSync(join(JS_DIR, rel), 'utf8');
-    check(`${rel}: 无旧 toggleMuted 样板（this.muted = !this.muted）`, !src.includes('this.muted = !this.muted'));
-    // endFreq 作为形参名的桥接（needle-awn playTone 位置传参包装）允许；作为实参键传递禁止
-    check(`${rel}: 无旧实参键 endFreq:`, !/endFreq\s*:/.test(src));
-}
 
 /* ── 5. 引擎静音路径冒烟（Node：window/localStorage 均未定义） ── */
 {
