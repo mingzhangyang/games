@@ -101,6 +101,22 @@ try {
     check(desktopInput.controlKeys.every(text => text && !/[鼠标触控方向键空格按钮双击]/.test(text)),
         '英文控制卡同步本地化右侧按键提示', JSON.stringify(desktopInput.controlKeys));
 
+    // Game shortcuts must stay out of the leaderboard name field.
+    await desktop.evaluate(() => {
+        window.game.handleGameOver();
+        const input = document.getElementById('sf-player-name-input');
+        input.value = '';
+        input.focus();
+    });
+    await desktop.keyboard.type('Mm Pq');
+    const nameTyping = await desktop.evaluate(() => ({
+        value: document.getElementById('sf-player-name-input').value,
+        muted: localStorage.getItem('site_muted'),
+        paused: window.game.isPaused,
+    }));
+    check(nameTyping.value === 'Mm Pq' && nameTyping.muted === '1' && !nameTyping.paused,
+        '排行榜昵称输入框可输入 M/P，且不触发静音/暂停快捷键', JSON.stringify(nameTyping));
+
     const scoring = await desktop.evaluate(() => {
         const g = window.game;
         g.isPlaying = false;

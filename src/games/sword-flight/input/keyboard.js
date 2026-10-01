@@ -26,6 +26,9 @@ export function bindKeyboardInput(game) {
 
     window.addEventListener('keydown', (e) => {
         if (e.repeat) return;
+        // Typing a leaderboard name must not toggle sound (M) or pause (P/Esc).
+        const tag = e.target && e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
         game.keys[e.code] = true;
 
         if (e.code === 'KeyP' || e.code === 'Escape') {
