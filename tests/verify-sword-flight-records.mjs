@@ -98,6 +98,16 @@ try {
     }
     console.log('✓ highest realm never decreases across either stored/active locale; higher realms still persist');
 
+    for (const storedLocale of ['zh', 'en']) {
+        for (const activeLocale of ['zh', 'en']) {
+            values.set('site_lang', activeLocale);
+            values.set(STORAGE_KEYS.MAX_REALM, I18N[storedLocale].realms[3]);
+            game().updateSideRecords();
+            assert.equal(node('sf-rec-realm').textContent, I18N[activeLocale].realms[3]);
+        }
+    }
+    console.log('✓ sidebar shows the highest realm in the active language, whatever locale stored it');
+
     for (const mode of ['stages', 'endless', 'daily', 'zen']) {
         const g = game(mode);
         g.player.maxQi = 200;

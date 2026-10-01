@@ -10,6 +10,7 @@ import { ICONS } from '../../../platform/icons.js';
 import { I18N } from '../i18n.js';
 import { getDailyDateKey as dailyDateKey } from '../model/daily.js';
 import { STORAGE_KEYS } from '../config.js';
+import { getRealmIndex } from '../model/realm.js';
 
 export function setGameplayHudVisible(game, visible) {
     const hud = document.getElementById('sf-in-hud');
@@ -91,7 +92,8 @@ export function updateSideRecords(game) {
     Object.values(game.stageStars).forEach(s => { stars += s; });
     document.getElementById('sf-rec-stars').textContent = `${stars} / 27 ⭐`;
     document.getElementById('sf-rec-endless').textContent = game.endlessBest.toLocaleString();
-    document.getElementById('sf-rec-realm').textContent = game.maxRealm;
+    // The record is stored in whichever locale reached it; show it in the current one.
+    document.getElementById('sf-rec-realm').textContent = game.getRealmName(getRealmIndex(game.maxRealm));
     document.getElementById('sf-rec-combo').textContent = `${game.maxComboRecord} ${I18N[getLang() === 'zh' ? 'zh' : 'en'].unitRings}`;
 
     const dateKey = dailyDateKey();
