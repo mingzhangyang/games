@@ -12,6 +12,7 @@
     "verify": "node tests/verify-all.mjs",
     "verify:quick": "node tests/verify-all.mjs --quick",
     "verify:changed": "node tests/verify-all.mjs --changed",
+    "architecture:report": "node tests/architecture-report.mjs",
     "verify:daily": "node tests/verify-daily.mjs",
     "verify:tower-defense-dist": "npm run build && node tests/lib/run-smoke-dist.mjs tests/smoke-tower-defense.mjs",
     "build:shadow-loom-silhouettes": "node tools/generators/shadow-loom-build-silhouettes.mjs",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^7.0.0",
+    "acorn": "8.18.0",
     "eslint": "^10.11.0",
     "puppeteer-core": "^25.10.0",
     "rollup-plugin-copy": "^3.5.0",

@@ -619,7 +619,7 @@ data-art-state="fallback"
 
 新增：
 
-`scripts/verify-sword-flight-art.mjs`
+`tests/verify-sword-flight-art.mjs`
 
 检查：
 
@@ -683,16 +683,9 @@ data-art-state="fallback"
 
 **stage aspect-ratio 不得因固定 height 再次失真。**
 
-### verify-all 注册
+### verify-all 自动发现
 
-新增 `scripts/verify-sword-flight-art.mjs` 与 `scripts/smoke-sword-flight.mjs`，并在 `scripts/verify-all.mjs` 注册：
-
-```js
-{ name: 'sword-flight-art', script: 'scripts/verify-sword-flight-art.mjs', args: [], needsServer: false },
-{ name: 'smoke-sword-flight', script: 'scripts/smoke-sword-flight.mjs', args: [], needsServer: true },
-```
-
-把 `sword-flight-art` 加入 `QUICK_NAMES`；浏览器 smoke 默认只进入 full suite。
+新增的 `verify-sword-flight-art.mjs` 与 `smoke-sword-flight.mjs` 会由 `tests/verify-all.mjs` 按文件名自动发现，并根据导入推断服务器需求。art verifier 自动进入 quick；browser smoke 默认只进入 full suite。
 
 ---
 
@@ -736,9 +729,9 @@ js/sword-flight.js
 js/sword-flight-art.js
 js/sword-flight-scene.js
 css/sword-flight.css
-scripts/verify-sword-flight-art.mjs
-scripts/smoke-sword-flight.mjs
-scripts/verify-all.mjs
+tests/verify-sword-flight-art.mjs
+tests/smoke-sword-flight.mjs
+tests/verify-all.mjs
 ```
 
 非必要不要改：

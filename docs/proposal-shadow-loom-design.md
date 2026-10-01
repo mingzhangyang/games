@@ -347,11 +347,11 @@ Prototype 成立后再扩展正式关卡。
 - **判定**：幕布上 5px 网格（80 × 84）的 mask；相似度 = 0.5·IoU + 0.5·轮廓分，轮廓分取
   「当前轮廓贴合目标」与「目标每块纸片那段轮廓都被缝上」的最小值 —— 小纸片（鱼鳍、鹤腿）错位不会被大纸片的面积淹没。
   阈值试玩调校后为 70 / 85 / 89 / 92.5%，持续 0.4s 完成（`THRESHOLDS` / `WIN_HOLD_MS`）。
-  容差由 `scripts/verify-shadow-loom-levels.mjs` 锁定：任一纸片影子偏 4px 仍可完成、偏 24px 必不可完成。
+  容差由 `tests/verify-shadow-loom-levels.mjs` 锁定：任一纸片影子偏 4px 仍可完成、偏 24px 必不可完成。
 - **灯的策略价值**（§16 问题 2）：灯行起每幕至少一块钉住的纸片，灯位由它唯一确定；校验器断言初始灯位下钉住纸片的影子偏离 ≥16px。
 - **完成奖励**：纸片与灯收紧到精确解（0.45s）→ 金线沿完整轮廓扫一圈、周边暗下（0.8s）→ 活影动作（兔抖耳跳两步、鸟振翅飞走、
   鲸摆尾、鹿抬头、月亮缓缓升起、树随风摇并落叶、锦鲤摆尾游开、鹤展翅升起）→ 结果层停在舞台下部，记录用时 / 移动 / 最高匹配 / 一次完成。
-- 仅深色（`docs/contracts/theme.md`）；无排行榜；进度存 `sl_progress`。真机冒烟 `scripts/smoke-shadow-loom.mjs` 用真实鼠标完成兔 / 鹿 / 树三幕。
+- 仅深色（`docs/contracts/theme.md`）；无排行榜；进度存 `sl_progress`。真机冒烟 `tests/smoke-shadow-loom.mjs` 用真实鼠标完成兔 / 鹿 / 树三幕。
 
 ## 19. 视觉对齐（第一步，2026-09-26）与分层素材接入规格（第二步）
 
@@ -395,6 +395,6 @@ Prototype 成立后再扩展正式关卡。
   `fill-rule="evenodd"` 子路径；鲸、鹿、鹤来自随 PR 生成的原创纸剪参考图并以曲线轮廓描摹，
   不是程序几何替代物。每关的纸片沿自然结构拆分为互不包含的区域（兔子的耳朵 / 头 / 身体 / 草，
   鲸的身体 / 鳍 / 尾，鹿的身体 / 颈 / 鹿角，月下亭的月亮 / 亭 / 山，锦鲤的头 / 身（含背鳍）/ 鳍 / 尾，鹤的身体 / 颈 / 双翼 / 腿），只在接缝处相邻。
-  `scripts/shadow-loom-build-silhouettes.mjs` 将 SVG 采样为运行时缓存，并在同一纸片内先合并重叠外轮廓，
+  `tools/generators/shadow-loom-build-silhouettes.mjs` 将 SVG 采样为运行时缓存，并在同一纸片内先合并重叠外轮廓，
   让 evenodd Path2D 与 judge 使用同一几何；`--check` 防止 SVG 与缓存漂移，
   `verify-shadow-loom-silhouettes.mjs` 与关卡校验检查坐标、锚点、镂空、引用和纸片拓扑。

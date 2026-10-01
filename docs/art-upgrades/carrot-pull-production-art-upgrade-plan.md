@@ -24,7 +24,7 @@
 ## 0.1 实施后偏差（as-built，2026-09-27）
 
 本文是实施前的计划，下文的锚点、挂点、图层清单与 SVG 骨架保留原样以便对照；**当前运行时契约是 `assets/carrot-pull/manifest.json`**，
-由 `scripts/verify-carrot-pull-art.mjs` 与 `scripts/smoke-carrot-pull.mjs` 双向锁定（HTML 初始变换、`SCENE`、`PRODUCTION_ATTACH`、
+由 `tests/verify-carrot-pull-art.mjs` 与 `tests/smoke-carrot-pull.mjs` 双向锁定（HTML 初始变换、`SCENE`、`PRODUCTION_ATTACH`、
 拳头裁切框、绘制顺序都逐项与 manifest 比对）。与计划不同之处：
 
 | 计划 | 实际落地 | 原因 |
@@ -793,7 +793,7 @@ Light / Dark 只影响：
 新增：
 
 ```text
-scripts/verify-carrot-pull-art.mjs
+tests/verify-carrot-pull-art.mjs
 ```
 
 至少检查：
@@ -812,22 +812,9 @@ scripts/verify-carrot-pull-art.mjs
 - production HTML 不再包含大型旧插画 path；
 - legacy SVG renderer 仅存在于明确的 fallback 模块。
 
-### 18.1 必须注册到 verify-all
+### 18.1 verify-all 自动发现
 
-`scripts/verify-all.mjs` 使用固定 `SUITE`，不会自动发现新脚本。实现时必须显式加入：
-
-```js
-{ name: 'carrot-pull-art', script: 'scripts/verify-carrot-pull-art.mjs', args: [], needsServer: false },
-{ name: 'smoke-carrot-pull', script: 'scripts/smoke-carrot-pull.mjs', args: [], needsServer: true },
-```
-
-并把：
-
-```text
-carrot-pull-art
-```
-
-加入 `QUICK_NAMES`。Art verifier 是纯离线低成本检查，应进入 quick；浏览器 smoke 保留在 full suite，除非实测运行成本足够低后再单独决定是否进入 quick。
+`tests/verify-all.mjs` 按 `verify-*.mjs` / `smoke-*.mjs` 文件名自动发现校验器，并根据导入推断是否需要服务器。`verify-carrot-pull-art.mjs` 是离线校验器，会自动进入 quick；`smoke-carrot-pull.mjs` 是浏览器 smoke，默认保留在 full suite。只有需要把浏览器检查加入 quick 时，才更新 `QUICK_BROWSER`。
 
 不要为此引入重量级 npm 图片依赖；必要时实现小型 WebP header reader。
 
@@ -838,7 +825,7 @@ carrot-pull-art
 新增：
 
 ```text
-scripts/smoke-carrot-pull.mjs
+tests/smoke-carrot-pull.mjs
 ```
 
 加入完整 verify suite。
@@ -1000,9 +987,9 @@ js/carrot-pull.js
 js/carrot-pull-art.js
 js/carrot-pull-scene.js
 js/carrot-pull-fallback-scene.js
-scripts/verify-carrot-pull-art.mjs
-scripts/smoke-carrot-pull.mjs
-scripts/verify-all.mjs
+tests/verify-carrot-pull-art.mjs
+tests/smoke-carrot-pull.mjs
+tests/verify-all.mjs
 ```
 
 非必要不要修改：
@@ -1099,7 +1086,7 @@ art(carrot-pull): production storybook scene and sprite pipeline
 
 ```bash
 npm run gen -- --check
-node scripts/verify-carrot-pull-art.mjs
+node tests/verify-carrot-pull-art.mjs
 npm run verify
 ```
 
@@ -1107,10 +1094,10 @@ npm run verify
 
 ```bash
 npm run build
-node scripts/run-smoke-dist.mjs scripts/smoke-carrot-pull.mjs
+node tests/lib/run-smoke-dist.mjs tests/smoke-carrot-pull.mjs
 ```
 
-`run-smoke-dist.mjs` 会从 `dist/` 启动临时 HTTP server，并把 base URL 传给 Puppeteer smoke；不要在 build 后直接裸跑 `node scripts/smoke-carrot-pull.mjs`，否则没有 server 时会得到假失败，也无法确认真正测试的是 dist 产物。
+`run-smoke-dist.mjs` 会从 `dist/` 启动临时 HTTP server，并把 base URL 传给 Puppeteer smoke；不要在 build 后直接裸跑 `node tests/smoke-carrot-pull.mjs`，否则没有 server 时会得到假失败，也无法确认真正测试的是 dist 产物。
 
 所有由本次 PR 新增或导致的失败必须修复。
 

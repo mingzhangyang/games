@@ -8,7 +8,7 @@ Layer order is defined by the `z` values in `manifest.json` and is intentionally
 
 `sky → mole → leaf stems → carrot → girl → girl fists → soil-front → foreground → particles → tug lines`
 
-`scripts/verify-carrot-pull-art.mjs` fails if that draw order stops following manifest `z` or if the scene draws anything without a `z`. The manifest also registers `clouds` (20), `hills-farm` (30), `garden-mid` (40) and `soil-back` (45) between the sky and the mole, but they are not drawn at the moment (see the runtime note below).
+`tests/verify-carrot-pull-art.mjs` fails if that draw order stops following manifest `z` or if the scene draws anything without a `z`. The manifest also registers `clouds` (20), `hills-farm` (30), `garden-mid` (40) and `soil-back` (45) between the sky and the mole, but they are not drawn at the moment (see the runtime note below).
 
 Runtime note (2026-09-27): `sky.webp` is already the complete painting. `clouds`, `hills-farm`, `garden-mid` and `soil-back` were exported crowded into the top third of the canvas, out of register with the same content in `sky.webp`, so the game neither draws nor preloads them (they left a ghosted fence and dirt band across the sky). Re-export those layers in register before wiring them back in.
 

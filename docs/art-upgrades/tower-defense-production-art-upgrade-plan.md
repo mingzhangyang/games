@@ -3,7 +3,7 @@
 > 目标执行者：Codex  
 > 状态：已实现（源代码、构建与静态验收通过；浏览器 smoke 需在有 Chrome/Chromium 的环境补跑）
 >
-> 本轮验收记录：`npm run build`、`node scripts/run-lint.mjs`、`npm run gen -- --check`、`node scripts/verify-registry.mjs`、`node scripts/verify-td-art.mjs` 已通过；当前执行容器未提供 Chrome/Chromium，因此 `td-topbar`、`td-difficulty`、`smoke-tower-defense` 与 immersive 浏览器几何验收暂未执行。
+> 本轮验收记录：`npm run build`、`node tools/checks/run-lint.mjs`、`npm run gen -- --check`、`node tests/verify-registry.mjs`、`node tests/verify-td-art.mjs` 已通过；当前执行容器未提供 Chrome/Chromium，因此 `td-topbar`、`td-difficulty`、`smoke-tower-defense` 与 immersive 浏览器几何验收暂未执行。
 > 目标：保留当前成熟的塔防核心玩法、6 个战役关卡（分别为 15 / 20 / 25 / 30 / 35 / 40 波）、敌人机制与技能系统，同时把当前 480×640 竖向小战场升级为**800×600 横屏沉浸式未来都市防线**，让路径长度、部署空间和战术纵深真正扩大，而不是只把现有画布放大显示。
 
 ## 0. 升级原则
@@ -148,10 +148,10 @@
 - `js/game-drawer.js`（仅用于确认 TD 迁移后不再依赖共享 stats drawer；不要求修改共享实现）
 - `js/tower-levels.js`
 - `games.config.json`
-- `scripts/gen-from-registry.mjs`
-- `scripts/verify-registry.mjs`
-- `scripts/verify-immersive.mjs`
-- `scripts/verify-all.mjs`
+- `tools/generators/gen-from-registry.mjs`
+- `tests/verify-registry.mjs`
+- `tests/verify-immersive.mjs`
+- `tests/verify-all.mjs`
 - `docs/contracts/layout.md`
 - `docs/contracts/registry.md`
 - `CLAUDE.md`
@@ -1083,7 +1083,7 @@ Verifier 必须逐关编译 active map 后断言：
 建议新增：
 
 ```text
-scripts/verify-td-art.mjs
+tests/verify-td-art.mjs
 ```
 
 ### 14.1 资源检查
@@ -1142,17 +1142,15 @@ scripts/verify-td-art.mjs
 - DPR 2；
 - reduced motion。
 
-### 14.4 verify-all
+### 14.4 verify-all 自动发现
 
-必须显式注册进 `scripts/verify-all.mjs`，不要依赖自动发现：
+`tests/verify-all.mjs` 按 `verify-*.mjs` / `smoke-*.mjs` 文件名自动发现这些校验器，并根据导入推断服务器需求：
 
-- `td-art` → `scripts/verify-td-art.mjs`，offline，仅验证源资源 / manifest / 字面 URL map / 静态预算，不声称验证 dist；
-- `td-difficulty` → 现有 `scripts/verify-td-difficulty.mjs`，`needsServer: true`、`games: ['tower-defense']`；
-- `smoke-tower-defense` → 新增完整 runtime smoke，`needsServer: true`；
-- 保留现有 `td-topbar`，但将其中锁定旧 portrait 几何的断言更新为新 landscape / rotation 契约；
-- 评估 `verify-td-btn-hover.mjs`：若仍是有效 UI 契约则一并注册；若被新 UI 明确取代，则删除 / 重写并在 PR 说明原因，不能留下无人运行的旧测试。
+- `verify-td-art.mjs` 是 offline 源资源 / manifest / 字面 URL map / 静态预算检查，不声称验证 dist，自动进入 quick；
+- `verify-td-difficulty.mjs`、`smoke-tower-defense.mjs`、`verify-td-topbar.mjs` 等浏览器检查默认进入 full suite；
+- `verify-td-btn-hover.mjs` 如仍是有效 UI 契约就保留，否则删除 / 重写并在 PR 说明原因，不能留下无人运行的旧测试。
 
-同时把以上 TD 关键项加入 `QUICK_NAMES`（至少 `td-art`、`td-difficulty`、`smoke-tower-defense`、`td-topbar`），保证日常验证不会只跑到顶栏而漏掉难度和地图机制。
+无需手动维护 `SUITE` / `QUICK_NAMES`；只有需要把浏览器检查加入 quick 时，才更新 `QUICK_BROWSER`。
 
 ### 14.5 构建产物（dist）验证
 
@@ -1160,7 +1158,7 @@ Vite hashed asset 的实际可加载性必须单独在**构建产物**上验证�
 
 实施要求：
 
-1. 新增 `scripts/smoke-tower-defense.mjs`，其生产美术断言必须检查：
+1. 新增 `tests/smoke-tower-defense.mjs`，其生产美术断言必须检查：
    - art loader 进入 `ready`；
    - 关键 environment / tower / enemy（包括 attacker）图片 `complete && naturalWidth > 0`；
    - 无关键资源 404 / decode error；
@@ -1169,11 +1167,11 @@ Vite hashed asset 的实际可加载性必须单独在**构建产物**上验证�
 3. **dist smoke 使用仓库现有编排器：**
    ```bash
    npm run build
-   node scripts/run-smoke-dist.mjs scripts/smoke-tower-defense.mjs
+node tests/lib/run-smoke-dist.mjs tests/smoke-tower-defense.mjs
    ```
 4. 为避免 CI / 人工验收漏跑，建议在 `package.json` 增加：
    ```json
-   "verify:tower-defense-dist": "npm run build && node scripts/run-smoke-dist.mjs scripts/smoke-tower-defense.mjs"
+"verify:tower-defense-dist": "npm run build && node tests/lib/run-smoke-dist.mjs tests/smoke-tower-defense.mjs"
    ```
 5. 本轮实施 PR 的验收记录必须同时包含：
    - `npm run verify:quick`（或 full verify）；

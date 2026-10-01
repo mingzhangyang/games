@@ -5,8 +5,8 @@
 
 - 契约文件：`css/layout.css`（`.game-topbar-center` / `.game-footer` 系列）
 - 行为实现：`js/game-chrome.js`（`bindChrome`）
-- 迁移工具：`scripts/apply-header-footer.py`、`scripts/add-chrome-i18n.py`（均幂等，支持 `--dry`）
-- 校验工具：`scripts/verify-chrome.mjs`（已并入 `npm run verify`，SUITE 名 `chrome`）
+- 历史参考：`tools/archive/migrations/apply-header-footer.py`、`tools/archive/migrations/add-chrome-i18n.py` 已归档，不用于日常开发。当前流程是按本文直接实现 markup、i18n 与 `bindChrome` 接入，再运行现行校验。
+- 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
 
 ---
 
@@ -117,7 +117,7 @@ bindChrome({
 - `tank-battle`：横屏全屏画布 + 虚拟手柄，P4-2 仅加 `<main class="tb-main">`（`display: contents`）+ sr-only h1。
   自带 `#btnLang`（虚拟手柄 aux-row）+ `switchLanguage()` + `L` 快捷键，也于 2026-09-21 随收敛移除。
   ⚠️ 这类自带语言钮的页面**不在 `verify-chrome` 的覆盖内**（它只遍历带 topbar cap 的页面），
-  本次就是这样漏了整整一轮 —— 现在由 `scripts/verify-no-game-lang.mjs` 兜住。
+  本次就是这样漏了整整一轮 —— 现在由 `tests/verify-no-game-lang.mjs` 兜住。
 - `math-rain`：全屏街机 HUD，P4-3 仅加 `<main class="mr-main">`（包 game-container）+ sr-only h1；
   其开始界面与设置面板的语言选择器也于 2026-09-21 随收敛一起移除（HTML-only，JS 空值守卫天然兼容）。
 - `index.html`：落地页，P4-1 加 `<main class="idx-main">`，有自己的头部，不属于本契约；
@@ -157,15 +157,14 @@ bindChrome({
 `npm run verify`（或 `npm run verify:quick`）已编排 `verify-chrome.mjs`；单独跑：
 
 ```bash
-npm run serve:static &        # 或 node scripts/verify-chrome.mjs（verify-all 自动起服务）
-node scripts/verify-chrome.mjs http://127.0.0.1:8899
+npm run serve:static &        # 或 node tests/verify-chrome.mjs（verify-all 自动起服务）
+node tests/verify-chrome.mjs http://127.0.0.1:8899
 
-# 迁移脚本幂等性（两者都应报「无改动」）
-python scripts/apply-header-footer.py --dry
-python scripts/add-chrome-i18n.py --dry
+# 校验当前 markup / runtime 接入，不运行归档迁移器
+node tests/verify-registry.mjs
 ```
 
-> `scripts/lib/browser.mjs` 会按「环境变量 → 系统 Chrome/Chromium → Puppeteer 缓存」解析路径，
+> `tools/lib/browser.mjs` 会按「环境变量 → 系统 Chrome/Chromium → Puppeteer 缓存」解析路径，
 > 不再依赖固定的 Puppeteer 版本目录。换机器时优先设置 `CHROME_BIN`；WSL 里的 Linux Node
 > 若要使用 Windows Chrome，请用 Windows 侧 Node 运行校验，或在 WSL 安装 Linux Chrome 后设置 `CHROME_BIN`。
 
@@ -184,7 +183,7 @@ python scripts/add-chrome-i18n.py --dry
 
 > ⚠️ **覆盖范围陷阱**：上面的 ①–⑨ 只遍历 `registry.withCap('topbar')` 的页面。
 > tank-battle / math-rain 这类豁免页根本不进循环 —— 它们的语言钮回归**一条断言都抓不到**。
-> 补齐手段是静态源扫描守卫 `scripts/verify-no-game-lang.mjs`（无需起服务，1 秒内）：
+> 补齐手段是静态源扫描守卫 `tests/verify-no-game-lang.mjs`（无需起服务，1 秒内）：
 > 扫全部 `*.html` + `js/**`，禁 `setLang(` / `selectLanguage(` / `switchLanguage(` /
 > `langTitle` / `btnLang` / `langBtn` / `data-chrome="lang"` / `__pendingLanguageSelection =`，
 > 外加「HTML 里名字带 lang 的按钮」结构检查；只豁免 `index.html`、`js/index-page.js`、

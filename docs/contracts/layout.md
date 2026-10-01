@@ -11,9 +11,9 @@
 - 引入顺序（硬性）：`tokens.css → layout.css → <game>.css → more-games.css`
   - 在这之前：gen 的 `head` 区域输出同步脚本 `/theme-boot.js`，必须先于任何样式表（首屏主题，见 `theme.md`）
   - 五个科学实验室游戏（crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet）在 layout 与页面 CSS 之间多一层 `science-showcase.css`；`shared-css-first` 给它 rank 2，保证产物与源码同序
-- 迁移工具：`scripts/apply-layout-unification.py`（幂等，可重复执行）
-- 校验工具：`scripts/layout-metrics.mjs`、`scripts/shots.mjs`、`scripts/serve-static.mjs`、
-  `scripts/verify-desktop-frame.mjs`、`scripts/verify-stats-drawer.mjs`
+- 历史参考：`tools/archive/migrations/apply-layout-unification.py` 已归档，不用于日常开发。当前直接按本文接入共享 `game-*` 骨架与 `--frame-*` 配置，并运行现行布局校验。
+- 校验工具：`tools/dev/layout-metrics.mjs`、`tools/dev/shots.mjs`、`tests/lib/serve-static.mjs`、
+  `tests/verify-desktop-frame.mjs`、`tests/verify-stats-drawer.mjs`
 
 ---
 
@@ -103,7 +103,7 @@ overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` �
 「本页接没接纵向预算」这种不随视口变化的事实，与 `game-drawer.js` 的
 `has-stats-drawer` 同模式。tower-defense 已迁移到 §7 的 immersive 舞台：技能条、
 战术面板和所有战斗控件都属于 800×600 场景，不再接入桌面纵向预算。
-校验：`node scripts/verify-desktop-frame.mjs`（六页 × 五档视口 × 双语，
+校验：`node tests/verify-desktop-frame.mjs`（六页 × 五档视口 × 双语，
 断言整页不滚 / 画幅 / 不糊 / 随视口长大 / 侧栏屏内 / chrome 收敛 / 无 pageerror）。
 
 **第二批接入（2026-09-19 晚）**：gomoku 与 tetris 也收进「桌面端一屏放下」。
@@ -166,7 +166,7 @@ overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` �
 
 1. **剪共享层重复声明前，确认共享层真有替代品**：`color` / `font-family` /
    `backdrop-filter` 是页面自己的调色板/字体/材质，`layout.css` 只有 `inherit`。
-   误剪后 9 页图标变纯黑、全页退回衬线字体。守卫：`scripts/fg-audit.mjs`。
+   误剪后 9 页图标变纯黑、全页退回衬线字体。守卫：`tests/fg-audit.mjs`。
 2. **HTML 类名注入必须判重**：`game-body` 死类曾累积 5 层、`game-canvas` 累积 3 层。
    迁移脚本的注入逻辑必须幂等。
 
@@ -182,8 +182,11 @@ Vite 会把**页面自己的 CSS chunk 排在共享 CSS 之前**，构建后 HTM
 - 修改布局后需在实际产物上复验，而不只是 dev 服务器：
   ```bash
   npm run build
-  node scripts/serve-static.mjs 8900   # 需在 dist/ 目录下运行
-  node scripts/layout-metrics.mjs http://127.0.0.1:8900
+  (cd dist && node ../tests/lib/serve-static.mjs 8900)
+  ```
+  保持服务器运行，在另一个终端从仓库根目录执行：
+  ```bash
+  node tools/dev/layout-metrics.mjs http://127.0.0.1:8900
   ```
 - ⚠️ `vite build` 与 `npm install` 并发会间歇性失败（`No matching HTML proxy module
   found`，失败入口随机漂移）——构建前确保 npm 空闲，CI 串行（见 `docs/backlog.md`）。
@@ -199,21 +202,21 @@ Vite 会把**页面自己的 CSS chunk 排在共享 CSS 之前**，构建后 HTM
 
 ```bash
 # 几何表：13 页 × 移动(390)/桌面(1280)
-node scripts/layout-metrics.mjs                       # 源码
-node scripts/layout-metrics.mjs http://127.0.0.1:8900 # 构建产物
+node tools/dev/layout-metrics.mjs                       # 源码
+node tools/dev/layout-metrics.mjs http://127.0.0.1:8900 # 构建产物
 
 # 截图 + 控制台错误巡检（输出到 %TEMP%/shots）
-node scripts/shots.mjs
-PAGES=tetris,gomoku node scripts/shots.mjs C:/path/out
+node tools/dev/shots.mjs
+PAGES=tetris,gomoku node tools/dev/shots.mjs C:/path/out
 
 # 单页探针（含画布尺寸、容器宽度、transform 等）
-node scripts/probe.mjs gomoku 1280 900 ".board-container"
+node tools/dev/probe.mjs gomoku 1280 900 ".board-container"
 
 # 前景色 / 字体审计：报「纯黑前景 = 深色底上不可见」与「退回浏览器默认衬线字体」
-node scripts/fg-audit.mjs
+node tests/fg-audit.mjs
 
 # 全量回归（quick 档日常跑，详见 docs/contracts/registry.md 的校验器清单）
-node scripts/verify-all.mjs --quick
+node tests/verify-all.mjs --quick
 ```
 
 期望值（统一后）：
@@ -252,7 +255,7 @@ CSS 契约顺序 + `<main>` 语义 + h1，**不套** shell/topbar/sidebar 几何
 - 页面的菜单须用 `.hidden` 类隐藏（`:has(> .game-overlay--menu:not(.hidden))` 依赖它）
 - 当前使用者：gravity-slingshot、needle-awn、lumen、circuit、silk-dew、bond-forge、echo-cave、
   maxwell-demon、crystal-bloom、flame-verse、ripple-duet，以及 planet-merge、hoop-shot（只在横屏手机上溢出）
-- 校验：`node scripts/verify-start-menus.mjs`（SUITE 名 `start-menus`，390×844 / 768×1024 / 844×390 横屏）——
+- 校验：`node tests/verify-start-menus.mjs`（verify-all 校验项 `verify-start-menus`，390×844 / 768×1024 / 844×390 横屏）——
   加载时可见、非全屏的舞台内浮层一旦内部溢出即红（新游戏漏加 class 会被抓）；菜单里**每个可见按钮**都必须能
   滚到并点中；菜单不得被 `overflow≠visible` 的舞台截断
 
@@ -302,12 +305,12 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 
 所有规则只新增 `.game-shell--immersive` / `.game-stage--immersive` 选择器，放在 `layout.css` **末尾**
 （靠「同特异度后声明者胜」+ shell 上的双类选择器压过上方 ≥1024px 桌面预算块），不改任何既有规则。
-验证：`scripts/layout-metrics.mjs` 在改动前后对全部标准页逐行一致；`verify-immersive.mjs` ⑨ 抽查
+验证：`tools/dev/layout-metrics.mjs` 在改动前后对全部标准页逐行一致；`verify-immersive.mjs` ⑨ 抽查
 标准页不带 immersive 类 / body 标记。
 
 ### 7.4 校验
 
-`node scripts/verify-immersive.mjs`（SUITE 名 `immersive`）：页面清单 = `registry.withLayout('immersive')`；
+`node tests/verify-immersive.mjs`（verify-all 校验项 `verify-immersive`）：页面清单 = `registry.withLayout('immersive')`；
 视口 390×844 / 393×852 / 430×932 / 844×390 / 1280×800 / 1440×900；默认 immersive 页断言舞台贴顶栏且到视口底、
 `--frame-chrome` 为实测值、窄屏贴边 / 宽屏 600–640 居中、无横向滚动、页脚在首屏之下且可滚到。
 tower-defense 在 <1024px 手机横屏战斗态采用显式例外：舞台四边贴合整个视口、顶栏 fixed 悬浮、页脚隐藏；

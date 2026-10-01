@@ -5,7 +5,7 @@ import { spawn, execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { registry } from './lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -26,6 +26,7 @@ const GAME_ALIASES = REGISTERED_GAMES.map(game => ({
     aliases: [game.id, game.prefix].filter(Boolean).map(alias => alias.split('-')),
 }));
 const CORE = new Set([
+    'verify-architecture-boundaries',
     'verify-boot', 'verify-chunk-isolation', 'verify-daily', 'verify-i18n',
     'verify-index-cards', 'verify-leaderboard', 'verify-no-game-lang',
     'verify-registry', 'verify-sfx',
@@ -43,7 +44,7 @@ function inferGames(name) {
     return GAME_ALIASES.filter(game => game.aliases.some(contains)).map(game => game.id);
 }
 
-function discover() {
+export function discover() {
     return readdirSync(TEST_ROOT)
         .filter(file => /^(verify-|smoke-|fg-audit|placeholder-leak-check).*\.mjs$/.test(file))
         .filter(file => file !== 'verify-all.mjs')
@@ -115,6 +116,10 @@ function selectSuite() {
 
     const { base, files } = changedFiles();
     console.log(`--changed: ${files.length} files vs ${base}`);
+    return selectChangedSuite(files);
+}
+
+export function selectChangedSuite(files) {
     const pages = new Set();
     let shared = false;
     const touchedTests = new Set();
@@ -216,37 +221,42 @@ async function pool(steps, limit, run) {
     return out;
 }
 
-let suite = selectSuite().filter(step => existsSync(join(ROOT, step.script)));
-const needsServer = suite.some(step => step.needsServer);
-const server = !BASE_URL && needsServer ? startServer() : null;
-const base = BASE_URL || `http://127.0.0.1:${PORT}`;
-let ready = true;
-if (server) ready = await waitForServer(base);
+const IS_MAIN = process.argv[1]
+    && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 
-const started = Date.now();
-let results = [];
-if (!ready) {
-    results = [{ name: 'server', ok: false, code: -1, ms: 0 }];
-} else if (JOBS === 1) {
-    for (const step of suite) results.push(await runStep(step, base, false));
-} else {
-    const offline = suite.filter(step => !step.needsServer);
-    const online = suite.filter(step => step.needsServer);
-    const [a, b] = await Promise.all([
-        pool(offline, Math.max(1, Math.min(4, JOBS * 2)), step => runStep(step, base, true)),
-        pool(online, JOBS, step => runStep(step, base, true)),
-    ]);
-    const byName = new Map([...a, ...b].map(result => [result.name, result]));
-    results = suite.map(step => byName.get(step.name));
-}
-if (server) server.kill();
+if (IS_MAIN) {
+    const suite = selectSuite().filter(step => existsSync(join(ROOT, step.script)));
+    const needsServer = suite.some(step => step.needsServer);
+    const server = !BASE_URL && needsServer ? startServer() : null;
+    const base = BASE_URL || `http://127.0.0.1:${PORT}`;
+    let ready = true;
+    if (server) ready = await waitForServer(base);
 
-console.log('\n== verify summary ==');
-let failed = 0;
-for (const result of results) {
-    if (!result.ok) failed++;
-    console.log(`${result.ok ? '✓' : '✗'} ${result.name.padEnd(34)} ${String(result.code).padStart(4)}  ${(result.ms / 1000).toFixed(1)}s`);
+    const started = Date.now();
+    let results = [];
+    if (!ready) {
+        results = [{ name: 'server', ok: false, code: -1, ms: 0 }];
+    } else if (JOBS === 1) {
+        for (const step of suite) results.push(await runStep(step, base, false));
+    } else {
+        const offline = suite.filter(step => !step.needsServer);
+        const online = suite.filter(step => step.needsServer);
+        const [a, b] = await Promise.all([
+            pool(offline, Math.max(1, Math.min(4, JOBS * 2)), step => runStep(step, base, true)),
+            pool(online, JOBS, step => runStep(step, base, true)),
+        ]);
+        const byName = new Map([...a, ...b].map(result => [result.name, result]));
+        results = suite.map(step => byName.get(step.name));
+    }
+    if (server) server.kill();
+
+    console.log('\n== verify summary ==');
+    let failed = 0;
+    for (const result of results) {
+        if (!result.ok) failed++;
+        console.log(`${result.ok ? '✓' : '✗'} ${result.name.padEnd(34)} ${String(result.code).padStart(4)}  ${(result.ms / 1000).toFixed(1)}s`);
+    }
+    console.log(`\nwall ${((Date.now() - started) / 1000).toFixed(1)}s · ${suite.length} steps`);
+    console.log(failed ? `\n${failed} failed ❌` : '\nall passed ✅');
+    process.exit(failed ? 1 : 0);
 }
-console.log(`\nwall ${((Date.now() - started) / 1000).toFixed(1)}s · ${suite.length} steps`);
-console.log(failed ? `\n${failed} failed ❌` : '\nall passed ✅');
-process.exit(failed ? 1 : 0);

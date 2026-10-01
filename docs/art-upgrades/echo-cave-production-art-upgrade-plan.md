@@ -60,7 +60,7 @@ BFS / smoke 可玩路径
 
 现有：
 
-`scripts/verify-echo-cave-levels.mjs`
+`tests/verify-echo-cave-levels.mjs`
 
 必须视为不可降低标准的玩法验收真源。
 
@@ -457,7 +457,7 @@ data-art-state="fallback"
 
 新增：
 
-`scripts/verify-echo-cave-art.mjs`
+`tests/verify-echo-cave-art.mjs`
 
 检查：
 
@@ -472,7 +472,7 @@ data-art-state="fallback"
 
 现有：
 
-`scripts/verify-echo-cave-levels.mjs`
+`tests/verify-echo-cave-levels.mjs`
 
 必须继续全绿。
 
@@ -521,15 +521,9 @@ pulse 结束后：
 - level result；
 - daily。
 
-### verify-all 注册
+### verify-all 自动发现
 
-现有 `echo-cave-levels` 与 `smoke-echo-cave` 已在 `scripts/verify-all.mjs` 中。新增 art verifier 时必须显式加入：
-
-```js
-{ name: 'echo-cave-art', script: 'scripts/verify-echo-cave-art.mjs', args: [], needsServer: false },
-```
-
-并把 `echo-cave-art` 加入 `QUICK_NAMES`。不得降低或替换现有 level verifier / smoke。
+`tests/verify-all.mjs` 按 `verify-*.mjs` / `smoke-*.mjs` 文件名自动发现校验器，并根据导入推断是否需要服务器。`verify-echo-cave-art.mjs` 是离线校验器，会自动进入 quick；现有 level verifier 和 browser smoke 无需手动登记，也不得降低或替换。
 
 视口：
 
@@ -549,16 +543,16 @@ js/echo-cave.js
 js/echo-cave-art.js
 js/echo-cave-materials.js
 css/echo-cave.css
-scripts/verify-echo-cave-art.mjs
-scripts/smoke-echo-cave.mjs
-scripts/verify-all.mjs
+tests/verify-echo-cave-art.mjs
+tests/smoke-echo-cave.mjs
+tests/verify-all.mjs
 ```
 
 除非确有必要，不修改：
 
 ```text
 js/echo-cave-caves.js
-scripts/verify-echo-cave-levels.mjs
+tests/verify-echo-cave-levels.mjs
 css/science-showcase.css
 css/layout.css
 ```

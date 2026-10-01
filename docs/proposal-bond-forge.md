@@ -82,7 +82,7 @@
 4. **par 可达性**：校验器用脚本模拟「最优拖拽序列」，断言 `bestDrags <= par`。par 由模拟得出，**不是手填的估计值**。
 5. **至少存在一条满星路径**：无撤销 + 无催化剂 + 一次成型三条同时满足的解法必须存在。
 
-校验器 `scripts/verify-bond-forge-levels.mjs`。
+校验器 `tests/verify-bond-forge-levels.mjs`。
 
 ### 2.6 反馈诚实原则（教育产品的底线）
 
@@ -157,8 +157,8 @@
 | `js/bond-forge.js` | 入口：拖拽交互、成键判定、渲染、模式编排 |
 | `js/bond-forge-molecules.js` | `ELEMENTS` / `MOLECULES` / `canonicalize` / `solveBest` —— 规则与数据单一来源 |
 | `js/bond-forge-levels.js` | 20 关定义（原子盘配置 + 目标 + par + isomers） |
-| `scripts/verify-bond-forge-levels.mjs` | 离线校验：元素表一致、原子守恒、isomers 完整、par 可达、满星路径存在 |
-| `scripts/smoke-bond-forge.mjs` | 在线校验：开始菜单→开局→真实拖拽原子→成键→结算，含非法键弹回断言 |
+| `tests/verify-bond-forge-levels.mjs` | 离线校验：元素表一致、原子守恒、isomers 完整、par 可达、满星路径存在 |
+| `tests/smoke-bond-forge.mjs` | 在线校验：开始菜单→开局→真实拖拽原子→成键→结算，含非法键弹回断言 |
 
 ### 5.2 复用共享层（一个都不新写）
 
@@ -199,7 +199,7 @@ gen 自动改写 9 处派生点。**手工表兜底**：`verify-stats-drawer.mjs
 | **M1 化学内核** | `ELEMENTS` + `canonicalize` + `solveBest`；拖拽吸附 + 价态校验 + 键角分布；单关可玩 | `verify-bond-forge-levels` 通过 schema 段；手测：合法键吸附、非法键弹回、键角正确 |
 | **M2 内容** | 20 手工关 + 星级/进度存储 + 选关 + 结算面板 | `verify-bond-forge-levels` 全绿（含 par 可达、满星路径） |
 | **M3 系统** | 每日 5 关 + 榜单提交 + i18n en/zh 全量（含全部化学名词）+ sfx 和声音程 + hubTrack | `daily / i18n / leaderboard / placeholder-leak` 绿 |
-| **M4 收口** | `smoke-bond-forge`（在线）+ SUITE/QUICK_NAMES 注册 + dist 复验 | 全套 verify 全绿；`npm run build` 后 dist 复跑 |
+| **M4 收口** | `smoke-bond-forge`（在线，按文件名自动发现）+ dist 复验 | 全套 verify 全绿；`npm run build` 后 dist 复跑 |
 
 ---
 

@@ -4,9 +4,9 @@
 > 永远不要手改任何派生文件。
 
 - 真源：`games.config.json`（全站游戏元数据唯一真源）
-- 读取器：`scripts/lib/registry.mjs`（Node 侧唯一入口）
-- 生成器：`scripts/gen-from-registry.mjs`（`npm run gen` / `npm run gen -- --check`）
-- 校验：`scripts/verify-registry.mjs`（已并入 `npm run verify`，SUITE 名 `registry`）
+- 读取器：`tools/lib/registry.mjs`（Node 侧唯一入口）
+- 生成器：`tools/generators/gen-from-registry.mjs`（`npm run gen` / `npm run gen -- --check`）
+- 校验：`tests/verify-registry.mjs`（按文件名自动发现，verify-all 校验项 `verify-registry`）
 
 ---
 
@@ -24,16 +24,7 @@ registry.withLayout('immersive'); // 某布局类型的全部游戏
 registry.assertCovered({ cap, covered, exempt, label });  // 手工表覆盖率守卫，见 §1.2
 ```
 
-Python 侧同构（`scripts/lib/registry.py`，迁移脚本用）：
-
-```python
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib.registry import REGISTRY
-REGISTRY.all() / .with_cap(cap) / .by_id(id) / .site() / .hrefs()
-REGISTRY.i18n_var(game)                       # i18n 表变量名，缺省 LANGUAGES
-REGISTRY.assert_covered(cap, covered, exempt, label)      # 硬失败，见 §1.2
-REGISTRY.report_coverage(cap, covered, label, checker)    # 提示 + 陈旧硬失败
-```
+历史迁移脚本曾有 Python 侧同构；当前活动代码统一使用 `tools/lib/registry.mjs`，归档迁移脚本不属于日常运行路径。
 
 **校验器 / 迁移脚本一律从这里拿页面清单，禁止再各自维护一份字符串数组。**
 

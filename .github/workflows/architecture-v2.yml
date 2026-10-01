@@ -6,6 +6,9 @@ on:
     branches:
       - main
     paths:
+      - 'docs/**'
+      - 'CLAUDE.md'
+      - 'README.md'
       - 'src/**'
       - 'worker/**'
       - 'Workers/**'
@@ -39,10 +42,13 @@ jobs:
     env:
       CI: '1'
       VERIFY_JOBS: '2'
+      ARCHITECTURE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4

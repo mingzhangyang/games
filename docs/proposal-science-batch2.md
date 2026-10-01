@@ -127,7 +127,7 @@
 - 骨架复用全套：tokens/layout/more-games、bindChrome、createStatsDrawer（pauseQuiet/resumeQuiet/isRunning）、bindFrame、i18n、daily、leaderboard、safe-storage、analytics、sfx、icons；按钮一律 `ICONS.*` + `game-btn`，零 emoji。
 - 计分口径：除麦克斯韦妖（剩余预算）外全部为离散操作量 asc，跨设备公平（键合/垂丝已验证该口径）；时间绝不进榜。
 - 判定单一来源：规则常量与判定函数独立成 `js/<id>-rules.js`，校验器与运行时同源 import（键合 §3.3 模式）。
-- 每款配 `scripts/verify-<id>-levels.mjs` + `scripts/smoke-<id>.mjs`，进 SUITE/QUICK_NAMES。
+- 每款配 `tests/verify-<id>-levels.mjs` + `tests/smoke-<id>.mjs`；`tests/verify-all.mjs` 按文件名自动发现，离线 verifier 自动进入 quick，browser smoke 默认进入 full suite。
 - registry 登记照键合 §5.3：改 `games.config.json` → `npm run gen` 派生 9 处；`verify-stats-drawer` AUGMENT、`verify-button-icons` TARGETS 手工表兜底记得补。
 - i18n：科学名词双语全部走键（波长、元素名、温差、溶解度……），placeholder-leak 覆盖。
 - 反馈诚实原则照抄键合 §2.6：错误反馈附规则、不扣分、不嘲讽、无倒计时压迫。
