@@ -1,8 +1,6 @@
 /** Entity generation and pool maintenance. */
 import { CANVAS_WIDTH } from '../config.js';
 
-export const DAILY_SPAWN_DISTANCE = 2.5;
-
 const random = game => (typeof game.random === 'function' ? game.random() : Math.random());
 
 export function seedStageEntities(game) {
@@ -145,17 +143,9 @@ export function updateSpawners(game, traveled) {
         game.spawnRing(lastRing ? lastRing.y - 180 : -100);
     }
 
-    if (game.mode !== 'daily') {
-        spawnRandomEntities(game);
-        return;
-    }
-
-    // Daily random decisions are keyed to traveled distance, so 60 Hz and
-    // 120 Hz displays consume the same seeded sequence for the same course.
-    game.spawnDistance = (game.spawnDistance || 0) + traveled;
-    while (game.spawnDistance >= DAILY_SPAWN_DISTANCE) {
-        game.spawnDistance -= DAILY_SPAWN_DISTANCE;
-        spawnRandomEntities(game);
-    }
+    // update() runs on the fixed SIM_STEP clock (see movement.js), so one roll
+    // per call keeps the original 60 Hz spawn rates in every mode, at any
+    // refresh rate and any flight speed.
+    spawnRandomEntities(game);
 
 }

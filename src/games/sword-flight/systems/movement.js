@@ -2,14 +2,31 @@
 import { SFX } from '../audio.js';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config.js';
 
+// The simulation advances in fixed 1/60s steps, independent of the display's
+// refresh rate. update() still carries 60 Hz-tuned per-step constants (keyboard
+// steering, velocity/tilt smoothing, bird and particle motion, spawn odds, the
+// 12-step hit stop), so 120/144 Hz screens used to run the game faster and
+// spawn more; now every display sees the same game and the seeded daily
+// course draws the same random sequence at the same flight time.
+export const SIM_STEP = 1 / 60;
+const MAX_FRAME_DT = 0.1;
+
 export function gameLoop(game, now) {
-    const dt = Math.min((now - game.lastTime) / 1000, 0.1);
+    const frameDt = Math.min((now - game.lastTime) / 1000, MAX_FRAME_DT);
     game.lastTime = now;
 
-    if (game.hitStopFrames > 0) {
-        game.hitStopFrames--;
-    } else if (game.isPlaying && !game.isPaused) {
-        game.update(dt);
+    if (game.isPlaying && !game.isPaused) {
+        game.simAccumulator = (game.simAccumulator || 0) + frameDt;
+        // Small epsilon: summed 1/120 or 1/144 frame times otherwise land a hair
+        // below a whole step and slip a tick into the next frame.
+        while (game.simAccumulator >= SIM_STEP - 1e-9 && game.isPlaying && !game.isPaused) {
+            game.simAccumulator -= SIM_STEP;
+            if (game.hitStopFrames > 0) game.hitStopFrames--;
+            else game.update(SIM_STEP);
+        }
+    } else {
+        game.simAccumulator = 0;
+        game.hitStopFrames = 0;
     }
 
     game.render();
