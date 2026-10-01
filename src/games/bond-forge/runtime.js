@@ -89,7 +89,10 @@ export const W = STAGE.w;
 export const H = STAGE.h;
 
 const PROGRESS_KEY = 'bf_progress';
-const DAILY_KEY_PREFIX = 'bf_daily_';
+// The completion marker is a local-storage key.  The leaderboard uses the
+// registry prefix from games.config.json, so keep the two contracts explicit.
+const DAILY_COMPLETION_KEY_PREFIX = 'bf_daily_';
+const DAILY_LEADERBOARD_KEY_PREFIX = 'bond-forge';
 // 通关后先让玩家看清刚刚完成的分子，再显示操作卡片。
 const CLEAR_PREVIEW_MS = 1400;
 
@@ -228,6 +231,7 @@ class BondForgeGame {
         this.progress = this.loadProgress();
         this.dailyCourse = [];
         this.dailyIndex = 0;
+        this.dailyTotalDrags = 0;
 
         this.time = 0;
         this.lastFrame = 0;
@@ -663,6 +667,7 @@ class BondForgeGame {
 
     startLevels() {
         this.mode = 'levels';
+        this.dailyTotalDrags = 0;
         this.startLevel(this.firstUncleared());
     }
 
@@ -678,6 +683,7 @@ class BondForgeGame {
         this.mode = 'daily';
         this.dailyCourse = this.buildDailyCourse();
         this.dailyIndex = 0;
+        this.dailyTotalDrags = 0;
         if (!this.dailyCourse.length) {
             this.toast(this.t('dailyStartToast'));
             return;
@@ -719,6 +725,7 @@ class BondForgeGame {
         this.levelIndex = -1;
         this.drags = 0;
         this.par = 0;
+        this.dailyTotalDrags = 0;
         this.setupBoard(null);
         // 自由盘：每种元素给两个，够拼出绝大多数常见小分子
         for (const sym of SANDBOX_TRAY) {
@@ -762,7 +769,9 @@ class BondForgeGame {
         this.isPaused = false;
         this.updateHud();
         this.renderSideRecords();
-        track('bond-forge', this.mode === 'daily' ? 'daily_start' : 'level_start');
+        // The analytics Worker accepts the canonical play/finish event names
+        // only; mode-specific names are rejected with HTTP 400.
+        track('bond-forge', 'play');
     }
 
     /**
@@ -823,6 +832,7 @@ class BondForgeGame {
         }
         if (this.levelIndex + 1 >= LEVELS.length) {
             this.toast(this.t('levelDone'));
+            track('bond-forge', 'finish');
             this.toMenu();
             return;
         }
@@ -847,10 +857,22 @@ class BondForgeGame {
     }
 
     finishDaily() {
+        if (this.state === 'over') return;
         this.cancelClearPreview();
         if (this.el['clear']) this.el['clear'].classList.add('hidden');
         this.state = 'over';
+        const total = this.dailyTotalDrags;
+        try {
+            // Keep the documented local completion marker separate from the
+            // network leaderboard key.  The date is always UTC+8 via todayKey.
+            storageSet(`${DAILY_COMPLETION_KEY_PREFIX}${todayKey()}`, String(total));
+        } catch (e) {
+            // Storage is optional; the completed result remains visible.
+        }
+        if (this.el['over-score']) this.el['over-score'].textContent = String(total);
+        if (this.el['over-sub']) this.el['over-sub'].textContent = `${this.t('drags')}: ${total}`;
         if (this.el['over']) this.el['over'].classList.remove('hidden');
+        track('bond-forge', 'finish');
         this.submitDailyScore();
     }
 
@@ -945,9 +967,9 @@ class BondForgeGame {
 
     submitDailyScore() {
         if (this.mode !== 'daily') return;
-        const total = this.dailyCourse.length ? this.drags : 0;
+        const total = this.dailyCourse.length ? this.dailyTotalDrags : 0;
         submitScore({
-            game: dailyKey(DAILY_KEY_PREFIX, Date.now()),
+            game: dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, Date.now()),
             name: ensurePlayerName(),
             score: total,
         }).then(ok => {
@@ -959,7 +981,7 @@ class BondForgeGame {
     refreshLeaderboard() {
         const list = this.el['lb-list'];
         if (!list) return;
-        fetchBoard(dailyKey(DAILY_KEY_PREFIX, Date.now()))
+        fetchBoard(dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, Date.now()))
             .then(rows => {
                 list.innerHTML = '';
                 if (!Array.isArray(rows) || !rows.length) {
@@ -993,7 +1015,11 @@ class BondForgeGame {
     }
 
     copyResult() {
-        const text = `${this.t('title')} — ${this.t('drags')} ${this.drags} / ${this.t('par')} ${this.par}`
+        const score = this.mode === 'daily' ? this.dailyTotalDrags : this.drags;
+        const detail = this.mode === 'daily'
+            ? `${this.t('drags')} ${score}`
+            : `${this.t('drags')} ${score} / ${this.t('par')} ${this.par}`;
+        const text = `${this.t('title')} — ${detail}`
             + ` (${todayKeyDisplay()})`;
         const done = () => this.toast(this.t('copied'));
         try {
@@ -1703,6 +1729,8 @@ class BondForgeGame {
             return;
         }
 
+        if (this.mode === 'daily') this.dailyTotalDrags += this.drags;
+
         const stars = this.checkStars();
         sfxTone(523, 0.16, 'sine', 0.16);
         sfxTone(659, 0.16, 'sine', 0.14);
@@ -1748,7 +1776,6 @@ class BondForgeGame {
         // 结算卡片延迟出现，避免把结果瞬间盖住。
         if (this.el['clear']) this.el['clear'].classList.add('hidden');
         this.scheduleClearOverlay();
-        track('bond-forge', 'level_clear', { stars });
     }
 }
 

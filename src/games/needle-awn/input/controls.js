@@ -10,7 +10,11 @@ export function bindNeedleAwnInput(game) {
             game.triggerDash(game.player);
         }
         if (event.code === 'KeyE') game.triggerUltimate(game.player);
-        if (event.code === 'Escape' && game.state === 'playing') game.togglePause();
+        if ((event.code === 'KeyP' || event.code === 'Escape')
+            && (game.state === 'playing' || game.state === 'paused')) {
+            event.preventDefault();
+            game.togglePause();
+        }
         if (game.mode === 'duel' && game.duelMode === '2p' && game.player2) {
             if (event.code === 'Enter') game.triggerDash(game.player2);
             if (event.code === 'Slash' || event.code === 'Numpad0') game.toggleStance(game.player2);

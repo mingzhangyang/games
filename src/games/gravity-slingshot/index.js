@@ -3,8 +3,8 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { LANGUAGES } from './i18n.js';
 import {
-    LANGUAGES,
     GravityGame,
     LEVELS,
     simulate,
