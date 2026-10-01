@@ -111,6 +111,7 @@ function movementGame(dailyModifiers = null) {
     player.trailHistory = [];
     return {
         mode: 'endless',
+        isPlaying: true,
         keys: {},
         player,
         dailyModifiers,

@@ -147,6 +147,46 @@ try {
     assert.equal(node('sf-go-distance').textContent, '13 li');
     console.log('✓ only endless game-over can improve the endless record');
 
+    // A fatal hit must end entity processing: later overlapping entities would
+    // otherwise see the fresh invincibility timer and add hidden score.
+    const fatalRun = (mode, fatal) => {
+        const g = game(mode, 1000);
+        Object.assign(g, {
+            combo: 1, rings: [], spiritStones: [], hazards: [], thunders: [], fiendBirds: [],
+            particles: [], clouds: [], petals: [], screenShakes: 0,
+        });
+        g.player.lives = 1;
+        g.player.x = 240;
+        g.player.y = 400;
+        const at = { x: 240, y: 400 };
+        // Arrays are walked from the end: the fatal entity goes last, overlapping extras before it.
+        g.hazards.push({ ...at, width: 100, height: 50, broken: false, type: 'cliff' });
+        g.fiendBirds.push({ ...at, vx: 0, vy: 0, wingAngle: 0, slain: false });
+        if (fatal === 'hazard') g.hazards.push({ ...at, width: 100, height: 50, broken: false, type: 'cliff' });
+        if (fatal === 'thunder') g.thunders.push({ ...at, radius: 50, chargeTime: 0, discharged: false });
+        if (fatal === 'bird') g.fiendBirds.push({ ...at, vx: 0, vy: 0, wingAngle: 0, slain: false });
+        return g;
+    };
+    for (const fatal of ['hazard', 'thunder', 'bird']) {
+        const g = fatalRun('endless', fatal);
+        g.updateEntities(1 / 60, 0);
+        assert.equal(g.isPlaying, false, `${fatal}: fatal hit ends the run`);
+        assert.equal(g.score, 1000, `${fatal}: no score after the fatal hit`);
+        assert.equal(node('sf-go-score').textContent, (1000).toLocaleString());
+    }
+    const lastStep = fatalRun('stages', 'hazard');
+    lastStep.player.realmIndex = 0;
+    lastStep.score = REALM_THRESHOLDS[1];
+    lastStep.distanceSoared = lastStep.stageTargetDistance = 1e9;
+    Object.assign(lastStep, { keys: {}, worldSpeed: 0, scrollOffset: 0, swordArrayAngle: 0, satelliteSwords: [], updateSpawners: () => {} });
+    lastStep.player.trailHistory = [];
+    node('sf-overlay-victory').classList.add('hidden');
+    lastStep.update(1 / 60);
+    assert.equal(lastStep.isPlaying, false);
+    assert(node('sf-overlay-victory').classList.contains('hidden'), 'dying on the goal step must not also win the stage');
+    assert.equal(lastStep.player.realmIndex, 0, 'no breakthrough after the run ended');
+    console.log('✓ a fatal hit stops entity scoring, stage victory and breakthroughs for that step');
+
     const dailyKey = `${STORAGE_KEYS.DAILY_PREFIX}${getDailyDateKey()}`;
     assert.equal(dailyKey, 'sf_daily_20260102');
     values.delete(dailyKey);

@@ -116,6 +116,9 @@ export function update(game, dt) {
 
     // 实体运动与碰撞判定
     game.updateEntities(dt, traveled);
+    // A fatal hit ends the run inside updateEntities; nothing after it may
+    // touch the finished run (realm records, stage victory, HUD).
+    if (!game.isPlaying) return;
 
     // 境界突破检测
     game.checkCultivationBreakthrough();

@@ -183,6 +183,8 @@ export function updateEntities(game, dt, traveled) {
                     // 玩家受伤
                     game.handlePlayerHit();
                     h.broken = true;
+                    // 致命一击已结算：停止本轮实体结算，免得无敌帧继续给已结束的一局加分
+                    if (!game.isPlaying) return;
                 }
             }
         }
@@ -211,6 +213,8 @@ export function updateEntities(game, dt, traveled) {
             } else if (game.player.invincibleTimer <= 0) {
                 game.handlePlayerHit();
                 th.discharged = true;
+                // 致命一击已结算：停止本轮实体结算，免得无敌帧继续给已结束的一局加分
+                if (!game.isPlaying) return;
             }
         }
 
@@ -239,6 +243,8 @@ export function updateEntities(game, dt, traveled) {
                 } else {
                     game.handlePlayerHit();
                     b.slain = true;
+                    // 致命一击已结算：停止本轮实体结算，免得无敌帧继续给已结束的一局加分
+                    if (!game.isPlaying) return;
                 }
             }
         }
