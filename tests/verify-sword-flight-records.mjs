@@ -159,12 +159,21 @@ try {
         g.player.x = 240;
         g.player.y = 400;
         const at = { x: 240, y: 400 };
-        // Arrays are walked from the end: the fatal entity goes last, overlapping extras before it.
-        g.hazards.push({ ...at, width: 100, height: 50, broken: false, type: 'cliff' });
-        g.fiendBirds.push({ ...at, vx: 0, vy: 0, wingAngle: 0, slain: false });
-        if (fatal === 'hazard') g.hazards.push({ ...at, width: 100, height: 50, broken: false, type: 'cliff' });
-        if (fatal === 'thunder') g.thunders.push({ ...at, radius: 50, chargeTime: 0, discharged: false });
-        if (fatal === 'bird') g.fiendBirds.push({ ...at, vx: 0, vy: 0, wingAngle: 0, slain: false });
+        const hazard = () => ({ ...at, width: 100, height: 50, broken: false, type: 'cliff' });
+        const thunder = () => ({ ...at, radius: 50, chargeTime: 0, discharged: false });
+        const bird = () => ({ ...at, vx: 0, vy: 0, wingAngle: 0, slain: false });
+        // updateEntities walks hazards → thunders → birds, each array from its end.
+        // The selected fatal entity must be the first collision, with an
+        // overlapping scoring entity still left after it in the same pass.
+        if (fatal === 'hazard') {
+            g.hazards.push(hazard(), hazard()); // last = fatal, first = scoring leftover
+            g.fiendBirds.push(bird());
+        } else if (fatal === 'thunder') {
+            g.thunders.push(thunder());
+            g.fiendBirds.push(bird()); // birds run after thunders
+        } else {
+            g.fiendBirds.push(bird(), bird()); // last = fatal, first = scoring leftover
+        }
         return g;
     };
     for (const fatal of ['hazard', 'thunder', 'bird']) {
@@ -172,6 +181,8 @@ try {
         g.updateEntities(1 / 60, 0);
         assert.equal(g.isPlaying, false, `${fatal}: fatal hit ends the run`);
         assert.equal(g.score, 1000, `${fatal}: no score after the fatal hit`);
+        const fatalEntity = { hazard: g.hazards.at(-1)?.broken, thunder: g.thunders.at(-1)?.discharged, bird: g.fiendBirds.at(-1)?.slain }[fatal];
+        assert.equal(fatalEntity, true, `${fatal}: the selected entity delivered the fatal hit`);
         assert.equal(node('sf-go-score').textContent, (1000).toLocaleString());
     }
     const lastStep = fatalRun('stages', 'hazard');
