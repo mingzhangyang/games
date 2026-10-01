@@ -63,9 +63,9 @@ const needleUsesExistingModules = read('src/games/needle-awn/runtime.js').includ
 check(needleUsesExistingModules, 'needle-awn: existing i18n/audio/effects modules are reused');
 check(read('src/games/gravity-slingshot/index.js').includes('window.__gravityDebug'),
     'gravity-slingshot: __gravityDebug remains published by the entry');
-check(read('src/games/gravity-slingshot/index.js').includes("owns: ['more', 'home']")
-    && !read('src/games/gravity-slingshot/runtime.js').includes("this.el['btn-home'].addEventListener"),
-    'gravity-slingshot: shared chrome exclusively owns the header Home button');
+const gravityHomeOwnership = read('src/games/gravity-slingshot/index.js').includes("owns: ['more', 'home']")
+    && !read('src/games/gravity-slingshot/runtime.js').includes("this.el['btn-home'].addEventListener");
+check(gravityHomeOwnership, 'gravity-slingshot: shared chrome exclusively owns the header Home button');
 
 const bondRuntime = read('src/games/bond-forge/runtime.js');
 check(bondRuntime.includes("const DAILY_COMPLETION_KEY_PREFIX = 'bf_daily_';"),
