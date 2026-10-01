@@ -1225,10 +1225,11 @@ class GameEngine {
 
             let moveX = 0;
             let moveY = 0;
-            if (this.keys['KeyW'] || this.keys['ArrowUp']) moveY -= 1;
-            if (this.keys['KeyS'] || this.keys['ArrowDown']) moveY += 1;
-            if (this.keys['KeyA'] || this.keys['ArrowLeft']) moveX -= 1;
-            if (this.keys['KeyD'] || this.keys['ArrowRight']) moveX += 1;
+            const arrowsControlP1 = !(this.mode === 'duel' && this.duelMode === '2p');
+            if (this.keys['KeyW'] || (arrowsControlP1 && this.keys['ArrowUp'])) moveY -= 1;
+            if (this.keys['KeyS'] || (arrowsControlP1 && this.keys['ArrowDown'])) moveY += 1;
+            if (this.keys['KeyA'] || (arrowsControlP1 && this.keys['ArrowLeft'])) moveX -= 1;
+            if (this.keys['KeyD'] || (arrowsControlP1 && this.keys['ArrowRight'])) moveX += 1;
 
             // 触屏摇杆兜底（键盘不动时生效），偏移量决定移动速度
             if (moveX === 0 && moveY === 0 && this.joy.active) {

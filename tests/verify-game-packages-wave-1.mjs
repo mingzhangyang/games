@@ -63,6 +63,9 @@ const needleUsesExistingModules = read('src/games/needle-awn/runtime.js').includ
 check(needleUsesExistingModules, 'needle-awn: existing i18n/audio/effects modules are reused');
 check(read('src/games/gravity-slingshot/index.js').includes('window.__gravityDebug'),
     'gravity-slingshot: __gravityDebug remains published by the entry');
+check(read('src/games/gravity-slingshot/index.js').includes("owns: ['more', 'home']")
+    && !read('src/games/gravity-slingshot/runtime.js').includes("this.el['btn-home'].addEventListener"),
+    'gravity-slingshot: shared chrome exclusively owns the header Home button');
 
 const bondRuntime = read('src/games/bond-forge/runtime.js');
 check(bondRuntime.includes("const DAILY_COMPLETION_KEY_PREFIX = 'bf_daily_';"),
@@ -104,6 +107,12 @@ check(needleKeyboardAccessibility, 'needle-awn: gameplay shortcuts preserve nati
 
 const needleIndex = read('src/games/needle-awn/index.js');
 const needleRuntime = read('src/games/needle-awn/runtime.js');
+const needleDuelArrowOwnership = needleRuntime.includes("const arrowsControlP1 = !(this.mode === 'duel' && this.duelMode === '2p');")
+    && needleRuntime.includes("(arrowsControlP1 && this.keys['ArrowUp'])")
+    && needleRuntime.includes("(arrowsControlP1 && this.keys['ArrowDown'])")
+    && needleRuntime.includes("(arrowsControlP1 && this.keys['ArrowLeft'])")
+    && needleRuntime.includes("(arrowsControlP1 && this.keys['ArrowRight'])");
+check(needleDuelArrowOwnership, 'needle-awn: local 2P reserves Arrow movement for P2');
 const needlePauseLabelContract = needleIndex.includes("window.gameEngine.state === 'paused'")
     && needleIndex.includes('text.resume')
     && needleIndex.includes('text.pauseTitle')

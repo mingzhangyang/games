@@ -679,7 +679,6 @@ class GravityGame {
             Sfx.click();
             this.startDailyMode();
         });
-        if (this.el['btn-home']) this.el['btn-home'].addEventListener('click', () => { window.location.href = 'index.html'; });
         if (this.el['btn-menu1']) this.el['btn-menu1'].addEventListener('click', () => { Sfx.click(); this.enterMenu(true); });
         if (this.el['btn-menu2']) this.el['btn-menu2'].addEventListener('click', () => { Sfx.click(); this.enterMenu(true); });
         if (this.el['btn-next']) this.el['btn-next'].addEventListener('click', () => { Sfx.click(); this.nextHole(); });
