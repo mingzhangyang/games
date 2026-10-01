@@ -11,7 +11,7 @@ const check = (condition, label, detail = '') => {
     if (!condition) failures.push(`${label}${detail ? ` — ${detail}` : ''}`);
     console.log(`${condition ? '✓' : '✗'} ${label}${detail ? ` (${detail})` : ''}`);
 };
-const noise = /analytics\.js|sw-register\.js|manifest|favicon|apple-touch-icon|fonts\.(googleapis|gstatic)\.com|game-scores|games-analytics|ERR_FAILED/i;
+const noise = /analytics\.js|sw-register\.js|manifest|favicon|apple-touch-icon|fonts\.(googleapis|gstatic)\.com|game-scores|games-analytics/i;
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 const diagnostics = (page, errors, requestFailures) => {

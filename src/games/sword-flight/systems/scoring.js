@@ -1,8 +1,10 @@
 /** Stage completion and run-end scoring side effects. */
+import { getLang } from '../../../platform/site-settings.js';
 import { storageSet } from '../../../platform/safe-storage.js';
 import { track } from '../../../platform/analytics.js';
 import { SFX } from '../audio.js';
 import { STORAGE_KEYS } from '../config.js';
+import { I18N } from '../i18n.js';
 import { saveDailyResult } from '../model/daily.js';
 
 export function handleStageVictory(game) {
@@ -67,7 +69,8 @@ export function handleGameOver(game) {
     overlay.classList.remove('hidden');
 
     document.getElementById('sf-go-score').textContent = game.score.toLocaleString();
-    document.getElementById('sf-go-distance').textContent = `${Math.round(game.distanceSoared)} 里`;
+    const lang = getLang() === 'zh' ? 'zh' : 'en';
+    document.getElementById('sf-go-distance').textContent = `${Math.round(game.distanceSoared)} ${I18N[lang].unitLi}`;
     document.getElementById('sf-go-realm').textContent = game.getRealmName(game.player.realmIndex);
     document.getElementById('sf-go-rings').textContent = game.ringsThreaded.toString();
 

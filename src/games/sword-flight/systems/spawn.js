@@ -1,6 +1,8 @@
 /** Entity generation and pool maintenance. */
 import { CANVAS_WIDTH } from '../config.js';
 
+export const DAILY_SPAWN_DISTANCE = 2.5;
+
 const random = game => (typeof game.random === 'function' ? game.random() : Math.random());
 
 export function seedStageEntities(game) {
@@ -123,6 +125,19 @@ export function updateSatelliteSwords(game, dt) {
 
 }
 
+function spawnRandomEntities(game) {
+    if (random(game) < 0.05) {
+        game.spawnSpiritStone(-50);
+    }
+    if (game.mode !== 'zen' && random(game) < 0.02) {
+        game.spawnHazard(-80);
+    }
+    if (game.mode !== 'zen' && (game.currentStageIndex >= 3 || game.mode === 'endless')) {
+        if (random(game) < 0.012) game.spawnThunder(-100);
+        if (random(game) < 0.015) game.spawnFiendBird(-100);
+    }
+}
+
 export function updateSpawners(game, traveled) {
     // 生成仙环
     const lastRing = game.rings[game.rings.length - 1];
@@ -130,20 +145,17 @@ export function updateSpawners(game, traveled) {
         game.spawnRing(lastRing ? lastRing.y - 180 : -100);
     }
 
-    // 生成灵石
-    if (random(game) < 0.05) {
-        game.spawnSpiritStone(-50);
+    if (game.mode !== 'daily') {
+        spawnRandomEntities(game);
+        return;
     }
 
-    // 生成障碍
-    if (game.mode !== 'zen' && random(game) < 0.02) {
-        game.spawnHazard(-80);
-    }
-
-    // 高阶关卡生成玄雷与妖禽
-    if (game.mode !== 'zen' && (game.currentStageIndex >= 3 || game.mode === 'endless')) {
-        if (random(game) < 0.012) game.spawnThunder(-100);
-        if (random(game) < 0.015) game.spawnFiendBird(-100);
+    // Daily random decisions are keyed to traveled distance, so 60 Hz and
+    // 120 Hz displays consume the same seeded sequence for the same course.
+    game.spawnDistance = (game.spawnDistance || 0) + traveled;
+    while (game.spawnDistance >= DAILY_SPAWN_DISTANCE) {
+        game.spawnDistance -= DAILY_SPAWN_DISTANCE;
+        spawnRandomEntities(game);
     }
 
 }

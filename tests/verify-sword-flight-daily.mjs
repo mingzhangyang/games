@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Daily-course determinism and modifier regression without Chrome.
 import assert from 'node:assert/strict';
+import { hashStringFNV, mulberry32 } from '../src/platform/daily.js';
 import { createPlayerState } from '../src/games/sword-flight/model/player-state.js';
 import { createDailyRandom, DAILY_MODIFIERS } from '../src/games/sword-flight/model/daily.js';
-import { seedStageEntities, spawnRing, spawnSpiritStone, spawnHazard } from '../src/games/sword-flight/systems/spawn.js';
+import { seedStageEntities, spawnRing, spawnSpiritStone, spawnHazard, spawnThunder, spawnFiendBird, updateSpawners } from '../src/games/sword-flight/systems/spawn.js';
 import { update } from '../src/games/sword-flight/systems/movement.js';
 import { handleRingThreaded } from '../src/games/sword-flight/systems/combat.js';
 
@@ -14,6 +15,8 @@ const sample = seed => {
 
 assert.deepEqual(sample('20260102'), sample('20260102'));
 assert.notDeepEqual(sample('20260102'), sample('20260103'));
+const sharedRandom = mulberry32(hashStringFNV('20260102'));
+assert.deepEqual(sample('20260102'), Array.from({ length: 12 }, () => sharedRandom()));
 console.log('✓ same daily date produces the same gameplay random stream');
 
 function seededCourse(seed) {
@@ -42,6 +45,39 @@ function seededCourse(seed) {
 assert.deepEqual(seededCourse('20260102'), seededCourse('20260102'));
 assert.notDeepEqual(seededCourse('20260102'), seededCourse('20260103'));
 console.log('✓ daily entity placement is seeded from the UTC+8 date');
+
+function spawnerCourse(chunks) {
+    const game = {
+        mode: 'daily',
+        currentStageIndex: 3,
+        random: createDailyRandom('20260102'),
+        spawnDistance: 0,
+        rings: [{ y: 0 }],
+        spiritStones: [],
+        hazards: [],
+        thunders: [],
+        fiendBirds: [],
+    };
+    game.spawnRing = y => spawnRing(game, y);
+    game.spawnSpiritStone = y => spawnSpiritStone(game, y);
+    game.spawnHazard = y => spawnHazard(game, y);
+    game.spawnThunder = y => spawnThunder(game, y);
+    game.spawnFiendBird = y => spawnFiendBird(game, y);
+    chunks.forEach(distance => updateSpawners(game, distance));
+    return {
+        spiritStones: game.spiritStones,
+        hazards: game.hazards,
+        thunders: game.thunders,
+        fiendBirds: game.fiendBirds,
+        spawnDistance: game.spawnDistance,
+    };
+}
+
+assert.deepEqual(
+    spawnerCourse(Array.from({ length: 100 }, () => 2.5)),
+    spawnerCourse(Array.from({ length: 50 }, () => 5)),
+);
+console.log('✓ daily spawn sequence is independent of display frame chunking');
 
 function movementGame(dailyModifiers = null) {
     const player = createPlayerState();

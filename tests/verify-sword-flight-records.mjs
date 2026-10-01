@@ -130,6 +130,11 @@ try {
     }
     game('endless', 100).handleGameOver();
     assert.equal(values.get(STORAGE_KEYS.ENDLESS_BEST), '2000');
+    values.set('site_lang', 'en');
+    const localizedDistance = game('endless', 1);
+    localizedDistance.distanceSoared = 12.6;
+    localizedDistance.handleGameOver();
+    assert.equal(node('sf-go-distance').textContent, '13 li');
     console.log('✓ only endless game-over can improve the endless record');
 
     const dailyKey = `${STORAGE_KEYS.DAILY_PREFIX}${getDailyDateKey()}`;

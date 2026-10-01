@@ -1,5 +1,5 @@
 /** The game-local names for the shared UTC+8 daily clock. */
-import { todayKey, todayKeyDisplay } from '../../../platform/daily.js';
+import { hashStringFNV, mulberry32, todayKey, todayKeyDisplay } from '../../../platform/daily.js';
 import { storageGet, storageSet } from '../../../platform/safe-storage.js';
 import { STORAGE_KEYS } from '../config.js';
 
@@ -14,19 +14,7 @@ export const DAILY_MODIFIERS = Object.freeze({
 
 /** Create the deterministic gameplay random stream used by today's course. */
 export function createDailyRandom(seed = todayKey()) {
-    let state = 2166136261;
-    for (const character of String(seed)) {
-        state ^= character.charCodeAt(0);
-        state = Math.imul(state, 16777619);
-    }
-
-    return () => {
-        state = (state + 0x6d2b79f5) | 0;
-        let value = state;
-        value = Math.imul(value ^ (value >>> 15), value | 1);
-        value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-        return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-    };
+    return mulberry32(hashStringFNV(String(seed)));
 }
 
 /** Local completion is independent of network submission, including 0 points. */

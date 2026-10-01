@@ -35,6 +35,7 @@ export class SwordFlightGame {
         this.isPaused = false;
         this.random = Math.random;
         this.dailyModifiers = null;
+        this.spawnDistance = 0;
 
         // 玩家实体
         this.player = createPlayerState();

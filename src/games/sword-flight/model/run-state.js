@@ -73,6 +73,7 @@ export function startFlight(game, mode = 'stages', stageIndex = 0) {
     game.maxComboThisRun = 1;
     game.ringsThreaded = 0;
     game.distanceSoared = 0;
+    game.spawnDistance = 0;
     game.scrollOffset = 0;
     game.worldSpeed = 5;
 
