@@ -69,20 +69,20 @@ check(bondRuntime.includes("const DAILY_COMPLETION_KEY_PREFIX = 'bf_daily_';"),
     'bond-forge: preserves the local daily completion key prefix');
 check(bondRuntime.includes("const DAILY_LEADERBOARD_KEY_PREFIX = 'bond-forge';"),
     'bond-forge: uses the registry prefix for leaderboard keys');
-check(bondRuntime.includes("dailyKey(DAILY_LEADERBOARD_KEY_PREFIX"),
+check(bondRuntime.includes('dailyKey(DAILY_LEADERBOARD_KEY_PREFIX'),
     'bond-forge: leaderboard requests use the registry daily key');
 check(bondRuntime.includes('this.dailyTotalDrags += this.drags'),
     'bond-forge: daily score aggregates every completed molecule');
 check(bondRuntime.includes('DAILY_COMPLETION_KEY_PREFIX}${todayKey()'),
     'bond-forge: persists the UTC+8 daily completion marker');
-check(bondRuntime.includes("track('bond-forge', 'play')")
-    && !/track\('bond-forge',\s*['"](?:daily_start|level_start)['"]/.test(bondRuntime),
-    'bond-forge: emits canonical analytics play events');
+const bondUsesCanonicalAnalytics = bondRuntime.includes("track('bond-forge', 'play')")
+    && !/track\('bond-forge',\s*['"](?:daily_start|level_start)['"]/.test(bondRuntime);
+check(bondUsesCanonicalAnalytics, 'bond-forge: emits canonical analytics play events');
 
 const needleControls = read('src/games/needle-awn/input/controls.js');
-check(needleControls.includes("event.code === 'KeyP'")
-    && needleControls.includes("game.state === 'paused'"),
-    'needle-awn: P and Escape toggle pause and resume');
+const needlePauseShortcuts = needleControls.includes("event.code === 'KeyP'")
+    && needleControls.includes("game.state === 'paused'");
+check(needlePauseShortcuts, 'needle-awn: P and Escape toggle pause and resume');
 
 if (failures.length) {
     console.error(`\nverify-game-packages-wave-1: ${failures.length} failure(s)`);
