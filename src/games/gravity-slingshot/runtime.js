@@ -118,6 +118,8 @@ class GravityGame {
         this.launches = 0;
         this.totalLaunches = 0;
         this.dailyBest = Number(storageGet('gd_daily_' + todayCompact())) || 0;
+        this.dailyStartedAt = 0;
+        this.dailyDateKey = '';
 
         // 飞行状态
         this.phase = 'menu';      // menu | aiming | flying | resolved | holed
@@ -223,11 +225,11 @@ class GravityGame {
     }
 
     /** 桌面侧栏战绩（≥1024px 可见）：今日赛程最好杆数 + 关卡总星数 */
-    updateSideRecords() {
+    updateSideRecords(date = todayCompact()) {
         const box = this.el['side-records'];
         if (!box) return;
         const t = this.TEXT;
-        const todayBest = Number(storageGet('gd_daily_' + todayCompact())) || 0;
+        const todayBest = Number(storageGet('gd_daily_' + date)) || 0;
         const totalStars = this.stars.reduce((a, b) => a + (b || 0), 0);
         const rows = [
             [`📅 ${t.bestToday}`, todayBest ? `${todayBest} ${t.launchesWord}` : '—'],
@@ -246,9 +248,9 @@ class GravityGame {
         });
     }
 
-    updateDailyBest() {
+    updateDailyBest(date = todayCompact()) {
         if (!this.el['daily-best']) return;
-        const best = Number(storageGet('gd_daily_' + todayCompact())) || 0;
+        const best = Number(storageGet('gd_daily_' + date)) || 0;
         this.el['daily-best'].textContent = best
             ? `📅 ${this.TEXT.bestToday}: ${best} ${this.TEXT.launchesWord}`
             : '';
@@ -292,7 +294,9 @@ class GravityGame {
 
     startDailyMode() {
         this.mode = 'daily';
-        this.course = buildDailyCourse();
+        this.dailyStartedAt = Date.now();
+        this.dailyDateKey = todayCompact(this.dailyStartedAt);
+        this.course = buildDailyCourse(this.dailyStartedAt);
         this.holeIdx = 0;
         this.totalLaunches = 0;
         this.enterMenu(false);
@@ -523,12 +527,12 @@ class GravityGame {
     /* ── 每日赛程结算 ── */
 
     finishDaily() {
-        const date = todayCompact();
+        const date = this.dailyDateKey || todayCompact(this.dailyStartedAt || Date.now());
         const prev = Number(storageGet('gd_daily_' + date)) || 0;
         const isBest = !prev || this.totalLaunches < prev;
         if (isBest) storageSet('gd_daily_' + date, String(this.totalLaunches));
-        this.updateDailyBest();
-        this.updateSideRecords();
+        this.updateDailyBest(date);
+        this.updateSideRecords(date);
 
         if (this.el['over-title']) this.el['over-title'].textContent = `📅 ${this.TEXT.dailyDone}`;
         if (this.el['over-score']) this.el['over-score'].textContent = `${this.totalLaunches} ${this.TEXT.launchesWord}`;
@@ -542,21 +546,21 @@ class GravityGame {
         const game = `gravity-d${date}`;
         // 网络层收敛到 js/leaderboard.js（false=未进全球榜，走本地兜底）
         submitScore({ game, name: ensurePlayerName() || 'Anonymous', score: this.totalLaunches }).then(ok => {
-            if (ok) return this.fetchDailyBoard(game);
-            this.renderLocalBoard();
+            if (ok) return this.fetchDailyBoard(game, date);
+            this.renderLocalBoard(date);
             if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbOffline;
         });
     }
 
-    localBoardKey() { return `gd_local_${todayCompact()}`; }
+    localBoardKey(date = this.dailyDateKey || todayCompact()) { return `gd_local_${date}`; }
 
-    renderLocalBoard() {
+    renderLocalBoard(date = this.dailyDateKey || todayCompact()) {
         const list = this.el['lb-list'];
         if (!list) return;
         list.textContent = '';
         let local = [];
         try {
-            local = JSON.parse(storageGet(this.localBoardKey())) || [];
+            local = JSON.parse(storageGet(this.localBoardKey(date))) || [];
         } catch (e) { local = []; }
         if (!Array.isArray(local) || local.length === 0) {
             const empty = document.createElement('div');
@@ -584,7 +588,7 @@ class GravityGame {
         return row;
     }
 
-    async fetchDailyBoard(game) {
+    async fetchDailyBoard(game, date = this.dailyDateKey || todayCompact()) {
         const list = this.el['lb-list'];
         const statusEl = this.el['lb-status'];
         if (!list) return;
@@ -593,13 +597,13 @@ class GravityGame {
             if (this.phase !== 'holed' || !this.el.over || this.el.over.classList.contains('hidden')) return;
             list.textContent = '';
             if (!Array.isArray(data) || data.length === 0) {
-                this.renderLocalBoard();
+                this.renderLocalBoard(date);
                 return;
             }
             data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
             if (statusEl) statusEl.textContent = '';
         } catch (e) {
-            this.renderLocalBoard();
+            this.renderLocalBoard(date);
             if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
         }
     }

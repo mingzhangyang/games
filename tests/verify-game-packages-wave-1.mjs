@@ -73,8 +73,13 @@ check(bondRuntime.includes('dailyKey(DAILY_LEADERBOARD_KEY_PREFIX'),
     'bond-forge: leaderboard requests use the registry daily key');
 check(bondRuntime.includes('this.dailyTotalDrags += this.drags'),
     'bond-forge: daily score aggregates every completed molecule');
-check(bondRuntime.includes('DAILY_COMPLETION_KEY_PREFIX}${todayKey()'),
-    'bond-forge: persists the UTC+8 daily completion marker');
+const bondPinsDailyDate = bondRuntime.includes('this.dailyStartedAt = Date.now();')
+    && bondRuntime.includes('this.dailyDateKey = todayKey(this.dailyStartedAt);')
+    && bondRuntime.includes('this.buildDailyCourse(this.dailyStartedAt)')
+    && bondRuntime.includes('const date = this.dailyDateKey || todayKey();')
+    && bondRuntime.includes('DAILY_COMPLETION_KEY_PREFIX}${date}')
+    && (bondRuntime.match(/dailyKey\(DAILY_LEADERBOARD_KEY_PREFIX, startedAt\)/g) || []).length >= 2;
+check(bondPinsDailyDate, 'bond-forge: Daily result and leaderboard stay pinned to the UTC+8 start date');
 const bondUsesCanonicalAnalytics = bondRuntime.includes("track('bond-forge', 'play')")
     && bondRuntime.includes("track('bond-forge', 'finish')")
     && !/track\('bond-forge',\s*['"](?:daily_start|level_start)['"]/.test(bondRuntime);
@@ -83,6 +88,7 @@ check(bondUsesCanonicalAnalytics, 'bond-forge: emits canonical analytics play ev
 const needleControls = read('src/games/needle-awn/input/controls.js');
 const needlePauseShortcuts = needleControls.includes("event.code === 'KeyP'")
     && needleControls.includes("event.code === 'Escape'")
+    && needleControls.includes('!event.repeat')
     && needleControls.includes("game.state === 'paused'");
 check(needlePauseShortcuts, 'needle-awn: P and Escape toggle pause and resume');
 
@@ -94,6 +100,22 @@ const needlePauseLabelContract = needleIndex.includes("window.gameEngine.state =
     && needleRuntime.includes("typeof chrome.renderPause === 'function'")
     && (needleRuntime.match(/this\.refreshPauseLabel\(\);/g) || []).length >= 4;
 check(needlePauseLabelContract, 'needle-awn: chrome pause label follows localized engine state');
+
+const gravityRuntime = read('src/games/gravity-slingshot/runtime.js');
+const gravityCourse = read('src/games/gravity-slingshot/model/course.js');
+const gravityPinsDailyDate = gravityRuntime.includes('this.dailyStartedAt = Date.now();')
+    && gravityRuntime.includes('this.dailyDateKey = todayCompact(this.dailyStartedAt);')
+    && gravityRuntime.includes('buildDailyCourse(this.dailyStartedAt)')
+    && gravityRuntime.includes('const date = this.dailyDateKey || todayCompact(this.dailyStartedAt || Date.now());')
+    && gravityCourse.includes('buildDailyCourse(now = Date.now())')
+    && gravityCourse.includes('const date = todayCompact(now);');
+check(gravityPinsDailyDate, 'gravity-slingshot: Daily result and board stay pinned to the UTC+8 start date');
+
+const needlePinsDailyDate = needleRuntime.includes('this.dailyDateKey = this.getTodayDateString();')
+    && needleRuntime.includes("const dailyDate = this.mode === 'daily'")
+    && needleRuntime.includes('STORAGE_KEYS.DAILY_PREFIX}${dailyDate}')
+    && needleRuntime.includes('needle-awn-d${dailyDate}');
+check(needlePinsDailyDate, 'needle-awn: Daily result and leaderboard stay pinned to the UTC+8 start date');
 
 if (failures.length) {
     console.error(`\nverify-game-packages-wave-1: ${failures.length} failure(s)`);

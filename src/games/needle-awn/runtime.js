@@ -54,6 +54,7 @@ class GameEngine {
         window.addEventListener('resize', () => this.setupCanvas());
         window.addEventListener('game-frame:changed', () => this.setupCanvas());
         this.mode = 'levels'; // 'levels' | 'endless' | 'daily' | 'duel'
+        this.dailyDateKey = '';
         this.currentLevel = 1;
         this.unlockedLevel = parseInt(storageGet(STORAGE_KEYS.UNLOCKED_LEVEL) || '1', 10);
         this.levelStars = JSON.parse(storageGet(STORAGE_KEYS.LEVEL_STARS) || '{}');
@@ -577,6 +578,7 @@ class GameEngine {
     startDailyMode() {
         if (!this.artReady) return;
         this.mode = 'daily';
+        this.dailyDateKey = this.getTodayDateString();
         this.resetGameState();
         this.resumeBattle();
         track('needle-awn', 'play');
@@ -969,15 +971,18 @@ class GameEngine {
             storageSet(STORAGE_KEYS.ENDLESS_BEST, this.endlessBest);
         }
 
+        const dailyDate = this.mode === 'daily'
+            ? (this.dailyDateKey || this.getTodayDateString())
+            : '';
+
         // 每日挑战记录保存
         if (this.mode === 'daily') {
-            const today = this.getTodayDateString();
-            storageSet(`${STORAGE_KEYS.DAILY_PREFIX}${today}`, String(this.score));
+            storageSet(`${STORAGE_KEYS.DAILY_PREFIX}${dailyDate}`, String(this.score));
         }
 
         // 尝试向共享排行榜 Worker 提交分数 (网络可用时)
         const name = getPlayerName() || ensurePlayerName();
-        const gameKey = this.mode === 'daily' ? `needle-awn-d${this.getTodayDateString()}` : 'needle-awn';
+        const gameKey = this.mode === 'daily' ? `needle-awn-d${dailyDate}` : 'needle-awn';
 
         // 网络层收敛到 js/leaderboard.js（原无超时/cors，统一补齐；false=未进金榜）
         const ok = await submitScore({ game: gameKey, name, score: this.score });

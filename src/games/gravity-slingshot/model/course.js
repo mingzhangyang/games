@@ -117,8 +117,8 @@ function cachedDailyCourse(date) {
     }
 }
 
-export function buildDailyCourse() {
-    const date = todayCompact();
+export function buildDailyCourse(now = Date.now()) {
+    const date = todayCompact(now);
     const cached = cachedDailyCourse(date);
     if (cached) return cached;
     const rng = mulberry32(hashStr(`gravity-daily-${date}`));

@@ -232,6 +232,8 @@ class BondForgeGame {
         this.dailyCourse = [];
         this.dailyIndex = 0;
         this.dailyTotalDrags = 0;
+        this.dailyStartedAt = 0;
+        this.dailyDateKey = '';
 
         this.time = 0;
         this.lastFrame = 0;
@@ -681,7 +683,9 @@ class BondForgeGame {
 
     startDaily() {
         this.mode = 'daily';
-        this.dailyCourse = this.buildDailyCourse();
+        this.dailyStartedAt = Date.now();
+        this.dailyDateKey = todayKey(this.dailyStartedAt);
+        this.dailyCourse = this.buildDailyCourse(this.dailyStartedAt);
         this.dailyIndex = 0;
         this.dailyTotalDrags = 0;
         if (!this.dailyCourse.length) {
@@ -699,8 +703,8 @@ class BondForgeGame {
      *    —— 改前缀或换哈希会让「今天已发布的赛程」在玩家之间不一致。
      *    （用 todayKey() 而不是 Date.now()：同一天内反复进入必须拿到同一套题。）
      */
-    buildDailyCourse() {
-        const rng = mulberry32(hashStringFNV(DAILY_SEED_PREFIX + todayKey()));
+    buildDailyCourse(now = Date.now()) {
+        const rng = mulberry32(hashStringFNV(DAILY_SEED_PREFIX + todayKey(now)));
         const ids = dailyPicks(rng, DAILY_POOL, DAILY_COUNT);
         return ids.map(levelById).filter(Boolean);
     }
@@ -862,10 +866,11 @@ class BondForgeGame {
         if (this.el['clear']) this.el['clear'].classList.add('hidden');
         this.state = 'over';
         const total = this.dailyTotalDrags;
+        const date = this.dailyDateKey || todayKey();
         try {
             // Keep the documented local completion marker separate from the
-            // network leaderboard key.  The date is always UTC+8 via todayKey.
-            storageSet(`${DAILY_COMPLETION_KEY_PREFIX}${todayKey()}`, String(total));
+            // network leaderboard key. The UTC+8 date is pinned when the run starts.
+            storageSet(`${DAILY_COMPLETION_KEY_PREFIX}${date}`, String(total));
         } catch (e) {
             // Storage is optional; the completed result remains visible.
         }
@@ -968,20 +973,21 @@ class BondForgeGame {
     submitDailyScore() {
         if (this.mode !== 'daily') return;
         const total = this.dailyCourse.length ? this.dailyTotalDrags : 0;
+        const startedAt = this.dailyStartedAt || Date.now();
         submitScore({
-            game: dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, Date.now()),
+            game: dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, startedAt),
             name: ensurePlayerName(),
             score: total,
         }).then(ok => {
-            if (ok) this.refreshLeaderboard();
+            if (ok) this.refreshLeaderboard(startedAt);
             else this.setLbStatus(this.t('lbOffline'));
         }).catch(() => this.setLbStatus(this.t('lbOffline')));
     }
 
-    refreshLeaderboard() {
+    refreshLeaderboard(startedAt = this.dailyStartedAt || Date.now()) {
         const list = this.el['lb-list'];
         if (!list) return;
-        fetchBoard(dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, Date.now()))
+        fetchBoard(dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, startedAt))
             .then(rows => {
                 list.innerHTML = '';
                 if (!Array.isArray(rows) || !rows.length) {
@@ -1019,8 +1025,11 @@ class BondForgeGame {
         const detail = this.mode === 'daily'
             ? `${this.t('drags')} ${score}`
             : `${this.t('drags')} ${score} / ${this.t('par')} ${this.par}`;
+        const resultDate = this.mode === 'daily'
+            ? todayKeyDisplay(this.dailyStartedAt || Date.now())
+            : todayKeyDisplay();
         const text = `${this.t('title')} — ${detail}`
-            + ` (${todayKeyDisplay()})`;
+            + ` (${resultDate})`;
         const done = () => this.toast(this.t('copied'));
         try {
             if (navigator.clipboard && navigator.clipboard.writeText) {

@@ -11,6 +11,7 @@ export function bindNeedleAwnInput(game) {
         }
         if (event.code === 'KeyE') game.triggerUltimate(game.player);
         if ((event.code === 'KeyP' || event.code === 'Escape')
+            && !event.repeat
             && (game.state === 'playing' || game.state === 'paused')) {
             event.preventDefault();
             game.togglePause();
