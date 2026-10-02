@@ -784,7 +784,7 @@ body.rainbow-theme {
     }
 
     /* 移动端侧栏让位给底部抽屉的规则已收敛到 css/layout.css 的
-       `body.has-stats-drawer .game-sidebar { display: none }`（由 js/tetris.js 打 body 类），
+       `body.has-stats-drawer .game-sidebar { display: none }`（由 src/games/tetris/runtime.js 打 body 类），
        本页不再单独声明 —— 与其余 6 个页面走同一条路径，避免两处规则各自演化。 */
 
     #tetris,

@@ -62,7 +62,7 @@ npm run verify:changed  # 按 git diff 只跑相关项（单页改动约 40s；�
 
 **Game-specific JavaScript**:
 - `js/math-rain/main.js` - Math Rain orchestrator; game logic is event-driven across `js/math-rain/` (systems/, core/, i18n/)
-- `js/tetris.js` - Tetris game engine and logic
+- `src/games/tetris/` - Tetris package (composition root, runtime, and compatibility entry)
 - `js/tank-battle.js` - Tank Battle game implementation
 - `js/gomoku.js` - Gomoku board, win detection, and AI
 

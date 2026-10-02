@@ -12,16 +12,16 @@
 
 **定位**：tetris 的 CSS 早已接入桌面纵向预算
 （`css/tetris.css:110-113` 的 `--frame-ratio/-stage-h/-shell-max/-stage-cap`
-+ `js/tetris.js:1457` 的 `bindFrame({ logicalWidth: 400 })`），
++ `src/games/tetris/index.js` 的 `frame: { logicalWidth: 400 }`），
 但渲染代码整份是按 `this.canvas.width` 的**像素坐标**直接作画的
-（约 12 处，如 `js/tetris.js:1081` 的整屏填充、`:1042-1050` 的网格线、
-`:995/1026` 的星空随机坐标），后端缓冲区一旦变大，这些读数全部跟着变，
+（约 12 处，如 `src/games/tetris/runtime.js` 的整屏填充、网格线和星空随机坐标），
+后端缓冲区一旦变大，这些读数全部跟着变，
 逻辑坐标系会整体错位。
 
 **修法**：把逻辑尺寸从 `canvas.width` 里剥出来（`LOGICAL_W=400 / LOGICAL_H=800` 常量），
 再按 `js/needle-awn.js` / `js/sword-flight.js` 的既有形态用
 `ctx.setTransform(s, 0, 0, s, 0, 0)`（⚠ 不是 `ctx.scale`，它是累乘的）缩放。
-必须一并处理：`Tetris.gridCanvas` 离屏网格缓存（`js/tetris.js:684-685`），
+必须一并处理：`Tetris.gridCanvas` 离屏网格缓存（`src/games/tetris/runtime.js`），
 以及 `#particleCanvas` / `#lineClearCanvas` 两层绝对定位的兄弟画布——
 CLAUDE.md 记过它们与棋盘错位的事故，三层必须同步缩放。
 
@@ -65,7 +65,7 @@ display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不
 ## verify-button-icons 未覆盖 tetris / minesweeper 的结果按钮
 
 **现象**：`tests/verify-button-icons.mjs` 的 `TARGETS` 只列了 8 页（2026-09-20 补上
-lumen 后 9 页）。tetris（`js/tetris.js` 3 处 `ICONS.`）与 minesweeper（`js/minesweeper.js`
+lumen 后 9 页）。tetris（`src/games/tetris/runtime.js` 3 处 `ICONS.`）与 minesweeper（`js/minesweeper.js`
 8 处）确实有「图标 + 文字」的结果/动作按钮，却一直不在表内，等于没被量过
 inline-flex / 单 svg / 图标 15px / 基线偏移这四条。
 

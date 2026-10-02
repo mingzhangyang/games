@@ -2,7 +2,7 @@
 import {
     LEVELS, GRID_COLS, GRID_ROWS, operableIndexes, initStatesOf,
     isCircuitSolved, minSteps, dailyLevel,
-} from '../js/circuit-levels.js';
+} from '../src/games/circuit/model/levels.js';
 
 let passed = 0, failed = 0;
 function assert(cond, msg) {

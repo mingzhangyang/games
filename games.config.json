@@ -220,7 +220,7 @@
       "id": "tetris",
       "prefix": "te",
       "href": "tetris.html",
-      "entry": "js/tetris.js",
+      "entry": "src/games/tetris/index.js",
       "emoji": "🟦",
       "title": {
         "doc": "Tetris - Cool edition",
@@ -974,7 +974,7 @@
       "id": "circuit",
       "prefix": "cc",
       "href": "circuit.html",
-      "entry": "js/circuit.js",
+      "entry": "src/games/circuit/index.js",
       "emoji": "💡",
       "title": {
         "doc": "电路谜题 Circuit — Light It Up",

@@ -80,6 +80,7 @@ const MIGRATED = [
     { rel: 'src/games/hoop-shot/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/carrot-pull/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/lumen/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/circuit/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
 ];
 for (const item of MIGRATED) {
     const src = readFileSync(join(item.root, item.rel.replace(/^src\/games\//, '').replace(/^js\//, '')), 'utf8');
@@ -101,11 +102,16 @@ for (const item of MIGRATED) {
 }
 
 /* ── 2. 表驱动页 import createSfx ── */
-const TABLE_DRIVEN = ['tetris.js', 'gomoku.js', 'tank-battle.js'];
-for (const rel of TABLE_DRIVEN) {
-    const src = readFileSync(join(JS_DIR, rel), 'utf8');
-    check(`${rel}: import createSfx`, /import\s*\{[^}]*createSfx[^}]*\}\s*from\s*'\.\/game-sfx\.js'/.test(src));
-    check(`${rel}: 无自造音频样板`, !/createOscillator|createBufferSource|webkitAudioContext/.test(src));
+const TABLE_DRIVEN = [
+    { rel: 'src/games/tetris/runtime.js', file: join(ROOT, 'src', 'games', 'tetris', 'runtime.js'), importPath: '../../platform/game-sfx.js' },
+    { rel: 'js/gomoku.js', file: join(JS_DIR, 'gomoku.js'), importPath: './game-sfx.js' },
+    { rel: 'js/tank-battle.js', file: join(JS_DIR, 'tank-battle.js'), importPath: './game-sfx.js' },
+];
+for (const item of TABLE_DRIVEN) {
+    const src = readFileSync(item.file, 'utf8');
+    const importRe = new RegExp(`import\\s*\\{[^}]*createSfx[^}]*\\}\\s*from\\s*['"]${item.importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`);
+    check(`${item.rel}: import createSfx`, importRe.test(src));
+    check(`${item.rel}: 无自造音频样板`, !/createOscillator|createBufferSource|webkitAudioContext/.test(src));
 }
 
 /* ── 3. 全域扫描（豁免文件除外） ── */
