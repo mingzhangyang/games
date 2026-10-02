@@ -9,6 +9,7 @@ import {
     SPEED_CAP,
     W,
     H,
+    FLIGHT_TIMEOUT,
 } from '../config.js';
 
 // Reused scratch objects keep the preview solver allocation-free while preserving
@@ -67,35 +68,50 @@ export function collisionAt(x, y, count) {
 }
 
 /**
+ * Advance one fixed simulation step.
+ *
+ * The preview and the live flight loop must use the same integrator. Keeping
+ * the step here makes that contract executable instead of relying on two
+ * copies of the update sequence staying in sync.
+ */
+export function stepProbe(level, probe, t) {
+    const count = bodiesAt(level, t);
+    const acceleration = accelAt(probe.x, probe.y, count);
+    probe.vx += acceleration.ax * DT;
+    probe.vy += acceleration.ay * DT;
+    const speed = Math.hypot(probe.vx, probe.vy);
+    if (speed > SPEED_CAP) {
+        probe.vx *= SPEED_CAP / speed;
+        probe.vy *= SPEED_CAP / speed;
+    }
+    probe.x += probe.vx * DT;
+    probe.y += probe.vy * DT;
+    const nextT = t + DT;
+
+    if (collisionAt(probe.x, probe.y, count)) return { t: nextT, outcome: 'crash' };
+    const dx = probe.x - level.target.x;
+    const dy = probe.y - level.target.y;
+    if (dx * dx + dy * dy < CAPTURE_R * CAPTURE_R) return { t: nextT, outcome: 'capture' };
+    if (probe.x < -BOUNDS || probe.x > W + BOUNDS || probe.y < -BOUNDS || probe.y > H + BOUNDS) {
+        return { t: nextT, outcome: 'lost' };
+    }
+    if (nextT > FLIGHT_TIMEOUT) return { t: nextT, outcome: 'lost' };
+    return { t: nextT, outcome: null };
+}
+
+/**
  * Simulate the same fixed-step trajectory used by the live game.
  * Returns capture|crash|lost|timeout and sampled points for rendering.
  */
 export function simulate(level, x, y, vx, vy, maxSteps) {
     const pts = [];
+    const probe = { x, y, vx, vy };
     let t = 0;
     for (let i = 0; i < maxSteps; i++) {
-        const count = bodiesAt(level, t);
-        const acceleration = accelAt(x, y, count);
-        vx += acceleration.ax * DT;
-        vy += acceleration.ay * DT;
-        const speed = Math.hypot(vx, vy);
-        if (speed > SPEED_CAP) {
-            vx *= SPEED_CAP / speed;
-            vy *= SPEED_CAP / speed;
-        }
-        x += vx * DT;
-        y += vy * DT;
-        t += DT;
-        if (collisionAt(x, y, count)) return { pts, outcome: 'crash', steps: i };
-        const dx = x - level.target.x;
-        const dy = y - level.target.y;
-        if (dx * dx + dy * dy < CAPTURE_R * CAPTURE_R) {
-            return { pts, outcome: 'capture', steps: i };
-        }
-        if (x < -BOUNDS || x > W + BOUNDS || y < -BOUNDS || y > H + BOUNDS) {
-            return { pts, outcome: 'lost', steps: i };
-        }
-        pts.push({ x, y });
+        const result = stepProbe(level, probe, t);
+        t = result.t;
+        if (result.outcome) return { pts, outcome: result.outcome, steps: i };
+        pts.push({ x: probe.x, y: probe.y });
     }
     return { pts, outcome: 'timeout', steps: maxSteps };
 }
