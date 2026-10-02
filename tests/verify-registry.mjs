@@ -66,11 +66,11 @@ const PROBES = {
     // delegate platform wiring to package modules (as Tower Defense now does).
     leaderboard: g => {
         const graph = graphFor(g);
-        return graph.has('js/leaderboard.js') || graph.has('src/platform/leaderboard.js');
+        return graph.has('src/platform/leaderboard.js');
     },
     analytics: g => {
         const graph = graphFor(g);
-        return graph.has('js/analytics.js') || graph.has('src/platform/analytics.js');
+        return graph.has('src/platform/analytics.js');
     },
     daily: g => {
         // Legacy pages historically declare the daily contract at their entry;
@@ -79,9 +79,9 @@ const PROBES = {
         // packages are the ones whose full graph carries this capability.
         if (g.entry === `src/games/${g.id}/index.js`) {
             const graph = graphFor(g);
-            return graph.has('js/daily.js') || graph.has('src/platform/daily.js');
+            return graph.has('src/platform/daily.js');
         }
-        return /from '\.{1,2}\/daily\.js'/.test(read(g.entry));
+        return /from ['"][^'"]*platform\/daily\.js['"]/.test(read(g.entry));
     },
     drawer: g => /game-drawer-panel/.test(read(g.href)),
     sidebar: g => /game-sidebar/.test(read(g.href)),

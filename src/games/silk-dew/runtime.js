@@ -321,7 +321,7 @@ export class SilkfallGame {
             el['btn-next'].addEventListener('click', () => { Sfx.click(); this.nextLevel(); });
         }
         if (el['btn-replay']) {
-            // ⚠️ 图标键名必须是 ICONS 里真实存在的 `retry`（js/icons.js:28）。
+            // ⚠️ 图标键名必须是 ICONS 里真实存在的 `retry`（src/platform/icons.js:28）。
             // 曾经写成 ICONS.refresh —— 该键不存在，求值得 undefined，
             // innerHTML 里塞进字面量 "undefined"，按钮变成「裸文本无图标」：
             // verify-button-icons 报 `svg=0`，而几何/点击断言全绿。
@@ -349,7 +349,7 @@ export class SilkfallGame {
             el['reset-btn'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
         }
         if (el['mute-btn']) {
-            // ⚠️ 键名是 soundOn / soundOff（js/icons.js:20,22），不是 volumeOn/volumeOff。
+            // ⚠️ 键名是 soundOn / soundOff（src/platform/icons.js:20,22），不是 volumeOn/volumeOff。
             // 写错键名会把字面量 "undefined" 塞进 innerHTML —— 图标消失但无报错。
             el['mute-btn'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
             el['mute-btn'].addEventListener('click', () => {

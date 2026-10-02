@@ -33,7 +33,7 @@ function clamp(v, min, max) {
     return v < min ? min : v > max ? max : v;
 }
 
-// UTC+8 日期键 / 每日种子哈希 / PRNG：已收敛到 js/daily.js（UTC+8 唯一口径）
+// UTC+8 日期键 / 每日种子哈希 / PRNG：已收敛到 src/platform/daily.js（UTC+8 唯一口径）
 
 function formatNumber(n) {
     return Number(n).toLocaleString('en-US');
@@ -260,7 +260,7 @@ export class PlanetMergeGame {
         this.bindUI();
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 js/game-frame.js）：
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 src/platform/game-frame.js）：
         // 后端缓冲区必须在 CSS 尺寸变化之后重算
         window.addEventListener('game-frame:changed', () => this.resize());
         this.updateHud();
@@ -983,7 +983,7 @@ export class PlanetMergeGame {
             { game: 'planet-merge', score: this.score },
             { game: `planet-merge-d${this.dailyDay}`, score: this.score }
         ];
-        // 网络层收敛到 js/leaderboard.js（任一失败即提示未进全球榜）
+        // 网络层收敛到 src/platform/leaderboard.js（任一失败即提示未进全球榜）
         const results = await Promise.all(entries.map(entry => submitScore({ name: this.getUsername(), ...entry })));
         if (results.some(r => !r)) {
             // 提交失败：本地榜已由 recordLocalScore 记录，但要让玩家知道未进全球榜

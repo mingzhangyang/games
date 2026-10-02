@@ -3,9 +3,9 @@
 > 现行契约（2026-09-25 立项）。实施分 P0–P3 四期，本文随每期落地更新「状态」列。
 > 相关：设计令牌与 hex 规则见 `style.md`；登记源与 caps 见 `registry.md`；页面骨架见 `layout.md`。
 
-- 设置读写：`js/site-settings.js`（`getThemePref` / `setThemePref`，键 `site_theme`）
+- 设置读写：`src/platform/site-settings.js`（`getThemePref` / `setThemePref`，键 `site_theme`）
 - 首屏定主题：`public/theme-boot.js`（同步经典脚本，由 gen 注入每页 `<head>`）
-- 运行时：`js/theme.js`（`getTheme` / `onThemeChange` / `readPalette`）
+- 运行时：`src/platform/theme.js`（`getTheme` / `onThemeChange` / `readPalette`）
 - 令牌：`css/tokens.css` 的 `:root[data-theme="light"]` 覆盖块
 - 登记：`games.config.json` 的 cap `theme-light` 与字段 `themeColorLight`
 - 校验：`tests/verify-theme.mjs`（按文件名自动发现，verify-all 校验项 `verify-theme`）
@@ -52,7 +52,7 @@
   `tokens.css` 的覆盖块里。页面 CSS 迁移时把字面色换成页面本地变量 `--xx-*`，
   再在同一文件里写 `:root[data-theme="light"] .xx-shell { --xx-*: … }` 覆盖。
 
-### 2.4 画布：`js/theme.js`
+### 2.4 画布：`src/platform/theme.js`
 
 - 画布颜色**不再写字面量**，而是读 CSS 变量：`readPalette(el, { bg: '--xx-canvas-bg', … })`
   返回 `{ bg: '…', … }`。这样图例（DOM）与画布共用一份颜色，不会再出现
@@ -66,7 +66,7 @@
 ## 3. 登记与生成
 
 - cap `theme-light`：页面支持浅色。判据（`verify-registry` 双向探针）：页面自己的 CSS 含
-  `[data-theme="light"]`。`js/theme.js` 只在画布颜色随主题变化时才需要 import
+  `[data-theme="light"]`。`src/platform/theme.js` 只在画布颜色随主题变化时才需要 import
   （gomoku 的木质棋盘与棋子是「实物」，两套主题一致，所以不 import）。
 - 字段 `themeColorLight`：浅色下的浏览器顶栏色，带 `theme-light` cap 时必填。
 - gen 的 `head` 区域输出：`theme-support` meta → `theme-color` meta（`data-light`）→

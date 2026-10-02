@@ -56,7 +56,7 @@
 
 - **每关**：星芒 1–2 + 本关**牵拉次数**。三星 = 收齐全部星芒且 `drags <= par`；收齐但超 par，或少 1 枚星但仍在 par 内 = 二星；其余成功入壶 = 一星。星芒因此是路线目标，不再只是装饰收集物。
 - **战役榜**（all-time，asc）：全 20 关「最佳牵拉次数」之和，20 关全部通关后才提交。类比高尔夫——越少越好。
-- **每日榜**（asc，键 `silk-dew-d<YYYYMMDD>`，`dailyTtlDays: 0`）：每日 5 关（`js/daily.js` UTC+8 种子，FNV-1a + mulberry32 洗牌从 20 关池抽 5 关，按 par 升序）。每日成绩按 **5 个关卡槽位**记录，每次重试只覆盖当前关槽位，`stars/totalDrags` 都从这 5 个槽位重新汇总，绝不按“通关事件”累加。**5 关当前结果必须全部三星才获得榜单资格**，合格者再按总牵拉次数升序比较；这样既不会奖励“跳过星芒换低牵拉”的捷径，也不会因同一关反复通关把星数叠到 15。计分仍是离散次数，与帧时序无关。
+- **每日榜**（asc，键 `silk-dew-d<YYYYMMDD>`，`dailyTtlDays: 0`）：每日 5 关（`src/platform/daily.js` UTC+8 种子，FNV-1a + mulberry32 洗牌从 20 关池抽 5 关，按 par 升序）。每日成绩按 **5 个关卡槽位**记录，每次重试只覆盖当前关槽位，`stars/totalDrags` 都从这 5 个槽位重新汇总，绝不按“通关事件”累加。**5 关当前结果必须全部三星才获得榜单资格**，合格者再按总牵拉次数升序比较；这样既不会奖励“跳过星芒换低牵拉”的捷径，也不会因同一关反复通关把星数叠到 15。计分仍是离散次数，与帧时序无关。
 - 每关带**设计师 par**（目标牵拉次数），HUD 显示 `牵拉 2 / par 3` 作自我参照，不进榜。
 
 ### 2.4 模式
@@ -138,7 +138,7 @@
 
 ### 5.2 复用共享层（一个都不新写）
 
-`css/tokens.css`+`layout.css`+`more-games.css`；`js/boot.js`(onReady) · `game-chrome.js`(bindChrome) · `game-drawer.js`(createStatsDrawer + `pauseQuiet/resumeQuiet/isRunning` 适配器) · `game-frame.js`(bindFrame) · `i18n.js`(makeText) · `daily.js`(todayKey/dailyKey/seed) · `leaderboard.js`(submitScore/fetchBoard/escapeHTML) · `safe-storage.js` · `analytics.js` · `game-sfx.js` · `icons.js`。
+`css/tokens.css`+`layout.css`+`more-games.css`；`src/platform/boot.js`(onReady) · `game-chrome.js`(bindChrome) · `game-drawer.js`(createStatsDrawer + `pauseQuiet/resumeQuiet/isRunning` 适配器) · `game-frame.js`(bindFrame) · `i18n.js`(makeText) · `daily.js`(todayKey/dailyKey/seed) · `leaderboard.js`(submitScore/fetchBoard/escapeHTML) · `safe-storage.js` · `analytics.js` · `game-sfx.js` · `icons.js`。
 
 ### 5.3 登记与派生（唯一动作：改 `games.config.json` → `npm run gen`）
 

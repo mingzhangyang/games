@@ -1,7 +1,7 @@
 // 国际化语言支持
-import { getLang } from './site-settings.js';
-import { createSfx } from './game-sfx.js';
-import { track } from './analytics.js';
+import { getLang } from '../src/platform/site-settings.js';
+import { createSfx } from '../src/platform/game-sfx.js';
+import { track } from '../src/platform/analytics.js';
 import { CONFIG, WEAPONS, Particle, PowerUp, Bullet, Tank, BossTank, bindTankI18n } from './tank-entities.js';
 import { createTankBattleArt } from './tank-battle-art.js';
 

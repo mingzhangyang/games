@@ -299,7 +299,7 @@ export class FlameVerseGame {
             el['reset-btn'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
         }
         if (el['mute-btn']) {
-            // ⚠️ 键名是 soundOn / soundOff（js/icons.js）
+            // ⚠️ 键名是 soundOn / soundOff（src/platform/icons.js）
             el['mute-btn'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
             el['mute-btn'].addEventListener('click', () => {
                 const next = !getMuted();

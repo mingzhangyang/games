@@ -41,7 +41,7 @@
 
 移动端重点验证 390×844、393×852、430×932；高度应基于 `100dvh - actual chrome - safe area`，不能使用固定魔数。桌面纵向舞台宽度控制在约 600–640px，并以深夜背景自然延展两侧。
 
-优先复用/扩展现有 `js/game-frame.js` 的 `bindFrame()`，不要重复实现 ResizeObserver、resize、`game-frame:changed` 和反馈环保护。
+优先复用/扩展现有 `src/platform/game-frame.js` 的 `bindFrame()`，不要重复实现 ResizeObserver、resize、`game-frame:changed` 和反馈环保护。
 
 ## 4. 视觉方向
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// verify-leaderboard.mjs — js/leaderboard.js 唯一榜单网络层回归防线（P2-4）
+// verify-leaderboard.mjs — src/platform/leaderboard.js 唯一榜单网络层回归防线（P2-4）
 //
 // 两层断言：
 //   1) 行为：mock globalThis.fetch，验证 submitScore / fetchBoard 的
@@ -17,7 +17,7 @@ import { registry } from './lib/registry.mjs';
 import { collectStaticModuleGraph } from './lib/static-module-graph.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const LB_PATH = join(ROOT, 'js', 'leaderboard.js');
+const LB_PATH = join(ROOT, 'src', 'platform', 'leaderboard.js');
 const WORKER_PATH = join(ROOT, 'Workers', 'game-scores.js');
 // 清单来自注册表：挂 leaderboard cap 的游戏。此前是手写的 9 个，lumen 上线后
 // 漏在外面（verify-registry 只校验 cap ⟺ 代码事实，管不到别的脚本的手写数组）。
@@ -113,7 +113,7 @@ try {
 console.log('\n▶ 源码收敛（防复制粘贴复活）');
 for (const g of GAMES) {
     const graph = collectStaticModuleGraph(g.entry, ROOT);
-    ok(graph.has('js/leaderboard.js') || graph.has('src/platform/leaderboard.js'),
+    ok(graph.has('src/platform/leaderboard.js'),
         `${g.entry} reaches the shared leaderboard module`);
 }
 

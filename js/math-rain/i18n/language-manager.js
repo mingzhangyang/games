@@ -5,8 +5,8 @@
 
 import LANGUAGES_EN from './lang-en.js';
 import LANGUAGES_ZH from './lang-zh.js';
-import { getLang } from '../../site-settings.js';
-import { updateMoreGames } from '../../more-games.js';
+import { getLang } from '../../../src/platform/site-settings.js';
+import { updateMoreGames } from '../../../src/platform/more-games.js';
 
 // 站内唯一取词口（P1 合并：原 language-manager / UIController / main.js / shop-manager
 // 四处各持一份 getLocalizedText + 同一套 fallback 表，现收敛于此）。

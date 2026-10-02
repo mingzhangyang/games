@@ -1,5 +1,5 @@
 /**
- * 萤火信号 — 声音（WebAudio 合成，走共享引擎 js/game-sfx.js，跟随全站静音 site_muted）
+ * 萤火信号 — 声音（WebAudio 合成，走共享引擎 src/platform/game-sfx.js，跟随全站静音 site_muted）
  * ===================================================================================
  * 声音只是锦上添花：Audio OFF 时游戏信息必须完整（HUD / 扩散圆 / 环境照明都不依赖声音）。
  *   · 单只萤火虫闪光：无声
@@ -8,7 +8,7 @@
  *   · 全局同步：柔和的完整和弦（琶音展开）
  *   · 玩家干预：一声很低、很短的「信号」
  */
-import { createSfxEngine } from '../game-sfx.js';
+import { createSfxEngine } from '../../src/platform/game-sfx.js';
 
 // D 大调五声音阶里取音：和谐、没有「错音」
 const PENTA = [587.33, 659.25, 739.99, 880, 987.77, 1174.66, 1318.51, 1479.98, 1760];

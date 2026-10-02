@@ -61,7 +61,7 @@
 
 - **每关**：星芒 1–3（星级由「无撤销」「无催化剂」「一次成型」三条给） + 本关**拖拽次数**。
 - **战役榜**（all-time，asc）：全 20 关「最佳拖拽次数」之和，20 关全部通关后才提交。**越少越好**（高尔夫口径，与垂丝引露一致）。
-- **每日榜**（asc，键 `bond-forge-d<YYYYMMDD>`）：每日 5 关（`js/daily.js` UTC+8 种子，FNV-1a + mulberry32 从 20 关池抽 5 关，按 par 升序），总拖拽次数在 5 关全部完成后提交。
+- **每日榜**（asc，键 `bond-forge-d<YYYYMMDD>`）：每日 5 关（`src/platform/daily.js` UTC+8 种子，FNV-1a + mulberry32 从 20 关池抽 5 关，按 par 升序），总拖拽次数在 5 关全部完成后提交。
 - 每关带**设计师 par**（目标拖拽次数），HUD 显示 `拖拽 4 / par 6` 作自我参照，不进榜。
 
 > **为什么计「拖拽次数」而不是「时间」**：时间受设备性能与手速影响，跨设备不公平；拖拽次数是离散量与帧时序无关（垂丝引露已验证该口径），而且它**直接度量「你有没有想清楚再动手」**——正好是本作的教育目标。
@@ -162,7 +162,7 @@
 
 ### 5.2 复用共享层（一个都不新写）
 
-`css/tokens.css`+`layout.css`+`more-games.css`；`js/boot.js`(onReady) · `game-chrome.js`(bindChrome) · `game-drawer.js`(createStatsDrawer + `pauseQuiet/resumeQuiet/isRunning`) · `game-frame.js`(bindFrame) · `i18n.js`(makeText) · `daily.js` · `leaderboard.js` · `safe-storage.js` · `analytics.js` · `game-sfx.js` · `icons.js`。
+`css/tokens.css`+`layout.css`+`more-games.css`；`src/platform/boot.js`(onReady) · `game-chrome.js`(bindChrome) · `game-drawer.js`(createStatsDrawer + `pauseQuiet/resumeQuiet/isRunning`) · `game-frame.js`(bindFrame) · `i18n.js`(makeText) · `daily.js` · `leaderboard.js` · `safe-storage.js` · `analytics.js` · `game-sfx.js` · `icons.js`。
 
 ### 5.3 登记与派生（唯一动作：改 `games.config.json` → `npm run gen`）
 

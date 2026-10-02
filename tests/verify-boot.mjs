@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// verify-boot.mjs — js/boot.js 启动包装唯一来源回归防线（P2-6）
+// verify-boot.mjs — src/platform/boot.js 启动包装唯一来源回归防线（P2-6）
 //
 // 断言：
 //   1) 行为：readyState='loading' 时挂 DOMContentLoaded 一次性监听；
@@ -37,7 +37,7 @@ globalThis.document = {
     readyState: 'loading',
     addEventListener(type, fn, opts) { listeners.push({ type, fn, opts }); },
 };
-const boot = await import(pathToFileURL(join(ROOT, 'js', 'boot.js')).href);
+const boot = await import(pathToFileURL(join(ROOT, 'src', 'platform', 'boot.js')).href);
 
 // 1) loading 态：挂 DOMContentLoaded 一次性监听，不立即执行
 let ranA = false;
@@ -83,7 +83,7 @@ function walkRuntime(dir, out = []) {
 }
 for (const abs of [...walkRuntime(join(ROOT, 'js')), ...walkRuntime(join(ROOT, 'src', 'games'))]) {
     const rel = abs.slice(ROOT.length + 1).replace(/\\/g, '/');
-    if (rel === 'js/boot.js' || rel.startsWith('js/math-rain/')) continue;
+    if (rel.startsWith('js/math-rain/')) continue;
     const src = readFileSync(abs, 'utf8');
     ok(!/addEventListener\(\s*['"]DOMContentLoaded['"]/.test(src), `${rel} 无 DOMContentLoaded 注册`);
 }

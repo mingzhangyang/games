@@ -4,7 +4,7 @@
 > 盒子几何（容器 / 顶栏尺寸 / 舞台 / 侧栏）见 `docs/contracts/layout.md`。
 
 - 契约文件：`css/layout.css`（`.game-topbar-center` / `.game-footer` 系列）
-- 行为实现：`js/game-chrome.js`（`bindChrome`）
+- 行为实现：`src/platform/game-chrome.js`（`bindChrome`）
 - 历史参考：`tools/archive/migrations/apply-header-footer.py`、`tools/archive/migrations/add-chrome-i18n.py` 已归档，不用于日常开发。当前流程是按本文直接实现 markup、i18n 与 `bindChrome` 接入，再运行现行校验。
 - 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
 
@@ -77,7 +77,7 @@ bindChrome({
 | `home` | `bindChrome` | 各页自己（多为 `<a href>`；na / bond-forge / silk-dew 顶栏是无 href 的 `<button>`，交给 chrome） |
 | `sound` | `bindChrome`（图标 + `aria-pressed`） | **各页自己**（见下方警告） |
 | `more` | `bindChrome` | `bindChrome` |
-| `stats` | `js/game-drawer.js` | `js/game-drawer.js` |
+| `stats` | `src/platform/game-drawer.js` | `src/platform/game-drawer.js` |
 | `pause` | 各页经 `labels.pause` 提供，`bindChrome` 落笔 | 各页自己 |
 
 > ⚠️ **`owns` 默认不含 `sound`。** 9 个页面的顶栏静音钮早就有自己的 handler（而且各自还要
@@ -187,7 +187,7 @@ node tests/verify-registry.mjs
 > 扫全部 `*.html` + `js/**`，禁 `setLang(` / `selectLanguage(` / `switchLanguage(` /
 > `langTitle` / `btnLang` / `langBtn` / `data-chrome="lang"` / `__pendingLanguageSelection =`，
 > 外加「HTML 里名字带 lang 的按钮」结构检查；只豁免 `index.html`、`js/index-page.js`、
-> `js/site-settings.js`，以及 word-daily 的 `#wd-btn-lang`（单词/成语模式切换，非语言）。
+> `src/platform/site-settings.js`，以及 word-daily 的 `#wd-btn-lang`（单词/成语模式切换，非语言）。
 > 已注册进 `verify-all` 全量档与 `--quick` 档。
 
 > 它已经抓到一个**与迁移无关的历史 bug**：`js/minesweeper.js` 里写的是 `this.el.mute`，

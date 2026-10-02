@@ -3,7 +3,7 @@
  * Handles all game state, scoring, and progression logic
  */
 
-import { storageGet, storageSet } from '../../safe-storage.js';
+import { storageGet, storageSet } from '../../../src/platform/safe-storage.js';
 
 class GameStateManager {
     constructor(eventSystem) {

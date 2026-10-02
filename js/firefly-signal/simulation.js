@@ -6,7 +6,7 @@
  *
  * 确定性契约：same seed + same (tick, fireflyId) 输入序列 = same simulation result
  *   - 固定步长 DT = 1/60 s，所有状态只在 step() / intervene() 里变化；
- *   - 随机只在建关时用一次 mulberry32(seed)（js/daily.js 的全站唯一实现）；
+ *   - 随机只在建关时用一次 mulberry32(seed)（src/platform/daily.js 的全站唯一实现）；
  *   - 位置是 tick 的纯函数（漫游 = 两个正弦），不累积浮点误差；
  *   - 同一 tick 内的闪光按数组下标顺序处理（级联也是），顺序固定即结果固定。
  *
@@ -21,7 +21,7 @@
  *   玩家的干预 pulse 不受窗口限制（有意的、明亮的信号），负责把群体拉进彼此的窗口，
  *   之后由自然耦合经桥接虫「逐渐合并」。
  */
-import { mulberry32 } from '../daily.js';
+import { mulberry32 } from '../../src/platform/daily.js';
 
 export const DT = 1 / 60;
 

@@ -185,7 +185,7 @@ export class HoopShotGame {
         this.bindUI();
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 js/game-frame.js）：
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 src/platform/game-frame.js）：
         // 后端缓冲区必须在 CSS 尺寸变化之后重算
         window.addEventListener('game-frame:changed', () => this.resize());
         this.updateHud();
@@ -859,7 +859,7 @@ export class HoopShotGame {
 
     async submitScore() {
         if (this.score <= 0) return;
-        // 网络层收敛到 js/leaderboard.js（超时/cors/ok 判定统一；false=未进全球榜）
+        // 网络层收敛到 src/platform/leaderboard.js（超时/cors/ok 判定统一；false=未进全球榜）
         const ok = await submitScore({ game: LB_GAME, name: this.getUsername(), score: this.score });
         if (ok) {
             await this.fetchLeaderboard();

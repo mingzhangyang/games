@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// verify-i18n.mjs — js/i18n.js 公共文案唯一来源回归防线（P2-5）
+// verify-i18n.mjs — src/platform/i18n.js 公共文案唯一来源回归防线（P2-5）
 //
 // 断言：
 //   1) 行为：makeText 原型链兜底（缺失键落 COMMON）、own 键优先覆盖、
 //      COMMON_TEXT 黄金值（改文案须有意识地在 i18n.js 改一处）。
 //   2) 收敛：11 个 shell-family 页均通过入口图使用提取的 i18n 模块且语言表经 makeText 包装；
 //      js/ 下除 i18n.js 外不再存在 6 个公共键的字面量副本（防复制复活）。
-//   3) 语言键：site_lang 仍由 js/site-settings.js 管理（历史教训：键名曾写错）。
+//   3) 语言键：site_lang 仍由 src/platform/site-settings.js 管理（历史教训：键名曾写错）。
 //
 // 用法：node scripts/verify-i18n.mjs（无需浏览器/服务器）
 
@@ -31,7 +31,7 @@ const ok = (cond, label, extra) => {
 /* ─────────────── 行为断言 ─────────────── */
 
 console.log('▶ 行为（makeText 原型链）');
-const i18n = await import(pathToFileURL(join(ROOT, 'js', 'i18n.js')).href);
+const i18n = await import(pathToFileURL(join(ROOT, 'src', 'platform', 'i18n.js')).href);
 const { COMMON_TEXT, makeText } = i18n;
 
 ok(COMMON_TEXT.en.sound === 'Sound' && COMMON_TEXT.zh.sound === '声音', 'COMMON_TEXT.sound 黄金值');
@@ -105,7 +105,7 @@ const SCAN_FILES = [
 ];
 for (const abs of SCAN_FILES) {
     const rel = abs.slice(ROOT.length + 1).replace(/\\/g, '/');
-    if (rel === 'js/i18n.js' || rel === 'src/platform/i18n.js') continue;
+    if (rel === 'src/platform/i18n.js') continue;
     const src = readFileSync(abs, 'utf8');
     let leaks = [];
     for (const lang of ['en', 'zh']) {

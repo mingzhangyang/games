@@ -565,7 +565,7 @@ export function solveBest(level) {
 
 /* ────────────────────────── 每日赛程 ──────────────────────────
  * 每日 5 关：由 dateKey 决定选哪 5 个分子。⚠️ 种子算法必须与
- * js/daily.js 的 hashStringFNV（FNV-1a）+ mulberry32 一致 —— 全站唯一口径。
+ * src/platform/daily.js 的 hashStringFNV（FNV-1a）+ mulberry32 一致 —— 全站唯一口径。
  * 本模块**不** import daily.js（保持零依赖，校验器可直接跑），
  * 由调用方把已算好的随机数或 dateKey 传进来。
  */

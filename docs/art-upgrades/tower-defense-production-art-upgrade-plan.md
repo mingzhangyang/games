@@ -145,7 +145,7 @@
 - `css/tower-defense.css`
 - `css/layout.css`（共享 immersive 变量消费规则保持兼容；TD 使用页面级变量覆盖，不修改全站默认 640px）
 - `js/tower-defense.js`
-- `js/game-drawer.js`（仅用于确认 TD 迁移后不再依赖共享 stats drawer；不要求修改共享实现）
+- `src/platform/game-drawer.js`（仅用于确认 TD 迁移后不再依赖共享 stats drawer；不要求修改共享实现）
 - `js/tower-levels.js`
 - `games.config.json`
 - `tools/generators/gen-from-registry.mjs`

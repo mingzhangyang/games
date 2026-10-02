@@ -10,7 +10,7 @@
  *  5. 引擎静音路径冒烟：Node 无 window → ensure() 返回 null，tone/noise 不抛
  *
  * 豁免（自治音频）：
- *  - js/game-sfx.js（引擎本体）
+ *  - src/platform/game-sfx.js（引擎本体）
  *  - src/games/sword-flight/audio.js（双振荡器和声/多段包络/持续风声，超出引擎表达域）
  *  - js/math-rain/**（化外页，P4 收编对象）
  */
@@ -20,6 +20,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const JS_DIR = join(ROOT, 'js');
+const PLATFORM_DIR = join(ROOT, 'src', 'platform');
 const GAMES_DIR = join(ROOT, 'src', 'games');
 
 let failures = 0;
@@ -46,13 +47,14 @@ function collectJsFiles(dir) {
     return out;
 }
 
-const EXEMPT = (rel) => rel === 'js/game-sfx.js'
+const EXEMPT = (rel) => rel === 'src/platform/game-sfx.js'
     || rel === 'src/games/sword-flight/audio.js'
     || rel === 'src/games/needle-awn/audio.js'
     || rel.startsWith('js/math-rain/');
 
 const allFiles = [
     ...collectJsFiles(JS_DIR),
+    ...collectJsFiles(PLATFORM_DIR),
     ...collectJsFiles(GAMES_DIR),
 ].map((p) => ({ abs: p, rel: relative(ROOT, p).replace(/\\/g, '/') }));
 
@@ -66,9 +68,9 @@ function audibleBoilerplate(rel, src) {
 /* ── 1. 迁移页 import createSfxEngine ── */
 const MIGRATED = [
     { rel: 'src/games/gravity-slingshot/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
-    { rel: 'js/minesweeper.js', root: JS_DIR, importPath: './game-sfx.js' },
+    { rel: 'js/minesweeper.js', root: JS_DIR, importPath: '../src/platform/game-sfx.js' },
     { rel: 'src/games/planet-merge/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
-    { rel: 'js/reversi.js', root: JS_DIR, importPath: './game-sfx.js' },
+    { rel: 'js/reversi.js', root: JS_DIR, importPath: '../src/platform/game-sfx.js' },
     { rel: 'src/games/word-daily/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/silk-dew/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/shadow-loom/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
@@ -104,8 +106,8 @@ for (const item of MIGRATED) {
 /* ── 2. 表驱动页 import createSfx ── */
 const TABLE_DRIVEN = [
     { rel: 'src/games/tetris/runtime.js', file: join(ROOT, 'src', 'games', 'tetris', 'runtime.js'), importPath: '../../platform/game-sfx.js' },
-    { rel: 'js/gomoku.js', file: join(JS_DIR, 'gomoku.js'), importPath: './game-sfx.js' },
-    { rel: 'js/tank-battle.js', file: join(JS_DIR, 'tank-battle.js'), importPath: './game-sfx.js' },
+    { rel: 'js/gomoku.js', file: join(JS_DIR, 'gomoku.js'), importPath: '../src/platform/game-sfx.js' },
+    { rel: 'js/tank-battle.js', file: join(JS_DIR, 'tank-battle.js'), importPath: '../src/platform/game-sfx.js' },
 ];
 for (const item of TABLE_DRIVEN) {
     const src = readFileSync(item.file, 'utf8');
@@ -132,7 +134,7 @@ check('运行时代码无自造 AudioContext 样板残留（显式音频模块�
 
 /* ── 5. 引擎静音路径冒烟（Node：window/localStorage 均未定义） ── */
 {
-    const sfxURL = pathToFileURL(join(JS_DIR, 'game-sfx.js')).href;
+    const sfxURL = pathToFileURL(join(ROOT, 'src', 'platform', 'game-sfx.js')).href;
     const CHILD = `
         import { createSfxEngine, createSfx } from ${JSON.stringify(sfxURL)};
         const eng = createSfxEngine();

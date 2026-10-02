@@ -6,7 +6,7 @@
 //
 // 两者都只通过 sim.intervene(id) 输入，产出 (tick, id) 序列，可在浏览器里逐 tick 回放。
 import { createSimulation, DT } from '../../js/firefly-signal/simulation.js';
-import { mulberry32 } from '../../js/daily.js';
+import { mulberry32 } from '../../src/platform/daily.js';
 
 const sec = s => Math.round(s / DT);
 

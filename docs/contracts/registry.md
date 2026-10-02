@@ -61,11 +61,11 @@ caps 是校验器与迁移脚本的唯一判据：
 | cap | 含义 |
 | --- | --- |
 | `sidebar` | 有 `.game-sidebar`（桌面信息侧栏） |
-| `drawer` | 接移动端统计抽屉（`js/game-drawer.js`） |
+| `drawer` | 接移动端统计抽屉（`src/platform/game-drawer.js`） |
 | `frame-budget` | 桌面舞台纵向预算（`--frame-shell-max` 覆写 + `bindFrame`，`verify-desktop-frame` 检查） |
-| `leaderboard` | 使用共享排行榜 Worker（入口 import `js/leaderboard.js`；与 `scores` 块同进同出） |
-| `daily` | 有每日挑战（判据：入口 import `js/daily.js`）。带 `scores` 的另有每日榜键 `<dailyKeyPrefix>-d<YYYYMMDD>`；word-daily 有每日玩法但不用共享榜，故只有本 cap |
-| `analytics` | 客户端调用 `hubTrack`（入口 import `js/analytics.js`） |
+| `leaderboard` | 使用共享排行榜 Worker（入口 import `src/platform/leaderboard.js`；与 `scores` 块同进同出） |
+| `daily` | 有每日挑战（判据：入口 import `src/platform/daily.js`）。带 `scores` 的另有每日榜键 `<dailyKeyPrefix>-d<YYYYMMDD>`；word-daily 有每日玩法但不用共享榜，故只有本 cap |
+| `analytics` | 客户端调用 `hubTrack`（入口 import `src/platform/analytics.js`） |
 | `topbar` | 有 `.game-topbar-center`（Header 三槽位契约，见 `chrome.md`） |
 | `theme-light` | 支持浅色模式（页面 CSS 写了 `[data-theme="light"]` 覆盖；与 `themeColorLight` 字段同进同出）。不带即仅深色，见 `theme.md` |
 
@@ -93,7 +93,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | `public/manifest.json` | （JSON 感知） | `shortcuts` 数组 |
 | `index.html` | `home-cards` | 首页卡片（紧凑静态 HTML；名称/描述/标签来自 registry，图标引用外部 sprite） |
 | `js/index-i18n-zh.js` | `home-i18n-zh` | 首页中文翻译懒加载块；英语直接使用静态 HTML，不重复下载 |
-| `js/more-games.js` | `more-games` | `export const MORE_GAMES = [...]`（各游戏页「更多游戏」运行时数据源） |
+| `src/platform/more-games.js` | `more-games` | `export const MORE_GAMES = [...]`（各游戏页「更多游戏」运行时数据源） |
 | `vite.config.js` | `inputs` | 多页构建入口 `input: { main, tetris, ... }` |
 | `Workers/game-scores.js` | `games-scores` | `GAMES` 白名单 + `DAILY_PATTERNS` 正则 |
 | `Workers/games-analytics.js` | `games-analytics` | `GAMES = [...]` 白名单 |
@@ -129,7 +129,7 @@ caps 是校验器与迁移脚本的唯一判据：
 
 ## 5. 派生文件不可 lint：gen 是唯一权威
 
-⚠️ **`js/more-games.js` 已加入 eslint `ignores`，不要移出来。**
+⚠️ **`src/platform/more-games.js` 已加入 eslint `ignores`，不要移出来。**
 
 派生文件由 gen 模板产出（双引号 JSON 风格格式化），而 eslint `quotes` 规则强制单引号 ——
 任何 `eslint --fix` 都会破坏 gen 产物 → 下次 `gen --check` 报漂移 → 修复又改回单引号 → **死循环**。

@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mulberry32 } from '../../js/daily.js';
+import { mulberry32 } from '../../src/platform/daily.js';
 import { GRID, RULES, computeField } from '../../src/games/echo-cave/model/rules.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');

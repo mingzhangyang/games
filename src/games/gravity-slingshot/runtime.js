@@ -157,7 +157,7 @@ class GravityGame {
         this.updateMuteButtons();
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 js/game-frame.js）：
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 src/platform/game-frame.js）：
         // 后端缓冲区必须在 CSS 尺寸变化之后重算
         window.addEventListener('game-frame:changed', () => this.resize());
         document.addEventListener('visibilitychange', () => {
@@ -519,7 +519,7 @@ class GravityGame {
         track('gravity-slingshot', 'finish');
 
         const game = `gravity-d${date}`;
-        // 网络层收敛到 js/leaderboard.js（false=未进全球榜，走本地兜底）
+        // 网络层收敛到 src/platform/leaderboard.js（false=未进全球榜，走本地兜底）
         submitScore({ game, name: ensurePlayerName() || 'Anonymous', score: this.totalLaunches }).then(ok => {
             if (ok) return this.fetchDailyBoard(game, date);
             this.renderLocalBoard(date);

@@ -17,7 +17,7 @@
 //   ⑨ 首屏可见的 game overlay 不得再塞一个 Home 链接。持久页脚已经提供 Home，
 //      两者叠在同一屏会出现 tower-defense / reversi / minesweeper / needle-awn 的重复 Home。
 //
-// ⚠️ 语言存储键是 site_lang（js/site-settings.js 的 LANG_KEY），不是 'lang'。
+// ⚠️ 语言存储键是 site_lang（src/platform/site-settings.js 的 LANG_KEY），不是 'lang'。
 //    游戏页只读不写：语言切换入口只在首页，boot 时的 site_lang 决定本页初始语言。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -34,7 +34,7 @@ exitIfNoPages(PAGES, 'verify-chrome');
 const CANON = ['stats', 'pause', 'sound'];
 
 // 共享层（bindChrome / createStatsDrawer）在这些钮上消耗的**公共**键，
-// 它们的 zh/en 值全站唯一（js/i18n.js 的 COMMON_TEXT）。
+// 它们的 zh/en 值全站唯一（src/platform/i18n.js 的 COMMON_TEXT）。
 //
 // ⚠️ 为什么要按语言断死值，而不是只断「文案非空 / 切换后变了」：
 //   这两条早就有（下面 §② 的非空 + §④ 的「变了」），但 silk-dew 曾把
@@ -157,7 +157,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             }
 
             /* ── ②b 共享文案必须真的本地化（不是只「非空」）──
-               只查 sound / moreGames：这两个键来自 js/i18n.js 的 COMMON_TEXT，
+               只查 sound / moreGames：这两个键来自 src/platform/i18n.js 的 COMMON_TEXT，
                zh 值全站唯一，断死值不会误伤。
                ⚠️ 刻意不查 home —— 它是**页面自有键**，各页取值不同（'Home' /
                '返回菜单' / '返回仙门'），断死值会在 needle-awn、sword-flight 上误报。 */

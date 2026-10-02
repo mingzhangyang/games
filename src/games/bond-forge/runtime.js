@@ -244,7 +244,7 @@ class BondForgeGame {
         this.initUI();
         this.applyLanguage();
 
-        // 全站语言 / 静音设置变化（js/site-settings.js 派发 site-settings:changed）→ 本页重刷。
+        // 全站语言 / 静音设置变化（src/platform/site-settings.js 派发 site-settings:changed）→ 本页重刷。
         // 语言切换入口已收敛到首页（2026-09-21）：本页不再主动 setLang，
         // 此监听器主要服务静音切换后的文案重刷。
         // 注意要从 getLang() 重新取值，不要沿用 this.lang —— 全站设置才是真源。
@@ -397,7 +397,7 @@ class BondForgeGame {
             el['btn-next'].addEventListener('click', () => { sfxTone(660, 0.09, 'triangle', 0.12); this.nextLevel(); });
         }
         if (el['btn-replay']) {
-            // ⚠️ 图标键名必须真实存在于 js/icons.js：`retry`（不是 refresh）。
+            // ⚠️ 图标键名必须真实存在于 src/platform/icons.js：`retry`（不是 refresh）。
             // 写错键名 → innerHTML 里塞进字面量 "undefined" → 按钮变「裸文本无图标」，
             // verify-button-icons 报 svg=0，而几何/点击断言全绿。
             el['btn-replay'].innerHTML = `${ICONS.retry}<span class="bf-btn-text">${this.t('retry')}</span>`;
@@ -424,7 +424,7 @@ class BondForgeGame {
             el['reset-btn'].addEventListener('click', () => { sfxTone(660, 0.09, 'triangle', 0.12); this.restartLevel(); });
         }
 
-        // 静音钮：⚠️ 键名是 soundOn / soundOff（js/icons.js），不是 volumeOn/volumeOff
+        // 静音钮：⚠️ 键名是 soundOn / soundOff（src/platform/icons.js），不是 volumeOn/volumeOff
         if (el['mute-btn']) {
             el['mute-btn'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
             el['mute-btn'].addEventListener('click', () => {

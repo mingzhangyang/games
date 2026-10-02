@@ -5,7 +5,7 @@
 //   c. 不糊：canvas.width >= canvas.clientWidth（border-box 下 rect 含 border）
 //   d. 舞台随视口长大：1920x1080 档画布宽 > 1280x900 档
 //   e. 侧栏在屏内：sidebar bottom <= innerHeight + 2
-//   f. --frame-chrome 收敛：就绪后间隔 250ms 两次读数相等（js/game-frame.js 反馈环护栏）
+//   f. --frame-chrome 收敛：就绪后间隔 250ms 两次读数相等（src/platform/game-frame.js 反馈环护栏）
 //   g. 无 pageerror
 // 用法：node scripts/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';

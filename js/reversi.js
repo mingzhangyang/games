@@ -7,18 +7,18 @@
  * Vanilla JS, DOM board with 3D flip animation. No runtime dependencies.
  */
 
-import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, getMuted, setMuted } from './site-settings.js';
-import { ICONS } from './icons.js';
-import { updateMoreGames } from './more-games.js';
+import { ensurePlayerName, setPlayerName } from '../src/platform/player.js';
+import { getLang, getMuted, setMuted } from '../src/platform/site-settings.js';
+import { ICONS } from '../src/platform/icons.js';
+import { updateMoreGames } from '../src/platform/more-games.js';
 import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from './reversi-ai.js';
-import { storageGet, storageSet } from './safe-storage.js';
-import { track } from './analytics.js';
-import { submitScore, fetchBoard } from './leaderboard.js';
-import { makeText } from './i18n.js';
-import { onReady } from './boot.js';
+import { storageGet, storageSet } from '../src/platform/safe-storage.js';
+import { track } from '../src/platform/analytics.js';
+import { submitScore, fetchBoard } from '../src/platform/leaderboard.js';
+import { makeText } from '../src/platform/i18n.js';
+import { onReady } from '../src/platform/boot.js';
 import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
-import { createSfxEngine } from './game-sfx.js';
+import { createSfxEngine } from '../src/platform/game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -521,7 +521,7 @@ class ReversiGame {
         local.push({ name: ensurePlayerName() || 'Anonymous', score: streak });
         local.sort((a, b) => b.score - a.score);
         storageSet('rv_local_scores', JSON.stringify(local.slice(0, 30)));
-        // 网络层收敛到 js/leaderboard.js（false=未进全球榜）
+        // 网络层收敛到 src/platform/leaderboard.js（false=未进全球榜）
         const ok = await submitScore({ game: 'reversi', name: ensurePlayerName() || 'Anonymous', score: streak });
         if (!ok) {
             // Worker 未部署：保留本地榜，但要提示玩家未进全球榜
@@ -710,7 +710,7 @@ onReady(() => {
 });
 
 /* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   槽位结构见 css/layout.css 的契约，行为统一由 src/platform/game-chrome.js 接管。
    owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {

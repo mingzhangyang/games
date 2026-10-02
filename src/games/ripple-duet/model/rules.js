@@ -15,7 +15,7 @@
  * par 由 solvePar() 按「成本从小到大」分层穷举现算 —— 不手填。
  */
 
-// 每日种子哈希与 PRNG 一律走 js/daily.js（verify-daily.mjs 强制收敛：
+// 每日种子哈希与 PRNG 一律走 src/platform/daily.js（verify-daily.mjs 强制收敛：
 // js/ 下除 daily.js 外不许再出现哈希常数）。
 import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 

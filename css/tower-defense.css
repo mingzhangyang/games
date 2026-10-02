@@ -1166,7 +1166,7 @@ body {
      * 把侧栏挤到第三行，整页拉到 1998px、桌面根本不是两列布局。
      * 现在技能条回到画布列下方，侧栏独占右列并跨两行。
      * --stage-w 由 css/layout.css 桌面契约推导，--frame-chrome 由
-     * js/game-frame.js 经 extraChrome 把技能条高度并入。
+     * src/platform/game-frame.js 经 extraChrome 把技能条高度并入。
      */
     .td-main {
         display: grid;

@@ -94,7 +94,7 @@ export async function submitScoreToLeaderboard(game, name, score) {
         ? getDailyLeaderboardKey(game.dailyDateKey || dailyDateKey())
         : 'sword-flight';
 
-    // 网络层收敛到 js/leaderboard.js（原无超时，统一补齐；false=未进全球榜）
+    // 网络层收敛到 src/platform/leaderboard.js（原无超时，统一补齐；false=未进全球榜）
     const ok = await submitScore({ game: gameKey, name, score });
     if (ok) {
         fb.textContent = I18N[getLang() === 'zh' ? 'zh' : 'en'].scoreSubmitted;

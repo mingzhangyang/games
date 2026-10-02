@@ -163,11 +163,11 @@ okp(!/function msUntilNextDay/.test(readFileSync(join(ROOT, 'js', 'word-daily.js
 for (const g of GAME_IDS) {
     const entry = registry.all().find(game => game.id === g);
     const graph = entry ? collectStaticModuleGraph(entry.entry, ROOT) : new Map();
-    okp(graph.has('js/daily.js') || graph.has('src/platform/daily.js'),
+    okp(graph.has('src/platform/daily.js'),
         `${entry?.entry || g} reaches the shared daily module`);
 }
 // js/ 与 src/ 都递归扫描：模块化后的游戏（src/games/<id>/）同样不许私藏哈希实现。
-const DAILY_SOURCES = new Set(['js/daily.js', 'src/platform/daily.js']);
+const DAILY_SOURCES = new Set(['src/platform/daily.js']);
 const scanSources = dir => readdirSync(join(ROOT, dir), { recursive: true })
     .map(f => `${dir}/${String(f).replaceAll('\\', '/')}`)
     .filter(f => f.endsWith('.js') && !DAILY_SOURCES.has(f));

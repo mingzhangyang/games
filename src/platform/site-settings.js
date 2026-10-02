@@ -91,7 +91,7 @@ export function setMuted(muted) {
 /**
  * 主题偏好：'dark' | 'light' | 'system'。缺失或非法值一律视为 'dark'（默认深色）。
  * 这里只管偏好；「这一页实际显示什么」由 public/theme-boot.js 结合页面是否支持浅色决定，
- * 运行时从 js/theme.js 的 getTheme() 读。
+ * 运行时从 src/platform/theme.js 的 getTheme() 读。
  */
 export function getThemePref() {
     const saved = read(THEME_KEY);

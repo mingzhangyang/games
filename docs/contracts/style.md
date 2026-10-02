@@ -122,7 +122,7 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 - 覆盖：`js/**/*.js`（运行时共享模块 + 各游戏页）、`tests/**/*.mjs`、`tools/generators/**/*.mjs` 与 `tools/checks/**/*.mjs`（校验器/生成器；不含 tools/dev、tools/archive）、
   `js/reversi-worker.js`（Worker 环境单独块）。
 - ignores：`dist/**`、`node_modules/**`、`Workers/**`（Cloudflare 独立域）、
-  `js/math-rain/**`（化外页）、`public/**`、`js/more-games.js`
+  `js/math-rain/**`（化外页）、`public/**`、`src/platform/more-games.js`
   （**派生文件，gen 唯一权威** —— 移出豁免会造成 gen↔lint 死循环，见 `registry.md` §5）。
 
 ### 3.2 规则要点
@@ -171,6 +171,6 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 node tools/checks/run-lint.mjs          # eslint + stylelint + 令牌残留检查 一键
 node tools/checks/run-lint.mjs --fix    # 同上，且真的替换令牌字面量
 node tools/checks/token-swap.mjs --check   # 只查令牌残留
-npx eslint js tests tools/generators tools/checks --fix    # 修 JS（勿碰 js/more-games.js —— 已 ignores 保护）
+npx eslint js src tests tools/generators tools/checks --fix    # 修 JS（勿碰 src/platform/more-games.js —— 已 ignores 保护）
 npx stylelint "css/**/*.css" --fix # 修 CSS（避开 math-rain；产物要烟测）
 ```
