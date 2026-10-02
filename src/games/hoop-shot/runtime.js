@@ -13,11 +13,11 @@ import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { bindPalette } from '../../platform/theme.js';
 import { LANGUAGES } from './i18n.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
+import { HOOP_SHOT_STORAGE, HOOP_SHOT_STORAGE_SLOTS } from './storage.js';
 
 /* 画布调色板：颜色只在 css/hoop-shot.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
    P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新（背景离屏缓存随之重建）。
@@ -45,15 +45,6 @@ export const CANVAS_VARS = {
 let P = null;
 
 /* ────────────────────────── utilities ────────────────────────── */
-
-function storageParse(key, fallback) {
-    try {
-        const parsed = JSON.parse(storageGet(key));
-        return parsed === null || parsed === undefined ? fallback : parsed;
-    } catch (e) {
-        return fallback;
-    }
-}
 
 function clamp(v, min, max) {
     return v < min ? min : v > max ? max : v;
@@ -137,6 +128,11 @@ const PREVIEW_STEPS = 28;       // 瞄准弹道预览步数（约 0.47s，只提
 const STREAK_FIRE = 3;          // 连中 3 球触发火球
 const LB_GAME = 'hoop-shot';
 
+function storedNumber(slot) {
+    const value = Number(HOOP_SHOT_STORAGE.get(slot, 0));
+    return Number.isFinite(value) ? value : 0;
+}
+
 /* ────────────────────────── game ────────────────────────── */
 
 export class HoopShotGame {
@@ -148,10 +144,10 @@ export class HoopShotGame {
 
         this.state = 'menu'; // menu | playing | paused | gameover | settling
         this.score = 0;
-        this.best = storageParse('hs_best', 0);
+        this.best = storedNumber(HOOP_SHOT_STORAGE_SLOTS.BEST);
         this.streak = 0;
         this.longestStreak = 0;      // 本局最长连击
-        this.bestStreakAll = storageParse('hs_longest_streak', 0); // 全局最长连击
+        this.bestStreakAll = storedNumber(HOOP_SHOT_STORAGE_SLOTS.LONGEST_STREAK); // 全局最长连击
         this.onFire = false;
 
         this.ball = null;      // { x, y, vx, vy, rot, prevY }
@@ -305,7 +301,7 @@ export class HoopShotGame {
         this.score = 0;
         this.streak = 0;
         this.longestStreak = 0; // 本局最长连击（全局纪录另存 hs_longest_streak）
-        this.bestStreakAll = storageParse('hs_longest_streak', 0);
+        this.bestStreakAll = storedNumber(HOOP_SHOT_STORAGE_SLOTS.LONGEST_STREAK);
         this.onFire = false;
         this.ball = null;
         this.ballReady = true;
@@ -683,13 +679,13 @@ export class HoopShotGame {
         const isNewBest = this.score > this.best;
         if (isNewBest) {
             this.best = this.score;
-            storageSet('hs_best', String(this.best));
+            HOOP_SHOT_STORAGE.set(HOOP_SHOT_STORAGE_SLOTS.BEST, this.best);
         }
 
         // 最长连击跨局持久化
         if (this.longestStreak > this.bestStreakAll) {
             this.bestStreakAll = this.longestStreak;
-            storageSet('hs_longest_streak', String(this.bestStreakAll));
+            HOOP_SHOT_STORAGE.set(HOOP_SHOT_STORAGE_SLOTS.LONGEST_STREAK, this.bestStreakAll);
         }
         this.updateSideRecords();
 
@@ -814,7 +810,7 @@ export class HoopShotGame {
     }
 
     localScores() {
-        const all = storageParse('hs_local_scores', []);
+        const all = HOOP_SHOT_STORAGE.get(HOOP_SHOT_STORAGE_SLOTS.LOCAL_SCORES, []);
         return Array.isArray(all) ? all : [];
     }
 
@@ -823,7 +819,7 @@ export class HoopShotGame {
         const local = this.localScores();
         local.push({ name: this.getUsername(), score: this.score });
         local.sort((a, b) => b.score - a.score);
-        storageSet('hs_local_scores', JSON.stringify(local.slice(0, 30)));
+        HOOP_SHOT_STORAGE.set(HOOP_SHOT_STORAGE_SLOTS.LOCAL_SCORES, local.slice(0, 30));
     }
 
     renderLocalScores() {

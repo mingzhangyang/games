@@ -639,6 +639,11 @@ git grep "./game-chrome.js"
 不要把所有游戏的持久化迁移塞进一个巨型 PR。先做 inventory，然后按 **2–4 款游戏/PR** 迁移；
 任何包含复杂 legacy migration 或跨版本兼容的游戏应单独 PR。
 
+Phase 5 的基线盘点与第一批迁移映射记录在
+[`docs/architecture-v2-game-storage-inventory.md`](./architecture-v2-game-storage-inventory.md)。
+第一批使用 `refactor/game-storage-migration-a`，包含 Carrot Pull、Hoop Shot、Bond Forge；
+其 legacy key → GameStorage 回归测试与用法 guard 先于后续批次落地。
+
 建议分支按批次命名：
 
 - `refactor/game-storage-migration-a`

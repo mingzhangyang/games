@@ -1,8 +1,8 @@
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { getLang } from '../../platform/site-settings.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { LANGUAGES } from './i18n.js';
+import { CARROT_PULL_STORAGE, CARROT_PULL_STORAGE_SLOTS } from './storage.js';
 import { ART_UI, loadCarrotPullArt } from './render/art.js';
 import { createCarrotScene } from './render/scene.js';
 import { createCarrotPullFallbackScene } from './render/fallback-scene.js';
@@ -11,7 +11,6 @@ const TOTAL_CARROTS = 6;
 const ROUND_TIME = 45;
 const TARGETS = [0.36, 0.66, 0.48, 0.72, 0.42, 0.58];
 const PULLS_NEEDED = [4, 4, 5, 5, 6, 6];
-const BEST_KEY = 'cp_best_score';
 
 function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -72,7 +71,10 @@ export function createGame() {
     }
 
     function bestScore() {
-        const value = Number.parseInt(storageGet(BEST_KEY) || '0', 10);
+        const value = Number.parseInt(
+            CARROT_PULL_STORAGE.get(CARROT_PULL_STORAGE_SLOTS.BEST, 0),
+            10,
+        );
         return Number.isFinite(value) ? value : 0;
     }
 
@@ -208,7 +210,7 @@ export function createGame() {
     function saveBest() {
         if (state.score > best) {
             best = state.score;
-            storageSet(BEST_KEY, String(best));
+            CARROT_PULL_STORAGE.set(CARROT_PULL_STORAGE_SLOTS.BEST, best);
         }
     }
 
