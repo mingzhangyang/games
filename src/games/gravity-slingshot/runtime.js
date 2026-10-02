@@ -23,10 +23,8 @@ import { updateMoreGames } from '../../platform/more-games.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { LANGUAGES } from './i18n.js';
 import {
-    BOUNDS,
     CAPTURE_R,
     DT,
-    FLIGHT_TIMEOUT,
     H,
     MAX_STEPS_PER_FRAME,
     SPEED_CAP,
@@ -36,7 +34,7 @@ import {
 } from './config.js';
 import { buildDailyCourse, LEVELS } from './model/course.js';
 import { loadDailyCourse } from './storage.js';
-import { accelAt, bodyScratch, bodiesAt, collisionAt, simulate } from './model/physics.js';
+import { bodyScratch, bodiesAt, simulate, stepProbe } from './model/physics.js';
 import { bgCanvas, buildStarLayer, planetSprite, PLANET_TONES, renderBackground, starLayer } from './render/scene.js';
 import { aimVector, bindGravityInput, toLogical } from './input/pointer.js';
 
@@ -397,36 +395,10 @@ class GravityGame {
         else this.acc -= steps * DT;
 
         for (let s = 0; s < steps; s++) {
-            const n = bodiesAt(this.level, this.flightT);
-            const a = accelAt(this.probe.x, this.probe.y, n);
-            this.probe.vx += a.ax * DT;
-            this.probe.vy += a.ay * DT;
-            const sp = Math.hypot(this.probe.vx, this.probe.vy);
-            if (sp > SPEED_CAP) {
-                this.probe.vx *= SPEED_CAP / sp;
-                this.probe.vy *= SPEED_CAP / sp;
-            }
-            this.probe.x += this.probe.vx * DT;
-            this.probe.y += this.probe.vy * DT;
-            this.flightT += DT;
-
-            if (collisionAt(this.probe.x, this.probe.y, n)) {
-                this.resolveFlight('crash');
-                return;
-            }
-            const dx = this.probe.x - this.level.target.x;
-            const dy = this.probe.y - this.level.target.y;
-            if (dx * dx + dy * dy < CAPTURE_R * CAPTURE_R) {
-                this.resolveFlight('capture');
-                return;
-            }
-            if (this.probe.x < -BOUNDS || this.probe.x > W + BOUNDS ||
-                this.probe.y < -BOUNDS || this.probe.y > H + BOUNDS) {
-                this.resolveFlight('lost');
-                return;
-            }
-            if (this.flightT > FLIGHT_TIMEOUT) {
-                this.resolveFlight('lost');
+            const result = stepProbe(this.level, this.probe, this.flightT);
+            this.flightT = result.t;
+            if (result.outcome) {
+                this.resolveFlight(result.outcome);
                 return;
             }
             if ((s & 1) === 0) {
