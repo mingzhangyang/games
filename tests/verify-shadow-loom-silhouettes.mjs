@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LEVELS } from '../js/shadow-loom-levels.js';
+import { LEVELS } from '../src/games/shadow-loom/model/levels.js';
 import { getSilhouette, SILHOUETTE_VIEWBOX } from '../src/generated/shadow-loom/silhouettes.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

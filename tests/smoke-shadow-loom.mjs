@@ -18,8 +18,8 @@
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import * as R from '../js/shadow-loom-rules.js';
-import { LEVELS } from '../js/shadow-loom-levels.js';
+import * as R from '../src/games/shadow-loom/model/rules.js';
+import { LEVELS } from '../src/games/shadow-loom/model/levels.js';
 
 const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];

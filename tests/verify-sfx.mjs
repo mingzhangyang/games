@@ -68,9 +68,11 @@ const MIGRATED = [
     { rel: 'src/games/gravity-slingshot/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'js/hoop-shot.js', root: JS_DIR, importPath: './game-sfx.js' },
     { rel: 'js/minesweeper.js', root: JS_DIR, importPath: './game-sfx.js' },
-    { rel: 'js/planet-merge.js', root: JS_DIR, importPath: './game-sfx.js' },
+    { rel: 'src/games/planet-merge/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'js/reversi.js', root: JS_DIR, importPath: './game-sfx.js' },
-    { rel: 'js/word-daily.js', root: JS_DIR, importPath: './game-sfx.js' },
+    { rel: 'src/games/word-daily/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/silk-dew/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/shadow-loom/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
 ];
 for (const item of MIGRATED) {
     const src = readFileSync(join(item.root, item.rel.replace(/^src\/games\//, '').replace(/^js\//, '')), 'utf8');

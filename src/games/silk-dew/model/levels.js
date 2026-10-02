@@ -14,7 +14,7 @@
 //   verlet  p += (p - prev) * damp + a * dt^2
 //   固定 dt = 1/120s 子步；每子步 4 次距离约束松弛迭代。
 //   确定性：同一「拖拽事件序列（时刻 + 目标位置）」在同一设备上必得同一结果。
-import { hashStringFNV, mulberry32 } from './daily.js';
+import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
 export const STAGE = { w: 480, h: 640 };
 

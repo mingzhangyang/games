@@ -4,7 +4,7 @@
  * Pipeline: painted far/mid layers -> gameplay -> painted foreground -> lit deltas.
  * Local lighting uses a half-resolution mask and a cached glow stamp.
  */
-import { loadSilkDewArt, SILK_DEW_MANIFEST } from './silk-dew-art.js';
+import { loadSilkDewArt, SILK_DEW_MANIFEST } from './art.js';
 
 const W = SILK_DEW_MANIFEST.coordinateSystem.width;
 const H = SILK_DEW_MANIFEST.coordinateSystem.height;

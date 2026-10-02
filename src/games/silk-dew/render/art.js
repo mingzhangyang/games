@@ -39,15 +39,15 @@ const ART_LOAD_TIMEOUT_MS = 8000;
 // Keep every production URL statically analyzable so Vite rewrites/copies the
 // asset correctly when import.meta.url moves into dist/assets/js.
 export const ART_URLS = Object.freeze({
-    sky: new URL('../assets/silk-dew/layers/sky.svg', import.meta.url).href,
-    'moon-mountains': new URL('../assets/silk-dew/layers/moon-mountains.svg', import.meta.url).href,
-    'garden-back': new URL('../assets/silk-dew/layers/garden-back.svg', import.meta.url).href,
-    'garden-mid': new URL('../assets/silk-dew/layers/garden-mid.svg', import.meta.url).href,
-    'garden-mid-lit': new URL('../assets/silk-dew/layers/garden-mid-lit.svg', import.meta.url).href,
-    foreground: new URL('../assets/silk-dew/layers/foreground.svg', import.meta.url).href,
-    'foreground-lit': new URL('../assets/silk-dew/layers/foreground-lit.svg', import.meta.url).href,
-    'jade-vessel': new URL('../assets/silk-dew/props/jade-vessel.svg', import.meta.url).href,
-    fallback: new URL('../assets/silk-dew/layers/fallback.svg', import.meta.url).href,
+    sky: new URL('../../../../assets/silk-dew/layers/sky.svg', import.meta.url).href,
+    'moon-mountains': new URL('../../../../assets/silk-dew/layers/moon-mountains.svg', import.meta.url).href,
+    'garden-back': new URL('../../../../assets/silk-dew/layers/garden-back.svg', import.meta.url).href,
+    'garden-mid': new URL('../../../../assets/silk-dew/layers/garden-mid.svg', import.meta.url).href,
+    'garden-mid-lit': new URL('../../../../assets/silk-dew/layers/garden-mid-lit.svg', import.meta.url).href,
+    foreground: new URL('../../../../assets/silk-dew/layers/foreground.svg', import.meta.url).href,
+    'foreground-lit': new URL('../../../../assets/silk-dew/layers/foreground-lit.svg', import.meta.url).href,
+    'jade-vessel': new URL('../../../../assets/silk-dew/props/jade-vessel.svg', import.meta.url).href,
+    fallback: new URL('../../../../assets/silk-dew/layers/fallback.svg', import.meta.url).href,
 });
 
 function loadImage(url, timeoutMs = ART_LOAD_TIMEOUT_MS) {

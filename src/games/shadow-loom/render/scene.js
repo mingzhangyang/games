@@ -32,16 +32,16 @@ export const ART_SCALE = 2.25;
 export const FRAME_SCALE = 1.2;
 const FRAME_ANCHOR = { x: 540, y: 1257 };
 
-const url = name => new URL(`../assets/shadow-loom/layers/${name}.webp`, import.meta.url).href;
 const FILES = {
-    background: url('stage-background'),
-    frame: url('paper-frame'),
-    desk: url('desk-back'),
-    foreground: url('foreground'),
-    lampBase: url('lamp-base'),
-    lampGlass: url('lamp-glass'),
-    lampShade: url('lamp-shade'),
-    paper: url('paper-fiber-tile'),
+    // Keep every production asset path literal so Vite emits and rewrites it.
+    background: new URL('../../../../assets/shadow-loom/layers/stage-background.webp', import.meta.url).href,
+    frame: new URL('../../../../assets/shadow-loom/layers/paper-frame.webp', import.meta.url).href,
+    desk: new URL('../../../../assets/shadow-loom/layers/desk-back.webp', import.meta.url).href,
+    foreground: new URL('../../../../assets/shadow-loom/layers/foreground.webp', import.meta.url).href,
+    lampBase: new URL('../../../../assets/shadow-loom/layers/lamp-base.webp', import.meta.url).href,
+    lampGlass: new URL('../../../../assets/shadow-loom/layers/lamp-glass.webp', import.meta.url).href,
+    lampShade: new URL('../../../../assets/shadow-loom/layers/lamp-shade.webp', import.meta.url).href,
+    paper: new URL('../../../../assets/shadow-loom/layers/paper-fiber-tile.webp', import.meta.url).href,
 };
 
 /**
