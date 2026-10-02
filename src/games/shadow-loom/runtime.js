@@ -6,7 +6,7 @@
  * 分层（设计方案 §15）：stage background → paper screen → frame / strings → paper pieces
  * → lamp → projected shadows → dynamic lighting → HUD → success outline / living shadow。
  * 纸片位置、灯位、投影全部由同一份实时状态驱动：画出来的影子与判定用的 mask
- * 都来自 js/shadow-loom-rules.js 的同一组多边形（§6.1 / §8）。
+ * 都来自 src/games/shadow-loom/model/rules.js 的同一组多边形（§6.1 / §8）。
  *
  * 状态机：menu → playing → solving（收紧 → 金线 → 活影）→ done（结果层）
  */
