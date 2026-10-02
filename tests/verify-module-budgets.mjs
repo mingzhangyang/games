@@ -20,6 +20,18 @@ const budgets = {
     'src/games/bond-forge/runtime.js': 76 * 1024,
     'src/games/needle-awn/index.js': 16 * 1024,
     'src/games/needle-awn/runtime.js': 66 * 1024,
+    'js/ripple-duet.js': 4 * 1024,
+    'src/games/ripple-duet/index.js': 16 * 1024,
+    'src/games/ripple-duet/runtime.js': 60 * 1024,
+    'js/hoop-shot.js': 4 * 1024,
+    'src/games/hoop-shot/index.js': 16 * 1024,
+    'src/games/hoop-shot/runtime.js': 60 * 1024,
+    'js/carrot-pull.js': 4 * 1024,
+    'src/games/carrot-pull/index.js': 16 * 1024,
+    'src/games/carrot-pull/runtime.js': 32 * 1024,
+    'js/lumen.js': 4 * 1024,
+    'src/games/lumen/index.js': 16 * 1024,
+    'src/games/lumen/runtime.js': 48 * 1024,
     'js/tetris.js': 60 * 1024,
 };
 let failed = 0;

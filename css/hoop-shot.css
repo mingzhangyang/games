@@ -422,7 +422,7 @@ body {
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
 }
 
-/* ── 画布调色板（js/hoop-shot.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
+/* ── 画布调色板（src/games/hoop-shot/runtime.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
    深色 = 迁移前 JS 里的字面量，逐字不变；浅色在下方覆盖。*-rgb 为「r, g, b」三元组 */
 :root {
     --hs-cv-bg-top: #0a0e24;

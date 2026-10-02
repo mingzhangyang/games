@@ -25,7 +25,7 @@
  * 全球同题、确定性可复现；⚠️ hashStringFNV 来自 js/daily.js（兼容铁律，勿改算法）。
  */
 
-import { hashStringFNV, mulberry32 } from './daily.js';
+import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
 export const GRID_N = 9;
 

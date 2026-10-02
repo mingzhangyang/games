@@ -17,7 +17,7 @@
 
 // 每日种子哈希与 PRNG 一律走 js/daily.js（verify-daily.mjs 强制收敛：
 // js/ 下除 daily.js 外不许再出现哈希常数）。
-import { hashStringFNV, mulberry32 } from './daily.js';
+import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
 export const STAGE = { w: 560, h: 640 };
 

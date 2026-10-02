@@ -372,7 +372,7 @@ body {
     max-width: 360px;
 }
 
-/* ⚠️ 类名必须与 js/ripple-duet.js 的 renderLevelGrid() 一致：那里写的是
+/* ⚠️ 类名必须与 src/games/ripple-duet/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'rd-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
 .rd-chip {
@@ -593,7 +593,7 @@ body {
 .rd-side-v { color: var(--tok-text); font-weight: 700; }
 
 /* ── 侧栏：读水 ──
-   参考条码由 js/ripple-duet.js 按真实波长写 linear-gradient 色标，
+   参考条码由 src/games/ripple-duet/runtime.js 按真实波长写 linear-gradient 色标，
    黑底 + 竖线与 canvas 里的条码同一套读法（400nm 在左，700nm 在右） */
 
 .rd-side-legend { display: flex; flex-direction: column; gap: 2px; }
@@ -683,7 +683,7 @@ body {
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
 }
 
-/* ── 画布调色板（js/ripple-duet.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
+/* ── 画布调色板（src/games/ripple-duet/runtime.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
    深色 = 迁移前 JS 里的字面量，逐字不变；浅色在下方覆盖 */
 :root {
     --rd-cv-panel: #132832;

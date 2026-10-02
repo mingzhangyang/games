@@ -2,7 +2,7 @@
 /**
  * 涟漪双生关卡生成器 —— par 一律 solvePar() 现算，绝不手填。
  *
- * 默认 dry-run（只打印），加 --write 才落盘 js/ripple-duet-levels.js。
+ * 默认 dry-run（只打印），加 --write 才落盘 src/games/ripple-duet/model/levels.js。
  * 固定种子 ⇒ 幂等：复跑内容无变化。
  *
  * 出题法是**构造式**的：先抽一个「解摆位」，再按这个摆位下的场去安放目标
@@ -11,13 +11,13 @@
  * 关卡难度靠 parBand 拒绝采样来卡。
  */
 
-import * as R from '../../js/ripple-duet-rules.js';
+import * as R from '../../src/games/ripple-duet/model/rules.js';
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const OUT = join(ROOT, 'js', 'ripple-duet-levels.js');
+const OUT = join(ROOT, 'src', 'games', 'ripple-duet', 'model', 'levels.js');
 const WRITE = process.argv.includes('--write');
 
 function mulberry32(a) {
