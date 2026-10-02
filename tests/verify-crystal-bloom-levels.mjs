@@ -13,7 +13,7 @@
  * 网格密度说明：par 是**离散网格上的最小成本**。低层必须穷尽才能断言「没有更便宜
  * 的解」，所以 2 锚/3 锚用了比 1 锚更粗的网格（否则单关 20 秒起）。
  */
-import * as R from '../js/crystal-bloom-rules.js';
+import * as R from '../src/games/crystal-bloom/model/rules.js';
 
 const TS = [3, 8, 14, 20, 28, 36, 45, 55, 66, 78, 90];
 const TEMP = [10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86];

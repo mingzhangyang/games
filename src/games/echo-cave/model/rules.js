@@ -14,7 +14,7 @@
 // 计分：**脉冲次数**（离散量，asc 越少越好），par 由校验器的 Dijkstra 求解器现算
 // （状态 = (格, 声晶掩码, 上次脉冲格)，荆棘视为墙；SAFE_R 内移动免费、发射脉冲代价 1）。
 // ⚠️ par 不是手填的估计值——scripts/verify-echo-cave-levels.mjs 会重算并断言一致。
-import { hashStringFNV, mulberry32 } from './daily.js';
+import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
 export const STAGE = { w: 480, h: 640 };
 export const GRID = { cell: 20, cols: 24, rows: 32 };

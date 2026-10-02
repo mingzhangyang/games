@@ -3,7 +3,7 @@
 //
 // 锁定五件事：
 //   1) schema：20 关、id 连续、中英名齐全、分子数 / 门宽 / target / stretch / par / budget 取值合理，
-//      tipKey 必须在 js/maxwell-demon.js 的中英两份字典里都存在（漏一条 = 页面静默显示键名）；
+//      tipKey 必须在 src/games/maxwell-demon/i18n.js 的中英两份字典里都存在（漏一条 = 页面静默显示键名）；
 //   2) par 由诚实机器人**现算**，不许手填：
 //      solve(spec, spec.id).spent === spec.par。
 //      诚实机器人的定义 —— 位置永远可见，快慢只能靠花钱观测才知道
@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 import {
     VESSEL, RULES, STAGE, LEVELS, DAILY_COUNT,
     createWorld, stepWorld, isFast, budgetLeft, dailyCourse,
-} from '../js/maxwell-demon-rules.js';
+} from '../src/games/maxwell-demon/model/rules.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WX = VESSEL.wallX;
@@ -152,7 +152,7 @@ function solve(spec, seedKey, opts = {}) {
 
 /* ────────────────────────── 逐关校验 ────────────────────────── */
 
-const pageSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'maxwell-demon.js'), 'utf8');
+const pageSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'games', 'maxwell-demon', 'i18n.js'), 'utf8');
 
 console.log('▶ 20 关 schema');
 ok(LEVELS.length === 20, `关卡数 = 20（实际 ${LEVELS.length}）`);

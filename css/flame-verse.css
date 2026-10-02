@@ -246,7 +246,7 @@ body {
     max-width: 360px;
 }
 
-/* ⚠️ 类名必须与 js/flame-verse.js 的 renderLevelGrid() 一致：那里写的是
+/* ⚠️ 类名必须与 src/games/flame-verse/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'fv-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
 .fv-chip {
@@ -467,7 +467,7 @@ body {
 .fv-side-v { color: var(--tok-text); font-weight: 700; }
 
 /* ── 侧栏：盐架图谱 ──
-   参考条码由 js/flame-verse.js 按真实波长写 linear-gradient 色标，
+   参考条码由 src/games/flame-verse/runtime.js 按真实波长写 linear-gradient 色标，
    黑底 + 竖线与 canvas 里的条码同一套读法（400nm 在左，700nm 在右） */
 
 .fv-side-legend { display: flex; flex-direction: column; gap: 2px; }

@@ -22,7 +22,7 @@
  * 计分：成本 = 锚点数 + 搅拌次数（asc，越小越聪明）。
  */
 
-import { hashStringFNV, mulberry32 } from './daily.js';
+import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
 export const STAGE = { w: 560, h: 640 };
 

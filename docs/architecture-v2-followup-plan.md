@@ -102,7 +102,7 @@ Architecture v2 的最终规则不能等到“所有历史代码都迁完”才�
 | P2 | `src/games/planet-merge/runtime.js` | ~66 KB | Phase 3B 已迁；后续按需拆 physics |
 | P2 | `src/games/word-daily/runtime.js` | ~64 KB | Phase 3B 已迁；词库已独立 |
 | P2 | `src/games/shadow-loom/runtime.js` | ~61 KB | Phase 3B 已迁；几何/渲染已独立 |
-| P2 | `js/maxwell-demon.js` 等 | ~55–59 KB | 批量轻拆 |
+| P2 | `src/games/maxwell-demon/runtime.js` 等 | ~55–59 KB | 批量轻拆 |
 
 目前已有 `src/games/` 包：
 

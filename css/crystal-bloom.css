@@ -381,7 +381,7 @@ body {
     max-width: 360px;
 }
 
-/* ⚠️ 类名必须与 js/crystal-bloom.js 的 renderLevelGrid() 一致：那里写的是
+/* ⚠️ 类名必须与 src/games/crystal-bloom/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'cb-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
 .cb-chip {
@@ -602,7 +602,7 @@ body {
 .cb-side-v { color: var(--tok-text); font-weight: 700; }
 
 /* ── 侧栏：热力学图例 ──
-   颜色必须与 js/crystal-bloom.js 渲染层的语义色一一对应：
+   颜色必须与 src/games/crystal-bloom/runtime.js 渲染层的语义色一一对应：
    快分子 --tok-hot / 慢分子 --tok-cold / 未观测灰 / 门 --tok-gold / 温差 = 光谱带 */
 
 .cb-side-legend { display: flex; flex-direction: column; gap: 2px; }
@@ -682,7 +682,7 @@ body {
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
 }
 
-/* ── 画布调色板（js/crystal-bloom.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
+/* ── 画布调色板（src/games/crystal-bloom/runtime.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
    深色 = 迁移前 JS 里的字面量，逐字不变；浅色在下方覆盖 */
 :root {
     --cb-cv-chart-bg: rgb(10,14,32,0.92);
