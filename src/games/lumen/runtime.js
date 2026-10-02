@@ -196,8 +196,8 @@ export class LumenGame {
     /* ── 语言 ── */
 
     applyLanguage() {
-        const t = this.TEXT;
         this.lang = getLang();
+        const t = this.TEXT;
         document.documentElement.lang = this.lang;
         document.title = this.lang === 'zh'
             ? '折光 Lumen — 光束折射解谜'

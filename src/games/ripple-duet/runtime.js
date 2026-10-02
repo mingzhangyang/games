@@ -240,7 +240,7 @@ export class RippleDuetGame {
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
         this.updateHud();
-        track('ripple-duet', 'level_start', this.levelIdx + 1);
+        track('ripple-duet', 'play');
     }
 
     startDaily() {
@@ -256,7 +256,7 @@ export class RippleDuetGame {
         this.hide(this.el['over']);
         this.updateHud();
         this.showToast(this.t('dailyStartToast'));
-        track('ripple-duet', 'daily_start', 0);
+        track('ripple-duet', 'play');
     }
 
     restartLevel() {
@@ -459,7 +459,7 @@ export class RippleDuetGame {
         }
         this.showClearPanel(stars, this.cost);
         if (stars === 3) Sfx.star3();
-        track('ripple-duet', 'level_win', stars);
+        track('ripple-duet', 'finish');
     }
 
     maybeSubmitCampaign() {

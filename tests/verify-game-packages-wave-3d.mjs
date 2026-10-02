@@ -16,6 +16,7 @@ const specs = [
         modelNeedles: ["from '../../../platform/daily.js"],
         handles: ['window.rdGame', 'window.rdRuntime', 'window.rdDrawer'],
         keys: ["'rd_progress'", "'rd_lb_"],
+        analytics: { play: 2, finish: 1 },
         retired: ['js/ripple-duet-rules.js', 'js/ripple-duet-levels.js'],
     },
     {
@@ -44,6 +45,7 @@ const specs = [
         modelNeedles: ["from '../../../platform/daily.js"],
         handles: ['window.lmGame', 'window.lmRuntime', 'window.lmDrawer'],
         keys: ["'lm_stars'", "'lm_daily_"],
+        languageRefresh: true,
         retired: ['js/lumen-levels.js'],
     },
 ];
@@ -76,6 +78,20 @@ for (const spec of selectedSpecs) {
         `${spec.id}: language table is extracted into the package`);
     for (const handle of spec.handles) check(index.includes(handle), `${spec.id}: preserves ${handle}`);
     for (const key of spec.keys) check(runtime.includes(key), `${spec.id}: preserves storage contract ${key}`);
+    if (spec.languageRefresh) {
+        const languageStart = runtime.indexOf('applyLanguage() {');
+        const languageEnd = runtime.indexOf('/* ── 菜单部件 ── */', languageStart);
+        const languageMethod = runtime.slice(languageStart, languageEnd);
+        check(languageMethod.indexOf('this.lang = getLang();') < languageMethod.indexOf('const t = this.TEXT;'),
+            `${spec.id}: refreshes the language before resolving localized text`);
+    }
+    if (spec.analytics) {
+        const count = event => (runtime.match(new RegExp(`track\\('${spec.id}', '${event}'\\)`, 'g')) || []).length;
+        check(count('play') === spec.analytics.play, `${spec.id}: uses canonical play analytics events`);
+        check(count('finish') === spec.analytics.finish, `${spec.id}: uses canonical finish analytics events`);
+        check(!/track\('ripple-duet', '(?:level_start|daily_start|level_win)'/.test(runtime),
+            `${spec.id}: has no unsupported analytics event names`);
+    }
     check(!/from ['"]\.\/(?:input|render|model)\//.test(index), `${spec.id}: index does not own implementation modules`);
     check(index.length < 8 * 1024, `${spec.id}: composition root stays below 8 KiB`);
     check(shim === `// Compatibility entry kept for the existing ${spec.id}.html URL.\n// The canonical game package lives under src/games/${spec.id}/.\nimport '../src/games/${spec.id}/index.js';\nexport * from '../src/games/${spec.id}/runtime.js';`,
