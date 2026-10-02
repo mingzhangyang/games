@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // verify-theme.mjs — 主题契约校验（docs/contracts/theme.md §4）
 //
-//   ① 夹具页：theme-boot.js + js/theme.js 的行为本身
+//   ① 夹具页：theme-boot.js + src/platform/theme.js 的行为本身
 //      默认深色 / 偏好浅色 / 跟随系统 / 非法值 / 同页即时切换 / 跨标签页同步 /
 //      theme-color 切换 / readPalette 读到浅色覆盖值 / --tok-* 浅色层生效
 //   ② 全部真实页面（注册表 22 页 + 首页），HTML 取自被测服务器（源码或 dist 都适用）：
@@ -51,7 +51,7 @@ const FIXTURE_HTML = `<!DOCTYPE html>
 </style>
 </head><body><div id="probe"></div>
 <script type="module">
-import * as T from '/js/theme.js';
+import * as T from '/src/platform/theme.js';
 window.__events = [];
 T.onThemeChange(t => window.__events.push(t));
 window.__T = T;

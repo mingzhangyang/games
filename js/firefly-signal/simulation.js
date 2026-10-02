@@ -21,7 +21,7 @@
  *   玩家的干预 pulse 不受窗口限制（有意的、明亮的信号），负责把群体拉进彼此的窗口，
  *   之后由自然耦合经桥接虫「逐渐合并」。
  */
-import { mulberry32 } from '../daily.js';
+import { mulberry32 } from '../../src/platform/daily.js';
 
 export const DT = 1 / 60;
 

@@ -194,7 +194,7 @@
 - **登记与代码生成**：新游戏先在 `games.config.json` 登记，再 `npm run gen`；不要手改 sitemap、Worker `GAMES` 映射等派生文件（见 `docs/contracts/registry.md`）。
 - **caps**：参照现有谜题游戏，默认带 `sidebar`、`drawer`、`frame-budget`、`topbar`、`analytics`；有排行榜和每日时加 `leaderboard`、`daily`；自然路线的浅色画面适合同时支持 `theme-light`（见 `docs/contracts/theme.md`）。
 - **排行榜键名**：总榜 `<id>`，每日榜 `<id>-d<YYYYMMDD>`，由共享 `game-scores` Worker 按 `scores` 块处理；关卡类记录步数用 `asc`，萤火信号无尽模式用 `desc`。
-- **共享模块**：日期与种子只用 `js/daily.js`，存储只用 `js/safe-storage.js`，页面启动用 `js/boot.js` 的 `onReady`，界面外壳用 `bindChrome` / `createStatsDrawer` / `bindFrame`。
+- **共享模块**：日期与种子只用 `src/platform/daily.js`，存储只用 `src/platform/safe-storage.js`，页面启动用 `src/platform/boot.js` 的 `onReady`，界面外壳用 `bindChrome` / `createStatsDrawer` / `bindFrame`。
 - 优先制作 390×844 手机视口的完整布局，保证舞台和底部操作区都能充分利用高度且不发生页面溢出。
 - 操作按钮保持至少 44px，触控输入放在画布下方，避免画布内悬浮按钮遮挡核心场景。
 - 所有关键状态都用颜色加图案、轮廓、线型或文字表达，并提供 `prefers-reduced-motion` 支持。

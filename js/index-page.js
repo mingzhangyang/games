@@ -1,7 +1,7 @@
 // 首页运行时：英语来自静态 HTML；中文翻译按需加载，卡片数据由 registry 生成。
-import { onReady } from './boot.js';
-import { getLang, setLang, getThemePref, setThemePref } from './site-settings.js';
-import { supportsLight, getTheme, onThemeChange } from './theme.js';
+import { onReady } from '../src/platform/boot.js';
+import { getLang, setLang, getThemePref, setThemePref } from '../src/platform/site-settings.js';
+import { supportsLight, getTheme, onThemeChange } from '../src/platform/theme.js';
 
 const selectors = '[data-i18n], [data-i18n-placeholder], [data-i18n-label]';
 const defaults = new WeakMap();

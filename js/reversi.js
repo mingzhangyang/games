@@ -7,18 +7,18 @@
  * Vanilla JS, DOM board with 3D flip animation. No runtime dependencies.
  */
 
-import { ensurePlayerName, setPlayerName } from './player.js';
-import { getLang, getMuted, setMuted } from './site-settings.js';
-import { ICONS } from './icons.js';
-import { updateMoreGames } from './more-games.js';
+import { ensurePlayerName, setPlayerName } from '../src/platform/player.js';
+import { getLang, getMuted, setMuted } from '../src/platform/site-settings.js';
+import { ICONS } from '../src/platform/icons.js';
+import { updateMoreGames } from '../src/platform/more-games.js';
 import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from './reversi-ai.js';
-import { storageGet, storageSet } from './safe-storage.js';
-import { track } from './analytics.js';
-import { submitScore, fetchBoard } from './leaderboard.js';
-import { makeText } from './i18n.js';
-import { onReady } from './boot.js';
+import { storageGet, storageSet } from '../src/platform/safe-storage.js';
+import { track } from '../src/platform/analytics.js';
+import { submitScore, fetchBoard } from '../src/platform/leaderboard.js';
+import { makeText } from '../src/platform/i18n.js';
+import { onReady } from '../src/platform/boot.js';
 import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
-import { createSfxEngine } from './game-sfx.js';
+import { createSfxEngine } from '../src/platform/game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 

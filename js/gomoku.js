@@ -1,10 +1,10 @@
-import { getLang } from './site-settings.js';
-import { updateMoreGames } from './more-games.js';
-import { createSfx } from './game-sfx.js';
-import { bindFrame } from './game-frame.js';
-import { track } from './analytics.js';
-import { makeText } from './i18n.js';
-import { onReady } from './boot.js';
+import { getLang } from '../src/platform/site-settings.js';
+import { updateMoreGames } from '../src/platform/more-games.js';
+import { createSfx } from '../src/platform/game-sfx.js';
+import { bindFrame } from '../src/platform/game-frame.js';
+import { track } from '../src/platform/analytics.js';
+import { makeText } from '../src/platform/i18n.js';
+import { onReady } from '../src/platform/boot.js';
 import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 
 // 音效：落子/胜利/失败/平局

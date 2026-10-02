@@ -16,7 +16,7 @@
  * 环境照明是视觉核心而不是收尾润色：群体同时闪光时，照亮的是整片草地。
  */
 import { WORLD, DT } from './simulation.js';
-import { mulberry32 } from '../daily.js';
+import { mulberry32 } from '../../src/platform/daily.js';
 
 const TAU = Math.PI * 2;
 

@@ -68,7 +68,7 @@
 --frame-radius: 18px;      /* 画布/覆盖层圆角 */
 --frame-ratio: 0.75;       /* 桌面画幅比 w/h（420×640 页面覆盖 0.65625） */
 --frame-stage-h: 960px;    /* 桌面舞台高度封顶 */
---frame-chrome: 150px;     /* 顶栏+页脚+shell 内距；js/game-frame.js 实测覆盖，此值仅首帧兜底 */
+--frame-chrome: 150px;     /* 顶栏+页脚+shell 内距；src/platform/game-frame.js 实测覆盖，此值仅首帧兜底 */
 --frame-main-gap: 28px;    /* 桌面 .game-main 的 gap */
 ```
 
@@ -76,7 +76,7 @@
 舞台宽度在桌面端由「视口可用高度 × 画幅比」推导，
 `--stage-w = min(--frame-stage-h, 100dvh - --frame-chrome) × --frame-ratio`，
 替换掉旧的固定 `--frame-max-wide` 上限——1920×1080 下 480×640 逻辑场从 460px
-放大到 ~700px，整页恒等于一屏。`--frame-chrome` 由 `js/game-frame.js` 的
+放大到 ~700px，整页恒等于一屏。`--frame-chrome` 由 `src/platform/game-frame.js` 的
 `bindFrame()` 实测写入 `.game-shell`（ResizeObserver + resize + 自派发的
 `game-frame:changed`；1px 死区 + 500ms 振荡锁定两个反馈环护栏），页面监听
 `game-frame:changed` 调用自己的 `resize()` 重算画布后端缓冲区。

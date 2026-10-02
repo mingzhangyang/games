@@ -88,7 +88,7 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
 
 ## 抽屉 / 顶栏行为
 
-- ⚠️ **The `:has()` trap — this is the one that silently fails.** Do **not** gate the sidebar-yield on `.game-sidebar:has([id$="StatsPanels"])`. By CSS-evaluation time the JS has *already moved* that node into the drawer body (which is the whole point of it), so the sidebar contains no such node, `:has()` never matches, and the sidebar just stays `display: block` — while every other assertion passes. The criterion has to come from a fact that does **not** change with the viewport: `js/game-drawer.js`'s `init()` does `document.body.classList.add('has-stats-drawer')` and `layout.css` uses
+- ⚠️ **The `:has()` trap — this is the one that silently fails.** Do **not** gate the sidebar-yield on `.game-sidebar:has([id$="StatsPanels"])`. By CSS-evaluation time the JS has *already moved* that node into the drawer body (which is the whole point of it), so the sidebar contains no such node, `:has()` never matches, and the sidebar just stays `display: block` — while every other assertion passes. The criterion has to come from a fact that does **not** change with the viewport: `src/platform/game-drawer.js`'s `init()` does `document.body.classList.add('has-stats-drawer')` and `layout.css` uses
   ```css
   @media (max-width: 1023.98px) { body.has-stats-drawer .game-sidebar { display: none; } }
   ```
@@ -104,13 +104,13 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
 
 - ⚠️ **`getText` on the shared layer means "return the whole table", not "look up one key".** `bindChrome` and `createStatsDrawer` both declare `@param {() => object} getText` and call it as `getText()` — then read `.home` / `.sound` / `.moreGames` / `.stats` / `.close` off the result. silk-dew was the one page that passed a *per-key* lookup (`(k) => game.t(k)`), so the shared code got `t(undefined)` → `undefined` → `|| {}` → every shared label fell back to its built-in English and stayed there. Seven pages got away with the same mistake being absent; silk-dew's version was invisible in every geometry assertion and only `verify-stats-drawer.mjs`'s `[zh] 文案已本地化` caught it (`stats=Stats close=Close title=Stats` under a 中文 page). The page now exposes `SilkfallGame.textTable()` returning `LANGUAGES[this.lang] || LANGUAGES.en` (which already carries `COMMON_TEXT` on its prototype, so `close` / `moreGames` / `sound` / `language` resolve), and **both** `createStatsDrawer` and `bindChrome` take `getText: () => game.textTable()`. When a shared module's option is a getter, check the call site's *arity*, not just its existence — `(k) => t(k)` looks perfectly reasonable and is silently wrong
 
-- ⚠️ **A shared renderer must not nest its i18n work inside `if (ICONS)`.** `js/game-drawer.js`'s `renderIcons()` originally read
+- ⚠️ **A shared renderer must not nest its i18n work inside `if (ICONS)`.** `src/platform/game-drawer.js`'s `renderIcons()` originally read
   ```js
   if (ICONS) { /* 图标 */ ; btn.setAttribute('aria-label', statsLabel); /* 文案 */ }
   ```
   i.e. "no icon table handed in" silently also meant "no `stats`/`close` text". Fix it at the *shared* layer — `init()` now calls `this.renderIcons()` unconditionally and the `site-settings:changed` listener only re-renders; do not "fix" it by adding one more call in the affected page. Corollary: when a shared module takes several optional collaborators (`ICONS`, `getText`, `Sfx`), make each *feature* it gates independent of the others — one `if (optionalThing) { …all the rest… }` is a latent per-page bug, not a convenience
 
-- ⚠️ **Label/aria text needs its own per-language assertion.** Geometry and clickability checks stay green while a button silently falls back to English — that is exactly how a missing `close` key slipped through (the i18n migrator unpacked `(ck, cv)` in its `for` loop and then never used it, so only `stats` was ever written). `verify-stats-drawer.mjs` now asserts `aria-label` on the Stats button, `aria-label` on the close button and the drawer title for **both** `zh` and `en`. Two gotchas: the language is stored under **`site_lang`** (`LANG_KEY` in `js/site-settings.js`) — seeding `'lang'` leaves the page on its `navigator.language` default and makes every "Chinese didn't apply" failure a *phantom*; and the tables are named **`LANGUAGES`** on pm/hs/td/gd (`this.TEXT` is only a class-property alias) but `I18N` on na/sf
+- ⚠️ **Label/aria text needs its own per-language assertion.** Geometry and clickability checks stay green while a button silently falls back to English — that is exactly how a missing `close` key slipped through (the i18n migrator unpacked `(ck, cv)` in its `for` loop and then never used it, so only `stats` was ever written). `verify-stats-drawer.mjs` now asserts `aria-label` on the Stats button, `aria-label` on the close button and the drawer title for **both** `zh` and `en`. Two gotchas: the language is stored under **`site_lang`** (`LANG_KEY` in `src/platform/site-settings.js`) — seeding `'lang'` leaves the page on its `navigator.language` default and makes every "Chinese didn't apply" failure a *phantom*; and the tables are named **`LANGUAGES`** on pm/hs/td/gd (`this.TEXT` is only a class-property alias) but `I18N` on na/sf
 
 ## 结算与渲染单一出口
 
@@ -177,7 +177,7 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
   写进正则时要同时认新旧两种形态。反向验证：摘掉一条注册表条目跑脚本，必须红。
 - ⚠️ **修活一个迁移器之前，先确认它要写的东西现在还该不该写。** 上面那两个脚本一旦恢复匹配，
   就会按 P2 之前的清单往每页插 `sound` / `moreGames` / `close` —— 而这三个键那时已被收进
-  `js/i18n.js` 的 `COMMON_TEXT`，靠 `makeText` 原型链兜底，页面里留副本会被
+  `src/platform/i18n.js` 的 `COMMON_TEXT`，靠 `makeText` 原型链兜底，页面里留副本会被
   `verify-i18n.mjs` 的「无公共键字面量副本」判红。也就是说「修好」的脚本会当场把 12 个页面改红。
   判据同样不能再抄一份：归档迁移辅助脚本 `tools/archive/migrations/lib/i18n_common.py` 现读 `COMMON_TEXT` 的键集合并剔除；它不属于活动运行路径。
 - ⚠️ **收紧一条断言时，先确认宽松版不是在容忍某种合法形态。** 给 `add-chrome-i18n.py` 加

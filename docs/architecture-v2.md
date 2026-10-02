@@ -9,7 +9,7 @@ The repository is now split into four explicit domains:
 - `tests/`: auto-discovered contract and end-to-end tests.
 - `tools/`: scaffolding, asset tooling, and archived one-off migrations.
 
-Legacy `js/*.js` shared-module paths are compatibility shims only. New code imports from
+The former `js/*.js` shared-module paths have been removed. New code imports from
 `src/platform` or stays inside its `src/games/<id>` package.
 
 ## New games

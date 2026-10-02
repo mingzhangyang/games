@@ -997,9 +997,9 @@ tests/verify-all.mjs
 ```text
 css/layout.css
 css/tokens.css
-js/game-frame.js
-js/game-drawer.js
-js/game-chrome.js
+src/platform/game-frame.js
+src/platform/game-drawer.js
+src/platform/game-chrome.js
 ```
 
 如果为了 Carrot Pull 修改共享契约，必须说明为什么无法在页面层解决。

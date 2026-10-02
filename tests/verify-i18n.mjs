@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// verify-i18n.mjs — js/i18n.js 公共文案唯一来源回归防线（P2-5）
+// verify-i18n.mjs — src/platform/i18n.js 公共文案唯一来源回归防线（P2-5）
 //
 // 断言：
 //   1) 行为：makeText 原型链兜底（缺失键落 COMMON）、own 键优先覆盖、
@@ -31,7 +31,7 @@ const ok = (cond, label, extra) => {
 /* ─────────────── 行为断言 ─────────────── */
 
 console.log('▶ 行为（makeText 原型链）');
-const i18n = await import(pathToFileURL(join(ROOT, 'js', 'i18n.js')).href);
+const i18n = await import(pathToFileURL(join(ROOT, 'src', 'platform', 'i18n.js')).href);
 const { COMMON_TEXT, makeText } = i18n;
 
 ok(COMMON_TEXT.en.sound === 'Sound' && COMMON_TEXT.zh.sound === '声音', 'COMMON_TEXT.sound 黄金值');
@@ -105,7 +105,7 @@ const SCAN_FILES = [
 ];
 for (const abs of SCAN_FILES) {
     const rel = abs.slice(ROOT.length + 1).replace(/\\/g, '/');
-    if (rel === 'js/i18n.js' || rel === 'src/platform/i18n.js') continue;
+    if (rel === 'src/platform/i18n.js') continue;
     const src = readFileSync(abs, 'utf8');
     let leaks = [];
     for (const lang of ['en', 'zh']) {

@@ -42,9 +42,7 @@ for (const name of platformModules) {
     const canonical = join(ROOT, 'src', 'platform', name + '.js');
     const shim = join(ROOT, 'js', name + '.js');
     ok(existsSync(canonical), 'platform module exists: ' + name);
-    const shimSrc = existsSync(shim) ? readFileSync(shim, 'utf8') : '';
-    ok(/Compatibility shim/.test(shimSrc) && shimSrc.includes('../src/platform/' + name + '.js'),
-        'legacy js/' + name + '.js is only a compatibility shim');
+    ok(!existsSync(shim), 'legacy js/' + name + '.js is removed');
 }
 
 const independentArchitectures = new Set(['math-rain', 'tank-battle']);

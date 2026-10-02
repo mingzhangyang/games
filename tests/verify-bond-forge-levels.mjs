@@ -19,7 +19,7 @@ import {
     canonicalize, bondSignature, findByComposition,
     allowsBonds, isIonic, maxBondsOf, lonePairsOf,
 } from '../src/games/bond-forge/model/molecules.js';
-import { hashStringFNV, mulberry32 } from '../js/daily.js';
+import { hashStringFNV, mulberry32 } from '../src/platform/daily.js';
 
 let passed = 0, failed = 0;
 function assert(cond, msg) {
