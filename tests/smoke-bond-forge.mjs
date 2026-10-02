@@ -473,9 +473,9 @@ const dailyBehavior = await page.evaluate(async () => {
         if (href.startsWith('https://game-scores.orangely.workers.dev/scores')) {
             if (String(options.method || 'GET').toUpperCase() === 'POST') {
                 try { scoreCalls.push(JSON.parse(options.body || '{}')); } catch { scoreCalls.push({}); }
-                return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+                return { ok: true, status: 200, json: async () => ({}) };
             }
-            return new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } });
+            return { ok: true, status: 200, json: async () => [] };
         }
         return originalFetch(url, options);
     };

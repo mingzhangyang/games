@@ -5,24 +5,28 @@ export function bindNeedleAwnInput(game) {
     const isEditableTarget = target => !!(target && target.closest && target.closest(
         'input, textarea, select, [contenteditable="true"]',
     ));
-    const isInteractiveTarget = target => !!(target && target.closest && target.closest(
-        'button, a, input, textarea, select, [contenteditable="true"], [role="button"], [role="link"]',
+    const isNativeActivationTarget = target => !!(target && target.closest && target.closest(
+        'button, a, [role="button"], [role="link"]',
     ));
 
     window.addEventListener('keydown', event => {
         const isPauseShortcut = event.code === 'KeyP' || event.code === 'Escape';
-        if (isPauseShortcut
-            && !event.repeat
-            && !isEditableTarget(event.target)
-            && (game.state === 'playing' || game.state === 'paused')) {
-            event.preventDefault();
-            game.togglePause();
-            return;
+        if (isPauseShortcut) {
+            // The stats drawer owns the pause it introduced and must be the only
+            // thing allowed to resume that state while it remains open.
+            if (window.naDrawer?.open || isEditableTarget(event.target)) return;
+            if (!event.repeat && (game.state === 'playing' || game.state === 'paused')) {
+                event.preventDefault();
+                game.togglePause();
+                return;
+            }
         }
 
-        // Preserve native keyboard activation/editing when focus is on UI controls.
-        // Gameplay action shortcuts only own keys while focus is outside those controls.
-        if (isInteractiveTarget(event.target)) return;
+        // Editable controls own every gameplay key. Buttons/links only reserve
+        // their native activation keys so stale focus never disables WASD/Q/E.
+        if (isEditableTarget(event.target)) return;
+        if (isNativeActivationTarget(event.target)
+            && (event.code === 'Enter' || event.code === 'Space')) return;
 
         if (game.state === 'playing') {
             game.keys[event.code] = true;

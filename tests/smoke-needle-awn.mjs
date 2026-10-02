@@ -139,6 +139,52 @@ async function assertNormalPage() {
             fail(`控件保留焦点时 Escape 无法恢复: ${JSON.stringify(focusedEscapeResume)}`);
         }
 
+        const yBeforeFocusedMove = await page.evaluate(() => window.gameEngine.player.y);
+        await page.keyboard.down('w');
+        await wait(120);
+        await page.keyboard.up('w');
+        const focusedMove = await page.evaluate(() => ({
+            state: window.gameEngine.state,
+            activeId: document.activeElement?.id,
+            y: window.gameEngine.player.y,
+            keyHeld: !!window.gameEngine.keys.KeyW,
+        }));
+        if (focusedMove.state !== 'playing' || focusedMove.y >= yBeforeFocusedMove - 1 || focusedMove.keyHeld) {
+            fail(`按钮保留焦点后 WASD 仍被阻断: before=${yBeforeFocusedMove}, after=${JSON.stringify(focusedMove)}`);
+        }
+
+        await page.setViewport({ width: 390, height: 844 });
+        await wait(80);
+        await page.click('#naStatsToggle');
+        await page.waitForFunction(() => window.naDrawer?.open && window.gameEngine.state === 'paused', { timeout: 2000 });
+        const drawerPause = await page.evaluate(() => ({
+            open: window.naDrawer?.open,
+            pausedByDrawer: window.naDrawer?.pausedByDrawer,
+            state: window.gameEngine.state,
+            activeId: document.activeElement?.id,
+        }));
+        await page.keyboard.press('p');
+        const drawerAfterP = await page.evaluate(() => ({
+            open: window.naDrawer?.open,
+            state: window.gameEngine.state,
+        }));
+        if (!drawerPause.open || !drawerPause.pausedByDrawer || drawerPause.state !== 'paused'
+            || !drawerAfterP.open || drawerAfterP.state !== 'paused') {
+            fail(`统计抽屉打开时 P 不应恢复游戏: before=${JSON.stringify(drawerPause)}, after=${JSON.stringify(drawerAfterP)}`);
+        }
+
+        await page.keyboard.press('Escape');
+        await page.waitForFunction(() => !window.naDrawer?.open, { timeout: 2000 });
+        const drawerClosed = await page.evaluate(() => ({
+            open: window.naDrawer?.open,
+            state: window.gameEngine.state,
+        }));
+        if (drawerClosed.open || drawerClosed.state !== 'playing') {
+            fail(`Escape 关闭统计抽屉后未由抽屉恢复游戏: ${JSON.stringify(drawerClosed)}`);
+        }
+        await page.setViewport({ width: 1280, height: 900 });
+        await wait(80);
+
         const clash = await page.evaluate(() => {
             const game = window.gameEngine;
             game.state = 'paused';
