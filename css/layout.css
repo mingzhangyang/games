@@ -60,7 +60,7 @@
        桌面纵向预算（2026-09-19，选择加入）：
        --frame-ratio        画幅比 w/h（默认 0.75；420×640 页面覆盖 0.65625）
        --frame-stage-h      舞台高度封顶（默认 960px）
-       --frame-chrome       顶栏+页脚+容器内距的纵向开销；js/game-frame.js 实测
+       --frame-chrome       顶栏+页脚+容器内距的纵向开销；src/platform/game-frame.js 实测
                             写入 .game-shell，150px 仅首帧兜底
        --frame-main-gap     桌面 .game-main 的 gap（默认 28）
        --frame-scrollbar-thumb / -hover  侧栏细滚动条滑块配色（白色半透明）
@@ -584,7 +584,7 @@ body.drawer-locked {
 
 /* ── 响应式：窄屏把侧栏让给底部抽屉 ── */
 /*
- * 只在「已接入抽屉」的页面上隐藏侧栏 —— 由 `js/game-drawer.js` 在 `init()` 时
+ * 只在「已接入抽屉」的页面上隐藏侧栏 —— 由 `src/platform/game-drawer.js` 在 `init()` 时
  * 给 `<body>` 打上 `has-stats-drawer`，本规则据此生效。
  *
  * ⚠️ 不要试图用 `.game-sidebar:has([id$="StatsPanels"])` 判断！
@@ -604,7 +604,7 @@ body.drawer-locked {
      *
      *   --stage-w = min(--frame-stage-h, 100dvh - --frame-chrome) × --frame-ratio
      *
-     * --frame-chrome 由 js/game-frame.js 实测（顶栏+页脚+shell 内距，td 另加技能条）
+     * --frame-chrome 由 src/platform/game-frame.js 实测（顶栏+页脚+shell 内距，td 另加技能条）
      * 写进 .game-shell 的内联样式，CSS 里的 150px 只兜首帧。
      *
      * ⚠️ 选择加入：只有覆盖了 --frame-shell-max / --frame-stage-cap 的页面
@@ -646,7 +646,7 @@ body.drawer-locked {
        var() 回退自行失效。写成无条件规则时它越界命中了 tetris —— 侧栏（488×930）
        变成可滚容器且带 overscroll-behavior: contain，鼠标落在侧栏上滚轮就再也
        传不到主文档，verify-tetris-topbar-mobile 的「滚轮下滚能滚起来」因此变红。
-       判据取「本页接没接纵向预算」这个不随视口变化的事实：由 js/game-frame.js
+       判据取「本页接没接纵向预算」这个不随视口变化的事实：由 src/platform/game-frame.js
        的 bindFrame() 打 body 类，与 game-drawer.js 的 has-stats-drawer 同模式。 */
     body.has-frame-budget .game-sidebar {
         max-height: calc(100dvh - var(--frame-chrome));
@@ -705,7 +705,7 @@ body.drawer-locked {
        </div>
 
    舞台高度 = 100dvh − 实测 chrome − 底部安全区：
-     --frame-chrome 由 js/game-frame.js 的 bindFrame({ layout: 'immersive' }) 实测
+     --frame-chrome 由 src/platform/game-frame.js 的 bindFrame({ layout: 'immersive' }) 实测
      （shell 上内距（含顶部安全区）+ 顶栏；**不含页脚** —— 页脚在首屏之下），不是魔数。
    宽度：手机端贴边铺满（不留 shell 内距与圆角）；≥ --frame-immersive-max 时居中，
      两侧由页面自己的 body 夜色背景自然延展。

@@ -49,7 +49,7 @@ class GameEngine {
         this.artState = 'loading';
         this.debugHitbox = new URLSearchParams(window.location.search).get('debug-hitbox') === '1';
         // 本页此前没有任何 resize 监听（画布尺寸恒定），现在舞台尺寸会随
-        // --frame-chrome 实测值与视口变化（见 js/game-frame.js），必须跟上；
+        // --frame-chrome 实测值与视口变化（见 src/platform/game-frame.js），必须跟上；
         // setupCanvas 用 setTransform 幂等重设变换，重复调用安全。
         window.addEventListener('resize', () => this.setupCanvas());
         window.addEventListener('game-frame:changed', () => this.setupCanvas());
@@ -540,7 +540,7 @@ class GameEngine {
     }
 
     getTodayDateString() {
-        // UTC+8 唯一口径已收敛到 js/daily.js（原 getTimezoneOffset 手写版退役）
+        // UTC+8 唯一口径已收敛到 src/platform/daily.js（原 getTimezoneOffset 手写版退役）
         return todayKey();
     }
 
@@ -984,7 +984,7 @@ class GameEngine {
         const name = getPlayerName() || ensurePlayerName();
         const gameKey = this.mode === 'daily' ? `needle-awn-d${dailyDate}` : 'needle-awn';
 
-        // 网络层收敛到 js/leaderboard.js（原无超时/cors，统一补齐；false=未进金榜）
+        // 网络层收敛到 src/platform/leaderboard.js（原无超时/cors，统一补齐；false=未进金榜）
         const ok = await submitScore({ game: gameKey, name, score: this.score });
         if (!ok) {
             // 离线环境静默降级，但要让玩家知道未进金榜

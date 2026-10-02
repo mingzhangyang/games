@@ -30,9 +30,9 @@ function storageParse(key, fallback) {
     }
 }
 
-// UTC+8 日期键（YYYY-MM-DD）：委托 js/daily.js 唯一口径（原手写 dayKey 退役）
+// UTC+8 日期键（YYYY-MM-DD）：委托 src/platform/daily.js 唯一口径（原手写 dayKey 退役）
 
-// 距离下一个 UTC+8 午夜的毫秒数：委托 js/daily.js（原手写版多加了一次 8h 偏移，
+// 距离下一个 UTC+8 午夜的毫秒数：委托 src/platform/daily.js（原手写版多加了一次 8h 偏移，
 // UTC+8 16:00 之后倒计时整整多报 24 小时）
 
 // 每日谜题编号（自 2026-01-01 UTC+8 起）
@@ -46,7 +46,7 @@ function dailyNumber() {
     return Math.floor((Date.now() - EPOCH) / (24 * 3600 * 1000)) + 1;
 }
 
-// 每日种子哈希 / PRNG：已收敛到 js/daily.js
+// 每日种子哈希 / PRNG：已收敛到 src/platform/daily.js
 
 /* ────────────────────────── data prep ────────────────────────── */
 
@@ -610,7 +610,7 @@ export class WordDailyGame {
 
        ⚠️ 反馈环：被观测的元素高度都不随棋盘宽度变化（shell 宽固定、
           .wd-diff-row 是自己的 440px 封顶），所以写入不会反过来改变自己；
-          仍保留 rAF 合并 + 1px 死区（与 js/game-frame.js 同款护栏）。 */
+          仍保留 rAF 合并 + 1px 死区（与 src/platform/game-frame.js 同款护栏）。 */
     bindBoardFit() {
         const shell = document.querySelector('.wd-shell');
         const main = shell && shell.querySelector('.wd-main');

@@ -580,7 +580,7 @@ body {
    （左 Home / 中 分数 HUD / 右 Stats + Theme，全部图标钮）。
    改成图标钮以前踩过两个坑，别踩回去：
    ① emoji（🌈 / ✨）的字体度量远大于行盒，文字胶囊时代量得「上留 7px、下留 15px」，
-      文案看起来偏上 4px。→ 图标走 inline SVG（ICONS.theme，见 js/icons.js），
+      文案看起来偏上 4px。→ 图标走 inline SVG（ICONS.theme，见 src/platform/icons.js），
       居中由 flex（.game-icon-btn）决定，不受字形度量影响。
    ② 热区外扩伪元素 ::after 是 position:absolute + inset:-6px —— 宿主若
       position:static，包含块会解析成整个 .game-container，等于给整页铺一层

@@ -255,7 +255,7 @@ export class EchoCaveGame {
             el['reset-btn'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
         }
         if (el['mute-btn']) {
-            // ⚠️ 键名是 soundOn / soundOff（js/icons.js），写错会把字面量 "undefined"
+            // ⚠️ 键名是 soundOn / soundOff（src/platform/icons.js），写错会把字面量 "undefined"
             // 塞进 innerHTML —— 图标消失但无报错。
             el['mute-btn'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
             el['mute-btn'].addEventListener('click', () => {

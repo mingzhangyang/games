@@ -20,7 +20,7 @@ const sfx = createSfx({
     gameover: { freqs: [392, 329.63, 261.63, 196], delay: 0.18, type: 'sawtooth', dur: 0.45, vol: 0.22 }
 });
 
-// escapeHTML 已收敛到 js/leaderboard.js（本地重复实现退役）
+// escapeHTML 已收敛到 src/platform/leaderboard.js（本地重复实现退役）
 
 const TETRIS_STORE = createGameStorage('tetris', {
     version: 1,
@@ -223,7 +223,7 @@ async function fetchAndDisplayGlobalScores() {
     loadingElement.textContent = TEXT.loadingScores;
     
     try {
-        // 网络层收敛到 js/leaderboard.js（侧栏拉取保持 5s 宽限）
+        // 网络层收敛到 src/platform/leaderboard.js（侧栏拉取保持 5s 宽限）
         const data = await fetchBoard('tetris', { timeoutMs: 5000 });
 
         if (data && data.length > 0) {
@@ -1145,7 +1145,7 @@ export class Tetris {
         localScores = localScores.slice(-20); // 只保留最近20条
         TETRIS_STORE.set('scores', localScores);
 
-        // 网络层收敛到 js/leaderboard.js（false=仅存本地）
+        // 网络层收敛到 src/platform/leaderboard.js（false=仅存本地）
         const ok = await submitScore({ game: 'tetris', name: username, score: this.score });
         if (!ok) {
             console.log('Score upload failed, saved locally only');
@@ -1165,7 +1165,7 @@ export class Tetris {
             isGlobalScores = leaderboard.length > 0;
         } else {
             try {
-                // 网络层收敛到 js/leaderboard.js
+                // 网络层收敛到 src/platform/leaderboard.js
                 leaderboard = await fetchBoard('tetris');
                 isGlobalScores = true;
             } catch (e) {

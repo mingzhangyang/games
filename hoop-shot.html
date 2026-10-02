@@ -39,7 +39,7 @@
         <!-- 顶栏 HUD -->
         <header class="hs-topbar game-topbar">
             <div class="hs-topbar-lead game-topbar-group">
-                <!-- 左簇：Home 永远第一个（文案 / aria 由 js/game-chrome.js 统一写） -->
+                <!-- 左簇：Home 永远第一个（文案 / aria 由 src/platform/game-chrome.js 统一写） -->
                 <button data-chrome="home" class="hs-icon-btn game-icon-btn" id="hs-btn-home-top" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
@@ -127,7 +127,7 @@
             </div>
 
             <!-- 桌面侧栏专属：必须放在 #hsStatsPanels 外面 —— 那个节点会被
-                 js/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
+                 src/platform/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
                  放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
             <div class="hs-side-card game-side-card">
                 <nav class="more-games" id="hsSideMore"></nav>

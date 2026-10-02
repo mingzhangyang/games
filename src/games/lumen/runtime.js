@@ -184,7 +184,7 @@ export class LumenGame {
         this.updateMuteButtons();
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        // 桌面舞台尺寸随 --frame-chrome 实测值变化（js/game-frame.js）
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（src/platform/game-frame.js）
         window.addEventListener('game-frame:changed', () => this.resize());
 
         this.loadLevel(0);   // 菜单背景展示第 1 关的光路
@@ -486,7 +486,7 @@ export class LumenGame {
         track('lumen', 'finish');
 
         const game = `lumen-d${date}`;
-        // 网络层收敛到 js/leaderboard.js（false=未进全球榜，走本地兜底）
+        // 网络层收敛到 src/platform/leaderboard.js（false=未进全球榜，走本地兜底）
         submitScore({ game, name: ensurePlayerName() || 'Anonymous', score }).then(ok => {
             if (ok) return this.fetchDailyBoard(game);
             this.pushLocalScore(date, score);

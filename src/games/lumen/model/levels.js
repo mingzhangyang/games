@@ -22,7 +22,7 @@
  * 解态可解性 / 初盘不可解性由 scripts/verify-lumen-levels.mjs 锁定。
  *
  * 每日谜题：16 布局池 × FNV-1a('lumen-' + UTC+8 日期) 选关 × mulberry32 打乱初盘。
- * 全球同题、确定性可复现；⚠️ hashStringFNV 来自 js/daily.js（兼容铁律，勿改算法）。
+ * 全球同题、确定性可复现；⚠️ hashStringFNV 来自 src/platform/daily.js（兼容铁律，勿改算法）。
  */
 
 import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
@@ -264,7 +264,7 @@ export const DAILY_POOL = DAILY_SPECS.map(spec => {
 
 /**
  * 当日谜题（确定性，全球同题）。
- * 种子 = FNV-1a('lumen-' + dateKey)；dateKey 为 js/daily.js 的 UTC+8 紧凑日期。
+ * 种子 = FNV-1a('lumen-' + dateKey)；dateKey 为 src/platform/daily.js 的 UTC+8 紧凑日期。
  * 打乱：每面镜面 50% 概率翻转（行序消费 rng）；保底 ≥2 处翻转且初盘不可解，
  * 不足时按行序补翻。par = 翻转数。
  */

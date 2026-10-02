@@ -6,7 +6,7 @@
 //      COMMON_TEXT 黄金值（改文案须有意识地在 i18n.js 改一处）。
 //   2) 收敛：11 个 shell-family 页均通过入口图使用提取的 i18n 模块且语言表经 makeText 包装；
 //      js/ 下除 i18n.js 外不再存在 6 个公共键的字面量副本（防复制复活）。
-//   3) 语言键：site_lang 仍由 js/site-settings.js 管理（历史教训：键名曾写错）。
+//   3) 语言键：site_lang 仍由 src/platform/site-settings.js 管理（历史教训：键名曾写错）。
 //
 // 用法：node scripts/verify-i18n.mjs（无需浏览器/服务器）
 

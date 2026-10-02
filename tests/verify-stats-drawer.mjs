@@ -399,7 +399,7 @@ for (const P of PAGES) {
     // 于是关闭钮在中英文下都退回 fallback 的 'Close'，而上面所有几何/可点击性断言
     // 全部照常通过 —— 文案类的缺陷只有专门断言文案才抓得到。
     //
-    // ⚠️ 存储键是 js/site-settings.js 的 LANG_KEY = 'site_lang'；写成 'lang' 会让页面
+    // ⚠️ 存储键是 src/platform/site-settings.js 的 LANG_KEY = 'site_lang'；写成 'lang' 会让页面
     // 一直走 navigator.language 默认值，于是"zh 不生效"变成彻头彻尾的假象。
     const WANT = {
         zh: { stats: '数据统计', close: '关闭' },
