@@ -18,7 +18,7 @@
  *      完全分拣的理论极差 ≈ 1.386（Rayleigh 分布上下半区条件均值之差）。
  */
 
-import { hashStringFNV, mulberry32 } from './daily.js';
+import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
 export const STAGE = { w: 560, h: 640 };
 

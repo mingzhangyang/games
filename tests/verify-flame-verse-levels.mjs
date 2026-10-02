@@ -14,7 +14,7 @@
  *   ④ 难度曲线   —— par 带宽、近似不降、每元素都在某关出现过、干扰对覆盖
  *   ⑤ daily      —— 730 天扫描：确定性 / 5 皿 / 不重复 / 元素数与档位在带宽内
  */
-import * as R from '../js/flame-verse-rules.js';
+import * as R from '../src/games/flame-verse/model/rules.js';
 
 let pass = 0, fail = 0;
 const ok = (cond, msg) => { if (cond) { pass++; } else { fail++; console.log('  ✗ ' + msg); } };

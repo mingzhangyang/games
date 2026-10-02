@@ -230,7 +230,7 @@ body {
     max-width: 360px;
 }
 
-/* ⚠️ 类名必须与 js/echo-cave.js 的 renderLevelGrid() 一致：那里写的是
+/* ⚠️ 类名必须与 src/games/echo-cave/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'ec-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
 .ec-chip {
@@ -451,7 +451,7 @@ body {
 .ec-side-v { color: var(--tok-text); font-weight: 700; }
 
 /* ── 侧栏：声学图例 ──
-   颜色必须与 js/echo-cave.js 渲染层的语义色一一对应：
+   颜色必须与 src/games/echo-cave/runtime.js 渲染层的语义色一一对应：
    岩壁 / 苔藓 / 声晶 --tok-gold / 出口 / 荆棘 --tok-danger / 法则 = 青色波环 */
 
 .ec-side-legend { display: flex; flex-direction: column; gap: 2px; }

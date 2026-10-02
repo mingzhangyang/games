@@ -21,7 +21,7 @@
  * scripts/verify-flame-verse-levels.mjs 会复核这个下界（par 绝不许手填谎报）。
  */
 
-import { hashStringFNV, mulberry32 } from './daily.js';
+import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
 /* ────────────────────────── 几何 ────────────────────────── */
 

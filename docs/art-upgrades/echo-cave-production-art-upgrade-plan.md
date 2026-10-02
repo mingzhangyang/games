@@ -49,7 +49,7 @@ BFS / smoke 可玩路径
 
 特别禁止修改：
 
-- `js/echo-cave-caves.js` 的地图；
+- `src/games/echo-cave/model/rules.js` 的地图；
 - `GRID`；
 - `RULES`；
 - wall / moss / exit / crystal / thorn 坐标；
@@ -539,7 +539,7 @@ pulse 结束后：
 
 ```text
 assets/echo-cave/**
-js/echo-cave.js
+src/games/echo-cave/runtime.js
 js/echo-cave-art.js
 js/echo-cave-materials.js
 css/echo-cave.css
@@ -551,7 +551,7 @@ tests/verify-all.mjs
 除非确有必要，不修改：
 
 ```text
-js/echo-cave-caves.js
+src/games/echo-cave/model/rules.js
 tests/verify-echo-cave-levels.mjs
 css/science-showcase.css
 css/layout.css

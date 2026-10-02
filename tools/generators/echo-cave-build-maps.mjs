@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mulberry32 } from '../../js/daily.js';
-import { GRID, RULES, computeField } from '../../js/echo-cave-caves.js';
+import { GRID, RULES, computeField } from '../../src/games/echo-cave/model/rules.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 // ⚠️ 默认只报告不改文件：万一有人手调了 LEVELS，跑一遍生成器会静默覆盖。
@@ -583,7 +583,7 @@ def('comb5', 'tipThorn', 5, () => {
 const DROP = new Set(['maze2', 'gallery']);
 
 // 每个设计稿要几根荆棘（由 placeThorns 自动落位）
-// 每关的教学提示（键必须已在 js/echo-cave.js 的 zh/en 两表里定义）
+// 每关的教学提示（键必须已在 src/games/echo-cave/i18n.js 的 zh/en 两表里定义）
 const TIPS = {
     comb2: 'tipMove',        // 双厅 + 苔墩
     ringCore: 'tipRoute',    // 环廊 + 内厅
@@ -668,7 +668,7 @@ const body = built.map((d, i) => {
     ].join('\n');
 }).join('\n');
 
-const target = path.resolve(ROOT, 'js/echo-cave-caves.js');
+const target = path.resolve(ROOT, 'src/games/echo-cave/model/rules.js');
 const src = fs.readFileSync(target, 'utf8');
 const begin = '    /* gen-begin */\n';
 const end = '    /* gen-end */\n';
@@ -678,4 +678,4 @@ if (bi < 0 || ei < 0) { console.error('找不到 gen-begin / gen-end 标记'); p
 const next = src.slice(0, bi + begin.length) + body + '\n' + src.slice(ei);
 if (next === src) console.log('（内容无变化）');
 else if (!WRITE) console.log(`\n[dry] ${built.length} 关已生成，与现状不同 —— 写盘请加 --write`);
-else { fs.writeFileSync(target, next, 'utf8'); console.log(`\n已写入 ${built.length} 关 → js/echo-cave-caves.js（par ${built[0].par} → ${built[built.length - 1].par}）`); }
+else { fs.writeFileSync(target, next, 'utf8'); console.log(`\n已写入 ${built.length} 关 → src/games/echo-cave/model/rules.js（par ${built[0].par} → ${built[built.length - 1].par}）`); }

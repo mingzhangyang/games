@@ -1166,7 +1166,7 @@
       "id": "echo-cave",
       "prefix": "ec",
       "href": "echo-cave.html",
-      "entry": "js/echo-cave.js",
+      "entry": "src/games/echo-cave/index.js",
       "emoji": "🦇",
       "title": {
         "doc": "回声洞窟 Echo Cave — Sonar Cave Puzzle",
@@ -1228,7 +1228,7 @@
       "id": "maxwell-demon",
       "prefix": "md",
       "href": "maxwell-demon.html",
-      "entry": "js/maxwell-demon.js",
+      "entry": "src/games/maxwell-demon/index.js",
       "emoji": "😈",
       "title": {
         "doc": "麦克斯韦妖 Maxwell's Demon — Heat & Entropy Puzzle",
@@ -1292,7 +1292,7 @@
       "id": "crystal-bloom",
       "prefix": "cb",
       "href": "crystal-bloom.html",
-      "entry": "js/crystal-bloom.js",
+      "entry": "src/games/crystal-bloom/index.js",
       "emoji": "💎",
       "title": {
         "doc": "晶绽 Crystal Bloom — Cooling Curve Crystal Puzzle",
@@ -1356,7 +1356,7 @@
       "id": "flame-verse",
       "prefix": "fv",
       "href": "flame-verse.html",
-      "entry": "js/flame-verse.js",
+      "entry": "src/games/flame-verse/index.js",
       "emoji": "🔥",
       "title": {
         "doc": "焰语 Flame Verse — Flame Spectrum Puzzle",

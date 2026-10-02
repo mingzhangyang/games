@@ -25,7 +25,7 @@
 import {
     GRID, RULES, LEVELS, DAILY_COUNT,
     parseCave, createWorld, stepWorld, computeField, dailyCourse,
-} from '../js/echo-cave-caves.js';
+} from '../src/games/echo-cave/model/rules.js';
 
 const { cols, rows, cell } = GRID;
 const SAFE = RULES.safeR;

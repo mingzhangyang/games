@@ -24,7 +24,7 @@
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import * as R from '../js/crystal-bloom-rules.js';
+import * as R from '../src/games/crystal-bloom/model/rules.js';
 
 const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
