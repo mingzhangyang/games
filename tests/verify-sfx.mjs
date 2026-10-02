@@ -3,7 +3,7 @@
  * verify-sfx — P2-7 音效收敛校验器
  *
  * 断言：
- *  1. 12 个迁移页 import createSfxEngine，且自造 AudioContext 样板清零
+ *  1. 15 个迁移页 import createSfxEngine，且自造 AudioContext 样板清零
  *  2. createSfx 表驱动页（tetris/gomoku/tank-battle）import createSfx
  *  3. 全 js/ 域（除豁免文件）无 createOscillator/createBufferSource/webkitAudioContext 残留
  *  4. 旧 toggleMuted 样板（this.muted = !this.muted）与旧参数名（endFreq）清零
@@ -66,7 +66,6 @@ function audibleBoilerplate(rel, src) {
 /* ── 1. 迁移页 import createSfxEngine ── */
 const MIGRATED = [
     { rel: 'src/games/gravity-slingshot/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
-    { rel: 'js/hoop-shot.js', root: JS_DIR, importPath: './game-sfx.js' },
     { rel: 'js/minesweeper.js', root: JS_DIR, importPath: './game-sfx.js' },
     { rel: 'src/games/planet-merge/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'js/reversi.js', root: JS_DIR, importPath: './game-sfx.js' },
@@ -77,6 +76,10 @@ const MIGRATED = [
     { rel: 'src/games/crystal-bloom/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/flame-verse/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/echo-cave/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/ripple-duet/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/hoop-shot/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/carrot-pull/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/lumen/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
 ];
 for (const item of MIGRATED) {
     const src = readFileSync(join(item.root, item.rel.replace(/^src\/games\//, '').replace(/^js\//, '')), 'utf8');

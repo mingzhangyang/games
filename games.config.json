@@ -482,7 +482,7 @@
       "id": "hoop-shot",
       "prefix": "hs",
       "href": "hoop-shot.html",
-      "entry": "js/hoop-shot.js",
+      "entry": "src/games/hoop-shot/index.js",
       "emoji": "🏀",
       "title": {
         "doc": "Hoop Shot — Flick Basketball Arcade",
@@ -912,7 +912,7 @@
       "id": "lumen",
       "prefix": "lm",
       "href": "lumen.html",
-      "entry": "js/lumen.js",
+      "entry": "src/games/lumen/index.js",
       "emoji": "💎",
       "title": {
         "doc": "Lumen — Beam Refraction Puzzle",
@@ -1418,7 +1418,7 @@
       "id": "ripple-duet",
       "prefix": "rd",
       "href": "ripple-duet.html",
-      "entry": "js/ripple-duet.js",
+      "entry": "src/games/ripple-duet/index.js",
       "emoji": "🌊",
       "title": {
         "doc": "涟漪双生 Ripple Duet — Wave Interference Puzzle",
@@ -1482,7 +1482,7 @@
       "id": "carrot-pull",
       "prefix": "cp",
       "href": "carrot-pull.html",
-      "entry": "js/carrot-pull.js",
+      "entry": "src/games/carrot-pull/index.js",
       "emoji": "🥕",
       "title": {
         "doc": "拔萝卜 Carrot Pull — Garden Rhythm Game",

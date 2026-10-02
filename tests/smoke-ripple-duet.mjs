@@ -26,8 +26,8 @@
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import * as R from '../js/ripple-duet-rules.js';
-import { LEVELS } from '../js/ripple-duet-levels.js';
+import * as R from '../src/games/ripple-duet/model/rules.js';
+import { LEVELS } from '../src/games/ripple-duet/model/levels.js';
 
 const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
@@ -35,7 +35,7 @@ const fail = m => fails.push(m);
 const pass = m => console.log('  ✓ ' + m);
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
-/* 控制台命中区（与 js/ripple-duet.js 的 BTN/CHIP 常量同源） */
+/* 控制台命中区（与 src/games/ripple-duet/runtime.js 的 BTN/CHIP 常量同源） */
 const BTN = {
     minus: { x: 330, y: 552, w: 64, h: 64 },
     plus: { x: 400, y: 552, w: 64, h: 64 },

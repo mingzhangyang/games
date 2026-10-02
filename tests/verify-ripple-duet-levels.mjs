@@ -7,8 +7,8 @@
  * 再用求解器给出的摆位回放一遍：satisfied 且 cost === par 且 3 星。
  */
 
-import * as R from '../js/ripple-duet-rules.js';
-import { LEVELS } from '../js/ripple-duet-levels.js';
+import * as R from '../src/games/ripple-duet/model/rules.js';
+import { LEVELS } from '../src/games/ripple-duet/model/levels.js';
 
 let pass = 0;
 const fails = [];

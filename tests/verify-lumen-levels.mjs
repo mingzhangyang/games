@@ -14,7 +14,7 @@
 import {
     GRID_N, buildGrid, traceGrid, mirrorCoords,
     LUMEN_LEVELS, DAILY_POOL, dailyLevel,
-} from '../js/lumen-levels.js';
+} from '../src/games/lumen/model/levels.js';
 
 let failed = 0;
 let passed = 0;

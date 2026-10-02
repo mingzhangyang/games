@@ -7,9 +7,9 @@ const ART_ROOT = join(ROOT, 'assets', 'carrot-pull');
 const manifestPath = join(ART_ROOT, 'manifest.json');
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 const html = readFileSync(join(ROOT, 'carrot-pull.html'), 'utf8');
-const artModule = readFileSync(join(ROOT, 'js', 'carrot-pull-art.js'), 'utf8');
-const sceneModule = readFileSync(join(ROOT, 'js', 'carrot-pull-scene.js'), 'utf8');
-const fallbackModule = readFileSync(join(ROOT, 'js', 'carrot-pull-fallback-scene.js'), 'utf8');
+const artModule = readFileSync(join(ROOT, 'src', 'games', 'carrot-pull', 'render', 'art.js'), 'utf8');
+const sceneModule = readFileSync(join(ROOT, 'src', 'games', 'carrot-pull', 'render', 'scene.js'), 'utf8');
+const fallbackModule = readFileSync(join(ROOT, 'src', 'games', 'carrot-pull', 'render', 'fallback-scene.js'), 'utf8');
 
 const errors = [];
 const checks = [];
@@ -92,7 +92,7 @@ if (manifest.coordinateSystem?.width !== 560 || manifest.coordinateSystem?.heigh
 
 // 角色锚点只认 manifest.anchors：精灵的 sceneAnchorLogicalPx / scale、运行时 SCENE（动画每帧据此重写变换）
 // 与 HTML 初始变换都要与它一致，否则只改 manifest 时角色仍画在旧位置而校验全绿。
-const { SCENE, PRODUCTION_ATTACH } = await import('../js/carrot-pull-scene.js');
+const { SCENE, PRODUCTION_ATTACH } = await import('../src/games/carrot-pull/render/scene.js');
 const groupTransform = id => html.match(new RegExp(`<g id="${id}" transform="([^"]+)"`))?.[1];
 const svgNumber = value => String(value).replace(/^0\./, '.');
 const CHARACTERS = {
@@ -186,7 +186,7 @@ Object.values(manifest.sprites || {}).forEach(sprite => inspectFile(sprite.file,
 
 // 预算只统计运行时真正下载的文件（加载器的 ART_URLS：预览 + 已接入的图层 + 精灵），
 // 而不是 manifest 里登记的全部 —— 不绘制的错位图层不该占预算，加载器多拉的文件也不能漏算。
-const { ART_URLS } = await import('../js/carrot-pull-art.js');
+const { ART_URLS } = await import('../src/games/carrot-pull/render/art.js');
 const drawnLayers = [...html.matchAll(/data-art-layer="([^"]+)"/g)].map(match => match[1]).sort();
 if (!same(Object.keys(ART_URLS.layers).sort(), drawnLayers)) {
     fail(`art loader layers (${Object.keys(ART_URLS.layers).join(', ')}) must match the layers the page draws (${drawnLayers.join(', ')})`);
