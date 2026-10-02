@@ -32,7 +32,14 @@ const budgets = {
     'js/lumen.js': 4 * 1024,
     'src/games/lumen/index.js': 16 * 1024,
     'src/games/lumen/runtime.js': 48 * 1024,
-    'js/tetris.js': 60 * 1024,
+    'js/circuit.js': 4 * 1024,
+    'js/circuit-levels.js': 4 * 1024,
+    'src/games/circuit/index.js': 16 * 1024,
+    'src/games/circuit/runtime.js': 60 * 1024,
+    'src/games/circuit/model/levels.js': 24 * 1024,
+    'js/tetris.js': 4 * 1024,
+    'src/games/tetris/index.js': 16 * 1024,
+    'src/games/tetris/runtime.js': 64 * 1024,
 };
 let failed = 0;
 for (const [file, max] of Object.entries(budgets)) {

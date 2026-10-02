@@ -536,7 +536,7 @@ body {
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
 }
 
-/* ── 画布调色板（js/circuit.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
+/* ── 画布调色板（src/games/circuit/runtime.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
    深色 = 迁移前 JS 里的字面量，逐字不变；浅色 = 「蓝图纸」：浅底、深琥珀通电、石板灰断路 */
 :root {
     --cc-cv-amber-soft: #ffe9b0;

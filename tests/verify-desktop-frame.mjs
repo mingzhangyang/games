@@ -160,7 +160,7 @@ for (const lang of LANGS) {
                 // c. 不糊：后端缓冲区 >= 内容盒（na/sf 固定后端的回归；rect 含 border，用 clientW）
                 if (m1.canvas.attrW < m1.canvas.clientW) {
                     // tetris 是已登记的已知缺口，不是新回归：它的 CSS 早就接了纵向预算
-                    // （css/tetris.css:110-113 四个 --frame-* + js/tetris.js:1457 bindFrame），
+                    // （css/tetris.css:110-113 四个 --frame-* + src/games/tetris/index.js 的 logicalWidth），
                     // 但整份渲染代码直接按 canvas.width 的像素坐标作画（约 12 处，外加
                     // Tetris.gridCanvas 离屏缓存与 particle/lineClear 两层必须像素对齐的画布），
                     // 后端缓冲区一直钉在 400×800。≥1920 宽时棋盘被放大到 464–480 CSS px，发虚。
