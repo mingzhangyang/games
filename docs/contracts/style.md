@@ -171,6 +171,6 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 node tools/checks/run-lint.mjs          # eslint + stylelint + 令牌残留检查 一键
 node tools/checks/run-lint.mjs --fix    # 同上，且真的替换令牌字面量
 node tools/checks/token-swap.mjs --check   # 只查令牌残留
-npx eslint js tests tools/generators tools/checks --fix    # 修 JS（勿碰 src/platform/more-games.js —— 已 ignores 保护）
+npx eslint js src tests tools/generators tools/checks --fix    # 修 JS（勿碰 src/platform/more-games.js —— 已 ignores 保护）
 npx stylelint "css/**/*.css" --fix # 修 CSS（避开 math-rain；产物要烟测）
 ```

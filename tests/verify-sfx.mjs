@@ -20,6 +20,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const JS_DIR = join(ROOT, 'js');
+const PLATFORM_DIR = join(ROOT, 'src', 'platform');
 const GAMES_DIR = join(ROOT, 'src', 'games');
 
 let failures = 0;
@@ -53,6 +54,7 @@ const EXEMPT = (rel) => rel === 'src/platform/game-sfx.js'
 
 const allFiles = [
     ...collectJsFiles(JS_DIR),
+    ...collectJsFiles(PLATFORM_DIR),
     ...collectJsFiles(GAMES_DIR),
 ].map((p) => ({ abs: p, rel: relative(ROOT, p).replace(/\\/g, '/') }));
 
