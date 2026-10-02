@@ -16,7 +16,7 @@ const specs = [
         modelNeedles: ["from '../../../platform/daily.js"],
         handles: ['window.rdGame', 'window.rdRuntime', 'window.rdDrawer'],
         keys: ["'rd_progress'", "'rd_lb_"],
-        analytics: { play: 2, finish: 1 },
+        analytics: { play: 2, finish: 1, finalDailyGate: true },
         retired: ['js/ripple-duet-rules.js', 'js/ripple-duet-levels.js'],
     },
     {
@@ -89,6 +89,12 @@ for (const spec of selectedSpecs) {
         const count = event => (runtime.match(new RegExp(`track\\('${spec.id}', '${event}'\\)`, 'g')) || []).length;
         check(count('play') === spec.analytics.play, `${spec.id}: uses canonical play analytics events`);
         check(count('finish') === spec.analytics.finish, `${spec.id}: uses canonical finish analytics events`);
+        if (spec.analytics.finalDailyGate) {
+            check(runtime.includes("const isFinalDailyWave = this.mode === 'daily'")
+                && runtime.includes('this.daily.cursor === this.daily.course.length - 1')
+                && runtime.includes("if (this.mode !== 'daily' || isFinalDailyWave) track('ripple-duet', 'finish');"),
+            `${spec.id}: gates daily finish analytics to the final wave`);
+        }
         check(!/track\('ripple-duet', '(?:level_start|daily_start|level_win)'/.test(runtime),
             `${spec.id}: has no unsupported analytics event names`);
     }

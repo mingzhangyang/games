@@ -3,7 +3,7 @@
  * verify-sfx — P2-7 音效收敛校验器
  *
  * 断言：
- *  1. 16 个迁移页 import createSfxEngine，且自造 AudioContext 样板清零
+ *  1. 15 个迁移页 import createSfxEngine，且自造 AudioContext 样板清零
  *  2. createSfx 表驱动页（tetris/gomoku/tank-battle）import createSfx
  *  3. 全 js/ 域（除豁免文件）无 createOscillator/createBufferSource/webkitAudioContext 残留
  *  4. 旧 toggleMuted 样板（this.muted = !this.muted）与旧参数名（endFreq）清零

@@ -459,7 +459,10 @@ export class RippleDuetGame {
         }
         this.showClearPanel(stars, this.cost);
         if (stars === 3) Sfx.star3();
-        track('ripple-duet', 'finish');
+        const isFinalDailyWave = this.mode === 'daily'
+            && this.daily
+            && this.daily.cursor === this.daily.course.length - 1;
+        if (this.mode !== 'daily' || isFinalDailyWave) track('ripple-duet', 'finish');
     }
 
     maybeSubmitCampaign() {
