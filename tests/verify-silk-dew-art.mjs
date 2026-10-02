@@ -9,12 +9,12 @@ const ART_ROOT = join(ROOT, 'assets', 'silk-dew');
 const manifest = JSON.parse(readFileSync(join(ART_ROOT, 'manifest.json'), 'utf8'));
 const html = readFileSync(join(ROOT, 'silk-dew.html'), 'utf8');
 const css = readFileSync(join(ROOT, 'css', 'silk-dew.css'), 'utf8');
-const game = readFileSync(join(ROOT, 'js', 'silk-dew.js'), 'utf8');
-const art = readFileSync(join(ROOT, 'js', 'silk-dew-art.js'), 'utf8');
-const scene = readFileSync(join(ROOT, 'js', 'silk-dew-scene.js'), 'utf8');
-const levels = readFileSync(join(ROOT, 'js', 'silk-dew-levels.js'), 'utf8');
+const game = readFileSync(join(ROOT, 'src', 'games', 'silk-dew', 'runtime.js'), 'utf8');
+const art = readFileSync(join(ROOT, 'src', 'games', 'silk-dew', 'render', 'art.js'), 'utf8');
+const scene = readFileSync(join(ROOT, 'src', 'games', 'silk-dew', 'render', 'scene.js'), 'utf8');
+const levels = readFileSync(join(ROOT, 'src', 'games', 'silk-dew', 'model', 'levels.js'), 'utf8');
 const smoke = readFileSync(join(ROOT, 'tests', 'smoke-silk-dew.mjs'), 'utf8');
-const { SILK_DEW_MANIFEST: runtimeManifest } = await import('../js/silk-dew-art.js');
+const { SILK_DEW_MANIFEST: runtimeManifest } = await import('../src/games/silk-dew/render/art.js');
 
 const errors = [];
 const checks = [];
@@ -58,7 +58,7 @@ const runtimeExpected = {
     support: manifest.support,
     runtimeBudgetBytes: manifest.runtimeBudgetBytes,
 };
-if (!same(runtimeManifest, runtimeExpected)) fail('js/silk-dew-art.js runtime manifest is out of sync with manifest.json');
+if (!same(runtimeManifest, runtimeExpected)) fail('src/games/silk-dew/render/art.js runtime manifest is out of sync with manifest.json');
 else pass('runtime manifest matches source manifest');
 
 let runtimeBytes = 0;
@@ -99,15 +99,15 @@ for (const needle of ['ART_URLS', 'loadSilkDewArt', 'onFallback', 'ART_LOAD_TIME
     if (!art.includes(needle)) fail(`art loader is missing ${needle}`);
 }
 const literalAssetUrls = [
-    '../assets/silk-dew/layers/sky.svg',
-    '../assets/silk-dew/layers/moon-mountains.svg',
-    '../assets/silk-dew/layers/garden-back.svg',
-    '../assets/silk-dew/layers/garden-mid.svg',
-    '../assets/silk-dew/layers/garden-mid-lit.svg',
-    '../assets/silk-dew/layers/foreground.svg',
-    '../assets/silk-dew/layers/foreground-lit.svg',
-    '../assets/silk-dew/props/jade-vessel.svg',
-    '../assets/silk-dew/layers/fallback.svg',
+    '../../../../assets/silk-dew/layers/sky.svg',
+    '../../../../assets/silk-dew/layers/moon-mountains.svg',
+    '../../../../assets/silk-dew/layers/garden-back.svg',
+    '../../../../assets/silk-dew/layers/garden-mid.svg',
+    '../../../../assets/silk-dew/layers/garden-mid-lit.svg',
+    '../../../../assets/silk-dew/layers/foreground.svg',
+    '../../../../assets/silk-dew/layers/foreground-lit.svg',
+    '../../../../assets/silk-dew/props/jade-vessel.svg',
+    '../../../../assets/silk-dew/layers/fallback.svg',
 ];
 for (const assetUrl of literalAssetUrls) {
     if (!art.includes(`new URL('${assetUrl}', import.meta.url)`)) {

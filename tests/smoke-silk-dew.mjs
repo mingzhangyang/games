@@ -208,7 +208,7 @@ if (after.state !== 'won-level') {
  * 该崩溃 100% 漏网。这里遍历全部 20 关，逐关强制同步 draw() 若干帧。
  * 统计「气泡/风/荆棘」出现次数做自检：若遍历中一个都没遇到，说明该回归形同虚设。 */
 const levelCount = await page.evaluate(() => {
-    // ⚠ 不要 import('/js/silk-dew-levels.js')：dist 里源码路径已打包成哈希 chunk，
+    // ⚠ 不要 import('/src/games/silk-dew/model/levels.js')：dist 里源码路径已打包成哈希 chunk，
     // 动态 import 必 404。改用 startLevel 的钳制语义探关数（越界 → 最后一关）。
     try {
         window.sdGame.startLevel(9999);

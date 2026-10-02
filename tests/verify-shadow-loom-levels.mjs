@@ -15,10 +15,10 @@
  *   ⑤ 深度：每关至少两个不同深度，第二章起至少三个（「错层」的教学点）
  *   ⑥ 数学：投影公式与设计方案 §6.1 一致（S = L + (P − L) / z），灯视差随深度单调
  *
- * 用法：node scripts/verify-shadow-loom-levels.mjs
+ * 用法：node tests/verify-shadow-loom-levels.mjs
  */
-import * as R from '../js/shadow-loom-rules.js';
-import { LEVELS } from '../js/shadow-loom-levels.js';
+import * as R from '../src/games/shadow-loom/model/rules.js';
+import { LEVELS } from '../src/games/shadow-loom/model/levels.js';
 
 let failed = 0;
 let passed = 0;

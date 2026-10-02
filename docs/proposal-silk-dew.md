@@ -91,7 +91,7 @@
 
 ## 3. 物理规范
 
-> 当前常量集中在 `js/silk-dew-levels.js` 的 `PHYS`，单一来源。
+> 当前常量集中在 `src/games/silk-dew/model/levels.js` 的 `PHYS`，单一来源。
 
 - **积分**：verlet `p += (p − prev) × damp + a × dt²`；固定 `dt = 1/120s` 子步 + 帧累积器（上限 `maxSub = 4` 子步/帧），与引力弹弓同一模式。
 - **绳**：距离约束 + 每子步 `iters = 4` 次松弛迭代，粒距 `seg = 10 px`；索引 0 = 锚结（可拖拽），末端系露珠。`ropeDamp = 0.996`。
@@ -131,8 +131,8 @@
 | --- | --- |
 | `silk-dew.html` | 页面骨架：tokens→layout→silk-dew→more-games 引入序；`game-*` 类；三槽位顶栏；侧栏三卡；抽屉骨架置于 `.game-shell` 之外 |
 | `css/silk-dew.css` | 页面样式：只覆盖 `--frame-*` 与页面美术 |
-| `js/silk-dew.js` | 入口：物理引擎、渲染、交互、模式编排 |
-| `js/silk-dew-levels.js` | 20 关数据 + `PHYS` 常量 + 物理内核（`createWorld`/`stepWorld`/`beginDrag`/`moveDrag`/`endDrag`/`popBubble`/`simulate`/`dailyCourse`），`circuit-levels` 模式，单页 module 入口抽文件无需改 HTML |
+| `src/games/silk-dew/runtime.js` | 运行时：物理引擎、渲染、交互、模式编排 |
+| `src/games/silk-dew/model/levels.js` | 20 关数据 + `PHYS` 常量 + 物理内核（`createWorld`/`stepWorld`/`beginDrag`/`moveDrag`/`endDrag`/`popBubble`/`simulate`/`dailyCourse`），与运行时和校验器共用 |
 | `tests/verify-silk-dew-levels.mjs` | 离线校验：关卡 schema + 满星可解性（渐进拖拽口径）+ 物理确定性 + 失败路径 + 730 天每日确定性，**500 项断言** |
 | `tests/smoke-silk-dew.mjs` | 在线校验：开始菜单→开局→**真实鼠标拖拽**→露珠位移→结算→20 关渲染回归→每日→抽屉 |
 
@@ -144,7 +144,7 @@
 
 ```json
 {
-  "id": "silk-dew", "prefix": "sd", "href": "silk-dew.html", "entry": "js/silk-dew.js",
+  "id": "silk-dew", "prefix": "sd", "href": "silk-dew.html", "entry": "src/games/silk-dew/index.js",
   "emoji": "💧",
   "title": { "doc": "垂丝引露 Silkfall — Rope Physics Puzzle", "seo": "垂丝引露 Silkfall — Rope Physics Puzzle" },
   "name": { "en": "Silkfall", "zh": "垂丝引露" },

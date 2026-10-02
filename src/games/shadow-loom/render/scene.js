@@ -32,7 +32,7 @@ export const ART_SCALE = 2.25;
 export const FRAME_SCALE = 1.2;
 const FRAME_ANCHOR = { x: 540, y: 1257 };
 
-const url = name => new URL(`../assets/shadow-loom/layers/${name}.webp`, import.meta.url).href;
+const url = name => new URL(`../../../../assets/shadow-loom/layers/${name}.webp`, import.meta.url).href;
 const FILES = {
     background: url('stage-background'),
     frame: url('paper-frame'),

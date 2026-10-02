@@ -1,0 +1,1475 @@
+/**
+ * Silkfall 垂丝引露 — 绳索牵拉物理解谜
+ * =====================================
+ * 玩法：**拖拽锚结**（丝线的悬点）牵引丝线，把系在丝尾的露珠引过夜庭，
+ * 避开荆棘、收集星芒、借气泡浮力与气旋推力，最终坠入玉壶。
+ *
+ * 机制说明（M1 修订）：
+ *   原方案「剪断摆绳靠摆动甩出」经实测摆幅仅 53px、落点散布 47px（< 壶口 88px），
+ *   产不出有效谜题。改为**拖拽牵引**后露珠横向可达 431px，谜题空间成立。
+ *   绳索仍是 verlet 链：拖拽时自然下垂、甩动、绷紧。
+ *
+ * 关卡数据 / 物理核心在 model/levels.js（纯模块，校验器共用）。
+ *
+ * 共享层（2026-09 契约）：game-frame / game-drawer / game-chrome /
+ * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
+ */
+
+import {
+    STAGE,
+    PHYS,
+    LEVELS,
+    scoreStars,
+    dailyQualifies,
+    summarizeDailyResults,
+    createWorld,
+    stepWorld,
+    beginDrag,
+    moveDrag,
+    endDrag,
+    popBubble,
+    bubbleAt,
+    dailyCourse,
+} from './model/levels.js';
+import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
+import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
+import { ICONS } from '../../platform/icons.js';
+import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { track } from '../../platform/analytics.js';
+import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
+import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { LANGUAGES } from './i18n.js';
+import { createSfxEngine } from '../../platform/game-sfx.js';
+import { createSilkDewScene } from './render/scene.js';
+
+/* 画布调色板：颜色只在 css/silk-dew.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
+   P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。 */
+export const CANVAS_VARS = {
+    skyTop: '--sd-cv-sky-top',
+    skyMid: '--sd-cv-sky-mid',
+    skyBottom: '--sd-cv-sky-bottom',
+    moonHalo: '--sd-cv-moon-halo',
+    moonHaloOut: '--sd-cv-moon-halo-out',
+    moon: '--sd-cv-moon',
+    hills: '--sd-cv-hills',
+    wind: '--sd-cv-wind',
+    windArrow: '--sd-cv-wind-arrow',
+    vesselStroke: '--sd-cv-vessel-stroke',
+    vesselMouth: '--sd-cv-vessel-mouth',
+    vesselGlow: '--sd-cv-vessel-glow',
+    bubbleIn: '--sd-cv-bubble-in',
+    bubbleMid: '--sd-cv-bubble-mid',
+    bubbleOut: '--sd-cv-bubble-out',
+    bubbleStroke: '--sd-cv-bubble-stroke',
+    bubbleShine: '--sd-cv-bubble-shine',
+    thorn: '--sd-cv-thorn',
+    thornRing: '--sd-cv-thorn-ring',
+    starEdge: '--sd-cv-star-edge',
+    ropeGlow: '--sd-cv-rope-glow',
+    rope: '--sd-cv-rope',
+    pearlTrail: '--sd-cv-pearl-trail',
+    pearlGlow: '--sd-cv-pearl-glow',
+    pearlGlowOut: '--sd-cv-pearl-glow-out',
+    pearlEdge: '--sd-cv-pearl-edge',
+    starDustRgb: '--sd-cv-star-dust-rgb',
+};
+let P = null;
+
+export function setCanvasPalette(palette) {
+    P = palette;
+}
+
+/* ────────────────────────── 常量 ────────────────────────── */
+
+export const W = STAGE.w;
+const H = STAGE.h;
+
+function clamp(v, min, max) {
+    return v < min ? min : v > max ? max : v;
+}
+
+function vibrate(pattern) {
+    try {
+        if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch (e) { /* 不支持则忽略 */ }
+}
+
+/* ────────────────────────── i18n ────────────────────────── */
+
+/* ────────────────────────── 音效 ────────────────────────── */
+// 五声音阶（宫商角徵羽）：星芒按收集顺序递进，与御剑飞行听觉血缘
+
+const PENTA = [523.25, 587.33, 659.25, 783.99, 880.00];
+const sfxEngine = createSfxEngine();
+
+const Sfx = {
+    click() { sfxEngine.tone({ freq: 640, type: 'square', dur: 0.05, vol: 0.06 }); },
+    /** 抓住锚结：低频「握」感 */
+    grab() { sfxEngine.tone({ freq: 320, type: 'sine', dur: 0.06, vol: 0.09 }); },
+    /** 松开 */
+    release() { sfxEngine.tone({ freq: 300, slideTo: 190, type: 'sine', dur: 0.09, vol: 0.06 }); },
+    /** 星芒：五声音阶递进 */
+    star(n) {
+        const f = PENTA[(n - 1) % PENTA.length];
+        sfxEngine.tone({ freq: f, type: 'sine', dur: 0.16, vol: 0.13 });
+        sfxEngine.tone({ freq: f * 2, type: 'sine', dur: 0.1, vol: 0.05, delay: 0.03 });
+    },
+    /** 破泡：短促「啵」 */
+    pop() { sfxEngine.tone({ freq: 900, slideTo: 1500, type: 'sine', dur: 0.07, vol: 0.09 }); },
+    /** 归壶：玉磬一记 */
+    win() {
+        sfxEngine.tone({ freq: 1046, type: 'sine', dur: 0.5, vol: 0.11 });
+        sfxEngine.tone({ freq: 1568, type: 'sine', dur: 0.4, vol: 0.06, delay: 0.05 });
+        sfxEngine.tone({ freq: 2093, type: 'sine', dur: 0.3, vol: 0.03, delay: 0.1 });
+    },
+    star3() {
+        [784, 988, 1175].forEach((f, i) => {
+            sfxEngine.tone({ freq: f, type: 'sine', dur: 0.2, vol: 0.12, delay: 0.3 + i * 0.1 });
+        });
+    },
+    fail() {
+        sfxEngine.tone({ freq: 300, slideTo: 120, type: 'sawtooth', dur: 0.3, vol: 0.1 });
+        sfxEngine.noise({ dur: 0.2, vol: 0.06, filterFreq: 500 });
+    },
+};
+
+/* ────────────────────────── 存储 ────────────────────────── */
+
+const PROGRESS_VERSION = '2';
+
+function persistProgressPayload(progress) {
+    const raw = JSON.stringify(progress || {});
+    storageSet('sd_progress', raw);
+    // safe-storage deliberately swallows localStorage exceptions. The read-back is
+    // therefore the transaction boundary: never advance the schema marker unless
+    // the v2 payload is demonstrably present.
+    if (storageGet('sd_progress') !== raw) return false;
+    storageSet('sd_progress_version', PROGRESS_VERSION);
+    return storageGet('sd_progress_version') === PROGRESS_VERSION;
+}
+
+function storageParseProgress() {
+    try {
+        const raw = storageGet('sd_progress');
+        const obj = JSON.parse(raw || '{}');
+        const out = {};
+
+        if (storageGet('sd_progress_version') !== PROGRESS_VERSION) {
+            // v1 的三星只看牵拉次数，允许跳过全部星芒，而且旧 bestDrags 也来自
+            // “无限行程/可直接拖露珠”的规则，不能和 v2 比较。
+            // 保留“已通关”事实为 1 星，但要求 2/3 星与最佳牵拉在新规则下重打。
+            if (obj && typeof obj === 'object') {
+                for (const k of Object.keys(obj)) {
+                    const v = obj[k];
+                    if (v && typeof v === 'object' && (v.stars | 0) > 0) {
+                        out[k] = { stars: 1, bestDrags: 0 };
+                    }
+                }
+            }
+            persistProgressPayload(out);
+            return out;
+        }
+
+        if (obj && typeof obj === 'object') {
+            for (const k of Object.keys(obj)) {
+                const v = obj[k];
+                if (v && typeof v === 'object') {
+                    out[k] = { stars: clamp(v.stars | 0, 0, 3), bestDrags: v.bestDrags | 0 };
+                }
+            }
+        }
+        return out;
+    } catch (e) {
+        return {};
+    }
+}
+
+/* ────────────────────────── 游戏主体 ────────────────────────── */
+
+export class SilkfallGame {
+    constructor() {
+        this.canvas = document.getElementById('sd-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.el = {};
+        [
+            'sd-hud-level', 'sd-drags', 'sd-par', 'sd-reset-btn', 'sd-mute-btn', 'sd-toast',
+            'sd-start', 'sd-title', 'sd-subtitle', 'sd-howto', 'sd-btn-levels', 'sd-btn-daily',
+            'sd-level-label', 'sd-level-grid', 'sd-daily-best', 'sd-start-mute',
+            'sd-side-howto-title', 'sd-side-howto', 'sd-side-records-title', 'sd-side-records',
+            'sd-clear', 'sd-clear-stars', 'sd-clear-line', 'sd-btn-next', 'sd-btn-replay', 'sd-btn-menu1',
+            'sd-over', 'sd-over-title', 'sd-over-score', 'sd-over-sub',
+            'sd-btn-again', 'sd-btn-copy', 'sd-btn-menu2',
+            'sd-lb-title', 'sd-lb-list', 'sd-lb-status', 'sd-username', 'sd-username-label',
+            'sd-hint'
+        ].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) this.el[id.replace(/^sd-/, '')] = el;
+        });
+
+        this.lang = getLang();
+        this.progress = storageParseProgress();
+
+        // 对局状态：menu | playing | won-level | won-daily | failed
+        // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
+        this.state = 'menu';
+        this.isPaused = false;
+        this.mode = 'levels';
+        this.levelIdx = 0;
+        this.drags = 0;
+        this.par = 1;
+        this.world = null;
+        this.spec = null;
+        this.daily = null;         // { key, display, course:[spec], cursor, results:[{stars,drags}|null], totalDrags, stars }
+        this.failReason = null;
+        this.failTimer = 0;
+
+        // 视觉
+        this.time = 0;
+        this.frameDt = 0;
+        this.toastTimer = 0;
+        this.particles = [];
+        this.starfield = this.buildStarfield();
+        // Wind fills are static for a zone; cache their CanvasGradient instead of
+        // allocating one per zone on every animation frame.
+        this.windGradientCache = new WeakMap();
+        this.pointerId = null;
+        this.dragInput = null;
+        this.isDragging = false;
+        this.dragMoved = false;
+
+        this.animationId = null;
+        this.lastFrame = 0;
+
+        this.stageEl = document.getElementById('sd-stage');
+        this.reducedMotionQuery = typeof window.matchMedia === 'function'
+            ? window.matchMedia('(prefers-reduced-motion: reduce)')
+            : null;
+        this.reducedMotion = !!this.reducedMotionQuery?.matches;
+        if (this.stageEl) this.stageEl.dataset.artState = 'loading';
+        this.scene = createSilkDewScene({
+            reducedMotion: this.reducedMotion,
+            onReady: () => {
+                if (this.stageEl) this.stageEl.dataset.artState = this.scene?.artState?.status || 'fallback';
+                this.draw();
+            },
+        });
+
+        this.feedback = [];
+        this.initUI();
+        this.applyLanguage();
+        this.bindInput();
+        this.bindUI();
+        this.resize();
+        this.startLoop();
+    }
+
+    /* ---------------------- 视觉底料 ---------------------- */
+
+    buildStarfield() {
+        const rng = (() => { let s = 20260921; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; })();
+        const out = [];
+        for (let i = 0; i < 70; i++) {
+            out.push({ x: rng() * W, y: rng() * H, r: 0.4 + rng() * 1.1, a: 0.15 + rng() * 0.4, ph: rng() * 6.28 });
+        }
+        return out;
+    }
+
+    t(key, vars) {
+        const table = LANGUAGES[this.lang] || LANGUAGES.en;
+        let s = table[key];
+        if (s === undefined) s = (LANGUAGES.en[key] !== undefined ? LANGUAGES.en[key] : key);
+        if (vars) {
+            s = String(s).replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined ? vars[k] : m));
+        }
+        return s;
+    }
+
+    /**
+     * 给共享层（bindChrome / createStatsDrawer）用的**整表**取用器。
+     *
+     * ⚠️ 共享层的 `getText` 契约是 `() => object`（返回当前语言的文案对象），
+     * 不是 `(key) => string`。早先这里传的是 `(k) => this.t(k)`，于是共享层内部
+     * 的 `getText()` 拿到的是 `t(undefined)` = `undefined`，`|| {}` 之后整表为空，
+     * 所有共享文案（抽屉的 stats / close、顶栏的 sound / moreGames / language）
+     * 一律退回内置英文兜底 —— 全站 8 个抽屉页里只有 silk-dew 是这样写的，
+     * 于是只有它常驻英文，且不报任何错（verify-stats-drawer 的
+     * `[zh] 文案已本地化` 是唯一抓得到它的断言）。
+     *
+     * 这里返回表本体（LANGUAGES 已由 makeText 挂上 COMMON_TEXT 原型链，
+     * close / moreGames / sound / language 这些公共键会自动兜底）。
+     */
+    textTable() {
+        return LANGUAGES[this.lang] || LANGUAGES.en;
+    }
+
+    /* ---------------------- UI 初始化 ---------------------- */
+
+    initUI() {
+        const el = this.el;
+        // 开始菜单：模式瓦片
+        if (el['btn-levels']) {
+            el['btn-levels'].innerHTML = `${ICONS.play}<span class="btn-text">${this.t('playLevels')}</span>`;
+            el['btn-levels'].addEventListener('click', () => { Sfx.click(); this.startLevels(); });
+        }
+        if (el['btn-daily']) {
+            el['btn-daily'].innerHTML = `${ICONS.calendar}<span class="btn-text">${this.t('playDaily')}</span>`;
+            el['btn-daily'].addEventListener('click', () => { Sfx.click(); this.startDaily(); });
+        }
+        // 结算面板
+        if (el['btn-next']) {
+            el['btn-next'].innerHTML = `${ICONS.arrowRight}<span class="btn-text">${this.t('next')}</span>`;
+            el['btn-next'].addEventListener('click', () => { Sfx.click(); this.nextLevel(); });
+        }
+        if (el['btn-replay']) {
+            // ⚠️ 图标键名必须是 ICONS 里真实存在的 `retry`（js/icons.js:28）。
+            // 曾经写成 ICONS.refresh —— 该键不存在，求值得 undefined，
+            // innerHTML 里塞进字面量 "undefined"，按钮变成「裸文本无图标」：
+            // verify-button-icons 报 `svg=0`，而几何/点击断言全绿。
+            el['btn-replay'].innerHTML = `${ICONS.retry}<span class="btn-text">${this.t('retry')}</span>`;
+            el['btn-replay'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
+        }
+        if (el['btn-menu1']) {
+            el['btn-menu1'].innerHTML = `${ICONS.home}<span class="btn-text">${this.t('menu')}</span>`;
+            el['btn-menu1'].addEventListener('click', () => { Sfx.click(); this.toMenu(); });
+        }
+        if (el['btn-again']) {
+            el['btn-again'].innerHTML = `${ICONS.retry}<span class="btn-text">${this.t('again')}</span>`;
+            el['btn-again'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
+        }
+        if (el['btn-copy']) {
+            el['btn-copy'].innerHTML = `${ICONS.copy}<span class="btn-text">${this.t('copyResult')}</span>`;
+            el['btn-copy'].addEventListener('click', () => this.copyResult());
+        }
+        if (el['btn-menu2']) {
+            el['btn-menu2'].innerHTML = `${ICONS.home}<span class="btn-text">${this.t('menu')}</span>`;
+            el['btn-menu2'].addEventListener('click', () => { Sfx.click(); this.toMenu(); });
+        }
+        if (el['reset-btn']) {
+            el['reset-btn'].innerHTML = ICONS.retry;
+            el['reset-btn'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
+        }
+        if (el['mute-btn']) {
+            // ⚠️ 键名是 soundOn / soundOff（js/icons.js:20,22），不是 volumeOn/volumeOff。
+            // 写错键名会把字面量 "undefined" 塞进 innerHTML —— 图标消失但无报错。
+            el['mute-btn'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
+            el['mute-btn'].addEventListener('click', () => {
+                const next = !getMuted();
+                setMuted(next);
+                el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
+                if (!next) Sfx.click();
+            });
+        }
+        if (el['start-mute']) {
+            el['start-mute'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
+            el['start-mute'].addEventListener('click', () => {
+                const next = !getMuted();
+                setMuted(next);
+                el['start-mute'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
+                if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
+            });
+        }
+        // 每日榜用户名
+        if (el['username']) {
+            el['username'].value = ensurePlayerName();
+            el['username'].addEventListener('change', () => {
+                setPlayerName(el['username'].value.trim() || ensurePlayerName());
+            });
+        }
+        this.renderLevelGrid();
+    }
+
+    applyLanguage() {
+        const el = this.el;
+        const setText = (key, text) => { if (el[key]) el[key].textContent = text; };
+        // ⚠️ 页面标题必须在这里重写：chrome 校验器会切语言后断言 document.title 变化，
+        // 只刷 DOM 文案不换标题 = 「界面没跟着刷新」硬失败（同 lumen/circuit 口径）。
+        document.title = this.lang === 'zh'
+            ? '垂丝引露 — 绳索物理解谜'
+            : 'Silkfall — Rope Physics Puzzle';
+        setText('title', this.t('title'));
+        setText('subtitle', this.t('subtitle'));
+        setText('howto', this.t('howto'));
+        setText('level-label', this.t('levelSelect'));
+        setText('side-howto-title', this.t('sideHowTo'));
+        setText('side-howto', this.t('howto'));
+        setText('side-records-title', this.t('sideRecords'));
+        setText('hint', this.t('hint'));
+        setText('lb-title', this.t('leaderboard'));
+        if (el['username-label']) el['username-label'].textContent = this.t('title');
+
+        // 带图标按钮：span 内文字单独更新（不重建 SVG）
+        const setBtnText = (key, text) => {
+            if (!el[key]) return;
+            const span = el[key].querySelector('.btn-text');
+            if (span) span.textContent = text;
+            else el[key].textContent = text;
+        };
+        setBtnText('btn-levels', this.t('playLevels'));
+        setBtnText('btn-daily', this.t('playDaily'));
+        setBtnText('btn-next', this.t('next'));
+        setBtnText('btn-replay', this.t('retry'));
+        setBtnText('btn-menu1', this.t('menu'));
+        setBtnText('btn-again', this.t('again'));
+        setBtnText('btn-copy', this.t('copyResult'));
+        setBtnText('btn-menu2', this.t('menu'));
+
+        if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
+        if (el['drags']) el['drags'].title = this.t('drags');
+        // 开始覆盖层的语言钮走文字（与 lumen/circuit 同口径：显示「切换目标语言的自称」）。
+
+        this.renderLevelGrid();
+        this.renderSideRecords();
+        this.updateHud();
+        document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
+    }
+
+    /* ---------------------- 关卡选择 ---------------------- */
+
+    renderLevelGrid() {
+        const grid = this.el['level-grid'];
+        if (!grid) return;
+        grid.innerHTML = '';
+        LEVELS.forEach((spec, i) => {
+            const p = this.progress[spec.id] || { stars: 0, bestDrags: 0 };
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'sd-chip' + (p.stars > 0 ? ' is-done' : '');
+            btn.dataset.level = String(i);
+            const num = document.createElement('span');
+            num.className = 'sd-chip-num';
+            num.textContent = String(i + 1);
+            const stars = document.createElement('span');
+            stars.className = 'sd-chip-stars';
+            stars.textContent = '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
+            btn.appendChild(num);
+            btn.appendChild(stars);
+            btn.addEventListener('click', () => { Sfx.click(); this.startLevel(i); });
+            grid.appendChild(btn);
+        });
+    }
+
+    renderSideRecords() {
+        const box = this.el['side-records'];
+        if (!box) return;
+        let cleared = 0, stars = 0, bestSum = 0, bestCount = 0;
+        for (const spec of LEVELS) {
+            const p = this.progress[spec.id];
+            if (p && p.stars > 0) {
+                cleared++;
+                stars += p.stars;
+                if (p.bestDrags > 0) { bestSum += p.bestDrags; bestCount++; }
+            }
+        }
+        const rows = [
+            [this.t('level'), `${cleared} / ${LEVELS.length}`],
+            [this.t('stars'), `${stars} / ${LEVELS.length * 3}`],
+            [this.t('drags'), bestCount ? String(bestSum) : '—'],
+        ];
+        box.innerHTML = '';
+        for (const [k, v] of rows) {
+            const row = document.createElement('div');
+            row.className = 'sd-side-row';
+            const kk = document.createElement('span');
+            kk.className = 'sd-side-k';
+            kk.textContent = k;
+            const vv = document.createElement('span');
+            vv.className = 'sd-side-v';
+            vv.textContent = v;
+            row.appendChild(kk);
+            row.appendChild(vv);
+            box.appendChild(row);
+        }
+    }
+
+    /* ---------------------- 模式与关卡流程 ---------------------- */
+
+    startLevels() {
+        track('silk-dew', 'start_levels');
+        this.mode = 'levels';
+        this.daily = null;
+        this.lastDailyKey = todayKey();
+        // 从第一个未通关的开始
+        let idx = 0;
+        for (let i = 0; i < LEVELS.length; i++) {
+            const p = this.progress[LEVELS[i].id];
+            if (!p || p.stars === 0) { idx = i; break; }
+            idx = Math.min(i + 1, LEVELS.length - 1);
+        }
+        this.startLevel(idx);
+    }
+
+    startDaily() {
+        const key = todayKey();
+        const course = dailyCourse(key);
+        this.mode = 'daily';
+        this.daily = {
+            key,
+            display: todayKeyDisplay(),
+            course,
+            cursor: 0,
+            results: Array(course.length).fill(null),
+            totalDrags: 0,
+            stars: 0,
+        };
+        track('silk-dew', 'start_daily');
+        this.startLevel(course[0]);
+        this.showToast(this.t('dailyStartToast'));
+    }
+
+    /**
+     * 开始一关。
+     * @param {number|object} ref  关卡索引（战役模式）**或**关卡对象本身（每日模式，
+     *   `dailyCourse()` 直接返回对象）。传对象时反查索引仅为让 HUD 能显示进度，
+     *   反查不到（理论上不会发生）就退回 0，绝不因索引为 -1 而崩。
+     */
+    startLevel(ref) {
+        const spec = (ref && typeof ref === 'object') ? ref : LEVELS[clamp(ref, 0, LEVELS.length - 1)];
+        const idx = LEVELS.indexOf(spec);
+        this.levelIdx = idx >= 0 ? idx : 0;
+        this.spec = spec;
+        this.par = this.spec.par || 1;
+        this.drags = 0;
+        this.failReason = null;
+        this.failTimer = 0;
+        this.particles = [];
+        this.world = createWorld(this.spec);
+        this.state = 'playing';
+        this.isPaused = false;
+        this.lastFrame = 0;
+        this.hide(this.el['start']);
+        this.hide(this.el['clear']);
+        this.hide(this.el['over']);
+        this.updateHud();
+        this.showToast(this.t(this.spec.tipKey || 'tipCut'));
+        if (this.mode === 'levels' && this.daily === null) this.lastDailyKey = null;
+    }
+
+    restartLevel() {
+        if (this.mode === 'daily' && this.daily) {
+            // daily.course 存的是关卡对象（dailyCourse 的返回），不是索引
+            this.startLevel(this.daily.course[this.daily.cursor]);
+        } else {
+            this.startLevel(this.levelIdx);
+        }
+    }
+
+    nextLevel() {
+        if (this.mode === 'daily' && this.daily) {
+            this.daily.cursor++;
+            if (this.daily.cursor < this.daily.course.length) {
+                this.startLevel(this.daily.course[this.daily.cursor]);
+            } else {
+                this.finishDaily();
+            }
+            return;
+        }
+        if (this.levelIdx + 1 < LEVELS.length) this.startLevel(this.levelIdx + 1);
+        else this.toMenu();
+    }
+
+    toMenu() {
+        this.state = 'menu';
+        this.world = null;
+        this.hide(this.el['clear']);
+        this.hide(this.el['over']);
+        this.show(this.el['start']);
+        this.renderLevelGrid();
+        this.renderSideRecords();
+    }
+
+    /* ---------------------- 结算 ---------------------- */
+
+    onLevelWon() {
+        Sfx.win();
+        vibrate(30);
+        const starsTaken = this.world ? this.world.starsTaken : 0;
+        const starsTotal = this.world ? this.world.stars.length : 0;
+        const stars = scoreStars(this.drags, this.par, starsTaken, starsTotal);
+        const p = this.progress[this.spec.id] || { stars: 0, bestDrags: 0 };
+        const oldStars = p.stars || 0;
+        const improved = stars > oldStars ||
+            (stars === oldStars && (p.bestDrags === 0 || this.drags < p.bestDrags));
+        // bestDrags 必须属于“当前最高星级”的成绩。低星捷径不能覆盖三星记录，
+        // 否则侧栏会展示一个实际上拿不到该星级的虚假最佳次数。
+        if (stars > oldStars) {
+            p.stars = stars;
+            p.bestDrags = this.drags;
+        } else if (stars === oldStars && (p.bestDrags === 0 || this.drags < p.bestDrags)) {
+            p.bestDrags = this.drags;
+        }
+        this.progress[this.spec.id] = p;
+        this.saveProgress();
+        this.renderLevelGrid();
+        this.renderSideRecords();
+
+        if (this.mode === 'daily' && this.daily) {
+            // Daily scoring is per stage, not per completion event. Replaying the
+            // current stage replaces its result instead of double-counting it.
+            this.daily.results[this.daily.cursor] = { stars, drags: this.drags };
+            const summary = summarizeDailyResults(this.daily.results, this.daily.course.length);
+            this.daily.totalDrags = summary.totalDrags;
+            this.daily.stars = summary.totalStars;
+            this.showClearPanel(stars, improved);
+        } else {
+            this.showClearPanel(stars, improved);
+        }
+        if (stars === 3) Sfx.star3();
+        track('silk-dew', 'level_win', stars);
+    }
+
+    showClearPanel(stars, improved) {
+        const el = this.el;
+        this.state = 'won-level';
+        if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+        if (el['clear-line']) {
+            const taken = this.world ? this.world.starsTaken : 0;
+            const total = this.world ? this.world.stars.length : 0;
+            const starPart = total ? ` · ★ ${taken}/${total}` : '';
+            el['clear-line'].textContent = `${this.t('drags')} ${this.drags} · ${this.t('par')} ${this.par}${starPart}`;
+        }
+        const isLast = this.mode === 'levels' && this.levelIdx + 1 >= LEVELS.length;
+        if (el['btn-next']) {
+            el['btn-next'].style.display = (this.mode === 'daily') ? '' : (isLast ? 'none' : '');
+        }
+        this.show(el['clear']);
+    }
+
+    onLevelFailed(reason) {
+        if (this.state !== 'playing') return;
+        this.state = 'failed';
+        this.failReason = reason;
+        this.failTimer = 0;
+        Sfx.fail();
+        vibrate([25, 40, 25]);
+        track('silk-dew', 'level_fail', 0);
+    }
+
+    finishDaily() {
+        this.state = 'won-daily';
+        const el = this.el;
+        this.showClearPanelSilent();
+        const maxStars = this.daily.course.length * 3;
+        const mastered = dailyQualifies(this.daily.results, this.daily.course.length);
+        if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
+        if (el['over-score']) el['over-score'].textContent = `${this.t('drags')} ${this.daily.totalDrags} · ★ ${this.daily.stars}/${maxStars}`;
+        if (el['over-sub']) {
+            el['over-sub'].textContent = `${this.daily.display} · ${this.t(mastered ? 'dailyQualified' : 'dailyNeedsMastery')}`;
+        }
+        this.show(el['over']);
+        this.computeStars = null;
+        // 榜单只比较“完整掌握”后的牵拉效率：五关必须全部三星。
+        // 否则跳过星芒会用更少牵拉得到更高名次，反向激励绕过谜题。
+        if (mastered) {
+            const game = `silk-dew-d${this.daily.key.replace(/-/g, '')}`;
+            this.submit(game, this.daily.totalDrags);
+        }
+    }
+
+    showClearPanelSilent() {
+        this.hide(this.el['clear']);
+    }
+
+    /* ---------------------- 榜单 ---------------------- */
+
+    submit(game, score) {
+        const name = ensurePlayerName();
+        const el = this.el;
+        if (el['lb-status']) el['lb-status'].textContent = '…';
+        submitScore({ game, name, score })
+            .then(() => fetchBoard(game))
+            .then((rows) => this.renderBoard(rows))
+            .catch(() => {
+                if (el['lb-status']) el['lb-status'].textContent = this.t('lbOffline');
+                const local = this.readLocalBoard(game);
+                if (local.length) this.renderBoard(local);
+            });
+    }
+
+    readLocalBoard(game) {
+        try {
+            const raw = storageGet('sd_lb_' + game);
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    renderBoard(rows) {
+        const el = this.el;
+        const list = el['lb-list'];
+        if (!list) return;
+        list.innerHTML = '';
+        if (!rows || !rows.length) {
+            if (el['lb-status']) el['lb-status'].textContent = this.t('noScores');
+            return;
+        }
+        if (el['lb-status']) el['lb-status'].textContent = '';
+        rows.slice(0, 10).forEach((row, i) => {
+            const li = document.createElement('li');
+            li.className = 'sd-lb-row';
+            const rank = document.createElement('span');
+            rank.className = 'sd-lb-rank';
+            rank.textContent = String(i + 1);
+            const nm = document.createElement('span');
+            nm.className = 'sd-lb-name';
+            nm.textContent = row.name || '—';
+            const sc = document.createElement('span');
+            sc.className = 'sd-lb-score';
+            sc.textContent = String(row.score);
+            li.appendChild(rank);
+            li.appendChild(nm);
+            li.appendChild(sc);
+            list.appendChild(li);
+        });
+    }
+
+    copyResult() {
+        const taken = this.world ? this.world.starsTaken : 0;
+        const total = this.world ? this.world.stars.length : 0;
+        const levelStars = scoreStars(this.drags, this.par, taken, total);
+        const text = this.mode === 'daily' && this.daily
+            ? `${this.t('title')} · ${this.daily.display} · ${this.t('drags')} ${this.daily.totalDrags} · ★${this.daily.stars}`
+            : `${this.t('title')} · ${this.t('level')} ${this.levelIdx + 1} · ${this.t('drags')} ${this.drags} · ` + '★'.repeat(levelStars);
+        const done = () => this.showToast(this.t('copyResult') + ' ✓');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(done);
+        } else {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch (e) { /* 忽略 */ }
+            done();
+        }
+    }
+
+    saveProgress() {
+        try {
+            return persistProgressPayload(this.progress);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /* ---------------------- HUD / Toast ---------------------- */
+
+    updateHud() {
+        const el = this.el;
+        if (el['drags']) el['drags'].textContent = String(this.drags);
+        if (el['par']) el['par'].textContent = String(this.par);
+        if (el['hud-level']) {
+            if (this.mode === 'daily' && this.daily) {
+                el['hud-level'].textContent = `${this.t('daily')} ${this.daily.cursor + 1}/${this.daily.course.length}`;
+            } else {
+                // ⚠️ 不能加 `&& this.spec` 的门槛：菜单态（spec 为 null）时 HUD 会停在
+                // HTML 里的英文静态文案「Level 1/20」，切中文后纹丝不动 ——
+                // smoke 断言 `HUD 未走中文文案` 抓的就是这个。levelIdx 缺省 0 即可。
+                el['hud-level'].textContent = `${this.t('level')} ${this.levelIdx + 1}/${LEVELS.length}`;
+            }
+        }
+    }
+
+    showToast(text) {
+        const el = this.el['toast'];
+        if (!el) return;
+        el.textContent = text;
+        el.classList.add('is-on');
+        this.toastTimer = 2.6;
+    }
+
+    hideToast() {
+        const el = this.el['toast'];
+        if (el) el.classList.remove('is-on');
+    }
+
+    // ⚠️ 类名必须是 `hidden`（css/silk-dew.css:24 与所有 HTML 的初始态都用它）。
+    // 曾经写成 `is-hidden` —— 该类在 CSS/HTML 里根本不存在，于是 show/hide
+    // 全部静默失效：开始覆盖层永不消失，压在 canvas 上吃掉所有 pointer 事件，
+    // 表现为「拖拽无效 / drags 恒为 0」。这类错位没有报错，只能靠 smoke 抓。
+    show(el) { if (el) el.classList.remove('hidden'); }
+    hide(el) { if (el) el.classList.add('hidden'); }
+
+    /* ---------------------- 输入 ---------------------- */
+
+    toLogical(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width * W;
+        const y = (e.clientY - rect.top) / rect.height * H;
+        return { x, y };
+    }
+
+    bindInput() {
+        const c = this.canvas;
+        c.style.touchAction = 'none';
+        const prevent = (e) => {
+            if (e.cancelable) e.preventDefault();
+        };
+
+        // Pointer Events 是主路径；Touch Events 作为移动浏览器兼容回退。
+        // 两套事件在部分浏览器上会同时派发，isDragging 让它们不会重复计数。
+        const startAt = (point, id, e, capture) => {
+            if (this.state !== 'playing' || this.isPaused || this.isDragging) return false;
+            const p = this.toLogical(point);
+            if (this.world && beginDrag(this.world, p.x, p.y)) {
+                this.pointerId = id;
+                this.dragInput = capture
+                    ? (e.pointerType === 'touch' ? 'pointer-touch' : 'pointer')
+                    : 'touch';
+                this.isDragging = true;
+                this.dragMoved = false;
+                if (capture && typeof c.setPointerCapture === 'function') {
+                    // 老版本 iOS 对 canvas 的 pointer capture 可能抛异常；
+                    // 不应因此中断已经开始的拖拽，touch/window 回退仍会接管后续事件。
+                    try { c.setPointerCapture(id); } catch { /* ignore */ }
+                }
+                Sfx.grab();
+                this.drags = this.world.drags;
+                this.updateHud();
+                prevent(e);
+                return true;
+            }
+            // 未抓住锚结：若点到气泡则点破（点破不计入拖拽次数）
+            if (this.world && bubbleAt(this.world, p.x, p.y)) {
+                popBubble(this.world, p.x, p.y);
+                prevent(e);
+                return true;
+            }
+            return false;
+        };
+
+        const moveAt = (point, id, e, source = 'pointer') => {
+            const touchFallback = source === 'touch' && this.dragInput === 'pointer-touch';
+            if (!this.isDragging || (id !== this.pointerId && !touchFallback)) return false;
+            const p = this.toLogical(point);
+            if (this.world) moveDrag(this.world, p.x, p.y);
+            this.dragMoved = true;
+            prevent(e);
+            return true;
+        };
+
+        const endAt = (id, e, source = 'pointer') => {
+            const touchFallback = source === 'touch' && this.dragInput === 'pointer-touch';
+            if (!this.isDragging || (id !== this.pointerId && !touchFallback)) return false;
+            if (this.world) endDrag(this.world);
+            this.isDragging = false;
+            this.pointerId = null;
+            this.dragInput = null;
+            Sfx.release();
+            prevent(e);
+            return true;
+        };
+
+        c.addEventListener('pointerdown', (e) => startAt(e, e.pointerId, e, true));
+        c.addEventListener('pointermove', (e) => moveAt(e, e.pointerId, e));
+        c.addEventListener('pointerup', (e) => endAt(e.pointerId, e));
+        c.addEventListener('pointercancel', (e) => endAt(e.pointerId, e));
+        c.addEventListener('lostpointercapture', (e) => endAt(e.pointerId, e));
+        // 如果 pointer capture 不可用，窗口级 pointerup 仍能收尾，避免卡在 dragging 状态。
+        window.addEventListener('pointerup', (e) => endAt(e.pointerId, e));
+        window.addEventListener('pointercancel', (e) => endAt(e.pointerId, e));
+
+        const firstTouch = (e) => e.changedTouches && e.changedTouches.length
+            ? e.changedTouches[0]
+            : null;
+        const touchWithId = (e) => {
+            if (!e.changedTouches) return null;
+            for (const touch of e.changedTouches) {
+                if (touch.identifier === this.pointerId || this.dragInput === 'pointer-touch') return touch;
+            }
+            return null;
+        };
+
+        // Safari / embedded webviews without a complete Pointer Events
+        // implementation still get a real drag path, including moves outside canvas.
+        c.addEventListener('touchstart', (e) => {
+            const touch = firstTouch(e);
+            if (touch) startAt(touch, touch.identifier, e, false);
+        }, { passive: false });
+        window.addEventListener('touchmove', (e) => {
+            const touch = touchWithId(e);
+            if (touch) moveAt(touch, touch.identifier, e, 'touch');
+        }, { passive: false });
+        window.addEventListener('touchend', (e) => {
+            const touch = touchWithId(e);
+            if (touch) endAt(touch.identifier, e, 'touch');
+        }, { passive: false });
+        window.addEventListener('touchcancel', (e) => {
+            const touch = touchWithId(e);
+            if (touch) endAt(touch.identifier, e, 'touch');
+        }, { passive: false });
+        c.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    bindUI() {
+        window.addEventListener('site-settings:changed', () => {
+            this.lang = getLang();
+            this.applyLanguage();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (this.state === 'playing') this.toMenu();
+            } else if (e.key === 'r' || e.key === 'R') {
+                if (this.state === 'playing') this.restartLevel();
+            }
+        });
+        window.addEventListener('resize', () => this.resize());
+        const onReducedMotion = () => {
+            this.reducedMotion = !!this.reducedMotionQuery?.matches;
+            this.scene?.setReducedMotion(this.reducedMotion);
+        };
+        if (this.reducedMotionQuery) {
+            if (typeof this.reducedMotionQuery.addEventListener === 'function') {
+                this.reducedMotionQuery.addEventListener('change', onReducedMotion);
+            } else if (typeof this.reducedMotionQuery.addListener === 'function') {
+                this.reducedMotionQuery.addListener(onReducedMotion);
+            }
+        }
+        // 桌面端 --frame-chrome 写入会改变舞台宽度 → 必须在 CSS 尺寸定下后重算后端缓冲区
+        window.addEventListener('game-frame:changed', () => this.resize());
+    }
+
+    /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
+    // 抽屉调这三元组，页面内部状态不暴露
+
+    pauseQuiet() { this.isPaused = true; }
+    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; }
+    isRunning() { return this.state === 'playing' && !this.isPaused; }
+
+    /* ---------------------- 尺寸 ---------------------- */
+
+    resize() {
+        // ⚠️ 必须用 clientWidth（整数取整）而非 getBoundingClientRect().width（亚像素小数）。
+        // 后者会让后端缓冲区比 CSS 盒窄 1–3px（实测 488 < 491），校验器报「画面糊」，
+        // 且浏览器拉伸时天然模糊。口径与 lumen.js 完全一致：按逻辑宽等比缩放。
+        const canvas = this.canvas;
+        const cssW = canvas.clientWidth || 300;
+        const scale = cssW / W;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const renderScale = scale * dpr;
+        const pw = Math.round(W * renderScale);
+        if (canvas.width !== pw) {
+            canvas.width = pw;
+            canvas.height = Math.round(H * renderScale);
+        }
+        if (this.renderScale !== renderScale) {
+            // CanvasGradient coordinates are tied to the canvas transform used
+            // when created; invalidate zone fills when resize/DPR changes it.
+            this.windGradientCache = new WeakMap();
+        }
+        this.renderScale = renderScale;
+        this.dpr = dpr;
+    }
+
+    /* ---------------------- 循环 ---------------------- */
+
+    startLoop() {
+        const loop = (ts) => {
+            this.animationId = requestAnimationFrame(loop);
+            if (!this.lastFrame) this.lastFrame = ts;
+            let dt = (ts - this.lastFrame) / 1000;
+            this.lastFrame = ts;
+            if (this.isPaused) return;
+            dt = Math.min(dt, 0.05);
+            this.time += dt;
+            this.frameDt = dt;
+            this.scene?.tick(dt);
+            if (this.state === 'playing' && this.world) {
+                stepWorld(this.world, dt);
+                this.consumeEvents();
+                if (this.world.state === 'won') this.onLevelWon();
+                else if (this.world.state === 'failed') this.onLevelFailed(this.world.state);
+            } else if (this.state === 'failed' && this.world) {
+                // 失败后短暂展示再自动重开（拖拽机制下重开无成本）
+                this.failTimer += dt;
+                if (this.failTimer > 1.1) {
+                    this.showToast(this.failReason === 'thorn' ? this.t('failThorn') : this.t('failOut'));
+                    this.restartLevel();
+                }
+            }
+            if (this.toastTimer > 0) {
+                this.toastTimer -= dt;
+                if (this.toastTimer <= 0) this.hideToast();
+            }
+            this.updateParticles(dt);
+            this.draw();
+        };
+        this.animationId = requestAnimationFrame(loop);
+    }
+
+    consumeEvents() {
+        const w = this.world;
+        if (!w || !w.events.length) return;
+        const evs = w.events.splice(0, w.events.length);
+        for (const e of evs) {
+            if (e.type === 'star') {
+                Sfx.star(w.starsTaken);
+                this.burst(e.x, e.y, '#ffd34d', 14);
+            } else if (e.type === 'pop') {
+                Sfx.pop();
+                this.burst(e.x, e.y, '#9fe8ff', 18);
+            } else if (e.type === 'win') {
+                this.burst(e.x, e.y, '#58c9a0', 26);
+            }
+        }
+    }
+
+    burst(x, y, color, n) {
+        if (this.reducedMotion) return;
+        for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2 + Math.random() * 0.3;
+            const sp = 60 + Math.random() * 150;
+            this.particles.push({
+                x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+                life: 0.5 + Math.random() * 0.4, t: 0, color, r: 1.4 + Math.random() * 1.8,
+            });
+        }
+    }
+
+    updateParticles(dt) {
+        const out = [];
+        for (const p of this.particles) {
+            p.t += dt;
+            if (p.t >= p.life) continue;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vx *= 0.96;
+            p.vy = p.vy * 0.96 + 200 * dt;
+            out.push(p);
+        }
+        this.particles = out;
+    }
+
+    /* ---------------------- 渲染 ---------------------- */
+
+    usesProductionArt() {
+        // The painted production plates are intentionally a moonlit/dark scene.
+        // Light theme keeps the existing palette-driven procedural renderer so
+        // theme-light canvas luminance and live theme switching remain correct.
+        return document.documentElement.getAttribute('data-theme') !== 'light';
+    }
+
+    draw() {
+        const ctx = this.ctx;
+        // `renderScale` already contains the CSS scale and device-pixel ratio
+        // used to size the backing store in resize(). Multiplying by `dpr`
+        // again makes high-DPR mobile browsers draw the logical scene ~2x
+        // too large, so ropes and the dew pearl get clipped at the right edge.
+        const s = this.renderScale || 1;
+        ctx.setTransform(s, 0, 0, s, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+
+        this.drawBackdrop(ctx);
+        if (this.world) {
+            this.drawWinds(ctx);
+            this.drawVessel(ctx);
+            this.drawBubbles(ctx);
+            this.drawThorns(ctx);
+            this.drawStars(ctx);
+            this.drawRopes(ctx);
+            this.drawPearl(ctx);
+            if (this.usesProductionArt()) {
+                this.scene?.drawForeground(ctx);
+                this.scene?.drawLocalLight(ctx, this.collectLightSources());
+            }
+        }
+        this.drawParticles(ctx);
+    }
+
+    drawBackdrop(ctx) {
+        if (this.usesProductionArt() && this.scene?.drawBackground(ctx)) return;
+        this.drawProceduralBackdrop(ctx);
+    }
+
+    drawProceduralBackdrop(ctx) {
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, P.skyTop);
+        g.addColorStop(0.55, P.skyMid);
+        g.addColorStop(1, P.skyBottom);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+
+        // 月晕
+        const mg = ctx.createRadialGradient(378, 92, 4, 378, 92, 96);
+        mg.addColorStop(0, P.moonHalo);
+        mg.addColorStop(1, P.moonHaloOut);
+        ctx.fillStyle = mg;
+        ctx.fillRect(280, 0, 200, 200);
+        ctx.beginPath();
+        ctx.arc(378, 92, 26, 0, Math.PI * 2);
+        ctx.fillStyle = P.moon;
+        ctx.fill();
+
+        // 星点
+        for (const st of this.starfield) {
+            const tw = this.reducedMotion ? 1 : 0.6 + 0.4 * Math.sin(this.time * 1.6 + st.ph);
+            ctx.beginPath();
+            ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${P.starDustRgb}, ${(st.a * tw).toFixed(3)})`;
+            ctx.fill();
+        }
+
+        // 远山剪影
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        ctx.lineTo(0, 470);
+        ctx.quadraticCurveTo(90, 404, 190, 452);
+        ctx.quadraticCurveTo(300, 500, 480, 428);
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fillStyle = P.hills;
+        ctx.fill();
+    }
+
+    drawWinds(ctx) {
+        const visualTime = this.reducedMotion ? 0 : this.time;
+        for (const w of this.world.winds) {
+            ctx.save();
+            const ax = w.ax || 0;
+            const ay = w.ay || 0;
+            const angle = Math.atan2(ay, ax || 0.0001);
+            const speed = Math.hypot(ax, ay);
+            let fog = this.windGradientCache.get(w);
+            if (!fog) {
+                fog = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
+                fog.addColorStop(0, 'rgba(112,210,219,0.015)');
+                fog.addColorStop(0.5, 'rgba(112,210,219,0.09)');
+                fog.addColorStop(1, 'rgba(112,210,219,0.015)');
+                this.windGradientCache.set(w, fog);
+            }
+            ctx.fillStyle = fog;
+            ctx.fillRect(w.x, w.y, w.w, w.h);
+
+            ctx.beginPath();
+            ctx.roundRect(w.x + 1, w.y + 1, Math.max(0, w.w - 2), Math.max(0, w.h - 2), 12);
+            ctx.strokeStyle = 'rgba(159,232,255,0.10)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.translate(w.x + w.w / 2, w.y + w.h / 2);
+            ctx.rotate(angle);
+            const span = Math.max(w.w, w.h);
+            const cross = Math.min(w.w, w.h);
+            ctx.lineCap = 'round';
+            for (let i = -2; i <= 2; i++) {
+                const offset = i * Math.min(13, cross / 6);
+                const phase = visualTime * (22 + speed * 0.015) + i * 13;
+                const start = -span * 0.38 + (phase % 28) - 14;
+                ctx.beginPath();
+                ctx.moveTo(start, offset);
+                ctx.bezierCurveTo(
+                    start + span * 0.20, offset - 5,
+                    start + span * 0.40, offset + 5,
+                    start + span * 0.62, offset
+                );
+                ctx.strokeStyle = i === 0 ? P.windArrow : P.wind;
+                ctx.lineWidth = i === 0 ? 1.8 : 1.15;
+                ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.moveTo(-8, 0);
+            ctx.lineTo(10, 0);
+            ctx.moveTo(5, -4);
+            ctx.lineTo(10, 0);
+            ctx.lineTo(5, 4);
+            ctx.strokeStyle = P.windArrow;
+            ctx.lineWidth = 1.7;
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    drawVessel(ctx) {
+        const v = this.world.vessel;
+        if (!v) return;
+        if (this.usesProductionArt() && this.scene?.drawVessel(ctx, v)) {
+            const half = v.w / 2;
+            const top = v.y;
+            const mouthGlow = ctx.createRadialGradient(v.x, top + 3, 1, v.x, top + 3, half * 1.18);
+            mouthGlow.addColorStop(0, 'rgba(181,245,215,0.24)');
+            mouthGlow.addColorStop(1, 'rgba(88,201,160,0)');
+            ctx.fillStyle = mouthGlow;
+            ctx.fillRect(v.x - half * 1.25, top - 10, half * 2.5, 28);
+            ctx.beginPath();
+            ctx.moveTo(v.x - half - 3, top);
+            ctx.lineTo(v.x + half + 3, top);
+            ctx.strokeStyle = P.vesselMouth;
+            ctx.lineWidth = 1.6;
+            ctx.stroke();
+            return;
+        }
+        const half = v.w / 2;
+        const top = v.y;
+        const bot = v.y + PHYS.vesselH;
+        // 壶身
+        ctx.beginPath();
+        ctx.moveTo(v.x - half, top);
+        ctx.lineTo(v.x - half + 6, bot);
+        ctx.quadraticCurveTo(v.x, bot + 12, v.x + half - 6, bot);
+        ctx.lineTo(v.x + half, top);
+        ctx.closePath();
+        const g = ctx.createLinearGradient(0, top, 0, bot);
+        g.addColorStop(0, 'rgba(88,201,160,0.30)');
+        g.addColorStop(1, 'rgba(31,111,87,0.55)');
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.strokeStyle = P.vesselStroke;
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+        // 壶口
+        ctx.beginPath();
+        ctx.moveTo(v.x - half - 5, top);
+        ctx.lineTo(v.x + half + 5, top);
+        ctx.strokeStyle = P.vesselMouth;
+        ctx.lineWidth = 2.6;
+        ctx.stroke();
+        // 内壁微光
+        ctx.beginPath();
+        ctx.ellipse(v.x, top + 3, half - 3, 3.4, 0, 0, Math.PI * 2);
+        ctx.fillStyle = P.vesselGlow;
+        ctx.fill();
+    }
+
+    drawBubbles(ctx) {
+        for (const b of this.world.bubbles) {
+            if (!b.alive) continue;
+            const pulse = this.reducedMotion ? 1 : 1 + 0.03 * Math.sin(this.time * 2.4 + b.i);
+            const r = b.r * pulse;
+            const g = ctx.createRadialGradient(b.x - r * 0.3, b.y - r * 0.3, r * 0.1, b.x, b.y, r);
+            g.addColorStop(0, P.bubbleIn);
+            g.addColorStop(0.7, P.bubbleMid);
+            g.addColorStop(1, P.bubbleOut);
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = g;
+            ctx.fill();
+            ctx.strokeStyle = P.bubbleStroke;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            // 高光
+            ctx.beginPath();
+            ctx.arc(b.x - r * 0.32, b.y - r * 0.34, r * 0.17, 0, Math.PI * 2);
+            ctx.fillStyle = P.bubbleShine;
+            ctx.fill();
+        }
+    }
+
+    drawThorns(ctx) {
+        for (let thornIndex = 0; thornIndex < this.world.thorns.length; thornIndex++) {
+            const t = this.world.thorns[thornIndex];
+            ctx.save();
+            ctx.translate(t.x, t.y);
+            const pulse = this.reducedMotion ? 1 : 1 + Math.sin(this.time * 1.7 + thornIndex) * 0.025;
+            ctx.scale(pulse, pulse);
+
+            const aura = ctx.createRadialGradient(0, 0, t.r * 0.15, 0, 0, t.r * 1.45);
+            aura.addColorStop(0, 'rgba(112,31,52,0.34)');
+            aura.addColorStop(0.58, 'rgba(94,24,45,0.18)');
+            aura.addColorStop(1, 'rgba(94,24,45,0)');
+            ctx.fillStyle = aura;
+            ctx.beginPath();
+            ctx.arc(0, 0, t.r * 1.45, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = P.thorn;
+            ctx.lineWidth = 2.1;
+            ctx.lineCap = 'round';
+            for (let i = 0; i < 9; i++) {
+                const a = (i / 9) * Math.PI * 2 + 0.16;
+                const inner = t.r * (0.30 + (i % 3) * 0.05);
+                const outer = t.r * (0.90 + (i % 2) * 0.20);
+                const bend = 0.16 * (i % 2 ? 1 : -1);
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
+                ctx.quadraticCurveTo(
+                    Math.cos(a + bend) * t.r * 0.64,
+                    Math.sin(a + bend) * t.r * 0.64,
+                    Math.cos(a) * outer,
+                    Math.sin(a) * outer
+                );
+                ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.arc(0, 0, t.r * 0.47, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(38,22,35,0.95)';
+            ctx.fill();
+            ctx.strokeStyle = P.thornRing;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    drawStars(ctx) {
+        for (const s of this.world.stars) {
+            if (s.taken) continue;
+            const bob = this.reducedMotion ? 0 : Math.sin(this.time * 2.2 + s.i) * 2.4;
+            const r = this.reducedMotion ? 9 : 9 + Math.sin(this.time * 3.1 + s.i) * 0.7;
+            const cy = s.y + bob;
+            const g = ctx.createRadialGradient(s.x, cy, 1, s.x, cy, r * 2.6);
+            g.addColorStop(0, 'rgba(255,211,77,0.42)');
+            g.addColorStop(1, 'rgba(255,211,77,0)');
+            ctx.beginPath();
+            ctx.arc(s.x, cy, r * 2.6, 0, Math.PI * 2);
+            ctx.fillStyle = g;
+            ctx.fill();
+            // 四芒星
+            ctx.beginPath();
+            ctx.moveTo(s.x, cy - r);
+            ctx.quadraticCurveTo(s.x + r * 0.24, cy - r * 0.24, s.x + r, cy);
+            ctx.quadraticCurveTo(s.x + r * 0.24, cy + r * 0.24, s.x, cy + r);
+            ctx.quadraticCurveTo(s.x - r * 0.24, cy + r * 0.24, s.x - r, cy);
+            ctx.quadraticCurveTo(s.x - r * 0.24, cy - r * 0.24, s.x, cy - r);
+            ctx.closePath();
+            ctx.fillStyle = '#ffd34d';
+            ctx.fill();
+            ctx.strokeStyle = P.starEdge;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
+
+    drawRopes(ctx) {
+        for (const rope of this.world.ropes) {
+            if (!rope.alive) continue;
+            const ps = rope.particles;
+            if (ps.length < 2) continue;
+            // 丝线：拉伸越明显，丝芯越亮、越细，张力变化更容易读懂。
+            let stretchSum = 0;
+            for (let i = 1; i < ps.length; i++) {
+                stretchSum += Math.hypot(ps[i].x - ps[i - 1].x, ps[i].y - ps[i - 1].y) / rope.segLen;
+            }
+            const tension = Math.max(0, Math.min(1, stretchSum / Math.max(1, ps.length - 1) - 0.92));
+            ctx.beginPath();
+            ctx.moveTo(ps[0].x, ps[0].y);
+            for (let i = 1; i < ps.length; i++) {
+                const p0 = ps[i - 1], p1 = ps[i];
+                const mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
+                ctx.quadraticCurveTo(p0.x, p0.y, mx, my);
+            }
+            ctx.lineTo(ps[ps.length - 1].x, ps[ps.length - 1].y);
+            ctx.strokeStyle = P.ropeGlow;
+            ctx.globalAlpha = 0.65 + tension * 0.35;
+            ctx.lineWidth = 5.5 - tension * 1.5;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            ctx.strokeStyle = P.rope;
+            ctx.lineWidth = 2.35 - tension * 0.55;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+
+            // 锚结（可拖拽）：金色小环 + 脉动提示
+            const a = ps[0];
+            const pulse = this.reducedMotion ? 1 : 1 + 0.10 * Math.sin(this.time * 3.4 + rope.i);
+            const isHeld = this.world.dragging && this.world.dragging.kind === 'anchor' && this.world.dragging.rope === rope.i;
+            if (isHeld) {
+                const d = this.world.dragging;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(d.originX, d.originY, d.maxDistance, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255,211,120,0.16)';
+                ctx.lineWidth = 1.2;
+                ctx.setLineDash([5, 7]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.moveTo(d.originX, d.originY);
+                ctx.lineTo(a.x, a.y);
+                ctx.strokeStyle = 'rgba(255,232,150,0.32)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+            const g = ctx.createRadialGradient(a.x, a.y, 1, a.x, a.y, PHYS.anchorR * 2.0 * pulse);
+            g.addColorStop(0, isHeld ? 'rgba(255,232,150,0.52)' : 'rgba(255,211,120,0.34)');
+            g.addColorStop(1, 'rgba(255,211,120,0)');
+            ctx.beginPath();
+            ctx.arc(a.x, a.y, PHYS.anchorR * 2.0 * pulse, 0, Math.PI * 2);
+            ctx.fillStyle = g;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(a.x, a.y, 7.5, 0, Math.PI * 2);
+            ctx.fillStyle = isHeld ? '#ffe89a' : '#ffd34d';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(60,44,10,0.55)';
+            ctx.lineWidth = 1.6;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(a.x, a.y, 3.1, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(30,40,30,0.65)';
+            ctx.fill();
+        }
+    }
+
+    drawPearl(ctx) {
+        const p = this.world.pearl;
+        // 拖尾（按速度）
+        const vx = p.x - p.px, vy = p.y - p.py;
+        const sp = Math.sqrt(vx * vx + vy * vy);
+        if (sp > 0.6) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - vx * 5.5, p.y - vy * 5.5);
+            ctx.strokeStyle = P.pearlTrail;
+            ctx.lineWidth = PHYS.pearlR * 1.5;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+        // 外辉光
+        const g = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, PHYS.pearlR * 3.4);
+        g.addColorStop(0, P.pearlGlow);
+        g.addColorStop(1, P.pearlGlowOut);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, PHYS.pearlR * 3.4, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+        // 珠体
+        const body = ctx.createRadialGradient(p.x - 3, p.y - 3.5, 1, p.x, p.y, PHYS.pearlR);
+        body.addColorStop(0, '#dffcff');
+        body.addColorStop(0.6, '#8ee6ff');
+        body.addColorStop(1, '#40d8ff');
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, PHYS.pearlR, 0, Math.PI * 2);
+        ctx.fillStyle = body;
+        ctx.fill();
+        ctx.strokeStyle = P.pearlEdge;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+        // 高光点
+        ctx.beginPath();
+        ctx.arc(p.x - PHYS.pearlR * 0.33, p.y - PHYS.pearlR * 0.38, PHYS.pearlR * 0.24, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.88)';
+        ctx.fill();
+    }
+
+    collectLightSources() {
+        if (!this.world) return [];
+        const sources = [];
+        const p = this.world.pearl;
+        if (p) sources.push({ x: p.x, y: p.y, radius: 112, alpha: 0.92 });
+        const v = this.world.vessel;
+        if (v) sources.push({ x: v.x, y: v.y + 10, radius: Math.max(86, v.w * 1.25), alpha: 0.52 });
+        for (const s of this.world.stars || []) {
+            if (!s.taken) sources.push({ x: s.x, y: s.y, radius: 48, alpha: 0.22 });
+        }
+        for (const b of this.world.bubbles || []) {
+            if (b.alive) sources.push({ x: b.x, y: b.y, radius: b.r * 2.2, alpha: 0.13 });
+        }
+        return sources;
+    }
+
+    drawParticles(ctx) {
+        for (const p of this.particles) {
+            const k = 1 - p.t / p.life;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r * k, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = k * 0.85;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
+}

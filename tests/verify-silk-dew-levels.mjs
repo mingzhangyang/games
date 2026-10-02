@@ -13,13 +13,13 @@
 // ⚠️ 关键：本脚本与 scripts/tmp-sd-redesign.mjs 共用同一套「拖拽—解算」口径。
 // 改任何元素位置后必须重跑本脚本确认仍可解。
 //
-// 用法：node scripts/verify-silk-dew-levels.mjs
+// 用法：node tests/verify-silk-dew-levels.mjs
 
 import {
     STAGE, PHYS, LEVELS, DAILY_COUNT, scoreStars, dailyQualifies, summarizeDailyResults,
     createWorld, beginDrag, moveDrag, endDrag, popBubble, bubbleAt,
     stepWorld, simulate, dailyCourse,
-} from '../js/silk-dew-levels.js';
+} from '../src/games/silk-dew/model/levels.js';
 
 let failed = 0;
 let passed = 0;

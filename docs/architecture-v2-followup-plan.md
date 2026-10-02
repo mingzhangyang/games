@@ -98,10 +98,10 @@ Architecture v2 的最终规则不能等到“所有历史代码都迁完”才�
 | P1 | `js/gravity-slingshot.js` | ~73 KB | 第二批拆分 |
 | P1 | `js/bond-forge.js` | ~72 KB | 第二批拆分 |
 | P1 | `js/needle-awn.js` | ~72 KB | 第二批拆分 |
-| P2 | `js/silk-dew.js` | ~67 KB | 迁目录时拆 |
-| P2 | `js/planet-merge.js` | ~66 KB | 迁目录时拆 |
-| P2 | `js/word-daily.js` | ~64 KB | 迁目录时拆 |
-| P2 | `js/shadow-loom.js` | ~61 KB | 迁目录时拆 |
+| P2 | `src/games/silk-dew/runtime.js` | ~67 KB | Phase 3B 已迁；后续按需拆 renderer |
+| P2 | `src/games/planet-merge/runtime.js` | ~66 KB | Phase 3B 已迁；后续按需拆 physics |
+| P2 | `src/games/word-daily/runtime.js` | ~64 KB | Phase 3B 已迁；词库已独立 |
+| P2 | `src/games/shadow-loom/runtime.js` | ~61 KB | Phase 3B 已迁；几何/渲染已独立 |
 | P2 | `js/maxwell-demon.js` 等 | ~55–59 KB | 批量轻拆 |
 
 目前已有 `src/games/` 包：
@@ -482,6 +482,8 @@ Sword Flight 当前类很大，但不要为了“类变小”把所有字段塞�
 ### PR 3B
 
 `refactor/game-packages-wave-2a`
+
+当前实现已完成四款的包边界迁移；合并前仍需完成候选分支的 review / build / browser smoke gate。
 
 - silk-dew
 - planet-merge

@@ -103,8 +103,8 @@ assets/silk-dew/
 
 新增：
 
-- `js/silk-dew-art.js`
-- `js/silk-dew-scene.js`
+- `src/games/silk-dew/render/art.js`
+- `src/games/silk-dew/render/scene.js`
 
 绘制顺序：
 
@@ -288,9 +288,9 @@ Light / Dark 只改变页面 chrome、sidebar、overlay。
 
 ```text
 assets/silk-dew/**
-js/silk-dew.js
-js/silk-dew-art.js
-js/silk-dew-scene.js
+src/games/silk-dew/runtime.js
+src/games/silk-dew/render/art.js
+src/games/silk-dew/render/scene.js
 css/silk-dew.css
 tests/verify-silk-dew-art.mjs
 tests/smoke-silk-dew.mjs

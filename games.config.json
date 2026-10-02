@@ -368,7 +368,7 @@
       "id": "planet-merge",
       "prefix": "pm",
       "href": "planet-merge.html",
-      "entry": "js/planet-merge.js",
+      "entry": "src/games/planet-merge/index.js",
       "emoji": "🪐",
       "title": {
         "doc": "Planet Merge — Cosmic Merge Puzzle",
@@ -431,7 +431,7 @@
       "id": "word-daily",
       "prefix": "wd",
       "href": "word-daily.html",
-      "entry": "js/word-daily.js",
+      "entry": "src/games/word-daily/index.js",
       "emoji": "🔤",
       "title": {
         "doc": "Word Daily — Daily Bilingual Word Puzzle",
@@ -1038,7 +1038,7 @@
       "id": "silk-dew",
       "prefix": "sd",
       "href": "silk-dew.html",
-      "entry": "js/silk-dew.js",
+      "entry": "src/games/silk-dew/index.js",
       "emoji": "💧",
       "title": {
         "doc": "垂丝引露 Silkfall — Rope Physics Puzzle",
@@ -1582,7 +1582,7 @@
       "id": "shadow-loom",
       "prefix": "sl",
       "href": "shadow-loom.html",
-      "entry": "js/shadow-loom.js",
+      "entry": "src/games/shadow-loom/index.js",
       "emoji": "🕯️",
       "title": {
         "doc": "影织 Shadow Loom — Paper Shadow Puzzle",
