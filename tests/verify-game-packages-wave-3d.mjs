@@ -21,19 +21,21 @@ const specs = [
     },
     {
         id: 'hoop-shot',
-        files: ['index.js', 'runtime.js', 'i18n.js'],
+        files: ['index.js', 'runtime.js', 'i18n.js', 'storage.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'initCanvasPalette', 'mountGameRuntime', 'window.hoopShotGame', 'window.hsRuntime', 'window.hsDrawer'],
         runtimeNeedles: ["from './i18n.js'", "from '../../platform/game-sfx.js'", "from '../../platform/theme.js'", 'export class HoopShotGame', 'export const WORLD_W'],
         handles: ['window.hoopShotGame', 'window.hsRuntime', 'window.hsDrawer'],
         keys: ["'hs_best'", "'hs_longest_streak'", "'hs_local_scores'"],
+        storageFile: 'storage.js',
     },
     {
         id: 'carrot-pull',
-        files: ['index.js', 'runtime.js', 'i18n.js', 'render/art.js', 'render/scene.js', 'render/fallback-scene.js'],
+        files: ['index.js', 'runtime.js', 'i18n.js', 'storage.js', 'render/art.js', 'render/scene.js', 'render/fallback-scene.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'mountGameRuntime', 'window.cpGame', 'window.cpRuntime', 'window.cpDrawer'],
         runtimeNeedles: ["from './i18n.js'", "from './render/art.js'", "from './render/scene.js'", "from './render/fallback-scene.js'", "from '../../platform/game-sfx.js'", 'export function createGame'],
         handles: ['window.cpGame', 'window.cpRuntime', 'window.cpDrawer'],
         keys: ["'cp_best_score'"],
+        storageFile: 'storage.js',
         renderNeedles: ['../../../../assets/carrot-pull/'],
         retired: ['js/carrot-pull-art.js', 'js/carrot-pull-scene.js', 'js/carrot-pull-fallback-scene.js'],
     },
@@ -66,6 +68,7 @@ for (const spec of selectedSpecs) {
     const index = read(`${packageRoot}/index.js`);
     const runtime = read(`${packageRoot}/runtime.js`);
     const i18n = read(`${packageRoot}/i18n.js`);
+    const storage = spec.storageFile ? read(`${packageRoot}/${spec.storageFile}`) : runtime;
     const shim = read(`js/${spec.id}.js`).trim();
 
     check(game.entry === `${packageRoot}/index.js`, `${spec.id}: registry points at the package composition root`);
@@ -77,7 +80,7 @@ for (const spec of selectedSpecs) {
     check(i18n.includes("from '../../platform/i18n.js'") && i18n.includes('export const LANGUAGES = makeText({'),
         `${spec.id}: language table is extracted into the package`);
     for (const handle of spec.handles) check(index.includes(handle), `${spec.id}: preserves ${handle}`);
-    for (const key of spec.keys) check(runtime.includes(key), `${spec.id}: preserves storage contract ${key}`);
+    for (const key of spec.keys) check(storage.includes(key), `${spec.id}: preserves storage contract ${key}`);
     if (spec.languageRefresh) {
         const languageStart = runtime.indexOf('applyLanguage() {');
         const languageEnd = runtime.indexOf('/* ── 菜单部件 ── */', languageStart);

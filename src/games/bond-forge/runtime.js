@@ -23,7 +23,7 @@
 
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay, dailyKey, hashStringFNV, mulberry32 } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
@@ -48,6 +48,7 @@ import {
 } from './model/molecules.js';
 import { bindBondForgePointer, toLogical, unbindBondForgePointer } from './input/pointer.js';
 import { drawBondForgeScene } from './render/scene.js';
+import { BOND_FORGE_STORAGE, BOND_FORGE_STORAGE_SLOTS } from './storage.js';
 
 /* 画布调色板：颜色只在 css/bond-forge.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
    P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。 */
@@ -88,7 +89,6 @@ const STAGE = { w: 520, h: 680 };
 export const W = STAGE.w;
 export const H = STAGE.h;
 
-const PROGRESS_KEY = 'bf_progress';
 // The completion marker is a local-storage key.  The leaderboard uses the
 // registry prefix from games.config.json, so keep the two contracts explicit.
 const DAILY_COMPLETION_KEY_PREFIX = 'bf_daily_';
@@ -648,18 +648,13 @@ class BondForgeGame {
     /* ---------------------- 进度存储 ---------------------- */
 
     loadProgress() {
-        try {
-            const raw = storageGet(PROGRESS_KEY);
-            const obj = raw ? JSON.parse(raw) : {};
-            return obj && typeof obj === 'object' ? obj : {};
-        } catch (e) {
-            return {};
-        }
+        const value = BOND_FORGE_STORAGE.get(BOND_FORGE_STORAGE_SLOTS.PROGRESS, {});
+        return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
     }
 
     saveProgress() {
         try {
-            storageSet(PROGRESS_KEY, JSON.stringify(this.progress));
+            BOND_FORGE_STORAGE.set(BOND_FORGE_STORAGE_SLOTS.PROGRESS, this.progress);
         } catch (e) {
             // 存储不可用时静默降级
         }
