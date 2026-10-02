@@ -14,8 +14,12 @@ const budgets = {
     'src/games/sword-flight/index.js': 30 * 1024,
     'src/games/sword-flight/runtime.js': 30 * 1024,
     'src/games/sword-flight/render/world.js': 48 * 1024,
-    'js/needle-awn.js': 74 * 1024,
-    'js/bond-forge.js': 74 * 1024,
+    'src/games/gravity-slingshot/index.js': 16 * 1024,
+    'src/games/gravity-slingshot/runtime.js': 56 * 1024,
+    'src/games/bond-forge/index.js': 16 * 1024,
+    'src/games/bond-forge/runtime.js': 76 * 1024,
+    'src/games/needle-awn/index.js': 16 * 1024,
+    'src/games/needle-awn/runtime.js': 66 * 1024,
     'js/tetris.js': 60 * 1024,
 };
 let failed = 0;

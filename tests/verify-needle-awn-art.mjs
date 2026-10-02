@@ -8,10 +8,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ART_ROOT = join(ROOT, 'assets', 'needle-awn');
 const manifest = JSON.parse(readFileSync(join(ART_ROOT, 'manifest.json'), 'utf8'));
 const html = readFileSync(join(ROOT, 'needle-awn.html'), 'utf8');
-const gameModule = readFileSync(join(ROOT, 'js', 'needle-awn.js'), 'utf8');
-const artModule = readFileSync(join(ROOT, 'js', 'needle-awn-art.js'), 'utf8');
-const sceneModule = readFileSync(join(ROOT, 'js', 'needle-awn-scene.js'), 'utf8');
-const { NEEDLE_AWN_MANIFEST: runtimeManifest } = await import('../js/needle-awn-art.js');
+const gameModule = readFileSync(join(ROOT, 'src', 'games', 'needle-awn', 'runtime.js'), 'utf8');
+const artModule = readFileSync(join(ROOT, 'src', 'games', 'needle-awn', 'render', 'art.js'), 'utf8');
+const sceneModule = readFileSync(join(ROOT, 'src', 'games', 'needle-awn', 'render', 'scene.js'), 'utf8');
+const { NEEDLE_AWN_MANIFEST: runtimeManifest } = await import('../src/games/needle-awn/render/art.js');
 
 const errors = [];
 const checks = [];
@@ -41,7 +41,7 @@ const expectedRuntimeManifest = {
 };
 
 if (!same(runtimeManifest, expectedRuntimeManifest)) {
-    fail('js/needle-awn-art.js runtime manifest is out of sync with assets/needle-awn/manifest.json');
+    fail('src/games/needle-awn/render/art.js runtime manifest is out of sync with assets/needle-awn/manifest.json');
 } else {
     pass('runtime manifest matches the source manifest');
 }

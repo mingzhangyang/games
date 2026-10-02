@@ -718,7 +718,7 @@
       "id": "gravity-slingshot",
       "prefix": "gd",
       "href": "gravity-slingshot.html",
-      "entry": "js/gravity-slingshot.js",
+      "entry": "src/games/gravity-slingshot/index.js",
       "emoji": "🚀",
       "title": {
         "doc": "Gravity Slingshot — Orbital Physics Puzzle",
@@ -780,7 +780,7 @@
       "id": "needle-awn",
       "prefix": "na",
       "href": "needle-awn.html",
-      "entry": "js/needle-awn.js",
+      "entry": "src/games/needle-awn/index.js",
       "emoji": "⚔️",
       "title": {
         "doc": "针尖对麦芒 — Pinpoint Clash",
@@ -1102,7 +1102,7 @@
       "id": "bond-forge",
       "prefix": "bf",
       "href": "bond-forge.html",
-      "entry": "js/bond-forge.js",
+      "entry": "src/games/bond-forge/index.js",
       "emoji": "⚗️",
       "title": {
         "doc": "键合工坊 Bond Forge — Molecule Building Puzzle",

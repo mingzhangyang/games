@@ -461,6 +461,93 @@ if (daily.a.length !== 5) fail(`每日应有 5 关，got ${daily.a.length}`);
 if (!daily.same) fail('每日赛程应确定性（同一天两次调用不一致）');
 else pass(`每日赛程：5 关且同一天内确定性 [${daily.a.slice(0, 2).join(',')}…]`);
 
+/* ── 7b. 每日聚合：重试替换 + 5 关只计一次 + 结算/复制/存档/榜单一致 ── */
+const dailyBehavior = await page.evaluate(async () => {
+    const g = window.bfGame;
+    const originalFetch = window.fetch;
+    const scoreCalls = [];
+    let copied = '';
+
+    window.fetch = async (url, options = {}) => {
+        const href = String(url);
+        if (href.startsWith('https://game-scores.orangely.workers.dev/scores')) {
+            if (String(options.method || 'GET').toUpperCase() === 'POST') {
+                try { scoreCalls.push(JSON.parse(options.body || '{}')); } catch { scoreCalls.push({}); }
+                return { ok: true, status: 200, json: async () => ({}) };
+            }
+            return { ok: true, status: 200, json: async () => [] };
+        }
+        return originalFetch(url, options);
+    };
+
+    try {
+        Object.defineProperty(navigator, 'clipboard', {
+            configurable: true,
+            value: { writeText: async text => { copied = String(text); } },
+        });
+
+        g.startDaily();
+        const date = g.dailyDateKey;
+        const courseIds = g.dailyCourse.map(level => level?.id);
+
+        g.drags = 2;
+        g.onLevelCleared();
+        const firstCommitted = g.dailyTotalDrags;
+        g.restartLevel();
+        const afterRetryReset = g.dailyTotalDrags;
+
+        for (const drags of [3, 4, 5, 6, 7]) {
+            g.drags = drags;
+            g.onLevelCleared();
+            g.nextLevel();
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 30));
+        g.copyResult();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        return {
+            date,
+            courseIds,
+            firstCommitted,
+            afterRetryReset,
+            state: g.state,
+            dailyIndex: g.dailyIndex,
+            total: g.dailyTotalDrags,
+            overScore: document.getElementById('bf-over-score')?.textContent,
+            overSub: document.getElementById('bf-over-sub')?.textContent,
+            stored: localStorage.getItem(`bf_daily_${date}`),
+            copied,
+            scoreCalls,
+        };
+    } finally {
+        window.fetch = originalFetch;
+    }
+});
+const expectedDailyTotal = 3 + 4 + 5 + 6 + 7;
+if (dailyBehavior.courseIds.length !== 5) fail(`每日运行时赛程应有 5 关，got ${dailyBehavior.courseIds.length}`);
+if (dailyBehavior.firstCommitted !== 2 || dailyBehavior.afterRetryReset !== 0) {
+    fail(`Daily Retry 应替换当前关贡献，got first=${dailyBehavior.firstCommitted}, reset=${dailyBehavior.afterRetryReset}`);
+}
+if (dailyBehavior.state !== 'over' || dailyBehavior.dailyIndex !== 5 || dailyBehavior.total !== expectedDailyTotal) {
+    fail(`每日 5 关聚合异常: ${JSON.stringify(dailyBehavior)}`);
+}
+if (dailyBehavior.overScore !== String(expectedDailyTotal) || !dailyBehavior.overSub?.includes(String(expectedDailyTotal))) {
+    fail(`每日结果卡未使用聚合拖拽数: ${JSON.stringify({ overScore: dailyBehavior.overScore, overSub: dailyBehavior.overSub })}`);
+}
+if (dailyBehavior.stored !== String(expectedDailyTotal)) {
+    fail(`每日完成存档未使用聚合拖拽数: ${dailyBehavior.stored}`);
+}
+if (!dailyBehavior.copied.includes(String(expectedDailyTotal))) {
+    fail(`复制结果未使用聚合拖拽数: "${dailyBehavior.copied}"`);
+}
+const dailySubmission = dailyBehavior.scoreCalls.find(call => call.game === `bond-forge-d${dailyBehavior.date}`);
+if (!dailySubmission || dailySubmission.score !== expectedDailyTotal) {
+    fail(`排行榜提交未使用聚合拖拽数: ${JSON.stringify(dailyBehavior.scoreCalls)}`);
+} else {
+    pass(`每日聚合：Retry 替换旧贡献，5 关合计 ${expectedDailyTotal}，结果/复制/存档/榜单一致`);
+}
+
 /* ── 9. 托盘几何：任何托盘规模都不许溢出/重叠 ──
  *
  * 回归的是沙盒那个洞：旧 `trayGeometry()` 用 `slot = min(58, (W-40)/n)` 单行排布，

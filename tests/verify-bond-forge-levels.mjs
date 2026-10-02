@@ -13,12 +13,12 @@
 import {
     LEVELS, LEVEL_COUNT, DAILY_POOL, SANDBOX_MOLECULES, levelById, levelByNo,
     DAILY_SEED_PREFIX, dailyPicks,
-} from '../js/bond-forge-levels.js';
+} from '../src/games/bond-forge/model/levels.js';
 import {
     MOLECULES, ELEMENTS, validateLevelSpec, solveBest, identify,
     canonicalize, bondSignature, findByComposition,
     allowsBonds, isIonic, maxBondsOf, lonePairsOf,
-} from '../js/bond-forge-molecules.js';
+} from '../src/games/bond-forge/model/molecules.js';
 import { hashStringFNV, mulberry32 } from '../js/daily.js';
 
 let passed = 0, failed = 0;
