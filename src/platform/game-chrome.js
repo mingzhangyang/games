@@ -11,12 +11,12 @@
  *
  * ⚠️ 职责边界（避免"同一标签多处写入"）
  *   本模块**只**写 home / sound / more 三个标签。
- *   - stats 的 title/aria 归 `js/game-drawer.js` 的 renderIcons()（已有 228 条断言）；
+ *   - stats 的 title/aria 归 `src/platform/game-drawer.js` 的 renderIcons()（已有 228 条断言）；
  *   - pause 是有状态的（Pause↔Resume），由页面通过 `labels.pause` 回调提供文案，
  *     本模块只负责落笔，不在内部推断当前暂停态；
  *   - 页脚 hint 文案不属于 chrome（各页差异大），由各页自己的 applyLanguage 写。
  *
- * ⚠️ 语言存储键是 `site_lang`（见 js/site-settings.js 的 LANG_KEY）。语言切换 UI 只在
+ * ⚠️ 语言存储键是 `site_lang`（见 src/platform/site-settings.js 的 LANG_KEY）。语言切换 UI 只在
  *   首页（2026-09-21 收敛）：游戏页不再有语言钮，本模块只订阅 `site-settings:changed`
  *   重刷 home / sound / more（setMuted 同样派发该事件，静音切换靠它重刷文案）。
  */

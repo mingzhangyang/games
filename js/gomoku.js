@@ -216,7 +216,7 @@ function resizeCanvas() {
     // 桌面端放宽棋盘上限（≤1024px 视口维持 600，大屏最高 700）
     const desktopCap = window.matchMedia('(min-width: 1024px)').matches ? 700 : 600;
     const containerWidth = Math.min(window.innerWidth - 40, desktopCap);
-    // 纵向预算取 js/game-frame.js 实测写入的 --frame-chrome（顶栏 + 状态条 + 页脚 + 容器内距）。
+    // 纵向预算取 src/platform/game-frame.js 实测写入的 --frame-chrome（顶栏 + 状态条 + 页脚 + 容器内距）。
     // 这里原本写死减 200，而实际 chrome 是 338 —— 1280×900 下整页被撑到 1038px，
     // 桌面端要滚动才能看全棋盘（2026-09-19 修）。200 仅作 bindFrame 落笔前的首帧兜底。
     const shell = document.querySelector('.game-shell');
@@ -898,7 +898,7 @@ function evaluateLine(r, c, dr, dc, player) {
 init();
 
 /* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   槽位结构见 css/layout.css 的契约，行为统一由 src/platform/game-chrome.js 接管。
    owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。
        本页的静音钮是随槽位契约新增的，页面自身没有 handler，

@@ -691,7 +691,7 @@ class MinesweeperGame {
     async submitScore(seconds) {
         this.recordLocalScore(seconds);
         const game = DIFFICULTIES[this.diff].lb;
-        // 网络层收敛到 js/leaderboard.js（超时/cors/ok 判定统一；false=未进全球榜）
+        // 网络层收敛到 src/platform/leaderboard.js（超时/cors/ok 判定统一；false=未进全球榜）
         const ok = await submitScore({ game, name: ensurePlayerName() || 'Anonymous', score: seconds });
         if (ok) {
             await this.fetchLeaderboard();
@@ -946,7 +946,7 @@ onReady(() => {
 });
 
 /* ── 顶栏 / 页脚通用控件：Home · Sound · More ──
-   槽位结构见 css/layout.css 的契约，行为统一由 js/game-chrome.js 接管。
+   槽位结构见 css/layout.css 的契约，行为统一由 src/platform/game-chrome.js 接管。
    owns 默认只含 more：静音钮在本页早就有自己的 handler（还要顺带做
    SFX 初始化之类的页面私事），chrome 再挂一个就会一次点击切换两次 = 净效果为零。 */
 onReady(() => {

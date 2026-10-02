@@ -6,7 +6,7 @@
  *
  * 确定性契约：same seed + same (tick, fireflyId) 输入序列 = same simulation result
  *   - 固定步长 DT = 1/60 s，所有状态只在 step() / intervene() 里变化；
- *   - 随机只在建关时用一次 mulberry32(seed)（js/daily.js 的全站唯一实现）；
+ *   - 随机只在建关时用一次 mulberry32(seed)（src/platform/daily.js 的全站唯一实现）；
  *   - 位置是 tick 的纯函数（漫游 = 两个正弦），不累积浮点误差；
  *   - 同一 tick 内的闪光按数组下标顺序处理（级联也是），顺序固定即结果固定。
  *
