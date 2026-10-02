@@ -3,13 +3,15 @@ import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { getLang } from '../../platform/site-settings.js';
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { createGame } from './runtime.js';
 import { LANGUAGES } from './i18n.js';
 
 export { createGame } from './runtime.js';
 
 onReady(() => {
-    const game = createGame();
+    const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
+    const game = createGame({ i18nBinder });
     window.cpGame = game;
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 

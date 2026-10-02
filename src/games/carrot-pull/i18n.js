@@ -2,6 +2,11 @@ import { makeText } from '../../platform/i18n.js';
 
 export const LANGUAGES = makeText({
     en: {
+        pageTitle: '拔萝卜 Carrot Pull — Garden Rhythm Game',
+        heading: '拔萝卜 Carrot Pull',
+        sceneTitle: 'A laughing girl in a straw hat and a happy mole pull a giant carrot out of a garden bed',
+        sceneDescription: 'A sunny garden with rolling hills, a farmhouse, a wooden fence and raised vegetable beds. A girl in teal overalls and yellow boots leans back holding the carrot leaves while a mole pops out of the soil to help.',
+        reset: 'Reset',
         brand: 'Carrot Pull',
         kicker: 'GARDEN RHYTHM',
         startTitle: 'Carrot Pull',
@@ -53,6 +58,11 @@ export const LANGUAGES = makeText({
         statusPaused: 'Paused — take a breath.',
     },
     zh: {
+        pageTitle: '拔萝卜 Carrot Pull — Garden Rhythm Game',
+        heading: '拔萝卜 Carrot Pull',
+        sceneTitle: '草帽女孩和开心的小鼹鼠一起把大萝卜从菜地里拔出来',
+        sceneDescription: '阳光明媚的菜园里有起伏的山丘、农舍、木栅栏和菜畦。穿着青绿色背带裤、脚蹬黄靴的女孩拉着萝卜叶子，小鼹鼠从泥土里探出身来帮忙。',
+        reset: '重置',
         brand: '拔萝卜',
         kicker: 'GARDEN RHYTHM',
         startTitle: '拔萝卜',

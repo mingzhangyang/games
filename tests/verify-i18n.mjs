@@ -20,6 +20,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 // 页面清单来自注册表：骨架契约内的页面（caps:topbar）。新游戏自动纳入。
 const PAGES = registry.withCap('topbar');
 const KEYS = ['sound', 'language', 'moreGames', 'close', 'copied', 'usernameLabel'];
+const DECLARATIVE_PAGES = new Set(['minesweeper', 'reversi', 'tetris', 'carrot-pull', 'circuit']);
 
 let failed = 0;
 const ok = (cond, label, extra) => {
@@ -59,11 +60,17 @@ for (const g of PAGES) {
     const src = readFileSync(join(ROOT, g.entry), 'utf8');
     const i18nVar = g.i18nVar || 'LANGUAGES';
     const declarative = /createI18nBinder/.test(src);
+    if (DECLARATIVE_PAGES.has(g.id)) {
+        ok(declarative, `${g.id}: Phase 6 page uses declarative i18n binder`);
+    }
     if (declarative) {
         ok(/import \{ createI18nBinder \} from ['"][^'"]*platform\/i18n\/bindings\.js['"];/.test(src),
             `${g.entry}: declarative i18n imports platform binder`);
         ok(/createI18nBinder\s*\(\s*\{/.test(src),
             `${g.entry}: declarative i18n creates binder`);
+        const html = readFileSync(join(ROOT, g.href), 'utf8');
+        ok(/data-i18n(?:-[a-z]+)?\s*=/.test(html),
+            `${g.href}: declarative markup contains i18n bindings`);
         continue;
     }
 

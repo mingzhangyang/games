@@ -14,6 +14,7 @@ import { updateMoreGames } from '../src/platform/more-games.js';
 import { storageGet, storageSet } from '../src/platform/safe-storage.js';
 import { track } from '../src/platform/analytics.js';
 import { makeText } from '../src/platform/i18n.js';
+import { createI18nBinder } from '../src/platform/i18n/bindings.js';
 import { onReady } from '../src/platform/boot.js';
 import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from '../src/platform/game-sfx.js';
@@ -28,6 +29,8 @@ function clamp(v, min, max) {
 
 const LANGUAGES = makeText({
     en: {
+        pageTitle: 'Minesweeper — Classic Logic Puzzle',
+        boardLabel: 'Minesweeper board',
         title: 'Minesweeper',
         subtitle: 'Logic · Deduction · Nerves of steel',
         howto: 'Tap to reveal a square. Numbers show adjacent mines. Right-click / long-press to flag. Clear every safe square without detonating a mine — your first click is always safe!',
@@ -64,6 +67,8 @@ const LANGUAGES = makeText({
         shareLine: 'Cleared in',
     },
     zh: {
+        pageTitle: '扫雷 — 经典逻辑益智游戏',
+        boardLabel: '扫雷棋盘',
         title: '扫雷',
         subtitle: '推理 · 演算 · 心跳加速',
         howto: '点击翻开格子，数字表示周围雷数。右键或长按插旗。翻开所有安全格子即获胜——第一次点击永远不会踩雷！',
@@ -151,7 +156,8 @@ const HIDDEN = 0, REVEALED = 1, FLAGGED = 2;
 /* ────────────────────────── game ────────────────────────── */
 
 class MinesweeperGame {
-    constructor() {
+    constructor({ i18nBinder = null } = {}) {
+        this.i18nBinder = i18nBinder;
         this.boardEl = document.getElementById('ms-board');
         this.el = {};
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
@@ -195,42 +201,12 @@ class MinesweeperGame {
 
     applyLanguage() {
         const t = this.TEXT;
-        document.documentElement.lang = this.lang;
-        document.title = this.lang === 'zh' ? '扫雷 — 经典逻辑益智游戏' : 'Minesweeper — Classic Logic Puzzle';
-        if (this.el.title) this.el.title.textContent = t.title;
-        if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
-        if (this.el.howto) this.el.howto.textContent = t.howto;
-        if (this.el['btn-play']) this.el['btn-play'].innerHTML = `${ICONS.mine}<span>${t.play}</span>`;
-        if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
-        if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
+        this.i18nBinder?.apply(this.lang);
+        // Copy feedback swaps the icon and label temporarily, so it remains a
+        // table-driven compound control rather than a declarative text node.
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
-        if (this.el['btn-close']) this.el['btn-close'].innerHTML = `${ICONS.close}<span>${t.close}</span>`;
-        if (this.el['counter-mines']) this.el['counter-mines'].title = t.minesLeft;
-        if (this.el['counter-timer']) this.el['counter-timer'].title = t.timeElapsed;
-        if (this.el.face) this.el.face.title = t.newGame;
         if (this.el['btn-pause']) {
             this.refreshPauseUi();
-        }
-        if (this.el['pause-title']) this.el['pause-title'].textContent = t.pausedTitle;
-        if (this.el['pause-hint']) this.el['pause-hint'].textContent = t.pausedHint;
-        if (this.el.flagmode) {
-            this.el.flagmode.title = t.flagModeTitle;
-            this.el.flagmode.setAttribute('aria-label', t.flagModeTitle);
-        }
-        if (this.el['btn-home']) {
-            this.el['btn-home'].title = t.home;
-            this.el['btn-home'].setAttribute('aria-label', t.home);
-        }
-        if (this.el['mute-btn']) {
-            this.el['mute-btn'].title = t.sound;
-            this.el['mute-btn'].setAttribute('aria-label', t.sound);
-        }
-
-        for (const d of ['easy', 'medium', 'hard']) {
-            const btn = document.querySelector(`[data-diff="${d}"]`);
-            if (btn) btn.textContent = t[d];
         }
 
         this.updateFlagModeButton();
@@ -935,7 +911,8 @@ class MinesweeperGame {
 /* ────────────────────────── boot ────────────────────────── */
 
 onReady(() => {
-    const game = new MinesweeperGame();
+    const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
+    const game = new MinesweeperGame({ i18nBinder });
     window.msGame = game; // 调试/测试句柄
     // 初始静音按钮状态
     const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;

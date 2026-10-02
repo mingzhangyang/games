@@ -24,7 +24,7 @@
     <meta name="twitter:title" content="电路谜题 Circuit — Light It Up">
     <meta name="twitter:description" content="Flip switches, route current, light every bulb.">
     <meta name="twitter:image" content="assets/seo/og-circuit.svg">
-    <title>电路谜题 Circuit — Light It Up</title>
+    <title data-i18n="pageTitle">电路谜题 Circuit — Light It Up</title>
     <!-- registry:end head -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a1230'/%3E%3Ccircle cx='32' cy='30' r='12' fill='none' stroke='%23ffc94d' stroke-width='3'/%3E%3Cpath d='M25 23l14 14M39 23L25 37' stroke='%23ffc94d' stroke-width='2.5'/%3E%3Cpath d='M32 46v8M22 54h20' stroke='%23ffc94d' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
@@ -49,7 +49,7 @@
                 </div>
             </div>
             <div class="cc-topbar-actions game-topbar-group">
-                <button class="cc-icon-btn game-icon-btn" id="cc-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button class="cc-icon-btn game-icon-btn" id="cc-reset-btn" data-i18n-title="resetTitle" data-i18n-label="resetTitle" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
                 <button data-chrome="stats" type="button" class="cc-icon-btn game-icon-btn cc-stats-btn game-stats-btn" id="ccStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="ccStatsDrawer"></button>
                 <button type="button" class="cc-icon-btn game-icon-btn" id="cc-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
             </div>
@@ -63,19 +63,19 @@
 
             <!-- 开始界面 -->
             <div class="cc-overlay game-overlay game-overlay--menu" id="cc-start">
-                <h1 class="cc-title" id="cc-title">Circuit</h1>
-                <p class="cc-subtitle" id="cc-subtitle">Switch · Wire · Light</p>
+                <h1 class="cc-title" id="cc-title" data-i18n="title">Circuit</h1>
+                <p class="cc-subtitle" id="cc-subtitle" data-i18n="subtitle">Switch · Wire · Light</p>
                 <div class="cc-hero">💡</div>
-                <p class="cc-howto" id="cc-howto"></p>
+                <p class="cc-howto" id="cc-howto" data-i18n="howto"></p>
                 <div class="cc-mode-row">
-                    <button class="cc-mode" id="cc-btn-levels">🧩 Levels</button>
-                    <button class="cc-mode cc-mode-daily" id="cc-btn-daily">📅 Daily</button>
+                    <button class="cc-mode" id="cc-btn-levels" data-i18n="playLevels">🧩 Levels</button>
+                    <button class="cc-mode cc-mode-daily" id="cc-btn-daily" data-i18n="playDaily">📅 Daily</button>
                 </div>
-                <p class="cc-level-label" id="cc-level-label">Select level</p>
+                <p class="cc-level-label" id="cc-level-label" data-i18n="levelSelect">Select level</p>
                 <div class="cc-level-grid" id="cc-level-grid"></div>
                 <p class="cc-daily-best" id="cc-daily-best"></p>
                 <div class="cc-start-footer">
-                    <button class="cc-icon-btn game-icon-btn" id="cc-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                    <button class="cc-icon-btn game-icon-btn" id="cc-start-mute" data-i18n-label="sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                 </div>
             </div>
 
@@ -85,9 +85,9 @@
                     <h2 class="cc-card-title" id="cc-clear-stars">⭐⭐⭐</h2>
                     <div class="cc-card-line" id="cc-clear-line">Moves 0 · Par 0</div>
                     <div class="cc-btn-row">
-                        <button class="cc-btn cc-btn-primary game-btn" id="cc-btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/></svg><span>Next</span></button>
-                        <button class="cc-btn game-btn" id="cc-btn-replay"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Retry</span></button>
-                        <button class="cc-btn cc-btn-ghost game-btn" id="cc-btn-menu1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
+                        <button class="cc-btn cc-btn-primary game-btn" id="cc-btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/></svg><span data-i18n="next">Next</span></button>
+                        <button class="cc-btn game-btn" id="cc-btn-replay"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span data-i18n="retry">Retry</span></button>
+                        <button class="cc-btn cc-btn-ghost game-btn" id="cc-btn-menu1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span data-i18n="menu">Home</span></button>
                     </div>
                 </div>
             </div>
@@ -99,29 +99,29 @@
                 <div class="cc-over-sub" id="cc-over-sub"></div>
                 <div class="cc-btn-row">
                     <button class="cc-btn game-btn" id="cc-btn-copy"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg><span>Copy</span></button>
-                    <button class="cc-btn cc-btn-ghost game-btn" id="cc-btn-menu2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
+                    <button class="cc-btn cc-btn-ghost game-btn" id="cc-btn-menu2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span data-i18n="menu">Home</span></button>
                 </div>
                 <div class="cc-lb">
-                    <div class="cc-lb-title" id="cc-lb-title">🏆 Global · Today's Puzzle</div>
+                    <div class="cc-lb-title" id="cc-lb-title">🏆 <span data-i18n="leaderboard">Global · Today's Puzzle</span></div>
                     <div class="cc-lb-list" id="cc-lb-list"></div>
                     <div class="cc-lb-status" id="cc-lb-status"></div>
                     <div class="cc-username-row">
-                        <label class="cc-username-label" for="cc-username" id="cc-username-label">Username</label>
-                        <input class="cc-username" id="cc-username" maxlength="20" autocomplete="off">
+                        <label class="cc-username-label" for="cc-username" id="cc-username-label" data-i18n="usernameLabel">Username</label>
+                        <input class="cc-username" id="cc-username" maxlength="20" autocomplete="off" data-i18n-placeholder="usernameLabel">
                     </div>
                 </div>
-                <button class="cc-btn cc-btn-primary game-btn" id="cc-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Again</span></button>
+                <button class="cc-btn cc-btn-primary game-btn" id="cc-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span data-i18n="again">Again</span></button>
             </div>
         </div>
 
             <aside class="cc-sidebar game-sidebar">
             <div id="ccStatsPanels">
                 <div class="cc-side-card game-side-card">
-                    <div class="cc-side-title game-side-title" id="cc-side-howto-title"></div>
-                    <p class="cc-side-text game-side-text" id="cc-side-howto"></p>
+                    <div class="cc-side-title game-side-title" id="cc-side-howto-title">📖 <span data-i18n="sideHowTo">How to play</span></div>
+                    <p class="cc-side-text game-side-text" id="cc-side-howto" data-i18n="howto"></p>
                 </div>
                 <div class="cc-side-card game-side-card">
-                    <div class="cc-side-title game-side-title" id="cc-side-records-title"></div>
+                    <div class="cc-side-title game-side-title" id="cc-side-records-title">🏅 <span data-i18n="sideRecords">Records</span></div>
                     <div class="cc-side-records" id="cc-side-records"></div>
                 </div>
             </div>
@@ -132,7 +132,7 @@
     </main>
 
     <footer class="cc-footer game-footer">
-        <p class="cc-footer-hint game-footer-hint" id="cc-hint"></p>
+        <p class="cc-footer-hint game-footer-hint" id="cc-hint" data-i18n="hint"></p>
         <div class="cc-footer-actions game-footer-actions game-topbar-group">
             <a class="cc-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
             <button type="button" class="cc-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="ccMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
@@ -144,8 +144,8 @@
         <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="ccStatsDrawerTitle">
             <div class="game-drawer-handle"></div>
             <div class="game-drawer-head">
-                <span class="game-drawer-title" id="ccStatsDrawerTitle"></span>
-                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="ccStatsClose" aria-label="Close"></button>
+                <span class="game-drawer-title" id="ccStatsDrawerTitle" data-i18n="stats">Stats</span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="ccStatsClose" data-i18n-title="close" data-i18n-label="close" aria-label="Close"></button>
             </div>
             <div class="game-drawer-body" id="ccStatsDrawerBody"></div>
         </div>

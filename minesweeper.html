@@ -24,7 +24,7 @@
     <meta name="twitter:title" content="Minesweeper 扫雷 — Classic Logic Puzzle">
     <meta name="twitter:description" content="The timeless mine-hunting puzzle. Clear the board without detonating a single mine.">
     <meta name="twitter:image" content="assets/seo/og-minesweeper.svg">
-    <title>Minesweeper — Classic Logic Puzzle</title>
+    <title data-i18n="pageTitle">Minesweeper — Classic Logic Puzzle</title>
     <!-- registry:end head -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23151a33'/%3E%3Ccircle cx='30' cy='34' r='14' fill='%23242c52'/%3E%3Ccircle cx='34' cy='30' r='15' fill='%23e8ecff'/%3E%3Ccircle cx='34' cy='30' r='9' fill='%2340b8ff'/%3E%3Ccircle cx='34' cy='30' r='4' fill='%23ff4d5e'/%3E%3Cpath d='M34 8v8M48 16l-6 6M20 16l6 6' stroke='%23e8ecff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
@@ -44,12 +44,12 @@
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="ms-topbar-center game-topbar-center">
-                <div class="ms-counter" id="ms-counter-mines" title="Mines left">
+                <div class="ms-counter" id="ms-counter-mines" data-i18n-title="minesLeft" title="Mines left">
                     <span class="ms-counter-icon">💣</span>
                     <span class="ms-counter-value" id="ms-mines">010</span>
                 </div>
-                <button class="ms-face" id="ms-face" title="New game">🙂</button>
-                <div class="ms-counter" id="ms-counter-timer" title="Time">
+                <button class="ms-face" id="ms-face" data-i18n-title="newGame" title="New game">🙂</button>
+                <div class="ms-counter" id="ms-counter-timer" data-i18n-title="timeElapsed" title="Time">
                     <span class="ms-counter-icon">⏱️</span>
                     <span class="ms-counter-value" id="ms-timer">000</span>
                 </div>
@@ -66,15 +66,15 @@
             <button class="ms-diff active" data-diff="easy" id="ms-diff-easy">Easy</button>
             <button class="ms-diff" data-diff="medium" id="ms-diff-medium">Medium</button>
             <button class="ms-diff" data-diff="hard" id="ms-diff-hard">Expert</button>
-            <button class="ms-icon-btn ms-flagmode game-icon-btn" id="ms-flagmode" title="Flag mode" aria-label="Flag mode"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5.5 21V3.5"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.5 3.5H17l-2.6 4L17 11.5H5.5z"/></svg></button>
+            <button class="ms-icon-btn ms-flagmode game-icon-btn" id="ms-flagmode" data-i18n-title="flagModeTitle" data-i18n-label="flagModeTitle" title="Flag mode" aria-label="Flag mode"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5.5 21V3.5"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.5 3.5H17l-2.6 4L17 11.5H5.5z"/></svg></button>
         </div>
 
         <!-- 棋盘 -->
         <div class="ms-board-wrap">
-            <div class="ms-board" id="ms-board" role="grid" aria-label="Minesweeper board"></div>
+            <div class="ms-board" id="ms-board" role="grid" data-i18n-label="boardLabel" aria-label="Minesweeper board"></div>
             <div class="ms-pause-overlay hidden" id="ms-pause-overlay">
-                <div class="ms-pause-title" id="ms-pause-title">已暂停</div>
-                <div class="ms-pause-hint" id="ms-pause-hint">计时已停止 — 点击任意处继续</div>
+                <div class="ms-pause-title" id="ms-pause-title" data-i18n="pausedTitle">已暂停</div>
+                <div class="ms-pause-hint" id="ms-pause-hint" data-i18n="pausedHint">计时已停止 — 点击任意处继续</div>
             </div>
         </div>
 
@@ -87,32 +87,32 @@
                 <div class="ms-result-time" id="ms-result-time">0s</div>
                 <div class="ms-result-best" id="ms-result-best"></div>
                 <div class="ms-lb">
-                    <div class="ms-lb-title" id="ms-lb-title">🏆 Fastest Clears</div>
+                    <div class="ms-lb-title" id="ms-lb-title">🏆 <span data-i18n="leaderboard">Fastest Clears</span></div>
                     <div class="ms-lb-list" id="ms-lb-list"></div>
                     <div class="ms-lb-status" id="ms-lb-status"></div>
                     <div class="ms-username-row">
-                        <label class="ms-username-label" for="ms-username" id="ms-username-label">Username</label>
-                        <input class="ms-username" id="ms-username" maxlength="20" autocomplete="off">
+                        <label class="ms-username-label" for="ms-username" id="ms-username-label" data-i18n="usernameLabel">Username</label>
+                        <input class="ms-username" id="ms-username" maxlength="20" autocomplete="off" data-i18n-placeholder="usernameLabel">
                     </div>
                 </div>
                 <div class="ms-btn-row">
-                    <button class="ms-btn ms-btn-primary" id="ms-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Again</span></button>
+                    <button class="ms-btn ms-btn-primary" id="ms-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span data-i18n="again">Again</span></button>
                     <button class="ms-btn" id="ms-btn-copy"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg><span>Copy</span></button>
-                    <button class="ms-btn ms-btn-ghost" id="ms-btn-close"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span>Close</span></button>
+                    <button class="ms-btn ms-btn-ghost" id="ms-btn-close"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span data-i18n="close">Close</span></button>
                 </div>
             </div>
         </div>
 
         <!-- 开始界面 -->
         <div class="ms-start" id="ms-start">
-            <h1 class="ms-title" id="ms-title">Minesweeper</h1>
-            <p class="ms-subtitle" id="ms-subtitle">Logic · Deduction · Nerves of steel</p>
+            <h1 class="ms-title" id="ms-title" data-i18n="title">Minesweeper</h1>
+            <p class="ms-subtitle" id="ms-subtitle" data-i18n="subtitle">Logic · Deduction · Nerves of steel</p>
             <div class="ms-hero">💣</div>
-            <p class="ms-howto" id="ms-howto"></p>
-            <button class="ms-btn ms-btn-primary ms-btn-big" id="ms-btn-play"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="5.5"/><path d="M12 4.5v3M12 18.5v3M3.5 13h3M17.5 13h3M6.3 7.3l2.1 2.1M17.7 7.3l-2.1 2.1M6.3 18.7l2.1-2.1M17.7 18.7l-2.1-2.1"/></svg><span>Play</span></button>
+            <p class="ms-howto" id="ms-howto" data-i18n="howto"></p>
+            <button class="ms-btn ms-btn-primary ms-btn-big" id="ms-btn-play"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="5.5"/><path d="M12 4.5v3M12 18.5v3M3.5 13h3M17.5 13h3M6.3 7.3l2.1 2.1M17.7 7.3l-2.1 2.1M6.3 18.7l2.1-2.1M17.7 18.7l-2.1-2.1"/></svg><span data-i18n="play">Play</span></button>
             <div class="ms-best-grid" id="ms-best-grid"></div>
             <nav class="more-games">
-                <div class="more-games-title">🎮 More Games</div>
+                <div class="more-games-title">🎮 <span data-i18n="moreGames">More Games</span></div>
                 <div class="more-games-links">
               <a href="math-rain.html">🔢 数字雨</a>
               <a href="tetris.html">🟦 俄罗斯方块</a>
@@ -128,7 +128,7 @@
             </nav>
             <div class="ms-start-footer">
                 <!-- Home is provided by the persistent footer; keep only menu-local sound here. -->
-                <button class="ms-icon-btn game-icon-btn" id="ms-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                <button class="ms-icon-btn game-icon-btn" id="ms-start-mute" data-i18n-label="sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
             </div>
         </div>
 

@@ -24,7 +24,7 @@
     <meta name="twitter:title" content="拔萝卜 Carrot Pull — Garden Rhythm Game">
     <meta name="twitter:description" content="Pull in rhythm, keep your streak, and harvest six giant carrots.">
     <meta name="twitter:image" content="assets/seo/og-carrot-pull.svg">
-    <title>拔萝卜 Carrot Pull — Garden Rhythm Game</title>
+    <title data-i18n="pageTitle">拔萝卜 Carrot Pull — Garden Rhythm Game</title>
     <!-- registry:end head -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173c3e'/%3E%3Cpath d='M32 38c-6-3-9-8-8-14 5 1 9 4 10 10 1-7 5-11 11-12 1 7-3 13-10 16v12h-6V38Z' fill='%235fae57'/%3E%3Cpath d='M26 34c8-1 13 2 13 9 0 7-5 13-11 13s-10-6-10-13c0-5 3-8 8-9Z' fill='%23f08a3c'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
@@ -44,17 +44,17 @@
             </div>
             <div class="cp-topbar-center game-topbar-center">
                 <div class="cp-brand">
-                    <span class="cp-brand-zh" id="cp-brand-zh">拔萝卜</span>
+                    <span class="cp-brand-zh" id="cp-brand-zh" data-i18n="brand">拔萝卜</span>
                     <span class="cp-brand-en">CARROT PULL</span>
                 </div>
-                <div class="cp-hud-row" id="cp-hud-row" aria-label="Game status">
-                    <span class="cp-chip"><span id="cp-round-label">Round</span><b id="cp-round">0/6</b></span>
-                    <span class="cp-chip"><span id="cp-score-label">Score</span><b id="cp-score">0</b></span>
-                    <span class="cp-chip cp-chip-time"><span id="cp-time-label">Time</span><b id="cp-time">45</b></span>
+                <div class="cp-hud-row" id="cp-hud-row" data-i18n-label="hudAria" aria-label="Game status">
+                    <span class="cp-chip"><span id="cp-round-label" data-i18n="round">Round</span><b id="cp-round">0/6</b></span>
+                    <span class="cp-chip"><span id="cp-score-label" data-i18n="score">Score</span><b id="cp-score">0</b></span>
+                    <span class="cp-chip cp-chip-time"><span id="cp-time-label" data-i18n="time">Time</span><b id="cp-time">45</b></span>
                 </div>
             </div>
             <div class="cp-topbar-actions game-topbar-group">
-                <button class="cp-icon-btn game-icon-btn" id="cp-reset-btn" title="Reset" aria-label="Reset">
+                <button class="cp-icon-btn game-icon-btn" id="cp-reset-btn" data-i18n-title="reset" data-i18n-label="reset" title="Reset" aria-label="Reset">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg>
                 </button>
                 <button data-chrome="stats" type="button" class="cp-icon-btn game-icon-btn cp-stats-btn game-stats-btn" id="cpStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="cpStatsDrawer"></button>
@@ -64,12 +64,12 @@
 
         <main class="cp-main game-main">
             <section class="cp-stage game-stage game-stage--fill" id="cp-stage" data-art-state="loading" aria-labelledby="cp-scene-heading">
-                <h1 id="cp-scene-heading" class="sr-only">拔萝卜 Carrot Pull</h1>
+                <h1 id="cp-scene-heading" class="sr-only" data-i18n="heading">拔萝卜 Carrot Pull</h1>
                 <div class="cp-stage-card">
                     <div class="cp-scene-wrap">
                         <svg class="cp-scene" id="cp-scene" viewBox="0 0 560 720" role="img" aria-labelledby="cp-scene-title cp-scene-desc" xmlns="http://www.w3.org/2000/svg">
-                            <title id="cp-scene-title">A laughing girl in a straw hat and a happy mole pull a giant carrot out of a garden bed</title>
-                            <desc id="cp-scene-desc">A sunny garden with rolling hills, a farmhouse, a wooden fence and raised vegetable beds. A girl in teal overalls and yellow boots leans back holding the carrot leaves while a mole pops out of the soil to help.</desc>
+                            <title id="cp-scene-title" data-i18n="sceneTitle">A laughing girl in a straw hat and a happy mole pull a giant carrot out of a garden bed</title>
+                            <desc id="cp-scene-desc" data-i18n="sceneDescription">A sunny garden with rolling hills, a farmhouse, a wooden fence and raised vegetable beds. A girl in teal overalls and yellow boots leans back holding the carrot leaves while a mole pops out of the soil to help.</desc>
 
                             <g id="cp-art-production" class="cp-art-production" data-art-production visibility="visible">
                                 <image data-art-preview x="0" y="0" width="560" height="720" preserveAspectRatio="none" aria-hidden="true"/>
@@ -115,7 +115,7 @@
                             </g>
 
                             <g id="cp-fallback-scene" aria-hidden="true" visibility="hidden"></g>
-                            <path id="cp-carrot-hit" d="M200 300h300v350H200z" fill="#fff" opacity="0" aria-label="Pull the carrot"/>
+                            <path id="cp-carrot-hit" d="M200 300h300v350H200z" fill="#fff" opacity="0" data-i18n-label="pullAria" aria-label="Pull the carrot"/>
                         </svg>
 
                         <div class="cp-toast game-toast" id="cp-toast" role="status" aria-live="polite"></div>
@@ -125,15 +125,15 @@
                                 <img class="cp-mini-carrot" data-art-ui="carrot-mark" alt="">
                                 <span class="cp-mini-spark" aria-hidden="true"></span>
                             </div>
-                            <p class="cp-kicker" id="cp-start-kicker">GARDEN RHYTHM</p>
-                            <h2 class="cp-overlay-title" id="cp-start-title">拔萝卜</h2>
-                            <p class="cp-overlay-copy" id="cp-start-copy">看准绿色甜蜜区，按下按钮用力一拔！和鼹鼠一起收获 6 根大萝卜。</p>
+                            <p class="cp-kicker" id="cp-start-kicker" data-i18n="kicker">GARDEN RHYTHM</p>
+                            <h2 class="cp-overlay-title" id="cp-start-title" data-i18n="startTitle">拔萝卜</h2>
+                            <p class="cp-overlay-copy" id="cp-start-copy" data-i18n="startCopy">看准绿色甜蜜区，按下按钮用力一拔！和鼹鼠一起收获 6 根大萝卜。</p>
                             <div class="cp-howto-row">
-                                <span class="cp-howto-chip"><b>1</b><span id="cp-howto-one">看准指针</span></span>
-                                <span class="cp-howto-chip"><b>2</b><span id="cp-howto-two">落在甜蜜区</span></span>
-                                <span class="cp-howto-chip"><b>3</b><span id="cp-howto-three">连续拔出</span></span>
+                                <span class="cp-howto-chip"><b>1</b><span id="cp-howto-one" data-i18n="howtoOne">看准指针</span></span>
+                                <span class="cp-howto-chip"><b>2</b><span id="cp-howto-two" data-i18n="howtoTwo">落在甜蜜区</span></span>
+                                <span class="cp-howto-chip"><b>3</b><span id="cp-howto-three" data-i18n="howtoThree">连续拔出</span></span>
                             </div>
-                            <button class="cp-primary game-btn" id="cp-start-btn" type="button" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span id="cp-start-label">开始拔萝卜</span></button>
+                            <button class="cp-primary game-btn" id="cp-start-btn" type="button" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span id="cp-start-label" data-i18n="startLabel">开始拔萝卜</span></button>
                             <p class="cp-key-hint" id="cp-key-hint">Space / ↑ 也可以用力拔</p>
                         </div>
 
@@ -141,10 +141,10 @@
                             <div class="cp-result-stamp" id="cp-result-stamp">HARVESTED!</div>
                             <h2 class="cp-overlay-title" id="cp-result-title">萝卜大丰收！</h2>
                             <p class="cp-overlay-copy" id="cp-result-copy">你和鼹鼠把菜园搬空啦。</p>
-                            <div class="cp-result-score"><span id="cp-result-score-label">Score</span><b id="cp-final-score">0</b></div>
+                            <div class="cp-result-score"><span id="cp-result-score-label" data-i18n="finalScore">Score</span><b id="cp-final-score">0</b></div>
                             <div class="cp-result-actions">
-                                <button class="cp-primary game-btn" id="cp-again-btn" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span id="cp-again-label">再拔一次</span></button>
-                                <button class="cp-secondary game-btn" id="cp-menu-btn" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span id="cp-menu-label">回到菜单</span></button>
+                                <button class="cp-primary game-btn" id="cp-again-btn" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span id="cp-again-label" data-i18n="again">再拔一次</span></button>
+                                <button class="cp-secondary game-btn" id="cp-menu-btn" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span id="cp-menu-label" data-i18n="menu">回到菜单</span></button>
                             </div>
                         </div>
                     </div>
@@ -155,8 +155,8 @@
                                 <span class="cp-status-dot" id="cp-status-dot" aria-hidden="true"></span>
                                 <span id="cp-status" aria-live="polite">找准时机，准备发力！</span>
                             </div>
-                            <div class="cp-meter-labels"><span id="cp-meter-label">拔萝卜节奏</span><span id="cp-sweet-label">甜蜜区</span></div>
-                            <div class="cp-meter" id="cp-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-label="Pull timing">
+                            <div class="cp-meter-labels"><span id="cp-meter-label" data-i18n="meterLabel">拔萝卜节奏</span><span id="cp-sweet-label" data-i18n="sweetLabel">甜蜜区</span></div>
+                            <div class="cp-meter" id="cp-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" data-i18n-label="meterAria" aria-label="Pull timing">
                                 <span class="cp-meter-track"><span class="cp-sweet-zone" id="cp-sweet-zone"></span><span class="cp-meter-needle" id="cp-meter-needle"><i></i></span></span>
                             </div>
                         </div>
@@ -165,7 +165,7 @@
                                 <path d="M16 27V7M16 7l-7 7M16 7l7 7"/>
                                 <path d="M7 25h18" opacity=".65"/>
                             </svg>
-                            <span class="cp-pull-text" id="cp-pull-label">用力拔！</span>
+                            <span class="cp-pull-text" id="cp-pull-label" data-i18n="pullLabel">用力拔！</span>
                         </button>
                     </div>
                 </div>
@@ -174,19 +174,19 @@
             <aside class="cp-sidebar game-sidebar">
                 <div id="cpStatsPanels">
                     <div class="cp-side-card game-side-card">
-                        <div class="cp-side-title game-side-title" id="cp-side-howto-title">怎么玩</div>
-                        <p class="cp-side-text game-side-text" id="cp-side-howto">按下“用力拔！”时，让指针落进绿色甜蜜区。连续命中会增加连击分，失误不会结束游戏，但会打断连击。</p>
+                        <div class="cp-side-title game-side-title" id="cp-side-howto-title" data-i18n="sideHowtoTitle">怎么玩</div>
+                        <p class="cp-side-text game-side-text" id="cp-side-howto" data-i18n="sideHowto">按下“用力拔！”时，让指针落进绿色甜蜜区。连续命中会增加连击分，失误不会结束游戏，但会打断连击。</p>
                     </div>
                     <div class="cp-side-card game-side-card">
-                        <div class="cp-side-title game-side-title" id="cp-side-progress-title">今日菜园</div>
-                        <div class="cp-progress-dots" id="cp-progress-dots" aria-label="Carrot harvest progress"></div>
-                        <div class="cp-side-row game-side-row"><span id="cp-side-score-label">本局得分</span><b id="cp-side-score">0</b></div>
-                        <div class="cp-side-row game-side-row"><span id="cp-side-best-label">最佳记录</span><b id="cp-side-best">0</b></div>
+                        <div class="cp-side-title game-side-title" id="cp-side-progress-title" data-i18n="sideProgressTitle">今日菜园</div>
+                        <div class="cp-progress-dots" id="cp-progress-dots" data-i18n-label="progressAria" aria-label="Carrot harvest progress"></div>
+                        <div class="cp-side-row game-side-row"><span id="cp-side-score-label" data-i18n="sideScore">本局得分</span><b id="cp-side-score">0</b></div>
+                        <div class="cp-side-row game-side-row"><span id="cp-side-best-label" data-i18n="sideBest">最佳记录</span><b id="cp-side-best">0</b></div>
                     </div>
                 </div>
                 <div class="cp-side-card game-side-card cp-tip-card">
-                    <div class="cp-side-title game-side-title" id="cp-side-tip-title">小鼹鼠提示</div>
-                    <p class="cp-side-text game-side-text" id="cp-side-tip">不要急着乱拔。把节奏踩在绿色区域，萝卜会自己松土。</p>
+                    <div class="cp-side-title game-side-title" id="cp-side-tip-title" data-i18n="sideTipTitle">小鼹鼠提示</div>
+                    <p class="cp-side-text game-side-text" id="cp-side-tip" data-i18n="sideTip">不要急着乱拔。把节奏踩在绿色区域，萝卜会自己松土。</p>
                 </div>
                 <nav class="more-games game-side-card" id="cpSideMore"></nav>
             </aside>

@@ -2,6 +2,8 @@ import { makeText } from '../../platform/i18n.js';
 
 export const LANGUAGES = makeText({
     en: {
+        pageTitle: 'Tetris - Cool Edition',
+        heading: 'Tetris',
         title: 'Tetris - Cool Edition',
         themeToggle: 'Theme',
         stats: 'Stats',
@@ -18,6 +20,10 @@ export const LANGUAGES = makeText({
         loadingScores: 'Loading...',
         noScores: 'No scores yet',
         failedToLoad: 'Failed to load scores',
+        usernameLabel: 'Username',
+        usernameTip: 'To change username, enter and press Enter',
+        localRecord: 'Local Record',
+        showingLocalScores: 'Showing local scores',
         next: 'Next Piece',
         start: 'Start',
         pause: 'Pause',
@@ -28,6 +34,8 @@ export const LANGUAGES = makeText({
         hint: 'Arrows move · Space hard drop · P pause · M mute',
     },
     zh: {
+        pageTitle: '俄罗斯方块 - 酷炫版',
+        heading: '俄罗斯方块',
         title: '俄罗斯方块 - 酷炫版',
         themeToggle: '切换主题',
         stats: '统计与排名',
@@ -44,6 +52,10 @@ export const LANGUAGES = makeText({
         loadingScores: '加载中...',
         noScores: '暂无分数',
         failedToLoad: '加载失败',
+        usernameLabel: '用户名',
+        usernameTip: '如需更改用户名，请输入后回车',
+        localRecord: '本地记录',
+        showingLocalScores: '显示本地分数',
         next: '下一个方块',
         start: '开始游戏',
         pause: '暂停',

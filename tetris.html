@@ -24,7 +24,7 @@
     <meta name="twitter:title" content="Tetris - Cool Edition">
     <meta name="twitter:description" content="Clear lines with smooth controls on desktop and mobile.">
     <meta name="twitter:image" content="assets/seo/og-tetris.svg">
-    <title>Tetris - Cool edition</title>
+    <title data-i18n="pageTitle">Tetris - Cool Edition</title>
     <!-- registry:end head -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Crect x='14' y='14' width='11' height='11' fill='white'/%3E%3Crect x='26' y='14' width='11' height='11' fill='white' opacity='0.85'/%3E%3Crect x='26' y='26' width='11' height='11' fill='white'/%3E%3Crect x='38' y='26' width='11' height='11' fill='white' opacity='0.7'/%3E%3C/svg%3E">
         <link rel="manifest" href="/manifest.json">
@@ -46,22 +46,22 @@
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="tt-topbar-center game-topbar-center">
-                <h1 class="sr-only">Tetris</h1>
+                <h1 class="sr-only" data-i18n="heading">Tetris</h1>
                 <div class="game-title-pill">
                     <div class="game-hud-box">
-                        <span class="hud-label" id="scoreHudLabel">Score</span>
+                        <span class="hud-label" id="scoreHudLabel" data-i18n="score">Score</span>
                         <span class="hud-value" id="scoreHudValue">0</span>
                     </div>
                     <div class="hud-sub">
-                        <span id="scoreHudBestLabel">Best</span><b id="scoreHudBest">0</b>
-                        <span id="scoreHudLevelLabel">Lv</span><b id="scoreHudLevel">1</b>
+                        <span id="scoreHudBestLabel" data-i18n="best">Best</span><b id="scoreHudBest">0</b>
+                        <span id="scoreHudLevelLabel" data-i18n="lv">Lv</span><b id="scoreHudLevel">1</b>
                     </div>
                 </div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
             <div class="tt-topbar-actions game-topbar-group">
                 <button type="button" class="icon-btn game-icon-btn theme-toggle" id="themeToggle" aria-pressed="false"></button>
-                <button data-chrome="stats" type="button" class="icon-btn game-icon-btn game-stats-btn" id="statsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="statsDrawer"></button>
+                <button data-chrome="stats" type="button" class="icon-btn game-icon-btn game-stats-btn" id="statsToggle" data-i18n-title="stats" data-i18n-label="stats" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="statsDrawer"></button>
                 <button type="button" class="tt-icon-btn game-icon-btn" id="tt-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
             </div>
         </header>
@@ -73,9 +73,9 @@
             <canvas id="lineClearCanvas" width="400" height="800"></canvas>
             <div class="game-over-overlay" id="gameOverOverlay">
                 <div class="game-over-content">
-                    <h2 id="gameOverTitle"></h2>
-                    <p id="finalScoreLabel"><span id="finalScore">0</span></p>
-                    <button class="btn" id="restartBtn"></button>
+                    <h2 id="gameOverTitle" data-i18n="gameOver"></h2>
+                    <p id="finalScoreLabel"><span id="finalScoreLabelText" data-i18n="finalScore">Final Score: </span><span id="finalScore">0</span></p>
+                    <button class="btn" id="restartBtn" data-i18n="restart"></button>
                 </div>
             </div>
             <div class="combo-display" id="comboDisplay"></div>
@@ -87,51 +87,51 @@
                  是对局中要用的按钮，绝不能落到滚动区之外。排在计分板之后时，
                  1280×900 下 Pause/Restart 正好被截在可视区外面。 -->
             <div class="info-box controls">
-                <button class="btn" id="startBtn"></button>
-                <button class="btn" id="pauseBtn"></button>
-                <button class="btn" id="restartGameBtn"></button>
+                <button class="btn" id="startBtn" data-i18n="start"></button>
+                <button class="btn" id="pauseBtn" data-i18n="pause"></button>
+                <button class="btn" id="restartGameBtn" data-i18n="restart"></button>
             </div>
             <div id="statsPanels">
             <div class="info-box" style="margin-bottom:8px;">
                 <div class="info-row">
-                    <span class="info-label" id="usernameLabel"></span>
+                    <span class="info-label" id="usernameLabel" data-i18n="usernameLabel"></span>
                     <input id="usernameInput" type="text" maxlength="20" />
                 </div>
-                <div id="usernameTip"></div>
+                <div id="usernameTip" data-i18n="usernameTip"></div>
             </div>
 
             <div class="info-box">
                 <div class="info-row">
-                    <span class="info-label" id="levelLabel"></span>
+                    <span class="info-label" id="levelLabel" data-i18n="level"></span>
                     <span class="score-display" id="level">1</span>
                 </div>
             </div>
 
             <div class="info-box">
                 <div class="info-row">
-                    <span class="info-label" id="linesLabel"></span>
+                    <span class="info-label" id="linesLabel" data-i18n="lines"></span>
                     <span class="score-display" id="lines">0</span>
                 </div>
             </div>
 
             <div class="info-box">
                 <div class="info-row">
-                    <span class="info-label" id="comboLabel"></span>
+                    <span class="info-label" id="comboLabel" data-i18n="combo"></span>
                     <span class="score-display" id="combo">0</span>
                 </div>
             </div>
 
             <div class="info-box">
                 <div class="info-row" style="align-items:center;">
-                    <span class="info-label" id="nextLabel" style="margin-right:18px;"></span>
+                    <span class="info-label" id="nextLabel" data-i18n="next" style="margin-right:18px;"></span>
                     <canvas id="nextPiece" class="next-piece" width="100" height="100" style="margin:0;"></canvas>
                 </div>
             </div>
 
             <div class="global-scores-panel game-side-card" id="globalScoresPanel">
-                <div class="global-scores-header" id="globalScoresHeader">Global Top 5</div>
+                <div class="global-scores-header" id="globalScoresHeader" data-i18n="globalScoresHeader">Global Top 5</div>
                 <div class="global-scores-list" id="globalScoresList">
-                    <div class="loading-scores" id="loadingScores">Loading...</div>
+                    <div class="loading-scores" id="loadingScores" data-i18n="loadingScores">Loading...</div>
                 </div>
             </div>
             </div>
@@ -143,7 +143,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
     <footer class="tt-footer game-footer">
-        <p class="tt-footer-hint game-footer-hint" id="tt-hint"></p>
+        <p class="tt-footer-hint game-footer-hint" id="tt-hint" data-i18n="hint"></p>
         <div class="tt-footer-actions game-footer-actions game-topbar-group">
             <a class="tt-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
             <button type="button" class="tt-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="ttMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
@@ -157,20 +157,20 @@
         <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="statsDrawerTitle">
             <div class="game-drawer-handle"></div>
             <div class="game-drawer-head">
-                <span class="game-drawer-title" id="statsDrawerTitle">Stats</span>
-                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="statsClose" aria-label="Close"></button>
+                <span class="game-drawer-title" id="statsDrawerTitle" data-i18n="stats">Stats</span>
+                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="statsClose" data-i18n-title="close" data-i18n-label="close" aria-label="Close"></button>
             </div>
             <div class="game-drawer-body" id="statsDrawerBody"></div>
         </div>
     </div>
 
-    <div class="level-up-effect" id="levelUpEffect"></div>
+    <div class="level-up-effect" id="levelUpEffect" data-i18n="levelUp"></div>
 
     <!-- Mobile bottom controls -->
     <div class="mobile-controls" id="mobileControls">
-        <button class="btn" id="mobileStartBtn"></button>
-        <button class="btn" id="mobilePauseBtn"></button>
-        <button class="btn" id="mobileRestartBtn"></button>
+        <button class="btn" id="mobileStartBtn" data-i18n="start"></button>
+        <button class="btn" id="mobilePauseBtn" data-i18n="pause"></button>
+        <button class="btn" id="mobileRestartBtn" data-i18n="restart"></button>
     </div>
 
         <!-- registry:begin seo-script -->

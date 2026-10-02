@@ -37,6 +37,7 @@ function getUserLang() {
 
 let currentLang = getUserLang();
 let TEXT = LANGUAGES[currentLang] || LANGUAGES['en'];
+let pageI18nBinder = null;
 
 function normalizeUsername(val) {
     const trimmed = String(val).trim().slice(0, 20);
@@ -121,14 +122,10 @@ function renderDrawerIcons() {
     const statsBtn = document.getElementById('statsToggle');
     if (statsBtn) {
         statsBtn.innerHTML = ICONS.stats;
-        statsBtn.setAttribute('title', TEXT.stats);
-        statsBtn.setAttribute('aria-label', TEXT.stats);
     }
     const closeBtn = document.getElementById('statsClose');
     if (closeBtn) {
         closeBtn.innerHTML = ICONS.close;
-        closeBtn.setAttribute('title', TEXT.close);
-        closeBtn.setAttribute('aria-label', TEXT.close);
     }
 }
 
@@ -173,43 +170,13 @@ function getBestScore() {
 }
 
 function setLangUI() {
-    document.documentElement.lang = currentLang;
-    document.title = TEXT.title;
-
-    // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的语言渲染入口写）
-    const ttHint = document.getElementById('tt-hint');
-    if (ttHint) ttHint.textContent = TEXT.hint;
+    pageI18nBinder?.apply(currentLang);
 
     renderThemeToggle();
     renderDrawerIcons();
-    document.getElementById('gameOverTitle').textContent = TEXT.gameOver;
-    document.getElementById('finalScoreLabel').innerHTML = TEXT.finalScore + '<span id="finalScore">0</span>';
-    document.getElementById('restartBtn').textContent = TEXT.restart;
-    // 分数已从侧栏移到顶栏 HUD（#score 这个 id 不再存在），改由 updateHud 呈现
-    setText('scoreHudLabel', TEXT.score);
-    setText('scoreHudBestLabel', TEXT.best);
-    setText('scoreHudLevelLabel', TEXT.lv);
-    setText('statsDrawerTitle', TEXT.stats);
-    document.getElementById('levelLabel').textContent = TEXT.level;
-    document.getElementById('linesLabel').textContent = TEXT.lines;
-    document.getElementById('comboLabel').textContent = TEXT.combo;
-    document.getElementById('globalScoresHeader').textContent = TEXT.globalScoresHeader;
-    document.getElementById('nextLabel').textContent = TEXT.next;
-    document.getElementById('startBtn').textContent = TEXT.start;
-    document.getElementById('pauseBtn').textContent = TEXT.pause;
-    document.getElementById('restartGameBtn').textContent = TEXT.restart;
-    document.getElementById('levelUpEffect').textContent = TEXT.levelUp;
-    // 用户名 label
-    document.getElementById('usernameLabel').textContent = currentLang === 'zh' ? '用户名' : 'Username';
-    // 用户名输入提示
-    document.getElementById('usernameTip').textContent = currentLang === 'zh' ? '如需更改用户名，请输入后回车' : 'To change username, enter and press Enter';
-    
-    // Mobile controls
-    if (document.getElementById('mobileStartBtn')) {
-        document.getElementById('mobileStartBtn').textContent = TEXT.start;
-        document.getElementById('mobilePauseBtn').textContent = TEXT.pause;
-        document.getElementById('mobileRestartBtn').textContent = TEXT.restart;
-    }
+    const pauseLabel = currentGame()?.paused ? TEXT.resume : TEXT.pause;
+    setText('pauseBtn', pauseLabel);
+    setText('mobilePauseBtn', pauseLabel);
     updateHud();
     updateMoreGames(currentLang);
 }
@@ -266,14 +233,14 @@ function showLocalScores(listElement, loadingElement) {
                 scoreItem.className = 'score-item';
                 scoreItem.innerHTML = `
                     <span class="score-rank">#${index + 1}</span>
-                    <span class="score-name">${currentLang === 'zh' ? '本地记录' : 'Local Record'}</span>
+                    <span class="score-name">${TEXT.localRecord}</span>
                     <span class="score-value">${score.score.toLocaleString()}</span>
                 `;
                 listElement.appendChild(scoreItem);
             });
             
             if (loadingElement) {
-                loadingElement.textContent = currentLang === 'zh' ? '显示本地分数' : 'Showing local scores';
+                loadingElement.textContent = TEXT.showingLocalScores;
             }
         } else {
             if (loadingElement) {
@@ -1368,7 +1335,8 @@ export function createTetrisGame() {
 }
 
 /** Bind page chrome/state that used to be registered by the legacy entry. */
-export function initTetrisPage() {
+export function initTetrisPage({ i18nBinder = null } = {}) {
+    pageI18nBinder = i18nBinder;
     drawer.init();
     setLangUI();
 
