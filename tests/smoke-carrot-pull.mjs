@@ -174,7 +174,7 @@ async function assertNormalPage() {
             mode: window.cpGame.state.mode,
             won: window.cpGame.state.won,
             resultVisible: !document.getElementById('cp-result').hidden,
-            storedBest: Number.parseInt(localStorage.getItem('cp_best_score') || '0', 10),
+            storedBest: Number.parseInt(localStorage.getItem('game:carrot-pull:v1:best') || '0', 10),
             round: window.cpGame.state.round,
         }));
         if (result.mode !== 'over' || !result.won || !result.resultVisible || result.round !== 6 || result.storedBest <= 0) {

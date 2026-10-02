@@ -164,7 +164,7 @@ const after = await page.evaluate(() => {
         atomSyms: g.atoms.map(a => a.sym).sort().join(','),
         cleared: !document.getElementById('bf-clear').classList.contains('hidden'),
         stars: document.getElementById('bf-clear-stars').textContent,
-        progress: (() => { try { return JSON.parse(localStorage.getItem('bf_progress') || '{}'); } catch (e) { return null; } })(),
+        progress: (() => { try { return JSON.parse(localStorage.getItem('game:bond-forge:v1:progress') || '{}'); } catch (e) { return null; } })(),
     };
 });
 if (sym1 !== 'H' || sym2 !== 'H') fail(`应拖出两个 H，实际 ${sym1},${sym2}`);
@@ -175,7 +175,7 @@ if (after.drags !== 2) fail(`拖拽数应为 2，got ${after.drags}`);
 if (after.cleared) fail('拼出 H₂O 后结算面板立即遮住结果');
 if (after.state !== 'clear') fail(`通关后 state 应为 clear，got ${after.state}`);
 if (after.stars !== '★★★') fail(`drags=par 应给 3 星，got "${after.stars}"`);
-if (!after.progress || !after.progress['bf-01-water']) fail('星级未写入 bf_progress');
+if (!after.progress || !after.progress['bf-01-water']) fail('星级未写入 versioned Bond Forge GameStorage');
 else if (after.progress['bf-01-water'].stars !== 3) fail(`存档星级应为 3，got ${after.progress['bf-01-water'].stars}`);
 if (errs.length) fail(`对局中 JS 运行时错误: ${errs.slice(0, 2).join(' | ')}`);
 else pass('L1 通关：先保留 H₂O 结果，再显示结算卡片 → 3 星 → 存档');
