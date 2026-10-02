@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const read = path => readFileSync(join(ROOT, path), 'utf8');
+const read = relPath => readFileSync(join(ROOT, relPath), 'utf8');
 const failures = [];
 const check = (condition, label) => {
     console.log(`${condition ? '✓' : '✗'} ${label}`);
@@ -31,8 +31,10 @@ for (const [id, source] of [
 
 check(!/storageGet\s*\(/.test(bondRuntime),
     'bond-forge: runtime has no direct private-state reads');
-check(!/storageSet\s*\(\s*PROGRESS_KEY/.test(bondRuntime),
-    'bond-forge: progress is not written through a legacy key');
+check(!/storageSet\s*\(\s*['"`]bf_progress['"`]/.test(bondRuntime),
+    'bond-forge: progress is not written through the legacy key');
+check(/BOND_FORGE_STORAGE\.set\s*\(\s*BOND_FORGE_STORAGE_SLOTS\.PROGRESS\b/.test(bondRuntime),
+    'bond-forge: progress writes go through GameStorage');
 const keepsDailyCompletionKey = bondRuntime.includes('DAILY_COMPLETION_KEY_PREFIX')
     && /storageSet\s*\(\s*`\$\{DAILY_COMPLETION_KEY_PREFIX\}/.test(bondRuntime);
 check(keepsDailyCompletionKey, 'bond-forge: daily completion marker keeps its legacy contract');

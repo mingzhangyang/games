@@ -300,7 +300,7 @@ export class HoopShotGame {
         this.state = 'playing';
         this.score = 0;
         this.streak = 0;
-        this.longestStreak = 0; // 本局最长连击（全局纪录另存 hs_longest_streak）
+        this.longestStreak = 0; // 本局最长连击（全局纪录存入 GameStorage，保留旧键兼容）
         this.bestStreakAll = storedNumber(HOOP_SHOT_STORAGE_SLOTS.LONGEST_STREAK);
         this.onFire = false;
         this.ball = null;
