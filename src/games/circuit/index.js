@@ -3,7 +3,8 @@ import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { getLang } from '../../platform/site-settings.js';
-import { CircuitGame, initCanvasPalette, LANGUAGES, W } from './runtime.js';
+import { LANGUAGES } from './i18n.js';
+import { CircuitGame, initCanvasPalette, W } from './runtime.js';
 
 export { CircuitGame } from './runtime.js';
 

@@ -3,6 +3,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,11 +18,12 @@ const size = file => statSync(join(ROOT, file)).size;
 const specs = [
     {
         id: 'circuit',
-        files: ['index.js', 'runtime.js', 'model/levels.js'],
+        files: ['index.js', 'runtime.js', 'i18n.js', 'model/levels.js'],
         indexNeedles: [
             "from '../../platform/boot.js'",
             "from '../../platform/runtime/game-runtime.js'",
             "from './runtime.js'",
+            "from './i18n.js'",
             'initCanvasPalette',
             'window.ccGame',
             'window.ccRuntime',
@@ -29,9 +31,10 @@ const specs = [
         ],
         runtimeNeedles: [
             "from './model/levels.js'",
+            "from './i18n.js'",
             "from '../../platform/game-sfx.js'",
             "from '../../platform/theme.js'",
-            'export const LANGUAGES',
+            'export { LANGUAGES } from',
             'export const W',
             'export class CircuitGame',
             'export function initCanvasPalette',
@@ -67,7 +70,10 @@ const specs = [
     },
 ];
 
-for (const spec of specs) {
+const selectedSpecs = specs.filter(spec => keepPage(spec.id));
+exitIfNoPages(selectedSpecs, 'verify-game-packages-wave-2d');
+
+for (const spec of selectedSpecs) {
     const packageRoot = `src/games/${spec.id}`;
     for (const file of spec.files) check(existsSync(join(ROOT, packageRoot, file)), `${spec.id}: package file exists: ${file}`);
     const index = read(`${packageRoot}/index.js`);

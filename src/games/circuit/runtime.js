@@ -33,9 +33,11 @@ import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
-import { makeText } from '../../platform/i18n.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { bindPalette } from '../../platform/theme.js';
+import { LANGUAGES } from './i18n.js';
+
+export { LANGUAGES } from './i18n.js';
 
 /* 画布调色板：颜色只在 css/circuit.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
    P 由 composition root 里的 initCanvasPalette() 填充，主题切换时就地刷新。 */
@@ -114,79 +116,6 @@ function roundRectPath(ctx, x, y, w, h, r) {
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
 }
-
-/* ────────────────────────── i18n ────────────────────────── */
-
-export const LANGUAGES = makeText({
-    en: {
-        stats: 'Stats',
-        title: 'Circuit',
-        subtitle: 'Switch · Wire · Light',
-        howto: 'Tap a switch to open or close it and route the current from the battery. Light every target bulb — but never link both battery terminals with plain wire, or everything goes dark!',
-        playLevels: '🧩 Levels',
-        playDaily: '📅 Daily',
-        level: 'Level',
-        daily: 'Daily',
-        levelSelect: 'Select level',
-        moves: 'Moves',
-        movesWord: 'moves',
-        par: 'Par',
-        dailyStartToast: '📅 Daily puzzle — light every target bulb in as few moves as possible',
-        shortToast: '⚡ Short circuit — every bulb goes dark!',
-        retry: 'Retry',
-        next: 'Next',
-        menu: 'Home',
-        again: 'Again',
-        levelCleared: 'All lit!',
-        levelDone: 'All levels cleared!',
-        dailyDone: 'Daily complete!',
-        bestToday: 'Your best today',
-        stars: 'Stars',
-        leaderboard: 'Global · Today\'s Puzzle',
-        noScores: 'No scores yet',
-        lbOffline: 'Leaderboard offline',
-        copyResult: 'Copy',
-        resetTitle: 'Reset',
-        home: 'Home',
-        hint: 'Tap switches to route the current · light every target bulb',
-        sideHowTo: 'How to play',
-        sideRecords: 'Records',
-    },
-    zh: {
-        stats: '数据统计',
-        title: '电路谜题',
-        subtitle: '开关 · 电流 · 点亮',
-        howto: '点击开关接通或切断电流，让电池的电流流过每一条支路。点亮所有目标灯泡——但别用纯导线直接连住电池两极，短路会让全场熄灭！',
-        playLevels: '🧩 关卡模式',
-        playDaily: '📅 每日挑战',
-        level: '关卡',
-        daily: '每日',
-        levelSelect: '选择关卡',
-        moves: '步数',
-        movesWord: '步',
-        par: '目标',
-        dailyStartToast: '📅 每日挑战——用尽可能少的操作点亮全部目标灯泡',
-        shortToast: '⚡ 短路啦——所有灯泡都熄灭了！',
-        retry: '重试',
-        next: '下一关',
-        menu: '返回主页',
-        again: '再来一次',
-        levelCleared: '全部点亮！',
-        levelDone: '全部关卡通关！',
-        dailyDone: '每日挑战完成！',
-        bestToday: '今日最好成绩',
-        stars: '星星',
-        leaderboard: '全球榜 · 今日谜题',
-        noScores: '暂无成绩',
-        lbOffline: '榜单离线',
-        copyResult: '复制',
-        resetTitle: '重开本关',
-        home: '主页',
-        hint: '点击开关调度电流 · 点亮全部目标灯泡',
-        sideHowTo: '玩法说明',
-        sideRecords: '战绩',
-    }
-});
 /* ────────────────────────── audio ────────────────────────── */
 
 const sfxEngine = createSfxEngine();
@@ -299,8 +228,8 @@ export class CircuitGame {
     /* ── 语言 ── */
 
     applyLanguage() {
-        const t = this.TEXT;
         this.lang = getLang();
+        const t = this.TEXT;
         document.documentElement.lang = this.lang;
         document.title = this.lang === 'zh'
             ? '电路谜题 Circuit — Light It Up'
