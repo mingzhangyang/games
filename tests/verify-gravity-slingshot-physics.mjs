@@ -61,6 +61,14 @@ for (const testCase of cases) {
 }
 console.log('✓ live fixed-step trajectories match the full preview solver');
 
+// Keep the max-step budget case above, but also cross the actual 20-second
+// flight deadline so the shared expiry check cannot be removed unnoticed.
+const deadlineLaunch = velocity(0, 84);
+const deadline = assertTraceMatches('flight-deadline', level, deadlineLaunch, 2401);
+assert.equal(deadline.preview.outcome, 'lost', 'preview enforces the flight deadline');
+assert.equal(deadline.live.outcome, 'lost', 'live flight enforces the flight deadline');
+console.log('✓ preview and live paths enforce the flight deadline');
+
 // The actual drag preview is capped at PREVIEW_STEPS.  Compare exactly the
 // visible preview window with the first live steps as well, so a later terminal
 // result cannot hide an early divergence.
