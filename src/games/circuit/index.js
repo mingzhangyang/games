@@ -11,6 +11,7 @@ export { CircuitGame } from './runtime.js';
 
 onReady(() => {
     const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
+    i18nBinder.apply();
     initCanvasPalette(() => window.ccGame && window.ccGame.draw());
     window.ccGame = new CircuitGame({ i18nBinder });
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;

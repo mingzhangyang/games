@@ -147,6 +147,38 @@ function withCommonKeys(tables) {
 function escapeRegExp(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+function binderInitName(entrySource) {
+    return /\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*createI18nBinder\s*\(/.exec(entrySource)?.[1] || null;
+}
+
+function stripSiteSettingsCallbacks(source) {
+    let result = source;
+    const spans = [];
+    const re = /addEventListener\(\s*['"]site-settings:changed['"]\s*,/g;
+    for (const match of source.matchAll(re)) {
+        const arrow = source.indexOf('=>', match.index + match[0].length);
+        if (arrow === -1 || arrow - match.index > 300) continue;
+        const start = skipTrivia(source, arrow + 2);
+        if (source[start] === '{') {
+            const close = findMatchingBrace(source, start);
+            if (close !== -1) spans.push([start, close + 1]);
+        } else {
+            const end = source.indexOf(');', start);
+            spans.push([start, end === -1 ? source.length : end]);
+        }
+    }
+    for (const [start, end] of spans.reverse()) {
+        result = result.slice(0, start) + ' '.repeat(end - start) + result.slice(end);
+    }
+    return result;
+}
+
+function entryAppliesBinderInitially(entrySource) {
+    const name = binderInitName(entrySource);
+    if (!name) return false;
+    const applyRe = new RegExp('\\b' + escapeRegExp(name) + '\\??\\.apply\\s*\\(');
+    return applyRe.test(stripSiteSettingsCallbacks(entrySource));
+}
 function binderAliases(entrySource, packageSource) {
     const init = /\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*createI18nBinder\s*\(/.exec(entrySource);
     const aliases = new Set(init ? [init[1]] : []);
@@ -253,6 +285,12 @@ const typoCase = missingBindingKeys(
     { en: new Set(['pageTitle']), zh: new Set(['pageTitle']) },
 );
 ok(typoCase.length === 2, '绑定键校验能捕获拼写错误（en/zh）');
+ok(entryAppliesBinderInitially(
+    "const phase6I18n = createI18nBinder({}); phase6I18n.apply(); window.addEventListener('site-settings:changed', () => phase6I18n.apply());",
+), '入口初次 apply 与 settings refresh 同时存在');
+ok(!entryAppliesBinderInitially(
+    "const phase6I18n = createI18nBinder({}); window.addEventListener('site-settings:changed', () => phase6I18n.apply());",
+), '仅 listener 中 apply 不能冒充首次本地化');
 ok(settingsListenerReachesBinder(
     'const phase6I18n = createI18nBinder({});',
     "const phase6I18n = createI18nBinder({}); window.addEventListener('site-settings:changed', () => phase6I18n.apply());",
@@ -285,6 +323,7 @@ for (const g of PAGES) {
             .join('\n');
         const binderImportCount = (src.match(/import \{ createI18nBinder \} from ['"][^'"]*platform\/i18n\/bindings\.js['"];/g) || []).length;
         const binderInitCount = (packageSrc.match(/\bcreateI18nBinder\s*\(\s*\{/g) || []).length;
+        const initialApply = entryAppliesBinderInitially(src);
         const aliases = binderAliases(src, packageSrc);
         const applyRe = binderApplyPattern(aliases);
         const binderApplyCount = applyRe ? (packageSrc.match(new RegExp(applyRe.source, 'g')) || []).length : 0;
@@ -293,6 +332,8 @@ for (const g of PAGES) {
             `${g.entry}: imports platform binder exactly once`, binderImportCount);
         ok(binderInitCount === 1,
             `${g.id}: initializes declarative i18n binder exactly once`, binderInitCount);
+        ok(initialApply,
+            `${g.entry}: applies declarative i18n during initial page boot`);
         ok(binderApplyCount >= 1,
             `${g.id}: declarative i18n binder is actively applied`, binderApplyCount);
         ok(settingsRefreshesBinder,
