@@ -9,7 +9,7 @@ globalThis.localStorage = {
     key(i) { return [...mem.keys()][i] ?? null; },
     getItem(key) { return mem.has(key) ? mem.get(key) : null; },
     setItem(key, value) {
-        if (key === blockedKey) throw new DOMException('simulated quota failure', 'QuotaExceededError');
+        if (key === blockedKey) throw new globalThis.DOMException('simulated quota failure', 'QuotaExceededError');
         mem.set(key, String(value));
     },
     removeItem(key) { mem.delete(key); },
