@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first three GameStorage migration batches.
+// Static guard for the first four GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +22,8 @@ const runtimes = {
     'crystal-bloom': read('src/games/crystal-bloom/runtime.js'),
     'flame-verse': read('src/games/flame-verse/runtime.js'),
     'ripple-duet': read('src/games/ripple-duet/runtime.js'),
+    'circuit': read('src/games/circuit/runtime.js'),
+    'lumen': read('src/games/lumen/runtime.js'),
 };
 const adapters = {
     'carrot-pull': read('src/games/carrot-pull/storage.js'),
@@ -33,6 +35,8 @@ const adapters = {
     'crystal-bloom': read('src/games/crystal-bloom/storage.js'),
     'flame-verse': read('src/games/flame-verse/storage.js'),
     'ripple-duet': read('src/games/ripple-duet/storage.js'),
+    'circuit': read('src/games/circuit/storage.js'),
+    'lumen': read('src/games/lumen/storage.js'),
 };
 
 for (const id of ['carrot-pull', 'hoop-shot']) {
@@ -94,6 +98,31 @@ for (const [id, prefix, slotName] of [
         `${id}: runtime composes its GameStorage adapter`);
 }
 
+
+for (const [id, prefix, slotName] of [
+    ['circuit', 'cc', 'CIRCUIT'],
+    ['lumen', 'lm', 'LUMEN'],
+]) {
+    const source = runtimes[id];
+    check(source.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
+        `${id}: protocol storage remains on the platform facade`);
+    const legacyStarsAccess = new RegExp(
+        `\\bstorage(?:Get|Set|Remove)\\s*\\(\\s*(['"\\x60])${prefix}_stars\\1`,
+    ).test(source);
+    check(!legacyStarsAccess,
+        `${id}: private stars no longer use the legacy key directly`);
+    check(new RegExp(`${slotName}_STORAGE\\.set\\s*\\(\\s*${slotName}_STORAGE_SLOTS\\.STARS\\b`).test(source),
+        `${id}: stars writes go through GameStorage`);
+    const keepsDailyRead = source.includes(`storageGet('${prefix}_daily_' + todayKey())`);
+    const keepsDailyWrite = source.includes(`storageSet('${prefix}_daily_' + date`);
+    check(keepsDailyRead && keepsDailyWrite,
+        `${id}: daily compatibility keys remain unchanged`);
+    check(source.includes(`${prefix}_local_`),
+        `${id}: local leaderboard compatibility keys remain unchanged`);
+    check(source.includes("from './storage.js'"),
+        `${id}: runtime composes its GameStorage adapter`);
+}
+
 for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
     check(source.includes(`createGameStorage('${id}'`), `${id}: adapter uses the canonical game id`);
@@ -108,6 +137,8 @@ for (const [id, source, legacyKeys] of [
     ['crystal-bloom', adapters['crystal-bloom'], ['cb_progress']],
     ['flame-verse', adapters['flame-verse'], ['fv_progress']],
     ['ripple-duet', adapters['ripple-duet'], ['rd_progress']],
+    ['circuit', adapters['circuit'], ['cc_stars']],
+    ['lumen', adapters['lumen'], ['lm_stars']],
 ]) {
     for (const key of legacyKeys) {
         check(source.includes(`'${key}'`), `${id}: adapter preserves legacy key ${key}`);

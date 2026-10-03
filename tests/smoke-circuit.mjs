@@ -5,7 +5,7 @@
  * 几何/元素存在性只能证明"页面长得对"，测不出"游戏能玩"（见 docs/traps.md 教训）。
  * 本脚本走一条真实交互链：
  *   menu → startLevel(0) → canvas 位图非空 → mouse 点击 L1 开关格心
- *   → 电流接通 → solved → 结算面板出现 → HUD moves=1 → 星级写入 cc_stars。
+ *   → 电流接通 → solved → 结算面板出现 → HUD moves=1 → 星级写入 game:circuit:v1:stars。
  *
  * L1 par=1 且校验器锁定「初盘未解」⇒ 翻 1 次必然判胜（与 lumen smoke 同策略，
  * 但开关格坐标从 window.ccGame.spec 动态推导，不硬编码）。
@@ -108,7 +108,7 @@ const after = await page.evaluate(() => ({
     moves: document.getElementById('cc-moves').textContent,
     clearVisible: !document.getElementById('cc-clear').classList.contains('hidden'),
     stars: document.getElementById('cc-clear-stars').textContent,
-    starsStored: JSON.parse(localStorage.getItem('cc_stars') || '[]')[0],
+    starsStored: JSON.parse(localStorage.getItem('game:circuit:v1:stars') || '[]')[0],
 }));
 if (after.state !== 'won-level') fail(`点击开关后 state=${after.state}（电路/判胜失败）`);
 if (after.moves !== '1') fail(`HUD moves 应为 1，got ${after.moves}`);

@@ -30,6 +30,7 @@ import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { CIRCUIT_STORAGE, CIRCUIT_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
@@ -152,7 +153,7 @@ const Sfx = {
 
 function storageParseStars() {
     try {
-        const arr = JSON.parse(storageGet('cc_stars'));
+        const arr = CIRCUIT_STORAGE.get(CIRCUIT_STORAGE_SLOTS.STARS, []);
         const out = Array.isArray(arr) ? arr.slice() : [];
         while (out.length < LEVELS.length) out.push(0);
         return out;
@@ -479,7 +480,7 @@ export class CircuitGame {
         const stars = this.moves <= this.par ? 3 : this.moves <= this.par + 2 ? 2 : 1;
         if (stars > (this.stars[this.levelIdx] || 0)) {
             this.stars[this.levelIdx] = stars;
-            storageSet('cc_stars', JSON.stringify(this.stars));
+            CIRCUIT_STORAGE.set(CIRCUIT_STORAGE_SLOTS.STARS, this.stars);
         }
         this.state = 'won-level';
         if (stars >= 3) Sfx.star3();
