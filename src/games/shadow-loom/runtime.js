@@ -14,7 +14,7 @@ import { LANGUAGES } from './i18n.js';
 import { ICONS } from '../../platform/icons.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { getLang } from '../../platform/site-settings.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { SHADOW_LOOM_STORAGE, SHADOW_LOOM_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import * as R from './model/rules.js';
 import { LEVELS, CHAPTERS } from './model/levels.js';
@@ -23,8 +23,6 @@ import { createScene } from './render/scene.js';
 export const W = R.STAGE.w;
 const H = R.STAGE.h;
 const RAIL_Y = R.SCREEN.y + 2;   // 丝线挂在木框内缘（纸幕顶沿）
-const PROGRESS_KEY = 'sl_progress';
-const SEEN_KEY = 'sl_seen_chapters';
 const SNAP_S = 0.45;
 const SWEEP_S = 0.8;
 const RESULT_AT_S = SNAP_S + SWEEP_S + 2.2;
@@ -68,11 +66,10 @@ function fmtTime(ms) {
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function readJson(key, fallback) {
+function readStoredObject(slot, fallback) {
     try {
-        const raw = storageGet(key);
-        const v = raw ? JSON.parse(raw) : null;
-        return v && typeof v === 'object' ? v : fallback;
+        const value = SHADOW_LOOM_STORAGE.get(slot, fallback);
+        return value && typeof value === 'object' ? value : fallback;
     } catch (e) {
         return fallback;
     }
@@ -119,8 +116,8 @@ export class ShadowLoomGame {
         });
         this.scene = createScene({ W, H, SCREEN: R.SCREEN });
         this.fret = [];
-        this.progress = readJson(PROGRESS_KEY, {});
-        this.seen = readJson(SEEN_KEY, {});
+        this.progress = readStoredObject(SHADOW_LOOM_STORAGE_SLOTS.PROGRESS, {});
+        this.seen = readStoredObject(SHADOW_LOOM_STORAGE_SLOTS.SEEN_CHAPTERS, {});
         this.lastRustle = 0;
 
         this.el = {};
@@ -343,7 +340,7 @@ export class ShadowLoomGame {
         const intro = this.t('chapterIntro')[ch];
         if (intro && !this.seen[ch]) {
             this.seen[ch] = 1;
-            storageSet(SEEN_KEY, JSON.stringify(this.seen));
+            SHADOW_LOOM_STORAGE.set(SHADOW_LOOM_STORAGE_SLOTS.SEEN_CHAPTERS, this.seen);
             this.toast(intro, 3800);
         }
         this.sfx.tone({ freq: 294, slideTo: 392, type: 'sine', dur: 0.5, vol: 0.05 });
@@ -397,7 +394,7 @@ export class ShadowLoomGame {
             best: Math.max(prev.best || 0, rec.best),
             first: prev.first || rec.first,
         } : rec;
-        storageSet(PROGRESS_KEY, JSON.stringify(this.progress));
+        SHADOW_LOOM_STORAGE.set(SHADOW_LOOM_STORAGE_SLOTS.PROGRESS, this.progress);
         track('shadow-loom', 'finish');
         this.renderRecords();
         this.renderProgress();

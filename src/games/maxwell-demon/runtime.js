@@ -33,7 +33,8 @@ import {
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { storageGet } from '../../platform/safe-storage.js';
+import { MAXWELL_DEMON_STORAGE, MAXWELL_DEMON_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
@@ -127,7 +128,7 @@ const Sfx = {
 
 function storageParseProgress() {
     try {
-        const obj = JSON.parse(storageGet('md_progress'));
+        const obj = MAXWELL_DEMON_STORAGE.get(MAXWELL_DEMON_STORAGE_SLOTS.PROGRESS, {});
         const out = {};
         if (obj && typeof obj === 'object') {
             for (const k of Object.keys(obj)) {
@@ -691,7 +692,7 @@ export class MaxwellDemonGame {
 
     saveProgress() {
         try {
-            storageSet('md_progress', JSON.stringify(this.progress));
+            MAXWELL_DEMON_STORAGE.set(MAXWELL_DEMON_STORAGE_SLOTS.PROGRESS, this.progress);
         } catch (e) { /* 忽略 */ }
     }
 

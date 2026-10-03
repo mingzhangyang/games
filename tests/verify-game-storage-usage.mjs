@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first GameStorage migration batch.
+// Static guard for the first two GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,23 +12,32 @@ const check = (condition, label) => {
     if (!condition) failures.push(label);
 };
 
-const carrotRuntime = read('src/games/carrot-pull/runtime.js');
-const hoopRuntime = read('src/games/hoop-shot/runtime.js');
-const bondRuntime = read('src/games/bond-forge/runtime.js');
-const carrotStorage = read('src/games/carrot-pull/storage.js');
-const hoopStorage = read('src/games/hoop-shot/storage.js');
-const bondStorage = read('src/games/bond-forge/storage.js');
+const runtimes = {
+    'carrot-pull': read('src/games/carrot-pull/runtime.js'),
+    'hoop-shot': read('src/games/hoop-shot/runtime.js'),
+    'bond-forge': read('src/games/bond-forge/runtime.js'),
+    'shadow-loom': read('src/games/shadow-loom/runtime.js'),
+    'echo-cave': read('src/games/echo-cave/runtime.js'),
+    'maxwell-demon': read('src/games/maxwell-demon/runtime.js'),
+};
+const adapters = {
+    'carrot-pull': read('src/games/carrot-pull/storage.js'),
+    'hoop-shot': read('src/games/hoop-shot/storage.js'),
+    'bond-forge': read('src/games/bond-forge/storage.js'),
+    'shadow-loom': read('src/games/shadow-loom/storage.js'),
+    'echo-cave': read('src/games/echo-cave/storage.js'),
+    'maxwell-demon': read('src/games/maxwell-demon/storage.js'),
+};
 
-for (const [id, source] of [
-    ['carrot-pull', carrotRuntime],
-    ['hoop-shot', hoopRuntime],
-]) {
+for (const id of ['carrot-pull', 'hoop-shot']) {
+    const source = runtimes[id];
     check(!/safe-storage|storage(Get|Set|Remove)\s*\(/.test(source),
         `${id}: runtime has no direct platform storage calls`);
     check(source.includes("from './storage.js'"),
         `${id}: runtime composes its GameStorage adapter`);
 }
 
+const bondRuntime = runtimes['bond-forge'];
 check(!/storageGet\s*\(/.test(bondRuntime),
     'bond-forge: runtime has no direct private-state reads');
 check(!/storageSet\s*\(\s*['"`]bf_progress['"`]/.test(bondRuntime),
@@ -41,15 +50,54 @@ check(keepsDailyCompletionKey, 'bond-forge: daily completion marker keeps its le
 check(bondRuntime.includes("from './storage.js'"),
     'bond-forge: runtime composes its GameStorage adapter');
 
-for (const [id, source, gameId] of [
-    ['carrot-pull', carrotStorage, 'carrot-pull'],
-    ['hoop-shot', hoopStorage, 'hoop-shot'],
-    ['bond-forge', bondStorage, 'bond-forge'],
+const shadowRuntime = runtimes['shadow-loom'];
+check(!shadowRuntime.includes("from '../../platform/safe-storage.js'"),
+    'shadow-loom: runtime no longer imports the platform storage facade');
+check(!/\bstorage(Get|Set|Remove)\s*\(/.test(shadowRuntime),
+    'shadow-loom: runtime has no direct platform storage calls');
+check(!/\bsl_(progress|seen_chapters)\b/.test(shadowRuntime),
+    'shadow-loom: legacy private keys are isolated in its adapter');
+check(/SHADOW_LOOM_STORAGE\.set\s*\(\s*SHADOW_LOOM_STORAGE_SLOTS\.PROGRESS\b/.test(shadowRuntime),
+    'shadow-loom: progress writes go through GameStorage');
+check(/SHADOW_LOOM_STORAGE\.set\s*\(\s*SHADOW_LOOM_STORAGE_SLOTS\.SEEN_CHAPTERS\b/.test(shadowRuntime),
+    'shadow-loom: chapter-history writes go through GameStorage');
+check(shadowRuntime.includes("from './storage.js'"),
+    'shadow-loom: runtime composes its GameStorage adapter');
+
+for (const [id, prefix, slotName] of [
+    ['echo-cave', 'ec', 'ECHO_CAVE'],
+    ['maxwell-demon', 'md', 'MAXWELL_DEMON'],
 ]) {
+    const source = runtimes[id];
+    check(source.includes("import { storageGet } from '../../platform/safe-storage.js';"),
+        `${id}: only the legacy leaderboard reader remains on platform storage`);
+    check(!/\bstorageSet\s*\(/.test(source),
+        `${id}: runtime has no direct platform storage writes`);
+    check(!new RegExp(`storageGet\\s*\\(\\s*['"`]\\${prefix}_progress['"`]`).test(source),
+        `${id}: private progress no longer reads the legacy key directly`);
+    check(source.includes(`storageGet('${prefix}_lb_' + game)`),
+        `${id}: leaderboard cache keeps its legacy/protocol key`);
+    check(new RegExp(`${slotName}_STORAGE\\.set\\s*\\(\\s*${slotName}_STORAGE_SLOTS\\.PROGRESS\\b`).test(source),
+        `${id}: progress writes go through GameStorage`);
+    check(source.includes("from './storage.js'"),
+        `${id}: runtime composes its GameStorage adapter`);
+}
+
+for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
-    check(source.includes(`createGameStorage('${gameId}'`), `${id}: adapter uses the canonical game id`);
+    check(source.includes(`createGameStorage('${id}'`), `${id}: adapter uses the canonical game id`);
     check(source.includes('version: 1'), `${id}: adapter declares an explicit storage version`);
     check(source.includes('legacy:'), `${id}: adapter declares legacy key mappings`);
+}
+
+for (const [id, source, legacyKeys] of [
+    ['shadow-loom', adapters['shadow-loom'], ['sl_progress', 'sl_seen_chapters']],
+    ['echo-cave', adapters['echo-cave'], ['ec_progress']],
+    ['maxwell-demon', adapters['maxwell-demon'], ['md_progress']],
+]) {
+    for (const key of legacyKeys) {
+        check(source.includes(`'${key}'`), `${id}: adapter preserves legacy key ${key}`);
+    }
 }
 
 if (failures.length) {

@@ -12,7 +12,7 @@ The scan covers `src/games/**/*.js` and the platform storage facade:
 - files containing `storageSet(`: 23;
 - files containing `storageGet(`: 22;
 - files containing `storageRemove(`: 1;
-- current `createGameStorage` users: Tetris and Word Daily.
+- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, and Maxwell Demon.
 
 The migration facade writes versioned slots as
 `game:<game-id>:v<version>:<slot>`. It reads the new slot first, imports a
@@ -74,10 +74,10 @@ These are candidates for `createGameStorage`:
 | Bond Forge | site settings | `bf_daily_<date>`, daily leaderboard contract | `bf_progress` | Phase 5 batch A |
 | Hoop Shot | site settings/player profile | remote leaderboard contract | `hs_best`, `hs_longest_streak`, `hs_local_scores` | Phase 5 batch A |
 | Carrot Pull | site settings | none | `cp_best_score` | Phase 5 batch A |
-| Shadow Loom | site settings | none identified | `sl_seen_chapters`, `sl_progress` | Later |
+| Shadow Loom | site settings | none identified | `sl_seen_chapters`, `sl_progress` | Phase 5 batch B |
 | Silk Dew | site settings | `sd_lb_*` | `sd_progress`, version marker | Later, existing custom migration |
-| Echo Cave | site settings | `ec_lb_*` | `ec_progress` | Later |
-| Maxwell Demon | site settings | `md_lb_*` | `md_progress` | Later |
+| Echo Cave | site settings | `ec_lb_*` | `ec_progress` | Phase 5 batch B |
+| Maxwell Demon | site settings | `md_lb_*` | `md_progress` | Phase 5 batch B |
 | Crystal Bloom | site settings | `cb_lb_*` | `cb_progress` | Later |
 | Flame Verse | site settings | `fv_lb_*` | `fv_progress` | Later |
 | Ripple Duet | site settings | `rd_lb_*` | `rd_progress` | Later |
@@ -107,3 +107,21 @@ adds per-game legacy fixtures that assert:
 3. the old key is still present;
 4. a second read uses the new slot and does not re-import changed legacy data;
 5. writing new state does not delete or overwrite the legacy key.
+
+
+## Batch B migration map
+
+Branch: `refactor/game-storage-migration-b`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `shadow-loom / progress` | `sl_progress` | `game:shadow-loom:v1:progress` | Read legacy once; never delete it |
+| `shadow-loom / seenChapters` | `sl_seen_chapters` | `game:shadow-loom:v1:seenChapters` | Keep chapter-intro history and the legacy key |
+| `echo-cave / progress` | `ec_progress` | `game:echo-cave:v1:progress` | Keep `ec_lb_*` outside GameStorage |
+| `maxwell-demon / progress` | `md_progress` | `game:maxwell-demon:v1:progress` | Keep `md_lb_*` outside GameStorage |
+
+Batch B deliberately leaves the local leaderboard cache families on the platform
+storage facade because they are protocol/compatibility state rather than private
+game progress. Its regression fixture verifies the new versioned slots, idempotent
+re-import behavior, preservation of the old keys, and non-interference with the
+leaderboard cache keys.
