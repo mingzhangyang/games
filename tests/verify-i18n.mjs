@@ -145,15 +145,8 @@ function withCommonKeys(tables) {
 }
 
 function escapeRegExp(value) {
-    return value.replace(/[.*+?^$(){}|[\]\\]/g, '\\function withCommonKeys(tables) {
-    return {
-        en: new Set([...tables.en, ...Object.keys(COMMON_TEXT.en)]),
-        zh: new Set([...tables.zh, ...Object.keys(COMMON_TEXT.zh)]),
-    };
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-');
-}
-
 function binderAliases(entrySource, packageSource) {
     const init = /\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*createI18nBinder\s*\(/.exec(entrySource);
     const aliases = new Set(init ? [init[1]] : []);

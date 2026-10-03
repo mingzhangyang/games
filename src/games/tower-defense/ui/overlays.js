@@ -83,22 +83,10 @@ export function applyLanguage(game) {
         const best = loadTowerDefenseBest(game.level.id);
         game.el['best-line'].textContent = best ? `${t.best}: ${formatNumber(best)}` : '';
     }
-    if (game.el['range-btn']) {
-    }
-    if (game.el['pause-btn']) {
-    }
-    if (game.el['mute-btn']) {
-    }
     if (game.el.statsToggle) {
         game.el.statsToggle.innerHTML = ICONS.stats;
         game.el.statsToggle.title = t.stats;
         game.el.statsToggle.setAttribute('aria-label', t.stats);
-    }
-    if (game.el['btn-home']) {
-    }
-    if (game.el['skill-emp']) {
-    }
-    if (game.el['skill-boost']) {
     }
 
     if (game.el.tacticalTitle) game.el.tacticalTitle.textContent = t.tacticalOverview;
