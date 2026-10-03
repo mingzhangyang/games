@@ -73,7 +73,7 @@ These are candidates for `createGameStorage`:
 | Gravity Slingshot | site settings | `gd_daily_*`, `gs_daily_*`, local boards, `gd_course_*` | `gd_stars` | Phase 5 batch H |
 | Needle Awn | site settings | `zj_daily_*` | unlocks, stars, endless best, clash max | Phase 5 batch E |
 | Sword Flight | site settings | `sf_daily_*` | stage unlocks/stars, endless best, realm, combo | Phase 5 batch E |
-| Tower Defense | site settings | leaderboard integration | clear flags, per-level/global best, private local scores | Later, split across runtime/UI |
+| Tower Defense | site settings | leaderboard integration | clear flags, per-level/global best, private local scores | Phase 5 batch J |
 | Planet Merge | `pm_muted` global mute mirror | `pm_daily_*` daily-best compatibility | skin, best, private local scores | Phase 5 batch F |
 | Bond Forge | site settings | `bf_daily_<date>`, daily leaderboard contract | `bf_progress` | Phase 5 batch A |
 | Hoop Shot | site settings/player profile | remote leaderboard contract | `hs_best`, `hs_longest_streak`, `hs_local_scores` | Phase 5 batch A |
@@ -271,3 +271,21 @@ and cache families.
 Batch I is deliberately limited to private local state. It does not change
 remote leaderboard submissions, player identity, global language/mute settings,
 or gameplay behavior. Legacy keys remain in place after import.
+
+
+## Batch J migration map
+
+Branch: `refactor/game-storage-migration-j`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `tower-defense / clear:<level>` | `td_clear_<level>` | `game:tower-defense:v1:clear:<level>` | Import each of the six existing campaign clear flags once; retain legacy keys |
+| `tower-defense / best:<level>` | `td_best_<level>` | `game:tower-defense:v1:best:<level>` | Preserve per-level score isolation and legacy records |
+| `tower-defense / globalBest` | `td_best` | `game:tower-defense:v1:globalBest` | Keep the cross-level side-panel record without continuing legacy writes |
+| `tower-defense / localScores` | `td_local_scores` | `game:tower-defense:v1:localScores` | Preserve the private fallback board; remote per-level leaderboard ids stay unchanged |
+
+Batch J is intentionally Tower Defense only because persistence is split between
+the runtime and the overlay/UI module. Both consumers now share one storage
+adapter, while remote `tower-defense-<level>` leaderboard submissions and
+global site settings remain unchanged. The legacy fixture covers all six level
+ids, canonical precedence, retained legacy keys, and local/global records.

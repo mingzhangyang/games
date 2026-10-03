@@ -13,7 +13,15 @@
 import { ensurePlayerName } from '../../platform/player.js';
 import { getLang } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import {
+    loadTowerDefenseBest,
+    saveTowerDefenseBest,
+    loadTowerDefenseGlobalBest,
+    saveTowerDefenseGlobalBest,
+    loadTowerDefenseLocalScores,
+    saveTowerDefenseLocalScores,
+    saveTowerDefenseClear,
+} from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { LANGUAGES } from './i18n.js';
@@ -461,7 +469,7 @@ export class TowerDefenseGame {
             const bonus = this.lives * 35 * (1 + diffIdx * 0.35) + this.level.waves * 40;
             this.score += Math.round(bonus);
             // 记录通关，用于解锁下一关
-            storageSet(`td_clear_${this.level.id}`, '1');
+            saveTowerDefenseClear(this.level.id);
             Sfx.win();
         } else {
             Sfx.lose();
@@ -496,14 +504,13 @@ export class TowerDefenseGame {
         }
 
         // 每关独立最佳分：简单关卡的高分不该压掉困难关卡的成绩
-        const bestKey = `td_best_${this.level.id}`;
-        const prevBest = Number(storageGet(bestKey)) || 0;
+        const prevBest = loadTowerDefenseBest(this.level.id);
         const isBest = this.score > prevBest;
         if (isBest) {
-            storageSet(bestKey, String(this.score));
-            // 兼容旧键：只要新成绩比旧记录好就同步，避免老玩家记录丢失
-            const legacy = Number(storageGet('td_best')) || 0;
-            if (this.score > legacy) storageSet('td_best', String(this.score));
+            saveTowerDefenseBest(this.level.id, this.score);
+            // 跨关卡全局记录也进入 GameStorage；legacy td_best 仅用于首次导入。
+            const globalBest = loadTowerDefenseGlobalBest();
+            if (this.score > globalBest) saveTowerDefenseGlobalBest(this.score);
         }
         this.updateSideRecords();
         if (this.el['best-line']) {
@@ -516,7 +523,7 @@ export class TowerDefenseGame {
         const local = this.localScores();
         local.push({ name: ensurePlayerName() || 'Anonymous', score: this.score, level: this.level.id });
         local.sort((a, b) => b.score - a.score);
-        storageSet('td_local_scores', JSON.stringify(local.slice(0, 30)));
+        saveTowerDefenseLocalScores(local.slice(0, 30));
 
         if (this.el.over) this.el.over.classList.remove('hidden');
         if (this.el.username) this.el.username.value = ensurePlayerName() || '';
@@ -550,12 +557,7 @@ export class TowerDefenseGame {
     }
 
     localScores() {
-        try {
-            const all = JSON.parse(storageGet('td_local_scores'));
-            return Array.isArray(all) ? all : [];
-        } catch (e) {
-            return [];
-        }
+        return loadTowerDefenseLocalScores();
     }
 
     renderLocalScores() {

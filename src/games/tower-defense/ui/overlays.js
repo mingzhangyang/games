@@ -1,7 +1,11 @@
 /** DOM-facing overlays and language panels for Tower Defense. */
 import { ICONS } from '../../../platform/icons.js';
 import { updateMoreGames } from '../../../platform/more-games.js';
-import { storageGet } from '../../../platform/safe-storage.js';
+import {
+    loadTowerDefenseBest,
+    loadTowerDefenseClear,
+    loadTowerDefenseGlobalBest,
+} from '../storage.js';
 import { LEVELS } from '../levels.js';
 import { Sfx } from '../audio.js';
 import { TOWER_TYPES, formatNumber } from '../config.js';
@@ -89,7 +93,7 @@ export function applyLanguage(game) {
     if (game.el['brief-lbl-gold']) game.el['brief-lbl-gold'].textContent = t.statGold;
     if (game.el['brief-lbl-lives']) game.el['brief-lbl-lives'].textContent = t.statLives;
     if (game.el['best-line']) {
-        const best = Number(storageGet(`td_best_${game.level.id}`)) || 0;
+        const best = loadTowerDefenseBest(game.level.id);
         game.el['best-line'].textContent = best ? `${t.best}: ${formatNumber(best)}` : '';
     }
     if (game.el['over-lbl-waves']) game.el['over-lbl-waves'].textContent = t.waveStat;
@@ -180,7 +184,7 @@ export function updateSideSkills(game) {
 export function unlockedCount(game) {
     let count = 1;
     for (let i = 0; i < LEVELS.length - 1; i++) {
-        if (storageGet(`td_clear_${LEVELS[i].id}`)) count = i + 2;
+        if (loadTowerDefenseClear(LEVELS[i].id)) count = i + 2;
         else break;
     }
     return Math.min(LEVELS.length, count);
@@ -213,8 +217,8 @@ export function renderLevelCards(game) {
     LEVELS.forEach((level, idx) => {
         const name = t.levels[level.id] || { name: level.id, tag: '', desc: '' };
         const isUnlocked = idx < unlocked;
-        const best = Number(storageGet(`td_best_${level.id}`)) || 0;
-        const cleared = !!storageGet(`td_clear_${level.id}`);
+        const best = loadTowerDefenseBest(level.id);
+        const cleared = loadTowerDefenseClear(level.id);
 
         const card = document.createElement('button');
         card.type = 'button';
@@ -388,7 +392,7 @@ export function updateSideShortcuts(game) {
 export function updateSideRecords(game) {
     const box = game.el['side-records'];
     if (!box) return;
-    const best = Number(storageGet('td_best')) || 0;
+    const best = loadTowerDefenseGlobalBest();
     const rows = [
         [`BEST`, best ? formatNumber(best) : '—'],
         [`KILLS`, formatNumber(game.totalKills || 0)]

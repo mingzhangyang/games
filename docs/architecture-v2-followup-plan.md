@@ -659,8 +659,10 @@ Phase 5 的基线盘点与第一批迁移映射记录在
 `gd_daily_*`、`gs_daily_*`、`gd_local_*` 与 `gd_course_*` 保持原协议。
 Phase 9 包迁移后的复扫发现早期 inventory 漏掉了一批原先仍在 legacy 入口中的私有状态；
 第九批使用 `refactor/game-storage-migration-i`，迁 Reversi、Minesweeper、Firefly Signal
-的偏好/纪录/本地成绩。Tower Defense、Math Rain、Word Daily 的混合或跨模块状态继续拆成
-后续独立小批，不与 Batch I 混合。
+的偏好/纪录/本地成绩。
+第十批使用 `refactor/game-storage-migration-j`，单独迁 Tower Defense 的六关 clear/best、
+全局 best 与 private local scores；远端 `tower-defense-<level>` leaderboard 协议保持不变。
+Math Rain、Word Daily 的混合或跨模块状态继续拆成后续独立小批。
 
 建议分支按批次命名：
 
