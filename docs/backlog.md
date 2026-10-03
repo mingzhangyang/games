@@ -51,11 +51,6 @@ vite 构建并发读取同一目录时模块解析与插件状态出现竞态窗
 **规约**：构建前确保没有 npm install 在跑；构建偶发此错时先检查是否有
 npm 进程并发，重跑即可。CI/脚本编排中 install 与 build 必须串行。
 
-**连带项（仍待做）**：minesweeper / reversi / gomoku 三页主体为平铺结构
-（无 `.game-main` 单一容器），升级 main 需引入新包裹层，有布局风险，
-应独立成 commit 并逐页截图验收。历史迁移工具 `tools/archive/migrations/p3-main-tag.mjs`
-（标签深度配对替换 + 幂等 + --dry）可扩展复用。
-
 ✅ 已完成：index.html main 升级（P4-2 批次补齐，hero/footer 保持在外）、
 tank-battle main 升级（P4-2 最小接骨架：layout.css 引入 + `<main class="tb-main">`
 display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不变）。

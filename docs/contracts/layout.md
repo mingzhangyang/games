@@ -26,7 +26,7 @@
 | `game-shell` | 页面容器：单列居中、`max-width` 由参数决定 | `<div class="gd-shell game-shell">` |
 | `game-topbar` | 顶栏：左 home / 中信息 / 右动作 | `<header class="gd-topbar game-topbar">` |
 | `game-topbar-group` | 顶栏左右动作簇 | `<div class="gd-topbar-actions game-topbar-group">` |
-| `game-main` | 舞台 + 侧栏的横向容器（移动端纵向） | `<div class="gd-main game-main">` |
+| `game-main` | 舞台 + 侧栏的横向容器（移动端纵向） | `<main class="gd-main game-main">` |
 | `game-stage` | 舞台：承载画布与覆盖层的定位盒（`position: relative`） | `<div class="gd-stage game-stage">` |
 | `game-stage--fill` | 需要吃掉剩余高度的舞台 | 纵向 100vh 布局的游戏 |
 | `game-canvas` | 画布外框：`width:100%` + 统一圆角 | `<canvas class="game-canvas">` |
@@ -146,8 +146,8 @@ overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` �
 | sword-flight | 520 / 960 | 480 | 320 | `game-stage--fill`；竖屏移动端填充顶栏与页脚之间的剩余高度 |
 | needle-awn | 520 / 960 | 480 | 320 | 同 sf |
 | reversi | 560 / 820 | 460 | — | DOM 棋盘 |
-| minesweeper | 640 / 780 | — | — | 格子尺寸由 `layoutCells()` 决定 |
-| word-daily | 520 / 600 | — | — | 单词方块宽度受限 |
+| minesweeper | 640 / 780 | 网格自适应 | — | 棋盘容器使用 `.game-stage`；格子尺寸仍由 `layoutCells()` 决定 |
+| word-daily | 520 / 600 | 内容自适应 | — | 棋盘容器使用 `.game-stage`；单词方块宽度仍受棋盘规则限制 |
 | gomoku | 760 | 760 | — | 15×15 棋盘桌面约 700px，容器需比其他页宽 |
 | tetris | 520 / 940 | 400（≤768px 340；≤480px 280） | 300 | 棋盘 1:2，舞台宽度跟随棋盘以保证格子正方形 |
 | tank-battle | — | — | — | 横屏全屏 + 虚拟手柄；**最小对齐已完成**（P4-2）：`layout.css` 已引入、`<main class="tb-main">`（`display: contents` 透传）+ sr-only h1；覆盖式 HUD 保留 |
