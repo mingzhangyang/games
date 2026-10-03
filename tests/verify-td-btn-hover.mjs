@@ -1,5 +1,5 @@
 // Deploy 按钮 hover 可见性回归
-// 用法：node scripts/verify-td-btn-hover.mjs [baseUrl] [outDir]
+// 用法：node tests/verify-td-btn-hover.mjs [baseUrl] [outDir]
 //
 // 背景（2026-09-19）：.td-btn:hover 设 background 长手，权重(0,2,0)高于
 // .td-btn-primary 的 background 简手(0,1,0)，悬停时渐变被一层近乎透明的白替换，

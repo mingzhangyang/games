@@ -1,5 +1,5 @@
 // 六个页面「顶部 Stats 钮 + 底部抽屉」快速冒烟测试
-// 用法：node scripts/verify-stats-drawer.mjs <baseUrl> [outDir]
+// 用法：node tests/verify-stats-drawer.mjs <baseUrl> [outDir]
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';

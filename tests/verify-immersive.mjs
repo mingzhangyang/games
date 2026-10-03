@@ -15,7 +15,7 @@
 //   ⑨ 标准布局页零回归抽查：注册表里非 immersive 的页不带 immersive 类、body 不带 has-immersive-stage
 //   ⑩ 无 pageerror
 //
-// 用法：node scripts/verify-immersive.mjs [baseUrl]（verify-all 自动传入）
+// 用法：node tests/verify-immersive.mjs [baseUrl]（verify-all 自动传入）
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';

@@ -4,7 +4,7 @@
    门 / 预算用萤光琥珀 --tok-gold
    ───────────────────────────────────────────── */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --cb-body-bg: radial-gradient(ellipse 62% 40% at 18% 8%, rgb(255, 138, 92, 0.10), transparent),
         radial-gradient(ellipse 62% 40% at 84% 92%, rgb(111, 216, 255, 0.10), transparent),

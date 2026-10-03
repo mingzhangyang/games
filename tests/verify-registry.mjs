@@ -15,7 +15,7 @@
 //   4) themeColorLight ⟺ theme-light cap（同上）。
 //   2b) layout 字段（standard | immersive）合法，且与 HTML 骨架 / 入口 bindFrame 双向一致。
 //
-// 用法：node scripts/verify-registry.mjs（无需浏览器/服务器）
+// 用法：node tests/verify-registry.mjs（无需浏览器/服务器）
 
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

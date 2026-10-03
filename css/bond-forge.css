@@ -13,7 +13,7 @@
    见 js/bond-forge-molecules.js 的 ELEMENTS.color。
    ═══════════════════════════════════════════════════════════════ */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --bf-body-bg: radial-gradient(1100px 620px at 50% -8%, rgb(91, 141, 238, 0.16), transparent 62%),
         radial-gradient(760px 520px at 12% 104%, rgb(192, 38, 211, 0.12), transparent 60%),

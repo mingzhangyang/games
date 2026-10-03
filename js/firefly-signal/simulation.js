@@ -2,7 +2,7 @@
  * 萤火信号 Firefly Signal — 纯模拟层（无 DOM、无 Canvas、无 Date / Math.random）
  * ===========================================================================
  * 与 renderer.js 完全解耦：渲染层只读 `sim.flies` / `sim.tick` / `sim.harmony`，
- * 从不写回。Node 端的 scripts/verify-firefly-signal-sim.mjs 直接 import 本文件跑测试。
+ * 从不写回。Node 端的 tests/verify-firefly-signal-sim.mjs 直接 import 本文件跑测试。
  *
  * 确定性契约：same seed + same (tick, fireflyId) 输入序列 = same simulation result
  *   - 固定步长 DT = 1/60 s，所有状态只在 step() / intervene() 里变化；

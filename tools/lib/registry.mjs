@@ -75,7 +75,7 @@ export const registry = {
 };
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-    // node scripts/lib/registry.mjs [cap] —— 调试用
+    // node tools/lib/registry.mjs [cap] —— 调试用
     const cap = process.argv[2];
     const list = cap ? registry.withCap(cap) : registry.all();
     console.log(list.map(g => g.id).join('\n'));

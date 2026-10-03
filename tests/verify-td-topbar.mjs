@@ -1,5 +1,5 @@
 // tower-defense 顶栏「单行三槽」契约回归
-// 用法：node scripts/verify-td-topbar.mjs [baseUrl] [outDir]
+// 用法：node tests/verify-td-topbar.mjs [baseUrl] [outDir]
 //
 // 背景：2026-09-19 曾按当时需求做过「两行顶栏」（全应用 icons 一行、本局信息一行），
 // 2026-09-21 起废弃 —— 与 lumen / gravity-slingshot 对齐为共享层单行三槽契约：

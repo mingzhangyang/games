@@ -3,7 +3,7 @@
    深蓝图纸底 + 导线琥珀（#ffc94d）+ 电蓝（#4dc3ff）双主色
    ───────────────────────────────────────────── */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --cc-body-bg: radial-gradient(ellipse 70% 42% at 50% -8%, rgb(77, 195, 255, 0.10), transparent),
         radial-gradient(ellipse 50% 30% at 85% 110%, rgb(255, 201, 77, 0.06), transparent),

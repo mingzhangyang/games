@@ -17,7 +17,7 @@
  *   · 火焰会把所有颜色混在一起（同色异谱），所以要看条码，别看火焰。
  *
  * 关卡数据 / 谱线库在本包的 model/rules.js（纯模块，校验器共用）。
- * par 由 scripts/verify-flame-verse-levels.mjs 复核，绝不手填。
+ * par 由 tests/verify-flame-verse-levels.mjs 复核，绝不手填。
  *
  * 共享层（2026-09 契约）：game-frame / game-drawer / game-chrome /
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。

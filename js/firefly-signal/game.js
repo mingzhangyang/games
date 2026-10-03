@@ -5,7 +5,7 @@
  *
  * 时间：固定步长累加器，每 tick = simulation.DT。真实帧率只决定一帧推进几个 tick，
  * 玩家输入在两个 tick 之间落地（sim.intervene 记下当前 tick），所以
- * same seed + same (tick, id) 序列 = same result（scripts/verify-firefly-signal-sim.mjs 锁住）。
+ * same seed + same (tick, id) 序列 = same result（tests/verify-firefly-signal-sim.mjs 锁住）。
  *
  * 成功序列（不立即弹窗）：达到目标并保持约 2 秒 → HUD 淡出 → 全体被收拢进同一节奏 →
  * 连续 3 次群体闪光，草 / 花 / 露珠 / 水面被一起照亮 → 柔和的完整和弦 → 短暂停顿 → 结算。

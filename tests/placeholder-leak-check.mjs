@@ -1,7 +1,7 @@
 /**
  * 全站文案模板占位符泄漏扫描：加载每个游戏页，扫描可见文本/属性/输入框 placeholder，
  * 报告残留的未展开占位符（形如 {n} {g} {who} {lives}）。
- * 用法：node scripts/placeholder-leak-check.mjs [baseUrl]
+ * 用法：node tests/placeholder-leak-check.mjs [baseUrl]
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';

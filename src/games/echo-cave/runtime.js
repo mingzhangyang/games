@@ -8,7 +8,7 @@
  * 声音是黑暗里唯一的信息载体——玩家在玩的过程中自然内化波的传播/反射/吸收。
  *
  * 关卡数据 / 声波核心在本包的 model/rules.js（纯模块，校验器共用）。
- * par 由 scripts/verify-echo-cave-levels.mjs 的 Dijkstra 求解器现算，绝不手填。
+ * par 由 tests/verify-echo-cave-levels.mjs 的 Dijkstra 求解器现算，绝不手填。
  *
  * 共享层（2026-09 契约）：game-frame / game-drawer / game-chrome /
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。

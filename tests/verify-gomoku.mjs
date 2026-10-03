@@ -1,5 +1,5 @@
 // 五子棋可玩性回归检查
-// 用法：node scripts/serve-static.mjs 8899 &  然后  node scripts/verify-gomoku.mjs http://127.0.0.1:8899
+// 用法：node tests/lib/serve-static.mjs 8899 &  然后  node tests/verify-gomoku.mjs http://127.0.0.1:8899
 //
 // 背景：2026-09-17 的 566dd8f 把木质棋盘底从 .board-container 的背景搬到绝对定位的 ::before，
 // 伪元素因此画在 <canvas> 之上 —— 网格被盖住、点击被吃掉，棋盘完全点不动。

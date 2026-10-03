@@ -9,7 +9,7 @@
 //   4) 反射表黄金断言（'/' 与 '\' 的四向反射、墙/发射器挡光、环路防死循环）
 //      与 buildGrid 的越界/重叠/非法翻转抛错。
 //
-// 用法：node scripts/verify-lumen-levels.mjs
+// 用法：node tests/verify-lumen-levels.mjs
 
 import {
     GRID_N, buildGrid, traceGrid, mirrorCoords,

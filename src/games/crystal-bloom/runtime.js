@@ -13,7 +13,7 @@
  * 成本 = 锚点数 + 搅拌次数（asc，越小越聪明）。par 由求解器现算，绝不手填。
  *
  * 关卡数据 / 结晶内核在本包的 model/rules.js（纯模块，校验器共用）。
- * par 由 scripts/verify-crystal-bloom-levels.mjs 现算。
+ * par 由 tests/verify-crystal-bloom-levels.mjs 现算。
  *
  * 共享层（2026-09 契约）：game-frame / game-drawer / game-chrome /
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。

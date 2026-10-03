@@ -336,7 +336,7 @@ export function starsForLevel(spent, par, gap, stretch) {
 /* ────────────────────────── 关卡 ────────────────────────── */
 /**
  * 20 关。par / budget / doorHalf / molecules 全部由
- * scripts/verify-maxwell-demon-levels.mjs 用「诚实机器人」现算并断言，
+ * tests/verify-maxwell-demon-levels.mjs 用「诚实机器人」现算并断言，
  * **不许手填**（手填 = 校验器立刻红）。
  *
  * 诚实机器人的定义：位置永远可见，快慢只能靠花钱观测才知道

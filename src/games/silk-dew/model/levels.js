@@ -120,11 +120,11 @@ function buildRopeParticles(r) {
 //   par       设计师目标牵拉次数
 //   pullMax   单次牵拉最大锚点位移（px），后期逐步收紧以形成多步决策
 export const LEVELS = [
-    // ⚠️ 本表由 scripts/tmp-sd-final3.mjs 生成并逐关验证（拖拽机制，20/20 满星可解）。
+    // ⚠️ 本表由一次性关卡生成器生成并逐关验证（拖拽机制，20/20 满星可解）。
     // 几何约束（实测）：绳 17–21 段（170–210px）+ 玉壶 y≈480 + 锚点起始 y≈100–150。
     // 星芒必须落在「渐进拖拽路径」上且两两间距 ≥70px；把指针瞬移到目标位会跳过路径，
     // 造成「赢了却没吃星」的假可解（早期 tmp-sd-redesign.mjs 就因此多报 5 关）。
-    // 改任何元素位置后必须重跑 scripts/verify-silk-dew-levels.mjs 确认。
+    // 改任何元素位置后必须重跑 tests/verify-silk-dew-levels.mjs 确认。
     {
         id: 'S1', par: 1, pullMax: 260, tipKey: 'tipCut',
         ropes: [rope(240, 110, 18, 0, 0, 0)],

@@ -44,7 +44,7 @@ export { dailyPicks } from './molecules.js';
  * 每日赛程种子前缀。
  *
  * ⚠️ 运行时（runtime.js 的 buildDailyCourse）与校验器
- *    （scripts/verify-bond-forge-levels.mjs）必须用**同一个**前缀，
+ *    （tests/verify-bond-forge-levels.mjs）必须用**同一个**前缀，
  *    否则校验器全绿而线上每天发的题与校验的根本不是同一套。
  *    所以它定义在这里、两边都 import，不允许各写一份字面量。
  */

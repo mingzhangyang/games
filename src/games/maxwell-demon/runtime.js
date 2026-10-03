@@ -10,7 +10,7 @@
  * 而代价就摆在 HUD 上——你每获得一个比特都要付账（兰道尔原理的游戏化表述）。
  *
  * 关卡数据 / 分子内核在本包的 model/rules.js（纯模块，校验器共用）。
- * par 由 scripts/verify-maxwell-demon-levels.mjs 的贪心模拟现算，绝不手填。
+ * par 由 tests/verify-maxwell-demon-levels.mjs 的贪心模拟现算，绝不手填。
  *
  * 共享层（2026-09 契约）：game-frame / game-drawer / game-chrome /
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。

@@ -20,7 +20,7 @@
 // ⚠️ safeR 的口径：脉冲实际揭示半径 pulseMaxR = 240px = 12 格，玩家可信穿越半径 safeR = 9 格
 // （多留 3 格余量）。改 safeR / pulseMaxR 任意一侧都必须重跑本脚本。
 //
-// 用法：node scripts/verify-echo-cave-levels.mjs
+// 用法：node tests/verify-echo-cave-levels.mjs
 
 import {
     GRID, RULES, LEVELS, DAILY_COUNT,

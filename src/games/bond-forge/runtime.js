@@ -9,7 +9,7 @@
  *
  * 化学内核（元素表 / 分子白名单 / 规范化判定 / 最优解）在
  * model/molecules.js，关卡数据在 model/levels.js
- * —— 两者都是**纯模块**，校验器 scripts/verify-bond-forge-levels.mjs 共用。
+ * —— 两者都是**纯模块**，校验器 tests/verify-bond-forge-levels.mjs 共用。
  *
  * 教育底线（docs/proposal-bond-forge.md §2.6 反馈诚实原则）：
  *   合法但不是本题目标 → 先肯定它的正确性、说出它的名字、再说「不是本题要的」；
@@ -83,7 +83,7 @@ let P = null;
  * ⚠️ 这里刻意**不**从 molecules.js 导入 STAGE。曾经导入成 `MOL_STAGE` 别名却
  *    一处没用（eslint 挂着 warning），而真正被引用的是本文件这个 `STAGE`。
  *    与其维护两套名字，不如只留一份并写清约束；真值漂移由
- *    `scripts/verify-bond-forge-levels.mjs` 的 §① 形状断言兜住。
+ *    `tests/verify-bond-forge-levels.mjs` 的 §① 形状断言兜住。
  */
 const STAGE = { w: 520, h: 680 };
 export const W = STAGE.w;
@@ -151,7 +151,7 @@ function sfxTone(freq, dur, type, vol) {
 /* ────────────────────────── i18n ──────────────────────────
  * ⚠️ 不要在此表里重复全站公共键（sound / language / moreGames / close /
  *    copied / usernameLabel）—— 它们由 makeText 经 COMMON_TEXT 原型链兜底，
- *    重复写出会被 scripts/verify-i18n.mjs 判为「字面量重复」硬失败。 */
+ *    重复写出会被 tests/verify-i18n.mjs 判为「字面量重复」硬失败。 */
 
 // LANGUAGES moved to src/games/bond-forge/i18n.js.
 
@@ -693,7 +693,7 @@ class BondForgeGame {
     /**
      * 今日赛程：从 DAILY_POOL 里确定性地抽 5 关。
      *
-     * ⚠️ 种子口径必须与 scripts/verify-bond-forge-levels.mjs 的断言一致：
+     * ⚠️ 种子口径必须与 tests/verify-bond-forge-levels.mjs 的断言一致：
      *    `mulberry32(hashStringFNV('bond-forge:' + todayKey()))`
      *    —— 改前缀或换哈希会让「今天已发布的赛程」在玩家之间不一致。
      *    （用 todayKey() 而不是 Date.now()：同一天内反复进入必须拿到同一套题。）

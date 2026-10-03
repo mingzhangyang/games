@@ -10,8 +10,8 @@
 //   附带：.theme-toggle 曾是 position:static，热区伪元素 ::after(inset:-6px) 解析到
 //      .game-container，给整页铺了一层隐形命中层。
 //
-// 用法：node scripts/serve-static.mjs 8899 & 然后
-//       node scripts/verify-tetris-topbar-mobile.mjs http://127.0.0.1:8899 [outDir]
+// 用法：node tests/lib/serve-static.mjs 8899 & 然后
+//       node tests/verify-tetris-topbar-mobile.mjs http://127.0.0.1:8899 [outDir]
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { mkdirSync } from 'node:fs';
@@ -137,7 +137,7 @@ for (const vp of VIEWPORTS) {
     // 原「文案 ink 居中 / 图标与文案基线对齐 / .game-btn 约束 15px」三条断言所测的
     // 对象（钮内有 <span> 文案）已不存在，按新契约改为验证「是纯图标钮」。
     // 垂直居中仍要有保障，只是改由 .game-icon-btn 的 flex 居中承担。
-    // 相关覆盖由 scripts/verify-tetris-drawer.mjs 承接（含抽屉与 HUD）。
+    // 相关覆盖由 tests/verify-tetris-drawer.mjs 承接（含抽屉与 HUD）。
     check(s.theme.hasSvg && s.theme.svgCount === 1, '主题钮内有且只有一个 inline SVG 图标', `svg=${s.theme.svgCount}`);
     check(s.theme.text.trim() === '',
         '主题钮不含文字子节点（纯图标钮；文案只在 aria-label / title）', JSON.stringify(s.theme.text));

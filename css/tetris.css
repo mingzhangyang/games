@@ -1,4 +1,4 @@
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --tt-body-bg: #0a0a0a;
     --tt-background-animation-bg: linear-gradient(45deg, #0a0a0a, #1a1a2e, #16213e);

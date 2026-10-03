@@ -711,7 +711,7 @@ body.drawer-locked {
      两侧由页面自己的 body 夜色背景自然延展。
 
    ⚠️ 只新增选择器、不改任何既有规则：未声明 layout 的页面几何逐像素不变
-      （验证：scripts/layout-metrics.mjs 改动前后逐行一致）。
+      （验证：tools/dev/layout-metrics.mjs 改动前后逐行一致）。
    ⚠️ 全部规则放在文件末尾：它们要压过上方 ≥1024px 媒体块里 .game-shell / .game-stage
       的桌面预算规则，靠的是「同等特异度、后声明者胜」+ shell 上的双类选择器。 */
 :root {

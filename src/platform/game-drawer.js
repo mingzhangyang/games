@@ -2,7 +2,8 @@
  * 共享底部统计抽屉控制器
  * =====================
  * 把「移动端侧栏 → 顶栏 Stats 图标钮 + 底部抽屉」这套交互抽成一份，供各页复用。
- * 结构（HTML）由 `scripts/apply-stats-drawer.py` 生成，本模块只负责行为。
+ * 静态 HTML 结构原由一次性迁移脚本生成（现归档于
+ * `tools/archive/migrations/apply-stats-drawer.py`）；本模块只负责行为。
  *
  * 约定（每个页面必须满足，否则 createStatsDrawer 会直接 return null）：
  *   - 抽屉：  `<div class="game-drawer" id="<idPrefix>StatsDrawer" hidden>`

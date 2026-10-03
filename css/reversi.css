@@ -2,7 +2,7 @@
    Reversi 黑白棋 — classic strategy board game
    ───────────────────────────────────────────── */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --rv-body-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(52, 211, 153, 0.09), transparent),
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #0e1f22 100%);

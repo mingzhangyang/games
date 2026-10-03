@@ -28,7 +28,7 @@ body {
  * 窄屏折行由共享层 .game-topbar-center 的 flex-wrap 负责（胶囊彼此保持单行、
  * 整组居中）；这里不再有任何纵向拆行覆盖。
  * 历史：「顶栏两行结构」（2026-09-19）已废弃 —— HTML 拍平 + 本段覆盖删除，
- * 回归脚本见 scripts/verify-td-topbar.mjs（断言单行契约 + 触控热区）。
+ * 回归脚本见 tests/verify-td-topbar.mjs（断言单行契约 + 触控热区）。
  */
 
 .td-stat {
