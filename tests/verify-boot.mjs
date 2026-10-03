@@ -83,7 +83,7 @@ function walkRuntime(dir, out = []) {
 }
 for (const abs of [...walkRuntime(join(ROOT, 'js')), ...walkRuntime(join(ROOT, 'src', 'games'))]) {
     const rel = abs.slice(ROOT.length + 1).replace(/\\/g, '/');
-    if (rel.startsWith('js/math-rain/')) continue;
+    if (rel.startsWith('src/games/math-rain/')) continue;
     const src = readFileSync(abs, 'utf8');
     ok(!/addEventListener\(\s*['"]DOMContentLoaded['"]/.test(src), `${rel} 无 DOMContentLoaded 注册`);
 }

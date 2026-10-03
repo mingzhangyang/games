@@ -118,7 +118,7 @@ caps 是校验器与迁移脚本的唯一判据：
 1. **结构**：`id` / `prefix` / `href` 全局唯一；`href` 与 `entry` 在磁盘上真实存在。
 2. **caps ⟺ 代码事实**（双向）：每条探针检查入口文件 / HTML 里是否真有该能力
    （`import leaderboard.js`、`game-sidebar`、`--frame-shell-max`……），与 caps 声明双向比对。
-   ⚠ 探针用 `\.{1,2}\/` 匹配相对路径 —— math-rain 的入口在 `js/math-rain/` 子目录，import 写成 `'../analytics.js'`，只认 `'./'` 会误判。
+   ⚠ 探针用 `\.{1,2}\/` 匹配相对路径 —— math-rain 的入口位于 `src/games/math-rain/`，平台 import 使用 `'../../platform/analytics.js'`，探针需接受多层相对路径。
 3. **scores 块 ⟺ leaderboard cap**：两者必须同进同出。
 4. **themeColorLight ⟺ theme-light cap**：同上。
 5. **layout 字段 ⟺ 页面骨架**（§2.1）。

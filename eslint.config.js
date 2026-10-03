@@ -1,13 +1,13 @@
 // ESLint flat config（eslint 10）— P3-2 风格契约
 //
-// 范围：js/**/*.js（运行时共享模块 + 各游戏页）、tests/**/*.mjs 及 tools/dev、tools/generators、tools/checks、tools/lib 下的 *.mjs。
-// 豁免：js/math-rain/**（化外页，P4 收编时纳入）、Workers/**（Cloudflare 独立域）、
+// 范围：保留的 js/**/*.js、src/platform/**/*.js、src/games/**/*.js、worker/**/*.js，以及 tests/**/*.mjs 和 tools/dev、tools/generators、tools/checks、tools/lib 下的 *.mjs。
+// 豁免：src/games/math-rain/**（保留的专用架构）、Workers/**（Cloudflare 独立域）、
 //       dist/**、node_modules/**、以及由 SVG 生成的 shadow-loom 运行时缓存。
 // 原则：正确性规则 error（阻断），风格规则以项目现状为准（4 空格 + 单引号），
 //       拿不准的先 warn 观察，避免首跑百行噪音淹没真问题。
 export default [
     {
-        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'js/math-rain/**', 'public/**', 'src/platform/more-games.js', 'src/generated/**'],
+        ignores: ['dist/**', 'node_modules/**', 'Workers/**', 'src/games/math-rain/**', 'public/**', 'src/platform/more-games.js', 'src/generated/**'],
     },
     {
         files: ['js/**/*.js', 'src/platform/**/*.js', 'src/games/**/*.js', 'worker/**/*.js'],
@@ -139,7 +139,7 @@ export default [
     },
     {
         // Web Worker 环境（reversi 的 AI worker）
-        files: ['js/reversi-worker.js'],
+        files: ['src/games/reversi/reversi-worker.js'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',

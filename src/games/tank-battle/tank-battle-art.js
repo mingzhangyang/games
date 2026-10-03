@@ -1,21 +1,21 @@
 // Tank Battle production art loader and renderer.
 // The runtime keeps procedural fallbacks so a missing asset never disables play.
 export const TANK_BATTLE_ART_URLS = {
-    'terrain.ground': new URL('../assets/tank-battle/terrain/ground.svg', import.meta.url).href,
-    'terrain.detail': new URL('../assets/tank-battle/terrain/ground-detail.svg', import.meta.url).href,
-    'tiles.brick': new URL('../assets/tank-battle/tiles/brick.svg', import.meta.url).href,
-    'tiles.steel': new URL('../assets/tank-battle/tiles/steel.svg', import.meta.url).href,
-    'tiles.boundary': new URL('../assets/tank-battle/tiles/boundary.svg', import.meta.url).href,
-    'tanks.player': new URL('../assets/tank-battle/tanks/player.svg', import.meta.url).href,
-    'tanks.enemy': new URL('../assets/tank-battle/tanks/enemy.svg', import.meta.url).href,
-    'tanks.boss': new URL('../assets/tank-battle/tanks/boss.svg', import.meta.url).href,
-    'powerups.health': new URL('../assets/tank-battle/powerups/health.svg', import.meta.url).href,
-    'powerups.weapon': new URL('../assets/tank-battle/powerups/weapon.svg', import.meta.url).href,
-    'powerups.shield': new URL('../assets/tank-battle/powerups/shield.svg', import.meta.url).href,
-    'powerups.speed': new URL('../assets/tank-battle/powerups/speed.svg', import.meta.url).href,
-    'ui.minimapFrame': new URL('../assets/tank-battle/ui/minimap-frame.svg', import.meta.url).href,
-    'ui.weaponIcons': new URL('../assets/tank-battle/ui/weapon-icons.svg', import.meta.url).href,
-    'ui.rotateDevice': new URL('../assets/tank-battle/ui/rotate-device.svg', import.meta.url).href,
+    'terrain.ground': new URL('../../../assets/tank-battle/terrain/ground.svg', import.meta.url).href,
+    'terrain.detail': new URL('../../../assets/tank-battle/terrain/ground-detail.svg', import.meta.url).href,
+    'tiles.brick': new URL('../../../assets/tank-battle/tiles/brick.svg', import.meta.url).href,
+    'tiles.steel': new URL('../../../assets/tank-battle/tiles/steel.svg', import.meta.url).href,
+    'tiles.boundary': new URL('../../../assets/tank-battle/tiles/boundary.svg', import.meta.url).href,
+    'tanks.player': new URL('../../../assets/tank-battle/tanks/player.svg', import.meta.url).href,
+    'tanks.enemy': new URL('../../../assets/tank-battle/tanks/enemy.svg', import.meta.url).href,
+    'tanks.boss': new URL('../../../assets/tank-battle/tanks/boss.svg', import.meta.url).href,
+    'powerups.health': new URL('../../../assets/tank-battle/powerups/health.svg', import.meta.url).href,
+    'powerups.weapon': new URL('../../../assets/tank-battle/powerups/weapon.svg', import.meta.url).href,
+    'powerups.shield': new URL('../../../assets/tank-battle/powerups/shield.svg', import.meta.url).href,
+    'powerups.speed': new URL('../../../assets/tank-battle/powerups/speed.svg', import.meta.url).href,
+    'ui.minimapFrame': new URL('../../../assets/tank-battle/ui/minimap-frame.svg', import.meta.url).href,
+    'ui.weaponIcons': new URL('../../../assets/tank-battle/ui/weapon-icons.svg', import.meta.url).href,
+    'ui.rotateDevice': new URL('../../../assets/tank-battle/ui/rotate-device.svg', import.meta.url).href,
 };
 
 const POWERUP_ASSET_KEYS = {

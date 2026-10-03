@@ -5,7 +5,7 @@
 // P2（2026-09-20）：HTML 的 onclick 内联处理器已全部移除，
 // 事件绑定统一收敛到本文件 —— 本 module 为 type="module"（defer 语义），执行时 DOM 已就绪。
 // P1（2026-09-20）：游戏依赖类（expression-generator 等 6 个）不再经此处动态 import +
-// window 兼容挂载，全部由 main.js 静态 import 直连；本文件只保留语言/商店/主入口编排。
+// window 兼容挂载，全部由 index.js 静态 import 直连；本文件只保留语言/商店/主入口编排。
 // mobile-adapter 保持 import 以触发其 DOM-ready 自初始化。
 
 // 原 globals 里的 window.updateShopInterface 转发包装已删：
@@ -37,7 +37,7 @@ if (homeExitBtn) {
             getGameStateManager: () => window.mathRainGame?.gameStateManager || null
         });
 
-        await import('./main.js');
+        await import('./index.js');
     } catch (error) {
         console.error('Failed to bootstrap Math Rain:', error);
     }

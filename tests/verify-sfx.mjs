@@ -12,7 +12,7 @@
  * 豁免（自治音频）：
  *  - src/platform/game-sfx.js（引擎本体）
  *  - src/games/sword-flight/audio.js（双振荡器和声/多段包络/持续风声，超出引擎表达域）
- *  - js/math-rain/**（化外页，P4 收编对象）
+ *  - src/games/math-rain/**（化外页，P4 收编对象）
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
@@ -50,7 +50,7 @@ function collectJsFiles(dir) {
 const EXEMPT = (rel) => rel === 'src/platform/game-sfx.js'
     || rel === 'src/games/sword-flight/audio.js'
     || rel === 'src/games/needle-awn/audio.js'
-    || rel.startsWith('js/math-rain/');
+    || rel.startsWith('src/games/math-rain/');
 
 const allFiles = [
     ...collectJsFiles(JS_DIR),
@@ -68,9 +68,9 @@ function audibleBoilerplate(rel, src) {
 /* ── 1. 迁移页 import createSfxEngine ── */
 const MIGRATED = [
     { rel: 'src/games/gravity-slingshot/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
-    { rel: 'js/minesweeper.js', root: JS_DIR, importPath: '../src/platform/game-sfx.js' },
+    { rel: 'src/games/minesweeper/index.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/planet-merge/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
-    { rel: 'js/reversi.js', root: JS_DIR, importPath: '../src/platform/game-sfx.js' },
+    { rel: 'src/games/reversi/index.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/word-daily/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/silk-dew/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/shadow-loom/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
@@ -106,8 +106,8 @@ for (const item of MIGRATED) {
 /* ── 2. 表驱动页 import createSfx ── */
 const TABLE_DRIVEN = [
     { rel: 'src/games/tetris/runtime.js', file: join(ROOT, 'src', 'games', 'tetris', 'runtime.js'), importPath: '../../platform/game-sfx.js' },
-    { rel: 'js/gomoku.js', file: join(JS_DIR, 'gomoku.js'), importPath: '../src/platform/game-sfx.js' },
-    { rel: 'js/tank-battle.js', file: join(JS_DIR, 'tank-battle.js'), importPath: '../src/platform/game-sfx.js' },
+    { rel: 'src/games/gomoku/index.js', file: join(GAMES_DIR, 'gomoku', 'index.js'), importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/tank-battle/index.js', file: join(GAMES_DIR, 'tank-battle', 'index.js'), importPath: '../../platform/game-sfx.js' },
 ];
 for (const item of TABLE_DRIVEN) {
     const src = readFileSync(item.file, 'utf8');

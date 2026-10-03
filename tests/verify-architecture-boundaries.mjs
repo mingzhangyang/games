@@ -165,28 +165,23 @@ ok(generatedContractViolations([join(ROOT, 'src/generated/unknown/cache.js')])
     .some(item => item.endsWith(':no-reproducibility-contract')), 'unknown generated files cannot pass with a stamp alone');
 const raised = JSON.parse(JSON.stringify(baseline));
 raised.categories['registry-entry-in-js'].items.push('example:js/example.js');
-ok(compareBaselineGrowth(raised).issues.length > 0, 'raising the baseline is rejected');
-// Model two consecutive PRs: first remove debt and lower the baseline, then
-// attempt to restore it, with and without raising the JSON alongside the code.
-const lower = JSON.parse(JSON.stringify(baseline));
+ok(compareBaselineGrowth(raised).issues.length > 0, 'strict-zero baseline regressions are rejected');
+// Model lowering a legacy ratchet into strict-zero, then verify restored debt fails.
 const category = 'registry-entry-in-js';
-const previousItems = baseline.categories[category].items;
-lower.categories[category].items = previousItems.slice(1);
+const previous = JSON.parse(JSON.stringify(baseline));
+previous.categories[category].items = ['fixture:js/legacy.js'];
+const lower = JSON.parse(JSON.stringify(baseline));
+lower.categories[category].items = [];
 const reduced = { [category]: lower.categories[category].items };
-ok(!compareDebt(reduced, baseline, category).synchronized,
-    'removing debt without trimming the checked-in baseline fails');
+ok(!compareDebt(reduced, previous, category).synchronized,
+    'clearing the old debt produces a baseline delta');
 ok(compareDebt(reduced, lower, category).synchronized
-    && compareBaselineGrowth(lower, { baseline, ref: 'fixture-before-removal' }).issues.length === 0,
-'removing debt and its baseline entry together passes');
-ok(!compareDebt({ [category]: previousItems }, lower, category).synchronized,
+    && compareBaselineGrowth(lower, { baseline: previous, ref: 'fixture-before-zero' }).issues.length === 0,
+    'emptying the final debt baseline passes');
+ok(compareDebt({ [category]: previous.categories[category].items }, lower, category).added.length === 1,
     'restoring removed debt against the lowered baseline fails');
-ok(compareBaselineGrowth(baseline, { baseline: lower, ref: 'fixture-after-removal' }).issues.length > 0,
-    'restoring debt together with its old baseline entry also fails');
-const zero = JSON.parse(JSON.stringify(lower));
-zero.categories[category].items = [];
-ok(compareDebt({ [category]: [] }, zero, category).synchronized
-    && compareBaselineGrowth(zero, { baseline: lower, ref: 'fixture-before-zero' }).issues.length === 0,
-'removing the final debt and emptying its baseline passes');
+ok(compareBaselineGrowth(previous, { baseline: lower, ref: 'fixture-after-zero' }).issues.length > 0,
+    'restoring debt in the strict-zero baseline also fails');
 const partialShell = compareDebt({ shell: ['minesweeper:game-main'] },
     { categories: { shell: { items: ['minesweeper:game-main', 'minesweeper:game-stage'] } } }, 'shell');
 ok(partialShell.added.length === 0 && partialShell.delta === -1, 'partial shell repairs are allowed');

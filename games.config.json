@@ -177,7 +177,7 @@
       "id": "math-rain",
       "prefix": "mr",
       "href": "math-rain.html",
-      "entry": "js/math-rain/main.js",
+      "entry": "src/games/math-rain/index.js",
       "emoji": "🔢",
       "title": {
         "doc": "Math Rain - Mathematical Expression Game",
@@ -280,7 +280,7 @@
       "id": "tank-battle",
       "prefix": "tb",
       "href": "tank-battle.html",
-      "entry": "js/tank-battle.js",
+      "entry": "src/games/tank-battle/index.js",
       "emoji": "🎯",
       "title": {
         "doc": "Tank Battle - Retro Arcade",
@@ -324,7 +324,7 @@
       "id": "gomoku",
       "prefix": "gk",
       "href": "gomoku.html",
-      "entry": "js/gomoku.js",
+      "entry": "src/games/gomoku/index.js",
       "emoji": "⚫",
       "title": {
         "doc": "Gomoku - Five in a Row",
@@ -546,7 +546,7 @@
       "id": "minesweeper",
       "prefix": "ms",
       "href": "minesweeper.html",
-      "entry": "js/minesweeper.js",
+      "entry": "src/games/minesweeper/index.js",
       "emoji": "💣",
       "title": {
         "doc": "Minesweeper — Classic Logic Puzzle",
@@ -604,7 +604,7 @@
       "id": "reversi",
       "prefix": "rv",
       "href": "reversi.html",
-      "entry": "js/reversi.js",
+      "entry": "src/games/reversi/index.js",
       "emoji": "⚪",
       "title": {
         "doc": "Reversi — Classic Strategy Board Game",
@@ -1541,7 +1541,7 @@
       "id": "firefly-signal",
       "prefix": "fs",
       "href": "firefly-signal.html",
-      "entry": "js/firefly-signal/main.js",
+      "entry": "src/games/firefly-signal/index.js",
       "emoji": "✨",
       "layout": "immersive",
       "title": {

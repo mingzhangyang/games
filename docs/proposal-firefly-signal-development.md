@@ -205,8 +205,8 @@ Firefly flash 应产生局部 illumination。第一版可使用 Canvas radial gr
 ```text
 firefly-signal.html
 
-js/firefly-signal/
-  main.js
+src/games/firefly-signal/
+  index.js
   game.js
   simulation.js
   renderer.js

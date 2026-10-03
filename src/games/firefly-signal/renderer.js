@@ -16,7 +16,7 @@
  * 环境照明是视觉核心而不是收尾润色：群体同时闪光时，照亮的是整片草地。
  */
 import { WORLD, DT } from './simulation.js';
-import { mulberry32 } from '../../src/platform/daily.js';
+import { mulberry32 } from '../../platform/daily.js';
 
 const TAU = Math.PI * 2;
 
@@ -27,14 +27,14 @@ const TAU = Math.PI * 2;
  * Vite 构建时会带上哈希并拷进 dist；源码态的静态服务器按原路径直出。
  */
 const LAYER_URLS = {
-    sky: new URL('../../assets/firefly-signal/layers/sky.webp', import.meta.url).href,
-    moon: new URL('../../assets/firefly-signal/layers/moon.webp', import.meta.url).href,
-    mountains: new URL('../../assets/firefly-signal/layers/mountains.webp', import.meta.url).href,
-    lake: new URL('../../assets/firefly-signal/layers/lake.webp', import.meta.url).href,
-    mid: new URL('../../assets/firefly-signal/layers/mid.webp', import.meta.url).href,
-    fore: new URL('../../assets/firefly-signal/layers/fore.webp', import.meta.url).href,
+    sky: new URL('../../../assets/firefly-signal/layers/sky.webp', import.meta.url).href,
+    moon: new URL('../../../assets/firefly-signal/layers/moon.webp', import.meta.url).href,
+    mountains: new URL('../../../assets/firefly-signal/layers/mountains.webp', import.meta.url).href,
+    lake: new URL('../../../assets/firefly-signal/layers/lake.webp', import.meta.url).href,
+    mid: new URL('../../../assets/firefly-signal/layers/mid.webp', import.meta.url).href,
+    fore: new URL('../../../assets/firefly-signal/layers/fore.webp', import.meta.url).href,
     // 前景「被照亮版」是加色增量（照亮版 − 原图，已去掉画进去的光球与剪影外的光晕），0.6 倍分辨率存储
-    foreLit: new URL('../../assets/firefly-signal/layers/fore-lit.webp', import.meta.url).href,
+    foreLit: new URL('../../../assets/firefly-signal/layers/fore-lit.webp', import.meta.url).href,
 };
 /** 前景剪影上沿（每列首个不透明行）的中位数约在素材高度 39% 处：萤火虫在它下面一点以上的画在草后 */
 const FORE_SPLIT = 0.42;

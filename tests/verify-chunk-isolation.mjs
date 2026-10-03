@@ -2,14 +2,14 @@
 /**
  * verify-chunk-isolation — 带自动初始化副作用的入口不得泄漏到其它页面。
  *
- * 事故（2026-09-21）：vite.config.js 的对象式 manualChunks 把 math-rain/main.js
+ * 事故（2026-09-21）：vite.config.js 的对象式 manualChunks 把 math-rain/index.js
  * 连同 safe-storage / site-settings / icons / analytics 打进 math-rain-core，
  * 其它页面为了拿这些共享导出加载该分块，顶层 auto-init 在缺 #game-canvas 时
  * 弹出「❌ 游戏初始化失败」。源码态 dev 走模块图，只有 prod 产物会中招。
  *
  * 断言：
  *   1) vite.config.js 生效配置（去注释后）没有 manualChunks
- *   2) js/math-rain/main.js 的 auto-init 有宿主页门闩
+ *   2) src/games/math-rain/index.js 的 auto-init 有宿主页门闩
  *   3) 若 dist/ 存在：除 math-rain.html 外的 HTML 不得引用 assets/js/math-rain*
  *
  * 用法：node tests/verify-chunk-isolation.mjs（无需浏览器/服务器）
@@ -48,11 +48,11 @@ ok(!/\bmanualChunks\s*:/.test(viteLive),
     'vite.config.js 生效配置无 manualChunks（对象式会把依赖图整包塞进分块）');
 
 console.log('\n▶ math-rain auto-init 门闩');
-const mainSrc = readFileSync(join(ROOT, 'js/math-rain/main.js'), 'utf8');
+const mainSrc = readFileSync(join(ROOT, 'src/games/math-rain/index.js'), 'utf8');
 ok(mainSrc.includes('querySelector(\'main.mr-main\')'),
-    'main.js 以 main.mr-main 作为宿主页门闩');
+    'index.js 以 main.mr-main 作为宿主页门闩');
 ok(mainSrc.includes('getElementById(\'game-canvas\')'),
-    'main.js 以 #game-canvas 作为宿主页门闩');
+    'index.js 以 #game-canvas 作为宿主页门闩');
 const hasGate = /function isMathRainHostPage\(/.test(mainSrc)
     && /if\s*\(\s*!isMathRainHostPage\(\)\s*\)/.test(mainSrc);
 ok(hasGate, 'initializeMathRainGame 在创建实例前调用 isMathRainHostPage');

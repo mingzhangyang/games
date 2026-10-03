@@ -14,7 +14,7 @@ import { createSimulation, DT, TUNING } from './simulation.js';
 import { createRenderer } from './renderer.js';
 import { createFireflyAudio } from './audio.js';
 import { LEVELS } from './levels.js';
-import { storageGet, storageSet } from '../../src/platform/safe-storage.js';
+import { storageGet, storageSet } from '../../platform/safe-storage.js';
 
 const GAME_ID = 'firefly-signal';
 const HIT_RADIUS = 24;          // CSS 像素：触控目标约 48px，视觉虫体可以很小

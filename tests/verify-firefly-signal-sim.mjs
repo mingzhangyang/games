@@ -17,8 +17,8 @@
 import {
     createSimulation, replay, orderParameter, falloff, ringFalloff, responseCurve, signedGap,
     DT, TYPES, TUNING, WORLD,
-} from '../js/firefly-signal/simulation.js';
-import { LEVELS, BRIDGES } from '../js/firefly-signal/levels.js';
+} from '../src/games/firefly-signal/simulation.js';
+import { LEVELS, BRIDGES } from '../src/games/firefly-signal/levels.js';
 import { solve, randomPlay, idle } from './lib/firefly-solver.mjs';
 
 let failed = 0;

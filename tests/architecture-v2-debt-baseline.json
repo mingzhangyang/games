@@ -1,17 +1,10 @@
 {
   "version": 1,
-  "generatedFrom": "main@dee8cb79139b1a84d46f0f91b6c3fcb111232ca9",
+  "generatedFrom": "main@aa744f11b8c6bf3ec06b9cc365dbc937f77e9b56",
   "categories": {
     "registry-entry-in-js": {
-      "mode": "ratchet",
-      "items": [
-        "firefly-signal:js/firefly-signal/main.js",
-        "gomoku:js/gomoku.js",
-        "math-rain:js/math-rain/main.js",
-        "minesweeper:js/minesweeper.js",
-        "reversi:js/reversi.js",
-        "tank-battle:js/tank-battle.js"
-      ]
+      "mode": "strict-zero",
+      "items": []
     },
     "platform-shim-consumers": {
       "mode": "strict-zero",
@@ -26,7 +19,7 @@
       "items": []
     },
     "active-scripts-references": {
-      "mode": "ratchet",
+      "mode": "strict-zero",
       "items": []
     },
     "oversized-composition-entries": {

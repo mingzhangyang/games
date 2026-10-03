@@ -30,16 +30,9 @@ const SELF_SCAN_FILES = new Set([
     'tests/architecture-report.mjs',
 ]);
 
-// The first baseline is introduced by this PR, so the merge-base has no JSON
-// file to compare against. Keep an immutable fingerprint for that bootstrap
-// snapshot; once the file exists on main, compare future PRs with its merge
-// base instead. The fingerprints are deliberately checked in here rather than
-// derived from the current JSON, otherwise a PR could raise both together.
-export const BOOTSTRAP_BASELINE = Object.freeze({
-    'registry-entry-in-js': Object.freeze({ count: 25, sha256: '43b0ace9e98c38c103bfff58c51f6bf8eb93200d18a3686da3d9e5bab503f412' }),
-    'platform-shim-consumers': Object.freeze({ count: 0, sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }),
-    'active-scripts-references': Object.freeze({ count: 0, sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }),
-});
+// Phase 9 retires the last ratchets. Any future ratchet must define a
+// separate immutable bootstrap ceiling before it can be enabled.
+export const BOOTSTRAP_BASELINE = Object.freeze({});
 
 function rel(abs) {
     return relative(ROOT, abs).replaceAll('\\', '/');
@@ -627,12 +620,11 @@ export function compareDebt(current, baseline, category) {
     };
 }
 
-export const RATCHET_CATEGORIES = [
-    'registry-entry-in-js',
-    'active-scripts-references',
-];
+export const RATCHET_CATEGORIES = [];
 
 export const STRICT_ZERO_CATEGORIES = [
+    'registry-entry-in-js',
+    'active-scripts-references',
     'platform-shim-consumers',
     'game-localstorage',
     'src-game-shim-imports',

@@ -308,7 +308,7 @@ assets/math-rain/**
 math-rain.html
 css/math-rain/math-rain.css
 css/math-rain/shop.css
-js/math-rain/main.js
+src/games/math-rain/index.js
 相关 UIController / screen style（仅必要）
 tests/verify-math-rain-art.mjs
 tests/smoke-math-rain.mjs
