@@ -12,7 +12,17 @@ import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from './reversi-ai.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import {
+    loadReversiMode,
+    loadReversiDifficulty,
+    loadReversiBestStreak,
+    saveReversiBestStreak,
+    loadReversiLocalScores,
+    saveReversiLocalScores,
+    saveReversiMode,
+    saveReversiDifficulty,
+    loadReversiStreak,
+} from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { makeText } from '../../platform/i18n.js';
@@ -152,8 +162,8 @@ class ReversiGame {
             if (el) this.el[id.replace(/^rv-/, '')] = el;
         });
 
-        this.mode = storageGet('rv_mode') === '2p' ? '2p' : 'ai';
-        this.diff = ['easy', 'medium', 'hard'].includes(storageGet('rv_diff')) ? storageGet('rv_diff') : 'medium';
+        this.mode = loadReversiMode();
+        this.diff = loadReversiDifficulty();
         this.lang = this.readLang();
 
         this.gameId = 0;      // 递增令牌，用于作废过期的 AI 回调
@@ -434,8 +444,8 @@ class ReversiGame {
             const won = b > w;
             if (won) {
                 this.streak = (this.streak || 0) + 1;
-                const best = Number(storageGet('rv_best_streak')) || 0;
-                if (this.streak > best) storageSet('rv_best_streak', String(this.streak));
+                const best = loadReversiBestStreak();
+                if (this.streak > best) saveReversiBestStreak(this.streak);
                 this.submitScore(this.streak);
                 streakNote = `${t.winStreak} ${this.streak}`;
             } else if (b < w) {
@@ -457,7 +467,7 @@ class ReversiGame {
 
     updateStreakLine() {
         if (!this.el['streak-line']) return;
-        const best = Number(storageGet('rv_best_streak')) || 0;
+        const best = loadReversiBestStreak();
         this.el['streak-line'].textContent = best > 0
             ? `${this.TEXT.winStreak}: ${this.streak || 0}   ·   ${this.TEXT.bestStreak}: ${best}`
             : '';
@@ -466,12 +476,7 @@ class ReversiGame {
     /* ── 排行榜 ── */
 
     localScores() {
-        try {
-            const all = JSON.parse(storageGet('rv_local_scores'));
-            return Array.isArray(all) ? all : [];
-        } catch (e) {
-            return [];
-        }
+        return loadReversiLocalScores();
     }
 
     renderLocalScores() {
@@ -510,7 +515,7 @@ class ReversiGame {
         const local = this.localScores();
         local.push({ name: ensurePlayerName() || 'Anonymous', score: streak });
         local.sort((a, b) => b.score - a.score);
-        storageSet('rv_local_scores', JSON.stringify(local.slice(0, 30)));
+        saveReversiLocalScores(local.slice(0, 30));
         // 网络层收敛到 src/platform/leaderboard.js（false=未进全球榜）
         const ok = await submitScore({ game: 'reversi', name: ensurePlayerName() || 'Anonymous', score: streak });
         if (!ok) {
@@ -623,7 +628,7 @@ class ReversiGame {
             const btn = e.target.closest('[data-mode]');
             if (!btn) return;
             this.mode = btn.dataset.mode;
-            storageSet('rv_mode', this.mode);
+            saveReversiMode(this.mode);
             this.syncModeButtons();
             Sfx.click();
         });
@@ -632,7 +637,7 @@ class ReversiGame {
             const btn = e.target.closest('[data-diff]');
             if (!btn) return;
             this.diff = btn.dataset.diff;
-            storageSet('rv_diff', this.diff);
+            saveReversiDifficulty(this.diff);
             this.syncModeButtons();
             Sfx.click();
         });
@@ -691,7 +696,7 @@ onReady(() => {
     const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
     const game = new ReversiGame({ i18nBinder });
     window.rvGame = game; // 调试/测试句柄
-    game.streak = Number(storageGet('rv_streak')) || 0; // 连胜跨会话持久化
+    game.streak = loadReversiStreak(); // 连胜跨会话持久化
     game.updateStreakLine();
     game.board = new Int8Array(64);
     game.board[27] = WHITE; game.board[28] = BLACK;

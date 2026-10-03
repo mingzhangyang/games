@@ -107,14 +107,20 @@ const res = await G(() => ({
     harmony: document.getElementById('fs-result-harmony').textContent,
     used: document.getElementById('fs-result-used').textContent,
     next: !document.getElementById('fs-btn-next').classList.contains('hidden'),
-    best: localStorage.getItem('fs_best_first-light'),
+    best: localStorage.getItem('game:firefly-signal:v1:best:first-light'),
+    legacyBest: localStorage.getItem('fs_best_first-light'),
 }));
 check(res.visible, '② 结算浮层可见');
 check(/Resonance/.test(res.title), '② 结算标题', res.title);
 check(/^Harmony \d{2,3}%$/.test(res.harmony), '② 同步度文案（无占位符泄漏）', res.harmony);
 check(res.used === `${plan.used} / ${L1.maxInterventions} signals`, '② 次数文案', res.used);
 check(res.next, '② 胜利时有 Continue');
-check(!!res.best && JSON.parse(res.best).used === plan.used, '② 最佳记录写入 fs_best_first-light', res.best);
+check(
+    !!res.best && JSON.parse(res.best).used === plan.used,
+    '② 最佳记录写入 canonical GameStorage slot',
+    res.best,
+);
+check(res.legacyBest === null, '② 新成绩不回写 legacy fs_best_first-light', res.legacyBest);
 
 /* ⑥ Continue → 第 2 关 */
 await page.click('#fs-btn-next');

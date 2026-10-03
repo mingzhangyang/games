@@ -657,6 +657,10 @@ Phase 5 的基线盘点与第一批迁移映射记录在
 `sd_progress_version=2` 评分迁移事务，再写入 canonical GameStorage slot，`sd_lb_*` 保持原协议。
 第八批使用 `refactor/game-storage-migration-h`，单独迁 Gravity Slingshot 的 `gd_stars`；
 `gd_daily_*`、`gs_daily_*`、`gd_local_*` 与 `gd_course_*` 保持原协议。
+Phase 9 包迁移后的复扫发现早期 inventory 漏掉了一批原先仍在 legacy 入口中的私有状态；
+第九批使用 `refactor/game-storage-migration-i`，迁 Reversi、Minesweeper、Firefly Signal
+的偏好/纪录/本地成绩。Tower Defense、Math Rain、Word Daily 的混合或跨模块状态继续拆成
+后续独立小批，不与 Batch I 混合。
 
 建议分支按批次命名：
 

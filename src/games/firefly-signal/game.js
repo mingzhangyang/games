@@ -14,7 +14,7 @@ import { createSimulation, DT, TUNING } from './simulation.js';
 import { createRenderer } from './renderer.js';
 import { createFireflyAudio } from './audio.js';
 import { LEVELS } from './levels.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { loadBest, saveBest } from './storage.js';
 
 const GAME_ID = 'firefly-signal';
 const HIT_RADIUS = 24;          // CSS 像素：触控目标约 48px，视觉虫体可以很小
@@ -23,24 +23,7 @@ const FAIL_GRACE = 14;          // 用完干预后再给多少秒让自然耦合
 const COACH_SECONDS = 7;
 const MAX_TICKS_PER_FRAME = 12; // 标签页卡顿后不一次性快进太多
 
-const bestKey = id => `fs_best_${id}`;
-
-export function loadBest(levelId) {
-    try {
-        const raw = storageGet(bestKey(levelId));
-        const v = raw ? JSON.parse(raw) : null;
-        return v && typeof v.used === 'number' && typeof v.harmony === 'number' ? v : null;
-    } catch (e) {
-        return null;
-    }
-}
-
-function saveBest(levelId, used, harmony) {
-    const prev = loadBest(levelId);
-    const better = !prev || used < prev.used || (used === prev.used && harmony > prev.harmony);
-    if (better) storageSet(bestKey(levelId), JSON.stringify({ used, harmony: Math.round(harmony * 100) / 100 }));
-    return better;
-}
+export { loadBest };
 
 export class FireflyGame {
     /**
