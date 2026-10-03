@@ -4,7 +4,7 @@
  *
  * 几何/元素存在性证明不了「游戏能玩」。本脚本走真实交互链：
  *   menu → startLevel(0) → 键盘 f 观测 / 空格武装 → 真放行一个分子
- *   → 拉出温差 → 通关结算 → 星级写入 md_progress → 破产宽限 → 每日赛程 → 复位
+ *   → 拉出温差 → 通关结算 → 星级写入 canonical GameStorage slot → 破产宽限 → 每日赛程 → 复位
  *
  * 六条静态校验器测不到、必须真机证明的教学内核：
  *   · 观测：花钱才看得见快慢（revealT 计时，分子常态不可辨）
@@ -259,15 +259,15 @@ const won = await page.evaluate(() => {
         state: g.state,
         clearVisible: !document.getElementById('md-clear').classList.contains('hidden'),
         stars: document.getElementById('md-clear-stars').textContent,
-        progress: (() => { try { return JSON.parse(localStorage.getItem('md_progress') || '{}'); } catch (e) { return null; } })(),
+        progress: (() => { try { return JSON.parse(localStorage.getItem('game:maxwell-demon:v1:progress') || '{}'); } catch (e) { return null; } })(),
         dlg: g.mode,
     };
 });
 if (won.state !== 'won-level') fail(`保持满 holdTime 后 state 应为 won-level，got ${won.state}`);
 else if (!won.clearVisible) fail('通关后未弹出结算面板');
-else if (!won.progress || !won.progress.md1) fail('星级未写入 md_progress');
+else if (!won.progress || !won.progress.md1) fail('星级未写入 game:maxwell-demon:v1:progress');
 else if (!won.progress.md1.stars || won.progress.md1.stars < 1) fail(`存档星级应 ≥1，got ${won.progress.md1.stars}`);
-else pass(`通关：won-level、结算面板弹出、${won.stars} 写入 md_progress（spent=${won.progress.md1.bestSpent}）`);
+else pass(`通关：won-level、结算面板弹出、${won.stars} 写入 canonical progress（spent=${won.progress.md1.bestSpent}）`);
 
 /* ── 8. 破产：预算见底 → 宽限 → 判负 ── */
 await page.evaluate(() => {

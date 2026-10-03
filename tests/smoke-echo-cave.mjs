@@ -4,7 +4,7 @@
  *
  * 几何/元素存在性只能证明「页面长得对」，测不出「游戏能玩」。本脚本走真实交互链：
  *   menu → startLevel(0) → 键盘走位（BFS 现算路线，不硬编码像素）+ 空格发脉冲
- *   → 拾晶 → 走进洞口 → 通关结算 → 星级写入 ec_progress
+ *   → 拾晶 → 走进洞口 → 通关结算 → 星级写入 canonical GameStorage slot
  *
  * 另外三条是这作的教学内核，必须由真机证明（静态校验器测不到运行时）：
  *   · 荆棘：踩上去扣护心 + 被击退
@@ -266,7 +266,7 @@ const won = await page.evaluate(() => {
         par: g.par,
         clearVisible: !document.getElementById('ec-clear').classList.contains('hidden'),
         stars: document.getElementById('ec-clear-stars').textContent,
-        progress: (() => { try { return JSON.parse(localStorage.getItem('ec_progress') || '{}'); } catch (e) { return null; } })(),
+        progress: (() => { try { return JSON.parse(localStorage.getItem('game:echo-cave:v1:progress') || '{}'); } catch (e) { return null; } })(),
     };
 });
 const before = fails.length;
@@ -275,7 +275,7 @@ if (won.state !== 'won-level') fail(`走进洞口后 state 应为 won-level，go
 if (!won.clearVisible) fail('通关后未弹出结算面板');
 if (won.got !== won.total) fail(`应拾齐 ${won.total} 颗声晶，got ${won.got}`);
 if (won.hearts !== 3) fail(`par 路线不应掉护心，got ${won.hearts}`);
-if (!won.progress || !won.progress.E1) fail('星级未写入 ec_progress');
+if (!won.progress || !won.progress.E1) fail('星级未写入 game:echo-cave:v1:progress');
 else if (!won.progress.E1.stars || won.progress.E1.stars < 2) fail(`存档星级应 ≥2，got ${won.progress.E1.stars}`);
 if (errs.length) fail(`对局中 JS 运行时错误: ${errs.slice(0, 2).join(' | ')}`);
 if (fails.length === before) {

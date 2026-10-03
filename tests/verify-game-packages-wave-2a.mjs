@@ -35,12 +35,12 @@ const specs = [
     },
     {
         id: 'shadow-loom',
-        files: ['index.js', 'runtime.js', 'i18n.js', 'model/levels.js', 'model/rules.js', 'render/scene.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'i18n.js', 'model/levels.js', 'model/rules.js', 'render/scene.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'mountGameRuntime', 'window.slGame', 'window.slRuntime'],
-        runtimeNeedles: ["from './i18n.js'", "from './model/rules.js'", "from './model/levels.js'", "from './render/scene.js'", "from '../../platform/game-sfx.js'"],
+        runtimeNeedles: ["from './i18n.js'", "from './storage.js'", "from './model/rules.js'", "from './model/levels.js'", "from './render/scene.js'", "from '../../platform/game-sfx.js'"],
         modelNeedles: ["from '../../../generated/shadow-loom/silhouettes.js"],
         handles: ['window.slGame', 'window.slRuntime', 'window.slDrawer'],
-        keys: ["'sl_progress'", "'sl_seen_chapters'"],
+        storageKeys: ["'sl_progress'", "'sl_seen_chapters'"],
     },
 ];
 
@@ -60,6 +60,7 @@ for (const spec of selectedSpecs) {
     const index = read(`${packageRoot}/index.js`);
     const runtime = read(`${packageRoot}/runtime.js`);
     const shim = read(`js/${spec.id}.js`).trim();
+    const storage = spec.storageKeys ? read(`${packageRoot}/storage.js`) : '';
 
     check(game.entry === `${packageRoot}/index.js`, `${spec.id}: registry points at the package composition root`);
     for (const file of spec.files) check(existsSync(join(ROOT, packageRoot, file)), `${spec.id}: ${file} exists`);
@@ -70,7 +71,8 @@ for (const spec of selectedSpecs) {
         check(read(modelFile).includes(needle), `${spec.id}: model delegates ${needle}`);
     }
     for (const handle of spec.handles) check(index.includes(handle), `${spec.id}: preserves ${handle}`);
-    for (const key of spec.keys) check(runtime.includes(key), `${spec.id}: preserves storage contract ${key}`);
+    for (const key of spec.keys || []) check(runtime.includes(key), `${spec.id}: preserves runtime storage contract ${key}`);
+    for (const key of spec.storageKeys || []) check(storage.includes(key), `${spec.id}: adapter preserves legacy storage contract ${key}`);
     check(!/from ['"]\.\/(?:input|render|model)\//.test(index), `${spec.id}: index does not own implementation modules`);
     check(index.length < 8 * 1024, `${spec.id}: composition root stays below 8 KiB`);
     check(shim === `// Compatibility entry kept for the existing ${spec.id}.html URL.\n// The canonical game package lives under src/games/${spec.id}/.\nimport '../src/games/${spec.id}/index.js';\nexport * from '../src/games/${spec.id}/runtime.js';`,
