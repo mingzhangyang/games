@@ -5,7 +5,7 @@
 //   randomPlay(level, seed, rngSeed, opts) —— 「随机点击的玩家」：随机时刻点随机的虫。
 //
 // 两者都只通过 sim.intervene(id) 输入，产出 (tick, id) 序列，可在浏览器里逐 tick 回放。
-import { createSimulation, DT } from '../../js/firefly-signal/simulation.js';
+import { createSimulation, DT } from '../../src/games/firefly-signal/simulation.js';
 import { mulberry32 } from '../../src/platform/daily.js';
 
 const sec = s => Math.round(s / DT);

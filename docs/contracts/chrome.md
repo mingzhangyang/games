@@ -190,5 +190,5 @@ node tests/verify-registry.mjs
 > `src/platform/site-settings.js`，以及 word-daily 的 `#wd-btn-lang`（单词/成语模式切换，非语言）。
 > 已注册进 `verify-all` 全量档与 `--quick` 档。
 
-> 它已经抓到一个**与迁移无关的历史 bug**：`js/minesweeper.js` 里写的是 `this.el.mute`，
+> 它已经抓到一个**与迁移无关的历史 bug**：`src/games/minesweeper/index.js` 里写的是 `this.el.mute`，
 > 而元素缓存的键是 `mute-btn`（id 去掉 `ms-` 前缀），所以扫雷顶栏的静音钮**自 HEAD 起就没绑上过**。

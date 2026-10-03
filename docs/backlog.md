@@ -60,7 +60,7 @@ display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不
 ## verify-button-icons 未覆盖 tetris / minesweeper 的结果按钮
 
 **现象**：`tests/verify-button-icons.mjs` 的 `TARGETS` 只列了 8 页（2026-09-20 补上
-lumen 后 9 页）。tetris（`src/games/tetris/runtime.js` 3 处 `ICONS.`）与 minesweeper（`js/minesweeper.js`
+lumen 后 9 页）。tetris（`src/games/tetris/runtime.js` 3 处 `ICONS.`）与 minesweeper（`src/games/minesweeper/index.js`
 8 处）确实有「图标 + 文字」的结果/动作按钮，却一直不在表内，等于没被量过
 inline-flex / 单 svg / 图标 15px / 基线偏移这四条。
 
@@ -71,7 +71,7 @@ inline-flex / 单 svg / 图标 15px / 基线偏移这四条。
 **当前状态**：`TARGETS` 旁的 `registry.assertCovered({ cap: 'topbar', … })` 把这两页
 连同 gomoku 列入 `exempt` 显式豁免 —— 漏页从此会红，但这两页的豁免是白纸黑字的
 待办，不是分工。gomoku 不算缺口：它的结果面板本来就没有图标 + 文字按钮
-（`js/gomoku.js` 零处 `ICONS.`），无可测。
+（`src/games/gomoku/index.js` 零处 `ICONS.`），无可测。
 
 **修法**：给两页的结果按钮补 `TARGETS` 条目（tetris 需先确认其结果面板按钮 id），
 跑 `node tests/verify-button-icons.mjs` 看四条量化断言是否通过；不通过的按

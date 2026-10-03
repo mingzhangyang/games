@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ART_ROOT = join(ROOT, 'assets', 'tank-battle');
 const manifest = JSON.parse(readFileSync(join(ART_ROOT, 'manifest.json'), 'utf8'));
-const art = readFileSync(join(ROOT, 'js', 'tank-battle-art.js'), 'utf8');
-const entities = readFileSync(join(ROOT, 'js', 'tank-entities.js'), 'utf8');
-const game = readFileSync(join(ROOT, 'js', 'tank-battle.js'), 'utf8');
+const art = readFileSync(join(ROOT, 'src', 'games', 'tank-battle', 'tank-battle-art.js'), 'utf8');
+const entities = readFileSync(join(ROOT, 'src', 'games', 'tank-battle', 'tank-entities.js'), 'utf8');
+const game = readFileSync(join(ROOT, 'src', 'games', 'tank-battle', 'index.js'), 'utf8');
 const html = readFileSync(join(ROOT, 'tank-battle.html'), 'utf8');
 const css = readFileSync(join(ROOT, 'css', 'tank-battle.css'), 'utf8');
 const smoke = readFileSync(join(ROOT, 'tests', 'smoke-tank-battle.mjs'), 'utf8');
@@ -84,7 +84,7 @@ for (const [key, [relative, viewBox]] of Object.entries(expected)) {
     if (!body.includes('<svg') || actualViewBox !== viewBox) {
         fail(key + ': expected SVG viewBox ' + viewBox + ', got ' + (actualViewBox || 'missing'));
     }
-    const literal = "new URL('../assets/tank-battle/" + relative + "', import.meta.url)";
+    const literal = "new URL('../../../assets/tank-battle/" + relative + "', import.meta.url)";
     if (!art.includes(literal)) fail(key + ': runtime URL is not a literal import.meta.url reference');
 }
 if (totalBytes > manifest.budgetBytes) fail('art pack is ' + totalBytes + ' bytes, over budget ' + manifest.budgetBytes);

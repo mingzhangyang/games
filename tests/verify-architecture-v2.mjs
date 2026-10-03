@@ -72,7 +72,7 @@ for (const rel of [
 const scaffold = renderGameShell({
     id: 'fixture-game',
     prefix: 'fg',
-    entry: 'src/games/fixture-game/main.js',
+    entry: 'src/games/fixture-game/index.js',
     name: { en: 'Fixture Game', zh: '示例游戏' },
     caps: ['theme-light'],
     themeColor: '#101820',

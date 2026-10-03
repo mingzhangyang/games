@@ -8,7 +8,7 @@
  *   · 全局同步：柔和的完整和弦（琶音展开）
  *   · 玩家干预：一声很低、很短的「信号」
  */
-import { createSfxEngine } from '../../src/platform/game-sfx.js';
+import { createSfxEngine } from '../../platform/game-sfx.js';
 
 // D 大调五声音阶里取音：和谐、没有「错音」
 const PENTA = [587.33, 659.25, 739.99, 880, 987.77, 1174.66, 1318.51, 1479.98, 1760];

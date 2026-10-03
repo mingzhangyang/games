@@ -119,10 +119,10 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 
 ### 3.1 范围与豁免
 
-- 覆盖：`js/**/*.js`（运行时共享模块 + 各游戏页）、`tests/**/*.mjs`、`tools/generators/**/*.mjs` 与 `tools/checks/**/*.mjs`（校验器/生成器；不含 tools/dev、tools/archive）、
-  `js/reversi-worker.js`（Worker 环境单独块）。
+- 覆盖：`js/**/*.js`（保留入口/兼容文件）、`src/platform/**/*.js`、`src/games/**/*.js` 与 `worker/**/*.js`，以及 `tests/**/*.mjs`、`tools/generators/**/*.mjs` 与 `tools/checks/**/*.mjs`（校验器/生成器；不含 tools/dev、tools/archive）、
+  `src/games/reversi/reversi-worker.js`（Worker 环境单独块）。
 - ignores：`dist/**`、`node_modules/**`、`Workers/**`（Cloudflare 独立域）、
-  `js/math-rain/**`（化外页）、`public/**`、`src/platform/more-games.js`
+  `src/games/math-rain/**`（专用架构）、`public/**`、`src/platform/more-games.js`
   （**派生文件，gen 唯一权威** —— 移出豁免会造成 gen↔lint 死循环，见 `registry.md` §5）。
 
 ### 3.2 规则要点

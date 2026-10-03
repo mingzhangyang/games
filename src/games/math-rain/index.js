@@ -11,7 +11,7 @@ import SessionManager from './core/SessionManager.js';
 import PerformanceOptimizer from './core/PerformanceOptimizer.js';
 import ErrorHandler from './core/ErrorHandler.js';
 import UIController from './core/UIController.js';
-import { track } from '../../src/platform/analytics.js';
+import { track } from '../../platform/analytics.js';
 // P1：外部组件静态 import 直连（替代原 window.* 全局轮询）
 import ExpressionGenerator from './expression-generator.js';
 import QuestionBankManager from './question-bank-manager.js';
@@ -19,7 +19,7 @@ import DifficultyManager from './difficulty-manager.js';
 import SoundManager from './sound-manager.js';
 import ParticleSystem from './particle-effects.js';
 import { getLocalizedText } from './i18n/language-manager.js';
-import { storageGet } from '../../src/platform/safe-storage.js';
+import { storageGet } from '../../platform/safe-storage.js';
 
 const MIN_EXPRESSION_TOUCH_TARGET = 44;
 

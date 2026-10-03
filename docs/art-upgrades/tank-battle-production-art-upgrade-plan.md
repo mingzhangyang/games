@@ -327,9 +327,9 @@ Minimap frame 使用统一边框。
 
 ```text
 assets/tank-battle/**
-js/tank-battle.js
-js/tank-entities.js
-js/tank-battle-art.js
+src/games/tank-battle/index.js
+src/games/tank-battle/tank-entities.js
+src/games/tank-battle/tank-battle-art.js
 css/tank-battle.css
 tests/verify-tank-battle-art.mjs
 tests/smoke-tank-battle.mjs

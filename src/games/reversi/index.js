@@ -7,19 +7,19 @@
  * Vanilla JS, DOM board with 3D flip animation. No runtime dependencies.
  */
 
-import { ensurePlayerName, setPlayerName } from '../src/platform/player.js';
-import { getLang, getMuted, setMuted } from '../src/platform/site-settings.js';
-import { ICONS } from '../src/platform/icons.js';
-import { updateMoreGames } from '../src/platform/more-games.js';
+import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
+import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
+import { ICONS } from '../../platform/icons.js';
+import { updateMoreGames } from '../../platform/more-games.js';
 import { EMPTY, BLACK, WHITE, findFlips, genMoves, countDiscs, pickAiMove } from './reversi-ai.js';
-import { storageGet, storageSet } from '../src/platform/safe-storage.js';
-import { track } from '../src/platform/analytics.js';
-import { submitScore, fetchBoard } from '../src/platform/leaderboard.js';
-import { makeText } from '../src/platform/i18n.js';
-import { createI18nBinder } from '../src/platform/i18n/bindings.js';
-import { onReady } from '../src/platform/boot.js';
-import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
-import { createSfxEngine } from '../src/platform/game-sfx.js';
+import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { track } from '../../platform/analytics.js';
+import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { makeText } from '../../platform/i18n.js';
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
+import { onReady } from '../../platform/boot.js';
+import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { createSfxEngine } from '../../platform/game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 

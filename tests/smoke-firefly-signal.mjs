@@ -19,8 +19,8 @@
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import { LEVELS } from '../js/firefly-signal/levels.js';
-import { replay } from '../js/firefly-signal/simulation.js';
+import { LEVELS } from '../src/games/firefly-signal/levels.js';
+import { replay } from '../src/games/firefly-signal/simulation.js';
 import { solve } from './lib/firefly-solver.mjs';
 
 const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';

@@ -86,7 +86,7 @@ assert(runtimeArtBytes <= 2_000_000, `运行时美术资产超过 2MB：${runtim
 const html = read(join(ROOT, 'math-rain.html'));
 const css = read(join(ROOT, 'css/math-rain/math-rain.css'));
 const shopCss = read(join(ROOT, 'css/math-rain/shop.css'));
-const mainJs = read(join(ROOT, 'js/math-rain/main.js'));
+const mainJs = read(join(ROOT, 'src/games/math-rain/index.js'));
 const smoke = read(join(ROOT, 'tests/smoke-math-rain.mjs'));
 
 for (const id of ['game-area', 'game-canvas', 'target-area', 'target-number', 'tool-bar', 'shop-screen']) {

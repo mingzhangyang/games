@@ -7,13 +7,13 @@
  *   levels.js      三个原型关卡
  *   audio.js       声音（共享引擎，跟随 site_muted）
  *   game.js        状态机 / 输入 / HUD / 成功序列
- *   main.js        本文件：文案、菜单、共享 chrome 与 Immersive Stage 的接线
+ *   index.js        本文件：文案、菜单、共享 chrome 与 Immersive Stage 的接线
  */
-import { onReady } from '../../src/platform/boot.js';
-import { mountGameRuntime } from '../../src/platform/runtime/game-runtime.js';
-import { makeText } from '../../src/platform/i18n.js';
-import { getLang, getMuted, setMuted } from '../../src/platform/site-settings.js';
-import { track } from '../../src/platform/analytics.js';
+import { onReady } from '../../platform/boot.js';
+import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { makeText } from '../../platform/i18n.js';
+import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
+import { track } from '../../platform/analytics.js';
 import { FireflyGame, LEVELS, loadBest } from './game.js';
 
 const LANGUAGES = makeText({
