@@ -106,8 +106,10 @@ for (const [id, prefix, slotName] of [
     const source = runtimes[id];
     check(source.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
         `${id}: protocol storage remains on the platform facade`);
-    check(!source.includes(`storageGet('${prefix}_stars')`)
-        && !source.includes(`storageSet('${prefix}_stars'`),
+    const legacyStarsAccess = new RegExp(
+        "\\bstorage(?:Get|Set|Remove)\\s*\\(\\s*(['\"\`])" + prefix + "_stars\\1",
+    ).test(source);
+    check(!legacyStarsAccess,
         `${id}: private stars no longer use the legacy key directly`);
     check(new RegExp(`${slotName}_STORAGE\\.set\\s*\\(\\s*${slotName}_STORAGE_SLOTS\\.STARS\\b`).test(source),
         `${id}: stars writes go through GameStorage`);
