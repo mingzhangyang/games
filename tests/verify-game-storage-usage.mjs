@@ -161,8 +161,9 @@ const swordPrivateSource = [
     swordFlightSources.scoring,
     swordFlightSources.combat,
 ].join('\n');
-check(!swordPrivateSource.includes('safe-storage.js')
-    && !/\bstorage(?:Get|Set|Remove)\s*\(/.test(swordPrivateSource),
+const swordPrivateStorageIsolated = !swordPrivateSource.includes('safe-storage.js')
+    && !/\bstorage(?:Get|Set|Remove)\s*\(/.test(swordPrivateSource);
+check(swordPrivateStorageIsolated,
     'sword-flight: private record modules no longer use the platform storage facade');
 for (const keyName of ['UNLOCKED_STAGE', 'STAGE_STARS', 'ENDLESS_BEST', 'MAX_REALM', 'MAX_COMBO']) {
     check(!swordPrivateSource.includes(`STORAGE_KEYS.${keyName}`),
@@ -170,8 +171,9 @@ for (const keyName of ['UNLOCKED_STAGE', 'STAGE_STARS', 'ENDLESS_BEST', 'MAX_REA
     check(adapters['sword-flight'].includes(`STORAGE_KEYS.${keyName}`),
         `sword-flight: adapter maps legacy ${keyName}`);
 }
-check(swordFlightSources.daily.includes("from '../../../platform/safe-storage.js'")
-    && swordFlightSources.daily.includes('STORAGE_KEYS.DAILY_PREFIX'),
+const swordDailyStoragePreserved = swordFlightSources.daily.includes("from '../../../platform/safe-storage.js'")
+    && swordFlightSources.daily.includes('STORAGE_KEYS.DAILY_PREFIX');
+check(swordDailyStoragePreserved,
     'sword-flight: Daily compatibility storage remains unchanged');
 check(swordFlightSources.config.includes("DAILY_PREFIX: 'sf_daily_'"),
     'sword-flight: sf_daily_ protocol prefix is preserved');
