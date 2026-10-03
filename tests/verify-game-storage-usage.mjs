@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first nine GameStorage migration batches.
+// Static guard for the first ten GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,6 +31,7 @@ const runtimes = {
     reversi: read('src/games/reversi/index.js'),
     minesweeper: read('src/games/minesweeper/index.js'),
     'firefly-signal': read('src/games/firefly-signal/game.js'),
+    'tower-defense': read('src/games/tower-defense/runtime.js'),
 };
 const adapters = {
     'carrot-pull': read('src/games/carrot-pull/storage.js'),
@@ -52,6 +53,7 @@ const adapters = {
     reversi: read('src/games/reversi/storage.js'),
     minesweeper: read('src/games/minesweeper/storage.js'),
     'firefly-signal': read('src/games/firefly-signal/storage.js'),
+    'tower-defense': read('src/games/tower-defense/storage.js'),
 };
 
 const swordFlightSources = {
@@ -63,6 +65,7 @@ const swordFlightSources = {
     config: read('src/games/sword-flight/config.js'),
 };
 const needleConfig = read('src/games/needle-awn/config.js');
+const towerDefenseOverlay = read('src/games/tower-defense/ui/overlays.js');
 
 for (const id of ['carrot-pull', 'hoop-shot']) {
     const source = runtimes[id];
@@ -277,6 +280,19 @@ for (const id of ['reversi', 'minesweeper', 'firefly-signal']) {
         `${id}: runtime composes its GameStorage adapter`);
 }
 
+const towerDefenseSources = [runtimes['tower-defense'], towerDefenseOverlay];
+const towerDefenseCombined = towerDefenseSources.join('\n');
+check(towerDefenseSources.every(source =>
+    !source.includes('safe-storage.js') && !/\bstorage(?:Get|Set|Remove)\s*\(/.test(source)),
+'tower-defense: runtime and overlays no longer bypass GameStorage');
+check(!/\btd_(?:clear_|best(?:_|\b)|local_scores\b)/.test(towerDefenseCombined),
+    'tower-defense: legacy private keys are isolated in its adapter');
+check(runtimes['tower-defense'].includes("from './storage.js'")
+    && towerDefenseOverlay.includes("from '../storage.js'"),
+'tower-defense: runtime and overlays compose the shared GameStorage adapter');
+check(adapters['tower-defense'].includes('td_clear_') && adapters['tower-defense'].includes('td_best_'),
+    'tower-defense: adapter preserves per-level legacy key families');
+
 for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
     check(source.includes(`createGameStorage('${id}'`), `${id}: adapter uses the canonical game id`);
@@ -299,6 +315,7 @@ for (const [id, source, legacyKeys] of [
     ['reversi', adapters.reversi, ['rv_mode', 'rv_diff', 'rv_best_streak', 'rv_streak', 'rv_local_scores']],
     ['minesweeper', adapters.minesweeper, ['ms_diff', 'ms_best_easy', 'ms_best_medium', 'ms_best_hard', 'ms_local_easy', 'ms_local_medium', 'ms_local_hard']],
     ['firefly-signal', adapters['firefly-signal'], ['fs_best_first-light', 'fs_best_two-meadows', 'fs_best_midsummer']],
+    ['tower-defense', adapters['tower-defense'], ['td_best', 'td_local_scores']],
 ]) {
     for (const key of legacyKeys) {
         check(source.includes(`'${key}'`), `${id}: adapter preserves legacy key ${key}`);

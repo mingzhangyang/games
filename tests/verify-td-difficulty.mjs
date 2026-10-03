@@ -83,14 +83,14 @@ check(levels.cards.every(c => /[1-6]\./.test(c.text)), '每张卡片带序号与
 const unlockProbe = await page.evaluate(() => {
     const g = window.tdGame;
     const before = g.unlockedCount();
-    localStorage.setItem('td_clear_outpost', '1');
+    localStorage.setItem('game:tower-defense:v1:clear:outpost', 'true');
     const after1 = g.unlockedCount();
-    localStorage.setItem('td_clear_vanguard', '1');
+    localStorage.setItem('game:tower-defense:v1:clear:vanguard', 'true');
     const after2 = g.unlockedCount();
     // 跳级通关闭环：只通了第 1、2 关，第 4 关不能解锁
-    localStorage.setItem('td_clear_skyfall', '1');
+    localStorage.setItem('game:tower-defense:v1:clear:skyfall', 'true');
     const after3 = g.unlockedCount();
-    ['td_clear_outpost', 'td_clear_vanguard', 'td_clear_skyfall'].forEach(k => localStorage.removeItem(k));
+    ['outpost', 'vanguard', 'skyfall'].forEach(id => localStorage.removeItem(`game:tower-defense:v1:clear:${id}`));
     return { before, after1, after2, after3 };
 });
 check(unlockProbe.before === 1, '初始解锁数 = 1', `实际 ${unlockProbe.before}`);
@@ -169,11 +169,11 @@ check(outpostMech.length === 0,
 console.log('\n=== 4. 装甲兵减免 ===');
 const armorTest = await page.evaluate(() => {
     const g = window.tdGame;
-    localStorage.setItem('td_clear_outpost', '1');
-    localStorage.setItem('td_clear_vanguard', '1');
-    localStorage.setItem('td_clear_citadel', '1');
-    localStorage.setItem('td_clear_skyfall', '1');
-    localStorage.setItem('td_clear_juggernaut', '1');
+    localStorage.setItem('game:tower-defense:v1:clear:outpost', 'true');
+    localStorage.setItem('game:tower-defense:v1:clear:vanguard', 'true');
+    localStorage.setItem('game:tower-defense:v1:clear:citadel', 'true');
+    localStorage.setItem('game:tower-defense:v1:clear:skyfall', 'true');
+    localStorage.setItem('game:tower-defense:v1:clear:juggernaut', 'true');
     g.level = window.__TD_LEVELS__.find(l => l.id === 'singularity');
     g.resetRun();
     g.state = 'playing';
@@ -576,26 +576,26 @@ check(Math.abs(stackReset.hpMul - 1) < 0.001, '堆叠归零后倍率恢复 ×1')
 console.log('\n=== 11. 分数隔离 ===');
 const scoreTest = await page.evaluate(async () => {
     const g = window.tdGame;
-    localStorage.removeItem('td_best_outpost');
-    localStorage.removeItem('td_best_vanguard');
+    localStorage.removeItem('game:tower-defense:v1:best:outpost');
+    localStorage.removeItem('game:tower-defense:v1:best:vanguard');
 
     g.level = window.__TD_LEVELS__.find(l => l.id === 'outpost');
     g.resetRun();
     g.score = 1111; g.lives = 5; g.wave = 15;
     // 不 await 网络部分：endGame 会尝试上报，离线时静默
     const p = g.endGame(true);
-    const bestOutpost = localStorage.getItem('td_best_outpost');
+    const bestOutpost = localStorage.getItem('game:tower-defense:v1:best:outpost');
     await p.catch(() => {});
 
     g.level = window.__TD_LEVELS__.find(l => l.id === 'vanguard');
     g.resetRun();
-    const bestVanguardBefore = localStorage.getItem('td_best_vanguard');
-    const outpostAfter = localStorage.getItem('td_best_outpost');
+    const bestVanguardBefore = localStorage.getItem('game:tower-defense:v1:best:vanguard');
+    const outpostAfter = localStorage.getItem('game:tower-defense:v1:best:outpost');
 
     return { bestOutpost: Number(bestOutpost) || 0, bestVanguardBefore, outpostAfter,
         idxOutpost: 0 };
 });
-check(scoreTest.bestOutpost > 0, '通关后写入本关最佳分 td_best_outpost',
+check(scoreTest.bestOutpost > 0, '通关后写入本关 canonical GameStorage 最佳分',
     `${scoreTest.bestOutpost}`);
 check(scoreTest.bestVanguardBefore === null,
     '未通关的关卡不写入最佳分（分数按关隔离）');
