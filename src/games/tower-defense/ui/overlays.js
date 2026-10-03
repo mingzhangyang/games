@@ -73,47 +73,21 @@ export function applyLanguage(game) {
     document.title = game.lang === 'zh'
         ? '霓虹塔防 — 策略塔防游戏'
         : 'Neon Tower Defense — Strategy TD';
-    if (game.el.title) game.el.title.textContent = t.title;
-    if (game.el.subtitle) game.el.subtitle.textContent = t.subtitle;
-    if (game.el.howto) game.el.howto.textContent = t.howto;
-    if (game.el['tower-intro']) game.el['tower-intro'].textContent = t.towerIntro;
     if (game.el['btn-play']) game.el['btn-play'].innerHTML = `${ICONS.play}<span>${t.levelStart.replace('▶ ', '')}</span>`;
-    if (game.el['pause-title']) game.el['pause-title'].textContent = t.paused;
-    if (game.el['btn-resume']) game.el['btn-resume'].textContent = t.resume;
     if (game.el['btn-menu']) game.el['btn-menu'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
     if (game.el['btn-menu2']) game.el['btn-menu2'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
     if (game.el['btn-again']) game.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
     if (game.el['btn-copy']) game.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
     if (game.el['lb-title']) game.el['lb-title'].textContent = `LEADERBOARD · ${t.leaderboard}`;
-    if (game.el['username-label']) game.el['username-label'].textContent = t.usernameLabel;
-    if (game.el.username) game.el.username.placeholder = t.usernameLabel;
-    if (game.el.hint) game.el.hint.textContent = t.hint;
-    if (game.el['select-title']) game.el['select-title'].textContent = t.selectLevel;
-    if (game.el['brief-lbl-waves']) game.el['brief-lbl-waves'].textContent = t.statWave;
-    if (game.el['brief-lbl-gold']) game.el['brief-lbl-gold'].textContent = t.statGold;
-    if (game.el['brief-lbl-lives']) game.el['brief-lbl-lives'].textContent = t.statLives;
     if (game.el['best-line']) {
         const best = loadTowerDefenseBest(game.level.id);
         game.el['best-line'].textContent = best ? `${t.best}: ${formatNumber(best)}` : '';
     }
-    if (game.el['over-lbl-waves']) game.el['over-lbl-waves'].textContent = t.waveStat;
-    if (game.el['over-lbl-kills']) game.el['over-lbl-kills'].textContent = t.kills;
-    if (game.el['over-lbl-lives']) game.el['over-lbl-lives'].textContent = t.lives;
-    if (game.el['stat-lives']) game.el['stat-lives'].title = t.statLives;
-    if (game.el['stat-gold']) game.el['stat-gold'].title = t.statGold;
-    if (game.el['stat-wave']) game.el['stat-wave'].title = t.statWave;
     if (game.el['range-btn']) {
-        game.el['range-btn'].title = t.rangeBtnTitle;
-        game.el['range-btn'].setAttribute('aria-label', t.rangeBtnTitle);
     }
-    if (game.el['speed-btn']) game.el['speed-btn'].title = t.speedBtnTitle;
     if (game.el['pause-btn']) {
-        game.el['pause-btn'].title = t.pauseBtnTitle;
-        game.el['pause-btn'].setAttribute('aria-label', t.pauseBtnTitle);
     }
     if (game.el['mute-btn']) {
-        game.el['mute-btn'].title = t.muteBtnTitle;
-        game.el['mute-btn'].setAttribute('aria-label', t.muteBtnTitle);
     }
     if (game.el.statsToggle) {
         game.el.statsToggle.innerHTML = ICONS.stats;
@@ -121,29 +95,19 @@ export function applyLanguage(game) {
         game.el.statsToggle.setAttribute('aria-label', t.stats);
     }
     if (game.el['btn-home']) {
-        game.el['btn-home'].title = t.homeBtnTitle;
-        game.el['btn-home'].setAttribute('aria-label', t.homeBtnTitle);
     }
     if (game.el['skill-emp']) {
-        game.el['skill-emp'].title = t.empBtnTitle;
-        game.el['skill-emp'].setAttribute('aria-label', t.empBtnTitle);
     }
     if (game.el['skill-boost']) {
-        game.el['skill-boost'].title = t.overdriveBtnTitle;
-        game.el['skill-boost'].setAttribute('aria-label', t.overdriveBtnTitle);
     }
 
     if (game.el.tacticalTitle) game.el.tacticalTitle.textContent = t.tacticalOverview;
     if (game.el.tacticalClose) {
         game.el.tacticalClose.setAttribute('aria-label', t.closeTactical);
     }
-    if (game.el['rotate-title']) game.el['rotate-title'].textContent = t.rotateTitle;
-    if (game.el['rotate-copy']) game.el['rotate-copy'].textContent = t.rotateCopy;
-    if (game.el['start-hero']) game.el['start-hero'].setAttribute('aria-label', t.heroLabel);
 
     // 侧栏
     if (game.el['side-howto-title']) game.el['side-howto-title'].textContent = `01 · ${t.sideHowTo}`;
-    if (game.el['side-howto']) game.el['side-howto'].textContent = t.howto;
     if (game.el['side-skills-title']) game.el['side-skills-title'].textContent = `02 · ${t.sideSkillsTitle}`;
     game.updateSideSkills();
     if (game.el['side-towers-title']) game.el['side-towers-title'].textContent = `03 · ${t.towerLegend}`;

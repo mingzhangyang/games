@@ -1,3 +1,4 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
 /**
  * Neon Tower Defense composition root.
  *
@@ -36,6 +37,9 @@ if (typeof window !== 'undefined') {
 }
 
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: LANGUAGES });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     window.tdGame = new TowerDefenseGame();
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 

@@ -230,7 +230,6 @@ export class WordDailyGame {
             : 'Word Daily — Daily Bilingual Word Puzzle';
         const t = this.TEXT;
 
-        if (this.el.title) this.el.title.textContent = t.title;
         if (this.el['btn-lang']) {
             this.el['btn-lang'].textContent = this.langMode === 'zh' ? t.switchToEn : t.switchToZh;
             const switchTitle = this.langMode === 'zh'
@@ -248,29 +247,15 @@ export class WordDailyGame {
         }
         if (this.el['btn-help']) {
             this.el['btn-help'].innerHTML = ICONS.help;
-            this.el['btn-help'].title = t.help;
-            this.el['btn-help'].setAttribute('aria-label', t.help);
         }
         if (this.el['btn-stats']) {
             this.el['btn-stats'].innerHTML = ICONS.stats;
-            this.el['btn-stats'].title = t.stats;
-            this.el['btn-stats'].setAttribute('aria-label', t.stats);
         }
-        if (this.el['help-title']) this.el['help-title'].textContent = t.helpTitle;
-        if (this.el['help-close']) this.el['help-close'].textContent = t.ok;
-        if (this.el['stats-title']) this.el['stats-title'].textContent = t.statsTitle;
-        if (this.el['lb-played']) this.el['lb-played'].textContent = t.playedLabel;
-        if (this.el['lb-winrate']) this.el['lb-winrate'].textContent = t.winRateLabel;
-        if (this.el['lb-cur']) this.el['lb-cur'].textContent = t.curStreakLabel;
-        if (this.el['lb-max']) this.el['lb-max'].textContent = t.maxStreakLabel;
-        if (this.el['dist-title']) this.el['dist-title'].textContent = t.distTitle;
         if (this.el.share) this.el.share.innerHTML = `${ICONS.share}<span>${t.share}</span>`;
-        if (this.el['submit-text']) this.el['submit-text'].textContent = t.submit;
         if (this.el.input) {
             this.el.input.placeholder = this.guessPlaceholderText();
         }
         if (this.el['hint-label']) this.el['hint-label'].textContent = `📖 ${t.hintLabel}`;
-        if (this.el['practice-banner']) this.el['practice-banner'].textContent = t.practiceBanner;
 
         const nextText = this.mode === 'daily' ? t.nextDaily : t.nextPractice;
         if (this.el['next-label']) this.el['next-label'].textContent = nextText;

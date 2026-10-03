@@ -337,16 +337,6 @@ export class FlameVerseGame {
         document.title = this.lang === 'zh'
             ? '焰语 — 焰色光谱解谜'
             : 'Flame Verse — Flame Spectrum Puzzle';
-        setText('title', this.t('title'));
-        setText('subtitle', this.t('subtitle'));
-        setText('howto', this.t('howto'));
-        setText('level-label', this.t('levelSelect'));
-        setText('side-howto-title', this.t('sideHowTo'));
-        setText('side-howto', this.t('howto'));
-        setText('side-records-title', this.t('sideRecords'));
-        setText('side-legend-title', this.t('legendTitle'));
-        setText('hint', this.t('hint'));
-        setText('lb-title', this.t('leaderboard'));
         if (el['username-label']) el['username-label'].textContent = this.t('playerName');
         if (el['run-btn']) el['run-btn'].title = this.t('assay');
         if (el['clear-btn']) el['clear-btn'].title = this.t('dump');

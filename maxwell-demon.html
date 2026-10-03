@@ -85,8 +85,8 @@
 
             <!-- 开始界面 -->
             <div class="md-overlay game-overlay game-overlay--menu" id="md-start">
-                <h1 class="md-title" id="md-title">Maxwell's Demon</h1>
-                <p class="md-subtitle" id="md-subtitle">Watch · Sort · Pay</p>
+                <h1 class="md-title" id="md-title" data-i18n="title">Maxwell's Demon</h1>
+                <p class="md-subtitle" id="md-subtitle" data-i18n="subtitle">Watch · Sort · Pay</p>
                 <div class="md-hero" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 64 64" fill="none">
                         <rect x="29" y="4" width="6" height="20" rx="2" fill="#263352"/>
@@ -99,12 +99,12 @@
                         <circle cx="32" cy="32" r="26" stroke="#a8b8ff" stroke-width="1.6" opacity="0.35"/>
                     </svg>
                 </div>
-                <p class="md-howto" id="md-howto"></p>
+                <p class="md-howto" id="md-howto" data-i18n="howto"></p>
                 <div class="md-mode-row">
                     <button class="md-mode" id="md-btn-levels"></button>
                     <button class="md-mode md-mode-daily" id="md-btn-daily"></button>
                 </div>
-                <p class="md-level-label" id="md-level-label"></p>
+                <p class="md-level-label" id="md-level-label" data-i18n="levelSelect"></p>
                 <div class="md-level-grid" id="md-level-grid"></div>
                 <p class="md-daily-best" id="md-daily-best"></p>
                 <div class="md-start-footer">
@@ -135,7 +135,7 @@
                     <button class="md-btn md-btn-ghost game-btn" id="md-btn-menu2"><span></span></button>
                 </div>
                 <div class="md-lb">
-                    <div class="md-lb-title" id="md-lb-title"></div>
+                    <div class="md-lb-title" id="md-lb-title" data-i18n="leaderboard"></div>
                     <div class="md-lb-list" id="md-lb-list"></div>
                     <div class="md-lb-status" id="md-lb-status"></div>
                     <div class="md-username-row">
@@ -152,11 +152,11 @@
             <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
             <div id="mdStatsPanels">
                 <div class="md-side-card game-side-card">
-                    <div class="md-side-title game-side-title" id="md-side-howto-title"></div>
-                    <p class="md-side-text game-side-text" id="md-side-howto"></p>
+                    <div class="md-side-title game-side-title" id="md-side-howto-title" data-i18n="sideHowTo"></div>
+                    <p class="md-side-text game-side-text" id="md-side-howto" data-i18n="howto"></p>
                 </div>
                 <div class="md-side-card game-side-card">
-                    <div class="md-side-title game-side-title" id="md-side-records-title"></div>
+                    <div class="md-side-title game-side-title" id="md-side-records-title" data-i18n="sideRecords"></div>
                     <div class="md-side-records" id="md-side-records"></div>
                 </div>
             </div>
@@ -165,7 +165,7 @@
                  src/platform/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
                  放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
             <div class="md-side-card game-side-card">
-                <div class="md-side-title game-side-title" id="md-side-legend-title"></div>
+                <div class="md-side-title game-side-title" id="md-side-legend-title" data-i18n="legendTitle"></div>
                 <div class="md-side-legend" id="md-side-legend"></div>
             </div>
 
@@ -182,7 +182,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
     <footer class="md-footer game-footer">
-        <p class="md-footer-hint game-footer-hint" id="md-hint"></p>
+        <p class="md-footer-hint game-footer-hint" id="md-hint" data-i18n="hint"></p>
         <div class="md-footer-actions game-footer-actions game-topbar-group">
             <a class="md-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
             <button type="button" class="md-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="mdMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>

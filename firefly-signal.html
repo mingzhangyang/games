@@ -45,12 +45,12 @@
                 <button data-chrome="home" type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             </div>
             <div class="fs-topbar-center game-topbar-center">
-                <h1 class="sr-only" id="fs-h1">Firefly Signal</h1>
+                <h1 class="sr-only" id="fs-h1" data-i18n="title">Firefly Signal</h1>
                 <div class="fs-level-pill" id="fs-level-pill">Firefly Signal</div>
             </div>
             <!-- 右簇固定顺序：专属（重来）→ sound -->
             <div class="fs-topbar-actions game-topbar-group">
-                <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-restart" title="Restart" aria-label="Restart" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-restart" title="Restart" aria-label="Restart" disabled data-i18n-title="restart" data-i18n-label="restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
                 <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-mute" data-chrome="sound" title="Sound" aria-label="Sound"></button>
             </div>
         </header>
@@ -72,12 +72,12 @@
                             <line class="fs-ring-target" id="fs-ring-target" x1="63.5" y1="32" x2="56" y2="32"/>
                         </svg>
                         <div class="fs-harmony-text">
-                            <span class="fs-harmony-label" id="fs-harmony-label">Harmony</span>
+                            <span class="fs-harmony-label" id="fs-harmony-label" data-i18n="harmonyShort">Harmony</span>
                             <span class="fs-harmony-value" id="fs-harmony-value">0%</span>
                         </div>
                     </div>
                     <div class="fs-signals">
-                        <span class="fs-signals-label" id="fs-signals-label">Signals</span>
+                        <span class="fs-signals-label" id="fs-signals-label" data-i18n="signalsLabel">Signals</span>
                         <div class="fs-dots" id="fs-dots" role="img" aria-label="Interventions"></div>
                         <span class="fs-signals-count" id="fs-signals-count">0/0</span>
                     </div>
@@ -88,9 +88,9 @@
 
                 <!-- 开始菜单 -->
                 <div class="fs-overlay fs-start game-overlay game-overlay--menu" id="fs-start">
-                    <p class="fs-kicker" id="fs-kicker">A midsummer synchrony puzzle</p>
-                    <h2 class="fs-start-title" id="fs-start-title">Firefly Signal</h2>
-                    <p class="fs-start-copy" id="fs-start-copy"></p>
+                    <p class="fs-kicker" id="fs-kicker" data-i18n="kicker">A midsummer synchrony puzzle</p>
+                    <h2 class="fs-start-title" id="fs-start-title" data-i18n="title">Firefly Signal</h2>
+                    <p class="fs-start-copy" id="fs-start-copy" data-i18n="startCopy"></p>
                     <div class="fs-level-list" id="fs-level-list"></div>
                     <div class="fs-start-footer">
                         <nav class="more-games" id="fsStartMore"></nav>
@@ -113,7 +113,7 @@
 
         <!-- 持久页脚：immersive 布局下随流在首屏之下（不占场景高度），只放无状态导航 -->
         <footer class="fs-footer game-footer">
-            <p class="fs-footer-hint game-footer-hint" id="fs-hint"></p>
+            <p class="fs-footer-hint game-footer-hint" id="fs-hint" data-i18n="hint"></p>
             <div class="fs-footer-actions game-footer-actions game-topbar-group">
                 <a class="fs-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
                 <button type="button" class="fs-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="fsMoreNav" title="More games" aria-label="More games"></button>

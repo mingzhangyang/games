@@ -336,15 +336,6 @@ export class SilkfallGame {
         document.title = this.lang === 'zh'
             ? '垂丝引露 — 绳索物理解谜'
             : 'Silkfall — Rope Physics Puzzle';
-        setText('title', this.t('title'));
-        setText('subtitle', this.t('subtitle'));
-        setText('howto', this.t('howto'));
-        setText('level-label', this.t('levelSelect'));
-        setText('side-howto-title', this.t('sideHowTo'));
-        setText('side-howto', this.t('howto'));
-        setText('side-records-title', this.t('sideRecords'));
-        setText('hint', this.t('hint'));
-        setText('lb-title', this.t('leaderboard'));
         if (el['username-label']) el['username-label'].textContent = this.t('title');
 
         // 带图标按钮：span 内文字单独更新（不重建 SVG）

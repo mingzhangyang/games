@@ -86,8 +86,8 @@
 
             <!-- 开始界面 -->
             <div class="fv-overlay game-overlay game-overlay--menu" id="fv-start">
-                <h1 class="fv-title" id="fv-title">Flame Verse</h1>
-                <p class="fv-subtitle" id="fv-subtitle">Salt · Flame · Light</p>
+                <h1 class="fv-title" id="fv-title" data-i18n="title">Flame Verse</h1>
+                <p class="fv-subtitle" id="fv-subtitle" data-i18n="subtitle">Salt · Flame · Light</p>
                 <div class="fv-hero" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 64 64" fill="none">
                         <path d="M32 6c8 10 14 16 14 26a14 14 0 1 1-28 0c0-7 3.5-11 7-16 .5 5 2 8.5 5.5 10.5C29 18 30 11.5 32 6z" fill="#ffb35c" opacity="0.92"/>
@@ -96,12 +96,12 @@
                         <path d="M14 55v6M27 53v8M40 54v7M50 56v5" stroke="#ffd34d" stroke-width="2" opacity="0.75"/>
                     </svg>
                 </div>
-                <p class="fv-howto" id="fv-howto"></p>
+                <p class="fv-howto" id="fv-howto" data-i18n="howto"></p>
                 <div class="fv-mode-row">
                     <button class="fv-mode" id="fv-btn-levels"></button>
                     <button class="fv-mode fv-mode-daily" id="fv-btn-daily"></button>
                 </div>
-                <p class="fv-level-label" id="fv-level-label"></p>
+                <p class="fv-level-label" id="fv-level-label" data-i18n="levelSelect"></p>
                 <div class="fv-level-grid" id="fv-level-grid"></div>
                 <p class="fv-daily-best" id="fv-daily-best"></p>
                 <div class="fv-start-footer">
@@ -132,7 +132,7 @@
                     <button class="fv-btn fv-btn-ghost game-btn" id="fv-btn-menu2"><span></span></button>
                 </div>
                 <div class="fv-lb">
-                    <div class="fv-lb-title" id="fv-lb-title"></div>
+                    <div class="fv-lb-title" id="fv-lb-title" data-i18n="leaderboard"></div>
                     <div class="fv-lb-list" id="fv-lb-list"></div>
                     <div class="fv-lb-status" id="fv-lb-status"></div>
                     <div class="fv-username-row">
@@ -149,11 +149,11 @@
             <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
             <div id="fvStatsPanels">
                 <div class="fv-side-card game-side-card">
-                    <div class="fv-side-title game-side-title" id="fv-side-howto-title"></div>
-                    <p class="fv-side-text game-side-text" id="fv-side-howto"></p>
+                    <div class="fv-side-title game-side-title" id="fv-side-howto-title" data-i18n="sideHowTo"></div>
+                    <p class="fv-side-text game-side-text" id="fv-side-howto" data-i18n="howto"></p>
                 </div>
                 <div class="fv-side-card game-side-card">
-                    <div class="fv-side-title game-side-title" id="fv-side-records-title"></div>
+                    <div class="fv-side-title game-side-title" id="fv-side-records-title" data-i18n="sideRecords"></div>
                     <div class="fv-side-records" id="fv-side-records"></div>
                 </div>
             </div>
@@ -162,7 +162,7 @@
                  src/platform/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
                  放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
             <div class="fv-side-card game-side-card">
-                <div class="fv-side-title game-side-title" id="fv-side-legend-title"></div>
+                <div class="fv-side-title game-side-title" id="fv-side-legend-title" data-i18n="legendTitle"></div>
                 <div class="fv-side-legend" id="fv-side-legend"></div>
             </div>
 
@@ -179,7 +179,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
     <footer class="fv-footer game-footer">
-        <p class="fv-footer-hint game-footer-hint" id="fv-hint"></p>
+        <p class="fv-footer-hint game-footer-hint" id="fv-hint" data-i18n="hint"></p>
         <div class="fv-footer-actions game-footer-actions game-topbar-group">
             <a class="fv-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
             <button type="button" class="fv-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="fvMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>

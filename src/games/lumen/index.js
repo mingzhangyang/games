@@ -1,3 +1,4 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
 /** Lumen composition root. */
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
@@ -9,6 +10,9 @@ import { LumenGame, W } from './runtime.js';
 export { LumenGame } from './runtime.js';
 
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: LANGUAGES });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     window.lmGame = new LumenGame();
 
     window.lmRuntime = mountGameRuntime({

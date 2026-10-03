@@ -1,3 +1,4 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
 /** Sword Flight composition root. */
 import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
@@ -10,6 +11,9 @@ import { setSwordFlightChrome } from './render/hud.js';
 export { SwordFlightGame } from './runtime.js';
 
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: I18N });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     window.game = new SwordFlightGame();
     const getText = () => I18N[getLang()] || I18N.zh;
 

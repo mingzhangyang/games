@@ -114,21 +114,9 @@ export function applyLanguage(game) {
 
     // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的 applyLanguage 写）
     const sfHint = document.getElementById('sf-hint');
-    if (sfHint) sfHint.textContent = t.hint;
 
-    document.getElementById('sf-stage-label').textContent = t.gameTitle;
-    document.getElementById('sf-main-title').textContent = t.gameTitle;
-    document.getElementById('sf-main-sub').textContent = t.gameSub;
     document.getElementById('sf-howto-box').innerHTML = t.howTo;
 
-    document.getElementById('sf-lbl-mode-stages').textContent = t.modeStages;
-    document.getElementById('sf-sub-mode-stages').textContent = t.modeStagesSub;
-    document.getElementById('sf-lbl-mode-endless').textContent = t.modeEndless;
-    document.getElementById('sf-sub-mode-endless').textContent = t.modeEndlessSub;
-    document.getElementById('sf-lbl-mode-daily').textContent = t.modeDaily;
-    document.getElementById('sf-sub-mode-daily').textContent = t.modeDailySub;
-    document.getElementById('sf-lbl-mode-zen').textContent = t.modeZen;
-    document.getElementById('sf-sub-mode-zen').textContent = t.modeZenSub;
 
     const touchLabels = [
         ['sf-touch-array-lbl', 'sf-touch-array', t.touchArray, t.touchArrayLabel],
@@ -142,57 +130,17 @@ export function applyLanguage(game) {
         if (button) button.setAttribute('aria-label', label);
     });
 
-    document.getElementById('sf-btn-start-daily').textContent = t.dailyStart;
-    document.getElementById('sf-lbl-open-rank').textContent = t.openRank;
-    document.getElementById('sf-stage-select-title').textContent = t.selectStage;
-    document.getElementById('sf-rank-title').textContent = t.rankTitle;
-    document.getElementById('sf-tab-endless').textContent = t.tabEndless;
-    document.getElementById('sf-tab-daily').textContent = t.tabDaily;
 
-    document.getElementById('sf-pause-title').textContent = t.pauseTitle;
-    document.getElementById('sf-pause-sub').textContent = t.pauseSub;
-    document.getElementById('sf-btn-resume').textContent = t.resume;
-    document.getElementById('sf-btn-restart').textContent = t.restart;
     document.getElementById('sf-btn-menu').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
 
-    document.getElementById('sf-victory-title').textContent = t.victoryTitle;
-    document.getElementById('sf-victory-sub').textContent = t.victorySub;
-    document.getElementById('sf-v-lbl-score').textContent = t.scoreLbl;
-    document.getElementById('sf-v-lbl-rings').textContent = t.ringsRateLbl;
-    document.getElementById('sf-v-lbl-combo').textContent = t.comboLbl;
-    document.getElementById('sf-v-lbl-realm').textContent = t.realmResultLbl;
-    document.getElementById('sf-btn-next-stage').textContent = t.nextStage;
-    document.getElementById('sf-btn-stage-replay').textContent = t.replayStage;
     document.getElementById('sf-btn-victory-menu').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
 
-    document.getElementById('sf-go-title').textContent = t.defeatTitle;
-    document.getElementById('sf-go-sub').textContent = t.defeatSub;
-    document.getElementById('sf-go-lbl-score').textContent = t.scoreLbl;
-    document.getElementById('sf-go-lbl-distance').textContent = t.distLbl;
-    document.getElementById('sf-go-lbl-realm').textContent = t.realmResultLbl;
-    document.getElementById('sf-go-lbl-rings').textContent = t.ringsCountLbl;
-    document.getElementById('sf-btn-go-replay').textContent = t.replayEndless;
     document.getElementById('sf-btn-go-menu').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
-    document.getElementById('sf-btn-submit-score').textContent = t.submitScore;
     document.getElementById('sf-player-name-input').placeholder = t.namePlaceholder;
 
     // 侧边栏
-    document.getElementById('sf-side-rules-title').textContent = t.sideRulesTitle;
     document.getElementById('sf-side-rules-text').innerHTML = t.sideRulesText;
-    document.getElementById('sf-side-records-title').textContent = t.sideRecordsTitle;
-    document.getElementById('sf-side-stars-lbl').textContent = t.sideStarsLbl;
-    document.getElementById('sf-side-endless-lbl').textContent = t.sideEndlessLbl;
-    document.getElementById('sf-side-maxrealm-lbl').textContent = t.sideRealmMaxLbl;
-    document.getElementById('sf-side-combo-lbl').textContent = t.sideComboLbl;
-    document.getElementById('sf-side-daily-lbl').textContent = t.sideDailyLbl;
-    document.getElementById('sf-side-controls-title').textContent = t.sideControlsTitle;
 
-    document.getElementById('sf-sc-steer').textContent = t.scSteer;
-    document.getElementById('sf-sc-keyboard').textContent = t.scKeyb;
-    document.getElementById('sf-sc-dash').textContent = t.scDash;
-    document.getElementById('sf-sc-array').textContent = t.scArray;
-    document.getElementById('sf-sc-ult').textContent = t.scUlt;
-    document.getElementById('sf-sc-pause').textContent = t.scPause;
     [
         ['sf-sc-steer-key', t.scSteerKey],
         ['sf-sc-keyboard-key', t.scKeybKey],
@@ -209,7 +157,6 @@ export function applyLanguage(game) {
 
     // 每日卡标签
     const dailyMod = document.getElementById('sf-daily-modifier');
-    if (dailyMod) dailyMod.textContent = t.dailyModifier;
 
     game.updateRealmDisplay();
     game.updateSideRecords();

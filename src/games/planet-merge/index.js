@@ -1,3 +1,4 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
 /** Planet Merge composition root. */
 import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
@@ -9,6 +10,9 @@ import { PlanetMergeGame, WORLD_W } from './runtime.js';
 export { PlanetMergeGame } from './runtime.js';
 
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: LANGUAGES });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     window.planetMergeGame = new PlanetMergeGame();
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 

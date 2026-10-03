@@ -68,16 +68,16 @@
 
             <!-- 开始界面 -->
             <div class="bf-overlay game-overlay game-overlay--menu" id="bf-start">
-                <h1 class="bf-title" id="bf-title">Bond Forge</h1>
-                <p class="bf-subtitle" id="bf-subtitle">Drag · Snap · Forge</p>
+                <h1 class="bf-title" id="bf-title" data-i18n="title">Bond Forge</h1>
+                <p class="bf-subtitle" id="bf-subtitle" data-i18n="subtitle">Drag · Snap · Forge</p>
                 <div class="bf-hero">⚗️</div>
-                <p class="bf-howto" id="bf-howto"></p>
+                <p class="bf-howto" id="bf-howto" data-i18n="howto"></p>
                 <div class="bf-mode-row">
                     <button class="bf-mode" id="bf-btn-levels"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7l9 5 9-5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg><span>Levels</span></button>
                     <button class="bf-mode bf-mode-daily" id="bf-btn-daily"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg><span>Daily</span></button>
                     <button class="bf-mode" id="bf-btn-sandbox"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 18h6"/><path d="M6 15 10 5h8"/></svg><span>Sandbox</span></button>
                 </div>
-                <p class="bf-level-label" id="bf-level-label">Select level</p>
+                <p class="bf-level-label" id="bf-level-label" data-i18n="levelSelect">Select level</p>
                 <div class="bf-level-grid" id="bf-level-grid"></div>
                 <p class="bf-daily-best" id="bf-daily-best"></p>
                 <div class="bf-start-footer">
@@ -101,7 +101,7 @@
 
             <!-- 每日结算 -->
             <div class="bf-overlay hidden game-overlay" id="bf-over">
-                <h2 class="bf-overlay-title" id="bf-over-title">Daily complete!</h2>
+                <h2 class="bf-overlay-title" id="bf-over-title" data-i18n="dailyDone">Daily complete!</h2>
                 <div class="bf-over-score" id="bf-over-score">0</div>
                 <div class="bf-over-sub" id="bf-over-sub"></div>
                 <div class="bf-btn-row">
@@ -109,7 +109,7 @@
                     <button class="bf-btn bf-btn-ghost game-btn" id="bf-btn-menu2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
                 </div>
                 <div class="bf-lb">
-                    <div class="bf-lb-title" id="bf-lb-title">Global · Today's Challenge</div>
+                    <div class="bf-lb-title" id="bf-lb-title" data-i18n="leaderboard">Global · Today's Challenge</div>
                     <div class="bf-lb-list" id="bf-lb-list"></div>
                     <div class="bf-lb-status" id="bf-lb-status"></div>
                     <div class="bf-username-row">
@@ -126,11 +126,11 @@
             <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
             <div id="bfStatsPanels">
                 <div class="bf-side-card game-side-card">
-                    <div class="bf-side-title game-side-title" id="bf-side-howto-title"></div>
-                    <p class="bf-side-text game-side-text" id="bf-side-howto"></p>
+                    <div class="bf-side-title game-side-title" id="bf-side-howto-title" data-i18n="sideHowTo"></div>
+                    <p class="bf-side-text game-side-text" id="bf-side-howto" data-i18n="howto"></p>
                 </div>
                 <div class="bf-side-card game-side-card">
-                    <div class="bf-side-title game-side-title" id="bf-side-records-title"></div>
+                    <div class="bf-side-title game-side-title" id="bf-side-records-title" data-i18n="sideRecords"></div>
                     <div class="bf-side-records" id="bf-side-records"></div>
                 </div>
             </div>
@@ -159,7 +159,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
     <footer class="bf-footer game-footer">
-        <p class="bf-footer-hint game-footer-hint" id="bf-hint"></p>
+        <p class="bf-footer-hint game-footer-hint" id="bf-hint" data-i18n="hint"></p>
         <div class="bf-footer-actions game-footer-actions game-topbar-group">
             <a class="bf-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
             <button type="button" class="bf-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="bfMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>

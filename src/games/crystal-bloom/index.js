@@ -1,3 +1,5 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
+import { getLang } from '../../platform/site-settings.js';
 /** Crystal Bloom composition root. */
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
@@ -8,6 +10,9 @@ import { LANGUAGES } from './i18n.js';
 export { CrystalBloomGame } from './runtime.js';
 
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: LANGUAGES });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     initCanvasPalette(() => window.cbGame && window.cbGame.draw());
     window.cbGame = new CrystalBloomGame();
     const getText = () => (window.cbGame ? window.cbGame.textTable() : LANGUAGES.en);

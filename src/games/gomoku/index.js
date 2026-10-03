@@ -1,3 +1,4 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { getLang } from '../../platform/site-settings.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { createSfx } from '../../platform/game-sfx.js';
@@ -592,32 +593,23 @@ function applyLanguage(lang) {
     document.title = t.title;
 
     const gameTitle = document.getElementById('gameTitle');
-    if (gameTitle) gameTitle.textContent = t.h1;
 
     // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的语言渲染入口写）
     const gmHint = document.getElementById('gm-hint');
-    if (gmHint) gmHint.textContent = t.hint;
 
-    if (restartBtn) restartBtn.textContent = t.restart;
     if (modeBtn) modeBtn.textContent = gameMode === 'pvp' ? t.modeBtn2Players : t.modeBtnVsComputer;
 
     const optEasy = document.getElementById('optEasy');
-    if (optEasy) optEasy.textContent = t.diffEasy;
     const optMedium = document.getElementById('optMedium');
-    if (optMedium) optMedium.textContent = t.diffMedium;
     const optHard = document.getElementById('optHard');
-    if (optHard) optHard.textContent = t.diffHard;
 
     const modalTitle = document.getElementById('modalTitle');
-    if (modalTitle) modalTitle.textContent = t.gameOver;
     // 结果文案同样要跟随语言。面板开着时切语言，只有标题和按钮变、
     // 「黑方获胜！」还留着上一个语言的版本会很割裂。
     // 这条路径真实可达：结算浮层盖住了顶栏，键盘 Tab 聚焦后用 Enter 激活
     // 走的是元素自身的 click，不经过浮层的命中测试。
     if (lastResult !== null) modalMessage.textContent = resultText(t);
-    if (modalRestartBtn) modalRestartBtn.textContent = t.playAgain;
     const modalViewBtn = document.getElementById('modalViewBtn');
-    if (modalViewBtn) modalViewBtn.textContent = t.viewBoard;
 
     updateStatus();
     updateMoreGames(currentLang);
@@ -923,6 +915,9 @@ init();
        本页的静音钮是随槽位契约新增的，页面自身没有 handler，
        所以显式把 sound 交给 chrome 接管。 */
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: LANGUAGES });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
     window.gomokuRuntime = mountGameRuntime({
         self: 'gomoku.html',

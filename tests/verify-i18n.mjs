@@ -4,7 +4,7 @@
 // 断言：
 //   1) 行为：makeText 原型链兜底（缺失键落 COMMON）、own 键优先覆盖、
 //      COMMON_TEXT 黄金值（改文案须有意识地在 i18n.js 改一处）。
-//   2) 收敛：11 个 shell-family 页均通过入口图使用提取的 i18n 模块且语言表经 makeText 包装；
+//   2) 收敛：所有 topbar 页面都通过 declarative binder 处理固定 DOM 文案，并继续通过入口图使用 i18n 模块；
 //      js/ 下除 i18n.js 外不再存在 6 个公共键的字面量副本（防复制复活）。
 //   3) 语言键：site_lang 仍由 src/platform/site-settings.js 管理（历史教训：键名曾写错）。
 //
@@ -20,7 +20,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 // 页面清单来自注册表：骨架契约内的页面（caps:topbar）。新游戏自动纳入。
 const PAGES = registry.withCap('topbar');
 const KEYS = ['sound', 'language', 'moreGames', 'close', 'copied', 'usernameLabel'];
-const DECLARATIVE_PAGES = new Set(['minesweeper', 'reversi', 'tetris', 'carrot-pull', 'circuit']);
+// Phase 6 收口后，所有 topbar 契约页都必须使用 declarative binder；动态/插值/canvas 文案仍可 table-driven。
+const DECLARATIVE_PAGES = new Set(PAGES.map(g => g.id));
 const BINDING_ATTR_RE = /\b(data-i18n(?:-(?:title|label|placeholder|tooltip))?)\s*=\s*(["'])([^"']+)\2/g;
 
 function skipQuoted(source, start) {

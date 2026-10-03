@@ -50,7 +50,7 @@
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="sf-topbar-center game-topbar-center">
                 <div class="sf-title-pill game-title-pill">
-                    <span class="sf-stage-label" id="sf-stage-label">御剑飞行</span>
+                    <span class="sf-stage-label" id="sf-stage-label" data-i18n="gameTitle">御剑飞行</span>
                     <span class="sf-mode-badge" id="sf-mode-badge">九天问道</span>
                 </div>
                 <div class="sf-hud-box game-hud-box">
@@ -144,8 +144,8 @@
                 <!-- 1. 主菜单覆盖层 -->
                 <div class="sf-overlay game-overlay" id="sf-overlay-start">
                     <div class="sf-badge">ORIENTAL XIANXIA SOARING</div>
-                    <h1 class="sf-title" id="sf-main-title">御剑飞行</h1>
-                    <p class="sf-subtitle" id="sf-main-sub">扶摇直上九重天 · 剑气纵横御清风</p>
+                    <h1 class="sf-title" id="sf-main-title" data-i18n="gameTitle">御剑飞行</h1>
+                    <p class="sf-subtitle" id="sf-main-sub" data-i18n="gameSub">扶摇直上九重天 · 剑气纵横御清风</p>
 
                     <div class="sf-hero-art">
                         <span class="sf-hero-icon">🗡️</span>
@@ -161,30 +161,30 @@
                     <div class="sf-mode-grid">
                         <button class="sf-mode-btn highlight" id="sf-btn-stages">
                             <span class="mode-icon">🌌</span>
-                            <span id="sf-lbl-mode-stages">九天问道</span>
-                            <span class="mode-sub" id="sf-sub-mode-stages">9 Celestial Stages</span>
+                            <span id="sf-lbl-mode-stages" data-i18n="modeStages">九天问道</span>
+                            <span class="mode-sub" id="sf-sub-mode-stages" data-i18n="modeStagesSub">9 Celestial Stages</span>
                         </button>
                         <button class="sf-mode-btn" id="sf-btn-endless">
                             <span class="mode-icon">☁️</span>
-                            <span id="sf-lbl-mode-endless">万里长空</span>
-                            <span class="mode-sub" id="sf-sub-mode-endless">Endless Soaring</span>
+                            <span id="sf-lbl-mode-endless" data-i18n="modeEndless">万里长空</span>
+                            <span class="mode-sub" id="sf-sub-mode-endless" data-i18n="modeEndlessSub">Endless Soaring</span>
                         </button>
                         <button class="sf-mode-btn" id="sf-btn-daily">
                             <span class="mode-icon">📅</span>
-                            <span id="sf-lbl-mode-daily">每日仙缘</span>
-                            <span class="mode-sub" id="sf-sub-mode-daily">Global Seeded Daily</span>
+                            <span id="sf-lbl-mode-daily" data-i18n="modeDaily">每日仙缘</span>
+                            <span class="mode-sub" id="sf-sub-mode-daily" data-i18n="modeDailySub">Global Seeded Daily</span>
                         </button>
                         <button class="sf-mode-btn" id="sf-btn-zen">
                             <span class="mode-icon">🧘</span>
-                            <span id="sf-lbl-mode-zen">问道清修</span>
-                            <span class="mode-sub" id="sf-sub-mode-zen">Zen Peaceful Flight</span>
+                            <span id="sf-lbl-mode-zen" data-i18n="modeZen">问道清修</span>
+                            <span class="mode-sub" id="sf-sub-mode-zen" data-i18n="modeZenSub">Zen Peaceful Flight</span>
                         </button>
                     </div>
 
                     <!-- 关卡选择面板 (九天问道) -->
                     <div class="hidden" id="sf-stage-select-wrap" style="width: 100%;">
                         <div class="sf-stage-select-head">
-                            <span class="sf-stage-select-title" id="sf-stage-select-title">选择天境重霄</span>
+                            <span class="sf-stage-select-title" id="sf-stage-select-title" data-i18n="selectStage">选择天境重霄</span>
                             <span class="sf-stage-stars-total" id="sf-stage-stars-total">⭐ 0/27</span>
                         </div>
                         <div class="sf-stage-grid" id="sf-stage-grid"></div>
@@ -193,24 +193,24 @@
                     <!-- 每日挑战卡片信息 -->
                     <div class="sf-daily-card hidden" id="sf-daily-card">
                         <div class="sf-daily-date" id="sf-daily-date">今日仙历：2026-09-15</div>
-                        <div class="sf-daily-modifier" id="sf-daily-modifier">天象奇观：【罡风浩荡】飞行极速提升 30%，仙环灵韵翻倍！</div>
-                        <button class="sf-action-btn primary" id="sf-btn-start-daily" style="margin-top: 10px;">开启今日仙途 ▶</button>
+                        <div class="sf-daily-modifier" id="sf-daily-modifier" data-i18n="dailyModifier">天象奇观：【罡风浩荡】飞行极速提升 30%，仙环灵韵翻倍！</div>
+                        <button class="sf-action-btn primary" id="sf-btn-start-daily" style="margin-top: 10px;" data-i18n="dailyStart">开启今日仙途 ▶</button>
                     </div>
 
                     <!-- 排行榜快速入口按钮 -->
                     <button class="sf-leaderboard-entry-btn game-btn" id="sf-btn-open-rank">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5.5a4 4 0 0 1-8 0V4z"/><path d="M8 5.5H5.2v1.4a3 3 0 0 0 3 3"/><path d="M16 5.5h2.8v1.4a3 3 0 0 1-3 3"/><path d="M12 13.5v4"/><path d="M8.5 20.5h7"/></svg>
-                        <span id="sf-lbl-open-rank">查看九天仙榜</span>
+                        <span id="sf-lbl-open-rank" data-i18n="openRank">查看九天仙榜</span>
                     </button>
                 </div>
 
                 <!-- 2. 暂停覆盖层 -->
                 <div class="sf-overlay hidden game-overlay" id="sf-overlay-pause">
-                    <h2 class="sf-overlay-title" id="sf-pause-title">凝神静思 · 调息</h2>
-                    <p class="sf-overlay-sub" id="sf-pause-sub">调和龙虎，蓄势待发</p>
+                    <h2 class="sf-overlay-title" id="sf-pause-title" data-i18n="pauseTitle">凝神静思 · 调息</h2>
+                    <p class="sf-overlay-sub" id="sf-pause-sub" data-i18n="pauseSub">调和龙虎，蓄势待发</p>
                     <div class="sf-overlay-btns">
-                        <button class="sf-action-btn primary" id="sf-btn-resume">继续御剑 ▶</button>
-                        <button class="sf-action-btn" id="sf-btn-restart">重新启程 ⟲</button>
+                        <button class="sf-action-btn primary" id="sf-btn-resume" data-i18n="resume">继续御剑 ▶</button>
+                        <button class="sf-action-btn" id="sf-btn-restart" data-i18n="restart">重新启程 ⟲</button>
                         <button class="sf-action-btn game-btn" id="sf-btn-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>返回仙门</span></button>
                     </div>
                 </div>
@@ -218,8 +218,8 @@
                 <!-- 3. 通关胜利覆盖层 (九天问道) -->
                 <div class="sf-overlay hidden game-overlay" id="sf-overlay-victory">
                     <div class="sf-badge gold">ASCENSION COMPLETED</div>
-                    <h2 class="sf-overlay-title" id="sf-victory-title">破境飞升 · 仙门洞开</h2>
-                    <p class="sf-overlay-sub" id="sf-victory-sub">剑意通神，跨入更高重天！</p>
+                    <h2 class="sf-overlay-title" id="sf-victory-title" data-i18n="victoryTitle">破境飞升 · 仙门洞开</h2>
+                    <p class="sf-overlay-sub" id="sf-victory-sub" data-i18n="victorySub">剑意通神，跨入更高重天！</p>
 
                     <div class="sf-stars-row" id="sf-victory-stars">
                         <span class="sf-star-slot">⭐</span>
@@ -229,62 +229,62 @@
 
                     <div class="sf-stats-box">
                         <div class="sf-stat-row">
-                            <span class="lbl" id="sf-v-lbl-score">修仙得分</span>
+                            <span class="lbl" id="sf-v-lbl-score" data-i18n="scoreLbl">修仙得分</span>
                             <span class="val" id="sf-v-score">0</span>
                         </div>
                         <div class="sf-stat-row">
-                            <span class="lbl" id="sf-v-lbl-rings">仙环通贯率</span>
+                            <span class="lbl" id="sf-v-lbl-rings" data-i18n="ringsRateLbl">仙环通贯率</span>
                             <span class="val" id="sf-v-rings">0%</span>
                         </div>
                         <div class="sf-stat-row">
-                            <span class="lbl" id="sf-v-lbl-combo">最高连环合鸣</span>
+                            <span class="lbl" id="sf-v-lbl-combo" data-i18n="comboLbl">最高连环合鸣</span>
                             <span class="val" id="sf-v-combo">×1</span>
                         </div>
                         <div class="sf-stat-row">
-                            <span class="lbl" id="sf-v-lbl-realm">修得道果</span>
+                            <span class="lbl" id="sf-v-lbl-realm" data-i18n="realmResultLbl">修得道果</span>
                             <span class="val highlight" id="sf-v-realm">筑基期</span>
                         </div>
                     </div>
 
                     <div class="sf-overlay-btns">
-                        <button class="sf-action-btn primary" id="sf-btn-next-stage">下一重天 ▶</button>
-                        <button class="sf-action-btn" id="sf-btn-stage-replay">再战此境 ⟲</button>
+                        <button class="sf-action-btn primary" id="sf-btn-next-stage" data-i18n="nextStage">下一重天 ▶</button>
+                        <button class="sf-action-btn" id="sf-btn-stage-replay" data-i18n="replayStage">再战此境 ⟲</button>
                         <button class="sf-action-btn game-btn" id="sf-btn-victory-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>返回仙境</span></button>
                     </div>
                 </div>
 
                 <!-- 4. 结算覆盖层 (无尽 / 每日 / 陨落) -->
                 <div class="sf-overlay hidden game-overlay" id="sf-overlay-gameover">
-                    <h2 class="sf-overlay-title" id="sf-go-title">仙缘未尽 · 调息重来</h2>
-                    <p class="sf-overlay-sub" id="sf-go-sub">剑心不灭，再问长生</p>
+                    <h2 class="sf-overlay-title" id="sf-go-title" data-i18n="defeatTitle">仙缘未尽 · 调息重来</h2>
+                    <p class="sf-overlay-sub" id="sf-go-sub" data-i18n="defeatSub">剑心不灭，再问长生</p>
 
                     <div class="sf-stats-box">
                         <div class="sf-stat-row">
-                            <span class="lbl" id="sf-go-lbl-score">最终御剑得分</span>
+                            <span class="lbl" id="sf-go-lbl-score" data-i18n="scoreLbl">最终御剑得分</span>
                             <span class="val" id="sf-go-score">0</span>
                         </div>
                         <div class="sf-stat-row">
-                            <span class="lbl" id="sf-go-lbl-distance">翱翔万里长空</span>
+                            <span class="lbl" id="sf-go-lbl-distance" data-i18n="distLbl">翱翔万里长空</span>
                             <span class="val" id="sf-go-distance">0 里</span>
                         </div>
                         <div class="sf-stat-row">
-                            <span class="lbl" id="sf-go-lbl-realm">达至最高境界</span>
+                            <span class="lbl" id="sf-go-lbl-realm" data-i18n="realmResultLbl">达至最高境界</span>
                             <span class="val highlight" id="sf-go-realm">结丹期</span>
                         </div>
                         <div class="sf-stat-row">
-                            <span class="lbl" id="sf-go-lbl-rings">贯通仙环总数</span>
+                            <span class="lbl" id="sf-go-lbl-rings" data-i18n="ringsCountLbl">贯通仙环总数</span>
                             <span class="val" id="sf-go-rings">0</span>
                         </div>
                     </div>
 
                     <div class="sf-name-submit-box" id="sf-name-box">
                         <input type="text" class="sf-name-input" id="sf-player-name-input" maxlength="16" placeholder="输入道号以铭刻仙榜...">
-                        <button class="sf-submit-score-btn" id="sf-btn-submit-score">铭刻道号</button>
+                        <button class="sf-submit-score-btn" id="sf-btn-submit-score" data-i18n="submitScore">铭刻道号</button>
                     </div>
                     <div class="sf-submit-feedback hidden" id="sf-submit-feedback"></div>
 
                     <div class="sf-overlay-btns">
-                        <button class="sf-action-btn primary" id="sf-btn-go-replay">再次御剑 ⟲</button>
+                        <button class="sf-action-btn primary" id="sf-btn-go-replay" data-i18n="replayEndless">再次御剑 ⟲</button>
                         <button class="sf-action-btn game-btn" id="sf-btn-go-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>返回仙门</span></button>
                     </div>
                 </div>
@@ -293,12 +293,12 @@
                 <div class="sf-modal-backdrop hidden" id="sf-rank-modal">
                     <div class="sf-modal">
                         <div class="sf-modal-header">
-                            <h3 class="sf-modal-title" id="sf-rank-title">🏆 九天绝巅仙榜</h3>
+                            <h3 class="sf-modal-title" id="sf-rank-title" data-i18n="rankTitle">🏆 九天绝巅仙榜</h3>
                             <button class="sf-modal-close" id="sf-btn-close-rank">✕</button>
                         </div>
                         <div class="sf-rank-tabs">
-                            <button class="sf-rank-tab active" id="sf-tab-endless">万里长空总榜</button>
-                            <button class="sf-rank-tab" id="sf-tab-daily">今日仙缘榜</button>
+                            <button class="sf-rank-tab active" id="sf-tab-endless" data-i18n="tabEndless">万里长空总榜</button>
+                            <button class="sf-rank-tab" id="sf-tab-daily" data-i18n="tabDaily">今日仙缘榜</button>
                         </div>
                         <div class="sf-rank-list" id="sf-rank-list">
                             <div class="sf-rank-loading">正在接引九天仙榜...</div>
@@ -314,7 +314,7 @@
                 <!-- 由 apply-stats-drawer.py 生成的搬迁节点：JS 在侧栏 / 底部抽屉之间搬移它 -->
                 <div id="sfStatsPanels">
                     <div class="sf-side-card game-side-card">
-                        <div class="sf-side-title game-side-title" id="sf-side-rules-title">📜 仙道御剑法则</div>
+                        <div class="sf-side-title game-side-title" id="sf-side-rules-title" data-i18n="sideRulesTitle">📜 仙道御剑法则</div>
                         <div class="sf-side-text game-side-text" id="sf-side-rules-text">
                             <b>御剑随心：</b>移动光标或手指引领飞剑穿行。俯冲蓄势破空，冲霄直入云霄！<br><br>
                             • <b>玄天仙环</b>：连续穿梭灵环可引发<b>五音合鸣</b>，真气急速回复，得分倍率飞升！<br>
@@ -326,54 +326,54 @@
 
                     <!-- 卡片 2：绝巅战绩 -->
                     <div class="sf-side-card game-side-card">
-                        <div class="sf-side-title game-side-title" id="sf-side-records-title">🏆 仙修造诣记录</div>
+                        <div class="sf-side-title game-side-title" id="sf-side-records-title" data-i18n="sideRecordsTitle">🏆 仙修造诣记录</div>
                         <div class="sf-side-row game-side-row">
-                            <span id="sf-side-stars-lbl">九天问道星数</span>
+                            <span id="sf-side-stars-lbl" data-i18n="sideStarsLbl">九天问道星数</span>
                             <b id="sf-rec-stars">0 / 27 ⭐</b>
                         </div>
                         <div class="sf-side-row game-side-row">
-                            <span id="sf-side-endless-lbl">万里长空最高分</span>
+                            <span id="sf-side-endless-lbl" data-i18n="sideEndlessLbl">万里长空最高分</span>
                             <b id="sf-rec-endless">0</b>
                         </div>
                         <div class="sf-side-row game-side-row">
-                            <span id="sf-side-maxrealm-lbl">至高修成境界</span>
+                            <span id="sf-side-maxrealm-lbl" data-i18n="sideRealmMaxLbl">至高修成境界</span>
                             <b id="sf-rec-realm">炼气期</b>
                         </div>
                         <div class="sf-side-row game-side-row">
-                            <span id="sf-side-combo-lbl">单局极意连环</span>
+                            <span id="sf-side-combo-lbl" data-i18n="sideComboLbl">单局极意连环</span>
                             <b id="sf-rec-combo">0 环</b>
                         </div>
                         <div class="sf-side-row game-side-row">
-                            <span id="sf-side-daily-lbl">今日仙缘修途</span>
+                            <span id="sf-side-daily-lbl" data-i18n="sideDailyLbl">今日仙缘修途</span>
                             <b id="sf-rec-daily">未涉足</b>
                         </div>
                     </div>
 
                     <!-- 卡片 3：操作指南 -->
                     <div class="sf-side-card game-side-card">
-                        <div class="sf-side-title game-side-title" id="sf-side-controls-title">⌨️ 键位与操控指南</div>
+                        <div class="sf-side-title game-side-title" id="sf-side-controls-title" data-i18n="sideControlsTitle">⌨️ 键位与操控指南</div>
                         <div class="sf-shortcut-item game-side-kbd-row">
-                            <span id="sf-sc-steer">指引剑路</span>
+                            <span id="sf-sc-steer" data-i18n="scSteer">指引剑路</span>
                             <span class="sf-key game-side-kbd" id="sf-sc-steer-key">鼠标移动 / 触控拖拽</span>
                         </div>
                         <div class="sf-shortcut-item game-side-kbd-row">
-                            <span id="sf-sc-keyboard">身法微调</span>
+                            <span id="sf-sc-keyboard" data-i18n="scKeyb">身法微调</span>
                             <span class="sf-key game-side-kbd" id="sf-sc-keyboard-key">W A S D / 方向键</span>
                         </div>
                         <div class="sf-shortcut-item game-side-kbd-row">
-                            <span id="sf-sc-dash">破空疾刺 (无敌穿斩)</span>
+                            <span id="sf-sc-dash" data-i18n="scDash">破空疾刺 (无敌穿斩)</span>
                             <span class="sf-key game-side-kbd" id="sf-sc-dash-key">鼠标左键 / 空格 / ⚡按钮</span>
                         </div>
                         <div class="sf-shortcut-item game-side-kbd-row">
-                            <span id="sf-sc-array">唤发剑气 / 阵列变幻</span>
+                            <span id="sf-sc-array" data-i18n="scArray">唤发剑气 / 阵列变幻</span>
                             <span class="sf-key game-side-kbd" id="sf-sc-array-key">鼠标右键 / Q 键 / ⚔️按钮</span>
                         </div>
                         <div class="sf-shortcut-item game-side-kbd-row">
-                            <span id="sf-sc-ult">万剑归宗 (青莲绝技)</span>
+                            <span id="sf-sc-ult" data-i18n="scUlt">万剑归宗 (青莲绝技)</span>
                             <span class="sf-key game-side-kbd" id="sf-sc-ult-key">E 键 / 双击 / 🌸按钮</span>
                         </div>
                         <div class="sf-shortcut-item game-side-kbd-row">
-                            <span id="sf-sc-pause">调息凝神 (暂停)</span>
+                            <span id="sf-sc-pause" data-i18n="scPause">调息凝神 (暂停)</span>
                             <span class="sf-key game-side-kbd" id="sf-sc-pause-key">P 键 / Esc 键</span>
                         </div>
                     </div>
@@ -386,7 +386,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
     <footer class="sf-footer game-footer">
-        <p class="sf-footer-hint game-footer-hint" id="sf-hint"></p>
+        <p class="sf-footer-hint game-footer-hint" id="sf-hint" data-i18n="hint"></p>
         <div class="sf-footer-actions game-footer-actions game-topbar-group">
             <a class="sf-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
             <button type="button" class="sf-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="sfMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>

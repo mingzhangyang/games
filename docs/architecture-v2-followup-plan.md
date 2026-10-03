@@ -817,6 +817,15 @@ JS 使用 `createI18nBinder`。
 - verify-i18n 同时支持 legacy 与 declarative 的过渡期
 - 最后一批 legacy 页面迁完后，再考虑删除 legacy-only verifier 分支
 
+### Phase 6 收口状态（2026-10-03）
+
+- PR #59 完成首批 5 页：Minesweeper、Reversi、Tetris、Carrot Pull、Circuit。
+- 最终收口批次覆盖其余所有 `caps:topbar` 页面，把纯静态 DOM 文案、固定标题/标签、ARIA、placeholder 等迁入 `createI18nBinder` + `data-i18n*`。
+- 动态状态、插值、成绩/计时、关卡名、Canvas 文案，以及需要保留 SVG/图标结构的复合按钮继续 table-driven；这些不是 legacy i18n 债务。
+- `tests/verify-i18n.mjs` 在 Phase 6 完成后要求所有 topbar 页面使用 declarative binder，并校验每个绑定 key 同时存在于 en/zh 表或 `COMMON_TEXT`。
+
+**Phase 6 退出条件：所有 topbar 页面 declarative gate 全绿，且无为追求语法统一而改写动态/Canvas 文案。**
+
 ---
 
 # 10. Phase 7 — HTML Shell 收敛
