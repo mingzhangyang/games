@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first seven GameStorage migration batches.
+// Static guard for the first eight GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,6 +25,7 @@ const runtimes = {
     'circuit': read('src/games/circuit/runtime.js'),
     'lumen': read('src/games/lumen/runtime.js'),
     'needle-awn': read('src/games/needle-awn/runtime.js'),
+    'gravity-slingshot': read('src/games/gravity-slingshot/runtime.js'),
     'silk-dew': read('src/games/silk-dew/runtime.js'),
     'planet-merge': read('src/games/planet-merge/runtime.js'),
 };
@@ -42,6 +43,7 @@ const adapters = {
     'lumen': read('src/games/lumen/storage.js'),
     'needle-awn': read('src/games/needle-awn/storage.js'),
     'sword-flight': read('src/games/sword-flight/storage.js'),
+    'gravity-slingshot': read('src/games/gravity-slingshot/storage.js'),
     'silk-dew': read('src/games/silk-dew/storage.js'),
     'planet-merge': read('src/games/planet-merge/storage.js'),
 };
@@ -183,6 +185,39 @@ check(swordFlightSources.config.includes("DAILY_PREFIX: 'sf_daily_'"),
     'sword-flight: sf_daily_ protocol prefix is preserved');
 
 
+const gravityRuntime = runtimes['gravity-slingshot'];
+const gravityStorage = adapters['gravity-slingshot'];
+check(gravityRuntime.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
+    'gravity-slingshot: Daily and board compatibility storage remain on the platform facade');
+const gravityStarsBypass = /\bstorage(?:Get|Set|Remove)\s*\(\s*(['"`])gd_stars\1/.test(gravityRuntime);
+check(!gravityStarsBypass,
+    'gravity-slingshot: private stars no longer use the legacy key directly');
+check(
+    gravityRuntime.includes('loadGravityStars(LEVELS.length)')
+        && gravityRuntime.includes('saveGravityStars(this.stars)'),
+    'gravity-slingshot: star reads and writes go through GameStorage',
+);
+const gravityDailyStoragePreserved =
+    gravityRuntime.includes("storageGet('gd_daily_' + date)")
+    && gravityRuntime.includes("storageSet('gd_daily_' + date, String(this.totalLaunches))")
+    && gravityRuntime.includes("storageSet('gs_daily_' + date, '1')");
+check(gravityDailyStoragePreserved,
+    'gravity-slingshot: Daily best and landing-hub completion keys remain unchanged');
+check(gravityRuntime.includes('return `gd_local_${date}`;'),
+    'gravity-slingshot: local board compatibility keys remain unchanged');
+const gravityCourseStoragePreserved =
+    gravityStorage.includes("const DAILY_COURSE_PREFIX = 'gd_course_';")
+    && gravityStorage.includes('storageKeys(DAILY_COURSE_PREFIX)')
+    && gravityStorage.includes('storageRemove(storedKey)');
+check(gravityCourseStoragePreserved,
+    'gravity-slingshot: deterministic Daily course cache remains on platform storage');
+const gravityProtocolKeysIsolated =
+    !gravityStorage.includes("'gd_daily_")
+    && !gravityStorage.includes("'gs_daily_")
+    && !gravityStorage.includes("'gd_local_");
+check(gravityProtocolKeysIsolated,
+    'gravity-slingshot: Daily and board compatibility keys stay outside GameStorage');
+
 const silkRuntime = runtimes['silk-dew'];
 check(silkRuntime.includes("import { storageGet } from '../../platform/safe-storage.js';"),
     'silk-dew: only leaderboard compatibility storage remains on the platform facade');
@@ -243,6 +278,7 @@ for (const [id, source, legacyKeys] of [
     ['ripple-duet', adapters['ripple-duet'], ['rd_progress']],
     ['circuit', adapters['circuit'], ['cc_stars']],
     ['lumen', adapters['lumen'], ['lm_stars']],
+    ['gravity-slingshot', adapters['gravity-slingshot'], ['gd_stars']],
     ['silk-dew', adapters['silk-dew'], ['sd_progress']],
     ['planet-merge', adapters['planet-merge'], ['pm_skin', 'pm_best', 'pm_local_scores']],
 ]) {

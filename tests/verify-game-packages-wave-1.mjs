@@ -155,6 +155,11 @@ if (keepPage('gravity-slingshot')) {
         && gravityStorage.includes("from '../../platform/safe-storage.js'")
         && gravityStorage.includes("from './model/course.js'");
     check(gravityPureCourseModel, 'gravity-slingshot: daily course model stays pure and storage lives in an adapter');
+    const gravityUsesGameStorage = gravityStorage.includes("createGameStorage('gravity-slingshot'")
+        && gravityStorage.includes("STARS: 'stars'")
+        && gravityStorage.includes("'gd_stars'");
+    check(gravityUsesGameStorage,
+        'gravity-slingshot: private stars are mapped through the GameStorage adapter');
     const gravityPinsDailyDate = gravityRuntime.includes('this.dailyStartedAt = Date.now();')
         && gravityRuntime.includes('this.dailyDateKey = todayCompact(this.dailyStartedAt);')
         && gravityRuntime.includes('loadDailyCourse(this.dailyStartedAt)')

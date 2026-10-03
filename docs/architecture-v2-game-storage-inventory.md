@@ -12,7 +12,7 @@ The scan covers `src/games/**/*.js` and the platform storage facade:
 - files containing `storageSet(`: 23;
 - files containing `storageGet(`: 22;
 - files containing `storageRemove(`: 1;
-- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Silk Dew, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, Lumen, Needle Awn, Sword Flight, and Planet Merge.
+- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Silk Dew, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, Lumen, Gravity Slingshot, Needle Awn, Sword Flight, and Planet Merge.
 
 The migration facade writes versioned slots as
 `game:<game-id>:v<version>:<slot>`. It reads the new slot first, imports a
@@ -66,7 +66,7 @@ These are candidates for `createGameStorage`:
 | Word Daily | site settings | `wd_daily_*` | `wd_lang_mode`, `wd_word_len_en`, `wd_hist_*`, `wd_stats_*`; `wd_seen_help` already migrated | Later, mixed daily state |
 | Circuit | site settings | `cc_daily_*`, `cc_local_*` | `cc_stars` | Phase 5 batch D |
 | Lumen | site settings | `lm_daily_*`, local/daily board keys | `lm_stars` | Phase 5 batch D |
-| Gravity Slingshot | site settings | `gd_daily_*`, `gs_daily_*`, local boards, `gd_course_*` | `gd_stars` | Later, daily cache needs care |
+| Gravity Slingshot | site settings | `gd_daily_*`, `gs_daily_*`, local boards, `gd_course_*` | `gd_stars` | Phase 5 batch H |
 | Needle Awn | site settings | `zj_daily_*` | unlocks, stars, endless best, clash max | Phase 5 batch E |
 | Sword Flight | site settings | `sf_daily_*` | stage unlocks/stars, endless best, realm, combo | Phase 5 batch E |
 | Tower Defense | site settings | leaderboard integration | clear flags, per-level/global best, private local scores | Later, split across runtime/UI |
@@ -224,3 +224,23 @@ authoritative and later progress writes use GameStorage only. The retained
 `sd_progress` / `sd_progress_version` pair remains available for rollback
 compatibility, while `sd_lb_*` leaderboard cache keys stay on the platform storage
 facade and are never exposed as GameStorage slots.
+
+
+## Batch H migration map
+
+Branch: `refactor/game-storage-migration-h`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `gravity-slingshot / stars` | `gd_stars` | `game:gravity-slingshot:v1:stars` | Import the legacy star array once and retain the old key |
+
+Batch H is intentionally Gravity Slingshot only. The private handcrafted-level
+star array moves to GameStorage, while all Daily and service-facing state keeps
+its existing compatibility contract: `gd_daily_*` stores the per-day best,
+`gs_daily_*` marks Daily Hub completion, `gd_local_*` remains the local
+leaderboard fallback, and `gd_course_*` remains the deterministic Daily course
+cache managed through the platform safe-storage facade.
+
+The migration fixture verifies legacy import, canonical-slot precedence, legacy
+key retention, level-count padding, and non-interference with all four protocol
+and cache families.

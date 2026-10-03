@@ -33,7 +33,7 @@ import {
     WARP_2,
 } from './config.js';
 import { buildDailyCourse, LEVELS } from './model/course.js';
-import { loadDailyCourse } from './storage.js';
+import { loadDailyCourse, loadGravityStars, saveGravityStars } from './storage.js';
 import { bodyScratch, bodiesAt, simulate, stepProbe } from './model/physics.js';
 import { bgCanvas, buildStarLayer, planetSprite, PLANET_TONES, renderBackground, starLayer } from './render/scene.js';
 import { aimVector, bindGravityInput, toLogical } from './input/pointer.js';
@@ -109,7 +109,7 @@ class GravityGame {
         });
 
         this.lang = this.readLang();
-        this.stars = storageParseStars();
+        this.stars = loadGravityStars(LEVELS.length);
 
         this.mode = 'levels';
         this.course = LEVELS;     // 当前洞口序列
@@ -471,7 +471,7 @@ class GravityGame {
         const prev = this.stars[this.holeIdx] || 0;
         if (starCount > prev) {
             this.stars[this.holeIdx] = starCount;
-            storageSet('gd_stars', JSON.stringify(this.stars));
+            saveGravityStars(this.stars);
         }
         this.updateSideRecords();
         if (this.el['hole-stars']) this.el['hole-stars'].textContent = '⭐'.repeat(starCount) + '☆'.repeat(3 - starCount);
@@ -1189,17 +1189,6 @@ class GravityGame {
             ctx.fillText(this.flightT > WARP_2 ? '▶▶▶' : '▶▶', W - 10, 24);
             ctx.textAlign = 'left';
         }
-    }
-}
-
-function storageParseStars() {
-    try {
-        const arr = JSON.parse(storageGet('gd_stars'));
-        const out = Array.isArray(arr) ? arr.slice() : [];
-        while (out.length < LEVELS.length) out.push(0);
-        return out;
-    } catch (e) {
-        return new Array(LEVELS.length).fill(0);
     }
 }
 
