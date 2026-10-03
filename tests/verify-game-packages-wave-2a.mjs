@@ -19,11 +19,11 @@ const specs = [
     },
     {
         id: 'planet-merge',
-        files: ['index.js', 'runtime.js', 'i18n.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'i18n.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'mountGameRuntime', 'window.planetMergeGame', 'window.pmRuntime'],
-        runtimeNeedles: ["from './i18n.js'", "from '../../platform/game-sfx.js'", "from '../../platform/daily.js"],
+        runtimeNeedles: ["from './i18n.js'", "from './storage.js'", "from '../../platform/game-sfx.js'", "from '../../platform/daily.js"],
         handles: ['window.planetMergeGame', 'window.pmRuntime', 'window.pmDrawer'],
-        keys: ["'pm_best'", "'pm_local_scores'"],
+        storageKeys: ["'pm_skin'", "'pm_best'", "'pm_local_scores'"],
     },
     {
         id: 'word-daily',

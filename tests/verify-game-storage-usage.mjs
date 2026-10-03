@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first five GameStorage migration batches.
+// Static guard for the first six GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,6 +25,7 @@ const runtimes = {
     'circuit': read('src/games/circuit/runtime.js'),
     'lumen': read('src/games/lumen/runtime.js'),
     'needle-awn': read('src/games/needle-awn/runtime.js'),
+    'planet-merge': read('src/games/planet-merge/runtime.js'),
 };
 const adapters = {
     'carrot-pull': read('src/games/carrot-pull/storage.js'),
@@ -40,6 +41,7 @@ const adapters = {
     'lumen': read('src/games/lumen/storage.js'),
     'needle-awn': read('src/games/needle-awn/storage.js'),
     'sword-flight': read('src/games/sword-flight/storage.js'),
+    'planet-merge': read('src/games/planet-merge/storage.js'),
 };
 
 const swordFlightSources = {
@@ -178,6 +180,32 @@ check(swordDailyStoragePreserved,
 check(swordFlightSources.config.includes("DAILY_PREFIX: 'sf_daily_'"),
     'sword-flight: sf_daily_ protocol prefix is preserved');
 
+const planetRuntime = runtimes['planet-merge'];
+check(planetRuntime.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
+    'planet-merge: global mute and Daily compatibility storage remain on the platform facade');
+const planetPrivateBypass = /\b(?:storage(?:Get|Set|Remove)|storageParse)\s*\(\s*(['"`])pm_(?:skin|best|local_scores)\1/.test(planetRuntime);
+check(!planetPrivateBypass,
+    'planet-merge: private skin, best, and local scores no longer bypass GameStorage');
+check(planetRuntime.includes("from './storage.js'"),
+    'planet-merge: runtime composes its GameStorage adapter');
+check(/PLANET_MERGE_STORAGE\.set\s*\(\s*PLANET_MERGE_STORAGE_SLOTS\.SKIN\b/.test(planetRuntime),
+    'planet-merge: skin writes go through GameStorage');
+check(/PLANET_MERGE_STORAGE\.set\s*\(\s*PLANET_MERGE_STORAGE_SLOTS\.BEST\b/.test(planetRuntime),
+    'planet-merge: best-score writes go through GameStorage');
+check(/PLANET_MERGE_STORAGE\.set\s*\(\s*PLANET_MERGE_STORAGE_SLOTS\.LOCAL_SCORES\b/.test(planetRuntime),
+    'planet-merge: local-score writes go through GameStorage');
+check(planetRuntime.includes("storageSet('pm_muted', muted ? '1' : '0')"),
+    'planet-merge: pm_muted remains a global mute compatibility mirror');
+const planetDailyStoragePreserved = planetRuntime.includes('const key = `pm_daily_${this.dailyDay}`;')
+    && planetRuntime.includes('storageParse(key, 0)')
+    && planetRuntime.includes('storageSet(key, String(this.score))');
+check(planetDailyStoragePreserved,
+    'planet-merge: pm_daily_* compatibility keys remain unchanged');
+const planetCompatibilityKeysIsolated = !adapters['planet-merge'].includes('pm_muted')
+    && !adapters['planet-merge'].includes('pm_daily_');
+check(planetCompatibilityKeysIsolated,
+    'planet-merge: global/daily compatibility keys stay outside GameStorage');
+
 for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
     check(source.includes(`createGameStorage('${id}'`), `${id}: adapter uses the canonical game id`);
@@ -194,6 +222,7 @@ for (const [id, source, legacyKeys] of [
     ['ripple-duet', adapters['ripple-duet'], ['rd_progress']],
     ['circuit', adapters['circuit'], ['cc_stars']],
     ['lumen', adapters['lumen'], ['lm_stars']],
+    ['planet-merge', adapters['planet-merge'], ['pm_skin', 'pm_best', 'pm_local_scores']],
 ]) {
     for (const key of legacyKeys) {
         check(source.includes(`'${key}'`), `${id}: adapter preserves legacy key ${key}`);
