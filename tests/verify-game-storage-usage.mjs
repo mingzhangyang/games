@@ -73,7 +73,9 @@ for (const [id, prefix, slotName] of [
         `${id}: only the legacy leaderboard reader remains on platform storage`);
     check(!/\bstorageSet\s*\(/.test(source),
         `${id}: runtime has no direct platform storage writes`);
-    check(!new RegExp(`storageGet\\s*\\(\\s*['"`]\\${prefix}_progress['"`]`).test(source),
+    const legacyProgressRead = source.includes(`storageGet('${prefix}_progress')`)
+        || source.includes(`storageGet("${prefix}_progress")`);
+    check(!legacyProgressRead,
         `${id}: private progress no longer reads the legacy key directly`);
     check(source.includes(`storageGet('${prefix}_lb_' + game)`),
         `${id}: leaderboard cache keeps its legacy/protocol key`);
