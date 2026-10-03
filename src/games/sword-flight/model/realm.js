@@ -1,9 +1,9 @@
 /** Cultivation thresholds and realm naming. */
 import { getLang } from '../../../platform/site-settings.js';
-import { storageSet } from '../../../platform/safe-storage.js';
 import { I18N } from '../i18n.js';
 import { SFX } from '../audio.js';
-import { REALM_THRESHOLDS, STORAGE_KEYS } from '../config.js';
+import { REALM_THRESHOLDS } from '../config.js';
+import { SWORD_FLIGHT_STORAGE, SWORD_FLIGHT_STORAGE_SLOTS } from '../storage.js';
 
 // Records keep their legacy localized strings; recognize either locale without
 // changing the storage schema when the site language changes.
@@ -29,7 +29,7 @@ export function checkCultivationBreakthrough(game) {
         const rName = game.getRealmName(nextRealm);
         if (nextRealm > getRealmIndex(game.maxRealm)) {
             game.maxRealm = rName;
-            storageSet(STORAGE_KEYS.MAX_REALM, rName);
+            SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.MAX_REALM, rName);
         }
     }
 

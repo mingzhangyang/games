@@ -649,6 +649,8 @@ Phase 5 的基线盘点与第一批迁移映射记录在
 继续只迁私有 progress，`cb_lb_*` / `fv_lb_*` / `rd_lb_*` 保持兼容协议。
 第四批使用 `refactor/game-storage-migration-d`，包含 Circuit、Lumen；
 只迁 `cc_stars` / `lm_stars`，Daily 与 local board compatibility key 保持原协议。
+第五批使用 `refactor/game-storage-migration-e`，包含 Needle Awn、Sword Flight；
+迁各自私有 progression/record slots，`zj_daily_*` / `sf_daily_*` 保持原协议。
 
 建议分支按批次命名：
 
@@ -656,6 +658,7 @@ Phase 5 的基线盘点与第一批迁移映射记录在
 - `refactor/game-storage-migration-b`
 - `refactor/game-storage-migration-c`
 - `refactor/game-storage-migration-d`
+- `refactor/game-storage-migration-e`
 - ...
 
 每批都必须有旧数据 fixture / migration regression，不允许等最后一批才补兼容测试。

@@ -58,7 +58,7 @@ files.forEach(visit);
 
 const rankOf = file => {
     const path = relative(PACKAGE, file).replace(/\\/g, '/');
-    if (path === 'config.js' || path === 'audio.js' || path === 'i18n.js') return 0;
+    if (path === 'config.js' || path === 'storage.js' || path === 'audio.js' || path === 'i18n.js') return 0;
     if (path.startsWith('model/')) return 1;
     if (path.startsWith('systems/')) return 2;
     if (path.startsWith('render/')) return 3;
@@ -97,6 +97,14 @@ check(!/from ['"]\.\/(?:systems\/|render\/(?:world|effects)\.js|input\/|ui\/)/.t
     'composition root does not import gameplay/render/input/menu implementation directly');
 check(composition.includes("from './runtime.js'") && composition.includes("from './render/hud.js'"),
     'composition root only assembles runtime and chrome setter');
+const storage = readFileSync(join(PACKAGE, 'storage.js'), 'utf8');
+check(storage.includes("createGameStorage('sword-flight'")
+    && storage.includes('STORAGE_KEYS.UNLOCKED_STAGE')
+    && storage.includes('STORAGE_KEYS.STAGE_STARS')
+    && storage.includes('STORAGE_KEYS.ENDLESS_BEST')
+    && storage.includes('STORAGE_KEYS.MAX_REALM')
+    && storage.includes('STORAGE_KEYS.MAX_COMBO'),
+'sword-flight: storage.js owns the private-record legacy mappings');
 
 if (failures.length) {
     console.error(`\nFAIL ${failures.length} 项:`);

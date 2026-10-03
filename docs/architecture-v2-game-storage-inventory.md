@@ -12,7 +12,7 @@ The scan covers `src/games/**/*.js` and the platform storage facade:
 - files containing `storageSet(`: 23;
 - files containing `storageGet(`: 22;
 - files containing `storageRemove(`: 1;
-- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, and Lumen.
+- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, Lumen, Needle Awn, and Sword Flight.
 
 The migration facade writes versioned slots as
 `game:<game-id>:v<version>:<slot>`. It reads the new slot first, imports a
@@ -67,8 +67,8 @@ These are candidates for `createGameStorage`:
 | Circuit | site settings | `cc_daily_*`, `cc_local_*` | `cc_stars` | Phase 5 batch D |
 | Lumen | site settings | `lm_daily_*`, local/daily board keys | `lm_stars` | Phase 5 batch D |
 | Gravity Slingshot | site settings | `gd_daily_*`, `gs_daily_*`, local boards, `gd_course_*` | `gd_stars` | Later, daily cache needs care |
-| Needle Awn | site settings | `zj_daily_*` | unlocks, stars, endless best, clash max | Later |
-| Sword Flight | site settings | `sf_daily_*` | stage unlocks/stars, endless best, realm, combo | Later |
+| Needle Awn | site settings | `zj_daily_*` | unlocks, stars, endless best, clash max | Phase 5 batch E |
+| Sword Flight | site settings | `sf_daily_*` | stage unlocks/stars, endless best, realm, combo | Phase 5 batch E |
 | Tower Defense | site settings | leaderboard integration | clear flags, per-level/global best, private local scores | Later, split across runtime/UI |
 | Planet Merge | global mute compatibility | local score compatibility as needed | skin, best, private local scores | Later |
 | Bond Forge | site settings | `bf_daily_<date>`, daily leaderboard contract | `bf_progress` | Phase 5 batch A |
@@ -159,3 +159,27 @@ private stars move to GameStorage. The usage guard therefore rejects only direct
 legacy stars access and separately asserts that the protocol key families remain
 present. The migration fixture verifies legacy import, canonical precedence,
 legacy-key retention, and non-interference with Daily/local data.
+
+
+## Batch E migration map
+
+Branch: `refactor/game-storage-migration-e`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `needle-awn / unlockedLevel` | `na_unlocked_level` | `game:needle-awn:v1:unlockedLevel` | Keep `zj_daily_*` outside GameStorage |
+| `needle-awn / levelStars` | `na_level_stars` | `game:needle-awn:v1:levelStars` | Preserve object shape and legacy key |
+| `needle-awn / endlessBest` | `na_endless_best` | `game:needle-awn:v1:endlessBest` | Preserve numeric semantics |
+| `needle-awn / clashMax` | `na_clash_max` | `game:needle-awn:v1:clashMax` | Preserve numeric semantics |
+| `sword-flight / unlockedStage` | `sf_unlocked_stage` | `game:sword-flight:v1:unlockedStage` | Keep `sf_daily_*` outside GameStorage |
+| `sword-flight / stageStars` | `sf_stage_stars` | `game:sword-flight:v1:stageStars` | Preserve object shape and legacy key |
+| `sword-flight / endlessBest` | `sf_endless_best` | `game:sword-flight:v1:endlessBest` | Preserve numeric semantics |
+| `sword-flight / maxRealm` | `sf_max_realm` | `game:sword-flight:v1:maxRealm` | Legacy localized strings import unchanged |
+| `sword-flight / maxCombo` | `sf_max_combo` | `game:sword-flight:v1:maxCombo` | Preserve numeric semantics |
+
+Batch E migrates the remaining private progression records for Needle Awn and
+Sword Flight. Needle Awn continues to use the platform storage facade only for
+its `zj_daily_*` completion/score contract. Sword Flight keeps all
+`sf_daily_*` reads and writes in `model/daily.js`; private record modules no
+longer import the platform storage facade. Legacy private keys remain available
+for one-time import and rollback compatibility.

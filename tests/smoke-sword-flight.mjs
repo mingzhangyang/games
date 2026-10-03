@@ -132,9 +132,10 @@ try {
         g.player.swordCount = 1;
         g.score = 1500;
         g.checkCultivationBreakthrough();
-        return { ring, realmIndex: g.player.realmIndex, swordCount: g.player.swordCount, realmText: document.getElementById('sf-realm-text').textContent };
+        const maxComboStored = JSON.parse(localStorage.getItem('game:sword-flight:v1:maxCombo') || '0');
+        return { ring, maxComboStored, realmIndex: g.player.realmIndex, swordCount: g.player.swordCount, realmText: document.getElementById('sf-realm-text').textContent };
     });
-    check(scoring.ring.score === 200 && scoring.ring.combo === 2 && scoring.ring.qi === 68 && scoring.ring.ultEnergy === 8,
+    check(scoring.ring.score === 200 && scoring.ring.combo === 2 && scoring.ring.qi === 68 && scoring.ring.ultEnergy === 8 && scoring.maxComboStored === 2,
         '穿环计分、连击、真气和极意保持不变', JSON.stringify(scoring.ring));
     check(scoring.realmIndex === 1 && scoring.swordCount === 3, '1500 分仍推进至第二境并召出伴生剑', JSON.stringify(scoring));
     check(desktopErrors.length === 0, '桌面端无 pageerror', desktopErrors.join(' | '));

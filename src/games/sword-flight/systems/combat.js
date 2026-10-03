@@ -1,9 +1,9 @@
 /** Collision handling, combat actions, and score-producing interactions. */
 import { getLang } from '../../../platform/site-settings.js';
-import { storageSet } from '../../../platform/safe-storage.js';
 import { I18N } from '../i18n.js';
 import { SFX } from '../audio.js';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, STORAGE_KEYS } from '../config.js';
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config.js';
+import { SWORD_FLIGHT_STORAGE, SWORD_FLIGHT_STORAGE_SLOTS } from '../storage.js';
 
 export function triggerDash(game) {
     if (!game.isPlaying || game.isPaused) return;
@@ -313,7 +313,7 @@ export function handleRingThreaded(game, ring) {
     if (game.combo > game.maxComboThisRun) game.maxComboThisRun = game.combo;
     if (game.combo > game.maxComboRecord) {
         game.maxComboRecord = game.combo;
-        storageSet(STORAGE_KEYS.MAX_COMBO, game.maxComboRecord.toString());
+        SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.MAX_COMBO, game.maxComboRecord);
     }
 
     const ringScore = 100 * game.combo * (game.dailyModifiers?.ringScoreMultiplier ?? 1);

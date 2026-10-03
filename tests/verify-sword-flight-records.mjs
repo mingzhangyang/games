@@ -9,6 +9,7 @@ import { getDailyDateKey, getDailyLeaderboardKey } from '../src/games/sword-flig
 import { STORAGE_KEYS, REALM_THRESHOLDS } from '../src/games/sword-flight/config.js';
 import { I18N } from '../src/games/sword-flight/i18n.js';
 import { SFX } from '../src/games/sword-flight/audio.js';
+import { SWORD_FLIGHT_STORAGE, SWORD_FLIGHT_STORAGE_SLOTS } from '../src/games/sword-flight/storage.js';
 
 const globals = ['document', 'localStorage', 'fetch', 'Date'];
 const originals = new Map(globals.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
@@ -19,6 +20,12 @@ let nowIso = '2026-01-01T16:00:00.000Z';
 const values = new Map();
 const nodes = new Map();
 const requests = [];
+const canonicalKey = slot => SWORD_FLIGHT_STORAGE.key(slot);
+const setCanonical = (slot, value) => values.set(canonicalKey(slot), JSON.stringify(value));
+const getCanonical = slot => {
+    const raw = values.get(canonicalKey(slot));
+    return raw == null ? undefined : JSON.parse(raw);
+};
 
 function node(id) {
     if (!nodes.has(id)) {
@@ -81,23 +88,23 @@ try {
             values.set('site_lang', activeLocale);
             for (let rank = 1; rank < REALM_THRESHOLDS.length; rank++) {
                 const record = I18N[storedLocale].realms[rank];
-                values.set(STORAGE_KEYS.MAX_REALM, record);
+                setCanonical(SWORD_FLIGHT_STORAGE_SLOTS.MAX_REALM, record);
                 const g = game();
                 g.score = REALM_THRESHOLDS[1];
                 g.checkCultivationBreakthrough();
                 g.saveRecords();
                 assert.equal(g.player.realmIndex, 1);
                 assert.equal(g.maxRealm, record);
-                assert.equal(values.get(STORAGE_KEYS.MAX_REALM), record);
+                assert.equal(getCanonical(SWORD_FLIGHT_STORAGE_SLOTS.MAX_REALM), record);
                 assert.equal(getRealmIndex(record), rank);
             }
-            values.set(STORAGE_KEYS.MAX_REALM, I18N[storedLocale].realms[1]);
+            setCanonical(SWORD_FLIGHT_STORAGE_SLOTS.MAX_REALM, I18N[storedLocale].realms[1]);
             const g = game();
             g.player.realmIndex = 1;
             g.score = REALM_THRESHOLDS[2];
             g.checkCultivationBreakthrough();
             assert.equal(g.maxRealm, I18N[activeLocale].realms[2]);
-            assert.equal(values.get(STORAGE_KEYS.MAX_REALM), g.maxRealm);
+            assert.equal(getCanonical(SWORD_FLIGHT_STORAGE_SLOTS.MAX_REALM), g.maxRealm);
         }
     }
     console.log('✓ highest realm never decreases across either stored/active locale; higher realms still persist');
@@ -105,7 +112,7 @@ try {
     for (const storedLocale of ['zh', 'en']) {
         for (const activeLocale of ['zh', 'en']) {
             values.set('site_lang', activeLocale);
-            values.set(STORAGE_KEYS.MAX_REALM, I18N[storedLocale].realms[3]);
+            setCanonical(SWORD_FLIGHT_STORAGE_SLOTS.MAX_REALM, I18N[storedLocale].realms[3]);
             game().updateSideRecords();
             assert.equal(node('sf-rec-realm').textContent, I18N[activeLocale].realms[3]);
         }
@@ -134,18 +141,18 @@ try {
     console.log('✓ start and restart reset realm, sword count, Qi capacity and HUD in all modes');
 
     for (const mode of ['stages', 'daily', 'zen', 'endless']) {
-        values.set(STORAGE_KEYS.ENDLESS_BEST, '900');
+        setCanonical(SWORD_FLIGHT_STORAGE_SLOTS.ENDLESS_BEST, 900);
         const g = game(mode, 2000);
         g.handleGameOver();
         assert.equal(g.endlessBest, mode === 'endless' ? 2000 : 900);
-        assert.equal(values.get(STORAGE_KEYS.ENDLESS_BEST), mode === 'endless' ? '2000' : '900');
+        assert.equal(getCanonical(SWORD_FLIGHT_STORAGE_SLOTS.ENDLESS_BEST), mode === 'endless' ? 2000 : 900);
         assert.equal(g.isPlaying, false);
         assert.equal(node('sf-go-score').textContent, (2000).toLocaleString());
         const eligible = mode === 'endless' || mode === 'daily';
         assert.equal(node('sf-name-box').classList.contains('hidden'), !eligible);
     }
     game('endless', 100).handleGameOver();
-    assert.equal(values.get(STORAGE_KEYS.ENDLESS_BEST), '2000');
+    assert.equal(getCanonical(SWORD_FLIGHT_STORAGE_SLOTS.ENDLESS_BEST), 2000);
     values.set('site_lang', 'en');
     const localizedDistance = game('endless', 1);
     localizedDistance.distanceSoared = 12.6;
@@ -283,11 +290,13 @@ try {
     console.log('✓ failed/successful leaderboard submissions do not overwrite local daily best; board keys stay unchanged');
 
     const stages = game('stages', 5000);
-    const endlessBefore = values.get(STORAGE_KEYS.ENDLESS_BEST);
+    const endlessBefore = getCanonical(SWORD_FLIGHT_STORAGE_SLOTS.ENDLESS_BEST);
     stages.handleStageVictory();
     assert.equal(stages.stageStars[1], 3);
     assert.equal(stages.unlockedStage, 2);
-    assert.equal(values.get(STORAGE_KEYS.ENDLESS_BEST), endlessBefore);
+    assert.deepEqual(getCanonical(SWORD_FLIGHT_STORAGE_SLOTS.STAGE_STARS), stages.stageStars);
+    assert.equal(getCanonical(SWORD_FLIGHT_STORAGE_SLOTS.UNLOCKED_STAGE), 2);
+    assert.equal(getCanonical(SWORD_FLIGHT_STORAGE_SLOTS.ENDLESS_BEST), endlessBefore);
     assert.equal(values.get(dailyKey), '800');
     console.log('✓ stage victory still saves stars/unlock without contaminating daily or endless records');
 } finally {

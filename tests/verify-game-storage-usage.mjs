@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first four GameStorage migration batches.
+// Static guard for the first five GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,7 @@ const runtimes = {
     'ripple-duet': read('src/games/ripple-duet/runtime.js'),
     'circuit': read('src/games/circuit/runtime.js'),
     'lumen': read('src/games/lumen/runtime.js'),
+    'needle-awn': read('src/games/needle-awn/runtime.js'),
 };
 const adapters = {
     'carrot-pull': read('src/games/carrot-pull/storage.js'),
@@ -37,7 +38,19 @@ const adapters = {
     'ripple-duet': read('src/games/ripple-duet/storage.js'),
     'circuit': read('src/games/circuit/storage.js'),
     'lumen': read('src/games/lumen/storage.js'),
+    'needle-awn': read('src/games/needle-awn/storage.js'),
+    'sword-flight': read('src/games/sword-flight/storage.js'),
 };
+
+const swordFlightSources = {
+    runState: read('src/games/sword-flight/model/run-state.js'),
+    realm: read('src/games/sword-flight/model/realm.js'),
+    scoring: read('src/games/sword-flight/systems/scoring.js'),
+    combat: read('src/games/sword-flight/systems/combat.js'),
+    daily: read('src/games/sword-flight/model/daily.js'),
+    config: read('src/games/sword-flight/config.js'),
+};
+const needleConfig = read('src/games/needle-awn/config.js');
 
 for (const id of ['carrot-pull', 'hoop-shot']) {
     const source = runtimes[id];
@@ -122,6 +135,48 @@ for (const [id, prefix, slotName] of [
     check(source.includes("from './storage.js'"),
         `${id}: runtime composes its GameStorage adapter`);
 }
+
+
+const needleRuntime = runtimes['needle-awn'];
+for (const keyName of ['UNLOCKED_LEVEL', 'LEVEL_STARS', 'ENDLESS_BEST', 'CLASH_MAX']) {
+    const directPrivateAccess = new RegExp(
+        `\\bstorage(?:Get|Set|Remove)\\s*\\(\\s*STORAGE_KEYS\\.${keyName}\\b`,
+    ).test(needleRuntime);
+    check(!directPrivateAccess, `needle-awn: ${keyName} no longer bypasses GameStorage`);
+}
+check(needleRuntime.includes("from './storage.js'"),
+    'needle-awn: runtime composes its GameStorage adapter');
+check(needleRuntime.includes('STORAGE_KEYS.DAILY_PREFIX'),
+    'needle-awn: Daily compatibility key stays on the legacy protocol');
+for (const keyName of ['UNLOCKED_LEVEL', 'LEVEL_STARS', 'ENDLESS_BEST', 'CLASH_MAX']) {
+    check(adapters['needle-awn'].includes(`STORAGE_KEYS.${keyName}`),
+        `needle-awn: adapter maps legacy ${keyName}`);
+}
+check(needleConfig.includes("DAILY_PREFIX: 'zj_daily_'"),
+    'needle-awn: zj_daily_ protocol prefix is preserved');
+
+const swordPrivateSource = [
+    swordFlightSources.runState,
+    swordFlightSources.realm,
+    swordFlightSources.scoring,
+    swordFlightSources.combat,
+].join('\n');
+const swordPrivateStorageIsolated = !swordPrivateSource.includes('safe-storage.js')
+    && !/\bstorage(?:Get|Set|Remove)\s*\(/.test(swordPrivateSource);
+check(swordPrivateStorageIsolated,
+    'sword-flight: private record modules no longer use the platform storage facade');
+for (const keyName of ['UNLOCKED_STAGE', 'STAGE_STARS', 'ENDLESS_BEST', 'MAX_REALM', 'MAX_COMBO']) {
+    check(!swordPrivateSource.includes(`STORAGE_KEYS.${keyName}`),
+        `sword-flight: ${keyName} is isolated behind GameStorage`);
+    check(adapters['sword-flight'].includes(`STORAGE_KEYS.${keyName}`),
+        `sword-flight: adapter maps legacy ${keyName}`);
+}
+const swordDailyStoragePreserved = swordFlightSources.daily.includes("from '../../../platform/safe-storage.js'")
+    && swordFlightSources.daily.includes('STORAGE_KEYS.DAILY_PREFIX');
+check(swordDailyStoragePreserved,
+    'sword-flight: Daily compatibility storage remains unchanged');
+check(swordFlightSources.config.includes("DAILY_PREFIX: 'sf_daily_'"),
+    'sword-flight: sf_daily_ protocol prefix is preserved');
 
 for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
