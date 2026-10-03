@@ -508,7 +508,7 @@ export class TowerDefenseGame {
         const isBest = this.score > prevBest;
         if (isBest) {
             saveTowerDefenseBest(this.level.id, this.score);
-            // 跨关卡全局记录也进入 GameStorage；legacy td_best 仅用于首次导入。
+            // 跨关卡全局记录也进入 GameStorage；legacy 全局记录仅用于首次导入。
             const globalBest = loadTowerDefenseGlobalBest();
             if (this.score > globalBest) saveTowerDefenseGlobalBest(this.score);
         }

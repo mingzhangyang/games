@@ -28,7 +28,7 @@ for (const levelId of TOWER_DEFENSE_LEVEL_IDS) {
 
 export const TOWER_DEFENSE_STORAGE = createGameStorage('tower-defense', {
     version: 1,
-    legacy,
+    legacy: legacy,
 });
 
 const nonNegativeScore = value => {
