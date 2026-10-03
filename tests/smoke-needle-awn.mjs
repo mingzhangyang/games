@@ -206,9 +206,10 @@ async function assertNormalPage() {
                 enemiesLeft: game.enemies.length,
                 tipDistance: [player.tipDistance, enemy.tipDistance],
                 increment: game.totalClashes - before,
+                clashMaxStored: JSON.parse(localStorage.getItem('game:needle-awn:v1:clashMax') || '0'),
             };
         });
-        if (!clash.result || clash.increment !== 1 || clash.clashes !== 1 || clash.score <= 0 || clash.enemiesLeft !== 0 || JSON.stringify(clash.tipDistance) !== JSON.stringify([22, 20])) {
+        if (!clash.result || clash.increment !== 1 || clash.clashes !== 1 || clash.clashMaxStored !== 1 || clash.score <= 0 || clash.enemiesLeft !== 0 || JSON.stringify(clash.tipDistance) !== JSON.stringify([22, 20])) {
             fail(`真实针尖碰撞未按原契约触发: ${JSON.stringify(clash)}`);
         }
 

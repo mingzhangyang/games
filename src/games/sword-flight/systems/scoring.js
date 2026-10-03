@@ -1,10 +1,9 @@
 /** Stage completion and run-end scoring side effects. */
 import { getLang } from '../../../platform/site-settings.js';
-import { storageSet } from '../../../platform/safe-storage.js';
 import { track } from '../../../platform/analytics.js';
 import { SFX } from '../audio.js';
-import { STORAGE_KEYS } from '../config.js';
 import { I18N } from '../i18n.js';
+import { SWORD_FLIGHT_STORAGE, SWORD_FLIGHT_STORAGE_SLOTS } from '../storage.js';
 import { saveDailyResult } from '../model/daily.js';
 
 export function handleStageVictory(game) {
@@ -24,12 +23,12 @@ export function handleStageVictory(game) {
     const prevStars = game.stageStars[currentStageNum] || 0;
     if (stars > prevStars) {
         game.stageStars[currentStageNum] = stars;
-        storageSet(STORAGE_KEYS.STAGE_STARS, JSON.stringify(game.stageStars));
+        SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.STAGE_STARS, game.stageStars);
     }
 
     if (currentStageNum >= game.unlockedStage && game.unlockedStage < 9) {
         game.unlockedStage = currentStageNum + 1;
-        storageSet(STORAGE_KEYS.UNLOCKED_STAGE, game.unlockedStage.toString());
+        SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.UNLOCKED_STAGE, game.unlockedStage);
     }
 
     game.saveRecords();
@@ -60,7 +59,7 @@ export function handleGameOver(game) {
     game.refreshPauseButton();
     if (game.mode === 'endless' && game.score > game.endlessBest) {
         game.endlessBest = game.score;
-        storageSet(STORAGE_KEYS.ENDLESS_BEST, game.endlessBest.toString());
+        SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.ENDLESS_BEST, game.endlessBest);
     }
     if (game.mode === 'daily') saveDailyResult(game.score, game.dailyDateKey || undefined);
     game.saveRecords();

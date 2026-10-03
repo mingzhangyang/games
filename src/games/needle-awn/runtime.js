@@ -22,6 +22,7 @@ import { ART_UI, loadNeedleAwnArt } from './render/art.js';
 import { createNeedleAwnScene } from './render/scene.js';
 import { bindNeedleAwnInput } from './input/controls.js';
 import { ARENA_HEIGHT, ARENA_WIDTH, STORAGE_KEYS } from './config.js';
+import { NEEDLE_AWN_STORAGE, NEEDLE_AWN_STORAGE_SLOTS } from './storage.js';
 
 /* ────────────────────────── 常量与配置 ────────────────────────── */
 
@@ -56,10 +57,10 @@ class GameEngine {
         this.mode = 'levels'; // 'levels' | 'endless' | 'daily' | 'duel'
         this.dailyDateKey = '';
         this.currentLevel = 1;
-        this.unlockedLevel = parseInt(storageGet(STORAGE_KEYS.UNLOCKED_LEVEL) || '1', 10);
-        this.levelStars = JSON.parse(storageGet(STORAGE_KEYS.LEVEL_STARS) || '{}');
-        this.endlessBest = parseInt(storageGet(STORAGE_KEYS.ENDLESS_BEST) || '0', 10);
-        this.clashMax = parseInt(storageGet(STORAGE_KEYS.CLASH_MAX) || '0', 10);
+        this.unlockedLevel = parseInt(NEEDLE_AWN_STORAGE.get(NEEDLE_AWN_STORAGE_SLOTS.UNLOCKED_LEVEL, 1), 10);
+        this.levelStars = NEEDLE_AWN_STORAGE.get(NEEDLE_AWN_STORAGE_SLOTS.LEVEL_STARS, {});
+        this.endlessBest = parseInt(NEEDLE_AWN_STORAGE.get(NEEDLE_AWN_STORAGE_SLOTS.ENDLESS_BEST, 0), 10);
+        this.clashMax = parseInt(NEEDLE_AWN_STORAGE.get(NEEDLE_AWN_STORAGE_SLOTS.CLASH_MAX, 0), 10);
 
         this.duelMode = 'ai'; // 'ai' | '2p'
         this.aiDifficulty = 'medium'; // 'easy' | 'medium' | 'hard'
@@ -789,7 +790,7 @@ class GameEngine {
         this.totalClashes++;
         if (this.totalClashes > this.clashMax) {
             this.clashMax = this.totalClashes;
-            storageSet(STORAGE_KEYS.CLASH_MAX, this.clashMax);
+            NEEDLE_AWN_STORAGE.set(NEEDLE_AWN_STORAGE_SLOTS.CLASH_MAX, this.clashMax);
         }
 
         // 连招累加
@@ -932,12 +933,12 @@ class GameEngine {
                 if (this.mode === 'levels') {
                     if (this.currentLevel === this.unlockedLevel && this.unlockedLevel < 10) {
                         this.unlockedLevel++;
-                        storageSet(STORAGE_KEYS.UNLOCKED_LEVEL, this.unlockedLevel);
+                        NEEDLE_AWN_STORAGE.set(NEEDLE_AWN_STORAGE_SLOTS.UNLOCKED_LEVEL, this.unlockedLevel);
                     }
                     const prevStars = this.levelStars[this.currentLevel] || 0;
                     if (stars > prevStars) {
                         this.levelStars[this.currentLevel] = stars;
-                        storageSet(STORAGE_KEYS.LEVEL_STARS, JSON.stringify(this.levelStars));
+                        NEEDLE_AWN_STORAGE.set(NEEDLE_AWN_STORAGE_SLOTS.LEVEL_STARS, this.levelStars);
                     }
                 }
             } else {
@@ -968,7 +969,7 @@ class GameEngine {
         // 无尽模式记录更新
         if (this.mode === 'endless' && this.score > this.endlessBest) {
             this.endlessBest = this.score;
-            storageSet(STORAGE_KEYS.ENDLESS_BEST, this.endlessBest);
+            NEEDLE_AWN_STORAGE.set(NEEDLE_AWN_STORAGE_SLOTS.ENDLESS_BEST, this.endlessBest);
         }
 
         const dailyDate = this.mode === 'daily'

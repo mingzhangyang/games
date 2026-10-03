@@ -1,31 +1,37 @@
 /** Run-state reset and persistence for Sword Flight. */
-import { storageGet, storageSet } from '../../../platform/safe-storage.js';
 import { track } from '../../../platform/analytics.js';
 import { SFX } from '../audio.js';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, STORAGE_KEYS } from '../config.js';
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config.js';
+import { SWORD_FLIGHT_STORAGE, SWORD_FLIGHT_STORAGE_SLOTS } from '../storage.js';
 import { createDailyRandom, DAILY_MODIFIERS, getDailyDateKey } from './daily.js';
 
 export function loadRecords(game) {
-    game.unlockedStage = parseInt(storageGet(STORAGE_KEYS.UNLOCKED_STAGE) || '1', 10);
-    try {
-        game.stageStars = JSON.parse(storageGet(STORAGE_KEYS.STAGE_STARS) || '{}');
-    } catch (e) {
-        game.stageStars = {};
-    }
-    game.endlessBest = parseInt(storageGet(STORAGE_KEYS.ENDLESS_BEST) || '0', 10);
-    game.maxRealm = storageGet(STORAGE_KEYS.MAX_REALM) || '炼气期';
-    game.maxComboRecord = parseInt(storageGet(STORAGE_KEYS.MAX_COMBO) || '1', 10);
-
+    game.unlockedStage = parseInt(
+        SWORD_FLIGHT_STORAGE.get(SWORD_FLIGHT_STORAGE_SLOTS.UNLOCKED_STAGE, 1),
+        10,
+    );
+    const stageStars = SWORD_FLIGHT_STORAGE.get(SWORD_FLIGHT_STORAGE_SLOTS.STAGE_STARS, {});
+    game.stageStars = stageStars && typeof stageStars === 'object' && !Array.isArray(stageStars)
+        ? stageStars
+        : {};
+    game.endlessBest = parseInt(
+        SWORD_FLIGHT_STORAGE.get(SWORD_FLIGHT_STORAGE_SLOTS.ENDLESS_BEST, 0),
+        10,
+    );
+    game.maxRealm = SWORD_FLIGHT_STORAGE.get(SWORD_FLIGHT_STORAGE_SLOTS.MAX_REALM, '炼气期') || '炼气期';
+    game.maxComboRecord = parseInt(
+        SWORD_FLIGHT_STORAGE.get(SWORD_FLIGHT_STORAGE_SLOTS.MAX_COMBO, 1),
+        10,
+    );
 }
 
 export function saveRecords(game) {
-    storageSet(STORAGE_KEYS.UNLOCKED_STAGE, game.unlockedStage.toString());
-    storageSet(STORAGE_KEYS.STAGE_STARS, JSON.stringify(game.stageStars));
-    storageSet(STORAGE_KEYS.ENDLESS_BEST, game.endlessBest.toString());
-    storageSet(STORAGE_KEYS.MAX_REALM, game.maxRealm);
-    storageSet(STORAGE_KEYS.MAX_COMBO, game.maxComboRecord.toString());
+    SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.UNLOCKED_STAGE, game.unlockedStage);
+    SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.STAGE_STARS, game.stageStars);
+    SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.ENDLESS_BEST, game.endlessBest);
+    SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.MAX_REALM, game.maxRealm);
+    SWORD_FLIGHT_STORAGE.set(SWORD_FLIGHT_STORAGE_SLOTS.MAX_COMBO, game.maxComboRecord);
     game.updateSideRecords();
-
 }
 
 export function startFlight(game, mode = 'stages', stageIndex = 0) {

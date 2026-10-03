@@ -25,9 +25,9 @@ const specs = [
     },
     {
         id: 'needle-awn',
-        files: ['index.js', 'runtime.js', 'config.js', 'input/controls.js', 'render/art.js', 'render/scene.js', 'i18n.js', 'audio.js', 'effects.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'config.js', 'input/controls.js', 'render/art.js', 'render/scene.js', 'i18n.js', 'audio.js', 'effects.js'],
         indexNeedles: ["from './runtime.js'", 'mountGameRuntime'],
-        runtimeNeedles: ["from './i18n.js'", "from './audio.js'", "from './effects.js'", "from './input/controls.js"],
+        runtimeNeedles: ["from './i18n.js'", "from './storage.js'", "from './audio.js'", "from './effects.js'", "from './input/controls.js"],
         shim: "import '../src/games/needle-awn/index.js';\nexport * from '../src/games/needle-awn/runtime.js';",
     },
 ];
@@ -93,10 +93,17 @@ if (keepPage('bond-forge')) {
 if (keepPage('needle-awn')) {
     const needleRuntime = read('src/games/needle-awn/runtime.js');
     const needleControls = read('src/games/needle-awn/input/controls.js');
+    const needleStorage = read('src/games/needle-awn/storage.js');
     const needleUsesExistingModules = needleRuntime.includes("from './i18n.js'")
         && needleRuntime.includes("from './audio.js'")
         && needleRuntime.includes("from './effects.js'");
     check(needleUsesExistingModules, 'needle-awn: existing i18n/audio/effects modules are reused');
+    check(needleStorage.includes("createGameStorage('needle-awn'")
+        && needleStorage.includes('STORAGE_KEYS.UNLOCKED_LEVEL')
+        && needleStorage.includes('STORAGE_KEYS.LEVEL_STARS')
+        && needleStorage.includes('STORAGE_KEYS.ENDLESS_BEST')
+        && needleStorage.includes('STORAGE_KEYS.CLASH_MAX'),
+    'needle-awn: private records are mapped through the GameStorage adapter');
 
     const needlePauseShortcuts = needleControls.includes("event.code === 'KeyP'")
         && needleControls.includes("event.code === 'Escape'")
