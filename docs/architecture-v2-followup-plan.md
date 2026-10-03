@@ -662,7 +662,9 @@ Phase 9 包迁移后的复扫发现早期 inventory 漏掉了一批原先仍在 
 的偏好/纪录/本地成绩。
 第十批使用 `refactor/game-storage-migration-j`，单独迁 Tower Defense 的六关 clear/best、
 全局 best 与 private local scores；远端 `tower-defense-<level>` leaderboard 协议保持不变。
-Math Rain、Word Daily 的混合或跨模块状态继续拆成后续独立小批。
+第十一批使用 `refactor/game-storage-migration-k`，单独迁 Math Rain 的 inventory 与 SFX/music
+音量偏好，并让 composition root、UI controller、GameStateManager 共享同一 adapter。
+Word Daily 的 private/Daily 混合状态保留为最后一个独立小批。
 
 建议分支按批次命名：
 

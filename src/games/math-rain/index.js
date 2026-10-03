@@ -19,7 +19,7 @@ import DifficultyManager from './difficulty-manager.js';
 import SoundManager from './sound-manager.js';
 import ParticleSystem from './particle-effects.js';
 import { getLocalizedText } from './i18n/language-manager.js';
-import { storageGet } from '../../platform/safe-storage.js';
+import { loadMathRainSfxVolume, loadMathRainMusicVolume } from './storage.js';
 
 const MIN_EXPRESSION_TOUCH_TARGET = 44;
 
@@ -370,13 +370,13 @@ class MathRainGame {
         // 恢复上次保存的音量（滑块位置由 UIController.initializeSettings 恢复；
         // 此处订阅已就绪，直接应用即可，不依赖初始化期的事件时序）
         {
-            const savedSfxVolume = storageGet('mr_sfx_volume');
+            const savedSfxVolume = loadMathRainSfxVolume();
             if (savedSfxVolume !== null && this.soundManager) {
-                this.soundManager.setSfxVolume(Number(savedSfxVolume) / 100);
+                this.soundManager.setSfxVolume(savedSfxVolume / 100);
             }
-            const savedMusicVolume = storageGet('mr_music_volume');
+            const savedMusicVolume = loadMathRainMusicVolume();
             if (savedMusicVolume !== null && this.soundManager) {
-                this.soundManager.setMusicVolume(Number(savedMusicVolume) / 100);
+                this.soundManager.setMusicVolume(savedMusicVolume / 100);
             }
         }
         
