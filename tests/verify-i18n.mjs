@@ -71,7 +71,6 @@ for (const g of PAGES) {
         const html = readFileSync(join(ROOT, g.href), 'utf8');
         ok(/data-i18n(?:-[a-z]+)?\s*=/.test(html),
             `${g.href}: declarative markup contains i18n bindings`);
-        continue;
     }
 
     const extracted = join(ROOT, 'src', 'games', g.id, 'i18n.js');

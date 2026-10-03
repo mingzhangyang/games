@@ -1147,7 +1147,8 @@ export class Tetris {
                 .map(score => ({ name: currentLang === 'zh' ? '本地记录' : 'Local', score: score.score }));
         }
         
-        let html = '<span id="finalScore">' + this.score + '</span>';
+        let html = '<span id="finalScoreLabelText" data-i18n="finalScore">' + TEXT.finalScore + '</span>';
+        html += '<span id="finalScore">' + this.score + '</span>';
         html += '<div style="margin-top:18px;text-align:left;font-size:18px;line-height:1.5;">';
         html += isGlobalScores ? 
             (currentLang === 'zh' ? '全站最高分：' : 'Global High Scores:') :
