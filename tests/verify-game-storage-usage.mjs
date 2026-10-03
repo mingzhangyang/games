@@ -196,12 +196,14 @@ check(/PLANET_MERGE_STORAGE\.set\s*\(\s*PLANET_MERGE_STORAGE_SLOTS\.LOCAL_SCORES
     'planet-merge: local-score writes go through GameStorage');
 check(planetRuntime.includes("storageSet('pm_muted', muted ? '1' : '0')"),
     'planet-merge: pm_muted remains a global mute compatibility mirror');
-check(planetRuntime.includes('const key = `pm_daily_${this.dailyDay}`;')
+const planetDailyStoragePreserved = planetRuntime.includes('const key = `pm_daily_${this.dailyDay}`;')
     && planetRuntime.includes('storageParse(key, 0)')
-    && planetRuntime.includes('storageSet(key, String(this.score))'),
+    && planetRuntime.includes('storageSet(key, String(this.score))');
+check(planetDailyStoragePreserved,
     'planet-merge: pm_daily_* compatibility keys remain unchanged');
-check(!adapters['planet-merge'].includes('pm_muted')
-    && !adapters['planet-merge'].includes('pm_daily_'),
+const planetCompatibilityKeysIsolated = !adapters['planet-merge'].includes('pm_muted')
+    && !adapters['planet-merge'].includes('pm_daily_');
+check(planetCompatibilityKeysIsolated,
     'planet-merge: global/daily compatibility keys stay outside GameStorage');
 
 for (const [id, source] of Object.entries(adapters)) {
