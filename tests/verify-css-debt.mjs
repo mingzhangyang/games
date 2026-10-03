@@ -64,6 +64,7 @@ function hasImportantPriority(value) {
 
     return false;
 }
+
 function normalizeAtRuleParams(value) {
     return value.replace(/\s+/g, ' ').trim();
 }
@@ -144,6 +145,7 @@ function assertNoNestedBlocks(body, file, selector) {
         break;
     }
 }
+
 function findClosingBrace(source, open, end) {
     let depth = 1;
     let quote = '';
@@ -346,6 +348,7 @@ function parseCssText(source, file) {
 
             if (atRule) {
                 const name = atRule[1].toLowerCase();
+                const rawParams = atRule[2].trim();
                 const params = normalizeAtRuleParams(atRule[2]);
                 result.atRules.push({ name, params, context: [...context], layer });
 
@@ -378,7 +381,7 @@ function parseCssText(source, file) {
                         result.specialAtRules ||= [];
                         result.specialAtRules.push([file, context.join(' / '), name, params]);
                     }
-                    walk(boundary.index + 1, close, [...context, '@' + name + (params ? ' ' + params : '')], layer, inKeyframes);
+                    walk(boundary.index + 1, close, [...context, '@' + name + (rawParams ? ' ' + rawParams : '')], layer, inKeyframes);
                 }
             } else if (!inKeyframes) {
                 const selector = normalizeSelector(header);
@@ -512,12 +515,67 @@ function runSelfChecks() {
         /CSS nesting or brace-bearing values are unsupported/,
     );
 
+    assert.deepEqual([
+        '/assets/tokens-test.css',
+        '/assets/layout-test.css',
+        '/assets/science-showcase-test.css',
+        '/assets/page-test.css',
+        '/assets/more-games-test.css',
+    ].map(stylesheetRank), [0, 1, 2, 5, 9]);
+
     const baseline = [['fixture.css', '', '.existing']];
     assert.deepEqual(multisetDelta(baseline, baseline), { added: [], removed: [] });
     assert.deepEqual(multisetDelta([...baseline, ['fixture.css', '', '.new']], baseline).added, [
         ['fixture.css', '', '.new'],
     ]);
     assert.deepEqual(multisetDelta([], baseline).removed, baseline);
+}
+
+function stylesheetRank(href) {
+    if (/\/tokens-/.test(href)) return 0;
+    if (/\/layout-/.test(href)) return 1;
+    if (/\/science-showcase-/.test(href)) return 2;
+    if (/\/more-games-/.test(href)) return 9;
+    return 5;
+}
+
+function verifyBuildOrderingContract(errors) {
+    const viteConfig = readFileSync(join(ROOT, 'vite.config.js'), 'utf8');
+    const pluginIndex = viteConfig.indexOf("name: 'shared-css-first'");
+    const plugin = pluginIndex < 0 ? '' : viteConfig.slice(pluginIndex, pluginIndex + 5000);
+    if (pluginIndex < 0 || !plugin.includes('transformIndexHtml')
+        || !plugin.includes("order: 'post'") || !plugin.includes('tokens-')
+        || !plugin.includes('layout-') || !plugin.includes('science-showcase-')
+        || !plugin.includes('more-games-')) {
+        errors.push('vite.config.js must retain the shared-css-first stylesheet ordering contract until P6.');
+    }
+
+    const distRoot = join(ROOT, 'dist');
+    if (!existsSync(distRoot)) return;
+    const distHtmlPaths = listFiles(distRoot, ROOT, path => path.endsWith('.html'));
+    if (!distHtmlPaths.length) {
+        errors.push('Production CSS ordering contract: dist contains no HTML files to verify.');
+        return;
+    }
+    for (const path of distHtmlPaths) {
+        const html = readFileSync(join(ROOT, path), 'utf8');
+        const links = [];
+        for (const match of html.matchAll(/<link\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi)) {
+            const attributes = parseAttributes(match[0]);
+            if ((attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet') && attributes.href) {
+                links.push({ href: attributes.href, start: match.index, end: match.index + match[0].length });
+            }
+        }
+        const ranks = links.map(link => stylesheetRank(link.href));
+        if (ranks.some((rank, index) => index > 0 && rank < ranks[index - 1])) {
+            errors.push(path + ': production stylesheet links violate shared-css-first rank order.');
+        }
+        const masked = html.replace(/<!--[\s\S]*?-->/g, match => ' '.repeat(match.length));
+        const styleAt = masked.search(/<style[\s>]/i);
+        if (styleAt >= 0 && links.some(link => link.start > styleAt)) {
+            errors.push(path + ': production external stylesheet appears after inline <style>.');
+        }
+    }
 }
 
 function verifyProject() {
@@ -615,6 +673,8 @@ function verifyProject() {
             errors.push(path + ': inline <style> block count differs from the P0 baseline.');
         }
     }
+
+    verifyBuildOrderingContract(errors);
 
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);
