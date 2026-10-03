@@ -17,11 +17,22 @@ import { track } from '../../platform/analytics.js';
 import { hashString, todayKeyDisplay, msUntilNextDay } from '../../platform/daily.js';
 import { LANGUAGES } from './i18n.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
-import { createGameStorage } from '../../platform/storage/game-storage.js';
+import {
+    loadWordDailyHistory,
+    loadWordDailyLangMode,
+    loadWordDailySeenHelp,
+    loadWordDailyStats,
+    loadWordDailyWordLength,
+    saveWordDailyHistory,
+    saveWordDailyLangMode,
+    saveWordDailySeenHelp,
+    saveWordDailyStats,
+    saveWordDailyWordLength,
+} from './storage.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
-function storageParse(key, fallback) {
+function dailyStorageParse(key, fallback) {
     try {
         const parsed = JSON.parse(storageGet(key));
         return parsed === null || parsed === undefined ? fallback : parsed;
@@ -36,11 +47,6 @@ function storageParse(key, fallback) {
 // UTC+8 16:00 之后倒计时整整多报 24 小时）
 
 // 每日谜题编号（自 2026-01-01 UTC+8 起）
-const WORD_STORE = createGameStorage('word-daily', {
-    version: 1,
-    legacy: { seenHelp: 'wd_seen_help' },
-});
-
 const EPOCH = Date.UTC(2026, 0, 1) - 8 * 3600 * 1000;
 function dailyNumber() {
     return Math.floor((Date.now() - EPOCH) / (24 * 3600 * 1000)) + 1;
@@ -199,15 +205,14 @@ export class WordDailyGame {
     }
 
     resolveLangMode() {
-        const saved = storageGet('wd_lang_mode');
-        if (saved === 'en' || saved === 'zh') return saved;
+        const saved = loadWordDailyLangMode();
+        if (saved) return saved;
         const lang = navigator.language || navigator.userLanguage || '';
         return lang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
     }
 
     resolveWordLength() {
-        const saved = parseInt(storageGet('wd_word_len_en'), 10);
-        return [4, 5, 6].includes(saved) ? saved : WORD_LEN_DEFAULT;
+        return loadWordDailyWordLength(WORD_LEN_DEFAULT);
     }
 
     applyLanguage() {
@@ -336,16 +341,6 @@ export class WordDailyGame {
         return `wd_daily_${this.day}_en_${this.wordLength}`;
     }
 
-    statsKey() {
-        if (this.langMode === 'zh') return 'wd_stats_zh';
-        return `wd_stats_en_${this.wordLength}`;
-    }
-
-    histKey() {
-        if (this.langMode === 'zh') return 'wd_hist_zh';
-        return `wd_hist_en_${this.wordLength}`;
-    }
-
     startDaily() {
         this.mode = 'daily';
         this.puzzleNum = dailyNumber();
@@ -359,9 +354,9 @@ export class WordDailyGame {
             this.hint = '';
         }
 
-        let saved = storageParse(this.lockKey(), null);
+        let saved = dailyStorageParse(this.lockKey(), null);
         if (!saved && this.langMode === 'en' && this.wordLength === 5) {
-            saved = storageParse(`wd_daily_${this.day}_en`, null);
+            saved = dailyStorageParse(`wd_daily_${this.day}_en`, null);
         }
         if (saved && Array.isArray(saved.rows)) {
             // 今天已玩过：恢复局面，禁止输入
@@ -420,7 +415,7 @@ export class WordDailyGame {
         if (![4, 5, 6].includes(len)) return;
         if (this.wordLength === len && this.langMode === 'en') return;
         this.wordLength = len;
-        storageSet('wd_word_len_en', String(len));
+        saveWordDailyWordLength(len);
         this.current = '';
         if (this.el.input) this.el.input.value = '';
         if (this.mode === 'daily') {
@@ -443,9 +438,9 @@ export class WordDailyGame {
         const t = this.TEXT;
         // 读某长度的当日战果（5 字母兼容无后缀的历史键）
         const readStatus = (len) => {
-            let saved = storageParse(`wd_daily_${this.day}_en_${len}`, null);
+            let saved = dailyStorageParse(`wd_daily_${this.day}_en_${len}`, null);
             if (!saved && len === 5) {
-                saved = storageParse(`wd_daily_${this.day}_en`, null);
+                saved = dailyStorageParse(`wd_daily_${this.day}_en`, null);
             }
             return saved && (saved.status === 'won' || saved.status === 'lost') ? saved.status : null;
         };
@@ -1065,16 +1060,13 @@ export class WordDailyGame {
 
         // 历史与连胜
         const won = this.status === 'won';
-        const hist = storageParse(this.histKey(), {}) || {};
+        const hist = loadWordDailyHistory(this.langMode, this.wordLength);
         hist[this.day] = won ? rowsUsed : 0;
         const keys = Object.keys(hist).sort();
         while (keys.length > 120) {
             delete hist[keys.shift()];
         }
-        storageSet(this.histKey(), JSON.stringify(hist));
-        if (this.langMode === 'en' && this.wordLength === 5) {
-            storageSet('wd_hist_en', JSON.stringify(hist));
-        }
+        saveWordDailyHistory(this.langMode, this.wordLength, hist);
 
         // 统计
         const stats = this.loadStats();
@@ -1086,18 +1078,12 @@ export class WordDailyGame {
         const streak = this.computeStreak();
         stats.curStreak = streak;
         stats.maxStreak = Math.max(stats.maxStreak, streak);
-        storageSet(this.statsKey(), JSON.stringify(stats));
-        if (this.langMode === 'en' && this.wordLength === 5) {
-            storageSet('wd_stats_en', JSON.stringify(stats));
-        }
+        saveWordDailyStats(this.langMode, this.wordLength, stats);
         this.updateDiffUi();
     }
 
     loadStats() {
-        let s = storageParse(this.statsKey(), null);
-        if (!s && this.langMode === 'en' && this.wordLength === 5) {
-            s = storageParse('wd_stats_en', null);
-        }
+        const s = loadWordDailyStats(this.langMode, this.wordLength);
         const base = { played: 0, wins: 0, dist: [0, 0, 0, 0, 0, 0, 0], curStreak: 0, maxStreak: 0 };
         if (!s || typeof s !== 'object') return base;
         return {
@@ -1110,10 +1096,7 @@ export class WordDailyGame {
     }
 
     computeStreak() {
-        let hist = storageParse(this.histKey(), null);
-        if (!hist && this.langMode === 'en' && this.wordLength === 5) {
-            hist = storageParse('wd_hist_en', null);
-        }
+        const hist = loadWordDailyHistory(this.langMode, this.wordLength);
         if (!hist || typeof hist !== 'object') return 0;
         let streak = 0;
         const d = new Date();
@@ -1280,9 +1263,9 @@ export class WordDailyGame {
 
     /* 首次访问自动展示玩法说明（只弹一次） */
     maybeShowFirstRunHelp() {
-        const seen = WORD_STORE.get('seenHelp', false);
+        const seen = loadWordDailySeenHelp();
         if (seen === true || seen === 1 || seen === '1') return;
-        if (!WORD_STORE.trySet('seenHelp', true)) return;
+        if (!saveWordDailySeenHelp(true)) return;
         this.openHelp();
     }
 
@@ -1414,7 +1397,7 @@ export class WordDailyGame {
 
         on('wd-btn-lang', () => {
             this.langMode = this.langMode === 'zh' ? 'en' : 'zh';
-            storageSet('wd_lang_mode', this.langMode);
+            saveWordDailyLangMode(this.langMode);
             this.startDaily();
         });
         on('wd-btn-practice', () => {

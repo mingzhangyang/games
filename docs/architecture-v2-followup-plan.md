@@ -664,7 +664,9 @@ Phase 9 包迁移后的复扫发现早期 inventory 漏掉了一批原先仍在 
 全局 best 与 private local scores；远端 `tower-defense-<level>` leaderboard 协议保持不变。
 第十一批使用 `refactor/game-storage-migration-k`，单独迁 Math Rain 的 inventory 与 SFX/music
 音量偏好，并让 composition root、UI controller、GameStateManager 共享同一 adapter。
-Word Daily 的 private/Daily 混合状态保留为最后一个独立小批。
+第十二批使用 `refactor/game-storage-migration-l`，作为 Phase 5 最后一个存储批次：迁 Word Daily
+的语言模式、英文词长、help marker 与各模式 history/stats；`wd_daily_*` 继续保留为 landing hub /
+daily-lock compatibility 协议。Batch L 合并且回归通过后，Phase 5 的已知游戏私有 persistence 收敛完成。
 
 建议分支按批次命名：
 

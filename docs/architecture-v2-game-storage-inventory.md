@@ -67,7 +67,7 @@ These are candidates for `createGameStorage`:
 | Firefly Signal | site settings | none | per-level best intervention/harmony records | Phase 5 batch I |
 | Math Rain | site settings | none identified | SFX/music volumes, persistent coins/items | Phase 5 batch K |
 | Tetris | `player_name`, `tetris_username` compatibility | leaderboard API keys | `tetris_scores`, `tetris_rainbow` | Already migrated |
-| Word Daily | site settings | `wd_daily_*` | `wd_lang_mode`, `wd_word_len_en`, `wd_hist_*`, `wd_stats_*`; `wd_seen_help` already migrated | Later, mixed daily state |
+| Word Daily | site settings | `wd_daily_*` | language mode, English word length, help marker, per-mode history/stats | Phase 5 batch L |
 | Circuit | site settings | `cc_daily_*`, `cc_local_*` | `cc_stars` | Phase 5 batch D |
 | Lumen | site settings | `lm_daily_*`, local/daily board keys | `lm_stars` | Phase 5 batch D |
 | Gravity Slingshot | site settings | `gd_daily_*`, `gs_daily_*`, local boards, `gd_course_*` | `gd_stars` | Phase 5 batch H |
@@ -305,3 +305,22 @@ Batch K is intentionally Math Rain only because persistence spans the compositio
 root, UI settings controller, and game-state manager. All three consumers now use
 one GameStorage adapter. The migration does not alter site-wide language/mute
 settings, game balance, sound synthesis, or any service/API contract.
+
+
+## Batch L migration map
+
+Branch: `refactor/game-storage-migration-l`
+
+| GameStorage slot | Legacy key(s) | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `word-daily / langMode` | `wd_lang_mode` | `game:word-daily:v1:langMode` | Import the saved word/idiom mode once; retain the legacy key |
+| `word-daily / wordLengthEn` | `wd_word_len_en` | `game:word-daily:v1:wordLengthEn` | Preserve the 4/5/6-letter English preference |
+| `word-daily / seenHelp` | `wd_seen_help` | `game:word-daily:v1:seenHelp` | Reuse the already-established canonical slot and retain legacy import |
+| `word-daily / history:<mode>` | `wd_hist_zh`, `wd_hist_en_<len>`; 5-letter fallback `wd_hist_en` | `game:word-daily:v1:history:...` | Preserve per-mode/per-length streak history; suffixed 5-letter data wins when both legacy forms exist |
+| `word-daily / stats:<mode>` | `wd_stats_zh`, `wd_stats_en_<len>`; 5-letter fallback `wd_stats_en` | `game:word-daily:v1:stats:...` | Preserve per-mode/per-length played/win/distribution/streak records |
+
+Batch L is the final Phase 5 persistence batch. The `wd_daily_*` family is
+deliberately not migrated: the landing-page Daily Hub and the current daily-lock
+compatibility flow read those keys directly. Runtime access through platform
+storage remains only for that protocol family; all private preferences and
+statistics now go through the Word Daily GameStorage adapter.

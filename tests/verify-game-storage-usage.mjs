@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first eleven GameStorage migration batches.
+// Static guard for the first twelve GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,6 +32,7 @@ const runtimes = {
     minesweeper: read('src/games/minesweeper/index.js'),
     'firefly-signal': read('src/games/firefly-signal/game.js'),
     'tower-defense': read('src/games/tower-defense/runtime.js'),
+    'word-daily': read('src/games/word-daily/runtime.js'),
 };
 const adapters = {
     'carrot-pull': read('src/games/carrot-pull/storage.js'),
@@ -55,6 +56,7 @@ const adapters = {
     'firefly-signal': read('src/games/firefly-signal/storage.js'),
     'tower-defense': read('src/games/tower-defense/storage.js'),
     'math-rain': read('src/games/math-rain/storage.js'),
+    'word-daily': read('src/games/word-daily/storage.js'),
 };
 
 const swordFlightSources = {
@@ -310,6 +312,29 @@ check(mathRainSources.index.includes("from './storage.js'")
     && mathRainSources.state.includes("from '../storage.js'"),
 'math-rain: all persistence consumers compose the shared GameStorage adapter');
 
+const wordDailyRuntime = runtimes['word-daily'];
+check(wordDailyRuntime.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
+    'word-daily: Daily compatibility storage remains on the platform facade');
+const wordDailyPrivateLegacyPattern =
+    /\bwd_(?:lang_mode|word_len_en|seen_help|hist_[a-z0-9_]+|stats_[a-z0-9_]+)\b/i;
+for (const sample of ['wd_lang_mode', 'wd_word_len_en', 'wd_seen_help', 'wd_hist_en_5', 'wd_stats_zh']) {
+    check(wordDailyPrivateLegacyPattern.test(sample),
+        `word-daily: private-key guard detects ${sample}`);
+}
+check(!wordDailyPrivateLegacyPattern.test(wordDailyRuntime),
+    'word-daily: private legacy keys are isolated in its adapter');
+check(wordDailyRuntime.includes("from './storage.js'"),
+    'word-daily: private persistence composes the GameStorage adapter');
+const wordDailyProtocolPreserved =
+    wordDailyRuntime.includes('return `wd_daily_${this.day}_zh`;')
+    && wordDailyRuntime.includes('return `wd_daily_${this.day}_en_${this.wordLength}`;')
+    && wordDailyRuntime.includes('storageSet(this.lockKey(), payload)')
+    && wordDailyRuntime.includes('storageSet(`wd_daily_${this.day}_en`, payload)');
+check(wordDailyProtocolPreserved,
+    'word-daily: wd_daily_* completion and compatibility keys remain unchanged');
+check(!adapters['word-daily'].includes('wd_daily_'),
+    'word-daily: Daily protocol keys stay outside GameStorage');
+
 for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
     check(source.includes(`createGameStorage('${id}'`), `${id}: adapter uses the canonical game id`);
@@ -334,6 +359,7 @@ for (const [id, source, legacyKeys] of [
     ['firefly-signal', adapters['firefly-signal'], ['fs_best_first-light', 'fs_best_two-meadows', 'fs_best_midsummer']],
     ['tower-defense', adapters['tower-defense'], ['td_best', 'td_local_scores']],
     ['math-rain', adapters['math-rain'], ['math-rain-inventory', 'mr_sfx_volume', 'mr_music_volume']],
+    ['word-daily', adapters['word-daily'], ['wd_lang_mode', 'wd_word_len_en', 'wd_hist_en', 'wd_stats_en', 'wd_seen_help']],
 ]) {
     for (const key of legacyKeys) {
         check(source.includes(`'${key}'`), `${id}: adapter preserves legacy key ${key}`);

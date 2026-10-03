@@ -27,11 +27,12 @@ const specs = [
     },
     {
         id: 'word-daily',
-        files: ['index.js', 'runtime.js', 'i18n.js', 'data/en.js', 'data/zh.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'i18n.js', 'data/en.js', 'data/zh.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'mountGameRuntime', 'window.wordDailyGame', 'window.wordDailyRuntime'],
-        runtimeNeedles: ["from './i18n.js'", "from './data/en.js'", "from './data/zh.js'", "from '../../platform/storage/game-storage.js'"],
+        runtimeNeedles: ["from './i18n.js'", "from './data/en.js'", "from './data/zh.js'", "from './storage.js'", "from '../../platform/safe-storage.js'"],
         handles: ['window.wordDailyGame', 'window.wordDailyRuntime'],
-        keys: ["'wd_lang_mode'", "'wd_hist_en'", "'wd_stats_en'"],
+        keys: ['`wd_daily_${this.day}_en`'],
+        storageKeys: ["'wd_lang_mode'", "'wd_word_len_en'", "'wd_hist_en'", "'wd_stats_en'", "'wd_seen_help'"],
     },
     {
         id: 'shadow-loom',
