@@ -78,13 +78,11 @@ candidate CI #19 和 #20 均通过。这说明当前页面仍依赖既有的生�
 最终目标是：所有普通 CSS 都进入显式 cascade layer，生产页面不再依赖 Vite 重排 stylesheet
 link；同时保持现有页面的视觉、几何、响应式和交互行为不变。
 
-建议的**候选**层级顺序为：
+P1 审计前曾将以下顺序作为候选；冲突审计后已修正为能保留当前有效优先级的顺序：
 
 ```css
-@layer tokens, layout, showcase, components, pages;
+@layer tokens, showcase, components, layout, pages;
 ```
-
-但该顺序在 P1 审计完成前**不得视为最终契约**。
 
 当前生产 link 顺序是：
 
@@ -92,27 +90,20 @@ link；同时保持现有页面的视觉、几何、响应式和交互行为不�
 tokens → layout → science-showcase → page → more-games
 ```
 
-而候选 layer 顺序会让普通声明的 `pages` 优先级高于 `components`。如果 `more-games.css` 与页面 CSS 存在相同 specificity 的冲突，这两种顺序并不天然等价。
+`layout.css` 当前未分层，普通声明优先于 `science-showcase.css` 的 `components` layer 声明。两组不同 selector 的同元素属性重叠已确认：共享 `.game-icon-btn` 的 `transition`，以及 `.game-side-card` 的 `border-radius`（含移动断点）。因此 `layout` 必须位于 `showcase` 与 `components` 之后。
 
-因此 P1 必须先审计以下跨文件冲突：
+页面 CSS 当前未分层，且在 layout 后加载；所以 `pages` 仍放最后。more-games 与 showcase 当前同属 `components`，并由生产 link 顺序保证 more-games 在后；拆层后 `components` 放在 `showcase` 之后。普通 layer 优先级与 important layer 优先级方向相反；按此顺序，Showcase 的 important 声明仍高于 layout/page，普通 layout 声明高于 Showcase，页面普通声明高于共享默认值。
 
-- `layout.css` ↔ page CSS；
-- `science-showcase.css` ↔ page CSS；
-- page CSS ↔ `more-games.css`；
-- 跨层 custom properties；
-- 相同 specificity 的共享 selector；
-- `!important` 规则的反向 layer 优先级。
-
-只有证明候选顺序行为等价，或根据真实生产 cascade 修正顺序后，才冻结最终 layer taxonomy。
+P1 的逐文件数量、冲突矩阵及计算基线见 `docs/css-layer-p0-p1-inventory-2026-10-03.md`。P3 行为回归和 P4 插件 canary 仍是迁移完成前的必要验证。
 
 层级职责：
 
 | 层级 | 内容 | 优先级意图 |
 | --- | --- | --- |
-| `tokens` | 设计令牌、主题变量、基础控件变量 | 最基础的共享值 |
-| `layout` | shell、topbar、main、stage、sidebar、drawer、frame 预算 | 共享几何默认值 |
-| `showcase` | 科学展柜的共享皮肤 | 位于公共骨架与页面皮肤之间 |
-| `components` | `more-games` 等共享组件 | 共享组件默认样式 |
+| `tokens` | 设计令牌、主题变量、基础控件变量 | 普通声明的最低共享层 |
+| `showcase` | 科学展柜的共享皮肤 | 普通声明低于 `components`、`layout`、`pages`；important 声明按反向 layer 次序处理 |
+| `components` | `more-games` 等共享组件 | 普通声明高于 `showcase`，低于 `layout` 与 `pages` |
+| `layout` | shell、topbar、main、stage、sidebar、drawer、frame 预算 | 普通几何默认值高于 showcase/components，低于页面覆盖 |
 | `pages` | 每个页面自己的视觉皮肤和必要覆盖 | 保留页面覆盖共享默认值的能力 |
 
 `pages` 放在最后，是为了复现当前“页面 CSS 可以覆盖 layout 默认值”的行为，而不是让
@@ -189,7 +180,7 @@ tokens → layout → science-showcase → page → more-games
 
 实施顺序：
 
-1. 将 `css/tokens.css` 的层级声明扩展为 **P1 审计后冻结的最终顺序**；若审计确认候选顺序正确，则为 `tokens, layout, showcase, components, pages`；
+1. 将 `css/tokens.css` 的层级声明扩展为 **P1 审计后冻结的最终顺序**；顺序冻结为 `tokens, showcase, components, layout, pages`；
 2. 将 `science-showcase.css` 从 `components` 调整为 `showcase`；
 3. 保持 `more-games.css` 在 `components`；
 4. 编写一次性迁移工具，能够：
@@ -354,10 +345,10 @@ handoff 通过后进入临时 layout freeze：
 
 ## 8. 当前待办清单
 
-- [ ] 建立 CSS debt baseline + migration ratchet
-- [ ] 完成全部 CSS 文件的 layer 归属盘点
-- [ ] 盘点 `!important`、内联样式、特殊 at-rule 和自定义属性覆盖
-- [ ] 审计当前 link 顺序与候选 layer 顺序的 selector/custom-property 冲突，并冻结最终 layer order
+- [x] 建立 CSS debt baseline + migration ratchet
+- [x] 完成全部 CSS 文件的 layer 归属盘点
+- [x] 盘点 `!important`、内联样式、特殊 at-rule 和自定义属性覆盖
+- [x] 审计当前 link 顺序与 selector/custom-property 冲突，并冻结最终 layer order 为 `tokens, showcase, components, layout, pages`
 - [ ] 编写幂等的 layer 包裹迁移工具
 - [ ] 建立 layer 结构静态检查
 - [ ] 完成页面 CSS 的统一 `pages` 包裹

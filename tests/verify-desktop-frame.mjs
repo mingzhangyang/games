@@ -9,6 +9,7 @@
 //   g. 无 pageerror
 // 用法：node tests/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
+import { readFileSync } from 'node:fs';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
@@ -23,6 +24,9 @@ const PAGES = Object.fromEntries(
 exitIfNoPages(Object.keys(PAGES), 'verify-desktop-frame');
 const VIEWPORTS = [[1280, 800], [1280, 900], [1440, 900], [1920, 1080], [2560, 1440]];
 const LANGS = ['en', 'zh'];
+const WIDTH_BASELINE_ZH = JSON.parse(readFileSync(
+    new URL('./css-layer-p0-baseline.json', import.meta.url), 'utf8',
+)).computedBaseline.desktopFrame.widthsZh;
 
 const MEASURE = () => {
     const g = s => document.querySelector(s);
@@ -191,6 +195,18 @@ for (const lang of LANGS) {
 }
 
 await browser.close();
+
+// P0 CSS cascade snapshot：冻结代表性页面的桌面舞台宽度，迁移 PR 必须显式对账。
+for (const [page, expectedWidths] of Object.entries(WIDTH_BASELINE_ZH)) {
+    if (!Object.hasOwn(PAGES, page)) continue;
+    for (const [viewport, expected] of Object.entries(expectedWidths)) {
+        const actual = widthTable[page + '|' + viewport + '|zh'];
+        if (actual !== expected) {
+            failures.push('CSS P0 geometry baseline ' + page + ' ' + viewport + ' zh changed: '
+                + actual + 'px (expected ' + expected + 'px)');
+        }
+    }
+}
 
 // 画布宽一览（1920 档，中文）
 console.log('\n===== 画布宽 @1920x1080 zh =====');
