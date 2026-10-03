@@ -223,7 +223,7 @@ function siteSettingsCallbacks(source) {
 function namedFunctionBodies(source, name) {
     const safe = escapeRegExp(name);
     const re = new RegExp(
-        '(?:function\\s+' + safe + '\\s*\\([^)]*\\)|(?:^|\\n)\\s*(?:async\\s+)?' + safe + '\\s*\\([^)]*\\))\\s*\\{',
+        '(?:function\\s+' + safe + '\\s*\\([^{}]*\\)|(?:^|\\n)\\s*(?:async\\s+)?' + safe + '\\s*\\([^{}]*\\))\\s*\\{',
         'gm',
     );
     const bodies = [];
@@ -299,6 +299,10 @@ ok(settingsListenerReachesBinder(
     'const i18nBinder = createI18nBinder({});',
     "const i18nBinder = createI18nBinder({}); let pageI18nBinder; function setLangUI() { pageI18nBinder?.apply(); } function init(i18nBinder) { pageI18nBinder = i18nBinder; window.addEventListener('site-settings:changed', () => { setLangUI(); }); }",
 ), '语言监听可经运行时方法间接触达 declarative binder');
+ok(settingsListenerReachesBinder(
+    'const i18nBinder = createI18nBinder({});',
+    "const i18nBinder = createI18nBinder({}); let pageI18nBinder = i18nBinder; function applyLanguage(nextLang = getLang()) { pageI18nBinder?.apply(nextLang); } window.addEventListener('site-settings:changed', () => applyLanguage(getLang()));",
+), '语言监听可经带嵌套默认参数的函数触达 declarative binder');
 ok(!settingsListenerReachesBinder(
     'const phase6I18n = createI18nBinder({});',
     "const phase6I18n = createI18nBinder({}); phase6I18n.apply(); window.addEventListener('site-settings:changed', () => refreshSound()); function refreshSound() {}",
