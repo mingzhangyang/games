@@ -7,7 +7,7 @@
  *   ① 菜单：6 个场景芯片，点第一个进入兔（灯固定、无旋转）
  *   ② 拖动响应 = 1/z：同一段鼠标位移，近灯纸片的影子移动更远（渲染与判定同源）
  *   ③ 兔：把每块纸片拖到解 → 相似度过阈值并持续 → solving → 结果层；
- *      移动次数 = 真实拖动次数；进度写入 sl_progress；一次完成 = 是
+ *      移动次数 = 真实拖动次数；进度写入 canonical GameStorage slot；一次完成 = 是
  *   ④ 鹿（灯行）：钉住的纸片拖不动；拖灯到解灯位 → 钉住纸片的影子归位 → 其余纸片拖到解 → 完成
  *   ⑤ 树（回旋）：点选纸片出现铜钮，拖铜钮转到解角，再拖到位 → 完成
  *   ⑥ 重置：纸片回到初始、「一次完成」变否；键盘 1 + → 移动选中纸片 4px 且记 1 次移动
@@ -131,8 +131,8 @@ check(await game(() => !document.getElementById('sl-result').classList.contains(
     check(res.moves === LEVELS[0].pieces.length, `移动次数 = ${LEVELS[0].pieces.length}`, String(res.moves));
     check(res.first === true, '一次完成 = 是');
     check(res.best >= R.THRESHOLDS.win, '最高匹配 ≥ 阈值', res.best.toFixed(3));
-    const saved = await game(() => JSON.parse(localStorage.getItem('sl_progress') || '{}'));
-    check(!!saved.rabbit, '进度写入 sl_progress.rabbit');
+    const saved = await game(() => JSON.parse(localStorage.getItem('game:shadow-loom:v1:progress') || '{}'));
+    check(!!saved.rabbit, '进度写入 game:shadow-loom:v1:progress.rabbit');
     const ddText = await game(() => [...document.querySelectorAll('#sl-result-stats dd')].map(d => d.textContent));
     check(ddText.length === 4 && ddText[1] === String(res.moves), '结果层四项数据', ddText.join(' | '));
 }

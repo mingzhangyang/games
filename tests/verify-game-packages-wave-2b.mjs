@@ -10,11 +10,12 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const specs = [
     {
         id: 'maxwell-demon',
-        files: ['index.js', 'runtime.js', 'i18n.js', 'model/rules.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'i18n.js', 'model/rules.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'initCanvasPalette', 'mountGameRuntime', 'window.mdGame', 'window.mdRuntime'],
-        runtimeNeedles: ["from './i18n.js'", "from './model/rules.js'", "from '../../platform/icons.js'", "from '../../platform/daily.js'", "from '../../platform/game-sfx.js'"],
+        runtimeNeedles: ["from './i18n.js'", "from './storage.js'", "from './model/rules.js'", "from '../../platform/icons.js'", "from '../../platform/daily.js'", "from '../../platform/game-sfx.js'"],
         handles: ['window.mdGame', 'window.mdRuntime', 'window.mdDrawer'],
-        keys: ["'md_progress'", "'md_lb_'"],
+        keys: ["'md_lb_'"],
+        storageKeys: ["'md_progress'"],
     },
     {
         id: 'crystal-bloom',
@@ -34,11 +35,12 @@ const specs = [
     },
     {
         id: 'echo-cave',
-        files: ['index.js', 'runtime.js', 'i18n.js', 'model/rules.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'i18n.js', 'model/rules.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'mountGameRuntime', 'window.ecGame', 'window.ecRuntime'],
-        runtimeNeedles: ["from './i18n.js'", "from './model/rules.js'", "from '../../platform/icons.js'", "from '../../platform/daily.js'", "from '../../platform/game-sfx.js'"],
+        runtimeNeedles: ["from './i18n.js'", "from './storage.js'", "from './model/rules.js'", "from '../../platform/icons.js'", "from '../../platform/daily.js'", "from '../../platform/game-sfx.js'"],
         handles: ['window.ecGame', 'window.ecRuntime', 'window.ecDrawer'],
-        keys: ["'ec_progress'", "'ec_lb_'"],
+        keys: ["'ec_lb_'"],
+        storageKeys: ["'ec_progress'"],
     },
 ];
 
@@ -60,6 +62,7 @@ for (const spec of selectedSpecs) {
     const rules = read(`${packageRoot}/model/rules.js`);
     const i18n = read(`${packageRoot}/i18n.js`);
     const shim = read(`js/${spec.id}.js`).trim();
+    const storage = spec.storageKeys ? read(`${packageRoot}/storage.js`) : '';
 
     check(game.entry === `${packageRoot}/index.js`, `${spec.id}: registry points at the package composition root`);
     for (const file of spec.files) check(existsSync(join(ROOT, packageRoot, file)), `${spec.id}: ${file} exists`);
@@ -69,7 +72,8 @@ for (const spec of selectedSpecs) {
         `${spec.id}: language table is extracted into the package`);
     check(rules.includes("from '../../../platform/daily.js'"), `${spec.id}: model uses the shared daily module`);
     for (const handle of spec.handles) check(index.includes(handle), `${spec.id}: preserves ${handle}`);
-    for (const key of spec.keys) check(runtime.includes(key), `${spec.id}: preserves storage contract ${key}`);
+    for (const key of spec.keys || []) check(runtime.includes(key), `${spec.id}: preserves runtime storage contract ${key}`);
+    for (const key of spec.storageKeys || []) check(storage.includes(key), `${spec.id}: adapter preserves legacy storage contract ${key}`);
     check(!/from ['"]\.\/(?:input|render|model)\//.test(index), `${spec.id}: index does not own implementation modules`);
     check(index.length < 8 * 1024, `${spec.id}: composition root stays below 8 KiB`);
     check(shim === `// Compatibility entry kept for the existing ${spec.id}.html URL.\n// The canonical game package lives under src/games/${spec.id}/.\nimport '../src/games/${spec.id}/index.js';\nexport * from '../src/games/${spec.id}/runtime.js';`,
