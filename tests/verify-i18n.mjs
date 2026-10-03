@@ -194,10 +194,21 @@ for (const g of PAGES) {
         ok(declarative, `${g.id}: Phase 6 page uses declarative i18n binder`);
     }
     if (declarative) {
-        ok(/import \{ createI18nBinder \} from ['"][^'"]*platform\/i18n\/bindings\.js['"];/.test(src),
-            `${g.entry}: declarative i18n imports platform binder`);
-        ok(/createI18nBinder\s*\(\s*\{/.test(src),
-            `${g.entry}: declarative i18n creates binder`);
+        const packageSrc = walkJs(join(ROOT, 'src', 'games', g.id))
+            .map(abs => readFileSync(abs, 'utf8'))
+            .join('\n');
+        const binderImportCount = (src.match(/import \{ createI18nBinder \} from ['"][^'"]*platform\/i18n\/bindings\.js['"];/g) || []).length;
+        const binderInitCount = (packageSrc.match(/\bcreateI18nBinder\s*\(\s*\{/g) || []).length;
+        const binderApplyCount = (packageSrc.match(/(?:\bphase6I18n|\bpageI18nBinder|\bi18nBinder|\bthis\.i18nBinder)\??\.apply\s*\(/g) || []).length;
+        const settingsSubscriptionCount = (packageSrc.match(/addEventListener\(\s*['"]site-settings:changed['"]/g) || []).length;
+        ok(binderImportCount === 1,
+            `${g.entry}: imports platform binder exactly once`, binderImportCount);
+        ok(binderInitCount === 1,
+            `${g.id}: initializes declarative i18n binder exactly once`, binderInitCount);
+        ok(binderApplyCount >= 1,
+            `${g.id}: declarative i18n binder is actively applied`, binderApplyCount);
+        ok(settingsSubscriptionCount >= 1,
+            `${g.id}: language changes are subscribed after binder setup`, settingsSubscriptionCount);
         const html = readFileSync(join(ROOT, g.href), 'utf8');
         ok(/data-i18n(?:-[a-z]+)?\s*=/.test(html),
             `${g.href}: declarative markup contains i18n bindings`);
