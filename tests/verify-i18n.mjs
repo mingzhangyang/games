@@ -144,6 +144,87 @@ function withCommonKeys(tables) {
     };
 }
 
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^$(){}|[\]\\]/g, '\\function withCommonKeys(tables) {
+    return {
+        en: new Set([...tables.en, ...Object.keys(COMMON_TEXT.en)]),
+        zh: new Set([...tables.zh, ...Object.keys(COMMON_TEXT.zh)]),
+    };
+}
+');
+}
+
+function binderAliases(entrySource, packageSource) {
+    const init = /\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*createI18nBinder\s*\(/.exec(entrySource);
+    const aliases = new Set(init ? [init[1]] : []);
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const match of packageSource.matchAll(/(?:\b(?:const|let|var)\s+)?((?:this\.)?[A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*)\s*;/g)) {
+            const [, lhs, rhs] = match;
+            if (aliases.has(rhs) && !aliases.has(lhs)) {
+                aliases.add(lhs);
+                changed = true;
+            }
+        }
+    }
+    return aliases;
+}
+
+function binderApplyPattern(aliases) {
+    if (!aliases.size) return null;
+    const escaped = [...aliases].map(escapeRegExp).join('|');
+    return new RegExp('(?:' + escaped + ')\\??\\.apply\\s*\\(');
+}
+
+function siteSettingsCallbacks(source) {
+    const callbacks = [];
+    const re = /addEventListener\(\s*['"]site-settings:changed['"]\s*,/g;
+    for (const match of source.matchAll(re)) {
+        const arrow = source.indexOf('=>', match.index + match[0].length);
+        if (arrow === -1 || arrow - match.index > 300) continue;
+        const start = skipTrivia(source, arrow + 2);
+        if (source[start] === '{') {
+            const close = findMatchingBrace(source, start);
+            if (close !== -1) callbacks.push(source.slice(start + 1, close));
+        } else {
+            const end = source.indexOf(');', start);
+            callbacks.push(source.slice(start, end === -1 ? start + 500 : end));
+        }
+    }
+    return callbacks;
+}
+
+function namedFunctionBodies(source, name) {
+    const safe = escapeRegExp(name);
+    const re = new RegExp(
+        '(?:function\\s+' + safe + '\\s*\\([^)]*\\)|(?:^|\\n)\\s*(?:async\\s+)?' + safe + '\\s*\\([^)]*\\))\\s*\\{',
+        'gm',
+    );
+    const bodies = [];
+    for (const match of source.matchAll(re)) {
+        const open = source.indexOf('{', match.index);
+        const close = findMatchingBrace(source, open);
+        if (close !== -1) bodies.push(source.slice(open + 1, close));
+    }
+    return bodies;
+}
+
+function settingsListenerReachesBinder(entrySource, packageSource) {
+    const aliases = binderAliases(entrySource, packageSource);
+    const applyRe = binderApplyPattern(aliases);
+    if (!applyRe) return false;
+    for (const callback of siteSettingsCallbacks(packageSource)) {
+        if (applyRe.test(callback)) return true;
+        const calls = [...callback.matchAll(/(?:\bthis\.)?([A-Za-z_$][\w$]*)\s*\(/g)]
+            .map(match => match[1]);
+        for (const name of calls) {
+            if (namedFunctionBodies(packageSource, name).some(body => applyRe.test(body))) return true;
+        }
+    }
+    return false;
+}
+
 let failed = 0;
 const ok = (cond, label, extra) => {
     if (cond) { console.log(`✓ ${label}`); return; }
@@ -179,6 +260,18 @@ const typoCase = missingBindingKeys(
     { en: new Set(['pageTitle']), zh: new Set(['pageTitle']) },
 );
 ok(typoCase.length === 2, '绑定键校验能捕获拼写错误（en/zh）');
+ok(settingsListenerReachesBinder(
+    'const phase6I18n = createI18nBinder({});',
+    "const phase6I18n = createI18nBinder({}); window.addEventListener('site-settings:changed', () => phase6I18n.apply());",
+), '语言监听可直接触达 declarative binder');
+ok(settingsListenerReachesBinder(
+    'const i18nBinder = createI18nBinder({});',
+    "const i18nBinder = createI18nBinder({}); let pageI18nBinder; function setLangUI() { pageI18nBinder?.apply(); } function init(i18nBinder) { pageI18nBinder = i18nBinder; window.addEventListener('site-settings:changed', () => { setLangUI(); }); }",
+), '语言监听可经运行时方法间接触达 declarative binder');
+ok(!settingsListenerReachesBinder(
+    'const phase6I18n = createI18nBinder({});',
+    "const phase6I18n = createI18nBinder({}); phase6I18n.apply(); window.addEventListener('site-settings:changed', () => refreshSound()); function refreshSound() {}",
+), '无关 settings listener 不能冒充 binder 刷新路径');
 
 /* ─────────────── 静态收敛断言 ─────────────── */
 
@@ -199,16 +292,18 @@ for (const g of PAGES) {
             .join('\n');
         const binderImportCount = (src.match(/import \{ createI18nBinder \} from ['"][^'"]*platform\/i18n\/bindings\.js['"];/g) || []).length;
         const binderInitCount = (packageSrc.match(/\bcreateI18nBinder\s*\(\s*\{/g) || []).length;
-        const binderApplyCount = (packageSrc.match(/(?:\bphase6I18n|\bpageI18nBinder|\bi18nBinder|\bthis\.i18nBinder)\??\.apply\s*\(/g) || []).length;
-        const settingsSubscriptionCount = (packageSrc.match(/addEventListener\(\s*['"]site-settings:changed['"]/g) || []).length;
+        const aliases = binderAliases(src, packageSrc);
+        const applyRe = binderApplyPattern(aliases);
+        const binderApplyCount = applyRe ? (packageSrc.match(new RegExp(applyRe.source, 'g')) || []).length : 0;
+        const settingsRefreshesBinder = settingsListenerReachesBinder(src, packageSrc);
         ok(binderImportCount === 1,
             `${g.entry}: imports platform binder exactly once`, binderImportCount);
         ok(binderInitCount === 1,
             `${g.id}: initializes declarative i18n binder exactly once`, binderInitCount);
         ok(binderApplyCount >= 1,
             `${g.id}: declarative i18n binder is actively applied`, binderApplyCount);
-        ok(settingsSubscriptionCount >= 1,
-            `${g.id}: language changes are subscribed after binder setup`, settingsSubscriptionCount);
+        ok(settingsRefreshesBinder,
+            `${g.id}: site-settings language listener reaches the declarative binder`);
         const html = readFileSync(join(ROOT, g.href), 'utf8');
         ok(/data-i18n(?:-[a-z]+)?\s*=/.test(html),
             `${g.href}: declarative markup contains i18n bindings`);
