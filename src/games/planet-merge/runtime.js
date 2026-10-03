@@ -15,7 +15,7 @@ import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay, hashString, mulberry32 } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { LANGUAGES } from './i18n.js';
-import { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS } from './storage.js';
+import { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS, getPlanetMergeBest } from './storage.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
@@ -227,7 +227,7 @@ export class PlanetMergeGame {
         this.shockwaves = [];
 
         this.score = 0;
-        this.best = PLANET_MERGE_STORAGE.get(PLANET_MERGE_STORAGE_SLOTS.BEST, 0);
+        this.best = getPlanetMergeBest();
         this.combo = 0;
         this.lastMergeAt = -1e9;
         this.mergesCount = 0;

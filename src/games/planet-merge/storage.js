@@ -14,3 +14,11 @@ export const PLANET_MERGE_STORAGE = createGameStorage('planet-merge', {
         [PLANET_MERGE_STORAGE_SLOTS.LOCAL_SCORES]: 'pm_local_scores',
     },
 });
+
+export function getPlanetMergeBest() {
+    const value = PLANET_MERGE_STORAGE.get(PLANET_MERGE_STORAGE_SLOTS.BEST, 0);
+    const normalized = Number(value);
+    if (Number.isFinite(normalized)) return normalized;
+    PLANET_MERGE_STORAGE.set(PLANET_MERGE_STORAGE_SLOTS.BEST, 0);
+    return 0;
+}

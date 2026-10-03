@@ -10,7 +10,7 @@ globalThis.localStorage = {
     removeItem(key) { mem.delete(key); },
 };
 
-const { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS } =
+const { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS, getPlanetMergeBest } =
     await import('../src/games/planet-merge/storage.js');
 
 const legacyScores = [
@@ -80,5 +80,11 @@ assert.equal(mem.get('pm_muted'), '1');
 assert.equal(mem.get('pm_daily_20261003'), '4000');
 assert.equal(mem.has('game:planet-merge:v1:muted'), false);
 assert.equal(mem.has('game:planet-merge:v1:daily'), false);
+
+mem.clear();
+mem.set('pm_best', 'not-a-number');
+assert.equal(getPlanetMergeBest(), 0);
+assert.equal(mem.get('game:planet-merge:v1:best'), '0');
+assert.equal(mem.get('pm_best'), 'not-a-number');
 
 console.log('✓ Phase 5 Batch F migrates Planet Merge private state while preserving global/Daily compatibility keys');
