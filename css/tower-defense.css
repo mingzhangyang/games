@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    Neon Tower Defense 霓虹塔防 — Strategy TD
    Cyberpunk Neon Aesthetic & Glassmorphism UI
@@ -1684,4 +1685,5 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
     .td-hero { animation: none; }
+}
 }

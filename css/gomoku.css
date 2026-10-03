@@ -1,3 +1,4 @@
+@layer pages {
 :root {
     /* gomoku 主色：蓝（保持辨识），tokens 的 .btn-primary/.btn-ghost 复用 */
     --tok-accent: #4299e1;
@@ -246,4 +247,5 @@ button:focus-visible {
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
+}
 }

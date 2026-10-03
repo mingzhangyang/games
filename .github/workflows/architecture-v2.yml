@@ -66,6 +66,9 @@ jobs:
       - name: Full verification suite
         run: npm run verify -- --jobs=2
 
+      - name: Built-output desktop frame contract
+        run: VERIFY_FRAME_JOBS=4 node tests/lib/run-smoke-dist.mjs tests/verify-desktop-frame.mjs
+
       - name: Built-output Tower Defense smoke
         run: node tests/lib/run-smoke-dist.mjs tests/smoke-tower-defense.mjs
 

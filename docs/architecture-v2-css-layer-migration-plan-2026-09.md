@@ -1,6 +1,6 @@
 # CSS Cascade Layers 迁移方案
 
-> 状态：方案已记录，尚未执行迁移
+> 状态：P0/P1 已完成；P2 迁移实现和 strict guard 已落地，候选 CI 待验收；P3/P4/P5/P6 继续按门禁推进迁移
 >
 > 记录日期：2026-09-30
 >
@@ -208,10 +208,10 @@ P1 的逐文件数量、冲突矩阵及计算基线见 `docs/css-layer-p0-p1-inv
 | B | planet-merge、hoop-shot、gravity-slingshot、sword-flight、needle-awn | 画布尺寸、frame budget、移动端高度 |
 | C | crystal-bloom、echo-cave、maxwell-demon、flame-verse、ripple-duet | showcase 层与页面皮肤优先级 |
 | D | tetris、tower-defense、carrot-pull、firefly-signal、shadow-loom | drawer、immersive、固定控件和生产美术 |
-| E | math-rain、tank-battle | 化外页、全屏 HUD、独立 CSS 和内联/经典脚本交互 |
+| E | math-rain（`math-rain.css`、`shop.css`）、tank-battle | 化外页、全屏 HUD、独立 CSS 和内联/经典脚本交互 |
+| F | bond-forge、circuit、lumen、silk-dew | 补齐 P0 inventory 中遗漏的页面样式，重点检查开始菜单与响应式覆盖 |
 
-每个批次必须同时验证源码态和生产产物；不能只在 Vite dev server 上判断 layer 是否正确。
-批次失败时只回滚当前批次，不改动已经通过的批次。
+全部 27 份页面样式表都由 A–F 覆盖（Math Rain 的 `shop.css` 与主样式同属 E）。每个批次必须同时验证源码态和生产产物；不能只在 Vite dev server 上判断 layer 是否正确。当前候选 CI 对完整源码运行全部 verify，并在生产产物上运行 desktop-frame 全页几何检查、Tower Defense / Sword Flight 冒烟，以及对所有 dist HTML 的 CSS link 顺序检查。批次失败时只回滚当前批次，不改动已经通过的批次。
 
 ### P4：做插件无关性 canary
 
@@ -349,10 +349,10 @@ handoff 通过后进入临时 layout freeze：
 - [x] 完成全部 CSS 文件的 layer 归属盘点
 - [x] 盘点 `!important`、内联样式、特殊 at-rule 和自定义属性覆盖
 - [x] 审计当前 link 顺序与 selector/custom-property 冲突，并冻结最终 layer order 为 `tokens, showcase, components, layout, pages`
-- [ ] 编写幂等的 layer 包裹迁移工具
-- [ ] 建立 layer 结构静态检查
-- [ ] 完成页面 CSS 的统一 `pages` 包裹
-- [ ] 完成 `layout` / `showcase` / `components` 的归位
+- [x] 编写幂等的 layer 包裹迁移工具（保留 BOM、CRLF 和合法 CSS prelude）
+- [x] 建立 layer 结构静态检查（所有规则与 keyframes strict-zero 脱层，核验工具幂等）
+- [x] 完成页面 CSS 的统一 `pages` 包裹
+- [x] 完成 `layout` / `showcase` / `components` 的归位
 - [ ] 运行插件保留模式下的分批回归
 - [ ] 运行禁用插件的 canary 对比
 - [ ] 在插件仍存在的生产路径下完成稳定性验证
@@ -360,4 +360,4 @@ handoff 通过后进入临时 layout freeze：
 - [ ] 更新现行契约与 PR 描述
 - [ ] 触发一次最终完整 CI
 
-在上述清单全部完成前，项目应继续把 `shared-css-first` 视为生产必需契约。
+在 P4/P5/P6 全部完成前，项目继续把 `shared-css-first` 视为生产必需契约。P2 候选的完整源码验证及生产产物 frame/smoke 门禁通过后，记录每个 P3 验收证据，再进入 P4 canary。

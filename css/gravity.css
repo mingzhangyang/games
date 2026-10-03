@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    Gravity Slingshot 引力弹弓 — orbital physics puzzle
    ───────────────────────────────────────────── */
@@ -424,4 +425,5 @@ body {
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}
 }

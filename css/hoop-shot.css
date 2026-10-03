@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    Hoop Shot 街机投篮 — arcade flick basketball
    ───────────────────────────────────────────── */
@@ -462,4 +463,5 @@ body {
     --hs-cv-popup: #2a2438;
     --hs-cv-popup-big: #c77800;
     --hs-cv-spark: #7c8aa8;
+}
 }

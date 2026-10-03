@@ -1,3 +1,4 @@
+@layer pages {
 /* Math Rain shop — instrument console skin. */
 
 #shop-screen .screen-content {
@@ -166,4 +167,5 @@
     .item-details p {
         white-space: normal;
     }
+}
 }

@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    垂丝引露 Silkfall — rope physics puzzle
    夜庭墨绿底 + 玉青（#58c9a0）+ 露青（#9fe8ff）双主色
@@ -663,4 +664,5 @@ body {
     --sd-cv-pearl-glow-out: rgb(20,160,210,0);
     --sd-cv-pearl-edge: rgb(8,110,150,0.8);
     --sd-cv-star-dust-rgb: 110,140,130;
+}
 }

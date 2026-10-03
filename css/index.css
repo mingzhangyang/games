@@ -1,3 +1,4 @@
+@layer pages {
 /* index.html 落地页样式（P4-1 自内联 \3c style> 原样抽离，未改任何规则） */
 
 /* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
@@ -749,3 +750,4 @@
         @media (width <= 380px) {
             .games-grid { grid-template-columns: 1fr; }
         }
+}

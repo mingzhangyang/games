@@ -26,7 +26,7 @@ const GAME_ALIASES = REGISTERED_GAMES.map(game => ({
     aliases: [game.id, game.prefix].filter(Boolean).map(alias => alias.split('-')),
 }));
 const CORE = new Set([
-    'verify-architecture-boundaries', 'verify-css-debt',
+    'verify-architecture-boundaries', 'verify-css-debt', 'verify-css-layer-tool',
     'verify-boot', 'verify-chunk-isolation', 'verify-daily', 'verify-i18n',
     'verify-index-cards', 'verify-leaderboard', 'verify-no-game-lang',
     'verify-registry', 'verify-sfx',

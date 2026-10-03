@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { transformCssFile } from '../tools/archive/migrations/apply-css-layers.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -614,7 +615,8 @@ function verifyProject() {
     let customPropertyDefinitions = 0;
 
     for (const path of cssPaths) {
-        const parsed = parseCssText(readFileSync(join(ROOT, path), 'utf8'), path);
+        const cssSource = readFileSync(join(ROOT, path), 'utf8');
+        const parsed = parseCssText(cssSource, path);
         totalRules += parsed.rules.length;
         importantCount += parsed.declarations.filter(declaration => hasImportantPriority(declaration.value)).length;
         customPropertyDefinitions += parsed.declarations.filter(declaration => declaration.property.startsWith('--')).length;
@@ -658,6 +660,26 @@ function verifyProject() {
         }
         if (!sameJson(layerBlocks, baselineFile.layerBlocks)) {
             errors.push(path + ': current @layer blocks differ from the reviewed P0 baseline.');
+        }
+        if (BASELINE.layerMigrationStatus === 'complete') {
+            const targetLayer = baselineFile.targetLayer;
+            if (!targetLayer || Object.keys(normalizedLayerCounts).length !== 1
+                || Object.keys(normalizedLayerCounts)[0] !== targetLayer) {
+                errors.push(path + ': all ordinary rules must be in the single registered target layer.');
+            }
+            if (parsed.rules.some(rule => rule.layer !== targetLayer)) {
+                errors.push(path + ': ordinary CSS rule escaped its registered target layer.');
+            }
+            if (parsed.keyframes.some(keyframe => keyframe.layer !== targetLayer)) {
+                errors.push(path + ': keyframes must be inside the registered target layer.');
+            }
+            try {
+                if (transformCssFile(path, cssSource, targetLayer) !== cssSource) {
+                    errors.push(path + ': CSS layer migration transform is not idempotent.');
+                }
+            } catch (error) {
+                errors.push(path + ': CSS layer migration transform failed: ' + error.message);
+            }
         }
     }
 
@@ -708,7 +730,7 @@ function verifyProject() {
     console.log('  !important declarations: ' + importantCount + ' · custom-property definitions: ' + customPropertyDefinitions);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
-    console.log('  stylesheet source order and current layer map match the P0 baseline.');
+    console.log('  stylesheet source order, strict target layers, and migration idempotence match the reviewed baseline.');
 }
 
 verifyProject();

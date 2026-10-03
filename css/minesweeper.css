@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    Minesweeper 扫雷 — classic logic puzzle
    ───────────────────────────────────────────── */
@@ -687,4 +688,5 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 0;
+}
 }

@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    麦克斯韦妖 Maxwell's Demon — 热与熵分拣解谜
    深靛底 + 冷蓝慢分子（--tok-accent）+ 暖橙快分子（--tok-hot）
@@ -714,4 +715,5 @@ body {
     --cb-cv-hud-sub: rgb(36,52,76,0.85);
     --cb-cv-menu-chart-bg: rgb(255,255,255,0.85);
     --cb-cv-menu-chart-edge: rgb(40,70,110,0.18);
+}
 }

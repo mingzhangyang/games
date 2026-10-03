@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    回声洞窟 Echo Cave — sonar cave puzzle
    深渊蓝黑底 + 声呐青（--tok-accent）+ 萤光琥珀（--tok-gold）双主色
@@ -528,4 +529,5 @@ body {
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
+}
 }

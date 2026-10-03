@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    拔萝卜 Carrot Pull — 清新花园节奏小游戏
    深石墨蓝外壳 + 薄荷天空 / 胡萝卜橙 / 叶片绿；
@@ -934,4 +935,5 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .cp-art-production [data-art-preview],
     .cp-art-production [data-art-render] { transition: none; }
+}
 }

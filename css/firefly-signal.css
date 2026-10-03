@@ -1,3 +1,4 @@
+@layer pages {
 /* ─────────────────────────────────────────────
    Firefly Signal 萤火信号 — 仲夏夜同步谜题
    绘本自然主义 × 仲夏夜 × 生物荧光；仅深色（夜色是可读性的一部分，不接 theme-light）
@@ -467,4 +468,5 @@ body.fs-body {
     .fs-btn { transition: none; }
 
     .fs-result { animation: none; }
+}
 }
