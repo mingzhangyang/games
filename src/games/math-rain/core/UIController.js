@@ -4,7 +4,12 @@
  */
 
 import { getLocalizedText } from '../i18n/language-manager.js';
-import { storageGet, storageSet } from '../../../platform/safe-storage.js';
+import {
+    loadMathRainSfxVolume,
+    saveMathRainSfxVolume,
+    loadMathRainMusicVolume,
+    saveMathRainMusicVolume,
+} from '../storage.js';
 
 class UIController {
     constructor(eventSystem, gameStateManager, sessionManager) {
@@ -526,7 +531,7 @@ class UIController {
         const soundVolumeValue = document.getElementById('sound-volume-value');
         if (soundVolumeSlider && soundVolumeValue) {
             // 恢复上次保存的音量
-            const savedSfx = storageGet('mr_sfx_volume');
+            const savedSfx = loadMathRainSfxVolume();
             if (savedSfx !== null) {
                 soundVolumeSlider.value = savedSfx;
                 soundVolumeValue.textContent = savedSfx + '%';
@@ -535,7 +540,7 @@ class UIController {
                 const volume = e.target.value / 100;
                 soundVolumeValue.textContent = e.target.value + '%';
                 // 存储不可用时音量仅当前会话生效
-                storageSet('mr_sfx_volume', e.target.value);
+                saveMathRainSfxVolume(e.target.value);
                 this.eventSystem.emit('ui:settings:sound:volume', { volume });
             });
         }
@@ -545,7 +550,7 @@ class UIController {
         const musicVolumeValue = document.getElementById('music-volume-value');
         if (musicVolumeSlider && musicVolumeValue) {
             // 恢复上次保存的音量
-            const savedMusic = storageGet('mr_music_volume');
+            const savedMusic = loadMathRainMusicVolume();
             if (savedMusic !== null) {
                 musicVolumeSlider.value = savedMusic;
                 musicVolumeValue.textContent = savedMusic + '%';
@@ -554,7 +559,7 @@ class UIController {
                 const volume = e.target.value / 100;
                 musicVolumeValue.textContent = e.target.value + '%';
                 // 存储不可用时音量仅当前会话生效
-                storageSet('mr_music_volume', e.target.value);
+                saveMathRainMusicVolume(e.target.value);
                 this.eventSystem.emit('ui:settings:music:volume', { volume });
             });
         }

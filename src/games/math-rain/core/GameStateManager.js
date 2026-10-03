@@ -3,12 +3,11 @@
  * Handles all game state, scoring, and progression logic
  */
 
-import { storageGet, storageSet } from '../../../platform/safe-storage.js';
+import { loadMathRainInventory, saveMathRainInventory } from '../storage.js';
 
 class GameStateManager {
     constructor(eventSystem) {
         this.eventSystem = eventSystem;
-        this.storageKey = 'math-rain-inventory';
         this.reset();
 
         // Game configuration
@@ -25,27 +24,19 @@ class GameStateManager {
      * 存储不可用或数据损坏时返回 null，由调用方使用默认值
      */
     loadInventory() {
-        try {
-            const saved = JSON.parse(storageGet(this.storageKey) || 'null');
-            if (saved && typeof saved === 'object') {
-                return saved;
-            }
-        } catch (error) {
-            // 数据损坏时忽略
-        }
-        return null;
+        return loadMathRainInventory();
     }
 
     /**
      * 持久化金币和道具库存（存储不可用时静默跳过）
      */
     saveInventory() {
-        storageSet(this.storageKey, JSON.stringify({
+        saveMathRainInventory({
             coins: this.coins,
             freezeCount: this.freezeCount,
             bombCount: this.bombCount,
             shieldCount: this.shieldCount
-        }));
+        });
     }
 
     /**

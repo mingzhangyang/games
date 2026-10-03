@@ -65,7 +65,7 @@ These are candidates for `createGameStorage`:
 | Reversi | site settings / player profile | remote leaderboard API | mode, AI difficulty, streak records, private local scores | Phase 5 batch I |
 | Minesweeper | site settings / player profile | remote leaderboard API | difficulty, per-difficulty best times, private local scores | Phase 5 batch I |
 | Firefly Signal | site settings | none | per-level best intervention/harmony records | Phase 5 batch I |
-| Math Rain | site settings | none identified | SFX/music volumes, persistent coins/items | Later, custom multi-module state |
+| Math Rain | site settings | none identified | SFX/music volumes, persistent coins/items | Phase 5 batch K |
 | Tetris | `player_name`, `tetris_username` compatibility | leaderboard API keys | `tetris_scores`, `tetris_rainbow` | Already migrated |
 | Word Daily | site settings | `wd_daily_*` | `wd_lang_mode`, `wd_word_len_en`, `wd_hist_*`, `wd_stats_*`; `wd_seen_help` already migrated | Later, mixed daily state |
 | Circuit | site settings | `cc_daily_*`, `cc_local_*` | `cc_stars` | Phase 5 batch D |
@@ -289,3 +289,19 @@ the runtime and the overlay/UI module. Both consumers now share one storage
 adapter, while remote `tower-defense-<level>` leaderboard submissions and
 global site settings remain unchanged. The legacy fixture covers all six level
 ids, canonical precedence, retained legacy keys, and local/global records.
+
+
+## Batch K migration map
+
+Branch: `refactor/game-storage-migration-k`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `math-rain / inventory` | `math-rain-inventory` | `game:math-rain:v1:inventory` | Import coins and freeze/bomb/shield counts once; retain the legacy object |
+| `math-rain / sfxVolume` | `mr_sfx_volume` | `game:math-rain:v1:sfxVolume` | Preserve the 0–100 slider scale; no-value behavior remains unchanged |
+| `math-rain / musicVolume` | `mr_music_volume` | `game:math-rain:v1:musicVolume` | Preserve the 0–100 slider scale; no-value behavior remains unchanged |
+
+Batch K is intentionally Math Rain only because persistence spans the composition
+root, UI settings controller, and game-state manager. All three consumers now use
+one GameStorage adapter. The migration does not alter site-wide language/mute
+settings, game balance, sound synthesis, or any service/API contract.

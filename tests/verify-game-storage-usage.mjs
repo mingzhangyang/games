@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first ten GameStorage migration batches.
+// Static guard for the first eleven GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -54,6 +54,7 @@ const adapters = {
     minesweeper: read('src/games/minesweeper/storage.js'),
     'firefly-signal': read('src/games/firefly-signal/storage.js'),
     'tower-defense': read('src/games/tower-defense/storage.js'),
+    'math-rain': read('src/games/math-rain/storage.js'),
 };
 
 const swordFlightSources = {
@@ -66,6 +67,11 @@ const swordFlightSources = {
 };
 const needleConfig = read('src/games/needle-awn/config.js');
 const towerDefenseOverlay = read('src/games/tower-defense/ui/overlays.js');
+const mathRainSources = {
+    index: read('src/games/math-rain/index.js'),
+    ui: read('src/games/math-rain/core/UIController.js'),
+    state: read('src/games/math-rain/core/GameStateManager.js'),
+};
 
 for (const id of ['carrot-pull', 'hoop-shot']) {
     const source = runtimes[id];
@@ -293,6 +299,17 @@ check(runtimes['tower-defense'].includes("from './storage.js'")
 check(adapters['tower-defense'].includes('td_clear_') && adapters['tower-defense'].includes('td_best_'),
     'tower-defense: adapter preserves per-level legacy key families');
 
+const mathRainCombined = Object.values(mathRainSources).join('\n');
+check(Object.values(mathRainSources).every(source =>
+    !source.includes('safe-storage.js') && !/\bstorage(?:Get|Set|Remove)\s*\(/.test(source)),
+'math-rain: orchestrator, UI, and game state no longer bypass GameStorage');
+check(!/\b(?:math-rain-inventory|mr_(?:sfx|music)_volume)\b/.test(mathRainCombined),
+    'math-rain: legacy private keys are isolated in its adapter');
+check(mathRainSources.index.includes("from './storage.js'")
+    && mathRainSources.ui.includes("from '../storage.js'")
+    && mathRainSources.state.includes("from '../storage.js'"),
+'math-rain: all persistence consumers compose the shared GameStorage adapter');
+
 for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
     check(source.includes(`createGameStorage('${id}'`), `${id}: adapter uses the canonical game id`);
@@ -316,6 +333,7 @@ for (const [id, source, legacyKeys] of [
     ['minesweeper', adapters.minesweeper, ['ms_diff', 'ms_best_easy', 'ms_best_medium', 'ms_best_hard', 'ms_local_easy', 'ms_local_medium', 'ms_local_hard']],
     ['firefly-signal', adapters['firefly-signal'], ['fs_best_first-light', 'fs_best_two-meadows', 'fs_best_midsummer']],
     ['tower-defense', adapters['tower-defense'], ['td_best', 'td_local_scores']],
+    ['math-rain', adapters['math-rain'], ['math-rain-inventory', 'mr_sfx_volume', 'mr_music_volume']],
 ]) {
     for (const key of legacyKeys) {
         check(source.includes(`'${key}'`), `${id}: adapter preserves legacy key ${key}`);
