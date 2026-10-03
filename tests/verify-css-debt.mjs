@@ -25,6 +25,45 @@ function normalizeValue(value) {
     return value.replace(/\s+/g, ' ').trim();
 }
 
+function hasImportantPriority(value) {
+    let quote = '';
+    let escaped = false;
+    let parentheses = 0;
+    let brackets = 0;
+
+    for (let index = 0; index < value.length; index++) {
+        const char = value[index];
+
+        if (quote) {
+            if (escaped) escaped = false;
+            else if (char.charCodeAt(0) === 92) escaped = true;
+            else if (char === quote) quote = '';
+            continue;
+        }
+        if (escaped) {
+            escaped = false;
+            continue;
+        }
+        if (char.charCodeAt(0) === 92) {
+            escaped = true;
+            continue;
+        }
+        if (char === '"' || char === "'") {
+            quote = char;
+            continue;
+        }
+        if (parentheses === 0 && brackets === 0 && char === '!'
+            && /^!\s*important\s*$/i.test(value.slice(index))) {
+            return true;
+        }
+        if (char === '(') parentheses++;
+        else if (char === ')') parentheses--;
+        else if (char === '[') brackets++;
+        else if (char === ']') brackets--;
+    }
+
+    return false;
+}
 function normalizeAtRuleParams(value) {
     return value.replace(/\s+/g, ' ').trim();
 }
@@ -90,6 +129,21 @@ function findCssDelimiter(source, start, end) {
     return { index: end, char: '' };
 }
 
+function assertNoNestedBlocks(body, file, selector) {
+    let start = 0;
+    while (start < body.length) {
+        const boundary = findCssDelimiter(body, start, body.length);
+        if (boundary.char === '{' || boundary.char === '}') {
+            throw new Error('CSS nesting or brace-bearing values are unsupported by the CSS debt scanner in '
+                + file + ' (' + selector + ')');
+        }
+        if (boundary.char === ';') {
+            start = boundary.index + 1;
+            continue;
+        }
+        break;
+    }
+}
 function findClosingBrace(source, open, end) {
     let depth = 1;
     let quote = '';
@@ -328,6 +382,7 @@ function parseCssText(source, file) {
                 }
             } else if (!inKeyframes) {
                 const selector = normalizeSelector(header);
+                assertNoNestedBlocks(body, file, selector);
                 const declarations = parseDeclarations(body).map(declaration => ({
                     ...declaration, selector, context: [...context], layer, atRule: '',
                 }));
@@ -447,6 +502,16 @@ function runSelfChecks() {
     assert.equal(parsed.keyframes.length, 1);
     assert.deepEqual(parsed.specialAtRules.map(row => row[2]), ['keyframes']);
 
+    assert.equal(hasImportantPriority('red!important'), true);
+    assert.equal(hasImportantPriority('red ! important'), true);
+    assert.equal(hasImportantPriority('"!important"'), false);
+    assert.equal(hasImportantPriority('url("x!important")'), false);
+    assert.equal(hasImportantPriority('red\\!important'), false);
+    assert.throws(
+        () => parseCssText('.parent { color: red; & .child { color: blue; } }', 'nested.css'),
+        /CSS nesting or brace-bearing values are unsupported/,
+    );
+
     const baseline = [['fixture.css', '', '.existing']];
     assert.deepEqual(multisetDelta(baseline, baseline), { added: [], removed: [] });
     assert.deepEqual(multisetDelta([...baseline, ['fixture.css', '', '.new']], baseline).added, [
@@ -493,7 +558,7 @@ function verifyProject() {
     for (const path of cssPaths) {
         const parsed = parseCssText(readFileSync(join(ROOT, path), 'utf8'), path);
         totalRules += parsed.rules.length;
-        importantCount += parsed.declarations.filter(declaration => /\s!important\s*$/i.test(declaration.value)).length;
+        importantCount += parsed.declarations.filter(declaration => hasImportantPriority(declaration.value)).length;
         customPropertyDefinitions += parsed.declarations.filter(declaration => declaration.property.startsWith('--')).length;
 
         const layerCounts = {};
@@ -512,7 +577,7 @@ function verifyProject() {
             }
         }
         for (const declaration of parsed.declarations) {
-            if (declaration.selector && /\s!important\s*$/i.test(declaration.value)) {
+            if (declaration.selector && hasImportantPriority(declaration.value)) {
                 actualDebt.importantDeclarations.push([
                     path, declaration.context.join(' / '), declaration.selector,
                     declaration.property, declaration.value,
