@@ -10,12 +10,14 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const specs = [
     {
         id: 'ripple-duet',
-        files: ['index.js', 'runtime.js', 'i18n.js', 'model/rules.js', 'model/levels.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'i18n.js', 'model/rules.js', 'model/levels.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'initCanvasPalette', 'mountGameRuntime', 'window.rdGame', 'window.rdRuntime', 'window.rdDrawer'],
-        runtimeNeedles: ["from './i18n.js'", "from './model/rules.js'", "from './model/levels.js'", "from '../../platform/game-sfx.js'", "from '../../platform/theme.js'", 'export class RippleDuetGame'],
+        runtimeNeedles: ["from './i18n.js'", "from './storage.js'", "from './model/rules.js'", "from './model/levels.js'", "from '../../platform/game-sfx.js'", "from '../../platform/theme.js'", 'export class RippleDuetGame'],
         modelNeedles: ["from '../../../platform/daily.js"],
         handles: ['window.rdGame', 'window.rdRuntime', 'window.rdDrawer'],
-        keys: ["'rd_progress'", "'rd_lb_"],
+        keys: ["'rd_progress'"],
+        runtimeKeys: ["'rd_lb_'"],
+        storageFile: 'storage.js',
         analytics: { play: 2, finish: 1, finalDailyGate: true },
         retired: ['js/ripple-duet-rules.js', 'js/ripple-duet-levels.js'],
     },
@@ -81,6 +83,7 @@ for (const spec of selectedSpecs) {
         `${spec.id}: language table is extracted into the package`);
     for (const handle of spec.handles) check(index.includes(handle), `${spec.id}: preserves ${handle}`);
     for (const key of spec.keys) check(storage.includes(key), `${spec.id}: preserves storage contract ${key}`);
+    for (const key of spec.runtimeKeys || []) check(runtime.includes(key), `${spec.id}: preserves runtime storage contract ${key}`);
     if (spec.languageRefresh) {
         const languageStart = runtime.indexOf('applyLanguage() {');
         const languageEnd = runtime.indexOf('/* ── 菜单部件 ── */', languageStart);

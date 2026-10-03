@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first two GameStorage migration batches.
+// Static guard for the first three GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +19,9 @@ const runtimes = {
     'shadow-loom': read('src/games/shadow-loom/runtime.js'),
     'echo-cave': read('src/games/echo-cave/runtime.js'),
     'maxwell-demon': read('src/games/maxwell-demon/runtime.js'),
+    'crystal-bloom': read('src/games/crystal-bloom/runtime.js'),
+    'flame-verse': read('src/games/flame-verse/runtime.js'),
+    'ripple-duet': read('src/games/ripple-duet/runtime.js'),
 };
 const adapters = {
     'carrot-pull': read('src/games/carrot-pull/storage.js'),
@@ -27,6 +30,9 @@ const adapters = {
     'shadow-loom': read('src/games/shadow-loom/storage.js'),
     'echo-cave': read('src/games/echo-cave/storage.js'),
     'maxwell-demon': read('src/games/maxwell-demon/storage.js'),
+    'crystal-bloom': read('src/games/crystal-bloom/storage.js'),
+    'flame-verse': read('src/games/flame-verse/storage.js'),
+    'ripple-duet': read('src/games/ripple-duet/storage.js'),
 };
 
 for (const id of ['carrot-pull', 'hoop-shot']) {
@@ -67,6 +73,9 @@ check(shadowRuntime.includes("from './storage.js'"),
 for (const [id, prefix, slotName] of [
     ['echo-cave', 'ec', 'ECHO_CAVE'],
     ['maxwell-demon', 'md', 'MAXWELL_DEMON'],
+    ['crystal-bloom', 'cb', 'CRYSTAL_BLOOM'],
+    ['flame-verse', 'fv', 'FLAME_VERSE'],
+    ['ripple-duet', 'rd', 'RIPPLE_DUET'],
 ]) {
     const source = runtimes[id];
     check(source.includes("import { storageGet } from '../../platform/safe-storage.js';"),
@@ -96,6 +105,9 @@ for (const [id, source, legacyKeys] of [
     ['shadow-loom', adapters['shadow-loom'], ['sl_progress', 'sl_seen_chapters']],
     ['echo-cave', adapters['echo-cave'], ['ec_progress']],
     ['maxwell-demon', adapters['maxwell-demon'], ['md_progress']],
+    ['crystal-bloom', adapters['crystal-bloom'], ['cb_progress']],
+    ['flame-verse', adapters['flame-verse'], ['fv_progress']],
+    ['ripple-duet', adapters['ripple-duet'], ['rd_progress']],
 ]) {
     for (const key of legacyKeys) {
         check(source.includes(`'${key}'`), `${id}: adapter preserves legacy key ${key}`);

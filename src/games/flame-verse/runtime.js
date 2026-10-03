@@ -50,7 +50,8 @@ import {
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { storageGet } from '../../platform/safe-storage.js';
+import { FLAME_VERSE_STORAGE, FLAME_VERSE_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
@@ -137,7 +138,7 @@ function emptyRecipe() {
 
 function storageParseProgress() {
     try {
-        const obj = JSON.parse(storageGet('fv_progress') || '{}');
+        const obj = FLAME_VERSE_STORAGE.get(FLAME_VERSE_STORAGE_SLOTS.PROGRESS, {});
         const out = {};
         if (obj && typeof obj === 'object') {
             for (const k of Object.keys(obj)) {
@@ -786,7 +787,7 @@ export class FlameVerseGame {
 
     saveProgress() {
         try {
-            storageSet('fv_progress', JSON.stringify(this.progress));
+            FLAME_VERSE_STORAGE.set(FLAME_VERSE_STORAGE_SLOTS.PROGRESS, this.progress);
         } catch (e) { /* 忽略 */ }
     }
 

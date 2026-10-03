@@ -42,7 +42,8 @@ import {
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { storageGet } from '../../platform/safe-storage.js';
+import { CRYSTAL_BLOOM_STORAGE, CRYSTAL_BLOOM_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
@@ -141,7 +142,7 @@ function vibrate(pattern) {
 
 function storageParseProgress() {
     try {
-        const obj = JSON.parse(storageGet('cb_progress') || '{}');
+        const obj = CRYSTAL_BLOOM_STORAGE.get(CRYSTAL_BLOOM_STORAGE_SLOTS.PROGRESS, {});
         const out = {};
         if (obj && typeof obj === 'object') {
             for (const k of Object.keys(obj)) {
@@ -768,7 +769,7 @@ export class CrystalBloomGame {
 
     saveProgress() {
         try {
-            storageSet('cb_progress', JSON.stringify(this.progress));
+            CRYSTAL_BLOOM_STORAGE.set(CRYSTAL_BLOOM_STORAGE_SLOTS.PROGRESS, this.progress);
         } catch (e) { /* 忽略 */ }
     }
 
