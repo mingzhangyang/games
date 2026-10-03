@@ -385,74 +385,24 @@ class GameEngine {
 
         // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的 applyLanguage 写）
         const naHint = document.getElementById('na-hint');
-        if (naHint) naHint.textContent = t.hint;
 
-        document.getElementById('na-main-title').textContent = t.gameTitle;
         document.getElementById('na-canvas').setAttribute('aria-label', t.canvasAria);
-        document.getElementById('na-main-sub').textContent = t.gameSub;
         document.getElementById('na-howto-box').innerHTML = t.howTo;
 
-        document.getElementById('na-lbl-mode-levels').textContent = t.trials;
-        document.getElementById('na-sub-mode-levels').textContent = t.trialsSub;
-        document.getElementById('na-lbl-mode-endless').textContent = t.endless;
-        document.getElementById('na-sub-mode-endless').textContent = t.endlessSub;
-        document.getElementById('na-lbl-mode-daily').textContent = t.daily;
-        document.getElementById('na-sub-mode-daily').textContent = t.dailySub;
-        document.getElementById('na-lbl-mode-duel').textContent = t.duel;
-        document.getElementById('na-sub-mode-duel').textContent = t.duelSub;
 
-        document.getElementById('na-level-title').textContent = t.selectLevel;
-        document.getElementById('na-duel-mode-lbl').textContent = t.duelModeLbl;
-        document.getElementById('na-duel-type-ai').textContent = t.duelTypeAi;
-        document.getElementById('na-duel-type-2p').textContent = t.duelType2P;
-        document.getElementById('na-ai-diff-lbl').textContent = t.aiDiffLbl;
-        document.getElementById('na-diff-easy').textContent = t.diffEasy;
-        document.getElementById('na-diff-medium').textContent = t.diffMedium;
-        document.getElementById('na-diff-hard').textContent = t.diffHard;
-        document.getElementById('na-btn-start-duel').textContent = t.startDuel;
 
-        document.getElementById('na-pause-title').textContent = t.pauseTitle;
-        document.getElementById('na-pause-sub').textContent = t.pauseSub;
-        document.getElementById('na-btn-resume').textContent = t.resume;
-        document.getElementById('na-btn-restart').textContent = t.restart;
         document.getElementById('na-btn-pause-home').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
 
-        document.getElementById('na-stat-score-lbl').textContent = t.scoreLbl;
-        document.getElementById('na-stat-clashes-lbl').textContent = t.clashesLbl;
-        document.getElementById('na-stat-combo-lbl').textContent = t.comboLbl;
-        document.getElementById('na-stat-extra-lbl').textContent = t.extraLbl;
-        document.getElementById('na-btn-next-stage').textContent = t.nextStage;
-        document.getElementById('na-btn-replay').textContent = t.replay;
         document.getElementById('na-btn-result-home').innerHTML = `${ICONS.home}<span>${t.home}</span>`;
 
-        document.getElementById('na-side-rules-title').textContent = t.sideRulesTitle;
         document.getElementById('na-side-rules-text').innerHTML = t.sideRulesText;
-        document.getElementById('na-side-records-title').textContent = t.sideRecordsTitle;
-        document.getElementById('na-side-rec-endless-lbl').textContent = t.sideEndlessLbl;
-        document.getElementById('na-side-rec-clash-lbl').textContent = t.sideClashLbl;
-        document.getElementById('na-side-rec-stars-lbl').textContent = t.sideStarsLbl;
-        document.getElementById('na-side-rec-daily-lbl').textContent = t.sideDailyLbl;
-        document.getElementById('na-side-controls-title').textContent = t.sideControlsTitle;
 
-        document.getElementById('na-sc-aim').textContent = t.scAim;
         const scAimKeyEl = document.getElementById('na-sc-aim-key');
-        if (scAimKeyEl) scAimKeyEl.textContent = t.scAimKey;
-        document.getElementById('na-sc-dash').textContent = t.scDash;
         const scDashKeyEl = document.getElementById('na-sc-dash-key');
-        if (scDashKeyEl) scDashKeyEl.textContent = t.scDashKey;
-        document.getElementById('na-sc-stance').textContent = t.scStance;
         const scStanceKeyEl = document.getElementById('na-sc-stance-key');
-        if (scStanceKeyEl) scStanceKeyEl.textContent = t.scStanceKey;
-        document.getElementById('na-sc-ult').textContent = t.scUlt;
         const scUltKeyEl = document.getElementById('na-sc-ult-key');
-        if (scUltKeyEl) scUltKeyEl.textContent = t.scUltKey;
-        document.getElementById('na-sc-move').textContent = t.scMove;
         const scMoveKeyEl = document.getElementById('na-sc-move-key');
-        if (scMoveKeyEl) scMoveKeyEl.textContent = t.scMoveKey;
 
-        document.getElementById('na-touch-dash-lbl').textContent = t.touchDash;
-        document.getElementById('na-touch-stance-lbl').textContent = t.touchStance;
-        document.getElementById('na-touch-ult-lbl').textContent = t.touchUlt;
 
         // 内部 HUD 姿态与极意标签
         const isNeedle = !this.player || this.player.stance === 'needle';

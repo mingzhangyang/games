@@ -147,15 +147,6 @@ export class ShadowLoomGame {
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
         document.title = this.lang === 'zh' ? '影织 Shadow Loom — 纸影解谜' : 'Shadow Loom 影织 — Paper Shadow Puzzle';
         const put = (id, key) => { if (this.el[id]) this.el[id].textContent = this.t(key); };
-        put('title', 'title');
-        put('subtitle', 'subtitle');
-        put('copy', 'copy');
-        put('level-label', 'levelSelect');
-        put('side-howto-title', 'sideHowToTitle');
-        put('side-howto', 'sideHowTo');
-        put('side-records-title', 'sideRecordsTitle');
-        put('side-keys-title', 'sideKeysTitle');
-        put('brand', 'brand');
         const setBtn = (id, icon, key) => {
             if (this.el[id]) this.el[id].innerHTML = `${ICONS[icon]}<span>${this.t(key)}</span>`;
         };

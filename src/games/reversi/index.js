@@ -694,6 +694,7 @@ class ReversiGame {
 
 onReady(() => {
     const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
+    i18nBinder.apply();
     const game = new ReversiGame({ i18nBinder });
     window.rvGame = game; // 调试/测试句柄
     game.streak = loadReversiStreak(); // 连胜跨会话持久化

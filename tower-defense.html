@@ -40,23 +40,23 @@
         <header class="td-topbar game-topbar">
             <div class="td-topbar-lead game-topbar-group">
                 <!-- 左簇：Home 永远第一个（文案 / aria 由 src/platform/game-chrome.js 统一写） -->
-                <button data-chrome="home" class="td-icon-btn game-icon-btn" id="td-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+                <button data-chrome="home" class="td-icon-btn game-icon-btn" id="td-btn-home" title="Home" aria-label="Home" data-i18n-title="homeBtnTitle" data-i18n-label="homeBtnTitle"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="td-topbar-center game-topbar-center">
                 <!-- 状态胶囊直接放中槽（单行契约，窄屏由共享层 flex-wrap 折行） -->
-                <div class="td-stat" id="td-stat-lives" title="Lives"><span class="td-stat-icon td-stat-icon--lives"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.6 5 8.2 5c1.6 0 3 .8 3.8 2 .8-1.2 2.2-2 3.8-2 2.6 0 4.7 2 4.7 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg></span><b id="td-lives">20</b></div>
-                    <div class="td-stat" id="td-stat-gold" title="Gold"><span class="td-stat-icon td-stat-icon--gold"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2 0 2.6 5.8 1.3 5.8 4 0 1.2-1.2 2-3 2-1.4 0-2.5-.5-3-1.4"/><path d="M12 6.5v11"/></svg></span><b id="td-gold">220</b></div>
-                    <div class="td-stat" id="td-stat-wave" title="Wave"><span class="td-stat-icon td-stat-icon--wave"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 13c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 18c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/></svg></span><b id="td-wave">0/15</b></div>
+                <div class="td-stat" id="td-stat-lives" title="Lives" data-i18n-title="statLives"><span class="td-stat-icon td-stat-icon--lives"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.6 5 8.2 5c1.6 0 3 .8 3.8 2 .8-1.2 2.2-2 3.8-2 2.6 0 4.7 2 4.7 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg></span><b id="td-lives">20</b></div>
+                    <div class="td-stat" id="td-stat-gold" title="Gold" data-i18n-title="statGold"><span class="td-stat-icon td-stat-icon--gold"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2 0 2.6 5.8 1.3 5.8 4 0 1.2-1.2 2-3 2-1.4 0-2.5-.5-3-1.4"/><path d="M12 6.5v11"/></svg></span><b id="td-gold">220</b></div>
+                    <div class="td-stat" id="td-stat-wave" title="Wave" data-i18n-title="statWave"><span class="td-stat-icon td-stat-icon--wave"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 13c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/><path d="M3 18c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 3-2"/></svg></span><b id="td-wave">0/15</b></div>
                 <div class="td-stack-badge hidden" id="td-stack-badge"></div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
             <div class="td-topbar-actions game-topbar-group">
-                <button class="td-icon-btn game-icon-btn" id="td-range-btn" title="Toggle Ranges (R)" aria-label="Toggle Ranges"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></button>
-                <button class="td-icon-btn game-icon-btn" id="td-speed-btn" title="Speed">×1</button>
+                <button class="td-icon-btn game-icon-btn" id="td-range-btn" title="Toggle Ranges (R)" aria-label="Toggle Ranges" data-i18n-title="rangeBtnTitle" data-i18n-label="rangeBtnTitle"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></button>
+                <button class="td-icon-btn game-icon-btn" id="td-speed-btn" title="Speed" data-i18n-title="speedBtnTitle">×1</button>
                 <button data-chrome="stats" type="button" class="td-icon-btn game-icon-btn td-stats-btn game-stats-btn" id="tdStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="tdTacticalPanel"></button>
-                <button data-chrome="pause" class="td-icon-btn game-icon-btn" id="td-pause-btn" title="Pause" aria-label="Pause"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
-                <button type="button" class="td-icon-btn game-icon-btn" id="td-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                <button data-chrome="pause" class="td-icon-btn game-icon-btn" id="td-pause-btn" title="Pause" aria-label="Pause" data-i18n-title="pauseBtnTitle" data-i18n-label="pauseBtnTitle"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
+                <button type="button" class="td-icon-btn game-icon-btn" id="td-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound" data-i18n-title="muteBtnTitle" data-i18n-label="muteBtnTitle"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
             </div>
         </header>
 
@@ -69,8 +69,8 @@
 
             <div class="td-rotate-prompt" id="td-rotate-prompt" role="status" aria-live="polite">
                 <span class="td-rotate-glyph" aria-hidden="true">↻</span>
-                <strong id="td-rotate-title">Rotate device</strong>
-                <span id="td-rotate-copy">Landscape view gives the defense line room to breathe.</span>
+                <strong id="td-rotate-title" data-i18n="rotateTitle">Rotate device</strong>
+                <span id="td-rotate-copy" data-i18n="rotateCopy">Landscape view gives the defense line room to breathe.</span>
             </div>
 
             <!-- 建造/升级面板 -->
@@ -81,9 +81,9 @@
 
             <!-- 开始界面 -->
             <div class="td-overlay td-overlay--menu game-overlay game-overlay--menu" id="td-start">
-                <h1 class="td-title" id="td-title">Neon Tower Defense</h1>
-                <p class="td-subtitle" id="td-subtitle">Build · Upgrade · Survive</p>
-                <div class="td-hero" id="td-start-hero" role="img" aria-label="Future-city energy defense platform">
+                <h1 class="td-title" id="td-title" data-i18n="title">Neon Tower Defense</h1>
+                <p class="td-subtitle" id="td-subtitle" data-i18n="subtitle">Build · Upgrade · Survive</p>
+                <div class="td-hero" id="td-start-hero" role="img" aria-label="Future-city energy defense platform" data-i18n-label="heroLabel">
                     <div class="td-hero-grid" aria-hidden="true">
                         <span class="td-hero-core"></span>
                         <span class="td-hero-rail td-hero-rail--one"></span>
@@ -96,18 +96,18 @@
 
                 <!-- 关卡选择 -->
                 <div class="td-select-block">
-                    <div class="td-select-title" id="td-select-title">Select Operation</div>
+                    <div class="td-select-title" id="td-select-title" data-i18n="selectLevel">Select Operation</div>
                     <div class="td-level-cards" id="td-level-cards"></div>
                     <div class="td-level-brief" id="td-level-brief"></div>
                     <div class="td-brief-stats">
-                        <div class="td-brief-stat"><span class="td-brief-stat-icon" aria-hidden="true">W</span><b id="td-brief-waves">15</b><span class="td-brief-stat-lbl" id="td-brief-lbl-waves">Waves</span></div>
-                        <div class="td-brief-stat"><span class="td-brief-stat-icon" aria-hidden="true">CR</span><b id="td-brief-gold">240</b><span class="td-brief-stat-lbl" id="td-brief-lbl-gold">Credits</span></div>
-                        <div class="td-brief-stat"><span class="td-brief-stat-icon" aria-hidden="true">HP</span><b id="td-brief-lives">20</b><span class="td-brief-stat-lbl" id="td-brief-lbl-lives">Core HP</span></div>
+                        <div class="td-brief-stat"><span class="td-brief-stat-icon" aria-hidden="true">W</span><b id="td-brief-waves">15</b><span class="td-brief-stat-lbl" id="td-brief-lbl-waves" data-i18n="statWave">Waves</span></div>
+                        <div class="td-brief-stat"><span class="td-brief-stat-icon" aria-hidden="true">CR</span><b id="td-brief-gold">240</b><span class="td-brief-stat-lbl" id="td-brief-lbl-gold" data-i18n="statGold">Credits</span></div>
+                        <div class="td-brief-stat"><span class="td-brief-stat-icon" aria-hidden="true">HP</span><b id="td-brief-lives">20</b><span class="td-brief-stat-lbl" id="td-brief-lbl-lives" data-i18n="statLives">Core HP</span></div>
                     </div>
                 </div>
 
-                <p class="td-howto" id="td-howto"></p>
-                <div class="td-tower-intro" id="td-tower-intro"></div>
+                <p class="td-howto" id="td-howto" data-i18n="howto"></p>
+                <div class="td-tower-intro" id="td-tower-intro" data-i18n="towerIntro"></div>
                 <button class="td-btn td-btn-primary game-btn" id="td-btn-play">▶ Deploy</button>
                 <p class="td-stat-line" id="td-best-line"></p>
                 <div class="td-start-footer">
@@ -118,9 +118,9 @@
 
             <!-- 暂停界面 -->
             <div class="td-overlay hidden game-overlay" id="td-pause">
-                <h2 class="td-overlay-title" id="td-pause-title">Paused</h2>
+                <h2 class="td-overlay-title" id="td-pause-title" data-i18n="paused">Paused</h2>
                 <div class="td-btn-col">
-                    <button class="td-btn td-btn-primary" id="td-btn-resume">Resume</button>
+                    <button class="td-btn td-btn-primary" id="td-btn-resume" data-i18n="resume">Resume</button>
                     <button class="td-btn td-btn-ghost game-btn" id="td-btn-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
                 </div>
             </div>
@@ -132,9 +132,9 @@
                 <div class="td-over-score" id="td-over-score">0</div>
                 <div class="td-over-sub" id="td-over-sub"></div>
                 <div class="td-over-stats-grid" id="td-over-stats-grid">
-                    <div class="td-over-stat-item"><span class="td-over-stat-icon">W</span><b id="td-over-waves">0/15</b><span class="td-over-stat-lbl" id="td-over-lbl-waves">Wave</span></div>
-                    <div class="td-over-stat-item"><span class="td-over-stat-icon">K</span><b id="td-over-kills">0</b><span class="td-over-stat-lbl" id="td-over-lbl-kills">Kills</span></div>
-                    <div class="td-over-stat-item"><span class="td-over-stat-icon">HP</span><b id="td-over-lives">0</b><span class="td-over-stat-lbl" id="td-over-lbl-lives">Lives</span></div>
+                    <div class="td-over-stat-item"><span class="td-over-stat-icon">W</span><b id="td-over-waves">0/15</b><span class="td-over-stat-lbl" id="td-over-lbl-waves" data-i18n="waveStat">Wave</span></div>
+                    <div class="td-over-stat-item"><span class="td-over-stat-icon">K</span><b id="td-over-kills">0</b><span class="td-over-stat-lbl" id="td-over-lbl-kills" data-i18n="kills">Kills</span></div>
+                    <div class="td-over-stat-item"><span class="td-over-stat-icon">HP</span><b id="td-over-lives">0</b><span class="td-over-stat-lbl" id="td-over-lbl-lives" data-i18n="lives">Lives</span></div>
                 </div>
                 <div class="td-btn-row">
                     <button class="td-btn td-btn-primary game-btn" id="td-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Again</span></button>
@@ -146,14 +146,14 @@
                     <div class="td-lb-list" id="td-lb-list"></div>
                     <div class="td-lb-status" id="td-lb-status"></div>
                     <div class="td-username-row">
-                        <label class="td-username-label" for="td-username" id="td-username-label">Username</label>
-                        <input class="td-username" id="td-username" maxlength="20" autocomplete="off">
+                        <label class="td-username-label" for="td-username" id="td-username-label" data-i18n="usernameLabel">Username</label>
+                        <input class="td-username" id="td-username" maxlength="20" autocomplete="off" data-i18n-placeholder="usernameLabel">
                     </div>
                 </div>
             </div>
         <!-- 底部战术与波次控制条（悬浮在舞台下沿，不遮挡核心路径） -->
         <div class="td-bottom-controls" id="td-bottom-controls">
-            <button class="td-skill-btn" id="td-skill-emp" title="EMP Shockwave (Q)" aria-label="EMP Shockwave">
+            <button class="td-skill-btn" id="td-skill-emp" title="EMP Shockwave (Q)" aria-label="EMP Shockwave" data-i18n-title="empBtnTitle" data-i18n-label="empBtnTitle">
                 <svg class="td-skill-ring" viewBox="0 0 44 44">
                     <circle class="td-ring-bg" cx="22" cy="22" r="19"/>
                     <circle class="td-ring-fg" id="td-emp-ring" cx="22" cy="22" r="19"/>
@@ -166,7 +166,7 @@
                 <span class="td-wave-title" id="td-wave-text">▶ Wave 1</span>
                 <span class="td-wave-preview" id="td-wave-preview"></span>
             </button>
-            <button class="td-skill-btn" id="td-skill-boost" title="Overdrive (E)" aria-label="Overdrive">
+            <button class="td-skill-btn" id="td-skill-boost" title="Overdrive (E)" aria-label="Overdrive" data-i18n-title="overdriveBtnTitle" data-i18n-label="overdriveBtnTitle">
                 <svg class="td-skill-ring" viewBox="0 0 44 44">
                     <circle class="td-ring-bg" cx="22" cy="22" r="19"/>
                     <circle class="td-ring-fg" id="td-boost-ring" cx="22" cy="22" r="19"/>
@@ -188,7 +188,7 @@
             <div id="tdStatsPanels">
                 <div class="td-side-card game-side-card">
                     <div class="td-side-title game-side-title" id="td-side-howto-title"></div>
-                    <p class="td-side-text game-side-text" id="td-side-howto"></p>
+                    <p class="td-side-text game-side-text" id="td-side-howto" data-i18n="howto"></p>
                 </div>
                 <div class="td-side-card game-side-card">
                     <div class="td-side-title game-side-title" id="td-side-skills-title"></div>
@@ -217,7 +217,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
     <footer class="td-footer game-footer">
-        <p class="td-footer-hint game-footer-hint" id="td-hint"></p>
+        <p class="td-footer-hint game-footer-hint" id="td-hint" data-i18n="hint"></p>
         <div class="td-footer-actions game-footer-actions game-topbar-group">
             <a class="td-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
             <button type="button" class="td-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="tdMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>

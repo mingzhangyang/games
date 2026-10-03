@@ -1,3 +1,4 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
 /**
  * 萤火信号 Firefly Signal — 页面入口
  * ==================================
@@ -181,18 +182,9 @@ function renderLevelList(game) {
 function applyLanguage(game) {
     const t = getText();
     document.documentElement.lang = getLang() === 'zh' ? 'zh-CN' : 'en';
-    $('fs-h1').textContent = t.title;
-    $('fs-kicker').textContent = t.kicker;
-    $('fs-start-title').textContent = t.title;
-    $('fs-start-copy').textContent = t.startCopy;
-    $('fs-hint').textContent = t.hint;
-    $('fs-harmony-label').textContent = t.harmonyShort;
-    $('fs-signals-label').textContent = t.signalsLabel;
     $('fs-canvas').setAttribute('aria-label', t.canvasLabel);
     $('fs-canvas').setAttribute('aria-roledescription', t.roleDescription);
     const restart = $('fs-btn-restart');
-    restart.title = t.restart;
-    restart.setAttribute('aria-label', t.restart);
     $('fs-btn-retry').querySelector('span').textContent = t.retry;
     $('fs-btn-menu').querySelector('span').textContent = t.menu;
     renderLevelList(game);
@@ -200,6 +192,9 @@ function applyLanguage(game) {
 }
 
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: LANGUAGES });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     const game = new FireflyGame({
         stage: $('fs-stage'),
         canvas: $('fs-canvas'),

@@ -1127,19 +1127,10 @@ export class RippleDuetGame {
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
         const el = this.el;
         const put = (id, key) => { if (el[id]) el[id].textContent = this.t(key); };
-        put('title', 'title');
-        put('subtitle', 'subtitle');
-        put('howto', 'howto');
         // 与 maxwell-demon / crystal-bloom / flame-verse / echo-cave 同款：图标 + 文字 span
         // （纯 textContent 会让模式按钮缺图标，且移动端热区掉到 41px）
         if (el['btn-levels']) el['btn-levels'].innerHTML = `${ICONS.play}<span class="btn-text">${this.t('playLevels')}</span>`;
         if (el['btn-daily']) el['btn-daily'].innerHTML = `${ICONS.calendar}<span class="btn-text">${this.t('playDaily')}</span>`;
-        put('level-label', 'levelSelect');
-        put('side-howto-title', 'sideHowTo');
-        put('side-howto', 'howto');
-        put('side-records-title', 'sideRecords');
-        put('side-legend-title', 'legendTitle');
-        put('hint', 'hint');
         const setActionButton = (id, icon, key) => {
             if (el[id]) el[id].innerHTML = `${icon}<span class="btn-text">${this.t(key)}</span>`;
         };
@@ -1149,8 +1140,6 @@ export class RippleDuetGame {
         setActionButton('btn-again', ICONS.retry, 'again');
         setActionButton('btn-copy', ICONS.copy, 'copyResult');
         setActionButton('btn-menu2', ICONS.home, 'menu');
-        put('lb-title', 'leaderboard');
-        put('username-label', 'playerName');
         document.title = this.lang === 'zh'
             ? '涟漪双生 Ripple Duet — 波的干涉解谜'
             : 'Ripple Duet — Wave Interference Puzzle';

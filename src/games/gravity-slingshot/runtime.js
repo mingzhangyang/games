@@ -185,12 +185,6 @@ class GravityGame {
         document.title = this.lang === 'zh'
             ? '引力弹弓 — 轨道物理益智游戏'
             : 'Gravity Slingshot — Orbital Physics Puzzle';
-        if (this.el.title) this.el.title.textContent = t.title;
-        if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
-        if (this.el.howto) this.el.howto.textContent = t.howto;
-        if (this.el['btn-levels']) this.el['btn-levels'].textContent = t.playLevels;
-        if (this.el['btn-daily']) this.el['btn-daily'].textContent = t.playDaily;
-        if (this.el['level-label']) this.el['level-label'].textContent = t.levelSelect;
         if (this.el['btn-next']) this.el['btn-next'].textContent = t.next;
         if (this.el['btn-replay']) this.el['btn-replay'].innerHTML = `${ICONS.retry}<span>${t.retry}</span>`;
         if (this.el['btn-menu1']) this.el['btn-menu1'].innerHTML = `${ICONS.home}<span>${t.menu}</span>`;
@@ -198,24 +192,15 @@ class GravityGame {
         if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
-        if (this.el.username) this.el.username.placeholder = t.usernameLabel;
         if (this.el.hint) this.el.hint.textContent = t.hint;
         if (this.el['reset-btn']) {
-            this.el['reset-btn'].title = t.retryTitle;
-            this.el['reset-btn'].setAttribute('aria-label', t.retryTitle);
         }
         if (this.el['btn-home']) {
-            this.el['btn-home'].title = t.home;
-            this.el['btn-home'].setAttribute('aria-label', t.home);
         }
         if (this.el['mute-btn']) {
-            this.el['mute-btn'].title = t.sound;
-            this.el['mute-btn'].setAttribute('aria-label', t.sound);
         }
         // 桌面侧栏（≥1024px 可见）
         if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
         if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
         this.renderLevelGrid();

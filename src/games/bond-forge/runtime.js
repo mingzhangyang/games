@@ -481,18 +481,8 @@ class BondForgeGame {
             ? '键合工坊 — 分子搭建化学解谜'
             : 'Bond Forge — Molecule Building Puzzle';
 
-        setText('title', this.t('title'));
-        setText('subtitle', this.t('subtitle'));
-        setText('howto', this.t('howto'));
-        setText('level-label', this.t('levelSelect'));
-        setText('side-howto-title', this.t('sideHowTo'));
-        setText('side-howto', this.t('howto'));
-        setText('side-records-title', this.t('sideRecords'));
         setText('cheat-title', this.t('sideCheat'));
-        setText('hint', this.t('hint'));
-        setText('lb-title', this.t('leaderboard'));
         setText('clear-note', this.t('clearNote'));
-        setText('over-title', this.t('dailyDone'));
         if (el['username-label']) el['username-label'].textContent = this.t('usernameLabel');
 
         // 带图标按钮：span 内文字单独更新（不重建 SVG）

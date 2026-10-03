@@ -203,12 +203,6 @@ export class LumenGame {
         document.title = this.lang === 'zh'
             ? '折光 Lumen — 光束折射解谜'
             : 'Lumen — Beam Refraction Puzzle';
-        if (this.el.title) this.el.title.textContent = t.title;
-        if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
-        if (this.el.howto) this.el.howto.textContent = t.howto;
-        if (this.el['btn-levels']) this.el['btn-levels'].textContent = t.playLevels;
-        if (this.el['btn-daily']) this.el['btn-daily'].textContent = t.playDaily;
-        if (this.el['level-label']) this.el['level-label'].textContent = t.levelSelect;
         if (this.el['btn-next']) this.el['btn-next'].innerHTML = `${ICONS.arrowRight}<span>${t.next}</span>`;
         if (this.el['btn-replay']) this.el['btn-replay'].innerHTML = `${ICONS.retry}<span>${t.retry}</span>`;
         if (this.el['btn-menu1']) this.el['btn-menu1'].innerHTML = `${ICONS.home}<span>${t.menu}</span>`;
@@ -216,20 +210,12 @@ export class LumenGame {
         if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
-        if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el.hint) this.el.hint.textContent = t.hint;
         if (this.el['reset-btn']) {
-            this.el['reset-btn'].title = t.resetTitle;
-            this.el['reset-btn'].setAttribute('aria-label', t.resetTitle);
         }
         if (this.el['btn-home']) {
-            this.el['btn-home'].title = t.home;
-            this.el['btn-home'].setAttribute('aria-label', t.home);
         }
         // 桌面侧栏
         if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
         if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.renderLevelGrid();
         this.updateDailyBest();

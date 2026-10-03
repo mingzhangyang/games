@@ -10,6 +10,7 @@ export { Tetris } from './runtime.js';
 
 onReady(() => {
     const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
+    i18nBinder.apply();
     const game = createTetrisGame();
     window.game = game;
     initTetrisPage({ i18nBinder });

@@ -68,20 +68,20 @@
 
             <!-- 开始界面 -->
             <div class="sd-overlay game-overlay game-overlay--menu" id="sd-start">
-                <h1 class="sd-title" id="sd-title">Silkfall</h1>
-                <p class="sd-subtitle" id="sd-subtitle">Cut · Swing · Catch</p>
+                <h1 class="sd-title" id="sd-title" data-i18n="title">Silkfall</h1>
+                <p class="sd-subtitle" id="sd-subtitle" data-i18n="subtitle">Cut · Swing · Catch</p>
                 <div class="sd-hero" aria-hidden="true">
                     <svg viewBox="0 0 72 88">
                         <path d="M36 5C25 23 11 38 11 56c0 15 11 27 25 27s25-12 25-27C61 38 47 23 36 5Z" fill="currentColor"/>
                         <path d="M26 58c2 8 7 12 15 13" fill="none" stroke="rgba(255,255,255,.72)" stroke-width="4" stroke-linecap="round"/>
                     </svg>
                 </div>
-                <p class="sd-howto" id="sd-howto"></p>
+                <p class="sd-howto" id="sd-howto" data-i18n="howto"></p>
                 <div class="sd-mode-row">
                     <button class="sd-mode game-btn" id="sd-btn-levels">Levels</button>
                     <button class="sd-mode sd-mode-daily game-btn" id="sd-btn-daily">Daily</button>
                 </div>
-                <p class="sd-level-label" id="sd-level-label">Select level</p>
+                <p class="sd-level-label" id="sd-level-label" data-i18n="levelSelect">Select level</p>
                 <div class="sd-level-grid" id="sd-level-grid"></div>
                 <p class="sd-daily-best" id="sd-daily-best"></p>
                 <div class="sd-start-footer">
@@ -112,7 +112,7 @@
                     <button class="sd-btn sd-btn-ghost game-btn" id="sd-btn-menu2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
                 </div>
                 <div class="sd-lb">
-                    <div class="sd-lb-title" id="sd-lb-title">Global · Today's Course</div>
+                    <div class="sd-lb-title" id="sd-lb-title" data-i18n="leaderboard">Global · Today's Course</div>
                     <div class="sd-lb-list" id="sd-lb-list"></div>
                     <div class="sd-lb-status" id="sd-lb-status"></div>
                     <div class="sd-username-row">
@@ -129,11 +129,11 @@
             <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
             <div id="sdStatsPanels">
                 <div class="sd-side-card game-side-card">
-                    <div class="sd-side-title game-side-title" id="sd-side-howto-title"></div>
-                    <p class="sd-side-text game-side-text" id="sd-side-howto"></p>
+                    <div class="sd-side-title game-side-title" id="sd-side-howto-title" data-i18n="sideHowTo"></div>
+                    <p class="sd-side-text game-side-text" id="sd-side-howto" data-i18n="howto"></p>
                 </div>
                 <div class="sd-side-card game-side-card">
-                    <div class="sd-side-title game-side-title" id="sd-side-records-title"></div>
+                    <div class="sd-side-title game-side-title" id="sd-side-records-title" data-i18n="sideRecords"></div>
                     <div class="sd-side-records" id="sd-side-records"></div>
                 </div>
             </div>
@@ -154,7 +154,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
     <footer class="sd-footer game-footer">
-        <p class="sd-footer-hint game-footer-hint" id="sd-hint"></p>
+        <p class="sd-footer-hint game-footer-hint" id="sd-hint" data-i18n="hint"></p>
         <div class="sd-footer-actions game-footer-actions game-topbar-group">
             <a class="sd-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
             <button type="button" class="sd-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="sdMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>

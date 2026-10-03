@@ -306,17 +306,9 @@ export class PlanetMergeGame {
         document.documentElement.lang = this.lang;
         document.title = this.lang === 'zh' ? '星球合成 — 宇宙合成消除' : 'Planet Merge — Cosmic Merge Puzzle';
 
-        if (this.el.title) this.el.title.textContent = t.title;
-        if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
-        if (this.el.howto) this.el.howto.textContent = t.howto;
         if (this.el['btn-endless']) this.el['btn-endless'].textContent = `♾️ ${t.endless}`;
         if (this.el['btn-daily']) this.el['btn-daily'].textContent = `📅 ${t.daily}`;
-        if (this.el['daily-note']) this.el['daily-note'].textContent = t.dailySameForAll;
-        if (this.el['pause-title']) this.el['pause-title'].textContent = t.paused;
-        if (this.el['btn-resume']) this.el['btn-resume'].textContent = t.resume;
-        if (this.el['btn-restart']) this.el['btn-restart'].textContent = t.restart;
         if (this.el['btn-menu']) this.el['btn-menu'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
-        if (this.el['over-title']) this.el['over-title'].textContent = t.gameOver;
         if (this.el['btn-share']) this.el['btn-share'].innerHTML = `${ICONS.share}<span>${t.share}</span>`;
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
         if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
@@ -324,11 +316,7 @@ export class PlanetMergeGame {
         const btnHome2 = document.getElementById('pm-btn-home2');
         if (btnHome2) btnHome2.innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['tab-daily']) this.el['tab-daily'].textContent = t.today;
-        if (this.el['tab-alltime']) this.el['tab-alltime'].textContent = t.allTime;
         if (this.el['lb-status']) this.el['lb-status'].textContent = '';
-        if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
-        if (this.el['username']) this.el['username'].placeholder = t.usernameLabel;
         if (this.el['over-max']) this.el['over-max'].textContent = '';
         if (this.el['over-suns']) this.el['over-suns'].textContent = '';
         if (this.el['over-merges']) this.el['over-merges'].textContent = '';
@@ -336,14 +324,11 @@ export class PlanetMergeGame {
         this.updateMuteButtons();
         // 桌面侧栏（≥1024px 可见）
         if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
         if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
         // HUD 小标签
         const scoreLabel = document.getElementById('pm-score-label');
-        if (scoreLabel) scoreLabel.textContent = t.score;
         const nextLabel = document.getElementById('pm-next-label');
-        if (nextLabel) nextLabel.textContent = t.next;
         const hint = document.querySelector('.pm-footer-hint');
         if (hint) hint.textContent = t.hint;
         this.updateStartStats();

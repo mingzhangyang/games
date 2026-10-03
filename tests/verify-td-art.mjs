@@ -207,8 +207,8 @@ if (!mobileMenuRule || missingMenuStageDeclarations.length) {
 } else {
     pass('mobile immersive start menu flow declarations are scoped to their rules');
 }
-if (!i18n.includes('heroLabel:') || !game.includes("setAttribute('aria-label', t.heroLabel)")) {
-    fail('start hero accessible label must be defined in game i18n and applied during applyLanguage');
+if (!i18n.includes('heroLabel:') || !html.includes('id="td-start-hero"') || !html.includes('data-i18n-label="heroLabel"')) {
+    fail('start hero accessible label must be defined in game i18n and declaratively bound in HTML');
 }
 for (const source of [landingCopy, landingHtml, socialPreview]) {
     if (source.includes('25 waves') || source.includes('25 波') || source.includes('neon grid') || source.includes('霓虹网格')) fail('landing/preview copy still advertises the retired 25-wave neon-grid contract');

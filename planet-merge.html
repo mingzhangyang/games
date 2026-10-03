@@ -45,7 +45,7 @@
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="pm-topbar-center game-topbar-center">
                 <div class="pm-scores">
-                    <div class="pm-score-main"><span class="pm-score-label" id="pm-score-label">Score</span><span class="pm-score-value" id="pm-score">0</span></div>
+                    <div class="pm-score-main"><span class="pm-score-label" id="pm-score-label" data-i18n="score">Score</span><span class="pm-score-value" id="pm-score">0</span></div>
                     <div class="pm-score-sub">🏆 <span id="pm-best">0</span> · <span id="pm-mode-label">♾️</span></div>
                 </div>
             </div>
@@ -62,22 +62,22 @@
         <div class="pm-stage game-stage game-stage--fill">
             <canvas class="game-canvas" id="pm-canvas" width="420" height="640"></canvas>
             <div class="pm-next-box" aria-hidden="true">
-                <span class="pm-next-label" id="pm-next-label">Next</span>
+                <span class="pm-next-label" id="pm-next-label" data-i18n="next">Next</span>
                 <span class="pm-next-emoji" id="pm-next-emoji">🌙</span>
             </div>
 
             <!-- 开始界面 -->
             <div class="pm-overlay game-overlay game-overlay--menu" id="pm-start">
-                <h1 class="pm-title" id="pm-title">Planet Merge</h1>
-                <p class="pm-subtitle" id="pm-subtitle">Drop · Merge · Chain the cosmos</p>
+                <h1 class="pm-title" id="pm-title" data-i18n="title">Planet Merge</h1>
+                <p class="pm-subtitle" id="pm-subtitle" data-i18n="subtitle">Drop · Merge · Chain the cosmos</p>
                 <div class="pm-chain" id="pm-chain"></div>
                 <div class="pm-skin-row" id="pm-skin-row"></div>
-                <p class="pm-howto" id="pm-howto"></p>
+                <p class="pm-howto" id="pm-howto" data-i18n="howto"></p>
                 <div class="pm-btn-col">
                     <button class="pm-btn pm-btn-primary" id="pm-btn-endless">♾️ Endless</button>
                     <button class="pm-btn pm-btn-daily" id="pm-btn-daily">📅 Daily Challenge</button>
                 </div>
-                <p class="pm-daily-note" id="pm-daily-note"></p>
+                <p class="pm-daily-note" id="pm-daily-note" data-i18n="dailySameForAll"></p>
                 <p class="pm-stat-line" id="pm-best-line"></p>
                 <p class="pm-stat-line pm-daily-best" id="pm-daily-best-line"></p>
                 <div class="pm-start-footer">
@@ -87,17 +87,17 @@
 
             <!-- 暂停界面 -->
             <div class="pm-overlay hidden game-overlay" id="pm-pause">
-                <h2 class="pm-overlay-title" id="pm-pause-title">Paused</h2>
+                <h2 class="pm-overlay-title" id="pm-pause-title" data-i18n="paused">Paused</h2>
                 <div class="pm-btn-col">
-                    <button class="pm-btn pm-btn-primary" id="pm-btn-resume">Resume</button>
-                    <button class="pm-btn" id="pm-btn-restart">Restart</button>
+                    <button class="pm-btn pm-btn-primary" id="pm-btn-resume" data-i18n="resume">Resume</button>
+                    <button class="pm-btn" id="pm-btn-restart" data-i18n="restart">Restart</button>
                     <button class="pm-btn pm-btn-ghost game-btn" id="pm-btn-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
                 </div>
             </div>
 
             <!-- 结算界面 -->
             <div class="pm-overlay hidden game-overlay" id="pm-over">
-                <h2 class="pm-overlay-title" id="pm-over-title">Game Over</h2>
+                <h2 class="pm-overlay-title" id="pm-over-title" data-i18n="gameOver">Game Over</h2>
                 <div class="pm-newbest" id="pm-over-newbest"></div>
                 <div class="pm-over-score" id="pm-over-score">0</div>
                 <div class="pm-over-best" id="pm-over-best"></div>
@@ -115,15 +115,15 @@
                     <div class="pm-lb-head">
                         <span class="pm-lb-title" id="pm-lb-title">🏆 Leaderboard</span>
                         <div class="pm-lb-tabs">
-                            <button class="pm-lb-tab active" id="pm-tab-daily">Today</button>
-                            <button class="pm-lb-tab" id="pm-tab-alltime">All-Time</button>
+                            <button class="pm-lb-tab active" id="pm-tab-daily" data-i18n="today">Today</button>
+                            <button class="pm-lb-tab" id="pm-tab-alltime" data-i18n="allTime">All-Time</button>
                         </div>
                     </div>
                     <div class="pm-lb-list" id="pm-lb-list"></div>
                     <div class="pm-lb-status" id="pm-lb-status"></div>
                     <div class="pm-username-row">
-                        <label class="pm-username-label" for="pm-username" id="pm-username-label">Username</label>
-                        <input class="pm-username" id="pm-username" maxlength="20" autocomplete="off">
+                        <label class="pm-username-label" for="pm-username" id="pm-username-label" data-i18n="usernameLabel">Username</label>
+                        <input class="pm-username" id="pm-username" maxlength="20" autocomplete="off" data-i18n-placeholder="usernameLabel">
                     </div>
                 </div>
                 <button class="pm-btn pm-btn-ghost game-btn" id="pm-btn-home2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
@@ -136,7 +136,7 @@
             <div id="pmStatsPanels">
                 <div class="pm-side-card game-side-card">
                     <div class="pm-side-title game-side-title" id="pm-side-howto-title"></div>
-                    <p class="pm-side-text game-side-text" id="pm-side-howto"></p>
+                    <p class="pm-side-text game-side-text" id="pm-side-howto" data-i18n="howto"></p>
                 </div>
                 <div class="pm-side-card game-side-card">
                     <div class="pm-side-title game-side-title" id="pm-side-records-title"></div>

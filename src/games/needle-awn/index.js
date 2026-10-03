@@ -1,3 +1,4 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
 /** Needle Awn composition root. */
 import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
@@ -9,6 +10,9 @@ import { GameEngine, ARENA_WIDTH } from './runtime.js';
 export { GameEngine } from './runtime.js';
 
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: I18N });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     window.gameEngine = new GameEngine();
     const getText = () => I18N[getLang()] || I18N.zh;
     const getPauseLabel = () => {

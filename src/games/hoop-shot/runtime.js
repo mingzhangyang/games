@@ -219,28 +219,18 @@ export class HoopShotGame {
             : 'Hoop Shot — Flick Basketball Arcade';
         const t = this.TEXT;
 
-        if (this.el.title) this.el.title.textContent = t.title;
-        if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
-        if (this.el.howto) this.el.howto.textContent = t.howto;
         if (this.el['btn-play']) this.el['btn-play'].textContent = `🏀 ${t.play}`;
-        if (this.el['pause-title']) this.el['pause-title'].textContent = t.paused;
-        if (this.el['btn-resume']) this.el['btn-resume'].textContent = t.resume;
         if (this.el['btn-menu']) this.el['btn-menu'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
-        if (this.el['over-title']) this.el['over-title'].textContent = t.gameOver;
         if (this.el['btn-share']) this.el['btn-share'].innerHTML = `${ICONS.share}<span>${t.share}</span>`;
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
         if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
         if (this.el['btn-home']) this.el['btn-home'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (this.el['lb-status']) this.el['lb-status'].textContent = '';
-        if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
-        if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el.hint) this.el.hint.textContent = t.hint; // 保留键位说明，不再被 tapToStart 整体替换
         this.updateMuteButtons();
         this.updateStartStats();
         // 桌面侧栏（≥1024px 可见）
         if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
         if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
         updateMoreGames(this.lang);

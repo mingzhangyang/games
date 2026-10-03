@@ -1,3 +1,5 @@
+import { createI18nBinder } from '../../platform/i18n/bindings.js';
+import { getLang } from '../../platform/site-settings.js';
 /** Ripple Duet composition root. */
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
@@ -8,6 +10,9 @@ import { initCanvasPalette, RippleDuetGame, W } from './runtime.js';
 export { RippleDuetGame } from './runtime.js';
 
 onReady(() => {
+    const phase6I18n = createI18nBinder({ getLang, tables: LANGUAGES });
+    phase6I18n.apply();
+    window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     initCanvasPalette(() => window.rdGame && window.rdGame.render());
     window.rdGame = new RippleDuetGame();
     const getText = () => (window.rdGame ? window.rdGame.textTable() : LANGUAGES.en);
