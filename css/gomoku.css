@@ -67,6 +67,8 @@ body {
 
 /* Preserve the original spacing now that the flat content has a semantic main wrapper. */
 .gm-main {
+    flex-direction: column;
+    align-items: center;
     gap: 18px;
 }
 

@@ -32,6 +32,7 @@ const BASE = args.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const PAGES = registry.withCap('topbar').map(g => g.id).filter(keepPage);
 exitIfNoPages(PAGES, 'verify-chrome');
 const CANON = ['stats', 'pause', 'sound'];
+const COLUMN_MAIN_PAGES = new Set(['gomoku', 'minesweeper', 'reversi']);
 
 // 共享层（bindChrome / createStatsDrawer）在这些钮上消耗的**公共**键，
 // 它们的 zh/en 值全站唯一（src/platform/i18n.js 的 COMMON_TEXT）。
@@ -111,6 +112,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     mainCount: document.querySelectorAll('main').length,
                     gameMainCount: document.querySelectorAll('main.game-main').length,
                     mainContainsStage: Boolean(document.querySelector('main.game-main .game-stage')),
+                    mainDirection: (() => { const main = document.querySelector('main.game-main'); return main ? getComputedStyle(main).flexDirection : null; })(),
                     rightRoles: actions ? Array.from(actions.querySelectorAll('[data-chrome]')).map(roleOf) : [],
                     chrome: Array.from(document.querySelectorAll('[data-chrome]')).map(label),
                     footerVisible: vis(footer),
@@ -135,6 +137,8 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                 fail(name, vp.tag, lang, `页面有 ${snap.gameMainCount} 个 main.game-main，契约要求一个`);
             if (!snap.mainContainsStage)
                 fail(name, vp.tag, lang, 'main.game-main 缺少 .game-stage（页面骨架契约）');
+            if (vp.w >= 1024 && COLUMN_MAIN_PAGES.has(name) && snap.mainDirection !== 'column')
+                fail(name, vp.tag, lang, `页面 main 方向为 ${snap.mainDirection}，宽屏下应保持纵向`);
 
             const canonSeen = snap.rightRoles.filter(r => CANON.includes(r));
             const expect = CANON.filter(c => canonSeen.includes(c));
