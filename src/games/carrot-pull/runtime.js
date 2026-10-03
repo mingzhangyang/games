@@ -23,7 +23,7 @@ function usesTouchInput() {
     );
 }
 
-export function createGame() {
+export function createGame({ i18nBinder = null } = {}) {
     const state = {
         mode: 'menu',
         paused: false,
@@ -42,6 +42,7 @@ export function createGame() {
         won: false,
     };
     const refs = {};
+    const pageI18nBinder = i18nBinder;
     let lang = getLang();
     const sfx = createSfxEngine({ masterGain: 0.55 });
 
@@ -99,48 +100,14 @@ export function createGame() {
         lang = nextLang === 'zh' ? 'zh' : 'en';
         const t = text();
         const touchInput = usesTouchInput();
-        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+        pageI18nBinder?.apply(lang);
         const labels = {
-            'cp-brand-zh': t.brand,
-            'cp-start-kicker': t.kicker,
-            'cp-start-title': t.startTitle,
-            'cp-start-copy': t.startCopy,
-            'cp-howto-one': t.howtoOne,
-            'cp-howto-two': t.howtoTwo,
-            'cp-howto-three': t.howtoThree,
-            'cp-start-label': t.startLabel,
             'cp-key-hint': touchInput ? t.keyHintTouch : t.keyHint,
-            'cp-again-label': t.again,
-            'cp-menu-label': t.menu,
-            'cp-round-label': t.round,
-            'cp-score-label': t.score,
-            'cp-time-label': t.time,
-            'cp-meter-label': t.meterLabel,
-            'cp-sweet-label': t.sweetLabel,
-            'cp-pull-label': t.pullLabel,
-            'cp-side-howto-title': t.sideHowtoTitle,
-            'cp-side-howto': t.sideHowto,
-            'cp-side-progress-title': t.sideProgressTitle,
-            'cp-side-score-label': t.sideScore,
-            'cp-side-best-label': t.sideBest,
-            'cp-side-tip-title': t.sideTipTitle,
-            'cp-side-tip': t.sideTip,
             'cp-hint': touchInput ? t.hintTouch : t.hint,
-            'cp-result-score-label': t.finalScore,
         };
         Object.entries(labels).forEach(([id, value]) => {
             const node = document.getElementById(id);
             if (node) node.textContent = value;
-        });
-        // 无可见文字的控件，无障碍名称也要跟随语言（Pull 按钮不设 aria-label，直接读可见文案）
-        const ariaLabels = {
-            'cp-hud-row': t.hudAria,
-            'cp-meter': t.meterAria,
-            'cp-progress-dots': t.progressAria,
-            'cp-carrot-hit': t.pullAria,
-        };
-        Object.entries(ariaLabels).forEach(([id, value]) => {
-            document.getElementById(id)?.setAttribute('aria-label', value);
         });
         updateProgressDots(true);
         if (state.mode === 'over') renderResult();

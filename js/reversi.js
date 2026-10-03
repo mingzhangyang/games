@@ -16,6 +16,7 @@ import { storageGet, storageSet } from '../src/platform/safe-storage.js';
 import { track } from '../src/platform/analytics.js';
 import { submitScore, fetchBoard } from '../src/platform/leaderboard.js';
 import { makeText } from '../src/platform/i18n.js';
+import { createI18nBinder } from '../src/platform/i18n/bindings.js';
 import { onReady } from '../src/platform/boot.js';
 import { mountGameRuntime } from '../src/platform/runtime/game-runtime.js';
 import { createSfxEngine } from '../src/platform/game-sfx.js';
@@ -26,6 +27,8 @@ import { createSfxEngine } from '../src/platform/game-sfx.js';
 
 const LANGUAGES = makeText({
     en: {
+        pageTitle: 'Reversi — Classic Strategy Board Game',
+        boardLabel: 'Reversi board',
         title: 'Reversi',
         subtitle: 'Flip · Trap · Dominate',
         howto: 'Place a disc to flank the opponent\'s line and flip it to your color. Most discs when the board fills wins. Corners never flip — fight for them!',
@@ -60,6 +63,8 @@ const LANGUAGES = makeText({
         hint: 'Tap a highlighted square to place your disc',
     },
     zh: {
+        pageTitle: '黑白棋 — 经典策略棋类游戏',
+        boardLabel: '黑白棋棋盘',
         title: '黑白棋',
         subtitle: '翻转 · 夹击 · 称霸',
         howto: '落子夹住对方棋子即可将其翻成己方颜色。棋盘下满时子多者胜。四角永远不会被翻——努力抢角吧！',
@@ -129,7 +134,8 @@ const Sfx = {
 /* ────────────────────────── game ────────────────────────── */
 
 class ReversiGame {
-    constructor() {
+    constructor({ i18nBinder = null } = {}) {
+        this.i18nBinder = i18nBinder;
         this.boardEl = document.getElementById('rv-board');
         this.el = {};
         ['rv-btn-home', 'rv-box-black', 'rv-box-white', 'rv-name-black', 'rv-name-white',
@@ -173,26 +179,10 @@ class ReversiGame {
 
     applyLanguage() {
         const t = this.TEXT;
-        document.documentElement.lang = this.lang;
-        document.title = this.lang === 'zh'
-            ? '黑白棋 — 经典策略棋类游戏'
-            : 'Reversi — Classic Strategy Board Game';
-        if (this.el.title) this.el.title.textContent = t.title;
-        if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
-        if (this.el.howto) this.el.howto.textContent = t.howto;
-        if (this.el['mode-ai-label']) this.el['mode-ai-label'].textContent = t.vsAI;
-        if (this.el['mode-2p-label']) this.el['mode-2p-label'].textContent = t.twoPlayers;
-        if (this.el['diff-easy']) this.el['diff-easy'].textContent = t.easy;
-        if (this.el['diff-medium']) this.el['diff-medium'].textContent = t.medium;
-        if (this.el['diff-hard']) this.el['diff-hard'].textContent = t.hard;
-        if (this.el['btn-play']) this.el['btn-play'].textContent = `⚫ ${t.play}`;
-        if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
+        this.i18nBinder?.apply(this.lang);
+        // Copy feedback swaps the icon and label temporarily, so it remains a
+        // table-driven compound control rather than a declarative text node.
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
-        if (this.el['btn-menu']) this.el['btn-menu'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
-        if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
-        if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el.hint) this.el.hint.textContent = t.hint;
         this.updatePlayerNames();
         this.updateStreakLine();
 
@@ -698,7 +688,8 @@ class ReversiGame {
 /* ────────────────────────── boot ────────────────────────── */
 
 onReady(() => {
-    const game = new ReversiGame();
+    const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
+    const game = new ReversiGame({ i18nBinder });
     window.rvGame = game; // 调试/测试句柄
     game.streak = Number(storageGet('rv_streak')) || 0; // 连胜跨会话持久化
     game.updateStreakLine();

@@ -223,7 +223,8 @@
       "entry": "src/games/tetris/index.js",
       "emoji": "🟦",
       "title": {
-        "doc": "Tetris - Cool edition",
+        "doc": "Tetris - Cool Edition",
+        "i18nKey": "pageTitle",
         "seo": "Tetris - Cool Edition"
       },
       "name": {
@@ -549,6 +550,7 @@
       "emoji": "💣",
       "title": {
         "doc": "Minesweeper — Classic Logic Puzzle",
+        "i18nKey": "pageTitle",
         "seo": "Minesweeper 扫雷 — Classic Logic Puzzle"
       },
       "name": {
@@ -606,6 +608,7 @@
       "emoji": "⚪",
       "title": {
         "doc": "Reversi — Classic Strategy Board Game",
+        "i18nKey": "pageTitle",
         "seo": "Reversi 黑白棋 — Classic Strategy Board Game"
       },
       "name": {
@@ -978,6 +981,7 @@
       "emoji": "💡",
       "title": {
         "doc": "电路谜题 Circuit — Light It Up",
+        "i18nKey": "pageTitle",
         "seo": "电路谜题 Circuit — Light It Up"
       },
       "name": {
@@ -1486,6 +1490,7 @@
       "emoji": "🥕",
       "title": {
         "doc": "拔萝卜 Carrot Pull — Garden Rhythm Game",
+        "i18nKey": "pageTitle",
         "seo": "拔萝卜 Carrot Pull — Garden Rhythm Game"
       },
       "name": {

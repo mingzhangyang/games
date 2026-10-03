@@ -164,7 +164,8 @@ function storageParseStars() {
 /* ────────────────────────── 游戏主体 ────────────────────────── */
 
 export class CircuitGame {
-    constructor() {
+    constructor({ i18nBinder = null } = {}) {
+        this.i18nBinder = i18nBinder;
         this.canvas = document.getElementById('cc-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.el = {};
@@ -230,38 +231,10 @@ export class CircuitGame {
     applyLanguage() {
         this.lang = getLang();
         const t = this.TEXT;
-        document.documentElement.lang = this.lang;
-        document.title = this.lang === 'zh'
-            ? '电路谜题 Circuit — Light It Up'
-            : 'Circuit — Light It Up';
-        if (this.el.title) this.el.title.textContent = t.title;
-        if (this.el.subtitle) this.el.subtitle.textContent = t.subtitle;
-        if (this.el.howto) this.el.howto.textContent = t.howto;
-        if (this.el['btn-levels']) this.el['btn-levels'].textContent = t.playLevels;
-        if (this.el['btn-daily']) this.el['btn-daily'].textContent = t.playDaily;
-        if (this.el['level-label']) this.el['level-label'].textContent = t.levelSelect;
-        if (this.el['btn-next']) this.el['btn-next'].innerHTML = `${ICONS.arrowRight}<span>${t.next}</span>`;
-        if (this.el['btn-replay']) this.el['btn-replay'].innerHTML = `${ICONS.retry}<span>${t.retry}</span>`;
-        if (this.el['btn-menu1']) this.el['btn-menu1'].innerHTML = `${ICONS.home}<span>${t.menu}</span>`;
-        if (this.el['btn-menu2']) this.el['btn-menu2'].innerHTML = `${ICONS.home}<span>${t.menu}</span>`;
-        if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
+        this.i18nBinder?.apply(this.lang);
+        // Copy feedback swaps the icon and label temporarily, so it remains a
+        // table-driven compound control rather than a declarative text node.
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
-        if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['username-label']) this.el['username-label'].textContent = t.usernameLabel;
-        if (this.el.username) this.el.username.placeholder = t.usernameLabel;
-        if (this.el.hint) this.el.hint.textContent = t.hint;
-        if (this.el['reset-btn']) {
-            this.el['reset-btn'].title = t.resetTitle;
-            this.el['reset-btn'].setAttribute('aria-label', t.resetTitle);
-        }
-        if (this.el['btn-home']) {
-            this.el['btn-home'].title = t.home;
-            this.el['btn-home'].setAttribute('aria-label', t.home);
-        }
-        // 桌面侧栏
-        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-howto']) this.el['side-howto'].textContent = t.howto;
-        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.renderLevelGrid();
         this.updateDailyBest();
         this.updateSideRecords();

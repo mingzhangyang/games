@@ -2,6 +2,7 @@ import { makeText } from '../../platform/i18n.js';
 
 export const LANGUAGES = makeText({
     en: {
+        pageTitle: 'Circuit — Light It Up',
         stats: 'Stats',
         title: 'Circuit',
         subtitle: 'Switch · Wire · Light',
@@ -36,6 +37,7 @@ export const LANGUAGES = makeText({
         sideRecords: 'Records',
     },
     zh: {
+        pageTitle: '电路谜题 Circuit — Light It Up',
         stats: '数据统计',
         title: '电路谜题',
         subtitle: '开关 · 电流 · 点亮',

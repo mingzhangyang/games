@@ -155,7 +155,8 @@ function headBlock(g) {
     L.push(`    <meta name="twitter:title" content="${esc(g.title.seo)}">`);
     L.push(`    <meta name="twitter:description" content="${esc(g.desc.twitter || g.desc.og || g.desc.meta)}">`);
     L.push(`    <meta name="twitter:image" content="${img}">`);
-    L.push(`    <title${g.title.titleId ? ` id="${g.title.titleId}"` : ''}>${esc(g.title.doc)}</title>`);
+    const titleI18n = g.title.i18nKey ? ` data-i18n="${esc(g.title.i18nKey)}"` : '';
+    L.push(`    <title${g.title.titleId ? ` id="${g.title.titleId}"` : ''}${titleI18n}>${esc(g.title.doc)}</title>`);
     return L.join('\n');
 }
 
