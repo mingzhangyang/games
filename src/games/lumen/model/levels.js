@@ -1,7 +1,7 @@
 /**
  * Lumen 折光 — 关卡数据与光束追踪
  * ================================
- * 纯模块：无 DOM、无 window，浏览器与 scripts/verify-lumen-levels.mjs 共用。
+ * 纯模块：无 DOM、无 window，浏览器与 tests/verify-lumen-levels.mjs 共用。
  *
  * 网格 9×9，字符语义：
  *   '.'  空地（可被光穿过并点亮轨迹）
@@ -19,7 +19,7 @@
  *   sol  = buildGrid(spec)          解态
  *   grid = buildGrid(spec, flip)    初盘（par = flip.length）
  * 坐标全部集中管理、由 buildGrid 程序化渲染，避免手抄 9 字符串的转录错误；
- * 解态可解性 / 初盘不可解性由 scripts/verify-lumen-levels.mjs 锁定。
+ * 解态可解性 / 初盘不可解性由 tests/verify-lumen-levels.mjs 锁定。
  *
  * 每日谜题：16 布局池 × FNV-1a('lumen-' + UTC+8 日期) 选关 × mulberry32 打乱初盘。
  * 全球同题、确定性可复现；⚠️ hashStringFNV 来自 src/platform/daily.js（兼容铁律，勿改算法）。

@@ -1,4 +1,4 @@
-// 顶栏/页脚槽位契约校验：node scripts/verify-chrome.mjs [baseUrl] [--shots <dir>]
+// 顶栏/页脚槽位契约校验：node tests/verify-chrome.mjs [baseUrl] [--shots <dir>]
 //
 // 断言（每页 × 移动 390 / 桌面 1280 × zh / en）：
 //   ① 顶栏三槽位齐全；右簇通用钮顺序 = stats → pause → sound

@@ -3,7 +3,7 @@
    夜庭墨绿底 + 玉青（#58c9a0）+ 露青（#9fe8ff）双主色
    ───────────────────────────────────────────── */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --sd-body-bg: radial-gradient(ellipse 70% 42% at 50% -8%, rgb(88, 201, 160, 0.12), transparent),
         radial-gradient(ellipse 50% 30% at 85% 110%, rgb(159, 232, 255, 0.07), transparent),

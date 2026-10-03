@@ -15,7 +15,7 @@
 //        （深色是既有设计，部分弱化文字本就低于 4.5，另行治理）
 //      - 同页即时切换：深色加载后改偏好为浅色，不刷新即变浅
 //
-// 用法：node scripts/verify-theme.mjs [baseUrl]（verify-all 自动传入）
+// 用法：node tests/verify-theme.mjs [baseUrl]（verify-all 自动传入）
 import puppeteer from 'puppeteer-core';
 import { inflateSync } from 'node:zlib';
 import { Buffer } from 'node:buffer';

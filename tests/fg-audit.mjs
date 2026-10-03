@@ -7,7 +7,7 @@
  *
  * 维护背景：布局迁移曾把各页 body 的 color/font-family 当成几何属性剪掉，共享层又没有替代，
  * 结果顶栏图标变纯黑不可见、全页退回衬线默认字体。
- * 用法：node scripts/fg-audit.mjs [baseUrl]
+ * 用法：node tests/fg-audit.mjs [baseUrl]
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';

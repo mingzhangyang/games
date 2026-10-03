@@ -1,6 +1,6 @@
 /* index.html 落地页样式（P4-1 自内联 \3c style> 原样抽离，未改任何规则） */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --ix-card-icon--carrot-pull-bg: rgb(240, 138, 60, 0.16);
     --ix-card-icon--carrot-pull-text: #f08a3c;

@@ -13,7 +13,7 @@
 //      - 第 2 关：只点桥接虫也能赢（「寻找连接群体的关键个体」这条路真实存在）
 //      - 完成同步后状态稳定：强制同相后 60 秒内非独行者始终锁在一起
 //
-// 用法：node scripts/verify-firefly-signal-sim.mjs
+// 用法：node tests/verify-firefly-signal-sim.mjs
 import {
     createSimulation, replay, orderParameter, falloff, ringFalloff, responseCurve, signedGap,
     DT, TYPES, TUNING, WORLD,

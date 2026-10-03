@@ -8,7 +8,7 @@
 //      js/ 下除 i18n.js 外不再存在 6 个公共键的字面量副本（防复制复活）。
 //   3) 语言键：site_lang 仍由 src/platform/site-settings.js 管理（历史教训：键名曾写错）。
 //
-// 用法：node scripts/verify-i18n.mjs（无需浏览器/服务器）
+// 用法：node tests/verify-i18n.mjs（无需浏览器/服务器）
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';

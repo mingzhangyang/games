@@ -1,5 +1,5 @@
 // 结果/动作按钮图标改造的专项验证：
-//   node scripts/verify-button-icons.mjs [baseUrl] [outDir]
+//   node tests/verify-button-icons.mjs [baseUrl] [outDir]
 //
 // 改动的按钮都在结果面板里，默认被开始浮层挡住，普通整页截图看不到。
 // 这里按 id 找到按钮 → 把它的浮层祖先解开 hidden → 量「图标尺寸/与文案的垂直居中对齐」

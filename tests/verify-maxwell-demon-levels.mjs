@@ -20,7 +20,7 @@
 //    就被判定对准/弹回，比中心线早 ≈11px。按中心线预测 ⇒ 武装窗口大量作废（实测 7/18），
 //    par 直接翻倍。改 RULES.gateWindow / VESSEL.wallHalf / RULES.molR 任一项都必须重跑本脚本。
 //
-// 用法：node scripts/verify-maxwell-demon-levels.mjs
+// 用法：node tests/verify-maxwell-demon-levels.mjs
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -45,7 +45,7 @@ const ok = (cond, label, extra) => {
 };
 
 /* ────────────────────────── 诚实机器人 ────────────────────────── */
-// 与 scratch/md-bot.mjs 同源；这里必须自包含（scripts/ 不许依赖 scratch/）。
+// 与 scratch/md-bot.mjs 同源；这里必须自包含（tests/ 不许依赖 scratch/）。
 
 /**
  * 分子多久后抵达隔板带近侧缘、能否真的穿过去。不能则返回 null。

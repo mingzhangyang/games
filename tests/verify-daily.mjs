@@ -10,7 +10,7 @@
 //   3) 收敛：5 个目标入口均到达共享 daily 模块，且 js/、src/ 下除 daily 模块外不再存在
 //      哈希常数、getTimezoneOffset( 调用（防复制粘贴复活）。
 //
-// 用法：node scripts/verify-daily.mjs
+// 用法：node tests/verify-daily.mjs
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';

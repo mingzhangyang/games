@@ -1,5 +1,5 @@
 // 塔防新难度机制回归检查
-// 用法：node scripts/verify-td-difficulty.mjs [baseUrl] [outDir]
+// 用法：node tests/verify-td-difficulty.mjs [baseUrl] [outDir]
 //
 // 背景（2026-09-19）：塔防被反馈"过于简单"。重做内容：
 //   1. 6 个可选关卡，各自独立曲线/起始资源/解锁条件与排行榜维度

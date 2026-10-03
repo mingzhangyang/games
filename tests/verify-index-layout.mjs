@@ -6,7 +6,7 @@
 // 校验器都测不到 —— 它们量的是游戏页的画布/侧栏/热区，没人量落地页的居中度。
 //
 // 判据：skew = 左间隙 − 右间隙，|skew| ≤ 2px 视为居中。五档视口全覆盖。
-// 用法：node scripts/verify-index-layout.mjs [baseUrl]（需静态服务器）
+// 用法：node tests/verify-index-layout.mjs [baseUrl]（需静态服务器）
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 

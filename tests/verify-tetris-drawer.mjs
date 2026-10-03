@@ -1,5 +1,5 @@
 // Tetris 移动端底部抽屉 + 顶栏图标钮回归
-// 用法: node scripts/verify-tetris-drawer.mjs <baseUrl> [shotDir]
+// 用法: node tests/verify-tetris-drawer.mjs <baseUrl> [shotDir]
 //
 // 覆盖：
 //   · 顶栏三区（Home / 分数 HUD / Stats+Theme 图标钮），两个钮必须是 inline SVG、无 emoji 文案

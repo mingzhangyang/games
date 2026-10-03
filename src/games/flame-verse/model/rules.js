@@ -18,7 +18,7 @@
  *
  * par 铁律：par = Σ 各元素档位 = costOf(recipe)，是「投盐把数」的数学下界
  * —— 任何吻合的配方每元素至少要投档位那么多次，且每次投盐最多 +1。
- * scripts/verify-flame-verse-levels.mjs 会复核这个下界（par 绝不许手填谎报）。
+ * tests/verify-flame-verse-levels.mjs 会复核这个下界（par 绝不许手填谎报）。
  */
 
 import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
@@ -266,7 +266,7 @@ export function dailyCourse(dateKey) {
  * 教学线：L1–3 单/双元素认线 → L4–6 干扰对登场 → L7–14 混色读谱 →
  *         L15–19 四五元高档位 → L20 八元素全谱收官。
  * par = costOf(recipe) 现算（数学下界），**绝不手填**；
- * scripts/verify-flame-verse-levels.mjs 穷举 4^8 配方空间复核。
+ * tests/verify-flame-verse-levels.mjs 穷举 4^8 配方空间复核。
  */
 const RAW_LEVELS = [
     { id: 'fv1', name: { en: 'First Light', zh: '初焰' }, recipe: { na: 1 }, tipKey: 'tipSalt' },

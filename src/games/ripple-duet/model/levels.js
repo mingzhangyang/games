@@ -1,5 +1,5 @@
 /**
- * 涟漪双生 — 20 关（由 scripts/ripple-build-levels.mjs 生成，勿手改）
+ * 涟漪双生 — 20 关（由 tools/generators/ripple-build-levels.mjs 生成，勿手改）
  *
  * par 全部由 solvePar() 按成本分层穷举现算（构造式出题保证有解，par 取真最小值）。
  * 复核：tests/verify-ripple-duet-levels.mjs

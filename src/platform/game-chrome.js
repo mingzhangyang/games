@@ -2,8 +2,8 @@
  * 共享顶栏 / 页脚控制器（chrome = 应用级外壳）
  * ==========================================
  * 把「Home / Sound / More」这三个**全站语义相同**的控件的文案、无障碍标签
- * 与点击行为收敛到一份实现。结构（HTML 槽位）由 `scripts/apply-header-footer.py`
- * 生成，本模块只负责行为。
+ * 与点击行为收敛到一份实现。静态 HTML 槽位原由一次性迁移脚本生成（现归档于
+ * `tools/archive/migrations/apply-header-footer.py`）；本模块只负责行为。
  *
  * 槽位契约（见 docs/header-footer-contract-2026-09-19.md）：
  *   header 右簇顺序：① 页面专属 → ② stats → ③ pause → ④ sound

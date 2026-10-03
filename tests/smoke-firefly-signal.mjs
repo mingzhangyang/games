@@ -15,7 +15,7 @@
  *   ⑦ resize / 转屏：390×844 → 844×390 → 430×932，舞台高度跟随、画布后备缓冲 = CSS × min(dpr,2)、
  *      点击仍命中同一只虫
  *
- * 用法：node scripts/smoke-firefly-signal.mjs [baseUrl]（verify-all 自动传入）
+ * 用法：node tests/smoke-firefly-signal.mjs [baseUrl]（verify-all 自动传入）
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';

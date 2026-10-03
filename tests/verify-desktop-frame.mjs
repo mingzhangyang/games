@@ -7,7 +7,7 @@
 //   e. 侧栏在屏内：sidebar bottom <= innerHeight + 2
 //   f. --frame-chrome 收敛：就绪后间隔 250ms 两次读数相等（src/platform/game-frame.js 反馈环护栏）
 //   g. 无 pageerror
-// 用法：node scripts/verify-desktop-frame.mjs [baseUrl]
+// 用法：node tests/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';

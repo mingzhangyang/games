@@ -13,7 +13,7 @@
 //   视口含横屏手机 844×390（Copilot 在 PR #15 指出：na 的横屏规则给舞台定了高度 + overflow:hidden）
 //   ③ 无 pageerror
 //
-// 用法：node scripts/verify-start-menus.mjs [baseUrl]（verify-all 自动传入）
+// 用法：node tests/verify-start-menus.mjs [baseUrl]（verify-all 自动传入）
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';

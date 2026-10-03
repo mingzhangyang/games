@@ -8,7 +8,7 @@
 //   2) 收敛：注册表里挂 leaderboard cap 的游戏均到达共享 leaderboard 模块，且不再存在
 //      硬编码 Workers URL、本地 escapeHTML 定义、榜单 AbortController 样板。
 //
-// 用法：node scripts/verify-leaderboard.mjs（无需浏览器/服务器）
+// 用法：node tests/verify-leaderboard.mjs（无需浏览器/服务器）
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';

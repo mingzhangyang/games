@@ -4,7 +4,7 @@
    场景插画用 SVG，控件保持统一的可读、可触达规格。
    ───────────────────────────────────────────── */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --cp-body-bg: #102d31;
     --cp-body-text: #f6f3e8;

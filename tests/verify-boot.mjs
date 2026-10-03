@@ -7,7 +7,7 @@
 //   2) 收敛：11 个 shell-family 页均 import ./boot.js 且使用 onReady；
 //      js/ 下除 boot.js 外不再存在 DOMContentLoaded 注册（防手写复活）。
 //
-// 用法：node scripts/verify-boot.mjs（无需浏览器/服务器）
+// 用法：node tests/verify-boot.mjs（无需浏览器/服务器）
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';

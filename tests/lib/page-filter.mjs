@@ -1,6 +1,6 @@
 // 跨页校验器的按页过滤（verify-all --changed 用）。
 //
-//   VERIFY_PAGES=silk-dew,index node scripts/verify-theme.mjs
+//   VERIFY_PAGES=silk-dew,index node tests/verify-theme.mjs
 //
 // 未设置 VERIFY_PAGES = 全部页，默认行为不变。页标识 = 注册表 id（= html 文件名去掉 .html），
 // 首页是 'index'。过滤只作用于「逐页循环」；覆盖率守卫（registry.assertCovered）和不属于

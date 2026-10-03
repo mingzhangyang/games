@@ -12,7 +12,7 @@
  *   2) js/math-rain/main.js 的 auto-init 有宿主页门闩
  *   3) 若 dist/ 存在：除 math-rain.html 外的 HTML 不得引用 assets/js/math-rain*
  *
- * 用法：node scripts/verify-chunk-isolation.mjs（无需浏览器/服务器）
+ * 用法：node tests/verify-chunk-isolation.mjs（无需浏览器/服务器）
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

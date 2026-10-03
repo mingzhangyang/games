@@ -869,7 +869,7 @@ class MinesweeperGame {
         if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());
 
         // ⚠️ 键是 'mute-btn'（id 去掉 ms- 前缀），写成 this.el.mute 会永远是 undefined，
-        //    顶栏静音钮因此从未绑上过 —— scripts/verify-chrome.mjs 的"点一次必须翻转"断言抓到的。
+        //    顶栏静音钮因此从未绑上过 —— tests/verify-chrome.mjs 的"点一次必须翻转"断言抓到的。
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
         if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
 

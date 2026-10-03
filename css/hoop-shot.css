@@ -2,7 +2,7 @@
    Hoop Shot 街机投篮 — arcade flick basketball
    ───────────────────────────────────────────── */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --hs-body-bg: radial-gradient(ellipse 75% 45% at 60% -10%, rgb(255, 140, 58, 0.10), transparent),
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #170f2b 100%);

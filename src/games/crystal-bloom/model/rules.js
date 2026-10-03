@@ -99,7 +99,7 @@ export function canPlaceAnchor(spec, anchors, t, T) {
 
 /**
  * 四个晶形档。阈值由 M1 探针标定（见 scratch/cb-probe.mjs），不许拍脑袋改：
- * 改任何一条都要重跑 scripts/verify-crystal-bloom-levels.mjs。
+ * 改任何一条都要重跑 tests/verify-crystal-bloom-levels.mjs。
  */
 export const HABITS = {
     needle: { id: 'needle', zh: '针状', en: 'Needle' },
@@ -462,7 +462,7 @@ export function evaluate(spec, world) {
 
 /**
  * 20 关。par 由 scratch/cb-levels-gen.mjs（求解器）现算写入，**绝不手填**；
- * scripts/verify-crystal-bloom-levels.mjs 会用同一把尺子复核每一关。
+ * tests/verify-crystal-bloom-levels.mjs 会用同一把尺子复核每一关。
  *
  * 关卡 = 终温窗口 [tEndMin, tEndMax] × 急冷时限 tChill × 目标晶形 × 最小尺寸。
  * 终温必须给**区间**：只给上界时求解器一律选最冷的解，20 关里十几关的答案都会

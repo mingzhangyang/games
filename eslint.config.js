@@ -1,6 +1,6 @@
 // ESLint flat config（eslint 10）— P3-2 风格契约
 //
-// 范围：js/**/*.js（运行时共享模块 + 各游戏页）与 scripts/*.mjs（校验器）。
+// 范围：js/**/*.js（运行时共享模块 + 各游戏页）、tests/**/*.mjs 及 tools/dev、tools/generators、tools/checks、tools/lib 下的 *.mjs。
 // 豁免：js/math-rain/**（化外页，P4 收编时纳入）、Workers/**（Cloudflare 独立域）、
 //       dist/**、node_modules/**、以及由 SVG 生成的 shadow-loom 运行时缓存。
 // 原则：正确性规则 error（阻断），风格规则以项目现状为准（4 空格 + 单引号），
@@ -92,7 +92,7 @@ export default [
         },
     },
     {
-        files: ['scripts/**/*.mjs', 'tests/**/*.mjs', 'tools/generators/**/*.mjs', 'tools/checks/**/*.mjs'],
+        files: ['tests/**/*.mjs', 'tools/dev/**/*.mjs', 'tools/generators/**/*.mjs', 'tools/checks/**/*.mjs', 'tools/lib/**/*.mjs'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',

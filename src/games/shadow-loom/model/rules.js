@@ -3,7 +3,7 @@ import { getSilhouette } from '../../../generated/shadow-loom/silhouettes.js';
 /**
  * 影织 Shadow Loom — 纯几何内核（无 DOM，Node 与浏览器共用）
  * =============================================================
- * 渲染、判定、关卡校验器（scripts/verify-shadow-loom-levels.mjs）都只走这里，
+ * 渲染、判定、关卡校验器（tests/verify-shadow-loom-levels.mjs）都只走这里，
  * 保证「看到的影子」与「被判定的影子」是同一组多边形（设计方案 §6.1 / §8）。
  *
  * 投影模型（设计方案 §6.1，归一化 Zl = 0、Zs = 1）：

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * smoke-index — index.html 落地页运行时冒烟（P4-1 内联抽离后的回归防线）。
- * 用法：node scripts/smoke-index.mjs [http://127.0.0.1:PORT]
+ * 用法：node tests/smoke-index.mjs [http://127.0.0.1:PORT]
  * 断言：module 脚本执行（i18n 注入）、daily hub 更新、卡片渲染、语言切换、CSS 生效、无页面错误。
  * 语言态必须显式 setItem('site_lang')（headless 默认 en-US，见 verify 教训）。
  */

@@ -2,7 +2,7 @@
    Word Daily 每日猜词 — bilingual daily word puzzle
    ───────────────────────────────────────────── */
 
-/* theme:begin vars — 由 scripts/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
+/* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --wd-body-bg: radial-gradient(ellipse 80% 45% at 70% -10%, rgb(99, 102, 241, 0.16), transparent),
         linear-gradient(165deg, var(--tok-bg) 0%, #0a0e24 55%, #120e2b 100%);

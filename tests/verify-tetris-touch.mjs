@@ -1,5 +1,5 @@
 // Tetris 触屏「棋盘不许缩放/不许位移」回归检查
-// 用法：node scripts/serve-static.mjs 8899 &  然后  node scripts/verify-tetris-touch.mjs http://127.0.0.1:8899
+// 用法：node tests/lib/serve-static.mjs 8899 &  然后  node tests/verify-tetris-touch.mjs http://127.0.0.1:8899
 //
 // 背景：css/tetris.css 曾在 @media (max-width:480px) 里给棋盘加
 //   #tetris:active { transform: scale(0.99); transition: transform 0.1s ease }

@@ -17,7 +17,6 @@ on:
       - 'js/**'
       - 'tests/**'
       - 'tools/**'
-      - 'scripts/**'
       - 'css/**'
       - '*.html'
       - 'games.config.json'
