@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first six GameStorage migration batches.
+// Static guard for the first seven GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,6 +25,7 @@ const runtimes = {
     'circuit': read('src/games/circuit/runtime.js'),
     'lumen': read('src/games/lumen/runtime.js'),
     'needle-awn': read('src/games/needle-awn/runtime.js'),
+    'silk-dew': read('src/games/silk-dew/runtime.js'),
     'planet-merge': read('src/games/planet-merge/runtime.js'),
 };
 const adapters = {
@@ -41,6 +42,7 @@ const adapters = {
     'lumen': read('src/games/lumen/storage.js'),
     'needle-awn': read('src/games/needle-awn/storage.js'),
     'sword-flight': read('src/games/sword-flight/storage.js'),
+    'silk-dew': read('src/games/silk-dew/storage.js'),
     'planet-merge': read('src/games/planet-merge/storage.js'),
 };
 
@@ -180,6 +182,25 @@ check(swordDailyStoragePreserved,
 check(swordFlightSources.config.includes("DAILY_PREFIX: 'sf_daily_'"),
     'sword-flight: sf_daily_ protocol prefix is preserved');
 
+
+const silkRuntime = runtimes['silk-dew'];
+check(silkRuntime.includes("import { storageGet } from '../../platform/safe-storage.js';"),
+    'silk-dew: only leaderboard compatibility storage remains on the platform facade');
+check(!/\bstorageSet\s*\(/.test(silkRuntime),
+    'silk-dew: runtime has no direct platform storage writes');
+check(!/\bsd_progress(?:_version)?\b/.test(silkRuntime),
+    'silk-dew: legacy progress keys are isolated in its adapter');
+check(silkRuntime.includes("from './storage.js'"),
+    'silk-dew: runtime composes its GameStorage adapter');
+check(silkRuntime.includes('loadSilkDewProgress()') && silkRuntime.includes('saveSilkDewProgress(this.progress)'),
+    'silk-dew: progress reads and writes go through the adapter');
+check(silkRuntime.includes("storageGet('sd_lb_' + game)"),
+    'silk-dew: sd_lb_* leaderboard compatibility keys remain unchanged');
+check(adapters['silk-dew'].includes("'sd_progress'") && adapters['silk-dew'].includes("'sd_progress_version'"),
+    'silk-dew: adapter preserves the historical progress payload and v2 marker');
+check(!adapters['silk-dew'].includes("'sd_lb_"),
+    'silk-dew: leaderboard compatibility keys stay outside GameStorage');
+
 const planetRuntime = runtimes['planet-merge'];
 check(planetRuntime.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
     'planet-merge: global mute and Daily compatibility storage remain on the platform facade');
@@ -222,6 +243,7 @@ for (const [id, source, legacyKeys] of [
     ['ripple-duet', adapters['ripple-duet'], ['rd_progress']],
     ['circuit', adapters['circuit'], ['cc_stars']],
     ['lumen', adapters['lumen'], ['lm_stars']],
+    ['silk-dew', adapters['silk-dew'], ['sd_progress']],
     ['planet-merge', adapters['planet-merge'], ['pm_skin', 'pm_best', 'pm_local_scores']],
 ]) {
     for (const key of legacyKeys) {

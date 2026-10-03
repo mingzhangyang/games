@@ -10,12 +10,12 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const specs = [
     {
         id: 'silk-dew',
-        files: ['index.js', 'runtime.js', 'i18n.js', 'model/levels.js', 'render/art.js', 'render/scene.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'i18n.js', 'model/levels.js', 'render/art.js', 'render/scene.js'],
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'mountGameRuntime', 'setCanvasPalette', 'window.sdGame'],
-        runtimeNeedles: ["from './i18n.js'", "from './model/levels.js'", "from './render/scene.js'", "from '../../platform/game-sfx.js'"],
+        runtimeNeedles: ["from './i18n.js'", "from './storage.js'", "from './model/levels.js'", "from './render/scene.js'", "from '../../platform/game-sfx.js'", "storageGet('sd_lb_' + game)"],
         modelNeedles: ["from '../../../platform/daily.js"],
         handles: ['window.sdGame', 'window.sdRuntime', 'window.sdDrawer'],
-        keys: ["'sd_progress'", "'sd_progress_version'"],
+        storageKeys: ["'sd_progress'", "'sd_progress_version'"],
     },
     {
         id: 'planet-merge',

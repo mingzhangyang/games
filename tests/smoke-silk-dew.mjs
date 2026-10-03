@@ -5,7 +5,7 @@
  * 几何/元素存在性只能证明「页面长得对」，测不出「游戏能玩」（见 docs/traps.md 教训）。
  * 本脚本走真实交互链：
  *   menu → startLevel(0) → canvas 位图非空 → mouse 真实拖拽锚结
- *   → 露珠被丝牵引移动 → 入壶判胜 → 结算面板 → HUD drags ≥1 → 星级写入 sd_progress。
+ *   → 露珠被丝牵引移动 → 入壶判胜 → 结算面板 → HUD drags ≥1 → 星级写入 game:silk-dew:v1:progress。
  *
  * 关键：用 canvas 逻辑坐标 ↔ 视口坐标换算（坐标来自 window.sdGame.world 的实时锚点，
  * 不硬编码像素）。拖拽必须分多步 move（模拟真实指针），一步瞬移会让物理不收敛。
@@ -182,7 +182,7 @@ const after = await page.evaluate(() => {
         starsTaken: g.world ? g.world.starsTaken : -1,
         clearVisible: !document.getElementById('sd-clear').classList.contains('hidden'),
         clearStars: document.getElementById('sd-clear-stars').textContent,
-        progress: (() => { try { return JSON.parse(localStorage.getItem('sd_progress') || '{}'); } catch (e) { return {}; } })(),
+        progress: (() => { try { return JSON.parse(localStorage.getItem('game:silk-dew:v1:progress') || '{}'); } catch (e) { return {}; } })(),
     };
 });
 // 拖拽确实计数了（机制在跑）
@@ -199,7 +199,7 @@ if (after.state !== 'won-level') {
     if (after.clearStars !== '★★★') fail(`L1 收齐星芒且 1 次牵拉应为三星，实际: ${after.clearStars}`);
     const p = after.progress['S1'];
     if (!p || p.stars !== 3 || p.bestDrags !== 1) {
-        fail(`sd_progress 应记录 S1 三星 / 1 次最佳牵拉: ${JSON.stringify(after.progress)}`);
+        fail(`GameStorage progress 应记录 S1 三星 / 1 次最佳牵拉: ${JSON.stringify(after.progress)}`);
     }
 }
 
@@ -421,10 +421,11 @@ await new Promise(r => setTimeout(r, 500));
 const migrationFailed = await migrationFailPage.evaluate(() => ({
     version: localStorage.getItem('sd_progress_version'),
     raw: localStorage.getItem('sd_progress'),
+    canonical: localStorage.getItem('game:silk-dew:v1:progress'),
     progress: window.sdGame?.progress || null,
 }));
-if (migrationFailed.version !== null) {
-    fail(`迁移写失败后不应提前写 sd_progress_version: ${JSON.stringify(migrationFailed)}`);
+if (migrationFailed.version !== null || migrationFailed.canonical !== null) {
+    fail(`legacy v2 事务失败时不应提前写 marker 或 canonical slot: ${JSON.stringify(migrationFailed)}`);
 }
 if (migrationFailed.progress?.S1?.stars !== 1 || migrationFailed.progress?.S1?.bestDrags !== 0) {
     fail(`迁移写失败时当前会话仍应使用安全降级后的内存进度: ${JSON.stringify(migrationFailed)}`);
@@ -439,6 +440,7 @@ await new Promise(r => setTimeout(r, 500));
 const migrationRetried = await migrationRetryPage.evaluate(() => ({
     version: localStorage.getItem('sd_progress_version'),
     raw: localStorage.getItem('sd_progress'),
+    canonical: localStorage.getItem('game:silk-dew:v1:progress'),
     progress: window.sdGame?.progress || null,
 }));
 if (migrationRetried.version !== '2') {
@@ -450,16 +452,20 @@ if (migrationRetried.progress?.S1?.stars !== 1 || migrationRetried.progress?.S1?
 }
 try {
     const stored = JSON.parse(migrationRetried.raw || '{}');
-    if (stored.S1?.stars !== 1 || stored.S1?.bestDrags !== 0 ||
-        stored.S2?.stars !== 1 || stored.S2?.bestDrags !== 0) {
-        fail(`重试迁移后 localStorage 未持久化 v2 进度: ${migrationRetried.raw}`);
+    const canonical = JSON.parse(migrationRetried.canonical || '{}');
+    for (const value of [stored, canonical]) {
+        if (value.S1?.stars !== 1 || value.S1?.bestDrags !== 0 ||
+            value.S2?.stars !== 1 || value.S2?.bestDrags !== 0) {
+            fail(`重试迁移后 legacy/canonical 进度不一致: ${JSON.stringify(migrationRetried)}`);
+            break;
+        }
     }
 } catch {
-    fail(`重试迁移后的 sd_progress 不是合法 JSON: ${migrationRetried.raw}`);
+    fail(`重试迁移后的 Silk Dew progress 不是合法 JSON: ${JSON.stringify(migrationRetried)}`);
 }
 await migrationRetryPage.close();
 
-/* ── 10. 普通保存：payload 写失败不得抢先更新版本标记 ── */
+/* ── 10. Canonical 保存失败：不得回写 legacy payload/version marker ── */
 const saveFailPage = await browser.newPage();
 attachDiagnostics(saveFailPage, 'save-fail');
 await saveFailPage.setViewport({ width: 480, height: 760 });
@@ -473,12 +479,15 @@ await saveFailPage.evaluateOnNewDocument(() => {
 await saveFailPage.goto(`${BASE}/silk-dew.html`, { waitUntil: 'networkidle0', timeout: 45000 });
 await new Promise(r => setTimeout(r, 400));
 const saveFailed = await saveFailPage.evaluate(() => {
-    // 将 marker 临时退回 1，模拟“版本写入是否会抢跑”的可观察条件。
+    // Canonical saves must not mutate the retained legacy payload/version marker.
     localStorage.setItem('sd_progress_version', '1');
-    const before = localStorage.getItem('sd_progress');
+    const beforeLegacy = localStorage.getItem('sd_progress');
+    const beforeCanonical = localStorage.getItem('game:silk-dew:v1:progress');
     const nativeSetItem = globalThis.Storage.prototype.setItem;
     globalThis.Storage.prototype.setItem = function (key, value) {
-        if (key === 'sd_progress') throw new globalThis.DOMException('simulated quota failure', 'QuotaExceededError');
+        if (key === 'game:silk-dew:v1:progress') {
+            throw new globalThis.DOMException('simulated quota failure', 'QuotaExceededError');
+        }
         return nativeSetItem.call(this, key, value);
     };
     window.sdGame.progress.S1 = { stars: 3, bestDrags: 1 };
@@ -486,12 +495,16 @@ const saveFailed = await saveFailPage.evaluate(() => {
     return {
         ok,
         version: localStorage.getItem('sd_progress_version'),
-        before,
-        after: localStorage.getItem('sd_progress'),
+        beforeLegacy,
+        afterLegacy: localStorage.getItem('sd_progress'),
+        beforeCanonical,
+        afterCanonical: localStorage.getItem('game:silk-dew:v1:progress'),
     };
 });
-if (saveFailed.ok !== false || saveFailed.version !== '1' || saveFailed.after !== saveFailed.before) {
-    fail(`普通保存写失败时不应更新版本标记或覆盖旧 payload: ${JSON.stringify(saveFailed)}`);
+if (saveFailed.ok !== false || saveFailed.version !== '1' ||
+    saveFailed.afterLegacy !== saveFailed.beforeLegacy ||
+    saveFailed.afterCanonical !== saveFailed.beforeCanonical) {
+    fail(`canonical 保存失败时不应改写 legacy 或旧 canonical payload: ${JSON.stringify(saveFailed)}`);
 }
 await saveFailPage.close();
 
