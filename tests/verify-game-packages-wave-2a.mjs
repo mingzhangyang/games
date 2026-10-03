@@ -31,7 +31,7 @@ const specs = [
         indexNeedles: ["from './runtime.js'", "from './i18n.js'", 'mountGameRuntime', 'window.wordDailyGame', 'window.wordDailyRuntime'],
         runtimeNeedles: ["from './i18n.js'", "from './data/en.js'", "from './data/zh.js'", "from './storage.js'", "from '../../platform/safe-storage.js'"],
         handles: ['window.wordDailyGame', 'window.wordDailyRuntime'],
-        keys: ["`wd_daily_${this.day}_en`"],
+        keys: ['`wd_daily_${this.day}_en`'],
         storageKeys: ["'wd_lang_mode'", "'wd_word_len_en'", "'wd_hist_en'", "'wd_stats_en'", "'wd_seen_help'"],
     },
     {

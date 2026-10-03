@@ -88,4 +88,35 @@ assert.equal(
     JSON.stringify(nextStats),
 );
 
+// Malformed suffixed 5-letter data must not block the historical unsuffixed fallback.
+word.WORD_DAILY_STORAGE.remove(word.WORD_DAILY_STORAGE_SLOTS.HISTORY_EN_5);
+word.WORD_DAILY_STORAGE.remove(word.WORD_DAILY_STORAGE_SLOTS.STATS_EN_5);
+const recoveredHistory = { '2026-10-03': 4 };
+const recoveredStats = { played: 8, wins: 7 };
+mem.set('wd_hist_en_5', '{broken-json');
+mem.set('wd_hist_en', JSON.stringify(recoveredHistory));
+mem.set('wd_stats_en_5', '{broken-json');
+mem.set('wd_stats_en', JSON.stringify(recoveredStats));
+
+assert.deepEqual(
+    word.loadWordDailyHistory('en', 5),
+    recoveredHistory,
+    'malformed suffixed history falls through to the valid unsuffixed fallback',
+);
+assert.deepEqual(
+    word.loadWordDailyStats('en', 5),
+    recoveredStats,
+    'malformed suffixed stats fall through to the valid unsuffixed fallback',
+);
+assert.equal(
+    mem.get(word.WORD_DAILY_STORAGE.key(word.WORD_DAILY_STORAGE_SLOTS.HISTORY_EN_5)),
+    JSON.stringify(recoveredHistory),
+    'recovered history is canonicalized after validated fallback import',
+);
+assert.equal(
+    mem.get(word.WORD_DAILY_STORAGE.key(word.WORD_DAILY_STORAGE_SLOTS.STATS_EN_5)),
+    JSON.stringify(recoveredStats),
+    'recovered stats are canonicalized after validated fallback import',
+);
+
 console.log('✓ Phase 5 Batch L migrates Word Daily private preferences/history/stats while retaining Daily protocol keys');

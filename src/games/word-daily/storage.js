@@ -1,3 +1,4 @@
+import { storageGet } from '../../platform/safe-storage.js';
 import { createGameStorage } from '../../platform/storage/game-storage.js';
 
 export const WORD_DAILY_STORAGE_SLOTS = Object.freeze({
@@ -20,15 +21,21 @@ export const WORD_DAILY_STORAGE = createGameStorage('word-daily', {
         [WORD_DAILY_STORAGE_SLOTS.SEEN_HELP]: 'wd_seen_help',
         [WORD_DAILY_STORAGE_SLOTS.LANG_MODE]: 'wd_lang_mode',
         [WORD_DAILY_STORAGE_SLOTS.WORD_LENGTH_EN]: 'wd_word_len_en',
-        [WORD_DAILY_STORAGE_SLOTS.HISTORY_ZH]: 'wd_hist_zh',
-        [WORD_DAILY_STORAGE_SLOTS.STATS_ZH]: 'wd_stats_zh',
-        [WORD_DAILY_STORAGE_SLOTS.HISTORY_EN_4]: 'wd_hist_en_4',
-        [WORD_DAILY_STORAGE_SLOTS.STATS_EN_4]: 'wd_stats_en_4',
-        [WORD_DAILY_STORAGE_SLOTS.HISTORY_EN_5]: ['wd_hist_en_5', 'wd_hist_en'],
-        [WORD_DAILY_STORAGE_SLOTS.STATS_EN_5]: ['wd_stats_en_5', 'wd_stats_en'],
-        [WORD_DAILY_STORAGE_SLOTS.HISTORY_EN_6]: 'wd_hist_en_6',
-        [WORD_DAILY_STORAGE_SLOTS.STATS_EN_6]: 'wd_stats_en_6',
     },
+});
+
+const HISTORY_LEGACY_KEYS = Object.freeze({
+    [WORD_DAILY_STORAGE_SLOTS.HISTORY_ZH]: ['wd_hist_zh'],
+    [WORD_DAILY_STORAGE_SLOTS.HISTORY_EN_4]: ['wd_hist_en_4'],
+    [WORD_DAILY_STORAGE_SLOTS.HISTORY_EN_5]: ['wd_hist_en_5', 'wd_hist_en'],
+    [WORD_DAILY_STORAGE_SLOTS.HISTORY_EN_6]: ['wd_hist_en_6'],
+});
+
+const STATS_LEGACY_KEYS = Object.freeze({
+    [WORD_DAILY_STORAGE_SLOTS.STATS_ZH]: ['wd_stats_zh'],
+    [WORD_DAILY_STORAGE_SLOTS.STATS_EN_4]: ['wd_stats_en_4'],
+    [WORD_DAILY_STORAGE_SLOTS.STATS_EN_5]: ['wd_stats_en_5', 'wd_stats_en'],
+    [WORD_DAILY_STORAGE_SLOTS.STATS_EN_6]: ['wd_stats_en_6'],
 });
 
 function historySlot(langMode, wordLength) {
@@ -66,9 +73,36 @@ export function saveWordDailyWordLength(value) {
     return WORD_DAILY_STORAGE.trySet(WORD_DAILY_STORAGE_SLOTS.WORD_LENGTH_EN, number);
 }
 
+function parseRecord(raw) {
+    if (raw == null) return null;
+    try {
+        const value = JSON.parse(raw);
+        return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+    } catch {
+        return null;
+    }
+}
+
+function loadRecordSlot(slot, legacyKeys, fallback) {
+    const canonicalRaw = storageGet(WORD_DAILY_STORAGE.key(slot));
+    if (canonicalRaw != null) {
+        const canonical = parseRecord(canonicalRaw);
+        return canonical ? { ...canonical } : fallback;
+    }
+
+    for (const legacyKey of legacyKeys) {
+        const value = parseRecord(storageGet(legacyKey));
+        if (!value) continue;
+        WORD_DAILY_STORAGE.trySet(slot, value);
+        return { ...value };
+    }
+
+    return fallback;
+}
+
 export function loadWordDailyHistory(langMode, wordLength = 5) {
-    const value = WORD_DAILY_STORAGE.get(historySlot(langMode, wordLength), {});
-    return value && typeof value === 'object' && !Array.isArray(value) ? { ...value } : {};
+    const slot = historySlot(langMode, wordLength);
+    return loadRecordSlot(slot, HISTORY_LEGACY_KEYS[slot] || [], {});
 }
 
 export function saveWordDailyHistory(langMode, wordLength, history) {
@@ -77,8 +111,8 @@ export function saveWordDailyHistory(langMode, wordLength, history) {
 }
 
 export function loadWordDailyStats(langMode, wordLength = 5) {
-    const value = WORD_DAILY_STORAGE.get(statsSlot(langMode, wordLength), null);
-    return value && typeof value === 'object' && !Array.isArray(value) ? { ...value } : null;
+    const slot = statsSlot(langMode, wordLength);
+    return loadRecordSlot(slot, STATS_LEGACY_KEYS[slot] || [], null);
 }
 
 export function saveWordDailyStats(langMode, wordLength, stats) {
