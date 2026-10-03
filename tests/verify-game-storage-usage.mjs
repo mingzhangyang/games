@@ -107,14 +107,15 @@ for (const [id, prefix, slotName] of [
     check(source.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
         `${id}: protocol storage remains on the platform facade`);
     const legacyStarsAccess = new RegExp(
-        "\\bstorage(?:Get|Set|Remove)\\s*\\(\\s*(['\"\`])" + prefix + "_stars\\1",
+        `\\bstorage(?:Get|Set|Remove)\\s*\\(\\s*(['"\\x60])${prefix}_stars\\1`,
     ).test(source);
     check(!legacyStarsAccess,
         `${id}: private stars no longer use the legacy key directly`);
     check(new RegExp(`${slotName}_STORAGE\\.set\\s*\\(\\s*${slotName}_STORAGE_SLOTS\\.STARS\\b`).test(source),
         `${id}: stars writes go through GameStorage`);
-    check(source.includes(`storageGet('${prefix}_daily_' + todayKey())`)
-        && source.includes(`storageSet('${prefix}_daily_' + date`),
+    const keepsDailyRead = source.includes(`storageGet('${prefix}_daily_' + todayKey())`);
+    const keepsDailyWrite = source.includes(`storageSet('${prefix}_daily_' + date`);
+    check(keepsDailyRead && keepsDailyWrite,
         `${id}: daily compatibility keys remain unchanged`);
     check(source.includes(`${prefix}_local_`),
         `${id}: local leaderboard compatibility keys remain unchanged`);
