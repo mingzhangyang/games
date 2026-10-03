@@ -17,6 +17,8 @@ on:
       - 'js/**'
       - 'tests/**'
       - 'tools/**'
+      # Sentinel: run architecture verification if the retired scripts/ tree is reintroduced.
+      - 'scripts/**'
       - 'css/**'
       - '*.html'
       - 'games.config.json'
