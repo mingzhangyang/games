@@ -12,7 +12,7 @@ The scan covers `src/games/**/*.js` and the platform storage facade:
 - files containing `storageSet(`: 23;
 - files containing `storageGet(`: 22;
 - files containing `storageRemove(`: 1;
-- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, and Ripple Duet.
+- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, and Lumen.
 
 The migration facade writes versioned slots as
 `game:<game-id>:v<version>:<slot>`. It reads the new slot first, imports a
@@ -64,8 +64,8 @@ These are candidates for `createGameStorage`:
 | --- | --- | --- | --- | --- |
 | Tetris | `player_name`, `tetris_username` compatibility | leaderboard API keys | `tetris_scores`, `tetris_rainbow` | Already migrated |
 | Word Daily | site settings | `wd_daily_*` | `wd_lang_mode`, `wd_word_len_en`, `wd_hist_*`, `wd_stats_*`; `wd_seen_help` already migrated | Later, mixed daily state |
-| Circuit | site settings | `cc_daily_*`, `cc_local_*` | `cc_stars` | Later, mixed daily/local state |
-| Lumen | site settings | `lm_daily_*`, local/daily board keys | `lm_stars` | Later, mixed daily/local state |
+| Circuit | site settings | `cc_daily_*`, `cc_local_*` | `cc_stars` | Phase 5 batch D |
+| Lumen | site settings | `lm_daily_*`, local/daily board keys | `lm_stars` | Phase 5 batch D |
 | Gravity Slingshot | site settings | `gd_daily_*`, `gs_daily_*`, local boards, `gd_course_*` | `gd_stars` | Later, daily cache needs care |
 | Needle Awn | site settings | `zj_daily_*` | unlocks, stars, endless best, clash max | Later |
 | Sword Flight | site settings | `sf_daily_*` | stage unlocks/stars, endless best, realm, combo | Later |
@@ -142,3 +142,20 @@ keeps only its leaderboard cache reader on the platform storage facade while
 private progress reads/writes go through a versioned GameStorage adapter. The
 legacy progress key is imported once and retained, and the migration fixture
 asserts canonical-slot precedence plus leaderboard-cache non-interference.
+
+
+## Batch D migration map
+
+Branch: `refactor/game-storage-migration-d`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `circuit / stars` | `cc_stars` | `game:circuit:v1:stars` | Keep `cc_daily_*` and `cc_local_*` on the compatibility facade |
+| `lumen / stars` | `lm_stars` | `game:lumen:v1:stars` | Keep `lm_daily_*` and `lm_local_*` on the compatibility facade |
+
+Batch D is the first mixed-state migration: the runtime still legitimately uses
+the platform storage facade for Daily and local leaderboard/cache contracts, while
+private stars move to GameStorage. The usage guard therefore rejects only direct
+legacy stars access and separately asserts that the protocol key families remain
+present. The migration fixture verifies legacy import, canonical precedence,
+legacy-key retention, and non-interference with Daily/local data.

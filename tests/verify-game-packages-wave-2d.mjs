@@ -18,7 +18,7 @@ const size = file => statSync(join(ROOT, file)).size;
 const specs = [
     {
         id: 'circuit',
-        files: ['index.js', 'runtime.js', 'i18n.js', 'model/levels.js'],
+        files: ['index.js', 'runtime.js', 'storage.js', 'i18n.js', 'model/levels.js'],
         indexNeedles: [
             "from '../../platform/boot.js'",
             "from '../../platform/runtime/game-runtime.js'",
@@ -32,6 +32,7 @@ const specs = [
         runtimeNeedles: [
             "from './model/levels.js'",
             "from './i18n.js'",
+            "from './storage.js'",
             "from '../../platform/game-sfx.js'",
             "from '../../platform/theme.js'",
             'export { LANGUAGES } from',
@@ -40,6 +41,9 @@ const specs = [
             'export function initCanvasPalette',
         ],
         modelNeedles: ["from '../../../platform/daily.js'", 'export const LEVELS', 'export function dailyLevel'],
+        storageFile: 'storage.js',
+        storageKeys: ["'cc_stars'"],
+        runtimeKeys: ["'cc_daily_'", 'cc_local_'],
         legacy: `// Compatibility entry kept for the existing circuit.html URL.\n// The canonical game package lives under src/games/circuit/.\nimport '../src/games/circuit/index.js';\nexport * from '../src/games/circuit/runtime.js';`,
         dataLegacy: `// Compatibility entry kept for level verifiers and existing imports.\n// The canonical circuit data lives under src/games/circuit/model/levels.js.\nexport * from '../src/games/circuit/model/levels.js';`,
     },
@@ -78,8 +82,11 @@ for (const spec of selectedSpecs) {
     for (const file of spec.files) check(existsSync(join(ROOT, packageRoot, file)), `${spec.id}: package file exists: ${file}`);
     const index = read(`${packageRoot}/index.js`);
     const runtime = read(`${packageRoot}/runtime.js`);
+    const storage = spec.storageFile ? read(`${packageRoot}/${spec.storageFile}`) : '';
     for (const needle of spec.indexNeedles) check(index.includes(needle), `${spec.id}: index keeps ${needle}`);
     for (const needle of spec.runtimeNeedles) check(runtime.includes(needle), `${spec.id}: runtime keeps ${needle}`);
+    for (const key of spec.storageKeys || []) check(storage.includes(key), `${spec.id}: adapter preserves legacy storage contract ${key}`);
+    for (const key of spec.runtimeKeys || []) check(runtime.includes(key), `${spec.id}: runtime preserves protocol storage contract ${key}`);
     for (const needle of spec.modelNeedles || []) check(read(`${packageRoot}/model/levels.js`).includes(needle), `${spec.id}: model keeps ${needle}`);
     check(index.length < 8 * 1024, `${spec.id}: composition root stays below 8 KiB`);
     check(!/\bonReady\s*\(/.test(runtime), `${spec.id}: runtime has no DOM boot registration`);

@@ -24,6 +24,7 @@ import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { LUMEN_STORAGE, LUMEN_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
@@ -122,7 +123,7 @@ function pointAtDist(geom, dist) {
 
 function storageParseStars() {
     try {
-        const arr = JSON.parse(storageGet('lm_stars'));
+        const arr = LUMEN_STORAGE.get(LUMEN_STORAGE_SLOTS.STARS, []);
         const out = Array.isArray(arr) ? arr.slice() : [];
         while (out.length < LUMEN_LEVELS.length) out.push(0);
         return out;
@@ -437,7 +438,7 @@ export class LumenGame {
         const stars = this.flips <= this.par ? 3 : this.flips <= this.par + 3 ? 2 : 1;
         if (stars > (this.stars[this.levelIdx] || 0)) {
             this.stars[this.levelIdx] = stars;
-            storageSet('lm_stars', JSON.stringify(this.stars));
+            LUMEN_STORAGE.set(LUMEN_STORAGE_SLOTS.STARS, this.stars);
         }
         this.state = 'won-level';
         if (stars >= 3) Sfx.star3();

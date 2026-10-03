@@ -5,7 +5,7 @@
  * 几何/元素存在性只能证明"页面长得对"，测不出"游戏能玩"（见 docs/traps.md 教训）。
  * 本脚本走一条真实交互链：
  *   menu → startLevel(0) → canvas 位图非空 → mouse 点击 L1 镜面 (4,6)
- *   → 光路点亮水晶 → solved → 结算面板出现 → HUD flips=1 → 星级写入 lm_stars。
+ *   → 光路点亮水晶 → solved → 结算面板出现 → HUD flips=1 → 星级写入 game:lumen:v1:stars。
  *
  * 语言态显式 setItem('site_lang', 'zh')（headless 默认 en-US 教训）。
  */
@@ -81,7 +81,7 @@ const after = await page.evaluate(() => ({
     flips: document.getElementById('lm-flips').textContent,
     clearVisible: !document.getElementById('lm-clear').classList.contains('hidden'),
     stars: document.getElementById('lm-clear-stars').textContent,
-    starsStored: JSON.parse(localStorage.getItem('lm_stars') || '[]')[0],
+    starsStored: JSON.parse(localStorage.getItem('game:lumen:v1:stars') || '[]')[0],
 }));
 if (after.state !== 'won-level') fail(`点击镜面后 state=${after.state}（光路/判胜失败）`);
 if (after.flips !== '1') fail(`HUD flips 应为 1，got ${after.flips}`);
