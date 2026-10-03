@@ -62,6 +62,10 @@ These are candidates for `createGameStorage`:
 
 | Game | Keep as A | Keep compatible as B | Move to GameStorage (C) | Batch/status |
 | --- | --- | --- | --- | --- |
+| Reversi | site settings / player profile | remote leaderboard API | mode, AI difficulty, streak records, private local scores | Phase 5 batch I |
+| Minesweeper | site settings / player profile | remote leaderboard API | difficulty, per-difficulty best times, private local scores | Phase 5 batch I |
+| Firefly Signal | site settings | none | per-level best intervention/harmony records | Phase 5 batch I |
+| Math Rain | site settings | none identified | SFX/music volumes, persistent coins/items | Later, custom multi-module state |
 | Tetris | `player_name`, `tetris_username` compatibility | leaderboard API keys | `tetris_scores`, `tetris_rainbow` | Already migrated |
 | Word Daily | site settings | `wd_daily_*` | `wd_lang_mode`, `wd_word_len_en`, `wd_hist_*`, `wd_stats_*`; `wd_seen_help` already migrated | Later, mixed daily state |
 | Circuit | site settings | `cc_daily_*`, `cc_local_*` | `cc_stars` | Phase 5 batch D |
@@ -82,9 +86,13 @@ These are candidates for `createGameStorage`:
 | Flame Verse | site settings | `fv_lb_*` | `fv_progress` | Phase 5 batch C |
 | Ripple Duet | site settings | `rd_lb_*` | `rd_progress` | Phase 5 batch C |
 
-The scan found no `storageGet/storageSet/storageRemove` call in Math Rain,
-Tank Battle, Gomoku, Minesweeper, Reversi, or Firefly Signal. Their other
-state contracts remain outside this inventory's scope.
+The original Phase 4 scan did not see direct storage calls for Math Rain,
+Tank Battle, Gomoku, Minesweeper, Reversi, or Firefly Signal because those
+games had not yet completed the Phase 9 package move into `src/games`. A
+post-Phase 9 re-scan exposed private persistence in Reversi, Minesweeper,
+Firefly Signal, Math Rain, plus the already-deferred Tower Defense and Word
+Daily state. Batch I therefore migrates the three low-risk games first; the
+mixed/custom state games remain separate follow-ups.
 
 ## Batch A migration map
 
@@ -244,3 +252,22 @@ cache managed through the platform safe-storage facade.
 The migration fixture verifies legacy import, canonical-slot precedence, legacy
 key retention, level-count padding, and non-interference with all four protocol
 and cache families.
+
+
+## Batch I migration map
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `reversi / mode` | `rv_mode` | `game:reversi:v1:mode` | Import once; retain legacy key |
+| `reversi / difficulty` | `rv_diff` | `game:reversi:v1:difficulty` | Import once; retain legacy key |
+| `reversi / bestStreak` | `rv_best_streak` | `game:reversi:v1:bestStreak` | Import once; retain legacy key |
+| `reversi / streak` | `rv_streak` | `game:reversi:v1:streak` | Preserve existing read semantics; retain legacy key |
+| `reversi / localScores` | `rv_local_scores` | `game:reversi:v1:localScores` | Local fallback only; remote leaderboard contract unchanged |
+| `minesweeper / difficulty` | `ms_diff` | `game:minesweeper:v1:difficulty` | Import once; retain legacy key |
+| `minesweeper / best:<difficulty>` | `ms_best_<difficulty>` | `game:minesweeper:v1:best:<difficulty>` | Three existing difficulties mapped explicitly |
+| `minesweeper / localScores:<difficulty>` | `ms_local_<difficulty>` | `game:minesweeper:v1:localScores:<difficulty>` | Local fallback only; remote leaderboard contract unchanged |
+| `firefly-signal / best:<level>` | `fs_best_<level>` | `game:firefly-signal:v1:best:<level>` | Existing three level ids mapped explicitly |
+
+Batch I is deliberately limited to private local state. It does not change
+remote leaderboard submissions, player identity, global language/mute settings,
+or gameplay behavior. Legacy keys remain in place after import.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Static guard for the first eight GameStorage migration batches.
+// Static guard for the first nine GameStorage migration batches.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +28,9 @@ const runtimes = {
     'gravity-slingshot': read('src/games/gravity-slingshot/runtime.js'),
     'silk-dew': read('src/games/silk-dew/runtime.js'),
     'planet-merge': read('src/games/planet-merge/runtime.js'),
+    reversi: read('src/games/reversi/index.js'),
+    minesweeper: read('src/games/minesweeper/index.js'),
+    'firefly-signal': read('src/games/firefly-signal/game.js'),
 };
 const adapters = {
     'carrot-pull': read('src/games/carrot-pull/storage.js'),
@@ -46,6 +49,9 @@ const adapters = {
     'gravity-slingshot': read('src/games/gravity-slingshot/storage.js'),
     'silk-dew': read('src/games/silk-dew/storage.js'),
     'planet-merge': read('src/games/planet-merge/storage.js'),
+    reversi: read('src/games/reversi/storage.js'),
+    minesweeper: read('src/games/minesweeper/storage.js'),
+    'firefly-signal': read('src/games/firefly-signal/storage.js'),
 };
 
 const swordFlightSources = {
@@ -262,6 +268,15 @@ const planetCompatibilityKeysIsolated = !adapters['planet-merge'].includes('pm_m
 check(planetCompatibilityKeysIsolated,
     'planet-merge: global/daily compatibility keys stay outside GameStorage');
 
+
+for (const id of ['reversi', 'minesweeper', 'firefly-signal']) {
+    const source = runtimes[id];
+    check(!source.includes('safe-storage.js') && !/\bstorage(?:Get|Set|Remove)\s*\(/.test(source),
+        `${id}: private persistence no longer bypasses GameStorage`);
+    check(source.includes("from './storage.js'"),
+        `${id}: runtime composes its GameStorage adapter`);
+}
+
 for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
     check(source.includes(`createGameStorage('${id}'`), `${id}: adapter uses the canonical game id`);
@@ -281,6 +296,9 @@ for (const [id, source, legacyKeys] of [
     ['gravity-slingshot', adapters['gravity-slingshot'], ['gd_stars']],
     ['silk-dew', adapters['silk-dew'], ['sd_progress']],
     ['planet-merge', adapters['planet-merge'], ['pm_skin', 'pm_best', 'pm_local_scores']],
+    ['reversi', adapters.reversi, ['rv_mode', 'rv_diff', 'rv_best_streak', 'rv_streak', 'rv_local_scores']],
+    ['minesweeper', adapters.minesweeper, ['ms_diff', 'ms_best_easy', 'ms_best_medium', 'ms_best_hard', 'ms_local_easy', 'ms_local_medium', 'ms_local_hard']],
+    ['firefly-signal', adapters['firefly-signal'], ['fs_best_first-light', 'fs_best_two-meadows', 'fs_best_midsummer']],
 ]) {
     for (const key of legacyKeys) {
         check(source.includes(`'${key}'`), `${id}: adapter preserves legacy key ${key}`);

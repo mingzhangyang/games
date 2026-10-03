@@ -11,7 +11,14 @@ import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import {
+    loadMinesweeperDifficulty,
+    saveMinesweeperDifficulty,
+    loadMinesweeperBestTime,
+    saveMinesweeperBestTime,
+    loadMinesweeperLocalScores,
+    saveMinesweeperLocalScores,
+} from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { makeText } from '../../platform/i18n.js';
 import { createI18nBinder } from '../../platform/i18n/bindings.js';
@@ -185,8 +192,7 @@ class MinesweeperGame {
     /* ── 基础状态 ── */
 
     readSavedDiff() {
-        const saved = storageGet('ms_diff');
-        return DIFFICULTIES[saved] ? saved : 'easy';
+        return loadMinesweeperDifficulty();
     }
 
     readLang() {
@@ -195,7 +201,6 @@ class MinesweeperGame {
 
     get TEXT() { return LANGUAGES[this.lang]; }
 
-    bestTimeKey() { return `ms_best_${this.diff}`; }
 
     /* ── 语言 ── */
 
@@ -462,9 +467,9 @@ class MinesweeperGame {
 
         let isBest = false;
         if (won) {
-            const prev = Number(storageGet(this.bestTimeKey()));
+            const prev = loadMinesweeperBestTime(this.diff);
             if (!prev || seconds < prev) {
-                storageSet(this.bestTimeKey(), String(seconds));
+                saveMinesweeperBestTime(this.diff, seconds);
                 isBest = true;
             }
         }
@@ -590,7 +595,7 @@ class MinesweeperGame {
         }
         if (this.el['result-best']) {
             if (won) {
-                const best = Number(storageGet(this.bestTimeKey()));
+                const best = loadMinesweeperBestTime(this.diff);
                 this.el['result-best'].textContent = isBest ? `🌟 ${t.newBest}` : `${t.personalBest}: ${best}${t.timeSec}`;
             } else {
                 this.el['result-best'].textContent = '';
@@ -615,22 +620,15 @@ class MinesweeperGame {
 
     /* ── 排行榜 ── */
 
-    localScoresKey() { return `ms_local_${this.diff}`; }
-
     localScores() {
-        try {
-            const all = JSON.parse(storageGet(this.localScoresKey()));
-            return Array.isArray(all) ? all : [];
-        } catch (e) {
-            return [];
-        }
+        return loadMinesweeperLocalScores(this.diff);
     }
 
     recordLocalScore(seconds) {
         const local = this.localScores();
         local.push({ name: ensurePlayerName() || 'Anonymous', score: seconds });
         local.sort((a, b) => a.score - b.score);
-        storageSet(this.localScoresKey(), JSON.stringify(local.slice(0, 30)));
+        saveMinesweeperLocalScores(this.diff, local.slice(0, 30));
     }
 
     renderLocalScores() {
@@ -723,7 +721,7 @@ class MinesweeperGame {
             const chip = document.createElement('span');
             chip.className = 'ms-best-chip';
             chip.textContent = `${t[d]} `;
-            const best = Number(storageGet(`ms_best_${d}`));
+            const best = loadMinesweeperBestTime(d);
             const b = document.createElement('b');
             b.textContent = best ? `${best}${t.timeSec}` : '—';
             chip.appendChild(b);
@@ -735,7 +733,7 @@ class MinesweeperGame {
 
     async copyResult() {
         const t = this.TEXT;
-        const best = Number(storageGet(this.bestTimeKey()));
+        const best = loadMinesweeperBestTime(this.diff);
         const text = `💣 ${t.title} · ${t[this.diff]}\n${t.shareLine}: ${this.elapsed}${t.timeSec}\n${t.personalBest}: ${best}${t.timeSec}\nhttps://games.orangely.xyz/minesweeper.html`;
         let ok = false;
         try {
@@ -838,7 +836,7 @@ class MinesweeperGame {
             const diff = btn.dataset.diff;
             if (diff === this.diff) return;
             this.diff = diff;
-            storageSet('ms_diff', diff);
+            saveMinesweeperDifficulty(diff);
             document.querySelectorAll('.ms-diff').forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
             Sfx.click();
             this.newGame();
