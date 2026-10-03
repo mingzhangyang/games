@@ -15,6 +15,7 @@ import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay, hashString, mulberry32 } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { LANGUAGES } from './i18n.js';
+import { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS } from './storage.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
@@ -118,12 +119,13 @@ const SKINS = {
     }
 };
 
-let skinId = SKINS[storageGet('pm_skin')] ? storageGet('pm_skin') : 'planets';
+const storedSkinId = PLANET_MERGE_STORAGE.get(PLANET_MERGE_STORAGE_SLOTS.SKIN, 'planets');
+let skinId = SKINS[storedSkinId] ? storedSkinId : 'planets';
 
 // 应用皮肤：把选中皮肤的字段写入 CHAIN（尺寸/分数保持不变）
 function applySkin(id) {
     skinId = SKINS[id] ? id : 'planets';
-    storageSet('pm_skin', skinId);
+    PLANET_MERGE_STORAGE.set(PLANET_MERGE_STORAGE_SLOTS.SKIN, skinId);
     const tiers = SKINS[skinId].tiers;
     CHAIN.forEach((tier, i) => {
         const v = tiers[i];
@@ -225,7 +227,7 @@ export class PlanetMergeGame {
         this.shockwaves = [];
 
         this.score = 0;
-        this.best = storageParse('pm_best', 0);
+        this.best = PLANET_MERGE_STORAGE.get(PLANET_MERGE_STORAGE_SLOTS.BEST, 0);
         this.combo = 0;
         this.lastMergeAt = -1e9;
         this.mergesCount = 0;
@@ -807,7 +809,7 @@ export class PlanetMergeGame {
         const isNewBest = this.score > this.best;
         if (isNewBest) {
             this.best = this.score;
-            storageSet('pm_best', String(this.best));
+            PLANET_MERGE_STORAGE.set(PLANET_MERGE_STORAGE_SLOTS.BEST, this.best);
             this.updateSideRecords();
         }
         const isDaily = this.mode === 'daily';
@@ -895,7 +897,7 @@ export class PlanetMergeGame {
     /* ── leaderboard ── */
 
     localScores() {
-        const all = storageParse('pm_local_scores', []);
+        const all = PLANET_MERGE_STORAGE.get(PLANET_MERGE_STORAGE_SLOTS.LOCAL_SCORES, []);
         return Array.isArray(all) ? all : [];
     }
 
@@ -973,7 +975,7 @@ export class PlanetMergeGame {
         const local = this.localScores();
         local.push({ name: this.getUsername(), score: this.score, day: this.dailyDay, mode: this.mode });
         local.sort((a, b) => b.score - a.score);
-        storageSet('pm_local_scores', JSON.stringify(local.slice(0, 30)));
+        PLANET_MERGE_STORAGE.set(PLANET_MERGE_STORAGE_SLOTS.LOCAL_SCORES, local.slice(0, 30));
     }
 
     async submitScore() {

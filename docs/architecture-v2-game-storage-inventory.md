@@ -12,7 +12,7 @@ The scan covers `src/games/**/*.js` and the platform storage facade:
 - files containing `storageSet(`: 23;
 - files containing `storageGet(`: 22;
 - files containing `storageRemove(`: 1;
-- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, Lumen, Needle Awn, and Sword Flight.
+- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, Lumen, Needle Awn, Sword Flight, and Planet Merge.
 
 The migration facade writes versioned slots as
 `game:<game-id>:v<version>:<slot>`. It reads the new slot first, imports a
@@ -70,7 +70,7 @@ These are candidates for `createGameStorage`:
 | Needle Awn | site settings | `zj_daily_*` | unlocks, stars, endless best, clash max | Phase 5 batch E |
 | Sword Flight | site settings | `sf_daily_*` | stage unlocks/stars, endless best, realm, combo | Phase 5 batch E |
 | Tower Defense | site settings | leaderboard integration | clear flags, per-level/global best, private local scores | Later, split across runtime/UI |
-| Planet Merge | global mute compatibility | local score compatibility as needed | skin, best, private local scores | Later |
+| Planet Merge | `pm_muted` global mute mirror | `pm_daily_*` daily-best compatibility | skin, best, private local scores | Phase 5 batch F |
 | Bond Forge | site settings | `bf_daily_<date>`, daily leaderboard contract | `bf_progress` | Phase 5 batch A |
 | Hoop Shot | site settings/player profile | remote leaderboard contract | `hs_best`, `hs_longest_streak`, `hs_local_scores` | Phase 5 batch A |
 | Carrot Pull | site settings | none | `cp_best_score` | Phase 5 batch A |
@@ -183,3 +183,22 @@ its `zj_daily_*` completion/score contract. Sword Flight keeps all
 `sf_daily_*` reads and writes in `model/daily.js`; private record modules no
 longer import the platform storage facade. Legacy private keys remain available
 for one-time import and rollback compatibility.
+
+
+## Batch F migration map
+
+Branch: `refactor/game-storage-migration-f`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `planet-merge / skin` | `pm_skin` | `game:planet-merge:v1:skin` | Read legacy once; preserve the selected skin and legacy key |
+| `planet-merge / best` | `pm_best` | `game:planet-merge:v1:best` | Preserve numeric best-score semantics |
+| `planet-merge / localScores` | `pm_local_scores` | `game:planet-merge:v1:localScores` | Preserve the private local score table and legacy key |
+
+Batch F is intentionally Planet Merge only. The runtime still uses the platform
+storage facade for two compatibility contracts: `pm_muted` remains a legacy
+mirror of the site-wide mute setting written alongside `site_muted`, and
+`pm_daily_*` remains the Daily best-score family. Neither key family is exposed
+as a Planet Merge GameStorage slot. The migration fixture verifies one-time
+legacy import, canonical-slot precedence, legacy-key retention, and
+non-interference with both compatibility contracts.
