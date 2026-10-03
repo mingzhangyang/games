@@ -651,6 +651,10 @@ Phase 5 的基线盘点与第一批迁移映射记录在
 只迁 `cc_stars` / `lm_stars`，Daily 与 local board compatibility key 保持原协议。
 第五批使用 `refactor/game-storage-migration-e`，包含 Needle Awn、Sword Flight；
 迁各自私有 progression/record slots，`zj_daily_*` / `sf_daily_*` 保持原协议。
+第六批使用 `refactor/game-storage-migration-f`，单独迁 Planet Merge 的 skin / best / private local scores；
+`pm_muted` 全局静音镜像与 `pm_daily_*` Daily key 保持原协议。
+第七批使用 `refactor/game-storage-migration-g`，单独迁 Silk Dew progress；先保留并完成其既有
+`sd_progress_version=2` 评分迁移事务，再写入 canonical GameStorage slot，`sd_lb_*` 保持原协议。
 
 建议分支按批次命名：
 

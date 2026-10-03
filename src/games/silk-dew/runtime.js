@@ -34,13 +34,14 @@ import {
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { storageGet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { LANGUAGES } from './i18n.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { createSilkDewScene } from './render/scene.js';
+import { loadSilkDewProgress, saveSilkDewProgress } from './storage.js';
 
 /* 画布调色板：颜色只在 css/silk-dew.css 里定义一次（深色 = 原值，浅色覆盖），见 docs/contracts/theme.md §2.4。
    P 由 onReady 里的 bindPalette() 填充，主题切换时就地刷新。 */
@@ -133,57 +134,6 @@ const Sfx = {
     },
 };
 
-/* ────────────────────────── 存储 ────────────────────────── */
-
-const PROGRESS_VERSION = '2';
-
-function persistProgressPayload(progress) {
-    const raw = JSON.stringify(progress || {});
-    storageSet('sd_progress', raw);
-    // safe-storage deliberately swallows localStorage exceptions. The read-back is
-    // therefore the transaction boundary: never advance the schema marker unless
-    // the v2 payload is demonstrably present.
-    if (storageGet('sd_progress') !== raw) return false;
-    storageSet('sd_progress_version', PROGRESS_VERSION);
-    return storageGet('sd_progress_version') === PROGRESS_VERSION;
-}
-
-function storageParseProgress() {
-    try {
-        const raw = storageGet('sd_progress');
-        const obj = JSON.parse(raw || '{}');
-        const out = {};
-
-        if (storageGet('sd_progress_version') !== PROGRESS_VERSION) {
-            // v1 的三星只看牵拉次数，允许跳过全部星芒，而且旧 bestDrags 也来自
-            // “无限行程/可直接拖露珠”的规则，不能和 v2 比较。
-            // 保留“已通关”事实为 1 星，但要求 2/3 星与最佳牵拉在新规则下重打。
-            if (obj && typeof obj === 'object') {
-                for (const k of Object.keys(obj)) {
-                    const v = obj[k];
-                    if (v && typeof v === 'object' && (v.stars | 0) > 0) {
-                        out[k] = { stars: 1, bestDrags: 0 };
-                    }
-                }
-            }
-            persistProgressPayload(out);
-            return out;
-        }
-
-        if (obj && typeof obj === 'object') {
-            for (const k of Object.keys(obj)) {
-                const v = obj[k];
-                if (v && typeof v === 'object') {
-                    out[k] = { stars: clamp(v.stars | 0, 0, 3), bestDrags: v.bestDrags | 0 };
-                }
-            }
-        }
-        return out;
-    } catch (e) {
-        return {};
-    }
-}
-
 /* ────────────────────────── 游戏主体 ────────────────────────── */
 
 export class SilkfallGame {
@@ -207,7 +157,7 @@ export class SilkfallGame {
         });
 
         this.lang = getLang();
-        this.progress = storageParseProgress();
+        this.progress = loadSilkDewProgress();
 
         // 对局状态：menu | playing | won-level | won-daily | failed
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
@@ -749,7 +699,7 @@ export class SilkfallGame {
 
     saveProgress() {
         try {
-            return persistProgressPayload(this.progress);
+            return saveSilkDewProgress(this.progress);
         } catch (e) {
             return false;
         }

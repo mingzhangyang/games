@@ -12,7 +12,7 @@ The scan covers `src/games/**/*.js` and the platform storage facade:
 - files containing `storageSet(`: 23;
 - files containing `storageGet(`: 22;
 - files containing `storageRemove(`: 1;
-- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, Lumen, Needle Awn, Sword Flight, and Planet Merge.
+- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Silk Dew, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet, Circuit, Lumen, Needle Awn, Sword Flight, and Planet Merge.
 
 The migration facade writes versioned slots as
 `game:<game-id>:v<version>:<slot>`. It reads the new slot first, imports a
@@ -75,7 +75,7 @@ These are candidates for `createGameStorage`:
 | Hoop Shot | site settings/player profile | remote leaderboard contract | `hs_best`, `hs_longest_streak`, `hs_local_scores` | Phase 5 batch A |
 | Carrot Pull | site settings | none | `cp_best_score` | Phase 5 batch A |
 | Shadow Loom | site settings | none identified | `sl_seen_chapters`, `sl_progress` | Phase 5 batch B |
-| Silk Dew | site settings | `sd_lb_*` | `sd_progress`, version marker | Later, existing custom migration |
+| Silk Dew | site settings | `sd_lb_*` | `sd_progress`, version marker | Phase 5 batch G |
 | Echo Cave | site settings | `ec_lb_*` | `ec_progress` | Phase 5 batch B |
 | Maxwell Demon | site settings | `md_lb_*` | `md_progress` | Phase 5 batch B |
 | Crystal Bloom | site settings | `cb_lb_*` | `cb_progress` | Phase 5 batch C |
@@ -202,3 +202,25 @@ mirror of the site-wide mute setting written alongside `site_muted`, and
 as a Planet Merge GameStorage slot. The migration fixture verifies one-time
 legacy import, canonical-slot precedence, legacy-key retention, and
 non-interference with both compatibility contracts.
+
+
+## Batch G migration map
+
+Branch: `refactor/game-storage-migration-g`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `silk-dew / progress` | `sd_progress` | `game:silk-dew:v1:progress` | Complete the historical v1→v2 downgrade transaction before canonical import; retain the legacy payload |
+
+Batch G is intentionally Silk Dew only because `sd_progress_version=2` is not a
+normal storage namespace version. It records a historical gameplay/scoring migration:
+completed legacy levels are reduced to one star and their incomparable `bestDrags`
+values are cleared. The adapter preserves the original read-back transaction boundary:
+if rewriting `sd_progress` fails, it does not advance the version marker and it does
+not create the canonical slot, so the next load can retry safely.
+
+After the historical transaction succeeds, `game:silk-dew:v1:progress` becomes
+authoritative and later progress writes use GameStorage only. The retained
+`sd_progress` / `sd_progress_version` pair remains available for rollback
+compatibility, while `sd_lb_*` leaderboard cache keys stay on the platform storage
+facade and are never exposed as GameStorage slots.
