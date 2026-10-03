@@ -175,9 +175,9 @@ lower.categories[category].items = [];
 const reduced = { [category]: lower.categories[category].items };
 ok(!compareDebt(reduced, previous, category).synchronized,
     'clearing the old debt produces a baseline delta');
-ok(compareDebt(reduced, lower, category).synchronized
-    && compareBaselineGrowth(lower, { baseline: previous, ref: 'fixture-before-zero' }).issues.length === 0,
-    'emptying the final debt baseline passes');
+const clearedBaselinePasses = compareDebt(reduced, lower, category).synchronized
+    && compareBaselineGrowth(lower, { baseline: previous, ref: 'fixture-before-zero' }).issues.length === 0;
+ok(clearedBaselinePasses, 'emptying the final debt baseline passes');
 ok(compareDebt({ [category]: previous.categories[category].items }, lower, category).added.length === 1,
     'restoring removed debt against the lowered baseline fails');
 ok(compareBaselineGrowth(previous, { baseline: lower, ref: 'fixture-after-zero' }).issues.length > 0,

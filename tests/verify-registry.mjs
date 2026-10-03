@@ -19,7 +19,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { registry } from './lib/registry.mjs';
 import { collectStaticModuleGraph } from './lib/static-module-graph.mjs';
 
@@ -61,6 +61,38 @@ const SHARED_CSS = /(^|\/)(tokens|layout|more-games|science-showcase)\.css$/;
 const pageCss = g => [...read(g.href).matchAll(/<link rel="stylesheet" href="([^"]+\.css)"/g)]
     .map(m => m[1]).filter(h => !SHARED_CSS.test(h)).map(read).join('\n');
 
+const DAILY_DATE_HELPERS = new Set(['todayKey', 'todayKeyDisplay', 'dailyKey', 'msUntilNextDay']);
+const DAILY_MODULE = join(ROOT, 'src', 'platform', 'daily.js');
+
+function importsDailyDateContract(graph) {
+    for (const [modulePath, source] of graph) {
+        const imports = /\bimport\s*\{([^}]+)\}\s*from\s*(['"])([^'"]+)\2/g;
+        for (const match of source.matchAll(imports)) {
+            const specifier = match[3];
+            if (!specifier.startsWith('.')) continue;
+            const target = resolve(dirname(join(ROOT, modulePath)), specifier);
+            if (target !== DAILY_MODULE) continue;
+            const bindings = match[1].split(',')
+                .map(binding => binding.trim().split(/\s+as\s+/)[0].trim());
+            if (bindings.some(binding => DAILY_DATE_HELPERS.has(binding))) return true;
+        }
+    }
+    return false;
+}
+
+const seededRandomOnly = new Map([[
+    'src/games/fixture/index.js',
+    "import { mulberry32, hashStringFNV } from '../../platform/daily.js';",
+]]);
+const dateHelperImport = new Map([[
+    'src/games/fixture/index.js',
+    "import { todayKey as dateKey } from '../../platform/daily.js';",
+]]);
+ok(!importsDailyDateContract(seededRandomOnly),
+    'seeded randomness alone does not imply a daily challenge');
+ok(importsDailyDateContract(dateHelperImport),
+    'UTC+8 date helpers imply daily-challenge support');
+
 const PROBES = {
     // Follow each entry's local static-import graph: entries may be nested or may
     // delegate platform wiring to package modules (as Tower Defense now does).
@@ -72,17 +104,7 @@ const PROBES = {
         const graph = graphFor(g);
         return graph.has('src/platform/analytics.js');
     },
-    daily: g => {
-        // Legacy pages historically declare the daily contract at their entry;
-        // some newer games use the shared date helper for deterministic level
-        // generation without exposing a daily challenge.  Canonical game
-        // packages are the ones whose full graph carries this capability.
-        if (g.entry === `src/games/${g.id}/index.js`) {
-            const graph = graphFor(g);
-            return graph.has('src/platform/daily.js');
-        }
-        return /from ['"][^'"]*platform\/daily\.js['"]/.test(read(g.entry));
-    },
+    daily: g => importsDailyDateContract(graphFor(g)),
     drawer: g => /game-drawer-panel/.test(read(g.href)),
     sidebar: g => /game-sidebar/.test(read(g.href)),
     topbar: g => /game-topbar-center/.test(read(g.href)),
