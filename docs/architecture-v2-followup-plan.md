@@ -645,11 +645,14 @@ Phase 5 的基线盘点与第一批迁移映射记录在
 其 legacy key → GameStorage 回归测试与用法 guard 先于后续批次落地。
 第二批使用 `refactor/game-storage-migration-b`，包含 Shadow Loom、Echo Cave、Maxwell Demon；
 只迁游戏私有 progress / seen 状态，`ec_lb_*` / `md_lb_*` 等 leaderboard/Daily compatibility key 保持原协议。
+第三批使用 `refactor/game-storage-migration-c`，包含 Crystal Bloom、Flame Verse、Ripple Duet；
+继续只迁私有 progress，`cb_lb_*` / `fv_lb_*` / `rd_lb_*` 保持兼容协议。
 
 建议分支按批次命名：
 
 - `refactor/game-storage-migration-a`
 - `refactor/game-storage-migration-b`
+- `refactor/game-storage-migration-c`
 - ...
 
 每批都必须有旧数据 fixture / migration regression，不允许等最后一批才补兼容测试。

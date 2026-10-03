@@ -42,7 +42,8 @@ import { LANGUAGES } from './i18n.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
+import { storageGet } from '../../platform/safe-storage.js';
+import { RIPPLE_DUET_STORAGE, RIPPLE_DUET_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
@@ -137,7 +138,7 @@ const Sfx = {
 
 function storageParseProgress() {
     try {
-        const obj = JSON.parse(storageGet('rd_progress') || '{}');
+        const obj = RIPPLE_DUET_STORAGE.get(RIPPLE_DUET_STORAGE_SLOTS.PROGRESS, {});
         const out = {};
         if (obj && typeof obj === 'object') {
             for (const k of Object.keys(obj)) {
@@ -579,7 +580,7 @@ export class RippleDuetGame {
 
     saveProgress() {
         try {
-            storageSet('rd_progress', JSON.stringify(this.progress));
+            RIPPLE_DUET_STORAGE.set(RIPPLE_DUET_STORAGE_SLOTS.PROGRESS, this.progress);
         } catch (e) { /* 忽略 */ }
     }
 

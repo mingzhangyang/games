@@ -293,14 +293,14 @@ console.log('\n▶ 7. 达标定格');
         stars: document.getElementById('rd-clear-stars').textContent.trim(),
         line: document.getElementById('rd-clear-line').textContent.trim(),
         clearVisible: !document.getElementById('rd-clear').classList.contains('hidden'),
-        progress: localStorage.getItem('rd_progress'),
+        progress: localStorage.getItem('game:ripple-duet:v1:progress'),
     }));
     if (w.state !== 'won-level') fail(`达标后应进入 won-level，got ${w.state}`);
     else if (w.stars !== '★★★') fail(`cost = par 应 3 星，got "${w.stars}"`);
     else if (!w.clearVisible) fail('结算面板未显示');
     else if (!new RegExp(`操作\\s*${pre.par}`).test(w.line)) fail(`结算应写操作 ${pre.par}，got "${w.line}"`);
-    else if (!/"rd1":\{"stars":3/.test(w.progress || '')) fail(`rd_progress 未写入 3 星：${w.progress}`);
-    else pass(`达标定格：★★★、${w.line}、rd_progress 已写入（par ${solved.par}）`);
+    else if (!/"rd1":\{"stars":3/.test(w.progress || '')) fail(`game:ripple-duet:v1:progress 未写入 3 星：${w.progress}`);
+    else pass(`达标定格：★★★、${w.line}、game:ripple-duet:v1:progress 已写入（par ${solved.par}）`);
 }
 
 /* ── 8. 冤枉路真掉星：拧满一圈回到同一摆位，仍达标但 1 星 ── */

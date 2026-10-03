@@ -263,17 +263,17 @@ const won = await page.evaluate(() => {
         cost: g.world ? g.world.cost : -1,
         clearVisible: !document.getElementById('cb-clear').classList.contains('hidden'),
         starsText: document.getElementById('cb-clear-stars').textContent.trim(),
-        progress: (() => { try { return JSON.parse(localStorage.getItem('cb_progress') || '{}'); } catch (e) { return null; } })(),
+        progress: (() => { try { return JSON.parse(localStorage.getItem('game:crystal-bloom:v1:progress') || '{}'); } catch (e) { return null; } })(),
     };
 });
 if (won.state !== 'won-level') fail(`通关后 state 应为 won-level，got ${won.state}（habit=${won.habit} cells=${won.cells}）`);
 else if (!won.clearVisible) fail('通关后未弹出结算面板');
 else if (won.habit !== LV1.target) fail(`长出的晶形应为 ${LV1.target}，got ${won.habit}`);
 else if (won.cells < LV1.minCells) fail(`尺寸应 ≥${LV1.minCells}，got ${won.cells}`);
-else if (!won.progress || !won.progress.cb1) fail('星级未写入 cb_progress');
+else if (!won.progress || !won.progress.cb1) fail('星级未写入 game:crystal-bloom:v1:progress');
 else if (!won.progress.cb1.stars || won.progress.cb1.stars < 1) fail(`存档星级应 ≥1，got ${won.progress.cb1.stars}`);
 else if (won.cost === LV1.par && won.progress.cb1.stars < 2) fail(`代价 ${won.cost} = par ${LV1.par} 应至少 2 星，got ${won.progress.cb1.stars}`);
-else pass(`通关：${won.habit} ${won.cells} 格（≥${LV1.minCells}）、q=${won.quality}、代价 ${won.cost}、${won.starsText} 写入 cb_progress`);
+else pass(`通关：${won.habit} ${won.cells} 格（≥${LV1.minCells}）、q=${won.quality}、代价 ${won.cost}、${won.starsText} 写入 game:crystal-bloom:v1:progress`);
 
 /* ── 8. 失败：面板要写明缺哪一项 ── */
 // 全程不降温 ⇒ tChill(90) 处还是 88℃，chilled 不过关，判负原因 =「起步太慢」

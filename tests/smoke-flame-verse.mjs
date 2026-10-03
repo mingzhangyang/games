@@ -231,15 +231,15 @@ console.log('\n▶ 6. 送检吻合');
             stars: document.getElementById('fv-clear-stars').textContent.trim(),
             line: document.getElementById('fv-clear-line').textContent.trim(),
             nextShown: document.getElementById('fv-btn-next').style.display !== 'none',
-            progress: localStorage.getItem('fv_progress'),
+            progress: localStorage.getItem('game:flame-verse:v1:progress'),
         };
     });
     if (w1.state !== 'won-level') fail(`吻合后应进入 won-level，got ${w1.state}`);
     else if (w1.stars !== '★★★') fail(`一把不浪费应 3 星，got "${w1.stars}"`);
     else if (!/代价\s*1/.test(w1.line)) fail(`结算应写代价 1，got "${w1.line}"`);
     else if (!w1.nextShown) fail('关卡模式下一份按钮应显示');
-    else if (!/"fv1":\{"stars":3/.test(w1.progress || '')) fail(`fv_progress 未写入 3 星：${w1.progress}`);
-    else pass(`送检吻合：★★★、${w1.line}、fv_progress 已写入`);
+    else if (!/"fv1":\{"stars":3/.test(w1.progress || '')) fail(`game:flame-verse:v1:progress 未写入 3 星：${w1.progress}`);
+    else pass(`送检吻合：★★★、${w1.line}、game:flame-verse:v1:progress 已写入`);
 }
 
 /* ── 7. 送检不吻合：谱差反馈，不终局 ── */

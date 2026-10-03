@@ -12,7 +12,7 @@ The scan covers `src/games/**/*.js` and the platform storage facade:
 - files containing `storageSet(`: 23;
 - files containing `storageGet(`: 22;
 - files containing `storageRemove(`: 1;
-- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, and Maxwell Demon.
+- current `createGameStorage` users: Tetris, Word Daily, Carrot Pull, Hoop Shot, Bond Forge, Shadow Loom, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, and Ripple Duet.
 
 The migration facade writes versioned slots as
 `game:<game-id>:v<version>:<slot>`. It reads the new slot first, imports a
@@ -78,9 +78,9 @@ These are candidates for `createGameStorage`:
 | Silk Dew | site settings | `sd_lb_*` | `sd_progress`, version marker | Later, existing custom migration |
 | Echo Cave | site settings | `ec_lb_*` | `ec_progress` | Phase 5 batch B |
 | Maxwell Demon | site settings | `md_lb_*` | `md_progress` | Phase 5 batch B |
-| Crystal Bloom | site settings | `cb_lb_*` | `cb_progress` | Later |
-| Flame Verse | site settings | `fv_lb_*` | `fv_progress` | Later |
-| Ripple Duet | site settings | `rd_lb_*` | `rd_progress` | Later |
+| Crystal Bloom | site settings | `cb_lb_*` | `cb_progress` | Phase 5 batch C |
+| Flame Verse | site settings | `fv_lb_*` | `fv_progress` | Phase 5 batch C |
+| Ripple Duet | site settings | `rd_lb_*` | `rd_progress` | Phase 5 batch C |
 
 The scan found no `storageGet/storageSet/storageRemove` call in Math Rain,
 Tank Battle, Gomoku, Minesweeper, Reversi, or Firefly Signal. Their other
@@ -125,3 +125,20 @@ storage facade because they are protocol/compatibility state rather than private
 game progress. Its regression fixture verifies the new versioned slots, idempotent
 re-import behavior, preservation of the old keys, and non-interference with the
 leaderboard cache keys.
+
+
+## Batch C migration map
+
+Branch: `refactor/game-storage-migration-c`
+
+| GameStorage slot | Legacy key | New key | Compatibility rule |
+| --- | --- | --- | --- |
+| `crystal-bloom / progress` | `cb_progress` | `game:crystal-bloom:v1:progress` | Keep `cb_lb_*` outside GameStorage |
+| `flame-verse / progress` | `fv_progress` | `game:flame-verse:v1:progress` | Keep `fv_lb_*` outside GameStorage |
+| `ripple-duet / progress` | `rd_progress` | `game:ripple-duet:v1:progress` | Keep `rd_lb_*` outside GameStorage |
+
+Batch C extends the progress-only migration pattern from Batch B. Each runtime
+keeps only its leaderboard cache reader on the platform storage facade while
+private progress reads/writes go through a versioned GameStorage adapter. The
+legacy progress key is imported once and retained, and the migration fixture
+asserts canonical-slot precedence plus leaderboard-cache non-interference.
