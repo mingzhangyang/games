@@ -113,6 +113,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     gameMainCount: document.querySelectorAll('main.game-main').length,
                     mainContainsStage: Boolean(document.querySelector('main.game-main .game-stage')),
                     mainDirection: (() => { const main = document.querySelector('main.game-main'); return main ? getComputedStyle(main).flexDirection : null; })(),
+                    gomokuCanvasWidth: (() => { const canvas = document.querySelector('#gameBoard'); return canvas ? canvas.getBoundingClientRect().width : null; })(),
                     rightRoles: actions ? Array.from(actions.querySelectorAll('[data-chrome]')).map(roleOf) : [],
                     chrome: Array.from(document.querySelectorAll('[data-chrome]')).map(label),
                     footerVisible: vis(footer),
@@ -139,6 +140,8 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                 fail(name, vp.tag, lang, 'main.game-main 缺少 .game-stage（页面骨架契约）');
             if (vp.w >= 1024 && COLUMN_MAIN_PAGES.has(name) && snap.mainDirection !== 'column')
                 fail(name, vp.tag, lang, `页面 main 方向为 ${snap.mainDirection}，宽屏下应保持纵向`);
+            if (name === 'gomoku' && vp.w >= 1024 && (snap.gomokuCanvasWidth ?? 0) < 500)
+                fail(name, vp.tag, lang, `桌面棋盘宽度仅 ${snap.gomokuCanvasWidth}px，纵向预算应保留至少 500px`);
 
             const canonSeen = snap.rightRoles.filter(r => CANON.includes(r));
             const expect = CANON.filter(c => canonSeen.includes(c));
