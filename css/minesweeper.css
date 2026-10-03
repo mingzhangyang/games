@@ -680,3 +680,11 @@ body {
     --frame-max: 640px;
     --frame-max-wide: 780px;
 }
+
+
+/* Keep the no-sidebar board page stacked when the shared desktop shell uses rows. */
+.ms-main {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}

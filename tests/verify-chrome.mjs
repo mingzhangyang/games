@@ -32,6 +32,7 @@ const BASE = args.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const PAGES = registry.withCap('topbar').map(g => g.id).filter(keepPage);
 exitIfNoPages(PAGES, 'verify-chrome');
 const CANON = ['stats', 'pause', 'sound'];
+const COLUMN_MAIN_PAGES = new Set(['gomoku', 'minesweeper', 'reversi']);
 
 // 共享层（bindChrome / createStatsDrawer）在这些钮上消耗的**公共**键，
 // 它们的 zh/en 值全站唯一（src/platform/i18n.js 的 COMMON_TEXT）。
@@ -47,16 +48,10 @@ const EXPECT_LABEL = {
     en: { sound: 'Sound', more: 'More games' },
 };
 
-// 语义标签契约的已登记缺口：这三页主体是平铺结构，升级 <main> 需引入新包裹层。
-// 见 docs/backlog.md。补一页就从这里删一页 —— 白名单只许缩不许涨。
-const MAIN_PENDING = new Set(['gomoku', 'minesweeper', 'reversi']);
-
 const fails = [];
 const warns = [];
-const knownGaps = new Set();
 const homeTested = new Set();   // §⑧ 每页只测一次（与视口/语言无关）
 const fail = (p, vp, lang, msg) => fails.push(`${p} @${vp}/${lang}: ${msg}`);
-const gap = msg => knownGaps.add(msg);
 
 const browser = await puppeteer.launch({
     executablePath: CHROME, headless: 'new',
@@ -115,6 +110,10 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     hasActions: !!actions,
                     h1Count: document.querySelectorAll('h1').length,
                     mainCount: document.querySelectorAll('main').length,
+                    gameMainCount: document.querySelectorAll('main.game-main').length,
+                    mainContainsStage: Boolean(document.querySelector('main.game-main .game-stage')),
+                    mainDirection: (() => { const main = document.querySelector('main.game-main'); return main ? getComputedStyle(main).flexDirection : null; })(),
+                    gomokuCanvasWidth: (() => { const canvas = document.querySelector('#gameBoard'); return canvas ? canvas.getBoundingClientRect().width : null; })(),
                     rightRoles: actions ? Array.from(actions.querySelectorAll('[data-chrome]')).map(roleOf) : [],
                     chrome: Array.from(document.querySelectorAll('[data-chrome]')).map(label),
                     footerVisible: vis(footer),
@@ -132,19 +131,17 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             if (!snap.hasActions) fail(name, vp.tag, lang, '顶栏缺右簇');
             if (snap.h1Count < 1) fail(name, vp.tag, lang, '页面缺 <h1>（语义标题，可为 .sr-only 视觉隐藏）');
 
-            // 语义标签契约（docs/contracts/layout.md §1.2）：单一 <main>。
-            // ⚠ MAIN_PENDING 三页主体是平铺结构（无 .game-main 单一容器），
-            //   升级需引入新包裹层、有布局风险，已在 docs/backlog.md 登记为独立任务。
-            //   这里降级为告警而不是放弃断言 —— 一旦其中某页补上了，白名单也该跟着缩。
-            if (snap.mainCount < 1) {
-                if (MAIN_PENDING.has(name)) {
-                    gap(`${name}: 缺 <main>（docs/backlog.md 已登记，待独立改动）`);
-                } else {
-                    fail(name, vp.tag, lang, '页面缺 <main>（语义主体容器，契约 layout.md §1.2）');
-                }
-            } else if (snap.mainCount > 1) {
+            // Standard and immersive game pages use one semantic main with a stage.
+            if (snap.mainCount !== 1)
                 fail(name, vp.tag, lang, `页面有 ${snap.mainCount} 个 <main>，契约要求单一`);
-            }
+            if (snap.gameMainCount !== 1)
+                fail(name, vp.tag, lang, `页面有 ${snap.gameMainCount} 个 main.game-main，契约要求一个`);
+            if (!snap.mainContainsStage)
+                fail(name, vp.tag, lang, 'main.game-main 缺少 .game-stage（页面骨架契约）');
+            if (vp.w >= 1024 && COLUMN_MAIN_PAGES.has(name) && snap.mainDirection !== 'column')
+                fail(name, vp.tag, lang, `页面 main 方向为 ${snap.mainDirection}，宽屏下应保持纵向`);
+            if (name === 'gomoku' && vp.w >= 1024 && (snap.gomokuCanvasWidth ?? 0) < 500)
+                fail(name, vp.tag, lang, `桌面棋盘宽度仅 ${snap.gomokuCanvasWidth}px，纵向预算应保留至少 500px`);
 
             const canonSeen = snap.rightRoles.filter(r => CANON.includes(r));
             const expect = CANON.filter(c => canonSeen.includes(c));
@@ -247,10 +244,6 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
 
 await browser.close();
 
-if (knownGaps.size) {
-    console.warn(`\n⚠ 已登记缺口 ${knownGaps.size} 项（不计失败，见 docs/backlog.md）：`);
-    [...knownGaps].forEach(g => console.warn('  ⚠ ' + g));
-}
 if (warns.length) {
     console.log(`\n提醒 ${warns.length} 条：`);
     warns.forEach(w => console.log('  · ' + w));

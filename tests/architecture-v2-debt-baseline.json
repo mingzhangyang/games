@@ -22,13 +22,8 @@
       "items": []
     },
     "legacy-shell-pages": {
-      "mode": "ratchet",
-      "items": [
-        "gomoku",
-        "minesweeper",
-        "reversi",
-        "word-daily"
-      ]
+      "mode": "strict-zero",
+      "items": []
     },
     "active-scripts-references": {
       "mode": "ratchet",
@@ -59,14 +54,8 @@
       "items": []
     },
     "legacy-shell-page-missing": {
-      "mode": "ratchet",
-      "items": [
-        "gomoku:game-main",
-        "minesweeper:game-main",
-        "minesweeper:game-stage",
-        "reversi:game-main",
-        "word-daily:game-stage"
-      ]
+      "mode": "strict-zero",
+      "items": []
     }
   },
   "exceptions": {

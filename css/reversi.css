@@ -609,3 +609,11 @@ body {
     --frame-max: 560px;
     --frame-max-wide: 820px;
 }
+
+
+/* Keep the no-sidebar board page stacked when the shared desktop shell uses rows. */
+.rv-main {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}

@@ -104,16 +104,12 @@ let cssSize = 600; // 画布 CSS 逻辑尺寸（canvas.width 是 DPR 缩放后�
 
 // Initialize
 function init() {
-    // 先量 chrome 再排版：bindFrame 把实测值写进 --frame-chrome，resizeCanvas 据此定棋盘边长。
+    // 桌面棋盘按剩余视口高度定边长，因此 frame budget 只计入舞台以外的内容。
+    // shell 有顶栏、main、页脚三个直接子项；main 内再排状态条、棋盘舞台和控制条。
+    // 这里分别累计 main 与 shell 的纵向间距，跳过舞台尺寸本身，并保留舞台木框内距。
     //
-    // gomoku 的 shell 不是「顶栏 / main / 页脚」三段式，而是五个在流内的直接子节点
-    // （顶栏 · 状态条 · 棋盘 · 控制条 · 页脚），彼此还有 18px 的 flex gap，棋盘外面
-    // 又套了 12px 的木框内距。bindFrame 只认 shell 内距 + 顶栏 + 页脚（= 166px），
-    // 剩下的 168px 必须经 extraChrome 补齐，否则棋盘按 700px 排，整页 1038px > 视口。
-    //
-    // ⚠️ 只累加**高度与 gap，不累加 margin**：.game-footer 带 margin-top:auto，
-    //    内容不足一屏时它的计算值是「剩余空白」，把它算进 chrome 会让棋盘越缩越小。
-    //    高度和 gap 与空白无关，因此这个量是稳定不动点。
+    // ⚠️ 不计入页脚 margin-top:auto：内容不足一屏时其计算值是剩余空白，
+    //    把它算进 chrome 会形成反馈环。控制条的 4px margin 则是实际内容间距。
     bindFrame({
         extraChrome: () => {
             const shell = document.querySelector('.game-shell');
@@ -121,20 +117,43 @@ function init() {
             if (!shell || !stage) return 0;
             const topbar = shell.querySelector(':scope > .game-topbar');
             const footer = shell.querySelector(':scope > .game-footer');
-            const kids = [...shell.children]
-                .filter(el => getComputedStyle(el).display !== 'none');
-            let h = 0;
-            for (const el of kids) {
-                if (el === topbar || el === footer || el === stage) continue;
-                // 这里可以安全地算 margin：带 margin-top:auto 的只有页脚，而它已被跳过
-                // （bindFrame 自己按高度算它）。.controls 就带着真实的 margin-top:4px。
+            const main = shell.querySelector(':scope > .game-main');
+            const isVisible = el => getComputedStyle(el).display !== 'none';
+            const shellKids = [...shell.children].filter(isVisible);
+            const mainKids = main ? [...main.children].filter(isVisible) : [];
+            const heightAndMargins = el => {
                 const cs = getComputedStyle(el);
-                h += el.getBoundingClientRect().height
+                return el.getBoundingClientRect().height
                     + (parseFloat(cs.marginTop) || 0)
                     + (parseFloat(cs.marginBottom) || 0);
+            };
+            const gapHeight = (container, count) => {
+                if (count <= 1) return 0;
+                return (parseFloat(getComputedStyle(container).rowGap) || 0) * (count - 1);
+            };
+
+            let h = 0;
+            for (const el of shellKids) {
+                if (el === topbar || el === footer || el === stage) continue;
+                if (el === main) {
+                    for (const child of mainKids) {
+                        if (child === stage) continue;
+                        // 页脚已跳过；控制条的 margin-top 是真实间距，可以安全计入。
+                        h += heightAndMargins(child);
+                    }
+                    const cs = getComputedStyle(main);
+                    h += gapHeight(main, mainKids.length);
+                    h += (parseFloat(cs.paddingTop) || 0)
+                        + (parseFloat(cs.paddingBottom) || 0)
+                        + (parseFloat(cs.borderTopWidth) || 0)
+                        + (parseFloat(cs.borderBottomWidth) || 0)
+                        + (parseFloat(cs.marginTop) || 0)
+                        + (parseFloat(cs.marginBottom) || 0);
+                } else {
+                    h += heightAndMargins(el);
+                }
             }
-            const rowGap = parseFloat(getComputedStyle(shell).rowGap) || 0;
-            if (kids.length > 1) h += rowGap * (kids.length - 1);
+            h += gapHeight(shell, shellKids.length);
             const tcs = getComputedStyle(stage);
             h += (parseFloat(tcs.paddingTop) || 0) + (parseFloat(tcs.paddingBottom) || 0);
             return h;

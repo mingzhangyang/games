@@ -38,8 +38,6 @@ const SELF_SCAN_FILES = new Set([
 export const BOOTSTRAP_BASELINE = Object.freeze({
     'registry-entry-in-js': Object.freeze({ count: 25, sha256: '43b0ace9e98c38c103bfff58c51f6bf8eb93200d18a3686da3d9e5bab503f412' }),
     'platform-shim-consumers': Object.freeze({ count: 0, sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }),
-    'legacy-shell-pages': Object.freeze({ count: 4, sha256: '4556ab7c3267d50001f96df9312769c875d2ae13d86689efacc3cb87a67a0c88' }),
-    'legacy-shell-page-missing': Object.freeze({ count: 5, sha256: '11bd82dc762a1b5f4fab1d5d43891eff3cc49cf44469b00264817b89ed0eb158' }),
     'active-scripts-references': Object.freeze({ count: 0, sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }),
 });
 
@@ -631,8 +629,6 @@ export function compareDebt(current, baseline, category) {
 
 export const RATCHET_CATEGORIES = [
     'registry-entry-in-js',
-    'legacy-shell-pages',
-    'legacy-shell-page-missing',
     'active-scripts-references',
 ];
 
@@ -644,4 +640,6 @@ export const STRICT_ZERO_CATEGORIES = [
     'archived-tool-references',
     'generated-contract',
     'stale-documentation-paths',
+    'legacy-shell-pages',
+    'legacy-shell-page-missing',
 ];

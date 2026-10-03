@@ -51,25 +51,28 @@
             </div>
         </header>
 
-        <div class="status-bar">
-            <div class="status-item" id="statusText">Black's Turn</div>
-            <div class="status-item" id="modeText"></div>
-        </div>
+        <main class="gm-main game-main">
+            <div class="status-bar">
+                <div class="status-item" id="statusText">Black's Turn</div>
+                <div class="status-item" id="modeText"></div>
+            </div>
 
-        <div class="board-container game-stage">
-            <canvas id="gameBoard"></canvas>
-        </div>
+            <div class="board-container game-stage">
+                <canvas id="gameBoard"></canvas>
+            </div>
 
-        <div class="controls">
-            <button class="btn btn-primary" id="restartBtn">Restart Game</button>
-            <button class="btn btn-ghost" id="modeBtn">Mode: vs Computer</button>
-            <select id="difficultySelect" class="btn btn-ghost gomoku-select">
-                <option value="easy" id="optEasy">Easy</option>
-                <option value="medium" id="optMedium" selected>Medium</option>
-                <option value="hard" id="optHard">Hard</option>
-            </select>
-        </div>
+            <div class="controls">
+                <button class="btn btn-primary" id="restartBtn">Restart Game</button>
+                <button class="btn btn-ghost" id="modeBtn">Mode: vs Computer</button>
+                <select id="difficultySelect" class="btn btn-ghost gomoku-select">
+                    <option value="easy" id="optEasy">Easy</option>
+                    <option value="medium" id="optMedium" selected>Medium</option>
+                    <option value="hard" id="optHard">Hard</option>
+                </select>
+            </div>
 
+
+        </main>
 
     <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
