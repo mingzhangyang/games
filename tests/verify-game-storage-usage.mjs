@@ -315,7 +315,13 @@ check(mathRainSources.index.includes("from './storage.js'")
 const wordDailyRuntime = runtimes['word-daily'];
 check(wordDailyRuntime.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
     'word-daily: Daily compatibility storage remains on the platform facade');
-check(!/\bwd_(?:lang_mode|word_len_en|hist_|stats_|seen_help)\b/.test(wordDailyRuntime),
+const wordDailyPrivateLegacyPattern =
+    /\bwd_(?:lang_mode|word_len_en|seen_help|hist_[a-z0-9_]+|stats_[a-z0-9_]+)\b/i;
+for (const sample of ['wd_lang_mode', 'wd_word_len_en', 'wd_seen_help', 'wd_hist_en_5', 'wd_stats_zh']) {
+    check(wordDailyPrivateLegacyPattern.test(sample),
+        `word-daily: private-key guard detects ${sample}`);
+}
+check(!wordDailyPrivateLegacyPattern.test(wordDailyRuntime),
     'word-daily: private legacy keys are isolated in its adapter');
 check(wordDailyRuntime.includes("from './storage.js'"),
     'word-daily: private persistence composes the GameStorage adapter');
