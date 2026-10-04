@@ -28,14 +28,18 @@ export function indexRuleOccurrences(parsed, path) {
     return parsed.rules.map((rule, sourceIndex) => {
         const declarations = rule.migrationDeclarations || [];
         const digest = declarationDigest(declarations);
-        const identity = [contextText(rule), rule.selector, rule.layer || null, digest];
+        const selectorDigest = declarationDigest(rule.migrationSelector || []);
+        const contextDigest = declarationDigest(rule.migrationContext || []);
+        const identity = [contextDigest, selectorDigest, rule.layer || null, digest];
         const key = jsonKey(identity);
         const occurrence = (seen.get(key) || 0) + 1;
         seen.set(key, occurrence);
         return {
             path,
-            context: identity[0],
+            context: contextText(rule),
             selector: rule.selector,
+            contextDigest,
+            selectorDigest,
             layer: rule.layer || null,
             declarationDigest: digest,
             declarations,
@@ -50,6 +54,8 @@ function ruleRef(rule) {
         path: rule.path,
         context: rule.context,
         selector: rule.selector,
+        contextDigest: rule.contextDigest,
+        selectorDigest: rule.selectorDigest,
         layer: rule.layer,
         declarationDigest: rule.declarationDigest,
         occurrence: rule.occurrence,
@@ -58,8 +64,8 @@ function ruleRef(rule) {
 
 function sameRef(actual, expected, includeLayer = true) {
     return actual.path === expected.path
-        && actual.context === expected.context
-        && actual.selector === expected.selector
+        && actual.contextDigest === expected.contextDigest
+        && actual.selectorDigest === expected.selectorDigest
         && (!includeLayer || actual.layer === (expected.layer || null))
         && actual.declarationDigest === expected.declarationDigest
         && actual.occurrence === expected.occurrence;
@@ -230,7 +236,7 @@ export function analyzeExactConflicts(
             if (!pages.length) continue;
             for (const peer of rules) {
                 if (peer.path === sourceRule.path && peer.sourceIndex === sourceRule.sourceIndex) continue;
-                if (peer.selector !== sourceRule.selector) continue;
+                if (peer.selectorDigest !== sourceRule.selectorDigest) continue;
                 for (let peerIndex = 0; peerIndex < peer.declarations.length; peerIndex++) {
                     const peerDeclaration = peer.declarations[peerIndex];
                     if (peerDeclaration.property !== declaration.property) continue;
@@ -272,7 +278,8 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
         errors.push(mapping.id + ': destination declarations must be an ordered, lossless partition of the source rule.');
     }
     for (const destination of destinationRules) {
-        if (destination.selector !== sourceRule.selector || destination.context !== sourceRule.context) {
+        if (destination.selectorDigest !== sourceRule.selectorDigest
+            || destination.contextDigest !== sourceRule.contextDigest) {
             errors.push(mapping.id + ': P2 layer migration cannot rewrite selector/context while moving a rule.');
         }
         if (!destination.layer) errors.push(mapping.id + ': every destination rule must be explicitly layered.');
@@ -282,6 +289,8 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
 function validRuleRef(ref, { requireDeclarations = false } = {}) {
     return ref && typeof ref.path === 'string' && ref.path.startsWith('css/')
         && typeof ref.context === 'string' && typeof ref.selector === 'string'
+        && /^[0-9a-f]{64}$/.test(ref.contextDigest || '')
+        && /^[0-9a-f]{64}$/.test(ref.selectorDigest || '')
         && /^[0-9a-f]{64}$/.test(ref.declarationDigest || '')
         && Number.isInteger(ref.occurrence) && ref.occurrence > 0
         && (!requireDeclarations || Array.isArray(ref.declarations));
@@ -333,6 +342,8 @@ function stableRuleRows(catalog) {
     return catalog.map(rule => ({
         context: rule.context,
         selector: rule.selector,
+        contextDigest: rule.contextDigest,
+        selectorDigest: rule.selectorDigest,
         layer: rule.layer,
         declarationDigest: rule.declarationDigest,
         declarations: rule.declarations,
