@@ -352,6 +352,7 @@ export function verifyRuleMigrations({
     const usedDestinations = new Set();
     const newMappingsByPath = new Map();
 
+    const pendingConflictReviews = [];
     for (const mapping of mappings.values()) {
         verifyMappingShape(mapping, allowedLayers, errors);
         if (mapping.source?.layer === null || mapping.source?.layer === undefined) {
@@ -375,9 +376,15 @@ export function verifyRuleMigrations({
 
         if (baseMappings.has(mapping.id)) {
             if (currentDestinationRules.length === (mapping.destinations || []).length) {
-                verifyPartition(mapping, { ...mapping.source, path: mapping.source.path }, currentDestinationRules, errors);
+                verifyPartition(mapping, mapping.source, currentDestinationRules, errors);
             }
             continue;
+        }
+
+        const paths = new Set([mapping.source.path, ...(mapping.destinations || []).map(item => item.path)]);
+        for (const path of paths) {
+            if (!newMappingsByPath.has(path)) newMappingsByPath.set(path, []);
+            newMappingsByPath.get(path).push(mapping);
         }
 
         const baseCatalog = baseCatalogs.get(mapping.source?.path) || [];
@@ -391,16 +398,23 @@ export function verifyRuleMigrations({
         }
         if (currentDestinationRules.length === (mapping.destinations || []).length) {
             verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
-            verifyConflictReview(mapping,
-                analyzeExactConflicts(
-                    mapping, sourceRule, currentDestinationRules, baseCatalogs, stylesheetLinks, layerOrder,
-                ), errors);
+            pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules });
         }
-        const paths = new Set([mapping.source.path, ...(mapping.destinations || []).map(item => item.path)]);
-        for (const path of paths) {
-            if (!newMappingsByPath.has(path)) newMappingsByPath.set(path, []);
-            newMappingsByPath.get(path).push(mapping);
-        }
+    }
+
+    const projectedLayers = new Map();
+    for (const { mapping, sourceRule, currentDestinationRules } of pendingConflictReviews) {
+        const assignments = destinationAssignments(mapping, sourceRule, currentDestinationRules);
+        assignments.forEach((destination, index) => {
+            if (destination) projectedLayers.set(projectionKey(sourceRule, index), destination.layer);
+        });
+    }
+    for (const { mapping, sourceRule, currentDestinationRules } of pendingConflictReviews) {
+        verifyConflictReview(mapping,
+            analyzeExactConflicts(
+                mapping, sourceRule, currentDestinationRules, baseCatalogs,
+                stylesheetLinks, layerOrder, projectedLayers,
+            ), errors);
     }
 
     compareCounts(countsFromCurrentUnlayered(currentCatalogs), expectedDebt, errors,
