@@ -107,9 +107,12 @@ export function parseCssText(source, file) {
                 continue;
             }
             if (name === 'layer') {
+                if (cssTokens(node.params).some(token => token[0] === 'comma-token')) {
+                    throw new Error(file + ': block @layer cannot declare multiple layer names');
+                }
                 result.layerBlocks.push(params);
                 layers(params);
-                const ownLayer = params.split(',')[0].trim() || '<anonymous>';
+                const ownLayer = params.trim() || '<anonymous>';
                 walk(node, context, migrationContext, layer ? layer + '.' + ownLayer : ownLayer, inKeyframes);
             } else if (KEYFRAMES.has(name)) {
                 result.keyframes.push({

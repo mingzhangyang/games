@@ -56,6 +56,13 @@ const quotedWhitespace = indexRuleOccurrences(
 assert.equal(quotedWhitespace[0].selector, quotedWhitespace[1].selector);
 assert.notEqual(quotedWhitespace[0].selectorDigest, quotedWhitespace[1].selectorDigest);
 
+// Comma-separated names are valid only for statement-form @layer. PostCSS
+// parses the invalid block form, so the adapter must reject it explicitly.
+assert.throws(
+    () => parseCssText('@layer pages, contracts{.x{color:red}}', 'css/invalid-layer.css'),
+    /block @layer cannot declare multiple layer names/,
+);
+
 const base = parseMap([
     ['css/a.css', '.x{color:red;display:none!important}'],
     ['css/b.css', '.x{display:block!important}'],
@@ -181,6 +188,12 @@ const batchMappingA = {
         important: [],
     },
 };
+const batchStylesheetLinks = {
+    'fixture.html': [
+        ['css/a.css', [['href', 'css/a.css'], ['rel', 'stylesheet']]],
+        ['css/b.css', [['href', 'css/b.css'], ['rel', 'stylesheet']]],
+    ],
+};
 const batchMappingB = {
     id: 'fixture-batch-b',
     source: sourceRef(batchSourceB),
@@ -206,7 +219,7 @@ verifyRuleMigrations({
     state: { ...emptyState, migratedRules: [batchMappingA, batchMappingB] },
     currentParsedByPath: batchCurrent,
     baseParsedByPath: batchBase,
-    stylesheetLinks,
+    stylesheetLinks: batchStylesheetLinks,
     allowedLayers: ALLOWED,
     layerOrder: LAYERS,
     baseState: emptyState,
