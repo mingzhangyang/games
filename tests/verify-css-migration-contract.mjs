@@ -1,0 +1,211 @@
+import assert from 'node:assert/strict';
+
+import { parseCssText } from './lib/css/baseline-adapter.mjs';
+import {
+    analyzeExactConflicts, indexRuleOccurrences, verifyMonotonicState, verifyRuleMigrations,
+} from './lib/css/migration-contract.mjs';
+
+const LAYERS = ['tokens', 'showcase', 'components', 'layout', 'pages', 'contracts'];
+const ALLOWED = new Set(LAYERS);
+
+const parseMap = entries => new Map(entries.map(([path, css]) => [path, parseCssText(css, path)]));
+const catalogMap = parsed => new Map([...parsed].map(([path, value]) => [path, indexRuleOccurrences(value, path)]));
+const sourceRef = rule => ({
+    path: rule.path,
+    context: rule.context,
+    selector: rule.selector,
+    layer: rule.layer,
+    declarationDigest: rule.declarationDigest,
+    occurrence: rule.occurrence,
+    declarations: rule.declarations,
+});
+const destinationRef = rule => ({
+    path: rule.path,
+    context: rule.context,
+    selector: rule.selector,
+    layer: rule.layer,
+    declarationDigest: rule.declarationDigest,
+    occurrence: rule.occurrence,
+});
+
+// Stable occurrence identity is semantic, not a source offset. Inserting an
+// unrelated rule may change sourceIndex, but repeated identical rules remain #1/#2.
+const duplicateA = indexRuleOccurrences(
+    parseCssText('.same{color:red}.other{margin:0}.same{color:red}', 'css/dup.css'),
+    'css/dup.css',
+).filter(rule => rule.selector === '.same');
+const duplicateB = indexRuleOccurrences(
+    parseCssText('.other{margin:0}.same{color:red}.same{color:red}', 'css/dup.css'),
+    'css/dup.css',
+).filter(rule => rule.selector === '.same');
+assert.deepEqual(duplicateA.map(rule => rule.occurrence), [1, 2]);
+assert.deepEqual(duplicateB.map(rule => rule.occurrence), [1, 2]);
+assert.equal(duplicateA[0].declarationDigest, duplicateB[0].declarationDigest);
+
+const base = parseMap([
+    ['css/a.css', '.x{color:red;display:none!important}'],
+    ['css/b.css', '.x{color:blue;display:block!important}'],
+]);
+const current = parseMap([
+    ['css/a.css', '@layer layout{.x{color:red}}@layer contracts{.x{display:none!important}}'],
+    ['css/b.css', '.x{color:blue;display:block!important}'],
+]);
+const baseCatalogs = catalogMap(base);
+const currentCatalogs = catalogMap(current);
+const source = baseCatalogs.get('css/a.css')[0];
+const destinations = currentCatalogs.get('css/a.css');
+const mapping = {
+    id: 'fixture-split',
+    source: sourceRef(source),
+    destinations: destinations.map(destinationRef),
+    conflicts: { normal: [], important: [] },
+};
+const stylesheetLinks = {
+    'fixture.html': [
+        ['css/a.css', [['href', 'css/a.css'], ['rel', 'stylesheet']]],
+        ['css/b.css', [['href', 'css/b.css'], ['rel', 'stylesheet']]],
+    ],
+};
+mapping.conflicts = analyzeExactConflicts(
+    mapping, source, destinations, baseCatalogs, stylesheetLinks, LAYERS,
+);
+assert.equal(mapping.conflicts.normal.length, 1);
+assert.equal(mapping.conflicts.important.length, 1);
+assert.equal(mapping.conflicts.normal[0].layerPriority, 'peer-unlayered-wins');
+assert.equal(mapping.conflicts.important[0].layerPriority, 'target-layer-wins');
+
+const baseline = {
+    debt: {
+        unlayeredRules: [
+            ['css/a.css', '', '.x'],
+            ['css/b.css', '', '.x'],
+        ],
+    },
+};
+const emptyState = {
+    migratedRules: [],
+    migratedKeyframes: [],
+    migratedRuntimeStyleSources: [],
+};
+const state = {
+    migratedRules: [mapping],
+    migratedKeyframes: [],
+    migratedRuntimeStyleSources: [],
+};
+const errors = [];
+const result = verifyRuleMigrations({
+    baseline,
+    state,
+    currentParsedByPath: current,
+    baseParsedByPath: base,
+    stylesheetLinks,
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors,
+});
+assert.deepEqual(errors, []);
+assert.equal(result.newMigrationCount, 1);
+assert.ok(result.mappedCssPaths.has('css/a.css'));
+assert.ok(result.mappedCssPaths.has('css/tokens.css'));
+
+// A stale conflict review must fail independently for normal/important paths.
+const stale = structuredClone(state);
+stale.migratedRules[0].conflicts = { normal: [], important: [] };
+const staleErrors = [];
+verifyRuleMigrations({
+    baseline,
+    state: stale,
+    currentParsedByPath: current,
+    baseParsedByPath: base,
+    stylesheetLinks,
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: staleErrors,
+});
+assert.ok(staleErrors.some(error => /normal exact selector\/property conflict/.test(error)));
+assert.ok(staleErrors.some(error => /important exact selector\/property conflict/.test(error)));
+
+// Existing layered rules can be explicitly re-layered (Showcase's P2 case)
+// without pretending they were unlayered P0 debt.
+const relayerBase = parseMap([['css/showcase.css', '@layer components{.s{color:red}}']]);
+const relayerCurrent = parseMap([['css/showcase.css', '@layer showcase{.s{color:red}}']]);
+const relayerSource = catalogMap(relayerBase).get('css/showcase.css')[0];
+const relayerDestination = catalogMap(relayerCurrent).get('css/showcase.css')[0];
+const relayerMapping = {
+    id: 'fixture-relayer',
+    source: sourceRef(relayerSource),
+    destinations: [destinationRef(relayerDestination)],
+    conflicts: { normal: [], important: [] },
+};
+const relayerErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: { ...emptyState, migratedRules: [relayerMapping] },
+    currentParsedByPath: relayerCurrent,
+    baseParsedByPath: relayerBase,
+    stylesheetLinks: { 'showcase.html': [['css/showcase.css', []]] },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: relayerErrors,
+});
+assert.deepEqual(relayerErrors, []);
+
+// The debt count alone is insufficient: an unrelated declaration rewrite in a
+// mapped file must still be caught by the base->head residual comparison.
+const mutationBase = parseMap([
+    ['css/a.css', '.x{color:red;display:none!important}.other{margin:0}'],
+    ['css/b.css', '.x{color:blue;display:block!important}'],
+]);
+const mutationCurrent = parseMap([
+    ['css/a.css', '@layer layout{.x{color:red}}@layer contracts{.x{display:none!important}}.other{margin:1px}'],
+    ['css/b.css', '.x{color:blue;display:block!important}'],
+]);
+const mutationBaseCatalogs = catalogMap(mutationBase);
+const mutationCurrentCatalogs = catalogMap(mutationCurrent);
+const mutationSource = mutationBaseCatalogs.get('css/a.css')[0];
+const mutationDestinations = mutationCurrentCatalogs.get('css/a.css').filter(rule => rule.selector === '.x');
+const mutationMapping = {
+    id: 'fixture-residual',
+    source: sourceRef(mutationSource),
+    destinations: mutationDestinations.map(destinationRef),
+    conflicts: { normal: [], important: [] },
+};
+mutationMapping.conflicts = analyzeExactConflicts(
+    mutationMapping, mutationSource, mutationDestinations, mutationBaseCatalogs, stylesheetLinks, LAYERS,
+);
+const mutationErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [
+                ['css/a.css', '', '.x'],
+                ['css/a.css', '', '.other'],
+                ['css/b.css', '', '.x'],
+            ],
+        },
+    },
+    state: { ...emptyState, migratedRules: [mutationMapping] },
+    currentParsedByPath: mutationCurrent,
+    baseParsedByPath: mutationBase,
+    stylesheetLinks,
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: mutationErrors,
+});
+assert.ok(mutationErrors.some(error => /beyond the newly registered migrations/.test(error)));
+
+// Merged mappings are append-only: deletion or in-place mutation is a ratchet violation.
+const removedErrors = [];
+verifyMonotonicState(state, emptyState, removedErrors);
+assert.ok(removedErrors.some(error => /was removed/.test(error)));
+const modifiedState = structuredClone(state);
+modifiedState.migratedRules[0].conflicts.normal = [];
+const modifiedErrors = [];
+verifyMonotonicState(state, modifiedState, modifiedErrors);
+assert.ok(modifiedErrors.some(error => /was modified/.test(error)));
+
+console.log('PASS CSS rule migration mapping, split, relayer, conflict and ratchet regressions');
