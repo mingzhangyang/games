@@ -280,6 +280,13 @@ flex-shrink 是标准 shell 的可定制 `layout` 默认几何。本批只迁这
 结构约束，继续留在未分层 `contracts` 批次。现有 desktop-frame / stats-drawer 浏览器回归
 继续证明侧栏可见性、纵向边界和生产几何不变。
 
+**P2-H toast positioning default：** `.game-toast` 只提供舞台内提示条的共享定位、层级、
+圆角与 pointer-event 默认值，不包含 margin / padding / box-sizing 等 reset-sensitive 属性。
+页面继续通过各自的 `xx-toast` 规则控制 max-width、文本对齐、换行、背景和具体偏移；这些
+page CSS 仍未分层，因此原有覆盖关系保持不变。本批不触碰 overlay、hidden state、
+start-menu、drawer、frame-budget 或 immersive contracts。现有 probe / 页面 smoke 继续作为
+cross-selector toast 行为证据，尤其守住 Planet Merge / Word Daily 的换行意图。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -448,6 +455,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-E：将已迁移 defaults 的普通响应式 peer（desktop `.game-main` / `.game-stage`、≤480px `.game-topbar-group` / `.game-topbar-center`）及 narrow footer spacing 依赖 `.game-footer-actions` 闭包迁入 `layout`；保持同层物理顺序，`.game-topbar` 继续暂缓
 - [x] P2-F：迁移 `.game-canvas` 共享默认规则到 `layout`；保留 page-specific canvas 规则未分层覆盖，不触碰 reset-sensitive 或 contracts 规则
 - [x] P2-G：迁移 desktop `.game-sidebar` 默认几何到 `layout`；drawer 隐藏与 frame-budget overflow/scrollbar 继续保留给 contracts 闭包
+- [x] P2-H：迁移 `.game-toast` 共享定位默认值到 `layout`；page-specific toast 规则继续未分层覆盖，不触碰 overlay/hidden/contracts
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
