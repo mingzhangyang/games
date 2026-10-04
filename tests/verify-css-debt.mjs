@@ -13,6 +13,9 @@ import { scanHtml, parseHtmlElements, htmlElementAttributes, htmlTagName, isStyl
 import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
 import { verifyActivationSnapshot } from './lib/css/activation.mjs';
+import {
+    readGitFile, resolveComparisonBase, verifyRuleMigrations,
+} from './lib/css/migration-contract.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -169,14 +172,15 @@ function verifyProject() {
     if (MIGRATION_STATE.runtimeMigrationUnit !== 'style-source') {
         errors.push('Runtime stylesheet migration must remain source-granular until P2 explicitly models it.');
     }
-    if (MIGRATION_STATE.status !== 'not-started') {
-        errors.push('CSS migration state changed before the rule-level P2 verifier was enabled.');
+    if (MIGRATION_STATE.schemaVersion !== 2 || MIGRATION_STATE.mappingContractVersion !== 1
+        || MIGRATION_STATE.status !== 'rule-mapping-enabled') {
+        errors.push('CSS migration state must use the reviewed P2 rule-mapping contract (schema 2 / contract 1).');
     }
-    if ((MIGRATION_STATE.migratedRules || []).length || (MIGRATION_STATE.migratedKeyframes || []).length) {
-        errors.push('Rule-level migration entries require the P2 verifier upgrade before production CSS can change.');
+    if ((MIGRATION_STATE.migratedKeyframes || []).length) {
+        errors.push('Keyframe migrations remain disabled until their own P2 mapping contract is implemented.');
     }
     if ((MIGRATION_STATE.migratedRuntimeStyleSources || []).length) {
-        errors.push('Runtime stylesheet migration entries require the P2 verifier upgrade before production cascade can change.');
+        errors.push('Runtime stylesheet migrations remain disabled until their own P2 mapping contract is implemented.');
     }
     const cssPaths = listFiles(join(ROOT, 'css'), ROOT, path => path.endsWith('.css'));
     const htmlPaths = [
