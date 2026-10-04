@@ -7,19 +7,28 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse as parseJavaScript } from 'acorn';
 import { parse } from 'parse5';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
 const MIGRATION_STATE_PATH = join(ROOT, 'tests/css-layer-migration-state.json');
+const RUNTIME_STYLE_BASELINE_PATH = join(ROOT, 'tests/css-runtime-style-p0-baseline.json');
 const BASELINE_TEXT = readFileSync(BASELINE_PATH, 'utf8');
 const BASELINE = JSON.parse(BASELINE_TEXT);
 const MIGRATION_STATE = JSON.parse(readFileSync(MIGRATION_STATE_PATH, 'utf8'));
+const RUNTIME_STYLE_BASELINE_TEXT = readFileSync(RUNTIME_STYLE_BASELINE_PATH, 'utf8');
+const RUNTIME_STYLE_BASELINE = JSON.parse(RUNTIME_STYLE_BASELINE_TEXT);
 const BASELINE_BLOB_SHA = createHash('sha1')
     .update(`blob ${Buffer.byteLength(BASELINE_TEXT, 'utf8')}\0`)
     .update(BASELINE_TEXT)
     .digest('hex');
+const RUNTIME_STYLE_BASELINE_BLOB_SHA = createHash('sha1')
+    .update(`blob ${Buffer.byteLength(RUNTIME_STYLE_BASELINE_TEXT, 'utf8')}\0`)
+    .update(RUNTIME_STYLE_BASELINE_TEXT)
+    .digest('hex');
 const REVIEWED_P0_BASELINE_BLOB_SHA = '9c4541b4a447bff3dbecb0bc6cd02e09f3850922';
+const REVIEWED_RUNTIME_STYLE_P0_BLOB_SHA = 'e766d5873cf551fb46cda56dd0df861c08f2780f';
 const REVIEWED_VITE_CONFIG_BLOB_SHA = 'dccb984916d19229011c035321b56a9ae43138db';
 const REVIEWED_LAYER_ORDER = Object.freeze(['tokens', 'showcase', 'components', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
@@ -191,6 +200,26 @@ function skipSpaceAndComments(source, start, end) {
     return index;
 }
 
+function skipCssEscape(source, index, end, context) {
+    if (source[index] !== '\\') return index;
+    const next = source[index + 1];
+    if (next == null || next === '\n' || next === '\r' || next === '\f') {
+        throw new Error('Invalid CSS escape in ' + context);
+    }
+
+    let cursor = index + 1;
+    if (/[0-9a-f]/i.test(source[cursor])) {
+        let digits = 0;
+        while (cursor < end && digits < 6 && /[0-9a-f]/i.test(source[cursor])) {
+            cursor++;
+            digits++;
+        }
+        if (/[ \t\r\n\f]/.test(source[cursor] || '')) cursor++;
+        return cursor - 1;
+    }
+    return index + 1;
+}
+
 function findCssDelimiter(source, start, end) {
     let quote = '';
     let escaped = false;
@@ -205,6 +234,10 @@ function findCssDelimiter(source, start, end) {
             if (escaped) escaped = false;
             else if (char === '\\') escaped = true;
             else if (char === quote) quote = '';
+            continue;
+        }
+        if (char === '\\') {
+            index = skipCssEscape(source, index, end, 'CSS selector or at-rule');
             continue;
         }
 
@@ -265,6 +298,10 @@ function findClosingBrace(source, open, end) {
             else if (char === quote) quote = '';
             continue;
         }
+        if (char === '\\') {
+            index = skipCssEscape(source, index, end, 'CSS block');
+            continue;
+        }
         if (char === '/' && next === '*') {
             const close = source.indexOf('*/', index + 2);
             if (close < 0 || close + 2 > end) throw new Error('Unclosed CSS comment');
@@ -298,6 +335,12 @@ function removeComments(value) {
             else if (char === quote) quote = '';
             continue;
         }
+        if (char === '\\') {
+            const escapeEnd = skipCssEscape(value, index, value.length, 'CSS declaration');
+            output += value.slice(index, escapeEnd + 1);
+            index = escapeEnd;
+            continue;
+        }
         if (char === '/' && next === '*') {
             const close = value.indexOf('*/', index + 2);
             if (close < 0) throw new Error('Unclosed CSS comment');
@@ -324,6 +367,10 @@ function findDeclarationColon(value) {
             if (escaped) escaped = false;
             else if (char === '\\') escaped = true;
             else if (char === quote) quote = '';
+            continue;
+        }
+        if (char === '\\') {
+            index = skipCssEscape(value, index, value.length, 'CSS declaration');
             continue;
         }
         if (char === '"' || char === "'") quote = char;
@@ -359,6 +406,10 @@ function parseDeclarations(body) {
             if (escaped) escaped = false;
             else if (char === '\\') escaped = true;
             else if (char === quote) quote = '';
+            continue;
+        }
+        if (char === '\\') {
+            index = skipCssEscape(body, index, body.length, 'CSS declaration value');
             continue;
         }
         if (char === '/' && next === '*') {
@@ -650,6 +701,183 @@ function sameJson(left, right) {
     return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function staticJavaScriptString(node) {
+    if (!node) return null;
+    if (node.type === 'Literal' && typeof node.value === 'string') return node.value;
+    if (node.type === 'TemplateLiteral' && node.expressions.length === 0) {
+        return node.quasis[0]?.value?.cooked ?? null;
+    }
+    return null;
+}
+
+function memberPropertyName(node) {
+    if (!node || node.type !== 'MemberExpression') return null;
+    if (!node.computed && node.property.type === 'Identifier') return node.property.name;
+    return staticJavaScriptString(node.property);
+}
+
+function runtimeStyleScopeNode(ancestors) {
+    for (let index = ancestors.length - 1; index >= 0; index--) {
+        const node = ancestors[index];
+        if (node.type === 'Program'
+            || node.type === 'FunctionDeclaration'
+            || node.type === 'FunctionExpression'
+            || node.type === 'ArrowFunctionExpression') return node;
+    }
+    return null;
+}
+
+function runtimeStyleScopeLabel(ancestors) {
+    for (let index = ancestors.length - 1; index >= 0; index--) {
+        const node = ancestors[index];
+        if (node.type === 'MethodDefinition') {
+            const method = node.computed ? staticJavaScriptString(node.key) : node.key?.name;
+            const owner = [...ancestors].reverse().find(parent =>
+                parent.type === 'ClassDeclaration' || parent.type === 'ClassExpression');
+            return (owner?.id?.name || '<class>') + '.' + (method || '<method>');
+        }
+    }
+    for (let index = ancestors.length - 1; index >= 0; index--) {
+        const node = ancestors[index];
+        if (node.type === 'FunctionDeclaration' && node.id?.name) return node.id.name;
+        if ((node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression')) {
+            const parent = ancestors[index - 1];
+            if (parent?.type === 'VariableDeclarator' && parent.id?.type === 'Identifier') return parent.id.name;
+        }
+    }
+    return '<module>';
+}
+
+function walkJavaScriptAst(node, ancestors, visit) {
+    if (!node || typeof node.type !== 'string') return;
+    visit(node, ancestors);
+    for (const [key, value] of Object.entries(node)) {
+        if (['start', 'end', 'loc', 'range'].includes(key)) continue;
+        if (Array.isArray(value)) {
+            for (const child of value) {
+                if (child && typeof child.type === 'string') walkJavaScriptAst(child, [...ancestors, node], visit);
+            }
+        } else if (value && typeof value.type === 'string') {
+            walkJavaScriptAst(value, [...ancestors, node], visit);
+        }
+    }
+}
+
+function isCreateStyleCall(node) {
+    return node?.type === 'CallExpression'
+        && node.callee?.type === 'MemberExpression'
+        && memberPropertyName(node.callee) === 'createElement'
+        && staticJavaScriptString(node.arguments?.[0])?.toLowerCase() === 'style';
+}
+
+function runtimeStyleSourcesForFile(path, source, errors) {
+    const ast = parseJavaScript(source, {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        allowHashBang: true,
+    });
+    const creations = [];
+    const assignments = [];
+
+    walkJavaScriptAst(ast, [], (node, ancestors) => {
+        const scopeNode = runtimeStyleScopeNode(ancestors);
+        if (isCreateStyleCall(node)) {
+            const parent = ancestors[ancestors.length - 1];
+            if (parent?.type !== 'VariableDeclarator'
+                || parent.init !== node
+                || parent.id?.type !== 'Identifier') {
+                errors.push(path + ': runtime <style> creation must use a local binding so its CSS can be audited.');
+                return;
+            }
+            creations.push({
+                binding: parent.id.name,
+                scopeNode,
+                scope: runtimeStyleScopeLabel(ancestors),
+                start: node.start,
+            });
+        }
+
+        if (node.type === 'AssignmentExpression' && node.left?.type === 'MemberExpression') {
+            const property = memberPropertyName(node.left);
+            if ((property === 'textContent' || property === 'innerHTML')
+                && node.left.object?.type === 'Identifier') {
+                assignments.push({
+                    binding: node.left.object.name,
+                    scopeNode,
+                    operator: node.operator,
+                    value: staticJavaScriptString(node.right),
+                });
+            }
+            if (property === 'adoptedStyleSheets') {
+                errors.push(path + ': adoptedStyleSheets is outside the audited CSS source model; use static CSS.');
+            }
+        }
+
+        if (node.type === 'NewExpression' && node.callee?.type === 'Identifier'
+            && node.callee.name === 'CSSStyleSheet') {
+            errors.push(path + ': constructed CSSStyleSheet is outside the audited CSS source model; use static CSS.');
+        }
+        if (node.type === 'CallExpression' && node.callee?.type === 'MemberExpression'
+            && ['insertRule', 'replace', 'replaceSync'].includes(memberPropertyName(node.callee))) {
+            errors.push(path + ': CSSOM stylesheet mutation is outside the audited CSS source model; use static CSS.');
+        }
+
+        if (node.type === 'Literal' && typeof node.value === 'string'
+            && /<style(?:\s|>)/i.test(node.value)) {
+            errors.push(path + ': runtime <style> markup is forbidden; use an audited stylesheet source.');
+        }
+        if (node.type === 'TemplateElement' && /<style(?:\s|>)/i.test(node.value?.raw || '')) {
+            errors.push(path + ': runtime <style> markup is forbidden; use an audited stylesheet source.');
+        }
+    });
+
+    const duplicateBindings = new Set();
+    for (const creation of creations) {
+        if (creations.some(other => other !== creation
+            && other.scopeNode === creation.scopeNode && other.binding === creation.binding)) {
+            duplicateBindings.add(creation);
+        }
+    }
+    for (const creation of duplicateBindings) {
+        errors.push(path + ': runtime <style> binding "' + creation.binding
+            + '" is reused in one scope and cannot be audited unambiguously.');
+    }
+
+    const scopeOccurrences = new Map();
+    return creations.sort((a, b) => a.start - b.start).flatMap(creation => {
+        const matches = assignments.filter(assignment =>
+            assignment.scopeNode === creation.scopeNode && assignment.binding === creation.binding);
+        if (matches.length !== 1 || matches[0].operator !== '=' || matches[0].value == null) {
+            errors.push(path + ': runtime <style> in ' + creation.scope
+                + ' must receive exactly one static textContent/innerHTML assignment.');
+            return [];
+        }
+        const occurrence = (scopeOccurrences.get(creation.scope) || 0) + 1;
+        scopeOccurrences.set(creation.scope, occurrence);
+        return [{
+            id: path + '#' + creation.scope + '#' + occurrence,
+            css: matches[0].value.replace(/\r\n/g, '\n').trim(),
+        }];
+    });
+}
+
+function scanRuntimeStyleSources(errors) {
+    const paths = [
+        ...listFiles(join(ROOT, 'src'), ROOT, path => /\.(?:m?js)$/.test(path)),
+        ...listFiles(join(ROOT, 'js'), ROOT, path => /\.(?:m?js)$/.test(path)),
+    ].sort();
+    const styles = [];
+    for (const path of paths) {
+        const source = readFileSync(join(ROOT, path), 'utf8');
+        try {
+            styles.push(...runtimeStyleSourcesForFile(path, source, errors));
+        } catch (error) {
+            errors.push(path + ': unable to audit runtime stylesheet sources: ' + error.message);
+        }
+    }
+    return styles.sort((left, right) => left.id.localeCompare(right.id));
+}
+
 function runSelfChecks() {
     const fixture = [
         '@layer components { .layered { color: red; } }',
@@ -682,6 +910,15 @@ function runSelfChecks() {
     assert.equal(hasImportantPriority('red !\\69mportant'), true);
     assert.equal(hasImportantPriority('red !\\000069 mportant'), true);
     assert.equal(hasImportantPriority('red !\\notimportant'), false);
+    const escapedDeclaration = parseCssText(
+        String.raw`.escaped { --x: foo\\;bar!important; color: red; }`,
+        'escaped-declaration.css',
+    );
+    assert.deepEqual(
+        escapedDeclaration.declarations.map(({ property, value }) => [property, value]),
+        [['--x', String.raw`foo\\;bar!important`], ['color', 'red']],
+    );
+    assert.equal(hasImportantPriority(escapedDeclaration.declarations[0].value), true);
     assert.throws(
         () => parseCssText('.parent { color: red; & .child { color: blue; } }', 'nested.css'),
         /CSS nesting or brace-bearing values are unsupported/,
@@ -760,6 +997,28 @@ function runSelfChecks() {
         ]],
     ]);
     assert.equal(htmlScan.styleBlocks.length, 0);
+    const runtimeErrors = [];
+    const runtimeStyles = runtimeStyleSourcesForFile('runtime-fixture.js', `
+        class Fixture {
+            addStyles() {
+                const style = document.createElement('style');
+                style.textContent = \`.runtime { color: red !important; }\`;
+                document.head.appendChild(style);
+            }
+        }
+    `, runtimeErrors);
+    assert.deepEqual(runtimeErrors, []);
+    assert.deepEqual(runtimeStyles, [{
+        id: 'runtime-fixture.js#Fixture.addStyles#1',
+        css: '.runtime { color: red !important; }',
+    }]);
+    const constructedErrors = [];
+    runtimeStyleSourcesForFile(
+        'constructed-fixture.js',
+        'const sheet = new CSSStyleSheet(); sheet.replaceSync(".x{}");',
+        constructedErrors,
+    );
+    assert.equal(constructedErrors.length, 2);
     assert.deepEqual(htmlScan.inlineAttributes, [
         ['fixture.html', 'div@0', 'color:red'],
         ['fixture.html', 'div@1', 'color:blue'],
@@ -845,6 +1104,12 @@ function verifyProject() {
     }
     if (BASELINE_BLOB_SHA !== REVIEWED_P0_BASELINE_BLOB_SHA) {
         errors.push('Immutable P0 baseline content differs from the independently reviewed digest.');
+    }
+    if (RUNTIME_STYLE_BASELINE.snapshotKind !== 'immutable-p0-runtime-styles') {
+        errors.push('tests/css-runtime-style-p0-baseline.json must remain the immutable runtime-style P0 addendum.');
+    }
+    if (RUNTIME_STYLE_BASELINE_BLOB_SHA !== REVIEWED_RUNTIME_STYLE_P0_BLOB_SHA) {
+        errors.push('Immutable runtime-style P0 addendum differs from the independently reviewed digest.');
     }
     if (MIGRATION_STATE.p0BaselineBlobSha !== REVIEWED_P0_BASELINE_BLOB_SHA) {
         errors.push('Migration state must reference the independently pinned immutable P0 digest.');
@@ -963,6 +1228,34 @@ function verifyProject() {
         }
     }
 
+    const runtimeStyles = scanRuntimeStyleSources(errors);
+    const expectedRuntimeStyles = [...(RUNTIME_STYLE_BASELINE.styles || [])]
+        .sort((left, right) => left.id.localeCompare(right.id));
+    if (!sameJson(runtimeStyles, expectedRuntimeStyles)) {
+        const actualIds = runtimeStyles.map(style => [style.id, style.css]);
+        const expectedIds = expectedRuntimeStyles.map(style => [style.id, style.css]);
+        const delta = multisetDelta(actualIds, expectedIds);
+        errors.push('Runtime stylesheet source inventory differs from the immutable P0 addendum ('
+            + delta.added.length + ' added/changed, ' + delta.removed.length + ' removed/changed).');
+        if (delta.added.length) errors.push('  runtime new: ' + JSON.stringify(delta.added.slice(0, 3)));
+        if (delta.removed.length) errors.push('  runtime gone: ' + JSON.stringify(delta.removed.slice(0, 3)));
+    }
+
+    let runtimeRules = 0;
+    let runtimeUnlayeredRules = 0;
+    let runtimeKeyframes = 0;
+    let runtimeUnlayeredKeyframes = 0;
+    let runtimeImportant = 0;
+    for (const style of runtimeStyles) {
+        const parsed = parseCssText(style.css, style.id);
+        runtimeRules += parsed.rules.length;
+        runtimeUnlayeredRules += parsed.rules.filter(rule => !rule.layer).length;
+        runtimeKeyframes += parsed.keyframes.length;
+        runtimeUnlayeredKeyframes += parsed.keyframes.filter(keyframe => !keyframe.layer).length;
+        runtimeImportant += parsed.declarations
+            .filter(declaration => declaration.selector && hasImportantPriority(declaration.value)).length;
+    }
+
     verifyBuildOrderingContract(errors);
 
     for (const key of Object.keys(actualDebt)) {
@@ -993,8 +1286,12 @@ function verifyProject() {
     const unlayeredCount = actualDebt.unlayeredRules.length;
     console.log('PASS CSS layer debt guard');
     console.log('  CSS files: ' + cssPaths.length + ' · HTML files: ' + htmlPaths.length);
-    console.log('  ordinary CSS rules: ' + totalRules + ' · unlayered: ' + unlayeredCount);
-    console.log('  !important declarations: ' + importantCount + ' · custom-property definitions: ' + customPropertyDefinitions);
+    console.log('  ordinary CSS rules: ' + totalRules + ' static + ' + runtimeRules
+        + ' runtime · unlayered: ' + unlayeredCount + ' static + ' + runtimeUnlayeredRules + ' runtime');
+    console.log('  !important declarations: ' + importantCount + ' static + ' + runtimeImportant
+        + ' runtime · custom-property definitions: ' + customPropertyDefinitions);
+    console.log('  runtime stylesheet sources/keyframes: ' + runtimeStyles.length + '/'
+        + runtimeKeyframes + ' · unlayered runtime keyframes: ' + runtimeUnlayeredKeyframes);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
     console.log('  immutable P0 snapshot, stylesheet source order, and current layer map all match.');
