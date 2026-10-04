@@ -295,9 +295,11 @@ cross-selector toast 行为证据，尤其守住 Planet Merge / Word Daily 的�
 
 **P2-I title-pill default：** `.game-title-pill` 的 display / flex-direction / align-items /
 text-align / min-width 是顶栏中槽的共享 `layout` 默认值，不含 reset-sensitive 属性。Tetris
-存在同 selector 的 page peer，并有 display / flex-direction / align-items / min-width 四项
-精确属性交集；该 peer 继续未分层，因此迁移前后仍由 Tetris 的 row/wrap 设计获胜，冲突在
-mapping module 中显式登记。本批不触碰 `.game-hud-box`（含 padding）或任何 contracts。
+存在同 selector 的 page peer：除 display / flex-direction / align-items / min-width 四项同名
+交集外，保守的 property-write 模型还把 `flex-direction` 与 peer 的 `flex` / `flex-wrap`
+视为 flex family 潜在重叠；这些冲突均在 mapping module 中显式登记。该 peer 继续未分层，
+因此迁移前后仍由 Tetris 的 row/wrap 设计获胜。本批不触碰 `.game-hud-box`（含 padding）
+或任何 contracts。
 
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。

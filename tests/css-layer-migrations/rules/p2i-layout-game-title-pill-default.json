@@ -25,6 +25,8 @@
       {"property":"align-items","peerProperty":"align-items","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]},
       {"property":"display","peerProperty":"display","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]},
       {"property":"flex-direction","peerProperty":"flex-direction","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]},
+      {"property":"flex-direction","peerProperty":"flex-wrap","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]},
+      {"property":"flex-direction","peerProperty":"flex","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]},
       {"property":"min-width","peerProperty":"min-width","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]}
     ],
     "important": []
