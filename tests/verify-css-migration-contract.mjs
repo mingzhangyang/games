@@ -9,6 +9,7 @@ const LAYERS = ['tokens', 'showcase', 'components', 'layout', 'pages', 'contract
 const ALLOWED = new Set(LAYERS);
 
 const parseMap = entries => new Map(entries.map(([path, css]) => [path, parseCssText(css, path)]));
+const clone = value => JSON.parse(JSON.stringify(value));
 const catalogMap = parsed => new Map([...parsed].map(([path, value]) => [path, indexRuleOccurrences(value, path)]));
 const sourceRef = rule => ({
     path: rule.path,
@@ -110,7 +111,7 @@ assert.ok(result.mappedCssPaths.has('css/a.css'));
 assert.ok(result.mappedCssPaths.has('css/tokens.css'));
 
 // A stale conflict review must fail independently for normal/important paths.
-const stale = structuredClone(state);
+const stale = clone(state);
 stale.migratedRules[0].conflicts = { normal: [], important: [] };
 const staleErrors = [];
 verifyRuleMigrations({
@@ -269,7 +270,7 @@ assert.ok(mutationErrors.some(error => /beyond the newly registered migrations/.
 const removedErrors = [];
 verifyMonotonicState(state, emptyState, removedErrors);
 assert.ok(removedErrors.some(error => /was removed/.test(error)));
-const modifiedState = structuredClone(state);
+const modifiedState = clone(state);
 modifiedState.migratedRules[0].conflicts.normal = [];
 const modifiedErrors = [];
 verifyMonotonicState(state, modifiedState, modifiedErrors);
