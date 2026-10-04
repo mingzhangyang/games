@@ -133,9 +133,12 @@ CSS parser 已切换至 PostCSS + CSS Syntax tokenizer；HTML 保持 parse5。
 五处运行时 stylesheet 已收敛到固定数据注册表及受控安装入口，保持原激活时机。
 详见 `docs/architecture-v2-postcss-verifier-migration-plan.md`。
 
-当前仍是 P0 冻结 gate，尚未实现 P2 的逐规则映射和单向 ratchet。P2 必须同时解释
-旧 P0 与新有序模型的变化，不能直接更新 fingerprint 放行。静态债务检查、迁移映射
-检查和浏览器行为验证是三个独立验收项。
+P2 的逐规则映射和单向 ratchet 已建立，但生产 CSS 迁移尚未开始。每条 mapping 都必须
+从 PR base 中找到稳定 source occurrence，并在当前源码中找到同 stylesheet 的显式 layer
+destination；1→N 拆分必须保持声明有序且无损。已合并 mapping 只能追加，不能删除或改写。
+normal / important 冲突分开记录其相反的 layer precedence；不同 selector 命中关系仍由
+geometry / interaction 浏览器测试负责。旧 P0 与 semantic addendum 继续保持不可变。
+静态债务检查、迁移映射检查和浏览器行为验证仍是三个独立验收项。
 
 ## 4. 分阶段实施方案
 
@@ -382,7 +385,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 用 P2 canary 证明 whole-file 单层模型不等价，并回滚生产 CSS 改动
 - [x] 冻结 P0 immutable snapshot，建立独立 migration-state 骨架
 - [x] 修正目标架构为 `tokens, showcase, components, layout, pages, contracts`
-- [ ] 升级 verifier，使 migration-state 支持逐规则迁移与单向 ratchet
+- [x] 升级 verifier，使 migration-state 支持稳定 occurrence、1→N/重新归层与单向 ratchet
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
