@@ -185,10 +185,12 @@
 }
 
 /* ── 画布：圆角 + 描边 + 投影由各页上色，几何统一 ── */
-.game-canvas {
-    display: block;
-    width: 100%;
-    border-radius: var(--frame-radius);
+@layer layout {
+    .game-canvas {
+        display: block;
+        width: 100%;
+        border-radius: var(--frame-radius);
+    }
 }
 
 /* ── 覆盖层：填充舞台、玻璃模糊、内容安全居中可滚动 ── */
