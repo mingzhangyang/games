@@ -229,6 +229,28 @@ geometry / interaction 浏览器测试负责。旧 P0 与 semantic addendum 继�
 7. 每一小批迁移都同时跑源码态和 production geometry/smoke；失败即回滚该批，不修改 P0；
 8. 全程保留 `shared-css-first`，直到 P4 canary 证明构建 link 顺序已经不再影响行为。
 
+### P2 职责切片（PR #79 后冻结）
+
+后续不再把“位于 `layout.css`”等同于“属于 `layout` layer。当前职责边界冻结如下：
+
+| 职责 | 典型规则 | 迁移要求 |
+| --- | --- | --- |
+| `layout` defaults | base shell / topbar / main / stage / canvas / footer / sidebar 几何，以及只压缩这些默认值的普通响应式 peer | 允许按 dependency-closed 小批迁移；页面 CSS 仍可有意覆盖；若属性被未分层 reset 触碰则必须先闭包或暂缓 |
+| `contracts` | start-menu `:has(...)` 结构切换、drawer 显隐与滚动锁、`has-stats-drawer`、frame-budget、immersive 边界/安全区 | 不得单独先移；必须与仍未分层且会竞争的 page/shared peers 一起闭包迁移 |
+
+其中 desktop `game-main` 的普通横排 peer 仍属于 `layout` 默认响应式行为；而消费
+`--stage-w` / frame budget 的结构约束、drawer 与 immersive 规则统一留到 `contracts`
+批次。任何难以明确归类的规则默认留在未分层状态，先补行为证据，不靠 specificity 或
+`!important` 强行归类。
+
+**Cross-selector reset boundary：** 迁移某条 shared default 前，不能只审 exact selector。
+同页仍未分层的 `*`、`html`、`body` 或 type-selector reset 会在 normal cascade 中压过
+任何 named layer，即使 specificity 更低。因此凡规则声明 `margin`、`padding`、
+`box-sizing` 等 reset 常见属性，都必须审计所有共存 stylesheet；存在重叠时，要么与 reset
+组成 dependency-closed 批次一起迁移，要么保持该 shared rule 未分层。PR #80 的
+`.game-topbar { padding: 4px 0 10px }` 因 Tetris、Word Daily、Needle Awn、Tower Defense
+等页面的 `* { padding: 0 }` 被暂缓，不能用 `!important` 或提高 specificity 绕过。
+
 **部分迁移不变量：** normal cascade 中，未分层声明高于所有 named layer；important
 则方向相反。P2 的每个 cutover 批次必须对这两套关系分别闭包。静态 exact-selector/property
 审计只负责可证明的交集，不同 selector 命中同一元素的关系继续由源码态 + production 浏览器
@@ -397,6 +419,8 @@ handoff 通过后进入临时 layout freeze：
 - [x] 启动首个 dependency-closed production canary：`.game-stage--fill` → `layout`
 - [x] P2-B：迁移 `.game-main` 顶层默认规则，并验证 desktop 同 selector peer 的 precedence 保持
 - [x] P2-C：迁移 `.game-stage` 顶层默认规则；desktop `max-width` 与 page/immersive/start-menu 覆盖关系保持不变
+- [x] 冻结 `layout.css` 的 layout defaults / contracts 职责切片边界
+- [x] P2-D：迁移 `.game-topbar-group` / `.game-topbar-center`；`.game-topbar` 因未分层 universal reset 的 padding 竞争暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

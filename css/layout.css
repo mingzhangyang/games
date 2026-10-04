@@ -129,25 +129,29 @@
     padding: 4px 0 10px;
 }
 
-.game-topbar-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
+@layer layout {
+    .game-topbar-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
 }
 
 /* ── 顶栏中槽：标题 / HUD 的自适应块 ──
    flex:1 + min-width:0 让它吃掉左右两簇之外的全部宽度并允许收缩换行；
    左右两簇 flex-shrink:0，因此无论中槽内容多宽，两侧按钮的屏幕位置都不变。
    flex-wrap 是必需的：td 三个状态胶囊 / rv 两个玩家框在 390px 下必须能折行。 */
-.game-topbar-center {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+@layer layout {
+    .game-topbar-center {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
 }
 
 /* ── 主体：移动端纵向，桌面端回退为 舞台+侧栏 横排 ── */
