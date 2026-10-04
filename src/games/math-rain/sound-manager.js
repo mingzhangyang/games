@@ -302,14 +302,18 @@ class SoundManager {
      * 通用播放方法（别名）
      */
     play(soundName, options = {}) {
-        // 检查是否有专门的方法
-        const methodName = 'play' + soundName.charAt(0).toUpperCase() + soundName.slice(1);
-        if (typeof this[methodName] === 'function') {
-            return this[methodName](options);
+        // 有专门方法的音效显式分派（不按运行时名字调用方法）
+        switch (soundName) {
+            case 'correct': return this.playCorrect(options);
+            case 'incorrect': return this.playIncorrect(options);
+            case 'combo': return this.playCombo(options.comboCount ?? 0, options);
+            case 'levelUp': return this.playLevelUp(options);
+            case 'gameOver': return this.playGameOver(options);
+            case 'click': return this.playClick(options);
+            case 'targetChange': return this.playTargetChange(options);
+            // 否则使用通用方法
+            default: return this.playSound(soundName, options);
         }
-        
-        // 否则使用通用方法
-        return this.playSound(soundName, options);
     }
 
     /**

@@ -1,3 +1,4 @@
+import { installMathRainStyle } from '../install-style.js';
 /**
  * Centralized Error Handler for Math Rain Game
  * Manages all error handling, logging, and user notifications
@@ -356,46 +357,7 @@ class ErrorHandler {
 
         // Add animation styles
         if (!document.getElementById('error-notification-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'error-notification-styles';
-            styles.textContent = `
-                @keyframes slideInRight {
-                    from {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-                .error-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-                .error-icon {
-                    font-size: 20px;
-                }
-                .error-text {
-                    flex: 1;
-                    font-size: 14px;
-                    line-height: 1.4;
-                }
-                .error-dismiss {
-                    background: rgba(255,255,255,0.2);
-                    border: none;
-                    color: white;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 12px;
-                }
-                .error-dismiss:hover {
-                    background: rgba(255,255,255,0.3);
-                }
-            `;
-            document.head.appendChild(styles);
+            installMathRainStyle('error-notification');
         }
     }
 

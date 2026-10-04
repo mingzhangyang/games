@@ -1,3 +1,4 @@
+import { installMathRainStyle } from './install-style.js';
 /**
  * Shop Manager for Math Rain Game
  * Handles shop functionality, purchases, and UI management
@@ -343,15 +344,7 @@ class ShopManager {
         
         // Add CSS animation if not already present
         if (!document.getElementById('notification-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'notification-styles';
-            styles.textContent = `
-                @keyframes slideInFromRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(styles);
+            installMathRainStyle('notification');
         }
         
         document.body.appendChild(popup);

@@ -1,3 +1,4 @@
+import { installMathRainStyle } from '../install-style.js';
 /**
  * UI Controller for Math Rain Game
  * Handles all UI updates, screen transitions, and user input
@@ -606,21 +607,7 @@ class UIController {
         
         // Add animation styles if not already present
         if (!document.getElementById('score-popup-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'score-popup-styles';
-            styles.textContent = `
-                @keyframes scoreFloat {
-                    0% {
-                        transform: translateY(0px);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translateY(-50px);
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(styles);
+            installMathRainStyle('score-popup');
         }
         
         document.body.appendChild(popup);

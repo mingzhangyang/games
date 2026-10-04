@@ -1,0 +1,119 @@
+import assert from 'node:assert/strict';
+import puppeteer from 'puppeteer-core';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { htmlJavaScriptInputs, isStylesheetLink, scanHtml } from './lib/css/html-inputs.mjs';
+import { auditHtmlStyleIngress } from './lib/css/runtime-sources.mjs';
+
+// Compare the static HTML execution inventory with the browser as an independent
+// oracle. No application server or external network is needed for these fixtures.
+const types = [
+    'application/ecmascript', 'application/javascript', 'application/x-ecmascript', 'application/x-javascript',
+    'text/ecmascript', 'text/javascript', 'text/javascript1.0', 'text/javascript1.1', 'text/javascript1.2',
+    'text/javascript1.3', 'text/javascript1.4', 'text/javascript1.5', 'text/jscript', 'text/livescript',
+    'text/x-ecmascript', 'text/x-javascript',
+];
+const attributes = ['', 'type=""', ...types.flatMap(type => [`type="${type}"`, `type=" ${type.toUpperCase()} "`]),
+    'type="module"', 'language="JavaScript1.5"', 'language="JScript"',
+    'type="" language="vbscript"', 'type="text/javascript" language="vbscript"',
+    'type="   "', 'type="text/javascript;charset=utf-8"', 'type="application/ld+json"',
+    'type="text/plain" language="javascript"', 'type="&#xA0;text/javascript&#xA0;"',
+    'language=" javascript"'];
+const scripts = attributes.map((attrs, index) => `<script ${attrs}>window.__execution.push(${index});</script>`);
+const expected = scripts.flatMap((html, index) => htmlJavaScriptInputs(html).length ? [index] : []);
+const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
+try {
+    const page = await browser.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.setContent('<!doctype html><script>window.__execution=[];</script>' + scripts.join('\n'));
+    await page.waitForFunction(count => window.__execution.length >= count, { timeout: 5000 }, expected.length);
+    assert.deepEqual((await page.evaluate(() => window.__execution)).sort((a, b) => a - b), expected,
+        'HTML script type/language classification must agree with actual execution');
+
+    const handler = `<button id="handler" onclick="with (window) { __handled=true; return false; }">probe</button>`;
+    // The browser runs `with` in a handler (sloppy FunctionBody); the audit parses
+    // it in the same grammar and rejects it because it hides name resolution.
+    assert.match(auditHtmlStyleIngress(handler).join('\n'), /with statements hide/);
+    const scoped = `<button id="scoped" onclick="return typeof createElement;">probe</button>`;
+    assert.ok(auditHtmlStyleIngress(scoped).length, 'handler scope exposes document members');
+    await page.setContent(handler);
+    assert.deepEqual(await page.evaluate(() => ({
+        result: document.getElementById('handler').onclick(new window.Event('click')),
+        handled: window.__handled,
+    })), { result: false, handled: true });
+    const injection = `<button id="inject" onclick="const s=document.createElement('style');
+        s.textContent='body{--handler-sheet:installed}'; document.head.append(s); return false;">probe</button>`;
+    assert.ok(auditHtmlStyleIngress(injection).length, 'event stylesheet injection must be rejected');
+    await page.setContent(injection);
+    await page.click('#inject');
+    assert.equal(await page.evaluate(() => window.getComputedStyle(document.body)
+        .getPropertyValue('--handler-sheet').trim()), 'installed');
+    const recovered = '<div></div><body onclick="document.body.dataset.recovered=\'yes\'; return false;">';
+    assert.equal(htmlJavaScriptInputs(recovered).filter(input => input.grammar === 'handler').length, 1);
+    await page.setContent(scoped);
+    assert.equal(await page.evaluate(() => document.getElementById('scoped').onclick(new window.Event('click'))),
+        'function', 'bare document members resolve in handler scope');
+    await page.setContent(recovered);
+    await page.evaluate(() => document.body.onclick(new window.Event('click')));
+    assert.equal(await page.evaluate(() => document.body.dataset.recovered), 'yes');
+
+    // A CSP pragma disables linked/inline styles without changing any stylesheet
+    // input, so the shared HTML boundary must reject it rather than ignore it.
+    const csp = `<meta http-equiv="Content-Security-Policy" content="style-src 'none'">
+        <style>body{--csp-style:installed}</style>`;
+    assert.throws(() => scanHtml('csp.html', csp), /http-equiv/);
+    assert.match(auditHtmlStyleIngress(csp).join('\n'), /http-equiv/);
+    const cspPage = await browser.newPage();
+    for (const [html, expected] of [[csp, ''], ['<style>body{--csp-style:installed}</style>', 'installed']]) {
+        await cspPage.goto('data:text/html,' + encodeURIComponent(html));
+        assert.equal(await cspPage.evaluate(() => window.getComputedStyle(document.body)
+            .getPropertyValue('--csp-style').trim()), expected, 'CSP pragma decides stylesheet activation');
+    }
+    await cspPage.close();
+
+    // The shared classifier splits rel on HTML ASCII whitespace (spec). Chromium
+    // splits on space/newline only, so tab/form-feed variants are classified
+    // active but not applied: a fail-closed superset. It must never miss a
+    // browser-active link, and NBSP / non-ASCII case folds are never separators.
+    for (const rel of ['stylesheet', ' STYLESHEET\npreload ', 'stylesheet\tpreload',
+        'stylesheet\u00a0preload', 'ſtylesheet']) {
+        const linkPage = await browser.newPage();
+        const href = 'data:text/css,' + encodeURIComponent('body{--rel-probe:on}');
+        await linkPage.setContent(`<link rel="${rel}" href="${href}"><p>probe</p>`, { waitUntil: 'load' });
+        const active = await linkPage.evaluate(() => window.getComputedStyle(document.body)
+            .getPropertyValue('--rel-probe').trim() === 'on');
+        if (active) assert.ok(isStylesheetLink({ rel }), 'browser-active link missed: ' + JSON.stringify(rel));
+        if (/[\u00a0ſ]/.test(rel)) assert.ok(!active && !isStylesheetLink({ rel }), JSON.stringify(rel));
+        await linkPage.close();
+    }
+
+    // The preload→stylesheet idiom: a handler activates its own link through
+    // `this` with no capability name, so handlers on such elements are rejected.
+    const preload = `<link rel="preload" as="style" href="data:text/css,body%7B--preload:on%7D"
+        onload="this.rel='stylesheet'"><p>probe</p>`;
+    assert.throws(() => scanHtml('preload.html', preload), /event handlers on <link>/);
+    const preloadPage = await browser.newPage();
+    await preloadPage.setContent(preload, { waitUntil: 'load' });
+    await preloadPage.waitForFunction(() => window.getComputedStyle(document.body)
+        .getPropertyValue('--preload').trim() === 'on', { timeout: 5000 });
+    await preloadPage.close();
+
+    for (const mode of ['open', 'closed']) {
+        const shadow = `<div id="host"><template shadowrootmode="${mode}">
+            <style>:host{color:rgb(17,34,51)}</style>
+            <link rel="stylesheet" href="data:text/css,:host%7B--shadow-link:installed%7D">
+            <slot></slot></template><span>probe</span></div>`;
+        assert.throws(() => scanHtml('shadow.html', shadow), /declarative Shadow DOM/);
+        assert.ok(auditHtmlStyleIngress(shadow).length);
+        await page.setContent(shadow);
+        await page.waitForFunction(() => window.getComputedStyle(document.getElementById('host'))
+            .getPropertyValue('--shadow-link').trim() === 'installed');
+        assert.equal(await page.evaluate(() => window.getComputedStyle(document.getElementById('host')).color),
+            'rgb(17, 34, 51)', 'declarative ' + mode + ' root activates its stylesheet');
+    }
+    assert.deepEqual(errors, []);
+    await page.close();
+    console.log('PASS HTML execution inventory agrees with browser script types, handlers and shadow-root activation');
+} finally {
+    await browser.close();
+}

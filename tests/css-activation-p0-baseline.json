@@ -1,0 +1,4304 @@
+{
+  "schemaVersion": 1,
+  "snapshotKind": "immutable-p0-activation",
+  "capturedFromCommit": "8a72f430027d7e463cf4a0119745a8fae57368cc",
+  "htmlUnchangedSince": "6bb0d80540707e09cfa41bde0d2384c86f6fedd6",
+  "note": "Addendum to the immutable P0 snapshots. Per page: document directives that govern how its stylesheets decode or evaluate (meta charset with its first-1024-byte prescan validity, viewport, color-scheme; http-equiv pragmas and <base href> are rejected), every <link> in order with normalized attributes (any rel can become a stylesheet), executable scripts (resolved source, grammar, normalized activation attributes, inline import edges), handler import edges, and the runtime stylesheet sources the page can activate by reaching the installer through its static/literal-dynamic import graph. Page HTML is byte-identical to the base commit; Math Rain's pre-registry inline style sites were reachable only from math-rain.html. Not a claim that every reachable source is installed on every run.",
+  "pages": {
+    "bond-forge.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/bond-forge.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d1024'/%3E%3Cpath d='M32 12v40' stroke='%235b8dee' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='12' r='8' fill='%23ff6b7a'/%3E%3Ccircle cx='22' cy='48' r='7' fill='%23e8ecff'/%3E%3Ccircle cx='42' cy='48' r='7' fill='%23e8ecff'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/bond-forge.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/bond-forge/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/bond-forge/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "carrot-pull.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/carrot-pull.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173c3e'/%3E%3Cpath d='M32 38c-6-3-9-8-8-14 5 1 9 4 10 10 1-7 5-11 11-12 1 7-3 13-10 16v12h-6V38Z' fill='%235fae57'/%3E%3Cpath d='M26 34c8-1 13 2 13 9 0 7-5 13-11 13s-10-6-10-13c0-5 3-8 8-9Z' fill='%23f08a3c'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/carrot-pull.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/carrot-pull.js",
+          "attributes": [
+            [
+              "src",
+              "js/carrot-pull.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "circuit.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/circuit.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a1230'/%3E%3Ccircle cx='32' cy='30' r='12' fill='none' stroke='%23ffc94d' stroke-width='3'/%3E%3Cpath d='M25 23l14 14M39 23L25 37' stroke='%23ffc94d' stroke-width='2.5'/%3E%3Cpath d='M32 46v8M22 54h20' stroke='%23ffc94d' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/circuit.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/circuit.js",
+          "attributes": [
+            [
+              "src",
+              "js/circuit.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "crystal-bloom.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/crystal-bloom.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070a18'/%3E%3Cpath d='M32 8 46 26 32 56 18 26z' fill='%236fd8ff' opacity='.9'/%3E%3Cpath d='M32 8 32 56 18 26z' fill='%23a8e8ff' opacity='.55'/%3E%3Cpath d='M18 26h28M32 8v48' stroke='%23ffd34d' stroke-width='1.6' opacity='.7'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/science-showcase.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/crystal-bloom.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/crystal-bloom.js",
+          "attributes": [
+            [
+              "src",
+              "js/crystal-bloom.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "echo-cave.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/echo-cave.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23050810'/%3E%3Ccircle cx='22' cy='32' r='3.5' fill='%23ffd34d'/%3E%3Ccircle cx='22' cy='32' r='9' fill='none' stroke='%236fd8ff' stroke-width='2' opacity='.9'/%3E%3Ccircle cx='22' cy='32' r='16' fill='none' stroke='%236fd8ff' stroke-width='2' opacity='.55'/%3E%3Ccircle cx='22' cy='32' r='23' fill='none' stroke='%236fd8ff' stroke-width='2' opacity='.3'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/science-showcase.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/echo-cave.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/echo-cave.js",
+          "attributes": [
+            [
+              "src",
+              "js/echo-cave.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "firefly-signal.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/firefly-signal.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23060b1a'/%3E%3Ccircle cx='32' cy='36' r='18' fill='%23ffc85a' opacity='.22'/%3E%3Cellipse cx='32' cy='38' rx='6' ry='8' fill='%23ffd98a'/%3E%3Cellipse cx='32' cy='26' rx='4.5' ry='5' fill='%23241c16'/%3E%3Cellipse cx='23' cy='30' rx='8' ry='4' fill='%23cfe3ff' opacity='.55' transform='rotate(-25 23 30)'/%3E%3Cellipse cx='41' cy='30' rx='8' ry='4' fill='%23cfe3ff' opacity='.55' transform='rotate(25 41 30)'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/firefly-signal.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/firefly-signal/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/firefly-signal/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "flame-verse.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/flame-verse.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230c0612'/%3E%3Cpath d='M32 8c8 10 14 15 14 25a14 14 0 1 1-28 0c0-6 3-10 6-14 0 5 1.5 8 5 10-1-8 0-15 3-21z' fill='%23ffb35c'/%3E%3Cpath d='M32 26c4 5 7 8 7 13a7 7 0 1 1-14 0c0-5 3-8 7-13z' fill='%23ffd34d'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/science-showcase.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/flame-verse.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/flame-verse.js",
+          "attributes": [
+            [
+              "src",
+              "js/flame-verse.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "gomoku.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/gomoku.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23fff'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/gomoku.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/gomoku/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/gomoku/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "gravity-slingshot.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/gravity-slingshot.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a0e24'/%3E%3Ccircle cx='40' cy='38' r='14' fill='%232a3c8f'/%3E%3Ccircle cx='40' cy='38' r='14' fill='none' stroke='%235a7bff' stroke-width='2'/%3E%3Cellipse cx='40' cy='38' rx='26' ry='10' fill='none' stroke='%237dfad0' stroke-width='2' transform='rotate(-24 40 38)'/%3E%3Ccircle cx='17' cy='29' r='3.4' fill='%23f4f7ff'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/gravity.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/gravity-slingshot/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/gravity-slingshot/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "hoop-shot.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/hoop-shot.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23f08c3a'/%3E%3Cpath d='M4 32h56M32 4v56M12 12c12 10 28 10 40 0M12 52c12-10 28-10 40 0' stroke='%235a2a08' stroke-width='3' fill='none'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/hoop-shot.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/hoop-shot.js",
+          "attributes": [
+            [
+              "src",
+              "js/hoop-shot.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "index.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Crect x='12' y='22' width='40' height='22' rx='11' fill='white'/%3E%3Cpath d='M22 27v12M16 33h12' stroke='%23667eea' stroke-width='3.4' stroke-linecap='round'/%3E%3Ccircle cx='39' cy='29' r='3' fill='%23667eea'/%3E%3Ccircle cx='45' cy='36' r='3' fill='%23667eea'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/index.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "module",
+          "src": "js/index-page.js",
+          "attributes": [
+            [
+              "src",
+              "js/index-page.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "lumen.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/lumen.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070b22'/%3E%3Cpath d='M8 46h32V20' fill='none' stroke='%237dfad0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='32' y1='54' x2='48' y2='38' stroke='%235a7bff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M40 5l8 9-8 9-8-9z' fill='%23f4f7ff'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/lumen.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/lumen.js",
+          "attributes": [
+            [
+              "src",
+              "js/lumen.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "math-rain.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/math-rain.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='28' fill='white' font-family='Segoe UI,Arial' dy='.3em'%3E%F0%9F%A7%AE%3C/text%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/math-rain/math-rain.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/math-rain/shop.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/math-rain/page-boot.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/math-rain/page-boot.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": [
+        "src/games/math-rain/core/ErrorHandler.js#ErrorHandler.addErrorStyles#1",
+        "src/games/math-rain/core/UIController.js#UIController.createScorePopup#1",
+        "src/games/math-rain/mobile-adapter.js#MobileAdapter.addMobileStyles#1",
+        "src/games/math-rain/mobile-adapter.js#MobileAdapter.applyLowEndSettings#1",
+        "src/games/math-rain/shop-manager.js#ShopManager.createNotificationPopup#1"
+      ]
+    },
+    "maxwell-demon.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/maxwell-demon.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070a18'/%3E%3Crect x='29' y='4' width='6' height='20' rx='2' fill='%23263352'/%3E%3Crect x='29' y='40' width='6' height='20' rx='2' fill='%23263352'/%3E%3Crect x='28' y='26' width='8' height='12' rx='4' fill='%23ffd34d'/%3E%3Ccircle cx='14' cy='20' r='3.4' fill='%23ff8a5c'/%3E%3Ccircle cx='18' cy='44' r='3.4' fill='%23ff8a5c'/%3E%3Ccircle cx='50' cy='24' r='3.4' fill='%236fd8ff'/%3E%3Ccircle cx='46' cy='48' r='3.4' fill='%236fd8ff'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/science-showcase.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/maxwell-demon.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/maxwell-demon.js",
+          "attributes": [
+            [
+              "src",
+              "js/maxwell-demon.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "minesweeper.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/minesweeper.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23151a33'/%3E%3Ccircle cx='30' cy='34' r='14' fill='%23242c52'/%3E%3Ccircle cx='34' cy='30' r='15' fill='%23e8ecff'/%3E%3Ccircle cx='34' cy='30' r='9' fill='%2340b8ff'/%3E%3Ccircle cx='34' cy='30' r='4' fill='%23ff4d5e'/%3E%3Cpath d='M34 8v8M48 16l-6 6M20 16l6 6' stroke='%23e8ecff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/minesweeper.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/minesweeper/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/minesweeper/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "needle-awn.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/needle-awn.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23030712'/%3E%3Cpath d='M14 50 L44 20' stroke='%2338bdf8' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M50 50 L20 20' stroke='%23f59e0b' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='20' r='6' fill='%23ffffff'/%3E%3Ccircle cx='32' cy='20' r='12' fill='none' stroke='%23fef08a' stroke-width='2'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/needle-awn.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/needle-awn/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/needle-awn/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "planet-merge.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/planet-merge.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='%23d7914f'/%3E%3Cellipse cx='32' cy='34' rx='40' ry='10' fill='none' stroke='%23f0d9a0' stroke-width='4' transform='rotate(-20 32 34)'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/planet-merge.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/planet-merge.js",
+          "attributes": [
+            [
+              "src",
+              "js/planet-merge.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "public/404.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='32' fill='white' font-family='Segoe UI,Arial' dy='.3em'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "reversi.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/reversi.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2315402e'/%3E%3Ccircle cx='24' cy='24' r='13' fill='%23101426'/%3E%3Ccircle cx='40' cy='40' r='13' fill='%23f4f7ff'/%3E%3Ccircle cx='40' cy='40' r='13' fill='none' stroke='%23c9d2f0' stroke-width='1.5'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/reversi.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/reversi/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/reversi/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "ripple-duet.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/ripple-duet.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23041826'/%3E%3Cg fill='none' stroke='%236fd8ff' stroke-width='3'%3E%3Ccircle cx='26' cy='32' r='7'/%3E%3Ccircle cx='26' cy='32' r='15'/%3E%3Ccircle cx='26' cy='32' r='23'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ff9a5c' stroke-width='3'%3E%3Ccircle cx='44' cy='32' r='7'/%3E%3Ccircle cx='44' cy='32' r='15'/%3E%3C/g%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/science-showcase.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/ripple-duet.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/ripple-duet.js",
+          "attributes": [
+            [
+              "src",
+              "js/ripple-duet.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "shadow-loom.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/shadow-loom.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d1226'/%3E%3Crect x='12' y='10' width='40' height='34' rx='3' fill='%23e9d6b0'/%3E%3Cpath d='M26 40c-6 0-8-8-2-11-2-8 2-15 5-15 2 0 2 6 1 11 5-6 8-8 9-6 1 3-4 8-6 10 5 1 7 5 5 9Z' fill='%234a3325'/%3E%3Ccircle cx='32' cy='54' r='5' fill='%23ffb347'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/shadow-loom.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/shadow-loom.js",
+          "attributes": [
+            [
+              "src",
+              "js/shadow-loom.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "silk-dew.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/silk-dew.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a1712'/%3E%3Ccircle cx='32' cy='16' r='3' fill='%23ffd34d'/%3E%3Cpath d='M32 19v10' stroke='%23e9e4d0' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M32 40c-6 0-9-4-9-8 0-5 4-9 9-13 5 4 9 8 9 13 0 4-3 8-9 8z' fill='%239fe8ff'/%3E%3Cpath d='M22 52h20' stroke='%2358c9a0' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/silk-dew.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/silk-dew.js",
+          "attributes": [
+            [
+              "src",
+              "js/silk-dew.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "sword-flight.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/sword-flight.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23030816'/%3E%3Cpath d='M16 48 L48 16' stroke='%2338bdf8' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M20 20 L44 44' stroke='%23fbbf24' stroke-width='2' stroke-dasharray='2 4'/%3E%3Ccircle cx='48' cy='16' r='5' fill='%23ffffff'/%3E%3Ccircle cx='32' cy='32' r='14' fill='none' stroke='%2338bdf8' stroke-width='2' opacity='0.7'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/sword-flight.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "https://fonts.googleapis.com"
+          ],
+          [
+            "rel",
+            "preconnect"
+          ]
+        ],
+        [
+          [
+            "crossorigin",
+            ""
+          ],
+          [
+            "href",
+            "https://fonts.gstatic.com"
+          ],
+          [
+            "rel",
+            "preconnect"
+          ]
+        ],
+        [
+          [
+            "href",
+            "https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&display=swap"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/sword-flight/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/sword-flight/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "tank-battle.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/tank-battle.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2310b981'/%3E%3Crect x='16' y='30' width='32' height='18' rx='5' fill='%23064e3b'/%3E%3Crect x='27' y='16' width='10' height='16' rx='2' fill='%23064e3b'/%3E%3Crect x='35' y='18' width='18' height='5' rx='2.5' fill='%23064e3b'/%3E%3Ccircle cx='32' cy='39' r='6' fill='%23a7f3d0'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tank-battle.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/tank-battle/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/tank-battle/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "tetris.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/tetris.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Crect x='14' y='14' width='11' height='11' fill='white'/%3E%3Crect x='26' y='14' width='11' height='11' fill='white' opacity='0.85'/%3E%3Crect x='26' y='26' width='11' height='11' fill='white'/%3E%3Crect x='38' y='26' width='11' height='11' fill='white' opacity='0.7'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tetris.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/tetris.js",
+          "attributes": [
+            [
+              "src",
+              "js/tetris.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "tower-defense.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/tower-defense.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d1230'/%3E%3Crect x='26' y='14' width='12' height='30' rx='3' fill='%2330449a'/%3E%3Crect x='22' y='10' width='20' height='8' rx='3' fill='%2340d8ff'/%3E%3Ccircle cx='32' cy='9' r='3.4' fill='%23ffd34d'/%3E%3Crect x='10' y='46' width='44' height='8' rx='3' fill='%2330449a'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tower-defense.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/tower-defense/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/tower-defense/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "word-daily.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8",
+          true
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
+      "links": [
+        [
+          [
+            "href",
+            "https://games.orangely.xyz/word-daily.html"
+          ],
+          [
+            "id",
+            "canonical-link"
+          ],
+          [
+            "rel",
+            "canonical"
+          ]
+        ],
+        [
+          [
+            "href",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e24'/%3E%3Crect x='8' y='8' width='22' height='22' rx='5' fill='%233aa655'/%3E%3Crect x='34' y='8' width='22' height='22' rx='5' fill='%23d0a63f'/%3E%3Crect x='8' y='34' width='22' height='22' rx='5' fill='%23333a56'/%3E%3Crect x='34' y='34' width='22' height='22' rx='5' fill='%233aa655'/%3E%3C/svg%3E"
+          ],
+          [
+            "rel",
+            "icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/manifest.json"
+          ],
+          [
+            "rel",
+            "manifest"
+          ]
+        ],
+        [
+          [
+            "href",
+            "/icons/apple-touch-icon.png"
+          ],
+          [
+            "rel",
+            "apple-touch-icon"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/tokens.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/layout.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/word-daily.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ],
+        [
+          [
+            "href",
+            "css/more-games.css"
+          ],
+          [
+            "rel",
+            "stylesheet"
+          ]
+        ]
+      ],
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/word-daily.js",
+          "attributes": [
+            [
+              "src",
+              "js/word-daily.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    }
+  }
+}

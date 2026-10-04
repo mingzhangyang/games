@@ -1,9 +1,23 @@
 import { SCENE, createSceneAnimator } from './scene.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+// Literal tags only: the fallback scene cannot create an arbitrary element.
+function createSvgElement(tag) {
+    switch (tag) {
+        case 'circle': return document.createElementNS(SVG_NS, 'circle');
+        case 'defs': return document.createElementNS(SVG_NS, 'defs');
+        case 'ellipse': return document.createElementNS(SVG_NS, 'ellipse');
+        case 'g': return document.createElementNS(SVG_NS, 'g');
+        case 'linearGradient': return document.createElementNS(SVG_NS, 'linearGradient');
+        case 'path': return document.createElementNS(SVG_NS, 'path');
+        case 'rect': return document.createElementNS(SVG_NS, 'rect');
+        case 'stop': return document.createElementNS(SVG_NS, 'stop');
+        default: throw new Error('Unsupported SVG element: ' + tag);
+    }
+}
 
 function el(tag, attrs, parent) {
-    const node = document.createElementNS(SVG_NS, tag);
+    const node = createSvgElement(tag);
     Object.entries(attrs || {}).forEach(([key, value]) => node.setAttribute(key, String(value)));
     parent?.appendChild(node);
     return node;
