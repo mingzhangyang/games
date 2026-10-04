@@ -448,12 +448,14 @@
 }
 
 /* ── 顶栏中部信息块（模式标记 + 分数） ── */
-.game-title-pill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    min-width: 0;
+@layer layout {
+    .game-title-pill {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        min-width: 0;
+    }
 }
 
 .game-hud-box {

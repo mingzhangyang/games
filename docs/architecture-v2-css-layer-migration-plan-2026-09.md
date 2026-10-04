@@ -136,6 +136,12 @@ CSS parser 已切换至 PostCSS + CSS Syntax tokenizer；HTML 保持 parse5。
 P2 的逐规则映射和单向 ratchet 已建立。首个生产 cutover 只迁移 `.game-stage--fill` 到 `layout`，用于验证真实 P2 路径；后续仍按 dependency-closed 小批继续。每条 mapping 都必须
 从 PR base 中找到稳定 source occurrence，并在当前源码中找到同 stylesheet 的显式 layer
 destination；1→N 拆分必须保持声明有序且无损。已合并 mapping 只能追加，不能删除或改写。
+
+迁移 ledger 采用模块化存储：`tests/css-layer-migration-state.json` 只保留共享元数据和
+`migratedRuleModules` 有序清单，每条 rule mapping 独立存放在
+`tests/css-layer-migrations/rules/<mapping-id>.json`。verifier 运行时 hydrate 成统一 state，
+并兼容读取旧版 monolithic comparison base，因此拆文件不改变单向 ratchet 语义。后续新增
+迁移只新增一个小 mapping module，不再让主状态文件无限增长。
 normal / important 冲突分开记录其相反的 layer precedence；不同 selector 命中关系仍由
 geometry / interaction 浏览器测试负责。旧 P0 与 semantic addendum 继续保持不可变。
 静态债务检查、迁移映射检查和浏览器行为验证仍是三个独立验收项。
@@ -286,6 +292,12 @@ flex-shrink 是标准 shell 的可定制 `layout` 默认几何。本批只迁这
 page CSS 仍未分层，因此原有覆盖关系保持不变。本批不触碰 overlay、hidden state、
 start-menu、drawer、frame-budget 或 immersive contracts。现有 probe / 页面 smoke 继续作为
 cross-selector toast 行为证据，尤其守住 Planet Merge / Word Daily 的换行意图。
+
+**P2-I title-pill default：** `.game-title-pill` 的 display / flex-direction / align-items /
+text-align / min-width 是顶栏中槽的共享 `layout` 默认值，不含 reset-sensitive 属性。Tetris
+存在同 selector 的 page peer，并有 display / flex-direction / align-items / min-width 四项
+精确属性交集；该 peer 继续未分层，因此迁移前后仍由 Tetris 的 row/wrap 设计获胜，冲突在
+mapping module 中显式登记。本批不触碰 `.game-hud-box`（含 padding）或任何 contracts。
 
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
@@ -456,6 +468,8 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-F：迁移 `.game-canvas` 共享默认规则到 `layout`；保留 page-specific canvas 规则未分层覆盖，不触碰 reset-sensitive 或 contracts 规则
 - [x] P2-G：迁移 desktop `.game-sidebar` 默认几何到 `layout`；drawer 隐藏与 frame-budget overflow/scrollbar 继续保留给 contracts 闭包
 - [x] P2-H：迁移 `.game-toast` 共享定位默认值到 `layout`；page-specific toast 规则继续未分层覆盖，不触碰 overlay/hidden/contracts
+- [x] 将 CSS migration ledger 拆为 manifest + per-mapping modules；主状态文件不再承载不断增长的完整 mapping payload
+- [x] P2-I：迁移 `.game-title-pill` 共享顶栏信息块默认值到 `layout`；Tetris exact-selector peer 保持未分层并显式登记冲突
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
