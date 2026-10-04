@@ -49,6 +49,18 @@ export function parseCssText(source, file) {
     function migrationDeclarations(node) {
         return (node.nodes || []).filter(child => child.type === 'decl').map(migrationDeclaration);
     }
+    function migrationKeyframeBody(node) {
+        return (node.nodes || []).filter(child => child.type !== 'comment').map(frame => {
+            if (frame.type !== 'rule') throw new Error(file + ': unsupported keyframe child ' + frame.type);
+            if (frame.nodes?.some(child => !['decl', 'comment'].includes(child.type))) {
+                throw new Error(file + ': nested keyframe declarations/rules require an explicit policy upgrade');
+            }
+            return {
+                selector: normalizeFragment(frame.selector),
+                declarations: migrationDeclarations(frame),
+            };
+        });
+    }
     function walk(parent, context = [], migrationContext = [], layer = null, inKeyframes = false) {
         for (const node of parent.nodes || []) {
             if (node.type === 'comment') continue;
@@ -88,7 +100,10 @@ export function parseCssText(source, file) {
                 const ownLayer = params.split(',')[0].trim() || '<anonymous>';
                 walk(node, context, migrationContext, layer ? layer + '.' + ownLayer : ownLayer, inKeyframes);
             } else if (KEYFRAMES.has(name)) {
-                result.keyframes.push({ name, params, context: [...context], layer });
+                result.keyframes.push({
+                    name, params, context: [...context], layer,
+                    migrationBody: migrationKeyframeBody(node),
+                });
                 walk(node, context, migrationContext, layer, true);
                 recordSpecial(context, name, params);
             } else if (DECLARATIONS.has(name)) {
