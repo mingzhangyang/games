@@ -280,10 +280,24 @@ export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module
             const name = property(node);
             if (ELEMENT_FACTORIES.has(name)) {
                 const call = parent?.type === 'CallExpression' && parent.callee === node ? parent : null;
-                const tag = string(call?.arguments[name === 'createElementNS' ? 1 : 0])?.toLowerCase();
-                if (!call || tag == null) fail('element factories must be direct calls with a literal tag');
-                else if (ACTIVATING_TAGS.has(tag) && !(tag === 'script' && inertScriptDataBlock(call, ancestors.slice(0, -1)))) {
-                    fail('runtime <' + tag + '> activates code, stylesheets or documents outside the page inventory');
+                const qualifiedTag = string(call?.arguments[name === 'createElementNS' ? 1 : 0]);
+                // DOM createElementNS accepts a qualified name such as "svg:style".
+                // Activation depends on the local name, not the optional prefix.
+                // Normalize that boundary once so namespaced style/script/link-like
+                // elements cannot escape the same capability policy as createElement.
+                const localTag = qualifiedTag == null ? null
+                    : (name === 'createElementNS'
+                        ? qualifiedTag.slice(qualifiedTag.lastIndexOf(':') + 1)
+                        : qualifiedTag).toLowerCase();
+                if (!call || localTag == null) fail('element factories must be direct calls with a literal tag');
+                else {
+                    // The inert-data exception is intentionally HTML-only.
+                    // A namespaced <script> is always treated as activating.
+                    const inertHtmlScript = name === 'createElement' && localTag === 'script'
+                        && inertScriptDataBlock(call, ancestors.slice(0, -1));
+                    if (ACTIVATING_TAGS.has(localTag) && !inertHtmlScript) {
+                        fail('runtime <' + localTag + '> activates code, stylesheets or documents outside the page inventory');
+                    }
                 }
             } else if (CAPABILITY_NAMES.has(name)) {
                 fail('capability .' + name + ' is outside the registered source boundary');

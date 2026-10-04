@@ -34,6 +34,9 @@ for (const source of [
     'const {createElement: make}=document; make("style");',
     'document["createElement"]("style");',
     'document.createElementNS("http://www.w3.org/2000/svg","style");',
+    'document.createElementNS("http://www.w3.org/2000/svg","svg:style");',
+    'const s=document.createElementNS("http://www.w3.org/2000/svg","svg:script");'
+        + ' s.type="application/ld+json"; s.textContent="{}"; document.head.append(s);',
     'const tag="style"; document.createElementNS("http://www.w3.org/2000/svg",tag);',
     'const link=document.createElement("link"); link.rel="stylesheet";',
     'new CSSStyleSheet();',
@@ -137,6 +140,7 @@ for (const source of [
     'setTimeout(handler.bind(null, 1), 0); setTimeout((0, step.bind)(this), 0);',
     'clearTimeout(timer); window.clearInterval(id);',
     'const write = value => value; write(1);',
+    'document.createElementNS("http://www.w3.org/2000/svg", "svg:g");',
     'const s=document.createElement("script"); s.type="application/ld+json"; s.textContent=JSON.stringify(data);'
         + ' document.head.appendChild(s);',
 ]) assert.deepEqual(auditStyleIngress(source), [], source);
