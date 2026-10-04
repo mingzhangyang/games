@@ -58,11 +58,13 @@ assert.notEqual(quotedWhitespace[0].selectorDigest, quotedWhitespace[1].selector
 
 const base = parseMap([
     ['css/a.css', '.x{color:red;display:none!important}'],
-    ['css/b.css', '.x{color:blue;display:block!important}'],
+    ['css/b.css', '.x{display:block!important}'],
+    ['css/c.css', '.x{color:blue}'],
 ]);
 const current = parseMap([
     ['css/a.css', '@layer layout{.x{color:red}}@layer contracts{.x{display:none!important}}'],
-    ['css/b.css', '.x{color:blue;display:block!important}'],
+    ['css/b.css', '.x{display:block!important}'],
+    ['css/c.css', '.x{color:blue}'],
 ]);
 const baseCatalogs = catalogMap(base);
 const currentCatalogs = catalogMap(current);
@@ -76,8 +78,9 @@ const mapping = {
 };
 const stylesheetLinks = {
     'fixture.html': [
-        ['css/a.css', [['href', 'css/a.css'], ['rel', 'stylesheet']]],
         ['css/b.css', [['href', 'css/b.css'], ['rel', 'stylesheet']]],
+        ['css/a.css', [['href', 'css/a.css'], ['rel', 'stylesheet']]],
+        ['css/c.css', [['href', 'css/c.css'], ['rel', 'stylesheet']]],
     ],
 };
 mapping.conflicts = analyzeExactConflicts(
@@ -93,6 +96,7 @@ const baseline = {
         unlayeredRules: [
             ['css/a.css', '', '.x'],
             ['css/b.css', '', '.x'],
+            ['css/c.css', '', '.x'],
         ],
     },
 };
