@@ -657,12 +657,14 @@ body.drawer-locked {
         .game-stage { max-width: var(--frame-stage-cap, var(--frame-stage)); }
     }
 
-    .game-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: var(--frame-side-gap);
-        width: var(--frame-side);
-        flex-shrink: 0;
+    @layer layout {
+        .game-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: var(--frame-side-gap);
+            width: var(--frame-side);
+            flex-shrink: 0;
+        }
     }
     /* 过长的侧栏锁到同一可用高度、内部滚动
        —— 这一条单独消灭 td 的 1998px 整页与 sf 的 1097px。
