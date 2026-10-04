@@ -254,13 +254,15 @@
    注意：这里**不要**加 white-space: nowrap。共享层比页面层先加载，
    一旦加上就会把页面自己的 max-width + text-align:center（意在长文案换行）
    压成单行 —— pm/wd 的 toast 原本都靠它换行。需要单行的胶囊提示由页面自己声明。 */
-.game-toast {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 20;
-    border-radius: 99px;
-    pointer-events: none;
+@layer layout {
+    .game-toast {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        border-radius: 99px;
+        pointer-events: none;
+    }
 }
 
 /* ── 持久页脚：随流在底部 ──
