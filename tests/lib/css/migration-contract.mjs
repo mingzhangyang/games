@@ -199,6 +199,10 @@ function destinationAssignments(mapping, sourceRule, destinationRules) {
     });
 }
 
+function projectionKey(rule, declarationIndex) {
+    return jsonKey([ruleRef(rule), declarationIndex]);
+}
+
 function layerPriority(targetLayer, peerLayer, priority, layerOrder) {
     if (!peerLayer) return priority === 'important' ? 'target-layer-wins' : 'peer-unlayered-wins';
     if (targetLayer === peerLayer) return 'same-layer';
@@ -211,6 +215,7 @@ function layerPriority(targetLayer, peerLayer, priority, layerOrder) {
 
 export function analyzeExactConflicts(
     mapping, sourceRule, destinationRules, baseCatalogs, stylesheetLinks, layerOrder,
+    projectedLayers = new Map(),
 ) {
     const pagesByPath = coactivePages(stylesheetLinks);
     const result = { normal: [], important: [] };
@@ -226,16 +231,19 @@ export function analyzeExactConflicts(
             for (const peer of rules) {
                 if (peer.path === sourceRule.path && peer.sourceIndex === sourceRule.sourceIndex) continue;
                 if (peer.selector !== sourceRule.selector) continue;
-                for (const peerDeclaration of peer.declarations) {
+                for (let peerIndex = 0; peerIndex < peer.declarations.length; peerIndex++) {
+                    const peerDeclaration = peer.declarations[peerIndex];
                     if (peerDeclaration.property !== declaration.property) continue;
                     if (priorityOf(peerDeclaration) !== priority) continue;
+                    const peerLayer = projectedLayers.get(projectionKey(peer, peerIndex)) ?? peer.layer;
                     result[priority].push({
                         property: declaration.property,
                         targetLayer: destination.layer,
                         peerPath: peer.path,
                         peerContext: peer.context,
-                        peerLayer: peer.layer,
-                        layerPriority: layerPriority(destination.layer, peer.layer, priority, layerOrder),
+                        peerSourceLayer: peer.layer,
+                        peerLayer,
+                        layerPriority: layerPriority(destination.layer, peerLayer, priority, layerOrder),
                         pages,
                     });
                 }
