@@ -103,13 +103,23 @@ export function moduleSpecifiers(ast) {
 // of these capabilities is statically visible where it is used. Each syntactic
 // way to hide a name (computed keys, dynamic dispatch, scope objects, strings
 // evaluated as code) is therefore rejected as a category, not shape by shape.
+// One capability table, checked identically at every position a name can occupy.
 const ELEMENT_FACTORIES = new Set(['createElement', 'createElementNS']);
 const STYLESHEET_HANDLES = new Set(['adoptedStyleSheets', 'styleSheets', 'sheet', 'insertRule', 'addRule',
-    'replaceSync', 'CSSStyleSheet', 'DOMParser', 'createContextualFragment', 'write', 'writeln',
+    'replaceSync', 'createContextualFragment', 'write', 'writeln',
     'attachShadow', 'setHTMLUnsafe', 'parseHTMLUnsafe', 'createHTMLDocument']);
-// Global bindings that construct stylesheets/documents, evaluate strings as
-// code, or invoke properties by runtime name. `.constructor` reaches Function.
+// Capabilities that are also global bindings (window properties): they
+// construct stylesheets/documents, evaluate strings as code, or invoke
+// properties by runtime name. `.constructor` reaches Function from any function.
 const GLOBAL_CAPABILITIES = new Set(['CSSStyleSheet', 'DOMParser', 'eval', 'Function', 'Reflect']);
+const CAPABILITY_NAMES = new Set([...ELEMENT_FACTORIES, ...STYLESHEET_HANDLES, ...GLOBAL_CAPABILITIES, 'constructor']);
+// What each name position can resolve to:
+// - property names (`x.name`, `{ name: alias } = x`): any object may be the
+//   window or a document, so every capability name;
+// - bare identifiers: the global bindings, plus every document member inside
+//   event handlers, whose scope chain includes the element, form and document.
+// Timers are checked by call-site name, so renaming them is rejected too.
+const RENAME_SENSITIVE = new Set([...CAPABILITY_NAMES, 'setTimeout', 'setInterval']);
 // Inserting these elements activates code, a stylesheet, a nested document, or
 // changes URL/stylesheet-set resolution for the rest of the page.
 const ACTIVATING_TAGS = new Set(['style', 'link', 'script', 'iframe', 'frame', 'object', 'embed', 'base', 'meta']);
@@ -210,8 +220,7 @@ export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module
     const ast = parseAuditedJs(source, grammar);
     // Handler scope chains include the element, its form and the document, so
     // a bare identifier there can resolve to any document capability.
-    const scopedNames = grammar === 'handler'
-        ? new Set([...GLOBAL_CAPABILITIES, ...ELEMENT_FACTORIES, ...STYLESHEET_HANDLES]) : GLOBAL_CAPABILITIES;
+    const scopedNames = grammar === 'handler' ? CAPABILITY_NAMES : GLOBAL_CAPABILITIES;
     walk(ast, [], (node, parent, ancestors) => {
         if (node.type === 'MemberExpression') {
             const name = property(node);
@@ -222,11 +231,9 @@ export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module
                 else if (ACTIVATING_TAGS.has(tag) && !(tag === 'script' && inertScriptDataBlock(call, ancestors.slice(0, -1)))) {
                     fail('runtime <' + tag + '> activates code, stylesheets or documents outside the page inventory');
                 }
+            } else if (CAPABILITY_NAMES.has(name)) {
+                fail('capability .' + name + ' is outside the registered source boundary');
             }
-            if (STYLESHEET_HANDLES.has(name)) {
-                fail('stylesheet/HTML injection handle .' + name + ' is outside the registered source boundary');
-            }
-            if (name === 'constructor') fail('.constructor reaches the Function constructor');
             if (name == null && invoked(ancestors, node)) {
                 fail('computed member invocation hides the called name; call a named method');
             }
@@ -245,8 +252,8 @@ export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module
                 if (entry.type !== 'Property') continue;
                 const key = staticKey(entry.key, entry.computed);
                 if (key == null) fail('computed destructuring hides the accessed name');
-                else if (ELEMENT_FACTORIES.has(key) || STYLESHEET_HANDLES.has(key) || key === 'constructor') {
-                    fail('capability .' + key + ' cannot be destructured or aliased');
+                else if (RENAME_SENSITIVE.has(key)) {
+                    fail('capability .' + key + ' cannot be destructured or renamed');
                 }
             }
         }

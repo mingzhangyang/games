@@ -101,6 +101,13 @@ each syntactic hiding *category*:
 | Strings as code / names | `eval`, `Function`, `.constructor`, `Reflect`, string timers, `javascript:` URL strings, non-literal `import()` |
 | Activating elements | Runtime `style`, `link`, `script`, `iframe`, `frame`, `object`, `embed`, `base`, `meta` |
 
+All of these use one capability table, checked the same way at every position a name can
+occupy. A property name (`window.eval`, `{ eval: run } = window`) may be on the window or a
+document, so it is checked against every capability. A bare identifier is checked against the
+global bindings, and inside event handlers against every document member. Timers are checked
+by call-site name, so renaming them by destructuring is rejected. Earlier, member access,
+identifiers and destructuring each had their own partial list, and `window.eval(...)` passed.
+
 A runtime `<script>` is accepted only as a locally proven inert data block (the existing
 JSON-LD sites): `const x = createElement('script')`, immediately `x.type = '<non-JS type>'`,
 then only `x.textContent = …` and `parent.append(x)` statements in the same statement list.
@@ -186,7 +193,13 @@ installer accepts any key; no caller-key inference is attempted. The per-page re
 addendum. Page HTML is byte-identical to the base commit; only `math-rain.html` activates
 the five sources, as before the registry. Adding, moving or reordering an executable script,
 or an import edge that reaches the installer, or changing a recorded directive needs an
-explicit P2 mapping. Selector-matched DOM state (`class`, `lang`, `dir` attributes) is not a
+explicit P2 mapping. HTML-derived values use HTML's own ASCII whitespace definition (`htmlTokens`,
+`isStylesheetLink`, attribute/directive normalization in `html-inputs.mjs`). JavaScript `\s`
+would also fold NBSP, which HTML keeps as data: a viewport or inline style differing only by
+NBSP would then fingerprint identically. The four separate `rel` checks are now one shared
+classifier. It follows the spec, splitting on all ASCII whitespace. Chromium splits only on
+space/newline, so the classifier is a fail-closed superset: the browser oracle checks that it
+never misses a browser-active link. Selector-matched DOM state (`class`, `lang`, `dir` attributes) is not a
 stylesheet input and stays outside this model.
 
 **Boundary of the guarantee:** these are architectural syntax checks, not a proof about

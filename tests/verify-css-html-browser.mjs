@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import { htmlJavaScriptInputs, scanHtml } from './lib/css/html-inputs.mjs';
+import { htmlJavaScriptInputs, isStylesheetLink, scanHtml } from './lib/css/html-inputs.mjs';
 import { auditHtmlStyleIngress } from './lib/css/runtime-sources.mjs';
 
 // Compare the static HTML execution inventory with the browser as an independent
@@ -70,6 +70,22 @@ try {
             .getPropertyValue('--csp-style').trim()), expected, 'CSP pragma decides stylesheet activation');
     }
     await cspPage.close();
+
+    // The shared classifier splits rel on HTML ASCII whitespace (spec). Chromium
+    // splits on space/newline only, so tab/form-feed variants are classified
+    // active but not applied: a fail-closed superset. It must never miss a
+    // browser-active link, and NBSP / non-ASCII case folds are never separators.
+    for (const rel of ['stylesheet', ' STYLESHEET\npreload ', 'stylesheet\tpreload',
+        'stylesheet\u00a0preload', 'ſtylesheet']) {
+        const linkPage = await browser.newPage();
+        const href = 'data:text/css,' + encodeURIComponent('body{--rel-probe:on}');
+        await linkPage.setContent(`<link rel="${rel}" href="${href}"><p>probe</p>`, { waitUntil: 'load' });
+        const active = await linkPage.evaluate(() => window.getComputedStyle(document.body)
+            .getPropertyValue('--rel-probe').trim() === 'on');
+        if (active) assert.ok(isStylesheetLink({ rel }), 'browser-active link missed: ' + JSON.stringify(rel));
+        if (/[\u00a0ſ]/.test(rel)) assert.ok(!active && !isStylesheetLink({ rel }), JSON.stringify(rel));
+        await linkPage.close();
+    }
 
     for (const mode of ['open', 'closed']) {
         const shadow = `<div id="host"><template shadowrootmode="${mode}">

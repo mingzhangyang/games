@@ -2,7 +2,9 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseStylesheet, normalizeFragment } from './model.mjs';
-import { parseHtmlElements, htmlElementAttributes, htmlTagName, styleElementSource } from './html-inputs.mjs';
+import {
+    parseHtmlElements, htmlElementAttributes, htmlTagName, isStylesheetLink, styleElementSource,
+} from './html-inputs.mjs';
 
 const SNAPSHOT_SHA256 = '8e95e837a3230b7e02653de9549cebe471a57b1936b0ab2e3abd09ca258df56d';
 export const fingerprint = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -16,7 +18,7 @@ export function htmlCascadeModel(html, file) {
         const occurrence = occurrences.get(tag) || 0;
         occurrences.set(tag, occurrence + 1);
         const attributes = Object.entries(attrs).sort(([a], [b]) => a.localeCompare(b));
-        if (tag === 'base' || (tag === 'link' && (attrs.rel || '').toLowerCase().split(/\s+/).includes('stylesheet'))) {
+        if (tag === 'base' || (tag === 'link' && isStylesheetLink(attrs))) {
             inputs.push({ kind: tag, attributes });
         }
         if (tag === 'style') {

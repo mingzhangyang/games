@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { hasImportantPriority } from './lib/css/model.mjs';
-import { scanHtml, parseHtmlElements, htmlElementAttributes, htmlTagName } from './lib/css/html-inputs.mjs';
+import { scanHtml, parseHtmlElements, htmlElementAttributes, htmlTagName, isStylesheetLink } from './lib/css/html-inputs.mjs';
 import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
 import { verifyActivationSnapshot } from './lib/css/activation.mjs';
@@ -117,7 +117,7 @@ function verifyBuildOrderingContract(errors) {
             const attributes = htmlElementAttributes(element);
             const start = element.sourceCodeLocation?.startOffset;
             if (tagName === 'link'
-                && (attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet')
+                && isStylesheetLink(attributes)
                 && attributes.href) {
                 links.push({ href: attributes.href, start });
             } else if (tagName === 'style') {

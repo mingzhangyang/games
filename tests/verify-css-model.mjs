@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { parseStylesheet, normalizeFragment, hasImportantPriority } from './lib/css/model.mjs';
-import { scanHtml, htmlJavaScriptInputs, htmlScriptKind } from './lib/css/html-inputs.mjs';
+import { scanHtml, htmlJavaScriptInputs, htmlScriptKind, isStylesheetLink } from './lib/css/html-inputs.mjs';
 import { htmlCascadeModel, fingerprint } from './lib/css/semantic-contract.mjs';
 import {
     auditStyleIngress, auditHtmlStyleIngress, auditedJavaScriptFiles, readStyleRegistry, SOURCE_IDS, STYLE_REGISTRY,
@@ -82,6 +82,17 @@ for (const source of [
     'const s=document.createElement("script"); s.type="application/ld+json"; s.type="text/javascript";',
     'const s=document.createElement("script"); s.type="application/ld+json"; setTimeout(() => { s.src=u; });',
     'let s=document.createElement("script"); s.type="application/ld+json"; document.head.append(s);',
+    // Every name position is checked against the same capability table.
+    'window.eval("document.styleSheets");',
+    'globalThis.Function("return document.styleSheets")();',
+    'window.Reflect.get(document, key);',
+    'new self.DOMParser();',
+    'new window.CSSStyleSheet();',
+    'const { eval: run } = window; run(code);',
+    'const { Function: F } = globalThis;',
+    'const { CSSStyleSheet: Sheet } = window;',
+    'const { constructor: make } = () => {};',
+    'const { setTimeout: later } = window; later("document.styleSheets", 0);',
 ]) assert.ok(auditStyleIngress(source).length, source);
 assert.match(auditHtmlStyleIngress('<script>with (document) { createElement("style"); }</script>').join('\n'),
     /with statements hide/);
@@ -131,6 +142,14 @@ for (const meta of ['<meta http-equiv="Content-Security-Policy" content="style-s
     assert.throws(() => activation(html), /http-equiv/, meta);
 }
 const directives = html => activation(html).directives;
+// HTML whitespace is ASCII-only: NBSP is data, not a separator, everywhere.
+assert.notDeepEqual(directives(indexHtml.replace('initial-scale', '\u00a0initial-scale')
+    .replace(', \u00a0', ',\u00a0')), directives(indexHtml));
+assert.equal(isStylesheetLink({ rel: 'stylesheet\u00a0preload' }), false);
+assert.equal(isStylesheetLink({ rel: '\tSTYLESHEET\npreload ' }), true);
+assert.equal(isStylesheetLink({ rel: 'ſtylesheet' }), false);
+assert.notDeepEqual(scanHtml('nbsp.html', '<div style="color:\u00a0red"></div>').inlineAttributes,
+    scanHtml('nbsp.html', '<div style="color: red"></div>').inlineAttributes);
 assert.deepEqual(directives(indexHtml).map(([name]) => name), ['charset', 'viewport']);
 for (const html of [
     indexHtml.replace('initial-scale=1.0', 'initial-scale=2.0'),

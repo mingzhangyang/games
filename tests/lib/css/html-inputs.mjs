@@ -1,9 +1,16 @@
 import { parse } from 'parse5';
 import { parseCssText } from './baseline-adapter.mjs';
-const normalizeValue = value => value.replace(/\s+/g, ' ').trim();
 const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 const asciiLower = value => value.replace(/[A-Z]/g, character => character.toLowerCase());
 const stripAsciiWhitespace = value => value.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, '');
+// HTML microsyntaxes split, trim and collapse ASCII whitespace only. JavaScript
+// \s would also fold NBSP and other Unicode spaces, which HTML keeps as data.
+const ASCII_WHITESPACE = /[\t\n\f\r ]+/g;
+const normalizeValue = value => stripAsciiWhitespace(value).replace(ASCII_WHITESPACE, ' ');
+export const htmlTokens = value => stripAsciiWhitespace(value).split(ASCII_WHITESPACE).filter(Boolean);
+// The one stylesheet-link classifier for every consumer (rel is an ASCII
+// case-insensitive token set).
+export const isStylesheetLink = attributes => htmlTokens(asciiLower(attributes.rel ?? '')).includes('stylesheet');
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type
 // HTML uses an essence *string match*, not MIME parsing: parameters do not match.
 const JAVASCRIPT_TYPES = new Set([
@@ -180,7 +187,7 @@ function normalizeLinkAttributes(attributes) {
         .map(([name, value]) => [
             name,
             name === 'rel'
-                ? value.toLowerCase().split(/\s+/).filter(Boolean).sort().join(' ')
+                ? htmlTokens(asciiLower(value)).sort().join(' ')
                 : normalizeValue(value),
         ])
         .sort(([left], [right]) => left.localeCompare(right));
@@ -203,7 +210,7 @@ export function scanHtml(path, html) {
         const attributes = htmlElementAttributes(element);
 
         if (tagName === 'link'
-            && (attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet')
+            && isStylesheetLink(attributes)
             && attributes.href) {
             links.push(stylesheetLinkSignature(attributes));
         }
