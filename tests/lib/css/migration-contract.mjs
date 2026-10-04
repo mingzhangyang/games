@@ -199,7 +199,19 @@ function destinationAssignments(mapping, sourceRule, destinationRules) {
     });
 }
 
-export function analyzeExactConflicts(mapping, sourceRule, destinationRules, baseCatalogs, stylesheetLinks) {
+function layerPriority(targetLayer, peerLayer, priority, layerOrder) {
+    if (!peerLayer) return priority === 'important' ? 'target-layer-wins' : 'peer-unlayered-wins';
+    if (targetLayer === peerLayer) return 'same-layer';
+    const targetRank = layerOrder.indexOf(targetLayer);
+    const peerRank = layerOrder.indexOf(peerLayer);
+    if (targetRank < 0 || peerRank < 0) return 'unreviewed-layer-relation';
+    if (priority === 'important') return targetRank < peerRank ? 'target-layer-wins' : 'peer-layer-wins';
+    return targetRank > peerRank ? 'target-layer-wins' : 'peer-layer-wins';
+}
+
+export function analyzeExactConflicts(
+    mapping, sourceRule, destinationRules, baseCatalogs, stylesheetLinks, layerOrder,
+) {
     const pagesByPath = coactivePages(stylesheetLinks);
     const result = { normal: [], important: [] };
     const assignments = destinationAssignments(mapping, sourceRule, destinationRules);
@@ -223,6 +235,7 @@ export function analyzeExactConflicts(mapping, sourceRule, destinationRules, bas
                         peerPath: peer.path,
                         peerContext: peer.context,
                         peerLayer: peer.layer,
+                        layerPriority: layerPriority(destination.layer, peer.layer, priority, layerOrder),
                         pages,
                     });
                 }
@@ -304,7 +317,8 @@ function stableRuleRows(catalog) {
 }
 
 export function verifyRuleMigrations({
-    baseline, state, currentParsedByPath, baseParsedByPath, stylesheetLinks, allowedLayers, baseState, errors,
+    baseline, state, currentParsedByPath, baseParsedByPath, stylesheetLinks,
+    allowedLayers, layerOrder, baseState, errors,
 }) {
     verifyMonotonicState(baseState || {}, state, errors);
     const currentCatalogs = new Map([...currentParsedByPath].map(([path, parsed]) => [path, indexRuleOccurrences(parsed, path)]));
@@ -355,7 +369,9 @@ export function verifyRuleMigrations({
         if (currentDestinationRules.length === (mapping.destinations || []).length) {
             verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
             verifyConflictReview(mapping,
-                analyzeExactConflicts(mapping, sourceRule, currentDestinationRules, baseCatalogs, stylesheetLinks), errors);
+                analyzeExactConflicts(
+                    mapping, sourceRule, currentDestinationRules, baseCatalogs, stylesheetLinks, layerOrder,
+                ), errors);
         }
         const paths = new Set([mapping.source.path, ...(mapping.destinations || []).map(item => item.path)]);
         for (const path of paths) {
