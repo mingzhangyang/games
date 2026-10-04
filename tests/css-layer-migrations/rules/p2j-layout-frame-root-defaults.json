@@ -1,0 +1,217 @@
+{
+  "id": "p2j-layout-frame-root-defaults",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ":root",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "4c10f44c2ae57698bd3ae208b6700ec56c5fa2d2865e8380b0c28c009060900d",
+    "layer": null,
+    "declarationDigest": "59a9db3d836c528fb9a368ad76d2c69f78bd0185db7bfd79506a7b79347df5ee",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "--frame-max",
+        "value": [
+          [
+            "dimension-token",
+            "520px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-max-wide",
+        "value": [
+          [
+            "dimension-token",
+            "940px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-stage",
+        "value": [
+          [
+            "dimension-token",
+            "460px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-side",
+        "value": [
+          [
+            "dimension-token",
+            "300px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-side-gap",
+        "value": [
+          [
+            "dimension-token",
+            "12px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-radius",
+        "value": [
+          [
+            "dimension-token",
+            "18px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--drawer-max",
+        "value": [
+          [
+            "dimension-token",
+            "90dvh"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-ratio",
+        "value": [
+          [
+            "number-token",
+            "0.75"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-stage-h",
+        "value": [
+          [
+            "dimension-token",
+            "960px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-chrome",
+        "value": [
+          [
+            "dimension-token",
+            "150px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-main-gap",
+        "value": [
+          [
+            "dimension-token",
+            "28px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-scrollbar-thumb",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--tok-scrollbar"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-scrollbar-thumb-hover",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--tok-scrollbar-hover"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ":root",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "4c10f44c2ae57698bd3ae208b6700ec56c5fa2d2865e8380b0c28c009060900d",
+      "layer": "layout",
+      "declarationDigest": "59a9db3d836c528fb9a368ad76d2c69f78bd0185db7bfd79506a7b79347df5ee",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "--frame-max",
+        "peerProperty": "--frame-max",
+        "targetLayer": "layout",
+        "peerPath": "css/gomoku.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": null,
+        "layerPriority": "peer-unlayered-wins",
+        "pages": [
+          "gomoku.html"
+        ]
+      },
+      {
+        "property": "--frame-max-wide",
+        "peerProperty": "--frame-max-wide",
+        "targetLayer": "layout",
+        "peerPath": "css/gomoku.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": null,
+        "layerPriority": "peer-unlayered-wins",
+        "pages": [
+          "gomoku.html"
+        ]
+      },
+      {
+        "property": "--frame-stage",
+        "peerProperty": "--frame-stage",
+        "targetLayer": "layout",
+        "peerPath": "css/gomoku.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": null,
+        "layerPriority": "peer-unlayered-wins",
+        "pages": [
+          "gomoku.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}
