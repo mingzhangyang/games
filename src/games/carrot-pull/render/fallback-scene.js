@@ -1,9 +1,20 @@
 import { SCENE, createSceneAnimator } from './scene.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const SVG_FACTORIES = Object.freeze({
+    circle: () => document.createElementNS(SVG_NS, 'circle'),
+    defs: () => document.createElementNS(SVG_NS, 'defs'),
+    ellipse: () => document.createElementNS(SVG_NS, 'ellipse'),
+    g: () => document.createElementNS(SVG_NS, 'g'),
+    linearGradient: () => document.createElementNS(SVG_NS, 'linearGradient'),
+    path: () => document.createElementNS(SVG_NS, 'path'),
+    rect: () => document.createElementNS(SVG_NS, 'rect'),
+    stop: () => document.createElementNS(SVG_NS, 'stop'),
+});
 
 function el(tag, attrs, parent) {
-    const node = document.createElementNS(SVG_NS, tag);
+    if (!Object.hasOwn(SVG_FACTORIES, tag)) throw new Error('Unsupported SVG element: ' + tag);
+    const node = SVG_FACTORIES[tag]();
     Object.entries(attrs || {}).forEach(([key, value]) => node.setAttribute(key, String(value)));
     parent?.appendChild(node);
     return node;

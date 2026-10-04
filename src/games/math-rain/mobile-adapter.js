@@ -1,3 +1,4 @@
+import { installMathRainStyle } from './install-style.js';
 /**
  * Mobile Adapter for Math Rain Game
  * Handles mobile-specific functionality and optimizations
@@ -162,29 +163,7 @@ class MobileAdapter {
      */
     applyLowEndSettings() {
         // Disable animations for better performance
-        const style = document.createElement('style');
-        style.textContent = `
-            @media (max-width: 768px) {
-                * {
-                    animation-duration: 0.1s !important;
-                    animation-iteration-count: 1 !important;
-                    transition-duration: 0.1s !important;
-                }
-                
-                .screen-content {
-                    backdrop-filter: none !important;
-                }
-                
-                #game-header {
-                    backdrop-filter: none !important;
-                }
-                
-                .tool-bar {
-                    backdrop-filter: none !important;
-                }
-            }
-        `;
-        document.head.appendChild(style);
+        installMathRainStyle('low-end');
     }
 
     /**
@@ -331,43 +310,7 @@ class MobileAdapter {
     addMobileStyles() {
         if (!this.isMobile) return;
 
-        const style = document.createElement('style');
-        style.textContent = `
-            .mobile-active {
-                transform: scale(0.95) !important;
-                opacity: 0.8 !important;
-                transition: transform 0.1s ease, opacity 0.1s ease !important;
-            }
-            
-            .orientation-landscape.landscape-compact #game-header {
-                padding: 4px 8px !important;
-                min-height: 40px !important;
-            }
-            
-            .orientation-landscape.landscape-compact .score-display span:last-child,
-            .orientation-landscape.landscape-compact .combo-display span:last-child,
-            .orientation-landscape.landscape-compact .level-display span:last-child,
-            .orientation-landscape.landscape-compact .time-display span:last-child,
-            .orientation-landscape.landscape-compact .lives-display span:last-child {
-                font-size: 14px !important;
-            }
-            
-            .keyboard-visible #target-area {
-                padding: 10px 15px !important;
-            }
-            
-            .keyboard-visible #target-number {
-                font-size: 32px !important;
-            }
-            
-            /* High contrast mode for outdoor visibility */
-            @media (prefers-contrast: high) {
-                .control-btn, .menu-btn, .start-btn {
-                    border-width: 3px !important;
-                }
-            }
-        `;
-        document.head.appendChild(style);
+        installMathRainStyle('mobile');
     }
 
     /**

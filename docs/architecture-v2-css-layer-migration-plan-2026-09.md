@@ -126,6 +126,17 @@ P0 历史事实永久保存在 `tests/css-layer-p0-baseline.json`，不得随着
 如果一条规则既像视觉又影响结构，先用行为测试确定职责，再决定 layer；不能靠加
 `!important` 或提高 selector specificity 抵消错误的 layer 模型。
 
+### 验证器前置改造（PR #75 后续）
+
+CSS parser 已切换至 PostCSS + CSS Syntax tokenizer；HTML 保持 parse5。
+规则和声明以有序模型独立校验，原 P0 tuple 仅保留作历史兼容适配。
+五处运行时 stylesheet 已收敛到固定数据注册表及受控安装入口，保持原激活时机。
+详见 `docs/architecture-v2-postcss-verifier-migration-plan.md`。
+
+当前仍是 P0 冻结 gate，尚未实现 P2 的逐规则映射和单向 ratchet。P2 必须同时解释
+旧 P0 与新有序模型的变化，不能直接更新 fingerprint 放行。静态债务检查、迁移映射
+检查和浏览器行为验证是三个独立验收项。
+
 ## 4. 分阶段实施方案
 
 ### P0：冻结现状、建立行为基线和 CSS debt baseline

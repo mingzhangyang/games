@@ -66,10 +66,15 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 `!important` 声明**。
 
 它们单独冻结在 `tests/css-runtime-style-p0-baseline.json`，其 Git blob digest 与静态 P0
-一样由 verifier 独立固定。verifier 使用 Acorn 扫描 `src/`、`js/`、`public/`
-中的生产 JavaScript；新增/删除/改写 JavaScript-created stylesheet、constructed
-`CSSStyleSheet`、`adoptedStyleSheets`、`insertRule` / `replace*` 或运行时
-`<style>` markup 都必须显式进入审计模型，不能静默绕过。
+一样由 verifier 独立固定。五处样式现已收敛到 Math Rain 固定字符串注册表和唯一安装入口，
+保留原调用位置、生效条件及插入顺序。Acorn 只读取数据结构并执行明确的入口语法限制，
+不再按变量名猜测 stylesheet 内容；这不是对任意 JavaScript 数据流的完备证明。
+真实安装结果由桌面/移动低性能场景的浏览器 CSSOM 对账独立验证。
+
+CSS 解析已经切换到 PostCSS 和标准 CSS tokenizer。原 P0 字节不变，
+新增 `tests/css-semantic-p0-baseline.json` 独立固定规则/声明顺序、layer/context、
+字符串内容及 HTML 激活属性。设计、边界和验收见
+`docs/architecture-v2-postcss-verifier-migration-plan.md`。
 
 migration state 同时引用静态 P0 与 runtime addendum。P2 的 **strict-zero** 因而不是只把
 静态 `unlayeredRules` 清零，而是必须同时处理运行时 stylesheet source。普通
