@@ -151,11 +151,13 @@
 }
 
 /* ── 主体：移动端纵向，桌面端回退为 舞台+侧栏 横排 ── */
-.game-main {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+@layer layout {
+    .game-main {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 }
 
 /* ── 舞台：承载画布与覆盖层的定位盒 ── */
