@@ -556,7 +556,76 @@ function listFiles(directory, root, predicate) {
 }
 
 function maskHtmlComments(html) {
-    return html.replace(/<!--[\s\S]*?(?:-->|$)/g, match => ' '.repeat(match.length));
+    const output = html.split('');
+    let inTag = false;
+    let quote = '';
+    let pendingRawTextTag = '';
+    let rawTextTag = '';
+
+    function maskRange(start, end) {
+        for (let index = start; index < end; index++) {
+            if (html[index] !== '\n' && html[index] !== '\r') output[index] = ' ';
+        }
+    }
+
+    for (let index = 0; index < html.length; index++) {
+        const char = html[index];
+
+        if (rawTextTag) {
+            if (char === '<' && html[index + 1] === '/') {
+                const candidate = html.slice(index + 2, index + 2 + rawTextTag.length);
+                const boundary = html[index + 2 + rawTextTag.length] || '';
+                if (candidate.toLowerCase() === rawTextTag && /[\s/>]/.test(boundary)) {
+                    rawTextTag = '';
+                    inTag = true;
+                    quote = '';
+                }
+            }
+            continue;
+        }
+
+        if (inTag) {
+            if (quote) {
+                if (char === quote) quote = '';
+                continue;
+            }
+            if (char === '"' || char === "'") {
+                quote = char;
+                continue;
+            }
+            if (char === '>') {
+                inTag = false;
+                if (pendingRawTextTag) {
+                    rawTextTag = pendingRawTextTag;
+                    pendingRawTextTag = '';
+                }
+            }
+            continue;
+        }
+
+        if (html.startsWith('<!--', index)) {
+            const close = html.indexOf('-->', index + 4);
+            const end = close < 0 ? html.length : close + 3;
+            maskRange(index, end);
+            index = end - 1;
+            continue;
+        }
+
+        if (char === '<') {
+            const match = html.slice(index).match(/^<\/?([a-z][^\s/>]*)/i);
+            if (match) {
+                const isEndTag = html[index + 1] === '/';
+                const tagName = match[1].toLowerCase();
+                inTag = true;
+                quote = '';
+                if (!isEndTag && (tagName === 'script' || tagName === 'style')) {
+                    pendingRawTextTag = tagName;
+                }
+            }
+        }
+    }
+
+    return output.join('');
 }
 
 function normalizeLinkAttributes(attributes) {
@@ -590,7 +659,7 @@ function scanHtml(path, html) {
     const styleBlocks = [];
     const inlineRules = [];
     const inlineAttributes = [];
-    for (const match of activeHtml.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) {
+    for (const match of activeHtml.matchAll(/<style\b(?:"[^"]*"|'[^']*'|[^'">])*>([\s\S]*?)<\/style\s*>/gi)) {
         const source = match[1].replace(/\r\n/g, '\n').trim();
         const index = styleBlocks.length;
         styleBlocks.push([path, index, source]);
@@ -600,7 +669,7 @@ function scanHtml(path, html) {
         }
     }
 
-    const htmlWithoutRawText = activeHtml.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+    const htmlWithoutRawText = activeHtml.replace(/<(script|style)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?<\/\1\s*>/gi, '');
     const tagOccurrences = new Map();
     for (const tag of htmlWithoutRawText.matchAll(/<[a-z](?:"[^"]*"|'[^']*'|[^'">])*>/gi)) {
         const tagName = (tag[0].match(/^<([a-z][^\s/>]*)/i) || [])[1]?.toLowerCase() || 'unknown';
@@ -714,6 +783,8 @@ function runSelfChecks() {
         '<link rel="style&#115heet" href="/active-decimal.css">',
         '<link rel="alternate stylesheet" href="/inactive.css" media="print" disabled>',
         '<div title=">" style="color:red"></div>',
+        '<div title="<!-- not a comment -->" style="color:blue"></div>',
+        '<script data-note=">">const fake = "<link rel=\\\"stylesheet\\\" href=\\\"/fake.css\\\">";</script>',
         '<div></div>',
         '<div style="color:red"></div>',
         '<!-- <style>.commented { display:none; }</style><div style="display:none"></div> -->',
@@ -731,7 +802,8 @@ function runSelfChecks() {
     assert.equal(htmlScan.styleBlocks.length, 0);
     assert.deepEqual(htmlScan.inlineAttributes, [
         ['fixture.html', 'div@0', 'color:red'],
-        ['fixture.html', 'div@2', 'color:red'],
+        ['fixture.html', 'div@1', 'color:blue'],
+        ['fixture.html', 'div@3', 'color:red'],
     ]);
 
     assert.deepEqual([
