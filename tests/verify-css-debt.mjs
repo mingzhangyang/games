@@ -915,12 +915,12 @@ function runSelfChecks() {
     assert.equal(hasImportantPriority('red !\\000069 mportant'), true);
     assert.equal(hasImportantPriority('red !\\notimportant'), false);
     const escapedDeclaration = parseCssText(
-        String.raw`.escaped { --x: foo\\;bar!important; color: red; }`,
+        String.raw`.escaped { --x: foo\;bar!important; color: red; }`,
         'escaped-declaration.css',
     );
     assert.deepEqual(
         escapedDeclaration.declarations.map(({ property, value }) => [property, value]),
-        [['--x', String.raw`foo\\;bar!important`], ['color', 'red']],
+        [['--x', String.raw`foo\;bar!important`], ['color', 'red']],
     );
     assert.equal(hasImportantPriority(escapedDeclaration.declarations[0].value), true);
     assert.throws(
