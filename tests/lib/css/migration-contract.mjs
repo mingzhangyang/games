@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
+import { propertiesOverlap } from './property-writes.mjs';
+
 const PRIORITIES = new Set(['normal', 'important']);
 
 export const declarationDigest = declarations => createHash('sha256')
@@ -245,11 +247,12 @@ export function analyzeExactConflicts(
                 if (peer.selectorDigest !== sourceRule.selectorDigest) continue;
                 for (let peerIndex = 0; peerIndex < peer.declarations.length; peerIndex++) {
                     const peerDeclaration = peer.declarations[peerIndex];
-                    if (peerDeclaration.property !== declaration.property) continue;
+                    if (!propertiesOverlap(peerDeclaration.property, declaration.property)) continue;
                     if (priorityOf(peerDeclaration) !== priority) continue;
                     const peerLayer = projectedLayers.get(projectionKey(peer, peerIndex)) ?? peer.layer;
                     result[priority].push({
                         property: declaration.property,
+                        peerProperty: peerDeclaration.property,
                         targetLayer: destination.layer,
                         peerPath: peer.path,
                         peerContext: peer.context,
@@ -284,18 +287,20 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
         errors.push(mapping.id + ': destination declarations must be an ordered, lossless partition of the source rule.');
     }
     const assignments = destinationAssignments(mapping, sourceRule, destinationRules);
-    const propertyLayers = new Map();
-    sourceRule.declarations.forEach((declaration, index) => {
-        const destination = assignments[index];
-        if (!destination) return;
-        const previous = propertyLayers.get(declaration.property);
-        if (previous && previous !== destination.layer) {
-            errors.push(mapping.id + ': repeated property ' + declaration.property
-                + ' cannot be split across layers; preserve its intra-rule fallback cascade.');
-        } else {
-            propertyLayers.set(declaration.property, destination.layer);
+    for (let left = 0; left < sourceRule.declarations.length; left++) {
+        const leftDestination = assignments[left];
+        if (!leftDestination) continue;
+        for (let right = left + 1; right < sourceRule.declarations.length; right++) {
+            const rightDestination = assignments[right];
+            if (!rightDestination || leftDestination.layer === rightDestination.layer) continue;
+            const leftProperty = sourceRule.declarations[left].property;
+            const rightProperty = sourceRule.declarations[right].property;
+            if (propertiesOverlap(leftProperty, rightProperty)) {
+                errors.push(mapping.id + ': overlapping properties ' + leftProperty + ' / ' + rightProperty
+                    + ' cannot be split across layers; preserve their intra-rule cascade.');
+            }
         }
-    });
+    }
     for (const destination of destinationRules) {
         if (destination.selectorDigest !== sourceRule.selectorDigest
             || destination.contextDigest !== sourceRule.contextDigest) {
