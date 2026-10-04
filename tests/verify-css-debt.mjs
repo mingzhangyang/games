@@ -20,6 +20,7 @@ const BASELINE_BLOB_SHA = createHash('sha1')
     .update(BASELINE_TEXT)
     .digest('hex');
 const REVIEWED_P0_BASELINE_BLOB_SHA = '9c4541b4a447bff3dbecb0bc6cd02e09f3850922';
+const REVIEWED_VITE_CONFIG_BLOB_SHA = 'dccb984916d19229011c035321b56a9ae43138db';
 const REVIEWED_LAYER_ORDER = Object.freeze(['tokens', 'showcase', 'components', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
 const STATEMENT_AT_RULES = new Set(['charset', 'import', 'namespace', 'layer']);
@@ -429,6 +430,9 @@ function parseCssText(source, file) {
                         throw new Error('Unsupported CSS statement at-rule @' + name + ' in ' + file);
                     }
                     if (name === 'layer') {
+                        if (layer || context.length) {
+                            throw new Error('Nested or conditional @layer order statements are unsupported in ' + file);
+                        }
                         result.layerStatements.push(params);
                         addLayerNames(params);
                     }
@@ -591,7 +595,10 @@ function scanHtml(path, html) {
             const styleSource = styleElementSource(html, element, path);
             const source = styleSource.replace(/\r\n/g, '\n').trim();
             const index = styleBlocks.length;
-            styleBlocks.push([path, index, source]);
+            const styleAttributes = normalizeLinkAttributes(attributes);
+            styleBlocks.push(styleAttributes.length
+                ? [path, index, styleAttributes, source]
+                : [path, index, source]);
             const parsed = parseCssText(styleSource, path + '#style[' + index + ']');
             for (const rule of parsed.rules) {
                 inlineRules.push([path + '#style[' + index + ']', rule.context.join(' / '), rule.selector]);
@@ -692,6 +699,15 @@ function runSelfChecks() {
         /CSS nesting or brace-bearing values are unsupported/,
     );
 
+    assert.throws(
+        () => parseCssText('@layer tokens { @layer components, layout; }', 'nested-layer.css'),
+        /Nested or conditional @layer order statements/,
+    );
+    assert.throws(
+        () => parseCssText('@media (width > 1px) { @layer components, layout; }', 'conditional-layer.css'),
+        /Nested or conditional @layer order statements/,
+    );
+
     const duplicateAttributeScan = scanHtml('duplicates.html', [
         '<link rel="stylesheet" rel="alternate" href="/first.css" href="/second.css">',
         '<div style="color:red" style="display:none"></div>',
@@ -703,6 +719,17 @@ function runSelfChecks() {
         ['duplicates.html', 'div@0', 'color:red'],
     ]);
 
+    const styleAttributeScan = scanHtml(
+        'style-attrs.html',
+        '<style media="print">.print-only { color: red; }</style>',
+    );
+    assert.deepEqual(styleAttributeScan.styleBlocks, [[
+        'style-attrs.html',
+        0,
+        [['media', 'print']],
+        '.print-only { color: red; }',
+    ]]);
+
     const htmlScan = scanHtml('fixture.html', [
         '<!-- <link rel="stylesheet" href="/commented.css"> -->',
         '<link rel="style&#x73;heet" href="/active.css">',
@@ -711,6 +738,7 @@ function runSelfChecks() {
         '<div title=">" style="color:red"></div>',
         '<div title="<!-- not a comment -->" style="color:blue"></div>',
         '<script data-note=">">const fake = "<link rel=\\\"stylesheet\\\" href=\\\"/fake.css\\\">";</script>',
+        '<template><link rel="stylesheet" href="/template.css"><style>.template { color:red; }</style><div style="display:none"></div></template>',
         '<div></div>',
         '<div style="color:red"></div>',
         '<!-- <style>.commented { display:none; }</style><div style="display:none"></div> -->',
@@ -758,13 +786,12 @@ function stylesheetRank(href) {
 
 function verifyBuildOrderingContract(errors) {
     const viteConfig = readFileSync(join(ROOT, 'vite.config.js'), 'utf8');
-    const pluginIndex = viteConfig.indexOf("name: 'shared-css-first'");
-    const plugin = pluginIndex < 0 ? '' : viteConfig.slice(pluginIndex, pluginIndex + 5000);
-    if (pluginIndex < 0 || !plugin.includes('transformIndexHtml')
-        || !plugin.includes("order: 'post'") || !plugin.includes('tokens-')
-        || !plugin.includes('layout-') || !plugin.includes('science-showcase-')
-        || !plugin.includes('more-games-')) {
-        errors.push('vite.config.js must retain the shared-css-first stylesheet ordering contract until P6.');
+    const viteConfigBlobSha = createHash('sha1')
+        .update(`blob ${Buffer.byteLength(viteConfig, 'utf8')}\0`)
+        .update(viteConfig)
+        .digest('hex');
+    if (viteConfigBlobSha !== REVIEWED_VITE_CONFIG_BLOB_SHA) {
+        errors.push('vite.config.js differs from the independently pinned shared-css-first implementation.');
     }
 
     const distRoot = join(ROOT, 'dist');
