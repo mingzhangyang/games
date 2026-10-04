@@ -396,6 +396,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 升级 verifier，使 migration-state 支持稳定 occurrence、1→N/重新归层与单向 ratchet
 - [x] 启动首个 dependency-closed production canary：`.game-stage--fill` → `layout`
 - [x] P2-B：迁移 `.game-main` 顶层默认规则，并验证 desktop 同 selector peer 的 precedence 保持
+- [x] P2-C：迁移 `.game-stage` 顶层默认规则；desktop `max-width` 与 page/immersive/start-menu 覆盖关系保持不变
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

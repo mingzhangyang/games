@@ -161,13 +161,15 @@
 }
 
 /* ── 舞台：承载画布与覆盖层的定位盒 ── */
-.game-stage {
-    position: relative;
-    width: 100%;
-    max-width: var(--frame-stage);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+@layer layout {
+    .game-stage {
+        position: relative;
+        width: 100%;
+        max-width: var(--frame-stage);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
 }
 
 /* 需要吃掉剩余高度的舞台（纵向 100vh 布局的游戏） */
