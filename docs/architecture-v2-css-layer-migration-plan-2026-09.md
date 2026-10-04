@@ -1,6 +1,6 @@
 # CSS Cascade Layers 迁移方案
 
-> 状态：P0/P1 基线已完成；2026-10-04 的 whole-file P2 canary 已回滚，生产 CSS 迁移仍未开始
+> 状态：P0/P1 基线与 P2 rule-mapping foundation 已完成；生产 CSS 迁移已从首个 dependency-closed `layout` canary（`.game-stage--fill`）开始
 >
 > 记录日期：2026-09-30
 >
@@ -133,7 +133,7 @@ CSS parser 已切换至 PostCSS + CSS Syntax tokenizer；HTML 保持 parse5。
 五处运行时 stylesheet 已收敛到固定数据注册表及受控安装入口，保持原激活时机。
 详见 `docs/architecture-v2-postcss-verifier-migration-plan.md`。
 
-P2 的逐规则映射和单向 ratchet 已建立，但生产 CSS 迁移尚未开始。每条 mapping 都必须
+P2 的逐规则映射和单向 ratchet 已建立。首个生产 cutover 只迁移 `.game-stage--fill` 到 `layout`，用于验证真实 P2 路径；后续仍按 dependency-closed 小批继续。每条 mapping 都必须
 从 PR base 中找到稳定 source occurrence，并在当前源码中找到同 stylesheet 的显式 layer
 destination；1→N 拆分必须保持声明有序且无损。已合并 mapping 只能追加，不能删除或改写。
 normal / important 冲突分开记录其相反的 layer precedence；不同 selector 命中关系仍由
@@ -394,6 +394,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 冻结 P0 immutable snapshot，建立独立 migration-state 骨架
 - [x] 修正目标架构为 `tokens, showcase, components, layout, pages, contracts`
 - [x] 升级 verifier，使 migration-state 支持稳定 occurrence、1→N/重新归层与单向 ratchet
+- [x] 启动首个 dependency-closed production canary：`.game-stage--fill` → `layout`
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
