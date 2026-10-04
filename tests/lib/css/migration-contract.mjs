@@ -532,23 +532,30 @@ export function verifyRuleMigrations({
     const baseMappings = mappingsById(baseState?.migratedRules || [], errors, 'base migratedRules');
     const mappings = mappingsById(state.migratedRules || [], errors, 'migratedRules');
     const expectedDebt = tupleCounts(baseline.debt?.unlayeredRules || []);
+    // The append-only state is a historical ledger. Only mappings absent from the
+    // comparison base form the current transaction; historical destinations may
+    // legitimately be consumed by a new mapping in a later PR.
+    for (const mapping of mappings.values()) {
+        verifyMappingShape(mapping, allowedLayers, errors);
+        if (mapping.source?.layer === null || mapping.source?.layer === undefined) {
+            const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
+            subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
+        }
+    }
+
     const usedSources = new Set();
     const usedDestinations = new Set();
     const newMappingsByPath = new Map();
-
     const pendingConflictReviews = [];
+
     for (const mapping of mappings.values()) {
-        verifyMappingShape(mapping, allowedLayers, errors);
+        if (baseMappings.has(mapping.id)) continue;
+
         const sourceKey = canonicalRefKey(mapping.source);
-        const duplicateSource = usedSources.has(sourceKey);
-        if (duplicateSource) {
-            errors.push(mapping.id + ': source rule is claimed by more than one migration.');
+        if (usedSources.has(sourceKey)) {
+            errors.push(mapping.id + ': source rule is claimed by more than one migration in this transaction.');
         } else {
             usedSources.add(sourceKey);
-            if (mapping.source?.layer === null || mapping.source?.layer === undefined) {
-                const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
-                subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
-            }
         }
 
         const currentDestinationRules = [];
@@ -561,16 +568,12 @@ export function verifyRuleMigrations({
             }
             verifyRefDiagnostics(destination, rule, errors, mapping.id + ' destination');
             const destinationKey = canonicalRefKey(ruleRef(rule));
-            if (usedDestinations.has(destinationKey)) errors.push(mapping.id + ': destination rule is claimed by more than one migration.');
-            usedDestinations.add(destinationKey);
-            currentDestinationRules.push(rule);
-        }
-
-        if (baseMappings.has(mapping.id)) {
-            if (currentDestinationRules.length === (mapping.destinations || []).length) {
-                verifyPartition(mapping, mapping.source, currentDestinationRules, errors);
+            if (usedDestinations.has(destinationKey)) {
+                errors.push(mapping.id + ': destination rule is claimed by more than one migration in this transaction.');
+            } else {
+                usedDestinations.add(destinationKey);
             }
-            continue;
+            currentDestinationRules.push(rule);
         }
 
         const paths = new Set([mapping.source.path, ...(mapping.destinations || []).map(item => item.path)]);
@@ -645,8 +648,8 @@ export function verifyRuleMigrations({
                 if (jsonKey(baseParsed.keyframes) !== jsonKey(currentParsed.keyframes)) {
                     errors.push(path + ': keyframes changed during a rule-only P2 migration; keyframe mappings are not enabled yet.');
                 }
-                if (jsonKey(baseParsed.specialAtRules || []) !== jsonKey(currentParsed.specialAtRules || [])) {
-                    errors.push(path + ': special at-rules changed outside the registered rule migrations.');
+                if (jsonKey(baseParsed.migrationAtRules || []) !== jsonKey(currentParsed.migrationAtRules || [])) {
+                    errors.push(path + ': non-rule at-rule semantics changed outside the registered rule migrations.');
                 }
             }
         }

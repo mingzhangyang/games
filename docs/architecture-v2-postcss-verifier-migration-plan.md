@@ -323,8 +323,11 @@ The contract now provides:
 3. Relayering of existing layered rules as well as unlayered-debt reduction, so
    `science-showcase.css` can move from `components` to `showcase` without pretending it
    was unlayered P0 debt.
-4. A one-way state ratchet: mappings already present in the PR base cannot be deleted or
-   edited; later work appends new ids.
+4. A one-way state ratchet with explicit lineage: mappings already present in the PR base
+   cannot be deleted or edited, but they are historical ledger entries rather than permanent
+   head-state assertions. Later work appends a new id whose source may be a terminal destination
+   present in the comparison base; that new transaction consumes the old destination while the
+   historical mapping remains unchanged.
 5. Exact-selector conflicts use the same property write-set overlap model, rather than literal
    property-name equality. The verifier reconstructs each peer's current physical occurrence
    and requires the pre/post cascade precedence relation to remain unchanged; this covers new
@@ -332,7 +335,10 @@ The contract now provides:
    important reviews remain separate because layer precedence reverses under `!important`.
    Different-selector overlap still belongs to browser/geometry evidence.
 6. Residual base→head comparison for every mapped stylesheet. Registering one rule does not
-   exempt unrelated rules in that file from semantic verification.
+   exempt unrelated rules in that file from semantic verification. In addition to ordinary
+   rules, canonical keyframe bodies and every non-`@layer` at-rule retain parent context,
+   effective layer, tokenized params and (for declaration-style at-rules such as
+   `@font-face`, `@property`, `@page` and `@view-transition`) descriptor declarations.
 7. Immutable P0 and semantic addenda remain unchanged. Only files proven by the migration
    contract may bypass their old whole-file semantic digest for that PR.
 

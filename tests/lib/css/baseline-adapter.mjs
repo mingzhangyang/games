@@ -28,11 +28,22 @@ export function parseCssText(source, file) {
     const { ast, model } = parseStylesheet(source, file);
     const result = {
         file, rules: [], declarations: [], atRules: [], layerStatements: [],
-        layerBlocks: [], layerNames: new Set(), keyframes: [], model,
+        layerBlocks: [], layerNames: new Set(), keyframes: [], migrationAtRules: [], model,
     };
     const recordSpecial = (context, name, params) => {
         result.specialAtRules ||= [];
         result.specialAtRules.push([file, context.join(' / '), name, params]);
+    };
+    const recordMigrationAtRule = (migrationContext, node, layer, form, body = undefined) => {
+        const entry = {
+            name: node.name.toLowerCase(),
+            form,
+            params: normalizeFragment(node.params),
+            context: [...migrationContext],
+            layer,
+        };
+        if (body !== undefined) entry.declarations = body;
+        result.migrationAtRules.push(entry);
     };
     const layers = params => params.split(',').forEach(part => {
         if (part.trim()) result.layerNames.add(part.trim().split('.')[0]);
@@ -92,6 +103,7 @@ export function parseCssText(source, file) {
                     layers(params);
                 }
                 if (SPECIAL.has(name)) recordSpecial(context, name, params);
+                if (name !== 'layer') recordMigrationAtRule(migrationContext, node, layer, 'statement');
                 continue;
             }
             if (name === 'layer') {
@@ -108,9 +120,13 @@ export function parseCssText(source, file) {
                 recordSpecial(context, name, params);
             } else if (DECLARATIONS.has(name)) {
                 recordSpecial(context, name, params);
+                recordMigrationAtRule(
+                    migrationContext, node, layer, 'declarations', migrationDeclarations(node),
+                );
                 result.declarations.push(...declarations(node, '', context, layer, name));
             } else if (GROUPS.has(name)) {
                 if (SPECIAL.has(name)) recordSpecial(context, name, params);
+                recordMigrationAtRule(migrationContext, node, layer, 'group');
                 walk(
                     node,
                     [...context, '@' + name + (node.params ? ' ' + node.params : '')],

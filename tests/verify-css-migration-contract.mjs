@@ -441,6 +441,69 @@ assert.equal(overlapMapping.conflicts.normal.length, 1);
 assert.equal(overlapMapping.conflicts.normal[0].property, 'margin');
 assert.equal(overlapMapping.conflicts.normal[0].peerProperty, 'margin-left');
 
+// Mapped files must retain canonical non-rule at-rule semantics. The whole-file
+// P0 digest is exempted only for mapped CSS, so declaration-style at-rule bodies
+// and their effective layer remain part of the base->head residual contract.
+const specialBase = parseMap([[
+    'css/special.css',
+    '.x{color:red}@font-face{font-family:X;src:url(x.woff2)}',
+]]);
+const specialSource = catalogMap(specialBase).get('css/special.css')[0];
+
+const specialBodyCurrent = parseMap([[
+    'css/special.css',
+    '@layer pages{.x{color:red}}@font-face{font-family:X;src:url(y.woff2)}',
+]]);
+const specialBodyDestination = catalogMap(specialBodyCurrent).get('css/special.css')[0];
+const specialBodyErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/special.css', '', '.x']] } },
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-special-body',
+            source: sourceRef(specialSource),
+            destinations: [destinationRef(specialBodyDestination)],
+            conflicts: { normal: [], important: [] },
+        }],
+    },
+    currentParsedByPath: specialBodyCurrent,
+    baseParsedByPath: specialBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: specialBodyErrors,
+});
+assert.ok(specialBodyErrors.some(error => /non-rule at-rule semantics changed/.test(error)));
+
+const specialLayerCurrent = parseMap([[
+    'css/special.css',
+    '@layer pages{.x{color:red}@font-face{font-family:X;src:url(x.woff2)}}',
+]]);
+const specialLayerDestination = catalogMap(specialLayerCurrent).get('css/special.css')[0];
+const specialLayerErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/special.css', '', '.x']] } },
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-special-layer',
+            source: sourceRef(specialSource),
+            destinations: [destinationRef(specialLayerDestination)],
+            conflicts: { normal: [], important: [] },
+        }],
+    },
+    currentParsedByPath: specialLayerCurrent,
+    baseParsedByPath: specialBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: specialLayerErrors,
+});
+assert.ok(specialLayerErrors.some(error => /non-rule at-rule semantics changed/.test(error)));
+
 // Mapped files bypass the immutable whole-file semantic digest only after the
 // migration contract verifies everything outside the mapped rule. Keyframe
 // bodies are therefore canonical residual state even while keyframe migration
@@ -500,6 +563,41 @@ verifyRuleMigrations({
     errors: relayerErrors,
 });
 assert.deepEqual(relayerErrors, []);
+
+// Historical mappings are an immutable ledger, not a requirement that every old
+// destination remain present forever. A later PR may consume the comparison-base
+// terminal destination as the source of a new mapping.
+const lineageP0 = parseMap([['css/lineage.css', '.s{color:red}']]);
+const lineageBase = parseMap([['css/lineage.css', '@layer components{.s{color:red}}']]);
+const lineageCurrent = parseMap([['css/lineage.css', '@layer showcase{.s{color:red}}']]);
+const lineageP0Rule = catalogMap(lineageP0).get('css/lineage.css')[0];
+const lineageBaseRule = catalogMap(lineageBase).get('css/lineage.css')[0];
+const lineageCurrentRule = catalogMap(lineageCurrent).get('css/lineage.css')[0];
+const historicalMapping = {
+    id: 'fixture-lineage-first-pr',
+    source: sourceRef(lineageP0Rule),
+    destinations: [destinationRef(lineageBaseRule)],
+    conflicts: { normal: [], important: [] },
+};
+const nextMapping = {
+    id: 'fixture-lineage-second-pr',
+    source: sourceRef(lineageBaseRule),
+    destinations: [destinationRef(lineageCurrentRule)],
+    conflicts: { normal: [], important: [] },
+};
+const lineageErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/lineage.css', '', '.s']] } },
+    state: { ...emptyState, migratedRules: [historicalMapping, nextMapping] },
+    currentParsedByPath: lineageCurrent,
+    baseParsedByPath: lineageBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: { ...emptyState, migratedRules: [historicalMapping] },
+    errors: lineageErrors,
+});
+assert.deepEqual(lineageErrors, []);
 
 // The debt count alone is insufficient: an unrelated declaration rewrite in a
 // mapped file must still be caught by the base->head residual comparison.

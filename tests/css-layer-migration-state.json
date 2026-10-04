@@ -22,7 +22,7 @@
   ],
   "migratedRules": [],
   "migratedKeyframes": [],
-  "note": "Immutable P0 remains historical evidence. P2 rule migrations are append-only and are verified against the PR base: each source occurrence must exist in its declared base layer (null means unlayered), only unlayered sources reduce P0 debt, every destination must be explicitly layered in the same stylesheet, declarations must be preserved as an ordered lossless 1-to-1 or 1-to-many partition, and exact selector/property conflicts are recorded separately for normal and important declarations. Keyframe and runtime-style migrations remain disabled until their own contracts are implemented.",
+  "note": "Immutable P0 remains historical evidence. P2 rule migrations are append-only ledger entries verified against the PR base. Only entries absent from the comparison-base state form the current transaction: a historical terminal destination may later be consumed as the source of a new mapping, while the older entry remains immutable. Each transaction source occurrence must exist in its declared base layer (null means unlayered), only unlayered origins reduce P0 debt, every transaction destination must be explicitly layered in the same stylesheet, declarations must be preserved losslessly with physical cascade precedence intact, and exact-selector conflicts are reviewed separately for normal and important declarations. Mapped files also retain canonical keyframe and non-layer at-rule semantics. Keyframe and runtime-style migrations remain disabled until their own contracts are implemented.",
   "runtimeStyleP0BaselineBlobSha": "e766d5873cf551fb46cda56dd0df861c08f2780f",
   "runtimeMigrationUnit": "style-source",
   "migratedRuntimeStyleSources": [],
