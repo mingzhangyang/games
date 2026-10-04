@@ -45,7 +45,9 @@ export function observeSemanticInputs(root, cssPaths, htmlPaths, runtimeStyles) 
     };
 }
 
-export function verifySemanticSnapshot(root, cssPaths, htmlPaths, runtimeStyles, errors) {
+export function verifySemanticSnapshot(
+    root, cssPaths, htmlPaths, runtimeStyles, errors, { allowedCssChanges = new Set() } = {},
+) {
     const text = readFileSync(join(root, 'tests/css-semantic-p0-baseline.json'), 'utf8');
     if (createHash('sha256').update(text).digest('hex') !== SNAPSHOT_SHA256) {
         errors.push('Ordered CSS P0 addendum changed; preserve history and review a separate correction.');
@@ -55,6 +57,7 @@ export function verifySemanticSnapshot(root, cssPaths, htmlPaths, runtimeStyles,
     const actual = observeSemanticInputs(root, cssPaths, htmlPaths, runtimeStyles);
     for (const kind of ['css', 'html', 'runtime']) {
         for (const file of new Set([...Object.keys(baseline.inputs[kind]), ...Object.keys(actual[kind])])) {
+            if (kind === 'css' && allowedCssChanges.has(file)) continue;
             if (baseline.inputs[kind][file] !== actual[kind][file]) {
                 errors.push(file + ': ordered CSS model changed (content, rule order, layer/context or activation inputs). '
                     + 'P2 must supply an explicit migration mapping before this can change.');
