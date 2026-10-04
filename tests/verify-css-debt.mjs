@@ -540,6 +540,20 @@ function styleElementSource(html, element, file) {
     return html.slice(start, end);
 }
 
+function listFiles(directory, root, predicate) {
+    if (!existsSync(directory)) return [];
+    const output = [];
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        const fullPath = join(directory, entry.name);
+        if (entry.isDirectory()) output.push(...listFiles(fullPath, root, predicate));
+        else if (entry.isFile()) {
+            const path = relative(root, fullPath).split(sep).join('/');
+            if (predicate(path)) output.push(path);
+        }
+    }
+    return output.sort();
+}
+
 function normalizeLinkAttributes(attributes) {
     return Object.entries(attributes)
         .map(([name, value]) => [
