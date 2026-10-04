@@ -64,6 +64,13 @@ function ruleRef(rule) {
     };
 }
 
+function canonicalRefKey(ref) {
+    return jsonKey([
+        ref?.path, ref?.contextDigest, ref?.selectorDigest, ref?.layer ?? null,
+        ref?.declarationDigest, ref?.occurrence,
+    ]);
+}
+
 function sameRef(actual, expected, includeLayer = true) {
     return actual.path === expected.path
         && actual.contextDigest === expected.contextDigest
@@ -198,19 +205,52 @@ function sharedPages(left, right, pagesByPath) {
     return [...a].filter(page => b.has(page)).sort();
 }
 
-function destinationAssignments(mapping, sourceRule, destinationRules) {
+function destinationEntries(destinationRules) {
+    return [...destinationRules]
+        .sort((a, b) => a.sourceIndex - b.sourceIndex)
+        .flatMap(rule => rule.declarations.map((declaration, declarationIndex) => ({
+            declaration,
+            layer: rule.layer,
+            rule,
+            declarationIndex,
+        })));
+}
+
+function destinationAssignments(sourceRule, destinationRules) {
     const queues = new Map();
-    for (let index = 0; index < destinationRules.length; index++) {
-        for (const declaration of destinationRules[index].declarations) {
-            const key = declarationKey(declaration);
-            if (!queues.has(key)) queues.set(key, []);
-            queues.get(key).push(mapping.destinations[index]);
-        }
+    for (const entry of destinationEntries(destinationRules)) {
+        const key = declarationKey(entry.declaration);
+        if (!queues.has(key)) queues.set(key, []);
+        queues.get(key).push(entry);
     }
     return sourceRule.declarations.map(declaration => {
         const queue = queues.get(declarationKey(declaration)) || [];
         return queue.shift() || null;
     });
+}
+
+function declarationCounts(declarations) {
+    const counts = new Map();
+    for (const declaration of declarations) {
+        const key = declarationKey(declaration);
+        counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+}
+
+function sameDeclarationMultiset(left, right) {
+    const a = declarationCounts(left);
+    const b = declarationCounts(right);
+    if (a.size !== b.size) return false;
+    for (const [key, count] of a) if (b.get(key) !== count) return false;
+    return true;
+}
+
+function comparePhysical(left, right) {
+    if (left.rule.sourceIndex !== right.rule.sourceIndex) {
+        return left.rule.sourceIndex - right.rule.sourceIndex;
+    }
+    return left.declarationIndex - right.declarationIndex;
 }
 
 function projectionKey(rule, declarationIndex) {
@@ -233,7 +273,7 @@ export function analyzeExactConflicts(
 ) {
     const pagesByPath = coactivePages(stylesheetLinks);
     const result = { normal: [], important: [] };
-    const assignments = destinationAssignments(mapping, sourceRule, destinationRules);
+    const assignments = destinationAssignments(sourceRule, destinationRules);
     for (let declarationIndex = 0; declarationIndex < sourceRule.declarations.length; declarationIndex++) {
         const declaration = sourceRule.declarations[declarationIndex];
         const priority = priorityOf(declaration);
@@ -282,31 +322,75 @@ function verifyConflictReview(mapping, computed, errors) {
 }
 
 function verifyPartition(mapping, sourceRule, destinationRules, errors) {
-    const flattened = destinationRules.flatMap(rule => rule.declarations);
-    if (jsonKey(flattened) !== jsonKey(sourceRule.declarations)) {
-        errors.push(mapping.id + ': destination declarations must be an ordered, lossless partition of the source rule.');
+    const actualDeclarations = destinationEntries(destinationRules).map(entry => entry.declaration);
+    if (!sameDeclarationMultiset(actualDeclarations, sourceRule.declarations)) {
+        errors.push(mapping.id + ': destination declarations must be a lossless partition of the source rule.');
     }
-    const assignments = destinationAssignments(mapping, sourceRule, destinationRules);
+
+    const assignments = destinationAssignments(sourceRule, destinationRules);
     for (let left = 0; left < sourceRule.declarations.length; left++) {
         const leftDestination = assignments[left];
         if (!leftDestination) continue;
         for (let right = left + 1; right < sourceRule.declarations.length; right++) {
             const rightDestination = assignments[right];
-            if (!rightDestination || leftDestination.layer === rightDestination.layer) continue;
-            const leftProperty = sourceRule.declarations[left].property;
-            const rightProperty = sourceRule.declarations[right].property;
-            if (propertiesOverlap(leftProperty, rightProperty)) {
-                errors.push(mapping.id + ': overlapping properties ' + leftProperty + ' / ' + rightProperty
-                    + ' cannot be split across layers; preserve their intra-rule cascade.');
+            if (!rightDestination) continue;
+            const leftDeclaration = sourceRule.declarations[left];
+            const rightDeclaration = sourceRule.declarations[right];
+            if (!propertiesOverlap(leftDeclaration.property, rightDeclaration.property)) continue;
+
+            if (leftDestination.layer !== rightDestination.layer) {
+                errors.push(mapping.id + ': overlapping properties ' + leftDeclaration.property + ' / '
+                    + rightDeclaration.property + ' cannot be split across layers; preserve their intra-rule cascade.');
+                continue;
+            }
+            if (priorityOf(leftDeclaration) === priorityOf(rightDeclaration)
+                && comparePhysical(leftDestination, rightDestination) >= 0) {
+                errors.push(mapping.id + ': physical destination order reverses overlapping '
+                    + leftDeclaration.property + ' / ' + rightDeclaration.property
+                    + ' declarations in layer ' + leftDestination.layer + '.');
             }
         }
     }
+
     for (const destination of destinationRules) {
         if (destination.selectorDigest !== sourceRule.selectorDigest
             || destination.contextDigest !== sourceRule.contextDigest) {
             errors.push(mapping.id + ': P2 layer migration cannot rewrite selector/context while moving a rule.');
         }
         if (!destination.layer) errors.push(mapping.id + ': every destination rule must be explicitly layered.');
+    }
+    return assignments;
+}
+
+function verifyInterMappingOrder(pending, errors) {
+    for (let left = 0; left < pending.length; left++) {
+        const a = pending[left];
+        for (let right = left + 1; right < pending.length; right++) {
+            const b = pending[right];
+            if (a.sourceRule.path !== b.sourceRule.path
+                || a.sourceRule.contextDigest !== b.sourceRule.contextDigest
+                || a.sourceRule.selectorDigest !== b.sourceRule.selectorDigest
+                || a.sourceRule.layer !== b.sourceRule.layer) continue;
+
+            const sourceOrder = Math.sign(a.sourceRule.sourceIndex - b.sourceRule.sourceIndex);
+            if (!sourceOrder) continue;
+            for (let ai = 0; ai < a.sourceRule.declarations.length; ai++) {
+                const ad = a.sourceRule.declarations[ai];
+                const at = a.assignments[ai];
+                if (!at) continue;
+                for (let bi = 0; bi < b.sourceRule.declarations.length; bi++) {
+                    const bd = b.sourceRule.declarations[bi];
+                    const bt = b.assignments[bi];
+                    if (!bt || at.layer !== bt.layer) continue;
+                    if (priorityOf(ad) !== priorityOf(bd) || !propertiesOverlap(ad.property, bd.property)) continue;
+                    const destinationOrder = Math.sign(comparePhysical(at, bt));
+                    if (destinationOrder && destinationOrder !== sourceOrder) {
+                        errors.push(a.mapping.id + ' / ' + b.mapping.id
+                            + ': mapped rules reverse a same-layer exact-selector cascade order in ' + at.layer + '.');
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -385,15 +469,23 @@ export function verifyRuleMigrations({
     const baseMappings = mappingsById(baseState?.migratedRules || [], errors, 'base migratedRules');
     const mappings = mappingsById(state.migratedRules || [], errors, 'migratedRules');
     const expectedDebt = tupleCounts(baseline.debt?.unlayeredRules || []);
+    const usedSources = new Set();
     const usedDestinations = new Set();
     const newMappingsByPath = new Map();
 
     const pendingConflictReviews = [];
     for (const mapping of mappings.values()) {
         verifyMappingShape(mapping, allowedLayers, errors);
-        if (mapping.source?.layer === null || mapping.source?.layer === undefined) {
-            const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
-            subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
+        const sourceKey = canonicalRefKey(mapping.source);
+        const duplicateSource = usedSources.has(sourceKey);
+        if (duplicateSource) {
+            errors.push(mapping.id + ': source rule is claimed by more than one migration.');
+        } else {
+            usedSources.add(sourceKey);
+            if (mapping.source?.layer === null || mapping.source?.layer === undefined) {
+                const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
+                subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
+            }
         }
 
         const currentDestinationRules = [];
@@ -405,7 +497,7 @@ export function verifyRuleMigrations({
                 continue;
             }
             verifyRefDiagnostics(destination, rule, errors, mapping.id + ' destination');
-            const destinationKey = jsonKey(ruleRef(rule));
+            const destinationKey = canonicalRefKey(ruleRef(rule));
             if (usedDestinations.has(destinationKey)) errors.push(mapping.id + ': destination rule is claimed by more than one migration.');
             usedDestinations.add(destinationKey);
             currentDestinationRules.push(rule);
@@ -435,14 +527,15 @@ export function verifyRuleMigrations({
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
         }
         if (currentDestinationRules.length === (mapping.destinations || []).length) {
-            verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
-            pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules });
+            const assignments = verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
+            pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules, assignments });
         }
     }
 
+    verifyInterMappingOrder(pendingConflictReviews, errors);
+
     const projectedLayers = new Map();
-    for (const { mapping, sourceRule, currentDestinationRules } of pendingConflictReviews) {
-        const assignments = destinationAssignments(mapping, sourceRule, currentDestinationRules);
+    for (const { sourceRule, assignments } of pendingConflictReviews) {
         assignments.forEach((destination, index) => {
             if (destination) projectedLayers.set(projectionKey(sourceRule, index), destination.layer);
         });
