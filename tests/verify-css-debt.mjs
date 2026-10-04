@@ -13,6 +13,9 @@ import { scanHtml, parseHtmlElements, htmlElementAttributes, htmlTagName, isStyl
 import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
 import { verifyActivationSnapshot } from './lib/css/activation.mjs';
+import {
+    readGitFile, resolveComparisonBase, verifyRuleMigrations,
+} from './lib/css/migration-contract.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -169,14 +172,15 @@ function verifyProject() {
     if (MIGRATION_STATE.runtimeMigrationUnit !== 'style-source') {
         errors.push('Runtime stylesheet migration must remain source-granular until P2 explicitly models it.');
     }
-    if (MIGRATION_STATE.status !== 'not-started') {
-        errors.push('CSS migration state changed before the rule-level P2 verifier was enabled.');
+    if (MIGRATION_STATE.schemaVersion !== 2 || MIGRATION_STATE.mappingContractVersion !== 1
+        || MIGRATION_STATE.status !== 'rule-mapping-enabled') {
+        errors.push('CSS migration state must use the reviewed P2 rule-mapping contract (schema 2 / contract 1).');
     }
-    if ((MIGRATION_STATE.migratedRules || []).length || (MIGRATION_STATE.migratedKeyframes || []).length) {
-        errors.push('Rule-level migration entries require the P2 verifier upgrade before production CSS can change.');
+    if ((MIGRATION_STATE.migratedKeyframes || []).length) {
+        errors.push('Keyframe migrations remain disabled until their own P2 mapping contract is implemented.');
     }
     if ((MIGRATION_STATE.migratedRuntimeStyleSources || []).length) {
-        errors.push('Runtime stylesheet migration entries require the P2 verifier upgrade before production cascade can change.');
+        errors.push('Runtime stylesheet migrations remain disabled until their own P2 mapping contract is implemented.');
     }
     const cssPaths = listFiles(join(ROOT, 'css'), ROOT, path => path.endsWith('.css'));
     const htmlPaths = [
@@ -195,6 +199,12 @@ function verifyProject() {
         errors.push('Active HTML inventory changed; review page/stylesheet ownership without editing immutable P0.');
     }
 
+    const declaredMappedPaths = new Set((MIGRATION_STATE.migratedRules || []).flatMap(mapping => [
+        mapping.source?.path,
+        ...(mapping.destinations || []).map(destination => destination.path),
+    ]).filter(Boolean));
+    const migrationStarted = (MIGRATION_STATE.migratedRules || []).length > 0;
+    const currentParsedByPath = new Map();
     const stylesheetLinks = {};
     const actualDebt = {
         unlayeredRules: [],
@@ -211,6 +221,7 @@ function verifyProject() {
 
     for (const path of cssPaths) {
         const parsed = parseCssText(readFileSync(join(ROOT, path), 'utf8'), path);
+        currentParsedByPath.set(path, parsed);
         totalRules += parsed.rules.length;
         importantCount += parsed.declarations.filter(declaration => hasImportantPriority(declaration.value)).length;
         const fileCustomPropertyDefinitions = parsed.declarations
@@ -252,14 +263,19 @@ function verifyProject() {
         const layerBlocks = [...parsed.layerBlocks];
         const normalizedLayerCounts = Object.fromEntries(Object.entries(layerCounts).sort(([a], [b]) => a.localeCompare(b)));
         const expectedLayerCounts = Object.fromEntries(Object.entries(baselineFile.currentLayers).sort(([a], [b]) => a.localeCompare(b)));
-        if (!sameJson(normalizedLayerCounts, expectedLayerCounts)) {
-            errors.push(path + ': current layer map differs from the reviewed P0 baseline.');
+        if (!declaredMappedPaths.has(path) && !sameJson(normalizedLayerCounts, expectedLayerCounts)) {
+            errors.push(path + ': current layer map differs from the reviewed P0 baseline without a registered rule mapping.');
         }
-        if (!sameJson(layerStatements, baselineFile.layerStatements)) {
+        if (path === 'css/tokens.css' && migrationStarted) {
+            const reviewedOrder = REVIEWED_LAYER_ORDER.join(', ');
+            if (!sameJson(layerStatements, [reviewedOrder])) {
+                errors.push(path + ': active P2 migration requires the canonical @layer order "' + reviewedOrder + '".');
+            }
+        } else if (!sameJson(layerStatements, baselineFile.layerStatements)) {
             errors.push(path + ': @layer order declaration differs from the reviewed P0 baseline.');
         }
-        if (!sameJson(layerBlocks, baselineFile.layerBlocks)) {
-            errors.push(path + ': current @layer blocks differ from the reviewed P0 baseline.');
+        if (!declaredMappedPaths.has(path) && !sameJson(layerBlocks, baselineFile.layerBlocks)) {
+            errors.push(path + ': current @layer blocks differ from the reviewed P0 baseline without a registered rule mapping.');
         }
     }
 
@@ -304,12 +320,51 @@ function verifyProject() {
             .filter(declaration => declaration.selector && hasImportantPriority(declaration.value)).length;
     }
 
-    verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors);
+    const comparisonBase = resolveComparisonBase(ROOT);
+    const baseStateText = readGitFile(ROOT, comparisonBase, 'tests/css-layer-migration-state.json');
+    let baseState = MIGRATION_STATE;
+    if (baseStateText) {
+        try {
+            baseState = JSON.parse(baseStateText);
+        } catch {
+            errors.push('Comparison-base migration state is not valid JSON.');
+        }
+    } else if (migrationStarted) {
+        errors.push('Active P2 migration requires an accessible git comparison base.');
+    }
+
+    const baseParsedByPath = new Map();
+    for (const path of cssPaths) {
+        const baseSource = readGitFile(ROOT, comparisonBase, path);
+        if (baseSource === null) {
+            if (migrationStarted) errors.push(path + ': cannot read comparison-base CSS for P2 mapping verification.');
+            baseParsedByPath.set(path, currentParsedByPath.get(path));
+        } else {
+            baseParsedByPath.set(path, parseCssText(baseSource, path));
+        }
+    }
+
+    const migrationResult = verifyRuleMigrations({
+        baseline: BASELINE,
+        state: MIGRATION_STATE,
+        currentParsedByPath,
+        baseParsedByPath,
+        stylesheetLinks: BASELINE.stylesheetLinks,
+        allowedLayers: ALLOWED_LAYERS,
+        layerOrder: REVIEWED_LAYER_ORDER,
+        baseState,
+        errors,
+    });
+
+    verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors, {
+        allowedCssChanges: migrationResult.mappedCssPaths,
+    });
     verifyActivationSnapshot(ROOT, htmlPaths, auditedJavaScriptFiles(ROOT), errors);
     verifyBuildOrderingContract(errors);
 
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);
+        if (key === 'unlayeredRules') continue;
         const expected = sortTuples(BASELINE.debt[key] || []);
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {

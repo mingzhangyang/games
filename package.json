@@ -27,6 +27,7 @@
     "@vitejs/plugin-legacy": "^7.0.0",
     "acorn": "8.18.0",
     "eslint": "^10.11.0",
+    "mdn-data": "2.27.1",
     "parse5": "8.0.1",
     "postcss": "8.5.28",
     "puppeteer-core": "^25.10.0",

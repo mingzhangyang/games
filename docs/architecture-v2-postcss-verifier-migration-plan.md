@@ -1,7 +1,8 @@
 # CSS verifier architecture and PostCSS migration
 
-Status: parser/model/source-boundary implementation completed in the PR #75 follow-up;
-production cascade-layer migration (P2+) remains blocked pending its own rule mapping.
+Status: parser/model/source-boundary implementation completed in PR #75. The P2
+rule-mapping/ratchet foundation is now implemented; production cascade-layer migration has
+not started and remains subject to per-batch browser evidence.
 
 ## Why the verifier needed a redesign
 
@@ -27,8 +28,10 @@ The revised contract separates syntax, observations, allowed changes and browser
 | `tests/lib/css/semantic-contract.mjs` | Independently pinned ordered-model addendum |
 | `tests/lib/css/runtime-sources.mjs` | Fixed registry validation and architectural JavaScript ingress rules |
 | `tests/lib/css/activation.mjs` | Page → script → import-graph activation model and its independently pinned addendum |
-| `tests/verify-css-debt.mjs` | Inventory, immutable history, migration gates and built stylesheet ordering |
+| `tests/lib/css/migration-contract.mjs` | Stable rule occurrences, append-only source→destination mappings, declaration partitioning and layer-conflict review |
+| `tests/verify-css-debt.mjs` | Inventory, immutable history, PR-base migration ratchet and built stylesheet ordering |
 | `tests/verify-css-model.mjs` | Fast parser/model/ingress regression fixtures |
+| `tests/verify-css-migration-contract.mjs` | 1→N split, relayer, duplicate occurrence, conflict and ratchet adversarial fixtures |
 | `tests/verify-css-html-browser.mjs` | Independent browser check of script-type execution, handler grammar and declarative-root activation |
 | `tests/verify-math-rain-styles.mjs` | Actual browser activation, insertion order, repeat calls and CSSOM comparison |
 | `tests/verify-css-live-activation.mjs` | Site-wide behavioral oracle: live activation of every page vs. its served HTML |
@@ -295,20 +298,62 @@ popups, repeated calls and actual CSSOM parsed by the browser from immutable P0 
 Use the same test against source and production output. Complete local checks before one
 combined push; do not trigger a full CI run for each fixture correction.
 
-## Remaining P2 work and stop conditions
+## P2 rule mapping foundation and remaining stop conditions
 
-This replaces the earlier proposal to keep repairing the handwritten parser before four
-separate parser-only PRs. Local shadow comparison preceded cutover; PR #75 now carries the
-coherent parser/model/source-boundary correction. It does **not** claim P2 migration is done.
+The verifier no longer treats a P0 fingerprint change as migration authority. Rule migrations
+are append-only records compared against the pull request base (the Architecture workflow
+checks out full history and provides `ARCHITECTURE_BASE_SHA`). A mapping contains a stable
+source occurrence, one or more destinations in the same stylesheet, the source declaration
+snapshot, and explicit normal/important conflict reviews.
 
-P2 still requires:
+The contract now provides:
 
-1. Stable rule-occurrence mapping, separate from ordered content fingerprints.
-2. Explicit one-to-many mapping when a mixed-responsibility rule must split.
-3. Verified source → destination layer mapping and irreversible debt reduction.
-4. Separate normal/important cascade conflict analysis.
-5. Source/production geometry and interaction evidence for each migration batch.
-6. Plugin-on/plugin-off equivalence before removing `shared-css-first`.
+1. Stable occurrence identity from canonical context-token digest + selector-token digest +
+   source layer + canonical declaration digest + duplicate occurrence number. Human-readable
+   legacy context/selector strings and source offsets are diagnostic only; they are not identity.
+2. Lossless 1→1 or 1→N declaration partitioning is reconstructed from the current AST;
+   destination arrays are an unordered declaration of ownership, never source-order authority.
+   Each historical source occurrence and each current destination occurrence has exactly one
+   migration owner. Declarations whose CSS write sets overlap cannot be split across layers,
+   and same-layer physical order must preserve their cascade. This includes shorthand/longhand
+   pairs, `all`, logical/physical aliases and duplicate properties. The write-set model is
+   backed by pinned `mdn-data` shorthand metadata and explicit logical/physical equivalence
+   rules; unknown non-custom properties fail closed. Selector/context rewrites and
+   cross-stylesheet moves are outside P2 and fail.
+3. Relayering of existing layered rules as well as unlayered-debt reduction, so
+   `science-showcase.css` can move from `components` to `showcase` without pretending it
+   was unlayered P0 debt.
+4. A one-way state ratchet with explicit lineage: mappings already present in the PR base
+   cannot be deleted or edited, but they are historical ledger entries rather than permanent
+   head-state assertions. Later work appends a new id whose source may be a terminal destination
+   present in the comparison base; that new transaction consumes the old destination while the
+   historical mapping remains unchanged.
+5. Exact-selector conflicts use the same property write-set overlap model, rather than literal
+   property-name equality. The verifier reconstructs each peer's current physical occurrence
+   and requires the pre/post cascade precedence relation to remain unchanged; this covers new
+   mappings against co-migrated, previously migrated and still-unlayered peers. Normal and
+   important reviews remain separate because layer precedence reverses under `!important`.
+   Different-selector overlap still belongs to browser/geometry evidence.
+6. Residual base→head comparison for every mapped stylesheet. Registering one rule does not
+   exempt unrelated rules in that file from semantic verification. In addition to ordinary
+   rules, canonical keyframe bodies and every non-`@layer` at-rule retain parent context,
+   effective layer, tokenized params and (for declaration-style at-rules such as
+   `@font-face`, `@property`, `@page` and `@view-transition`) descriptor declarations.
+7. Immutable P0 and semantic addenda remain unchanged. Only files proven by the migration
+   contract may bypass their old whole-file semantic digest for that PR.
+
+Production P2 still requires:
+
+1. The first dependency-closed production slice and canonical six-layer order declaration.
+   Low-risk `layout` defaults may move independently after evidence; a `contracts` rule must
+   move together with any still-unlayered page peers that could compete with it, because normal
+   unlayered declarations outrank every named layer.
+2. Source and production geometry/interaction evidence for every migration batch.
+3. Continued independent debt/mapping/browser acceptance; one passing gate never substitutes
+   for the others.
+4. Plugin-on/plugin-off equivalence before removing `shared-css-first`.
+5. Separate contracts before keyframe or runtime-style migrations; both remain rejected by the
+   current migration state.
 
 Do not turn the new semantic addendum into a mutable expected-output file. Genuine historical
 defects require a separately reviewed correction. Parser compatibility changes require

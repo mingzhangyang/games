@@ -1,4 +1,6 @@
-import { cssTokens, declarationValue, parseStylesheet } from './model.mjs';
+import {
+    cssTokens, declarationValue, hasImportantPriority, normalizeFragment, parseStylesheet,
+} from './model.mjs';
 
 const STATEMENTS = new Set(['charset', 'import', 'namespace', 'layer']);
 const GROUPS = new Set(['media', 'supports', 'container', 'scope', 'starting-style', 'document']);
@@ -13,15 +15,35 @@ const legacyNormalize = value => value.replace(/\s+/g, ' ').trim();
 const legacyValue = node => legacyNormalize(cssTokens(declarationValue(node))
     .map(token => token[0] === 'comment' ? ' ' : token[1]).join(''));
 
+function migrationDeclaration(node) {
+    const value = declarationValue(node);
+    return {
+        property: node.prop.startsWith('--') ? node.prop : node.prop.toLowerCase(),
+        value: normalizeFragment(value),
+        important: hasImportantPriority(value),
+    };
+}
+
 export function parseCssText(source, file) {
     const { ast, model } = parseStylesheet(source, file);
     const result = {
         file, rules: [], declarations: [], atRules: [], layerStatements: [],
-        layerBlocks: [], layerNames: new Set(), keyframes: [], model,
+        layerBlocks: [], layerNames: new Set(), keyframes: [], migrationAtRules: [], model,
     };
     const recordSpecial = (context, name, params) => {
         result.specialAtRules ||= [];
         result.specialAtRules.push([file, context.join(' / '), name, params]);
+    };
+    const recordMigrationAtRule = (migrationContext, node, layer, form, body = undefined) => {
+        const entry = {
+            name: node.name.toLowerCase(),
+            form,
+            params: normalizeFragment(node.params),
+            context: [...migrationContext],
+            layer,
+        };
+        if (body !== undefined) entry.declarations = body;
+        result.migrationAtRules.push(entry);
     };
     const layers = params => params.split(',').forEach(part => {
         if (part.trim()) result.layerNames.add(part.trim().split('.')[0]);
@@ -35,14 +57,37 @@ export function parseCssText(source, file) {
             selector, context: [...context], layer, atRule,
         }));
     }
-    function walk(parent, context = [], layer = null, inKeyframes = false) {
+    function migrationDeclarations(node) {
+        return (node.nodes || []).filter(child => child.type === 'decl').map(migrationDeclaration);
+    }
+    function migrationKeyframeBody(node) {
+        return (node.nodes || []).filter(child => child.type !== 'comment').map(frame => {
+            if (frame.type !== 'rule') throw new Error(file + ': unsupported keyframe child ' + frame.type);
+            if (frame.nodes?.some(child => !['decl', 'comment'].includes(child.type))) {
+                throw new Error(file + ': nested keyframe declarations/rules require an explicit policy upgrade');
+            }
+            return {
+                selector: normalizeFragment(frame.selector),
+                declarations: migrationDeclarations(frame),
+            };
+        });
+    }
+    function walk(parent, context = [], migrationContext = [], layer = null, inKeyframes = false) {
         for (const node of parent.nodes || []) {
             if (node.type === 'comment') continue;
             if (node.type === 'rule') {
                 if (inKeyframes) continue; // P0 excludes frame declarations; canonical model retains them.
                 const selector = legacyNormalize(node.selector);
                 const values = declarations(node, selector, context, layer, '');
-                result.rules.push({ selector, context: [...context], layer, declarations: values });
+                result.rules.push({
+                    selector,
+                    context: [...context],
+                    layer,
+                    declarations: values,
+                    migrationSelector: normalizeFragment(node.selector),
+                    migrationContext: [...migrationContext],
+                    migrationDeclarations: migrationDeclarations(node),
+                });
                 result.declarations.push(...values);
                 continue;
             }
@@ -58,23 +103,40 @@ export function parseCssText(source, file) {
                     layers(params);
                 }
                 if (SPECIAL.has(name)) recordSpecial(context, name, params);
+                if (name !== 'layer') recordMigrationAtRule(migrationContext, node, layer, 'statement');
                 continue;
             }
             if (name === 'layer') {
+                if (cssTokens(node.params).some(token => token[0] === 'comma-token')) {
+                    throw new Error(file + ': block @layer cannot declare multiple layer names');
+                }
                 result.layerBlocks.push(params);
                 layers(params);
-                const ownLayer = params.split(',')[0].trim() || '<anonymous>';
-                walk(node, context, layer ? layer + '.' + ownLayer : ownLayer, inKeyframes);
+                const ownLayer = params.trim() || '<anonymous>';
+                walk(node, context, migrationContext, layer ? layer + '.' + ownLayer : ownLayer, inKeyframes);
             } else if (KEYFRAMES.has(name)) {
-                result.keyframes.push({ name, params, context: [...context], layer });
-                walk(node, context, layer, true);
+                result.keyframes.push({
+                    name, params, context: [...context], layer,
+                    migrationBody: migrationKeyframeBody(node),
+                });
+                walk(node, context, migrationContext, layer, true);
                 recordSpecial(context, name, params);
             } else if (DECLARATIONS.has(name)) {
                 recordSpecial(context, name, params);
+                recordMigrationAtRule(
+                    migrationContext, node, layer, 'declarations', migrationDeclarations(node),
+                );
                 result.declarations.push(...declarations(node, '', context, layer, name));
             } else if (GROUPS.has(name)) {
                 if (SPECIAL.has(name)) recordSpecial(context, name, params);
-                walk(node, [...context, '@' + name + (node.params ? ' ' + node.params : '')], layer, inKeyframes);
+                recordMigrationAtRule(migrationContext, node, layer, 'group');
+                walk(
+                    node,
+                    [...context, '@' + name + (node.params ? ' ' + node.params : '')],
+                    [...migrationContext, { name, params: normalizeFragment(node.params) }],
+                    layer,
+                    inKeyframes,
+                );
             } else {
                 throw new Error(file + ': unsupported block @' + name);
             }
