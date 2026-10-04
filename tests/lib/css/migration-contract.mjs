@@ -371,6 +371,7 @@ export function verifyRuleMigrations({
         mapping.source?.path,
         ...(mapping.destinations || []).map(item => item.path),
     ]).filter(Boolean));
+    if (mappings.size) mappedCssPaths.add('css/tokens.css');
     for (const path of mappedCssPaths) {
         const pathMappings = newMappingsByPath.get(path) || [];
         const baseCatalog = baseCatalogs.get(path) || [];
