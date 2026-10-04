@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "status": "not-started",
+  "schemaVersion": 2,
+  "status": "rule-mapping-enabled",
   "p0BaselineBlobSha": "9c4541b4a447bff3dbecb0bc6cd02e09f3850922",
   "migrationUnit": "rule",
   "rejectedStrategy": "whole-file-single-layer",
@@ -22,8 +22,9 @@
   ],
   "migratedRules": [],
   "migratedKeyframes": [],
-  "note": "P0 custom-property metadata uses parser declaration occurrences. The static P0 snapshot and immutable runtime-style P0 addendum are both migration authorities. P2 must upgrade the verifier to consume rule-level static entries and source-level runtime stylesheet entries before any production cascade change.",
+  "note": "Immutable P0 remains historical evidence. P2 rule migrations are append-only and are verified against the PR base: each source occurrence must be unlayered in the base, each destination must be explicitly layered, declarations must be preserved as an ordered lossless 1-to-1 or 1-to-many partition, and exact selector/property conflicts are recorded separately for normal and important declarations. Keyframe and runtime-style migrations remain disabled until their own contracts are implemented.",
   "runtimeStyleP0BaselineBlobSha": "e766d5873cf551fb46cda56dd0df861c08f2780f",
   "runtimeMigrationUnit": "style-source",
-  "migratedRuntimeStyleSources": []
+  "migratedRuntimeStyleSources": [],
+  "mappingContractVersion": 1
 }
