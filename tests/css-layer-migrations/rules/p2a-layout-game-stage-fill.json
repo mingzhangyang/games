@@ -1,0 +1,24 @@
+{
+  "id": "p2a-layout-game-stage-fill",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-stage--fill",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "d7ad3e26e24c411df34fdb9b3105d947d974eb98c331019220f35b780d82f6f5",
+    "layer": null,
+    "declarationDigest": "35c6397b02c9a14778338c59be26b95be0ba5a73f414d686f359627c4ec70ae9",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"flex","value":[["number-token","1"]],"important":false},
+      {"property":"min-height","value":[["number-token","0"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-stage--fill","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"d7ad3e26e24c411df34fdb9b3105d947d974eb98c331019220f35b780d82f6f5","layer":"layout","declarationDigest":"35c6397b02c9a14778338c59be26b95be0ba5a73f414d686f359627c4ec70ae9","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -16,14 +16,14 @@ import { verifyActivationSnapshot } from './lib/css/activation.mjs';
 import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
+import { readMigrationState, readMigrationStateAtGit } from './lib/css/migration-state.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
-const MIGRATION_STATE_PATH = join(ROOT, 'tests/css-layer-migration-state.json');
 const RUNTIME_STYLE_BASELINE_PATH = join(ROOT, 'tests/css-runtime-style-p0-baseline.json');
 const BASELINE_TEXT = readFileSync(BASELINE_PATH, 'utf8');
 const BASELINE = JSON.parse(BASELINE_TEXT);
-const MIGRATION_STATE = JSON.parse(readFileSync(MIGRATION_STATE_PATH, 'utf8'));
+const MIGRATION_STATE = readMigrationState(ROOT);
 const RUNTIME_STYLE_BASELINE_TEXT = readFileSync(RUNTIME_STYLE_BASELINE_PATH, 'utf8');
 const RUNTIME_STYLE_BASELINE = JSON.parse(RUNTIME_STYLE_BASELINE_TEXT);
 const BASELINE_BLOB_SHA = createHash('sha1')
@@ -321,16 +321,15 @@ function verifyProject() {
     }
 
     const comparisonBase = resolveComparisonBase(ROOT);
-    const baseStateText = readGitFile(ROOT, comparisonBase, 'tests/css-layer-migration-state.json');
     let baseState = MIGRATION_STATE;
-    if (baseStateText) {
-        try {
-            baseState = JSON.parse(baseStateText);
-        } catch {
-            errors.push('Comparison-base migration state is not valid JSON.');
+    try {
+        const comparisonState = readMigrationStateAtGit(ROOT, comparisonBase);
+        if (comparisonState) baseState = comparisonState;
+        else if (migrationStarted) {
+            errors.push('Active P2 migration requires an accessible git comparison base.');
         }
-    } else if (migrationStarted) {
-        errors.push('Active P2 migration requires an accessible git comparison base.');
+    } catch (error) {
+        errors.push('Comparison-base migration state could not be loaded: ' + error.message);
     }
 
     const baseParsedByPath = new Map();
