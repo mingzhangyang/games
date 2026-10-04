@@ -311,15 +311,20 @@ The contract now provides:
 1. Stable occurrence identity from canonical context-token digest + selector-token digest +
    source layer + canonical declaration digest + duplicate occurrence number. Human-readable
    legacy context/selector strings and source offsets are diagnostic only; they are not identity.
-2. Ordered, lossless 1→1 or 1→N declaration partitioning. Selector/context rewrites and
-   cross-stylesheet moves are outside P2 and fail.
+2. Ordered, lossless 1→1 or 1→N declaration partitioning. Declarations whose CSS write sets
+   overlap cannot be split across layers: this includes shorthand/longhand pairs, `all`,
+   logical/physical aliases and duplicate properties. The write-set model is backed by pinned
+   `mdn-data` shorthand metadata and explicit logical/physical equivalence rules; unknown
+   non-custom properties fail closed. Selector/context rewrites and cross-stylesheet moves are
+   outside P2 and fail.
 3. Relayering of existing layered rules as well as unlayered-debt reduction, so
    `science-showcase.css` can move from `components` to `showcase` without pretending it
    was unlayered P0 debt.
 4. A one-way state ratchet: mappings already present in the PR base cannot be deleted or
    edited; later work appends new ids.
-5. Exact selector/property conflict records split into normal and important paths, including
-   the opposite layer-precedence direction. These records supplement—not replace—the
+5. Exact-selector conflict records use the same property write-set overlap model, rather than
+   literal property-name equality, and are split into normal and important paths including the
+   opposite layer-precedence direction. These records supplement—not replace—the
    different-selector browser/geometry checks.
 6. Residual base→head comparison for every mapped stylesheet. Registering one rule does not
    exempt unrelated rules in that file from semantic verification.
