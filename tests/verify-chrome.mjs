@@ -3,7 +3,7 @@
 // 断言（每页 × 移动 390 / 桌面 1280 × zh / en）：
 //   ① 顶栏三槽位齐全；右簇通用钮顺序 = stats → pause → sound
 //   ② home / sound / more / pause 的 title 与 aria-label 非空，且随语言变化
-//   ③ 页脚在 390 宽下**可见**（此前 ≤480px 被 display:none，等于没有页脚），hint 非空
+//   ③ 页脚在 390 宽下**可见**（此前 ≤480px 被 display:none，等于没有页脚），hint 非空；\n//      footer actions 的 gap 保持桌面 8px / ≤480px 4px，守住 game-footer-actions × game-topbar-group 的跨 selector cascade
 //   ④ 游戏页**不得**出现语言钮（2026-09-21 语言切换 UI 收敛到首页 index.html；
 //      历史上的「点一次语言钮 UI 必须换语言」断言随 UI 一起移除）
 //   ⑤ 点一次静音钮，site_muted 真的翻转（挡住"页面与 chrome 各挂一个 handler
@@ -118,6 +118,10 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     chrome: Array.from(document.querySelectorAll('[data-chrome]')).map(label),
                     footerVisible: vis(footer),
                     hintText: hint ? (hint.textContent || '').trim() : null,
+                    footerActionsGap: (() => {
+                        const actions = document.querySelector('.game-footer .game-footer-actions');
+                        return actions ? getComputedStyle(actions).gap : null;
+                    })(),
                     htmlLang: document.documentElement.lang,
                     docTitle: document.title,
                     muted: (() => { try { return localStorage.getItem('site_muted'); } catch (e) { return null; } })(),
@@ -176,6 +180,9 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
 
             if (!snap.footerVisible) fail(name, vp.tag, lang, '页脚不可见');
             if (!snap.hintText) fail(name, vp.tag, lang, '页脚提示为空');
+            const expectedFooterGap = vp.w <= 480 ? '4px' : '8px';
+            if (snap.footerActionsGap !== expectedFooterGap)
+                fail(name, vp.tag, lang, `页脚动作间距 ${snap.footerActionsGap} ≠ ${expectedFooterGap}（game-footer-actions × game-topbar-group cascade 回归）`);
             if (snap.visibleOverlayHomeCount > 0)
                 fail(name, vp.tag, lang, `首屏 overlay 内还有 ${snap.visibleOverlayHomeCount} 个 Home 链接，会与持久页脚 Home 重复`);
             if (snap.htmlLang && !snap.htmlLang.startsWith(lang))
