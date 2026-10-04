@@ -117,6 +117,9 @@ for (const source of [
     'setTimeout(...args);',
     'setTimeout(`document.${key}`);',
     'setInterval(new String("document.styleSheets"));',
+    'setTimeout(String("document.body.append(document.createElement(\'style\'))"), 0);',
+    'setTimeout(getCode(), 0);',
+    'setTimeout(registry.code.toString(), 0);',
 ]) assert.ok(auditStyleIngress(source).length, source);
 assert.match(auditHtmlStyleIngress('<script>with (document) { createElement("style"); }</script>').join('\n'),
     /with statements hide/);
@@ -131,6 +134,7 @@ for (const source of [
     'const value = (0, registry[key]); total = flag ? grid[y][x] : 0; label = names[i] || "";',
     'setTimeout(flag ? first : second, 0); (cond ? a : b).run();',
     'setTimeout(() => tick(), 16); window.setTimeout(function () {}, 0); setInterval(this.step.bind(this), 50);',
+    'setTimeout(handler.bind(null, 1), 0); setTimeout((0, step.bind)(this), 0);',
     'clearTimeout(timer); window.clearInterval(id);',
     'const write = value => value; write(1);',
     'const s=document.createElement("script"); s.type="application/ld+json"; s.textContent=JSON.stringify(data);'
@@ -177,6 +181,11 @@ for (const html of [
     indexHtml.replace(/<link rel="manifest"[^>]*>/, ''),
 ]) assert.notDeepEqual(links(html), links(indexHtml));
 const directives = html => activation(html).directives;
+// A charset declaration only counts within the first 1024 bytes.
+assert.deepEqual(directives(indexHtml).find(([name]) => name === 'charset'), ['charset', 'utf-8', true]);
+const lateCharset = indexHtml.replace('<meta charset="UTF-8">', '')
+    .replace('</head>', '<!--' + 'x'.repeat(1100) + '--><meta charset="UTF-8"></head>');
+assert.deepEqual(directives(lateCharset).find(([name]) => name === 'charset'), ['charset', 'utf-8', false]);
 // HTML whitespace is ASCII-only: NBSP is data, not a separator, everywhere.
 assert.notDeepEqual(directives(indexHtml.replace('initial-scale', '\u00a0initial-scale')
     .replace(', \u00a0', ',\u00a0')), directives(indexHtml));

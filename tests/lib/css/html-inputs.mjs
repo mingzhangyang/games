@@ -103,7 +103,13 @@ export function htmlDocumentDirectives(html, file = 'fixture.html') {
     for (const element of parseHtmlElements(html, file)) {
         if (htmlTagName(element) !== 'meta') continue;
         const attrs = htmlElementAttributes(element);
-        if (Object.hasOwn(attrs, 'charset')) directives.push(['charset', asciiLower(stripAsciiWhitespace(attrs.charset))]);
+        if (Object.hasOwn(attrs, 'charset')) {
+            // The encoding prescan only honours a declaration that ends within the
+            // first 1024 bytes; record that validity, not just the label.
+            const end = element.sourceCodeLocation?.endOffset;
+            const prescan = Number.isInteger(end) && Buffer.byteLength(html.slice(0, end), 'utf8') <= 1024;
+            directives.push(['charset', asciiLower(stripAsciiWhitespace(attrs.charset)), prescan]);
+        }
         const name = asciiLower(stripAsciiWhitespace(attrs.name ?? ''));
         if (META_DIRECTIVES.has(name)) directives.push([name, normalizeValue(attrs.content ?? '')]);
     }

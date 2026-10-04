@@ -3,13 +3,14 @@
   "snapshotKind": "immutable-p0-activation",
   "capturedFromCommit": "8a72f430027d7e463cf4a0119745a8fae57368cc",
   "htmlUnchangedSince": "6bb0d80540707e09cfa41bde0d2384c86f6fedd6",
-  "note": "Addendum to the immutable P0 snapshots. Per page: document directives that govern how its stylesheets decode or evaluate (meta charset, viewport, color-scheme; http-equiv pragmas and <base href> are rejected), every <link> in order with normalized attributes (any rel can become a stylesheet), executable scripts (resolved source, grammar, normalized activation attributes, inline import edges), handler import edges, and the runtime stylesheet sources the page can activate by reaching the installer through its static/literal-dynamic import graph. Page HTML is byte-identical to the base commit; Math Rain's pre-registry inline style sites were reachable only from math-rain.html. Not a claim that every reachable source is installed on every run.",
+  "note": "Addendum to the immutable P0 snapshots. Per page: document directives that govern how its stylesheets decode or evaluate (meta charset with its first-1024-byte prescan validity, viewport, color-scheme; http-equiv pragmas and <base href> are rejected), every <link> in order with normalized attributes (any rel can become a stylesheet), executable scripts (resolved source, grammar, normalized activation attributes, inline import edges), handler import edges, and the runtime stylesheet sources the page can activate by reaching the installer through its static/literal-dynamic import graph. Page HTML is byte-identical to the base commit; Math Rain's pre-registry inline style sites were reachable only from math-rain.html. Not a claim that every reachable source is installed on every run.",
   "pages": {
     "bond-forge.html": {
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -169,7 +170,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -329,7 +331,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -489,7 +492,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -659,7 +663,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -829,7 +834,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -989,7 +995,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -1159,7 +1166,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -1319,7 +1327,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -1479,7 +1488,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -1639,7 +1649,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -1783,7 +1794,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -1943,7 +1955,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -2119,7 +2132,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -2289,7 +2303,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -2449,7 +2464,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -2609,7 +2625,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -2769,7 +2786,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -2803,7 +2821,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -2963,7 +2982,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -3133,7 +3153,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -3293,7 +3314,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -3453,7 +3475,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -3647,7 +3670,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -3797,7 +3821,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -3957,7 +3982,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",
@@ -4117,7 +4143,8 @@
       "directives": [
         [
           "charset",
-          "utf-8"
+          "utf-8",
+          true
         ],
         [
           "viewport",

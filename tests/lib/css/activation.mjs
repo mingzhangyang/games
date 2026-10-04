@@ -9,7 +9,7 @@ import { moduleSpecifiers, parseAuditedJs, SCAFFOLD, SOURCE_IDS, STYLE_INSTALLER
 // Pinned in code, like the ordered-model addendum: a baseline + digest update
 // in the same change cannot silently re-approve a new activation.
 const SNAPSHOT_PATH = 'tests/css-activation-p0-baseline.json';
-const SNAPSHOT_SHA256 = 'f1f874ff8f63f11377bbb22e6c2feff83314fd87877ad8b984efaf47131043fa';
+const SNAPSHOT_SHA256 = '4ad177d9cf0fafbcb85a69aea0adebe8028b33a0c95fb4010197440a5c21709f';
 
 // Per page, this addendum records the document directives that govern how its
 // stylesheets decode/evaluate, every <link> (any rel can become a stylesheet),

@@ -31,6 +31,7 @@ The revised contract separates syntax, observations, allowed changes and browser
 | `tests/verify-css-model.mjs` | Fast parser/model/ingress regression fixtures |
 | `tests/verify-css-html-browser.mjs` | Independent browser check of script-type execution, handler grammar and declarative-root activation |
 | `tests/verify-math-rain-styles.mjs` | Actual browser activation, insertion order, repeat calls and CSSOM comparison |
+| `tests/verify-css-live-activation.mjs` | Site-wide behavioral oracle: live activation of every page vs. its served HTML |
 
 PostCSS `8.5.28` and `@csstools/css-tokenizer` `4.0.1` are direct, exact development
 dependencies. parse5 remains the HTML parser. No CSS transformation plugin is used.
@@ -110,7 +111,8 @@ identifiers and destructuring each had their own partial list, and `window.eval(
 
 Timers are the one string-to-code capability that stays allowed, so they get exactly one
 reviewed shape, like element factories: a direct call whose first argument is syntactically
-a function value (function/arrow expression, identifier, member or call such as `bind`). Any
+a function value (function/arrow expression, identifier, member, or the reviewed `f.bind(…)`
+call; any other call such as `String('…')` may return the code string). Any
 other use of the name fails: `call`/`apply`/`bind` on the timer, passing it (`list.forEach(setTimeout)`),
 storing it, renaming it, or a spread or non-function argument. The audit does not try to
 recognize the indirect call shapes one by one.
@@ -158,7 +160,7 @@ event attributes; an exact three-value script-type list missed browser-valid Jav
 | `javascript:` URL attributes | Rejected explicitly after URL parsing (including control-character/case variants) |
 | Import maps and speculation rules | Rejected until script resolution/loading effects have a reviewed contract |
 | `<meta http-equiv>` pragmas (CSP, `default-style`, `content-type`, `refresh`, …) | Rejected until modeled: they decide whether/which stylesheets and scripts activate or how they decode, without changing any stylesheet input (browser-confirmed for CSP) |
-| `<meta charset>`, `viewport`, `color-scheme` | Recorded per page in the activation addendum: linked-CSS decoding fallback, media-query viewport, used color scheme |
+| `<meta charset>`, `viewport`, `color-scheme` | Recorded per page in the activation addendum: linked-CSS decoding fallback, media-query viewport, used color scheme. A charset declaration counts only if it ends within the first 1024 bytes, so that prescan validity is recorded too |
 | `<base href>` | Rejected: a base applies only from the moment the parser inserts it, so earlier script/link URLs resolve against the document URL. A finished DOM cannot reproduce that order. Without it every URL resolves exactly against the document URL |
 | Event handlers on `link`/`style`/`script`/`meta` | Rejected: `this` is the element itself, so a handler can rewrite its `rel`/`media`/`disabled`/`src`/`content` with no capability name (e.g. the `preload` + `onload="this.rel='stylesheet'"` idiom, browser-confirmed) |
 | Every `<link>`, any `rel` | Recorded per page in the activation addendum: any link can become a stylesheet by changing `rel`, so adding or changing a non-stylesheet link is a reviewed delta |
@@ -217,6 +219,35 @@ classifier. It follows the spec, splitting on all ASCII whitespace. Chromium spl
 space/newline, so the classifier is a fail-closed superset: the browser oracle checks that it
 never misses a browser-active link. Selector-matched DOM state (`class`, `lang`, `dir` attributes) is not a
 stylesheet input and stays outside this model.
+
+## Behavioral oracle for existing-element mutation
+
+The syntax boundary rejects every way to *create* a stylesheet, document or script. It cannot
+decide which element a generic write targets: `el.rel = …`, `el.media = …` and
+`meta.setAttribute('content', …)` use names that production code legitimately writes on other
+elements (it updates the canonical `href` and og/theme-color `content`). Rejecting those names
+would be wrong, and resolving the target is data flow. `verify-css-live-activation.mjs`
+therefore checks the behavior directly on every page, at a desktop and a mobile/low-end
+profile:
+
+- From before the first byte is parsed, a `MutationObserver` records every insertion, removal
+  and attribute write on `link`/`style`/`script`/`meta`/`base` (subtrees included, deduplicated
+  by element). `attachShadow` calls are counted.
+- After load, the live elements are compared with the page's own served HTML (parsed in the
+  page, so the same check runs on source and on `dist`). Each element has an activation
+  identity: link rel/media/disabled, style key/media/content hash, script type/src, meta
+  name/pragma/charset.
+- Violations are any undeclared insertion or live input, any removal, any attribute write that
+  can change activation, a runtime-disabled sheet, adopted sheets, shadow roots, or a document
+  encoding that differs from the declared one. Allowed writes are `data-*`, `href` on links
+  that fetch nothing (canonical/icon/manifest) and `content` on non-directive metas. Allowed
+  insertions are registered sources on pages that reach the installer, inert JSON-LD and the
+  build's `modulepreload` links.
+
+Injected probes (canonical link switched to a stylesheet, viewport rewritten, sheet disabled,
+link removed, `innerHTML` stylesheet assembled from string pieces, icon media changed) each
+fail it. It covers load-time behavior, not every interaction path; `verify-math-rain-styles`
+covers the installer's interaction paths.
 
 **Boundary of the guarantee:** these are architectural syntax checks, not a proof about
 arbitrary JavaScript data flow (a capability aliased through a variable) or every possible

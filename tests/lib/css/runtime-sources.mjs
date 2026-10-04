@@ -122,9 +122,12 @@ const CAPABILITY_NAMES = new Set([...ELEMENT_FACTORIES, ...STYLESHEET_HANDLES, .
 // are allowed in exactly one reviewed shape: a direct call whose first argument
 // is syntactically a function value. Any other use of the name (call/apply/bind,
 // passing or storing it, renaming it) fails, instead of recognizing call shapes.
+// A call result is a function only in the reviewed `f.bind(...)` shape: any
+// other call (`String('…')`) may return the code string itself.
 const TIMERS = new Set(['setTimeout', 'setInterval']);
-const FUNCTION_VALUES = new Set(['ArrowFunctionExpression', 'FunctionExpression', 'Identifier', 'MemberExpression',
-    'CallExpression']);
+const FUNCTION_VALUES = new Set(['ArrowFunctionExpression', 'FunctionExpression', 'Identifier', 'MemberExpression']);
+const functionValue = node => FUNCTION_VALUES.has(node.type)
+    || (node.type === 'CallExpression' && valueSources(node.callee).every(callee => property(callee) === 'bind'));
 const RENAME_SENSITIVE = new Set([...CAPABILITY_NAMES, ...TIMERS]);
 // Inserting these elements activates code, a stylesheet, a nested document, or
 // changes URL/stylesheet-set resolution for the rest of the page.
@@ -313,7 +316,7 @@ export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module
         if (timer) {
             const call = directCall(ancestors, node);
             if (!call) fail('timers may only be called directly; other uses hide string evaluation');
-            else if (!valueSources(call.arguments[0]).every(argument => FUNCTION_VALUES.has(argument.type))) {
+            else if (!valueSources(call.arguments[0]).every(functionValue)) {
                 fail('timer callbacks must be function values; strings evaluate code outside the audited source');
             }
         }
