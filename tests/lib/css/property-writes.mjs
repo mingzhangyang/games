@@ -5,6 +5,7 @@ const PROPERTIES = require('mdn-data/css/properties.json');
 const SHORTHAND_FIELDS = ['initial', 'computed', 'animationType', 'percentages'];
 const CACHE = new Map();
 const WILDCARD = '*';
+let SHORTHANDS = null;
 const EDGES = ['top', 'right', 'bottom', 'left'];
 const CORNERS = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
 
@@ -30,6 +31,22 @@ function shorthandChildren(property) {
         }
     }
     return [...children];
+}
+
+function shorthandFamilies(property) {
+    if (!SHORTHANDS) {
+        SHORTHANDS = Object.keys(PROPERTIES)
+            .filter(name => shorthandChildren(name).length)
+            .sort((a, b) => b.length - a.length);
+    }
+    return new Set(SHORTHANDS
+        .filter(shorthand => property.startsWith(shorthand + '-'))
+        .map(shorthand => 'shorthand:' + shorthand));
+}
+
+function withFamilies(property, slots) {
+    for (const family of shorthandFamilies(property)) slots.add(family);
+    return slots;
 }
 
 const edgeSlots = family => new Set(EDGES.map(edge => family + ':' + edge));
@@ -116,11 +133,11 @@ function expandProperty(property, stack = new Set()) {
     if (stack.has(property)) return new Set([WILDCARD]);
 
     const children = shorthandChildren(property);
-    if (!children.length) return leafSlots(property);
+    if (!children.length) return withFamilies(property, leafSlots(property));
 
     const next = new Set(stack);
     next.add(property);
-    const out = new Set();
+    const out = new Set(['shorthand:' + property]);
     for (const child of children) {
         for (const slot of expandProperty(child, next)) out.add(slot);
     }
