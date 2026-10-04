@@ -263,6 +263,10 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
         errors.push(mapping.id + ': source must include the reviewed declaration snapshot.');
         return;
     }
+    if (mapping.source.layer !== null && mapping.source.layer !== undefined
+        && !allowedLayers.has(mapping.source.layer)) {
+        errors.push(mapping.id + ': source layer ' + mapping.source.layer + ' is not reviewed.');
+    }
     if (declarationDigest(mapping.source.declarations) !== mapping.source.declarationDigest) {
         errors.push(mapping.id + ': source declarationDigest does not match its declaration snapshot.');
     }
@@ -313,8 +317,10 @@ export function verifyRuleMigrations({
 
     for (const mapping of mappings.values()) {
         verifyMappingShape(mapping, allowedLayers, errors);
-        const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
-        subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
+        if (mapping.source?.layer === null || mapping.source?.layer === undefined) {
+            const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
+            subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
+        }
 
         const currentDestinationRules = [];
         for (const destination of mapping.destinations || []) {
@@ -338,9 +344,9 @@ export function verifyRuleMigrations({
         }
 
         const baseCatalog = baseCatalogs.get(mapping.source?.path) || [];
-        const sourceRule = findRule(baseCatalog, { ...mapping.source, layer: null }, true);
+        const sourceRule = findRule(baseCatalog, mapping.source, true);
         if (!sourceRule) {
-            errors.push(mapping.id + ': source rule was not present and unlayered in the comparison base.');
+            errors.push(mapping.id + ': source rule was not present in the declared layer in the comparison base.');
             continue;
         }
         if (jsonKey(sourceRule.declarations) !== jsonKey(mapping.source.declarations)) {
@@ -370,7 +376,7 @@ export function verifyRuleMigrations({
         const baseCatalog = baseCatalogs.get(path) || [];
         const currentCatalog = currentCatalogs.get(path) || [];
         const sourceRefs = pathMappings.filter(mapping => mapping.source.path === path)
-            .map(mapping => ({ ...mapping.source, layer: null }));
+            .map(mapping => mapping.source);
         const destinationRefs = pathMappings.flatMap(mapping => (mapping.destinations || []).filter(item => item.path === path));
         const baseResidual = filterCatalog(baseCatalog, sourceRefs, true);
         const currentResidual = filterCatalog(currentCatalog, destinationRefs, true);
