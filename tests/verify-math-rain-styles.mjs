@@ -20,7 +20,7 @@ try {
             Object.defineProperty(navigator, 'deviceMemory', { get: () => low ? 1 : 8 });
             Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => low ? 2 : 8 });
         }, mobile);
-        await page.goto(BASE + '/math-rain.html', { waitUntil: 'networkidle0' });
+        await page.goto(BASE + '/math-rain.html', { waitUntil: 'load' });
         await page.waitForFunction(() => window.mathRainGame?.uiController && window.mobileAdapter && window.shopManager);
         const initial = await page.evaluate(() => ({
             styles: [...document.querySelectorAll('style')].map(style => style.dataset.mathRainStyle),
