@@ -31,7 +31,11 @@ try {
         'HTML script type/language classification must agree with actual execution');
 
     const handler = `<button id="handler" onclick="with (window) { __handled=true; return false; }">probe</button>`;
-    assert.deepEqual(auditHtmlStyleIngress(handler), []);
+    // The browser runs `with` in a handler (sloppy FunctionBody); the audit parses
+    // it in the same grammar and rejects it because it hides name resolution.
+    assert.match(auditHtmlStyleIngress(handler).join('\n'), /with statements hide/);
+    const scoped = `<button id="scoped" onclick="return typeof createElement;">probe</button>`;
+    assert.ok(auditHtmlStyleIngress(scoped).length, 'handler scope exposes document members');
     await page.setContent(handler);
     assert.deepEqual(await page.evaluate(() => ({
         result: document.getElementById('handler').onclick(new window.Event('click')),
@@ -46,6 +50,9 @@ try {
         .getPropertyValue('--handler-sheet').trim()), 'installed');
     const recovered = '<div></div><body onclick="document.body.dataset.recovered=\'yes\'; return false;">';
     assert.equal(htmlJavaScriptInputs(recovered).filter(input => input.grammar === 'handler').length, 1);
+    await page.setContent(scoped);
+    assert.equal(await page.evaluate(() => document.getElementById('scoped').onclick(new window.Event('click'))),
+        'function', 'bare document members resolve in handler scope');
     await page.setContent(recovered);
     await page.evaluate(() => document.body.onclick(new window.Event('click')));
     assert.equal(await page.evaluate(() => document.body.dataset.recovered), 'yes');

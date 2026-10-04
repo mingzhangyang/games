@@ -26,6 +26,7 @@ The revised contract separates syntax, observations, allowed changes and browser
 | `tests/lib/css/html-inputs.mjs` | Shared HTML scope policy, execution-input classification and historical stylesheet projection |
 | `tests/lib/css/semantic-contract.mjs` | Independently pinned ordered-model addendum |
 | `tests/lib/css/runtime-sources.mjs` | Fixed registry validation and architectural JavaScript ingress rules |
+| `tests/lib/css/activation.mjs` | Page → script → import-graph activation model and its independently pinned addendum |
 | `tests/verify-css-debt.mjs` | Inventory, immutable history, migration gates and built stylesheet ordering |
 | `tests/verify-css-model.mjs` | Fast parser/model/ingress regression fixtures |
 | `tests/verify-css-html-browser.mjs` | Independent browser check of script-type execution, handler grammar and declarative-root activation |
@@ -83,9 +84,32 @@ provenance, rather than being renamed to their new physical registry location.
 
 The installer is small and independently fingerprinted. Outside it, direct stylesheet/link
 creation, factory aliases, nonliteral element tags, stylesheet handles, constructed sheets,
-known CSSOM injection APIs and literal stylesheet markup fail architectural checks. The
-one variable SVG factory in Carrot Pull is replaced with a bounded table of literal tag
-factories, so it cannot manufacture a stylesheet by accepting an arbitrary tag.
+known CSSOM/HTML-parsing injection APIs and literal stylesheet markup fail architectural checks.
+
+These checks are name-based, so they hold one invariant: **every name that can reach a
+stylesheet, HTML-parsing or code-evaluation capability is statically visible where it is
+used.** Earlier fixes rejected one hiding shape at a time (a computed key directly on bare
+`document`); `globalThis.document['create' + 'Element']` then passed. The audit now rejects
+each syntactic hiding *category*:
+
+| Category | Rejected forms |
+| --- | --- |
+| Computed key on a host object | Any unresolved key on an expression that statically names a Window/Document/root element (`window`, `globalThis.document`, `document.body`, `x.ownerDocument`, `x.getRootNode()`, optional chains). Plain `window[name] = value` stays allowed. |
+| Dynamic dispatch | An unresolved computed member used as callee, `new` target, template tag, or `call`/`apply`/`bind` receiver, on any object |
+| Computed destructuring | `{ [key]: x } = …`; destructuring any capability name |
+| Scope objects | `with`; bare capability names in event-handler attributes, whose scope chain includes the element, form and document (browser-confirmed) |
+| Strings as code / names | `eval`, `Function`, `.constructor`, `Reflect`, string timers, `javascript:` URL strings, non-literal `import()` |
+| Activating elements | Runtime `style`, `link`, `script`, `iframe`, `frame`, `object`, `embed`, `base`, `meta` |
+
+A runtime `<script>` is accepted only as a locally proven inert data block (the existing
+JSON-LD sites): `const x = createElement('script')`, immediately `x.type = '<non-JS type>'`,
+then only `x.textContent = …` and `parent.append(x)` statements in the same statement list.
+Any other reference to the binding fails. This is a check of one binding's uses, not inference.
+
+Production code now follows the invariant: Carrot Pull's SVG fallback uses a `switch` of
+literal `createElementNS` calls, and Math Rain's unused `SoundManager.play(name)` alias
+dispatches its seven dedicated sounds explicitly instead of calling `this[methodName]`.
+Ordinary data lookups such as `window.LANGUAGES[lang]` or `grid[y][x]` are unaffected.
 
 The existing HTML scaffold renderer is a documented exception: it emits a complete document
 for `new-game.mjs`, rather than installing a stylesheet. Its entire source is independently
@@ -120,8 +144,9 @@ Traversal includes implied DOM elements: HTML recovery can merge a late body tok
 or style attributes into an implied body without a source location. Offsets are diagnostics,
 not a filter for active inputs; both the static model and execution inventory see these nodes.
 The event-handler parser supplies function context and checks that input cannot escape its
-wrapper. Classic scripts retain their non-module grammar (including legacy HTML comments
-and `with`); module-only syntax in a classic script fails. Parse errors fail the audit.
+wrapper. Classic scripts retain their non-module grammar (legacy HTML comments parse; `with`
+parses and is then rejected by policy); module-only syntax in a classic script fails. Parse
+errors fail the audit.
 
 Type classification follows the [HTML preparation algorithm](https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element)
 and [JavaScript MIME essence list](https://mimesniff.spec.whatwg.org/#javascript-mime-type).
@@ -137,8 +162,31 @@ handler, actual handler-created stylesheet activation, and style/link activation
 open and closed declarative roots. The supported project pages still match every immutable
 P0 observation. New HTML mechanisms must extend this shared contract; omission is not support.
 
+## Page activation
+
+A runtime stylesheet source affects a page's cascade only on pages that execute its
+installer. The previous model recorded *where* sources are defined but not *which pages run
+them*, so adding `<script type="module" src="src/games/math-rain/mobile-adapter.js">` to
+another page changed that page's cascade while every snapshot still matched.
+
+`activation.mjs` makes activation part of the model. For each page it builds the executed
+graph from the shared HTML execution inventory: external scripts (resolved repository file,
+grammar, normalized activation attributes such as `type`/`defer`/`async`), inline scripts
+(grammar, attributes, import edges), and handler import edges, followed through static
+imports, re-exports and literal `import()`. The graph is closed over the audited local
+inventory: bare, remote, `data:` or non-JS specifiers and non-literal `import()` fail. The
+build-time HTML scaffold (exempt from the ingress audit) must not be reachable from a page.
+
+A page that reaches `install-style.js` can activate every registered source, because the
+installer accepts any key; no caller-key inference is attempted. The per-page result is
+`tests/css-activation-p0-baseline.json`, pinned by SHA-256 in code like the ordered-model
+addendum. Page HTML is byte-identical to the base commit; only `math-rain.html` activates
+the five sources, as before the registry. Adding, moving or reordering an executable script,
+or an import edge that reaches the installer, needs an explicit P2 mapping.
+
 **Boundary of the guarantee:** these are architectural syntax checks, not a proof about
-arbitrary JavaScript data flow or every possible HTML-string construction. Do not extend
+arbitrary JavaScript data flow (a capability aliased through a variable) or every possible
+HTML-string construction. Do not extend
 them into another partial interpreter. Runtime inline element styles used for positions,
 colors and animation are also outside the stylesheet-source P0 totals. Browser tests are
 the independent check for exercised activation paths; they are not exhaustive execution
@@ -224,3 +272,12 @@ Follow-up HTML boundary verification (2026-10-04): the expanded fast regression 
 full source/runtime/HTML P0 guard, standalone browser oracle and repository lint passed.
 This follow-up changes verifier/test/documentation code only; P0 artifacts and production
 sources remain unchanged. It does not require a new cascade baseline.
+
+Follow-up ingress/activation verification (2026-10-04): two review findings (a computed key
+reached through `globalThis.document`, and a page newly loading a style-installing module)
+shared the same causes. The ingress audit could hide a name in syntax, and the model omitted
+page activation. Both are now handled by category, as described above. New fast fixtures
+cover every listed form. Re-running them against the previous audit confirmed that it missed
+each one. The browser oracle confirms that bare document members resolve in event-handler
+scope. The P0 static/runtime/semantic artifacts are unchanged; the activation addendum is
+new and separately pinned.

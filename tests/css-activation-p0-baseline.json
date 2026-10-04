@@ -1,0 +1,1685 @@
+{
+  "schemaVersion": 1,
+  "snapshotKind": "immutable-p0-script-activation",
+  "capturedFromCommit": "8a72f430027d7e463cf4a0119745a8fae57368cc",
+  "htmlUnchangedSince": "6bb0d80540707e09cfa41bde0d2384c86f6fedd6",
+  "note": "Addendum to the immutable P0 snapshots: per-page executable scripts (resolved source, grammar, normalized activation attributes, inline import edges), handler import edges, and the runtime stylesheet sources a page can activate by reaching the installer through its static/literal-dynamic import graph. Page HTML is byte-identical to the base commit; Math Rain's pre-registry inline style sites were reachable only from math-rain.html. Not a claim that every reachable source is installed on every run.",
+  "pages": {
+    "bond-forge.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/bond-forge/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/bond-forge/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "carrot-pull.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/carrot-pull.js",
+          "attributes": [
+            [
+              "src",
+              "js/carrot-pull.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "circuit.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/circuit.js",
+          "attributes": [
+            [
+              "src",
+              "js/circuit.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "crystal-bloom.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/crystal-bloom.js",
+          "attributes": [
+            [
+              "src",
+              "js/crystal-bloom.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "echo-cave.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/echo-cave.js",
+          "attributes": [
+            [
+              "src",
+              "js/echo-cave.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "firefly-signal.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/firefly-signal/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/firefly-signal/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "flame-verse.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/flame-verse.js",
+          "attributes": [
+            [
+              "src",
+              "js/flame-verse.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "gomoku.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/gomoku/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/gomoku/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "gravity-slingshot.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/gravity-slingshot/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/gravity-slingshot/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "hoop-shot.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/hoop-shot.js",
+          "attributes": [
+            [
+              "src",
+              "js/hoop-shot.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "index.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "module",
+          "src": "js/index-page.js",
+          "attributes": [
+            [
+              "src",
+              "js/index-page.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "lumen.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/lumen.js",
+          "attributes": [
+            [
+              "src",
+              "js/lumen.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "math-rain.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/math-rain/page-boot.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/math-rain/page-boot.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": [
+        "src/games/math-rain/core/ErrorHandler.js#ErrorHandler.addErrorStyles#1",
+        "src/games/math-rain/core/UIController.js#UIController.createScorePopup#1",
+        "src/games/math-rain/mobile-adapter.js#MobileAdapter.addMobileStyles#1",
+        "src/games/math-rain/mobile-adapter.js#MobileAdapter.applyLowEndSettings#1",
+        "src/games/math-rain/shop-manager.js#ShopManager.createNotificationPopup#1"
+      ]
+    },
+    "maxwell-demon.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/maxwell-demon.js",
+          "attributes": [
+            [
+              "src",
+              "js/maxwell-demon.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "minesweeper.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/minesweeper/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/minesweeper/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "needle-awn.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/needle-awn/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/needle-awn/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "planet-merge.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/planet-merge.js",
+          "attributes": [
+            [
+              "src",
+              "js/planet-merge.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "public/404.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "reversi.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/reversi/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/reversi/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "ripple-duet.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/ripple-duet.js",
+          "attributes": [
+            [
+              "src",
+              "js/ripple-duet.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "shadow-loom.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/shadow-loom.js",
+          "attributes": [
+            [
+              "src",
+              "js/shadow-loom.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "silk-dew.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/silk-dew.js",
+          "attributes": [
+            [
+              "src",
+              "js/silk-dew.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "sword-flight.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/sword-flight/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/sword-flight/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "tank-battle.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/tank-battle/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/tank-battle/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "tetris.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/tetris.js",
+          "attributes": [
+            [
+              "src",
+              "js/tetris.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "tower-defense.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "src/games/tower-defense/index.js",
+          "attributes": [
+            [
+              "src",
+              "src/games/tower-defense/index.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    },
+    "word-daily.html": {
+      "scripts": [
+        {
+          "grammar": "script",
+          "src": "public/theme-boot.js",
+          "attributes": [
+            [
+              "src",
+              "/theme-boot.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "inline": true,
+          "attributes": [],
+          "imports": []
+        },
+        {
+          "grammar": "module",
+          "src": "js/word-daily.js",
+          "attributes": [
+            [
+              "src",
+              "js/word-daily.js"
+            ],
+            [
+              "type",
+              "module"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/analytics.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/analytics.js"
+            ]
+          ]
+        },
+        {
+          "grammar": "script",
+          "src": "public/sw-register.js",
+          "attributes": [
+            [
+              "defer",
+              ""
+            ],
+            [
+              "src",
+              "/sw-register.js"
+            ]
+          ]
+        }
+      ],
+      "handlerImports": [],
+      "runtimeStyleSources": []
+    }
+  }
+}

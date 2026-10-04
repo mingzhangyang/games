@@ -10,8 +10,9 @@ import { fileURLToPath } from 'node:url';
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { hasImportantPriority } from './lib/css/model.mjs';
 import { scanHtml, parseHtmlElements, htmlElementAttributes, htmlTagName } from './lib/css/html-inputs.mjs';
-import { scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
+import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
+import { verifyActivationSnapshot } from './lib/css/activation.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -304,6 +305,7 @@ function verifyProject() {
     }
 
     verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors);
+    verifyActivationSnapshot(ROOT, htmlPaths, auditedJavaScriptFiles(ROOT), errors);
     verifyBuildOrderingContract(errors);
 
     for (const key of Object.keys(actualDebt)) {
@@ -342,7 +344,7 @@ function verifyProject() {
         + runtimeKeyframes + ' · unlayered runtime keyframes: ' + runtimeUnlayeredKeyframes);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
-    console.log('  immutable P0 snapshot, stylesheet source order, and current layer map all match.');
+    console.log('  immutable P0 snapshot, script activation, stylesheet source order, and current layer map all match.');
 }
 
 verifyProject();

@@ -2,7 +2,7 @@ import { parse } from 'acorn';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { htmlJavaScriptInputs } from './html-inputs.mjs';
+import { htmlJavaScriptInputs, htmlScriptKind, resolveLocalScript } from './html-inputs.mjs';
 
 export const STYLE_REGISTRY = 'src/games/math-rain/style-sources.js';
 export const STYLE_INSTALLER = 'src/games/math-rain/install-style.js';
@@ -16,20 +16,26 @@ export const SOURCE_IDS = Object.freeze({
 const INSTALLER_SHA256 = '4650a9991128e625fc639a0df36dfe58bb76198995fdc7cd52fa09176452a284';
 // This existing pure scaffold renderer emits whole HTML for new-game.mjs.
 // Pin its bytes instead of misclassifying its template as a live DOM injection.
-const SCAFFOLD = 'src/platform/shell/render-game-shell.js';
+export const SCAFFOLD = 'src/platform/shell/render-game-shell.js';
 const SCAFFOLD_SHA256 = 'd79dfc7567c624a3d33c0dcc8947f45cdbd276b4ff353bcfb17274d4f1058e55';
 const parseJs = source => parse(source, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true });
 const string = node => node?.type === 'Literal' && typeof node.value === 'string' ? node.value
     : node?.type === 'TemplateLiteral' && node.expressions.length === 0 ? node.quasis[0].value.cooked : null;
-const property = node => node.computed ? string(node.property) : node.property?.name;
+// A statically known property name, or null when a computed key hides it.
+const staticKey = (key, computed) => key?.type === 'Identifier' && !computed ? key.name
+    : key?.type === 'PrivateIdentifier' ? '#' + key.name
+        : key?.type === 'Literal' && ['number', 'bigint'].includes(typeof key.value) ? String(key.value) : string(key);
+const property = node => staticKey(node.property, node.computed);
 
-function walk(node, parent, visit) {
+function walk(node, ancestors, visit) {
     if (!node || typeof node.type !== 'string') return;
-    visit(node, parent);
+    visit(node, ancestors.at(-1) ?? null, ancestors);
+    ancestors.push(node);
     for (const value of Object.values(node)) {
-        if (Array.isArray(value)) value.forEach(child => walk(child, node, visit));
-        else if (value && typeof value === 'object') walk(value, node, visit);
+        if (Array.isArray(value)) value.forEach(child => walk(child, ancestors, visit));
+        else if (value && typeof value === 'object') walk(value, ancestors, visit);
     }
+    ancestors.pop();
 }
 
 export function readStyleRegistry(source) {
@@ -60,59 +66,203 @@ export function readStyleRegistry(source) {
     return entries;
 }
 
-// This is an architectural syntax boundary, not a JavaScript data-flow proof.
-// Browser tests independently observe actual installed styles after exercising
-// the callers. Do not add alias/constant-propagation heuristics to this module.
-export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module') {
-    const errors = [];
-    const fail = message => errors.push(file + ': ' + message);
-    let ast;
+export function parseAuditedJs(source, grammar = 'module') {
     if (grammar === 'handler') {
         // Event attributes are FunctionBody, not Module or Script. A wrapper
         // supplies function context; ensure input cannot escape that wrapper.
-        ast = parse('function __html_handler__(event) {\n' + source + '\n}',
+        const ast = parse('function __html_handler__(event) {\n' + source + '\n}',
             { ecmaVersion: 'latest', sourceType: 'script' });
         if (ast.body.length !== 1 || ast.body[0].type !== 'FunctionDeclaration') {
             throw new Error('Event handler must be a single function body');
         }
-    } else if (grammar === 'script') {
-        ast = parse(source, { ecmaVersion: 'latest', sourceType: 'script' });
-    } else if (grammar === 'module') ast = parseJs(source);
-    else throw new Error('Unsupported JavaScript grammar: ' + grammar);
-    walk(ast, null, (node, parent) => {
+        return ast;
+    }
+    if (grammar === 'script') return parse(source, { ecmaVersion: 'latest', sourceType: 'script' });
+    if (grammar === 'module') return parseJs(source);
+    throw new Error('Unsupported JavaScript grammar: ' + grammar);
+}
+
+// Static and dynamic module edges. A non-literal import() cannot be placed in
+// the page activation graph, so it is rejected rather than omitted.
+export function moduleSpecifiers(ast) {
+    const specifiers = [];
+    walk(ast, [], node => {
+        if (['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration'].includes(node.type) && node.source) {
+            specifiers.push(node.source.value);
+        }
+        if (node.type === 'ImportExpression') {
+            const target = string(node.source);
+            if (target == null) throw new Error('import() specifier must be a string literal');
+            specifiers.push(target);
+        }
+    });
+    return specifiers;
+}
+
+// The audit below is name-based. Its invariant: every name that can reach one
+// of these capabilities is statically visible where it is used. Each syntactic
+// way to hide a name (computed keys, dynamic dispatch, scope objects, strings
+// evaluated as code) is therefore rejected as a category, not shape by shape.
+const ELEMENT_FACTORIES = new Set(['createElement', 'createElementNS']);
+const STYLESHEET_HANDLES = new Set(['adoptedStyleSheets', 'styleSheets', 'sheet', 'insertRule', 'addRule',
+    'replaceSync', 'CSSStyleSheet', 'DOMParser', 'createContextualFragment', 'write', 'writeln',
+    'attachShadow', 'setHTMLUnsafe', 'parseHTMLUnsafe', 'createHTMLDocument']);
+// Global bindings that construct stylesheets/documents, evaluate strings as
+// code, or invoke properties by runtime name. `.constructor` reaches Function.
+const GLOBAL_CAPABILITIES = new Set(['CSSStyleSheet', 'DOMParser', 'eval', 'Function', 'Reflect']);
+// Inserting these elements activates code, a stylesheet, a nested document, or
+// changes URL/stylesheet-set resolution for the rest of the page.
+const ACTIVATING_TAGS = new Set(['style', 'link', 'script', 'iframe', 'frame', 'object', 'embed', 'base', 'meta']);
+// Expressions that statically name a Window/Document/root element. A computed
+// key on one of them may name any capability above.
+const WINDOW_GLOBALS = new Set(['window', 'self', 'globalThis', 'top', 'parent', 'frames', 'opener']);
+const GLOBAL_HOST_HOPS = new Set([...WINDOW_GLOBALS, 'document', 'documentElement', 'head', 'body',
+    'scrollingElement', 'implementation']);
+const DOCUMENT_HOPS = new Set(['document', 'ownerDocument', 'defaultView', 'contentDocument', 'contentWindow']);
+
+function hostObject(node) {
+    if (node?.type === 'ChainExpression') return hostObject(node.expression);
+    if (node?.type === 'Identifier') return WINDOW_GLOBALS.has(node.name) || node.name === 'document';
+    if (node?.type === 'CallExpression') return property(node.callee.type === 'ChainExpression'
+        ? node.callee.expression : node.callee) === 'getRootNode';
+    if (node?.type !== 'MemberExpression') return false;
+    const name = property(node);
+    return DOCUMENT_HOPS.has(name) || ((name == null || GLOBAL_HOST_HOPS.has(name)) && hostObject(node.object));
+}
+
+// Identifier in a binding-reference position (not a property name or label).
+function isReference(node, parent) {
+    if (!parent) return true;
+    if (parent.type === 'MemberExpression') return parent.object === node || parent.computed;
+    if (['Property', 'MethodDefinition', 'PropertyDefinition'].includes(parent.type) && parent.key === node) {
+        return parent.computed || (parent.type === 'Property' && parent.shorthand);
+    }
+    if (['LabeledStatement', 'BreakStatement', 'ContinueStatement'].includes(parent.type)) return false;
+    if (['ImportSpecifier', 'ExportSpecifier'].includes(parent.type)) return parent.local === node;
+    return parent.type !== 'MetaProperty';
+}
+
+// The member is invoked by runtime name: callee, new target, template tag, or
+// receiver of call/apply/bind.
+function invoked(ancestors, node) {
+    let child = node;
+    for (let index = ancestors.length - 1; index >= 0; index--) {
+        const parent = ancestors[index];
+        if (parent.type === 'ChainExpression') { child = parent; continue; }
+        if (['CallExpression', 'NewExpression'].includes(parent.type)) return parent.callee === child;
+        if (parent.type === 'TaggedTemplateExpression') return parent.tag === child;
+        return parent.type === 'MemberExpression' && parent.object === child
+            && ['call', 'apply', 'bind'].includes(property(parent));
+    }
+    return false;
+}
+
+function memberOf(node, name, key) {
+    return node?.type === 'MemberExpression' && node.object.type === 'Identifier' && node.object.name === name
+        && property(node) === key;
+}
+
+// A runtime <script> is accepted only as a locally proven inert data block:
+// `const x = createElement('script')`, immediately `x.type = '<non-JS type>'`,
+// then only `x.textContent = ...` and `parent.append(x)`/`appendChild(x)`
+// statements in the same statement list. Any other reference (src, setAttribute,
+// aliases, closures, a later type change) fails; no data flow is inferred.
+function inertScriptDataBlock(call, ancestors) {
+    const [container, declaration, declarator] = ancestors.slice(-3);
+    if (declarator?.type !== 'VariableDeclarator' || declarator.init !== call || declarator.id.type !== 'Identifier'
+        || declaration?.type !== 'VariableDeclaration' || declaration.kind !== 'const'
+        || declaration.declarations.length !== 1 || !Array.isArray(container?.body)) return false;
+    const name = declarator.id.name;
+    const statements = container.body;
+    const index = statements.indexOf(declaration);
+    const assignment = (statement, key) => statement?.type === 'ExpressionStatement'
+        && statement.expression.type === 'AssignmentExpression' && statement.expression.operator === '='
+        && memberOf(statement.expression.left, name, key) ? statement.expression : null;
+    const typeAssignment = assignment(statements[index + 1], 'type');
+    const type = string(typeAssignment?.right);
+    if (type == null || htmlScriptKind({ type }) !== 'data') return false;
+    const allowed = new Set([declarator.id, typeAssignment.left.object]);
+    for (const statement of statements.slice(index + 2)) {
+        const text = assignment(statement, 'textContent');
+        if (text) allowed.add(text.left.object);
+        const call = statement.type === 'ExpressionStatement' ? statement.expression : null;
+        if (call?.type === 'CallExpression' && ['append', 'appendChild'].includes(property(call.callee) ?? '')
+            && call.arguments.length === 1 && call.arguments[0].type === 'Identifier'
+            && call.arguments[0].name === name) allowed.add(call.arguments[0]);
+    }
+    let inert = true;
+    walk(container, [], (node, parent) => {
+        if (node.type === 'Identifier' && node.name === name && isReference(node, parent) && !allowed.has(node)) {
+            inert = false;
+        }
+    });
+    return inert;
+}
+
+const javascriptUrl = value => /^javascript:/i.test(value.replace(/^[\u0000-\u0020]+/, '').replace(/[\t\n\r]/g, ''));
+
+// This is an architectural syntax boundary, not a JavaScript data-flow proof.
+// Aliasing a value through a variable is out of scope; browser tests observe
+// actual installed styles. Do not add alias/constant-propagation heuristics.
+export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module') {
+    const errors = [];
+    const fail = message => errors.push(file + ': ' + message);
+    const ast = parseAuditedJs(source, grammar);
+    // Handler scope chains include the element, its form and the document, so
+    // a bare identifier there can resolve to any document capability.
+    const scopedNames = grammar === 'handler'
+        ? new Set([...GLOBAL_CAPABILITIES, ...ELEMENT_FACTORIES, ...STYLESHEET_HANDLES]) : GLOBAL_CAPABILITIES;
+    walk(ast, [], (node, parent, ancestors) => {
         if (node.type === 'MemberExpression') {
             const name = property(node);
-            if (['createElement', 'createElementNS'].includes(name)) {
+            if (ELEMENT_FACTORIES.has(name)) {
                 const call = parent?.type === 'CallExpression' && parent.callee === node ? parent : null;
-                const tag = string(call?.arguments[name === 'createElementNS' ? 1 : 0]);
-                if (!call || tag == null || ['style', 'link'].includes(tag.toLowerCase())) {
-                    fail('element factories must be direct calls with a literal non-stylesheet tag');
+                const tag = string(call?.arguments[name === 'createElementNS' ? 1 : 0])?.toLowerCase();
+                if (!call || tag == null) fail('element factories must be direct calls with a literal tag');
+                else if (ACTIVATING_TAGS.has(tag) && !(tag === 'script' && inertScriptDataBlock(call, ancestors.slice(0, -1)))) {
+                    fail('runtime <' + tag + '> activates code, stylesheets or documents outside the page inventory');
                 }
             }
-            if (['adoptedStyleSheets', 'styleSheets', 'sheet', 'insertRule', 'addRule', 'replaceSync',
-                'CSSStyleSheet', 'DOMParser', 'createContextualFragment', 'write', 'writeln'].includes(name)) {
+            if (STYLESHEET_HANDLES.has(name)) {
                 fail('stylesheet/HTML injection handle .' + name + ' is outside the registered source boundary');
             }
-            if (node.computed && name == null && ['document', 'window', 'globalThis'].includes(node.object?.name)
-                && !(parent?.type === 'AssignmentExpression' && parent.left === node && parent.operator === '=')) {
-                fail('computed global DOM access requires an explicit reviewed boundary');
+            if (name === 'constructor') fail('.constructor reaches the Function constructor');
+            if (name == null && invoked(ancestors, node)) {
+                fail('computed member invocation hides the called name; call a named method');
+            }
+            if (name == null && hostObject(node.object)
+                && !(WINDOW_GLOBALS.has(node.object.name) && parent?.type === 'AssignmentExpression'
+                    && parent.left === node && parent.operator === '=')) {
+                fail('computed access on a window/document object hides the accessed name');
             }
         }
-        if (node.type === 'Identifier' && ['CSSStyleSheet', 'DOMParser'].includes(node.name)) {
+        if (node.type === 'Identifier' && scopedNames.has(node.name) && isReference(node, parent)) {
             fail(node.name + ' is outside the registered source boundary');
         }
-        if (node.type === 'Property' && parent?.type === 'ObjectPattern'
-            && ['createElement', 'createElementNS'].includes(node.key?.name ?? string(node.key))) {
-            fail('element factories cannot be destructured or aliased');
+        if (node.type === 'WithStatement') fail('with statements hide the object that names resolve against');
+        if (node.type === 'ObjectPattern') {
+            for (const entry of node.properties) {
+                if (entry.type !== 'Property') continue;
+                const key = staticKey(entry.key, entry.computed);
+                if (key == null) fail('computed destructuring hides the accessed name');
+                else if (ELEMENT_FACTORIES.has(key) || STYLESHEET_HANDLES.has(key) || key === 'constructor') {
+                    fail('capability .' + key + ' cannot be destructured or aliased');
+                }
+            }
         }
-        if (node.type === 'Literal' && typeof node.value === 'string'
-            && /<\s*(?:style|link)(?:[\s/>])/i.test(node.value)) fail('runtime stylesheet markup is forbidden');
-        if (node.type === 'TemplateElement' && /<\s*(?:style|link)(?:[\s/>])/i.test(node.value.cooked || '')) {
-            fail('runtime stylesheet markup is forbidden');
+        if (node.type === 'CallExpression' && ['setTimeout', 'setInterval'].includes(
+            node.callee.type === 'Identifier' ? node.callee.name : property(node.callee) ?? '')
+            && ['Literal', 'TemplateLiteral', 'BinaryExpression'].includes(node.arguments[0]?.type)) {
+            fail('string timers evaluate code outside the audited source');
         }
+        const text = node.type === 'Literal' && typeof node.value === 'string' ? node.value
+            : node.type === 'TemplateElement' ? node.value.cooked || '' : null;
+        if (text != null && /<\s*(?:style|link)(?:[\s/>])/i.test(text)) fail('runtime stylesheet markup is forbidden');
+        if (text != null && javascriptUrl(text)) fail('javascript: URLs evaluate code outside the audited source');
         if (node.type === 'ImportDeclaration' || node.type === 'ImportExpression') {
             const target = string(node.source);
-            if (target && /\.css(?:[?#]|$)/i.test(target)) fail('CSS imports must be registered as page stylesheet inputs');
+            if (target == null) fail('import() specifier must be a string literal for the activation graph');
+            else if (/\.css(?:[?#]|$)/i.test(target)) fail('CSS imports must be registered as page stylesheet inputs');
         }
     });
     return errors;
@@ -124,10 +274,7 @@ export function auditHtmlStyleIngress(html, file = 'fixture.html', auditedFiles 
         for (const input of htmlJavaScriptInputs(html, file)) {
             try {
                 if (input.url) {
-                    const url = new URL(input.url);
-                    const path = decodeURIComponent(url.pathname).slice(1);
-                    if (url.origin !== 'https://css-audit.invalid'
-                        || ![path, 'public/' + path].some(candidate => auditedFiles.has(candidate))) {
+                    if (!resolveLocalScript(input.url, auditedFiles)) {
                         errors.push(input.file + ': external script is outside the audited local JavaScript inventory');
                     }
                 } else errors.push(...auditStyleIngress(input.source, input.file, input.grammar));
@@ -144,14 +291,19 @@ function files(root, directory) {
     });
 }
 
+// Every local file a page may execute. The activation graph must stay inside it.
+export function auditedJavaScriptFiles(root) {
+    return new Set(['src', 'js', 'public'].flatMap(directory => files(root, directory))
+        .filter(file => /\.(?:m?js)$/.test(file)));
+}
+
 export function scanRuntimeStyleSources(root, errors) {
     const registry = readStyleRegistry(readFileSync(join(root, STYLE_REGISTRY), 'utf8'));
     const installer = readFileSync(join(root, STYLE_INSTALLER), 'utf8');
     if (createHash('sha256').update(installer).digest('hex') !== INSTALLER_SHA256) {
         errors.push('Runtime stylesheet installer changed; review insertion semantics and its independent digest.');
     }
-    const auditedFiles = new Set(['src', 'js', 'public'].flatMap(directory => files(root, directory))
-        .filter(file => /\.(?:m?js)$/.test(file)));
+    const auditedFiles = auditedJavaScriptFiles(root);
     for (const file of auditedFiles) {
         if ([STYLE_REGISTRY, STYLE_INSTALLER].includes(file)) continue;
         if (file === SCAFFOLD) {

@@ -58,12 +58,28 @@ export function parseHtmlElements(html, file = 'fixture.html') {
     return elements;
 }
 
-// One HTML execution inventory for the runtime audit. Attribute values and
-// script child text come from the parser's DOM, not raw HTML/entity spellings.
+// Every audited page and module is addressed by its served URL on one
+// synthetic origin. public/ files are served from the site root.
+export const AUDIT_ORIGIN = 'https://css-audit.invalid';
+export const servedUrl = file => new URL(file.replace(/^public\//, ''), AUDIT_ORIGIN + '/');
+
+// Map an executable URL back to an audited repository file, or null when it is
+// outside the local inventory (another origin, data:, unknown path, non-JS).
+export function resolveLocalScript(href, auditedFiles) {
+    const url = new URL(href);
+    if (url.origin !== AUDIT_ORIGIN) return null;
+    const path = decodeURIComponent(url.pathname).slice(1);
+    return [path, 'public/' + path].find(candidate => auditedFiles.has(candidate)) ?? null;
+}
+
+// One HTML execution inventory for the runtime audit and the activation model.
+// Attribute values and script child text come from the parser's DOM, not raw
+// HTML/entity spellings. Script inputs carry their activation attributes; every
+// input carries the base URL its import specifiers resolve against.
 export function htmlJavaScriptInputs(html, file = 'fixture.html') {
     const inputs = [];
     const elements = parseHtmlElements(html, file);
-    const documentUrl = new URL(file.replace(/^public\//, ''), 'https://css-audit.invalid/');
+    const documentUrl = servedUrl(file);
     let baseUrl = documentUrl;
     const base = elements.find(element => htmlTagName(element) === 'base'
         && Object.hasOwn(htmlElementAttributes(element), 'href'));
@@ -78,7 +94,10 @@ export function htmlJavaScriptInputs(html, file = 'fixture.html') {
         for (const [name, value] of Object.entries(attrs)) {
             // Conservatively include every unnamespaced on* attribute, including
             // new browser event names. Function-body grammar allows return/with.
-            if (/^on/i.test(name)) inputs.push({ file: label + '[' + name + ']', source: value, grammar: 'handler' });
+            if (/^on/i.test(name)) {
+                inputs.push({ kind: 'handler', file: label + '[' + name + ']', source: value, grammar: 'handler',
+                    baseUrl: baseUrl.href });
+            }
             if (['href', 'xlink:href', 'src', 'action', 'formaction', 'data', 'codebase'].includes(name)) {
                 let url;
                 try { url = new URL(value, baseUrl); } catch { continue; }
@@ -93,13 +112,14 @@ export function htmlJavaScriptInputs(html, file = 'fixture.html') {
         if (['importmap', 'speculationrules'].includes(grammar)) {
             throw new Error(label + ': ' + grammar + ' requires an explicit script-resolution contract');
         }
+        const script = { kind: 'script', file: label, grammar, attributes: normalizeLinkAttributes(attrs),
+            baseUrl: baseUrl.href };
         if (Object.hasOwn(attrs, 'src')) {
-            const url = new URL(attrs.src, baseUrl);
-            inputs.push({ file: label, url: url.href, grammar });
+            inputs.push({ ...script, url: new URL(attrs.src, baseUrl).href });
         } else {
             const source = (element.childNodes || []).filter(child => child.nodeName === '#text')
                 .map(child => child.value).join('');
-            inputs.push({ file: label, source, grammar });
+            inputs.push({ ...script, source });
         }
     }
     return inputs;

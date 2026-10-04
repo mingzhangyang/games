@@ -4,7 +4,10 @@ import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { parseStylesheet, normalizeFragment, hasImportantPriority } from './lib/css/model.mjs';
 import { scanHtml, htmlJavaScriptInputs, htmlScriptKind } from './lib/css/html-inputs.mjs';
 import { htmlCascadeModel, fingerprint } from './lib/css/semantic-contract.mjs';
-import { auditStyleIngress, auditHtmlStyleIngress, readStyleRegistry, STYLE_REGISTRY } from './lib/css/runtime-sources.mjs';
+import {
+    auditStyleIngress, auditHtmlStyleIngress, auditedJavaScriptFiles, readStyleRegistry, SOURCE_IDS, STYLE_REGISTRY,
+} from './lib/css/runtime-sources.mjs';
+import { pageActivation } from './lib/css/activation.mjs';
 
 const model = css => parseStylesheet(css, 'fixture.css').model;
 const different = (a, b) => assert.notEqual(fingerprint(model(a)), fingerprint(model(b)));
@@ -43,6 +46,86 @@ for (const source of [
     'import "./new.css";',
 ]) assert.ok(auditStyleIngress(source).length, source);
 assert.deepEqual(auditStyleIngress('const clean="a-b".replace("-", ""); document.createElement("div");'), []);
+// Name-hiding is rejected by category: every syntactic way to make a capability
+// name invisible at its use site (no aliasing/data flow involved) must fail.
+for (const source of [
+    'globalThis.document["create" + "Element"]("style");',
+    'const k="sheet"; window.document.body[k];',
+    'element.ownerDocument[key]("style");',
+    'node.getRootNode()[key];',
+    'document?.["create" + "Element"]?.("style");',
+    'factories[key]("style");',
+    'new registry[key]();',
+    'registry[key]`style`;',
+    'registry[key].call(document, "style");',
+    '(registry?.[key])("style");',
+    'const {[key]: make} = document;',
+    'const {styleSheets} = document;',
+    'Reflect.apply(document.createElement, document, ["style"]);',
+    'Reflect.get(document, key);',
+    'eval("document.styleSheets");',
+    'new Function("return document.styleSheets")();',
+    '(() => {}).constructor("return document.styleSheets")();',
+    'setTimeout("document.styleSheets", 0);',
+    'window.setInterval(`document.${key}`, 0);',
+    'location.href = "java\tscript:void document.styleSheets";',
+    'import(path);',
+    'element.attachShadow({ mode: "open" });',
+    'element.setHTMLUnsafe(markup);',
+    'document.createElement("iframe");',
+    'document.createElement("base");',
+    'document.createElement("meta");',
+    'const s=document.createElement("script"); s.src="/src/games/math-rain/mobile-adapter.js"; document.head.append(s);',
+    'const s=document.createElement("script"); s.type="module"; s.textContent=code; document.head.append(s);',
+    'const s=document.createElement("script"); s.textContent=code; s.type="application/ld+json"; document.head.append(s);',
+    'const s=document.createElement("script"); s.type="application/ld+json"; const t=s; t.type="module";',
+    'const s=document.createElement("script"); s.type="application/ld+json"; s.type="text/javascript";',
+    'const s=document.createElement("script"); s.type="application/ld+json"; setTimeout(() => { s.src=u; });',
+    'let s=document.createElement("script"); s.type="application/ld+json"; document.head.append(s);',
+]) assert.ok(auditStyleIngress(source).length, source);
+assert.match(auditHtmlStyleIngress('<script>with (document) { createElement("style"); }</script>').join('\n'),
+    /with statements hide/);
+for (const body of ['createElement("style")', 'return styleSheets[0]', 'adoptedStyleSheets = []', 'write("x")']) {
+    assert.ok(auditHtmlStyleIngress(`<button onclick='${body}'></button>`).length, 'handler scope: ' + body);
+}
+// Ordinary data lookups and statically named calls remain allowed.
+for (const source of [
+    'const text = window.LANGUAGES[window.currentLanguage];',
+    'window[expose] = runtime.game;',
+    'items[index].update(); grid[y][x] = 1; handlers[0]();',
+    'const write = value => value; write(1);',
+    'const s=document.createElement("script"); s.type="application/ld+json"; s.textContent=JSON.stringify(data);'
+        + ' document.head.appendChild(s);',
+]) assert.deepEqual(auditStyleIngress(source), [], source);
+
+// Activation: which page executes a runtime stylesheet installer is part of
+// the cascade model. A new page entry or import edge must change it.
+const ROOT = new URL('..', import.meta.url).pathname;
+const audited = auditedJavaScriptFiles(ROOT);
+const indexHtml = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const activation = html => pageActivation(ROOT, 'index.html', html, audited);
+const withScript = script => indexHtml.replace('</body>', script + '\n</body>');
+const allSources = Object.values(SOURCE_IDS).sort();
+assert.deepEqual(activation(indexHtml).runtimeStyleSources, []);
+assert.deepEqual(pageActivation(ROOT, 'math-rain.html',
+    readFileSync(new URL('../math-rain.html', import.meta.url), 'utf8'), audited).runtimeStyleSources, allSources);
+for (const script of [
+    '<script type="module" src="src/games/math-rain/mobile-adapter.js"></script>',
+    '<script type="module">import "./src/games/math-rain/shop-manager.js";</script>',
+    '<script type="module">import("/src/games/math-rain/install-style.js");</script>',
+    '<button onclick="import(\'./src/games/math-rain/core/UIController.js\')"></button>',
+]) assert.deepEqual(activation(withScript(script)).runtimeStyleSources, allSources, script);
+const reordered = activation(withScript('<script src="/analytics.js"></script>'));
+assert.notDeepEqual(reordered.scripts, activation(indexHtml).scripts, 'script identity and order are recorded');
+const deferred = indexHtml.replace('<script src="/theme-boot.js"></script>', '<script src="/theme-boot.js" defer></script>');
+assert.notDeepEqual(activation(deferred).scripts, activation(indexHtml).scripts, 'activation attributes are recorded');
+for (const [script, pattern] of [
+    ['<script type="module">import(name);</script>', /string literal/],
+    ['<script type="module">import "lodash";</script>', /outside the audited local/],
+    ['<script type="module">import "https://elsewhere.invalid/x.js";</script>', /outside the audited local/],
+    ['<script type="module">import "./css/index.css";</script>', /outside the audited local/],
+    ['<script type="module" src="src/platform/shell/render-game-shell.js"></script>', /scaffold/],
+]) assert.throws(() => activation(withScript(script)), pattern, script);
 const registryText = readFileSync(new URL('../' + STYLE_REGISTRY, import.meta.url), 'utf8');
 assert.equal(Object.keys(readStyleRegistry(registryText)).length, 5);
 assert.throws(() => readStyleRegistry(registryText + '\nconsole.log("side effect");'));
@@ -86,7 +169,7 @@ const scriptMimeTypes = [
 for (const type of ['', ...scriptMimeTypes.flatMap(type => [type, '\t' + type.toUpperCase() + '\n'])]) {
     const html = `<script type="${type}">document.createElement("style")</script>`;
     assert.equal(htmlJavaScriptInputs(html)[0].grammar, 'script', type);
-    assert.match(auditHtmlStyleIngress(html).join('\n'), /literal non-stylesheet tag/, type);
+    assert.match(auditHtmlStyleIngress(html).join('\n'), /runtime <style> activates/, type);
 }
 assert.equal(htmlScriptKind({ type: '   ' }), 'data');
 assert.equal(htmlScriptKind({ type: '\u00a0text/javascript\u00a0' }), 'data');
@@ -97,7 +180,10 @@ assert.equal(htmlScriptKind({ type: '', language: 'vbscript' }), 'script');
 assert.equal(htmlScriptKind({ type: 'application/json', language: 'javascript' }), 'data');
 assert.match(auditHtmlStyleIngress('<script language="JScript">document.styleSheets</script>').join('\n'), /styleSheets/);
 assert.deepEqual(auditHtmlStyleIngress('<script type="application/ld+json">{"literal":"document.createElement(\'style\')"}</script>'), []);
-assert.deepEqual(auditHtmlStyleIngress('<script><!-- classic HTML comment\nwith (window) { void 0; }</script>'), []);
+assert.deepEqual(auditHtmlStyleIngress('<script><!-- classic HTML comment\nvoid 0;</script>'), []);
+// Classic grammar parses `with`; the policy then rejects it (not a parse failure).
+assert.match(auditHtmlStyleIngress('<script>with (document) { createElement("style"); }</script>').join('\n'),
+    /with statements hide/);
 assert.deepEqual(auditHtmlStyleIngress('<script type=" MoDuLe ">export const x = 1;</script>'), []);
 assert.ok(auditHtmlStyleIngress('<script>export const x = 1;</script>').length);
 assert.ok(auditHtmlStyleIngress('<script type="module">with (window) { void 0; }</script>').length);
@@ -114,7 +200,9 @@ for (const [attribute, body] of [
 ]) {
     assert.ok(auditHtmlStyleIngress(`<body ${attribute}='${body}'></body>`).length, attribute);
 }
-assert.deepEqual(auditHtmlStyleIngress('<button onclick="with (window) { return false; }"></button>'), []);
+assert.deepEqual(auditHtmlStyleIngress('<button onclick="return false;"></button>'), []);
+assert.match(auditHtmlStyleIngress('<button onclick="with (window) { return false; }"></button>').join('\n'),
+    /with statements hide/);
 assert.deepEqual(auditHtmlStyleIngress('<button onclick="return new.target;"></button>'), []);
 assert.deepEqual(auditHtmlStyleIngress('<button onclick="return false;" onclick="document.styleSheets"></button>'), []);
 assert.match(auditHtmlStyleIngress('<button onclick="return @;"></button>').join('\n'), /cannot audit JavaScript/);
@@ -122,7 +210,7 @@ assert.throws(() => auditStyleIngress('} document.styleSheets; {', 'handler', 'h
 // Parser-created elements are live DOM too. A late <body> token can attach
 // executable/style attributes to an implied body with no source location.
 assert.match(auditHtmlStyleIngress('<div></div><body onclick="document.createElement(\'style\')">')
-    .join('\n'), /literal non-stylesheet tag/);
+    .join('\n'), /runtime <style> activates/);
 assert.equal(scanHtml('implied.html', '<div></div><body style="color:red">').inlineAttributes.length, 1);
 assert.notEqual(htmlModel('<div></div>'), htmlModel('<div></div><body style="color:red">'));
 

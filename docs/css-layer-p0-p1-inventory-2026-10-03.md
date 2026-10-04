@@ -73,7 +73,9 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 
 CSS 解析已经切换到 PostCSS 和标准 CSS tokenizer。原 P0 字节不变，
 新增 `tests/css-semantic-p0-baseline.json` 独立固定规则/声明顺序、layer/context、
-字符串内容及 HTML 激活属性。设计、边界和验收见
+字符串内容及 HTML 激活属性。`tests/css-activation-p0-baseline.json` 另行固定每页的可执行脚本
+（来源、语法、激活属性）及其 import 图能否到达运行时样式安装入口：目前只有 `math-rain.html`
+可激活五个运行时样式源。设计、边界和验收见
 `docs/architecture-v2-postcss-verifier-migration-plan.md`。
 
 migration state 同时引用静态 P0 与 runtime addendum。P2 的 **strict-zero** 因而不是只把
