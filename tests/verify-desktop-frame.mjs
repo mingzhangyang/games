@@ -17,16 +17,31 @@ import { registry } from './lib/registry.mjs';
 const CHROME = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
+// P0 几何 baseline 与 frame-budget registry membership 是同一个契约。
+// 先对未过滤的完整集合做一一对账；VERIFY_PAGES 只能减少本次测量工作量，
+// 不能改变“哪些页面属于 baseline”的事实。
+const FRAME_BUDGET_GAMES = registry.withCap('frame-budget');
+const WIDTH_BASELINE_ZH = JSON.parse(readFileSync(
+    new URL('./css-layer-p0-baseline.json', import.meta.url), 'utf8',
+)).computedBaseline.desktopFrame.widthsZh;
+const FRAME_BUDGET_PAGE_IDS = FRAME_BUDGET_GAMES.map(game => game.id).sort();
+const BASELINE_PAGE_IDS = Object.keys(WIDTH_BASELINE_ZH).sort();
+if (JSON.stringify(FRAME_BUDGET_PAGE_IDS) !== JSON.stringify(BASELINE_PAGE_IDS)) {
+    const registryOnly = FRAME_BUDGET_PAGE_IDS.filter(id => !BASELINE_PAGE_IDS.includes(id));
+    const baselineOnly = BASELINE_PAGE_IDS.filter(id => !FRAME_BUDGET_PAGE_IDS.includes(id));
+    console.error('FAIL desktop-frame P0 coverage contract changed.');
+    if (registryOnly.length) console.error('  frame-budget pages missing from baseline: ' + registryOnly.join(', '));
+    if (baselineOnly.length) console.error('  baseline pages no longer carrying frame-budget: ' + baselineOnly.join(', '));
+    process.exit(1);
+}
+
 // 画幅预算页 = 挂 frame-budget cap 的游戏；ratio 由注册表 stage.w/h 派生（不再手写 0.75）
 const PAGES = Object.fromEntries(
-    registry.withCap('frame-budget').filter(g => keepPage(g.id)).map(g => [g.id, g.stage.w / g.stage.h]),
+    FRAME_BUDGET_GAMES.filter(game => keepPage(game.id)).map(game => [game.id, game.stage.w / game.stage.h]),
 );
 exitIfNoPages(Object.keys(PAGES), 'verify-desktop-frame');
 const VIEWPORTS = [[1280, 800], [1280, 900], [1440, 900], [1920, 1080], [2560, 1440]];
 const LANGS = ['en', 'zh'];
-const WIDTH_BASELINE_ZH = JSON.parse(readFileSync(
-    new URL('./css-layer-p0-baseline.json', import.meta.url), 'utf8',
-)).computedBaseline.desktopFrame.widthsZh;
 
 const MEASURE = () => {
     const g = s => document.querySelector(s);
@@ -198,7 +213,7 @@ await browser.close();
 
 // P0 CSS cascade snapshot：冻结代表性页面的桌面舞台宽度，迁移 PR 必须显式对账。
 for (const [page, expectedWidths] of Object.entries(WIDTH_BASELINE_ZH)) {
-    if (!Object.hasOwn(PAGES, page)) continue;
+    if (!Object.hasOwn(PAGES, page)) continue; // VERIFY_PAGES may intentionally narrow measurement only.
     for (const [viewport, expected] of Object.entries(expectedWidths)) {
         const actual = widthTable[page + '|' + viewport + '|zh'];
         if (actual !== expected) {
