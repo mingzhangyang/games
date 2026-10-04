@@ -216,15 +216,23 @@ geometry / interaction 浏览器测试负责。旧 P0 与 semantic addendum 继�
    才允许对应 P0 unlayered debt 退出 active debt；已经迁移的规则不得重新变回 unlayered；
 3. 将目标顺序冻结为 `tokens, showcase, components, layout, pages, contracts`，并针对
    normal/important 两套相反的 layer precedence 分别做冲突检查；
-4. 先给 `layout.css` 做职责切片：
+4. 先给 `layout.css` 做职责分类，但**不要把所有分类结果一次切换到 layer**：
    - 可定制的 shell/topbar/stage/sidebar 默认几何 → `layout`；
    - drawer 隐藏、frame budget、immersive 边界、安全区等平台不变量 → `contracts`；
+   - 第一批生产 cutover 只选可独立证明无行为变化的低风险 `layout` 默认规则。
 5. 页面 CSS 逐规则迁移到 `pages`；凡命中共享 shell/sidebar/drawer/frame selector 或同一 DOM 属性的规则，
-   必须先经过冲突审计，不能因为“文件属于某游戏”就自动归入 `pages`；
+   必须先经过冲突审计，不能因为“文件属于某游戏”就自动归入 `pages`。特别注意：未分层 normal
+   声明优先于所有 named layer，因此任何 `contracts` 规则若可能与仍未分层的页面规则竞争，
+   必须与这些页面 peer 组成 dependency-closed 批次同时迁移，不能先单独把 contract 放进 layer；
 6. `science-showcase.css` 与 `more-games.css` 分别收敛到 `showcase` / `components`，
    但仍按规则验证 important 与跨 selector 命中关系；
 7. 每一小批迁移都同时跑源码态和 production geometry/smoke；失败即回滚该批，不修改 P0；
 8. 全程保留 `shared-css-first`，直到 P4 canary 证明构建 link 顺序已经不再影响行为。
+
+**部分迁移不变量：** normal cascade 中，未分层声明高于所有 named layer；important
+则方向相反。P2 的每个 cutover 批次必须对这两套关系分别闭包。静态 exact-selector/property
+审计只负责可证明的交集，不同 selector 命中同一元素的关系继续由源码态 + production 浏览器
+geometry/interaction evidence 决定。
 
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
