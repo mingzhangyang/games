@@ -272,6 +272,14 @@ margin / padding / box-sizing 等 reset-sensitive 属性，也不触碰 start-me
 frame-budget、immersive 或其它 `contracts` 规则。现有 desktop frame / game smoke 的 canvas
 几何与画幅检查继续作为 cross-selector 行为证据。
 
+**P2-G desktop sidebar default：** 桌面 `.game-sidebar` 的 display / direction / gap / width /
+flex-shrink 是标准 shell 的可定制 `layout` 默认几何。本批只迁这一条 `@media (width >= 1024px)`
+规则；页面 CSS 仍未分层，因此 game-specific sidebar 视觉或几何覆盖继续保持原优先级。
+移动端 `body.has-stats-drawer .game-sidebar { display:none }` 与 desktop media 不共存；
+`body.has-frame-budget .game-sidebar` 及其 scrollbar peers 只负责 max-height / overflow 等
+结构约束，继续留在未分层 `contracts` 批次。现有 desktop-frame / stats-drawer 浏览器回归
+继续证明侧栏可见性、纵向边界和生产几何不变。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -439,6 +447,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-D：迁移 `.game-topbar-group` / `.game-topbar-center`；`.game-topbar` 因未分层 universal reset 的 padding 竞争暂缓
 - [x] P2-E：将已迁移 defaults 的普通响应式 peer（desktop `.game-main` / `.game-stage`、≤480px `.game-topbar-group` / `.game-topbar-center`）及 narrow footer spacing 依赖 `.game-footer-actions` 闭包迁入 `layout`；保持同层物理顺序，`.game-topbar` 继续暂缓
 - [x] P2-F：迁移 `.game-canvas` 共享默认规则到 `layout`；保留 page-specific canvas 规则未分层覆盖，不触碰 reset-sensitive 或 contracts 规则
+- [x] P2-G：迁移 desktop `.game-sidebar` 默认几何到 `layout`；drawer 隐藏与 frame-budget overflow/scrollbar 继续保留给 contracts 闭包
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
