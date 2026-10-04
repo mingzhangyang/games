@@ -165,7 +165,17 @@ function violations(file, result) {
     return errors;
 }
 
-const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
+const browser = await puppeteer.launch({
+    executablePath: CHROME_PATH,
+    headless: 'new',
+    // Four concurrent tabs must remain schedulable while waiting on rAF/idle.
+    // Match the repository's concurrent-browser contract so background tabs
+    // cannot make activation verification nondeterministic.
+    args: [...LAUNCH_ARGS,
+        '--disable-background-timer-throttling',
+        '--disable-renderer-backgrounding',
+        '--disable-backgrounding-occluded-windows'],
+});
 const failures = [];
 try {
     const jobs = pages.flatMap(file => PROFILES.map(profile => ({ file, profile })));
