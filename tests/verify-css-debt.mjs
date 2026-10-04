@@ -18,7 +18,8 @@ const BASELINE_BLOB_SHA = createHash('sha1')
     .update(`blob ${Buffer.byteLength(BASELINE_TEXT, 'utf8')}\0`)
     .update(BASELINE_TEXT)
     .digest('hex');
-const ALLOWED_LAYERS = new Set(MIGRATION_STATE.allowedLayers);
+const REVIEWED_LAYER_ORDER = Object.freeze(['tokens', 'showcase', 'components', 'layout', 'pages', 'contracts']);
+const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
 const SPECIAL_AT_RULES = new Set([
     'charset', 'import', 'font-face', 'property', 'keyframes', '-webkit-keyframes',
     '-moz-keyframes', '-o-keyframes', 'page', 'counter-style', 'namespace',
@@ -31,6 +32,37 @@ function normalizeSelector(value) {
 
 function normalizeValue(value) {
     return value.replace(/\s+/g, ' ').trim();
+}
+
+function decodeCssIdentifierEscapes(value) {
+    let output = '';
+    for (let index = 0; index < value.length; index++) {
+        const char = value[index];
+        if (char !== '\\') {
+            output += char;
+            continue;
+        }
+
+        const next = value[index + 1];
+        if (next == null || next === '\n' || next === '\r' || next === '\f') return null;
+
+        const hex = value.slice(index + 1).match(/^[0-9a-f]{1,6}/i);
+        if (hex) {
+            const codePoint = Number.parseInt(hex[0], 16);
+            if (codePoint === 0 || codePoint > 0x10ffff || (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
+                output += '\uFFFD';
+            } else {
+                output += String.fromCodePoint(codePoint);
+            }
+            index += hex[0].length;
+            if (/\s/.test(value[index + 1] || '')) index++;
+            continue;
+        }
+
+        output += next;
+        index++;
+    }
+    return output;
 }
 
 function hasImportantPriority(value) {
@@ -60,9 +92,9 @@ function hasImportantPriority(value) {
             quote = char;
             continue;
         }
-        if (parentheses === 0 && brackets === 0 && char === '!'
-            && /^!\s*important\s*$/i.test(value.slice(index))) {
-            return true;
+        if (parentheses === 0 && brackets === 0 && char === '!') {
+            const decoded = decodeCssIdentifierEscapes(value.slice(index + 1).trim());
+            if (decoded != null && /^important$/i.test(decoded.trim())) return true;
         }
         if (char === '(') parentheses++;
         else if (char === ')') parentheses--;
@@ -466,7 +498,7 @@ function scanHtml(path, html) {
     }
 
     const htmlWithoutRawText = activeHtml.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
-    for (const tag of htmlWithoutRawText.matchAll(/<[a-z][^<>]*>/gi)) {
+    for (const tag of htmlWithoutRawText.matchAll(/<[a-z](?:"[^"]*"|'[^']*'|[^'">])*>/gi)) {
         const attributes = parseAttributes(tag[0]);
         if (Object.hasOwn(attributes, 'style')) {
             inlineAttributes.push([path, inlineAttributes.length, normalizeValue(attributes.style)]);
@@ -525,6 +557,9 @@ function runSelfChecks() {
     assert.equal(hasImportantPriority('"!important"'), false);
     assert.equal(hasImportantPriority('url("x!important")'), false);
     assert.equal(hasImportantPriority('red\\!important'), false);
+    assert.equal(hasImportantPriority('red !\\69mportant'), true);
+    assert.equal(hasImportantPriority('red !\\000069 mportant'), true);
+    assert.equal(hasImportantPriority('red !\\notimportant'), false);
     assert.throws(
         () => parseCssText('.parent { color: red; & .child { color: blue; } }', 'nested.css'),
         /CSS nesting or brace-bearing values are unsupported/,
@@ -533,11 +568,12 @@ function runSelfChecks() {
     const htmlScan = scanHtml('fixture.html', [
         '<!-- <link rel="stylesheet" href="/commented.css"> -->',
         '<link rel="stylesheet" href="/active.css">',
+        '<div title=">" style="color:red"></div>',
         '<!-- <style>.commented { display:none; }</style><div style="display:none"></div> -->',
     ].join('\n'));
     assert.deepEqual(htmlScan.links, ['/active.css']);
     assert.equal(htmlScan.styleBlocks.length, 0);
-    assert.equal(htmlScan.inlineAttributes.length, 0);
+    assert.deepEqual(htmlScan.inlineAttributes, [['fixture.html', 0, 'color:red']]);
 
     assert.deepEqual([
         '/assets/tokens-test.css',
@@ -611,6 +647,13 @@ function verifyProject() {
     }
     if (MIGRATION_STATE.p0BaselineBlobSha !== BASELINE_BLOB_SHA) {
         errors.push('Immutable P0 baseline fingerprint changed; migration progress belongs in css-layer-migration-state.json.');
+    }
+    if (!sameJson(MIGRATION_STATE.targetLayerOrder, REVIEWED_LAYER_ORDER)) {
+        errors.push('targetLayerOrder must exactly match the reviewed layer taxonomy: '
+            + REVIEWED_LAYER_ORDER.join(', ') + '.');
+    }
+    if (!sameJson(MIGRATION_STATE.allowedLayers, REVIEWED_LAYER_ORDER)) {
+        errors.push('allowedLayers must exactly match the reviewed layer taxonomy; migration state cannot authorize new layers.');
     }
     if (MIGRATION_STATE.migrationUnit !== 'rule' || MIGRATION_STATE.rejectedStrategy !== 'whole-file-single-layer') {
         errors.push('CSS migration must remain rule-granular; whole-file single-layer migration is rejected.');
