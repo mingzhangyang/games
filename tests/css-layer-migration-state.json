@@ -41,6 +41,7 @@
     "tests/css-layer-migrations/rules/p2g-layout-game-sidebar-desktop-default.json",
     "tests/css-layer-migrations/rules/p2h-layout-game-toast-default.json",
     "tests/css-layer-migrations/rules/p2i-layout-game-title-pill-default.json",
-    "tests/css-layer-migrations/rules/p2j-layout-frame-root-defaults.json"
+    "tests/css-layer-migrations/rules/p2j-layout-frame-root-defaults.json",
+    "tests/css-layer-migrations/rules/p2k-layout-game-footer-nav-default.json"
   ]
 }

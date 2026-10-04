@@ -296,8 +296,10 @@
 }
 
 /* 页脚展开的「更多游戏」导航：收起时不占高度（[hidden] 优先于下面的 display） */
-.game-footer-nav {
-    width: 100%;
+@layer layout {
+    .game-footer-nav {
+        width: 100%;
+    }
 }
 
 .game-footer-nav[hidden] { display: none; }

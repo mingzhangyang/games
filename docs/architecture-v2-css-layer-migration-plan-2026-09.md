@@ -310,6 +310,13 @@ text-align / min-width 是顶栏中槽的共享 `layout` 默认值，不含 rese
 覆盖从 `:root` 继承的默认值。本批继续不触碰 `.game-topbar`、`.game-hud-box` 或任何
 drawer / start-menu / frame-budget / immersive contracts。
 
+**P2-K footer navigation width default：** `.game-footer-nav` 只提供持久页脚中
+“更多游戏”导航的 `width: 100%` 共享几何默认值，因此单独迁入 `layout`。同一元素同时带有
+`.more-games`，其 `components` 层也声明 `width: 100%`；两边值完全一致，所以跨 selector
+层级变化不改变 computed width。紧邻的 `.game-footer-nav[hidden] { display:none }` 负责显隐
+结构语义，继续保持未分层，留给后续结构契约闭包。本批不触碰 footer padding、hint 响应式规则、
+按钮组件或任何 drawer / frame-budget / immersive contracts。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -482,6 +489,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 将 CSS migration ledger 拆为 manifest + per-mapping modules；主状态文件不再承载不断增长的完整 mapping payload
 - [x] P2-I：迁移 `.game-title-pill` 共享顶栏信息块默认值到 `layout`；Tetris exact-selector peer 保持未分层并显式登记冲突
 - [x] P2-J：迁移共享 frame `:root` 变量默认值到 `layout`；Gomoku 的 3 个 exact-selector 自定义属性覆盖保持未分层优先
+- [x] P2-K：迁移 `.game-footer-nav { width:100% }` 到 `layout`；同元素 `.more-games` 的 components 宽度值一致，`[hidden]` 显隐规则继续未分层
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
