@@ -4,6 +4,7 @@ import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import {
     analyzeExactConflicts, indexRuleOccurrences, verifyMonotonicState, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
+import { propertiesOverlap } from './lib/css/property-writes.mjs';
 
 const LAYERS = ['tokens', 'showcase', 'components', 'layout', 'pages', 'contracts'];
 const ALLOWED = new Set(LAYERS);
@@ -164,6 +165,7 @@ const batchMappingA = {
     conflicts: {
         normal: [{
             property: 'color',
+            peerProperty: 'color',
             targetLayer: 'layout',
             peerPath: 'css/b.css',
             peerContext: '',
@@ -182,6 +184,7 @@ const batchMappingB = {
     conflicts: {
         normal: [{
             property: 'color',
+            peerProperty: 'color',
             targetLayer: 'pages',
             peerPath: 'css/a.css',
             peerContext: '',
@@ -235,7 +238,73 @@ verifyRuleMigrations({
     baseState: emptyState,
     errors: fallbackErrors,
 });
-assert.ok(fallbackErrors.some(error => /intra-rule fallback cascade/.test(error)));
+assert.ok(fallbackErrors.some(error => /intra-rule cascade/.test(error)));
+
+// CSS declaration overlap is modeled by the properties they can write, not by
+// literal property-name equality. Shorthands, logical aliases and `all` are
+// therefore unsafe to split from overlapping declarations.
+assert.equal(propertiesOverlap('margin', 'margin-left'), true);
+assert.equal(propertiesOverlap('margin-inline-start', 'margin-left'), true);
+assert.equal(propertiesOverlap('margin-top', 'margin-left'), false);
+assert.equal(propertiesOverlap('all', 'color'), true);
+assert.equal(propertiesOverlap('--theme-gap', 'margin'), false);
+
+const shorthandBase = parseMap([['css/shorthand.css', '.d{margin:1px;margin-left:2px}']]);
+const shorthandCurrent = parseMap([[
+    'css/shorthand.css',
+    '@layer layout{.d{margin:1px}}@layer pages{.d{margin-left:2px}}',
+]]);
+const shorthandSource = catalogMap(shorthandBase).get('css/shorthand.css')[0];
+const shorthandDestinations = catalogMap(shorthandCurrent).get('css/shorthand.css');
+const shorthandMapping = {
+    id: 'fixture-shorthand-longhand',
+    source: sourceRef(shorthandSource),
+    destinations: shorthandDestinations.map(destinationRef),
+    conflicts: { normal: [], important: [] },
+};
+const shorthandErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/shorthand.css', '', '.d']] } },
+    state: { ...emptyState, migratedRules: [shorthandMapping] },
+    currentParsedByPath: shorthandCurrent,
+    baseParsedByPath: shorthandBase,
+    stylesheetLinks: { 'shorthand.html': [['css/shorthand.css', []]] },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: shorthandErrors,
+});
+assert.ok(shorthandErrors.some(error => /overlapping properties margin \/ margin-left/.test(error)));
+
+const overlapBase = parseMap([
+    ['css/a.css', '.x{margin:1px}'],
+    ['css/b.css', '.x{margin-left:2px}'],
+]);
+const overlapCurrent = parseMap([
+    ['css/a.css', '@layer layout{.x{margin:1px}}'],
+    ['css/b.css', '.x{margin-left:2px}'],
+]);
+const overlapBaseCatalogs = catalogMap(overlapBase);
+const overlapCurrentCatalogs = catalogMap(overlapCurrent);
+const overlapSource = overlapBaseCatalogs.get('css/a.css')[0];
+const overlapDestination = overlapCurrentCatalogs.get('css/a.css')[0];
+const overlapMapping = {
+    id: 'fixture-shorthand-peer',
+    source: sourceRef(overlapSource),
+    destinations: [destinationRef(overlapDestination)],
+    conflicts: { normal: [], important: [] },
+};
+overlapMapping.conflicts = analyzeExactConflicts(
+    overlapMapping,
+    overlapSource,
+    [overlapDestination],
+    overlapBaseCatalogs,
+    stylesheetLinks,
+    LAYERS,
+);
+assert.equal(overlapMapping.conflicts.normal.length, 1);
+assert.equal(overlapMapping.conflicts.normal[0].property, 'margin');
+assert.equal(overlapMapping.conflicts.normal[0].peerProperty, 'margin-left');
 
 // Mapped files bypass the immutable whole-file semantic digest only after the
 // migration contract verifies everything outside the mapped rule. Keyframe
