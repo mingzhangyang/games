@@ -328,8 +328,10 @@ The contract now provides:
 
 Production P2 still requires:
 
-1. The first reviewed `layout.css` layout/contracts responsibility slice and canonical six-layer
-   order declaration.
+1. The first dependency-closed production slice and canonical six-layer order declaration.
+   Low-risk `layout` defaults may move independently after evidence; a `contracts` rule must
+   move together with any still-unlayered page peers that could compete with it, because normal
+   unlayered declarations outrank every named layer.
 2. Source and production geometry/interaction evidence for every migration batch.
 3. Continued independent debt/mapping/browser acceptance; one passing gate never substitutes
    for the others.
