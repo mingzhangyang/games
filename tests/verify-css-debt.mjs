@@ -21,10 +21,18 @@ const BASELINE_BLOB_SHA = createHash('sha1')
 const REVIEWED_P0_BASELINE_BLOB_SHA = '9c4541b4a447bff3dbecb0bc6cd02e09f3850922';
 const REVIEWED_LAYER_ORDER = Object.freeze(['tokens', 'showcase', 'components', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
+const STATEMENT_AT_RULES = new Set(['charset', 'import', 'namespace', 'layer']);
+const GROUPING_AT_RULES = new Set(['media', 'supports', 'container', 'scope', 'starting-style', 'document']);
+const DECLARATION_AT_RULES = new Set([
+    'font-face', 'property', 'page', 'counter-style', 'font-feature-values',
+    'font-palette-values', 'color-profile', 'viewport', 'view-transition',
+]);
+const KEYFRAME_AT_RULES = new Set(['keyframes', '-webkit-keyframes', '-moz-keyframes', '-o-keyframes']);
 const SPECIAL_AT_RULES = new Set([
-    'charset', 'import', 'font-face', 'property', 'keyframes', '-webkit-keyframes',
-    '-moz-keyframes', '-o-keyframes', 'page', 'counter-style', 'namespace',
-    'font-feature-values', 'font-palette-values', 'color-profile', 'viewport', 'document',
+    ...STATEMENT_AT_RULES,
+    ...DECLARATION_AT_RULES,
+    ...KEYFRAME_AT_RULES,
+    'document',
 ]);
 
 function normalizeSelector(value) {
@@ -368,6 +376,9 @@ function parseCssText(source, file) {
                         const name = match[1].toLowerCase();
                         const params = normalizeAtRuleParams(match[2]);
                         result.atRules.push({ name, params, context: [...context], layer });
+                        if (!STATEMENT_AT_RULES.has(name)) {
+                            throw new Error('Unsupported CSS statement at-rule @' + name + ' in ' + file);
+                        }
                         if (name === 'layer') {
                             result.layerStatements.push(params);
                             addLayerNames(params);
@@ -399,30 +410,25 @@ function parseCssText(source, file) {
                     const ownLayer = params.split(',')[0].trim() || '<anonymous>';
                     const fullLayer = layer ? layer + '.' + ownLayer : ownLayer;
                     walk(boundary.index + 1, close, context, fullLayer, inKeyframes);
-                } else if (name === 'keyframes' || name === '-webkit-keyframes'
-                    || name === '-moz-keyframes' || name === '-o-keyframes') {
+                } else if (KEYFRAME_AT_RULES.has(name)) {
                     result.keyframes.push({ name, params, context: [...context], layer });
                     walk(boundary.index + 1, close, context, layer, true);
-                    if (SPECIAL_AT_RULES.has(name)) {
-                        result.specialAtRules ||= [];
-                        result.specialAtRules.push([file, context.join(' / '), name, params]);
-                    }
-                } else if (name === 'font-face' || name === 'property' || name === 'page'
-                    || name === 'counter-style' || name === 'font-feature-values'
-                    || name === 'font-palette-values' || name === 'color-profile' || name === 'viewport') {
-                    if (SPECIAL_AT_RULES.has(name)) {
-                        result.specialAtRules ||= [];
-                        result.specialAtRules.push([file, context.join(' / '), name, params]);
-                    }
+                    result.specialAtRules ||= [];
+                    result.specialAtRules.push([file, context.join(' / '), name, params]);
+                } else if (DECLARATION_AT_RULES.has(name)) {
+                    result.specialAtRules ||= [];
+                    result.specialAtRules.push([file, context.join(' / '), name, params]);
                     result.declarations.push(...parseDeclarations(body).map(declaration => ({
                         ...declaration, selector: '', context: [...context], layer, atRule: name,
                     })));
-                } else {
+                } else if (GROUPING_AT_RULES.has(name)) {
                     if (SPECIAL_AT_RULES.has(name)) {
                         result.specialAtRules ||= [];
                         result.specialAtRules.push([file, context.join(' / '), name, params]);
                     }
                     walk(boundary.index + 1, close, [...context, '@' + name + (rawParams ? ' ' + rawParams : '')], layer, inKeyframes);
+                } else {
+                    throw new Error('Unsupported CSS block at-rule @' + name + ' in ' + file);
                 }
             } else if (!inKeyframes) {
                 const selector = normalizeSelector(header);
@@ -442,6 +448,33 @@ function parseCssText(source, file) {
     return result;
 }
 
+function decodeHtmlCharacterReferences(value) {
+    const named = new Map([
+        ['amp', '&'],
+        ['lt', '<'],
+        ['gt', '>'],
+        ['quot', '"'],
+        ['apos', "'"],
+    ]);
+    return value.replace(/&(#(?:x[0-9a-f]+|[0-9]+)|[a-z][a-z0-9]+);/gi, (match, body) => {
+        if (body[0] === '#') {
+            const hex = body[1]?.toLowerCase() === 'x';
+            const digits = body.slice(hex ? 2 : 1);
+            const codePoint = Number.parseInt(digits, hex ? 16 : 10);
+            if (!Number.isFinite(codePoint) || codePoint <= 0 || codePoint > 0x10ffff
+                || (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
+                return '\uFFFD';
+            }
+            return String.fromCodePoint(codePoint);
+        }
+        const decoded = named.get(body.toLowerCase());
+        if (decoded == null) {
+            throw new Error('Unsupported named HTML character reference &' + body + '; in scanned attribute');
+        }
+        return decoded;
+    });
+}
+
 function parseAttributes(tag) {
     const attributes = {};
     const matcher = /(?:^|\s)([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
@@ -449,7 +482,7 @@ function parseAttributes(tag) {
     while ((match = matcher.exec(tag))) {
         const name = match[1].toLowerCase();
         if (name === 'link' || name.startsWith('<')) continue;
-        attributes[name] = match[2] ?? match[3] ?? match[4] ?? '';
+        attributes[name] = decodeHtmlCharacterReferences(match[2] ?? match[3] ?? match[4] ?? '');
     }
     return attributes;
 }
@@ -585,10 +618,24 @@ function runSelfChecks() {
         () => parseCssText('.parent { color: red; & .child { color: blue; } }', 'nested.css'),
         /CSS nesting or brace-bearing values are unsupported/,
     );
+    const viewTransition = parseCssText('@view-transition { navigation: auto; }', 'view-transition.css');
+    assert.deepEqual(
+        viewTransition.declarations.map(({ property, value, atRule }) => [property, value, atRule]),
+        [['navigation', 'auto', 'view-transition']],
+    );
+    assert.deepEqual(viewTransition.specialAtRules.map(row => row[2]), ['view-transition']);
+    assert.throws(
+        () => parseCssText('@future-rule { navigation: auto; }', 'future.css'),
+        /Unsupported CSS block at-rule @future-rule/,
+    );
+    assert.throws(
+        () => parseCssText('@future-rule foo;', 'future.css'),
+        /Unsupported CSS statement at-rule @future-rule/,
+    );
 
     const htmlScan = scanHtml('fixture.html', [
         '<!-- <link rel="stylesheet" href="/commented.css"> -->',
-        '<link rel="stylesheet" href="/active.css">',
+        '<link rel="style&#x73;heet" href="/active.css">',
         '<link rel="alternate stylesheet" href="/inactive.css" media="print" disabled>',
         '<div title=">" style="color:red"></div>',
         '<div></div>',
