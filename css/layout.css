@@ -119,16 +119,14 @@
 }
 
 /* ── 顶栏：左 home / 中信息 / 右动作 ── */
-@layer layout {
-    .game-topbar {
-        width: 100%;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 4px 0 10px;
-    }
+.game-topbar {
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 0 10px;
 }
 
 @layer layout {
