@@ -57,6 +57,20 @@ try {
     await page.evaluate(() => document.body.onclick(new window.Event('click')));
     assert.equal(await page.evaluate(() => document.body.dataset.recovered), 'yes');
 
+    // A CSP pragma disables linked/inline styles without changing any stylesheet
+    // input, so the shared HTML boundary must reject it rather than ignore it.
+    const csp = `<meta http-equiv="Content-Security-Policy" content="style-src 'none'">
+        <style>body{--csp-style:installed}</style>`;
+    assert.throws(() => scanHtml('csp.html', csp), /http-equiv/);
+    assert.match(auditHtmlStyleIngress(csp).join('\n'), /http-equiv/);
+    const cspPage = await browser.newPage();
+    for (const [html, expected] of [[csp, ''], ['<style>body{--csp-style:installed}</style>', 'installed']]) {
+        await cspPage.goto('data:text/html,' + encodeURIComponent(html));
+        assert.equal(await cspPage.evaluate(() => window.getComputedStyle(document.body)
+            .getPropertyValue('--csp-style').trim()), expected, 'CSP pragma decides stylesheet activation');
+    }
+    await cspPage.close();
+
     for (const mode of ['open', 'closed']) {
         const shadow = `<div id="host"><template shadowrootmode="${mode}">
             <style>:host{color:rgb(17,34,51)}</style>

@@ -43,6 +43,11 @@ export function parseHtmlElements(html, file = 'fixture.html') {
             if (['iframe', 'frame', 'object', 'embed'].includes(tag)) {
                 throw new Error(file + ': embedded documents require an explicit stylesheet/source contract');
             }
+            // Pragmas (CSP, default-style, content-type, refresh, ...) change which
+            // stylesheets/scripts activate or how they decode. None is modeled yet.
+            if (tag === 'meta' && Object.hasOwn(attributes, 'http-equiv')) {
+                throw new Error(file + ': <meta http-equiv> pragmas require an explicit activation contract');
+            }
             if (node.namespaceURI !== HTML_NAMESPACE && ['script', 'style', 'link'].includes(tag)) {
                 throw new Error(file + ': foreign-namespace scripting/styles require an explicit source contract');
             }
@@ -56,6 +61,24 @@ export function parseHtmlElements(html, file = 'fixture.html') {
 
     visit(document);
     return elements;
+}
+
+// Document-level directives that change how the page's stylesheets decode or
+// evaluate: the encoding is the fallback for linked CSS, the viewport sizes
+// media queries, color-scheme sets the used scheme. (Pragmas are rejected above;
+// <base> is part of the ordered HTML model.) Selector-matched DOM state such as
+// class/lang/dir attributes is outside the stylesheet-input model.
+const META_DIRECTIVES = new Set(['viewport', 'color-scheme', 'supported-color-schemes']);
+export function htmlDocumentDirectives(html, file = 'fixture.html') {
+    const directives = [];
+    for (const element of parseHtmlElements(html, file)) {
+        if (htmlTagName(element) !== 'meta') continue;
+        const attrs = htmlElementAttributes(element);
+        if (Object.hasOwn(attrs, 'charset')) directives.push(['charset', asciiLower(stripAsciiWhitespace(attrs.charset))]);
+        const name = asciiLower(stripAsciiWhitespace(attrs.name ?? ''));
+        if (META_DIRECTIVES.has(name)) directives.push([name, normalizeValue(attrs.content ?? '')]);
+    }
+    return directives;
 }
 
 // Every audited page and module is addressed by its served URL on one

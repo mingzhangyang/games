@@ -137,6 +137,8 @@ event attributes; an exact three-value script-type list missed browser-valid Jav
 | Executable script `src` | Resolve against the first base URL; must belong to the audited local JS inventory |
 | `javascript:` URL attributes | Rejected explicitly after URL parsing (including control-character/case variants) |
 | Import maps and speculation rules | Rejected until script resolution/loading effects have a reviewed contract |
+| `<meta http-equiv>` pragmas (CSP, `default-style`, `content-type`, `refresh`, …) | Rejected until modeled: they decide whether/which stylesheets and scripts activate or how they decode, without changing any stylesheet input (browser-confirmed for CSP) |
+| `<meta charset>`, `viewport`, `color-scheme` | Recorded per page in the activation addendum: linked-CSS decoding fallback, media-query viewport, used color scheme |
 | Non-executable script data blocks | Remain data; e.g. JSON-LD is not parsed as JavaScript |
 
 The runtime audit consumes this inventory rather than rediscovering HTML execution rules.
@@ -169,7 +171,8 @@ installer. The previous model recorded *where* sources are defined but not *whic
 them*, so adding `<script type="module" src="src/games/math-rain/mobile-adapter.js">` to
 another page changed that page's cascade while every snapshot still matched.
 
-`activation.mjs` makes activation part of the model. For each page it builds the executed
+`activation.mjs` makes activation part of the model. For each page it records the document
+directives above, then builds the executed
 graph from the shared HTML execution inventory: external scripts (resolved repository file,
 grammar, normalized activation attributes such as `type`/`defer`/`async`), inline scripts
 (grammar, attributes, import edges), and handler import edges, followed through static
@@ -182,7 +185,9 @@ installer accepts any key; no caller-key inference is attempted. The per-page re
 `tests/css-activation-p0-baseline.json`, pinned by SHA-256 in code like the ordered-model
 addendum. Page HTML is byte-identical to the base commit; only `math-rain.html` activates
 the five sources, as before the registry. Adding, moving or reordering an executable script,
-or an import edge that reaches the installer, needs an explicit P2 mapping.
+or an import edge that reaches the installer, or changing a recorded directive needs an
+explicit P2 mapping. Selector-matched DOM state (`class`, `lang`, `dir` attributes) is not a
+stylesheet input and stays outside this model.
 
 **Boundary of the guarantee:** these are architectural syntax checks, not a proof about
 arbitrary JavaScript data flow (a capability aliased through a variable) or every possible
@@ -281,3 +286,10 @@ cover every listed form. Re-running them against the previous audit confirmed th
 each one. The browser oracle confirms that bare document members resolve in event-handler
 scope. The P0 static/runtime/semantic artifacts are unchanged; the activation addendum is
 new and separately pinned.
+
+Document-directive follow-up (2026-10-04): a review found that a static CSP pragma could
+disable every stylesheet without changing any inventory. The same gap covered all document-level
+directives. Pragmas are now rejected in the shared HTML boundary, so every consumer (static
+scan, ordered model, execution audit, activation) fails on them. The encoding, viewport and
+color-scheme directives in use are pinned per page. The browser oracle confirms that the CSP
+pragma decides stylesheet activation.

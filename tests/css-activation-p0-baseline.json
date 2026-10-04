@@ -1,11 +1,21 @@
 {
   "schemaVersion": 1,
-  "snapshotKind": "immutable-p0-script-activation",
+  "snapshotKind": "immutable-p0-activation",
   "capturedFromCommit": "8a72f430027d7e463cf4a0119745a8fae57368cc",
   "htmlUnchangedSince": "6bb0d80540707e09cfa41bde0d2384c86f6fedd6",
-  "note": "Addendum to the immutable P0 snapshots: per-page executable scripts (resolved source, grammar, normalized activation attributes, inline import edges), handler import edges, and the runtime stylesheet sources a page can activate by reaching the installer through its static/literal-dynamic import graph. Page HTML is byte-identical to the base commit; Math Rain's pre-registry inline style sites were reachable only from math-rain.html. Not a claim that every reachable source is installed on every run.",
+  "note": "Addendum to the immutable P0 snapshots. Per page: document directives that govern how its stylesheets decode or evaluate (meta charset, viewport, color-scheme; http-equiv pragmas are rejected), executable scripts (resolved source, grammar, normalized activation attributes, inline import edges), handler import edges, and the runtime stylesheet sources the page can activate by reaching the installer through its static/literal-dynamic import graph. Page HTML is byte-identical to the base commit; Math Rain's pre-registry inline style sites were reachable only from math-rain.html. Not a claim that every reachable source is installed on every run.",
   "pages": {
     "bond-forge.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -70,6 +80,16 @@
       "runtimeStyleSources": []
     },
     "carrot-pull.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -134,6 +154,16 @@
       "runtimeStyleSources": []
     },
     "circuit.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -198,6 +228,16 @@
       "runtimeStyleSources": []
     },
     "crystal-bloom.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -262,6 +302,16 @@
       "runtimeStyleSources": []
     },
     "echo-cave.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -326,6 +376,16 @@
       "runtimeStyleSources": []
     },
     "firefly-signal.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -390,6 +450,16 @@
       "runtimeStyleSources": []
     },
     "flame-verse.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -454,6 +524,16 @@
       "runtimeStyleSources": []
     },
     "gomoku.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -518,6 +598,16 @@
       "runtimeStyleSources": []
     },
     "gravity-slingshot.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -582,6 +672,16 @@
       "runtimeStyleSources": []
     },
     "hoop-shot.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -646,6 +746,16 @@
       "runtimeStyleSources": []
     },
     "index.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -704,6 +814,16 @@
       "runtimeStyleSources": []
     },
     "lumen.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -768,6 +888,16 @@
       "runtimeStyleSources": []
     },
     "math-rain.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -838,6 +968,16 @@
       ]
     },
     "maxwell-demon.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -902,6 +1042,16 @@
       "runtimeStyleSources": []
     },
     "minesweeper.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -966,6 +1116,16 @@
       "runtimeStyleSources": []
     },
     "needle-awn.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1030,6 +1190,16 @@
       "runtimeStyleSources": []
     },
     "planet-merge.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1094,6 +1264,16 @@
       "runtimeStyleSources": []
     },
     "public/404.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1106,6 +1286,16 @@
       "runtimeStyleSources": []
     },
     "reversi.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1170,6 +1360,16 @@
       "runtimeStyleSources": []
     },
     "ripple-duet.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1234,6 +1434,16 @@
       "runtimeStyleSources": []
     },
     "shadow-loom.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1298,6 +1508,16 @@
       "runtimeStyleSources": []
     },
     "silk-dew.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1362,6 +1582,16 @@
       "runtimeStyleSources": []
     },
     "sword-flight.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1426,6 +1656,16 @@
       "runtimeStyleSources": []
     },
     "tank-battle.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1490,6 +1730,16 @@
       "runtimeStyleSources": []
     },
     "tetris.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1554,6 +1804,16 @@
       "runtimeStyleSources": []
     },
     "tower-defense.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",
@@ -1618,6 +1878,16 @@
       "runtimeStyleSources": []
     },
     "word-daily.html": {
+      "directives": [
+        [
+          "charset",
+          "utf-8"
+        ],
+        [
+          "viewport",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover"
+        ]
+      ],
       "scripts": [
         {
           "grammar": "script",

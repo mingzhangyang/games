@@ -119,6 +119,24 @@ const reordered = activation(withScript('<script src="/analytics.js"></script>')
 assert.notDeepEqual(reordered.scripts, activation(indexHtml).scripts, 'script identity and order are recorded');
 const deferred = indexHtml.replace('<script src="/theme-boot.js"></script>', '<script src="/theme-boot.js" defer></script>');
 assert.notDeepEqual(activation(deferred).scripts, activation(indexHtml).scripts, 'activation attributes are recorded');
+// Document directives: pragmas are rejected by the shared HTML boundary; the
+// encoding/viewport/color-scheme directives are recorded per page.
+for (const meta of ['<meta http-equiv="Content-Security-Policy" content="style-src \'none\'">',
+    '<meta HTTP-EQUIV="default-style" content="alt">', '<meta http-equiv="content-type" content="text/html; charset=latin1">',
+    '<meta http-equiv="refresh" content="0">', '<p><meta http-equiv="x-unknown" content=""></p>']) {
+    const html = indexHtml.replace('<head>', '<head>' + meta);
+    assert.throws(() => scanHtml('index.html', html), /http-equiv/, meta);
+    assert.throws(() => htmlCascadeModel(html, 'index.html'), /http-equiv/, meta);
+    assert.match(auditHtmlStyleIngress(html, 'index.html', audited).join('\n'), /http-equiv/, meta);
+    assert.throws(() => activation(html), /http-equiv/, meta);
+}
+const directives = html => activation(html).directives;
+assert.deepEqual(directives(indexHtml).map(([name]) => name), ['charset', 'viewport']);
+for (const html of [
+    indexHtml.replace('initial-scale=1.0', 'initial-scale=2.0'),
+    indexHtml.replace('<meta charset="UTF-8">', '<meta charset="windows-1252">'),
+    indexHtml.replace('<head>', '<head><meta name="Color-Scheme" content="light dark">'),
+]) assert.notDeepEqual(directives(html), directives(indexHtml));
 for (const [script, pattern] of [
     ['<script type="module">import(name);</script>', /string literal/],
     ['<script type="module">import "lodash";</script>', /outside the audited local/],
