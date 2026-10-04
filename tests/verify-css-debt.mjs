@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse } from 'parse5';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -494,138 +495,49 @@ function parseCssText(source, file) {
     return result;
 }
 
-function decodeHtmlCharacterReferences(value) {
-    const named = new Map([
-        ['amp', '&'],
-        ['lt', '<'],
-        ['gt', '>'],
-        ['quot', '"'],
-        ['apos', "'"],
-    ]);
-
-    let decoded = value.replace(/&#(x[0-9a-f]+|[0-9]+);?/gi, (match, body) => {
-        const hex = body[0]?.toLowerCase() === 'x';
-        const digits = body.slice(hex ? 1 : 0);
-        const codePoint = Number.parseInt(digits, hex ? 16 : 10);
-        if (!Number.isFinite(codePoint) || codePoint <= 0 || codePoint > 0x10ffff
-            || (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
-            return '\uFFFD';
-        }
-        return String.fromCodePoint(codePoint);
+function parseHtmlElements(html) {
+    const document = parse(html, {
+        sourceCodeLocationInfo: true,
+        scriptingEnabled: true,
     });
+    const elements = [];
 
-    decoded = decoded.replace(/&([a-z][a-z0-9]+);/gi, (match, body) => {
-        const replacement = named.get(body.toLowerCase());
-        if (replacement == null) {
-            throw new Error('Unsupported named HTML character reference &' + body + '; in scanned attribute');
-        }
-        return replacement;
-    });
+    function visit(node) {
+        if (node?.tagName && node.sourceCodeLocation) elements.push(node);
+        for (const child of node?.childNodes || []) visit(child);
+        // Do not walk template.content: CSS there is inert until instantiated.
+    }
 
-    return decoded;
+    visit(document);
+    return elements.sort((left, right) =>
+        left.sourceCodeLocation.startOffset - right.sourceCodeLocation.startOffset);
 }
 
-function parseAttributes(tag) {
+function htmlElementAttributes(element) {
     const attributes = {};
-    const matcher = /(?:^|\s)([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
-    let match;
-    while ((match = matcher.exec(tag))) {
-        const name = match[1].toLowerCase();
-        if (name === 'link' || name.startsWith('<')) continue;
-        // The HTML tokenizer drops later duplicate attributes. Preserve the first
-        // occurrence so stylesheet classification matches browser semantics.
-        if (!Object.hasOwn(attributes, name)) {
-            attributes[name] = decodeHtmlCharacterReferences(match[2] ?? match[3] ?? match[4] ?? '');
-        }
+    for (const attribute of element.attrs || []) {
+        const name = attribute.prefix
+            ? attribute.prefix + ':' + attribute.name
+            : attribute.name;
+        // parse5 already applies HTML tokenizer semantics here: character
+        // references are decoded and later duplicate attributes are discarded.
+        if (!Object.hasOwn(attributes, name)) attributes[name] = attribute.value;
     }
     return attributes;
 }
 
-function listFiles(directory, root, predicate) {
-    if (!existsSync(directory)) return [];
-    const output = [];
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-        const fullPath = join(directory, entry.name);
-        if (entry.isDirectory()) output.push(...listFiles(fullPath, root, predicate));
-        else if (entry.isFile()) {
-            const path = relative(root, fullPath).split(sep).join('/');
-            if (predicate(path)) output.push(path);
-        }
-    }
-    return output.sort();
+function htmlTagName(element) {
+    return String(element.tagName || element.nodeName || '').toLowerCase();
 }
 
-function maskHtmlComments(html) {
-    const output = html.split('');
-    let inTag = false;
-    let quote = '';
-    let pendingRawTextTag = '';
-    let rawTextTag = '';
-
-    function maskRange(start, end) {
-        for (let index = start; index < end; index++) {
-            if (html[index] !== '\n' && html[index] !== '\r') output[index] = ' ';
-        }
+function styleElementSource(html, element, file) {
+    const location = element.sourceCodeLocation;
+    const start = location?.startTag?.endOffset;
+    const end = location?.endTag?.startOffset ?? location?.endOffset;
+    if (!Number.isInteger(start) || !Number.isInteger(end) || end < start) {
+        throw new Error('Unable to determine <style> source range in ' + file);
     }
-
-    for (let index = 0; index < html.length; index++) {
-        const char = html[index];
-
-        if (rawTextTag) {
-            if (char === '<' && html[index + 1] === '/') {
-                const candidate = html.slice(index + 2, index + 2 + rawTextTag.length);
-                const boundary = html[index + 2 + rawTextTag.length] || '';
-                if (candidate.toLowerCase() === rawTextTag && /[\s/>]/.test(boundary)) {
-                    rawTextTag = '';
-                    inTag = true;
-                    quote = '';
-                }
-            }
-            continue;
-        }
-
-        if (inTag) {
-            if (quote) {
-                if (char === quote) quote = '';
-                continue;
-            }
-            if (char === '"' || char === "'") {
-                quote = char;
-                continue;
-            }
-            if (char === '>') {
-                inTag = false;
-                if (pendingRawTextTag) {
-                    rawTextTag = pendingRawTextTag;
-                    pendingRawTextTag = '';
-                }
-            }
-            continue;
-        }
-
-        if (html.startsWith('<!--', index)) {
-            const close = html.indexOf('-->', index + 4);
-            const end = close < 0 ? html.length : close + 3;
-            maskRange(index, end);
-            index = end - 1;
-            continue;
-        }
-
-        if (char === '<') {
-            const match = html.slice(index).match(/^<\/?([a-z][^\s/>]*)/i);
-            if (match) {
-                const isEndTag = html[index + 1] === '/';
-                const tagName = match[1].toLowerCase();
-                inTag = true;
-                quote = '';
-                if (!isEndTag && (tagName === 'script' || tagName === 'style')) {
-                    pendingRawTextTag = tagName;
-                }
-            }
-        }
-    }
-
-    return output.join('');
+    return html.slice(start, end);
 }
 
 function normalizeLinkAttributes(attributes) {
@@ -644,38 +556,36 @@ function stylesheetLinkSignature(attributes) {
 }
 
 function scanHtml(path, html) {
-    // HTML comments are inert browser content. Mask them before every HTML-level
-    // scan so commented links/styles cannot impersonate active cascade inputs.
-    const activeHtml = maskHtmlComments(html);
+    const elements = parseHtmlElements(html);
     const links = [];
-    const linkTags = activeHtml.matchAll(/<link\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi);
-    for (const match of linkTags) {
-        const attributes = parseAttributes(match[0]);
-        if ((attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet') && attributes.href) {
-            links.push(stylesheetLinkSignature(attributes));
-        }
-    }
-
     const styleBlocks = [];
     const inlineRules = [];
     const inlineAttributes = [];
-    for (const match of activeHtml.matchAll(/<style\b(?:"[^"]*"|'[^']*'|[^'">])*>([\s\S]*?)<\/style\s*>/gi)) {
-        const source = match[1].replace(/\r\n/g, '\n').trim();
-        const index = styleBlocks.length;
-        styleBlocks.push([path, index, source]);
-        const parsed = parseCssText(match[1], path + '#style[' + index + ']');
-        for (const rule of parsed.rules) {
-            inlineRules.push([path + '#style[' + index + ']', rule.context.join(' / '), rule.selector]);
-        }
-    }
-
-    const htmlWithoutRawText = activeHtml.replace(/<(script|style)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?<\/\1\s*>/gi, '');
     const tagOccurrences = new Map();
-    for (const tag of htmlWithoutRawText.matchAll(/<[a-z](?:"[^"]*"|'[^']*'|[^'">])*>/gi)) {
-        const tagName = (tag[0].match(/^<([a-z][^\s/>]*)/i) || [])[1]?.toLowerCase() || 'unknown';
+
+    for (const element of elements) {
+        const tagName = htmlTagName(element);
+        const attributes = htmlElementAttributes(element);
+
+        if (tagName === 'link'
+            && (attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet')
+            && attributes.href) {
+            links.push(stylesheetLinkSignature(attributes));
+        }
+
+        if (tagName === 'style') {
+            const styleSource = styleElementSource(html, element, path);
+            const source = styleSource.replace(/\r\n/g, '\n').trim();
+            const index = styleBlocks.length;
+            styleBlocks.push([path, index, source]);
+            const parsed = parseCssText(styleSource, path + '#style[' + index + ']');
+            for (const rule of parsed.rules) {
+                inlineRules.push([path + '#style[' + index + ']', rule.context.join(' / '), rule.selector]);
+            }
+        }
+
         const occurrence = tagOccurrences.get(tagName) || 0;
         tagOccurrences.set(tagName, occurrence + 1);
-        const attributes = parseAttributes(tag[0]);
         if (Object.hasOwn(attributes, 'style')) {
             const identity = attributes.id ? tagName + '#' + attributes.id : tagName + '@' + occurrence;
             inlineAttributes.push([path, identity, normalizeValue(attributes.style)]);
@@ -768,14 +678,16 @@ function runSelfChecks() {
         /CSS nesting or brace-bearing values are unsupported/,
     );
 
-    assert.deepEqual(
-        parseAttributes('<link rel="stylesheet" rel="alternate" href="/first.css" href="/second.css">'),
-        { rel: 'stylesheet', href: '/first.css' },
-    );
-    assert.deepEqual(
-        parseAttributes('<div style="color:red" style="display:none">'),
-        { style: 'color:red' },
-    );
+    const duplicateAttributeScan = scanHtml('duplicates.html', [
+        '<link rel="stylesheet" rel="alternate" href="/first.css" href="/second.css">',
+        '<div style="color:red" style="display:none"></div>',
+    ].join('\n'));
+    assert.deepEqual(duplicateAttributeScan.links, [
+        ['/first.css', [['href', '/first.css'], ['rel', 'stylesheet']]],
+    ]);
+    assert.deepEqual(duplicateAttributeScan.inlineAttributes, [
+        ['duplicates.html', 'div@0', 'color:red'],
+    ]);
 
     const htmlScan = scanHtml('fixture.html', [
         '<!-- <link rel="stylesheet" href="/commented.css"> -->',
@@ -850,22 +762,30 @@ function verifyBuildOrderingContract(errors) {
     }
     for (const path of distHtmlPaths) {
         const html = readFileSync(join(ROOT, path), 'utf8');
-        const activeHtml = maskHtmlComments(html);
+        const elements = parseHtmlElements(html);
         const links = [];
-        for (const match of activeHtml.matchAll(/<link\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi)) {
-            const attributes = parseAttributes(match[0]);
-            if ((attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet') && attributes.href) {
-                links.push({ href: attributes.href, start: match.index, end: match.index + match[0].length });
+        const styleOffsets = [];
+        for (const element of elements) {
+            const tagName = htmlTagName(element);
+            const attributes = htmlElementAttributes(element);
+            const start = element.sourceCodeLocation.startOffset;
+            if (tagName === 'link'
+                && (attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet')
+                && attributes.href) {
+                links.push({ href: attributes.href, start });
+            } else if (tagName === 'style') {
+                styleOffsets.push(start);
             }
         }
         const ranks = links.map(link => stylesheetRank(link.href));
         if (ranks.some((rank, index) => index > 0 && rank < ranks[index - 1])) {
             errors.push(path + ': production stylesheet links violate shared-css-first rank order.');
         }
-        const styleAt = activeHtml.search(/<style[\s>]/i);
+        const styleAt = styleOffsets.length ? Math.min(...styleOffsets) : -1;
         if (styleAt >= 0 && links.some(link => link.start > styleAt)) {
             errors.push(path + ': production external stylesheet appears after inline <style>.');
         }
+
     }
 }
 
