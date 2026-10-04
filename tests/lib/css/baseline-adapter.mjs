@@ -1,4 +1,6 @@
-import { cssTokens, declarationValue, parseStylesheet } from './model.mjs';
+import {
+    cssTokens, declarationValue, hasImportantPriority, normalizeFragment, parseStylesheet,
+} from './model.mjs';
 
 const STATEMENTS = new Set(['charset', 'import', 'namespace', 'layer']);
 const GROUPS = new Set(['media', 'supports', 'container', 'scope', 'starting-style', 'document']);
@@ -12,6 +14,15 @@ const SPECIAL = new Set(['charset', 'import', 'namespace', ...DECLARATIONS, ...K
 const legacyNormalize = value => value.replace(/\s+/g, ' ').trim();
 const legacyValue = node => legacyNormalize(cssTokens(declarationValue(node))
     .map(token => token[0] === 'comment' ? ' ' : token[1]).join(''));
+
+function migrationDeclaration(node) {
+    const value = declarationValue(node);
+    return {
+        property: node.prop.startsWith('--') ? node.prop : node.prop.toLowerCase(),
+        value: normalizeFragment(value),
+        important: hasImportantPriority(value),
+    };
+}
 
 export function parseCssText(source, file) {
     const { ast, model } = parseStylesheet(source, file);
@@ -35,6 +46,9 @@ export function parseCssText(source, file) {
             selector, context: [...context], layer, atRule,
         }));
     }
+    function migrationDeclarations(node) {
+        return (node.nodes || []).filter(child => child.type === 'decl').map(migrationDeclaration);
+    }
     function walk(parent, context = [], layer = null, inKeyframes = false) {
         for (const node of parent.nodes || []) {
             if (node.type === 'comment') continue;
@@ -42,7 +56,13 @@ export function parseCssText(source, file) {
                 if (inKeyframes) continue; // P0 excludes frame declarations; canonical model retains them.
                 const selector = legacyNormalize(node.selector);
                 const values = declarations(node, selector, context, layer, '');
-                result.rules.push({ selector, context: [...context], layer, declarations: values });
+                result.rules.push({
+                    selector,
+                    context: [...context],
+                    layer,
+                    declarations: values,
+                    migrationDeclarations: migrationDeclarations(node),
+                });
                 result.declarations.push(...values);
                 continue;
             }
