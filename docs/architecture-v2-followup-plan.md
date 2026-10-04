@@ -976,23 +976,15 @@ css/
 `docs/architecture-v2-css-layer-migration-plan-2026-09.md` 的 P0/P1 盘点可以提前做，但只有以下条件全部满足，
 才允许进入会改变 CSS cascade 语义的 P2+：
 
-- [x] Architecture boundary verifier + debt ratchet 已稳定运行；
-- [x] registry/game package 的主要 legacy 迁移完成，剩余项只有明确例外；
-- [x] platform shim consumer 为 0，或只剩有删除 issue/理由的临时例外；
-- [x] GameStorage/i18n/shell 的结构性迁移已完成到不会再大规模改 DOM/class contract 的状态；
-- [x] HTML shell convergence 已完成；
-- [x] 没有正在进行的大规模 shared DOM / class / layout 重构 PR；
-- [x] `shared-css-first` 仍被视为当前生产契约，并有 build/contract 测试保护；
-- [x] `npm run build`、Architecture v2 candidate CI、关键 smoke 全绿；
-- [x] CSS 方案 P0 的 computed-style / geometry baseline 已记录。
-
-
-### Handoff 验收证据（2026-10-03）
-
-- PR #75 的候选 CI #122 已通过生产构建、完整 Architecture v2 verification、Tower Defense / Sword Flight 构建产物 smoke 和 Worker dry-run；其中 `verify-architecture-boundaries`、CSS debt guard 与 dist stylesheet-order contract 均通过。
-- `tests/architecture-v2-debt-baseline.json` 的严格债务类别为零；Architecture boundary verifier 与 debt ratchet 已进入候选 CI。
-- PR #74 的 Phase 6 i18n 收口已合并；registry/package、platform shim、GameStorage 与 shell 收敛项已由 Architecture v2 verifier 验收，没有并行的大规模 shared DOM / class / layout PR。
-- `shared-css-first` 仍在 `vite.config.js`，PR #75 的静态和构建产物 guard 保护它；P0 computed-style / geometry 基线已记录在 `tests/css-layer-p0-baseline.json`，候选源运行 #119 通过。
+- [ ] Architecture boundary verifier + debt ratchet 已稳定运行；
+- [ ] registry/game package 的主要 legacy 迁移完成，剩余项只有明确例外；
+- [ ] platform shim consumer 为 0，或只剩有删除 issue/理由的临时例外；
+- [ ] GameStorage/i18n/shell 的结构性迁移已完成到不会再大规模改 DOM/class contract 的状态；
+- [ ] HTML shell convergence 已完成；
+- [ ] 没有正在进行的大规模 shared DOM / class / layout 重构 PR；
+- [ ] `shared-css-first` 仍被视为当前生产契约，并有 build/contract 测试保护；
+- [ ] `npm run build`、Architecture v2 candidate CI、关键 smoke 全绿；
+- [ ] CSS 方案 P0 的 computed-style / geometry baseline 已记录。
 
 handoff 通过后，CSS layer 迁移期间进入一个临时 **layout freeze**：
 

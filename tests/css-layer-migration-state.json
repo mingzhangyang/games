@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "status": "not-started",
+  "p0BaselineBlobSha": "a8f5ed6df17ac1f211c33c32e2d7b63bd3d2984c",
+  "migrationUnit": "rule",
+  "rejectedStrategy": "whole-file-single-layer",
+  "targetLayerOrder": [
+    "tokens",
+    "showcase",
+    "components",
+    "layout",
+    "pages",
+    "contracts"
+  ],
+  "allowedLayers": [
+    "tokens",
+    "showcase",
+    "components",
+    "layout",
+    "pages",
+    "contracts"
+  ],
+  "migratedRules": [],
+  "migratedKeyframes": [],
+  "note": "P2 must upgrade the verifier to consume rule-level migration entries before any production CSS cascade change."
+}

@@ -1,4 +1,3 @@
-@layer pages {
 /* Math Rain — 数学天文台 / 数字观测舱
  *
  * Math Rain is intentionally outside the shared game-shell geometry. This
@@ -1345,5 +1344,4 @@ input:focus-visible {
         scroll-behavior: auto !important;
         transition-duration: 0.001ms !important;
     }
-}
 }

@@ -1,4 +1,3 @@
-@layer pages {
 /* ─────────────────────────────────────────────
    Word Daily 每日猜词 — bilingual daily word puzzle
    ───────────────────────────────────────────── */
@@ -1283,5 +1282,4 @@ body {
 /* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ── */
 .wd-shell {
     --frame-max-wide: 600px;
-}
 }

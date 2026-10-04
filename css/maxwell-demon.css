@@ -1,4 +1,3 @@
-@layer pages {
 /* ─────────────────────────────────────────────
    麦克斯韦妖 Maxwell's Demon — 热与熵分拣解谜
    深靛底 + 冷蓝慢分子（--tok-accent）+ 暖橙快分子（--tok-hot）
@@ -702,5 +701,4 @@ body {
     --md-cv-gap-hit: #9a6200;
     --md-cv-gap-text: #13222b;
     --md-cv-budget-text: #2c4050;
-}
 }

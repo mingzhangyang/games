@@ -1,4 +1,3 @@
-@layer pages {
 /* ─────────────────────────────────────────────
    焰语 Flame Verse — 焰色光谱解谜
    暗夜底 + 焰橙主色（#ffb35c 系）+ 谱线按真实波长上色
@@ -546,5 +545,4 @@ body {
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
-}
 }

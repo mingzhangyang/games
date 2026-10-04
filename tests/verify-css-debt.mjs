@@ -1,17 +1,24 @@
 #!/usr/bin/env node
 // CSS layer migration guard.
-// Records exact unlayered rule identities and non-layer debt so wrappers can be
-// migrated in reviewed batches without allowing new unlayered rules to slip in.
+// P0 is an immutable factual snapshot. Migration progress lives in a separate
+// rule-level state file so production CSS cannot be rebaselined into silence.
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { transformCssFile } from '../tools/archive/migrations/apply-css-layers.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
-const BASELINE = JSON.parse(readFileSync(BASELINE_PATH, 'utf8'));
-const ALLOWED_LAYERS = new Set(BASELINE.layerContractCandidate);
+const MIGRATION_STATE_PATH = join(ROOT, 'tests/css-layer-migration-state.json');
+const BASELINE_TEXT = readFileSync(BASELINE_PATH, 'utf8');
+const BASELINE = JSON.parse(BASELINE_TEXT);
+const MIGRATION_STATE = JSON.parse(readFileSync(MIGRATION_STATE_PATH, 'utf8'));
+const BASELINE_BLOB_SHA = createHash('sha1')
+    .update(`blob ${Buffer.byteLength(BASELINE_TEXT, 'utf8')}\0`)
+    .update(BASELINE_TEXT)
+    .digest('hex');
+const ALLOWED_LAYERS = new Set(MIGRATION_STATE.allowedLayers);
 const SPECIAL_AT_RULES = new Set([
     'charset', 'import', 'font-face', 'property', 'keyframes', '-webkit-keyframes',
     '-moz-keyframes', '-o-keyframes', 'page', 'counter-style', 'namespace',
@@ -583,6 +590,21 @@ function verifyProject() {
     runSelfChecks();
 
     const errors = [];
+    if (BASELINE.snapshotKind !== 'immutable-p0') {
+        errors.push('tests/css-layer-p0-baseline.json must remain the immutable P0 snapshot.');
+    }
+    if (MIGRATION_STATE.p0BaselineBlobSha !== BASELINE_BLOB_SHA) {
+        errors.push('Immutable P0 baseline fingerprint changed; migration progress belongs in css-layer-migration-state.json.');
+    }
+    if (MIGRATION_STATE.migrationUnit !== 'rule' || MIGRATION_STATE.rejectedStrategy !== 'whole-file-single-layer') {
+        errors.push('CSS migration must remain rule-granular; whole-file single-layer migration is rejected.');
+    }
+    if (MIGRATION_STATE.status !== 'not-started') {
+        errors.push('CSS migration state changed before the rule-level P2 verifier was enabled.');
+    }
+    if ((MIGRATION_STATE.migratedRules || []).length || (MIGRATION_STATE.migratedKeyframes || []).length) {
+        errors.push('Rule-level migration entries require the P2 verifier upgrade before production CSS can change.');
+    }
     const cssPaths = listFiles(join(ROOT, 'css'), ROOT, path => path.endsWith('.css'));
     const htmlPaths = [
         ...readdirSync(ROOT, { withFileTypes: true })
@@ -615,8 +637,7 @@ function verifyProject() {
     let customPropertyDefinitions = 0;
 
     for (const path of cssPaths) {
-        const cssSource = readFileSync(join(ROOT, path), 'utf8');
-        const parsed = parseCssText(cssSource, path);
+        const parsed = parseCssText(readFileSync(join(ROOT, path), 'utf8'), path);
         totalRules += parsed.rules.length;
         importantCount += parsed.declarations.filter(declaration => hasImportantPriority(declaration.value)).length;
         customPropertyDefinitions += parsed.declarations.filter(declaration => declaration.property.startsWith('--')).length;
@@ -661,26 +682,6 @@ function verifyProject() {
         if (!sameJson(layerBlocks, baselineFile.layerBlocks)) {
             errors.push(path + ': current @layer blocks differ from the reviewed P0 baseline.');
         }
-        if (BASELINE.layerMigrationStatus === 'complete') {
-            const targetLayer = baselineFile.targetLayer;
-            if (!targetLayer || Object.keys(normalizedLayerCounts).length !== 1
-                || Object.keys(normalizedLayerCounts)[0] !== targetLayer) {
-                errors.push(path + ': all ordinary rules must be in the single registered target layer.');
-            }
-            if (parsed.rules.some(rule => rule.layer !== targetLayer)) {
-                errors.push(path + ': ordinary CSS rule escaped its registered target layer.');
-            }
-            if (parsed.keyframes.some(keyframe => keyframe.layer !== targetLayer)) {
-                errors.push(path + ': keyframes must be inside the registered target layer.');
-            }
-            try {
-                if (transformCssFile(path, cssSource, targetLayer) !== cssSource) {
-                    errors.push(path + ': CSS layer migration transform is not idempotent.');
-                }
-            } catch (error) {
-                errors.push(path + ': CSS layer migration transform failed: ' + error.message);
-            }
-        }
     }
 
     for (const path of htmlPaths) {
@@ -704,8 +705,8 @@ function verifyProject() {
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {
             errors.push(
-                key + ' differs from the reviewed CSS debt baseline (' + delta.added.length
-                + ' added, ' + delta.removed.length + ' removed); update it only in the same reviewed CSS migration change.',
+                key + ' differs from the immutable P0 CSS snapshot (' + delta.added.length
+                + ' added, ' + delta.removed.length + ' removed); do not edit the P0 snapshot to hide migration progress.',
             );
             if (delta.added.length) errors.push('  new: ' + JSON.stringify(delta.added.slice(0, 3)));
             if (delta.removed.length) errors.push('  gone: ' + JSON.stringify(delta.removed.slice(0, 3)));
@@ -730,7 +731,7 @@ function verifyProject() {
     console.log('  !important declarations: ' + importantCount + ' · custom-property definitions: ' + customPropertyDefinitions);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
-    console.log('  stylesheet source order, strict target layers, and migration idempotence match the reviewed baseline.');
+    console.log('  immutable P0 snapshot, stylesheet source order, and current layer map all match.');
 }
 
 verifyProject();

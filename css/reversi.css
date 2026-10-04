@@ -1,4 +1,3 @@
-@layer pages {
 /* ─────────────────────────────────────────────
    Reversi 黑白棋 — classic strategy board game
    ───────────────────────────────────────────── */
@@ -617,5 +616,4 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 0;
-}
 }

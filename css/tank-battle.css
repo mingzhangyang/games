@@ -1,4 +1,3 @@
-@layer pages {
 :root {
     /* tank-battle 唯一主色：翠绿，供 tokens 焦点环与控件复用 */
     --tok-accent: #10b981;
@@ -766,5 +765,4 @@ html, body {
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
-}
 }

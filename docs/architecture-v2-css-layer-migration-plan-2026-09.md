@@ -1,6 +1,6 @@
 # CSS Cascade Layers 迁移方案
 
-> 状态：P0/P1 已完成；P2 迁移实现和 strict guard 已落地，候选 CI 待验收；P3/P4/P5/P6 继续按门禁推进迁移
+> 状态：P0/P1 基线已完成；2026-10-04 的 whole-file P2 canary 已回滚，生产 CSS 迁移仍未开始
 >
 > 记录日期：2026-09-30
 >
@@ -78,37 +78,53 @@ candidate CI #19 和 #20 均通过。这说明当前页面仍依赖既有的生�
 最终目标是：所有普通 CSS 都进入显式 cascade layer，生产页面不再依赖 Vite 重排 stylesheet
 link；同时保持现有页面的视觉、几何、响应式和交互行为不变。
 
-P1 审计前曾将以下顺序作为候选；冲突审计后已修正为能保留当前有效优先级的顺序：
+P1 最初得到过一个**文件级**候选顺序：
 
 ```css
 @layer tokens, showcase, components, layout, pages;
 ```
 
-当前生产 link 顺序是：
+2026-10-04 的 P2 canary 证明这个抽象不成立。原因不是某几个 selector 写错，而是 cascade
+layer 的优先级先于 specificity：一旦整个 `layout.css` 放进较早的 `layout` 层，较晚
+`pages` 层中的低 specificity 页面规则也能压过共享结构契约。Tetris 中
+`.info-panel { display:flex }` 压过 `body.has-stats-drawer .game-sidebar { display:none }`
+就是这个问题的最小反例；同一轮 CI 还同时出现 frame、immersive、start-menu、carrot-pull
+和 needle-awn 几何回归。
+
+因此迁移单位从“CSS 文件”改为“**规则职责**”，并引入最后的结构契约层：
+
+```css
+@layer tokens, showcase, components, layout, pages, contracts;
+```
+
+当前生产 link 顺序仍保持：
 
 ```
 tokens → layout → science-showcase → page → more-games
 ```
 
-`layout.css` 当前未分层，普通声明优先于 `science-showcase.css` 的 `components` layer 声明。两组不同 selector 的同元素属性重叠已确认：共享 `.game-icon-btn` 的 `transition`，以及 `.game-side-card` 的 `border-radius`（含移动断点）。因此 `layout` 必须位于 `showcase` 与 `components` 之后。
+新的目标不是用 layer 顺序机械复制 link 顺序，而是显式表达两类过去靠 specificity 共存的关系：
+共享默认值允许页面覆盖，共享结构不变量则不得被页面皮肤破坏。同一个 CSS 文件可以贡献多个
+layer；文件路径不再等于 layer ownership。
 
-页面 CSS 当前未分层，且在 layout 后加载；所以 `pages` 仍放最后。more-games 与 showcase 当前同属 `components`，并由生产 link 顺序保证 more-games 在后；拆层后 `components` 放在 `showcase` 之后。普通 layer 优先级与 important layer 优先级方向相反；按此顺序，Showcase 的 important 声明仍高于 layout/page，普通 layout 声明高于 Showcase，页面普通声明高于共享默认值。
-
-P1 的逐文件数量、冲突矩阵及计算基线见 `docs/css-layer-p0-p1-inventory-2026-10-03.md`。P3 行为回归和 P4 插件 canary 仍是迁移完成前的必要验证。
+P0 历史事实永久保存在 `tests/css-layer-p0-baseline.json`，不得随着迁移下调。后续进度只写入
+独立的 `tests/css-layer-migration-state.json`；P2 必须先升级 verifier 支持 rule-level state，
+之后才允许改生产 CSS。
 
 层级职责：
 
 | 层级 | 内容 | 优先级意图 |
 | --- | --- | --- |
 | `tokens` | 设计令牌、主题变量、基础控件变量 | 普通声明的最低共享层 |
-| `showcase` | 科学展柜的共享皮肤 | 普通声明低于 `components`、`layout`、`pages`；important 声明按反向 layer 次序处理 |
-| `components` | `more-games` 等共享组件 | 普通声明高于 `showcase`，低于 `layout` 与 `pages` |
-| `layout` | shell、topbar、main、stage、sidebar、drawer、frame 预算 | 普通几何默认值高于 showcase/components，低于页面覆盖 |
-| `pages` | 每个页面自己的视觉皮肤和必要覆盖 | 保留页面覆盖共享默认值的能力 |
+| `showcase` | 科学展柜共享皮肤 | 保留 Showcase 的共享视觉语义；important 仍需单独审计 |
+| `components` | `more-games` 等共享组件 | 高于 showcase 的普通共享组件 |
+| `layout` | shell/topbar/stage/sidebar 等**可被页面定制的默认几何** | 页面仍可有意覆盖默认值 |
+| `pages` | 页面视觉、玩法专属组件与经过审计的页面几何 | 高于共享默认值 |
+| `contracts` | drawer 隐藏、frame budget、immersive 边界、固定安全区等结构不变量 | 普通声明最后，保护平台布局契约不被页面层意外覆盖 |
 
-`pages` 放在最后，是为了复现当前“页面 CSS 可以覆盖 layout 默认值”的行为，而不是让
-共享层无条件压过页面。任何需要反常规覆盖的规则都必须单独记录，禁止靠提高选择器权重
-或随意增加 `!important` 解决。
+禁止再使用“给整个页面 CSS 包 `pages`、给整个 `layout.css` 包 `layout`”的机械迁移。
+如果一条规则既像视觉又影响结构，先用行为测试确定职责，再决定 layer；不能靠加
+`!important` 或提高 selector specificity 抵消错误的 layer 模型。
 
 ## 4. 分阶段实施方案
 
@@ -124,8 +140,8 @@ P1 的逐文件数量、冲突矩阵及计算基线见 `docs/css-layer-p0-p1-inv
   - HTML `<style>` 与 `style=""` 例外；
   - `!important` 与特殊 at-rule 例外；
   - 仍依赖 stylesheet link 顺序的页面；
-- 新增迁移期静态检查：已有 debt 可保持/减少，但**禁止新增未分层普通 CSS**；
-- baseline 记录具体文件/规则，不只记录总数；任何向上 rebaseline 需单独 review；
+- 新增迁移期静态检查：已有 debt 可保持，但**禁止新增未分层普通 CSS**；P2 开始后减少量记录在独立 migration state；
+- P0 baseline 记录具体文件/规则并永久不可变；禁止通过修改 P0 快照来吸收迁移进度或检查失败；
 - 记录所有 CSS 文件的入口、页面归属和当前层级；
 - 记录关键页面的 computed style、frame 尺寸、侧栏显示状态和 drawer 挂载位置；
 - 运行并保存基线结果：
@@ -164,7 +180,7 @@ P1 的逐文件数量、冲突矩阵及计算基线见 `docs/css-layer-p0-p1-inv
 
 交付物：
 
-- CSS 文件到目标 layer 的清单；
+- 规则职责到目标 layer 的清单；同一文件允许同时包含 layout/pages/contracts 等多个职责层；
 - 跨 `layout/showcase/page/components` 的 selector/custom-property 冲突矩阵；
 - 对“当前 link 顺序”与“候选 layer 顺序”是否等价的书面结论；
 - 若不等价，给出修正后的最终 layer order；
@@ -172,29 +188,32 @@ P1 的逐文件数量、冲突矩阵及计算基线见 `docs/css-layer-p0-p1-inv
 - 每个例外的替代方案和回归测试；
 - 已落地的“禁止新增非分层 CSS”迁移期检查，而不是只停留在草案。
 
-### P2：建立层级声明和迁移工具
+### P2：先建立 rule-level migration state，再迁移生产 CSS
 
 **前置：Architecture v2 follow-up handoff gate 必须全部满足。**
 
-目标：先建立统一入口，再用机械、可审查的方式完成文件包裹。
+目标：先让机器能够表达“同一文件中的不同规则属于不同职责”，再做任何 cascade 语义切换。
 
 实施顺序：
 
-1. 将 `css/tokens.css` 的层级声明扩展为 **P1 审计后冻结的最终顺序**；顺序冻结为 `tokens, showcase, components, layout, pages`；
-2. 将 `science-showcase.css` 从 `components` 调整为 `showcase`；
-3. 保持 `more-games.css` 在 `components`；
-4. 编写一次性迁移工具，能够：
-   - 保留 `@charset` 等必须位于文件开头的声明；
-   - 在文件内容外包裹目标 `@layer`；
-   - 保留原始换行符和文件编码；
-   - 检查括号、顶层 at-rule 和 layer 包裹是否平衡；
-   - 对已经迁移的文件幂等运行；
-5. 先对所有页面 CSS 完成 `pages` 包裹，再对 `layout.css` 完成 `layout` 包裹，
-   避免出现“layout 已分层、页面仍未分层”的中间状态；
-6. 迁移期间暂时保留 `shared-css-first`，让它继续保护同一 layer 内的源码顺序和内联样式顺序。
+1. 保持 `tests/css-layer-p0-baseline.json` 不变；启用独立的
+   `tests/css-layer-migration-state.json`，migration unit 固定为 rule/selector，而不是 file；
+2. 先升级 `verify-css-debt.mjs`：只有 migration state 中逐项登记、且能在目标 layer 找到同一规则时，
+   才允许对应 P0 unlayered debt 退出 active debt；已经迁移的规则不得重新变回 unlayered；
+3. 将目标顺序冻结为 `tokens, showcase, components, layout, pages, contracts`，并针对
+   normal/important 两套相反的 layer precedence 分别做冲突检查；
+4. 先给 `layout.css` 做职责切片：
+   - 可定制的 shell/topbar/stage/sidebar 默认几何 → `layout`；
+   - drawer 隐藏、frame budget、immersive 边界、安全区等平台不变量 → `contracts`；
+5. 页面 CSS 逐规则迁移到 `pages`；凡命中共享 shell/sidebar/drawer/frame selector 或同一 DOM 属性的规则，
+   必须先经过冲突审计，不能因为“文件属于某游戏”就自动归入 `pages`；
+6. `science-showcase.css` 与 `more-games.css` 分别收敛到 `showcase` / `components`，
+   但仍按规则验证 important 与跨 selector 命中关系；
+7. 每一小批迁移都同时跑源码态和 production geometry/smoke；失败即回滚该批，不修改 P0；
+8. 全程保留 `shared-css-first`，直到 P4 canary 证明构建 link 顺序已经不再影响行为。
 
-这里的关键原则是：`layout.css` 与页面 CSS 的 layer 切换必须作为同一语义变更完成，不能
-只提交其中一部分，否则会产生比当前状态更难诊断的优先级变化。
+**明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
+统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
 ### P3：按风险分批恢复行为
 
@@ -208,10 +227,10 @@ P1 的逐文件数量、冲突矩阵及计算基线见 `docs/css-layer-p0-p1-inv
 | B | planet-merge、hoop-shot、gravity-slingshot、sword-flight、needle-awn | 画布尺寸、frame budget、移动端高度 |
 | C | crystal-bloom、echo-cave、maxwell-demon、flame-verse、ripple-duet | showcase 层与页面皮肤优先级 |
 | D | tetris、tower-defense、carrot-pull、firefly-signal、shadow-loom | drawer、immersive、固定控件和生产美术 |
-| E | math-rain（`math-rain.css`、`shop.css`）、tank-battle | 化外页、全屏 HUD、独立 CSS 和内联/经典脚本交互 |
-| F | bond-forge、circuit、lumen、silk-dew | 补齐 P0 inventory 中遗漏的页面样式，重点检查开始菜单与响应式覆盖 |
+| E | math-rain、tank-battle | 化外页、全屏 HUD、独立 CSS 和内联/经典脚本交互 |
 
-全部 27 份页面样式表都由 A–F 覆盖（Math Rain 的 `shop.css` 与主样式同属 E）。每个批次必须同时验证源码态和生产产物；不能只在 Vite dev server 上判断 layer 是否正确。当前候选 CI 对完整源码运行全部 verify，并在生产产物上运行 desktop-frame 全页几何检查、Tower Defense / Sword Flight 冒烟，以及对所有 dist HTML 的 CSS link 顺序检查。批次失败时只回滚当前批次，不改动已经通过的批次。
+每个批次必须同时验证源码态和生产产物；不能只在 Vite dev server 上判断 layer 是否正确。
+批次失败时只回滚当前批次，不改动已经通过的批次。
 
 ### P4：做插件无关性 canary
 
@@ -280,22 +299,22 @@ P0 就启用：
 - 禁止新增未分层普通 CSS；
 - 未分层 debt 只能保持或下降；
 - 已清零类别自动 strict-zero；
-- baseline 只能向下更新；
+- P0 baseline 永久不可修改；迁移进度只能在 migration state 中单向前进；
 - 输出当前 debt、相对 baseline delta 和 top offenders。
 
 ### 5.2 最终 strict verifier
 
 随着批次迁移完成，把同一 verifier 逐步收紧为 strict contract。建议新增 `tools/checks/verify-css-layers.mjs`，至少检查：
 
-1. `css/tokens.css` 声明完整且顺序正确；
-2. `layout.css` 位于 `layout` 层；
-3. 页面 CSS 位于 `pages` 层；
-4. `science-showcase.css` 位于 `showcase` 层；
-5. 共享组件位于 `components` 层；
-6. 未列入 allowlist 的顶层普通 CSS 不得脱离 layer；
-7. 不得重新引入依赖 link 重排的构建逻辑；
-8. 迁移工具重复运行不会产生 diff；
-9. 最终 layer order 与 P1 审计结论一致；
+1. P0 baseline blob fingerprint 与 immutable snapshot 完全一致；
+2. migration state 只能前进，不能通过重新激活已迁移 debt 回退；
+3. 每条 migrated rule/keyframe 都能在 state 指定的目标 layer 找到精确身份；
+4. `contracts` 中只放经过书面审计的平台结构不变量；
+5. 页面规则不得仅因文件归属而自动进入 `pages`；
+6. `science-showcase.css` / shared components 的 important 与普通声明分别校验；
+7. 未登记的新 unlayered CSS 仍然失败；
+8. 不得重新引入依赖 link 重排的新构建逻辑；
+9. 最终 layer order 为 `tokens, showcase, components, layout, pages, contracts`；
 10. `shared-css-first` 删除后不得重新引入同类 link-reordering 构建逻辑。
 
 该检查应加入日常 changed verification；完整浏览器回归仍只在 PR candidate / 手动运行时执行，
@@ -306,8 +325,8 @@ P0 就启用：
 ### 完成标准
 
 - Architecture v2 follow-up handoff gate 已满足并保持；
-- CSS debt baseline 已收敛为 strict-zero 或明确 allowlist；
-- P1 已证明最终 layer order 与现有生产 cascade 等价；
+- P0 CSS baseline 保持不可变，migration state 已收敛为 strict-zero 或明确 allowlist；
+- rule-level 审计与 P3/P4 行为证据证明最终 layer order 与现有生产 cascade 等价；
 - `vite.config.js` 中不再存在 `shared-css-first`；
 - 所有普通 CSS 规则均属于明确 layer，例外有书面理由；
 - 不依赖 HTML 中 link 的排列来决定跨层级优先级；
@@ -348,11 +367,14 @@ handoff 通过后进入临时 layout freeze：
 - [x] 建立 CSS debt baseline + migration ratchet
 - [x] 完成全部 CSS 文件的 layer 归属盘点
 - [x] 盘点 `!important`、内联样式、特殊 at-rule 和自定义属性覆盖
-- [x] 审计当前 link 顺序与 selector/custom-property 冲突，并冻结最终 layer order 为 `tokens, showcase, components, layout, pages`
-- [x] 编写幂等的 layer 包裹迁移工具（保留 BOM、CRLF 和合法 CSS prelude）
-- [x] 建立 layer 结构静态检查（所有规则与 keyframes strict-zero 脱层，核验工具幂等）
-- [x] 完成页面 CSS 的统一 `pages` 包裹
-- [x] 完成 `layout` / `showcase` / `components` 的归位
+- [x] 审计当前 link 顺序与 selector/custom-property 冲突，并记录五层文件级候选
+- [x] 用 P2 canary 证明 whole-file 单层模型不等价，并回滚生产 CSS 改动
+- [x] 冻结 P0 immutable snapshot，建立独立 migration-state 骨架
+- [x] 修正目标架构为 `tokens, showcase, components, layout, pages, contracts`
+- [ ] 升级 verifier，使 migration-state 支持逐规则迁移与单向 ratchet
+- [ ] 完成 `layout.css` 的 layout/contracts 职责切片
+- [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
+- [ ] 完成 `showcase` / `components` 的规则级归位
 - [ ] 运行插件保留模式下的分批回归
 - [ ] 运行禁用插件的 canary 对比
 - [ ] 在插件仍存在的生产路径下完成稳定性验证
@@ -360,4 +382,4 @@ handoff 通过后进入临时 layout freeze：
 - [ ] 更新现行契约与 PR 描述
 - [ ] 触发一次最终完整 CI
 
-在 P4/P5/P6 全部完成前，项目继续把 `shared-css-first` 视为生产必需契约。P2 候选的完整源码验证及生产产物 frame/smoke 门禁通过后，记录每个 P3 验收证据，再进入 P4 canary。
+在上述清单全部完成前，项目应继续把 `shared-css-first` 视为生产必需契约。

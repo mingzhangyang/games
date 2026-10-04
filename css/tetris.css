@@ -1,4 +1,3 @@
-@layer pages {
 /* theme:begin vars — 由 tools/generators/theme-varize.mjs 生成：深色 = 原值；浅色在下一块，需人工校准 */
 :root {
     --tt-body-bg: #0a0a0a;
@@ -999,5 +998,4 @@ body.rainbow-theme {
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
-}
 }

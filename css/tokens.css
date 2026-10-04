@@ -1,4 +1,4 @@
-@layer tokens, showcase, components, layout, pages;
+@layer tokens, layout, components;
 
 @layer tokens {
 /* ─────────────────────────────────────────────

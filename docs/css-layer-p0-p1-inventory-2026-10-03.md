@@ -3,7 +3,8 @@
 > 日期：2026-10-03  
 > 基线源码：`6bb0d80540707e09cfa41bde0d2384c86f6fedd6`（PR #74 合并后的 main）  
 > 范围：只记录现状并启用 debt guard；此变更不改 CSS cascade 语义。  
-> `shared-css-first` 继续作为生产构建契约。
+> `shared-css-first` 继续作为生产构建契约。  
+> 2026-10-04：whole-file P2 canary 因真实布局回归被否决并回滚；本文件下方记录修正后的规则级结论。
 
 ## 交接门槛
 
@@ -13,7 +14,7 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 
 ## P0：CSS 与 HTML 现状
 
-当前共有 31 个 CSS 文件、2,912 条普通样式规则。66 条已分层（tokens 16、components 50），其余 2,846 条仍未分层，分布在 28 个文件。CSS 文件职责和当前状态如下。
+当前共有 31 个 CSS 文件、2,912 条普通样式规则。66 条已分层（tokens 16、components 50），其余 2,846 条仍未分层，分布在 28 个文件。CSS 文件职责和当前状态如下。表中的“目标层”是 P1 当时的**文件级候选**，仅用于盘点；2026-10-04 canary 已证明它不能机械解释为“整个文件包进一个 layer”。
 
 | 文件 | owner | 目标层 | 已分层 / 未分层规则 | `!important` | 自定义属性定义 | 当前层 |
 | --- | --- | --- | ---: | ---: | ---: | --- |
@@ -67,7 +68,7 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 - Sword Flight 的 Google Fonts 外链位于内部样式表之后。
 - Showcase 页面将 `science-showcase.css` 放在页面 CSS 之前。
 
-`verify-css-debt.mjs` 固定 27 页的精确 stylesheet link 顺序、CSS/HTML 文件清单、当前 layer 声明与包裹位置。它会在 `verify:changed` 中运行；已有 debt 的任何减少都要求同一改动把 baseline 向下更新，新添/替换的未分层规则、keyframes、`!important` 或内联样式会失败。CSS 新文件也必须显式登记 owner 和目标层。
+`verify-css-debt.mjs` 固定 27 页的精确 stylesheet link 顺序、CSS/HTML 文件清单、当前 layer 声明与包裹位置。它会在 `verify:changed` 中运行。P0 baseline 是不可变历史快照，不再随迁移下调；后续迁移进度只能记录在独立 migration state。新添/替换的未分层规则、keyframes、`!important` 或内联样式仍会失败。CSS 新文件必须显式登记 ownership，并在 P2 规则级审计中登记职责。
 
 ## P1：特殊规则和全局样式审计
 
@@ -99,22 +100,38 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 
 这个矩阵按 selector 文本完全相同计算；不同文本的选择器仍可能命中同一个元素，因此它不单独证明所有 DOM 状态等价。P3 的 A–E 源码态和生产产物回归仍是行为验收。
 
-### Layer 顺序结论
+### Layer 顺序结论（2026-10-04 修正）
 
-P1 审计将最终候选顺序调整为：
+P1 最初提出过五层文件级候选：
 
 ```css
 @layer tokens, showcase, components, layout, pages;
 ```
 
-关键发现是 `layout.css` 当前仍未分层，而 `science-showcase.css` 已在 `components` layer。普通未分层声明会优先于任意正常 layer 声明，因此现在 layout 的普通声明优先于 showcase，即使 showcase 选择器更具体。
+它只分析了 link 顺序、完全相同 selector/property 交集和部分不同-selector 冲突，仍遗漏了一个关键事实：
+**layer precedence 先于 selector specificity**。因此“页面样式表后加载”不能简单翻译成“整个页面文件放在
+比 layout 更晚的 layer”。
 
-有两组不同 selector 会作用到相同的共享控件与属性，必须保留 layout 优先：
+P2 whole-file canary 给出了确定反例：Tetris 页面层的 `.info-panel { display:flex }` 在
+`pages` 层后，压过了较早 `layout` 层的
+`body.has-stats-drawer .game-sidebar { display:none }`。在旧的同层/未分层 cascade 中，后者依靠
+更高 specificity 正确隐藏移动 sidebar；分层后 specificity 根本没有机会参与比较。同一 CI
+还出现 desktop frame、immersive、start-menu、carrot-pull、needle-awn、Tetris drawer/topbar
+等多组几何回归，证明这不是 Tetris 单点异常。
 
-- `.game-icon-btn` 的 `transition` 对应 Showcase 下的共享图标按钮 transition；
-- `.game-side-card` 的 `border-radius` 对应 Showcase 下同一卡片规则，含 `width <= 680px` 移动规则。
+因此五层文件级候选被否决。修正后的**规则职责级**目标为：
 
-因此 `layout` 必须排在 `showcase` 与 `components` 之后。另有 60 条 Showcase `!important` 声明；important layer 顺序反向，当前它们优先于普通 layout 声明。让 Showcase 位于 layout 之前，能在分层后保留这一关系。more-games 与 Showcase 当前同属 `components`，但 more-games link 在后；拆层时令 `components` 排在 `showcase` 后，可保留同层声明的当前先后关系。页面普通声明当前未分层且在 layout 后加载；将 `pages` 放最后，保留页面覆盖共享默认值的能力。
+```css
+@layer tokens, showcase, components, layout, pages, contracts;
+```
+
+其中 `layout` 只承载页面可以覆盖的共享默认几何；`contracts` 最后承载 drawer/frame/immersive/
+safe-area 等平台结构不变量。页面视觉与玩法专属组件进入 `pages`。同一个 `layout.css` 或游戏
+CSS 文件都允许出现多个 layer block，文件路径不再决定 layer ownership。
+
+P0 快照与迁移状态也必须分离：`tests/css-layer-p0-baseline.json` 是不可变证据；
+`tests/css-layer-migration-state.json` 才是后续 rule-level ratchet。任何迁移都必须先让 verifier
+能证明“某条 P0 debt 已在指定 layer 出现”，再允许它退出 active debt。
 
 其他审计结果：
 
@@ -123,7 +140,7 @@ P1 审计将最终候选顺序调整为：
 3. `:root` 的 5 个重复自定义属性都来自 tokens/layout 与页面 CSS；`pages` 最后继续让页面值生效。
 4. `science-showcase.css` 与 `more-games.css` 对共同加载页面 CSS 没有完全相同 selector/property；它们的非同名共享控件关系按上述 layer 顺序处理。
 
-这个结论冻结 P2 的候选声明顺序，但不提前宣称迁移已经验证。P3 的 A–E 回归必须在层级切换后确认 DOM、响应式与交互行为，再进入 P4 canary。
+原五层结论不再冻结 P2。六层规则职责模型必须先通过 rule-level verifier，再由 P3 的 A–E 回归确认 DOM、响应式与交互行为，之后才能进入 P4 canary。
 
 ## P0 行为基线
 
@@ -167,8 +184,9 @@ P1 审计将最终候选顺序调整为：
 
 ## 后续门槛
 
-- P2 原子地包裹所有页面 CSS 为 `pages`、`layout.css` 为 `layout`，并把 Showcase 调至 `showcase`；同时下调 unlayered rule/keyframe baseline。
-- P3 按 A–E 批次跑源码态和 production 输出检查；任何行为失败先修当前批次。
+- P2 先启用独立 migration state 与 rule-level verifier；禁止修改 immutable P0，也禁止 whole-file wrapper。
+- P2 按职责把共享默认值放 `layout`、页面专属规则放 `pages`、结构不变量放最后的 `contracts`；每批只迁移已审计规则。
+- P3 按 A–E 批次跑源码态和 production 输出检查；任何行为失败先回滚当前批次并重新审计职责，不用 `!important` 打补丁。
 - P4 加入仅用于 canary 的构建开关，对照正常构建与禁用 `shared-css-first` 的输出。
 - P5 保留插件稳定运行，确认普通 CSS debt 清零或剩下书面例外，并完成候选 CI。
 - P6 另开单独小 PR 移除 `shared-css-first`。
