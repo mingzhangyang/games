@@ -169,9 +169,11 @@
 }
 
 /* 需要吃掉剩余高度的舞台（纵向 100vh 布局的游戏） */
-.game-stage--fill {
-    flex: 1;
-    min-height: 0;
+@layer layout {
+    .game-stage--fill {
+        flex: 1;
+        min-height: 0;
+    }
 }
 
 /* ── 画布：圆角 + 描边 + 投影由各页上色，几何统一 ── */

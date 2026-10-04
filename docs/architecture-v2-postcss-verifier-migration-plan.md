@@ -1,8 +1,9 @@
 # CSS verifier architecture and PostCSS migration
 
 Status: parser/model/source-boundary implementation completed in PR #75. The P2
-rule-mapping/ratchet foundation is now implemented; production cascade-layer migration has
-not started and remains subject to per-batch browser evidence.
+rule-mapping/ratchet foundation is implemented, and production cascade-layer migration has
+started with the first dependency-closed `layout` canary (`.game-stage--fill`); every batch
+remains subject to source/production browser evidence.
 
 ## Why the verifier needed a redesign
 
@@ -344,8 +345,9 @@ The contract now provides:
 
 Production P2 still requires:
 
-1. The first dependency-closed production slice and canonical six-layer order declaration.
-   Low-risk `layout` defaults may move independently after evidence; a `contracts` rule must
+1. Continue with dependency-closed production slices after the initial `.game-stage--fill`
+   `layout` canary and canonical six-layer order declaration. Low-risk `layout` defaults may
+   move independently after evidence; a `contracts` rule must
    move together with any still-unlayered page peers that could compete with it, because normal
    unlayered declarations outrank every named layer.
 2. Source and production geometry/interaction evidence for every migration batch.
