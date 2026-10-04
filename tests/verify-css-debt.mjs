@@ -320,12 +320,50 @@ function verifyProject() {
             .filter(declaration => declaration.selector && hasImportantPriority(declaration.value)).length;
     }
 
-    verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors);
+    const comparisonBase = resolveComparisonBase(ROOT);
+    const baseStateText = readGitFile(ROOT, comparisonBase, 'tests/css-layer-migration-state.json');
+    let baseState = MIGRATION_STATE;
+    if (baseStateText) {
+        try {
+            baseState = JSON.parse(baseStateText);
+        } catch {
+            errors.push('Comparison-base migration state is not valid JSON.');
+        }
+    } else if (migrationStarted) {
+        errors.push('Active P2 migration requires an accessible git comparison base.');
+    }
+
+    const baseParsedByPath = new Map();
+    for (const path of cssPaths) {
+        const baseSource = readGitFile(ROOT, comparisonBase, path);
+        if (baseSource === null) {
+            if (migrationStarted) errors.push(path + ': cannot read comparison-base CSS for P2 mapping verification.');
+            baseParsedByPath.set(path, currentParsedByPath.get(path));
+        } else {
+            baseParsedByPath.set(path, parseCssText(baseSource, path));
+        }
+    }
+
+    const migrationResult = verifyRuleMigrations({
+        baseline: BASELINE,
+        state: MIGRATION_STATE,
+        currentParsedByPath,
+        baseParsedByPath,
+        stylesheetLinks: BASELINE.stylesheetLinks,
+        allowedLayers: ALLOWED_LAYERS,
+        baseState,
+        errors,
+    });
+
+    verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors, {
+        allowedCssChanges: migrationResult.mappedCssPaths,
+    });
     verifyActivationSnapshot(ROOT, htmlPaths, auditedJavaScriptFiles(ROOT), errors);
     verifyBuildOrderingContract(errors);
 
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);
+        if (key === 'unlayeredRules') continue;
         const expected = sortTuples(BASELINE.debt[key] || []);
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {
