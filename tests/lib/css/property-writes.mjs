@@ -6,6 +6,7 @@ const SHORTHAND_FIELDS = ['initial', 'computed', 'animationType', 'percentages']
 const CACHE = new Map();
 const WILDCARD = '*';
 let SHORTHANDS = null;
+const DESCENDANTS = new Map();
 const EDGES = ['top', 'right', 'bottom', 'left'];
 const CORNERS = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
 
@@ -33,6 +34,20 @@ function shorthandChildren(property) {
     return [...children];
 }
 
+function shorthandDescendants(property, stack = new Set()) {
+    if (DESCENDANTS.has(property)) return DESCENDANTS.get(property);
+    if (stack.has(property)) return new Set();
+    const next = new Set(stack);
+    next.add(property);
+    const out = new Set();
+    for (const child of shorthandChildren(property)) {
+        out.add(child);
+        for (const nested of shorthandDescendants(child, next)) out.add(nested);
+    }
+    DESCENDANTS.set(property, out);
+    return out;
+}
+
 function shorthandFamilies(property) {
     if (!SHORTHANDS) {
         SHORTHANDS = Object.keys(PROPERTIES)
@@ -40,7 +55,8 @@ function shorthandFamilies(property) {
             .sort((a, b) => b.length - a.length);
     }
     return new Set(SHORTHANDS
-        .filter(shorthand => property.startsWith(shorthand + '-'))
+        .filter(shorthand => property.startsWith(shorthand + '-')
+            && !shorthandDescendants(shorthand).has(property))
         .map(shorthand => 'shorthand:' + shorthand));
 }
 
