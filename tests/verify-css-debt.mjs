@@ -865,6 +865,7 @@ function scanRuntimeStyleSources(errors) {
     const paths = [
         ...listFiles(join(ROOT, 'src'), ROOT, path => /\.(?:m?js)$/.test(path)),
         ...listFiles(join(ROOT, 'js'), ROOT, path => /\.(?:m?js)$/.test(path)),
+        ...listFiles(join(ROOT, 'public'), ROOT, path => /\.(?:m?js)$/.test(path)),
     ].sort();
     const styles = [];
     for (const path of paths) {
