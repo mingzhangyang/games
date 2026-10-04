@@ -308,8 +308,9 @@ snapshot, and explicit normal/important conflict reviews.
 
 The contract now provides:
 
-1. Stable occurrence identity from context + selector + source layer + canonical declaration
-   digest + duplicate occurrence number. Source offsets and line numbers are diagnostic only.
+1. Stable occurrence identity from canonical context-token digest + selector-token digest +
+   source layer + canonical declaration digest + duplicate occurrence number. Human-readable
+   legacy context/selector strings and source offsets are diagnostic only; they are not identity.
 2. Ordered, lossless 1→1 or 1→N declaration partitioning. Selector/context rewrites and
    cross-stylesheet moves are outside P2 and fail.
 3. Relayering of existing layered rules as well as unlayered-debt reduction, so
