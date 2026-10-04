@@ -15,6 +15,8 @@ const sourceRef = rule => ({
     path: rule.path,
     context: rule.context,
     selector: rule.selector,
+    contextDigest: rule.contextDigest,
+    selectorDigest: rule.selectorDigest,
     layer: rule.layer,
     declarationDigest: rule.declarationDigest,
     occurrence: rule.occurrence,
@@ -24,6 +26,8 @@ const destinationRef = rule => ({
     path: rule.path,
     context: rule.context,
     selector: rule.selector,
+    contextDigest: rule.contextDigest,
+    selectorDigest: rule.selectorDigest,
     layer: rule.layer,
     declarationDigest: rule.declarationDigest,
     occurrence: rule.occurrence,
@@ -42,6 +46,14 @@ const duplicateB = indexRuleOccurrences(
 assert.deepEqual(duplicateA.map(rule => rule.occurrence), [1, 2]);
 assert.deepEqual(duplicateB.map(rule => rule.occurrence), [1, 2]);
 assert.equal(duplicateA[0].declarationDigest, duplicateB[0].declarationDigest);
+
+// Legacy P0 formatting is intentionally lossy, but migration identity is not.
+const quotedWhitespace = indexRuleOccurrences(
+    parseCssText('[data-x="a  b"]{color:red}[data-x="a b"]{color:red}', 'css/quoted.css'),
+    'css/quoted.css',
+);
+assert.equal(quotedWhitespace[0].selector, quotedWhitespace[1].selector);
+assert.notEqual(quotedWhitespace[0].selectorDigest, quotedWhitespace[1].selectorDigest);
 
 const base = parseMap([
     ['css/a.css', '.x{color:red;display:none!important}'],
