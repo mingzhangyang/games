@@ -93,6 +93,20 @@ for (const source of [
     'const { CSSStyleSheet: Sheet } = window;',
     'const { constructor: make } = () => {};',
     'const { setTimeout: later } = window; later("document.styleSheets", 0);',
+    // Value-preserving wrappers are transparent to every check.
+    '(0, document)[key] = sheets;',
+    '(condition ? document : window)[key] = value;',
+    '(fallback || globalThis.document)[key];',
+    '(cached ??= document.body)[key];',
+    '(node = element.ownerDocument)[key];',
+    'async function f() { (await document)[key]; }',
+    '(0, registry[key])("style");',
+    '(flag ? registry[key] : other)("style");',
+    '(registry[key] || other).call(document, "style");',
+    'new (0, registry[key])();',
+    '(0, setTimeout)("document.styleSheets", 0);',
+    'setTimeout((0, "document.styleSheets"), 0);',
+    'setTimeout(flag ? "document.styleSheets" : handler, 0);',
 ]) assert.ok(auditStyleIngress(source).length, source);
 assert.match(auditHtmlStyleIngress('<script>with (document) { createElement("style"); }</script>').join('\n'),
     /with statements hide/);
@@ -104,6 +118,8 @@ for (const source of [
     'const text = window.LANGUAGES[window.currentLanguage];',
     'window[expose] = runtime.game;',
     'items[index].update(); grid[y][x] = 1; handlers[0]();',
+    'const value = (0, registry[key]); total = flag ? grid[y][x] : 0; label = names[i] || "";',
+    'setTimeout(flag ? first : second, 0); (cond ? a : b).run();',
     'const write = value => value; write(1);',
     'const s=document.createElement("script"); s.type="application/ld+json"; s.textContent=JSON.stringify(data);'
         + ' document.head.appendChild(s);',

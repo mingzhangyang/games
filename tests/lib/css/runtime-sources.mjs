@@ -130,14 +130,48 @@ const GLOBAL_HOST_HOPS = new Set([...WINDOW_GLOBALS, 'document', 'documentElemen
     'scrollingElement', 'implementation']);
 const DOCUMENT_HOPS = new Set(['document', 'ownerDocument', 'defaultView', 'contentDocument', 'contentWindow']);
 
+// Value-preserving wrappers: an expression evaluates to one of these child
+// values unchanged. Every check that asks "what is this value / where does it
+// go" sees through the same wrappers, so (0, document), (c ? document : x),
+// a || document, (x = document) and optional chains are never opaque.
+const LOGICAL_ASSIGNMENT = new Set(['&&=', '||=', '??=']);
+function passesValue(parent, child) {
+    switch (parent.type) {
+        case 'ChainExpression': case 'ParenthesizedExpression': case 'LogicalExpression': return true;
+        case 'SequenceExpression': return parent.expressions.at(-1) === child;
+        case 'ConditionalExpression': return parent.test !== child;
+        case 'AssignmentExpression': return (parent.operator === '=' && parent.right === child)
+            || LOGICAL_ASSIGNMENT.has(parent.operator);
+        case 'AwaitExpression': return true;
+        default: return false;
+    }
+}
+function valueSources(node) {
+    if (!node) return [];
+    switch (node.type) {
+        case 'ChainExpression': case 'ParenthesizedExpression': return valueSources(node.expression);
+        case 'SequenceExpression': return valueSources(node.expressions.at(-1));
+        case 'ConditionalExpression': return [...valueSources(node.consequent), ...valueSources(node.alternate)];
+        case 'LogicalExpression': return [...valueSources(node.left), ...valueSources(node.right)];
+        case 'AwaitExpression': return valueSources(node.argument);
+        case 'AssignmentExpression':
+            if (node.operator === '=') return valueSources(node.right);
+            if (LOGICAL_ASSIGNMENT.has(node.operator)) return [...valueSources(node.left), ...valueSources(node.right)];
+            return [node];
+        default: return [node];
+    }
+}
+
 function hostObject(node) {
-    if (node?.type === 'ChainExpression') return hostObject(node.expression);
-    if (node?.type === 'Identifier') return WINDOW_GLOBALS.has(node.name) || node.name === 'document';
-    if (node?.type === 'CallExpression') return property(node.callee.type === 'ChainExpression'
-        ? node.callee.expression : node.callee) === 'getRootNode';
-    if (node?.type !== 'MemberExpression') return false;
-    const name = property(node);
-    return DOCUMENT_HOPS.has(name) || ((name == null || GLOBAL_HOST_HOPS.has(name)) && hostObject(node.object));
+    return valueSources(node).some(source => {
+        if (source.type === 'Identifier') return WINDOW_GLOBALS.has(source.name) || source.name === 'document';
+        if (source.type === 'CallExpression') {
+            return valueSources(source.callee).some(callee => property(callee) === 'getRootNode');
+        }
+        if (source.type !== 'MemberExpression') return false;
+        const name = property(source);
+        return DOCUMENT_HOPS.has(name) || ((name == null || GLOBAL_HOST_HOPS.has(name)) && hostObject(source.object));
+    });
 }
 
 // Identifier in a binding-reference position (not a property name or label).
@@ -158,7 +192,7 @@ function invoked(ancestors, node) {
     let child = node;
     for (let index = ancestors.length - 1; index >= 0; index--) {
         const parent = ancestors[index];
-        if (parent.type === 'ChainExpression') { child = parent; continue; }
+        if (passesValue(parent, child)) { child = parent; continue; }
         if (['CallExpression', 'NewExpression'].includes(parent.type)) return parent.callee === child;
         if (parent.type === 'TaggedTemplateExpression') return parent.tag === child;
         return parent.type === 'MemberExpression' && parent.object === child
@@ -257,9 +291,10 @@ export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module
                 }
             }
         }
-        if (node.type === 'CallExpression' && ['setTimeout', 'setInterval'].includes(
-            node.callee.type === 'Identifier' ? node.callee.name : property(node.callee) ?? '')
-            && ['Literal', 'TemplateLiteral', 'BinaryExpression'].includes(node.arguments[0]?.type)) {
+        if (node.type === 'CallExpression' && valueSources(node.callee).some(callee =>
+            ['setTimeout', 'setInterval'].includes(callee.type === 'Identifier' ? callee.name : property(callee) ?? ''))
+            && valueSources(node.arguments[0]).some(argument =>
+                ['Literal', 'TemplateLiteral', 'BinaryExpression'].includes(argument.type))) {
             fail('string timers evaluate code outside the audited source');
         }
         const text = node.type === 'Literal' && typeof node.value === 'string' ? node.value

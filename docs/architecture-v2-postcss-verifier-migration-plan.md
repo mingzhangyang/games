@@ -108,6 +108,12 @@ global bindings, and inside event handlers against every document member. Timers
 by call-site name, so renaming them by destructuring is rejected. Earlier, member access,
 identifiers and destructuring each had their own partial list, and `window.eval(...)` passed.
 
+Value-preserving wrappers are defined once (`passesValue`/`valueSources`): sequence (last
+operand), conditional branches, logical operands, `=`/logical assignment, `await`, optional
+chains. Host detection, invocation and timer checks all see through them, so `(0, document)[k]`,
+`(c ? document : window)[k]`, `(0, registry[k])(…)` and `(0, setTimeout)('…')` are the same as
+their unwrapped forms. Binding a value to a variable is still aliasing and out of scope.
+
 A runtime `<script>` is accepted only as a locally proven inert data block (the existing
 JSON-LD sites): `const x = createElement('script')`, immediately `x.type = '<non-JS type>'`,
 then only `x.textContent = …` and `parent.append(x)` statements in the same statement list.
