@@ -469,35 +469,46 @@ function validRuleRef(ref, { requireDeclarations = false } = {}) {
 }
 
 function verifyMappingShape(mapping, allowedLayers, errors) {
+    let valid = true;
     if (!validRuleRef(mapping.source, { requireDeclarations: true })) {
         errors.push(mapping.id + ': source must be a complete stable rule reference with a declaration snapshot.');
-        return;
+        return false;
     }
     if (mapping.source.layer !== null && mapping.source.layer !== undefined
         && !allowedLayers.has(mapping.source.layer)) {
         errors.push(mapping.id + ': source layer ' + mapping.source.layer + ' is not reviewed.');
+        valid = false;
     }
     if (declarationDigest(mapping.source.declarations) !== mapping.source.declarationDigest) {
         errors.push(mapping.id + ': source declarationDigest does not match its declaration snapshot.');
+        valid = false;
     }
     if (!Array.isArray(mapping.destinations) || !mapping.destinations.length) {
         errors.push(mapping.id + ': at least one layered destination is required.');
+        valid = false;
     }
     for (const destination of mapping.destinations || []) {
         if (!validRuleRef(destination)) {
             errors.push(mapping.id + ': every destination must be a complete stable rule reference.');
+            valid = false;
             continue;
         }
         if (destination.path !== mapping.source.path) {
             errors.push(mapping.id + ': P2 layering may not move a rule between stylesheet files.');
+            valid = false;
         }
-        if (!allowedLayers.has(destination.layer)) errors.push(mapping.id + ': destination layer ' + destination.layer + ' is not reviewed.');
+        if (!allowedLayers.has(destination.layer)) {
+            errors.push(mapping.id + ': destination layer ' + destination.layer + ' is not reviewed.');
+            valid = false;
+        }
     }
     for (const priority of PRIORITIES) {
         if (!Array.isArray(mapping.conflicts?.[priority])) {
             errors.push(mapping.id + ': conflicts.' + priority + ' must be an explicit array, even when empty.');
+            valid = false;
         }
     }
+    return valid;
 }
 
 function filterCatalog(catalog, refs, includeLayer) {
@@ -535,9 +546,11 @@ export function verifyRuleMigrations({
     // The append-only state is a historical ledger. Only mappings absent from the
     // comparison base form the current transaction; historical destinations may
     // legitimately be consumed by a new mapping in a later PR.
+    const validMappings = new Set();
     for (const mapping of mappings.values()) {
-        verifyMappingShape(mapping, allowedLayers, errors);
-        if (mapping.source?.layer === null || mapping.source?.layer === undefined) {
+        if (!verifyMappingShape(mapping, allowedLayers, errors)) continue;
+        validMappings.add(mapping.id);
+        if (mapping.source.layer === null) {
             const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
             subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
         }
@@ -549,7 +562,7 @@ export function verifyRuleMigrations({
     const pendingConflictReviews = [];
 
     for (const mapping of mappings.values()) {
-        if (baseMappings.has(mapping.id)) continue;
+        if (baseMappings.has(mapping.id) || !validMappings.has(mapping.id)) continue;
 
         const sourceKey = canonicalRefKey(mapping.source);
         if (usedSources.has(sourceKey)) {

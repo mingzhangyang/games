@@ -644,6 +644,28 @@ verifyRuleMigrations({
 });
 assert.ok(mutationErrors.some(error => /beyond the newly registered migrations/.test(error)));
 
+// Malformed state must fail closed with diagnostics rather than crashing the verifier.
+const malformedErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-malformed-source',
+            destinations: [],
+            conflicts: { normal: [], important: [] },
+        }],
+    },
+    currentParsedByPath: new Map(),
+    baseParsedByPath: new Map(),
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: malformedErrors,
+});
+assert.ok(malformedErrors.some(error => /source must be a complete stable rule reference/.test(error)));
+
 // Merged mappings are append-only: deletion or in-place mutation is a ratchet violation.
 const removedErrors = [];
 verifyMonotonicState(state, emptyState, removedErrors);
