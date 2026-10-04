@@ -127,6 +127,73 @@ verifyRuleMigrations({
 assert.ok(staleErrors.some(error => /normal exact selector\/property conflict/.test(error)));
 assert.ok(staleErrors.some(error => /important exact selector\/property conflict/.test(error)));
 
+// Conflict review is computed after projecting every new mapping in the batch.
+// Otherwise two rules migrated together would incorrectly review each other as
+// still unlayered in the PR base.
+const batchBase = parseMap([
+    ['css/a.css', '.x{color:red}'],
+    ['css/b.css', '.x{color:blue}'],
+]);
+const batchCurrent = parseMap([
+    ['css/a.css', '@layer layout{.x{color:red}}'],
+    ['css/b.css', '@layer pages{.x{color:blue}}'],
+]);
+const batchBaseCatalogs = catalogMap(batchBase);
+const batchCurrentCatalogs = catalogMap(batchCurrent);
+const batchSourceA = batchBaseCatalogs.get('css/a.css')[0];
+const batchSourceB = batchBaseCatalogs.get('css/b.css')[0];
+const batchDestinationA = batchCurrentCatalogs.get('css/a.css')[0];
+const batchDestinationB = batchCurrentCatalogs.get('css/b.css')[0];
+const batchMappingA = {
+    id: 'fixture-batch-a',
+    source: sourceRef(batchSourceA),
+    destinations: [destinationRef(batchDestinationA)],
+    conflicts: {
+        normal: [{
+            property: 'color',
+            targetLayer: 'layout',
+            peerPath: 'css/b.css',
+            peerContext: '',
+            peerSourceLayer: null,
+            peerLayer: 'pages',
+            layerPriority: 'peer-layer-wins',
+            pages: ['fixture.html'],
+        }],
+        important: [],
+    },
+};
+const batchMappingB = {
+    id: 'fixture-batch-b',
+    source: sourceRef(batchSourceB),
+    destinations: [destinationRef(batchDestinationB)],
+    conflicts: {
+        normal: [{
+            property: 'color',
+            targetLayer: 'pages',
+            peerPath: 'css/a.css',
+            peerContext: '',
+            peerSourceLayer: null,
+            peerLayer: 'layout',
+            layerPriority: 'target-layer-wins',
+            pages: ['fixture.html'],
+        }],
+        important: [],
+    },
+};
+const batchErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/a.css', '', '.x'], ['css/b.css', '', '.x']] } },
+    state: { ...emptyState, migratedRules: [batchMappingA, batchMappingB] },
+    currentParsedByPath: batchCurrent,
+    baseParsedByPath: batchBase,
+    stylesheetLinks,
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: batchErrors,
+});
+assert.deepEqual(batchErrors, []);
+
 // Existing layered rules can be explicitly re-layered (Showcase's P2 case)
 // without pretending they were unlayered P0 debt.
 const relayerBase = parseMap([['css/showcase.css', '@layer components{.s{color:red}}']]);
