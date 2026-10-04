@@ -435,9 +435,16 @@ function listFiles(directory, root, predicate) {
     return output.sort();
 }
 
+function maskHtmlComments(html) {
+    return html.replace(/<!--[\s\S]*?(?:-->|$)/g, match => ' '.repeat(match.length));
+}
+
 function scanHtml(path, html) {
+    // HTML comments are inert browser content. Mask them before every HTML-level
+    // scan so commented links/styles cannot impersonate active cascade inputs.
+    const activeHtml = maskHtmlComments(html);
     const links = [];
-    const linkTags = html.matchAll(/<link\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi);
+    const linkTags = activeHtml.matchAll(/<link\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi);
     for (const match of linkTags) {
         const attributes = parseAttributes(match[0]);
         if ((attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet') && attributes.href) {
@@ -448,7 +455,7 @@ function scanHtml(path, html) {
     const styleBlocks = [];
     const inlineRules = [];
     const inlineAttributes = [];
-    for (const match of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) {
+    for (const match of activeHtml.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) {
         const source = match[1].replace(/\r\n/g, '\n').trim();
         const index = styleBlocks.length;
         styleBlocks.push([path, index, source]);
@@ -458,7 +465,7 @@ function scanHtml(path, html) {
         }
     }
 
-    const htmlWithoutRawText = html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+    const htmlWithoutRawText = activeHtml.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
     for (const tag of htmlWithoutRawText.matchAll(/<[a-z][^<>]*>/gi)) {
         const attributes = parseAttributes(tag[0]);
         if (Object.hasOwn(attributes, 'style')) {
@@ -522,6 +529,15 @@ function runSelfChecks() {
         () => parseCssText('.parent { color: red; & .child { color: blue; } }', 'nested.css'),
         /CSS nesting or brace-bearing values are unsupported/,
     );
+
+    const htmlScan = scanHtml('fixture.html', [
+        '<!-- <link rel="stylesheet" href="/commented.css"> -->',
+        '<link rel="stylesheet" href="/active.css">',
+        '<!-- <style>.commented { display:none; }</style><div style="display:none"></div> -->',
+    ].join('\n'));
+    assert.deepEqual(htmlScan.links, ['/active.css']);
+    assert.equal(htmlScan.styleBlocks.length, 0);
+    assert.equal(htmlScan.inlineAttributes.length, 0);
 
     assert.deepEqual([
         '/assets/tokens-test.css',
@@ -640,7 +656,9 @@ function verifyProject() {
         const parsed = parseCssText(readFileSync(join(ROOT, path), 'utf8'), path);
         totalRules += parsed.rules.length;
         importantCount += parsed.declarations.filter(declaration => hasImportantPriority(declaration.value)).length;
-        customPropertyDefinitions += parsed.declarations.filter(declaration => declaration.property.startsWith('--')).length;
+        const fileCustomPropertyDefinitions = parsed.declarations
+            .filter(declaration => declaration.property.startsWith('--')).length;
+        customPropertyDefinitions += fileCustomPropertyDefinitions;
 
         const layerCounts = {};
         for (const rule of parsed.rules) {
@@ -669,6 +687,10 @@ function verifyProject() {
 
         const baselineFile = BASELINE.cssFiles.find(file => file.path === path);
         if (!baselineFile) continue;
+        if (fileCustomPropertyDefinitions !== baselineFile.customPropertyDefinitions) {
+            errors.push(path + ': custom-property declaration occurrences differ from the P0 inventory ('
+                + fileCustomPropertyDefinitions + ' current vs ' + baselineFile.customPropertyDefinitions + ' P0).');
+        }
         const layerStatements = [...parsed.layerStatements];
         const layerBlocks = [...parsed.layerBlocks];
         const normalizedLayerCounts = Object.fromEntries(Object.entries(layerCounts).sort(([a], [b]) => a.localeCompare(b)));

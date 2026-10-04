@@ -25,9 +25,9 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 | `css/echo-cave.css` | echo-cave | pages | 0 / 94 | 2 | 10 | — |
 | `css/firefly-signal.css` | firefly-signal | pages | 0 / 65 | 1 | 13 | — |
 | `css/flame-verse.css` | flame-verse | pages | 0 / 94 | 2 | 12 | — |
-| `css/gomoku.css` | gomoku | pages | 0 / 26 | 4 | 33 | — |
-| `css/gravity.css` | gravity-slingshot | pages | 0 / 73 | 2 | 7 | — |
-| `css/hoop-shot.css` | hoop-shot | pages | 0 / 61 | 2 | 106 | — |
+| `css/gomoku.css` | gomoku | pages | 0 / 26 | 4 | 36 | — |
+| `css/gravity.css` | gravity-slingshot | pages | 0 / 73 | 2 | 8 | — |
+| `css/hoop-shot.css` | hoop-shot | pages | 0 / 61 | 2 | 107 | — |
 | `css/index.css` | index | pages | 0 / 114 | 0 | 166 | — |
 | `css/layout.css` | shared | layout | 0 / 89 | 1 | 18 | — |
 | `css/lumen.css` | lumen | pages | 0 / 75 | 2 | 10 | — |
@@ -36,17 +36,17 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 | `css/maxwell-demon.css` | maxwell-demon | pages | 0 / 104 | 2 | 136 | — |
 | `css/minesweeper.css` | minesweeper | pages | 0 / 102 | 2 | 118 | — |
 | `css/more-games.css` | shared | components | 6 / 0 | 0 | 0 | components |
-| `css/needle-awn.css` | needle-awn | pages | 0 / 111 | 3 | 21 | — |
-| `css/planet-merge.css` | planet-merge | pages | 0 / 78 | 0 | 7 | — |
+| `css/needle-awn.css` | needle-awn | pages | 0 / 111 | 3 | 22 | — |
+| `css/planet-merge.css` | planet-merge | pages | 0 / 78 | 0 | 8 | — |
 | `css/reversi.css` | reversi | pages | 0 / 92 | 2 | 104 | — |
-| `css/ripple-duet.css` | ripple-duet | pages | 0 / 104 | 2 | 159 | — |
-| `css/science-showcase.css` | shared | showcase | 44 / 0 | 60 | 60 | components |
+| `css/ripple-duet.css` | ripple-duet | pages | 0 / 104 | 2 | 160 | — |
+| `css/science-showcase.css` | shared | showcase | 44 / 0 | 60 | 61 | components |
 | `css/shadow-loom.css` | shadow-loom | pages | 0 / 79 | 1 | 22 | — |
 | `css/silk-dew.css` | silk-dew | pages | 0 / 87 | 2 | 144 | — |
-| `css/sword-flight.css` | sword-flight | pages | 0 / 143 | 3 | 22 | — |
-| `css/tank-battle.css` | tank-battle | pages | 0 / 90 | 5 | 5 | — |
-| `css/tetris.css` | tetris | pages | 0 / 106 | 7 | 99 | — |
-| `css/tokens.css` | shared | tokens | 16 / 0 | 0 | 30 | tokens |
+| `css/sword-flight.css` | sword-flight | pages | 0 / 143 | 3 | 23 | — |
+| `css/tank-battle.css` | tank-battle | pages | 0 / 90 | 5 | 8 | — |
+| `css/tetris.css` | tetris | pages | 0 / 106 | 7 | 100 | — |
+| `css/tokens.css` | shared | tokens | 16 / 0 | 0 | 59 | tokens |
 | `css/tower-defense.css` | tower-defense | pages | 0 / 263 | 2 | 5 | — |
 | `css/word-daily.css` | word-daily | pages | 0 / 170 | 3 | 213 | — |
 
@@ -80,7 +80,7 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 | `@layer` block | 3 | `tokens.css` 的 `tokens`；`more-games.css` 和 `science-showcase.css` 的 `components`。 |
 | `@charset` / `@import` / `@font-face` / `@property` / `@page` / `@namespace` | 0 | 当前无此类例外。 |
 
-普通规则中有 2,125 个自定义属性定义。共有 64 条选择器涉及 `html`、`body` 或 `canvas`；另有 18 条使用 `position: fixed` 或 `sticky`。这些全局、画布和固定定位规则在 P0/P1 均保持原样。
+普通规则中有 2,168 次自定义属性声明。这里的指标与 `verify-css-debt.mjs` 完全一致：按 parser 解析到的 declaration occurrence 计数，同一 `--property` 在不同 selector、主题或 media context 中重复定义会逐次计入，不做属性名去重。P0 baseline 的逐文件 `customPropertyDefinitions` 字段由 verifier 逐项复核。共有 64 条选择器涉及 `html`、`body` 或 `canvas`；另有 18 条使用 `position: fixed` 或 `sticky`。这些全局、画布和固定定位规则在 P0/P1 均保持原样。
 
 ### 跨文件冲突矩阵
 

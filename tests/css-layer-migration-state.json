@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "not-started",
-  "p0BaselineBlobSha": "a8f5ed6df17ac1f211c33c32e2d7b63bd3d2984c",
+  "p0BaselineBlobSha": "f36a163954d23f56d9dd0216106110df2a3ed269",
   "migrationUnit": "rule",
   "rejectedStrategy": "whole-file-single-layer",
   "targetLayerOrder": [
@@ -22,5 +22,5 @@
   ],
   "migratedRules": [],
   "migratedKeyframes": [],
-  "note": "P2 must upgrade the verifier to consume rule-level migration entries before any production CSS cascade change."
+  "note": "P0 custom-property metadata uses parser declaration occurrences. P2 must upgrade the verifier to consume rule-level migration entries before any production CSS cascade change."
 }

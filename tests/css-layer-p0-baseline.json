@@ -131,7 +131,7 @@
       "currentlyUnlayeredRuleCount": 26,
       "currentLayers": {},
       "importantCount": 4,
-      "customPropertyDefinitions": 33,
+      "customPropertyDefinitions": 36,
       "specialAtRules": {},
       "layerBlocks": [],
       "layerStatements": []
@@ -145,7 +145,7 @@
       "currentlyUnlayeredRuleCount": 73,
       "currentLayers": {},
       "importantCount": 2,
-      "customPropertyDefinitions": 7,
+      "customPropertyDefinitions": 8,
       "specialAtRules": {
         "keyframes": 3
       },
@@ -161,7 +161,7 @@
       "currentlyUnlayeredRuleCount": 61,
       "currentLayers": {},
       "importantCount": 2,
-      "customPropertyDefinitions": 106,
+      "customPropertyDefinitions": 107,
       "specialAtRules": {
         "keyframes": 3
       },
@@ -301,7 +301,7 @@
       "currentlyUnlayeredRuleCount": 111,
       "currentLayers": {},
       "importantCount": 3,
-      "customPropertyDefinitions": 21,
+      "customPropertyDefinitions": 22,
       "specialAtRules": {
         "keyframes": 4
       },
@@ -317,7 +317,7 @@
       "currentlyUnlayeredRuleCount": 78,
       "currentLayers": {},
       "importantCount": 0,
-      "customPropertyDefinitions": 7,
+      "customPropertyDefinitions": 8,
       "specialAtRules": {
         "keyframes": 1
       },
@@ -349,7 +349,7 @@
       "currentlyUnlayeredRuleCount": 104,
       "currentLayers": {},
       "importantCount": 2,
-      "customPropertyDefinitions": 159,
+      "customPropertyDefinitions": 160,
       "specialAtRules": {
         "keyframes": 2
       },
@@ -367,7 +367,7 @@
         "components": 44
       },
       "importantCount": 60,
-      "customPropertyDefinitions": 60,
+      "customPropertyDefinitions": 61,
       "specialAtRules": {},
       "layerBlocks": [
         "components"
@@ -415,7 +415,7 @@
       "currentlyUnlayeredRuleCount": 143,
       "currentLayers": {},
       "importantCount": 3,
-      "customPropertyDefinitions": 22,
+      "customPropertyDefinitions": 23,
       "specialAtRules": {
         "keyframes": 2
       },
@@ -431,7 +431,7 @@
       "currentlyUnlayeredRuleCount": 90,
       "currentLayers": {},
       "importantCount": 5,
-      "customPropertyDefinitions": 5,
+      "customPropertyDefinitions": 8,
       "specialAtRules": {
         "keyframes": 1
       },
@@ -447,7 +447,7 @@
       "currentlyUnlayeredRuleCount": 106,
       "currentLayers": {},
       "importantCount": 7,
-      "customPropertyDefinitions": 99,
+      "customPropertyDefinitions": 100,
       "specialAtRules": {
         "keyframes": 7
       },
@@ -465,7 +465,7 @@
         "tokens": 16
       },
       "importantCount": 0,
-      "customPropertyDefinitions": 30,
+      "customPropertyDefinitions": 59,
       "specialAtRules": {},
       "layerBlocks": [
         "tokens"
