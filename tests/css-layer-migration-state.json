@@ -607,6 +607,501 @@
         ],
         "important": []
       }
+    },
+    {
+      "id": "p2e-layout-game-main-desktop-peer",
+      "source": {
+        "path": "css/layout.css",
+        "context": "@media (width >= 1024px)",
+        "selector": ".game-main",
+        "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+        "selectorDigest": "ec1d64b0254df3d7bdf7dc2b267c16f47177c1f319ecef5cf18c82f4b104271b",
+        "layer": null,
+        "declarationDigest": "1ddcf9d9c625e0a90a476a12458290e5fbd398ea50b7972e1041b20e29822bf3",
+        "occurrence": 1,
+        "declarations": [
+          {
+            "property": "flex-direction",
+            "value": [
+              [
+                "ident-token",
+                "row"
+              ]
+            ],
+            "important": false
+          },
+          {
+            "property": "align-items",
+            "value": [
+              [
+                "ident-token",
+                "flex-start"
+              ]
+            ],
+            "important": false
+          },
+          {
+            "property": "justify-content",
+            "value": [
+              [
+                "ident-token",
+                "center"
+              ]
+            ],
+            "important": false
+          },
+          {
+            "property": "gap",
+            "value": [
+              [
+                "function-token",
+                "var("
+              ],
+              [
+                "ident-token",
+                "--frame-main-gap"
+              ],
+              [
+                ")-token",
+                ")"
+              ]
+            ],
+            "important": false
+          }
+        ]
+      },
+      "destinations": [
+        {
+          "path": "css/layout.css",
+          "context": "@media (width >= 1024px)",
+          "selector": ".game-main",
+          "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+          "selectorDigest": "ec1d64b0254df3d7bdf7dc2b267c16f47177c1f319ecef5cf18c82f4b104271b",
+          "layer": "layout",
+          "declarationDigest": "1ddcf9d9c625e0a90a476a12458290e5fbd398ea50b7972e1041b20e29822bf3",
+          "occurrence": 1
+        }
+      ],
+      "conflicts": {
+        "normal": [
+          {
+            "property": "align-items",
+            "peerProperty": "align-items",
+            "targetLayer": "layout",
+            "peerPath": "css/layout.css",
+            "peerContext": "",
+            "peerSourceLayer": "layout",
+            "peerLayer": "layout",
+            "layerPriority": "same-layer",
+            "pages": [
+              "bond-forge.html",
+              "carrot-pull.html",
+              "circuit.html",
+              "crystal-bloom.html",
+              "echo-cave.html",
+              "firefly-signal.html",
+              "flame-verse.html",
+              "gomoku.html",
+              "gravity-slingshot.html",
+              "hoop-shot.html",
+              "index.html",
+              "lumen.html",
+              "math-rain.html",
+              "maxwell-demon.html",
+              "minesweeper.html",
+              "needle-awn.html",
+              "planet-merge.html",
+              "reversi.html",
+              "ripple-duet.html",
+              "shadow-loom.html",
+              "silk-dew.html",
+              "sword-flight.html",
+              "tank-battle.html",
+              "tetris.html",
+              "tower-defense.html",
+              "word-daily.html"
+            ]
+          },
+          {
+            "property": "flex-direction",
+            "peerProperty": "flex-direction",
+            "targetLayer": "layout",
+            "peerPath": "css/layout.css",
+            "peerContext": "",
+            "peerSourceLayer": "layout",
+            "peerLayer": "layout",
+            "layerPriority": "same-layer",
+            "pages": [
+              "bond-forge.html",
+              "carrot-pull.html",
+              "circuit.html",
+              "crystal-bloom.html",
+              "echo-cave.html",
+              "firefly-signal.html",
+              "flame-verse.html",
+              "gomoku.html",
+              "gravity-slingshot.html",
+              "hoop-shot.html",
+              "index.html",
+              "lumen.html",
+              "math-rain.html",
+              "maxwell-demon.html",
+              "minesweeper.html",
+              "needle-awn.html",
+              "planet-merge.html",
+              "reversi.html",
+              "ripple-duet.html",
+              "shadow-loom.html",
+              "silk-dew.html",
+              "sword-flight.html",
+              "tank-battle.html",
+              "tetris.html",
+              "tower-defense.html",
+              "word-daily.html"
+            ]
+          }
+        ],
+        "important": []
+      }
+    },
+    {
+      "id": "p2e-layout-game-stage-desktop-peer",
+      "source": {
+        "path": "css/layout.css",
+        "context": "@media (width >= 1024px)",
+        "selector": ".game-stage",
+        "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+        "selectorDigest": "5136173ac59bc4c5cc6071143147d7bd7479b30df3bd3e667f19ce0d43eb2f8d",
+        "layer": null,
+        "declarationDigest": "84af986898c0bbfba47f988a5706c0c2d002e08c740769c6738d2f229d8dfee2",
+        "occurrence": 1,
+        "declarations": [
+          {
+            "property": "max-width",
+            "value": [
+              [
+                "function-token",
+                "var("
+              ],
+              [
+                "ident-token",
+                "--frame-stage-cap"
+              ],
+              [
+                "comma-token",
+                ","
+              ],
+              [
+                "whitespace-token",
+                " "
+              ],
+              [
+                "function-token",
+                "var("
+              ],
+              [
+                "ident-token",
+                "--frame-stage"
+              ],
+              [
+                ")-token",
+                ")"
+              ],
+              [
+                ")-token",
+                ")"
+              ]
+            ],
+            "important": false
+          }
+        ]
+      },
+      "destinations": [
+        {
+          "path": "css/layout.css",
+          "context": "@media (width >= 1024px)",
+          "selector": ".game-stage",
+          "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+          "selectorDigest": "5136173ac59bc4c5cc6071143147d7bd7479b30df3bd3e667f19ce0d43eb2f8d",
+          "layer": "layout",
+          "declarationDigest": "84af986898c0bbfba47f988a5706c0c2d002e08c740769c6738d2f229d8dfee2",
+          "occurrence": 1
+        }
+      ],
+      "conflicts": {
+        "normal": [
+          {
+            "property": "max-width",
+            "peerProperty": "max-width",
+            "targetLayer": "layout",
+            "peerPath": "css/layout.css",
+            "peerContext": "",
+            "peerSourceLayer": "layout",
+            "peerLayer": "layout",
+            "layerPriority": "same-layer",
+            "pages": [
+              "bond-forge.html",
+              "carrot-pull.html",
+              "circuit.html",
+              "crystal-bloom.html",
+              "echo-cave.html",
+              "firefly-signal.html",
+              "flame-verse.html",
+              "gomoku.html",
+              "gravity-slingshot.html",
+              "hoop-shot.html",
+              "index.html",
+              "lumen.html",
+              "math-rain.html",
+              "maxwell-demon.html",
+              "minesweeper.html",
+              "needle-awn.html",
+              "planet-merge.html",
+              "reversi.html",
+              "ripple-duet.html",
+              "shadow-loom.html",
+              "silk-dew.html",
+              "sword-flight.html",
+              "tank-battle.html",
+              "tetris.html",
+              "tower-defense.html",
+              "word-daily.html"
+            ]
+          }
+        ],
+        "important": []
+      }
+    },
+    {
+      "id": "p2e-layout-game-topbar-group-narrow-peer",
+      "source": {
+        "path": "css/layout.css",
+        "context": "@media (width <= 480px)",
+        "selector": ".game-topbar-group",
+        "contextDigest": "0c7a72ac27ebc74e9a6acf24657cf6f585df51aa83259bd5f818f43b72f85f21",
+        "selectorDigest": "d2e33d41f159aad15d2d3060d0c69dcb3ed75e0e2b1adceafc6c2cb70453dd7a",
+        "layer": null,
+        "declarationDigest": "a3c6ef2a2ba1dc74c0d2d830a07318661e79d3e7b9b0c5d7ab6e14c8044a5d3a",
+        "occurrence": 1,
+        "declarations": [
+          {
+            "property": "gap",
+            "value": [
+              [
+                "dimension-token",
+                "4px"
+              ]
+            ],
+            "important": false
+          }
+        ]
+      },
+      "destinations": [
+        {
+          "path": "css/layout.css",
+          "context": "@media (width <= 480px)",
+          "selector": ".game-topbar-group",
+          "contextDigest": "0c7a72ac27ebc74e9a6acf24657cf6f585df51aa83259bd5f818f43b72f85f21",
+          "selectorDigest": "d2e33d41f159aad15d2d3060d0c69dcb3ed75e0e2b1adceafc6c2cb70453dd7a",
+          "layer": "layout",
+          "declarationDigest": "a3c6ef2a2ba1dc74c0d2d830a07318661e79d3e7b9b0c5d7ab6e14c8044a5d3a",
+          "occurrence": 1
+        }
+      ],
+      "conflicts": {
+        "normal": [
+          {
+            "property": "gap",
+            "peerProperty": "gap",
+            "targetLayer": "layout",
+            "peerPath": "css/layout.css",
+            "peerContext": "",
+            "peerSourceLayer": "layout",
+            "peerLayer": "layout",
+            "layerPriority": "same-layer",
+            "pages": [
+              "bond-forge.html",
+              "carrot-pull.html",
+              "circuit.html",
+              "crystal-bloom.html",
+              "echo-cave.html",
+              "firefly-signal.html",
+              "flame-verse.html",
+              "gomoku.html",
+              "gravity-slingshot.html",
+              "hoop-shot.html",
+              "index.html",
+              "lumen.html",
+              "math-rain.html",
+              "maxwell-demon.html",
+              "minesweeper.html",
+              "needle-awn.html",
+              "planet-merge.html",
+              "reversi.html",
+              "ripple-duet.html",
+              "shadow-loom.html",
+              "silk-dew.html",
+              "sword-flight.html",
+              "tank-battle.html",
+              "tetris.html",
+              "tower-defense.html",
+              "word-daily.html"
+            ]
+          }
+        ],
+        "important": []
+      }
+    },
+    {
+      "id": "p2e-layout-game-topbar-center-narrow-peer",
+      "source": {
+        "path": "css/layout.css",
+        "context": "@media (width <= 480px)",
+        "selector": ".game-topbar-center",
+        "contextDigest": "0c7a72ac27ebc74e9a6acf24657cf6f585df51aa83259bd5f818f43b72f85f21",
+        "selectorDigest": "6ebd338606f6bc08331afcdfbc7cbb2f5dfa3e426c563aa5a4b22b12c479df24",
+        "layer": null,
+        "declarationDigest": "79ecd44d0b54a6accaca8b4958f9900c47586f75357cd474020cc971bbcb9781",
+        "occurrence": 1,
+        "declarations": [
+          {
+            "property": "gap",
+            "value": [
+              [
+                "dimension-token",
+                "5px"
+              ]
+            ],
+            "important": false
+          }
+        ]
+      },
+      "destinations": [
+        {
+          "path": "css/layout.css",
+          "context": "@media (width <= 480px)",
+          "selector": ".game-topbar-center",
+          "contextDigest": "0c7a72ac27ebc74e9a6acf24657cf6f585df51aa83259bd5f818f43b72f85f21",
+          "selectorDigest": "6ebd338606f6bc08331afcdfbc7cbb2f5dfa3e426c563aa5a4b22b12c479df24",
+          "layer": "layout",
+          "declarationDigest": "79ecd44d0b54a6accaca8b4958f9900c47586f75357cd474020cc971bbcb9781",
+          "occurrence": 1
+        }
+      ],
+      "conflicts": {
+        "normal": [
+          {
+            "property": "gap",
+            "peerProperty": "gap",
+            "targetLayer": "layout",
+            "peerPath": "css/layout.css",
+            "peerContext": "",
+            "peerSourceLayer": "layout",
+            "peerLayer": "layout",
+            "layerPriority": "same-layer",
+            "pages": [
+              "bond-forge.html",
+              "carrot-pull.html",
+              "circuit.html",
+              "crystal-bloom.html",
+              "echo-cave.html",
+              "firefly-signal.html",
+              "flame-verse.html",
+              "gomoku.html",
+              "gravity-slingshot.html",
+              "hoop-shot.html",
+              "index.html",
+              "lumen.html",
+              "math-rain.html",
+              "maxwell-demon.html",
+              "minesweeper.html",
+              "needle-awn.html",
+              "planet-merge.html",
+              "reversi.html",
+              "ripple-duet.html",
+              "shadow-loom.html",
+              "silk-dew.html",
+              "sword-flight.html",
+              "tank-battle.html",
+              "tetris.html",
+              "tower-defense.html",
+              "word-daily.html"
+            ]
+          }
+        ],
+        "important": []
+      }
+    },
+    {
+      "id": "p2e-layout-game-footer-actions-default",
+      "source": {
+        "path": "css/layout.css",
+        "context": "",
+        "selector": ".game-footer-actions",
+        "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "selectorDigest": "28a7f535b9b8d6588f884135ab134050e851bddc67183e63ccee16dbca9c8894",
+        "layer": null,
+        "declarationDigest": "9d88a840482e04c3477ad3a4e36853624dce8b398d0c5752c706b7e93057d394",
+        "occurrence": 1,
+        "declarations": [
+          {
+            "property": "display",
+            "value": [
+              [
+                "ident-token",
+                "flex"
+              ]
+            ],
+            "important": false
+          },
+          {
+            "property": "align-items",
+            "value": [
+              [
+                "ident-token",
+                "center"
+              ]
+            ],
+            "important": false
+          },
+          {
+            "property": "justify-content",
+            "value": [
+              [
+                "ident-token",
+                "center"
+              ]
+            ],
+            "important": false
+          },
+          {
+            "property": "gap",
+            "value": [
+              [
+                "dimension-token",
+                "8px"
+              ]
+            ],
+            "important": false
+          }
+        ]
+      },
+      "destinations": [
+        {
+          "path": "css/layout.css",
+          "context": "",
+          "selector": ".game-footer-actions",
+          "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "selectorDigest": "28a7f535b9b8d6588f884135ab134050e851bddc67183e63ccee16dbca9c8894",
+          "layer": "layout",
+          "declarationDigest": "9d88a840482e04c3477ad3a4e36853624dce8b398d0c5752c706b7e93057d394",
+          "occurrence": 1
+        }
+      ],
+      "conflicts": {
+        "normal": [],
+        "important": []
+      }
     }
   ],
   "migratedKeyframes": [],
