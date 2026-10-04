@@ -75,6 +75,12 @@ function findRule(catalog, ref, includeLayer = true) {
     return catalog.find(rule => sameRef(rule, ref, includeLayer));
 }
 
+function verifyRefDiagnostics(ref, rule, errors, label) {
+    if (ref.context !== rule.context || ref.selector !== rule.selector) {
+        errors.push(label + ': readable selector/context diagnostics do not match the canonical rule reference.');
+    }
+}
+
 function tupleKey(path, context, selector) {
     return jsonKey([path, context, selector]);
 }
@@ -288,6 +294,7 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
 
 function validRuleRef(ref, { requireDeclarations = false } = {}) {
     return ref && typeof ref.path === 'string' && ref.path.startsWith('css/')
+        && Object.hasOwn(ref, 'layer') && (ref.layer === null || typeof ref.layer === 'string')
         && typeof ref.context === 'string' && typeof ref.selector === 'string'
         && /^[0-9a-f]{64}$/.test(ref.contextDigest || '')
         && /^[0-9a-f]{64}$/.test(ref.selectorDigest || '')
@@ -379,6 +386,7 @@ export function verifyRuleMigrations({
                 errors.push(mapping.id + ': destination rule not found: ' + jsonKey(destination) + '.');
                 continue;
             }
+            verifyRefDiagnostics(destination, rule, errors, mapping.id + ' destination');
             const destinationKey = jsonKey(ruleRef(rule));
             if (usedDestinations.has(destinationKey)) errors.push(mapping.id + ': destination rule is claimed by more than one migration.');
             usedDestinations.add(destinationKey);
@@ -404,6 +412,7 @@ export function verifyRuleMigrations({
             errors.push(mapping.id + ': source rule was not present in the declared layer in the comparison base.');
             continue;
         }
+        verifyRefDiagnostics(mapping.source, sourceRule, errors, mapping.id + ' source');
         if (jsonKey(sourceRule.declarations) !== jsonKey(mapping.source.declarations)) {
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
         }
