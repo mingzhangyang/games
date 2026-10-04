@@ -108,13 +108,13 @@ function verifyBuildOrderingContract(errors) {
     }
     for (const path of distHtmlPaths) {
         const html = readFileSync(join(ROOT, path), 'utf8');
-        const elements = parseHtmlElements(html);
+        const elements = parseHtmlElements(html, path);
         const links = [];
         const styleOffsets = [];
         for (const element of elements) {
             const tagName = htmlTagName(element);
             const attributes = htmlElementAttributes(element);
-            const start = element.sourceCodeLocation.startOffset;
+            const start = element.sourceCodeLocation?.startOffset;
             if (tagName === 'link'
                 && (attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet')
                 && attributes.href) {

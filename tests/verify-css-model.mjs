@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { parseStylesheet, normalizeFragment, hasImportantPriority } from './lib/css/model.mjs';
-import { scanHtml } from './lib/css/html-inputs.mjs';
+import { scanHtml, htmlJavaScriptInputs, htmlScriptKind } from './lib/css/html-inputs.mjs';
 import { htmlCascadeModel, fingerprint } from './lib/css/semantic-contract.mjs';
-import { auditStyleIngress, readStyleRegistry, STYLE_REGISTRY } from './lib/css/runtime-sources.mjs';
+import { auditStyleIngress, auditHtmlStyleIngress, readStyleRegistry, STYLE_REGISTRY } from './lib/css/runtime-sources.mjs';
 
 const model = css => parseStylesheet(css, 'fixture.css').model;
 const different = (a, b) => assert.notEqual(fingerprint(model(a)), fingerprint(model(b)));
@@ -53,6 +53,94 @@ assert.notEqual(htmlModel('<style>.a{color:red}</style>'), htmlModel('<style med
 assert.notEqual(htmlModel('<div style="--x: \'a  b\'"></div>'), htmlModel('<div style="--x: \'a b\'"></div>'));
 assert.notEqual(htmlModel('<link rel="stylesheet" href="x.css">'), htmlModel('<template><link rel="stylesheet" href="x.css"></template>'));
 assert.notEqual(htmlModel('<base href="/a/"><link rel="stylesheet" href="x.css">'), htmlModel('<base href="/b/"><link rel="stylesheet" href="x.css">'));
+
+// Browser-active inputs are classified once, before either cascade projection or
+// JavaScript audit. Unsupported cascade scopes must fail in every consumer.
+for (const mode of ['open', 'closed', 'OPEN', 'cl&#111;sed', 'unknown', '']) {
+    const html = `<div><template shadowrootmode="${mode}"><style>.x{color:red}</style>
+        <link rel="stylesheet" href="x.css"></template></div>`;
+    assert.throws(() => scanHtml('shadow.html', html), /declarative Shadow DOM/);
+    assert.throws(() => htmlCascadeModel(html, 'shadow.html'), /declarative Shadow DOM/);
+    assert.match(auditHtmlStyleIngress(html).join('\n'), /declarative Shadow DOM/);
+}
+for (const html of [
+    '<iframe srcdoc="&lt;style&gt;.x{}&lt;/style&gt;"></iframe>',
+    '<iframe src="data:text/html,%3Cscript%3Ealert(1)%3C/script%3E"></iframe>',
+    '<object data="new.html"></object>', '<embed src="new.svg">',
+    '<svg><script>document.createElement("style")</script></svg>',
+    '<svg><style>.x{fill:red}</style></svg>',
+]) {
+    assert.throws(() => scanHtml('unsupported.html', html), /explicit.*contract/);
+    assert.throws(() => htmlCascadeModel(html, 'unsupported.html'), /explicit.*contract/);
+    assert.ok(auditHtmlStyleIngress(html).length);
+}
+assert.deepEqual(auditHtmlStyleIngress(`<template><button onclick="document.createElement('style')"></button>
+    <script>document.createElement("style")</script></template>`), []);
+
+const scriptMimeTypes = [
+    'application/ecmascript', 'application/javascript', 'application/x-ecmascript', 'application/x-javascript',
+    'text/ecmascript', 'text/javascript', 'text/javascript1.0', 'text/javascript1.1', 'text/javascript1.2',
+    'text/javascript1.3', 'text/javascript1.4', 'text/javascript1.5', 'text/jscript', 'text/livescript',
+    'text/x-ecmascript', 'text/x-javascript',
+];
+for (const type of ['', ...scriptMimeTypes.flatMap(type => [type, '\t' + type.toUpperCase() + '\n'])]) {
+    const html = `<script type="${type}">document.createElement("style")</script>`;
+    assert.equal(htmlJavaScriptInputs(html)[0].grammar, 'script', type);
+    assert.match(auditHtmlStyleIngress(html).join('\n'), /literal non-stylesheet tag/, type);
+}
+assert.equal(htmlScriptKind({ type: '   ' }), 'data');
+assert.equal(htmlScriptKind({ type: '\u00a0text/javascript\u00a0' }), 'data');
+assert.equal(htmlScriptKind({ type: 'text/javascript;charset=utf-8' }), 'data');
+assert.equal(htmlScriptKind({ language: 'JavaScript1.5' }), 'script');
+assert.equal(htmlScriptKind({ language: ' javascript' }), 'data');
+assert.equal(htmlScriptKind({ type: '', language: 'vbscript' }), 'script');
+assert.equal(htmlScriptKind({ type: 'application/json', language: 'javascript' }), 'data');
+assert.match(auditHtmlStyleIngress('<script language="JScript">document.styleSheets</script>').join('\n'), /styleSheets/);
+assert.deepEqual(auditHtmlStyleIngress('<script type="application/ld+json">{"literal":"document.createElement(\'style\')"}</script>'), []);
+assert.deepEqual(auditHtmlStyleIngress('<script><!-- classic HTML comment\nwith (window) { void 0; }</script>'), []);
+assert.deepEqual(auditHtmlStyleIngress('<script type=" MoDuLe ">export const x = 1;</script>'), []);
+assert.ok(auditHtmlStyleIngress('<script>export const x = 1;</script>').length);
+assert.ok(auditHtmlStyleIngress('<script type="module">with (window) { void 0; }</script>').length);
+for (const type of ['IMPORTMAP', ' speculationrules ']) {
+    assert.match(auditHtmlStyleIngress(`<script type="${type}">{}</script>`).join('\n'), /explicit script-resolution contract/);
+}
+
+for (const [attribute, body] of [
+    ['onclick', 'return document.createElement("style")'],
+    ['ONERROR', 'const {createElement: make}=document; return make("style")'],
+    ['onbeforeunload', 'return document.styleSheets[0].insertRule(".x{}")'],
+    ['onload', 'document[&quot;createElement&quot;](&quot;style&quot;)'],
+    ['onanimationend', 'document.adoptedStyleSheets=[]'],
+]) {
+    assert.ok(auditHtmlStyleIngress(`<body ${attribute}='${body}'></body>`).length, attribute);
+}
+assert.deepEqual(auditHtmlStyleIngress('<button onclick="with (window) { return false; }"></button>'), []);
+assert.deepEqual(auditHtmlStyleIngress('<button onclick="return new.target;"></button>'), []);
+assert.deepEqual(auditHtmlStyleIngress('<button onclick="return false;" onclick="document.styleSheets"></button>'), []);
+assert.match(auditHtmlStyleIngress('<button onclick="return @;"></button>').join('\n'), /cannot audit JavaScript/);
+assert.throws(() => auditStyleIngress('} document.styleSheets; {', 'handler', 'handler'), /single function body/);
+// Parser-created elements are live DOM too. A late <body> token can attach
+// executable/style attributes to an implied body with no source location.
+assert.match(auditHtmlStyleIngress('<div></div><body onclick="document.createElement(\'style\')">')
+    .join('\n'), /literal non-stylesheet tag/);
+assert.equal(scanHtml('implied.html', '<div></div><body style="color:red">').inlineAttributes.length, 1);
+assert.notEqual(htmlModel('<div></div>'), htmlModel('<div></div><body style="color:red">'));
+
+for (const url of ['javascript:document.styleSheets', 'JaVaScRiPt:document.styleSheets',
+    '  java&#x09;script:document.styleSheets', '&#x01;javascript:document.styleSheets']) {
+    for (const attribute of ['href', 'action', 'formaction', 'xlink:href']) {
+        assert.match(auditHtmlStyleIngress(`<a ${attribute}="${url}"></a>`).join('\n'), /javascript: URLs/);
+    }
+}
+assert.deepEqual(auditHtmlStyleIngress('<a href="next.html" data-note="javascript:example"></a>'), []);
+const localFiles = new Set(['public/theme-boot.js', 'src/game.js']);
+assert.deepEqual(auditHtmlStyleIngress(`<script src="/theme-boot.js"></script>
+    <script type="module" src="src/game.js"></script>`, 'index.html', localFiles), []);
+for (const html of ['<script src="data:text/javascript,document.styleSheets"></script>',
+    '<script src="https://elsewhere.invalid/new.js"></script>', '<script src="/unknown.js"></script>',
+    '<base href="https://elsewhere.invalid/"><script src="src/game.js"></script>']) {
+    assert.match(auditHtmlStyleIngress(html, 'index.html', localFiles).join('\n'), /outside the audited local/);
+}
 
 const fixture = [
     '@layer components { .layered { color: red; } }',

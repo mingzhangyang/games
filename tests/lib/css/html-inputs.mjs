@@ -1,8 +1,30 @@
 import { parse } from 'parse5';
 import { parseCssText } from './baseline-adapter.mjs';
 const normalizeValue = value => value.replace(/\s+/g, ' ').trim();
+const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+const asciiLower = value => value.replace(/[A-Z]/g, character => character.toLowerCase());
+const stripAsciiWhitespace = value => value.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, '');
+// https://mimesniff.spec.whatwg.org/#javascript-mime-type
+// HTML uses an essence *string match*, not MIME parsing: parameters do not match.
+const JAVASCRIPT_TYPES = new Set([
+    'application/ecmascript', 'application/javascript', 'application/x-ecmascript', 'application/x-javascript',
+    'text/ecmascript', 'text/javascript', 'text/javascript1.0', 'text/javascript1.1', 'text/javascript1.2',
+    'text/javascript1.3', 'text/javascript1.4', 'text/javascript1.5', 'text/jscript', 'text/livescript',
+    'text/x-ecmascript', 'text/x-javascript',
+]);
 
-export function parseHtmlElements(html) {
+export function htmlScriptKind(attributes) {
+    // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element
+    const hasType = Object.hasOwn(attributes, 'type');
+    const type = hasType ? attributes.type === '' ? 'text/javascript' : stripAsciiWhitespace(attributes.type)
+        : attributes.language ? 'text/' + attributes.language : 'text/javascript';
+    const normalized = asciiLower(type);
+    if (JAVASCRIPT_TYPES.has(normalized)) return 'script';
+    if (['module', 'importmap', 'speculationrules'].includes(normalized)) return normalized;
+    return 'data';
+}
+
+export function parseHtmlElements(html, file = 'fixture.html') {
     const document = parse(html, {
         sourceCodeLocationInfo: true,
         scriptingEnabled: true,
@@ -10,13 +32,77 @@ export function parseHtmlElements(html) {
     const elements = [];
 
     function visit(node) {
-        if (node?.tagName && node.sourceCodeLocation) elements.push(node);
+        if (node?.tagName) {
+            const tag = htmlTagName(node);
+            const attributes = htmlElementAttributes(node);
+            // Our model has one light-DOM cascade scope. Reject mechanisms that
+            // create another scope/document instead of treating them as inert.
+            if (tag === 'template' && Object.hasOwn(attributes, 'shadowrootmode')) {
+                throw new Error(file + ': declarative Shadow DOM requires an explicit scoped stylesheet contract');
+            }
+            if (['iframe', 'frame', 'object', 'embed'].includes(tag)) {
+                throw new Error(file + ': embedded documents require an explicit stylesheet/source contract');
+            }
+            if (node.namespaceURI !== HTML_NAMESPACE && ['script', 'style', 'link'].includes(tag)) {
+                throw new Error(file + ': foreign-namespace scripting/styles require an explicit source contract');
+            }
+            // HTML recovery can merge attributes from a later <body> token onto
+            // an implied body with no source location. Such attributes still run.
+            elements.push(node);
+        }
         for (const child of node?.childNodes || []) visit(child);
-        // Do not walk template.content: CSS there is inert until instantiated.
+        // Ordinary template.content is inert. Declarative roots were rejected above.
     }
 
     visit(document);
     return elements;
+}
+
+// One HTML execution inventory for the runtime audit. Attribute values and
+// script child text come from the parser's DOM, not raw HTML/entity spellings.
+export function htmlJavaScriptInputs(html, file = 'fixture.html') {
+    const inputs = [];
+    const elements = parseHtmlElements(html, file);
+    const documentUrl = new URL(file.replace(/^public\//, ''), 'https://css-audit.invalid/');
+    let baseUrl = documentUrl;
+    const base = elements.find(element => htmlTagName(element) === 'base'
+        && Object.hasOwn(htmlElementAttributes(element), 'href'));
+    if (base) {
+        try { baseUrl = new URL(htmlElementAttributes(base).href, documentUrl); }
+        catch { /* Invalid first base URL falls back to the document URL. */ }
+    }
+    for (const element of elements) {
+        const tag = htmlTagName(element);
+        const attrs = htmlElementAttributes(element);
+        const label = file + ':' + (element.sourceCodeLocation?.startLine ?? 'implied') + ':' + tag;
+        for (const [name, value] of Object.entries(attrs)) {
+            // Conservatively include every unnamespaced on* attribute, including
+            // new browser event names. Function-body grammar allows return/with.
+            if (/^on/i.test(name)) inputs.push({ file: label + '[' + name + ']', source: value, grammar: 'handler' });
+            if (['href', 'xlink:href', 'src', 'action', 'formaction', 'data', 'codebase'].includes(name)) {
+                let url;
+                try { url = new URL(value, baseUrl); } catch { continue; }
+                if (url.protocol === 'javascript:') {
+                    throw new Error(label + '[' + name + ']: javascript: URLs require an explicit source contract');
+                }
+            }
+        }
+        if (tag !== 'script') continue;
+        const grammar = htmlScriptKind(attrs);
+        if (grammar === 'data') continue;
+        if (['importmap', 'speculationrules'].includes(grammar)) {
+            throw new Error(label + ': ' + grammar + ' requires an explicit script-resolution contract');
+        }
+        if (Object.hasOwn(attrs, 'src')) {
+            const url = new URL(attrs.src, baseUrl);
+            inputs.push({ file: label, url: url.href, grammar });
+        } else {
+            const source = (element.childNodes || []).filter(child => child.nodeName === '#text')
+                .map(child => child.value).join('');
+            inputs.push({ file: label, source, grammar });
+        }
+    }
+    return inputs;
 }
 
 export function htmlElementAttributes(element) {
@@ -62,7 +148,7 @@ function stylesheetLinkSignature(attributes) {
 }
 
 export function scanHtml(path, html) {
-    const elements = parseHtmlElements(html);
+    const elements = parseHtmlElements(html, path);
     const links = [];
     const styleBlocks = [];
     const inlineRules = [];

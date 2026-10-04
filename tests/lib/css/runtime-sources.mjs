@@ -2,7 +2,7 @@ import { parse } from 'acorn';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseHtmlElements, htmlElementAttributes, htmlTagName, styleElementSource } from './html-inputs.mjs';
+import { htmlJavaScriptInputs } from './html-inputs.mjs';
 
 export const STYLE_REGISTRY = 'src/games/math-rain/style-sources.js';
 export const STYLE_INSTALLER = 'src/games/math-rain/install-style.js';
@@ -63,10 +63,23 @@ export function readStyleRegistry(source) {
 // This is an architectural syntax boundary, not a JavaScript data-flow proof.
 // Browser tests independently observe actual installed styles after exercising
 // the callers. Do not add alias/constant-propagation heuristics to this module.
-export function auditStyleIngress(source, file = 'fixture.js') {
+export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module') {
     const errors = [];
     const fail = message => errors.push(file + ': ' + message);
-    walk(parseJs(source), null, (node, parent) => {
+    let ast;
+    if (grammar === 'handler') {
+        // Event attributes are FunctionBody, not Module or Script. A wrapper
+        // supplies function context; ensure input cannot escape that wrapper.
+        ast = parse('function __html_handler__(event) {\n' + source + '\n}',
+            { ecmaVersion: 'latest', sourceType: 'script' });
+        if (ast.body.length !== 1 || ast.body[0].type !== 'FunctionDeclaration') {
+            throw new Error('Event handler must be a single function body');
+        }
+    } else if (grammar === 'script') {
+        ast = parse(source, { ecmaVersion: 'latest', sourceType: 'script' });
+    } else if (grammar === 'module') ast = parseJs(source);
+    else throw new Error('Unsupported JavaScript grammar: ' + grammar);
+    walk(ast, null, (node, parent) => {
         if (node.type === 'MemberExpression') {
             const name = property(node);
             if (['createElement', 'createElementNS'].includes(name)) {
@@ -105,6 +118,25 @@ export function auditStyleIngress(source, file = 'fixture.js') {
     return errors;
 }
 
+export function auditHtmlStyleIngress(html, file = 'fixture.html', auditedFiles = new Set()) {
+    const errors = [];
+    try {
+        for (const input of htmlJavaScriptInputs(html, file)) {
+            try {
+                if (input.url) {
+                    const url = new URL(input.url);
+                    const path = decodeURIComponent(url.pathname).slice(1);
+                    if (url.origin !== 'https://css-audit.invalid'
+                        || ![path, 'public/' + path].some(candidate => auditedFiles.has(candidate))) {
+                        errors.push(input.file + ': external script is outside the audited local JavaScript inventory');
+                    }
+                } else errors.push(...auditStyleIngress(input.source, input.file, input.grammar));
+            } catch (error) { errors.push(input.file + ': cannot audit JavaScript: ' + error.message); }
+        }
+    } catch (error) { errors.push(file + ': cannot audit HTML execution inputs: ' + error.message); }
+    return errors;
+}
+
 function files(root, directory) {
     return readdirSync(join(root, directory), { withFileTypes: true }).flatMap(entry => {
         const path = directory + '/' + entry.name;
@@ -118,8 +150,10 @@ export function scanRuntimeStyleSources(root, errors) {
     if (createHash('sha256').update(installer).digest('hex') !== INSTALLER_SHA256) {
         errors.push('Runtime stylesheet installer changed; review insertion semantics and its independent digest.');
     }
-    for (const file of ['src', 'js', 'public'].flatMap(directory => files(root, directory))) {
-        if (!/\.(?:m?js)$/.test(file) || [STYLE_REGISTRY, STYLE_INSTALLER].includes(file)) continue;
+    const auditedFiles = new Set(['src', 'js', 'public'].flatMap(directory => files(root, directory))
+        .filter(file => /\.(?:m?js)$/.test(file)));
+    for (const file of auditedFiles) {
+        if ([STYLE_REGISTRY, STYLE_INSTALLER].includes(file)) continue;
         if (file === SCAFFOLD) {
             if (createHash('sha256').update(readFileSync(join(root, file))).digest('hex') !== SCAFFOLD_SHA256) {
                 errors.push('HTML scaffold source changed; review its stylesheet inputs.');
@@ -129,18 +163,12 @@ export function scanRuntimeStyleSources(root, errors) {
         try { errors.push(...auditStyleIngress(readFileSync(join(root, file), 'utf8'), file)); }
         catch (error) { errors.push(file + ': cannot audit JavaScript: ' + error.message); }
     }
-    // Inline executable scripts are source inputs too; JSON-LD remains data.
+    // All supported HTML execution inputs share one classifier and AST audit.
     const htmlFiles = readdirSync(root).filter(file => file.endsWith('.html'))
         .concat(files(root, 'public').filter(file => file.endsWith('.html')));
     for (const file of htmlFiles) {
         const html = readFileSync(join(root, file), 'utf8');
-        for (const element of parseHtmlElements(html)) {
-            if (htmlTagName(element) !== 'script') continue;
-            const attrs = htmlElementAttributes(element);
-            if (attrs.src || (attrs.type && !['module', 'text/javascript', 'application/javascript'].includes(attrs.type))) continue;
-            try { errors.push(...auditStyleIngress(styleElementSource(html, element, file), file)); }
-            catch (error) { errors.push(file + ': cannot audit inline JavaScript: ' + error.message); }
-        }
+        errors.push(...auditHtmlStyleIngress(html, file, auditedFiles));
     }
     return Object.entries(registry).map(([key, css]) => ({ id: SOURCE_IDS[key], css }))
         .sort((a, b) => a.id.localeCompare(b.id));

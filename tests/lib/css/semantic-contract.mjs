@@ -10,7 +10,7 @@ export const fingerprint = value => createHash('sha256').update(JSON.stringify(v
 export function htmlCascadeModel(html, file) {
     const inputs = [];
     const occurrences = new Map();
-    for (const element of parseHtmlElements(html)) {
+    for (const element of parseHtmlElements(html, file)) {
         const tag = htmlTagName(element);
         const attrs = htmlElementAttributes(element);
         const occurrence = occurrences.get(tag) || 0;

@@ -23,11 +23,12 @@ The revised contract separates syntax, observations, allowed changes and browser
 | --- | --- |
 | `tests/lib/css/model.mjs` | PostCSS tree parsing and CSS Syntax tokens; ordered canonical model |
 | `tests/lib/css/baseline-adapter.mjs` | Project syntax policy and compatibility projection into historical P0 tuples |
-| `tests/lib/css/html-inputs.mjs` | parse5 document traversal, active stylesheet inputs and historical HTML projection |
+| `tests/lib/css/html-inputs.mjs` | Shared HTML scope policy, execution-input classification and historical stylesheet projection |
 | `tests/lib/css/semantic-contract.mjs` | Independently pinned ordered-model addendum |
 | `tests/lib/css/runtime-sources.mjs` | Fixed registry validation and architectural JavaScript ingress rules |
 | `tests/verify-css-debt.mjs` | Inventory, immutable history, migration gates and built stylesheet ordering |
 | `tests/verify-css-model.mjs` | Fast parser/model/ingress regression fixtures |
+| `tests/verify-css-html-browser.mjs` | Independent browser check of script-type execution, handler grammar and declarative-root activation |
 | `tests/verify-math-rain-styles.mjs` | Actual browser activation, insertion order, repeat calls and CSSOM comparison |
 
 PostCSS `8.5.28` and `@csstools/css-tokenizer` `4.0.1` are direct, exact development
@@ -91,6 +92,51 @@ for `new-game.mjs`, rather than installing a stylesheet. Its entire source is in
 pinned. Changing that template requires an explicit review. This exception does not permit
 new runtime style factories.
 
+## HTML activation and execution boundary
+
+The next review found three omissions with one cause: HTML parsing was shared, but
+activation/execution classification still relied on incomplete assumptions in its consumers.
+Skipping every template missed declarative Shadow DOM; auditing only script elements missed
+event attributes; an exact three-value script-type list missed browser-valid JavaScript types.
+
+`html-inputs.mjs` now owns the supported HTML boundary for every consumer:
+
+| Input | Contract |
+| --- | --- |
+| Ordinary template contents and scripting-enabled noscript contents | Inert; not inventoried as live DOM |
+| Any active template carrying `shadowrootmode` | Rejected until scoped CSS identities and cascade rules are modeled; includes invalid/empty modes conservatively |
+| Embedded documents (`iframe`, `frame`, `object`, `embed`) | Rejected until nested-document inputs are modeled, including `srcdoc`/data documents |
+| Foreign-namespace script/style/link elements | Rejected until their distinct source semantics are modeled |
+| Classic inline scripts | All 16 JavaScript MIME essence strings, ASCII case/whitespace rules, and legacy language fallback; Script grammar |
+| Module inline scripts | Module grammar; type classification follows the standard conservatively |
+| Unnamespaced `on*` attributes | Parser-decoded values, FunctionBody grammar; audit every event name conservatively |
+| Executable script `src` | Resolve against the first base URL; must belong to the audited local JS inventory |
+| `javascript:` URL attributes | Rejected explicitly after URL parsing (including control-character/case variants) |
+| Import maps and speculation rules | Rejected until script resolution/loading effects have a reviewed contract |
+| Non-executable script data blocks | Remain data; e.g. JSON-LD is not parsed as JavaScript |
+
+The runtime audit consumes this inventory rather than rediscovering HTML execution rules.
+Traversal includes implied DOM elements: HTML recovery can merge a late body token's event
+or style attributes into an implied body without a source location. Offsets are diagnostics,
+not a filter for active inputs; both the static model and execution inventory see these nodes.
+The event-handler parser supplies function context and checks that input cannot escape its
+wrapper. Classic scripts retain their non-module grammar (including legacy HTML comments
+and `with`); module-only syntax in a classic script fails. Parse errors fail the audit.
+
+Type classification follows the [HTML preparation algorithm](https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element)
+and [JavaScript MIME essence list](https://mimesniff.spec.whatwg.org/#javascript-mime-type).
+An HTML type value with MIME parameters is not an essence-string match. Event attributes use
+the [FunctionBody contract](https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-content-attributes).
+Browser versions may lag standard changes; the audit conservatively includes case variants
+of module types even where an engine does not yet execute them.
+
+Fast fixtures exercise all of these boundaries through the same production audit functions,
+including each of the three reported bypasses. The browser fixture independently confirms
+execution of the MIME aliases/case variants, classic/module behavior, `return`/`with` in a
+handler, actual handler-created stylesheet activation, and style/link activation in both
+open and closed declarative roots. The supported project pages still match every immutable
+P0 observation. New HTML mechanisms must extend this shared contract; omission is not support.
+
 **Boundary of the guarantee:** these are architectural syntax checks, not a proof about
 arbitrary JavaScript data flow or every possible HTML-string construction. Do not extend
 them into another partial interpreter. Runtime inline element styles used for positions,
@@ -123,6 +169,7 @@ Validation commands:
 ```sh
 node tests/verify-css-model.mjs
 node tests/verify-css-debt.mjs
+CHROME_BIN=/absolute/path/to/chrome node tests/verify-css-html-browser.mjs
 npm run gen -- --check
 node tools/checks/run-lint.mjs
 npm run build
@@ -172,3 +219,8 @@ Browser installation recovery and execution-network lessons are recorded in
   removed and the committed Tetris test was not changed. This is not a claim that the unmodified
   full-suite run was green.
 - Worker dry-run was blocked by automatic approval review and is not counted as validated.
+
+Follow-up HTML boundary verification (2026-10-04): the expanded fast regression fixtures,
+full source/runtime/HTML P0 guard, standalone browser oracle and repository lint passed.
+This follow-up changes verifier/test/documentation code only; P0 artifacts and production
+sources remain unchanged. It does not require a new cascade baseline.
