@@ -145,6 +145,11 @@ export function verifyMonotonicState(baseState, currentState, errors) {
 
 export function resolveComparisonBase(root) {
     if (process.env.ARCHITECTURE_BASE_SHA) return process.env.ARCHITECTURE_BASE_SHA;
+    for (const ref of ['origin/main', 'main']) {
+        try {
+            return execFileSync('git', ['merge-base', 'HEAD', ref], { cwd: root, encoding: 'utf8' }).trim();
+        } catch {}
+    }
     try {
         return execFileSync('git', ['rev-parse', 'HEAD^1'], { cwd: root, encoding: 'utf8' }).trim();
     } catch {
