@@ -240,6 +240,139 @@ verifyRuleMigrations({
 });
 assert.ok(fallbackErrors.some(error => /intra-rule cascade/.test(error)));
 
+// Destination refs are declarations of intent, not ordering authority. Reversing
+// the JSON refs cannot hide a physical same-layer reversal in the stylesheet.
+const orderBase = parseMap([['css/order.css', '.d{color:red;color:blue}']]);
+const orderCurrentBad = parseMap([[
+    'css/order.css',
+    '@layer pages{.d{color:blue}.d{color:red}}',
+]]);
+const orderSource = catalogMap(orderBase).get('css/order.css')[0];
+const orderBadDestinations = catalogMap(orderCurrentBad).get('css/order.css');
+const orderBadMapping = {
+    id: 'fixture-physical-order',
+    source: sourceRef(orderSource),
+    destinations: [destinationRef(orderBadDestinations[1]), destinationRef(orderBadDestinations[0])],
+    conflicts: { normal: [], important: [] },
+};
+const orderBadErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/order.css', '', '.d']] } },
+    state: { ...emptyState, migratedRules: [orderBadMapping] },
+    currentParsedByPath: orderCurrentBad,
+    baseParsedByPath: orderBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: orderBadErrors,
+});
+assert.ok(orderBadErrors.some(error => /physical destination order reverses/.test(error)));
+
+const orderCurrentGood = parseMap([[
+    'css/order.css',
+    '@layer pages{.d{color:red}.d{color:blue}}',
+]]);
+const orderGoodDestinations = catalogMap(orderCurrentGood).get('css/order.css');
+const orderGoodMapping = {
+    id: 'fixture-json-order-is-not-authority',
+    source: sourceRef(orderSource),
+    destinations: [destinationRef(orderGoodDestinations[1]), destinationRef(orderGoodDestinations[0])],
+    conflicts: { normal: [], important: [] },
+};
+const orderGoodErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/order.css', '', '.d']] } },
+    state: { ...emptyState, migratedRules: [orderGoodMapping] },
+    currentParsedByPath: orderCurrentGood,
+    baseParsedByPath: orderBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: orderGoodErrors,
+});
+assert.deepEqual(orderGoodErrors, []);
+
+// One historical source occurrence has exactly one migration owner, even when
+// it was already layered and therefore does not participate in P0 debt counts.
+const duplicateSourceBase = parseMap([[
+    'css/duplicate-source.css',
+    '@layer components{.s{color:red}}',
+]]);
+const duplicateSourceCurrent = parseMap([[
+    'css/duplicate-source.css',
+    '@layer showcase{.s{color:red}.s{color:red}}',
+]]);
+const duplicateSourceRule = catalogMap(duplicateSourceBase).get('css/duplicate-source.css')[0];
+const duplicateDestinations = catalogMap(duplicateSourceCurrent).get('css/duplicate-source.css');
+const duplicateSourceErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: {
+        ...emptyState,
+        migratedRules: [
+            {
+                id: 'fixture-duplicate-source-a',
+                source: sourceRef(duplicateSourceRule),
+                destinations: [destinationRef(duplicateDestinations[0])],
+                conflicts: { normal: [], important: [] },
+            },
+            {
+                id: 'fixture-duplicate-source-b',
+                source: sourceRef(duplicateSourceRule),
+                destinations: [destinationRef(duplicateDestinations[1])],
+                conflicts: { normal: [], important: [] },
+            },
+        ],
+    },
+    currentParsedByPath: duplicateSourceCurrent,
+    baseParsedByPath: duplicateSourceBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: duplicateSourceErrors,
+});
+assert.ok(duplicateSourceErrors.some(error => /source rule is claimed by more than one migration/.test(error)));
+
+// The exact-selector static oracle also protects interactions outside one mapping.
+// Here the mapped rule originally wins by source order, but layering it would let
+// the still-unlayered peer win; that behavior change is rejected automatically.
+const peerBase = parseMap([[
+    'css/peer.css',
+    '.x{color:blue}.x{color:red}',
+]]);
+const peerCurrent = parseMap([[
+    'css/peer.css',
+    '.x{color:blue}@layer pages{.x{color:red}}',
+]]);
+const peerBaseCatalog = catalogMap(peerBase).get('css/peer.css');
+const peerCurrentCatalog = catalogMap(peerCurrent).get('css/peer.css');
+const peerSource = peerBaseCatalog[1];
+const peerDestination = peerCurrentCatalog[1];
+const peerErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/peer.css', '', '.x'], ['css/peer.css', '', '.x']] } },
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-peer-precedence',
+            source: sourceRef(peerSource),
+            destinations: [destinationRef(peerDestination)],
+            conflicts: { normal: [], important: [] },
+        }],
+    },
+    currentParsedByPath: peerCurrent,
+    baseParsedByPath: peerBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: peerErrors,
+});
+assert.ok(peerErrors.some(error => /exact-selector cascade precedence changes/.test(error)));
+
 // CSS declaration overlap is modeled by the properties they can write, not by
 // literal property-name equality. Shorthands, logical aliases and `all` are
 // therefore unsafe to split from overlapping declarations.

@@ -311,21 +311,26 @@ The contract now provides:
 1. Stable occurrence identity from canonical context-token digest + selector-token digest +
    source layer + canonical declaration digest + duplicate occurrence number. Human-readable
    legacy context/selector strings and source offsets are diagnostic only; they are not identity.
-2. Ordered, lossless 1→1 or 1→N declaration partitioning. Declarations whose CSS write sets
-   overlap cannot be split across layers: this includes shorthand/longhand pairs, `all`,
-   logical/physical aliases and duplicate properties. The write-set model is backed by pinned
-   `mdn-data` shorthand metadata and explicit logical/physical equivalence rules; unknown
-   non-custom properties fail closed. Selector/context rewrites and cross-stylesheet moves are
-   outside P2 and fail.
+2. Lossless 1→1 or 1→N declaration partitioning is reconstructed from the current AST;
+   destination arrays are an unordered declaration of ownership, never source-order authority.
+   Each historical source occurrence and each current destination occurrence has exactly one
+   migration owner. Declarations whose CSS write sets overlap cannot be split across layers,
+   and same-layer physical order must preserve their cascade. This includes shorthand/longhand
+   pairs, `all`, logical/physical aliases and duplicate properties. The write-set model is
+   backed by pinned `mdn-data` shorthand metadata and explicit logical/physical equivalence
+   rules; unknown non-custom properties fail closed. Selector/context rewrites and
+   cross-stylesheet moves are outside P2 and fail.
 3. Relayering of existing layered rules as well as unlayered-debt reduction, so
    `science-showcase.css` can move from `components` to `showcase` without pretending it
    was unlayered P0 debt.
 4. A one-way state ratchet: mappings already present in the PR base cannot be deleted or
    edited; later work appends new ids.
-5. Exact-selector conflict records use the same property write-set overlap model, rather than
-   literal property-name equality, and are split into normal and important paths including the
-   opposite layer-precedence direction. These records supplement—not replace—the
-   different-selector browser/geometry checks.
+5. Exact-selector conflicts use the same property write-set overlap model, rather than literal
+   property-name equality. The verifier reconstructs each peer's current physical occurrence
+   and requires the pre/post cascade precedence relation to remain unchanged; this covers new
+   mappings against co-migrated, previously migrated and still-unlayered peers. Normal and
+   important reviews remain separate because layer precedence reverses under `!important`.
+   Different-selector overlap still belongs to browser/geometry evidence.
 6. Residual base→head comparison for every mapped stylesheet. Registering one rule does not
    exempt unrelated rules in that file from semantic verification.
 7. Immutable P0 and semantic addenda remain unchanged. Only files proven by the migration

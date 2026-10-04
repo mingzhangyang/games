@@ -267,6 +267,101 @@ function layerPriority(targetLayer, peerLayer, priority, layerOrder) {
     return targetRank > peerRank ? 'target-layer-wins' : 'peer-layer-wins';
 }
 
+function layerStrength(layer, priority, layerOrder) {
+    if (!layer) return priority === 'important' ? 0 : layerOrder.length + 1;
+    const index = layerOrder.indexOf(layer);
+    if (index < 0) return null;
+    return priority === 'important' ? layerOrder.length - index : index + 1;
+}
+
+function stylesheetPosition(stylesheetLinks, page, path) {
+    const positions = [];
+    for (let index = 0; index < (stylesheetLinks[page] || []).length; index++) {
+        if (stylesheetLinks[page][index][0] === path) positions.push(index);
+    }
+    return positions.length === 1 ? positions[0] : null;
+}
+
+function compareActivationOrder(left, right, page, stylesheetLinks) {
+    if (left.rule.path === right.rule.path) return Math.sign(comparePhysical(left, right));
+    if (!page) return null;
+    const a = stylesheetPosition(stylesheetLinks, page, left.rule.path);
+    const b = stylesheetPosition(stylesheetLinks, page, right.rule.path);
+    if (a === null || b === null || a === b) return null;
+    return Math.sign(a - b);
+}
+
+function compareCascadePrecedence(left, right, priority, page, stylesheetLinks, layerOrder) {
+    const a = layerStrength(left.layer, priority, layerOrder);
+    const b = layerStrength(right.layer, priority, layerOrder);
+    if (a === null || b === null) return null;
+    if (a !== b) return Math.sign(a - b);
+    return compareActivationOrder(left, right, page, stylesheetLinks);
+}
+
+function verifyExactSelectorCascadePreservation(
+    pending, baseCatalogs, projectedEntries, residualCurrentEntries,
+    stylesheetLinks, layerOrder, errors,
+) {
+    const pagesByPath = coactivePages(stylesheetLinks);
+    const seen = new Set();
+    for (const { mapping, sourceRule } of pending) {
+        for (let sourceIndex = 0; sourceIndex < sourceRule.declarations.length; sourceIndex++) {
+            const sourceDeclaration = sourceRule.declarations[sourceIndex];
+            const currentSource = projectedEntries.get(projectionKey(sourceRule, sourceIndex));
+            if (!currentSource) continue;
+
+            for (const rules of baseCatalogs.values()) {
+                for (const peer of rules) {
+                    if (peer.path === sourceRule.path && peer.sourceIndex === sourceRule.sourceIndex) continue;
+                    if (peer.selectorDigest !== sourceRule.selectorDigest) continue;
+
+                    for (let peerIndex = 0; peerIndex < peer.declarations.length; peerIndex++) {
+                        const peerDeclaration = peer.declarations[peerIndex];
+                        if (priorityOf(peerDeclaration) !== priorityOf(sourceDeclaration)
+                            || !propertiesOverlap(peerDeclaration.property, sourceDeclaration.property)) continue;
+
+                        const sourceProjection = projectionKey(sourceRule, sourceIndex);
+                        const peerProjection = projectionKey(peer, peerIndex);
+                        const currentPeer = projectedEntries.get(peerProjection)
+                            || residualCurrentEntries.get(peerProjection);
+                        if (!currentPeer) continue;
+
+                        const pages = sourceRule.path === peer.path
+                            ? [null]
+                            : sharedPages(sourceRule.path, peer.path, pagesByPath);
+                        for (const page of pages) {
+                            const pair = [sourceProjection, peerProjection].sort().join(' <-> ')
+                                + ' @ ' + (page || '<same-stylesheet>');
+                            if (seen.has(pair)) continue;
+                            seen.add(pair);
+
+                            const before = compareCascadePrecedence(
+                                { rule: sourceRule, layer: sourceRule.layer, declarationIndex: sourceIndex },
+                                { rule: peer, layer: peer.layer, declarationIndex: peerIndex },
+                                priorityOf(sourceDeclaration), page, stylesheetLinks, layerOrder,
+                            );
+                            const after = compareCascadePrecedence(
+                                currentSource, currentPeer, priorityOf(sourceDeclaration),
+                                page, stylesheetLinks, layerOrder,
+                            );
+                            if (before === null || after === null) {
+                                errors.push(mapping.id + ': exact-selector cascade order is ambiguous for '
+                                    + sourceDeclaration.property + ' / ' + peerDeclaration.property
+                                    + (page ? ' on ' + page : '') + '; migration must fail closed.');
+                            } else if (before !== after) {
+                                errors.push(mapping.id + ': exact-selector cascade precedence changes for '
+                                    + sourceDeclaration.property + ' / ' + peerDeclaration.property
+                                    + (page ? ' on ' + page : '') + '.');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 export function analyzeExactConflicts(
     mapping, sourceRule, destinationRules, baseCatalogs, stylesheetLinks, layerOrder,
     projectedLayers = new Map(),
@@ -360,38 +455,6 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
         if (!destination.layer) errors.push(mapping.id + ': every destination rule must be explicitly layered.');
     }
     return assignments;
-}
-
-function verifyInterMappingOrder(pending, errors) {
-    for (let left = 0; left < pending.length; left++) {
-        const a = pending[left];
-        for (let right = left + 1; right < pending.length; right++) {
-            const b = pending[right];
-            if (a.sourceRule.path !== b.sourceRule.path
-                || a.sourceRule.contextDigest !== b.sourceRule.contextDigest
-                || a.sourceRule.selectorDigest !== b.sourceRule.selectorDigest
-                || a.sourceRule.layer !== b.sourceRule.layer) continue;
-
-            const sourceOrder = Math.sign(a.sourceRule.sourceIndex - b.sourceRule.sourceIndex);
-            if (!sourceOrder) continue;
-            for (let ai = 0; ai < a.sourceRule.declarations.length; ai++) {
-                const ad = a.sourceRule.declarations[ai];
-                const at = a.assignments[ai];
-                if (!at) continue;
-                for (let bi = 0; bi < b.sourceRule.declarations.length; bi++) {
-                    const bd = b.sourceRule.declarations[bi];
-                    const bt = b.assignments[bi];
-                    if (!bt || at.layer !== bt.layer) continue;
-                    if (priorityOf(ad) !== priorityOf(bd) || !propertiesOverlap(ad.property, bd.property)) continue;
-                    const destinationOrder = Math.sign(comparePhysical(at, bt));
-                    if (destinationOrder && destinationOrder !== sourceOrder) {
-                        errors.push(a.mapping.id + ' / ' + b.mapping.id
-                            + ': mapped rules reverse a same-layer exact-selector cascade order in ' + at.layer + '.');
-                    }
-                }
-            }
-        }
-    }
 }
 
 function validRuleRef(ref, { requireDeclarations = false } = {}) {
@@ -532,22 +595,6 @@ export function verifyRuleMigrations({
         }
     }
 
-    verifyInterMappingOrder(pendingConflictReviews, errors);
-
-    const projectedLayers = new Map();
-    for (const { sourceRule, assignments } of pendingConflictReviews) {
-        assignments.forEach((destination, index) => {
-            if (destination) projectedLayers.set(projectionKey(sourceRule, index), destination.layer);
-        });
-    }
-    for (const { mapping, sourceRule, currentDestinationRules } of pendingConflictReviews) {
-        verifyConflictReview(mapping,
-            analyzeExactConflicts(
-                mapping, sourceRule, currentDestinationRules, baseCatalogs,
-                stylesheetLinks, layerOrder, projectedLayers,
-            ), errors);
-    }
-
     compareCounts(countsFromCurrentUnlayered(currentCatalogs), expectedDebt, errors,
         'unlayered rule debt must equal immutable P0 minus registered migrations');
 
@@ -556,28 +603,76 @@ export function verifyRuleMigrations({
         ...(mapping.destinations || []).map(item => item.path),
     ]).filter(Boolean));
     if (mappings.size) mappedCssPaths.add('css/tokens.css');
-    for (const path of mappedCssPaths) {
+
+    // Remove only newly declared source/destination occurrences, then pair every
+    // remaining base rule with its unchanged current counterpart. This makes the
+    // AST—not JSON array order—the source of truth for physical cascade position.
+    const residualCurrentEntries = new Map();
+    const allPaths = new Set([...baseCatalogs.keys(), ...currentCatalogs.keys()]);
+    for (const path of allPaths) {
         const pathMappings = newMappingsByPath.get(path) || [];
         const baseCatalog = baseCatalogs.get(path) || [];
         const currentCatalog = currentCatalogs.get(path) || [];
         const sourceRefs = pathMappings.filter(mapping => mapping.source.path === path)
             .map(mapping => mapping.source);
-        const destinationRefs = pathMappings.flatMap(mapping => (mapping.destinations || []).filter(item => item.path === path));
+        const destinationRefs = pathMappings
+            .flatMap(mapping => (mapping.destinations || []).filter(item => item.path === path));
         const baseResidual = filterCatalog(baseCatalog, sourceRefs, true);
         const currentResidual = filterCatalog(currentCatalog, destinationRefs, true);
-        if (jsonKey(stableRuleRows(baseResidual)) !== jsonKey(stableRuleRows(currentResidual))) {
+        const residualMatches = jsonKey(stableRuleRows(baseResidual)) === jsonKey(stableRuleRows(currentResidual));
+        if (!residualMatches && mappedCssPaths.has(path)) {
             errors.push(path + ': rule changes beyond the newly registered migrations were detected against the comparison base.');
         }
-        const baseParsed = baseParsedByPath.get(path);
-        const currentParsed = currentParsedByPath.get(path);
-        if (baseParsed && currentParsed) {
-            if (jsonKey(baseParsed.keyframes) !== jsonKey(currentParsed.keyframes)) {
-                errors.push(path + ': keyframes changed during a rule-only P2 migration; keyframe mappings are not enabled yet.');
-            }
-            if (jsonKey(baseParsed.specialAtRules || []) !== jsonKey(currentParsed.specialAtRules || [])) {
-                errors.push(path + ': special at-rules changed outside the registered rule migrations.');
+        if (residualMatches) {
+            for (let ruleIndex = 0; ruleIndex < baseResidual.length; ruleIndex++) {
+                const baseRule = baseResidual[ruleIndex];
+                const currentRule = currentResidual[ruleIndex];
+                for (let declarationIndex = 0; declarationIndex < baseRule.declarations.length; declarationIndex++) {
+                    residualCurrentEntries.set(projectionKey(baseRule, declarationIndex), {
+                        rule: currentRule,
+                        layer: currentRule.layer,
+                        declarationIndex,
+                        declaration: currentRule.declarations[declarationIndex],
+                    });
+                }
             }
         }
+
+        if (mappedCssPaths.has(path)) {
+            const baseParsed = baseParsedByPath.get(path);
+            const currentParsed = currentParsedByPath.get(path);
+            if (baseParsed && currentParsed) {
+                if (jsonKey(baseParsed.keyframes) !== jsonKey(currentParsed.keyframes)) {
+                    errors.push(path + ': keyframes changed during a rule-only P2 migration; keyframe mappings are not enabled yet.');
+                }
+                if (jsonKey(baseParsed.specialAtRules || []) !== jsonKey(currentParsed.specialAtRules || [])) {
+                    errors.push(path + ': special at-rules changed outside the registered rule migrations.');
+                }
+            }
+        }
+    }
+
+    const projectedEntries = new Map();
+    const projectedLayers = new Map();
+    for (const { sourceRule, assignments } of pendingConflictReviews) {
+        assignments.forEach((destination, index) => {
+            if (!destination) return;
+            projectedEntries.set(projectionKey(sourceRule, index), destination);
+            projectedLayers.set(projectionKey(sourceRule, index), destination.layer);
+        });
+    }
+
+    verifyExactSelectorCascadePreservation(
+        pendingConflictReviews, baseCatalogs, projectedEntries, residualCurrentEntries,
+        stylesheetLinks, layerOrder, errors,
+    );
+
+    for (const { mapping, sourceRule, currentDestinationRules } of pendingConflictReviews) {
+        verifyConflictReview(mapping,
+            analyzeExactConflicts(
+                mapping, sourceRule, currentDestinationRules, baseCatalogs,
+                stylesheetLinks, layerOrder, projectedLayers,
+            ), errors);
     }
 
     return {
