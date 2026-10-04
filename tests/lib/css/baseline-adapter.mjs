@@ -49,7 +49,7 @@ export function parseCssText(source, file) {
     function migrationDeclarations(node) {
         return (node.nodes || []).filter(child => child.type === 'decl').map(migrationDeclaration);
     }
-    function walk(parent, context = [], layer = null, inKeyframes = false) {
+    function walk(parent, context = [], migrationContext = [], layer = null, inKeyframes = false) {
         for (const node of parent.nodes || []) {
             if (node.type === 'comment') continue;
             if (node.type === 'rule') {
@@ -61,6 +61,8 @@ export function parseCssText(source, file) {
                     context: [...context],
                     layer,
                     declarations: values,
+                    migrationSelector: normalizeFragment(node.selector),
+                    migrationContext: [...migrationContext],
                     migrationDeclarations: migrationDeclarations(node),
                 });
                 result.declarations.push(...values);
@@ -84,17 +86,23 @@ export function parseCssText(source, file) {
                 result.layerBlocks.push(params);
                 layers(params);
                 const ownLayer = params.split(',')[0].trim() || '<anonymous>';
-                walk(node, context, layer ? layer + '.' + ownLayer : ownLayer, inKeyframes);
+                walk(node, context, migrationContext, layer ? layer + '.' + ownLayer : ownLayer, inKeyframes);
             } else if (KEYFRAMES.has(name)) {
                 result.keyframes.push({ name, params, context: [...context], layer });
-                walk(node, context, layer, true);
+                walk(node, context, migrationContext, layer, true);
                 recordSpecial(context, name, params);
             } else if (DECLARATIONS.has(name)) {
                 recordSpecial(context, name, params);
                 result.declarations.push(...declarations(node, '', context, layer, name));
             } else if (GROUPS.has(name)) {
                 if (SPECIAL.has(name)) recordSpecial(context, name, params);
-                walk(node, [...context, '@' + name + (node.params ? ' ' + node.params : '')], layer, inKeyframes);
+                walk(
+                    node,
+                    [...context, '@' + name + (node.params ? ' ' + node.params : '')],
+                    [...migrationContext, { name, params: normalizeFragment(node.params) }],
+                    layer,
+                    inKeyframes,
+                );
             } else {
                 throw new Error(file + ': unsupported block @' + name);
             }
