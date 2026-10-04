@@ -246,7 +246,9 @@ assert.ok(fallbackErrors.some(error => /intra-rule cascade/.test(error)));
 assert.equal(propertiesOverlap('margin', 'margin-left'), true);
 assert.equal(propertiesOverlap('margin-inline-start', 'margin-left'), true);
 assert.equal(propertiesOverlap('margin-top', 'margin-left'), false);
+assert.equal(propertiesOverlap('border', 'border-image-source'), true);
 assert.equal(propertiesOverlap('all', 'color'), true);
+assert.equal(propertiesOverlap('future-property', 'color'), true);
 assert.equal(propertiesOverlap('--theme-gap', 'margin'), false);
 
 const shorthandBase = parseMap([['css/shorthand.css', '.d{margin:1px;margin-left:2px}']]);
