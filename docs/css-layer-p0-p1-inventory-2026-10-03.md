@@ -10,11 +10,11 @@
 
 Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `37133888429`）通过 production build、full verify、Tower Defense / Sword Flight 产物 smoke 和 Cloudflare Worker dry run。P0 的几何值从该轮 `verify-desktop-frame` 日志采集。
 
-本 PR 新增静态 debt guard，并把代表性桌面舞台宽度冻结在 `verify-desktop-frame`。P2 只在本 PR 的 CI 和 review 通过后开始；届时仍保留 `shared-css-first`。
+本 PR 新增静态与运行时 stylesheet debt guard，并把代表性桌面舞台宽度冻结在 `verify-desktop-frame`。P2 只在本 PR 的 CI 和 review 通过后开始；届时仍保留 `shared-css-first`。
 
 ## P0：CSS 与 HTML 现状
 
-当前共有 31 个 CSS 文件、2,912 条普通样式规则。66 条已分层（tokens 16、components 50），其余 2,846 条仍未分层，分布在 28 个文件。CSS 文件职责和当前状态如下。表中的“目标层”是 P1 当时的**文件级候选**，仅用于盘点；2026-10-04 canary 已证明它不能机械解释为“整个文件包进一个 layer”。
+静态 CSS/HTML P0 当前共有 31 个 CSS 文件、2,912 条普通样式规则。66 条已分层（tokens 16、components 50），其余 2,846 条仍未分层，分布在 28 个文件。CSS 文件职责和当前状态如下。表中的“目标层”是 P1 当时的**文件级候选**，仅用于盘点；2026-10-04 canary 已证明它不能机械解释为“整个文件包进一个 layer”。
 
 | 文件 | owner | 目标层 | 已分层 / 未分层规则 | `!important` | 自定义属性定义 | 当前层 |
 | --- | --- | --- | ---: | ---: | ---: | --- |
@@ -55,6 +55,27 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 - 1 个 `<style>` 块、6 条规则，位于 `public/404.html`；该页没有 CSS link。
 - 14 个 `style=""` 属性，分布在 `math-rain.html`（1）、`needle-awn.html`（3）、`sword-flight.html`（5）、`tetris.html`（4）、`word-daily.html`（1）。
 - baseline 保存每条未分层规则、keyframes、重要声明和内联例外的逐项签名；不只保存总数。
+
+
+### 运行时 stylesheet 补充基线
+
+上面的 2,912 / 2,846 / 85 / 123 是**静态 CSS/HTML**快照。生产 JavaScript 还会创建
+5 个运行时 `<style>` source，均来自 Math Rain：`mobile-adapter.js` 2 个，
+`shop-manager.js`、`core/ErrorHandler.js`、`core/UIController.js` 各 1 个。
+这些 source 当前解析出 **15 条普通未分层规则、3 个未分层 keyframes、15 条
+`!important` 声明**。
+
+它们单独冻结在 `tests/css-runtime-style-p0-baseline.json`，其 Git blob digest 与静态 P0
+一样由 verifier 独立固定。verifier 使用 Acorn 扫描 `src/`、`js/`、`public/`
+中的生产 JavaScript；新增/删除/改写 JavaScript-created stylesheet、constructed
+`CSSStyleSheet`、`adoptedStyleSheets`、`insertRule` / `replace*` 或运行时
+`<style>` markup 都必须显式进入审计模型，不能静默绕过。
+
+migration state 同时引用静态 P0 与 runtime addendum。P2 的 **strict-zero** 因而不是只把
+静态 `unlayeredRules` 清零，而是必须同时处理运行时 stylesheet source。普通
+`element.style.*` / `style.setProperty(...)` 是运行时状态/几何写入，不是可放入
+cascade layer 的 stylesheet rule，因此不虚报为“未分层规则”，继续由对应行为与布局契约约束。
+
 
 ### 页面样式表顺序
 

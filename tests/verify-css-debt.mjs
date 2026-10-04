@@ -1115,6 +1115,9 @@ function verifyProject() {
     if (MIGRATION_STATE.p0BaselineBlobSha !== REVIEWED_P0_BASELINE_BLOB_SHA) {
         errors.push('Migration state must reference the independently pinned immutable P0 digest.');
     }
+    if (MIGRATION_STATE.runtimeStyleP0BaselineBlobSha !== REVIEWED_RUNTIME_STYLE_P0_BLOB_SHA) {
+        errors.push('Migration state must reference the independently pinned runtime-style P0 addendum digest.');
+    }
     if (!sameJson(MIGRATION_STATE.targetLayerOrder, REVIEWED_LAYER_ORDER)) {
         errors.push('targetLayerOrder must exactly match the reviewed layer taxonomy: '
             + REVIEWED_LAYER_ORDER.join(', ') + '.');
@@ -1125,11 +1128,17 @@ function verifyProject() {
     if (MIGRATION_STATE.migrationUnit !== 'rule' || MIGRATION_STATE.rejectedStrategy !== 'whole-file-single-layer') {
         errors.push('CSS migration must remain rule-granular; whole-file single-layer migration is rejected.');
     }
+    if (MIGRATION_STATE.runtimeMigrationUnit !== 'style-source') {
+        errors.push('Runtime stylesheet migration must remain source-granular until P2 explicitly models it.');
+    }
     if (MIGRATION_STATE.status !== 'not-started') {
         errors.push('CSS migration state changed before the rule-level P2 verifier was enabled.');
     }
     if ((MIGRATION_STATE.migratedRules || []).length || (MIGRATION_STATE.migratedKeyframes || []).length) {
         errors.push('Rule-level migration entries require the P2 verifier upgrade before production CSS can change.');
+    }
+    if ((MIGRATION_STATE.migratedRuntimeStyleSources || []).length) {
+        errors.push('Runtime stylesheet migration entries require the P2 verifier upgrade before production cascade can change.');
     }
     const cssPaths = listFiles(join(ROOT, 'css'), ROOT, path => path.endsWith('.css'));
     const htmlPaths = [

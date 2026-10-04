@@ -22,5 +22,8 @@
   ],
   "migratedRules": [],
   "migratedKeyframes": [],
-  "note": "P0 custom-property metadata uses parser declaration occurrences. P2 must upgrade the verifier to consume rule-level migration entries before any production CSS cascade change."
+  "note": "P0 custom-property metadata uses parser declaration occurrences. The static P0 snapshot and immutable runtime-style P0 addendum are both migration authorities. P2 must upgrade the verifier to consume rule-level static entries and source-level runtime stylesheet entries before any production cascade change.",
+  "runtimeStyleP0BaselineBlobSha": "e766d5873cf551fb46cda56dd0df861c08f2780f",
+  "runtimeMigrationUnit": "style-source",
+  "migratedRuntimeStyleSources": []
 }
