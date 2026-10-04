@@ -583,8 +583,9 @@ function verifyBuildOrderingContract(errors) {
     }
     for (const path of distHtmlPaths) {
         const html = readFileSync(join(ROOT, path), 'utf8');
+        const activeHtml = maskHtmlComments(html);
         const links = [];
-        for (const match of html.matchAll(/<link\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi)) {
+        for (const match of activeHtml.matchAll(/<link\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi)) {
             const attributes = parseAttributes(match[0]);
             if ((attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet') && attributes.href) {
                 links.push({ href: attributes.href, start: match.index, end: match.index + match[0].length });
@@ -594,8 +595,7 @@ function verifyBuildOrderingContract(errors) {
         if (ranks.some((rank, index) => index > 0 && rank < ranks[index - 1])) {
             errors.push(path + ': production stylesheet links violate shared-css-first rank order.');
         }
-        const masked = html.replace(/<!--[\s\S]*?-->/g, match => ' '.repeat(match.length));
-        const styleAt = masked.search(/<style[\s>]/i);
+        const styleAt = activeHtml.search(/<style[\s>]/i);
         if (styleAt >= 0 && links.some(link => link.start > styleAt)) {
             errors.push(path + ': production external stylesheet appears after inline <style>.');
         }

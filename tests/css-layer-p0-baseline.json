@@ -17266,5 +17266,8 @@
     "components",
     "layout",
     "pages"
-  ]
+  ],
+  "metricDefinitions": {
+    "customPropertyDefinitions": "Count parsed custom-property declaration occurrences; repeated property names in different selectors, themes, or at-rule contexts count separately."
+  }
 }
