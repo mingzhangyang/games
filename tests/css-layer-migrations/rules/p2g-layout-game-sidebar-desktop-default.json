@@ -10,85 +10,15 @@
     "declarationDigest": "4a838330da950044fc4e076e764a7caf5600878e9fb70f03ca2bc852d0409e66",
     "occurrence": 1,
     "declarations": [
-      {
-        "property": "display",
-        "value": [
-          [
-            "ident-token",
-            "flex"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "flex-direction",
-        "value": [
-          [
-            "ident-token",
-            "column"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "gap",
-        "value": [
-          [
-            "function-token",
-            "var("
-          ],
-          [
-            "ident-token",
-            "--frame-side-gap"
-          ],
-          [
-            ")-token",
-            ")"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "width",
-        "value": [
-          [
-            "function-token",
-            "var("
-          ],
-          [
-            "ident-token",
-            "--frame-side"
-          ],
-          [
-            ")-token",
-            ")"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "flex-shrink",
-        "value": [
-          [
-            "number-token",
-            "0"
-          ]
-        ],
-        "important": false
-      }
+      {"property":"display","value":[["ident-token","flex"]],"important":false},
+      {"property":"flex-direction","value":[["ident-token","column"]],"important":false},
+      {"property":"gap","value":[["function-token","var("],["ident-token","--frame-side-gap"],[")-token",")"]],"important":false},
+      {"property":"width","value":[["function-token","var("],["ident-token","--frame-side"],[")-token",")"]],"important":false},
+      {"property":"flex-shrink","value":[["number-token","0"]],"important":false}
     ]
   },
   "destinations": [
-    {
-      "path": "css/layout.css",
-      "context": "@media (width >= 1024px)",
-      "selector": ".game-sidebar",
-      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
-      "selectorDigest": "393140f9a7887628b322642ce138f747bc97788003b048e0309418024dbbd810",
-      "layer": "layout",
-      "declarationDigest": "4a838330da950044fc4e076e764a7caf5600878e9fb70f03ca2bc852d0409e66",
-      "occurrence": 1
-    }
+    {"path":"css/layout.css","context":"@media (width >= 1024px)","selector":".game-sidebar","contextDigest":"1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5","selectorDigest":"393140f9a7887628b322642ce138f747bc97788003b048e0309418024dbbd810","layer":"layout","declarationDigest":"4a838330da950044fc4e076e764a7caf5600878e9fb70f03ca2bc852d0409e66","occurrence":1}
   ],
   "conflicts": {
     "normal": [],

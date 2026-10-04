@@ -10,57 +10,13 @@
     "declarationDigest": "7443b58ca3cdd78a3d29588949b564b7c7d6d7fff2359c48938ea91d094c238d",
     "occurrence": 1,
     "declarations": [
-      {
-        "property": "display",
-        "value": [
-          [
-            "ident-token",
-            "block"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "width",
-        "value": [
-          [
-            "percentage-token",
-            "100%"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "border-radius",
-        "value": [
-          [
-            "function-token",
-            "var("
-          ],
-          [
-            "ident-token",
-            "--frame-radius"
-          ],
-          [
-            ")-token",
-            ")"
-          ]
-        ],
-        "important": false
-      }
+      {"property":"display","value":[["ident-token","block"]],"important":false},
+      {"property":"width","value":[["percentage-token","100%"]],"important":false},
+      {"property":"border-radius","value":[["function-token","var("],["ident-token","--frame-radius"],[")-token",")"]],"important":false}
     ]
   },
   "destinations": [
-    {
-      "path": "css/layout.css",
-      "context": "",
-      "selector": ".game-canvas",
-      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "selectorDigest": "79f6d86cf5dcd3d4442f44788fab4c6e7c3a61ff06bfccc4a870617e308bb438",
-      "layer": "layout",
-      "declarationDigest": "7443b58ca3cdd78a3d29588949b564b7c7d6d7fff2359c48938ea91d094c238d",
-      "occurrence": 1
-    }
+    {"path":"css/layout.css","context":"","selector":".game-canvas","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"79f6d86cf5dcd3d4442f44788fab4c6e7c3a61ff06bfccc4a870617e308bb438","layer":"layout","declarationDigest":"7443b58ca3cdd78a3d29588949b564b7c7d6d7fff2359c48938ea91d094c238d","occurrence":1}
   ],
   "conflicts": {
     "normal": [],

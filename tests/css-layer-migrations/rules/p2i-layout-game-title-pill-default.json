@@ -1,0 +1,32 @@
+{
+  "id": "p2i-layout-game-title-pill-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-title-pill",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "3cca54fd31b74bfb0d2a2a4b66473aad1c6b69153c192d0b67de95131aa31ba0",
+    "layer": null,
+    "declarationDigest": "9e51425cfadc72880595d74e79051746f118cfba974b84b2e7e914170fe05bce",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"display","value":[["ident-token","flex"]],"important":false},
+      {"property":"flex-direction","value":[["ident-token","column"]],"important":false},
+      {"property":"align-items","value":[["ident-token","center"]],"important":false},
+      {"property":"text-align","value":[["ident-token","center"]],"important":false},
+      {"property":"min-width","value":[["number-token","0"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-title-pill","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"3cca54fd31b74bfb0d2a2a4b66473aad1c6b69153c192d0b67de95131aa31ba0","layer":"layout","declarationDigest":"9e51425cfadc72880595d74e79051746f118cfba974b84b2e7e914170fe05bce","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [
+      {"property":"align-items","peerProperty":"align-items","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]},
+      {"property":"display","peerProperty":"display","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]},
+      {"property":"flex-direction","peerProperty":"flex-direction","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]},
+      {"property":"min-width","peerProperty":"min-width","targetLayer":"layout","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["tetris.html"]}
+    ],
+    "important": []
+  }
+}

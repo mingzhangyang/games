@@ -10,100 +10,18 @@
     "declarationDigest": "d865c8514501b6d4231f87db2dd48722b92f51616275762c59eed333b5fccaa6",
     "occurrence": 1,
     "declarations": [
-      {
-        "property": "display",
-        "value": [
-          [
-            "ident-token",
-            "flex"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "align-items",
-        "value": [
-          [
-            "ident-token",
-            "center"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "gap",
-        "value": [
-          [
-            "dimension-token",
-            "6px"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "flex-shrink",
-        "value": [
-          [
-            "number-token",
-            "0"
-          ]
-        ],
-        "important": false
-      }
+      {"property":"display","value":[["ident-token","flex"]],"important":false},
+      {"property":"align-items","value":[["ident-token","center"]],"important":false},
+      {"property":"gap","value":[["dimension-token","6px"]],"important":false},
+      {"property":"flex-shrink","value":[["number-token","0"]],"important":false}
     ]
   },
   "destinations": [
-    {
-      "path": "css/layout.css",
-      "context": "",
-      "selector": ".game-topbar-group",
-      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "selectorDigest": "d2e33d41f159aad15d2d3060d0c69dcb3ed75e0e2b1adceafc6c2cb70453dd7a",
-      "layer": "layout",
-      "declarationDigest": "d865c8514501b6d4231f87db2dd48722b92f51616275762c59eed333b5fccaa6",
-      "occurrence": 1
-    }
+    {"path":"css/layout.css","context":"","selector":".game-topbar-group","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"d2e33d41f159aad15d2d3060d0c69dcb3ed75e0e2b1adceafc6c2cb70453dd7a","layer":"layout","declarationDigest":"d865c8514501b6d4231f87db2dd48722b92f51616275762c59eed333b5fccaa6","occurrence":1}
   ],
   "conflicts": {
     "normal": [
-      {
-        "property": "gap",
-        "peerProperty": "gap",
-        "targetLayer": "layout",
-        "peerPath": "css/layout.css",
-        "peerContext": "@media (width <= 480px)",
-        "peerSourceLayer": null,
-        "peerLayer": null,
-        "layerPriority": "peer-unlayered-wins",
-        "pages": [
-          "bond-forge.html",
-          "carrot-pull.html",
-          "circuit.html",
-          "crystal-bloom.html",
-          "echo-cave.html",
-          "firefly-signal.html",
-          "flame-verse.html",
-          "gomoku.html",
-          "gravity-slingshot.html",
-          "hoop-shot.html",
-          "index.html",
-          "lumen.html",
-          "math-rain.html",
-          "maxwell-demon.html",
-          "minesweeper.html",
-          "needle-awn.html",
-          "planet-merge.html",
-          "reversi.html",
-          "ripple-duet.html",
-          "shadow-loom.html",
-          "silk-dew.html",
-          "sword-flight.html",
-          "tank-battle.html",
-          "tetris.html",
-          "tower-defense.html",
-          "word-daily.html"
-        ]
-      }
+      {"property":"gap","peerProperty":"gap","targetLayer":"layout","peerPath":"css/layout.css","peerContext":"@media (width <= 480px)","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["bond-forge.html","carrot-pull.html","circuit.html","crystal-bloom.html","echo-cave.html","firefly-signal.html","flame-verse.html","gomoku.html","gravity-slingshot.html","hoop-shot.html","index.html","lumen.html","math-rain.html","maxwell-demon.html","minesweeper.html","needle-awn.html","planet-merge.html","reversi.html","ripple-duet.html","shadow-loom.html","silk-dew.html","sword-flight.html","tank-battle.html","tetris.html","tower-defense.html","word-daily.html"]}
     ],
     "important": []
   }

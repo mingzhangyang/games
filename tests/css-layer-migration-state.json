@@ -39,6 +39,7 @@
     "tests/css-layer-migrations/rules/p2e-layout-game-footer-actions-default.json",
     "tests/css-layer-migrations/rules/p2f-layout-game-canvas-default.json",
     "tests/css-layer-migrations/rules/p2g-layout-game-sidebar-desktop-default.json",
-    "tests/css-layer-migrations/rules/p2h-layout-game-toast-default.json"
+    "tests/css-layer-migrations/rules/p2h-layout-game-toast-default.json",
+    "tests/css-layer-migrations/rules/p2i-layout-game-title-pill-default.json"
   ]
 }

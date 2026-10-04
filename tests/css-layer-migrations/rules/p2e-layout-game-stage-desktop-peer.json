@@ -10,98 +10,15 @@
     "declarationDigest": "84af986898c0bbfba47f988a5706c0c2d002e08c740769c6738d2f229d8dfee2",
     "occurrence": 1,
     "declarations": [
-      {
-        "property": "max-width",
-        "value": [
-          [
-            "function-token",
-            "var("
-          ],
-          [
-            "ident-token",
-            "--frame-stage-cap"
-          ],
-          [
-            "comma-token",
-            ","
-          ],
-          [
-            "whitespace-token",
-            " "
-          ],
-          [
-            "function-token",
-            "var("
-          ],
-          [
-            "ident-token",
-            "--frame-stage"
-          ],
-          [
-            ")-token",
-            ")"
-          ],
-          [
-            ")-token",
-            ")"
-          ]
-        ],
-        "important": false
-      }
+      {"property":"max-width","value":[["function-token","var("],["ident-token","--frame-stage-cap"],["comma-token",","],["whitespace-token"," "],["function-token","var("],["ident-token","--frame-stage"],[")-token",")"],[")-token",")"]],"important":false}
     ]
   },
   "destinations": [
-    {
-      "path": "css/layout.css",
-      "context": "@media (width >= 1024px)",
-      "selector": ".game-stage",
-      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
-      "selectorDigest": "5136173ac59bc4c5cc6071143147d7bd7479b30df3bd3e667f19ce0d43eb2f8d",
-      "layer": "layout",
-      "declarationDigest": "84af986898c0bbfba47f988a5706c0c2d002e08c740769c6738d2f229d8dfee2",
-      "occurrence": 1
-    }
+    {"path":"css/layout.css","context":"@media (width >= 1024px)","selector":".game-stage","contextDigest":"1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5","selectorDigest":"5136173ac59bc4c5cc6071143147d7bd7479b30df3bd3e667f19ce0d43eb2f8d","layer":"layout","declarationDigest":"84af986898c0bbfba47f988a5706c0c2d002e08c740769c6738d2f229d8dfee2","occurrence":1}
   ],
   "conflicts": {
     "normal": [
-      {
-        "property": "max-width",
-        "peerProperty": "max-width",
-        "targetLayer": "layout",
-        "peerPath": "css/layout.css",
-        "peerContext": "",
-        "peerSourceLayer": "layout",
-        "peerLayer": "layout",
-        "layerPriority": "same-layer",
-        "pages": [
-          "bond-forge.html",
-          "carrot-pull.html",
-          "circuit.html",
-          "crystal-bloom.html",
-          "echo-cave.html",
-          "firefly-signal.html",
-          "flame-verse.html",
-          "gomoku.html",
-          "gravity-slingshot.html",
-          "hoop-shot.html",
-          "index.html",
-          "lumen.html",
-          "math-rain.html",
-          "maxwell-demon.html",
-          "minesweeper.html",
-          "needle-awn.html",
-          "planet-merge.html",
-          "reversi.html",
-          "ripple-duet.html",
-          "shadow-loom.html",
-          "silk-dew.html",
-          "sword-flight.html",
-          "tank-battle.html",
-          "tetris.html",
-          "tower-defense.html",
-          "word-daily.html"
-        ]
-      }
+      {"property":"max-width","peerProperty":"max-width","targetLayer":"layout","peerPath":"css/layout.css","peerContext":"","peerSourceLayer":"layout","peerLayer":"layout","layerPriority":"same-layer","pages":["bond-forge.html","carrot-pull.html","circuit.html","crystal-bloom.html","echo-cave.html","firefly-signal.html","flame-verse.html","gomoku.html","gravity-slingshot.html","hoop-shot.html","index.html","lumen.html","math-rain.html","maxwell-demon.html","minesweeper.html","needle-awn.html","planet-merge.html","reversi.html","ripple-duet.html","shadow-loom.html","silk-dew.html","sword-flight.html","tank-battle.html","tetris.html","tower-defense.html","word-daily.html"]}
     ],
     "important": []
   }
