@@ -283,6 +283,19 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
     if (jsonKey(flattened) !== jsonKey(sourceRule.declarations)) {
         errors.push(mapping.id + ': destination declarations must be an ordered, lossless partition of the source rule.');
     }
+    const assignments = destinationAssignments(mapping, sourceRule, destinationRules);
+    const propertyLayers = new Map();
+    sourceRule.declarations.forEach((declaration, index) => {
+        const destination = assignments[index];
+        if (!destination) return;
+        const previous = propertyLayers.get(declaration.property);
+        if (previous && previous !== destination.layer) {
+            errors.push(mapping.id + ': repeated property ' + declaration.property
+                + ' cannot be split across layers; preserve its intra-rule fallback cascade.');
+        } else {
+            propertyLayers.set(declaration.property, destination.layer);
+        }
+    });
     for (const destination of destinationRules) {
         if (destination.selectorDigest !== sourceRule.selectorDigest
             || destination.contextDigest !== sourceRule.contextDigest) {
