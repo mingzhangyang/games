@@ -108,6 +108,13 @@ global bindings, and inside event handlers against every document member. Timers
 by call-site name, so renaming them by destructuring is rejected. Earlier, member access,
 identifiers and destructuring each had their own partial list, and `window.eval(...)` passed.
 
+Timers are the one string-to-code capability that stays allowed, so they get exactly one
+reviewed shape, like element factories: a direct call whose first argument is syntactically
+a function value (function/arrow expression, identifier, member or call such as `bind`). Any
+other use of the name fails: `call`/`apply`/`bind` on the timer, passing it (`list.forEach(setTimeout)`),
+storing it, renaming it, or a spread or non-function argument. The audit does not try to
+recognize the indirect call shapes one by one.
+
 Value-preserving wrappers are defined once (`passesValue`/`valueSources`): sequence (last
 operand), conditional branches, logical operands, `=`/logical assignment, `await`, optional
 chains. Host detection, invocation and timer checks all see through them, so `(0, document)[k]`,

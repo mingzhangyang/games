@@ -118,8 +118,14 @@ const CAPABILITY_NAMES = new Set([...ELEMENT_FACTORIES, ...STYLESHEET_HANDLES, .
 //   window or a document, so every capability name;
 // - bare identifiers: the global bindings, plus every document member inside
 //   event handlers, whose scope chain includes the element, form and document.
-// Timers are checked by call-site name, so renaming them is rejected too.
-const RENAME_SENSITIVE = new Set([...CAPABILITY_NAMES, 'setTimeout', 'setInterval']);
+// Timers evaluate a string first argument as code. Like element factories they
+// are allowed in exactly one reviewed shape: a direct call whose first argument
+// is syntactically a function value. Any other use of the name (call/apply/bind,
+// passing or storing it, renaming it) fails, instead of recognizing call shapes.
+const TIMERS = new Set(['setTimeout', 'setInterval']);
+const FUNCTION_VALUES = new Set(['ArrowFunctionExpression', 'FunctionExpression', 'Identifier', 'MemberExpression',
+    'CallExpression']);
+const RENAME_SENSITIVE = new Set([...CAPABILITY_NAMES, ...TIMERS]);
 // Inserting these elements activates code, a stylesheet, a nested document, or
 // changes URL/stylesheet-set resolution for the rest of the page.
 const ACTIVATING_TAGS = new Set(['style', 'link', 'script', 'iframe', 'frame', 'object', 'embed', 'base', 'meta']);
@@ -199,6 +205,17 @@ function invoked(ancestors, node) {
             && ['call', 'apply', 'bind'].includes(property(parent));
     }
     return false;
+}
+
+// The call whose callee this node is, seeing through value-preserving wrappers.
+function directCall(ancestors, node) {
+    let child = node;
+    for (let index = ancestors.length - 1; index >= 0; index--) {
+        const parent = ancestors[index];
+        if (passesValue(parent, child)) { child = parent; continue; }
+        return parent.type === 'CallExpression' && parent.callee === child ? parent : null;
+    }
+    return null;
 }
 
 function memberOf(node, name, key) {
@@ -291,11 +308,14 @@ export function auditStyleIngress(source, file = 'fixture.js', grammar = 'module
                 }
             }
         }
-        if (node.type === 'CallExpression' && valueSources(node.callee).some(callee =>
-            ['setTimeout', 'setInterval'].includes(callee.type === 'Identifier' ? callee.name : property(callee) ?? ''))
-            && valueSources(node.arguments[0]).some(argument =>
-                ['Literal', 'TemplateLiteral', 'BinaryExpression'].includes(argument.type))) {
-            fail('string timers evaluate code outside the audited source');
+        const timer = node.type === 'MemberExpression' ? TIMERS.has(property(node))
+            : node.type === 'Identifier' && TIMERS.has(node.name) && isReference(node, parent);
+        if (timer) {
+            const call = directCall(ancestors, node);
+            if (!call) fail('timers may only be called directly; other uses hide string evaluation');
+            else if (!valueSources(call.arguments[0]).every(argument => FUNCTION_VALUES.has(argument.type))) {
+                fail('timer callbacks must be function values; strings evaluate code outside the audited source');
+            }
         }
         const text = node.type === 'Literal' && typeof node.value === 'string' ? node.value
             : node.type === 'TemplateElement' ? node.value.cooked || '' : null;

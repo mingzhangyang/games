@@ -107,6 +107,16 @@ for (const source of [
     '(0, setTimeout)("document.styleSheets", 0);',
     'setTimeout((0, "document.styleSheets"), 0);',
     'setTimeout(flag ? "document.styleSheets" : handler, 0);',
+    // Timers have one allowed shape: a direct call with a function value.
+    'setTimeout.call(window, "document.createElement(\'style\')", 0);',
+    'window.setTimeout.apply(window, [code, 0]);',
+    'const later = setTimeout.bind(window); later("document.styleSheets");',
+    '["document.styleSheets"].forEach(setTimeout);',
+    'const timers = { later: setTimeout }; timers.later(code);',
+    '[setTimeout][0](code);',
+    'setTimeout(...args);',
+    'setTimeout(`document.${key}`);',
+    'setInterval(new String("document.styleSheets"));',
 ]) assert.ok(auditStyleIngress(source).length, source);
 assert.match(auditHtmlStyleIngress('<script>with (document) { createElement("style"); }</script>').join('\n'),
     /with statements hide/);
@@ -120,6 +130,8 @@ for (const source of [
     'items[index].update(); grid[y][x] = 1; handlers[0]();',
     'const value = (0, registry[key]); total = flag ? grid[y][x] : 0; label = names[i] || "";',
     'setTimeout(flag ? first : second, 0); (cond ? a : b).run();',
+    'setTimeout(() => tick(), 16); window.setTimeout(function () {}, 0); setInterval(this.step.bind(this), 50);',
+    'clearTimeout(timer); window.clearInterval(id);',
     'const write = value => value; write(1);',
     'const s=document.createElement("script"); s.type="application/ld+json"; s.textContent=JSON.stringify(data);'
         + ' document.head.appendChild(s);',
