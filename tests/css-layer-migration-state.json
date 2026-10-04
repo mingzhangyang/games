@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "not-started",
-  "p0BaselineBlobSha": "9ae75fbd1c857d1b587a89706b1e5bc6147249fc",
+  "p0BaselineBlobSha": "9c4541b4a447bff3dbecb0bc6cd02e09f3850922",
   "migrationUnit": "rule",
   "rejectedStrategy": "whole-file-single-layer",
   "targetLayerOrder": [

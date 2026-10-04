@@ -18,6 +18,7 @@ const BASELINE_BLOB_SHA = createHash('sha1')
     .update(`blob ${Buffer.byteLength(BASELINE_TEXT, 'utf8')}\0`)
     .update(BASELINE_TEXT)
     .digest('hex');
+const REVIEWED_P0_BASELINE_BLOB_SHA = '9c4541b4a447bff3dbecb0bc6cd02e09f3850922';
 const REVIEWED_LAYER_ORDER = Object.freeze(['tokens', 'showcase', 'components', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
 const SPECIAL_AT_RULES = new Set([
@@ -471,6 +472,21 @@ function maskHtmlComments(html) {
     return html.replace(/<!--[\s\S]*?(?:-->|$)/g, match => ' '.repeat(match.length));
 }
 
+function normalizeLinkAttributes(attributes) {
+    return Object.entries(attributes)
+        .map(([name, value]) => [
+            name,
+            name === 'rel'
+                ? value.toLowerCase().split(/\s+/).filter(Boolean).sort().join(' ')
+                : normalizeValue(value),
+        ])
+        .sort(([left], [right]) => left.localeCompare(right));
+}
+
+function stylesheetLinkSignature(attributes) {
+    return [attributes.href, normalizeLinkAttributes(attributes)];
+}
+
 function scanHtml(path, html) {
     // HTML comments are inert browser content. Mask them before every HTML-level
     // scan so commented links/styles cannot impersonate active cascade inputs.
@@ -480,7 +496,7 @@ function scanHtml(path, html) {
     for (const match of linkTags) {
         const attributes = parseAttributes(match[0]);
         if ((attributes.rel || '').toLowerCase().split(/\s+/).includes('stylesheet') && attributes.href) {
-            links.push(attributes.href);
+            links.push(stylesheetLinkSignature(attributes));
         }
     }
 
@@ -498,10 +514,15 @@ function scanHtml(path, html) {
     }
 
     const htmlWithoutRawText = activeHtml.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+    const tagOccurrences = new Map();
     for (const tag of htmlWithoutRawText.matchAll(/<[a-z](?:"[^"]*"|'[^']*'|[^'">])*>/gi)) {
+        const tagName = (tag[0].match(/^<([a-z][^\s/>]*)/i) || [])[1]?.toLowerCase() || 'unknown';
+        const occurrence = tagOccurrences.get(tagName) || 0;
+        tagOccurrences.set(tagName, occurrence + 1);
         const attributes = parseAttributes(tag[0]);
         if (Object.hasOwn(attributes, 'style')) {
-            inlineAttributes.push([path, inlineAttributes.length, normalizeValue(attributes.style)]);
+            const identity = attributes.id ? tagName + '#' + attributes.id : tagName + '@' + occurrence;
+            inlineAttributes.push([path, identity, normalizeValue(attributes.style)]);
         }
     }
 
@@ -568,12 +589,26 @@ function runSelfChecks() {
     const htmlScan = scanHtml('fixture.html', [
         '<!-- <link rel="stylesheet" href="/commented.css"> -->',
         '<link rel="stylesheet" href="/active.css">',
+        '<link rel="alternate stylesheet" href="/inactive.css" media="print" disabled>',
         '<div title=">" style="color:red"></div>',
+        '<div></div>',
+        '<div style="color:red"></div>',
         '<!-- <style>.commented { display:none; }</style><div style="display:none"></div> -->',
     ].join('\n'));
-    assert.deepEqual(htmlScan.links, ['/active.css']);
+    assert.deepEqual(htmlScan.links, [
+        ['/active.css', [['href', '/active.css'], ['rel', 'stylesheet']]],
+        ['/inactive.css', [
+            ['disabled', ''],
+            ['href', '/inactive.css'],
+            ['media', 'print'],
+            ['rel', 'alternate stylesheet'],
+        ]],
+    ]);
     assert.equal(htmlScan.styleBlocks.length, 0);
-    assert.deepEqual(htmlScan.inlineAttributes, [['fixture.html', 0, 'color:red']]);
+    assert.deepEqual(htmlScan.inlineAttributes, [
+        ['fixture.html', 'div@0', 'color:red'],
+        ['fixture.html', 'div@2', 'color:red'],
+    ]);
 
     assert.deepEqual([
         '/assets/tokens-test.css',
@@ -645,8 +680,11 @@ function verifyProject() {
     if (BASELINE.snapshotKind !== 'immutable-p0') {
         errors.push('tests/css-layer-p0-baseline.json must remain the immutable P0 snapshot.');
     }
-    if (MIGRATION_STATE.p0BaselineBlobSha !== BASELINE_BLOB_SHA) {
-        errors.push('Immutable P0 baseline fingerprint changed; migration progress belongs in css-layer-migration-state.json.');
+    if (BASELINE_BLOB_SHA !== REVIEWED_P0_BASELINE_BLOB_SHA) {
+        errors.push('Immutable P0 baseline content differs from the independently reviewed digest.');
+    }
+    if (MIGRATION_STATE.p0BaselineBlobSha !== REVIEWED_P0_BASELINE_BLOB_SHA) {
+        errors.push('Migration state must reference the independently pinned immutable P0 digest.');
     }
     if (!sameJson(MIGRATION_STATE.targetLayerOrder, REVIEWED_LAYER_ORDER)) {
         errors.push('targetLayerOrder must exactly match the reviewed layer taxonomy: '

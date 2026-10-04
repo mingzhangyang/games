@@ -68,7 +68,7 @@ Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `3713388
 - Sword Flight 的 Google Fonts 外链位于内部样式表之后。
 - Showcase 页面将 `science-showcase.css` 放在页面 CSS 之前。
 
-`verify-css-debt.mjs` 固定 27 页的精确 stylesheet link 顺序、CSS/HTML 文件清单、当前 layer 声明与包裹位置。它会在 `verify:changed` 中运行。P0 baseline 是不可变历史快照，不再随迁移下调；后续迁移进度只能记录在独立 migration state。新添/替换的未分层规则、keyframes、`!important` 或内联样式仍会失败。CSS 新文件必须显式登记 ownership，并在 P2 规则级审计中登记职责。
+`verify-css-debt.mjs` 固定 27 页的 stylesheet 顺序及规范化 link 属性签名、inline style 的稳定元素身份、CSS/HTML 文件清单、当前 layer 声明与包裹位置。它会在 `verify:changed` 中运行。P0 baseline 的 Git blob digest 由 verifier 独立固定，migration state 只能引用该 digest，不能自行重定义；后续迁移进度只能记录在独立 migration state。新添/替换的未分层规则、keyframes、`!important` 或内联样式仍会失败。CSS 新文件必须显式登记 ownership，并在 P2 规则级审计中登记职责。
 
 ## P1：特殊规则和全局样式审计
 
