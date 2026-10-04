@@ -199,6 +199,12 @@ function verifyProject() {
         errors.push('Active HTML inventory changed; review page/stylesheet ownership without editing immutable P0.');
     }
 
+    const declaredMappedPaths = new Set((MIGRATION_STATE.migratedRules || []).flatMap(mapping => [
+        mapping.source?.path,
+        ...(mapping.destinations || []).map(destination => destination.path),
+    ]).filter(Boolean));
+    const migrationStarted = (MIGRATION_STATE.migratedRules || []).length > 0;
+    const currentParsedByPath = new Map();
     const stylesheetLinks = {};
     const actualDebt = {
         unlayeredRules: [],
@@ -215,6 +221,7 @@ function verifyProject() {
 
     for (const path of cssPaths) {
         const parsed = parseCssText(readFileSync(join(ROOT, path), 'utf8'), path);
+        currentParsedByPath.set(path, parsed);
         totalRules += parsed.rules.length;
         importantCount += parsed.declarations.filter(declaration => hasImportantPriority(declaration.value)).length;
         const fileCustomPropertyDefinitions = parsed.declarations
@@ -256,14 +263,19 @@ function verifyProject() {
         const layerBlocks = [...parsed.layerBlocks];
         const normalizedLayerCounts = Object.fromEntries(Object.entries(layerCounts).sort(([a], [b]) => a.localeCompare(b)));
         const expectedLayerCounts = Object.fromEntries(Object.entries(baselineFile.currentLayers).sort(([a], [b]) => a.localeCompare(b)));
-        if (!sameJson(normalizedLayerCounts, expectedLayerCounts)) {
-            errors.push(path + ': current layer map differs from the reviewed P0 baseline.');
+        if (!declaredMappedPaths.has(path) && !sameJson(normalizedLayerCounts, expectedLayerCounts)) {
+            errors.push(path + ': current layer map differs from the reviewed P0 baseline without a registered rule mapping.');
         }
-        if (!sameJson(layerStatements, baselineFile.layerStatements)) {
+        if (path === 'css/tokens.css' && migrationStarted) {
+            const reviewedOrder = REVIEWED_LAYER_ORDER.join(', ');
+            if (!sameJson(layerStatements, [reviewedOrder])) {
+                errors.push(path + ': active P2 migration requires the canonical @layer order "' + reviewedOrder + '".');
+            }
+        } else if (!sameJson(layerStatements, baselineFile.layerStatements)) {
             errors.push(path + ': @layer order declaration differs from the reviewed P0 baseline.');
         }
-        if (!sameJson(layerBlocks, baselineFile.layerBlocks)) {
-            errors.push(path + ': current @layer blocks differ from the reviewed P0 baseline.');
+        if (!declaredMappedPaths.has(path) && !sameJson(layerBlocks, baselineFile.layerBlocks)) {
+            errors.push(path + ': current @layer blocks differ from the reviewed P0 baseline without a registered rule mapping.');
         }
     }
 
