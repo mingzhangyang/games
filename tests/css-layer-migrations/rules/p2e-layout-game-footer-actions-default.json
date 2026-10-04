@@ -1,0 +1,71 @@
+{
+  "id": "p2e-layout-game-footer-actions-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-footer-actions",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "28a7f535b9b8d6588f884135ab134050e851bddc67183e63ccee16dbca9c8894",
+    "layer": null,
+    "declarationDigest": "9d88a840482e04c3477ad3a4e36853624dce8b398d0c5752c706b7e93057d394",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "flex"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-content",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "8px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ".game-footer-actions",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "28a7f535b9b8d6588f884135ab134050e851bddc67183e63ccee16dbca9c8894",
+      "layer": "layout",
+      "declarationDigest": "9d88a840482e04c3477ad3a4e36853624dce8b398d0c5752c706b7e93057d394",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

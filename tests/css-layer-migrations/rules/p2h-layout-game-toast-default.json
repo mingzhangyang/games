@@ -1,0 +1,99 @@
+{
+  "id": "p2h-layout-game-toast-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-toast",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "81420dacad6989af1983418c70fb91cf4e5a3edc1d0fd64900ac3dce0996cd4d",
+    "layer": null,
+    "declarationDigest": "411593e60617dd7119c1f97102c1e342abeccc854199b471995f54e6d476d4ab",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "position",
+        "value": [
+          [
+            "ident-token",
+            "absolute"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "left",
+        "value": [
+          [
+            "percentage-token",
+            "50%"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "transform",
+        "value": [
+          [
+            "function-token",
+            "translateX("
+          ],
+          [
+            "percentage-token",
+            "-50%"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "z-index",
+        "value": [
+          [
+            "number-token",
+            "20"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "border-radius",
+        "value": [
+          [
+            "dimension-token",
+            "99px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "pointer-events",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ".game-toast",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "81420dacad6989af1983418c70fb91cf4e5a3edc1d0fd64900ac3dce0996cd4d",
+      "layer": "layout",
+      "declarationDigest": "411593e60617dd7119c1f97102c1e342abeccc854199b471995f54e6d476d4ab",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "id": "p2e-layout-game-main-desktop-peer",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width >= 1024px)",
+    "selector": ".game-main",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "ec1d64b0254df3d7bdf7dc2b267c16f47177c1f319ecef5cf18c82f4b104271b",
+    "layer": null,
+    "declarationDigest": "1ddcf9d9c625e0a90a476a12458290e5fbd398ea50b7972e1041b20e29822bf3",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "flex-direction",
+        "value": [
+          [
+            "ident-token",
+            "row"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "flex-start"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-content",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-main-gap"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width >= 1024px)",
+      "selector": ".game-main",
+      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+      "selectorDigest": "ec1d64b0254df3d7bdf7dc2b267c16f47177c1f319ecef5cf18c82f4b104271b",
+      "layer": "layout",
+      "declarationDigest": "1ddcf9d9c625e0a90a476a12458290e5fbd398ea50b7972e1041b20e29822bf3",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "align-items",
+        "peerProperty": "align-items",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "flex-direction",
+        "peerProperty": "flex-direction",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}

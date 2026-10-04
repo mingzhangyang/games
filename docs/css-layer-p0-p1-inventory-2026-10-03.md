@@ -158,8 +158,9 @@ safe-area 等平台结构不变量。页面视觉与玩法专属组件进入 `pa
 CSS 文件都允许出现多个 layer block，文件路径不再决定 layer ownership。
 
 P0 快照与迁移状态也必须分离：`tests/css-layer-p0-baseline.json` 是不可变证据；
-`tests/css-layer-migration-state.json` 才是后续 rule-level ratchet。任何迁移都必须先让 verifier
-能证明“某条 P0 debt 已在指定 layer 出现”，再允许它退出 active debt。
+`tests/css-layer-migration-state.json` 是后续 rule-level ratchet 的小型 manifest，完整 mapping
+按一条规则一个文件存放在 `tests/css-layer-migrations/rules/`。verifier hydrate manifest + modules
+后再执行单向 ratchet；任何迁移都必须先证明“某条 P0 debt 已在指定 layer 出现”，才允许它退出 active debt。
 
 其他审计结果：
 
