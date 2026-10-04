@@ -564,8 +564,12 @@ body.drawer-locked {
     .game-shell { padding: 6px 8px 4px; }
     /* 窄屏收紧顶栏间距：保证最挤的页面（td 三个状态胶囊）仍保持单行 */
     .game-topbar { gap: 6px; }
-    .game-topbar-group { gap: 4px; }
-    .game-topbar-center { gap: 5px; }
+    @layer layout {
+        .game-topbar-group { gap: 4px; }
+    }
+    @layer layout {
+        .game-topbar-center { gap: 5px; }
+    }
     .game-icon-btn { font-size: 14px; }
     .game-icon-btn--wide { padding: 0 9px; }
     .game-overlay { padding: 16px; gap: 11px; }
@@ -632,15 +636,19 @@ body.drawer-locked {
         max-width: var(--frame-shell-max, var(--frame-max-wide));
     }
 
-    .game-main {
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: center;
-        gap: var(--frame-main-gap);
+    @layer layout {
+        .game-main {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            gap: var(--frame-main-gap);
+        }
     }
     /* 横向安全网：1024–1200px 视口下容器吃满视口时，
        舞台不得挤掉 flex-shrink:0 的侧栏 */
-    .game-stage { max-width: var(--frame-stage-cap, var(--frame-stage)); }
+    @layer layout {
+        .game-stage { max-width: var(--frame-stage-cap, var(--frame-stage)); }
+    }
 
     .game-sidebar {
         display: flex;
