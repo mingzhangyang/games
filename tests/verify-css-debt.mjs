@@ -31,7 +31,9 @@ const DECLARATION_AT_RULES = new Set([
 ]);
 const KEYFRAME_AT_RULES = new Set(['keyframes', '-webkit-keyframes', '-moz-keyframes', '-o-keyframes']);
 const SPECIAL_AT_RULES = new Set([
-    ...STATEMENT_AT_RULES,
+    // @layer order statements have a dedicated immutable identity in
+    // cssFiles[].layerStatements; do not double-count them as special debt.
+    'charset', 'import', 'namespace',
     ...DECLARATION_AT_RULES,
     ...KEYFRAME_AT_RULES,
     'document',
@@ -659,6 +661,10 @@ function runSelfChecks() {
     assert.deepEqual(parsed.rules.filter(rule => !rule.layer).map(rule => rule.selector), ['.existing']);
     assert.equal(parsed.keyframes.length, 1);
     assert.deepEqual(parsed.specialAtRules.map(row => row[2]), ['keyframes']);
+
+    const layerOrder = parseCssText('@layer tokens, layout, components;', 'layer-order.css');
+    assert.deepEqual(layerOrder.layerStatements, ['tokens, layout, components']);
+    assert.deepEqual(layerOrder.specialAtRules || [], []);
 
     const escapedAtRules = parseCssText([
         '@\\69mport url("/escaped.css");',
