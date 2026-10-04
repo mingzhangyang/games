@@ -808,9 +808,12 @@ function runtimeStyleSourcesForFile(path, source, errors) {
                     value: staticJavaScriptString(node.right),
                 });
             }
-            if (property === 'adoptedStyleSheets') {
-                errors.push(path + ': adoptedStyleSheets is outside the audited CSS source model; use static CSS.');
-            }
+        }
+
+        if (node.type === 'MemberExpression'
+            && ['adoptedStyleSheets', 'styleSheets', 'sheet'].includes(memberPropertyName(node))) {
+            errors.push(path + ': stylesheet handle access .' + memberPropertyName(node)
+                + ' is outside the audited CSS source model; use static CSS.');
         }
 
         if (node.type === 'NewExpression' && node.callee?.type === 'Identifier'
@@ -818,7 +821,7 @@ function runtimeStyleSourcesForFile(path, source, errors) {
             errors.push(path + ': constructed CSSStyleSheet is outside the audited CSS source model; use static CSS.');
         }
         if (node.type === 'CallExpression' && node.callee?.type === 'MemberExpression'
-            && ['insertRule', 'replace', 'replaceSync'].includes(memberPropertyName(node.callee))) {
+            && ['insertRule', 'addRule', 'replaceSync'].includes(memberPropertyName(node.callee))) {
             errors.push(path + ': CSSOM stylesheet mutation is outside the audited CSS source model; use static CSS.');
         }
 
@@ -1020,6 +1023,20 @@ function runSelfChecks() {
         constructedErrors,
     );
     assert.equal(constructedErrors.length, 2);
+    const stringReplaceErrors = [];
+    runtimeStyleSourcesForFile(
+        'string-replace-fixture.js',
+        'const clean = "a-b".replace("-", "");',
+        stringReplaceErrors,
+    );
+    assert.deepEqual(stringReplaceErrors, []);
+    const existingSheetErrors = [];
+    runtimeStyleSourcesForFile(
+        'existing-sheet-fixture.js',
+        'document.styleSheets[0].replace(".x{}");',
+        existingSheetErrors,
+    );
+    assert.equal(existingSheetErrors.length, 1);
     assert.deepEqual(htmlScan.inlineAttributes, [
         ['fixture.html', 'div@0', 'color:red'],
         ['fixture.html', 'div@1', 'color:blue'],
