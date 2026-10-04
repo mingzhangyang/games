@@ -69,20 +69,22 @@
        未覆盖的页面回落 --frame-max-wide / --frame-stage，行为不变。
    ───────────────────────────────────────────── */
 
-:root {
-    --frame-max: 520px;
-    --frame-max-wide: 940px;
-    --frame-stage: 460px;
-    --frame-side: 300px;
-    --frame-side-gap: 12px;
-    --frame-radius: 18px;
-    --drawer-max: 90dvh;
-    --frame-ratio: 0.75;
-    --frame-stage-h: 960px;
-    --frame-chrome: 150px;
-    --frame-main-gap: 28px;
-    --frame-scrollbar-thumb: var(--tok-scrollbar);
-    --frame-scrollbar-thumb-hover: var(--tok-scrollbar-hover);
+@layer layout {
+    :root {
+        --frame-max: 520px;
+        --frame-max-wide: 940px;
+        --frame-stage: 460px;
+        --frame-side: 300px;
+        --frame-side-gap: 12px;
+        --frame-radius: 18px;
+        --drawer-max: 90dvh;
+        --frame-ratio: 0.75;
+        --frame-stage-h: 960px;
+        --frame-chrome: 150px;
+        --frame-main-gap: 28px;
+        --frame-scrollbar-thumb: var(--tok-scrollbar);
+        --frame-scrollbar-thumb-hover: var(--tok-scrollbar-hover);
+    }
 }
 
 /* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */

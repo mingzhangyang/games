@@ -301,6 +301,15 @@ text-align / min-width 是顶栏中槽的共享 `layout` 默认值，不含 rese
 因此迁移前后仍由 Tetris 的 row/wrap 设计获胜。本批不触碰 `.game-hud-box`（含 padding）
 或任何 contracts。
 
+**P2-J shared frame variable defaults：** 顶层 `:root` 中的 `--frame-*`、
+`--drawer-max` 与 scrollbar 变量是共享 shell 的可定制配置默认值，本批整体迁入 `layout`。
+这不会把 drawer / frame-budget / immersive 的结构规则提前迁入 `contracts`；这里只改变变量默认值
+所在 layer。Gomoku 在自己的未分层 `:root` 中覆盖 `--frame-max`、`--frame-max-wide`、
+`--frame-stage`，三项 exact-selector 冲突均在 mapping module 中显式登记，因此仍由 Gomoku
+页面值获胜。其它游戏主要在各自 shell selector 上覆盖 `--frame-*`，这些元素级声明本来就会
+覆盖从 `:root` 继承的默认值。本批继续不触碰 `.game-topbar`、`.game-hud-box` 或任何
+drawer / start-menu / frame-budget / immersive contracts。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -472,6 +481,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-H：迁移 `.game-toast` 共享定位默认值到 `layout`；page-specific toast 规则继续未分层覆盖，不触碰 overlay/hidden/contracts
 - [x] 将 CSS migration ledger 拆为 manifest + per-mapping modules；主状态文件不再承载不断增长的完整 mapping payload
 - [x] P2-I：迁移 `.game-title-pill` 共享顶栏信息块默认值到 `layout`；Tetris exact-selector peer 保持未分层并显式登记冲突
+- [x] P2-J：迁移共享 frame `:root` 变量默认值到 `layout`；Gomoku 的 3 个 exact-selector 自定义属性覆盖保持未分层优先
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
