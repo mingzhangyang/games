@@ -351,6 +351,7 @@ function verifyProject() {
         baseParsedByPath,
         stylesheetLinks: BASELINE.stylesheetLinks,
         allowedLayers: ALLOWED_LAYERS,
+        layerOrder: REVIEWED_LAYER_ORDER,
         baseState,
         errors,
     });
