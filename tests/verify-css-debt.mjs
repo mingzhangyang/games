@@ -418,6 +418,7 @@ function parseCssText(source, file) {
                 } else if (DECLARATION_AT_RULES.has(name)) {
                     result.specialAtRules ||= [];
                     result.specialAtRules.push([file, context.join(' / '), name, params]);
+                    assertNoNestedBlocks(body, file, '@' + name + (rawParams ? ' ' + rawParams : ''));
                     result.declarations.push(...parseDeclarations(body).map(declaration => ({
                         ...declaration, selector: '', context: [...context], layer, atRule: name,
                     })));
@@ -456,23 +457,27 @@ function decodeHtmlCharacterReferences(value) {
         ['quot', '"'],
         ['apos', "'"],
     ]);
-    return value.replace(/&(#(?:x[0-9a-f]+|[0-9]+)|[a-z][a-z0-9]+);/gi, (match, body) => {
-        if (body[0] === '#') {
-            const hex = body[1]?.toLowerCase() === 'x';
-            const digits = body.slice(hex ? 2 : 1);
-            const codePoint = Number.parseInt(digits, hex ? 16 : 10);
-            if (!Number.isFinite(codePoint) || codePoint <= 0 || codePoint > 0x10ffff
-                || (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
-                return '\uFFFD';
-            }
-            return String.fromCodePoint(codePoint);
+
+    let decoded = value.replace(/&#(x[0-9a-f]+|[0-9]+);?/gi, (match, body) => {
+        const hex = body[0]?.toLowerCase() === 'x';
+        const digits = body.slice(hex ? 1 : 0);
+        const codePoint = Number.parseInt(digits, hex ? 16 : 10);
+        if (!Number.isFinite(codePoint) || codePoint <= 0 || codePoint > 0x10ffff
+            || (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
+            return '\uFFFD';
         }
-        const decoded = named.get(body.toLowerCase());
-        if (decoded == null) {
+        return String.fromCodePoint(codePoint);
+    });
+
+    decoded = decoded.replace(/&([a-z][a-z0-9]+);/gi, (match, body) => {
+        const replacement = named.get(body.toLowerCase());
+        if (replacement == null) {
             throw new Error('Unsupported named HTML character reference &' + body + '; in scanned attribute');
         }
-        return decoded;
+        return replacement;
     });
+
+    return decoded;
 }
 
 function parseAttributes(tag) {
@@ -632,10 +637,15 @@ function runSelfChecks() {
         () => parseCssText('@future-rule foo;', 'future.css'),
         /Unsupported CSS statement at-rule @future-rule/,
     );
+    assert.throws(
+        () => parseCssText('@page { @top-left { content: "x"; } }', 'page.css'),
+        /CSS nesting or brace-bearing values are unsupported/,
+    );
 
     const htmlScan = scanHtml('fixture.html', [
         '<!-- <link rel="stylesheet" href="/commented.css"> -->',
         '<link rel="style&#x73;heet" href="/active.css">',
+        '<link rel="style&#115heet" href="/active-decimal.css">',
         '<link rel="alternate stylesheet" href="/inactive.css" media="print" disabled>',
         '<div title=">" style="color:red"></div>',
         '<div></div>',
@@ -644,6 +654,7 @@ function runSelfChecks() {
     ].join('\n'));
     assert.deepEqual(htmlScan.links, [
         ['/active.css', [['href', '/active.css'], ['rel', 'stylesheet']]],
+        ['/active-decimal.css', [['href', '/active-decimal.css'], ['rel', 'stylesheet']]],
         ['/inactive.css', [
             ['disabled', ''],
             ['href', '/inactive.css'],
