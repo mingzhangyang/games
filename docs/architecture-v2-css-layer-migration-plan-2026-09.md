@@ -256,6 +256,13 @@ geometry / interaction 浏览器测试负责。旧 P0 与 semantic addendum 继�
 审计只负责可证明的交集，不同 selector 命中同一元素的关系继续由源码态 + production 浏览器
 geometry/interaction evidence 决定。
 
+**P2-E 响应式 peer 闭包：** PR #80 后，`.game-main`、`.game-stage`、
+`.game-topbar-group`、`.game-topbar-center` 的顶层 defaults 已在 `layout`，但它们的普通
+desktop / narrow peers 仍未分层。P2-E 将这些 exact-selector peers 一并迁入同一个
+`layout` layer，并保持原有物理顺序，所以 media 命中时仍由后声明 peer 覆盖 default；
+这一步不碰 universal reset、page CSS 或任何 `contracts` 规则。`.game-topbar` 仍因
+page-level `* { padding: 0 }` 等 cross-selector reset 依赖保持未分层。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -421,6 +428,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-C：迁移 `.game-stage` 顶层默认规则；desktop `max-width` 与 page/immersive/start-menu 覆盖关系保持不变
 - [x] 冻结 `layout.css` 的 layout defaults / contracts 职责切片边界
 - [x] P2-D：迁移 `.game-topbar-group` / `.game-topbar-center`；`.game-topbar` 因未分层 universal reset 的 padding 竞争暂缓
+- [x] P2-E：将已迁移 defaults 的普通响应式 peer（desktop `.game-main` / `.game-stage`、≤480px `.game-topbar-group` / `.game-topbar-center`）闭包迁入 `layout`；保持同层物理顺序，`.game-topbar` 继续暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
