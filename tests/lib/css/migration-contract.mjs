@@ -271,9 +271,17 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
     }
 }
 
+function validRuleRef(ref, { requireDeclarations = false } = {}) {
+    return ref && typeof ref.path === 'string' && ref.path.startsWith('css/')
+        && typeof ref.context === 'string' && typeof ref.selector === 'string'
+        && /^[0-9a-f]{64}$/.test(ref.declarationDigest || '')
+        && Number.isInteger(ref.occurrence) && ref.occurrence > 0
+        && (!requireDeclarations || Array.isArray(ref.declarations));
+}
+
 function verifyMappingShape(mapping, allowedLayers, errors) {
-    if (!mapping.source || !Array.isArray(mapping.source.declarations)) {
-        errors.push(mapping.id + ': source must include the reviewed declaration snapshot.');
+    if (!validRuleRef(mapping.source, { requireDeclarations: true })) {
+        errors.push(mapping.id + ': source must be a complete stable rule reference with a declaration snapshot.');
         return;
     }
     if (mapping.source.layer !== null && mapping.source.layer !== undefined
@@ -287,6 +295,13 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
         errors.push(mapping.id + ': at least one layered destination is required.');
     }
     for (const destination of mapping.destinations || []) {
+        if (!validRuleRef(destination)) {
+            errors.push(mapping.id + ': every destination must be a complete stable rule reference.');
+            continue;
+        }
+        if (destination.path !== mapping.source.path) {
+            errors.push(mapping.id + ': P2 layering may not move a rule between stylesheet files.');
+        }
         if (!allowedLayers.has(destination.layer)) errors.push(mapping.id + ': destination layer ' + destination.layer + ' is not reviewed.');
     }
     for (const priority of PRIORITIES) {
