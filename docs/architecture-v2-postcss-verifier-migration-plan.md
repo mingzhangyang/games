@@ -154,11 +154,14 @@ event attributes; an exact three-value script-type list missed browser-valid Jav
 | Classic inline scripts | All 16 JavaScript MIME essence strings, ASCII case/whitespace rules, and legacy language fallback; Script grammar |
 | Module inline scripts | Module grammar; type classification follows the standard conservatively |
 | Unnamespaced `on*` attributes | Parser-decoded values, FunctionBody grammar; audit every event name conservatively |
-| Executable script `src` | Resolve against the first base URL; must belong to the audited local JS inventory |
+| Executable script `src` | Resolve against the document URL (`<base href>` is rejected); must belong to the audited local JS inventory |
 | `javascript:` URL attributes | Rejected explicitly after URL parsing (including control-character/case variants) |
 | Import maps and speculation rules | Rejected until script resolution/loading effects have a reviewed contract |
 | `<meta http-equiv>` pragmas (CSP, `default-style`, `content-type`, `refresh`, …) | Rejected until modeled: they decide whether/which stylesheets and scripts activate or how they decode, without changing any stylesheet input (browser-confirmed for CSP) |
 | `<meta charset>`, `viewport`, `color-scheme` | Recorded per page in the activation addendum: linked-CSS decoding fallback, media-query viewport, used color scheme |
+| `<base href>` | Rejected: a base applies only from the moment the parser inserts it, so earlier script/link URLs resolve against the document URL. A finished DOM cannot reproduce that order. Without it every URL resolves exactly against the document URL |
+| Event handlers on `link`/`style`/`script`/`meta` | Rejected: `this` is the element itself, so a handler can rewrite its `rel`/`media`/`disabled`/`src`/`content` with no capability name (e.g. the `preload` + `onload="this.rel='stylesheet'"` idiom, browser-confirmed) |
+| Every `<link>`, any `rel` | Recorded per page in the activation addendum: any link can become a stylesheet by changing `rel`, so adding or changing a non-stylesheet link is a reviewed delta |
 | Non-executable script data blocks | Remain data; e.g. JSON-LD is not parsed as JavaScript |
 
 The runtime audit consumes this inventory rather than rediscovering HTML execution rules.

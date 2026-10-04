@@ -169,6 +169,13 @@ for (const meta of ['<meta http-equiv="Content-Security-Policy" content="style-s
     assert.match(auditHtmlStyleIngress(html, 'index.html', audited).join('\n'), /http-equiv/, meta);
     assert.throws(() => activation(html), /http-equiv/, meta);
 }
+// Every <link> is an activation input: any rel can be switched to stylesheet.
+const links = html => activation(html).links;
+for (const html of [
+    indexHtml.replace('</head>', '<link rel="preload" as="style" href="css/index.css"></head>'),
+    indexHtml.replace('rel="manifest"', 'rel="manifest" media="print"'),
+    indexHtml.replace(/<link rel="manifest"[^>]*>/, ''),
+]) assert.notDeepEqual(links(html), links(indexHtml));
 const directives = html => activation(html).directives;
 // HTML whitespace is ASCII-only: NBSP is data, not a separator, everywhere.
 assert.notDeepEqual(directives(indexHtml.replace('initial-scale', '\u00a0initial-scale')
@@ -200,7 +207,22 @@ const htmlModel = html => fingerprint(htmlCascadeModel(html, 'fixture.html'));
 assert.notEqual(htmlModel('<style>.a{color:red}</style>'), htmlModel('<style media="print">.a{color:red}</style>'));
 assert.notEqual(htmlModel('<div style="--x: \'a  b\'"></div>'), htmlModel('<div style="--x: \'a b\'"></div>'));
 assert.notEqual(htmlModel('<link rel="stylesheet" href="x.css">'), htmlModel('<template><link rel="stylesheet" href="x.css"></template>'));
-assert.notEqual(htmlModel('<base href="/a/"><link rel="stylesheet" href="x.css">'), htmlModel('<base href="/b/"><link rel="stylesheet" href="x.css">'));
+// <base href> makes URL resolution parse-order dependent (a script before it
+// resolves against the document URL), so every consumer rejects it.
+for (const html of ['<base href="/a/"><link rel="stylesheet" href="x.css">',
+    '<script src="x.js"></script><base href="/other/">', '<p></p><base href="https://elsewhere.invalid/">']) {
+    assert.throws(() => htmlModel(html), /base href/, html);
+    assert.throws(() => scanHtml('base.html', html), /base href/, html);
+    assert.match(auditHtmlStyleIngress(html).join('\n'), /base href/, html);
+}
+assert.deepEqual(auditHtmlStyleIngress('<base target="_blank"><p></p>'), []);
+// Handlers on activation-bearing elements can rewrite them through `this`.
+for (const html of ['<link rel="preload" as="style" href="x.css" onload="this.rel=\'stylesheet\'">',
+    '<style onload="this.media=\'all\'">.a{}</style>', '<meta name="viewport" content="x" onclick="this.content=\'y\'">',
+    '<script src="x.js" onerror="this.src=\'y.js\'"></script>']) {
+    assert.throws(() => scanHtml('handler.html', html), /event handlers on/, html);
+    assert.match(auditHtmlStyleIngress(html).join('\n'), /event handlers on/, html);
+}
 
 // Browser-active inputs are classified once, before either cascade projection or
 // JavaScript audit. Unsupported cascade scopes must fail in every consumer.
@@ -290,8 +312,7 @@ const localFiles = new Set(['public/theme-boot.js', 'src/game.js']);
 assert.deepEqual(auditHtmlStyleIngress(`<script src="/theme-boot.js"></script>
     <script type="module" src="src/game.js"></script>`, 'index.html', localFiles), []);
 for (const html of ['<script src="data:text/javascript,document.styleSheets"></script>',
-    '<script src="https://elsewhere.invalid/new.js"></script>', '<script src="/unknown.js"></script>',
-    '<base href="https://elsewhere.invalid/"><script src="src/game.js"></script>']) {
+    '<script src="https://elsewhere.invalid/new.js"></script>', '<script src="/unknown.js"></script>']) {
     assert.match(auditHtmlStyleIngress(html, 'index.html', localFiles).join('\n'), /outside the audited local/);
 }
 

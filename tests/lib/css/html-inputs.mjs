@@ -55,6 +55,19 @@ export function parseHtmlElements(html, file = 'fixture.html') {
             if (tag === 'meta' && Object.hasOwn(attributes, 'http-equiv')) {
                 throw new Error(file + ': <meta http-equiv> pragmas require an explicit activation contract');
             }
+            // A base URL applies from the moment the parser inserts it, so URLs
+            // resolved earlier (script src, links) use the document URL. A finished
+            // DOM cannot reproduce that order; without <base>, every URL resolves
+            // against the document URL exactly.
+            if (tag === 'base' && Object.hasOwn(attributes, 'href')) {
+                throw new Error(file + ': <base href> makes URL resolution parse-order dependent; not modeled');
+            }
+            // Inside an event handler `this` is the element itself, so a handler on
+            // an activation-bearing element can rewrite its rel/media/disabled/src/
+            // content with no capability name (e.g. the preload→stylesheet idiom).
+            if (ACTIVATION_ELEMENTS.has(tag) && Object.keys(attributes).some(name => /^on/i.test(name))) {
+                throw new Error(file + ': event handlers on <' + tag + '> can change its activation; not modeled');
+            }
             if (node.namespaceURI !== HTML_NAMESPACE && ['script', 'style', 'link'].includes(tag)) {
                 throw new Error(file + ': foreign-namespace scripting/styles require an explicit source contract');
             }
@@ -70,10 +83,19 @@ export function parseHtmlElements(html, file = 'fixture.html') {
     return elements;
 }
 
+const ACTIVATION_ELEMENTS = new Set(['link', 'style', 'script', 'meta', 'base']);
+
+// Every <link>, whatever its rel: a link becomes a stylesheet by changing rel,
+// so link membership and attributes are activation inputs, not just stylesheets.
+export function htmlLinkElements(html, file = 'fixture.html') {
+    return parseHtmlElements(html, file).filter(element => htmlTagName(element) === 'link')
+        .map(element => normalizeLinkAttributes(htmlElementAttributes(element)));
+}
+
 // Document-level directives that change how the page's stylesheets decode or
 // evaluate: the encoding is the fallback for linked CSS, the viewport sizes
 // media queries, color-scheme sets the used scheme. (Pragmas are rejected above;
-// <base> is part of the ordered HTML model.) Selector-matched DOM state such as
+// <base href> is rejected.) Selector-matched DOM state such as
 // class/lang/dir attributes is outside the stylesheet-input model.
 const META_DIRECTIVES = new Set(['viewport', 'color-scheme', 'supported-color-schemes']);
 export function htmlDocumentDirectives(html, file = 'fixture.html') {
@@ -110,13 +132,7 @@ export function htmlJavaScriptInputs(html, file = 'fixture.html') {
     const inputs = [];
     const elements = parseHtmlElements(html, file);
     const documentUrl = servedUrl(file);
-    let baseUrl = documentUrl;
-    const base = elements.find(element => htmlTagName(element) === 'base'
-        && Object.hasOwn(htmlElementAttributes(element), 'href'));
-    if (base) {
-        try { baseUrl = new URL(htmlElementAttributes(base).href, documentUrl); }
-        catch { /* Invalid first base URL falls back to the document URL. */ }
-    }
+    const baseUrl = documentUrl; // <base href> is rejected by parseHtmlElements.
     for (const element of elements) {
         const tag = htmlTagName(element);
         const attrs = htmlElementAttributes(element);

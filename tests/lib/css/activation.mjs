@@ -1,16 +1,19 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { htmlDocumentDirectives, htmlJavaScriptInputs, resolveLocalScript, servedUrl } from './html-inputs.mjs';
+import {
+    htmlDocumentDirectives, htmlJavaScriptInputs, htmlLinkElements, resolveLocalScript, servedUrl,
+} from './html-inputs.mjs';
 import { moduleSpecifiers, parseAuditedJs, SCAFFOLD, SOURCE_IDS, STYLE_INSTALLER } from './runtime-sources.mjs';
 
 // Pinned in code, like the ordered-model addendum: a baseline + digest update
 // in the same change cannot silently re-approve a new activation.
 const SNAPSHOT_PATH = 'tests/css-activation-p0-baseline.json';
-const SNAPSHOT_SHA256 = '4d044e747cd9c7cdc7a38e53bfeedb2b2016ae0856a0436e4a6eb8ca71e31c1d';
+const SNAPSHOT_SHA256 = 'f1f874ff8f63f11377bbb22e6c2feff83314fd87877ad8b984efaf47131043fa';
 
 // Per page, this addendum records the document directives that govern how its
-// stylesheets decode/evaluate (html-inputs.mjs) and what code it executes.
+// stylesheets decode/evaluate, every <link> (any rel can become a stylesheet),
+// and what code it executes (html-inputs.mjs).
 // A runtime stylesheet source contributes to a page's cascade only if that page
 // executes its installer. Activation is therefore part of the cascade model:
 // page → executable scripts/handlers → static and literal dynamic imports.
@@ -75,6 +78,7 @@ export function pageActivation(root, file, html, auditedFiles) {
     const runtimeStyleSources = reached.has(STYLE_INSTALLER) ? Object.values(SOURCE_IDS).sort() : [];
     return {
         directives: htmlDocumentDirectives(html, file),
+        links: htmlLinkElements(html, file),
         scripts, handlerImports: [...handlerImports].sort(), runtimeStyleSources,
     };
 }

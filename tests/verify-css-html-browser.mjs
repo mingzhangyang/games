@@ -87,6 +87,17 @@ try {
         await linkPage.close();
     }
 
+    // The preload→stylesheet idiom: a handler activates its own link through
+    // `this` with no capability name, so handlers on such elements are rejected.
+    const preload = `<link rel="preload" as="style" href="data:text/css,body%7B--preload:on%7D"
+        onload="this.rel='stylesheet'"><p>probe</p>`;
+    assert.throws(() => scanHtml('preload.html', preload), /event handlers on <link>/);
+    const preloadPage = await browser.newPage();
+    await preloadPage.setContent(preload, { waitUntil: 'load' });
+    await preloadPage.waitForFunction(() => window.getComputedStyle(document.body)
+        .getPropertyValue('--preload').trim() === 'on', { timeout: 5000 });
+    await preloadPage.close();
+
     for (const mode of ['open', 'closed']) {
         const shadow = `<div id="host"><template shadowrootmode="${mode}">
             <style>:host{color:rgb(17,34,51)}</style>
