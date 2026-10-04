@@ -237,6 +237,40 @@ verifyRuleMigrations({
 });
 assert.ok(fallbackErrors.some(error => /intra-rule fallback cascade/.test(error)));
 
+// Mapped files bypass the immutable whole-file semantic digest only after the
+// migration contract verifies everything outside the mapped rule. Keyframe
+// bodies are therefore canonical residual state even while keyframe migration
+// itself remains disabled.
+const keyframeBase = parseMap([[
+    'css/keyframe.css',
+    '.x{color:red}@keyframes pulse{from{opacity:0}to{opacity:1}}',
+]]);
+const keyframeCurrent = parseMap([[
+    'css/keyframe.css',
+    '@layer pages{.x{color:red}}@keyframes pulse{from{opacity:.5}to{opacity:1}}',
+]]);
+const keyframeSource = catalogMap(keyframeBase).get('css/keyframe.css')[0];
+const keyframeDestination = catalogMap(keyframeCurrent).get('css/keyframe.css')[0];
+const keyframeMapping = {
+    id: 'fixture-keyframe-body',
+    source: sourceRef(keyframeSource),
+    destinations: [destinationRef(keyframeDestination)],
+    conflicts: { normal: [], important: [] },
+};
+const keyframeErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/keyframe.css', '', '.x']] } },
+    state: { ...emptyState, migratedRules: [keyframeMapping] },
+    currentParsedByPath: keyframeCurrent,
+    baseParsedByPath: keyframeBase,
+    stylesheetLinks: { 'keyframe.html': [['css/keyframe.css', []]] },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: keyframeErrors,
+});
+assert.ok(keyframeErrors.some(error => /keyframes changed/.test(error)));
+
 // Existing layered rules can be explicitly re-layered (Showcase's P2 case)
 // without pretending they were unlayered P0 debt.
 const relayerBase = parseMap([['css/showcase.css', '@layer components{.s{color:red}}']]);
