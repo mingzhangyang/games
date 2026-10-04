@@ -207,6 +207,36 @@ verifyRuleMigrations({
 });
 assert.deepEqual(batchErrors, []);
 
+// Duplicate declarations of one property form an intra-rule fallback chain.
+// Splitting that chain across layers would replace source-order fallback with
+// layer precedence, so the contract rejects it.
+const fallbackBase = parseMap([['css/fallback.css', '.d{color:red;color:blue}']]);
+const fallbackCurrent = parseMap([[
+    'css/fallback.css',
+    '@layer layout{.d{color:red}}@layer pages{.d{color:blue}}',
+]]);
+const fallbackSource = catalogMap(fallbackBase).get('css/fallback.css')[0];
+const fallbackDestinations = catalogMap(fallbackCurrent).get('css/fallback.css');
+const fallbackMapping = {
+    id: 'fixture-fallback',
+    source: sourceRef(fallbackSource),
+    destinations: fallbackDestinations.map(destinationRef),
+    conflicts: { normal: [], important: [] },
+};
+const fallbackErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/fallback.css', '', '.d']] } },
+    state: { ...emptyState, migratedRules: [fallbackMapping] },
+    currentParsedByPath: fallbackCurrent,
+    baseParsedByPath: fallbackBase,
+    stylesheetLinks: { 'fallback.html': [['css/fallback.css', []]] },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: fallbackErrors,
+});
+assert.ok(fallbackErrors.some(error => /intra-rule fallback cascade/.test(error)));
+
 // Existing layered rules can be explicitly re-layered (Showcase's P2 case)
 // without pretending they were unlayered P0 debt.
 const relayerBase = parseMap([['css/showcase.css', '@layer components{.s{color:red}}']]);
