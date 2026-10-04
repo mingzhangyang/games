@@ -265,6 +265,13 @@ desktop / narrow peers 仍未分层。P2-E 将这些 exact-selector peers 一并
 原有顺序。这一步仍不碰 universal reset、page CSS 或任何 `contracts` 规则。`.game-topbar` 仍因
 page-level `* { padding: 0 }` 等 cross-selector reset 依赖保持未分层。
 
+**P2-F canvas default：** `.game-canvas` 明确属于冻结职责表中的 `layout` default。本批只将
+这一个共享 canvas 默认规则迁入 `layout`；它没有同 selector 的 page peer，页面中仍未分层的
+ID / type / game-specific canvas 规则继续按原有意图覆盖共享默认。该规则不声明
+margin / padding / box-sizing 等 reset-sensitive 属性，也不触碰 start-menu、drawer、
+frame-budget、immersive 或其它 `contracts` 规则。现有 desktop frame / game smoke 的 canvas
+几何与画幅检查继续作为 cross-selector 行为证据。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -431,6 +438,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 冻结 `layout.css` 的 layout defaults / contracts 职责切片边界
 - [x] P2-D：迁移 `.game-topbar-group` / `.game-topbar-center`；`.game-topbar` 因未分层 universal reset 的 padding 竞争暂缓
 - [x] P2-E：将已迁移 defaults 的普通响应式 peer（desktop `.game-main` / `.game-stage`、≤480px `.game-topbar-group` / `.game-topbar-center`）及 narrow footer spacing 依赖 `.game-footer-actions` 闭包迁入 `layout`；保持同层物理顺序，`.game-topbar` 继续暂缓
+- [x] P2-F：迁移 `.game-canvas` 共享默认规则到 `layout`；保留 page-specific canvas 规则未分层覆盖，不触碰 reset-sensitive 或 contracts 规则
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
