@@ -5,6 +5,18 @@ const PROPERTIES = require('mdn-data/css/properties.json');
 const SHORTHAND_FIELDS = ['initial', 'computed', 'animationType', 'percentages'];
 const CACHE = new Map();
 const WILDCARD = '*';
+const EDGES = ['top', 'right', 'bottom', 'left'];
+const CORNERS = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+
+const ALIASES = new Map([
+    ['word-wrap', 'overflow-wrap'],
+    ['grid-gap', 'gap'],
+    ['grid-row-gap', 'row-gap'],
+    ['grid-column-gap', 'column-gap'],
+    ['page-break-before', 'break-before'],
+    ['page-break-after', 'break-after'],
+    ['page-break-inside', 'break-inside'],
+]);
 
 function shorthandChildren(property) {
     const entry = PROPERTIES[property];
@@ -20,59 +32,91 @@ function shorthandChildren(property) {
     return [...children];
 }
 
-function canonicalLogicalSlot(property) {
-    if (/^-(?:webkit|moz|ms|o)-/.test(property)) return WILDCARD;
+const edgeSlots = family => new Set(EDGES.map(edge => family + ':' + edge));
+const cornerSlots = family => new Set(CORNERS.map(corner => family + ':' + corner));
 
-    const edge = property.match(
-        /^(margin|padding|scroll-margin|scroll-padding)-(?:top|right|bottom|left|block(?:-(?:start|end))?|inline(?:-(?:start|end))?)$/,
-    );
-    if (edge) return edge[1] + ':edge';
+function leafSlots(property) {
+    const alias = ALIASES.get(property);
+    if (alias) return expandProperty(alias);
 
-    if (/^(?:top|right|bottom|left)$/.test(property)
-        || /^inset-(?:block|inline)(?:-(?:start|end))?$/.test(property)) {
-        return 'inset:edge';
+    const vendor = property.match(/^-(?:webkit|moz|ms|o)-(.+)$/);
+    if (vendor) {
+        if (PROPERTIES[vendor[1]]) return expandProperty(vendor[1]);
+        return new Set([WILDCARD]);
     }
 
-    const border = property.match(
-        /^border-(?:(?:top|right|bottom|left)|(?:block|inline)(?:-(?:start|end))?)-(width|style|color)$/,
-    );
-    if (border) return 'border:' + border[1] + ':edge';
+    let match = property.match(/^(margin|padding|scroll-margin|scroll-padding)-(top|right|bottom|left)$/);
+    if (match) return new Set([match[1] + ':' + match[2]]);
 
-    if (/^border-(?:(?:top|bottom)-(?:left|right)|(?:start|end)-(?:start|end))-radius$/.test(property)) {
-        return 'border:radius:corner';
+    match = property.match(/^(margin|padding|scroll-margin|scroll-padding)-(?:block|inline)-(?:start|end)$/);
+    if (match) return edgeSlots(match[1]);
+
+    match = property.match(/^border-(top|right|bottom|left)-(width|style|color)$/);
+    if (match) return new Set(['border:' + match[2] + ':' + match[1]]);
+
+    match = property.match(/^border-(?:block|inline)-(?:start|end)-(width|style|color)$/);
+    if (match) return edgeSlots('border:' + match[1]);
+
+    match = property.match(/^border-(top|right|bottom|left)-(?:left|right|top|bottom)-radius$/);
+    if (match) {
+        const corner = property.slice('border-'.length, -'-radius'.length);
+        return new Set(['border:radius:' + corner]);
+    }
+    if (/^border-(?:start|end)-(?:start|end)-radius$/.test(property)) {
+        return cornerSlots('border:radius');
     }
 
-    if (/^(?:width|height|block-size|inline-size)$/.test(property)) return 'size';
-    if (/^(?:min-width|min-height|min-block-size|min-inline-size)$/.test(property)) return 'min-size';
-    if (/^(?:max-width|max-height|max-block-size|max-inline-size)$/.test(property)) return 'max-size';
+    if (/^(?:top|right|bottom|left)$/.test(property)) return new Set(['inset:' + property]);
+    if (/^inset-(?:block|inline)-(?:start|end)$/.test(property)) return edgeSlots('inset');
 
-    if (/^(?:overflow-x|overflow-y|overflow-block|overflow-inline)$/.test(property)) return 'overflow:axis';
-    if (/^overscroll-behavior-(?:x|y|block|inline)$/.test(property)) return 'overscroll-behavior:axis';
-    if (/^contain-intrinsic-(?:width|height|block-size|inline-size)$/.test(property)) {
-        return 'contain-intrinsic:size';
-    }
-
-    const legacyBreak = {
-        'page-break-before': 'break-before',
-        'page-break-after': 'break-after',
-        'page-break-inside': 'break-inside',
+    const physicalSize = {
+        width: 'size:width',
+        height: 'size:height',
+        'min-width': 'min-size:width',
+        'min-height': 'min-size:height',
+        'max-width': 'max-size:width',
+        'max-height': 'max-size:height',
+        'contain-intrinsic-width': 'contain-intrinsic:size:width',
+        'contain-intrinsic-height': 'contain-intrinsic:size:height',
     }[property];
-    if (legacyBreak) return legacyBreak;
+    if (physicalSize) return new Set([physicalSize]);
 
-    // A logical property family not explicitly modeled above is unsafe to split.
-    // Failing closed is preferable to silently inventing a physical mapping.
-    if (/(?:^|-)(?:block|inline)(?:-|$)/.test(property)) return WILDCARD;
-    return property;
+    const logicalSize = {
+        'inline-size': ['size:width', 'size:height'],
+        'block-size': ['size:width', 'size:height'],
+        'min-inline-size': ['min-size:width', 'min-size:height'],
+        'min-block-size': ['min-size:width', 'min-size:height'],
+        'max-inline-size': ['max-size:width', 'max-size:height'],
+        'max-block-size': ['max-size:width', 'max-size:height'],
+        'contain-intrinsic-inline-size': ['contain-intrinsic:size:width', 'contain-intrinsic:size:height'],
+        'contain-intrinsic-block-size': ['contain-intrinsic:size:width', 'contain-intrinsic:size:height'],
+    }[property];
+    if (logicalSize) return new Set(logicalSize);
+
+    if (/^overflow-[xy]$/.test(property)) return new Set(['overflow:' + property.at(-1)]);
+    if (/^overflow-(?:block|inline)$/.test(property)) return new Set(['overflow:x', 'overflow:y']);
+
+    if (/^overscroll-behavior-[xy]$/.test(property)) {
+        return new Set(['overscroll-behavior:' + property.at(-1)]);
+    }
+    if (/^overscroll-behavior-(?:block|inline)$/.test(property)) {
+        return new Set(['overscroll-behavior:x', 'overscroll-behavior:y']);
+    }
+
+    // New logical families that MDN knows about but this model has not explicitly
+    // mapped are unsafe to split. This is intentionally fail-closed.
+    if (/(?:^|-)(?:block|inline)(?:-|$)/.test(property)) return new Set([WILDCARD]);
+    return new Set([property]);
 }
 
 function expandProperty(property, stack = new Set()) {
     if (property.startsWith('--')) return new Set(['custom:' + property]);
     if (property === 'all') return new Set([WILDCARD]);
-    if (!PROPERTIES[property]) return new Set([WILDCARD]);
+    if (!PROPERTIES[property] && !ALIASES.has(property)) return new Set([WILDCARD]);
     if (stack.has(property)) return new Set([WILDCARD]);
 
     const children = shorthandChildren(property);
-    if (!children.length) return new Set([canonicalLogicalSlot(property)]);
+    if (!children.length) return leafSlots(property);
 
     const next = new Set(stack);
     next.add(property);
