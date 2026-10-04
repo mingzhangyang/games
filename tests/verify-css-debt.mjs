@@ -118,6 +118,57 @@ function normalizeAtRuleParams(value) {
     return value.replace(/\s+/g, ' ').trim();
 }
 
+function parseAtRuleHeader(header, file) {
+    if (!header.startsWith('@')) return null;
+
+    let index = 1;
+    let rawName = '';
+    while (index < header.length) {
+        const char = header[index];
+        if (char === '\\') {
+            const escapeStart = index;
+            const next = header[index + 1];
+            if (next == null || next === '\n' || next === '\r' || next === '\f') {
+                throw new Error('Invalid CSS at-keyword escape in ' + file + ': ' + header);
+            }
+
+            const hex = header.slice(index + 1).match(/^[0-9a-f]{1,6}/i);
+            if (hex) {
+                index += 1 + hex[0].length;
+                if (/[ \t\r\n\f]/.test(header[index] || '')) index++;
+            } else {
+                index += 2;
+            }
+            rawName += header.slice(escapeStart, index);
+            continue;
+        }
+
+        const codePoint = char.codePointAt(0);
+        if (/[-_a-z0-9]/i.test(char) || codePoint >= 0x80) {
+            rawName += char;
+            index += char.length;
+            continue;
+        }
+        break;
+    }
+
+    if (!rawName) {
+        throw new Error('Invalid CSS at-keyword in ' + file + ': ' + header);
+    }
+
+    const decodedName = decodeCssIdentifierEscapes(rawName);
+    if (decodedName == null || !decodedName) {
+        throw new Error('Invalid CSS at-keyword escape in ' + file + ': ' + header);
+    }
+
+    const rawParams = header.slice(index).trim();
+    return {
+        name: decodedName.toLowerCase(),
+        rawParams,
+        params: normalizeAtRuleParams(rawParams),
+    };
+}
+
 function skipSpaceAndComments(source, start, end) {
     let index = start;
     while (index < end) {
@@ -371,22 +422,18 @@ function parseCssText(source, file) {
 
             if (boundary.char === ';') {
                 if (header.startsWith('@')) {
-                    const match = header.match(/^@([-\w]+)\s*([\s\S]*)$/);
-                    if (match) {
-                        const name = match[1].toLowerCase();
-                        const params = normalizeAtRuleParams(match[2]);
-                        result.atRules.push({ name, params, context: [...context], layer });
-                        if (!STATEMENT_AT_RULES.has(name)) {
-                            throw new Error('Unsupported CSS statement at-rule @' + name + ' in ' + file);
-                        }
-                        if (name === 'layer') {
-                            result.layerStatements.push(params);
-                            addLayerNames(params);
-                        }
-                        if (SPECIAL_AT_RULES.has(name)) {
-                            result.specialAtRules ||= [];
-                            result.specialAtRules.push([file, context.join(' / '), name, params]);
-                        }
+                    const { name, params } = parseAtRuleHeader(header, file);
+                    result.atRules.push({ name, params, context: [...context], layer });
+                    if (!STATEMENT_AT_RULES.has(name)) {
+                        throw new Error('Unsupported CSS statement at-rule @' + name + ' in ' + file);
+                    }
+                    if (name === 'layer') {
+                        result.layerStatements.push(params);
+                        addLayerNames(params);
+                    }
+                    if (SPECIAL_AT_RULES.has(name)) {
+                        result.specialAtRules ||= [];
+                        result.specialAtRules.push([file, context.join(' / '), name, params]);
                     }
                 }
                 index = boundary.index + 1;
@@ -396,12 +443,10 @@ function parseCssText(source, file) {
             if (boundary.char !== '{') throw new Error('Missing CSS block or semicolon in ' + file);
             const close = findClosingBrace(source, boundary.index, end);
             const body = source.slice(boundary.index + 1, close);
-            const atRule = header.match(/^@([-\w]+)\s*([\s\S]*)$/);
+            const atRule = header.startsWith('@') ? parseAtRuleHeader(header, file) : null;
 
             if (atRule) {
-                const name = atRule[1].toLowerCase();
-                const rawParams = atRule[2].trim();
-                const params = normalizeAtRuleParams(atRule[2]);
+                const { name, rawParams, params } = atRule;
                 result.atRules.push({ name, params, context: [...context], layer });
 
                 if (name === 'layer') {
@@ -487,7 +532,11 @@ function parseAttributes(tag) {
     while ((match = matcher.exec(tag))) {
         const name = match[1].toLowerCase();
         if (name === 'link' || name.startsWith('<')) continue;
-        attributes[name] = decodeHtmlCharacterReferences(match[2] ?? match[3] ?? match[4] ?? '');
+        // The HTML tokenizer drops later duplicate attributes. Preserve the first
+        // occurrence so stylesheet classification matches browser semantics.
+        if (!Object.hasOwn(attributes, name)) {
+            attributes[name] = decodeHtmlCharacterReferences(match[2] ?? match[3] ?? match[4] ?? '');
+        }
     }
     return attributes;
 }
@@ -611,6 +660,14 @@ function runSelfChecks() {
     assert.equal(parsed.keyframes.length, 1);
     assert.deepEqual(parsed.specialAtRules.map(row => row[2]), ['keyframes']);
 
+    const escapedAtRules = parseCssText([
+        '@\\69mport url("/escaped.css");',
+        '@m\\65 dia (width < 600px) { .escaped-media { display: none; } }',
+    ].join('\n'), 'escaped-at-rules.css');
+    assert.deepEqual(escapedAtRules.atRules.map(({ name }) => name), ['import', 'media']);
+    assert.deepEqual(escapedAtRules.rules.map(rule => rule.selector), ['.escaped-media']);
+    assert.deepEqual(escapedAtRules.specialAtRules.map(row => row[2]), ['import']);
+
     assert.equal(hasImportantPriority('red!important'), true);
     assert.equal(hasImportantPriority('red ! important'), true);
     assert.equal(hasImportantPriority('"!important"'), false);
@@ -640,6 +697,15 @@ function runSelfChecks() {
     assert.throws(
         () => parseCssText('@page { @top-left { content: "x"; } }', 'page.css'),
         /CSS nesting or brace-bearing values are unsupported/,
+    );
+
+    assert.deepEqual(
+        parseAttributes('<link rel="stylesheet" rel="alternate" href="/first.css" href="/second.css">'),
+        { rel: 'stylesheet', href: '/first.css' },
+    );
+    assert.deepEqual(
+        parseAttributes('<div style="color:red" style="display:none">'),
+        { style: 'color:red' },
     );
 
     const htmlScan = scanHtml('fixture.html', [
