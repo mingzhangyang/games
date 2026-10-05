@@ -8,12 +8,12 @@
 //      历史上的「点一次语言钮 UI 必须换语言」断言随 UI 一起移除）
 //   ⑤ 点一次静音钮，site_muted 真的翻转（挡住"页面与 chrome 各挂一个 handler
 //      导致一次点击切换两次 = 净效果为零"这个最隐蔽的回归）
-//   ⑦ 整轮无 pageerror
-//   ⑧ 点一次**顶栏**首页钮，必须真的导航回 index.html。顶栏 home 多为无 href 的
+//   ⑥ 整轮无 pageerror
+//   ⑦ 点一次**顶栏**首页钮，必须真的导航回 index.html。顶栏 home 多为无 href 的
 //      <button>，跳转完全依赖 chrome（owns 含 'home'）或页面自绑 —— §② 只查标签，
 //      查不出「按钮是死的」。bond-forge / silk-dew 曾双双中招（footer 的 <a> 天然
 //      可用，所以用户只见顶栏坏）。每页只测一次、且是本轮最后一个操作（会真的离开页面）。
-//   ⑨ 首屏可见的 game overlay 不得再塞一个 Home 链接。顶栏已经提供 Home，
+//   ⑧ 首屏可见的 game overlay 不得再塞一个 Home 链接。顶栏已经提供 Home，
 //      两者叠在同一屏会出现 tower-defense / reversi / minesweeper / needle-awn 的重复 Home。
 //
 // ⚠️ 语言存储键是 site_lang（src/platform/site-settings.js 的 LANG_KEY），不是 'lang'。
@@ -49,7 +49,7 @@ const EXPECT_LABEL = {
 
 const fails = [];
 const warns = [];
-const homeTested = new Set();   // §⑧ 每页只测一次（与视口/语言无关）
+const homeTested = new Set();   // §⑦ 每页只测一次（与视口/语言无关）
 const fail = (p, vp, lang, msg) => fails.push(`${p} @${vp}/${lang}: ${msg}`);
 
 const browser = await puppeteer.launch({
@@ -84,7 +84,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
 
             if (errs.length) fail(name, vp.tag, lang, `pageerror: ${errs.join(' | ')}`);
 
-            /* ── ①②③⑥ 结构与标签 ── */
+            /* ── ①②③ 结构与标签 ── */
             const snap = await page.evaluate(() => {
                 const header = document.querySelector('.game-topbar');
                 const actions = header && header.querySelector('.game-topbar-group:last-of-type, [class*="topbar-actions"]');
@@ -177,7 +177,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             if (snap.footerMoreNavCount !== 0)
                 fail(name, vp.tag, lang, `页脚仍有 ${snap.footerMoreNavCount} 个 .game-footer-nav`);
             if (snap.visibleOverlayHomeCount > 0)
-                fail(name, vp.tag, lang, `首屏 overlay 内还有 ${snap.visibleOverlayHomeCount} 个 Home 链接，会与持久页脚 Home 重复`);
+                fail(name, vp.tag, lang, `首屏 overlay 内还有 ${snap.visibleOverlayHomeCount} 个 Home 链接，会与顶栏 Home 重复`);
             if (snap.htmlLang && !snap.htmlLang.startsWith(lang))
                 warns.push(`${name} @${vp.tag}/${lang}: <html lang="${snap.htmlLang}">`);
 
@@ -193,7 +193,7 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             if (!muteRes.skip && muteRes.before === muteRes.after)
                 fail(name, vp.tag, lang, `静音钮点击无效（site_muted 仍为 ${muteRes.after}）—— 多半是页面与 chrome 双绑，一次点击切了两次`);
 
-            /* ── ⑧ 顶栏首页钮：点击必须真的导航回 index.html ──
+            /* ── ⑦ 顶栏首页钮：点击必须真的导航回 index.html ──
                编程式 click（element.click()）只验证「监听器接没接」，绕开命中测试 ——
                遮挡类问题归 verify-button-icons 的几何断言，两处口径互补。
                必须是本轮最后一个操作：点击会真的离开本页。 */

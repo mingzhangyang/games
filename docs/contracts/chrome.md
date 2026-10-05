@@ -167,7 +167,7 @@ node tests/verify-registry.mjs
 7. 顶栏首页钮点击后真的导航回 `index.html`（行为断言，防死按钮）
 8. Footer 不含 `data-chrome` 控件或 `.game-footer-nav`；全程无 `pageerror`
 
-> ⚠️ **覆盖范围陷阱**：上面的 ①–⑨ 只遍历 `registry.withCap('topbar')` 的页面。
+> ⚠️ **覆盖范围陷阱**：上面的 ①–⑧ 只遍历 `registry.withCap('topbar')` 的页面。
 > tank-battle / math-rain 这类豁免页根本不进循环 —— 它们的语言钮回归**一条断言都抓不到**。
 > 补齐手段是静态源扫描守卫 `tests/verify-no-game-lang.mjs`（无需起服务，1 秒内）：
 > 扫全部 `*.html` + `js/**`，禁 `setLang(` / `selectLanguage(` / `switchLanguage(` /
