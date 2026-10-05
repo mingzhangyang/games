@@ -1,0 +1,178 @@
+{
+  "id": "p2t-layout-game-hud-box-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-hud-box",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "39d3a5073f05c2ad6b408b8f741f8639947d3266a0de4e64a279daa00947b11d",
+    "layer": null,
+    "declarationDigest": "f78739bf49d9d144838ef85442cf9f3c4cb9faa422e186b50f602a1b56919114",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "flex"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "baseline"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "6px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "border-radius",
+        "value": [
+          [
+            "dimension-token",
+            "12px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding",
+        "value": [
+          [
+            "dimension-token",
+            "5px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "14px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "font-variant-numeric",
+        "value": [
+          [
+            "ident-token",
+            "tabular-nums"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ".game-hud-box",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "39d3a5073f05c2ad6b408b8f741f8639947d3266a0de4e64a279daa00947b11d",
+      "layer": "layout",
+      "declarationDigest": "f78739bf49d9d144838ef85442cf9f3c4cb9faa422e186b50f602a1b56919114",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "align-items",
+        "peerProperty": "align-items",
+        "targetLayer": "layout",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "peer-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "border-radius",
+        "peerProperty": "border",
+        "targetLayer": "layout",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "peer-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "border-radius",
+        "peerProperty": "border-radius",
+        "targetLayer": "layout",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "peer-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "display",
+        "peerProperty": "display",
+        "targetLayer": "layout",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "peer-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "gap",
+        "peerProperty": "gap",
+        "targetLayer": "layout",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "peer-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "padding",
+        "peerProperty": "padding",
+        "targetLayer": "layout",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "peer-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}

@@ -1,0 +1,204 @@
+{
+  "id": "p2t-pages-tetris-game-title-pill",
+  "source": {
+    "path": "css/tetris.css",
+    "context": "",
+    "selector": ".game-title-pill",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "3cca54fd31b74bfb0d2a2a4b66473aad1c6b69153c192d0b67de95131aa31ba0",
+    "layer": null,
+    "declarationDigest": "4aee8da5db4c338c9f83cbdc927654e3ede1d3f4ff3ef356cdfdec6b322cab01",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "min-width",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "flex",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "1"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "flex"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "flex-direction",
+        "value": [
+          [
+            "ident-token",
+            "row"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "flex-wrap",
+        "value": [
+          [
+            "ident-token",
+            "wrap"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "2px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "8px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tetris.css",
+      "context": "",
+      "selector": ".game-title-pill",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "3cca54fd31b74bfb0d2a2a4b66473aad1c6b69153c192d0b67de95131aa31ba0",
+      "layer": "pages",
+      "declarationDigest": "4aee8da5db4c338c9f83cbdc927654e3ede1d3f4ff3ef356cdfdec6b322cab01",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "align-items",
+        "peerProperty": "align-items",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "display",
+        "peerProperty": "display",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "flex",
+        "peerProperty": "flex-direction",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "flex-direction",
+        "peerProperty": "flex-direction",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "flex-wrap",
+        "peerProperty": "flex-direction",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "min-width",
+        "peerProperty": "min-width",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}

@@ -291,7 +291,8 @@
 }
 
 /* 首页仍复用该 actions row 放语言/主题控件；游戏页 #89 后不再渲染它。
-   在 pages 迁移前保持共享规则，避免把首页专属 CSS cutover 混入 P2-K。 */
+   该规则仍与 ≤480px .game-topbar-group 的 gap 形成 responsive dependency；
+   在两者能一起页面化前继续留在 layout，避免单边提升到 pages 改变窄屏间距。 */
 @layer layout {
     .game-footer-actions {
         display: flex;

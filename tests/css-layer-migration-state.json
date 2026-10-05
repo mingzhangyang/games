@@ -100,6 +100,10 @@
     "tests/css-layer-migrations/rules/p2s-layout-game-footer-short-peer.json",
     "tests/css-layer-migrations/rules/p2s-layout-game-footer-hint-default.json",
     "tests/css-layer-migrations/rules/p2s-layout-game-footer-hint-narrow-peer.json",
-    "tests/css-layer-migrations/rules/p2s-layout-game-footer-hint-short-peer.json"
+    "tests/css-layer-migrations/rules/p2s-layout-game-footer-hint-short-peer.json",
+    "tests/css-layer-migrations/rules/p2t-layout-game-hud-box-default.json",
+    "tests/css-layer-migrations/rules/p2t-pages-tetris-game-hud-box.json",
+    "tests/css-layer-migrations/rules/p2t-pages-tetris-game-title-pill.json",
+    "tests/css-layer-migrations/rules/p2t-pages-index-game-footer.json"
   ]
 }

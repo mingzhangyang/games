@@ -1,0 +1,214 @@
+{
+  "id": "p2t-pages-tetris-game-hud-box",
+  "source": {
+    "path": "css/tetris.css",
+    "context": "",
+    "selector": ".game-hud-box",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "39d3a5073f05c2ad6b408b8f741f8639947d3266a0de4e64a279daa00947b11d",
+    "layer": null,
+    "declarationDigest": "94355a420d33053134f5cd97509319421218430e035c988f644e1fd165c1f694",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "flex"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "flex-direction",
+        "value": [
+          [
+            "ident-token",
+            "row"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "baseline"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "7px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding",
+        "value": [
+          [
+            "dimension-token",
+            "4px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "14px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "background",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--tt-game-hud-box-bg"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "border",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--tt-game-hud-box-border"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "border-radius",
+        "value": [
+          [
+            "dimension-token",
+            "12px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tetris.css",
+      "context": "",
+      "selector": ".game-hud-box",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "39d3a5073f05c2ad6b408b8f741f8639947d3266a0de4e64a279daa00947b11d",
+      "layer": "pages",
+      "declarationDigest": "94355a420d33053134f5cd97509319421218430e035c988f644e1fd165c1f694",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "align-items",
+        "peerProperty": "align-items",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "border",
+        "peerProperty": "border-radius",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "border-radius",
+        "peerProperty": "border-radius",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "display",
+        "peerProperty": "display",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "gap",
+        "peerProperty": "gap",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "padding",
+        "peerProperty": "padding",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "tetris.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}
