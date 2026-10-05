@@ -71,6 +71,23 @@ function canonicalRefKey(ref) {
     ]);
 }
 
+function ruleLocationKey(ref) {
+    return jsonKey([
+        ref?.path, ref?.contextDigest, ref?.selectorDigest, ref?.layer ?? null,
+    ]);
+}
+
+function ruleLocationCounts(catalogs) {
+    const counts = new Map();
+    for (const catalog of catalogs.values()) {
+        for (const rule of catalog) {
+            const key = ruleLocationKey(rule);
+            counts.set(key, (counts.get(key) || 0) + 1);
+        }
+    }
+    return counts;
+}
+
 function sameRef(actual, expected, includeLayer = true) {
     return actual.path === expected.path
         && actual.contextDigest === expected.contextDigest
@@ -574,11 +591,16 @@ export function verifyRuleMigrations({
             const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
             subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
         }
-        if (isRetirement(mapping)) {
-            const currentCatalog = currentCatalogs.get(mapping.source.path) || [];
-            if (findRule(currentCatalog, mapping.source, true)) {
-                errors.push(mapping.id + ': retired source rule is still present in current CSS.');
-            }
+    }
+
+    const retiredLocations = new Map();
+    const newRetirementCounts = new Map();
+    for (const mapping of mappings.values()) {
+        if (!validMappings.has(mapping.id) || !isRetirement(mapping)) continue;
+        const location = ruleLocationKey(mapping.source);
+        retiredLocations.set(location, mapping.source);
+        if (!baseMappings.has(mapping.id)) {
+            newRetirementCounts.set(location, (newRetirementCounts.get(location) || 0) + 1);
         }
     }
 
@@ -604,6 +626,9 @@ export function verifyRuleMigrations({
             if (!rule) {
                 errors.push(mapping.id + ': destination rule not found: ' + jsonKey(destination) + '.');
                 continue;
+            }
+            if (retiredLocations.has(ruleLocationKey(destination))) {
+                errors.push(mapping.id + ': destination reintroduces a previously retired rule location.');
             }
             verifyRefDiagnostics(destination, rule, errors, mapping.id + ' destination');
             const destinationKey = canonicalRefKey(ruleRef(rule));
@@ -648,6 +673,25 @@ export function verifyRuleMigrations({
         if (currentDestinationRules.length === (mapping.destinations || []).length) {
             const assignments = verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
             pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules, assignments });
+        }
+    }
+
+    const baseLocationCounts = ruleLocationCounts(baseCatalogs);
+    const currentLocationCounts = ruleLocationCounts(currentCatalogs);
+    for (const [location, source] of retiredLocations) {
+        const baseCount = baseLocationCounts.get(location) || 0;
+        const retiredNow = newRetirementCounts.get(location) || 0;
+        const maxSurvivors = baseCount - retiredNow;
+        if (maxSurvivors < 0) {
+            errors.push('Retirement location ' + source.path + ' ' + source.selector
+                + ': current transaction retires more occurrences than exist in the comparison base.');
+            continue;
+        }
+        const currentCount = currentLocationCounts.get(location) || 0;
+        if (currentCount > maxSurvivors) {
+            errors.push('Retirement location ' + source.path + ' ' + source.selector
+                + ': found ' + currentCount + ' current occurrence(s), expected at most '
+                + maxSurvivors + ' survivor(s).');
         }
     }
 
@@ -748,5 +792,8 @@ export function verifyRuleMigrations({
     return {
         mappedCssPaths,
         newMigrationCount: [...mappings.keys()].filter(id => !baseMappings.has(id)).length,
+        retirementSources: [...mappings.values()]
+            .filter(mapping => validMappings.has(mapping.id) && isRetirement(mapping))
+            .map(mapping => normalizeMapping(mapping.source)),
     };
 }
