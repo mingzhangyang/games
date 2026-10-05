@@ -352,17 +352,19 @@
 /* ── 含图标的文字按钮（Play/Again/Copy/Close/Home/Share/Stats/Next）──
    只负责「图标 + 文案」在同一行居中，让 inline SVG 的基线不再抬高图标；
    按钮的配色/内距/圆角依然归各页自己的 .xx-btn，不在此处接管。 */
-.game-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-}
+@layer components {
+    .game-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+    }
 
-.game-btn > svg {
-    width: 15px;
-    height: 15px;
-    flex: 0 0 auto;
+    .game-btn > svg {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 auto;
+    }
 }
 
 /* ── 侧栏卡片族 ── */
