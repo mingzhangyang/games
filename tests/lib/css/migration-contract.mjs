@@ -593,17 +593,21 @@ export function verifyRuleMigrations({
         }
     }
 
+    // A retired location is a lasting cardinality ceiling, not a digest tombstone:
+    // surviving duplicate occurrences may renumber, while a later rule with new
+    // declarations at the same path/context/selector/layer must not grow the location.
     const retiredLocations = new Map();
-    const newRetirementCounts = new Map();
+    for (const mapping of baseMappings.values()) {
+        if (isRetirement(mapping)) retiredLocations.set(ruleLocationKey(mapping.source), mapping.source);
+    }
     for (const mapping of mappings.values()) {
-        if (!validMappings.has(mapping.id) || !isRetirement(mapping)) continue;
-        const location = ruleLocationKey(mapping.source);
-        retiredLocations.set(location, mapping.source);
-        if (!baseMappings.has(mapping.id)) {
-            newRetirementCounts.set(location, (newRetirementCounts.get(location) || 0) + 1);
+        if (!baseMappings.has(mapping.id) && validMappings.has(mapping.id) && isRetirement(mapping)) {
+            retiredLocations.set(ruleLocationKey(mapping.source), mapping.source);
         }
     }
 
+    const validatedRetirementSources = [];
+    const newRetirementCounts = new Map();
     const usedSources = new Set();
     const usedDestinations = new Set();
     const newMappingsByPath = new Map();
@@ -657,16 +661,23 @@ export function verifyRuleMigrations({
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
         }
         if (isRetirement(mapping)) {
-            // findRule above already proves the exact canonical source, including
-            // layer/declaration/occurrence identity. Do not add selector-level
-            // uniqueness: repeated same-layer rules are legitimate distinct sources.
+            // findRule above proves exact comparison-base provenance. Runtime
+            // enforcement below is location-cardinality based so duplicate
+            // survivors may renumber without reopening a retired location.
+            let retirementValid = true;
             if (mapping.source.layer !== null) {
                 const historicalDestination = [...baseMappings.values()].some(previous =>
                     (previous.destinations || []).some(destination =>
                         canonicalRefKey(destination) === canonicalRefKey(mapping.source)));
                 if (!historicalDestination) {
                     errors.push(mapping.id + ': layered retirement source must be a destination of a previously merged migration.');
+                    retirementValid = false;
                 }
+            }
+            if (retirementValid) {
+                validatedRetirementSources.push(normalizeMapping(mapping.source));
+                const location = ruleLocationKey(mapping.source);
+                newRetirementCounts.set(location, (newRetirementCounts.get(location) || 0) + 1);
             }
             continue;
         }
@@ -792,8 +803,11 @@ export function verifyRuleMigrations({
     return {
         mappedCssPaths,
         newMigrationCount: [...mappings.keys()].filter(id => !baseMappings.has(id)).length,
-        retirementSources: [...mappings.values()]
-            .filter(mapping => validMappings.has(mapping.id) && isRetirement(mapping))
-            .map(mapping => normalizeMapping(mapping.source)),
+        retirementSources: [
+            ...[...baseMappings.values()]
+                .filter(mapping => isRetirement(mapping))
+                .map(mapping => normalizeMapping(mapping.source)),
+            ...validatedRetirementSources,
+        ],
     };
 }
