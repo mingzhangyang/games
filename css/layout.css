@@ -338,8 +338,9 @@
     border-radius: inherit;
 }
 
+.game-icon-btn:hover { background: var(--tok-panel-strong); }
+
 @layer components {
-    .game-icon-btn:hover { background: var(--tok-panel-strong); }
     .game-icon-btn:active { transform: scale(0.92); }
 }
 
