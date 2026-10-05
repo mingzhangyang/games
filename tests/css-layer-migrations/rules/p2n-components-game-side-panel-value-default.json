@@ -1,0 +1,24 @@
+{
+  "id": "p2n-components-game-side-panel-value-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-panel b",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "f7a84e8c88e7390bf4485a68047140c991fa7910da050f3140b2069c0c03fbe3",
+    "layer": null,
+    "declarationDigest": "9c14a6f73996fda09ca0e100088a0e904c4cedc1dad705e7f95ad39cf5d61cb5",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"color","value":[["function-token","var("],["ident-token","--tok-text"],[")-token",")"]],"important":false},
+      {"property":"white-space","value":[["ident-token","nowrap"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-panel b","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"f7a84e8c88e7390bf4485a68047140c991fa7910da050f3140b2069c0c03fbe3","layer":"components","declarationDigest":"9c14a6f73996fda09ca0e100088a0e904c4cedc1dad705e7f95ad39cf5d61cb5","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
