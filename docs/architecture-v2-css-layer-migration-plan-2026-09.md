@@ -315,8 +315,11 @@ drawer / start-menu / frame-budget / immersive contracts。
 immutable migration ledger 而永久留在生产 CSS。P2-K 将 mapping contract 升到 v2，新增
 append-only `kind: "retire"` transaction：历史 migration module 仍不可修改/删除，
 retirement 只声明“comparison-base 中这条精确规则已因产品/DOM contract 消失而删除”。
-未分层 retirement 必须对应 immutable P0 debt；已经分层的 retirement 必须来自此前已合并 migration
-的 destination；retired selector location 在后续提交中不得静默重新出现。
+未分层 retirement 必须对应 immutable P0 debt；已经分层的 retirement 必须通过
+`sourceProvenance: { mappingId, destinationIndex }` 显式指向此前已合并、尚未被消费的 migration
+destination，并且稳定内容身份一致。这里的 `occurrence` 只用于当前 comparison-base 内精确定位，
+**不是**跨 PR 的 lineage 主键，因此相邻 duplicate 迁出导致 occurrence 重编号不会破坏血缘。
+retired selector location 在后续提交中不得静默重新出现。
 
 `.game-footer-actions` **不在本批退休**：游戏页虽然已不再渲染 action row，但首页 Footer
 仍复用该 class 来排列语言/主题控件。立即把它拆成首页专属 page-layer rule 会把后续 `pages`
