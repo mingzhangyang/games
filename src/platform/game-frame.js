@@ -56,11 +56,14 @@ export function bindFrame(opts = {}) {
         // Preserve that row's *layout budget* without preserving any visible or
         // interactive placeholder. Derive it from the same shared tokens/rules
         // that sized the removed row so responsive button/gap changes stay exact.
-        const rootStyle = getComputedStyle(document.documentElement);
         const footerStyle = getComputedStyle(footer);
-        const buttonSize = parseFloat(rootStyle.getPropertyValue('--tok-btn-size')) || 0;
+        const referenceButton = topbar?.querySelector('.game-icon-btn');
+        const measuredButtonHeight = referenceButton?.getBoundingClientRect().height || 0;
+        const tokenButtonHeight = parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue('--tok-btn-size'),
+        ) || 0;
         const gap = parseFloat(footerStyle.rowGap || footerStyle.gap) || 0;
-        return buttonSize + gap;
+        return (measuredButtonHeight || tokenButtonHeight) + gap;
     }
 
     function measure() {
