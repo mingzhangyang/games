@@ -429,6 +429,22 @@ Science Showcase 对 topbar/footer/hint 的现有规则只写视觉属性或 `!i
 与本批几何 property chain 不构成 exact-selector normal cutover；最终仍由浏览器
 geometry/chrome 回归确认 cross-selector 行为等价。
 
+**P2-T Pages Closure A：** 首次进入 `pages` 层时不做 whole-page wrapper，而是先闭合两个已经
+被前序批次明确记录的 dependency chain。共享 `.game-hud-box` 进入 `layout`，同时将
+Tetris 的 `.game-hud-box` 与 `.game-title-pill` exact-selector 页面覆盖迁入 `pages`；
+这样 `pages > layout` 显式取代原先依赖未分层 page CSS 的优先级。Tetris HUD 的
+display / align / gap / padding / border-radius，以及 verifier 对 border shorthand 的保守
+overlap，均在同一 transaction 中登记，避免单边切层改变 cascade。
+
+首页 `css/index.css .game-footer` 同批迁入 `pages`，关闭 #98 暂留的 landing-page footer
+override：其 gap / padding 继续稳定覆盖 shared `layout` footer 的 base、窄屏与矮屏 peers。
+`.game-footer-actions` 本批仍留在 `layout`，但它本身没有与 ≤480px
+`.game-topbar-group` 共用 class，后者的 4px gap 不会作用到 footer actions row。这里继续
+暂缓只是为了把首页专属 actions-row 归层留给后续 pages 批次，而不是因为存在必须联动的
+responsive dependency。drawer、stats-drawer、
+frame-budget、immersive/safe-area 与 reduced-motion `!important` 仍全部留给后续
+`contracts` / accessibility closure。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -610,6 +626,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-Q：新增最低 `reset` layer，并将 25 条顶层 normal universal reset 作为一个 foundation closure 迁入；4 条 reduced-motion universal `!important` 继续暂缓
 - [x] P2-R / #97：完成 Components Closure A；迁移 icon family 4 条 + Sidebar family 6 条到 `components`，保留既有 active/text/value leaves；两条窄屏 icon peers 经审计后保持未分层以维持既有 precedence；`game-hud-box` 因 Tetris 五项 exact-selector peer 暂缓
 - [x] P2-S / #98：完成 Layout Closure A；迁移 shell/topbar/footer/footer-hint 四个 responsive family 共 12 条规则到 `layout`；首页 `.game-footer` 页面覆盖保持未分层优先，`game-hud-box` 与 contracts family 继续暂缓
+- [x] P2-T：完成 Pages Closure A；共享 `.game-hud-box` → `layout`，Tetris HUD/title + 首页 `.game-footer` → `pages`，首次闭合 `layout → pages` exact-selector dependency chain；`.game-footer-actions` 与 contracts family 继续暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

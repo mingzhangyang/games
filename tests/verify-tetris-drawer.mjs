@@ -74,11 +74,33 @@ const SNAP = () => {
     const statBtn = q('#statsToggle'), themeBtn = q('#themeToggle');
     const drawer = q('#statsDrawer'), panel = q('.game-drawer-panel');
     const sidebar = q('#infoPanel'), panels = q('#statsPanels');
+    const hud = q('.game-hud-box'), titlePill = q('.game-title-pill');
+    const css = el => {
+        if (!el) return null;
+        const s = getComputedStyle(el);
+        return {
+            display: s.display,
+            flexDirection: s.flexDirection,
+            flexWrap: s.flexWrap,
+            alignItems: s.alignItems,
+            rowGap: s.rowGap,
+            columnGap: s.columnGap,
+            minWidth: s.minWidth,
+            paddingTop: s.paddingTop,
+            paddingRight: s.paddingRight,
+            paddingBottom: s.paddingBottom,
+            paddingLeft: s.paddingLeft,
+            borderRadius: s.borderRadius,
+        };
+    };
     return {
         view: { w: window.innerWidth, h: window.innerHeight },
         hudScore: q('#scoreHudValue') ? q('#scoreHudValue').textContent.trim() : null,
         hudLabel: q('#scoreHudLabel') ? q('#scoreHudLabel').textContent.trim() : null,
-        hudBox: box(q('.game-hud-box')),
+        hudBox: box(hud),
+        hudStyle: css(hud),
+        titlePillBox: box(titlePill),
+        titlePillStyle: css(titlePill),
         stat: {
             exists: !!statBtn, visible: vis(statBtn), box: box(statBtn),
             svg: statBtn ? !!statBtn.querySelector('svg') : false,
@@ -140,6 +162,45 @@ for (const vp of VIEWPORTS) {
     // ── 顶栏 ──
     check(s.hudScore !== null && s.hudBox && s.hudBox.h > 0, '顶栏有分数 HUD 且可见',
         `hudScore=${s.hudScore} box=${JSON.stringify(s.hudBox)}`);
+
+    // #99 page-layer cutover: guard the rendered cascade, not just the migration ledger.
+    // These values are the pre-migration Tetris page overrides and must survive on
+    // both normal-height and short mobile viewports.
+    if (!isDesktop) {
+        const h = s.hudStyle;
+        check(h
+            && h.display === 'flex'
+            && h.flexDirection === 'row'
+            && h.alignItems === 'baseline'
+            && h.rowGap === '7px'
+            && h.columnGap === '7px'
+            && h.paddingTop === '4px'
+            && h.paddingRight === '14px'
+            && h.paddingBottom === '4px'
+            && h.paddingLeft === '14px'
+            && h.borderRadius === '12px',
+        '移动端 HUD 保持迁移前 row/baseline/7px gap/4×14px padding',
+        JSON.stringify(h));
+
+        const t = s.titlePillStyle;
+        check(t
+            && t.display === 'flex'
+            && t.flexDirection === 'row'
+            && t.flexWrap === 'wrap'
+            && t.alignItems === 'center'
+            && t.rowGap === '2px'
+            && t.columnGap === '8px'
+            && t.minWidth === '0px',
+        '移动端 title pill 保持迁移前 row/wrap/2×8px gap',
+        JSON.stringify(t));
+
+        check(s.titlePillBox && s.hudBox
+            && s.titlePillBox.w > 0 && s.titlePillBox.h > 0
+            && s.hudBox.w > 0 && s.hudBox.h > 0,
+        '移动端 HUD/title 几何均可见且非零',
+        `title=${JSON.stringify(s.titlePillBox)} hud=${JSON.stringify(s.hudBox)}`);
+    }
+
     check(s.theme.exists && s.theme.visible && s.theme.svg, '主题钮是可见的图标钮（inline SVG）',
         `exists=${s.theme.exists} visible=${s.theme.visible} svg=${s.theme.svg}`);
     check(s.theme.text === '', '主题钮不含文字子节点（文案只在 aria-label / title）', `text="${s.theme.text}"`);

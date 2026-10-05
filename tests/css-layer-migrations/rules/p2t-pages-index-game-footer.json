@@ -1,0 +1,146 @@
+{
+  "id": "p2t-pages-index-game-footer",
+  "source": {
+    "path": "css/index.css",
+    "context": "",
+    "selector": ".game-footer",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "28687646655932150cafa5a09a7c2bbe15eaf67658dc8d6b600857984558667e",
+    "layer": null,
+    "declarationDigest": "c7ea217d5a2d9def575a58234e79076f5fad83cb1f3b4240f1a105b9a2a0b67c",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "10px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding",
+        "value": [
+          [
+            "dimension-token",
+            "20px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "28px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/index.css",
+      "context": "",
+      "selector": ".game-footer",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "28687646655932150cafa5a09a7c2bbe15eaf67658dc8d6b600857984558667e",
+      "layer": "pages",
+      "declarationDigest": "c7ea217d5a2d9def575a58234e79076f5fad83cb1f3b4240f1a105b9a2a0b67c",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "gap",
+        "peerProperty": "gap",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "index.html"
+        ]
+      },
+      {
+        "property": "gap",
+        "peerProperty": "gap",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (height <= 720px)",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "index.html"
+        ]
+      },
+      {
+        "property": "gap",
+        "peerProperty": "gap",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "index.html"
+        ]
+      },
+      {
+        "property": "padding",
+        "peerProperty": "padding",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "index.html"
+        ]
+      },
+      {
+        "property": "padding",
+        "peerProperty": "padding",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (height <= 720px)",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "index.html"
+        ]
+      },
+      {
+        "property": "padding",
+        "peerProperty": "padding",
+        "targetLayer": "pages",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": "layout",
+        "peerLayer": "layout",
+        "layerPriority": "target-layer-wins",
+        "pages": [
+          "index.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}
