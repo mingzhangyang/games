@@ -438,9 +438,10 @@ overlap，均在同一 transaction 中登记，避免单边切层改变 cascade�
 
 首页 `css/index.css .game-footer` 同批迁入 `pages`，关闭 #98 暂留的 landing-page footer
 override：其 gap / padding 继续稳定覆盖 shared `layout` footer 的 base、窄屏与矮屏 peers。
-`.game-footer-actions` 本批仍留在 `layout`，因为它与 ≤480px
-`.game-topbar-group` 的 4px gap 存在 cross-selector responsive dependency；在没有把该
-dependency 一起页面化之前，不能只把 actions row 提升到 `pages`。drawer、stats-drawer、
+`.game-footer-actions` 本批仍留在 `layout`，但它本身没有与 ≤480px
+`.game-topbar-group` 共用 class，后者的 4px gap 不会作用到 footer actions row。这里继续
+暂缓只是为了把首页专属 actions-row 归层留给后续 pages 批次，而不是因为存在必须联动的
+responsive dependency。drawer、stats-drawer、
 frame-budget、immersive/safe-area 与 reduced-motion `!important` 仍全部留给后续
 `contracts` / accessibility closure。
 

@@ -291,8 +291,8 @@
 }
 
 /* 首页仍复用该 actions row 放语言/主题控件；游戏页 #89 后不再渲染它。
-   该规则仍与 ≤480px .game-topbar-group 的 gap 形成 responsive dependency；
-   在两者能一起页面化前继续留在 layout，避免单边提升到 pages 改变窄屏间距。 */
+   该 footer row 不带 .game-topbar-group，因此 ≤480px 顶栏 gap 不会作用到它。
+   继续留在 layout 只是把首页专属 actions-row 的 pages 归位延后到后续批次。 */
 @layer layout {
     .game-footer-actions {
         display: flex;
