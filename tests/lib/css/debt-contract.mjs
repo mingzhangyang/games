@@ -6,7 +6,10 @@ function sameImportantDeclaration(row, source, declaration) {
     return row[0] === source.path
         && row[1] === source.context
         && row[2] === source.selector
-        && row[3] === declaration.property
+        // P0 debt tuples come from the legacy adapter, which lowercases every
+        // property name. Canonical migration snapshots intentionally preserve
+        // custom-property case, so normalize only at this legacy boundary.
+        && row[3] === declaration.property.toLowerCase()
         && jsonKey(normalizeFragment(row[4])) === jsonKey(declaration.value);
 }
 
