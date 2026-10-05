@@ -282,22 +282,6 @@
     margin-top: auto;
 }
 
-@layer layout {
-    .game-footer-actions {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-}
-
-/* 页脚展开的「更多游戏」导航：收起时不占高度（[hidden] 优先于下面的 display） */
-.game-footer-nav {
-    width: 100%;
-}
-
-.game-footer-nav[hidden] { display: none; }
-
 /* ── 底部操作提示 ──
    手机上必须可见：此前 ≤480px 与 ≤720px 高都 display:none，等于没有页脚。
    改为永不隐藏，窄屏/矮屏压成单行省略。 */
