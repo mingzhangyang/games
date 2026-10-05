@@ -490,42 +490,56 @@
    ② 面板用 transform 滑入，且**不要**给画布加任何 transform/transition。
    ③ .mobile-controls 固定底栏（z-index 1000）会与抽屉抢层级，抽屉放 1200；
       面板底部内距仍要和底栏留白对得上（见各页 padding-bottom）。 */
-.game-drawer {
-    position: fixed;
-    inset: 0;
-    z-index: 1200;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    background: var(--tok-scrim);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    opacity: 0;
-    transition: opacity 0.22s ease;
+@layer contracts {
+    .game-drawer {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        opacity: 0;
+    }
+
+    .game-drawer[hidden] { display: none; }
+
+    .game-drawer.is-open { opacity: 1; }
 }
 
-.game-drawer[hidden] { display: none; }
-
-.game-drawer.is-open { opacity: 1; }
-
-.game-drawer-panel {
-    position: relative;
-    width: 100%;
-    max-width: var(--frame-max);
-    max-height: var(--drawer-max);
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    border-radius: 20px 20px 0 0;
-    background: var(--tok-sheet);
-    border: 1px solid var(--tok-border, rgb(255, 255, 255, 0.1));
-    border-bottom: none;
-    box-shadow: 0 -18px 50px var(--tok-shadow-strong);
-    transform: translateY(100%);
-    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+@layer components {
+    .game-drawer {
+        background: var(--tok-scrim);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        transition: opacity 0.22s ease;
+    }
 }
 
-.game-drawer.is-open .game-drawer-panel { transform: translateY(0); }
+@layer contracts {
+    .game-drawer-panel {
+        position: relative;
+        width: 100%;
+        max-width: var(--frame-max);
+        max-height: var(--drawer-max);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        transform: translateY(100%);
+    }
+
+    .game-drawer.is-open .game-drawer-panel { transform: translateY(0); }
+}
+
+@layer components {
+    .game-drawer-panel {
+        border-radius: 20px 20px 0 0;
+        background: var(--tok-sheet);
+        border: 1px solid var(--tok-border, rgb(255, 255, 255, 0.1));
+        border-bottom: none;
+        box-shadow: 0 -18px 50px var(--tok-shadow-strong);
+        transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+}
 
 /* 抓握条：纯装饰，不承担拖拽（拖拽手势与棋盘滑动会互相污染） */
 .game-drawer-handle {
@@ -572,8 +586,10 @@
 .game-drawer-body::-webkit-scrollbar { display: none; }
 
 /* 抽屉打开时锁背景滚动 —— 只改 overflow，绝不 body{position:fixed} */
-body.drawer-locked {
-    overflow: hidden;
+@layer contracts {
+    body.drawer-locked {
+        overflow: hidden;
+    }
 }
 
 /* 触发钮：与普通图标钮同形，仅桌面端隐藏 */
@@ -650,7 +666,9 @@ body.drawer-locked {
  * 判据必须来自"这个页面接没接抽屉"这种**不随视口变化**的事实，而不是当前 DOM 位置。
  */
 @media (width <= 1023.98px) {
-    body.has-stats-drawer .game-sidebar { display: none; }
+    @layer contracts {
+        body.has-stats-drawer .game-sidebar { display: none; }
+    }
 }
 
 /* ── 响应式：桌面横排 ── */
@@ -744,8 +762,10 @@ body.drawer-locked {
     body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb:hover {
         background: var(--frame-scrollbar-thumb-hover);
     }
-    /* 桌面端有常驻侧栏，抽屉与它的触发钮都没有意义 */
-    .game-drawer { display: none; }
+    /* 桌面端共享统计抽屉必须退场；stats 按钮本身存在 immersive 页面例外，继续留给后续 dependency closure。 */
+    @layer contracts {
+        .game-drawer { display: none; }
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

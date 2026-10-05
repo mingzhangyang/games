@@ -131,6 +131,8 @@ const SNAP = () => {
         panelsParent: panels ? (panels.parentElement.id || panels.parentElement.className) : null,
         bodyLocked: document.body.classList.contains('drawer-locked'),
         bodyPosition: getComputedStyle(document.body).position,
+        bodyOverflowX: getComputedStyle(document.body).overflowX,
+        bodyOverflowY: getComputedStyle(document.body).overflowY,
         paused: window.game ? window.game.paused : null,
         animating: window.game ? window.game.animationId !== null : null,
         score: window.game ? window.game.score : null,
@@ -245,7 +247,38 @@ for (const vp of VIEWPORTS) {
 
     // ── 抽屉开合（移动端） ──
     if (!isDesktop) {
-        // 先开始一局，让"强制暂停"有可验证的对象
+        // #100 contracts cutover：先在未开局、未 game-locked 的状态验证 drawer 自己的 overflow contract。
+        // 否则 <=480px 开局后 body.game-locked 本身就是 hidden，会把 drawer cascade 回归掩盖成假绿。
+        const unlockedBeforeDrawer = await page.evaluate(SNAP);
+        check(unlockedBeforeDrawer.bodyLocked === false,
+            '未开局时没有 drawer-locked（为 computed overflow 断言建立独立基线）',
+            `locked=${unlockedBeforeDrawer.bodyLocked}`);
+
+        await page.click('#statsToggle');
+        await new Promise(r => setTimeout(r, 500));
+        const unlockedDrawerOpen = await page.evaluate(SNAP);
+        check(unlockedDrawerOpen.bodyLocked === true,
+            '未开局打开抽屉也会添加 drawer-locked',
+            `locked=${unlockedDrawerOpen.bodyLocked}`);
+        check(unlockedDrawerOpen.bodyOverflowX === 'hidden' && unlockedDrawerOpen.bodyOverflowY === 'hidden',
+            'drawer contract 已赢得 computed overflow cascade（x/y:hidden）',
+            `x=${unlockedDrawerOpen.bodyOverflowX} y=${unlockedDrawerOpen.bodyOverflowY}`);
+
+        await page.keyboard.press('Escape');
+        await new Promise(r => setTimeout(r, 500));
+        const unlockedDrawerClosed = await page.evaluate(SNAP);
+        check(unlockedDrawerClosed.bodyLocked === false,
+            '未开局关闭抽屉后 drawer-locked 已移除',
+            `locked=${unlockedDrawerClosed.bodyLocked}`);
+        check(
+            unlockedDrawerClosed.bodyOverflowX === unlockedBeforeDrawer.bodyOverflowX
+            && unlockedDrawerClosed.bodyOverflowY === unlockedBeforeDrawer.bodyOverflowY,
+            '未开局关闭抽屉后 computed overflow 恢复原值',
+            `before=${unlockedBeforeDrawer.bodyOverflowX}/${unlockedBeforeDrawer.bodyOverflowY} `
+                + `after=${unlockedDrawerClosed.bodyOverflowX}/${unlockedDrawerClosed.bodyOverflowY}`,
+        );
+
+        // 再开始一局，让"强制暂停"有可验证的对象
         await domClick(page, '#startBtn');
         await new Promise(r => setTimeout(r, 700));
         const before = await page.evaluate(SNAP);
@@ -281,6 +314,9 @@ for (const vp of VIEWPORTS) {
         check(opened.paused === true, '打开抽屉时游戏被强制暂停', `paused=${opened.paused}`);
         check(opened.animating === false, '暂停后主循环已停（animationId 已清）', `animating=${opened.animating}`);
         check(opened.bodyLocked === true, '背景滚动已锁（body.drawer-locked）', `locked=${opened.bodyLocked}`);
+        check(opened.bodyOverflowX === 'hidden' && opened.bodyOverflowY === 'hidden',
+            '打开抽屉时 computed overflow 保持 x/y:hidden',
+            `x=${opened.bodyOverflowX} y=${opened.bodyOverflowY}`);
         check(opened.bodyPosition !== 'fixed', '锁滚动没有把 body 变成 position:fixed（会永久滚不动）',
             `position=${opened.bodyPosition}`);
         check(opened.stat.aria === 'true', 'Stats 钮 aria-expanded=true', `aria=${opened.stat.aria}`);
@@ -316,6 +352,9 @@ for (const vp of VIEWPORTS) {
         check(closed.drawer.hidden === true && closed.drawer.open === false,
             'Esc 关闭抽屉', `hidden=${closed.drawer.hidden}`);
         check(closed.bodyLocked === false, '关闭后背景滚动锁解除', `locked=${closed.bodyLocked}`);
+        check(closed.bodyOverflowX === before.bodyOverflowX && closed.bodyOverflowY === before.bodyOverflowY,
+            '关闭后恢复开局状态本来的 computed overflow',
+            `before=${before.bodyOverflowX}/${before.bodyOverflowY} after=${closed.bodyOverflowX}/${closed.bodyOverflowY}`);
         check(closed.stat.aria === 'false', 'Stats 钮 aria-expanded=false', `aria=${closed.stat.aria}`);
         check(closed.paused === false, '关闭后恢复「因抽屉而暂停」的那一次暂停（游戏继续）',
             `paused=${closed.paused} animating=${closed.animating}`);

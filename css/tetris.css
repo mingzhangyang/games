@@ -135,19 +135,21 @@ input, textarea {
    整页彻底滚不动（实测 body.scrollTop 赋值 / wheel / 真实触摸上滑全部纹丝不动）。
    后果：移动端 SCORE 以下的 Level/Lines/Combo/Next Piece/More Games 永远不可达。
    现在让 body 正常在流内，由视口自然滚动；游戏进行中需要锁滚动时用 .game-locked。 */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--tt-body-bg);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    color: var(--light-color);
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
+@layer pages {
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--tt-body-bg);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        color: var(--light-color);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
 }
 
 .background-animation {
@@ -270,11 +272,13 @@ body {
 /* 这个元素同时是 .game-sidebar：宽度与收缩交给共享层（桌面 --frame-side + flex-shrink:0）。
    此前这里的 width:100% 与 flex:0 1 auto 会压过共享层，侧栏在 1280 下被撑到 488px —— 比
    400px 的棋盘还宽，正是「两列不平衡」最刺眼的一处。 */
-.info-panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--frame-side-gap);
-    min-width: 200px;
+@layer pages {
+    .info-panel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--frame-side-gap);
+        min-width: 200px;
+    }
 }
 
 /* #statsPanels 是移动/桌面共用的同一个节点：桌面在侧栏内，移动端移动进抽屉。
@@ -772,14 +776,16 @@ body.rainbow-theme {
 
 /* Responsive Design */
 @media (width <= 768px) {
-    body {
-        overflow-y: auto;
-        min-height: 100vh;
-        /* 固定底栏 .mobile-controls 会盖住页尾：留出「底栏高 + 刘海安全区」。
-           底栏高度 = 2px 上边框 + 12px 内距×2 + 50px 按钮 = 76px（按钮 min-height 由
-           .mobile-controls .btn 定，40/44px 的窄屏规则盖不过它）。
-           此前只留了 72px，且只在 ≤480px 生效，481–768px 之间完全没留。 */
-        padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    @layer pages {
+        body {
+            overflow-y: auto;
+            min-height: 100vh;
+            /* 固定底栏 .mobile-controls 会盖住页尾：留出「底栏高 + 刘海安全区」。
+               底栏高度 = 2px 上边框 + 12px 内距×2 + 50px 按钮 = 76px（按钮 min-height 由
+               .mobile-controls .btn 定，40/44px 的窄屏规则盖不过它）。
+               此前只留了 72px，且只在 ≤480px 生效，481–768px 之间完全没留。 */
+            padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+        }
     }
 
     /* 容器/棋盘/侧栏几何由 css/layout.css 的 .game-shell/.game-stage/.game-sidebar 统一提供 */
@@ -859,11 +865,13 @@ body.rainbow-theme {
 }
 
 @media (width <= 480px) {
-    body {
-        /* 底部留白（底栏高 + 安全区）由上面的 ≤768px 块统一给，这里不要再写死 72px */
-        min-height: 100vh;
-        overflow-y: auto;
-        overflow-x: hidden;
+    @layer pages {
+        body {
+            /* 底部留白（底栏高 + 安全区）由上面的 ≤768px 块统一给，这里不要再写死 72px */
+            min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
     }
 
     body.game-locked {

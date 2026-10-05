@@ -104,6 +104,18 @@
     "tests/css-layer-migrations/rules/p2t-layout-game-hud-box-default.json",
     "tests/css-layer-migrations/rules/p2t-pages-tetris-game-hud-box.json",
     "tests/css-layer-migrations/rules/p2t-pages-tetris-game-title-pill.json",
-    "tests/css-layer-migrations/rules/p2t-pages-index-game-footer.json"
+    "tests/css-layer-migrations/rules/p2t-pages-index-game-footer.json",
+    "tests/css-layer-migrations/rules/p2u-drawer-game-drawer-default.json",
+    "tests/css-layer-migrations/rules/p2u-contracts-game-drawer-hidden.json",
+    "tests/css-layer-migrations/rules/p2u-contracts-game-drawer-open.json",
+    "tests/css-layer-migrations/rules/p2u-drawer-game-drawer-panel-default.json",
+    "tests/css-layer-migrations/rules/p2u-contracts-game-drawer-panel-open.json",
+    "tests/css-layer-migrations/rules/p2u-contracts-drawer-locked.json",
+    "tests/css-layer-migrations/rules/p2u-contracts-stats-sidebar-narrow.json",
+    "tests/css-layer-migrations/rules/p2u-contracts-game-drawer-desktop.json",
+    "tests/css-layer-migrations/rules/p2u-pages-tetris-info-panel.json",
+    "tests/css-layer-migrations/rules/p2u-pages-tetris-body-default.json",
+    "tests/css-layer-migrations/rules/p2u-pages-tetris-body-tablet.json",
+    "tests/css-layer-migrations/rules/p2u-pages-tetris-body-narrow.json"
   ]
 }

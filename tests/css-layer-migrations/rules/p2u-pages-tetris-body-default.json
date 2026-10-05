@@ -1,0 +1,359 @@
+{
+  "id": "p2u-pages-tetris-body-default",
+  "source": {
+    "path": "css/tetris.css",
+    "context": "",
+    "selector": "body",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "0847a0dfc6f43e9e652726c4730296c1ef9fa3b9afee23c4d33760b9a86f2b31",
+    "layer": null,
+    "declarationDigest": "ff0ed30e319f062e134f7bf5826c2ad9642604a85495fa766c182efffd14dc96",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "font-family",
+        "value": [
+          [
+            "ident-token",
+            "-apple-system"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "BlinkMacSystemFont"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "string-token",
+            "'Segoe UI'"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "Roboto"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "sans-serif"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "background",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--tt-body-bg"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "min-height",
+        "value": [
+          [
+            "dimension-token",
+            "100vh"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "flex"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-content",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "flex-start"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "color",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--light-color"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow-x",
+        "value": [
+          [
+            "ident-token",
+            "hidden"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow-y",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overscroll-behavior",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "-webkit-overflow-scrolling",
+        "value": [
+          [
+            "ident-token",
+            "touch"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "width",
+        "value": [
+          [
+            "percentage-token",
+            "100%"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tetris.css",
+      "context": "",
+      "selector": "body",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0847a0dfc6f43e9e652726c4730296c1ef9fa3b9afee23c4d33760b9a86f2b31",
+      "layer": "pages",
+      "declarationDigest": "ff0ed30e319f062e134f7bf5826c2ad9642604a85495fa766c182efffd14dc96",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "min-height",
+        "peerProperty": "min-height",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 768px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "min-height",
+        "peerProperty": "min-height",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "overflow-x",
+        "peerProperty": "overflow-x",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "overflow-y",
+        "peerProperty": "overflow-y",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 768px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "overflow-y",
+        "peerProperty": "overflow-y",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "-webkit-overflow-scrolling",
+        "peerProperty": "overflow-y",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 768px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "-webkit-overflow-scrolling",
+        "peerProperty": "min-height",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 768px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "-webkit-overflow-scrolling",
+        "peerProperty": "padding-bottom",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 768px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "-webkit-overflow-scrolling",
+        "peerProperty": "min-height",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "-webkit-overflow-scrolling",
+        "peerProperty": "overflow-y",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "-webkit-overflow-scrolling",
+        "peerProperty": "overflow-x",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}
