@@ -45,6 +45,8 @@
     "tests/css-layer-migrations/rules/p2k-retire-game-footer-nav.json",
     "tests/css-layer-migrations/rules/p2k-retire-game-footer-nav-hidden.json",
     "tests/css-layer-migrations/rules/p2l-components-game-btn-default.json",
-    "tests/css-layer-migrations/rules/p2l-components-game-btn-icon-default.json"
+    "tests/css-layer-migrations/rules/p2l-components-game-btn-icon-default.json",
+    "tests/css-layer-migrations/rules/p2m-components-game-side-text-default.json",
+    "tests/css-layer-migrations/rules/p2m-components-game-side-text-bold-default.json"
   ]
 }
