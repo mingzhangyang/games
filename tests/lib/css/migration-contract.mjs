@@ -468,8 +468,23 @@ function validRuleRef(ref, { requireDeclarations = false } = {}) {
         && (!requireDeclarations || Array.isArray(ref.declarations));
 }
 
+function isRetirement(mapping) {
+    return mapping?.kind === 'retire';
+}
+
+function sameSelectorLocation(actual, expected) {
+    return actual.path === expected.path
+        && actual.contextDigest === expected.contextDigest
+        && actual.selectorDigest === expected.selectorDigest;
+}
+
 function verifyMappingShape(mapping, allowedLayers, errors) {
     let valid = true;
+    const kind = mapping.kind || 'migrate';
+    if (!['migrate', 'retire'].includes(kind)) {
+        errors.push(mapping.id + ': kind must be "migrate" or "retire".');
+        valid = false;
+    }
     if (!validRuleRef(mapping.source, { requireDeclarations: true })) {
         errors.push(mapping.id + ': source must be a complete stable rule reference with a declaration snapshot.');
         return false;
@@ -482,6 +497,17 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
     if (declarationDigest(mapping.source.declarations) !== mapping.source.declarationDigest) {
         errors.push(mapping.id + ': source declarationDigest does not match its declaration snapshot.');
         valid = false;
+    }
+    if (isRetirement(mapping)) {
+        if (!Array.isArray(mapping.destinations) || mapping.destinations.length) {
+            errors.push(mapping.id + ': retired rules must declare an empty destinations array.');
+            valid = false;
+        }
+        if (typeof mapping.reason !== 'string' || !mapping.reason.trim()) {
+            errors.push(mapping.id + ': retired rules require a non-empty reason.');
+            valid = false;
+        }
+        return valid;
     }
     if (!Array.isArray(mapping.destinations) || !mapping.destinations.length) {
         errors.push(mapping.id + ': at least one layered destination is required.');
@@ -554,6 +580,12 @@ export function verifyRuleMigrations({
             const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
             subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
         }
+        if (isRetirement(mapping)) {
+            const currentCatalog = currentCatalogs.get(mapping.source.path) || [];
+            if (currentCatalog.some(rule => sameSelectorLocation(rule, mapping.source))) {
+                errors.push(mapping.id + ': retired selector location is still present in current CSS.');
+            }
+        }
     }
 
     const usedSources = new Set();
@@ -604,6 +636,21 @@ export function verifyRuleMigrations({
         verifyRefDiagnostics(mapping.source, sourceRule, errors, mapping.id + ' source');
         if (jsonKey(sourceRule.declarations) !== jsonKey(mapping.source.declarations)) {
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
+        }
+        if (isRetirement(mapping)) {
+            const locationMatches = baseCatalog.filter(rule => sameSelectorLocation(rule, mapping.source));
+            if (locationMatches.length !== 1) {
+                errors.push(mapping.id + ': retirement source selector must resolve to exactly one comparison-base rule.');
+            }
+            if (mapping.source.layer !== null) {
+                const historicalDestination = [...baseMappings.values()].some(previous =>
+                    (previous.destinations || []).some(destination =>
+                        canonicalRefKey(destination) === canonicalRefKey(mapping.source)));
+                if (!historicalDestination) {
+                    errors.push(mapping.id + ': layered retirement source must be a destination of a previously merged migration.');
+                }
+            }
+            continue;
         }
         if (currentDestinationRules.length === (mapping.destinations || []).length) {
             const assignments = verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
