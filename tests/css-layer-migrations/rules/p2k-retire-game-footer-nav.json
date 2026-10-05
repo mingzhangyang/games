@@ -1,0 +1,28 @@
+{
+  "id": "p2k-retire-game-footer-nav",
+  "kind": "retire",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-footer-nav",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "0171ea98bb29424e0ec3f9055abdbecb130f29feab9d26f815f15fc2777e8d8d",
+    "layer": null,
+    "declarationDigest": "8fbf0648b8b953212bd5786574615f65c3332d25beb15eaa2f44d41f93f9e3b0",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "width",
+        "value": [
+          [
+            "percentage-token",
+            "100%"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "PR #89 removed every footer More-games nav container; recommendations now live outside game chrome."
+}
