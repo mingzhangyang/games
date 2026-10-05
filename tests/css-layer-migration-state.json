@@ -49,6 +49,7 @@
     "tests/css-layer-migrations/rules/p2m-components-game-side-text-default.json",
     "tests/css-layer-migrations/rules/p2m-components-game-side-text-bold-default.json",
     "tests/css-layer-migrations/rules/p2n-components-game-side-row-value-default.json",
-    "tests/css-layer-migrations/rules/p2n-components-game-side-panel-value-default.json"
+    "tests/css-layer-migrations/rules/p2n-components-game-side-panel-value-default.json",
+    "tests/css-layer-migrations/rules/p2o-components-game-drawer-title-default.json"
   ]
 }
