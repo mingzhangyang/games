@@ -392,11 +392,14 @@ universal reset 反压，因此 Architecture candidate 必须把 computed style 
 
 **P2-R / #97 Components Closure A：** reset foundation 落地后，第一批中等规模迁移按完整
 component family 收口，而不是继续拆成 selector 微批次。本批把共享 `.game-icon-btn` base、
-`::after`、`:hover`、`--wide` 以及 ≤480px 的 `font-size` / `padding` responsive peers
-共 6 条规则迁入 `components`；既有 `:active` 保持在同层，base background → page hover /
-shared hover 的 property chain 因而闭合。页面自己的 `.xx-icon-btn` 皮肤和交互规则继续未分层，
-仍按既有 cascade 覆盖共享默认；Science Showcase 的更具体规则已经位于同一 `components` 层，
-继续由 specificity 保持现有皮肤。
+`::after`、`:hover`、`--wide` 共 4 条规则迁入 `components`；既有 `:active` 保持在同层，
+base background → page hover / shared hover 的 property chain 因而闭合。≤480px 的 `font-size` /
+`padding` same-selector responsive peers 经 dependency audit 后保持未分层，因此 normal cascade
+仍由窄屏 peer 覆盖 layered base，与迁移前“后出现的窄屏规则获胜”等价。同 selector 的
+`prefers-reduced-motion` `transition:none` accessibility peer 也保持未分层，并以
+`peer-unlayered-wins` 显式登记其与 base `transition` 的 shorthand conflict。页面自己的
+`.xx-icon-btn` 皮肤和交互规则继续未分层，仍按既有 cascade 覆盖共享默认；Science Showcase
+的更具体规则已经位于同一 `components` 层，继续由 specificity 保持现有皮肤。
 
 Sidebar 同批迁入 `.game-side-card`、`.game-side-title`、`.game-side-row`、
 `.game-side-panel`、`.game-side-kbd-row`、`.game-side-kbd` 6 条基础规则；此前已迁移的
