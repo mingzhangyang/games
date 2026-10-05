@@ -17,6 +17,7 @@ import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { LANGUAGES } from './i18n.js';
 import { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS, getPlanetMergeBest } from './storage.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
+import { measureHintOnlyFooterReserve } from '../../platform/game-frame.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -1204,11 +1205,15 @@ export class PlanetMergeGame {
         // 高度，与"视口高度 - 顶栏页脚"的注释完全不是一回事（2026-09-19 修正）。
         const shell = this.canvas.closest('.game-shell');
         const main = this.canvas.closest('.game-main');
-        const usedH = shell
+        const measuredChrome = shell
             ? Array.from(shell.children)
                 .filter(el => el !== main)
                 .reduce((sum, el) => sum + el.getBoundingClientRect().height, 0)
             : 120;
+        // bindFrame preserves the removed footer action row in the shared CSS
+        // budget. This runtime owns a second vertical-fit budget, so it must use
+        // the same virtual reserve or the portrait canvas grows after footer cleanup.
+        const usedH = measuredChrome + (shell ? measureHintOnlyFooterReserve(shell) : 0);
         const availH = Math.max(320, window.innerHeight - usedH - 20);
         // 量舞台不量画布：本方法会把 cssWidth 写进内联 style.width，内联胜过
         // width:100%，再用 clientWidth 当输入就自锁了 —— 舞台放宽画布也不会长
@@ -1221,16 +1226,11 @@ export class PlanetMergeGame {
         }
         this.canvas.width = Math.round(cssWidth * dpr);
         this.canvas.height = Math.round(cssHeight * dpr);
-        // Desktop frame-budget CSS owns the visual box. Writing inline width/height
-        // before bindFrame() settles can become a flex min-content constraint and self-lock
-        // the stage. Mobile keeps the explicit size because availH is its vertical-fit guard.
-        if (window.innerWidth >= 1024) {
-            this.canvas.style.removeProperty('width');
-            this.canvas.style.removeProperty('height');
-        } else {
-            this.canvas.style.width = `${cssWidth}px`;
-            this.canvas.style.height = `${cssHeight}px`;
-        }
+        // Visual sizing remains runtime-owned for these portrait canvases. The
+        // input comes from the parent stage, not canvas.clientWidth, so writing
+        // the inline size cannot recreate the old self-lock feedback loop.
+        this.canvas.style.width = `${cssWidth}px`;
+        this.canvas.style.height = `${cssHeight}px`;
         this.scale = (cssWidth / WORLD_W) * dpr;
         this.buildStarfield();
     }
