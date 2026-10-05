@@ -601,25 +601,27 @@ body {
 /* ── 顶栏中部 HUD：移动端首屏必须能看到分数，不能等点开抽屉 ──
    宽度用 max-content 而不是让 flex 自由收缩：分数是动作钮（tabular-nums）
    会随位数变宽，若不锁住测量宽度，两位变五位时整条顶栏会抖动。 */
-.game-hud-box {
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    gap: 7px;
-    padding: 4px 14px;
-    background: var(--tt-game-hud-box-bg);
-    border: var(--tt-game-hud-box-border);
-    border-radius: 12px;
-}
+@layer pages {
+    .game-hud-box {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 7px;
+        padding: 4px 14px;
+        background: var(--tt-game-hud-box-bg);
+        border: var(--tt-game-hud-box-border);
+        border-radius: 12px;
+    }
 
-.game-title-pill {
-    min-width: 0;
-    flex: 0 1 auto;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 2px 8px;
+    .game-title-pill {
+        min-width: 0;
+        flex: 0 1 auto;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px 8px;
+    }
 }
 
 .hud-label {
