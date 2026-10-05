@@ -781,6 +781,41 @@ verifyRuleMigrations({
 });
 assert.ok(customRetireErrors.some(error => /does not support custom-property/.test(error)));
 
+// Malformed retirement declaration snapshots must fail closed instead of
+// throwing while retirement-specific checks inspect declaration fields.
+for (const [id, declaration] of [
+    ['fixture-retire-null-declaration', null],
+    ['fixture-retire-empty-declaration', {}],
+    ['fixture-retire-non-string-property', { property: 42, value: [], important: false }],
+]) {
+    const errors = [];
+    verifyRuleMigrations({
+        baseline: { debt: { unlayeredRules: [['css/retire-malformed.css', '', '.dead']] } },
+        state: {
+            ...emptyState,
+            migratedRules: [{
+                id,
+                kind: 'retire',
+                source: {
+                    ...sourceRef(retireSource),
+                    path: 'css/retire-malformed.css',
+                    declarations: [declaration],
+                },
+                destinations: [],
+                reason: 'malformed fixture',
+            }],
+        },
+        currentParsedByPath: parseMap([['css/retire-malformed.css', '']]),
+        baseParsedByPath: parseMap([['css/retire-malformed.css', '.dead{display:none}']]),
+        stylesheetLinks: {},
+        allowedLayers: ALLOWED,
+        layerOrder: LAYERS,
+        baseState: emptyState,
+        errors,
+    });
+    assert.ok(errors.some(error => /source must be a complete stable rule reference/.test(error)));
+}
+
 // Malformed state must fail closed with diagnostics rather than crashing the verifier.
 const malformedErrors = [];
 verifyRuleMigrations({
