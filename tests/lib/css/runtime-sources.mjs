@@ -17,7 +17,9 @@ const INSTALLER_SHA256 = '4650a9991128e625fc639a0df36dfe58bb76198995fdc7cd52fa09
 // This existing pure scaffold renderer emits whole HTML for new-game.mjs.
 // Pin its bytes instead of misclassifying its template as a live DOM injection.
 export const SCAFFOLD = 'src/platform/shell/render-game-shell.js';
-const SCAFFOLD_SHA256 = 'd79dfc7567c624a3d33c0dcc8947f45cdbd276b4ff353bcfb17274d4f1058e55';
+// Reviewed 2026-10-05: the shared scaffold changed only by removing footer
+// Home / More markup; its script and stylesheet inputs are unchanged.
+const SCAFFOLD_SHA256 = 'd73edf29f2a1f8bcfae6208f9b4c1c70f128fcc329cae3538a2226abe3c36aec';
 const parseJs = source => parse(source, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true });
 const string = node => node?.type === 'Literal' && typeof node.value === 'string' ? node.value
     : node?.type === 'TemplateLiteral' && node.expressions.length === 0 ? node.quasis[0].value.cooked : null;
