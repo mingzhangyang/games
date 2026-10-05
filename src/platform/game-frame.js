@@ -76,7 +76,7 @@ export function bindFrame(opts = {}) {
         [topbar, footer].forEach(el => {
             if (el) chrome += el.getBoundingClientRect().height;
         });
-        chrome += measureHintOnlyFooterReserve(shell);
+        if (!immersive) chrome += measureHintOnlyFooterReserve(shell);
         if (typeof extraChrome === 'function') {
             try {
                 chrome += extraChrome() || 0;
