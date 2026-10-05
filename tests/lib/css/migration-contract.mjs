@@ -457,6 +457,15 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
     return assignments;
 }
 
+function validDeclarationSnapshot(declaration) {
+    return declaration && !Array.isArray(declaration)
+        && typeof declaration === 'object'
+        && typeof declaration.property === 'string'
+        && declaration.property.length > 0
+        && Array.isArray(declaration.value)
+        && typeof declaration.important === 'boolean';
+}
+
 function validRuleRef(ref, { requireDeclarations = false } = {}) {
     return ref && typeof ref.path === 'string' && ref.path.startsWith('css/')
         && Object.hasOwn(ref, 'layer') && (ref.layer === null || typeof ref.layer === 'string')
@@ -465,7 +474,10 @@ function validRuleRef(ref, { requireDeclarations = false } = {}) {
         && /^[0-9a-f]{64}$/.test(ref.selectorDigest || '')
         && /^[0-9a-f]{64}$/.test(ref.declarationDigest || '')
         && Number.isInteger(ref.occurrence) && ref.occurrence > 0
-        && (!requireDeclarations || Array.isArray(ref.declarations));
+        && (!requireDeclarations || (
+            Array.isArray(ref.declarations)
+            && ref.declarations.every(validDeclarationSnapshot)
+        ));
 }
 
 function isRetirement(mapping) {
