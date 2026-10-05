@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { hasImportantPriority } from './lib/css/model.mjs';
+import { deriveRetirementDebtExpectations } from './lib/css/debt-contract.mjs';
 import { scanHtml, parseHtmlElements, htmlElementAttributes, htmlTagName, isStylesheetLink } from './lib/css/html-inputs.mjs';
 import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
@@ -218,6 +219,7 @@ function verifyProject() {
     let totalRules = 0;
     let importantCount = 0;
     let customPropertyDefinitions = 0;
+    const customPropertyDefinitionsByPath = new Map();
 
     for (const path of cssPaths) {
         const parsed = parseCssText(readFileSync(join(ROOT, path), 'utf8'), path);
@@ -227,6 +229,7 @@ function verifyProject() {
         const fileCustomPropertyDefinitions = parsed.declarations
             .filter(declaration => declaration.property.startsWith('--')).length;
         customPropertyDefinitions += fileCustomPropertyDefinitions;
+        customPropertyDefinitionsByPath.set(path, fileCustomPropertyDefinitions);
 
         const layerCounts = {};
         for (const rule of parsed.rules) {
@@ -255,10 +258,6 @@ function verifyProject() {
 
         const baselineFile = BASELINE.cssFiles.find(file => file.path === path);
         if (!baselineFile) continue;
-        if (fileCustomPropertyDefinitions !== baselineFile.customPropertyDefinitions) {
-            errors.push(path + ': custom-property declaration occurrences differ from the P0 inventory ('
-                + fileCustomPropertyDefinitions + ' current vs ' + baselineFile.customPropertyDefinitions + ' P0).');
-        }
         const layerStatements = [...parsed.layerStatements];
         const layerBlocks = [...parsed.layerBlocks];
         const normalizedLayerCounts = Object.fromEntries(Object.entries(layerCounts).sort(([a], [b]) => a.localeCompare(b)));
@@ -355,6 +354,18 @@ function verifyProject() {
         errors,
     });
 
+    const retirementDebt = deriveRetirementDebtExpectations(
+        BASELINE, migrationResult.retirementSources,
+    );
+    errors.push(...retirementDebt.errors);
+    for (const [path, expected] of retirementDebt.customPropertyDefinitions) {
+        const actual = customPropertyDefinitionsByPath.get(path) || 0;
+        if (actual !== expected) {
+            errors.push(path + ': custom-property declaration occurrences differ from immutable P0 minus '
+                + 'validated retirements (' + actual + ' current vs ' + expected + ' expected).');
+        }
+    }
+
     verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors, {
         allowedCssChanges: migrationResult.mappedCssPaths,
     });
@@ -364,7 +375,11 @@ function verifyProject() {
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);
         if (key === 'unlayeredRules') continue;
-        const expected = sortTuples(BASELINE.debt[key] || []);
+        const expected = sortTuples(
+            key === 'importantDeclarations'
+                ? retirementDebt.importantDeclarations
+                : (BASELINE.debt[key] || []),
+        );
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {
             errors.push(
