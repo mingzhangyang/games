@@ -152,6 +152,8 @@ for (const P of PAGES) {
             sidebarDisplay: sidebar ? getComputedStyle(sidebar).display : null,
             sidebarHasPanels: sidebar ? !!sidebar.querySelector('[id$="StatsPanels"]') : null,
             bodyExists: !!body,
+            bodyOverflowX: getComputedStyle(document.body).overflowX,
+            bodyOverflowY: getComputedStyle(document.body).overflowY,
             titleText: (document.getElementById(ids.drawer + 'Title') || {}).textContent ?? null,
         };
     }, ids);
@@ -233,6 +235,8 @@ for (const P of PAGES) {
             vh: window.innerHeight,
             locked: document.body.classList.contains('drawer-locked'),
             bodyPos: getComputedStyle(document.body).position,
+            bodyOverflowX: getComputedStyle(document.body).overflowX,
+            bodyOverflowY: getComputedStyle(document.body).overflowY,
             expanded: document.getElementById(ids.toggle).getAttribute('aria-expanded'),
             role: p.getAttribute('role'),
             ariaModal: p.getAttribute('aria-modal'),
@@ -248,6 +252,9 @@ for (const P of PAGES) {
     check(opened.panelMaxH > 0 && opened.panelMaxH <= opened.vh * 0.92,
         '面板高度上限约 90dvh', `maxH=${opened.panelMaxH} vh=${opened.vh}`);
     check(opened.locked, '背景滚动已锁（body.drawer-locked）');
+    check(opened.bodyOverflowX === 'hidden' && opened.bodyOverflowY === 'hidden',
+        '锁滚动规则已赢得 computed cascade（overflow-x/y:hidden）',
+        `x=${opened.bodyOverflowX} y=${opened.bodyOverflowY}`);
     check(opened.bodyPos !== 'fixed', '锁滚动没有把 body 变成 position:fixed', opened.bodyPos);
     check(opened.expanded === 'true', 'Stats 钮 aria-expanded=true');
     check(opened.role === 'dialog' && opened.ariaModal === 'true', '面板 role=dialog / aria-modal=true');
@@ -261,9 +268,14 @@ for (const P of PAGES) {
     let cl = await page.evaluate((ids) => ({
         open: document.getElementById(ids.drawer).classList.contains('is-open'),
         locked: document.body.classList.contains('drawer-locked'),
+        bodyOverflowX: getComputedStyle(document.body).overflowX,
+        bodyOverflowY: getComputedStyle(document.body).overflowY,
         expanded: document.getElementById(ids.toggle).getAttribute('aria-expanded'),
     }), ids);
     check(!cl.open && !cl.locked && cl.expanded === 'false', 'Esc 可关闭抽屉并解锁滚动');
+    check(cl.bodyOverflowX === s.bodyOverflowX && cl.bodyOverflowY === s.bodyOverflowY,
+        '关闭后恢复打开前的 computed overflow',
+        `before=${s.bodyOverflowX}/${s.bodyOverflowY} after=${cl.bodyOverflowX}/${cl.bodyOverflowY}`);
 
     await domClick(page, `#${ids.toggle}`);
     await new Promise(r => setTimeout(r, 500));
