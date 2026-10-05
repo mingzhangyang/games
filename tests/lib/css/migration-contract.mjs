@@ -472,13 +472,6 @@ function isRetirement(mapping) {
     return mapping?.kind === 'retire';
 }
 
-function sameRuleLocation(actual, expected) {
-    return actual.path === expected.path
-        && actual.contextDigest === expected.contextDigest
-        && actual.selectorDigest === expected.selectorDigest
-        && actual.layer === (expected.layer || null);
-}
-
 function verifyMappingShape(mapping, allowedLayers, errors) {
     let valid = true;
     const kind = mapping.kind || 'migrate';
@@ -583,8 +576,8 @@ export function verifyRuleMigrations({
         }
         if (isRetirement(mapping)) {
             const currentCatalog = currentCatalogs.get(mapping.source.path) || [];
-            if (currentCatalog.some(rule => sameRuleLocation(rule, mapping.source))) {
-                errors.push(mapping.id + ': retired rule location is still present in current CSS.');
+            if (findRule(currentCatalog, mapping.source, true)) {
+                errors.push(mapping.id + ': retired source rule is still present in current CSS.');
             }
         }
     }
@@ -639,10 +632,9 @@ export function verifyRuleMigrations({
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
         }
         if (isRetirement(mapping)) {
-            const locationMatches = baseCatalog.filter(rule => sameRuleLocation(rule, mapping.source));
-            if (locationMatches.length !== 1) {
-                errors.push(mapping.id + ': retirement source location must resolve to exactly one comparison-base rule.');
-            }
+            // findRule above already proves the exact canonical source, including
+            // layer/declaration/occurrence identity. Do not add selector-level
+            // uniqueness: repeated same-layer rules are legitimate distinct sources.
             if (mapping.source.layer !== null) {
                 const historicalDestination = [...baseMappings.values()].some(previous =>
                     (previous.destinations || []).some(destination =>
