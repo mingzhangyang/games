@@ -1,0 +1,246 @@
+{
+  "id": "p2s-layout-game-footer-short-peer",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (height <= 720px)",
+    "selector": ".game-footer",
+    "contextDigest": "65a74f6a194207ff3fa8cd8b0cc1eef0c5c532549dac20c4ab4237a18a7e09c2",
+    "selectorDigest": "28687646655932150cafa5a09a7c2bbe15eaf67658dc8d6b600857984558667e",
+    "layer": null,
+    "declarationDigest": "5c8c7564516ba4860317a00bd02ef47abb470321713751deede6ef55ce2068f3",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "padding",
+        "value": [
+          [
+            "dimension-token",
+            "2px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "4px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (height <= 720px)",
+      "selector": ".game-footer",
+      "contextDigest": "65a74f6a194207ff3fa8cd8b0cc1eef0c5c532549dac20c4ab4237a18a7e09c2",
+      "selectorDigest": "28687646655932150cafa5a09a7c2bbe15eaf67658dc8d6b600857984558667e",
+      "layer": "layout",
+      "declarationDigest": "5c8c7564516ba4860317a00bd02ef47abb470321713751deede6ef55ce2068f3",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "gap",
+        "peerProperty": "gap",
+        "targetLayer": "layout",
+        "peerPath": "css/index.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": null,
+        "layerPriority": "peer-unlayered-wins",
+        "pages": [
+          "index.html"
+        ]
+      },
+      {
+        "property": "gap",
+        "peerProperty": "gap",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "gap",
+        "peerProperty": "gap",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "padding",
+        "peerProperty": "padding",
+        "targetLayer": "layout",
+        "peerPath": "css/index.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": null,
+        "layerPriority": "peer-unlayered-wins",
+        "pages": [
+          "index.html"
+        ]
+      },
+      {
+        "property": "padding",
+        "peerProperty": "padding",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "padding",
+        "peerProperty": "padding",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}

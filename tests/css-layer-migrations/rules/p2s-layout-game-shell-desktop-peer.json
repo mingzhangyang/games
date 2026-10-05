@@ -1,0 +1,202 @@
+{
+  "id": "p2s-layout-game-shell-desktop-peer",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width >= 1024px)",
+    "selector": ".game-shell",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "9c9ccf5524e843aaeb849af55d94c1a72e4a50acf37db4e53ca9b6bc430f114f",
+    "layer": null,
+    "declarationDigest": "19f383fab58b518032f4fad9497df8e5bcced9495b8a71534375015dd3fa2066",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "--stage-w",
+        "value": [
+          [
+            "function-token",
+            "calc("
+          ],
+          [
+            "function-token",
+            "min("
+          ],
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-stage-h"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "100dvh"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "-"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-chrome"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "*"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-ratio"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-shell-max"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-max-wide"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width >= 1024px)",
+      "selector": ".game-shell",
+      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+      "selectorDigest": "9c9ccf5524e843aaeb849af55d94c1a72e4a50acf37db4e53ca9b6bc430f114f",
+      "layer": "layout",
+      "declarationDigest": "19f383fab58b518032f4fad9497df8e5bcced9495b8a71534375015dd3fa2066",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "max-width",
+        "peerProperty": "max-width",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}

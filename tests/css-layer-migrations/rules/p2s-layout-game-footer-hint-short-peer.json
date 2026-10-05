@@ -1,0 +1,224 @@
+{
+  "id": "p2s-layout-game-footer-hint-short-peer",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (height <= 720px)",
+    "selector": ".game-footer-hint",
+    "contextDigest": "65a74f6a194207ff3fa8cd8b0cc1eef0c5c532549dac20c4ab4237a18a7e09c2",
+    "selectorDigest": "edaf14d12167ac45a28f93d4aabab298d891ad4b17f84d950f4f77f78dda770b",
+    "layer": null,
+    "declarationDigest": "4fa06344bb5bd2ce1d8544b785760340ab1ba24958023fa6805d4e50132daa38",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "white-space",
+        "value": [
+          [
+            "ident-token",
+            "nowrap"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow",
+        "value": [
+          [
+            "ident-token",
+            "hidden"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "text-overflow",
+        "value": [
+          [
+            "ident-token",
+            "ellipsis"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "font-size",
+        "value": [
+          [
+            "dimension-token",
+            "11px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (height <= 720px)",
+      "selector": ".game-footer-hint",
+      "contextDigest": "65a74f6a194207ff3fa8cd8b0cc1eef0c5c532549dac20c4ab4237a18a7e09c2",
+      "selectorDigest": "edaf14d12167ac45a28f93d4aabab298d891ad4b17f84d950f4f77f78dda770b",
+      "layer": "layout",
+      "declarationDigest": "4fa06344bb5bd2ce1d8544b785760340ab1ba24958023fa6805d4e50132daa38",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "font-size",
+        "peerProperty": "font-size",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "overflow",
+        "peerProperty": "overflow",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "text-overflow",
+        "peerProperty": "text-overflow",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "white-space",
+        "peerProperty": "white-space",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}

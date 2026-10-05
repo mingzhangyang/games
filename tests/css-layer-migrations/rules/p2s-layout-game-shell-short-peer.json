@@ -1,0 +1,118 @@
+{
+  "id": "p2s-layout-game-shell-short-peer",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (height <= 720px)",
+    "selector": ".game-shell",
+    "contextDigest": "65a74f6a194207ff3fa8cd8b0cc1eef0c5c532549dac20c4ab4237a18a7e09c2",
+    "selectorDigest": "9c9ccf5524e843aaeb849af55d94c1a72e4a50acf37db4e53ca9b6bc430f114f",
+    "layer": null,
+    "declarationDigest": "ef1e59fbc367ccc759249ccce1e70b596ec5310e8ea991278c7b975aea7f5ac4",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "padding-top",
+        "value": [
+          [
+            "dimension-token",
+            "6px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (height <= 720px)",
+      "selector": ".game-shell",
+      "contextDigest": "65a74f6a194207ff3fa8cd8b0cc1eef0c5c532549dac20c4ab4237a18a7e09c2",
+      "selectorDigest": "9c9ccf5524e843aaeb849af55d94c1a72e4a50acf37db4e53ca9b6bc430f114f",
+      "layer": "layout",
+      "declarationDigest": "ef1e59fbc367ccc759249ccce1e70b596ec5310e8ea991278c7b975aea7f5ac4",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "padding-top",
+        "peerProperty": "padding",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "padding-top",
+        "peerProperty": "padding",
+        "targetLayer": "layout",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "layout",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}
