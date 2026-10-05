@@ -112,6 +112,56 @@ const emptyState = {
     migratedKeyframes: [],
     migratedRuntimeStyleSources: [],
 };
+
+function resetFixtureErrors(id, baseCss, currentCss) {
+    const path = 'css/' + id + '.css';
+    const fixtureBase = parseMap([[path, baseCss]]);
+    const fixtureCurrent = parseMap([[path, currentCss]]);
+    const fixtureSource = catalogMap(fixtureBase).get(path)[0];
+    const fixtureDestination = catalogMap(fixtureCurrent).get(path)[0];
+    const fixtureErrors = [];
+    verifyRuleMigrations({
+        baseline: { debt: { unlayeredRules: [[path, fixtureSource.context, fixtureSource.selector]] } },
+        state: {
+            ...emptyState,
+            migratedRules: [{
+                id,
+                source: sourceRef(fixtureSource),
+                destinations: [destinationRef(fixtureDestination)],
+                conflicts: { normal: [], important: [] },
+            }],
+        },
+        currentParsedByPath: fixtureCurrent,
+        baseParsedByPath: fixtureBase,
+        stylesheetLinks: { 'fixture.html': [[path, [['href', path], ['rel', 'stylesheet']]]] },
+        allowedLayers: ALLOWED,
+        layerOrder: LAYERS,
+        baseState: emptyState,
+        errors: fixtureErrors,
+    });
+    return fixtureErrors;
+}
+
+assert.deepEqual(
+    resetFixtureErrors('fixture-reset-valid', '*{margin:0}', '@layer reset{*{margin:0}}'),
+    [],
+);
+assert.ok(resetFixtureErrors(
+    'fixture-reset-non-universal',
+    '.x{margin:0}',
+    '@layer reset{.x{margin:0}}',
+).some(error => /reset layer is limited to reviewed universal selectors/.test(error)));
+assert.ok(resetFixtureErrors(
+    'fixture-reset-nested',
+    '@media (width >= 1px){*{margin:0}}',
+    '@media (width >= 1px){@layer reset{*{margin:0}}}',
+).some(error => /reset layer is limited to top-level rules/.test(error)));
+assert.ok(resetFixtureErrors(
+    'fixture-reset-important',
+    '*{margin:0!important}',
+    '@layer reset{*{margin:0!important}}',
+).some(error => /reset layer accepts normal declarations only/.test(error)));
+
 const state = {
     migratedRules: [mapping],
     migratedKeyframes: [],
