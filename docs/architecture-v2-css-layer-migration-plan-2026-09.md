@@ -310,6 +310,24 @@ text-align / min-width 是顶栏中槽的共享 `layout` 默认值，不含 rese
 覆盖从 `:root` 继承的默认值。本批继续不触碰 `.game-topbar`、`.game-hud-box` 或任何
 drawer / start-menu / frame-budget / immersive contracts。
 
+**P2-K dead-rule retirement：** PR #89 将游戏页 Footer 收敛为 hint-only 后，
+`.game-footer-nav` 与 `.game-footer-nav[hidden]` 已没有任何 DOM consumer；它们不应为了
+immutable migration ledger 而永久留在生产 CSS。P2-K 将 mapping contract 升到 v2，但刻意只新增
+一个**窄的** append-only `kind: "retire"` transaction：仅允许退休 immutable P0 中仍未分层、
+且不含 `!important` 或 custom-property declaration 的普通规则。retirement 只声明
+“comparison-base 中这条精确 P0 rule 已因产品/DOM contract 消失而删除”；历史 mapping module
+仍不可修改/删除。
+
+P2-K **不支持** layered-source retirement、跨 PR provenance、`!important` retirement、
+custom-property retirement，亦不尝试为 legacy debt representation 增加新的规范化语义。
+这些能力当前没有生产需求；若未来确实出现，应以独立 contract/PR 重新设计，而不是把本批
+dead-CSS 清理扩展成通用 CSS lineage 系统。
+
+`.game-footer-actions` **不在本批退休**：游戏页虽然已不再渲染 action row，但首页 Footer
+仍复用该 class 来排列语言/主题控件。立即把它拆成首页专属 page-layer rule 会把后续 `pages`
+迁移混进 P2-K，因此保持现有共享 `layout` rule，待 page CSS dependency closure 时再解耦。
+本批不改变任何仍有 consumer 的 layout/contracts 规则，也继续保留 `shared-css-first`。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -482,6 +500,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 将 CSS migration ledger 拆为 manifest + per-mapping modules；主状态文件不再承载不断增长的完整 mapping payload
 - [x] P2-I：迁移 `.game-title-pill` 共享顶栏信息块默认值到 `layout`；Tetris exact-selector peer 保持未分层并显式登记冲突
 - [x] P2-J：迁移共享 frame `:root` 变量默认值到 `layout`；Gomoku 的 3 个 exact-selector 自定义属性覆盖保持未分层优先
+- [x] P2-K：以窄版 P0-only retirement transaction 清理 #89 后遗留的 Footer nav dead rules；明确拒绝 layered / `!important` / custom-property retirement，并保留首页仍使用的 `.game-footer-actions`
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

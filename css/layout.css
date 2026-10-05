@@ -282,6 +282,8 @@
     margin-top: auto;
 }
 
+/* 首页仍复用该 actions row 放语言/主题控件；游戏页 #89 后不再渲染它。
+   在 pages 迁移前保持共享规则，避免把首页专属 CSS cutover 混入 P2-K。 */
 @layer layout {
     .game-footer-actions {
         display: flex;
@@ -290,13 +292,6 @@
         gap: 8px;
     }
 }
-
-/* 页脚展开的「更多游戏」导航：收起时不占高度（[hidden] 优先于下面的 display） */
-.game-footer-nav {
-    width: 100%;
-}
-
-.game-footer-nav[hidden] { display: none; }
 
 /* ── 底部操作提示 ──
    手机上必须可见：此前 ≤480px 与 ≤720px 高都 display:none，等于没有页脚。

@@ -457,6 +457,15 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
     return assignments;
 }
 
+function validDeclarationSnapshot(declaration) {
+    return declaration && !Array.isArray(declaration)
+        && typeof declaration === 'object'
+        && typeof declaration.property === 'string'
+        && declaration.property.length > 0
+        && Array.isArray(declaration.value)
+        && typeof declaration.important === 'boolean';
+}
+
 function validRuleRef(ref, { requireDeclarations = false } = {}) {
     return ref && typeof ref.path === 'string' && ref.path.startsWith('css/')
         && Object.hasOwn(ref, 'layer') && (ref.layer === null || typeof ref.layer === 'string')
@@ -465,11 +474,23 @@ function validRuleRef(ref, { requireDeclarations = false } = {}) {
         && /^[0-9a-f]{64}$/.test(ref.selectorDigest || '')
         && /^[0-9a-f]{64}$/.test(ref.declarationDigest || '')
         && Number.isInteger(ref.occurrence) && ref.occurrence > 0
-        && (!requireDeclarations || Array.isArray(ref.declarations));
+        && (!requireDeclarations || (
+            Array.isArray(ref.declarations)
+            && ref.declarations.every(validDeclarationSnapshot)
+        ));
+}
+
+function isRetirement(mapping) {
+    return mapping?.kind === 'retire';
 }
 
 function verifyMappingShape(mapping, allowedLayers, errors) {
     let valid = true;
+    const kind = mapping.kind || 'migrate';
+    if (!['migrate', 'retire'].includes(kind)) {
+        errors.push(mapping.id + ': kind must be "migrate" or "retire".');
+        valid = false;
+    }
     if (!validRuleRef(mapping.source, { requireDeclarations: true })) {
         errors.push(mapping.id + ': source must be a complete stable rule reference with a declaration snapshot.');
         return false;
@@ -483,6 +504,31 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
         errors.push(mapping.id + ': source declarationDigest does not match its declaration snapshot.');
         valid = false;
     }
+
+    if (isRetirement(mapping)) {
+        if (mapping.source.layer !== null) {
+            errors.push(mapping.id + ': P2-K retirement is intentionally limited to unlayered P0 rules.');
+            valid = false;
+        }
+        if (!Array.isArray(mapping.destinations) || mapping.destinations.length) {
+            errors.push(mapping.id + ': retired rules must declare an empty destinations array.');
+            valid = false;
+        }
+        if (typeof mapping.reason !== 'string' || !mapping.reason.trim()) {
+            errors.push(mapping.id + ': retired rules require a non-empty reason.');
+            valid = false;
+        }
+        if ((mapping.source.declarations || []).some(declaration => declaration.important)) {
+            errors.push(mapping.id + ': P2-K retirement does not support !important declarations.');
+            valid = false;
+        }
+        if ((mapping.source.declarations || []).some(declaration => declaration.property.startsWith('--'))) {
+            errors.push(mapping.id + ': P2-K retirement does not support custom-property declarations.');
+            valid = false;
+        }
+        return valid;
+    }
+
     if (!Array.isArray(mapping.destinations) || !mapping.destinations.length) {
         errors.push(mapping.id + ': at least one layered destination is required.');
         valid = false;
@@ -605,6 +651,7 @@ export function verifyRuleMigrations({
         if (jsonKey(sourceRule.declarations) !== jsonKey(mapping.source.declarations)) {
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
         }
+        if (isRetirement(mapping)) continue;
         if (currentDestinationRules.length === (mapping.destinations || []).length) {
             const assignments = verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
             pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules, assignments });
