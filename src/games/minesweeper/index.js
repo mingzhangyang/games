@@ -931,7 +931,6 @@ onReady(() => {
         self: 'minesweeper.html',
         frame: false,
         chrome: {
-            owns: ['more'],
             getText,
             labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
         },

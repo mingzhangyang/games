@@ -48,7 +48,7 @@ onReady(() => {
         game: window.tdGame,
         frame: { logicalWidth: W, layout: 'immersive' },
         chrome: {
-            owns: ['home', 'more'],
+            owns: ['home'],
             getText,
             labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
         },

@@ -30,7 +30,6 @@ onReady(() => {
             getText,
         },
         chrome: {
-            owns: ['more'],
             getText,
             labels: {
                 pause: () => {
