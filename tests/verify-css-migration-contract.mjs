@@ -733,7 +733,96 @@ verifyRuleMigrations({
     baseState: emptyState,
     errors: retireStillPresentErrors,
 });
-assert.ok(retireStillPresentErrors.some(error => /retired selector location is still present/.test(error)));
+assert.ok(retireStillPresentErrors.some(error => /retired rule location is still present/.test(error)));
+
+// A historical split may produce the same selector in multiple layers. Each
+// terminal destination is a distinct retirement source, so layer is part of
+// retirement location identity.
+const retireSplitP0 = parseMap([['css/retire-split.css', '.x{color:red;display:none!important}']]);
+const retireSplitBase = parseMap([[
+    'css/retire-split.css',
+    '@layer layout{.x{color:red}}@layer contracts{.x{display:none!important}}',
+]]);
+const retireSplitCurrent = parseMap([['css/retire-split.css', '']]);
+const retireSplitP0Rule = catalogMap(retireSplitP0).get('css/retire-split.css')[0];
+const retireSplitBaseRules = catalogMap(retireSplitBase).get('css/retire-split.css');
+const retireSplitHistory = {
+    id: 'fixture-retire-split-history',
+    source: sourceRef(retireSplitP0Rule),
+    destinations: retireSplitBaseRules.map(destinationRef),
+    conflicts: { normal: [], important: [] },
+};
+const retireSplitMappings = retireSplitBaseRules.map((rule, index) => ({
+    id: 'fixture-retire-split-' + index,
+    kind: 'retire',
+    source: sourceRef(rule),
+    destinations: [],
+    reason: 'fixture split destination was removed',
+}));
+const retireSplitErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/retire-split.css', '', '.x']] } },
+    state: { ...emptyState, migratedRules: [retireSplitHistory, ...retireSplitMappings] },
+    currentParsedByPath: retireSplitCurrent,
+    baseParsedByPath: retireSplitBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: { ...emptyState, migratedRules: [retireSplitHistory] },
+    errors: retireSplitErrors,
+});
+assert.deepEqual(retireSplitErrors, []);
+
+// Conflict analysis uses the post-transaction peer graph. A peer retired in the
+// same transaction must not create conflict metadata for a surviving migration.
+const mixedBase = parseMap([
+    ['css/mixed-migrate.css', '.x{color:red}'],
+    ['css/mixed-retire.css', '.x{color:blue}'],
+]);
+const mixedCurrent = parseMap([
+    ['css/mixed-migrate.css', '@layer pages{.x{color:red}}'],
+    ['css/mixed-retire.css', ''],
+]);
+const mixedBaseCatalogs = catalogMap(mixedBase);
+const mixedCurrentCatalogs = catalogMap(mixedCurrent);
+const mixedMigration = {
+    id: 'fixture-mixed-migrate',
+    source: sourceRef(mixedBaseCatalogs.get('css/mixed-migrate.css')[0]),
+    destinations: [destinationRef(mixedCurrentCatalogs.get('css/mixed-migrate.css')[0])],
+    conflicts: { normal: [], important: [] },
+};
+const mixedRetirement = {
+    id: 'fixture-mixed-retire',
+    kind: 'retire',
+    source: sourceRef(mixedBaseCatalogs.get('css/mixed-retire.css')[0]),
+    destinations: [],
+    reason: 'fixture peer was removed',
+};
+const mixedErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [
+                ['css/mixed-migrate.css', '', '.x'],
+                ['css/mixed-retire.css', '', '.x'],
+            ],
+        },
+    },
+    state: { ...emptyState, migratedRules: [mixedMigration, mixedRetirement] },
+    currentParsedByPath: mixedCurrent,
+    baseParsedByPath: mixedBase,
+    stylesheetLinks: {
+        'mixed.html': [
+            ['css/mixed-migrate.css', [['href', 'css/mixed-migrate.css'], ['rel', 'stylesheet']]],
+            ['css/mixed-retire.css', [['href', 'css/mixed-retire.css'], ['rel', 'stylesheet']]],
+        ],
+    },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: mixedErrors,
+});
+assert.deepEqual(mixedErrors, []);
 
 const retireWithoutHistoryErrors = [];
 verifyRuleMigrations({
