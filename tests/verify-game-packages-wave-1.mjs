@@ -142,7 +142,7 @@ if (keepPage('needle-awn')) {
 if (keepPage('gravity-slingshot')) {
     check(read('src/games/gravity-slingshot/index.js').includes('window.__gravityDebug'),
         'gravity-slingshot: __gravityDebug remains published by the entry');
-    const gravityHomeOwnership = read('src/games/gravity-slingshot/index.js').includes("owns: ['more', 'home']")
+    const gravityHomeOwnership = read('src/games/gravity-slingshot/index.js').includes("owns: ['home']")
         && !read('src/games/gravity-slingshot/runtime.js').includes("this.el['btn-home'].addEventListener");
     check(gravityHomeOwnership, 'gravity-slingshot: shared chrome exclusively owns the header Home button');
 

@@ -35,11 +35,8 @@
        持久页脚（随流在底部，不用 sticky/fixed）：
        <footer class="xx-footer game-footer">
          <p class="xx-footer-hint game-footer-hint">   操作提示
-         <div class="xx-footer-actions game-topbar-group">
-           <a|button class="game-icon-btn" data-chrome="home">
-           <button class="game-icon-btn" data-chrome="more" aria-expanded aria-controls>
-         <nav class="more-games game-footer-nav" id="xxMoreNav" hidden>
-       —— 有状态的开关（Sound / Lang）只在 header，页脚只放无状态导航。
+       —— 游戏页 Footer 只保留操作提示；Home / Sound 等固定控件留在 Header，
+          跨游戏推荐放在侧栏 / 开始菜单等内容区域。
 
        底部抽屉（移动端专用，桌面端自动失效）：
        <button class="xx-icon-btn game-icon-btn game-stats-btn">  触发钮（≥1024px 隐藏）
@@ -268,9 +265,8 @@
 }
 
 /* ── 持久页脚：随流在底部 ──
-   ⚠️ 只放无状态导航（Home / 更多游戏）+ 操作提示。Sound 与 Lang 是状态开关，
-   它们的唯一真源在 header —— 若两处都写同一标签，切语言时会出现两个写入者
-   （CLAUDE.md 记过这个坑），且页脚开关无法与 header 的 aria-pressed 同步。
+   ⚠️ 游戏页只保留操作提示。Home / Sound 等固定控件统一在 header，
+   跨游戏推荐由独立 more-games 组件放在侧栏 / 开始菜单等内容区域。
 
    ⚠️ 不要改成 sticky / fixed：tetris 的 .mobile-controls(z-index 1000)、
    底部统计抽屉(z-index 1200)、各页结算浮层都会与它抢层级，固定底栏还会吃掉

@@ -2,19 +2,18 @@
 //
 // 断言（每页 × 移动 390 / 桌面 1280 × zh / en）：
 //   ① 顶栏三槽位齐全；右簇通用钮顺序 = stats → pause → sound
-//   ② home / sound / more / pause 的 title 与 aria-label 非空，且随语言变化
-//   ③ 页脚在 390 宽下**可见**（此前 ≤480px 被 display:none，等于没有页脚），hint 非空；\n//      footer actions 的 gap 保持桌面 8px / ≤480px 4px，守住 game-footer-actions × game-topbar-group 的跨 selector cascade
+//   ② home / sound / pause 的 title 与 aria-label 非空，且随语言变化
+//   ③ 页脚在 390 宽下**可见**且 hint 非空；页脚不得再包含 data-chrome 控件或 More nav
 //   ④ 游戏页**不得**出现语言钮（2026-09-21 语言切换 UI 收敛到首页 index.html；
 //      历史上的「点一次语言钮 UI 必须换语言」断言随 UI 一起移除）
 //   ⑤ 点一次静音钮，site_muted 真的翻转（挡住"页面与 chrome 各挂一个 handler
 //      导致一次点击切换两次 = 净效果为零"这个最隐蔽的回归）
-//   ⑥ 页脚「更多游戏」展开后 aria-expanded=true、列表非空、不含指向本页的自链接
 //   ⑦ 整轮无 pageerror
 //   ⑧ 点一次**顶栏**首页钮，必须真的导航回 index.html。顶栏 home 多为无 href 的
 //      <button>，跳转完全依赖 chrome（owns 含 'home'）或页面自绑 —— §② 只查标签，
 //      查不出「按钮是死的」。bond-forge / silk-dew 曾双双中招（footer 的 <a> 天然
 //      可用，所以用户只见顶栏坏）。每页只测一次、且是本轮最后一个操作（会真的离开页面）。
-//   ⑨ 首屏可见的 game overlay 不得再塞一个 Home 链接。持久页脚已经提供 Home，
+//   ⑨ 首屏可见的 game overlay 不得再塞一个 Home 链接。顶栏已经提供 Home，
 //      两者叠在同一屏会出现 tower-defense / reversi / minesweeper / needle-awn 的重复 Home。
 //
 // ⚠️ 语言存储键是 site_lang（src/platform/site-settings.js 的 LANG_KEY），不是 'lang'。
@@ -44,8 +43,8 @@ const COLUMN_MAIN_PAGES = new Set(['gomoku', 'minesweeper', 'reversi']);
 //   （因为变的是页面自己的 hint/title），全绿。只有把期望值写死，
 //   「该是中文却给了英文」才无处可躲。
 const EXPECT_LABEL = {
-    zh: { sound: '声音', more: '更多游戏' },
-    en: { sound: 'Sound', more: 'More games' },
+    zh: { sound: '声音' },
+    en: { sound: 'Sound' },
 };
 
 const fails = [];
@@ -118,10 +117,8 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     chrome: Array.from(document.querySelectorAll('[data-chrome]')).map(label),
                     footerVisible: vis(footer),
                     hintText: hint ? (hint.textContent || '').trim() : null,
-                    footerActionsGap: (() => {
-                        const actions = document.querySelector('.game-footer .game-footer-actions');
-                        return actions ? getComputedStyle(actions).gap : null;
-                    })(),
+                    footerControlCount: footer ? footer.querySelectorAll('[data-chrome]').length : 0,
+                    footerMoreNavCount: footer ? footer.querySelectorAll('.game-footer-nav').length : 0,
                     htmlLang: document.documentElement.lang,
                     docTitle: document.title,
                     muted: (() => { try { return localStorage.getItem('site_muted'); } catch (e) { return null; } })(),
@@ -158,19 +155,14 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             }
 
             /* ── ②b 共享文案必须真的本地化（不是只「非空」）──
-               只查 sound / moreGames：这两个键来自 src/platform/i18n.js 的 COMMON_TEXT，
-               zh 值全站唯一，断死值不会误伤。
-               ⚠️ 刻意不查 home —— 它是**页面自有键**，各页取值不同（'Home' /
-               '返回菜单' / '返回仙门'），断死值会在 needle-awn、sword-flight 上误报。 */
+               sound 来自 src/platform/i18n.js 的 COMMON_TEXT；刻意不把 home 断死，
+               因为 needle-awn / sword-flight 等页有自己的 Home 文案。 */
             const want = EXPECT_LABEL[lang];
             const labelOf = role => (snap.chrome.find(c => c.role === role) || {}).aria || '';
             const soundLabel = labelOf('sound');
             // 静音态下文案会换成 soundOffLabel（'Unmute' / '取消静音'），两种情况都接受
             if (soundLabel && soundLabel !== want.sound && !/Unmute|取消静音/.test(soundLabel))
                 fail(name, vp.tag, lang, `静音钮文案未本地化：期望「${want.sound}」，实得「${soundLabel}」（共享层 getText 是否返回整表？）`);
-            const moreLabel = labelOf('more');
-            if (moreLabel && moreLabel !== want.more)
-                fail(name, vp.tag, lang, `更多游戏钮文案未本地化：期望「${want.more}」，实得「${moreLabel}」（共享层 getText 是否返回整表？）`);
 
             // ④ 负向断言：游戏页不允许再有语言钮（入口收敛到首页，2026-09-21）
             if (snap.chrome.some(c => c.role === 'lang'))
@@ -180,9 +172,10 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
 
             if (!snap.footerVisible) fail(name, vp.tag, lang, '页脚不可见');
             if (!snap.hintText) fail(name, vp.tag, lang, '页脚提示为空');
-            const expectedFooterGap = vp.w <= 480 ? '4px' : '8px';
-            if (snap.footerActionsGap !== expectedFooterGap)
-                fail(name, vp.tag, lang, `页脚动作间距 ${snap.footerActionsGap} ≠ ${expectedFooterGap}（game-footer-actions × game-topbar-group cascade 回归）`);
+            if (snap.footerControlCount !== 0)
+                fail(name, vp.tag, lang, `页脚仍有 ${snap.footerControlCount} 个 data-chrome 控件（Footer 应只保留 hint）`);
+            if (snap.footerMoreNavCount !== 0)
+                fail(name, vp.tag, lang, `页脚仍有 ${snap.footerMoreNavCount} 个 .game-footer-nav`);
             if (snap.visibleOverlayHomeCount > 0)
                 fail(name, vp.tag, lang, `首屏 overlay 内还有 ${snap.visibleOverlayHomeCount} 个 Home 链接，会与持久页脚 Home 重复`);
             if (snap.htmlLang && !snap.htmlLang.startsWith(lang))
@@ -199,28 +192,6 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
             });
             if (!muteRes.skip && muteRes.before === muteRes.after)
                 fail(name, vp.tag, lang, `静音钮点击无效（site_muted 仍为 ${muteRes.after}）—— 多半是页面与 chrome 双绑，一次点击切了两次`);
-
-            /* ── ⑥ 更多游戏 ── */
-            const moreRes = await page.evaluate(name => {
-                const btn = document.querySelector('[data-chrome="more"]');
-                if (!btn) return { missing: true };
-                btn.click();
-                const nav = document.getElementById(btn.getAttribute('aria-controls'));
-                const links = nav ? Array.from(nav.querySelectorAll('a')).map(a => a.getAttribute('href')) : [];
-                return {
-                    expanded: btn.getAttribute('aria-expanded'),
-                    hidden: nav ? nav.hidden : null,
-                    count: links.length,
-                    self: links.includes(name + '.html'),
-                };
-            }, name);
-            if (moreRes.missing) fail(name, vp.tag, lang, '页脚没有「更多游戏」钮');
-            else {
-                if (moreRes.expanded !== 'true') fail(name, vp.tag, lang, '更多游戏：aria-expanded 未置 true');
-                if (moreRes.hidden !== false) fail(name, vp.tag, lang, '更多游戏：展开后 nav 仍 hidden');
-                if (!moreRes.count) fail(name, vp.tag, lang, '更多游戏：列表为空');
-                if (moreRes.self) fail(name, vp.tag, lang, '更多游戏：包含指向本页的自链接');
-            }
 
             /* ── ⑧ 顶栏首页钮：点击必须真的导航回 index.html ──
                编程式 click（element.click()）只验证「监听器接没接」，绕开命中测试 ——

@@ -1,28 +1,18 @@
 /**
- * 共享顶栏 / 页脚控制器（chrome = 应用级外壳）
- * ==========================================
- * 把「Home / Sound / More」这三个**全站语义相同**的控件的文案、无障碍标签
- * 与点击行为收敛到一份实现。静态 HTML 槽位原由一次性迁移脚本生成（现归档于
- * `tools/archive/migrations/apply-header-footer.py`）；本模块只负责行为。
+ * 共享顶栏控制器（chrome = 应用级外壳）
+ * ==================================
+ * Home / Sound 是全站语义相同的顶栏控件；Pause 文案由页面提供。
+ * Footer 自 2026-10-05 起只保留操作提示，不再承载 Home / More 导航控件。
  *
- * 槽位契约（见 docs/header-footer-contract-2026-09-19.md）：
- *   header 右簇顺序：① 页面专属 → ② stats → ③ pause → ④ sound
- *   footer 只放无状态导航：data-chrome="home" / data-chrome="more" + 操作提示
- *
- * ⚠️ 职责边界（避免"同一标签多处写入"）
- *   本模块**只**写 home / sound / more 三个标签。
- *   - stats 的 title/aria 归 `src/platform/game-drawer.js` 的 renderIcons()（已有 228 条断言）；
- *   - pause 是有状态的（Pause↔Resume），由页面通过 `labels.pause` 回调提供文案，
- *     本模块只负责落笔，不在内部推断当前暂停态；
- *   - 页脚 hint 文案不属于 chrome（各页差异大），由各页自己的 applyLanguage 写。
- *
- * ⚠️ 语言存储键是 `site_lang`（见 src/platform/site-settings.js 的 LANG_KEY）。语言切换 UI 只在
- *   首页（2026-09-21 收敛）：游戏页不再有语言钮，本模块只订阅 `site-settings:changed`
- *   重刷 home / sound / more（setMuted 同样派发该事件，静音切换靠它重刷文案）。
+ * ⚠️ 职责边界
+ *   - home / sound 标签与 sound 图标由本模块统一渲染；
+ *   - stats 归 src/platform/game-drawer.js；
+ *   - pause 的动态文案由页面通过 labels.pause 提供；
+ *   - footer hint 由各页自己的 i18n 渲染；
+ *   - 跨游戏推荐由 more-games 组件独立负责，不属于 chrome。
  */
 
-import { getLang, getMuted, setMuted } from './site-settings.js';
-import { renderMoreGames } from './more-games.js';
+import { getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
 
 function setLabel(node, text) {
@@ -33,27 +23,20 @@ function setLabel(node, text) {
 
 /**
  * @param {object} opts
- * @param {string} opts.self  当前页文件名（用于从「更多游戏」里排除自身），如 'tetris.html'
- * @param {() => object} [opts.getText]  返回当前语言文案对象；需含 home / sound /
- *        moreGames / pause 等键（缺哪个就用内置英文兜底）
- * @param {object} [opts.labels]  { pause: () => string } 之类的动态文案提供者
- * @param {string[]} [opts.owns]  本模块**接管点击**的角色，默认 ['more']。
- *        ⚠️ sound 默认**不**接管：9 个页面的顶栏静音钮早就有自己的 handler（并且各自
- *        还要做 SFX.init() / updateMute() 这类页面私事），再挂一个就会一次点击切换两次
- *        = 净效果为零。只有本来没有 handler 的新钮（gomoku / tetris）才传入 'sound'。
- *        渲染（图标 / 标签 / aria-pressed）不受 owns 影响，始终由本模块负责 —— 各页
- *        写的是同一个 ICONS 值，属无害的幂等重复。
- * @param {() => boolean} [opts.isMuted]  自定义静音读值（默认 getMuted()）
- * @param {(m:boolean) => void} [opts.onToggleMute] 自定义静音写入；给了就不再调 setMuted，
- *        页面可在回调里同步刷新自己的音效实例
+ * @param {() => object} [opts.getText] 返回当前语言文案对象；需含 home / sound 等键。
+ * @param {object} [opts.labels] { pause: () => string } 之类的动态文案提供者。
+ * @param {string[]} [opts.owns] 本模块接管点击的角色。默认不接管任何角色。
+ *        sound 只有页面没有自己的 mute handler 时才应交给 chrome；
+ *        无 href 的 Home <button> 可交给 chrome。
+ * @param {() => boolean} [opts.isMuted] 自定义静音读值（默认 getMuted()）
+ * @param {(m:boolean) => void} [opts.onToggleMute] 自定义静音写入。
  * @returns {object|null}
  */
 export function bindChrome(opts) {
     const {
-        self = '',
         getText = null,
         labels = null,
-        owns = ['more'],
+        owns = [],
         isMuted = getMuted,
         onToggleMute = null,
     } = opts || {};
@@ -61,21 +44,12 @@ export function bindChrome(opts) {
     const txt = () => (typeof getText === 'function' ? (getText() || {}) : {});
     const ownsRole = role => Array.isArray(owns) && owns.indexOf(role) !== -1;
 
-    // 收集所有槽位节点：header 与 footer 可能各有一次（页脚的是纯导航，无 sound）
     const nodes = Array.from(document.querySelectorAll('[data-chrome]'));
     const byRole = role => nodes.filter(n => n.getAttribute('data-chrome') === role);
-
     const soundBtns = byRole('sound');
     const homeNodes = byRole('home');
-    const moreBtns = byRole('more');
 
-    // 页面没迁完（一个槽位标记都没有）就静默退出，不报错、不影响游戏本体
     if (!nodes.length) return null;
-
-    let moreNav = null;          // 页脚的「更多游戏」容器（懒创建内容）
-    let moreExpanded = false;
-
-    /* ── 渲染 ── */
 
     function renderHome() {
         const t = txt();
@@ -86,7 +60,6 @@ export function bindChrome(opts) {
     function renderSound() {
         const muted = !!isMuted();
         const t = txt();
-        // 有独立键的页（gd / ms）优先用 t.sound，其余页回落到统一内置文案
         const label = muted ? (t.soundOffLabel || 'Unmute') : (t.sound || 'Sound');
         soundBtns.forEach(btn => {
             btn.innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
@@ -95,18 +68,7 @@ export function bindChrome(opts) {
         });
     }
 
-    function renderMore() {
-        const t = txt();
-        const label = t.moreGames || 'More games';
-        moreBtns.forEach(btn => {
-            if (!btn.innerHTML.trim()) btn.innerHTML = ICONS.games;
-            setLabel(btn, label);
-            btn.setAttribute('aria-expanded', moreExpanded ? 'true' : 'false');
-        });
-    }
-
     function renderPause() {
-        // 文案由页面提供（Pause↔Resume 是页面自己的状态）
         const pauseNodes = byRole('pause');
         if (!pauseNodes.length) return;
         const provider = labels && typeof labels.pause === 'function' ? labels.pause : null;
@@ -119,11 +81,8 @@ export function bindChrome(opts) {
         if (!document.body.contains(nodes[0])) return;
         renderHome();
         renderSound();
-        renderMore();
         renderPause();
     }
-
-    /* ── 行为 ── */
 
     function toggleMute() {
         const next = !isMuted();
@@ -132,33 +91,9 @@ export function bindChrome(opts) {
         renderSound();
     }
 
-    function expandMore() {
-        // 容器可能不在同一元素上（data-chrome="more" 的钮用 aria-controls 指向它）
-        const btn = moreBtns[0];
-        if (!btn) return;
-        const id = btn.getAttribute('aria-controls');
-        moreNav = (id && document.getElementById(id)) ||
-                  document.querySelector('.game-footer-nav');
-        if (!moreNav) return;
-
-        moreExpanded = !moreExpanded;
-        if (moreExpanded && !moreNav.dataset.rendered) {
-            renderMoreGames(moreNav, { exclude: self, lang: getLang() });
-            moreNav.dataset.rendered = '1';
-        } else if (moreExpanded) {
-            // 已渲染过：跟随当前语言重建（语言可能在收起期间变过）
-            renderMoreGames(moreNav, { exclude: self, lang: getLang() });
-        }
-        moreNav.hidden = !moreExpanded;
-        renderMore();
-    }
-
     function init() {
         if (ownsRole('sound')) soundBtns.forEach(btn => btn.addEventListener('click', toggleMute));
-        if (ownsRole('more')) moreBtns.forEach(btn => btn.addEventListener('click', expandMore));
 
-        // Home 型 <button>（少数页面用 button + onclick）：补上 href 语义。
-        // 已有 onclick / 已是 <a> 的不重复挂，否则会触发两次导航。
         if (ownsRole('home')) {
             homeNodes.forEach(n => {
                 if (n.tagName === 'A' || n.getAttribute('onclick')) return;
@@ -169,18 +104,13 @@ export function bindChrome(opts) {
             });
         }
 
-        // 静音（及首页的语言切换）统一在此重刷 —— 不依赖各页 applyLanguage（6 个不同实现）；
-        // 游戏页自身已无语言入口（2026-09-21 收敛），本监听主要服务 setMuted 后的重刷
         window.addEventListener('site-settings:changed', renderSound);
         window.addEventListener('site-settings:changed', renderHome);
-        window.addEventListener('site-settings:changed', () => {
-            if (moreExpanded) renderMoreGames(moreNav, { exclude: self, lang: getLang() });
-        });
 
         refresh();
     }
 
-    const api = { refresh, renderSound, renderHome, renderMore, renderPause, expandMore, nodes };
+    const api = { refresh, renderSound, renderHome, renderPause, nodes };
     init();
     return api;
 }

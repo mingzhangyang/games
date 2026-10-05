@@ -48,7 +48,7 @@ export function mountGameRuntime(options = {}) {
 
     if (chrome !== false) {
         const chromeOptions = chrome && typeof chrome === 'object' ? chrome : {};
-        runtime.chrome = bindChrome({ self, ...chromeOptions });
+        runtime.chrome = bindChrome(chromeOptions);
     }
 
     if (typeof resize === 'function') {
