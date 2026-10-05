@@ -88,6 +88,18 @@
     "tests/css-layer-migrations/rules/p2r-components-game-side-row-default.json",
     "tests/css-layer-migrations/rules/p2r-components-game-side-panel-default.json",
     "tests/css-layer-migrations/rules/p2r-components-game-side-kbd-row-default.json",
-    "tests/css-layer-migrations/rules/p2r-components-game-side-kbd-default.json"
+    "tests/css-layer-migrations/rules/p2r-components-game-side-kbd-default.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-shell-default.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-shell-narrow-peer.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-shell-short-peer.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-shell-desktop-peer.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-topbar-default.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-topbar-narrow-peer.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-footer-default.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-footer-narrow-peer.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-footer-short-peer.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-footer-hint-default.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-footer-hint-narrow-peer.json",
+    "tests/css-layer-migrations/rules/p2s-layout-game-footer-hint-short-peer.json"
   ]
 }
