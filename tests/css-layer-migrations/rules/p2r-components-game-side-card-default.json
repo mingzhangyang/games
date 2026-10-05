@@ -1,0 +1,27 @@
+{
+  "id": "p2r-components-game-side-card-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-card",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "e9edaa049a92d71c2a6b109a49ee2110a3a6b7012f2b6ac5c3c6a5a6d75c5a76",
+    "layer": null,
+    "declarationDigest": "5d30370da74906f5409fc6716884e7a71ab6a3492642f3dbbcb178e68d3d247b",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"background","value":[["function-token","var("],["ident-token","--tok-surface"],[")-token",")"]],"important":false},
+      {"property":"border","value":[["dimension-token","1px"],["whitespace-token"," "],["ident-token","solid"],["whitespace-token"," "],["function-token","var("],["ident-token","--tok-border"],[")-token",")"]],"important":false},
+      {"property":"border-radius","value":[["dimension-token","14px"]],"important":false},
+      {"property":"padding","value":[["dimension-token","14px"],["whitespace-token"," "],["dimension-token","16px"]],"important":false},
+      {"property":"text-align","value":[["ident-token","left"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-card","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"e9edaa049a92d71c2a6b109a49ee2110a3a6b7012f2b6ac5c3c6a5a6d75c5a76","layer":"components","declarationDigest":"5d30370da74906f5409fc6716884e7a71ab6a3492642f3dbbcb178e68d3d247b","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

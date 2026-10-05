@@ -390,6 +390,26 @@ universal reset 反压，因此 Architecture candidate 必须把 computed style 
 同一 property chain（例如 base background + hover）必须同批迁移。默认每个 PR 处理约
 5–20 条相关规则，只有跨职责边界或无法证明 cascade 等价时才进一步拆分。
 
+**P2-R / #97 Components Closure A：** reset foundation 落地后，第一批中等规模迁移按完整
+component family 收口，而不是继续拆成 selector 微批次。本批把共享 `.game-icon-btn` base、
+`::after`、`:hover`、`--wide` 以及 ≤480px 的 `font-size` / `padding` responsive peers
+共 6 条规则迁入 `components`；既有 `:active` 保持在同层，base background → page hover /
+shared hover 的 property chain 因而闭合。页面自己的 `.xx-icon-btn` 皮肤和交互规则继续未分层，
+仍按既有 cascade 覆盖共享默认；Science Showcase 的更具体规则已经位于同一 `components` 层，
+继续由 specificity 保持现有皮肤。
+
+Sidebar 同批迁入 `.game-side-card`、`.game-side-title`、`.game-side-row`、
+`.game-side-panel`、`.game-side-kbd-row`、`.game-side-kbd` 6 条基础规则；此前已迁移的
+side text / value leaves 保持 `components`，并与本批整理为连续 family block。#96 已把 universal
+reset 下沉到最低 `reset`，因此 padding / margin 不再构成本批的未分层反压。审计确认 Tetris、
+Tower Defense、Carrot Pull、Shadow Loom 等页面的不同-selector card/row peers 仍按页面规则获胜，
+且 `more-games.css` 无 property overlap。
+
+`.game-hud-box` 本批**明确暂缓**：Tetris 仍有同 selector 的 display / align-items / gap /
+padding / border-radius 五项 peer。它需要和 Tetris page-side peer 组成独立 dependency closure，不能
+为了凑批次把 shared default 单边送入 named layer。本批不新增 `!important`、不提高 selector
+specificity，也不触碰 drawer / start-menu / frame / immersive contracts。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -569,6 +589,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-O：迁移 `.game-drawer-title` 标题 typography 到 `components`；drawer 的 open/hidden/panel/body/scroll-lock 结构契约继续未分层
 - [x] P2-P：仅迁移 `.game-icon-btn:active` 按压状态到 `components`；hover 因未分层基础 background 会反压 layered hover 而继续暂缓，待基础按钮 dependency closure 一起迁移
 - [x] P2-Q：新增最低 `reset` layer，并将 25 条顶层 normal universal reset 作为一个 foundation closure 迁入；4 条 reduced-motion universal `!important` 继续暂缓
+- [x] P2-R / #97：完成 Components Closure A；迁移 icon family 6 条（含窄屏 peers）+ Sidebar family 6 条到 `components`，保留既有 active/text/value leaves；`game-hud-box` 因 Tetris 五项 exact-selector peer 暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

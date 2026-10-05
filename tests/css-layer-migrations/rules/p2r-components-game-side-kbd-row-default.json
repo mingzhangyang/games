@@ -1,0 +1,29 @@
+{
+  "id": "p2r-components-game-side-kbd-row-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-kbd-row",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "40ee8f7e4ed303a2f9430d8d5fb4d65a772aa1b71bda3d284ab6859b930aefbb",
+    "layer": null,
+    "declarationDigest": "2cd44bbb66320ac80f0c5e902a6ed36c2041e30d58a80681bc580c3806d2da08",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"display","value":[["ident-token","flex"]],"important":false},
+      {"property":"justify-content","value":[["ident-token","space-between"]],"important":false},
+      {"property":"align-items","value":[["ident-token","center"]],"important":false},
+      {"property":"gap","value":[["dimension-token","8px"]],"important":false},
+      {"property":"font-size","value":[["dimension-token","12px"]],"important":false},
+      {"property":"padding","value":[["dimension-token","3px"],["whitespace-token"," "],["number-token","0"]],"important":false},
+      {"property":"color","value":[["function-token","var("],["ident-token","--tok-text-dim"],[")-token",")"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-kbd-row","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"40ee8f7e4ed303a2f9430d8d5fb4d65a772aa1b71bda3d284ab6859b930aefbb","layer":"components","declarationDigest":"2cd44bbb66320ac80f0c5e902a6ed36c2041e30d58a80681bc580c3806d2da08","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

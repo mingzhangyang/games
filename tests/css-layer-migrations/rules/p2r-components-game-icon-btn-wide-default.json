@@ -1,0 +1,28 @@
+{
+  "id": "p2r-components-game-icon-btn-wide-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-icon-btn--wide",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "7cc7e0a0a1e989f4b629939fc06a0764e16f7f4f11fe1a1a7ba135f8851995e7",
+    "layer": null,
+    "declarationDigest": "4bd86fff6af41d878044f8bde73f05ed763fc371d7f22cb37c78485530732b5f",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"width","value":[["ident-token","auto"]],"important":false},
+      {"property":"min-width","value":[["function-token","var("],["ident-token","--tok-btn-size"],[")-token",")"]],"important":false},
+      {"property":"padding","value":[["number-token","0"],["whitespace-token"," "],["dimension-token","12px"]],"important":false},
+      {"property":"white-space","value":[["ident-token","nowrap"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-icon-btn--wide","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"7cc7e0a0a1e989f4b629939fc06a0764e16f7f4f11fe1a1a7ba135f8851995e7","layer":"components","declarationDigest":"4bd86fff6af41d878044f8bde73f05ed763fc371d7f22cb37c78485530732b5f","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [
+      {"property":"padding","peerProperty":"padding","targetLayer":"components","peerPath":"css/layout.css","peerContext":"@media (width <= 480px)","peerSourceLayer":null,"peerLayer":"components","layerPriority":"same-layer","pages":["bond-forge.html","carrot-pull.html","circuit.html","crystal-bloom.html","echo-cave.html","firefly-signal.html","flame-verse.html","gomoku.html","gravity-slingshot.html","hoop-shot.html","index.html","lumen.html","math-rain.html","maxwell-demon.html","minesweeper.html","needle-awn.html","planet-merge.html","reversi.html","ripple-duet.html","shadow-loom.html","silk-dew.html","sword-flight.html","tank-battle.html","tetris.html","tower-defense.html","word-daily.html"]}
+    ],
+    "important": []
+  }
+}

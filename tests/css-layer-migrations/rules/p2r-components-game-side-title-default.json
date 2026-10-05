@@ -1,0 +1,26 @@
+{
+  "id": "p2r-components-game-side-title-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-title",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "c1c143b03156b4fce21aaa86594cb41defc337e646e6f1380477a02819ef1674",
+    "layer": null,
+    "declarationDigest": "f87aa81c20d9e695098ea89151003896c874f937734af31255e9b666810e1728",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"font-size","value":[["dimension-token","14px"]],"important":false},
+      {"property":"font-weight","value":[["number-token","800"]],"important":false},
+      {"property":"letter-spacing","value":[["dimension-token","0.02em"]],"important":false},
+      {"property":"margin-bottom","value":[["dimension-token","8px"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-title","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"c1c143b03156b4fce21aaa86594cb41defc337e646e6f1380477a02819ef1674","layer":"components","declarationDigest":"f87aa81c20d9e695098ea89151003896c874f937734af31255e9b666810e1728","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
