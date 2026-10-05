@@ -397,7 +397,7 @@ base background → page hover / shared hover 的 property chain 因而闭合。
 `padding` same-selector responsive peers 经 dependency audit 后保持未分层，因此 normal cascade
 仍由窄屏 peer 覆盖 layered base，与迁移前“后出现的窄屏规则获胜”等价。同 selector 的
 `prefers-reduced-motion` `transition:none` accessibility peer 也保持未分层，并以
-`peer-unlayered-wins` 显式登记其与 base `transition` 的 shorthand conflict。页面自己的
+`peer-unlayered-wins` 显式登记其与 base `transition` 的 shorthand conflict。另因 verifier 对未知 vendor property 采取 fail-closed 策略，`-webkit-tap-highlight-color` 会展开为 wildcard write-set，因此它与上述 `font-size` / `transition` peers 的两条保守冲突也一并登记；这是验证模型的保守审计记录，不表示浏览器实际存在属性覆盖。页面自己的
 `.xx-icon-btn` 皮肤和交互规则继续未分层，仍按既有 cascade 覆盖共享默认；Science Showcase
 的更具体规则已经位于同一 `components` 层，继续由 specificity 保持现有皮肤。
 
