@@ -112,6 +112,7 @@
     "tests/css-layer-migrations/rules/p2u-contracts-game-drawer-panel-open.json",
     "tests/css-layer-migrations/rules/p2u-contracts-drawer-locked.json",
     "tests/css-layer-migrations/rules/p2u-contracts-stats-sidebar-narrow.json",
-    "tests/css-layer-migrations/rules/p2u-contracts-game-drawer-desktop.json"
+    "tests/css-layer-migrations/rules/p2u-contracts-game-drawer-desktop.json",
+    "tests/css-layer-migrations/rules/p2u-pages-tetris-info-panel.json"
   ]
 }
