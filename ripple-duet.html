@@ -166,14 +166,9 @@
 
     <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
-         ⚠️ 只放无状态导航；Sound / Lang 是状态开关，唯一真源在 header。 -->
+         ⚠️ 只保留操作提示；导航与状态控件统一留在 header / 页面主体。 -->
     <footer class="rd-footer game-footer">
         <p class="rd-footer-hint game-footer-hint" id="rd-hint" data-i18n="hint"></p>
-        <div class="rd-footer-actions game-footer-actions game-topbar-group">
-            <a class="rd-icon-btn game-icon-btn" data-chrome="home" href="index.html" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></a>
-            <button type="button" class="rd-icon-btn game-icon-btn" data-chrome="more" aria-expanded="false" aria-controls="rdMoreNav" title="More games" aria-label="More games"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 8.5h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4.2a2.6 2.6 0 0 1-4.7 2L15.6 16H8.4l-1.5 2.4a2.6 2.6 0 0 1-4.7-2l.7-4.2a4.6 4.6 0 0 1 4.5-3.7z"/><path d="M7.5 11.6v3M6 13.1h3"/><circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14" r="1.1" fill="currentColor" stroke="none"/></svg></button>
-        </div>
-        <nav class="more-games game-footer-nav" id="rdMoreNav" hidden></nav>
     </footer>
     </div>
     <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
