@@ -71,6 +71,24 @@ function canonicalRefKey(ref) {
     ]);
 }
 
+function stableContentRefKey(ref) {
+    return jsonKey([
+        ref?.path, ref?.contextDigest, ref?.selectorDigest, ref?.layer ?? null,
+        ref?.declarationDigest,
+    ]);
+}
+
+function provenanceKey(provenance) {
+    return provenance
+        ? jsonKey([provenance.mappingId, provenance.destinationIndex])
+        : '';
+}
+
+function validSourceProvenance(provenance) {
+    return provenance && typeof provenance.mappingId === 'string' && provenance.mappingId
+        && Number.isInteger(provenance.destinationIndex) && provenance.destinationIndex >= 0;
+}
+
 function ruleLocationKey(ref) {
     return jsonKey([
         ref?.path, ref?.contextDigest, ref?.selectorDigest, ref?.layer ?? null,
@@ -509,6 +527,16 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
         errors.push(mapping.id + ': source declarationDigest does not match its declaration snapshot.');
         valid = false;
     }
+    if (mapping.sourceProvenance !== undefined && mapping.sourceProvenance !== null
+        && !validSourceProvenance(mapping.sourceProvenance)) {
+        errors.push(mapping.id + ': sourceProvenance must name a migration id and non-negative destinationIndex.');
+        valid = false;
+    }
+    if (isRetirement(mapping) && mapping.source.layer !== null
+        && !validSourceProvenance(mapping.sourceProvenance)) {
+        errors.push(mapping.id + ': layered retirements require explicit sourceProvenance.');
+        valid = false;
+    }
     if (isRetirement(mapping)) {
         if (!Array.isArray(mapping.destinations) || mapping.destinations.length) {
             errors.push(mapping.id + ': retired rules must declare an empty destinations array.');
@@ -606,10 +634,18 @@ export function verifyRuleMigrations({
         }
     }
 
+    const consumedHistoricalProvenance = new Set();
+    for (const historical of baseMappings.values()) {
+        if (validSourceProvenance(historical.sourceProvenance)) {
+            consumedHistoricalProvenance.add(provenanceKey(historical.sourceProvenance));
+        }
+    }
+
     const validatedRetirementSources = [];
     const newRetirementCounts = new Map();
     const usedSources = new Set();
     const usedDestinations = new Set();
+    const usedProvenance = new Set();
     const newMappingsByPath = new Map();
     const pendingConflictReviews = [];
 
@@ -660,20 +696,35 @@ export function verifyRuleMigrations({
         if (jsonKey(sourceRule.declarations) !== jsonKey(mapping.source.declarations)) {
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
         }
-        if (isRetirement(mapping)) {
-            // findRule above proves exact comparison-base provenance. Runtime
-            // enforcement below is location-cardinality based so duplicate
-            // survivors may renumber without reopening a retired location.
-            let retirementValid = true;
-            if (mapping.source.layer !== null) {
-                const historicalDestination = [...baseMappings.values()].some(previous =>
-                    (previous.destinations || []).some(destination =>
-                        canonicalRefKey(destination) === canonicalRefKey(mapping.source)));
-                if (!historicalDestination) {
-                    errors.push(mapping.id + ': layered retirement source must be a destination of a previously merged migration.');
-                    retirementValid = false;
-                }
+
+        let sourceProvenanceValid = true;
+        if (validSourceProvenance(mapping.sourceProvenance)) {
+            const provenance = mapping.sourceProvenance;
+            const provenanceId = provenanceKey(provenance);
+            const owner = baseMappings.get(provenance.mappingId);
+            const destination = owner?.destinations?.[provenance.destinationIndex];
+            if (!destination) {
+                errors.push(mapping.id + ': sourceProvenance does not resolve to a comparison-base migration destination.');
+                sourceProvenanceValid = false;
+            } else if (stableContentRefKey(destination) !== stableContentRefKey(mapping.source)) {
+                errors.push(mapping.id + ': sourceProvenance destination does not match the current layered source content.');
+                sourceProvenanceValid = false;
+            } else if (consumedHistoricalProvenance.has(provenanceId)) {
+                errors.push(mapping.id + ': sourceProvenance was already consumed by a previously merged migration.');
+                sourceProvenanceValid = false;
+            } else if (usedProvenance.has(provenanceId)) {
+                errors.push(mapping.id + ': sourceProvenance is claimed by more than one migration in this transaction.');
+                sourceProvenanceValid = false;
+            } else {
+                usedProvenance.add(provenanceId);
             }
+        }
+
+        if (isRetirement(mapping)) {
+            // findRule above proves exact comparison-base source identity. Cross-PR
+            // lineage is explicit via sourceProvenance, so occurrence renumbering
+            // never serves as historical ownership.
+            const retirementValid = mapping.source.layer === null || sourceProvenanceValid;
             if (retirementValid) {
                 validatedRetirementSources.push(normalizeMapping(mapping.source));
                 const location = ruleLocationKey(mapping.source);
