@@ -270,11 +270,13 @@ body {
 /* 这个元素同时是 .game-sidebar：宽度与收缩交给共享层（桌面 --frame-side + flex-shrink:0）。
    此前这里的 width:100% 与 flex:0 1 auto 会压过共享层，侧栏在 1280 下被撑到 488px —— 比
    400px 的棋盘还宽，正是「两列不平衡」最刺眼的一处。 */
-.info-panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--frame-side-gap);
-    min-width: 200px;
+@layer pages {
+    .info-panel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--frame-side-gap);
+        min-width: 200px;
+    }
 }
 
 /* #statsPanels 是移动/桌面共用的同一个节点：桌面在侧栏内，移动端移动进抽屉。
