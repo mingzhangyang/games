@@ -310,6 +310,16 @@ text-align / min-width 是顶栏中槽的共享 `layout` 默认值，不含 rese
 覆盖从 `:root` 继承的默认值。本批继续不触碰 `.game-topbar`、`.game-hud-box` 或任何
 drawer / start-menu / frame-budget / immersive contracts。
 
+**P2-K dead-rule retirement：** PR #89 将游戏页 Footer 收敛为 hint-only 后，
+`.game-footer-actions`、`.game-footer-nav` 与 `.game-footer-nav[hidden]` 已没有 DOM consumer。
+它们不应为了 immutable migration ledger 而永久留在生产 CSS。P2-K 将 mapping contract 升到 v2，
+新增 append-only `kind: "retire"` transaction：历史 migration module 仍不可修改/删除，
+retirement 只声明“comparison-base 中这条精确规则已因产品/DOM contract 消失而删除”。
+未分层 retirement 必须对应 immutable P0 debt；已经分层的 retirement 必须来自此前已合并 migration
+的 destination；retired selector location 在后续提交中不得静默重新出现。本批只删除上述三条
+Footer dead rule，不改变任何仍有 consumer 的 layout/contracts 规则，也继续保留
+`shared-css-first`。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -482,6 +492,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 将 CSS migration ledger 拆为 manifest + per-mapping modules；主状态文件不再承载不断增长的完整 mapping payload
 - [x] P2-I：迁移 `.game-title-pill` 共享顶栏信息块默认值到 `layout`；Tetris exact-selector peer 保持未分层并显式登记冲突
 - [x] P2-J：迁移共享 frame `:root` 变量默认值到 `layout`；Gomoku 的 3 个 exact-selector 自定义属性覆盖保持未分层优先
+- [x] P2-K：为已失去 consumer 的 CSS 增加 append-only retirement transaction，并清理 #89 后遗留的 Footer action/nav dead rules
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
