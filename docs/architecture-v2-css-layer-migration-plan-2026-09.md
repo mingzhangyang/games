@@ -361,6 +361,13 @@ box-sizing，也不改变父级 flex/grid/overflow。页面专属 `.xx-side-row 
 `.game-drawer`、panel/head/body/handle 与 open/hidden/scroll-lock 等结构规则继续留在未分层
 contracts 路径，不与本批混合。
 
+**P2-P icon-button interaction leaves：** `.game-icon-btn:hover` 与 `.game-icon-btn:active`
+只负责共享图标按钮的 hover 背景和按压缩放，不声明盒模型、尺寸、定位或触控热区。Science
+Showcase 的 hover 皮肤使用更具体的 `.science-showcase .game-icon-btn:hover`，且与本批保持
+同一 `components` layer，因此 specificity / stylesheet 顺序仍维持原行为；active 没有
+exact-selector 页面 peer。本批不迁基础 `.game-icon-btn`、`::after` 触控热区、
+wide variant 或 reduced-motion contract。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -538,6 +545,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-M：迁移共享 `.game-side-text` / `.game-side-text b` 侧栏文字默认值到 `components`；side-card/title/row 的 reset-sensitive 几何继续暂缓
 - [x] P2-N：迁移共享 `.game-side-row b` / `.game-side-panel b` 值文本叶子规则到 `components`；父级 row/panel 几何继续暂缓
 - [x] P2-O：迁移 `.game-drawer-title` 标题 typography 到 `components`；drawer 的 open/hidden/panel/body/scroll-lock 结构契约继续未分层
+- [x] P2-P：迁移 `.game-icon-btn:hover` / `.game-icon-btn:active` 交互叶子规则到 `components`；基础按钮几何、触控热区与 reduced-motion 继续暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
