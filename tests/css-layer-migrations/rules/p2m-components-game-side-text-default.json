@@ -1,0 +1,25 @@
+{
+  "id": "p2m-components-game-side-text-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-text",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "698710a3e531d4e446dac1ad258cb6fa1ee0fc7daac49bc0448828f88aa24f22",
+    "layer": null,
+    "declarationDigest": "e8b06ca13f8b6664bb85fcd089215529ca8bd341ff8fd3c7d8a2c74c9a069179",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"font-size","value":[["dimension-token","12.5px"]],"important":false},
+      {"property":"line-height","value":[["number-token","1.7"]],"important":false},
+      {"property":"color","value":[["function-token","var("],["ident-token","--tok-text-dim"],[")-token",")"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-text","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"698710a3e531d4e446dac1ad258cb6fa1ee0fc7daac49bc0448828f88aa24f22","layer":"components","declarationDigest":"e8b06ca13f8b6664bb85fcd089215529ca8bd341ff8fd3c7d8a2c74c9a069179","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
