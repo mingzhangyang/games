@@ -71,41 +71,6 @@ function canonicalRefKey(ref) {
     ]);
 }
 
-function stableContentRefKey(ref) {
-    return jsonKey([
-        ref?.path, ref?.contextDigest, ref?.selectorDigest, ref?.layer ?? null,
-        ref?.declarationDigest,
-    ]);
-}
-
-function provenanceKey(provenance) {
-    return provenance
-        ? jsonKey([provenance.mappingId, provenance.destinationIndex])
-        : '';
-}
-
-function validSourceProvenance(provenance) {
-    return provenance && typeof provenance.mappingId === 'string' && provenance.mappingId
-        && Number.isInteger(provenance.destinationIndex) && provenance.destinationIndex >= 0;
-}
-
-function ruleLocationKey(ref) {
-    return jsonKey([
-        ref?.path, ref?.contextDigest, ref?.selectorDigest, ref?.layer ?? null,
-    ]);
-}
-
-function ruleLocationCounts(catalogs) {
-    const counts = new Map();
-    for (const catalog of catalogs.values()) {
-        for (const rule of catalog) {
-            const key = ruleLocationKey(rule);
-            counts.set(key, (counts.get(key) || 0) + 1);
-        }
-    }
-    return counts;
-}
-
 function sameRef(actual, expected, includeLayer = true) {
     return actual.path === expected.path
         && actual.contextDigest === expected.contextDigest
@@ -527,17 +492,12 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
         errors.push(mapping.id + ': source declarationDigest does not match its declaration snapshot.');
         valid = false;
     }
-    if (mapping.sourceProvenance !== undefined && mapping.sourceProvenance !== null
-        && !validSourceProvenance(mapping.sourceProvenance)) {
-        errors.push(mapping.id + ': sourceProvenance must name a migration id and non-negative destinationIndex.');
-        valid = false;
-    }
-    if (isRetirement(mapping) && mapping.source.layer !== null
-        && !validSourceProvenance(mapping.sourceProvenance)) {
-        errors.push(mapping.id + ': layered retirements require explicit sourceProvenance.');
-        valid = false;
-    }
+
     if (isRetirement(mapping)) {
+        if (mapping.source.layer !== null) {
+            errors.push(mapping.id + ': P2-K retirement is intentionally limited to unlayered P0 rules.');
+            valid = false;
+        }
         if (!Array.isArray(mapping.destinations) || mapping.destinations.length) {
             errors.push(mapping.id + ': retired rules must declare an empty destinations array.');
             valid = false;
@@ -546,8 +506,17 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
             errors.push(mapping.id + ': retired rules require a non-empty reason.');
             valid = false;
         }
+        if ((mapping.source.declarations || []).some(declaration => declaration.important)) {
+            errors.push(mapping.id + ': P2-K retirement does not support !important declarations.');
+            valid = false;
+        }
+        if ((mapping.source.declarations || []).some(declaration => declaration.property.startsWith('--'))) {
+            errors.push(mapping.id + ': P2-K retirement does not support custom-property declarations.');
+            valid = false;
+        }
         return valid;
     }
+
     if (!Array.isArray(mapping.destinations) || !mapping.destinations.length) {
         errors.push(mapping.id + ': at least one layered destination is required.');
         valid = false;
@@ -621,31 +590,8 @@ export function verifyRuleMigrations({
         }
     }
 
-    // A retired location is a lasting cardinality ceiling, not a digest tombstone:
-    // surviving duplicate occurrences may renumber, while a later rule with new
-    // declarations at the same path/context/selector/layer must not grow the location.
-    const retiredLocations = new Map();
-    for (const mapping of baseMappings.values()) {
-        if (isRetirement(mapping)) retiredLocations.set(ruleLocationKey(mapping.source), mapping.source);
-    }
-    for (const mapping of mappings.values()) {
-        if (!baseMappings.has(mapping.id) && validMappings.has(mapping.id) && isRetirement(mapping)) {
-            retiredLocations.set(ruleLocationKey(mapping.source), mapping.source);
-        }
-    }
-
-    const consumedHistoricalProvenance = new Set();
-    for (const historical of baseMappings.values()) {
-        if (validSourceProvenance(historical.sourceProvenance)) {
-            consumedHistoricalProvenance.add(provenanceKey(historical.sourceProvenance));
-        }
-    }
-
-    const validatedRetirementSources = [];
-    const newRetirementCounts = new Map();
     const usedSources = new Set();
     const usedDestinations = new Set();
-    const usedProvenance = new Set();
     const newMappingsByPath = new Map();
     const pendingConflictReviews = [];
 
@@ -666,9 +612,6 @@ export function verifyRuleMigrations({
             if (!rule) {
                 errors.push(mapping.id + ': destination rule not found: ' + jsonKey(destination) + '.');
                 continue;
-            }
-            if (retiredLocations.has(ruleLocationKey(destination))) {
-                errors.push(mapping.id + ': destination reintroduces a previously retired rule location.');
             }
             verifyRefDiagnostics(destination, rule, errors, mapping.id + ' destination');
             const destinationKey = canonicalRefKey(ruleRef(rule));
@@ -696,64 +639,10 @@ export function verifyRuleMigrations({
         if (jsonKey(sourceRule.declarations) !== jsonKey(mapping.source.declarations)) {
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
         }
-
-        let sourceProvenanceValid = true;
-        if (validSourceProvenance(mapping.sourceProvenance)) {
-            const provenance = mapping.sourceProvenance;
-            const provenanceId = provenanceKey(provenance);
-            const owner = baseMappings.get(provenance.mappingId);
-            const destination = owner?.destinations?.[provenance.destinationIndex];
-            if (!destination) {
-                errors.push(mapping.id + ': sourceProvenance does not resolve to a comparison-base migration destination.');
-                sourceProvenanceValid = false;
-            } else if (stableContentRefKey(destination) !== stableContentRefKey(mapping.source)) {
-                errors.push(mapping.id + ': sourceProvenance destination does not match the current layered source content.');
-                sourceProvenanceValid = false;
-            } else if (consumedHistoricalProvenance.has(provenanceId)) {
-                errors.push(mapping.id + ': sourceProvenance was already consumed by a previously merged migration.');
-                sourceProvenanceValid = false;
-            } else if (usedProvenance.has(provenanceId)) {
-                errors.push(mapping.id + ': sourceProvenance is claimed by more than one migration in this transaction.');
-                sourceProvenanceValid = false;
-            } else {
-                usedProvenance.add(provenanceId);
-            }
-        }
-
-        if (isRetirement(mapping)) {
-            // findRule above proves exact comparison-base source identity. Cross-PR
-            // lineage is explicit via sourceProvenance, so occurrence renumbering
-            // never serves as historical ownership.
-            const retirementValid = mapping.source.layer === null || sourceProvenanceValid;
-            if (retirementValid) {
-                validatedRetirementSources.push(normalizeMapping(mapping.source));
-                const location = ruleLocationKey(mapping.source);
-                newRetirementCounts.set(location, (newRetirementCounts.get(location) || 0) + 1);
-            }
-            continue;
-        }
+        if (isRetirement(mapping)) continue;
         if (currentDestinationRules.length === (mapping.destinations || []).length) {
             const assignments = verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
             pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules, assignments });
-        }
-    }
-
-    const baseLocationCounts = ruleLocationCounts(baseCatalogs);
-    const currentLocationCounts = ruleLocationCounts(currentCatalogs);
-    for (const [location, source] of retiredLocations) {
-        const baseCount = baseLocationCounts.get(location) || 0;
-        const retiredNow = newRetirementCounts.get(location) || 0;
-        const maxSurvivors = baseCount - retiredNow;
-        if (maxSurvivors < 0) {
-            errors.push('Retirement location ' + source.path + ' ' + source.selector
-                + ': current transaction retires more occurrences than exist in the comparison base.');
-            continue;
-        }
-        const currentCount = currentLocationCounts.get(location) || 0;
-        if (currentCount > maxSurvivors) {
-            errors.push('Retirement location ' + source.path + ' ' + source.selector
-                + ': found ' + currentCount + ' current occurrence(s), expected at most '
-                + maxSurvivors + ' survivor(s).');
         }
     }
 
@@ -814,20 +703,6 @@ export function verifyRuleMigrations({
         }
     }
 
-    // Conflict review models the post-transaction peer graph. Rules retired in
-    // this transaction are still required in baseCatalogs for source/provenance
-    // and residual validation, but they are no longer cascade peers.
-    const retiredRefsByPath = new Map();
-    for (const mapping of mappings.values()) {
-        if (baseMappings.has(mapping.id) || !validMappings.has(mapping.id) || !isRetirement(mapping)) continue;
-        if (!retiredRefsByPath.has(mapping.source.path)) retiredRefsByPath.set(mapping.source.path, []);
-        retiredRefsByPath.get(mapping.source.path).push(mapping.source);
-    }
-    const conflictBaseCatalogs = new Map([...baseCatalogs].map(([path, catalog]) => [
-        path,
-        filterCatalog(catalog, retiredRefsByPath.get(path) || [], true),
-    ]));
-
     const projectedEntries = new Map();
     const projectedLayers = new Map();
     for (const { sourceRule, assignments } of pendingConflictReviews) {
@@ -846,7 +721,7 @@ export function verifyRuleMigrations({
     for (const { mapping, sourceRule, currentDestinationRules } of pendingConflictReviews) {
         verifyConflictReview(mapping,
             analyzeExactConflicts(
-                mapping, sourceRule, currentDestinationRules, conflictBaseCatalogs,
+                mapping, sourceRule, currentDestinationRules, baseCatalogs,
                 stylesheetLinks, layerOrder, projectedLayers,
             ), errors);
     }
@@ -854,11 +729,5 @@ export function verifyRuleMigrations({
     return {
         mappedCssPaths,
         newMigrationCount: [...mappings.keys()].filter(id => !baseMappings.has(id)).length,
-        retirementSources: [
-            ...[...baseMappings.values()]
-                .filter(mapping => isRetirement(mapping))
-                .map(mapping => normalizeMapping(mapping.source)),
-            ...validatedRetirementSources,
-        ],
     };
 }
