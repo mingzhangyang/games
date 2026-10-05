@@ -328,6 +328,18 @@ dead-CSS 清理扩展成通用 CSS lineage 系统。
 迁移混进 P2-K，因此保持现有共享 `layout` rule，待 page CSS dependency closure 时再解耦。
 本批不改变任何仍有 consumer 的 layout/contracts 规则，也继续保留 `shared-css-first`。
 
+**P2-L shared text-button component：** `.game-btn` 与 `.game-btn > svg` 是共享的
+“图标 + 文案”按钮排版组件，而不是 shell 几何。它们只负责 inline-flex 居中、7px 间距与
+15px 图标尺寸，不声明 margin / padding / box-sizing，也不承载 drawer、frame-budget、
+start-menu 或 immersive 结构语义，因此本批归入 `components`。各页 `.xx-btn` 仍保持
+未分层并继续拥有配色、内距、圆角和页面专属 flex 行为；Science Showcase 当前同样位于
+`components`，其更具体的 `.science-showcase .game-btn` 规则保持原有同层 specificity /
+stylesheet 顺序。未来 Showcase 归位到 `showcase` 时，本批声明也不会与其现有 min-height、
+颜色/皮肤属性产生 property overlap。
+
+P2-L 只迁这两个相邻规则，并分别登记 immutable mapping；不顺带迁 `.game-icon-btn`、
+side-card family 或任何 reset-sensitive shared component。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -501,6 +513,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-I：迁移 `.game-title-pill` 共享顶栏信息块默认值到 `layout`；Tetris exact-selector peer 保持未分层并显式登记冲突
 - [x] P2-J：迁移共享 frame `:root` 变量默认值到 `layout`；Gomoku 的 3 个 exact-selector 自定义属性覆盖保持未分层优先
 - [x] P2-K：以窄版 P0-only retirement transaction 清理 #89 后遗留的 Footer nav dead rules；明确拒绝 layered / `!important` / custom-property retirement，并保留首页仍使用的 `.game-footer-actions`
+- [x] P2-L：迁移共享 `.game-btn` / `.game-btn > svg` 文案按钮排版到 `components`；页面按钮皮肤继续保持未分层优先，不触碰 reset-sensitive/shared contracts
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

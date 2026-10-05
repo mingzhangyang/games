@@ -1,0 +1,25 @@
+{
+  "id": "p2l-components-game-btn-icon-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-btn > svg",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "9d6c0b4a692d03606fccd6cec53e12fba114fe6edc51d8baf78e7452b9e73de8",
+    "layer": null,
+    "declarationDigest": "b34d9c8c98086b7ae2aaa01464ea55c5416c2143eecc1a46e3d19e8fbafee77c",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"width","value":[["dimension-token","15px"]],"important":false},
+      {"property":"height","value":[["dimension-token","15px"]],"important":false},
+      {"property":"flex","value":[["number-token","0"],["whitespace-token"," "],["number-token","0"],["whitespace-token"," "],["ident-token","auto"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-btn > svg","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"9d6c0b4a692d03606fccd6cec53e12fba114fe6edc51d8baf78e7452b9e73de8","layer":"components","declarationDigest":"b34d9c8c98086b7ae2aaa01464ea55c5416c2143eecc1a46e3d19e8fbafee77c","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
