@@ -145,7 +145,11 @@ function leafSlots(property) {
 function expandProperty(property, stack = new Set()) {
     if (property.startsWith('--')) return new Set(['custom:' + property]);
     if (property === 'all') return new Set([WILDCARD]);
-    if (!PROPERTIES[property] && !ALIASES.has(property)) return new Set([WILDCARD]);
+    const vendor = property.match(/^-(?:webkit|moz|ms|o)-(.+)$/);
+    const knownVendorAlias = vendor && PROPERTIES[vendor[1]];
+    if (!PROPERTIES[property] && !ALIASES.has(property) && !knownVendorAlias) {
+        return new Set([WILDCARD]);
+    }
     if (stack.has(property)) return new Set([WILDCARD]);
 
     const children = shorthandChildren(property);

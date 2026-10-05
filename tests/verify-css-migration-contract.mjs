@@ -449,6 +449,12 @@ assert.equal(propertiesOverlap('margin-top', 'margin-left'), false);
 assert.equal(propertiesOverlap('border', 'border-image-source'), true);
 assert.equal(propertiesOverlap('all', 'color'), true);
 assert.equal(propertiesOverlap('future-property', 'color'), true);
+// Known prefixed aliases must resolve through their standard property instead of
+// becoming wildcard writes. Unknown/non-standard vendor properties remain
+// fail-closed so the migration guard does not under-report real conflicts.
+assert.equal(propertiesOverlap('-webkit-backdrop-filter', 'backdrop-filter'), true);
+assert.equal(propertiesOverlap('-webkit-backdrop-filter', 'font-size'), false);
+assert.equal(propertiesOverlap('-webkit-tap-highlight-color', 'font-size'), true);
 assert.equal(propertiesOverlap('--theme-gap', 'margin'), false);
 
 const shorthandBase = parseMap([['css/shorthand.css', '.d{margin:1px;margin-left:2px}']]);
