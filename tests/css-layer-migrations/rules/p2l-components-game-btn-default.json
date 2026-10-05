@@ -1,0 +1,71 @@
+{
+  "id": "p2l-components-game-btn-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-btn",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "c044be3e34801e544d4bd4a15a0d6a5e828768a20cf2768155a004b7dc167c94",
+    "layer": null,
+    "declarationDigest": "999ba14aeb64e1ab0b2b659d8c99287fd7d77195300c4a58ad423206ba7e5d99",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "inline-flex"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-content",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "7px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ".game-btn",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "c044be3e34801e544d4bd4a15a0d6a5e828768a20cf2768155a004b7dc167c94",
+      "layer": "components",
+      "declarationDigest": "999ba14aeb64e1ab0b2b659d8c99287fd7d77195300c4a58ad423206ba7e5d99",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
