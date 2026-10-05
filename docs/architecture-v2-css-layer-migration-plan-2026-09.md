@@ -340,6 +340,14 @@ stylesheet 顺序。未来 Showcase 归位到 `showcase` 时，本批声明也�
 P2-L 只迁这两个相邻规则，并分别登记 immutable mapping；不顺带迁 `.game-icon-btn`、
 side-card family 或任何 reset-sensitive shared component。
 
+**P2-M shared sidebar text typography：** `.game-side-text` 与 `.game-side-text b` 只负责
+侧栏说明文字的字号、行高和前景色，不声明 margin / padding / box-sizing，也不参与
+drawer/frame/start-menu/immersive 结构。它们因此作为共享 UI component 迁入 `components`。
+各游戏自己的 `.xx-side-text` 规则仍保持未分层并继续拥有页面专属字体/颜色覆盖；Science
+Showcase 的 `.science-showcase .game-side-text` 仍在现有 `components` 中以更具体选择器和
+`!important` 维持当前皮肤。带几何的 `.game-side-card` / `.game-side-title` /
+`.game-side-row` 继续暂缓，避免把 universal reset 依赖混入本批。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -514,6 +522,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-J：迁移共享 frame `:root` 变量默认值到 `layout`；Gomoku 的 3 个 exact-selector 自定义属性覆盖保持未分层优先
 - [x] P2-K：以窄版 P0-only retirement transaction 清理 #89 后遗留的 Footer nav dead rules；明确拒绝 layered / `!important` / custom-property retirement，并保留首页仍使用的 `.game-footer-actions`
 - [x] P2-L：迁移共享 `.game-btn` / `.game-btn > svg` 文案按钮排版到 `components`；页面按钮皮肤继续保持未分层优先，不触碰 reset-sensitive/shared contracts
+- [x] P2-M：迁移共享 `.game-side-text` / `.game-side-text b` 侧栏文字默认值到 `components`；side-card/title/row 的 reset-sensitive 几何继续暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
