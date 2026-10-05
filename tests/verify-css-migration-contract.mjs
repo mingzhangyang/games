@@ -661,387 +661,125 @@ verifyRuleMigrations({
 });
 assert.ok(mutationErrors.some(error => /beyond the newly registered migrations/.test(error)));
 
-// Rule retirement is an explicit append-only transaction: dead CSS may leave
-// the active stylesheet without rewriting or deleting its historical migration.
-const retireP0Base = parseMap([['css/retire-p0.css', '.dead{display:none}.keep{color:red}']]);
-const retireP0Current = parseMap([['css/retire-p0.css', '.keep{color:red}']]);
-const retireP0Source = catalogMap(retireP0Base).get('css/retire-p0.css')[0];
-const retireP0Mapping = {
+// P2-K retirement is deliberately narrow: it removes only ordinary,
+// unlayered P0 rules whose consumers have disappeared.
+const retireBase = parseMap([['css/retire.css', '.dead{display:none}.keep{color:red}']]);
+const retireCurrent = parseMap([['css/retire.css', '.keep{color:red}']]);
+const retireSource = catalogMap(retireBase).get('css/retire.css')[0];
+const retireMapping = {
     id: 'fixture-retire-p0',
     kind: 'retire',
-    source: sourceRef(retireP0Source),
+    source: sourceRef(retireSource),
     destinations: [],
     reason: 'fixture consumer was removed',
 };
-const retireP0Errors = [];
+const retireErrors = [];
 verifyRuleMigrations({
-    baseline: { debt: { unlayeredRules: [['css/retire-p0.css', '', '.dead'], ['css/retire-p0.css', '', '.keep']] } },
-    state: { ...emptyState, migratedRules: [retireP0Mapping] },
-    currentParsedByPath: retireP0Current,
-    baseParsedByPath: retireP0Base,
+    baseline: { debt: { unlayeredRules: [['css/retire.css', '', '.dead'], ['css/retire.css', '', '.keep']] } },
+    state: { ...emptyState, migratedRules: [retireMapping] },
+    currentParsedByPath: retireCurrent,
+    baseParsedByPath: retireBase,
     stylesheetLinks: {},
     allowedLayers: ALLOWED,
     layerOrder: LAYERS,
     baseState: emptyState,
-    errors: retireP0Errors,
+    errors: retireErrors,
 });
-assert.deepEqual(retireP0Errors, []);
+assert.deepEqual(retireErrors, []);
 
-// Layered retirement is only legal when the source is the terminal output of
-// an already merged migration, preventing retirement from bypassing the ledger.
-const retireLayeredP0 = parseMap([['css/retire-layered.css', '.dead{display:none}']]);
-const retireLayeredBase = parseMap([['css/retire-layered.css', '@layer layout{.dead{display:none}}']]);
-const retireLayeredCurrent = parseMap([['css/retire-layered.css', '']]);
-const retireLayeredP0Rule = catalogMap(retireLayeredP0).get('css/retire-layered.css')[0];
-const retireLayeredBaseRule = catalogMap(retireLayeredBase).get('css/retire-layered.css')[0];
-const retireLayeredHistory = {
-    id: 'fixture-retire-layered-history',
-    source: sourceRef(retireLayeredP0Rule),
-    destinations: [destinationRef(retireLayeredBaseRule)],
-    conflicts: { normal: [], important: [] },
-};
-const retireLayeredMapping = {
-    id: 'fixture-retire-layered',
-    kind: 'retire',
-    source: sourceRef(retireLayeredBaseRule),
-    sourceProvenance: {
-        mappingId: 'fixture-retire-layered-history',
-        destinationIndex: 0,
-    },
-    destinations: [],
-    reason: 'fixture consumer was removed',
-};
-const retireLayeredErrors = [];
+// Retirement may not hide unrelated edits in the same mapped stylesheet.
+const retireMutationCurrent = parseMap([['css/retire.css', '.keep{color:blue}']]);
+const retireMutationErrors = [];
 verifyRuleMigrations({
-    baseline: { debt: { unlayeredRules: [['css/retire-layered.css', '', '.dead']] } },
-    state: { ...emptyState, migratedRules: [retireLayeredHistory, retireLayeredMapping] },
-    currentParsedByPath: retireLayeredCurrent,
-    baseParsedByPath: retireLayeredBase,
-    stylesheetLinks: {},
-    allowedLayers: ALLOWED,
-    layerOrder: LAYERS,
-    baseState: { ...emptyState, migratedRules: [retireLayeredHistory] },
-    errors: retireLayeredErrors,
-});
-assert.deepEqual(retireLayeredErrors, []);
-
-const retireStillPresentErrors = [];
-verifyRuleMigrations({
-    baseline: { debt: { unlayeredRules: [['css/retire-p0.css', '', '.dead'], ['css/retire-p0.css', '', '.keep']] } },
-    state: { ...emptyState, migratedRules: [retireP0Mapping] },
-    currentParsedByPath: retireP0Base,
-    baseParsedByPath: retireP0Base,
+    baseline: { debt: { unlayeredRules: [['css/retire.css', '', '.dead'], ['css/retire.css', '', '.keep']] } },
+    state: { ...emptyState, migratedRules: [retireMapping] },
+    currentParsedByPath: retireMutationCurrent,
+    baseParsedByPath: retireBase,
     stylesheetLinks: {},
     allowedLayers: ALLOWED,
     layerOrder: LAYERS,
     baseState: emptyState,
-    errors: retireStillPresentErrors,
+    errors: retireMutationErrors,
 });
-assert.ok(retireStillPresentErrors.some(error => /expected at most 0 survivor/.test(error)));
+assert.ok(retireMutationErrors.some(error => /beyond the newly registered migrations/.test(error)));
 
-// A historical split may produce the same selector in multiple layers. Each
-// terminal destination is a distinct retirement source, so layer is part of
-// retirement location identity.
-const retireSplitP0 = parseMap([['css/retire-split.css', '.x{color:red;display:none!important}']]);
-const retireSplitBase = parseMap([[
-    'css/retire-split.css',
-    '@layer layout{.x{color:red}}@layer contracts{.x{display:none!important}}',
-]]);
-const retireSplitCurrent = parseMap([['css/retire-split.css', '']]);
-const retireSplitP0Rule = catalogMap(retireSplitP0).get('css/retire-split.css')[0];
-const retireSplitBaseRules = catalogMap(retireSplitBase).get('css/retire-split.css');
-const retireSplitHistory = {
-    id: 'fixture-retire-split-history',
-    source: sourceRef(retireSplitP0Rule),
-    destinations: retireSplitBaseRules.map(destinationRef),
-    conflicts: { normal: [], important: [] },
-};
-const retireSplitMappings = retireSplitBaseRules.map((rule, index) => ({
-    id: 'fixture-retire-split-' + index,
-    kind: 'retire',
-    source: sourceRef(rule),
-    sourceProvenance: {
-        mappingId: 'fixture-retire-split-history',
-        destinationIndex: index,
-    },
-    destinations: [],
-    reason: 'fixture split destination was removed',
-}));
-const retireSplitErrors = [];
-verifyRuleMigrations({
-    baseline: { debt: { unlayeredRules: [['css/retire-split.css', '', '.x']] } },
-    state: { ...emptyState, migratedRules: [retireSplitHistory, ...retireSplitMappings] },
-    currentParsedByPath: retireSplitCurrent,
-    baseParsedByPath: retireSplitBase,
-    stylesheetLinks: {},
-    allowedLayers: ALLOWED,
-    layerOrder: LAYERS,
-    baseState: { ...emptyState, migratedRules: [retireSplitHistory] },
-    errors: retireSplitErrors,
-});
-assert.deepEqual(retireSplitErrors, []);
-
-// Stable occurrence identity also permits retiring repeated same-selector,
-// same-layer rules independently without inventing selector-level uniqueness.
-const retireDuplicateBase = parseMap([[
-    'css/retire-duplicate.css',
-    '@layer layout{.x{color:red}.x{color:red}}',
-]]);
-const retireDuplicateCurrent = parseMap([[
-    'css/retire-duplicate.css',
-    '@layer layout{.x{color:red}}',
-]]);
-const retireDuplicateRules = catalogMap(retireDuplicateBase).get('css/retire-duplicate.css');
-const retireDuplicateHistory = retireDuplicateRules.map((rule, index) => ({
-    id: 'fixture-retire-duplicate-history-' + index,
-    source: {
-        ...sourceRef(rule),
-        layer: null,
-    },
-    destinations: [destinationRef(rule)],
-    conflicts: { normal: [], important: [] },
-}));
-const retireFirstDuplicate = {
-    id: 'fixture-retire-duplicate-0',
-    kind: 'retire',
-    source: sourceRef(retireDuplicateRules[0]),
-    sourceProvenance: {
-        mappingId: 'fixture-retire-duplicate-history-0',
-        destinationIndex: 0,
-    },
-    destinations: [],
-    reason: 'fixture first duplicate destination was removed',
-};
-const retireDuplicateErrors = [];
-verifyRuleMigrations({
-    baseline: {
-        debt: {
-            unlayeredRules: [
-                ['css/retire-duplicate.css', '', '.x'],
-                ['css/retire-duplicate.css', '', '.x'],
-            ],
-        },
-    },
-    state: {
-        ...emptyState,
-        migratedRules: [...retireDuplicateHistory, retireFirstDuplicate],
-    },
-    currentParsedByPath: retireDuplicateCurrent,
-    baseParsedByPath: retireDuplicateBase,
-    stylesheetLinks: {},
-    allowedLayers: ALLOWED,
-    layerOrder: LAYERS,
-    baseState: { ...emptyState, migratedRules: retireDuplicateHistory },
-    errors: retireDuplicateErrors,
-});
-assert.deepEqual(retireDuplicateErrors, []);
-
-// Cross-PR lineage is explicit, so a tracked destination can renumber after
-// an unrelated duplicate leaves its layer without losing provenance.
-const provenanceP0 = parseMap([[
-    'css/provenance.css',
-    '.x{color:red}@layer layout{.x{color:red}}',
-]]);
-const provenanceStageA = parseMap([[
-    'css/provenance.css',
-    '@layer layout{.x{color:red}.x{color:red}}',
-]]);
-const provenanceBase = parseMap([[
-    'css/provenance.css',
-    '@layer components{.x{color:red}}@layer layout{.x{color:red}}',
-]]);
-const provenanceCurrent = parseMap([[
-    'css/provenance.css',
-    '@layer components{.x{color:red}}',
-]]);
-const provenanceP0Rules = catalogMap(provenanceP0).get('css/provenance.css');
-const provenanceStageARules = catalogMap(provenanceStageA).get('css/provenance.css');
-const provenanceBaseRules = catalogMap(provenanceBase).get('css/provenance.css');
-const provenanceMigrationA = {
-    id: 'fixture-provenance-a',
-    source: sourceRef(provenanceP0Rules[0]),
-    destinations: [destinationRef(provenanceStageARules[1])],
-    conflicts: { normal: [], important: [] },
-};
-const provenanceMigrationB = {
-    id: 'fixture-provenance-b',
-    source: sourceRef(provenanceStageARules[0]),
-    destinations: [destinationRef(provenanceBaseRules[0])],
-    conflicts: { normal: [], important: [] },
-};
-const provenanceRetirement = {
-    id: 'fixture-provenance-retire',
-    kind: 'retire',
-    source: sourceRef(provenanceBaseRules[1]),
-    sourceProvenance: {
-        mappingId: 'fixture-provenance-a',
-        destinationIndex: 0,
-    },
-    destinations: [],
-    reason: 'tracked occurrence renumbered after an unrelated duplicate moved',
-};
-const provenanceErrors = [];
-verifyRuleMigrations({
-    baseline: { debt: { unlayeredRules: [['css/provenance.css', '', '.x']] } },
-    state: {
-        ...emptyState,
-        migratedRules: [provenanceMigrationA, provenanceMigrationB, provenanceRetirement],
-    },
-    currentParsedByPath: provenanceCurrent,
-    baseParsedByPath: provenanceBase,
-    stylesheetLinks: {},
-    allowedLayers: ALLOWED,
-    layerOrder: LAYERS,
-    baseState: {
-        ...emptyState,
-        migratedRules: [provenanceMigrationA, provenanceMigrationB],
-    },
-    errors: provenanceErrors,
-});
-assert.deepEqual(provenanceErrors, []);
-
-// Historical retirement freezes the location cardinality. A later migration
-// cannot reuse that path/context/selector/layer with different declarations.
-const reintroP0 = parseMap([['css/reintro.css', '.x{color:red}.x{color:blue}']]);
-const reintroHistoricalStage = parseMap([[
-    'css/reintro.css',
-    '@layer layout{.x{color:red}}.x{color:blue}',
-]]);
-const reintroBase = parseMap([['css/reintro.css', '.x{color:blue}']]);
-const reintroCurrent = parseMap([['css/reintro.css', '@layer layout{.x{color:blue}}']]);
-const reintroP0Rules = catalogMap(reintroP0).get('css/reintro.css');
-const reintroHistoricalRules = catalogMap(reintroHistoricalStage).get('css/reintro.css');
-const reintroBaseRule = catalogMap(reintroBase).get('css/reintro.css')[0];
-const reintroCurrentRule = catalogMap(reintroCurrent).get('css/reintro.css')[0];
-const reintroHistory = {
-    id: 'fixture-reintro-history',
-    source: sourceRef(reintroP0Rules[0]),
-    destinations: [destinationRef(reintroHistoricalRules[0])],
-    conflicts: { normal: [], important: [] },
-};
-const reintroRetirement = {
-    id: 'fixture-reintro-retirement',
-    kind: 'retire',
-    source: sourceRef(reintroHistoricalRules[0]),
-    sourceProvenance: {
-        mappingId: 'fixture-reintro-history',
-        destinationIndex: 0,
-    },
-    destinations: [],
-    reason: 'fixture historical rule was removed',
-};
-const reintroMigration = {
-    id: 'fixture-reintro-migration',
-    source: sourceRef(reintroBaseRule),
-    destinations: [destinationRef(reintroCurrentRule)],
-    conflicts: { normal: [], important: [] },
-};
-const reintroErrors = [];
-verifyRuleMigrations({
-    baseline: {
-        debt: {
-            unlayeredRules: [
-                ['css/reintro.css', '', '.x'],
-                ['css/reintro.css', '', '.x'],
-            ],
-        },
-    },
-    state: {
-        ...emptyState,
-        migratedRules: [reintroHistory, reintroRetirement, reintroMigration],
-    },
-    currentParsedByPath: reintroCurrent,
-    baseParsedByPath: reintroBase,
-    stylesheetLinks: {},
-    allowedLayers: ALLOWED,
-    layerOrder: LAYERS,
-    baseState: {
-        ...emptyState,
-        migratedRules: [reintroHistory, reintroRetirement],
-    },
-    errors: reintroErrors,
-});
-assert.ok(reintroErrors.some(error => /reintroduces a previously retired rule location/.test(error)));
-assert.ok(reintroErrors.some(error => /expected at most 0 survivor/.test(error)));
-
-// Conflict analysis uses the post-transaction peer graph. A peer retired in the
-// same transaction must not create conflict metadata for a surviving migration.
-const mixedBase = parseMap([
-    ['css/mixed-migrate.css', '.x{color:red}'],
-    ['css/mixed-retire.css', '.x{color:blue}'],
-]);
-const mixedCurrent = parseMap([
-    ['css/mixed-migrate.css', '@layer pages{.x{color:red}}'],
-    ['css/mixed-retire.css', ''],
-]);
-const mixedBaseCatalogs = catalogMap(mixedBase);
-const mixedCurrentCatalogs = catalogMap(mixedCurrent);
-const mixedMigration = {
-    id: 'fixture-mixed-migrate',
-    source: sourceRef(mixedBaseCatalogs.get('css/mixed-migrate.css')[0]),
-    destinations: [destinationRef(mixedCurrentCatalogs.get('css/mixed-migrate.css')[0])],
-    conflicts: { normal: [], important: [] },
-};
-const mixedRetirement = {
-    id: 'fixture-mixed-retire',
-    kind: 'retire',
-    source: sourceRef(mixedBaseCatalogs.get('css/mixed-retire.css')[0]),
-    destinations: [],
-    reason: 'fixture peer was removed',
-};
-const mixedErrors = [];
-verifyRuleMigrations({
-    baseline: {
-        debt: {
-            unlayeredRules: [
-                ['css/mixed-migrate.css', '', '.x'],
-                ['css/mixed-retire.css', '', '.x'],
-            ],
-        },
-    },
-    state: { ...emptyState, migratedRules: [mixedMigration, mixedRetirement] },
-    currentParsedByPath: mixedCurrent,
-    baseParsedByPath: mixedBase,
-    stylesheetLinks: {
-        'mixed.html': [
-            ['css/mixed-migrate.css', [['href', 'css/mixed-migrate.css'], ['rel', 'stylesheet']]],
-            ['css/mixed-retire.css', [['href', 'css/mixed-retire.css'], ['rel', 'stylesheet']]],
-        ],
-    },
-    allowedLayers: ALLOWED,
-    layerOrder: LAYERS,
-    baseState: emptyState,
-    errors: mixedErrors,
-});
-assert.deepEqual(mixedErrors, []);
-
-const retireWithoutHistoryErrors = [];
+// The P2-K contract intentionally fails closed on retirement cases it does not
+// need yet. Future layered/priority/custom-property retirement requires a
+// separately reviewed contract instead of accumulating compatibility branches.
+const layeredRetireBase = parseMap([['css/retire-layered.css', '@layer layout{.dead{display:none}}']]);
+const layeredRetireSource = catalogMap(layeredRetireBase).get('css/retire-layered.css')[0];
+const layeredRetireErrors = [];
 verifyRuleMigrations({
     baseline: { debt: { unlayeredRules: [] } },
-    state: { ...emptyState, migratedRules: [retireLayeredMapping] },
-    currentParsedByPath: retireLayeredCurrent,
-    baseParsedByPath: retireLayeredBase,
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-retire-layered',
+            kind: 'retire',
+            source: sourceRef(layeredRetireSource),
+            destinations: [],
+            reason: 'unsupported layered retirement',
+        }],
+    },
+    currentParsedByPath: parseMap([['css/retire-layered.css', '']]),
+    baseParsedByPath: layeredRetireBase,
     stylesheetLinks: {},
     allowedLayers: ALLOWED,
     layerOrder: LAYERS,
     baseState: emptyState,
-    errors: retireWithoutHistoryErrors,
+    errors: layeredRetireErrors,
 });
-assert.ok(retireWithoutHistoryErrors.some(error => /sourceProvenance does not resolve/.test(error)));
+assert.ok(layeredRetireErrors.some(error => /limited to unlayered P0 rules/.test(error)));
 
-const retireMissingReasonErrors = [];
+const importantRetireBase = parseMap([['css/retire-important.css', '.dead{display:none!important}']]);
+const importantRetireSource = catalogMap(importantRetireBase).get('css/retire-important.css')[0];
+const importantRetireErrors = [];
 verifyRuleMigrations({
-    baseline: { debt: { unlayeredRules: [['css/retire-p0.css', '', '.dead'], ['css/retire-p0.css', '', '.keep']] } },
-    state: { ...emptyState, migratedRules: [{ ...retireP0Mapping, id: 'fixture-retire-no-reason', reason: '' }] },
-    currentParsedByPath: retireP0Current,
-    baseParsedByPath: retireP0Base,
+    baseline: { debt: { unlayeredRules: [['css/retire-important.css', '', '.dead']] } },
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-retire-important',
+            kind: 'retire',
+            source: sourceRef(importantRetireSource),
+            destinations: [],
+            reason: 'unsupported important retirement',
+        }],
+    },
+    currentParsedByPath: parseMap([['css/retire-important.css', '']]),
+    baseParsedByPath: importantRetireBase,
     stylesheetLinks: {},
     allowedLayers: ALLOWED,
     layerOrder: LAYERS,
     baseState: emptyState,
-    errors: retireMissingReasonErrors,
+    errors: importantRetireErrors,
 });
-assert.ok(retireMissingReasonErrors.some(error => /require a non-empty reason/.test(error)));
+assert.ok(importantRetireErrors.some(error => /does not support !important/.test(error)));
+
+const customRetireBase = parseMap([['css/retire-custom.css', '.dead{--accent:red}']]);
+const customRetireSource = catalogMap(customRetireBase).get('css/retire-custom.css')[0];
+const customRetireErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/retire-custom.css', '', '.dead']] } },
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-retire-custom',
+            kind: 'retire',
+            source: sourceRef(customRetireSource),
+            destinations: [],
+            reason: 'unsupported custom-property retirement',
+        }],
+    },
+    currentParsedByPath: parseMap([['css/retire-custom.css', '']]),
+    baseParsedByPath: customRetireBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: customRetireErrors,
+});
+assert.ok(customRetireErrors.some(error => /does not support custom-property/.test(error)));
 
 // Malformed state must fail closed with diagnostics rather than crashing the verifier.
 const malformedErrors = [];
@@ -1075,4 +813,4 @@ const modifiedErrors = [];
 verifyMonotonicState(state, modifiedState, modifiedErrors);
 assert.ok(modifiedErrors.some(error => /was modified/.test(error)));
 
-console.log('PASS CSS rule migration mapping, retirement, split, relayer, conflict and ratchet regressions');
+console.log('PASS CSS rule migration mapping, P0 retirement, split, relayer, conflict and ratchet regressions');
