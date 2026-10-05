@@ -335,18 +335,24 @@ The contract now provides:
    mappings against co-migrated, previously migrated and still-unlayered peers. Normal and
    important reviews remain separate because layer precedence reverses under `!important`.
    Different-selector overlap still belongs to browser/geometry evidence.
-6. Residual base→head comparison for every mapped stylesheet. Registering one rule does not
+6. The lowest `reset` layer is policy-constrained, not merely an allowed layer name. A mapping
+   targeting `reset` must be a top-level reviewed universal selector (`*` or
+   `*, *::before, *::after`) and contain only normal declarations; the whole mapped rule stays
+   in `reset`. Negative fixtures reject non-universal, conditional/nested and `!important`
+   reset mappings so reduced-motion/accessibility rules cannot accidentally gain reversed
+   important-layer precedence.
+7. Residual base→head comparison for every mapped stylesheet. Registering one rule does not
    exempt unrelated rules in that file from semantic verification. In addition to ordinary
    rules, canonical keyframe bodies and every non-`@layer` at-rule retain parent context,
    effective layer, tokenized params and (for declaration-style at-rules such as
    `@font-face`, `@property`, `@page` and `@view-transition`) descriptor declarations.
-7. Immutable P0 and semantic addenda remain unchanged. Only files proven by the migration
+8. Immutable P0 and semantic addenda remain unchanged. Only files proven by the migration
    contract may bypass their old whole-file semantic digest for that PR.
 
 Production P2 still requires:
 
 1. Continue with dependency-closed production slices after the initial `.game-stage--fill`
-   `layout` canary and canonical six-layer order declaration. Low-risk `layout` defaults may
+   `layout` canary and canonical seven-layer order (`reset, tokens, showcase, components, layout, pages, contracts`) declaration. Low-risk `layout` defaults may
    move independently after evidence; a `contracts` rule must
    move together with any still-unlayered page peers that could compete with it, because normal
    unlayered declarations outrank every named layer.

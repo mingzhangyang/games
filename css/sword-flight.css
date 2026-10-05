@@ -3,10 +3,12 @@
    Oriental Xianxia Kinetic Flight Action
    ───────────────────────────────────────────── */
 
+@layer reset {
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
 }
 
 :root {

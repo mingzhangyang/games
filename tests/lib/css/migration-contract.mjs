@@ -484,6 +484,33 @@ function isRetirement(mapping) {
     return mapping?.kind === 'retire';
 }
 
+const RESET_UNIVERSAL_SELECTORS = new Set(['*', '*, *::before, *::after']);
+
+function verifyResetMappingInvariant(mapping, errors) {
+    if (!(mapping.destinations || []).some(destination => destination?.layer === 'reset')) return true;
+
+    let valid = true;
+    if (mapping.source.context !== ''
+        || (mapping.destinations || []).some(destination => destination?.context !== '')) {
+        errors.push(mapping.id + ': reset layer is limited to top-level rules; conditional/nested resets require a separate contract.');
+        valid = false;
+    }
+    if (!RESET_UNIVERSAL_SELECTORS.has(mapping.source.selector)
+        || (mapping.destinations || []).some(destination => destination?.selector !== mapping.source.selector)) {
+        errors.push(mapping.id + ': reset layer is limited to reviewed universal selectors (* or *, *::before, *::after).');
+        valid = false;
+    }
+    if ((mapping.source.declarations || []).some(declaration => declaration.important)) {
+        errors.push(mapping.id + ': reset layer accepts normal declarations only; !important reset/accessibility rules require a separate contract.');
+        valid = false;
+    }
+    if ((mapping.destinations || []).some(destination => destination?.layer !== 'reset')) {
+        errors.push(mapping.id + ': a reset migration must keep the whole rule in reset; split-layer reset mappings are not reviewed.');
+        valid = false;
+    }
+    return valid;
+}
+
 function verifyMappingShape(mapping, allowedLayers, errors) {
     let valid = true;
     const kind = mapping.kind || 'migrate';
@@ -548,6 +575,7 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
             valid = false;
         }
     }
+    if (!verifyResetMappingInvariant(mapping, errors)) valid = false;
     for (const priority of PRIORITIES) {
         if (!Array.isArray(mapping.conflicts?.[priority])) {
             errors.push(mapping.id + ': conflicts.' + priority + ' must be an explicit array, even when empty.');
