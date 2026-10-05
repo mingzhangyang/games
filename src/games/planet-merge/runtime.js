@@ -1221,11 +1221,16 @@ export class PlanetMergeGame {
         }
         this.canvas.width = Math.round(cssWidth * dpr);
         this.canvas.height = Math.round(cssHeight * dpr);
-        // CSS owns the visual box (width: 100%); only resize the backing store here.
-        // Inline CSS sizing can become a flex min-content constraint and self-lock the
-        // stage before bindFrame() finishes its first geometry pass.
-        this.canvas.style.removeProperty('width');
-        this.canvas.style.removeProperty('height');
+        // Desktop frame-budget CSS owns the visual box. Writing inline width/height
+        // before bindFrame() settles can become a flex min-content constraint and self-lock
+        // the stage. Mobile keeps the explicit size because availH is its vertical-fit guard.
+        if (window.innerWidth >= 1024) {
+            this.canvas.style.removeProperty('width');
+            this.canvas.style.removeProperty('height');
+        } else {
+            this.canvas.style.width = `${cssWidth}px`;
+            this.canvas.style.height = `${cssHeight}px`;
+        }
         this.scale = (cssWidth / WORLD_W) * dpr;
         this.buildStarfield();
     }
