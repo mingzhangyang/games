@@ -535,11 +535,13 @@
     border-bottom: 1px solid var(--tok-border, rgb(255, 255, 255, 0.08));
 }
 
-.game-drawer-title {
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: var(--tok-text, #f7fafc);
+@layer components {
+    .game-drawer-title {
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: var(--tok-text, #f7fafc);
+    }
 }
 
 .game-drawer-body {

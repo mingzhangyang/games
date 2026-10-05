@@ -1,0 +1,26 @@
+{
+  "id": "p2o-components-game-drawer-title-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-drawer-title",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "6742156fb4262d1f4b80c89d6dfe33db358b6bd4beeb5259a7f774bca4c43764",
+    "layer": null,
+    "declarationDigest": "7aa37ecf276cee053e6b620c69dd5961a4e3398aa2d8fbd952913b9f4515237c",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"font-size","value":[["dimension-token","15px"]],"important":false},
+      {"property":"font-weight","value":[["number-token","800"]],"important":false},
+      {"property":"letter-spacing","value":[["dimension-token","0.02em"]],"important":false},
+      {"property":"color","value":[["function-token","var("],["ident-token","--tok-text"],["comma-token",","],["whitespace-token"," "],["hash-token","#f7fafc"],[")-token",")"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-drawer-title","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"6742156fb4262d1f4b80c89d6dfe33db358b6bd4beeb5259a7f774bca4c43764","layer":"components","declarationDigest":"7aa37ecf276cee053e6b620c69dd5961a4e3398aa2d8fbd952913b9f4515237c","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
