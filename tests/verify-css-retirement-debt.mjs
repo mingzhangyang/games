@@ -5,7 +5,7 @@ import { deriveRetirementDebtExpectations } from './lib/css/debt-contract.mjs';
 import { indexRuleOccurrences } from './lib/css/migration-contract.mjs';
 
 const parsed = parseCssText(
-    '.retired{--accent:red;color:blue !important}.keep{display:none !important}',
+    '.retired{--Accent:red !important}.keep{display:none !important}',
     'css/debt.css',
 );
 const source = indexRuleOccurrences(parsed, 'css/debt.css')[0];
@@ -16,7 +16,9 @@ const baseline = {
     }],
     debt: {
         importantDeclarations: [
-            ['css/debt.css', '', '.retired', 'color', 'blue !important'],
+            // Legacy P0 tuples lowercase property names even though canonical
+            // migration snapshots preserve custom-property case.
+            ['css/debt.css', '', '.retired', '--accent', 'red !important'],
             ['css/debt.css', '', '.keep', 'display', 'none !important'],
         ],
     },
