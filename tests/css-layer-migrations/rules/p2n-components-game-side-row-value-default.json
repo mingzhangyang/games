@@ -1,0 +1,24 @@
+{
+  "id": "p2n-components-game-side-row-value-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-row b",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "ad049dd2e4ad7ae8b4ad063fc1b88961f7eeb71388b4dc3e7eaad8b62fce86b8",
+    "layer": null,
+    "declarationDigest": "5d8a68acf3e4cfd641c154dbdb5488cd4d99741dcce050672f7b481c55239f20",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"color","value":[["function-token","var("],["ident-token","--tok-text"],[")-token",")"]],"important":false},
+      {"property":"font-variant-numeric","value":[["ident-token","tabular-nums"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-row b","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"ad049dd2e4ad7ae8b4ad063fc1b88961f7eeb71388b4dc3e7eaad8b62fce86b8","layer":"components","declarationDigest":"5d8a68acf3e4cfd641c154dbdb5488cd4d99741dcce050672f7b481c55239f20","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
