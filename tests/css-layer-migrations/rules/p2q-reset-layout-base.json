@@ -17,7 +17,9 @@
     {"path":"css/layout.css","context":"","selector":"*, *::before, *::after","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"42b3377eb81dd1da8531fd16c60c4564e7f0640bbd4a68583f8dadc9d0b736be","layer":"reset","declarationDigest":"da792bc6f004096bc36e80c085dec9194ea212d0305c503ecfdd204edd66f6b4","occurrence":1}
   ],
   "conflicts": {
-    "normal": [],
+    "normal": [
+      {"property":"box-sizing","peerProperty":"box-sizing","targetLayer":"reset","peerPath":"css/index.css","peerContext":"","peerSourceLayer":null,"peerLayer":"reset","layerPriority":"same-layer","pages":["index.html"]}
+    ],
     "important": []
   }
 }
