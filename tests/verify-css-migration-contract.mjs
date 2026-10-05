@@ -704,6 +704,10 @@ const retireLayeredMapping = {
     id: 'fixture-retire-layered',
     kind: 'retire',
     source: sourceRef(retireLayeredBaseRule),
+    sourceProvenance: {
+        mappingId: 'fixture-retire-layered-history',
+        destinationIndex: 0,
+    },
     destinations: [],
     reason: 'fixture consumer was removed',
 };
@@ -756,6 +760,10 @@ const retireSplitMappings = retireSplitBaseRules.map((rule, index) => ({
     id: 'fixture-retire-split-' + index,
     kind: 'retire',
     source: sourceRef(rule),
+    sourceProvenance: {
+        mappingId: 'fixture-retire-split-history',
+        destinationIndex: index,
+    },
     destinations: [],
     reason: 'fixture split destination was removed',
 }));
@@ -797,6 +805,10 @@ const retireFirstDuplicate = {
     id: 'fixture-retire-duplicate-0',
     kind: 'retire',
     source: sourceRef(retireDuplicateRules[0]),
+    sourceProvenance: {
+        mappingId: 'fixture-retire-duplicate-history-0',
+        destinationIndex: 0,
+    },
     destinations: [],
     reason: 'fixture first duplicate destination was removed',
 };
@@ -824,6 +836,70 @@ verifyRuleMigrations({
 });
 assert.deepEqual(retireDuplicateErrors, []);
 
+// Cross-PR lineage is explicit, so a tracked destination can renumber after
+// an unrelated duplicate leaves its layer without losing provenance.
+const provenanceP0 = parseMap([[
+    'css/provenance.css',
+    '.x{color:red}@layer layout{.x{color:red}}',
+]]);
+const provenanceStageA = parseMap([[
+    'css/provenance.css',
+    '@layer layout{.x{color:red}.x{color:red}}',
+]]);
+const provenanceBase = parseMap([[
+    'css/provenance.css',
+    '@layer components{.x{color:red}}@layer layout{.x{color:red}}',
+]]);
+const provenanceCurrent = parseMap([[
+    'css/provenance.css',
+    '@layer components{.x{color:red}}',
+]]);
+const provenanceP0Rules = catalogMap(provenanceP0).get('css/provenance.css');
+const provenanceStageARules = catalogMap(provenanceStageA).get('css/provenance.css');
+const provenanceBaseRules = catalogMap(provenanceBase).get('css/provenance.css');
+const provenanceMigrationA = {
+    id: 'fixture-provenance-a',
+    source: sourceRef(provenanceP0Rules[0]),
+    destinations: [destinationRef(provenanceStageARules[1])],
+    conflicts: { normal: [], important: [] },
+};
+const provenanceMigrationB = {
+    id: 'fixture-provenance-b',
+    source: sourceRef(provenanceStageARules[0]),
+    destinations: [destinationRef(provenanceBaseRules[0])],
+    conflicts: { normal: [], important: [] },
+};
+const provenanceRetirement = {
+    id: 'fixture-provenance-retire',
+    kind: 'retire',
+    source: sourceRef(provenanceBaseRules[1]),
+    sourceProvenance: {
+        mappingId: 'fixture-provenance-a',
+        destinationIndex: 0,
+    },
+    destinations: [],
+    reason: 'tracked occurrence renumbered after an unrelated duplicate moved',
+};
+const provenanceErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/provenance.css', '', '.x']] } },
+    state: {
+        ...emptyState,
+        migratedRules: [provenanceMigrationA, provenanceMigrationB, provenanceRetirement],
+    },
+    currentParsedByPath: provenanceCurrent,
+    baseParsedByPath: provenanceBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: {
+        ...emptyState,
+        migratedRules: [provenanceMigrationA, provenanceMigrationB],
+    },
+    errors: provenanceErrors,
+});
+assert.deepEqual(provenanceErrors, []);
+
 // Historical retirement freezes the location cardinality. A later migration
 // cannot reuse that path/context/selector/layer with different declarations.
 const reintroP0 = parseMap([['css/reintro.css', '.x{color:red}.x{color:blue}']]);
@@ -847,6 +923,10 @@ const reintroRetirement = {
     id: 'fixture-reintro-retirement',
     kind: 'retire',
     source: sourceRef(reintroHistoricalRules[0]),
+    sourceProvenance: {
+        mappingId: 'fixture-reintro-history',
+        destinationIndex: 0,
+    },
     destinations: [],
     reason: 'fixture historical rule was removed',
 };
@@ -947,7 +1027,7 @@ verifyRuleMigrations({
     baseState: emptyState,
     errors: retireWithoutHistoryErrors,
 });
-assert.ok(retireWithoutHistoryErrors.some(error => /layered retirement source must be a destination/.test(error)));
+assert.ok(retireWithoutHistoryErrors.some(error => /sourceProvenance does not resolve/.test(error)));
 
 const retireMissingReasonErrors = [];
 verifyRuleMigrations({
