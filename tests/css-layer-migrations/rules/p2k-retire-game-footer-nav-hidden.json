@@ -1,0 +1,28 @@
+{
+  "id": "p2k-retire-game-footer-nav-hidden",
+  "kind": "retire",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-footer-nav[hidden]",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "58ffccfa68f23bdf3bfa776842eee0b297b4723a3454b3895bf78757e1e539b3",
+    "layer": null,
+    "declarationDigest": "5fbaf5b43dd6ddd3ac92d5096d223e3998cc1d9cfddacee882b1873ecc51c9e8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "PR #89 removed footer More-games nav containers, so their hidden-state rule has no remaining consumer."
+}
