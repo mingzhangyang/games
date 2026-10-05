@@ -445,6 +445,20 @@ responsive dependency。drawer、stats-drawer、
 frame-budget、immersive/safe-area 与 reduced-motion `!important` 仍全部留给后续
 `contracts` / accessibility closure。
 
+**P2-U Contracts Closure A：** 首次迁入 `contracts` 层，按 drawer / stats-drawer 完整结构族闭合，
+而不是单独迁一条隐藏规则。共享 `.game-drawer` 与 `.game-drawer-panel` 采用 1→N migration：
+定位、层级、尺寸、display、open/hidden 状态、panel transform 等结构不变量进入 `contracts`；
+scrim、blur、边框、阴影与 transition 等皮肤/动画声明进入 `components`。同时将
+`body.drawer-locked`、窄屏 `body.has-stats-drawer .game-sidebar` 和桌面
+`.game-drawer { display:none }` 归入 `contracts`，使移动 sidebar 让位、背景锁滚动和桌面抽屉退场
+不再依赖未分层 specificity/source order。
+
+桌面 `.game-stats-btn { display:none }` **本批明确暂缓**：Tower Defense immersive 在
+`css/tower-defense.css` 中有 `.td-shell.game-shell--immersive .game-stats-btn { display:inline-flex }`
+的合法页面例外。若把共享隐藏规则单边提升到 `contracts`，会反压该页面 override；它必须与
+Tower Defense peer 在后续独立 dependency closure 中一起处理。frame-budget、immersive/safe-area
+与 reduced-motion `!important` 仍不进入本批。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -627,6 +641,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-R / #97：完成 Components Closure A；迁移 icon family 4 条 + Sidebar family 6 条到 `components`，保留既有 active/text/value leaves；两条窄屏 icon peers 经审计后保持未分层以维持既有 precedence；`game-hud-box` 因 Tetris 五项 exact-selector peer 暂缓
 - [x] P2-S / #98：完成 Layout Closure A；迁移 shell/topbar/footer/footer-hint 四个 responsive family 共 12 条规则到 `layout`；首页 `.game-footer` 页面覆盖保持未分层优先，`game-hud-box` 与 contracts family 继续暂缓
 - [x] P2-T：完成 Pages Closure A；共享 `.game-hud-box` → `layout`，Tetris HUD/title + 首页 `.game-footer` → `pages`，首次闭合 `layout → pages` exact-selector dependency chain；`.game-footer-actions` 与 contracts family 继续暂缓
+- [x] P2-U：完成 Contracts Closure A；drawer / stats-drawer 结构族首次进入 `contracts`，`.game-drawer` / panel 以 1→N 拆分保留视觉到 `components`；Tower Defense 桌面 stats-button 例外、frame-budget 与 immersive family 继续暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
