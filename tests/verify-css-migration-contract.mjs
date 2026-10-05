@@ -733,7 +733,7 @@ verifyRuleMigrations({
     baseState: emptyState,
     errors: retireStillPresentErrors,
 });
-assert.ok(retireStillPresentErrors.some(error => /retired rule location is still present/.test(error)));
+assert.ok(retireStillPresentErrors.some(error => /retired source rule is still present/.test(error)));
 
 // A historical split may produce the same selector in multiple layers. Each
 // terminal destination is a distinct retirement source, so layer is part of
@@ -772,6 +772,54 @@ verifyRuleMigrations({
     errors: retireSplitErrors,
 });
 assert.deepEqual(retireSplitErrors, []);
+
+// Stable occurrence identity also permits retiring repeated same-selector,
+ // same-layer rules independently without inventing selector-level uniqueness.
+const retireDuplicateBase = parseMap([[
+    'css/retire-duplicate.css',
+    '@layer layout{.x{color:red}.x{color:red}}',
+]]);
+const retireDuplicateCurrent = parseMap([['css/retire-duplicate.css', '']]);
+const retireDuplicateRules = catalogMap(retireDuplicateBase).get('css/retire-duplicate.css');
+const retireDuplicateHistory = retireDuplicateRules.map((rule, index) => ({
+    id: 'fixture-retire-duplicate-history-' + index,
+    source: {
+        ...sourceRef(rule),
+        layer: null,
+    },
+    destinations: [destinationRef(rule)],
+    conflicts: { normal: [], important: [] },
+}));
+const retireDuplicateMappings = retireDuplicateRules.map((rule, index) => ({
+    id: 'fixture-retire-duplicate-' + index,
+    kind: 'retire',
+    source: sourceRef(rule),
+    destinations: [],
+    reason: 'fixture duplicate destination was removed',
+}));
+const retireDuplicateErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [
+                ['css/retire-duplicate.css', '', '.x'],
+                ['css/retire-duplicate.css', '', '.x'],
+            ],
+        },
+    },
+    state: {
+        ...emptyState,
+        migratedRules: [...retireDuplicateHistory, ...retireDuplicateMappings],
+    },
+    currentParsedByPath: retireDuplicateCurrent,
+    baseParsedByPath: retireDuplicateBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: { ...emptyState, migratedRules: retireDuplicateHistory },
+    errors: retireDuplicateErrors,
+});
+assert.deepEqual(retireDuplicateErrors, []);
 
 // Conflict analysis uses the post-transaction peer graph. A peer retired in the
 // same transaction must not create conflict metadata for a surviving migration.
