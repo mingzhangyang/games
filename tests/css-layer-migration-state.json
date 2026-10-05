@@ -78,6 +78,16 @@
     "tests/css-layer-migrations/rules/p2q-reset-tank-battle-base.json",
     "tests/css-layer-migrations/rules/p2q-reset-tetris-base.json",
     "tests/css-layer-migrations/rules/p2q-reset-tower-defense-base.json",
-    "tests/css-layer-migrations/rules/p2q-reset-word-daily-base.json"
+    "tests/css-layer-migrations/rules/p2q-reset-word-daily-base.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-default.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-after.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-hover.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-wide-default.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-side-card-default.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-side-title-default.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-side-row-default.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-side-panel-default.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-side-kbd-row-default.json",
+    "tests/css-layer-migrations/rules/p2r-components-game-side-kbd-default.json"
   ]
 }

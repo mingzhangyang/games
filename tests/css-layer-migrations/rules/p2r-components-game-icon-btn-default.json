@@ -1,0 +1,48 @@
+{
+  "id": "p2r-components-game-icon-btn-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-icon-btn",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "7e92f269999d42ba8cecb78419ab81aa6a4d8d23737eea058de56905edcc0b16",
+    "layer": null,
+    "declarationDigest": "2bfd8cc6f1ce31549767f15987a576358cc28dfd1e726062b777e95cec7ce1a5",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"width","value":[["function-token","var("],["ident-token","--tok-btn-size"],[")-token",")"]],"important":false},
+      {"property":"height","value":[["function-token","var("],["ident-token","--tok-btn-size"],[")-token",")"]],"important":false},
+      {"property":"flex-shrink","value":[["number-token","0"]],"important":false},
+      {"property":"padding","value":[["number-token","0"]],"important":false},
+      {"property":"white-space","value":[["ident-token","nowrap"]],"important":false},
+      {"property":"position","value":[["ident-token","relative"]],"important":false},
+      {"property":"display","value":[["ident-token","inline-flex"]],"important":false},
+      {"property":"align-items","value":[["ident-token","center"]],"important":false},
+      {"property":"justify-content","value":[["ident-token","center"]],"important":false},
+      {"property":"font-size","value":[["dimension-token","17px"]],"important":false},
+      {"property":"font-family","value":[["ident-token","inherit"]],"important":false},
+      {"property":"font-weight","value":[["number-token","700"]],"important":false},
+      {"property":"color","value":[["ident-token","inherit"]],"important":false},
+      {"property":"cursor","value":[["ident-token","pointer"]],"important":false},
+      {"property":"background","value":[["function-token","var("],["ident-token","--tok-panel"],[")-token",")"]],"important":false},
+      {"property":"border","value":[["dimension-token","1px"],["whitespace-token"," "],["ident-token","solid"],["whitespace-token"," "],["function-token","var("],["ident-token","--tok-border"],[")-token",")"]],"important":false},
+      {"property":"border-radius","value":[["function-token","var("],["ident-token","--tok-radius-btn"],[")-token",")"]],"important":false},
+      {"property":"backdrop-filter","value":[["function-token","blur("],["dimension-token","8px"],[")-token",")"]],"important":false},
+      {"property":"-webkit-backdrop-filter","value":[["function-token","blur("],["dimension-token","8px"],[")-token",")"]],"important":false},
+      {"property":"transition","value":[["ident-token","background"],["whitespace-token"," "],["dimension-token","0.15s"],["comma-token",","],["whitespace-token"," "],["ident-token","transform"],["whitespace-token"," "],["dimension-token","0.1s"],["comma-token",","],["whitespace-token"," "],["ident-token","border-color"],["whitespace-token"," "],["dimension-token","0.15s"]],"important":false},
+      {"property":"-webkit-tap-highlight-color","value":[["ident-token","transparent"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-icon-btn","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"7e92f269999d42ba8cecb78419ab81aa6a4d8d23737eea058de56905edcc0b16","layer":"components","declarationDigest":"2bfd8cc6f1ce31549767f15987a576358cc28dfd1e726062b777e95cec7ce1a5","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [
+      {"property":"-webkit-tap-highlight-color","peerProperty":"font-size","targetLayer":"components","peerPath":"css/layout.css","peerContext":"@media (width <= 480px)","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["bond-forge.html","carrot-pull.html","circuit.html","crystal-bloom.html","echo-cave.html","firefly-signal.html","flame-verse.html","gomoku.html","gravity-slingshot.html","hoop-shot.html","index.html","lumen.html","math-rain.html","maxwell-demon.html","minesweeper.html","needle-awn.html","planet-merge.html","reversi.html","ripple-duet.html","shadow-loom.html","silk-dew.html","sword-flight.html","tank-battle.html","tetris.html","tower-defense.html","word-daily.html"]},
+      {"property":"-webkit-tap-highlight-color","peerProperty":"transition","targetLayer":"components","peerPath":"css/layout.css","peerContext":"@media (prefers-reduced-motion: reduce)","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["bond-forge.html","carrot-pull.html","circuit.html","crystal-bloom.html","echo-cave.html","firefly-signal.html","flame-verse.html","gomoku.html","gravity-slingshot.html","hoop-shot.html","index.html","lumen.html","math-rain.html","maxwell-demon.html","minesweeper.html","needle-awn.html","planet-merge.html","reversi.html","ripple-duet.html","shadow-loom.html","silk-dew.html","sword-flight.html","tank-battle.html","tetris.html","tower-defense.html","word-daily.html"]},
+      {"property":"font-size","peerProperty":"font-size","targetLayer":"components","peerPath":"css/layout.css","peerContext":"@media (width <= 480px)","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["bond-forge.html","carrot-pull.html","circuit.html","crystal-bloom.html","echo-cave.html","firefly-signal.html","flame-verse.html","gomoku.html","gravity-slingshot.html","hoop-shot.html","index.html","lumen.html","math-rain.html","maxwell-demon.html","minesweeper.html","needle-awn.html","planet-merge.html","reversi.html","ripple-duet.html","shadow-loom.html","silk-dew.html","sword-flight.html","tank-battle.html","tetris.html","tower-defense.html","word-daily.html"]},
+      {"property":"transition","peerProperty":"transition","targetLayer":"components","peerPath":"css/layout.css","peerContext":"@media (prefers-reduced-motion: reduce)","peerSourceLayer":null,"peerLayer":null,"layerPriority":"peer-unlayered-wins","pages":["bond-forge.html","carrot-pull.html","circuit.html","crystal-bloom.html","echo-cave.html","firefly-signal.html","flame-verse.html","gomoku.html","gravity-slingshot.html","hoop-shot.html","index.html","lumen.html","math-rain.html","maxwell-demon.html","minesweeper.html","needle-awn.html","planet-merge.html","reversi.html","ripple-duet.html","shadow-loom.html","silk-dew.html","sword-flight.html","tank-battle.html","tetris.html","tower-defense.html","word-daily.html"]}
+    ],
+    "important": []
+  }
+}

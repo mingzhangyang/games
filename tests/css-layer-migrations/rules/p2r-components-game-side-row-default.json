@@ -1,0 +1,29 @@
+{
+  "id": "p2r-components-game-side-row-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-row",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "c455f7a1bea14f4210292c95c792e663d0c06029ebd5f61b6d4c03c353e9417f",
+    "layer": null,
+    "declarationDigest": "7133169d65a07723cdf439a0a11f2e33b5fd6679ba1b1ab0d401b3e923fffa39",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"display","value":[["ident-token","flex"]],"important":false},
+      {"property":"justify-content","value":[["ident-token","space-between"]],"important":false},
+      {"property":"align-items","value":[["ident-token","baseline"]],"important":false},
+      {"property":"gap","value":[["dimension-token","10px"]],"important":false},
+      {"property":"font-size","value":[["dimension-token","13.5px"]],"important":false},
+      {"property":"padding","value":[["dimension-token","4px"],["whitespace-token"," "],["number-token","0"]],"important":false},
+      {"property":"color","value":[["function-token","var("],["ident-token","--tok-text-dim"],[")-token",")"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-row","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"c455f7a1bea14f4210292c95c792e663d0c06029ebd5f61b6d4c03c353e9417f","layer":"components","declarationDigest":"7133169d65a07723cdf439a0a11f2e33b5fd6679ba1b1ab0d401b3e923fffa39","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "p2r-components-game-icon-btn-after",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-icon-btn::after",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "6c2990dc71b13b704ab3e13bceecb20bb4d9e4bce9fe9cb56efc2fa9579ae8bd",
+    "layer": null,
+    "declarationDigest": "afd40dc595f1cc70ad33926ede804ff36414324a9831e56ca7305b2b4e993df8",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"content","value":[["string-token","''"]],"important":false},
+      {"property":"position","value":[["ident-token","absolute"]],"important":false},
+      {"property":"inset","value":[["function-token","var("],["ident-token","--tok-hit-pad"],[")-token",")"]],"important":false},
+      {"property":"border-radius","value":[["ident-token","inherit"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-icon-btn::after","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"6c2990dc71b13b704ab3e13bceecb20bb4d9e4bce9fe9cb56efc2fa9579ae8bd","layer":"components","declarationDigest":"afd40dc595f1cc70ad33926ede804ff36414324a9831e56ca7305b2b4e993df8","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

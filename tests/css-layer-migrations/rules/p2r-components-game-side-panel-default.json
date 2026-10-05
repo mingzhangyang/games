@@ -1,0 +1,29 @@
+{
+  "id": "p2r-components-game-side-panel-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-panel",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "c28a7a6877d567183cb923fd2c5e89b646261bc1b5ad2126db3af94de3408e3a",
+    "layer": null,
+    "declarationDigest": "814dea5db7c53a384b22a3f5cbf75657ae4dbedf6a1ea82cc8db383621fad2db",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"display","value":[["ident-token","flex"]],"important":false},
+      {"property":"align-items","value":[["ident-token","baseline"]],"important":false},
+      {"property":"gap","value":[["dimension-token","8px"]],"important":false},
+      {"property":"font-size","value":[["dimension-token","12.5px"]],"important":false},
+      {"property":"line-height","value":[["number-token","1.6"]],"important":false},
+      {"property":"padding","value":[["dimension-token","3px"],["whitespace-token"," "],["number-token","0"]],"important":false},
+      {"property":"color","value":[["function-token","var("],["ident-token","--tok-text-dim"],[")-token",")"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-panel","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"c28a7a6877d567183cb923fd2c5e89b646261bc1b5ad2126db3af94de3408e3a","layer":"components","declarationDigest":"814dea5db7c53a384b22a3f5cbf75657ae4dbedf6a1ea82cc8db383621fad2db","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

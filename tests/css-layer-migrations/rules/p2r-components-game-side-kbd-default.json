@@ -1,0 +1,30 @@
+{
+  "id": "p2r-components-game-side-kbd-default",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-side-kbd",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "9d27379ce048f23de8649abfe64c8648dc47aaba309f5252c2de4db00e53684d",
+    "layer": null,
+    "declarationDigest": "74f2e61378f595e5ef735e86dbfa4aac4970a8e42624f314c21189dc1efadf96",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"background","value":[["function-token","var("],["ident-token","--tok-fill-raised"],[")-token",")"]],"important":false},
+      {"property":"border","value":[["dimension-token","1px"],["whitespace-token"," "],["ident-token","solid"],["whitespace-token"," "],["function-token","var("],["ident-token","--tok-border-raised"],[")-token",")"]],"important":false},
+      {"property":"border-radius","value":[["dimension-token","5px"]],"important":false},
+      {"property":"padding","value":[["dimension-token","1px"],["whitespace-token"," "],["dimension-token","6px"]],"important":false},
+      {"property":"font-family","value":[["ident-token","inherit"]],"important":false},
+      {"property":"font-size","value":[["dimension-token","10.5px"]],"important":false},
+      {"property":"font-weight","value":[["number-token","800"]],"important":false},
+      {"property":"color","value":[["function-token","var("],["ident-token","--tok-text"],[")-token",")"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-side-kbd","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"9d27379ce048f23de8649abfe64c8648dc47aaba309f5252c2de4db00e53684d","layer":"components","declarationDigest":"74f2e61378f595e5ef735e86dbfa4aac4970a8e42624f314c21189dc1efadf96","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

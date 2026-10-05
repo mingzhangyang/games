@@ -309,49 +309,49 @@
 }
 
 /* ── 图标钮：40px 视觉 / ≥44px 触控热区（尺寸取 tokens 变量，与 .icon-btn 同源） ── */
-.game-icon-btn {
-    width: var(--tok-btn-size);
-    height: var(--tok-btn-size);
-    flex-shrink: 0;
-    padding: 0;
-    white-space: nowrap;
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 17px;
-    font-family: inherit;
-    font-weight: 700;
-    color: inherit;
-    cursor: pointer;
-    background: var(--tok-panel);
-    border: 1px solid var(--tok-border);
-    border-radius: var(--tok-radius-btn);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: background 0.15s, transform 0.1s, border-color 0.15s;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.game-icon-btn::after {
-    content: '';
-    position: absolute;
-    inset: var(--tok-hit-pad);
-    border-radius: inherit;
-}
-
-.game-icon-btn:hover { background: var(--tok-panel-strong); }
-
 @layer components {
+    .game-icon-btn {
+        width: var(--tok-btn-size);
+        height: var(--tok-btn-size);
+        flex-shrink: 0;
+        padding: 0;
+        white-space: nowrap;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        font-family: inherit;
+        font-weight: 700;
+        color: inherit;
+        cursor: pointer;
+        background: var(--tok-panel);
+        border: 1px solid var(--tok-border);
+        border-radius: var(--tok-radius-btn);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        transition: background 0.15s, transform 0.1s, border-color 0.15s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .game-icon-btn::after {
+        content: '';
+        position: absolute;
+        inset: var(--tok-hit-pad);
+        border-radius: inherit;
+    }
+    
+    .game-icon-btn:hover { background: var(--tok-panel-strong); }
+    
     .game-icon-btn:active { transform: scale(0.92); }
-}
-
-/* 文字型图标钮（语言切换等）：宽度自适应，最小不低于视觉尺寸 */
-.game-icon-btn--wide {
-    width: auto;
-    min-width: var(--tok-btn-size);
-    padding: 0 12px;
-    white-space: nowrap;
+    
+    /* 文字型图标钮（语言切换等）：宽度自适应，最小不低于视觉尺寸 */
+    .game-icon-btn--wide {
+        width: auto;
+        min-width: var(--tok-btn-size);
+        padding: 0 12px;
+        white-space: nowrap;
+    }
 }
 
 /* ── 含图标的文字按钮（Play/Again/Copy/Close/Home/Share/Stats/Next）──
@@ -373,84 +373,80 @@
 }
 
 /* ── 侧栏卡片族 ── */
-.game-side-card {
-    background: var(--tok-surface);
-    border: 1px solid var(--tok-border);
-    border-radius: 14px;
-    padding: 14px 16px;
-    text-align: left;
-}
-
-.game-side-title {
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    margin-bottom: 8px;
-}
-
 @layer components {
+    .game-side-card {
+        background: var(--tok-surface);
+        border: 1px solid var(--tok-border);
+        border-radius: 14px;
+        padding: 14px 16px;
+        text-align: left;
+    }
+    
+    .game-side-title {
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        margin-bottom: 8px;
+    }
+    
     .game-side-text {
         font-size: 12.5px;
         line-height: 1.7;
         color: var(--tok-text-dim);
     }
-
+    
     .game-side-text b { color: var(--tok-text); }
-}
-
-.game-side-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 13.5px;
-    padding: 4px 0;
-    color: var(--tok-text-dim);
-}
-
-@layer components {
+    
+    .game-side-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 13.5px;
+        padding: 4px 0;
+        color: var(--tok-text-dim);
+    }
+    
     .game-side-row b {
         color: var(--tok-text);
         font-variant-numeric: tabular-nums;
     }
-}
-
-.game-side-panel {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-size: 12.5px;
-    line-height: 1.6;
-    padding: 3px 0;
-    color: var(--tok-text-dim);
-}
-
-@layer components {
+    
+    .game-side-panel {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 12.5px;
+        line-height: 1.6;
+        padding: 3px 0;
+        color: var(--tok-text-dim);
+    }
+    
     .game-side-panel b {
         color: var(--tok-text);
         white-space: nowrap;
     }
-}
-
-.game-side-kbd-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    padding: 3px 0;
-    color: var(--tok-text-dim);
-}
-
-.game-side-kbd {
-    background: var(--tok-fill-raised);
-    border: 1px solid var(--tok-border-raised);
-    border-radius: 5px;
-    padding: 1px 6px;
-    font-family: inherit;
-    font-size: 10.5px;
-    font-weight: 800;
-    color: var(--tok-text);
+    
+    .game-side-kbd-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        padding: 3px 0;
+        color: var(--tok-text-dim);
+    }
+    
+    .game-side-kbd {
+        background: var(--tok-fill-raised);
+        border: 1px solid var(--tok-border-raised);
+        border-radius: 5px;
+        padding: 1px 6px;
+        font-family: inherit;
+        font-size: 10.5px;
+        font-weight: 800;
+        color: var(--tok-text);
+    }
 }
 
 /* ── 顶栏中部信息块（模式标记 + 分数） ── */
