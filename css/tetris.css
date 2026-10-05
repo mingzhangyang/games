@@ -97,6 +97,7 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+@layer reset {
 * {
     margin: 0;
     padding: 0;
@@ -107,6 +108,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
 }
 
 /* 触屏操作面禁止「双击放大」：手指在棋盘/操作钮周围快速连点会触发浏览器的双击

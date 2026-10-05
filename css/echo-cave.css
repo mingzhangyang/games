@@ -4,10 +4,12 @@
    紫罗兰 = 出口嗡鸣 / 荆棘红 --tok-danger = 尖鸣警示
    ───────────────────────────────────────────── */
 
+@layer reset {
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
 }
 
 body {

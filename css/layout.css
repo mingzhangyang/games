@@ -85,10 +85,12 @@
 }
 
 /* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */
+@layer reset {
 *,
 *::before,
 *::after {
     box-sizing: border-box;
+}
 }
 
 /* ── 页面容器：单列居中的移动优先栏 ── */

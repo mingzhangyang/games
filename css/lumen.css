@@ -3,10 +3,12 @@
    深空底 + 光束青（#7dfad0）+ 靛蓝（#5a7bff）双主色
    ───────────────────────────────────────────── */
 
+@layer reset {
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
 }
 
 body {

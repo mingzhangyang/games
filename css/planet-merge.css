@@ -2,10 +2,12 @@
    Planet Merge 星球合成 — deep-space theme
    ───────────────────────────────────────────── */
 
+@layer reset {
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
 }
 
 html, body {

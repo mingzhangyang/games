@@ -94,7 +94,7 @@ layer 的优先级先于 specificity：一旦整个 `layout.css` 放进较早的
 因此迁移单位从“CSS 文件”改为“**规则职责**”，并引入最后的结构契约层：
 
 ```css
-@layer tokens, showcase, components, layout, pages, contracts;
+@layer reset, tokens, showcase, components, layout, pages, contracts;
 ```
 
 当前生产 link 顺序仍保持：
@@ -220,7 +220,7 @@ geometry / interaction 浏览器测试负责。旧 P0 与 semantic addendum 继�
    `tests/css-layer-migration-state.json`，migration unit 固定为 rule/selector，而不是 file；
 2. 先升级 `verify-css-debt.mjs`：只有 migration state 中逐项登记、且能在目标 layer 找到同一规则时，
    才允许对应 P0 unlayered debt 退出 active debt；已经迁移的规则不得重新变回 unlayered；
-3. 将目标顺序冻结为 `tokens, showcase, components, layout, pages, contracts`，并针对
+3. 将目标顺序冻结为 `reset, tokens, showcase, components, layout, pages, contracts`，并针对
    normal/important 两套相反的 layer precedence 分别做冲突检查；
 4. 先给 `layout.css` 做职责分类，但**不要把所有分类结果一次切换到 layer**：
    - 可定制的 shell/topbar/stage/sidebar 默认几何 → `layout`；
@@ -369,6 +369,27 @@ background 与其 dependency closure 一起迁入兼容 layer 时再处理。act
 exact-selector 页面 peer，因此可独立迁移。本批仍不迁基础 `.game-icon-btn`、`::after`
 触控热区、wide variant 或 reduced-motion contract。
 
+**P2-Q reset / cascade foundation：** #95 证明 selector 级微迁移已经触及结构边界：未分层
+normal reset/base declaration 会压过所有 named-layer normal declaration，因此后续迁移必须按
+property dependency closure 进行。本批把 layer taxonomy 显式升级为
+`reset → tokens → showcase → components → layout → pages → contracts`，并一次迁移 P0 中
+25 条**顶层 normal universal reset**。其中 22 个游戏页是 `margin:0 / padding:0 /
+box-sizing:border-box` 三件套，index 与 layout 是共享 box-sizing reset，Tetris 额外包含全局
+touch/user-select reset。每条历史规则仍有独立 immutable mapping，但作为一个 foundation
+transaction 集中提交和验证。
+
+本批**刻意不迁** 4 条 `prefers-reduced-motion` 下的 universal `!important` rules：
+important declaration 的 layer precedence 与 normal 相反，把它们放进最低 `reset` 反而会获得
+最高 named-layer 优先级；它们必须在后续 accessibility/contracts closure 单独审计。P2-Q 也不
+顺带迁普通 component/layout/page rules。reset 下沉后，named-layer 组件将首次不再被页面
+universal reset 反压，因此 Architecture candidate 必须把 computed style / browser geometry
+作为验收证据；若需要补偿性 `!important` 才能维持行为，则回滚本批重新划分 closure，而不是
+继续叠补丁。
+
+从 P2-Q 起，默认迁移单位从“单 selector”切换为**semantic/property dependency closure**；
+同一 property chain（例如 base background + hover）必须同批迁移。默认每个 PR 处理约
+5–20 条相关规则，只有跨职责边界或无法证明 cascade 等价时才进一步拆分。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -471,7 +492,7 @@ P0 就启用：
 6. `science-showcase.css` / shared components 的 important 与普通声明分别校验；
 7. 未登记的新 unlayered CSS 仍然失败；
 8. 不得重新引入依赖 link 重排的新构建逻辑；
-9. 最终 layer order 为 `tokens, showcase, components, layout, pages, contracts`；
+9. 最终 layer order 为 `reset, tokens, showcase, components, layout, pages, contracts`；
 10. `shared-css-first` 删除后不得重新引入同类 link-reordering 构建逻辑。
 
 该检查应加入日常 changed verification；完整浏览器回归仍只在 PR candidate / 手动运行时执行，
@@ -527,7 +548,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 审计当前 link 顺序与 selector/custom-property 冲突，并记录五层文件级候选
 - [x] 用 P2 canary 证明 whole-file 单层模型不等价，并回滚生产 CSS 改动
 - [x] 冻结 P0 immutable snapshot，建立独立 migration-state 骨架
-- [x] 修正目标架构为 `tokens, showcase, components, layout, pages, contracts`
+- [x] 修正目标架构为 `reset, tokens, showcase, components, layout, pages, contracts`
 - [x] 升级 verifier，使 migration-state 支持稳定 occurrence、1→N/重新归层与单向 ratchet
 - [x] 启动首个 dependency-closed production canary：`.game-stage--fill` → `layout`
 - [x] P2-B：迁移 `.game-main` 顶层默认规则，并验证 desktop 同 selector peer 的 precedence 保持
@@ -547,6 +568,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-N：迁移共享 `.game-side-row b` / `.game-side-panel b` 值文本叶子规则到 `components`；父级 row/panel 几何继续暂缓
 - [x] P2-O：迁移 `.game-drawer-title` 标题 typography 到 `components`；drawer 的 open/hidden/panel/body/scroll-lock 结构契约继续未分层
 - [x] P2-P：仅迁移 `.game-icon-btn:active` 按压状态到 `components`；hover 因未分层基础 background 会反压 layered hover 而继续暂缓，待基础按钮 dependency closure 一起迁移
+- [x] P2-Q：新增最低 `reset` layer，并将 25 条顶层 normal universal reset 作为一个 foundation closure 迁入；4 条 reduced-motion universal `!important` 继续暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
