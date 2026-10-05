@@ -589,7 +589,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-O：迁移 `.game-drawer-title` 标题 typography 到 `components`；drawer 的 open/hidden/panel/body/scroll-lock 结构契约继续未分层
 - [x] P2-P：仅迁移 `.game-icon-btn:active` 按压状态到 `components`；hover 因未分层基础 background 会反压 layered hover 而继续暂缓，待基础按钮 dependency closure 一起迁移
 - [x] P2-Q：新增最低 `reset` layer，并将 25 条顶层 normal universal reset 作为一个 foundation closure 迁入；4 条 reduced-motion universal `!important` 继续暂缓
-- [x] P2-R / #97：完成 Components Closure A；迁移 icon family 6 条（含窄屏 peers）+ Sidebar family 6 条到 `components`，保留既有 active/text/value leaves；`game-hud-box` 因 Tetris 五项 exact-selector peer 暂缓
+- [x] P2-R / #97：完成 Components Closure A；迁移 icon family 4 条 + Sidebar family 6 条到 `components`，保留既有 active/text/value leaves；两条窄屏 icon peers 经审计后保持未分层以维持既有 precedence；`game-hud-box` 因 Tetris 五项 exact-selector peer 暂缓
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

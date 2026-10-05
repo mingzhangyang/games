@@ -83,8 +83,6 @@
     "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-after.json",
     "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-hover.json",
     "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-wide-default.json",
-    "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-narrow-peer.json",
-    "tests/css-layer-migrations/rules/p2r-components-game-icon-btn-wide-narrow-peer.json",
     "tests/css-layer-migrations/rules/p2r-components-game-side-card-default.json",
     "tests/css-layer-migrations/rules/p2r-components-game-side-title-default.json",
     "tests/css-layer-migrations/rules/p2r-components-game-side-row-default.json",

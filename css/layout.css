@@ -585,10 +585,8 @@ body.drawer-locked {
         .game-topbar-center { gap: 5px; }
     }
 
-    @layer components {
-        .game-icon-btn { font-size: 14px; }
-        .game-icon-btn--wide { padding: 0 9px; }
-    }
+    .game-icon-btn { font-size: 14px; }
+    .game-icon-btn--wide { padding: 0 9px; }
     .game-overlay { padding: 16px; gap: 11px; }
     /* 页脚在手机上保留（此前是 display:none，等于没有页脚），压成单行省略 */
     .game-footer-hint {
