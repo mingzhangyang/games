@@ -581,6 +581,7 @@ body.drawer-locked {
 /* ── 响应式：窄屏压缩 ── */
 @media (width <= 480px) {
     :root { --tok-btn-size: 36px; }
+
     @layer layout {
         .game-shell { padding: 6px 8px 4px; }
     }
@@ -608,6 +609,7 @@ body.drawer-locked {
             text-overflow: ellipsis;
         }
     }
+
     @layer layout {
         .game-footer { padding: 4px 0 2px; gap: 5px; }
     }
@@ -627,6 +629,7 @@ body.drawer-locked {
             font-size: 11px;
         }
     }
+
     @layer layout {
         .game-footer { padding: 2px 0 0; gap: 4px; }
     }
