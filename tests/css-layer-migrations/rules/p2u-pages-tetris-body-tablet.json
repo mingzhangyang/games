@@ -1,1 +1,197 @@
-{"id":"p2u-pages-tetris-body-tablet","source":{"path":"css/tetris.css","context":"@media (width <= 768px)","selector":"body","contextDigest":"7d7d7b8fdf091e3087d9a06288c8e37838185bc53b5afc18bfe07e8580981d32","selectorDigest":"0847a0dfc6f43e9e652726c4730296c1ef9fa3b9afee23c4d33760b9a86f2b31","layer":null,"declarationDigest":"3f721fdb40930c7a14155e91128b7d6d06b3c5d3213274f442e4aa239b95cb7c","occurrence":1,"declarations":[{"property":"overflow-y","value":[["ident-token","auto"]],"important":false},{"property":"min-height","value":[["dimension-token","100vh"]],"important":false},{"property":"padding-bottom","value":[["function-token","calc("],["dimension-token","76px"],["whitespace-token"," "],["delim-token","+"],["whitespace-token"," "],["function-token","env("],["ident-token","safe-area-inset-bottom"],["comma-token",","],["whitespace-token"," "],["dimension-token","0px"],[")-token",")"],[")-token",")"]],"important":false}]},"destinations":[{"path":"css/tetris.css","context":"@media (width <= 768px)","selector":"body","contextDigest":"7d7d7b8fdf091e3087d9a06288c8e37838185bc53b5afc18bfe07e8580981d32","selectorDigest":"0847a0dfc6f43e9e652726c4730296c1ef9fa3b9afee23c4d33760b9a86f2b31","layer":"pages","declarationDigest":"3f721fdb40930c7a14155e91128b7d6d06b3c5d3213274f442e4aa239b95cb7c","occurrence":1}],"conflicts":{"normal":[{"property":"overflow-y","peerProperty":"overflow-y","targetLayer":"pages","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":"pages","layerPriority":"same-layer","pages":["tetris.html"]},{"property":"overflow-y","peerProperty":"overflow-y","targetLayer":"pages","peerPath":"css/tetris.css","peerContext":"@media (width <= 480px)","peerSourceLayer":null,"peerLayer":"pages","layerPriority":"same-layer","pages":["tetris.html"]},{"property":"min-height","peerProperty":"min-height","targetLayer":"pages","peerPath":"css/tetris.css","peerContext":"","peerSourceLayer":null,"peerLayer":"pages","layerPriority":"same-layer","pages":["tetris.html"]},{"property":"min-height","peerProperty":"min-height","targetLayer":"pages","peerPath":"css/tetris.css","peerContext":"@media (width <= 480px)","peerSourceLayer":null,"peerLayer":"pages","layerPriority":"same-layer","pages":["tetris.html"]}],"important":[]}}
+{
+  "id": "p2u-pages-tetris-body-tablet",
+  "source": {
+    "path": "css/tetris.css",
+    "context": "@media (width <= 768px)",
+    "selector": "body",
+    "contextDigest": "7d7d7b8fdf091e3087d9a06288c8e37838185bc53b5afc18bfe07e8580981d32",
+    "selectorDigest": "0847a0dfc6f43e9e652726c4730296c1ef9fa3b9afee23c4d33760b9a86f2b31",
+    "layer": null,
+    "declarationDigest": "3f721fdb40930c7a14155e91128b7d6d06b3c5d3213274f442e4aa239b95cb7c",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "overflow-y",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "min-height",
+        "value": [
+          [
+            "dimension-token",
+            "100vh"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding-bottom",
+        "value": [
+          [
+            "function-token",
+            "calc("
+          ],
+          [
+            "dimension-token",
+            "76px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "+"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "env("
+          ],
+          [
+            "ident-token",
+            "safe-area-inset-bottom"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "0px"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tetris.css",
+      "context": "@media (width <= 768px)",
+      "selector": "body",
+      "contextDigest": "7d7d7b8fdf091e3087d9a06288c8e37838185bc53b5afc18bfe07e8580981d32",
+      "selectorDigest": "0847a0dfc6f43e9e652726c4730296c1ef9fa3b9afee23c4d33760b9a86f2b31",
+      "layer": "pages",
+      "declarationDigest": "3f721fdb40930c7a14155e91128b7d6d06b3c5d3213274f442e4aa239b95cb7c",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "overflow-y",
+        "peerProperty": "overflow-y",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "overflow-y",
+        "peerProperty": "overflow-y",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "min-height",
+        "peerProperty": "min-height",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "min-height",
+        "peerProperty": "min-height",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "@media (width <= 480px)",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "overflow-y",
+        "peerProperty": "-webkit-overflow-scrolling",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "min-height",
+        "peerProperty": "-webkit-overflow-scrolling",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      },
+      {
+        "property": "padding-bottom",
+        "peerProperty": "-webkit-overflow-scrolling",
+        "targetLayer": "pages",
+        "peerPath": "css/tetris.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "pages",
+        "layerPriority": "same-layer",
+        "pages": [
+          "tetris.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}
