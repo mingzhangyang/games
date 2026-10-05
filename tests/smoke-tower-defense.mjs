@@ -49,13 +49,19 @@ check(requestFailures.length === 0, '启动阶段无资源请求失败', request
 const menuNavControls = await page.evaluate(() => ({
     startFooterHomeCount: document.querySelectorAll('#td-start .td-start-footer a[href="index.html"], #td-start .td-start-footer [data-chrome="home"]').length,
     startFooterSoundCount: document.querySelectorAll('#td-start #td-start-mute').length,
-    persistentFooterHomeCount: document.querySelectorAll('.td-footer [data-chrome="home"]').length,
+    headerHomeCount: document.querySelectorAll('.td-topbar [data-chrome="home"]').length,
+    persistentFooterHintCount: document.querySelectorAll('.td-footer .game-footer-hint').length,
+    persistentFooterChromeCount: document.querySelectorAll('.td-footer [data-chrome]').length,
+    persistentFooterMoreNavCount: document.querySelectorAll('.td-footer .game-footer-nav').length,
 }));
 check(
     menuNavControls.startFooterHomeCount === 0
         && menuNavControls.startFooterSoundCount === 1
-        && menuNavControls.persistentFooterHomeCount === 1,
-    '开始菜单不重复渲染 Home，底部导航只保留一个 Home',
+        && menuNavControls.headerHomeCount === 1
+        && menuNavControls.persistentFooterHintCount === 1
+        && menuNavControls.persistentFooterChromeCount === 0
+        && menuNavControls.persistentFooterMoreNavCount === 0,
+    '开始菜单不重复 Home；Header 保留唯一 Home，Footer 只保留 hint',
     JSON.stringify(menuNavControls),
 );
 
