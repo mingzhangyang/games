@@ -1,0 +1,23 @@
+{
+  "id": "p2p-components-game-icon-btn-active",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-icon-btn:active",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "65193b5da6ddcd082a385c0386af641734d5489ea19fb0806d0e63a9cbdf27ad",
+    "layer": null,
+    "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+    "occurrence": 1,
+    "declarations": [
+      {"property":"transform","value":[["function-token","scale("],["number-token","0.92"],[")-token",")"]],"important":false}
+    ]
+  },
+  "destinations": [
+    {"path":"css/layout.css","context":"","selector":".game-icon-btn:active","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"65193b5da6ddcd082a385c0386af641734d5489ea19fb0806d0e63a9cbdf27ad","layer":"components","declarationDigest":"8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c","occurrence":1}
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

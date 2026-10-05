@@ -339,7 +339,10 @@
 }
 
 .game-icon-btn:hover { background: var(--tok-panel-strong); }
-.game-icon-btn:active { transform: scale(0.92); }
+
+@layer components {
+    .game-icon-btn:active { transform: scale(0.92); }
+}
 
 /* 文字型图标钮（语言切换等）：宽度自适应，最小不低于视觉尺寸 */
 .game-icon-btn--wide {
