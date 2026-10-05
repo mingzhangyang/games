@@ -51,7 +51,6 @@
     "tests/css-layer-migrations/rules/p2n-components-game-side-row-value-default.json",
     "tests/css-layer-migrations/rules/p2n-components-game-side-panel-value-default.json",
     "tests/css-layer-migrations/rules/p2o-components-game-drawer-title-default.json",
-    "tests/css-layer-migrations/rules/p2p-components-game-icon-btn-hover.json",
     "tests/css-layer-migrations/rules/p2p-components-game-icon-btn-active.json"
   ]
 }
