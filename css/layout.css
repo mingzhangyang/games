@@ -403,9 +403,11 @@
     color: var(--tok-text-dim);
 }
 
-.game-side-row b {
-    color: var(--tok-text);
-    font-variant-numeric: tabular-nums;
+@layer components {
+    .game-side-row b {
+        color: var(--tok-text);
+        font-variant-numeric: tabular-nums;
+    }
 }
 
 .game-side-panel {
@@ -418,9 +420,11 @@
     color: var(--tok-text-dim);
 }
 
-.game-side-panel b {
-    color: var(--tok-text);
-    white-space: nowrap;
+@layer components {
+    .game-side-panel b {
+        color: var(--tok-text);
+        white-space: nowrap;
+    }
 }
 
 .game-side-kbd-row {
