@@ -661,6 +661,108 @@ verifyRuleMigrations({
 });
 assert.ok(mutationErrors.some(error => /beyond the newly registered migrations/.test(error)));
 
+// Rule retirement is an explicit append-only transaction: dead CSS may leave
+// the active stylesheet without rewriting or deleting its historical migration.
+const retireP0Base = parseMap([['css/retire-p0.css', '.dead{display:none}.keep{color:red}']]);
+const retireP0Current = parseMap([['css/retire-p0.css', '.keep{color:red}']]);
+const retireP0Source = catalogMap(retireP0Base).get('css/retire-p0.css')[0];
+const retireP0Mapping = {
+    id: 'fixture-retire-p0',
+    kind: 'retire',
+    source: sourceRef(retireP0Source),
+    destinations: [],
+    reason: 'fixture consumer was removed',
+};
+const retireP0Errors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/retire-p0.css', '', '.dead'], ['css/retire-p0.css', '', '.keep']] } },
+    state: { ...emptyState, migratedRules: [retireP0Mapping] },
+    currentParsedByPath: retireP0Current,
+    baseParsedByPath: retireP0Base,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: retireP0Errors,
+});
+assert.deepEqual(retireP0Errors, []);
+
+// Layered retirement is only legal when the source is the terminal output of
+// an already merged migration, preventing retirement from bypassing the ledger.
+const retireLayeredP0 = parseMap([['css/retire-layered.css', '.dead{display:none}']]);
+const retireLayeredBase = parseMap([['css/retire-layered.css', '@layer layout{.dead{display:none}}']]);
+const retireLayeredCurrent = parseMap([['css/retire-layered.css', '']]);
+const retireLayeredP0Rule = catalogMap(retireLayeredP0).get('css/retire-layered.css')[0];
+const retireLayeredBaseRule = catalogMap(retireLayeredBase).get('css/retire-layered.css')[0];
+const retireLayeredHistory = {
+    id: 'fixture-retire-layered-history',
+    source: sourceRef(retireLayeredP0Rule),
+    destinations: [destinationRef(retireLayeredBaseRule)],
+    conflicts: { normal: [], important: [] },
+};
+const retireLayeredMapping = {
+    id: 'fixture-retire-layered',
+    kind: 'retire',
+    source: sourceRef(retireLayeredBaseRule),
+    destinations: [],
+    reason: 'fixture consumer was removed',
+};
+const retireLayeredErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/retire-layered.css', '', '.dead']] } },
+    state: { ...emptyState, migratedRules: [retireLayeredHistory, retireLayeredMapping] },
+    currentParsedByPath: retireLayeredCurrent,
+    baseParsedByPath: retireLayeredBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: { ...emptyState, migratedRules: [retireLayeredHistory] },
+    errors: retireLayeredErrors,
+});
+assert.deepEqual(retireLayeredErrors, []);
+
+const retireStillPresentErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/retire-p0.css', '', '.dead'], ['css/retire-p0.css', '', '.keep']] } },
+    state: { ...emptyState, migratedRules: [retireP0Mapping] },
+    currentParsedByPath: retireP0Base,
+    baseParsedByPath: retireP0Base,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: retireStillPresentErrors,
+});
+assert.ok(retireStillPresentErrors.some(error => /retired selector location is still present/.test(error)));
+
+const retireWithoutHistoryErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: { ...emptyState, migratedRules: [retireLayeredMapping] },
+    currentParsedByPath: retireLayeredCurrent,
+    baseParsedByPath: retireLayeredBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: retireWithoutHistoryErrors,
+});
+assert.ok(retireWithoutHistoryErrors.some(error => /layered retirement source must be a destination/.test(error)));
+
+const retireMissingReasonErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/retire-p0.css', '', '.dead'], ['css/retire-p0.css', '', '.keep']] } },
+    state: { ...emptyState, migratedRules: [{ ...retireP0Mapping, id: 'fixture-retire-no-reason', reason: '' }] },
+    currentParsedByPath: retireP0Current,
+    baseParsedByPath: retireP0Base,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: retireMissingReasonErrors,
+});
+assert.ok(retireMissingReasonErrors.some(error => /require a non-empty reason/.test(error)));
+
 // Malformed state must fail closed with diagnostics rather than crashing the verifier.
 const malformedErrors = [];
 verifyRuleMigrations({
@@ -693,4 +795,4 @@ const modifiedErrors = [];
 verifyMonotonicState(state, modifiedState, modifiedErrors);
 assert.ok(modifiedErrors.some(error => /was modified/.test(error)));
 
-console.log('PASS CSS rule migration mapping, split, relayer, conflict and ratchet regressions');
+console.log('PASS CSS rule migration mapping, retirement, split, relayer, conflict and ratchet regressions');
