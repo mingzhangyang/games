@@ -733,7 +733,7 @@ verifyRuleMigrations({
     baseState: emptyState,
     errors: retireStillPresentErrors,
 });
-assert.ok(retireStillPresentErrors.some(error => /retired source rule is still present/.test(error)));
+assert.ok(retireStillPresentErrors.some(error => /expected at most 0 survivor/.test(error)));
 
 // A historical split may produce the same selector in multiple layers. Each
 // terminal destination is a distinct retirement source, so layer is part of
@@ -774,12 +774,15 @@ verifyRuleMigrations({
 assert.deepEqual(retireSplitErrors, []);
 
 // Stable occurrence identity also permits retiring repeated same-selector,
- // same-layer rules independently without inventing selector-level uniqueness.
+// same-layer rules independently without inventing selector-level uniqueness.
 const retireDuplicateBase = parseMap([[
     'css/retire-duplicate.css',
     '@layer layout{.x{color:red}.x{color:red}}',
 ]]);
-const retireDuplicateCurrent = parseMap([['css/retire-duplicate.css', '']]);
+const retireDuplicateCurrent = parseMap([[
+    'css/retire-duplicate.css',
+    '@layer layout{.x{color:red}}',
+]]);
 const retireDuplicateRules = catalogMap(retireDuplicateBase).get('css/retire-duplicate.css');
 const retireDuplicateHistory = retireDuplicateRules.map((rule, index) => ({
     id: 'fixture-retire-duplicate-history-' + index,
@@ -790,13 +793,13 @@ const retireDuplicateHistory = retireDuplicateRules.map((rule, index) => ({
     destinations: [destinationRef(rule)],
     conflicts: { normal: [], important: [] },
 }));
-const retireDuplicateMappings = retireDuplicateRules.map((rule, index) => ({
-    id: 'fixture-retire-duplicate-' + index,
+const retireFirstDuplicate = {
+    id: 'fixture-retire-duplicate-0',
     kind: 'retire',
-    source: sourceRef(rule),
+    source: sourceRef(retireDuplicateRules[0]),
     destinations: [],
-    reason: 'fixture duplicate destination was removed',
-}));
+    reason: 'fixture first duplicate destination was removed',
+};
 const retireDuplicateErrors = [];
 verifyRuleMigrations({
     baseline: {
@@ -809,7 +812,7 @@ verifyRuleMigrations({
     },
     state: {
         ...emptyState,
-        migratedRules: [...retireDuplicateHistory, ...retireDuplicateMappings],
+        migratedRules: [...retireDuplicateHistory, retireFirstDuplicate],
     },
     currentParsedByPath: retireDuplicateCurrent,
     baseParsedByPath: retireDuplicateBase,
@@ -820,6 +823,66 @@ verifyRuleMigrations({
     errors: retireDuplicateErrors,
 });
 assert.deepEqual(retireDuplicateErrors, []);
+
+// Historical retirement freezes the location cardinality. A later migration
+// cannot reuse that path/context/selector/layer with different declarations.
+const reintroP0 = parseMap([['css/reintro.css', '.x{color:red}.x{color:blue}']]);
+const reintroHistoricalStage = parseMap([[
+    'css/reintro.css',
+    '@layer layout{.x{color:red}}.x{color:blue}',
+]]);
+const reintroBase = parseMap([['css/reintro.css', '.x{color:blue}']]);
+const reintroCurrent = parseMap([['css/reintro.css', '@layer layout{.x{color:blue}}']]);
+const reintroP0Rules = catalogMap(reintroP0).get('css/reintro.css');
+const reintroHistoricalRules = catalogMap(reintroHistoricalStage).get('css/reintro.css');
+const reintroBaseRule = catalogMap(reintroBase).get('css/reintro.css')[0];
+const reintroCurrentRule = catalogMap(reintroCurrent).get('css/reintro.css')[0];
+const reintroHistory = {
+    id: 'fixture-reintro-history',
+    source: sourceRef(reintroP0Rules[0]),
+    destinations: [destinationRef(reintroHistoricalRules[0])],
+    conflicts: { normal: [], important: [] },
+};
+const reintroRetirement = {
+    id: 'fixture-reintro-retirement',
+    kind: 'retire',
+    source: sourceRef(reintroHistoricalRules[0]),
+    destinations: [],
+    reason: 'fixture historical rule was removed',
+};
+const reintroMigration = {
+    id: 'fixture-reintro-migration',
+    source: sourceRef(reintroBaseRule),
+    destinations: [destinationRef(reintroCurrentRule)],
+    conflicts: { normal: [], important: [] },
+};
+const reintroErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [
+                ['css/reintro.css', '', '.x'],
+                ['css/reintro.css', '', '.x'],
+            ],
+        },
+    },
+    state: {
+        ...emptyState,
+        migratedRules: [reintroHistory, reintroRetirement, reintroMigration],
+    },
+    currentParsedByPath: reintroCurrent,
+    baseParsedByPath: reintroBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: {
+        ...emptyState,
+        migratedRules: [reintroHistory, reintroRetirement],
+    },
+    errors: reintroErrors,
+});
+assert.ok(reintroErrors.some(error => /reintroduces a previously retired rule location/.test(error)));
+assert.ok(reintroErrors.some(error => /expected at most 0 survivor/.test(error)));
 
 // Conflict analysis uses the post-transaction peer graph. A peer retired in the
 // same transaction must not create conflict metadata for a surviving migration.
