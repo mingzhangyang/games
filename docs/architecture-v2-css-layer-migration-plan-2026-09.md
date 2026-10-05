@@ -354,6 +354,13 @@ box-sizing，也不改变父级 flex/grid/overflow。页面专属 `.xx-side-row 
 继续未分层并保留原有覆盖优先级，因此这两条可以独立归入 `components`。父级
 `.game-side-row` / `.game-side-panel` 仍含 padding / gap / alignment 等几何属性，本批不迁。
 
+**P2-O drawer title typography：** `.game-drawer-title` 只是 drawer 标题的字号、字重、字距和
+文字颜色；不负责 drawer 的 position、display、transform、overflow、尺寸或开合状态，因此可
+作为叶子 UI component 独立迁入 `components`。Science Showcase 的
+`.science-showcase .game-drawer-title` 仍以更具体选择器和 `!important` 保持当前主题颜色。
+`.game-drawer`、panel/head/body/handle 与 open/hidden/scroll-lock 等结构规则继续留在未分层
+contracts 路径，不与本批混合。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -530,6 +537,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-L：迁移共享 `.game-btn` / `.game-btn > svg` 文案按钮排版到 `components`；页面按钮皮肤继续保持未分层优先，不触碰 reset-sensitive/shared contracts
 - [x] P2-M：迁移共享 `.game-side-text` / `.game-side-text b` 侧栏文字默认值到 `components`；side-card/title/row 的 reset-sensitive 几何继续暂缓
 - [x] P2-N：迁移共享 `.game-side-row b` / `.game-side-panel b` 值文本叶子规则到 `components`；父级 row/panel 几何继续暂缓
+- [x] P2-O：迁移 `.game-drawer-title` 标题 typography 到 `components`；drawer 的 open/hidden/panel/body/scroll-lock 结构契约继续未分层
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
