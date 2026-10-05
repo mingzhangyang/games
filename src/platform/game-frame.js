@@ -47,6 +47,22 @@ export function bindFrame(opts = {}) {
     let burstCount = 0;     // 窗口内写入次数
     let locked = false;     // 振荡锁定：不再写、只告警
 
+    function hintOnlyFooterReserve() {
+        if (!footer || footer.children.length !== 1
+            || !footer.firstElementChild?.classList.contains('game-footer-hint')) return 0;
+
+        // 2026-10-05 footer cleanup removed the Home / More action row, but the
+        // CSS-layer migration is still under the frozen P0 geometry contract.
+        // Preserve that row's *layout budget* without preserving any visible or
+        // interactive placeholder. Derive it from the same shared tokens/rules
+        // that sized the removed row so responsive button/gap changes stay exact.
+        const rootStyle = getComputedStyle(document.documentElement);
+        const footerStyle = getComputedStyle(footer);
+        const buttonSize = parseFloat(rootStyle.getPropertyValue('--tok-btn-size')) || 0;
+        const gap = parseFloat(footerStyle.rowGap || footerStyle.gap) || 0;
+        return buttonSize + gap;
+    }
+
     function measure() {
         let chrome = 0;
         const cs = getComputedStyle(shell);
@@ -55,6 +71,7 @@ export function bindFrame(opts = {}) {
         [topbar, footer].forEach(el => {
             if (el) chrome += el.getBoundingClientRect().height;
         });
+        chrome += hintOnlyFooterReserve();
         if (typeof extraChrome === 'function') {
             try {
                 chrome += extraChrome() || 0;
