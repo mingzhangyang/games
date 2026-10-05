@@ -10,109 +10,19 @@
     "declarationDigest": "08dddc9e2a6849290d7028ea4a0a0f7c95d34b0eb24090456ca1941476202bda",
     "occurrence": 1,
     "declarations": [
-      {
-        "property": "margin",
-        "value": [
-          [
-            "number-token",
-            "0"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "padding",
-        "value": [
-          [
-            "number-token",
-            "0"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "box-sizing",
-        "value": [
-          [
-            "ident-token",
-            "border-box"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "-webkit-tap-highlight-color",
-        "value": [
-          [
-            "ident-token",
-            "transparent"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "-webkit-touch-callout",
-        "value": [
-          [
-            "ident-token",
-            "none"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "-webkit-user-select",
-        "value": [
-          [
-            "ident-token",
-            "none"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "-moz-user-select",
-        "value": [
-          [
-            "ident-token",
-            "none"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "-ms-user-select",
-        "value": [
-          [
-            "ident-token",
-            "none"
-          ]
-        ],
-        "important": false
-      },
-      {
-        "property": "user-select",
-        "value": [
-          [
-            "ident-token",
-            "none"
-          ]
-        ],
-        "important": false
-      }
+      {"property":"margin","value":[["number-token","0"]],"important":false},
+      {"property":"padding","value":[["number-token","0"]],"important":false},
+      {"property":"box-sizing","value":[["ident-token","border-box"]],"important":false},
+      {"property":"-webkit-tap-highlight-color","value":[["ident-token","transparent"]],"important":false},
+      {"property":"-webkit-touch-callout","value":[["ident-token","none"]],"important":false},
+      {"property":"-webkit-user-select","value":[["ident-token","none"]],"important":false},
+      {"property":"-moz-user-select","value":[["ident-token","none"]],"important":false},
+      {"property":"-ms-user-select","value":[["ident-token","none"]],"important":false},
+      {"property":"user-select","value":[["ident-token","none"]],"important":false}
     ]
   },
   "destinations": [
-    {
-      "path": "css/tetris.css",
-      "context": "",
-      "selector": "*",
-      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "selectorDigest": "1e40ec70d680ea5741faa8c9b0516fbe44242df1b5f926fa8b425c3599adbd31",
-      "layer": "reset",
-      "declarationDigest": "08dddc9e2a6849290d7028ea4a0a0f7c95d34b0eb24090456ca1941476202bda",
-      "occurrence": 1
-    }
+    {"path":"css/tetris.css","context":"","selector":"*","contextDigest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","selectorDigest":"1e40ec70d680ea5741faa8c9b0516fbe44242df1b5f926fa8b425c3599adbd31","layer":"reset","declarationDigest":"08dddc9e2a6849290d7028ea4a0a0f7c95d34b0eb24090456ca1941476202bda","occurrence":1}
   ],
   "conflicts": {
     "normal": [],
