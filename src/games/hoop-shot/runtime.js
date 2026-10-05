@@ -996,8 +996,11 @@ export class HoopShotGame {
         }
         this.canvas.width = Math.round(cssWidth * dpr);
         this.canvas.height = Math.round(cssHeight * dpr);
-        this.canvas.style.width = `${cssWidth}px`;
-        this.canvas.style.height = `${cssHeight}px`;
+        // CSS owns the visual box (width: 100%); only resize the backing store here.
+        // Inline CSS sizing can become a flex min-content constraint and self-lock the
+        // stage before bindFrame() finishes its first geometry pass.
+        this.canvas.style.removeProperty('width');
+        this.canvas.style.removeProperty('height');
         this.scale = (cssWidth / WORLD_W) * dpr;
         this.buildStarfield();
     }
