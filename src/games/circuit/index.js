@@ -29,7 +29,7 @@ onReady(() => {
             ICONS,
             getText,
         },
-        chrome: { owns: ['more'], getText },
+        chrome: { getText },
     });
 
     window.ccDrawer = window.ccRuntime.drawer;

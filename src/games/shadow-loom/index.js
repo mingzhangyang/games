@@ -31,7 +31,7 @@ onReady(() => {
             getText,
         },
         chrome: {
-            owns: ['more', 'home', 'sound'],
+            owns: ['home', 'sound'],
             getText,
         },
     });
