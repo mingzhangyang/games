@@ -42,7 +42,6 @@ onReady(() => {
             getText,
         },
         chrome: {
-            owns: ['more'],
             getText,
             labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
         },

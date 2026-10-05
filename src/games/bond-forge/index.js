@@ -31,7 +31,7 @@ onReady(() => {
             ICONS,
             getText,
         },
-        chrome: { owns: ['more', 'home'], getText },
+        chrome: { owns: ['home'], getText },
         resize: g => g && g.resize(),
     });
 

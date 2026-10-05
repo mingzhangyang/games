@@ -28,7 +28,7 @@ onReady(() => {
             ICONS,
             getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
         },
-        chrome: { owns: ['more'], getText: () => LANGUAGES[getLang()] || LANGUAGES.en },
+        chrome: { getText: () => LANGUAGES[getLang()] || LANGUAGES.en },
     });
 
     window.lmDrawer = window.lmRuntime.drawer;

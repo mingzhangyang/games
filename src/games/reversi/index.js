@@ -716,7 +716,6 @@ onReady(() => {
         self: 'reversi.html',
         frame: false,
         chrome: {
-            owns: ['more'],
             getText,
             labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
         },

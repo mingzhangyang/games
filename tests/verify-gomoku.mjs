@@ -147,11 +147,11 @@ await page.goto(BASE + '/gomoku.html', { waitUntil: 'networkidle2' });
 await new Promise(r => setTimeout(r, 800));
 const enBoot = await page.evaluate(() => ({
     htmlLang: document.documentElement.lang,
-    moreAria: (document.querySelector('[data-chrome="more"]') || { getAttribute: () => null }).getAttribute('aria-label'),
+    homeAria: (document.querySelector('.game-topbar [data-chrome="home"]') || { getAttribute: () => null }).getAttribute('aria-label'),
     langBtn: !!document.getElementById('langBtn'),
 }));
 check(/^en/.test(enBoot.htmlLang), '预置 en 后 boot：<html lang> 以 en 开头', enBoot.htmlLang);
-check(enBoot.moreAria === 'More games', '预置 en 后 boot：顶栏共享文案为英文', String(enBoot.moreAria));
+check(enBoot.homeAria === 'Home', '预置 en 后 boot：顶栏 Home 文案为英文', String(enBoot.homeAria));
 check(!enBoot.langBtn, '预置 en 后 boot：仍无语言钮', String(enBoot.langBtn));
 
 await browser.close();

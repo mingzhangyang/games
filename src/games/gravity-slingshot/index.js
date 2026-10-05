@@ -40,7 +40,7 @@ onReady(() => {
             getText,
         },
         chrome: {
-            owns: ['more', 'home'],
+            owns: ['home'],
             getText,
             labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
         },

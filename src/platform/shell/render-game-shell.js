@@ -61,11 +61,6 @@ export function renderGameShell(game, {
         </main>
         <footer class="game-footer">
             <p class="game-footer-hint" data-i18n="hint"></p>
-            <div class="game-topbar-group">
-                <a class="game-icon-btn" data-chrome="home" href="index.html" aria-label="Home"></a>
-                <button class="game-icon-btn" data-chrome="more" aria-controls="${prefix}MoreNav" aria-expanded="false" type="button"></button>
-            </div>
-            <nav class="more-games game-footer-nav" id="${prefix}MoreNav" hidden></nav>
         </footer>
     </div>
     <div class="game-drawer" id="${prefix}StatsDrawer" hidden>

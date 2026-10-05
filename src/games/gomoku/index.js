@@ -923,7 +923,7 @@ onReady(() => {
         self: 'gomoku.html',
         frame: false,
         chrome: {
-            owns: ['more', 'sound'],
+            owns: ['sound'],
             getText,
             labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
         },

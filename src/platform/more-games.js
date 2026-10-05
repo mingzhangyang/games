@@ -32,9 +32,8 @@ export const MORE_GAMES = [
 
 /**
  * 往一个空容器里生成「更多游戏」导航条（含标题 + 链接），排除自身。
- * 页面用静态 <nav class="more-games"> 的走 updateMoreGames()；
- * 页脚按需展开的那种走本函数（内容在首次展开时才建，既能省首屏 DOM，
- * 又保证链接文案用的是点开那一刻的语言）。
+ * 静态 <nav class="more-games"> 可走 updateMoreGames()；动态侧栏 / 菜单容器
+ * 可直接调用本函数生成推荐内容。
  *
  * @param {Element} container  目标容器（会被清空重建）
  * @param {object}  [opts]
@@ -67,9 +66,6 @@ export function updateMoreGames(lang) {
     if (!navs.length) return;
 
     navs.forEach(nav => {
-        // 页脚导航由 game-chrome.js 在展开时重建整块（它会重写标题与链接），
-        // 这里跳过它，避免两个写入者互相覆盖。
-        if (nav.id && /MoreNav$/.test(nav.id)) return;
         const title = nav.querySelector('.more-games-title');
         if (title) {
             title.textContent = isZh ? '🎮 更多游戏' : '🎮 MORE GAMES';

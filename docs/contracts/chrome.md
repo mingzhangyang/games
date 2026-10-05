@@ -1,4 +1,4 @@
-# Chrome 契约：Header 三槽位 / Footer / bindChrome
+# Chrome 契约：Header 三槽位 / Hint-only Footer / bindChrome
 
 > 现行契约。底稿（2026-09-19 迁移轮的完整过程记录）见 `docs/archive/header-footer-contract-2026-09-19.md`；
 > 盒子几何（容器 / 顶栏尺寸 / 舞台 / 侧栏）见 `docs/contracts/layout.md`。
@@ -38,53 +38,40 @@ Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇�
 > 跨标签页为「下次加载生效」。`verify-chrome.mjs` 对游戏页语言钮做**负向断言**
 > （出现即失败）。历史上的「文字钮显示目标语言自称」规格随 UI 作废。
 
-### 1.2 Footer：持久页脚，随流在底部
+### 1.2 Footer：只保留操作提示
 
 ```html
 <footer class="xx-footer game-footer">
   <p class="xx-footer-hint game-footer-hint" id="xx-hint">操作提示</p>
-  <div class="xx-footer-actions game-footer-actions game-topbar-group">
-    <a data-chrome="home" href="index.html">
-    <button data-chrome="more" aria-expanded aria-controls="xxMoreNav">
-  </div>
-  <nav class="more-games game-footer-nav" id="xxMoreNav" hidden></nav>
 </footer>
 ```
 
-- **有状态的开关（Sound）只在 header**，页脚只放无状态导航 + 操作提示：
-  每个开关只有一个真源，避开本仓库反复踩过的「同一标签多处写入」。
-- **随流，不用 sticky / fixed**：否则会与 tetris 的 `.mobile-controls`（z-index 1000）、
-  底部统计抽屉（1200）、各页结算浮层抢层级，还会吃掉竖版画布的可用高度。
-- **手机上可见**：`.game-footer-hint` 永不 `display:none`，窄屏 / 矮屏压成单行省略。
-- 开始浮层里原有的 `.xx-start-footer` / `.na-footer-bar` 保留不动（首屏的跨游戏推荐位；
-  其中的语言钮已于 2026-09-21 随收敛一起移除）。
+- 游戏页 Footer 不再重复 Home，也不再放“更多游戏”展开按钮；Home 的唯一固定入口在 Header。
+- 跨游戏推荐仍可存在于侧栏、开始菜单等内容区域，由 `more-games` 组件负责，不属于 Chrome。
+- Footer 继续随流，不使用 sticky / fixed；手机上 `.game-footer-hint` 保持可见。
+- 首页 `index.html` 的语言 / 主题 Footer 属于落地页自己的 UI，不受游戏页 Footer 契约约束。
 
 ### 1.3 行为：`bindChrome`
 
 ```js
 bindChrome({
-    self: 'planet-merge.html',          // 从「更多游戏」里排除自身
-    owns: ['more'],                     // 本模块接管点击的角色（默认 ['more']）
+    owns: ['home'], // 仅无 href 的 Home <button> 需要交给 chrome；普通 <a href> 不需要
     getText: () => LANGUAGES[getLang()] || LANGUAGES.en,
     labels: { pause: () => (LANGUAGES[getLang()] || {}).pause },
 });
 ```
 
-职责边界（每个标签只有一个写入者）：
+职责边界：
 
 | 角色 | 文案 / 图标 | 点击 |
 | --- | --- | --- |
-| `home` | `bindChrome` | 各页自己（多为 `<a href>`；na / bond-forge / silk-dew 顶栏是无 href 的 `<button>`，交给 chrome） |
-| `sound` | `bindChrome`（图标 + `aria-pressed`） | **各页自己**（见下方警告） |
-| `more` | `bindChrome` | `bindChrome` |
+| `home` | `bindChrome` | 普通 `<a href>` 自带导航；无 href 的按钮可由 chrome 接管 |
+| `sound` | `bindChrome`（图标 + `aria-pressed`） | 默认由各页自己；只有没有 handler 的页才把 `'sound'` 放进 `owns` |
 | `stats` | `src/platform/game-drawer.js` | `src/platform/game-drawer.js` |
-| `pause` | 各页经 `labels.pause` 提供，`bindChrome` 落笔 | 各页自己 |
+| `pause` | 页面经 `labels.pause` 提供，`bindChrome` 落笔 | 各页自己 |
 
-> ⚠️ **`owns` 默认不含 `sound`。** 9 个页面的顶栏静音钮早就有自己的 handler（而且各自还要
-> 顺带做 `SFX.init()` / `updateMute()` 这类页面私事）。chrome 再挂一个，一次点击就会切换两次，
-> **净效果为零** —— 按钮看起来"没反应"，而所有几何 / 标签断言依然全绿。
-> 只有本来没有 handler 的新钮（gomoku / tetris）才显式传 `'sound'`。
-> `verify-chrome.mjs` 的「点一次 `site_muted` 必须翻转」就是专门堵这个的。
+`bindChrome` 不再处理 `more`。推荐列表由 `src/platform/more-games.js` 独立渲染，
+避免导航控件与推荐内容再次耦合。
 
 ### 1.4 语义标签（P3-3 并入）
 
@@ -172,16 +159,15 @@ node tests/verify-registry.mjs
 
 1. 顶栏三槽位齐全；右簇通用钮顺序符合契约
 2. 页面至少一个 `<h1>`（`h1Count >= 1`，可为 `.sr-only`）—— P3-3 并入
-3. `home` / `sound` / `more` / `pause` 的 `title` 与 `aria-label` 非空
+3. `home` / `sound` / `pause` 的 `title` 与 `aria-label` 非空
 4. 页脚在 390 宽下**可见**，hint 非空
 5. 游戏页**不得出现语言钮**（负向断言；2026-09-21 语言 UI 收敛到首页后新增，
    取代历史上的「点一次语言钮 UI 必须换语言」）
 6. 点一次静音钮：`site_muted` 必须翻转（双绑导致的「切两次 = 没切」会被抓出来）
-7. 页脚「更多游戏」展开后 `aria-expanded=true`、列表非空、不含自链接
-8. 顶栏首页钮点击后真的导航回 `index.html`（行为断言，防死按钮）
-9. 全程无 `pageerror`
+7. 顶栏首页钮点击后真的导航回 `index.html`（行为断言，防死按钮）
+8. Footer 不含 `data-chrome` 控件或 `.game-footer-nav`；全程无 `pageerror`
 
-> ⚠️ **覆盖范围陷阱**：上面的 ①–⑨ 只遍历 `registry.withCap('topbar')` 的页面。
+> ⚠️ **覆盖范围陷阱**：上面的 ①–⑧ 只遍历 `registry.withCap('topbar')` 的页面。
 > tank-battle / math-rain 这类豁免页根本不进循环 —— 它们的语言钮回归**一条断言都抓不到**。
 > 补齐手段是静态源扫描守卫 `tests/verify-no-game-lang.mjs`（无需起服务，1 秒内）：
 > 扫全部 `*.html` + `js/**`，禁 `setLang(` / `selectLanguage(` / `switchLanguage(` /

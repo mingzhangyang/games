@@ -236,7 +236,7 @@ onReady(() => {
         more: '#fsStartMore',
         chrome: {
             getText,
-            owns: ['more', 'home', 'sound'],
+            owns: ['home', 'sound'],
             isMuted: getMuted,
             onToggleMute: m => { setMuted(m); if (!m) game.audio.prime(); },
         },

@@ -69,7 +69,7 @@ onReady(() => {
             isBusy: () => game.isRunning(),
             getText: () => TEXT[getLang()] || TEXT.en,
         },
-        chrome: { owns: ['more'], getText: () => TEXT[getLang()] || TEXT.en },
+        chrome: { getText: () => TEXT[getLang()] || TEXT.en },
     });
 });
 `;

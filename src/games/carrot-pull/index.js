@@ -30,7 +30,7 @@ onReady(() => {
             ICONS,
             getText,
         },
-        chrome: { getText, owns: ['more', 'home', 'sound'] },
+        chrome: { getText, owns: ['home', 'sound'] },
     });
 
     window.cpDrawer = window.cpRuntime.drawer;
