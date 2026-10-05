@@ -5,7 +5,8 @@
 // 不像 body 那样 flex 居中）里被顶到**左边缘**。肉眼在宽屏上很扎眼，但所有既有
 // 校验器都测不到 —— 它们量的是游戏页的画布/侧栏/热区，没人量落地页的居中度。
 //
-// 判据：skew = 左间隙 − 右间隙，|skew| ≤ 2px 视为居中。五档视口全覆盖。
+// 判据：skew = 左间隙 − 右间隙，|skew| ≤ 2px 视为居中。六档视口全覆盖；
+// 同时守住 pages > layout 后首页 footer 在窄屏 / 矮屏 / 两者叠加时的 spacing。
 // 用法：node tests/verify-index-layout.mjs [baseUrl]（需静态服务器）
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -23,6 +24,7 @@ const VIEWPORTS = [
     { w: 1440, h: 900, label: 'desktop-1440' },
     { w: 1024, h: 800, label: 'tablet-1024' },
     { w: 768, h: 900, label: 'mobile-768' },
+    { w: 768, h: 680, label: 'short-768' },
     { w: 390, h: 844, label: 'phone-390' },
     { w: 320, h: 568, label: 'phone-320' },
 ];
@@ -47,11 +49,20 @@ for (const vp of VIEWPORTS) {
                 skew: Math.round(r.left - (document.documentElement.clientWidth - r.right)),
             };
         };
+        const footer = document.querySelector('.game-footer');
+        const footerCss = footer ? getComputedStyle(footer) : null;
         return {
             vw: document.documentElement.clientWidth,
             hub: pick('.daily-hub'),
             games: pick('.games-section'),
             perks: pick('.perks'),
+            footer: footerCss ? {
+                gap: footerCss.gap,
+                paddingTop: footerCss.paddingTop,
+                paddingRight: footerCss.paddingRight,
+                paddingBottom: footerCss.paddingBottom,
+                paddingLeft: footerCss.paddingLeft,
+            } : null,
             cards: document.querySelectorAll('.game-card').length,
             lumen: !!document.getElementById('lumen-name'),
             circuit: !!document.getElementById('circuit-name'),
@@ -59,10 +70,26 @@ for (const vp of VIEWPORTS) {
     });
 
     const bad = [];
-    for (const [k, v] of Object.entries(m)) {
-        if (!v || typeof v !== 'object') continue;
-        if (Math.abs(v.skew) > 2) bad.push(`${k} skew=${v.skew}`);
+    for (const k of ['hub', 'games', 'perks']) {
+        const v = m[k];
+        if (v && Math.abs(v.skew) > 2) bad.push(`${k} skew=${v.skew}`);
     }
+
+    // #99: page-layer footer spacing must keep winning over both responsive
+    // layout peers. 390×844 = narrow only, 768×680 = short only,
+    // 320×568 = narrow + short simultaneously.
+    const checksFooterSpacing = vp.w <= 480 || vp.h <= 720;
+    if (checksFooterSpacing) {
+        const f = m.footer;
+        const footerOk = f
+            && f.gap === '10px'
+            && f.paddingTop === '20px'
+            && f.paddingRight === '0px'
+            && f.paddingBottom === '28px'
+            && f.paddingLeft === '0px';
+        if (!footerOk) bad.push(`footer spacing=${JSON.stringify(f)}`);
+    }
+
     if (bad.length) failed++;
     const mark = bad.length ? '✗' : '✓';
     console.log(`${mark} ${vp.label.padEnd(14)} vw=${m.vw}  cards=${m.cards}  lumen=${m.lumen} circuit=${m.circuit}`);
@@ -70,7 +97,11 @@ for (const vp of VIEWPORTS) {
         const v = m[k];
         if (v) console.log(`     ${k.padEnd(6)} w=${String(v.width).padStart(4)} left=${String(v.left).padStart(4)} right=${String(v.right).padStart(4)} skew=${v.skew}`);
     }
-    if (bad.length) console.log(`     ↳ 未居中: ${bad.join(', ')}`);
+    if (checksFooterSpacing) {
+        const f = m.footer;
+        console.log(`     footer gap=${f?.gap ?? 'missing'} padding=${f ? [f.paddingTop, f.paddingRight, f.paddingBottom, f.paddingLeft].join(' ') : 'missing'}`);
+    }
+    if (bad.length) console.log(`     ↳ 回归: ${bad.join(', ')}`);
 }
 
 await browser.close();
