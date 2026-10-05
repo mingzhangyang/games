@@ -679,13 +679,12 @@
      *
      *   --stage-w = min(--frame-stage-h, 100dvh - --frame-chrome) × --frame-ratio
      *
-     * --frame-chrome 由 src/platform/game-frame.js 实测（顶栏+页脚+shell 内距，td 另加技能条）
+     * --frame-chrome 由 src/platform/game-frame.js 实测（顶栏+页脚+shell 内距）
      * 写进 .game-shell 的内联样式，CSS 里的 150px 只兜首帧。
      *
-     * ⚠️ 选择加入：只有覆盖了 --frame-shell-max / --frame-stage-cap 的页面
-     * （六个画布游戏）才消费 --stage-w；其余页面（tetris/gomoku/reversi/
-     * minesweeper/word-daily）回落到旧契约的 --frame-max-wide / --frame-stage，
-     * 棋盘几何不受影响。页面侧的覆盖形如：
+     * ⚠️ 选择加入：registry 带 frame-budget cap 的标准页面由 bindFrame() 打标并消费
+     * 桌面纵向预算；页面是否覆盖 --frame-shell-max / --frame-stage-cap 决定舞台宽度
+     * 是否由 --stage-w 驱动。未覆盖消费变量的页面仍回落共享默认值。页面侧覆盖形如：
      *     .xx-shell {
      *         --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
      *         --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
@@ -722,45 +721,43 @@
             flex-shrink: 0;
         }
     }
-    /* 过长的侧栏锁到同一可用高度、内部滚动
-       —— 这一条单独消灭 td 的 1998px 整页与 sf 的 1097px。
-       ⚠️ 必须和 --frame-shell-max / --frame-stage-cap 一样「选择加入」：
-       它是本段里唯一会改**双属性**（max-height + overflow-y）的规则，无法靠
-       var() 回退自行失效。写成无条件规则时它越界命中了 tetris —— 侧栏（488×930）
-       变成可滚容器且带 overscroll-behavior: contain，鼠标落在侧栏上滚轮就再也
-       传不到主文档，verify-tetris-topbar-mobile 的「滚轮下滚能滚起来」因此变红。
-       判据取「本页接没接纵向预算」这个不随视口变化的事实：由 src/platform/game-frame.js
-       的 bindFrame() 打 body 类，与 game-drawer.js 的 has-stats-drawer 同模式。 */
-    body.has-frame-budget .game-sidebar {
-        max-height: calc(100dvh - var(--frame-chrome));
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        /* Firefox */
-        scrollbar-width: thin;
-        scrollbar-color: var(--frame-scrollbar-thumb) transparent;
+    /* 过长的侧栏锁到同一可用高度、内部滚动。
+       这是 frame-budget 的结构不变量：只有 bindFrame() 明确打上 has-frame-budget
+       的页面才会命中，避免把未接入页面意外变成嵌套滚动容器。 */
+    @layer contracts {
+        body.has-frame-budget .game-sidebar {
+            max-height: calc(100dvh - var(--frame-chrome));
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
     }
 
-    /* 细滚动条 —— 配色取玻璃语言的白色半透明（与 .game-side-card 的填充/描边同源），
-       不用 --tok-accent：六页都没覆盖它，橙色系的 hoop-shot 上会显出靛蓝色。
-       想换肤的页面覆盖 --frame-scrollbar-thumb / -hover 即可。
-       ⚠️ 必须同时写 ::-webkit-scrollbar：scrollbar-width 在 Blink 要 Chrome 121+
-       才支持（本仓回归用的 puppeteer 是 119），只写它等于什么都没做。 */
-    body.has-frame-budget .game-sidebar::-webkit-scrollbar {
-        width: 6px;
-    }
+    /* 细滚动条属于共享皮肤，不承担 frame-budget 的结构约束。
+       Firefox 与 WebKit 两套声明保持在同一个 dependency closure 中，但归 components；
+       页面如需换肤只覆盖 --frame-scrollbar-thumb / -hover。 */
+    @layer components {
+        body.has-frame-budget .game-sidebar {
+            scrollbar-width: thin;
+            scrollbar-color: var(--frame-scrollbar-thumb) transparent;
+        }
 
-    body.has-frame-budget .game-sidebar::-webkit-scrollbar-track {
-        background: transparent;
-    }
+        body.has-frame-budget .game-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
 
-    body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb {
-        background: var(--frame-scrollbar-thumb);
-        border-radius: 99px;
-    }
+        body.has-frame-budget .game-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
 
-    body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb,
-    body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb:hover {
-        background: var(--frame-scrollbar-thumb-hover);
+        body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb {
+            background: var(--frame-scrollbar-thumb);
+            border-radius: 99px;
+        }
+
+        body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb,
+        body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--frame-scrollbar-thumb-hover);
+        }
     }
     /* 桌面端共享统计抽屉必须退场；stats 按钮本身存在 immersive 页面例外，继续留给后续 dependency closure。 */
     @layer contracts {
