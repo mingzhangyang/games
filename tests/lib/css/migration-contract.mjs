@@ -472,10 +472,11 @@ function isRetirement(mapping) {
     return mapping?.kind === 'retire';
 }
 
-function sameSelectorLocation(actual, expected) {
+function sameRuleLocation(actual, expected) {
     return actual.path === expected.path
         && actual.contextDigest === expected.contextDigest
-        && actual.selectorDigest === expected.selectorDigest;
+        && actual.selectorDigest === expected.selectorDigest
+        && actual.layer === (expected.layer || null);
 }
 
 function verifyMappingShape(mapping, allowedLayers, errors) {
@@ -582,8 +583,8 @@ export function verifyRuleMigrations({
         }
         if (isRetirement(mapping)) {
             const currentCatalog = currentCatalogs.get(mapping.source.path) || [];
-            if (currentCatalog.some(rule => sameSelectorLocation(rule, mapping.source))) {
-                errors.push(mapping.id + ': retired selector location is still present in current CSS.');
+            if (currentCatalog.some(rule => sameRuleLocation(rule, mapping.source))) {
+                errors.push(mapping.id + ': retired rule location is still present in current CSS.');
             }
         }
     }
@@ -638,9 +639,9 @@ export function verifyRuleMigrations({
             errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
         }
         if (isRetirement(mapping)) {
-            const locationMatches = baseCatalog.filter(rule => sameSelectorLocation(rule, mapping.source));
+            const locationMatches = baseCatalog.filter(rule => sameRuleLocation(rule, mapping.source));
             if (locationMatches.length !== 1) {
-                errors.push(mapping.id + ': retirement source selector must resolve to exactly one comparison-base rule.');
+                errors.push(mapping.id + ': retirement source location must resolve to exactly one comparison-base rule.');
             }
             if (mapping.source.layer !== null) {
                 const historicalDestination = [...baseMappings.values()].some(previous =>
@@ -715,6 +716,20 @@ export function verifyRuleMigrations({
         }
     }
 
+    // Conflict review models the post-transaction peer graph. Rules retired in
+    // this transaction are still required in baseCatalogs for source/provenance
+    // and residual validation, but they are no longer cascade peers.
+    const retiredRefsByPath = new Map();
+    for (const mapping of mappings.values()) {
+        if (baseMappings.has(mapping.id) || !validMappings.has(mapping.id) || !isRetirement(mapping)) continue;
+        if (!retiredRefsByPath.has(mapping.source.path)) retiredRefsByPath.set(mapping.source.path, []);
+        retiredRefsByPath.get(mapping.source.path).push(mapping.source);
+    }
+    const conflictBaseCatalogs = new Map([...baseCatalogs].map(([path, catalog]) => [
+        path,
+        filterCatalog(catalog, retiredRefsByPath.get(path) || [], true),
+    ]));
+
     const projectedEntries = new Map();
     const projectedLayers = new Map();
     for (const { sourceRule, assignments } of pendingConflictReviews) {
@@ -733,7 +748,7 @@ export function verifyRuleMigrations({
     for (const { mapping, sourceRule, currentDestinationRules } of pendingConflictReviews) {
         verifyConflictReview(mapping,
             analyzeExactConflicts(
-                mapping, sourceRule, currentDestinationRules, baseCatalogs,
+                mapping, sourceRule, currentDestinationRules, conflictBaseCatalogs,
                 stylesheetLinks, layerOrder, projectedLayers,
             ), errors);
     }
