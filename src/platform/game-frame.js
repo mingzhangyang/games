@@ -21,6 +21,27 @@
  *    ③ 所有测量/写入合并进 requestAnimationFrame，每帧至多一轮。
  */
 
+export function measureHintOnlyFooterReserve(shell) {
+    if (!shell) return 0;
+    const footer = shell.querySelector(':scope > .game-footer');
+    const topbar = shell.querySelector(':scope > .game-topbar');
+    if (!footer || footer.children.length !== 1
+        || !footer.firstElementChild?.classList.contains('game-footer-hint')) return 0;
+
+    // Footer cleanup removed the Home / More action row while the CSS-layer
+    // migration still freezes P0 geometry. Keep only that row's layout budget.
+    // Prefer a live header icon button so page-specific min-height/cascade
+    // (for example science-showcase) is reflected; the token is a fallback.
+    const footerStyle = getComputedStyle(footer);
+    const referenceButton = topbar?.querySelector('.game-icon-btn');
+    const measuredButtonHeight = referenceButton?.getBoundingClientRect().height || 0;
+    const tokenButtonHeight = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--tok-btn-size'),
+    ) || 0;
+    const gap = parseFloat(footerStyle.rowGap || footerStyle.gap) || 0;
+    return (measuredButtonHeight || tokenButtonHeight) + gap;
+}
+
 export function bindFrame(opts = {}) {
     // layout: 'standard'（默认，桌面纵向预算）| 'immersive'（games.config.json 的 layout 字段，
     // 见 css/layout.css 末尾与 docs/contracts/layout.md §7）。immersive 的页脚在首屏之下，
@@ -47,25 +68,6 @@ export function bindFrame(opts = {}) {
     let burstCount = 0;     // 窗口内写入次数
     let locked = false;     // 振荡锁定：不再写、只告警
 
-    function hintOnlyFooterReserve() {
-        if (!footer || footer.children.length !== 1
-            || !footer.firstElementChild?.classList.contains('game-footer-hint')) return 0;
-
-        // 2026-10-05 footer cleanup removed the Home / More action row, but the
-        // CSS-layer migration is still under the frozen P0 geometry contract.
-        // Preserve that row's *layout budget* without preserving any visible or
-        // interactive placeholder. Derive it from the same shared tokens/rules
-        // that sized the removed row so responsive button/gap changes stay exact.
-        const footerStyle = getComputedStyle(footer);
-        const referenceButton = topbar?.querySelector('.game-icon-btn');
-        const measuredButtonHeight = referenceButton?.getBoundingClientRect().height || 0;
-        const tokenButtonHeight = parseFloat(
-            getComputedStyle(document.documentElement).getPropertyValue('--tok-btn-size'),
-        ) || 0;
-        const gap = parseFloat(footerStyle.rowGap || footerStyle.gap) || 0;
-        return (measuredButtonHeight || tokenButtonHeight) + gap;
-    }
-
     function measure() {
         let chrome = 0;
         const cs = getComputedStyle(shell);
@@ -74,7 +76,7 @@ export function bindFrame(opts = {}) {
         [topbar, footer].forEach(el => {
             if (el) chrome += el.getBoundingClientRect().height;
         });
-        chrome += hintOnlyFooterReserve();
+        chrome += measureHintOnlyFooterReserve(shell);
         if (typeof extraChrome === 'function') {
             try {
                 chrome += extraChrome() || 0;
