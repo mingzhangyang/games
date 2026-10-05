@@ -726,9 +726,11 @@
             border-color: var(--tok-border-raised);
         }
 
-        .game-footer {
-            gap: 10px;
-            padding: 20px 0 28px;
+        @layer pages {
+            .game-footer {
+                gap: 10px;
+                padding: 20px 0 28px;
+            }
         }
 
         /* ── Responsive ────────────────────────────── */
