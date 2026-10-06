@@ -72,16 +72,19 @@
 --frame-main-gap: 28px;    /* 桌面 .game-main 的 gap */
 ```
 
-**桌面纵向预算（2026-09-19，选择加入）**：六个画布游戏（gd/hs/pm/td/na/sf）的
-舞台宽度在桌面端由「视口可用高度 × 画幅比」推导，
-`--stage-w = min(--frame-stage-h, 100dvh - --frame-chrome) × --frame-ratio`，
-替换掉旧的固定 `--frame-max-wide` 上限——1920×1080 下 480×640 逻辑场从 460px
-放大到 ~700px，整页恒等于一屏。`--frame-chrome` 由 `src/platform/game-frame.js` 的
-`bindFrame()` 实测写入 `.game-shell`（ResizeObserver + resize + 自派发的
-`game-frame:changed`；1px 死区 + 500ms 振荡锁定两个反馈环护栏），页面监听
-`game-frame:changed` 调用自己的 `resize()` 重算画布后端缓冲区。
+**桌面纵向预算（2026-09-19，选择加入）**：资格只由 registry 的
+`frame-budget` cap 决定；验证器使用 `registry.withCap('frame-budget')` 动态读取页面清单，
+不再维护历史手写“六页”名单。共享层提供
+`--stage-w = min(--frame-stage-h, 100dvh - --frame-chrome) × --frame-ratio`；
+页面是否覆盖 `--frame-shell-max` / `--frame-stage-cap` 决定舞台宽度是否消费该值，
+未覆盖消费变量的页面继续回落 `--frame-max-wide` / `--frame-stage`，所以不同游戏可以在
+同一 frame-budget eligibility 下保留各自几何策略。`--frame-chrome` 由
+`src/platform/game-frame.js` 的 `bindFrame()` 实测写入 `.game-shell`
+（ResizeObserver + resize + 自派发的 `game-frame:changed`；1px 死区 + 500ms 振荡锁定两个
+反馈环护栏），页面需要时监听 `game-frame:changed` 重算后端缓冲区。
 
-接入方式：页面 shell 上覆盖两个**消费**变量，未覆盖的页面回落旧契约、几何不变：
+接入方式：需要消费动态舞台宽度的页面在 shell 上覆盖两个**消费**变量；只带
+`frame-budget` cap 而未覆盖这些变量的页面仍可使用共享默认几何：
 
 ```css
 .xx-shell {
@@ -92,19 +95,24 @@
 }
 ```
 
-配套规则（同在 layout.css 桌面 media）：`.game-main` 的 gap 提为 `--frame-main-gap`；
-侧栏限高写作 `body.has-frame-budget .game-sidebar { max-height: calc(100dvh - var(--frame-chrome));
-overflow-y: auto; overscroll-behavior: contain }`，body 类由 `bindFrame()` 打上。
-⚠️ 这条**必须**跟着选择加入，不能写成无条件规则：它是本段里唯一同时改
-`max-height` 与 `overflow-y` 的规则，没法靠 `var()` 回退自行失效。写成无条件时
-它越界命中了未接入的 tetris —— 侧栏（488×930）变成带 `overscroll-behavior: contain`
-的滚动容器，鼠标落在侧栏上滚轮就再也传不到主文档，`verify-tetris-topbar-mobile`
-的「滚轮下滚能滚起来」因此变红（实测 scrollTop=0 / 上限 53）。判据取
-「本页接没接纵向预算」这种不随视口变化的事实，与 `game-drawer.js` 的
-`has-stats-drawer` 同模式。tower-defense 已迁移到 §7 的 immersive 舞台：技能条、
-战术面板和所有战斗控件都属于 800×600 场景，不再接入桌面纵向预算。
-校验：`node tests/verify-desktop-frame.mjs`（六页 × 五档视口 × 双语，
-断言整页不滚 / 画幅 / 不糊 / 随视口长大 / 侧栏屏内 / chrome 收敛 / 无 pageerror）。
+配套规则（同在 layout.css 桌面 media）：`.game-main` 的 gap 使用
+`--frame-main-gap`；`bindFrame()` 给符合资格的页面 body 打
+`has-frame-budget`，由 `contracts` 层强制
+`body.has-frame-budget .game-sidebar { max-height: calc(100dvh - var(--frame-chrome));
+overflow-y: auto; overscroll-behavior: contain }`。Firefox / WebKit 的 scrollbar 宽度与配色
+属于 `components` 皮肤，不属于结构契约。
+
+⚠️ sidebar cap **必须**由 `has-frame-budget` 选择加入，不能写成无条件规则。历史上在
+Tetris 尚未接入 frame-budget 时，共享规则曾越界把它的 488×930 侧栏变成
+`overscroll-behavior: contain` 的嵌套滚动容器，鼠标滚轮因此无法继续传到主文档；
+后来 Tetris 正式接入 frame-budget，但这次事故仍说明 eligibility 不能靠 viewport 或 DOM
+偶然结构推断。当前非 frame-budget / immersive 页面不会获得该 body 标记；tower-defense
+属于 §7 immersive 舞台，也不接桌面纵向预算。
+
+校验：`node tests/verify-desktop-frame.mjs` 的页面集合直接来自 registry，逐页跑五档视口 ×
+双语；除整页不滚、画幅、不糊、随视口长大、侧栏屏内、chrome 收敛与 pageerror 外，还直接检查
+computed sidebar `max-height` / `overflow-y` / `overscroll-behavior` 与 scrollbar skin，
+确保 cascade layer 迁移后真正命中，而不是只看到 `has-frame-budget` class。
 
 **第二批接入（2026-09-19 晚）**：gomoku 与 tetris 也收进「桌面端一屏放下」。
 两者的接法与六个画布游戏不同，各自有一条必须记住的前提：

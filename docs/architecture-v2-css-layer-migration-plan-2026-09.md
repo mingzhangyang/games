@@ -464,6 +464,25 @@ scrim、blur、边框、阴影与 transition 等皮肤/动画声明进入 `compo
 Tower Defense peer 在后续独立 dependency closure 中一起处理。frame-budget、immersive/safe-area
 与 reduced-motion `!important` 仍不进入本批。
 
+**P2-V / #101 Frame Budget Closure：** 桌面纵向预算按完整 sidebar dependency family 收口。
+共享 `body.has-frame-budget .game-sidebar` 采用 1→N migration：`max-height`、`overflow-y`、
+`overscroll-behavior` 是“页面不能突破可用视口高度”的结构不变量，进入 `contracts`；
+Firefox 的 `scrollbar-width` / `scrollbar-color` 以及 WebKit scrollbar / track / thumb / hover
+伪元素只负责滚动条皮肤，进入 `components`。这样不会为了“同一个 selector”把视觉声明误归为
+平台结构契约，同时仍在一个 transaction 中关闭完整 frame-budget family。
+
+依赖审计以 `registry.withCap('frame-budget')` 为唯一页面清单，而不是继续维护历史“六页”名单。
+当前所有 frame-budget 页面都使用标准 sidebar contract；逐页检查到的 `max-height` / `overflow-y`
+均属于排行榜、说明等 sidebar **内部子容器**，没有发现直接竞争
+`body.has-frame-budget .game-sidebar` 的页面级 peer，因此不需要把 17 份页面 CSS 一起迁层。
+`verify-desktop-frame.mjs` 同批升级为 computed-style contract：除既有几何/画幅/chrome 检查外，
+还要求 body 真正带 `has-frame-budget`，并验证 sidebar 的 computed `max-height ≈ innerHeight -
+--frame-chrome`、`overflow-y:auto`、`overscroll-behavior:contain` 与 scrollbar skin，避免只看
+class 或 bottom 几何而漏掉 layer precedence 回归。
+
+Tower Defense 的 immersive stats-button 例外、immersive/safe-area family 与 reduced-motion
+`!important` 仍明确留给后续 closure；本批不修改玩法、页面几何变量或 `shared-css-first`。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 

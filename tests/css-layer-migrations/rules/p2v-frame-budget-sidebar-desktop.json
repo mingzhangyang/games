@@ -1,0 +1,139 @@
+{
+  "id": "p2v-frame-budget-sidebar-desktop",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width >= 1024px)",
+    "selector": "body.has-frame-budget .game-sidebar",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "844b1120be9587e222c507313207024d3d2eeaebc92622ff6c553cd5ed560d36",
+    "layer": null,
+    "declarationDigest": "3b78886e9ed9960cbaeea235b7740fa1fb4ddfb96c7af34c23891397223d64ca",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "max-height",
+        "value": [
+          [
+            "function-token",
+            "calc("
+          ],
+          [
+            "dimension-token",
+            "100dvh"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "-"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-chrome"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow-y",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overscroll-behavior",
+        "value": [
+          [
+            "ident-token",
+            "contain"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "scrollbar-width",
+        "value": [
+          [
+            "ident-token",
+            "thin"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "scrollbar-color",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-scrollbar-thumb"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "transparent"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width >= 1024px)",
+      "selector": "body.has-frame-budget .game-sidebar",
+      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+      "selectorDigest": "844b1120be9587e222c507313207024d3d2eeaebc92622ff6c553cd5ed560d36",
+      "layer": "contracts",
+      "declarationDigest": "89be0cfc120dfe38e9f2cf779fc6cd78ec54226b93a46dd1aba84abc6e7b0d53",
+      "occurrence": 1
+    },
+    {
+      "path": "css/layout.css",
+      "context": "@media (width >= 1024px)",
+      "selector": "body.has-frame-budget .game-sidebar",
+      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+      "selectorDigest": "844b1120be9587e222c507313207024d3d2eeaebc92622ff6c553cd5ed560d36",
+      "layer": "components",
+      "declarationDigest": "4bbb53572c486477e23cf1d0293ba27219bdd55c86bdb2bd3c33db0e25114808",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,12 +1,13 @@
-// 桌面舞台契约校验（2026-09-19）：六页 × 五档视口 × 中英双语
+// 桌面舞台契约校验（2026-09-19）：registry frame-budget 页面 × 五档视口 × 中英双语
 // 断言：
 //   a. 整页不滚动：scrollingElement.scrollHeight <= innerHeight + 2
 //   b. 画幅不失真：|rect.width/rect.height - ratio| < 0.01
 //   c. 不糊：canvas.width >= canvas.clientWidth（border-box 下 rect 含 border）
 //   d. 舞台随视口长大：1920x1080 档画布宽 > 1280x900 档
-//   e. 侧栏在屏内：sidebar bottom <= innerHeight + 2
-//   f. --frame-chrome 收敛：就绪后间隔 250ms 两次读数相等（src/platform/game-frame.js 反馈环护栏）
-//   g. 无 pageerror
+//   e. frame-budget 侧栏 computed contract 生效：max-height / overflow / overscroll + scrollbar skin
+//   f. 侧栏在屏内：sidebar bottom <= innerHeight + 2
+//   g. --frame-chrome 收敛：就绪后间隔 250ms 两次读数相等（src/platform/game-frame.js 反馈环护栏）
+//   h. 无 pageerror
 // 用法：node tests/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
 import { readFileSync } from 'node:fs';
@@ -42,12 +43,46 @@ const PAGES = Object.fromEntries(
 exitIfNoPages(Object.keys(PAGES), 'verify-desktop-frame');
 const VIEWPORTS = [[1280, 800], [1280, 900], [1440, 900], [1920, 1080], [2560, 1440]];
 const LANGS = ['en', 'zh'];
+const HOVER_VIEWPORT = '1280x900';
+const HOVER_LANG = 'zh';
 
 const MEASURE = () => {
     const g = s => document.querySelector(s);
     const canvas = g('.game-stage canvas') || g('canvas');
     const side = g('.game-sidebar');
     const shell = g('.game-shell');
+    const sideStyle = side ? getComputedStyle(side) : null;
+    let scrollbarSkin = null;
+    if (side && sideStyle) {
+        const probe = document.createElement('span');
+        probe.style.display = 'none';
+        side.append(probe);
+
+        const resolvedBackground = value => {
+            probe.style.background = value;
+            return getComputedStyle(probe).backgroundColor;
+        };
+        const expectedThumbBackground = resolvedBackground('var(--frame-scrollbar-thumb)');
+        const expectedThumbHoverBackground = resolvedBackground('var(--frame-scrollbar-thumb-hover)');
+        const expectedTrackBackground = resolvedBackground('transparent');
+
+        probe.style.setProperty('scrollbar-color', 'var(--frame-scrollbar-thumb) transparent');
+        const expectedScrollbarColor = getComputedStyle(probe).scrollbarColor || '';
+        probe.remove();
+
+        scrollbarSkin = {
+            scrollbarColor: sideStyle.scrollbarColor || '',
+            scrollbarColorSupported: typeof sideStyle.scrollbarColor === 'string'
+                && sideStyle.scrollbarColor !== '',
+            expectedScrollbarColor,
+            webkitTrackBackground: getComputedStyle(side, '::-webkit-scrollbar-track').backgroundColor || '',
+            webkitThumbBackground: getComputedStyle(side, '::-webkit-scrollbar-thumb').backgroundColor || '',
+            thumbHoverActive: side.matches(':hover'),
+            expectedTrackBackground,
+            expectedThumbBackground,
+            expectedThumbHoverBackground,
+        };
+    }
     const r = canvas ? canvas.getBoundingClientRect() : null;
     return {
         pageH: document.scrollingElement.scrollHeight,
@@ -61,6 +96,17 @@ const MEASURE = () => {
         // d「舞台随视口长大」改量 .game-stage 宽度，否则恒为 0 必然误报。
         stageW: g('.game-stage') ? Math.round(g('.game-stage').getBoundingClientRect().width) : 0,
         sideBottom: side ? Math.round(side.getBoundingClientRect().bottom) : -1,
+        bodyHasFrameBudget: document.body.classList.contains('has-frame-budget'),
+        sideContract: sideStyle ? {
+            maxHeight: sideStyle.maxHeight,
+            overflowY: sideStyle.overflowY,
+            overscrollBehaviorY: sideStyle.overscrollBehaviorY || sideStyle.overscrollBehavior,
+            scrollbarWidth: sideStyle.scrollbarWidth || '',
+            scrollbarWidthSupported: typeof sideStyle.scrollbarWidth === 'string'
+                && sideStyle.scrollbarWidth !== '',
+            webkitScrollbarWidth: getComputedStyle(side, '::-webkit-scrollbar').width || '',
+            ...scrollbarSkin,
+        } : null,
         chrome: shell ? shell.style.getPropertyValue('--frame-chrome') : '',
         // bindFrame 量 chrome 靠 shell.querySelector(':scope > .game-topbar'/'.game-footer')。
         // 这两个节点一旦不是 shell 的**直接子节点**，querySelector 返回 null，
@@ -97,6 +143,64 @@ const failures = [];
 const knownGaps = [];
 const widthTable = {}; // page -> "WxH/lang" -> canvas rectW
 
+function scrollbarSkinFailures(contract) {
+    const issues = [];
+    if (!contract) return ['missing sidebar contract'];
+    if (contract.scrollbarWidthSupported && contract.scrollbarWidth !== 'thin') {
+        issues.push(`scrollbar-width=${contract.scrollbarWidth}，期望 thin`);
+    }
+    if (contract.scrollbarColorSupported
+        && contract.scrollbarColor !== contract.expectedScrollbarColor) {
+        issues.push(`scrollbar-color=${contract.scrollbarColor}，期望 ${contract.expectedScrollbarColor}`);
+    }
+    if (contract.webkitScrollbarWidth) {
+        if (contract.webkitScrollbarWidth !== '6px') {
+            issues.push(`webkit scrollbar width=${contract.webkitScrollbarWidth}，期望 6px`);
+        }
+        if (contract.webkitTrackBackground !== contract.expectedTrackBackground) {
+            issues.push(`webkit track background=${contract.webkitTrackBackground}，期望 ${contract.expectedTrackBackground}`);
+        }
+        const expectedThumbBackground = contract.thumbHoverActive
+            ? contract.expectedThumbHoverBackground
+            : contract.expectedThumbBackground;
+        if (contract.webkitThumbBackground !== expectedThumbBackground) {
+            const state = contract.thumbHoverActive ? 'hover' : 'idle';
+            issues.push(`webkit thumb ${state} background=${contract.webkitThumbBackground}，期望 ${expectedThumbBackground}`);
+        }
+    }
+    return issues;
+}
+
+const READ_SCROLLBAR_HOVER_RULES = () => {
+    const matches = [];
+    const walk = rules => {
+        for (const rule of rules) {
+            if (rule.cssRules) walk(rule.cssRules);
+            if (!rule.selectorText || !rule.style) continue;
+            if (rule.selectorText.includes('.game-sidebar:hover::-webkit-scrollbar-thumb')) {
+                matches.push({
+                    selector: rule.selectorText,
+                    background: rule.style.background || '',
+                    important: rule.style.getPropertyPriority('background') || '',
+                });
+            }
+        }
+    };
+    for (const sheet of document.styleSheets) {
+        try { walk(sheet.cssRules); } catch (e) { /* cross-origin sheets are irrelevant here */ }
+    }
+    return matches;
+};
+
+function scrollbarHoverRuleFailures(rules) {
+    if (!rules?.length) return ['browser CSSOM 缺少 sidebar hover thumb rule'];
+    const last = rules[rules.length - 1];
+    if (last.background !== 'var(--frame-scrollbar-thumb-hover)') {
+        return [`browser CSSOM hover thumb background=${last.background || '(empty)'}，期望 var(--frame-scrollbar-thumb-hover)`];
+    }
+    return [];
+}
+
 // 就绪：字体加载完、bindFrame 已写 --frame-chrome、且连续两帧舞台尺寸与 chrome 不变
 const WAIT_STABLE = () => new Promise(resolve => {
     const t0 = performance.now();
@@ -117,7 +221,7 @@ const WAIT_STABLE = () => new Promise(resolve => {
     document.fonts.ready.then(() => requestAnimationFrame(tick));
 });
 
-async function measureOne(page, W, H, lang) {
+async function measureOne(page, W, H, lang, measureHover) {
     const ctx = await browser.createBrowserContext();
     const pg = await ctx.newPage();
     try {
@@ -127,10 +231,17 @@ async function measureOne(page, W, H, lang) {
         pg.on('pageerror', e => errors.push(e.message));
         await pg.goto(`${BASE}/${page}.html`, { waitUntil: 'load', timeout: 20000 }).catch(() => { });
         await pg.evaluate(WAIT_STABLE).catch(() => { });
+        await pg.mouse.move(0, 0);
         const m1 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
+        let mHover = null;
+        if (measureHover && !m1.err && m1.sideContract) {
+            await pg.hover('.game-sidebar').catch(() => { });
+            mHover = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
+            await pg.mouse.move(0, 0);
+        }
         await new Promise(r => setTimeout(r, CONVERGE_GAP_MS));
         const m2 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
-        return { m1, m2, errors };
+        return { m1, mHover, m2, errors };
     } finally {
         await ctx.close();
     }
@@ -139,7 +250,12 @@ async function measureOne(page, W, H, lang) {
 const jobs = [];
 for (const lang of LANGS) {
     for (const [page, ratio] of Object.entries(PAGES)) {
-        for (const [W, H] of VIEWPORTS) jobs.push({ page, ratio, W, H, lang });
+        for (const [W, H] of VIEWPORTS) {
+            jobs.push({
+                page, ratio, W, H, lang,
+                measureHover: `${W}x${H}` === HOVER_VIEWPORT && lang === HOVER_LANG,
+            });
+        }
     }
 }
 const measured = new Map();
@@ -147,9 +263,44 @@ let next = 0;
 await Promise.all(Array.from({ length: Math.min(JOBS, jobs.length) }, async () => {
     while (next < jobs.length) {
         const job = jobs[next++];
-        measured.set(job, await measureOne(job.page, job.W, job.H, job.lang));
+        measured.set(job, await measureOne(job.page, job.W, job.H, job.lang, job.measureHover));
     }
 }));
+
+// Chromium may expose static scrollbar pseudo styles through getComputedStyle() while
+// refusing to expose the dynamic :hover result. Probe that capability once so a browser
+// observability limit is not misdiagnosed as 17 page regressions. CSSOM parsing remains
+// mandatory in either mode.
+const regressionPage = Object.keys(PAGES)[0];
+let webkitHoverComputedStyleSupported = false;
+let productionHoverRules = [];
+if (regressionPage) {
+    const ctx = await browser.createBrowserContext();
+    const pg = await ctx.newPage();
+    try {
+        await pg.setViewport({ width: 1280, height: 900 });
+        await pg.goto(`${BASE}/${regressionPage}.html`, { waitUntil: 'load', timeout: 20000 }).catch(() => { });
+        await pg.evaluate(WAIT_STABLE).catch(() => { });
+        await pg.hover('.game-sidebar').catch(() => { });
+        const baselineHover = await pg.evaluate(MEASURE);
+        productionHoverRules = await pg.evaluate(READ_SCROLLBAR_HOVER_RULES);
+        const probeStyle = await pg.addStyleTag({ content: `
+            body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb {
+                background: rgb(1, 2, 3) !important;
+            }
+        ` });
+        const forcedHover = await pg.evaluate(MEASURE);
+        webkitHoverComputedStyleSupported = !!baselineHover.sideContract?.thumbHoverActive
+            && forcedHover.sideContract?.webkitThumbBackground
+                !== baselineHover.sideContract?.webkitThumbBackground;
+        await probeStyle.evaluate(el => el.remove());
+    } finally {
+        await ctx.close();
+    }
+}
+for (const issue of scrollbarHoverRuleFailures(productionHoverRules)) {
+    failures.push(`scrollbar hover production rule: ${issue}`);
+}
 
 // 断言按原顺序逐条跑，保证失败列表与串行版本一致
 for (const lang of LANGS) {
@@ -157,7 +308,7 @@ for (const lang of LANGS) {
         const canvasW = {};
         for (const job of jobs.filter(j => j.page === page && j.lang === lang)) {
             const { W, H } = job;
-            const { m1, m2, errors } = measured.get(job);
+            const { m1, mHover, m2, errors } = measured.get(job);
             const tag = `${page} ${W}x${H} ${lang}`;
 
             if (m1.err) {
@@ -192,20 +343,109 @@ for (const lang of LANGS) {
                     }
                 }
             }
-            // e. 侧栏在屏内（td 1998px / sf 1097px 的回归）
-            if (m1.sideBottom >= 0 && m1.sideBottom > m1.innerH + 2) failures.push(`${tag}: 侧栏溢出 bottom ${m1.sideBottom} > innerH ${m1.innerH}`);
-            // f. --frame-chrome 收敛（反馈环护栏：差值 ≤1px 视为稳定）
+            // e. frame-budget computed contract 必须真正赢得 cascade，而不只是 body 上有 class。
             const c1 = parseFloat(m1.chrome), c2 = parseFloat(m2.chrome);
+            if (!m1.bodyHasFrameBudget) {
+                failures.push(`${tag}: body 缺少 has-frame-budget，sidebar contract 未激活`);
+            }
+            if (!m1.sideContract) {
+                failures.push(`${tag}: frame-budget 页面缺少 .game-sidebar`);
+            } else {
+                const maxHeight = parseFloat(m1.sideContract.maxHeight);
+                const expectedMaxHeight = m1.innerH - c1;
+                if (!Number.isFinite(maxHeight) || (Number.isFinite(expectedMaxHeight)
+                    && Math.abs(maxHeight - expectedMaxHeight) > 2)) {
+                    failures.push(`${tag}: sidebar max-height ${m1.sideContract.maxHeight}，期望约 ${expectedMaxHeight.toFixed(1)}px`);
+                }
+                if (m1.sideContract.overflowY !== 'auto') {
+                    failures.push(`${tag}: sidebar overflow-y=${m1.sideContract.overflowY}，期望 auto`);
+                }
+                if (m1.sideContract.overscrollBehaviorY !== 'contain') {
+                    failures.push(`${tag}: sidebar overscroll-behavior-y=${m1.sideContract.overscrollBehaviorY}，期望 contain`);
+                }
+                for (const issue of scrollbarSkinFailures(m1.sideContract)) {
+                    failures.push(`${tag}: sidebar ${issue}`);
+                }
+                if (job.measureHover) {
+                    if (!mHover || mHover.err || !mHover.sideContract?.thumbHoverActive) {
+                        failures.push(`${tag}: sidebar hover 状态未成功测量`);
+                    } else if (webkitHoverComputedStyleSupported) {
+                        for (const issue of scrollbarSkinFailures(mHover.sideContract)) {
+                            failures.push(`${tag}: hovered sidebar ${issue}`);
+                        }
+                    } else if (!mHover.sideContract.expectedThumbHoverBackground) {
+                        failures.push(`${tag}: sidebar hover 主题变量无法解析`);
+                    }
+                }
+            }
+            // f. 侧栏在屏内（历史 1998px / 1097px 整页溢出的回归）
+            if (m1.sideBottom >= 0 && m1.sideBottom > m1.innerH + 2) failures.push(`${tag}: 侧栏溢出 bottom ${m1.sideBottom} > innerH ${m1.innerH}`);
+            // g. --frame-chrome 收敛（反馈环护栏：差值 ≤1px 视为稳定）
             if (!m1.chrome || !Number.isFinite(c1) || Math.abs(c1 - c2) > 1) {
                 failures.push(`${tag}: --frame-chrome 未收敛 "${m1.chrome}" -> "${m2.chrome}"`);
             }
-            // g. 无 pageerror
+            // h. 无 pageerror
             if (errors.length) failures.push(`${tag}: pageerror ${errors.join(' | ')}`);
 
         }
         // d. 舞台确实随视口长大
         const w1280 = canvasW['1280x900'], w1920 = canvasW['1920x1080'];
         if (!(w1920 > w1280)) failures.push(`${page}: 1920 档画布宽 ${w1920} 未大于 1280x900 档 ${w1280}`);
+    }
+}
+
+// 负向回归：只覆盖 scrollbar 颜色、不动宽度，验证 computed-style contract 真能抓住 cascade 漏洞。
+if (regressionPage) {
+    const ctx = await browser.createBrowserContext();
+    const pg = await ctx.newPage();
+    try {
+        await pg.setViewport({ width: 1280, height: 900 });
+        await pg.goto(`${BASE}/${regressionPage}.html`, { waitUntil: 'load', timeout: 20000 }).catch(() => { });
+        await pg.evaluate(WAIT_STABLE).catch(() => { });
+        const before = await pg.evaluate(MEASURE);
+        await pg.addStyleTag({ content: `
+            body.has-frame-budget .game-sidebar {
+                scrollbar-color: rgb(1, 2, 3) transparent;
+            }
+            body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb {
+                background: rgb(1, 2, 3);
+            }
+            body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb,
+            body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb:hover {
+                background: rgb(4, 5, 6);
+            }
+        ` });
+        await pg.mouse.move(0, 0);
+        const after = await pg.evaluate(MEASURE);
+        await pg.hover('.game-sidebar');
+        const afterHover = await pg.evaluate(MEASURE);
+        const beforeSkin = scrollbarSkinFailures(before.sideContract);
+        const afterSkin = scrollbarSkinFailures(after.sideContract);
+        const afterHoverSkin = scrollbarSkinFailures(afterHover.sideContract);
+        if (beforeSkin.length) {
+            failures.push(`scrollbar color regression probe baseline invalid: ${beforeSkin.join(' | ')}`);
+        }
+        if (before.sideContract?.scrollbarWidth !== after.sideContract?.scrollbarWidth
+            || before.sideContract?.webkitScrollbarWidth !== after.sideContract?.webkitScrollbarWidth) {
+            failures.push('scrollbar color regression probe changed widths; fixture must isolate color-only overrides');
+        }
+        if (!afterSkin.some(issue => /color|background/.test(issue))) {
+            failures.push('scrollbar color regression probe failed to detect an idle color-only cascade override');
+        }
+        if (!afterHover.sideContract?.thumbHoverActive) {
+            failures.push('scrollbar color regression probe did not enter sidebar hover state');
+        } else if (webkitHoverComputedStyleSupported) {
+            if (!afterHoverSkin.some(issue => /hover background/.test(issue))) {
+                failures.push('scrollbar color regression probe failed to detect a hover-only thumb-color override');
+            }
+        } else {
+            const overriddenHoverRules = await pg.evaluate(READ_SCROLLBAR_HOVER_RULES);
+            if (!scrollbarHoverRuleFailures(overriddenHoverRules).length) {
+                failures.push('scrollbar CSSOM fallback failed to detect a hover-only thumb-color override');
+            }
+        }
+    } finally {
+        await ctx.close();
     }
 }
 

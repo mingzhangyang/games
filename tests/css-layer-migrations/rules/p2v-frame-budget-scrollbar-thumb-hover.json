@@ -1,0 +1,49 @@
+{
+  "id": "p2v-frame-budget-scrollbar-thumb-hover",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width >= 1024px)",
+    "selector": "body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb, body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb:hover",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "b40c5fa2a4f2218e331a983f4b536fe7fc4130358d1bbb21cd1ca4f79317c817",
+    "layer": null,
+    "declarationDigest": "e37d4c175ce92d0005350227fb8ed3c20f8e9c81141f84ce129658bacb56926a",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "background",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-scrollbar-thumb-hover"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width >= 1024px)",
+      "selector": "body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb, body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb:hover",
+      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+      "selectorDigest": "b40c5fa2a4f2218e331a983f4b536fe7fc4130358d1bbb21cd1ca4f79317c817",
+      "layer": "components",
+      "declarationDigest": "e37d4c175ce92d0005350227fb8ed3c20f8e9c81141f84ce129658bacb56926a",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
