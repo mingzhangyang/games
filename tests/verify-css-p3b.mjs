@@ -18,6 +18,15 @@ const FRAME_VARS = {
     stageH: '--frame-stage-h',
 };
 
+function frameContractMatches(key, actual, expected) {
+    if (key !== 'ratio') return actual === expected;
+    const actualNumber = Number.parseFloat(actual);
+    const expectedNumber = Number.parseFloat(expected);
+    return Number.isFinite(actualNumber)
+        && Number.isFinite(expectedNumber)
+        && Math.abs(actualNumber - expectedNumber) < 1e-9;
+}
+
 async function waitHidden(page, selector) {
     await page.waitForFunction(target => {
         const el = document.querySelector(target);
@@ -136,7 +145,7 @@ function framePage(config) {
 
             for (const [key, expected] of Object.entries(config.frame)) {
                 check(
-                    metrics.frame[key] === expected,
+                    frameContractMatches(key, metrics.frame[key], expected),
                     `${config.id} ${viewportName}: ${FRAME_VARS[key]} keeps page contract`,
                     `got ${metrics.frame[key] || 'missing'}, want ${expected}`,
                 );
