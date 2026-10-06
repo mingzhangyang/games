@@ -69,7 +69,8 @@ const MEASURE = () => {
             overflowY: sideStyle.overflowY,
             overscrollBehaviorY: sideStyle.overscrollBehaviorY || sideStyle.overscrollBehavior,
             scrollbarWidth: sideStyle.scrollbarWidth || '',
-            scrollbarWidthSupported: CSS.supports('scrollbar-width', 'thin'),
+            scrollbarWidthSupported: typeof sideStyle.scrollbarWidth === 'string'
+                && sideStyle.scrollbarWidth !== '',
             webkitScrollbarWidth: getComputedStyle(side, '::-webkit-scrollbar').width || '',
         } : null,
         chrome: shell ? shell.style.getPropertyValue('--frame-chrome') : '',
