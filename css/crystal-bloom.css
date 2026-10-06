@@ -665,7 +665,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .cb-hero, .cb-card { animation: none !important; }
+    @layer accessibility {
+        .cb-hero, .cb-card { animation: none !important; }
+    }
     .cb-toast { transition: none; }
     .cb-btn, .cb-icon-btn, .cb-mode, .cb-chip, .cb-action-btn { transition: none; }
 }

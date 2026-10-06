@@ -394,7 +394,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hs-ball-row, .hs-fire-badge, .hs-newbest.show { animation: none !important; }
+    @layer accessibility {
+        .hs-ball-row, .hs-fire-badge, .hs-newbest.show { animation: none !important; }
+    }
     .hs-btn, .hs-icon-btn { transition: none; }
 }
 

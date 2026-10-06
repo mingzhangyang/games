@@ -519,7 +519,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .cc-hero, .cc-toast, .cc-card { animation: none !important; }
+    @layer accessibility {
+        .cc-hero, .cc-toast, .cc-card { animation: none !important; }
+    }
     .cc-btn, .cc-icon-btn, .cc-mode, .cc-level-chip { transition: none; }
 }
 

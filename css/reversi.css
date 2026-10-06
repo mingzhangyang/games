@@ -591,7 +591,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .rv-hero-b, .rv-hero-w, .rv-status.thinking, .rv-cell.legal::after, .rv-toast { animation: none !important; }
+    @layer accessibility {
+        .rv-hero-b, .rv-hero-w, .rv-status.thinking, .rv-cell.legal::after, .rv-toast { animation: none !important; }
+    }
     .rv-disc3 { transition: none; }
     .rv-btn, .rv-icon-btn, .rv-mode, .rv-diff { transition: none; }
 }

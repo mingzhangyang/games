@@ -94,7 +94,7 @@ layer 的优先级先于 specificity：一旦整个 `layout.css` 放进较早的
 因此迁移单位从“CSS 文件”改为“**规则职责**”，并引入最后的结构契约层：
 
 ```css
-@layer reset, tokens, showcase, components, layout, pages, contracts;
+@layer reset, tokens, showcase, components, accessibility, layout, pages, contracts;
 ```
 
 当前生产 link 顺序仍保持：
@@ -220,7 +220,7 @@ geometry / interaction 浏览器测试负责。旧 P0 与 semantic addendum 继�
    `tests/css-layer-migration-state.json`，migration unit 固定为 rule/selector，而不是 file；
 2. 先升级 `verify-css-debt.mjs`：只有 migration state 中逐项登记、且能在目标 layer 找到同一规则时，
    才允许对应 P0 unlayered debt 退出 active debt；已经迁移的规则不得重新变回 unlayered；
-3. 将目标顺序冻结为 `reset, tokens, showcase, components, layout, pages, contracts`，并针对
+3. 将目标顺序冻结为 `reset, tokens, showcase, components, accessibility, layout, pages, contracts`，并针对
    normal/important 两套相反的 layer precedence 分别做冲突检查；
 4. 先给 `layout.css` 做职责分类，但**不要把所有分类结果一次切换到 layer**：
    - 可定制的 shell/topbar/stage/sidebar 默认几何 → `layout`；
@@ -507,6 +507,29 @@ touch/overflow 恢复：TD 的 `.td-overlay` 等页面 peer 仍未分层，若�
 `verify-immersive.mjs` 上增加 computed-style contract，并显式守住 TD 桌面 stats-button 例外、
 safe-area padding、stage overflow/可配置 min-height 与横屏 fixed stage。
 
+**P2-X / #103 Reduced-Motion Accessibility Closure：** reduced-motion 的 important cascade 不能沿用
+normal declaration 的 layer 直觉：named-layer `!important` 优先级与 normal 相反。为此目标 taxonomy
+扩展为 `reset → tokens → showcase → components → accessibility → layout → pages → contracts`。
+`accessibility` 放在 `components` 之后。原因不是让一般组件动画压过无障碍规则——normal declaration
+无论如何都会输给 `!important`——而是 `science-showcase.css` 的共享 reduced-motion clamp 当前仍归
+`components`。important layer 优先级反转，因此让 `components` 先于 `accessibility` 可以保留既有
+`0.001ms` duration clamp，同时 accessibility 仍稳定压过 layout/pages/contracts 与所有 normal motion；
+`reset` 继续禁止 important declaration，避免最低 normal reset 反而变成最高 important 层。
+
+本批只迁 P0 中 22 条 `@media (prefers-reduced-motion: reduce)` 下、且整条 rule 全为
+`!important` 的 motion declaration，允许属性严格限制为 animation/animation-duration/
+animation-iteration-count/transition/transition-duration/scroll-behavior。共享 `layout.css` 的
+`.game-icon-btn` 与 drawer/panel 两条 normal `transition:none` 则进入最后的 `contracts`，
+因为 normal cascade 需要高于 components；不通过新增 `!important` 强行塞进 accessibility。
+其余页面级 normal reduced-motion 规则仍保持未分层：它们与尚未迁层的 page base transition/
+animation peers 同属后续 dependency closure，单边迁移会让 unlayered normal base 反压无障碍规则。
+
+contract v3 对 accessibility destination 做 fail-closed 校验：必须来自未分层 P0、必须位于
+`prefers-reduced-motion: reduce`、必须全部为 reviewed motion `!important`，且整条 source rule
+不得拆到其它 layer。浏览器回归同时验证 universal duration clamp、page animation/transition
+suppression、shared icon/drawer normal override，以及仍由 components 持有的 Science Showcase
+shared reduced-motion clamp precedence 没有被新层顺序改变。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -609,7 +632,7 @@ P0 就启用：
 6. `science-showcase.css` / shared components 的 important 与普通声明分别校验；
 7. 未登记的新 unlayered CSS 仍然失败；
 8. 不得重新引入依赖 link 重排的新构建逻辑；
-9. 最终 layer order 为 `reset, tokens, showcase, components, layout, pages, contracts`；
+9. 最终 layer order 为 `reset, tokens, showcase, components, accessibility, layout, pages, contracts`；
 10. `shared-css-first` 删除后不得重新引入同类 link-reordering 构建逻辑。
 
 该检查应加入日常 changed verification；完整浏览器回归仍只在 PR candidate / 手动运行时执行，
@@ -665,7 +688,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] 审计当前 link 顺序与 selector/custom-property 冲突，并记录五层文件级候选
 - [x] 用 P2 canary 证明 whole-file 单层模型不等价，并回滚生产 CSS 改动
 - [x] 冻结 P0 immutable snapshot，建立独立 migration-state 骨架
-- [x] 修正目标架构为 `reset, tokens, showcase, components, layout, pages, contracts`
+- [x] 修正目标架构为 `reset, tokens, showcase, components, accessibility, layout, pages, contracts`
 - [x] 升级 verifier，使 migration-state 支持稳定 occurrence、1→N/重新归层与单向 ratchet
 - [x] 启动首个 dependency-closed production canary：`.game-stage--fill` → `layout`
 - [x] P2-B：迁移 `.game-main` 顶层默认规则，并验证 desktop 同 selector peer 的 precedence 保持

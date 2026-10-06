@@ -150,10 +150,10 @@ P2 whole-file canary 给出了确定反例：Tetris 页面层的 `.info-panel { 
 因此五层文件级候选被否决。修正后的**规则职责级**目标为：
 
 ```css
-@layer reset, tokens, showcase, components, layout, pages, contracts;
+@layer reset, tokens, showcase, components, accessibility, layout, pages, contracts;
 ```
 
-`reset` 只承载最低优先级的普通 reset/default normalization；reduced-motion 等 `!important` 全局规则不自动归入 reset。`layout` 只承载页面可以覆盖的共享默认几何；`contracts` 最后承载 drawer/frame/immersive/
+`reset` 只承载最低优先级的普通 reset/default normalization；reduced-motion `!important` 不归 reset，而由 P2-X 新增的 `accessibility` 承载。该层位于 `components` 之后、`layout` 之前：important cascade 的 layer precedence 反转，而 Science Showcase 的 shared reduced-motion clamp 当前仍属于 `components`，因此该顺序保留其既有优先级，同时 accessibility 仍压过后续结构层。`layout` 只承载页面可以覆盖的共享默认几何；`contracts` 最后承载 drawer/frame/immersive/
 safe-area 等平台结构不变量。页面视觉与玩法专属组件进入 `pages`。同一个 `layout.css` 或游戏
 CSS 文件都允许出现多个 layer block，文件路径不再决定 layer ownership。
 
@@ -169,7 +169,7 @@ P0 快照与迁移状态也必须分离：`tests/css-layer-p0-baseline.json` 是
 3. `:root` 的 5 个重复自定义属性都来自 tokens/layout 与页面 CSS；`pages` 最后继续让页面值生效。
 4. `science-showcase.css` 与 `more-games.css` 对共同加载页面 CSS 没有完全相同 selector/property；它们的非同名共享控件关系按上述 layer 顺序处理。
 
-原五层结论不再冻结 P2。#95 进一步证明未分层 universal reset 会反压 named-layer normal declarations，因此 P2-Q 引入最低 reset layer；七层规则职责模型必须先通过 rule-level verifier，再由 P3 的 A–E 回归确认 DOM、响应式与交互行为，之后才能进入 P4 canary。
+原五层结论不再冻结 P2。#95 进一步证明未分层 universal reset 会反压 named-layer normal declarations，因此 P2-Q 引入最低 reset layer；八层规则职责模型必须先通过 rule-level verifier，再由 P3 的 A–E 回归确认 DOM、响应式与交互行为，之后才能进入 P4 canary。
 
 ## P0 行为基线
 

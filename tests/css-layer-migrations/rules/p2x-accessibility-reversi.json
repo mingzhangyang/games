@@ -1,0 +1,53 @@
+{
+  "id": "p2x-accessibility-reversi",
+  "source": {
+    "path": "css/reversi.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".rv-hero-b, .rv-hero-w, .rv-status.thinking, .rv-cell.legal::after, .rv-toast",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "bb547399f49328de23659e8b78a613a7cb51aabd63a973aea4edac972b09b26d",
+    "layer": null,
+    "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "animation",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/reversi.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": ".rv-hero-b, .rv-hero-w, .rv-status.thinking, .rv-cell.legal::after, .rv-toast",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "bb547399f49328de23659e8b78a613a7cb51aabd63a973aea4edac972b09b26d",
+      "layer": "accessibility",
+      "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

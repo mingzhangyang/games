@@ -513,7 +513,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ec-hero, .ec-card { animation: none !important; }
+    @layer accessibility {
+        .ec-hero, .ec-card { animation: none !important; }
+    }
     .ec-toast { transition: none; }
     .ec-btn, .ec-icon-btn, .ec-mode, .ec-chip, .ec-pulse-btn { transition: none; }
 }

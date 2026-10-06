@@ -1,0 +1,119 @@
+{
+  "id": "p2x-accessibility-tank-battle",
+  "source": {
+    "path": "css/tank-battle.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": "*, *::before, *::after",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "42b3377eb81dd1da8531fd16c60c4564e7f0640bbd4a68583f8dadc9d0b736be",
+    "layer": null,
+    "declarationDigest": "fd0a880e891fcfa936bb9bb541566503ef3024250ecca9cad0fd84d6fe684974",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "animation-duration",
+        "value": [
+          [
+            "dimension-token",
+            "0.01ms"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      },
+      {
+        "property": "animation-iteration-count",
+        "value": [
+          [
+            "number-token",
+            "1"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      },
+      {
+        "property": "transition-duration",
+        "value": [
+          [
+            "dimension-token",
+            "0.01ms"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      },
+      {
+        "property": "scroll-behavior",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tank-battle.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": "*, *::before, *::after",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "42b3377eb81dd1da8531fd16c60c4564e7f0640bbd4a68583f8dadc9d0b736be",
+      "layer": "accessibility",
+      "declarationDigest": "fd0a880e891fcfa936bb9bb541566503ef3024250ecca9cad0fd84d6fe684974",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

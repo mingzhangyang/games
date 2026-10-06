@@ -1,0 +1,53 @@
+{
+  "id": "p2x-accessibility-needle-awn-animation",
+  "source": {
+    "path": "css/needle-awn.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".na-hero-art, .na-toast, .na-card, .na-ult-bar-fill",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "5597dfdb5dda890999c5d19ab70d9050e1827eb95e27a70975fb03618d34e766",
+    "layer": null,
+    "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "animation",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/needle-awn.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": ".na-hero-art, .na-toast, .na-card, .na-ult-bar-fill",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "5597dfdb5dda890999c5d19ab70d9050e1827eb95e27a70975fb03618d34e766",
+      "layer": "accessibility",
+      "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

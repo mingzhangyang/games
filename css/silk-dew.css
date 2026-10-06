@@ -587,7 +587,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .sd-hero, .sd-toast, .sd-card, .sd-stage[data-art-state="loading"]::after { animation: none !important; }
+    @layer accessibility {
+        .sd-hero, .sd-toast, .sd-card, .sd-stage[data-art-state="loading"]::after { animation: none !important; }
+    }
     .sd-btn, .sd-icon-btn, .sd-mode, .sd-chip { transition: none; }
 }
 

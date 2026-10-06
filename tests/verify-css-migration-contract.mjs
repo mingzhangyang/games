@@ -6,7 +6,7 @@ import {
 } from './lib/css/migration-contract.mjs';
 import { propertiesOverlap } from './lib/css/property-writes.mjs';
 
-const LAYERS = ['reset', 'tokens', 'showcase', 'components', 'layout', 'pages', 'contracts'];
+const LAYERS = ['reset', 'tokens', 'showcase', 'components', 'accessibility', 'layout', 'pages', 'contracts'];
 const ALLOWED = new Set(LAYERS);
 
 const parseMap = entries => new Map(entries.map(([path, css]) => [path, parseCssText(css, path)]));
@@ -142,6 +142,41 @@ function resetFixtureErrors(id, baseCss, currentCss) {
     return fixtureErrors;
 }
 
+
+function accessibilityFixtureErrors(id, baseCss, currentCss) {
+    const path = 'css/' + id + '.css';
+    const fixtureBase = parseMap([[path, baseCss]]);
+    const fixtureCurrent = parseMap([[path, currentCss]]);
+    const fixtureSource = catalogMap(fixtureBase).get(path)[0];
+    const fixtureDestinations = catalogMap(fixtureCurrent).get(path);
+    const fixtureErrors = [];
+    verifyRuleMigrations({
+        baseline: {
+            debt: {
+                unlayeredRules: fixtureSource.layer
+                    ? []
+                    : [[path, fixtureSource.context, fixtureSource.selector]],
+            },
+        },
+        state: {
+            ...emptyState,
+            migratedRules: [{
+                id,
+                source: sourceRef(fixtureSource),
+                destinations: fixtureDestinations.map(destinationRef),
+                conflicts: { normal: [], important: [] },
+            }],
+        },
+        currentParsedByPath: fixtureCurrent,
+        baseParsedByPath: fixtureBase,
+        stylesheetLinks: { 'fixture.html': [[path, [['href', path], ['rel', 'stylesheet']]]] },
+        allowedLayers: ALLOWED,
+        layerOrder: LAYERS,
+        baseState: emptyState,
+        errors: fixtureErrors,
+    });
+    return fixtureErrors;
+}
 assert.deepEqual(
     resetFixtureErrors('fixture-reset-valid', '*{margin:0}', '@layer reset{*{margin:0}}'),
     [],
@@ -161,6 +196,45 @@ assert.ok(resetFixtureErrors(
     '*{margin:0!important}',
     '@layer reset{*{margin:0!important}}',
 ).some(error => /reset layer accepts normal declarations only/.test(error)));
+
+
+assert.deepEqual(
+    resetFixtureErrors(
+        'fixture-accessibility-valid',
+        '@media (prefers-reduced-motion: reduce){.x{animation:none!important}}',
+        '@media (prefers-reduced-motion: reduce){@layer accessibility{.x{animation:none!important}}}',
+    ),
+    [],
+);
+assert.ok(resetFixtureErrors(
+    'fixture-accessibility-normal',
+    '@media (prefers-reduced-motion: reduce){.x{transition:none}}',
+    '@media (prefers-reduced-motion: reduce){@layer accessibility{.x{transition:none}}}',
+).some(error => /accepts !important reduced-motion declarations only/.test(error)));
+assert.ok(resetFixtureErrors(
+    'fixture-accessibility-context',
+    '@media (width >= 1px){.x{animation:none!important}}',
+    '@media (width >= 1px){@layer accessibility{.x{animation:none!important}}}',
+).some(error => /limited to prefers-reduced-motion/.test(error)));
+assert.ok(resetFixtureErrors(
+    'fixture-accessibility-property',
+    '@media (prefers-reduced-motion: reduce){.x{color:red!important}}',
+    '@media (prefers-reduced-motion: reduce){@layer accessibility{.x{color:red!important}}}',
+).some(error => /unreviewed motion property/.test(error)));
+
+
+assert.ok(accessibilityFixtureErrors(
+    'fixture-accessibility-layered-source',
+    '@media (prefers-reduced-motion: reduce){@layer components{.x{animation:none!important}}}',
+    '@media (prefers-reduced-motion: reduce){@layer accessibility{.x{animation:none!important}}}',
+).some(error => /only migrates unlayered P0 reduced-motion rules/.test(error)));
+assert.ok(accessibilityFixtureErrors(
+    'fixture-accessibility-split-destination',
+    '@media (prefers-reduced-motion: reduce){.x{animation:none!important;transition:none!important}}',
+    '@media (prefers-reduced-motion: reduce){'
+        + '@layer accessibility{.x{animation:none!important}}'
+        + '@layer contracts{.x{transition:none!important}}}',
+).some(error => /must keep the whole source rule in accessibility/.test(error)));
 
 const state = {
     migratedRules: [mapping],

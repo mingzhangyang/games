@@ -530,7 +530,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .fv-hero, .fv-card { animation: none !important; }
+    @layer accessibility {
+        .fv-hero, .fv-card { animation: none !important; }
+    }
     .fv-toast { transition: none; }
     .fv-btn, .fv-icon-btn, .fv-mode, .fv-chip, .fv-action-btn { transition: none; }
 }

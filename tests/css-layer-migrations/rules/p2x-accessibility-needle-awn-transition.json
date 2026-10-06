@@ -1,0 +1,53 @@
+{
+  "id": "p2x-accessibility-needle-awn-transition",
+  "source": {
+    "path": "css/needle-awn.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".na-btn, .na-icon-btn, .na-touch-btn",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "85b33bbcfec18208e59707ca6b74bd907dee4a8fad69009e0c169acb3b8b425d",
+    "layer": null,
+    "declarationDigest": "1decb9043de962d7d834832348d43e6bd1424f495487e3d958f074021f88cb78",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "transition",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/needle-awn.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": ".na-btn, .na-icon-btn, .na-touch-btn",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "85b33bbcfec18208e59707ca6b74bd907dee4a8fad69009e0c169acb3b8b425d",
+      "layer": "accessibility",
+      "declarationDigest": "1decb9043de962d7d834832348d43e6bd1424f495487e3d958f074021f88cb78",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

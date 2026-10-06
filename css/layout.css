@@ -768,10 +768,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .game-icon-btn { transition: none; }
+    @layer contracts {
+        .game-icon-btn { transition: none; }
 
-    .game-drawer,
-    .game-drawer-panel { transition: none; }
+        .game-drawer,
+        .game-drawer-panel { transition: none; }
+    }
 }
 
 /* ─────────────────────────────────────────────

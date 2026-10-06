@@ -399,7 +399,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .gd-hero, .gd-toast, .gd-card { animation: none !important; }
+    @layer accessibility {
+        .gd-hero, .gd-toast, .gd-card { animation: none !important; }
+    }
     .gd-btn, .gd-icon-btn, .gd-mode, .gd-level-chip { transition: none; }
 }
 

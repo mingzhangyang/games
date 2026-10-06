@@ -1156,7 +1156,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .td-hero, .td-toast, .td-panel { animation: none !important; }
+    @layer accessibility {
+        .td-hero, .td-toast, .td-panel { animation: none !important; }
+    }
     .td-btn, .td-icon-btn, .td-wave-btn, .td-skill-btn { transition: none; }
 }
 
