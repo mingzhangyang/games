@@ -43,6 +43,8 @@ const PAGES = Object.fromEntries(
 exitIfNoPages(Object.keys(PAGES), 'verify-desktop-frame');
 const VIEWPORTS = [[1280, 800], [1280, 900], [1440, 900], [1920, 1080], [2560, 1440]];
 const LANGS = ['en', 'zh'];
+const HOVER_VIEWPORT = '1280x900';
+const HOVER_LANG = 'zh';
 
 const MEASURE = () => {
     const g = s => document.querySelector(s);
@@ -169,6 +171,36 @@ function scrollbarSkinFailures(contract) {
     return issues;
 }
 
+const READ_SCROLLBAR_HOVER_RULES = () => {
+    const matches = [];
+    const walk = rules => {
+        for (const rule of rules) {
+            if (rule.cssRules) walk(rule.cssRules);
+            if (!rule.selectorText || !rule.style) continue;
+            if (rule.selectorText.includes('.game-sidebar:hover::-webkit-scrollbar-thumb')) {
+                matches.push({
+                    selector: rule.selectorText,
+                    background: rule.style.background || '',
+                    important: rule.style.getPropertyPriority('background') || '',
+                });
+            }
+        }
+    };
+    for (const sheet of document.styleSheets) {
+        try { walk(sheet.cssRules); } catch (e) { /* cross-origin sheets are irrelevant here */ }
+    }
+    return matches;
+};
+
+function scrollbarHoverRuleFailures(rules) {
+    if (!rules?.length) return ['browser CSSOM 缺少 sidebar hover thumb rule'];
+    const last = rules[rules.length - 1];
+    if (last.background !== 'var(--frame-scrollbar-thumb-hover)') {
+        return [`browser CSSOM hover thumb background=${last.background || '(empty)'}，期望 var(--frame-scrollbar-thumb-hover)`];
+    }
+    return [];
+}
+
 // 就绪：字体加载完、bindFrame 已写 --frame-chrome、且连续两帧舞台尺寸与 chrome 不变
 const WAIT_STABLE = () => new Promise(resolve => {
     const t0 = performance.now();
@@ -189,7 +221,7 @@ const WAIT_STABLE = () => new Promise(resolve => {
     document.fonts.ready.then(() => requestAnimationFrame(tick));
 });
 
-async function measureOne(page, W, H, lang) {
+async function measureOne(page, W, H, lang, measureHover) {
     const ctx = await browser.createBrowserContext();
     const pg = await ctx.newPage();
     try {
@@ -202,7 +234,7 @@ async function measureOne(page, W, H, lang) {
         await pg.mouse.move(0, 0);
         const m1 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
         let mHover = null;
-        if (!m1.err && m1.sideContract) {
+        if (measureHover && !m1.err && m1.sideContract) {
             await pg.hover('.game-sidebar').catch(() => { });
             mHover = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
             await pg.mouse.move(0, 0);
@@ -218,7 +250,12 @@ async function measureOne(page, W, H, lang) {
 const jobs = [];
 for (const lang of LANGS) {
     for (const [page, ratio] of Object.entries(PAGES)) {
-        for (const [W, H] of VIEWPORTS) jobs.push({ page, ratio, W, H, lang });
+        for (const [W, H] of VIEWPORTS) {
+            jobs.push({
+                page, ratio, W, H, lang,
+                measureHover: `${W}x${H}` === HOVER_VIEWPORT && lang === HOVER_LANG,
+            });
+        }
     }
 }
 const measured = new Map();
@@ -226,9 +263,44 @@ let next = 0;
 await Promise.all(Array.from({ length: Math.min(JOBS, jobs.length) }, async () => {
     while (next < jobs.length) {
         const job = jobs[next++];
-        measured.set(job, await measureOne(job.page, job.W, job.H, job.lang));
+        measured.set(job, await measureOne(job.page, job.W, job.H, job.lang, job.measureHover));
     }
 }));
+
+// Chromium may expose static scrollbar pseudo styles through getComputedStyle() while
+// refusing to expose the dynamic :hover result. Probe that capability once so a browser
+// observability limit is not misdiagnosed as 17 page regressions. CSSOM parsing remains
+// mandatory in either mode.
+const regressionPage = Object.keys(PAGES)[0];
+let webkitHoverComputedStyleSupported = false;
+let productionHoverRules = [];
+if (regressionPage) {
+    const ctx = await browser.createBrowserContext();
+    const pg = await ctx.newPage();
+    try {
+        await pg.setViewport({ width: 1280, height: 900 });
+        await pg.goto(`${BASE}/${regressionPage}.html`, { waitUntil: 'load', timeout: 20000 }).catch(() => { });
+        await pg.evaluate(WAIT_STABLE).catch(() => { });
+        await pg.hover('.game-sidebar').catch(() => { });
+        const baselineHover = await pg.evaluate(MEASURE);
+        productionHoverRules = await pg.evaluate(READ_SCROLLBAR_HOVER_RULES);
+        const probeStyle = await pg.addStyleTag({ content: `
+            body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb {
+                background: rgb(1, 2, 3) !important;
+            }
+        ` });
+        const forcedHover = await pg.evaluate(MEASURE);
+        webkitHoverComputedStyleSupported = !!baselineHover.sideContract?.thumbHoverActive
+            && forcedHover.sideContract?.webkitThumbBackground
+                !== baselineHover.sideContract?.webkitThumbBackground;
+        await probeStyle.evaluate(el => el.remove());
+    } finally {
+        await ctx.close();
+    }
+}
+for (const issue of scrollbarHoverRuleFailures(productionHoverRules)) {
+    failures.push(`scrollbar hover production rule: ${issue}`);
+}
 
 // 断言按原顺序逐条跑，保证失败列表与串行版本一致
 for (const lang of LANGS) {
@@ -294,11 +366,15 @@ for (const lang of LANGS) {
                 for (const issue of scrollbarSkinFailures(m1.sideContract)) {
                     failures.push(`${tag}: sidebar ${issue}`);
                 }
-                if (!mHover || mHover.err || !mHover.sideContract?.thumbHoverActive) {
-                    failures.push(`${tag}: sidebar hover 状态未成功测量`);
-                } else {
-                    for (const issue of scrollbarSkinFailures(mHover.sideContract)) {
-                        failures.push(`${tag}: hovered sidebar ${issue}`);
+                if (job.measureHover) {
+                    if (!mHover || mHover.err || !mHover.sideContract?.thumbHoverActive) {
+                        failures.push(`${tag}: sidebar hover 状态未成功测量`);
+                    } else if (webkitHoverComputedStyleSupported) {
+                        for (const issue of scrollbarSkinFailures(mHover.sideContract)) {
+                            failures.push(`${tag}: hovered sidebar ${issue}`);
+                        }
+                    } else if (!mHover.sideContract.expectedThumbHoverBackground) {
+                        failures.push(`${tag}: sidebar hover 主题变量无法解析`);
                     }
                 }
             }
@@ -319,7 +395,6 @@ for (const lang of LANGS) {
 }
 
 // 负向回归：只覆盖 scrollbar 颜色、不动宽度，验证 computed-style contract 真能抓住 cascade 漏洞。
-const regressionPage = Object.keys(PAGES)[0];
 if (regressionPage) {
     const ctx = await browser.createBrowserContext();
     const pg = await ctx.newPage();
@@ -357,9 +432,17 @@ if (regressionPage) {
         if (!afterSkin.some(issue => /color|background/.test(issue))) {
             failures.push('scrollbar color regression probe failed to detect an idle color-only cascade override');
         }
-        if (!afterHover.sideContract?.thumbHoverActive
-            || !afterHoverSkin.some(issue => /hover background/.test(issue))) {
-            failures.push('scrollbar color regression probe failed to detect a hover-only thumb-color override');
+        if (!afterHover.sideContract?.thumbHoverActive) {
+            failures.push('scrollbar color regression probe did not enter sidebar hover state');
+        } else if (webkitHoverComputedStyleSupported) {
+            if (!afterHoverSkin.some(issue => /hover background/.test(issue))) {
+                failures.push('scrollbar color regression probe failed to detect a hover-only thumb-color override');
+            }
+        } else {
+            const overriddenHoverRules = await pg.evaluate(READ_SCROLLBAR_HOVER_RULES);
+            if (!scrollbarHoverRuleFailures(overriddenHoverRules).length) {
+                failures.push('scrollbar CSSOM fallback failed to detect a hover-only thumb-color override');
+            }
         }
     } finally {
         await ctx.close();
