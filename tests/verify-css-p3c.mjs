@@ -37,6 +37,9 @@ function showcasePage(config) {
     const startGameplay = async page => {
         await page.click(selectors.levels);
         await waitHidden(page, selectors.start);
+        // Do not let Puppeteer's stationary pointer leak :hover into the next
+        // same-layout navigation, where we assert the controls' rest-state skin.
+        await page.mouse.move(0, 0);
         return true;
     };
 
@@ -59,7 +62,7 @@ function showcasePage(config) {
         },
         interact: startGameplay,
         mobileInteract: startGameplay,
-        async validate({ page, snapshot, viewportName, check }) {
+        async validate({ page, snapshot, viewportName, viewport, check }) {
             const metrics = await page.evaluate(({ selectors }) => {
                 const bodyStyle = getComputedStyle(document.body);
                 const styleOf = selector => {
@@ -192,7 +195,7 @@ function showcasePage(config) {
                 check(
                     metrics.sideCard.backgroundColor === metrics.showcase.panel
                         && metrics.sideCard.borderTopColor === metrics.showcase.border
-                        && metrics.sideCard.borderRadius === '12px'
+                        && metrics.sideCard.borderRadius === (viewport.width <= 680 ? '10px' : '12px')
                         && metrics.sideCard.boxShadow === 'none',
                     `${config.id} ${viewportName}: side card keeps showcase material contract`,
                     `${metrics.sideCard.backgroundColor} / ${metrics.sideCard.borderTopColor} / ${metrics.sideCard.borderRadius}`,
