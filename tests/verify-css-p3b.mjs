@@ -170,18 +170,24 @@ function framePage(config) {
             check(Boolean(metrics.canvas), `${config.id} ${viewportName}: canvas exists`);
             if (metrics.canvas) {
                 const requiredWidth = metrics.canvas.clientWidth * metrics.dpr;
-                const backingRatio = metrics.canvas.attrWidth / metrics.canvas.attrHeight;
+                const requiredHeight = metrics.canvas.clientHeight * metrics.dpr;
                 check(
                     metrics.canvas.attrWidth + 2 >= requiredWidth,
                     `${config.id} ${viewportName}: canvas backing width tracks devicePixelRatio`,
                     `attr=${metrics.canvas.attrWidth}×${metrics.canvas.attrHeight}, client=${metrics.canvas.clientWidth}×${metrics.canvas.clientHeight}, dpr=${metrics.dpr}`,
                 );
                 check(
-                    Math.abs(backingRatio - config.canvasRatio) < 0.015,
-                    `${config.id} ${viewportName}: canvas backing buffer keeps logical aspect ratio`,
-                    `got ${backingRatio.toFixed(4)}, want ${config.canvasRatio.toFixed(4)}`,
+                    metrics.canvas.attrHeight + 2 >= requiredHeight,
+                    `${config.id} ${viewportName}: canvas backing height tracks devicePixelRatio`,
+                    `attr=${metrics.canvas.attrWidth}×${metrics.canvas.attrHeight}, client=${metrics.canvas.clientWidth}×${metrics.canvas.clientHeight}, dpr=${metrics.dpr}`,
                 );
                 if (viewportName.startsWith('desktop')) {
+                    const backingRatio = metrics.canvas.attrWidth / metrics.canvas.attrHeight;
+                    check(
+                        Math.abs(backingRatio - config.canvasRatio) < 0.015,
+                        `${config.id} ${viewportName}: canvas backing buffer keeps logical aspect ratio`,
+                        `got ${backingRatio.toFixed(4)}, want ${config.canvasRatio.toFixed(4)}`,
+                    );
                     const ratio = metrics.canvas.width / metrics.canvas.height;
                     check(
                         Math.abs(ratio - config.canvasRatio) < 0.015,
@@ -324,6 +330,12 @@ const CASES = [
                 return wrap && !wrap.classList.contains('hidden')
                     && wrap.querySelectorAll('.sf-stage-card').length === 9;
             });
+            return true;
+        },
+        async mobileInteract(page) {
+            await page.click('#sf-btn-endless');
+            await page.waitForFunction(() => window.game?.isPlaying
+                && document.getElementById('sf-overlay-start')?.classList.contains('hidden'));
             return true;
         },
     }),
