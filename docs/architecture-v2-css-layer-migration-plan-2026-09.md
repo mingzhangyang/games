@@ -578,6 +578,17 @@ Flight 的竖屏舞台有意取消固定 aspect-ratio，因此逻辑画幅比例
 Hoop Shot 声明 `theme-light`，所以只有该页执行深/浅主题切换验收；其余四页不在本批
 顺带引入新的浅色主题契约。同一 `verify-css-p3b.mjs` 必须覆盖源码态与 `dist/`。
 
+**P3-C 行为验收：** 第三批复用同一浏览器 harness 覆盖 crystal-bloom、echo-cave、
+maxwell-demon、flame-verse、ripple-duet，重点冻结 `science-showcase` 与各页未分层 skin
+之间的双向优先级边界。共享 showcase 的重要表面规则必须继续控制 body 背景、topbar/footer/
+side-card、标题、mode/primary 控件、HUD cut box 与 overlay；页面自己的 normal skin 则继续
+保留 body typography、canvas border/radius/shadow/touch-action 等未被 showcase 接管的属性。
+三款声明 `theme-light` 的页面（Crystal Bloom、Maxwell's Demon、Ripple Duet）同时验证深浅
+主题 accent/material 切换，Echo Cave 与 Flame Verse 不新增浅色契约。每页在 1280×900 与
+390×844 下继续验证无横向溢出、关键 shell 几何以及最小真实玩法进入；同一
+`verify-css-p3c.mjs` 必须覆盖源码态与 `dist/`。本批只建立行为证据，不改变 CSS ownership、
+selector、玩法、frame variables 或 `shared-css-first`。
+
 ### P4：做插件无关性 canary
 
 目标：证明 CSS 已经不再依赖 `shared-css-first`。
@@ -746,7 +757,8 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-X / #103：完成 Reduced-Motion Accessibility Closure；新增 `accessibility` layer 并关闭 reviewed `!important` motion debt
 - [x] P2-Y / #104：完成 Landing Page Ownership Closure；将首页独占 `.game-footer-actions` 从 `layout` 重新归位到 `pages`，并补 computed-style 回归
 - [x] P3-A / #105：验证 index / word-daily / minesweeper / reversi / gomoku 的源码态 + dist 行为等价
-- [ ] P3-B：验证 planet-merge / hoop-shot / gravity-slingshot / sword-flight / needle-awn 的画布、frame-budget 与移动端高度契约
+- [x] P3-B / #106：验证 planet-merge / hoop-shot / gravity-slingshot / sword-flight / needle-awn 的画布、frame-budget 与移动端高度契约
+- [ ] P3-C：验证 crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet 的 showcase / page-skin 优先级与源码态 + dist 行为等价
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
