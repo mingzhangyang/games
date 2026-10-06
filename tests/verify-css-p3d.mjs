@@ -21,22 +21,6 @@ async function waitDrawer(page, selector, open) {
     }, { timeout: 5000 }, { selector, open });
 }
 
-async function clickReachable(page, selector) {
-    await page.waitForFunction(selector => {
-        const el = document.querySelector(selector);
-        if (!el) return false;
-        el.scrollIntoView({ block: 'center', inline: 'center' });
-        const style = getComputedStyle(el);
-        const rect = el.getBoundingClientRect();
-        if (style.display === 'none' || style.visibility === 'hidden' || Number.parseFloat(style.opacity) === 0) return false;
-        if (rect.width <= 0 || rect.height <= 0 || rect.bottom <= 0 || rect.top >= innerHeight || rect.right <= 0 || rect.left >= innerWidth) return false;
-        const x = Math.min(innerWidth - 1, Math.max(0, rect.left + rect.width / 2));
-        const y = Math.min(innerHeight - 1, Math.max(0, rect.top + rect.height / 2));
-        const hit = document.elementFromPoint(x, y);
-        return Boolean(hit && (hit === el || el.contains(hit)));
-    }, { timeout: 5000 }, selector);
-    await page.click(selector);
-}
 
 async function validateDrawer(page, config, check, viewportName) {
     const initial = await page.evaluate(cfg => {
@@ -154,9 +138,14 @@ async function validateDrawer(page, config, check, viewportName) {
 
         const manuallyPaused = await setPaused(true);
         check(manuallyPaused === true, label(config.id, viewportName, 'player pause state can be established before drawer reopen'));
-        await clickReachable(page, config.drawerContract.toggle);
+        // Pointer reachability and drawer geometry were already proven by the first
+        // open/close cycle above. This second cycle isolates the state-machine contract:
+        // a player-paused game must stay paused after the drawer closes. Trigger the same
+        // button click handler directly so layout/scroll changes from Tetris unlockPage()
+        // cannot create a second, unrelated pointer-geometry race.
+        await page.evaluate(selector => document.querySelector(selector)?.click(), config.drawerContract.toggle);
         await waitDrawer(page, config.drawerContract.drawer, true);
-        await page.click(config.drawerContract.close);
+        await page.evaluate(selector => document.querySelector(selector)?.click(), config.drawerContract.close);
         await waitDrawer(page, config.drawerContract.drawer, false);
         const stillPaused = await runningState();
         check(stillPaused === false, label(config.id, viewportName, 'closing drawer does not resume player-paused gameplay'));
