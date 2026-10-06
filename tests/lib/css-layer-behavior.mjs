@@ -145,9 +145,15 @@ export async function runCssLayerBehaviorBatch({
             assertFrame(testCase, dark, 'desktop');
             check(pageErrors.length === 0, `${testCase.id} desktop dark: no pageerror`, pageErrors.join(' | '));
 
+            // Navigation and interaction errors are separate evidence. Clear only after
+            // the navigation assertion so a handler that mutates expected DOM and then
+            // throws cannot be hidden by the next navigate() resetting pageErrors.
+            pageErrors = [];
             let interactionOk = false;
             try {
                 interactionOk = await testCase.interact(page);
+                // Give browser error events one rendering turn to cross the CDP boundary.
+                await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => resolve())));
             } catch (error) {
                 check(false, `${testCase.id}: interaction probe succeeds`, error.message);
             }
@@ -155,6 +161,11 @@ export async function runCssLayerBehaviorBatch({
             else if (!failures.some(item => item.startsWith(`${testCase.id}: interaction probe succeeds`))) {
                 check(false, `${testCase.id}: interaction probe succeeds`);
             }
+            check(
+                pageErrors.length === 0,
+                `${testCase.id} interaction: no pageerror`,
+                pageErrors.join(' | '),
+            );
 
             await navigate(testCase, viewports.desktop, 'light');
             const light = await snapshot(testCase);
