@@ -291,9 +291,9 @@
 }
 
 /* 首页仍复用该 actions row 放语言/主题控件；游戏页 #89 后不再渲染它。
-   该 footer row 不带 .game-topbar-group，因此 ≤480px 顶栏 gap 不会作用到它。
-   继续留在 layout 只是把首页专属 actions-row 的 pages 归位延后到后续批次。 */
-@layer layout {
+   P2-Y 起 ownership 正式归首页 pages。规则暂留在 layout.css 仅为保持 P2
+   “不跨 stylesheet 搬迁”的稳定 rule identity；文件路径不再代表 layer ownership。 */
+@layer pages {
     .game-footer-actions {
         display: flex;
         align-items: center;

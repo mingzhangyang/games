@@ -530,6 +530,18 @@ contract v3 对 accessibility destination 做 fail-closed 校验：必须来自�
 suppression、shared icon/drawer normal override，以及仍由 components 持有的 Science Showcase
 shared reduced-motion clamp precedence 没有被新层顺序改变。
 
+**P2-Y / #104 Landing Page Ownership Closure：** #89 以后游戏页已经不再渲染
+`.game-footer-actions`，当前唯一消费者是首页 footer 的语言/主题控件，因此它不再是共享
+`layout` default，而是明确的 landing-page `pages` 规则。P2 的 migration contract 禁止
+跨 stylesheet 搬迁，所以本批保留规则在 `css/layout.css` 的物理位置，只把 layer ownership
+从 `layout` 重新归到 `pages`；这再次落实“文件路径不等于 layer ownership”，同时保持稳定的
+rule identity 与 append-only lineage。
+
+该 relayer 不减少 P0 unlayered debt，也不改 declaration、selector 或 DOM。首页现有
+`verify-index-layout.mjs` 同批扩展为六档视口 computed-style contract，持续断言 actions row
+为 flex、横纵居中且 gap 为 8px，避免以后把 landing-only rule 误迁回共享 layout 或因 responsive
+peer 造成无声级联变化。完成本批后，再进入 P3 A–E 的插件保留模式全页面行为验证。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 
@@ -713,6 +725,10 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-S / #98：完成 Layout Closure A；迁移 shell/topbar/footer/footer-hint 四个 responsive family 共 12 条规则到 `layout`；首页 `.game-footer` 页面覆盖保持未分层优先，`game-hud-box` 与 contracts family 继续暂缓
 - [x] P2-T：完成 Pages Closure A；共享 `.game-hud-box` → `layout`，Tetris HUD/title + 首页 `.game-footer` → `pages`，首次闭合 `layout → pages` exact-selector dependency chain；`.game-footer-actions` 与 contracts family 继续暂缓
 - [x] P2-U：完成 Contracts Closure A；drawer / stats-drawer 结构族首次进入 `contracts`，`.game-drawer` / panel 以 1→N 拆分保留视觉到 `components`，Tetris `.info-panel` 与三条 body overflow peers 同步进入 `pages`，闭合 sidebar display + drawer-lock 跨-selector 依赖；Tower Defense 桌面 stats-button 例外、frame-budget 与 immersive family 继续暂缓
+- [x] P2-V / #101：完成 Frame Budget Closure；sidebar 纵向预算进入 `contracts`，scrollbar skin 留在 `components`
+- [x] P2-W / #102：完成 Immersive & Safe-Area Contracts Closure；共享 immersive 边界与 Tower Defense 结构例外组成 dependency closure
+- [x] P2-X / #103：完成 Reduced-Motion Accessibility Closure；新增 `accessibility` layer 并关闭 reviewed `!important` motion debt
+- [x] P2-Y / #104：完成 Landing Page Ownership Closure；将首页独占 `.game-footer-actions` 从 `layout` 重新归位到 `pages`，并补 computed-style 回归
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

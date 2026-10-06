@@ -173,6 +173,7 @@
     "tests/css-layer-migrations/rules/p2x-accessibility-tower-defense.json",
     "tests/css-layer-migrations/rules/p2x-accessibility-word-daily.json",
     "tests/css-layer-migrations/rules/p2x-contracts-reduced-motion-icon-button.json",
-    "tests/css-layer-migrations/rules/p2x-contracts-reduced-motion-drawer.json"
+    "tests/css-layer-migrations/rules/p2x-contracts-reduced-motion-drawer.json",
+    "tests/css-layer-migrations/rules/p2y-pages-index-footer-actions.json"
   ]
 }
