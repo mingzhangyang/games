@@ -33,14 +33,21 @@ function showcasePage(config) {
         start: `#${prefix}-start`,
         levels: `#${prefix}-btn-levels`,
     };
+    const gameGlobal = `${prefix}Game`;
 
     const startGameplay = async page => {
         await page.click(selectors.levels);
-        await waitHidden(page, selectors.start);
+        await page.waitForFunction(({ start, gameGlobal }) => {
+            const startEl = document.querySelector(start);
+            const game = window[gameGlobal];
+            const startHidden = startEl
+                && (startEl.classList.contains('hidden') || getComputedStyle(startEl).display === 'none');
+            return startHidden && game?.isRunning?.() === true;
+        }, { timeout: 5000 }, { start: selectors.start, gameGlobal });
         // Do not let Puppeteer's stationary pointer leak :hover into the next
         // same-layout navigation, where we assert the controls' rest-state skin.
         await page.mouse.move(0, 0);
-        return true;
+        return page.evaluate(name => window[name]?.isRunning?.() === true, gameGlobal);
     };
 
     return {
@@ -63,21 +70,22 @@ function showcasePage(config) {
         interact: startGameplay,
         mobileInteract: startGameplay,
         async validate({ page, snapshot, viewportName, viewport, check }) {
-            const metrics = await page.evaluate(({ selectors }) => {
+            const metrics = await page.evaluate(({ selectors, expectedTitleColor }) => {
                 const bodyStyle = getComputedStyle(document.body);
                 const styleOf = selector => {
                     const el = document.querySelector(selector);
                     return el ? getComputedStyle(el) : null;
                 };
-                const resolveColor = cssVar => {
+                const resolveColorValue = value => {
                     const probe = document.createElement('span');
                     probe.style.position = 'fixed';
-                    probe.style.color = `var(${cssVar})`;
+                    probe.style.color = value;
                     document.body.appendChild(probe);
-                    const value = getComputedStyle(probe).color;
+                    const resolved = getComputedStyle(probe).color;
                     probe.remove();
-                    return value;
+                    return resolved;
                 };
+                const resolveColor = cssVar => resolveColorValue(`var(${cssVar})`);
                 const topbar = styleOf(selectors.topbar);
                 const footer = styleOf(selectors.footer);
                 const sideCard = styleOf(selectors.sideCard);
@@ -125,6 +133,7 @@ function showcasePage(config) {
                         borderRadius: sideCard.borderRadius,
                         boxShadow: sideCard.boxShadow,
                     },
+                    expectedTitleColor: resolveColorValue(expectedTitleColor),
                     title: title && {
                         backgroundImage: title.backgroundImage,
                         color: title.color,
@@ -157,7 +166,10 @@ function showcasePage(config) {
                         cursor: canvas.cursor,
                     },
                 };
-            }, { selectors });
+            }, {
+                selectors,
+                expectedTitleColor: config.titleColors[snapshot.theme],
+            });
 
             check(
                 metrics.bodyClasses.includes('science-showcase') && metrics.bodyClasses.includes(config.themeClass),
@@ -209,9 +221,10 @@ function showcasePage(config) {
             if (metrics.title) {
                 check(
                     metrics.title.backgroundImage === 'none'
+                        && metrics.title.color === metrics.expectedTitleColor
                         && (metrics.title.textFillColor === 'currentcolor' || metrics.title.textFillColor === metrics.title.color),
-                    `${config.id} ${viewportName}: showcase title stays solid instead of gradient-clipped`,
-                    `${metrics.title.backgroundImage} / fill=${metrics.title.textFillColor} / color=${metrics.title.color}`,
+                    `${config.id} ${viewportName}: showcase title keeps solid theme color`,
+                    `${metrics.title.backgroundImage} / fill=${metrics.title.textFillColor} / color=${metrics.title.color} / expected=${metrics.expectedTitleColor}`,
                 );
             }
             check(Boolean(metrics.mode), `${config.id} ${viewportName}: mode control exists`);
@@ -278,6 +291,7 @@ const CASES = [
         stageWidth: 560,
         lightTheme: true,
         accents: { dark: '#69c7c7', light: '#22807f' },
+        titleColors: { dark: '#b7e5e2', light: '#1d6f6d' },
     }),
     showcasePage({
         id: 'echo-cave',
@@ -286,6 +300,7 @@ const CASES = [
         themeClass: 'science-theme-echo',
         stageWidth: 480,
         accents: { dark: '#63c7c8' },
+        titleColors: { dark: '#9ed9d7' },
     }),
     showcasePage({
         id: 'maxwell-demon',
@@ -295,6 +310,7 @@ const CASES = [
         stageWidth: 560,
         lightTheme: true,
         accents: { dark: '#70c4c3', light: '#267f7d' },
+        titleColors: { dark: '#b7d9d5', light: '#22625f' },
     }),
     showcasePage({
         id: 'flame-verse',
@@ -303,6 +319,7 @@ const CASES = [
         themeClass: 'science-theme-flame',
         stageWidth: 560,
         accents: { dark: '#e9954f' },
+        titleColors: { dark: '#f2bd69' },
     }),
     showcasePage({
         id: 'ripple-duet',
@@ -312,6 +329,7 @@ const CASES = [
         stageWidth: 560,
         lightTheme: true,
         accents: { dark: '#63c1c5', light: '#237b80' },
+        titleColors: { dark: '#e9b19d', light: '#a4432c' },
     }),
 ].filter(testCase => keepPage(testCase.id));
 
