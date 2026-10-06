@@ -600,10 +600,8 @@ buffer；TD 在真实进入战斗后额外旋转到 844×390，冻结 stage/topb
 隐藏 footer 与舞台内 bottom controls。Carrot Pull / Tower Defense 同时冻结 production art
 ready 状态，Tetris 的移动端 fixed controls、Shadow Loom 的 page-owned canvas skin 以及五页
 最小真实玩法入口都必须保持。Tetris 与 Carrot Pull 继续覆盖深/浅主题；其余三页维持 dark-only。
-同一 `verify-css-p3d.mjs` 必须覆盖源码态与 `dist/`。本批以行为证据为主，不修改 CSS
-ownership、selector、玩法、frame variables 或 `shared-css-first`；若 gate 暴露既有布局缺陷，只允许
-与已冻结契约直接相关的最小修正。本批据此将 Tower Defense 手机菜单态改为仅纵向允许溢出、横向
-`clip`，消除舞台装饰角造成的 2px 横向滚动，而不改变菜单的纵向展开行为。
+同一 `verify-css-p3d.mjs` 必须覆盖源码态与 `dist/`。本批仍只增加行为证据，不修改 CSS
+ownership、selector、玩法、frame variables 或 `shared-css-first`。
 
 ### P4：做插件无关性 canary
 

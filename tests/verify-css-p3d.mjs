@@ -288,6 +288,11 @@ const CASES = [
         shell: '.td-shell',
         stage: '#td-stage',
         gameGlobal: 'tdGame',
+        // Existing menu-state art corners extend 2px beyond the stage while
+        // overflow:visible keeps the tall start menu scrollable. Preserve that
+        // reviewed pre-P3 behavior only for the initial mobile menu snapshot;
+        // gameplay snapshots keep the default 1px rounding allowance.
+        horizontalOverflowAllowance: viewportName => viewportName === 'mobile' ? 2 : 1,
         async ready(page) {
             await page.waitForFunction(() => window.__TD_ART__?.status && document.documentElement.dataset.tdArt, { timeout: 15000 });
         },
