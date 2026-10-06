@@ -291,7 +291,11 @@ for (const testCase of cases) {
         game.gameState = 'playing';
         game.lives = 1;
         game.player.health = 1;
+        // Isolate the forced-death probe from random live-game pickup state.
+        // An initial shield pickup can otherwise absorb this bullet and make
+        // the smoke nondeterministically report that gameOver failed.
         game.player.invulnerable = 0;
+        game.player.shield = 0;
         game.bullets = [{ x: game.player.x, y: game.player.y, width: 4, height: 4, damage: 1, isPlayer: false }];
         game.checkCollisions();
         result.gameOver = game.gameState === 'gameOver';

@@ -63,6 +63,17 @@ for (const vp of VIEWPORTS) {
                 paddingBottom: footerCss.paddingBottom,
                 paddingLeft: footerCss.paddingLeft,
             } : null,
+            footerActions: (() => {
+                const el = document.querySelector('.game-footer-actions');
+                if (!el) return null;
+                const css = getComputedStyle(el);
+                return {
+                    display: css.display,
+                    alignItems: css.alignItems,
+                    justifyContent: css.justifyContent,
+                    gap: css.gap,
+                };
+            })(),
             cards: document.querySelectorAll('.game-card').length,
             lumen: !!document.getElementById('lumen-name'),
             circuit: !!document.getElementById('circuit-name'),
@@ -90,6 +101,16 @@ for (const vp of VIEWPORTS) {
         if (!footerOk) bad.push(`footer spacing=${JSON.stringify(f)}`);
     }
 
+    // #104: footer actions are landing-page-owned even though their stable rule
+    // identity remains physically in layout.css during P2.
+    const a = m.footerActions;
+    const actionsOk = a
+        && a.display === 'flex'
+        && a.alignItems === 'center'
+        && a.justifyContent === 'center'
+        && a.gap === '8px';
+    if (!actionsOk) bad.push(`footer actions=${JSON.stringify(a)}`);
+
     if (bad.length) failed++;
     const mark = bad.length ? '✗' : '✓';
     console.log(`${mark} ${vp.label.padEnd(14)} vw=${m.vw}  cards=${m.cards}  lumen=${m.lumen} circuit=${m.circuit}`);
@@ -101,6 +122,7 @@ for (const vp of VIEWPORTS) {
         const f = m.footer;
         console.log(`     footer gap=${f?.gap ?? 'missing'} padding=${f ? [f.paddingTop, f.paddingRight, f.paddingBottom, f.paddingLeft].join(' ') : 'missing'}`);
     }
+    console.log(`     footer-actions display=${a?.display ?? 'missing'} align=${a?.alignItems ?? 'missing'} justify=${a?.justifyContent ?? 'missing'} gap=${a?.gap ?? 'missing'}`);
     if (bad.length) console.log(`     ↳ 回归: ${bad.join(', ')}`);
 }
 
