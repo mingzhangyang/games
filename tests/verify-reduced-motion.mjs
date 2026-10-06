@@ -35,10 +35,10 @@ async function open(href) {
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     await page.goto(`${BASE}/${href}`, { waitUntil: 'load', timeout: 30000 });
     await page.waitForFunction(
-        () => document.readyState === 'complete' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+        () => document.readyState === 'complete' && globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches,
         { timeout: 5000 },
     );
-    const media = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const media = await page.evaluate(() => globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches);
     check(media, `${href}: reduced-motion media query is active`);
     return { page, errors };
 }
