@@ -54,7 +54,11 @@ export async function runCssLayerBehaviorBatch({
             }, { timeout: 5000 }, testCase.stage);
         }
         if (testCase.ready) {
-            await testCase.ready(page, { viewport, theme });
+            await testCase.ready(page, {
+                viewport,
+                theme: expectedTheme,
+                themePreference,
+            });
         }
     };
 
