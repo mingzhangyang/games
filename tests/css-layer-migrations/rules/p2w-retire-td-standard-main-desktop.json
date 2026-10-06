@@ -1,0 +1,128 @@
+{
+  "id": "p2w-retire-td-standard-main-desktop",
+  "kind": "retire",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "@media (width >= 1024px)",
+    "selector": ".td-main",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "093e822ee2d7a63a6817406707f86ba42d376f17f83c701e8cf045ab5c236743",
+    "layer": null,
+    "declarationDigest": "2b78fe920d7e0bc1c59c5f23bb571743394ef46899ab1ec0865bd9e6eb50b201",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "grid"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "grid-template-columns",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--stage-w"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-side"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "grid-template-rows",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "column-gap",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-main-gap"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "row-gap",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-content",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-content",
+        "value": [
+          [
+            "ident-token",
+            "start"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "Tower Defense is permanently registry-declared immersive; this legacy standard-layout desktop grid main is superseded by the immersive scene contract and would otherwise mask named-layer behavior."
+}

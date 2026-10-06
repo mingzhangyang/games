@@ -1,0 +1,62 @@
+{
+  "id": "p2w-retire-td-standard-sidebar-desktop",
+  "kind": "retire",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "@media (width >= 1024px)",
+    "selector": ".td-sidebar",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "bb213cc5b87ddb56c2669ab03b6b85182befe02cd5be42a5544b275a156316b4",
+    "layer": null,
+    "declarationDigest": "612bd9144d826fed3474ce29277dd915ee668198c01f6b599b2285553bba70d4",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "grid-column",
+        "value": [
+          [
+            "number-token",
+            "2"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "grid-row",
+        "value": [
+          [
+            "number-token",
+            "1"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "/"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "span"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "2"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "Tower Defense no longer renders the desktop sidebar in immersive layout; this legacy standard-layout grid placement is dead and would otherwise remain an unlayered structural peer."
+}

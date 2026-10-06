@@ -311,10 +311,20 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 
 ### 7.3 零回归
 
-所有规则只新增 `.game-shell--immersive` / `.game-stage--immersive` 选择器，放在 `layout.css` **末尾**
-（靠「同特异度后声明者胜」+ shell 上的双类选择器压过上方 ≥1024px 桌面预算块），不改任何既有规则。
-验证：`tools/dev/layout-metrics.mjs` 在改动前后对全部标准页逐行一致；`verify-immersive.mjs` ⑨ 抽查
-标准页不带 immersive 类 / body 标记。
+P2-W 起不再用“`layout.css` 放在文件末尾 + 同特异度后声明者胜”表达 immersive 不变量：
+`--frame-immersive-max` / `--frame-immersive-min-h` 是可覆盖配置默认值，位于 `layout`；
+shell/topbar/main/stage/footer 的视口几何、safe-area、overflow 与手势边界位于 `contracts`。
+因此 shared layout defaults 无论物理 source order 如何都不能突破 immersive contract。
+
+Tower Defense 的页面调色板、背景、边框与阴影仍属于 `pages`；800px 场景边界、sidebar 隐藏、
+desktop stats-button 可见例外与手机横屏 full-viewport battle 都与共享 immersive
+规则处于同一个 `contracts` closure。普通态 stage 的 `position:relative` 仍属于可定制的
+shared `layout` default，而不是 immersive-only 不变量；只有 TD 横屏战斗的 `position:fixed`
+是显式 `contracts` 例外。菜单态结构例外继续未分层，等待 shared start-menu
+dependency closure 与仍未分层的 overlay/overflow peers 一次收口。旧 standard-layout desktop grid 的
+`.td-main` / `.td-stage` / `.td-sidebar` 已退休，避免未分层历史 peer 反压 named layer。
+标准页仍不会获得 immersive 类或 `has-immersive-stage` body 标记；`verify-immersive.mjs` ⑨
+继续逐页抽查这一点。
 
 ### 7.4 校验
 
@@ -323,3 +333,7 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 `--frame-chrome` 为实测值、窄屏贴边 / 宽屏 600–640 居中、无横向滚动、页脚在首屏之下且可滚到。
 tower-defense 在 <1024px 手机横屏战斗态采用显式例外：舞台四边贴合整个视口、顶栏 fixed 悬浮、页脚隐藏；
 其余仍校验 4:3 canvas 后备缓冲 = CSS × min(dpr, 2)、手势属性、转屏后几何恢复及无 pageerror。
+P2-W 以后同一校验器还读取 computed style，直接断言 shell `max-width:none` / `100dvh`、
+stage `display:block` / `overflow:hidden` / `--frame-immersive-min-h`、topbar/footer 的
+`--frame-immersive-max` 与 safe-area padding，并守住 Tower Defense 桌面 stats-button
+“非 `display:none`”的合法 contract 例外（`inline-flex` 在布局参与时允许被浏览器 blockify 为 `flex`）。

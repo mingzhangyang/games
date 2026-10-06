@@ -1,0 +1,41 @@
+{
+  "id": "p2w-contracts-immersive-main",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-shell--immersive > .game-main",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "a4b49f15c321c38789c32f35d8fda5a15dd41418c7f0ffbe7f6f3fdf10f8d5e5",
+    "layer": null,
+    "declarationDigest": "ea3b2bc971e6bbef93e12bea214873c4eeb6586db205e385f9029598befeb4d1",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "flex",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ".game-shell--immersive > .game-main",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "a4b49f15c321c38789c32f35d8fda5a15dd41418c7f0ffbe7f6f3fdf10f8d5e5",
+      "layer": "contracts",
+      "declarationDigest": "ea3b2bc971e6bbef93e12bea214873c4eeb6586db205e385f9029598befeb4d1",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

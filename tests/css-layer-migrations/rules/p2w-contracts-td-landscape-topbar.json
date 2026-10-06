@@ -1,0 +1,251 @@
+{
+  "id": "p2w-contracts-td-landscape-topbar",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "@media (width < 1024px) and (orientation: landscape)",
+    "selector": ".td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar",
+    "contextDigest": "07b5c199fd6aab6a2f587dc1a21d9a8af7fbe243a225ddf782a5e479db32860c",
+    "selectorDigest": "b4f3aa19f844b42e4525711ae033e7ca254cf4027a5b7c5cfd807a5c0b92ad3e",
+    "layer": null,
+    "declarationDigest": "25e78277718fe2491b0a75f20e7a62c3e3b1c51151c5084f819547dd488aa77b",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "position",
+        "value": [
+          [
+            "ident-token",
+            "fixed"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "z-index",
+        "value": [
+          [
+            "number-token",
+            "30"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "top",
+        "value": [
+          [
+            "function-token",
+            "max("
+          ],
+          [
+            "dimension-token",
+            "6px"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "env("
+          ],
+          [
+            "ident-token",
+            "safe-area-inset-top"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "0px"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "left",
+        "value": [
+          [
+            "function-token",
+            "max("
+          ],
+          [
+            "dimension-token",
+            "6px"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "env("
+          ],
+          [
+            "ident-token",
+            "safe-area-inset-left"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "0px"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "right",
+        "value": [
+          [
+            "function-token",
+            "max("
+          ],
+          [
+            "dimension-token",
+            "6px"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "env("
+          ],
+          [
+            "ident-token",
+            "safe-area-inset-right"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "0px"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "width",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "4px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "pointer-events",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "@media (width < 1024px) and (orientation: landscape)",
+      "selector": ".td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar",
+      "contextDigest": "07b5c199fd6aab6a2f587dc1a21d9a8af7fbe243a225ddf782a5e479db32860c",
+      "selectorDigest": "b4f3aa19f844b42e4525711ae033e7ca254cf4027a5b7c5cfd807a5c0b92ad3e",
+      "layer": "contracts",
+      "declarationDigest": "25e78277718fe2491b0a75f20e7a62c3e3b1c51151c5084f819547dd488aa77b",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "id": "p2w-pages-contracts-td-immersive-shell",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "",
+    "selector": ".td-shell.game-shell--immersive",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "9f7935a29f164ea66ed94020adaab329585d0c7bc8bc4eb956d8a9abeb0802f1",
+    "layer": null,
+    "declarationDigest": "0d319eb264a1f95705a9e8146818419eb36d11bee213e7075b4f491600c89466",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "--frame-immersive-max",
+        "value": [
+          [
+            "dimension-token",
+            "800px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--td-matte",
+        "value": [
+          [
+            "hash-token",
+            "#111d2d"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--td-matte-strong",
+        "value": [
+          [
+            "hash-token",
+            "#17283a"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--td-line",
+        "value": [
+          [
+            "function-token",
+            "rgb("
+          ],
+          [
+            "number-token",
+            "139"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "196"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "193"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0.24"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--td-energy",
+        "value": [
+          [
+            "hash-token",
+            "#75e1d2"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding-left",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding-right",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "background",
+        "value": [
+          [
+            "hash-token",
+            "#091321"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".td-shell.game-shell--immersive",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "9f7935a29f164ea66ed94020adaab329585d0c7bc8bc4eb956d8a9abeb0802f1",
+      "layer": "pages",
+      "declarationDigest": "d48508359a266aee467c4f057a8698ae3e6730c3459dd39ab83faa4b9dbaf420",
+      "occurrence": 1
+    },
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".td-shell.game-shell--immersive",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "9f7935a29f164ea66ed94020adaab329585d0c7bc8bc4eb956d8a9abeb0802f1",
+      "layer": "contracts",
+      "declarationDigest": "8715612b5c14e40d13bf639bdd1ff7004810d8a502b0944132e92749ce726f6b",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "p2w-layout-immersive-vars",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ":root",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "4c10f44c2ae57698bd3ae208b6700ec56c5fa2d2865e8380b0c28c009060900d",
+    "layer": null,
+    "declarationDigest": "8ba1c3029a2b517689d091b67d5cb8c1051fde32b2a9c0fd90713e7e3ba605dd",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "--frame-immersive-max",
+        "value": [
+          [
+            "dimension-token",
+            "640px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "--frame-immersive-min-h",
+        "value": [
+          [
+            "dimension-token",
+            "300px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ":root",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "4c10f44c2ae57698bd3ae208b6700ec56c5fa2d2865e8380b0c28c009060900d",
+      "layer": "layout",
+      "declarationDigest": "8ba1c3029a2b517689d091b67d5cb8c1051fde32b2a9c0fd90713e7e3ba605dd",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

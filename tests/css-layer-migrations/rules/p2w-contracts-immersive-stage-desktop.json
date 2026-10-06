@@ -1,0 +1,164 @@
+{
+  "id": "p2w-contracts-immersive-stage-desktop",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width >= 1024px)",
+    "selector": ".game-stage.game-stage--immersive",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "5ebdb2ad6a4e998741132396894cbae41d74ac3fdc477175b0136c6ed656644a",
+    "layer": null,
+    "declarationDigest": "2481337401f389fa4f66c21843e23d125d4b4a7821b58e339abb87ec7adbb43d",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-immersive-max"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width >= 1024px)",
+      "selector": ".game-stage.game-stage--immersive",
+      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+      "selectorDigest": "5ebdb2ad6a4e998741132396894cbae41d74ac3fdc477175b0136c6ed656644a",
+      "layer": "contracts",
+      "declarationDigest": "2481337401f389fa4f66c21843e23d125d4b4a7821b58e339abb87ec7adbb43d",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "max-width",
+        "peerProperty": "-webkit-tap-highlight-color",
+        "targetLayer": "contracts",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "contracts",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "max-width",
+        "peerProperty": "-webkit-touch-callout",
+        "targetLayer": "contracts",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "contracts",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "max-width",
+        "peerProperty": "max-width",
+        "targetLayer": "contracts",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "contracts",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}
