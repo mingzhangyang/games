@@ -122,7 +122,6 @@ for (const vp of VIEWPORTS) {
         const f = m.footer;
         console.log(`     footer gap=${f?.gap ?? 'missing'} padding=${f ? [f.paddingTop, f.paddingRight, f.paddingBottom, f.paddingLeft].join(' ') : 'missing'}`);
     }
-    const a = m.footerActions;
     console.log(`     footer-actions display=${a?.display ?? 'missing'} align=${a?.alignItems ?? 'missing'} justify=${a?.justifyContent ?? 'missing'} gap=${a?.gap ?? 'missing'}`);
     if (bad.length) console.log(`     ↳ 回归: ${bad.join(', ')}`);
 }
