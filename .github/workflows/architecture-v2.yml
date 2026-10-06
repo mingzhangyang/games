@@ -78,6 +78,9 @@ jobs:
       - name: Built-output CSS P3-D behavior gate
         run: node tests/lib/run-smoke-dist.mjs tests/verify-css-p3d.mjs
 
+      - name: Built-output CSS P3-E behavior gate
+        run: node tests/lib/run-smoke-dist.mjs tests/verify-css-p3e.mjs
+
       - name: Built-output Tower Defense smoke
         run: node tests/lib/run-smoke-dist.mjs tests/smoke-tower-defense.mjs
 
