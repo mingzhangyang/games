@@ -1,0 +1,191 @@
+import puppeteer from 'puppeteer-core';
+
+const DEFAULT_VIEWPORTS = {
+    desktop: { width: 1280, height: 900, deviceScaleFactor: 1 },
+    mobile: { width: 390, height: 844, deviceScaleFactor: 2 },
+};
+
+export async function runCssLayerBehaviorBatch({
+    name,
+    base,
+    cases,
+    chromePath,
+    launchArgs,
+    viewports = DEFAULT_VIEWPORTS,
+}) {
+    const failures = [];
+    let passes = 0;
+    const check = (condition, label, detail = '') => {
+        if (condition) {
+            passes++;
+            console.log(`  ✓ ${label}${detail ? ` (${detail})` : ''}`);
+            return;
+        }
+        const message = `${label}${detail ? ` — ${detail}` : ''}`;
+        failures.push(message);
+        console.log(`  ✗ ${message}`);
+    };
+
+    const browser = await puppeteer.launch({
+        executablePath: chromePath,
+        headless: 'new',
+        args: launchArgs,
+    });
+    const page = await browser.newPage();
+    let pageErrors = [];
+    page.on('pageerror', error => pageErrors.push(String(error?.message || error).split('\n')[0]));
+
+    const navigate = async (testCase, viewport, theme) => {
+        await page.setViewport(viewport);
+        pageErrors = [];
+        await page.evaluate(value => localStorage.setItem('site_theme', value), theme);
+        await page.goto(`${base}/${testCase.href}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.waitForFunction(
+            expected => document.documentElement.getAttribute('data-theme') === expected,
+            { timeout: 5000 },
+            theme,
+        );
+        if (testCase.stage) {
+            await page.waitForFunction(selector => {
+                const el = document.querySelector(selector);
+                if (!el) return false;
+                const rect = el.getBoundingClientRect();
+                return rect.width > 0 && rect.height > 0;
+            }, { timeout: 5000 }, testCase.stage);
+        }
+    };
+
+    const snapshot = testCase => page.evaluate(config => {
+        const rectOf = selector => {
+            const el = document.querySelector(selector);
+            if (!el) return null;
+            const rect = el.getBoundingClientRect();
+            return {
+                left: rect.left,
+                right: rect.right,
+                width: rect.width,
+                height: rect.height,
+                display: getComputedStyle(el).display,
+            };
+        };
+        const rootStyle = getComputedStyle(document.documentElement);
+        const shell = config.shell ? document.querySelector(config.shell) : null;
+        const shellStyle = shell ? getComputedStyle(shell) : null;
+        const bodyStyle = getComputedStyle(document.body);
+        const selectors = [...new Set([
+            ...(config.probes || []),
+            config.shell,
+            config.stage,
+        ].filter(Boolean))];
+
+        return {
+            theme: document.documentElement.getAttribute('data-theme'),
+            scrollWidth: document.documentElement.scrollWidth,
+            viewportWidth: innerWidth,
+            bodyBackground: `${bodyStyle.backgroundColor}|${bodyStyle.backgroundImage}`,
+            themeVar: rootStyle.getPropertyValue(config.themeVar).trim(),
+            frame: shellStyle ? {
+                max: shellStyle.getPropertyValue('--frame-max').trim(),
+                wide: shellStyle.getPropertyValue('--frame-max-wide').trim(),
+                stage: shellStyle.getPropertyValue('--frame-stage').trim(),
+            } : null,
+            rects: Object.fromEntries(selectors.map(selector => [selector, rectOf(selector)])),
+        };
+    }, testCase);
+
+    const assertGeometry = (testCase, snap, viewportName) => {
+        check(
+            snap.scrollWidth <= snap.viewportWidth + 1,
+            `${testCase.id} ${viewportName}: no horizontal overflow`,
+            `scroll=${snap.scrollWidth}, viewport=${snap.viewportWidth}`,
+        );
+        for (const [selector, rect] of Object.entries(snap.rects)) {
+            check(!!rect, `${testCase.id} ${viewportName}: ${selector} exists`);
+            if (!rect) continue;
+            check(
+                rect.width > 0 && rect.height > 0 && rect.display !== 'none',
+                `${testCase.id} ${viewportName}: ${selector} has visible geometry`,
+                `${Math.round(rect.width)}×${Math.round(rect.height)} display=${rect.display}`,
+            );
+            check(
+                rect.left >= -1 && rect.right <= snap.viewportWidth + 1,
+                `${testCase.id} ${viewportName}: ${selector} stays inside viewport`,
+                `left=${rect.left.toFixed(1)} right=${rect.right.toFixed(1)}`,
+            );
+        }
+    };
+
+    const assertFrame = (testCase, snap, viewportName) => {
+        if (!testCase.frame) return;
+        const labels = { max: '--frame-max', wide: '--frame-max-wide', stage: '--frame-stage' };
+        for (const [key, expected] of Object.entries(testCase.frame)) {
+            check(
+                snap.frame?.[key] === expected,
+                `${testCase.id} ${viewportName}: ${labels[key]} keeps page contract`,
+                `got ${snap.frame?.[key] || 'missing'}, want ${expected}`,
+            );
+        }
+    };
+
+    try {
+        await page.goto(`${base}/index.html`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+        for (const testCase of cases) {
+            console.log(`\n=== ${name} ${testCase.id} ===`);
+
+            await navigate(testCase, viewports.desktop, 'dark');
+            const dark = await snapshot(testCase);
+            check(dark.theme === 'dark', `${testCase.id}: dark preference resolves to dark`, dark.theme);
+            check(Boolean(dark.themeVar), `${testCase.id}: ${testCase.themeVar} is populated`);
+            check(
+                dark.bodyBackground !== 'rgba(0, 0, 0, 0)|none',
+                `${testCase.id}: dark page background is styled`,
+            );
+            assertGeometry(testCase, dark, 'desktop');
+            assertFrame(testCase, dark, 'desktop');
+            check(pageErrors.length === 0, `${testCase.id} desktop dark: no pageerror`, pageErrors.join(' | '));
+
+            let interactionOk = false;
+            try {
+                interactionOk = await testCase.interact(page);
+            } catch (error) {
+                check(false, `${testCase.id}: interaction probe succeeds`, error.message);
+            }
+            if (interactionOk) check(true, `${testCase.id}: interaction probe succeeds`);
+            else if (!failures.some(item => item.startsWith(`${testCase.id}: interaction probe succeeds`))) {
+                check(false, `${testCase.id}: interaction probe succeeds`);
+            }
+
+            await navigate(testCase, viewports.desktop, 'light');
+            const light = await snapshot(testCase);
+            check(light.theme === 'light', `${testCase.id}: light preference resolves to light`, light.theme);
+            check(Boolean(light.themeVar), `${testCase.id}: light ${testCase.themeVar} is populated`);
+            check(
+                light.themeVar !== dark.themeVar,
+                `${testCase.id}: page/theme variable changes between dark and light`,
+            );
+            check(
+                light.bodyBackground !== dark.bodyBackground,
+                `${testCase.id}: computed page background changes in light mode`,
+            );
+            assertGeometry(testCase, light, 'desktop-light');
+            assertFrame(testCase, light, 'desktop-light');
+            check(pageErrors.length === 0, `${testCase.id} desktop light: no pageerror`, pageErrors.join(' | '));
+
+            await navigate(testCase, viewports.mobile, 'dark');
+            const mobile = await snapshot(testCase);
+            assertGeometry(testCase, mobile, 'mobile');
+            assertFrame(testCase, mobile, 'mobile');
+            check(pageErrors.length === 0, `${testCase.id} mobile dark: no pageerror`, pageErrors.join(' | '));
+        }
+    } finally {
+        await browser.close();
+    }
+
+    console.log(`\n${name}: ${passes} checks passed, ${failures.length} failed`);
+    if (failures.length) {
+        for (const failure of failures) console.error(`  - ${failure}`);
+        process.exit(1);
+    }
+    console.log(`${name} source/dist behavioral contract passed ✅`);
+}
