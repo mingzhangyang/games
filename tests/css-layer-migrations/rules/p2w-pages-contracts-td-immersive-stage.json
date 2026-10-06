@@ -292,7 +292,7 @@
       "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
       "selectorDigest": "76ded83d9072e8abe8c80229000305158fae8d8303097c6c234693c4a752f4f3",
       "layer": "contracts",
-      "declarationDigest": "8408a14278366846d113e3c497ca1ba2b54ebb24511b5ced7bc3bdd97f50225b",
+      "declarationDigest": "415cf5d97f7075bebaa01b2171dca4b95b2f179ae5908a4f1005d27fa77bb0aa",
       "occurrence": 1
     },
     {
@@ -302,7 +302,7 @@
       "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
       "selectorDigest": "76ded83d9072e8abe8c80229000305158fae8d8303097c6c234693c4a752f4f3",
       "layer": "pages",
-      "declarationDigest": "8664fc307fadf8480a5ed76d7256a88570d95b0fc2ec3415ac4edb3678e03925",
+      "declarationDigest": "ac4a810bcd406dd5eb74f50a0695c5c89f67185fbc0743440a7f3c317dfd73ac",
       "occurrence": 1
     }
   ],

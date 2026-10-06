@@ -1265,7 +1265,6 @@ body {
 
 @layer contracts {
     .td-shell.game-shell--immersive .td-stage {
-        position: relative;
         width: 100%;
         max-width: 800px;
         height: calc(100dvh - var(--frame-chrome) - env(safe-area-inset-bottom, 0px));
@@ -1278,6 +1277,7 @@ body {
 
 @layer pages {
     .td-shell.game-shell--immersive .td-stage {
+        position: relative;
         background: #0b1625;
         border: 0;
         border-radius: 0;
