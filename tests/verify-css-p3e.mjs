@@ -20,7 +20,7 @@ const CASES = [
         lightTheme: false,
         darkOnly: true,
         themeVar: '--tok-bg',
-        probes: ['main.mr-main', '#game-container', '#game-area'],
+        probes: ['main.mr-main', '#game-container', '#game-area', '#game-canvas'],
         async ready(page) {
             await page.waitForFunction(
                 () => Boolean(window.mathRainGame?.gameStateManager && window.mathRainGame?.uiController),
@@ -165,21 +165,56 @@ const CASES = [
                     && getComputedStyle(orientation).display === 'none';
             }, { timeout: 12000 });
 
+            const tapPause = async expectedPaused => {
+                const target = await page.evaluate(() => {
+                    const button = document.getElementById('btnPause');
+                    const rect = button?.getBoundingClientRect();
+                    if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+                    const x = rect.left + rect.width / 2;
+                    const y = rect.top + rect.height / 2;
+                    const hit = document.elementFromPoint(x, y);
+                    return {
+                        x,
+                        y,
+                        hitPause: Boolean(hit?.closest?.('#btnPause')),
+                        hit: hit?.id || hit?.className || hit?.tagName || 'unknown',
+                    };
+                });
+                if (!target?.hitPause) {
+                    throw new Error(`Pause control is not the landscape hit target (got ${target?.hit || 'missing'})`);
+                }
+                await page.touchscreen.tap(target.x, target.y);
+                await page.waitForFunction(
+                    expected => Boolean(window.tankBattleInstance?.paused) === expected,
+                    { timeout: 5000 },
+                    expectedPaused,
+                );
+            };
+
             const before = await page.evaluate(() => Boolean(window.tankBattleInstance?.paused));
-            await page.click('#btnPause');
-            await page.waitForFunction(expected => Boolean(window.tankBattleInstance?.paused) === expected, { timeout: 5000 }, !before);
-            await page.click('#btnPause');
-            await page.waitForFunction(expected => Boolean(window.tankBattleInstance?.paused) === expected, { timeout: 5000 }, before);
+            await tapPause(!before);
+            // The production control intentionally debounces duplicate touch/click input
+            // for 250ms. Honor that contract before verifying the resume path.
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await tapPause(before);
 
             const landscape = await page.evaluate(() => {
                 const canvas = document.getElementById('gameCanvas')?.getBoundingClientRect();
                 const dpad = document.getElementById('dpad')?.getBoundingClientRect();
                 const fire = document.getElementById('btnFire')?.getBoundingClientRect();
                 return {
-                    canvas: canvas ? { width: canvas.width, height: canvas.height, left: canvas.left, right: canvas.right } : null,
+                    canvas: canvas ? {
+                        width: canvas.width,
+                        height: canvas.height,
+                        left: canvas.left,
+                        right: canvas.right,
+                        top: canvas.top,
+                        bottom: canvas.bottom,
+                    } : null,
                     dpad: dpad ? { width: dpad.width, height: dpad.height } : null,
                     fire: fire ? { width: fire.width, height: fire.height } : null,
                     vw: innerWidth,
+                    vh: innerHeight,
                 };
             });
             const landscapeOk = Boolean(
@@ -188,6 +223,8 @@ const CASES = [
                 && landscape.canvas.height > 0
                 && landscape.canvas.left >= -1
                 && landscape.canvas.right <= landscape.vw + 1
+                && landscape.canvas.top >= -1
+                && landscape.canvas.bottom <= landscape.vh + 1
                 && landscape.dpad?.width >= 100
                 && landscape.dpad?.height >= 100
                 && landscape.fire?.width >= 60
