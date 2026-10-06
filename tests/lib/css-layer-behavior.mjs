@@ -197,7 +197,7 @@ export async function runCssLayerBehaviorBatch({
                 );
                 assertGeometry(testCase, light, 'desktop-light');
                 assertFrame(testCase, light, 'desktop-light');
-                    await assertCustom(testCase, light, 'desktop-light', viewports.desktop);
+                await assertCustom(testCase, light, 'desktop-light', viewports.desktop);
                 check(pageErrors.length === 0, `${testCase.id} desktop light: no pageerror`, pageErrors.join(' | '));
 
             }
