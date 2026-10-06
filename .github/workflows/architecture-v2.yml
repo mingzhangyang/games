@@ -66,6 +66,9 @@ jobs:
       - name: Full verification suite
         run: npm run verify -- --jobs=2
 
+      - name: Built-output CSS P3-A behavior gate
+        run: node tests/lib/run-smoke-dist.mjs tests/verify-css-p3a.mjs
+
       - name: Built-output Tower Defense smoke
         run: node tests/lib/run-smoke-dist.mjs tests/smoke-tower-defense.mjs
 
