@@ -208,6 +208,33 @@ export async function runCssLayerBehaviorBatch({
             assertFrame(testCase, mobile, 'mobile');
             await assertCustom(testCase, mobile, 'mobile', viewports.mobile);
             check(pageErrors.length === 0, `${testCase.id} mobile dark: no pageerror`, pageErrors.join(' | '));
+
+            if (testCase.mobileInteract) {
+                pageErrors = [];
+                let mobileInteractionOk = false;
+                try {
+                    mobileInteractionOk = await testCase.mobileInteract(page);
+                    if (testCase.ready) {
+                        await testCase.ready(page, { viewport: viewports.mobile, theme: 'dark' });
+                    }
+                } catch (error) {
+                    check(false, `${testCase.id}: mobile gameplay probe succeeds`, error.message);
+                }
+                if (mobileInteractionOk) {
+                    check(true, `${testCase.id}: mobile gameplay probe succeeds`);
+                    const mobileGameplay = await snapshot(testCase);
+                    assertGeometry(testCase, mobileGameplay, 'mobile-gameplay');
+                    assertFrame(testCase, mobileGameplay, 'mobile-gameplay');
+                    await assertCustom(testCase, mobileGameplay, 'mobile-gameplay', viewports.mobile);
+                } else if (!failures.some(item => item.startsWith(`${testCase.id}: mobile gameplay probe succeeds`))) {
+                    check(false, `${testCase.id}: mobile gameplay probe succeeds`);
+                }
+                check(
+                    pageErrors.length === 0,
+                    `${testCase.id} mobile gameplay: no pageerror`,
+                    pageErrors.join(' | '),
+                );
+            }
         }
     } finally {
         await browser.close();
