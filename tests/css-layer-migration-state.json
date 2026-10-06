@@ -116,6 +116,11 @@
     "tests/css-layer-migrations/rules/p2u-pages-tetris-info-panel.json",
     "tests/css-layer-migrations/rules/p2u-pages-tetris-body-default.json",
     "tests/css-layer-migrations/rules/p2u-pages-tetris-body-tablet.json",
-    "tests/css-layer-migrations/rules/p2u-pages-tetris-body-narrow.json"
+    "tests/css-layer-migrations/rules/p2u-pages-tetris-body-narrow.json",
+    "tests/css-layer-migrations/rules/p2v-frame-budget-sidebar-desktop.json",
+    "tests/css-layer-migrations/rules/p2v-frame-budget-scrollbar.json",
+    "tests/css-layer-migrations/rules/p2v-frame-budget-scrollbar-track.json",
+    "tests/css-layer-migrations/rules/p2v-frame-budget-scrollbar-thumb.json",
+    "tests/css-layer-migrations/rules/p2v-frame-budget-scrollbar-thumb-hover.json"
   ]
 }
