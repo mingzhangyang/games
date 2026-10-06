@@ -603,6 +603,19 @@ ready 状态，Tetris 的移动端 fixed controls、Shadow Loom 的 page-owned c
 同一 `verify-css-p3d.mjs` 必须覆盖源码态与 `dist/`。本批仍只增加行为证据，不修改 CSS
 ownership、selector、玩法、frame variables 或 `shared-css-first`。
 
+**P3-E 行为验收：** 最后一批覆盖 math-rain 与 tank-battle 两个明确不参加 shared shell/topbar
+骨架的化外页，重点冻结“独立页面所有权”而不是强行统一结构。Math Rain 保留 page-owned
+`body { overflow:hidden }`、观测舱 responsive production background、装饰层 pointer passthrough，
+并在 desktop / 390×844 下验证 game container / game area 几何、Canvas 可见性和真实开局；
+Tank Battle 继续保持 800×600 逻辑画布与 4:3 战场、覆盖式 HUD、production art + terrain cache，
+desktop 不出现手机控制层，390×844 触屏竖屏由 fixed rotation gate 独占，844×390 横屏则显示
+virtual controller 且 D-pad / Fire 命中区域不缩水。两页都必须明确保持在 frame-budget /
+immersive / stats-drawer shared markers 之外，并执行最小真实交互，防止未来 layer cutover 把
+“化外页”误吸收到共享结构契约。两页均维持 dark-only，不在本批新增浅色主题。
+同一 `verify-css-p3e.mjs` 必须由 `verify-all` 覆盖源码态，并由 Architecture v2 candidate
+对 `dist/` 产物再次执行；本批不修改生产 CSS/JS ownership、selector、玩法或
+`shared-css-first`。
+
 ### P4：做插件无关性 canary
 
 目标：证明 CSS 已经不再依赖 `shared-css-first`。
@@ -774,6 +787,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P3-B / #106：验证 planet-merge / hoop-shot / gravity-slingshot / sword-flight / needle-awn 的画布、frame-budget 与移动端高度契约
 - [x] P3-C / #107：验证 crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet 的 showcase / page-skin 优先级与源码态 + dist 行为等价
 - [x] P3-D / #108：验证 tetris / tower-defense / carrot-pull / firefly-signal / shadow-loom 的 drawer、immersive、fixed controls 与生产美术契约
+- [ ] P3-E / #109：验证 math-rain / tank-battle 两个化外页的独立 CSS、全屏/覆盖式 HUD、orientation 与真实交互，并覆盖源码态 + dist
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
