@@ -9,14 +9,6 @@ import { runCssLayerBehaviorBatch } from './lib/css-layer-behavior.mjs';
 
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 
-async function waitHidden(page, selector) {
-    await page.waitForFunction(target => {
-        const el = document.querySelector(target);
-        return el && (el.classList.contains('hidden') || getComputedStyle(el).display === 'none');
-    }, { timeout: 5000 }, selector);
-    return true;
-}
-
 function showcasePage(config) {
     const prefix = config.prefix;
     const selectors = {
