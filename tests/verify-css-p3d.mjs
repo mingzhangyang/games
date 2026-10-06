@@ -375,7 +375,7 @@ const CASES = [
             drawerBody: '#slStatsDrawerBody', panels: '#slStatsPanels', sidebar: '.sl-sidebar',
         },
         async ready(page) {
-            await page.waitForFunction(() => window.slGame?.state === 'menu' && document.querySelectorAll('#sl-level-grid .sl-chip').length > 0, { timeout: 10000 });
+            await page.waitForFunction(() => Boolean(window.slGame) && document.querySelectorAll('#sl-level-grid .sl-chip').length > 0, { timeout: 10000 });
         },
         async interact(page) {
             await page.click('#sl-level-grid .sl-chip');
