@@ -37,7 +37,7 @@ const RUNTIME_STYLE_BASELINE_BLOB_SHA = createHash('sha1')
 const REVIEWED_P0_BASELINE_BLOB_SHA = '9c4541b4a447bff3dbecb0bc6cd02e09f3850922';
 const REVIEWED_RUNTIME_STYLE_P0_BLOB_SHA = 'e766d5873cf551fb46cda56dd0df861c08f2780f';
 const REVIEWED_VITE_CONFIG_BLOB_SHA = 'dccb984916d19229011c035321b56a9ae43138db';
-const REVIEWED_LAYER_ORDER = Object.freeze(['reset', 'tokens', 'showcase', 'accessibility', 'components', 'layout', 'pages', 'contracts']);
+const REVIEWED_LAYER_ORDER = Object.freeze(['reset', 'tokens', 'showcase', 'components', 'accessibility', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
 function listFiles(directory, root, predicate) {
     if (!existsSync(directory)) return [];

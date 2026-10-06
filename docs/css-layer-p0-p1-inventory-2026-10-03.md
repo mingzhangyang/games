@@ -150,10 +150,10 @@ P2 whole-file canary 给出了确定反例：Tetris 页面层的 `.info-panel { 
 因此五层文件级候选被否决。修正后的**规则职责级**目标为：
 
 ```css
-@layer reset, tokens, showcase, accessibility, components, layout, pages, contracts;
+@layer reset, tokens, showcase, components, accessibility, layout, pages, contracts;
 ```
 
-`reset` 只承载最低优先级的普通 reset/default normalization；reduced-motion `!important` 不归 reset，而由 P2-X 新增的 `accessibility` 承载。该层位于 `showcase` 之后、`components` 之前，以匹配 important cascade 的反向 layer precedence。`layout` 只承载页面可以覆盖的共享默认几何；`contracts` 最后承载 drawer/frame/immersive/
+`reset` 只承载最低优先级的普通 reset/default normalization；reduced-motion `!important` 不归 reset，而由 P2-X 新增的 `accessibility` 承载。该层位于 `components` 之后、`layout` 之前：important cascade 的 layer precedence 反转，而 Science Showcase 的 shared reduced-motion clamp 当前仍属于 `components`，因此该顺序保留其既有优先级，同时 accessibility 仍压过后续结构层。`layout` 只承载页面可以覆盖的共享默认几何；`contracts` 最后承载 drawer/frame/immersive/
 safe-area 等平台结构不变量。页面视觉与玩法专属组件进入 `pages`。同一个 `layout.css` 或游戏
 CSS 文件都允许出现多个 layer block，文件路径不再决定 layer ownership。
 

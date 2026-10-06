@@ -1,4 +1,4 @@
-@layer reset, tokens, showcase, accessibility, components, layout, pages, contracts;
+@layer reset, tokens, showcase, components, accessibility, layout, pages, contracts;
 
 @layer tokens {
 /* ─────────────────────────────────────────────

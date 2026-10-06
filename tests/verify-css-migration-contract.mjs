@@ -6,7 +6,7 @@ import {
 } from './lib/css/migration-contract.mjs';
 import { propertiesOverlap } from './lib/css/property-writes.mjs';
 
-const LAYERS = ['reset', 'tokens', 'showcase', 'accessibility', 'components', 'layout', 'pages', 'contracts'];
+const LAYERS = ['reset', 'tokens', 'showcase', 'components', 'accessibility', 'layout', 'pages', 'contracts'];
 const ALLOWED = new Set(LAYERS);
 
 const parseMap = entries => new Map(entries.map(([path, css]) => [path, parseCssText(css, path)]));

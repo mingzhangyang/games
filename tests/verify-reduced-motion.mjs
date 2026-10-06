@@ -121,8 +121,9 @@ if (shouldRun('word-daily.html')) {
     await page.close();
 }
 
-// Important layer precedence is reversed. Showcase intentionally remains before
-// accessibility so its universal duration clamp continues to outrank page shorthand.
+// Important layer precedence is reversed. Science Showcase still owns its shared
+// reduced-motion clamp in components, so components intentionally remains before
+// accessibility until that stylesheet gets its own dependency-closed showcase migration.
 if (shouldRun('crystal-bloom.html')) {
     const { page, errors } = await open('crystal-bloom.html');
     const s = await style(page, '.cb-card');
@@ -130,7 +131,7 @@ if (shouldRun('crystal-bloom.html')) {
     if (s) {
         check(s.animationName === 'none', 'crystal-bloom: page animation remains disabled', s.animationName);
         check(Math.abs(toMs(s.animationDuration) - 0.001) < 0.0001,
-            'crystal-bloom: showcase important duration precedence preserved', s.animationDuration);
+            'crystal-bloom: shared showcase duration precedence preserved', s.animationDuration);
     }
     check(errors.length === 0, 'crystal-bloom: no pageerror', errors.join(' | '));
     await page.close();
