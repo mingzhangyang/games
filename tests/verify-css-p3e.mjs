@@ -213,6 +213,10 @@ const CASES = [
                 const orientation = document.getElementById('orientationOverlay');
                 const orientationRect = orientation?.getBoundingClientRect();
                 const controller = document.getElementById('virtualController');
+                const hud = document.getElementById('gameUI');
+                const hudRect = hud?.getBoundingClientRect();
+                const gameInfo = document.getElementById('gameInfo');
+                const miniMap = document.getElementById('miniMap');
                 const instance = window.tankBattleInstance;
                 return {
                     bodyClass: document.body.className,
@@ -240,6 +244,22 @@ const CASES = [
                         height: orientationRect.height,
                     } : null,
                     controllerDisplay: controller ? getComputedStyle(controller).display : null,
+                    hud: hudRect ? {
+                        position: getComputedStyle(hud).position,
+                        pointerEvents: getComputedStyle(hud).pointerEvents,
+                        top: hudRect.top,
+                        left: hudRect.left,
+                        right: hudRect.right,
+                        bottom: hudRect.bottom,
+                    } : null,
+                    gameInfoPosition: gameInfo ? getComputedStyle(gameInfo).position : null,
+                    miniMapPosition: miniMap ? getComputedStyle(miniMap).position : null,
+                    containerRect: containerRect ? {
+                        top: containerRect.top,
+                        left: containerRect.left,
+                        right: containerRect.right,
+                        bottom: containerRect.bottom,
+                    } : null,
                     vw: innerWidth,
                     vh: innerHeight,
                 };
@@ -271,6 +291,24 @@ const CASES = [
                 metrics.artState === 'ready' && metrics.artReady && metrics.terrainReady,
                 label('tank-battle', viewportName, 'production art and terrain cache remain ready'),
                 JSON.stringify({ state: metrics.artState, artReady: metrics.artReady, terrainReady: metrics.terrainReady }),
+            );
+            check(
+                metrics.hud?.position === 'absolute'
+                    && metrics.hud?.pointerEvents === 'none'
+                    && metrics.gameInfoPosition === 'absolute'
+                    && metrics.miniMapPosition === 'absolute'
+                    && metrics.containerRect
+                    && metrics.hud.top >= metrics.containerRect.top - 1
+                    && metrics.hud.left >= metrics.containerRect.left - 1
+                    && metrics.hud.right <= metrics.containerRect.right + 1
+                    && metrics.hud.bottom <= metrics.containerRect.bottom + 1,
+                label('tank-battle', viewportName, 'overlay HUD remains absolutely positioned inside battlefield container'),
+                JSON.stringify({
+                    hud: metrics.hud,
+                    gameInfo: metrics.gameInfoPosition,
+                    miniMap: metrics.miniMapPosition,
+                    container: metrics.containerRect,
+                }),
             );
 
             if (viewportName === 'desktop') {
