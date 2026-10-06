@@ -50,6 +50,23 @@ async function validateDrawer(page, config, check, viewportName) {
         if (id === 'shadow-loom') return Boolean(window.slGame?.isRunning?.());
         return null;
     }, config.id);
+    const setPaused = paused => page.evaluate(({ id, paused }) => {
+        if (id === 'tetris') {
+            if (Boolean(window.game?.paused) !== paused) window.game?.togglePause?.();
+            return Boolean(window.game?.paused);
+        }
+        if (id === 'carrot-pull') {
+            if (paused) window.cpGame?.pauseQuiet?.();
+            else window.cpGame?.resumeQuiet?.();
+            return !window.cpGame?.isRunning?.();
+        }
+        if (id === 'shadow-loom') {
+            if (paused) window.slGame?.pauseQuiet?.();
+            else window.slGame?.resumeQuiet?.();
+            return !window.slGame?.isRunning?.();
+        }
+        return null;
+    }, { id: config.id, paused });
     const wasRunning = await runningState();
 
     await page.click(config.drawerContract.toggle);
@@ -64,12 +81,22 @@ async function validateDrawer(page, config, check, viewportName) {
         const body = document.querySelector(cfg.drawerBody);
         const drawerStyle = drawer ? getComputedStyle(drawer) : null;
         const panelStyle = panel ? getComputedStyle(panel) : null;
+        const rect = panel?.getBoundingClientRect();
         return {
             expanded: toggle?.getAttribute('aria-expanded'),
             position: drawerStyle?.position,
             opacity: Number.parseFloat(drawerStyle?.opacity || '0'),
             transform: panelStyle?.transform,
             maxHeight: Number.parseFloat(panelStyle?.maxHeight || '0'),
+            panelRect: rect ? {
+                top: rect.top,
+                bottom: rect.bottom,
+                left: rect.left,
+                right: rect.right,
+                width: rect.width,
+                height: rect.height,
+            } : null,
+            viewport: { width: innerWidth, height: innerHeight },
             overflow: getComputedStyle(document.body).overflow,
             panelsInDrawer: Boolean(panels && body && body.contains(panels)),
         };
@@ -78,7 +105,15 @@ async function validateDrawer(page, config, check, viewportName) {
     check(open.expanded === 'true', label(config.id, viewportName, 'drawer ARIA expands'));
     check(open.position === 'fixed' && open.opacity > 0.99, label(config.id, viewportName, 'drawer fixed overlay contract wins'), open.position + '/' + open.opacity);
     check(open.transform === 'none' || open.transform === 'matrix(1, 0, 0, 1, 0, 0)', label(config.id, viewportName, 'drawer panel settles on screen'), open.transform || 'missing');
-    check(open.maxHeight > 0, label(config.id, viewportName, 'drawer panel keeps bounded height'), String(open.maxHeight));
+    check(open.maxHeight > 0 && open.maxHeight <= open.viewport.height + 1, label(config.id, viewportName, 'drawer panel max-height stays viewport-bounded'), String(open.maxHeight));
+    check(Boolean(open.panelRect)
+        && open.panelRect.top >= -1
+        && open.panelRect.left >= -1
+        && open.panelRect.right <= open.viewport.width + 1
+        && open.panelRect.height <= open.viewport.height + 1
+        && Math.abs(open.panelRect.bottom - open.viewport.height) <= 1,
+    label(config.id, viewportName, 'drawer panel stays inside viewport and bottom-aligned'),
+    JSON.stringify({ rect: open.panelRect, viewport: open.viewport }));
     check(open.overflow === 'hidden', label(config.id, viewportName, 'drawer locks background scroll'), open.overflow);
     check(open.panelsInDrawer, label(config.id, viewportName, 'drawer keeps the single stats panel instance'));
 
@@ -99,6 +134,16 @@ async function validateDrawer(page, config, check, viewportName) {
     if (wasRunning === true) {
         const resumed = await runningState();
         check(resumed === true, label(config.id, viewportName, 'closing drawer resumes only drawer-paused gameplay'));
+
+        const manuallyPaused = await setPaused(true);
+        check(manuallyPaused === true, label(config.id, viewportName, 'player pause state can be established before drawer reopen'));
+        await page.click(config.drawerContract.toggle);
+        await waitDrawer(page, config.drawerContract.drawer, true);
+        await page.click(config.drawerContract.close);
+        await waitDrawer(page, config.drawerContract.drawer, false);
+        const stillPaused = await runningState();
+        check(stillPaused === false, label(config.id, viewportName, 'closing drawer does not resume player-paused gameplay'));
+        await setPaused(false);
     }
 }
 
