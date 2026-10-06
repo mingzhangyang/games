@@ -18,6 +18,7 @@ const CASES = [
         shell: '#game-container',
         stage: '#game-area',
         lightTheme: false,
+        darkOnly: true,
         themeVar: '--tok-bg',
         probes: ['main.mr-main', '#game-container', '#game-area'],
         async ready(page) {
@@ -117,6 +118,7 @@ const CASES = [
         shell: '#gameContainer',
         stage: '#gameCanvas',
         lightTheme: false,
+        darkOnly: true,
         themeVar: '--tok-bg',
         probes: ['main.tb-main', '#gameContainer', '#gameCanvas', '#gameInfo', '#miniMap'],
         async ready(page) {
