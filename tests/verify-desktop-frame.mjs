@@ -50,6 +50,36 @@ const MEASURE = () => {
     const side = g('.game-sidebar');
     const shell = g('.game-shell');
     const sideStyle = side ? getComputedStyle(side) : null;
+    let scrollbarSkin = null;
+    if (side && sideStyle) {
+        const probe = document.createElement('span');
+        probe.style.display = 'none';
+        side.append(probe);
+
+        const resolvedBackground = value => {
+            probe.style.background = value;
+            return getComputedStyle(probe).backgroundColor;
+        };
+        const expectedThumbBackground = resolvedBackground('var(--frame-scrollbar-thumb)');
+        const expectedThumbHoverBackground = resolvedBackground('var(--frame-scrollbar-thumb-hover)');
+        const expectedTrackBackground = resolvedBackground('transparent');
+
+        probe.style.setProperty('scrollbar-color', 'var(--frame-scrollbar-thumb) transparent');
+        const expectedScrollbarColor = getComputedStyle(probe).scrollbarColor || '';
+        probe.remove();
+
+        scrollbarSkin = {
+            scrollbarColor: sideStyle.scrollbarColor || '',
+            scrollbarColorSupported: typeof sideStyle.scrollbarColor === 'string'
+                && sideStyle.scrollbarColor !== '',
+            expectedScrollbarColor,
+            webkitTrackBackground: getComputedStyle(side, '::-webkit-scrollbar-track').backgroundColor || '',
+            webkitThumbBackground: getComputedStyle(side, '::-webkit-scrollbar-thumb').backgroundColor || '',
+            expectedTrackBackground,
+            expectedThumbBackground,
+            expectedThumbHoverBackground,
+        };
+    }
     const r = canvas ? canvas.getBoundingClientRect() : null;
     return {
         pageH: document.scrollingElement.scrollHeight,
@@ -72,6 +102,7 @@ const MEASURE = () => {
             scrollbarWidthSupported: typeof sideStyle.scrollbarWidth === 'string'
                 && sideStyle.scrollbarWidth !== '',
             webkitScrollbarWidth: getComputedStyle(side, '::-webkit-scrollbar').width || '',
+            ...scrollbarSkin,
         } : null,
         chrome: shell ? shell.style.getPropertyValue('--frame-chrome') : '',
         // bindFrame 量 chrome 靠 shell.querySelector(':scope > .game-topbar'/'.game-footer')。
@@ -108,6 +139,30 @@ const failures = [];
 // 已登记的既有缺口：不算失败，但每次运行都要打出来，避免被遗忘
 const knownGaps = [];
 const widthTable = {}; // page -> "WxH/lang" -> canvas rectW
+
+function scrollbarSkinFailures(contract) {
+    const issues = [];
+    if (!contract) return ['missing sidebar contract'];
+    if (contract.scrollbarWidthSupported && contract.scrollbarWidth !== 'thin') {
+        issues.push(`scrollbar-width=${contract.scrollbarWidth}，期望 thin`);
+    }
+    if (contract.scrollbarColorSupported
+        && contract.scrollbarColor !== contract.expectedScrollbarColor) {
+        issues.push(`scrollbar-color=${contract.scrollbarColor}，期望 ${contract.expectedScrollbarColor}`);
+    }
+    if (contract.webkitScrollbarWidth) {
+        if (contract.webkitScrollbarWidth !== '6px') {
+            issues.push(`webkit scrollbar width=${contract.webkitScrollbarWidth}，期望 6px`);
+        }
+        if (contract.webkitTrackBackground !== contract.expectedTrackBackground) {
+            issues.push(`webkit track background=${contract.webkitTrackBackground}，期望 ${contract.expectedTrackBackground}`);
+        }
+        if (contract.webkitThumbBackground !== contract.expectedThumbBackground) {
+            issues.push(`webkit thumb background=${contract.webkitThumbBackground}，期望 ${contract.expectedThumbBackground}`);
+        }
+    }
+    return issues;
+}
 
 // 就绪：字体加载完、bindFrame 已写 --frame-chrome、且连续两帧舞台尺寸与 chrome 不变
 const WAIT_STABLE = () => new Promise(resolve => {
@@ -224,11 +279,8 @@ for (const lang of LANGS) {
                 if (m1.sideContract.overscrollBehaviorY !== 'contain') {
                     failures.push(`${tag}: sidebar overscroll-behavior-y=${m1.sideContract.overscrollBehaviorY}，期望 contain`);
                 }
-                if (m1.sideContract.scrollbarWidthSupported && m1.sideContract.scrollbarWidth !== 'thin') {
-                    failures.push(`${tag}: sidebar scrollbar-width=${m1.sideContract.scrollbarWidth}，期望 thin`);
-                }
-                if (m1.sideContract.webkitScrollbarWidth && m1.sideContract.webkitScrollbarWidth !== '6px') {
-                    failures.push(`${tag}: webkit scrollbar width=${m1.sideContract.webkitScrollbarWidth}，期望 6px`);
+                for (const issue of scrollbarSkinFailures(m1.sideContract)) {
+                    failures.push(`${tag}: sidebar ${issue}`);
                 }
             }
             // f. 侧栏在屏内（历史 1998px / 1097px 整页溢出的回归）
@@ -244,6 +296,42 @@ for (const lang of LANGS) {
         // d. 舞台确实随视口长大
         const w1280 = canvasW['1280x900'], w1920 = canvasW['1920x1080'];
         if (!(w1920 > w1280)) failures.push(`${page}: 1920 档画布宽 ${w1920} 未大于 1280x900 档 ${w1280}`);
+    }
+}
+
+// 负向回归：只覆盖 scrollbar 颜色、不动宽度，验证 computed-style contract 真能抓住 cascade 漏洞。
+const regressionPage = Object.keys(PAGES)[0];
+if (regressionPage) {
+    const ctx = await browser.createBrowserContext();
+    const pg = await ctx.newPage();
+    try {
+        await pg.setViewport({ width: 1280, height: 900 });
+        await pg.goto(`${BASE}/${regressionPage}.html`, { waitUntil: 'load', timeout: 20000 }).catch(() => { });
+        await pg.evaluate(WAIT_STABLE).catch(() => { });
+        const before = await pg.evaluate(MEASURE);
+        await pg.addStyleTag({ content: `
+            body.has-frame-budget .game-sidebar {
+                scrollbar-color: rgb(1, 2, 3) transparent;
+            }
+            body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb {
+                background: rgb(1, 2, 3);
+            }
+        ` });
+        const after = await pg.evaluate(MEASURE);
+        const beforeSkin = scrollbarSkinFailures(before.sideContract);
+        const afterSkin = scrollbarSkinFailures(after.sideContract);
+        if (beforeSkin.length) {
+            failures.push(`scrollbar color regression probe baseline invalid: ${beforeSkin.join(' | ')}`);
+        }
+        if (before.sideContract?.scrollbarWidth !== after.sideContract?.scrollbarWidth
+            || before.sideContract?.webkitScrollbarWidth !== after.sideContract?.webkitScrollbarWidth) {
+            failures.push('scrollbar color regression probe changed widths; fixture must isolate color-only overrides');
+        }
+        if (!afterSkin.some(issue => /color|background/.test(issue))) {
+            failures.push('scrollbar color regression probe failed to detect a color-only cascade override');
+        }
+    } finally {
+        await ctx.close();
     }
 }
 
