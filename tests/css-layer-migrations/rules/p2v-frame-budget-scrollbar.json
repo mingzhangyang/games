@@ -1,0 +1,41 @@
+{
+  "id": "p2v-frame-budget-scrollbar",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width >= 1024px)",
+    "selector": "body.has-frame-budget .game-sidebar::-webkit-scrollbar",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "5e4adabfc29e21019adb7003f597b8ddf80d57ac530e5d34a6023ab7196e5561",
+    "layer": null,
+    "declarationDigest": "2336dcd17538359d3e5a94cf405eb39089893bc1664ea26a95021697c64098c8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "width",
+        "value": [
+          [
+            "dimension-token",
+            "6px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width >= 1024px)",
+      "selector": "body.has-frame-budget .game-sidebar::-webkit-scrollbar",
+      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+      "selectorDigest": "5e4adabfc29e21019adb7003f597b8ddf80d57ac530e5d34a6023ab7196e5561",
+      "layer": "components",
+      "declarationDigest": "2336dcd17538359d3e5a94cf405eb39089893bc1664ea26a95021697c64098c8",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
