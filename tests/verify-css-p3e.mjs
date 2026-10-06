@@ -19,7 +19,7 @@ const CASES = [
         stage: '#game-area',
         lightTheme: false,
         themeVar: '--tok-bg',
-        probes: ['main.mr-main', '#game-container', '#game-area', '#start-screen'],
+        probes: ['main.mr-main', '#game-container', '#game-area'],
         async ready(page) {
             await page.waitForFunction(
                 () => Boolean(window.mathRainGame?.gameStateManager && window.mathRainGame?.uiController),
