@@ -41,6 +41,46 @@ function framePage(config) {
                     && Boolean(shell?.style.getPropertyValue('--frame-chrome'));
             }, { timeout: 5000 }, config.shell);
             if (config.ready) await config.ready(page);
+
+            await page.evaluate(({ shell, stage, canvas }) => new Promise((resolve, reject) => {
+                const started = performance.now();
+                const snapshot = () => {
+                    const shellEl = document.querySelector(shell);
+                    const stageEl = document.querySelector(stage);
+                    const canvasEl = document.querySelector(canvas);
+                    const stageRect = stageEl?.getBoundingClientRect();
+                    const canvasRect = canvasEl?.getBoundingClientRect();
+                    return [
+                        shellEl?.style.getPropertyValue('--frame-chrome') || '',
+                        stageRect?.width || 0,
+                        stageRect?.height || 0,
+                        canvasRect?.width || 0,
+                        canvasRect?.height || 0,
+                        canvasEl?.width || 0,
+                        canvasEl?.height || 0,
+                        document.scrollingElement?.scrollHeight || document.documentElement.scrollHeight,
+                    ].join('|');
+                };
+
+                let previous = null;
+                let same = 0;
+                const tick = () => {
+                    const current = snapshot();
+                    same = current === previous && !current.startsWith('|') ? same + 1 : 0;
+                    previous = current;
+                    if (same >= 2) {
+                        resolve();
+                        return;
+                    }
+                    if (performance.now() - started > 4000) {
+                        reject(new Error(`frame geometry did not settle: ${current}`));
+                        return;
+                    }
+                    requestAnimationFrame(tick);
+                };
+
+                document.fonts.ready.then(() => requestAnimationFrame(tick), reject);
+            }), config);
         },
         async validate({ page, viewportName, check }) {
             const metrics = await page.evaluate(({ shell, stage, canvas }) => {
@@ -51,7 +91,14 @@ function framePage(config) {
                 const stageRect = stageEl?.getBoundingClientRect() || null;
                 const canvasRect = canvasEl?.getBoundingClientRect() || null;
                 const frame = {};
-                for (const [key, cssVar] of Object.entries({"wide":"--frame-max-wide","stage":"--frame-stage","side":"--frame-side","sideGap":"--frame-side-gap","ratio":"--frame-ratio","stageH":"--frame-stage-h"})) {
+                for (const [key, cssVar] of Object.entries({
+                    wide: '--frame-max-wide',
+                    stage: '--frame-stage',
+                    side: '--frame-side',
+                    sideGap: '--frame-side-gap',
+                    ratio: '--frame-ratio',
+                    stageH: '--frame-stage-h',
+                })) {
                     frame[key] = shellStyle?.getPropertyValue(cssVar).trim() || '';
                 }
                 return {
@@ -96,7 +143,7 @@ function framePage(config) {
                     `${config.id} ${viewportName}: canvas backing buffer is not undersized`,
                     `attr=${metrics.canvas.attrWidth}×${metrics.canvas.attrHeight}, client=${metrics.canvas.clientWidth}×${metrics.canvas.clientHeight}`,
                 );
-                if (viewportName === 'desktop') {
+                if (viewportName.startsWith('desktop')) {
                     const ratio = metrics.canvas.width / metrics.canvas.height;
                     check(
                         Math.abs(ratio - config.canvasRatio) < 0.015,
