@@ -69,14 +69,25 @@ const CASES = [
         stage: '.rv-stage',
         themeVar: '--rv-body-bg',
         frame: { max: '560px', wide: '820px' },
-        probes: ['.game-topbar', '.game-main', '.rv-status'],
+        // The menu intentionally clears .rv-status, so its zero-width inline box is
+        // valid before Play. Freeze the board geometry here; verify status geometry
+        // only after the game starts and the status has content again.
+        probes: ['.game-topbar', '.game-main', '.rv-board'],
         async interact(page) {
             await page.click('#rv-btn-play');
             await page.waitForFunction(() => {
                 const start = document.getElementById('rv-start');
                 return start && (start.classList.contains('hidden') || getComputedStyle(start).display === 'none');
             });
-            return page.evaluate(() => document.querySelectorAll('#rv-board .rv-cell').length === 64);
+            return page.evaluate(() => {
+                const status = document.getElementById('rv-status');
+                const rect = status?.getBoundingClientRect();
+                return document.querySelectorAll('#rv-board .rv-cell').length === 64
+                    && Boolean(status?.textContent.trim())
+                    && rect
+                    && rect.width > 0
+                    && rect.height > 0;
+            });
         },
     },
     {
