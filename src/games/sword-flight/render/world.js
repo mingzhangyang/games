@@ -2,25 +2,21 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config.js';
 
 export function resizeCanvas(game) {
-    // Backing pixels follow the rendered CSS box on both axes. Portrait gameplay
-    // intentionally lets the stage grow taller than the 480×640 logical field;
-    // using width-only scaling there makes the browser stretch a short bitmap and
-    // blurs the scene vertically. Separate transforms preserve the existing logical
-    // 480×640 coordinate system while matching the current non-uniform CSS mapping.
+    // 按容器实测缩放（照 js/gravity-slingshot.js 的形状，2026-09-19）：
+    // 此前后端固定 CANVAS_WIDTH*dpr（只重读 dpr），CSS 尺寸一变位图就脱节，
+    // 桌面舞台放大后整体拉伸变糊。setTransform 幂等，重复调用安全。
     const stage = game.canvas.parentElement;
     const cssW = (stage && stage.clientWidth) || CANVAS_WIDTH;
-    const cssH = (stage && stage.clientHeight) || CANVAS_HEIGHT;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const scaleX = (cssW / CANVAS_WIDTH) * dpr;
-    const scaleY = (cssH / CANVAS_HEIGHT) * dpr;
-    const pw = Math.round(cssW * dpr);
-    const ph = Math.round(cssH * dpr);
-    if (game.canvas.width !== pw || game.canvas.height !== ph) {
+    const s = (cssW / CANVAS_WIDTH) * dpr;
+    const pw = Math.round(CANVAS_WIDTH * s);
+    if (game.canvas.width !== pw) {
         game.canvas.width = pw;
-        game.canvas.height = ph;
+        game.canvas.height = Math.round(CANVAS_HEIGHT * s);
     }
-    game.ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    game.ctx.setTransform(s, 0, 0, s, 0, 0);
     game.dpr = dpr;
+
 }
 
 export function initBackgrounds(game) {

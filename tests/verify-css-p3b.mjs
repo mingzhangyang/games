@@ -373,9 +373,10 @@ const CASES = [
         },
         async mobileInteract(page) {
             await page.click('#na-btn-levels');
-            await page.waitForFunction(() => document.querySelector('.na-level-chip.unlocked'));
-            await page.click('.na-level-chip.unlocked');
-            await page.waitForFunction(() => document.getElementById('na-start')?.classList.contains('hidden'));
+            await page.waitForSelector('#na-level-grid .na-level-chip.unlocked', { visible: true });
+            await page.click('#na-level-grid .na-level-chip.unlocked');
+            await page.waitForFunction(() => window.gameEngine?.state === 'playing'
+                && document.getElementById('na-overlay-start')?.classList.contains('hidden'));
             return true;
         },
     }),

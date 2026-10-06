@@ -141,6 +141,10 @@ export async function runCssLayerBehaviorBatch({
         });
     };
 
+    const flushPageErrors = () => page.evaluate(
+        () => new Promise(resolve => requestAnimationFrame(() => resolve())),
+    );
+
     try {
         await page.goto(`${base}/index.html`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
@@ -168,7 +172,7 @@ export async function runCssLayerBehaviorBatch({
             try {
                 interactionOk = await testCase.interact(page);
                 // Give browser error events one rendering turn to cross the CDP boundary.
-                await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => resolve())));
+                await flushPageErrors();
             } catch (error) {
                 check(false, `${testCase.id}: interaction probe succeeds`, error.message);
             }
@@ -217,6 +221,9 @@ export async function runCssLayerBehaviorBatch({
                     if (testCase.ready) {
                         await testCase.ready(page, { viewport: viewports.mobile, theme: 'dark' });
                     }
+                    // Match the desktop probe: let late CDP pageerror events arrive
+                    // before the mobile gameplay assertion can report a false pass.
+                    await flushPageErrors();
                 } catch (error) {
                     check(false, `${testCase.id}: mobile gameplay probe succeeds`, error.message);
                 }
