@@ -300,8 +300,21 @@ const CASES = [
             return panel.display !== 'none' && panel.position === 'absolute' && panel.sharedDrawer === false;
         },
         async mobileInteract(page) {
+            // Portrait phones intentionally show a full-stage rotation prompt that owns
+            // pointer input. Enter gameplay through the real landscape path, then restore
+            // portrait so the shared harness can take its normal mobile-gameplay snapshot.
+            await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+            await page.waitForFunction(
+                () => !document.getElementById('td-rotate-prompt')?.classList.contains('is-active'),
+                { timeout: 5000 },
+            );
             await page.click('#td-btn-play');
             await page.waitForFunction(() => window.tdGame?.state === 'playing', { timeout: 5000 });
+            await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+            await page.waitForFunction(
+                () => document.getElementById('td-rotate-prompt')?.classList.contains('is-active'),
+                { timeout: 5000 },
+            );
             return true;
         },
         async validate({ page, viewportName, viewport, check }) {

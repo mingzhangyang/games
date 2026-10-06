@@ -773,7 +773,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P3-A / #105：验证 index / word-daily / minesweeper / reversi / gomoku 的源码态 + dist 行为等价
 - [x] P3-B / #106：验证 planet-merge / hoop-shot / gravity-slingshot / sword-flight / needle-awn 的画布、frame-budget 与移动端高度契约
 - [x] P3-C / #107：验证 crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet 的 showcase / page-skin 优先级与源码态 + dist 行为等价
-- [ ] P3-D：验证 tetris / tower-defense / carrot-pull / firefly-signal / shadow-loom 的 drawer、immersive、fixed controls 与生产美术契约
+- [x] P3-D / #108：验证 tetris / tower-defense / carrot-pull / firefly-signal / shadow-loom 的 drawer、immersive、fixed controls 与生产美术契约
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
