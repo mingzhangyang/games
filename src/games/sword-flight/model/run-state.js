@@ -53,6 +53,10 @@ export function startFlight(game, mode = 'stages', stageIndex = 0) {
     document.getElementById('sf-overlay-victory').classList.add('hidden');
     document.getElementById('sf-overlay-gameover').classList.add('hidden');
 
+    // Hiding the menu changes the portrait stage from content-sized grid back to
+    // the flex gameplay box, so refresh backing pixels against the settled box now.
+    game.resizeCanvas();
+
     // 重置玩家
     game.player.x = CANVAS_WIDTH / 2;
     game.player.y = CANVAS_HEIGHT * 0.75;
