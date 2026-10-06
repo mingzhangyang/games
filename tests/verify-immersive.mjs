@@ -175,7 +175,8 @@ for (const g of RUN_PAGES) {
             check(m.stageStyle.minHeight === 0, `②b ${tag}：TD 横屏覆盖共享 300px min-height`, m.stageStyle.minHeight);
         }
         if (g.id === 'tower-defense' && w >= 1024) {
-            check(m.statsDisplay !== 'none', `②b ${tag}：TD 桌面 stats-button 合法例外保持可见`, m.statsDisplay);
+            check(['inline-flex', 'flex'].includes(m.statsDisplay),
+                `②b ${tag}：TD 桌面 stats-button 合法例外保持 inline-flex/flex`, m.statsDisplay);
         }
         if (tdLandscapeFullscreen) {
             check(Math.abs(m.stage.width - m.vw) <= 1 && Math.abs(m.stage.left) <= 1,
