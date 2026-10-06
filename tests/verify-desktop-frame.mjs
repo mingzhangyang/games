@@ -75,6 +75,7 @@ const MEASURE = () => {
             expectedScrollbarColor,
             webkitTrackBackground: getComputedStyle(side, '::-webkit-scrollbar-track').backgroundColor || '',
             webkitThumbBackground: getComputedStyle(side, '::-webkit-scrollbar-thumb').backgroundColor || '',
+            thumbHoverActive: side.matches(':hover'),
             expectedTrackBackground,
             expectedThumbBackground,
             expectedThumbHoverBackground,
@@ -157,8 +158,12 @@ function scrollbarSkinFailures(contract) {
         if (contract.webkitTrackBackground !== contract.expectedTrackBackground) {
             issues.push(`webkit track background=${contract.webkitTrackBackground}，期望 ${contract.expectedTrackBackground}`);
         }
-        if (contract.webkitThumbBackground !== contract.expectedThumbBackground) {
-            issues.push(`webkit thumb background=${contract.webkitThumbBackground}，期望 ${contract.expectedThumbBackground}`);
+        const expectedThumbBackground = contract.thumbHoverActive
+            ? contract.expectedThumbHoverBackground
+            : contract.expectedThumbBackground;
+        if (contract.webkitThumbBackground !== expectedThumbBackground) {
+            const state = contract.thumbHoverActive ? 'hover' : 'idle';
+            issues.push(`webkit thumb ${state} background=${contract.webkitThumbBackground}，期望 ${expectedThumbBackground}`);
         }
     }
     return issues;
@@ -194,10 +199,17 @@ async function measureOne(page, W, H, lang) {
         pg.on('pageerror', e => errors.push(e.message));
         await pg.goto(`${BASE}/${page}.html`, { waitUntil: 'load', timeout: 20000 }).catch(() => { });
         await pg.evaluate(WAIT_STABLE).catch(() => { });
+        await pg.mouse.move(0, 0);
         const m1 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
+        let mHover = null;
+        if (!m1.err && m1.sideContract) {
+            await pg.hover('.game-sidebar').catch(() => { });
+            mHover = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
+            await pg.mouse.move(0, 0);
+        }
         await new Promise(r => setTimeout(r, CONVERGE_GAP_MS));
         const m2 = await pg.evaluate(MEASURE).catch(e => ({ err: e.message }));
-        return { m1, m2, errors };
+        return { m1, mHover, m2, errors };
     } finally {
         await ctx.close();
     }
@@ -224,7 +236,7 @@ for (const lang of LANGS) {
         const canvasW = {};
         for (const job of jobs.filter(j => j.page === page && j.lang === lang)) {
             const { W, H } = job;
-            const { m1, m2, errors } = measured.get(job);
+            const { m1, mHover, m2, errors } = measured.get(job);
             const tag = `${page} ${W}x${H} ${lang}`;
 
             if (m1.err) {
@@ -282,6 +294,13 @@ for (const lang of LANGS) {
                 for (const issue of scrollbarSkinFailures(m1.sideContract)) {
                     failures.push(`${tag}: sidebar ${issue}`);
                 }
+                if (!mHover || mHover.err || !mHover.sideContract?.thumbHoverActive) {
+                    failures.push(`${tag}: sidebar hover 状态未成功测量`);
+                } else {
+                    for (const issue of scrollbarSkinFailures(mHover.sideContract)) {
+                        failures.push(`${tag}: hovered sidebar ${issue}`);
+                    }
+                }
             }
             // f. 侧栏在屏内（历史 1998px / 1097px 整页溢出的回归）
             if (m1.sideBottom >= 0 && m1.sideBottom > m1.innerH + 2) failures.push(`${tag}: 侧栏溢出 bottom ${m1.sideBottom} > innerH ${m1.innerH}`);
@@ -316,10 +335,18 @@ if (regressionPage) {
             body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb {
                 background: rgb(1, 2, 3);
             }
+            body.has-frame-budget .game-sidebar:hover::-webkit-scrollbar-thumb,
+            body.has-frame-budget .game-sidebar::-webkit-scrollbar-thumb:hover {
+                background: rgb(4, 5, 6);
+            }
         ` });
+        await pg.mouse.move(0, 0);
         const after = await pg.evaluate(MEASURE);
+        await pg.hover('.game-sidebar');
+        const afterHover = await pg.evaluate(MEASURE);
         const beforeSkin = scrollbarSkinFailures(before.sideContract);
         const afterSkin = scrollbarSkinFailures(after.sideContract);
+        const afterHoverSkin = scrollbarSkinFailures(afterHover.sideContract);
         if (beforeSkin.length) {
             failures.push(`scrollbar color regression probe baseline invalid: ${beforeSkin.join(' | ')}`);
         }
@@ -328,7 +355,11 @@ if (regressionPage) {
             failures.push('scrollbar color regression probe changed widths; fixture must isolate color-only overrides');
         }
         if (!afterSkin.some(issue => /color|background/.test(issue))) {
-            failures.push('scrollbar color regression probe failed to detect a color-only cascade override');
+            failures.push('scrollbar color regression probe failed to detect an idle color-only cascade override');
+        }
+        if (!afterHover.sideContract?.thumbHoverActive
+            || !afterHoverSkin.some(issue => /hover background/.test(issue))) {
+            failures.push('scrollbar color regression probe failed to detect a hover-only thumb-color override');
         }
     } finally {
         await ctx.close();
