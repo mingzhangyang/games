@@ -1,0 +1,80 @@
+{
+  "id": "p2w-contracts-immersive-shell-desktop",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width >= 1024px)",
+    "selector": ".game-shell.game-shell--immersive",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "dd393accce91a110fc6816c6ea334ecb1f3dff489e56bd8876183c47d57cde88",
+    "layer": null,
+    "declarationDigest": "77bd02442cf4f890c6fab6ec2714cf42d7f556e4130b2a5b0c62e45d19a6b8a3",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width >= 1024px)",
+      "selector": ".game-shell.game-shell--immersive",
+      "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+      "selectorDigest": "dd393accce91a110fc6816c6ea334ecb1f3dff489e56bd8876183c47d57cde88",
+      "layer": "contracts",
+      "declarationDigest": "77bd02442cf4f890c6fab6ec2714cf42d7f556e4130b2a5b0c62e45d19a6b8a3",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "max-width",
+        "peerProperty": "max-width",
+        "targetLayer": "contracts",
+        "peerPath": "css/layout.css",
+        "peerContext": "",
+        "peerSourceLayer": null,
+        "peerLayer": "contracts",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}

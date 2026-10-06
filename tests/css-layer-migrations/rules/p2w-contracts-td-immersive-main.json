@@ -1,0 +1,81 @@
+{
+  "id": "p2w-contracts-td-immersive-main",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "",
+    "selector": ".td-shell.game-shell--immersive .td-main",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "4c89e2ace7d400cd0a5f33b3ecacb83fd114aaf24e756a39c758625fe01a75bc",
+    "layer": null,
+    "declarationDigest": "c06303b984e7689810a4e614590e32674fa50bed07f1ae2c3e4d82a808a759ba",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "position",
+        "value": [
+          [
+            "ident-token",
+            "relative"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "block"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "width",
+        "value": [
+          [
+            "percentage-token",
+            "100%"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "margin",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".td-shell.game-shell--immersive .td-main",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "4c89e2ace7d400cd0a5f33b3ecacb83fd114aaf24e756a39c758625fe01a75bc",
+      "layer": "contracts",
+      "declarationDigest": "c06303b984e7689810a4e614590e32674fa50bed07f1ae2c3e4d82a808a759ba",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "p2w-contracts-td-landscape-shell",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "@media (width < 1024px) and (orientation: landscape)",
+    "selector": ".td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden)",
+    "contextDigest": "07b5c199fd6aab6a2f587dc1a21d9a8af7fbe243a225ddf782a5e479db32860c",
+    "selectorDigest": "733af52942824ef1b2e3fd9c3fcddbf883f18345d2768cdc0bcbdab421f61d28",
+    "layer": null,
+    "declarationDigest": "de5743d06bbc072948bd0d7b604ae604ea28d2fd7cbf14e217567c3384282881",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "min-height",
+        "value": [
+          [
+            "dimension-token",
+            "100dvh"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "@media (width < 1024px) and (orientation: landscape)",
+      "selector": ".td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden)",
+      "contextDigest": "07b5c199fd6aab6a2f587dc1a21d9a8af7fbe243a225ddf782a5e479db32860c",
+      "selectorDigest": "733af52942824ef1b2e3fd9c3fcddbf883f18345d2768cdc0bcbdab421f61d28",
+      "layer": "contracts",
+      "declarationDigest": "de5743d06bbc072948bd0d7b604ae604ea28d2fd7cbf14e217567c3384282881",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

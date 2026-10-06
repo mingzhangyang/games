@@ -1,0 +1,163 @@
+{
+  "id": "p2w-contracts-immersive-topbar",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-shell--immersive > .game-topbar",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "4d9b5a35ddbea406c2cc6950bc4edbda4c58cdbaaed6ab91f38efea2fcb61a59",
+    "layer": null,
+    "declarationDigest": "a4c992771c77834ca2fa003f8b6cc36350c3d82ae67eaa78034e5e9e169c4cc2",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-immersive-max"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding",
+        "value": [
+          [
+            "dimension-token",
+            "6px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "max("
+          ],
+          [
+            "dimension-token",
+            "10px"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "env("
+          ],
+          [
+            "ident-token",
+            "safe-area-inset-right"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "0px"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "6px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "max("
+          ],
+          [
+            "dimension-token",
+            "10px"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "env("
+          ],
+          [
+            "ident-token",
+            "safe-area-inset-left"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "0px"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ".game-shell--immersive > .game-topbar",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "4d9b5a35ddbea406c2cc6950bc4edbda4c58cdbaaed6ab91f38efea2fcb61a59",
+      "layer": "contracts",
+      "declarationDigest": "a4c992771c77834ca2fa003f8b6cc36350c3d82ae67eaa78034e5e9e169c4cc2",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

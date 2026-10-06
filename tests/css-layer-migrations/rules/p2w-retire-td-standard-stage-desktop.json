@@ -1,0 +1,38 @@
+{
+  "id": "p2w-retire-td-standard-stage-desktop",
+  "kind": "retire",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "@media (width >= 1024px)",
+    "selector": ".td-stage",
+    "contextDigest": "1125c9dc97cd6691dd241a651071184015a289324291caa99ccfdeeb878a92e5",
+    "selectorDigest": "2893ade263f2481dce08ab305a0b7655beb082b5aa9815655ab6c290bde7483a",
+    "layer": null,
+    "declarationDigest": "c4a543a7850a0e23137aef69c31d7f8fd12dda2f811a3280ab8ad30fb629c8e8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "grid-column",
+        "value": [
+          [
+            "number-token",
+            "1"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "grid-row",
+        "value": [
+          [
+            "number-token",
+            "1"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "Tower Defense is permanently registry-declared immersive; this legacy standard-layout desktop grid placement is dead and would otherwise remain an unlayered peer of the immersive stage contract."
+}

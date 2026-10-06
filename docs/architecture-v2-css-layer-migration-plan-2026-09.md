@@ -483,6 +483,30 @@ class 或 bottom 几何而漏掉 layer precedence 回归。
 Tower Defense 的 immersive stats-button 例外、immersive/safe-area family 与 reduced-motion
 `!important` 仍明确留给后续 closure；本批不修改玩法、页面几何变量或 `shared-css-first`。
 
+**P2-W / #102 Immersive & Safe-Area Contracts Closure：** 收口最后一组大型 normal-cascade
+平台结构边界。共享 `--frame-immersive-max` / `--frame-immersive-min-h` 仍是可覆盖配置默认值，
+进入 `layout`；`.game-shell--immersive`、immersive topbar/main/stage/footer 的视口边界、
+safe-area padding、手势与 overflow 则进入 `contracts`。原来只在 desktop media 中重复
+`max-width` 的两条 declaration-identical immersive peer 也进入同一 `contracts` 层；
+P2 的 non-rule at-rule 语义仍是冻结契约，因此本批保留原 `@media` 容器而不把“删除 group”
+偷偷塞进普通 rule retirement。
+
+Tower Defense 与共享 contract 组成同一个 dependency closure：TD 的主题变量和背景/边框/阴影
+仍属于 `pages`，而 800px 场景边界、主舞台几何、sidebar 隐藏、desktop stats-button 可见例外、
+手机横屏全视口战斗进入 `contracts`。同时退休已经被
+`layout: immersive` 永久取代的旧 desktop standard-grid `.td-main` / `.td-stage` /
+`.td-sidebar` 三条规则；否则这些未分层旧规则会反压 named-layer immersive contract。
+
+本批**不**迁共享 start-menu `:has(...)` family，也不迁 TD 自己的菜单态
+touch/overflow 恢复：TD 的 `.td-overlay` 等页面 peer 仍未分层，若只把菜单例外提升到
+`contracts`，反而会被这些 unlayered normal declarations 压回去。它们应与多款游戏中尚未分层
+的页面级尺寸/overflow peers 一起作为后续独立 dependency closure。reduced-motion `!important` 也继续
+留给 accessibility closure；`shared-css-first` 保持不变。普通态 stage 的
+`position:relative` 继续是可定制 `layout` default，不被误升格为 immersive-only contract；
+只有 TD 横屏战斗的 fixed positioning 属于结构例外。浏览器验收在既有 registry-driven
+`verify-immersive.mjs` 上增加 computed-style contract，并显式守住 TD 桌面 stats-button 例外、
+safe-area padding、stage overflow/可配置 min-height 与横屏 fixed stage。
+
 **明确禁止：** whole-file wrapper、一次性给 28 个页面统一套 `pages`、给整个 `layout.css`
 统一套 `layout`，以及用新增 `!important`/selector specificity 修补 layer 模型错误。
 

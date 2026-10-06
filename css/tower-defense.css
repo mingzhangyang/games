@@ -1170,33 +1170,10 @@ body {
      * --stage-w 由 css/layout.css 桌面契约推导，--frame-chrome 由
      * src/platform/game-frame.js 经 extraChrome 把技能条高度并入。
      */
-    .td-main {
-        display: grid;
-        grid-template-columns: var(--stage-w) var(--frame-side);
-        grid-template-rows: auto auto;
-        column-gap: var(--frame-main-gap);
-        /* layout.css 的 .game-main 用 gap: var(--frame-main-gap)（双向），
-           桌面两行网格会把行 1/行 2 拉开 28px 且不在纵向预算内
-           （行距由 .td-bottom-controls 的 margin-top 提供） */
-        row-gap: 0;
-        justify-content: center;
-        align-content: start;
-    }
-
-    .td-stage {
-        grid-column: 1;
-        grid-row: 1;
-    }
-
     .td-bottom-controls {
         grid-column: 1;
         grid-row: 2;
         width: auto;
-    }
-
-    .td-sidebar {
-        grid-column: 2;
-        grid-row: 1 / span 2;
     }
 
     .td-side-title {
@@ -1245,48 +1222,67 @@ body {
    Future-city defense pass
    ─────────────────────────────────────────────
    Tower Defense is now an immersive 800×600 battlefield.  The shared
-   immersive shell owns the viewport budget; this page only sets its 800px
-   maximum and keeps all tactical controls inside the scene.
+   immersive shell owns the viewport budget. P2-W keeps page palette/config in
+   pages while structural 800px bounds, safe-area and fullscreen battle exceptions
+   live in contracts, so the scene no longer depends on unlayered source order.
 */
-.td-shell.game-shell--immersive {
-    --frame-immersive-max: 800px;
-    --td-matte: #111d2d;
-    --td-matte-strong: #17283a;
-    --td-line: rgb(139, 196, 193, 0.24);
-    --td-energy: #75e1d2;
+@layer pages {
+    .td-shell.game-shell--immersive {
+        --frame-immersive-max: 800px;
+        --td-matte: #111d2d;
+        --td-matte-strong: #17283a;
+        --td-line: rgb(139, 196, 193, 0.24);
+        --td-energy: #75e1d2;
 
-    max-width: none;
-    padding-left: 0;
-    padding-right: 0;
-    background: #091321;
+        background: #091321;
+    }
 }
 
-.td-shell.game-shell--immersive > .td-topbar,
-.td-shell.game-shell--immersive > .td-footer {
-    max-width: 800px;
+@layer contracts {
+    .td-shell.game-shell--immersive {
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
 }
 
-.td-shell.game-shell--immersive .td-main {
-    position: relative;
-    display: block;
-    width: 100%;
-    max-width: none;
-    margin: 0;
+@layer contracts {
+    .td-shell.game-shell--immersive > .td-topbar,
+    .td-shell.game-shell--immersive > .td-footer {
+        max-width: 800px;
+    }
 }
 
-.td-shell.game-shell--immersive .td-stage {
-    position: relative;
-    width: 100%;
-    max-width: 800px;
-    height: calc(100dvh - var(--frame-chrome) - env(safe-area-inset-bottom, 0px));
-    min-height: var(--frame-immersive-min-h);
-    margin: 0 auto;
-    display: block;
-    overflow: hidden;
-    background: #0b1625;
-    border: 0;
-    border-radius: 0;
-    box-shadow: 0 18px 50px rgb(0, 0, 0, 0.4);
+@layer contracts {
+    .td-shell.game-shell--immersive .td-main {
+        position: relative;
+        display: block;
+        width: 100%;
+        max-width: none;
+        margin: 0;
+    }
+}
+
+@layer contracts {
+    .td-shell.game-shell--immersive .td-stage {
+        width: 100%;
+        max-width: 800px;
+        height: calc(100dvh - var(--frame-chrome) - env(safe-area-inset-bottom, 0px));
+        min-height: var(--frame-immersive-min-h);
+        margin: 0 auto;
+        display: block;
+        overflow: hidden;
+    }
+}
+
+@layer pages {
+    .td-shell.game-shell--immersive .td-stage {
+        position: relative;
+        background: #0b1625;
+        border: 0;
+        border-radius: 0;
+        box-shadow: 0 18px 50px rgb(0, 0, 0, 0.4);
+    }
 }
 
 .td-shell.game-shell--immersive .td-stage::before,
@@ -1335,8 +1331,10 @@ body {
     backdrop-filter: blur(10px);
 }
 
-.td-shell.game-shell--immersive .td-sidebar { display: none; }
-.td-shell.game-shell--immersive .game-stats-btn { display: inline-flex; }
+@layer contracts {
+    .td-shell.game-shell--immersive .td-sidebar { display: none; }
+    .td-shell.game-shell--immersive .game-stats-btn { display: inline-flex; }
+}
 
 .td-shell.game-shell--immersive .td-stat {
     background: rgb(17, 29, 45, 0.92);
@@ -1588,35 +1586,45 @@ body {
    events), while the 800×600 canvas keeps its aspect ratio and can therefore
    use the phone's full physical height without stretching the grid. */
 @media (width < 1024px) and (orientation: landscape) {
-    body:has(.td-shell.game-shell--immersive > .td-main > .td-stage > .game-overlay--menu.hidden) {
-        overflow: hidden;
+    @layer contracts {
+        body:has(.td-shell.game-shell--immersive > .td-main > .td-stage > .game-overlay--menu.hidden) {
+            overflow: hidden;
+        }
     }
 
-    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) {
-        min-height: 100dvh;
-        padding: 0;
+    @layer contracts {
+        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) {
+            min-height: 100dvh;
+            padding: 0;
+        }
     }
 
-    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar {
-        position: fixed;
-        z-index: 30;
-        top: max(6px, env(safe-area-inset-top, 0px));
-        left: max(6px, env(safe-area-inset-left, 0px));
-        right: max(6px, env(safe-area-inset-right, 0px));
-        width: auto;
-        max-width: none;
-        padding: 0;
-        gap: 4px;
-        pointer-events: none;
+    @layer contracts {
+        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar {
+            position: fixed;
+            z-index: 30;
+            top: max(6px, env(safe-area-inset-top, 0px));
+            left: max(6px, env(safe-area-inset-left, 0px));
+            right: max(6px, env(safe-area-inset-right, 0px));
+            width: auto;
+            max-width: none;
+            padding: 0;
+            gap: 4px;
+            pointer-events: none;
+        }
     }
 
-    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar .game-topbar-group {
-        pointer-events: auto;
+    @layer contracts {
+        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar .game-topbar-group {
+            pointer-events: auto;
+        }
     }
 
-    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar .game-topbar-center {
-        pointer-events: none;
-        gap: 4px;
+    @layer contracts {
+        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar .game-topbar-center {
+            pointer-events: none;
+            gap: 4px;
+        }
     }
 
     .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar .td-stat {
@@ -1625,24 +1633,30 @@ body {
         background: rgb(11, 22, 37, 0.82);
     }
 
-    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-main {
-        width: 100vw;
-        height: 100dvh;
+    @layer contracts {
+        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-main {
+            width: 100vw;
+            height: 100dvh;
+        }
     }
 
-    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-stage {
-        position: fixed;
-        z-index: 1;
-        inset: 0;
-        width: 100vw;
-        max-width: none;
-        height: 100dvh;
-        min-height: 0;
-        margin: 0;
+    @layer contracts {
+        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) .td-stage {
+            position: fixed;
+            z-index: 1;
+            inset: 0;
+            width: 100vw;
+            max-width: none;
+            height: 100dvh;
+            min-height: 0;
+            margin: 0;
+        }
     }
 
-    .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-footer {
-        display: none;
+    @layer contracts {
+        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-footer {
+            display: none;
+        }
     }
 }
 

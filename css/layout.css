@@ -592,9 +592,11 @@
     }
 }
 
-/* 触发钮：与普通图标钮同形，仅桌面端隐藏 */
+/* 触发钮：与普通图标钮同形；桌面默认隐藏，immersive 页面合法例外必须同在 contracts。 */
 @media (width >= 1024px) {
-    .game-stats-btn { display: none; }
+    @layer contracts {
+        .game-stats-btn { display: none; }
+    }
 }
 
 /* ── 响应式：窄屏压缩 ── */
@@ -792,53 +794,60 @@
    宽度：手机端贴边铺满（不留 shell 内距与圆角）；≥ --frame-immersive-max 时居中，
      两侧由页面自己的 body 夜色背景自然延展。
 
-   ⚠️ 只新增选择器、不改任何既有规则：未声明 layout 的页面几何逐像素不变
-      （验证：tools/dev/layout-metrics.mjs 改动前后逐行一致）。
-   ⚠️ 全部规则放在文件末尾：它们要压过上方 ≥1024px 媒体块里 .game-shell / .game-stage
-      的桌面预算规则，靠的是「同等特异度、后声明者胜」+ shell 上的双类选择器。 */
-:root {
-    --frame-immersive-max: 640px;
-    --frame-immersive-min-h: 300px;
+   ⚠️ immersive 选择器始终由显式 class 选择加入；未声明 immersive layout 的页面不会命中
+      这些结构契约，标准页几何继续由现有 layout/pages 规则决定。
+   ⚠️ P2-W 起，--frame-immersive-* 的可调默认值进入 layout；immersive 几何、safe-area、
+      手势边界进入 contracts。正确性不再依赖“文件末尾 + 后声明者胜”；页面级合法结构例外
+      必须与共享规则处于同一 contracts closure。 */
+@layer layout {
+    :root {
+        --frame-immersive-max: 640px;
+        --frame-immersive-min-h: 300px;
+    }
 }
 
-.game-shell.game-shell--immersive {
-    max-width: none;
-    padding: env(safe-area-inset-top, 0) 0 0;
-    min-height: 100dvh;
-}
+@layer contracts {
+    .game-shell.game-shell--immersive {
+        max-width: none;
+        padding: env(safe-area-inset-top, 0) 0 0;
+        min-height: 100dvh;
+    }
 
-.game-shell--immersive > .game-topbar {
-    max-width: var(--frame-immersive-max);
-    padding: 6px max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px));
-}
+    .game-shell--immersive > .game-topbar {
+        max-width: var(--frame-immersive-max);
+        padding: 6px max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px));
+    }
 
-.game-shell--immersive > .game-main {
-    flex: none;
-}
+    .game-shell--immersive > .game-main {
+        flex: none;
+    }
 
-.game-stage.game-stage--immersive {
-    width: 100%;
-    max-width: var(--frame-immersive-max);
-    height: calc(100dvh - var(--frame-chrome) - env(safe-area-inset-bottom, 0px));
-    min-height: var(--frame-immersive-min-h);
-    flex: none;
-    display: block;
-    overflow: hidden;
-    /* 场景是纯手势区：不滚页、不双击缩放、不选字、不弹长按菜单 */
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
-}
+    .game-stage.game-stage--immersive {
+        width: 100%;
+        max-width: var(--frame-immersive-max);
+        height: calc(100dvh - var(--frame-chrome) - env(safe-area-inset-bottom, 0px));
+        min-height: var(--frame-immersive-min-h);
+        flex: none;
+        display: block;
+        overflow: hidden;
+        /* 场景是纯手势区：不滚页、不双击缩放、不选字、不弹长按菜单 */
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+    }
 
-.game-shell--immersive > .game-footer {
-    max-width: var(--frame-immersive-max);
-    padding: 10px max(10px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+    .game-shell--immersive > .game-footer {
+        max-width: var(--frame-immersive-max);
+        padding: 10px max(10px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+    }
 }
 
 @media (width >= 1024px) {
-    .game-shell.game-shell--immersive { max-width: none; }
+    @layer contracts {
+        .game-shell.game-shell--immersive { max-width: none; }
 
-    .game-stage.game-stage--immersive { max-width: var(--frame-immersive-max); }
+        .game-stage.game-stage--immersive { max-width: var(--frame-immersive-max); }
+    }
 }

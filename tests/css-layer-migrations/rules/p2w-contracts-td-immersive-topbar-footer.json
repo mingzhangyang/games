@@ -1,0 +1,41 @@
+{
+  "id": "p2w-contracts-td-immersive-topbar-footer",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "",
+    "selector": ".td-shell.game-shell--immersive > .td-topbar, .td-shell.game-shell--immersive > .td-footer",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "42e39092aef20ce5a981358ef48bbc7f3e1da7ceb22e6e8c3b370c847c865db1",
+    "layer": null,
+    "declarationDigest": "9bd62198e588358d2baf4b8b53d5531e3adc44549b0f89fd3a770cc4fc442bed",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "dimension-token",
+            "800px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".td-shell.game-shell--immersive > .td-topbar, .td-shell.game-shell--immersive > .td-footer",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "42e39092aef20ce5a981358ef48bbc7f3e1da7ceb22e6e8c3b370c847c865db1",
+      "layer": "contracts",
+      "declarationDigest": "9bd62198e588358d2baf4b8b53d5531e3adc44549b0f89fd3a770cc4fc442bed",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

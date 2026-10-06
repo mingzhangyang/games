@@ -9,6 +9,7 @@
 //   ③ 宽度：窄于 --frame-immersive-max 时贴边铺满；更宽时居中，按页面上限（TD 为 800px，其它为 640px）
 //   ④ 默认：无横向滚动且页脚在首屏之下可滚到；TD 手机横屏战斗例外：页脚 display:none
 //   ⑤ 场景是纯手势区：touch-action:none、user-select:none
+//   ⑤b computed contract：immersive shell/stage/topbar/footer 的 named-layer 结构值真实生效；TD 桌面 stats 例外可见
 //   ⑥ 画布后备缓冲 = CSS 尺寸 × min(dpr, 2)（高清且有上限），画面非空
 //   ⑦ HUD 在舞台上部 25% 以内（悬浮在天空区域），不是独立面板
 //   ⑧ 转屏 / 缩放后重新满足 ①（ResizeObserver + bindFrame 生效，不靠刷新）
@@ -54,8 +55,14 @@ const measure = page => page.evaluate(() => {
     const tb = topbar.getBoundingClientRect();
     const ft = footer ? footer.getBoundingClientRect() : null;
     const scs = getComputedStyle(stage);
-    const rootMax = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--frame-immersive-max')) || 640;
+    const tcs = getComputedStyle(topbar);
+    const fcs = footer ? getComputedStyle(footer) : null;
+    const stats = document.querySelector('.game-stats-btn');
+    const rootStyle = getComputedStyle(document.documentElement);
+    const rootMax = parseFloat(rootStyle.getPropertyValue('--frame-immersive-max')) || 640;
+    const rootMinH = parseFloat(rootStyle.getPropertyValue('--frame-immersive-min-h')) || 300;
     const immersiveMax = parseFloat(cs.getPropertyValue('--frame-immersive-max')) || rootMax;
+    const immersiveMinH = parseFloat(cs.getPropertyValue('--frame-immersive-min-h')) || rootMinH;
     let lit = 0;
     if (canvas && canvas.width) {
         const g = canvas.getContext('2d');
@@ -76,9 +83,37 @@ const measure = page => page.evaluate(() => {
         hud: hud ? { top: hud.getBoundingClientRect().top, bottom: hud.getBoundingClientRect().bottom } : null,
         rootMax,
         immersiveMax,
+        immersiveMinH,
         bodyClass: document.body.className,
-        topbarPosition: getComputedStyle(topbar).position,
-        footerDisplay: footer ? getComputedStyle(footer).display : null,
+        topbarPosition: tcs.position,
+        footerDisplay: footer ? fcs.display : null,
+        shellStyle: {
+            maxWidth: cs.maxWidth,
+            minHeight: parseFloat(cs.minHeight) || 0,
+            paddingTop: parseFloat(cs.paddingTop) || 0,
+            paddingLeft: parseFloat(cs.paddingLeft) || 0,
+            paddingRight: parseFloat(cs.paddingRight) || 0,
+        },
+        topbarStyle: {
+            maxWidth: parseFloat(tcs.maxWidth) || null,
+            paddingLeft: parseFloat(tcs.paddingLeft) || 0,
+            paddingRight: parseFloat(tcs.paddingRight) || 0,
+        },
+        stageStyle: {
+            position: scs.position,
+            display: scs.display,
+            overflowX: scs.overflowX,
+            overflowY: scs.overflowY,
+            maxWidth: parseFloat(scs.maxWidth) || null,
+            minHeight: parseFloat(scs.minHeight) || 0,
+        },
+        footerStyle: fcs ? {
+            maxWidth: parseFloat(fcs.maxWidth) || null,
+            paddingLeft: parseFloat(fcs.paddingLeft) || 0,
+            paddingRight: parseFloat(fcs.paddingRight) || 0,
+            paddingBottom: parseFloat(fcs.paddingBottom) || 0,
+        } : null,
+        statsDisplay: stats ? getComputedStyle(stats).display : null,
     };
 });
 
@@ -112,6 +147,37 @@ for (const g of RUN_PAGES) {
             check(Math.abs(m.stage.bottom - m.vh) <= 1, `① ${tag}：舞台底边 = 视口底边`, `stage.bottom=${m.stage.bottom} vh=${m.vh}`);
         }
         check(Math.abs(m.chromeVar - Math.round(m.padTop + m.topbarH)) <= 1, `② ${tag}：--frame-chrome 为实测值`, `${m.chromeVar} vs ${m.padTop}+${m.topbarH}`);
+        check(m.shellStyle.maxWidth === 'none', `②b ${tag}：immersive shell contract 的 max-width:none 生效`, m.shellStyle.maxWidth);
+        check(m.shellStyle.minHeight >= m.vh - 1, `②b ${tag}：immersive shell 至少占满 100dvh`, m.shellStyle.minHeight);
+        if (!tdLandscapeFullscreen) {
+            check(m.stageStyle.display === 'block', `②b ${tag}：immersive stage display:block`, m.stageStyle.display);
+            // Normal-state positioning remains a customizable layout/page choice; only the
+            // TD fullscreen state below owns a fixed-position contract.
+            check(m.stageStyle.overflowX === 'hidden' && m.stageStyle.overflowY === 'hidden',
+                `②b ${tag}：immersive stage overflow:hidden`, `${m.stageStyle.overflowX}/${m.stageStyle.overflowY}`);
+            check(Math.abs(m.stageStyle.maxWidth - m.immersiveMax) <= 1,
+                `②b ${tag}：stage max-width 由 --frame-immersive-max 驱动`, `${m.stageStyle.maxWidth} vs ${m.immersiveMax}`);
+            check(Math.abs(m.stageStyle.minHeight - m.immersiveMinH) <= 1,
+                `②b ${tag}：stage min-height 跟随 --frame-immersive-min-h`,
+                `${m.stageStyle.minHeight} vs ${m.immersiveMinH}`);
+            check(Math.abs(m.topbarStyle.maxWidth - m.immersiveMax) <= 1,
+                `②b ${tag}：topbar max-width 与 immersive 上限一致`, `${m.topbarStyle.maxWidth} vs ${m.immersiveMax}`);
+            check(m.topbarStyle.paddingLeft >= 9.5 && m.topbarStyle.paddingRight >= 9.5,
+                `②b ${tag}：topbar 保留左右 safe-area 下限`, `${m.topbarStyle.paddingLeft}/${m.topbarStyle.paddingRight}`);
+            if (m.footerStyle) {
+                check(Math.abs(m.footerStyle.maxWidth - m.immersiveMax) <= 1,
+                    `②b ${tag}：footer max-width 与 immersive 上限一致`, `${m.footerStyle.maxWidth} vs ${m.immersiveMax}`);
+                check(m.footerStyle.paddingLeft >= 9.5 && m.footerStyle.paddingRight >= 9.5 && m.footerStyle.paddingBottom >= 7.5,
+                    `②b ${tag}：footer 保留 safe-area padding`, JSON.stringify(m.footerStyle));
+            }
+        } else {
+            check(m.stageStyle.position === 'fixed', `②b ${tag}：TD 横屏全视口 stage contract 为 fixed`, m.stageStyle.position);
+            check(m.stageStyle.minHeight === 0, `②b ${tag}：TD 横屏覆盖共享 300px min-height`, m.stageStyle.minHeight);
+        }
+        if (g.id === 'tower-defense' && w >= 1024) {
+            check(['inline-flex', 'flex'].includes(m.statsDisplay),
+                `②b ${tag}：TD 桌面 stats-button 合法例外保持 inline-flex/flex`, m.statsDisplay);
+        }
         if (tdLandscapeFullscreen) {
             check(Math.abs(m.stage.width - m.vw) <= 1 && Math.abs(m.stage.left) <= 1,
                 `③ ${tag}：TD 横屏战斗舞台横向铺满视口`, `${m.stage.left}/${m.stage.width}`);
