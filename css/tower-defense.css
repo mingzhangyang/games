@@ -1669,7 +1669,10 @@ body {
         align-items: start;
         height: auto;
         min-height: 0;
-        overflow: visible;
+        /* The menu may grow vertically beyond the gameplay stage, but the stage's
+           -2px decorative corner accents must not create horizontal page scroll. */
+        overflow-x: clip;
+        overflow-y: visible;
         touch-action: auto;
         user-select: auto;
         -webkit-user-select: auto;
