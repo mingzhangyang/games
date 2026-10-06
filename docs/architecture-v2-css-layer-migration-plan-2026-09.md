@@ -562,6 +562,13 @@ peer 造成无声级联变化。完成本批后，再进入 P3 A–E 的插件�
 每个批次必须同时验证源码态和生产产物；不能只在 Vite dev server 上判断 layer 是否正确。
 批次失败时只回滚当前批次，不改动已经通过的批次。
 
+**P3-A 行为验收：** 首批使用统一浏览器 harness 覆盖 index、word-daily、minesweeper、
+reversi、gomoku。每页在 1280×900 与 390×844 下检查关键 DOM 几何和横向溢出，在深/浅
+主题下检查页面主题变量与实际背景切换，并冻结各页面现有 `--frame-*` 覆盖值；同时执行一个
+最小真实交互，避免“几何正常但控件被层叠关系盖住”。同一个 `verify-css-p3a.mjs` 必须先由
+`verify-all` 对源码态执行，再由 Architecture v2 candidate 对 `dist/` 产物执行。该批不修改
+CSS ownership、selector 或 `shared-css-first`，只建立插件保留模式下的行为证据。
+
 ### P4：做插件无关性 canary
 
 目标：证明 CSS 已经不再依赖 `shared-css-first`。
@@ -729,6 +736,7 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-W / #102：完成 Immersive & Safe-Area Contracts Closure；共享 immersive 边界与 Tower Defense 结构例外组成 dependency closure
 - [x] P2-X / #103：完成 Reduced-Motion Accessibility Closure；新增 `accessibility` layer 并关闭 reviewed `!important` motion debt
 - [x] P2-Y / #104：完成 Landing Page Ownership Closure；将首页独占 `.game-footer-actions` 从 `layout` 重新归位到 `pages`，并补 computed-style 回归
+- [ ] P3-A：验证 index / word-daily / minesweeper / reversi / gomoku 的源码态 + dist 行为等价
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
