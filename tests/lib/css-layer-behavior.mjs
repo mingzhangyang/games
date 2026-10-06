@@ -97,10 +97,13 @@ export async function runCssLayerBehaviorBatch({
     }, testCase);
 
     const assertGeometry = (testCase, snap, viewportName) => {
+        const overflowAllowance = typeof testCase.horizontalOverflowAllowance === 'function'
+            ? testCase.horizontalOverflowAllowance(viewportName)
+            : (testCase.horizontalOverflowAllowance ?? 1);
         check(
-            snap.scrollWidth <= snap.viewportWidth + 1,
+            snap.scrollWidth <= snap.viewportWidth + overflowAllowance,
             `${testCase.id} ${viewportName}: no horizontal overflow`,
-            `scroll=${snap.scrollWidth}, viewport=${snap.viewportWidth}`,
+            `scroll=${snap.scrollWidth}, viewport=${snap.viewportWidth}, allowance=${overflowAllowance}`,
         );
         for (const [selector, rect] of Object.entries(snap.rects)) {
             check(!!rect, `${testCase.id} ${viewportName}: ${selector} exists`);

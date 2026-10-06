@@ -589,6 +589,20 @@ side-card、标题、mode/primary 控件、HUD cut box 与 overlay；页面自�
 `verify-css-p3c.mjs` 必须覆盖源码态与 `dist/`。本批只建立行为证据，不改变 CSS ownership、
 selector、玩法、frame variables 或 `shared-css-first`。
 
+
+**P3-D 行为验收：** 第四批复用同一浏览器 harness 覆盖 tetris、tower-defense、
+carrot-pull、firefly-signal、shadow-loom，冻结 drawer / immersive / fixed-control 与生产美术
+四类高风险边界。Tetris、Carrot Pull 与 Shadow Loom 在桌面继续由 sidebar 持有 stats 内容，
+390×844 窄屏则保留共享 Stats 触发钮、fixed 底部抽屉、背景 scroll-lock 与单实例内容搬迁；
+Tower Defense 明确维持页面自有 tactical panel，不退回共享 drawer。Tower Defense 与
+Firefly Signal 继续验证 `has-immersive-stage`、scene overflow/touch contract 与高清 canvas
+buffer；TD 在真实进入战斗后额外旋转到 844×390，冻结 stage/topbar 的 fixed 全视口状态、
+隐藏 footer 与舞台内 bottom controls。Carrot Pull / Tower Defense 同时冻结 production art
+ready 状态，Tetris 的移动端 fixed controls、Shadow Loom 的 page-owned canvas skin 以及五页
+最小真实玩法入口都必须保持。Tetris 与 Carrot Pull 继续覆盖深/浅主题；其余三页维持 dark-only。
+同一 `verify-css-p3d.mjs` 必须覆盖源码态与 `dist/`。本批仍只增加行为证据，不修改 CSS
+ownership、selector、玩法、frame variables 或 `shared-css-first`。
+
 ### P4：做插件无关性 canary
 
 目标：证明 CSS 已经不再依赖 `shared-css-first`。
@@ -758,7 +772,8 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-Y / #104：完成 Landing Page Ownership Closure；将首页独占 `.game-footer-actions` 从 `layout` 重新归位到 `pages`，并补 computed-style 回归
 - [x] P3-A / #105：验证 index / word-daily / minesweeper / reversi / gomoku 的源码态 + dist 行为等价
 - [x] P3-B / #106：验证 planet-merge / hoop-shot / gravity-slingshot / sword-flight / needle-awn 的画布、frame-budget 与移动端高度契约
-- [ ] P3-C：验证 crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet 的 showcase / page-skin 优先级与源码态 + dist 行为等价
+- [x] P3-C / #107：验证 crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet 的 showcase / page-skin 优先级与源码态 + dist 行为等价
+- [x] P3-D / #108：验证 tetris / tower-defense / carrot-pull / firefly-signal / shadow-loom 的 drawer、immersive、fixed controls 与生产美术契约
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
