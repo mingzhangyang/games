@@ -120,7 +120,7 @@ const CASES = [
         lightTheme: false,
         darkOnly: true,
         themeVar: '--tok-bg',
-        probes: ['main.tb-main', '#gameContainer', '#gameCanvas', '#gameInfo', '#miniMap'],
+        probes: ['#gameContainer', '#gameCanvas', '#gameInfo', '#miniMap'],
         async ready(page) {
             await page.waitForFunction(() => {
                 const game = window.tankBattleInstance;
@@ -142,6 +142,10 @@ const CASES = [
             return true;
         },
         async mobileInteract(page) {
+            // Tank Battle's touch/hover media contract is evaluated as a device mode.
+            // Reload after each emulated orientation, matching the existing dedicated
+            // smoke cases instead of assuming Chromium will reclassify pointer/hover
+            // media features during an in-document viewport rotation.
             await page.setViewport({
                 width: 844,
                 height: 390,
@@ -149,14 +153,17 @@ const CASES = [
                 isMobile: true,
                 hasTouch: true,
             });
+            await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
             await page.waitForFunction(() => {
+                const game = window.tankBattleInstance;
                 const controller = document.getElementById('virtualController');
                 const orientation = document.getElementById('orientationOverlay');
-                return controller
+                return game?.art?.ready === true
+                    && controller
                     && getComputedStyle(controller).display === 'block'
                     && orientation
                     && getComputedStyle(orientation).display === 'none';
-            }, { timeout: 5000 });
+            }, { timeout: 12000 });
 
             const before = await page.evaluate(() => Boolean(window.tankBattleInstance?.paused));
             await page.click('#btnPause');
@@ -194,14 +201,17 @@ const CASES = [
                 isMobile: true,
                 hasTouch: true,
             });
+            await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
             await page.waitForFunction(() => {
+                const game = window.tankBattleInstance;
                 const controller = document.getElementById('virtualController');
                 const orientation = document.getElementById('orientationOverlay');
-                return controller
+                return game?.art?.ready === true
+                    && controller
                     && getComputedStyle(controller).display === 'none'
                     && orientation
                     && getComputedStyle(orientation).display === 'flex';
-            }, { timeout: 5000 });
+            }, { timeout: 12000 });
             return landscapeOk;
         },
         async validate({ page, viewportName, check }) {
@@ -221,6 +231,7 @@ const CASES = [
                 return {
                     bodyClass: document.body.className,
                     bodyDisplay: getComputedStyle(document.body).display,
+                    semanticMain: Boolean(document.querySelector('main.tb-main')),
                     sharedShell: Boolean(document.querySelector('.game-shell, .game-topbar, .game-footer')),
                     canvas: canvasRect ? {
                         width: canvasRect.width,
@@ -265,6 +276,7 @@ const CASES = [
                 };
             });
 
+            check(metrics.semanticMain, label('tank-battle', viewportName, 'semantic main remains present despite display:contents'));
             check(!metrics.sharedShell, label('tank-battle', viewportName, 'remains outside shared shell/chrome ownership'));
             check(
                 !metrics.bodyClass.includes('has-frame-budget')
