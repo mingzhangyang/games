@@ -569,6 +569,15 @@ reversi、gomoku。每页在 1280×900 与 390×844 下检查关键 DOM 几何�
 `verify-all` 对源码态执行，再由 Architecture v2 candidate 对 `dist/` 产物执行。该批不修改
 CSS ownership、selector 或 `shared-css-first`，只建立插件保留模式下的行为证据。
 
+**P3-B 行为验收：** 第二批复用同一 harness 覆盖 planet-merge、hoop-shot、
+gravity-slingshot、sword-flight、needle-awn。除基础 DOM 几何与真实交互外，本批冻结
+registry `frame-budget` 激活、`--frame-chrome` 初始化和各页 `--frame-*` 参数；桌面态按
+420×640 / 480×640 逻辑画幅校验 canvas 比例，所有视口都要求 backing buffer 不小于 CSS
+显示尺寸。390×844 竖屏额外要求舞台留在视口高度内且不产生 document 纵向滚动。Sword
+Flight 的竖屏舞台有意取消固定 aspect-ratio，因此逻辑画幅比例只在 desktop 冻结。仅
+Hoop Shot 声明 `theme-light`，所以只有该页执行深/浅主题切换验收；其余四页不在本批
+顺带引入新的浅色主题契约。同一 `verify-css-p3b.mjs` 必须覆盖源码态与 `dist/`。
+
 ### P4：做插件无关性 canary
 
 目标：证明 CSS 已经不再依赖 `shared-css-first`。
@@ -736,7 +745,8 @@ handoff 通过后进入临时 layout freeze：
 - [x] P2-W / #102：完成 Immersive & Safe-Area Contracts Closure；共享 immersive 边界与 Tower Defense 结构例外组成 dependency closure
 - [x] P2-X / #103：完成 Reduced-Motion Accessibility Closure；新增 `accessibility` layer 并关闭 reviewed `!important` motion debt
 - [x] P2-Y / #104：完成 Landing Page Ownership Closure；将首页独占 `.game-footer-actions` 从 `layout` 重新归位到 `pages`，并补 computed-style 回归
-- [ ] P3-A：验证 index / word-daily / minesweeper / reversi / gomoku 的源码态 + dist 行为等价
+- [x] P3-A / #105：验证 index / word-daily / minesweeper / reversi / gomoku 的源码态 + dist 行为等价
+- [ ] P3-B：验证 planet-merge / hoop-shot / gravity-slingshot / sword-flight / needle-awn 的画布、frame-budget 与移动端高度契约
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
