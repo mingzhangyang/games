@@ -352,7 +352,7 @@ The contract now provides:
 Production P2 still requires:
 
 1. Continue with dependency-closed production slices after the initial `.game-stage--fill`
-   `layout` canary and canonical seven-layer order (`reset, tokens, showcase, accessibility, components, layout, pages, contracts`) declaration. Low-risk `layout` defaults may
+   `layout` canary and canonical eight-layer order (`reset, tokens, showcase, accessibility, components, layout, pages, contracts`) declaration. Low-risk `layout` defaults may
    move independently after evidence; a `contracts` rule must
    move together with any still-unlayered page peers that could compete with it, because normal
    unlayered declarations outrank every named layer.

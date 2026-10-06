@@ -2,8 +2,16 @@
 // verify-reduced-motion.mjs — P2-X / #103 Reduced-Motion Accessibility Closure
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 
 const BASE = process.argv.slice(2).find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
+const PROBE_PAGES = [
+    'tetris', 'math-rain', 'circuit', 'needle-awn', 'word-daily', 'crystal-bloom',
+];
+const RUN_PAGES = new Set(PROBE_PAGES.filter(keepPage));
+exitIfNoPages([...RUN_PAGES], 'verify-reduced-motion');
+const shouldRun = href => RUN_PAGES.has(String(href).replace(/\.html$/, ''));
+
 const fails = [];
 let passes = 0;
 const check = (condition, label, extra = '') => {
@@ -25,8 +33,11 @@ async function open(href) {
     page.on('pageerror', error => errors.push(String(error.message || error).split('\n')[0]));
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
-    await page.goto(`${BASE}/${href}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await new Promise(resolve => setTimeout(resolve, 250));
+    await page.goto(`${BASE}/${href}`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForFunction(
+        () => document.readyState === 'complete' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+        { timeout: 5000 },
+    );
     const media = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
     check(media, `${href}: reduced-motion media query is active`);
     return { page, errors };
@@ -48,7 +59,7 @@ async function style(page, selector) {
 }
 
 // Universal important clamps: contract v3 must keep exact legacy values.
-for (const [href, expectedMs] of [['tetris.html', 0.01], ['math-rain.html', 0.001]]) {
+for (const [href, expectedMs] of [['tetris.html', 0.01], ['math-rain.html', 0.001]].filter(([href]) => shouldRun(href))) {
     const { page, errors } = await open(href);
     const s = await style(page, 'html');
     check(!!s, `${href}: root exists`);
@@ -66,7 +77,7 @@ for (const [href, expectedMs] of [['tetris.html', 0.01], ['math-rain.html', 0.00
 }
 
 // Page-scoped important animation rule.
-{
+if (shouldRun('circuit.html')) {
     const { page, errors } = await open('circuit.html');
     const s = await style(page, '.cc-hero');
     check(!!s, 'circuit: hero probe exists');
@@ -87,7 +98,7 @@ for (const [href, expectedMs] of [['tetris.html', 0.01], ['math-rain.html', 0.00
 }
 
 // Important transition family.
-{
+if (shouldRun('needle-awn.html')) {
     const { page, errors } = await open('needle-awn.html');
     const s = await style(page, '.na-btn');
     check(!!s, 'needle-awn: button probe exists');
@@ -98,7 +109,7 @@ for (const [href, expectedMs] of [['tetris.html', 0.01], ['math-rain.html', 0.00
 }
 
 // One rule containing both important animation and transition.
-{
+if (shouldRun('word-daily.html')) {
     const { page, errors } = await open('word-daily.html');
     const s = await style(page, '.wd-btn');
     check(!!s, 'word-daily: button probe exists');
@@ -112,7 +123,7 @@ for (const [href, expectedMs] of [['tetris.html', 0.01], ['math-rain.html', 0.00
 
 // Important layer precedence is reversed. Showcase intentionally remains before
 // accessibility so its universal duration clamp continues to outrank page shorthand.
-{
+if (shouldRun('crystal-bloom.html')) {
     const { page, errors } = await open('crystal-bloom.html');
     const s = await style(page, '.cb-card');
     check(!!s, 'crystal-bloom: showcase card probe exists');
