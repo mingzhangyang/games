@@ -53,6 +53,9 @@ export async function runCssLayerBehaviorBatch({
                 return rect.width > 0 && rect.height > 0;
             }, { timeout: 5000 }, testCase.stage);
         }
+        if (testCase.ready) {
+            await testCase.ready(page, { viewport, theme });
+        }
     };
 
     const snapshot = testCase => page.evaluate(config => {
@@ -127,6 +130,17 @@ export async function runCssLayerBehaviorBatch({
         }
     };
 
+    const assertCustom = async (testCase, snap, viewportName, viewport) => {
+        if (!testCase.validate) return;
+        await testCase.validate({
+            page,
+            snapshot: snap,
+            viewportName,
+            viewport,
+            check,
+        });
+    };
+
     try {
         await page.goto(`${base}/index.html`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
@@ -143,6 +157,7 @@ export async function runCssLayerBehaviorBatch({
             );
             assertGeometry(testCase, dark, 'desktop');
             assertFrame(testCase, dark, 'desktop');
+            await assertCustom(testCase, dark, 'desktop', viewports.desktop);
             check(pageErrors.length === 0, `${testCase.id} desktop dark: no pageerror`, pageErrors.join(' | '));
 
             // Navigation and interaction errors are separate evidence. Clear only after
@@ -167,26 +182,31 @@ export async function runCssLayerBehaviorBatch({
                 pageErrors.join(' | '),
             );
 
-            await navigate(testCase, viewports.desktop, 'light');
-            const light = await snapshot(testCase);
-            check(light.theme === 'light', `${testCase.id}: light preference resolves to light`, light.theme);
-            check(Boolean(light.themeVar), `${testCase.id}: light ${testCase.themeVar} is populated`);
-            check(
-                light.themeVar !== dark.themeVar,
-                `${testCase.id}: page/theme variable changes between dark and light`,
-            );
-            check(
-                light.bodyBackground !== dark.bodyBackground,
-                `${testCase.id}: computed page background changes in light mode`,
-            );
-            assertGeometry(testCase, light, 'desktop-light');
-            assertFrame(testCase, light, 'desktop-light');
-            check(pageErrors.length === 0, `${testCase.id} desktop light: no pageerror`, pageErrors.join(' | '));
+            if (testCase.lightTheme !== false) {
+                await navigate(testCase, viewports.desktop, 'light');
+                const light = await snapshot(testCase);
+                check(light.theme === 'light', `${testCase.id}: light preference resolves to light`, light.theme);
+                check(Boolean(light.themeVar), `${testCase.id}: light ${testCase.themeVar} is populated`);
+                check(
+                    light.themeVar !== dark.themeVar,
+                    `${testCase.id}: page/theme variable changes between dark and light`,
+                );
+                check(
+                    light.bodyBackground !== dark.bodyBackground,
+                    `${testCase.id}: computed page background changes in light mode`,
+                );
+                assertGeometry(testCase, light, 'desktop-light');
+                assertFrame(testCase, light, 'desktop-light');
+                    await assertCustom(testCase, light, 'desktop-light', viewports.desktop);
+                check(pageErrors.length === 0, `${testCase.id} desktop light: no pageerror`, pageErrors.join(' | '));
+
+            }
 
             await navigate(testCase, viewports.mobile, 'dark');
             const mobile = await snapshot(testCase);
             assertGeometry(testCase, mobile, 'mobile');
             assertFrame(testCase, mobile, 'mobile');
+            await assertCustom(testCase, mobile, 'mobile', viewports.mobile);
             check(pageErrors.length === 0, `${testCase.id} mobile dark: no pageerror`, pageErrors.join(' | '));
         }
     } finally {
