@@ -27,6 +27,14 @@ export class SwordFlightGame {
         // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 src/platform/game-frame.js）：
         // 后端缓冲区必须在 CSS 尺寸变化之后重算
         window.addEventListener('game-frame:changed', () => this.resizeCanvas());
+        // Portrait gameplay changes the stage height when overlays open/close without
+        // firing either event above. Observe the actual stage box so backing pixels
+        // always follow the rendered canvas size.
+        const stage = this.canvas.parentElement;
+        if (stage && typeof ResizeObserver !== 'undefined') {
+            this.canvasResizeObserver = new ResizeObserver(() => this.resizeCanvas());
+            this.canvasResizeObserver.observe(stage);
+        }
 
         // 游戏模式: 'stages' | 'endless' | 'daily' | 'zen'
         this.mode = 'stages';

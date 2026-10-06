@@ -2,21 +2,29 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config.js';
 
 export function resizeCanvas(game) {
-    // 按容器实测缩放（照 js/gravity-slingshot.js 的形状，2026-09-19）：
-    // 此前后端固定 CANVAS_WIDTH*dpr（只重读 dpr），CSS 尺寸一变位图就脱节，
-    // 桌面舞台放大后整体拉伸变糊。setTransform 幂等，重复调用安全。
-    const stage = game.canvas.parentElement;
-    const cssW = (stage && stage.clientWidth) || CANVAS_WIDTH;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const s = (cssW / CANVAS_WIDTH) * dpr;
-    const pw = Math.round(CANVAS_WIDTH * s);
-    if (game.canvas.width !== pw) {
-        game.canvas.width = pw;
-        game.canvas.height = Math.round(CANVAS_HEIGHT * s);
-    }
-    game.ctx.setTransform(s, 0, 0, s, 0, 0);
-    game.dpr = dpr;
+    // The logical world stays 480×640, but portrait mobile intentionally lets the
+    // CSS stage become taller than that ratio. Size the backing buffer from the
+    // rendered box on both axes so the browser never has to upscale a short bitmap.
+    // Separate transforms preserve logical coordinates while matching the CSS mapping.
+    const canvas = game.canvas;
+    const ctx = game.ctx;
+    if (!canvas || !ctx) return;
 
+    const stage = canvas.parentElement;
+    const cssW = stage?.clientWidth || canvas.clientWidth || CANVAS_WIDTH;
+    const cssH = stage?.clientHeight || canvas.clientHeight || CANVAS_HEIGHT;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const pixelW = Math.max(1, Math.round(cssW * dpr));
+    const pixelH = Math.max(1, Math.round(cssH * dpr));
+    const scaleX = pixelW / CANVAS_WIDTH;
+    const scaleY = pixelH / CANVAS_HEIGHT;
+
+    if (canvas.width !== pixelW || canvas.height !== pixelH) {
+        canvas.width = pixelW;
+        canvas.height = pixelH;
+    }
+    ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    game.dpr = dpr;
 }
 
 export function initBackgrounds(game) {
