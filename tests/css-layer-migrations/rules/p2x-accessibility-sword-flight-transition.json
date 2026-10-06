@@ -1,0 +1,53 @@
+{
+  "id": "p2x-accessibility-sword-flight-transition",
+  "source": {
+    "path": "css/sword-flight.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".sf-action-btn, .sf-icon-btn, .sf-touch-btn",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "eea47894757c1185a2f2a3c4cdf2b983b74617c483bd4cbe693decd9dc3c2891",
+    "layer": null,
+    "declarationDigest": "1decb9043de962d7d834832348d43e6bd1424f495487e3d958f074021f88cb78",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "transition",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/sword-flight.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": ".sf-action-btn, .sf-icon-btn, .sf-touch-btn",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "eea47894757c1185a2f2a3c4cdf2b983b74617c483bd4cbe693decd9dc3c2891",
+      "layer": "accessibility",
+      "declarationDigest": "1decb9043de962d7d834832348d43e6bd1424f495487e3d958f074021f88cb78",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

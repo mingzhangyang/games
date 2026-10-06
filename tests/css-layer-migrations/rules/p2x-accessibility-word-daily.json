@@ -1,0 +1,75 @@
+{
+  "id": "p2x-accessibility-word-daily",
+  "source": {
+    "path": "css/word-daily.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".wd-tile, .wd-row, .wd-modal-box, .wd-btn, .wd-icon-btn",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "9ef865dc47e0710c8a636b6eea410ebfd0c31ff76ad63400a9ae0727d7e18d23",
+    "layer": null,
+    "declarationDigest": "45afaf9fbfae624d8894f3a0b1d7bf56a5a58cd9102ea3963d3c0fc7b0969abe",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "animation",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      },
+      {
+        "property": "transition",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/word-daily.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": ".wd-tile, .wd-row, .wd-modal-box, .wd-btn, .wd-icon-btn",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "9ef865dc47e0710c8a636b6eea410ebfd0c31ff76ad63400a9ae0727d7e18d23",
+      "layer": "accessibility",
+      "declarationDigest": "45afaf9fbfae624d8894f3a0b1d7bf56a5a58cd9102ea3963d3c0fc7b0969abe",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

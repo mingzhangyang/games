@@ -769,8 +769,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .na-hero-art, .na-toast, .na-card, .na-ult-bar-fill { animation: none !important; }
-    .na-btn, .na-icon-btn, .na-touch-btn { transition: none !important; }
+    @layer accessibility {
+        .na-hero-art, .na-toast, .na-card, .na-ult-bar-fill { animation: none !important; }
+        .na-btn, .na-icon-btn, .na-touch-btn { transition: none !important; }
+    }
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */

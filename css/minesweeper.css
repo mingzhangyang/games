@@ -661,7 +661,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ms-hero, .ms-result-card, .ms-cell.revealed, .ms-cell.boom { animation: none !important; }
+    @layer accessibility {
+        .ms-hero, .ms-result-card, .ms-cell.revealed, .ms-cell.boom { animation: none !important; }
+    }
     .ms-btn, .ms-icon-btn, .ms-face, .ms-diff { transition: none; }
 }
 

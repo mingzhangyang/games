@@ -1,0 +1,53 @@
+{
+  "id": "p2x-accessibility-lumen",
+  "source": {
+    "path": "css/lumen.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".lm-hero, .lm-toast, .lm-card",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "e19d153658795466bb50cd9ec30c7c1009154ee9d079054a0703b550aff4d9cb",
+    "layer": null,
+    "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "animation",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/lumen.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": ".lm-hero, .lm-toast, .lm-card",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "e19d153658795466bb50cd9ec30c7c1009154ee9d079054a0703b550aff4d9cb",
+      "layer": "accessibility",
+      "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

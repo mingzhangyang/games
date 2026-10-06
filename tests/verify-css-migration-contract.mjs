@@ -6,7 +6,7 @@ import {
 } from './lib/css/migration-contract.mjs';
 import { propertiesOverlap } from './lib/css/property-writes.mjs';
 
-const LAYERS = ['reset', 'tokens', 'showcase', 'components', 'layout', 'pages', 'contracts'];
+const LAYERS = ['reset', 'tokens', 'showcase', 'accessibility', 'components', 'layout', 'pages', 'contracts'];
 const ALLOWED = new Set(LAYERS);
 
 const parseMap = entries => new Map(entries.map(([path, css]) => [path, parseCssText(css, path)]));
@@ -161,6 +161,31 @@ assert.ok(resetFixtureErrors(
     '*{margin:0!important}',
     '@layer reset{*{margin:0!important}}',
 ).some(error => /reset layer accepts normal declarations only/.test(error)));
+
+
+assert.deepEqual(
+    resetFixtureErrors(
+        'fixture-accessibility-valid',
+        '@media (prefers-reduced-motion: reduce){.x{animation:none!important}}',
+        '@media (prefers-reduced-motion: reduce){@layer accessibility{.x{animation:none!important}}}',
+    ),
+    [],
+);
+assert.ok(resetFixtureErrors(
+    'fixture-accessibility-normal',
+    '@media (prefers-reduced-motion: reduce){.x{transition:none}}',
+    '@media (prefers-reduced-motion: reduce){@layer accessibility{.x{transition:none}}}',
+).some(error => /accepts !important reduced-motion declarations only/.test(error)));
+assert.ok(resetFixtureErrors(
+    'fixture-accessibility-context',
+    '@media (width >= 1px){.x{animation:none!important}}',
+    '@media (width >= 1px){@layer accessibility{.x{animation:none!important}}}',
+).some(error => /limited to prefers-reduced-motion/.test(error)));
+assert.ok(resetFixtureErrors(
+    'fixture-accessibility-property',
+    '@media (prefers-reduced-motion: reduce){.x{color:red!important}}',
+    '@media (prefers-reduced-motion: reduce){@layer accessibility{.x{color:red!important}}}',
+).some(error => /unreviewed motion property/.test(error)));
 
 const state = {
     migratedRules: [mapping],

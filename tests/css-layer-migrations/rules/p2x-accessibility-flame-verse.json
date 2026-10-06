@@ -1,0 +1,53 @@
+{
+  "id": "p2x-accessibility-flame-verse",
+  "source": {
+    "path": "css/flame-verse.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".fv-hero, .fv-card",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "543d787826f150ae53dcd046ecb8c13da7edd2c78115f60e2dcbf31cf698d8b4",
+    "layer": null,
+    "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "animation",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/flame-verse.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": ".fv-hero, .fv-card",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "543d787826f150ae53dcd046ecb8c13da7edd2c78115f60e2dcbf31cf698d8b4",
+      "layer": "accessibility",
+      "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

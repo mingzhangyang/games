@@ -486,6 +486,40 @@ function isRetirement(mapping) {
 
 const RESET_UNIVERSAL_SELECTORS = new Set(['*', '*, *::before, *::after']);
 
+const ACCESSIBILITY_CONTEXT = '@media (prefers-reduced-motion: reduce)';
+const ACCESSIBILITY_PROPERTIES = new Set([
+    'animation', 'animation-duration', 'animation-iteration-count',
+    'scroll-behavior', 'transition', 'transition-duration',
+]);
+
+function verifyAccessibilityMappingInvariant(mapping, errors) {
+    if (!(mapping.destinations || []).some(destination => destination?.layer === 'accessibility')) return true;
+
+    let valid = true;
+    if (mapping.source.layer !== null) {
+        errors.push(mapping.id + ': accessibility contract v3 only migrates unlayered P0 reduced-motion rules.');
+        valid = false;
+    }
+    if (mapping.source.context !== ACCESSIBILITY_CONTEXT
+        || (mapping.destinations || []).some(destination => destination?.context !== ACCESSIBILITY_CONTEXT)) {
+        errors.push(mapping.id + ': accessibility layer is limited to prefers-reduced-motion: reduce rules.');
+        valid = false;
+    }
+    if ((mapping.source.declarations || []).some(declaration => !declaration.important)) {
+        errors.push(mapping.id + ': accessibility layer accepts !important reduced-motion declarations only.');
+        valid = false;
+    }
+    if ((mapping.source.declarations || []).some(declaration => !ACCESSIBILITY_PROPERTIES.has(declaration.property))) {
+        errors.push(mapping.id + ': accessibility layer contains an unreviewed motion property.');
+        valid = false;
+    }
+    if ((mapping.destinations || []).some(destination => destination?.layer !== 'accessibility')) {
+        errors.push(mapping.id + ': an accessibility migration must keep the whole source rule in accessibility.');
+        valid = false;
+    }
+    return valid;
+}
+
 function verifyResetMappingInvariant(mapping, errors) {
     if (!(mapping.destinations || []).some(destination => destination?.layer === 'reset')) return true;
 
@@ -576,6 +610,7 @@ function verifyMappingShape(mapping, allowedLayers, errors) {
         }
     }
     if (!verifyResetMappingInvariant(mapping, errors)) valid = false;
+    if (!verifyAccessibilityMappingInvariant(mapping, errors)) valid = false;
     for (const priority of PRIORITIES) {
         if (!Array.isArray(mapping.conflicts?.[priority])) {
             errors.push(mapping.id + ': conflicts.' + priority + ' must be an explicit array, even when empty.');

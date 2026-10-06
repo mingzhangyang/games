@@ -666,7 +666,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .rd-hero, .rd-card { animation: none !important; }
+    @layer accessibility {
+        .rd-hero, .rd-card { animation: none !important; }
+    }
     .rd-toast { transition: none; }
     .rd-btn, .rd-icon-btn, .rd-mode, .rd-chip, .rd-action-btn { transition: none; }
 }

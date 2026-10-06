@@ -423,7 +423,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .lm-hero, .lm-toast, .lm-card { animation: none !important; }
+    @layer accessibility {
+        .lm-hero, .lm-toast, .lm-card { animation: none !important; }
+    }
     .lm-btn, .lm-icon-btn, .lm-mode, .lm-level-chip { transition: none; }
 }
 

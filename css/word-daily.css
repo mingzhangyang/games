@@ -1219,7 +1219,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .wd-tile, .wd-row, .wd-modal-box, .wd-btn, .wd-icon-btn { animation: none !important; transition: none !important; }
+    @layer accessibility {
+        .wd-tile, .wd-row, .wd-modal-box, .wd-btn, .wd-icon-btn { animation: none !important; transition: none !important; }
+    }
 }
 
 /* 回首页锚点（复用 wd-icon-btn 外观） */

@@ -962,8 +962,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .sf-hero-art, .sf-toast, .sf-bar-fill { animation: none !important; }
-    .sf-action-btn, .sf-icon-btn, .sf-touch-btn { transition: none !important; }
+    @layer accessibility {
+        .sf-hero-art, .sf-toast, .sf-bar-fill { animation: none !important; }
+        .sf-action-btn, .sf-icon-btn, .sf-touch-btn { transition: none !important; }
+    }
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */

@@ -1,0 +1,53 @@
+{
+  "id": "p2x-accessibility-crystal-bloom",
+  "source": {
+    "path": "css/crystal-bloom.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".cb-hero, .cb-card",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "b76b4dc50a270e89f41f1e4e1be1992fe71718d7b5dbb605529df8081fa00bcc",
+    "layer": null,
+    "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "animation",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/crystal-bloom.css",
+      "context": "@media (prefers-reduced-motion: reduce)",
+      "selector": ".cb-hero, .cb-card",
+      "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+      "selectorDigest": "b76b4dc50a270e89f41f1e4e1be1992fe71718d7b5dbb605529df8081fa00bcc",
+      "layer": "accessibility",
+      "declarationDigest": "6d85b74d9321282d8ec189eee9785f8014355ddc8027285c8b0231be825c65b8",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}
