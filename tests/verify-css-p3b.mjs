@@ -88,6 +88,7 @@ function framePage(config) {
                 const stageEl = document.querySelector(stage);
                 const canvasEl = document.querySelector(canvas);
                 const shellStyle = shellEl ? getComputedStyle(shellEl) : null;
+                const stageStyle = stageEl ? getComputedStyle(stageEl) : null;
                 const stageRect = stageEl?.getBoundingClientRect() || null;
                 const canvasRect = canvasEl?.getBoundingClientRect() || null;
                 const frame = {};
@@ -104,7 +105,12 @@ function framePage(config) {
                 return {
                     bodyHasFrameBudget: document.body.classList.contains('has-frame-budget'),
                     frameChrome: shellEl?.style.getPropertyValue('--frame-chrome') || '',
+                    frameShellMax: shellStyle?.getPropertyValue('--frame-shell-max').trim() || '',
+                    frameStageCap: shellStyle?.getPropertyValue('--frame-stage-cap').trim() || '',
+                    shellMaxWidth: shellStyle?.maxWidth || '',
+                    stageMaxWidth: stageStyle?.maxWidth || '',
                     frame,
+                    dpr: Math.min(window.devicePixelRatio || 1, 2),
                     scrollHeight: document.scrollingElement?.scrollHeight || document.documentElement.scrollHeight,
                     viewportHeight: innerHeight,
                     stage: stageRect ? {
@@ -135,13 +141,33 @@ function framePage(config) {
                 );
             }
 
+            if (viewportName.startsWith('desktop')) {
+                check(
+                    Boolean(metrics.frameShellMax) && Boolean(metrics.frameStageCap),
+                    `${config.id} ${viewportName}: frame-budget consumption variables are present`,
+                    `shellMax=${metrics.frameShellMax || 'missing'} stageCap=${metrics.frameStageCap || 'missing'}`,
+                );
+                check(
+                    metrics.shellMaxWidth !== config.frame.wide,
+                    `${config.id} ${viewportName}: shell max-width is derived from frame budget`,
+                    `computed=${metrics.shellMaxWidth} fallback=${config.frame.wide}`,
+                );
+                check(
+                    metrics.stageMaxWidth !== config.frame.stage,
+                    `${config.id} ${viewportName}: stage max-width is derived from frame budget`,
+                    `computed=${metrics.stageMaxWidth} fallback=${config.frame.stage}`,
+                );
+            }
+
             check(Boolean(metrics.canvas), `${config.id} ${viewportName}: canvas exists`);
             if (metrics.canvas) {
+                const requiredWidth = metrics.canvas.clientWidth * metrics.dpr;
+                const requiredHeight = metrics.canvas.clientHeight * metrics.dpr;
                 check(
-                    metrics.canvas.attrWidth + 1 >= metrics.canvas.clientWidth
-                        && metrics.canvas.attrHeight + 1 >= metrics.canvas.clientHeight,
-                    `${config.id} ${viewportName}: canvas backing buffer is not undersized`,
-                    `attr=${metrics.canvas.attrWidth}×${metrics.canvas.attrHeight}, client=${metrics.canvas.clientWidth}×${metrics.canvas.clientHeight}`,
+                    metrics.canvas.attrWidth + 2 >= requiredWidth
+                        && metrics.canvas.attrHeight + 2 >= requiredHeight,
+                    `${config.id} ${viewportName}: canvas backing buffer tracks devicePixelRatio`,
+                    `attr=${metrics.canvas.attrWidth}×${metrics.canvas.attrHeight}, client=${metrics.canvas.clientWidth}×${metrics.canvas.clientHeight}, dpr=${metrics.dpr}`,
                 );
                 if (viewportName.startsWith('desktop')) {
                     const ratio = metrics.canvas.width / metrics.canvas.height;
