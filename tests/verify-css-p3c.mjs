@@ -108,6 +108,10 @@ function showcasePage(config) {
                         backgroundColor: bodyStyle.backgroundColor,
                         backgroundImage: bodyStyle.backgroundImage,
                         fontFamily: bodyStyle.fontFamily,
+                        firstFontFamily: bodyStyle.fontFamily
+                            .split(',')[0]
+                            .trim()
+                            .replace(/^["']|["']$/g, ''),
                     },
                     topbar: topbar && {
                         backgroundColor: topbar.backgroundColor,
@@ -171,9 +175,9 @@ function showcasePage(config) {
                 `${metrics.body.backgroundColor} / ${metrics.body.backgroundImage}`,
             );
             check(
-                metrics.body.fontFamily.includes('Segoe UI'),
+                metrics.body.firstFontFamily === 'Segoe UI',
                 `${config.id} ${viewportName}: unlayered page typography still wins normal cascade`,
-                metrics.body.fontFamily,
+                `first=${metrics.body.firstFontFamily || 'missing'}; computed=${metrics.body.fontFamily}`,
             );
             check(Boolean(metrics.topbar), `${config.id} ${viewportName}: showcase topbar exists`);
             if (metrics.topbar) {
