@@ -509,7 +509,7 @@ safe-area padding、stage overflow/可配置 min-height 与横屏 fixed stage。
 
 **P2-X / #103 Reduced-Motion Accessibility Closure：** reduced-motion 的 important cascade 不能沿用
 normal declaration 的 layer 直觉：named-layer `!important` 优先级与 normal 相反。为此目标 taxonomy
-扩展为 `reset → tokens → showcase → accessibility → components → layout → pages → contracts`。
+扩展为 `reset → tokens → showcase → components → accessibility → layout → pages → contracts`。
 `accessibility` 放在 `components` 之后。原因不是让一般组件动画压过无障碍规则——normal declaration
 无论如何都会输给 `!important`——而是 `science-showcase.css` 的共享 reduced-motion clamp 当前仍归
 `components`。important layer 优先级反转，因此让 `components` 先于 `accessibility` 可以保留既有
