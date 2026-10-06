@@ -1,12 +1,13 @@
-// 桌面舞台契约校验（2026-09-19）：六页 × 五档视口 × 中英双语
+// 桌面舞台契约校验（2026-09-19）：registry frame-budget 页面 × 五档视口 × 中英双语
 // 断言：
 //   a. 整页不滚动：scrollingElement.scrollHeight <= innerHeight + 2
 //   b. 画幅不失真：|rect.width/rect.height - ratio| < 0.01
 //   c. 不糊：canvas.width >= canvas.clientWidth（border-box 下 rect 含 border）
 //   d. 舞台随视口长大：1920x1080 档画布宽 > 1280x900 档
-//   e. 侧栏在屏内：sidebar bottom <= innerHeight + 2
-//   f. --frame-chrome 收敛：就绪后间隔 250ms 两次读数相等（src/platform/game-frame.js 反馈环护栏）
-//   g. 无 pageerror
+//   e. frame-budget 侧栏 computed contract 生效：max-height / overflow / overscroll + scrollbar skin
+//   f. 侧栏在屏内：sidebar bottom <= innerHeight + 2
+//   g. --frame-chrome 收敛：就绪后间隔 250ms 两次读数相等（src/platform/game-frame.js 反馈环护栏）
+//   h. 无 pageerror
 // 用法：node tests/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
 import { readFileSync } from 'node:fs';
@@ -48,6 +49,7 @@ const MEASURE = () => {
     const canvas = g('.game-stage canvas') || g('canvas');
     const side = g('.game-sidebar');
     const shell = g('.game-shell');
+    const sideStyle = side ? getComputedStyle(side) : null;
     const r = canvas ? canvas.getBoundingClientRect() : null;
     return {
         pageH: document.scrollingElement.scrollHeight,
@@ -61,6 +63,15 @@ const MEASURE = () => {
         // d「舞台随视口长大」改量 .game-stage 宽度，否则恒为 0 必然误报。
         stageW: g('.game-stage') ? Math.round(g('.game-stage').getBoundingClientRect().width) : 0,
         sideBottom: side ? Math.round(side.getBoundingClientRect().bottom) : -1,
+        bodyHasFrameBudget: document.body.classList.contains('has-frame-budget'),
+        sideContract: sideStyle ? {
+            maxHeight: sideStyle.maxHeight,
+            overflowY: sideStyle.overflowY,
+            overscrollBehaviorY: sideStyle.overscrollBehaviorY || sideStyle.overscrollBehavior,
+            scrollbarWidth: sideStyle.scrollbarWidth || '',
+            scrollbarWidthSupported: CSS.supports('scrollbar-width', 'thin'),
+            webkitScrollbarWidth: getComputedStyle(side, '::-webkit-scrollbar').width || '',
+        } : null,
         chrome: shell ? shell.style.getPropertyValue('--frame-chrome') : '',
         // bindFrame 量 chrome 靠 shell.querySelector(':scope > .game-topbar'/'.game-footer')。
         // 这两个节点一旦不是 shell 的**直接子节点**，querySelector 返回 null，
@@ -192,14 +203,40 @@ for (const lang of LANGS) {
                     }
                 }
             }
-            // e. 侧栏在屏内（td 1998px / sf 1097px 的回归）
-            if (m1.sideBottom >= 0 && m1.sideBottom > m1.innerH + 2) failures.push(`${tag}: 侧栏溢出 bottom ${m1.sideBottom} > innerH ${m1.innerH}`);
-            // f. --frame-chrome 收敛（反馈环护栏：差值 ≤1px 视为稳定）
+            // e. frame-budget computed contract 必须真正赢得 cascade，而不只是 body 上有 class。
             const c1 = parseFloat(m1.chrome), c2 = parseFloat(m2.chrome);
+            if (!m1.bodyHasFrameBudget) {
+                failures.push(`${tag}: body 缺少 has-frame-budget，sidebar contract 未激活`);
+            }
+            if (!m1.sideContract) {
+                failures.push(`${tag}: frame-budget 页面缺少 .game-sidebar`);
+            } else {
+                const maxHeight = parseFloat(m1.sideContract.maxHeight);
+                const expectedMaxHeight = m1.innerH - c1;
+                if (!Number.isFinite(maxHeight) || (Number.isFinite(expectedMaxHeight)
+                    && Math.abs(maxHeight - expectedMaxHeight) > 2)) {
+                    failures.push(`${tag}: sidebar max-height ${m1.sideContract.maxHeight}，期望约 ${expectedMaxHeight.toFixed(1)}px`);
+                }
+                if (m1.sideContract.overflowY !== 'auto') {
+                    failures.push(`${tag}: sidebar overflow-y=${m1.sideContract.overflowY}，期望 auto`);
+                }
+                if (m1.sideContract.overscrollBehaviorY !== 'contain') {
+                    failures.push(`${tag}: sidebar overscroll-behavior-y=${m1.sideContract.overscrollBehaviorY}，期望 contain`);
+                }
+                if (m1.sideContract.scrollbarWidthSupported && m1.sideContract.scrollbarWidth !== 'thin') {
+                    failures.push(`${tag}: sidebar scrollbar-width=${m1.sideContract.scrollbarWidth}，期望 thin`);
+                }
+                if (m1.sideContract.webkitScrollbarWidth && m1.sideContract.webkitScrollbarWidth !== '6px') {
+                    failures.push(`${tag}: webkit scrollbar width=${m1.sideContract.webkitScrollbarWidth}，期望 6px`);
+                }
+            }
+            // f. 侧栏在屏内（历史 1998px / 1097px 整页溢出的回归）
+            if (m1.sideBottom >= 0 && m1.sideBottom > m1.innerH + 2) failures.push(`${tag}: 侧栏溢出 bottom ${m1.sideBottom} > innerH ${m1.innerH}`);
+            // g. --frame-chrome 收敛（反馈环护栏：差值 ≤1px 视为稳定）
             if (!m1.chrome || !Number.isFinite(c1) || Math.abs(c1 - c2) > 1) {
                 failures.push(`${tag}: --frame-chrome 未收敛 "${m1.chrome}" -> "${m2.chrome}"`);
             }
-            // g. 无 pageerror
+            // h. 无 pageerror
             if (errors.length) failures.push(`${tag}: pageerror ${errors.join(' | ')}`);
 
         }
