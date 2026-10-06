@@ -108,6 +108,7 @@ function framePage(config) {
                     frameShellMax: shellStyle?.getPropertyValue('--frame-shell-max').trim() || '',
                     frameStageCap: shellStyle?.getPropertyValue('--frame-stage-cap').trim() || '',
                     shellMaxWidth: shellStyle?.maxWidth || '',
+                    shellWidth: shellEl?.getBoundingClientRect().width || 0,
                     stageMaxWidth: stageStyle?.maxWidth || '',
                     frame,
                     dpr: Math.min(window.devicePixelRatio || 1, 2),
@@ -147,27 +148,38 @@ function framePage(config) {
                     `${config.id} ${viewportName}: frame-budget consumption variables are present`,
                     `shellMax=${metrics.frameShellMax || 'missing'} stageCap=${metrics.frameStageCap || 'missing'}`,
                 );
+                const shellMaxPx = Number.parseFloat(metrics.shellMaxWidth);
+                const stageFallbackPx = Number.parseFloat(config.frame.stage);
                 check(
-                    metrics.shellMaxWidth !== config.frame.wide,
+                    metrics.shellMaxWidth.endsWith('px') && shellMaxPx > 0,
+                    `${config.id} ${viewportName}: shell max-width resolves to a positive pixel length`,
+                    `computed=${metrics.shellMaxWidth || 'missing'}`,
+                );
+                check(
+                    Number.isFinite(shellMaxPx) && Math.abs(shellMaxPx - Number.parseFloat(config.frame.wide)) > 0.5,
                     `${config.id} ${viewportName}: shell max-width is derived from frame budget`,
                     `computed=${metrics.shellMaxWidth} fallback=${config.frame.wide}`,
                 );
                 check(
-                    metrics.stageMaxWidth !== config.frame.stage,
-                    `${config.id} ${viewportName}: stage max-width is derived from frame budget`,
-                    `computed=${metrics.stageMaxWidth} fallback=${config.frame.stage}`,
+                    metrics.stage?.width > 0 && metrics.stage.width > stageFallbackPx + 0.5,
+                    `${config.id} ${viewportName}: stage width is positively derived beyond fixed fallback`,
+                    `actual=${metrics.stage?.width || 0}px fallback=${config.frame.stage}, max=${metrics.stageMaxWidth || 'missing'}`,
                 );
             }
 
             check(Boolean(metrics.canvas), `${config.id} ${viewportName}: canvas exists`);
             if (metrics.canvas) {
                 const requiredWidth = metrics.canvas.clientWidth * metrics.dpr;
-                const requiredHeight = metrics.canvas.clientHeight * metrics.dpr;
+                const backingRatio = metrics.canvas.attrWidth / metrics.canvas.attrHeight;
                 check(
-                    metrics.canvas.attrWidth + 2 >= requiredWidth
-                        && metrics.canvas.attrHeight + 2 >= requiredHeight,
-                    `${config.id} ${viewportName}: canvas backing buffer tracks devicePixelRatio`,
+                    metrics.canvas.attrWidth + 2 >= requiredWidth,
+                    `${config.id} ${viewportName}: canvas backing width tracks devicePixelRatio`,
                     `attr=${metrics.canvas.attrWidth}×${metrics.canvas.attrHeight}, client=${metrics.canvas.clientWidth}×${metrics.canvas.clientHeight}, dpr=${metrics.dpr}`,
+                );
+                check(
+                    Math.abs(backingRatio - config.canvasRatio) < 0.015,
+                    `${config.id} ${viewportName}: canvas backing buffer keeps logical aspect ratio`,
+                    `got ${backingRatio.toFixed(4)}, want ${config.canvasRatio.toFixed(4)}`,
                 );
                 if (viewportName.startsWith('desktop')) {
                     const ratio = metrics.canvas.width / metrics.canvas.height;
@@ -179,7 +191,7 @@ function framePage(config) {
                 }
             }
 
-            if (viewportName === 'mobile') {
+            if (viewportName.startsWith('mobile')) {
                 check(Boolean(metrics.stage), `${config.id} mobile: stage exists for height budget`);
                 if (metrics.stage) {
                     check(
@@ -222,6 +234,11 @@ const CASES = [
             await waitHidden(page, '#pm-start');
             return page.evaluate(() => Boolean(window.planetMergeGame?.isRunning()));
         },
+        async mobileInteract(page) {
+            await page.click('#pm-btn-endless');
+            await waitHidden(page, '#pm-start');
+            return page.evaluate(() => Boolean(window.planetMergeGame?.isRunning()));
+        },
     }),
     framePage({
         id: 'hoop-shot',
@@ -247,6 +264,11 @@ const CASES = [
             await waitHidden(page, '#hs-start');
             return page.evaluate(() => Boolean(window.hoopShotGame?.isRunning()));
         },
+        async mobileInteract(page) {
+            await page.click('#hs-btn-play');
+            await waitHidden(page, '#hs-start');
+            return page.evaluate(() => Boolean(window.hoopShotGame?.isRunning()));
+        },
     }),
     framePage({
         id: 'gravity-slingshot',
@@ -267,6 +289,11 @@ const CASES = [
         probes: ['.game-topbar', '.game-main', '.game-footer'],
         async interact(page) {
             await page.waitForFunction(() => Boolean(window.gdGame));
+            await page.click('#gd-btn-levels');
+            await waitHidden(page, '#gd-start');
+            return page.evaluate(() => window.gdGame?.phase === 'aiming');
+        },
+        async mobileInteract(page) {
             await page.click('#gd-btn-levels');
             await waitHidden(page, '#gd-start');
             return page.evaluate(() => window.gdGame?.phase === 'aiming');
@@ -330,6 +357,13 @@ const CASES = [
                 return wrap && !wrap.classList.contains('hidden')
                     && document.getElementById('na-level-grid')?.children.length === 10;
             });
+            return true;
+        },
+        async mobileInteract(page) {
+            await page.click('#na-btn-levels');
+            await page.waitForFunction(() => document.querySelector('.na-level-chip.unlocked'));
+            await page.click('.na-level-chip.unlocked');
+            await page.waitForFunction(() => document.getElementById('na-start')?.classList.contains('hidden'));
             return true;
         },
     }),
