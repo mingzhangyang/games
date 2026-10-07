@@ -87,8 +87,8 @@ function verifyRuntimeAdoption(root, file, localClass, sharedClass, errors, labe
     const local = escapeRegExp(localClass);
     const shared = escapeRegExp(sharedClass);
     const literal = new RegExp(
-        "className\\\\s*=\\\\s*(['\\\"])[^'\\\"]*\\\\b" + local
-        + "\\\\b[^'\\\"]*\\\\b" + shared + "\\\\b",
+        "className\\s*=\\s*(['\\\"])[^'\\\"]*\\b" + local
+        + "\\b[^'\\\"]*\\b" + shared + "\\b",
     );
     if (!literal.test(source)) {
         errors.push(label + ': ' + file + ' does not assign .' + localClass + ' with .' + sharedClass
