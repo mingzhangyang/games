@@ -10,7 +10,7 @@
 - 契约文件：`css/layout.css`（骨架与 `--frame-*` 参数）、`css/tokens.css`（颜色/圆角/控件尺寸）
 - 引入顺序（硬性）：`tokens.css → layout.css → <game>.css → more-games.css`
   - 在这之前：gen 的 `head` 区域输出同步脚本 `/theme-boot.js`，必须先于任何样式表（首屏主题，见 `theme.md`）
-  - 五个科学实验室游戏（crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet）在 layout 与页面 CSS 之间多一层 `science-showcase.css`；`shared-css-first` 给它 rank 2，保证产物与源码同序
+  - 五个科学实验室游戏（crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet）在 layout 与页面 CSS 之间多一层 `science-showcase.css`；这是源码/生成器的 authoring 顺序，不再依赖构建后 link 重排
 - 历史参考：`tools/archive/migrations/apply-layout-unification.py` 已归档，不用于日常开发。当前直接按本文接入共享 `game-*` 骨架与 `--frame-*` 配置，并运行现行布局校验。
 - 校验工具：`tools/dev/layout-metrics.mjs`、`tools/dev/shots.mjs`、`tests/lib/serve-static.mjs`、
   `tests/verify-desktop-frame.mjs`、`tests/verify-stats-drawer.mjs`
@@ -178,24 +178,34 @@ computed sidebar `max-height` / `overflow-y` / `overscroll-behavior` 与 scrollb
 2. **HTML 类名注入必须判重**：`game-body` 死类曾累积 5 层、`game-canvas` 累积 3 层。
    迁移脚本的注入逻辑必须幂等。
 
-## 4. 生产构建的样式顺序陷阱（重要）
+## 4. 生产构建的 cascade 契约（P6 后）
 
-Vite 会把**页面自己的 CSS chunk 排在共享 CSS 之前**，构建后 HTML 形如
-`gomoku.css → tokens.css → layout.css`，于是 `layout.css` 的默认值反而覆盖页面覆盖值
-（实测 gomoku 的 `--frame-stage: 760px` 失效，棋盘缩到 444px）。
+历史上 Vite 曾把页面 CSS chunk 排在共享 CSS 之前，导致 `layout.css` 的默认值反向覆盖页面覆盖值；
+`shared-css-first` 因此曾在 `transformIndexHtml` 阶段重排 stylesheet links。P4 已用同一套产物行为门禁证明
+“插件开启 / 插件关闭”在当前架构上等价，P5 又把剩余未分层规则精确冻结为 compatibility allowlist。
 
-- 已在 `vite.config.js` 加入 `shared-css-first` 插件，在 `transformIndexHtml` 阶段把产物里的
-  `<link rel="stylesheet">` 重排为 `tokens → layout → 页面 → more-games`。**不要删除该插件。**
+从 P6 起：
 
-- 修改布局后需在实际产物上复验，而不只是 dev 服务器：
-  ```bash
-  npm run build
-  (cd dist && node ../tests/lib/serve-static.mjs 8900)
-  ```
-  保持服务器运行，在另一个终端从仓库根目录执行：
-  ```bash
-  node tools/dev/layout-metrics.mjs http://127.0.0.1:8900
-  ```
+- `shared-css-first` 已删除，`CSS_LAYER_CANARY` 也已删除；
+- **物理 `<link>` 顺序不再是生产正确性的独立契约**，不得重新引入 post-build link sorting；
+- 源码/生成器仍按 `tokens → layout → [science-showcase] → 页面 → more-games` 组织，便于审阅和静态分析；
+- 当前仍存在的未分层规则继续受 immutable P0、append-only migration ledger 与 P5 frozen counts 约束，不能借 P6
+  名义重新基线或静默增长；
+- 任何未来 shared cascade 改动都必须通过源码态 + `dist/` 的 P3/P4 行为门禁，而不是依赖人工猜测 link 顺序。
+
+修改布局后仍需在实际产物上复验，而不只是 dev server：
+
+```bash
+npm run build
+(cd dist && node ../tests/lib/serve-static.mjs 8900)
+```
+
+保持服务器运行，在另一个终端从仓库根目录执行：
+
+```bash
+node tools/dev/layout-metrics.mjs http://127.0.0.1:8900
+```
+
 - ⚠️ `vite build` 与 `npm install` 并发会间歇性失败（`No matching HTML proxy module
   found`，失败入口随机漂移）——构建前确保 npm 空闲，CI 串行（见 `docs/backlog.md`）。
 - ⚠️ 内联 `<style>` / 内联 `<script type="module">` 是 html-inline-proxy 竞态的风险源。
@@ -205,7 +215,6 @@ Vite 会把**页面自己的 CSS chunk 排在共享 CSS 之前**，构建后 HTM
   （globals 挂载先于 languageManager 初始化，`__pendingLanguageSelection` 顺序约定见该文件头注释；
   死代码 `window.updateShopInterface` 顺手删除）。
   至此仅保留 gen 契约的 seo-script 内联块（全站模式，gen 管理）。
-
 ## 5. 验证方式
 
 ```bash
