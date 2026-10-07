@@ -3,14 +3,14 @@
 > 日期：2026-10-03  
 > 基线源码：`6bb0d80540707e09cfa41bde0d2384c86f6fedd6`（PR #74 合并后的 main）  
 > 范围：只记录现状并启用 debt guard；此变更不改 CSS cascade 语义。  
-> `shared-css-first` 继续作为生产构建契约。  
+> `shared-css-first` 在该 P0/P1 基线时仍是生产构建契约；P6 candidate 已将其退役。  
 > 2026-10-04：whole-file P2 canary 因真实布局回归被否决并回滚；本文件下方记录修正后的规则级结论。
 
 ## 交接门槛
 
 Architecture v2 Phase 0–9 已由 PR #74 完成。候选 CI #119（run `37133888429`）通过 production build、full verify、Tower Defense / Sword Flight 产物 smoke 和 Cloudflare Worker dry run。P0 的几何值从该轮 `verify-desktop-frame` 日志采集。
 
-本 PR 新增静态与运行时 stylesheet debt guard，并把代表性桌面舞台宽度冻结在 `verify-desktop-frame`。P2 只在本 PR 的 CI 和 review 通过后开始；届时仍保留 `shared-css-first`。
+本 PR 当时新增静态与运行时 stylesheet debt guard，并把代表性桌面舞台宽度冻结在 `verify-desktop-frame`。P2 只在本 PR 的 CI 和 review 通过后开始；当时要求继续保留 `shared-css-first`。
 
 ## P0：CSS 与 HTML 现状
 
@@ -211,11 +211,11 @@ P0 快照与迁移状态也必须分离：`tests/css-layer-p0-baseline.json` 是
 - Tetris canvas backing width 固定为 400px；CSS client width 在 1920×1080 达到 469px、2560×1440 达到 480px（中英文共四个告警）。
 - Tetris 首屏在 360×640 时棋盘超出可视区域 52px，在 320×568 时超出 136px；滚动仍可用。
 
-## 后续门槛
+## 后续门槛（当时计划；现已推进至 P6）
 
 - P2 先启用独立 migration state 与 rule-level verifier；禁止修改 immutable P0，也禁止 whole-file wrapper。
 - P2 按职责把共享默认值放 `layout`、页面专属规则放 `pages`、结构不变量放最后的 `contracts`；每批只迁移已审计规则。
 - P3 按 A–E 批次跑源码态和 production 输出检查；任何行为失败先回滚当前批次并重新审计职责，不用 `!important` 打补丁。
 - P4 加入仅用于 canary 的构建开关，对照正常构建与禁用 `shared-css-first` 的输出。
-- P5 保留插件稳定运行，确认普通 CSS debt 清零或剩下书面例外，并完成候选 CI。
-- P6 另开单独小 PR 移除 `shared-css-first`。
+- P5 实际冻结 post-canary compatibility tier：剩余未分层规则采用 immutable P0 − append-only migrations 的精确 allowlist，而非强制一次性清零。
+- P6 candidate 使用独立小 PR 移除 `shared-css-first` 与 `CSS_LAYER_CANARY`，并保留同一套 built-output 行为门禁做最终验收。
