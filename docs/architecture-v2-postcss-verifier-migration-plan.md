@@ -1,9 +1,10 @@
 # CSS verifier architecture and PostCSS migration
 
-Status: parser/model/source-boundary implementation completed in PR #75. The P2
-rule-mapping/ratchet foundation is implemented, and production cascade-layer migration has
-started with the first dependency-closed `layout` canary (`.game-stage--fill`); every batch
-remains subject to source/production browser evidence.
+Status: parser/model/source-boundary implementation completed in PR #75. P2 rule-mapping/ratchet,
+P3 behavior baselines, P4 plugin-independence canary, and P5 compatibility freeze are complete.
+P6 candidate has retired the former stylesheet-link reordering plugin; the verifier now preserves
+immutable history, the append-only migration ledger, frozen compatibility counts, and source/production
+browser evidence without treating physical production link order as an oracle.
 
 ## Why the verifier needed a redesign
 
@@ -359,7 +360,7 @@ Production P2 still requires:
 2. Source and production geometry/interaction evidence for every migration batch.
 3. Continued independent debt/mapping/browser acceptance; one passing gate never substitutes
    for the others.
-4. Plugin-on/plugin-off equivalence before removing `shared-css-first`.
+4. P4 required plugin-on/plugin-off equivalence before removing `shared-css-first`; P6 now locks the plugin and temporary canary plumbing out of the active build.
 5. Separate contracts before keyframe or runtime-style migrations; both remain rejected by the
    current migration state.
 
