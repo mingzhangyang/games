@@ -58,8 +58,10 @@ async function setupPage(page, { blockArt = false } = {}) {
         await page.setRequestInterception(true);
         page.on('request', request => {
             const url = request.url();
-            const isArt = request.resourceType() === 'image'
-                && matchesBundledAsset(url, CRITICAL_ART_SIGNATURES);
+            // Match the exact source/emitted asset identity instead of Puppeteer's
+            // resource classification: runtime Image() requests are not guaranteed to
+            // be reported as "image" consistently across source and built output.
+            const isArt = matchesBundledAsset(url, CRITICAL_ART_SIGNATURES);
             if (isArt) {
                 blockedArtUrls.push(url);
                 request.abort();
@@ -268,7 +270,7 @@ async function assertFallbackPage() {
             hasGame: !!window.cpGame,
         }));
         if (fallback.artState !== 'fallback' || !fallback.fallbackVisible || !fallback.hasGame) {
-            fail(`资源失败时 fallback 未接管: ${JSON.stringify(fallback)}`);
+            fail(`资源失败时 fallback 未接管: ${JSON.stringify({ ...fallback, blockedArtRequests: diagnostics?.blockedArtUrls?.length || 0 })}`);
         }
         await page.click('#cp-start-btn');
         await page.evaluate(() => { window.cpGame.state.needle = window.cpGame.state.target; });
