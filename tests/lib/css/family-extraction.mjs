@@ -170,6 +170,127 @@ export function verifyExtractionAdoption(root, extraction, errors) {
     }
 }
 
+export function verifyExtractionShape(extraction, errors) {
+    let valid = true;
+    const fail = message => {
+        errors.push(extraction?.id + ': ' + message);
+        valid = false;
+    };
+
+    if (!extraction || typeof extraction !== 'object') {
+        errors.push('family extraction entry must be an object.');
+        return false;
+    }
+    if (!extraction.games || typeof extraction.games !== 'object' || Array.isArray(extraction.games)) {
+        fail('games must be an object keyed by participant prefix.');
+    }
+    if (!Array.isArray(extraction.components) || !extraction.components.length) {
+        fail('components must be a non-empty array.');
+        return false;
+    }
+
+    const suffixes = new Set();
+    const sharedClasses = new Set();
+    for (const component of extraction.components) {
+        if (!component || typeof component !== 'object') {
+            fail('component entries must be objects.');
+            continue;
+        }
+        if (typeof component.suffix !== 'string' || !component.suffix) {
+            fail('every component requires a non-empty suffix.');
+        } else if (suffixes.has(component.suffix)) {
+            fail('duplicate component suffix ' + component.suffix + '.');
+        } else {
+            suffixes.add(component.suffix);
+        }
+
+        if (typeof component.sharedClass !== 'string' || !component.sharedClass) {
+            fail('every component requires a non-empty sharedClass.');
+        } else if (sharedClasses.has(component.sharedClass)) {
+            fail('duplicate sharedClass ' + component.sharedClass + '.');
+        } else {
+            sharedClasses.add(component.sharedClass);
+        }
+
+        if (!['html', 'runtime'].includes(component.surface)) {
+            fail('component .' + (component.sharedClass || '<missing>') + ' has unsupported surface '
+                + JSON.stringify(component.surface) + '.');
+        }
+        if (!Array.isArray(component.participants) || !component.participants.length) {
+            fail('component .' + (component.sharedClass || '<missing>')
+                + ' must declare at least one participant.');
+            continue;
+        }
+        if (!Array.isArray(component.fullyRemoved)) {
+            fail('component .' + (component.sharedClass || '<missing>') + ' fullyRemoved must be an array.');
+            continue;
+        }
+
+        const participants = new Set();
+        for (const prefix of component.participants) {
+            if (typeof prefix !== 'string' || !prefix) {
+                fail('component .' + component.sharedClass + ' has an invalid participant.');
+                continue;
+            }
+            if (participants.has(prefix)) {
+                fail('component .' + component.sharedClass + ' repeats participant ' + prefix + '.');
+                continue;
+            }
+            participants.add(prefix);
+            const game = extraction.games?.[prefix];
+            if (!game || typeof game.css !== 'string' || !game.css
+                || typeof game.html !== 'string' || !game.html
+                || typeof game.runtime !== 'string' || !game.runtime) {
+                fail('component .' + component.sharedClass
+                    + ' participant ' + prefix + ' requires css/html/runtime metadata.');
+            }
+        }
+
+        const fullyRemoved = new Set();
+        for (const prefix of component.fullyRemoved) {
+            if (fullyRemoved.has(prefix)) {
+                fail('component .' + component.sharedClass + ' repeats fullyRemoved participant ' + prefix + '.');
+                continue;
+            }
+            fullyRemoved.add(prefix);
+            if (!participants.has(prefix)) {
+                fail('component .' + component.sharedClass + ' marks non-participant ' + prefix
+                    + ' as fullyRemoved.');
+            }
+        }
+
+        const inherited = component.inheritedEquivalentProperties || {};
+        if (!inherited || typeof inherited !== 'object' || Array.isArray(inherited)) {
+            fail('component .' + component.sharedClass + ' inheritedEquivalentProperties must be an object.');
+            continue;
+        }
+        for (const [prefix, properties] of Object.entries(inherited)) {
+            if (!participants.has(prefix)) {
+                fail('component .' + component.sharedClass
+                    + ' inherited-equivalent properties reference non-participant ' + prefix + '.');
+            }
+            if (!Array.isArray(properties) || !properties.length) {
+                fail('component .' + component.sharedClass
+                    + ' inherited-equivalent properties for ' + prefix + ' must be a non-empty array.');
+                continue;
+            }
+            const seenProperties = new Set();
+            for (const property of properties) {
+                if (typeof property !== 'string' || !property) {
+                    fail('component .' + component.sharedClass
+                        + ' has an invalid inherited-equivalent property for ' + prefix + '.');
+                } else if (seenProperties.has(property)) {
+                    fail('component .' + component.sharedClass
+                        + ' repeats inherited-equivalent property ' + property + ' for ' + prefix + '.');
+                } else {
+                    seenProperties.add(property);
+                }
+            }
+        }
+    }
+    return valid;
+}
+
 function stateById(state, errors, label) {
     const map = new Map();
     if (state.schemaVersion !== 1 || state.contract !== 'append-only-family-extraction-v1'
@@ -192,36 +313,8 @@ function removedTuples(extraction, errors) {
     const rows = [];
     const games = extraction.games || {};
     for (const component of extraction.components || []) {
-        if (!component?.suffix || !component?.sharedClass
-            || !['html', 'runtime'].includes(component.surface)
-            || !Array.isArray(component.participants)
-            || !Array.isArray(component.fullyRemoved)) {
-            errors.push(extraction.id + ': invalid component entry.');
-            continue;
-        }
-        const participants = new Set(component.participants);
-        for (const [prefix, properties] of Object.entries(component.inheritedEquivalentProperties || {})) {
-            if (!participants.has(prefix)) {
-                errors.push(extraction.id + ': inherited-equivalent properties reference non-participant '
-                    + prefix + ' for .' + component.sharedClass + '.');
-            }
-            if (!Array.isArray(properties) || !properties.length) {
-                errors.push(extraction.id + ': inherited-equivalent properties for ' + prefix
-                    + ' / .' + component.sharedClass + ' must be a non-empty array.');
-            }
-        }
         for (const prefix of component.fullyRemoved) {
-            if (!participants.has(prefix)) {
-                errors.push(extraction.id + ': .' + prefix + '-' + component.suffix
-                    + ' is marked fully removed without participating in the shared component.');
-                continue;
-            }
-            const game = games[prefix];
-            if (!game?.css) {
-                errors.push(extraction.id + ': missing game metadata for ' + prefix + '.');
-                continue;
-            }
-            rows.push([game.css, '', '.' + prefix + '-' + component.suffix]);
+            rows.push([games[prefix].css, '', '.' + prefix + '-' + component.suffix]);
         }
     }
     return rows;
@@ -370,6 +463,7 @@ export function verifyFamilyExtractions({
     const removed = [];
     let totalRuleDelta = 0;
     for (const extraction of currentById.values()) {
+        if (!verifyExtractionShape(extraction, errors)) continue;
         // Adoption is a persistent invariant, not a one-time transformation check.
         // Re-run it for every ledger entry so later HTML/runtime edits cannot silently
         // disconnect a page from its shared family styles after the extraction merges.
