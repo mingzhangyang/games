@@ -1,0 +1,325 @@
+{
+  "id": "p2z-pages-needle-awn-stage-default",
+  "source": {
+    "path": "css/needle-awn.css",
+    "context": "",
+    "selector": ".na-stage",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "bec97ec832ebaab66819d2e573c61213b098f29c253ff7d639803b1ccf4a1c10",
+    "declarationDigest": "813a476c830995f2230bccb1395dcf8910c51f8e51ed3ec8d69f5b21f237a3d9",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "position",
+        "value": [
+          [
+            "ident-token",
+            "relative"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "aspect-ratio",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--frame-ratio"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "background",
+        "value": [
+          [
+            "hash-token",
+            "#02040b"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "border-radius",
+        "value": [
+          [
+            "dimension-token",
+            "18px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow",
+        "value": [
+          [
+            "ident-token",
+            "hidden"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "box-shadow",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "16px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "40px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "rgb("
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0.58"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "1px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "rgb("
+          ],
+          [
+            "number-token",
+            "143"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "196"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "202"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0.08"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "border",
+        "value": [
+          [
+            "dimension-token",
+            "1.5px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "solid"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "rgb("
+          ],
+          [
+            "number-token",
+            "143"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "196"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "202"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0.22"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/needle-awn.css",
+      "context": "",
+      "selector": ".na-stage",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "bec97ec832ebaab66819d2e573c61213b098f29c253ff7d639803b1ccf4a1c10",
+      "declarationDigest": "813a476c830995f2230bccb1395dcf8910c51f8e51ed3ec8d69f5b21f237a3d9",
+      "occurrence": 1,
+      "layer": "pages"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

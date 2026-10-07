@@ -1,0 +1,53 @@
+{
+  "id": "p2z-contracts-start-menu-canvas",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width < 1024px)",
+    "selector": ".game-stage:has(> .game-overlay--menu:not(.hidden)) > canvas",
+    "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+    "selectorDigest": "28aa378e1cb2e419c0ac32c795aaf2d7655fa191403d7db1bcc8f407762cf2c1",
+    "layer": null,
+    "declarationDigest": "5c43d81a1f48bf294d187a45c96ca57152a9d54c24d2fa57896641be9a8f4962",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "height",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "!"
+          ],
+          [
+            "ident-token",
+            "important"
+          ]
+        ],
+        "important": true
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width < 1024px)",
+      "selector": ".game-stage:has(> .game-overlay--menu:not(.hidden)) > canvas",
+      "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+      "selectorDigest": "28aa378e1cb2e419c0ac32c795aaf2d7655fa191403d7db1bcc8f407762cf2c1",
+      "layer": "contracts",
+      "declarationDigest": "5c43d81a1f48bf294d187a45c96ca57152a9d54c24d2fa57896641be9a8f4962",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

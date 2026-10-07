@@ -596,24 +596,28 @@ body {
 
 /* ── 覆盖层（开始/暂停/结算） ── */
 
-.td-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: safe center;
-    gap: 12px;
-    background: rgb(6, 8, 22, 0.88);
-    backdrop-filter: blur(14px);
-    padding: 24px 18px;
-    text-align: center;
-    overflow-y: auto;
-    scrollbar-width: none;
+@layer pages {
+    .td-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: safe center;
+        gap: 12px;
+        background: rgb(6, 8, 22, 0.88);
+        backdrop-filter: blur(14px);
+        padding: 24px 18px;
+        text-align: center;
+        overflow-y: auto;
+        scrollbar-width: none;
+    }
 }
 
-.td-overlay::-webkit-scrollbar { display: none; }
+@layer pages {
+    .td-overlay::-webkit-scrollbar { display: none; }
+}
 
 .td-title {
     font-size: 32px;
@@ -1460,12 +1464,14 @@ body {
 
 .td-tactical-panel .td-side-title { color: #d8ece9; }
 
-.td-shell.game-shell--immersive .td-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    background: rgb(5, 13, 23, 0.91);
-    backdrop-filter: blur(8px);
+@layer pages {
+    .td-shell.game-shell--immersive .td-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        background: rgb(5, 13, 23, 0.91);
+        backdrop-filter: blur(8px);
+    }
 }
 
 .td-shell.game-shell--immersive .td-title {
@@ -1663,29 +1669,35 @@ body {
 }
 
 @media (width < 1024px) {
-    .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) {
-        display: grid;
-        justify-items: center;
-        align-items: start;
-        height: auto;
-        min-height: 0;
-        overflow: visible;
-        touch-action: auto;
-        user-select: auto;
-        -webkit-user-select: auto;
+    @layer contracts {
+        .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) {
+            display: grid;
+            justify-items: center;
+            align-items: start;
+            height: auto;
+            min-height: 0;
+            overflow: visible;
+            touch-action: auto;
+            user-select: auto;
+            -webkit-user-select: auto;
+        }
     }
 
-    .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) > * {
-        grid-area: 1 / 1;
+    @layer contracts {
+        .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) > * {
+            grid-area: 1 / 1;
+        }
     }
 
-    .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) > .td-overlay--menu {
-        position: relative;
-        inset: auto;
-        justify-self: stretch;
-        align-self: stretch;
-        overflow: visible;
-        touch-action: auto;
+    @layer contracts {
+        .td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden)) > .td-overlay--menu {
+            position: relative;
+            inset: auto;
+            justify-self: stretch;
+            align-self: stretch;
+            overflow: visible;
+            touch-action: auto;
+        }
     }
 
     .td-shell.game-shell--immersive .td-tactical-panel {

@@ -1,0 +1,71 @@
+{
+  "id": "p2z-pages-firefly-canvas-default",
+  "source": {
+    "path": "css/firefly-signal.css",
+    "context": "",
+    "selector": ".fs-canvas",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "bc1c12d0b175eebf2086e149ffd016958cb36a6152a8d2af213019e5ab528888",
+    "declarationDigest": "1e7a5eaf3151adfe4dc0daaed27aaad1ea719fb8136be9ed248eb657f4c6a7a5",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "block"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "width",
+        "value": [
+          [
+            "percentage-token",
+            "100%"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "height",
+        "value": [
+          [
+            "percentage-token",
+            "100%"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "cursor",
+        "value": [
+          [
+            "ident-token",
+            "pointer"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/firefly-signal.css",
+      "context": "",
+      "selector": ".fs-canvas",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "bc1c12d0b175eebf2086e149ffd016958cb36a6152a8d2af213019e5ab528888",
+      "declarationDigest": "1e7a5eaf3151adfe4dc0daaed27aaad1ea719fb8136be9ed248eb657f4c6a7a5",
+      "occurrence": 1,
+      "layer": "pages"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "p2z-pages-echo-cave-stage-narrow",
+  "source": {
+    "path": "css/echo-cave.css",
+    "context": "@media (width <= 480px)",
+    "selector": ".ec-stage",
+    "contextDigest": "0c7a72ac27ebc74e9a6acf24657cf6f585df51aa83259bd5f818f43b72f85f21",
+    "selectorDigest": "6990ae5a973f9e83764646c2cb21524f4bbf2edf74572575c144423faba08804",
+    "declarationDigest": "09e5e358344b8253158945a1ae87648f2cbf976b9f9203e9c30b9c7eb2d25b53",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "flex-direction",
+        "value": [
+          [
+            "ident-token",
+            "column"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "stretch"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/echo-cave.css",
+      "context": "@media (width <= 480px)",
+      "selector": ".ec-stage",
+      "contextDigest": "0c7a72ac27ebc74e9a6acf24657cf6f585df51aa83259bd5f818f43b72f85f21",
+      "selectorDigest": "6990ae5a973f9e83764646c2cb21524f4bbf2edf74572575c144423faba08804",
+      "declarationDigest": "09e5e358344b8253158945a1ae87648f2cbf976b9f9203e9c30b9c7eb2d25b53",
+      "occurrence": 1,
+      "layer": "pages"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

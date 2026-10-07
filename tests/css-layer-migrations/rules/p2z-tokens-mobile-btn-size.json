@@ -1,0 +1,118 @@
+{
+  "id": "p2z-tokens-mobile-btn-size",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width <= 480px)",
+    "selector": ":root",
+    "contextDigest": "0c7a72ac27ebc74e9a6acf24657cf6f585df51aa83259bd5f818f43b72f85f21",
+    "selectorDigest": "4c10f44c2ae57698bd3ae208b6700ec56c5fa2d2865e8380b0c28c009060900d",
+    "layer": null,
+    "declarationDigest": "0be21dc40182c6f45351d1e09c18255d9ab06d7ef18006339049cd1ebc84046a",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "--tok-btn-size",
+        "value": [
+          [
+            "dimension-token",
+            "36px"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width <= 480px)",
+      "selector": ":root",
+      "contextDigest": "0c7a72ac27ebc74e9a6acf24657cf6f585df51aa83259bd5f818f43b72f85f21",
+      "selectorDigest": "4c10f44c2ae57698bd3ae208b6700ec56c5fa2d2865e8380b0c28c009060900d",
+      "layer": "tokens",
+      "declarationDigest": "0be21dc40182c6f45351d1e09c18255d9ab06d7ef18006339049cd1ebc84046a",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [
+      {
+        "property": "--tok-btn-size",
+        "peerProperty": "--tok-btn-size",
+        "targetLayer": "tokens",
+        "peerPath": "css/tokens.css",
+        "peerContext": "",
+        "peerSourceLayer": "tokens",
+        "peerLayer": "tokens",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      },
+      {
+        "property": "--tok-btn-size",
+        "peerProperty": "--tok-btn-size",
+        "targetLayer": "tokens",
+        "peerPath": "css/layout.css",
+        "peerContext": "@media (height <= 720px)",
+        "peerSourceLayer": null,
+        "peerLayer": "tokens",
+        "layerPriority": "same-layer",
+        "pages": [
+          "bond-forge.html",
+          "carrot-pull.html",
+          "circuit.html",
+          "crystal-bloom.html",
+          "echo-cave.html",
+          "firefly-signal.html",
+          "flame-verse.html",
+          "gomoku.html",
+          "gravity-slingshot.html",
+          "hoop-shot.html",
+          "index.html",
+          "lumen.html",
+          "math-rain.html",
+          "maxwell-demon.html",
+          "minesweeper.html",
+          "needle-awn.html",
+          "planet-merge.html",
+          "reversi.html",
+          "ripple-duet.html",
+          "shadow-loom.html",
+          "silk-dew.html",
+          "sword-flight.html",
+          "tank-battle.html",
+          "tetris.html",
+          "tower-defense.html",
+          "word-daily.html"
+        ]
+      }
+    ],
+    "important": []
+  }
+}

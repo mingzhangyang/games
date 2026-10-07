@@ -39,18 +39,29 @@ frame-budget、immersive、主题与其他游戏的系统性回归证据来自 #
 
 重新运行 CSS debt/P6 config 检查得到：
 
-| P5 冻结项 | 数量 |
+| P5 历史冻结项 | 数量 |
 | --- | ---: |
 | 静态 ordinary rules / 其中未分层 | 2912 / 2703 |
 | runtime ordinary rules / 其中未分层 | 15 / 15 |
 | 未分层 runtime keyframes | 3 |
 | inline style blocks / rules / attributes | 1 / 6 / 14 |
 
-精确身份以 immutable P0 减 append-only migration ledger 为准；计数不能替代成员校验。
-`tests/css-layer-migration-state.json` 和 `tests/verify-css-debt.mjs` 当前还精确锁定 P5 计数，
-因此**合法减少债务也必须显式调整冻结契约并接受审查**，仅追加 mapping 不会自动通过。
-未来批次须列出 source→destination、完整 selector/property 依赖、预期计数变化及行为证据；
-P0 与已合并 ledger 不得重写，不得通过上调 baseline 掩盖新增 debt。
+P5 数值是插件退役前的**历史证据**，不是阻止后续合法分层减债的固定当前值。精确身份始终以
+immutable P0 减 append-only migration ledger 为准；`verify-css-debt.mjs` 只允许
+`staticUnlayeredRules` 保持或下降，并继续逐条验证当前 debt 恰好等于“P0 − 已登记 migrations”。
+`staticOrdinaryRules` 总数仍精确锁定 2912，避免误删已分层规则或静默新增规则；未来如需 P5 后
+retirement，必须另行扩展并审查守卫。runtime stylesheet 与 inline style 尚无减债 contract，
+对应 P5 数量同样保持精确锁定。
+
+2026-10-07 的 focused priority closure 在只读审计后迁移 24 条 dependency-closed 静态规则：
+共享 start-menu / overlay contract、移动 icon-button 响应式 peer，以及为保持结构优先级必须
+同步进入 `pages` / `contracts` 的 Needle Awn、Science Showcase 三页、Firefly Signal 与
+Tower Defense peers。静态 ordinary rules 仍为 2912，未分层降为 **2679**；`layout.css`
+共享未分层规则由 16 条降为 **5 条**（`.sr-only` + drawer handle/head/body/scrollbar）。
+后五条没有发现跨组件几何竞争，本轮明确保留；Theme token 与页面独有 skin 也不为清零而迁移。
+
+未来批次仍须列出 source→destination、完整 selector/property 依赖、预期计数变化及行为证据；
+P0、P5 历史快照与已合并 ledger 均不得重写，不得通过上调 baseline 掩盖新增 debt。
 keyframe/runtime-style ownership 迁移仍需先建立专门契约，不能套用普通静态 rule 的迁移事务。
 
 ## 3. 日常开发入口

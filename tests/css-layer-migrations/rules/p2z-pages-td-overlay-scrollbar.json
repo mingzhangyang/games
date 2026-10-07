@@ -1,0 +1,41 @@
+{
+  "id": "p2z-pages-td-overlay-scrollbar",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "",
+    "selector": ".td-overlay::-webkit-scrollbar",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "084d9742e67d5e8853edbcea277c09183876770c3e45bc113197a1295e96bc88",
+    "declarationDigest": "5fbaf5b43dd6ddd3ac92d5096d223e3998cc1d9cfddacee882b1873ecc51c9e8",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".td-overlay::-webkit-scrollbar",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "084d9742e67d5e8853edbcea277c09183876770c3e45bc113197a1295e96bc88",
+      "declarationDigest": "5fbaf5b43dd6ddd3ac92d5096d223e3998cc1d9cfddacee882b1873ecc51c9e8",
+      "occurrence": 1,
+      "layer": "pages"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

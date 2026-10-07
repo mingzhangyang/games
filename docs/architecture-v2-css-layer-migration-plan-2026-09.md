@@ -19,6 +19,12 @@ P5 又把剩余未分层 CSS 精确冻结为 compatibility allowlist。基于这
 与 15 条 runtime 未分层 ordinary rules，并继续用 immutable P0 − append-only migrations、
 frozen counts 和行为回归约束它们。P6 只切换构建契约，不夹带新的 CSS ownership/selector/视觉迁移。
 
+这里的 2703 是 **P5 当时的历史冻结上限**，不是未来必须永久等于的当前值。P6 之后允许经过
+dependency-closed 审计的 `staticUnlayeredRules` 继续下降；每次下降必须追加 immutable migration
+mapping，而不是修改 P0 / P5 历史证据。`staticOrdinaryRules` 总数继续精确锁定，防止误删或
+静默新增普通规则；verifier 同时执行“未分层数量不得高于 P5 上限”和“当前成员必须精确等于
+P0 − ledger”两道检查。
+
 此外，迁移期间采用与 Architecture v2 相同的 **debt ratchet** 原则：
 
 - 已有未分层 CSS 可以在 baseline 中暂时存在；
@@ -689,6 +695,26 @@ P6（#112）的实现边界：
 P6 已通过最终 Architecture v2 candidate #341（run 37583907407）；#112 合并后的 Workers build 也已通过。
 完整证据见最终交接文档。如果确认回归由 P6 引入，应整体回滚 #112；其他后续回归应回滚实际引入问题的变更，
 不要局部恢复插件、canary 或堆叠 selector 补丁。
+
+### Post-P6：Focused Priority Closure（2026-10-07）
+
+P6 后没有继续按 2703 条规则的总量拆小 PR，而是重新审计仍可能跨组件改变优先级的未分层规则。
+结论只保留两个值得治理的完整依赖组，并在同一 focused transaction 中闭合：
+
+- **Overlay / Start-menu**：共享 overlay 默认值进入 `layout`，菜单打开时的 stage/canvas/overlay
+  结构不变量进入 `contracts`；Crystal Bloom、Echo Cave、Maxwell Demon、Needle Awn、
+  Firefly Signal 与 Tower Defense 的必要页面 peers（含 TD overlay base / scrollbar / immersive overlay）同步进入 `pages` / `contracts`。
+- **Mobile Icon Button**：≤480px / 矮屏的 `--tok-btn-size` 进入 `tokens`，
+  `.game-icon-btn` 与 `--wide` 响应式 peer 进入 `components`。
+- 共迁移 **24 条**静态规则，不改 selector、声明值、DOM、Theme、Drawer 或玩法；静态未分层
+  ordinary rules 从 P5 的 2703 降到 **2679**。
+- `layout.css` 剩余 5 条未分层共享规则为 `.sr-only` 与 drawer handle/head/body/scrollbar。
+  审计没有发现页面几何 peer 与它们竞争，因此保留为 compatibility island，不为规则数量清零而迁移。
+- Theme token 覆盖和绝大多数页面 `.xx-btn/.xx-stage/.xx-shell` 皮肤仍是合法页面扩展点；
+  没有跨组件冲突证据的规则保持原状。
+
+这一批把“CSS 优先级治理完成”的判断标准从总 rule count 改为**跨组件依赖是否显式闭合**：
+以后只有出现新的具体冲突/收益证据才继续迁移，不把 2682 → 0 设为项目目标。
 
 ## 5. 必须新增的自动守卫
 

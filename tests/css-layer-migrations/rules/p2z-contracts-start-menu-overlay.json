@@ -1,0 +1,81 @@
+{
+  "id": "p2z-contracts-start-menu-overlay",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width < 1024px)",
+    "selector": ".game-stage > .game-overlay--menu",
+    "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+    "selectorDigest": "7b7e3869160a4e66f0521d38f8568437af200bcf3c9e3ed3a4d37e4dc7b4189b",
+    "layer": null,
+    "declarationDigest": "27c721d0a1aafa07a24a1fa2b3456e8bd5e8fda543f1e421abf1882ae920146d",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "position",
+        "value": [
+          [
+            "ident-token",
+            "relative"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "inset",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-self",
+        "value": [
+          [
+            "ident-token",
+            "stretch"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-self",
+        "value": [
+          [
+            "ident-token",
+            "stretch"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow",
+        "value": [
+          [
+            "ident-token",
+            "visible"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width < 1024px)",
+      "selector": ".game-stage > .game-overlay--menu",
+      "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+      "selectorDigest": "7b7e3869160a4e66f0521d38f8568437af200bcf3c9e3ed3a4d37e4dc7b4189b",
+      "layer": "contracts",
+      "declarationDigest": "27c721d0a1aafa07a24a1fa2b3456e8bd5e8fda543f1e421abf1882ae920146d",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "id": "p2z-pages-needle-awn-stage-landscape",
+  "source": {
+    "path": "css/needle-awn.css",
+    "context": "@media (orientation: landscape) and (height <= 640px)",
+    "selector": ".na-stage",
+    "contextDigest": "3b0f887a7e0f2d1801c5d52922d834eb5c540ba354e2afcbfa89c31fb6f00beb",
+    "selectorDigest": "bec97ec832ebaab66819d2e573c61213b098f29c253ff7d639803b1ccf4a1c10",
+    "declarationDigest": "a37dbe030ac700318bd9c0eaee1c334649992018cfc6c4d8f00ea5982d7777da",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "height",
+        "value": [
+          [
+            "function-token",
+            "min("
+          ],
+          [
+            "dimension-token",
+            "640px"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "function-token",
+            "calc("
+          ],
+          [
+            "dimension-token",
+            "100vh"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "-"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "72px"
+          ],
+          [
+            ")-token",
+            ")"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "width",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "max-width",
+        "value": [
+          [
+            "percentage-token",
+            "100%"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/needle-awn.css",
+      "context": "@media (orientation: landscape) and (height <= 640px)",
+      "selector": ".na-stage",
+      "contextDigest": "3b0f887a7e0f2d1801c5d52922d834eb5c540ba354e2afcbfa89c31fb6f00beb",
+      "selectorDigest": "bec97ec832ebaab66819d2e573c61213b098f29c253ff7d639803b1ccf4a1c10",
+      "declarationDigest": "a37dbe030ac700318bd9c0eaee1c334649992018cfc6c4d8f00ea5982d7777da",
+      "occurrence": 1,
+      "layer": "pages"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

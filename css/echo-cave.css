@@ -499,7 +499,10 @@ body {
     .ec-howto { font-size: 12px; }
     .ec-mode { font-size: 13px; padding: 11px 15px; }
     .ec-level-grid { gap: 5px; }
-    .ec-stage { flex-direction: column; align-items: stretch; }
+
+    @layer pages {
+        .ec-stage { flex-direction: column; align-items: stretch; }
+    }
 
     .ec-action-row {
         position: relative;
