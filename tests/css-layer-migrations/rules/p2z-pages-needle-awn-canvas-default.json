@@ -1,0 +1,71 @@
+{
+  "id": "p2z-pages-needle-awn-canvas-default",
+  "source": {
+    "path": "css/needle-awn.css",
+    "context": "",
+    "selector": "#na-canvas",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "48c2ea998f8b565bfc954eb8bedb9805b03699c3b9a24433e121ef45f17ad16c",
+    "declarationDigest": "bdee7bb088f5feffb407b151a2aeb348d2666ab0bbe2a647d1d03300ae011add",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "block"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "width",
+        "value": [
+          [
+            "percentage-token",
+            "100%"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "height",
+        "value": [
+          [
+            "percentage-token",
+            "100%"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "touch-action",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/needle-awn.css",
+      "context": "",
+      "selector": "#na-canvas",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "48c2ea998f8b565bfc954eb8bedb9805b03699c3b9a24433e121ef45f17ad16c",
+      "declarationDigest": "bdee7bb088f5feffb407b151a2aeb348d2666ab0bbe2a647d1d03300ae011add",
+      "occurrence": 1,
+      "layer": "pages"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "id": "p2z-layout-game-overlay-scrollbar",
+  "source": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-overlay::-webkit-scrollbar",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "03b9bd15b84609b3ba8dffd4be03d25c8bbb06f4b0d9c119e700befdb7949b4d",
+    "layer": null,
+    "declarationDigest": "5fbaf5b43dd6ddd3ac92d5096d223e3998cc1d9cfddacee882b1873ecc51c9e8",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "",
+      "selector": ".game-overlay::-webkit-scrollbar",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "03b9bd15b84609b3ba8dffd4be03d25c8bbb06f4b0d9c119e700befdb7949b4d",
+      "layer": "layout",
+      "declarationDigest": "5fbaf5b43dd6ddd3ac92d5096d223e3998cc1d9cfddacee882b1873ecc51c9e8",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

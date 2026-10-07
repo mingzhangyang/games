@@ -1,0 +1,57 @@
+{
+  "id": "p2z-contracts-start-menu-children",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width < 1024px)",
+    "selector": ".game-stage:has(> .game-overlay--menu:not(.hidden)) > *",
+    "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+    "selectorDigest": "78e6165a3a6e0b293f88f5883eb0fb8eb80b088bd3a6d3b04bb634dc6c96a10b",
+    "layer": null,
+    "declarationDigest": "1005b7f05dfdb30e721ea0af1b793c84383082342bdad7c36300f65a6ff938c3",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "grid-area",
+        "value": [
+          [
+            "number-token",
+            "1"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "delim-token",
+            "/"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "1"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width < 1024px)",
+      "selector": ".game-stage:has(> .game-overlay--menu:not(.hidden)) > *",
+      "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+      "selectorDigest": "78e6165a3a6e0b293f88f5883eb0fb8eb80b088bd3a6d3b04bb634dc6c96a10b",
+      "layer": "contracts",
+      "declarationDigest": "1005b7f05dfdb30e721ea0af1b793c84383082342bdad7c36300f65a6ff938c3",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

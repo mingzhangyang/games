@@ -1,0 +1,91 @@
+{
+  "id": "p2z-contracts-start-menu-stage",
+  "source": {
+    "path": "css/layout.css",
+    "context": "@media (width < 1024px)",
+    "selector": ".game-stage:has(> .game-overlay--menu:not(.hidden))",
+    "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+    "selectorDigest": "ebffda61f8c9509db111ec2ffda97bc92b8e0486800bf617d1a65fc99fbb9c3c",
+    "layer": null,
+    "declarationDigest": "0d6e435abf3747cd4717335faac815918010478836eea8a853807b3d8200b79e",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "grid"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-items",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "start"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "aspect-ratio",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "height",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow",
+        "value": [
+          [
+            "ident-token",
+            "visible"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/layout.css",
+      "context": "@media (width < 1024px)",
+      "selector": ".game-stage:has(> .game-overlay--menu:not(.hidden))",
+      "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+      "selectorDigest": "ebffda61f8c9509db111ec2ffda97bc92b8e0486800bf617d1a65fc99fbb9c3c",
+      "layer": "contracts",
+      "declarationDigest": "0d6e435abf3747cd4717335faac815918010478836eea8a853807b3d8200b79e",
+      "occurrence": 1
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

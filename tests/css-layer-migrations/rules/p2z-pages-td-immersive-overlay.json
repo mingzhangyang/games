@@ -1,0 +1,133 @@
+{
+  "id": "p2z-pages-td-immersive-overlay",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "",
+    "selector": ".td-shell.game-shell--immersive .td-overlay",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "24f08bec29997d11e7e6c0626a1833c8ef41c9b72352942c185b844b6056038f",
+    "declarationDigest": "3b2fbde6138e51f3064a626b070ff7bfbdb8a3daa3443061f3bf72e5eb0bcb40",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "position",
+        "value": [
+          [
+            "ident-token",
+            "absolute"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "inset",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "z-index",
+        "value": [
+          [
+            "number-token",
+            "20"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "background",
+        "value": [
+          [
+            "function-token",
+            "rgb("
+          ],
+          [
+            "number-token",
+            "5"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "13"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "23"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0.91"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "backdrop-filter",
+        "value": [
+          [
+            "function-token",
+            "blur("
+          ],
+          [
+            "dimension-token",
+            "8px"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".td-shell.game-shell--immersive .td-overlay",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "24f08bec29997d11e7e6c0626a1833c8ef41c9b72352942c185b844b6056038f",
+      "declarationDigest": "3b2fbde6138e51f3064a626b070ff7bfbdb8a3daa3443061f3bf72e5eb0bcb40",
+      "occurrence": 1,
+      "layer": "pages"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "id": "p2z-pages-td-overlay-default",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "",
+    "selector": ".td-overlay",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "67d312962d38e2b092742c9614b7d7a43931f0ccba49cf5c51bbca5e2ef0295f",
+    "declarationDigest": "a77e7a0da3202d4d5859de7d4c9c0cff34f89bf4225b9638d26f59956b823200",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "position",
+        "value": [
+          [
+            "ident-token",
+            "fixed"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "inset",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "z-index",
+        "value": [
+          [
+            "number-token",
+            "20"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "flex"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "flex-direction",
+        "value": [
+          [
+            "ident-token",
+            "column"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-content",
+        "value": [
+          [
+            "ident-token",
+            "safe"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "gap",
+        "value": [
+          [
+            "dimension-token",
+            "12px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "background",
+        "value": [
+          [
+            "function-token",
+            "rgb("
+          ],
+          [
+            "number-token",
+            "6"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "8"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "22"
+          ],
+          [
+            "comma-token",
+            ","
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "number-token",
+            "0.88"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "backdrop-filter",
+        "value": [
+          [
+            "function-token",
+            "blur("
+          ],
+          [
+            "dimension-token",
+            "14px"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding",
+        "value": [
+          [
+            "dimension-token",
+            "24px"
+          ],
+          [
+            "whitespace-token",
+            " "
+          ],
+          [
+            "dimension-token",
+            "18px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "text-align",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow-y",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "scrollbar-width",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".td-overlay",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "67d312962d38e2b092742c9614b7d7a43931f0ccba49cf5c51bbca5e2ef0295f",
+      "declarationDigest": "a77e7a0da3202d4d5859de7d4c9c0cff34f89bf4225b9638d26f59956b823200",
+      "occurrence": 1,
+      "layer": "pages"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

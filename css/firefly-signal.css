@@ -91,11 +91,13 @@ body.fs-body {
     inset: 0;
 }
 
-.fs-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
+@layer pages {
+    .fs-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
 }
 
 /* 键盘聚焦到场景时的外框（选中的萤火虫另有画布里的虚线焦点环） */

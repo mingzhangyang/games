@@ -1,0 +1,121 @@
+{
+  "id": "p2z-contracts-td-start-menu-stage",
+  "source": {
+    "path": "css/tower-defense.css",
+    "context": "@media (width < 1024px)",
+    "selector": ".td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden))",
+    "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+    "selectorDigest": "5957742b66db393f631e4c8b43cfd5106962b9df821f328e314a50b9b9575f13",
+    "declarationDigest": "ea8bbf8bf25112e11457c3446c11133e821e4051584b394d83706f410ad33abc",
+    "occurrence": 1,
+    "layer": null,
+    "declarations": [
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "grid"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-items",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "start"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "height",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "min-height",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "overflow",
+        "value": [
+          [
+            "ident-token",
+            "visible"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "touch-action",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "user-select",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "-webkit-user-select",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [
+    {
+      "path": "css/tower-defense.css",
+      "context": "@media (width < 1024px)",
+      "selector": ".td-shell.game-shell--immersive .td-stage:has(> .game-overlay--menu:not(.hidden))",
+      "contextDigest": "d9e9e4b9097f66dca73701ae52edb45714cd17f8e7aac28b93299834f69bf644",
+      "selectorDigest": "5957742b66db393f631e4c8b43cfd5106962b9df821f328e314a50b9b9575f13",
+      "declarationDigest": "ea8bbf8bf25112e11457c3446c11133e821e4051584b394d83706f410ad33abc",
+      "occurrence": 1,
+      "layer": "contracts"
+    }
+  ],
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

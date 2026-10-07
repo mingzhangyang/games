@@ -314,7 +314,7 @@ function verifyProject() {
             .filter(declaration => declaration.selector && hasImportantPriority(declaration.value)).length;
     }
 
-    const p5FrozenCounts = {
+    const currentCompatibilityCounts = {
         staticOrdinaryRules: totalRules,
         staticUnlayeredRules: actualDebt.unlayeredRules.length,
         runtimeOrdinaryRules: runtimeRules,
@@ -324,9 +324,31 @@ function verifyProject() {
         inlineStyleRules: actualDebt.inlineStyleRules.length,
         inlineStyleAttributes: actualDebt.inlineStyleAttributes.length,
     };
-    if (!sameJson(p5FrozenCounts, MIGRATION_STATE.p5StabilityFreeze?.frozenCounts)) {
-        errors.push('P5 CSS compatibility tier changed after the stability freeze: '
-            + JSON.stringify(p5FrozenCounts) + '.');
+    const p5FrozenCounts = MIGRATION_STATE.p5StabilityFreeze?.frozenCounts || {};
+    // P5 is immutable historical evidence, not a floor that prevents reviewed layering.
+    // This contract only opens one direction: registered static rules may leave the unlayered
+    // compatibility tier. The total static rule population remains exact, so deleting a layered
+    // rule or adding a new one still requires a separately reviewed verifier contract.
+    if (currentCompatibilityCounts.staticOrdinaryRules !== p5FrozenCounts.staticOrdinaryRules) {
+        errors.push('Static ordinary rule population changed outside the reviewed layering contract: '
+            + currentCompatibilityCounts.staticOrdinaryRules + ' !== '
+            + p5FrozenCounts.staticOrdinaryRules + '.');
+    }
+    if (currentCompatibilityCounts.staticUnlayeredRules > p5FrozenCounts.staticUnlayeredRules) {
+        errors.push('Static unlayered CSS debt grew above the P5 frozen ceiling: '
+            + currentCompatibilityCounts.staticUnlayeredRules + ' > '
+            + p5FrozenCounts.staticUnlayeredRules + '.');
+    }
+    // Runtime stylesheet and inline-style migrations still have no reviewed reduction contract.
+    // Keep those historical counts exact until such a contract exists.
+    for (const key of [
+        'runtimeOrdinaryRules', 'runtimeUnlayeredRules', 'runtimeUnlayeredKeyframes',
+        'inlineStyleBlocks', 'inlineStyleRules', 'inlineStyleAttributes',
+    ]) {
+        if (currentCompatibilityCounts[key] !== p5FrozenCounts[key]) {
+            errors.push('Unreviewed non-static CSS compatibility count changed for ' + key + ': '
+                + currentCompatibilityCounts[key] + ' !== ' + p5FrozenCounts[key] + '.');
+        }
     }
 
     const comparisonBase = resolveComparisonBase(ROOT);
@@ -407,7 +429,7 @@ function verifyProject() {
         + runtimeKeyframes + ' · unlayered runtime keyframes: ' + runtimeUnlayeredKeyframes);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
-    console.log('  P5 compatibility tier matches the frozen post-canary counts and cannot grow silently.');
+    console.log('  static ordinary rule count matches P5; unlayered debt stays below its historical ceiling and matches the append-only ledger.');
     console.log('  immutable P0 snapshot, script activation, stylesheet source order, and current layer map all match.');
 }
 
