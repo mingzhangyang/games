@@ -1,6 +1,6 @@
 # CSS Cascade Layers 迁移方案
 
-> 状态：P0–P2 cascade ownership 已收敛，P3-A～P3-E 行为基线已完成；下一阶段为 P4 `shared-css-first` 插件无关性 canary
+> 状态：P0–P4 已完成；P5 已冻结 post-canary compatibility tier，下一阶段为 P6 独立移除 `shared-css-first`
 >
 > 记录日期：2026-09-30
 >
@@ -652,13 +652,24 @@ P3-A～P3-E 的确定性断言取代原始表格 diff，避免动画、字体时
 
 目标：在插件仍存在的生产路径下确认 layer 架构已经稳定，且 P4 canary 等价。
 
-工作项：
+P5 在 #111 将 post-canary compatibility tier 写入 migration state，并由
+`verify-css-debt.mjs` 强制验证。这里不把“剩余未分层 CSS”误写成“已经全部迁移”：
+#110 的成功候选 CI 实测仍有 2912 条静态 ordinary rules，其中 2703 条未分层，
+另有 15 条 runtime ordinary rules 全部未分层。它们继续由“immutable P0 − append-only
+registered migrations”精确约束，不能无登记增长；这是一份明确、机器可验证的 compatibility
+allowlist，而不是重新放宽 debt baseline。
 
-- 完成所有批次回归；
-- CSS debt ratchet 中未分层普通规则清零或只剩文档化例外；
-- 正常模式与 canary 模式契约指标等价；
-- 至少一次完整 Architecture v2 candidate CI 通过；
-- 在这一阶段**仍不删除** `shared-css-first`。
+冻结证据：
+
+- Architecture v2 candidate #335 / run 37567729830 成功；
+- normal production build 与 `CSS_LAYER_CANARY=1` build 复跑同一套 built-output gates，均通过；
+- 当前 compatibility tier 的 ordinary/unlayered、runtime keyframe、inline-style 计数写入
+  `tests/css-layer-migration-state.json`；
+- verifier 对上述计数和 P4 证据做精确校验，任何漂移必须作为新的、显式审查 transaction 处理；
+- 本阶段仍保留 `shared-css-first`，不夹带任何 CSS ownership、selector 或视觉改动。
+
+因此 P5 的含义是“冻结已证明与插件顺序无关的当前架构状态”，而不是机械把 2703 条页面规则
+一次性包进 `pages`。后者会扩大 cascade 语义变更面，反而破坏 P4 已获得的等价证据。
 
 ### P6：单独 PR 删除 `shared-css-first`
 
@@ -796,13 +807,13 @@ handoff 通过后进入临时 layout freeze：
 - [x] P3-C / #107：验证 crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet 的 showcase / page-skin 优先级与源码态 + dist 行为等价
 - [x] P3-D / #108：验证 tetris / tower-defense / carrot-pull / firefly-signal / shadow-loom 的 drawer、immersive、fixed controls 与生产美术契约
 - [x] P3-E / #109：验证 math-rain / tank-battle 两个化外页的独立 CSS、全屏/覆盖式 HUD、orientation 与真实交互，并覆盖源码态 + dist
-- [ ] P4 / #110：以 `CSS_LAYER_CANARY=1` 仅关闭 `shared-css-first`，对正常构建与 canary 构建复跑冻结的产物行为契约
+- [x] P4 / #110：以 `CSS_LAYER_CANARY=1` 仅关闭 `shared-css-first`，对正常构建与 canary 构建复跑冻结的产物行为契约
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位
 - [ ] 运行插件保留模式下的分批回归
-- [ ] 运行禁用插件的 canary 对比
-- [ ] 在插件仍存在的生产路径下完成稳定性验证
+- [x] 运行禁用插件的 canary 对比
+- [x] P5 / #111：在插件仍存在的生产路径下冻结 post-canary compatibility tier，并将 P4 证据与剩余 debt allowlist 变成机器可验证契约
 - [ ] 用独立小 PR 移除 `shared-css-first`
 - [ ] 更新现行契约与 PR 描述
 - [ ] 触发一次最终完整 CI
