@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "engine": "postcss-duplication-audit-v1",
+  "expectedOrdinaryRuleCount": 2912,
+  "minimumCrossFileCount": 2,
+  "classifications": [
+    "exact-duplicate",
+    "structural-duplicate",
+    "intentional-local"
+  ],
+  "baseline": {
+    "categoryCounts": {
+      "exact-duplicate": 638,
+      "structural-duplicate": 94,
+      "intentional-local": 2180
+    },
+    "classificationDigest": "f25f5a147d2bb31547381bd47a2e0d6d4cee8ec04fa52fe983fe1adef564a5e3",
+    "exactFamilyCount": 115,
+    "structuralFamilyCount": 28
+  },
+  "policy": {
+    "automaticCssRewrite": false,
+    "exactDuplicateMeaning": "Same normalized semantic selector family, same at-rule/layer context, and same ordered declarations across at least two CSS files.",
+    "structuralDuplicateMeaning": "Same normalized semantic selector family and context with identical non-theme declarations; palette, background, border, shadow, filter, radius, opacity and custom-property values may differ and require family review.",
+    "intentionalLocalMeaning": "Game-stage/canvas/board/overlay and responsive contracts are hard-local; unmatched rules remain local until a reviewed family proves otherwise.",
+    "literalLayoutGeometryDifferencesStaySignificant": true
+  }
+}
