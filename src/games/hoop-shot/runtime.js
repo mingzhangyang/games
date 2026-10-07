@@ -820,7 +820,7 @@ export class HoopShotGame {
         const filtered = this.localScores().slice(0, 10);
         if (filtered.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'hs-lb-empty';
+            empty.className = 'hs-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
@@ -830,15 +830,15 @@ export class HoopShotGame {
 
     buildLbRow(rank, entry) {
         const row = document.createElement('div');
-        row.className = 'hs-lb-row' + (rank < 3 ? ` hs-lb-top${rank + 1}` : '');
+        row.className = 'hs-lb-row game-lb-row' + (rank < 3 ? ` hs-lb-top${rank + 1}` : '');
         const rankEl = document.createElement('span');
-        rankEl.className = 'hs-lb-rank';
+        rankEl.className = 'hs-lb-rank game-lb-rank';
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
-        nameEl.className = 'hs-lb-name';
+        nameEl.className = 'hs-lb-name game-lb-name';
         nameEl.textContent = entry.name; // textContent 防注入
         const scoreEl = document.createElement('span');
-        scoreEl.className = 'hs-lb-score';
+        scoreEl.className = 'hs-lb-score game-lb-score';
         scoreEl.textContent = formatNumber(entry.score);
         row.append(rankEl, nameEl, scoreEl);
         return row;
@@ -867,7 +867,7 @@ export class HoopShotGame {
             list.textContent = '';
             if (!Array.isArray(data) || data.length === 0) {
                 const empty = document.createElement('div');
-                empty.className = 'hs-lb-empty';
+                empty.className = 'hs-lb-empty game-lb-empty';
                 empty.textContent = this.TEXT.noScores;
                 list.appendChild(empty);
             } else {

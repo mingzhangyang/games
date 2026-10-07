@@ -33,6 +33,8 @@
 | `game-sidebar` | 桌面侧栏（≥1024px 生效，宽度 `--frame-side`） | `<aside class="gd-sidebar game-sidebar">` |
 | `game-side-card` / `-title` / `-text` / `-row` / `-panel` | 侧栏卡片族 | 记录卡、玩法说明 |
 | `game-side-kbd-row` / `game-side-kbd` | 快捷键行 / 键帽 | 操作说明 |
+| `game-lb` / `game-lb-title` / `game-lb-list` / `game-lb-row` / `game-lb-rank` / `game-lb-name` / `game-lb-score` / `game-lb-empty` / `game-lb-status` | 排行榜稳定骨架 | 共享几何/排版；主题背景、边框、前三名样式留在页面 |
+| `game-lb-username-row` / `game-lb-username-label` / `game-lb-username` | 排行榜用户名编辑行 | 输入布局共享；背景、边框、focus 色留在页面 |
 | `game-overlay` | 舞台内覆盖层（`absolute` 铺满 + 玻璃模糊 + 可滚动） | 开始/结算界面 |
 | `game-toast` | 舞台内提示条 | 居中胶囊 |
 | `game-footer-hint` | 底部操作提示 | `<p class="xx-footer-hint game-footer-hint">` |
@@ -42,7 +44,7 @@
 | `sr-only` | 语义标题视觉隐藏（P3-3） | `<h1 class="sr-only">` |
 
 引入顺序决定成败：`layout.css` 在前，各页仍可用自己的规则与变量覆盖。
-但**几何**（宽度、内外边距、圆角、定位）应交给契约，页面只保留配色与动效。
+但**几何**（宽度、内外边距、圆角、定位）应交给契约，页面只保留配色与动效。排行榜是显式的 family-sized 例子：通用 `game-lb-*` 拥有稳定几何/排版，页面前缀类只保留主题差异与确有必要的几何例外。
 
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 

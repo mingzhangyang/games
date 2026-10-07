@@ -570,7 +570,7 @@ export class TowerDefenseGame {
             .slice(0, 10);
         if (filtered.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'td-lb-empty';
+            empty.className = 'td-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
@@ -580,15 +580,15 @@ export class TowerDefenseGame {
 
     buildLbRow(rank, entry) {
         const row = document.createElement('div');
-        row.className = 'td-lb-row' + (rank < 3 ? ` td-lb-top${rank + 1}` : '');
+        row.className = 'td-lb-row game-lb-row' + (rank < 3 ? ` td-lb-top${rank + 1}` : '');
         const rankEl = document.createElement('span');
-        rankEl.className = 'td-lb-rank';
+        rankEl.className = 'td-lb-rank game-lb-rank';
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
-        nameEl.className = 'td-lb-name';
+        nameEl.className = 'td-lb-name game-lb-name';
         nameEl.textContent = entry.name;
         const scoreEl = document.createElement('span');
-        scoreEl.className = 'td-lb-score';
+        scoreEl.className = 'td-lb-score game-lb-score';
         scoreEl.textContent = formatNumber(entry.score);
         row.append(rankEl, nameEl, scoreEl);
         return row;

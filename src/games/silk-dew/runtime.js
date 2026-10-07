@@ -648,15 +648,15 @@ export class SilkfallGame {
         if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
-            li.className = 'sd-lb-row';
+            li.className = 'sd-lb-row game-lb-row';
             const rank = document.createElement('span');
-            rank.className = 'sd-lb-rank';
+            rank.className = 'sd-lb-rank game-lb-rank';
             rank.textContent = String(i + 1);
             const nm = document.createElement('span');
-            nm.className = 'sd-lb-name';
+            nm.className = 'sd-lb-name game-lb-name';
             nm.textContent = row.name || '—';
             const sc = document.createElement('span');
-            sc.className = 'sd-lb-score';
+            sc.className = 'sd-lb-score game-lb-score';
             sc.textContent = String(row.score);
             li.appendChild(rank);
             li.appendChild(nm);

@@ -642,16 +642,16 @@ export class MaxwellDemonGame {
         if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
-            li.className = 'md-lb-row';
+            li.className = 'md-lb-row game-lb-row';
             if (i < 3) li.classList.add(`md-lb-top${i + 1}`);
             const rank = document.createElement('span');
-            rank.className = 'md-lb-rank';
+            rank.className = 'md-lb-rank game-lb-rank';
             rank.textContent = String(i + 1);
             const nm = document.createElement('span');
-            nm.className = 'md-lb-name';
+            nm.className = 'md-lb-name game-lb-name';
             nm.textContent = row.name || '—';
             const sc = document.createElement('span');
-            sc.className = 'md-lb-score';
+            sc.className = 'md-lb-score game-lb-score';
             sc.textContent = String(row.score);
             li.appendChild(rank);
             li.appendChild(nm);

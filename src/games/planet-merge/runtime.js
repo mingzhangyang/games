@@ -899,7 +899,7 @@ export class PlanetMergeGame {
             .slice(0, 10);
         if (filtered.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'pm-lb-empty';
+            empty.className = 'pm-lb-empty game-lb-empty';
             empty.textContent = t.noScores;
             list.appendChild(empty);
             return;
@@ -911,15 +911,15 @@ export class PlanetMergeGame {
 
     buildLbRow(rank, entry) {
         const row = document.createElement('div');
-        row.className = 'pm-lb-row' + (rank < 3 ? ` pm-lb-top${rank + 1}` : '');
+        row.className = 'pm-lb-row game-lb-row' + (rank < 3 ? ` pm-lb-top${rank + 1}` : '');
         const rankEl = document.createElement('span');
-        rankEl.className = 'pm-lb-rank';
+        rankEl.className = 'pm-lb-rank game-lb-rank';
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
-        nameEl.className = 'pm-lb-name';
+        nameEl.className = 'pm-lb-name game-lb-name';
         nameEl.textContent = entry.name; // textContent 防注入
         const scoreEl = document.createElement('span');
-        scoreEl.className = 'pm-lb-score';
+        scoreEl.className = 'pm-lb-score game-lb-score';
         scoreEl.textContent = formatNumber(entry.score);
         row.append(rankEl, nameEl, scoreEl);
         return row;
@@ -937,7 +937,7 @@ export class PlanetMergeGame {
             if (!Array.isArray(data) || data.length === 0) {
                 list.textContent = '';
                 const empty = document.createElement('div');
-                empty.className = 'pm-lb-empty';
+                empty.className = 'pm-lb-empty game-lb-empty';
                 empty.textContent = this.TEXT.noScores;
                 list.appendChild(empty);
             } else {
