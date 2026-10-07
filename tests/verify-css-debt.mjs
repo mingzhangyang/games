@@ -36,7 +36,7 @@ const RUNTIME_STYLE_BASELINE_BLOB_SHA = createHash('sha1')
     .digest('hex');
 const REVIEWED_P0_BASELINE_BLOB_SHA = '9c4541b4a447bff3dbecb0bc6cd02e09f3850922';
 const REVIEWED_RUNTIME_STYLE_P0_BLOB_SHA = 'e766d5873cf551fb46cda56dd0df861c08f2780f';
-const REVIEWED_SHARED_CSS_FIRST_BLOB_SHA = '701ff209f152ba31780ca34f273164d0497c6a88';
+const REVIEWED_SHARED_CSS_FIRST_BLOB_SHA = '2a32764598980bbe88a7968e8bcc48da9aaac87f';
 const REVIEWED_LAYER_ORDER = Object.freeze(['reset', 'tokens', 'showcase', 'components', 'accessibility', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
 function listFiles(directory, root, predicate) {
@@ -109,9 +109,9 @@ function verifyBuildOrderingContract(errors) {
         }
     }
     const requiredViteFragments = [
-        "import { createSharedCssFirstPlugin } from './tools/lib/shared-css-first.mjs';",
-        "const cssLayerCanary = process.env.CSS_LAYER_CANARY === '1';",
-        "...(!cssLayerCanary ? [createSharedCssFirstPlugin()] : []),",
+        `import { createSharedCssFirstPlugin } from './tools/lib/shared-css-first.mjs';`,
+        `const cssLayerCanary = process.env.CSS_LAYER_CANARY === '1';`,
+        `...(!cssLayerCanary ? [createSharedCssFirstPlugin()] : []),`,
     ];
     for (const fragment of requiredViteFragments) {
         if (!viteConfig.includes(fragment)) {
