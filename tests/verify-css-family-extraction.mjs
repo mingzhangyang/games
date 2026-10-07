@@ -6,6 +6,8 @@ import { join } from 'node:path';
 
 import { verifyExtractionAdoption, verifyExtractionShape } from './lib/css/family-extraction.mjs';
 
+const clone = value => JSON.parse(JSON.stringify(value));
+
 const root = mkdtempSync(join(tmpdir(), 'family-adoption-'));
 mkdirSync(join(root, 'src/games/demo'), { recursive: true });
 
@@ -101,15 +103,15 @@ try {
         },
     ];
     for (const shapeCase of shapeCases) {
-        const candidate = structuredClone(extraction);
+        const candidate = clone(extraction);
         shapeCase.mutate(candidate.components[0], candidate);
         const shapeErrors = [];
         assert.equal(verifyExtractionShape(candidate, shapeErrors), false, shapeCase.name);
         assert.ok(shapeErrors.some(error => shapeCase.expected.test(error)), shapeCase.name);
     }
 
-    const duplicateIdentity = structuredClone(extraction);
-    duplicateIdentity.components.push(structuredClone(duplicateIdentity.components[0]));
+    const duplicateIdentity = clone(extraction);
+    duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));
     const duplicateIdentityErrors = [];
     assert.equal(verifyExtractionShape(duplicateIdentity, duplicateIdentityErrors), false);
     assert.ok(duplicateIdentityErrors.some(error => /duplicate component suffix panel/.test(error)));
