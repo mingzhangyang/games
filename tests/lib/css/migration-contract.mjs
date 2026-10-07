@@ -644,7 +644,8 @@ function stableRuleRows(catalog) {
 
 export function verifyRuleMigrations({
     baseline, state, currentParsedByPath, baseParsedByPath, stylesheetLinks,
-    allowedLayers, layerOrder, baseState, externalRuleChanges = { base: [], current: [] }, errors,
+    allowedLayers, layerOrder, baseState, externalRuleChanges = { base: [], current: [] },
+    guardedCssPaths = new Set(), errors,
 }) {
     verifyMonotonicState(baseState || {}, state, errors);
     const currentCatalogs = new Map([...currentParsedByPath].map(([path, parsed]) => [path, indexRuleOccurrences(parsed, path)]));
@@ -733,7 +734,11 @@ export function verifyRuleMigrations({
         ...(externalRuleChanges.base || []).map(rule => rule.path),
         ...(externalRuleChanges.current || []).map(rule => rule.path),
     ]);
-    const reviewedChangedPaths = new Set([...mappedCssPaths, ...externallyReviewedPaths]);
+    const reviewedChangedPaths = new Set([
+        ...mappedCssPaths,
+        ...externallyReviewedPaths,
+        ...guardedCssPaths,
+    ]);
 
     // Remove only newly declared source/destination occurrences, plus rule occurrences
     // consumed/produced by an independently verified family-extraction transaction, then pair every

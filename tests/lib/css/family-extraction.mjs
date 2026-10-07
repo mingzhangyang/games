@@ -104,31 +104,43 @@ function classTokens(value) {
 
 function verifyHtmlAdoption(root, file, localClass, sharedClass, errors, label) {
     const html = readFileSync(join(root, file), 'utf8');
-    const found = parseHtmlElements(html, file).some(element => {
+    const localElements = parseHtmlElements(html, file).filter(element => {
         const attrs = htmlElementAttributes(element);
-        const tokens = classTokens(attrs.class);
-        return tokens.has(localClass) && tokens.has(sharedClass);
+        return classTokens(attrs.class).has(localClass);
     });
-    if (!found) {
-        errors.push(label + ': ' + file + ' does not co-locate .' + localClass + ' with .' + sharedClass + '.');
+    if (!localElements.length) {
+        errors.push(label + ': ' + file + ' does not contain .' + localClass + '.');
+        return;
+    }
+    const missingShared = localElements.filter(element => {
+        const attrs = htmlElementAttributes(element);
+        return !classTokens(attrs.class).has(sharedClass);
+    });
+    if (missingShared.length) {
+        errors.push(label + ': ' + file + ' has ' + missingShared.length + ' .' + localClass
+            + ' element(s) without .' + sharedClass + '.');
     }
 }
 
-function escapeRegExp(value) {
-    return value.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+function literalClassNameAssignments(source) {
+    const assignments = [];
+    const pattern = /className\\s*=\\s*([\'"\x60])([^\'"\x60]*)\\1/g;
+    for (const match of source.matchAll(pattern)) assignments.push(match[2]);
+    return assignments;
 }
 
 function verifyRuntimeAdoption(root, file, localClass, sharedClass, errors, label) {
     const source = readFileSync(join(root, file), 'utf8');
-    const local = escapeRegExp(localClass);
-    const shared = escapeRegExp(sharedClass);
-    const literal = new RegExp(
-        'className\\s*=\\s*([\'"])[^\'"]*\\b' + local
-        + '\\b[^\'"]*\\b' + shared + '\\b',
-    );
-    if (!literal.test(source)) {
-        errors.push(label + ': ' + file + ' does not assign .' + localClass + ' with .' + sharedClass
-            + ' in the same className literal.');
+    const localAssignments = literalClassNameAssignments(source)
+        .filter(value => classTokens(value).has(localClass));
+    if (!localAssignments.length) {
+        errors.push(label + ': ' + file + ' does not assign .' + localClass + ' in a className literal.');
+        return;
+    }
+    const missingShared = localAssignments.filter(value => !classTokens(value).has(sharedClass));
+    if (missingShared.length) {
+        errors.push(label + ': ' + file + ' has ' + missingShared.length + ' className assignment(s) with .'
+            + localClass + ' but without .' + sharedClass + '.');
     }
 }
 

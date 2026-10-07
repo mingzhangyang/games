@@ -40,7 +40,10 @@ try {
     writeFileSync(join(root, 'demo.html'), '<div class="dm-panel game-panel"></div>\n');
     writeFileSync(
         join(root, 'src/games/demo/runtime.js'),
-        "const row = document.createElement('div');\nrow.className = 'dm-row game-row';\n",
+        "const row = document.createElement('div');\n"
+            + "row.className = 'dm-row game-row';\n"
+            + "const second = document.createElement('div');\n"
+            + "second.className = 'dm-row game-row';\n",
     );
 
     const validErrors = [];
@@ -51,17 +54,20 @@ try {
     const missingHtmlErrors = [];
     verifyExtractionAdoption(root, extraction, missingHtmlErrors);
     assert.ok(missingHtmlErrors.some(error =>
-        /demo\.html does not co-locate \.dm-panel with \.game-panel/.test(error)));
+        /demo\.html has 1 \.dm-panel element\(s\) without \.game-panel/.test(error)));
 
     writeFileSync(join(root, 'demo.html'), '<div class="dm-panel game-panel"></div>\n');
     writeFileSync(
         join(root, 'src/games/demo/runtime.js'),
-        "const row = document.createElement('div');\nrow.className = 'dm-row';\n",
+        "const row = document.createElement('div');\n"
+            + "row.className = 'dm-row game-row';\n"
+            + "const second = document.createElement('div');\n"
+            + "second.className = 'dm-row';\n",
     );
     const missingRuntimeErrors = [];
     verifyExtractionAdoption(root, extraction, missingRuntimeErrors);
     assert.ok(missingRuntimeErrors.some(error =>
-        /runtime\.js does not assign \.dm-row with \.game-row/.test(error)));
+        /runtime\.js has 1 className assignment\(s\) with \.dm-row but without \.game-row/.test(error)));
 } finally {
     rmSync(root, { recursive: true, force: true });
 }
