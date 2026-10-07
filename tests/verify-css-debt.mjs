@@ -398,6 +398,7 @@ function verifyProject() {
         allowedLayers: ALLOWED_LAYERS,
         layerOrder: REVIEWED_LAYER_ORDER,
         baseState,
+        externalRuleChanges: familyResult.externalRuleChanges,
         errors,
     });
 

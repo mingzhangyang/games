@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { htmlElementAttributes, parseHtmlElements } from './html-inputs.mjs';
-import { readGitFile } from './migration-contract.mjs';
+import { indexRuleOccurrences, readGitFile } from './migration-contract.mjs';
 
 export const FAMILY_EXTRACTION_STATE_PATH = 'tests/css-family-extraction-state.json';
 
@@ -32,6 +32,19 @@ function uniqueRule(parsed, selector, layer, errors, label) {
         && (rule.context || []).length === 0);
     if (matches.length !== 1) {
         errors.push(label + ': expected exactly one top-level ' + selector + ' rule in layer '
+            + (layer || '<unlayered>') + ', found ' + matches.length + '.');
+        return null;
+    }
+    return matches[0];
+}
+
+function uniqueCatalogRule(catalog, selector, layer, errors, label) {
+    const matches = (catalog || []).filter(rule =>
+        rule.selector === selector
+        && (rule.layer || null) === (layer || null)
+        && rule.context === '');
+    if (matches.length !== 1) {
+        errors.push(label + ': expected exactly one indexed ' + selector + ' rule in layer '
             + (layer || '<unlayered>') + ', found ' + matches.length + '.');
         return null;
     }
@@ -176,7 +189,8 @@ function totalRules(parsedByPath) {
     return total;
 }
 
-function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedByPath, comparisonBase, errors) {
+function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedByPath,
+    currentCatalogs, baseCatalogs, externalRuleChanges, comparisonBase, errors) {
     const baseContractText = readGitFile(root, comparisonBase, 'tests/css-duplication-audit-contract.json');
     if (baseContractText === null) {
         errors.push(extraction.id + ': cannot read comparison-base duplication contract.');
@@ -206,6 +220,10 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
         }
         const sharedRule = uniqueRule(currentSharedCss, sharedSelector, sharedLayer, errors, label);
         if (!sharedRule) continue;
+        const sharedIndexed = uniqueCatalogRule(
+            currentCatalogs.get(sharedPath), sharedSelector, sharedLayer, errors, label + '/current',
+        );
+        if (sharedIndexed) externalRuleChanges.current.push(sharedIndexed);
 
         for (const prefix of component.participants || []) {
             const game = games[prefix];
@@ -218,6 +236,10 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
             const baseRule = uniqueRule(baseParsedByPath.get(game.css), localSelector, null, errors,
                 label + '/' + prefix + '/base');
             if (!baseRule) continue;
+            const baseIndexed = uniqueCatalogRule(
+                baseCatalogs.get(game.css), localSelector, null, errors, label + '/' + prefix + '/base-index',
+            );
+            if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
 
             const expected = expectedResidual(baseRule, sharedRule, errors, label + '/' + prefix);
             const currentMatches = (currentParsedByPath.get(game.css)?.rules || []).filter(rule =>
@@ -232,6 +254,13 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
             } else if (canonical(currentMatches[0].migrationDeclarations || []) !== canonical(expected)) {
                 errors.push(label + '/' + prefix
                     + ': local residual declarations are not exactly source minus shared declarations.');
+            }
+            if (expected.length && currentMatches.length === 1) {
+                const currentIndexed = uniqueCatalogRule(
+                    currentCatalogs.get(game.css), localSelector, null, errors,
+                    label + '/' + prefix + '/current-index',
+                );
+                if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
             }
 
             if (component.surface === 'html') {
@@ -294,9 +323,17 @@ export function verifyFamilyExtractions({
         seenRemoved.add(key);
     }
 
+    const currentCatalogs = new Map([...currentParsedByPath]
+        .map(([path, parsed]) => [path, indexRuleOccurrences(parsed, path)]));
+    const baseCatalogs = new Map([...baseParsedByPath]
+        .map(([path, parsed]) => [path, indexRuleOccurrences(parsed, path)]));
+    const externalRuleChanges = { base: [], current: [] };
     const newExtractions = [...currentById.values()].filter(extraction => !baseById.has(extraction.id));
     for (const extraction of newExtractions) {
-        verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedByPath, comparisonBase, errors);
+        verifyNewExtraction(
+            root, extraction, currentParsedByPath, baseParsedByPath,
+            currentCatalogs, baseCatalogs, externalRuleChanges, comparisonBase, errors,
+        );
     }
     if (newExtractions.length) {
         const actualDelta = totalRules(currentParsedByPath) - totalRules(baseParsedByPath);
@@ -311,6 +348,7 @@ export function verifyFamilyExtractions({
         cssPaths,
         totalRuleDelta,
         remainingUnlayeredRules: subtractRows(baselineUnlayeredRules, removed, errors),
+        externalRuleChanges,
         newExtractionIds: newExtractions.map(extraction => extraction.id),
     };
 }

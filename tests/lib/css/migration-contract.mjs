@@ -644,7 +644,7 @@ function stableRuleRows(catalog) {
 
 export function verifyRuleMigrations({
     baseline, state, currentParsedByPath, baseParsedByPath, stylesheetLinks,
-    allowedLayers, layerOrder, baseState, errors,
+    allowedLayers, layerOrder, baseState, externalRuleChanges = { base: [], current: [] }, errors,
 }) {
     verifyMonotonicState(baseState || {}, state, errors);
     const currentCatalogs = new Map([...currentParsedByPath].map(([path, parsed]) => [path, indexRuleOccurrences(parsed, path)]));
@@ -729,8 +729,14 @@ export function verifyRuleMigrations({
         ...(mapping.destinations || []).map(item => item.path),
     ]).filter(Boolean));
     if (mappings.size) mappedCssPaths.add('css/tokens.css');
+    const externallyReviewedPaths = new Set([
+        ...(externalRuleChanges.base || []).map(rule => rule.path),
+        ...(externalRuleChanges.current || []).map(rule => rule.path),
+    ]);
+    const reviewedChangedPaths = new Set([...mappedCssPaths, ...externallyReviewedPaths]);
 
-    // Remove only newly declared source/destination occurrences, then pair every
+    // Remove only newly declared source/destination occurrences, plus rule occurrences
+    // consumed/produced by an independently verified family-extraction transaction, then pair every
     // remaining base rule with its unchanged current counterpart. This makes the
     // AST—not JSON array order—the source of truth for physical cascade position.
     const residualCurrentEntries = new Map();
@@ -743,11 +749,13 @@ export function verifyRuleMigrations({
             .map(mapping => mapping.source);
         const destinationRefs = pathMappings
             .flatMap(mapping => (mapping.destinations || []).filter(item => item.path === path));
-        const baseResidual = filterCatalog(baseCatalog, sourceRefs, true);
-        const currentResidual = filterCatalog(currentCatalog, destinationRefs, true);
+        const externalBaseRefs = (externalRuleChanges.base || []).filter(rule => rule.path === path);
+        const externalCurrentRefs = (externalRuleChanges.current || []).filter(rule => rule.path === path);
+        const baseResidual = filterCatalog(filterCatalog(baseCatalog, sourceRefs, true), externalBaseRefs, true);
+        const currentResidual = filterCatalog(filterCatalog(currentCatalog, destinationRefs, true), externalCurrentRefs, true);
         const residualMatches = jsonKey(stableRuleRows(baseResidual)) === jsonKey(stableRuleRows(currentResidual));
-        if (!residualMatches && mappedCssPaths.has(path)) {
-            errors.push(path + ': rule changes beyond the newly registered migrations were detected against the comparison base.');
+        if (!residualMatches && reviewedChangedPaths.has(path)) {
+            errors.push(path + ': rule changes beyond the registered migration/family transactions were detected against the comparison base.');
         }
         if (residualMatches) {
             for (let ruleIndex = 0; ruleIndex < baseResidual.length; ruleIndex++) {
@@ -764,7 +772,7 @@ export function verifyRuleMigrations({
             }
         }
 
-        if (mappedCssPaths.has(path)) {
+        if (reviewedChangedPaths.has(path)) {
             const baseParsed = baseParsedByPath.get(path);
             const currentParsed = currentParsedByPath.get(path);
             if (baseParsed && currentParsed) {
