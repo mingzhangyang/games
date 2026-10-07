@@ -46,10 +46,11 @@ const CASES = [
         requiredLocalOnly: ['#bf-lb-list', '#bf-lb-status', '.bf-username-row', '#bf-username-label', '#bf-username'],
         expected: {
             container: { display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '330px', radius: '14px',
-                padding: ['13px', '15px', '13px', '15px'] },
+                textAlign: 'left', padding: ['13px', '15px', '13px', '15px'] },
             list: { display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '150px', overflowY: 'auto' },
             row: { display: 'flex', alignItems: 'baseline', gap: '8px', fontSize: '12.5px', radius: '0px',
                 padding: ['0px', '0px', '0px', '0px'] },
+            name: { textAlign: 'left' },
             input: { fontSize: '13px', height: '34px', radius: '9px',
                 padding: ['0px', '10px', '0px', '10px'] },
         },
@@ -214,6 +215,7 @@ try {
                         radius: s.borderTopLeftRadius,
                         marginTop: s.marginTop,
                         marginBottom: s.marginBottom,
+                        textAlign: s.textAlign,
                         padding: [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft],
                     };
                 };
@@ -227,6 +229,7 @@ try {
                     container: style(container),
                     list: style(list),
                     row: style(row),
+                    name: style(name),
                     input: style(input),
                     usernameRow: style(input.closest('[class*="username-row"]')),
                     requiredShared: (config.requiredShared || []).map(selector => ({
@@ -262,6 +265,7 @@ try {
             compare(testCase.id, 'container', snapshot.container, testCase.expected.container);
             compare(testCase.id, 'list', snapshot.list, testCase.expected.list);
             compare(testCase.id, 'row', snapshot.row, testCase.expected.row);
+            compare(testCase.id, 'name', snapshot.name, testCase.expected.name);
             compare(testCase.id, 'username row', snapshot.usernameRow, testCase.expected.usernameRow);
             compare(testCase.id, 'input', snapshot.input, testCase.expected.input);
 

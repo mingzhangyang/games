@@ -284,7 +284,12 @@
             "rd",
             "sd",
             "td"
-          ]
+          ],
+          "inheritedEquivalentProperties": {
+            "bf": [
+              "text-align"
+            ]
+          }
         },
         {
           "suffix": "lb-score",

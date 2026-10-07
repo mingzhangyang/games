@@ -55,15 +55,27 @@ function declarationKey(declaration) {
     return canonical(declaration);
 }
 
-function expectedResidual(baseRule, sharedRule, errors, label) {
+const REVIEWED_INHERITED_EQUIVALENT_PROPERTIES = new Set(['text-align']);
+
+function expectedResidual(
+    baseRule, sharedRule, errors, label, inheritedEquivalentProperties = [],
+) {
     const base = [...(baseRule.migrationDeclarations || [])];
     const shared = sharedRule.migrationDeclarations || [];
     const residual = [...base];
+    const inheritedEquivalent = new Set(inheritedEquivalentProperties);
+
+    for (const property of inheritedEquivalent) {
+        if (!REVIEWED_INHERITED_EQUIVALENT_PROPERTIES.has(property)) {
+            errors.push(label + ': inherited-equivalent property ' + property + ' is not reviewed.');
+        }
+    }
 
     for (const declaration of shared) {
         const sameProperty = base.filter(item =>
             item.property === declaration.property && item.important === declaration.important);
         if (!sameProperty.length) {
+            if (inheritedEquivalent.has(declaration.property)) continue;
             errors.push(label + ': shared property ' + declaration.property
                 + ' did not exist in the local source; family extraction may not invent geometry/behavior.');
             continue;
@@ -71,6 +83,17 @@ function expectedResidual(baseRule, sharedRule, errors, label) {
         const exactKey = declarationKey(declaration);
         const index = residual.findIndex(item => declarationKey(item) === exactKey);
         if (index >= 0) residual.splice(index, 1);
+    }
+
+    for (const property of inheritedEquivalent) {
+        if (!shared.some(item => item.property === property)) {
+            errors.push(label + ': inherited-equivalent property ' + property
+                + ' is stale because the shared rule no longer writes it.');
+        }
+        if (base.some(item => item.property === property)) {
+            errors.push(label + ': inherited-equivalent property ' + property
+                + ' is unnecessary because the local source already wrote it.');
+        }
     }
     return residual;
 }
@@ -100,8 +123,8 @@ function verifyRuntimeAdoption(root, file, localClass, sharedClass, errors, labe
     const local = escapeRegExp(localClass);
     const shared = escapeRegExp(sharedClass);
     const literal = new RegExp(
-        "className\\s*=\\s*(['\\\"])[^'\\\"]*\\b" + local
-        + "\\b[^'\\\"]*\\b" + shared + "\\b",
+        'className\\s*=\\s*([\'"])[^\'"]*\\b' + local
+        + '\\b[^\'"]*\\b' + shared + '\\b',
     );
     if (!literal.test(source)) {
         errors.push(label + ': ' + file + ' does not assign .' + localClass + ' with .' + sharedClass
@@ -139,6 +162,16 @@ function removedTuples(extraction, errors) {
             continue;
         }
         const participants = new Set(component.participants);
+        for (const [prefix, properties] of Object.entries(component.inheritedEquivalentProperties || {})) {
+            if (!participants.has(prefix)) {
+                errors.push(extraction.id + ': inherited-equivalent properties reference non-participant '
+                    + prefix + ' for .' + component.sharedClass + '.');
+            }
+            if (!Array.isArray(properties) || !properties.length) {
+                errors.push(extraction.id + ': inherited-equivalent properties for ' + prefix
+                    + ' / .' + component.sharedClass + ' must be a non-empty array.');
+            }
+        }
         for (const prefix of component.fullyRemoved) {
             if (!participants.has(prefix)) {
                 errors.push(extraction.id + ': .' + prefix + '-' + component.suffix
@@ -241,7 +274,13 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
             );
             if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
 
-            const expected = expectedResidual(baseRule, sharedRule, errors, label + '/' + prefix);
+            const expected = expectedResidual(
+                baseRule,
+                sharedRule,
+                errors,
+                label + '/' + prefix,
+                component.inheritedEquivalentProperties?.[prefix] || [],
+            );
             const currentMatches = (currentParsedByPath.get(game.css)?.rules || []).filter(rule =>
                 rule.selector === localSelector && !rule.layer && (rule.context || []).length === 0);
             if (!expected.length) {

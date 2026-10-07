@@ -556,9 +556,7 @@ body {
     .rv-board { width: min(100%, 640px, calc(100vh - 200px)); }
     .rv-player-count { font-size: 24px; }
     .rv-player-name { max-width: 110px; }
-.rv-lb {
-    max-width: 440px;
-}
+    .rv-lb { max-width: 440px; }
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
