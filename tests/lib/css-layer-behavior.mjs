@@ -35,15 +35,15 @@ export async function runCssLayerBehaviorBatch({
     let pageErrors = [];
     page.on('pageerror', error => pageErrors.push(String(error?.message || error).split('\n')[0]));
 
-    const navigate = async (testCase, viewport, theme) => {
+    const navigate = async (testCase, viewport, themePreference, expectedTheme = themePreference) => {
         await page.setViewport(viewport);
         pageErrors = [];
-        await page.evaluate(value => localStorage.setItem('site_theme', value), theme);
+        await page.evaluate(value => localStorage.setItem('site_theme', value), themePreference);
         await page.goto(`${base}/${testCase.href}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await page.waitForFunction(
             expected => document.documentElement.getAttribute('data-theme') === expected,
             { timeout: 5000 },
-            theme,
+            expectedTheme,
         );
         if (testCase.stage) {
             await page.waitForFunction(selector => {
@@ -54,7 +54,11 @@ export async function runCssLayerBehaviorBatch({
             }, { timeout: 5000 }, testCase.stage);
         }
         if (testCase.ready) {
-            await testCase.ready(page, { viewport, theme });
+            await testCase.ready(page, {
+                viewport,
+                theme: expectedTheme,
+                themePreference,
+            });
         }
     };
 
@@ -189,7 +193,32 @@ export async function runCssLayerBehaviorBatch({
                 pageErrors.join(' | '),
             );
 
-            if (testCase.lightTheme !== false) {
+            if (testCase.darkOnly === true) {
+                await navigate(testCase, viewports.desktop, 'light', 'dark');
+                const forcedDark = await snapshot(testCase);
+                check(
+                    forcedDark.theme === 'dark',
+                    `${testCase.id}: light preference is forced back to dark on dark-only page`,
+                    forcedDark.theme,
+                );
+                check(
+                    forcedDark.themeVar === dark.themeVar,
+                    `${testCase.id}: dark-only theme variable stays identical under light preference`,
+                    `dark=${dark.themeVar}, light-pref=${forcedDark.themeVar}`,
+                );
+                check(
+                    forcedDark.bodyBackground === dark.bodyBackground,
+                    `${testCase.id}: dark-only background stays identical under light preference`,
+                );
+                assertGeometry(testCase, forcedDark, 'desktop-light-pref-dark-only');
+                assertFrame(testCase, forcedDark, 'desktop-light-pref-dark-only');
+                await assertCustom(testCase, forcedDark, 'desktop-light-pref-dark-only', viewports.desktop);
+                check(
+                    pageErrors.length === 0,
+                    `${testCase.id} desktop light preference/dark-only: no pageerror`,
+                    pageErrors.join(' | '),
+                );
+            } else if (testCase.lightTheme !== false) {
                 await navigate(testCase, viewports.desktop, 'light');
                 const light = await snapshot(testCase);
                 check(light.theme === 'light', `${testCase.id}: light preference resolves to light`, light.theme);
