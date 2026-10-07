@@ -479,6 +479,273 @@
           "fullyRemoved": []
         }
       ]
+    },
+    {
+      "id": "action-buttons-v1",
+      "baseDuplicationDigest": "daace9cb5725e02b7f294f8daaf464148fd4398ebbca47e708c175628cd3fccb",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -52,
+      "expectedRemovedUnlayeredRules": 58,
+      "games": {
+        "cc": {
+          "css": "css/circuit.css",
+          "html": "circuit.html",
+          "runtime": "src/games/circuit/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "gd": {
+          "css": "css/gravity.css",
+          "html": "gravity-slingshot.html",
+          "runtime": "src/games/gravity-slingshot/runtime.js"
+        },
+        "hs": {
+          "css": "css/hoop-shot.css",
+          "html": "hoop-shot.html",
+          "runtime": "src/games/hoop-shot/runtime.js"
+        },
+        "lm": {
+          "css": "css/lumen.css",
+          "html": "lumen.html",
+          "runtime": "src/games/lumen/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "pm": {
+          "css": "css/planet-merge.css",
+          "html": "planet-merge.html",
+          "runtime": "src/games/planet-merge/runtime.js"
+        },
+        "rv": {
+          "css": "css/reversi.css",
+          "html": "reversi.html",
+          "runtime": "src/games/reversi/index.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        },
+        "td": {
+          "css": "css/tower-defense.css",
+          "html": "tower-defense.html",
+          "runtime": "src/games/tower-defense/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "btn-row",
+          "sharedClass": "game-action-row",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ]
+        },
+        {
+          "suffix": "btn",
+          "sharedClass": "game-action-btn",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "color",
+            "background",
+            "border"
+          ]
+        },
+        {
+          "suffix": "btn",
+          "sharedClass": "game-action-btn",
+          "localSelectorSuffix": ":hover",
+          "sharedSelectorSuffix": ":hover",
+          "requiresAdoption": false,
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "background"
+          ]
+        },
+        {
+          "suffix": "btn",
+          "sharedClass": "game-action-btn",
+          "localSelectorSuffix": ":active",
+          "sharedSelectorSuffix": ":active",
+          "requiresAdoption": false,
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "btn-primary",
+          "sharedClass": "game-action-btn--primary",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "color",
+            "background",
+            "border",
+            "box-shadow"
+          ]
+        },
+        {
+          "suffix": "btn-ghost",
+          "sharedClass": "game-action-btn--ghost",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        }
+      ]
     }
   ]
 }

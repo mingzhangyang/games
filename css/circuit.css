@@ -373,36 +373,10 @@ body {
 
 .cc-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
-.cc-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
-.cc-btn {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--cc-btn-bg);
-    border: var(--cc-btn-border);
-    border-radius: 13px;
-    padding: 11px 18px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
 
-.cc-btn:hover { background: var(--cc-btn-hover-bg); }
-.cc-btn:active { transform: scale(0.96); }
 
-.cc-btn-primary {
-    background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
-    border: none;
-    box-shadow: var(--cc-btn-primary-shadow);
-}
 
-.cc-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 /* ── 排行榜 ── */
 

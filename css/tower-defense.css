@@ -1031,12 +1031,6 @@ body {
     100% { transform: translateY(560px) rotate(720deg) scale(0.6); opacity: 0; }
 }
 
-.td-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
 /* ── 排行榜 ── */
 

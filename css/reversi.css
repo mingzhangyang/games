@@ -486,12 +486,6 @@ body {
 
 .rv-over-streak { font-size: 13.5px; color: var(--tok-success); min-height: 17px; }
 
-.rv-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
 /* ── 排行榜 ── */
 

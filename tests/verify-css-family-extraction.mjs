@@ -110,6 +110,40 @@ try {
         assert.ok(shapeErrors.some(error => shapeCase.expected.test(error)), shapeCase.name);
     }
 
+    const pseudoState = clone(extraction);
+    pseudoState.components = [{
+        suffix: 'panel',
+        sharedClass: 'game-panel',
+        localSelectorSuffix: ':hover',
+        sharedSelectorSuffix: ':hover',
+        requiresAdoption: false,
+        convergedThemeProperties: ['background'],
+        surface: 'html',
+        participants: ['dm'],
+        fullyRemoved: ['dm'],
+    }];
+    const pseudoShapeErrors = [];
+    assert.equal(verifyExtractionShape(pseudoState, pseudoShapeErrors), true);
+    assert.deepEqual(pseudoShapeErrors, []);
+    writeFileSync(join(root, 'demo.html'), '<div class="dm-panel"></div>\n');
+    const pseudoAdoptionErrors = [];
+    verifyExtractionAdoption(root, pseudoState, pseudoAdoptionErrors);
+    assert.deepEqual(pseudoAdoptionErrors, []);
+
+    const invalidConvergence = clone(extraction);
+    invalidConvergence.components[0].convergedThemeProperties = ['padding'];
+    const invalidConvergenceErrors = [];
+    assert.equal(verifyExtractionShape(invalidConvergence, invalidConvergenceErrors), false);
+    assert.ok(invalidConvergenceErrors.some(error =>
+        /unreviewed theme convergence property padding/.test(error)));
+
+    const invalidSkippedAdoption = clone(extraction);
+    invalidSkippedAdoption.components[0].requiresAdoption = false;
+    const invalidSkippedAdoptionErrors = [];
+    assert.equal(verifyExtractionShape(invalidSkippedAdoption, invalidSkippedAdoptionErrors), false);
+    assert.ok(invalidSkippedAdoptionErrors.some(error =>
+        /requiresAdoption:false is only valid for a state selector/.test(error)));
+
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));
     const duplicateIdentityErrors = [];

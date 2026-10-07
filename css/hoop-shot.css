@@ -288,12 +288,6 @@ body {
 .hs-over-best { font-size: 15px; color: var(--hs-over-best-text); font-variant-numeric: tabular-nums; }
 .hs-over-streak { font-size: 13.5px; color: var(--hs-over-streak-text); }
 
-.hs-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
 /* ── 排行榜 ── */
 

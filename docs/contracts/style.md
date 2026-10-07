@@ -46,8 +46,8 @@
 | `--tok-btn-size` | `40px` | 图标按钮视觉尺寸 |
 | `--tok-hit-pad` | `-6px` | 触控热区外扩（视觉不变，命中 ≥44px） |
 
-tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-primary` / `.btn-ghost`
-（玻璃 + 渐变主色）、`.btn`（无背景排版基线）。各页另需主色时**只覆盖 `--tok-accent`**。
+tokens.css 还保留通用 `.icon-btn` 与 `.btn` / `.btn-primary` / `.btn-ghost`，主要服务历史独立页面（例如 Gomoku）。
+采用共享 shell 的游戏页，标准文本动作统一使用 `layout.css` 的 `.game-action-btn` / `--primary` / `--ghost` 与 `.game-action-row`；页面不再复制 padding、圆角、字号和 hover/active 基线。特殊 mode / ability / gameplay controls 不属于这一 family。
 
 ---
 

@@ -334,36 +334,10 @@ body {
 
 .fv-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
-.fv-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
-.fv-btn {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.08);
-    border: 1px solid rgb(255, 255, 255, 0.14);
-    border-radius: 13px;
-    padding: 11px 18px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
 
-.fv-btn:hover { background: rgb(255, 255, 255, 0.14); }
-.fv-btn:active { transform: scale(0.96); }
 
-.fv-btn-primary {
-    background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
-    border: none;
-    box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
-}
 
-.fv-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 /* ── 排行榜 ── */
 

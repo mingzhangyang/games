@@ -209,12 +209,6 @@ body {
     max-width: 280px;
 }
 
-.pm-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
 .pm-btn {
     font-family: inherit;

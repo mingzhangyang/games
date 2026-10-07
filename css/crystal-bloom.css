@@ -469,36 +469,10 @@ body {
 
 .cb-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
-.cb-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
-.cb-btn {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--cb-btn-bg);
-    border: var(--cb-btn-border);
-    border-radius: 13px;
-    padding: 11px 18px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
 
-.cb-btn:hover { background: var(--cb-btn-hover-bg); }
-.cb-btn:active { transform: scale(0.96); }
 
-.cb-btn-primary {
-    background: var(--cb-btn-primary-bg);
-    border: none;
-    box-shadow: var(--cb-btn-primary-shadow);
-}
 
-.cb-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 /* ── 排行榜 ── */
 

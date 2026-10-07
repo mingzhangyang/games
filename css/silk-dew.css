@@ -429,35 +429,9 @@ body {
 
 .sd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
-.sd-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
-.sd-btn {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--sd-btn-bg);
-    border: var(--sd-btn-border);
-    border-radius: 13px;
-    padding: 11px 18px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
 
-.sd-btn:hover { background: var(--sd-btn-hover-bg); }
-.sd-btn:active { transform: scale(0.96); }
 
-.sd-btn-primary {
-    background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
-    border: none;
-    color: var(--tok-on-accent);
-    box-shadow: var(--sd-btn-primary-shadow);
-}
 
 /* .sd-mode:hover / .sd-btn:hover 用 background 简写，会把渐变冲掉；须放在 .sd-btn:hover 之后 */
 .sd-mode-daily:hover,
@@ -470,7 +444,6 @@ body {
 :root[data-theme="light"] .sd-mode-daily:hover,
 :root[data-theme="light"] .sd-btn-primary:hover { filter: brightness(0.92); }
 
-.sd-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 /* ── 排行榜 ── */
 

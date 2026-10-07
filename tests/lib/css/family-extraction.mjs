@@ -56,33 +56,76 @@ function declarationKey(declaration) {
 }
 
 const REVIEWED_INHERITED_EQUIVALENT_PROPERTIES = new Set(['text-align']);
+const REVIEWED_SELECTOR_SUFFIXES = new Set(['', ':hover', ':active', ':focus-visible', ':disabled']);
+const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
+    'color', 'background', 'background-color', 'border', 'border-color',
+    'box-shadow', 'filter', 'opacity',
+]);
+
+function componentLocalSelector(prefix, component) {
+    return '.' + prefix + '-' + component.suffix + (component.localSelectorSuffix || '');
+}
+
+function componentSharedSelector(component) {
+    return '.' + component.sharedClass + (component.sharedSelectorSuffix || '');
+}
 
 function expectedResidual(
-    baseRule, sharedRule, errors, label, inheritedEquivalentProperties = [],
+    baseRule, sharedRule, errors, label,
+    inheritedEquivalentProperties = [], convergedThemeProperties = [],
 ) {
     const base = [...(baseRule.migrationDeclarations || [])];
     const shared = sharedRule.migrationDeclarations || [];
     const residual = [...base];
     const inheritedEquivalent = new Set(inheritedEquivalentProperties);
+    const convergedTheme = new Set(convergedThemeProperties);
 
     for (const property of inheritedEquivalent) {
         if (!REVIEWED_INHERITED_EQUIVALENT_PROPERTIES.has(property)) {
             errors.push(label + ': inherited-equivalent property ' + property + ' is not reviewed.');
         }
     }
+    for (const property of convergedTheme) {
+        if (!REVIEWED_THEME_CONVERGENCE_PROPERTIES.has(property)) {
+            errors.push(label + ': theme convergence property ' + property + ' is not reviewed.');
+        }
+        if (!shared.some(item => item.property === property)) {
+            errors.push(label + ': theme convergence property ' + property
+                + ' is stale because the shared rule no longer writes it.');
+        }
+    }
 
     for (const declaration of shared) {
         const sameProperty = base.filter(item =>
             item.property === declaration.property && item.important === declaration.important);
+        const exactKey = declarationKey(declaration);
+        const exactIndex = residual.findIndex(item => declarationKey(item) === exactKey);
+
+        if (convergedTheme.has(declaration.property)) {
+            if (sameProperty.length > 1 && exactIndex < 0) {
+                errors.push(label + ': theme convergence may not collapse a fallback chain for '
+                    + declaration.property + '.');
+                continue;
+            }
+            if (exactIndex >= 0) {
+                residual.splice(exactIndex, 1);
+            } else if (sameProperty.length === 1) {
+                const propertyIndex = residual.findIndex(item =>
+                    item.property === declaration.property && item.important === declaration.important);
+                if (propertyIndex >= 0) residual.splice(propertyIndex, 1);
+            }
+            // A reviewed theme convergence may also add a theme property that the local
+            // source inherited before. Geometry/typography remain protected below.
+            continue;
+        }
+
         if (!sameProperty.length) {
             if (inheritedEquivalent.has(declaration.property)) continue;
             errors.push(label + ': shared property ' + declaration.property
                 + ' did not exist in the local source; family extraction may not invent geometry/behavior.');
             continue;
         }
-        const exactKey = declarationKey(declaration);
-        const index = residual.findIndex(item => declarationKey(item) === exactKey);
-        if (index >= 0) residual.splice(index, 1);
+        if (exactIndex >= 0) residual.splice(exactIndex, 1);
     }
 
     for (const property of inheritedEquivalent) {
@@ -148,6 +191,7 @@ export function verifyExtractionAdoption(root, extraction, errors) {
     const games = extraction.games || {};
     for (const component of extraction.components || []) {
         const label = extraction.id + '/' + component.sharedClass;
+        if (component.requiresAdoption === false) continue;
         for (const prefix of component.participants || []) {
             const game = games[prefix];
             if (!game?.css || !game?.html || !game?.runtime) {
@@ -196,20 +240,55 @@ export function verifyExtractionShape(extraction, errors) {
             fail('component entries must be objects.');
             continue;
         }
+        const localSelectorSuffix = component.localSelectorSuffix || '';
+        const sharedSelectorSuffix = component.sharedSelectorSuffix || '';
+        if (!REVIEWED_SELECTOR_SUFFIXES.has(localSelectorSuffix)
+            || !REVIEWED_SELECTOR_SUFFIXES.has(sharedSelectorSuffix)) {
+            fail('component selector suffixes must be reviewed pseudo-classes.');
+        }
+        if (component.requiresAdoption !== undefined && typeof component.requiresAdoption !== 'boolean') {
+            fail('requiresAdoption must be boolean when present.');
+        }
+        if (component.requiresAdoption === false && !localSelectorSuffix) {
+            fail('requiresAdoption:false is only valid for a state selector.');
+        }
+
         if (typeof component.suffix !== 'string' || !component.suffix) {
             fail('every component requires a non-empty suffix.');
-        } else if (suffixes.has(component.suffix)) {
-            fail('duplicate component suffix ' + component.suffix + '.');
         } else {
-            suffixes.add(component.suffix);
+            const suffixKey = component.suffix + localSelectorSuffix;
+            if (suffixes.has(suffixKey)) {
+                fail('duplicate component suffix ' + suffixKey + '.');
+            } else {
+                suffixes.add(suffixKey);
+            }
         }
 
         if (typeof component.sharedClass !== 'string' || !component.sharedClass) {
             fail('every component requires a non-empty sharedClass.');
-        } else if (sharedClasses.has(component.sharedClass)) {
-            fail('duplicate sharedClass ' + component.sharedClass + '.');
         } else {
-            sharedClasses.add(component.sharedClass);
+            const sharedKey = component.sharedClass + sharedSelectorSuffix;
+            if (sharedClasses.has(sharedKey)) {
+                fail('duplicate sharedClass ' + sharedKey + '.');
+            } else {
+                sharedClasses.add(sharedKey);
+            }
+        }
+
+        const convergedThemeProperties = component.convergedThemeProperties || [];
+        if (!Array.isArray(convergedThemeProperties)) {
+            fail('convergedThemeProperties must be an array.');
+        } else {
+            const seenConverged = new Set();
+            for (const property of convergedThemeProperties) {
+                if (!REVIEWED_THEME_CONVERGENCE_PROPERTIES.has(property)) {
+                    fail('unreviewed theme convergence property ' + property + '.');
+                } else if (seenConverged.has(property)) {
+                    fail('duplicate theme convergence property ' + property + '.');
+                } else {
+                    seenConverged.add(property);
+                }
+            }
         }
 
         if (!['html', 'runtime'].includes(component.surface)) {
@@ -314,7 +393,7 @@ function removedTuples(extraction, errors) {
     const games = extraction.games || {};
     for (const component of extraction.components || []) {
         for (const prefix of component.fullyRemoved) {
-            rows.push([games[prefix].css, '', '.' + prefix + '-' + component.suffix]);
+            rows.push([games[prefix].css, '', componentLocalSelector(prefix, component)]);
         }
     }
     return rows;
@@ -376,8 +455,9 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
     }
 
     for (const component of extraction.components || []) {
-        const label = extraction.id + '/' + component.sharedClass;
-        const sharedSelector = '.' + component.sharedClass;
+        const label = extraction.id + '/' + component.sharedClass
+            + (component.sharedSelectorSuffix || '');
+        const sharedSelector = componentSharedSelector(component);
         const baseSharedMatches = (baseSharedCss?.rules || []).filter(rule => rule.selector === sharedSelector);
         if (baseSharedMatches.length) {
             errors.push(label + ': shared selector already existed in the comparison base.');
@@ -395,8 +475,7 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
                 errors.push(label + ': incomplete game metadata for ' + prefix + '.');
                 continue;
             }
-            const localClass = prefix + '-' + component.suffix;
-            const localSelector = '.' + localClass;
+            const localSelector = componentLocalSelector(prefix, component);
             const baseRule = uniqueRule(baseParsedByPath.get(game.css), localSelector, null, errors,
                 label + '/' + prefix + '/base');
             if (!baseRule) continue;
@@ -411,6 +490,7 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
                 errors,
                 label + '/' + prefix,
                 component.inheritedEquivalentProperties?.[prefix] || [],
+                component.convergedThemeProperties || [],
             );
             const currentMatches = (currentParsedByPath.get(game.css)?.rules || []).filter(rule =>
                 rule.selector === localSelector && !rule.layer && (rule.context || []).length === 0);
