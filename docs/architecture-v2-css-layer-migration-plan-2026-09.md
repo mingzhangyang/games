@@ -632,7 +632,10 @@ legacy 插件、入口、压缩和其它配置完全不变，只从 `plugins` �
 1. 正常模式：保留 `shared-css-first`；
 2. canary 模式：禁用 `shared-css-first`。
 
-正常产物先按既有 candidate gate 验证；随后 canary 覆盖重建同一 `dist/`，并复跑：
+正常产物与 canary 产物必须调用同一个 `run-css-p4-dist-gates.mjs` gate manifest；
+随后 canary 覆盖重建同一 `dist/` 并再次运行完全相同的 built-output 契约。另由
+`verify-css-p4-config.mjs` 在源码态证明两份 production 配置的唯一插件差异是
+`shared-css-first`，且所有非插件配置完全相同。共同 gate manifest 覆盖：
 
 - P3-A～P3-E 的源码/产物冻结契约（它们已经覆盖关键页面的 geometry、computed style、
   drawer、immersive、主题、移动端和真实交互边界）；
