@@ -31,7 +31,7 @@ The revised contract separates syntax, observations, allowed changes and browser
 | `tests/lib/css/runtime-sources.mjs` | Fixed registry validation and architectural JavaScript ingress rules |
 | `tests/lib/css/activation.mjs` | Page → script → import-graph activation model and its independently pinned addendum |
 | `tests/lib/css/migration-contract.mjs` | Stable rule occurrences, append-only source→destination mappings, declaration partitioning and layer-conflict review |
-| `tests/verify-css-debt.mjs` | Inventory, immutable history, PR-base migration ratchet and built stylesheet ordering |
+| `tests/verify-css-debt.mjs` | Inventory, immutable history, PR-base migration ratchet, source stylesheet membership/order, P5 freeze and P6 retirement contract |
 | `tests/verify-css-model.mjs` | Fast parser/model/ingress regression fixtures |
 | `tests/verify-css-migration-contract.mjs` | 1→N split, relayer, duplicate occurrence, conflict and ratchet adversarial fixtures |
 | `tests/verify-css-html-browser.mjs` | Independent browser check of script-type execution, handler grammar and declarative-root activation |
