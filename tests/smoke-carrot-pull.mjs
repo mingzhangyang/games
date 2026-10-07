@@ -3,6 +3,8 @@
 import puppeteer from 'puppeteer-core';
 import { readFileSync } from 'node:fs';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { assetSignatures, installImageFailureHook, isExpectedBlockedDiagnostic } from './lib/art-request.mjs';
+import { ART_URLS as CARROT_ART_URLS } from '../src/games/carrot-pull/render/art.js';
 
 // 挂点契约只认 manifest：叶柄数量 = 挂点数，第 i 根从 carrot.crown[i] 出发、止于 girl.fists[i]
 const MANIFEST = JSON.parse(readFileSync(new URL('../assets/carrot-pull/manifest.json', import.meta.url), 'utf8'));
@@ -11,6 +13,11 @@ const STEM_CONTRACT = {
     fists: MANIFEST.attachments['girl.fists'].points,
     clip: MANIFEST.attachments['girl.fists'].overlayClipLocalLogicalPx,
 };
+
+const CRITICAL_ART_SIGNATURES = assetSignatures([
+    ...Object.values(CARROT_ART_URLS.layers),
+    ...Object.values(CARROT_ART_URLS.sprites),
+]);
 
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
@@ -21,23 +28,34 @@ function isIgnorable(message) {
     return /analytics\.js|sw-register\.js|manifest|apple-touch-icon|favicon|game-scores|games-analytics|CORS/i.test(message);
 }
 
+function collectDiagnostics(diagnostics, label) {
+    for (const message of diagnostics?.pageErrors || []) {
+        if (!isIgnorable(message)) fail(`${label}页面错误: ${message}`);
+    }
+    for (const message of diagnostics?.consoleErrors || []) {
+        const expectedBlockedArt = diagnostics?.blockArt
+            && isExpectedBlockedDiagnostic(message, diagnostics.blockedArtUrls || []);
+        if (!expectedBlockedArt && !isIgnorable(message)) fail(`${label}console 错误: ${message}`);
+    }
+    for (const url of diagnostics?.failedRequests || []) {
+        const expectedBlockedArt = diagnostics?.blockArt
+            && (diagnostics.blockedArtUrls || []).includes(url);
+        if (!expectedBlockedArt && !isIgnorable(url)) fail(`${label}请求失败: ${url}`);
+    }
+}
+
 async function setupPage(page, { blockArt = false } = {}) {
     const pageErrors = [];
     const consoleErrors = [];
     const failedRequests = [];
+    const blockedArtUrls = [];
     page.on('pageerror', error => pageErrors.push(String(error.message || error).split('\n')[0]));
     page.on('console', message => {
         if (message.type() === 'error') consoleErrors.push(`${message.text().split('\n')[0]} @ ${message.location()?.url || ''}`);
     });
     page.on('requestfailed', request => failedRequests.push(request.url()));
     if (blockArt) {
-        await page.setRequestInterception(true);
-        page.on('request', request => {
-            const url = request.url();
-            const isArt = request.resourceType() === 'image' && /\.(?:webp|svg)(?:\?|$)/i.test(url);
-            if (isArt) request.abort();
-            else request.continue();
-        });
+        await installImageFailureHook(page, CRITICAL_ART_SIGNATURES);
     }
     await page.evaluateOnNewDocument(() => {
         try {
@@ -47,8 +65,11 @@ async function setupPage(page, { blockArt = false } = {}) {
     });
     await page.goto(`${BASE}/carrot-pull.html`, { waitUntil: 'networkidle0', timeout: 45000 });
     await page.waitForFunction(() => window.cpGame && ['ready', 'fallback'].includes(document.getElementById('cp-stage')?.dataset.artState), { timeout: 15000 });
+    if (blockArt) {
+        blockedArtUrls.push(...await page.evaluate(() => window.__testBlockedArtUrls || []));
+    }
     await wait(180);
-    return { pageErrors, consoleErrors, failedRequests };
+    return { pageErrors, consoleErrors, failedRequests, blockArt, blockedArtUrls };
 }
 
 async function assertNormalPage() {
@@ -221,8 +242,7 @@ async function assertNormalPage() {
     } catch (error) {
         fail(`正常路径脚本异常: ${error.message}`);
     } finally {
-        for (const message of diagnostics?.pageErrors || []) if (!isIgnorable(message)) fail(`页面错误: ${message}`);
-        for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message)) fail(`console 错误: ${message}`);
+        collectDiagnostics(diagnostics, '');
         await browser.close();
     }
 }
@@ -240,7 +260,7 @@ async function assertFallbackPage() {
             hasGame: !!window.cpGame,
         }));
         if (fallback.artState !== 'fallback' || !fallback.fallbackVisible || !fallback.hasGame) {
-            fail(`资源失败时 fallback 未接管: ${JSON.stringify(fallback)}`);
+            fail(`资源失败时 fallback 未接管: ${JSON.stringify({ ...fallback, blockedArtRequests: diagnostics?.blockedArtUrls?.length || 0 })}`);
         }
         await page.click('#cp-start-btn');
         await page.evaluate(() => { window.cpGame.state.needle = window.cpGame.state.target; });
@@ -250,10 +270,7 @@ async function assertFallbackPage() {
     } catch (error) {
         fail(`fallback 路径脚本异常: ${error.message}`);
     } finally {
-        for (const message of diagnostics?.pageErrors || []) if (!isIgnorable(message)) fail(`fallback 页面错误: ${message}`);
-        // 本用例故意 abort 了全部美术请求，它们的 net::ERR_FAILED 是预期内的
-        const blockedArt = message => /net::ERR_FAILED @ .*\/assets\/carrot-pull\//.test(message);
-        for (const message of diagnostics?.consoleErrors || []) if (!isIgnorable(message) && !blockedArt(message)) fail(`fallback console 错误: ${message}`);
+        collectDiagnostics(diagnostics, 'fallback ');
         await browser.close();
     }
 }

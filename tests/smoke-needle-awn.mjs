@@ -2,6 +2,14 @@
 // 针尖对麦芒生产美术烟测：资源状态、真实启动、尖端碰撞、Boss、双人、响应式与 fallback。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { assetSignatures, installImageFailureHook, isExpectedBlockedDiagnostic } from './lib/art-request.mjs';
+import { ART_URLS as NEEDLE_ART_URLS } from '../src/games/needle-awn/render/art.js';
+
+const CRITICAL_ART_SIGNATURES = assetSignatures([
+    ...Object.values(NEEDLE_ART_URLS.layers),
+    ...Object.values(NEEDLE_ART_URLS.bosses),
+    ...Object.values(NEEDLE_ART_URLS.ui),
+]);
 
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
@@ -16,17 +24,14 @@ async function setupPage(page, { blockArt = false } = {}) {
     const pageErrors = [];
     const consoleErrors = [];
     const failedRequests = [];
+    const blockedArtUrls = [];
     page.on('pageerror', error => pageErrors.push(String(error.message || error).split('\n')[0]));
     page.on('console', message => {
         if (message.type() === 'error') consoleErrors.push(`${message.text().split('\n')[0]} @ ${message.location()?.url || ''}`);
     });
     page.on('requestfailed', request => failedRequests.push(request.url()));
     if (blockArt) {
-        await page.setRequestInterception(true);
-        page.on('request', request => {
-            if (request.url().includes('/assets/needle-awn/')) request.abort();
-            else request.continue();
-        });
+        await installImageFailureHook(page, CRITICAL_ART_SIGNATURES);
     }
     await page.evaluateOnNewDocument(() => {
         try {
@@ -36,18 +41,23 @@ async function setupPage(page, { blockArt = false } = {}) {
     });
     await page.goto(`${BASE}/needle-awn.html`, { waitUntil: 'networkidle0', timeout: 45000 });
     await page.waitForFunction(() => window.gameEngine && ['ready', 'fallback'].includes(document.getElementById('na-stage')?.dataset.artState), { timeout: 15000 });
+    if (blockArt) {
+        blockedArtUrls.push(...await page.evaluate(() => window.__testBlockedArtUrls || []));
+    }
     await wait(180);
-    return { pageErrors, consoleErrors, failedRequests, blockArt };
+    return { pageErrors, consoleErrors, failedRequests, blockArt, blockedArtUrls };
 }
 
 async function collectDiagnostics(diagnostics, label) {
     for (const message of diagnostics?.pageErrors || []) if (!isIgnorable(message)) fail(`${label} 页面错误: ${message}`);
     for (const message of diagnostics?.consoleErrors || []) {
-        const expectedBlockedArt = diagnostics?.blockArt && message.includes('/assets/needle-awn/');
+        const expectedBlockedArt = diagnostics?.blockArt
+            && isExpectedBlockedDiagnostic(message, diagnostics.blockedArtUrls || []);
         if (!expectedBlockedArt && !isIgnorable(message)) fail(`${label} console 错误: ${message}`);
     }
     for (const url of diagnostics?.failedRequests || []) {
-        const expectedBlockedArt = diagnostics?.blockArt && url.includes('/assets/needle-awn/');
+        const expectedBlockedArt = diagnostics?.blockArt
+            && (diagnostics.blockedArtUrls || []).includes(url);
         if (!expectedBlockedArt && !isIgnorable(url)) fail(`${label} 请求失败: ${url}`);
     }
 }
@@ -315,7 +325,7 @@ async function assertFallbackPage() {
             canvasVisible: document.getElementById('na-canvas')?.getBoundingClientRect().width > 0,
         }));
         if (fallback.artState !== 'fallback' || fallback.sceneState !== 'fallback' || !fallback.hasGame || !fallback.canvasVisible) {
-            fail(`资源失败时 fallback 未接管: ${JSON.stringify(fallback)}`);
+            fail(`资源失败时 fallback 未接管: ${JSON.stringify({ ...fallback, blockedArtRequests: diagnostics?.blockedArtUrls?.length || 0 })}`);
         }
         const playable = await page.evaluate(() => {
             const game = window.gameEngine;

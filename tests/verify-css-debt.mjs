@@ -36,7 +36,7 @@ const RUNTIME_STYLE_BASELINE_BLOB_SHA = createHash('sha1')
     .digest('hex');
 const REVIEWED_P0_BASELINE_BLOB_SHA = '9c4541b4a447bff3dbecb0bc6cd02e09f3850922';
 const REVIEWED_RUNTIME_STYLE_P0_BLOB_SHA = 'e766d5873cf551fb46cda56dd0df861c08f2780f';
-const REVIEWED_VITE_CONFIG_BLOB_SHA = 'dccb984916d19229011c035321b56a9ae43138db';
+const REVIEWED_SHARED_CSS_FIRST_BLOB_SHA = '2a32764598980bbe88a7968e8bcc48da9aaac87f';
 const REVIEWED_LAYER_ORDER = Object.freeze(['reset', 'tokens', 'showcase', 'components', 'accessibility', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
 function listFiles(directory, root, predicate) {
@@ -95,12 +95,28 @@ function stylesheetRank(href) {
 
 function verifyBuildOrderingContract(errors) {
     const viteConfig = readFileSync(join(ROOT, 'vite.config.js'), 'utf8');
-    const viteConfigBlobSha = createHash('sha1')
-        .update(`blob ${Buffer.byteLength(viteConfig, 'utf8')}\0`)
-        .update(viteConfig)
-        .digest('hex');
-    if (viteConfigBlobSha !== REVIEWED_VITE_CONFIG_BLOB_SHA) {
-        errors.push('vite.config.js differs from the independently pinned shared-css-first implementation.');
+    const sharedCssFirstPath = join(ROOT, 'tools/lib/shared-css-first.mjs');
+    if (!existsSync(sharedCssFirstPath)) {
+        errors.push('Canonical shared-css-first implementation is missing.');
+    } else {
+        const sharedCssFirst = readFileSync(sharedCssFirstPath, 'utf8');
+        const sharedCssFirstBlobSha = createHash('sha1')
+            .update(`blob ${Buffer.byteLength(sharedCssFirst, 'utf8')}\0`)
+            .update(sharedCssFirst)
+            .digest('hex');
+        if (sharedCssFirstBlobSha !== REVIEWED_SHARED_CSS_FIRST_BLOB_SHA) {
+            errors.push('tools/lib/shared-css-first.mjs differs from the independently pinned implementation.');
+        }
+    }
+    const requiredViteFragments = [
+        `import { createSharedCssFirstPlugin } from './tools/lib/shared-css-first.mjs';`,
+        `const cssLayerCanary = process.env.CSS_LAYER_CANARY === '1';`,
+        `...(!cssLayerCanary ? [createSharedCssFirstPlugin()] : []),`,
+    ];
+    for (const fragment of requiredViteFragments) {
+        if (!viteConfig.includes(fragment)) {
+            errors.push('vite.config.js no longer wires the pinned shared-css-first implementation through the P4 canary gate: ' + fragment);
+        }
     }
 
     const distRoot = join(ROOT, 'dist');

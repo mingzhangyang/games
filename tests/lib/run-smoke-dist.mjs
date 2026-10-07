@@ -43,7 +43,9 @@ const done = (code) => {
 await new Promise(r => setTimeout(r, 1200));
 
 const child = spawn(NODE, [target, `http://127.0.0.1:${PORT}`], {
-    cwd: ROOT, stdio: 'inherit',
+    cwd: ROOT,
+    env: { ...process.env, VERIFY_BUILT_OUTPUT: '1' },
+    stdio: 'inherit',
 });
 child.on('exit', done);
 child.on('error', (e) => { console.error(e); done(1); });

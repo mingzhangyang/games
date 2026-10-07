@@ -1,11 +1,13 @@
 import { defineConfig } from 'vite';
 import legacy from '@vitejs/plugin-legacy';
 import { resolve } from 'path';
+import { createSharedCssFirstPlugin } from './tools/lib/shared-css-first.mjs';
 
 // dev / prod 单文件按 mode 分支：保证两边插件、别名、assetsInclude 完全一致。
-// 共享 CSS 的源码顺序由 shared-css-first 在产物 HTML 中保持。
+// 正常生产构建由 shared-css-first 保持共享 CSS 顺序；P4 canary 仅关闭该插件以验证 layer 独立性。
 export default defineConfig(({ mode }) => {
   const isDev = mode === 'development';
+  const cssLayerCanary = process.env.CSS_LAYER_CANARY === '1';
 
   return {
     // 开发服务器配置
@@ -98,61 +100,11 @@ main: resolve(__dirname, 'index.html'),
 
     // 插件配置
     plugins: [
+      // 正常生产路径保留 shared-css-first；CSS_LAYER_CANARY=1 时仅关闭这一插件，其他构建语义不变。
       // 契约样式必须排在各页样式之前：tokens(变量) → layout(骨架) → 页面 → more-games。
       // Vite 打包后会按入口把页面 CSS 提到最前，导致 layout 的默认值反向覆盖页面覆盖值
       // （实测 gomoku 的 --frame-* 在产物中失效）。这里在产出 HTML 时重新排序 link。
-      {
-        name: 'shared-css-first',
-        transformIndexHtml: {
-          order: 'post',
-          handler(html) {
-            const RANK = name =>
-              /\/tokens-/.test(name) ? 0
-                : /\/layout-/.test(name) ? 1
-                  // 科学展柜共享皮肤（5 个实验室游戏）：源码里排在 layout 之后、页面 CSS 之前
-                  : /\/science-showcase-/.test(name) ? 2
-                    : /\/more-games-/.test(name) ? 9
-                      : 5;
-            // ① 外链之间排序：tokens → layout → [science-showcase] → 页面 → more-games
-            const links = [...html.matchAll(/[ \t]*<link rel="stylesheet"[^>]*>/g)];
-            if (links.length >= 2) {
-              const sorted = [...links].sort((a, b) => RANK(a[0]) - RANK(b[0]));
-              if (!sorted.every((m, i) => m.index === links[i].index)) {
-                let out = '', last = 0;
-                links.forEach((m, i) => {
-                  out += html.slice(last, m.index) + sorted[i][0];
-                  last = m.index + m[0].length;
-                });
-                html = out + html.slice(last);
-              }
-            }
-            if (!links.length) return html;
-
-            // ② 外链还必须排在内联 <style> 之前。
-            //    定位内联样式前先把 HTML 注释抹掉，避免说明文字里的标签名干扰匹配。
-            const masked = html.replace(/<!--[\s\S]*?-->/g, m => ' '.repeat(m.length));
-            const styleAt = masked.search(/<style[\s>]/);
-            if (styleAt < 0) return html;
-            const all = [...html.matchAll(/[ \t]*<link rel="stylesheet"[^>]*>[ \t]*\r?\n?/g)];
-            if (!all.length || all.every(m => m.index < styleAt)) return html;
-
-            const tags = all.map(m => m[0].trim());
-            let stripped = '', prev = 0;
-            for (const m of all) {
-              stripped += html.slice(prev, m.index);
-              prev = m.index + m[0].length;
-            }
-            stripped += html.slice(prev);
-            const maskedOut = stripped.replace(/<!--[\s\S]*?-->/g, m => ' '.repeat(m.length));
-            const si = maskedOut.search(/<style[\s>]/);
-            const lineStart = stripped.lastIndexOf('\n', si) + 1;
-            const indent = stripped.slice(lineStart, si).match(/^[ \t]*/)[0];
-            return stripped.slice(0, lineStart)
-              + tags.map(t => indent + t + '\n').join('')
-              + stripped.slice(lineStart);
-          }
-        }
-      },
+      ...(!cssLayerCanary ? [createSharedCssFirstPlugin()] : []),
       // 兼容性支持（仅生产构建需要）
       ...(isDev ? [] : [legacy({ targets: ['defaults', 'not IE 11'] })]),
     ],
