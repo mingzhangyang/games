@@ -39,7 +39,10 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # P4/P5 deliberately verify both normal and no-plugin production builds.
+    # The two built-output browser gate passes can legitimately exceed 30 minutes
+    # on slower hosted runners even when every assertion is green.
+    timeout-minutes: 45
     env:
       CI: '1'
       VERIFY_JOBS: '2'
