@@ -7,6 +7,7 @@
 // still computes the intended container/list/row/input geometry.
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
@@ -119,6 +120,9 @@ const CASES = [
     },
 ];
 
+const RUN = CASES.filter(testCase => keepPage(testCase.href));
+exitIfNoPages(RUN, 'verify-leaderboard-layout');
+
 const failures = [];
 const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
@@ -140,7 +144,7 @@ function compare(id, subject, actual, expected) {
 }
 
 try {
-    for (const testCase of CASES) {
+    for (const testCase of RUN) {
         const page = await browser.newPage();
         const pageErrors = [];
         page.on('pageerror', error => pageErrors.push(String(error?.message || error).split('\n')[0]));
