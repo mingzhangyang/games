@@ -1,6 +1,7 @@
 # CSS Cascade Layers 迁移方案
 
-> 状态：P0–P5 已完成；P6 candidate 已移除 `shared-css-first` 与临时 canary plumbing，等待最终 Architecture v2 candidate CI
+> 状态：P0–P6 已完成并验收；#112 已合并，最终 Architecture v2 candidate #341 与合并后 Workers build 均通过。
+> 最终证据与维护规则：[Architecture v2 最终交接](architecture-v2-final-handoff.md)。
 >
 > 记录日期：2026-09-30
 >
@@ -11,7 +12,7 @@
 ## 1. 结论先行
 
 P4 已证明当前生产源码在开启/关闭 `shared-css-first` 时通过同一套 built-output 行为门禁，
-P5 又把剩余未分层 CSS 精确冻结为 compatibility allowlist。基于这两份证据，P6 candidate
+P5 又把剩余未分层 CSS 精确冻结为 compatibility allowlist。基于这两份证据，P6（#112）
 已经删除 `shared-css-first`、`CSS_LAYER_CANARY` 和专属 link-reordering plumbing。
 
 这不等于声称“所有 CSS 都已经进入 `@layer`”。P5 明确保留 2703 条静态未分层 ordinary rules
@@ -676,7 +677,7 @@ allowlist，而不是重新放宽 debt baseline。
 
 `refactor/remove-shared-css-first`
 
-P6 candidate 的实现边界：
+P6（#112）的实现边界：
 
 - 从 `vite.config.js` 删除 `shared-css-first` import、插件接线与 `CSS_LAYER_CANARY` 分支；
 - 删除 `tools/lib/shared-css-first.mjs`；
@@ -685,8 +686,9 @@ P6 candidate 的实现边界：
 - 更新现行 architecture/layout/index 注释，不改 CSS selector、ownership、玩法、视觉或 shell；
 - P5 的 inline-style / unlayered compatibility counts 保持原样；P6 不借删除插件之名重做 debt baseline。
 
-P6 仍以一次完整 Architecture v2 candidate CI 为最终验收。如果删除插件后出现行为回归，应优先
-回滚该 PR，而不是在同一个 PR 堆叠 `!important`、selector 或页面级补丁。
+P6 已通过最终 Architecture v2 candidate #341（run 37583907407）；#112 合并后的 Workers build 也已通过。
+完整证据见最终交接文档。如果确认回归由 P6 引入，应整体回滚 #112；其他后续回归应回滚实际引入问题的变更，
+不要局部恢复插件、canary 或堆叠 selector 补丁。
 
 ## 5. 必须新增的自动守卫
 
@@ -737,7 +739,8 @@ P0 就启用：
 
 ### 立即回滚条件
 
-出现以下任一情况，停止当前批次并恢复插件，不继续堆叠修复：
+出现以下任一情况，停止并回滚引入回归的批次，不继续堆叠修复。P6 之后不把恢复插件作为常规修复；
+只有整体回滚 #112 时，才随该提交一并恢复其历史构建契约：
 
 - 移动端侧栏、drawer 或固定底栏行为改变；
 - frame / immersive 的几何指标失败；
@@ -746,15 +749,18 @@ P0 就启用：
 - 需要大量新增 `!important` 才能恢复页面；
 - 迁移工具产生大规模与 CSS 语义无关的换行或编码 diff。
 
-## 7. 与 Architecture v2 follow-up 的正式交接
+## 7. 与 Architecture v2 follow-up 的正式交接（已完成）
 
-在 `docs/architecture-v2-followup-plan.md` 的 handoff gate 未满足前：
+以下记录迁移时的进入条件。该 handoff 已完成；P6 验收后临时 layout freeze 结束，
+共享 DOM/CSS 改动按[维护交接](architecture-v2-final-handoff.md)的独立 PR 与行为验证要求进行。
+
+当时在 `docs/architecture-v2-followup-plan.md` 的 handoff gate 未满足前：
 
 - 可以执行本计划 P0/P1：盘点、baseline、冲突审计、静态检查；
 - 不执行 P2+ 的 layer 包裹、cascade 语义切换或插件 canary；
 - 不把 CSS migration 与 shell/DOM 大改并行。
 
-handoff 通过后进入临时 layout freeze：
+handoff 通过后、P6 验收前曾进入临时 layout freeze：
 
 - 不并行进行 shell redesign、共享 class 重命名、全站 layout 重构；
 - 游戏逻辑/内容开发可以继续，只要不改变 shared cascade contract；
@@ -809,8 +815,8 @@ handoff 通过后进入临时 layout freeze：
 - [x] P3 已完成插件保留模式下的分批源码态 + dist 行为回归
 - [x] 运行禁用插件的 canary 对比
 - [x] P5 / #111：在插件仍存在的生产路径下冻结 post-canary compatibility tier，并将 P4 证据与剩余 debt allowlist 变成机器可验证契约
-- [x] P6 candidate：用独立小 PR 移除 `shared-css-first` 与临时 `CSS_LAYER_CANARY` plumbing
+- [x] P6 / #112：用独立小 PR 移除 `shared-css-first` 与临时 `CSS_LAYER_CANARY` plumbing
 - [x] 更新现行 architecture/layout 契约与代码注释；PR 描述在创建 PR 时同步
-- [ ] 触发并通过一次最终完整 Architecture v2 candidate CI
+- [x] 最终完整 Architecture v2 candidate #341 / run 37583907407 通过；#112 合并后 Workers build 通过
 
-P6 candidate 已停止把 `shared-css-first` 视为生产契约；如果最终 Architecture v2 candidate CI 或 review 暴露回归，应回滚 P6，而不是恢复为长期双路径。
+P0–P6 的本轮迁移已完成。剩余 compatibility debt 继续冻结；后续 ownership 迁移必须作为新的独立 transaction 审查，不能静默修改 P0、既有 ledger 或冻结计数。

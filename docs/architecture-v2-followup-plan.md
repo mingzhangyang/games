@@ -1,8 +1,10 @@
 # Architecture v2 收尾与 Legacy 清退执行计划
 
-> 面向 Codex 的实施手册。  
+> 状态：Phase 0–9 已完成，后续 CSS P0–P6 已随 #112 验收。
+> 本文保留原实施顺序和历史任务模板；它们不是新的待办。当前维护入口为[最终交接](architecture-v2-final-handoff.md)。
+> 面向 Codex 的历史实施手册。
 > 基线：PR #43 `refactor: establish platform architecture v2` 的 head。  
-> 本文描述 **Architecture v2 平台落地之后仍未完成的历史代码迁移**，不是重新设计平台。
+> 本文描述 **Architecture v2 平台落地后当时待完成的历史代码迁移**，不是重新设计平台。
 >
 > 核心原则：**先建立边界守卫，再迁移；用 architecture debt ratchet 保证历史债务只能下降不能反弹；小 PR、可回滚；默认跑 changed/targeted tests，只有候选 PR 才跑 full verify。**
 >
@@ -987,7 +989,8 @@ css/
 - [ ] `npm run build`、Architecture v2 candidate CI、关键 smoke 全绿；
 - [ ] CSS 方案 P0 的 computed-style / geometry baseline 已记录。
 
-handoff 通过后，CSS layer 迁移期间进入一个临时 **layout freeze**：
+以下 **layout freeze** 只适用于当时的 CSS 迁移期；#112 / candidate #341 验收后已经结束。
+后续共享 DOM/CSS 工作按最终交接文档单独审查、验证。历史规则如下：
 
 - 可以继续做独立游戏逻辑、内容和不触及 shared cascade 的工作；
 - 不并行进行 shell redesign、全站 class 重命名、共享布局重构；
@@ -1072,9 +1075,9 @@ Next recommended PR
 
 ---
 
-# 16. Codex 任务提示词（可直接交接）
+# 16. Codex 任务提示词（历史，勿重新执行）
 
-下面这段可直接作为 Codex 的总任务说明：
+下面保留当时的总任务说明；当前工作从最终交接文档开始：
 
 > 你正在完成 games 仓库的 Architecture v2 收尾迁移。  
 > 先阅读 `docs/architecture-v2.md`、本文件、`docs/contracts/*` 和当前 `games.config.json`。  
@@ -1091,31 +1094,18 @@ Next recommended PR
 
 ---
 
-# 17. 最终验收清单
+# 17. 最终验收记录（2026-10-07）
 
-Architecture v2 legacy migration 只有在以下全部成立时才算真正完成：
+本轮已验收。完整提交、CI、部署、抽查与维护边界见[最终交接](architecture-v2-final-handoff.md)。
 
-- [ ] 所有非例外 registry entry 指向 `src/games/<id>/index.js`
-- [ ] Math Rain / Tank Battle 的特殊结构有明确 contract 与测试
-- [ ] 无游戏代码从旧 platform shim 导入
-- [ ] platform shim 删除或只剩明确、临时且有删除日期/issue 的例外
-- [ ] 游戏私有 persistence 不直接使用 localStorage
-- [ ] GameStorage legacy migrations 有测试
-- [ ] 大型入口已拆，composition entry 保持轻量
-- [ ] standard 页面符合 shell contract
-- [ ] i18n 静态 DOM 文案默认 declarative binding
-- [ ] `scripts/` 不再是 active tooling 杂物目录
-- [ ] docs 不再引用已移动/归档的脚本路径
-- [ ] architecture boundary verifier 全绿
-- [ ] architecture debt counters 已清零，或只剩文档化长期例外；无类别通过向上 rebaseline “解决”
-- [ ] `architecture:report` 显示最终 strict-zero/allowlist 状态，且本阶段无 debt 反弹
-- [ ] 第 13 节 Architecture → CSS handoff gate 满足
-- [ ] `npm run gen -- --check` 通过
-- [ ] `npm run build` 通过
-- [ ] `npm run verify` 通过
-- [ ] Tower Defense dist smoke 通过
-- [ ] `wrangler deploy --dry-run` 通过
-- [ ] 无 unresolved Copilot review comments
-- [ ] main 合并后 Workers build 通过
+| 验收范围 | 结果与证据 |
+| --- | --- |
+| registry / platform shim / 私有持久化 / shell / tooling / 文档路径 | `architecture:report` 的 11 类 strict-zero 全部为 0；超大 composition entry 为 0 |
+| GameStorage 迁移、i18n、平台边界与生成契约 | candidate #341 的完整 `npm run verify -- --jobs=2` 通过 |
+| 特殊 shell | Math Rain / Tank Battle 为文档化例外，继续受专属测试及 CSS P3-E 保护 |
+| CSS handoff、P0–P6 | #112 合并，插件与临时 canary 退役，P5 compatibility allowlist 保持冻结 |
+| build / 源码态浏览器 / dist 行为与 Tower Defense smoke / Worker dry-run | candidate #341 的对应步骤全部通过 |
+| 最后一轮 Copilot 审查 | Findings: None；当时等待的最终 CI 随后成功，见交接文档中的 review 和 run 链接 |
+| main 合并后 Workers build | `8b69ade` 对应的 Workers Builds: games 检查成功 |
 
-完成这些后，Architecture v2 才从“平台已经建立”进入“历史代码也完成迁移”的最终状态。
+Architecture v2 进入日常维护。剩余未分层 CSS 是明确保留的兼容债务，不能把本轮完成解释为全部 CSS 已分层。

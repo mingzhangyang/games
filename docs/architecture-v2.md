@@ -1,6 +1,10 @@
 # Architecture v2
 
-The repository is now split into four explicit domains:
+Architecture v2 legacy migration and CSS P0–P6 are accepted as of 2026-10-07.
+See the [final evidence and maintenance handoff](architecture-v2-final-handoff.md) for the accepted
+commit, CI/deployment evidence, retained compatibility debt, and future change requirements.
+
+The repository is now split into explicit domains:
 
 - `src/platform/`: shared runtime capabilities (settings, chrome, frame, drawer, audio, storage, i18n).
 - `src/games/`: game-specific modules extracted from large entrypoints and the home for all new games.

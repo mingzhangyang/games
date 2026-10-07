@@ -2,9 +2,11 @@
 
 Status: parser/model/source-boundary implementation completed in PR #75. P2 rule-mapping/ratchet,
 P3 behavior baselines, P4 plugin-independence canary, and P5 compatibility freeze are complete.
-P6 candidate has retired the former stylesheet-link reordering plugin; the verifier now preserves
+P6 (#112, merged; final candidate #341 passed) has retired the former stylesheet-link reordering plugin; the verifier now preserves
 immutable history, the append-only migration ledger, frozen compatibility counts, and source/production
 browser evidence without treating physical production link order as an oracle.
+
+Final acceptance and ongoing maintenance: [Architecture v2 handoff](architecture-v2-final-handoff.md).
 
 ## Why the verifier needed a redesign
 

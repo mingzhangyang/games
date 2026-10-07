@@ -184,6 +184,8 @@ computed sidebar `max-height` / `overflow-y` / `overscroll-behavior` 与 scrollb
 `shared-css-first` 因此曾在 `transformIndexHtml` 阶段重排 stylesheet links。P4 已用同一套产物行为门禁证明
 “插件开启 / 插件关闭”在当前架构上等价，P5 又把剩余未分层规则精确冻结为 compatibility allowlist。
 
+P6 已在 #112 验收；生产证据、后续变更流程与回滚边界见[最终交接](../architecture-v2-final-handoff.md)。
+
 从 P6 起：
 
 - `shared-css-first` 已删除，`CSS_LAYER_CANARY` 也已删除；
