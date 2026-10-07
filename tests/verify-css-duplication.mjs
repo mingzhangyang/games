@@ -37,7 +37,7 @@ const observedBaseline = {
     exactFamilyCount: audit.exactGroups.length,
     structuralFamilyCount: audit.structuralGroups.length,
 };
-const observedHint = '\\nObserved baseline: ' + JSON.stringify(observedBaseline);
+const observedHint = '\nObserved baseline: ' + JSON.stringify(observedBaseline);
 
 assert.ok(CONTRACT.baseline && typeof CONTRACT.baseline === 'object',
     'duplication audit baseline must stay pinned; null/absent baseline disables the family-membership contract' + observedHint);
