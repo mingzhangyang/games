@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "engine": "postcss-duplication-audit-v1",
+  "expectedOrdinaryRuleCount": 2912,
+  "minimumCrossFileCount": 2,
+  "classifications": [
+    "exact-duplicate",
+    "structural-duplicate",
+    "intentional-local"
+  ],
+  "baseline": null,
+  "policy": {
+    "automaticCssRewrite": false,
+    "exactDuplicateMeaning": "Same normalized semantic selector family, same at-rule/layer context, and same ordered declarations across at least two CSS files.",
+    "structuralDuplicateMeaning": "Same normalized semantic selector family and context with identical non-theme declarations; palette, background, border, shadow, filter, radius, opacity and custom-property values may differ and require family review.",
+    "intentionalLocalMeaning": "Game-stage/canvas/board/overlay and responsive contracts are hard-local; unmatched rules remain local until a reviewed family proves otherwise.",
+    "literalGeometryDifferencesStayLocal": true
+  }
+}
