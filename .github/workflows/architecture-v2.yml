@@ -39,9 +39,8 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    # P4/P5 deliberately verify both normal and no-plugin production builds.
-    # The two built-output browser gate passes can legitimately exceed 30 minutes
-    # on slower hosted runners even when every assertion is green.
+    # P6 has one production graph after retiring the link-reordering plugin.
+    # Keep the candidate budget conservative; the full suite plus browser gates and Worker dry-run remain authoritative.
     timeout-minutes: 45
     env:
       CI: '1'
@@ -69,18 +68,8 @@ jobs:
       - name: Full verification suite
         run: npm run verify -- --jobs=2
 
-      - name: CSS P4 normal built-output gates
+      - name: CSS P6 post-removal built-output gates
         run: node tests/lib/run-css-p4-dist-gates.mjs
 
       - name: Cloudflare Worker dry run
         run: npx wrangler deploy --dry-run --outdir .wrangler-dry-run
-
-      # P4 canary: rebuild the exact production graph with only shared-css-first disabled,
-      # then rerun the cascade-sensitive built-output contracts against that dist/.
-      - name: CSS P4 canary build without shared-css-first
-        env:
-          CSS_LAYER_CANARY: '1'
-        run: npm run build
-
-      - name: CSS P4 canary built-output gates
-        run: node tests/lib/run-css-p4-dist-gates.mjs
