@@ -124,7 +124,7 @@ function verifyHtmlAdoption(root, file, localClass, sharedClass, errors, label) 
 
 function literalClassNameAssignments(source) {
     const assignments = [];
-    const pattern = /className\\s*=\\s*([\'"\x60])([^\'"\x60]*)\\1/g;
+    const pattern = /className\s*=\s*(['"`])([^'"`]*)\1/g;
     for (const match of source.matchAll(pattern)) assignments.push(match[2]);
     return assignments;
 }
