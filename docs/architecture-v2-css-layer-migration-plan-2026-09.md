@@ -1,6 +1,6 @@
 # CSS Cascade Layers 迁移方案
 
-> 状态：P0/P1 基线与 P2 rule-mapping foundation 已完成；生产 CSS 迁移已从首个 dependency-closed `layout` canary（`.game-stage--fill`）开始
+> 状态：P0–P2 cascade ownership 已收敛，P3-A～P3-E 行为基线已完成；下一阶段为 P4 `shared-css-first` 插件无关性 canary
 >
 > 记录日期：2026-09-30
 >
@@ -622,23 +622,28 @@ immersive / stats-drawer shared markers 之外，并执行最小真实交互，�
 
 这一阶段仍然**不删除插件**。迁移后的 layer 架构应先在“插件仍存在”的正常生产路径下稳定，再用 canary 证明关闭插件也等价。这样可以把“layer 迁移问题”和“删除构建插件问题”拆开诊断。
 
-建议临时加入一个仅供迁移期间使用的构建开关，例如 `CSS_LAYER_CANARY=1`，让构建可以
-在不加载插件的情况下生成产物。此开关只用于验证，不作为永久运行模式。
+P4 使用仅供迁移期间验证的 `CSS_LAYER_CANARY=1` 构建开关：保持 Vite 的 production mode、
+legacy 插件、入口、压缩和其它配置完全不变，只从 `plugins` 中移除 `shared-css-first`。
+这样 canary 与正常构建之间唯一有意差异就是 link-reordering 插件本身，避免用另一个 Vite mode
+引入 `import.meta.env.MODE` / `.env.<mode>` 的额外变量。此开关只用于验证，不作为永久运行模式。
 
 对同一源码分别生成：
 
 1. 正常模式：保留 `shared-css-first`；
 2. canary 模式：禁用 `shared-css-first`。
 
-两份产物都运行：
+正常产物先按既有 candidate gate 验证；随后 canary 覆盖重建同一 `dist/`，并复跑：
 
-- `layout-metrics`；
-- 所有 frame / drawer / immersive / start-menu 检查；
+- P3-A～P3-E 的源码/产物冻结契约（它们已经覆盖关键页面的 geometry、computed style、
+  drawer、immersive、主题、移动端和真实交互边界）；
+- desktop frame / stats drawer / immersive / start-menu；
 - carrot-pull、needle-awn、tower-defense smoke；
-- theme / chrome / index 检查；
-- 关键页面截图与 computed style 对账。
+- theme / chrome / index。
 
-只有当两种模式在契约指标上等价，才允许进入插件删除阶段。
+早期计划中的 `layout-metrics` 继续保留为人工诊断工具，不作为 CI pass/fail oracle；
+P3-A～P3-E 的确定性断言取代原始表格 diff，避免动画、字体时序或取整噪声制造假差异。
+
+只有正常 production build 与 canary build 都通过同一组冻结契约，才允许进入插件删除阶段。
 
 ### P5：冻结 layer 架构并完成稳定性验证
 
@@ -787,7 +792,8 @@ handoff 通过后进入临时 layout freeze：
 - [x] P3-B / #106：验证 planet-merge / hoop-shot / gravity-slingshot / sword-flight / needle-awn 的画布、frame-budget 与移动端高度契约
 - [x] P3-C / #107：验证 crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet 的 showcase / page-skin 优先级与源码态 + dist 行为等价
 - [x] P3-D / #108：验证 tetris / tower-defense / carrot-pull / firefly-signal / shadow-loom 的 drawer、immersive、fixed controls 与生产美术契约
-- [ ] P3-E / #109：验证 math-rain / tank-battle 两个化外页的独立 CSS、全屏/覆盖式 HUD、orientation 与真实交互，并覆盖源码态 + dist
+- [x] P3-E / #109：验证 math-rain / tank-battle 两个化外页的独立 CSS、全屏/覆盖式 HUD、orientation 与真实交互，并覆盖源码态 + dist
+- [ ] P4 / #110：以 `CSS_LAYER_CANARY=1` 仅关闭 `shared-css-first`，对正常构建与 canary 构建复跑冻结的产物行为契约
 - [ ] 完成 `layout.css` 的 layout/contracts 职责切片
 - [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
 - [ ] 完成 `showcase` / `components` 的规则级归位

@@ -89,3 +89,28 @@ jobs:
 
       - name: Cloudflare Worker dry run
         run: npx wrangler deploy --dry-run --outdir .wrangler-dry-run
+
+      # P4 canary: rebuild the exact production graph with only shared-css-first disabled,
+      # then rerun the cascade-sensitive built-output contracts against that dist/.
+      - name: CSS P4 canary build without shared-css-first
+        env:
+          CSS_LAYER_CANARY: '1'
+        run: npm run build
+
+      - name: CSS P4 canary behavior gates
+        run: |
+          node tests/lib/run-smoke-dist.mjs tests/verify-css-p3a.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-css-p3b.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-css-p3c.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-css-p3d.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-css-p3e.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-desktop-frame.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-stats-drawer.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-immersive.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-start-menus.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-theme.mjs
+          node tests/lib/run-smoke-dist.mjs tests/verify-chrome.mjs
+          node tests/lib/run-smoke-dist.mjs tests/smoke-index.mjs
+          node tests/lib/run-smoke-dist.mjs tests/smoke-carrot-pull.mjs
+          node tests/lib/run-smoke-dist.mjs tests/smoke-needle-awn.mjs
+          node tests/lib/run-smoke-dist.mjs tests/smoke-tower-defense.mjs

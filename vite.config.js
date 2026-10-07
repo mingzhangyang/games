@@ -3,9 +3,10 @@ import legacy from '@vitejs/plugin-legacy';
 import { resolve } from 'path';
 
 // dev / prod 单文件按 mode 分支：保证两边插件、别名、assetsInclude 完全一致。
-// 共享 CSS 的源码顺序由 shared-css-first 在产物 HTML 中保持。
+// 正常生产构建由 shared-css-first 保持共享 CSS 顺序；P4 canary 仅关闭该插件以验证 layer 独立性。
 export default defineConfig(({ mode }) => {
   const isDev = mode === 'development';
+  const cssLayerCanary = process.env.CSS_LAYER_CANARY === '1';
 
   return {
     // 开发服务器配置
@@ -98,10 +99,11 @@ main: resolve(__dirname, 'index.html'),
 
     // 插件配置
     plugins: [
+      // 正常生产路径保留 shared-css-first；CSS_LAYER_CANARY=1 时仅关闭这一插件，其他构建语义不变。
       // 契约样式必须排在各页样式之前：tokens(变量) → layout(骨架) → 页面 → more-games。
       // Vite 打包后会按入口把页面 CSS 提到最前，导致 layout 的默认值反向覆盖页面覆盖值
       // （实测 gomoku 的 --frame-* 在产物中失效）。这里在产出 HTML 时重新排序 link。
-      {
+      ...(!cssLayerCanary ? [{
         name: 'shared-css-first',
         transformIndexHtml: {
           order: 'post',
@@ -152,7 +154,7 @@ main: resolve(__dirname, 'index.html'),
               + stripped.slice(lineStart);
           }
         }
-      },
+      }] : []),
       // 兼容性支持（仅生产构建需要）
       ...(isDev ? [] : [legacy({ targets: ['defaults', 'not IE 11'] })]),
     ],
