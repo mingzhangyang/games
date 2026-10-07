@@ -994,9 +994,9 @@ class BondForgeGame {
                 this.setLbStatus('');
                 rows.slice(0, 20).forEach((r, i) => {
                     const div = document.createElement('div');
-                    div.className = 'bf-lb-row game-lb-row';
+                    div.className = 'bf-lb-row';
                     const rank = document.createElement('span');
-                    rank.className = 'bf-lb-rank game-lb-rank';
+                    rank.className = 'bf-lb-rank';
                     rank.textContent = String(i + 1);
                     const name = document.createElement('span');
                     name.className = 'bf-lb-name game-lb-name';

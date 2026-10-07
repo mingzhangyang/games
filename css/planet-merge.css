@@ -339,7 +339,8 @@ body {
 }
 
 .pm-lb-title {
-    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: 700;
 }
 
 .pm-lb-tabs { display: flex; gap: 6px; }
