@@ -24,7 +24,7 @@ const GATES = [
 ];
 
 for (const gate of GATES) {
-    console.log(`\n=== P4 built-output gate: ${gate} ===`);
+    console.log(`\n=== CSS stability built-output gate: ${gate} ===`);
     const result = spawnSync(process.execPath, [RUNNER, gate], {
         cwd: ROOT,
         env: process.env,
@@ -34,4 +34,4 @@ for (const gate of GATES) {
     if (result.status !== 0) process.exit(result.status || 1);
 }
 
-console.log('\nPASS CSS P4 built-output gate set');
+console.log('\nPASS CSS stability built-output gate set');

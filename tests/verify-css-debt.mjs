@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { hasImportantPriority } from './lib/css/model.mjs';
-import { scanHtml, parseHtmlElements, htmlElementAttributes, htmlTagName, isStylesheetLink } from './lib/css/html-inputs.mjs';
+import { scanHtml } from './lib/css/html-inputs.mjs';
 import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
 import { verifyActivationSnapshot } from './lib/css/activation.mjs';
@@ -36,7 +36,6 @@ const RUNTIME_STYLE_BASELINE_BLOB_SHA = createHash('sha1')
     .digest('hex');
 const REVIEWED_P0_BASELINE_BLOB_SHA = '9c4541b4a447bff3dbecb0bc6cd02e09f3850922';
 const REVIEWED_RUNTIME_STYLE_P0_BLOB_SHA = 'e766d5873cf551fb46cda56dd0df861c08f2780f';
-const REVIEWED_SHARED_CSS_FIRST_BLOB_SHA = '2a32764598980bbe88a7968e8bcc48da9aaac87f';
 const REVIEWED_LAYER_ORDER = Object.freeze(['reset', 'tokens', 'showcase', 'components', 'accessibility', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
 const REVIEWED_P5_STABILITY_FREEZE = Object.freeze({
@@ -109,73 +108,25 @@ function sameJson(left, right) {
     return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function stylesheetRank(href) {
-    if (/\/tokens-/.test(href)) return 0;
-    if (/\/layout-/.test(href)) return 1;
-    if (/\/science-showcase-/.test(href)) return 2;
-    if (/\/more-games-/.test(href)) return 9;
-    return 5;
-}
-
-function verifyBuildOrderingContract(errors) {
+function verifyPluginRetirementContract(errors) {
     const viteConfig = readFileSync(join(ROOT, 'vite.config.js'), 'utf8');
     const sharedCssFirstPath = join(ROOT, 'tools/lib/shared-css-first.mjs');
-    if (!existsSync(sharedCssFirstPath)) {
-        errors.push('Canonical shared-css-first implementation is missing.');
-    } else {
-        const sharedCssFirst = readFileSync(sharedCssFirstPath, 'utf8');
-        const sharedCssFirstBlobSha = createHash('sha1')
-            .update(`blob ${Buffer.byteLength(sharedCssFirst, 'utf8')}\0`)
-            .update(sharedCssFirst)
-            .digest('hex');
-        if (sharedCssFirstBlobSha !== REVIEWED_SHARED_CSS_FIRST_BLOB_SHA) {
-            errors.push('tools/lib/shared-css-first.mjs differs from the independently pinned implementation.');
-        }
+    if (existsSync(sharedCssFirstPath)) {
+        errors.push('P6 retirement contract: tools/lib/shared-css-first.mjs must stay deleted.');
     }
-    const requiredViteFragments = [
-        `import { createSharedCssFirstPlugin } from './tools/lib/shared-css-first.mjs';`,
-        `const cssLayerCanary = process.env.CSS_LAYER_CANARY === '1';`,
-        `...(!cssLayerCanary ? [createSharedCssFirstPlugin()] : []),`,
-    ];
-    for (const fragment of requiredViteFragments) {
-        if (!viteConfig.includes(fragment)) {
-            errors.push('vite.config.js no longer wires the pinned shared-css-first implementation through the P4 canary gate: ' + fragment);
+
+    for (const fragment of ['shared-css-first', 'createSharedCssFirstPlugin', 'CSS_LAYER_CANARY']) {
+        if (viteConfig.includes(fragment)) {
+            errors.push('P6 retirement contract: vite.config.js reintroduced retired CSS ordering plumbing: ' + fragment);
         }
     }
 
-    const distRoot = join(ROOT, 'dist');
-    if (!existsSync(distRoot)) return;
-    const distHtmlPaths = listFiles(distRoot, ROOT, path => path.endsWith('.html'));
-    if (!distHtmlPaths.length) {
-        errors.push('Production CSS ordering contract: dist contains no HTML files to verify.');
-        return;
-    }
-    for (const path of distHtmlPaths) {
-        const html = readFileSync(join(ROOT, path), 'utf8');
-        const elements = parseHtmlElements(html, path);
-        const links = [];
-        const styleOffsets = [];
-        for (const element of elements) {
-            const tagName = htmlTagName(element);
-            const attributes = htmlElementAttributes(element);
-            const start = element.sourceCodeLocation?.startOffset;
-            if (tagName === 'link'
-                && isStylesheetLink(attributes)
-                && attributes.href) {
-                links.push({ href: attributes.href, start });
-            } else if (tagName === 'style') {
-                styleOffsets.push(start);
-            }
+    const workflowPath = join(ROOT, '.github/workflows/architecture-v2.yml');
+    if (existsSync(workflowPath)) {
+        const workflow = readFileSync(workflowPath, 'utf8');
+        if (workflow.includes('CSS_LAYER_CANARY')) {
+            errors.push('P6 retirement contract: Architecture v2 workflow must not restore the temporary CSS_LAYER_CANARY path.');
         }
-        const ranks = links.map(link => stylesheetRank(link.href));
-        if (ranks.some((rank, index) => index > 0 && rank < ranks[index - 1])) {
-            errors.push(path + ': production stylesheet links violate shared-css-first rank order.');
-        }
-        const styleAt = styleOffsets.length ? Math.min(...styleOffsets) : -1;
-        if (styleAt >= 0 && links.some(link => link.start > styleAt)) {
-            errors.push(path + ': production external stylesheet appears after inline <style>.');
-        }
-
     }
 }
 
@@ -417,7 +368,7 @@ function verifyProject() {
         allowedCssChanges: migrationResult.mappedCssPaths,
     });
     verifyActivationSnapshot(ROOT, htmlPaths, auditedJavaScriptFiles(ROOT), errors);
-    verifyBuildOrderingContract(errors);
+    verifyPluginRetirementContract(errors);
 
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);

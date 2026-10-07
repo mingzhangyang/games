@@ -1,9 +1,10 @@
 # CSS verifier architecture and PostCSS migration
 
-Status: parser/model/source-boundary implementation completed in PR #75. The P2
-rule-mapping/ratchet foundation is implemented, and production cascade-layer migration has
-started with the first dependency-closed `layout` canary (`.game-stage--fill`); every batch
-remains subject to source/production browser evidence.
+Status: parser/model/source-boundary implementation completed in PR #75. P2 rule-mapping/ratchet,
+P3 behavior baselines, P4 plugin-independence canary, and P5 compatibility freeze are complete.
+P6 candidate has retired the former stylesheet-link reordering plugin; the verifier now preserves
+immutable history, the append-only migration ledger, frozen compatibility counts, and source/production
+browser evidence without treating physical production link order as an oracle.
 
 ## Why the verifier needed a redesign
 
@@ -30,7 +31,7 @@ The revised contract separates syntax, observations, allowed changes and browser
 | `tests/lib/css/runtime-sources.mjs` | Fixed registry validation and architectural JavaScript ingress rules |
 | `tests/lib/css/activation.mjs` | Page → script → import-graph activation model and its independently pinned addendum |
 | `tests/lib/css/migration-contract.mjs` | Stable rule occurrences, append-only source→destination mappings, declaration partitioning and layer-conflict review |
-| `tests/verify-css-debt.mjs` | Inventory, immutable history, PR-base migration ratchet and built stylesheet ordering |
+| `tests/verify-css-debt.mjs` | Inventory, immutable history, PR-base migration ratchet, source stylesheet membership/order, P5 freeze and P6 retirement contract |
 | `tests/verify-css-model.mjs` | Fast parser/model/ingress regression fixtures |
 | `tests/verify-css-migration-contract.mjs` | 1→N split, relayer, duplicate occurrence, conflict and ratchet adversarial fixtures |
 | `tests/verify-css-html-browser.mjs` | Independent browser check of script-type execution, handler grammar and declarative-root activation |
@@ -359,7 +360,7 @@ Production P2 still requires:
 2. Source and production geometry/interaction evidence for every migration batch.
 3. Continued independent debt/mapping/browser acceptance; one passing gate never substitutes
    for the others.
-4. Plugin-on/plugin-off equivalence before removing `shared-css-first`.
+4. P4 required plugin-on/plugin-off equivalence before removing `shared-css-first`; P6 now locks the plugin and temporary canary plumbing out of the active build.
 5. Separate contracts before keyframe or runtime-style migrations; both remain rejected by the
    current migration state.
 

@@ -1,6 +1,6 @@
 # CSS Cascade Layers 迁移方案
 
-> 状态：P0–P4 已完成；P5 已冻结 post-canary compatibility tier，下一阶段为 P6 独立移除 `shared-css-first`
+> 状态：P0–P5 已完成；P6 candidate 已移除 `shared-css-first` 与临时 canary plumbing，等待最终 Architecture v2 candidate CI
 >
 > 记录日期：2026-09-30
 >
@@ -10,16 +10,13 @@
 
 ## 1. 结论先行
 
-当前项目继续采用 `shared-css-first` 作为生产环境的样式排序契约，暂不直接删除该插件，
-也不再在 PR 描述中声称已经完成 `@layer` 迁移。
+P4 已证明当前生产源码在开启/关闭 `shared-css-first` 时通过同一套 built-output 行为门禁，
+P5 又把剩余未分层 CSS 精确冻结为 compatibility allowlist。基于这两份证据，P6 candidate
+已经删除 `shared-css-first`、`CSS_LAYER_CANARY` 和专属 link-reordering plumbing。
 
-这不是放弃 cascade layers，而是把两件事分开：
-
-1. 先保持已有页面的生产布局稳定；
-2. 在一次独立、可回滚的架构改造中，把所有普通 CSS 规则迁移到明确的层级后，
-   再移除 `shared-css-first`。
-
-迁移完成前，`shared-css-first` 是有效的构建契约，不是临时的无效代码。
+这不等于声称“所有 CSS 都已经进入 `@layer`”。P5 明确保留 2703 条静态未分层 ordinary rules
+与 15 条 runtime 未分层 ordinary rules，并继续用 immutable P0 − append-only migrations、
+frozen counts 和行为回归约束它们。P6 只切换构建契约，不夹带新的 CSS ownership/selector/视觉迁移。
 
 此外，迁移期间采用与 Architecture v2 相同的 **debt ratchet** 原则：
 
@@ -29,11 +26,11 @@
 - 某一类别降到 0 后切换为 strict-zero；
 - 禁止通过向上调整 baseline 来“修复”检查失败。
 
-## 2. 为什么不能直接移除插件
+## 2. 为什么早期不能直接移除插件（历史）
 
-### 2.1 当前仓库的真实状态
+### 2.1 P0/P2 当时仓库的真实状态
 
-当前 CSS 并没有形成完整的层级系统：
+P0/P2 当时 CSS 并没有形成完整的层级系统：
 
 | 文件类别 | 当前状态 |
 | --- | --- |
@@ -63,7 +60,7 @@ CSS 的普通非分层规则优先于普通分层规则。因此，如果只把 
 candidate CI #19 和 #20 均通过。这说明当前页面仍依赖既有的生产 CSS 优先级，不能只改一层
 或只删一个插件。
 
-### 2.3 当前插件实际做了什么
+### 2.3 当时插件实际做了什么
 
 `vite.config.js` 中的 `shared-css-first` 不只是简单地交换两个 link：
 
@@ -675,21 +672,21 @@ allowlist，而不是重新放宽 debt baseline。
 
 目标：把最后的构建契约切换做成一个极小、极易回滚的 PR。
 
-建议分支：
+分支：
 
 `refactor/remove-shared-css-first`
 
-工作项：
+P6 candidate 的实现边界：
 
-- 删除 `shared-css-first` 及其专属排序逻辑；
-- 删除或改写依赖“构建后重排 link”的文档和注释；
-- 保留源码中的 layer 顺序声明和文件归属规则；
-- 将内联 CSS 例外清零，或把剩余例外写入明确的契约；
-- 更新 `docs/contracts/layout.md` 的第 4 节；
-- 更新 PR / architecture-v2 描述，说明迁移已真正完成；
-- 运行一次完整 Architecture v2 candidate CI。
+- 从 `vite.config.js` 删除 `shared-css-first` import、插件接线与 `CSS_LAYER_CANARY` 分支；
+- 删除 `tools/lib/shared-css-first.mjs`；
+- 用 `verify-css-p6-config.mjs` 与 `verify-css-debt.mjs` 锁定“插件/临时 canary 不得重新引入”；
+- Architecture v2 candidate 只构建一次真实生产图，但继续运行 #110 已验证的同一套 built-output 行为门禁；
+- 更新现行 architecture/layout/index 注释，不改 CSS selector、ownership、玩法、视觉或 shell；
+- P5 的 inline-style / unlayered compatibility counts 保持原样；P6 不借删除插件之名重做 debt baseline。
 
-P6 PR 不应顺便迁移 CSS、改选择器、重做页面视觉或改变 shell；如果删除插件后出现回归，应优先回滚该 PR，而不是在同一个 PR 继续堆叠 `!important` 或 selector 修补。
+P6 仍以一次完整 Architecture v2 candidate CI 为最终验收。如果删除插件后出现行为回归，应优先
+回滚该 PR，而不是在同一个 PR 堆叠 `!important`、selector 或页面级补丁。
 
 ## 5. 必须新增的自动守卫
 
@@ -731,9 +728,9 @@ P0 就启用：
 - P0 CSS baseline 保持不可变，migration state 已收敛为 strict-zero 或明确 allowlist；
 - rule-level 审计与 P3/P4 行为证据证明最终 layer order 与现有生产 cascade 等价；
 - `vite.config.js` 中不再存在 `shared-css-first`；
-- 所有普通 CSS 规则均属于明确 layer，例外有书面理由；
+- 所有普通 CSS 规则均属于明确 layer，或位于 P5 精确冻结且不可静默增长的 compatibility allowlist；
 - 不依赖 HTML 中 link 的排列来决定跨层级优先级；
-- dev / production / canary 三种验证口径一致；
+- P3 源码态与 production 行为门禁保持一致；P4 的 plugin-on/plugin-off canary 证据保留为已完成的历史验收；
 - 所有现有 layout、theme、chrome、drawer、immersive、smoke 检查通过；
 - 生产构建前后页面无新增 pageerror、溢出、不可点击控件或画布模糊；
 - 文档、PR 描述和代码实现一致。
@@ -808,14 +805,12 @@ handoff 通过后进入临时 layout freeze：
 - [x] P3-D / #108：验证 tetris / tower-defense / carrot-pull / firefly-signal / shadow-loom 的 drawer、immersive、fixed controls 与生产美术契约
 - [x] P3-E / #109：验证 math-rain / tank-battle 两个化外页的独立 CSS、全屏/覆盖式 HUD、orientation 与真实交互，并覆盖源码态 + dist
 - [x] P4 / #110：以 `CSS_LAYER_CANARY=1` 仅关闭 `shared-css-first`，对正常构建与 canary 构建复跑冻结的产物行为契约
-- [ ] 完成 `layout.css` 的 layout/contracts 职责切片
-- [ ] 分批迁移页面规则到 `pages`，逐批验证跨 selector 冲突
-- [ ] 完成 `showcase` / `components` 的规则级归位
-- [ ] 运行插件保留模式下的分批回归
+- [x] P5 方案调整：不再把剩余 `layout.css` / pages / showcase / components 未分层规则的批量归位作为 P6 前置；它们留在精确冻结的 compatibility allowlist，未来只能以独立 migration transaction 继续下降
+- [x] P3 已完成插件保留模式下的分批源码态 + dist 行为回归
 - [x] 运行禁用插件的 canary 对比
 - [x] P5 / #111：在插件仍存在的生产路径下冻结 post-canary compatibility tier，并将 P4 证据与剩余 debt allowlist 变成机器可验证契约
-- [ ] 用独立小 PR 移除 `shared-css-first`
-- [ ] 更新现行契约与 PR 描述
-- [ ] 触发一次最终完整 CI
+- [x] P6 candidate：用独立小 PR 移除 `shared-css-first` 与临时 `CSS_LAYER_CANARY` plumbing
+- [x] 更新现行 architecture/layout 契约与代码注释；PR 描述在创建 PR 时同步
+- [ ] 触发并通过一次最终完整 Architecture v2 candidate CI
 
-在上述清单全部完成前，项目应继续把 `shared-css-first` 视为生产必需契约。
+P6 candidate 已停止把 `shared-css-first` 视为生产契约；如果最终 Architecture v2 candidate CI 或 review 暴露回归，应回滚 P6，而不是恢复为长期双路径。

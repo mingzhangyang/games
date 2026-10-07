@@ -39,7 +39,12 @@ This keeps feedback fast while preserving one authoritative full validation befo
 
 ## CSS cascade migration
 
-The current production contract intentionally retains Vite's `shared-css-first` ordering plugin:
-the repository has not completed the all-files `@layer` migration yet. The rationale, target layer
-taxonomy, staged migration plan, canary procedure, and rollback criteria are recorded in
+P6 retired Vite's former `shared-css-first` stylesheet-link reordering plugin after P4 proved
+plugin-on/plugin-off behavioral equivalence and P5 froze the remaining compatibility tier. Production
+now uses the normal Vite stylesheet graph with no CSS-specific post-build link reordering and no
+`CSS_LAYER_CANARY` switch. The immutable P0 baseline, append-only rule-migration ledger, frozen P5
+compatibility counts, and P3/P4 browser contracts remain authoritative; the remaining unlayered CSS is
+an explicit compatibility allowlist, not a claim that every rule has already moved into `@layer`.
+
+The rationale, target layer taxonomy, completed canary evidence, and rollback history are recorded in
 [`docs/architecture-v2-css-layer-migration-plan-2026-09.md`](architecture-v2-css-layer-migration-plan-2026-09.md).

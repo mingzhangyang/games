@@ -971,9 +971,10 @@ css/
 
 ---
 
-# 13. Architecture → CSS Cascade Layers handoff gate
+# 13. Architecture → CSS Cascade Layers handoff gate（历史）
 
-`docs/architecture-v2-css-layer-migration-plan-2026-09.md` 的 P0/P1 盘点可以提前做，但只有以下条件全部满足，
+该 gate 已在 CSS P2 开始前完成交接；下列条目保留为当时的进入条件，不再作为当前待办。
+`docs/architecture-v2-css-layer-migration-plan-2026-09.md` 的 P0/P1 当时可以提前做，但只有以下条件全部满足，
 才允许进入会改变 CSS cascade 语义的 P2+：
 
 - [ ] Architecture boundary verifier + debt ratchet 已稳定运行；
@@ -982,7 +983,7 @@ css/
 - [ ] GameStorage/i18n/shell 的结构性迁移已完成到不会再大规模改 DOM/class contract 的状态；
 - [ ] HTML shell convergence 已完成；
 - [ ] 没有正在进行的大规模 shared DOM / class / layout 重构 PR；
-- [ ] `shared-css-first` 仍被视为当前生产契约，并有 build/contract 测试保护；
+- [x] handoff 当时 `shared-css-first` 是生产契约并受 build/contract 保护；P4/P5 完成等价证明与冻结后，P6 才将其退役；
 - [ ] `npm run build`、Architecture v2 candidate CI、关键 smoke 全绿；
 - [ ] CSS 方案 P0 的 computed-style / geometry baseline 已记录。
 
