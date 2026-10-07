@@ -35,16 +35,15 @@ export function isExpectedBlockedDiagnostic(value, blockedUrls) {
     });
 }
 
-
 export async function installImageFailureHook(page, signatures) {
     await page.evaluateOnNewDocument((blockedSignatures) => {
-        const descriptor = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+        const descriptor = Object.getOwnPropertyDescriptor(window.HTMLImageElement.prototype, 'src');
         if (!descriptor?.set) throw new Error('HTMLImageElement.src setter unavailable');
 
         const matches = (value) => {
             let name = '';
             try {
-                const url = new URL(String(value), location.href);
+                const url = new URL(String(value), window.location.href);
                 name = decodeURIComponent(url.pathname.split('/').pop() || '');
             } catch {
                 return false;
@@ -54,7 +53,7 @@ export async function installImageFailureHook(page, signatures) {
                 || (name.startsWith(`${stem}-`) && name.endsWith(ext)));
         };
 
-        Object.defineProperty(HTMLImageElement.prototype, 'src', {
+        Object.defineProperty(window.HTMLImageElement.prototype, 'src', {
             configurable: descriptor.configurable,
             enumerable: descriptor.enumerable,
             get: descriptor.get,
@@ -65,7 +64,7 @@ export async function installImageFailureHook(page, signatures) {
                 }
                 window.__testBlockedArtUrls = window.__testBlockedArtUrls || [];
                 window.__testBlockedArtUrls.push(String(value));
-                queueMicrotask(() => this.dispatchEvent(new Event('error')));
+                window.queueMicrotask(() => this.dispatchEvent(new window.Event('error')));
             },
         });
     }, signatures);
