@@ -32,6 +32,26 @@ function nonPluginSignature(config) {
     return JSON.parse(JSON.stringify(copy));
 }
 
+function nestedRollupPluginGraph(config) {
+    const rollupOptions = config.build?.rollupOptions || {};
+    const outputs = Array.isArray(rollupOptions.output)
+        ? rollupOptions.output
+        : rollupOptions.output
+            ? [rollupOptions.output]
+            : [];
+
+    return {
+        input: pluginGraphSignature(rollupOptions.plugins),
+        outputs: outputs
+            .map((output, index) => ({
+                index,
+                plugins: pluginGraphSignature(output?.plugins),
+            }))
+            .filter(entry => entry.plugins.length > 0),
+    };
+}
+
+
 async function load(formerCanaryEnv) {
     const previous = process.env.CSS_LAYER_CANARY;
     if (formerCanaryEnv === undefined) delete process.env.CSS_LAYER_CANARY;
@@ -70,6 +90,8 @@ const normal = await load(undefined);
 const formerCanary = await load('1');
 const normalPluginGraph = pluginGraphSignature(normal.plugins);
 const formerCanaryPluginGraph = pluginGraphSignature(formerCanary.plugins);
+const normalNestedRollupPlugins = nestedRollupPluginGraph(normal);
+const formerCanaryNestedRollupPlugins = nestedRollupPluginGraph(formerCanary);
 const reviewedLegacyPluginGraph = pluginGraphSignature(
     legacy({ targets: ['defaults', 'not IE 11'] }),
 );
@@ -84,6 +106,17 @@ assert.deepEqual(
     formerCanaryPluginGraph,
     normalPluginGraph,
     'the former CSS_LAYER_CANARY environment variable must no longer alter the production plugin graph',
+);
+assert.deepEqual(
+    normalNestedRollupPlugins,
+    { input: [], outputs: [] },
+    'P6 production build must not define build.rollupOptions.plugins or output.plugins; '
+        + 'all project-local Rollup plugins require an explicit contract change',
+);
+assert.deepEqual(
+    formerCanaryNestedRollupPlugins,
+    normalNestedRollupPlugins,
+    'the former CSS_LAYER_CANARY environment variable must not introduce nested Rollup plugins',
 );
 assert.deepEqual(
     nonPluginSignature(formerCanary),
