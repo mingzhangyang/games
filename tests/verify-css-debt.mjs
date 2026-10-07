@@ -17,6 +17,7 @@ import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
 import { readMigrationState, readMigrationStateAtGit } from './lib/css/migration-state.mjs';
+import { verifyFamilyExtractions } from './lib/css/family-extraction.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -325,15 +326,8 @@ function verifyProject() {
         inlineStyleAttributes: actualDebt.inlineStyleAttributes.length,
     };
     const p5FrozenCounts = MIGRATION_STATE.p5StabilityFreeze?.frozenCounts || {};
-    // P5 is immutable historical evidence, not a floor that prevents reviewed layering.
-    // This contract only opens one direction: registered static rules may leave the unlayered
-    // compatibility tier. The total static rule population remains exact, so deleting a layered
-    // rule or adding a new one still requires a separately reviewed verifier contract.
-    if (currentCompatibilityCounts.staticOrdinaryRules !== p5FrozenCounts.staticOrdinaryRules) {
-        errors.push('Static ordinary rule population changed outside the reviewed layering contract: '
-            + currentCompatibilityCounts.staticOrdinaryRules + ' !== '
-            + p5FrozenCounts.staticOrdinaryRules + '.');
-    }
+    // P5 remains immutable historical evidence. Reviewed family extractions may later reduce
+    // the static rule population; that exact delta is checked after the comparison-base CSS is loaded.
     if (currentCompatibilityCounts.staticUnlayeredRules > p5FrozenCounts.staticUnlayeredRules) {
         errors.push('Static unlayered CSS debt grew above the P5 frozen ceiling: '
             + currentCompatibilityCounts.staticUnlayeredRules + ' > '
@@ -374,8 +368,29 @@ function verifyProject() {
         }
     }
 
+    const familyResult = verifyFamilyExtractions({
+        root: ROOT,
+        comparisonBase,
+        currentParsedByPath,
+        baseParsedByPath,
+        baselineUnlayeredRules: BASELINE.debt?.unlayeredRules || [],
+        errors,
+    });
+    const expectedStaticOrdinaryRules = p5FrozenCounts.staticOrdinaryRules + familyResult.totalRuleDelta;
+    if (currentCompatibilityCounts.staticOrdinaryRules !== expectedStaticOrdinaryRules) {
+        errors.push('Static ordinary rule population differs from P5 plus reviewed family extractions: '
+            + currentCompatibilityCounts.staticOrdinaryRules + ' !== ' + expectedStaticOrdinaryRules + '.');
+    }
+    const familyAdjustedBaseline = {
+        ...BASELINE,
+        debt: {
+            ...BASELINE.debt,
+            unlayeredRules: familyResult.remainingUnlayeredRules,
+        },
+    };
+
     const migrationResult = verifyRuleMigrations({
-        baseline: BASELINE,
+        baseline: familyAdjustedBaseline,
         state: MIGRATION_STATE,
         currentParsedByPath,
         baseParsedByPath,
@@ -387,7 +402,7 @@ function verifyProject() {
     });
 
     verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors, {
-        allowedCssChanges: migrationResult.mappedCssPaths,
+        allowedCssChanges: new Set([...migrationResult.mappedCssPaths, ...familyResult.cssPaths]),
     });
     verifyActivationSnapshot(ROOT, htmlPaths, auditedJavaScriptFiles(ROOT), errors);
     verifyPluginRetirementContract(errors);
@@ -429,8 +444,10 @@ function verifyProject() {
         + runtimeKeyframes + ' · unlayered runtime keyframes: ' + runtimeUnlayeredKeyframes);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
-    console.log('  static ordinary rule count matches P5; unlayered debt stays below its historical ceiling and matches the append-only ledger.');
-    console.log('  immutable P0 snapshot, script activation, stylesheet source order, and current layer map all match.');
+    console.log('  static ordinary rule count matches P5 plus reviewed family-extraction deltas; unlayered debt matches both append-only ledgers.');
+    console.log('  reviewed family extractions: ' + (familyResult.newExtractionIds.length
+        ? familyResult.newExtractionIds.join(', ') : 'no new transaction in this diff'));
+    console.log('  immutable P0/P5 evidence, script activation, stylesheet source order, and current layer map all match.');
 }
 
 verifyProject();
