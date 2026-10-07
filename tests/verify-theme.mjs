@@ -25,6 +25,8 @@ import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const FIXTURE = '/__theme-fixture.html';
+const STORAGE_FIXTURE = '/__theme-storage.html';
+const BUILT_OUTPUT = process.env.VERIFY_BUILT_OUTPUT === '1';
 
 const fails = [];
 let passes = 0;
@@ -37,6 +39,8 @@ const PAGES = [
     { id: 'index', href: 'index.html', light: true },    // 首页不在注册表里，手写（P1 起支持浅色）
     ...registry.all().map(g => ({ id: g.id, href: g.href, light: (g.caps || []).includes('theme-light') })),
 ];
+
+const STORAGE_FIXTURE_HTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body></body></html>';
 
 const FIXTURE_HTML = `<!DOCTYPE html>
 <html lang="en"><head>
@@ -66,8 +70,11 @@ async function openPage(ctx) {
     page.on('pageerror', e => errors.push(e.message));
     await page.setRequestInterception(true);
     page.on('request', req => {
-        if (new URL(req.url()).pathname === FIXTURE) {
+        const pathname = new URL(req.url()).pathname;
+        if (pathname === FIXTURE) {
             req.respond({ status: 200, contentType: 'text/html; charset=utf-8', body: FIXTURE_HTML });
+        } else if (pathname === STORAGE_FIXTURE) {
+            req.respond({ status: 200, contentType: 'text/html; charset=utf-8', body: STORAGE_FIXTURE_HTML });
         } else {
             req.continue();
         }
@@ -88,7 +95,7 @@ const state = page => page.evaluate(() => {
 
 // 在 origin 上写好偏好后再导航（localStorage 需要同源页面才能写）
 async function gotoWithPref(page, path, pref) {
-    await page.goto(`${BASE}${FIXTURE}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${BASE}${STORAGE_FIXTURE}`, { waitUntil: 'domcontentloaded' });
     await page.evaluate(p => {
         localStorage.clear();
         if (p !== null) localStorage.setItem('site_theme', p);
@@ -96,8 +103,8 @@ async function gotoWithPref(page, path, pref) {
     await page.goto(`${BASE}${path}`, { waitUntil: 'domcontentloaded' });
 }
 
-/* ── ① 夹具：theme-boot + theme.js ── */
-{
+/* ── ① 夹具：theme-boot + theme.js（源码服务器专属；dist 只验证真实构建页面） ── */
+if (!BUILT_OUTPUT) {
     const ctx = await browser.createBrowserContext();
     const { page, errors } = await openPage(ctx);
     const waitT = () => page.waitForFunction(() => !!window.__T, { timeout: 5000 });
