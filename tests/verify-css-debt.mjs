@@ -39,6 +39,30 @@ const REVIEWED_RUNTIME_STYLE_P0_BLOB_SHA = 'e766d5873cf551fb46cda56dd0df861c08f2
 const REVIEWED_SHARED_CSS_FIRST_BLOB_SHA = '2a32764598980bbe88a7968e8bcc48da9aaac87f';
 const REVIEWED_LAYER_ORDER = Object.freeze(['reset', 'tokens', 'showcase', 'components', 'accessibility', 'layout', 'pages', 'contracts']);
 const ALLOWED_LAYERS = new Set(REVIEWED_LAYER_ORDER);
+const REVIEWED_P5_STABILITY_FREEZE = Object.freeze({
+    policy: 'freeze-current-compatibility-tier',
+    remainingUnlayeredPolicy: 'immutable-p0-minus-registered-migrations',
+    allowNewUnlayeredRules: false,
+    p4Evidence: {
+        workflow: 'Architecture v2 candidate',
+        runNumber: 335,
+        runId: 37567729830,
+        headCommit: '49e54480be18605b08c21c3e32c9a20a43cb8360',
+        conclusion: 'success',
+        normalAndCanaryUseSameBuiltOutputGates: true,
+    },
+    frozenCounts: {
+        staticOrdinaryRules: 2912,
+        staticUnlayeredRules: 2703,
+        runtimeOrdinaryRules: 15,
+        runtimeUnlayeredRules: 15,
+        runtimeUnlayeredKeyframes: 3,
+        inlineStyleBlocks: 1,
+        inlineStyleRules: 6,
+        inlineStyleAttributes: 14,
+    },
+    note: 'P5 freezes the post-P4 compatibility tier before plugin removal. Remaining unlayered CSS is not declared fully migrated; its exact membership is still derived from immutable P0 minus append-only registered migrations, so it cannot grow silently. Further ownership migration is a separate future transaction rather than a prerequisite for removing the proven-independent link-order plugin.',
+});
 function listFiles(directory, root, predicate) {
     if (!existsSync(directory)) return [];
     const output = [];
@@ -198,6 +222,9 @@ function verifyProject() {
     if ((MIGRATION_STATE.migratedRuntimeStyleSources || []).length) {
         errors.push('Runtime stylesheet migrations remain disabled until their own P2 mapping contract is implemented.');
     }
+    if (!sameJson(MIGRATION_STATE.p5StabilityFreeze, REVIEWED_P5_STABILITY_FREEZE)) {
+        errors.push('P5 stability freeze metadata differs from the reviewed post-canary contract.');
+    }
     const cssPaths = listFiles(join(ROOT, 'css'), ROOT, path => path.endsWith('.css'));
     const htmlPaths = [
         ...readdirSync(ROOT, { withFileTypes: true })
@@ -336,6 +363,21 @@ function verifyProject() {
             .filter(declaration => declaration.selector && hasImportantPriority(declaration.value)).length;
     }
 
+    const p5FrozenCounts = {
+        staticOrdinaryRules: totalRules,
+        staticUnlayeredRules: actualDebt.unlayeredRules.length,
+        runtimeOrdinaryRules: runtimeRules,
+        runtimeUnlayeredRules,
+        runtimeUnlayeredKeyframes,
+        inlineStyleBlocks: actualDebt.inlineStyleBlocks.length,
+        inlineStyleRules: actualDebt.inlineStyleRules.length,
+        inlineStyleAttributes: actualDebt.inlineStyleAttributes.length,
+    };
+    if (!sameJson(p5FrozenCounts, MIGRATION_STATE.p5StabilityFreeze?.frozenCounts)) {
+        errors.push('P5 CSS compatibility tier changed after the stability freeze: '
+            + JSON.stringify(p5FrozenCounts) + '.');
+    }
+
     const comparisonBase = resolveComparisonBase(ROOT);
     let baseState = MIGRATION_STATE;
     try {
@@ -414,6 +456,7 @@ function verifyProject() {
         + runtimeKeyframes + ' · unlayered runtime keyframes: ' + runtimeUnlayeredKeyframes);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
+    console.log('  P5 compatibility tier matches the frozen post-canary counts and cannot grow silently.');
     console.log('  immutable P0 snapshot, script activation, stylesheet source order, and current layer map all match.');
 }
 
