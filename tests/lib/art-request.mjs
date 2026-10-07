@@ -34,3 +34,39 @@ export function isExpectedBlockedDiagnostic(value, blockedUrls) {
         }
     });
 }
+
+
+export async function installImageFailureHook(page, signatures) {
+    await page.evaluateOnNewDocument((blockedSignatures) => {
+        const descriptor = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+        if (!descriptor?.set) throw new Error('HTMLImageElement.src setter unavailable');
+
+        const matches = (value) => {
+            let name = '';
+            try {
+                const url = new URL(String(value), location.href);
+                name = decodeURIComponent(url.pathname.split('/').pop() || '');
+            } catch {
+                return false;
+            }
+            return blockedSignatures.some(({ stem, ext }) =>
+                name === `${stem}${ext}`
+                || (name.startsWith(`${stem}-`) && name.endsWith(ext)));
+        };
+
+        Object.defineProperty(HTMLImageElement.prototype, 'src', {
+            configurable: descriptor.configurable,
+            enumerable: descriptor.enumerable,
+            get: descriptor.get,
+            set(value) {
+                if (!matches(value)) {
+                    descriptor.set.call(this, value);
+                    return;
+                }
+                window.__testBlockedArtUrls = window.__testBlockedArtUrls || [];
+                window.__testBlockedArtUrls.push(String(value));
+                queueMicrotask(() => this.dispatchEvent(new Event('error')));
+            },
+        });
+    }, signatures);
+}

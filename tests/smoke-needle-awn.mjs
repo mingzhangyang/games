@@ -2,7 +2,7 @@
 // 针尖对麦芒生产美术烟测：资源状态、真实启动、尖端碰撞、Boss、双人、响应式与 fallback。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import { assetSignatures, isExpectedBlockedDiagnostic, matchesBundledAsset } from './lib/art-request.mjs';
+import { assetSignatures, installImageFailureHook, isExpectedBlockedDiagnostic } from './lib/art-request.mjs';
 import { ART_URLS as NEEDLE_ART_URLS } from '../src/games/needle-awn/render/art.js';
 
 const CRITICAL_ART_SIGNATURES = assetSignatures([
@@ -31,20 +31,7 @@ async function setupPage(page, { blockArt = false } = {}) {
     });
     page.on('requestfailed', request => failedRequests.push(request.url()));
     if (blockArt) {
-        await page.setRequestInterception(true);
-        page.on('request', request => {
-            const url = request.url();
-            // Match the exact source/emitted asset identity instead of Puppeteer's
-            // resource classification: runtime Image() requests are not guaranteed to
-            // be reported as "image" consistently across source and built output.
-            const isArt = matchesBundledAsset(url, CRITICAL_ART_SIGNATURES);
-            if (isArt) {
-                blockedArtUrls.push(url);
-                request.abort();
-            } else {
-                request.continue();
-            }
-        });
+        await installImageFailureHook(page, CRITICAL_ART_SIGNATURES);
     }
     await page.evaluateOnNewDocument(() => {
         try {
@@ -54,6 +41,9 @@ async function setupPage(page, { blockArt = false } = {}) {
     });
     await page.goto(`${BASE}/needle-awn.html`, { waitUntil: 'networkidle0', timeout: 45000 });
     await page.waitForFunction(() => window.gameEngine && ['ready', 'fallback'].includes(document.getElementById('na-stage')?.dataset.artState), { timeout: 15000 });
+    if (blockArt) {
+        blockedArtUrls.push(...await page.evaluate(() => window.__testBlockedArtUrls || []));
+    }
     await wait(180);
     return { pageErrors, consoleErrors, failedRequests, blockArt, blockedArtUrls };
 }

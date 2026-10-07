@@ -3,7 +3,7 @@
 import puppeteer from 'puppeteer-core';
 import { readFileSync } from 'node:fs';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import { assetSignatures, isExpectedBlockedDiagnostic, matchesBundledAsset } from './lib/art-request.mjs';
+import { assetSignatures, installImageFailureHook, isExpectedBlockedDiagnostic } from './lib/art-request.mjs';
 import { ART_URLS as CARROT_ART_URLS } from '../src/games/carrot-pull/render/art.js';
 
 // 挂点契约只认 manifest：叶柄数量 = 挂点数，第 i 根从 carrot.crown[i] 出发、止于 girl.fists[i]
@@ -55,20 +55,7 @@ async function setupPage(page, { blockArt = false } = {}) {
     });
     page.on('requestfailed', request => failedRequests.push(request.url()));
     if (blockArt) {
-        await page.setRequestInterception(true);
-        page.on('request', request => {
-            const url = request.url();
-            // Match the exact source/emitted asset identity instead of Puppeteer's
-            // resource classification: runtime Image() requests are not guaranteed to
-            // be reported as "image" consistently across source and built output.
-            const isArt = matchesBundledAsset(url, CRITICAL_ART_SIGNATURES);
-            if (isArt) {
-                blockedArtUrls.push(url);
-                request.abort();
-            } else {
-                request.continue();
-            }
-        });
+        await installImageFailureHook(page, CRITICAL_ART_SIGNATURES);
     }
     await page.evaluateOnNewDocument(() => {
         try {
@@ -78,6 +65,9 @@ async function setupPage(page, { blockArt = false } = {}) {
     });
     await page.goto(`${BASE}/carrot-pull.html`, { waitUntil: 'networkidle0', timeout: 45000 });
     await page.waitForFunction(() => window.cpGame && ['ready', 'fallback'].includes(document.getElementById('cp-stage')?.dataset.artState), { timeout: 15000 });
+    if (blockArt) {
+        blockedArtUrls.push(...await page.evaluate(() => window.__testBlockedArtUrls || []));
+    }
     await wait(180);
     return { pageErrors, consoleErrors, failedRequests, blockArt, blockedArtUrls };
 }
