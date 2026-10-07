@@ -2,17 +2,28 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import legacy from '@vitejs/plugin-legacy';
 import { loadConfigFromFile } from 'vite';
 
 const ROOT = resolve(new URL('..', import.meta.url).pathname);
 const CONFIG = resolve(ROOT, 'vite.config.js');
 const RETIRED_PLUGIN = join(ROOT, 'tools/lib/shared-css-first.mjs');
 
-function flattenPlugins(plugins) {
+function flattenPluginObjects(plugins) {
     return (plugins || [])
         .flat(Infinity)
-        .filter(Boolean)
-        .map(plugin => plugin.name || '<anonymous>');
+        .filter(Boolean);
+}
+
+function pluginGraphSignature(plugins) {
+    return flattenPluginObjects(plugins).map(plugin => ({
+        name: plugin.name || '<anonymous>',
+        enforce: plugin.enforce || null,
+        apply: typeof plugin.apply === 'string' ? plugin.apply : typeof plugin.apply,
+        hooks: Object.keys(plugin)
+            .filter(key => !['name', 'enforce', 'apply'].includes(key))
+            .sort(),
+    }));
 }
 
 function nonPluginSignature(config) {
@@ -57,17 +68,21 @@ for (const fragment of ['shared-css-first', 'createSharedCssFirstPlugin', 'CSS_L
 
 const normal = await load(undefined);
 const formerCanary = await load('1');
-const normalPlugins = flattenPlugins(normal.plugins);
-const formerCanaryPlugins = flattenPlugins(formerCanary.plugins);
+const normalPluginGraph = pluginGraphSignature(normal.plugins);
+const formerCanaryPluginGraph = pluginGraphSignature(formerCanary.plugins);
+const reviewedLegacyPluginGraph = pluginGraphSignature(
+    legacy({ targets: ['defaults', 'not IE 11'] }),
+);
 
-assert.equal(
-    normalPlugins.includes('shared-css-first'),
-    false,
-    'production config must not contain the retired shared-css-first plugin',
+assert.deepEqual(
+    normalPluginGraph,
+    reviewedLegacyPluginGraph,
+    'P6 production plugin graph must remain exactly the reviewed @vitejs/plugin-legacy graph; '
+        + 'project-local build plugins, including renamed stylesheet sorters, require an explicit contract change',
 );
 assert.deepEqual(
-    formerCanaryPlugins,
-    normalPlugins,
+    formerCanaryPluginGraph,
+    normalPluginGraph,
     'the former CSS_LAYER_CANARY environment variable must no longer alter the production plugin graph',
 );
 assert.deepEqual(
