@@ -30,6 +30,30 @@
   "runtimeMigrationUnit": "style-source",
   "migratedRuntimeStyleSources": [],
   "mappingContractVersion": 3,
+  "p5StabilityFreeze": {
+    "policy": "freeze-current-compatibility-tier",
+    "remainingUnlayeredPolicy": "immutable-p0-minus-registered-migrations",
+    "allowNewUnlayeredRules": false,
+    "p4Evidence": {
+      "workflow": "Architecture v2 candidate",
+      "runNumber": 335,
+      "runId": 37567729830,
+      "headCommit": "49e54480be18605b08c21c3e32c9a20a43cb8360",
+      "conclusion": "success",
+      "normalAndCanaryUseSameBuiltOutputGates": true
+    },
+    "frozenCounts": {
+      "staticOrdinaryRules": 2912,
+      "staticUnlayeredRules": 2703,
+      "runtimeOrdinaryRules": 15,
+      "runtimeUnlayeredRules": 15,
+      "runtimeUnlayeredKeyframes": 3,
+      "inlineStyleBlocks": 1,
+      "inlineStyleRules": 6,
+      "inlineStyleAttributes": 14
+    },
+    "note": "P5 freezes the post-P4 compatibility tier before plugin removal. Remaining unlayered CSS is not declared fully migrated; its exact membership is still derived from immutable P0 minus append-only registered migrations, so it cannot grow silently. Further ownership migration is a separate future transaction rather than a prerequisite for removing the proven-independent link-order plugin."
+  },
   "migratedRuleModules": [
     "tests/css-layer-migrations/rules/p2a-layout-game-stage-fill.json",
     "tests/css-layer-migrations/rules/p2b-layout-game-main-default.json",
