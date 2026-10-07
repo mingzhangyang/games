@@ -132,6 +132,32 @@ function verifyRuntimeAdoption(root, file, localClass, sharedClass, errors, labe
     }
 }
 
+export function verifyExtractionAdoption(root, extraction, errors) {
+    const games = extraction.games || {};
+    for (const component of extraction.components || []) {
+        const label = extraction.id + '/' + component.sharedClass;
+        for (const prefix of component.participants || []) {
+            const game = games[prefix];
+            if (!game?.css || !game?.html || !game?.runtime) {
+                errors.push(label + ': incomplete game metadata for ' + prefix + '.');
+                continue;
+            }
+            const localClass = prefix + '-' + component.suffix;
+            if (component.surface === 'html') {
+                verifyHtmlAdoption(
+                    root, game.html, localClass, component.sharedClass, errors, label + '/' + prefix,
+                );
+            } else if (component.surface === 'runtime') {
+                verifyRuntimeAdoption(
+                    root, game.runtime, localClass, component.sharedClass, errors, label + '/' + prefix,
+                );
+            } else {
+                errors.push(label + ': unsupported adoption surface ' + JSON.stringify(component.surface) + '.');
+            }
+        }
+    }
+}
+
 function stateById(state, errors, label) {
     const map = new Map();
     if (state.schemaVersion !== 1 || state.contract !== 'append-only-family-extraction-v1'
@@ -302,11 +328,6 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
                 if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
             }
 
-            if (component.surface === 'html') {
-                verifyHtmlAdoption(root, game.html, localClass, component.sharedClass, errors, label + '/' + prefix);
-            } else {
-                verifyRuntimeAdoption(root, game.runtime, localClass, component.sharedClass, errors, label + '/' + prefix);
-            }
         }
     }
 }
@@ -337,6 +358,10 @@ export function verifyFamilyExtractions({
     const removed = [];
     let totalRuleDelta = 0;
     for (const extraction of currentById.values()) {
+        // Adoption is a persistent invariant, not a one-time transformation check.
+        // Re-run it for every ledger entry so later HTML/runtime edits cannot silently
+        // disconnect a page from its shared family styles after the extraction merges.
+        verifyExtractionAdoption(root, extraction, errors);
         if (!Number.isInteger(extraction.expectedRuleDelta) || extraction.expectedRuleDelta >= 0) {
             errors.push(extraction.id + ': expectedRuleDelta must be a negative integer.');
             continue;
