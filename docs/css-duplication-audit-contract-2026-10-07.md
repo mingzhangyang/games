@@ -10,7 +10,28 @@ Every ordinary rule is assigned to exactly one class:
 2. **Structural duplicate** — the selector family and context match, all non-theme declarations match, but theme payload differs. The audit treats palette/background/border/shadow/filter/radius/opacity and custom-property values as parameterizable evidence. This is a review candidate, not an automatic rewrite instruction.
 3. **Intentional local** — stage/canvas/board/overlay rules, their responsive contracts, page theme surfaces, and every rule without a proven cross-file family remain page-owned.
 
-The structural classifier is deliberately conservative. Literal geometry and typography differences such as `width`, `height`, `padding`, `gap`, positioning and font metrics are **not** erased to manufacture a match. If a later family review decides one of those values is genuinely a theme parameter, that decision belongs in the extraction PR together with its browser/geometry evidence.
+The structural classifier is deliberately conservative. Literal layout geometry and typography differences such as `width`, `height`, `padding`, `gap`, positioning and font metrics are **not** erased to manufacture a match. Geometry-bearing `outline` and `stroke-width` values also remain significant. Decorative border/radius values may still be treated as theme evidence, but any extraction based on them requires browser/geometry review.
+
+Structural evidence is built from the complete non-local family before the three classes are assigned. Exact matches have final classification precedence, but they still participate in the structural-family evidence. This matters for mixed families such as “two exact copies plus one themed variant”: the themed variant remains discoverable instead of falling through to intentional-local.
+
+## Reviewed baseline
+
+The first reviewed audit on the post-#114 tree is pinned in `tests/css-duplication-audit-contract.json`:
+
+| Class | Rules | Families |
+| --- | ---: | ---: |
+| Exact duplicate | 638 | 115 |
+| Structural duplicate | 94 | 28 |
+| Intentional local | 2,180 | — |
+| **Total** | **2,912** | — |
+
+Classification membership digest:
+
+`f25f5a147d2bb31547381bd47a2e0d6d4cee8ec04fa52fe983fe1adef564a5e3`
+
+The strongest exact evidence is concentrated in reusable UI rather than game stages: leaderboard name/row/list/rank/status families, universal reset, side rows, button rows, username rows, level grids and start-menu typography. The strongest structural families include username input, buttons, leaderboard containers/rank/status, chips and mode buttons. This is the intended signal: component families are candidates; gameplay geometry remains predominantly local.
+
+A structural family may contain members whose final exclusive class is exact duplicate. Family membership describes the full extraction boundary; the 638/94/2,180 rule counts remain mutually exclusive. Therefore exact and structural “potential removal” figures must not be summed as independent totals.
 
 ## Machine-reproducible contract
 
@@ -26,7 +47,7 @@ node tests/verify-css-duplication.mjs --json
 
 The default output prints the global classification summary and the highest-return exact/structural families. `--json` emits the full 2,912-rule inventory, including stable rule ids, source selector, semantic family, page impact, class and family id. The full inventory is generated rather than committed so this audit does not add another multi-thousand-line snapshot file.
 
-`tests/css-duplication-audit-contract.json` freezes the taxonomy, parser engine and the upstream 2,912-rule population. Once this PR's observed counts and membership digest are captured, they are pinned there so future CSS work cannot silently move rules between classes. The `baseline` field is intentionally temporary only while collecting the first audit; it must be non-null before #115 is mergeable.
+The committed baseline is mandatory. Counts, family counts and the membership digest are all verified; setting `baseline` to `null` is itself a CI failure. Future family extraction must update the baseline only as part of an explicitly reviewed CSS transaction.
 
 ## Hard boundaries
 
@@ -41,3 +62,5 @@ This PR must not use duplicate counts as a target metric and must not change pro
 ## Next-step decision rule
 
 After the audit is pinned, rank families by **cross-page impact and removable declaration copies**, not by raw selector count. A follow-up PR should select one complete family, state the affected pages and expected reduction, then extract it atomically. If the audit shows little benefit outside a few families, CSS cleanup stops there rather than trying to drive the remaining local-rule count toward zero.
+
+The first family-sized follow-up should be the **leaderboard surface** rather than one selector: review `lb`, `lb-name`, `lb-row`, `lb-list`, `lb-rank`, `lb-status`, username row/label/input and their responsive states as one dependency-closed component family.

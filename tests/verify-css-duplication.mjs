@@ -31,16 +31,16 @@ for (const group of audit.structuralGroups) {
     assert.ok(members.every(Boolean), group.id + ': missing structural family member');
 }
 
-if (CONTRACT.baseline) {
-    assert.deepEqual(audit.categoryCounts, CONTRACT.baseline.categoryCounts,
-        'duplication classification counts changed; review the family delta instead of silently rebaselining');
-    assert.equal(audit.classificationDigest, CONTRACT.baseline.classificationDigest,
-        'duplication family membership changed; inspect the generated report before updating the contract');
-    assert.equal(audit.exactGroups.length, CONTRACT.baseline.exactFamilyCount,
-        'exact duplicate family count changed');
-    assert.equal(audit.structuralGroups.length, CONTRACT.baseline.structuralFamilyCount,
-        'structural duplicate family count changed');
-}
+assert.ok(CONTRACT.baseline && typeof CONTRACT.baseline === 'object',
+    'duplication audit baseline must stay pinned; null/absent baseline disables the family-membership contract');
+assert.deepEqual(audit.categoryCounts, CONTRACT.baseline.categoryCounts,
+    'duplication classification counts changed; review the family delta instead of silently rebaselining');
+assert.equal(audit.classificationDigest, CONTRACT.baseline.classificationDigest,
+    'duplication family membership changed; inspect the generated report before updating the contract');
+assert.equal(audit.exactGroups.length, CONTRACT.baseline.exactFamilyCount,
+    'exact duplicate family count changed');
+assert.equal(audit.structuralGroups.length, CONTRACT.baseline.structuralFamilyCount,
+    'structural duplicate family count changed');
 
 if (process.argv.includes('--json')) {
     console.log(JSON.stringify(audit, null, 2));
