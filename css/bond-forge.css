@@ -506,12 +506,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    width: 100%;
-    max-width: 330px;
     padding: 13px 15px;
     background: var(--bf-lb-bg);
     border: var(--bf-lb-border);
-    border-radius: 14px;
     text-align: left;
 }
 
@@ -550,11 +547,6 @@ body {
 }
 
 .bf-lb-name {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     color: var(--tok-text);
 }
 
@@ -562,7 +554,6 @@ body {
     flex: 0 0 auto;
     font-weight: 800;
     color: var(--tok-text);
-    font-variant-numeric: tabular-nums;
 }
 
 .bf-lb-row.is-me .bf-lb-name { color: var(--tok-gold); }

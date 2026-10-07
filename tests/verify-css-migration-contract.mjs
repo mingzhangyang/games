@@ -789,7 +789,7 @@ verifyRuleMigrations({
     baseState: emptyState,
     errors: mutationErrors,
 });
-assert.ok(mutationErrors.some(error => /beyond the newly registered migrations/.test(error)));
+assert.ok(mutationErrors.some(error => /beyond the registered migration\/family transactions/.test(error)));
 
 // P2-K retirement is deliberately narrow: it removes only ordinary,
 // unlayered P0 rules whose consumers have disappeared.
@@ -831,7 +831,29 @@ verifyRuleMigrations({
     baseState: emptyState,
     errors: retireMutationErrors,
 });
-assert.ok(retireMutationErrors.some(error => /beyond the newly registered migrations/.test(error)));
+assert.ok(retireMutationErrors.some(error => /beyond the registered migration\/family transactions/.test(error)));
+
+
+// Persisted family stylesheets remain exempt from the immutable P0 semantic snapshot,
+// but they are not free-edit zones: every later change must still be explained by a
+// registered migration/family transaction against the current comparison base.
+const familyGuardBase = parseMap([['css/family.css', '.kept{color:red}']]);
+const familyGuardCurrent = parseMap([['css/family.css', '.kept{color:blue}']]);
+const familyGuardErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [['css/family.css', '', '.kept']] } },
+    state: emptyState,
+    currentParsedByPath: familyGuardCurrent,
+    baseParsedByPath: familyGuardBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    guardedCssPaths: new Set(['css/family.css']),
+    errors: familyGuardErrors,
+});
+assert.ok(familyGuardErrors.some(error =>
+    /css\/family\.css: rule changes beyond the registered migration\/family transactions/.test(error)));
 
 // The P2-K contract intentionally fails closed on retirement cases it does not
 // need yet. Future layered/priority/custom-property retirement requires a

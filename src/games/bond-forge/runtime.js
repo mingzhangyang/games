@@ -999,10 +999,10 @@ class BondForgeGame {
                     rank.className = 'bf-lb-rank';
                     rank.textContent = String(i + 1);
                     const name = document.createElement('span');
-                    name.className = 'bf-lb-name';
+                    name.className = 'bf-lb-name game-lb-name';
                     name.textContent = r.name;
                     const score = document.createElement('span');
-                    score.className = 'bf-lb-score';
+                    score.className = 'bf-lb-score game-lb-score';
                     score.textContent = String(r.score);
                     div.appendChild(rank);
                     div.appendChild(name);

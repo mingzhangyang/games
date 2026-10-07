@@ -475,84 +475,37 @@ body {
 /* ── 排行榜 ── */
 
 .sd-lb {
-    width: 100%;
-    max-width: 330px;
     background: var(--sd-lb-bg);
     border: var(--sd-lb-border);
-    border-radius: 14px;
-    padding: 12px 14px;
 }
 
-.sd-lb-title {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
 
-.sd-lb-list {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-height: 40px;
-    max-height: 168px;
-    overflow-y: auto;
-}
 
-.sd-lb-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13.5px;
-    padding: 3px 6px;
-    border-radius: 7px;
-}
+
+
+
 
 .sd-lb-row.sd-lb-top1 { background: var(--sd-lb-row-lb-top1-bg); }
 .sd-lb-row.sd-lb-top2 { background: var(--sd-lb-row-lb-top2-bg); }
 .sd-lb-row.sd-lb-top3 { background: var(--sd-lb-row-lb-top3-bg); }
 
-.sd-lb-rank { width: 22px; flex-shrink: 0; color: var(--tok-text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.sd-lb-name {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: left;
-}
 
-.sd-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+
+
 
 .sd-lb-empty { color: var(--tok-text-mute); font-size: 13px; padding: 10px 0; }
 
-.sd-lb-status {
-    min-height: 16px;
-    font-size: 11.5px;
-    color: var(--tok-text-mute);
-    margin-top: 4px;
-}
 
-.sd-username-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 6px;
-}
 
-.sd-username-label { font-size: 11.5px; color: var(--tok-text-dim); flex-shrink: 0; }
+
+
+
 
 .sd-username {
-    flex: 1;
-    min-width: 0;
-    font-family: inherit;
-    font-size: 13px;
-    color: var(--tok-text);
     background: var(--sd-username-bg);
     border: var(--sd-username-border);
-    border-radius: 9px;
-    padding: 7px 10px;
-    outline: none;
 }
 
 .sd-username:focus { border-color: var(--sd-username-focus-border); }

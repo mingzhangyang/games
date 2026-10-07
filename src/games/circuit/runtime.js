@@ -561,7 +561,7 @@ export class CircuitGame {
         } catch (e) { local = []; }
         if (!Array.isArray(local) || local.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'cc-lb-empty';
+            empty.className = 'cc-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
@@ -571,15 +571,15 @@ export class CircuitGame {
 
     buildLbRow(rank, entry) {
         const row = document.createElement('div');
-        row.className = 'cc-lb-row' + (rank < 3 ? ` cc-lb-top${rank + 1}` : '');
+        row.className = 'cc-lb-row game-lb-row' + (rank < 3 ? ` cc-lb-top${rank + 1}` : '');
         const rankEl = document.createElement('span');
-        rankEl.className = 'cc-lb-rank';
+        rankEl.className = 'cc-lb-rank game-lb-rank';
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
-        nameEl.className = 'cc-lb-name';
+        nameEl.className = 'cc-lb-name game-lb-name';
         nameEl.textContent = entry.name; // textContent 防注入
         const scoreEl = document.createElement('span');
-        scoreEl.className = 'cc-lb-score';
+        scoreEl.className = 'cc-lb-score game-lb-score';
         scoreEl.textContent = `${entry.score}`;
         row.append(rankEl, nameEl, scoreEl);
         return row;

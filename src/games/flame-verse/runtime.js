@@ -737,16 +737,16 @@ export class FlameVerseGame {
         if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
-            li.className = 'fv-lb-row';
+            li.className = 'fv-lb-row game-lb-row';
             if (i < 3) li.classList.add(`fv-lb-top${i + 1}`);
             const rank = document.createElement('span');
-            rank.className = 'fv-lb-rank';
+            rank.className = 'fv-lb-rank game-lb-rank';
             rank.textContent = String(i + 1);
             const nm = document.createElement('span');
-            nm.className = 'fv-lb-name';
+            nm.className = 'fv-lb-name game-lb-name';
             nm.textContent = row.name || '—';
             const sc = document.createElement('span');
-            sc.className = 'fv-lb-score';
+            sc.className = 'fv-lb-score game-lb-score';
             sc.textContent = String(row.score);
             li.appendChild(rank);
             li.appendChild(nm);

@@ -18,6 +18,7 @@
        <div class="xx-side-row game-side-row">  键值行（内层标签用 <b>）
        <div class="xx-side-kbd-row game-side-kbd-row"> 快捷键行
        <span class="xx-key game-side-kbd">      键帽
+       <div class="xx-lb game-lb">              排行榜容器（内部使用 game-lb-* family）
        <div class="xx-overlay game-overlay">    舞台内覆盖层（absolute 铺满）
        <div class="xx-toast game-toast">        舞台内提示条
        <button class="xx-icon-btn game-icon-btn">  顶栏图标钮
@@ -466,6 +467,102 @@
         font-family: inherit;
         font-size: 10.5px;
         font-weight: 800;
+        color: var(--tok-text);
+    }
+}
+
+
+/* ── 排行榜组件族 ──
+   共享层只拥有跨游戏稳定的几何与排版；背景、边框、前三名配色、特殊高度/动效仍由页面主题负责。
+   页面保留 xx-* 类供业务 JS 与主题规则使用，并在同一节点追加 game-lb-*。 */
+@layer components {
+    .game-lb {
+        width: 100%;
+        max-width: 330px;
+        border-radius: 14px;
+        padding: 12px 14px;
+    }
+
+    .game-lb-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .game-lb-list {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-height: 40px;
+        max-height: 168px;
+        overflow-y: auto;
+    }
+
+    .game-lb-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13.5px;
+        padding: 3px 6px;
+        border-radius: 7px;
+    }
+
+    .game-lb-rank {
+        width: 22px;
+        flex-shrink: 0;
+        color: var(--tok-text-dim);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .game-lb-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+    }
+
+    .game-lb-score {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .game-lb-empty {
+        color: var(--tok-text-mute);
+        font-size: 13px;
+        padding: 10px 0;
+    }
+
+    .game-lb-status {
+        min-height: 16px;
+        margin-top: 4px;
+        font-size: 11.5px;
+        color: var(--tok-text-mute);
+    }
+
+    .game-lb-username-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .game-lb-username-label {
+        flex-shrink: 0;
+        font-size: 11.5px;
+        color: var(--tok-text-dim);
+    }
+
+    .game-lb-username {
+        flex: 1;
+        min-width: 0;
+        padding: 7px 10px;
+        border-radius: 9px;
+        outline: none;
+        font-family: inherit;
+        font-size: 13px;
         color: var(--tok-text);
     }
 }

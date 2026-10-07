@@ -326,12 +326,9 @@ body {
 }
 
 .pm-lb {
-    width: 100%;
     max-width: 340px;
     background: rgb(255, 255, 255, 0.045);
     border: 1px solid rgb(255, 255, 255, 0.1);
-    border-radius: 14px;
-    padding: 12px 14px;
 }
 
 .pm-lb-head {
@@ -367,86 +364,42 @@ body {
 }
 
 .pm-lb-list {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
     min-height: 60px;
     max-height: 148px;
-    overflow-y: auto;
 }
 
-.pm-lb-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13.5px;
-    padding: 3px 6px;
-    border-radius: 7px;
-}
+
 
 .pm-lb-row.pm-lb-top1 { background: rgb(252, 211, 77, 0.14); }
 .pm-lb-row.pm-lb-top2 { background: rgb(203, 213, 225, 0.10); }
 .pm-lb-row.pm-lb-top3 { background: rgb(205, 127, 50, 0.12); }
 
 .pm-lb-rank {
-    width: 22px;
-    flex-shrink: 0;
     color: #8fa0d8;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
 }
 
-.pm-lb-name {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: left;
-}
 
-.pm-lb-score {
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-}
+
+
 
 .pm-lb-empty {
     color: var(--tok-text-faint);
-    font-size: 13px;
     padding: 14px 0;
 }
 
 .pm-lb-status {
-    min-height: 16px;
-    font-size: 11.5px;
     color: var(--tok-text-faint);
-    margin-top: 4px;
 }
 
-.pm-username-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 6px;
-}
+
 
 .pm-username-label {
-    font-size: 11.5px;
     color: #8fa0d8;
-    flex-shrink: 0;
 }
 
 .pm-username {
-    flex: 1;
-    min-width: 0;
-    font-family: inherit;
-    font-size: 13px;
-    color: var(--tok-text);
     background: rgb(255, 255, 255, 0.07);
     border: 1px solid rgb(255, 255, 255, 0.14);
-    border-radius: 9px;
-    padding: 7px 10px;
-    outline: none;
 }
 
 .pm-username:focus { border-color: rgb(148, 163, 255, 0.5); }

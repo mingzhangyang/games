@@ -638,7 +638,7 @@ class MinesweeperGame {
         const filtered = this.localScores().slice(0, 10);
         if (filtered.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'ms-lb-empty';
+            empty.className = 'ms-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
@@ -648,15 +648,15 @@ class MinesweeperGame {
 
     buildLbRow(rank, entry) {
         const row = document.createElement('div');
-        row.className = 'ms-lb-row' + (rank < 3 ? ` ms-lb-top${rank + 1}` : '');
+        row.className = 'ms-lb-row game-lb-row' + (rank < 3 ? ` ms-lb-top${rank + 1}` : '');
         const rankEl = document.createElement('span');
-        rankEl.className = 'ms-lb-rank';
+        rankEl.className = 'ms-lb-rank game-lb-rank';
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
-        nameEl.className = 'ms-lb-name';
+        nameEl.className = 'ms-lb-name game-lb-name';
         nameEl.textContent = entry.name; // textContent 防注入
         const scoreEl = document.createElement('span');
-        scoreEl.className = 'ms-lb-score';
+        scoreEl.className = 'ms-lb-score game-lb-score';
         scoreEl.textContent = `${entry.score}s`;
         row.append(rankEl, nameEl, scoreEl);
         return row;
@@ -687,7 +687,7 @@ class MinesweeperGame {
             list.textContent = '';
             if (data.length === 0) {
                 const empty = document.createElement('div');
-                empty.className = 'ms-lb-empty';
+                empty.className = 'ms-lb-empty game-lb-empty';
                 empty.textContent = this.TEXT.noScores;
                 list.appendChild(empty);
             } else {

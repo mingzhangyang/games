@@ -540,16 +540,16 @@ export class RippleDuetGame {
         if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
-            li.className = 'rd-lb-row';
+            li.className = 'rd-lb-row game-lb-row';
             if (i < 3) li.classList.add(`rd-lb-top${i + 1}`);
             const rank = document.createElement('span');
-            rank.className = 'rd-lb-rank';
+            rank.className = 'rd-lb-rank game-lb-rank';
             rank.textContent = String(i + 1);
             const nm = document.createElement('span');
-            nm.className = 'rd-lb-name';
+            nm.className = 'rd-lb-name game-lb-name';
             nm.textContent = row.name || '—';
             const sc = document.createElement('span');
-            sc.className = 'rd-lb-score';
+            sc.className = 'rd-lb-score game-lb-score';
             sc.textContent = String(row.score);
             li.appendChild(rank);
             li.appendChild(nm);

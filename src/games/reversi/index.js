@@ -486,7 +486,7 @@ class ReversiGame {
         const filtered = this.localScores().slice(0, 10);
         if (filtered.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'rv-lb-empty';
+            empty.className = 'rv-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
@@ -496,15 +496,15 @@ class ReversiGame {
 
     buildLbRow(rank, entry) {
         const row = document.createElement('div');
-        row.className = 'rv-lb-row' + (rank < 3 ? ` rv-lb-top${rank + 1}` : '');
+        row.className = 'rv-lb-row game-lb-row' + (rank < 3 ? ` rv-lb-top${rank + 1}` : '');
         const rankEl = document.createElement('span');
-        rankEl.className = 'rv-lb-rank';
+        rankEl.className = 'rv-lb-rank game-lb-rank';
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
-        nameEl.className = 'rv-lb-name';
+        nameEl.className = 'rv-lb-name game-lb-name';
         nameEl.textContent = entry.name; // textContent 防注入
         const scoreEl = document.createElement('span');
-        scoreEl.className = 'rv-lb-score';
+        scoreEl.className = 'rv-lb-score game-lb-score';
         scoreEl.textContent = `🔥 ${entry.score}`;
         row.append(rankEl, nameEl, scoreEl);
         return row;

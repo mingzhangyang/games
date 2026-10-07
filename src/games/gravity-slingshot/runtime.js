@@ -524,7 +524,7 @@ class GravityGame {
         } catch (e) { local = []; }
         if (!Array.isArray(local) || local.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'gd-lb-empty';
+            empty.className = 'gd-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
@@ -534,15 +534,15 @@ class GravityGame {
 
     buildLbRow(rank, entry) {
         const row = document.createElement('div');
-        row.className = 'gd-lb-row' + (rank < 3 ? ` gd-lb-top${rank + 1}` : '');
+        row.className = 'gd-lb-row game-lb-row' + (rank < 3 ? ` gd-lb-top${rank + 1}` : '');
         const rankEl = document.createElement('span');
-        rankEl.className = 'gd-lb-rank';
+        rankEl.className = 'gd-lb-rank game-lb-rank';
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
-        nameEl.className = 'gd-lb-name';
+        nameEl.className = 'gd-lb-name game-lb-name';
         nameEl.textContent = entry.name; // textContent 防注入
         const scoreEl = document.createElement('span');
-        scoreEl.className = 'gd-lb-score';
+        scoreEl.className = 'gd-lb-score game-lb-score';
         scoreEl.textContent = `${entry.score}`;
         row.append(rankEl, nameEl, scoreEl);
         return row;

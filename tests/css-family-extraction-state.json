@@ -1,0 +1,484 @@
+{
+  "schemaVersion": 1,
+  "contract": "append-only-family-extraction-v1",
+  "extractions": [
+    {
+      "id": "leaderboard-v1",
+      "baseDuplicationDigest": "f25f5a147d2bb31547381bd47a2e0d6d4cee8ec04fa52fe983fe1adef564a5e3",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -105,
+      "expectedRemovedUnlayeredRules": 117,
+      "games": {
+        "bf": {
+          "css": "css/bond-forge.css",
+          "html": "bond-forge.html",
+          "runtime": "src/games/bond-forge/runtime.js"
+        },
+        "cc": {
+          "css": "css/circuit.css",
+          "html": "circuit.html",
+          "runtime": "src/games/circuit/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "gd": {
+          "css": "css/gravity.css",
+          "html": "gravity-slingshot.html",
+          "runtime": "src/games/gravity-slingshot/runtime.js"
+        },
+        "hs": {
+          "css": "css/hoop-shot.css",
+          "html": "hoop-shot.html",
+          "runtime": "src/games/hoop-shot/runtime.js"
+        },
+        "lm": {
+          "css": "css/lumen.css",
+          "html": "lumen.html",
+          "runtime": "src/games/lumen/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "ms": {
+          "css": "css/minesweeper.css",
+          "html": "minesweeper.html",
+          "runtime": "src/games/minesweeper/index.js"
+        },
+        "pm": {
+          "css": "css/planet-merge.css",
+          "html": "planet-merge.html",
+          "runtime": "src/games/planet-merge/runtime.js"
+        },
+        "rv": {
+          "css": "css/reversi.css",
+          "html": "reversi.html",
+          "runtime": "src/games/reversi/index.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        },
+        "td": {
+          "css": "css/tower-defense.css",
+          "html": "tower-defense.html",
+          "runtime": "src/games/tower-defense/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "lb",
+          "sharedClass": "game-lb",
+          "surface": "html",
+          "participants": [
+            "bf",
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": []
+        },
+        {
+          "suffix": "lb-title",
+          "sharedClass": "game-lb-title",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "rv",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "lb-list",
+          "sharedClass": "game-lb-list",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "rv",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "lb-row",
+          "sharedClass": "game-lb-row",
+          "surface": "runtime",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "lb-rank",
+          "sharedClass": "game-lb-rank",
+          "surface": "runtime",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "ms",
+            "rv",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "lb-name",
+          "sharedClass": "game-lb-name",
+          "surface": "runtime",
+          "participants": [
+            "bf",
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "inheritedEquivalentProperties": {
+            "bf": [
+              "text-align"
+            ]
+          }
+        },
+        {
+          "suffix": "lb-score",
+          "sharedClass": "game-lb-score",
+          "surface": "runtime",
+          "participants": [
+            "bf",
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "lb-empty",
+          "sharedClass": "game-lb-empty",
+          "surface": "runtime",
+          "participants": [
+            "cc",
+            "gd",
+            "hs",
+            "lm",
+            "ms",
+            "pm",
+            "rv",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "gd",
+            "lm",
+            "ms",
+            "rv",
+            "td"
+          ]
+        },
+        {
+          "suffix": "lb-status",
+          "sharedClass": "game-lb-status",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "ms",
+            "rv",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "username-row",
+          "sharedClass": "game-lb-username-row",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "username-label",
+          "sharedClass": "game-lb-username-label",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "ms",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ]
+        },
+        {
+          "suffix": "username",
+          "sharedClass": "game-lb-username",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "ms",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": []
+        }
+      ]
+    }
+  ]
+}

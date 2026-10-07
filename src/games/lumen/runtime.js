@@ -506,7 +506,7 @@ export class LumenGame {
         } catch (e) { local = []; }
         if (!Array.isArray(local) || local.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'lm-lb-empty';
+            empty.className = 'lm-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
@@ -516,15 +516,15 @@ export class LumenGame {
 
     buildLbRow(rank, entry) {
         const row = document.createElement('div');
-        row.className = 'lm-lb-row' + (rank < 3 ? ` lm-lb-top${rank + 1}` : '');
+        row.className = 'lm-lb-row game-lb-row' + (rank < 3 ? ` lm-lb-top${rank + 1}` : '');
         const rankEl = document.createElement('span');
-        rankEl.className = 'lm-lb-rank';
+        rankEl.className = 'lm-lb-rank game-lb-rank';
         rankEl.textContent = `${rank + 1}.`;
         const nameEl = document.createElement('span');
-        nameEl.className = 'lm-lb-name';
+        nameEl.className = 'lm-lb-name game-lb-name';
         nameEl.textContent = entry.name; // textContent 防注入
         const scoreEl = document.createElement('span');
-        scoreEl.className = 'lm-lb-score';
+        scoreEl.className = 'lm-lb-score game-lb-score';
         scoreEl.textContent = `${entry.score}`;
         row.append(rankEl, nameEl, scoreEl);
         return row;

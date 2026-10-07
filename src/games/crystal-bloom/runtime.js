@@ -719,16 +719,16 @@ export class CrystalBloomGame {
         if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
-            li.className = 'cb-lb-row';
+            li.className = 'cb-lb-row game-lb-row';
             if (i < 3) li.classList.add(`cb-lb-top${i + 1}`);
             const rank = document.createElement('span');
-            rank.className = 'cb-lb-rank';
+            rank.className = 'cb-lb-rank game-lb-rank';
             rank.textContent = String(i + 1);
             const nm = document.createElement('span');
-            nm.className = 'cb-lb-name';
+            nm.className = 'cb-lb-name game-lb-name';
             nm.textContent = row.name || '—';
             const sc = document.createElement('span');
-            sc.className = 'cb-lb-score';
+            sc.className = 'cb-lb-score game-lb-score';
             sc.textContent = String(row.score);
             li.appendChild(rank);
             li.appendChild(nm);

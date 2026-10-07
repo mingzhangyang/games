@@ -620,15 +620,15 @@ export class EchoCaveGame {
         if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
-            li.className = 'ec-lb-row';
+            li.className = 'ec-lb-row game-lb-row';
             const rank = document.createElement('span');
-            rank.className = 'ec-lb-rank';
+            rank.className = 'ec-lb-rank game-lb-rank';
             rank.textContent = String(i + 1);
             const nm = document.createElement('span');
-            nm.className = 'ec-lb-name';
+            nm.className = 'ec-lb-name game-lb-name';
             nm.textContent = row.name || '—';
             const sc = document.createElement('span');
-            sc.className = 'ec-lb-score';
+            sc.className = 'ec-lb-score game-lb-score';
             sc.textContent = String(row.score);
             li.appendChild(rank);
             li.appendChild(nm);
