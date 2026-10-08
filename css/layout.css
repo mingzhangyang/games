@@ -85,13 +85,26 @@
     }
 }
 
-/* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */
+/* ── 基础重置：统一页面默认间距与 border-box ── */
 @layer reset {
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 *,
 *::before,
 *::after {
     box-sizing: border-box;
 }
+}
+
+/* ── 全站状态契约：脚本切换的隐藏类只有一个所有者 ── */
+@layer contracts {
+    .hidden {
+        display: none !important;
+    }
 }
 
 /* ── 页面容器：单列居中的移动优先栏 ── */

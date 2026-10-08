@@ -67,13 +67,6 @@
 }
 /* theme:end light */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     background:
@@ -82,12 +75,10 @@ body {
     color: var(--tok-text);
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 ── */
 
 .hs-icon-btn:hover { background: var(--hs-icon-btn-hover-bg); }
-.hs-icon-btn:active { transform: scale(0.92); }
 
 /* 中槽对齐参考页（lumen 模式）：单行并排 —— 左侧小文本（Best），
    右侧分数胶囊；order 只是视觉调序，DOM/i18n 不动。

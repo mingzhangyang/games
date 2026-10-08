@@ -391,11 +391,6 @@ function verifyProject() {
         }
     }
 
-    const expectedStaticOrdinaryRules = p5FrozenCounts.staticOrdinaryRules + familyResult.totalRuleDelta;
-    if (currentCompatibilityCounts.staticOrdinaryRules !== expectedStaticOrdinaryRules) {
-        errors.push('Static ordinary rule population differs from P5 plus reviewed family extractions: '
-            + currentCompatibilityCounts.staticOrdinaryRules + ' !== ' + expectedStaticOrdinaryRules + '.');
-    }
     const familyAdjustedBaseline = {
         ...BASELINE,
         debt: {
@@ -418,6 +413,13 @@ function verifyProject() {
         errors,
     });
 
+    const expectedStaticOrdinaryRules = p5FrozenCounts.staticOrdinaryRules
+        + familyResult.totalRuleDelta + migrationResult.newRuleDelta;
+    if (currentCompatibilityCounts.staticOrdinaryRules !== expectedStaticOrdinaryRules) {
+        errors.push('Static ordinary rule population differs from P5 plus reviewed family and rule migrations: '
+            + currentCompatibilityCounts.staticOrdinaryRules + ' !== ' + expectedStaticOrdinaryRules + '.');
+    }
+
     verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors, {
         allowedCssChanges: new Set([...migrationResult.mappedCssPaths, ...familyResult.cssPaths]),
     });
@@ -429,9 +431,21 @@ function verifyProject() {
         if (key === 'unlayeredRules') continue;
         // Reviewed family selector narrowings keep every !important declaration and only
         // re-key it under the narrowed selector; everything else stays exactly P0.
-        const expected = sortTuples(key === 'importantDeclarations'
+        let expected = sortTuples(key === 'importantDeclarations'
             ? applyReviewedSelectorNarrowingsToImportant(BASELINE.debt[key], familyResult.extractions, errors)
             : BASELINE.debt[key] || []);
+        if (key === 'importantDeclarations') {
+            for (const removed of migrationResult.importantDeclarationDelta.removed) {
+                const index = expected.findIndex(row => sameJson(row, removed));
+                if (index < 0) {
+                    errors.push('importantDeclarations migration tried to remove a tuple absent from the reviewed P0 snapshot: '
+                        + JSON.stringify(removed));
+                } else {
+                    expected.splice(index, 1);
+                }
+            }
+            expected.push(...migrationResult.importantDeclarationDelta.added);
+        }
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {
             errors.push(

@@ -351,6 +351,151 @@ verifyRuleMigrations({
 });
 assert.deepEqual(batchErrors, []);
 
+// Exact duplicate families may converge across files into one reviewed shared
+// owner. A dedupe mapping removes every source occurrence, creates one new
+// destination, and keeps the important-declaration ledger explainable.
+const dedupeBase = parseMap([
+    ['css/a.css', '.a-hidden{display:none!important}'],
+    ['css/b.css', '.b-hidden{display:none!important}'],
+    ['css/layout.css', ''],
+]);
+const dedupeCurrent = parseMap([
+    ['css/a.css', ''],
+    ['css/b.css', ''],
+    ['css/layout.css', '@layer contracts{.hidden{display:none!important}}'],
+]);
+const dedupeBaseCatalogs = catalogMap(dedupeBase);
+const dedupeCurrentCatalogs = catalogMap(dedupeCurrent);
+const dedupeMapping = {
+    id: 'fixture-dedupe-hidden',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(dedupeBaseCatalogs.get('css/a.css')[0]),
+        sourceRef(dedupeBaseCatalogs.get('css/b.css')[0]),
+    ],
+    destination: destinationRef(dedupeCurrentCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: false,
+    reason: 'fixture shared hidden owner',
+    conflicts: { normal: [], important: [] },
+};
+const dedupeErrors = [];
+const dedupeResult = verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+        },
+    },
+    state: { ...emptyState, migratedRules: [dedupeMapping] },
+    currentParsedByPath: dedupeCurrent,
+    baseParsedByPath: dedupeBase,
+    stylesheetLinks: {
+        'dedupe.html': [
+            ['css/a.css', []], ['css/b.css', []], ['css/layout.css', []],
+        ],
+    },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: dedupeErrors,
+});
+assert.deepEqual(dedupeErrors, []);
+assert.equal(dedupeResult.newRuleDelta, -1);
+assert.deepEqual(dedupeResult.importantDeclarationDelta.removed, [
+    ['css/a.css', '', '.a-hidden', 'display', 'none!important'],
+    ['css/b.css', '', '.b-hidden', 'display', 'none!important'],
+]);
+assert.deepEqual(dedupeResult.importantDeclarationDelta.added, [
+    ['css/layout.css', '', '.hidden', 'display', 'none!important'],
+]);
+
+// A dedupe can also reuse an existing shared destination. The destination is
+// consumed from both base/current residual catalogs so the ledger does not
+// require a duplicate copy or falsely report an unrelated edit.
+const reuseBase = parseMap([
+    ['css/a.css', '.a-icon-btn:active{transform:scale(0.92)}'],
+    ['css/b.css', '.b-icon-btn:active{transform:scale(0.92)}'],
+    ['css/layout.css', '@layer components{.game-icon-btn:active{transform:scale(0.92)}}'],
+]);
+const reuseCurrent = parseMap([
+    ['css/a.css', ''],
+    ['css/b.css', ''],
+    ['css/layout.css', '@layer components{.game-icon-btn:active{transform:scale(0.92)}}'],
+]);
+const reuseBaseCatalogs = catalogMap(reuseBase);
+const reuseMapping = {
+    id: 'fixture-dedupe-icon-active',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(reuseBaseCatalogs.get('css/a.css')[0]),
+        sourceRef(reuseBaseCatalogs.get('css/b.css')[0]),
+    ],
+    destination: destinationRef(reuseBaseCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: true,
+    reason: 'fixture existing shared icon owner',
+    conflicts: { normal: [], important: [] },
+};
+const reuseErrors = [];
+const reuseResult = verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [['css/a.css', '', '.a-icon-btn:active'], ['css/b.css', '', '.b-icon-btn:active']],
+        },
+    },
+    state: { ...emptyState, migratedRules: [reuseMapping] },
+    currentParsedByPath: reuseCurrent,
+    baseParsedByPath: reuseBase,
+    stylesheetLinks: {
+        'reuse.html': [
+            ['css/a.css', []], ['css/b.css', []], ['css/layout.css', []],
+        ],
+    },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: reuseErrors,
+});
+assert.deepEqual(reuseErrors, []);
+assert.equal(reuseResult.newRuleDelta, -2);
+
+const badDedupeBase = parseMap([
+    ['css/a.css', '@layer components{*{margin:0}}'],
+    ['css/b.css', '@layer components{*{margin:0}}'],
+    ['css/layout.css', ''],
+]);
+const badDedupeCurrent = parseMap([
+    ['css/a.css', ''], ['css/b.css', ''],
+    ['css/layout.css', '@layer reset{*{margin:0}}'],
+]);
+const badDedupeBaseCatalogs = catalogMap(badDedupeBase);
+const badDedupeCurrentCatalogs = catalogMap(badDedupeCurrent);
+const badDedupeErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-dedupe-reset-layered-source',
+            kind: 'dedupe',
+            sources: [
+                sourceRef(badDedupeBaseCatalogs.get('css/a.css')[0]),
+                sourceRef(badDedupeBaseCatalogs.get('css/b.css')[0]),
+            ],
+            destination: destinationRef(badDedupeCurrentCatalogs.get('css/layout.css')[0]),
+            reuseExistingDestination: false,
+            reason: 'invalid reset fixture',
+            conflicts: { normal: [], important: [] },
+        }],
+    },
+    currentParsedByPath: badDedupeCurrent,
+    baseParsedByPath: badDedupeBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: badDedupeErrors,
+});
+assert.ok(badDedupeErrors.some(error => /must keep every universal rule in reset/.test(error)));
+
 // Duplicate declarations of one property form an intra-rule fallback chain.
 // Splitting that chain across layers would replace source-order fallback with
 // layer precedence, so the contract rejects it.

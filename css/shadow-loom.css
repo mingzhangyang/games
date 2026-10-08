@@ -21,13 +21,6 @@
     --sl-panel: rgb(20, 26, 54, 0.72);
 }
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     min-height: 100dvh;
@@ -42,13 +35,11 @@ body {
     --tok-accent-2: var(--sl-copper);
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 ── */
 
 .sl-icon-btn { color: var(--sl-text); }
 .sl-icon-btn:hover { background: rgb(255, 215, 154, 0.12); }
-.sl-icon-btn:active { transform: scale(0.92); }
 
 .sl-topbar-center {
     display: flex;

@@ -4,13 +4,6 @@
    盐架 / 代价用萤光琥珀 --tok-gold
    ───────────────────────────────────────────── */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     background:
@@ -26,12 +19,10 @@ body {
     --tok-cold: #ffb35c;
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 HUD ── */
 
 .fv-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
-.fv-icon-btn:active { transform: scale(0.92); }
 
 .fv-hud-level {
     font-size: 13.5px;

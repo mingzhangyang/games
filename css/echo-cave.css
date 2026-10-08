@@ -4,13 +4,6 @@
    紫罗兰 = 出口嗡鸣 / 荆棘红 --tok-danger = 尖鸣警示
    ───────────────────────────────────────────── */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     background:
@@ -24,12 +17,10 @@ body {
     --tok-accent-2: #ffd34d;
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 HUD ── */
 
 .ec-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
-.ec-icon-btn:active { transform: scale(0.92); }
 
 .ec-hud-level {
     font-size: 13.5px;

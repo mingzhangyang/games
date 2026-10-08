@@ -306,9 +306,11 @@ combined push; do not trigger a full CI run for each fixture correction.
 
 The verifier no longer treats a P0 fingerprint change as migration authority. Rule migrations
 are append-only records compared against the pull request base (the Architecture workflow
-checks out full history and provides `ARCHITECTURE_BASE_SHA`). A mapping contains a stable
+checks out full history and provides `ARCHITECTURE_BASE_SHA`). A normal mapping contains a stable
 source occurrence, one or more destinations in the same stylesheet, the source declaration
-snapshot, and explicit normal/important conflict reviews.
+snapshot, and explicit normal/important conflict reviews. W3 adds a narrowly scoped `dedupe`
+mapping for exact cross-file duplicate families: it lists every source occurrence and one
+explicitly new or reused shared destination.
 
 The contract now provides:
 
@@ -322,8 +324,10 @@ The contract now provides:
    and same-layer physical order must preserve their cascade. This includes shorthand/longhand
    pairs, `all`, logical/physical aliases and duplicate properties. The write-set model is
    backed by pinned `mdn-data` shorthand metadata and explicit logical/physical equivalence
-   rules; unknown non-custom properties fail closed. Selector/context rewrites and
-   cross-stylesheet moves are outside P2 and fail.
+   rules; unknown non-custom properties fail closed. Selector/context rewrites and arbitrary
+   cross-stylesheet moves are outside P2 and fail. The reviewed `dedupe` form is the only
+   cross-file exception, and it requires identical context/declarations plus an explicit
+   destination mode.
 3. Relayering of existing layered rules as well as unlayered-debt reduction, so
    `science-showcase.css` can move from `components` to `showcase` without pretending it
    was unlayered P0 debt.
@@ -341,7 +345,8 @@ The contract now provides:
 6. The lowest `reset` layer is policy-constrained, not merely an allowed layer name. A mapping
    targeting `reset` must be a top-level reviewed universal selector (`*` or
    `*, *::before, *::after`) and contain only normal declarations; the whole mapped rule stays
-   in `reset`. Negative fixtures reject non-universal, conditional/nested and `!important`
+   in `reset`. This applies to every source and the destination of a `dedupe` mapping as well.
+   Negative fixtures reject non-universal, conditional/nested and `!important`
    reset mappings so reduced-motion/accessibility rules cannot accidentally gain reversed
    important-layer precedence.
 7. Residual base→head comparison for every mapped stylesheet. Registering one rule does not

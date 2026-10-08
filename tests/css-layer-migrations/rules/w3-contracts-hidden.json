@@ -1,0 +1,702 @@
+{
+  "id": "w3-contracts-hidden",
+  "kind": "dedupe",
+  "sources": [
+    {
+      "path": "css/bond-forge.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/carrot-pull.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/circuit.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/crystal-bloom.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/echo-cave.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/firefly-signal.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/flame-verse.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/gravity.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/hoop-shot.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/lumen.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/maxwell-demon.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/minesweeper.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/needle-awn.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/reversi.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/ripple-duet.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/shadow-loom.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/silk-dew.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/sword-flight.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    },
+    {
+      "path": "css/word-daily.css",
+      "context": "",
+      "selector": ".hidden",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+      "layer": null,
+      "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "display",
+          "value": [
+            [
+              "ident-token",
+              "none"
+            ],
+            [
+              "whitespace-token",
+              " "
+            ],
+            [
+              "delim-token",
+              "!"
+            ],
+            [
+              "ident-token",
+              "important"
+            ]
+          ],
+          "important": true
+        }
+      ]
+    }
+  ],
+  "destination": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".hidden",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "0ef7c447cf1582644b029792b5137e002f3f564208eb2be3418d8cb744f27ecf",
+    "layer": "contracts",
+    "declarationDigest": "63b91c3da05e7e1344b652a0404bfb720e33dd36036d761b46d9fb408820b3a6",
+    "occurrence": 1
+  },
+  "reuseExistingDestination": false,
+  "reason": "Deduplicate the shared script-controlled hidden state under the global contracts layer.",
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

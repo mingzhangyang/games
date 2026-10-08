@@ -2,7 +2,7 @@
 
 > 用途：PR #117（标准动作按钮 family）之后，继续"打通全站、去除冗余与重复 CSS"的执行底稿。
 > 每个工作项都可以在新 session 里独立领取执行；做完一项就在本文件里更新状态。
-> 数据快照：PR #117 分支头（`refactor/css-action-button-family`，2026-10-08）。**开工前先按 §5 重跑审计**，数字以重跑结果为准。
+> 数据快照：W3 完成后的 `main` 兼容层（2026-10-08）。**每个新批次开工前先按 §5 重跑审计**，数字以重跑结果为准。
 
 ## 0. 原则
 
@@ -16,9 +16,9 @@
 
 | 指标 | 数值 |
 |---|---|
-| 普通 CSS 规则 | 2727 |
-| 精确重复 / 结构重复 / 本地 | 471 / 65 / 2191 |
-| 重复族 | 119 个（精确 100 + 结构 19） |
+| 普通 CSS 规则 | 2651 |
+| 精确重复 / 结构重复 / 本地 | 408 / 65 / 2178 |
+| 重复族 | 116 个（精确 97 + 结构 19） |
 | 理论可删 | 约 **433 条规则 / 1421 条声明** |
 
 按簇分布（可删数 = 规则副本 / 声明副本）：
@@ -28,7 +28,7 @@
 | **A 开始菜单 / 选关** | 145 / 412 | 32 / 276 | `level-grid`、`level-label`、`subtitle`、`par`、`howto`、`card-line`、`start-footer`、`chip-stars`、`chip-num`、`mode-row`；结构类：`chip`、`mode`、`title`、`daily-best`、`level-chip` | 9 个解谜页：circuit、crystal-bloom、echo-cave、flame-verse、gravity-slingshot、lumen、maxwell-demon、ripple-duet、silk-dew |
 | **B 侧栏卡片** | 44 / 168 | 0 | `side-row`、`legend-row/dot/text`、`side-records`、`card-title`、`side-legend` | 同上 + bond-forge |
 | **C 结算浮层** | 28 / 80 | 13 / 75 | `over-sub`、`cut-value`、`over-score`（含手机 @media）；结构类：`over-score`、`cut-box` | 同上 |
-| **D 全站零散** | 57 / 99 | 0 | `*`（22 份）、`.hidden`（19 份）、`.xx-icon-btn:active`（17 份） | 几乎所有页 |
+| **D 全站零散** | 60 / 104 | 0 | `*`（22 份）、`.hidden`（20 份）、`.xx-icon-btn:active`（18 份） | 几乎所有页 |
 | **其他** | 97 / 195 | 17 / 116 | `game-shell`、`lb-empty`、`lang-btn`、`action-row/btn @media ≤480`、reduced-motion 选择器列表、`toast.*`、`lb-row.top1-3` 等 | 分散 |
 
 ⚠️ 审计会把页面前缀归一成 `.game-*`，所以 cb/ec 等页的**玩法按钮** `.xx-action-btn`（`.is-broke` / `.is-dimmed`）会显示成 `.game-action-btn.*`。它们**不属于**标准动作按钮 family，别误收编。
@@ -57,7 +57,7 @@
 ### 2.3 保留的例外（有充分理由，不在本路线图内）
 
 - **页面骨架**：index（落地页）、tank-battle（横屏掌机）、math-rain（全屏街机 HUD）不套 shell / 三槽顶栏。见 `layout.md` §6、`chrome.md`、`tests/architecture-v2-debt-baseline.json`。
-- **Immersive**：TD 手机横屏战斗时舞台铺满全屏、顶栏悬浮；TD 桌面显示 stats 按钮。见 `layout.md` §7。TD 菜单态的结构规则还没分层，随 W3 的 start-menu 收口一起处理。
+- **Immersive**：TD 手机横屏战斗时舞台铺满全屏、顶栏悬浮；TD 桌面显示 stats 按钮。见 `layout.md` §7。TD 菜单态的结构规则还没分层，随后续 start-menu 批次一起处理。
 - **仅深色主题**：11 页（`theme.md` 有逐页理由）。math-rain 浅色暂缓。
 - **校验器里合理的豁免**：`verify-stats-drawer` 豁免 tetris（有专门校验器）；`verify-sfx` 豁免共享音效模块本身和 sword-flight / needle-awn / math-rain 自带的音频引擎；`verify-no-game-lang` 放行 word-daily 的词库切换钮；emoji 审计放行扫雷笑脸；`verify-button-icons` 豁免 gomoku（它没有图标按钮）。
 - **math-rain** 免 eslint / stylelint / token-swap 检查（老式架构）。
@@ -79,15 +79,16 @@
 - 收尾：删掉 `verify-leaderboard-layout` 里的 4 个 `*-exception` 用例，改为标准断言，并做反向验证。
 - 完整执行提示词见附录 A。
 
-### W2 收尾动作按钮 family（小）
+### W2 收尾动作按钮 family（小，已复核不单列）
 - 动作按钮 family 在手机端（`@media (width <= 480px)`）的 `.xx-action-row` / `.xx-btn` 重复，用 `reviewedRuleRetirements` 退役。如果确实需要手机尺寸，就在 `layout.css` 里加一条共享的 `@media` 规则（需要契约支持带上下文的共享规则，先评估）。
 - 顺手确认还有没有页面在标准动作上写 `.xx-btn` 几何（`grep -n "\-btn {" css/*.css` 并人工判断）。
+  W2 复核结论：这些页面前缀 action-row / action-btn 不是标准 `game-action-btn` 的同义副本，保留为玩法语义，未创建独立迁移事务。
 
-### W3 簇 D：全站零散精确重复（小，低风险）
-- `.hidden`（19 份）：在 `layout.css` 里建共享规则，删除页面副本。注意有的页面靠 `.hidden` 驱动 `:has(> .game-overlay--menu:not(.hidden))`，语义必须保持一致。
-- `.xx-icon-btn:active`（17 份）：`layout.css` 第 368 行已有 `.game-icon-btn:active { transform: scale(0.92); }`。确认各页都挂了 `game-icon-btn` 后，页面副本直接退役。
+### W3 簇 D：全站零散精确重复（小，低风险）— ✅ 已完成（`w3-*` dedupe 事务）
+- `.hidden`（20 份）：在 `layout.css` 里建共享规则，删除页面副本。注意有的页面靠 `.hidden` 驱动 `:has(> .game-overlay--menu:not(.hidden))`，语义必须保持一致。
+- `.xx-icon-btn:active`（18 份）：`layout.css` 已有 `.game-icon-btn:active { transform: scale(0.92); }`。确认各页都挂了 `game-icon-btn` 后，页面副本直接退役。
 - `*`（22 份）：审计把它和 reset 层的 `*, *::before, *::after` 算成两个选择器族。先比对声明（可能带 margin/padding:0），再决定是并入 reset 层还是统一写法。
-- 预计删约 57 条规则。
+- 实际删除 58 条规则：20 份 `.hidden` 收口到 `@layer contracts`，18 份图标钮 active 复用 `game-icon-btn`，22 份页面 reset 收口到 `@layer reset`；Tetris 的额外触控 reset 保留。
 
 ### W4 簇 A：开始菜单 / 选关（最大，拆两个 PR）
 - **A1（精确重复）**：`level-grid`、`level-label`、`subtitle`、`par`、`howto`、`card-line`、`start-footer`、`chip-stars`、`chip-num`、`mode-row`，以及它们的手机 `@media` 副本。约 145 条规则 / 412 条声明。不涉及主题收敛。
@@ -120,6 +121,8 @@
 | `retiredCustomProperties` | 删掉不再被消费的页面变量 | 每次运行都会检查当前代码里有没有重新定义或重新使用 |
 | `requiresAdoption:false` 状态组件 | `:hover` / `:active` 等状态规则 | 参与页必须是锚点组件参与页的子集 |
 | fallback 链 | 同一属性重复出现，作为一条有序回退链 | 必须整链搬迁，或者完全不动 |
+
+W3 还扩展了 P2 规则账本：`kind: "dedupe"` 可把多个跨文件、声明完全相同的源规则收敛到一个共享目标；目标必须明确是新建还是复用，reset 目标只能是顶层 `*`，并由单测覆盖反向失败路径。
 
 ## 5. 每个 PR 的执行清单
 

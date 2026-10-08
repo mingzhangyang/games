@@ -2,13 +2,6 @@
    Gravity Slingshot 引力弹弓 — orbital physics puzzle
    ───────────────────────────────────────────── */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     background:
@@ -18,12 +11,10 @@ body {
     color: var(--tok-text);
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 ── */
 
 .gd-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
-.gd-icon-btn:active { transform: scale(0.92); }
 
 .gd-hole-label {
     font-size: 13.5px;

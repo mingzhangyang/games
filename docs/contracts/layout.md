@@ -53,6 +53,13 @@
 
 标准 action 的状态优先级也是 shared ownership：通用 hover 只提供普通按钮反馈，不能盖过 `--primary` / `--ghost` modifier。实现上应让 modifier 保持同级或更高 cascade authority，而不是依赖页面级 `:hover` 兜底。
 
+### 1.1.1 全站默认值与状态归属（W3，2026-10-08）
+
+- `layout.css` 的 `@layer reset` 是 shell 页唯一的顶层默认 reset owner：`*` 统一 `margin: 0`、`padding: 0`、`box-sizing: border-box`，旁边的 `*, *::before, *::after` 继续负责伪元素的 `box-sizing`。页面 CSS 不得再复制这条 `*` 规则；Tetris 的额外触控禁选行为仍属于它自己的 reset 例外。
+- `layout.css` 的 `@layer contracts` 是 `.hidden` 的唯一 owner，值固定为 `display: none !important`。菜单和结果层仍通过原有 `.hidden` class / `:has(...:not(.hidden))` 语义工作，页面只负责切换 class，不再声明页面副本。
+- 带有 `game-icon-btn` 的页面图标钮统一使用共享 `.game-icon-btn:active` 缩放；页面前缀的 `*.icon-btn:active` 不得重新出现。玩法按钮（如 `*-action-row`）不是这个语义 family，不能因为选择器形似就并入。
+- 这些跨文件精确重复由 `tests/css-layer-migration-state.json` 的 `w3-*` `kind: "dedupe"` 事务登记。事务必须列出所有源 occurrence、目标是新建还是复用，并通过 `verify-css-debt` 的声明与规则数 delta 校验；不能直接改 P0 快照来隐藏删除。
+
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 
 每个页面必须提供：

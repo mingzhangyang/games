@@ -3,13 +3,6 @@
    Cyberpunk Neon Aesthetic & Glassmorphism UI
    ───────────────────────────────────────────── */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     background:
@@ -20,7 +13,6 @@ body {
     color: var(--tok-text);
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 HUD ── */
 
@@ -103,7 +95,6 @@ body {
     border-color: rgb(64, 216, 255, 0.35);
     box-shadow: 0 0 10px rgb(64, 216, 255, 0.2);
 }
-.td-icon-btn:active { transform: scale(0.92); }
 
 #td-range-btn.active {
     background: rgb(64, 216, 255, 0.24);
