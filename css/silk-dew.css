@@ -306,10 +306,9 @@ body {
     box-shadow: var(--sd-mode-daily-shadow);
 }
 
-/* 深色：亮薄荷/青渐变上用深色字（--tok-on-accent）；
-   浅色：渐变用的是加深后的 --tok-success / --tok-cyan，深色字只剩 3.5:1，改白字 */
-:root[data-theme="light"] .sd-mode-daily,
-:root[data-theme="light"] .sd-btn-primary { color: #fff; }
+/* Mode 仍使用旧的深色 semantic gradient；浅色下改白字保证对比度。
+   标准 action primary 已由 game-action-btn--primary 独立拥有 surface/foreground。 */
+:root[data-theme="light"] .sd-mode-daily { color: #fff; }
 
 .sd-level-label {
     font-size: 11px;
@@ -425,16 +424,14 @@ body {
 
 
 
-/* .sd-mode:hover / .sd-btn:hover 用 background 简写，会把渐变冲掉；须放在 .sd-btn:hover 之后 */
-.sd-mode-daily:hover,
-.sd-btn-primary:hover {
+/* Mode hover 仍需保护自己的 semantic gradient；标准 action primary 使用 shared state contract。 */
+.sd-mode-daily:hover {
     background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
     filter: brightness(1.08);
 }
 
-/* 浅色是白字压深底：提亮会把青端对比度从 4.27 拉到 3.71，悬停改为压暗（→ 4.94+） */
-:root[data-theme="light"] .sd-mode-daily:hover,
-:root[data-theme="light"] .sd-btn-primary:hover { filter: brightness(0.92); }
+/* 浅色是白字压深底：提亮会降低对比度，悬停改为压暗。 */
+:root[data-theme="light"] .sd-mode-daily:hover { filter: brightness(0.92); }
 
 
 /* ── 排行榜 ── */

@@ -472,6 +472,39 @@ export function verifyExtractionShape(extraction, errors) {
             }
         }
     }
+
+    const selectorPrunes = extraction.reviewedSelectorPrunes || [];
+    if (!Array.isArray(selectorPrunes)) {
+        fail('reviewedSelectorPrunes must be an array.');
+    } else {
+        const pruneKeys = new Set();
+        for (const prune of selectorPrunes) {
+            if (!prune || typeof prune !== 'object' || Array.isArray(prune)) {
+                fail('every reviewed selector prune must be an object.');
+                continue;
+            }
+            if (!extraction.games?.[prune.prefix]?.css) {
+                fail('reviewed selector prune references unknown game prefix ' + prune.prefix + '.');
+            }
+            if (typeof prune.baseSelector !== 'string' || !prune.baseSelector.trim()
+                || typeof prune.currentSelector !== 'string' || !prune.currentSelector.trim()) {
+                fail('reviewed selector prune requires non-empty baseSelector/currentSelector.');
+                continue;
+            }
+            const baseParts = prune.baseSelector.split(',').map(part => part.trim()).filter(Boolean);
+            const currentParts = prune.currentSelector.split(',').map(part => part.trim()).filter(Boolean);
+            if (currentParts.length >= baseParts.length
+                || currentParts.some(part => !baseParts.includes(part))) {
+                fail('reviewed selector prune must remove selectors without adding or rewriting survivors.');
+            }
+            if (typeof prune.reason !== 'string' || !prune.reason.trim()) {
+                fail('reviewed selector prune requires a reason.');
+            }
+            const key = prune.prefix + '\0' + prune.baseSelector + '\0' + prune.currentSelector;
+            if (pruneKeys.has(key)) fail('duplicate reviewed selector prune ' + prune.prefix + '.');
+            pruneKeys.add(key);
+        }
+    }
     return valid;
 }
 
@@ -545,6 +578,32 @@ function migrationValueText(value) {
     return (value || []).map(token => token[1]).join('');
 }
 
+export function verifyCurrentRetiredCustomProperties(extraction, currentParsedByPath, errors) {
+    const retirements = extraction.retiredCustomProperties || {};
+    for (const [prefix, retirement] of Object.entries(retirements)) {
+        const label = extraction.id + '/retired-custom-properties/' + prefix;
+        for (const property of retirement.properties || []) {
+            const referencePattern = new RegExp(
+                'var\\(\\s*' + escapeRegExp(property) + '(?:\\s*[,)]|\\s*$)',
+            );
+            for (const [path, parsed] of currentParsedByPath) {
+                for (const rule of parsed.rules || []) {
+                    for (const declaration of rule.migrationDeclarations || []) {
+                        if (declaration.property === property) {
+                            errors.push(label + ': ' + property
+                                + ' was redefined in current CSS at ' + path + ' ' + rule.selector + '.');
+                        }
+                        if (referencePattern.test(migrationValueText(declaration.value))) {
+                            errors.push(label + ': ' + property + ' still has a CSS consumer in '
+                                + path + ' ' + rule.selector + '.');
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 export function verifyRetiredCustomProperties(
     extraction, currentParsedByPath, baseParsedByPath,
     currentCatalogs, baseCatalogs, externalRuleChanges, errors,
@@ -607,27 +666,38 @@ export function verifyRetiredCustomProperties(
             if (!seenBase.has(property)) {
                 errors.push(label + ': ' + property + ' was not defined in the comparison base.');
             }
-            const currentDefinitions = (currentParsed?.rules || []).flatMap(rule =>
-                (rule.migrationDeclarations || []).filter(declaration => declaration.property === property));
-            if (currentDefinitions.length) {
-                errors.push(label + ': ' + property + ' still has '
-                    + currentDefinitions.length + ' current definition(s).');
-            }
-
-            const referencePattern = new RegExp(
-                'var\\(\\s*' + escapeRegExp(property) + '(?:\\s*[,)]|\\s*$)',
-            );
-            for (const [path, parsed] of currentParsedByPath) {
-                for (const rule of parsed.rules || []) {
-                    for (const declaration of rule.migrationDeclarations || []) {
-                        if (referencePattern.test(migrationValueText(declaration.value))) {
-                            errors.push(label + ': ' + property + ' still has a CSS consumer in '
-                                + path + ' ' + rule.selector + '.');
-                        }
-                    }
-                }
-            }
         }
+    }
+}
+
+function verifyReviewedSelectorPrunes(
+    extraction, currentParsedByPath, baseParsedByPath,
+    currentCatalogs, baseCatalogs, externalRuleChanges, errors,
+) {
+    for (const prune of extraction.reviewedSelectorPrunes || []) {
+        const path = extraction.games?.[prune.prefix]?.css;
+        if (!path) continue;
+        const label = extraction.id + '/selector-prune/' + prune.prefix;
+        const baseRule = uniqueRule(
+            baseParsedByPath.get(path), prune.baseSelector, null, errors, label + '/base',
+        );
+        const currentRule = uniqueRule(
+            currentParsedByPath.get(path), prune.currentSelector, null, errors, label + '/current',
+        );
+        if (!baseRule || !currentRule) continue;
+        if (canonical(baseRule.migrationDeclarations || [])
+            !== canonical(currentRule.migrationDeclarations || [])) {
+            errors.push(label + ': selector prune changed declarations.');
+        }
+
+        const baseIndexed = uniqueCatalogRule(
+            baseCatalogs.get(path), prune.baseSelector, null, errors, label + '/base-index',
+        );
+        const currentIndexed = uniqueCatalogRule(
+            currentCatalogs.get(path), prune.currentSelector, null, errors, label + '/current-index',
+        );
+        if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
+        if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
     }
 }
 
@@ -715,6 +785,10 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
         }
     }
 
+    verifyReviewedSelectorPrunes(
+        extraction, currentParsedByPath, baseParsedByPath,
+        currentCatalogs, baseCatalogs, externalRuleChanges, errors,
+    );
     verifyRetiredCustomProperties(
         extraction, currentParsedByPath, baseParsedByPath,
         currentCatalogs, baseCatalogs, externalRuleChanges, errors,
@@ -754,6 +828,7 @@ export function verifyFamilyExtractions({
         // Re-run it for every ledger entry so later HTML/runtime edits cannot silently
         // disconnect a page from its shared family styles after the extraction merges.
         verifyExtractionAdoption(root, extraction, errors);
+        verifyCurrentRetiredCustomProperties(extraction, currentParsedByPath, errors);
         if (!Number.isInteger(extraction.expectedRuleDelta) || extraction.expectedRuleDelta >= 0) {
             errors.push(extraction.id + ': expectedRuleDelta must be a negative integer.');
             continue;

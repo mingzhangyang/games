@@ -796,7 +796,27 @@
           ],
           "expectedRemovedDefinitions": 8
         }
-      }
+      },
+      "reviewedSelectorPrunes": [
+        {
+          "prefix": "sd",
+          "baseSelector": ":root[data-theme=\"light\"] .sd-mode-daily, :root[data-theme=\"light\"] .sd-btn-primary",
+          "currentSelector": ":root[data-theme=\"light\"] .sd-mode-daily",
+          "reason": "standard action primary foreground is now owned by game-action-btn--primary"
+        },
+        {
+          "prefix": "sd",
+          "baseSelector": ".sd-mode-daily:hover, .sd-btn-primary:hover",
+          "currentSelector": ".sd-mode-daily:hover",
+          "reason": "standard action primary hover is now owned by the shared action state contract"
+        },
+        {
+          "prefix": "sd",
+          "baseSelector": ":root[data-theme=\"light\"] .sd-mode-daily:hover, :root[data-theme=\"light\"] .sd-btn-primary:hover",
+          "currentSelector": ":root[data-theme=\"light\"] .sd-mode-daily:hover",
+          "reason": "standard action primary light hover is now owned by the shared action state contract"
+        }
+      ]
     }
   ]
 }

@@ -6,7 +6,8 @@ import { join } from 'node:path';
 
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import {
-    verifyExtractionAdoption, verifyExtractionShape, verifyRetiredCustomProperties,
+    verifyCurrentRetiredCustomProperties, verifyExtractionAdoption, verifyExtractionShape,
+    verifyRetiredCustomProperties,
 } from './lib/css/family-extraction.mjs';
 import { indexRuleOccurrences } from './lib/css/migration-contract.mjs';
 
@@ -245,12 +246,17 @@ try {
         parseCssText('.consumer{background:var(--dm-panel-bg)}', 'css/consumer.css'),
     );
     const consumerErrors = [];
-    verifyRetiredCustomProperties(
-        validRetirementShape, consumerCurrent, retirementBase,
-        catalogMap(consumerCurrent), catalogMap(retirementBase),
-        { base: [], current: [] }, consumerErrors,
-    );
+    verifyCurrentRetiredCustomProperties(validRetirementShape, consumerCurrent, consumerErrors);
     assert.ok(consumerErrors.some(error => /still has a CSS consumer/.test(error)));
+
+    const redefinedCurrent = new Map(retirementCurrent);
+    redefinedCurrent.set(
+        'css/reintroduced.css',
+        parseCssText(':root{--dm-panel-bg:purple}', 'css/reintroduced.css'),
+    );
+    const redefinedErrors = [];
+    verifyCurrentRetiredCustomProperties(validRetirementShape, redefinedCurrent, redefinedErrors);
+    assert.ok(redefinedErrors.some(error => /was redefined in current CSS/.test(error)));
 
     const changedThemeCurrent = new Map([[
         'css/demo.css',
@@ -268,6 +274,24 @@ try {
     assert.ok(changedThemeErrors.some(error =>
         /theme rule changed beyond the declared custom-property retirements/.test(error)));
 
+    const validSelectorPrune = clone(extraction);
+    validSelectorPrune.reviewedSelectorPrunes = [{
+        prefix: 'dm',
+        baseSelector: '.dm-mode-daily, .dm-panel',
+        currentSelector: '.dm-mode-daily',
+        reason: 'panel moved to the shared family',
+    }];
+    const validSelectorPruneErrors = [];
+    assert.equal(verifyExtractionShape(validSelectorPrune, validSelectorPruneErrors), true);
+    assert.deepEqual(validSelectorPruneErrors, []);
+
+    const invalidSelectorPrune = clone(validSelectorPrune);
+    invalidSelectorPrune.reviewedSelectorPrunes[0].currentSelector = '.dm-other';
+    const invalidSelectorPruneErrors = [];
+    assert.equal(verifyExtractionShape(invalidSelectorPrune, invalidSelectorPruneErrors), false);
+    assert.ok(invalidSelectorPruneErrors.some(error =>
+        /must remove selectors without adding or rewriting survivors/.test(error)));
+
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));
     const duplicateIdentityErrors = [];
@@ -279,4 +303,4 @@ try {
     rmSync(root, { recursive: true, force: true });
 }
 
-console.log('PASS persisted CSS family entries continuously enforce HTML/runtime shared-class adoption');
+console.log('PASS persisted CSS family entries continuously enforce adoption and retired-token invariants');

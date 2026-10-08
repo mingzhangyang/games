@@ -11,8 +11,8 @@
 //      「仅深色」小标只在浅色时出现，且恰好标在不支持浅色的注册表游戏上
 //   ④ 支持浅色的页面：{浅色, 深色} × {390, 1280}
 //      - 页面底色取自真实截图像素（四角）：浅色亮度 > 0.6、深色 < 0.3（抓「只换了外框」）
-//      - 文字对比度：浅色下正文 ≥ 4.5:1、大字 ≥ 3:1；primary action 渐变逐端点 ≥ 4.5:1
-//        （不能只用渐变平均色掩盖单端点失败）；深色下只统计不判红
+//      - 文字对比度：浅色下正文 ≥ 4.5:1、大字 ≥ 3:1；primary action 实际 surface ≥ 4.5:1
+//        （渐变逐端点、纯色检查 computed backgroundColor，不能用平均色掩盖失败）；深色下只统计不判红
 //      - 同页即时切换：深色加载后改偏好为浅色，不刷新即变浅
 //
 // 用法：node tests/verify-theme.mjs [baseUrl]（verify-all 自动传入）
@@ -390,9 +390,10 @@ const contrastAudit = page => page.evaluate(() => {
 }
 
 /**
- * 标准 primary action 的渐变端点对比度。
+ * 标准 primary action 的 surface 对比度。
  * 通用正文审计会把渐变色标平均，无法发现“平均值合格但某个端点不合格”；
- * 这里直接读取 computed gradient 的每个实际色标，逐端点要求 4.5:1。
+ * 实际为渐变时逐端点检查；science-showcase 等把 primary 覆盖成纯色时，
+ * 回退到 computed backgroundColor。所有实际 surface 都要求 4.5:1。
  */
 const actionPrimaryContrastAudit = page => page.evaluate(() => {
     const parse = (s) => {
@@ -429,14 +430,20 @@ const actionPrimaryContrastAudit = page => page.evaluate(() => {
         const cs = getComputedStyle(el);
         const fg = parse(cs.color);
         const stops = extractStops(cs.backgroundImage);
-        if (!fg || stops.length < 2) {
-            bad.push('unparseable primary surface: ' + cs.backgroundImage + ' / ' + cs.color);
+        const solid = parse(cs.backgroundColor);
+        const surfaces = stops.length ? stops : (solid ? [solid] : []);
+        if (!fg || !surfaces.length) {
+            bad.push('unparseable primary surface: ' + cs.backgroundImage
+                + ' / ' + cs.backgroundColor + ' / ' + cs.color);
             continue;
         }
-        for (const stop of stops) {
+        for (const surface of surfaces) {
             total++;
-            const ratio = contrast(fg, stop);
-            if (ratio < 4.5) bad.push(ratio.toFixed(2) + ':1 @ ' + cs.backgroundImage);
+            const ratio = contrast(fg, surface);
+            if (ratio < 4.5) {
+                const source = stops.length ? cs.backgroundImage : cs.backgroundColor;
+                bad.push(ratio.toFixed(2) + ':1 @ ' + source);
+            }
         }
     }
     return { bad, total };
