@@ -35,10 +35,6 @@
     --sd-card-border: 1px solid rgb(176, 220, 196, 0.18);
     --sd-card-shadow: 0 24px 64px rgb(0, 0, 0, 0.46), inset 0 1px rgb(255, 255, 255, 0.04);
     --sd-over-score-glow: 0 0 26px rgb(159, 232, 255, 0.45);
-    --sd-btn-bg: rgb(255, 255, 255, 0.08);
-    --sd-btn-border: 1px solid rgb(255, 255, 255, 0.14);
-    --sd-btn-hover-bg: rgb(255, 255, 255, 0.14);
-    --sd-btn-primary-shadow: 0 8px 24px rgb(52, 211, 153, 0.4);
     --sd-lb-bg: rgb(255, 255, 255, 0.045);
     --sd-lb-border: 1px solid rgb(255, 255, 255, 0.1);
     --sd-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
@@ -82,10 +78,6 @@
     --sd-card-border: 1px solid rgb(15, 23, 42, 0.132);
     --sd-card-shadow: 0 22px 54px rgb(15, 23, 42, 0.18), inset 0 1px rgb(255, 255, 255, 0.7);
     --sd-over-score-glow: none;
-    --sd-btn-bg: rgb(255, 255, 255, 0.79);
-    --sd-btn-border: 1px solid rgb(15, 23, 42, 0.154);
-    --sd-btn-hover-bg: rgb(255, 255, 255, 0.95);
-    --sd-btn-primary-shadow: 0 8px 24px rgb(15, 23, 42, 0.14);
     --sd-lb-bg: rgb(255, 255, 255, 0.685);
     --sd-lb-border: 1px solid rgb(15, 23, 42, 0.11);
     --sd-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
@@ -314,10 +306,9 @@ body {
     box-shadow: var(--sd-mode-daily-shadow);
 }
 
-/* 深色：亮薄荷/青渐变上用深色字（--tok-on-accent）；
-   浅色：渐变用的是加深后的 --tok-success / --tok-cyan，深色字只剩 3.5:1，改白字 */
-:root[data-theme="light"] .sd-mode-daily,
-:root[data-theme="light"] .sd-btn-primary { color: #fff; }
+/* Mode 仍使用旧的深色 semantic gradient；浅色下改白字保证对比度。
+   标准 action primary 已由 game-action-btn--primary 独立拥有 surface/foreground。 */
+:root[data-theme="light"] .sd-mode-daily { color: #fff; }
 
 .sd-level-label {
     font-size: 11px;
@@ -429,48 +420,19 @@ body {
 
 .sd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
-.sd-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
-.sd-btn {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--sd-btn-bg);
-    border: var(--sd-btn-border);
-    border-radius: 13px;
-    padding: 11px 18px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
 
-.sd-btn:hover { background: var(--sd-btn-hover-bg); }
-.sd-btn:active { transform: scale(0.96); }
 
-.sd-btn-primary {
-    background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
-    border: none;
-    color: var(--tok-on-accent);
-    box-shadow: var(--sd-btn-primary-shadow);
-}
 
-/* .sd-mode:hover / .sd-btn:hover 用 background 简写，会把渐变冲掉；须放在 .sd-btn:hover 之后 */
-.sd-mode-daily:hover,
-.sd-btn-primary:hover {
+/* Mode hover 仍需保护自己的 semantic gradient；标准 action primary 使用 shared state contract。 */
+.sd-mode-daily:hover {
     background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
     filter: brightness(1.08);
 }
 
-/* 浅色是白字压深底：提亮会把青端对比度从 4.27 拉到 3.71，悬停改为压暗（→ 4.94+） */
-:root[data-theme="light"] .sd-mode-daily:hover,
-:root[data-theme="light"] .sd-btn-primary:hover { filter: brightness(0.92); }
+/* 浅色是白字压深底：提亮会降低对比度，悬停改为压暗。 */
+:root[data-theme="light"] .sd-mode-daily:hover { filter: brightness(0.92); }
 
-.sd-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 /* ── 排行榜 ── */
 

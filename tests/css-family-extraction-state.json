@@ -479,6 +479,514 @@
           "fullyRemoved": []
         }
       ]
+    },
+    {
+      "id": "action-buttons-v1",
+      "baseDuplicationDigest": "daace9cb5725e02b7f294f8daaf464148fd4398ebbca47e708c175628cd3fccb",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -80,
+      "expectedRemovedUnlayeredRules": 86,
+      "games": {
+        "cc": {
+          "css": "css/circuit.css",
+          "html": "circuit.html",
+          "runtime": "src/games/circuit/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "gd": {
+          "css": "css/gravity.css",
+          "html": "gravity-slingshot.html",
+          "runtime": "src/games/gravity-slingshot/runtime.js"
+        },
+        "hs": {
+          "css": "css/hoop-shot.css",
+          "html": "hoop-shot.html",
+          "runtime": "src/games/hoop-shot/runtime.js"
+        },
+        "lm": {
+          "css": "css/lumen.css",
+          "html": "lumen.html",
+          "runtime": "src/games/lumen/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "pm": {
+          "css": "css/planet-merge.css",
+          "html": "planet-merge.html",
+          "runtime": "src/games/planet-merge/runtime.js"
+        },
+        "rv": {
+          "css": "css/reversi.css",
+          "html": "reversi.html",
+          "runtime": "src/games/reversi/index.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        },
+        "td": {
+          "css": "css/tower-defense.css",
+          "html": "tower-defense.html",
+          "runtime": "src/games/tower-defense/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "btn-row",
+          "sharedClass": "game-action-row",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ]
+        },
+        {
+          "suffix": "btn",
+          "sharedClass": "game-action-btn",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "convergedThemeProperties": [
+            "color",
+            "background",
+            "border"
+          ],
+          "participantConvergedProperties": {
+            "hs": [
+              "font-size",
+              "border-radius",
+              "padding"
+            ],
+            "pm": [
+              "font-size",
+              "border-radius",
+              "padding",
+              "transition"
+            ],
+            "rv": [
+              "font-size",
+              "border-radius",
+              "padding"
+            ],
+            "td": [
+              "font-size",
+              "font-weight",
+              "border-radius",
+              "padding",
+              "transition",
+              "backdrop-filter"
+            ]
+          }
+        },
+        {
+          "suffix": "btn",
+          "sharedClass": "game-action-btn",
+          "localSelectorSuffix": ":hover",
+          "sharedSelectorSuffix": ":hover",
+          "requiresAdoption": false,
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "background"
+          ],
+          "sharedClassSpecificity": "zero"
+        },
+        {
+          "suffix": "btn",
+          "sharedClass": "game-action-btn",
+          "localSelectorSuffix": ":active",
+          "sharedSelectorSuffix": ":active",
+          "requiresAdoption": false,
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ]
+        },
+        {
+          "suffix": "btn-primary",
+          "sharedClass": "game-action-btn--primary",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "convergedThemeProperties": [
+            "color",
+            "background",
+            "border",
+            "box-shadow"
+          ]
+        },
+        {
+          "suffix": "btn-ghost",
+          "sharedClass": "game-action-btn--ghost",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "hs",
+            "lm",
+            "md",
+            "pm",
+            "rv",
+            "rd",
+            "sd",
+            "td"
+          ],
+          "participantConvergedProperties": {
+            "hs": [
+              "color"
+            ],
+            "pm": [
+              "border-color",
+              "color"
+            ],
+            "td": [
+              "border-color"
+            ]
+          }
+        }
+      ],
+      "retiredCustomProperties": {
+        "cc": {
+          "properties": [
+            "--cc-btn-bg",
+            "--cc-btn-border",
+            "--cc-btn-hover-bg",
+            "--cc-btn-primary-shadow"
+          ],
+          "expectedRemovedDefinitions": 8
+        },
+        "cb": {
+          "properties": [
+            "--cb-btn-bg",
+            "--cb-btn-border",
+            "--cb-btn-hover-bg",
+            "--cb-btn-primary-bg",
+            "--cb-btn-primary-shadow"
+          ],
+          "expectedRemovedDefinitions": 10
+        },
+        "md": {
+          "properties": [
+            "--md-btn-bg",
+            "--md-btn-border",
+            "--md-btn-hover-bg",
+            "--md-btn-primary-bg",
+            "--md-btn-primary-shadow"
+          ],
+          "expectedRemovedDefinitions": 10
+        },
+        "rd": {
+          "properties": [
+            "--rd-btn-bg",
+            "--rd-btn-border",
+            "--rd-btn-hover-bg",
+            "--rd-btn-primary-bg",
+            "--rd-btn-primary-shadow"
+          ],
+          "expectedRemovedDefinitions": 10
+        },
+        "sd": {
+          "properties": [
+            "--sd-btn-bg",
+            "--sd-btn-border",
+            "--sd-btn-hover-bg",
+            "--sd-btn-primary-shadow"
+          ],
+          "expectedRemovedDefinitions": 8
+        },
+        "hs": {
+          "properties": [
+            "--hs-btn-bg",
+            "--hs-btn-border",
+            "--hs-btn-hover-bg",
+            "--hs-btn-primary-bg",
+            "--hs-btn-primary-shadow",
+            "--hs-btn-primary-text",
+            "--hs-btn-ghost-text"
+          ],
+          "expectedRemovedDefinitions": 13
+        },
+        "rv": {
+          "properties": [
+            "--rv-btn-bg",
+            "--rv-btn-border",
+            "--rv-btn-hover-bg",
+            "--rv-btn-primary-bg",
+            "--rv-btn-primary-shadow"
+          ],
+          "expectedRemovedDefinitions": 10
+        }
+      },
+      "reviewedSelectorPrunes": [
+        {
+          "prefix": "sd",
+          "baseSelector": ":root[data-theme=\"light\"] .sd-mode-daily, :root[data-theme=\"light\"] .sd-btn-primary",
+          "currentSelector": ":root[data-theme=\"light\"] .sd-mode-daily",
+          "reason": "standard action primary foreground is now owned by game-action-btn--primary"
+        },
+        {
+          "prefix": "sd",
+          "baseSelector": ".sd-mode-daily:hover, .sd-btn-primary:hover",
+          "currentSelector": ".sd-mode-daily:hover",
+          "reason": "standard action primary hover is now owned by the shared action state contract"
+        },
+        {
+          "prefix": "sd",
+          "baseSelector": ":root[data-theme=\"light\"] .sd-mode-daily:hover, :root[data-theme=\"light\"] .sd-btn-primary:hover",
+          "currentSelector": ":root[data-theme=\"light\"] .sd-mode-daily:hover",
+          "reason": "standard action primary light hover is now owned by the shared action state contract"
+        },
+        {
+          "prefix": "td",
+          "baseSelector": ".td-shell.game-shell--immersive .td-btn, .td-shell.game-shell--immersive .td-level-card, .td-shell.game-shell--immersive .td-level-brief, .td-shell.game-shell--immersive .td-brief-stat, .td-shell.game-shell--immersive .td-lb",
+          "currentSelector": ".td-shell.game-shell--immersive .td-level-card, .td-shell.game-shell--immersive .td-level-brief, .td-shell.game-shell--immersive .td-brief-stat, .td-shell.game-shell--immersive .td-lb",
+          "reason": "standard actions keep the shared action surface inside the immersive scene"
+        }
+      ],
+      "reviewedSelectorNarrowings": [
+        {
+          "path": "css/science-showcase.css",
+          "layer": "components",
+          "excludedClass": "game-action-btn--primary",
+          "baseSelector": ".science-showcase .game-icon-btn:hover, .science-showcase .game-btn:hover, .science-showcase .cb-mode:hover, .science-showcase .ec-mode:hover, .science-showcase .md-mode:hover, .science-showcase .fv-mode:hover, .science-showcase .rd-mode:hover, .science-showcase .cb-chip:hover, .science-showcase .ec-chip:hover, .science-showcase .md-chip:hover, .science-showcase .fv-chip:hover, .science-showcase .rd-chip:hover",
+          "currentSelector": ".science-showcase .game-icon-btn:hover, .science-showcase .game-btn:not(.game-action-btn--primary):hover, .science-showcase .cb-mode:hover, .science-showcase .ec-mode:hover, .science-showcase .md-mode:hover, .science-showcase .fv-mode:hover, .science-showcase .rd-mode:hover, .science-showcase .cb-chip:hover, .science-showcase .ec-chip:hover, .science-showcase .md-chip:hover, .science-showcase .fv-chip:hover, .science-showcase .rd-chip:hover",
+          "reason": "standard primary actions keep their accent surface on hover; the showcase panel hover would otherwise put on-accent text on --showcase-hover (1.16:1 in light mode)"
+        }
+      ],
+      "reviewedRuleRetirements": [
+        {
+          "prefix": "hs",
+          "context": "@media (width <= 480px)",
+          "selector": ".hs-btn",
+          "reason": "phone action size now comes from the shared game-action-btn geometry"
+        },
+        {
+          "prefix": "pm",
+          "context": "@media (width <= 480px)",
+          "selector": ".pm-btn",
+          "reason": "phone action size now comes from the shared game-action-btn geometry"
+        },
+        {
+          "prefix": "rv",
+          "context": "@media (width <= 480px)",
+          "selector": ".rv-btn",
+          "reason": "phone action size now comes from the shared game-action-btn geometry"
+        },
+        {
+          "prefix": "pm",
+          "context": "",
+          "selector": ".pm-btn-primary:hover",
+          "reason": "primary hover keeps the shared accent surface like every other action family page"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-btn:hover:not(.td-btn-primary)",
+          "reason": "standard hover is owned by the shared zero-specificity action hover"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-btn-primary:hover",
+          "reason": "primary hover keeps the shared accent surface like every other action family page"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-btn-primary:active",
+          "reason": "primary press feedback is the shared action :active scale"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-btn-ghost:hover",
+          "reason": "ghost hover is owned by the shared action hover"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-shell.game-shell--immersive .td-btn-primary",
+          "reason": "immersive scene no longer reskins the standard primary action"
+        }
+      ]
     }
   ]
 }

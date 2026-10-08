@@ -71,7 +71,7 @@
                 <p class="hs-subtitle" id="hs-subtitle" data-i18n="subtitle">Flick · Arc · Score</p>
                 <div class="hs-ball-row">🏀</div>
                 <p class="hs-howto" id="hs-howto" data-i18n="howto"></p>
-                <button class="hs-btn hs-btn-primary" id="hs-btn-play">🏀 Play</button>
+                <button class="hs-btn hs-btn-primary game-action-btn game-action-btn--primary" id="hs-btn-play">🏀 Play</button>
                 <p class="hs-stat-line" id="hs-best-line"></p>
                 <div class="hs-start-footer">
                     <button class="hs-icon-btn game-icon-btn" id="hs-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
@@ -82,8 +82,8 @@
             <div class="hs-overlay hidden game-overlay" id="hs-pause">
                 <h2 class="hs-overlay-title" id="hs-pause-title" data-i18n="paused">Paused</h2>
                 <div class="hs-btn-col">
-                    <button class="hs-btn hs-btn-primary" id="hs-btn-resume" data-i18n="resume">Resume</button>
-                    <button class="hs-btn hs-btn-ghost game-btn" id="hs-btn-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
+                    <button class="hs-btn hs-btn-primary game-action-btn game-action-btn--primary" id="hs-btn-resume" data-i18n="resume">Resume</button>
+                    <button class="hs-btn hs-btn-ghost game-btn game-action-btn game-action-btn--ghost" id="hs-btn-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
                 </div>
             </div>
 
@@ -94,10 +94,10 @@
                 <div class="hs-over-score" id="hs-over-score">0</div>
                 <div class="hs-over-best" id="hs-over-best"></div>
                 <div class="hs-over-streak" id="hs-over-streak"></div>
-                <div class="hs-btn-row">
-                    <button class="hs-btn hs-btn-primary game-btn" id="hs-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Again</span></button>
-                    <button class="hs-btn game-btn" id="hs-btn-share"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="17.5" cy="5.5" r="2.8"/><circle cx="6.5" cy="12" r="2.8"/><circle cx="17.5" cy="18.5" r="2.8"/><path d="M9.1 10.7l5.8-3.4M9.1 13.3l5.8 3.4"/></svg><span>Share</span></button>
-                    <button class="hs-btn game-btn" id="hs-btn-copy"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg><span>Copy</span></button>
+                <div class="hs-btn-row game-action-row">
+                    <button class="hs-btn hs-btn-primary game-btn game-action-btn game-action-btn--primary" id="hs-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Again</span></button>
+                    <button class="hs-btn game-btn game-action-btn" id="hs-btn-share"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="17.5" cy="5.5" r="2.8"/><circle cx="6.5" cy="12" r="2.8"/><circle cx="17.5" cy="18.5" r="2.8"/><path d="M9.1 10.7l5.8-3.4M9.1 13.3l5.8 3.4"/></svg><span>Share</span></button>
+                    <button class="hs-btn game-btn game-action-btn" id="hs-btn-copy"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg><span>Copy</span></button>
                 </div>
                 <div class="hs-lb game-lb">
                     <div class="hs-lb-title game-lb-title" id="hs-lb-title">🏆 Global Top 10</div>
@@ -108,7 +108,7 @@
                         <input class="hs-username game-lb-username" id="hs-username" maxlength="20" autocomplete="off" data-i18n-placeholder="usernameLabel">
                     </div>
                 </div>
-                <button class="hs-btn hs-btn-ghost game-btn" id="hs-btn-home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
+                <button class="hs-btn hs-btn-ghost game-btn game-action-btn game-action-btn--ghost" id="hs-btn-home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span>Home</span></button>
             </div>
         </div>
 

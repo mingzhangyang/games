@@ -4,7 +4,13 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { verifyExtractionAdoption, verifyExtractionShape } from './lib/css/family-extraction.mjs';
+import { parseCssText } from './lib/css/baseline-adapter.mjs';
+import {
+    applyReviewedSelectorNarrowingsToImportant, applyReviewedSelectorPrunesToDebt, expectedResidual,
+    verifyCurrentRetiredCustomProperties,
+    verifyExtractionAdoption, verifyExtractionShape, verifyRetiredCustomProperties,
+} from './lib/css/family-extraction.mjs';
+import { indexRuleOccurrences } from './lib/css/migration-contract.mjs';
 
 const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -110,14 +116,350 @@ try {
         assert.ok(shapeErrors.some(error => shapeCase.expected.test(error)), shapeCase.name);
     }
 
+    const pseudoState = clone(extraction);
+    pseudoState.components = [
+        clone(extraction.components[0]),
+        {
+            suffix: 'panel',
+            sharedClass: 'game-panel',
+            localSelectorSuffix: ':hover',
+            sharedSelectorSuffix: ':hover',
+            requiresAdoption: false,
+            convergedThemeProperties: ['background'],
+            surface: 'html',
+            participants: ['dm'],
+            fullyRemoved: ['dm'],
+        },
+    ];
+    const pseudoShapeErrors = [];
+    assert.equal(verifyExtractionShape(pseudoState, pseudoShapeErrors), true);
+    assert.deepEqual(pseudoShapeErrors, []);
+    writeFileSync(join(root, 'demo.html'), '<div class="dm-panel game-panel"></div>\n');
+    const pseudoAdoptionErrors = [];
+    verifyExtractionAdoption(root, pseudoState, pseudoAdoptionErrors);
+    assert.deepEqual(pseudoAdoptionErrors, []);
+
+    const zeroSpecificityState = clone(pseudoState);
+    zeroSpecificityState.components[1].sharedClassSpecificity = 'zero';
+    const zeroSpecificityErrors = [];
+    assert.equal(verifyExtractionShape(zeroSpecificityState, zeroSpecificityErrors), true);
+    assert.deepEqual(zeroSpecificityErrors, []);
+
+    const invalidZeroSpecificity = clone(extraction);
+    invalidZeroSpecificity.components[0].sharedClassSpecificity = 'zero';
+    const invalidZeroSpecificityErrors = [];
+    assert.equal(verifyExtractionShape(invalidZeroSpecificity, invalidZeroSpecificityErrors), false);
+    assert.ok(invalidZeroSpecificityErrors.some(error =>
+        /zero shared-class specificity is only valid for a state selector/.test(error)));
+
+    const mismatchedState = clone(pseudoState);
+    mismatchedState.components[1].sharedSelectorSuffix = ':disabled';
+    const mismatchedStateErrors = [];
+    assert.equal(verifyExtractionShape(mismatchedState, mismatchedStateErrors), false);
+    assert.ok(mismatchedStateErrors.some(error =>
+        /local and shared selector suffixes must match/.test(error)));
+
+    const standaloneState = clone(pseudoState);
+    standaloneState.components = [standaloneState.components[1]];
+    const standaloneShapeErrors = [];
+    assert.equal(verifyExtractionShape(standaloneState, standaloneShapeErrors), false);
+    assert.ok(standaloneShapeErrors.some(error =>
+        /requiresAdoption:false state requires a validated unsuffixed component/.test(error)));
+    const standaloneAdoptionErrors = [];
+    verifyExtractionAdoption(root, standaloneState, standaloneAdoptionErrors);
+    assert.ok(standaloneAdoptionErrors.some(error =>
+        /skipped adoption state requires a validated unsuffixed component/.test(error)));
+
+    const invalidConvergence = clone(extraction);
+    invalidConvergence.components[0].convergedThemeProperties = ['padding'];
+    const invalidConvergenceErrors = [];
+    assert.equal(verifyExtractionShape(invalidConvergence, invalidConvergenceErrors), false);
+    assert.ok(invalidConvergenceErrors.some(error =>
+        /unreviewed theme convergence property padding/.test(error)));
+
+    const invalidSkippedAdoption = clone(extraction);
+    invalidSkippedAdoption.components[0].requiresAdoption = false;
+    const invalidSkippedAdoptionErrors = [];
+    assert.equal(verifyExtractionShape(invalidSkippedAdoption, invalidSkippedAdoptionErrors), false);
+    assert.ok(invalidSkippedAdoptionErrors.some(error =>
+        /requiresAdoption:false is only valid for a state selector/.test(error)));
+
+    const validRetirementShape = clone(extraction);
+    validRetirementShape.retiredCustomProperties = {
+        dm: {
+            properties: ['--dm-panel-bg'],
+            expectedRemovedDefinitions: 2,
+        },
+    };
+    const validRetirementShapeErrors = [];
+    assert.equal(verifyExtractionShape(validRetirementShape, validRetirementShapeErrors), true);
+    assert.deepEqual(validRetirementShapeErrors, []);
+
+    const invalidRetirementShape = clone(validRetirementShape);
+    invalidRetirementShape.retiredCustomProperties.dm.properties.push('padding');
+    const invalidRetirementShapeErrors = [];
+    assert.equal(verifyExtractionShape(invalidRetirementShape, invalidRetirementShapeErrors), false);
+    assert.ok(invalidRetirementShapeErrors.some(error =>
+        /retired custom property for dm must start with --/.test(error)));
+
+    const retirementBase = new Map([[
+        'css/demo.css',
+        parseCssText(
+            ':root{--dm-panel-bg:red;color:black}'
+                + ':root[data-theme="light"]{--dm-panel-bg:white;color:black}',
+            'css/demo.css',
+        ),
+    ]]);
+    const retirementCurrent = new Map([[
+        'css/demo.css',
+        parseCssText(
+            ':root{color:black}:root[data-theme="light"]{color:black}',
+            'css/demo.css',
+        ),
+    ]]);
+    const catalogMap = parsed => new Map([...parsed]
+        .map(([path, value]) => [path, indexRuleOccurrences(value, path)]));
+    const retirementErrors = [];
+    const retirementExternal = { base: [], current: [] };
+    verifyRetiredCustomProperties(
+        validRetirementShape, retirementCurrent, retirementBase,
+        catalogMap(retirementCurrent), catalogMap(retirementBase),
+        retirementExternal, retirementErrors,
+    );
+    assert.deepEqual(retirementErrors, []);
+    assert.equal(retirementExternal.base.length, 2);
+    assert.equal(retirementExternal.current.length, 2);
+
+    const wrongRetirementCount = clone(validRetirementShape);
+    wrongRetirementCount.retiredCustomProperties.dm.expectedRemovedDefinitions = 1;
+    const wrongRetirementCountErrors = [];
+    verifyRetiredCustomProperties(
+        wrongRetirementCount, retirementCurrent, retirementBase,
+        catalogMap(retirementCurrent), catalogMap(retirementBase),
+        { base: [], current: [] }, wrongRetirementCountErrors,
+    );
+    assert.ok(wrongRetirementCountErrors.some(error =>
+        /base contains 2 retired declaration occurrence\(s\), expected 1/.test(error)));
+
+    const consumerCurrent = new Map(retirementCurrent);
+    consumerCurrent.set(
+        'css/consumer.css',
+        parseCssText('.consumer{background:var(--dm-panel-bg)}', 'css/consumer.css'),
+    );
+    const consumerErrors = [];
+    verifyCurrentRetiredCustomProperties(validRetirementShape, consumerCurrent, consumerErrors);
+    assert.ok(consumerErrors.some(error => /still has a CSS consumer/.test(error)));
+
+    const redefinedCurrent = new Map(retirementCurrent);
+    redefinedCurrent.set(
+        'css/reintroduced.css',
+        parseCssText(':root{--dm-panel-bg:purple}', 'css/reintroduced.css'),
+    );
+    const redefinedErrors = [];
+    verifyCurrentRetiredCustomProperties(validRetirementShape, redefinedCurrent, redefinedErrors);
+    assert.ok(redefinedErrors.some(error => /was redefined in current CSS/.test(error)));
+
+    const changedThemeCurrent = new Map([[
+        'css/demo.css',
+        parseCssText(
+            ':root{color:blue}:root[data-theme="light"]{color:black}',
+            'css/demo.css',
+        ),
+    ]]);
+    const changedThemeErrors = [];
+    verifyRetiredCustomProperties(
+        validRetirementShape, changedThemeCurrent, retirementBase,
+        catalogMap(changedThemeCurrent), catalogMap(retirementBase),
+        { base: [], current: [] }, changedThemeErrors,
+    );
+    assert.ok(changedThemeErrors.some(error =>
+        /theme rule changed beyond the declared custom-property retirements/.test(error)));
+
+    const validSelectorPrune = clone(extraction);
+    validSelectorPrune.reviewedSelectorPrunes = [{
+        prefix: 'dm',
+        baseSelector: '.dm-mode-daily, .dm-panel',
+        currentSelector: '.dm-mode-daily',
+        reason: 'panel moved to the shared family',
+    }];
+    const validSelectorPruneErrors = [];
+    assert.equal(verifyExtractionShape(validSelectorPrune, validSelectorPruneErrors), true);
+    assert.deepEqual(validSelectorPruneErrors, []);
+
+    const invalidSelectorPrune = clone(validSelectorPrune);
+    invalidSelectorPrune.reviewedSelectorPrunes[0].currentSelector = '.dm-other';
+    const invalidSelectorPruneErrors = [];
+    assert.equal(verifyExtractionShape(invalidSelectorPrune, invalidSelectorPruneErrors), false);
+    assert.ok(invalidSelectorPruneErrors.some(error =>
+        /must remove selectors without adding or rewriting survivors/.test(error)));
+
+    const projectedDebtErrors = [];
+    const projectedDebt = applyReviewedSelectorPrunesToDebt(
+        [['css/demo.css', '', '.dm-mode-daily, .dm-panel']],
+        [validSelectorPrune],
+        projectedDebtErrors,
+    );
+    assert.deepEqual(projectedDebtErrors, []);
+    assert.deepEqual(projectedDebt, [['css/demo.css', '', '.dm-mode-daily']]);
+
+    const missingDebtErrors = [];
+    applyReviewedSelectorPrunesToDebt(
+        [['css/demo.css', '', '.dm-unrelated']],
+        [validSelectorPrune],
+        missingDebtErrors,
+    );
+    assert.ok(missingDebtErrors.some(error =>
+        /immutable P0 debt must contain exactly one reviewed base selector tuple/.test(error)));
+
+    const validNarrowing = clone(extraction);
+    validNarrowing.reviewedSelectorNarrowings = [{
+        path: 'css/showcase.css',
+        layer: 'components',
+        excludedClass: 'game-panel',
+        baseSelector: '.showcase .game-icon:hover, .showcase .game-btn:hover',
+        currentSelector: '.showcase .game-icon:hover, .showcase .game-btn:not(.game-panel):hover',
+        reason: 'shared panel keeps its own hover surface',
+    }];
+    const validNarrowingErrors = [];
+    assert.equal(verifyExtractionShape(validNarrowing, validNarrowingErrors), true);
+    assert.deepEqual(validNarrowingErrors, []);
+
+    for (const [currentSelector, why] of [
+        ['.showcase .game-icon:hover, .showcase .game-btn:not(.game-row):hover', 'excludes another class'],
+        ['.showcase .game-btn:not(.game-panel):hover', 'drops a selector'],
+        ['.showcase .game-icon:hover, .showcase .game-btn:not(.game-panel):focus', 'rewrites the state'],
+        ['.showcase .game-icon:hover, .showcase .game-btn:hover', 'narrows nothing'],
+    ]) {
+        const rewritten = clone(validNarrowing);
+        rewritten.reviewedSelectorNarrowings[0].currentSelector = currentSelector;
+        const rewrittenErrors = [];
+        assert.equal(verifyExtractionShape(rewritten, rewrittenErrors), false, why);
+        assert.ok(rewrittenErrors.some(error => /must only insert :not\(\.game-panel\)/.test(error)), why);
+    }
+
+    const foreignNarrowing = clone(validNarrowing);
+    foreignNarrowing.reviewedSelectorNarrowings[0].excludedClass = 'game-foreign';
+    foreignNarrowing.reviewedSelectorNarrowings[0].currentSelector =
+        '.showcase .game-icon:hover, .showcase .game-btn:not(.game-foreign):hover';
+    const foreignNarrowingErrors = [];
+    assert.equal(verifyExtractionShape(foreignNarrowing, foreignNarrowingErrors), false);
+    assert.ok(foreignNarrowingErrors.some(error =>
+        /may only exclude a sharedClass owned by this extraction/.test(error)));
+
+    const narrowedImportantErrors = [];
+    const narrowedImportant = applyReviewedSelectorNarrowingsToImportant(
+        [
+            ['css/showcase.css', '', '.showcase .game-icon:hover, .showcase .game-btn:hover', 'background', 'red !important'],
+            ['css/showcase.css', '', '.showcase .other', 'color', 'red !important'],
+        ],
+        [validNarrowing],
+        narrowedImportantErrors,
+    );
+    assert.deepEqual(narrowedImportantErrors, []);
+    assert.deepEqual(narrowedImportant, [
+        ['css/showcase.css', '', '.showcase .game-icon:hover, .showcase .game-btn:not(.game-panel):hover', 'background', 'red !important'],
+        ['css/showcase.css', '', '.showcase .other', 'color', 'red !important'],
+    ]);
+
+    const missingImportantErrors = [];
+    applyReviewedSelectorNarrowingsToImportant(
+        [['css/showcase.css', '', '.showcase .other', 'color', 'red !important']],
+        [validNarrowing],
+        missingImportantErrors,
+    );
+    assert.ok(missingImportantErrors.some(error =>
+        /no declaration under the reviewed base selector/.test(error)));
+
+    const decl = (property, value) => ({ property, value, important: false });
+    const fallbackSource = { migrationDeclarations: [
+        decl('color', 'white'),
+        decl('background', 'red'),
+        decl('background', 'linear-gradient(red, blue)'),
+    ] };
+    for (const converged of [[], ['background']]) {
+        const partialChainErrors = [];
+        const partialResidual = expectedResidual(
+            fallbackSource,
+            { migrationDeclarations: [decl('background', 'linear-gradient(red, blue)')] },
+            partialChainErrors, 'fallback', [], converged,
+        );
+        assert.ok(partialChainErrors.some(error => /may not break the fallback chain for background/.test(error)),
+            'exact match of one chain member must not pass (converged=' + converged + ')');
+        assert.ok(partialResidual.some(item => item.value === 'red'));
+    }
+    // The reverse direction: a shared chain longer than the source would consume the
+    // source value with its first member and then introduce a new winning value.
+    const singleSource = { migrationDeclarations: [decl('color', 'white'), decl('background', 'red')] };
+    for (const converged of [[], ['background']]) {
+        const extendedChainErrors = [];
+        expectedResidual(
+            singleSource,
+            { migrationDeclarations: [decl('background', 'red'), decl('background', 'blue')] },
+            extendedChainErrors, 'fallback', [], converged,
+        );
+        assert.ok(extendedChainErrors.some(error => /may not break the fallback chain for background/.test(error)),
+            'a shared chain the source does not carry must not pass (converged=' + converged + ')');
+    }
+    const wholeChainErrors = [];
+    const wholeChainResidual = expectedResidual(
+        fallbackSource,
+        { migrationDeclarations: [decl('background', 'red'), decl('background', 'linear-gradient(red, blue)')] },
+        wholeChainErrors, 'fallback',
+    );
+    assert.deepEqual(wholeChainErrors, []);
+    assert.deepEqual(wholeChainResidual, [decl('color', 'white')]);
+
+    const sizedSource = { migrationDeclarations: [
+        decl('font-size', '15px'), decl('padding', '12px 20px'), decl('backdrop-filter', 'blur(8px)'),
+    ] };
+    const sizedShared = { migrationDeclarations: [decl('font-size', '14.5px'), decl('padding', '11px 18px')] };
+    const keptSizeErrors = [];
+    assert.deepEqual(expectedResidual(sizedSource, sizedShared, keptSizeErrors, 'size'),
+        sizedSource.migrationDeclarations, 'without convergence the page size stays as a residual');
+    const convergedSizeErrors = [];
+    assert.deepEqual(expectedResidual(
+        sizedSource, sizedShared, convergedSizeErrors, 'size', [], [],
+        ['font-size', 'padding', 'backdrop-filter'],
+    ), []);
+    assert.deepEqual(convergedSizeErrors, []);
+    const layoutConvergenceErrors = [];
+    expectedResidual(
+        { migrationDeclarations: [decl('width', '200px')] }, { migrationDeclarations: [] },
+        layoutConvergenceErrors, 'layout', [], [], ['width'],
+    );
+    assert.ok(layoutConvergenceErrors.some(error => /participant convergence property width is not reviewed/.test(error)));
+    const staleConvergenceErrors = [];
+    expectedResidual(sizedSource, sizedShared, staleConvergenceErrors, 'stale', [], [], ['border-radius']);
+    assert.ok(staleConvergenceErrors.some(error => /border-radius is stale/.test(error)));
+
+    const convergenceShape = clone(extraction);
+    convergenceShape.components[0].participantConvergedProperties = { dm: ['width'] };
+    const convergenceShapeErrors = [];
+    assert.equal(verifyExtractionShape(convergenceShape, convergenceShapeErrors), false);
+    assert.ok(convergenceShapeErrors.some(error => /reviewed theme\/geometry properties/.test(error)));
+
+    const validRetirement = clone(extraction);
+    validRetirement.reviewedRuleRetirements = [{
+        prefix: 'dm', context: '@media (width <= 480px)', selector: '.dm-btn', reason: 'shared size',
+    }];
+    const validRetirementErrors = [];
+    assert.equal(verifyExtractionShape(validRetirement, validRetirementErrors), true);
+    assert.deepEqual(validRetirementErrors, []);
+    const foreignRetirement = clone(validRetirement);
+    foreignRetirement.reviewedRuleRetirements[0].selector = '.dm-btn, .game-action-btn';
+    const foreignRetirementErrors = [];
+    assert.equal(verifyExtractionShape(foreignRetirement, foreignRetirementErrors), false);
+    assert.ok(foreignRetirementErrors.some(error => /may only remove dm-prefixed page selectors/.test(error)));
+
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));
     const duplicateIdentityErrors = [];
     assert.equal(verifyExtractionShape(duplicateIdentity, duplicateIdentityErrors), false);
     assert.ok(duplicateIdentityErrors.some(error => /duplicate component suffix panel/.test(error)));
-    assert.ok(duplicateIdentityErrors.some(error => /duplicate sharedClass game-panel/.test(error)));
+    assert.ok(duplicateIdentityErrors.some(error =>
+        /duplicate sharedClass selector \.game-panel/.test(error)));
 } finally {
     rmSync(root, { recursive: true, force: true });
 }
 
-console.log('PASS persisted CSS family entries continuously enforce HTML/runtime shared-class adoption');
+console.log('PASS persisted CSS family entries continuously enforce adoption and retired-token invariants');

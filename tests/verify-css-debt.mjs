@@ -17,7 +17,9 @@ import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
 import { readMigrationState, readMigrationStateAtGit } from './lib/css/migration-state.mjs';
-import { verifyFamilyExtractions } from './lib/css/family-extraction.mjs';
+import {
+    applyReviewedSelectorNarrowingsToImportant, verifyFamilyExtractions,
+} from './lib/css/family-extraction.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -213,6 +215,7 @@ function verifyProject() {
     let totalRules = 0;
     let importantCount = 0;
     let customPropertyDefinitions = 0;
+    const customPropertyDefinitionsByPath = new Map();
 
     for (const path of cssPaths) {
         const parsed = parseCssText(readFileSync(join(ROOT, path), 'utf8'), path);
@@ -222,6 +225,7 @@ function verifyProject() {
         const fileCustomPropertyDefinitions = parsed.declarations
             .filter(declaration => declaration.property.startsWith('--')).length;
         customPropertyDefinitions += fileCustomPropertyDefinitions;
+        customPropertyDefinitionsByPath.set(path, fileCustomPropertyDefinitions);
 
         const layerCounts = {};
         for (const rule of parsed.rules) {
@@ -250,10 +254,6 @@ function verifyProject() {
 
         const baselineFile = BASELINE.cssFiles.find(file => file.path === path);
         if (!baselineFile) continue;
-        if (fileCustomPropertyDefinitions !== baselineFile.customPropertyDefinitions) {
-            errors.push(path + ': custom-property declaration occurrences differ from the P0 inventory ('
-                + fileCustomPropertyDefinitions + ' current vs ' + baselineFile.customPropertyDefinitions + ' P0).');
-        }
         const layerStatements = [...parsed.layerStatements];
         const layerBlocks = [...parsed.layerBlocks];
         const normalizedLayerCounts = Object.fromEntries(Object.entries(layerCounts).sort(([a], [b]) => a.localeCompare(b)));
@@ -376,6 +376,21 @@ function verifyProject() {
         baselineUnlayeredRules: BASELINE.debt?.unlayeredRules || [],
         errors,
     });
+    for (const path of cssPaths) {
+        const baselineFile = BASELINE.cssFiles.find(file => file.path === path);
+        if (!baselineFile) continue;
+        const retiredDefinitions = familyResult.removedCustomPropertyDefinitionsByPath.get(path) || 0;
+        const expectedDefinitions = baselineFile.customPropertyDefinitions - retiredDefinitions;
+        const actualDefinitions = customPropertyDefinitionsByPath.get(path) || 0;
+        if (expectedDefinitions < 0) {
+            errors.push(path + ': reviewed custom-property retirements exceed the immutable P0 inventory.');
+        } else if (actualDefinitions !== expectedDefinitions) {
+            errors.push(path + ': custom-property declaration occurrences differ from P0 minus reviewed family retirements ('
+                + actualDefinitions + ' current vs ' + expectedDefinitions + ' expected; '
+                + retiredDefinitions + ' retired).');
+        }
+    }
+
     const expectedStaticOrdinaryRules = p5FrozenCounts.staticOrdinaryRules + familyResult.totalRuleDelta;
     if (currentCompatibilityCounts.staticOrdinaryRules !== expectedStaticOrdinaryRules) {
         errors.push('Static ordinary rule population differs from P5 plus reviewed family extractions: '
@@ -412,7 +427,11 @@ function verifyProject() {
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);
         if (key === 'unlayeredRules') continue;
-        const expected = sortTuples(BASELINE.debt[key] || []);
+        // Reviewed family selector narrowings keep every !important declaration and only
+        // re-key it under the narrowed selector; everything else stays exactly P0.
+        const expected = sortTuples(key === 'importantDeclarations'
+            ? applyReviewedSelectorNarrowingsToImportant(BASELINE.debt[key], familyResult.extractions, errors)
+            : BASELINE.debt[key] || []);
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {
             errors.push(

@@ -46,8 +46,8 @@
 | `--tok-btn-size` | `40px` | 图标按钮视觉尺寸 |
 | `--tok-hit-pad` | `-6px` | 触控热区外扩（视觉不变，命中 ≥44px） |
 
-tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-primary` / `.btn-ghost`
-（玻璃 + 渐变主色）、`.btn`（无背景排版基线）。各页另需主色时**只覆盖 `--tok-accent`**。
+tokens.css 还保留通用 `.icon-btn` 与 `.btn` / `.btn-primary` / `.btn-ghost`，主要服务历史独立页面（例如 Gomoku）。
+采用共享 shell 的游戏页，标准文本动作统一使用 `layout.css` 的 `.game-action-btn` / `--primary` / `--ghost` 与 `.game-action-row`；页面不再复制 padding、圆角、字号和 hover/active 基线。特殊 mode / ability / gameplay controls 不属于这一 family。标准 action 没有页面级尺寸例外：Hoop Shot、Planet Merge、Reversi、Tower Defense 原先更大一号的按钮已收敛到共享 family（见 `layout.md` §1.1）。页面只保留语义上不同的修饰类（如 `.pm-btn-daily`）。
 
 ---
 
@@ -65,7 +65,7 @@ tokens.css 还内置通用组件类：`.icon-btn`（玻璃图标钮）、`.btn-p
 | 页面底 | `#f3f5fa → #e8ecf5` 的浅灰蓝渐变，可叠一层 ≤0.1 透明度的主题色光晕 |
 | 面板 / 卡片 | 白色 0.7–0.98 + `rgb(15 23 42 / 0.1–0.14)` 细边框；阴影用石板色低透明度（≤0.2），不用纯黑 |
 | 文字 | 主 `#182033`、次 `#3f4a66`、弱 `#525c78`；正文对比度 ≥ 4.5:1，大字 ≥ 3:1（`verify-theme` 强制） |
-| 强调色 | 渐变保留品牌色；**上面的文字**：亮底（青、金、浅绿）用深色，深饱和底（靛、深蓝、深绿）用白色 |
+| 强调色 | 渐变保留品牌色；**上面的文字**：亮底（青、金、浅绿）用深色，深饱和底（靛、深蓝、深绿）用白色。标准 `game-action-btn--primary` 不直接把浅色主题中“为浅底文字而加深”的 `--tok-success / --tok-cyan` 当 surface，而以 `color-mix(..., white)` 提亮后再生成按钮渐变；`verify-theme` 对每个实际渐变端点强制 ≥4.5:1。 |
 | 发光 | 文字发光（带模糊的 `text-shadow`）一律去掉，按钮彩色光晕改为中性阴影 |
 | 遮罩 / 浮层 | 遮罩 `rgb(15 23 42 / 0.32)`，浮层卡片白色 0.98 |
 | 游戏实物 | 棋盘、棋子、牌面等「桌上的东西」两套主题一致（五子棋木盘、黑白棋的黑子白子、猜词的绿黄格）；棋盘可改为同一实物的另一种材质（黑白棋深色版的夜蓝盘 → 浅色版的绿色台呢） |

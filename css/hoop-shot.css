@@ -17,12 +17,6 @@
     --hs-overlay-bg: rgb(8, 10, 26, 0.88);
     --hs-title-bg: linear-gradient(120deg, var(--tok-gold), #ff8c5a 60%, #ff5a3c);
     --hs-subtitle-text: #b8a58c;
-    --hs-btn-bg: rgb(255, 255, 255, 0.08);
-    --hs-btn-border: 1px solid rgb(255, 255, 255, 0.14);
-    --hs-btn-hover-bg: rgb(255, 255, 255, 0.14);
-    --hs-btn-primary-bg: linear-gradient(120deg, #f08c3a, #ff5a3c);
-    --hs-btn-primary-shadow: 0 8px 24px rgb(255, 106, 60, 0.4);
-    --hs-btn-ghost-text: #b8a58c;
     --hs-newbest-glow: 0 0 16px rgb(255, 211, 77, 0.6);
     --hs-over-score-glow: 0 0 28px rgb(255, 140, 58, 0.5);
     --hs-over-best-text: #b8a58c;
@@ -56,13 +50,6 @@
     --hs-overlay-bg: rgb(250, 246, 240, 0.9);
     --hs-title-bg: linear-gradient(120deg, #c77800, #d9602a 60%, #c7361c);
     --hs-subtitle-text: #6e5a40;
-    --hs-btn-bg: rgb(255, 255, 255, 0.8);
-    --hs-btn-border: 1px solid rgb(15, 23, 42, 0.15);
-    --hs-btn-hover-bg: rgb(255, 255, 255, 0.95);
-    --hs-btn-primary-bg: linear-gradient(120deg, #c2561a, #c7361c);
-    --hs-btn-primary-shadow: 0 8px 22px rgb(199, 54, 28, 0.25);
-    --hs-btn-primary-text: #fff;
-    --hs-btn-ghost-text: #6e5a40;
     --hs-newbest-glow: none;
     --hs-over-score-glow: none;
     --hs-over-best-text: #6e5a40;
@@ -222,34 +209,6 @@ body {
     max-width: 320px;
 }
 
-.hs-btn {
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--hs-btn-bg);
-    border: var(--hs-btn-border);
-    border-radius: 14px;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
-
-.hs-btn:hover { background: var(--hs-btn-hover-bg); }
-.hs-btn:active { transform: scale(0.96); }
-
-.hs-btn-primary {
-    color: var(--hs-btn-primary-text, var(--tok-text));
-    background: var(--hs-btn-primary-bg);
-    border: none;
-    box-shadow: var(--hs-btn-primary-shadow);
-}
-
-.hs-btn-ghost {
-    background: transparent;
-    color: var(--hs-btn-ghost-text);
-}
-
 .hs-stat-line { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .hs-start-footer { display: flex; gap: 10px; }
@@ -288,12 +247,6 @@ body {
 .hs-over-best { font-size: 15px; color: var(--hs-over-best-text); font-variant-numeric: tabular-nums; }
 .hs-over-streak { font-size: 13.5px; color: var(--hs-over-streak-text); }
 
-.hs-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
 /* ── 排行榜 ── */
 
@@ -351,7 +304,6 @@ body {
 @media (width <= 480px) {
     .hs-title { font-size: 30px; }
     .hs-over-score { font-size: 44px; }
-    .hs-btn { padding: 11px 16px; font-size: 14px; }
     .hs-howto { font-size: 12.5px; }
 }
 

@@ -40,11 +40,16 @@
 | `game-footer-hint` | 底部操作提示 | `<p class="xx-footer-hint game-footer-hint">` |
 | `game-icon-btn` | 顶栏图标钮（40px 视觉 / ≥44px 触控热区） | home、暂停、静音… |
 | `game-icon-btn--wide` | 文字型图标钮（宽度自适应） | 语言切换（如 "Idioms" 这类长标签） |
+| `game-btn` | 图标 + 文案 composition primitive：只负责 inline-flex、对齐、gap 与 SVG 尺寸 | 特殊 mode/玩法控件也可复用 |
+| `game-action-btn` / `--primary` / `--ghost` | 标准文本 action surface：字号、内距、圆角、基础皮肤与 hover/active | Play / Again / Retry / Copy / Home 等标准动作 |
+| `game-action-row` | 标准 action button 横向布局 | 结算/通关按钮组 |
 | `game-title-pill` / `game-hud-box` | 顶栏中部标题 / 数值块 | 模式标记、分数 |
 | `sr-only` | 语义标题视觉隐藏（P3-3） | `<h1 class="sr-only">` |
 
 引入顺序决定成败：`layout.css` 在前，各页仍可用自己的规则与变量覆盖。
-但**几何**（宽度、内外边距、圆角、定位）应交给契约，页面只保留配色与动效。排行榜是显式的 family-sized 例子：通用 `game-lb-*` 拥有稳定几何/排版，页面前缀类只保留主题差异与确有必要的几何例外。
+但**稳定组件几何与交互状态**应交给契约，页面前缀类只保留业务选择器和确有必要的视觉/行为例外。排行榜与标准 action button 都是 family-sized 例子：`game-lb-*` 拥有稳定榜单骨架；`game-action-btn*` / `game-action-row` 拥有标准 action surface。不要因为历史页面 CSS 已存在就复制一套 `.xx-btn` 几何。历史上更大一号的个例（Hoop Shot、Planet Merge、Reversi、Tower Defense 的 15px / 14px 圆角按钮、手机端尺寸覆盖、页面自带的 primary hover 和 TD 沉浸式按钮皮肤）已一并收编进同一 family：标准 action 不设页面级尺寸例外。需要完全不同语义的 mode、技能或玩法按钮继续用自己的组件，不要强塞进 action family。
+
+标准 action 的状态优先级也是 shared ownership：通用 hover 只提供普通按钮反馈，不能盖过 `--primary` / `--ghost` modifier。实现上应让 modifier 保持同级或更高 cascade authority，而不是依赖页面级 `:hover` 兜底。
 
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 

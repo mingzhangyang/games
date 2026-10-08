@@ -44,11 +44,6 @@
     --rd-card-border: 1px solid rgb(255, 255, 255, 0.12);
     --rd-card-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
     --rd-over-score-glow: 0 0 26px rgb(255, 211, 77, 0.4);
-    --rd-btn-bg: rgb(255, 255, 255, 0.08);
-    --rd-btn-border: 1px solid rgb(255, 255, 255, 0.14);
-    --rd-btn-hover-bg: rgb(255, 255, 255, 0.14);
-    --rd-btn-primary-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
-    --rd-btn-primary-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
     --rd-lb-bg: rgb(255, 255, 255, 0.045);
     --rd-lb-border: 1px solid rgb(255, 255, 255, 0.1);
     --rd-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
@@ -108,11 +103,6 @@
     --rd-card-border: 1px solid rgb(15, 23, 42, 0.132);
     --rd-card-shadow: 0 24px 70px rgb(15, 23, 42, 0.2);
     --rd-over-score-glow: none;
-    --rd-btn-bg: rgb(255, 255, 255, 0.79);
-    --rd-btn-border: 1px solid rgb(15, 23, 42, 0.154);
-    --rd-btn-hover-bg: rgb(255, 255, 255, 0.95);
-    --rd-btn-primary-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
-    --rd-btn-primary-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
     --rd-lb-bg: rgb(255, 255, 255, 0.685);
     --rd-lb-border: 1px solid rgb(15, 23, 42, 0.11);
     --rd-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
@@ -460,36 +450,10 @@ body {
 
 .rd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
-.rd-btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
-.rd-btn {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--rd-btn-bg);
-    border: var(--rd-btn-border);
-    border-radius: 13px;
-    padding: 11px 18px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
 
-.rd-btn:hover { background: var(--rd-btn-hover-bg); }
-.rd-btn:active { transform: scale(0.96); }
 
-.rd-btn-primary {
-    background: var(--rd-btn-primary-bg);
-    border: none;
-    box-shadow: var(--rd-btn-primary-shadow);
-}
 
-.rd-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 /* ── 排行榜 ── */
 
