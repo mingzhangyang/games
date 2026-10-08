@@ -92,7 +92,7 @@ One implementation each; every module has a `verify-*` checker wired into `npm r
 
 ### PWA & analytics
 - PWA: `public/manifest.json` + `public/sw.js` (navigations network-first, static assets cache-first with background refresh) + `public/sw-register.js` (classic script, one tag per page). The checked-in icons under `public/icons/` are the release assets. The former Python/Node icon generators are archived/reference-only; do not rerun them as part of normal development.
-- Analytics: `public/analytics.js` exposes `window.hubTrack(game, 'play'|'finish')` via sendBeacon to `Workers/games-analytics.js` (KV binding `GAMES_ANALYTICS`, daily keys expire in 90 days). Every game calls hubTrack at game start / game over; the landing hub shows today's total plays when the worker is reachable and stays hidden otherwise.
+- Analytics: `public/analytics.js` exposes `window.hubTrack(game, 'play'|'finish')` via sendBeacon to `Workers/games-analytics.js` (KV binding `GAMES_ANALYTICS`, daily keys expire in 90 days). Every game calls hubTrack at game start / game over; the landing hub shows today's total plays when the worker is reachable and stays hidden otherwise. The three external games (`site.home.externalGames`: 2d-minecraft / dots-and-boxes / the-stack, separate repos) post the same `{game, event}` beacon from their own `analytics.ts` under their registry ids `minecraft` / `dots` / `stack`; gen appends those ids to the Worker's `GAMES` whitelist, so they count toward the hub total.
 
 ## Development Workflow
 

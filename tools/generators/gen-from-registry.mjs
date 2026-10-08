@@ -319,8 +319,11 @@ function scoresTransform(src) {
 }
 
 // ---------- Workers/games-analytics.js ----------
+// 站外游戏（site.home.externalGames：2d-minecraft / dots-and-boxes / the-stack）
+// 也通过同一 hubTrack 协议上报，用的是它们在登记表里的 id。
 function analyticsContent() {
-    return `const GAMES = [${GAMES.map(g => `'${g.id}'`).join(', ')}];`;
+    const ids = [...GAMES.map(g => g.id), ...(SITE.home.externalGames || []).map(g => g.id)];
+    return `const GAMES = [${ids.map(id => `'${id}'`).join(', ')}];`;
 }
 function analyticsTransform(src) {
     return applyRegion(src, 'games-analytics', analyticsContent(), (s, body) => {
