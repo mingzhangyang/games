@@ -522,7 +522,7 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
                     // Visible actions transition background for 150ms; without this the
                     // audit could read the pre-hover or an intermediate surface.
                     const noTransition = await page.addStyleTag({
-                        content: '.game-action-btn--primary { transition: none !important; }',
+                        content: '.game-action-btn--primary, .game-action-btn--ghost { transition: none !important; }',
                     });
                     try {
                         await cdp.send('DOM.enable');
@@ -550,6 +550,25 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
                         check(hovered === primaryCount && hovered > 0,
                             `${p.id}@${w}：primary hover 实际执行数量`,
                             `${hovered}/${primaryCount}`);
+                        // Ghost actions are transparent at rest and must still show hover
+                        // feedback: a same-specificity modifier written after the shared
+                        // zero-specificity hover once silently cancelled it.
+                        const { nodeIds: ghostIds } = await cdp.send('DOM.querySelectorAll', {
+                            nodeId: root.nodeId, selector: '.game-action-btn--ghost',
+                        });
+                        const ghostBg = i => page.evaluate(index => getComputedStyle(
+                            document.querySelectorAll('.game-action-btn--ghost')[index]).backgroundColor, i);
+                        for (const [i, nodeId] of ghostIds.entries()) {
+                            const rest = await ghostBg(i);
+                            await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover'] });
+                            try {
+                                const hover = await ghostBg(i);
+                                check(hover !== rest, `${p.id}@${w}：ghost action hover 有底色反馈（按钮 ${i + 1}）`,
+                                    `${rest} → ${hover}`);
+                            } finally {
+                                await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] });
+                            }
+                        }
                     } finally {
                         await noTransition.evaluate(node => node.remove());
                         await cdp.detach();

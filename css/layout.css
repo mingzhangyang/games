@@ -441,6 +441,12 @@
         color: var(--tok-text-dim);
         background: transparent;
     }
+
+    /* --ghost 与零特异性的共享 hover 同为 (0,1,0) 且写在后面，会盖掉 hover 底色；
+       旧的 .xx-btn:hover 是 (0,2,0)，ghost 一直有 hover 反馈。 */
+    .game-action-btn--ghost:hover {
+        background: var(--tok-panel-strong);
+    }
 }
 
 /* ── 侧栏卡片族 ── */

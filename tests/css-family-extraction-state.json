@@ -485,7 +485,7 @@
       "baseDuplicationDigest": "daace9cb5725e02b7f294f8daaf464148fd4398ebbca47e708c175628cd3fccb",
       "sharedStylesheet": "css/layout.css",
       "sharedLayer": "components",
-      "expectedRuleDelta": -80,
+      "expectedRuleDelta": -79,
       "expectedRemovedUnlayeredRules": 86,
       "games": {
         "cc": {
@@ -821,6 +821,23 @@
               "border-color"
             ]
           }
+        },
+        {
+          "suffix": "btn-ghost",
+          "sharedClass": "game-action-btn--ghost",
+          "localSelectorSuffix": ":hover",
+          "sharedSelectorSuffix": ":hover",
+          "requiresAdoption": false,
+          "surface": "html",
+          "participants": [
+            "td"
+          ],
+          "fullyRemoved": [
+            "td"
+          ],
+          "convergedThemeProperties": [
+            "background"
+          ]
         }
       ],
       "retiredCustomProperties": {
@@ -973,12 +990,6 @@
           "context": "",
           "selector": ".td-btn-primary:active",
           "reason": "primary press feedback is the shared action :active scale"
-        },
-        {
-          "prefix": "td",
-          "context": "",
-          "selector": ".td-btn-ghost:hover",
-          "reason": "ghost hover is owned by the shared action hover"
         },
         {
           "prefix": "td",
