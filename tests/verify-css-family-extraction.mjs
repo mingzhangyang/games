@@ -170,13 +170,18 @@ try {
         /requiresAdoption:false is only valid for a state selector/.test(error)));
 
     const validRetirementShape = clone(extraction);
-    validRetirementShape.retiredCustomProperties = { dm: ['--dm-panel-bg'] };
+    validRetirementShape.retiredCustomProperties = {
+        dm: {
+            properties: ['--dm-panel-bg'],
+            expectedRemovedDefinitions: 2,
+        },
+    };
     const validRetirementShapeErrors = [];
     assert.equal(verifyExtractionShape(validRetirementShape, validRetirementShapeErrors), true);
     assert.deepEqual(validRetirementShapeErrors, []);
 
     const invalidRetirementShape = clone(validRetirementShape);
-    invalidRetirementShape.retiredCustomProperties.dm.push('padding');
+    invalidRetirementShape.retiredCustomProperties.dm.properties.push('padding');
     const invalidRetirementShapeErrors = [];
     assert.equal(verifyExtractionShape(invalidRetirementShape, invalidRetirementShapeErrors), false);
     assert.ok(invalidRetirementShapeErrors.some(error =>
@@ -209,6 +214,17 @@ try {
     assert.deepEqual(retirementErrors, []);
     assert.equal(retirementExternal.base.length, 2);
     assert.equal(retirementExternal.current.length, 2);
+
+    const wrongRetirementCount = clone(validRetirementShape);
+    wrongRetirementCount.retiredCustomProperties.dm.expectedRemovedDefinitions = 1;
+    const wrongRetirementCountErrors = [];
+    verifyRetiredCustomProperties(
+        wrongRetirementCount, retirementCurrent, retirementBase,
+        catalogMap(retirementCurrent), catalogMap(retirementBase),
+        { base: [], current: [] }, wrongRetirementCountErrors,
+    );
+    assert.ok(wrongRetirementCountErrors.some(error =>
+        /base contains 2 retired declaration occurrence\(s\), expected 1/.test(error)));
 
     const consumerCurrent = new Map(retirementCurrent);
     consumerCurrent.set(

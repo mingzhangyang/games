@@ -400,14 +400,24 @@ export function verifyExtractionShape(extraction, errors) {
         fail('retiredCustomProperties must be an object keyed by game prefix.');
     } else {
         const seenRetired = new Set();
-        for (const [prefix, properties] of Object.entries(retiredCustomProperties)) {
+        for (const [prefix, retirement] of Object.entries(retiredCustomProperties)) {
             if (!extraction.games?.[prefix]) {
                 fail('retired custom properties reference unknown game prefix ' + prefix + '.');
                 continue;
             }
-            if (!Array.isArray(properties) || !properties.length) {
-                fail('retired custom properties for ' + prefix + ' must be a non-empty array.');
+            if (!retirement || typeof retirement !== 'object' || Array.isArray(retirement)) {
+                fail('retired custom properties for ' + prefix + ' must be an object.');
                 continue;
+            }
+            const properties = retirement.properties;
+            if (!Array.isArray(properties) || !properties.length) {
+                fail('retired custom properties for ' + prefix + ' require a non-empty properties array.');
+                continue;
+            }
+            if (!Number.isInteger(retirement.expectedRemovedDefinitions)
+                || retirement.expectedRemovedDefinitions <= 0) {
+                fail('retired custom properties for ' + prefix
+                    + ' require a positive expectedRemovedDefinitions integer.');
             }
             for (const property of properties) {
                 if (typeof property !== 'string' || !property.startsWith('--')) {
@@ -494,10 +504,11 @@ export function verifyRetiredCustomProperties(
     currentCatalogs, baseCatalogs, externalRuleChanges, errors,
 ) {
     const retirements = extraction.retiredCustomProperties || {};
-    for (const [prefix, properties] of Object.entries(retirements)) {
+    for (const [prefix, retirement] of Object.entries(retirements)) {
         const game = extraction.games?.[prefix];
         if (!game?.css) continue;
         const label = extraction.id + '/retired-custom-properties/' + prefix;
+        const properties = retirement.properties || [];
         const retired = new Set(properties);
         const baseParsed = baseParsedByPath.get(game.css);
         const currentParsed = currentParsedByPath.get(game.css);
@@ -506,10 +517,14 @@ export function verifyRetiredCustomProperties(
             && (rule.context || []).length === 0
             && (rule.migrationDeclarations || []).some(declaration => retired.has(declaration.property)));
         const seenBase = new Set();
+        let removedDefinitionCount = 0;
 
         for (const baseRule of baseRules) {
             for (const declaration of baseRule.migrationDeclarations || []) {
-                if (retired.has(declaration.property)) seenBase.add(declaration.property);
+                if (retired.has(declaration.property)) {
+                    seenBase.add(declaration.property);
+                    removedDefinitionCount += 1;
+                }
             }
             const currentRule = uniqueRule(
                 currentParsed, baseRule.selector, null, errors, label + '/' + baseRule.selector + '/current',
@@ -532,6 +547,12 @@ export function verifyRetiredCustomProperties(
             );
             if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
             if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
+        }
+
+        if (removedDefinitionCount !== retirement.expectedRemovedDefinitions) {
+            errors.push(label + ': base contains ' + removedDefinitionCount
+                + ' retired declaration occurrence(s), expected '
+                + retirement.expectedRemovedDefinitions + '.');
         }
 
         for (const property of properties) {
@@ -676,6 +697,8 @@ export function verifyFamilyExtractions({
 
     const cssPaths = new Set();
     const removed = [];
+    const removedCustomPropertyDefinitionsByPath = new Map();
+    const retiredPropertyClaims = new Set();
     let totalRuleDelta = 0;
     for (const extraction of currentById.values()) {
         if (!verifyExtractionShape(extraction, errors)) continue;
@@ -699,6 +722,25 @@ export function verifyFamilyExtractions({
         removed.push(...tuples);
         if (extraction.sharedStylesheet) cssPaths.add(extraction.sharedStylesheet);
         for (const game of Object.values(extraction.games || {})) if (game?.css) cssPaths.add(game.css);
+
+        for (const [prefix, retirement] of Object.entries(extraction.retiredCustomProperties || {})) {
+            const path = extraction.games?.[prefix]?.css;
+            if (!path) continue;
+            removedCustomPropertyDefinitionsByPath.set(
+                path,
+                (removedCustomPropertyDefinitionsByPath.get(path) || 0)
+                    + retirement.expectedRemovedDefinitions,
+            );
+            for (const property of retirement.properties || []) {
+                const claim = path + '\0' + property;
+                if (retiredPropertyClaims.has(claim)) {
+                    errors.push('retired custom property is claimed by more than one family transaction: '
+                        + path + ' ' + property + '.');
+                } else {
+                    retiredPropertyClaims.add(claim);
+                }
+            }
+        }
     }
 
     const seenRemoved = new Set();
@@ -733,6 +775,7 @@ export function verifyFamilyExtractions({
         cssPaths,
         totalRuleDelta,
         remainingUnlayeredRules: subtractRows(baselineUnlayeredRules, removed, errors),
+        removedCustomPropertyDefinitionsByPath,
         externalRuleChanges,
         newExtractionIds: newExtractions.map(extraction => extraction.id),
     };
