@@ -1259,7 +1259,7 @@
               "properties": [
                 "flex"
               ],
-              "reason": "flex: 0 0 auto only restated the default content-sized score column next to the shared flex: 1 name."
+              "reason": "Bond Forge intentionally gives up its non-shrinking score column (flex: 0 0 auto, i.e. flex-shrink: 0); the score now uses the default flex-shrink: 1 like every other page, next to the shared flex: 1 / min-width: 0 name that absorbs overflow first."
             }
           }
         },

@@ -79,8 +79,8 @@ function compare(id, subject, snapshot, expected) {
         if (typeof wanted === 'string' && wanted.startsWith('inherit:')) {
             target = snapshot[wanted.slice('inherit:'.length)]?.[key];
         } else if (wanted === 'auto-box') {
-            // No page height: the box is exactly line box + padding + border.
-            target = actual?.contentBoxHeight;
+            // No page height: the input must be exactly as tall as its auto-height clone.
+            target = snapshot.autoHeight;
         }
         const got = actual?.[key];
         if (JSON.stringify(got) !== JSON.stringify(target)) {
@@ -145,7 +145,6 @@ try {
 
                     const style = element => {
                         const s = getComputedStyle(element);
-                        const px = value => parseFloat(value) || 0;
                         return {
                             display: s.display,
                             flexDirection: s.flexDirection,
@@ -166,9 +165,6 @@ try {
                             textTransform: s.textTransform,
                             textAlign: s.textAlign,
                             height: s.height,
-                            contentBoxHeight: s.lineHeight === 'normal' ? s.height
-                                : (px(s.lineHeight) + px(s.paddingTop) + px(s.paddingBottom)
-                                    + px(s.borderTopWidth) + px(s.borderBottomWidth)) + 'px',
                             radius: s.borderTopLeftRadius,
                             marginTop: s.marginTop,
                             marginBottom: s.marginBottom,
@@ -178,6 +174,14 @@ try {
                         };
                     };
                     const result = { overlayDisplay: getComputedStyle(target).display, classes: {} };
+                    // Reference height: a clone under the same cascade with the height forced back to
+                    // auto. Any page-fixed height on the real input then differs from it.
+                    const reference = nodes.input.cloneNode();
+                    reference.removeAttribute('id');
+                    reference.style.setProperty('height', 'auto', 'important');
+                    nodes.input.after(reference);
+                    result.autoHeight = getComputedStyle(reference).height;
+                    reference.remove();
                     for (const [key, node] of Object.entries(nodes)) result[key] = style(node);
                     for (const [key, sharedClass] of Object.entries(sharedClasses)) {
                         result.classes[key] = nodes[key].classList.contains(sharedClass) ? null : sharedClass;
