@@ -147,15 +147,16 @@ export function expectedResidual(
         const exactKey = declarationKey(declaration);
         const exactIndex = residual.findIndex(item => declarationKey(item) === exactKey);
 
-        // A repeated property in the source is an ordered fallback chain. Moving only part
+        // A repeated property on either side is an ordered fallback chain. Moving only part
         // of it would leave the rest as an unlayered residual that outranks the layered
-        // shared rule, so the shared rule must carry the whole chain verbatim or none of it.
-        if (sameProperty.length > 1) {
+        // shared rule, and a longer shared chain would consume the source value and then
+        // introduce a new winning one, so the two ordered chains must match exactly.
+        const sharedChain = shared.filter(item =>
+            item.property === declaration.property && item.important === declaration.important);
+        if (sameProperty.length > 1 || sharedChain.length > 1) {
             const chainKey = declaration.property + '\0' + declaration.important;
             if (handledChains.has(chainKey)) continue;
             handledChains.add(chainKey);
-            const sharedChain = shared.filter(item =>
-                item.property === declaration.property && item.important === declaration.important);
             if (canonical(sharedChain) !== canonical(sameProperty)) {
                 errors.push(label + ': family extraction may not break the fallback chain for '
                     + declaration.property + '; the shared rule must carry the whole ordered chain.');

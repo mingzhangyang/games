@@ -387,6 +387,19 @@ try {
             'exact match of one chain member must not pass (converged=' + converged + ')');
         assert.ok(partialResidual.some(item => item.value === 'red'));
     }
+    // The reverse direction: a shared chain longer than the source would consume the
+    // source value with its first member and then introduce a new winning value.
+    const singleSource = { migrationDeclarations: [decl('color', 'white'), decl('background', 'red')] };
+    for (const converged of [[], ['background']]) {
+        const extendedChainErrors = [];
+        expectedResidual(
+            singleSource,
+            { migrationDeclarations: [decl('background', 'red'), decl('background', 'blue')] },
+            extendedChainErrors, 'fallback', [], converged,
+        );
+        assert.ok(extendedChainErrors.some(error => /may not break the fallback chain for background/.test(error)),
+            'a shared chain the source does not carry must not pass (converged=' + converged + ')');
+    }
     const wholeChainErrors = [];
     const wholeChainResidual = expectedResidual(
         fallbackSource,
