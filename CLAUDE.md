@@ -30,6 +30,10 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript, b
 npm run dev         # Vite dev server
 npm run build       # Vite production build -> dist/ (multi-entry, legacy plugin, terser)
 npm run deploy      # vite build && wrangler deploy
+npm run deploy:analytics   # 统计 Worker（games-analytics）
+npm run deploy:scores      # 排行榜 Worker（game-scores）
+npm run deploy:word-stats  # Word Daily 统计 Worker
+npm run deploy:all         # 主站 + 以上三个 Worker；改了 games.config.json 并 gen 后用它
 npm run preview     # wrangler dev (serves dist/ + src/index.js worker)
 npm run gen         # 由 games.config.json 重新生成全部登记点（见 registry 契约）
 npm run verify      # 全量校验体系（自动发现的全部项，见 Testing）
@@ -92,7 +96,7 @@ One implementation each; every module has a `verify-*` checker wired into `npm r
 
 ### PWA & analytics
 - PWA: `public/manifest.json` + `public/sw.js` (navigations network-first, static assets cache-first with background refresh) + `public/sw-register.js` (classic script, one tag per page). The checked-in icons under `public/icons/` are the release assets. The former Python/Node icon generators are archived/reference-only; do not rerun them as part of normal development.
-- Analytics: `public/analytics.js` exposes `window.hubTrack(game, 'play'|'finish')` via sendBeacon to `Workers/games-analytics.js` (KV binding `GAMES_ANALYTICS`, daily keys expire in 90 days). Every game calls hubTrack at game start / game over; the landing hub shows today's total plays when the worker is reachable and stays hidden otherwise.
+- Analytics: `public/analytics.js` exposes `window.hubTrack(game, 'play'|'finish')` via sendBeacon to `Workers/games-analytics.js` (KV binding `GAMES_ANALYTICS`, daily keys expire in 90 days). Every game calls hubTrack at game start / game over; the landing hub shows today's total plays when the worker is reachable and stays hidden otherwise. The three external games (`site.home.externalGames`: 2d-minecraft / dots-and-boxes / the-stack, separate repos) post the same `{game, event}` beacon from their own `analytics.ts` under their registry ids `minecraft` / `dots` / `stack`; gen appends those ids to the Worker's `GAMES` whitelist, so they count toward the hub total.
 
 ## Development Workflow
 
