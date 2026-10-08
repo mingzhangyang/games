@@ -428,7 +428,11 @@
 
     .game-action-btn--primary {
         color: var(--tok-on-accent);
-        background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
+        background: linear-gradient(
+            120deg,
+            color-mix(in srgb, var(--tok-success) 85%, white),
+            color-mix(in srgb, var(--tok-cyan) 85%, white)
+        );
         border: none;
         box-shadow: 0 8px 24px rgb(52, 211, 153, 0.4);
     }

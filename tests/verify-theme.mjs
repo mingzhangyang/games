@@ -11,8 +11,8 @@
 //      「仅深色」小标只在浅色时出现，且恰好标在不支持浅色的注册表游戏上
 //   ④ 支持浅色的页面：{浅色, 深色} × {390, 1280}
 //      - 页面底色取自真实截图像素（四角）：浅色亮度 > 0.6、深色 < 0.3（抓「只换了外框」）
-//      - 文字对比度：浅色下正文 ≥ 4.5:1、大字 ≥ 3:1，不达标即失败；深色下只统计不判红
-//        （深色是既有设计，部分弱化文字本就低于 4.5，另行治理）
+//      - 文字对比度：浅色下正文 ≥ 4.5:1、大字 ≥ 3:1；primary action 渐变逐端点 ≥ 4.5:1
+//        （不能只用渐变平均色掩盖单端点失败）；深色下只统计不判红
 //      - 同页即时切换：深色加载后改偏好为浅色，不刷新即变浅
 //
 // 用法：node tests/verify-theme.mjs [baseUrl]（verify-all 自动传入）
@@ -389,6 +389,59 @@ const contrastAudit = page => page.evaluate(() => {
     await ctx.close();
 }
 
+/**
+ * 标准 primary action 的渐变端点对比度。
+ * 通用正文审计会把渐变色标平均，无法发现“平均值合格但某个端点不合格”；
+ * 这里直接读取 computed gradient 的每个实际色标，逐端点要求 4.5:1。
+ */
+const actionPrimaryContrastAudit = page => page.evaluate(() => {
+    const parse = (s) => {
+        if (!s) return null;
+        let m = s.match(/rgba?\(([^)]+)\)/);
+        if (m) {
+            const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+            return { r: p[0], g: p[1], b: p[2] };
+        }
+        m = s.match(/color\(srgb\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)/);
+        if (m) return { r: Number(m[1]) * 255, g: Number(m[2]) * 255, b: Number(m[3]) * 255 };
+        return null;
+    };
+    const lum = c => {
+        const f = v => {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+    };
+    const contrast = (a, b) => {
+        const l1 = Math.max(lum(a), lum(b));
+        const l2 = Math.min(lum(a), lum(b));
+        return (l1 + 0.05) / (l2 + 0.05);
+    };
+    const extractStops = image => {
+        const tokens = image.match(/rgba?\([^)]+\)|color\(srgb\s+[^)]+\)/g) || [];
+        return tokens.map(parse).filter(Boolean);
+    };
+
+    const bad = [];
+    let total = 0;
+    for (const el of document.querySelectorAll('.game-action-btn--primary')) {
+        const cs = getComputedStyle(el);
+        const fg = parse(cs.color);
+        const stops = extractStops(cs.backgroundImage);
+        if (!fg || stops.length < 2) {
+            bad.push('unparseable primary surface: ' + cs.backgroundImage + ' / ' + cs.color);
+            continue;
+        }
+        for (const stop of stops) {
+            total++;
+            const ratio = contrast(fg, stop);
+            if (ratio < 4.5) bad.push(ratio.toFixed(2) + ':1 @ ' + cs.backgroundImage);
+        }
+    }
+    return { bad, total };
+});
+
 /* ── ④ 支持浅色的页面：像素底色 / 画布底色 / 对比度 / 即时切换 ── */
 // 画布底色随主题的例外：画布四角画的是「实物」、两套主题本就一致
 // （gomoku 的木棋盘、crystal-bloom 的结晶皿、ripple-duet 的海面、tetris 的棋盘屏幕）
@@ -435,6 +488,10 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
             const audit = await contrastAudit(page);
             if (theme === 'light') {
                 check(audit.bad.length === 0, `${p.id}@${w}：浅色文字对比度（${audit.total} 处）`, audit.bad.slice(0, 6).join(' | '));
+                const primaryAudit = await actionPrimaryContrastAudit(page);
+                check(primaryAudit.bad.length === 0,
+                    `${p.id}@${w}：primary action 渐变端点对比度（${primaryAudit.total} 个端点）`,
+                    primaryAudit.bad.slice(0, 4).join(' | '));
             } else if (audit.bad.length) {
                 darkContrast.push(`${p.id}@${w}: ${audit.bad.length}/${audit.total}`);
             }
