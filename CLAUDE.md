@@ -30,6 +30,10 @@ This is a collection of single-page HTML5 games built with vanilla JavaScript, b
 npm run dev         # Vite dev server
 npm run build       # Vite production build -> dist/ (multi-entry, legacy plugin, terser)
 npm run deploy      # vite build && wrangler deploy
+npm run deploy:analytics   # 统计 Worker（games-analytics）
+npm run deploy:scores      # 排行榜 Worker（game-scores）
+npm run deploy:word-stats  # Word Daily 统计 Worker
+npm run deploy:all         # 主站 + 以上三个 Worker；改了 games.config.json 并 gen 后用它
 npm run preview     # wrangler dev (serves dist/ + src/index.js worker)
 npm run gen         # 由 games.config.json 重新生成全部登记点（见 registry 契约）
 npm run verify      # 全量校验体系（自动发现的全部项，见 Testing）
