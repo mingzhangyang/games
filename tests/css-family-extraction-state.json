@@ -1411,6 +1411,18 @@
             "margin-bottom"
           ],
           "reason": "The head row now carries .pm-lb-title/.game-lb-title, so the shared title margin spaces it; the page copy of the same 8px is retired. The row keeps only its page-only tab layout."
+        },
+        {
+          "prefix": "bf",
+          "context": "",
+          "selector": ".bf-username:focus",
+          "properties": [
+            "outline"
+          ],
+          "reviewedLayoutProperties": [
+            "outline"
+          ],
+          "reason": "The shared .game-lb-username already sets outline: none; the focus rule keeps only its palette (border-color, background)."
         }
       ]
     }

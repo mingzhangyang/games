@@ -714,10 +714,20 @@ export function verifyExtractionShape(extraction, errors) {
                 fail('reviewed declaration retirement may only edit ' + retirement.prefix + '-prefixed page selectors.');
             }
             const properties = retirement.properties;
+            const declarationLayout = new Set(retirement.reviewedLayoutProperties || []);
+            if (retirement.reviewedLayoutProperties !== undefined
+                && (!Array.isArray(retirement.reviewedLayoutProperties) || !declarationLayout.size
+                    || declarationLayout.size !== retirement.reviewedLayoutProperties.length
+                    || [...declarationLayout].some(property => !REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES.has(property))
+                    || [...declarationLayout].some(property => !(properties || []).includes(property)))) {
+                fail('reviewed declaration retirement reviewedLayoutProperties must be a non-empty, duplicate-free '
+                    + 'list of reviewed layout properties that are also listed in properties.');
+            }
             if (!Array.isArray(properties) || !properties.length || new Set(properties).size !== properties.length
-                || properties.some(property => !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property))) {
+                || properties.some(property => !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property)
+                    && !declarationLayout.has(property))) {
                 fail('reviewed declaration retirement properties must be a non-empty, duplicate-free list of '
-                    + 'reviewed theme/geometry properties.');
+                    + 'reviewed theme/geometry properties (layout properties also need reviewedLayoutProperties).');
             }
             if (typeof retirement.reason !== 'string' || !retirement.reason.trim()) {
                 fail('reviewed declaration retirement requires a reason.');

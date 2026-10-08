@@ -535,7 +535,6 @@ body {
 }
 
 .bf-username:focus {
-    outline: none;
     border-color: var(--bf-username-focus-border);
     background: var(--bf-username-focus-bg);
 }

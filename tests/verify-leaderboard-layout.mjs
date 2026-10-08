@@ -10,6 +10,7 @@
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
+import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
@@ -18,23 +19,36 @@ const VIEWPORTS = [
     { width: 1280, height: 900 },
 ];
 
-const PAGES = [
-    ['bf', 'bond-forge.html'],
-    ['cc', 'circuit.html'],
-    ['cb', 'crystal-bloom.html'],
-    ['ec', 'echo-cave.html'],
-    ['fv', 'flame-verse.html'],
-    ['gd', 'gravity-slingshot.html'],
-    ['hs', 'hoop-shot.html'],
-    ['lm', 'lumen.html'],
-    ['md', 'maxwell-demon.html'],
-    ['ms', 'minesweeper.html', { overlay: '#ms-result', hide: ['#ms-start'] }],
-    ['pm', 'planet-merge.html'],
-    ['rv', 'reversi.html'],
-    ['rd', 'ripple-duet.html'],
-    ['sd', 'silk-dew.html'],
-    ['td', 'tower-defense.html'],
-];
+// Per-page fixture overrides, keyed by registry id. Every page with the `leaderboard`
+// cap must appear here or in LEADERBOARD_EXEMPT, so a new leaderboard game cannot be
+// silently skipped (registry.assertCovered fails instead).
+const FIXTURES = {
+    'bond-forge': {},
+    'circuit': {},
+    'crystal-bloom': {},
+    'echo-cave': {},
+    'flame-verse': {},
+    'gravity-slingshot': {},
+    'hoop-shot': {},
+    'lumen': {},
+    'maxwell-demon': {},
+    'minesweeper': { overlay: '#ms-result', hide: ['#ms-start'] },
+    'planet-merge': {},
+    'reversi': {},
+    'ripple-duet': {},
+    'silk-dew': {},
+    'tower-defense': {},
+};
+// These leaderboard-cap pages have no game-lb-* board: Tetris keeps its own sidebar
+// high-score table, Sword Flight lists ranks in its menu (`.sf-rank-*`), and Needle vs Awn
+// only submits scores without rendering a board. Converging them is separate work.
+const LEADERBOARD_EXEMPT = ['tetris', 'needle-awn', 'sword-flight'];
+registry.assertCovered({
+    cap: 'leaderboard', covered: Object.keys(FIXTURES), exempt: LEADERBOARD_EXEMPT, label: 'FIXTURES',
+});
+const PAGES = registry.withCap('leaderboard')
+    .filter(game => FIXTURES[game.id])
+    .map(game => [game.prefix, game.href, FIXTURES[game.id]]);
 
 // Values owned by the shared `game-lb-*` rules in css/layout.css. `inherit:<subject>`
 // means "must equal the computed value of that subject", i.e. the page wrote nothing.

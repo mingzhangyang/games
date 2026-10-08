@@ -629,9 +629,28 @@ try {
             catalogMap(current), catalogMap(base), { base: [], current: [] }, caseErrors);
         assert.ok(caseErrors.some(error => /register a whole-rule retirement instead/.test(error)));
     }
+    const layoutDeclaration = clone(declarationRetirement);
+    Object.assign(layoutDeclaration.reviewedDeclarationRetirements[0], {
+        selector: '.dm-input:focus', properties: ['outline'], reviewedLayoutProperties: ['outline'],
+    });
+    const layoutDeclarationShapeErrors = [];
+    assert.equal(verifyExtractionShape(layoutDeclaration, layoutDeclarationShapeErrors), true);
+    assert.deepEqual(layoutDeclarationShapeErrors, []);
+    {
+        const base = parsedMap('css/demo.css', '.dm-input:focus{outline:none;border-color:red}');
+        const current = parsedMap('css/demo.css', '.dm-input:focus{border-color:red}');
+        const caseErrors = [];
+        verifyReviewedDeclarationRetirements(layoutDeclaration, current, base,
+            catalogMap(current), catalogMap(base), { base: [], current: [] }, caseErrors);
+        assert.deepEqual(caseErrors, []);
+    }
     for (const [mutate, expected, why] of [
         [entry => { entry.selector = '.dm-head, .game-lb-title'; }, /may only edit dm-prefixed page selectors/, 'foreign selector'],
         [entry => { entry.properties = ['display']; }, /reviewed theme\/geometry properties/, 'layout property'],
+        [entry => { entry.properties = ['margin-bottom']; entry.reviewedLayoutProperties = ['display']; },
+            /also listed in properties/, 'reviewed layout property not retired'],
+        [entry => { entry.properties = ['position']; entry.reviewedLayoutProperties = ['position']; },
+            /reviewedLayoutProperties must be a non-empty/, 'unreviewed layout property'],
         [entry => { entry.reason = ''; }, /declaration retirement requires a reason/, 'missing reason'],
     ]) {
         const candidate = clone(declarationRetirement);
