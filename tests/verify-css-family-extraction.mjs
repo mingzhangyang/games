@@ -396,6 +396,48 @@ try {
     assert.deepEqual(wholeChainErrors, []);
     assert.deepEqual(wholeChainResidual, [decl('color', 'white')]);
 
+    const sizedSource = { migrationDeclarations: [
+        decl('font-size', '15px'), decl('padding', '12px 20px'), decl('backdrop-filter', 'blur(8px)'),
+    ] };
+    const sizedShared = { migrationDeclarations: [decl('font-size', '14.5px'), decl('padding', '11px 18px')] };
+    const keptSizeErrors = [];
+    assert.deepEqual(expectedResidual(sizedSource, sizedShared, keptSizeErrors, 'size'),
+        sizedSource.migrationDeclarations, 'without convergence the page size stays as a residual');
+    const convergedSizeErrors = [];
+    assert.deepEqual(expectedResidual(
+        sizedSource, sizedShared, convergedSizeErrors, 'size', [], [],
+        ['font-size', 'padding', 'backdrop-filter'],
+    ), []);
+    assert.deepEqual(convergedSizeErrors, []);
+    const layoutConvergenceErrors = [];
+    expectedResidual(
+        { migrationDeclarations: [decl('width', '200px')] }, { migrationDeclarations: [] },
+        layoutConvergenceErrors, 'layout', [], [], ['width'],
+    );
+    assert.ok(layoutConvergenceErrors.some(error => /participant convergence property width is not reviewed/.test(error)));
+    const staleConvergenceErrors = [];
+    expectedResidual(sizedSource, sizedShared, staleConvergenceErrors, 'stale', [], [], ['border-radius']);
+    assert.ok(staleConvergenceErrors.some(error => /border-radius is stale/.test(error)));
+
+    const convergenceShape = clone(extraction);
+    convergenceShape.components[0].participantConvergedProperties = { dm: ['width'] };
+    const convergenceShapeErrors = [];
+    assert.equal(verifyExtractionShape(convergenceShape, convergenceShapeErrors), false);
+    assert.ok(convergenceShapeErrors.some(error => /reviewed theme\/geometry properties/.test(error)));
+
+    const validRetirement = clone(extraction);
+    validRetirement.reviewedRuleRetirements = [{
+        prefix: 'dm', context: '@media (width <= 480px)', selector: '.dm-btn', reason: 'shared size',
+    }];
+    const validRetirementErrors = [];
+    assert.equal(verifyExtractionShape(validRetirement, validRetirementErrors), true);
+    assert.deepEqual(validRetirementErrors, []);
+    const foreignRetirement = clone(validRetirement);
+    foreignRetirement.reviewedRuleRetirements[0].selector = '.dm-btn, .game-action-btn';
+    const foreignRetirementErrors = [];
+    assert.equal(verifyExtractionShape(foreignRetirement, foreignRetirementErrors), false);
+    assert.ok(foreignRetirementErrors.some(error => /may only remove dm-prefixed page selectors/.test(error)));
+
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));
     const duplicateIdentityErrors = [];

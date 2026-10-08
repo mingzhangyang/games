@@ -485,8 +485,8 @@
       "baseDuplicationDigest": "daace9cb5725e02b7f294f8daaf464148fd4398ebbca47e708c175628cd3fccb",
       "sharedStylesheet": "css/layout.css",
       "sharedLayer": "components",
-      "expectedRuleDelta": -52,
-      "expectedRemovedUnlayeredRules": 58,
+      "expectedRuleDelta": -80,
+      "expectedRemovedUnlayeredRules": 86,
       "games": {
         "cc": {
           "css": "css/circuit.css",
@@ -600,10 +600,14 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
-            "sd"
+            "sd",
+            "td"
           ],
           "fullyRemoved": [
             "cc",
@@ -611,16 +615,46 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
-            "sd"
+            "sd",
+            "td"
           ],
           "convergedThemeProperties": [
             "color",
             "background",
             "border"
-          ]
+          ],
+          "participantConvergedProperties": {
+            "hs": [
+              "font-size",
+              "border-radius",
+              "padding"
+            ],
+            "pm": [
+              "font-size",
+              "border-radius",
+              "padding",
+              "transition"
+            ],
+            "rv": [
+              "font-size",
+              "border-radius",
+              "padding"
+            ],
+            "td": [
+              "font-size",
+              "font-weight",
+              "border-radius",
+              "padding",
+              "transition",
+              "backdrop-filter"
+            ]
+          }
         },
         {
           "suffix": "btn",
@@ -635,8 +669,11 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
             "sd"
           ],
@@ -646,8 +683,11 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
             "sd"
           ],
@@ -669,10 +709,14 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
-            "sd"
+            "sd",
+            "td"
           ],
           "fullyRemoved": [
             "cc",
@@ -680,10 +724,14 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
-            "sd"
+            "sd",
+            "td"
           ]
         },
         {
@@ -696,10 +744,14 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
-            "sd"
+            "sd",
+            "td"
           ],
           "fullyRemoved": [
             "cc",
@@ -707,10 +759,14 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
-            "sd"
+            "sd",
+            "td"
           ],
           "convergedThemeProperties": [
             "color",
@@ -729,10 +785,14 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
-            "sd"
+            "sd",
+            "td"
           ],
           "fullyRemoved": [
             "cc",
@@ -740,11 +800,27 @@
             "ec",
             "fv",
             "gd",
+            "hs",
             "lm",
             "md",
+            "pm",
+            "rv",
             "rd",
-            "sd"
-          ]
+            "sd",
+            "td"
+          ],
+          "participantConvergedProperties": {
+            "hs": [
+              "color"
+            ],
+            "pm": [
+              "border-color",
+              "color"
+            ],
+            "td": [
+              "border-color"
+            ]
+          }
         }
       ],
       "retiredCustomProperties": {
@@ -795,6 +871,28 @@
             "--sd-btn-primary-shadow"
           ],
           "expectedRemovedDefinitions": 8
+        },
+        "hs": {
+          "properties": [
+            "--hs-btn-bg",
+            "--hs-btn-border",
+            "--hs-btn-hover-bg",
+            "--hs-btn-primary-bg",
+            "--hs-btn-primary-shadow",
+            "--hs-btn-primary-text",
+            "--hs-btn-ghost-text"
+          ],
+          "expectedRemovedDefinitions": 13
+        },
+        "rv": {
+          "properties": [
+            "--rv-btn-bg",
+            "--rv-btn-border",
+            "--rv-btn-hover-bg",
+            "--rv-btn-primary-bg",
+            "--rv-btn-primary-shadow"
+          ],
+          "expectedRemovedDefinitions": 10
         }
       },
       "reviewedSelectorPrunes": [
@@ -815,6 +913,12 @@
           "baseSelector": ":root[data-theme=\"light\"] .sd-mode-daily:hover, :root[data-theme=\"light\"] .sd-btn-primary:hover",
           "currentSelector": ":root[data-theme=\"light\"] .sd-mode-daily:hover",
           "reason": "standard action primary light hover is now owned by the shared action state contract"
+        },
+        {
+          "prefix": "td",
+          "baseSelector": ".td-shell.game-shell--immersive .td-btn, .td-shell.game-shell--immersive .td-level-card, .td-shell.game-shell--immersive .td-level-brief, .td-shell.game-shell--immersive .td-brief-stat, .td-shell.game-shell--immersive .td-lb",
+          "currentSelector": ".td-shell.game-shell--immersive .td-level-card, .td-shell.game-shell--immersive .td-level-brief, .td-shell.game-shell--immersive .td-brief-stat, .td-shell.game-shell--immersive .td-lb",
+          "reason": "standard actions keep the shared action surface inside the immersive scene"
         }
       ],
       "reviewedSelectorNarrowings": [
@@ -825,6 +929,62 @@
           "baseSelector": ".science-showcase .game-icon-btn:hover, .science-showcase .game-btn:hover, .science-showcase .cb-mode:hover, .science-showcase .ec-mode:hover, .science-showcase .md-mode:hover, .science-showcase .fv-mode:hover, .science-showcase .rd-mode:hover, .science-showcase .cb-chip:hover, .science-showcase .ec-chip:hover, .science-showcase .md-chip:hover, .science-showcase .fv-chip:hover, .science-showcase .rd-chip:hover",
           "currentSelector": ".science-showcase .game-icon-btn:hover, .science-showcase .game-btn:not(.game-action-btn--primary):hover, .science-showcase .cb-mode:hover, .science-showcase .ec-mode:hover, .science-showcase .md-mode:hover, .science-showcase .fv-mode:hover, .science-showcase .rd-mode:hover, .science-showcase .cb-chip:hover, .science-showcase .ec-chip:hover, .science-showcase .md-chip:hover, .science-showcase .fv-chip:hover, .science-showcase .rd-chip:hover",
           "reason": "standard primary actions keep their accent surface on hover; the showcase panel hover would otherwise put on-accent text on --showcase-hover (1.16:1 in light mode)"
+        }
+      ],
+      "reviewedRuleRetirements": [
+        {
+          "prefix": "hs",
+          "context": "@media (width <= 480px)",
+          "selector": ".hs-btn",
+          "reason": "phone action size now comes from the shared game-action-btn geometry"
+        },
+        {
+          "prefix": "pm",
+          "context": "@media (width <= 480px)",
+          "selector": ".pm-btn",
+          "reason": "phone action size now comes from the shared game-action-btn geometry"
+        },
+        {
+          "prefix": "rv",
+          "context": "@media (width <= 480px)",
+          "selector": ".rv-btn",
+          "reason": "phone action size now comes from the shared game-action-btn geometry"
+        },
+        {
+          "prefix": "pm",
+          "context": "",
+          "selector": ".pm-btn-primary:hover",
+          "reason": "primary hover keeps the shared accent surface like every other action family page"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-btn:hover:not(.td-btn-primary)",
+          "reason": "standard hover is owned by the shared zero-specificity action hover"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-btn-primary:hover",
+          "reason": "primary hover keeps the shared accent surface like every other action family page"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-btn-primary:active",
+          "reason": "primary press feedback is the shared action :active scale"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-btn-ghost:hover",
+          "reason": "ghost hover is owned by the shared action hover"
+        },
+        {
+          "prefix": "td",
+          "context": "",
+          "selector": ".td-shell.game-shell--immersive .td-btn-primary",
+          "reason": "immersive scene no longer reskins the standard primary action"
         }
       ]
     }

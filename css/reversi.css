@@ -43,11 +43,6 @@
     --rv-mode-hover-bg: rgb(255, 255, 255, 0.1);
     --rv-mode-active-bg: linear-gradient(120deg, var(--tok-success), #5eead4);
     --rv-mode-active-shadow: 0 4px 16px rgb(52, 211, 153, 0.35);
-    --rv-btn-bg: rgb(255, 255, 255, 0.08);
-    --rv-btn-border: 1px solid rgb(255, 255, 255, 0.14);
-    --rv-btn-hover-bg: rgb(255, 255, 255, 0.14);
-    --rv-btn-primary-bg: linear-gradient(120deg, var(--tok-success), #2dd4d4);
-    --rv-btn-primary-shadow: 0 8px 24px rgb(52, 211, 153, 0.4);
     --rv-over-verdict-glow: 0 0 16px rgb(255, 211, 77, 0.5);
     --rv-lb-bg: rgb(255, 255, 255, 0.045);
     --rv-lb-border: 1px solid rgb(255, 255, 255, 0.1);
@@ -100,11 +95,6 @@
     --rv-mode-hover-bg: rgb(255, 255, 255, 0.85);
     --rv-mode-active-bg: linear-gradient(120deg, var(--tok-success), #5eead4);
     --rv-mode-active-shadow: 0 4px 16px rgb(15, 23, 42, 0.122);
-    --rv-btn-bg: rgb(255, 255, 255, 0.79);
-    --rv-btn-border: 1px solid rgb(15, 23, 42, 0.154);
-    --rv-btn-hover-bg: rgb(255, 255, 255, 0.95);
-    --rv-btn-primary-bg: linear-gradient(120deg, var(--tok-success), #2dd4d4);
-    --rv-btn-primary-shadow: 0 8px 24px rgb(15, 23, 42, 0.14);
     --rv-over-verdict-glow: none;
     --rv-lb-bg: rgb(255, 255, 255, 0.685);
     --rv-lb-border: 1px solid rgb(15, 23, 42, 0.11);
@@ -433,30 +423,6 @@ body {
 
 .rv-diff-row { margin-top: -4px; }
 
-.rv-btn {
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--rv-btn-bg);
-    border: var(--rv-btn-border);
-    border-radius: 14px;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
-
-.rv-btn:hover { background: var(--rv-btn-hover-bg); }
-.rv-btn:active { transform: scale(0.96); }
-
-.rv-btn-primary {
-    background: var(--rv-btn-primary-bg);
-    border: none;
-    box-shadow: var(--rv-btn-primary-shadow);
-}
-
-.rv-btn-ghost { background: transparent; color: var(--tok-text-dim); }
-
 .rv-stat-line { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .rv-start-footer { display: flex; gap: 10px; }
@@ -533,7 +499,6 @@ body {
     .rv-title { font-size: 30px; }
     .rv-over-score { font-size: 38px; }
     .rv-mode, .rv-diff { font-size: 12.5px; padding: 8px 12px; }
-    .rv-btn { font-size: 14px; padding: 11px 16px; }
     .rv-howto { font-size: 12.5px; }
 }
 

@@ -93,6 +93,15 @@ const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
     'color', 'background', 'background-color', 'border', 'border-color',
     'box-shadow', 'filter', 'opacity',
 ]);
+// Visual geometry/typography a reviewed participant may give up so that the shared
+// family's size wins. Layout/behaviour properties (display, position, width, …) stay
+// protected: convergence may restyle a standard surface, never re-lay it out.
+const REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES = new Set([
+    'font-size', 'font-weight', 'padding', 'border-radius', 'transition', 'backdrop-filter',
+]);
+const REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES = new Set([
+    ...REVIEWED_THEME_CONVERGENCE_PROPERTIES, ...REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES,
+]);
 
 function componentLocalSelector(prefix, component) {
     return '.' + prefix + '-' + component.suffix + (component.localSelectorSuffix || '');
@@ -108,6 +117,7 @@ function componentSharedSelector(component) {
 export function expectedResidual(
     baseRule, sharedRule, errors, label,
     inheritedEquivalentProperties = [], convergedThemeProperties = [],
+    participantConvergedProperties = [],
 ) {
     const base = [...(baseRule.migrationDeclarations || [])];
     const shared = sharedRule.migrationDeclarations || [];
@@ -179,6 +189,23 @@ export function expectedResidual(
         if (exactIndex >= 0) residual.splice(exactIndex, 1);
     }
 
+    // Reviewed per-participant convergence: the page gives up its own value (or a
+    // page-only declaration) for these properties so the shared family wins.
+    for (const property of participantConvergedProperties) {
+        if (!REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property)) {
+            errors.push(label + ': participant convergence property ' + property + ' is not reviewed.');
+            continue;
+        }
+        if (!base.some(item => item.property === property)) {
+            errors.push(label + ': participant convergence property ' + property
+                + ' is stale because the local source never wrote it.');
+            continue;
+        }
+        for (let index = residual.length - 1; index >= 0; index--) {
+            if (residual[index].property === property) residual.splice(index, 1);
+        }
+    }
+
     for (const property of inheritedEquivalent) {
         if (!shared.some(item => item.property === property)) {
             errors.push(label + ': inherited-equivalent property ' + property
@@ -205,7 +232,9 @@ function hasAdoptionAnchor(extraction, component) {
         && candidate.suffix === component.suffix
         && candidate.sharedClass === component.sharedClass
         && candidate.surface === component.surface
-        && canonical(candidate.participants || []) === canonical(component.participants || []));
+        // The anchor re-validates adoption for every participant it lists, so a state
+        // component may cover a subset (e.g. a page whose hover is retired instead).
+        && (component.participants || []).every(prefix => (candidate.participants || []).includes(prefix)));
 }
 
 function verifyHtmlAdoption(root, file, localClass, sharedClass, errors, label) {
@@ -419,7 +448,25 @@ export function verifyExtractionShape(extraction, errors) {
 
         if (component.requiresAdoption === false && !hasAdoptionAnchor(extraction, component)) {
             fail('requiresAdoption:false state requires a validated unsuffixed component '
-                + 'with the same local/shared classes, surface, and participants.');
+                + 'with the same local/shared classes and surface that covers its participants.');
+        }
+
+        const participantConverged = component.participantConvergedProperties || {};
+        if (!participantConverged || typeof participantConverged !== 'object' || Array.isArray(participantConverged)) {
+            fail('component .' + component.sharedClass + ' participantConvergedProperties must be an object.');
+        } else {
+            for (const [prefix, properties] of Object.entries(participantConverged)) {
+                if (!participants.has(prefix)) {
+                    fail('component .' + component.sharedClass
+                        + ' participant convergence references non-participant ' + prefix + '.');
+                }
+                if (!Array.isArray(properties) || !properties.length
+                    || new Set(properties).size !== properties.length
+                    || properties.some(property => !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property))) {
+                    fail('component .' + component.sharedClass + ' participant convergence for ' + prefix
+                        + ' must be a non-empty, duplicate-free list of reviewed theme/geometry properties.');
+                }
+            }
         }
 
         const inherited = component.inheritedEquivalentProperties || {};
@@ -560,6 +607,37 @@ export function verifyExtractionShape(extraction, errors) {
             narrowingKeys.add(key);
         }
     }
+
+    const retirements = extraction.reviewedRuleRetirements || [];
+    if (!Array.isArray(retirements)) {
+        fail('reviewedRuleRetirements must be an array.');
+    } else {
+        const retirementKeys = new Set();
+        for (const retirement of retirements) {
+            if (!retirement || typeof retirement !== 'object' || Array.isArray(retirement)) {
+                fail('every reviewed rule retirement must be an object.');
+                continue;
+            }
+            if (!extraction.games?.[retirement.prefix]?.css) {
+                fail('reviewed rule retirement references unknown game prefix ' + retirement.prefix + '.');
+            }
+            if (typeof retirement.context !== 'string'
+                || typeof retirement.selector !== 'string' || !retirement.selector.trim()) {
+                fail('reviewed rule retirement requires a context string and a non-empty selector.');
+                continue;
+            }
+            if (!splitSelectorList(retirement.selector).every(part =>
+                new RegExp('\\.' + retirement.prefix + '-').test(part))) {
+                fail('reviewed rule retirement may only remove ' + retirement.prefix + '-prefixed page selectors.');
+            }
+            if (typeof retirement.reason !== 'string' || !retirement.reason.trim()) {
+                fail('reviewed rule retirement requires a reason.');
+            }
+            const key = retirement.prefix + '\0' + retirement.context + '\0' + retirement.selector;
+            if (retirementKeys.has(key)) fail('duplicate reviewed rule retirement ' + retirement.selector + '.');
+            retirementKeys.add(key);
+        }
+    }
     return valid;
 }
 
@@ -612,6 +690,11 @@ function removedTuples(extraction, errors) {
     for (const component of extraction.components || []) {
         for (const prefix of component.fullyRemoved) {
             rows.push([games[prefix].css, '', componentLocalSelector(prefix, component)]);
+        }
+    }
+    for (const retirement of extraction.reviewedRuleRetirements || []) {
+        if (games[retirement.prefix]?.css) {
+            rows.push([games[retirement.prefix].css, retirement.context, retirement.selector]);
         }
     }
     return rows;
@@ -857,6 +940,42 @@ function verifyReviewedSelectorNarrowings(
     }
 }
 
+// A retired page rule must have been a pure theme/geometry skin of the extracted
+// family: once the shared component owns the surface, the page copy is deleted
+// outright instead of being kept as a competing unlayered residual.
+function verifyReviewedRuleRetirements(
+    extraction, currentParsedByPath, baseParsedByPath, baseCatalogs, externalRuleChanges, errors,
+) {
+    for (const retirement of extraction.reviewedRuleRetirements || []) {
+        const path = extraction.games?.[retirement.prefix]?.css;
+        if (!path) continue;
+        const label = extraction.id + '/rule-retirement/' + retirement.prefix + ' ' + retirement.selector
+            + (retirement.context ? ' @ ' + retirement.context : '');
+        const matches = parsed => (parsed?.rules || []).filter(rule =>
+            rule.selector === retirement.selector && !rule.layer
+            && (rule.context || []).join(' / ') === retirement.context);
+        const baseRules = matches(baseParsedByPath.get(path));
+        if (baseRules.length !== 1) {
+            errors.push(label + ': expected exactly one unlayered base rule, found ' + baseRules.length + '.');
+            continue;
+        }
+        if (matches(currentParsedByPath.get(path)).length) {
+            errors.push(label + ': retired rule still exists in current CSS.');
+        }
+        const unreviewed = (baseRules[0].migrationDeclarations || [])
+            .map(declaration => declaration.property)
+            .filter(property => !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property));
+        if (unreviewed.length) {
+            errors.push(label + ': retired rule carries non-theme/geometry declarations ('
+                + [...new Set(unreviewed)].join(', ') + ').');
+        }
+        const baseIndexed = (baseCatalogs.get(path) || []).filter(rule =>
+            rule.selector === retirement.selector && !rule.layer && rule.context === retirement.context);
+        if (baseIndexed.length === 1) externalRuleChanges.base.push(baseIndexed[0]);
+        else errors.push(label + ': expected exactly one indexed base rule, found ' + baseIndexed.length + '.');
+    }
+}
+
 function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedByPath,
     currentCatalogs, baseCatalogs, externalRuleChanges, comparisonBase, errors) {
     const baseContractText = readGitFile(root, comparisonBase, 'tests/css-duplication-audit-contract.json');
@@ -916,6 +1035,7 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
                 label + '/' + prefix,
                 component.inheritedEquivalentProperties?.[prefix] || [],
                 component.convergedThemeProperties || [],
+                component.participantConvergedProperties?.[prefix] || [],
             );
             const currentMatches = (currentParsedByPath.get(game.css)?.rules || []).filter(rule =>
                 rule.selector === localSelector && !rule.layer && (rule.context || []).length === 0);
@@ -948,6 +1068,9 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
     verifyReviewedSelectorNarrowings(
         extraction, currentParsedByPath, baseParsedByPath,
         currentCatalogs, baseCatalogs, externalRuleChanges, errors,
+    );
+    verifyReviewedRuleRetirements(
+        extraction, currentParsedByPath, baseParsedByPath, baseCatalogs, externalRuleChanges, errors,
     );
     verifyRetiredCustomProperties(
         extraction, currentParsedByPath, baseParsedByPath,
@@ -999,7 +1122,7 @@ export function verifyFamilyExtractions({
                 + extraction.expectedRemovedUnlayeredRules + ' vs ' + tuples.length + ').');
         }
         if (extraction.expectedRuleDelta !== (extraction.components || []).length - tuples.length) {
-            errors.push(extraction.id + ': expectedRuleDelta must equal shared rules minus fully removed local rules.');
+            errors.push(extraction.id + ': expectedRuleDelta must equal shared rules minus fully removed and retired local rules.');
         }
         totalRuleDelta += extraction.expectedRuleDelta;
         removed.push(...tuples);

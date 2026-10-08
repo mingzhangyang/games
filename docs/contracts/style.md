@@ -47,7 +47,7 @@
 | `--tok-hit-pad` | `-6px` | 触控热区外扩（视觉不变，命中 ≥44px） |
 
 tokens.css 还保留通用 `.icon-btn` 与 `.btn` / `.btn-primary` / `.btn-ghost`，主要服务历史独立页面（例如 Gomoku）。
-采用共享 shell 的游戏页，标准文本动作统一使用 `layout.css` 的 `.game-action-btn` / `--primary` / `--ghost` 与 `.game-action-row`；页面不再复制 padding、圆角、字号和 hover/active 基线。特殊 mode / ability / gameplay controls 不属于这一 family。例外（已审阅，row-only）：Hoop Shot、Planet Merge、Reversi、Tower Defense 只采用 `.game-action-row`，按钮 surface 仍由 `.hs/.pm/.rv/.td-btn` 页面级持有，因为它们刻意更大（15px / 14px 圆角 / 12–13px × 20–24px 内距）；收敛需要共享尺寸变体，见 `layout.md` §1.1。
+采用共享 shell 的游戏页，标准文本动作统一使用 `layout.css` 的 `.game-action-btn` / `--primary` / `--ghost` 与 `.game-action-row`；页面不再复制 padding、圆角、字号和 hover/active 基线。特殊 mode / ability / gameplay controls 不属于这一 family。标准 action 没有页面级尺寸例外：Hoop Shot、Planet Merge、Reversi、Tower Defense 原先更大一号的按钮已收敛到共享 family（见 `layout.md` §1.1）。页面只保留语义上不同的修饰类（如 `.pm-btn-daily`）。
 
 ---
 
