@@ -145,6 +145,18 @@ function classTokens(value) {
     return new Set(String(value || '').split(/\s+/).filter(Boolean));
 }
 
+function hasAdoptionAnchor(extraction, component) {
+    return (extraction.components || []).some(candidate =>
+        candidate !== component
+        && !candidate.localSelectorSuffix
+        && !candidate.sharedSelectorSuffix
+        && candidate.requiresAdoption !== false
+        && candidate.suffix === component.suffix
+        && candidate.sharedClass === component.sharedClass
+        && candidate.surface === component.surface
+        && canonical(candidate.participants || []) === canonical(component.participants || []));
+}
+
 function verifyHtmlAdoption(root, file, localClass, sharedClass, errors, label) {
     const html = readFileSync(join(root, file), 'utf8');
     const localElements = parseHtmlElements(html, file).filter(element => {
@@ -191,7 +203,13 @@ export function verifyExtractionAdoption(root, extraction, errors) {
     const games = extraction.games || {};
     for (const component of extraction.components || []) {
         const label = extraction.id + '/' + component.sharedClass;
-        if (component.requiresAdoption === false) continue;
+        if (component.requiresAdoption === false) {
+            if (!hasAdoptionAnchor(extraction, component)) {
+                errors.push(label + ': skipped adoption state requires a validated unsuffixed component '
+                    + 'with the same local/shared classes, surface, and participants.');
+            }
+            continue;
+        }
         for (const prefix of component.participants || []) {
             const game = games[prefix];
             if (!game?.css || !game?.html || !game?.runtime) {
@@ -245,6 +263,9 @@ export function verifyExtractionShape(extraction, errors) {
         if (!REVIEWED_SELECTOR_SUFFIXES.has(localSelectorSuffix)
             || !REVIEWED_SELECTOR_SUFFIXES.has(sharedSelectorSuffix)) {
             fail('component selector suffixes must be reviewed pseudo-classes.');
+        }
+        if (localSelectorSuffix !== sharedSelectorSuffix) {
+            fail('local and shared selector suffixes must match.');
         }
         if (component.requiresAdoption !== undefined && typeof component.requiresAdoption !== 'boolean') {
             fail('requiresAdoption must be boolean when present.');
@@ -336,6 +357,11 @@ export function verifyExtractionShape(extraction, errors) {
                 fail('component .' + component.sharedClass + ' marks non-participant ' + prefix
                     + ' as fullyRemoved.');
             }
+        }
+
+        if (component.requiresAdoption === false && !hasAdoptionAnchor(extraction, component)) {
+            fail('requiresAdoption:false state requires a validated unsuffixed component '
+                + 'with the same local/shared classes, surface, and participants.');
         }
 
         const inherited = component.inheritedEquivalentProperties || {};

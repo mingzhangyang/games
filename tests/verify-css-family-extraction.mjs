@@ -111,24 +111,45 @@ try {
     }
 
     const pseudoState = clone(extraction);
-    pseudoState.components = [{
-        suffix: 'panel',
-        sharedClass: 'game-panel',
-        localSelectorSuffix: ':hover',
-        sharedSelectorSuffix: ':hover',
-        requiresAdoption: false,
-        convergedThemeProperties: ['background'],
-        surface: 'html',
-        participants: ['dm'],
-        fullyRemoved: ['dm'],
-    }];
+    pseudoState.components = [
+        clone(extraction.components[0]),
+        {
+            suffix: 'panel',
+            sharedClass: 'game-panel',
+            localSelectorSuffix: ':hover',
+            sharedSelectorSuffix: ':hover',
+            requiresAdoption: false,
+            convergedThemeProperties: ['background'],
+            surface: 'html',
+            participants: ['dm'],
+            fullyRemoved: ['dm'],
+        },
+    ];
     const pseudoShapeErrors = [];
     assert.equal(verifyExtractionShape(pseudoState, pseudoShapeErrors), true);
     assert.deepEqual(pseudoShapeErrors, []);
-    writeFileSync(join(root, 'demo.html'), '<div class="dm-panel"></div>\n');
+    writeFileSync(join(root, 'demo.html'), '<div class="dm-panel game-panel"></div>\n');
     const pseudoAdoptionErrors = [];
     verifyExtractionAdoption(root, pseudoState, pseudoAdoptionErrors);
     assert.deepEqual(pseudoAdoptionErrors, []);
+
+    const mismatchedState = clone(pseudoState);
+    mismatchedState.components[1].sharedSelectorSuffix = ':disabled';
+    const mismatchedStateErrors = [];
+    assert.equal(verifyExtractionShape(mismatchedState, mismatchedStateErrors), false);
+    assert.ok(mismatchedStateErrors.some(error =>
+        /local and shared selector suffixes must match/.test(error)));
+
+    const standaloneState = clone(pseudoState);
+    standaloneState.components = [standaloneState.components[1]];
+    const standaloneShapeErrors = [];
+    assert.equal(verifyExtractionShape(standaloneState, standaloneShapeErrors), false);
+    assert.ok(standaloneShapeErrors.some(error =>
+        /requiresAdoption:false state requires a validated unsuffixed component/.test(error)));
+    const standaloneAdoptionErrors = [];
+    verifyExtractionAdoption(root, standaloneState, standaloneAdoptionErrors);
+    assert.ok(standaloneAdoptionErrors.some(error =>
+        /skipped adoption state requires a validated unsuffixed component/.test(error)));
 
     const invalidConvergence = clone(extraction);
     invalidConvergence.components[0].convergedThemeProperties = ['padding'];
