@@ -98,9 +98,19 @@ const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
 // protected: convergence may restyle a standard surface, never re-lay it out.
 const REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES = new Set([
     'font-size', 'font-weight', 'padding', 'border-radius', 'transition', 'backdrop-filter',
+    // Visual dimensions/spacing (leaderboard-v2): sizes and gaps of a standard surface.
+    'max-width', 'min-height', 'max-height', 'height', 'gap',
+    'letter-spacing', 'line-height', 'margin-top', 'margin-bottom',
 ]);
 const REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES = new Set([
     ...REVIEWED_THEME_CONVERGENCE_PROPERTIES, ...REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES,
+]);
+// Layout/behaviour properties stay protected by default. A participant may only give
+// them up through participantLayoutConvergence, which names the exact properties and
+// carries a written reason, so every re-layout is an explicit reviewed decision.
+const REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES = new Set([
+    'display', 'flex-direction', 'flex', 'flex-shrink', 'align-items', 'width',
+    'text-align', 'text-transform', 'outline', 'scrollbar-width',
 ]);
 
 function componentLocalSelector(prefix, component) {
@@ -117,13 +127,14 @@ function componentSharedSelector(component) {
 export function expectedResidual(
     baseRule, sharedRule, errors, label,
     inheritedEquivalentProperties = [], convergedThemeProperties = [],
-    participantConvergedProperties = [],
+    participantConvergedProperties = [], participantLayoutProperties = [],
 ) {
     const base = [...(baseRule.migrationDeclarations || [])];
     const shared = sharedRule.migrationDeclarations || [];
     const residual = [...base];
     const inheritedEquivalent = new Set(inheritedEquivalentProperties);
     const convergedTheme = new Set(convergedThemeProperties);
+    const participantConverged = new Set([...participantConvergedProperties, ...participantLayoutProperties]);
 
     for (const property of inheritedEquivalent) {
         if (!REVIEWED_INHERITED_EQUIVALENT_PROPERTIES.has(property)) {
@@ -183,6 +194,9 @@ export function expectedResidual(
 
         if (!sameProperty.length) {
             if (inheritedEquivalent.has(declaration.property)) continue;
+            // A reviewed participant convergence may adopt the shared value for a
+            // property the page never wrote (e.g. the shared title margin).
+            if (participantConverged.has(declaration.property)) continue;
             errors.push(label + ': shared property ' + declaration.property
                 + ' did not exist in the local source; family extraction may not invent geometry/behavior.');
             continue;
@@ -192,18 +206,24 @@ export function expectedResidual(
 
     // Reviewed per-participant convergence: the page gives up its own value (or a
     // page-only declaration) for these properties so the shared family wins.
-    for (const property of participantConvergedProperties) {
-        if (!REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property)) {
-            errors.push(label + ': participant convergence property ' + property + ' is not reviewed.');
-            continue;
-        }
-        if (!base.some(item => item.property === property)) {
-            errors.push(label + ': participant convergence property ' + property
-                + ' is stale because the local source never wrote it.');
-            continue;
-        }
-        for (let index = residual.length - 1; index >= 0; index--) {
-            if (residual[index].property === property) residual.splice(index, 1);
+    for (const [properties, reviewed, kind] of [
+        [participantConvergedProperties, REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES, 'participant convergence'],
+        [participantLayoutProperties, REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES, 'participant layout convergence'],
+    ]) {
+        for (const property of properties) {
+            if (!reviewed.has(property)) {
+                errors.push(label + ': ' + kind + ' property ' + property + ' is not reviewed.');
+                continue;
+            }
+            if (!base.some(item => item.property === property)
+                && !shared.some(item => item.property === property)) {
+                errors.push(label + ': ' + kind + ' property ' + property
+                    + ' is stale because neither the local source nor the shared rule writes it.');
+                continue;
+            }
+            for (let index = residual.length - 1; index >= 0; index--) {
+                if (residual[index].property === property) residual.splice(index, 1);
+            }
         }
     }
 
@@ -216,6 +236,40 @@ export function expectedResidual(
             errors.push(label + ': inherited-equivalent property ' + property
                 + ' is unnecessary because the local source already wrote it.');
         }
+    }
+    return residual;
+}
+
+// A participant that an earlier transaction of the same family already adopted keeps
+// receiving the unchanged shared rule; a later transaction may only delete the page's
+// remaining residual declarations for reviewed properties. Nothing is compared with the
+// shared rule again, and a listed property the residual does not write is stale.
+export function expectedConvergedResidual(
+    baseRule, errors, label, participantConvergedProperties = [], participantLayoutProperties = [],
+) {
+    const base = [...(baseRule.migrationDeclarations || [])];
+    const residual = [...base];
+    for (const [properties, reviewed, kind] of [
+        [participantConvergedProperties, REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES, 'participant convergence'],
+        [participantLayoutProperties, REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES, 'participant layout convergence'],
+    ]) {
+        for (const property of properties) {
+            if (!reviewed.has(property)) {
+                errors.push(label + ': ' + kind + ' property ' + property + ' is not reviewed.');
+                continue;
+            }
+            if (!base.some(item => item.property === property)) {
+                errors.push(label + ': ' + kind + ' property ' + property
+                    + ' is stale because the already-adopted residual never wrote it.');
+                continue;
+            }
+            for (let index = residual.length - 1; index >= 0; index--) {
+                if (residual[index].property === property) residual.splice(index, 1);
+            }
+        }
+    }
+    if (residual.length === base.length) {
+        errors.push(label + ': already-adopted participant converges nothing; drop it from this transaction.');
     }
     return residual;
 }
@@ -470,6 +524,29 @@ export function verifyExtractionShape(extraction, errors) {
             }
         }
 
+        const layoutConverged = component.participantLayoutConvergence || {};
+        if (!layoutConverged || typeof layoutConverged !== 'object' || Array.isArray(layoutConverged)) {
+            fail('component .' + component.sharedClass + ' participantLayoutConvergence must be an object.');
+        } else {
+            for (const [prefix, entry] of Object.entries(layoutConverged)) {
+                if (!participants.has(prefix)) {
+                    fail('component .' + component.sharedClass
+                        + ' layout convergence references non-participant ' + prefix + '.');
+                }
+                const properties = entry?.properties;
+                if (!Array.isArray(properties) || !properties.length
+                    || new Set(properties).size !== properties.length
+                    || properties.some(property => !REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES.has(property))) {
+                    fail('component .' + component.sharedClass + ' layout convergence for ' + prefix
+                        + ' must be a non-empty, duplicate-free list of reviewed layout properties.');
+                }
+                if (typeof entry?.reason !== 'string' || !entry.reason.trim()) {
+                    fail('component .' + component.sharedClass + ' layout convergence for ' + prefix
+                        + ' requires a reason.');
+                }
+            }
+        }
+
         const inherited = component.inheritedEquivalentProperties || {};
         if (!inherited || typeof inherited !== 'object' || Array.isArray(inherited)) {
             fail('component .' + component.sharedClass + ' inheritedEquivalentProperties must be an object.');
@@ -498,6 +575,11 @@ export function verifyExtractionShape(extraction, errors) {
                 }
             }
         }
+    }
+
+    if (extraction.extends !== undefined
+        && (typeof extraction.extends !== 'string' || !extraction.extends || extraction.extends === extraction.id)) {
+        fail('extends must name another family extraction id.');
     }
 
     const retiredCustomProperties = extraction.retiredCustomProperties || {};
@@ -609,6 +691,53 @@ export function verifyExtractionShape(extraction, errors) {
         }
     }
 
+    const declarationRetirements = extraction.reviewedDeclarationRetirements || [];
+    if (!Array.isArray(declarationRetirements)) {
+        fail('reviewedDeclarationRetirements must be an array.');
+    } else {
+        const declarationKeys = new Set();
+        for (const retirement of declarationRetirements) {
+            if (!retirement || typeof retirement !== 'object' || Array.isArray(retirement)) {
+                fail('every reviewed declaration retirement must be an object.');
+                continue;
+            }
+            if (!extraction.games?.[retirement.prefix]?.css) {
+                fail('reviewed declaration retirement references unknown game prefix ' + retirement.prefix + '.');
+            }
+            if (typeof retirement.context !== 'string'
+                || typeof retirement.selector !== 'string' || !retirement.selector.trim()) {
+                fail('reviewed declaration retirement requires a context string and a non-empty selector.');
+                continue;
+            }
+            if (!splitSelectorList(retirement.selector).every(part =>
+                new RegExp('\\.' + retirement.prefix + '-').test(part))) {
+                fail('reviewed declaration retirement may only edit ' + retirement.prefix + '-prefixed page selectors.');
+            }
+            const properties = retirement.properties;
+            const declarationLayout = new Set(retirement.reviewedLayoutProperties || []);
+            if (retirement.reviewedLayoutProperties !== undefined
+                && (!Array.isArray(retirement.reviewedLayoutProperties) || !declarationLayout.size
+                    || declarationLayout.size !== retirement.reviewedLayoutProperties.length
+                    || [...declarationLayout].some(property => !REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES.has(property))
+                    || [...declarationLayout].some(property => !(properties || []).includes(property)))) {
+                fail('reviewed declaration retirement reviewedLayoutProperties must be a non-empty, duplicate-free '
+                    + 'list of reviewed layout properties that are also listed in properties.');
+            }
+            if (!Array.isArray(properties) || !properties.length || new Set(properties).size !== properties.length
+                || properties.some(property => !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property)
+                    && !declarationLayout.has(property))) {
+                fail('reviewed declaration retirement properties must be a non-empty, duplicate-free list of '
+                    + 'reviewed theme/geometry properties (layout properties also need reviewedLayoutProperties).');
+            }
+            if (typeof retirement.reason !== 'string' || !retirement.reason.trim()) {
+                fail('reviewed declaration retirement requires a reason.');
+            }
+            const key = retirement.prefix + '\0' + retirement.context + '\0' + retirement.selector;
+            if (declarationKeys.has(key)) fail('duplicate reviewed declaration retirement ' + retirement.selector + '.');
+            declarationKeys.add(key);
+        }
+    }
+
     const retirements = extraction.reviewedRuleRetirements || [];
     if (!Array.isArray(retirements)) {
         fail('reviewedRuleRetirements must be an array.');
@@ -633,6 +762,13 @@ export function verifyExtractionShape(extraction, errors) {
             }
             if (typeof retirement.reason !== 'string' || !retirement.reason.trim()) {
                 fail('reviewed rule retirement requires a reason.');
+            }
+            const layoutProperties = retirement.reviewedLayoutProperties;
+            if (layoutProperties !== undefined && (!Array.isArray(layoutProperties) || !layoutProperties.length
+                || new Set(layoutProperties).size !== layoutProperties.length
+                || layoutProperties.some(property => !REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES.has(property)))) {
+                fail('reviewed rule retirement reviewedLayoutProperties must be a non-empty, duplicate-free '
+                    + 'list of reviewed layout properties.');
             }
             const key = retirement.prefix + '\0' + retirement.context + '\0' + retirement.selector;
             if (retirementKeys.has(key)) fail('duplicate reviewed rule retirement ' + retirement.selector + '.');
@@ -944,7 +1080,7 @@ function verifyReviewedSelectorNarrowings(
 // A retired page rule must have been a pure theme/geometry skin of the extracted
 // family: once the shared component owns the surface, the page copy is deleted
 // outright instead of being kept as a competing unlayered residual.
-function verifyReviewedRuleRetirements(
+export function verifyReviewedRuleRetirements(
     extraction, currentParsedByPath, baseParsedByPath, baseCatalogs, externalRuleChanges, errors,
 ) {
     for (const retirement of extraction.reviewedRuleRetirements || []) {
@@ -963,12 +1099,19 @@ function verifyReviewedRuleRetirements(
         if (matches(currentParsedByPath.get(path)).length) {
             errors.push(label + ': retired rule still exists in current CSS.');
         }
-        const unreviewed = (baseRules[0].migrationDeclarations || [])
-            .map(declaration => declaration.property)
-            .filter(property => !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property));
+        const layoutProperties = new Set(retirement.reviewedLayoutProperties || []);
+        const baseProperties = (baseRules[0].migrationDeclarations || []).map(declaration => declaration.property);
+        const unreviewed = baseProperties.filter(property =>
+            !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property) && !layoutProperties.has(property));
         if (unreviewed.length) {
             errors.push(label + ': retired rule carries non-theme/geometry declarations ('
                 + [...new Set(unreviewed)].join(', ') + ').');
+        }
+        for (const property of layoutProperties) {
+            if (!baseProperties.includes(property)) {
+                errors.push(label + ': reviewed layout property ' + property
+                    + ' is stale because the retired rule never wrote it.');
+            }
         }
         const baseIndexed = (baseCatalogs.get(path) || []).filter(rule =>
             rule.selector === retirement.selector && !rule.layer && rule.context === retirement.context);
@@ -977,8 +1120,105 @@ function verifyReviewedRuleRetirements(
     }
 }
 
+function componentIdentity(component) {
+    return [
+        component.suffix, component.localSelectorSuffix || '', component.sharedClass,
+        component.sharedSelectorSuffix || '', component.sharedClassSpecificity || 'normal', component.surface,
+    ].join('\0');
+}
+
+// An `extends` transaction appends adoption/convergence to a family whose shared rules an
+// earlier ledger entry already created. It may not create, rename or restyle shared rules:
+// every component must be one the root family owns, and the shared rule must be identical
+// in the comparison base and the current tree. Returns, per component identity, the
+// participants that earlier entries of the same family already adopted.
+export function resolveFamilyExtension(extraction, orderedExtractions, errors) {
+    if (extraction.extends === undefined) return null;
+    const label = extraction.id + '/extends';
+    const index = orderedExtractions.indexOf(extraction);
+    const prior = orderedExtractions.slice(0, Math.max(index, 0));
+    const rootFamily = prior.find(candidate => candidate.id === extraction.extends);
+    if (!rootFamily) {
+        errors.push(label + ': extended family ' + extraction.extends + ' must be an earlier ledger entry.');
+        return new Map();
+    }
+    if (rootFamily.extends !== undefined) {
+        errors.push(label + ': extend the root family ' + rootFamily.extends + ', not another extension.');
+    }
+    if (rootFamily.sharedStylesheet !== extraction.sharedStylesheet || rootFamily.sharedLayer !== extraction.sharedLayer) {
+        errors.push(label + ': shared stylesheet/layer must match the extended family.');
+    }
+    const adopted = new Map();
+    for (const component of rootFamily.components || []) adopted.set(componentIdentity(component), new Set());
+    for (const candidate of prior) {
+        if (candidate.id !== rootFamily.id && candidate.extends !== rootFamily.id) continue;
+        for (const component of candidate.components || []) {
+            const set = adopted.get(componentIdentity(component));
+            if (set) for (const prefix of component.participants || []) set.add(prefix);
+        }
+    }
+    for (const component of extraction.components || []) {
+        if (!adopted.has(componentIdentity(component))) {
+            errors.push(label + '/' + component.sharedClass + (component.sharedSelectorSuffix || '')
+                + ': extension components must match a component of ' + rootFamily.id
+                + ' (same suffix, shared selector and surface).');
+        }
+    }
+    return adopted;
+}
+
+// A page rule that stays (it owns page-only layout) may shed theme/geometry declarations
+// that now duplicate or fight the shared family. Every other declaration must survive in
+// order, and the rule may not disappear (that is a whole-rule retirement instead).
+export function verifyReviewedDeclarationRetirements(
+    extraction, currentParsedByPath, baseParsedByPath, currentCatalogs, baseCatalogs, externalRuleChanges, errors,
+) {
+    for (const retirement of extraction.reviewedDeclarationRetirements || []) {
+        const path = extraction.games?.[retirement.prefix]?.css;
+        if (!path) continue;
+        const label = extraction.id + '/declaration-retirement/' + retirement.prefix + ' ' + retirement.selector
+            + (retirement.context ? ' @ ' + retirement.context : '');
+        const matches = parsed => (parsed?.rules || []).filter(rule =>
+            rule.selector === retirement.selector && !rule.layer
+            && (rule.context || []).join(' / ') === retirement.context);
+        const baseRules = matches(baseParsedByPath.get(path));
+        const currentRules = matches(currentParsedByPath.get(path));
+        if (baseRules.length !== 1 || currentRules.length !== 1) {
+            errors.push(label + ': expected exactly one unlayered base and current rule, found '
+                + baseRules.length + '/' + currentRules.length + '.');
+            continue;
+        }
+        const retired = new Set(retirement.properties || []);
+        const baseDeclarations = baseRules[0].migrationDeclarations || [];
+        for (const property of retired) {
+            if (!baseDeclarations.some(declaration => declaration.property === property)) {
+                errors.push(label + ': retired property ' + property + ' is stale because the base rule never wrote it.');
+            }
+        }
+        const expected = baseDeclarations.filter(declaration => !retired.has(declaration.property));
+        if (!expected.length) {
+            errors.push(label + ': every declaration is retired; register a whole-rule retirement instead.');
+        }
+        if (canonical(currentRules[0].migrationDeclarations || []) !== canonical(expected)) {
+            errors.push(label + ': current declarations are not exactly the base rule minus the retired properties.');
+        }
+        const indexed = (catalog, declarations) => (catalog || []).filter(rule =>
+            rule.selector === retirement.selector && !rule.layer && rule.context === retirement.context
+            && canonical(rule.declarations || []) === canonical(declarations));
+        const baseIndexed = indexed(baseCatalogs.get(path), baseRules[0].migrationDeclarations || []);
+        const currentIndexed = indexed(currentCatalogs.get(path), currentRules[0].migrationDeclarations || []);
+        if (baseIndexed.length === 1 && currentIndexed.length === 1) {
+            externalRuleChanges.base.push(baseIndexed[0]);
+            externalRuleChanges.current.push(currentIndexed[0]);
+        } else {
+            errors.push(label + ': expected exactly one indexed base/current rule, found '
+                + baseIndexed.length + '/' + currentIndexed.length + '.');
+        }
+    }
+}
+
 function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedByPath,
-    currentCatalogs, baseCatalogs, externalRuleChanges, comparisonBase, errors) {
+    currentCatalogs, baseCatalogs, externalRuleChanges, comparisonBase, errors, extension = null) {
     const baseContractText = readGitFile(root, comparisonBase, 'tests/css-duplication-audit-contract.json');
     if (baseContractText === null) {
         errors.push(extraction.id + ': cannot read comparison-base duplication contract.');
@@ -1003,16 +1243,28 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
         const label = extraction.id + '/' + component.sharedClass
             + (component.sharedSelectorSuffix || '');
         const sharedSelector = componentSharedSelector(component);
-        const baseSharedMatches = (baseSharedCss?.rules || []).filter(rule => rule.selector === sharedSelector);
-        if (baseSharedMatches.length) {
-            errors.push(label + ': shared selector already existed in the comparison base.');
+        const adoptedParticipants = extension?.get(componentIdentity(component)) || null;
+        let sharedRule;
+        if (extension) {
+            // Referenced shared rule: it must already exist and stay byte-for-byte unchanged.
+            const baseShared = uniqueRule(baseSharedCss, sharedSelector, sharedLayer, errors, label + '/base-shared');
+            sharedRule = uniqueRule(currentSharedCss, sharedSelector, sharedLayer, errors, label);
+            if (!baseShared || !sharedRule) continue;
+            if (canonical(baseShared.migrationDeclarations || []) !== canonical(sharedRule.migrationDeclarations || [])) {
+                errors.push(label + ': an extension may not change the referenced shared rule.');
+            }
+        } else {
+            const baseSharedMatches = (baseSharedCss?.rules || []).filter(rule => rule.selector === sharedSelector);
+            if (baseSharedMatches.length) {
+                errors.push(label + ': shared selector already existed in the comparison base.');
+            }
+            sharedRule = uniqueRule(currentSharedCss, sharedSelector, sharedLayer, errors, label);
+            if (!sharedRule) continue;
+            const sharedIndexed = uniqueCatalogRule(
+                currentCatalogs.get(sharedPath), sharedSelector, sharedLayer, errors, label + '/current',
+            );
+            if (sharedIndexed) externalRuleChanges.current.push(sharedIndexed);
         }
-        const sharedRule = uniqueRule(currentSharedCss, sharedSelector, sharedLayer, errors, label);
-        if (!sharedRule) continue;
-        const sharedIndexed = uniqueCatalogRule(
-            currentCatalogs.get(sharedPath), sharedSelector, sharedLayer, errors, label + '/current',
-        );
-        if (sharedIndexed) externalRuleChanges.current.push(sharedIndexed);
 
         for (const prefix of component.participants || []) {
             const game = games[prefix];
@@ -1029,15 +1281,22 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
             );
             if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
 
-            const expected = expectedResidual(
-                baseRule,
-                sharedRule,
-                errors,
-                label + '/' + prefix,
-                component.inheritedEquivalentProperties?.[prefix] || [],
-                component.convergedThemeProperties || [],
-                component.participantConvergedProperties?.[prefix] || [],
-            );
+            const layoutProperties = component.participantLayoutConvergence?.[prefix]?.properties || [];
+            const expected = adoptedParticipants?.has(prefix)
+                ? expectedConvergedResidual(
+                    baseRule, errors, label + '/' + prefix,
+                    component.participantConvergedProperties?.[prefix] || [], layoutProperties,
+                )
+                : expectedResidual(
+                    baseRule,
+                    sharedRule,
+                    errors,
+                    label + '/' + prefix,
+                    component.inheritedEquivalentProperties?.[prefix] || [],
+                    component.convergedThemeProperties || [],
+                    component.participantConvergedProperties?.[prefix] || [],
+                    layoutProperties,
+                );
             const currentMatches = (currentParsedByPath.get(game.css)?.rules || []).filter(rule =>
                 rule.selector === localSelector && !rule.layer && (rule.context || []).length === 0);
             if (!expected.length) {
@@ -1072,6 +1331,9 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
     );
     verifyReviewedRuleRetirements(
         extraction, currentParsedByPath, baseParsedByPath, baseCatalogs, externalRuleChanges, errors,
+    );
+    verifyReviewedDeclarationRetirements(
+        extraction, currentParsedByPath, baseParsedByPath, currentCatalogs, baseCatalogs, externalRuleChanges, errors,
     );
     verifyRetiredCustomProperties(
         extraction, currentParsedByPath, baseParsedByPath,
@@ -1122,8 +1384,10 @@ export function verifyFamilyExtractions({
             errors.push(extraction.id + ': expectedRemovedUnlayeredRules does not match component membership ('
                 + extraction.expectedRemovedUnlayeredRules + ' vs ' + tuples.length + ').');
         }
-        if (extraction.expectedRuleDelta !== (extraction.components || []).length - tuples.length) {
-            errors.push(extraction.id + ': expectedRuleDelta must equal shared rules minus fully removed and retired local rules.');
+        // An extension references existing shared rules, so it adds none of its own.
+        const addedSharedRules = extraction.extends === undefined ? (extraction.components || []).length : 0;
+        if (extraction.expectedRuleDelta !== addedSharedRules - tuples.length) {
+            errors.push(extraction.id + ': expectedRuleDelta must equal new shared rules minus fully removed and retired local rules.');
         }
         totalRuleDelta += extraction.expectedRuleDelta;
         removed.push(...tuples);
@@ -1163,11 +1427,15 @@ export function verifyFamilyExtractions({
     const baseCatalogs = new Map([...baseParsedByPath]
         .map(([path, parsed]) => [path, indexRuleOccurrences(parsed, path)]));
     const externalRuleChanges = { base: [], current: [] };
-    const newExtractions = [...currentById.values()].filter(extraction => !baseById.has(extraction.id));
+    const orderedExtractions = [...currentById.values()];
+    const extensions = new Map(orderedExtractions.map(extraction =>
+        [extraction.id, resolveFamilyExtension(extraction, orderedExtractions, errors)]));
+    const newExtractions = orderedExtractions.filter(extraction => !baseById.has(extraction.id));
     for (const extraction of newExtractions) {
         verifyNewExtraction(
             root, extraction, currentParsedByPath, baseParsedByPath,
             currentCatalogs, baseCatalogs, externalRuleChanges, comparisonBase, errors,
+            extensions.get(extraction.id),
         );
     }
     if (newExtractions.length) {

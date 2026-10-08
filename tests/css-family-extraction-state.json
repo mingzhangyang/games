@@ -987,6 +987,444 @@
           "reason": "immersive scene no longer reskins the standard primary action"
         }
       ]
+    },
+    {
+      "id": "leaderboard-v2",
+      "extends": "leaderboard-v1",
+      "baseDuplicationDigest": "8f20f44febe7d1862fe3c0d37a6fa7beb4aee4b77ebea7c88e03958fc4746f19",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -18,
+      "expectedRemovedUnlayeredRules": 18,
+      "games": {
+        "bf": {
+          "css": "css/bond-forge.css",
+          "html": "bond-forge.html",
+          "runtime": "src/games/bond-forge/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "hs": {
+          "css": "css/hoop-shot.css",
+          "html": "hoop-shot.html",
+          "runtime": "src/games/hoop-shot/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "ms": {
+          "css": "css/minesweeper.css",
+          "html": "minesweeper.html",
+          "runtime": "src/games/minesweeper/index.js"
+        },
+        "pm": {
+          "css": "css/planet-merge.css",
+          "html": "planet-merge.html",
+          "runtime": "src/games/planet-merge/runtime.js"
+        },
+        "rv": {
+          "css": "css/reversi.css",
+          "html": "reversi.html",
+          "runtime": "src/games/reversi/index.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        },
+        "td": {
+          "css": "css/tower-defense.css",
+          "html": "tower-defense.html",
+          "runtime": "src/games/tower-defense/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "lb",
+          "sharedClass": "game-lb",
+          "surface": "html",
+          "participants": [
+            "bf",
+            "hs",
+            "ms",
+            "pm",
+            "td"
+          ],
+          "fullyRemoved": [],
+          "participantConvergedProperties": {
+            "bf": [
+              "gap",
+              "padding"
+            ],
+            "hs": [
+              "max-width"
+            ],
+            "ms": [
+              "max-width"
+            ],
+            "pm": [
+              "max-width"
+            ],
+            "td": [
+              "max-width",
+              "border-radius",
+              "padding"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "bf": {
+              "properties": [
+                "display",
+                "flex-direction",
+                "text-align"
+              ],
+              "reason": "Bond Forge drops its own flex-column/gap stack and left alignment: the shared title/status/username-row margins already space the standard block flow, and the leaderboard text alignment follows the result card like every other page."
+            }
+          }
+        },
+        {
+          "suffix": "lb-title",
+          "sharedClass": "game-lb-title",
+          "surface": "html",
+          "participants": [
+            "bf",
+            "pm",
+            "td"
+          ],
+          "fullyRemoved": [
+            "pm"
+          ],
+          "participantConvergedProperties": {
+            "bf": [
+              "font-size",
+              "font-weight",
+              "letter-spacing",
+              "margin-bottom"
+            ],
+            "pm": [
+              "margin-bottom"
+            ],
+            "td": [
+              "font-weight",
+              "letter-spacing"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "bf": {
+              "properties": [
+                "text-transform"
+              ],
+              "reason": "The standard leaderboard title is sentence case on every page; Bond Forge no longer upper-cases it."
+            }
+          }
+        },
+        {
+          "suffix": "lb-list",
+          "sharedClass": "game-lb-list",
+          "surface": "html",
+          "participants": [
+            "bf",
+            "pm",
+            "td"
+          ],
+          "fullyRemoved": [
+            "bf",
+            "pm",
+            "td"
+          ],
+          "participantConvergedProperties": {
+            "bf": [
+              "min-height",
+              "max-height"
+            ],
+            "pm": [
+              "min-height",
+              "max-height"
+            ],
+            "td": [
+              "max-height"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "bf": {
+              "properties": [
+                "scrollbar-width"
+              ],
+              "reason": "The standard list shows the platform scrollbar on every page; Bond Forge no longer hides it, so overflow past the shared max-height stays discoverable."
+            }
+          }
+        },
+        {
+          "suffix": "lb-row",
+          "sharedClass": "game-lb-row",
+          "surface": "runtime",
+          "participants": [
+            "bf",
+            "td"
+          ],
+          "fullyRemoved": [
+            "td"
+          ],
+          "participantConvergedProperties": {
+            "bf": [
+              "font-size",
+              "padding",
+              "border-radius"
+            ],
+            "td": [
+              "font-size",
+              "padding",
+              "border-radius",
+              "transition"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "bf": {
+              "properties": [
+                "align-items"
+              ],
+              "reason": "Standard rows centre rank/name/score vertically; Bond Forge used baseline alignment only because its rows had no padding."
+            }
+          }
+        },
+        {
+          "suffix": "lb-rank",
+          "sharedClass": "game-lb-rank",
+          "surface": "runtime",
+          "participants": [
+            "bf",
+            "td"
+          ],
+          "fullyRemoved": [
+            "td"
+          ],
+          "participantConvergedProperties": {
+            "bf": [
+              "font-weight"
+            ],
+            "td": [
+              "font-weight"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "bf": {
+              "properties": [
+                "flex",
+                "width",
+                "flex-shrink"
+              ],
+              "reason": "Bond Forge spelled the fixed rank column as flex: 0 0 22px; the shared rule expresses the same 22px non-shrinking column as width + flex-shrink."
+            }
+          }
+        },
+        {
+          "suffix": "lb-score",
+          "sharedClass": "game-lb-score",
+          "surface": "runtime",
+          "participants": [
+            "bf",
+            "td"
+          ],
+          "fullyRemoved": [],
+          "participantConvergedProperties": {
+            "bf": [
+              "font-weight"
+            ],
+            "td": [
+              "font-weight"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "bf": {
+              "properties": [
+                "flex"
+              ],
+              "reason": "Bond Forge intentionally gives up its non-shrinking score column (flex: 0 0 auto, i.e. flex-shrink: 0); the score now uses the default flex-shrink: 1 like every other page, next to the shared flex: 1 / min-width: 0 name that absorbs overflow first."
+            }
+          }
+        },
+        {
+          "suffix": "lb-empty",
+          "sharedClass": "game-lb-empty",
+          "surface": "runtime",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd",
+            "pm"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "participantConvergedProperties": {
+            "pm": [
+              "padding"
+            ]
+          }
+        },
+        {
+          "suffix": "lb-status",
+          "sharedClass": "game-lb-status",
+          "surface": "html",
+          "participants": [
+            "bf"
+          ],
+          "fullyRemoved": [
+            "bf"
+          ],
+          "participantConvergedProperties": {
+            "bf": [
+              "line-height",
+              "min-height",
+              "margin-top"
+            ]
+          }
+        },
+        {
+          "suffix": "username-row",
+          "sharedClass": "game-lb-username-row",
+          "surface": "html",
+          "participants": [
+            "bf",
+            "td"
+          ],
+          "fullyRemoved": [
+            "bf",
+            "td"
+          ],
+          "participantConvergedProperties": {
+            "bf": [
+              "margin-top"
+            ],
+            "td": [
+              "margin-top"
+            ]
+          }
+        },
+        {
+          "suffix": "username-label",
+          "sharedClass": "game-lb-username-label",
+          "surface": "html",
+          "participants": [
+            "bf"
+          ],
+          "fullyRemoved": [
+            "bf"
+          ],
+          "participantConvergedProperties": {
+            "bf": [
+              "font-size",
+              "font-weight"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "bf": {
+              "properties": [
+                "flex",
+                "flex-shrink"
+              ],
+              "reason": "flex: 0 0 auto and the shared flex-shrink: 0 both keep the label at its content width."
+            }
+          }
+        },
+        {
+          "suffix": "username",
+          "sharedClass": "game-lb-username",
+          "surface": "html",
+          "participants": [
+            "bf",
+            "td"
+          ],
+          "fullyRemoved": [],
+          "participantConvergedProperties": {
+            "bf": [
+              "height",
+              "padding"
+            ],
+            "td": [
+              "border-radius",
+              "padding",
+              "transition"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "bf": {
+              "properties": [
+                "outline"
+              ],
+              "reason": "The shared input already removes the UA outline (its :focus rule restyles the border instead); Bond Forge did the same in its own :focus rule."
+            }
+          }
+        }
+      ],
+      "reviewedRuleRetirements": [
+        {
+          "prefix": "bf",
+          "context": "",
+          "selector": ".bf-lb-list::-webkit-scrollbar",
+          "reviewedLayoutProperties": [
+            "display"
+          ],
+          "reason": "Hidden WebKit scrollbar pairs with the retired scrollbar-width: none; the standard list keeps the platform scrollbar."
+        },
+        {
+          "prefix": "rv",
+          "context": "@media (width >= 1024px)",
+          "selector": ".rv-lb",
+          "reason": "Desktop-only 440px leaderboard width; the standard 330px leaderboard applies at every breakpoint."
+        }
+      ],
+      "reviewedDeclarationRetirements": [
+        {
+          "prefix": "pm",
+          "context": "",
+          "selector": ".pm-lb-head",
+          "properties": [
+            "margin-bottom"
+          ],
+          "reason": "The head row now carries .pm-lb-title/.game-lb-title, so the shared title margin spaces it; the page copy of the same 8px is retired. The row keeps only its page-only tab layout."
+        },
+        {
+          "prefix": "bf",
+          "context": "",
+          "selector": ".bf-username:focus",
+          "properties": [
+            "outline"
+          ],
+          "reviewedLayoutProperties": [
+            "outline"
+          ],
+          "reason": "The shared .game-lb-username already sets outline: none; the focus rule keeps only its palette (border-color, background)."
+        }
+      ]
     }
   ]
 }

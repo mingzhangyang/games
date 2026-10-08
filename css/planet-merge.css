@@ -290,7 +290,6 @@ body {
 }
 
 .pm-lb {
-    max-width: 340px;
     background: rgb(255, 255, 255, 0.045);
     border: 1px solid rgb(255, 255, 255, 0.1);
 }
@@ -299,12 +298,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
-}
-
-.pm-lb-title {
-    font-size: 14px;
-    font-weight: 700;
 }
 
 .pm-lb-tabs { display: flex; gap: 6px; }
@@ -327,10 +320,6 @@ body {
     border-color: transparent;
 }
 
-.pm-lb-list {
-    min-height: 60px;
-    max-height: 148px;
-}
 
 
 
@@ -348,7 +337,6 @@ body {
 
 .pm-lb-empty {
     color: var(--tok-text-faint);
-    padding: 14px 0;
 }
 
 .pm-lb-status {

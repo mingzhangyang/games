@@ -49,6 +49,8 @@
 tokens.css 还保留通用 `.icon-btn` 与 `.btn` / `.btn-primary` / `.btn-ghost`，主要服务历史独立页面（例如 Gomoku）。
 采用共享 shell 的游戏页，标准文本动作统一使用 `layout.css` 的 `.game-action-btn` / `--primary` / `--ghost` 与 `.game-action-row`；页面不再复制 padding、圆角、字号和 hover/active 基线。特殊 mode / ability / gameplay controls 不属于这一 family。标准 action 没有页面级尺寸例外：Hoop Shot、Planet Merge、Reversi、Tower Defense 原先更大一号的按钮已收敛到共享 family（见 `layout.md` §1.1）。页面只保留语义上不同的修饰类（如 `.pm-btn-daily`）。
 
+排行榜 `game-lb-*` family 同理：页面规则只允许调色板残余（`color` / `background` / `border` / `box-shadow` 等），**不允许任何几何或字体偏差**（宽度、圆角、内距、字号、字重、字距、行高、间距、高度）。2026-10 的 `leaderboard-v2` 已把 Bond Forge、Tower Defense、Planet Merge、Minesweeper、Hoop Shot、Reversi 的旧例外全部收敛，`tests/verify-leaderboard-layout.mjs` 对 15 页统一按标准表断言计算样式。
+
 ---
 
 ### 1.5 浅色主题（`:root[data-theme="light"]`，见 `theme.md`）

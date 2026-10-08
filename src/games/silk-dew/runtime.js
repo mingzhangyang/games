@@ -642,7 +642,11 @@ export class SilkfallGame {
         if (!list) return;
         list.innerHTML = '';
         if (!rows || !rows.length) {
-            if (el['lb-status']) el['lb-status'].textContent = this.t('noScores');
+            if (el['lb-status']) el['lb-status'].textContent = '';
+            const empty = document.createElement('div');
+            empty.className = 'sd-lb-empty game-lb-empty';
+            empty.textContent = this.t('noScores');
+            list.appendChild(empty);
             return;
         }
         if (el['lb-status']) el['lb-status'].textContent = '';

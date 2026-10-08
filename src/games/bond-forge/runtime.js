@@ -988,15 +988,19 @@ class BondForgeGame {
             .then(rows => {
                 list.innerHTML = '';
                 if (!Array.isArray(rows) || !rows.length) {
-                    this.setLbStatus(this.t('noScores'));
+                    this.setLbStatus('');
+                    const empty = document.createElement('div');
+                    empty.className = 'bf-lb-empty game-lb-empty';
+                    empty.textContent = this.t('noScores');
+                    list.appendChild(empty);
                     return;
                 }
                 this.setLbStatus('');
                 rows.slice(0, 20).forEach((r, i) => {
                     const div = document.createElement('div');
-                    div.className = 'bf-lb-row';
+                    div.className = 'bf-lb-row game-lb-row';
                     const rank = document.createElement('span');
-                    rank.className = 'bf-lb-rank';
+                    rank.className = 'bf-lb-rank game-lb-rank';
                     rank.textContent = String(i + 1);
                     const name = document.createElement('span');
                     name.className = 'bf-lb-name game-lb-name';
