@@ -616,7 +616,6 @@ export function verifyRetiredCustomProperties(
         const properties = retirement.properties || [];
         const retired = new Set(properties);
         const baseParsed = baseParsedByPath.get(game.css);
-        const currentParsed = currentParsedByPath.get(game.css);
         const baseRules = (baseParsed?.rules || []).filter(rule =>
             !rule.layer
             && (rule.context || []).length === 0
