@@ -378,7 +378,7 @@
 
 /* ── 含图标的文字按钮（Play/Again/Copy/Close/Home/Share/Stats/Next）──
    只负责「图标 + 文案」在同一行居中，让 inline SVG 的基线不再抬高图标；
-   按钮的配色/内距/圆角依然归各页自己的 .xx-btn，不在此处接管。 */
+   game-btn 仅负责图标与文案排版；标准操作按钮的颜色、内距和圆角由 game-action-btn family 统一负责，页面仅保留确有必要的专用控件样式。 */
 @layer components {
     .game-btn {
         display: inline-flex;
