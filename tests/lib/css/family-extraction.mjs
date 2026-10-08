@@ -51,6 +51,38 @@ function uniqueCatalogRule(catalog, selector, layer, errors, label) {
     return matches[0];
 }
 
+function uniqueRuleByDeclarations(parsed, selector, layer, declarations, errors, label) {
+    const wanted = canonical(declarations);
+    const matches = (parsed?.rules || []).filter(rule =>
+        rule.selector === selector
+        && (rule.layer || null) === (layer || null)
+        && (rule.context || []).length === 0
+        && canonical(rule.migrationDeclarations || []) === wanted);
+    if (matches.length !== 1) {
+        errors.push(label + ': expected exactly one ' + selector
+            + ' rule with the reviewed residual declarations in layer '
+            + (layer || '<unlayered>') + ', found ' + matches.length + '.');
+        return null;
+    }
+    return matches[0];
+}
+
+function uniqueCatalogRuleByDeclarations(catalog, selector, layer, declarations, errors, label) {
+    const wanted = canonical(declarations);
+    const matches = (catalog || []).filter(rule =>
+        rule.selector === selector
+        && (rule.layer || null) === (layer || null)
+        && rule.context === ''
+        && canonical(rule.declarations || []) === wanted);
+    if (matches.length !== 1) {
+        errors.push(label + ': expected exactly one indexed ' + selector
+            + ' rule with the reviewed declarations in layer '
+            + (layer || '<unlayered>') + ', found ' + matches.length + '.');
+        return null;
+    }
+    return matches[0];
+}
+
 function declarationKey(declaration) {
     return canonical(declaration);
 }
@@ -499,6 +531,10 @@ function escapeRegExp(value) {
     return value.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
+function migrationValueText(value) {
+    return (value || []).map(token => token[1]).join('');
+}
+
 export function verifyRetiredCustomProperties(
     extraction, currentParsedByPath, baseParsedByPath,
     currentCatalogs, baseCatalogs, externalRuleChanges, errors,
@@ -526,24 +562,22 @@ export function verifyRetiredCustomProperties(
                     removedDefinitionCount += 1;
                 }
             }
-            const currentRule = uniqueRule(
-                currentParsed, baseRule.selector, null, errors, label + '/' + baseRule.selector + '/current',
-            );
-            if (!currentRule) continue;
             const expected = (baseRule.migrationDeclarations || [])
                 .filter(declaration => !retired.has(declaration.property));
-            if (canonical(currentRule.migrationDeclarations || []) !== canonical(expected)) {
-                errors.push(label + '/' + baseRule.selector
-                    + ': theme rule changed beyond the declared custom-property retirements.');
-            }
+            const currentRule = uniqueRuleByDeclarations(
+                currentParsed, baseRule.selector, null, expected, errors,
+                label + '/' + baseRule.selector + '/current',
+            );
+            if (!currentRule) continue;
 
-            const baseIndexed = uniqueCatalogRule(
-                baseCatalogs.get(game.css), baseRule.selector, null, errors,
+            const baseIndexed = uniqueCatalogRuleByDeclarations(
+                baseCatalogs.get(game.css), baseRule.selector, null,
+                baseRule.migrationDeclarations || [], errors,
                 label + '/' + baseRule.selector + '/base-index',
             );
-            const currentIndexed = uniqueCatalogRule(
-                currentCatalogs.get(game.css), baseRule.selector, null, errors,
-                label + '/' + baseRule.selector + '/current-index',
+            const currentIndexed = uniqueCatalogRuleByDeclarations(
+                currentCatalogs.get(game.css), baseRule.selector, null,
+                expected, errors, label + '/' + baseRule.selector + '/current-index',
             );
             if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
             if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
@@ -572,7 +606,7 @@ export function verifyRetiredCustomProperties(
             for (const [path, parsed] of currentParsedByPath) {
                 for (const rule of parsed.rules || []) {
                     for (const declaration of rule.migrationDeclarations || []) {
-                        if (referencePattern.test(String(declaration.value || ''))) {
+                        if (referencePattern.test(migrationValueText(declaration.value))) {
                             errors.push(label + ': ' + property + ' still has a CSS consumer in '
                                 + path + ' ' + rule.selector + '.');
                         }
