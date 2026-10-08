@@ -497,8 +497,27 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
                 check(audit.bad.length === 0, `${p.id}@${w}：浅色文字对比度（${audit.total} 处）`, audit.bad.slice(0, 6).join(' | '));
                 const primaryAudit = await actionPrimaryContrastAudit(page);
                 check(primaryAudit.bad.length === 0,
-                    `${p.id}@${w}：primary action 渐变端点对比度（${primaryAudit.total} 个端点）`,
+                    `${p.id}@${w}：primary action 静止对比度（${primaryAudit.total} 个端点）`,
                     primaryAudit.bad.slice(0, 4).join(' | '));
+                // Exercise real CSS :hover, not a synthetic mouseover event. Only visible
+                // buttons can be hovered; the resting audit above still covers hidden ones.
+                const visiblePrimaries = await page.evaluate(() => [...document.querySelectorAll('.game-action-btn--primary')]
+                    .map((el, i) => ({ i, rect: el.getBoundingClientRect(), style: getComputedStyle(el) }))
+                    .filter(x => x.rect.width > 0 && x.rect.height > 0 && x.style.visibility === 'visible'
+                        && x.style.display !== 'none' && x.rect.top >= 0 && x.rect.bottom <= innerHeight
+                        && x.rect.left >= 0 && x.rect.right <= innerWidth)
+                    .map(x => x.i));
+                for (const index of visiblePrimaries) {
+                    const selector = `.game-action-btn--primary:nth-of-type(1)`;
+                    // Use the original DOM index: nth-of-type is not equivalent to querySelectorAll order.
+                    const target = await page.$('.game-action-btn--primary');
+                    await target[index].hover();
+                    const hoverAudit = await actionPrimaryContrastAudit(page);
+                    check(hoverAudit.bad.length === 0,
+                        `${p.id}@${w}：primary action hover 对比度（按钮 ${index}）`,
+                        hoverAudit.bad.slice(0, 4).join(' | '));
+                    await page.mouse.move(0, 0);
+                }
             } else if (audit.bad.length) {
                 darkContrast.push(`${p.id}@${w}: ${audit.bad.length}/${audit.total}`);
             }
