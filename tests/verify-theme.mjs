@@ -499,24 +499,42 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
                 check(primaryAudit.bad.length === 0,
                     `${p.id}@${w}：primary action 静止对比度（${primaryAudit.total} 个端点）`,
                     primaryAudit.bad.slice(0, 4).join(' | '));
-                // Exercise real CSS :hover, not a synthetic mouseover event. Only visible
-                // buttons can be hovered; the resting audit above still covers hidden ones.
-                const visiblePrimaries = await page.evaluate(() => [...document.querySelectorAll('.game-action-btn--primary')]
-                    .map((el, i) => ({ i, rect: el.getBoundingClientRect(), style: getComputedStyle(el) }))
-                    .filter(x => x.rect.width > 0 && x.rect.height > 0 && x.style.visibility === 'visible'
-                        && x.style.display !== 'none' && x.rect.top >= 0 && x.rect.bottom <= innerHeight
-                        && x.rect.left >= 0 && x.rect.right <= innerWidth)
-                    .map(x => x.i));
-                for (const index of visiblePrimaries) {
-                    const selector = `.game-action-btn--primary:nth-of-type(1)`;
-                    // Use the original DOM index: nth-of-type is not equivalent to querySelectorAll order.
-                    const target = await page.$('.game-action-btn--primary');
-                    await target[index].hover();
-                    const hoverAudit = await actionPrimaryContrastAudit(page);
-                    check(hoverAudit.bad.length === 0,
-                        `${p.id}@${w}：primary action hover 对比度（按钮 ${index}）`,
-                        hoverAudit.bad.slice(0, 4).join(' | '));
-                    await page.mouse.move(0, 0);
+                // Completion overlays are initially hidden. Force the browser's real
+                // :hover pseudo-state through CDP instead of relying on hit testing.
+                // This exercises the same CSS cascade without starting a game.
+                const primaryCount = await page.evaluate(() =>
+                    document.querySelectorAll('.game-action-btn--primary').length);
+                if (primaryCount) {
+                    const cdp = await page.createCDPSession();
+                    try {
+                        await cdp.send('DOM.enable');
+                        await cdp.send('CSS.enable');
+                        const { root } = await cdp.send('DOM.getDocument');
+                        const { nodeIds } = await cdp.send('DOM.querySelectorAll', {
+                            nodeId: root.nodeId, selector: '.game-action-btn--primary',
+                        });
+                        check(nodeIds.length === primaryCount,
+                            `${p.id}@${w}：primary hover 审计覆盖全部按钮`,
+                            `${nodeIds.length}/${primaryCount}`);
+                        let hovered = 0;
+                        for (const nodeId of nodeIds) {
+                            await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover'] });
+                            try {
+                                const hoverAudit = await actionPrimaryContrastAudit(page);
+                                hovered++;
+                                check(hoverAudit.bad.length === 0,
+                                    `${p.id}@${w}：primary action hover 对比度（按钮 ${hovered}）`,
+                                    hoverAudit.bad.slice(0, 4).join(' | '));
+                            } finally {
+                                await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] });
+                            }
+                        }
+                        check(hovered === primaryCount && hovered > 0,
+                            `${p.id}@${w}：primary hover 实际执行数量`,
+                            `${hovered}/${primaryCount}`);
+                    } finally {
+                        await cdp.detach();
+                    }
                 }
             } else if (audit.bad.length) {
                 darkContrast.push(`${p.id}@${w}: ${audit.bad.length}/${audit.total}`);
