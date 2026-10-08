@@ -519,6 +519,11 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
                 if (primaryCount) {
                     const cdp = await page.createCDPSession();
                     cssDomainUsed = true;
+                    // Visible actions transition background for 150ms; without this the
+                    // audit could read the pre-hover or an intermediate surface.
+                    const noTransition = await page.addStyleTag({
+                        content: '.game-action-btn--primary { transition: none !important; }',
+                    });
                     try {
                         await cdp.send('DOM.enable');
                         await cdp.send('CSS.enable');
@@ -546,6 +551,7 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
                             `${p.id}@${w}：primary hover 实际执行数量`,
                             `${hovered}/${primaryCount}`);
                     } finally {
+                        await noTransition.evaluate(node => node.remove());
                         await cdp.detach();
                     }
                 }
