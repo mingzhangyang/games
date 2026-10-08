@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import {
-    applyReviewedSelectorNarrowingsToImportant, applyReviewedSelectorPrunesToDebt,
+    applyReviewedSelectorNarrowingsToImportant, applyReviewedSelectorPrunesToDebt, expectedResidual,
     verifyCurrentRetiredCustomProperties,
     verifyExtractionAdoption, verifyExtractionShape, verifyRetiredCustomProperties,
 } from './lib/css/family-extraction.mjs';
@@ -369,6 +369,32 @@ try {
     );
     assert.ok(missingImportantErrors.some(error =>
         /no declaration under the reviewed base selector/.test(error)));
+
+    const decl = (property, value) => ({ property, value, important: false });
+    const fallbackSource = { migrationDeclarations: [
+        decl('color', 'white'),
+        decl('background', 'red'),
+        decl('background', 'linear-gradient(red, blue)'),
+    ] };
+    for (const converged of [[], ['background']]) {
+        const partialChainErrors = [];
+        const partialResidual = expectedResidual(
+            fallbackSource,
+            { migrationDeclarations: [decl('background', 'linear-gradient(red, blue)')] },
+            partialChainErrors, 'fallback', [], converged,
+        );
+        assert.ok(partialChainErrors.some(error => /may not break the fallback chain for background/.test(error)),
+            'exact match of one chain member must not pass (converged=' + converged + ')');
+        assert.ok(partialResidual.some(item => item.value === 'red'));
+    }
+    const wholeChainErrors = [];
+    const wholeChainResidual = expectedResidual(
+        fallbackSource,
+        { migrationDeclarations: [decl('background', 'red'), decl('background', 'linear-gradient(red, blue)')] },
+        wholeChainErrors, 'fallback',
+    );
+    assert.deepEqual(wholeChainErrors, []);
+    assert.deepEqual(wholeChainResidual, [decl('color', 'white')]);
 
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));

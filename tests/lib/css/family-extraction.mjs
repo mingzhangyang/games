@@ -105,7 +105,7 @@ function componentSharedSelector(component) {
     return classSelector + (component.sharedSelectorSuffix || '');
 }
 
-function expectedResidual(
+export function expectedResidual(
     baseRule, sharedRule, errors, label,
     inheritedEquivalentProperties = [], convergedThemeProperties = [],
 ) {
@@ -130,18 +130,34 @@ function expectedResidual(
         }
     }
 
+    const handledChains = new Set();
     for (const declaration of shared) {
         const sameProperty = base.filter(item =>
             item.property === declaration.property && item.important === declaration.important);
         const exactKey = declarationKey(declaration);
         const exactIndex = residual.findIndex(item => declarationKey(item) === exactKey);
 
-        if (convergedTheme.has(declaration.property)) {
-            if (sameProperty.length > 1 && exactIndex < 0) {
-                errors.push(label + ': theme convergence may not collapse a fallback chain for '
-                    + declaration.property + '.');
+        // A repeated property in the source is an ordered fallback chain. Moving only part
+        // of it would leave the rest as an unlayered residual that outranks the layered
+        // shared rule, so the shared rule must carry the whole chain verbatim or none of it.
+        if (sameProperty.length > 1) {
+            const chainKey = declaration.property + '\0' + declaration.important;
+            if (handledChains.has(chainKey)) continue;
+            handledChains.add(chainKey);
+            const sharedChain = shared.filter(item =>
+                item.property === declaration.property && item.important === declaration.important);
+            if (canonical(sharedChain) !== canonical(sameProperty)) {
+                errors.push(label + ': family extraction may not break the fallback chain for '
+                    + declaration.property + '; the shared rule must carry the whole ordered chain.');
                 continue;
             }
+            for (const item of sameProperty) {
+                residual.splice(residual.findIndex(entry => declarationKey(entry) === declarationKey(item)), 1);
+            }
+            continue;
+        }
+
+        if (convergedTheme.has(declaration.property)) {
             if (exactIndex >= 0) {
                 residual.splice(exactIndex, 1);
             } else if (sameProperty.length === 1) {
