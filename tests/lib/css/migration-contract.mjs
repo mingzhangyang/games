@@ -489,11 +489,26 @@ function sameValues(left, right) {
     return jsonKey(sortedValues(left)) === jsonKey(sortedValues(right));
 }
 
-function verifyDedupeAdoption(mapping, sources, destination, stylesheetLinks, htmlSources, errors) {
-    if (sources.every(source => source.selector === destination.selector)) return new Set();
+function verifyDedupeDestinationActivation(mapping, sources, destination, pagesByPath, errors) {
+    const destinationPages = pagesByPath.get(destination.path) || new Set();
+    const sourcePaths = new Set(sources.map(source => source.path));
+    for (const sourcePath of sourcePaths) {
+        const sourcePages = pagesByPath.get(sourcePath) || new Set();
+        for (const page of sourcePages) {
+            if (!destinationPages.has(page)) {
+                errors.push(mapping.id + ': destination stylesheet ' + destination.path
+                    + ' is not active on ' + page + ' (required by source stylesheet ' + sourcePath + ').');
+            }
+        }
+    }
+}
 
+function verifyDedupeAdoption(mapping, sources, destination, stylesheetLinks, htmlSources, errors) {
     const adoption = mapping.adoption;
     const pagesByPath = coactivePages(stylesheetLinks);
+    verifyDedupeDestinationActivation(mapping, sources, destination, pagesByPath, errors);
+    if (sources.every(source => source.selector === destination.selector)) return;
+
     const expectedPaths = new Set(sources.map(source => source.path));
     const consumers = Array.isArray(adoption?.consumers) ? adoption.consumers : [];
     const byPath = new Map();
@@ -558,6 +573,14 @@ function verifyDedupeAdoption(mapping, sources, destination, stylesheetLinks, ht
                     errors.push(mapping.id + ': body-class adoption requires bodyClass for ' + path + '.');
                 } else if (bodies.length !== 1 || !classTokens(htmlElementAttributes(bodies[0]).class).has(bodyClass)) {
                     errors.push(mapping.id + ': ' + page + ' must opt into .' + bodyClass + ' on its body.');
+                }
+            } else if (adoption?.surface === 'root-class') {
+                const rootClass = consumer.rootClass;
+                const roots = elements.filter(element => htmlTagName(element) === 'html');
+                if (typeof rootClass !== 'string' || !rootClass) {
+                    errors.push(mapping.id + ': root-class adoption requires rootClass for ' + path + '.');
+                } else if (roots.length !== 1 || !classTokens(htmlElementAttributes(roots[0]).class).has(rootClass)) {
+                    errors.push(mapping.id + ': ' + page + ' must opt into .' + rootClass + ' on its document root.');
                 }
             } else {
                 errors.push(mapping.id + ': unsupported adoption surface ' + JSON.stringify(adoption?.surface) + '.');
@@ -687,9 +710,9 @@ function verifyDedupeResetMappingInvariant(mapping, errors) {
         valid = false;
     }
     if (mapping.destination.selector === '.game-reset, .game-reset *'
-        && (mapping.adoption?.surface !== 'body-class'
-            || (mapping.adoption.consumers || []).some(consumer => consumer.bodyClass !== 'game-reset'))) {
-        errors.push(mapping.id + ': scoped reset deduplication requires body-class adoption evidence for .game-reset.');
+        && (mapping.adoption?.surface !== 'root-class'
+            || (mapping.adoption.consumers || []).some(consumer => consumer.rootClass !== 'game-reset'))) {
+        errors.push(mapping.id + ': scoped reset deduplication requires root-class adoption evidence for .game-reset.');
         valid = false;
     }
     if (mapping.destination.layer !== 'reset' || sources.some(source => source?.layer !== 'reset')) {

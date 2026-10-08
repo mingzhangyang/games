@@ -18,7 +18,7 @@ import {
 } from './lib/css/migration-contract.mjs';
 import { readMigrationState, readMigrationStateAtGit } from './lib/css/migration-state.mjs';
 import {
-    applyReviewedSelectorNarrowingsToImportant, verifyFamilyExtractions,
+    verifyFamilyExtractions,
 } from './lib/css/family-extraction.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -109,6 +109,41 @@ function multisetDelta(actual, expected) {
 
 function sameJson(left, right) {
     return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function declarationValueText(value) {
+    return Array.isArray(value) ? value.map(token => token[1]).join('') : value;
+}
+
+function importantRowsFromParsed(path, parsed) {
+    return (parsed?.declarations || [])
+        .filter(declaration => declaration.selector && hasImportantPriority(declaration.value))
+        .map(declaration => [
+            path, declaration.context.join(' / '), declaration.selector,
+            declaration.property, declaration.value,
+        ]);
+}
+
+function importantRowsFromIndexedRule(rule) {
+    return (rule?.declarations || [])
+        .filter(declaration => declaration.important)
+        .map(declaration => [
+            rule.path, rule.context, rule.selector,
+            declaration.property, declarationValueText(declaration.value),
+        ]);
+}
+
+function applyImportantRows(expected, removed, added, errors, label) {
+    for (const row of removed) {
+        const index = expected.findIndex(candidate => sameJson(candidate, row));
+        if (index < 0) {
+            errors.push(label + ' tried to remove a tuple absent from the comparison-base snapshot: '
+                + JSON.stringify(row));
+        } else {
+            expected.splice(index, 1);
+        }
+    }
+    expected.push(...added);
 }
 
 function verifyPluginRetirementContract(errors) {
@@ -370,6 +405,11 @@ function verifyProject() {
         }
     }
 
+    const baseStaticOrdinaryRules = [...baseParsedByPath.values()]
+        .reduce((total, parsed) => total + (parsed?.rules || []).length, 0);
+    const baseImportantDeclarations = [...baseParsedByPath.entries()]
+        .flatMap(([path, parsed]) => importantRowsFromParsed(path, parsed));
+
     const familyResult = verifyFamilyExtractions({
         root: ROOT,
         comparisonBase,
@@ -416,10 +456,10 @@ function verifyProject() {
         errors,
     });
 
-    const expectedStaticOrdinaryRules = p5FrozenCounts.staticOrdinaryRules
-        + familyResult.totalRuleDelta + migrationResult.newRuleDelta;
+    const expectedStaticOrdinaryRules = baseStaticOrdinaryRules
+        + familyResult.newRuleDelta + migrationResult.newRuleDelta;
     if (currentCompatibilityCounts.staticOrdinaryRules !== expectedStaticOrdinaryRules) {
-        errors.push('Static ordinary rule population differs from P5 plus reviewed family and rule migrations: '
+        errors.push('Static ordinary rule population differs from the comparison base plus current family and rule migrations: '
             + currentCompatibilityCounts.staticOrdinaryRules + ' !== ' + expectedStaticOrdinaryRules + '.');
     }
 
@@ -432,27 +472,33 @@ function verifyProject() {
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);
         if (key === 'unlayeredRules') continue;
-        // Reviewed family selector narrowings keep every !important declaration and only
-        // re-key it under the narrowed selector; everything else stays exactly P0.
+        // The comparison-base CSS already contains historical selector narrowings and
+        // migrations; only current family/rule transactions are applied below.
         let expected = sortTuples(key === 'importantDeclarations'
-            ? applyReviewedSelectorNarrowingsToImportant(BASELINE.debt[key], familyResult.extractions, errors)
+            ? baseImportantDeclarations
             : BASELINE.debt[key] || []);
         if (key === 'importantDeclarations') {
-            for (const removed of migrationResult.importantDeclarationDelta.removed) {
-                const index = expected.findIndex(row => sameJson(row, removed));
-                if (index < 0) {
-                    errors.push('importantDeclarations migration tried to remove a tuple absent from the reviewed P0 snapshot: '
-                        + JSON.stringify(removed));
-                } else {
-                    expected.splice(index, 1);
-                }
-            }
-            expected.push(...migrationResult.importantDeclarationDelta.added);
+            const familyBaseRows = (familyResult.externalRuleChanges?.base || [])
+                .flatMap(rule => importantRowsFromIndexedRule(rule));
+            const familyCurrentRows = (familyResult.externalRuleChanges?.current || [])
+                .flatMap(rule => importantRowsFromIndexedRule(rule));
+            applyImportantRows(
+                expected, familyBaseRows, familyCurrentRows, errors,
+                'family extraction important-declaration transaction',
+            );
+            applyImportantRows(
+                expected,
+                migrationResult.importantDeclarationDelta.removed,
+                migrationResult.importantDeclarationDelta.added,
+                errors,
+                'importantDeclarations migration',
+            );
+            expected = sortTuples(expected);
         }
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {
             errors.push(
-                key + ' differs from the immutable P0 CSS snapshot (' + delta.added.length
+                key + ' differs from the comparison base plus reviewed current transactions (' + delta.added.length
                 + ' added, ' + delta.removed.length + ' removed); do not edit the P0 snapshot to hide migration progress.',
             );
             if (delta.added.length) errors.push('  new: ' + JSON.stringify(delta.added.slice(0, 3)));
@@ -482,7 +528,7 @@ function verifyProject() {
         + runtimeKeyframes + ' · unlayered runtime keyframes: ' + runtimeUnlayeredKeyframes);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
-    console.log('  static ordinary rule count matches P5 plus reviewed family-extraction deltas; unlayered debt matches both append-only ledgers.');
+    console.log('  static ordinary rule count matches the comparison base plus current family/rule deltas; unlayered debt matches both append-only ledgers.');
     console.log('  reviewed family extractions: ' + (familyResult.newExtractionIds.length
         ? familyResult.newExtractionIds.join(', ') : 'no new transaction in this diff'));
     console.log('  immutable P0/P5 evidence, script activation, stylesheet source order, and current layer map all match.');

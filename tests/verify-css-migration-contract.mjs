@@ -418,6 +418,115 @@ assert.deepEqual(dedupeResult.importantDeclarationDelta.added, [
     ['css/layout.css', '', '.hidden', 'display', 'none!important'],
 ]);
 
+// Even an exact selector match must keep the shared destination active on every
+// page that loaded a source stylesheet; otherwise the verifier could approve a
+// deletion whose replacement is unreachable at runtime.
+const inactiveDestinationBase = parseMap([
+    ['css/a.css', '.shared{display:none!important}'],
+    ['css/b.css', '.shared{display:none!important}'],
+    ['css/layout.css', ''],
+]);
+const inactiveDestinationCurrent = parseMap([
+    ['css/a.css', ''],
+    ['css/b.css', ''],
+    ['css/layout.css', '@layer contracts{.shared{display:none!important}}'],
+]);
+const inactiveBaseCatalogs = catalogMap(inactiveDestinationBase);
+const inactiveCurrentCatalogs = catalogMap(inactiveDestinationCurrent);
+const inactiveDestinationMapping = {
+    id: 'fixture-dedupe-inactive-destination',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(inactiveBaseCatalogs.get('css/a.css')[0]),
+        sourceRef(inactiveBaseCatalogs.get('css/b.css')[0]),
+    ],
+    destination: destinationRef(inactiveCurrentCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: false,
+    reason: 'fixture exact selector destination activation',
+    conflicts: { normal: [], important: [] },
+};
+const inactiveDestinationErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [['css/a.css', '', '.shared'], ['css/b.css', '', '.shared']],
+        },
+    },
+    state: { ...emptyState, migratedRules: [inactiveDestinationMapping] },
+    currentParsedByPath: inactiveDestinationCurrent,
+    baseParsedByPath: inactiveDestinationBase,
+    stylesheetLinks: {
+        'dedupe-same.html': [
+            ['css/a.css', []], ['css/b.css', []],
+        ],
+    },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: inactiveDestinationErrors,
+});
+assert.ok(inactiveDestinationErrors.some(error => /destination stylesheet css\/layout\.css is not active/.test(error)));
+
+const rootResetBase = parseMap([
+    ['css/root-a.css', '@layer reset{*{margin:0;padding:0;box-sizing:border-box}}'],
+    ['css/root-b.css', '@layer reset{*{margin:0;padding:0;box-sizing:border-box}}'],
+    ['css/layout.css', ''],
+]);
+const rootResetCurrent = parseMap([
+    ['css/root-a.css', ''],
+    ['css/root-b.css', ''],
+    ['css/layout.css', '@layer reset{.game-reset, .game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
+]);
+const rootResetBaseCatalogs = catalogMap(rootResetBase);
+const rootResetCurrentCatalogs = catalogMap(rootResetCurrent);
+const rootResetMapping = {
+    id: 'fixture-dedupe-root-reset',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(rootResetBaseCatalogs.get('css/root-a.css')[0]),
+        sourceRef(rootResetBaseCatalogs.get('css/root-b.css')[0]),
+    ],
+    destination: destinationRef(rootResetCurrentCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: false,
+    adoption: {
+        surface: 'root-class',
+        consumers: [
+            { sourcePath: 'css/root-a.css', pages: ['root-a.html'], rootClass: 'game-reset' },
+            { sourcePath: 'css/root-b.css', pages: ['root-b.html'], rootClass: 'game-reset' },
+        ],
+    },
+    reason: 'fixture document-root reset opt-in',
+    conflicts: { normal: [], important: [] },
+};
+const rootResetErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [],
+        },
+    },
+    state: { ...emptyState, migratedRules: [rootResetMapping] },
+    currentParsedByPath: rootResetCurrent,
+    baseParsedByPath: rootResetBase,
+    stylesheetLinks: {
+        'root-a.html': [
+            ['css/layout.css', []], ['css/root-a.css', []],
+        ],
+        'root-b.html': [
+            ['css/layout.css', []], ['css/root-b.css', []],
+        ],
+    },
+    htmlSources: new Map([
+        ['root-a.html', '<html class="game-reset"><body></body></html>'],
+        ['root-b.html', '<html class="game-reset"><body></body></html>'],
+    ]),
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: rootResetErrors,
+});
+assert.deepEqual(rootResetErrors, []);
+
 const missingAdoptionErrors = [];
 const missingAdoption = clone(dedupeMapping);
 delete missingAdoption.adoption;

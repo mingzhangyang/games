@@ -1431,6 +1431,7 @@ export function verifyFamilyExtractions({
     const extensions = new Map(orderedExtractions.map(extraction =>
         [extraction.id, resolveFamilyExtension(extraction, orderedExtractions, errors)]));
     const newExtractions = orderedExtractions.filter(extraction => !baseById.has(extraction.id));
+    const newRuleDelta = newExtractions.reduce((sum, extraction) => sum + extraction.expectedRuleDelta, 0);
     for (const extraction of newExtractions) {
         verifyNewExtraction(
             root, extraction, currentParsedByPath, baseParsedByPath,
@@ -1440,10 +1441,9 @@ export function verifyFamilyExtractions({
     }
     if (newExtractions.length) {
         const actualDelta = totalRules(currentParsedByPath) - totalRules(baseParsedByPath);
-        const expectedDelta = newExtractions.reduce((sum, extraction) => sum + extraction.expectedRuleDelta, 0);
-        if (actualDelta !== expectedDelta) {
+        if (actualDelta !== newRuleDelta) {
             errors.push('family extraction transaction changed the static rule population by ' + actualDelta
-                + ', expected ' + expectedDelta + '.');
+                + ', expected ' + newRuleDelta + '.');
         }
     }
 
@@ -1459,5 +1459,6 @@ export function verifyFamilyExtractions({
         externalRuleChanges,
         extractions: [...currentById.values()],
         newExtractionIds: newExtractions.map(extraction => extraction.id),
+        newRuleDelta,
     };
 }

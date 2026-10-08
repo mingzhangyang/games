@@ -87,7 +87,7 @@
 ### W3 簇 D：全站零散精确重复（小，低风险）— ✅ 已完成（`w3-*` dedupe 事务）
 - `.hidden`（20 份）：在 `layout.css` 里建共享规则，删除页面副本。注意有的页面靠 `.hidden` 驱动 `:has(> .game-overlay--menu:not(.hidden))`，语义必须保持一致。
 - `.xx-icon-btn:active`（18 份）：`layout.css` 已有 `.game-icon-btn:active { transform: scale(0.92); }`。确认各页都挂了 `game-icon-btn`，并在账本中逐个记录 HTML 采用证据后，页面副本直接退役。
-- `*`（22 份）：审计把它和 reset 层的 `*, *::before, *::after` 算成两个选择器族。W3 将页面 reset 收口到显式 `body.game-reset` 采用的 `.game-reset, .game-reset *`；未迁移页面不受影响，契约要求每个 stylesheet consumer 都有 body-class 证据，并保留反向失败夹具。
+- `*`（22 份）：审计把它和 reset 层的 `*, *::before, *::after` 算成两个选择器族。W3 将页面 reset 收口到显式 `html.game-reset` 采用的 `.game-reset, .game-reset *`；未迁移页面不受影响，契约要求每个 stylesheet consumer 都有 root-class 证据，并保留反向失败夹具。
 - 实际删除 58 条规则：20 份 `.hidden` 收口到 `@layer contracts`，18 份图标钮 active 复用 `game-icon-btn`，22 份页面 reset 收口到 `@layer reset`；Tetris 的额外触控 reset 保留。
 
 ### W4 簇 A：开始菜单 / 选关（最大，拆两个 PR）
@@ -122,7 +122,7 @@
 | `requiresAdoption:false` 状态组件 | `:hover` / `:active` 等状态规则 | 参与页必须是锚点组件参与页的子集 |
 | fallback 链 | 同一属性重复出现，作为一条有序回退链 | 必须整链搬迁，或者完全不动 |
 
-W3 还扩展了 P2 规则账本：`kind: "dedupe"` 可把多个跨文件、声明完全相同的源规则收敛到一个共享目标；目标必须明确是新建还是复用，reset 目标只能是顶层 `*` 或显式 `.game-reset, .game-reset *`，后者必须为每个 stylesheet consumer 提供 body-class 采用证据，并由单测覆盖反向失败路径。
+W3 还扩展了 P2 规则账本：`kind: "dedupe"` 可把多个跨文件、声明完全相同的源规则收敛到一个共享目标；目标必须明确是新建还是复用，reset 目标只能是顶层 `*` 或显式 `.game-reset, .game-reset *`，后者必须为每个 stylesheet consumer 提供 root-class 采用证据，并由单测覆盖反向失败路径。
 
 ## 5. 每个 PR 的执行清单
 
