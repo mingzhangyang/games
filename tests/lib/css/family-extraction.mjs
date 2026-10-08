@@ -564,6 +564,31 @@ function subtractRows(rows, removed, errors) {
     return remaining;
 }
 
+export function applyReviewedSelectorPrunesToDebt(rows, extractions, errors) {
+    const projected = (rows || []).map(row => [...row]);
+    for (const extraction of extractions || []) {
+        for (const prune of extraction.reviewedSelectorPrunes || []) {
+            const path = extraction.games?.[prune.prefix]?.css;
+            if (!path) continue;
+            const baseTuple = [path, '', prune.baseSelector];
+            const currentTuple = [path, '', prune.currentSelector];
+            const baseKey = tupleKey(baseTuple);
+            const matches = [];
+            for (let index = 0; index < projected.length; index++) {
+                if (tupleKey(projected[index]) === baseKey) matches.push(index);
+            }
+            if (matches.length !== 1) {
+                errors.push(extraction.id + '/selector-prune/' + prune.prefix
+                    + ': immutable P0 debt must contain exactly one reviewed base selector tuple; found '
+                    + matches.length + '.');
+                continue;
+            }
+            projected[matches[0]] = currentTuple;
+        }
+    }
+    return projected;
+}
+
 function totalRules(parsedByPath) {
     let total = 0;
     for (const parsed of parsedByPath.values()) total += (parsed.rules || []).length;
@@ -896,7 +921,11 @@ export function verifyFamilyExtractions({
     return {
         cssPaths,
         totalRuleDelta,
-        remainingUnlayeredRules: subtractRows(baselineUnlayeredRules, removed, errors),
+        remainingUnlayeredRules: applyReviewedSelectorPrunesToDebt(
+            subtractRows(baselineUnlayeredRules, removed, errors),
+            [...currentById.values()],
+            errors,
+        ),
         removedCustomPropertyDefinitionsByPath,
         externalRuleChanges,
         newExtractionIds: newExtractions.map(extraction => extraction.id),

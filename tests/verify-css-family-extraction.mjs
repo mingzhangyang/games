@@ -6,8 +6,8 @@ import { join } from 'node:path';
 
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import {
-    verifyCurrentRetiredCustomProperties, verifyExtractionAdoption, verifyExtractionShape,
-    verifyRetiredCustomProperties,
+    applyReviewedSelectorPrunesToDebt, verifyCurrentRetiredCustomProperties,
+    verifyExtractionAdoption, verifyExtractionShape, verifyRetiredCustomProperties,
 } from './lib/css/family-extraction.mjs';
 import { indexRuleOccurrences } from './lib/css/migration-contract.mjs';
 
@@ -291,6 +291,24 @@ try {
     assert.equal(verifyExtractionShape(invalidSelectorPrune, invalidSelectorPruneErrors), false);
     assert.ok(invalidSelectorPruneErrors.some(error =>
         /must remove selectors without adding or rewriting survivors/.test(error)));
+
+    const projectedDebtErrors = [];
+    const projectedDebt = applyReviewedSelectorPrunesToDebt(
+        [['css/demo.css', '', '.dm-mode-daily, .dm-panel']],
+        [validSelectorPrune],
+        projectedDebtErrors,
+    );
+    assert.deepEqual(projectedDebtErrors, []);
+    assert.deepEqual(projectedDebt, [['css/demo.css', '', '.dm-mode-daily']]);
+
+    const missingDebtErrors = [];
+    applyReviewedSelectorPrunesToDebt(
+        [['css/demo.css', '', '.dm-unrelated']],
+        [validSelectorPrune],
+        missingDebtErrors,
+    );
+    assert.ok(missingDebtErrors.some(error =>
+        /immutable P0 debt must contain exactly one reviewed base selector tuple/.test(error)));
 
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));
