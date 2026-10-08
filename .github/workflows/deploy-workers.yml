@@ -1,0 +1,74 @@
+name: Deploy Workers
+
+# Manual deploy for the standalone Workers (and optionally the site), so a
+# Worker can be published from the GitHub web UI / mobile app without a local
+# wrangler setup. The site itself is normally deployed by Cloudflare's git
+# integration on push to main; "site" here is only a fallback.
+#
+# One-time setup (repo Settings -> Secrets and variables -> Actions):
+#   CLOUDFLARE_API_TOKEN   API token created from Cloudflare's
+#                          "Edit Cloudflare Workers" template
+#   CLOUDFLARE_ACCOUNT_ID  the Cloudflare account id
+#
+# Run: Actions -> Deploy Workers -> Run workflow -> pick a target.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: What to deploy
+        type: choice
+        default: analytics
+        options:
+          - analytics
+          - scores
+          - word-stats
+          - site
+          - all
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-workers
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Only ever deploy reviewed code: refuse runs started on other branches.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Worker whitelists are gen-derived; refuse to ship a drifted copy.
+      - name: Registry drift check
+        run: npm run gen -- --check
+
+      - name: Deploy
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          case "$TARGET" in
+            analytics)  npm run deploy:analytics ;;
+            scores)     npm run deploy:scores ;;
+            word-stats) npm run deploy:word-stats ;;
+            site)       npm run deploy ;;
+            all)        npm run deploy:all ;;
+            *) echo "unknown target: $TARGET" >&2; exit 1 ;;
+          esac

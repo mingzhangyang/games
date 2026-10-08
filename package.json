@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "wrangler dev",
-    "deploy": "vite build && wrangler deploy && npm run deploy:analytics",
+    "deploy": "vite build && wrangler deploy",
     "deploy:analytics": "wrangler deploy -c Workers/wrangler-games-analytics.jsonc",
     "deploy:scores": "wrangler deploy -c Workers/wrangler-game-scores.jsonc",
     "deploy:word-stats": "wrangler deploy -c Workers/wrangler-word-daily.jsonc",

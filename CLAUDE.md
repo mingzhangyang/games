@@ -34,6 +34,7 @@ npm run deploy:analytics   # 统计 Worker（games-analytics）
 npm run deploy:scores      # 排行榜 Worker（game-scores）
 npm run deploy:word-stats  # Word Daily 统计 Worker
 npm run deploy:all         # 主站 + 以上三个 Worker；改了 games.config.json 并 gen 后用它
+# 无本地 wrangler 时：GitHub → Actions → Deploy Workers → Run workflow（.github/workflows/deploy-workers.yml，仅 main，需 CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID secrets）
 npm run preview     # wrangler dev (serves dist/ + src/index.js worker)
 npm run gen         # 由 games.config.json 重新生成全部登记点（见 registry 契约）
 npm run verify      # 全量校验体系（自动发现的全部项，见 Testing）
