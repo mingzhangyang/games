@@ -158,6 +158,13 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
   hs/pm 的 inline-width 自锁（见「桌面舞台预算」）只在首屏暴露；二是并发标签页不加
   `--disable-background-timer-throttling` / `--disable-renderer-backgrounding` —— 后台页 rAF 被节流，就绪判定等不到新帧。
   提速后必须拿新旧版本跑同一批页做全量读数比对 + 注入缺陷反向验证，不能只看「还是绿的」。
+
+- ⚠️ **CDP `CSS.enable` 会让同一页之后的 `waitForNetworkIdle` 永远等不到静默。** 2026-10-08 PR #117 给
+  `verify-theme` 加 primary hover 审计（`CSS.forcePseudoState` 需要先 `CSS.enable`）后，该页随后的深色导航每次都
+  卡满 8s 超时：页面层看不到任何挂起请求（开着请求拦截时，CSS 域触发的内部请求被 Puppeteer 记为 in-flight 却永不结束），
+  `CSS.disable`、不 detach 都无效。26 页 × 2 视口累计把本项从 112s 拖到 222s，CI 上以 exit 124（180s 步骤上限）失败，
+  而断言全绿。修法：用过 CSS 域的页不再导航，下一轮换同 context 的新页（导航次数不变，pageerror 两页合并断言）。
+  教训：新校验器里开 CDP 域前，先想清楚这一页之后还要不要等网络空闲；单项耗时翻倍要当失败对待，不能等它撞上步骤上限。
   编排层同步改了：`verify-all` 离线项全并发、浏览器项 `--jobs` 池（并发输出缓冲成整块），`--changed` 按 diff 选项。
 
 ## codegen 脚本

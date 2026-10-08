@@ -480,9 +480,21 @@ const darkContrast = [];
 for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
     for (const [w, h] of [[390, 844], [1280, 900]]) {
         const ctx = await browser.createBrowserContext();
-        const { page, errors } = await openPage(ctx);
+        let { page, errors } = await openPage(ctx);
+        const allErrors = [errors];
         await page.setViewport({ width: w, height: h });
+        // CSS.enable（hover 审计需要）会让 Chrome 发出 Puppeteer 记为 in-flight 却永不结束的请求，
+        // 同一页后续的 waitForNetworkIdle 只能等满 8s 超时（26 页累计把本校验器拖过 180s 步骤上限）。
+        // 审计过的页不再导航：深色轮换一个干净的新页，导航次数不变。
+        let cssDomainUsed = false;
         for (const theme of ['light', 'dark']) {
+            if (cssDomainUsed) {
+                await page.close();
+                ({ page, errors } = await openPage(ctx));
+                allErrors.push(errors);
+                await page.setViewport({ width: w, height: h });
+                cssDomainUsed = false;
+            }
             await gotoWithPref(page, `/${p.href}`, theme);
             await page.waitForNetworkIdle({ idleTime: 300, timeout: 8000 }).catch(() => {});
             await new Promise(r => setTimeout(r, 400));
@@ -506,6 +518,7 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
                     document.querySelectorAll('.game-action-btn--primary').length);
                 if (primaryCount) {
                     const cdp = await page.createCDPSession();
+                    cssDomainUsed = true;
                     try {
                         await cdp.send('DOM.enable');
                         await cdp.send('CSS.enable');
@@ -548,7 +561,8 @@ for (const p of PAGES.filter(x => x.light && keepPage(x.id))) {
         await new Promise(r => setTimeout(r, 400));
         const L = await cornerLuminance(page);
         check((await state(page)).theme === 'light' && L > 0.6, `${p.id}@${w}：同页切到浅色即时生效（亮度 ${L.toFixed(2)}）`);
-        check(errors.length === 0, `${p.id}@${w}：无 pageerror`, errors.join(' | '));
+        const pageErrors = allErrors.flat();
+        check(pageErrors.length === 0, `${p.id}@${w}：无 pageerror`, pageErrors.join(' | '));
         await ctx.close();
     }
 }
