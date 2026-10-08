@@ -418,7 +418,7 @@
         transition: transform 0.12s, background 0.15s;
     }
 
-    .game-action-btn:hover {
+    :where(.game-action-btn):hover {
         background: var(--tok-panel-strong);
     }
 

@@ -99,7 +99,10 @@ function componentLocalSelector(prefix, component) {
 }
 
 function componentSharedSelector(component) {
-    return '.' + component.sharedClass + (component.sharedSelectorSuffix || '');
+    const classSelector = component.sharedClassSpecificity === 'zero'
+        ? ':where(.' + component.sharedClass + ')'
+        : '.' + component.sharedClass;
+    return classSelector + (component.sharedSelectorSuffix || '');
 }
 
 function expectedResidual(
@@ -292,12 +295,19 @@ export function verifyExtractionShape(extraction, errors) {
         }
         const localSelectorSuffix = component.localSelectorSuffix || '';
         const sharedSelectorSuffix = component.sharedSelectorSuffix || '';
+        const sharedClassSpecificity = component.sharedClassSpecificity || 'normal';
         if (!REVIEWED_SELECTOR_SUFFIXES.has(localSelectorSuffix)
             || !REVIEWED_SELECTOR_SUFFIXES.has(sharedSelectorSuffix)) {
             fail('component selector suffixes must be reviewed pseudo-classes.');
         }
         if (localSelectorSuffix !== sharedSelectorSuffix) {
             fail('local and shared selector suffixes must match.');
+        }
+        if (!['normal', 'zero'].includes(sharedClassSpecificity)) {
+            fail('sharedClassSpecificity must be "normal" or "zero".');
+        }
+        if (sharedClassSpecificity === 'zero' && !sharedSelectorSuffix) {
+            fail('zero shared-class specificity is only valid for a state selector.');
         }
         if (component.requiresAdoption !== undefined && typeof component.requiresAdoption !== 'boolean') {
             fail('requiresAdoption must be boolean when present.');
@@ -320,9 +330,9 @@ export function verifyExtractionShape(extraction, errors) {
         if (typeof component.sharedClass !== 'string' || !component.sharedClass) {
             fail('every component requires a non-empty sharedClass.');
         } else {
-            const sharedKey = component.sharedClass + sharedSelectorSuffix;
+            const sharedKey = componentSharedSelector(component);
             if (sharedClasses.has(sharedKey)) {
-                fail('duplicate sharedClass ' + sharedKey + '.');
+                fail('duplicate sharedClass selector ' + sharedKey + '.');
             } else {
                 sharedClasses.add(sharedKey);
             }
@@ -568,7 +578,11 @@ export function verifyRetiredCustomProperties(
                 currentParsed, baseRule.selector, null, expected, errors,
                 label + '/' + baseRule.selector + '/current',
             );
-            if (!currentRule) continue;
+            if (!currentRule) {
+                errors.push(label + '/' + baseRule.selector
+                    + ': theme rule changed beyond the declared custom-property retirements.');
+                continue;
+            }
 
             const baseIndexed = uniqueCatalogRuleByDeclarations(
                 baseCatalogs.get(game.css), baseRule.selector, null,

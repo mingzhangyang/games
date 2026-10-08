@@ -137,6 +137,19 @@ try {
     verifyExtractionAdoption(root, pseudoState, pseudoAdoptionErrors);
     assert.deepEqual(pseudoAdoptionErrors, []);
 
+    const zeroSpecificityState = clone(pseudoState);
+    zeroSpecificityState.components[1].sharedClassSpecificity = 'zero';
+    const zeroSpecificityErrors = [];
+    assert.equal(verifyExtractionShape(zeroSpecificityState, zeroSpecificityErrors), true);
+    assert.deepEqual(zeroSpecificityErrors, []);
+
+    const invalidZeroSpecificity = clone(extraction);
+    invalidZeroSpecificity.components[0].sharedClassSpecificity = 'zero';
+    const invalidZeroSpecificityErrors = [];
+    assert.equal(verifyExtractionShape(invalidZeroSpecificity, invalidZeroSpecificityErrors), false);
+    assert.ok(invalidZeroSpecificityErrors.some(error =>
+        /zero shared-class specificity is only valid for a state selector/.test(error)));
+
     const mismatchedState = clone(pseudoState);
     mismatchedState.components[1].sharedSelectorSuffix = ':disabled';
     const mismatchedStateErrors = [];
@@ -260,7 +273,8 @@ try {
     const duplicateIdentityErrors = [];
     assert.equal(verifyExtractionShape(duplicateIdentity, duplicateIdentityErrors), false);
     assert.ok(duplicateIdentityErrors.some(error => /duplicate component suffix panel/.test(error)));
-    assert.ok(duplicateIdentityErrors.some(error => /duplicate sharedClass game-panel/.test(error)));
+    assert.ok(duplicateIdentityErrors.some(error =>
+        /duplicate sharedClass selector \.game-panel/.test(error)));
 } finally {
     rmSync(root, { recursive: true, force: true });
 }

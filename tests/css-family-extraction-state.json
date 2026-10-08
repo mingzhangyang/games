@@ -653,7 +653,8 @@
           ],
           "convergedThemeProperties": [
             "background"
-          ]
+          ],
+          "sharedClassSpecificity": "zero"
         },
         {
           "suffix": "btn",
