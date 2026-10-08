@@ -341,14 +341,17 @@ The contract now provides:
    and requires the pre/post cascade precedence relation to remain unchanged; this covers new
    mappings against co-migrated, previously migrated and still-unlayered peers. Normal and
    important reviews remain separate because layer precedence reverses under `!important`.
-   Different-selector overlap still belongs to browser/geometry evidence.
+   Different-selector overlap still belongs to browser/geometry evidence. A dedupe mapping that
+   changes selectors must additionally carry per-source adoption evidence checked against every
+   stylesheet consumer and its HTML anchor.
 6. The lowest `reset` layer is policy-constrained, not merely an allowed layer name. A mapping
    targeting `reset` must be a top-level reviewed universal selector (`*` or
    `*, *::before, *::after`) and contain only normal declarations; the whole mapped rule stays
-   in `reset`. This applies to every source and the destination of a `dedupe` mapping as well.
-   Negative fixtures reject non-universal, conditional/nested and `!important`
-   reset mappings so reduced-motion/accessibility rules cannot accidentally gain reversed
-   important-layer precedence.
+   in `reset`. A dedupe target may also be the explicit scoped selector `.game-reset, .game-reset *`,
+   but then every source stylesheet consumer must provide body-class adoption evidence. This
+   applies to every source and the destination of a `dedupe` mapping as well. Negative fixtures
+   reject non-universal, conditional/nested and `!important` reset mappings so reduced-motion/
+   accessibility rules cannot accidentally gain reversed important-layer precedence.
 7. Residual base→head comparison for every mapped stylesheet. Registering one rule does not
    exempt unrelated rules in that file from semantic verification. In addition to ordinary
    rules, canonical keyframe bodies and every non-`@layer` at-rule retain parent context,

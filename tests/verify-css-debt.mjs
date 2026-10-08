@@ -203,6 +203,7 @@ function verifyProject() {
     const migrationStarted = (MIGRATION_STATE.migratedRules || []).length > 0;
     const currentParsedByPath = new Map();
     const stylesheetLinks = {};
+    const htmlSources = new Map();
     const actualDebt = {
         unlayeredRules: [],
         unlayeredKeyframes: [],
@@ -276,6 +277,7 @@ function verifyProject() {
 
     for (const path of htmlPaths) {
         const html = readFileSync(join(ROOT, path), 'utf8');
+        htmlSources.set(path, html);
         const scanned = scanHtml(path, html);
         stylesheetLinks[path] = scanned.links;
         actualDebt.inlineStyleRules.push(...scanned.inlineRules);
@@ -405,6 +407,7 @@ function verifyProject() {
         currentParsedByPath,
         baseParsedByPath,
         stylesheetLinks: BASELINE.stylesheetLinks,
+        htmlSources,
         allowedLayers: ALLOWED_LAYERS,
         layerOrder: REVIEWED_LAYER_ORDER,
         baseState,

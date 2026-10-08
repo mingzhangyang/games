@@ -51,7 +51,7 @@ tokens.css 还保留通用 `.icon-btn` 与 `.btn` / `.btn-primary` / `.btn-ghost
 
 排行榜 `game-lb-*` family 同理：页面规则只允许调色板残余（`color` / `background` / `border` / `box-shadow` 等），**不允许任何几何或字体偏差**（宽度、圆角、内距、字号、字重、字距、行高、间距、高度）。2026-10 的 `leaderboard-v2` 已把 Bond Forge、Tower Defense、Planet Merge、Minesweeper、Hoop Shot、Reversi 的旧例外全部收敛，`tests/verify-leaderboard-layout.mjs` 对 15 页统一按标准表断言计算样式。
 
-全站默认值与状态也只有一个 owner：shell 页的顶层 `margin/padding/box-sizing` reset 和脚本使用的 `.hidden { display: none !important }` 都由 `layout.css` 提供；带 `game-icon-btn` 的图标钮统一继承共享 `:active` 缩放。页面前缀类不得复制这些规则，玩法专属的 `*-action-row` / mode / ability 控件除外。
+全站默认值与状态也只有一个 owner：显式加入 `game-reset` body opt-in 的 shell 页，其顶层 `margin/padding/box-sizing` reset 由 `layout.css` 提供；首页、Gomoku、Firefly Signal 等未迁移消费者不会被这个新 reset 自动影响。脚本使用的 `.hidden { display: none !important }` 和带 `game-icon-btn` 图标钮的共享 `:active` 缩放同样只有一个 owner。页面前缀类不得复制这些规则，玩法专属的 `*-action-row` / mode / ability 控件除外。
 
 ---
 

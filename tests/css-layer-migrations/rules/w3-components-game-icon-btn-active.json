@@ -554,6 +554,29 @@
     "occurrence": 1
   },
   "reuseExistingDestination": true,
+  "adoption": {
+    "surface": "html-class",
+    "consumers": [
+      { "sourcePath": "css/carrot-pull.css", "pages": ["carrot-pull.html"], "localClass": "cp-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/circuit.css", "pages": ["circuit.html"], "localClass": "cc-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/crystal-bloom.css", "pages": ["crystal-bloom.html"], "localClass": "cb-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/echo-cave.css", "pages": ["echo-cave.html"], "localClass": "ec-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/flame-verse.css", "pages": ["flame-verse.html"], "localClass": "fv-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/gravity.css", "pages": ["gravity-slingshot.html"], "localClass": "gd-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/hoop-shot.css", "pages": ["hoop-shot.html"], "localClass": "hs-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/lumen.css", "pages": ["lumen.html"], "localClass": "lm-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/maxwell-demon.css", "pages": ["maxwell-demon.html"], "localClass": "md-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/minesweeper.css", "pages": ["minesweeper.html"], "localClass": "ms-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/needle-awn.css", "pages": ["needle-awn.html"], "localClass": "na-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/planet-merge.css", "pages": ["planet-merge.html"], "localClass": "pm-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/reversi.css", "pages": ["reversi.html"], "localClass": "rv-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/ripple-duet.css", "pages": ["ripple-duet.html"], "localClass": "rd-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/shadow-loom.css", "pages": ["shadow-loom.html"], "localClass": "sl-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/silk-dew.css", "pages": ["silk-dew.html"], "localClass": "sd-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/sword-flight.css", "pages": ["sword-flight.html"], "localClass": "sf-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/tower-defense.css", "pages": ["tower-defense.html"], "localClass": "td-icon-btn", "sharedClass": "game-icon-btn" }
+    ]
+  },
   "reason": "Reuse the existing shared game-icon button active transform instead of page aliases.",
   "conflicts": {
     "normal": [],

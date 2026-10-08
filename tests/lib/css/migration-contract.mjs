@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
+import { htmlElementAttributes, htmlTagName, parseHtmlElements } from './html-inputs.mjs';
 import { propertiesOverlap } from './property-writes.mjs';
 
 const PRIORITIES = new Set(['normal', 'important']);
@@ -472,6 +473,103 @@ function verifyDedupePartition(mapping, sourceRule, destinationRules, errors) {
     return destinationAssignments(sourceRule, destinationRules);
 }
 
+function classTokens(value) {
+    return new Set(String(value || '').split(/\s+/).filter(Boolean));
+}
+
+function selectorHasClass(selector, className) {
+    return (String(selector || '').match(/\.[a-zA-Z_][a-zA-Z0-9_-]*/g) || []).includes('.' + className);
+}
+
+function sortedValues(values) {
+    return [...values].sort();
+}
+
+function sameValues(left, right) {
+    return jsonKey(sortedValues(left)) === jsonKey(sortedValues(right));
+}
+
+function verifyDedupeAdoption(mapping, sources, destination, stylesheetLinks, htmlSources, errors) {
+    if (sources.every(source => source.selector === destination.selector)) return new Set();
+
+    const adoption = mapping.adoption;
+    const pagesByPath = coactivePages(stylesheetLinks);
+    const expectedPaths = new Set(sources.map(source => source.path));
+    const consumers = Array.isArray(adoption?.consumers) ? adoption.consumers : [];
+    const byPath = new Map();
+    for (const consumer of consumers) {
+        const path = consumer?.sourcePath;
+        if (!expectedPaths.has(path)) {
+            errors.push(mapping.id + ': adoption evidence names an unregistered source path ' + JSON.stringify(path) + '.');
+            continue;
+        }
+        if (byPath.has(path)) {
+            errors.push(mapping.id + ': adoption evidence duplicates source path ' + path + '.');
+            continue;
+        }
+        byPath.set(path, consumer);
+        const expectedPages = pagesByPath.get(path) || new Set();
+        const declaredPages = new Set(Array.isArray(consumer.pages) ? consumer.pages : []);
+        if (!sameValues(declaredPages, expectedPages)) {
+            errors.push(mapping.id + ': adoption pages for ' + path + ' must exactly match every stylesheet consumer.');
+        }
+        for (const page of declaredPages) {
+            const html = htmlSources?.get?.(page);
+            if (typeof html !== 'string') {
+                errors.push(mapping.id + ': adoption evidence has no HTML source for consumer ' + page + '.');
+                continue;
+            }
+            let elements;
+            try {
+                elements = parseHtmlElements(html, page);
+            } catch (error) {
+                errors.push(mapping.id + ': cannot inspect adoption consumer ' + page + ': ' + error.message);
+                continue;
+            }
+            if (adoption?.surface === 'html-class') {
+                const localClass = consumer.localClass;
+                const sharedClass = consumer.sharedClass;
+                if (typeof localClass !== 'string' || typeof sharedClass !== 'string'
+                    || !localClass || !sharedClass) {
+                    errors.push(mapping.id + ': html-class adoption requires localClass and sharedClass for ' + path + '.');
+                    continue;
+                }
+                const source = sources.find(item => item.path === path);
+                if (!selectorHasClass(source?.selector, localClass)
+                    || !selectorHasClass(destination.selector, sharedClass)) {
+                    errors.push(mapping.id + ': html-class adoption classes do not match source/destination selectors for ' + path + '.');
+                }
+                const localElements = elements.filter(element =>
+                    classTokens(htmlElementAttributes(element).class).has(localClass));
+                if (!localElements.length) {
+                    errors.push(mapping.id + ': ' + page + ' has no .' + localClass + ' adoption anchor.');
+                    continue;
+                }
+                const missingShared = localElements.filter(element =>
+                    !classTokens(htmlElementAttributes(element).class).has(sharedClass));
+                if (missingShared.length) {
+                    errors.push(mapping.id + ': ' + page + ' has ' + missingShared.length
+                        + ' .' + localClass + ' element(s) without .' + sharedClass + '.');
+                }
+            } else if (adoption?.surface === 'body-class') {
+                const bodyClass = consumer.bodyClass;
+                const bodies = elements.filter(element => htmlTagName(element) === 'body');
+                if (typeof bodyClass !== 'string' || !bodyClass) {
+                    errors.push(mapping.id + ': body-class adoption requires bodyClass for ' + path + '.');
+                } else if (bodies.length !== 1 || !classTokens(htmlElementAttributes(bodies[0]).class).has(bodyClass)) {
+                    errors.push(mapping.id + ': ' + page + ' must opt into .' + bodyClass + ' on its body.');
+                }
+            } else {
+                errors.push(mapping.id + ': unsupported adoption surface ' + JSON.stringify(adoption?.surface) + '.');
+                break;
+            }
+        }
+    }
+    for (const path of expectedPaths) {
+        if (!byPath.has(path)) errors.push(mapping.id + ': adoption evidence is missing source path ' + path + '.');
+    }
+}
+
 function validDeclarationSnapshot(declaration) {
     return declaration && !Array.isArray(declaration)
         && typeof declaration === 'object'
@@ -583,9 +681,15 @@ function verifyDedupeResetMappingInvariant(mapping, errors) {
         errors.push(mapping.id + ': reset deduplication is limited to top-level rules; conditional/nested resets require a separate contract.');
         valid = false;
     }
-    if (mapping.destination.selector !== '*'
+    if (!['*', '.game-reset, .game-reset *'].includes(mapping.destination.selector)
         || sources.some(source => source?.selector !== '*')) {
-        errors.push(mapping.id + ': reset deduplication is limited to reviewed universal * rules.');
+        errors.push(mapping.id + ': reset deduplication is limited to reviewed universal * rules or the explicit .game-reset scope.');
+        valid = false;
+    }
+    if (mapping.destination.selector === '.game-reset, .game-reset *'
+        && (mapping.adoption?.surface !== 'body-class'
+            || (mapping.adoption.consumers || []).some(consumer => consumer.bodyClass !== 'game-reset'))) {
+        errors.push(mapping.id + ': scoped reset deduplication requires body-class adoption evidence for .game-reset.');
         valid = false;
     }
     if (mapping.destination.layer !== 'reset' || sources.some(source => source?.layer !== 'reset')) {
@@ -661,6 +765,12 @@ function verifyDedupeMappingShape(mapping, allowedLayers, errors) {
             errors.push(mapping.id + ': dedupe destination must preserve source context and declarations.');
             valid = false;
         }
+    }
+    if (validRuleRef(mapping.destination) && mapping.destination.selector !== firstSource.selector
+        && (!mapping.adoption || typeof mapping.adoption.surface !== 'string'
+            || !Array.isArray(mapping.adoption.consumers))) {
+        errors.push(mapping.id + ': dedupe selector changes require explicit per-source adoption evidence.');
+        valid = false;
     }
     for (const priority of PRIORITIES) {
         if (!Array.isArray(mapping.conflicts?.[priority])) {
@@ -772,6 +882,7 @@ function stableRuleRows(catalog) {
 
 export function verifyRuleMigrations({
     baseline, state, currentParsedByPath, baseParsedByPath, stylesheetLinks,
+    htmlSources = new Map(),
     allowedLayers, layerOrder, baseState, externalRuleChanges = { base: [], current: [] },
     guardedCssPaths = new Set(), errors,
 }) {
@@ -871,13 +982,15 @@ export function verifyRuleMigrations({
                     }
                 }
             }
-            for (const destinationRule of currentDestinationRules) {
-                for (const declaration of destinationRule.declarations) {
-                    if (declaration.important) {
-                        importantDeclarationDelta.added.push([
-                            destinationRule.path, destinationRule.context, destinationRule.selector,
-                            declaration.property, declarationValueText(declaration.value),
-                        ]);
+            if (!(isDeduplication(mapping) && mapping.reuseExistingDestination)) {
+                for (const destinationRule of currentDestinationRules) {
+                    for (const declaration of destinationRule.declarations) {
+                        if (declaration.important) {
+                            importantDeclarationDelta.added.push([
+                                destinationRule.path, destinationRule.context, destinationRule.selector,
+                                declaration.property, declarationValueText(declaration.value),
+                            ]);
+                        }
                     }
                 }
             }
@@ -908,6 +1021,9 @@ export function verifyRuleMigrations({
             }
             if (sourceRules.length === sources.length
                 && currentDestinationRules.length === destinations.length) {
+                verifyDedupeAdoption(
+                    mapping, sources, destinations[0], stylesheetLinks, htmlSources, errors,
+                );
                 for (const sourceRule of sourceRules) {
                     const assignments = verifyDedupePartition(mapping, sourceRule, currentDestinationRules, errors);
                     pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules, assignments });

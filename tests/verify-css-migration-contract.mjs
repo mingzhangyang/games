@@ -375,6 +375,13 @@ const dedupeMapping = {
     ],
     destination: destinationRef(dedupeCurrentCatalogs.get('css/layout.css')[0]),
     reuseExistingDestination: false,
+    adoption: {
+        surface: 'html-class',
+        consumers: [
+            { sourcePath: 'css/a.css', pages: ['dedupe.html'], localClass: 'a-hidden', sharedClass: 'hidden' },
+            { sourcePath: 'css/b.css', pages: ['dedupe.html'], localClass: 'b-hidden', sharedClass: 'hidden' },
+        ],
+    },
     reason: 'fixture shared hidden owner',
     conflicts: { normal: [], important: [] },
 };
@@ -393,6 +400,9 @@ const dedupeResult = verifyRuleMigrations({
             ['css/a.css', []], ['css/b.css', []], ['css/layout.css', []],
         ],
     },
+    htmlSources: new Map([[
+        'dedupe.html', '<body><div class="a-hidden hidden"></div><div class="b-hidden hidden"></div></body>',
+    ]]),
     allowedLayers: ALLOWED,
     layerOrder: LAYERS,
     baseState: emptyState,
@@ -408,18 +418,45 @@ assert.deepEqual(dedupeResult.importantDeclarationDelta.added, [
     ['css/layout.css', '', '.hidden', 'display', 'none!important'],
 ]);
 
+const missingAdoptionErrors = [];
+const missingAdoption = clone(dedupeMapping);
+delete missingAdoption.adoption;
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+        },
+    },
+    state: { ...emptyState, migratedRules: [missingAdoption] },
+    currentParsedByPath: dedupeCurrent,
+    baseParsedByPath: dedupeBase,
+    stylesheetLinks: {
+        'dedupe.html': [
+            ['css/a.css', []], ['css/b.css', []], ['css/layout.css', []],
+        ],
+    },
+    htmlSources: new Map([[
+        'dedupe.html', '<body><div class="a-hidden hidden"></div><div class="b-hidden hidden"></div></body>',
+    ]]),
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: missingAdoptionErrors,
+});
+assert.ok(missingAdoptionErrors.some(error => /selector changes require explicit per-source adoption evidence/.test(error)));
+
 // A dedupe can also reuse an existing shared destination. The destination is
 // consumed from both base/current residual catalogs so the ledger does not
 // require a duplicate copy or falsely report an unrelated edit.
 const reuseBase = parseMap([
-    ['css/a.css', '.a-icon-btn:active{transform:scale(0.92)}'],
-    ['css/b.css', '.b-icon-btn:active{transform:scale(0.92)}'],
-    ['css/layout.css', '@layer components{.game-icon-btn:active{transform:scale(0.92)}}'],
+    ['css/a.css', '.a-icon-btn:active{transform:scale(0.92)!important}'],
+    ['css/b.css', '.b-icon-btn:active{transform:scale(0.92)!important}'],
+    ['css/layout.css', '@layer components{.game-icon-btn:active{transform:scale(0.92)!important}}'],
 ]);
 const reuseCurrent = parseMap([
     ['css/a.css', ''],
     ['css/b.css', ''],
-    ['css/layout.css', '@layer components{.game-icon-btn:active{transform:scale(0.92)}}'],
+    ['css/layout.css', '@layer components{.game-icon-btn:active{transform:scale(0.92)!important}}'],
 ]);
 const reuseBaseCatalogs = catalogMap(reuseBase);
 const reuseMapping = {
@@ -431,6 +468,13 @@ const reuseMapping = {
     ],
     destination: destinationRef(reuseBaseCatalogs.get('css/layout.css')[0]),
     reuseExistingDestination: true,
+    adoption: {
+        surface: 'html-class',
+        consumers: [
+            { sourcePath: 'css/a.css', pages: ['reuse.html'], localClass: 'a-icon-btn', sharedClass: 'game-icon-btn' },
+            { sourcePath: 'css/b.css', pages: ['reuse.html'], localClass: 'b-icon-btn', sharedClass: 'game-icon-btn' },
+        ],
+    },
     reason: 'fixture existing shared icon owner',
     conflicts: { normal: [], important: [] },
 };
@@ -449,6 +493,9 @@ const reuseResult = verifyRuleMigrations({
             ['css/a.css', []], ['css/b.css', []], ['css/layout.css', []],
         ],
     },
+    htmlSources: new Map([[
+        'reuse.html', '<body><button class="a-icon-btn game-icon-btn"></button><button class="b-icon-btn game-icon-btn"></button></body>',
+    ]]),
     allowedLayers: ALLOWED,
     layerOrder: LAYERS,
     baseState: emptyState,
@@ -456,6 +503,11 @@ const reuseResult = verifyRuleMigrations({
 });
 assert.deepEqual(reuseErrors, []);
 assert.equal(reuseResult.newRuleDelta, -2);
+assert.deepEqual(reuseResult.importantDeclarationDelta.removed, [
+    ['css/a.css', '', '.a-icon-btn:active', 'transform', 'scale(0.92)!important'],
+    ['css/b.css', '', '.b-icon-btn:active', 'transform', 'scale(0.92)!important'],
+]);
+assert.deepEqual(reuseResult.importantDeclarationDelta.added, []);
 
 const badDedupeBase = parseMap([
     ['css/a.css', '@layer components{*{margin:0}}'],
