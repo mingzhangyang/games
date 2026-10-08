@@ -505,7 +505,71 @@ export function verifyExtractionShape(extraction, errors) {
             pruneKeys.add(key);
         }
     }
+
+    const narrowings = extraction.reviewedSelectorNarrowings || [];
+    if (!Array.isArray(narrowings)) {
+        fail('reviewedSelectorNarrowings must be an array.');
+    } else {
+        const sharedClasses = new Set((extraction.components || []).map(component => component?.sharedClass));
+        const narrowingKeys = new Set();
+        for (const narrowing of narrowings) {
+            if (!narrowing || typeof narrowing !== 'object' || Array.isArray(narrowing)) {
+                fail('every reviewed selector narrowing must be an object.');
+                continue;
+            }
+            if (typeof narrowing.path !== 'string' || !/^css\/[\w.-]+\.css$/.test(narrowing.path)) {
+                fail('reviewed selector narrowing requires a css/*.css path.');
+            }
+            if (narrowing.layer !== null && typeof narrowing.layer !== 'string') {
+                fail('reviewed selector narrowing requires an explicit layer (string or null).');
+            }
+            if (!sharedClasses.has(narrowing.excludedClass)) {
+                fail('reviewed selector narrowing may only exclude a sharedClass owned by this extraction.');
+                continue;
+            }
+            if (typeof narrowing.baseSelector !== 'string' || !narrowing.baseSelector.trim()
+                || typeof narrowing.currentSelector !== 'string' || !narrowing.currentSelector.trim()) {
+                fail('reviewed selector narrowing requires non-empty baseSelector/currentSelector.');
+                continue;
+            }
+            if (!isReviewedSelectorNarrowing(narrowing)) {
+                fail('reviewed selector narrowing must only insert :not(.' + narrowing.excludedClass
+                    + ') before trailing pseudo-classes, without adding, removing or rewriting selectors.');
+            }
+            if (typeof narrowing.reason !== 'string' || !narrowing.reason.trim()) {
+                fail('reviewed selector narrowing requires a reason.');
+            }
+            const key = narrowing.path + '\0' + narrowing.baseSelector;
+            if (narrowingKeys.has(key)) fail('duplicate reviewed selector narrowing ' + narrowing.path + '.');
+            narrowingKeys.add(key);
+        }
+    }
     return valid;
+}
+
+function splitSelectorList(selector) {
+    return selector.split(',').map(part => part.trim()).filter(Boolean);
+}
+
+// A narrowing only excludes the extraction's own shared class from an existing
+// selector: `.a .b:hover` -> `.a .b:not(.shared):hover`. Every other selector in
+// the list must survive byte-for-byte, so the rule can match fewer elements but
+// never new ones.
+function isReviewedSelectorNarrowing({ baseSelector, currentSelector, excludedClass }) {
+    const baseParts = splitSelectorList(baseSelector);
+    const currentParts = splitSelectorList(currentSelector);
+    if (baseParts.length !== currentParts.length) return false;
+    const exclusion = ':not(.' + excludedClass + ')';
+    let narrowed = 0;
+    for (let index = 0; index < baseParts.length; index++) {
+        const base = baseParts[index];
+        const current = currentParts[index];
+        if (current === base) continue;
+        const [, head, tail] = base.match(/^(.*?[^\s>+~:])((?::[a-z-]+)*)$/) || [];
+        if (head === undefined || base.includes(exclusion) || current !== head + exclusion + tail) return false;
+        narrowed += 1;
+    }
+    return narrowed > 0;
 }
 
 function stateById(state, errors, label) {
@@ -584,6 +648,27 @@ export function applyReviewedSelectorPrunesToDebt(rows, extractions, errors) {
                 continue;
             }
             projected[matches[0]] = currentTuple;
+        }
+    }
+    return projected;
+}
+
+export function applyReviewedSelectorNarrowingsToImportant(rows, extractions, errors) {
+    const projected = (rows || []).map(row => [...row]);
+    for (const extraction of extractions || []) {
+        for (const narrowing of extraction.reviewedSelectorNarrowings || []) {
+            let matched = 0;
+            for (let index = 0; index < projected.length; index++) {
+                const row = projected[index];
+                if (row[0] === narrowing.path && row[2] === narrowing.baseSelector) {
+                    projected[index] = [row[0], row[1], narrowing.currentSelector, ...row.slice(3)];
+                    matched += 1;
+                }
+            }
+            if (!matched) {
+                errors.push(extraction.id + '/selector-narrowing/' + narrowing.path
+                    + ': immutable P0 !important inventory has no declaration under the reviewed base selector.');
+            }
         }
     }
     return projected;
@@ -726,6 +811,36 @@ function verifyReviewedSelectorPrunes(
     }
 }
 
+function verifyReviewedSelectorNarrowings(
+    extraction, currentParsedByPath, baseParsedByPath,
+    currentCatalogs, baseCatalogs, externalRuleChanges, errors,
+) {
+    for (const narrowing of extraction.reviewedSelectorNarrowings || []) {
+        const { path, layer } = narrowing;
+        const label = extraction.id + '/selector-narrowing/' + path;
+        const baseRule = uniqueRule(
+            baseParsedByPath.get(path), narrowing.baseSelector, layer, errors, label + '/base',
+        );
+        const currentRule = uniqueRule(
+            currentParsedByPath.get(path), narrowing.currentSelector, layer, errors, label + '/current',
+        );
+        if (!baseRule || !currentRule) continue;
+        if (canonical(baseRule.migrationDeclarations || [])
+            !== canonical(currentRule.migrationDeclarations || [])) {
+            errors.push(label + ': selector narrowing changed declarations.');
+        }
+
+        const baseIndexed = uniqueCatalogRule(
+            baseCatalogs.get(path), narrowing.baseSelector, layer, errors, label + '/base-index',
+        );
+        const currentIndexed = uniqueCatalogRule(
+            currentCatalogs.get(path), narrowing.currentSelector, layer, errors, label + '/current-index',
+        );
+        if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
+        if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
+    }
+}
+
 function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedByPath,
     currentCatalogs, baseCatalogs, externalRuleChanges, comparisonBase, errors) {
     const baseContractText = readGitFile(root, comparisonBase, 'tests/css-duplication-audit-contract.json');
@@ -814,6 +929,10 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
         extraction, currentParsedByPath, baseParsedByPath,
         currentCatalogs, baseCatalogs, externalRuleChanges, errors,
     );
+    verifyReviewedSelectorNarrowings(
+        extraction, currentParsedByPath, baseParsedByPath,
+        currentCatalogs, baseCatalogs, externalRuleChanges, errors,
+    );
     verifyRetiredCustomProperties(
         extraction, currentParsedByPath, baseParsedByPath,
         currentCatalogs, baseCatalogs, externalRuleChanges, errors,
@@ -870,6 +989,7 @@ export function verifyFamilyExtractions({
         removed.push(...tuples);
         if (extraction.sharedStylesheet) cssPaths.add(extraction.sharedStylesheet);
         for (const game of Object.values(extraction.games || {})) if (game?.css) cssPaths.add(game.css);
+        for (const narrowing of extraction.reviewedSelectorNarrowings || []) cssPaths.add(narrowing.path);
 
         for (const [prefix, retirement] of Object.entries(extraction.retiredCustomProperties || {})) {
             const path = extraction.games?.[prefix]?.css;
@@ -929,6 +1049,7 @@ export function verifyFamilyExtractions({
         ),
         removedCustomPropertyDefinitionsByPath,
         externalRuleChanges,
+        extractions: [...currentById.values()],
         newExtractionIds: newExtractions.map(extraction => extraction.id),
     };
 }

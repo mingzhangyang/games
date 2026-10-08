@@ -6,7 +6,8 @@ import { join } from 'node:path';
 
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import {
-    applyReviewedSelectorPrunesToDebt, verifyCurrentRetiredCustomProperties,
+    applyReviewedSelectorNarrowingsToImportant, applyReviewedSelectorPrunesToDebt,
+    verifyCurrentRetiredCustomProperties,
     verifyExtractionAdoption, verifyExtractionShape, verifyRetiredCustomProperties,
 } from './lib/css/family-extraction.mjs';
 import { indexRuleOccurrences } from './lib/css/migration-contract.mjs';
@@ -309,6 +310,65 @@ try {
     );
     assert.ok(missingDebtErrors.some(error =>
         /immutable P0 debt must contain exactly one reviewed base selector tuple/.test(error)));
+
+    const validNarrowing = clone(extraction);
+    validNarrowing.reviewedSelectorNarrowings = [{
+        path: 'css/showcase.css',
+        layer: 'components',
+        excludedClass: 'game-panel',
+        baseSelector: '.showcase .game-icon:hover, .showcase .game-btn:hover',
+        currentSelector: '.showcase .game-icon:hover, .showcase .game-btn:not(.game-panel):hover',
+        reason: 'shared panel keeps its own hover surface',
+    }];
+    const validNarrowingErrors = [];
+    assert.equal(verifyExtractionShape(validNarrowing, validNarrowingErrors), true);
+    assert.deepEqual(validNarrowingErrors, []);
+
+    for (const [currentSelector, why] of [
+        ['.showcase .game-icon:hover, .showcase .game-btn:not(.game-row):hover', 'excludes another class'],
+        ['.showcase .game-btn:not(.game-panel):hover', 'drops a selector'],
+        ['.showcase .game-icon:hover, .showcase .game-btn:not(.game-panel):focus', 'rewrites the state'],
+        ['.showcase .game-icon:hover, .showcase .game-btn:hover', 'narrows nothing'],
+    ]) {
+        const rewritten = clone(validNarrowing);
+        rewritten.reviewedSelectorNarrowings[0].currentSelector = currentSelector;
+        const rewrittenErrors = [];
+        assert.equal(verifyExtractionShape(rewritten, rewrittenErrors), false, why);
+        assert.ok(rewrittenErrors.some(error => /must only insert :not\(\.game-panel\)/.test(error)), why);
+    }
+
+    const foreignNarrowing = clone(validNarrowing);
+    foreignNarrowing.reviewedSelectorNarrowings[0].excludedClass = 'game-foreign';
+    foreignNarrowing.reviewedSelectorNarrowings[0].currentSelector =
+        '.showcase .game-icon:hover, .showcase .game-btn:not(.game-foreign):hover';
+    const foreignNarrowingErrors = [];
+    assert.equal(verifyExtractionShape(foreignNarrowing, foreignNarrowingErrors), false);
+    assert.ok(foreignNarrowingErrors.some(error =>
+        /may only exclude a sharedClass owned by this extraction/.test(error)));
+
+    const narrowedImportantErrors = [];
+    const narrowedImportant = applyReviewedSelectorNarrowingsToImportant(
+        [
+            ['css/showcase.css', '', '.showcase .game-icon:hover, .showcase .game-btn:hover', 'background', 'red !important'],
+            ['css/showcase.css', '', '.showcase .other', 'color', 'red !important'],
+        ],
+        [validNarrowing],
+        narrowedImportantErrors,
+    );
+    assert.deepEqual(narrowedImportantErrors, []);
+    assert.deepEqual(narrowedImportant, [
+        ['css/showcase.css', '', '.showcase .game-icon:hover, .showcase .game-btn:not(.game-panel):hover', 'background', 'red !important'],
+        ['css/showcase.css', '', '.showcase .other', 'color', 'red !important'],
+    ]);
+
+    const missingImportantErrors = [];
+    applyReviewedSelectorNarrowingsToImportant(
+        [['css/showcase.css', '', '.showcase .other', 'color', 'red !important']],
+        [validNarrowing],
+        missingImportantErrors,
+    );
+    assert.ok(missingImportantErrors.some(error =>
+        /no declaration under the reviewed base selector/.test(error)));
 
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));

@@ -816,6 +816,16 @@
           "currentSelector": ":root[data-theme=\"light\"] .sd-mode-daily:hover",
           "reason": "standard action primary light hover is now owned by the shared action state contract"
         }
+      ],
+      "reviewedSelectorNarrowings": [
+        {
+          "path": "css/science-showcase.css",
+          "layer": "components",
+          "excludedClass": "game-action-btn--primary",
+          "baseSelector": ".science-showcase .game-icon-btn:hover, .science-showcase .game-btn:hover, .science-showcase .cb-mode:hover, .science-showcase .ec-mode:hover, .science-showcase .md-mode:hover, .science-showcase .fv-mode:hover, .science-showcase .rd-mode:hover, .science-showcase .cb-chip:hover, .science-showcase .ec-chip:hover, .science-showcase .md-chip:hover, .science-showcase .fv-chip:hover, .science-showcase .rd-chip:hover",
+          "currentSelector": ".science-showcase .game-icon-btn:hover, .science-showcase .game-btn:not(.game-action-btn--primary):hover, .science-showcase .cb-mode:hover, .science-showcase .ec-mode:hover, .science-showcase .md-mode:hover, .science-showcase .fv-mode:hover, .science-showcase .rd-mode:hover, .science-showcase .cb-chip:hover, .science-showcase .ec-chip:hover, .science-showcase .md-chip:hover, .science-showcase .fv-chip:hover, .science-showcase .rd-chip:hover",
+          "reason": "standard primary actions keep their accent surface on hover; the showcase panel hover would otherwise put on-accent text on --showcase-hover (1.16:1 in light mode)"
+        }
       ]
     }
   ]

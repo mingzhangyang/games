@@ -17,7 +17,9 @@ import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
 import { readMigrationState, readMigrationStateAtGit } from './lib/css/migration-state.mjs';
-import { verifyFamilyExtractions } from './lib/css/family-extraction.mjs';
+import {
+    applyReviewedSelectorNarrowingsToImportant, verifyFamilyExtractions,
+} from './lib/css/family-extraction.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -425,7 +427,11 @@ function verifyProject() {
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);
         if (key === 'unlayeredRules') continue;
-        const expected = sortTuples(BASELINE.debt[key] || []);
+        // Reviewed family selector narrowings keep every !important declaration and only
+        // re-key it under the narrowed selector; everything else stays exactly P0.
+        const expected = sortTuples(key === 'importantDeclarations'
+            ? applyReviewedSelectorNarrowingsToImportant(BASELINE.debt[key], familyResult.extractions, errors)
+            : BASELINE.debt[key] || []);
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {
             errors.push(
