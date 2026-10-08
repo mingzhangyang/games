@@ -4,7 +4,11 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { verifyExtractionAdoption, verifyExtractionShape } from './lib/css/family-extraction.mjs';
+import { parseCssText } from './lib/css/baseline-adapter.mjs';
+import {
+    verifyExtractionAdoption, verifyExtractionShape, verifyRetiredCustomProperties,
+} from './lib/css/family-extraction.mjs';
+import { indexRuleOccurrences } from './lib/css/migration-contract.mjs';
 
 const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -164,6 +168,76 @@ try {
     assert.equal(verifyExtractionShape(invalidSkippedAdoption, invalidSkippedAdoptionErrors), false);
     assert.ok(invalidSkippedAdoptionErrors.some(error =>
         /requiresAdoption:false is only valid for a state selector/.test(error)));
+
+    const validRetirementShape = clone(extraction);
+    validRetirementShape.retiredCustomProperties = { dm: ['--dm-panel-bg'] };
+    const validRetirementShapeErrors = [];
+    assert.equal(verifyExtractionShape(validRetirementShape, validRetirementShapeErrors), true);
+    assert.deepEqual(validRetirementShapeErrors, []);
+
+    const invalidRetirementShape = clone(validRetirementShape);
+    invalidRetirementShape.retiredCustomProperties.dm.push('padding');
+    const invalidRetirementShapeErrors = [];
+    assert.equal(verifyExtractionShape(invalidRetirementShape, invalidRetirementShapeErrors), false);
+    assert.ok(invalidRetirementShapeErrors.some(error =>
+        /retired custom property for dm must start with --/.test(error)));
+
+    const retirementBase = new Map([[
+        'css/demo.css',
+        parseCssText(
+            ':root{--dm-panel-bg:red;color:black}'
+                + ':root[data-theme="light"]{--dm-panel-bg:white;color:black}',
+            'css/demo.css',
+        ),
+    ]]);
+    const retirementCurrent = new Map([[
+        'css/demo.css',
+        parseCssText(
+            ':root{color:black}:root[data-theme="light"]{color:black}',
+            'css/demo.css',
+        ),
+    ]]);
+    const catalogMap = parsed => new Map([...parsed]
+        .map(([path, value]) => [path, indexRuleOccurrences(value, path)]));
+    const retirementErrors = [];
+    const retirementExternal = { base: [], current: [] };
+    verifyRetiredCustomProperties(
+        validRetirementShape, retirementCurrent, retirementBase,
+        catalogMap(retirementCurrent), catalogMap(retirementBase),
+        retirementExternal, retirementErrors,
+    );
+    assert.deepEqual(retirementErrors, []);
+    assert.equal(retirementExternal.base.length, 2);
+    assert.equal(retirementExternal.current.length, 2);
+
+    const consumerCurrent = new Map(retirementCurrent);
+    consumerCurrent.set(
+        'css/consumer.css',
+        parseCssText('.consumer{background:var(--dm-panel-bg)}', 'css/consumer.css'),
+    );
+    const consumerErrors = [];
+    verifyRetiredCustomProperties(
+        validRetirementShape, consumerCurrent, retirementBase,
+        catalogMap(consumerCurrent), catalogMap(retirementBase),
+        { base: [], current: [] }, consumerErrors,
+    );
+    assert.ok(consumerErrors.some(error => /still has a CSS consumer/.test(error)));
+
+    const changedThemeCurrent = new Map([[
+        'css/demo.css',
+        parseCssText(
+            ':root{color:blue}:root[data-theme="light"]{color:black}',
+            'css/demo.css',
+        ),
+    ]]);
+    const changedThemeErrors = [];
+    verifyRetiredCustomProperties(
+        validRetirementShape, changedThemeCurrent, retirementBase,
+        catalogMap(changedThemeCurrent), catalogMap(retirementBase),
+        { base: [], current: [] }, changedThemeErrors,
+    );
+    assert.ok(changedThemeErrors.some(error =>
+        /theme rule changed beyond the declared custom-property retirements/.test(error)));
 
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));

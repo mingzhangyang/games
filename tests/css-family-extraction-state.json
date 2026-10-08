@@ -745,7 +745,42 @@
             "sd"
           ]
         }
-      ]
+      ],
+      "retiredCustomProperties": {
+        "cc": [
+          "--cc-btn-bg",
+          "--cc-btn-border",
+          "--cc-btn-hover-bg",
+          "--cc-btn-primary-shadow"
+        ],
+        "cb": [
+          "--cb-btn-bg",
+          "--cb-btn-border",
+          "--cb-btn-hover-bg",
+          "--cb-btn-primary-bg",
+          "--cb-btn-primary-shadow"
+        ],
+        "md": [
+          "--md-btn-bg",
+          "--md-btn-border",
+          "--md-btn-hover-bg",
+          "--md-btn-primary-bg",
+          "--md-btn-primary-shadow"
+        ],
+        "rd": [
+          "--rd-btn-bg",
+          "--rd-btn-border",
+          "--rd-btn-hover-bg",
+          "--rd-btn-primary-bg",
+          "--rd-btn-primary-shadow"
+        ],
+        "sd": [
+          "--sd-btn-bg",
+          "--sd-btn-border",
+          "--sd-btn-hover-bg",
+          "--sd-btn-primary-shadow"
+        ]
+      }
     }
   ]
 }

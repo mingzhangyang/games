@@ -393,6 +393,33 @@ export function verifyExtractionShape(extraction, errors) {
             }
         }
     }
+
+    const retiredCustomProperties = extraction.retiredCustomProperties || {};
+    if (!retiredCustomProperties || typeof retiredCustomProperties !== 'object'
+        || Array.isArray(retiredCustomProperties)) {
+        fail('retiredCustomProperties must be an object keyed by game prefix.');
+    } else {
+        const seenRetired = new Set();
+        for (const [prefix, properties] of Object.entries(retiredCustomProperties)) {
+            if (!extraction.games?.[prefix]) {
+                fail('retired custom properties reference unknown game prefix ' + prefix + '.');
+                continue;
+            }
+            if (!Array.isArray(properties) || !properties.length) {
+                fail('retired custom properties for ' + prefix + ' must be a non-empty array.');
+                continue;
+            }
+            for (const property of properties) {
+                if (typeof property !== 'string' || !property.startsWith('--')) {
+                    fail('retired custom property for ' + prefix + ' must start with --.');
+                } else if (seenRetired.has(property)) {
+                    fail('retired custom property ' + property + ' is claimed more than once.');
+                } else {
+                    seenRetired.add(property);
+                }
+            }
+        }
+    }
     return valid;
 }
 
@@ -456,6 +483,83 @@ function totalRules(parsedByPath) {
     let total = 0;
     for (const parsed of parsedByPath.values()) total += (parsed.rules || []).length;
     return total;
+}
+
+function escapeRegExp(value) {
+    return value.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
+export function verifyRetiredCustomProperties(
+    extraction, currentParsedByPath, baseParsedByPath,
+    currentCatalogs, baseCatalogs, externalRuleChanges, errors,
+) {
+    const retirements = extraction.retiredCustomProperties || {};
+    for (const [prefix, properties] of Object.entries(retirements)) {
+        const game = extraction.games?.[prefix];
+        if (!game?.css) continue;
+        const label = extraction.id + '/retired-custom-properties/' + prefix;
+        const retired = new Set(properties);
+        const baseParsed = baseParsedByPath.get(game.css);
+        const currentParsed = currentParsedByPath.get(game.css);
+        const baseRules = (baseParsed?.rules || []).filter(rule =>
+            !rule.layer
+            && (rule.context || []).length === 0
+            && (rule.migrationDeclarations || []).some(declaration => retired.has(declaration.property)));
+        const seenBase = new Set();
+
+        for (const baseRule of baseRules) {
+            for (const declaration of baseRule.migrationDeclarations || []) {
+                if (retired.has(declaration.property)) seenBase.add(declaration.property);
+            }
+            const currentRule = uniqueRule(
+                currentParsed, baseRule.selector, null, errors, label + '/' + baseRule.selector + '/current',
+            );
+            if (!currentRule) continue;
+            const expected = (baseRule.migrationDeclarations || [])
+                .filter(declaration => !retired.has(declaration.property));
+            if (canonical(currentRule.migrationDeclarations || []) !== canonical(expected)) {
+                errors.push(label + '/' + baseRule.selector
+                    + ': theme rule changed beyond the declared custom-property retirements.');
+            }
+
+            const baseIndexed = uniqueCatalogRule(
+                baseCatalogs.get(game.css), baseRule.selector, null, errors,
+                label + '/' + baseRule.selector + '/base-index',
+            );
+            const currentIndexed = uniqueCatalogRule(
+                currentCatalogs.get(game.css), baseRule.selector, null, errors,
+                label + '/' + baseRule.selector + '/current-index',
+            );
+            if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
+            if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
+        }
+
+        for (const property of properties) {
+            if (!seenBase.has(property)) {
+                errors.push(label + ': ' + property + ' was not defined in the comparison base.');
+            }
+            const currentDefinitions = (currentParsed?.rules || []).flatMap(rule =>
+                (rule.migrationDeclarations || []).filter(declaration => declaration.property === property));
+            if (currentDefinitions.length) {
+                errors.push(label + ': ' + property + ' still has '
+                    + currentDefinitions.length + ' current definition(s).');
+            }
+
+            const referencePattern = new RegExp(
+                'var\\(\\s*' + escapeRegExp(property) + '(?:\\s*[,)]|\\s*$)',
+            );
+            for (const [path, parsed] of currentParsedByPath) {
+                for (const rule of parsed.rules || []) {
+                    for (const declaration of rule.migrationDeclarations || []) {
+                        if (referencePattern.test(String(declaration.value || ''))) {
+                            errors.push(label + ': ' + property + ' still has a CSS consumer in '
+                                + path + ' ' + rule.selector + '.');
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedByPath,
@@ -541,6 +645,11 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
 
         }
     }
+
+    verifyRetiredCustomProperties(
+        extraction, currentParsedByPath, baseParsedByPath,
+        currentCatalogs, baseCatalogs, externalRuleChanges, errors,
+    );
 }
 
 export function verifyFamilyExtractions({
