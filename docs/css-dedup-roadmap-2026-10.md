@@ -71,7 +71,7 @@
 
 前置：**PR #117 合并到 `main`**。下面每一项都从最新 `main` 开新分支，单独一个 PR。
 
-### W1 排行榜例外收编（优先，规模中等）
+### W1 排行榜例外收编（优先，规模中等）— ✅ 已完成（`refactor/css-leaderboard-convergence`，`leaderboard-v2`）
 - 范围：§2.1 里的排行榜各项。
 - 关键障碍：账本是 append-only 的，`leaderboard-v1` 已经在 `main` 上，不能修改，只能追加新事务（例如 `leaderboard-v2`）。可是 `verifyNewExtraction` 要求共享选择器"在 base 中不存在"，`expectedRuleDelta` 又按"组件数 − 删除数"计算。所以要先扩展契约，支持"引用已有共享规则"的组件（或 `extends: 'leaderboard-v1'`）：这类组件不计入新增规则，同时校验共享规则保持不变。
 - 排行榜可能还要收敛 max-width、max-height、min-height、gap、letter-spacing、margin-top。可以扩展 `participantConvergedProperties` 的白名单，但只加视觉尺寸类属性；display、position、flex 继续保护。

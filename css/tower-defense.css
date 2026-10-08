@@ -994,29 +994,13 @@ body {
 /* ── 排行榜 ── */
 
 .td-lb {
-    max-width: 340px;
     background: rgb(14, 20, 48, 0.65);
     border: 1px solid rgb(255, 255, 255, 0.12);
-    border-radius: 16px;
-    padding: 13px 15px;
     box-shadow: 0 12px 30px rgb(0, 0, 0, 0.4);
 }
 
 .td-lb-title {
-    font-weight: 800;
     color: var(--tok-text-soft);
-    letter-spacing: 0.03em;
-}
-
-.td-lb-list {
-    max-height: 175px;
-}
-
-.td-lb-row {
-    font-size: 13px;
-    padding: 4px 7px;
-    border-radius: 8px;
-    transition: background 0.15s;
 }
 
 .td-lb-row.td-lb-top1 {
@@ -1034,12 +1018,7 @@ body {
     border: 1px solid rgb(205, 127, 50, 0.28);
 }
 
-.td-lb-rank {
-    font-weight: 800;
-}
-
 .td-lb-score {
-    font-weight: 800;
     color: var(--tok-gold);
 }
 
@@ -1048,18 +1027,9 @@ body {
     color: #6271a8;
 }
 
-.td-username-row {
-    margin-top: 8px;
-}
-
-
-
 .td-username {
     background: rgb(255, 255, 255, 0.08);
     border: 1px solid rgb(255, 255, 255, 0.16);
-    border-radius: 10px;
-    padding: 7px 11px;
-    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .td-username:focus {

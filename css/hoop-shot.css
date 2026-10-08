@@ -251,7 +251,6 @@ body {
 /* ── 排行榜 ── */
 
 .hs-lb {
-    max-width: 340px;
     background: var(--hs-lb-bg);
     border: var(--hs-lb-border);
 }

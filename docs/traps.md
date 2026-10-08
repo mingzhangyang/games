@@ -38,6 +38,8 @@
 
 ## 共享层迁移与剪枝
 
+- ⚠️ **Adopting a shared title inside a page-owned flex row moves its margin *into* the row.** Planet Merge's leaderboard title sits in `.pm-lb-head` (title + Today/All-Time tabs, `align-items: center`). Putting `game-lb-title` on the inner `<span>` brought the shared `margin-bottom: 8px` inside the flex row: tabs centre on the title's margin box, so the title rode ~4px above the tabs, and the row's own `margin-bottom: 8px` doubled the gap. Fix: the row itself carries `pm-lb-title game-lb-title` (the `#pm-lb-title` id stays on the text span the runtime writes), and the row's duplicate margin is retired via `reviewedDeclarationRetirements`. Geometry checkers that only read the title's computed style pass either way — look at the screenshot.
+
 - Pruning shared-layer duplicates must never drop `color` / `font-family` / `backdrop-filter`: they are the page's own palette, font and material, and `css/layout.css` provides no replacement. Removing them once turned every topbar icon pure black and dropped the pages onto the browser's default serif font. The migration script's `BODY_STRIP` / `ROLE_SPECS` lists now exclude them, and `tests/fg-audit.mjs` guards the regression
 
 - ⚠️ **A migration script must never replace an existing node with a freshly generated one.** Doing so silently drops its `id`, and the page JS is still calling `getElementById` on it: `sf-btn-sound` / `na-btn-sound` vanished and `js/sword-flight.js:775` / `js/needle-awn.js:928` threw a null deref **inside the constructor**, so both pages failed to boot at all; `wd-btn-help` went with its wrapper and left the help modal with no entry point. `apply-header-footer.py` now refuses to write when any `id` would disappear — keep that guard

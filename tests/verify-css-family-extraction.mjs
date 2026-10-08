@@ -6,9 +6,10 @@ import { join } from 'node:path';
 
 import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import {
-    applyReviewedSelectorNarrowingsToImportant, applyReviewedSelectorPrunesToDebt, expectedResidual,
-    verifyCurrentRetiredCustomProperties,
+    applyReviewedSelectorNarrowingsToImportant, applyReviewedSelectorPrunesToDebt, expectedConvergedResidual,
+    expectedResidual, resolveFamilyExtension, verifyCurrentRetiredCustomProperties,
     verifyExtractionAdoption, verifyExtractionShape, verifyRetiredCustomProperties,
+    verifyReviewedDeclarationRetirements, verifyReviewedRuleRetirements,
 } from './lib/css/family-extraction.mjs';
 import { indexRuleOccurrences } from './lib/css/migration-contract.mjs';
 
@@ -450,6 +451,195 @@ try {
     const foreignRetirementErrors = [];
     assert.equal(verifyExtractionShape(foreignRetirement, foreignRetirementErrors), false);
     assert.ok(foreignRetirementErrors.some(error => /may only remove dm-prefixed page selectors/.test(error)));
+
+    // ── leaderboard-v2: visual dimensions, adopting shared-only geometry, reviewed layout ──
+    const dimensionSource = { migrationDeclarations: [decl('max-width', '340px'), decl('color', 'red')] };
+    const dimensionShared = { migrationDeclarations: [decl('max-width', '330px'), decl('margin-bottom', '8px')] };
+    const inventedErrors = [];
+    expectedResidual(dimensionSource, dimensionShared, inventedErrors, 'dims', [], [], ['max-width']);
+    assert.ok(inventedErrors.some(error => /shared property margin-bottom did not exist in the local source/.test(error)),
+        'a shared-only property is still "invented geometry" unless the participant converges it');
+    const adoptedErrors = [];
+    assert.deepEqual(expectedResidual(
+        dimensionSource, dimensionShared, adoptedErrors, 'dims', [], [], ['max-width', 'margin-bottom'],
+    ), [decl('color', 'red')]);
+    assert.deepEqual(adoptedErrors, []);
+    const neitherErrors = [];
+    expectedResidual(dimensionSource, dimensionShared, neitherErrors, 'dims', [], [], ['min-height']);
+    assert.ok(neitherErrors.some(error => /min-height is stale because neither/.test(error)));
+
+    const layoutSource = { migrationDeclarations: [decl('display', 'flex'), decl('gap', '6px')] };
+    const layoutAsGeometryErrors = [];
+    expectedResidual(layoutSource, { migrationDeclarations: [] }, layoutAsGeometryErrors, 'layout', [], [], ['display']);
+    assert.ok(layoutAsGeometryErrors.some(error => /participant convergence property display is not reviewed/.test(error)),
+        'display stays protected in the geometry whitelist');
+    const layoutErrors = [];
+    assert.deepEqual(expectedResidual(
+        layoutSource, { migrationDeclarations: [] }, layoutErrors, 'layout', [], [], ['gap'], ['display'],
+    ), []);
+    assert.deepEqual(layoutErrors, []);
+    const positionErrors = [];
+    expectedResidual({ migrationDeclarations: [decl('position', 'absolute')] }, { migrationDeclarations: [] },
+        positionErrors, 'layout', [], [], [], ['position']);
+    assert.ok(positionErrors.some(error => /participant layout convergence property position is not reviewed/.test(error)));
+
+    const layoutShape = clone(extraction);
+    layoutShape.components[0].participantLayoutConvergence = { dm: { properties: ['display'], reason: 'standard flow' } };
+    const layoutShapeErrors = [];
+    assert.equal(verifyExtractionShape(layoutShape, layoutShapeErrors), true);
+    assert.deepEqual(layoutShapeErrors, []);
+    for (const [mutate, expected, why] of [
+        [entry => { entry.dm.reason = ' '; }, /layout convergence for dm requires a reason/, 'missing reason'],
+        [entry => { entry.dm.properties = ['position']; }, /list of reviewed layout properties/, 'unreviewed layout property'],
+        [entry => { entry.dm.properties = ['display', 'display']; }, /list of reviewed layout properties/, 'duplicate property'],
+        [entry => { entry.other = entry.dm; }, /layout convergence references non-participant other/, 'non-participant'],
+    ]) {
+        const candidate = clone(layoutShape);
+        mutate(candidate.components[0].participantLayoutConvergence);
+        const candidateErrors = [];
+        assert.equal(verifyExtractionShape(candidate, candidateErrors), false, why);
+        assert.ok(candidateErrors.some(error => expected.test(error)), why);
+    }
+
+    // Already-adopted participants: only residual declarations may be dropped.
+    const residualRule = { migrationDeclarations: [decl('display', 'flex'), decl('padding', '13px'), decl('color', 'red')] };
+    const convergedErrors = [];
+    assert.deepEqual(expectedConvergedResidual(residualRule, convergedErrors, 'adopted', ['padding'], ['display']),
+        [decl('color', 'red')]);
+    assert.deepEqual(convergedErrors, []);
+    const staleAdoptedErrors = [];
+    expectedConvergedResidual(residualRule, staleAdoptedErrors, 'adopted', ['max-width']);
+    assert.ok(staleAdoptedErrors.some(error => /max-width is stale because the already-adopted residual never wrote it/.test(error)));
+    const noopErrors = [];
+    expectedConvergedResidual(residualRule, noopErrors, 'adopted');
+    assert.ok(noopErrors.some(error => /already-adopted participant converges nothing/.test(error)));
+    const protectedErrors = [];
+    expectedConvergedResidual(residualRule, protectedErrors, 'adopted', ['display']);
+    assert.ok(protectedErrors.some(error => /participant convergence property display is not reviewed/.test(error)));
+
+    // `extends`: reference an earlier family instead of creating shared rules.
+    const rootFamily = { ...clone(extraction), id: 'family-v1', sharedStylesheet: 'css/layout.css', sharedLayer: 'components' };
+    rootFamily.components[1].participants = ['dm'];
+    const extension = {
+        ...clone(extraction), id: 'family-v2', extends: 'family-v1',
+        sharedStylesheet: 'css/layout.css', sharedLayer: 'components',
+    };
+    extension.games.dn = { css: 'css/dn.css', html: 'dn.html', runtime: 'src/games/dn/runtime.js' };
+    extension.components = [clone(rootFamily.components[0])];
+    extension.components[0].participants = ['dn'];
+    const later = { ...clone(extension), id: 'family-v3' };
+    later.components[0].participants = ['dm', 'dn'];
+    const extensionErrors = [];
+    const adopted = resolveFamilyExtension(later, [rootFamily, extension, later], extensionErrors);
+    assert.deepEqual(extensionErrors, []);
+    assert.deepEqual([...adopted.values()][0], new Set(['dm', 'dn']),
+        'participants adopted by the root family or an earlier extension count as already adopted');
+    assert.equal(resolveFamilyExtension(rootFamily, [rootFamily], []), null);
+    const chained = { ...clone(later), extends: 'family-v2' };
+    const relayered = { ...clone(extension), sharedLayer: 'pages' };
+    for (const [ordered, candidate, expected, why] of [
+        [[extension, rootFamily], extension, /must be an earlier ledger entry/, 'root after extension'],
+        [[rootFamily, extension, chained], chained,
+            /extend the root family family-v1, not another extension/, 'extension of an extension'],
+        [[rootFamily, relayered], relayered, /shared stylesheet\/layer must match/, 'different layer'],
+    ]) {
+        const caseErrors = [];
+        resolveFamilyExtension(candidate, ordered, caseErrors);
+        assert.ok(caseErrors.some(error => expected.test(error)), why);
+    }
+    const foreignComponent = clone(extension);
+    foreignComponent.components[0].sharedClass = 'game-other';
+    const foreignComponentErrors = [];
+    resolveFamilyExtension(foreignComponent, [rootFamily, foreignComponent], foreignComponentErrors);
+    assert.ok(foreignComponentErrors.some(error => /extension components must match a component of family-v1/.test(error)));
+    const selfExtension = { ...clone(extension), extends: 'family-v2' };
+    const selfExtensionErrors = [];
+    assert.equal(verifyExtractionShape(selfExtension, selfExtensionErrors), false);
+    assert.ok(selfExtensionErrors.some(error => /extends must name another family extraction id/.test(error)));
+
+    // Whole-rule retirement of a layout declaration needs reviewedLayoutProperties.
+    const parsedMap = (path, css) => new Map([[path, parseCssText(css, path)]]);
+    const scrollbarBase = parsedMap('css/demo.css', '.dm-list::-webkit-scrollbar{display:none}.dm-x{color:red}');
+    const scrollbarCurrent = parsedMap('css/demo.css', '.dm-x{color:red}');
+    const scrollbarRetirement = clone(extraction);
+    scrollbarRetirement.reviewedRuleRetirements = [{
+        prefix: 'dm', context: '', selector: '.dm-list::-webkit-scrollbar', reason: 'platform scrollbar',
+    }];
+    const unreviewedLayoutErrors = [];
+    verifyReviewedRuleRetirements(scrollbarRetirement, scrollbarCurrent, scrollbarBase,
+        catalogMap(scrollbarBase), { base: [], current: [] }, unreviewedLayoutErrors);
+    assert.ok(unreviewedLayoutErrors.some(error => /retired rule carries non-theme\/geometry declarations \(display\)/.test(error)));
+    scrollbarRetirement.reviewedRuleRetirements[0].reviewedLayoutProperties = ['display'];
+    const reviewedLayoutShapeErrors = [];
+    assert.equal(verifyExtractionShape(scrollbarRetirement, reviewedLayoutShapeErrors), true);
+    const reviewedLayoutErrors = [];
+    verifyReviewedRuleRetirements(scrollbarRetirement, scrollbarCurrent, scrollbarBase,
+        catalogMap(scrollbarBase), { base: [], current: [] }, reviewedLayoutErrors);
+    assert.deepEqual(reviewedLayoutErrors, []);
+    const staleLayoutRetirement = clone(scrollbarRetirement);
+    staleLayoutRetirement.reviewedRuleRetirements[0].reviewedLayoutProperties = ['display', 'outline'];
+    const staleLayoutErrors = [];
+    verifyReviewedRuleRetirements(staleLayoutRetirement, scrollbarCurrent, scrollbarBase,
+        catalogMap(scrollbarBase), { base: [], current: [] }, staleLayoutErrors);
+    assert.ok(staleLayoutErrors.some(error => /reviewed layout property outline is stale/.test(error)));
+    const badLayoutShape = clone(scrollbarRetirement);
+    badLayoutShape.reviewedRuleRetirements[0].reviewedLayoutProperties = ['position'];
+    const badLayoutShapeErrors = [];
+    assert.equal(verifyExtractionShape(badLayoutShape, badLayoutShapeErrors), false);
+    assert.ok(badLayoutShapeErrors.some(error => /reviewedLayoutProperties must be a non-empty/.test(error)));
+
+    // Declaration retirement: a surviving page rule sheds only the reviewed declarations.
+    const headBase = parsedMap('css/demo.css', '.dm-head{display:flex;align-items:center;margin-bottom:8px}');
+    const declarationRetirement = clone(extraction);
+    declarationRetirement.reviewedDeclarationRetirements = [{
+        prefix: 'dm', context: '', selector: '.dm-head', properties: ['margin-bottom'], reason: 'shared title margin',
+    }];
+    const declarationShapeErrors = [];
+    assert.equal(verifyExtractionShape(declarationRetirement, declarationShapeErrors), true);
+    assert.deepEqual(declarationShapeErrors, []);
+    const runDeclarationRetirement = (candidate, currentCss) => {
+        const current = parsedMap('css/demo.css', currentCss);
+        const caseErrors = [];
+        const external = { base: [], current: [] };
+        verifyReviewedDeclarationRetirements(candidate, current, headBase,
+            catalogMap(current), catalogMap(headBase), external, caseErrors);
+        return { caseErrors, external };
+    };
+    const validDeclaration = runDeclarationRetirement(declarationRetirement, '.dm-head{display:flex;align-items:center}');
+    assert.deepEqual(validDeclaration.caseErrors, []);
+    assert.equal(validDeclaration.external.base.length, 1);
+    assert.equal(validDeclaration.external.current.length, 1);
+    assert.ok(runDeclarationRetirement(declarationRetirement, '.dm-head{display:flex}').caseErrors.some(error =>
+        /not exactly the base rule minus the retired properties/.test(error)), 'an unlisted layout edit must fail');
+    assert.ok(runDeclarationRetirement(declarationRetirement, '.dm-head{display:flex;align-items:center;margin-bottom:8px}')
+        .caseErrors.some(error => /not exactly the base rule minus the retired properties/.test(error)),
+    'restoring the retired declaration must fail');
+    const staleDeclaration = clone(declarationRetirement);
+    staleDeclaration.reviewedDeclarationRetirements[0].properties = ['margin-bottom', 'gap'];
+    assert.ok(runDeclarationRetirement(staleDeclaration, '.dm-head{display:flex;align-items:center}')
+        .caseErrors.some(error => /retired property gap is stale/.test(error)));
+    const everythingDeclaration = clone(declarationRetirement);
+    everythingDeclaration.reviewedDeclarationRetirements[0].selector = '.dm-only';
+    everythingDeclaration.reviewedDeclarationRetirements[0].properties = ['margin-bottom'];
+    {
+        const base = parsedMap('css/demo.css', '.dm-only{margin-bottom:8px}');
+        const current = parsedMap('css/demo.css', '.dm-only{}');
+        const caseErrors = [];
+        verifyReviewedDeclarationRetirements(everythingDeclaration, current, base,
+            catalogMap(current), catalogMap(base), { base: [], current: [] }, caseErrors);
+        assert.ok(caseErrors.some(error => /register a whole-rule retirement instead/.test(error)));
+    }
+    for (const [mutate, expected, why] of [
+        [entry => { entry.selector = '.dm-head, .game-lb-title'; }, /may only edit dm-prefixed page selectors/, 'foreign selector'],
+        [entry => { entry.properties = ['display']; }, /reviewed theme\/geometry properties/, 'layout property'],
+        [entry => { entry.reason = ''; }, /declaration retirement requires a reason/, 'missing reason'],
+    ]) {
+        const candidate = clone(declarationRetirement);
+        mutate(candidate.reviewedDeclarationRetirements[0]);
+        const candidateErrors = [];
+        assert.equal(verifyExtractionShape(candidate, candidateErrors), false, why);
+        assert.ok(candidateErrors.some(error => expected.test(error)), why);
+    }
 
     const duplicateIdentity = clone(extraction);
     duplicateIdentity.components.push(clone(duplicateIdentity.components[0]));

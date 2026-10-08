@@ -444,11 +444,8 @@ body {
 /* ── 排行榜 ── */
 
 .ms-lb {
-    width: 100%;
     background: var(--ms-lb-bg);
     border: var(--ms-lb-border);
-    border-radius: 14px;
-    padding: 12px 14px;
 }
 
 

@@ -1,127 +1,68 @@
 #!/usr/bin/env node
-// Browser geometry gate for the first post-#115 component-family extraction.
+// Browser geometry gate for the shared leaderboard family (leaderboard-v1 + leaderboard-v2).
 //
-// This deliberately covers one standard leaderboard plus each documented geometry
-// exception. Static/runtime class adoption is verified by family-extraction.mjs;
-// this test is the independent browser oracle that proves the resulting cascade
-// still computes the intended container/list/row/input geometry.
+// Every page with a result-overlay leaderboard is held to ONE standard expectation table:
+// there are no page-level geometry exceptions. Static/runtime class adoption is verified by
+// family-extraction.mjs; this test is the independent browser oracle that proves the
+// resulting cascade computes the shared container/title/list/row/empty/status/input
+// geometry on each page, at a phone and a desktop viewport (so a page @media override
+// cannot hide behind one breakpoint).
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
-const CASES = [
-    {
-        id: 'standard-circuit',
-        href: 'circuit.html',
-        overlay: '#cc-over',
-        list: '#cc-lb-list',
-        rowClass: 'cc-lb-row game-lb-row',
-        rankClass: 'cc-lb-rank game-lb-rank',
-        nameClass: 'cc-lb-name game-lb-name',
-        scoreClass: 'cc-lb-score game-lb-score',
-        container: '.cc-lb',
-        input: '#cc-username',
-        requiredShared: ['.cc-lb', '#cc-lb-list', '#cc-lb-status', '.cc-username-row', '#cc-username-label', '#cc-username'],
-        expected: {
-            container: { maxWidth: '330px', radius: '14px', padding: ['12px', '14px', '12px', '14px'] },
-            list: { display: 'flex', flexDirection: 'column', gap: '3px', minHeight: '40px', maxHeight: '168px', overflowY: 'auto' },
-            row: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', radius: '7px', padding: ['3px', '6px', '3px', '6px'] },
-            input: { fontSize: '13px', radius: '9px', padding: ['7px', '10px', '7px', '10px'] },
-        },
-    },
-    {
-        id: 'bond-forge-exception',
-        href: 'bond-forge.html',
-        overlay: '#bf-over',
-        list: '#bf-lb-list',
-        rowClass: 'bf-lb-row',
-        rankClass: 'bf-lb-rank',
-        nameClass: 'bf-lb-name game-lb-name',
-        scoreClass: 'bf-lb-score game-lb-score',
-        container: '.bf-lb',
-        input: '#bf-username',
-        requiredShared: ['.bf-lb'],
-        requiredLocalOnly: ['#bf-lb-list', '#bf-lb-status', '.bf-username-row', '#bf-username-label', '#bf-username'],
-        expected: {
-            container: { display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '330px', radius: '14px',
-                textAlign: 'left', padding: ['13px', '15px', '13px', '15px'] },
-            list: { display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '150px', overflowY: 'auto' },
-            row: { display: 'flex', alignItems: 'baseline', gap: '8px', fontSize: '12.5px', radius: '0px',
-                padding: ['0px', '0px', '0px', '0px'] },
-            name: { textAlign: 'left' },
-            input: { fontSize: '13px', height: '34px', radius: '9px',
-                padding: ['0px', '10px', '0px', '10px'] },
-        },
-    },
-    {
-        id: 'planet-merge-exception',
-        href: 'planet-merge.html',
-        overlay: '#pm-over',
-        list: '#pm-lb-list',
-        rowClass: 'pm-lb-row game-lb-row',
-        rankClass: 'pm-lb-rank game-lb-rank',
-        nameClass: 'pm-lb-name game-lb-name',
-        scoreClass: 'pm-lb-score game-lb-score',
-        container: '.pm-lb',
-        input: '#pm-username',
-        requiredShared: ['.pm-lb', '#pm-lb-list', '#pm-lb-status', '.pm-username-row', '#pm-username-label', '#pm-username'],
-        requiredLocalOnly: ['#pm-lb-title'],
-        expected: {
-            container: { maxWidth: '340px', radius: '14px', padding: ['12px', '14px', '12px', '14px'] },
-            list: { display: 'flex', flexDirection: 'column', gap: '3px', minHeight: '60px', maxHeight: '148px', overflowY: 'auto' },
-            row: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', radius: '7px',
-                padding: ['3px', '6px', '3px', '6px'] },
-            input: { fontSize: '13px', radius: '9px', padding: ['7px', '10px', '7px', '10px'] },
-        },
-    },
-    {
-        id: 'minesweeper-exception',
-        href: 'minesweeper.html',
-        overlay: '#ms-result',
-        hide: ['#ms-start'],
-        list: '#ms-lb-list',
-        rowClass: 'ms-lb-row game-lb-row',
-        rankClass: 'ms-lb-rank game-lb-rank',
-        nameClass: 'ms-lb-name game-lb-name',
-        scoreClass: 'ms-lb-score game-lb-score',
-        container: '.ms-lb',
-        input: '#ms-username',
-        requiredShared: ['#ms-lb-title', '#ms-lb-list', '#ms-lb-status', '.ms-username-row', '#ms-username-label', '#ms-username'],
-        requiredLocalOnly: ['.ms-lb'],
-        expected: {
-            container: { maxWidth: 'none', radius: '14px', padding: ['12px', '14px', '12px', '14px'] },
-            list: { display: 'flex', flexDirection: 'column', gap: '3px', minHeight: '40px', maxHeight: '168px', overflowY: 'auto' },
-            row: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', radius: '7px',
-                padding: ['3px', '6px', '3px', '6px'] },
-            input: { fontSize: '13px', radius: '9px', padding: ['7px', '10px', '7px', '10px'] },
-        },
-    },
-    {
-        id: 'tower-defense-exception',
-        href: 'tower-defense.html',
-        overlay: '#td-over',
-        list: '#td-lb-list',
-        rowClass: 'td-lb-row game-lb-row',
-        rankClass: 'td-lb-rank game-lb-rank',
-        nameClass: 'td-lb-name game-lb-name',
-        scoreClass: 'td-lb-score game-lb-score',
-        container: '.td-lb',
-        input: '#td-username',
-        requiredShared: ['.td-lb', '#td-lb-list', '#td-lb-status', '.td-username-row', '#td-username-label', '#td-username'],
-        expected: {
-            container: { maxWidth: '340px', radius: '16px', padding: ['13px', '15px', '13px', '15px'] },
-            list: { display: 'flex', flexDirection: 'column', gap: '3px', minHeight: '40px', maxHeight: '175px', overflowY: 'auto' },
-            row: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', radius: '8px',
-                padding: ['4px', '7px', '4px', '7px'] },
-            usernameRow: { marginTop: '8px' },
-            input: { fontSize: '13px', radius: '10px', padding: ['7px', '11px', '7px', '11px'] },
-        },
-    },
+const VIEWPORTS = [
+    { width: 390, height: 844 },
+    { width: 1280, height: 900 },
 ];
 
-const RUN = CASES.filter(testCase => keepPage(testCase.href));
+const PAGES = [
+    ['bf', 'bond-forge.html'],
+    ['cc', 'circuit.html'],
+    ['cb', 'crystal-bloom.html'],
+    ['ec', 'echo-cave.html'],
+    ['fv', 'flame-verse.html'],
+    ['gd', 'gravity-slingshot.html'],
+    ['hs', 'hoop-shot.html'],
+    ['lm', 'lumen.html'],
+    ['md', 'maxwell-demon.html'],
+    ['ms', 'minesweeper.html', { overlay: '#ms-result', hide: ['#ms-start'] }],
+    ['pm', 'planet-merge.html'],
+    ['rv', 'reversi.html'],
+    ['rd', 'ripple-duet.html'],
+    ['sd', 'silk-dew.html'],
+    ['td', 'tower-defense.html'],
+];
+
+// Values owned by the shared `game-lb-*` rules in css/layout.css. `inherit:<subject>`
+// means "must equal the computed value of that subject", i.e. the page wrote nothing.
+const STANDARD = {
+    container: { display: 'block', maxWidth: '330px', radius: '14px', padding: ['12px', '14px', '12px', '14px'],
+        textAlign: 'inherit:parent' },
+    title: { fontSize: '14px', fontWeight: '700', marginBottom: '8px', letterSpacing: 'normal', textTransform: 'none' },
+    list: { display: 'flex', flexDirection: 'column', gap: '3px', minHeight: '40px', maxHeight: '168px',
+        overflowY: 'auto', scrollbarWidth: 'auto' },
+    row: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', radius: '7px',
+        padding: ['3px', '6px', '3px', '6px'], transitionDuration: '0s' },
+    rank: { width: '22px', flexShrink: '0', flexGrow: '0', fontWeight: '700' },
+    name: { flexGrow: '1', textAlign: 'left' },
+    score: { flexGrow: '0', flexShrink: '1', fontWeight: '700' },
+    empty: { fontSize: '13px', padding: ['10px', '0px', '10px', '0px'] },
+    status: { minHeight: '16px', marginTop: '4px', fontSize: '11.5px', lineHeight: 'inherit:container' },
+    usernameRow: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' },
+    label: { flexShrink: '0', flexGrow: '0', fontSize: '11.5px', fontWeight: 'inherit:container' },
+    input: { fontSize: '13px', radius: '9px', padding: ['7px', '10px', '7px', '10px'], height: 'auto-box',
+        outlineStyle: 'none', transitionDuration: '0s' },
+};
+
+const SHARED_CLASSES = {
+    container: 'game-lb', title: 'game-lb-title', list: 'game-lb-list', status: 'game-lb-status',
+    usernameRow: 'game-lb-username-row', label: 'game-lb-username-label', input: 'game-lb-username',
+};
+
+const RUN = PAGES.filter(([, href]) => keepPage(href));
 exitIfNoPages(RUN, 'verify-leaderboard-layout');
 
 const failures = [];
@@ -131,149 +72,136 @@ const browser = await puppeteer.launch({
     args: LAUNCH_ARGS,
 });
 
-function compare(id, subject, actual, expected) {
+function compare(id, subject, snapshot, expected) {
+    const actual = snapshot[subject];
     for (const [key, wanted] of Object.entries(expected || {})) {
+        let target = wanted;
+        if (typeof wanted === 'string' && wanted.startsWith('inherit:')) {
+            target = snapshot[wanted.slice('inherit:'.length)]?.[key];
+        } else if (wanted === 'auto-box') {
+            // No page height: the box is exactly line box + padding + border.
+            target = actual?.contentBoxHeight;
+        }
         const got = actual?.[key];
-        if (Array.isArray(wanted)) {
-            if (JSON.stringify(got) !== JSON.stringify(wanted)) {
-                failures.push(`${id}: ${subject} ${key}=${JSON.stringify(got)}, expected ${JSON.stringify(wanted)}`);
-            }
-        } else if (got !== wanted) {
-            failures.push(`${id}: ${subject} ${key}=${JSON.stringify(got)}, expected ${JSON.stringify(wanted)}`);
+        if (JSON.stringify(got) !== JSON.stringify(target)) {
+            failures.push(`${id}: ${subject} ${key}=${JSON.stringify(got)}, expected ${JSON.stringify(target)}`);
         }
     }
 }
 
 try {
-    for (const testCase of RUN) {
-        const page = await browser.newPage();
-        const pageErrors = [];
-        page.on('pageerror', error => pageErrors.push(String(error?.message || error).split('\n')[0]));
-        try {
-            await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 });
-            await page.goto(`${BASE}/${testCase.href}`, { waitUntil: 'load', timeout: 30000 });
+    for (const [prefix, href, options = {}] of RUN) {
+        for (const viewport of VIEWPORTS) {
+            const id = `${prefix} ${viewport.width}x${viewport.height}`;
+            const page = await browser.newPage();
+            const pageErrors = [];
+            page.on('pageerror', error => pageErrors.push(String(error?.message || error).split('\n')[0]));
+            try {
+                await page.setViewport({ ...viewport, deviceScaleFactor: 1 });
+                await page.goto(`${BASE}/${href}`, { waitUntil: 'load', timeout: 30000 });
 
-            const snapshot = await page.evaluate(config => {
-                const target = document.querySelector(config.overlay);
-                if (!target) return { missingOverlay: true };
-                target.classList.remove('hidden');
-                target.hidden = false;
-                for (const selector of config.hide || []) {
-                    const element = document.querySelector(selector);
-                    if (element) element.style.display = 'none';
-                }
+                const snapshot = await page.evaluate(({ prefix, overlay, hide, sharedClasses }) => {
+                    const target = document.querySelector(overlay || `#${prefix}-over`);
+                    if (!target) return { missing: 'overlay' };
+                    target.classList.remove('hidden');
+                    target.hidden = false;
+                    for (const selector of hide || []) {
+                        const element = document.querySelector(selector);
+                        if (element) element.style.display = 'none';
+                    }
 
-                const list = document.querySelector(config.list);
-                const container = document.querySelector(config.container);
-                const input = document.querySelector(config.input);
-                if (!list || !container || !input) {
-                    return {
-                        missing: {
-                            list: !list,
-                            container: !container,
-                            input: !input,
-                        },
+                    const q = selector => document.querySelector(selector);
+                    const nodes = {
+                        container: q(`.${prefix}-lb`),
+                        title: q(`.${prefix}-lb-title`),
+                        list: q(`#${prefix}-lb-list`),
+                        status: q(`#${prefix}-lb-status`),
+                        usernameRow: q(`.${prefix}-username-row`),
+                        label: q(`#${prefix}-username-label`),
+                        input: q(`#${prefix}-username`),
                     };
-                }
+                    const missing = Object.entries(nodes).filter(([, node]) => !node).map(([key]) => key);
+                    if (missing.length) return { missing: missing.join(',') };
 
-                // The family contract separately proves that production runtime literals
-                // co-locate these classes. A synthetic row makes the browser exercise the
-                // real cascade without depending on leaderboard network/data state.
-                list.textContent = '';
-                const row = document.createElement('div');
-                row.className = config.rowClass;
-                const rank = document.createElement('span');
-                rank.className = config.rankClass;
-                rank.textContent = '1';
-                const name = document.createElement('span');
-                name.className = config.nameClass;
-                name.textContent = 'Player';
-                const score = document.createElement('span');
-                score.className = config.scoreClass;
-                score.textContent = '100';
-                row.append(rank, name, score);
-                list.append(row);
-
-                const style = selectorOrElement => {
-                    const element = typeof selectorOrElement === 'string'
-                        ? document.querySelector(selectorOrElement)
-                        : selectorOrElement;
-                    if (!element) return null;
-                    const s = getComputedStyle(element);
-                    return {
-                        display: s.display,
-                        flexDirection: s.flexDirection,
-                        alignItems: s.alignItems,
-                        gap: s.gap,
-                        maxWidth: s.maxWidth,
-                        minHeight: s.minHeight,
-                        maxHeight: s.maxHeight,
-                        overflowY: s.overflowY,
-                        fontSize: s.fontSize,
-                        fontWeight: s.fontWeight,
-                        height: s.height,
-                        radius: s.borderTopLeftRadius,
-                        marginTop: s.marginTop,
-                        marginBottom: s.marginBottom,
-                        textAlign: s.textAlign,
-                        padding: [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft],
+                    // The family contract separately proves that production runtime literals
+                    // co-locate these classes. Synthetic nodes built from the same literals
+                    // exercise the real cascade without leaderboard network/data state.
+                    const make = (tag, className, text) => {
+                        const element = document.createElement(tag);
+                        element.className = className;
+                        if (text) element.textContent = text;
+                        return element;
                     };
-                };
-                const classInfo = selector => {
-                    const element = document.querySelector(selector);
-                    return element ? [...element.classList] : null;
-                };
+                    nodes.list.textContent = '';
+                    const row = make('div', `${prefix}-lb-row game-lb-row`);
+                    const rank = make('span', `${prefix}-lb-rank game-lb-rank`, '1');
+                    const name = make('span', `${prefix}-lb-name game-lb-name`, 'Player');
+                    const score = make('span', `${prefix}-lb-score game-lb-score`, '100');
+                    row.append(rank, name, score);
+                    const empty = make('div', `${prefix}-lb-empty game-lb-empty`, 'No scores yet');
+                    nodes.list.append(row, empty);
+                    nodes.status.textContent = 'status';
+                    Object.assign(nodes, { row, rank, name, score, empty, parent: nodes.container.parentElement });
 
-                return {
-                    overlayDisplay: getComputedStyle(target).display,
-                    container: style(container),
-                    list: style(list),
-                    row: style(row),
-                    name: style(name),
-                    input: style(input),
-                    usernameRow: style(input.closest('[class*="username-row"]')),
-                    requiredShared: (config.requiredShared || []).map(selector => ({
-                        selector,
-                        classes: classInfo(selector),
-                    })),
-                    requiredLocalOnly: (config.requiredLocalOnly || []).map(selector => ({
-                        selector,
-                        classes: classInfo(selector),
-                    })),
-                };
-            }, testCase);
+                    const style = element => {
+                        const s = getComputedStyle(element);
+                        const px = value => parseFloat(value) || 0;
+                        return {
+                            display: s.display,
+                            flexDirection: s.flexDirection,
+                            alignItems: s.alignItems,
+                            flexGrow: s.flexGrow,
+                            flexShrink: s.flexShrink,
+                            gap: s.gap,
+                            width: s.width,
+                            maxWidth: s.maxWidth,
+                            minHeight: s.minHeight,
+                            maxHeight: s.maxHeight,
+                            overflowY: s.overflowY,
+                            scrollbarWidth: s.scrollbarWidth,
+                            fontSize: s.fontSize,
+                            fontWeight: s.fontWeight,
+                            letterSpacing: s.letterSpacing,
+                            lineHeight: s.lineHeight,
+                            textTransform: s.textTransform,
+                            textAlign: s.textAlign,
+                            height: s.height,
+                            contentBoxHeight: s.lineHeight === 'normal' ? s.height
+                                : (px(s.lineHeight) + px(s.paddingTop) + px(s.paddingBottom)
+                                    + px(s.borderTopWidth) + px(s.borderBottomWidth)) + 'px',
+                            radius: s.borderTopLeftRadius,
+                            marginTop: s.marginTop,
+                            marginBottom: s.marginBottom,
+                            outlineStyle: s.outlineStyle,
+                            transitionDuration: s.transitionDuration,
+                            padding: [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft],
+                        };
+                    };
+                    const result = { overlayDisplay: getComputedStyle(target).display, classes: {} };
+                    for (const [key, node] of Object.entries(nodes)) result[key] = style(node);
+                    for (const [key, sharedClass] of Object.entries(sharedClasses)) {
+                        result.classes[key] = nodes[key].classList.contains(sharedClass) ? null : sharedClass;
+                    }
+                    return result;
+                }, { prefix, overlay: options.overlay, hide: options.hide, sharedClasses: SHARED_CLASSES });
 
-            if (snapshot.missingOverlay || snapshot.missing) {
-                failures.push(`${testCase.id}: result overlay/leaderboard fixture is incomplete: ${JSON.stringify(snapshot)}`);
-                continue;
-            }
-            if (snapshot.overlayDisplay === 'none') {
-                failures.push(`${testCase.id}: representative result overlay did not open`);
-            }
-
-            for (const item of snapshot.requiredShared || []) {
-                if (!item.classes?.some(name => name.startsWith('game-lb'))) {
-                    failures.push(`${testCase.id}: ${item.selector} is missing its game-lb shared class`);
+                if (snapshot.missing) {
+                    failures.push(`${id}: leaderboard fixture is incomplete (${snapshot.missing})`);
+                    continue;
                 }
-            }
-            for (const item of snapshot.requiredLocalOnly || []) {
-                if (item.classes?.some(name => name.startsWith('game-lb'))) {
-                    failures.push(`${testCase.id}: ${item.selector} must remain a documented local-only geometry exception`);
+                if (snapshot.overlayDisplay === 'none') failures.push(`${id}: result overlay did not open`);
+                for (const [key, sharedClass] of Object.entries(snapshot.classes)) {
+                    if (sharedClass) failures.push(`${id}: ${key} is missing .${sharedClass}`);
                 }
+                for (const [subject, expected] of Object.entries(STANDARD)) {
+                    compare(id, subject, snapshot, expected);
+                }
+                for (const error of pageErrors) failures.push(`${id}: pageerror ${error}`);
+            } catch (error) {
+                failures.push(`${id}: ${error.message}`);
+            } finally {
+                await page.close();
             }
-
-            compare(testCase.id, 'container', snapshot.container, testCase.expected.container);
-            compare(testCase.id, 'list', snapshot.list, testCase.expected.list);
-            compare(testCase.id, 'row', snapshot.row, testCase.expected.row);
-            compare(testCase.id, 'name', snapshot.name, testCase.expected.name);
-            compare(testCase.id, 'username row', snapshot.usernameRow, testCase.expected.usernameRow);
-            compare(testCase.id, 'input', snapshot.input, testCase.expected.input);
-
-            for (const error of pageErrors) failures.push(`${testCase.id}: pageerror ${error}`);
-        } catch (error) {
-            failures.push(`${testCase.id}: ${error.message}`);
-        } finally {
-            await page.close();
         }
     }
 } finally {
@@ -286,4 +214,5 @@ if (failures.length) {
     process.exit(1);
 }
 
-console.log('PASS shared leaderboard computed geometry: standard family + Bond Forge/Planet Merge/Minesweeper/Tower Defense exceptions');
+console.log(`PASS shared leaderboard computed geometry: ${RUN.length} page(s) × ${VIEWPORTS.length} viewports `
+    + 'match the standard game-lb-* family with no page-level geometry exceptions');
