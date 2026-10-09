@@ -182,6 +182,11 @@ assert.deepEqual(
     [],
 );
 assert.ok(resetFixtureErrors(
+    'fixture-reset-escaped-layer',
+    '@layer reset{*{margin:0}}',
+    '@layer components{*{margin:0}}',
+).some(error => /a reset migration must keep the whole rule in reset/.test(error)));
+assert.ok(resetFixtureErrors(
     'fixture-reset-non-universal',
     '.x{margin:0}',
     '@layer reset{.x{margin:0}}',
@@ -350,6 +355,562 @@ verifyRuleMigrations({
     errors: batchErrors,
 });
 assert.deepEqual(batchErrors, []);
+
+// Exact duplicate families may converge across files into one reviewed shared
+// owner. A dedupe mapping removes every source occurrence, creates one new
+// destination, and keeps the important-declaration ledger explainable.
+const dedupeBase = parseMap([
+    ['css/a.css', '.a-hidden{display:none!important}'],
+    ['css/b.css', '.b-hidden{display:none!important}'],
+    ['css/layout.css', ''],
+]);
+const dedupeCurrent = parseMap([
+    ['css/a.css', ''],
+    ['css/b.css', ''],
+    ['css/layout.css', '@layer contracts{.hidden{display:none!important}}'],
+]);
+const dedupeBaseCatalogs = catalogMap(dedupeBase);
+const dedupeCurrentCatalogs = catalogMap(dedupeCurrent);
+const dedupeMapping = {
+    id: 'fixture-dedupe-hidden',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(dedupeBaseCatalogs.get('css/a.css')[0]),
+        sourceRef(dedupeBaseCatalogs.get('css/b.css')[0]),
+    ],
+    destination: destinationRef(dedupeCurrentCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: false,
+    adoption: {
+        surface: 'html-class',
+        consumers: [
+            { sourcePath: 'css/a.css', pages: ['dedupe.html'], localClass: 'a-hidden', sharedClass: 'hidden' },
+            { sourcePath: 'css/b.css', pages: ['dedupe.html'], localClass: 'b-hidden', sharedClass: 'hidden' },
+        ],
+    },
+    reason: 'fixture shared hidden owner',
+    conflicts: { normal: [], important: [] },
+};
+const dedupeErrors = [];
+const dedupeResult = verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+        },
+    },
+    state: { ...emptyState, migratedRules: [dedupeMapping] },
+    currentParsedByPath: dedupeCurrent,
+    baseParsedByPath: dedupeBase,
+    stylesheetLinks: {
+        'dedupe.html': [
+            ['css/a.css', []], ['css/b.css', []], ['css/layout.css', []],
+        ],
+    },
+    htmlSources: new Map([[
+        'dedupe.html', '<body><div class="a-hidden hidden"></div><div class="b-hidden hidden"></div></body>',
+    ]]),
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: dedupeErrors,
+});
+assert.deepEqual(dedupeErrors, []);
+assert.equal(dedupeResult.newRuleDelta, -1);
+for (const path of ['css/a.css', 'css/b.css', 'css/layout.css']) {
+    assert.ok(dedupeResult.mappedCssPaths.has(path), path + ' must be registered by the dedupe mapping');
+}
+assert.deepEqual(dedupeResult.importantDeclarationDelta.removed, [
+    ['css/a.css', '', '.a-hidden', 'display', 'none!important'],
+    ['css/b.css', '', '.b-hidden', 'display', 'none!important'],
+]);
+assert.deepEqual(dedupeResult.importantDeclarationDelta.added, [
+    ['css/layout.css', '', '.hidden', 'display', 'none!important'],
+]);
+
+function historicalDedupeErrors(mapping, parsed, unlayeredRules, stylesheetLinks, htmlSources = new Map()) {
+    // Simulate the following PR: W3 is already in both the comparison base and
+    // the append-only ledger. Only current HTML/stylesheet adoption may change.
+    const historicalState = { ...emptyState, migratedRules: [mapping] };
+    const historicalErrors = [];
+    const historicalResult = verifyRuleMigrations({
+        baseline: { debt: { unlayeredRules } },
+        state: historicalState,
+        currentParsedByPath: parsed,
+        baseParsedByPath: parsed,
+        stylesheetLinks,
+        htmlSources,
+        allowedLayers: ALLOWED,
+        layerOrder: LAYERS,
+        baseState: historicalState,
+        errors: historicalErrors,
+    });
+    assert.equal(historicalResult.newMigrationCount, 0);
+    return historicalErrors;
+}
+
+const historicalHiddenErrors = historicalDedupeErrors(
+    dedupeMapping, dedupeCurrent,
+    [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+    { 'dedupe.html': [['css/a.css', []], ['css/b.css', []], ['css/layout.css', []]] },
+    new Map([[
+        'dedupe.html', '<body><div class="a-hidden"></div><div class="b-hidden hidden"></div></body>',
+    ]]),
+);
+assert.ok(historicalHiddenErrors.some(error => error.includes('.a-hidden element(s) without .hidden')));
+// Historical migrations with intact consumers must remain valid; the
+// continuing adoption check must not invent new rule transactions.
+assert.deepEqual(historicalDedupeErrors(
+    dedupeMapping, dedupeCurrent,
+    [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+    { 'dedupe.html': [['css/a.css', []], ['css/b.css', []], ['css/layout.css', []]] },
+    new Map([[
+        'dedupe.html', '<body><div class="a-hidden hidden"></div><div class="b-hidden hidden"></div></body>',
+    ]]),
+), []);
+
+
+// The full migration entry point must use the bidirectional selector proof,
+// not just direct helper callers. Keep this invariant after W3 is historical.
+const widenedDedupeHtml = new Map([[
+    'dedupe.html',
+    '<html><body><div class="a-hidden hidden"></div>'
+        + '<div class="b-hidden hidden"></div><div class="hidden"></div></body></html>',
+]]);
+const widenedNewErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: { unlayeredRules: [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']] },
+    },
+    state: { ...emptyState, migratedRules: [dedupeMapping] },
+    currentParsedByPath: dedupeCurrent,
+    baseParsedByPath: dedupeBase,
+    stylesheetLinks: {
+        'dedupe.html': [['css/a.css', []], ['css/b.css', []], ['css/layout.css', []]],
+    },
+    htmlSources: widenedDedupeHtml,
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: widenedNewErrors,
+});
+assert.ok(widenedNewErrors.some(error => /shared destination matches 1 extra element/.test(error)));
+const widenedHistoricalErrors = historicalDedupeErrors(
+    dedupeMapping, dedupeCurrent,
+    [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+    { 'dedupe.html': [['css/a.css', []], ['css/b.css', []], ['css/layout.css', []]] },
+    widenedDedupeHtml,
+);
+assert.ok(widenedHistoricalErrors.some(error => /shared destination matches 1 extra element/.test(error)));
+
+// Even an exact selector match must keep the shared destination active on every
+// page that loaded a source stylesheet; otherwise the verifier could approve a
+// deletion whose replacement is unreachable at runtime.
+const inactiveDestinationBase = parseMap([
+    ['css/a.css', '.shared{display:none!important}'],
+    ['css/b.css', '.shared{display:none!important}'],
+    ['css/layout.css', ''],
+]);
+const inactiveDestinationCurrent = parseMap([
+    ['css/a.css', ''],
+    ['css/b.css', ''],
+    ['css/layout.css', '@layer contracts{.shared{display:none!important}}'],
+]);
+const inactiveBaseCatalogs = catalogMap(inactiveDestinationBase);
+const inactiveCurrentCatalogs = catalogMap(inactiveDestinationCurrent);
+const inactiveDestinationMapping = {
+    id: 'fixture-dedupe-inactive-destination',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(inactiveBaseCatalogs.get('css/a.css')[0]),
+        sourceRef(inactiveBaseCatalogs.get('css/b.css')[0]),
+    ],
+    destination: destinationRef(inactiveCurrentCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: false,
+    reason: 'fixture exact selector destination activation',
+    conflicts: { normal: [], important: [] },
+};
+const inactiveDestinationErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [['css/a.css', '', '.shared'], ['css/b.css', '', '.shared']],
+        },
+    },
+    state: { ...emptyState, migratedRules: [inactiveDestinationMapping] },
+    currentParsedByPath: inactiveDestinationCurrent,
+    baseParsedByPath: inactiveDestinationBase,
+    stylesheetLinks: {
+        'dedupe-same.html': [
+            ['css/a.css', []], ['css/b.css', []],
+        ],
+    },
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: inactiveDestinationErrors,
+});
+assert.ok(inactiveDestinationErrors.some(error => /destination stylesheet css\/layout\.css is not active/.test(error)));
+
+// Same-selector destination activation remains required after the mapping
+// has moved into the comparison base and is no longer a new transaction.
+const historicalInactiveErrors = historicalDedupeErrors(
+    inactiveDestinationMapping, inactiveDestinationCurrent,
+    [['css/a.css', '', '.shared'], ['css/b.css', '', '.shared']],
+    { 'dedupe-same.html': [['css/a.css', []], ['css/b.css', []]] },
+);
+assert.ok(historicalInactiveErrors.some(error => /destination stylesheet css\/layout\.css is not active/.test(error)));
+
+// Destination-only pages must not silently inherit a newly introduced
+// shared selector. Math Rain's fading modal is such a consumer of layout.css.
+const hiddenScopeBase = parseMap([
+    ['css/a.css', '.hidden{display:none!important}'],
+    ['css/b.css', '.hidden{display:none!important}'],
+    ['css/layout.css', ''],
+]);
+const hiddenScopeCurrent = parseMap([
+    ['css/a.css', ''],
+    ['css/b.css', ''],
+    ['css/layout.css', '@layer contracts{html.game-hidden-contract .hidden{display:none!important}}'],
+]);
+const hiddenScopeBaseCatalogs = catalogMap(hiddenScopeBase);
+const hiddenScopeCurrentCatalogs = catalogMap(hiddenScopeCurrent);
+const hiddenScopeMapping = {
+    id: 'fixture-dedupe-hidden-scoped',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(hiddenScopeBaseCatalogs.get('css/a.css')[0]),
+        sourceRef(hiddenScopeBaseCatalogs.get('css/b.css')[0]),
+    ],
+    destination: destinationRef(hiddenScopeCurrentCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: false,
+    adoption: {
+        surface: 'root-class',
+        consumers: [
+            { sourcePath: 'css/a.css', pages: ['a.html'], rootClass: 'game-hidden-contract' },
+            { sourcePath: 'css/b.css', pages: ['b.html'], rootClass: 'game-hidden-contract' },
+        ],
+    },
+    reason: 'fixture scoped hidden owner without affecting a fading modal',
+    conflicts: { normal: [], important: [] },
+};
+const hiddenScopeStylesheets = {
+    'a.html': [['css/a.css', []], ['css/layout.css', []]],
+    'b.html': [['css/b.css', []], ['css/layout.css', []]],
+    'math-rain.html': [['css/layout.css', []]],
+};
+const hiddenScopeHtml = new Map([
+    ['a.html', '<html class="game-hidden-contract"><body><div class="hidden"></div></body></html>'],
+    ['b.html', '<html class="game-hidden-contract"><body><div class="hidden"></div></body></html>'],
+    ['math-rain.html', '<html><body><div class="screen hidden"></div></body></html>'],
+]);
+const hiddenScopeDebt = [['css/a.css', '', '.hidden'], ['css/b.css', '', '.hidden']];
+function hiddenScopeErrors(mapping, current, html = hiddenScopeHtml, baseState = emptyState) {
+    const errors = [];
+    verifyRuleMigrations({
+        baseline: { debt: { unlayeredRules: hiddenScopeDebt } },
+        state: { ...emptyState, migratedRules: [mapping] },
+        currentParsedByPath: current,
+        baseParsedByPath: baseState.migratedRules?.length ? current : hiddenScopeBase,
+        stylesheetLinks: hiddenScopeStylesheets,
+        htmlSources: html,
+        allowedLayers: ALLOWED,
+        layerOrder: LAYERS,
+        baseState,
+        errors,
+    });
+    return errors;
+}
+assert.deepEqual(hiddenScopeErrors(hiddenScopeMapping, hiddenScopeCurrent), []);
+const historicalHiddenScope = { ...emptyState, migratedRules: [hiddenScopeMapping] };
+assert.deepEqual(hiddenScopeErrors(hiddenScopeMapping, hiddenScopeCurrent, hiddenScopeHtml, historicalHiddenScope), []);
+
+// If a destination-only page adopts the shared state without being a source,
+// this must fail in current and historical transactions alike.
+const accidentalOptIn = new Map(hiddenScopeHtml);
+accidentalOptIn.set('math-rain.html',
+    '<html class="game-hidden-contract"><body><div class="screen hidden"></div></body></html>');
+assert.ok(hiddenScopeErrors(hiddenScopeMapping, hiddenScopeCurrent, accidentalOptIn)
+    .some(error => /destination-only consumer math-rain.html unexpectedly opts into/.test(error)));
+assert.ok(hiddenScopeErrors(hiddenScopeMapping, hiddenScopeCurrent, accidentalOptIn, historicalHiddenScope)
+    .some(error => /destination-only consumer math-rain.html unexpectedly opts into/.test(error)));
+
+// An unscoped shared .hidden is never a valid new owner when unrelated pages
+// load the destination stylesheet; matching selectors alone are not proof.
+const unscopedHiddenCurrent = parseMap([
+    ['css/a.css', ''], ['css/b.css', ''],
+    ['css/layout.css', '@layer contracts{.hidden{display:none!important}}'],
+]);
+const unscopedHiddenMapping = {
+    ...hiddenScopeMapping,
+    id: 'fixture-dedupe-hidden-global-regression',
+    destination: destinationRef(catalogMap(unscopedHiddenCurrent).get('css/layout.css')[0]),
+};
+assert.ok(hiddenScopeErrors(unscopedHiddenMapping, unscopedHiddenCurrent)
+    .some(error => /destination-only consumers \(math-rain.html\)/.test(error)));
+
+const rootResetBase = parseMap([
+    ['css/root-a.css', '@layer reset{*{margin:0;padding:0;box-sizing:border-box}}'],
+    ['css/root-b.css', '@layer reset{*{margin:0;padding:0;box-sizing:border-box}}'],
+    ['css/layout.css', ''],
+]);
+const rootResetCurrent = parseMap([
+    ['css/root-a.css', ''],
+    ['css/root-b.css', ''],
+    ['css/layout.css', '@layer reset{html.game-reset, html.game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
+]);
+const rootResetBaseCatalogs = catalogMap(rootResetBase);
+const rootResetCurrentCatalogs = catalogMap(rootResetCurrent);
+const rootResetMapping = {
+    id: 'fixture-dedupe-root-reset',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(rootResetBaseCatalogs.get('css/root-a.css')[0]),
+        sourceRef(rootResetBaseCatalogs.get('css/root-b.css')[0]),
+    ],
+    destination: destinationRef(rootResetCurrentCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: false,
+    adoption: {
+        surface: 'root-class',
+        consumers: [
+            { sourcePath: 'css/root-a.css', pages: ['root-a.html'], rootClass: 'game-reset' },
+            { sourcePath: 'css/root-b.css', pages: ['root-b.html'], rootClass: 'game-reset' },
+        ],
+    },
+    reason: 'fixture document-root reset opt-in',
+    conflicts: { normal: [], important: [] },
+};
+const rootResetErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [],
+        },
+    },
+    state: { ...emptyState, migratedRules: [rootResetMapping] },
+    currentParsedByPath: rootResetCurrent,
+    baseParsedByPath: rootResetBase,
+    stylesheetLinks: {
+        'root-a.html': [
+            ['css/layout.css', []], ['css/root-a.css', []],
+        ],
+        'root-b.html': [
+            ['css/layout.css', []], ['css/root-b.css', []],
+        ],
+    },
+    htmlSources: new Map([
+        ['root-a.html', '<html class="game-reset"><body></body></html>'],
+        ['root-b.html', '<html class="game-reset"><body></body></html>'],
+    ]),
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: rootResetErrors,
+});
+assert.deepEqual(rootResetErrors, []);
+
+// The historic root opt-in must continue to be verified on each subsequent
+// PR, including when neither the CSS rules nor the ledger have changed.
+const historicalRootErrors = historicalDedupeErrors(
+    rootResetMapping, rootResetCurrent, [],
+    {
+        'root-a.html': [['css/layout.css', []], ['css/root-a.css', []]],
+        'root-b.html': [['css/layout.css', []], ['css/root-b.css', []]],
+    },
+    new Map([
+        ['root-a.html', '<html><body></body></html>'],
+        ['root-b.html', '<html class="game-reset"><body></body></html>'],
+    ]),
+);
+assert.ok(historicalRootErrors.some(error => error.includes('root-a.html must opt into .game-reset on its document root.')));
+
+// An unanchored `.game-reset` branch would let any descendant carrying the
+// class activate the reset for its subtree; only html.game-reset is reviewed.
+const unanchoredResetCurrent = parseMap([
+    ['css/root-a.css', ''],
+    ['css/root-b.css', ''],
+    ['css/layout.css', '@layer reset{.game-reset, .game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
+]);
+const unanchoredResetMapping = {
+    ...rootResetMapping,
+    id: 'fixture-dedupe-reset-unanchored',
+    destination: destinationRef(catalogMap(unanchoredResetCurrent).get('css/layout.css')[0]),
+};
+const unanchoredResetErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: { ...emptyState, migratedRules: [unanchoredResetMapping] },
+    currentParsedByPath: unanchoredResetCurrent,
+    baseParsedByPath: rootResetBase,
+    stylesheetLinks: {
+        'root-a.html': [['css/layout.css', []], ['css/root-a.css', []]],
+        'root-b.html': [['css/layout.css', []], ['css/root-b.css', []]],
+    },
+    htmlSources: new Map([
+        ['root-a.html', '<html class="game-reset"><body></body></html>'],
+        ['root-b.html', '<html class="game-reset"><body></body></html>'],
+    ]),
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: unanchoredResetErrors,
+});
+assert.ok(unanchoredResetErrors.some(error => error.includes('explicit html.game-reset scope')));
+
+// Inverse reset-layer fixture: a source in reset must not be deduplicated
+// into components, even if the destination selector and declaration digest
+// otherwise satisfy the dedupe contract.
+const relayeredResetCurrent = parseMap([
+    ['css/root-a.css', ''],
+    ['css/root-b.css', ''],
+    ['css/layout.css', '@layer components{html.game-reset, html.game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
+]);
+const relayeredResetMapping = {
+    ...rootResetMapping,
+    id: 'fixture-dedupe-reset-escaped-layer',
+    destination: destinationRef(catalogMap(relayeredResetCurrent).get('css/layout.css')[0]),
+};
+const relayeredResetErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: { ...emptyState, migratedRules: [relayeredResetMapping] },
+    currentParsedByPath: relayeredResetCurrent,
+    baseParsedByPath: rootResetBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: relayeredResetErrors,
+});
+assert.ok(relayeredResetErrors.some(error => /reset deduplication must keep every universal rule in reset/.test(error)));
+
+const missingAdoptionErrors = [];
+const missingAdoption = clone(dedupeMapping);
+delete missingAdoption.adoption;
+verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+        },
+    },
+    state: { ...emptyState, migratedRules: [missingAdoption] },
+    currentParsedByPath: dedupeCurrent,
+    baseParsedByPath: dedupeBase,
+    stylesheetLinks: {
+        'dedupe.html': [
+            ['css/a.css', []], ['css/b.css', []], ['css/layout.css', []],
+        ],
+    },
+    htmlSources: new Map([[
+        'dedupe.html', '<body><div class="a-hidden hidden"></div><div class="b-hidden hidden"></div></body>',
+    ]]),
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: missingAdoptionErrors,
+});
+assert.ok(missingAdoptionErrors.some(error => /selector changes require explicit per-source adoption evidence/.test(error)));
+
+// A dedupe can also reuse an existing shared destination. The destination is
+// consumed from both base/current residual catalogs so the ledger does not
+// require a duplicate copy or falsely report an unrelated edit.
+const reuseBase = parseMap([
+    ['css/a.css', '.a-icon-btn:active{transform:scale(0.92)!important}'],
+    ['css/b.css', '.b-icon-btn:active{transform:scale(0.92)!important}'],
+    ['css/layout.css', '@layer components{.game-icon-btn:active{transform:scale(0.92)!important}}'],
+]);
+const reuseCurrent = parseMap([
+    ['css/a.css', ''],
+    ['css/b.css', ''],
+    ['css/layout.css', '@layer components{.game-icon-btn:active{transform:scale(0.92)!important}}'],
+]);
+const reuseBaseCatalogs = catalogMap(reuseBase);
+const reuseMapping = {
+    id: 'fixture-dedupe-icon-active',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(reuseBaseCatalogs.get('css/a.css')[0]),
+        sourceRef(reuseBaseCatalogs.get('css/b.css')[0]),
+    ],
+    destination: destinationRef(reuseBaseCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: true,
+    adoption: {
+        surface: 'html-class',
+        consumers: [
+            { sourcePath: 'css/a.css', pages: ['reuse.html'], localClass: 'a-icon-btn', sharedClass: 'game-icon-btn' },
+            { sourcePath: 'css/b.css', pages: ['reuse.html'], localClass: 'b-icon-btn', sharedClass: 'game-icon-btn' },
+        ],
+    },
+    reason: 'fixture existing shared icon owner',
+    conflicts: { normal: [], important: [] },
+};
+const reuseErrors = [];
+const reuseResult = verifyRuleMigrations({
+    baseline: {
+        debt: {
+            unlayeredRules: [['css/a.css', '', '.a-icon-btn:active'], ['css/b.css', '', '.b-icon-btn:active']],
+        },
+    },
+    state: { ...emptyState, migratedRules: [reuseMapping] },
+    currentParsedByPath: reuseCurrent,
+    baseParsedByPath: reuseBase,
+    stylesheetLinks: {
+        'reuse.html': [
+            ['css/a.css', []], ['css/b.css', []], ['css/layout.css', []],
+        ],
+    },
+    htmlSources: new Map([[
+        'reuse.html', '<body><button class="a-icon-btn game-icon-btn"></button><button class="b-icon-btn game-icon-btn"></button></body>',
+    ]]),
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: reuseErrors,
+});
+assert.deepEqual(reuseErrors, []);
+assert.equal(reuseResult.newRuleDelta, -2);
+assert.deepEqual(reuseResult.importantDeclarationDelta.removed, [
+    ['css/a.css', '', '.a-icon-btn:active', 'transform', 'scale(0.92)!important'],
+    ['css/b.css', '', '.b-icon-btn:active', 'transform', 'scale(0.92)!important'],
+]);
+assert.deepEqual(reuseResult.importantDeclarationDelta.added, []);
+
+const badDedupeBase = parseMap([
+    ['css/a.css', '@layer components{*{margin:0}}'],
+    ['css/b.css', '@layer components{*{margin:0}}'],
+    ['css/layout.css', ''],
+]);
+const badDedupeCurrent = parseMap([
+    ['css/a.css', ''], ['css/b.css', ''],
+    ['css/layout.css', '@layer reset{*{margin:0}}'],
+]);
+const badDedupeBaseCatalogs = catalogMap(badDedupeBase);
+const badDedupeCurrentCatalogs = catalogMap(badDedupeCurrent);
+const badDedupeErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: {
+        ...emptyState,
+        migratedRules: [{
+            id: 'fixture-dedupe-reset-layered-source',
+            kind: 'dedupe',
+            sources: [
+                sourceRef(badDedupeBaseCatalogs.get('css/a.css')[0]),
+                sourceRef(badDedupeBaseCatalogs.get('css/b.css')[0]),
+            ],
+            destination: destinationRef(badDedupeCurrentCatalogs.get('css/layout.css')[0]),
+            reuseExistingDestination: false,
+            reason: 'invalid reset fixture',
+            conflicts: { normal: [], important: [] },
+        }],
+    },
+    currentParsedByPath: badDedupeCurrent,
+    baseParsedByPath: badDedupeBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: badDedupeErrors,
+});
+assert.ok(badDedupeErrors.some(error => /must keep every universal rule in reset/.test(error)));
 
 // Duplicate declarations of one property form an intra-rule fallback chain.
 // Splitting that chain across layers would replace source-order fallback with

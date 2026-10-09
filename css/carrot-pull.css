@@ -172,13 +172,6 @@
 }
 /* theme:end light */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     --tok-accent: #f08a3c;
@@ -191,7 +184,6 @@ body {
     font-family: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
-.hidden { display: none !important; }
 
 .cp-shell {
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
@@ -219,7 +211,6 @@ body {
     border-color: var(--cp-icon-btn-hover-border);
 }
 
-.cp-icon-btn:active { transform: scale(0.92); }
 
 .cp-topbar-center {
     flex-direction: column;

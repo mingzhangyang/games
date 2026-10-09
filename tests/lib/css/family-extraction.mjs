@@ -910,12 +910,6 @@ export function applyReviewedSelectorNarrowingsToImportant(rows, extractions, er
     return projected;
 }
 
-function totalRules(parsedByPath) {
-    let total = 0;
-    for (const parsed of parsedByPath.values()) total += (parsed.rules || []).length;
-    return total;
-}
-
 function escapeRegExp(value) {
     return value.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
@@ -1431,6 +1425,7 @@ export function verifyFamilyExtractions({
     const extensions = new Map(orderedExtractions.map(extraction =>
         [extraction.id, resolveFamilyExtension(extraction, orderedExtractions, errors)]));
     const newExtractions = orderedExtractions.filter(extraction => !baseById.has(extraction.id));
+    const newRuleDelta = newExtractions.reduce((sum, extraction) => sum + extraction.expectedRuleDelta, 0);
     for (const extraction of newExtractions) {
         verifyNewExtraction(
             root, extraction, currentParsedByPath, baseParsedByPath,
@@ -1438,15 +1433,10 @@ export function verifyFamilyExtractions({
             extensions.get(extraction.id),
         );
     }
-    if (newExtractions.length) {
-        const actualDelta = totalRules(currentParsedByPath) - totalRules(baseParsedByPath);
-        const expectedDelta = newExtractions.reduce((sum, extraction) => sum + extraction.expectedRuleDelta, 0);
-        if (actualDelta !== expectedDelta) {
-            errors.push('family extraction transaction changed the static rule population by ' + actualDelta
-                + ', expected ' + expectedDelta + '.');
-        }
-    }
-
+    // Rule population is a cross-transaction invariant: verify-css-debt
+    // combines this family delta with rule/dedupe migration deltas against the
+    // comparison base. A family-only whole-tree check would reject valid
+    // changes containing both types of migration.
     return {
         cssPaths,
         totalRuleDelta,
@@ -1459,5 +1449,6 @@ export function verifyFamilyExtractions({
         externalRuleChanges,
         extractions: [...currentById.values()],
         newExtractionIds: newExtractions.map(extraction => extraction.id),
+        newRuleDelta,
     };
 }

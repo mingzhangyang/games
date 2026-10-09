@@ -1,0 +1,585 @@
+{
+  "id": "w3-components-game-icon-btn-active",
+  "kind": "dedupe",
+  "sources": [
+    {
+      "path": "css/carrot-pull.css",
+      "context": "",
+      "selector": ".cp-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "ad198f9a16d37dd4d640e5d6a6705daa91dac61e2e5c2c767cd1423df551d023",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/circuit.css",
+      "context": "",
+      "selector": ".cc-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "05315c5e0e269b898e9df313c212032a65d61ac1da50822ba2bbe79e7217f8f4",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/crystal-bloom.css",
+      "context": "",
+      "selector": ".cb-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "22d99b4b28e3268380d8f219dcd58244786ac5b9de64d1f3656439c0ab85fca1",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/echo-cave.css",
+      "context": "",
+      "selector": ".ec-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "365b1817876febf30e008229d981aafccd10089a55199b960f4018a887b44232",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/flame-verse.css",
+      "context": "",
+      "selector": ".fv-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "3c12ff0de4317e20eaa150705693bd4c86e7b584b1cc09d0bb64a075c70c5da3",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/gravity.css",
+      "context": "",
+      "selector": ".gd-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "4fb2335d5e4f4b9cb4b02435b1ca5c9f964aeb847a0a62189b07ebb2375b6d9a",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/hoop-shot.css",
+      "context": "",
+      "selector": ".hs-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "f0b203d7096ed1277b3615d58696583267b872e08910324cb73f372f98fc3b55",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/lumen.css",
+      "context": "",
+      "selector": ".lm-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "8e7260db490c351aa98c59c54e3fc797ec8a1b7e56e4eb36ab929868d396ef40",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/maxwell-demon.css",
+      "context": "",
+      "selector": ".md-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "d8bb6e59c14b23e5ae6f1f82425aad3634f26410226f8907768e80dd181cf227",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/minesweeper.css",
+      "context": "",
+      "selector": ".ms-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "05c2d8aae3346b2470662ef5553fced4b8c0903e07348e45e94999ee699edb45",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/needle-awn.css",
+      "context": "",
+      "selector": ".na-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "cf584fb94918cbc468eadb5c5dfcd4910342a3f43ed2b1dc475bb6b1bd1a9fb8",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/planet-merge.css",
+      "context": "",
+      "selector": ".pm-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "efc48e0f9704327d382c85a1ae651e3a2cd8e0eef72add688f022e62033a045a",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/reversi.css",
+      "context": "",
+      "selector": ".rv-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "7954d71e536b4524e849cb23e59c13853d4d04f7e29c860430d64aac57b61413",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/ripple-duet.css",
+      "context": "",
+      "selector": ".rd-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "1857e66e920162cf5b99cbe4833af24c7c4559ac7b802bd982ad814b3a417843",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/shadow-loom.css",
+      "context": "",
+      "selector": ".sl-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "2871bff99da80d9a64eb3ef787d12359169d1baaaddd0ccb8dc552395f5323df",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/silk-dew.css",
+      "context": "",
+      "selector": ".sd-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "927454328df5c30ce7f34c15077b89d56d25def1851909e2146ee104fac80245",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/sword-flight.css",
+      "context": "",
+      "selector": ".sf-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "f0948b29090bf56b82482f38861548fbb6365975152e225d58992a4d3135c890",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    },
+    {
+      "path": "css/tower-defense.css",
+      "context": "",
+      "selector": ".td-icon-btn:active",
+      "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "selectorDigest": "4192903e8f644ecae1a47be22b7bd247cbfd2e597920f4de8d4bb6898f29db57",
+      "layer": null,
+      "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+      "occurrence": 1,
+      "declarations": [
+        {
+          "property": "transform",
+          "value": [
+            [
+              "function-token",
+              "scale("
+            ],
+            [
+              "number-token",
+              "0.92"
+            ],
+            [
+              ")-token",
+              ")"
+            ]
+          ],
+          "important": false
+        }
+      ]
+    }
+  ],
+  "destination": {
+    "path": "css/layout.css",
+    "context": "",
+    "selector": ".game-icon-btn:active",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "65193b5da6ddcd082a385c0386af641734d5489ea19fb0806d0e63a9cbdf27ad",
+    "layer": "components",
+    "declarationDigest": "8ff269ac2b3cd5de3a3b7562ee0ed102cc2a2a00efe2d5fa33df154b87c4fd1c",
+    "occurrence": 1
+  },
+  "reuseExistingDestination": true,
+  "adoption": {
+    "surface": "html-class",
+    "consumers": [
+      { "sourcePath": "css/carrot-pull.css", "pages": ["carrot-pull.html"], "localClass": "cp-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/circuit.css", "pages": ["circuit.html"], "localClass": "cc-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/crystal-bloom.css", "pages": ["crystal-bloom.html"], "localClass": "cb-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/echo-cave.css", "pages": ["echo-cave.html"], "localClass": "ec-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/flame-verse.css", "pages": ["flame-verse.html"], "localClass": "fv-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/gravity.css", "pages": ["gravity-slingshot.html"], "localClass": "gd-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/hoop-shot.css", "pages": ["hoop-shot.html"], "localClass": "hs-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/lumen.css", "pages": ["lumen.html"], "localClass": "lm-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/maxwell-demon.css", "pages": ["maxwell-demon.html"], "localClass": "md-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/minesweeper.css", "pages": ["minesweeper.html"], "localClass": "ms-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/needle-awn.css", "pages": ["needle-awn.html"], "localClass": "na-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/planet-merge.css", "pages": ["planet-merge.html"], "localClass": "pm-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/reversi.css", "pages": ["reversi.html"], "localClass": "rv-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/ripple-duet.css", "pages": ["ripple-duet.html"], "localClass": "rd-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/shadow-loom.css", "pages": ["shadow-loom.html"], "localClass": "sl-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/silk-dew.css", "pages": ["silk-dew.html"], "localClass": "sd-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/sword-flight.css", "pages": ["sword-flight.html"], "localClass": "sf-icon-btn", "sharedClass": "game-icon-btn" },
+      { "sourcePath": "css/tower-defense.css", "pages": ["tower-defense.html"], "localClass": "td-icon-btn", "sharedClass": "game-icon-btn" }
+    ]
+  },
+  "reason": "Reuse the existing shared game-icon button active transform instead of page aliases.",
+  "conflicts": {
+    "normal": [],
+    "important": []
+  }
+}

@@ -122,13 +122,6 @@
 }
 /* theme:end light */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     background:
@@ -142,12 +135,10 @@ body {
     --tok-cold: #6fd8ff;   /* 波谷 */
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 HUD ── */
 
 .rd-icon-btn:hover { background: var(--rd-icon-btn-hover-bg); }
-.rd-icon-btn:active { transform: scale(0.92); }
 
 .rd-hud-level {
     font-size: 13.5px;

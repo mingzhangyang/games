@@ -38,7 +38,6 @@ body.fs-body {
     -webkit-font-smoothing: antialiased;
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏：透明、只保留轻微对比 ── */
 .fs-icon-btn {

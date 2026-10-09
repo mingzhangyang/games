@@ -46,7 +46,8 @@ export function observeSemanticInputs(root, cssPaths, htmlPaths, runtimeStyles) 
 }
 
 export function verifySemanticSnapshot(
-    root, cssPaths, htmlPaths, runtimeStyles, errors, { allowedCssChanges = new Set() } = {},
+    root, cssPaths, htmlPaths, runtimeStyles, errors,
+    { allowedCssChanges = new Set() } = {},
 ) {
     const text = readFileSync(join(root, 'tests/css-semantic-p0-baseline.json'), 'utf8');
     if (createHash('sha256').update(text).digest('hex') !== SNAPSHOT_SHA256) {

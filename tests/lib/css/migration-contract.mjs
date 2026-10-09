@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
+import { verifyDedupeAdoption } from './dedupe-adoption.mjs';
+import { mappedStylesheetPaths, mappingDestinations, mappingSources } from './migration-record.mjs';
 import { propertiesOverlap } from './property-writes.mjs';
 
 const PRIORITIES = new Set(['normal', 'important']);
@@ -19,6 +21,10 @@ function contextText(rule) {
 
 function declarationKey(declaration) {
     return jsonKey(declaration);
+}
+
+function declarationValueText(value) {
+    return Array.isArray(value) ? value.map(token => token[1]).join('') : value;
 }
 
 function priorityOf(declaration) {
@@ -457,6 +463,17 @@ function verifyPartition(mapping, sourceRule, destinationRules, errors) {
     return assignments;
 }
 
+function verifyDedupePartition(mapping, sourceRule, destinationRules, errors) {
+    const actualDeclarations = destinationEntries(destinationRules).map(entry => entry.declaration);
+    if (!sameDeclarationMultiset(actualDeclarations, sourceRule.declarations)) {
+        errors.push(mapping.id + ': dedupe destination declarations must exactly match every source rule.');
+    }
+    for (const destination of destinationRules) {
+        if (!destination.layer) errors.push(mapping.id + ': dedupe destination must be explicitly layered.');
+    }
+    return destinationAssignments(sourceRule, destinationRules);
+}
+
 function validDeclarationSnapshot(declaration) {
     return declaration && !Array.isArray(declaration)
         && typeof declaration === 'object'
@@ -482,6 +499,10 @@ function validRuleRef(ref, { requireDeclarations = false } = {}) {
 
 function isRetirement(mapping) {
     return mapping?.kind === 'retire';
+}
+
+function isDeduplication(mapping) {
+    return mapping?.kind === 'dedupe';
 }
 
 const RESET_UNIVERSAL_SELECTORS = new Set(['*', '*, *::before, *::after']);
@@ -521,7 +542,10 @@ function verifyAccessibilityMappingInvariant(mapping, errors) {
 }
 
 function verifyResetMappingInvariant(mapping, errors) {
-    if (!(mapping.destinations || []).some(destination => destination?.layer === 'reset')) return true;
+    // A layered reset source cannot escape into a higher cascade layer,
+    // just as a newly created reset destination must satisfy reset policy.
+    if (mapping.source?.layer !== 'reset'
+        && !(mapping.destinations || []).some(destination => destination?.layer === 'reset')) return true;
 
     let valid = true;
     if (mapping.source.context !== ''
@@ -545,13 +569,127 @@ function verifyResetMappingInvariant(mapping, errors) {
     return valid;
 }
 
+function verifyDedupeResetMappingInvariant(mapping, errors) {
+    const sources = mapping.sources || [];
+    // Reset ownership is symmetric: source rules may not escape this policy
+    // merely because the destination was moved into another allowed layer.
+    if (mapping.destination?.layer !== 'reset'
+        && !sources.some(source => source?.layer === 'reset')) return true;
+
+    let valid = true;
+    if (mapping.destination.context !== '' || sources.some(source => source?.context !== '')) {
+        errors.push(mapping.id + ': reset deduplication is limited to top-level rules; conditional/nested resets require a separate contract.');
+        valid = false;
+    }
+    if (!['*', 'html.game-reset, html.game-reset *'].includes(mapping.destination.selector)
+        || sources.some(source => source?.selector !== '*')) {
+        errors.push(mapping.id + ': reset deduplication is limited to reviewed universal * rules or the explicit html.game-reset scope.');
+        valid = false;
+    }
+    if (mapping.destination.selector === 'html.game-reset, html.game-reset *'
+        && (mapping.adoption?.surface !== 'root-class'
+            || (mapping.adoption.consumers || []).some(consumer => consumer.rootClass !== 'game-reset'))) {
+        errors.push(mapping.id + ': scoped reset deduplication requires root-class adoption evidence for .game-reset.');
+        valid = false;
+    }
+    if (mapping.destination.layer !== 'reset' || sources.some(source => source?.layer !== 'reset')) {
+        errors.push(mapping.id + ': reset deduplication must keep every universal rule in reset.');
+        valid = false;
+    }
+    if (sources.some(source => (source?.declarations || []).some(declaration => declaration.important))) {
+        errors.push(mapping.id + ': reset deduplication accepts normal declarations only.');
+        valid = false;
+    }
+    if (sources.some(source => (source?.declarations || []).some(declaration => declaration.property.startsWith('--')))) {
+        errors.push(mapping.id + ': reset deduplication does not accept custom-property declarations.');
+        valid = false;
+    }
+    return valid;
+}
+
+function verifyDedupeMappingShape(mapping, allowedLayers, errors) {
+    let valid = true;
+    if (!Array.isArray(mapping.sources) || mapping.sources.length < 2) {
+        errors.push(mapping.id + ': dedupe mappings require at least two source rules.');
+        return false;
+    }
+    if (!validRuleRef(mapping.destination)) {
+        errors.push(mapping.id + ': dedupe mappings require one complete stable destination reference.');
+        valid = false;
+    }
+    if (mapping.destination?.layer !== null && mapping.destination?.layer !== undefined
+        && !allowedLayers.has(mapping.destination.layer)) {
+        errors.push(mapping.id + ': destination layer ' + mapping.destination.layer + ' is not reviewed.');
+        valid = false;
+    }
+    if (!mapping.destination?.layer) {
+        errors.push(mapping.id + ': dedupe destinations must be explicitly layered.');
+        valid = false;
+    }
+    if (typeof mapping.reason !== 'string' || !mapping.reason.trim()) {
+        errors.push(mapping.id + ': dedupe mappings require a non-empty reason.');
+        valid = false;
+    }
+    if (typeof mapping.reuseExistingDestination !== 'boolean') {
+        errors.push(mapping.id + ': dedupe mappings must explicitly declare reuseExistingDestination.');
+        valid = false;
+    }
+
+    const firstSource = mapping.sources[0] || {};
+    for (const source of mapping.sources) {
+        if (!validRuleRef(source, { requireDeclarations: true })) {
+            errors.push(mapping.id + ': every dedupe source must be a complete stable rule reference with a declaration snapshot.');
+            valid = false;
+            continue;
+        }
+        if (source.layer !== null && source.layer !== undefined && !allowedLayers.has(source.layer)) {
+            errors.push(mapping.id + ': source layer ' + source.layer + ' is not reviewed.');
+            valid = false;
+        }
+        if (declarationDigest(source.declarations) !== source.declarationDigest) {
+            errors.push(mapping.id + ': source declarationDigest does not match its declaration snapshot.');
+            valid = false;
+        }
+        if (firstSource && (source.context !== firstSource.context
+            || source.contextDigest !== firstSource.contextDigest
+            || source.declarationDigest !== firstSource.declarationDigest
+            || jsonKey(source.declarations) !== jsonKey(firstSource.declarations))) {
+            errors.push(mapping.id + ': dedupe sources must share one context and one exact declaration snapshot.');
+            valid = false;
+        }
+    }
+    if (validRuleRef(mapping.destination)) {
+        if (mapping.destination.context !== firstSource.context
+            || mapping.destination.contextDigest !== firstSource.contextDigest
+            || mapping.destination.declarationDigest !== firstSource.declarationDigest) {
+            errors.push(mapping.id + ': dedupe destination must preserve source context and declarations.');
+            valid = false;
+        }
+    }
+    if (validRuleRef(mapping.destination) && mapping.destination.selector !== firstSource.selector
+        && (!mapping.adoption || typeof mapping.adoption.surface !== 'string'
+            || !Array.isArray(mapping.adoption.consumers))) {
+        errors.push(mapping.id + ': dedupe selector changes require explicit per-source adoption evidence.');
+        valid = false;
+    }
+    for (const priority of PRIORITIES) {
+        if (!Array.isArray(mapping.conflicts?.[priority])) {
+            errors.push(mapping.id + ': conflicts.' + priority + ' must be an explicit array, even when empty.');
+            valid = false;
+        }
+    }
+    if (!verifyDedupeResetMappingInvariant(mapping, errors)) valid = false;
+    return valid;
+}
+
 function verifyMappingShape(mapping, allowedLayers, errors) {
     let valid = true;
     const kind = mapping.kind || 'migrate';
-    if (!['migrate', 'retire'].includes(kind)) {
-        errors.push(mapping.id + ': kind must be "migrate" or "retire".');
+    if (!['migrate', 'retire', 'dedupe'].includes(kind)) {
+        errors.push(mapping.id + ': kind must be "migrate", "retire", or "dedupe".');
         valid = false;
     }
+    if (isDeduplication(mapping)) return verifyDedupeMappingShape(mapping, allowedLayers, errors);
     if (!validRuleRef(mapping.source, { requireDeclarations: true })) {
         errors.push(mapping.id + ': source must be a complete stable rule reference with a declaration snapshot.');
         return false;
@@ -644,6 +782,7 @@ function stableRuleRows(catalog) {
 
 export function verifyRuleMigrations({
     baseline, state, currentParsedByPath, baseParsedByPath, stylesheetLinks,
+    htmlSources = new Map(),
     allowedLayers, layerOrder, baseState, externalRuleChanges = { base: [], current: [] },
     guardedCssPaths = new Set(), errors,
 }) {
@@ -660,9 +799,19 @@ export function verifyRuleMigrations({
     for (const mapping of mappings.values()) {
         if (!verifyMappingShape(mapping, allowedLayers, errors)) continue;
         validMappings.add(mapping.id);
-        if (mapping.source.layer === null) {
-            const sourceTuple = tupleKey(mapping.source?.path, mapping.source?.context, mapping.source?.selector);
-            subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
+        // Adoption is a continuing invariant of the append-only dedupe ledger,
+        // not a one-time proof. Recheck current HTML and linked stylesheets even
+        // after a mapping has entered the comparison base.
+        if (isDeduplication(mapping)) {
+            verifyDedupeAdoption(
+                mapping, mapping.sources, mapping.destination, coactivePages(stylesheetLinks), htmlSources, errors,
+            );
+        }
+        for (const source of mappingSources(mapping)) {
+            if (source?.layer === null) {
+                const sourceTuple = tupleKey(source?.path, source?.context, source?.selector);
+                subtractTuple(expectedDebt, sourceTuple, errors, mapping.id);
+            }
         }
     }
 
@@ -670,19 +819,26 @@ export function verifyRuleMigrations({
     const usedDestinations = new Set();
     const newMappingsByPath = new Map();
     const pendingConflictReviews = [];
+    const transactionExternalBase = [...(externalRuleChanges.base || [])];
+    const transactionExternalCurrent = [...(externalRuleChanges.current || [])];
+    const importantDeclarationDelta = { removed: [], added: [] };
 
     for (const mapping of mappings.values()) {
         if (baseMappings.has(mapping.id) || !validMappings.has(mapping.id)) continue;
 
-        const sourceKey = canonicalRefKey(mapping.source);
-        if (usedSources.has(sourceKey)) {
-            errors.push(mapping.id + ': source rule is claimed by more than one migration in this transaction.');
-        } else {
-            usedSources.add(sourceKey);
+        const sources = mappingSources(mapping);
+        const destinations = mappingDestinations(mapping);
+        for (const source of sources) {
+            const sourceKey = canonicalRefKey(source);
+            if (usedSources.has(sourceKey)) {
+                errors.push(mapping.id + ': source rule is claimed by more than one migration in this transaction.');
+            } else {
+                usedSources.add(sourceKey);
+            }
         }
 
         const currentDestinationRules = [];
-        for (const destination of mapping.destinations || []) {
+        for (const destination of destinations) {
             const catalog = currentCatalogs.get(destination.path) || [];
             const rule = findRule(catalog, destination, true);
             if (!rule) {
@@ -699,24 +855,87 @@ export function verifyRuleMigrations({
             currentDestinationRules.push(rule);
         }
 
-        const paths = new Set([mapping.source.path, ...(mapping.destinations || []).map(item => item.path)]);
+        const paths = mappedStylesheetPaths([mapping]);
         for (const path of paths) {
             if (!newMappingsByPath.has(path)) newMappingsByPath.set(path, []);
             newMappingsByPath.get(path).push(mapping);
         }
 
-        const baseCatalog = baseCatalogs.get(mapping.source?.path) || [];
-        const sourceRule = findRule(baseCatalog, mapping.source, true);
-        if (!sourceRule) {
-            errors.push(mapping.id + ': source rule was not present in the declared layer in the comparison base.');
+        const sourceRules = [];
+        for (const source of sources) {
+            const baseCatalog = baseCatalogs.get(source?.path) || [];
+            const sourceRule = findRule(baseCatalog, source, true);
+            if (!sourceRule) {
+                errors.push(mapping.id + ': source rule was not present in the declared layer in the comparison base.');
+                continue;
+            }
+            verifyRefDiagnostics(source, sourceRule, errors, mapping.id + ' source');
+            if (jsonKey(sourceRule.declarations) !== jsonKey(source.declarations)) {
+                errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
+            }
+            sourceRules.push(sourceRule);
+        }
+
+        if (!isRetirement(mapping)) {
+            for (const sourceRule of sourceRules) {
+                for (const declaration of sourceRule.declarations) {
+                    if (declaration.important) {
+                        importantDeclarationDelta.removed.push([
+                            sourceRule.path, sourceRule.context, sourceRule.selector,
+                            declaration.property, declarationValueText(declaration.value),
+                        ]);
+                    }
+                }
+            }
+            if (!(isDeduplication(mapping) && mapping.reuseExistingDestination)) {
+                for (const destinationRule of currentDestinationRules) {
+                    for (const declaration of destinationRule.declarations) {
+                        if (declaration.important) {
+                            importantDeclarationDelta.added.push([
+                                destinationRule.path, destinationRule.context, destinationRule.selector,
+                                declaration.property, declarationValueText(declaration.value),
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (isRetirement(mapping)) continue;
+
+        if (isDeduplication(mapping)) {
+            const destination = destinations[0];
+            const currentDestination = currentDestinationRules[0];
+            if (mapping.reuseExistingDestination) {
+                const baseDestination = findRule(baseCatalogs.get(destination?.path) || [], destination, true);
+                if (!baseDestination) {
+                    errors.push(mapping.id + ': reuseExistingDestination requires the destination to exist in the comparison base.');
+                } else {
+                    verifyRefDiagnostics(destination, baseDestination, errors, mapping.id + ' comparison-base destination');
+                    transactionExternalBase.push(baseDestination);
+                    if (currentDestination) transactionExternalCurrent.push(currentDestination);
+                }
+            } else if (findRule(baseCatalogs.get(destination?.path) || [], destination, true)) {
+                errors.push(mapping.id + ': a new dedupe destination must not already exist in the comparison base.');
+            }
+            for (const source of sources) {
+                const currentSource = findRule(currentCatalogs.get(source?.path) || [], source, true);
+                if (currentSource) {
+                    errors.push(mapping.id + ': dedupe source rule still exists in the current stylesheet: ' + jsonKey(source) + '.');
+                }
+            }
+            if (sourceRules.length === sources.length
+                && currentDestinationRules.length === destinations.length) {
+                for (const sourceRule of sourceRules) {
+                    const assignments = verifyDedupePartition(mapping, sourceRule, currentDestinationRules, errors);
+                    pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules, assignments });
+                }
+            }
             continue;
         }
-        verifyRefDiagnostics(mapping.source, sourceRule, errors, mapping.id + ' source');
-        if (jsonKey(sourceRule.declarations) !== jsonKey(mapping.source.declarations)) {
-            errors.push(mapping.id + ': source declaration snapshot does not match the comparison base.');
-        }
-        if (isRetirement(mapping)) continue;
-        if (currentDestinationRules.length === (mapping.destinations || []).length) {
+
+        const sourceRule = sourceRules[0];
+        if (sourceRule && currentDestinationRules.length === destinations.length) {
             const assignments = verifyPartition(mapping, sourceRule, currentDestinationRules, errors);
             pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules, assignments });
         }
@@ -725,10 +944,7 @@ export function verifyRuleMigrations({
     compareCounts(countsFromCurrentUnlayered(currentCatalogs), expectedDebt, errors,
         'unlayered rule debt must equal immutable P0 minus registered migrations');
 
-    const mappedCssPaths = new Set([...mappings.values()].flatMap(mapping => [
-        mapping.source?.path,
-        ...(mapping.destinations || []).map(item => item.path),
-    ]).filter(Boolean));
+    const mappedCssPaths = mappedStylesheetPaths(mappings.values());
     if (mappings.size) mappedCssPaths.add('css/tokens.css');
     const externallyReviewedPaths = new Set([
         ...(externalRuleChanges.base || []).map(rule => rule.path),
@@ -750,12 +966,12 @@ export function verifyRuleMigrations({
         const pathMappings = newMappingsByPath.get(path) || [];
         const baseCatalog = baseCatalogs.get(path) || [];
         const currentCatalog = currentCatalogs.get(path) || [];
-        const sourceRefs = pathMappings.filter(mapping => mapping.source.path === path)
-            .map(mapping => mapping.source);
+        const sourceRefs = pathMappings
+            .flatMap(mapping => mappingSources(mapping).filter(item => item?.path === path));
         const destinationRefs = pathMappings
-            .flatMap(mapping => (mapping.destinations || []).filter(item => item.path === path));
-        const externalBaseRefs = (externalRuleChanges.base || []).filter(rule => rule.path === path);
-        const externalCurrentRefs = (externalRuleChanges.current || []).filter(rule => rule.path === path);
+            .flatMap(mapping => mappingDestinations(mapping).filter(item => item?.path === path));
+        const externalBaseRefs = transactionExternalBase.filter(rule => rule.path === path);
+        const externalCurrentRefs = transactionExternalCurrent.filter(rule => rule.path === path);
         const baseResidual = filterCatalog(filterCatalog(baseCatalog, sourceRefs, true), externalBaseRefs, true);
         const currentResidual = filterCatalog(filterCatalog(currentCatalog, destinationRefs, true), externalCurrentRefs, true);
         const residualMatches = jsonKey(stableRuleRows(baseResidual)) === jsonKey(stableRuleRows(currentResidual));
@@ -806,16 +1022,54 @@ export function verifyRuleMigrations({
         stylesheetLinks, layerOrder, errors,
     );
 
-    for (const { mapping, sourceRule, currentDestinationRules } of pendingConflictReviews) {
-        verifyConflictReview(mapping,
-            analyzeExactConflicts(
+    const dedupeComputedById = new Map();
+    for (const pending of pendingConflictReviews) {
+        const { mapping, sourceRule, currentDestinationRules } = pending;
+        let computed;
+        if (isDeduplication(mapping)) {
+            if (!dedupeComputedById.has(mapping.id)) {
+                const aggregate = { normal: [], important: [] };
+                const seen = { normal: new Set(), important: new Set() };
+                for (const candidate of pendingConflictReviews.filter(item => item.mapping.id === mapping.id)) {
+                    const candidateComputed = analyzeExactConflicts(
+                        mapping, candidate.sourceRule, candidate.currentDestinationRules,
+                        baseCatalogs, stylesheetLinks, layerOrder, projectedLayers,
+                    );
+                    for (const priority of PRIORITIES) {
+                        for (const row of candidateComputed[priority]) {
+                            const key = jsonKey(row);
+                            if (!seen[priority].has(key)) {
+                                seen[priority].add(key);
+                                aggregate[priority].push(row);
+                            }
+                        }
+                    }
+                }
+                dedupeComputedById.set(mapping.id, aggregate);
+            }
+            computed = dedupeComputedById.get(mapping.id);
+        } else {
+            computed = analyzeExactConflicts(
                 mapping, sourceRule, currentDestinationRules, baseCatalogs,
                 stylesheetLinks, layerOrder, projectedLayers,
-            ), errors);
+            );
+        }
+        verifyConflictReview(mapping, computed, errors);
     }
+
+    const newMappings = [...mappings.values()].filter(mapping => !baseMappings.has(mapping.id));
+    const newRuleDelta = newMappings.reduce((delta, mapping) => {
+        if (isDeduplication(mapping)) {
+            return delta + (mapping.reuseExistingDestination ? 0 : 1) - mappingSources(mapping).length;
+        }
+        if (isRetirement(mapping)) return delta - 1;
+        return delta + mappingDestinations(mapping).length - 1;
+    }, 0);
 
     return {
         mappedCssPaths,
         newMigrationCount: [...mappings.keys()].filter(id => !baseMappings.has(id)).length,
+        newRuleDelta,
+        importantDeclarationDelta,
     };
 }

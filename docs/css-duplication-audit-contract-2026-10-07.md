@@ -49,6 +49,38 @@ The default output prints the global classification summary and the highest-retu
 
 The committed baseline is mandatory. Counts, family counts and the membership digest are all verified; setting `baseline` to `null` is itself a CI failure. Future family extraction must update the baseline only as part of an explicitly reviewed CSS transaction.
 
+### W3 hidden-state scope review (PR #122, 2026-10-09)
+
+The W3 dedupe changes the *one* shared `css/layout.css` selector from `.hidden` to
+`html.game-hidden-contract .hidden`, while retaining `display: none !important` in
+`@layer contracts`. The scoped selector affects only the 20 former source stylesheet
+consumers that explicitly opt in on their document root; unrelated layout consumers such as
+Math Rain keep their distinct opacity/visibility transition behavior. Current CSS differs
+from the preceding PR head only in that reviewed rule and its explanatory comment.
+
+The Architecture v2 run for `b07866f` computed the following audit result:
+
+- **Static ordinary rules:** 2,651 (unchanged)
+- **Classification counts:** exact 408, structural 65, intentional-local 2,178 (unchanged)
+- **Families:** 97 exact and 19 structural (unchanged)
+- **Classification digest:** `64a13b0c768bc16eeb3f6d2aef8989aaabf57d98434bf7741d7110185e193a9f` → `cdc787170a5f3afd633e56f532741fd0560899f66d1adcfdb32917cc6c97665e`
+
+This is a single intentional selector-identity change, not a new extraction or a changed
+classification policy. The pinned membership digest has been advanced to the observed value;
+`verify-css-duplication` still checks all original metrics and the full digest. CSS migration,
+Math Rain style/smoke, and the new computed-style hidden-contract browser regressions also
+passed in that run. Do not edit immutable P0/P5 evidence or disable the membership assertion.
+
+A follow-up review anchored the scoped reset to the document root:
+`.game-reset, .game-reset *` → `html.game-reset, html.game-reset *` in `@layer reset`.
+Every opted-in page already carries `game-reset` on `<html>` only, so matched elements are
+unchanged; the change only stops a descendant `game-reset` class from activating the reset
+for its subtree. Declarations and layer are unchanged.
+
+- **Static ordinary rules / classification counts / families:** unchanged (2,651; 408/65/2,178; 97/19)
+- **Classification digest:** `cdc787170a5f3afd633e56f532741fd0560899f66d1adcfdb32917cc6c97665e` → `e75532c2388ae2db7f5bd5a7c4382b4f3255e307d787ba46c884ee51b02a9b02`
+
+
 ## Hard boundaries
 
 This PR must not use duplicate counts as a target metric and must not change production CSS merely to improve the numbers. In particular:

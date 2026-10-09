@@ -3,13 +3,6 @@
    Oriental Xianxia Kinetic Flight Action
    ───────────────────────────────────────────── */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 :root {
     --color-bg: #030816;
@@ -38,7 +31,6 @@ body {
     color: var(--color-text);
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 HUD ── */
 
@@ -46,7 +38,6 @@ body {
     background: rgb(255, 255, 255, 0.14);
     border-color: rgb(56, 189, 248, 0.45);
 }
-.sf-icon-btn:active { transform: scale(0.92); }
 
 .sf-stage-label {
     font-size: 14px;

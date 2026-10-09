@@ -306,9 +306,11 @@ combined push; do not trigger a full CI run for each fixture correction.
 
 The verifier no longer treats a P0 fingerprint change as migration authority. Rule migrations
 are append-only records compared against the pull request base (the Architecture workflow
-checks out full history and provides `ARCHITECTURE_BASE_SHA`). A mapping contains a stable
+checks out full history and provides `ARCHITECTURE_BASE_SHA`). A normal mapping contains a stable
 source occurrence, one or more destinations in the same stylesheet, the source declaration
-snapshot, and explicit normal/important conflict reviews.
+snapshot, and explicit normal/important conflict reviews. W3 adds a narrowly scoped `dedupe`
+mapping for exact cross-file duplicate families: it lists every source occurrence and one
+explicitly new or reused shared destination.
 
 The contract now provides:
 
@@ -322,8 +324,10 @@ The contract now provides:
    and same-layer physical order must preserve their cascade. This includes shorthand/longhand
    pairs, `all`, logical/physical aliases and duplicate properties. The write-set model is
    backed by pinned `mdn-data` shorthand metadata and explicit logical/physical equivalence
-   rules; unknown non-custom properties fail closed. Selector/context rewrites and
-   cross-stylesheet moves are outside P2 and fail.
+   rules; unknown non-custom properties fail closed. Selector/context rewrites and arbitrary
+   cross-stylesheet moves are outside P2 and fail. The reviewed `dedupe` form is the only
+   cross-file exception, and it requires identical context/declarations plus an explicit
+   destination mode.
 3. Relayering of existing layered rules as well as unlayered-debt reduction, so
    `science-showcase.css` can move from `components` to `showcase` without pretending it
    was unlayered P0 debt.
@@ -337,13 +341,36 @@ The contract now provides:
    and requires the pre/post cascade precedence relation to remain unchanged; this covers new
    mappings against co-migrated, previously migrated and still-unlayered peers. Normal and
    important reviews remain separate because layer precedence reverses under `!important`.
-   Different-selector overlap still belongs to browser/geometry evidence.
+   Different-selector overlap still belongs to browser/geometry evidence. A dedupe mapping that
+   changes selectors must additionally carry per-source adoption evidence checked against every
+   stylesheet consumer and its HTML anchor. A **new** shared destination must also be proven
+   harmless on destination-only consumers: either a reviewed document-root opt-in selector
+   excludes those pages, or the mapping is rejected. The opt-in must remain absent on every
+   destination-only page, including after the migration becomes historical; reused destinations
+   are already active and do not create this new-consumer exposure. A **new** destination
+   must also have a match set exactly equal to the union of every participating source
+   selector on each source consumer page (both old-to-new and new-to-old).
+   For `html-class` rewrites the automatic proof deliberately supports only an exact
+   single-class substitution with an identical simple state pseudo-class
+   (e.g. `.xx-icon-btn:active` → `.game-icon-btn:active`), and rejects combinators,
+   selector lists, changed pseudo-states, or duplicated sources in one stylesheet.
+   It checks actual HTML class sets against all active source stylesheets to reject
+   extra destination-only matches, then rechecks historical ledgers on subsequent PRs.
+   An existing reused destination may match other elements because that behavior
+   predates the transaction; its unchanged comparison-base occurrence must be verified
+   separately. Scoped reset/hidden states use only the explicitly reviewed
+   `root-class` patterns; unproved `body-class` selector rewrites fail closed.
+   Static HTML does not prove every JavaScript-created DOM state or cascade outcome:
+   browser interaction/computed-style checks remain mandatory for runtime changes,
+   before any reviewer claims complete behavioral equivalence.
 6. The lowest `reset` layer is policy-constrained, not merely an allowed layer name. A mapping
    targeting `reset` must be a top-level reviewed universal selector (`*` or
    `*, *::before, *::after`) and contain only normal declarations; the whole mapped rule stays
-   in `reset`. Negative fixtures reject non-universal, conditional/nested and `!important`
-   reset mappings so reduced-motion/accessibility rules cannot accidentally gain reversed
-   important-layer precedence.
+   in `reset`. A dedupe target may also be the explicit scoped selector `html.game-reset, html.game-reset *`,
+   but then every source stylesheet consumer must provide root-class adoption evidence. This
+   applies to every source and the destination of a `dedupe` mapping as well. Negative fixtures
+   reject non-universal, conditional/nested and `!important` reset mappings so reduced-motion/
+   accessibility rules cannot accidentally gain reversed important-layer precedence.
 7. Residual base→head comparison for every mapped stylesheet. Registering one rule does not
    exempt unrelated rules in that file from semantic verification. In addition to ordinary
    rules, canonical keyframe bodies and every non-`@layer` at-rule retain parent context,

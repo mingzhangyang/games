@@ -204,13 +204,6 @@
 }
 /* theme:end light */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 :root {
     --bg: #0a0e24;
@@ -252,7 +245,6 @@ body {
     color: var(--text);
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 ── */
 

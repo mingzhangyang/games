@@ -132,13 +132,6 @@
 }
 /* theme:end light */
 
-@layer reset {
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-}
 
 body {
     background:
@@ -147,12 +140,10 @@ body {
     color: var(--tok-text);
 }
 
-.hidden { display: none !important; }
 
 /* ── 顶栏 ── */
 
 .ms-icon-btn:hover { background: var(--ms-icon-btn-hover-bg); }
-.ms-icon-btn:active { transform: scale(0.92); }
 
 .ms-counter {
     display: flex;

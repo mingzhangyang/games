@@ -85,13 +85,27 @@
     }
 }
 
-/* ── 基础重置：统一 border-box（此前散落在各页 CSS，新页无需再写） ── */
+/* ── 基础重置：统一页面默认间距与 border-box ── */
 @layer reset {
+html.game-reset,
+html.game-reset * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 *,
 *::before,
 *::after {
     box-sizing: border-box;
 }
+}
+
+/* ── 显式启用的共享隐藏契约；不覆盖未迁移页面的淡入淡出状态 ── */
+@layer contracts {
+    html.game-hidden-contract .hidden {
+        display: none !important;
+    }
 }
 
 /* ── 页面容器：单列居中的移动优先栏 ── */

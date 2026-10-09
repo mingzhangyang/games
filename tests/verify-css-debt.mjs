@@ -16,10 +16,12 @@ import { verifyActivationSnapshot } from './lib/css/activation.mjs';
 import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
+import { mappedStylesheetPaths } from './lib/css/migration-record.mjs';
 import { readMigrationState, readMigrationStateAtGit } from './lib/css/migration-state.mjs';
 import {
-    applyReviewedSelectorNarrowingsToImportant, verifyFamilyExtractions,
+    verifyFamilyExtractions,
 } from './lib/css/family-extraction.mjs';
+import { verifyStaticRulePopulation } from './lib/css/rule-population.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -111,6 +113,41 @@ function sameJson(left, right) {
     return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function declarationValueText(value) {
+    return Array.isArray(value) ? value.map(token => token[1]).join('') : value;
+}
+
+function importantRowsFromParsed(path, parsed) {
+    return (parsed?.declarations || [])
+        .filter(declaration => declaration.selector && hasImportantPriority(declaration.value))
+        .map(declaration => [
+            path, declaration.context.join(' / '), declaration.selector,
+            declaration.property, declaration.value,
+        ]);
+}
+
+function importantRowsFromIndexedRule(rule) {
+    return (rule?.declarations || [])
+        .filter(declaration => declaration.important)
+        .map(declaration => [
+            rule.path, rule.context, rule.selector,
+            declaration.property, declarationValueText(declaration.value),
+        ]);
+}
+
+function applyImportantRows(expected, removed, added, errors, label) {
+    for (const row of removed) {
+        const index = expected.findIndex(candidate => sameJson(candidate, row));
+        if (index < 0) {
+            errors.push(label + ' tried to remove a tuple absent from the comparison-base snapshot: '
+                + JSON.stringify(row));
+        } else {
+            expected.splice(index, 1);
+        }
+    }
+    expected.push(...added);
+}
+
 function verifyPluginRetirementContract(errors) {
     const viteConfig = readFileSync(join(ROOT, 'vite.config.js'), 'utf8');
     const sharedCssFirstPath = join(ROOT, 'tools/lib/shared-css-first.mjs');
@@ -196,13 +233,14 @@ function verifyProject() {
         errors.push('Active HTML inventory changed; review page/stylesheet ownership without editing immutable P0.');
     }
 
-    const declaredMappedPaths = new Set((MIGRATION_STATE.migratedRules || []).flatMap(mapping => [
-        mapping.source?.path,
-        ...(mapping.destinations || []).map(destination => destination.path),
-    ]).filter(Boolean));
+    // Use the same migration schema normalizer as verifyRuleMigrations. Dedupe
+    // mappings own multiple source files and a singular shared destination;
+    // legacy-only path extraction silently rejected their new @layer blocks.
+    const declaredMappedPaths = mappedStylesheetPaths(MIGRATION_STATE.migratedRules || []);
     const migrationStarted = (MIGRATION_STATE.migratedRules || []).length > 0;
     const currentParsedByPath = new Map();
     const stylesheetLinks = {};
+    const htmlSources = new Map();
     const actualDebt = {
         unlayeredRules: [],
         unlayeredKeyframes: [],
@@ -276,6 +314,7 @@ function verifyProject() {
 
     for (const path of htmlPaths) {
         const html = readFileSync(join(ROOT, path), 'utf8');
+        htmlSources.set(path, html);
         const scanned = scanHtml(path, html);
         stylesheetLinks[path] = scanned.links;
         actualDebt.inlineStyleRules.push(...scanned.inlineRules);
@@ -368,6 +407,11 @@ function verifyProject() {
         }
     }
 
+    const baseStaticOrdinaryRules = [...baseParsedByPath.values()]
+        .reduce((total, parsed) => total + (parsed?.rules || []).length, 0);
+    const baseImportantDeclarations = [...baseParsedByPath.entries()]
+        .flatMap(([path, parsed]) => importantRowsFromParsed(path, parsed));
+
     const familyResult = verifyFamilyExtractions({
         root: ROOT,
         comparisonBase,
@@ -391,11 +435,6 @@ function verifyProject() {
         }
     }
 
-    const expectedStaticOrdinaryRules = p5FrozenCounts.staticOrdinaryRules + familyResult.totalRuleDelta;
-    if (currentCompatibilityCounts.staticOrdinaryRules !== expectedStaticOrdinaryRules) {
-        errors.push('Static ordinary rule population differs from P5 plus reviewed family extractions: '
-            + currentCompatibilityCounts.staticOrdinaryRules + ' !== ' + expectedStaticOrdinaryRules + '.');
-    }
     const familyAdjustedBaseline = {
         ...BASELINE,
         debt: {
@@ -410,11 +449,20 @@ function verifyProject() {
         currentParsedByPath,
         baseParsedByPath,
         stylesheetLinks: BASELINE.stylesheetLinks,
+        htmlSources,
         allowedLayers: ALLOWED_LAYERS,
         layerOrder: REVIEWED_LAYER_ORDER,
         baseState,
         externalRuleChanges: familyResult.externalRuleChanges,
         guardedCssPaths: familyResult.cssPaths,
+        errors,
+    });
+
+    verifyStaticRulePopulation({
+        baseCount: baseStaticOrdinaryRules,
+        currentCount: currentCompatibilityCounts.staticOrdinaryRules,
+        familyRuleDelta: familyResult.newRuleDelta,
+        migrationRuleDelta: migrationResult.newRuleDelta,
         errors,
     });
 
@@ -427,15 +475,33 @@ function verifyProject() {
     for (const key of Object.keys(actualDebt)) {
         actualDebt[key] = sortTuples(actualDebt[key]);
         if (key === 'unlayeredRules') continue;
-        // Reviewed family selector narrowings keep every !important declaration and only
-        // re-key it under the narrowed selector; everything else stays exactly P0.
-        const expected = sortTuples(key === 'importantDeclarations'
-            ? applyReviewedSelectorNarrowingsToImportant(BASELINE.debt[key], familyResult.extractions, errors)
+        // The comparison-base CSS already contains historical selector narrowings and
+        // migrations; only current family/rule transactions are applied below.
+        let expected = sortTuples(key === 'importantDeclarations'
+            ? baseImportantDeclarations
             : BASELINE.debt[key] || []);
+        if (key === 'importantDeclarations') {
+            const familyBaseRows = (familyResult.externalRuleChanges?.base || [])
+                .flatMap(rule => importantRowsFromIndexedRule(rule));
+            const familyCurrentRows = (familyResult.externalRuleChanges?.current || [])
+                .flatMap(rule => importantRowsFromIndexedRule(rule));
+            applyImportantRows(
+                expected, familyBaseRows, familyCurrentRows, errors,
+                'family extraction important-declaration transaction',
+            );
+            applyImportantRows(
+                expected,
+                migrationResult.importantDeclarationDelta.removed,
+                migrationResult.importantDeclarationDelta.added,
+                errors,
+                'importantDeclarations migration',
+            );
+            expected = sortTuples(expected);
+        }
         const delta = multisetDelta(actualDebt[key], expected);
         if (delta.added.length || delta.removed.length) {
             errors.push(
-                key + ' differs from the immutable P0 CSS snapshot (' + delta.added.length
+                key + ' differs from the comparison base plus reviewed current transactions (' + delta.added.length
                 + ' added, ' + delta.removed.length + ' removed); do not edit the P0 snapshot to hide migration progress.',
             );
             if (delta.added.length) errors.push('  new: ' + JSON.stringify(delta.added.slice(0, 3)));
@@ -465,7 +531,7 @@ function verifyProject() {
         + runtimeKeyframes + ' · unlayered runtime keyframes: ' + runtimeUnlayeredKeyframes);
     console.log('  inline style blocks/rules/attributes: ' + actualDebt.inlineStyleBlocks.length + '/'
         + actualDebt.inlineStyleRules.length + '/' + actualDebt.inlineStyleAttributes.length);
-    console.log('  static ordinary rule count matches P5 plus reviewed family-extraction deltas; unlayered debt matches both append-only ledgers.');
+    console.log('  static ordinary rule count matches the comparison base plus current family/rule deltas; unlayered debt matches both append-only ledgers.');
     console.log('  reviewed family extractions: ' + (familyResult.newExtractionIds.length
         ? familyResult.newExtractionIds.join(', ') : 'no new transaction in this diff'));
     console.log('  immutable P0/P5 evidence, script activation, stylesheet source order, and current layer map all match.');
