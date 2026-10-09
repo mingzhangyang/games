@@ -92,7 +92,7 @@ rootElementMatchesOld.set('both.html',
 assert.ok(verify({
     mapping: rootMapping, sources: rootRules, destination: rootTarget, html: rootElementMatchesOld,
 }).some(e => /source selector matches the document root/.test(e)),
-    'a root-scoped descendant selector must not silently omit a source match on the document element');
+'a root-scoped descendant selector must not silently omit a source match on the document element');
 
 const withDestinationOnly = new Map(pages);
 withDestinationOnly.set('css/layout.css', new Set(['both.html', 'math-rain.html']));
@@ -117,6 +117,6 @@ assert.ok(verify({
 assert.ok(verify({ html: html(
     '<button class="a-btn\u00a0shared-btn"></button><button class="b-btn shared-btn"></button>',
 ) }).some(e => /no .a-btn adoption anchor/.test(e)),
-    'HTML class names must be tokenized using ASCII whitespace, not JavaScript Unicode splitting');
+'HTML class names must be tokenized using ASCII whitespace, not JavaScript Unicode splitting');
 
 console.log('PASS dedupe two-way selector equivalence / root and destination-only checks');
