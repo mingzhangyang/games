@@ -88,7 +88,7 @@
 - `.hidden`（20 份）：在 `layout.css` 里建共享规则，删除页面副本。注意有的页面靠 `.hidden` 驱动 `:has(> .game-overlay--menu:not(.hidden))`，语义必须保持一致。
 - `.xx-icon-btn:active`（18 份）：`layout.css` 已有 `.game-icon-btn:active { transform: scale(0.92); }`。确认各页都挂了 `game-icon-btn`，并在账本中逐个记录 HTML 采用证据后，页面副本直接退役。
 - `*`（22 份）：审计把它和 reset 层的 `*, *::before, *::after` 算成两个选择器族。W3 将页面 reset 收口到显式 `html.game-reset` 采用的 `.game-reset, .game-reset *`；未迁移页面不受影响，契约要求每个 stylesheet consumer 都有 root-class 证据，并保留反向失败夹具。
-- 实际删除 58 条规则：20 份 `.hidden` 收口到 `@layer contracts`，18 份图标钮 active 复用 `game-icon-btn`，22 份页面 reset 收口到 `@layer reset`；Tetris 的额外触控 reset 保留。
+- 实际删除 58 条规则：20 份 `.hidden` 收口到显式 `html.game-hidden-contract` opt-in 的 `@layer contracts`，18 份图标钮 active 复用 `game-icon-btn`，22 份页面 reset 收口到 `@layer reset`；Tetris 的额外触控 reset 保留。
 
 ### W4 簇 A：开始菜单 / 选关（最大，拆两个 PR）
 - **A1（精确重复）**：`level-grid`、`level-label`、`subtitle`、`par`、`howto`、`card-line`、`start-footer`、`chip-stars`、`chip-num`、`mode-row`，以及它们的手机 `@media` 副本。约 145 条规则 / 412 条声明。不涉及主题收敛。

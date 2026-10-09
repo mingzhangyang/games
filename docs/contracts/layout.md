@@ -56,7 +56,7 @@
 ### 1.1.1 全站默认值与状态归属（W3，2026-10-08）
 
 - `layout.css` 的 `@layer reset` 是已接入页面的顶层默认 reset owner：带有 `game-reset` root opt-in（`class="game-reset"` 位于 `<html>`）的页面由 `.game-reset, .game-reset *` 统一 `margin: 0`、`padding: 0`、`box-sizing: border-box`，因此 document element 也与原通配符 reset 等价；旁边的 `*, *::before, *::after` 继续负责全站既有的伪元素 `box-sizing`。未迁移的消费者（例如首页、Gomoku、Firefly Signal）不自动获得新的元素级 margin/padding reset；页面 CSS 不得再复制这条 opt-in 规则；Tetris 的额外触控禁选行为仍属于它自己的 reset 例外。
-- `layout.css` 的 `@layer contracts` 是 `.hidden` 的唯一 owner，值固定为 `display: none !important`。菜单和结果层仍通过原有 `.hidden` class / `:has(...:not(.hidden))` 语义工作，页面只负责切换 class，不再声明页面副本。
+- `layout.css` 的 `@layer contracts` 是**已 opt-in 页面**的标准 `.hidden` 唯一 owner：选择器为 `html.game-hidden-contract .hidden`，声明固定为 `display: none !important`。仅 20 个原有 `display:none` 的游戏页面在文档 `<html>` 上带 `game-hidden-contract`；共享 layout 的其他消费者不能自动继承这项状态。Math Rain 的 `.screen.hidden` 是 `visibility/opacity` 淡入淡出（180ms），属于有意保留的**不同语义**，不参与这个 opt-in。菜单和结果层仍通过原有 `.hidden` / `:has(...:not(.hidden))` 语义工作。
 - 带有 `game-icon-btn` 的页面图标钮统一使用共享 `.game-icon-btn:active` 缩放；页面前缀的 `*.icon-btn:active` 不得重新出现。玩法按钮（如 `*-action-row`）不是这个语义 family，不能因为选择器形似就并入。
 - 这些跨文件精确重复由 `tests/css-layer-migration-state.json` 的 `w3-*` `kind: "dedupe"` 事务登记。事务必须列出所有源 occurrence、目标是新建还是复用；只要目标选择器不同，就必须附带逐源、逐 stylesheet consumer 的 adoption evidence（图标钮检查 HTML 是否同时带 shared class；reset 检查文档 `<html>` 根元素是否显式 opt-in），并通过 `verify-css-debt` 的声明与规则数 delta 校验；不能直接改 P0 快照来隐藏删除。
 

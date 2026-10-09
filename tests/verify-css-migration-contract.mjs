@@ -526,6 +526,94 @@ const historicalInactiveErrors = historicalDedupeErrors(
 );
 assert.ok(historicalInactiveErrors.some(error => /destination stylesheet css\/layout\.css is not active/.test(error)));
 
+// Destination-only pages must not silently inherit a newly introduced
+// shared selector. Math Rain's fading modal is such a consumer of layout.css.
+const hiddenScopeBase = parseMap([
+    ['css/a.css', '.hidden{display:none!important}'],
+    ['css/b.css', '.hidden{display:none!important}'],
+    ['css/layout.css', ''],
+]);
+const hiddenScopeCurrent = parseMap([
+    ['css/a.css', ''],
+    ['css/b.css', ''],
+    ['css/layout.css', '@layer contracts{html.game-hidden-contract .hidden{display:none!important}}'],
+]);
+const hiddenScopeBaseCatalogs = catalogMap(hiddenScopeBase);
+const hiddenScopeCurrentCatalogs = catalogMap(hiddenScopeCurrent);
+const hiddenScopeMapping = {
+    id: 'fixture-dedupe-hidden-scoped',
+    kind: 'dedupe',
+    sources: [
+        sourceRef(hiddenScopeBaseCatalogs.get('css/a.css')[0]),
+        sourceRef(hiddenScopeBaseCatalogs.get('css/b.css')[0]),
+    ],
+    destination: destinationRef(hiddenScopeCurrentCatalogs.get('css/layout.css')[0]),
+    reuseExistingDestination: false,
+    adoption: {
+        surface: 'root-class',
+        consumers: [
+            { sourcePath: 'css/a.css', pages: ['a.html'], rootClass: 'game-hidden-contract' },
+            { sourcePath: 'css/b.css', pages: ['b.html'], rootClass: 'game-hidden-contract' },
+        ],
+    },
+    reason: 'fixture scoped hidden owner without affecting a fading modal',
+    conflicts: { normal: [], important: [] },
+};
+const hiddenScopeStylesheets = {
+    'a.html': [['css/a.css', []], ['css/layout.css', []]],
+    'b.html': [['css/b.css', []], ['css/layout.css', []]],
+    'math-rain.html': [['css/layout.css', []]],
+};
+const hiddenScopeHtml = new Map([
+    ['a.html', '<html class="game-hidden-contract"><body><div class="hidden"></div></body></html>'],
+    ['b.html', '<html class="game-hidden-contract"><body><div class="hidden"></div></body></html>'],
+    ['math-rain.html', '<html><body><div class="screen hidden"></div></body></html>'],
+]);
+const hiddenScopeDebt = [['css/a.css', '', '.hidden'], ['css/b.css', '', '.hidden']];
+function hiddenScopeErrors(mapping, current, html = hiddenScopeHtml, baseState = emptyState) {
+    const errors = [];
+    verifyRuleMigrations({
+        baseline: { debt: { unlayeredRules: hiddenScopeDebt } },
+        state: { ...emptyState, migratedRules: [mapping] },
+        currentParsedByPath: current,
+        baseParsedByPath: baseState.migratedRules?.length ? current : hiddenScopeBase,
+        stylesheetLinks: hiddenScopeStylesheets,
+        htmlSources: html,
+        allowedLayers: ALLOWED,
+        layerOrder: LAYERS,
+        baseState,
+        errors,
+    });
+    return errors;
+}
+assert.deepEqual(hiddenScopeErrors(hiddenScopeMapping, hiddenScopeCurrent), []);
+const historicalHiddenScope = { ...emptyState, migratedRules: [hiddenScopeMapping] };
+assert.deepEqual(hiddenScopeErrors(hiddenScopeMapping, hiddenScopeCurrent, hiddenScopeHtml, historicalHiddenScope), []);
+
+// If a destination-only page adopts the shared state without being a source,
+// this must fail in current and historical transactions alike.
+const accidentalOptIn = new Map(hiddenScopeHtml);
+accidentalOptIn.set('math-rain.html',
+    '<html class="game-hidden-contract"><body><div class="screen hidden"></div></body></html>');
+assert.ok(hiddenScopeErrors(hiddenScopeMapping, hiddenScopeCurrent, accidentalOptIn)
+    .some(error => /destination-only consumer math-rain.html unexpectedly opts into/.test(error)));
+assert.ok(hiddenScopeErrors(hiddenScopeMapping, hiddenScopeCurrent, accidentalOptIn, historicalHiddenScope)
+    .some(error => /destination-only consumer math-rain.html unexpectedly opts into/.test(error)));
+
+// An unscoped shared .hidden is never a valid new owner when unrelated pages
+// load the destination stylesheet; matching selectors alone are not proof.
+const unscopedHiddenCurrent = parseMap([
+    ['css/a.css', ''], ['css/b.css', ''],
+    ['css/layout.css', '@layer contracts{.hidden{display:none!important}}'],
+]);
+const unscopedHiddenMapping = {
+    ...hiddenScopeMapping,
+    id: 'fixture-dedupe-hidden-global-regression',
+    destination: destinationRef(catalogMap(unscopedHiddenCurrent).get('css/layout.css')[0]),
+};
+assert.ok(hiddenScopeErrors(unscopedHiddenMapping, unscopedHiddenCurrent)
+    .some(error => /destination-only consumers \(math-rain.html\)/.test(error)));
+
 const rootResetBase = parseMap([
     ['css/root-a.css', '@layer reset{*{margin:0;padding:0;box-sizing:border-box}}'],
     ['css/root-b.css', '@layer reset{*{margin:0;padding:0;box-sizing:border-box}}'],

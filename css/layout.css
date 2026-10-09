@@ -101,9 +101,9 @@
 }
 }
 
-/* ── 全站状态契约：脚本切换的隐藏类只有一个所有者 ── */
+/* ── 显式启用的共享隐藏契约；不覆盖未迁移页面的淡入淡出状态 ── */
 @layer contracts {
-    .hidden {
+    html.game-hidden-contract .hidden {
         display: none !important;
     }
 }

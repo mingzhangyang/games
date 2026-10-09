@@ -504,10 +504,68 @@ function verifyDedupeDestinationActivation(mapping, sources, destination, pagesB
     }
 }
 
+// Newly introduced shared rules must not silently activate on destination-only
+// pages. Explicit root scoping proves that consumers lacking the opt-in class
+// retain their original CSS behavior (e.g. Math Rain's opacity-based modals).
+// Do not accept a selector list: an unscoped comma branch would bypass the gate.
+function dedupeDestinationRootScope(mapping, sources, destination) {
+    if (mapping.adoption?.surface !== 'root-class'
+        || !Array.isArray(mapping.adoption.consumers)
+        || !mapping.adoption.consumers.length) return null;
+    const rootClass = mapping.adoption.consumers[0]?.rootClass;
+    if (typeof rootClass !== 'string' || !/^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(rootClass)
+        || mapping.adoption.consumers.some(consumer => consumer.rootClass !== rootClass)) return null;
+    const selector = sources[0]?.selector;
+    if (sources.some(source => source.selector !== selector)) return null;
+    if (selector === '*'
+        && destination.selector === '.' + rootClass + ', .' + rootClass + ' *') {
+        return rootClass; // Reviewed universal reset: root element and descendants.
+    }
+    if (/^\.[a-zA-Z_][a-zA-Z0-9_-]*$/.test(selector)
+        && destination.selector === 'html.' + rootClass + ' ' + selector) {
+        return rootClass; // State class, anchored to an opted-in document root.
+    }
+    return null;
+}
+
+function verifyDedupeDestinationConsumers(mapping, sources, destination, pagesByPath, htmlSources, errors) {
+    if (mapping.reuseExistingDestination) return; // Existing CSS cannot create new exposure.
+    const sourcePages = new Set(sources.flatMap(source => [...(pagesByPath.get(source.path) || [])]));
+    const destinationOnly = [...(pagesByPath.get(destination.path) || [])]
+        .filter(page => !sourcePages.has(page)).sort();
+    if (!destinationOnly.length) return;
+
+    const rootClass = dedupeDestinationRootScope(mapping, sources, destination);
+    if (!rootClass) {
+        errors.push(mapping.id + ': new shared destination reaches destination-only consumers ('
+            + destinationOnly.join(', ') + '); require a document-root-scoped selector and root-class adoption evidence.');
+        return;
+    }
+    for (const page of destinationOnly) {
+        const html = htmlSources?.get?.(page);
+        if (typeof html !== 'string') {
+            errors.push(mapping.id + ': destination-only consumer ' + page + ' has no current HTML evidence.');
+            continue;
+        }
+        try {
+            const roots = parseHtmlElements(html, page).filter(element => htmlTagName(element) === 'html');
+            if (roots.length !== 1) {
+                errors.push(mapping.id + ': destination-only consumer ' + page + ' must have exactly one document root.');
+            } else if (classTokens(htmlElementAttributes(roots[0]).class).has(rootClass)) {
+                errors.push(mapping.id + ': destination-only consumer ' + page
+                    + ' unexpectedly opts into .' + rootClass + ' without registered source adoption.');
+            }
+        } catch (error) {
+            errors.push(mapping.id + ': cannot inspect destination-only consumer ' + page + ': ' + error.message);
+        }
+    }
+}
+
 function verifyDedupeAdoption(mapping, sources, destination, stylesheetLinks, htmlSources, errors) {
     const adoption = mapping.adoption;
     const pagesByPath = coactivePages(stylesheetLinks);
     verifyDedupeDestinationActivation(mapping, sources, destination, pagesByPath, errors);
+    verifyDedupeDestinationConsumers(mapping, sources, destination, pagesByPath, htmlSources, errors);
     if (sources.every(source => source.selector === destination.selector)) return;
 
     const expectedPaths = new Set(sources.map(source => source.path));
