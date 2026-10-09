@@ -5,7 +5,7 @@
 // 280–500px 高，关卡网格被压进一个看不出能滚的小盒子 —— 晶绽 / 涟漪 / 焰语只露出 10/20 个关卡，
 // 电路谜题一个都看不到。几何检查器全绿，因为菜单「在舞台里」。
 //
-// 断言（390×844、768×1024，全部注册表页面）：
+// 断言（390×844、768×1024、844×390；九个 W4b 页面另测 1280×900，全部注册表页面）：
 //   ① 覆盖：加载时可见、且被困在舞台里（非视口级全屏）的 .game-overlay 不得内部溢出 ——
 //      溢出的必须加 .game-overlay--menu（新游戏漏加 → 红）
 //   ② 可达：带 .game-overlay--menu 的菜单里，每个可见按钮都能滚到视口里、并且中心点命中它自己
@@ -44,7 +44,20 @@ for (const g of GAMES) {
         const errors = [];
         page.on('pageerror', e => errors.push(e.message));
         await page.setViewport({ width: w, height: h });
-        await page.goto(`${BASE}/${g.href}`, { waitUntil: 'networkidle2' });
+        try {
+            // networkidle2 can hang on analytics, service workers and third-party fonts
+            // even when the game is ready. DOMContentLoaded waits for deferred/module
+            // scripts; the dynamically rendered level chips prove W4b runtime startup.
+            // Never turn a timeout into a silent skip: record its exact game + viewport.
+            await page.goto(`${BASE}/${g.href}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            if (W4A_GAMES.has(g.id)) {
+                await page.waitForSelector('.game-start-level-chip', { timeout: 10000 });
+            }
+        } catch (error) {
+            check(false, `${g.id}@${w}×${h}：页面或菜单初始化失败`, error.message);
+            await page.close().catch(() => {});
+            continue;
+        }
         await new Promise(r => setTimeout(r, 400));
 
         // ① 覆盖
