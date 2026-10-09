@@ -1650,7 +1650,7 @@
         },
         {
           "suffix": "start-footer",
-          "sharedClass": "game-start-start-footer",
+          "sharedClass": "game-start-footer",
           "surface": "html",
           "participants": [
             "cc",

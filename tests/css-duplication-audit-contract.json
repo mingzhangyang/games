@@ -10,12 +10,12 @@
   ],
   "baseline": {
     "categoryCounts": {
-      "exact-duplicate": 408,
+      "exact-duplicate": 313,
       "structural-duplicate": 65,
-      "intentional-local": 2178
+      "intentional-local": 2189
     },
-    "classificationDigest": "e75532c2388ae2db7f5bd5a7c4382b4f3255e307d787ba46c884ee51b02a9b02",
-    "exactFamilyCount": 97,
+    "classificationDigest": "fa3d78c3e1e2403252afe24e6bb9a22a106ffdf3579b6bfdb31374164a952eff",
+    "exactFamilyCount": 86,
     "structuralFamilyCount": 19
   },
   "policy": {

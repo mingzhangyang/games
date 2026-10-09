@@ -102,7 +102,8 @@ for (const g of GAMES) {
                     'par', 'subtitle', 'howto', 'mode-row', 'level-label', 'level-grid',
                     'chip-num', 'chip-stars', 'start-footer', 'card-line',
                 ]) {
-                    const element = document.querySelector('.game-start-' + suffix);
+                    const sharedClass = suffix === 'start-footer' ? 'game-start-footer' : 'game-start-' + suffix;
+                    const element = document.querySelector('.' + sharedClass);
                     if (!element) { samples[suffix] = null; continue; }
                     const style = getComputedStyle(element);
                     samples[suffix] = {
