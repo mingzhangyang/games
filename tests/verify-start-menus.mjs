@@ -28,6 +28,7 @@ const W4A_GAMES = new Set([
 
 const fails = [];
 let passes = 0;
+let verifiedPageViewports = 0;
 const check = (cond, label, extra = '') => { if (cond) passes++; else fails.push(`${label}${extra ? ' —— ' + extra : ''}`); };
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
@@ -231,6 +232,7 @@ for (const g of GAMES) {
         }
         check(errors.length === 0, `${g.id}@${w}：无 pageerror`, errors.join(' | '));
         await page.close();
+        verifiedPageViewports++;
     }
 }
 await browser.close();
@@ -240,4 +242,4 @@ if (fails.length) {
     console.error(`\nverify-start-menus：${fails.length} 项失败（${passes} 项通过）❌`);
     process.exit(1);
 }
-console.log(`verify-start-menus 全部通过 ✅（${passes} 项断言，${GAMES.length} 页 × ${VIEWPORTS.length} 视口）`);
+console.log(`verify-start-menus 全部通过 ✅（${passes} 项断言，${GAMES.length} 页，${verifiedPageViewports} 组页面/视口）`);
