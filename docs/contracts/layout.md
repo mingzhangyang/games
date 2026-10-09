@@ -88,7 +88,7 @@ W4a 抽取精确重复的文本/网格默认值；W4b 将相同语义的九个�
 `mode`、`mode-daily`、`chip/level-chip`、`title`、`daily-best`
 归入一组真正共享的组件 surface。
 
-- `game-start-title`：标题共享 34px/800，≤480px 为 27px；页面只保留渐变材质。历史上 Gravity 的 32px 和 Silk Dew 的书法字体/35px 不构成额外标准。
+- `game-start-title`：标题共享 34px/800，≤480px 为 27px；页面渐变只保留 `background-image` 长写，不得使用 `background` 简写（会重置共享 `background-clip:text`，使透明字形不可见）。`participantResidualRewrites` 严格审计九页从 `background` 到 `background-image` 的图像值转换，不开放其他属性改写。历史上 Gravity 的 32px 和 Silk Dew 的书法字体/35px 不构成额外标准。
 - `game-start-mode`：相同的 inline-flex 对齐、13px 圆角、11px×20px 内距、≥44px 高度和 hover/active；手机统一 13px、11px×15px。`game-start-mode--daily` 是语义修饰，负责去除边框，页面背景渐变/阴影仍可以主题化。
 - `game-start-level-chip`：六页 legacy `*-chip` 与三页 `*-level-chip` 采用相同的选关控件（10px 圆角、≥44px 高度、hover/active）；旧业务类与 `is-done` 语义必须保留，完成态只允许页面自有的 palette。
 - `game-start-daily-best`：12.5px/600、15px 最小高度、等宽数字；记录颜色属于页面主题。

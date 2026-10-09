@@ -175,6 +175,8 @@ for (const g of GAMES) {
                         fontSize: css.fontSize, fontWeight: css.fontWeight,
                         minHeight: css.minHeight, borderRadius: css.borderRadius,
                         padding: css.padding, cursor: css.cursor,
+                        backgroundClip: css.backgroundClip,
+                        backgroundImage: css.backgroundImage,
                         height: element.getBoundingClientRect().height,
                     };
                 };
@@ -198,6 +200,12 @@ for (const g of GAMES) {
                 `${g.id}@${w}：W4b title standard font size`, String(family.title?.fontSize));
             check(family.title?.fontWeight === '800',
                 `${g.id}@${w}：W4b title standard font weight`, String(family.title?.fontWeight));
+            if (!family.showcase) {
+                check(family.title?.backgroundClip === 'text'
+                    && family.title?.backgroundImage !== 'none',
+                    `${g.id}@${w}：W4b gradient title text clipping`,
+                    JSON.stringify(family.title));
+            }
             check(family.mode?.fontSize === wantedModeSize,
                 `${g.id}@${w}：W4b mode standard font size`, String(family.mode?.fontSize));
             check(family.mode?.padding === (w <= 480 ? '11px 15px' : '11px 20px'),

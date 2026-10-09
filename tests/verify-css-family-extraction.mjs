@@ -606,6 +606,69 @@ try {
     assert.ok(foreignRetirementErrors.some(error => /may only remove dm-prefixed page selectors/.test(error)));
 
     // ── leaderboard-v2: visual dimensions, adopting shared-only geometry, reviewed layout ──
+    // W4b: no unlayered title background shorthand may reset a layered clip.
+    const titleSource = { migrationDeclarations: [
+        decl('font-size', '34px'), decl('background', 'linear-gradient(red, blue)'),
+    ] };
+    const titleShared = { migrationDeclarations: [decl('font-size', '34px')] };
+    const approvedGradient = [{ from: 'background', to: 'background-image', reason: 'preserve clipping' }];
+    const gradientErrors = [];
+    assert.deepEqual(expectedResidual(
+        titleSource, titleShared, gradientErrors, 'title', [], [], [], [], approvedGradient,
+    ), [decl('background-image', 'linear-gradient(red, blue)')]);
+    assert.deepEqual(gradientErrors, []);
+
+    const tokenErrors = [];
+    assert.deepEqual(expectedResidual(
+        { migrationDeclarations: [decl('background', 'var(--cb-title-bg)')] },
+        { migrationDeclarations: [] }, tokenErrors, 'title', [], [], [], [], approvedGradient,
+    ), [decl('background-image', 'var(--cb-title-bg)')]);
+    assert.deepEqual(tokenErrors, []);
+
+    const unsafeErrors = [];
+    expectedResidual(
+        { migrationDeclarations: [decl('background', 'red')] },
+        { migrationDeclarations: [] }, unsafeErrors, 'title', [], [], [], [], approvedGradient,
+    );
+    assert.ok(unsafeErrors.some(error => /requires a non-important gradient-only/.test(error)));
+
+    const missingErrors = [];
+    expectedResidual(
+        { migrationDeclarations: [decl('color', 'red')] },
+        { migrationDeclarations: [] }, missingErrors, 'title', [], [], [], [], approvedGradient,
+    );
+    assert.ok(missingErrors.some(error => /background is missing, ambiguous/.test(error)));
+
+    const approvedShape = clone(extraction);
+    approvedShape.components[0].suffix = 'title';
+    approvedShape.components[0].sharedClass = 'game-start-title';
+    approvedShape.components[0].participantResidualRewrites = {
+        dm: [{ from: 'background', to: 'background-image', reason: 'preserve clipping' }],
+    };
+    const approvedShapeErrors = [];
+    assert.equal(verifyExtractionShape(approvedShape, approvedShapeErrors), true);
+    assert.deepEqual(approvedShapeErrors, []);
+
+    const invalidTarget = clone(approvedShape);
+    invalidTarget.components[0].participantResidualRewrites.dm[0].to = 'color';
+    const invalidTargetErrors = [];
+    assert.equal(verifyExtractionShape(invalidTarget, invalidTargetErrors), false);
+    assert.ok(invalidTargetErrors.some(error => /reviewed background to background-image/.test(error)));
+
+    const wrongFamily = clone(approvedShape);
+    wrongFamily.components[0].sharedClass = 'game-other';
+    const wrongFamilyErrors = [];
+    assert.equal(verifyExtractionShape(wrongFamily, wrongFamilyErrors), false);
+    assert.ok(wrongFamilyErrors.some(error => /only reviewed for default game-start-title/.test(error)));
+
+    const foreignRewrite = clone(approvedShape);
+    foreignRewrite.components[0].participantResidualRewrites = {
+        other: [{ from: 'background', to: 'background-image', reason: 'foreign' }],
+    };
+    const foreignErrors = [];
+    assert.equal(verifyExtractionShape(foreignRewrite, foreignErrors), false);
+    assert.ok(foreignErrors.some(error => /residual rewrite references non-participant other/.test(error)));
+
     const dimensionSource = { migrationDeclarations: [decl('max-width', '340px'), decl('color', 'red')] };
     const dimensionShared = { migrationDeclarations: [decl('max-width', '330px'), decl('margin-bottom', '8px')] };
     const inventedErrors = [];
