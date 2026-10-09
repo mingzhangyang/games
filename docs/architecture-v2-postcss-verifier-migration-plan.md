@@ -347,7 +347,22 @@ The contract now provides:
    harmless on destination-only consumers: either a reviewed document-root opt-in selector
    excludes those pages, or the mapping is rejected. The opt-in must remain absent on every
    destination-only page, including after the migration becomes historical; reused destinations
-   are already active and do not create this new-consumer exposure.
+   are already active and do not create this new-consumer exposure. A **new** destination
+   must also have a match set exactly equal to the union of every participating source
+   selector on each source consumer page (both old-to-new and new-to-old).
+   For `html-class` rewrites the automatic proof deliberately supports only an exact
+   single-class substitution with an identical simple state pseudo-class
+   (e.g. `.xx-icon-btn:active` → `.game-icon-btn:active`), and rejects combinators,
+   selector lists, changed pseudo-states, or duplicated sources in one stylesheet.
+   It checks actual HTML class sets against all active source stylesheets to reject
+   extra destination-only matches, then rechecks historical ledgers on subsequent PRs.
+   An existing reused destination may match other elements because that behavior
+   predates the transaction; its unchanged comparison-base occurrence must be verified
+   separately. Scoped reset/hidden states use only the explicitly reviewed
+   `root-class` patterns; unproved `body-class` selector rewrites fail closed.
+   Static HTML does not prove every JavaScript-created DOM state or cascade outcome:
+   browser interaction/computed-style checks remain mandatory for runtime changes,
+   before any reviewer claims complete behavioral equivalence.
 6. The lowest `reset` layer is policy-constrained, not merely an allowed layer name. A mapping
    targeting `reset` must be a top-level reviewed universal selector (`*` or
    `*, *::before, *::after`) and contain only normal declarations; the whole mapped rule stays

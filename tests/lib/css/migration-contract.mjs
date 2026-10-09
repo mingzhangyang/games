@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
-import { htmlElementAttributes, htmlTagName, parseHtmlElements } from './html-inputs.mjs';
+import { verifyDedupeAdoption } from './dedupe-adoption.mjs';
 import { mappedStylesheetPaths, mappingDestinations, mappingSources } from './migration-record.mjs';
 import { propertiesOverlap } from './property-writes.mjs';
 
@@ -474,184 +474,6 @@ function verifyDedupePartition(mapping, sourceRule, destinationRules, errors) {
     return destinationAssignments(sourceRule, destinationRules);
 }
 
-function classTokens(value) {
-    return new Set(String(value || '').split(/\s+/).filter(Boolean));
-}
-
-function selectorHasClass(selector, className) {
-    return (String(selector || '').match(/\.[a-zA-Z_][a-zA-Z0-9_-]*/g) || []).includes('.' + className);
-}
-
-function sortedValues(values) {
-    return [...values].sort();
-}
-
-function sameValues(left, right) {
-    return jsonKey(sortedValues(left)) === jsonKey(sortedValues(right));
-}
-
-function verifyDedupeDestinationActivation(mapping, sources, destination, pagesByPath, errors) {
-    const destinationPages = pagesByPath.get(destination.path) || new Set();
-    const sourcePaths = new Set(sources.map(source => source.path));
-    for (const sourcePath of sourcePaths) {
-        const sourcePages = pagesByPath.get(sourcePath) || new Set();
-        for (const page of sourcePages) {
-            if (!destinationPages.has(page)) {
-                errors.push(mapping.id + ': destination stylesheet ' + destination.path
-                    + ' is not active on ' + page + ' (required by source stylesheet ' + sourcePath + ').');
-            }
-        }
-    }
-}
-
-// Newly introduced shared rules must not silently activate on destination-only
-// pages. Explicit root scoping proves that consumers lacking the opt-in class
-// retain their original CSS behavior (e.g. Math Rain's opacity-based modals).
-// Do not accept a selector list: an unscoped comma branch would bypass the gate.
-function dedupeDestinationRootScope(mapping, sources, destination) {
-    if (mapping.adoption?.surface !== 'root-class'
-        || !Array.isArray(mapping.adoption.consumers)
-        || !mapping.adoption.consumers.length) return null;
-    const rootClass = mapping.adoption.consumers[0]?.rootClass;
-    if (typeof rootClass !== 'string' || !/^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(rootClass)
-        || mapping.adoption.consumers.some(consumer => consumer.rootClass !== rootClass)) return null;
-    const selector = sources[0]?.selector;
-    if (sources.some(source => source.selector !== selector)) return null;
-    if (selector === '*'
-        && destination.selector === '.' + rootClass + ', .' + rootClass + ' *') {
-        return rootClass; // Reviewed universal reset: root element and descendants.
-    }
-    if (/^\.[a-zA-Z_][a-zA-Z0-9_-]*$/.test(selector)
-        && destination.selector === 'html.' + rootClass + ' ' + selector) {
-        return rootClass; // State class, anchored to an opted-in document root.
-    }
-    return null;
-}
-
-function verifyDedupeDestinationConsumers(mapping, sources, destination, pagesByPath, htmlSources, errors) {
-    if (mapping.reuseExistingDestination) return; // Existing CSS cannot create new exposure.
-    const sourcePages = new Set(sources.flatMap(source => [...(pagesByPath.get(source.path) || [])]));
-    const destinationOnly = [...(pagesByPath.get(destination.path) || [])]
-        .filter(page => !sourcePages.has(page)).sort();
-    if (!destinationOnly.length) return;
-
-    const rootClass = dedupeDestinationRootScope(mapping, sources, destination);
-    if (!rootClass) {
-        errors.push(mapping.id + ': new shared destination reaches destination-only consumers ('
-            + destinationOnly.join(', ') + '); require a document-root-scoped selector and root-class adoption evidence.');
-        return;
-    }
-    for (const page of destinationOnly) {
-        const html = htmlSources?.get?.(page);
-        if (typeof html !== 'string') {
-            errors.push(mapping.id + ': destination-only consumer ' + page + ' has no current HTML evidence.');
-            continue;
-        }
-        try {
-            const roots = parseHtmlElements(html, page).filter(element => htmlTagName(element) === 'html');
-            if (roots.length !== 1) {
-                errors.push(mapping.id + ': destination-only consumer ' + page + ' must have exactly one document root.');
-            } else if (classTokens(htmlElementAttributes(roots[0]).class).has(rootClass)) {
-                errors.push(mapping.id + ': destination-only consumer ' + page
-                    + ' unexpectedly opts into .' + rootClass + ' without registered source adoption.');
-            }
-        } catch (error) {
-            errors.push(mapping.id + ': cannot inspect destination-only consumer ' + page + ': ' + error.message);
-        }
-    }
-}
-
-function verifyDedupeAdoption(mapping, sources, destination, stylesheetLinks, htmlSources, errors) {
-    const adoption = mapping.adoption;
-    const pagesByPath = coactivePages(stylesheetLinks);
-    verifyDedupeDestinationActivation(mapping, sources, destination, pagesByPath, errors);
-    verifyDedupeDestinationConsumers(mapping, sources, destination, pagesByPath, htmlSources, errors);
-    if (sources.every(source => source.selector === destination.selector)) return;
-
-    const expectedPaths = new Set(sources.map(source => source.path));
-    const consumers = Array.isArray(adoption?.consumers) ? adoption.consumers : [];
-    const byPath = new Map();
-    for (const consumer of consumers) {
-        const path = consumer?.sourcePath;
-        if (!expectedPaths.has(path)) {
-            errors.push(mapping.id + ': adoption evidence names an unregistered source path ' + JSON.stringify(path) + '.');
-            continue;
-        }
-        if (byPath.has(path)) {
-            errors.push(mapping.id + ': adoption evidence duplicates source path ' + path + '.');
-            continue;
-        }
-        byPath.set(path, consumer);
-        const expectedPages = pagesByPath.get(path) || new Set();
-        const declaredPages = new Set(Array.isArray(consumer.pages) ? consumer.pages : []);
-        if (!sameValues(declaredPages, expectedPages)) {
-            errors.push(mapping.id + ': adoption pages for ' + path + ' must exactly match every stylesheet consumer.');
-        }
-        for (const page of declaredPages) {
-            const html = htmlSources?.get?.(page);
-            if (typeof html !== 'string') {
-                errors.push(mapping.id + ': adoption evidence has no HTML source for consumer ' + page + '.');
-                continue;
-            }
-            let elements;
-            try {
-                elements = parseHtmlElements(html, page);
-            } catch (error) {
-                errors.push(mapping.id + ': cannot inspect adoption consumer ' + page + ': ' + error.message);
-                continue;
-            }
-            if (adoption?.surface === 'html-class') {
-                const localClass = consumer.localClass;
-                const sharedClass = consumer.sharedClass;
-                if (typeof localClass !== 'string' || typeof sharedClass !== 'string'
-                    || !localClass || !sharedClass) {
-                    errors.push(mapping.id + ': html-class adoption requires localClass and sharedClass for ' + path + '.');
-                    continue;
-                }
-                const source = sources.find(item => item.path === path);
-                if (!selectorHasClass(source?.selector, localClass)
-                    || !selectorHasClass(destination.selector, sharedClass)) {
-                    errors.push(mapping.id + ': html-class adoption classes do not match source/destination selectors for ' + path + '.');
-                }
-                const localElements = elements.filter(element =>
-                    classTokens(htmlElementAttributes(element).class).has(localClass));
-                if (!localElements.length) {
-                    errors.push(mapping.id + ': ' + page + ' has no .' + localClass + ' adoption anchor.');
-                    continue;
-                }
-                const missingShared = localElements.filter(element =>
-                    !classTokens(htmlElementAttributes(element).class).has(sharedClass));
-                if (missingShared.length) {
-                    errors.push(mapping.id + ': ' + page + ' has ' + missingShared.length
-                        + ' .' + localClass + ' element(s) without .' + sharedClass + '.');
-                }
-            } else if (adoption?.surface === 'body-class') {
-                const bodyClass = consumer.bodyClass;
-                const bodies = elements.filter(element => htmlTagName(element) === 'body');
-                if (typeof bodyClass !== 'string' || !bodyClass) {
-                    errors.push(mapping.id + ': body-class adoption requires bodyClass for ' + path + '.');
-                } else if (bodies.length !== 1 || !classTokens(htmlElementAttributes(bodies[0]).class).has(bodyClass)) {
-                    errors.push(mapping.id + ': ' + page + ' must opt into .' + bodyClass + ' on its body.');
-                }
-            } else if (adoption?.surface === 'root-class') {
-                const rootClass = consumer.rootClass;
-                const roots = elements.filter(element => htmlTagName(element) === 'html');
-                if (typeof rootClass !== 'string' || !rootClass) {
-                    errors.push(mapping.id + ': root-class adoption requires rootClass for ' + path + '.');
-                } else if (roots.length !== 1 || !classTokens(htmlElementAttributes(roots[0]).class).has(rootClass)) {
-                    errors.push(mapping.id + ': ' + page + ' must opt into .' + rootClass + ' on its document root.');
-                }
-            } else {
-                errors.push(mapping.id + ': unsupported adoption surface ' + JSON.stringify(adoption?.surface) + '.');
-                break;
-            }
-        }
-    }
-    for (const path of expectedPaths) {
-        if (!byPath.has(path)) errors.push(mapping.id + ': adoption evidence is missing source path ' + path + '.');
-    }
-}
-
 function validDeclarationSnapshot(declaration) {
     return declaration && !Array.isArray(declaration)
         && typeof declaration === 'object'
@@ -982,7 +804,7 @@ export function verifyRuleMigrations({
         // after a mapping has entered the comparison base.
         if (isDeduplication(mapping)) {
             verifyDedupeAdoption(
-                mapping, mapping.sources, mapping.destination, stylesheetLinks, htmlSources, errors,
+                mapping, mapping.sources, mapping.destination, coactivePages(stylesheetLinks), htmlSources, errors,
             );
         }
         for (const source of mappingSources(mapping)) {

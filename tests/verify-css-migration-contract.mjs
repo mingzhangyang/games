@@ -468,6 +468,39 @@ assert.deepEqual(historicalDedupeErrors(
 ), []);
 
 
+// The full migration entry point must use the bidirectional selector proof,
+// not just direct helper callers. Keep this invariant after W3 is historical.
+const widenedDedupeHtml = new Map([[
+    'dedupe.html',
+    '<html><body><div class="a-hidden hidden"></div>'
+        + '<div class="b-hidden hidden"></div><div class="hidden"></div></body></html>',
+]]);
+const widenedNewErrors = [];
+verifyRuleMigrations({
+    baseline: {
+        debt: { unlayeredRules: [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']] },
+    },
+    state: { ...emptyState, migratedRules: [dedupeMapping] },
+    currentParsedByPath: dedupeCurrent,
+    baseParsedByPath: dedupeBase,
+    stylesheetLinks: {
+        'dedupe.html': [['css/a.css', []], ['css/b.css', []], ['css/layout.css', []]],
+    },
+    htmlSources: widenedDedupeHtml,
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: widenedNewErrors,
+});
+assert.ok(widenedNewErrors.some(error => /shared destination matches 1 extra element/.test(error)));
+const widenedHistoricalErrors = historicalDedupeErrors(
+    dedupeMapping, dedupeCurrent,
+    [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+    { 'dedupe.html': [['css/a.css', []], ['css/b.css', []], ['css/layout.css', []]] },
+    widenedDedupeHtml,
+);
+assert.ok(widenedHistoricalErrors.some(error => /shared destination matches 1 extra element/.test(error)));
+
 // Even an exact selector match must keep the shared destination active on every
 // page that loaded a source stylesheet; otherwise the verifier could approve a
 // deletion whose replacement is unreachable at runtime.
