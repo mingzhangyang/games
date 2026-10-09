@@ -149,15 +149,7 @@ body {
 
 .fv-overlay-dim { background: rgb(5, 7, 15, 0.72); }
 
-.fv-title {
-    font-size: 34px;
-    font-weight: 800;
-    line-height: 1.15;
-    background: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+.fv-title { background: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c); }
 
 
 .fv-hero {
@@ -173,30 +165,13 @@ body {
 
 
 
-.fv-mode {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    line-height: 1;
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
-    border-radius: 13px;
-    padding: 11px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
+ 
 
-.fv-mode:hover { background: rgb(255, 255, 255, 0.13); }
-.fv-mode:active { transform: scale(0.95); }
+ 
+ 
 
 .fv-mode-daily {
     background: linear-gradient(120deg, #7fa8ff, #ff8a5c);
-    border: none;
     box-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
 }
 
@@ -205,24 +180,10 @@ body {
 /* ⚠️ 类名必须与 src/games/flame-verse/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'fv-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
-.fv-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    font-family: inherit;
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 6px 2px 4px;
-    cursor: pointer;
-    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
-    color: var(--tok-text);
-    transition: background 0.15s, transform 0.1s;
-}
+ 
 
-.fv-chip:hover { background: rgb(255, 255, 255, 0.11); }
-.fv-chip:active { transform: scale(0.93); }
+ 
+ 
 
 .fv-chip.is-done {
     background: rgb(127, 168, 255, 0.12);
@@ -233,13 +194,7 @@ body {
 
 .fv-chip-stars { color: var(--tok-gold); }
 
-.fv-daily-best {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #a8c4ff;
-    min-height: 15px;
-    font-variant-numeric: tabular-nums;
-}
+.fv-daily-best { color: #a8c4ff; }
 
 
 /* ── 过关卡片 ── */
@@ -393,9 +348,9 @@ body {
 @media (width <= 480px) {
     .fv-hud-level { font-size: 12px; }
     .fv-cut-value { font-size: 16px; }
-    .fv-title { font-size: 27px; }
+ 
     .fv-over-score { font-size: 34px; }
-    .fv-mode { font-size: 13px; padding: 11px 15px; }
+ 
     .fv-action-btn { width: 58px; height: 58px; bottom: 12px; }
     .fv-clear-btn { left: 12px; }
     .fv-run-btn { right: 12px; }

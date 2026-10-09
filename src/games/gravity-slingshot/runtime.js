@@ -247,7 +247,7 @@ class GravityGame {
         for (let i = 0; i < LEVELS.length; i++) {
             const chip = document.createElement('button');
             chip.type = 'button';
-            chip.className = 'gd-level-chip';
+            chip.className = 'gd-level-chip game-start-level-chip';
             const num = document.createElement('span');
             num.className = 'gd-chip-num game-start-chip-num';
             num.textContent = String(i + 1);
