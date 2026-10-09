@@ -186,3 +186,14 @@ node tools/checks/token-swap.mjs --check   # 只查令牌残留
 npx eslint js src tests tools/generators tools/checks --fix    # 修 JS（勿碰 src/platform/more-games.js —— 已 ignores 保护）
 npx stylelint "css/**/*.css" --fix # 修 CSS（避开 math-rain；产物要烟测）
 ```
+
+## W4b Start-menu shared visual ownership
+
+九个解谜游戏的 start-title/mode/level-chip/daily-best 结构由
+`css/layout.css` 的 `game-start-*` 组件族持有；页面只能保留标题渐变、
+Daily accent/shadow、关卡完成态调色板和成绩色。普通模式按钮与关卡按钮的
+字体、padding、圆角、min-height (44px)、hover/active 和移动端值禁止复写。
+标题页面残余只能保留 `background-image`，不得使用 `background` 简写重置共享 `background-clip:text`。
+Science Showcase 现有 P0 冻结材质例外仍然适用；`game-start-mode` 的共享 hover
+使用 `:where()`，不能遮盖页面 Daily primary 渐变。详情见
+`docs/contracts/layout.md` §1.1.3。

@@ -619,7 +619,7 @@ export class RippleDuetGame {
             // game-start-chip-* 的共享字体尺寸。两套类名缺一不可：
             // 只写 rd-level-* 会丢失页面配色；只写 rd-chip-* 则失去共享排版。
             const rec = this.progress[spec.id];
-            btn.className = 'rd-chip' + (rec && rec.stars ? ' is-done' : '');
+            btn.className = 'rd-chip game-start-level-chip' + (rec && rec.stars ? ' is-done' : '');
             btn.type = 'button';
             btn.dataset.index = String(i);
             btn.innerHTML = `<span class="rd-chip-num game-start-chip-num">${i + 1}</span>${rec && rec.stars

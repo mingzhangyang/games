@@ -94,15 +94,7 @@ body {
 
 .gd-overlay-dim { background: rgb(8, 10, 26, 0.72); }
 
-.gd-title {
-    font-size: 32px;
-    font-weight: 800;
-    line-height: 1.15;
-    background: linear-gradient(120deg, #7dfad0, #60a5fa 55%, #a78bfa);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+.gd-title { background-image: linear-gradient(120deg, #7dfad0, #60a5fa 55%, #a78bfa); }
 
 
 .gd-hero {
@@ -118,57 +110,26 @@ body {
 
 
 
-.gd-mode {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
-    border-radius: 13px;
-    padding: 11px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
+ 
 
-.gd-mode:hover { background: rgb(255, 255, 255, 0.13); }
-.gd-mode:active { transform: scale(0.95); }
+ 
+ 
 
 .gd-mode-daily {
     background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
-    border: none;
     box-shadow: 0 8px 24px rgb(52, 211, 153, 0.35);
 }
 
 
 
-.gd-level-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    font-family: inherit;
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 6px 2px 4px;
-    cursor: pointer;
-    color: inherit;
-    transition: background 0.15s, transform 0.1s;
-}
+ 
 
-.gd-level-chip:hover { background: rgb(255, 255, 255, 0.11); }
-.gd-level-chip:active { transform: scale(0.93); }
+ 
+ 
 
 
 
-.gd-daily-best {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #9fe8d0;
-    min-height: 15px;
-    font-variant-numeric: tabular-nums;
-}
+.gd-daily-best { color: #9fe8d0; }
 
 
 .gd-lang-btn {
@@ -264,9 +225,9 @@ body {
 @media (width <= 480px) {
     .gd-hole-label { font-size: 12px; }
     .gd-launch-value { font-size: 16px; }
-    .gd-title { font-size: 26px; }
+ 
     .gd-over-score { font-size: 34px; }
-    .gd-mode { font-size: 13px; padding: 10px 15px; }
+ 
 }
 
 @media (prefers-reduced-motion: reduce) {

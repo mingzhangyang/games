@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { TokenType } from '@csstools/css-tokenizer';
 import { join } from 'node:path';
 
 import { htmlElementAttributes, parseHtmlElements } from './html-inputs.mjs';
+import { cssTokens } from './model.mjs';
 import { indexRuleOccurrences, readGitFile } from './migration-contract.mjs';
 
 export const FAMILY_EXTRACTION_STATE_PATH = 'tests/css-family-extraction-state.json';
@@ -99,7 +101,7 @@ const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
 // family's size wins. Layout/behaviour properties (display, position, width, …) stay
 // protected: convergence may restyle a standard surface, never re-lay it out.
 const REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES = new Set([
-    'font-size', 'font-weight', 'padding', 'border-radius', 'transition', 'backdrop-filter',
+    'font-size', 'font-weight', 'font-family', 'padding', 'border-radius', 'transition', 'backdrop-filter',
     // Visual dimensions/spacing (leaderboard-v2): sizes and gaps of a standard surface.
     'max-width', 'min-height', 'max-height', 'height', 'gap',
     'letter-spacing', 'line-height', 'margin-top', 'margin-bottom',
@@ -111,12 +113,13 @@ const REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES = new Set([
 // them up through participantLayoutConvergence, which names the exact properties and
 // carries a written reason, so every re-layout is an explicit reviewed decision.
 const REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES = new Set([
-    'display', 'flex-direction', 'flex', 'flex-shrink', 'align-items', 'width',
+    'display', 'flex-direction', 'flex', 'flex-shrink', 'align-items', 'justify-content', 'width',
     'text-align', 'text-transform', 'outline', 'scrollbar-width', 'grid-template-columns',
 ]);
 
 function componentLocalSelector(prefix, component) {
-    return '.' + prefix + '-' + component.suffix + (component.localSelectorSuffix || '');
+    return '.' + prefix + '-' + (component.localSuffixByParticipant?.[prefix] || component.suffix)
+        + (component.localSelectorSuffix || '');
 }
 
 function componentSharedSelector(component) {
@@ -126,10 +129,65 @@ function componentSharedSelector(component) {
     return classSelector + (component.sharedSelectorSuffix || '');
 }
 
+// Background is a shorthand; translating it to background-image preserves
+// clipping only if the *entire* value is one image, not a gradient followed by
+// position/size, repeat, another layer, or malformed nested functions.
+// Use the same CSS Syntax tokenizer as the audit adapter, not a prefix regex.
+function isSingleLinearGradientImage(value) {
+    let tokens;
+    try {
+        tokens = cssTokens(value).filter(([type]) =>
+            type !== TokenType.Whitespace && type !== TokenType.Comment);
+    } catch {
+        return false;
+    }
+    if (tokens[0]?.[0] !== TokenType.Function
+        || tokens[0][1].toLowerCase() !== 'linear-gradient(') return false;
+
+    const matchingClose = new Map([
+        [TokenType.Function, TokenType.CloseParen],
+        [TokenType.OpenParen, TokenType.CloseParen],
+        [TokenType.OpenSquare, TokenType.CloseSquare],
+    ]);
+    const closing = new Set([
+        TokenType.CloseParen, TokenType.CloseSquare, TokenType.CloseCurly,
+    ]);
+    const stack = [];
+    let commaCount = 0;
+    let hasArgument = false;
+
+    for (let index = 0; index < tokens.length; index++) {
+        const type = tokens[index][0];
+        if (matchingClose.has(type)) {
+            if (stack.length === 1) hasArgument = true;
+            stack.push(matchingClose.get(type));
+        } else if (closing.has(type)) {
+            if (stack.pop() !== type) return false;
+            if (stack.length === 0) {
+                // A gradient needs at least two non-empty top-level arguments.
+                // Every token must be consumed by the outer function.
+                return index === tokens.length - 1 && commaCount >= 1 && hasArgument;
+            }
+        } else if (type === TokenType.Comma && stack.length === 1) {
+            if (!hasArgument) return false;
+            commaCount += 1;
+            hasArgument = false;
+        } else if (type === TokenType.BadString || type === TokenType.BadURL
+            || type === TokenType.Semicolon || type === TokenType.OpenCurly) {
+            return false;
+        } else if (stack.length === 1) {
+            hasArgument = true;
+        }
+    }
+    // Unmatched '(' or a value with no complete outer gradient is invalid.
+    return false;
+}
+
 export function expectedResidual(
     baseRule, sharedRule, errors, label,
     inheritedEquivalentProperties = [], convergedThemeProperties = [],
     participantConvergedProperties = [], participantLayoutProperties = [],
+    participantResidualRewrites = [],
 ) {
     const base = [...(baseRule.migrationDeclarations || [])];
     const shared = sharedRule.migrationDeclarations || [];
@@ -239,6 +297,34 @@ export function expectedResidual(
                 + ' is unnecessary because the local source already wrote it.');
         }
     }
+
+    // An unlayered background shorthand resets background-clip, hiding layered
+    // gradient text. Permit only a reviewed image-only title gradient to change
+    // from background to background-image; preserve its exact original value.
+    for (const rewrite of participantResidualRewrites) {
+        if (rewrite.from !== 'background' || rewrite.to !== 'background-image') {
+            errors.push(label + ': unsupported residual property rewrite.');
+            continue;
+        }
+        const indices = residual.flatMap((declaration, index) =>
+            declaration.property === rewrite.from ? [index] : []);
+        if (indices.length !== 1 || residual.some(item => item.property === rewrite.to)) {
+            errors.push(label + ': residual title background is missing, ambiguous or already rewritten.');
+            continue;
+        }
+        const declaration = residual[indices[0]];
+        const rawValue = Array.isArray(declaration.value)
+            ? migrationValueText(declaration.value)
+            : String(declaration.value || '');
+        const value = rawValue.trim();
+        if (declaration.important
+            || !(isSingleLinearGradientImage(value)
+                || /^var\(--[a-z]{2}-title-bg\)$/.test(value))) {
+            errors.push(label + ': background-image rewrite requires a non-important gradient-only title value.');
+            continue;
+        }
+        residual[indices[0]] = { ...declaration, property: 'background-image' };
+    }
     return residual;
 }
 
@@ -289,6 +375,9 @@ function hasAdoptionAnchor(extraction, component) {
         && candidate.suffix === component.suffix
         && candidate.sharedClass === component.sharedClass
         && candidate.surface === component.surface
+        && (component.participants || []).every(prefix =>
+            (candidate.localSuffixByParticipant?.[prefix] || candidate.suffix)
+                === (component.localSuffixByParticipant?.[prefix] || component.suffix))
         // The anchor re-validates adoption for every participant it lists, so a state
         // component may cover a subset (e.g. a page whose hover is retired instead).
         && (component.participants || []).every(prefix => (candidate.participants || []).includes(prefix)));
@@ -362,7 +451,7 @@ export function verifyExtractionAdoption(root, extraction, errors) {
                 errors.push(label + ': incomplete game metadata for ' + prefix + '.');
                 continue;
             }
-            const localClass = prefix + '-' + component.suffix;
+            const localClass = prefix + '-' + (component.localSuffixByParticipant?.[prefix] || component.suffix);
             if (component.surface === 'html') {
                 verifyHtmlAdoption(
                     root, game.html, localClass, component.sharedClass, errors, label + '/' + prefix,
@@ -503,6 +592,25 @@ export function verifyExtractionShape(extraction, errors) {
             }
         }
 
+        // An alias preserves each existing DOM class while one semantic family owns CSS.
+        if (component.localSuffixByParticipant !== undefined) {
+            const map = component.localSuffixByParticipant;
+            if (!map || typeof map !== 'object' || Array.isArray(map)) {
+                fail('localSuffixByParticipant must be an object keyed by participant prefix.');
+            } else {
+                for (const [prefix, suffix] of Object.entries(map)) {
+                    if (!participants.has(prefix)) {
+                        fail('local suffix override references non-participant ' + prefix + '.');
+                    }
+                    if (typeof suffix !== 'string' || !/^[a-z][a-z0-9-]*$/.test(suffix)
+                        || suffix === component.suffix) {
+                        fail('local suffix override for ' + prefix
+                            + ' must be a different kebab-case class suffix.');
+                    }
+                }
+            }
+        }
+
         const fullyRemoved = new Set();
         for (const prefix of component.fullyRemoved) {
             if (fullyRemoved.has(prefix)) {
@@ -558,6 +666,28 @@ export function verifyExtractionShape(extraction, errors) {
                 if (typeof entry?.reason !== 'string' || !entry.reason.trim()) {
                     fail('component .' + component.sharedClass + ' layout convergence for ' + prefix
                         + ' requires a reason.');
+                }
+            }
+        }
+
+        // Strict, title-only semantic equivalence for gradient backgrounds.
+        const rewrites = component.participantResidualRewrites || {};
+        if (!rewrites || typeof rewrites !== 'object' || Array.isArray(rewrites)) {
+            fail('participantResidualRewrites must be an object keyed by participant prefix.');
+        } else {
+            for (const [prefix, entries] of Object.entries(rewrites)) {
+                if (!participants.has(prefix)) {
+                    fail('residual rewrite references non-participant ' + prefix + '.');
+                }
+                if (component.suffix !== 'title' || component.sharedClass !== 'game-start-title'
+                    || (component.context || '') !== '' || component.localSelectorSuffix) {
+                    fail('residual property rewrites are only reviewed for default game-start-title.');
+                }
+                if (!Array.isArray(entries) || entries.length !== 1
+                    || entries[0]?.from !== 'background'
+                    || entries[0]?.to !== 'background-image'
+                    || typeof entries[0]?.reason !== 'string' || !entries[0].reason.trim()) {
+                    fail('residual rewrite must be reviewed background to background-image with a reason.');
                 }
             }
         }
@@ -1337,6 +1467,7 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
                     component.convergedThemeProperties || [],
                     component.participantConvergedProperties?.[prefix] || [],
                     layoutProperties,
+                    component.participantResidualRewrites?.[prefix] || [],
                 );
             const currentMatches = (currentParsedByPath.get(game.css)?.rules || []).filter(rule =>
                 rule.selector === localSelector && !rule.layer && (rule.context || []).join(' / ') === context);

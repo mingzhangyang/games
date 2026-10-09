@@ -29,14 +29,8 @@
     --cb-overlay-bg: rgb(5, 7, 15, 0.92);
     --cb-overlay-dim-bg: rgb(5, 7, 15, 0.72);
     --cb-title-bg: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
-    --cb-mode-bg: rgb(255, 255, 255, 0.07);
-    --cb-mode-border: 1px solid rgb(255, 255, 255, 0.14);
-    --cb-mode-hover-bg: rgb(255, 255, 255, 0.13);
     --cb-mode-daily-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
     --cb-mode-daily-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
-    --cb-chip-bg: rgb(255, 255, 255, 0.05);
-    --cb-chip-border: 1px solid rgb(255, 255, 255, 0.1);
-    --cb-chip-hover-bg: rgb(255, 255, 255, 0.11);
     --cb-chip-is-done-bg: rgb(127, 168, 255, 0.12);
     --cb-chip-is-done-border: rgb(127, 168, 255, 0.38);
     --cb-daily-best-text: #a8c4ff;
@@ -87,14 +81,8 @@
     --cb-overlay-bg: rgb(255, 255, 255, 0.98);
     --cb-overlay-dim-bg: rgb(15, 23, 42, 0.32);
     --cb-title-bg: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
-    --cb-mode-bg: rgb(255, 255, 255, 0.76);
-    --cb-mode-border: 1px solid rgb(15, 23, 42, 0.154);
-    --cb-mode-hover-bg: rgb(255, 255, 255, 0.94);
     --cb-mode-daily-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
     --cb-mode-daily-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
-    --cb-chip-bg: rgb(255, 255, 255, 0.7);
-    --cb-chip-border: 1px solid rgb(15, 23, 42, 0.11);
-    --cb-chip-hover-bg: rgb(255, 255, 255, 0.88);
     --cb-chip-is-done-bg: rgb(127, 168, 255, 0.12);
     --cb-chip-is-done-border: rgb(127, 168, 255, 0.38);
     --cb-daily-best-text: #0f172a;
@@ -274,15 +262,7 @@ body {
 
 .cb-overlay-dim { background: var(--cb-overlay-dim-bg); }
 
-.cb-title {
-    font-size: 34px;
-    font-weight: 800;
-    line-height: 1.15;
-    background: var(--cb-title-bg);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+.cb-title { background-image: var(--cb-title-bg); }
 
 
 .cb-hero {
@@ -298,30 +278,13 @@ body {
 
 
 
-.cb-mode {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    line-height: 1;
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--cb-mode-bg);
-    border: var(--cb-mode-border);
-    border-radius: 13px;
-    padding: 11px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
+ 
 
-.cb-mode:hover { background: var(--cb-mode-hover-bg); }
-.cb-mode:active { transform: scale(0.95); }
+ 
+ 
 
 .cb-mode-daily {
     background: var(--cb-mode-daily-bg);
-    border: none;
     box-shadow: var(--cb-mode-daily-shadow);
 }
 
@@ -330,24 +293,10 @@ body {
 /* ⚠️ 类名必须与 src/games/crystal-bloom/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'cb-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
-.cb-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    font-family: inherit;
-    background: var(--cb-chip-bg);
-    border: var(--cb-chip-border);
-    border-radius: 10px;
-    padding: 6px 2px 4px;
-    cursor: pointer;
-    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
-    color: var(--tok-text);
-    transition: background 0.15s, transform 0.1s;
-}
+ 
 
-.cb-chip:hover { background: var(--cb-chip-hover-bg); }
-.cb-chip:active { transform: scale(0.93); }
+ 
+ 
 
 .cb-chip.is-done {
     background: var(--cb-chip-is-done-bg);
@@ -358,13 +307,7 @@ body {
 
 .cb-chip-stars { color: var(--tok-gold); }
 
-.cb-daily-best {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--cb-daily-best-text);
-    min-height: 15px;
-    font-variant-numeric: tabular-nums;
-}
+.cb-daily-best { color: var(--cb-daily-best-text); }
 
 
 /* ── 过关卡片 ── */
@@ -509,9 +452,9 @@ body {
 @media (width <= 480px) {
     .cb-hud-level { font-size: 12px; }
     .cb-cut-value { font-size: 16px; }
-    .cb-title { font-size: 27px; }
+ 
     .cb-over-score { font-size: 34px; }
-    .cb-mode { font-size: 13px; padding: 11px 15px; }
+ 
 
     @layer pages {
         .cb-stage { flex-direction: column; align-items: stretch; }

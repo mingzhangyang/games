@@ -133,15 +133,7 @@ body {
 
 .ec-overlay-dim { background: rgb(5, 8, 16, 0.72); }
 
-.ec-title {
-    font-size: 34px;
-    font-weight: 800;
-    line-height: 1.15;
-    background: linear-gradient(120deg, #6fd8ff, var(--tok-gold) 55%, #a78bfa);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+.ec-title { background-image: linear-gradient(120deg, #6fd8ff, var(--tok-gold) 55%, #a78bfa); }
 
 
 .ec-hero {
@@ -157,30 +149,13 @@ body {
 
 
 
-.ec-mode {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    line-height: 1;
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: rgb(255, 255, 255, 0.07);
-    border: 1px solid rgb(255, 255, 255, 0.14);
-    border-radius: 13px;
-    padding: 11px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
+ 
 
-.ec-mode:hover { background: rgb(255, 255, 255, 0.13); }
-.ec-mode:active { transform: scale(0.95); }
+ 
+ 
 
 .ec-mode-daily {
     background: linear-gradient(120deg, #6fd8ff, #a78bfa);
-    border: none;
     box-shadow: 0 8px 24px rgb(167, 139, 250, 0.35);
 }
 
@@ -189,24 +164,10 @@ body {
 /* ⚠️ 类名必须与 src/games/echo-cave/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'ec-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
-.ec-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    font-family: inherit;
-    background: rgb(255, 255, 255, 0.05);
-    border: 1px solid rgb(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 6px 2px 4px;
-    cursor: pointer;
-    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
-    color: var(--tok-text);
-    transition: background 0.15s, transform 0.1s;
-}
+ 
 
-.ec-chip:hover { background: rgb(255, 255, 255, 0.11); }
-.ec-chip:active { transform: scale(0.93); }
+ 
+ 
 
 .ec-chip.is-done {
     background: rgb(111, 216, 255, 0.12);
@@ -217,13 +178,7 @@ body {
 
 .ec-chip-stars { color: var(--tok-gold); }
 
-.ec-daily-best {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #9fdcff;
-    min-height: 15px;
-    font-variant-numeric: tabular-nums;
-}
+.ec-daily-best { color: #9fdcff; }
 
 
 /* ── 过关卡片 ── */
@@ -368,9 +323,9 @@ body {
 @media (width <= 480px) {
     .ec-hud-level { font-size: 12px; }
     .ec-cut-value { font-size: 16px; }
-    .ec-title { font-size: 27px; }
+ 
     .ec-over-score { font-size: 34px; }
-    .ec-mode { font-size: 13px; padding: 11px 15px; }
+ 
 
     @layer pages {
         .ec-stage { flex-direction: column; align-items: stretch; }

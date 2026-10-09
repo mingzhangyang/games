@@ -233,7 +233,7 @@ export class LumenGame {
         for (let i = 0; i < LUMEN_LEVELS.length; i++) {
             const chip = document.createElement('button');
             chip.type = 'button';
-            chip.className = 'lm-level-chip';
+            chip.className = 'lm-level-chip game-start-level-chip';
             const num = document.createElement('span');
             num.className = 'lm-chip-num game-start-chip-num';
             num.textContent = String(i + 1);

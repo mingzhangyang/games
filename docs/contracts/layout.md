@@ -82,6 +82,23 @@ Gravity Slingshot 不再保留原 340px 特例；所有选关网格均复用同�
 `verify-start-menus.mjs` 以三种视口检查九页 computed styles 与真实 runtime 节点。
 新引入的 `@media (width <= 480px)` 容器在 `start-menu-exact-w4a` 中以 `reviewedAtRuleAdditions` 单独登记。验证器只允许恰好一个已批准的 media grouping 插入，要求历史 non-rule at-rule 列表完整、顺序不变；其内部的两个普通 CSS 规则仍须通过 family extraction 逐项对账。
 
+### 1.1.3 开始菜单结构组件族（W4b，2026-10-09）
+
+W4a 抽取精确重复的文本/网格默认值；W4b 将相同语义的九个解谜页
+`mode`、`mode-daily`、`chip/level-chip`、`title`、`daily-best`
+归入一组真正共享的组件 surface。
+
+- `game-start-title`：标题共享 34px/800，≤480px 为 27px；页面渐变只保留 `background-image` 长写，不得使用 `background` 简写（会重置共享 `background-clip:text`，使透明字形不可见）。`participantResidualRewrites` 严格审计九页从 `background` 到 `background-image` 的图像值转换，不开放其他属性改写。历史上 Gravity 的 32px 和 Silk Dew 的书法字体/35px 不构成额外标准。
+- `game-start-mode`：相同的 inline-flex 对齐、13px 圆角、11px×20px 内距、≥44px 高度和 hover/active；手机统一 13px、11px×15px。`game-start-mode--daily` 是语义修饰，负责去除边框，页面背景渐变/阴影仍可以主题化。
+- `game-start-level-chip`：六页 legacy `*-chip` 与三页 `*-level-chip` 采用相同的选关控件（10px 圆角、≥44px 高度、hover/active）；旧业务类与 `is-done` 语义必须保留，完成态只允许页面自有的 palette。
+- `game-start-daily-best`：12.5px/600、15px 最小高度、等宽数字；记录颜色属于页面主题。
+- 五个 Science Showcase 页 `science-showcase.css` 的 9px 圆角、统一强调面板与 44px 触控外观继续保持 P0 冻结；迁移不得通过削弱 `!important` 账本来制造“统一”。
+- 家族历史类映射由 append-only `start-menu-structural-w4b` 的 `localSuffixByParticipant` 明确登记，动态 runtime 节点必须使用真实页面类 + 通用类；不能通过重命名 JS 内部选择器假装采用。
+- Desktop/phone/tablet/landscape 的真实 computed-style/touch 校验由 `verify-start-menus.mjs` 持续执行。
+<1024px 菜单通过流式网格自然撑高页面，因此不得在 overlay 内部隐藏溢出；≥1024px 则保留原有固定舞台，
+如内容高于 overlay，必须保持 `overflow-y:auto`，并在滚动后逐一做按钮中心命中测试，
+不能错误沿用手机的“不得内部滚动”断言。任一页面重引入旧组件几何仍将违反 CSS debt 契约。
+
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 
 每个页面必须提供：

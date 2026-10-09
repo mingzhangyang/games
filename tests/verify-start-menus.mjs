@@ -5,7 +5,7 @@
 // 280–500px 高，关卡网格被压进一个看不出能滚的小盒子 —— 晶绽 / 涟漪 / 焰语只露出 10/20 个关卡，
 // 电路谜题一个都看不到。几何检查器全绿，因为菜单「在舞台里」。
 //
-// 断言（390×844、768×1024，全部注册表页面）：
+// 断言（390×844、768×1024、844×390；九个 W4b 页面另测 1280×900，全部注册表页面）：
 //   ① 覆盖：加载时可见、且被困在舞台里（非视口级全屏）的 .game-overlay 不得内部溢出 ——
 //      溢出的必须加 .game-overlay--menu（新游戏漏加 → 红）
 //   ② 可达：带 .game-overlay--menu 的菜单里，每个可见按钮都能滚到视口里、并且中心点命中它自己
@@ -28,6 +28,7 @@ const W4A_GAMES = new Set([
 
 const fails = [];
 let passes = 0;
+let verifiedPageViewports = 0;
 const check = (cond, label, extra = '') => { if (cond) passes++; else fails.push(`${label}${extra ? ' —— ' + extra : ''}`); };
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
@@ -35,12 +36,28 @@ const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 
 const GAMES = registry.all().filter(g => keepPage(g.id));
 exitIfNoPages(GAMES, 'verify-start-menus');
 for (const g of GAMES) {
-    for (const [w, h] of VIEWPORTS) {
+    // W4b also checks the complete desktop menu family; preserve the original
+    // three-viewport gate for other games to avoid extra unrelated CI work.
+    const viewports = W4A_GAMES.has(g.id) ? [...VIEWPORTS, [1280, 900]] : VIEWPORTS;
+    for (const [w, h] of viewports) {
         const page = await browser.newPage();
         const errors = [];
         page.on('pageerror', e => errors.push(e.message));
         await page.setViewport({ width: w, height: h });
-        await page.goto(`${BASE}/${g.href}`, { waitUntil: 'networkidle2' });
+        try {
+            // networkidle2 can hang on analytics, service workers and third-party fonts
+            // even when the game is ready. DOMContentLoaded waits for deferred/module
+            // scripts; the dynamically rendered level chips prove W4b runtime startup.
+            // Never turn a timeout into a silent skip: record its exact game + viewport.
+            await page.goto(`${BASE}/${g.href}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            if (W4A_GAMES.has(g.id)) {
+                await page.waitForSelector('.game-start-level-chip', { timeout: 10000 });
+            }
+        } catch (error) {
+            check(false, `${g.id}@${w}×${h}：页面或菜单初始化失败`, error.message);
+            await page.close().catch(() => {});
+            continue;
+        }
         await new Promise(r => setTimeout(r, 400));
 
         // ① 覆盖
@@ -53,10 +70,23 @@ for (const g of GAMES) {
                 fullscreen: e.clientHeight >= innerHeight - 1,
                 h: e.clientHeight,
                 sh: e.scrollHeight,
+                overflowY: getComputedStyle(e).overflowY,
             })));
         for (const o of overlays) {
             if (o.fullscreen) continue;
-            check(o.sh <= o.h + 2, `${g.id}@${w}：#${o.id} 不内部溢出${o.menu ? '' : '（溢出就加 .game-overlay--menu）'}`, `h=${o.h} scrollH=${o.sh}`);
+            // The no-inner-scroll invariant belongs to <1024px flow-layout menus.
+            // At desktop width the stage stays fixed and .game-overlay intentionally
+            // scrolls within it. Require a real scrollable menu if content exceeds
+            // its box, then hit-test every button after scrolling below.
+            if (w < 1024) {
+                check(o.sh <= o.h + 2,
+                    `${g.id}@${w}：#${o.id} 移动/平板菜单不能被内部滚动盒裁切`,
+                    `h=${o.h} scrollH=${o.sh}`);
+            } else if (o.sh > o.h + 2) {
+                check(o.menu && o.overflowY === 'auto',
+                    `${g.id}@${w}：#${o.id} desktop overflow must be scrollable menu`,
+                    JSON.stringify(o));
+            }
         }
 
         // ② 可达：菜单里**所有**可见按钮（不只数字关卡 —— na 的模式按钮也曾被裁）都能滚到并点中；
@@ -147,6 +177,67 @@ for (const g of GAMES) {
             check(gridTrackCount === 5,
                 `${g.id}@${w}：W4a 选关网格必须保持五列`,
                 `${gridTrackCount} columns (computed grid-template-columns: ${gridTemplate})`);
+            // W4b: assert component adoption and resolved geometry, including dynamic
+            // level chips. Science Showcase intentionally overrides border radius to
+            // 9px with its frozen P0 !important material rule.
+            const family = await page.evaluate(() => {
+                const sample = (selector) => {
+                    const element = document.querySelector(selector);
+                    if (!element) return null;
+                    const css = getComputedStyle(element);
+                    return {
+                        fontSize: css.fontSize, fontWeight: css.fontWeight,
+                        minHeight: css.minHeight, borderRadius: css.borderRadius,
+                        padding: css.padding, cursor: css.cursor,
+                        backgroundClip: css.backgroundClip,
+                        backgroundImage: css.backgroundImage,
+                        height: element.getBoundingClientRect().height,
+                    };
+                };
+                return {
+                    showcase: !!document.querySelector('.science-showcase'),
+                    title: sample('.game-start-title'),
+                    mode: sample('.game-start-mode:not(.game-start-mode--daily)'),
+                    daily: sample('.game-start-mode--daily'),
+                    chip: sample('.game-start-level-chip'),
+                    best: sample('.game-start-daily-best'),
+                };
+            });
+            for (const [name, value] of Object.entries(family)) {
+                if (name !== 'showcase') {
+                    check(value !== null, `${g.id}@${w}：W4b ${name} component adopted`);
+                }
+            }
+            const wantedTitleSize = w <= 480 ? '27px' : '34px';
+            const wantedModeSize = w <= 480 ? '13px' : '14.5px';
+            check(family.title?.fontSize === wantedTitleSize,
+                `${g.id}@${w}：W4b title standard font size`, String(family.title?.fontSize));
+            check(family.title?.fontWeight === '800',
+                `${g.id}@${w}：W4b title standard font weight`, String(family.title?.fontWeight));
+            if (!family.showcase) {
+                check(family.title?.backgroundClip === 'text'
+                    && family.title?.backgroundImage !== 'none',
+                `${g.id}@${w}：W4b gradient title text clipping`,
+                JSON.stringify(family.title));
+            }
+            check(family.mode?.fontSize === wantedModeSize,
+                `${g.id}@${w}：W4b mode standard font size`, String(family.mode?.fontSize));
+            check(family.mode?.padding === (w <= 480 ? '11px 15px' : '11px 20px'),
+                `${g.id}@${w}：W4b mode standard padding`, String(family.mode?.padding));
+            for (const [name, expectedRadius] of [
+                ['mode', family.showcase ? '9px' : '13px'],
+                ['chip', family.showcase ? '9px' : '10px'],
+            ]) {
+                const style = family[name];
+                check(style?.minHeight === '44px' && style?.borderRadius === expectedRadius,
+                    `${g.id}@${w}：W4b ${name} touch/radius contract`,
+                    JSON.stringify(style));
+                check(style?.cursor === 'pointer',
+                    `${g.id}@${w}：W4b ${name} clickable state`, String(style?.cursor));
+            }
+            check(family.best?.fontSize === '12.5px' && family.best?.minHeight === '15px',
+                `${g.id}@${w}：W4b best score typographic contract`,
+                JSON.stringify(family.best));
             if (g.id === 'gravity-slingshot') {
                 check(audit.howto?.maxWidth === '350px',
                     `${g.id}@${w}：howto 不再保留 340px 特例`, String(audit.howto?.maxWidth));
@@ -154,6 +245,7 @@ for (const g of GAMES) {
         }
         check(errors.length === 0, `${g.id}@${w}：无 pageerror`, errors.join(' | '));
         await page.close();
+        verifiedPageViewports++;
     }
 }
 await browser.close();
@@ -163,4 +255,4 @@ if (fails.length) {
     console.error(`\nverify-start-menus：${fails.length} 项失败（${passes} 项通过）❌`);
     process.exit(1);
 }
-console.log(`verify-start-menus 全部通过 ✅（${passes} 项断言，${GAMES.length} 页 × ${VIEWPORTS.length} 视口）`);
+console.log(`verify-start-menus 全部通过 ✅（${passes} 项断言，${GAMES.length} 页，${verifiedPageViewports} 组页面/视口）`);

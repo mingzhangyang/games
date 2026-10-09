@@ -374,7 +374,7 @@ export class SilkfallGame {
             const p = this.progress[spec.id] || { stars: 0, bestDrags: 0 };
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'sd-chip' + (p.stars > 0 ? ' is-done' : '');
+            btn.className = 'sd-chip game-start-level-chip' + (p.stars > 0 ? ' is-done' : '');
             btn.dataset.level = String(i);
             const num = document.createElement('span');
             num.className = 'sd-chip-num game-start-chip-num';

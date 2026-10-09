@@ -376,7 +376,7 @@ export class FlameVerseGame {
             const p = this.progress[spec.id] || { stars: 0, bestCost: 0 };
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'fv-chip' + (p.stars > 0 ? ' is-done' : '');
+            btn.className = 'fv-chip game-start-level-chip' + (p.stars > 0 ? ' is-done' : '');
             btn.dataset.level = String(i);
             const num = document.createElement('span');
             num.className = 'fv-chip-num game-start-chip-num';

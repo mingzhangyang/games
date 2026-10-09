@@ -1815,6 +1815,628 @@
           "reason": "The two adopted W4a phone defaults introduce exactly one new media grouping in layout.css. The family ledger verifies both declarations and all nine page participants; the surrounding historical at-rule inventory must stay unchanged."
         }
       ]
+    },
+    {
+      "id": "start-menu-structural-w4b",
+      "baseDuplicationDigest": "fa3d78c3e1e2403252afe24e6bb9a22a106ffdf3579b6bfdb31374164a952eff",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -61,
+      "expectedRemovedUnlayeredRules": 72,
+      "games": {
+        "cc": {
+          "css": "css/circuit.css",
+          "html": "circuit.html",
+          "runtime": "src/games/circuit/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "gd": {
+          "css": "css/gravity.css",
+          "html": "gravity-slingshot.html",
+          "runtime": "src/games/gravity-slingshot/runtime.js"
+        },
+        "lm": {
+          "css": "css/lumen.css",
+          "html": "lumen.html",
+          "runtime": "src/games/lumen/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "title",
+          "sharedClass": "game-start-title",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [],
+          "participantConvergedProperties": {
+            "gd": [
+              "font-size"
+            ],
+            "sd": [
+              "font-size",
+              "font-weight",
+              "font-family",
+              "letter-spacing"
+            ]
+          },
+          "participantResidualRewrites": {
+            "cc": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "cb": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "ec": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "fv": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "gd": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "lm": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "md": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "rd": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "sd": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ]
+          }
+        },
+        {
+          "suffix": "mode",
+          "sharedClass": "game-start-mode",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "background",
+            "border"
+          ],
+          "participantConvergedProperties": {
+            "cc": [
+              "min-height",
+              "gap",
+              "line-height"
+            ],
+            "cb": [
+              "min-height"
+            ],
+            "ec": [
+              "min-height"
+            ],
+            "fv": [
+              "min-height"
+            ],
+            "gd": [
+              "min-height",
+              "gap",
+              "line-height"
+            ],
+            "lm": [
+              "min-height",
+              "gap",
+              "line-height"
+            ],
+            "md": [
+              "min-height"
+            ],
+            "rd": [
+              "min-height"
+            ],
+            "sd": [
+              "min-height",
+              "gap",
+              "line-height"
+            ]
+          },
+          "participantLayoutConvergence": {
+            "cc": {
+              "properties": [
+                "display",
+                "align-items",
+                "justify-content"
+              ],
+              "reason": "All nine start-menu mode controls are the same semantic inline-flex button; these four pages had relied on default button layout rather than explicitly declaring flex alignment."
+            },
+            "gd": {
+              "properties": [
+                "display",
+                "align-items",
+                "justify-content"
+              ],
+              "reason": "All nine start-menu mode controls are the same semantic inline-flex button; these four pages had relied on default button layout rather than explicitly declaring flex alignment."
+            },
+            "lm": {
+              "properties": [
+                "display",
+                "align-items",
+                "justify-content"
+              ],
+              "reason": "All nine start-menu mode controls are the same semantic inline-flex button; these four pages had relied on default button layout rather than explicitly declaring flex alignment."
+            },
+            "sd": {
+              "properties": [
+                "display",
+                "align-items",
+                "justify-content"
+              ],
+              "reason": "All nine start-menu mode controls are the same semantic inline-flex button; these four pages had relied on default button layout rather than explicitly declaring flex alignment."
+            }
+          }
+        },
+        {
+          "suffix": "mode",
+          "sharedClass": "game-start-mode",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "localSelectorSuffix": ":hover",
+          "sharedSelectorSuffix": ":hover",
+          "sharedClassSpecificity": "zero",
+          "requiresAdoption": false,
+          "convergedThemeProperties": [
+            "background"
+          ]
+        },
+        {
+          "suffix": "mode",
+          "sharedClass": "game-start-mode",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "localSelectorSuffix": ":active",
+          "sharedSelectorSuffix": ":active",
+          "requiresAdoption": false
+        },
+        {
+          "suffix": "mode-daily",
+          "sharedClass": "game-start-mode--daily",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": []
+        },
+        {
+          "suffix": "chip",
+          "sharedClass": "game-start-level-chip",
+          "surface": "runtime",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "localSuffixByParticipant": {
+            "cc": "level-chip",
+            "gd": "level-chip",
+            "lm": "level-chip"
+          },
+          "convergedThemeProperties": [
+            "background",
+            "border",
+            "color"
+          ],
+          "participantConvergedProperties": {
+            "cc": [
+              "min-height"
+            ],
+            "cb": [
+              "min-height"
+            ],
+            "ec": [
+              "min-height"
+            ],
+            "fv": [
+              "min-height"
+            ],
+            "gd": [
+              "min-height"
+            ],
+            "lm": [
+              "min-height"
+            ],
+            "md": [
+              "min-height"
+            ],
+            "rd": [
+              "min-height"
+            ],
+            "sd": [
+              "min-height"
+            ]
+          }
+        },
+        {
+          "suffix": "chip",
+          "sharedClass": "game-start-level-chip",
+          "surface": "runtime",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "localSuffixByParticipant": {
+            "cc": "level-chip",
+            "gd": "level-chip",
+            "lm": "level-chip"
+          },
+          "localSelectorSuffix": ":hover",
+          "sharedSelectorSuffix": ":hover",
+          "sharedClassSpecificity": "zero",
+          "requiresAdoption": false,
+          "convergedThemeProperties": [
+            "background"
+          ]
+        },
+        {
+          "suffix": "chip",
+          "sharedClass": "game-start-level-chip",
+          "surface": "runtime",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "localSuffixByParticipant": {
+            "cc": "level-chip",
+            "gd": "level-chip",
+            "lm": "level-chip"
+          },
+          "localSelectorSuffix": ":active",
+          "sharedSelectorSuffix": ":active",
+          "requiresAdoption": false
+        },
+        {
+          "suffix": "daily-best",
+          "sharedClass": "game-start-daily-best",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": []
+        },
+        {
+          "suffix": "title",
+          "sharedClass": "game-start-title",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "context": "@media (width <= 480px)",
+          "participantConvergedProperties": {
+            "gd": [
+              "font-size"
+            ]
+          }
+        },
+        {
+          "suffix": "mode",
+          "sharedClass": "game-start-mode",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "context": "@media (width <= 480px)",
+          "participantConvergedProperties": {
+            "cc": [
+              "padding"
+            ],
+            "gd": [
+              "padding"
+            ],
+            "lm": [
+              "padding"
+            ],
+            "sd": [
+              "padding"
+            ]
+          }
+        }
+      ],
+      "retiredCustomProperties": {
+        "cc": {
+          "properties": [
+            "--cc-mode-bg",
+            "--cc-mode-border",
+            "--cc-mode-hover-bg",
+            "--cc-level-chip-bg",
+            "--cc-level-chip-border",
+            "--cc-level-chip-hover-bg"
+          ],
+          "expectedRemovedDefinitions": 12
+        },
+        "cb": {
+          "properties": [
+            "--cb-mode-bg",
+            "--cb-mode-border",
+            "--cb-mode-hover-bg",
+            "--cb-chip-bg",
+            "--cb-chip-border",
+            "--cb-chip-hover-bg"
+          ],
+          "expectedRemovedDefinitions": 12
+        },
+        "md": {
+          "properties": [
+            "--md-mode-bg",
+            "--md-mode-border",
+            "--md-mode-hover-bg",
+            "--md-chip-bg",
+            "--md-chip-border",
+            "--md-chip-hover-bg"
+          ],
+          "expectedRemovedDefinitions": 12
+        },
+        "rd": {
+          "properties": [
+            "--rd-mode-bg",
+            "--rd-mode-border",
+            "--rd-mode-hover-bg",
+            "--rd-chip-bg",
+            "--rd-chip-border",
+            "--rd-chip-hover-bg"
+          ],
+          "expectedRemovedDefinitions": 12
+        },
+        "sd": {
+          "properties": [
+            "--sd-mode-bg",
+            "--sd-mode-border",
+            "--sd-mode-hover-bg",
+            "--sd-chip-bg",
+            "--sd-chip-border",
+            "--sd-chip-hover-bg"
+          ],
+          "expectedRemovedDefinitions": 12
+        }
+      }
     }
   ]
 }
