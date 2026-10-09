@@ -11,8 +11,8 @@ body {
         linear-gradient(165deg, #070b22 0%, var(--tok-bg-2) 55%, #0d1338 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
-    --game-over-glow-hue: rgb(125, 250, 208);
 
+    --game-over-glow-hue: rgb(125, 250, 208);
     --tok-accent: #5a7bff;
     --tok-accent-2: #7dfad0;
 }

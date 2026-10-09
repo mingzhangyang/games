@@ -2697,6 +2697,256 @@
           ],
           "expectedRemovedDefinitions": 6
         }
+      },
+      "reviewedCustomPropertyIntroductions": {
+        "cc": [
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 201, 77)",
+            "replaces": "--cc-over-score-glow",
+            "previousValue": "0 0 26px rgb(255, 201, 77, 0.45)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--cc-over-score-glow",
+            "previousValue": "none"
+          }
+        ],
+        "cb": [
+          {
+            "selector": ":root",
+            "property": "--game-cut-surface",
+            "value": "rgb(0, 0, 0, 0.4)",
+            "replaces": "--cb-cut-box-bg",
+            "previousValue": "rgb(0, 0, 0, 0.4)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--cb-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "replaces": "--cb-over-score-glow",
+            "previousValue": "0 0 26px rgb(255, 211, 77, 0.4)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-surface",
+            "value": "rgb(15, 23, 42, 0.1)",
+            "replaces": "--cb-cut-box-bg",
+            "previousValue": "rgb(15, 23, 42, 0.1)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--cb-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--cb-over-score-glow",
+            "previousValue": "none"
+          }
+        ],
+        "ec": [
+          {
+            "selector": "body",
+            "property": "--game-cut-value-color",
+            "value": "var(--tok-text)",
+            "insertAfter": "color"
+          },
+          {
+            "selector": "body",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(111, 216, 255, 0.16)",
+            "insertAfter": "--game-cut-value-color"
+          },
+          {
+            "selector": "body",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "insertAfter": "--game-cut-stroke-color"
+          }
+        ],
+        "fv": [
+          {
+            "selector": "body",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "insertAfter": "color"
+          },
+          {
+            "selector": "body",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "insertAfter": "--game-cut-stroke-color"
+          }
+        ],
+        "gd": [
+          {
+            "selector": "body",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(125, 250, 208)",
+            "insertAfter": "color"
+          }
+        ],
+        "lm": [
+          {
+            "selector": "body",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(125, 250, 208)",
+            "insertAfter": "color"
+          }
+        ],
+        "md": [
+          {
+            "selector": ":root",
+            "property": "--game-cut-surface",
+            "value": "rgb(0, 0, 0, 0.4)",
+            "replaces": "--md-cut-box-bg",
+            "previousValue": "rgb(0, 0, 0, 0.4)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--md-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "replaces": "--md-over-score-glow",
+            "previousValue": "0 0 26px rgb(255, 211, 77, 0.4)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-surface",
+            "value": "rgb(15, 23, 42, 0.1)",
+            "replaces": "--md-cut-box-bg",
+            "previousValue": "rgb(15, 23, 42, 0.1)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--md-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--md-over-score-glow",
+            "previousValue": "none"
+          }
+        ],
+        "rd": [
+          {
+            "selector": ":root",
+            "property": "--game-cut-surface",
+            "value": "rgb(0, 0, 0, 0.4)",
+            "replaces": "--rd-cut-box-bg",
+            "previousValue": "rgb(0, 0, 0, 0.4)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--rd-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "replaces": "--rd-over-score-glow",
+            "previousValue": "0 0 26px rgb(255, 211, 77, 0.4)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-surface",
+            "value": "rgb(15, 23, 42, 0.1)",
+            "replaces": "--rd-cut-box-bg",
+            "previousValue": "rgb(15, 23, 42, 0.1)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--rd-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--rd-over-score-glow",
+            "previousValue": "none"
+          }
+        ],
+        "sd": [
+          {
+            "selector": ":root",
+            "property": "--game-cut-surface",
+            "value": "rgb(0, 0, 0, 0.4)",
+            "replaces": "--sd-cut-box-bg",
+            "previousValue": "rgb(0, 0, 0, 0.35)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(255, 255, 255, 0.09)",
+            "replaces": "--sd-cut-box-border",
+            "previousValue": "1px solid rgb(255, 255, 255, 0.09)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-value-color",
+            "value": "var(--tok-text)",
+            "insertAfter": "--game-cut-stroke-color"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(159, 232, 255)",
+            "replaces": "--sd-over-score-glow",
+            "previousValue": "0 0 26px rgb(159, 232, 255, 0.45)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-surface",
+            "value": "rgb(15, 23, 42, 0.1)",
+            "replaces": "--sd-cut-box-bg",
+            "previousValue": "rgb(15, 23, 42, 0.087)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(15, 23, 42, 0.099)",
+            "replaces": "--sd-cut-box-border",
+            "previousValue": "1px solid rgb(15, 23, 42, 0.099)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--sd-over-score-glow",
+            "previousValue": "none"
+          }
+        ]
       }
     }
   ]

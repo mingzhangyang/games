@@ -119,7 +119,7 @@ flex / baseline / 5px 间隔，统一 40% 黑色的深色玻璃背景（浅色�
 所有旧业务类与 DOM ID 保留。P0 Science Showcase 五页仍使用冻结的
 8px 计数盒圆角 / 不透明主题材质和 mono 字体，不削弱 `!important`。
 `result-hud-w5a` 以 append-only 账本记录所有 45 条原规则退役、
-6 条共享规则与 13 个页面变量名退役。全部新规则进入
+6 条共享规则、13 个页面旧变量名退役和 34 个严格审计的令牌定义（26 次原地替换、8 次新增）。全部新规则进入
 `css/layout.css` 的 components 层，手机端复用既有 480px media 容器。
 `verify-start-menus` 覆盖九页的四档视口及结果/HUD 的实际 computed style。
 

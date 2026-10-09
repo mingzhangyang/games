@@ -427,7 +427,7 @@ try {
         { base: [], current: [] }, changedThemeErrors,
     );
     assert.ok(changedThemeErrors.some(error =>
-        /theme rule changed beyond the declared custom-property retirements/.test(error)));
+        /theme rule changed beyond exact reviewed token transformations/.test(error)));
 
     const validSelectorPrune = clone(extraction);
     validSelectorPrune.reviewedSelectorPrunes = [{

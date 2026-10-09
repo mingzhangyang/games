@@ -424,14 +424,17 @@ function verifyProject() {
         const baselineFile = BASELINE.cssFiles.find(file => file.path === path);
         if (!baselineFile) continue;
         const retiredDefinitions = familyResult.removedCustomPropertyDefinitionsByPath.get(path) || 0;
-        const expectedDefinitions = baselineFile.customPropertyDefinitions - retiredDefinitions;
+        const introducedDefinitions = familyResult.introducedCustomPropertyDefinitionsByPath.get(path) || 0;
+        const expectedDefinitions = baselineFile.customPropertyDefinitions
+            - retiredDefinitions + introducedDefinitions;
         const actualDefinitions = customPropertyDefinitionsByPath.get(path) || 0;
         if (expectedDefinitions < 0) {
             errors.push(path + ': reviewed custom-property retirements exceed the immutable P0 inventory.');
         } else if (actualDefinitions !== expectedDefinitions) {
-            errors.push(path + ': custom-property declaration occurrences differ from P0 minus reviewed family retirements ('
+            errors.push(path + ': custom-property declaration occurrences differ from P0 plus exact'
+                + ' reviewed token transformations ('
                 + actualDefinitions + ' current vs ' + expectedDefinitions + ' expected; '
-                + retiredDefinitions + ' retired).');
+                + retiredDefinitions + ' retired, ' + introducedDefinitions + ' introduced).');
         }
     }
 
