@@ -131,6 +131,7 @@ export function expectedResidual(
     baseRule, sharedRule, errors, label,
     inheritedEquivalentProperties = [], convergedThemeProperties = [],
     participantConvergedProperties = [], participantLayoutProperties = [],
+    participantResidualRewrites = [],
 ) {
     const base = [...(baseRule.migrationDeclarations || [])];
     const shared = sharedRule.migrationDeclarations || [];
@@ -239,6 +240,33 @@ export function expectedResidual(
             errors.push(label + ': inherited-equivalent property ' + property
                 + ' is unnecessary because the local source already wrote it.');
         }
+    }
+
+    // An unlayered background shorthand resets background-clip, hiding layered
+    // gradient text. Permit only a reviewed image-only title gradient to change
+    // from background to background-image; preserve its exact original value.
+    for (const rewrite of participantResidualRewrites) {
+        if (rewrite.from !== 'background' || rewrite.to !== 'background-image') {
+            errors.push(label + ': unsupported residual property rewrite.');
+            continue;
+        }
+        const indices = residual.flatMap((declaration, index) =>
+            declaration.property === rewrite.from ? [index] : []);
+        if (indices.length !== 1 || residual.some(item => item.property === rewrite.to)) {
+            errors.push(label + ': residual title background is missing, ambiguous or already rewritten.');
+            continue;
+        }
+        const declaration = residual[indices[0]];
+        const rawValue = Array.isArray(declaration.value)
+            ? migrationValueText(declaration.value)
+            : String(declaration.value || '');
+        const value = rawValue.trim();
+        if (declaration.important
+            || !/^(?:linear-gradient\(|var\(--[a-z]{2}-title-bg\)$)/.test(value)) {
+            errors.push(label + ': background-image rewrite requires a non-important gradient-only title value.');
+            continue;
+        }
+        residual[indices[0]] = { ...declaration, property: 'background-image' };
     }
     return residual;
 }
@@ -581,6 +609,28 @@ export function verifyExtractionShape(extraction, errors) {
                 if (typeof entry?.reason !== 'string' || !entry.reason.trim()) {
                     fail('component .' + component.sharedClass + ' layout convergence for ' + prefix
                         + ' requires a reason.');
+                }
+            }
+        }
+
+        // Strict, title-only semantic equivalence for gradient backgrounds.
+        const rewrites = component.participantResidualRewrites || {};
+        if (!rewrites || typeof rewrites !== 'object' || Array.isArray(rewrites)) {
+            fail('participantResidualRewrites must be an object keyed by participant prefix.');
+        } else {
+            for (const [prefix, entries] of Object.entries(rewrites)) {
+                if (!participants.has(prefix)) {
+                    fail('residual rewrite references non-participant ' + prefix + '.');
+                }
+                if (component.suffix !== 'title' || component.sharedClass !== 'game-start-title'
+                    || (component.context || '') !== '' || component.localSelectorSuffix) {
+                    fail('residual property rewrites are only reviewed for default game-start-title.');
+                }
+                if (!Array.isArray(entries) || entries.length !== 1
+                    || entries[0]?.from !== 'background'
+                    || entries[0]?.to !== 'background-image'
+                    || typeof entries[0]?.reason !== 'string' || !entries[0].reason.trim()) {
+                    fail('residual rewrite must be reviewed background to background-image with a reason.');
                 }
             }
         }
@@ -1360,6 +1410,7 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
                     component.convergedThemeProperties || [],
                     component.participantConvergedProperties?.[prefix] || [],
                     layoutProperties,
+                    component.participantResidualRewrites?.[prefix] || [],
                 );
             const currentMatches = (currentParsedByPath.get(game.css)?.rules || []).filter(rule =>
                 rule.selector === localSelector && !rule.layer && (rule.context || []).join(' / ') === context);
