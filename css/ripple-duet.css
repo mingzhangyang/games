@@ -29,14 +29,8 @@
     --rd-overlay-bg: rgb(5, 7, 15, 0.92);
     --rd-overlay-dim-bg: rgb(5, 7, 15, 0.72);
     --rd-title-bg: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
-    --rd-mode-bg: rgb(255, 255, 255, 0.07);
-    --rd-mode-border: 1px solid rgb(255, 255, 255, 0.14);
-    --rd-mode-hover-bg: rgb(255, 255, 255, 0.13);
     --rd-mode-daily-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
     --rd-mode-daily-shadow: 0 8px 24px rgb(127, 168, 255, 0.35);
-    --rd-chip-bg: rgb(255, 255, 255, 0.05);
-    --rd-chip-border: 1px solid rgb(255, 255, 255, 0.1);
-    --rd-chip-hover-bg: rgb(255, 255, 255, 0.11);
     --rd-chip-is-done-bg: rgb(127, 168, 255, 0.12);
     --rd-chip-is-done-border: rgb(127, 168, 255, 0.38);
     --rd-daily-best-text: #a8c4ff;
@@ -88,14 +82,8 @@
     --rd-overlay-bg: rgb(255, 255, 255, 0.98);
     --rd-overlay-dim-bg: rgb(15, 23, 42, 0.32);
     --rd-title-bg: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c);
-    --rd-mode-bg: rgb(255, 255, 255, 0.76);
-    --rd-mode-border: 1px solid rgb(15, 23, 42, 0.154);
-    --rd-mode-hover-bg: rgb(255, 255, 255, 0.94);
     --rd-mode-daily-bg: linear-gradient(120deg, #7fa8ff, #ff8a5c);
     --rd-mode-daily-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
-    --rd-chip-bg: rgb(255, 255, 255, 0.7);
-    --rd-chip-border: 1px solid rgb(15, 23, 42, 0.11);
-    --rd-chip-hover-bg: rgb(255, 255, 255, 0.88);
     --rd-chip-is-done-bg: rgb(127, 168, 255, 0.12);
     --rd-chip-is-done-border: rgb(127, 168, 255, 0.38);
     --rd-daily-best-text: #0f172a;
@@ -265,15 +253,7 @@ body {
 
 .rd-overlay-dim { background: var(--rd-overlay-dim-bg); }
 
-.rd-title {
-    font-size: 34px;
-    font-weight: 800;
-    line-height: 1.15;
-    background: var(--rd-title-bg);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+.rd-title { background: var(--rd-title-bg); }
 
 
 .rd-hero {
@@ -289,30 +269,13 @@ body {
 
 
 
-.rd-mode {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    line-height: 1;
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--rd-mode-bg);
-    border: var(--rd-mode-border);
-    border-radius: 13px;
-    padding: 11px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
+ 
 
-.rd-mode:hover { background: var(--rd-mode-hover-bg); }
-.rd-mode:active { transform: scale(0.95); }
+ 
+ 
 
 .rd-mode-daily {
     background: var(--rd-mode-daily-bg);
-    border: none;
     box-shadow: var(--rd-mode-daily-shadow);
 }
 
@@ -321,24 +284,10 @@ body {
 /* ⚠️ 类名必须与 src/games/ripple-duet/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'rd-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑」。 */
-.rd-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    font-family: inherit;
-    background: var(--rd-chip-bg);
-    border: var(--rd-chip-border);
-    border-radius: 10px;
-    padding: 6px 2px 4px;
-    cursor: pointer;
-    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
-    color: var(--tok-text);
-    transition: background 0.15s, transform 0.1s;
-}
+ 
 
-.rd-chip:hover { background: var(--rd-chip-hover-bg); }
-.rd-chip:active { transform: scale(0.93); }
+ 
+ 
 
 .rd-chip.is-done {
     background: var(--rd-chip-is-done-bg);
@@ -349,13 +298,7 @@ body {
 
 .rd-chip-stars { color: var(--tok-gold); }
 
-.rd-daily-best {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--rd-daily-best-text);
-    min-height: 15px;
-    font-variant-numeric: tabular-nums;
-}
+.rd-daily-best { color: var(--rd-daily-best-text); }
 
 
 /* ── 过关卡片 ── */
@@ -519,9 +462,9 @@ body {
 @media (width <= 480px) {
     .rd-hud-level { font-size: 12px; }
     .rd-cut-value { font-size: 16px; }
-    .rd-title { font-size: 27px; }
+ 
     .rd-over-score { font-size: 34px; }
-    .rd-mode { font-size: 13px; padding: 11px 15px; }
+ 
     .rd-action-btn { width: 58px; height: 58px; bottom: 12px; }
     .rd-clear-btn { left: 12px; }
     .rd-run-btn { right: 12px; }

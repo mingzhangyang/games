@@ -368,7 +368,7 @@ export class MaxwellDemonGame {
             const p = this.progress[spec.id] || { stars: 0, bestSpent: 0 };
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'md-chip' + (p.stars > 0 ? ' is-done' : '');
+            btn.className = 'md-chip game-start-level-chip' + (p.stars > 0 ? ' is-done' : '');
             btn.dataset.level = String(i);
             const num = document.createElement('span');
             num.className = 'md-chip-num game-start-chip-num';

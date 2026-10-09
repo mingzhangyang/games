@@ -21,13 +21,7 @@
     --sd-overlay-bg: rgb(5, 17, 16, 0.74);
     --sd-overlay-dim-bg: rgb(5, 16, 15, 0.62);
     --sd-title-bg: linear-gradient(120deg, #9fe8ff, #58c9a0 55%, #a78bfa);
-    --sd-mode-bg: rgb(255, 255, 255, 0.07);
-    --sd-mode-border: 1px solid rgb(255, 255, 255, 0.14);
-    --sd-mode-hover-bg: rgb(255, 255, 255, 0.13);
     --sd-mode-daily-shadow: 0 8px 24px rgb(52, 211, 153, 0.35);
-    --sd-chip-bg: rgb(255, 255, 255, 0.05);
-    --sd-chip-border: 1px solid rgb(255, 255, 255, 0.1);
-    --sd-chip-hover-bg: rgb(255, 255, 255, 0.11);
     --sd-chip-is-done-bg: rgb(88, 201, 160, 0.14);
     --sd-chip-is-done-border: rgb(88, 201, 160, 0.38);
     --sd-daily-best-text: #9fe8c8;
@@ -64,13 +58,7 @@
     --sd-overlay-bg: rgb(247, 250, 247, 0.90);
     --sd-overlay-dim-bg: rgb(15, 31, 30, 0.30);
     --sd-title-bg: linear-gradient(120deg, #0b84ad, #1f8f6a 55%, #6d4fd6);
-    --sd-mode-bg: rgb(255, 255, 255, 0.76);
-    --sd-mode-border: 1px solid rgb(15, 23, 42, 0.154);
-    --sd-mode-hover-bg: rgb(255, 255, 255, 0.94);
     --sd-mode-daily-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
-    --sd-chip-bg: rgb(255, 255, 255, 0.7);
-    --sd-chip-border: 1px solid rgb(15, 23, 42, 0.11);
-    --sd-chip-hover-bg: rgb(255, 255, 255, 0.88);
     --sd-chip-is-done-bg: rgb(88, 201, 160, 0.14);
     --sd-chip-is-done-border: rgb(88, 201, 160, 0.38);
     --sd-daily-best-text: #047857;
@@ -216,17 +204,7 @@ body {
 
 .sd-overlay-dim { background: var(--sd-overlay-dim-bg); }
 
-.sd-title {
-    font-family: STKaiti, KaiTi, "Songti SC", Georgia, serif;
-    font-size: 35px;
-    font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: 0.08em;
-    background: var(--sd-title-bg);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+.sd-title { background: var(--sd-title-bg); }
 
 
 .sd-hero {
@@ -251,25 +229,13 @@ body {
 
 
 
-.sd-mode {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--sd-mode-bg);
-    border: var(--sd-mode-border);
-    border-radius: 13px;
-    padding: 11px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
+ 
 
-.sd-mode:hover { background: var(--sd-mode-hover-bg); }
-.sd-mode:active { transform: scale(0.95); }
+ 
+ 
 
 .sd-mode-daily {
     background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
-    border: none;
     color: var(--tok-on-accent);
     box-shadow: var(--sd-mode-daily-shadow);
 }
@@ -283,24 +249,10 @@ body {
 /* ⚠️ 类名必须与 src/games/silk-dew/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'sd-chip' + (is-done)`，不是 `sd-level-chip`。类名错位会让整块容器规则静默失效，
    芯片失去颜色来源 → 继承到开始覆盖层的黑色文字 → fg-audit「纯黑 20 处」。 */
-.sd-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    font-family: inherit;
-    background: var(--sd-chip-bg);
-    border: var(--sd-chip-border);
-    border-radius: 10px;
-    padding: 6px 2px 4px;
-    cursor: pointer;
-    /* 显式亮色：组件同时落在亮/暗两种表面上，继承来的文字色不可信。 */
-    color: var(--tok-text);
-    transition: background 0.15s, transform 0.1s;
-}
+ 
 
-.sd-chip:hover { background: var(--sd-chip-hover-bg); }
-.sd-chip:active { transform: scale(0.93); }
+ 
+ 
 
 .sd-chip.is-done {
     background: var(--sd-chip-is-done-bg);
@@ -311,13 +263,7 @@ body {
 
 .sd-chip-stars { color: var(--tok-gold); }
 
-.sd-daily-best {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--sd-daily-best-text);
-    min-height: 15px;
-    font-variant-numeric: tabular-nums;
-}
+.sd-daily-best { color: var(--sd-daily-best-text); }
 
 
 .sd-lang-btn {
@@ -441,9 +387,9 @@ body {
 @media (width <= 480px) {
     .sd-hud-level { font-size: 12px; }
     .sd-cut-value { font-size: 16px; }
-    .sd-title { font-size: 27px; }
+ 
     .sd-over-score { font-size: 34px; }
-    .sd-mode { font-size: 13px; padding: 10px 15px; }
+ 
 }
 
 @media (prefers-reduced-motion: reduce) {
