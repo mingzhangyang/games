@@ -263,7 +263,7 @@ body {
 
 .md-overlay-dim { background: var(--md-overlay-dim-bg); }
 
-.md-title { background: var(--md-title-bg); }
+.md-title { background-image: var(--md-title-bg); }
 
 
 .md-hero {

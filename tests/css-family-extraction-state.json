@@ -1897,6 +1897,71 @@
               "font-family",
               "letter-spacing"
             ]
+          },
+          "participantResidualRewrites": {
+            "cc": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "cb": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "ec": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "fv": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "gd": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "lm": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "md": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "rd": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ],
+            "sd": [
+              {
+                "from": "background",
+                "to": "background-image",
+                "reason": "Keep title gradient image without resetting shared background-clip:text."
+              }
+            ]
           }
         },
         {

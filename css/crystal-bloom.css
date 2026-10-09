@@ -262,7 +262,7 @@ body {
 
 .cb-overlay-dim { background: var(--cb-overlay-dim-bg); }
 
-.cb-title { background: var(--cb-title-bg); }
+.cb-title { background-image: var(--cb-title-bg); }
 
 
 .cb-hero {

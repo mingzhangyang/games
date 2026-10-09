@@ -253,7 +253,7 @@ body {
 
 .rd-overlay-dim { background: var(--rd-overlay-dim-bg); }
 
-.rd-title { background: var(--rd-title-bg); }
+.rd-title { background-image: var(--rd-title-bg); }
 
 
 .rd-hero {

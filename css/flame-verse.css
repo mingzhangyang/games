@@ -149,7 +149,7 @@ body {
 
 .fv-overlay-dim { background: rgb(5, 7, 15, 0.72); }
 
-.fv-title { background: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c); }
+.fv-title { background-image: linear-gradient(120deg, #7fa8ff, var(--tok-gold) 55%, #ff8a5c); }
 
 
 .fv-hero {

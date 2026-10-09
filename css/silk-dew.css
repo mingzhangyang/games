@@ -204,7 +204,7 @@ body {
 
 .sd-overlay-dim { background: var(--sd-overlay-dim-bg); }
 
-.sd-title { background: var(--sd-title-bg); }
+.sd-title { background-image: var(--sd-title-bg); }
 
 
 .sd-hero {

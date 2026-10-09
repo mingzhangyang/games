@@ -133,7 +133,7 @@ body {
 
 .ec-overlay-dim { background: rgb(5, 8, 16, 0.72); }
 
-.ec-title { background: linear-gradient(120deg, #6fd8ff, var(--tok-gold) 55%, #a78bfa); }
+.ec-title { background-image: linear-gradient(120deg, #6fd8ff, var(--tok-gold) 55%, #a78bfa); }
 
 
 .ec-hero {

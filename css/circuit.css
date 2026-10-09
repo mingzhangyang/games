@@ -173,7 +173,7 @@ body {
 
 .cc-overlay-dim { background: var(--cc-overlay-dim-bg); }
 
-.cc-title { background: var(--cc-title-bg); }
+.cc-title { background-image: var(--cc-title-bg); }
 
 
 .cc-hero {
