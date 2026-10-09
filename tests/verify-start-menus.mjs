@@ -238,6 +238,67 @@ for (const g of GAMES) {
             check(family.best?.fontSize === '12.5px' && family.best?.minHeight === '15px',
                 `${g.id}@${w}：W4b best score typographic contract`,
                 JSON.stringify(family.best));
+
+            // W5a checks real computed CSS for the results and HUD counters.
+            // Results remain hidden during startup; computed values still expose
+            // the exact cascade and skin that the game will show on completion.
+            const resultHud = await page.evaluate(() => {
+                const get = selector => {
+                    const el = document.querySelector(selector);
+                    if (!el) return null;
+                    const s = getComputedStyle(el);
+                    return {
+                        fontSize: s.fontSize, fontWeight: s.fontWeight,
+                        lineHeight: s.lineHeight, fontVariantNumeric: s.fontVariantNumeric,
+                        minHeight: s.minHeight, textShadow: s.textShadow,
+                        display: s.display, alignItems: s.alignItems, gap: s.gap,
+                        borderRadius: s.borderRadius, borderTopWidth: s.borderTopWidth,
+                        borderTopStyle: s.borderTopStyle, backgroundColor: s.backgroundColor,
+                        padding: s.padding, minWidth: s.minWidth, textAlign: s.textAlign,
+                        fontFamily: s.fontFamily,
+                    };
+                };
+                return {
+                    showcase: !!document.querySelector('.science-showcase'),
+                    score: get('.game-over-score'), subtitle: get('.game-over-sub'),
+                    cutBox: get('.game-cut-box'), cutValue: get('.game-cut-value'),
+                };
+            });
+            check(resultHud.score?.fontSize === (w <= 480 ? '34px' : '42px')
+                && resultHud.score?.fontWeight === '800'
+                && (resultHud.score?.lineHeight === '1'
+                    || Number.parseFloat(resultHud.score?.lineHeight) === Number.parseFloat(resultHud.score?.fontSize))
+                && resultHud.score?.fontVariantNumeric === 'tabular-nums',
+            `${g.id}@${w}：W5a result score geometry`, JSON.stringify(resultHud.score));
+            check(resultHud.score?.textShadow?.includes('26px'),
+                `${g.id}@${w}：W5a common 26px glow blur`, String(resultHud.score?.textShadow));
+            check(resultHud.subtitle?.fontSize === '13px'
+                && resultHud.subtitle?.minHeight === '16px'
+                && resultHud.subtitle?.fontVariantNumeric === 'tabular-nums',
+            `${g.id}@${w}：W5a result subtitle typography`, JSON.stringify(resultHud.subtitle));
+            const needsCounter = ['crystal-bloom', 'echo-cave', 'flame-verse',
+                'maxwell-demon', 'ripple-duet', 'silk-dew'].includes(g.id);
+            if (needsCounter) {
+                check(resultHud.cutBox?.display === 'flex'
+                    && resultHud.cutBox?.alignItems === 'baseline'
+                    && resultHud.cutBox?.gap === '5px'
+                    && resultHud.cutBox?.padding === '6px 12px'
+                    && resultHud.cutBox?.borderRadius === (resultHud.showcase ? '8px' : '11px')
+                    && resultHud.cutBox?.borderTopStyle === 'solid'
+                    && resultHud.cutBox?.borderTopWidth === '1px',
+                `${g.id}@${w}：W5a cut-box standardized surface with P0 retained`,
+                JSON.stringify(resultHud.cutBox));
+                check(resultHud.cutValue?.fontSize === (w <= 480 ? '16px' : '19px')
+                    && resultHud.cutValue?.fontWeight === '800'
+                    && resultHud.cutValue?.fontVariantNumeric === 'tabular-nums'
+                    && resultHud.cutValue?.textAlign === 'center'
+                    && Number.parseFloat(resultHud.cutValue?.minWidth) > 0,
+                `${g.id}@${w}：W5a cut-value width/typography`,
+                JSON.stringify(resultHud.cutValue));
+            } else {
+                check(resultHud.cutBox === null && resultHud.cutValue === null,
+                    `${g.id}@${w}：W5a no invented HUD counter`);
+            }
             if (g.id === 'gravity-slingshot') {
                 check(audit.howto?.maxWidth === '350px',
                     `${g.id}@${w}：howto 不再保留 340px 特例`, String(audit.howto?.maxWidth));

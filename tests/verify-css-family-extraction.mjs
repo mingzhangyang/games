@@ -720,6 +720,21 @@ try {
     expectedResidual(dimensionSource, dimensionShared, neitherErrors, 'dims', [], [], ['min-height']);
     assert.ok(neitherErrors.some(error => /min-height is stale because neither/.test(error)));
 
+    // W5a: strict reviewed glow hue and numeric width convergence, without
+    // permitting layout changes or silently preserving page-specific geometry.
+    const glowSource = { migrationDeclarations: [decl('text-shadow', '0 0 26px gold')] };
+    const glowShared = { migrationDeclarations: [decl('text-shadow', '0 0 26px cyan')] };
+    const glowErrors = [];
+    assert.deepEqual(expectedResidual(glowSource, glowShared, glowErrors, 'w5a-glow', [],
+        ['text-shadow']), []);
+    assert.deepEqual(glowErrors, []);
+    const narrowNumber = { migrationDeclarations: [decl('min-width', '1.4ch'), decl('color', 'gold')] };
+    const sharedNumber = { migrationDeclarations: [decl('min-width', '2ch')] };
+    const numberErrors = [];
+    assert.deepEqual(expectedResidual(narrowNumber, sharedNumber, numberErrors,
+        'w5a-cut-value', [], [], ['min-width']), [decl('color', 'gold')]);
+    assert.deepEqual(numberErrors, []);
+
     const layoutSource = { migrationDeclarations: [decl('display', 'flex'), decl('gap', '6px')] };
     const layoutAsGeometryErrors = [];
     expectedResidual(layoutSource, { migrationDeclarations: [] }, layoutAsGeometryErrors, 'layout', [], [], ['display']);

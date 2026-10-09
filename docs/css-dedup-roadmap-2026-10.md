@@ -94,14 +94,14 @@
 - **A1（精确重复，W4a）— ✅ PR #123 已合并**：九个解谜页面的 `level-grid`、`level-label`、`subtitle`、`par`、`howto`、`card-line`、`start-footer`、`chip-stars`、`chip-num`、`mode-row` 及 `@media (width <= 480px)` 两个副本，由 `css/layout.css` 的 `game-start-*` family 统一。108 条原有规则收敛成 12 条共享规则和 12 条仅含页面 `color` 的残余规则，净减少 84 条普通规则（本批次精确计数；原约 145 条是整个簇 A 的估计）。Gravity Slingshot 的 `howto` 340px 按统一要求采用 350px，移动端五列重复声明退役。账本 `start-menu-exact-w4a` 记录完整退役 / 媒体语义，`verify-start-menus` 覆盖所有九页的 computed style。
 - W4a 的新增手机条件必须通过 `reviewedAtRuleAdditions` 审查：不能直接放宽所有 non-rule at-rule 变更，也不能在迁移账本外随意增加媒体边界。验证器将历史 at-rule 顺序与每个新增 media grouping 逐一对账。
 - W4a 是**无主题收敛**的稳定默认值抽取。Ripple Duet 使用 `innerHTML` 创建的 `chip-num` / `chip-stars` 也必须挂共享类；`verify-css-family-extraction` 现在将字面量 HTML fragment 视为 runtime adoption 证据。科学展柜在 `@media (width <= 680px)` 对 `howto` 的专用规则没有随这一批删除，它独立于九页一致的基础/480px 规则。
-- **A2（结构重复，W4b）— PR #124 已实现，待 CI / Review 验收**：九页 `chip` / `level-chip`、`mode`、`title`、`daily-best` 及 `:hover` / `:active` 统一为 `game-start-*` 组件族。以附加账本 `start-menu-structural-w4b` 的机器核对为准，**退役 72 条页面规则、增加 11 条共享规则，净减少 61 条普通规则**；另外退役 30 个仅页面使用的主题变量（共 60 处明/暗定义）。原“约 32 条规则 / 276 条声明”是迁移前估算，不能再当成实现结果。页面保留 Daily 强调色、标题渐变、完成态调色板；Science Showcase 冻结规则保持不变，Tower Defense 沉浸式菜单不纳入本批次。
+- **A2（结构重复，W4b）— ✅ PR #124 已合并**：九页 `chip` / `level-chip`、`mode`、`title`、`daily-best` 及 `:hover` / `:active` 统一为 `game-start-*` 组件族。以附加账本 `start-menu-structural-w4b` 的机器核对为准，**退役 72 条页面规则、增加 11 条共享规则，净减少 61 条普通规则**；另外退役 30 个仅页面使用的主题变量（共 60 处明/暗定义）。原“约 32 条规则 / 276 条声明”是迁移前估算，不能再当成实现结果。页面保留 Daily 强调色、标题渐变、完成态调色板；Science Showcase 冻结规则保持不变，Tower Defense 沉浸式菜单不纳入本批次。
 - 先动手前置检查：这些规则有没有被 `css/science-showcase.css` 里 P0 冻结的 `!important` 规则覆盖（五个科学页的 `.xx-mode` / `.xx-chip` 都在它的选择器列表里），有就提前规划 narrowing / prune。
 - TD 菜单态那条未分层的结构例外，评估能否在这里一起收口。
 
-### W5 簇 C 结算浮层 + 簇 B 侧栏卡片（中等，可各开一个 PR）
-- C：`over-score`、`over-sub`、`cut-box`、`cut-value`（含手机 @media）。
-- B：`side-row`、`side-records`、`side-legend`、`legend-*`、`card-title`。
-- 涉及页面和 A 是同一批，复用 W4 建立的模式。
+### W5 结算结果/顶栏计数 + 侧栏卡片（两个 PR）
+- **W5a（C）— PR #125 实施中**：九页 `over-score`、`over-sub`，六页 `cut-box`、`cut-value`，包含 480px 移动端规则。退役 45 条原有规则，增加 6 条共享规则，净减少 39 条普通 CSS 规则；由新共享组件拥有 26px/45% 分数发光、40% 黑色玻璃材质/1px 描边和几何/排版。页级仅用主题令牌传递发光色、边框颜色及浅色面板；共退役 13 个旧页面变量。Echo Cave / Silk Dew 的数字最小宽度收敛为 2ch，不留 Gravity 例外，P0 Science Showcase 冻结 `!important` 不变。
+- **W5b（B）— 待开始**：`side-row`、`side-records`、`side-legend`、`legend-*`、`card-title`。
+- 沿用 append-only family extraction、退役审计和真实浏览器 computed-style 验证。
 
 ### W6 真缺口（独立的 bug 修复）
 - tetris / minesweeper 结果按钮补进 `verify-button-icons` 的 `TARGETS`，删掉 `exempt`（见 backlog）。

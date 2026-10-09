@@ -95,7 +95,7 @@ const REVIEWED_SELECTOR_SUFFIXES = new Set(['', ':hover', ':active', ':focus-vis
 const REVIEWED_COMPONENT_CONTEXTS = new Set(['', '@media (width <= 480px)']);
 const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
     'color', 'background', 'background-color', 'border', 'border-color',
-    'box-shadow', 'filter', 'opacity',
+    'box-shadow', 'filter', 'opacity', 'text-shadow',
 ]);
 // Visual geometry/typography a reviewed participant may give up so that the shared
 // family's size wins. Layout/behaviour properties (display, position, width, …) stay
@@ -103,7 +103,7 @@ const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
 const REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES = new Set([
     'font-size', 'font-weight', 'font-family', 'padding', 'border-radius', 'transition', 'backdrop-filter',
     // Visual dimensions/spacing (leaderboard-v2): sizes and gaps of a standard surface.
-    'max-width', 'min-height', 'max-height', 'height', 'gap',
+    'max-width', 'min-width', 'min-height', 'max-height', 'height', 'gap',
     'letter-spacing', 'line-height', 'margin-top', 'margin-bottom',
 ]);
 const REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES = new Set([

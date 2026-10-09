@@ -2437,6 +2437,267 @@
           "expectedRemovedDefinitions": 12
         }
       }
+    },
+    {
+      "id": "result-hud-w5a",
+      "baseDuplicationDigest": "f1cbd51a1cd0c06aea406c8f375b7d13c23930fb15a6025076b86d408118d3b5",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -39,
+      "expectedRemovedUnlayeredRules": 45,
+      "games": {
+        "cc": {
+          "css": "css/circuit.css",
+          "html": "circuit.html",
+          "runtime": "src/games/circuit/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "gd": {
+          "css": "css/gravity.css",
+          "html": "gravity-slingshot.html",
+          "runtime": "src/games/gravity-slingshot/runtime.js"
+        },
+        "lm": {
+          "css": "css/lumen.css",
+          "html": "lumen.html",
+          "runtime": "src/games/lumen/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "over-score",
+          "sharedClass": "game-over-score",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "text-shadow"
+          ]
+        },
+        {
+          "suffix": "over-sub",
+          "sharedClass": "game-over-sub",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "cut-box",
+          "sharedClass": "game-cut-box",
+          "surface": "html",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "background",
+            "border"
+          ]
+        },
+        {
+          "suffix": "cut-value",
+          "sharedClass": "game-cut-value",
+          "surface": "html",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "color"
+          ],
+          "participantConvergedProperties": {
+            "ec": [
+              "min-width"
+            ],
+            "sd": [
+              "min-width"
+            ]
+          }
+        },
+        {
+          "suffix": "over-score",
+          "sharedClass": "game-over-score",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "context": "@media (width <= 480px)"
+        },
+        {
+          "suffix": "cut-value",
+          "sharedClass": "game-cut-value",
+          "surface": "html",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "context": "@media (width <= 480px)"
+        }
+      ],
+      "retiredCustomProperties": {
+        "cc": {
+          "properties": [
+            "--cc-over-score-glow"
+          ],
+          "expectedRemovedDefinitions": 2
+        },
+        "cb": {
+          "properties": [
+            "--cb-over-score-glow",
+            "--cb-cut-box-bg",
+            "--cb-cut-box-border"
+          ],
+          "expectedRemovedDefinitions": 6
+        },
+        "md": {
+          "properties": [
+            "--md-over-score-glow",
+            "--md-cut-box-bg",
+            "--md-cut-box-border"
+          ],
+          "expectedRemovedDefinitions": 6
+        },
+        "rd": {
+          "properties": [
+            "--rd-over-score-glow",
+            "--rd-cut-box-bg",
+            "--rd-cut-box-border"
+          ],
+          "expectedRemovedDefinitions": 6
+        },
+        "sd": {
+          "properties": [
+            "--sd-over-score-glow",
+            "--sd-cut-box-bg",
+            "--sd-cut-box-border"
+          ],
+          "expectedRemovedDefinitions": 6
+        }
+      }
     }
   ]
 }

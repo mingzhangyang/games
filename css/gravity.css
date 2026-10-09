@@ -9,6 +9,7 @@ body {
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #0f1230 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
+    --game-over-glow-hue: rgb(125, 250, 208);
 }
 
 
@@ -167,15 +168,7 @@ body {
 
 .gd-overlay-title { font-size: 26px; font-weight: 800; }
 
-.gd-over-score {
-    font-size: 42px;
-    font-weight: 800;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 26px rgb(125, 250, 208, 0.45);
-}
 
-.gd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
 
 
@@ -226,7 +219,6 @@ body {
     .gd-hole-label { font-size: 12px; }
     .gd-launch-value { font-size: 16px; }
  
-    .gd-over-score { font-size: 34px; }
  
 }
 

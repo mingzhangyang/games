@@ -10,8 +10,9 @@
         linear-gradient(165deg, #0a1712 0%, var(--tok-bg-2) 55%, #0d1338 100%);
     --sd-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
     --sd-hud-level-text: #9fe8c8;
-    --sd-cut-box-bg: rgb(0, 0, 0, 0.35);
-    --sd-cut-box-border: 1px solid rgb(255, 255, 255, 0.09);
+    --game-cut-surface: rgb(0, 0, 0, 0.4);
+    --game-cut-stroke-color: rgb(255, 255, 255, 0.09);
+    --game-cut-value-color: var(--tok-text);
     --sd-canvas-border: 1px solid rgb(143, 196, 170, 0.20);
     --sd-canvas-shadow: 0 20px 52px rgb(0, 0, 0, 0.52), 0 0 0 1px rgb(188, 229, 204, 0.035);
     --sd-toast-bg: linear-gradient(120deg, #9fe8c8, var(--tok-cyan));
@@ -28,7 +29,7 @@
     --sd-card-bg: rgb(10, 27, 24, 0.90);
     --sd-card-border: 1px solid rgb(176, 220, 196, 0.18);
     --sd-card-shadow: 0 24px 64px rgb(0, 0, 0, 0.46), inset 0 1px rgb(255, 255, 255, 0.04);
-    --sd-over-score-glow: 0 0 26px rgb(159, 232, 255, 0.45);
+    --game-over-glow-hue: rgb(159, 232, 255);
     --sd-lb-bg: rgb(255, 255, 255, 0.045);
     --sd-lb-border: 1px solid rgb(255, 255, 255, 0.1);
     --sd-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
@@ -47,8 +48,8 @@
         linear-gradient(165deg, #f4f8f6 0%, var(--tok-bg-2) 55%, #e6e8f2 100%);
     --sd-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
     --sd-hud-level-text: #047857;
-    --sd-cut-box-bg: rgb(15, 23, 42, 0.087);
-    --sd-cut-box-border: 1px solid rgb(15, 23, 42, 0.099);
+    --game-cut-surface: rgb(15, 23, 42, 0.1);
+    --game-cut-stroke-color: rgb(15, 23, 42, 0.099);
     --sd-canvas-border: 1px solid rgb(88, 201, 160, 0.18);
     --sd-canvas-shadow: 0 18px 50px rgb(15, 23, 42, 0.175), 0 0 46px rgb(15, 23, 42, 0.042);
     --sd-toast-bg: linear-gradient(120deg, #9fe8c8, var(--tok-cyan));
@@ -65,7 +66,7 @@
     --sd-card-bg: rgb(250, 252, 249, 0.94);
     --sd-card-border: 1px solid rgb(15, 23, 42, 0.132);
     --sd-card-shadow: 0 22px 54px rgb(15, 23, 42, 0.18), inset 0 1px rgb(255, 255, 255, 0.7);
-    --sd-over-score-glow: none;
+    --game-over-glow-hue: transparent;
     --sd-lb-bg: rgb(255, 255, 255, 0.685);
     --sd-lb-border: 1px solid rgb(15, 23, 42, 0.11);
     --sd-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
@@ -102,24 +103,7 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.sd-cut-box {
-    display: flex;
-    align-items: baseline;
-    gap: 5px;
-    background: var(--sd-cut-box-bg);
-    border: var(--sd-cut-box-border);
-    border-radius: 11px;
-    padding: 6px 12px;
-}
 
-.sd-cut-value {
-    font-size: 19px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    color: var(--tok-text);
-    min-width: 1.4ch;
-    text-align: center;
-}
 
 
 /* ── 舞台 ── */
@@ -304,15 +288,7 @@ body {
 
 .sd-overlay-title { font-size: 26px; font-weight: 800; }
 
-.sd-over-score {
-    font-size: 42px;
-    font-weight: 800;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    text-shadow: var(--sd-over-score-glow);
-}
 
-.sd-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
 
 
@@ -386,9 +362,7 @@ body {
 
 @media (width <= 480px) {
     .sd-hud-level { font-size: 12px; }
-    .sd-cut-value { font-size: 16px; }
  
-    .sd-over-score { font-size: 34px; }
  
 }
 

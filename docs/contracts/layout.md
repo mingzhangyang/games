@@ -99,6 +99,30 @@ W4a 抽取精确重复的文本/网格默认值；W4b 将相同语义的九个�
 如内容高于 overlay，必须保持 `overflow-y:auto`，并在滚动后逐一做按钮中心命中测试，
 不能错误沿用手机的“不得内部滚动”断言。任一页面重引入旧组件几何仍将违反 CSS debt 契约。
 
+### 1.1.4 结算结果与操作计数共享组件（W5a，2026-10-09）
+
+九个解谜游戏统一使用 `game-over-score` / `game-over-sub`：
+分数 42px / 800 / 1 倍行高、等宽数字，≤480px 为 34px；
+次要文字为 13px、至少 16px 高。分数阴影由同一规则拥有 26px 模糊
+和 45% 强度；页面只提供 `--game-over-glow-hue` 主题色，支持浅色主题的
+`transparent` 无光晕状态（不保留独立 text-shadow）。
+
+Crystal Bloom、Echo Cave、Flame Verse、Maxwell Demon、Ripple Duet、Silk Dew
+额外使用 `game-cut-box` / `game-cut-value`：
+flex / baseline / 5px 间隔，统一 40% 黑色的深色玻璃背景（浅色主题的
+`--game-cut-surface` 为原有调色板），边框固定 1px solid，由
+`--game-cut-stroke-color` 决定主题颜色；11px 圆角、6px×12px 内距。
+数字统一 19px/800/2ch 居中，≤480px 为 16px；
+原 Echo Cave 与 Silk Dew 的 1.4ch 收敛到 2ch。
+数字内容语义与脚本不变，不给 Circuit、Gravity Slingshot、Lumen 虚构 HUD。
+
+所有旧业务类与 DOM ID 保留。P0 Science Showcase 五页仍使用冻结的
+8px 计数盒圆角 / 不透明主题材质和 mono 字体，不削弱 `!important`。
+`result-hud-w5a` 以 append-only 账本记录所有 45 条原规则退役、
+6 条共享规则与 13 个页面变量名退役。全部新规则进入
+`css/layout.css` 的 components 层，手机端复用既有 480px media 容器。
+`verify-start-menus` 覆盖九页的四档视口及结果/HUD 的实际 computed style。
+
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 
 每个页面必须提供：

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "engine": "postcss-duplication-audit-v1",
-  "expectedOrdinaryRuleCount": 2506,
+  "expectedOrdinaryRuleCount": 2467,
   "minimumCrossFileCount": 2,
   "classifications": [
     "exact-duplicate",

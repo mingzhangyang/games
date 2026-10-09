@@ -11,6 +11,7 @@ body {
         linear-gradient(165deg, #070b22 0%, var(--tok-bg-2) 55%, #0d1338 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
+    --game-over-glow-hue: rgb(125, 250, 208);
 
     --tok-accent: #5a7bff;
     --tok-accent-2: #7dfad0;
@@ -174,15 +175,7 @@ body {
 
 .lm-overlay-title { font-size: 26px; font-weight: 800; }
 
-.lm-over-score {
-    font-size: 42px;
-    font-weight: 800;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 26px rgb(125, 250, 208, 0.45);
-}
 
-.lm-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
 
 
@@ -250,7 +243,6 @@ body {
     .lm-hud-level { font-size: 12px; }
     .lm-flip-value { font-size: 16px; }
  
-    .lm-over-score { font-size: 34px; }
  
 }
 

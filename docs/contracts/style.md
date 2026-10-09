@@ -59,6 +59,14 @@ Gravity Slingshot 的 `howto` 最大宽度也统一为 350px，不保留单页�
 Chip 的页面残余仅允许原有颜色属性，其他视觉与主题结构留到 W4b；动态生成的 HTML fragment 也必须挂共享类。
 见 `layout.md` §1.1.2。
 
+W5a 结算结果与 HUD 的视觉基线由 `game-over-score` /
+`game-over-sub` / `game-cut-box` / `game-cut-value` 单一拥有。
+统一发光半径/强度、深色玻璃透明度、边框结构以及所有响应式字体，
+游戏只能通过 `--game-over-glow-hue`、`--game-cut-surface`、
+`--game-cut-stroke-color`、`--game-cut-value-color` 选择主题颜色或明暗面板。
+不再留下页面级 `text-shadow`、`background`、`border` 几何规则；
+Science Showcase P0 的特殊展示材质仍冻结。见 `layout.md` §1.1.4。
+
 全站默认值与状态也只有一个 owner：显式加入 `game-reset` root opt-in 的页面（包括非 shell 的 Math Rain、Tank Battle；`class="game-reset"` 位于 `<html>`），其顶层 `margin/padding/box-sizing` reset 由 `layout.css` 提供；首页、Gomoku、Firefly Signal 等未迁移消费者不会被这个新 reset 自动影响。通用的即时隐藏状态由 `html.game-hidden-contract .hidden { display: none !important }` 唯一拥有，只有显式标记 `game-hidden-contract` 的原 `.hidden` 源页面采用；不能把它作为 `layout.css` 所有消费者的隐式行为。Math Rain `.screen.hidden` 控制 `visibility/opacity` 的 180ms 弹层过渡，不等价于即时隐藏，因此保留为页面语义（不加 opt-in）。带 `game-icon-btn` 图标钮的共享 `:active` 缩放仍只有一个 owner；页面前缀类不得复制相同声明，玩法专属的 `*-action-row` / mode / ability 控件除外。
 
 ---

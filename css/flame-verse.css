@@ -12,6 +12,8 @@ body {
         linear-gradient(165deg, #05070f 0%, var(--tok-bg-2) 55%, #0d1330 100%);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--tok-text);
+    --game-cut-stroke-color: rgb(168, 184, 255, 0.18);
+    --game-over-glow-hue: rgb(255, 211, 77);
 
     --tok-accent: #7fa8ff;
     --tok-accent-2: #ff8a5c;
@@ -33,24 +35,7 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.fv-cut-box {
-    display: flex;
-    align-items: baseline;
-    gap: 5px;
-    background: rgb(0, 0, 0, 0.4);
-    border: 1px solid rgb(168, 184, 255, 0.18);
-    border-radius: 11px;
-    padding: 6px 12px;
-}
 
-.fv-cut-value {
-    font-size: 19px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    color: var(--tok-gold);
-    min-width: 2ch;
-    text-align: center;
-}
 
 
 /* ── 舞台 ── */
@@ -227,15 +212,7 @@ body {
 
 .fv-overlay-title { font-size: 26px; font-weight: 800; }
 
-.fv-over-score {
-    font-size: 42px;
-    font-weight: 800;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 26px rgb(255, 211, 77, 0.4);
-}
 
-.fv-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
 
 
@@ -347,9 +324,7 @@ body {
 
 @media (width <= 480px) {
     .fv-hud-level { font-size: 12px; }
-    .fv-cut-value { font-size: 16px; }
  
-    .fv-over-score { font-size: 34px; }
  
     .fv-action-btn { width: 58px; height: 58px; bottom: 12px; }
     .fv-clear-btn { left: 12px; }

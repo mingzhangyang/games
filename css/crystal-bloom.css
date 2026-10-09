@@ -11,8 +11,8 @@
         linear-gradient(165deg, #05070f 0%, var(--tok-bg-2) 55%, #0d1330 100%);
     --cb-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
     --cb-hud-level-text: #a8c4ff;
-    --cb-cut-box-bg: rgb(0, 0, 0, 0.4);
-    --cb-cut-box-border: 1px solid rgb(168, 184, 255, 0.18);
+    --game-cut-surface: rgb(0, 0, 0, 0.4);
+    --game-cut-stroke-color: rgb(168, 184, 255, 0.18);
     --cb-canvas-border: 1px solid rgb(168, 184, 255, 0.18);
     --cb-canvas-shadow: 0 18px 50px rgb(0, 0, 0, 0.6), 0 0 46px rgb(127, 168, 255, 0.1);
     --cb-action-btn-border: 1px solid rgb(255, 255, 255, 0.35);
@@ -37,7 +37,7 @@
     --cb-card-bg: rgb(9, 12, 26, 0.96);
     --cb-card-border: 1px solid rgb(255, 255, 255, 0.12);
     --cb-card-shadow: 0 24px 70px rgb(0, 0, 0, 0.6);
-    --cb-over-score-glow: 0 0 26px rgb(255, 211, 77, 0.4);
+    --game-over-glow-hue: rgb(255, 211, 77);
     --cb-lb-bg: rgb(255, 255, 255, 0.045);
     --cb-lb-border: 1px solid rgb(255, 255, 255, 0.1);
     --cb-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
@@ -63,8 +63,8 @@
         linear-gradient(165deg, #f8f9fb 0%, var(--tok-bg-2) 55%, #e9ebf3 100%);
     --cb-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
     --cb-hud-level-text: #0f172a;
-    --cb-cut-box-bg: rgb(15, 23, 42, 0.1);
-    --cb-cut-box-border: 1px solid rgb(168, 184, 255, 0.18);
+    --game-cut-surface: rgb(15, 23, 42, 0.1);
+    --game-cut-stroke-color: rgb(168, 184, 255, 0.18);
     --cb-canvas-border: 1px solid rgb(168, 184, 255, 0.18);
     --cb-canvas-shadow: 0 18px 50px rgb(15, 23, 42, 0.2), 0 0 46px rgb(15, 23, 42, 0.04);
     --cb-action-btn-border: 1px solid rgb(15, 23, 42, 0.2);
@@ -89,7 +89,7 @@
     --cb-card-bg: rgb(255, 255, 255, 0.98);
     --cb-card-border: 1px solid rgb(15, 23, 42, 0.132);
     --cb-card-shadow: 0 24px 70px rgb(15, 23, 42, 0.2);
-    --cb-over-score-glow: none;
+    --game-over-glow-hue: transparent;
     --cb-lb-bg: rgb(255, 255, 255, 0.685);
     --cb-lb-border: 1px solid rgb(15, 23, 42, 0.11);
     --cb-lb-row-lb-top1-bg: rgb(252, 211, 77, 0.14);
@@ -135,24 +135,7 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.cb-cut-box {
-    display: flex;
-    align-items: baseline;
-    gap: 5px;
-    background: var(--cb-cut-box-bg);
-    border: var(--cb-cut-box-border);
-    border-radius: 11px;
-    padding: 6px 12px;
-}
 
-.cb-cut-value {
-    font-size: 19px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    color: var(--tok-gold);
-    min-width: 2ch;
-    text-align: center;
-}
 
 
 /* ── 舞台 ── */
@@ -340,15 +323,7 @@ body {
 
 .cb-overlay-title { font-size: 26px; font-weight: 800; }
 
-.cb-over-score {
-    font-size: 42px;
-    font-weight: 800;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    text-shadow: var(--cb-over-score-glow);
-}
 
-.cb-over-sub { font-size: 13px; color: var(--tok-text-dim); min-height: 16px; font-variant-numeric: tabular-nums; }
 
 
 
@@ -451,9 +426,7 @@ body {
 
 @media (width <= 480px) {
     .cb-hud-level { font-size: 12px; }
-    .cb-cut-value { font-size: 16px; }
  
-    .cb-over-score { font-size: 34px; }
  
 
     @layer pages {
