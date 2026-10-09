@@ -457,6 +457,90 @@ html.game-reset * {
     }
 }
 
+/* ── W4a 开始菜单 / 选关精确共享 family ──
+   游戏前缀类继续承载 DOM/玩法语义；只有逐页一致的布局与文字指标在这里拥有单一 owner。
+   主题化 mode/chip/title 留给 W4b。 */
+@layer components {
+    .game-start-par {
+        font-size: 11.5px;
+        color: var(--tok-text-faint);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .game-start-subtitle {
+        font-size: 12.5px;
+        color: var(--tok-text-mute);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        margin-top: -6px;
+    }
+
+    .game-start-howto {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--tok-text-soft);
+        max-width: 350px;
+    }
+
+    .game-start-mode-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .game-start-level-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--tok-text-mute);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .game-start-level-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .game-start-chip-num {
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .game-start-chip-stars {
+        font-size: 9.5px;
+        letter-spacing: -0.25px;
+        opacity: 0.9;
+    }
+
+    .game-start-footer {
+        display: flex;
+        gap: 10px;
+    }
+
+    .game-start-card-line {
+        font-size: 14px;
+        color: var(--tok-text-dim);
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+/* Both mobile overrides have the exact same semantics on all nine W4a pages.
+   Gravity's former repeat(5, 1fr) restatement is already owned by the base grid. */
+@media (width <= 480px) {
+    @layer components {
+        .game-start-howto {
+            font-size: 12px;
+        }
+
+        .game-start-level-grid {
+            gap: 5px;
+        }
+    }
+}
+
 /* ── 侧栏卡片族 ── */
 @layer components {
     .game-side-card {

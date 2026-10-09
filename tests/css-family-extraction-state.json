@@ -1425,6 +1425,396 @@
           "reason": "The shared .game-lb-username already sets outline: none; the focus rule keeps only its palette (border-color, background)."
         }
       ]
+    },
+    {
+      "id": "start-menu-exact-w4a",
+      "baseDuplicationDigest": "e75532c2388ae2db7f5bd5a7c4382b4f3255e307d787ba46c884ee51b02a9b02",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -84,
+      "expectedRemovedUnlayeredRules": 96,
+      "games": {
+        "cc": {
+          "css": "css/circuit.css",
+          "html": "circuit.html",
+          "runtime": "src/games/circuit/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "gd": {
+          "css": "css/gravity.css",
+          "html": "gravity-slingshot.html",
+          "runtime": "src/games/gravity-slingshot/runtime.js"
+        },
+        "lm": {
+          "css": "css/lumen.css",
+          "html": "lumen.html",
+          "runtime": "src/games/lumen/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "par",
+          "sharedClass": "game-start-par",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "subtitle",
+          "sharedClass": "game-start-subtitle",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "howto",
+          "sharedClass": "game-start-howto",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "participantConvergedProperties": {
+            "gd": [
+              "max-width"
+            ]
+          }
+        },
+        {
+          "suffix": "mode-row",
+          "sharedClass": "game-start-mode-row",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "level-label",
+          "sharedClass": "game-start-level-label",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "level-grid",
+          "sharedClass": "game-start-level-grid",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "start-footer",
+          "sharedClass": "game-start-footer",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "card-line",
+          "sharedClass": "game-start-card-line",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "chip-num",
+          "sharedClass": "game-start-chip-num",
+          "surface": "runtime",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "gd",
+            "lm"
+          ]
+        },
+        {
+          "suffix": "chip-stars",
+          "sharedClass": "game-start-chip-stars",
+          "surface": "runtime",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "gd",
+            "lm"
+          ]
+        },
+        {
+          "suffix": "howto",
+          "sharedClass": "game-start-howto",
+          "context": "@media (width <= 480px)",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "level-grid",
+          "sharedClass": "game-start-level-grid",
+          "context": "@media (width <= 480px)",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "participantLayoutConvergence": {
+            "gd": {
+              "properties": [
+                "grid-template-columns"
+              ],
+              "reason": "All nine pages inherit five equal grid columns from the shared base; Gravity's identical 5-column mobile restatement was redundant, not a page-specific layout."
+            }
+          }
+        }
+      ],
+      "reviewedAtRuleAdditions": [
+        {
+          "context": "@media (width <= 480px)",
+          "reason": "The two adopted W4a phone defaults introduce exactly one new media grouping in layout.css. The family ledger verifies both declarations and all nine page participants; the surrounding historical at-rule inventory must stay unchanged."
+        }
+      ]
     }
   ]
 }

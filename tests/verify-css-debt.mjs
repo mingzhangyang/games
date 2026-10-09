@@ -454,6 +454,7 @@ function verifyProject() {
         layerOrder: REVIEWED_LAYER_ORDER,
         baseState,
         externalRuleChanges: familyResult.externalRuleChanges,
+        reviewedAtRuleAdditions: familyResult.newReviewedAtRuleAdditions,
         guardedCssPaths: familyResult.cssPaths,
         errors,
     });

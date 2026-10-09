@@ -11,7 +11,7 @@ import {
     verifyExtractionAdoption, verifyExtractionShape, verifyRetiredCustomProperties,
     verifyReviewedDeclarationRetirements, verifyReviewedRuleRetirements,
 } from './lib/css/family-extraction.mjs';
-import { indexRuleOccurrences } from './lib/css/migration-contract.mjs';
+import { indexRuleOccurrences, verifyReviewedAtRuleAdditions } from './lib/css/migration-contract.mjs';
 
 const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -78,8 +78,32 @@ try {
     assert.ok(missingRuntimeErrors.some(error =>
         /runtime\.js has 1 className assignment\(s\) with \.dm-row but without \.game-row/.test(error)));
 
+    // Runtime DOM strings (including template-literal innerHTML) are adoption surfaces too.
+    // A className-only scan used to miss Ripple Duet's level-chip spans.
+    writeFileSync(
+        join(root, 'src/games/demo/runtime.js'),
+        'const rendered = `<span class="dm-row">row</span>`;\n',
+    );
+    const unadoptedHtmlFragmentErrors = [];
+    verifyExtractionAdoption(root, extraction, unadoptedHtmlFragmentErrors);
+    assert.ok(unadoptedHtmlFragmentErrors.some(error =>
+        /without \.game-row/.test(error)), 'unadopted runtime HTML fragment must fail');
+
+    writeFileSync(
+        join(root, 'src/games/demo/runtime.js'),
+        'const rendered = `<span class="dm-row game-row">row</span>`;\n',
+    );
+    const adoptedHtmlFragmentErrors = [];
+    verifyExtractionAdoption(root, extraction, adoptedHtmlFragmentErrors);
+    assert.deepEqual(adoptedHtmlFragmentErrors, []);
+
 
     const shapeCases = [
+        {
+            name: 'unsupported extraction media context',
+            mutate(component) { component.context = '@media print'; },
+            expected: /component context is not a reviewed extraction media query/,
+        },
         {
             name: 'empty participants',
             mutate(component) { component.participants = []; },
@@ -116,6 +140,75 @@ try {
         assert.equal(verifyExtractionShape(candidate, shapeErrors), false, shapeCase.name);
         assert.ok(shapeErrors.some(error => shapeCase.expected.test(error)), shapeCase.name);
     }
+
+    // Same shared selector is permitted in default and phone contexts, never twice in one context.
+    const mobileContext = clone(extraction);
+    mobileContext.components.push({
+        ...clone(extraction.components[0]),
+        context: '@media (width <= 480px)',
+    });
+    const validMobileContextErrors = [];
+    assert.equal(verifyExtractionShape(mobileContext, validMobileContextErrors), true);
+    assert.deepEqual(validMobileContextErrors, []);
+    const registeredMedia = clone(mobileContext);
+    registeredMedia.reviewedAtRuleAdditions = [{
+        context: '@media (width <= 480px)',
+        reason: 'Both shared mobile rules occupy the same reviewed media condition.',
+    }];
+    const registeredMediaShapeErrors = [];
+    assert.equal(verifyExtractionShape(registeredMedia, registeredMediaShapeErrors), true);
+    assert.deepEqual(registeredMediaShapeErrors, []);
+
+    const unbackedMedia = clone(extraction);
+    unbackedMedia.reviewedAtRuleAdditions = registeredMedia.reviewedAtRuleAdditions;
+    const unbackedMediaErrors = [];
+    assert.equal(verifyExtractionShape(unbackedMedia, unbackedMediaErrors), false);
+    assert.ok(unbackedMediaErrors.some(error => /has no shared component/.test(error)));
+
+    const duplicateMedia = clone(registeredMedia);
+    duplicateMedia.reviewedAtRuleAdditions.push(clone(duplicateMedia.reviewedAtRuleAdditions[0]));
+    const duplicateMediaErrors = [];
+    assert.equal(verifyExtractionShape(duplicateMedia, duplicateMediaErrors), false);
+    assert.ok(duplicateMediaErrors.some(error => /duplicate reviewed at-rule addition/.test(error)));
+
+    const approvedAtRule = { path: 'css/layout.css', context: '@media (width <= 480px)' };
+    const baseAtRules = parseCssText(
+        '@media (width <= 480px) { .existing { color: red; } }', 'css/layout.css',
+    ).migrationAtRules;
+    const addedAtRules = parseCssText(
+        '@media (width <= 480px) { .added { color: blue; } }'
+            + '@media (width <= 480px) { .existing { color: red; } }',
+        'css/layout.css',
+    ).migrationAtRules;
+    const validAdditionErrors = [];
+    verifyReviewedAtRuleAdditions(baseAtRules, addedAtRules, [approvedAtRule], 'css/layout.css', validAdditionErrors);
+    assert.deepEqual(validAdditionErrors, [], 'one registered wrapper preserves the original at-rule inventory');
+
+    const checkBadMedia = (actual, reviews, pattern) => {
+        const found = [];
+        verifyReviewedAtRuleAdditions(baseAtRules, actual, reviews, 'css/layout.css', found);
+        assert.ok(found.some(error => pattern.test(error)), JSON.stringify(found));
+    };
+    checkBadMedia(addedAtRules, [], /non-rule at-rule semantics changed/);
+    checkBadMedia(addedAtRules, [
+        { path: 'css/layout.css', context: '@media (width >= 480px)' },
+    ], /unrecognized family at-rule addition/);
+    checkBadMedia([...addedAtRules, ...addedAtRules.slice(0, 1)], [approvedAtRule],
+        /non-rule at-rule semantics changed/);
+    checkBadMedia(baseAtRules, [approvedAtRule], /does not preserve the complete base at-rule inventory/);
+    checkBadMedia(
+        parseCssText('@media (width >= 480px) { .existing { color: red; } }',
+            'css/layout.css').migrationAtRules,
+        [approvedAtRule],
+        /non-rule at-rule semantics changed/,
+    );
+
+    const duplicateMobileContext = clone(mobileContext);
+    duplicateMobileContext.components.push(clone(mobileContext.components[2]));
+    const duplicateMobileErrors = [];
+    assert.equal(verifyExtractionShape(duplicateMobileContext, duplicateMobileErrors), false);
+    assert.ok(duplicateMobileErrors.some(error =>
+        /duplicate component suffix/.test(error)));
 
     const pseudoState = clone(extraction);
     pseudoState.components = [

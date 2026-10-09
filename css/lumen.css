@@ -49,12 +49,6 @@ body {
     text-align: center;
 }
 
-.lm-par {
-    font-size: 11.5px;
-    color: var(--tok-text-faint);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
 
 /* ── 舞台 ── */
 
@@ -116,13 +110,6 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-.lm-subtitle {
-    font-size: 12.5px;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    margin-top: -6px;
-}
 
 .lm-hero {
     font-size: 46px;
@@ -136,17 +123,7 @@ body {
     50% { transform: translateY(-8px) rotate(5deg); }
 }
 
-.lm-howto {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--tok-text-soft);
-    max-width: 350px;
-}
 
-.lm-mode-row {
-    display: flex;
-    gap: 8px;
-}
 
 .lm-mode {
     font-family: inherit;
@@ -170,21 +147,7 @@ body {
     box-shadow: 0 8px 24px rgb(52, 211, 153, 0.35);
 }
 
-.lm-level-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-}
 
-.lm-level-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    width: 100%;
-    max-width: 360px;
-}
 
 .lm-level-chip {
     display: flex;
@@ -204,9 +167,7 @@ body {
 .lm-level-chip:hover { background: rgb(255, 255, 255, 0.11); }
 .lm-level-chip:active { transform: scale(0.93); }
 
-.lm-chip-num { font-size: 14px; font-weight: 800; }
 
-.lm-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; }
 
 .lm-daily-best {
     font-size: 12.5px;
@@ -216,7 +177,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.lm-start-footer { display: flex; gap: 10px; }
 
 .lm-lang-btn {
     font-size: 13px;
@@ -250,11 +210,6 @@ body {
     letter-spacing: 2px;
 }
 
-.lm-card-line {
-    font-size: 14px;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
 .lm-overlay-title { font-size: 26px; font-weight: 800; }
 
@@ -335,9 +290,7 @@ body {
     .lm-flip-value { font-size: 16px; }
     .lm-title { font-size: 27px; }
     .lm-over-score { font-size: 34px; }
-    .lm-howto { font-size: 12px; }
     .lm-mode { font-size: 13px; padding: 10px 15px; }
-    .lm-level-grid { gap: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

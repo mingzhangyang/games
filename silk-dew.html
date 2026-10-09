@@ -47,7 +47,7 @@
                 <div class="sd-hud-level" id="sd-hud-level">Level 1/20</div>
                 <div class="sd-cut-box">
                     <span class="sd-cut-value" id="sd-drags">0</span>
-                    <span class="sd-par" id="sd-par">· Par 1</span>
+                    <span class="sd-par game-start-par" id="sd-par">· Par 1</span>
                 </div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → sound → lang -->
@@ -69,22 +69,22 @@
             <!-- 开始界面 -->
             <div class="sd-overlay game-overlay game-overlay--menu" id="sd-start">
                 <h1 class="sd-title" id="sd-title" data-i18n="title">Silkfall</h1>
-                <p class="sd-subtitle" id="sd-subtitle" data-i18n="subtitle">Cut · Swing · Catch</p>
+                <p class="sd-subtitle game-start-subtitle" id="sd-subtitle" data-i18n="subtitle">Cut · Swing · Catch</p>
                 <div class="sd-hero" aria-hidden="true">
                     <svg viewBox="0 0 72 88">
                         <path d="M36 5C25 23 11 38 11 56c0 15 11 27 25 27s25-12 25-27C61 38 47 23 36 5Z" fill="currentColor"/>
                         <path d="M26 58c2 8 7 12 15 13" fill="none" stroke="rgba(255,255,255,.72)" stroke-width="4" stroke-linecap="round"/>
                     </svg>
                 </div>
-                <p class="sd-howto" id="sd-howto" data-i18n="howto"></p>
-                <div class="sd-mode-row">
+                <p class="sd-howto game-start-howto" id="sd-howto" data-i18n="howto"></p>
+                <div class="sd-mode-row game-start-mode-row">
                     <button class="sd-mode game-btn" id="sd-btn-levels">Levels</button>
                     <button class="sd-mode sd-mode-daily game-btn" id="sd-btn-daily">Daily</button>
                 </div>
-                <p class="sd-level-label" id="sd-level-label" data-i18n="levelSelect">Select level</p>
-                <div class="sd-level-grid" id="sd-level-grid"></div>
+                <p class="sd-level-label game-start-level-label" id="sd-level-label" data-i18n="levelSelect">Select level</p>
+                <div class="sd-level-grid game-start-level-grid" id="sd-level-grid"></div>
                 <p class="sd-daily-best" id="sd-daily-best"></p>
-                <div class="sd-start-footer">
+                <div class="sd-start-footer game-start-footer">
                     <button class="sd-icon-btn game-icon-btn" id="sd-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                 </div>
             </div>
@@ -93,7 +93,7 @@
             <div class="sd-overlay sd-overlay-dim hidden game-overlay" id="sd-clear">
                 <div class="sd-card">
                     <h2 class="sd-card-title" id="sd-clear-stars">★★★</h2>
-                    <div class="sd-card-line" id="sd-clear-line">Cuts 0 · Par 0</div>
+                    <div class="sd-card-line game-start-card-line" id="sd-clear-line">Cuts 0 · Par 0</div>
                     <div class="sd-btn-row game-action-row">
                         <button class="sd-btn sd-btn-primary game-btn game-action-btn game-action-btn--primary" id="sd-btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14.5"/><path d="M12.5 6l6 6-6 6"/></svg><span>Next</span></button>
                         <button class="sd-btn game-btn game-action-btn" id="sd-btn-replay"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Retry</span></button>

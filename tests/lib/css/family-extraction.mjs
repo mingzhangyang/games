@@ -25,24 +25,24 @@ function tupleKey(tuple) {
     return canonical(tuple);
 }
 
-function uniqueRule(parsed, selector, layer, errors, label) {
+function uniqueRule(parsed, selector, layer, errors, label, context = '') {
     const matches = (parsed?.rules || []).filter(rule =>
         rule.selector === selector
         && (rule.layer || null) === (layer || null)
-        && (rule.context || []).length === 0);
+        && (rule.context || []).join(' / ') === context);
     if (matches.length !== 1) {
-        errors.push(label + ': expected exactly one top-level ' + selector + ' rule in layer '
+        errors.push(label + ': expected exactly one ' + selector + ' rule in layer '
             + (layer || '<unlayered>') + ', found ' + matches.length + '.');
         return null;
     }
     return matches[0];
 }
 
-function uniqueCatalogRule(catalog, selector, layer, errors, label) {
+function uniqueCatalogRule(catalog, selector, layer, errors, label, context = '') {
     const matches = (catalog || []).filter(rule =>
         rule.selector === selector
         && (rule.layer || null) === (layer || null)
-        && rule.context === '');
+        && rule.context === context);
     if (matches.length !== 1) {
         errors.push(label + ': expected exactly one indexed ' + selector + ' rule in layer '
             + (layer || '<unlayered>') + ', found ' + matches.length + '.');
@@ -89,6 +89,8 @@ function declarationKey(declaration) {
 
 const REVIEWED_INHERITED_EQUIVALENT_PROPERTIES = new Set(['text-align']);
 const REVIEWED_SELECTOR_SUFFIXES = new Set(['', ':hover', ':active', ':focus-visible', ':disabled']);
+// W4a media rules use the same exact-family ownership contract as their defaults.
+const REVIEWED_COMPONENT_CONTEXTS = new Set(['', '@media (width <= 480px)']);
 const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
     'color', 'background', 'background-color', 'border', 'border-color',
     'box-shadow', 'filter', 'opacity',
@@ -110,7 +112,7 @@ const REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES = new Set([
 // carries a written reason, so every re-layout is an explicit reviewed decision.
 const REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES = new Set([
     'display', 'flex-direction', 'flex', 'flex-shrink', 'align-items', 'width',
-    'text-align', 'text-transform', 'outline', 'scrollbar-width',
+    'text-align', 'text-transform', 'outline', 'scrollbar-width', 'grid-template-columns',
 ]);
 
 function componentLocalSelector(prefix, component) {
@@ -312,6 +314,15 @@ function verifyHtmlAdoption(root, file, localClass, sharedClass, errors, label) 
     }
 }
 
+function literalRuntimeHtmlClasses(source) {
+    // Literal class attributes inside runtime HTML fragments also require shared adoption.
+    // Ripple Duet builds level chips through innerHTML instead of className assignments.
+    const classes = [];
+    const pattern = /\bclass\s*=\s*(['"])([^'"]*)\1/g;
+    for (const match of source.matchAll(pattern)) classes.push(match[2]);
+    return classes;
+}
+
 function literalClassNameAssignments(source) {
     const assignments = [];
     const pattern = /className\s*=\s*(['"`])([^'"`]*)\1/g;
@@ -321,7 +332,7 @@ function literalClassNameAssignments(source) {
 
 function verifyRuntimeAdoption(root, file, localClass, sharedClass, errors, label) {
     const source = readFileSync(join(root, file), 'utf8');
-    const localAssignments = literalClassNameAssignments(source)
+    const localAssignments = [...literalClassNameAssignments(source), ...literalRuntimeHtmlClasses(source)]
         .filter(value => classTokens(value).has(localClass));
     if (!localAssignments.length) {
         errors.push(label + ': ' + file + ' does not assign .' + localClass + ' in a className literal.');
@@ -396,6 +407,10 @@ export function verifyExtractionShape(extraction, errors) {
         const localSelectorSuffix = component.localSelectorSuffix || '';
         const sharedSelectorSuffix = component.sharedSelectorSuffix || '';
         const sharedClassSpecificity = component.sharedClassSpecificity || 'normal';
+        const context = component.context || '';
+        if (component.context !== undefined && !REVIEWED_COMPONENT_CONTEXTS.has(component.context)) {
+            fail('component context is not a reviewed extraction media query.');
+        }
         if (!REVIEWED_SELECTOR_SUFFIXES.has(localSelectorSuffix)
             || !REVIEWED_SELECTOR_SUFFIXES.has(sharedSelectorSuffix)) {
             fail('component selector suffixes must be reviewed pseudo-classes.');
@@ -419,7 +434,7 @@ export function verifyExtractionShape(extraction, errors) {
         if (typeof component.suffix !== 'string' || !component.suffix) {
             fail('every component requires a non-empty suffix.');
         } else {
-            const suffixKey = component.suffix + localSelectorSuffix;
+            const suffixKey = component.suffix + localSelectorSuffix + '\0' + context;
             if (suffixes.has(suffixKey)) {
                 fail('duplicate component suffix ' + suffixKey + '.');
             } else {
@@ -430,7 +445,7 @@ export function verifyExtractionShape(extraction, errors) {
         if (typeof component.sharedClass !== 'string' || !component.sharedClass) {
             fail('every component requires a non-empty sharedClass.');
         } else {
-            const sharedKey = componentSharedSelector(component);
+            const sharedKey = componentSharedSelector(component) + '\0' + context;
             if (sharedClasses.has(sharedKey)) {
                 fail('duplicate sharedClass selector ' + sharedKey + '.');
             } else {
@@ -775,6 +790,35 @@ export function verifyExtractionShape(extraction, errors) {
             retirementKeys.add(key);
         }
     }
+    // A family may introduce a conditional grouping boundary only when that same
+    // transaction also creates concrete, verified shared rules under its context.
+    // This registration never grants permission to change existing @rules.
+    const atRuleAdditions = extraction.reviewedAtRuleAdditions || [];
+    if (!Array.isArray(atRuleAdditions)) {
+        fail('reviewedAtRuleAdditions must be an array.');
+    } else {
+        const contexts = new Set();
+        for (const addition of atRuleAdditions) {
+            if (!addition || typeof addition !== 'object' || Array.isArray(addition)
+                || !REVIEWED_COMPONENT_CONTEXTS.has(addition.context) || !addition.context) {
+                fail('reviewed at-rule addition must name a reviewed non-empty component media context.');
+                continue;
+            }
+            if (contexts.has(addition.context)) {
+                fail('duplicate reviewed at-rule addition for ' + addition.context + '.');
+            }
+            contexts.add(addition.context);
+            if (extraction.extends !== undefined) {
+                fail('family extensions cannot introduce new conditional group boundaries.');
+            }
+            if (!(extraction.components || []).some(component => component.context === addition.context)) {
+                fail('reviewed at-rule addition has no shared component in ' + addition.context + '.');
+            }
+            if (typeof addition.reason !== 'string' || !addition.reason.trim()) {
+                fail('reviewed at-rule addition requires a reason.');
+            }
+        }
+    }
     return valid;
 }
 
@@ -826,7 +870,7 @@ function removedTuples(extraction, errors) {
     const games = extraction.games || {};
     for (const component of extraction.components || []) {
         for (const prefix of component.fullyRemoved) {
-            rows.push([games[prefix].css, '', componentLocalSelector(prefix, component)]);
+            rows.push([games[prefix].css, component.context || '', componentLocalSelector(prefix, component)]);
         }
     }
     for (const retirement of extraction.reviewedRuleRetirements || []) {
@@ -1118,6 +1162,7 @@ function componentIdentity(component) {
     return [
         component.suffix, component.localSelectorSuffix || '', component.sharedClass,
         component.sharedSelectorSuffix || '', component.sharedClassSpecificity || 'normal', component.surface,
+        component.context || '',
     ].join('\0');
 }
 
@@ -1237,25 +1282,27 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
         const label = extraction.id + '/' + component.sharedClass
             + (component.sharedSelectorSuffix || '');
         const sharedSelector = componentSharedSelector(component);
+        const context = component.context || '';
         const adoptedParticipants = extension?.get(componentIdentity(component)) || null;
         let sharedRule;
         if (extension) {
             // Referenced shared rule: it must already exist and stay byte-for-byte unchanged.
-            const baseShared = uniqueRule(baseSharedCss, sharedSelector, sharedLayer, errors, label + '/base-shared');
-            sharedRule = uniqueRule(currentSharedCss, sharedSelector, sharedLayer, errors, label);
+            const baseShared = uniqueRule(baseSharedCss, sharedSelector, sharedLayer, errors, label + '/base-shared', context);
+            sharedRule = uniqueRule(currentSharedCss, sharedSelector, sharedLayer, errors, label, context);
             if (!baseShared || !sharedRule) continue;
             if (canonical(baseShared.migrationDeclarations || []) !== canonical(sharedRule.migrationDeclarations || [])) {
                 errors.push(label + ': an extension may not change the referenced shared rule.');
             }
         } else {
-            const baseSharedMatches = (baseSharedCss?.rules || []).filter(rule => rule.selector === sharedSelector);
+            const baseSharedMatches = (baseSharedCss?.rules || []).filter(rule =>
+                rule.selector === sharedSelector && (rule.context || []).join(' / ') === context);
             if (baseSharedMatches.length) {
                 errors.push(label + ': shared selector already existed in the comparison base.');
             }
-            sharedRule = uniqueRule(currentSharedCss, sharedSelector, sharedLayer, errors, label);
+            sharedRule = uniqueRule(currentSharedCss, sharedSelector, sharedLayer, errors, label, context);
             if (!sharedRule) continue;
             const sharedIndexed = uniqueCatalogRule(
-                currentCatalogs.get(sharedPath), sharedSelector, sharedLayer, errors, label + '/current',
+                currentCatalogs.get(sharedPath), sharedSelector, sharedLayer, errors, label + '/current', context,
             );
             if (sharedIndexed) externalRuleChanges.current.push(sharedIndexed);
         }
@@ -1268,10 +1315,10 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
             }
             const localSelector = componentLocalSelector(prefix, component);
             const baseRule = uniqueRule(baseParsedByPath.get(game.css), localSelector, null, errors,
-                label + '/' + prefix + '/base');
+                label + '/' + prefix + '/base', context);
             if (!baseRule) continue;
             const baseIndexed = uniqueCatalogRule(
-                baseCatalogs.get(game.css), localSelector, null, errors, label + '/' + prefix + '/base-index',
+                baseCatalogs.get(game.css), localSelector, null, errors, label + '/' + prefix + '/base-index', context,
             );
             if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
 
@@ -1292,7 +1339,7 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
                     layoutProperties,
                 );
             const currentMatches = (currentParsedByPath.get(game.css)?.rules || []).filter(rule =>
-                rule.selector === localSelector && !rule.layer && (rule.context || []).length === 0);
+                rule.selector === localSelector && !rule.layer && (rule.context || []).join(' / ') === context);
             if (!expected.length) {
                 if (currentMatches.length) {
                     errors.push(label + '/' + prefix + ': fully shared local rule still exists.');
@@ -1307,7 +1354,7 @@ function verifyNewExtraction(root, extraction, currentParsedByPath, baseParsedBy
             if (expected.length && currentMatches.length === 1) {
                 const currentIndexed = uniqueCatalogRule(
                     currentCatalogs.get(game.css), localSelector, null, errors,
-                    label + '/' + prefix + '/current-index',
+                    label + '/' + prefix + '/current-index', context,
                 );
                 if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
             }
@@ -1426,6 +1473,10 @@ export function verifyFamilyExtractions({
         [extraction.id, resolveFamilyExtension(extraction, orderedExtractions, errors)]));
     const newExtractions = orderedExtractions.filter(extraction => !baseById.has(extraction.id));
     const newRuleDelta = newExtractions.reduce((sum, extraction) => sum + extraction.expectedRuleDelta, 0);
+    const newReviewedAtRuleAdditions = newExtractions.flatMap(extraction =>
+        (extraction.reviewedAtRuleAdditions || []).map(addition => ({
+            ...addition, path: extraction.sharedStylesheet, extractionId: extraction.id,
+        })));
     for (const extraction of newExtractions) {
         verifyNewExtraction(
             root, extraction, currentParsedByPath, baseParsedByPath,
@@ -1449,6 +1500,7 @@ export function verifyFamilyExtractions({
         externalRuleChanges,
         extractions: [...currentById.values()],
         newExtractionIds: newExtractions.map(extraction => extraction.id),
+        newReviewedAtRuleAdditions,
         newRuleDelta,
     };
 }

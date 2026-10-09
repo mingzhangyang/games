@@ -133,12 +133,6 @@ body {
     text-align: center;
 }
 
-.cc-par {
-    font-size: 11.5px;
-    color: var(--tok-text-faint);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
 
 /* ── 舞台 ── */
 
@@ -201,13 +195,6 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-.cc-subtitle {
-    font-size: 12.5px;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    margin-top: -6px;
-}
 
 .cc-hero {
     font-size: 46px;
@@ -221,17 +208,7 @@ body {
     50% { transform: translateY(-8px) rotate(5deg); }
 }
 
-.cc-howto {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--tok-text-soft);
-    max-width: 350px;
-}
 
-.cc-mode-row {
-    display: flex;
-    gap: 8px;
-}
 
 .cc-mode {
     font-family: inherit;
@@ -258,21 +235,7 @@ body {
 /* 浅色：渐变用的是加深后的 --tok-success / --tok-cyan，深色字只剩 3.5:1，改白字 */
 :root[data-theme="light"] .cc-mode-daily { color: #fff; }
 
-.cc-level-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-}
 
-.cc-level-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    width: 100%;
-    max-width: 360px;
-}
 
 .cc-level-chip {
     display: flex;
@@ -292,9 +255,7 @@ body {
 .cc-level-chip:hover { background: var(--cc-level-chip-hover-bg); }
 .cc-level-chip:active { transform: scale(0.93); }
 
-.cc-chip-num { font-size: 14px; font-weight: 800; }
 
-.cc-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; }
 
 .cc-daily-best {
     font-size: 12.5px;
@@ -304,7 +265,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.cc-start-footer { display: flex; gap: 10px; }
 
 .cc-lang-btn {
     font-size: 13px;
@@ -338,11 +298,6 @@ body {
     letter-spacing: 2px;
 }
 
-.cc-card-line {
-    font-size: 14px;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
 .cc-overlay-title { font-size: 26px; font-weight: 800; }
 
@@ -423,9 +378,7 @@ body {
     .cc-move-value { font-size: 16px; }
     .cc-title { font-size: 27px; }
     .cc-over-score { font-size: 34px; }
-    .cc-howto { font-size: 12px; }
     .cc-mode { font-size: 13px; padding: 10px 15px; }
-    .cc-level-grid { gap: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

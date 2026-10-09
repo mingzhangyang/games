@@ -615,16 +615,16 @@ export class RippleDuetGame {
         grid.innerHTML = '';
         LEVELS.forEach((spec, i) => {
             const btn = document.createElement('button');
-            // ⚠️ 类名必须与 css/ripple-duet.css 的 .rd-chip* 家族逐字一致。
-            // 这里写成 rd-level-* 时整块容器规则静默失效 → 芯片失去颜色来源
-            // → 继承到开始覆盖层的黑色文字 → fg-audit 报「纯黑 20 处」。
+            // rd-chip* 保留游戏状态/调色板语义，数字和星级文本同时采用
+            // game-start-chip-* 的共享字体尺寸。两套类名缺一不可：
+            // 只写 rd-level-* 会丢失页面配色；只写 rd-chip-* 则失去共享排版。
             const rec = this.progress[spec.id];
             btn.className = 'rd-chip' + (rec && rec.stars ? ' is-done' : '');
             btn.type = 'button';
             btn.dataset.index = String(i);
-            btn.innerHTML = `<span class="rd-chip-num">${i + 1}</span>${rec && rec.stars
-                ? `<span class="rd-chip-stars">${'★'.repeat(rec.stars)}</span>`
-                : '<span class="rd-chip-stars rd-chip-stars--none">☆☆☆</span>'}`;
+            btn.innerHTML = `<span class="rd-chip-num game-start-chip-num">${i + 1}</span>${rec && rec.stars
+                ? `<span class="rd-chip-stars game-start-chip-stars">${'★'.repeat(rec.stars)}</span>`
+                : '<span class="rd-chip-stars rd-chip-stars--none game-start-chip-stars">☆☆☆</span>'}`;
             btn.addEventListener('click', () => this.startLevel(i));
             grid.appendChild(btn);
         });

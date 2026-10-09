@@ -47,7 +47,7 @@
                 <div class="gd-hole-label" id="gd-hole-label">Hole 1/20</div>
                 <div class="gd-launch-box">
                     <span class="gd-launch-value" id="gd-launches">0</span>
-                    <span class="gd-par" id="gd-par">· Par 1</span>
+                    <span class="gd-par game-start-par" id="gd-par">· Par 1</span>
                 </div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
@@ -69,17 +69,17 @@
             <!-- 开始界面 -->
             <div class="gd-overlay game-overlay game-overlay--menu" id="gd-start">
                 <h1 class="gd-title" id="gd-title" data-i18n="title">Gravity Slingshot</h1>
-                <p class="gd-subtitle" id="gd-subtitle" data-i18n="subtitle">Aim · Bend · Orbit · Capture</p>
+                <p class="gd-subtitle game-start-subtitle" id="gd-subtitle" data-i18n="subtitle">Aim · Bend · Orbit · Capture</p>
                 <div class="gd-hero">🚀</div>
-                <p class="gd-howto" id="gd-howto" data-i18n="howto"></p>
-                <div class="gd-mode-row">
+                <p class="gd-howto game-start-howto" id="gd-howto" data-i18n="howto"></p>
+                <div class="gd-mode-row game-start-mode-row">
                     <button class="gd-mode" id="gd-btn-levels" data-i18n="playLevels">🛰 Levels</button>
                     <button class="gd-mode gd-mode-daily" id="gd-btn-daily" data-i18n="playDaily">📅 Daily Course</button>
                 </div>
-                <p class="gd-level-label" id="gd-level-label" data-i18n="levelSelect">Select hole</p>
-                <div class="gd-level-grid" id="gd-level-grid"></div>
+                <p class="gd-level-label game-start-level-label" id="gd-level-label" data-i18n="levelSelect">Select hole</p>
+                <div class="gd-level-grid game-start-level-grid" id="gd-level-grid"></div>
                 <p class="gd-daily-best" id="gd-daily-best"></p>
-                <div class="gd-start-footer">
+                <div class="gd-start-footer game-start-footer">
                     <button class="gd-icon-btn game-icon-btn" id="gd-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                 </div>
             </div>
@@ -88,7 +88,7 @@
             <div class="gd-overlay gd-overlay-dim hidden game-overlay" id="gd-hole">
                 <div class="gd-card">
                     <h2 class="gd-card-title" id="gd-hole-stars">⭐⭐⭐</h2>
-                    <div class="gd-card-line" id="gd-hole-line">Launches 1 · Par 1</div>
+                    <div class="gd-card-line game-start-card-line" id="gd-hole-line">Launches 1 · Par 1</div>
                     <div class="gd-btn-row game-action-row">
                         <button class="gd-btn gd-btn-primary game-action-btn game-action-btn--primary" id="gd-btn-next">Next ▶</button>
                         <button class="gd-btn game-btn game-action-btn" id="gd-btn-replay"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span>Retry</span></button>

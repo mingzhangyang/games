@@ -377,10 +377,10 @@ export class SilkfallGame {
             btn.className = 'sd-chip' + (p.stars > 0 ? ' is-done' : '');
             btn.dataset.level = String(i);
             const num = document.createElement('span');
-            num.className = 'sd-chip-num';
+            num.className = 'sd-chip-num game-start-chip-num';
             num.textContent = String(i + 1);
             const stars = document.createElement('span');
-            stars.className = 'sd-chip-stars';
+            stars.className = 'sd-chip-stars game-start-chip-stars';
             stars.textContent = '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
             btn.appendChild(num);
             btn.appendChild(stars);

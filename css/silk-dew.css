@@ -133,12 +133,6 @@ body {
     text-align: center;
 }
 
-.sd-par {
-    font-size: 11.5px;
-    color: var(--tok-text-faint);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
 
 /* ── 舞台 ── */
 
@@ -234,13 +228,6 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-.sd-subtitle {
-    font-size: 12.5px;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    margin-top: -6px;
-}
 
 .sd-hero {
     width: 46px;
@@ -262,17 +249,7 @@ body {
     50% { transform: translateY(-8px) rotate(5deg); }
 }
 
-.sd-howto {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--tok-text-soft);
-    max-width: 350px;
-}
 
-.sd-mode-row {
-    display: flex;
-    gap: 8px;
-}
 
 .sd-mode {
     font-family: inherit;
@@ -301,21 +278,7 @@ body {
    标准 action primary 已由 game-action-btn--primary 独立拥有 surface/foreground。 */
 :root[data-theme="light"] .sd-mode-daily { color: #fff; }
 
-.sd-level-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-}
 
-.sd-level-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    width: 100%;
-    max-width: 360px;
-}
 
 /* ⚠️ 类名必须与 src/games/silk-dew/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'sd-chip' + (is-done)`，不是 `sd-level-chip`。类名错位会让整块容器规则静默失效，
@@ -344,9 +307,9 @@ body {
     border-color: var(--sd-chip-is-done-border);
 }
 
-.sd-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
+.sd-chip-num { color: inherit; }
 
-.sd-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; color: var(--tok-gold); }
+.sd-chip-stars { color: var(--tok-gold); }
 
 .sd-daily-best {
     font-size: 12.5px;
@@ -356,7 +319,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.sd-start-footer { display: flex; gap: 10px; }
 
 .sd-lang-btn {
     font-size: 13px;
@@ -393,11 +355,6 @@ body {
     text-shadow: 0 2px 12px rgb(0, 0, 0, 0.18);
 }
 
-.sd-card-line {
-    font-size: 14px;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
 .sd-overlay-title { font-size: 26px; font-weight: 800; }
 
@@ -486,9 +443,7 @@ body {
     .sd-cut-value { font-size: 16px; }
     .sd-title { font-size: 27px; }
     .sd-over-score { font-size: 34px; }
-    .sd-howto { font-size: 12px; }
     .sd-mode { font-size: 13px; padding: 10px 15px; }
-    .sd-level-grid { gap: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

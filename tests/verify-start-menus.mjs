@@ -20,7 +20,11 @@ import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
-const VIEWPORTS = [[390, 844], [768, 1024], [844, 390]];   // 含横屏手机：na 的横屏规则给舞台定了高度
+const VIEWPORTS = [[390, 844], [768, 1024], [844, 390]];
+const W4A_GAMES = new Set([
+    'circuit', 'crystal-bloom', 'echo-cave', 'flame-verse', 'gravity-slingshot',
+    'lumen', 'maxwell-demon', 'ripple-duet', 'silk-dew',
+]);   // 含横屏手机：na 的横屏规则给舞台定了高度
 
 const fails = [];
 let passes = 0;
@@ -88,6 +92,65 @@ for (const g of GAMES) {
                 if (r.ok) reachable++; else missed.push(r.name);
             }
             check(reachable === n, `${g.id}@${w}：#${o.id} 的按钮全部可点`, `${reachable}/${n} 点不到：${missed.join(', ')}`);
+        }
+        // W4a: check real computed styles (not merely stylesheet rule counts) at every
+        // viewport; two dynamically created chip spans are checked with the static menu.
+        if (W4A_GAMES.has(g.id)) {
+            const audit = await page.evaluate(() => {
+                const samples = {};
+                for (const suffix of [
+                    'par', 'subtitle', 'howto', 'mode-row', 'level-label', 'level-grid',
+                    'chip-num', 'chip-stars', 'start-footer', 'card-line',
+                ]) {
+                    const sharedClass = suffix === 'start-footer' ? 'game-start-footer' : 'game-start-' + suffix;
+                    const element = document.querySelector('.' + sharedClass);
+                    if (!element) { samples[suffix] = null; continue; }
+                    const style = getComputedStyle(element);
+                    samples[suffix] = {
+                        fontSize: style.fontSize, display: style.display, gap: style.gap,
+                        maxWidth: style.maxWidth, gridTemplateColumns: style.gridTemplateColumns,
+                    };
+                }
+                return samples;
+            });
+            for (const [suffix, value] of Object.entries(audit)) {
+                check(value !== null, `${g.id}@${w}：W4a .game-start-${suffix} 已实际采用`);
+            }
+            const required = [
+                ['par', 'fontSize', '11.5px'],
+                ['subtitle', 'fontSize', '12.5px'],
+                ['howto', 'fontSize', w <= 480 ? '12px' : '13px'],
+                ['level-label', 'fontSize', '11px'],
+                ['level-grid', 'display', 'grid'],
+                ['level-grid', 'gap', w <= 480 ? '5px' : '6px'],
+                ['mode-row', 'display', 'flex'],
+                ['mode-row', 'gap', '8px'],
+                ['chip-num', 'fontSize', '14px'],
+                ['chip-stars', 'fontSize', '9.5px'],
+                ['start-footer', 'display', 'flex'],
+                ['start-footer', 'gap', '10px'],
+                ['card-line', 'fontSize', '14px'],
+            ];
+            for (const [suffix, property, wanted] of required) {
+                check(audit[suffix]?.[property] === wanted,
+                    `${g.id}@${w}：W4a ${suffix}.${property}=${wanted}`,
+                    String(audit[suffix]?.[property]));
+            }
+            // Computed grid-template-columns expands repeat(5, 1fr) to five used
+            // track widths when laid out. If an ancestor has no layout box, the
+            // computed value may retain repeat(5, 1fr); handle both forms so a
+            // four-column override fails regardless of menu visibility.
+            const gridTemplate = audit['level-grid']?.gridTemplateColumns?.trim() ?? '';
+            const declaredRepeat = /^repeat\(\s*(\d+)\s*,\s*1fr\s*\)$/.exec(gridTemplate);
+            const gridTrackCount = declaredRepeat ? Number(declaredRepeat[1])
+                : gridTemplate === 'none' ? 0 : gridTemplate.split(/\s+/).filter(Boolean).length;
+            check(gridTrackCount === 5,
+                `${g.id}@${w}：W4a 选关网格必须保持五列`,
+                `${gridTrackCount} columns (computed grid-template-columns: ${gridTemplate})`);
+            if (g.id === 'gravity-slingshot') {
+                check(audit.howto?.maxWidth === '350px',
+                    `${g.id}@${w}：howto 不再保留 340px 特例`, String(audit.howto?.maxWidth));
+            }
         }
         check(errors.length === 0, `${g.id}@${w}：无 pageerror`, errors.join(' | '));
         await page.close();

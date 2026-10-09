@@ -48,7 +48,7 @@
                 <div class="rd-hud-level" id="rd-hud-level">Wave 1/20</div>
                 <div class="rd-cut-box">
                     <span class="rd-cut-value" id="rd-budget">0</span>
-                    <span class="rd-par" id="rd-par">Par 0</span>
+                    <span class="rd-par game-start-par" id="rd-par">Par 0</span>
                 </div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → sound -->
@@ -73,7 +73,7 @@
             <!-- 开始界面 -->
             <div class="rd-overlay game-overlay game-overlay--menu" id="rd-start">
                 <h1 class="rd-title" id="rd-title" data-i18n="title">Ripple Duet</h1>
-                <p class="rd-subtitle" id="rd-subtitle" data-i18n="subtitle">Two Sources · One Sea</p>
+                <p class="rd-subtitle game-start-subtitle" id="rd-subtitle" data-i18n="subtitle">Two Sources · One Sea</p>
                 <div class="rd-hero" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 64 64" fill="none">
                         <g stroke="#6fd8ff" stroke-width="2.4">
@@ -85,15 +85,15 @@
                         <rect x="31" y="10" width="3" height="44" fill="#04070d"/>
                     </svg>
                 </div>
-                <p class="rd-howto" id="rd-howto" data-i18n="howto"></p>
-                <div class="rd-mode-row">
+                <p class="rd-howto game-start-howto" id="rd-howto" data-i18n="howto"></p>
+                <div class="rd-mode-row game-start-mode-row">
                     <button class="rd-mode" id="rd-btn-levels"></button>
                     <button class="rd-mode rd-mode-daily" id="rd-btn-daily"></button>
                 </div>
-                <p class="rd-level-label" id="rd-level-label" data-i18n="levelSelect"></p>
-                <div class="rd-level-grid" id="rd-level-grid"></div>
+                <p class="rd-level-label game-start-level-label" id="rd-level-label" data-i18n="levelSelect"></p>
+                <div class="rd-level-grid game-start-level-grid" id="rd-level-grid"></div>
                 <p class="rd-daily-best" id="rd-daily-best"></p>
-                <div class="rd-start-footer">
+                <div class="rd-start-footer game-start-footer">
                     <button class="rd-icon-btn game-icon-btn" id="rd-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                 </div>
             </div>
@@ -102,7 +102,7 @@
             <div class="rd-overlay rd-overlay-dim hidden game-overlay" id="rd-clear">
                 <div class="rd-card">
                     <h2 class="rd-card-title" id="rd-clear-stars">☆☆☆</h2>
-                    <div class="rd-card-line" id="rd-clear-line"></div>
+                    <div class="rd-card-line game-start-card-line" id="rd-clear-line"></div>
                     <div class="rd-btn-row game-action-row">
                         <button class="rd-btn rd-btn-primary game-btn game-action-btn game-action-btn--primary" id="rd-btn-next"><span></span></button>
                         <button class="rd-btn game-btn game-action-btn" id="rd-btn-replay"><span></span></button>
