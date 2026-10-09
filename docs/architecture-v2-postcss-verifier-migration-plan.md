@@ -343,7 +343,11 @@ The contract now provides:
    important reviews remain separate because layer precedence reverses under `!important`.
    Different-selector overlap still belongs to browser/geometry evidence. A dedupe mapping that
    changes selectors must additionally carry per-source adoption evidence checked against every
-   stylesheet consumer and its HTML anchor.
+   stylesheet consumer and its HTML anchor. A **new** shared destination must also be proven
+   harmless on destination-only consumers: either a reviewed document-root opt-in selector
+   excludes those pages, or the mapping is rejected. The opt-in must remain absent on every
+   destination-only page, including after the migration becomes historical; reused destinations
+   are already active and do not create this new-consumer exposure.
 6. The lowest `reset` layer is policy-constrained, not merely an allowed layer name. A mapping
    targeting `reset` must be a top-level reviewed universal selector (`*` or
    `*, *::before, *::after`) and contain only normal declarations; the whole mapped rule stays
