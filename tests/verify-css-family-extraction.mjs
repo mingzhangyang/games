@@ -127,7 +127,7 @@ try {
     );
     const aliasMissingClassErrors = [];
     verifyExtractionAdoption(root, aliasedFamily, aliasMissingClassErrors);
-    assert.ok(aliasMissingClassErrors.some(error => /without \\.game-start-level-chip/.test(error)));
+    assert.ok(aliasMissingClassErrors.some(error => /without \.game-start-level-chip/.test(error)));
 
     const invalidAliasPage = clone(aliasedFamily);
     invalidAliasPage.components[0].localSuffixByParticipant = { other: 'level-chip' };

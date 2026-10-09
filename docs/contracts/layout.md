@@ -85,17 +85,16 @@ Gravity Slingshot 不再保留原 340px 特例；所有选关网格均复用同�
 ### 1.1.3 开始菜单结构组件族（W4b，2026-10-09）
 
 W4a 抽取精确重复的文本/网格默认值；W4b 将相同语义的九个解谜页
-\`mode\`、\`mode-daily\`、\`chip/level-chip\`、\`title\`、\`daily-best\`
+`mode`、`mode-daily`、`chip/level-chip`、`title`、`daily-best`
 归入一组真正共享的组件 surface。
 
-- \begin{ignore}\end{ignore}
-- \`game-start-title\`：标题共享 34px/800，≤480px 为 27px；页面只保留渐变材质。历史上 Gravity 的 32px 和 Silk Dew 的书法字体/35px 不构成额外标准。
-- \`game-start-mode\`：相同的 inline-flex 对齐、13px 圆角、11px×20px 内距、≥44px 高度和 hover/active；手机统一 13px、11px×15px。\`game-start-mode--daily\` 是语义修饰，负责去除边框，页面背景渐变/阴影仍可以主题化。
-- \`game-start-level-chip\`：六页 legacy \`*-chip\` 与三页 \`*-level-chip\` 采用相同的选关控件（10px 圆角、≥44px 高度、hover/active）；旧业务类与 \`is-done\` 语义必须保留，完成态只允许页面自有的 palette。
-- \`game-start-daily-best\`：12.5px/600、15px 最小高度、等宽数字；记录颜色属于页面主题。
-- 五个 Science Showcase 页 \`science-showcase.css\` 的 9px 圆角、统一强调面板与 44px 触控外观继续保持 P0 冻结；迁移不得通过削弱 \`!important\` 账本来制造“统一”。
-- 家族历史类映射由 append-only \`start-menu-structural-w4b\` 的 \`localSuffixByParticipant\` 明确登记，动态 runtime 节点必须使用真实页面类 + 通用类；不能通过重命名 JS 内部选择器假装采用。
-- Desktop/phone/tablet/landscape 的真实 computed-style/touch 校验由 \`verify-start-menus.mjs\` 持续执行，任意一页重引入旧组件几何将违反 CSS debt 契约。
+- `game-start-title`：标题共享 34px/800，≤480px 为 27px；页面只保留渐变材质。历史上 Gravity 的 32px 和 Silk Dew 的书法字体/35px 不构成额外标准。
+- `game-start-mode`：相同的 inline-flex 对齐、13px 圆角、11px×20px 内距、≥44px 高度和 hover/active；手机统一 13px、11px×15px。`game-start-mode--daily` 是语义修饰，负责去除边框，页面背景渐变/阴影仍可以主题化。
+- `game-start-level-chip`：六页 legacy `*-chip` 与三页 `*-level-chip` 采用相同的选关控件（10px 圆角、≥44px 高度、hover/active）；旧业务类与 `is-done` 语义必须保留，完成态只允许页面自有的 palette。
+- `game-start-daily-best`：12.5px/600、15px 最小高度、等宽数字；记录颜色属于页面主题。
+- 五个 Science Showcase 页 `science-showcase.css` 的 9px 圆角、统一强调面板与 44px 触控外观继续保持 P0 冻结；迁移不得通过削弱 `!important` 账本来制造“统一”。
+- 家族历史类映射由 append-only `start-menu-structural-w4b` 的 `localSuffixByParticipant` 明确登记，动态 runtime 节点必须使用真实页面类 + 通用类；不能通过重命名 JS 内部选择器假装采用。
+- Desktop/phone/tablet/landscape 的真实 computed-style/touch 校验由 `verify-start-menus.mjs` 持续执行，任意一页重引入旧组件几何将违反 CSS debt 契约。
 
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 
