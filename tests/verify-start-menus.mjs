@@ -35,7 +35,10 @@ const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 
 const GAMES = registry.all().filter(g => keepPage(g.id));
 exitIfNoPages(GAMES, 'verify-start-menus');
 for (const g of GAMES) {
-    for (const [w, h] of VIEWPORTS) {
+    // W4b also checks the complete desktop menu family; preserve the original
+    // three-viewport gate for other games to avoid extra unrelated CI work.
+    const viewports = W4A_GAMES.has(g.id) ? [...VIEWPORTS, [1280, 900]] : VIEWPORTS;
+    for (const [w, h] of viewports) {
         const page = await browser.newPage();
         const errors = [];
         page.on('pageerror', e => errors.push(e.message));
@@ -147,6 +150,59 @@ for (const g of GAMES) {
             check(gridTrackCount === 5,
                 `${g.id}@${w}：W4a 选关网格必须保持五列`,
                 `${gridTrackCount} columns (computed grid-template-columns: ${gridTemplate})`);
+            // W4b: assert component adoption and resolved geometry, including dynamic
+            // level chips. Science Showcase intentionally overrides border radius to
+            // 9px with its frozen P0 !important material rule.
+            const family = await page.evaluate(() => {
+                const sample = (selector) => {
+                    const element = document.querySelector(selector);
+                    if (!element) return null;
+                    const css = getComputedStyle(element);
+                    return {
+                        fontSize: css.fontSize, fontWeight: css.fontWeight,
+                        minHeight: css.minHeight, borderRadius: css.borderRadius,
+                        padding: css.padding, cursor: css.cursor,
+                        height: element.getBoundingClientRect().height,
+                    };
+                };
+                return {
+                    showcase: !!document.querySelector('.science-showcase'),
+                    title: sample('.game-start-title'),
+                    mode: sample('.game-start-mode:not(.game-start-mode--daily)'),
+                    daily: sample('.game-start-mode--daily'),
+                    chip: sample('.game-start-level-chip'),
+                    best: sample('.game-start-daily-best'),
+                };
+            });
+            for (const [name, value] of Object.entries(family)) {
+                if (name !== 'showcase') {
+                    check(value !== null, `${g.id}@${w}：W4b ${name} component adopted`);
+                }
+            }
+            const wantedTitleSize = w <= 480 ? '27px' : '34px';
+            const wantedModeSize = w <= 480 ? '13px' : '14.5px';
+            check(family.title?.fontSize === wantedTitleSize,
+                `${g.id}@${w}：W4b title standard font size`, String(family.title?.fontSize));
+            check(family.title?.fontWeight === '800',
+                `${g.id}@${w}：W4b title standard font weight`, String(family.title?.fontWeight));
+            check(family.mode?.fontSize === wantedModeSize,
+                `${g.id}@${w}：W4b mode standard font size`, String(family.mode?.fontSize));
+            check(family.mode?.padding === (w <= 480 ? '11px 15px' : '11px 20px'),
+                `${g.id}@${w}：W4b mode standard padding`, String(family.mode?.padding));
+            for (const [name, expectedRadius] of [
+                ['mode', family.showcase ? '9px' : '13px'],
+                ['chip', family.showcase ? '9px' : '10px'],
+            ]) {
+                const style = family[name];
+                check(style?.minHeight === '44px' && style?.borderRadius === expectedRadius,
+                    `${g.id}@${w}：W4b ${name} touch/radius contract`,
+                    JSON.stringify(style));
+                check(style?.cursor === 'pointer',
+                    `${g.id}@${w}：W4b ${name} clickable state`, String(style?.cursor));
+            }
+            check(family.best?.fontSize === '12.5px' && family.best?.minHeight === '15px',
+                `${g.id}@${w}：W4b best score typographic contract`,
+                JSON.stringify(family.best));
             if (g.id === 'gravity-slingshot') {
                 check(audit.howto?.maxWidth === '350px',
                     `${g.id}@${w}：howto 不再保留 340px 特例`, String(audit.howto?.maxWidth));

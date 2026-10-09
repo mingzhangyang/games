@@ -98,6 +98,66 @@ try {
     assert.deepEqual(adoptedHtmlFragmentErrors, []);
 
 
+    // W4b: a legacy class may use a different suffix on a subset of pages,
+    // but a single shared family must still own every real runtime chip.
+    const aliasedFamily = clone(extraction);
+    aliasedFamily.components = [{
+        suffix: 'chip',
+        localSuffixByParticipant: { dm: 'level-chip' },
+        sharedClass: 'game-start-level-chip',
+        surface: 'runtime',
+        participants: ['dm'],
+        fullyRemoved: [],
+    }];
+    writeFileSync(
+        join(root, 'src/games/demo/runtime.js'),
+        "const chip = document.createElement('button');\n"
+            + "chip.className = 'dm-level-chip game-start-level-chip';\n",
+    );
+    const aliasShapeErrors = [];
+    assert.equal(verifyExtractionShape(aliasedFamily, aliasShapeErrors), true);
+    assert.deepEqual(aliasShapeErrors, []);
+    const aliasAdoptionErrors = [];
+    verifyExtractionAdoption(root, aliasedFamily, aliasAdoptionErrors);
+    assert.deepEqual(aliasAdoptionErrors, []);
+
+    writeFileSync(
+        join(root, 'src/games/demo/runtime.js'),
+        "chip.className = 'dm-level-chip';\n",
+    );
+    const aliasMissingClassErrors = [];
+    verifyExtractionAdoption(root, aliasedFamily, aliasMissingClassErrors);
+    assert.ok(aliasMissingClassErrors.some(error => /without \\.game-start-level-chip/.test(error)));
+
+    const invalidAliasPage = clone(aliasedFamily);
+    invalidAliasPage.components[0].localSuffixByParticipant = { other: 'level-chip' };
+    const invalidAliasPageErrors = [];
+    assert.equal(verifyExtractionShape(invalidAliasPage, invalidAliasPageErrors), false);
+    assert.ok(invalidAliasPageErrors.some(error => /non-participant other/.test(error)));
+
+    const invalidAliasName = clone(aliasedFamily);
+    invalidAliasName.components[0].localSuffixByParticipant = { dm: 'LevelChip' };
+    const invalidAliasNameErrors = [];
+    assert.equal(verifyExtractionShape(invalidAliasName, invalidAliasNameErrors), false);
+    assert.ok(invalidAliasNameErrors.some(error => /kebab-case/.test(error)));
+
+    const aliasState = clone(aliasedFamily);
+    aliasState.components.push({
+        ...clone(aliasState.components[0]),
+        localSelectorSuffix: ':active',
+        sharedSelectorSuffix: ':active',
+        requiresAdoption: false,
+    });
+    const aliasStateErrors = [];
+    assert.equal(verifyExtractionShape(aliasState, aliasStateErrors), true);
+    assert.deepEqual(aliasStateErrors, []);
+
+    const mismatchedAliasState = clone(aliasState);
+    mismatchedAliasState.components[1].localSuffixByParticipant = {};
+    const mismatchedAliasErrors = [];
+    assert.equal(verifyExtractionShape(mismatchedAliasState, mismatchedAliasErrors), false);
+    assert.ok(mismatchedAliasErrors.some(error => /requires a validated unsuffixed component/.test(error)));
+
     const shapeCases = [
         {
             name: 'unsupported extraction media context',
