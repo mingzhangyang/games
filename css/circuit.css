@@ -23,13 +23,7 @@
     --cc-overlay-bg: rgb(8, 13, 36, 0.92);
     --cc-overlay-dim-bg: rgb(8, 13, 36, 0.72);
     --cc-title-bg: linear-gradient(120deg, #ffd98a, #ffc94d 55%, #4dc3ff);
-    --cc-mode-bg: rgb(255, 255, 255, 0.07);
-    --cc-mode-border: 1px solid rgb(255, 255, 255, 0.14);
-    --cc-mode-hover-bg: rgb(255, 255, 255, 0.13);
     --cc-mode-daily-shadow: 0 8px 24px rgb(52, 211, 153, 0.35);
-    --cc-level-chip-bg: rgb(255, 255, 255, 0.05);
-    --cc-level-chip-border: 1px solid rgb(255, 255, 255, 0.1);
-    --cc-level-chip-hover-bg: rgb(255, 255, 255, 0.11);
     --cc-daily-best-text: #ffd98a;
     --cc-card-bg: rgb(10, 18, 48, 0.96);
     --cc-card-border: 1px solid rgb(255, 255, 255, 0.12);
@@ -66,13 +60,7 @@
     --cc-overlay-bg: rgb(255, 255, 255, 0.98);
     --cc-overlay-dim-bg: rgb(15, 23, 42, 0.32);
     --cc-title-bg: linear-gradient(120deg, #a86a00, #c98a00 55%, #0a7ea8);
-    --cc-mode-bg: rgb(255, 255, 255, 0.76);
-    --cc-mode-border: 1px solid rgb(15, 23, 42, 0.154);
-    --cc-mode-hover-bg: rgb(255, 255, 255, 0.94);
     --cc-mode-daily-shadow: 0 8px 24px rgb(15, 23, 42, 0.122);
-    --cc-level-chip-bg: rgb(255, 255, 255, 0.7);
-    --cc-level-chip-border: 1px solid rgb(15, 23, 42, 0.11);
-    --cc-level-chip-hover-bg: rgb(255, 255, 255, 0.88);
     --cc-daily-best-text: #8a5a00;
     --cc-card-bg: rgb(255, 255, 255, 0.98);
     --cc-card-border: 1px solid rgb(15, 23, 42, 0.132);
@@ -185,15 +173,7 @@ body {
 
 .cc-overlay-dim { background: var(--cc-overlay-dim-bg); }
 
-.cc-title {
-    font-size: 34px;
-    font-weight: 800;
-    line-height: 1.15;
-    background: var(--cc-title-bg);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+.cc-title { background: var(--cc-title-bg); }
 
 
 .cc-hero {
@@ -210,25 +190,13 @@ body {
 
 
 
-.cc-mode {
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--tok-text);
-    background: var(--cc-mode-bg);
-    border: var(--cc-mode-border);
-    border-radius: 13px;
-    padding: 11px 20px;
-    cursor: pointer;
-    transition: transform 0.12s, background 0.15s;
-}
+ 
 
-.cc-mode:hover { background: var(--cc-mode-hover-bg); }
-.cc-mode:active { transform: scale(0.95); }
+ 
+ 
 
 .cc-mode-daily {
     background: linear-gradient(120deg, var(--tok-success), var(--tok-cyan));
-    border: none;
     box-shadow: var(--cc-mode-daily-shadow);
 }
 
@@ -237,33 +205,14 @@ body {
 
 
 
-.cc-level-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    font-family: inherit;
-    background: var(--cc-level-chip-bg);
-    border: var(--cc-level-chip-border);
-    border-radius: 10px;
-    padding: 6px 2px 4px;
-    cursor: pointer;
-    color: inherit;
-    transition: background 0.15s, transform 0.1s;
-}
+ 
 
-.cc-level-chip:hover { background: var(--cc-level-chip-hover-bg); }
-.cc-level-chip:active { transform: scale(0.93); }
+ 
+ 
 
 
 
-.cc-daily-best {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--cc-daily-best-text);
-    min-height: 15px;
-    font-variant-numeric: tabular-nums;
-}
+.cc-daily-best { color: var(--cc-daily-best-text); }
 
 
 .cc-lang-btn {
@@ -376,9 +325,9 @@ body {
 @media (width <= 480px) {
     .cc-hud-level { font-size: 12px; }
     .cc-move-value { font-size: 16px; }
-    .cc-title { font-size: 27px; }
+ 
     .cc-over-score { font-size: 34px; }
-    .cc-mode { font-size: 13px; padding: 10px 15px; }
+ 
 }
 
 @media (prefers-reduced-motion: reduce) {

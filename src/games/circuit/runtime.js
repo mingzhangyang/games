@@ -252,7 +252,7 @@ export class CircuitGame {
         for (let i = 0; i < LEVELS.length; i++) {
             const chip = document.createElement('button');
             chip.type = 'button';
-            chip.className = 'cc-level-chip';
+            chip.className = 'cc-level-chip game-start-level-chip';
             const num = document.createElement('span');
             num.className = 'cc-chip-num game-start-chip-num';
             num.textContent = String(i + 1);

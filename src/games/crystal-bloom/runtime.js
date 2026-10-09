@@ -379,7 +379,7 @@ export class CrystalBloomGame {
             const p = this.progress[spec.id] || { stars: 0, bestCost: 0 };
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'cb-chip' + (p.stars > 0 ? ' is-done' : '');
+            btn.className = 'cb-chip game-start-level-chip' + (p.stars > 0 ? ' is-done' : '');
             btn.dataset.level = String(i);
             const num = document.createElement('span');
             num.className = 'cb-chip-num game-start-chip-num';
