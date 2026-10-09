@@ -1808,6 +1808,12 @@
             }
           }
         }
+      ],
+      "reviewedAtRuleAdditions": [
+        {
+          "context": "@media (width <= 480px)",
+          "reason": "The two adopted W4a phone defaults introduce exactly one new media grouping in layout.css. The family ledger verifies both declarations and all nine page participants; the surrounding historical at-rule inventory must stay unchanged."
+        }
       ]
     }
   ]

@@ -790,6 +790,35 @@ export function verifyExtractionShape(extraction, errors) {
             retirementKeys.add(key);
         }
     }
+    // A family may introduce a conditional grouping boundary only when that same
+    // transaction also creates concrete, verified shared rules under its context.
+    // This registration never grants permission to change existing @rules.
+    const atRuleAdditions = extraction.reviewedAtRuleAdditions || [];
+    if (!Array.isArray(atRuleAdditions)) {
+        fail('reviewedAtRuleAdditions must be an array.');
+    } else {
+        const contexts = new Set();
+        for (const addition of atRuleAdditions) {
+            if (!addition || typeof addition !== 'object' || Array.isArray(addition)
+                || !REVIEWED_COMPONENT_CONTEXTS.has(addition.context) || !addition.context) {
+                fail('reviewed at-rule addition must name a reviewed non-empty component media context.');
+                continue;
+            }
+            if (contexts.has(addition.context)) {
+                fail('duplicate reviewed at-rule addition for ' + addition.context + '.');
+            }
+            contexts.add(addition.context);
+            if (extraction.extends !== undefined) {
+                fail('family extensions cannot introduce new conditional group boundaries.');
+            }
+            if (!(extraction.components || []).some(component => component.context === addition.context)) {
+                fail('reviewed at-rule addition has no shared component in ' + addition.context + '.');
+            }
+            if (typeof addition.reason !== 'string' || !addition.reason.trim()) {
+                fail('reviewed at-rule addition requires a reason.');
+            }
+        }
+    }
     return valid;
 }
 
@@ -1444,6 +1473,10 @@ export function verifyFamilyExtractions({
         [extraction.id, resolveFamilyExtension(extraction, orderedExtractions, errors)]));
     const newExtractions = orderedExtractions.filter(extraction => !baseById.has(extraction.id));
     const newRuleDelta = newExtractions.reduce((sum, extraction) => sum + extraction.expectedRuleDelta, 0);
+    const newReviewedAtRuleAdditions = newExtractions.flatMap(extraction =>
+        (extraction.reviewedAtRuleAdditions || []).map(addition => ({
+            ...addition, path: extraction.sharedStylesheet, extractionId: extraction.id,
+        })));
     for (const extraction of newExtractions) {
         verifyNewExtraction(
             root, extraction, currentParsedByPath, baseParsedByPath,
@@ -1467,6 +1500,7 @@ export function verifyFamilyExtractions({
         externalRuleChanges,
         extractions: [...currentById.values()],
         newExtractionIds: newExtractions.map(extraction => extraction.id),
+        newReviewedAtRuleAdditions,
         newRuleDelta,
     };
 }

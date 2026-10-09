@@ -80,6 +80,7 @@ Gravity Slingshot 不再保留原 340px 特例；所有选关网格均复用同�
 本批不碰。追加的 `start-menu-exact-w4a` family extraction
 对十二条共享规则分别声明 source、媒体 context、完全退役名单；以后不得原地编辑历史事务。
 `verify-start-menus.mjs` 以三种视口检查九页 computed styles 与真实 runtime 节点。
+新引入的 `@media (width <= 480px)` 容器在 `start-menu-exact-w4a` 中以 `reviewedAtRuleAdditions` 单独登记。验证器只允许恰好一个已批准的 media grouping 插入，要求历史 non-rule at-rule 列表完整、顺序不变；其内部的两个普通 CSS 规则仍须通过 family extraction 逐项对账。
 
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 

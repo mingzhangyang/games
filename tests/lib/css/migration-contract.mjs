@@ -4,8 +4,48 @@ import { execFileSync } from 'node:child_process';
 import { verifyDedupeAdoption } from './dedupe-adoption.mjs';
 import { mappedStylesheetPaths, mappingDestinations, mappingSources } from './migration-record.mjs';
 import { propertiesOverlap } from './property-writes.mjs';
+import { normalizeFragment } from './model.mjs';
 
 const PRIORITIES = new Set(['normal', 'important']);
+
+// A family extraction can add a *single, explicitly reviewed* conditional group
+// while retaining every historical at-rule in its original order. The actual
+// ordinary rules inside that group are independently matched against the family
+// ledger; this only accounts for the extra non-rule grouping boundary.
+export function verifyReviewedAtRuleAdditions(baseAtRules, currentAtRules, additions, path, errors) {
+    const approvals = (additions || []).map(addition => {
+        if (addition.path !== path || addition.context !== '@media (width <= 480px)') {
+            errors.push(path + ': unrecognized family at-rule addition review.');
+            return null;
+        }
+        return {
+            name: 'media',
+            form: 'group',
+            params: normalizeFragment('(width <= 480px)'),
+            context: [],
+            layer: null,
+        };
+    });
+    const used = new Set();
+    let baseIndex = 0;
+    for (const actual of currentAtRules || []) {
+        if (baseIndex < (baseAtRules || []).length
+            && jsonKey(actual) === jsonKey(baseAtRules[baseIndex])) {
+            baseIndex++;
+            continue;
+        }
+        const approvedIndex = approvals.findIndex((approval, index) =>
+            approval && !used.has(index) && jsonKey(approval) === jsonKey(actual));
+        if (approvedIndex === -1) {
+            errors.push(path + ': non-rule at-rule semantics changed outside the registered rule migrations.');
+            return;
+        }
+        used.add(approvedIndex);
+    }
+    if (baseIndex !== (baseAtRules || []).length || used.size !== approvals.length) {
+        errors.push(path + ': registered at-rule insertion does not preserve the complete base at-rule inventory.');
+    }
+}
 
 export const declarationDigest = declarations => createHash('sha256')
     .update(JSON.stringify(declarations))
@@ -784,7 +824,7 @@ export function verifyRuleMigrations({
     baseline, state, currentParsedByPath, baseParsedByPath, stylesheetLinks,
     htmlSources = new Map(),
     allowedLayers, layerOrder, baseState, externalRuleChanges = { base: [], current: [] },
-    guardedCssPaths = new Set(), errors,
+    reviewedAtRuleAdditions = [], guardedCssPaths = new Set(), errors,
 }) {
     verifyMonotonicState(baseState || {}, state, errors);
     const currentCatalogs = new Map([...currentParsedByPath].map(([path, parsed]) => [path, indexRuleOccurrences(parsed, path)]));
@@ -1000,9 +1040,11 @@ export function verifyRuleMigrations({
                 if (jsonKey(baseParsed.keyframes) !== jsonKey(currentParsed.keyframes)) {
                     errors.push(path + ': keyframes changed during a rule-only P2 migration; keyframe mappings are not enabled yet.');
                 }
-                if (jsonKey(baseParsed.migrationAtRules || []) !== jsonKey(currentParsed.migrationAtRules || [])) {
-                    errors.push(path + ': non-rule at-rule semantics changed outside the registered rule migrations.');
-                }
+                verifyReviewedAtRuleAdditions(
+                    baseParsed.migrationAtRules, currentParsed.migrationAtRules,
+                    reviewedAtRuleAdditions.filter(addition => addition.path === path),
+                    path, errors,
+                );
             }
         }
     }
