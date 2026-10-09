@@ -625,6 +625,42 @@ try {
     ), [decl('background-image', 'var(--cb-title-bg)')]);
     assert.deepEqual(tokenErrors, []);
 
+    // A complete function is mandatory: CSS background accepts positions,
+    // sizes, repeat keywords and comma-separated layers that background-image
+    // does not. These must never be approved as lossless title rewrites.
+    for (const [name, shorthand] of [
+        ['position and size', 'linear-gradient(red, blue) center / cover'],
+        ['repeat', 'linear-gradient(red, blue) no-repeat'],
+        ['multiple layers', 'linear-gradient(red, blue), linear-gradient(black, white)'],
+        ['trailing text', 'linear-gradient(red, blue)junk'],
+        ['unclosed gradient', 'linear-gradient(red, blue'],
+        ['extra closing parenthesis', 'linear-gradient(red, blue))'],
+        ['unclosed nested function', 'linear-gradient(red, rgb(0, 0, 255)'],
+        ['too few color stops', 'linear-gradient(red)'],
+        ['empty color stop', 'linear-gradient(red, )'],
+        ['theme variable plus size', 'var(--cb-title-bg) center / cover'],
+    ]) {
+        const errors = [];
+        const source = { migrationDeclarations: [decl('background', shorthand)] };
+        assert.deepEqual(expectedResidual(
+            source, { migrationDeclarations: [] }, errors,
+            name, [], [], [], [], approvedGradient,
+        ), source.migrationDeclarations, name + ': rejected rewrites leave source untouched');
+        assert.ok(errors.some(error => /requires a non-important gradient-only title value/.test(error)),
+            name + ': an unsafe shorthand must be rejected');
+    }
+
+    // Inner color/variable functions are fine as long as the outer gradient
+    // consumes the entire value (and has more than one color stop).
+    const nestedGradient = 'linear-gradient(120deg, rgb(255 0 0 / 50%), var(--tok-gold) 55%, #ff8a5c)';
+    const nestedGradientErrors = [];
+    assert.deepEqual(expectedResidual(
+        { migrationDeclarations: [decl('background', nestedGradient)] },
+        { migrationDeclarations: [] }, nestedGradientErrors,
+        'nested-gradient', [], [], [], [], approvedGradient,
+    ), [decl('background-image', nestedGradient)]);
+    assert.deepEqual(nestedGradientErrors, []);
+
     const unsafeErrors = [];
     expectedResidual(
         { migrationDeclarations: [decl('background', 'red')] },

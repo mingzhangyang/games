@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { TokenType } from '@csstools/css-tokenizer';
 import { join } from 'node:path';
 
 import { htmlElementAttributes, parseHtmlElements } from './html-inputs.mjs';
+import { cssTokens } from './model.mjs';
 import { indexRuleOccurrences, readGitFile } from './migration-contract.mjs';
 
 export const FAMILY_EXTRACTION_STATE_PATH = 'tests/css-family-extraction-state.json';
@@ -125,6 +127,60 @@ function componentSharedSelector(component) {
         ? ':where(.' + component.sharedClass + ')'
         : '.' + component.sharedClass;
     return classSelector + (component.sharedSelectorSuffix || '');
+}
+
+// Background is a shorthand; translating it to background-image preserves
+// clipping only if the *entire* value is one image, not a gradient followed by
+// position/size, repeat, another layer, or malformed nested functions.
+// Use the same CSS Syntax tokenizer as the audit adapter, not a prefix regex.
+function isSingleLinearGradientImage(value) {
+    let tokens;
+    try {
+        tokens = cssTokens(value).filter(([type]) =>
+            type !== TokenType.Whitespace && type !== TokenType.Comment);
+    } catch {
+        return false;
+    }
+    if (tokens[0]?.[0] !== TokenType.Function
+        || tokens[0][1].toLowerCase() !== 'linear-gradient(') return false;
+
+    const matchingClose = new Map([
+        [TokenType.Function, TokenType.CloseParen],
+        [TokenType.OpenParen, TokenType.CloseParen],
+        [TokenType.OpenSquare, TokenType.CloseSquare],
+    ]);
+    const closing = new Set([
+        TokenType.CloseParen, TokenType.CloseSquare, TokenType.CloseCurly,
+    ]);
+    const stack = [];
+    let commaCount = 0;
+    let hasArgument = false;
+
+    for (let index = 0; index < tokens.length; index++) {
+        const type = tokens[index][0];
+        if (matchingClose.has(type)) {
+            if (stack.length === 1) hasArgument = true;
+            stack.push(matchingClose.get(type));
+        } else if (closing.has(type)) {
+            if (stack.pop() !== type) return false;
+            if (stack.length === 0) {
+                // A gradient needs at least two non-empty top-level arguments.
+                // Every token must be consumed by the outer function.
+                return index === tokens.length - 1 && commaCount >= 1 && hasArgument;
+            }
+        } else if (type === TokenType.Comma && stack.length === 1) {
+            if (!hasArgument) return false;
+            commaCount += 1;
+            hasArgument = false;
+        } else if (type === TokenType.BadString || type === TokenType.BadURL
+            || type === TokenType.Semicolon || type === TokenType.OpenCurly) {
+            return false;
+        } else if (stack.length === 1) {
+            hasArgument = true;
+        }
+    }
+    // Unmatched '(' or a value with no complete outer gradient is invalid.
+    return false;
 }
 
 export function expectedResidual(
@@ -262,7 +318,8 @@ export function expectedResidual(
             : String(declaration.value || '');
         const value = rawValue.trim();
         if (declaration.important
-            || !/^(?:linear-gradient\(|var\(--[a-z]{2}-title-bg\)$)/.test(value)) {
+            || !(isSingleLinearGradientImage(value)
+                || /^var\(--[a-z]{2}-title-bg\)$/.test(value))) {
             errors.push(label + ': background-image rewrite requires a non-important gradient-only title value.');
             continue;
         }
