@@ -587,25 +587,6 @@ html.game-reset * {
     }
 }
 
-/* Both mobile overrides have the exact same semantics on all nine W4a pages.
-   Gravity's former repeat(5, 1fr) restatement is already owned by the base grid. */
-@media (width <= 480px) {
-    @layer components {
-        .game-start-howto {
-            font-size: 12px;
-        }
-
-        .game-start-level-grid {
-            gap: 5px;
-        }
-        .game-start-title { font-size: 27px; }
-        .game-start-mode { font-size: 13px; padding: 11px 15px; }
-        .game-over-score { font-size: 34px; }
-        .game-cut-value { font-size: 16px; }
-    }
-}
-
-
 /* ── W5a: result-overlay score and topbar action counter surfaces ──
    All geometry, glass opacity and glow strength have one owner.
    Only the color hue/stroke follows each game's tokens.
@@ -645,6 +626,25 @@ html.game-reset * {
         text-align: center;
     }
 }
+
+/* Both mobile overrides have the exact same semantics on all nine W4a pages.
+   Gravity's former repeat(5, 1fr) restatement is already owned by the base grid. */
+@media (width <= 480px) {
+    @layer components {
+        .game-start-howto {
+            font-size: 12px;
+        }
+
+        .game-start-level-grid {
+            gap: 5px;
+        }
+        .game-start-title { font-size: 27px; }
+        .game-start-mode { font-size: 13px; padding: 11px 15px; }
+        .game-over-score { font-size: 34px; }
+        .game-cut-value { font-size: 16px; }
+    }
+}
+
 
 /* ── 侧栏卡片族 ── */
 @layer components {
