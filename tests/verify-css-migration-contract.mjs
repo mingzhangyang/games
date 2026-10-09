@@ -182,6 +182,11 @@ assert.deepEqual(
     [],
 );
 assert.ok(resetFixtureErrors(
+    'fixture-reset-escaped-layer',
+    '@layer reset{*{margin:0}}',
+    '@layer components{*{margin:0}}',
+).some(error => /a reset migration must keep the whole rule in reset/.test(error)));
+assert.ok(resetFixtureErrors(
     'fixture-reset-non-universal',
     '.x{margin:0}',
     '@layer reset{.x{margin:0}}',
@@ -448,6 +453,16 @@ const historicalHiddenErrors = historicalDedupeErrors(
     ]]),
 );
 assert.ok(historicalHiddenErrors.some(error => error.includes('.a-hidden element(s) without .hidden')));
+// Historical migrations with intact consumers must remain valid; the
+// continuing adoption check must not invent new rule transactions.
+assert.deepEqual(historicalDedupeErrors(
+    dedupeMapping, dedupeCurrent,
+    [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+    { 'dedupe.html': [['css/a.css', []], ['css/b.css', []], ['css/layout.css', []]] },
+    new Map([[
+        'dedupe.html', '<body><div class="a-hidden hidden"></div><div class="b-hidden hidden"></div></body>',
+    ]]),
+), []);
 
 
 // Even an exact selector match must keep the shared destination active on every

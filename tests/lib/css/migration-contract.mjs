@@ -671,7 +671,10 @@ function verifyAccessibilityMappingInvariant(mapping, errors) {
 }
 
 function verifyResetMappingInvariant(mapping, errors) {
-    if (!(mapping.destinations || []).some(destination => destination?.layer === 'reset')) return true;
+    // A layered reset source cannot escape into a higher cascade layer,
+    // just as a newly created reset destination must satisfy reset policy.
+    if (mapping.source?.layer !== 'reset'
+        && !(mapping.destinations || []).some(destination => destination?.layer === 'reset')) return true;
 
     let valid = true;
     if (mapping.source.context !== ''
