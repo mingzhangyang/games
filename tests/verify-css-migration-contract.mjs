@@ -415,6 +415,9 @@ const dedupeResult = verifyRuleMigrations({
 });
 assert.deepEqual(dedupeErrors, []);
 assert.equal(dedupeResult.newRuleDelta, -1);
+for (const path of ['css/a.css', 'css/b.css', 'css/layout.css']) {
+    assert.ok(dedupeResult.mappedCssPaths.has(path), path + ' must be registered by the dedupe mapping');
+}
 assert.deepEqual(dedupeResult.importantDeclarationDelta.removed, [
     ['css/a.css', '', '.a-hidden', 'display', 'none!important'],
     ['css/b.css', '', '.b-hidden', 'display', 'none!important'],

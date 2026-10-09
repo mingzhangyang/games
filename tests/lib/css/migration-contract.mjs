@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
 import { htmlElementAttributes, htmlTagName, parseHtmlElements } from './html-inputs.mjs';
+import { mappedStylesheetPaths, mappingDestinations, mappingSources } from './migration-record.mjs';
 import { propertiesOverlap } from './property-writes.mjs';
 
 const PRIORITIES = new Set(['normal', 'important']);
@@ -624,16 +625,6 @@ function isDeduplication(mapping) {
     return mapping?.kind === 'dedupe';
 }
 
-function mappingSources(mapping) {
-    return isDeduplication(mapping) ? (mapping.sources || []) : [mapping.source];
-}
-
-function mappingDestinations(mapping) {
-    return isDeduplication(mapping)
-        ? (mapping.destination ? [mapping.destination] : [])
-        : (mapping.destinations || []);
-}
-
 const RESET_UNIVERSAL_SELECTORS = new Set(['*', '*, *::before, *::after']);
 
 const ACCESSIBILITY_CONTEXT = '@media (prefers-reduced-motion: reduce)';
@@ -984,10 +975,7 @@ export function verifyRuleMigrations({
             currentDestinationRules.push(rule);
         }
 
-        const paths = new Set([
-            ...sources.map(source => source?.path),
-            ...destinations.map(item => item?.path),
-        ].filter(Boolean));
+        const paths = mappedStylesheetPaths([mapping]);
         for (const path of paths) {
             if (!newMappingsByPath.has(path)) newMappingsByPath.set(path, []);
             newMappingsByPath.get(path).push(mapping);
@@ -1076,10 +1064,7 @@ export function verifyRuleMigrations({
     compareCounts(countsFromCurrentUnlayered(currentCatalogs), expectedDebt, errors,
         'unlayered rule debt must equal immutable P0 minus registered migrations');
 
-    const mappedCssPaths = new Set([...mappings.values()].flatMap(mapping => [
-        ...mappingSources(mapping).map(item => item?.path),
-        ...mappingDestinations(mapping).map(item => item?.path),
-    ]).filter(Boolean));
+    const mappedCssPaths = mappedStylesheetPaths(mappings.values());
     if (mappings.size) mappedCssPaths.add('css/tokens.css');
     const externallyReviewedPaths = new Set([
         ...(externalRuleChanges.base || []).map(rule => rule.path),

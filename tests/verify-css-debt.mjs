@@ -16,6 +16,7 @@ import { verifyActivationSnapshot } from './lib/css/activation.mjs';
 import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
+import { mappedStylesheetPaths } from './lib/css/migration-record.mjs';
 import { readMigrationState, readMigrationStateAtGit } from './lib/css/migration-state.mjs';
 import {
     verifyFamilyExtractions,
@@ -232,10 +233,10 @@ function verifyProject() {
         errors.push('Active HTML inventory changed; review page/stylesheet ownership without editing immutable P0.');
     }
 
-    const declaredMappedPaths = new Set((MIGRATION_STATE.migratedRules || []).flatMap(mapping => [
-        mapping.source?.path,
-        ...(mapping.destinations || []).map(destination => destination.path),
-    ]).filter(Boolean));
+    // Use the same migration schema normalizer as verifyRuleMigrations. Dedupe
+    // mappings own multiple source files and a singular shared destination;
+    // legacy-only path extraction silently rejected their new @layer blocks.
+    const declaredMappedPaths = mappedStylesheetPaths(MIGRATION_STATE.migratedRules || []);
     const migrationStarted = (MIGRATION_STATE.migratedRules || []).length > 0;
     const currentParsedByPath = new Map();
     const stylesheetLinks = {};
