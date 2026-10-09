@@ -340,10 +340,10 @@ export class EchoCaveGame {
             btn.className = 'ec-chip' + (p.stars > 0 ? ' is-done' : '');
             btn.dataset.level = String(i);
             const num = document.createElement('span');
-            num.className = 'ec-chip-num';
+            num.className = 'ec-chip-num game-start-chip-num';
             num.textContent = String(i + 1);
             const stars = document.createElement('span');
-            stars.className = 'ec-chip-stars';
+            stars.className = 'ec-chip-stars game-start-chip-stars';
             stars.textContent = '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
             btn.appendChild(num);
             btn.appendChild(stars);

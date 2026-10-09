@@ -254,10 +254,10 @@ export class CircuitGame {
             chip.type = 'button';
             chip.className = 'cc-level-chip';
             const num = document.createElement('span');
-            num.className = 'cc-chip-num';
+            num.className = 'cc-chip-num game-start-chip-num';
             num.textContent = String(i + 1);
             const starLine = document.createElement('span');
-            starLine.className = 'cc-chip-stars';
+            starLine.className = 'cc-chip-stars game-start-chip-stars';
             const n = this.stars[i] || 0;
             starLine.textContent = n > 0 ? '⭐'.repeat(n) : '☆☆☆';
             chip.append(num, starLine);

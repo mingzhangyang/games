@@ -78,8 +78,32 @@ try {
     assert.ok(missingRuntimeErrors.some(error =>
         /runtime\.js has 1 className assignment\(s\) with \.dm-row but without \.game-row/.test(error)));
 
+    // Runtime DOM strings (including template-literal innerHTML) are adoption surfaces too.
+    // A className-only scan used to miss Ripple Duet's level-chip spans.
+    writeFileSync(
+        join(root, 'src/games/demo/runtime.js'),
+        'const rendered = `<span class="dm-row">row</span>`;\n',
+    );
+    const unadoptedHtmlFragmentErrors = [];
+    verifyExtractionAdoption(root, extraction, unadoptedHtmlFragmentErrors);
+    assert.ok(unadoptedHtmlFragmentErrors.some(error =>
+        /without \.game-row/.test(error)), 'unadopted runtime HTML fragment must fail');
+
+    writeFileSync(
+        join(root, 'src/games/demo/runtime.js'),
+        'const rendered = `<span class="dm-row game-row">row</span>`;\n',
+    );
+    const adoptedHtmlFragmentErrors = [];
+    verifyExtractionAdoption(root, extraction, adoptedHtmlFragmentErrors);
+    assert.deepEqual(adoptedHtmlFragmentErrors, []);
+
 
     const shapeCases = [
+        {
+            name: 'unsupported extraction media context',
+            mutate(component) { component.context = '@media print'; },
+            expected: /component context is not a reviewed extraction media query/,
+        },
         {
             name: 'empty participants',
             mutate(component) { component.participants = []; },
@@ -116,6 +140,22 @@ try {
         assert.equal(verifyExtractionShape(candidate, shapeErrors), false, shapeCase.name);
         assert.ok(shapeErrors.some(error => shapeCase.expected.test(error)), shapeCase.name);
     }
+
+    // Same shared selector is permitted in default and phone contexts, never twice in one context.
+    const mobileContext = clone(extraction);
+    mobileContext.components.push({
+        ...clone(extraction.components[0]),
+        context: '@media (width <= 480px)',
+    });
+    const validMobileContextErrors = [];
+    assert.equal(verifyExtractionShape(mobileContext, validMobileContextErrors), true);
+    assert.deepEqual(validMobileContextErrors, []);
+    const duplicateMobileContext = clone(mobileContext);
+    duplicateMobileContext.components.push(clone(mobileContext.components[2]));
+    const duplicateMobileErrors = [];
+    assert.equal(verifyExtractionShape(duplicateMobileContext, duplicateMobileErrors), false);
+    assert.ok(duplicateMobileErrors.some(error =>
+        /duplicate component suffix/.test(error)));
 
     const pseudoState = clone(extraction);
     pseudoState.components = [

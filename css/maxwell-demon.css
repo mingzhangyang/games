@@ -166,12 +166,6 @@ body {
     text-align: center;
 }
 
-.md-par {
-    font-size: 11.5px;
-    color: var(--tok-text-faint);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
 
 /* ── 舞台 ── */
 
@@ -291,13 +285,6 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-.md-subtitle {
-    font-size: 12.5px;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    margin-top: -6px;
-}
 
 .md-hero {
     line-height: 1;
@@ -310,17 +297,7 @@ body {
     50% { transform: translateY(-8px); }
 }
 
-.md-howto {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--tok-text-soft);
-    max-width: 350px;
-}
 
-.md-mode-row {
-    display: flex;
-    gap: 8px;
-}
 
 .md-mode {
     display: inline-flex;
@@ -349,21 +326,7 @@ body {
     box-shadow: var(--md-mode-daily-shadow);
 }
 
-.md-level-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-}
 
-.md-level-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    width: 100%;
-    max-width: 360px;
-}
 
 /* ⚠️ 类名必须与 src/games/maxwell-demon/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'md-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
@@ -392,9 +355,9 @@ body {
     border-color: var(--md-chip-is-done-border);
 }
 
-.md-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
+.md-chip-num { color: inherit; }
 
-.md-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; color: var(--tok-gold); }
+.md-chip-stars { color: var(--tok-gold); }
 
 .md-daily-best {
     font-size: 12.5px;
@@ -404,7 +367,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.md-start-footer { display: flex; gap: 10px; }
 
 /* ── 过关卡片 ── */
 
@@ -433,11 +395,6 @@ body {
     color: var(--tok-gold);
 }
 
-.md-card-line {
-    font-size: 14px;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
 .md-overlay-title { font-size: 26px; font-weight: 800; }
 
@@ -555,9 +512,7 @@ body {
     .md-cut-value { font-size: 16px; }
     .md-title { font-size: 27px; }
     .md-over-score { font-size: 34px; }
-    .md-howto { font-size: 12px; }
     .md-mode { font-size: 13px; padding: 11px 15px; }
-    .md-level-grid { gap: 5px; }
 
     @layer pages {
         .md-stage { flex-direction: column; align-items: stretch; }

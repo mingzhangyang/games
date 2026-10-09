@@ -379,10 +379,10 @@ export class FlameVerseGame {
             btn.className = 'fv-chip' + (p.stars > 0 ? ' is-done' : '');
             btn.dataset.level = String(i);
             const num = document.createElement('span');
-            num.className = 'fv-chip-num';
+            num.className = 'fv-chip-num game-start-chip-num';
             num.textContent = String(i + 1);
             const stars = document.createElement('span');
-            stars.className = 'fv-chip-stars';
+            stars.className = 'fv-chip-stars game-start-chip-stars';
             stars.textContent = '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
             btn.appendChild(num);
             btn.appendChild(stars);

@@ -168,12 +168,6 @@ body {
     text-align: center;
 }
 
-.rd-par {
-    font-size: 11.5px;
-    color: var(--tok-text-faint);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
 
 /* ── 舞台 ── */
 
@@ -281,13 +275,6 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-.rd-subtitle {
-    font-size: 12.5px;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    margin-top: -6px;
-}
 
 .rd-hero {
     line-height: 1;
@@ -300,17 +287,7 @@ body {
     50% { transform: translateY(-8px); }
 }
 
-.rd-howto {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--tok-text-soft);
-    max-width: 350px;
-}
 
-.rd-mode-row {
-    display: flex;
-    gap: 8px;
-}
 
 .rd-mode {
     display: inline-flex;
@@ -339,21 +316,7 @@ body {
     box-shadow: var(--rd-mode-daily-shadow);
 }
 
-.rd-level-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--tok-text-mute);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-}
 
-.rd-level-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    width: 100%;
-    max-width: 360px;
-}
 
 /* ⚠️ 类名必须与 src/games/ripple-duet/runtime.js 的 renderLevelGrid() 一致：那里写的是
    `'rd-chip' + (is-done)`。类名错位会让整块容器规则静默失效，
@@ -382,9 +345,9 @@ body {
     border-color: var(--rd-chip-is-done-border);
 }
 
-.rd-chip-num { font-size: 14px; font-weight: 800; color: inherit; }
+.rd-chip-num { color: inherit; }
 
-.rd-chip-stars { font-size: 9.5px; letter-spacing: -0.25px; opacity: 0.9; color: var(--tok-gold); }
+.rd-chip-stars { color: var(--tok-gold); }
 
 .rd-daily-best {
     font-size: 12.5px;
@@ -394,7 +357,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.rd-start-footer { display: flex; gap: 10px; }
 
 /* ── 过关卡片 ── */
 
@@ -423,11 +385,6 @@ body {
     color: var(--tok-gold);
 }
 
-.rd-card-line {
-    font-size: 14px;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
 .rd-overlay-title { font-size: 26px; font-weight: 800; }
 
@@ -564,9 +521,7 @@ body {
     .rd-cut-value { font-size: 16px; }
     .rd-title { font-size: 27px; }
     .rd-over-score { font-size: 34px; }
-    .rd-howto { font-size: 12px; }
     .rd-mode { font-size: 13px; padding: 11px 15px; }
-    .rd-level-grid { gap: 5px; }
     .rd-action-btn { width: 58px; height: 58px; bottom: 12px; }
     .rd-clear-btn { left: 12px; }
     .rd-run-btn { right: 12px; }

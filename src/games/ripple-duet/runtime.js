@@ -622,9 +622,9 @@ export class RippleDuetGame {
             btn.className = 'rd-chip' + (rec && rec.stars ? ' is-done' : '');
             btn.type = 'button';
             btn.dataset.index = String(i);
-            btn.innerHTML = `<span class="rd-chip-num">${i + 1}</span>${rec && rec.stars
-                ? `<span class="rd-chip-stars">${'★'.repeat(rec.stars)}</span>`
-                : '<span class="rd-chip-stars rd-chip-stars--none">☆☆☆</span>'}`;
+            btn.innerHTML = `<span class="rd-chip-num game-start-chip-num">${i + 1}</span>${rec && rec.stars
+                ? `<span class="rd-chip-stars game-start-chip-stars">${'★'.repeat(rec.stars)}</span>`
+                : '<span class="rd-chip-stars rd-chip-stars--none game-start-chip-stars">☆☆☆</span>'}`;
             btn.addEventListener('click', () => this.startLevel(i));
             grid.appendChild(btn);
         });

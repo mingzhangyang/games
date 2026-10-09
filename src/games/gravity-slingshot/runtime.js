@@ -249,10 +249,10 @@ class GravityGame {
             chip.type = 'button';
             chip.className = 'gd-level-chip';
             const num = document.createElement('span');
-            num.className = 'gd-chip-num';
+            num.className = 'gd-chip-num game-start-chip-num';
             num.textContent = String(i + 1);
             const starLine = document.createElement('span');
-            starLine.className = 'gd-chip-stars';
+            starLine.className = 'gd-chip-stars game-start-chip-stars';
             const n = this.stars[i] || 0;
             starLine.textContent = n > 0 ? '⭐'.repeat(n) : '☆☆☆';
             chip.append(num, starLine);

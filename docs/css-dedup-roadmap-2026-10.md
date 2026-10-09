@@ -91,7 +91,8 @@
 - 实际删除 58 条规则：20 份 `.hidden` 收口到显式 `html.game-hidden-contract` opt-in 的 `@layer contracts`，18 份图标钮 active 复用 `game-icon-btn`，22 份页面 reset 收口到 `@layer reset`；Tetris 的额外触控 reset 保留。
 
 ### W4 簇 A：开始菜单 / 选关（最大，拆两个 PR）
-- **A1（精确重复）**：`level-grid`、`level-label`、`subtitle`、`par`、`howto`、`card-line`、`start-footer`、`chip-stars`、`chip-num`、`mode-row`，以及它们的手机 `@media` 副本。约 145 条规则 / 412 条声明。不涉及主题收敛。
+- **A1（精确重复，W4a）— 已提交待验收**：九个解谜页面的 `level-grid`、`level-label`、`subtitle`、`par`、`howto`、`card-line`、`start-footer`、`chip-stars`、`chip-num`、`mode-row` 及 `@media (width <= 480px)` 两个副本，由 `css/layout.css` 的 `game-start-*` family 统一。108 条原有规则收敛成 12 条共享规则和 12 条仅含页面 `color` 的残余规则，净减少 84 条普通规则（本批次精确计数；原约 145 条是整个簇 A 的估计）。Gravity Slingshot 的 `howto` 340px 按统一要求采用 350px，移动端五列重复声明退役。账本 `start-menu-exact-w4a` 记录完整退役 / 媒体语义，`verify-start-menus` 覆盖所有九页的 computed style。
+- W4a 是**无主题收敛**的稳定默认值抽取。Ripple Duet 使用 `innerHTML` 创建的 `chip-num` / `chip-stars` 也必须挂共享类；`verify-css-family-extraction` 现在将字面量 HTML fragment 视为 runtime adoption 证据。科学展柜在 `@media (width <= 680px)` 对 `howto` 的专用规则没有随这一批删除，它独立于九页一致的基础/480px 规则。
 - **A2（结构重复）**：`chip`、`mode`、`title`、`daily-best`、`level-chip` 及其 `:hover` / `:active`。各页配色不同，需要逐项审主题收敛。约 32 条规则 / 276 条声明。
 - 先动手前置检查：这些规则有没有被 `css/science-showcase.css` 里 P0 冻结的 `!important` 规则覆盖（五个科学页的 `.xx-mode` / `.xx-chip` 都在它的选择器列表里），有就提前规划 narrowing / prune。
 - TD 菜单态那条未分层的结构例外，评估能否在这里一起收口。

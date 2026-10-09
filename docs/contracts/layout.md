@@ -60,6 +60,27 @@
 - 带有 `game-icon-btn` 的页面图标钮统一使用共享 `.game-icon-btn:active` 缩放；页面前缀的 `*.icon-btn:active` 不得重新出现。玩法按钮（如 `*-action-row`）不是这个语义 family，不能因为选择器形似就并入。
 - 这些跨文件精确重复由 `tests/css-layer-migration-state.json` 的 `w3-*` `kind: "dedupe"` 事务登记。事务必须列出所有源 occurrence、目标是新建还是复用；只要目标选择器不同，就必须附带逐源、逐 stylesheet consumer 的 adoption evidence（图标钮检查 HTML 是否同时带 shared class；reset 检查文档 `<html>` 根元素是否显式 opt-in），并通过 `verify-css-debt` 的声明与规则数 delta 校验；不能直接改 P0 快照来隐藏删除。
 
+### 1.1.2 开始菜单 / 选关共享默认值（W4a，2026-10-09）
+
+九个解谜页（cc/cb/ec/fv/gd/lm/md/rd/sd）共用 `css/layout.css` `@layer components` 中的
+`game-start-*` family：`par`、`subtitle`、`howto`、`mode-row`、`level-label`、
+`level-grid`、`chip-num`、`chip-stars`、`start-footer`、`card-line`。
+每一个 HTML 元素、runtime 创建的 chip 节点须同时保留原 `xx-*` 语义类和 `game-start-*` 共享类。
+包括 Ripple Duet 的模板字面量 `innerHTML`，不能只审计 `className = ...` 赋值。
+
+`@media (width <= 480px)` 统一将 `howto` 字号变为 12px、`level-grid` 的间隙变为 5px；
+宽屏分别为 13px 和 6px。全站九页的 `howto` 默认 `max-width: 350px`，
+Gravity Slingshot 不再保留原 340px 特例；所有选关网格均复用同一组 5 列。
+五个科学展柜页面专属的 `@media (width <= 680px)` `howto` 材质/宽度规则仍保留，
+不能把它误认作这两条共享手机规则的重复。
+
+`chip-num`、`chip-stars` 六个科学页本地 CSS 只剩原有 `color` 声明
+（`inherit` / `var(--tok-gold)`），其余基础排版属于共享层；cc/gd/lm 完全无本地副本。
+`chip` / `mode` / `title` / `daily-best` / `level-chip` 的材质、状态和主题差异属于 W4b，
+本批不碰。追加的 `start-menu-exact-w4a` family extraction
+对十二条共享规则分别声明 source、媒体 context、完全退役名单；以后不得原地编辑历史事务。
+`verify-start-menus.mjs` 以三种视口检查九页 computed styles 与真实 runtime 节点。
+
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 
 每个页面必须提供：
