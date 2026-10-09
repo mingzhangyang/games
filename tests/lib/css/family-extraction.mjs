@@ -99,7 +99,7 @@ const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
 // family's size wins. Layout/behaviour properties (display, position, width, …) stay
 // protected: convergence may restyle a standard surface, never re-lay it out.
 const REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES = new Set([
-    'font-size', 'font-weight', 'padding', 'border-radius', 'transition', 'backdrop-filter',
+    'font-size', 'font-weight', 'font-family', 'padding', 'border-radius', 'transition', 'backdrop-filter',
     // Visual dimensions/spacing (leaderboard-v2): sizes and gaps of a standard surface.
     'max-width', 'min-height', 'max-height', 'height', 'gap',
     'letter-spacing', 'line-height', 'margin-top', 'margin-bottom',
@@ -111,12 +111,13 @@ const REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES = new Set([
 // them up through participantLayoutConvergence, which names the exact properties and
 // carries a written reason, so every re-layout is an explicit reviewed decision.
 const REVIEWED_LAYOUT_CONVERGENCE_PROPERTIES = new Set([
-    'display', 'flex-direction', 'flex', 'flex-shrink', 'align-items', 'width',
+    'display', 'flex-direction', 'flex', 'flex-shrink', 'align-items', 'justify-content', 'width',
     'text-align', 'text-transform', 'outline', 'scrollbar-width', 'grid-template-columns',
 ]);
 
 function componentLocalSelector(prefix, component) {
-    return '.' + prefix + '-' + component.suffix + (component.localSelectorSuffix || '');
+    return '.' + prefix + '-' + (component.localSuffixByParticipant?.[prefix] || component.suffix)
+        + (component.localSelectorSuffix || '');
 }
 
 function componentSharedSelector(component) {
@@ -289,6 +290,9 @@ function hasAdoptionAnchor(extraction, component) {
         && candidate.suffix === component.suffix
         && candidate.sharedClass === component.sharedClass
         && candidate.surface === component.surface
+        && (component.participants || []).every(prefix =>
+            (candidate.localSuffixByParticipant?.[prefix] || candidate.suffix)
+                === (component.localSuffixByParticipant?.[prefix] || component.suffix))
         // The anchor re-validates adoption for every participant it lists, so a state
         // component may cover a subset (e.g. a page whose hover is retired instead).
         && (component.participants || []).every(prefix => (candidate.participants || []).includes(prefix)));
@@ -362,7 +366,7 @@ export function verifyExtractionAdoption(root, extraction, errors) {
                 errors.push(label + ': incomplete game metadata for ' + prefix + '.');
                 continue;
             }
-            const localClass = prefix + '-' + component.suffix;
+            const localClass = prefix + '-' + (component.localSuffixByParticipant?.[prefix] || component.suffix);
             if (component.surface === 'html') {
                 verifyHtmlAdoption(
                     root, game.html, localClass, component.sharedClass, errors, label + '/' + prefix,
@@ -500,6 +504,25 @@ export function verifyExtractionShape(extraction, errors) {
                 || typeof game.runtime !== 'string' || !game.runtime) {
                 fail('component .' + component.sharedClass
                     + ' participant ' + prefix + ' requires css/html/runtime metadata.');
+            }
+        }
+
+        // An alias preserves each existing DOM class while one semantic family owns CSS.
+        if (component.localSuffixByParticipant !== undefined) {
+            const map = component.localSuffixByParticipant;
+            if (!map || typeof map !== 'object' || Array.isArray(map)) {
+                fail('localSuffixByParticipant must be an object keyed by participant prefix.');
+            } else {
+                for (const [prefix, suffix] of Object.entries(map)) {
+                    if (!participants.has(prefix)) {
+                        fail('local suffix override references non-participant ' + prefix + '.');
+                    }
+                    if (typeof suffix !== 'string' || !/^[a-z][a-z0-9-]*$/.test(suffix)
+                        || suffix === component.suffix) {
+                        fail('local suffix override for ' + prefix
+                            + ' must be a different kebab-case class suffix.');
+                    }
+                }
             }
         }
 
