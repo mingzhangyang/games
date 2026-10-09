@@ -203,8 +203,8 @@ for (const g of GAMES) {
             if (!family.showcase) {
                 check(family.title?.backgroundClip === 'text'
                     && family.title?.backgroundImage !== 'none',
-                    `${g.id}@${w}：W4b gradient title text clipping`,
-                    JSON.stringify(family.title));
+                `${g.id}@${w}：W4b gradient title text clipping`,
+                JSON.stringify(family.title));
             }
             check(family.mode?.fontSize === wantedModeSize,
                 `${g.id}@${w}：W4b mode standard font size`, String(family.mode?.fontSize));
