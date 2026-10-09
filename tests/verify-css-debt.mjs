@@ -20,6 +20,7 @@ import { readMigrationState, readMigrationStateAtGit } from './lib/css/migration
 import {
     verifyFamilyExtractions,
 } from './lib/css/family-extraction.mjs';
+import { verifyStaticRulePopulation } from './lib/css/rule-population.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE_PATH = join(ROOT, 'tests/css-layer-p0-baseline.json');
@@ -456,12 +457,13 @@ function verifyProject() {
         errors,
     });
 
-    const expectedStaticOrdinaryRules = baseStaticOrdinaryRules
-        + familyResult.newRuleDelta + migrationResult.newRuleDelta;
-    if (currentCompatibilityCounts.staticOrdinaryRules !== expectedStaticOrdinaryRules) {
-        errors.push('Static ordinary rule population differs from the comparison base plus current family and rule migrations: '
-            + currentCompatibilityCounts.staticOrdinaryRules + ' !== ' + expectedStaticOrdinaryRules + '.');
-    }
+    verifyStaticRulePopulation({
+        baseCount: baseStaticOrdinaryRules,
+        currentCount: currentCompatibilityCounts.staticOrdinaryRules,
+        familyRuleDelta: familyResult.newRuleDelta,
+        migrationRuleDelta: migrationResult.newRuleDelta,
+        errors,
+    });
 
     verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors, {
         allowedCssChanges: new Set([...migrationResult.mappedCssPaths, ...familyResult.cssPaths]),

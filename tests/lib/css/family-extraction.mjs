@@ -910,12 +910,6 @@ export function applyReviewedSelectorNarrowingsToImportant(rows, extractions, er
     return projected;
 }
 
-function totalRules(parsedByPath) {
-    let total = 0;
-    for (const parsed of parsedByPath.values()) total += (parsed.rules || []).length;
-    return total;
-}
-
 function escapeRegExp(value) {
     return value.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
@@ -1439,14 +1433,10 @@ export function verifyFamilyExtractions({
             extensions.get(extraction.id),
         );
     }
-    if (newExtractions.length) {
-        const actualDelta = totalRules(currentParsedByPath) - totalRules(baseParsedByPath);
-        if (actualDelta !== newRuleDelta) {
-            errors.push('family extraction transaction changed the static rule population by ' + actualDelta
-                + ', expected ' + newRuleDelta + '.');
-        }
-    }
-
+    // Rule population is a cross-transaction invariant: verify-css-debt
+    // combines this family delta with rule/dedupe migration deltas against the
+    // comparison base. A family-only whole-tree check would reject valid
+    // changes containing both types of migration.
     return {
         cssPaths,
         totalRuleDelta,
