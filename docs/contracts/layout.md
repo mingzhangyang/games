@@ -74,7 +74,7 @@ Gravity Slingshot 不再保留原 340px 特例；所有选关网格均复用同�
 五个科学展柜页面专属的 `@media (width <= 680px)` `howto` 材质/宽度规则仍保留，
 不能把它误认作这两条共享手机规则的重复。
 
-`chip-num`、`chip-stars` 六个科学页本地 CSS 只剩原有 `color` 声明
+`chip-num`、`chip-stars` 在 cb/ec/fv/md/rd/sd 六个页面的本地 CSS 只剩原有 `color` 声明
 （`inherit` / `var(--tok-gold)`），其余基础排版属于共享层；cc/gd/lm 完全无本地副本。
 `chip` / `mode` / `title` / `daily-best` / `level-chip` 的材质、状态和主题差异属于 W4b，
 本批不碰。追加的 `start-menu-exact-w4a` family extraction

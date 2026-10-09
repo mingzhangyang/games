@@ -136,6 +136,17 @@ for (const g of GAMES) {
                     `${g.id}@${w}：W4a ${suffix}.${property}=${wanted}`,
                     String(audit[suffix]?.[property]));
             }
+            // Computed grid-template-columns expands repeat(5, 1fr) to five used
+            // track widths when laid out. If an ancestor has no layout box, the
+            // computed value may retain repeat(5, 1fr); handle both forms so a
+            // four-column override fails regardless of menu visibility.
+            const gridTemplate = audit['level-grid']?.gridTemplateColumns?.trim() ?? '';
+            const declaredRepeat = /^repeat\(\s*(\d+)\s*,\s*1fr\s*\)$/.exec(gridTemplate);
+            const gridTrackCount = declaredRepeat ? Number(declaredRepeat[1])
+                : gridTemplate === 'none' ? 0 : gridTemplate.split(/\s+/).filter(Boolean).length;
+            check(gridTrackCount === 5,
+                `${g.id}@${w}：W4a 选关网格必须保持五列`,
+                `${gridTrackCount} columns (computed grid-template-columns: ${gridTemplate})`);
             if (g.id === 'gravity-slingshot') {
                 check(audit.howto?.maxWidth === '350px',
                     `${g.id}@${w}：howto 不再保留 340px 特例`, String(audit.howto?.maxWidth));
