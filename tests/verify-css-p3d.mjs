@@ -22,6 +22,35 @@ async function waitDrawer(page, selector, open) {
 }
 
 
+// Observe the actual visual endpoint, not elapsed wall-clock time. CSS transitions
+// use animation frames, which can be delayed under CI/browser contention even after
+// a nominal 280ms transition has had 350ms of wall-clock time.
+async function waitDrawerPanelSettled(page, selector) {
+    try {
+        await page.waitForFunction(drawerSelector => {
+            const drawer = document.querySelector(drawerSelector);
+            if (!drawer || drawer.hidden || !drawer.classList.contains('is-open')) return false;
+            const panel = drawer.querySelector('.game-drawer-panel');
+            if (!panel) return false;
+            const transform = getComputedStyle(panel).transform;
+            return transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)';
+        }, { timeout: 5000 }, selector);
+    } catch (error) {
+        const state = await page.evaluate(drawerSelector => {
+            const drawer = document.querySelector(drawerSelector);
+            const panel = drawer?.querySelector('.game-drawer-panel');
+            return {
+                hidden: drawer?.hidden,
+                open: drawer?.classList.contains('is-open'),
+                transform: panel ? getComputedStyle(panel).transform : null,
+                animations: panel?.getAnimations().map(animation => animation.playState) || [],
+            };
+        }, selector);
+        throw new Error('drawer panel never reached its resting transform: '
+            + JSON.stringify(state), { cause: error });
+    }
+}
+
 async function validateDrawer(page, config, check, viewportName) {
     const initial = await page.evaluate(cfg => {
         const toggle = document.querySelector(cfg.toggle);
@@ -72,7 +101,7 @@ async function validateDrawer(page, config, check, viewportName) {
 
     await page.click(config.drawerContract.toggle);
     await waitDrawer(page, config.drawerContract.drawer, true);
-    await wait(350);
+    await waitDrawerPanelSettled(page, config.drawerContract.drawer);
 
     const open = await page.evaluate(cfg => {
         const toggle = document.querySelector(cfg.toggle);
