@@ -94,7 +94,10 @@ W4a 抽取精确重复的文本/网格默认值；W4b 将相同语义的九个�
 - `game-start-daily-best`：12.5px/600、15px 最小高度、等宽数字；记录颜色属于页面主题。
 - 五个 Science Showcase 页 `science-showcase.css` 的 9px 圆角、统一强调面板与 44px 触控外观继续保持 P0 冻结；迁移不得通过削弱 `!important` 账本来制造“统一”。
 - 家族历史类映射由 append-only `start-menu-structural-w4b` 的 `localSuffixByParticipant` 明确登记，动态 runtime 节点必须使用真实页面类 + 通用类；不能通过重命名 JS 内部选择器假装采用。
-- Desktop/phone/tablet/landscape 的真实 computed-style/touch 校验由 `verify-start-menus.mjs` 持续执行，任意一页重引入旧组件几何将违反 CSS debt 契约。
+- Desktop/phone/tablet/landscape 的真实 computed-style/touch 校验由 `verify-start-menus.mjs` 持续执行。
+<1024px 菜单通过流式网格自然撑高页面，因此不得在 overlay 内部隐藏溢出；≥1024px 则保留原有固定舞台，
+如内容高于 overlay，必须保持 `overflow-y:auto`，并在滚动后逐一做按钮中心命中测试，
+不能错误沿用手机的“不得内部滚动”断言。任一页面重引入旧组件几何仍将违反 CSS debt 契约。
 
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 

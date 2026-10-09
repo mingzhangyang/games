@@ -56,10 +56,23 @@ for (const g of GAMES) {
                 fullscreen: e.clientHeight >= innerHeight - 1,
                 h: e.clientHeight,
                 sh: e.scrollHeight,
+                overflowY: getComputedStyle(e).overflowY,
             })));
         for (const o of overlays) {
             if (o.fullscreen) continue;
-            check(o.sh <= o.h + 2, `${g.id}@${w}：#${o.id} 不内部溢出${o.menu ? '' : '（溢出就加 .game-overlay--menu）'}`, `h=${o.h} scrollH=${o.sh}`);
+            // The no-inner-scroll invariant belongs to <1024px flow-layout menus.
+            // At desktop width the stage stays fixed and .game-overlay intentionally
+            // scrolls within it. Require a real scrollable menu if content exceeds
+            // its box, then hit-test every button after scrolling below.
+            if (w < 1024) {
+                check(o.sh <= o.h + 2,
+                    `${g.id}@${w}：#${o.id} 移动/平板菜单不能被内部滚动盒裁切`,
+                    `h=${o.h} scrollH=${o.sh}`);
+            } else if (o.sh > o.h + 2) {
+                check(o.menu && o.overflowY === 'auto',
+                    `${g.id}@${w}：#${o.id} desktop overflow must be scrollable menu`,
+                    JSON.stringify(o));
+            }
         }
 
         // ② 可达：菜单里**所有**可见按钮（不只数字关卡 —— na 的模式按钮也曾被裁）都能滚到并点中；
