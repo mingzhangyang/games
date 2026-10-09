@@ -18,10 +18,12 @@ const browser = await puppeteer.launch({
 
 try {
     const page = await browser.newPage();
+    // `load` (not DOMContentLoaded) guarantees the external stylesheets under test
+    // have been applied before getComputedStyle; see docs/traps.md 校验基础设施.
     await page.setViewport({ width: 390, height: 844 });
 
     if (keepPage('bond-forge')) {
-        await page.goto(BASE + '/bond-forge.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.goto(BASE + '/bond-forge.html', { waitUntil: 'load', timeout: 30000 });
         const optedIn = await page.evaluate(() => {
             const root = document.documentElement.classList.contains('game-hidden-contract');
             const el = document.createElement('div');
@@ -36,7 +38,7 @@ try {
     }
 
     if (keepPage('math-rain')) {
-        await page.goto(BASE + '/math-rain.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.goto(BASE + '/math-rain.html', { waitUntil: 'load', timeout: 30000 });
         const mathRain = await page.evaluate(() => {
             const screen = document.getElementById('pause-screen');
             const style = getComputedStyle(screen);
