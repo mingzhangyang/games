@@ -930,9 +930,9 @@
   "destination": {
     "path": "css/layout.css",
     "context": "",
-    "selector": ".game-reset, .game-reset *",
+    "selector": "html.game-reset, html.game-reset *",
     "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-    "selectorDigest": "382ed9eec11fe3d186e9a554a927dc72e7393f60541f78c32d135aa35cb54116",
+    "selectorDigest": "d9c489d12a4cdf43d942ad2c2582dbe223aa5b04853ffd875c0725bb2171ca13",
     "layer": "reset",
     "declarationDigest": "119f1fc208745db9416d7adac87e2d4b761b4c24d7b3aff18be6952929aae681",
     "occurrence": 1

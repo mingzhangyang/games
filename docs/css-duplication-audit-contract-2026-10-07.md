@@ -71,6 +71,15 @@ classification policy. The pinned membership digest has been advanced to the obs
 Math Rain style/smoke, and the new computed-style hidden-contract browser regressions also
 passed in that run. Do not edit immutable P0/P5 evidence or disable the membership assertion.
 
+A follow-up review anchored the scoped reset to the document root:
+`.game-reset, .game-reset *` → `html.game-reset, html.game-reset *` in `@layer reset`.
+Every opted-in page already carries `game-reset` on `<html>` only, so matched elements are
+unchanged; the change only stops a descendant `game-reset` class from activating the reset
+for its subtree. Declarations and layer are unchanged.
+
+- **Static ordinary rules / classification counts / families:** unchanged (2,651; 408/65/2,178; 97/19)
+- **Classification digest:** `cdc787170a5f3afd633e56f532741fd0560899f66d1adcfdb32917cc6c97665e` → `e75532c2388ae2db7f5bd5a7c4382b4f3255e307d787ba46c884ee51b02a9b02`
+
 
 ## Hard boundaries
 

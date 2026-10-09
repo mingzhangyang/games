@@ -87,8 +87,8 @@
 
 /* ── 基础重置：统一页面默认间距与 border-box ── */
 @layer reset {
-.game-reset,
-.game-reset * {
+html.game-reset,
+html.game-reset * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;

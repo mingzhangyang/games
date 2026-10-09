@@ -655,7 +655,7 @@ const rootResetBase = parseMap([
 const rootResetCurrent = parseMap([
     ['css/root-a.css', ''],
     ['css/root-b.css', ''],
-    ['css/layout.css', '@layer reset{.game-reset, .game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
+    ['css/layout.css', '@layer reset{html.game-reset, html.game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
 ]);
 const rootResetBaseCatalogs = catalogMap(rootResetBase);
 const rootResetCurrentCatalogs = catalogMap(rootResetCurrent);
@@ -722,13 +722,46 @@ const historicalRootErrors = historicalDedupeErrors(
 );
 assert.ok(historicalRootErrors.some(error => error.includes('root-a.html must opt into .game-reset on its document root.')));
 
+// An unanchored `.game-reset` branch would let any descendant carrying the
+// class activate the reset for its subtree; only html.game-reset is reviewed.
+const unanchoredResetCurrent = parseMap([
+    ['css/root-a.css', ''],
+    ['css/root-b.css', ''],
+    ['css/layout.css', '@layer reset{.game-reset, .game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
+]);
+const unanchoredResetMapping = {
+    ...rootResetMapping,
+    id: 'fixture-dedupe-reset-unanchored',
+    destination: destinationRef(catalogMap(unanchoredResetCurrent).get('css/layout.css')[0]),
+};
+const unanchoredResetErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: { ...emptyState, migratedRules: [unanchoredResetMapping] },
+    currentParsedByPath: unanchoredResetCurrent,
+    baseParsedByPath: rootResetBase,
+    stylesheetLinks: {
+        'root-a.html': [['css/layout.css', []], ['css/root-a.css', []]],
+        'root-b.html': [['css/layout.css', []], ['css/root-b.css', []]],
+    },
+    htmlSources: new Map([
+        ['root-a.html', '<html class="game-reset"><body></body></html>'],
+        ['root-b.html', '<html class="game-reset"><body></body></html>'],
+    ]),
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: unanchoredResetErrors,
+});
+assert.ok(unanchoredResetErrors.some(error => error.includes('explicit html.game-reset scope')));
+
 // Inverse reset-layer fixture: a source in reset must not be deduplicated
 // into components, even if the destination selector and declaration digest
 // otherwise satisfy the dedupe contract.
 const relayeredResetCurrent = parseMap([
     ['css/root-a.css', ''],
     ['css/root-b.css', ''],
-    ['css/layout.css', '@layer components{.game-reset, .game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
+    ['css/layout.css', '@layer components{html.game-reset, html.game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
 ]);
 const relayeredResetMapping = {
     ...rootResetMapping,

@@ -581,12 +581,12 @@ function verifyDedupeResetMappingInvariant(mapping, errors) {
         errors.push(mapping.id + ': reset deduplication is limited to top-level rules; conditional/nested resets require a separate contract.');
         valid = false;
     }
-    if (!['*', '.game-reset, .game-reset *'].includes(mapping.destination.selector)
+    if (!['*', 'html.game-reset, html.game-reset *'].includes(mapping.destination.selector)
         || sources.some(source => source?.selector !== '*')) {
-        errors.push(mapping.id + ': reset deduplication is limited to reviewed universal * rules or the explicit .game-reset scope.');
+        errors.push(mapping.id + ': reset deduplication is limited to reviewed universal * rules or the explicit html.game-reset scope.');
         valid = false;
     }
-    if (mapping.destination.selector === '.game-reset, .game-reset *'
+    if (mapping.destination.selector === 'html.game-reset, html.game-reset *'
         && (mapping.adoption?.surface !== 'root-class'
             || (mapping.adoption.consumers || []).some(consumer => consumer.rootClass !== 'game-reset'))) {
         errors.push(mapping.id + ': scoped reset deduplication requires root-class adoption evidence for .game-reset.');

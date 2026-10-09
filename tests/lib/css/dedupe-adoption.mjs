@@ -114,7 +114,7 @@ function dedupeDestinationRootScope(mapping, sources, destination) {
     const selector = sources[0]?.selector;
     if (sources.some(source => source.selector !== selector)) return null;
     if (selector === '*'
-        && destination.selector === '.' + rootClass + ', .' + rootClass + ' *') {
+        && destination.selector === 'html.' + rootClass + ', html.' + rootClass + ' *') {
         return rootClass; // Reviewed universal reset: root element and descendants.
     }
     if (/^\.[a-zA-Z_][a-zA-Z0-9_-]*$/.test(selector)
