@@ -418,6 +418,38 @@ assert.deepEqual(dedupeResult.importantDeclarationDelta.added, [
     ['css/layout.css', '', '.hidden', 'display', 'none!important'],
 ]);
 
+function historicalDedupeErrors(mapping, parsed, unlayeredRules, stylesheetLinks, htmlSources = new Map()) {
+    // Simulate the following PR: W3 is already in both the comparison base and
+    // the append-only ledger. Only current HTML/stylesheet adoption may change.
+    const historicalState = { ...emptyState, migratedRules: [mapping] };
+    const historicalErrors = [];
+    const historicalResult = verifyRuleMigrations({
+        baseline: { debt: { unlayeredRules } },
+        state: historicalState,
+        currentParsedByPath: parsed,
+        baseParsedByPath: parsed,
+        stylesheetLinks,
+        htmlSources,
+        allowedLayers: ALLOWED,
+        layerOrder: LAYERS,
+        baseState: historicalState,
+        errors: historicalErrors,
+    });
+    assert.equal(historicalResult.newMigrationCount, 0);
+    return historicalErrors;
+}
+
+const historicalHiddenErrors = historicalDedupeErrors(
+    dedupeMapping, dedupeCurrent,
+    [['css/a.css', '', '.a-hidden'], ['css/b.css', '', '.b-hidden']],
+    { 'dedupe.html': [['css/a.css', []], ['css/b.css', []], ['css/layout.css', []]] },
+    new Map([[
+        'dedupe.html', '<body><div class="a-hidden"></div><div class="b-hidden hidden"></div></body>',
+    ]]),
+);
+assert.ok(historicalHiddenErrors.some(error => error.includes('.a-hidden element(s) without .hidden')));
+
+
 // Even an exact selector match must keep the shared destination active on every
 // page that loaded a source stylesheet; otherwise the verifier could approve a
 // deletion whose replacement is unreachable at runtime.
@@ -466,6 +498,15 @@ verifyRuleMigrations({
     errors: inactiveDestinationErrors,
 });
 assert.ok(inactiveDestinationErrors.some(error => /destination stylesheet css\/layout\.css is not active/.test(error)));
+
+// Same-selector destination activation remains required after the mapping
+// has moved into the comparison base and is no longer a new transaction.
+const historicalInactiveErrors = historicalDedupeErrors(
+    inactiveDestinationMapping, inactiveDestinationCurrent,
+    [['css/a.css', '', '.shared'], ['css/b.css', '', '.shared']],
+    { 'dedupe-same.html': [['css/a.css', []], ['css/b.css', []]] },
+);
+assert.ok(historicalInactiveErrors.some(error => /destination stylesheet css\/layout\.css is not active/.test(error)));
 
 const rootResetBase = parseMap([
     ['css/root-a.css', '@layer reset{*{margin:0;padding:0;box-sizing:border-box}}'],
@@ -526,6 +567,48 @@ verifyRuleMigrations({
     errors: rootResetErrors,
 });
 assert.deepEqual(rootResetErrors, []);
+
+// The historic root opt-in must continue to be verified on each subsequent
+// PR, including when neither the CSS rules nor the ledger have changed.
+const historicalRootErrors = historicalDedupeErrors(
+    rootResetMapping, rootResetCurrent, [],
+    {
+        'root-a.html': [['css/layout.css', []], ['css/root-a.css', []]],
+        'root-b.html': [['css/layout.css', []], ['css/root-b.css', []]],
+    },
+    new Map([
+        ['root-a.html', '<html><body></body></html>'],
+        ['root-b.html', '<html class="game-reset"><body></body></html>'],
+    ]),
+);
+assert.ok(historicalRootErrors.some(error => error.includes('root-a.html must opt into .game-reset on its document root.')));
+
+// Inverse reset-layer fixture: a source in reset must not be deduplicated
+// into components, even if the destination selector and declaration digest
+// otherwise satisfy the dedupe contract.
+const relayeredResetCurrent = parseMap([
+    ['css/root-a.css', ''],
+    ['css/root-b.css', ''],
+    ['css/layout.css', '@layer components{.game-reset, .game-reset *{margin:0;padding:0;box-sizing:border-box}}'],
+]);
+const relayeredResetMapping = {
+    ...rootResetMapping,
+    id: 'fixture-dedupe-reset-escaped-layer',
+    destination: destinationRef(catalogMap(relayeredResetCurrent).get('css/layout.css')[0]),
+};
+const relayeredResetErrors = [];
+verifyRuleMigrations({
+    baseline: { debt: { unlayeredRules: [] } },
+    state: { ...emptyState, migratedRules: [relayeredResetMapping] },
+    currentParsedByPath: relayeredResetCurrent,
+    baseParsedByPath: rootResetBase,
+    stylesheetLinks: {},
+    allowedLayers: ALLOWED,
+    layerOrder: LAYERS,
+    baseState: emptyState,
+    errors: relayeredResetErrors,
+});
+assert.ok(relayeredResetErrors.some(error => /reset deduplication must keep every universal rule in reset/.test(error)));
 
 const missingAdoptionErrors = [];
 const missingAdoption = clone(dedupeMapping);

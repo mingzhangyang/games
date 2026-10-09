@@ -696,10 +696,13 @@ function verifyResetMappingInvariant(mapping, errors) {
 }
 
 function verifyDedupeResetMappingInvariant(mapping, errors) {
-    if (mapping.destination?.layer !== 'reset') return true;
+    const sources = mapping.sources || [];
+    // Reset ownership is symmetric: source rules may not escape this policy
+    // merely because the destination was moved into another allowed layer.
+    if (mapping.destination?.layer !== 'reset'
+        && !sources.some(source => source?.layer === 'reset')) return true;
 
     let valid = true;
-    const sources = mapping.sources || [];
     if (mapping.destination.context !== '' || sources.some(source => source?.context !== '')) {
         errors.push(mapping.id + ': reset deduplication is limited to top-level rules; conditional/nested resets require a separate contract.');
         valid = false;
@@ -922,6 +925,14 @@ export function verifyRuleMigrations({
     for (const mapping of mappings.values()) {
         if (!verifyMappingShape(mapping, allowedLayers, errors)) continue;
         validMappings.add(mapping.id);
+        // Adoption is a continuing invariant of the append-only dedupe ledger,
+        // not a one-time proof. Recheck current HTML and linked stylesheets even
+        // after a mapping has entered the comparison base.
+        if (isDeduplication(mapping)) {
+            verifyDedupeAdoption(
+                mapping, mapping.sources, mapping.destination, stylesheetLinks, htmlSources, errors,
+            );
+        }
         for (const source of mappingSources(mapping)) {
             if (source?.layer === null) {
                 const sourceTuple = tupleKey(source?.path, source?.context, source?.selector);
@@ -1044,9 +1055,6 @@ export function verifyRuleMigrations({
             }
             if (sourceRules.length === sources.length
                 && currentDestinationRules.length === destinations.length) {
-                verifyDedupeAdoption(
-                    mapping, sources, destinations[0], stylesheetLinks, htmlSources, errors,
-                );
                 for (const sourceRule of sourceRules) {
                     const assignments = verifyDedupePartition(mapping, sourceRule, currentDestinationRules, errors);
                     pendingConflictReviews.push({ mapping, sourceRule, currentDestinationRules, assignments });
