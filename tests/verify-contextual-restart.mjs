@@ -199,6 +199,11 @@ try {
             }, { key: global, id });
             check(untouched, id + ': reset without progress works');
 
+            // Carrot Pull's untouched action intentionally returns to the
+            // menu. Re-enter gameplay before testing pause/resume; otherwise
+            // the pause hook correctly does nothing in menu state.
+            if (id === 'carrot-pull') await start();
+
             if (id === 'gravity-slingshot') {
                 const keepsAttemptCount = await page.evaluate(key => {
                     const g = window[key];
@@ -220,7 +225,6 @@ try {
             check(true, id + ': quiet resume restores retry');
 
             if (id !== 'gravity-slingshot') {
-                if (id === 'carrot-pull') await start();
                 const field = PROGRESS[id];
                 const mutateProgress = () => page.evaluate(({ key, path }) => {
                     const g = window[key];
