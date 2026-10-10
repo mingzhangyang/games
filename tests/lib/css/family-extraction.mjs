@@ -980,6 +980,28 @@ export function verifyExtractionShape(extraction, errors) {
             retirementKeys.add(key);
         }
     }
+    // A media grouping may be removed only when its sole source rule is retired
+    // in this same extraction. This is intentionally narrower than general @rule
+    // rewrites and cannot authorize edits to unrelated media group contents.
+    const retiredMedia = extraction.reviewedAtRuleRetirements || [];
+    if (!Array.isArray(retiredMedia)) {
+        fail('reviewedAtRuleRetirements must be an array.');
+    } else {
+        const seen = new Set();
+        for (const entry of retiredMedia) {
+            const paired = (extraction.reviewedRuleRetirements || []).some(retirement =>
+                retirement.prefix === entry?.prefix && retirement.context === entry?.context
+                && retirement.selector === entry?.selector);
+            if (!extraction.games?.[entry?.prefix]?.css || entry.context !== '@media (width >= 1024px)'
+                || entry.selector !== '.' + entry.prefix + '-side-row b' || !paired
+                || typeof entry.reason !== 'string' || !entry.reason.trim()) {
+                fail('reviewed media retirement must match the sole reviewed desktop sidebar rule.');
+            }
+            const key = entry?.prefix + '\0' + entry?.context;
+            if (seen.has(key)) fail('duplicate reviewed media retirement ' + key + '.');
+            seen.add(key);
+        }
+    }
     // A family may introduce a conditional grouping boundary only when that same
     // transaction also creates concrete, verified shared rules under its context.
     // This registration never grants permission to change existing @rules.
@@ -1736,11 +1758,37 @@ export function verifyFamilyExtractions({
         }
     }
 
-    const seenRemoved = new Set();
+    // A legacy stylesheet can legitimately contain several rules with the
+    // same selector in the same media context. Only a single explicitly reviewed
+    // expectedOccurrences retirement may consume those distinct occurrences.
+    // Two independent transactions can never both claim the same tuple.
+    const reviewedMultiplicities = new Map();
+    for (const extraction of currentById.values()) {
+        for (const retirement of extraction.reviewedRuleRetirements || []) {
+            if (!retirement.expectedOccurrences) continue;
+            const key = tupleKey([
+                extraction.games?.[retirement.prefix]?.css, retirement.context, retirement.selector,
+            ]);
+            if (reviewedMultiplicities.has(key)) {
+                errors.push('family extraction duplicate retirement multiplicity claim: ' + key + '.');
+            }
+            reviewedMultiplicities.set(key, retirement.expectedOccurrences);
+        }
+    }
+    const removedCounts = new Map();
     for (const row of removed) {
         const key = tupleKey(row);
-        if (seenRemoved.has(key)) errors.push('family extraction rule is consumed more than once: ' + key + '.');
-        seenRemoved.add(key);
+        const count = (removedCounts.get(key) || 0) + 1;
+        removedCounts.set(key, count);
+        if (count > (reviewedMultiplicities.get(key) || 1)) {
+            errors.push('family extraction rule is consumed more than once: ' + key + '.');
+        }
+    }
+    for (const [key, reviewedCount] of reviewedMultiplicities) {
+        if (removedCounts.get(key) !== reviewedCount) {
+            errors.push('family extraction exact duplicate retirement count disagrees with reviewed multiplicity: '
+                + key + '.');
+        }
     }
 
     const currentCatalogs = new Map([...currentParsedByPath]
@@ -1756,6 +1804,10 @@ export function verifyFamilyExtractions({
     const newReviewedAtRuleAdditions = newExtractions.flatMap(extraction =>
         (extraction.reviewedAtRuleAdditions || []).map(addition => ({
             ...addition, path: extraction.sharedStylesheet, extractionId: extraction.id,
+        })));
+    const newReviewedAtRuleRetirements = newExtractions.flatMap(extraction =>
+        (extraction.reviewedAtRuleRetirements || []).map(retirement => ({
+            ...retirement, path: extraction.games[retirement.prefix].css, extractionId: extraction.id,
         })));
     for (const extraction of newExtractions) {
         verifyNewExtraction(
@@ -1782,6 +1834,7 @@ export function verifyFamilyExtractions({
         extractions: [...currentById.values()],
         newExtractionIds: newExtractions.map(extraction => extraction.id),
         newReviewedAtRuleAdditions,
+        newReviewedAtRuleRetirements,
         newRuleDelta,
     };
 }

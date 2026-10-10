@@ -899,6 +899,65 @@ try {
     assert.equal(verifyExtractionShape(missingNumeric, numericShapeErrors), true);
     assert.deepEqual(numericShapeErrors, []);
 
+
+    // Removing a now-empty desktop media group is allowed only with its one
+    // registered source-rule retirement. Keep all unrelated grouping semantics.
+    const reviewedMedia = clone(extraction);
+    reviewedMedia.reviewedRuleRetirements = [{
+        prefix: 'dm', context: '@media (width >= 1024px)', selector: '.dm-side-row b',
+        reason: 'retire a redundant desktop-only style',
+    }];
+    reviewedMedia.reviewedAtRuleRetirements = [{
+        prefix: 'dm', context: '@media (width >= 1024px)', selector: '.dm-side-row b',
+        reason: 'the wrapper has no other children after its sole rule is removed',
+    }];
+    const reviewedMediaShapeErrors = [];
+    assert.equal(verifyExtractionShape(reviewedMedia, reviewedMediaShapeErrors), true);
+    assert.deepEqual(reviewedMediaShapeErrors, []);
+    const orphanMedia = clone(reviewedMedia);
+    orphanMedia.reviewedRuleRetirements = [];
+    const orphanMediaErrors = [];
+    assert.equal(verifyExtractionShape(orphanMedia, orphanMediaErrors), false);
+    assert.ok(orphanMediaErrors.some(e => /must match the sole reviewed desktop sidebar rule/.test(e)));
+    const arbitraryMedia = clone(reviewedMedia);
+    arbitraryMedia.reviewedAtRuleRetirements[0].context = '@media print';
+    const arbitraryErrors = [];
+    assert.equal(verifyExtractionShape(arbitraryMedia, arbitraryErrors), false);
+    assert.ok(arbitraryErrors.some(e => /must match the sole reviewed desktop sidebar rule/.test(e)));
+    const mediaCss = before => parseCssText(before, 'css/demo.css').migrationAtRules;
+    const mediaSource = mediaCss(
+        '@media (width >= 1024px) {.dm-side-row b {color:red}}'
+        + '@media (width <= 480px) {.other {color:blue}}',
+    );
+    const mediaDestination = mediaCss('@media (width <= 480px) {.other {color:blue}}');
+    const retireParams = [{
+        path: 'css/demo.css', context: '@media (width >= 1024px)', selector: '.dm-side-row b',
+    }];
+    const validMediaErrors = [];
+    verifyReviewedAtRuleAdditions(
+        mediaSource, mediaDestination, [], 'css/demo.css', validMediaErrors, retireParams,
+    );
+    assert.deepEqual(validMediaErrors, []);
+    const unreviewedMediaErrors = [];
+    verifyReviewedAtRuleAdditions(
+        mediaSource, mediaDestination, [], 'css/demo.css', unreviewedMediaErrors,
+    );
+    assert.ok(unreviewedMediaErrors.some(e => /at-rule inventory/.test(e)));
+    const duplicateMediaSource = mediaCss(
+        '@media (width >= 1024px) {.dm-side-row b {color:red}}'
+        + '@media (width >= 1024px) {.other {color:red}}',
+    );
+    const duplicateMediaErrors = [];
+    verifyReviewedAtRuleAdditions(
+        duplicateMediaSource, [], [], 'css/demo.css', duplicateMediaErrors, retireParams,
+    );
+    assert.ok(duplicateMediaErrors.some(e => /exactly one original media group/.test(e)));
+    const injectedMediaErrors = [];
+    verifyReviewedAtRuleAdditions(
+        mediaSource, mediaSource, [], 'css/demo.css', injectedMediaErrors, retireParams,
+    );
+    assert.ok(injectedMediaErrors.length > 0, 'retired media grouping cannot remain in current CSS');
+
     // Declaration retirement: a surviving page rule sheds only the reviewed declarations.
     const headBase = parsedMap('css/demo.css', '.dm-head{display:flex;align-items:center;margin-bottom:8px}');
     const declarationRetirement = clone(extraction);

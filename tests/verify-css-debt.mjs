@@ -458,6 +458,7 @@ function verifyProject() {
         baseState,
         externalRuleChanges: familyResult.externalRuleChanges,
         reviewedAtRuleAdditions: familyResult.newReviewedAtRuleAdditions,
+        reviewedAtRuleRetirements: familyResult.newReviewedAtRuleRetirements,
         guardedCssPaths: familyResult.cssPaths,
         errors,
     });

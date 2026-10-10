@@ -3362,6 +3362,14 @@
           "reason": "The shared game-side-row b values apply at every viewport; drop desktop-only redundant value styling."
         }
       ],
+      "reviewedAtRuleRetirements": [
+        {
+          "prefix": "gd",
+          "context": "@media (width >= 1024px)",
+          "selector": ".gd-side-row b",
+          "reason": "The only rule inside this desktop-only media group was retired; do not preserve a now-empty at-rule."
+        }
+      ],
       "retiredCustomProperties": {
         "rd": {
           "properties": [

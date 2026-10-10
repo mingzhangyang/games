@@ -105,7 +105,7 @@ try {
                         && row.layout.fontSize === '13.5px'
                         && row.valueNumeric === 'tabular-nums'),
                 label + ' all actual record rows use shared layout and semantic numeric values',
-                    actual.sidebarRows);
+                actual.sidebarRows);
                 check(actual.rippleUsesRealRows, label + ' ripple runtime rows retain original identity');
                 check(actual.clearClass && actual.clearTitle?.fontSize === '26px'
                     && actual.clearTitle.fontWeight === '800'

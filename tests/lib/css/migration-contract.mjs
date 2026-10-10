@@ -12,7 +12,7 @@ const PRIORITIES = new Set(['normal', 'important']);
 // while retaining every historical at-rule in its original order. The actual
 // ordinary rules inside that group are independently matched against the family
 // ledger; this only accounts for the extra non-rule grouping boundary.
-export function verifyReviewedAtRuleAdditions(baseAtRules, currentAtRules, additions, path, errors) {
+export function verifyReviewedAtRuleAdditions(baseAtRules, currentAtRules, additions, path, errors, retirements = []) {
     const approvals = (additions || []).map(addition => {
         if (addition.path !== path || addition.context !== '@media (width <= 480px)') {
             errors.push(path + ': unrecognized family at-rule addition review.');
@@ -26,11 +26,29 @@ export function verifyReviewedAtRuleAdditions(baseAtRules, currentAtRules, addit
             layer: null,
         };
     });
+    const retainedBase = [...(baseAtRules || [])];
+    for (const retirement of retirements) {
+        if (retirement.path !== path || retirement.context !== '@media (width >= 1024px)') {
+            errors.push(path + ': unrecognized family at-rule retirement review.');
+            continue;
+        }
+        const reviewedMedia = {
+            name: 'media', form: 'group',
+            params: normalizeFragment('(width >= 1024px)'), context: [], layer: null,
+        };
+        const matches = retainedBase.flatMap((rule, index) =>
+            jsonKey(rule) === jsonKey(reviewedMedia) ? [index] : []);
+        if (matches.length !== 1) {
+            errors.push(path + ': reviewed at-rule retirement must name exactly one original media group.');
+            continue;
+        }
+        retainedBase.splice(matches[0], 1);
+    }
     const used = new Set();
     let baseIndex = 0;
     for (const actual of currentAtRules || []) {
-        if (baseIndex < (baseAtRules || []).length
-            && jsonKey(actual) === jsonKey(baseAtRules[baseIndex])) {
+        if (baseIndex < retainedBase.length
+            && jsonKey(actual) === jsonKey(retainedBase[baseIndex])) {
             baseIndex++;
             continue;
         }
@@ -42,7 +60,7 @@ export function verifyReviewedAtRuleAdditions(baseAtRules, currentAtRules, addit
         }
         used.add(approvedIndex);
     }
-    if (baseIndex !== (baseAtRules || []).length || used.size !== approvals.length) {
+    if (baseIndex !== retainedBase.length || used.size !== approvals.length) {
         errors.push(path + ': registered at-rule insertion does not preserve the complete base at-rule inventory.');
     }
 }
@@ -824,7 +842,7 @@ export function verifyRuleMigrations({
     baseline, state, currentParsedByPath, baseParsedByPath, stylesheetLinks,
     htmlSources = new Map(),
     allowedLayers, layerOrder, baseState, externalRuleChanges = { base: [], current: [] },
-    reviewedAtRuleAdditions = [], guardedCssPaths = new Set(), errors,
+    reviewedAtRuleAdditions = [], reviewedAtRuleRetirements = [], guardedCssPaths = new Set(), errors,
 }) {
     verifyMonotonicState(baseState || {}, state, errors);
     const currentCatalogs = new Map([...currentParsedByPath].map(([path, parsed]) => [path, indexRuleOccurrences(parsed, path)]));
@@ -1040,10 +1058,24 @@ export function verifyRuleMigrations({
                 if (jsonKey(baseParsed.keyframes) !== jsonKey(currentParsed.keyframes)) {
                     errors.push(path + ': keyframes changed during a rule-only P2 migration; keyframe mappings are not enabled yet.');
                 }
+                const mediaRetirements = reviewedAtRuleRetirements
+                    .filter(retirement => retirement.path === path);
+                for (const retirement of mediaRetirements) {
+                    const originalChildren = (baseParsed.rules || []).filter(rule =>
+                        !rule.layer && (rule.context || []).join(' / ') === retirement.context);
+                    const remainingChildren = (currentParsed.rules || []).filter(rule =>
+                        (rule.context || []).join(' / ') === retirement.context);
+                    if (originalChildren.length !== 1
+                        || originalChildren[0].selector !== retirement.selector
+                        || remainingChildren.length !== 0) {
+                        errors.push(path + ': reviewed media wrapper retirement requires exactly its one '
+                            + 'registered page rule to disappear without changing other media content.');
+                    }
+                }
                 verifyReviewedAtRuleAdditions(
                     baseParsed.migrationAtRules, currentParsed.migrationAtRules,
                     reviewedAtRuleAdditions.filter(addition => addition.path === path),
-                    path, errors,
+                    path, errors, mediaRetirements,
                 );
             }
         }
