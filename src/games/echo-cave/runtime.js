@@ -741,7 +741,7 @@ export class EchoCaveGame {
                     e.preventDefault();
                 }
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing' && !this.isPaused) {
+                if (this.state === 'playing' && !this.isPaused && !e.repeat) {
                     e.preventDefault();
                     this.contextualRestart?.requestRestart();
                 }

@@ -863,7 +863,10 @@ export class SilkfallGame {
             if (e.key === 'Escape') {
                 if (this.state === 'playing') this.toMenu();
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing') this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused && !e.repeat) {
+                    e.preventDefault();
+                    this.contextualRestart?.requestRestart();
+                }
             }
         });
         window.addEventListener('resize', () => this.resize());

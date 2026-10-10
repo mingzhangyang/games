@@ -821,7 +821,10 @@ export class CrystalBloomGame {
             } else if (e.key === 'f' || e.key === 'F') {
                 if (this.state === 'playing' && !this.isPaused && !e.repeat) this.pressStir();
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing' && !this.isPaused) this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused && !e.repeat) {
+                    e.preventDefault();
+                    this.contextualRestart?.requestRestart();
+                }
             } else if (e.key === 'Escape') {
                 if (this.state === 'playing' && !this.isPaused) this.toMenu();
             }

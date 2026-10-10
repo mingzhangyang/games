@@ -211,11 +211,23 @@ console.log('▶ 重置与键盘');
     const g = await page.evaluate(() => window.slGame.grabPoint(0));
     await drag(g, { x: g.x + 30, y: g.y });
     // Explicitly accept the contextual confirmation after moving a piece.
-    const prompted = new Promise(resolve => page.once('dialog', async dialog => {
-        const copy = dialog.message();
-        await dialog.accept();
-        resolve(copy);
-    }));
+    const prompted = new Promise(resolve => {
+        const onDialog = async dialog => {
+            clearTimeout(timeout);
+            try {
+                const copy = dialog.message();
+                await dialog.accept();
+                resolve(copy);
+            } catch (error) {
+                resolve('dialog failed: ' + error.message);
+            }
+        };
+        const timeout = setTimeout(() => {
+            page.off('dialog', onDialog);
+            resolve(''); // A missing confirmation must fail this smoke promptly.
+        }, 4000);
+        page.once('dialog', onDialog);
+    });
     await page.click('#sl-reset-btn');
     check(/restart|重新开始/i.test(await prompted), '重置已有移动的关卡前要求确认');
     await wait(150);

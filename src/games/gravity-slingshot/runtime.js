@@ -659,8 +659,10 @@ class GravityGame {
             if (e.target && e.target.closest && e.target.closest('input, textarea')) return;
             const k = e.key.toLowerCase();
             if (k === 'r') {
-                Sfx.click();
-                this.resetHole();
+                if (!e.repeat) {
+                    e.preventDefault();
+                    this.contextualRestart?.requestRestart();
+                }
             } else if (k === 'm') {
                 this.toggleMute();
             }

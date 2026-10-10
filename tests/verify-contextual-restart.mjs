@@ -23,6 +23,14 @@ const CASES = {
     'gravity-slingshot': ['gd', 'gdGame', 'startLevelMode', 'enterMenu'],
 };
 
+// Every game with a live R shortcut must route it through the same controller.
+// This list is cross-checked against runtime bindings, so new shortcuts cannot
+// silently avoid the browser confirmation/pause tests.
+const R_SHORTCUT_GAMES = new Set([
+    'silk-dew', 'echo-cave', 'flame-verse', 'ripple-duet',
+    'crystal-bloom', 'maxwell-demon', 'shadow-loom', 'gravity-slingshot',
+]);
+
 // Negative contract: adding an unreviewed topbar reset must not silently pass.
 const topbarGames = registry.withCap('topbar').map(g => g.id);
 const discovered = topbarGames.filter(id => {
@@ -52,6 +60,11 @@ for (const id of Object.keys(CASES)) {
         : id === 'gravity-slingshot'
             ? /\bthis\.(?:phase|isPaused)\s*=\s*(?:'[^']*'|true|false)\s*;/g
             : /\bthis\.(?:state|isPaused)\s*=\s*(?:'[^']*'|true|false)\s*;/g;
+    const hasRShortcut = /\b(?:e\.key|k)\s*===\s*['"]r['"]/.test(src);
+    if (hasRShortcut !== R_SHORTCUT_GAMES.has(id)
+        || (hasRShortcut && !src.includes('this.contextualRestart?.requestRestart()'))) {
+        throw new Error(id + ': R shortcut must use the shared controller and have browser coverage');
+    }
     const lines = src.split('\n');
     const unsignaled = lines.flatMap((line, index) => {
         if (line.trimStart().startsWith('//')) return [];
@@ -213,6 +226,26 @@ try {
                     return g.phase === 'aiming' && g.launches === 2;
                 }, global);
                 check(keepsAttemptCount, 'gravity-slingshot: retry resets shot, not accumulated attempts');
+                const keyboardShot = await page.evaluate(key => {
+                    const g = window[key];
+                    g.launches = 3;
+                    g.phase = 'flying';
+                    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', bubbles: true }));
+                    const active = { phase: g.phase, launches: g.launches };
+                    g.phase = 'flying';
+                    g.isPaused = true;
+                    g.contextualRestart?.sync();
+                    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', bubbles: true }));
+                    const paused = { phase: g.phase, launches: g.launches };
+                    g.isPaused = false;
+                    g.phase = 'aiming';
+                    g.contextualRestart?.sync();
+                    return { active, paused };
+                }, global);
+                check(keyboardShot.active.phase === 'aiming' && keyboardShot.active.launches === 3
+                    && keyboardShot.paused.phase === 'flying' && keyboardShot.paused.launches === 3,
+                'gravity-slingshot: R resets only the current shot and is disabled while paused '
+                    + JSON.stringify(keyboardShot));
             }
             // The controls also follow quiet drawer / visibility pauses without
             // waiting for a menu-overlay mutation.
@@ -311,6 +344,31 @@ try {
                 }, { key: global, path: field });
                 const scoreBefore = await mutateProgress();
                 check(scoreBefore > 0, id + ': fixture created meaningful game progress');
+
+                if (R_SHORTCUT_GAMES.has(id)) {
+                    checkpoint('decline keyboard restart');
+                    await page.evaluate(() => document.activeElement?.blur());
+                    dialogAction = 'dismiss';
+                    const beforeShortcut = dialogs.length;
+                    await page.keyboard.press('r');
+                    const shortcutEvents = dialogs.slice(beforeShortcut);
+                    const shortcutRetained = await readProgress();
+                    check(shortcutEvents.length === 1
+                        && /^Restart this level\?/.test(shortcutEvents[0].message)
+                        && shortcutRetained === scoreBefore,
+                    id + ': R shortcut confirms and cancel preserves progress '
+                        + JSON.stringify({ shortcutEvents, shortcutRetained }));
+
+                    // Quiet pause must not allow a hidden keyboard shortcut to
+                    // restart a run behind the drawer.
+                    await page.evaluate(key => window[key].pauseQuiet(), global);
+                    const beforePausedKey = dialogs.length;
+                    await page.keyboard.press('r');
+                    const pausedRetained = await readProgress();
+                    check(dialogs.length === beforePausedKey && pausedRetained === scoreBefore,
+                        id + ': paused R shortcut cannot restart or prompt');
+                    await page.evaluate(key => window[key].resumeQuiet(), global);
+                }
 
                 checkpoint('decline destructive restart');
                 dialogAction = 'dismiss';

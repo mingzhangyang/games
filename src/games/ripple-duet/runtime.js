@@ -1200,7 +1200,10 @@ export class RippleDuetGame {
             } else if (e.key === 'ArrowLeft') { e.preventDefault(); this.turnPhase(-1); }
             else if (e.key === 'ArrowRight') { e.preventDefault(); this.turnPhase(1); }
             else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.pressFreeze(); }
-            else if (e.key === 'r' || e.key === 'R') { this.restartLevel(); }
+            else if ((e.key === 'r' || e.key === 'R') && !e.repeat) {
+                e.preventDefault();
+                this.contextualRestart?.requestRestart();
+            }
         });
 
         window.addEventListener('resize', () => this.resize());

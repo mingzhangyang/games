@@ -654,7 +654,13 @@ export class ShadowLoomGame {
             else this.toast(this.t('lampFixedToast'), 1600);
             return;
         }
-        if (k === 'r' || k === 'R') { this.restartLevel(); return; }
+        if (k === 'r' || k === 'R') {
+            if (!e.repeat) {
+                e.preventDefault();
+                this.contextualRestart?.requestRestart();
+            }
+            return;
+        }
         const step = e.shiftKey ? 1 : 4;
         const dirs = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
         if (dirs[k]) {

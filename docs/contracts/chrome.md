@@ -101,12 +101,18 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
   “重置本次发射”，不加误导性的进度损失确认。
 - Echo Cave 的重开判断以 `model/rules.js` 的模拟世界为准，包含探索移动（返回起点仍保留）、
   声波次数、已收集声晶及损失的生命。不得用每帧从 world 同步的 `pulseUsed` 显示缓存
-  作为进度依据。`R` 键复用同一个确认动作，不能绕过顶栏保护。
+  作为进度依据。
+- 8 个游戏的 `R` 快捷键（sd/ec/fv/rd/cb/md/sl/gd）和可见顶栏动作统一调用
+  `contextualRestart.requestRestart()`，不能直达 `restartLevel()` 或 `resetHole()`：
+  包括有进度时的本地化确认、取消保护、无进度时立即重开、暂停/结算时禁止重开。
+  `gd` 为不丢累计发射次数的例外，仍通过同一生命周期守卫。
+  验证器应从实际运行时代码识别 R 绑定并对照测试清单，避免新增快捷键遗漏。
 - 测试：tests/verify-contextual-restart.mjs 覆盖 12 个游戏的菜单、游戏中、结算态，
   对全部 11 个可能丢失进度的游戏分别执行中/英确认、取消保留与确认后重置；
   `gravity-slingshot` 验证仅复位发射、累计次数不丢；状态变更静态钩子和
   solving/clear/over 等结果浮层之前的状态也覆盖。
-  smoke-shadow-loom.mjs 对带移动的重开显式接受确认。
+  所有 R 重开快捷键执行取消与静默暂停断言，`gd` 验证累计发射次数不丢；
+  smoke-shadow-loom.mjs 对带移动的重开显式接受确认，并对缺失确认设置有界超时。
 - 不更改其他 Home、Stats、Pause、Sound 顶栏职责；若新游戏不需要游戏内重置，
   不应为了图标整齐而机械添加循环箭头。
 
