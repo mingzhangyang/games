@@ -106,7 +106,31 @@ try {
         const page = await browser.newPage();
         const selector = '#' + prefix + '-reset-btn';
         const errors = [];
+        let phase = 'boot';
+        // Native dialogs block page clicks. Keep one always-on handler rather
+        // than waiting forever for a dialog that a game may not produce.
+        // When a dialog is unexpected, dismiss it and record the regression.
+        const dialogs = [];
+        let dialogAction = 'dismiss';
+        page.on('dialog', async dialog => {
+            const action = dialogAction;
+            dialogs.push({ message: dialog.message(), action });
+            try {
+                if (action === 'accept') await dialog.accept();
+                else await dialog.dismiss();
+            } catch (error) {
+                errors.push('dialog handling: ' + error.message);
+            }
+        });
+        const checkpoint = name => {
+            phase = name;
+            console.log('[contextual-restart] ' + id + ': ' + name);
+        };
         page.on('pageerror', err => errors.push(err.message));
+        // Default click/evaluate interactions must never wait indefinitely.
+        // Test-specific state waits below retain their tighter explicit limits.
+        page.setDefaultTimeout(6000);
+        page.setDefaultNavigationTimeout(15000);
         await page.setViewport({ width: 390, height: 844 });
         await page.setBypassServiceWorker(true);
         await page.setRequestInterception(true);
@@ -121,14 +145,16 @@ try {
             } else void request.continue();
         });
         try {
+            checkpoint('navigate');
             await page.evaluateOnNewDocument(() => {
                 try {
                     localStorage.setItem('site_lang', 'en');
                     localStorage.setItem('site_muted', '1');
                 } catch { /* storage unavailable */ }
             });
-            await page.goto(BASE + '/' + id + '.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
+            await page.goto(BASE + '/' + id + '.html', { waitUntil: 'domcontentloaded', timeout: 15000 });
             await page.waitForFunction(key => !!window[key], { timeout: 15000 }, global);
+            checkpoint('menu');
             check(await page.evaluate(isHidden, selector), id + ': reset hidden on menu');
             if (id === 'carrot-pull') {
                 await page.waitForFunction(() => ['ready', 'fallback']
@@ -141,6 +167,7 @@ try {
                 const b = document.querySelector(sel);
                 return b && !b.disabled && getComputedStyle(b).display !== 'none';
             }, { timeout: 4000 }, selector);
+            checkpoint('playing');
             const geometry = await page.evaluate(sel => {
                 const b = document.querySelector(sel);
                 const rect = b.getBoundingClientRect();
@@ -150,8 +177,20 @@ try {
                 && geometry.width >= 32 && geometry.height >= 32,
             id + ': accessible playing-state action ' + JSON.stringify(geometry));
 
-            // With no work yet, restarting is harmless and needs no confirmation.
+            // Clock-based games may have elapsed time just from CI startup,
+            // so establish a genuinely fresh run at the moment of the click.
+            if (id === 'carrot-pull') {
+                await page.evaluate(() => { window.cpGame.state.time = 45; });
+            }
+            if (id === 'shadow-loom') {
+                await page.evaluate(() => { window.slGame.elapsed = 0; });
+            }
+            checkpoint('fresh retry');
+            const beforeFreshDialog = dialogs.length;
             await page.click(selector);
+            check(dialogs.length === beforeFreshDialog,
+                id + ': untouched run should not ask to discard progress: '
+                + JSON.stringify(dialogs.slice(beforeFreshDialog)));
             const untouched = await page.evaluate(({ key, id: gameId }) => {
                 const g = window[key];
                 return gameId === 'carrot-pull' ? g.state.mode === 'menu'
@@ -206,13 +245,15 @@ try {
                 const scoreBefore = await mutateProgress();
                 check(scoreBefore > 0, id + ': fixture created meaningful game progress');
 
-                const declined = new Promise(resolve => page.once('dialog', async dialog => {
-                    const message = dialog.message();
-                    await dialog.dismiss();
-                    resolve(message);
-                }));
+                checkpoint('decline destructive restart');
+                dialogAction = 'dismiss';
+                const beforeDecline = dialogs.length;
                 await page.click(selector);
-                const declinedMessage = await declined;
+                const declinedEvents = dialogs.slice(beforeDecline);
+                const declinedMessage = declinedEvents[0]?.message || '';
+                check(declinedEvents.length === 1,
+                    id + ': discard action must open exactly one confirmation: '
+                    + JSON.stringify(declinedEvents));
                 const retained = await readProgress();
                 check(/^(Restart this level|End this round)\?/.test(declinedMessage)
                     && retained === scoreBefore,
@@ -229,13 +270,16 @@ try {
                     && /重开|结束本局/.test(localized.title),
                 id + ': Chinese locale retains controller-owned button label ' + JSON.stringify(localized));
 
-                const accepted = new Promise(resolve => page.once('dialog', async dialog => {
-                    const message = dialog.message();
-                    await dialog.accept();
-                    resolve(message);
-                }));
+                checkpoint('accept destructive restart');
+                dialogAction = 'accept';
+                const beforeAccept = dialogs.length;
                 await page.click(selector);
-                const acceptedMessage = await accepted;
+                dialogAction = 'dismiss';
+                const acceptedEvents = dialogs.slice(beforeAccept);
+                const acceptedMessage = acceptedEvents[0]?.message || '';
+                check(acceptedEvents.length === 1,
+                    id + ': accepting discard must display exactly one confirmation: '
+                    + JSON.stringify(acceptedEvents));
                 const after = await readProgress();
                 const expectedState = id === 'carrot-pull' ? 'menu' : 'playing';
                 const actualState = await page.evaluate(({ key, name }) =>
@@ -248,6 +292,7 @@ try {
                 }));
             }
 
+            checkpoint('menu transition');
             if (id === 'carrot-pull') {
                 await start();
                 await page.evaluate(() => { window.cpGame.state.time = 0.001; });
@@ -296,8 +341,10 @@ try {
                 check(true, id + ': topbar retry not shown over result');
             }
             check(!errors.length, id + ': no page errors: ' + errors.join(' | ').slice(0, 250));
+            checkpoint('passed');
         } catch (err) {
-            failures.push(id + ': ' + String(err.message || err).slice(0, 700));
+            failures.push(id + ' @ ' + phase + ': ' + String(err.message || err).slice(0, 700));
+            checkpoint('failed @ ' + phase);
         } finally {
             await page.close();
         }
