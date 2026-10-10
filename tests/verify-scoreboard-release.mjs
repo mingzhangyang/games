@@ -1,89 +1,70 @@
 #!/usr/bin/env node
 /**
- * The release graph must prevent new site keys outrunning the scores backend.
- * Real production deploys are not executed in this test.
+ * The website is auto-published by Cloudflare. Scores are manually deployed.
+ * Verify they are independent and late backends cannot block the site.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { releasePlan, executeRelease } from '../tools/deploy/release.mjs';
-import { CANARY_KEYS, verifyScoresWorker, waitForScoresWorker } from '../tools/deploy/verify-scores-worker.mjs';
+import {
+    CANARY_KEYS, verifyScoresWorker, waitForScoresWorker,
+} from '../tools/deploy/verify-scores-worker.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = file => readFileSync(join(ROOT, file), 'utf8');
 const scripts = JSON.parse(read('package.json')).scripts;
-assert.equal(scripts.deploy, 'node tools/deploy/release.mjs site',
-    'the standard site deploy must use the dependency-aware release gate');
-assert.equal(scripts['deploy:all'], 'node tools/deploy/release.mjs all',
-    'the standard all deploy must use the same release contract');
+assert.equal(scripts.deploy, 'vite build && wrangler deploy',
+    'site deploy must not publish scores or require a deployed score Worker');
+assert.equal(scripts['deploy:scores'], 'wrangler deploy -c Workers/wrangler-game-scores.jsonc',
+    'standalone score Worker requires an explicit manual target');
+assert.equal(scripts['verify:scores:live'], 'node tools/deploy/verify-scores-worker.mjs',
+    'live verification remains opt-in after manual Worker deployment');
+assert.deepEqual(scripts['deploy:all'].split(' && '), [
+    'npm run deploy:scores', 'npm run verify:scores:live',
+    'npm run deploy:analytics', 'npm run deploy:word-stats', 'npm run deploy',
+], 'explicit manual combined release runs the scores Worker before the site');
+assert.ok(!scripts.deploy.includes('verify:scores:live'));
+assert.ok(!scripts.deploy.includes('deploy:scores'));
+const workflow = read('.github/workflows/deploy-workers.yml');
+assert.ok(workflow.includes('scores)     npm run deploy:scores && npm run verify:scores:live'),
+    'manual score publication validates the public Worker');
+assert.ok(workflow.includes('site)       npm run deploy ;;'),
+    'manual site fallback is a separate target');
+assert.ok(workflow.includes('all)        npm run deploy:all ;;'),
+    'the opt-in all target retains its coordinated ordering');
 
-function checkPlan(target) {
-    const commands = releasePlan(target).map(step => step.args.join(' '));
-    const worker = commands.indexOf('run deploy:scores');
-    const gate = commands.findIndex(text => text.includes('verify-scores-worker.mjs'));
-    const build = commands.indexOf('run build');
-    const site = commands.indexOf('exec -- wrangler deploy');
-    assert.ok(worker >= 0 && worker < gate && gate < build && build < site,
-        target + ': Worker, live gate and site must execute in that order');
-    assert.equal(site, commands.length - 1, 'site is always published last');
-    return commands;
-}
-
-const siteSteps = checkPlan('site');
-const allSteps = checkPlan('all');
-assert.ok(allSteps.indexOf('run deploy:analytics') > allSteps.indexOf('run deploy:scores'));
-assert.ok(allSteps.indexOf('run deploy:word-stats') < allSteps.indexOf('exec -- wrangler deploy'));
-assert.throws(() => releasePlan('unknown'), /Unknown release target/);
-
-const executed = [];
-const simulatedFail = (command, args) => {
-    executed.push(args.join(' '));
-    return { status: executed.length === 3 ? 1 : 0 }; // Worker live gate fails
-};
-assert.equal(executeRelease('site', simulatedFail), 1, 'gate failure fails the release');
-assert.deepEqual(executed, siteSteps.slice(0, 3), 'site deploy never executes after a failed gate');
-const failedWorker = [];
-assert.equal(executeRelease('all', (command, args) => {
-    failedWorker.push(args.join(' '));
-    return { status: failedWorker.length === 2 ? 42 : 0 };
-}), 42);
-assert.deepEqual(failedWorker, allSteps.slice(0, 2), 'failed Worker deploy blocks every later deployment');
-
+const dialog = read('src/platform/scoreboard-dialog.js');
+assert.ok(dialog.includes('UnsupportedLeaderboardError'), 'new client handles old Worker');
+assert.ok(dialog.includes('enqueuePendingScore'), 'failed submissions can survive late backend rollout');
+assert.ok(dialog.includes('retryPendingScores'), 'scores get retried on a future successful read');
+assert.ok(dialog.includes('pendingWorker'), 'UI distinguishes unsupported games from empty boards');
 assert.ok(CANARY_KEYS.includes('tetris') && CANARY_KEYS.includes('math-rain-6'),
-    'live canaries must cover old and new keys');
+    'live manual checks cover legacy and new score families');
+
 const visited = [];
 await verifyScoresWorker(async (url, options) => {
     visited.push({ url, options });
     return { ok: true, json: async () => [] };
 });
-assert.equal(visited.length, CANARY_KEYS.length, 'all live key families must be checked');
-assert.ok(visited.every(({ options }) =>
-    options.headers.Origin === 'https://games.orangely.xyz' && options.signal),
-    'GET canaries must be read-only and use the real CORS origin');
-
+assert.equal(visited.length, CANARY_KEYS.length, 'all game families are checked');
+const validOrigins = visited.every(({ options }) =>
+    options.headers.Origin === 'https://games.orangely.xyz' && options.signal);
+assert.ok(validOrigins, 'manual gate is read-only and uses the real site origin');
 await assert.rejects(verifyScoresWorker(async () => ({ ok: false, status: 400 })),
-    /Scoreboard tetris: HTTP 400/, 'stale Worker allowlist must block release');
+    /Scoreboard tetris: HTTP 400/, 'a stale Worker fails an explicit readiness check');
 await assert.rejects(verifyScoresWorker(async () => ({ ok: true, json: async () => ({}) })),
-    /expected an array/, 'an unrelated 200 response cannot pass as a leaderboard');
+    /expected an array/, 'unrelated success cannot pass readiness checks');
 let checks = 0;
 await waitForScoresWorker({
     verify: async () => { if (++checks < 3) throw new Error('not yet live'); },
     attempts: 3, delayMs: 0, sleep: async () => {},
 });
-assert.equal(checks, 3, 'temporary propagation delay is retried');
+assert.equal(checks, 3, 'propagation is retried on manual verification');
 checks = 0;
 await assert.rejects(waitForScoresWorker({
-    verify: async () => { ++checks; throw new Error('unhealthy'); },
+    verify: async () => { checks++; throw new Error('unhealthy'); },
     attempts: 2, delayMs: 0, sleep: async () => {},
-}), /unhealthy/, 'persistent failure must never allow site release');
-assert.equal(checks, 2, 'retries must be bounded');
-
-const manualFlow = read('.github/workflows/deploy-workers.yml');
-assert.ok(manualFlow.includes('site)       npm run deploy ;;'),
-    'manual site deployment must use the guarded standard command');
-assert.ok(manualFlow.includes('all)        npm run deploy:all ;;'),
-    'manual all deployment must use the guarded standard command');
-assert.ok(manualFlow.includes('npm run deploy:scores && npm run verify:scores:live'),
-    'standalone scores deployment verifies public rollout');
-console.log('PASS release ordering, live gate, no-publish-on-failure and workflow contract');
+}), /unhealthy/, 'persistent failure surfaces an error to the manual publisher');
+assert.equal(checks, 2, 'readiness retries are bounded');
+console.log('PASS independent web auto-deploy and manual scores deployment contracts');

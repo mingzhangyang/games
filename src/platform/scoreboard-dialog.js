@@ -2,7 +2,8 @@
  * Shared visible leaderboard dialog for games that did not previously expose a board.
  * Gameplay owns the score and eligibility; this module owns identity, network and DOM.
  */
-import { fetchBoard, submitScore } from './leaderboard.js';
+import { fetchBoard, submitScore, UnsupportedLeaderboardError } from './leaderboard.js';
+import { enqueuePendingScore, pendingScoreCount, retryPendingScores } from './scoreboard-pending.js';
 import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang } from './site-settings.js';
 import { ICONS } from './icons.js';
@@ -15,6 +16,9 @@ const TEXT = {
         failed: 'This score was not uploaded. Check your connection.',
         sent: 'Score submitted. Placement depends on the leaderboard.',
         reload: 'Refresh', board: 'Leaderboard',
+        pendingWorker: 'Rankings for this game are not live yet.',
+        queued: 'Score saved on this device; upload will retry when rankings are available.',
+        notSaved: 'Score was not uploaded or saved on this device.',
     },
     zh: {
         title: '全球排行榜', open: '查看排名', close: '关闭',
@@ -23,6 +27,9 @@ const TEXT = {
         failed: '本次成绩未上传，请检查网络。',
         sent: '成绩已提交，是否上榜以榜单结果为准。',
         reload: '刷新', board: '榜单',
+        pendingWorker: '本游戏排行榜尚未上线。',
+        queued: '成绩已暂存在本设备；排行榜可用后将重试上传。',
+        notSaved: '成绩未能上传，也未能保存在本设备。',
     },
 };
 const value = (label, lang) => typeof label === 'string'
@@ -137,10 +144,27 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
             const data = await fetchBoard(key);
             if (seq !== requestId || !dialog.open || board !== boardFor(select.value)) return;
             renderRows(data, board);
-            setStatus(notices.get(key) || '');
-        } catch {
+            setStatus(pendingScoreCount(key) ? text('queued') : (notices.get(key) || ''));
+
+            // A successful GET proves this independently deployed Worker has
+            // been updated. Replay queued scores across ALL boards, including
+            // yesterday's date-specific runs, with bounded/idempotent POSTs.
+            const uploaded = await retryPendingScores(submitScore);
+            for (const game of uploaded) notices.set(game, text('sent'));
             if (seq !== requestId || !dialog.open || board !== boardFor(select.value)) return;
-            setStatus(notices.get(key) || text('offline'));
+            if (uploaded.includes(key)) {
+                void refresh(); // Read the now-persisted ranking exactly once.
+            } else {
+                setStatus(pendingScoreCount(key) ? text('queued') : (notices.get(key) || ''));
+            }
+        } catch (error) {
+            if (seq !== requestId || !dialog.open || board !== boardFor(select.value)) return;
+            const queued = pendingScoreCount(key) ? ' ' + text('queued') : '';
+            if (error instanceof UnsupportedLeaderboardError) {
+                setStatus(text('pendingWorker') + queued);
+            } else {
+                setStatus((notices.get(key) || text('offline')) + queued);
+            }
         }
     }
 
@@ -222,10 +246,12 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         const board = boardFor(boardId);
         if (!board || !isFiniteScore(score)) return false;
         const resolved = key || resolvedKey(board);
-        const ok = await submitScore({ game: resolved, name: getPlayerName() || ensurePlayerName(), score });
-        notices.set(resolved, text(ok ? 'sent' : 'failed'));
+        const name = getPlayerName() || ensurePlayerName();
+        const ok = await submitScore({ game: resolved, name, score });
+        const locallySaved = !ok && enqueuePendingScore({ game: resolved, name, score });
+        notices.set(resolved, text(ok ? 'sent' : (locallySaved ? 'queued' : 'notSaved')));
         if (dialog.open && resolvedKey(boardFor(select.value)) === resolved) void refresh();
-        return ok;
+        return ok; // Only remote acknowledgement counts as success.
     }
 
     return { open, submit, refresh, dialog };

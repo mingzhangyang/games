@@ -21,7 +21,7 @@ The new `scores.ui: "dialog"` entry declares shared visible UI ownership. `tests
 
 **Scope exclusions:** Gomoku remains unranked until a difficulty-specific versus-AI win-streak system is designed, and Word Daily continues using its existing global participation/win-rate statistics instead of a saturated 1–6-guess leaderboard. External games are outside this repository.
 
-**Validation and deployment:** The shared scoreboard backend is a prerequisite for the site: publish scores first, verify the live API, and only then deploy the site. The standard `npm run deploy` and `npm run deploy:all` commands now enforce this dependency automatically. The backend accepts client-supplied scores; these boards are casual community rankings, not server-authoritative competition. For anti-cheat requirements, a score-proof protocol would need separate work.
+**Validation and deployment:** Cloudflare Git automatically deploys the web app. The score Worker is deployed **manually**, separately, using `npm run deploy:scores` or GitHub Actions → Deploy Workers → scores; `npm run verify:scores:live` is an optional post-deploy check. The website does not publish the score Worker. Existing gameplay remains functional when a new board key is not yet supported; client-side feedback and a bounded local submission retry queue bridge the independent rollout. The backend accepts client-supplied scores; these boards are casual community rankings, not server-authoritative competition.
 
 **CSS activation contract:** The six pages register the new `css/scoreboard-dialog.css` stylesheet through `tests/lib/css/feature-additions.mjs`. The additive component is layered under `components`, has a fixed consumer list, and is validated separately. The immutable CSS P0/P5 source/link/activation snapshots are compared after subtracting only this explicitly reviewed addition; unregistered CSS links and pre-existing CSS changes remain errors. Needle Awn's result row uses the existing shared `game-action-row` rather than a new page-specific rule.
 
@@ -52,37 +52,43 @@ context so a fresh dialog shows today's leaderboard.
 `GameScoreBoard` class through a `new_sqlite_classes` migration. Run
 `npm run verify`, `npm run build` and
 `npx wrangler deploy --dry-run -c Workers/wrangler-game-scores.jsonc` before
-ordered scores-Worker-first release. After first live migration,
+manual score-Worker release (independent of automatic site publication). After first live migration,
 **do not roll back only the scores Worker to KV-writing code**: it would show stale
 snapshots and lose all scores written to Durable Objects. A deployed Worker roundtrip
 is a separate release check, not performed by source-only verification.
 
-## Modal keyboard isolation and dependency-safe publication
+## Modal keyboard isolation and independently published services
 
 **Input ownership.** The shared native leaderboard dialog intercepts bubbling
 `keydown`, `keyup` and `keypress` events at the dialog boundary. Modal
-controls still receive their normal keyboard behavior, including text editing,
-Tab focus movement and native Escape-to-close, but the six games' document and
-window gameplay handlers never receive those events while a focused modal
-control is active. `tests/smoke-scoreboard-dialog.mjs` verifies this behavior
-across every dialog consumer in real browser viewports.
+controls retain native text editing, focus navigation and Escape-to-close,
+while background game handlers never receive these keys.
 
-**Release ownership.** Use `npm run deploy` for the site, or `npm run
-deploy:all` for all Workers. Both now call `tools/deploy/release.mjs`:
-registry drift check → `deploy:scores` (including the SQLite migration)
-→ `verify:scores:live` (read-only, real HTTP requests against legacy and
-new keys with retries) → remaining Worker deployments if requested →
-site build → site publish. Any failure aborts immediately **before site
-publication**. A scores-only GitHub Actions dispatch also verifies its
-live endpoint after deployment. Never bypass these commands with an
-uncoordinated standalone `wrangler deploy`.
+**Actual production topology.** The web app is published automatically by
+Cloudflare's Git integration on `main`. Its release command is independent
+of the manually operated score Worker. Do not configure its Cloudflare Deploy
+command to deploy the score Worker. `npm run deploy` handles **only the web app**
+as before. `npm run deploy:scores` explicitly deploys **only the score Worker**
+and `npm run verify:scores:live` checks it after manual publication.
+`deploy:all` is a separate, explicitly requested manual command that deploys
+the score Worker first, verifies it, and then publishes the remaining services.
 
-**Important: Cloudflare Git integration is an independent deployment path.**
-If Cloudflare Workers Builds automatically deploys on a push to `main`,
-its dashboard **Deploy command** must be configured to `npm run deploy`
-(instead of `npx wrangler deploy`), or automatic production deployment must
-be disabled so only the repo's guarded workflow publishes the site. Changing
-`package.json` alone cannot change a remotely configured automatic deploy
-command. This configuration must be checked before merging: otherwise a Git
-push can still publish the new site before the scores Worker. The existing
-Cloudflare dashboard configuration has **not** been modified as part of this PR.
+**Client/server compatibility.** When a newly published web UI queries a
+scoreboard key unknown to the still-old manually deployed Worker, the API
+returns HTTP 400. The dialog presents a localized "not yet available"
+state (not a fabricated empty ranking). Failed submissions are saved in a
+bounded browser-local queue and retried the next time a scoreboard is opened
+or refreshed; a successful upload removes the matching pending entry.
+Users can play normally while awaiting the manual Worker upgrade. If
+browser storage is blocked/full, the dialog says the score could not be
+saved; it never pretends the remote score was accepted. Opening a board
+after the manual Worker upgrade requires no web app redeploy.
+The queue is local to the browser profile and is not a cross-device sync.
+
+**Manual release checklist:** (1) merge after CI; Cloudflare may auto-publish
+the website immediately; (2) manually publish the score Worker whenever
+the new leaderboard feature should become live, using `deploy:scores`;
+(3) run `verify:scores:live`; (4) open a new leaderboard and verify the
+pending upload notice clears. SQLite DO migrations happen during the
+explicit score Worker publication. Never downgrade to a KV-writing Worker
+after the migration; it would hide newer Durable Object scores.

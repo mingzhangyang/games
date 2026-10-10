@@ -7,6 +7,15 @@
 
 export const SCORES_URL = 'https://game-scores.orangely.workers.dev';
 
+/** Old manually deployed score Workers do not yet recognize newer board IDs. */
+export class UnsupportedLeaderboardError extends Error {
+    constructor(game) {
+        super('Scoreboard not supported by deployed Worker: ' + game);
+        this.name = 'UnsupportedLeaderboardError';
+        this.game = game;
+    }
+}
+
 /**
  * 提交分数。返回 true = Worker 接受（2xx）；false = 失败（网络/超时/非 2xx）。绝不抛出。
  * @param {object} o
@@ -53,6 +62,8 @@ export async function fetchBoard(game, { timeoutMs = 3500 } = {}) {
             signal: controller.signal,
             mode: 'cors',
         });
+        // The older independently released Worker returns 400 for unknown keys.
+        if (res.status === 400) throw new UnsupportedLeaderboardError(game);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return await res.json();
     } finally {

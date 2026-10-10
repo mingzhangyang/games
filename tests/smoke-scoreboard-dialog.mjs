@@ -21,6 +21,7 @@ try {
         await page.setBypassServiceWorker(true);
         const pageErrors = [];
         const requests = [];
+        let scoreWorkerReady = true;
         page.on('pageerror', err => pageErrors.push(String(err.message || err)));
         await page.setRequestInterception(true);
         page.on('request', request => {
@@ -29,10 +30,10 @@ try {
                 const parsed = new URL(url);
                 requests.push({ method: request.method(), key: parsed.searchParams.get('game') });
                 void request.respond({
-                    status: 200,
-                    contentType: 'application/json',
+                    status: scoreWorkerReady ? 200 : 400,
+                    contentType: scoreWorkerReady ? 'application/json' : 'text/plain',
                     headers: { 'access-control-allow-origin': '*' },
-                    body: JSON.stringify([{ name: 'Test Player', score: 1234 }]),
+                    body: scoreWorkerReady ? JSON.stringify([{ name: 'Test Player', score: 1234 }]) : 'Invalid',
                 });
                 return;
             }
@@ -148,6 +149,17 @@ try {
             const escapeLeaks = await page.evaluate(() =>
                 window.__scoreboardKeyLeaks.filter(key => key.endsWith(':down:Escape')));
             if (escapeLeaks.length) errors.push(game.id + ': Escape leaked into gameplay: ' + escapeLeaks.join(','));
+
+            // Simulate a Cloudflare auto-published site outrunning the manually
+            // deployed scoring Worker. Old Worker rejects the new board key.
+            scoreWorkerReady = false;
+            await page.click(trigger);
+            await page.waitForFunction(() => {
+                const dialog = document.querySelector('dialog[data-scoreboard-dialog]');
+                return dialog?.open && dialog.querySelector('.scoreboard-status')?.textContent
+                    ?.includes('not live yet');
+            }, { timeout: 6000 });
+            await page.evaluate(() => document.querySelector('dialog[data-scoreboard-dialog]').close());
             if (pageErrors.length) errors.push(game.id + ': page exceptions: ' + pageErrors.join(' | ').slice(0, 600));
         } catch (error) {
             errors.push(game.id + ': ' + String(error.message || error).slice(0, 500));
