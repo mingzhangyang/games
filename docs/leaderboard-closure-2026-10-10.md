@@ -21,7 +21,7 @@ The new `scores.ui: "dialog"` entry declares shared visible UI ownership. `tests
 
 **Scope exclusions:** Gomoku remains unranked until a difficulty-specific versus-AI win-streak system is designed, and Word Daily continues using its existing global participation/win-rate statistics instead of a saturated 1–6-guess leaderboard. External games are outside this repository.
 
-**Validation and deployment:** First merge source/tests; then deploy the main site and `npm run deploy:scores` (new Worker allowlist) together. Do not deploy the site without the Worker whitelist. The backend accepts client-supplied scores; these boards are casual community rankings, not server-authoritative competition. For anti-cheat requirements, the score-proof protocol and persistence backend would need separate work.
+**Validation and deployment:** The shared scoreboard backend is a prerequisite for the site: publish scores first, verify the live API, and only then deploy the site. The standard `npm run deploy` and `npm run deploy:all` commands now enforce this dependency automatically. The backend accepts client-supplied scores; these boards are casual community rankings, not server-authoritative competition. For anti-cheat requirements, a score-proof protocol would need separate work.
 
 **CSS activation contract:** The six pages register the new `css/scoreboard-dialog.css` stylesheet through `tests/lib/css/feature-additions.mjs`. The additive component is layered under `components`, has a fixed consumer list, and is validated separately. The immutable CSS P0/P5 source/link/activation snapshots are compared after subtracting only this explicitly reviewed addition; unregistered CSS links and pre-existing CSS changes remain errors. Needle Awn's result row uses the existing shared `game-action-row` rather than a new page-specific rule.
 
@@ -52,7 +52,37 @@ context so a fresh dialog shows today's leaderboard.
 `GameScoreBoard` class through a `new_sqlite_classes` migration. Run
 `npm run verify`, `npm run build` and
 `npx wrangler deploy --dry-run -c Workers/wrangler-game-scores.jsonc` before
-coordinated main-site and scores-Worker deployment. After first live migration,
+ordered scores-Worker-first release. After first live migration,
 **do not roll back only the scores Worker to KV-writing code**: it would show stale
 snapshots and lose all scores written to Durable Objects. A deployed Worker roundtrip
 is a separate release check, not performed by source-only verification.
+
+## Modal keyboard isolation and dependency-safe publication
+
+**Input ownership.** The shared native leaderboard dialog intercepts bubbling
+`keydown`, `keyup` and `keypress` events at the dialog boundary. Modal
+controls still receive their normal keyboard behavior, including text editing,
+Tab focus movement and native Escape-to-close, but the six games' document and
+window gameplay handlers never receive those events while a focused modal
+control is active. `tests/smoke-scoreboard-dialog.mjs` verifies this behavior
+across every dialog consumer in real browser viewports.
+
+**Release ownership.** Use `npm run deploy` for the site, or `npm run
+deploy:all` for all Workers. Both now call `tools/deploy/release.mjs`:
+registry drift check → `deploy:scores` (including the SQLite migration)
+→ `verify:scores:live` (read-only, real HTTP requests against legacy and
+new keys with retries) → remaining Worker deployments if requested →
+site build → site publish. Any failure aborts immediately **before site
+publication**. A scores-only GitHub Actions dispatch also verifies its
+live endpoint after deployment. Never bypass these commands with an
+uncoordinated standalone `wrangler deploy`.
+
+**Important: Cloudflare Git integration is an independent deployment path.**
+If Cloudflare Workers Builds automatically deploys on a push to `main`,
+its dashboard **Deploy command** must be configured to `npm run deploy`
+(instead of `npx wrangler deploy`), or automatic production deployment must
+be disabled so only the repo's guarded workflow publishes the site. Changing
+`package.json` alone cannot change a remotely configured automatic deploy
+command. This configuration must be checked before merging: otherwise a Git
+push can still publish the new site before the scores Worker. The existing
+Cloudflare dashboard configuration has **not** been modified as part of this PR.

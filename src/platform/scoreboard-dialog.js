@@ -193,6 +193,12 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         description.textContent = value(boardFor(select.value)?.description, lang());
         void refresh();
     });
+    // Modal owns its keyboard events. Let native input/select/Tab/Escape behavior
+    // run, but never bubble those keys to each game's document/window controls.
+    // In particular Escape must retain the native dialog close default.
+    for (const type of ['keydown', 'keyup', 'keypress']) {
+        dialog.addEventListener(type, event => event.stopPropagation());
+    }
     dialog.addEventListener('close', () => { ++requestId; onClose(); });
     dialog.addEventListener('click', event => {
         if (event.target === dialog) dialog.close();

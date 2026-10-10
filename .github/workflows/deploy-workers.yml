@@ -2,8 +2,10 @@ name: Deploy Workers
 
 # Manual deploy for the standalone Workers (and optionally the site), so a
 # Worker can be published from the GitHub web UI / mobile app without a local
-# wrangler setup. The site itself is normally deployed by Cloudflare's git
-# integration on push to main; "site" here is only a fallback.
+# wrangler setup. The site is also deployed by Cloudflare Git integration.
+# Configure that integration to use "npm run deploy" (Worker first + live gate),
+# not a standalone site deploy. Otherwise disable its automatic production
+# deployments and use the verified site/all target here.
 #
 # One-time setup (repo Settings -> Secrets and variables -> Actions):
 #   CLOUDFLARE_API_TOKEN   API token created from Cloudflare's
@@ -66,7 +68,7 @@ jobs:
         run: |
           case "$TARGET" in
             analytics)  npm run deploy:analytics ;;
-            scores)     npm run deploy:scores ;;
+            scores)     npm run deploy:scores && npm run verify:scores:live ;;
             word-stats) npm run deploy:word-stats ;;
             site)       npm run deploy ;;
             all)        npm run deploy:all ;;

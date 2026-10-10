@@ -106,8 +106,48 @@ try {
                 await page.waitForFunction(() => document.querySelector('.game-lb-name')?.textContent === 'Test Player');
                 if (requests.at(-1)?.key === beforeKey) errors.push(game.id + ': selector did not change remote key');
             }
+            // A modal's focused controls must own keyboard input. Game-level
+            // document/window shortcuts (Tank P, Math Rain Space, Needle Escape)
+            // must never see the events or resume the world underneath.
+            const focusReady = await page.evaluate(() => {
+                const dialog = document.querySelector('dialog[data-scoreboard-dialog]');
+                const input = dialog.querySelector('.game-lb-username');
+                window.__scoreboardKeyLeaks = [];
+                document.addEventListener('keydown', event => {
+                    window.__scoreboardKeyLeaks.push('document:down:' + event.code);
+                });
+                window.addEventListener('keyup', event => {
+                    window.__scoreboardKeyLeaks.push('window:up:' + event.code);
+                });
+                // Use a known short value so the maxLength=20 cap cannot
+                // turn the typed-key regression into a false negative.
+                window.__scoreboardOldName = input.value;
+                input.value = 'KeyTest';
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
+                return document.activeElement === input;
+            });
+            if (!focusReady) errors.push(game.id + ': nickname input could not receive native focus');
+            await page.keyboard.press('p');
+            await page.keyboard.press('Space');
+            const keyboardWhileOpen = await page.evaluate(() => {
+                const input = document.querySelector('.game-lb-username');
+                return { leaks: window.__scoreboardKeyLeaks.slice(), inputValue: input.value,
+                    open: document.querySelector('dialog[data-scoreboard-dialog]').open };
+            });
+            if (!keyboardWhileOpen.open || keyboardWhileOpen.inputValue !== 'KeyTestp '
+                || keyboardWhileOpen.leaks.length) {
+                errors.push(game.id + ': modal keyboard reached gameplay or broke input: '
+                    + JSON.stringify(keyboardWhileOpen));
+            }
+            await page.evaluate(() => {
+                document.querySelector('.game-lb-username').value = window.__scoreboardOldName;
+            });
             await page.keyboard.press('Escape');
             await page.waitForFunction(() => !document.querySelector('dialog[data-scoreboard-dialog]')?.open);
+            const escapeLeaks = await page.evaluate(() =>
+                window.__scoreboardKeyLeaks.filter(key => key.endsWith(':down:Escape')));
+            if (escapeLeaks.length) errors.push(game.id + ': Escape leaked into gameplay: ' + escapeLeaks.join(','));
             if (pageErrors.length) errors.push(game.id + ': page exceptions: ' + pageErrors.join(' | ').slice(0, 600));
         } catch (error) {
             errors.push(game.id + ': ' + String(error.message || error).slice(0, 500));
