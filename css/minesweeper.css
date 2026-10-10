@@ -470,6 +470,14 @@ body {
 
 .ms-username:focus { border-color: var(--ms-username-focus-border); }
 
+.ms-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 2px;
+}
+
 .ms-btn {
     display: inline-flex;
     align-items: center;
@@ -498,6 +506,8 @@ body {
     border: none;
     box-shadow: var(--ms-btn-primary-shadow);
 }
+
+.ms-btn-ghost { background: transparent; color: var(--tok-text-dim); }
 
 .ms-btn-big { font-size: 16px; padding: 14px 34px; }
 
