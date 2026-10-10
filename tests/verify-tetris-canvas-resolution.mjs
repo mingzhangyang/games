@@ -2,7 +2,10 @@
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
-import { LOGICAL_W, LOGICAL_H, MAX_DPR, calculateCanvasResolution, applyCanvasResolution } from '../src/games/tetris/canvas-resolution.js';
+import {
+    LOGICAL_W, LOGICAL_H, MAX_DPR, calculateCanvasResolution,
+    applyCanvasResolution, watchDevicePixelRatio,
+} from '../src/games/tetris/canvas-resolution.js';
 
 assert.equal(LOGICAL_W, 400);
 assert.equal(LOGICAL_H, 800);
@@ -17,6 +20,71 @@ const planned = calculateCanvasResolution(464, 2);
 assert.equal(applyCanvasResolution(fakes, planned), true);
 assert.equal(applyCanvasResolution(fakes, planned), false);
 assert.ok(fakes.every(c => c.width === 928 && c.height === 1856));
+
+
+// Verify the actual media-query subscription and re-arm contract, independent
+// of CDP device emulation (which does not dispatch real DPR change events).
+function verifyDprWatchLifecycle(legacy) {
+    let currentDpr = 1;
+    const queries = [];
+    const notifications = [];
+    const matchMedia = media => {
+        const listeners = new Set();
+        const query = {
+            media,
+            emit() { for (const callback of [...listeners]) callback({ matches: false }); },
+            get listeners() { return listeners.size; },
+        };
+        if (legacy) {
+            query.addListener = callback => listeners.add(callback);
+            query.removeListener = callback => listeners.delete(callback);
+        } else {
+            query.addEventListener = (type, callback) => {
+                assert.equal(type, 'change');
+                listeners.add(callback);
+            };
+            query.removeEventListener = (type, callback) => {
+                assert.equal(type, 'change');
+                listeners.delete(callback);
+            };
+        }
+        queries.push(query);
+        return query;
+    };
+    const stop = watchDevicePixelRatio(matchMedia, () => currentDpr,
+        () => notifications.push(currentDpr));
+    assert.equal(queries.length, 1);
+    assert.equal(queries[0].media, '(resolution: 1dppx)');
+    assert.equal(queries[0].listeners, 1);
+
+    currentDpr = 2;
+    queries[0].emit();
+    assert.deepEqual(notifications, [2]);
+    assert.equal(queries[0].listeners, 0, 'old listener must be removed');
+    assert.equal(queries[1].media, '(resolution: 2dppx)');
+    assert.equal(queries[1].listeners, 1);
+
+    // An old event must not re-arm or notify again.
+    queries[0].emit();
+    assert.equal(queries.length, 2);
+    assert.deepEqual(notifications, [2]);
+
+    currentDpr = 1.5;
+    queries[1].emit();
+    assert.deepEqual(notifications, [2, 1.5]);
+    assert.equal(queries[1].listeners, 0);
+    assert.equal(queries[2].media, '(resolution: 1.5dppx)');
+    assert.equal(queries[2].listeners, 1);
+
+    stop();
+    stop();
+    assert.equal(queries[2].listeners, 0);
+    queries[2].emit();
+    assert.deepEqual(notifications, [2, 1.5]);
+}
+verifyDprWatchLifecycle(false);
+verifyDprWatchLifecycle(true);
+assert.doesNotThrow(() => watchDevicePixelRatio(null, () => 1, () => {})());
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 const failures = [];
@@ -132,9 +200,23 @@ try {
                 width: v.width, height: v.height, deviceScaleFactor: v.dpr,
                 hasTouch: v.width < 500, isMobile: v.width < 500,
             });
-            await page.evaluateOnNewDocument(({ lang, theme }) => {
+            await page.evaluateOnNewDocument(({ lang, theme, dynamic }) => {
                 localStorage.setItem('site_lang', lang);
                 localStorage.setItem('site_theme', theme);
+                if (dynamic) {
+                    // Record the *native* MQLs the game subscribes to, before
+                    // the runtime boots. The verifier can dispatch 'change'
+                    // on that real EventTarget, never a generic resize event.
+                    const native = window.matchMedia.bind(window);
+                    window.__w6bResolutionQueries = [];
+                    window.matchMedia = expression => {
+                        const query = native(expression);
+                        if (expression.startsWith('(resolution: ')) {
+                            window.__w6bResolutionQueries.push(query);
+                        }
+                        return query;
+                    };
+                }
             }, v);
             await page.goto(BASE + '/tetris.html', { waitUntil: 'load' });
             await ready(page);
@@ -221,22 +303,47 @@ try {
             }
 
             if (v.dynamic) {
+                const initialQueries = await page.evaluate(
+                    () => window.__w6bResolutionQueries?.map(q => q.media) || []);
+                check(initialQueries.includes('(resolution: 1dppx)'),
+                    'monitor-DPR listener registered before resizing',
+                    initialQueries.join(', '));
                 let previous = { width: first.clientWidth, dpr: first.dpr };
+                let viewport = { width: v.width, height: v.height };
                 for (const next of [
                     { width: 1920, height: 1080, dpr: 1 },
                     { width: 1920, height: 1080, dpr: 2 },
+                    { width: 1920, height: 1080, dpr: 1 },
                     { width: 1440, height: 900, dpr: 1 },
                 ]) {
                     await page.setViewport({
                         width: next.width, height: next.height, deviceScaleFactor: next.dpr,
                     });
-                    // CDP's synthetic deviceScaleFactor change updates DPR and
-                    // matchMedia.matches but emits NO resize / media-query change
-                    // event at unchanged viewport size. Real monitor changes
-                    // deliver browser notifications; emulate that notification
-                    // explicitly so the test verifies the supported resize path.
-                    if (next.dpr !== previous.dpr) {
-                        await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+                    // CDP updates devicePixelRatio at an unchanged viewport,
+                    // but fails to dispatch native matchMedia 'change'. Emit
+                    // change on the game's *actual subscribed* MQL instead of
+                    // using window.resize (which would hide a broken DPR hook).
+                    if (next.dpr !== previous.dpr
+                        && next.width === viewport.width && next.height === viewport.height) {
+                        const transition = await page.evaluate(() => {
+                            const queries = window.__w6bResolutionQueries || [];
+                            const old = queries[queries.length - 1];
+                            if (!old) return null;
+                            const before = queries.length;
+                            const from = old.media;
+                            old.dispatchEvent(new Event('change'));
+                            const after = queries.length;
+                            const to = queries[queries.length - 1].media;
+                            // A detached, stale listener must no longer re-arm.
+                            old.dispatchEvent(new Event('change'));
+                            return { from, to, rearmed: after === before + 1,
+                                staleDetached: queries.length === after };
+                        });
+                        check(transition?.rearmed && transition?.staleDetached
+                            && transition.from === `(resolution: ${previous.dpr}dppx)`
+                            && transition.to === `(resolution: ${next.dpr}dppx)`,
+                        `monitor DPR ${previous.dpr} -> ${next.dpr} re-arms actual MQL`,
+                        JSON.stringify(transition));
                     }
                     await ready(page, previous);
                     const after = await page.evaluate(snapshot);
@@ -245,6 +352,7 @@ try {
                     check(JSON.stringify(after.game) === JSON.stringify(first.game),
                         'resizing stopped game retains full state');
                     previous = { width: after.clientWidth, dpr: after.dpr };
+                    viewport = { width: next.width, height: next.height };
                 }
                 await page.evaluate(() => window.dispatchEvent(new Event('game-frame:changed')));
                 const repeated = await page.evaluate(snapshot);

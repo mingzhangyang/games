@@ -27,3 +27,46 @@ export function applyCanvasResolution(canvases, resolution) {
     }
     return changed;
 }
+
+/**
+ * Observe monitor-DPR changes without polling or mutating CSS sizing.
+ *
+ * The media query stops matching after a DPR switch. Re-arm it at the new DPR
+ * before notifying the owner, so a second monitor switch is also observed.
+ * The injected adapters keep this lifecycle testable without a browser.
+ */
+export function watchDevicePixelRatio(matchMedia, readDpr, notify) {
+    if (typeof matchMedia !== 'function') return () => {};
+    let active = true;
+    let unlisten = () => {};
+
+    const changed = () => {
+        if (!active) return;
+        unlisten();
+        subscribe();
+        notify();
+    };
+
+    function subscribe() {
+        const rawDpr = readDpr();
+        const dpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1;
+        const query = matchMedia(`(resolution: ${dpr}dppx)`);
+        if (typeof query?.addEventListener === 'function') {
+            query.addEventListener('change', changed);
+            unlisten = () => query.removeEventListener('change', changed);
+        } else if (typeof query?.addListener === 'function') {
+            // Safari's older MediaQueryList exposes addListener/removeListener.
+            query.addListener(changed);
+            unlisten = () => query.removeListener(changed);
+        } else {
+            unlisten = () => {};
+        }
+    }
+
+    subscribe();
+    return () => {
+        if (!active) return;
+        active = false;
+        unlisten();
+    };
+}

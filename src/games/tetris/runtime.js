@@ -1,4 +1,7 @@
-import { LOGICAL_W, LOGICAL_H, calculateCanvasResolution, applyCanvasResolution } from './canvas-resolution.js';
+import {
+    LOGICAL_W, LOGICAL_H, calculateCanvasResolution, applyCanvasResolution,
+    watchDevicePixelRatio,
+} from './canvas-resolution.js';
 import { getLang } from '../../platform/site-settings.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { createSfx } from '../../platform/game-sfx.js';
@@ -608,21 +611,15 @@ export class Tetris {
             this.canvasResizeObserver = new ResizeObserver(sync);
             this.canvasResizeObserver.observe(this.canvas.parentElement);
         }
-        // Switching monitors may change DPR without a browser resize.
-        // Re-arm the resolution media query whenever DPR changes.
-        if (typeof window.matchMedia === 'function') {
-            let query;
-            const onDprChange = () => {
-                query.removeEventListener?.('change', onDprChange);
-                listenAtCurrentDpr();
-                sync();
-            };
-            const listenAtCurrentDpr = () => {
-                query = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
-                query.addEventListener?.('change', onDprChange);
-            };
-            listenAtCurrentDpr();
-        }
+        // Unlike a viewport resize, a monitor switch may change only DPR.
+        // The watcher re-arms the media query after each change (including
+        // legacy addListener implementations) and notifies this same sync path.
+        this.stopDprObservation = watchDevicePixelRatio(
+            typeof window.matchMedia === 'function'
+                ? window.matchMedia.bind(window) : null,
+            () => window.devicePixelRatio || 1,
+            sync,
+        );
     }
 
     createStars() {
