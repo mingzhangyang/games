@@ -1,3 +1,7 @@
+import {
+    LOGICAL_W, LOGICAL_H, calculateCanvasResolution, applyCanvasResolution,
+    watchDevicePixelRatio,
+} from './canvas-resolution.js';
 import { getLang } from '../../platform/site-settings.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { createSfx } from '../../platform/game-sfx.js';
@@ -467,7 +471,7 @@ class LineClearAnimation {
             ctx.fillStyle = this.color;
             ctx.shadowBlur = 20;
             ctx.shadowColor = this.color;
-            ctx.fillRect(0, this.y * 40, 400, 40);
+            ctx.fillRect(0, this.y * 40, LOGICAL_W, 40);
             ctx.restore();
         }
         
@@ -568,19 +572,54 @@ export class Tetris {
         this.setupControls();
         this.createStars();
         
-        // 只创建一次 gridCanvas 并复用
+        // Grid artwork is cached; its backing must match all three visible layers.
         if (!Tetris.gridCanvas) {
             Tetris.gridCanvas = document.createElement('canvas');
-            Tetris.gridCanvas.width = this.canvas.width;
-            Tetris.gridCanvas.height = this.canvas.height;
             Tetris.gridCtx = Tetris.gridCanvas.getContext('2d');
-            this.gridCanvas = Tetris.gridCanvas;
-            this.gridCtx = Tetris.gridCtx;
-            this.drawGrid();
-        } else {
-            this.gridCanvas = Tetris.gridCanvas;
-            this.gridCtx = Tetris.gridCtx;
         }
+        this.gridCanvas = Tetris.gridCanvas;
+        this.gridCtx = Tetris.gridCtx;
+        this.renderScale = 0;
+        this.syncCanvasResolution();
+        this.observeCanvasResolution();
+    }
+
+    /** Synchronize backing stores without touching gameplay or timers. */
+    syncCanvasResolution() {
+        const resolution = calculateCanvasResolution(
+            this.canvas.clientWidth || LOGICAL_W, window.devicePixelRatio || 1,
+        );
+        if (!resolution) return;
+        const canvases = [
+            this.canvas, this.particleCanvas, this.lineClearCanvas, this.gridCanvas,
+        ];
+        const resized = applyCanvasResolution(canvases, resolution);
+        if (!resized && this.renderScale === resolution.scale) return;
+        this.renderScale = resolution.scale;
+        this.drawGrid();
+        // There is no active loop before Start, while paused or after Game Over.
+        // Repaint all layers immediately without progressing effect animations.
+        this.draw(false);
+    }
+
+    /** Track viewport, frame-budget, stage size and physical DPR changes. */
+    observeCanvasResolution() {
+        const sync = () => this.syncCanvasResolution();
+        window.addEventListener('resize', sync);
+        window.addEventListener('game-frame:changed', sync);
+        if (typeof ResizeObserver !== 'undefined') {
+            this.canvasResizeObserver = new ResizeObserver(sync);
+            this.canvasResizeObserver.observe(this.canvas.parentElement);
+        }
+        // Unlike a viewport resize, a monitor switch may change only DPR.
+        // The watcher re-arms the media query after each change (including
+        // legacy addListener implementations) and notifies this same sync path.
+        this.stopDprObservation = watchDevicePixelRatio(
+            typeof window.matchMedia === 'function'
+                ? window.matchMedia.bind(window) : null,
+            () => window.devicePixelRatio || 1,
+            sync,
+        );
     }
 
     createStars() {
@@ -882,8 +921,8 @@ export class Tetris {
         // 粒子特效
         for (let i = 0; i < 80; i++) {
             this.particles.push(new Particle(
-                Math.random() * this.canvas.width,
-                Math.random() * this.canvas.height,
+                Math.random() * LOGICAL_W,
+                Math.random() * LOGICAL_H,
                 this.rainbowColors[Math.floor(Math.random() * this.rainbowColors.length)]
             ));
         }
@@ -913,16 +952,17 @@ export class Tetris {
         }, 2000);
         for (let i = 0; i < 50; i++) {
             this.particles.push(new Particle(
-                Math.random() * this.canvas.width,
-                Math.random() * this.canvas.height,
+                Math.random() * LOGICAL_W,
+                Math.random() * LOGICAL_H,
                 this.rainbowColors[Math.floor(Math.random() * this.rainbowColors.length)]
             ));
         }
     }
 
     drawGrid() {
+        this.gridCtx.setTransform(this.renderScale, 0, 0, this.renderScale, 0, 0);
         this.gridCtx.fillStyle = '#0a0a0a';
-        this.gridCtx.fillRect(0, 0, this.gridCanvas.width, this.gridCanvas.height);
+        this.gridCtx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
         
         this.gridCtx.strokeStyle = 'rgba(102, 126, 234, 0.2)';
         this.gridCtx.lineWidth = 0.5;
@@ -930,14 +970,14 @@ export class Tetris {
         for (let x = 0; x <= this.cols; x++) {
             this.gridCtx.beginPath();
             this.gridCtx.moveTo(x * this.blockSize, 0);
-            this.gridCtx.lineTo(x * this.blockSize, this.canvas.height);
+            this.gridCtx.lineTo(x * this.blockSize, LOGICAL_H);
             this.gridCtx.stroke();
         }
         
         for (let y = 0; y <= this.rows; y++) {
             this.gridCtx.beginPath();
             this.gridCtx.moveTo(0, y * this.blockSize);
-            this.gridCtx.lineTo(this.canvas.width, y * this.blockSize);
+            this.gridCtx.lineTo(LOGICAL_W, y * this.blockSize);
             this.gridCtx.stroke();
         }
     }
@@ -965,10 +1005,14 @@ export class Tetris {
         this.ctx.fillRect(pixelX + 1, pixelY + this.blockSize - 5, this.blockSize - 2, 4);
     }
 
-    draw() {
-        // Clear canvas
+    draw(advance = true) {
+        const frameDelta = advance ? this.deltaTime : 0;
+        // Idempotent base transform on all three layers. Never use ctx.scale().
+        for (const ctx of [this.ctx, this.particleCtx, this.lineClearCtx]) {
+            ctx.setTransform(this.renderScale, 0, 0, this.renderScale, 0, 0);
+        }
         this.ctx.fillStyle = '#0a0a0a';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
 
         // Draw glow 拖尾（更亮更慢消失）
         if (this.tailGlow && this.tailGlow.length) {
@@ -985,22 +1029,23 @@ export class Tetris {
                 this.ctx.restore();
             }
             // 拖尾渐隐消失（更慢）
-            this.tailGlow = this.tailGlow.map(g => ({...g, alpha: g.alpha * Math.pow(0.95, this.deltaTime), size: g.size * Math.pow(0.98, this.deltaTime)})).filter(g => g.alpha > 0.03 && g.size > 2);
+            this.tailGlow = this.tailGlow.map(g => ({...g, alpha: g.alpha * Math.pow(0.95, frameDelta), size: g.size * Math.pow(0.98, frameDelta)})).filter(g => g.alpha > 0.03 && g.size > 2);
         }
 
-        // Apply screen shake
-        if (this.shakeAmount > 0) {
+        // Restore even on the frame that crosses the shake-decay threshold.
+        const shaking = this.shakeAmount > 0;
+        if (shaking) {
             this.ctx.save();
             this.ctx.translate(
                 (Math.random() - 0.5) * this.shakeAmount,
                 (Math.random() - 0.5) * this.shakeAmount
             );
-            this.shakeAmount *= Math.pow(0.9, this.deltaTime);
-            if (this.shakeAmount < 0.1) this.shakeAmount = 0;
+            this.shakeAmount *= Math.pow(0.9, frameDelta);
+            if (advance && this.shakeAmount < 0.1) this.shakeAmount = 0;
         }
 
         // Draw grid
-        this.ctx.drawImage(this.gridCanvas, 0, 0);
+        this.ctx.drawImage(this.gridCanvas, 0, 0, LOGICAL_W, LOGICAL_H);
 
         // Draw locked blocks
         for (let y = 0; y < this.rows; y++) {
@@ -1027,22 +1072,22 @@ export class Tetris {
             }
         }
 
-        if (this.shakeAmount > 0) {
+        if (shaking) {
             this.ctx.restore();
         }
 
         // Draw particles
-        this.particleCtx.clearRect(0, 0, this.particleCanvas.width, this.particleCanvas.height);
+        this.particleCtx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
         this.particles = this.particles.filter(particle => {
-            particle.update(this.deltaTime);
+            particle.update(frameDelta);
             particle.draw(this.particleCtx);
             return particle.life > 0;
         });
 
         // Draw line clear animations
-        this.lineClearCtx.clearRect(0, 0, this.lineClearCanvas.width, this.lineClearCanvas.height);
+        this.lineClearCtx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
         this.lineClearAnimations = this.lineClearAnimations.filter(animation => {
-            const active = animation.update(this.deltaTime);
+            const active = animation.update(frameDelta);
             animation.draw(this.lineClearCtx);
             return active;
         });

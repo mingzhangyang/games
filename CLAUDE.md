@@ -65,7 +65,7 @@ npm run verify:changed  # 按 git diff 只跑相关项（单页改动约 40s；�
 
 **Game-specific JavaScript**:
 - `src/games/math-rain/index.js` - Math Rain orchestrator; game logic is event-driven across `src/games/math-rain/` (systems/, core/, i18n/)
-- `src/games/tetris/` - Tetris package (composition root, runtime, and compatibility entry)
+- `src/games/tetris/` - Tetris package (composition root, runtime, and compatibility entry). `canvas-resolution.js` owns logical 400×800 versus raster backing: playfield/particle/line-clear/grid cache use one CSS-width × capped DPR plan, redraw after resize / `game-frame:changed` without advancing game state. Do not use backing `canvas.width` as world coordinates, accumulate `ctx.scale()`, or size overlay layers independently.
 - `src/games/tank-battle/index.js` - Tank Battle game implementation
 - `src/games/gomoku/index.js` - Gomoku board, win detection, and AI
 
