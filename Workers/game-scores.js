@@ -75,7 +75,9 @@ const DAILY_PATTERNS = [
 // registry:end games-scores
 
 function resolveGame(game) {
-  if (GAMES[game]) return GAMES[game];
+  if (typeof game !== 'string') return null;
+  // Plain object prototypes are not valid game IDs (e.g. "__proto__").
+  if (Object.prototype.hasOwnProperty.call(GAMES, game)) return GAMES[game];
   for (const p of DAILY_PATTERNS) {
     // Reject nonexistent or unbounded date suffixes BEFORE idFromName(),
     // on both GET and POST. The Origin header is not authentication.

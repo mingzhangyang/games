@@ -66,7 +66,7 @@ async function request(game, method) {
         options.headers['Content-Type'] = 'application/json';
         options.body = JSON.stringify({ game, name: 'Tester', score: 4 });
     }
-    return worker.fetch(new Request(url, options), env);
+    return worker.fetch(new globalThis.Request(url, options), env);
 }
 
 const invalid = [
@@ -78,6 +78,7 @@ const invalid = [
     daily(utcDay(today + 2 * DAY)),
     'gravity-d12345678',
     'lumen-d20260010',
+    '__proto__', 'constructor', 'toString', // Not inherited allowlist entries.
 ];
 for (const game of invalid) {
     for (const method of ['GET', 'POST']) {
