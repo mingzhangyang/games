@@ -2,10 +2,12 @@
 // W7 audit-only closure: reviewed high-return families and no silent coverage downgrade.
 // CSS baselines and historical migration transactions are deliberately not rewritten here.
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { buildCssDuplicationAudit } from './lib/css/duplication-audit.mjs';
+import { discover } from './verify-all.mjs';
 import { registry } from './lib/registry.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -70,19 +72,59 @@ const observedHtml = htmlBaseline.htmlFiles.map(entry => entry.path).sort();
 assert.deepEqual(observedHtml, expectedHtml,
     'P0 HTML activation coverage does not equal home + 404 + every registry game');
 
-// Any new verifier-level escape from a hard failure must be explicitly reviewed.
-const testFiles = readdirSync(join(ROOT, 'tests'))
-    .filter(file => /^(verify|smoke)-.+\.mjs$/.test(file));
-const silentGaps = testFiles.filter(file =>
-    /\bknownGaps?\s*(?::|=)/.test(read('tests/' + file)));
-assert.deepEqual(silentGaps, [],
-    'verifier introduced a knownGap downgrade; register, justify and review it separately');
+// Reuse the full verification runner's actual test discovery rather than a second
+// filename filter; this includes fg-audit, placeholder-leak-check, and future tests.
+// verify-all.mjs runs its suite only when it is the CLI entrypoint.
+const GAP_ASSIGNMENT = /\bknownGaps?\s*(?::|=)/;
+function findSilentGaps(suite, sourceOf) {
+    return suite.filter(({ script }) => GAP_ASSIGNMENT.test(sourceOf(script)))
+        .map(({ script }) => script);
+}
+const discoveredSuite = discover();
+assert.ok(discoveredSuite.some(({ script }) => script === 'tests/verify-css-w7-closure.mjs'),
+    'W7 guard must itself be discoverable by the full verification runner');
+assert.deepEqual(findSilentGaps(discoveredSuite, read), [],
+    'auto-discovered verifier introduced a knownGap downgrade; review and register it separately');
 
-// A previous base .game-toast white-space rule broke wrapped messages in other games.
-const toastRule = read('css/layout.css').match(/\.game-toast\s*\{([^}]*)\}/);
-assert.ok(toastRule, 'shared .game-toast contract disappeared');
-assert.doesNotMatch(toastRule[1], /\bwhite-space\s*:/,
-    'shared .game-toast must not force nowrap; wrapping belongs to each page');
+// Every discovered script, including non verify-/smoke- names, must be scanned.
+// Build the negative fixture in two pieces so the scanning test is not itself a hit.
+const injectedGap = ['const known', 'Gap = true;'].join('');
+for (const { script } of discoveredSuite) {
+    assert.deepEqual(findSilentGaps(discoveredSuite, path => path === script ? injectedGap : ''), [script],
+        script + ': a verifier must not silently escape the downgrade scan');
+}
+const injectedGapMap = ['const known', 'Gaps: {}'].join('');
+assert.deepEqual(findSilentGaps([{ script: 'tests/fixture.mjs' }], () => injectedGapMap),
+    ['tests/fixture.mjs'], 'plural knownGaps assignments must also be detected');
+
+// Reuse the PostCSS-backed CSS contract parser: inspect every rule and every
+// media/layer/selector-list occurrence, rather than the first regex match.
+const TOAST_CLASS = /(^|[^a-zA-Z0-9_-])\.game-toast(?![a-zA-Z0-9_-])/;
+function findToastWhiteSpace(cssText) {
+    const rules = parseCssText(cssText, 'css/layout.css').rules
+        .filter(({ selector }) => TOAST_CLASS.test(selector));
+    assert.ok(rules.length, 'shared .game-toast contract disappeared');
+    return rules.flatMap(rule => rule.migrationDeclarations
+        .filter(({ property }) => property.toLowerCase() === 'white-space')
+        .map(() => rule.selector + ' (' + (rule.layer || 'unlayered') + ')'));
+}
+assert.deepEqual(findToastWhiteSpace(read('css/layout.css')), [],
+    'shared .game-toast must not impose white-space, including media/layer and selector lists');
+
+// Mutation probes: later declarations, selector lists and modifier rules must all
+// fail while similarly named classes must not trigger a false positive.
+const cleanToast = '@layer layout { .game-toast { pointer-events: none; } }';
+assert.deepEqual(findToastWhiteSpace(cleanToast
+    + ' @media (width <= 480px) { .game-toast-copy { white-space: nowrap; } }'), [],
+    'lookalike classes must not be treated as .game-toast');
+for (const mutation of [
+    '@media (width <= 480px) { .game-toast { white-space: nowrap; } }',
+    '@layer components { .other, .game-toast { white-space: pre; } }',
+    '@layer layout { .game-toast.is-on { white-space: nowrap; } }',
+]) {
+    assert.ok(findToastWhiteSpace(cleanToast + '\n' + mutation).length > 0,
+        'toast selector or media/layer mutation escaped the AST guard: ' + mutation);
+}
 
 console.log('PASS W7 CSS closure: ' + candidateCount + ' reviewed high-return families, '
     + registry.all().length + ' registered games in P0 activation, '

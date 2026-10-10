@@ -56,8 +56,8 @@
 
 1. 根据实时 PostCSS duplication audit **重新计算**所有达到 15 声明副本的候选；`tests/css-w7-reviewed-families.json` 必须恰好覆盖它们，路径、族 ID、类别、收益和审计 digest 都不得漂移。
 2. 用 `games.config.json` 与完整 P0 HTML 清单做双向登记检查。新增游戏如果没有进入样式激活清单，必须失败，而不是被忽略。
-3. 对活动 verifier 的 `knownGaps` / `knownGap` 赋值进行扫描：当前无允许的降级。若以后确实需要降级，须先独立审查、登记 backlog 并明确修改守卫，不可静默回退硬断言。
-4. 保护基础 `.game-toast` 不设 `white-space`：过去它曾强制不换行、破坏 Planet Merge/Word Daily 等提示。
+3. **复用 `verify-all.mjs` 的 `discover()`** 遍历全部活动 verifier（包括 `fg-audit.mjs`、`placeholder-leak-check.mjs`）；扫描 `knownGaps` / `knownGap` 赋值，对每个自动发现条目进行反向注入。若以后确实需要降级，须先独立审查、登记 backlog 并明确修改守卫。
+4. **复用 CSS 契约的 PostCSS 解析器**检查 `layout.css` 所有包含 `.game-toast` 的规则，包括媒体/层、组合选择器与状态规则；不准设置 `white-space`。反向测试覆盖后续覆盖规则、selector list 与近似类名。过去共享 toast 曾强制不换行、破坏 Planet Merge/Word Daily 等提示。
 5. 对遗漏族、伪造路径、错误 digest 运行反向变异断言，保证护栏确实会失败。
 
 这份 W7 决议表属于**可审查的后续维护登记**，不属于 immutable P0/P5/历史 migration ledger；未来合法 CSS 事务如改变候选族，必须在同一 PR 重新审计、解释决议变化，不能通过抬高阈值掩盖。
