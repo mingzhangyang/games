@@ -215,7 +215,6 @@ class MinesweeperGame {
     /* ── 语言 ── */
 
     applyLanguage() {
-        const t = this.TEXT;
         this.i18nBinder?.apply(this.lang);
         // Preserve transient Copied state while relocalizing it; timer restores using current TEXT.
         this.renderCopyButton(this.copyFeedbackTimer !== null);
