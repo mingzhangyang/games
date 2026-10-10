@@ -239,6 +239,47 @@ try {
                 window.__scoreboardKeyLeaks.filter(key => key.endsWith(':down:Escape')));
             if (escapeLeaks.length) errors.push(game.id + ': Escape leaked into gameplay: ' + escapeLeaks.join(','));
 
+            // Integration regression: #131 contextual retry and #130 rankings
+            // share the same real game lifecycle on Carrot Pull and Shadow Loom.
+            // Opening rankings must pause live play and hide restart; closing
+            // them must restore both without returning to the menu.
+            if (game.id === 'carrot-pull' || game.id === 'shadow-loom') {
+                if (game.id === 'carrot-pull') {
+                    await page.waitForFunction(() => ['ready', 'fallback']
+                        .includes(document.getElementById('cp-stage')?.dataset.artState),
+                    { timeout: 15000 });
+                }
+                await page.evaluate(id => {
+                    if (id === 'carrot-pull') window.cpGame.start();
+                    else window.slGame.startLevel(0);
+                }, game.id);
+                await page.waitForFunction(id => {
+                    const button = document.getElementById(id === 'carrot-pull' ? 'cp-reset-btn' : 'sl-reset-btn');
+                    const playing = id === 'carrot-pull'
+                        ? window.cpGame.state.mode === 'playing' && !window.cpGame.state.paused
+                        : window.slGame.state === 'playing' && !window.slGame.isPaused;
+                    return playing && button && !button.disabled && getComputedStyle(button).display !== 'none';
+                }, { timeout: 6000 }, game.id);
+                await page.click(trigger);
+                await page.waitForFunction(id => {
+                    const button = document.getElementById(id === 'carrot-pull' ? 'cp-reset-btn' : 'sl-reset-btn');
+                    const paused = id === 'carrot-pull'
+                        ? window.cpGame.state.mode === 'playing' && window.cpGame.state.paused
+                        : window.slGame.state === 'playing' && window.slGame.isPaused;
+                    return document.querySelector('dialog[data-scoreboard-dialog]')?.open
+                        && paused && button?.disabled && getComputedStyle(button).display === 'none';
+                }, { timeout: 6000 }, game.id);
+                await page.evaluate(() => document.querySelector('dialog[data-scoreboard-dialog]').close());
+                await page.waitForFunction(id => {
+                    const button = document.getElementById(id === 'carrot-pull' ? 'cp-reset-btn' : 'sl-reset-btn');
+                    const resumed = id === 'carrot-pull'
+                        ? window.cpGame.state.mode === 'playing' && !window.cpGame.state.paused
+                        : window.slGame.state === 'playing' && !window.slGame.isPaused;
+                    return !document.querySelector('dialog[data-scoreboard-dialog]')?.open
+                        && resumed && button && !button.disabled && getComputedStyle(button).display !== 'none';
+                }, { timeout: 6000 }, game.id);
+            }
+
             // Simulate a Cloudflare auto-published site outrunning the manually
             // deployed scoring Worker. Old Worker rejects the new board key.
             scoreWorkerReady = false;
