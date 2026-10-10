@@ -12,6 +12,7 @@ import PerformanceOptimizer from './core/PerformanceOptimizer.js';
 import ErrorHandler from './core/ErrorHandler.js';
 import UIController from './core/UIController.js';
 import { track } from '../../platform/analytics.js';
+import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
 // P1：外部组件静态 import 直连（替代原 window.* 全局轮询）
 import ExpressionGenerator from './expression-generator.js';
 import QuestionBankManager from './question-bank-manager.js';
@@ -20,6 +21,7 @@ import SoundManager from './sound-manager.js';
 import ParticleSystem from './particle-effects.js';
 import { getLocalizedText } from './i18n/language-manager.js';
 import { loadMathRainSfxVolume, loadMathRainMusicVolume } from './storage.js';
+import { invalidateOnDifficultyChange } from './leaderboard-eligibility.js';
 
 const MIN_EXPRESSION_TOUCH_TARGET = 44;
 
@@ -38,6 +40,7 @@ class MathRainGame {
             
             // Initialize core systems
             this.eventSystem = new EventSystem();
+            this.rankedRun = null;
             this.container = new DependencyContainer();
             this.errorHandler = new ErrorHandler(this.eventSystem);
             
@@ -124,6 +127,39 @@ class MathRainGame {
             
             // Setup event handlers
             this.setupEventHandlers();
+            const difficultyNames = [
+                ['Beginner', '入门级'], ['Elementary', '初级'],
+                ['Intermediate', '中级'], ['Advanced', '高级'],
+                ['Expert', '专家级'], ['Master', '大师级'],
+            ];
+            let pausedForRanking = false;
+            this.scoreboard = mountScoreboardDialog({
+                boards: difficultyNames.map(([en, zh], index) => ({
+                    id: String(index + 1),
+                    key: `math-rain-${index + 1}`,
+                    label: { en, zh },
+                    description: {
+                        en: '3-minute session, same starting difficulty, no power-ups. Higher score wins.',
+                        zh: '3 分钟完整会话、同一起始难度、未使用道具；分数越高越好。',
+                    },
+                })),
+                triggers: [
+                    { before: '#help-btn', icon: true, boardId: () => String(this.difficultyManager?.baseLevel || 1) },
+                    { before: '#settings-btn', icon: true, boardId: () => String(this.difficultyManager?.baseLevel || 1) },
+                    { before: '#play-again-btn', boardId: () => String(this.difficultyManager?.baseLevel || 1) },
+                    { before: '#session-continue-btn', boardId: () => String(this.difficultyManager?.baseLevel || 1) },
+                ],
+                onOpen: () => {
+                    pausedForRanking = this.gameStateManager?.gameState === 'playing';
+                    if (pausedForRanking) this.gameStateManager.pauseGame();
+                },
+                onClose: () => {
+                    if (pausedForRanking && this.gameStateManager?.gameState === 'paused') {
+                        this.gameStateManager.resumeGame();
+                    }
+                    pausedForRanking = false;
+                },
+            });
             
             // Load question bank
             await this.loadQuestionBank();
@@ -214,10 +250,21 @@ class MathRainGame {
         this.eventSystem.on('ui:powerup:shield', () => this.gameStateManager?.useShield());
         
         this.eventSystem.on('ui:difficulty:selected', (data) => {
+            const previousLevel = this.difficultyManager?.baseLevel;
             this.difficultyManager?.setBaseLevel(data.level);
+            // Settings pauses the game first. Any real change disqualifies the
+            // active run even when paused; returning to the old level cannot fix it.
+            invalidateOnDifficultyChange(this.rankedRun, previousLevel, this.difficultyManager?.baseLevel);
             this.expressionGenerator?.setDifficulty(data.level);
         });
         
+        // Power-ups make the ongoing session ineligible for competition.
+        for (const event of ['powerup:freeze:used', 'powerup:bomb:used', 'powerup:shield:used']) {
+            this.eventSystem.on(event, () => {
+                if (this.rankedRun) this.rankedRun.eligible = false;
+            });
+        }
+
         // Sound events
         this.eventSystem.on('ui:sound:click', () => this.safePlaySound('click'));
         this.eventSystem.on('answer:correct', (data) => {
@@ -288,6 +335,7 @@ class MathRainGame {
             }
         });
         this.eventSystem.on('game:over', () => {
+            this.rankedRun = null; // early death is not a completed three-minute session
             this.safePlaySound('gameOver');
             track('math-rain', 'finish');
             // 结束后停止渲染循环，避免空转耗电
@@ -411,6 +459,15 @@ class MathRainGame {
         
         // Session events
         this.eventSystem.on('session:completed', (sessionData) => {
+            // The clock and final score belong to the just-finished timed session.
+            const run = this.rankedRun;
+            this.rankedRun = null;
+            if (run?.eligible && this.sessionManager?.config.sessionDuration === 180000
+                && this.gameStateManager?.gameTime >= 175000
+                && this.difficultyManager?.baseLevel === run.level
+                && Number.isInteger(sessionData.finalScore) && sessionData.finalScore >= 0) {
+                void this.scoreboard.submit({ boardId: String(run.level), score: sessionData.finalScore });
+            }
             // Stop the game when session completes
             this.isRendering = false;
 
@@ -471,6 +528,8 @@ class MathRainGame {
 
             // Reset game state
             this.gameStateManager?.reset();
+            this.rankedRun = this.sessionManager?.areSessionsEnabled()
+                ? { level: this.difficultyManager?.baseLevel, eligible: true } : null;
             
             // Initialize session if enabled
             if (this.sessionManager?.areSessionsEnabled()) {
@@ -583,6 +642,9 @@ class MathRainGame {
     gameLoop() {
         const gameState = this.gameStateManager?.getState();
         if (gameState?.gameState !== 'playing') {
+            // The rAF chain has stopped. A later resume must be able to
+            // create a fresh chain instead of observing a stale running flag.
+            this._gameLoopRunning = false;
             return;
         }
         
@@ -1112,6 +1174,8 @@ class MathRainGame {
         
         // Reset game state first
         this.gameStateManager?.reset();
+        this.rankedRun = this.sessionManager?.areSessionsEnabled()
+            ? { level: this.difficultyManager?.baseLevel, eligible: true } : null;
         
         // Initialize session if enabled
         if (this.sessionManager?.areSessionsEnabled()) {

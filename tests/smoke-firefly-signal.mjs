@@ -32,6 +32,31 @@ const check = (cond, label, extra = '') => { if (cond) passes++; else fails.push
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 const page = await browser.newPage();
 await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+// This test solves a real level, so it also triggers a real score submission.
+// Stub the remote worker *before navigation*; no CI smoke test may submit
+// synthetic scores to production or depend on a production CORS allowlist.
+const submittedScores = [];
+await page.setBypassServiceWorker(true);
+await page.setRequestInterception(true);
+page.on('request', request => {
+    if (!request.url().startsWith('https://game-scores.orangely.workers.dev/')) {
+        void request.continue();
+        return;
+    }
+    if (request.method() === 'POST') {
+        try { submittedScores.push(JSON.parse(request.postData() || '{}')); } catch { /* asserted below */ }
+    }
+    void request.respond({
+        status: request.method() === 'OPTIONS' ? 204 : 200,
+        headers: {
+            'Access-Control-Allow-Origin': ORIGIN,
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        },
+        contentType: 'application/json',
+        body: request.method() === 'GET' ? '[]' : '',
+    });
+});
 const errs = [];
 page.on('pageerror', e => errs.push(String(e.message || e).split('\n')[0]));
 page.on('console', msg => {
@@ -121,6 +146,14 @@ check(
     res.best,
 );
 check(res.legacyBest === null, '② 新成绩不回写 legacy fs_best_first-light', res.legacyBest);
+check(
+    submittedScores.length === 1
+        && submittedScores[0].game === 'firefly-signal-first-light'
+        && Number.isInteger(submittedScores[0].score)
+        && submittedScores[0].score >= 0,
+    '② 通关仅向隔离的 Worker mock 提交第 1 关成绩',
+    JSON.stringify(submittedScores),
+);
 
 /* ⑥ Continue → 第 2 关 */
 await page.click('#fs-btn-next');

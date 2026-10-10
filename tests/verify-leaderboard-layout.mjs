@@ -39,10 +39,14 @@ const FIXTURES = {
     'silk-dew': {},
     'tower-defense': {},
 };
-// These leaderboard-cap pages have no game-lb-* board: Tetris keeps its own sidebar
-// high-score table, Sword Flight lists ranks in its menu (`.sf-rank-*`), and Needle vs Awn
-// only submits scores without rendering a board. Converging them is separate work.
-const LEADERBOARD_EXEMPT = ['tetris', 'needle-awn', 'sword-flight'];
+// Original Tetris / Sword Flight boards keep independent layouts. New dialog-mode
+// boards are verified by smoke-scoreboard-dialog and verify-scoreboard-contract;
+// they are native <dialog> children mounted outside the page stage, not per-page
+// result-overlay game-lb-* surfaces measured by this test.
+const LEADERBOARD_EXEMPT = [
+    'tetris', 'sword-flight',
+    ...registry.withCap('leaderboard').filter(game => game.scores?.ui === 'dialog').map(game => game.id),
+];
 registry.assertCovered({
     cap: 'leaderboard', covered: Object.keys(FIXTURES), exempt: LEADERBOARD_EXEMPT, label: 'FIXTURES',
 });

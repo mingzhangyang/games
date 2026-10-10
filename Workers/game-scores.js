@@ -1,5 +1,7 @@
+export { GameScoreBoard } from './scoreboard-durable.js';
+import { validDailyDateKey } from './scoreboard-date.js';
 // Cloudflare Worker — 共享游戏排行榜（全站唯一榜单 Worker）
-// 一个 KV 命名空间承载所有游戏：键 `top:<game>`；每日榜按天一个键（TTL 自然滚动）
+// SQLite Durable Objects own live scores; KV holds legacy snapshots for one-time read-only migration.
 // 承载游戏：tetris / hoop-shot / planet-merge(+每日) / reversi / tower-defense /
 //           minesweeper-easy|medium|hard / gravity-d<日期>
 // GET  /scores?game=<id>   -> [{ name, score }, ...]（按游戏配置的升降序排好）
@@ -16,7 +18,14 @@ const ALLOWED_ORIGINS = [
 // ttl 为可选的 KV 过期秒数（用于每日榜的自然滚动）
 // registry:begin games-scores
 const GAMES = {
+  'math-rain-1': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-2': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-3': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-4': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-5': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-6': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
   'tetris': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'tank-battle': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'planet-merge': { order: 'desc', maxScore: 10000000, maxEntries: 50 },
   'hoop-shot': { order: 'desc', maxScore: 1000000, maxEntries: 50 },
   'minesweeper-easy': { order: 'asc', maxScore: 9999, maxEntries: 50 },
@@ -31,7 +40,20 @@ const GAMES = {
   'tower-defense-juggernaut': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'tower-defense-singularity': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'needle-awn': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'needle-awn-endless': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'sword-flight': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'carrot-pull': { order: 'desc', maxScore: 1000000, maxEntries: 50 },
+  'firefly-signal-first-light': { order: 'asc', maxScore: 100000, maxEntries: 50 },
+  'firefly-signal-two-meadows': { order: 'asc', maxScore: 100000, maxEntries: 50 },
+  'firefly-signal-midsummer': { order: 'asc', maxScore: 100000, maxEntries: 50 },
+  'shadow-loom-rabbit': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-bird': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-whale': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-deer': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-pagoda': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-tree': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-koi': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-crane': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
 };
 
 // 每日赛程 / 每日挑战榜：按天一个键，正则白名单 + TTL 自然滚动
@@ -53,9 +75,13 @@ const DAILY_PATTERNS = [
 // registry:end games-scores
 
 function resolveGame(game) {
-  if (GAMES[game]) return GAMES[game];
+  if (typeof game !== 'string') return null;
+  // Plain object prototypes are not valid game IDs (e.g. "__proto__").
+  if (Object.prototype.hasOwnProperty.call(GAMES, game)) return GAMES[game];
   for (const p of DAILY_PATTERNS) {
-    if (p.re.test(game)) return p.config;
+    // Reject nonexistent or unbounded date suffixes BEFORE idFromName(),
+    // on both GET and POST. The Origin header is not authentication.
+    if (p.re.test(game) && validDailyDateKey(game)) return p.config;
   }
   return null;
 }
@@ -85,22 +111,9 @@ function sanitizeName(value) {
     .slice(0, MAX_NAME_LEN);
 }
 
-function gameKey(game) {
-  return `top:${game}`;
-}
-
-async function readList(env, game) {
-  try {
-    const raw = await env.GAME_SCORES.get(gameKey(game));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function betterThan(a, b, order) {
-  return order === 'asc' ? a < b : a > b;
+function boardStub(env, game) {
+  if (!env.SCORE_BOARDS) throw new Error('SCORE_BOARDS binding unavailable');
+  return env.SCORE_BOARDS.get(env.SCORE_BOARDS.idFromName(game));
 }
 
 export default {
@@ -128,7 +141,11 @@ export default {
         return new Response('Invalid', { status: 400, headers: cors });
       }
       try {
-        const { game, name, score } = await request.json();
+        const payload = await request.json().catch(() => null);
+        if (!payload || typeof payload !== 'object') {
+          return new Response('Invalid', { status: 400, headers: cors });
+        }
+        const { game, name, score } = payload;
         const config = resolveGame(game);
         if (!config) {
           return new Response('Invalid', { status: 400, headers: cors });
@@ -141,21 +158,11 @@ export default {
           return new Response('Invalid', { status: 400, headers: cors });
         }
 
-        const list = await readList(env, game);
-        const idx = list.findIndex(item => item.name === cleanName);
-        if (idx >= 0) {
-          if (betterThan(cleanScore, list[idx].score, config.order)) {
-            list[idx].score = cleanScore;
-          }
-        } else {
-          list.push({ name: cleanName, score: cleanScore });
-        }
-        list.sort((a, b) => config.order === 'asc' ? a.score - b.score : b.score - a.score);
-        const putOptions = config.ttl ? { expirationTtl: config.ttl } : {};
-        await env.GAME_SCORES.put(gameKey(game), JSON.stringify(list.slice(0, config.maxEntries)), putOptions);
+        await boardStub(env, game).submit(game, config, cleanName, cleanScore);
         return new Response('OK', { headers: cors });
       } catch (e) {
-        return new Response('Error', { status: 400, headers: cors });
+        console.error('Leaderboard submit unavailable', e);
+        return new Response('Unavailable', { status: 503, headers: cors });
       }
     }
 
@@ -165,17 +172,15 @@ export default {
       if (!config) {
         return new Response('Invalid', { status: 400, headers: cors });
       }
-      const list = await readList(env, game);
-      const top = list
-        .sort((a, b) => config.order === 'asc' ? a.score - b.score : b.score - a.score)
-        .slice(0, config.maxEntries);
-      return new Response(JSON.stringify(top), {
-        headers: {
-          ...cors,
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store'
-        }
-      });
+      try {
+        const top = await boardStub(env, game).list(game, config);
+        return new Response(JSON.stringify(top), {
+          headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      } catch (error) {
+        console.error('Leaderboard read unavailable', error);
+        return new Response('Unavailable', { status: 503, headers: cors });
+      }
     }
 
     return new Response('Not Found', { status: 404, headers: cors });

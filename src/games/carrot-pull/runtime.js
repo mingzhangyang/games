@@ -2,6 +2,7 @@ import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { getLang } from '../../platform/site-settings.js';
 import { track } from '../../platform/analytics.js';
+import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
 import { LANGUAGES } from './i18n.js';
 import { CARROT_PULL_STORAGE, CARROT_PULL_STORAGE_SLOTS } from './storage.js';
 import { ART_UI, loadCarrotPullArt } from './render/art.js';
@@ -56,6 +57,8 @@ export function createGame({ i18nBinder = null } = {}) {
     let contextualRestart = null;
     let best = 0;
     let dotsRound = -1;
+    let scoreboard;
+    let pausedForRanking = false;
 
     function cacheRefs() {
         [
@@ -193,6 +196,7 @@ export function createGame({ i18nBinder = null } = {}) {
         state.mode = 'over'; contextualRestart?.sync();
         state.paused = false; contextualRestart?.sync();
         saveBest();
+        void scoreboard.submit({ boardId: 'all', score: state.score });
         state.won = won;
         if (won) state.pulls = 0;
         hideToast();
@@ -384,6 +388,22 @@ export function createGame({ i18nBinder = null } = {}) {
 
     function init() {
         cacheRefs();
+        scoreboard = mountScoreboardDialog({
+            boards: [{
+                id: 'all', key: 'carrot-pull',
+                label: { en: 'All-time high scores', zh: '历史最高分' },
+                description: { en: 'Each finished run, including timeouts. Highest score wins.', zh: '每局结束（包括超时）均可参赛，分数越高越好。' },
+            }],
+            triggers: [{ before: '#cpStatsToggle', icon: true }, { before: '#cp-menu-btn' }],
+            onOpen: () => {
+                pausedForRanking = state.mode === 'playing' && !state.paused;
+                if (pausedForRanking) setPaused(true);
+            },
+            onClose: () => {
+                if (pausedForRanking) setPaused(false);
+                pausedForRanking = false;
+            },
+        });
         productionScene = createCarrotScene();
         fallbackScene = createCarrotPullFallbackScene();
         scene = fallbackScene || productionScene;

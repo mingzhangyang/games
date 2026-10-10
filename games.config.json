@@ -197,7 +197,8 @@
         "PuzzleGame"
       ],
       "caps": [
-        "analytics"
+        "analytics",
+        "leaderboard"
       ],
       "sitemap": {
         "changefreq": "monthly",
@@ -214,6 +215,20 @@
           "en": "Educational",
           "zh": "益智教育"
         }
+      },
+      "scores": {
+        "keys": [
+          "math-rain-1",
+          "math-rain-2",
+          "math-rain-3",
+          "math-rain-4",
+          "math-rain-5",
+          "math-rain-6"
+        ],
+        "order": "desc",
+        "maxScore": 2000000,
+        "maxEntries": 50,
+        "ui": "dialog"
       }
     },
     {
@@ -301,7 +316,8 @@
         "Retro"
       ],
       "caps": [
-        "analytics"
+        "analytics",
+        "leaderboard"
       ],
       "sitemap": {
         "changefreq": "monthly",
@@ -318,6 +334,13 @@
           "en": "Arcade",
           "zh": "街机竞技"
         }
+      },
+      "scores": {
+        "key": "tank-battle",
+        "order": "desc",
+        "maxScore": 5000000,
+        "maxEntries": 50,
+        "ui": "dialog"
       }
     },
     {
@@ -815,13 +838,17 @@
         "topbar"
       ],
       "scores": {
-        "key": "needle-awn",
+        "keys": [
+          "needle-awn",
+          "needle-awn-endless"
+        ],
         "order": "desc",
         "maxScore": 5000000,
         "maxEntries": 50,
         "daily": true,
         "dailyKeyPrefix": "needle-awn",
-        "dailyTtlDays": 14
+        "dailyTtlDays": 14,
+        "ui": "dialog"
       },
       "stage": {
         "w": 480,
@@ -1512,7 +1539,8 @@
         "frame-budget",
         "analytics",
         "topbar",
-        "theme-light"
+        "theme-light",
+        "leaderboard"
       ],
       "stage": {
         "w": 560,
@@ -1535,6 +1563,13 @@
           "zh": "休闲街机"
         },
         "badge": "new"
+      },
+      "scores": {
+        "key": "carrot-pull",
+        "order": "desc",
+        "maxScore": 1000000,
+        "maxEntries": 50,
+        "ui": "dialog"
       }
     },
     {
@@ -1563,7 +1598,8 @@
       ],
       "caps": [
         "analytics",
-        "topbar"
+        "topbar",
+        "leaderboard"
       ],
       "sitemap": {
         "changefreq": "monthly",
@@ -1581,6 +1617,17 @@
           "zh": "同步谜题"
         },
         "badge": "new"
+      },
+      "scores": {
+        "keys": [
+          "firefly-signal-first-light",
+          "firefly-signal-two-meadows",
+          "firefly-signal-midsummer"
+        ],
+        "order": "asc",
+        "maxScore": 100000,
+        "maxEntries": 50,
+        "ui": "dialog"
       }
     },
     {
@@ -1610,7 +1657,8 @@
         "drawer",
         "frame-budget",
         "analytics",
-        "topbar"
+        "topbar",
+        "leaderboard"
       ],
       "stage": {
         "w": 480,
@@ -1632,6 +1680,22 @@
           "zh": "纸影解谜"
         },
         "badge": "new"
+      },
+      "scores": {
+        "keys": [
+          "shadow-loom-rabbit",
+          "shadow-loom-bird",
+          "shadow-loom-whale",
+          "shadow-loom-deer",
+          "shadow-loom-pagoda",
+          "shadow-loom-tree",
+          "shadow-loom-koi",
+          "shadow-loom-crane"
+        ],
+        "order": "asc",
+        "maxScore": 9007199254740991,
+        "maxEntries": 50,
+        "ui": "dialog"
       }
     }
   ],

@@ -28,6 +28,7 @@ on:
       - 'wrangler.jsonc'
       - 'package*.json'
       - '.github/workflows/architecture-v2.yml'
+      - '.github/workflows/deploy-workers.yml'
 
 permissions:
   contents: read

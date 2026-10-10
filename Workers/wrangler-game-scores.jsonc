@@ -7,6 +7,12 @@
   "main": "game-scores.js",
   "compatibility_date": "2025-04-01",
   "workers_dev": true,
+  "durable_objects": {
+    "bindings": [{ "name": "SCORE_BOARDS", "class_name": "GameScoreBoard" }]
+  },
+  "migrations": [
+    { "tag": "v1-scoreboards-sqlite", "new_sqlite_classes": ["GameScoreBoard"] }
+  ],
   "kv_namespaces": [
     { "binding": "GAME_SCORES", "id": "fe5897ff187e4ddca2e2430dcfe43e09" }
   ]

@@ -292,6 +292,11 @@
         "dailyTtlDays": {
           "type": "number",
           "minimum": 0
+        },
+        "ui": {
+          "enum": [
+            "dialog"
+          ]
         }
       },
       "additionalProperties": true

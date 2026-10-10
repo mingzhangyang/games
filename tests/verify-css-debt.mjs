@@ -13,6 +13,7 @@ import { scanHtml } from './lib/css/html-inputs.mjs';
 import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
 import { verifyActivationSnapshot } from './lib/css/activation.mjs';
+import { reviewFeatureStyles } from './lib/css/feature-additions.mjs';
 import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
@@ -223,7 +224,11 @@ function verifyProject() {
             .map(entry => entry.name),
         ...listFiles(join(ROOT, 'public'), ROOT, path => path.endsWith('.html')),
     ].sort();
-    const expectedCssPaths = BASELINE.cssFiles.map(file => file.path).sort();
+    // Feature additions are explicit and additive: old source/link history stays frozen.
+    const featureStyles = reviewFeatureStyles(ROOT, cssPaths, htmlPaths, errors);
+    const expectedCssPaths = [
+        ...BASELINE.cssFiles.map(file => file.path), ...featureStyles.cssPaths,
+    ].sort();
     const expectedHtmlPaths = BASELINE.htmlFiles.map(file => file.path).sort();
 
     if (!sameJson(cssPaths, expectedCssPaths)) {
@@ -315,7 +320,8 @@ function verifyProject() {
     for (const path of htmlPaths) {
         const html = readFileSync(join(ROOT, path), 'utf8');
         htmlSources.set(path, html);
-        const scanned = scanHtml(path, html);
+        // Subtract only the reviewed additive link for the immutable P0 link snapshot.
+        const scanned = scanHtml(path, featureStyles.stripHtml(path, html));
         stylesheetLinks[path] = scanned.links;
         actualDebt.inlineStyleRules.push(...scanned.inlineRules);
         actualDebt.inlineStyleBlocks.push(...scanned.styleBlocks);
@@ -400,7 +406,9 @@ function verifyProject() {
     for (const path of cssPaths) {
         const baseSource = readGitFile(ROOT, comparisonBase, path);
         if (baseSource === null) {
-            if (migrationStarted) errors.push(path + ': cannot read comparison-base CSS for P2 mapping verification.');
+            if (migrationStarted && !featureStyles.cssPaths.has(path)) {
+                errors.push(path + ': cannot read comparison-base CSS for P2 mapping verification.');
+            }
             baseParsedByPath.set(path, currentParsedByPath.get(path));
         } else {
             baseParsedByPath.set(path, parseCssText(baseSource, path));
@@ -472,9 +480,14 @@ function verifyProject() {
     });
 
     verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors, {
-        allowedCssChanges: new Set([...migrationResult.mappedCssPaths, ...familyResult.cssPaths]),
+        allowedCssChanges: new Set([
+            ...migrationResult.mappedCssPaths, ...familyResult.cssPaths, ...featureStyles.cssPaths,
+        ]),
+        stripHtml: featureStyles.stripHtml,
     });
-    verifyActivationSnapshot(ROOT, htmlPaths, auditedJavaScriptFiles(ROOT), errors);
+    verifyActivationSnapshot(ROOT, htmlPaths, auditedJavaScriptFiles(ROOT), errors, {
+        stripHtml: featureStyles.stripHtml,
+    });
     verifyPluginRetirementContract(errors);
 
     for (const key of Object.keys(actualDebt)) {

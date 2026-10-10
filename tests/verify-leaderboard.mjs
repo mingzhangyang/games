@@ -100,6 +100,15 @@ try {
     try { await lb.fetchBoard('g'); } catch { threw = true; }
     ok(threw === true, 'fetchBoard 非 2xx → 抛出');
 
+    // New web app may precede manual score Worker deployment. A 400 for
+    // an unknown new game key must be distinguishable from a normal outage.
+    mockFetch(400);
+    let unsupported;
+    try { await lb.fetchBoard('math-rain-6'); } catch (error) { unsupported = error; }
+    ok(unsupported instanceof lb.UnsupportedLeaderboardError
+        && unsupported.game === 'math-rain-6',
+    '旧 Worker 未注册榜单 → 显式 UnsupportedLeaderboardError');
+
     // escapeHTML 黄金值
     ok(lb.escapeHTML('<b class="x">A&B\'C</b>')
         === '&lt;b class=&quot;x&quot;&gt;A&amp;B&#39;C&lt;/b&gt;',

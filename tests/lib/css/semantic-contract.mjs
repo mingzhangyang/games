@@ -47,7 +47,7 @@ export function observeSemanticInputs(root, cssPaths, htmlPaths, runtimeStyles) 
 
 export function verifySemanticSnapshot(
     root, cssPaths, htmlPaths, runtimeStyles, errors,
-    { allowedCssChanges = new Set() } = {},
+    { allowedCssChanges = new Set(), stripHtml = null } = {},
 ) {
     const text = readFileSync(join(root, 'tests/css-semantic-p0-baseline.json'), 'utf8');
     if (createHash('sha256').update(text).digest('hex') !== SNAPSHOT_SHA256) {
@@ -56,6 +56,14 @@ export function verifySemanticSnapshot(
     }
     const baseline = JSON.parse(text);
     const actual = observeSemanticInputs(root, cssPaths, htmlPaths, runtimeStyles);
+    if (stripHtml) {
+        // Compare the original P0 model after projecting away only a separately
+        // validated additive feature link; every other HTML change still fails.
+        for (const file of htmlPaths) {
+            const html = readFileSync(join(root, file), 'utf8');
+            actual.html[file] = fingerprint(htmlCascadeModel(stripHtml(file, html), file));
+        }
+    }
     for (const kind of ['css', 'html', 'runtime']) {
         for (const file of new Set([...Object.keys(baseline.inputs[kind]), ...Object.keys(actual[kind])])) {
             if (kind === 'css' && allowedCssChanges.has(file)) continue;

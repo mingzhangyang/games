@@ -15,6 +15,8 @@ import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { makeText } from '../../platform/i18n.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { track } from '../../platform/analytics.js';
+import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { encodeFireflyScore, formatFireflyScore } from './leaderboard-score.js';
 import { FireflyGame, LEVELS, loadBest } from './game.js';
 
 const LANGUAGES = makeText({
@@ -195,6 +197,7 @@ onReady(() => {
     const phase6I18n = createI18nBinder({ getLang, tables: LANGUAGES });
     phase6I18n.apply();
     window.addEventListener('site-settings:changed', () => phase6I18n.apply());
+    let scoreboard;
     const game = new FireflyGame({
         stage: $('fs-stage'),
         canvas: $('fs-canvas'),
@@ -217,7 +220,39 @@ onReady(() => {
         btnRestart: $('fs-btn-restart'),
         backdrop: $('fs-backdrop'),
         srStatus: $('fs-sr-status'),
-    }, getText, { track });
+    }, getText, {
+        track,
+        onFinish: ({ levelId, won, used, harmony }) => {
+            if (!won) return;
+            const score = encodeFireflyScore(used, harmony);
+            if (score !== null) void scoreboard.submit({ boardId: levelId, score });
+        },
+    });
+    let pausedForRanking = false;
+    scoreboard = mountScoreboardDialog({
+        boards: LEVELS.map(level => ({
+            id: level.id,
+            key: `firefly-signal-${level.id}`,
+            label: { en: LANGUAGES.en.levels[level.id].name, zh: LANGUAGES.zh.levels[level.id].name },
+            description: {
+                en: 'Completed level only. Fewer signals win; harmony breaks ties.',
+                zh: '仅成功通关成绩有效；干预越少越好，相同次数时同步度越高越好。',
+            },
+            format: formatFireflyScore,
+        })),
+        triggers: [
+            { before: '#fs-btn-mute', icon: true, boardId: () => LEVELS[game.levelIndex].id },
+            { before: '#fs-btn-menu', boardId: () => LEVELS[game.levelIndex].id },
+        ],
+        onOpen: () => {
+            pausedForRanking = (game.state === 'playing' || game.state === 'ending') && !game.paused;
+            if (pausedForRanking) game.pauseQuiet();
+        },
+        onClose: () => {
+            if (pausedForRanking) game.resumeQuiet();
+            pausedForRanking = false;
+        },
+    });
     // 测试钩子（verify-immersive / smoke-firefly-signal 用）：只读快照 + 公开方法，不暴露模拟内部可写引用
     window.__fireflySignal = game;
 

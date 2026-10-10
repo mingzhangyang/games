@@ -2,6 +2,7 @@
 import { getLang } from '../../platform/site-settings.js';
 import { createSfx } from '../../platform/game-sfx.js';
 import { track } from '../../platform/analytics.js';
+import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
 import { CONFIG, WEAPONS, Particle, PowerUp, Bullet, Tank, BossTank, bindTankI18n } from './tank-entities.js';
 import { createTankBattleArt } from './tank-battle-art.js';
 
@@ -244,6 +245,27 @@ class TankBattle {
         this.time = 0; // 游戏内时钟（毫秒）：暂停/切后台时冻结，AI 计时全部基于它
 
         this.init();
+        let pausedForRanking = false;
+        this.scoreboard = mountScoreboardDialog({
+            boards: [{
+                id: 'all', key: 'tank-battle',
+                label: { en: 'Survival high scores', zh: '生存高分榜' },
+                description: { en: 'Final score from a completed run; higher is better.', zh: '以结束时的最终分数排名，分数越高越好。' },
+            }],
+            triggers: [{ after: '.tb-home-btn', icon: true }],
+            onOpen: () => {
+                pausedForRanking = this.gameState === 'playing' && !this.paused;
+                // Modal keyup is intentionally isolated from document controls:
+                // release keyboard, D-pad and fire *before* pausing.
+                this.resetHeldControls();
+                if (pausedForRanking) this.paused = true;
+            },
+            onClose: () => {
+                this.resetHeldControls();
+                if (pausedForRanking && this.gameState === 'playing') this.paused = false;
+                pausedForRanking = false;
+            },
+        });
         this.setupEventListeners();
         this.gameLoop();
         track('tank-battle', 'play');
@@ -385,6 +407,14 @@ class TankBattle {
         }
     }
 
+    resetHeldControls() {
+        this.keys = {};
+        this.resetVirtualInputs?.();
+        const dpad = document.getElementById('dpad');
+        dpad?.querySelectorAll('.dpad-btn').forEach(button => button.classList.remove('active'));
+        document.getElementById('btnFire')?.classList.remove('active');
+    }
+
     setupEventListeners() {
         document.addEventListener('keydown', (e) => {
             this.keys[e.key.toLowerCase()] = true;
@@ -424,18 +454,9 @@ class TankBattle {
             }
         });
 
-        // 窗口失焦或方向旋转时清空按键，防止方向键粘连
-        const resetKeys = () => {
-            this.keys = {};
-            const dpad = document.getElementById('dpad');
-            if (dpad) {
-                dpad.querySelectorAll('.dpad-btn').forEach(b => b.classList.remove('active'));
-            }
-            const btnFire = document.getElementById('btnFire');
-            if (btnFire) btnFire.classList.remove('active');
-        };
-        window.addEventListener('blur', resetKeys);
-        window.addEventListener('orientationchange', resetKeys);
+        // Focus loss and modal transitions share one authoritative reset.
+        window.addEventListener('blur', () => this.resetHeldControls());
+        window.addEventListener('orientationchange', () => this.resetHeldControls());
 
         // 初始化移动端虚拟掌机控制器
         this.setupVirtualController();
@@ -560,6 +581,15 @@ class TankBattle {
         btnFire.addEventListener('touchcancel', stopFiring, { passive: false });
         btnFire.addEventListener('mousedown', startFiring);
         btnFire.addEventListener('mouseup', stopFiring);
+
+        // Active pointer IDs live in this closure; exposing a controlled
+        // release hook avoids a stale touch/mouse move reasserting direction.
+        this.resetVirtualInputs = () => {
+            dpadTouchId = null;
+            dpadMouseDown = false;
+            clearDpadKeys();
+            stopFiring();
+        };
 
         // --- 切换武器 ---
         if (btnWeapon) {
@@ -828,8 +858,9 @@ class TankBattle {
                     this.player.takeDamage(bullet.damage, this);
                     bulletsToRemove.add(bi);
                     this.screenShake = 8;
-                    if (this.lives <= 0) {
+                    if (this.lives <= 0 && this.gameState === 'playing') {
                         this.gameState = 'gameOver';
+                        void this.scoreboard.submit({ boardId: 'all', score: this.score });
                         track('tank-battle', 'finish');
                     }
                     this.updateUI();
@@ -881,12 +912,14 @@ class TankBattle {
     }
 
     checkWinCondition() {
+        if (this.gameState !== 'playing') return;
         if (this.enemies.length === 0) {
             this.level++;
             this.score += 500 * this.level;
             
             if (this.level > CONFIG.MAX_LEVEL) {
                 this.gameState = 'victory';
+                void this.scoreboard.submit({ boardId: 'all', score: this.score });
                 track('tank-battle', 'finish');
             } else {
                 // 下一关

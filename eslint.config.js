@@ -92,7 +92,7 @@ export default [
         },
     },
     {
-        files: ['tests/**/*.mjs', 'tools/dev/**/*.mjs', 'tools/generators/**/*.mjs', 'tools/checks/**/*.mjs', 'tools/lib/**/*.mjs'],
+        files: ['tests/**/*.mjs', 'tools/dev/**/*.mjs', 'tools/generators/**/*.mjs', 'tools/checks/**/*.mjs', 'tools/lib/**/*.mjs', 'tools/deploy/**/*.mjs'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',

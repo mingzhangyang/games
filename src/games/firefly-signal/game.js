@@ -37,6 +37,7 @@ export class FireflyGame {
         this.dom = dom;
         this.t = getText;
         this.track = typeof hooks.track === 'function' ? hooks.track : () => {};
+        this.onFinish = typeof hooks.onFinish === 'function' ? hooks.onFinish : () => {};
         this.reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
         this.renderer = createRenderer(dom.canvas, {
             reducedMotion: this.reduced,
@@ -261,6 +262,7 @@ export class FireflyGame {
         this.dom.hud.classList.add('is-faded');
         this.dom.btnRestart.disabled = false;
         if (won) this.result.newBest = saveBest(level.id, this.result.used, this.result.harmony);
+        this.onFinish({ levelId: level.id, won, used: this.result.used, harmony: this.result.harmony });
         this.track(GAME_ID, 'finish');
         this.showResult();
     }
