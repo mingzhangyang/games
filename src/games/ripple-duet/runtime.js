@@ -640,11 +640,11 @@ export class RippleDuetGame {
             const p = this.progress[spec.id];
             if (p && p.stars > 0) { done++; sum += p.bestCost; }
         });
-        rows.push(`<div class="rd-rec"><span>${this.t('stars')}</span><b>${this.totalStars()}/60</b></div>`);
-        rows.push(`<div class="rd-rec"><span>${this.t('best')}</span><b>${done ? sum : '—'}</b></div>`);
+        rows.push(`<div class="rd-rec game-side-row"><span>${this.t('stars')}</span><b>${this.totalStars()}/60</b></div>`);
+        rows.push(`<div class="rd-rec game-side-row"><span>${this.t('best')}</span><b>${done ? sum : '—'}</b></div>`);
         const best = this.readLocalBoard('ripple-duet');
         if (best.length) {
-            rows.push(`<div class="rd-rec"><span>${this.t('leaderboard')}</span><b>${best[0].score}</b></div>`);
+            rows.push(`<div class="rd-rec game-side-row"><span>${this.t('leaderboard')}</span><b>${best[0].score}</b></div>`);
         }
         box.innerHTML = rows.join('');
     }
@@ -661,7 +661,7 @@ export class RippleDuetGame {
     renderLegend() {
         const box = this.el['side-legend'];
         if (!box) return;
-        const row = (cls, label) => `<div class="rd-legend-row"><span class="${cls}"></span><span>${label}</span></div>`;
+        const row = (cls, label) => `<div class="rd-legend-row game-legend-row"><span class="${cls}"></span><span class="game-legend-text">${label}</span></div>`;
         box.innerHTML = [
             row('rd-legend-swatch rd-legend-crest', this.t('legendCrest')),
             row('rd-legend-swatch rd-legend-trough', this.t('legendTrough')),

@@ -855,6 +855,50 @@ try {
     assert.equal(verifyExtractionShape(badLayoutShape, badLayoutShapeErrors), false);
     assert.ok(badLayoutShapeErrors.some(error => /reviewedLayoutProperties must be a non-empty/.test(error)));
 
+
+    // W5b: duplicate legacy selectors must retire by exact occurrence count,
+    // not by assuming that a selector uniquely identifies a CSS rule.
+    const duplicateBase = parsedMap('css/demo.css',
+        '.dm-legend-row{display:flex;align-items:center;gap:9px}'
+        + '.dm-legend-row{display:flex;align-items:center;margin-bottom:7px}');
+    const duplicateCurrent = parsedMap('css/demo.css', '.dm-unrelated{color:red}');
+    const duplicateRetirement = clone(extraction);
+    duplicateRetirement.reviewedRuleRetirements = [{
+        prefix: 'dm', context: '', selector: '.dm-legend-row', expectedOccurrences: 2,
+        reviewedLayoutProperties: ['display', 'align-items'],
+        reason: 'duplicate legacy row selectors are fully replaced by a shared component',
+    }];
+    const duplicateShapeErrors = [];
+    assert.equal(verifyExtractionShape(duplicateRetirement, duplicateShapeErrors), true);
+    assert.deepEqual(duplicateShapeErrors, []);
+    const duplicateRemoved = { base: [], current: [] };
+    const duplicateErrors = [];
+    verifyReviewedRuleRetirements(duplicateRetirement, duplicateCurrent, duplicateBase,
+        catalogMap(duplicateBase), duplicateRemoved, duplicateErrors);
+    assert.deepEqual(duplicateErrors, []);
+    assert.equal(duplicateRemoved.base.length, 2, 'both duplicate declarations must be accounted for');
+    const duplicateWrongCount = clone(duplicateRetirement);
+    duplicateWrongCount.reviewedRuleRetirements[0].expectedOccurrences = 3;
+    const wrongCountErrors = [];
+    verifyReviewedRuleRetirements(duplicateWrongCount, duplicateCurrent, duplicateBase,
+        catalogMap(duplicateBase), { base: [], current: [] }, wrongCountErrors);
+    assert.ok(wrongCountErrors.some(e => /expected exactly 3 unlayered base rule occurrence/.test(e)));
+    const duplicateBadShape = clone(duplicateRetirement);
+    duplicateBadShape.reviewedRuleRetirements[0].expectedOccurrences = 1;
+    const duplicateBadShapeErrors = [];
+    assert.equal(verifyExtractionShape(duplicateBadShape, duplicateBadShapeErrors), false);
+    assert.ok(duplicateBadShapeErrors.some(e => /expectedOccurrences must be 2\.\.8/.test(e)));
+    const duplicateReappears = parsedMap('css/demo.css', '.dm-legend-row{display:flex}');
+    const reappearsErrors = [];
+    verifyReviewedRuleRetirements(duplicateRetirement, duplicateReappears, duplicateBase,
+        catalogMap(duplicateBase), { base: [], current: [] }, reappearsErrors);
+    assert.ok(reappearsErrors.some(e => /retired rule still exists/.test(e)));
+    const missingNumeric = clone(extraction);
+    missingNumeric.components[0].participantConvergedProperties = { dm: ['font-variant-numeric'] };
+    const numericShapeErrors = [];
+    assert.equal(verifyExtractionShape(missingNumeric, numericShapeErrors), true);
+    assert.deepEqual(numericShapeErrors, []);
+
     // Declaration retirement: a surviving page rule sheds only the reviewed declarations.
     const headBase = parsedMap('css/demo.css', '.dm-head{display:flex;align-items:center;margin-bottom:8px}');
     const declarationRetirement = clone(extraction);

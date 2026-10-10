@@ -123,6 +123,34 @@ flex / baseline / 5px 间隔，统一 40% 黑色的深色玻璃背景（浅色�
 `css/layout.css` 的 components 层，手机端复用既有 480px media 容器。
 `verify-start-menus` 覆盖九页的四档视口及结果/HUD 的实际 computed style。
 
+### 1.1.5 侧栏记录、科学图例与通关标题（W5b，2026-10-10）
+
+十个游戏（cc/cb/ec/fv/gd/lm/md/rd/sd/bf）的静态记录容器使用
+`game-side-records`（flex column）。运行时记录行复用**已有**
+`game-side-row` / `game-side-row b`：统一 13.5px、baseline 对齐、
+10px 水平间距、4px 行内距和 tabular numerals；旧 `*-side-row`
+页面规则与 `side-k`/`side-v` 外观副本已退役，数值使用语义 `<b>`。
+Gravity Slingshot 原本没有独立的记录容器 CSS，直接 opt in 现有共享值；
+Ripple Duet 的运行时 `rd-rec` 也必须真正挂 `game-side-row`，保留原业务类。
+
+五个科学实验室的 `side-legend` 使用 `game-side-legend`，
+图例行与文字采用 `game-legend-row` / `game-legend-text`，
+普通圆点采用 `game-legend-dot`。只统一列和行间距、12.5px 文本、
+3px 行内距、12px 圆点的基础几何。晶体不同形状、焰语动态波长条、
+涟漪的 28px 波纹色块等实际**数据图例**不强制变成圆点；
+颜色情报仍由运行时、游戏主题与冻结的 Science Showcase 皮肤决定。
+Ripple Duet 两个相互覆盖的 `rd-legend-row` 旧声明已按两次出现显式退役，
+深/浅色通过 `--game-legend-text-color` 提供。
+
+`*-card-title` 实际是通关浮层的星级标题（非侧栏标题）：统一采用
+`game-clear-title` 的 26px/800/2px 字距；Silk Dew 原 27px/700/0.12em
+与 Bond Forge 的较大字距一同收敛，允许保留主题字体、颜色和光影。
+不改变原 ID、关卡进度、排行榜数据与 `StatsPanels` 移动节点。
+五个科学游戏的桌面专属图例仍在 `StatsPanels` 之外。
+迁移以附加账本 `sidebar-family-w5b` 管理 56 条原规则退役、
+6 条新增共享规则（净 -50 条），包括按原出现次数审计同名选择器；
+`verify-sidebar-family.mjs` 测四种视口的真实 DOM 与计算样式。
+
 ### 1.2 语义标签契约（P3-3，2026-09-20）
 
 每个页面必须提供：

@@ -409,11 +409,11 @@ export class SilkfallGame {
         box.innerHTML = '';
         for (const [k, v] of rows) {
             const row = document.createElement('div');
-            row.className = 'sd-side-row';
+            row.className = 'sd-side-row game-side-row';
             const kk = document.createElement('span');
             kk.className = 'sd-side-k';
             kk.textContent = k;
-            const vv = document.createElement('span');
+            const vv = document.createElement('b');
             vv.className = 'sd-side-v';
             vv.textContent = v;
             row.appendChild(kk);

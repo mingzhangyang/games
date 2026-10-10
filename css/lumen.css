@@ -166,11 +166,6 @@ body {
     to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-.lm-card-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: 2px;
-}
 
 
 .lm-overlay-title { font-size: 26px; font-weight: 800; }
@@ -222,20 +217,8 @@ body {
 
 /* ── 侧栏：每日记录行 ── */
 
-.lm-side-records { display: flex; flex-direction: column; }
 
-.lm-side-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 13px;
-    padding: 4px 0;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
-.lm-side-row b { color: var(--tok-text); }
 
 /* ── 响应式 ── */
 

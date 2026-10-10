@@ -99,8 +99,8 @@
 - TD 菜单态那条未分层的结构例外，评估能否在这里一起收口。
 
 ### W5 结算结果/顶栏计数 + 侧栏卡片（两个 PR）
-- **W5a（C）— PR #125 实施中**：九页 `over-score`、`over-sub`，六页 `cut-box`、`cut-value`，包含 480px 移动端规则。退役 45 条原有规则，增加 6 条共享规则，净减少 39 条普通 CSS 规则；由新共享组件拥有 26px/45% 分数发光、40% 黑色玻璃材质/1px 描边和几何/排版。页级仅用主题令牌传递发光色、边框颜色及浅色面板；共退役 13 个旧页面变量。Echo Cave / Silk Dew 的数字最小宽度收敛为 2ch，不留 Gravity 例外，P0 Science Showcase 冻结 `!important` 不变。
-- **W5b（B）— 待开始**：`side-row`、`side-records`、`side-legend`、`legend-*`、`card-title`。
+- **W5a（C）— ✅ PR #125 已合并**：九页 `over-score`、`over-sub`，六页 `cut-box`、`cut-value`，包含 480px 移动端规则。退役 45 条原有规则，增加 6 条共享规则，净减少 39 条普通 CSS 规则；由新共享组件拥有 26px/45% 分数发光、40% 黑色玻璃材质/1px 描边和几何/排版。页级仅用主题令牌传递发光色、边框颜色及浅色面板；共退役 13 个旧页面变量。Echo Cave / Silk Dew 的数字最小宽度收敛为 2ch，不留 Gravity 例外，P0 Science Showcase 冻结 `!important` 不变。
+- **W5b（B）— PR #126 待验收**：十页记录容器、记录行和星级标题；五页科学图例外层与标准标记。复用已存在的 `game-side-row`，新建 `game-side-records` / `game-side-legend` / `game-legend-*` / `game-clear-title` 六个共享规则；退役 56 个原规则副本、净 -50 条普通 CSS 规则（2467 → 2417）。Ripple Duet 的 `rd-rec` 动态记录采用共享行、两条同名 `rd-legend-row` 都按出现次数退役；局部波长/渐变/非圆形数据图例保留。每个页面的 DOM 与 runtime 必须实际采用新类，Sci Showcase P0 保持不变。账本 `sidebar-family-w5b` + `verify-sidebar-family.mjs` 完整验收。
 - 沿用 append-only family extraction、退役审计和真实浏览器 computed-style 验证。
 
 ### W6 真缺口（独立的 bug 修复）
@@ -117,7 +117,7 @@
 | `convergedThemeProperties` | 组件级主题收敛 | 只限 color、background(-color)、border(-color)、box-shadow、filter、opacity |
 | `participantConvergedProperties` | 按页收敛（页面值让位给共享值，或删掉页面独有的声明） | 主题属性 + font-size、font-weight、padding、border-radius、transition、backdrop-filter；需要更多属性就扩展白名单，只加视觉类 |
 | `inheritedEquivalentProperties` | 共享规则写了、页面靠继承得到的同等属性 | 目前只审了 `text-align` |
-| `reviewedRuleRetirements` | 整条删除页面规则（可以在 `@media` 里） | 选择器必须全部带该页前缀；声明只能是主题 / 几何属性 |
+| `reviewedRuleRetirements` | 整条删除页面规则（可以在 `@media` 里） | 选择器必须全部带该页前缀；声明只能是主题 / 几何属性；同名重复规则用精确 `expectedOccurrences`（2–8）枚举并逐个验证退役 |
 | `reviewedSelectorPrunes` | 从页面规则的选择器列表里删掉若干选择器 | 只能删除，不能改写；只限页面 CSS |
 | `reviewedSelectorNarrowings` | 给共享文件（如 `science-showcase.css`）的选择器插入 `:not(.<本事务的共享类>)` | 声明必须逐字不变；改动会映射到 P0 的 `!important` 账本 |
 | `retiredCustomProperties` | 删掉不再被消费的页面变量 | 每次运行都会检查当前代码里有没有重新定义或重新使用 |

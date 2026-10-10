@@ -278,9 +278,9 @@ body {
 
 .sd-card-title {
     font-family: STKaiti, KaiTi, "Songti SC", Georgia, serif;
-    font-size: 27px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
+
+
+
     color: var(--tok-gold);
     text-shadow: 0 2px 12px rgb(0, 0, 0, 0.18);
 }
@@ -343,20 +343,8 @@ body {
 
 /* ── 侧栏：每日记录行 ── */
 
-.sd-side-records { display: flex; flex-direction: column; }
 
-.sd-side-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 13px;
-    padding: 4px 0;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
-.sd-side-row b { color: var(--tok-text); }
 
 /* ── 响应式 ── */
 

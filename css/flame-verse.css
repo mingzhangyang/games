@@ -203,9 +203,8 @@ body {
 }
 
 .fv-card-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: 2px;
+
+
     color: var(--tok-gold);
 }
 
@@ -258,38 +257,15 @@ body {
 
 /* ── 侧栏：记录行 ── */
 
-.fv-side-records { display: flex; flex-direction: column; }
 
-.fv-side-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 13px;
-    padding: 4px 0;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
-.fv-side-k { color: var(--tok-text-dim); }
-.fv-side-v { color: var(--tok-text); font-weight: 700; }
 
 /* ── 侧栏：盐架图谱 ──
    参考条码由 src/games/flame-verse/runtime.js 按真实波长写 linear-gradient 色标，
    黑底 + 竖线与 canvas 里的条码同一套读法（400nm 在左，700nm 在右） */
 
-.fv-side-legend { display: flex; flex-direction: column; gap: 2px; }
 
-.fv-legend-row {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    font-size: 12.5px;
-    padding: 3px 0;
-    color: var(--tok-text-dim);
-}
 
-.fv-legend-text { flex: 1; min-width: 0; line-height: 1.45; }
 
 .fv-legend-dot {
     width: 12px;

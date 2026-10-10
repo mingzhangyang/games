@@ -101,7 +101,7 @@ const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
 // family's size wins. Layout/behaviour properties (display, position, width, …) stay
 // protected: convergence may restyle a standard surface, never re-lay it out.
 const REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES = new Set([
-    'font-size', 'font-weight', 'font-family', 'padding', 'border-radius', 'transition', 'backdrop-filter',
+    'font-size', 'font-weight', 'font-family', 'font-variant-numeric', 'padding', 'border-radius', 'transition', 'backdrop-filter',
     // Visual dimensions/spacing (leaderboard-v2): sizes and gaps of a standard surface.
     'max-width', 'min-width', 'min-height', 'max-height', 'height', 'gap',
     'letter-spacing', 'line-height', 'margin-top', 'margin-bottom',
@@ -779,6 +779,7 @@ export function verifyExtractionShape(extraction, errors) {
             '--game-cut-surface': 'cut-box-bg',
             '--game-cut-stroke-color': 'cut-box-border',
             '--game-cut-value-color': null,
+            '--game-legend-text-color': 'legend-row-text',
         };
         for (const [prefix, entries] of Object.entries(reviewedIntroductions)) {
             if (!extraction.games?.[prefix] || !Array.isArray(entries) || !entries.length) {
@@ -793,8 +794,10 @@ export function verifyExtractionShape(extraction, errors) {
                     fail('reviewed custom-property introduction has an unsupported selector/token: ' + label);
                     continue;
                 }
+                const isLegendHex = entry.property === '--game-legend-text-color'
+                    && /^#[0-9a-fA-F]{6}$/.test(entry.value || '');
                 if (typeof entry.value !== 'string' || !entry.value.trim()
-                    || !/^(?:rgb\(|transparent$|var\(--tok-text\)$)/.test(entry.value)) {
+                    || (!/^(?:rgb\(|transparent$|var\(--tok-text\)$)/.test(entry.value) && !isLegendHex)) {
                     fail('reviewed custom-property introduction has an invalid reviewed color: ' + label);
                 }
                 const key = entry.selector + '\0' + entry.property;
@@ -948,6 +951,11 @@ export function verifyExtractionShape(extraction, errors) {
             if (!extraction.games?.[retirement.prefix]?.css) {
                 fail('reviewed rule retirement references unknown game prefix ' + retirement.prefix + '.');
             }
+            if (retirement.expectedOccurrences !== undefined
+                && (!Number.isInteger(retirement.expectedOccurrences)
+                    || retirement.expectedOccurrences < 2 || retirement.expectedOccurrences > 8)) {
+                fail('reviewed rule retirement expectedOccurrences must be 2..8 when explicitly set.');
+            }
             if (typeof retirement.context !== 'string'
                 || typeof retirement.selector !== 'string' || !retirement.selector.trim()) {
                 fail('reviewed rule retirement requires a context string and a non-empty selector.');
@@ -1057,7 +1065,9 @@ function removedTuples(extraction, errors) {
     }
     for (const retirement of extraction.reviewedRuleRetirements || []) {
         if (games[retirement.prefix]?.css) {
-            rows.push([games[retirement.prefix].css, retirement.context, retirement.selector]);
+            for (let index = 0; index < (retirement.expectedOccurrences || 1); index++) {
+                rows.push([games[retirement.prefix].css, retirement.context, retirement.selector]);
+            }
         }
     }
     return rows;
@@ -1388,15 +1398,18 @@ export function verifyReviewedRuleRetirements(
             rule.selector === retirement.selector && !rule.layer
             && (rule.context || []).join(' / ') === retirement.context);
         const baseRules = matches(baseParsedByPath.get(path));
-        if (baseRules.length !== 1) {
-            errors.push(label + ': expected exactly one unlayered base rule, found ' + baseRules.length + '.');
+        const expectedOccurrences = retirement.expectedOccurrences || 1;
+        if (baseRules.length !== expectedOccurrences) {
+            errors.push(label + ': expected exactly ' + expectedOccurrences
+                + ' unlayered base rule occurrence(s), found ' + baseRules.length + '.');
             continue;
         }
         if (matches(currentParsedByPath.get(path)).length) {
             errors.push(label + ': retired rule still exists in current CSS.');
         }
         const layoutProperties = new Set(retirement.reviewedLayoutProperties || []);
-        const baseProperties = (baseRules[0].migrationDeclarations || []).map(declaration => declaration.property);
+        const baseProperties = baseRules.flatMap(rule =>
+            (rule.migrationDeclarations || []).map(declaration => declaration.property));
         const unreviewed = baseProperties.filter(property =>
             !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property) && !layoutProperties.has(property));
         if (unreviewed.length) {
@@ -1411,8 +1424,9 @@ export function verifyReviewedRuleRetirements(
         }
         const baseIndexed = (baseCatalogs.get(path) || []).filter(rule =>
             rule.selector === retirement.selector && !rule.layer && rule.context === retirement.context);
-        if (baseIndexed.length === 1) externalRuleChanges.base.push(baseIndexed[0]);
-        else errors.push(label + ': expected exactly one indexed base rule, found ' + baseIndexed.length + '.');
+        if (baseIndexed.length === expectedOccurrences) externalRuleChanges.base.push(...baseIndexed);
+        else errors.push(label + ': expected exactly ' + expectedOccurrences
+            + ' indexed base rule occurrence(s), found ' + baseIndexed.length + '.');
     }
 }
 

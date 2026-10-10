@@ -414,11 +414,11 @@ export class CrystalBloomGame {
         box.innerHTML = '';
         for (const [k, v] of rows) {
             const row = document.createElement('div');
-            row.className = 'cb-side-row';
+            row.className = 'cb-side-row game-side-row';
             const kk = document.createElement('span');
             kk.className = 'cb-side-k';
             kk.textContent = k;
-            const vv = document.createElement('span');
+            const vv = document.createElement('b');
             vv.className = 'cb-side-v';
             vv.textContent = v;
             row.appendChild(kk);
@@ -440,11 +440,11 @@ export class CrystalBloomGame {
         box.innerHTML = '';
         for (const [kind, text] of rows) {
             const row = document.createElement('div');
-            row.className = 'cb-legend-row';
+            row.className = 'cb-legend-row game-legend-row';
             const dot = document.createElement('span');
-            dot.className = `cb-legend-dot cb-legend-${kind}`;
+            dot.className = `cb-legend-dot game-legend-dot cb-legend-${kind}`;
             const tx = document.createElement('span');
-            tx.className = 'cb-legend-text';
+            tx.className = 'cb-legend-text game-legend-text';
             tx.textContent = text;
             row.appendChild(dot);
             row.appendChild(tx);
