@@ -92,7 +92,7 @@ export function observeActivation(root, htmlPaths, auditedFiles, errors) {
     return pages;
 }
 
-export function verifyActivationSnapshot(root, htmlPaths, auditedFiles, errors) {
+export function verifyActivationSnapshot(root, htmlPaths, auditedFiles, errors, { stripHtml = null } = {}) {
     const text = readFileSync(join(root, SNAPSHOT_PATH), 'utf8');
     if (createHash('sha256').update(text).digest('hex') !== SNAPSHOT_SHA256) {
         errors.push('Activation P0 addendum changed; preserve history and review a separate correction.');
@@ -100,6 +100,18 @@ export function verifyActivationSnapshot(root, htmlPaths, auditedFiles, errors) 
     }
     const baseline = JSON.parse(text).pages;
     const actual = observeActivation(root, htmlPaths, auditedFiles, errors);
+    if (stripHtml) {
+        for (const file of htmlPaths) {
+            const html = readFileSync(join(root, file), 'utf8');
+            const projected = stripHtml(file, html);
+            if (projected === html) continue;
+            try {
+                actual[file] = pageActivation(root, file, projected, auditedFiles);
+            } catch (error) {
+                errors.push('Feature style activation projection: ' + error.message);
+            }
+        }
+    }
     for (const file of new Set([...Object.keys(baseline), ...Object.keys(actual)])) {
         if (JSON.stringify(baseline[file]) !== JSON.stringify(actual[file])) {
             const before = baseline[file]?.runtimeStyleSources ?? [];
