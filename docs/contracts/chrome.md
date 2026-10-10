@@ -89,7 +89,10 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
 - HTML 保留原有 DOM id / game-icon-btn，初始添加 hidden class，避免加载前出现无效按钮；
   只有游戏进入有效游玩状态，且开始/结算浮层已收起，按钮才显示并可点击。
 - 各游戏通过 active/hasProgress/restart 回调显式提供事实，控制器只观察既有浮层
-  hidden 属性和 class 的变化，不轮询、不注入 CSS、不再绑定第二次点击事件。
+  hidden 属性和 class 的变化；所有游戏 state/phase/paused 的真实变更点也显式
+  调用 `contextualRestart.sync()`（构造早期通过可选链调用）。不可只依靠结算浮层通知：
+  影织 solving、键合工坊 clear、拔萝卜 over 与暂停状态都可能先于浮层变化。
+  不轮询、不注入 CSS、不再绑定第二次点击事件。
 - 存在实质操作进度时，顶栏点击重开必须先确认；取消时保持状态。结算页继续由
   原有 Retry/Again 操作接管，不增加重复的顶栏重开。
 - Carrot Pull 的原重置实际是退出当前游戏，本轮用关闭图标和“结束本局并返回菜单”说明，
@@ -97,7 +100,10 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
 - Gravity Slingshot 的“重试”只重置当前发射，不清除累计发射次数；其文案改为
   “重置本次发射”，不加误导性的进度损失确认。
 - 测试：tests/verify-contextual-restart.mjs 覆盖 12 个游戏的菜单、游戏中、结算态，
-  以及退出/进度确认；smoke-shadow-loom.mjs 对带移动的重开显式接受确认。
+  对全部 11 个可能丢失进度的游戏分别执行中/英确认、取消保留与确认后重置；
+  `gravity-slingshot` 验证仅复位发射、累计次数不丢；状态变更静态钩子和
+  solving/clear/over 等结果浮层之前的状态也覆盖。
+  smoke-shadow-loom.mjs 对带移动的重开显式接受确认。
 - 不更改其他 Home、Stats、Pause、Sound 顶栏职责；若新游戏不需要游戏内重置，
   不应为了图标整齐而机械添加循环箭头。
 

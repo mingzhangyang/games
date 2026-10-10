@@ -173,8 +173,8 @@ export class MaxwellDemonGame {
 
         // 对局状态：menu | playing | won-level | won-daily | failed
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
         this.spec = null;
@@ -277,9 +277,9 @@ export class MaxwellDemonGame {
         }
         if (el['reset-btn']) {
             el['reset-btn'].innerHTML = ICONS.retry;
-            bindContextualRestart({
+            this.contextualRestart = bindContextualRestart({
                 button: this.el['reset-btn'],
-                active: () => this.state === 'playing',
+                active: () => this.state === 'playing' && !this.isPaused,
                 hasProgress: () => this.world && this.spec && budgetLeft(this.world) < this.spec.budget,
                 restart: () => { Sfx.click(); this.restartLevel(); },
             });
@@ -487,8 +487,8 @@ export class MaxwellDemonGame {
             ? `${spec.id}-${this.daily.key}`
             : spec.id;
         this.world = createWorld(spec, seedKey);
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = 0;
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
@@ -521,7 +521,7 @@ export class MaxwellDemonGame {
     }
 
     toMenu() {
-        this.state = 'menu';
+        this.state = 'menu'; this.contextualRestart?.sync();
         this.world = null;
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
@@ -571,7 +571,7 @@ export class MaxwellDemonGame {
 
     showClearPanel(stars, spent, gap) {
         const el = this.el;
-        this.state = 'won-level';
+        this.state = 'won-level'; this.contextualRestart?.sync();
         if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         if (el['clear-line']) {
             el['clear-line'].textContent = `${this.t('spent')} ${spent} · ${this.t('par')} ${this.spec.par} · ΔT ${gap.toFixed(2)}`;
@@ -586,7 +586,7 @@ export class MaxwellDemonGame {
 
     onLevelFailed() {
         if (this.state !== 'playing') return;
-        this.state = 'failed';
+        this.state = 'failed'; this.contextualRestart?.sync();
         this.failReason = 'broke';
         this.failTimer = 0;
         this.syncActionVisibility();
@@ -596,7 +596,7 @@ export class MaxwellDemonGame {
     }
 
     finishDaily() {
-        this.state = 'won-daily';
+        this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.hide(el['clear']);
         if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
@@ -776,8 +776,8 @@ export class MaxwellDemonGame {
 
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
 
-    pauseQuiet() { this.isPaused = true; }
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
+    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */

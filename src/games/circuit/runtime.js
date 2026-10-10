@@ -190,8 +190,8 @@ export class CircuitGame {
 
         // 对局状态：menu | playing | won-level | won-daily
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
         this.par = 1;
@@ -322,8 +322,8 @@ export class CircuitGame {
     startLevel(idx) {
         clearTimeout(this.solveTimer);
         this.loadLevel(idx);
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.hideOverlays();
         this.updateHud();
         track('circuit', 'play');
@@ -343,8 +343,8 @@ export class CircuitGame {
         this.sol = solveCircuit(this.spec, this.states);
         this.particles.length = 0;
         this.flipFx = null;
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.hideOverlays();
         this.updateHud();
         this.showToast(this.TEXT.dailyStartToast, 1800);
@@ -365,8 +365,8 @@ export class CircuitGame {
 
     showMenu() {
         clearTimeout(this.solveTimer);
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.loadLevel(this.levelIdx);   // 菜单背景继续展示当前关的电路
         if (this.el.start) this.el.start.classList.remove('hidden');
         if (this.el.clear) this.el.clear.classList.add('hidden');
@@ -483,7 +483,7 @@ export class CircuitGame {
             this.stars[this.levelIdx] = stars;
             CIRCUIT_STORAGE.set(CIRCUIT_STORAGE_SLOTS.STARS, this.stars);
         }
-        this.state = 'won-level';
+        this.state = 'won-level'; this.contextualRestart?.sync();
         if (stars >= 3) Sfx.star3();
         if (this.el['clear-stars']) {
             this.el['clear-stars'].textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
@@ -510,7 +510,7 @@ export class CircuitGame {
         const t = this.TEXT;
         const date = todayKey();
         const score = Math.min(this.moves, 99);
-        this.state = 'won-daily';
+        this.state = 'won-daily'; this.contextualRestart?.sync();
         const prev = Number(storageGet('cc_daily_' + date)) || 0;
         const isBest = !prev || score < prev;
         if (isBest) storageSet('cc_daily_' + date, String(score));
@@ -655,12 +655,12 @@ export class CircuitGame {
     /** 静默暂停/恢复：本页无暂停遮罩，冻结靠主循环 isPaused 判断 */
     pauseQuiet() {
         if (this.state === 'menu') return;
-        this.isPaused = true;
+        this.isPaused = true; this.contextualRestart?.sync();
     }
 
     resumeQuiet() {
         if (!this.isPaused) return;
-        this.isPaused = false;
+        this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃
     }
 
@@ -713,9 +713,9 @@ export class CircuitGame {
             });
         }
         if (this.el['reset-btn']) {
-            bindContextualRestart({
+            this.contextualRestart = bindContextualRestart({
                 button: this.el['reset-btn'],
-                active: () => this.state === 'playing',
+                active: () => this.state === 'playing' && !this.isPaused,
                 hasProgress: () => this.moves > 0,
                 restart: () => { this.resetLevel(); },
             });

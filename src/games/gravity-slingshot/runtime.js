@@ -122,7 +122,7 @@ class GravityGame {
         this.dailyDateKey = '';
 
         // 飞行状态
-        this.phase = 'menu';      // menu | aiming | flying | resolved | holed
+        this.phase = 'menu'; this.contextualRestart?.sync();      // menu | aiming | flying | resolved | holed
         this.probe = null;
         this.trail = [];
         this.flightT = 0;
@@ -149,7 +149,7 @@ class GravityGame {
          * `stepFlight()`（飞行弹道）、粒子推进、以及所有以真实时间为基础的动画
          * （背景星层视差等）都读这个标记。判据放主循环里统一处理，避免散落各处。
          */
-        this.isPaused = false;
+        this.isPaused = false; this.contextualRestart?.sync();
 
         this.applyLanguage();
         this.renderLevelGrid();
@@ -291,7 +291,7 @@ class GravityGame {
     loadHole() {
         this.launches = 0;
         this.loadLevelIntoView(this.course[this.holeIdx]);
-        this.phase = 'aiming';
+        this.phase = 'aiming'; this.contextualRestart?.sync();
         this.updateHud();
         this.hideOverlays();
         if (this.el.hint) this.el.hint.textContent = this.TEXT.tapToAim;
@@ -310,7 +310,7 @@ class GravityGame {
     }
 
     enterMenu(show = true) {
-        this.phase = 'menu';
+        this.phase = 'menu'; this.contextualRestart?.sync();
         if (show) {
             this.loadLevelIntoView(LEVELS[0]);
         }
@@ -359,7 +359,7 @@ class GravityGame {
 
     fire(vx, vy) {
         this.launches++;
-        this.phase = 'flying';
+        this.phase = 'flying'; this.contextualRestart?.sync();
         this.probe = { x: this.level.pad.x, y: this.level.pad.y, vx, vy };
         this.trail = [];
         this.flightT = 0;
@@ -393,7 +393,7 @@ class GravityGame {
     }
 
     resolveFlight(outcome) {
-        this.phase = 'resolved';
+        this.phase = 'resolved'; this.contextualRestart?.sync();
         if (outcome === 'crash') {
             Sfx.crash();
             vibrate(60);
@@ -410,7 +410,7 @@ class GravityGame {
         }
         setTimeout(() => {
             if (this.phase === 'resolved') {
-                this.phase = 'aiming';
+                this.phase = 'aiming'; this.contextualRestart?.sync();
                 this.loadLevelIntoView(this.level);
                 this.updateHud();
             }
@@ -418,13 +418,13 @@ class GravityGame {
     }
 
     abortFlight() {
-        this.phase = 'aiming';
+        this.phase = 'aiming'; this.contextualRestart?.sync();
         this.loadLevelIntoView(this.level);
         this.updateHud();
     }
 
     onCapture() {
-        this.phase = 'holed';
+        this.phase = 'holed'; this.contextualRestart?.sync();
         Sfx.capture();
         vibrate([25, 40, 70]);
         this.burstSwirl(this.probe.x, this.probe.y, '#7dfad0', 26);
@@ -623,7 +623,7 @@ class GravityGame {
 
     resetHole() {
         if (this.phase === 'flying' || this.phase === 'resolved' || this.phase === 'aiming') {
-            this.phase = 'aiming';
+            this.phase = 'aiming'; this.contextualRestart?.sync();
             this.loadLevelIntoView(this.level);
             this.updateHud();
         }
@@ -644,9 +644,9 @@ class GravityGame {
         if (this.el['btn-replay']) this.el['btn-replay'].addEventListener('click', () => { Sfx.click(); this.loadHole(); });
         if (this.el['btn-again']) this.el['btn-again'].addEventListener('click', () => { Sfx.click(); this.startDailyMode(); });
         if (this.el['reset-btn']) {
-            bindContextualRestart({
+            this.contextualRestart = bindContextualRestart({
                 button: this.el['reset-btn'],
-                active: () => ['aiming', 'flying', 'resolved'].includes(this.phase),
+                active: () => !this.isPaused && ['aiming', 'flying', 'resolved'].includes(this.phase),
                 hasProgress: () => false,
                 restart: () => { Sfx.click(); this.resetHole(); },
                 purpose: 'attempt',
@@ -752,12 +752,12 @@ class GravityGame {
     pauseQuiet() {
         // menu 态本来就没有模拟在跑，标记它没意义（恢复时反而容易误判）
         if (this.phase === 'menu') return;
-        this.isPaused = true;
+        this.isPaused = true; this.contextualRestart?.sync();
     }
 
     resumeQuiet() {
         if (!this.isPaused) return;
-        this.isPaused = false;
+        this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃
     }
 

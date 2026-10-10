@@ -184,8 +184,8 @@ export class FlameVerseGame {
         // 对局状态：menu | playing | won-level | won-daily
         // （焰语没有 terminal 失败态：送检不吻合只是一次读数反馈，继续投盐即可）
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
         this.spec = null;
@@ -298,9 +298,9 @@ export class FlameVerseGame {
         }
         if (el['reset-btn']) {
             el['reset-btn'].innerHTML = ICONS.retry;
-            bindContextualRestart({
+            this.contextualRestart = bindContextualRestart({
                 button: el['reset-btn'],
-                active: () => this.state === 'playing',
+                active: () => this.state === 'playing' && !this.isPaused,
                 hasProgress: () => this.throws > 0 || this.refills > 0,
                 restart: () => { Sfx.click(); this.restartLevel(); },
             });
@@ -517,8 +517,8 @@ export class FlameVerseGame {
         this.throws = 0;
         this.refills = 0;
         this.diff = [];
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = 0;
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
@@ -561,7 +561,7 @@ export class FlameVerseGame {
     }
 
     toMenu() {
-        this.state = 'menu';
+        this.state = 'menu'; this.contextualRestart?.sync();
         this.recipe = emptyRecipe();
         this.throws = 0;
         this.refills = 0;
@@ -678,7 +678,7 @@ export class FlameVerseGame {
 
     showClearPanel(stars, cost) {
         const el = this.el;
-        this.state = 'won-level';
+        this.state = 'won-level'; this.contextualRestart?.sync();
         if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         if (el['clear-line']) {
             el['clear-line'].textContent = `${this.t('cost')} ${cost} · ${this.t('par')} ${this.spec.par} · ${this.t('throws')} ${this.throws} · ${this.t('refills')} ${this.refills}`;
@@ -692,7 +692,7 @@ export class FlameVerseGame {
     }
 
     finishDaily() {
-        this.state = 'won-daily';
+        this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.hide(el['clear']);
         if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
@@ -898,8 +898,8 @@ export class FlameVerseGame {
 
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
 
-    pauseQuiet() { this.isPaused = true; }
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
+    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */

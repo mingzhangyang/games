@@ -47,6 +47,42 @@ for (const id of Object.keys(CASES)) {
         || !src.includes("from '../../platform/contextual-restart.js'")) {
         throw new Error(id + ': the shared restart controller is missing');
     }
+    const transitions = id === 'carrot-pull'
+        ? /\bstate\.(?:mode|paused)\s*=\s*(?:'[^']*'|true|false|paused)\s*;/g
+        : id === 'gravity-slingshot'
+            ? /\bthis\.(?:phase|isPaused)\s*=\s*(?:'[^']*'|true|false)\s*;/g
+            : /\bthis\.(?:state|isPaused)\s*=\s*(?:'[^']*'|true|false)\s*;/g;
+    const lines = src.split('\n');
+    const unsignaled = lines.flatMap((line, index) => {
+        if (line.trimStart().startsWith('//')) return [];
+        const assignments = [...line.matchAll(transitions)];
+        // Constructor transitions are also signaled safely via optional chaining.
+        return assignments.length && !line.includes('contextualRestart?.sync()')
+            ? [index + 1] : [];
+    });
+    if (unsignaled.length) {
+        throw new Error(id + ': state transitions lack contextual retry sync at '
+            + unsignaled.join(', '));
+    }
+}
+// Every destructive restart has an explicit progress owner and matching
+// rollback invariant; a new case cannot silently skip its confirmation test.
+const PROGRESS = {
+    'lumen': 'flips',
+    'circuit': 'moves',
+    'silk-dew': 'drags',
+    'echo-cave': 'pulseUsed',
+    'bond-forge': 'drags',
+    'flame-verse': 'throws',
+    'ripple-duet': 'cost',
+    'carrot-pull': 'pulls',
+    'crystal-bloom': 'anchors',
+    'maxwell-demon': 'world.spent',
+    'shadow-loom': 'moves',
+};
+const expectedDestructive = Object.keys(CASES).filter(id => id !== 'gravity-slingshot').sort();
+if (JSON.stringify(Object.keys(PROGRESS).sort()) !== JSON.stringify(expectedDestructive)) {
+    throw new Error('Missing progress test for a destructive topbar restart');
 }
 const PAGES = Object.keys(CASES).filter(keepPage);
 exitIfNoPages(PAGES, 'verify-contextual-restart');
@@ -85,6 +121,12 @@ try {
             } else void request.continue();
         });
         try {
+            await page.evaluateOnNewDocument(() => {
+                try {
+                    localStorage.setItem('site_lang', 'en');
+                    localStorage.setItem('site_muted', '1');
+                } catch { /* storage unavailable */ }
+            });
             await page.goto(BASE + '/' + id + '.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
             await page.waitForFunction(key => !!window[key], { timeout: 15000 }, global);
             check(await page.evaluate(isHidden, selector), id + ': reset hidden on menu');
@@ -128,39 +170,91 @@ try {
                 }, global);
                 check(keepsAttemptCount, 'gravity-slingshot: retry resets shot, not accumulated attempts');
             }
-            if (['lumen', 'shadow-loom', 'carrot-pull'].includes(id)) {
-                if (id === 'carrot-pull') await start();
-                const field = id === 'lumen' ? 'flips' : id === 'shadow-loom' ? 'moves' : 'pulls';
-                await page.evaluate(({ key, field, gameId }) => {
-                    const g = window[key];
-                    (gameId === 'carrot-pull' ? g.state : g)[field] = 1;
-                }, { key: global, field, gameId: id });
-                let declinedMessage = '';
-                page.once('dialog', async dialog => {
-                    declinedMessage = dialog.message();
-                    await dialog.dismiss();
-                });
-                await page.click(selector);
-                const retained = await page.evaluate(({ key, field, gameId }) =>
-                    (gameId === 'carrot-pull' ? window[key].state : window[key])[field] === 1,
-                { key: global, field, gameId: id });
-                check(declinedMessage.length > 0 && retained, id + ': cancel preserves score/progress');
+            // The controls also follow quiet drawer / visibility pauses without
+            // waiting for a menu-overlay mutation.
+            await page.evaluate(key => window[key].pauseQuiet(), global);
+            await page.waitForFunction(isHidden, { timeout: 4000 }, selector);
+            check(true, id + ': quiet pause immediately hides retry');
+            await page.evaluate(key => window[key].resumeQuiet(), global);
+            await page.waitForFunction(sel => !document.querySelector(sel)?.disabled,
+                { timeout: 4000 }, selector);
+            check(true, id + ': quiet resume restores retry');
 
-                let acceptedMessage = '';
-                page.once('dialog', async dialog => {
-                    acceptedMessage = dialog.message();
-                    await dialog.accept();
-                });
+            if (id !== 'gravity-slingshot') {
+                if (id === 'carrot-pull') await start();
+                const field = PROGRESS[id];
+                const mutateProgress = () => page.evaluate(({ key, path }) => {
+                    const g = window[key];
+                    if (path === 'anchors') {
+                        g.anchors.push({ t: 1, T: g.spec.t0 });
+                        return g.anchors.length;
+                    }
+                    if (path === 'world.spent') {
+                        g.world.spent = 2;
+                        return g.world.spent;
+                    }
+                    const state = path === 'pulls' ? g.state : g;
+                    state[path] = 1;
+                    return state[path];
+                }, { key: global, path: field });
+                const readProgress = () => page.evaluate(({ key, path }) => {
+                    const g = window[key];
+                    if (path === 'anchors') return g.anchors.length;
+                    if (path === 'world.spent') return g.world.spent;
+                    return (path === 'pulls' ? g.state : g)[path];
+                }, { key: global, path: field });
+                const scoreBefore = await mutateProgress();
+                check(scoreBefore > 0, id + ': fixture created meaningful game progress');
+
+                const declined = new Promise(resolve => page.once('dialog', async dialog => {
+                    const message = dialog.message();
+                    await dialog.dismiss();
+                    resolve(message);
+                }));
                 await page.click(selector);
-                const after = await page.evaluate(({ key, field, gameId }) => {
-                    const g = window[key], state = gameId === 'carrot-pull' ? g.state : g;
-                    return { progress: state[field], state: gameId === 'carrot-pull' ? g.state.mode : g.state };
-                }, { key: global, field, gameId: id });
-                check(acceptedMessage.length > 0 && after.progress === 0
-                    && after.state === (id === 'carrot-pull' ? 'menu' : 'playing'),
-                id + ': confirmation restarts correctly ' + JSON.stringify(after));
+                const declinedMessage = await declined;
+                const retained = await readProgress();
+                check(/^(Restart this level|End this round)\?/.test(declinedMessage)
+                    && retained === scoreBefore,
+                id + ': English confirmation and cancellation preserve progress ' + declinedMessage);
+
+                // Test the actual consumer listener ordering, not just getLang().
+                const localized = await page.evaluate(sel => {
+                    localStorage.setItem('site_lang', 'zh');
+                    window.dispatchEvent(new CustomEvent('site-settings:changed'));
+                    const btn = document.querySelector(sel);
+                    return { title: btn.title, aria: btn.getAttribute('aria-label') };
+                }, selector);
+                check(localized.title === localized.aria
+                    && /重开|结束本局/.test(localized.title),
+                id + ': Chinese locale retains controller-owned button label ' + JSON.stringify(localized));
+
+                const accepted = new Promise(resolve => page.once('dialog', async dialog => {
+                    const message = dialog.message();
+                    await dialog.accept();
+                    resolve(message);
+                }));
+                await page.click(selector);
+                const acceptedMessage = await accepted;
+                const after = await readProgress();
+                const expectedState = id === 'carrot-pull' ? 'menu' : 'playing';
+                const actualState = await page.evaluate(({ key, name }) =>
+                    name === 'carrot-pull' ? window[key].state.mode : window[key].state,
+                { key: global, name: id });
+                check(/^(重新开始本关|结束本局)/.test(acceptedMessage)
+                    && after === 0 && actualState === expectedState,
+                id + ': Chinese confirmation restores expected game state ' + JSON.stringify({
+                    acceptedMessage, after, actualState,
+                }));
             }
 
+            if (id === 'carrot-pull') {
+                await start();
+                await page.evaluate(() => { window.cpGame.state.time = 0.001; });
+                await page.waitForFunction(() => window.cpGame.state.mode === 'over', { timeout: 3000 });
+                check(await page.evaluate(isHidden, selector),
+                    'carrot-pull: terminal game state immediately hides exit button');
+            }
             if (id !== 'carrot-pull') {
                 await page.evaluate(({ key, method }) => window[key][method](true),
                     { key: global, method: menuMethod });
@@ -174,6 +268,21 @@ try {
                     { timeout: 4000 }, selector);
                 const resultId = id === 'shadow-loom' ? prefix + '-result'
                     : id === 'gravity-slingshot' ? prefix + '-over' : prefix + '-clear';
+                // Assert the *state-only* transition before any result DOM change.
+                // Shadow Loom enters "solving", Bond Forge "clear" and delays
+                // the result overlay: a stale restart icon would remain actionable.
+                if (id === 'shadow-loom' || id === 'bond-forge') {
+                    const pure = await page.evaluate(({ key, name, sel }) => {
+                        const g = window[key], button = document.querySelector(sel);
+                        if (name === 'shadow-loom') g.solve();
+                        else g.onLevelCleared();
+                        return { state: g.state, hidden: button.disabled
+                            && getComputedStyle(button).display === 'none' };
+                    }, { key: global, name: id, sel: selector });
+                    check(pure.hidden && pure.state === (id === 'shadow-loom' ? 'solving' : 'clear'),
+                        id + ': state-only completion hides restart before result overlay '
+                        + JSON.stringify(pure));
+                }
                 const exists = await page.evaluate(({ key, name, nodeId }) => {
                     const g = window[key], result = document.getElementById(nodeId);
                     if (!result) return false;

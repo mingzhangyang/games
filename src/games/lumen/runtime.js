@@ -159,8 +159,8 @@ export class LumenGame {
 
         // 对局状态：menu | playing | won-level | won-daily
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
         this.par = 1;
@@ -298,8 +298,8 @@ export class LumenGame {
     startLevel(idx) {
         clearTimeout(this.solveTimer);
         this.loadLevel(idx);
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.hideOverlays();
         this.updateHud();
         track('lumen', 'play');
@@ -317,8 +317,8 @@ export class LumenGame {
         this.flips = 0;
         this.trace = traceGrid(this.grid);
         this.particles.length = 0;
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.hideOverlays();
         this.updateHud();
         this.showToast(this.TEXT.dailyStartToast, 1800);
@@ -338,8 +338,8 @@ export class LumenGame {
 
     showMenu() {
         clearTimeout(this.solveTimer);
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.loadLevel(this.levelIdx);   // 菜单背景继续展示当前关的光路
         if (this.el.start) this.el.start.classList.remove('hidden');
         if (this.el.clear) this.el.clear.classList.add('hidden');
@@ -425,7 +425,7 @@ export class LumenGame {
             this.stars[this.levelIdx] = stars;
             LUMEN_STORAGE.set(LUMEN_STORAGE_SLOTS.STARS, this.stars);
         }
-        this.state = 'won-level';
+        this.state = 'won-level'; this.contextualRestart?.sync();
         if (stars >= 3) Sfx.star3();
         if (this.el['clear-stars']) {
             this.el['clear-stars'].textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
@@ -453,7 +453,7 @@ export class LumenGame {
         const t = this.TEXT;
         const date = todayKey();
         const score = this.flips;
-        this.state = 'won-daily';
+        this.state = 'won-daily'; this.contextualRestart?.sync();
         const prev = Number(storageGet('lm_daily_' + date)) || 0;
         const isBest = !prev || score < prev;
         if (isBest) storageSet('lm_daily_' + date, String(score));
@@ -602,12 +602,12 @@ export class LumenGame {
      */
     pauseQuiet() {
         if (this.state === 'menu') return;
-        this.isPaused = true;
+        this.isPaused = true; this.contextualRestart?.sync();
     }
 
     resumeQuiet() {
         if (!this.isPaused) return;
-        this.isPaused = false;
+        this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃
     }
 
@@ -656,9 +656,9 @@ export class LumenGame {
             });
         }
         if (this.el['reset-btn']) {
-            bindContextualRestart({
+            this.contextualRestart = bindContextualRestart({
                 button: this.el['reset-btn'],
-                active: () => this.state === 'playing',
+                active: () => this.state === 'playing' && !this.isPaused,
                 hasProgress: () => this.flips > 0,
                 restart: () => { this.resetLevel(); },
             });

@@ -186,8 +186,8 @@ class BondForgeGame {
         this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
 
         /** 状态机：'menu' | 'playing' | 'paused' | 'clear' | 'over' */
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
 
         this.mode = 'levels';           // 'levels' | 'daily' | 'sandbox'
         this.levelIndex = 0;
@@ -422,9 +422,9 @@ class BondForgeGame {
         }
         if (el['reset-btn']) {
             el['reset-btn'].innerHTML = ICONS.retry;
-            bindContextualRestart({
+            this.contextualRestart = bindContextualRestart({
                 button: el['reset-btn'],
-                active: () => this.state === 'playing' && this.mode !== 'sandbox',
+                active: () => this.state === 'playing' && !this.isPaused && this.mode !== 'sandbox',
                 hasProgress: () => this.drags > 0 || this.usedUndo || this.usedCatalyst,
                 restart: () => { sfxTone(660, 0.09, 'triangle', 0.12); this.restartLevel(); },
             });
@@ -727,8 +727,8 @@ class BondForgeGame {
             this.tray.push({ sym, used: false });
         }
         this.hideOverlays();
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.updateHud();
         this.toast(this.t('sandboxHint'));
     }
@@ -759,8 +759,8 @@ class BondForgeGame {
         this.usedCatalyst = false;
         this.setupBoard(this.level);
         this.hideOverlays();
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.updateHud();
         this.renderSideRecords();
         // The analytics Worker accepts the canonical play/finish event names
@@ -846,8 +846,8 @@ class BondForgeGame {
     }
 
     toMenu() {
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.level = null;
         this.hideOverlays();
         if (this.el['start']) this.el['start'].classList.remove('hidden');
@@ -866,7 +866,7 @@ class BondForgeGame {
         if (this.state === 'over') return;
         this.cancelClearPreview();
         if (this.el['clear']) this.el['clear'].classList.add('hidden');
-        this.state = 'over';
+        this.state = 'over'; this.contextualRestart?.sync();
         const total = this.dailyTotalDrags;
         const date = this.dailyDateKey || todayKey();
         try {
@@ -1059,9 +1059,9 @@ class BondForgeGame {
 
     /* ---------------------- 暂停（抽屉适配器） ---------------------- */
 
-    pauseQuiet() { this.isPaused = true; }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
 
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; }
+    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
 
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
@@ -1735,12 +1735,12 @@ class BondForgeGame {
      */
     onLevelCleared() {
         if (this.state !== 'playing') return;
-        this.state = 'clear';
+        this.state = 'clear'; this.contextualRestart?.sync();
 
         if (this.mode === 'sandbox') {
             // 沙盒是自由搭建，不判定通关、不记分
             this.toast(this.t('toastLevelDone'));
-            this.state = 'playing';
+            this.state = 'playing'; this.contextualRestart?.sync();
             return;
         }
 

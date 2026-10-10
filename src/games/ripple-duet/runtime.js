@@ -184,8 +184,8 @@ export class RippleDuetGame {
         // 对局状态：menu | playing | won-level | won-daily
         // （没有 terminal 失败态：图样不达标只是读数不够，继续调就是）
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
         this.spec = null;
@@ -237,7 +237,7 @@ export class RippleDuetGame {
         this.levelIdx = LEVELS.indexOf(spec);
         if (this.levelIdx < 0) this.levelIdx = 0;
         this.loadLevel(spec);
-        this.state = 'playing';
+        this.state = 'playing'; this.contextualRestart?.sync();
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
@@ -252,7 +252,7 @@ export class RippleDuetGame {
         this.mode = 'daily';
         this.daily = { key, display: todayKeyDisplay(), course, cursor: 0, totalCost: 0, stars: 0 };
         this.loadLevel(course[0]);
-        this.state = 'playing';
+        this.state = 'playing'; this.contextualRestart?.sync();
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
@@ -264,13 +264,13 @@ export class RippleDuetGame {
     restartLevel() {
         if (!this.spec) return;
         this.loadLevel(this.spec);
-        this.state = 'playing';
+        this.state = 'playing'; this.contextualRestart?.sync();
         this.hide(this.el['clear']);
         this.updateHud();
     }
 
     toMenu() {
-        this.state = 'menu';
+        this.state = 'menu'; this.contextualRestart?.sync();
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
         this.show(this.el['start']);
@@ -285,7 +285,7 @@ export class RippleDuetGame {
                 return;
             }
             this.loadLevel(this.daily.course[this.daily.cursor]);
-            this.state = 'playing';
+            this.state = 'playing'; this.contextualRestart?.sync();
             this.hide(this.el['clear']);
             this.updateHud();
             return;
@@ -480,7 +480,7 @@ export class RippleDuetGame {
 
     showClearPanel(stars, cost) {
         const el = this.el;
-        this.state = 'won-level';
+        this.state = 'won-level'; this.contextualRestart?.sync();
         if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         if (el['clear-line']) {
             el['clear-line'].textContent = `${this.t('cost')} ${cost} · ${this.t('par')} ${this.spec.par}`;
@@ -493,7 +493,7 @@ export class RippleDuetGame {
     }
 
     finishDaily() {
-        this.state = 'won-daily';
+        this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.hide(el['clear']);
         if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
@@ -1162,9 +1162,9 @@ export class RippleDuetGame {
         this.canvas.addEventListener('pointercancel', () => this.onPointerUp());
 
         if (this.el['reset-btn']) {
-            bindContextualRestart({
+            this.contextualRestart = bindContextualRestart({
                 button: this.el['reset-btn'],
-                active: () => this.state === 'playing',
+                active: () => this.state === 'playing' && !this.isPaused,
                 hasProgress: () => this.cost > 0,
                 restart: () => { this.restartLevel(); },
             });
@@ -1222,8 +1222,8 @@ export class RippleDuetGame {
         });
     }
 
-    pauseQuiet() { this.isPaused = true; }
-    resumeQuiet() { this.isPaused = false; }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
+    resumeQuiet() { this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 }
 

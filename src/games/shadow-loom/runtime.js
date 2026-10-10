@@ -87,8 +87,8 @@ export class ShadowLoomGame {
         this.sfx = createSfxEngine({ masterGain: 0.5 });
         this.reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
 
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.pausedByHidden = false;
         this.levelIdx = 0;
         this.level = LEVELS[0];
@@ -322,8 +322,8 @@ export class ShadowLoomGame {
 
     startLevel(i) {
         this.loadLevel(i, true);
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.el.start?.classList.add('hidden');
         this.el.result?.classList.add('hidden');
         this.renderProgress();
@@ -353,8 +353,8 @@ export class ShadowLoomGame {
     }
 
     showMenu() {
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.drag = null;
         this.el.result?.classList.add('hidden');
         this.el.start?.classList.remove('hidden');
@@ -364,7 +364,7 @@ export class ShadowLoomGame {
     }
 
     solve() {
-        this.state = 'solving';
+        this.state = 'solving'; this.contextualRestart?.sync();
         this.solveT = this.clock;
         // 按住不放也可能完成：这一次拖动同样算一次移动
         if (this.drag && this.drag.moved) this.moves++;
@@ -394,7 +394,7 @@ export class ShadowLoomGame {
     }
 
     showResult() {
-        this.state = 'done';
+        this.state = 'done'; this.contextualRestart?.sync();
         this.renderResult();
         this.el.result?.classList.remove('hidden');
     }
@@ -1301,9 +1301,9 @@ export class ShadowLoomGame {
         this.el['btn-next']?.addEventListener('click', () => this.nextLevel());
         this.el['btn-replay']?.addEventListener('click', () => this.startLevel(this.levelIdx));
         this.el['btn-menu']?.addEventListener('click', () => this.showMenu());
-        bindContextualRestart({
+        this.contextualRestart = bindContextualRestart({
             button: this.el['reset-btn'],
-            active: () => this.state === 'playing',
+            active: () => this.state === 'playing' && !this.isPaused,
             hasProgress: () => this.moves > 0 || this.elapsed > 5000,
             restart: () => { this.restartLevel(); },
         });
@@ -1314,21 +1314,21 @@ export class ShadowLoomGame {
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 if (this.isRunning()) {
-                    this.isPaused = true;
+                    this.isPaused = true; this.contextualRestart?.sync();
                     this.pausedByHidden = true;
                 }
             } else if (this.pausedByHidden) {
                 this.pausedByHidden = false;
-                this.isPaused = false;
+                this.isPaused = false; this.contextualRestart?.sync();
             }
         });
     }
 
     pauseQuiet() {
-        this.isPaused = true;
+        this.isPaused = true; this.contextualRestart?.sync();
         this.onPointerUp();
     }
 
-    resumeQuiet() { this.isPaused = false; }
+    resumeQuiet() { this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 }
