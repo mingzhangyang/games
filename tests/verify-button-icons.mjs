@@ -241,13 +241,32 @@ for (const name of ['tetris', 'minesweeper'].filter(keepPage)) {
             }
             // 真实按钮点击合同：Restart / Again / Close，以及复制反馈的动态 SVG。
             if (name === 'tetris') {
-                const ok = await page.evaluate(() => {
-                    document.getElementById('restartBtn').click();
+                const result = await page.evaluate(() => {
                     const g = window.tetrisRuntime.game;
-                    return !g.gameOver && !!g.animationId
-                        && document.getElementById('gameOverOverlay').style.display === 'none';
+                    // Dirty the finished board and counters so a mere overlay close cannot pass.
+                    g.board[g.rows - 1][0] = 'T';
+                    g.board[g.rows - 2][3] = 'L';
+                    g.score = 4821;
+                    g.lines = 12;
+                    g.level = 7;
+                    g.combo = 5;
+                    const previousBoard = g.board;
+                    const seeded = previousBoard.flat().some(Boolean) && g.score > 0 && g.lines > 0;
+                    document.getElementById('restartBtn').click();
+                    return {
+                        seeded,
+                        resumed: !g.gameOver && !!g.animationId
+                            && document.getElementById('gameOverOverlay').style.display === 'none',
+                        freshBoard: g.board !== previousBoard && g.board.length === g.rows
+                            && g.board.every(row => row.length === g.cols && row.every(cell => cell === 0)),
+                        freshCounters: g.score === 0 && g.lines === 0 && g.level === 1 && g.combo === 0,
+                        pieceReady: !!g.currentPiece && !!g.nextPiece && !g.paused,
+                    };
                 });
-                if (!ok) { bad++; console.error('  x ' + tag + ': Restart failed to resume gameplay'); }
+                if (Object.values(result).some(ok => !ok)) {
+                    bad++;
+                    console.error('  x ' + tag + ': Tetris Restart reset contract ' + JSON.stringify(result));
+                }
             } else {
                 await page.evaluate(() => {
                     // 避免无权限的 headless clipboard 使结果依赖机器环境。
@@ -323,6 +342,88 @@ for (const name of ['tetris', 'minesweeper'].filter(keepPage)) {
                 if (!actions.closed || !actions.replayed || !actions.fresh) {
                     bad++;
                     console.error('  x ' + tag + ': Close / Again result contract ' + JSON.stringify(actions));
+                }
+
+                // Deterministic async-lifecycle regression: the clipboard Promise resolves
+                // AFTER Again created a fresh game. Old feedback must never mutate new UI.
+                // Also cover a rejection after Close (no stale execCommand fallback), and
+                // two out-of-order Copy attempts (latest request owns the feedback timer).
+                if (testCase.lang === 'en' && testCase.theme === 'dark') {
+                    const race = await page.evaluate(async () => {
+                        const game = window.msGame;
+                        const button = document.getElementById('ms-btn-copy');
+                        const records = [];
+                        for (const fail of [false, true]) {
+                            let complete;
+                            let writes = 0;
+                            let fallbackCalls = 0;
+                            const pending = new Promise((resolve, reject) => {
+                                complete = () => fail ? reject(new Error('denied')) : resolve();
+                            });
+                            Object.defineProperty(navigator, 'clipboard', {
+                                configurable: true,
+                                value: { writeText: () => { writes++; return pending; } },
+                            });
+                            const originalExec = document.execCommand;
+                            document.execCommand = () => { fallbackCalls++; return true; };
+                            try {
+                                game.showResult(false, 12, false);
+                                const copy = game.copyResult();
+                                const beforeReset = game.copyRequestId;
+                                document.getElementById(fail ? 'ms-btn-close' : 'ms-btn-again').click();
+                                const invalidated = game.copyRequestId > beforeReset;
+                                complete();
+                                await copy;
+                                records.push({
+                                    writes,
+                                    invalidated,
+                                    fallbackCalls,
+                                    normalLabel: button.querySelector('span')?.textContent === game.TEXT.copyResult,
+                                    iconCount: button.querySelectorAll('svg').length,
+                                    noTimer: game.copyFeedbackTimer === null,
+                                });
+                            } finally {
+                                document.execCommand = originalExec;
+                            }
+                        }
+
+                        game.showResult(false, 12, false);
+                        let finishFirst;
+                        let writes = 0;
+                        Object.defineProperty(navigator, 'clipboard', {
+                            configurable: true,
+                            value: { writeText: () => {
+                                writes++;
+                                return writes === 1
+                                    ? new Promise(resolve => { finishFirst = resolve; })
+                                    : Promise.resolve();
+                            } },
+                        });
+                        const first = game.copyResult();
+                        const second = game.copyResult();
+                        await second;
+                        const latestTimer = game.copyFeedbackTimer;
+                        const latestLabel = button.querySelector('span')?.textContent === game.TEXT.copied;
+                        finishFirst();
+                        await first;
+                        const concurrent = {
+                            writes,
+                            latestLabel,
+                            timerPreserved: latestTimer !== null && game.copyFeedbackTimer === latestTimer,
+                            iconCount: button.querySelectorAll('svg').length,
+                        };
+                        game.hideResult();
+                        return { records, concurrent };
+                    });
+                    const cancelled = race.records.every(record =>
+                        record.writes === 1 && record.invalidated && record.fallbackCalls === 0
+                        && record.normalLabel && record.iconCount === 1 && record.noTimer);
+                    const concurrent = race.concurrent.writes === 2 && race.concurrent.latestLabel
+                        && race.concurrent.timerPreserved && race.concurrent.iconCount === 1;
+                    if (!cancelled || !concurrent) {
+                        bad++;
+                        console.error('  x ' + tag + ': stale clipboard lifecycle ' + JSON.stringify(race));
+                    }
                 }
             }
             if (errors.length) {

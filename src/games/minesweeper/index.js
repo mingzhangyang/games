@@ -166,6 +166,7 @@ class MinesweeperGame {
     constructor({ i18nBinder = null } = {}) {
         this.i18nBinder = i18nBinder;
         this.copyFeedbackTimer = null;
+        this.copyRequestId = 0;
         this.boardEl = document.getElementById('ms-board');
         this.el = {};
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
@@ -212,6 +213,19 @@ class MinesweeperGame {
         button.innerHTML = `${icon}<span>${label}</span>`;
     }
 
+    // A new game, a dismissed result, or another Copy attempt supersedes any
+    // unfinished clipboard promise as well as any displayed feedback timer.
+    // Async continuations may finish, but only the current request may touch UI.
+    invalidateCopyFeedback() {
+        this.copyRequestId++;
+        if (this.copyFeedbackTimer !== null) {
+            clearTimeout(this.copyFeedbackTimer);
+            this.copyFeedbackTimer = null;
+        }
+        this.renderCopyButton();
+        return this.copyRequestId;
+    }
+
     /* ── 语言 ── */
 
     applyLanguage() {
@@ -241,11 +255,7 @@ class MinesweeperGame {
     /* ── 新局 ── */
 
     newGame() {
-        if (this.copyFeedbackTimer !== null) {
-            clearTimeout(this.copyFeedbackTimer);
-            this.copyFeedbackTimer = null;
-            this.renderCopyButton();
-        }
+        this.invalidateCopyFeedback();
         const cfg = DIFFICULTIES[this.diff];
         this.cols = cfg.cols;
         this.rows = cfg.rows;
@@ -627,6 +637,7 @@ class MinesweeperGame {
     }
 
     hideResult() {
+        this.invalidateCopyFeedback();
         if (this.el.result) this.el.result.classList.add('hidden');
         Sfx.click();
     }
@@ -745,6 +756,7 @@ class MinesweeperGame {
     /* ── 复制成绩 ── */
 
     async copyResult() {
+        const requestId = this.invalidateCopyFeedback();
         const t = this.TEXT;
         const best = loadMinesweeperBestTime(this.diff);
         const text = `💣 ${t.title} · ${t[this.diff]}\n${t.shareLine}: ${this.elapsed}${t.timeSec}\n${t.personalBest}: ${best}${t.timeSec}\nhttps://games.orangely.xyz/minesweeper.html`;
@@ -753,6 +765,8 @@ class MinesweeperGame {
             await navigator.clipboard.writeText(text);
             ok = true;
         } catch (e) {
+            // Never run the fallback for a copy request superseded by a new game.
+            if (requestId !== this.copyRequestId) return;
             try {
                 const ta = document.createElement('textarea');
                 ta.value = text;
@@ -765,13 +779,13 @@ class MinesweeperGame {
                 ok = false;
             }
         }
-        if (this.copyFeedbackTimer !== null) {
-            clearTimeout(this.copyFeedbackTimer);
-            this.copyFeedbackTimer = null;
-        }
+        // A pending clipboard operation may settle long after Again/Close/difficulty
+        // change or after a newer Copy request has superseded this one.
+        if (requestId !== this.copyRequestId) return;
         this.renderCopyButton(ok);
         if (ok) {
             this.copyFeedbackTimer = setTimeout(() => {
+                if (requestId !== this.copyRequestId) return;
                 this.copyFeedbackTimer = null;
                 this.renderCopyButton(); // restore in the current language
             }, 1600);
