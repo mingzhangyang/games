@@ -104,6 +104,14 @@ assert.ok(worker.includes("from './scoreboard-durable.js'"), 'Worker exports dur
 assert.ok(worker.includes('boardStub(env, game).submit'), 'Worker submits through durable storage');
 assert.ok(worker.includes('boardStub(env, game).list'), 'Worker reads the same durable source');
 assert.ok(!worker.includes('GAME_SCORES.put('), 'Worker must never write to legacy KV');
+assert.match(worker, /p\\.re\\.test\\(game\\) && validDailyDateKey\\(game\\)/,
+    'date-specific Durable Object keys must be bounded before route selection');
+assert.match(math, /_gameLoopRunning = false;/,
+    'Math Rain must clear the running flag when a pause ends the animation chain');
+assert.match(tank, /resetHeldControls\\(\\);/,
+    'Tank Battle must release held input when opening the leaderboard');
+assert.match(needle, /resetNeedleAwnControls\\(this\\);/,
+    'Needle Awn must release held input before resuming from the leaderboard');
 const pausedRun = { level: 2, eligible: true };
 invalidateOnDifficultyChange(pausedRun, 2, 2);
 assert.equal(pausedRun.eligible, true, 'no-op difficulty selection stays eligible');

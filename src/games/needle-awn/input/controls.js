@@ -1,5 +1,25 @@
 import { ARENA_HEIGHT, ARENA_WIDTH } from '../config.js';
 
+/**
+ * The leaderboard modal swallows keyup by design. Clear gameplay state at the
+ * input owner before that boundary becomes active, including active touch IDs.
+ * Also useful when the browser loses focus while movement is held.
+ */
+export function resetNeedleAwnControls(game) {
+    game.keys = {};
+    game.pointer.down = false;
+    game.aimTouchId = null;
+    game.lastTouchTime = 0;
+    Object.assign(game.joy, {
+        active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0, x: 0, y: 0,
+    });
+    game.dom.joy?.classList.add('hidden');
+    if (game.dom.joyKnob) {
+        game.dom.joyKnob.style.left = '50%';
+        game.dom.joyKnob.style.top = '50%';
+    }
+}
+
 /** Bind keyboard, pointer and touch controls without owning game rules. */
 export function bindNeedleAwnInput(game) {
     const isEditableTarget = target => !!(target && target.closest && target.closest(
@@ -43,6 +63,7 @@ export function bindNeedleAwnInput(game) {
         }
     });
     window.addEventListener('keyup', event => { game.keys[event.code] = false; });
+    window.addEventListener('blur', () => resetNeedleAwnControls(game));
 
     game.canvas.addEventListener('mousemove', event => {
         const rect = game.canvas.getBoundingClientRect();

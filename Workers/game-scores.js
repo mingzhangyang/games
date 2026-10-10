@@ -1,4 +1,5 @@
 export { GameScoreBoard } from './scoreboard-durable.js';
+import { validDailyDateKey } from './scoreboard-date.js';
 // Cloudflare Worker — 共享游戏排行榜（全站唯一榜单 Worker）
 // SQLite Durable Objects own live scores; KV holds legacy snapshots for one-time read-only migration.
 // 承载游戏：tetris / hoop-shot / planet-merge(+每日) / reversi / tower-defense /
@@ -76,7 +77,9 @@ const DAILY_PATTERNS = [
 function resolveGame(game) {
   if (GAMES[game]) return GAMES[game];
   for (const p of DAILY_PATTERNS) {
-    if (p.re.test(game)) return p.config;
+    // Reject nonexistent or unbounded date suffixes BEFORE idFromName(),
+    // on both GET and POST. The Origin header is not authentication.
+    if (p.re.test(game) && validDailyDateKey(game)) return p.config;
   }
   return null;
 }

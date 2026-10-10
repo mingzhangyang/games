@@ -255,9 +255,13 @@ class TankBattle {
             triggers: [{ after: '.tb-home-btn', icon: true }],
             onOpen: () => {
                 pausedForRanking = this.gameState === 'playing' && !this.paused;
+                // Modal keyup is intentionally isolated from document controls:
+                // release keyboard, D-pad and fire *before* pausing.
+                this.resetHeldControls();
                 if (pausedForRanking) this.paused = true;
             },
             onClose: () => {
+                this.resetHeldControls();
                 if (pausedForRanking && this.gameState === 'playing') this.paused = false;
                 pausedForRanking = false;
             },
@@ -403,6 +407,14 @@ class TankBattle {
         }
     }
 
+    resetHeldControls() {
+        this.keys = {};
+        this.resetVirtualInputs?.();
+        const dpad = document.getElementById('dpad');
+        dpad?.querySelectorAll('.dpad-btn').forEach(button => button.classList.remove('active'));
+        document.getElementById('btnFire')?.classList.remove('active');
+    }
+
     setupEventListeners() {
         document.addEventListener('keydown', (e) => {
             this.keys[e.key.toLowerCase()] = true;
@@ -442,18 +454,9 @@ class TankBattle {
             }
         });
 
-        // 窗口失焦或方向旋转时清空按键，防止方向键粘连
-        const resetKeys = () => {
-            this.keys = {};
-            const dpad = document.getElementById('dpad');
-            if (dpad) {
-                dpad.querySelectorAll('.dpad-btn').forEach(b => b.classList.remove('active'));
-            }
-            const btnFire = document.getElementById('btnFire');
-            if (btnFire) btnFire.classList.remove('active');
-        };
-        window.addEventListener('blur', resetKeys);
-        window.addEventListener('orientationchange', resetKeys);
+        // Focus loss and modal transitions share one authoritative reset.
+        window.addEventListener('blur', () => this.resetHeldControls());
+        window.addEventListener('orientationchange', () => this.resetHeldControls());
 
         // 初始化移动端虚拟掌机控制器
         this.setupVirtualController();
@@ -578,6 +581,15 @@ class TankBattle {
         btnFire.addEventListener('touchcancel', stopFiring, { passive: false });
         btnFire.addEventListener('mousedown', startFiring);
         btnFire.addEventListener('mouseup', stopFiring);
+
+        // Active pointer IDs live in this closure; exposing a controlled
+        // release hook avoids a stale touch/mouse move reasserting direction.
+        this.resetVirtualInputs = () => {
+            dpadTouchId = null;
+            dpadMouseDown = false;
+            clearDpadKeys();
+            stopFiring();
+        };
 
         // --- 切换武器 ---
         if (btnWeapon) {

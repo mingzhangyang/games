@@ -183,6 +183,32 @@ if (!running.canvasReceivesPointer) fail('playing 状态 Canvas 不是可命中�
 if (!running.target) fail('目标数字未显示');
 if (!running.toolbar) fail('缺 #tool-bar');
 
+// Opening rankings during a running session pauses the logic rAF chain.
+// After its pending frame exits, the chain flag must clear and resume exactly
+// one loop; otherwise the game visually unpauses but expressions stay frozen.
+await page.evaluate(() => {
+    const trigger = document.getElementById('settings-btn')?.previousElementSibling;
+    if (!trigger?.classList.contains('scoreboard-trigger')) {
+        throw new Error('Math Rain in-game ranking trigger missing');
+    }
+    trigger.click();
+});
+await waitFor(page, () => document.querySelector('dialog[data-scoreboard-dialog]')?.open
+    && window.mathRainGame?.gameStateManager?.gameState === 'paused',
+'排行榜打开没有静默暂停 Math Rain');
+await waitFor(page, () => window.mathRainGame?._gameLoopRunning === false,
+'Math Rain 暂停时遗留 _gameLoopRunning 标记');
+await page.evaluate(() => document.querySelector('dialog[data-scoreboard-dialog]')?.close());
+await waitFor(page, () => window.mathRainGame?.gameStateManager?.gameState === 'playing'
+    && window.mathRainGame?._gameLoopRunning === true,
+'排行榜关闭后 Math Rain 逻辑循环未恢复');
+const framesBefore = await page.evaluate(() => window.mathRainGame.performanceOptimizer.frameCount);
+await new Promise(resolve => setTimeout(resolve, 160));
+const framesAfter = await page.evaluate(() => window.mathRainGame.performanceOptimizer.frameCount);
+if (framesAfter <= framesBefore + 1 || framesAfter > framesBefore + 48) {
+    fail(`排行榜关闭后 Math Rain 循环异常：frames ${framesBefore} → ${framesAfter}`);
+}
+
 // 实际鼠标坐标命中：正确答案与错误答案各走一次，验证渲染几何和 hit-test 共用。
 const beforeCorrect = await gameState(page);
 const target = beforeCorrect?.targetNumber;

@@ -21,7 +21,7 @@ import { updateMoreGames } from '../../platform/more-games.js';
 import { I18N } from './i18n.js';
 import { ART_UI, loadNeedleAwnArt } from './render/art.js';
 import { createNeedleAwnScene } from './render/scene.js';
-import { bindNeedleAwnInput } from './input/controls.js';
+import { bindNeedleAwnInput, resetNeedleAwnControls } from './input/controls.js';
 import { ARENA_HEIGHT, ARENA_WIDTH, STORAGE_KEYS } from './config.js';
 import { NEEDLE_AWN_STORAGE, NEEDLE_AWN_STORAGE_SLOTS } from './storage.js';
 
@@ -120,9 +120,11 @@ class GameEngine {
             ],
             onOpen: () => {
                 pausedForRanking = this.isRunning();
+                resetNeedleAwnControls(this);
                 if (pausedForRanking) this.pauseQuiet();
             },
             onClose: () => {
+                resetNeedleAwnControls(this);
                 if (pausedForRanking) this.resumeQuiet();
                 pausedForRanking = false;
             },

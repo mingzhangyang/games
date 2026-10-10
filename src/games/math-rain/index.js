@@ -642,6 +642,9 @@ class MathRainGame {
     gameLoop() {
         const gameState = this.gameStateManager?.getState();
         if (gameState?.gameState !== 'playing') {
+            // The rAF chain has stopped. A later resume must be able to
+            // create a fresh chain instead of observing a stale running flag.
+            this._gameLoopRunning = false;
             return;
         }
         

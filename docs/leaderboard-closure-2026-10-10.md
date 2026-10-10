@@ -92,3 +92,29 @@ the new leaderboard feature should become live, using `deploy:scores`;
 pending upload notice clears. SQLite DO migrations happen during the
 explicit score Worker publication. Never downgrade to a KV-writing Worker
 after the migration; it would hide newer Durable Object scores.
+
+## Board allocation and pause/input review closure
+
+**Bounded Daily IDs:** The public score Worker accepts a calendar-valid UTC
+`YYYYMMDD` suffix only in the last 30 UTC days, today, or the following UTC
+day (necessary for UTC+8 date rollover). All 13 daily-key patterns share the
+same check in `resolveGame()` before any Durable Object ID is created.
+Malformed dates and out-of-range GET/POST requests return HTTP 400 without
+touching storage. Static all-time boards remain unaffected. Old historical
+days outside this bounded public window are no longer addressable through the
+HTTP API; this intentionally limits persistent-object allocation.
+
+**Modal lifecycle:** The shared modal still prevents global gameplay shortcuts
+from receiving dialog key events. Tank Battle explicitly releases held
+keyboard direction, D-pad pointer IDs and fire state when the dialog opens
+and closes, using the same reset on blur and orientation change. Needle vs
+Awn similarly releases held keys, active joystick and aim-touch identifiers
+before pause/resume. Math Rain's logic rAF chain resets its running flag
+when non-playing state ends a frame, allowing a later resume to restart
+exactly one chain.
+
+**Verification:** `verify-scoreboard-date` covers calendar and time-bound
+validation plus both actual GET/POST Worker handlers with a Durable Object
+allocation sentinel; `smoke-scoreboard-dialog` covers held inputs across modal
+open/close; `smoke-math-rain` covers real loop termination and resumption.
+The Web App and score Worker remain independently deployed.

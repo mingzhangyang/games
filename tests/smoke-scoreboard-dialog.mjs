@@ -5,6 +5,44 @@ import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { registry } from './lib/registry.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 
+async function setHeldMovement(page, gameId) {
+    if (!['tank-battle', 'needle-awn'].includes(gameId)) return;
+    await page.evaluate(id => {
+        if (id === 'tank-battle') {
+            const game = window.tankBattleInstance;
+            game.keys.w = true;
+            game.keys[' '] = true;
+            document.getElementById('btnFire')?.classList.add('active');
+            document.querySelector('#dpad .dpad-btn')?.classList.add('active');
+        } else {
+            const game = window.gameEngine;
+            game.keys.KeyW = true;
+            game.aimTouchId = 91;
+            game.joy.active = true;
+            game.joy.id = 42;
+            game.joy.x = 1;
+            game.joy.y = -0.5;
+            game.dom.joy.classList.remove('hidden');
+        }
+    }, gameId);
+}
+
+async function heldMovementReleased(page, gameId) {
+    if (!['tank-battle', 'needle-awn'].includes(gameId)) return true;
+    return page.evaluate(id => {
+        if (id === 'tank-battle') {
+            const game = window.tankBattleInstance;
+            return !game.keys.w && !game.keys[' ']
+                && !document.getElementById('btnFire')?.classList.contains('active')
+                && !document.querySelector('#dpad .dpad-btn.active');
+        }
+        const game = window.gameEngine;
+        return !game.keys.KeyW && !game.joy.active && game.joy.id === null
+            && game.joy.x === 0 && game.joy.y === 0 && game.aimTouchId === null
+            && game.dom.joy.classList.contains('hidden');
+    }, gameId);
+}
+
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const games = registry.withCap('leaderboard').filter(g => g.scores?.ui === 'dialog')
     .filter(game => keepPage(game.href));
@@ -75,8 +113,14 @@ try {
                 errors.push(game.id + ': topbar rank control changed frame chrome or lost its 44px hit area: '
                     + JSON.stringify(state));
             }
+            // The modal consumes keyup. A key/button held before opening must
+            // be explicitly released by the owning game input controller.
+            await setHeldMovement(page, game.id);
             await page.click(trigger);
             await page.waitForFunction(() => document.querySelector('dialog[data-scoreboard-dialog]')?.open, { timeout: 6000 });
+            if (!await heldMovementReleased(page, game.id)) {
+                errors.push(game.id + ': modal open left held keyboard/joystick/fire state behind');
+            }
             await page.waitForFunction(() =>
                 document.querySelector('dialog[data-scoreboard-dialog] .game-lb-name')?.textContent === 'Test Player',
             { timeout: 5000 });
@@ -144,8 +188,12 @@ try {
             await page.evaluate(() => {
                 document.querySelector('.game-lb-username').value = window.__scoreboardOldName;
             });
+            await setHeldMovement(page, game.id);
             await page.keyboard.press('Escape');
             await page.waitForFunction(() => !document.querySelector('dialog[data-scoreboard-dialog]')?.open);
+            if (!await heldMovementReleased(page, game.id)) {
+                errors.push(game.id + ': modal close resumed with stale held controls');
+            }
             const escapeLeaks = await page.evaluate(() =>
                 window.__scoreboardKeyLeaks.filter(key => key.endsWith(':down:Escape')));
             if (escapeLeaks.length) errors.push(game.id + ': Escape leaked into gameplay: ' + escapeLeaks.join(','));
