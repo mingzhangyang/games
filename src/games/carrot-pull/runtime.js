@@ -1,3 +1,4 @@
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { getLang } from '../../platform/site-settings.js';
 import { track } from '../../platform/analytics.js';
@@ -53,6 +54,7 @@ export function createGame({ i18nBinder = null } = {}) {
     let fallbackScene = null;
     let rafId = 0;
     let pausedByHidden = false;
+    let contextualRestart = null;
     let best = 0;
     let dotsRound = -1;
     let scoreboard;
@@ -191,8 +193,8 @@ export function createGame({ i18nBinder = null } = {}) {
 
     function finish(won) {
         if (state.mode !== 'playing') return;
-        state.mode = 'over';
-        state.paused = false;
+        state.mode = 'over'; contextualRestart?.sync();
+        state.paused = false; contextualRestart?.sync();
         saveBest();
         void scoreboard.submit({ boardId: 'all', score: state.score });
         state.won = won;
@@ -215,8 +217,8 @@ export function createGame({ i18nBinder = null } = {}) {
 
     function start() {
         if (!['ready', 'fallback'].includes(refs['cp-stage']?.dataset.artState)) return;
-        state.mode = 'playing';
-        state.paused = false;
+        state.mode = 'playing'; contextualRestart?.sync();
+        state.paused = false; contextualRestart?.sync();
         state.round = 0;
         state.score = 0;
         state.time = ROUND_TIME;
@@ -238,8 +240,8 @@ export function createGame({ i18nBinder = null } = {}) {
     }
 
     function resetToMenu() {
-        state.mode = 'menu';
-        state.paused = false;
+        state.mode = 'menu'; contextualRestart?.sync();
+        state.paused = false; contextualRestart?.sync();
         state.round = 0;
         state.score = 0;
         state.time = ROUND_TIME;
@@ -296,7 +298,7 @@ export function createGame({ i18nBinder = null } = {}) {
 
     function setPaused(paused) {
         if (state.mode !== 'playing' || state.paused === paused) return;
-        state.paused = paused;
+        state.paused = paused; contextualRestart?.sync();
         if (!paused) pausedByHidden = false;
         updateUi();
         updateStatus(currentStatusText());
@@ -339,7 +341,13 @@ export function createGame({ i18nBinder = null } = {}) {
         refs['cp-start-btn'].addEventListener('click', start);
         refs['cp-again-btn'].addEventListener('click', start);
         refs['cp-menu-btn'].addEventListener('click', resetToMenu);
-        refs['cp-reset-btn'].addEventListener('click', resetToMenu);
+        contextualRestart = bindContextualRestart({
+            button: refs['cp-reset-btn'],
+            active: () => state.mode === 'playing' && !state.paused,
+            hasProgress: () => state.pulls > 0 || state.score > 0 || state.time < ROUND_TIME,
+            restart: resetToMenu,
+            purpose: 'exit',
+        });
         refs['cp-pull-btn'].addEventListener('pointerdown', (event) => {
             event.preventDefault();
             refs['cp-pull-btn'].classList.add('is-pressed');

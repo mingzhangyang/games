@@ -81,6 +81,46 @@ bindChrome({
 
 ---
 
+### 1.5 顶栏重置按游玩状态呈现（2026-10-10）
+
+12 个顶栏重开入口（lm/cc/sd/ec/bf/fv/rd/cp/cb/md/sl/gd）由共享模块
+src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一套游戏状态。
+
+- HTML 保留原有 DOM id / game-icon-btn，初始添加 hidden class，避免加载前出现无效按钮；
+  只有游戏进入有效游玩状态，且开始/结算浮层已收起，按钮才显示并可点击。
+- 各游戏通过 active/hasProgress/restart 回调显式提供事实，控制器只观察既有浮层
+  hidden 属性和 class 的变化；所有游戏 state/phase/paused 的真实变更点也显式
+  调用 `contextualRestart.sync()`（构造早期通过可选链调用）。不可只依靠结算浮层通知：
+  影织 solving、键合工坊 clear、拔萝卜 over 与暂停状态都可能先于浮层变化。
+  不轮询、不注入 CSS、不再绑定第二次点击事件。
+- 存在实质操作进度时，顶栏点击重开必须先确认；取消时保持状态。结算页继续由
+  原有 Retry/Again 操作接管，不增加重复的顶栏重开。
+- Carrot Pull 的原重置实际是退出当前游戏，本轮用关闭图标和“结束本局并返回菜单”说明。
+  计时器 `time < ROUND_TIME` 即已有不可恢复的时间消耗，哪怕只失误一次、仍零分零次拔取，
+  也必须确认；不能用 5 秒容差掩盖进度。
+- Crystal Bloom 一旦开始生长就有进度；`phase !== 'draw'` 必须与锚点及搅动一起参与
+  `hasProgress`，而不是只看可计数操作。
+- Gravity Slingshot 的“重试”只重置当前发射，不清除累计发射次数；其文案改为
+  “重置本次发射”，不加误导性的进度损失确认。未发射的 `aiming` 没有可重置的当前发射，
+  按钮必须隐藏且 R 不能执行空操作；仅 `flying`/`resolved` 暴露操作。
+- Echo Cave 的重开判断以 `model/rules.js` 的模拟世界为准，包含探索移动（返回起点仍保留）、
+  声波次数、已收集声晶及损失的生命。不得用每帧从 world 同步的 `pulseUsed` 显示缓存
+  作为进度依据。
+- 8 个游戏的 `R` 快捷键（sd/ec/fv/rd/cb/md/sl/gd）和可见顶栏动作统一调用
+  `contextualRestart.requestRestart()`，不能直达 `restartLevel()` 或 `resetHole()`：
+  包括有进度时的本地化确认、取消保护、无进度时立即重开、暂停/结算时禁止重开。
+  `gd` 为不丢累计发射次数的例外，仍通过同一生命周期守卫。
+  验证器应从实际运行时代码识别 R 绑定并对照测试清单，避免新增快捷键遗漏。
+- 测试：tests/verify-contextual-restart.mjs 覆盖 12 个游戏的菜单、游戏中、结算态，
+  对全部 11 个可能丢失进度的游戏分别执行中/英确认、取消保留与确认后重置；
+  `gravity-slingshot` 验证仅复位发射、累计次数不丢；状态变更静态钩子和
+  solving/clear/over 等结果浮层之前的状态也覆盖。
+  所有 R 重开快捷键执行取消与静默暂停断言；另覆盖拔萝卜仅消耗时间、
+  Crystal Bloom 仅开始生长、`gd` 空闲瞄准隐藏及复位保留累计发射次数；
+  smoke-shadow-loom.mjs 对带移动的重开显式接受确认，并对缺失确认设置有界超时。
+- 不更改其他 Home、Stats、Pause、Sound 顶栏职责；若新游戏不需要游戏内重置，
+  不应为了图标整齐而机械添加循环箭头。
+
 ## 2. 各页现状
 
 | 页面 | 左簇 | 右簇（专属 → stats → pause → sound） | 页脚 hint 来源 |

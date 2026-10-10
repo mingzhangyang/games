@@ -14,6 +14,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { LANGUAGES } from './i18n.js';
 
 import {
@@ -22,6 +23,7 @@ import {
     RULES,
     LEVELS,
     createWorld,
+    hasWorldProgress,
     stepWorld,
     dailyCourse,
 } from './model/rules.js';
@@ -147,8 +149,8 @@ export class EchoCaveGame {
 
         // 对局状态：menu | playing | won-level | won-daily | failed
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
         this.pulseUsed = 0;
@@ -253,7 +255,12 @@ export class EchoCaveGame {
         }
         if (el['reset-btn']) {
             el['reset-btn'].innerHTML = ICONS.retry;
-            el['reset-btn'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
+            this.contextualRestart = bindContextualRestart({
+                button: el['reset-btn'],
+                active: () => this.state === 'playing' && !this.isPaused,
+                hasProgress: () => hasWorldProgress(this.world),
+                restart: () => { Sfx.click(); this.restartLevel(); },
+            });
         }
         if (el['mute-btn']) {
             // ⚠️ 键名是 soundOn / soundOff（src/platform/icons.js），写错会把字面量 "undefined"
@@ -317,7 +324,6 @@ export class EchoCaveGame {
         setBtnText('btn-copy', this.t('copyResult'));
         setBtnText('btn-menu2', this.t('menu'));
 
-        if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
         if (el['pulses']) el['pulses'].title = this.t('pulses');
 
         this.renderLevelGrid();
@@ -451,9 +457,9 @@ export class EchoCaveGame {
         this.joy = null;
         this.world = createWorld(this.spec);
         this.memDirty = true;
-        this.state = 'playing';
+        this.state = 'playing'; this.contextualRestart?.sync();
         this.syncActionVisibility();
-        this.isPaused = false;
+        this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = 0;
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
@@ -485,7 +491,7 @@ export class EchoCaveGame {
     }
 
     toMenu() {
-        this.state = 'menu';
+        this.state = 'menu'; this.contextualRestart?.sync();
         this.syncActionVisibility();
         this.world = null;
         this.hide(this.el['clear']);
@@ -541,7 +547,7 @@ export class EchoCaveGame {
 
     showClearPanel(stars) {
         const el = this.el;
-        this.state = 'won-level';
+        this.state = 'won-level'; this.contextualRestart?.sync();
         this.syncActionVisibility();
         if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         if (el['clear-line']) {
@@ -559,7 +565,7 @@ export class EchoCaveGame {
 
     onLevelFailed() {
         if (this.state !== 'playing') return;
-        this.state = 'failed';
+        this.state = 'failed'; this.contextualRestart?.sync();
         this.syncActionVisibility();
         this.failReason = 'thorns';
         this.failTimer = 0;
@@ -569,7 +575,7 @@ export class EchoCaveGame {
     }
 
     finishDaily() {
-        this.state = 'won-daily';
+        this.state = 'won-daily'; this.contextualRestart?.sync();
         this.syncActionVisibility();
         const el = this.el;
         this.hide(el['clear']);
@@ -735,7 +741,10 @@ export class EchoCaveGame {
                     e.preventDefault();
                 }
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing' && !this.isPaused) this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused && !e.repeat) {
+                    e.preventDefault();
+                    this.contextualRestart?.requestRestart();
+                }
             } else if (e.key === 'Escape') {
                 if (this.state === 'playing' && !this.isPaused) this.toMenu();
             }
@@ -787,8 +796,8 @@ export class EchoCaveGame {
 
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
 
-    pauseQuiet() { this.isPaused = true; }
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
+    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */

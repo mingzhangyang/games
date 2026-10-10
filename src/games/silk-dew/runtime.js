@@ -15,6 +15,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import {
     STAGE,
     PHYS,
@@ -161,8 +162,8 @@ export class SilkfallGame {
 
         // 对局状态：menu | playing | won-level | won-daily | failed
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
         this.drags = 0;
@@ -296,7 +297,12 @@ export class SilkfallGame {
         }
         if (el['reset-btn']) {
             el['reset-btn'].innerHTML = ICONS.retry;
-            el['reset-btn'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
+            this.contextualRestart = bindContextualRestart({
+                button: el['reset-btn'],
+                active: () => this.state === 'playing' && !this.isPaused,
+                hasProgress: () => this.drags > 0,
+                restart: () => { Sfx.click(); this.restartLevel(); },
+            });
         }
         if (el['mute-btn']) {
             // ⚠️ 键名是 soundOn / soundOff（src/platform/icons.js:20,22），不是 volumeOn/volumeOff。
@@ -354,7 +360,6 @@ export class SilkfallGame {
         setBtnText('btn-copy', this.t('copyResult'));
         setBtnText('btn-menu2', this.t('menu'));
 
-        if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
         if (el['drags']) el['drags'].title = this.t('drags');
         // 开始覆盖层的语言钮走文字（与 lumen/circuit 同口径：显示「切换目标语言的自称」）。
 
@@ -474,8 +479,8 @@ export class SilkfallGame {
         this.failTimer = 0;
         this.particles = [];
         this.world = createWorld(this.spec);
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = 0;
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
@@ -509,7 +514,7 @@ export class SilkfallGame {
     }
 
     toMenu() {
-        this.state = 'menu';
+        this.state = 'menu'; this.contextualRestart?.sync();
         this.world = null;
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
@@ -560,7 +565,7 @@ export class SilkfallGame {
 
     showClearPanel(stars, improved) {
         const el = this.el;
-        this.state = 'won-level';
+        this.state = 'won-level'; this.contextualRestart?.sync();
         if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         if (el['clear-line']) {
             const taken = this.world ? this.world.starsTaken : 0;
@@ -577,7 +582,7 @@ export class SilkfallGame {
 
     onLevelFailed(reason) {
         if (this.state !== 'playing') return;
-        this.state = 'failed';
+        this.state = 'failed'; this.contextualRestart?.sync();
         this.failReason = reason;
         this.failTimer = 0;
         Sfx.fail();
@@ -586,7 +591,7 @@ export class SilkfallGame {
     }
 
     finishDaily() {
-        this.state = 'won-daily';
+        this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.showClearPanelSilent();
         const maxStars = this.daily.course.length * 3;
@@ -858,7 +863,10 @@ export class SilkfallGame {
             if (e.key === 'Escape') {
                 if (this.state === 'playing') this.toMenu();
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing') this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused && !e.repeat) {
+                    e.preventDefault();
+                    this.contextualRestart?.requestRestart();
+                }
             }
         });
         window.addEventListener('resize', () => this.resize());
@@ -880,8 +888,8 @@ export class SilkfallGame {
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
     // 抽屉调这三元组，页面内部状态不暴露
 
-    pauseQuiet() { this.isPaused = true; }
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
+    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */
