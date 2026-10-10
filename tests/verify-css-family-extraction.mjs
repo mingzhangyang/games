@@ -942,7 +942,8 @@ try {
     verifyReviewedAtRuleAdditions(
         mediaSource, mediaDestination, [], 'css/demo.css', unreviewedMediaErrors,
     );
-    assert.ok(unreviewedMediaErrors.some(e => /at-rule inventory/.test(e)));
+    assert.ok(unreviewedMediaErrors.some(e => /non-rule at-rule semantics changed/.test(e)),
+        'unreviewed removal of a media group must be rejected as an at-rule semantics change');
     const duplicateMediaSource = mediaCss(
         '@media (width >= 1024px) {.dm-side-row b {color:red}}'
         + '@media (width >= 1024px) {.other {color:red}}',
