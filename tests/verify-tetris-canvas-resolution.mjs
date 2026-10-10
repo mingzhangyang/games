@@ -204,6 +204,14 @@ try {
                     await page.setViewport({
                         width: next.width, height: next.height, deviceScaleFactor: next.dpr,
                     });
+                    // CDP's synthetic deviceScaleFactor change updates DPR and
+                    // matchMedia.matches but emits NO resize / media-query change
+                    // event at unchanged viewport size. Real monitor changes
+                    // deliver browser notifications; emulate that notification
+                    // explicitly so the test verifies the supported resize path.
+                    if (next.dpr !== previous.dpr) {
+                        await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+                    }
                     await ready(page, previous);
                     const after = await page.evaluate(snapshot);
                     const problems = audit(after);
