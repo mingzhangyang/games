@@ -1044,7 +1044,7 @@ export class Tetris {
                 (Math.random() - 0.5) * this.shakeAmount
             );
             this.shakeAmount *= Math.pow(0.9, frameDelta);
-            if (this.shakeAmount < 0.1) this.shakeAmount = 0;
+            if (advance && this.shakeAmount < 0.1) this.shakeAmount = 0;
         }
 
         // Draw grid

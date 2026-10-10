@@ -52,7 +52,7 @@
 | 缺口 | 登记 | 工作项 |
 |---|---|---|
 | `verify-button-icons` 没覆盖 tetris、minesweeper 的结果按钮 | 已通过 W6a 在校验器中消除豁免（见 §3） | W6a |
-| tetris 桌面宽屏棋盘发虚（画布后端缓冲固定 400×800） | `docs/backlog.md`，`verify-desktop-frame` knownGap 已移除（不清晰改为硬失败） | W6b |
+| tetris 桌面宽屏棋盘发虚（画布后端缓冲固定 400×800） | W6b 在 PR #128 修复；已移除 backlog 条目与 knownGap，清晰度转为硬性断言 | W6b |
 
 ### 2.3 保留的例外（有充分理由，不在本路线图内）
 

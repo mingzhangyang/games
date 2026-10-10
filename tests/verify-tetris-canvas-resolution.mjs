@@ -148,13 +148,45 @@ try {
                     draw(ctx) { ctx.fillStyle = '#00ff00'; ctx.fillRect(180, 100, 12, 12); },
                 }];
                 g.draw(false);
-                // Exercise the frame in which a tiny shake decays to zero.
+                // A saved sentinel under the shake frame exposes leaked saves.
+                // A second draw(false) alone would mask the transform leak.
+                const ctx = g.ctx;
+                const s = g.renderScale;
+                ctx.setTransform(7, 0, 0, 7, 31, 47);
+                ctx.save();
                 g.shakeAmount = 0.05;
+                g.deltaTime = 1;
+                g.draw(true); // crosses the threshold in this advancing frame
+                const decayedToZero = g.shakeAmount === 0;
+                ctx.restore();
+                const m = ctx.getTransform();
+                const restoredSentinel = m.a === 7 && m.d === 7
+                    && m.e === 31 && m.f === 47;
+                ctx.setTransform(s, 0, 0, s, 0, 0);
                 g.draw(false);
-                g.draw(false);
+                window.__w6bShakeProbe = { decayedToZero, restoredSentinel };
             });
             const first = await page.evaluate(snapshot);
+            const shakeProbe = await page.evaluate(() => window.__w6bShakeProbe);
+            check(shakeProbe.decayedToZero && shakeProbe.restoredSentinel,
+                tag + ' shake cutoff restores the context stack',
+                JSON.stringify(shakeProbe));
             check(audit(first).length === 0, tag + ' raster and pixel audit', audit(first).join(', '));
+            // A non-advancing redraw must not discard residual shake.
+            const stationaryShake = await page.evaluate(() => {
+                const g = window.game;
+                g.shakeAmount = 0.05;
+                g.draw(false);
+                const afterDraw = g.shakeAmount;
+                g.syncCanvasResolution();
+                const afterSync = g.shakeAmount;
+                g.shakeAmount = 0;
+                g.draw(false);
+                return { afterDraw, afterSync };
+            });
+            check(stationaryShake.afterDraw === 0.05 && stationaryShake.afterSync === 0.05,
+                tag + ' non-advancing redraw preserves shake',
+                JSON.stringify(stationaryShake));
             const corrupt = JSON.parse(JSON.stringify(first));
             corrupt.layers[1].width -= 1;
             check(audit(corrupt).includes('backing 1'), tag + ' rejects unsynchronized backing');
