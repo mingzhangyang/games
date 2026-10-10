@@ -81,7 +81,13 @@ const snapshot = () => {
 };
 function audit(s) {
     const bad = [];
-    const near = (x, y) => Math.abs(x - y) <= 0.6;
+    // Rectangles use CSS pixels: allow small fractional layout rounding.
+    // Canvas transform scales are unitless; a 0.6 tolerance would miss even
+    // an identity matrix where the expected backing scale is 1.16 or 1.4.
+    const nearRectPx = (x, y) => Number.isFinite(x) && Number.isFinite(y)
+        && Math.abs(x - y) <= 0.6;
+    const nearScale = (x, y) => Number.isFinite(x) && Number.isFinite(y)
+        && Math.abs(x - y) <= 1e-6;
     const width = Math.ceil(s.clientWidth * Math.max(1, Math.min(s.dpr, 2)));
     const scale = width / 400;
     const reference = s.layers[0].rect;
@@ -90,13 +96,13 @@ function audit(s) {
     });
     s.layers.forEach((l, i) => {
         const m = l.matrix;
-        if (!near(m[0], scale) || !near(m[3], scale) || m[1] !== 0 || m[2] !== 0
+        if (!nearScale(m[0], scale) || !nearScale(m[3], scale) || m[1] !== 0 || m[2] !== 0
             || m[4] !== 0 || m[5] !== 0) bad.push(`transform ${i}`);
         for (const k of ['x', 'y', 'w', 'h']) {
-            if (!near(l.rect[k], reference[k])) bad.push(`offset ${i} ${k}`);
+            if (!nearRectPx(l.rect[k], reference[k])) bad.push(`offset ${i} ${k}`);
         }
     });
-    if (!near(s.grid.scale, scale)) bad.push('grid scale');
+    if (!nearScale(s.grid.scale, scale)) bad.push('grid scale');
     if (s.pixels[0].slice(0, 3).join(',') !== '79,209,224') bad.push('block pixel');
     if (s.pixels[1].join(',') !== '255,0,255,255') bad.push('particle pixel');
     if (s.pixels[2].join(',') !== '0,255,0,255') bad.push('line pixel');
@@ -193,6 +199,26 @@ try {
             const badTransform = JSON.parse(JSON.stringify(first));
             badTransform.layers[2].matrix[4] = 1;
             check(audit(badTransform).includes('transform 2'), tag + ' rejects layer displacement');
+
+            // Mutations target both axes and the offscreen cache separately:
+            // a unitless ±0.02 error must fail even though it is < 0.6px.
+            for (const [axis, index] of [['x', 0], ['y', 3]]) {
+                const badScale = JSON.parse(JSON.stringify(first));
+                badScale.layers[1].matrix[index] += 0.02;
+                check(audit(badScale).includes('transform 1'),
+                    tag + ` rejects incorrect ${axis} axis scale`);
+            }
+            const badGridScale = JSON.parse(JSON.stringify(first));
+            badGridScale.grid.scale += 0.02;
+            check(audit(badGridScale).includes('grid scale'),
+                tag + ' rejects incorrectly scaled cached grid');
+            const identityScale = JSON.parse(JSON.stringify(first));
+            identityScale.layers[0].matrix[0] = 1;
+            identityScale.layers[0].matrix[3] = 1;
+            if (Math.abs(first.layers[0].matrix[0] - 1) > 1e-6) {
+                check(audit(identityScale).includes('transform 0'),
+                    tag + ' rejects accidental identity transform');
+            }
 
             if (v.dynamic) {
                 let previous = { width: first.clientWidth, dpr: first.dpr };
