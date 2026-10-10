@@ -947,11 +947,11 @@ try {
         '@media (width >= 1024px) {.dm-side-row b {color:red}}'
         + '@media (width >= 1024px) {.other {color:red}}',
     );
-    const duplicateMediaErrors = [];
+    const duplicateMediaGroupErrors = [];
     verifyReviewedAtRuleAdditions(
-        duplicateMediaSource, [], [], 'css/demo.css', duplicateMediaErrors, retireParams,
+        duplicateMediaSource, [], [], 'css/demo.css', duplicateMediaGroupErrors, retireParams,
     );
-    assert.ok(duplicateMediaErrors.some(e => /exactly one original media group/.test(e)));
+    assert.ok(duplicateMediaGroupErrors.some(e => /exactly one original media group/.test(e)));
     const injectedMediaErrors = [];
     verifyReviewedAtRuleAdditions(
         mediaSource, mediaSource, [], 'css/demo.css', injectedMediaErrors, retireParams,
