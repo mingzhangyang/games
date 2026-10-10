@@ -197,7 +197,7 @@ await waitFor(page, () => document.querySelector('dialog[data-scoreboard-dialog]
     && window.mathRainGame?.gameStateManager?.gameState === 'paused',
 '排行榜打开没有静默暂停 Math Rain');
 await waitFor(page, () => window.mathRainGame?._gameLoopRunning === false,
-'Math Rain 暂停时遗留 _gameLoopRunning 标记');
+    'Math Rain 暂停时遗留 _gameLoopRunning 标记');
 await page.evaluate(() => document.querySelector('dialog[data-scoreboard-dialog]')?.close());
 await waitFor(page, () => window.mathRainGame?.gameStateManager?.gameState === 'playing'
     && window.mathRainGame?._gameLoopRunning === true,
