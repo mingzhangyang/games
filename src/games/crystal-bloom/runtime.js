@@ -19,6 +19,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { LANGUAGES } from './i18n.js';
 
 import {
@@ -186,8 +187,8 @@ export class CrystalBloomGame {
 
         // 对局状态：menu | playing | won-level | won-daily | failed
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
         this.spec = null;
@@ -296,7 +297,12 @@ export class CrystalBloomGame {
         }
         if (el['reset-btn']) {
             el['reset-btn'].innerHTML = ICONS.retry;
-            el['reset-btn'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
+            this.contextualRestart = bindContextualRestart({
+                button: this.el['reset-btn'],
+                active: () => this.state === 'playing' && !this.isPaused,
+                hasProgress: () => this.phase !== 'draw' || this.anchors.length > 0 || this.stirs.length > 0,
+                restart: () => { Sfx.click(); this.restartLevel(); },
+            });
         }
         if (el['mute-btn']) {
             // ⚠️ 键名是 soundOn / soundOff（src/platform/icons.js），写错会把字面量 "undefined" 塞进 innerHTML
@@ -359,7 +365,6 @@ export class CrystalBloomGame {
         setBtnText('btn-copy', this.t('copyResult'));
         setBtnText('btn-menu2', this.t('menu'));
 
-        if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
         if (el['budget']) el['budget'].title = this.t('cost');
 
         this.renderLevelGrid();
@@ -494,8 +499,8 @@ export class CrystalBloomGame {
         this.world = createWorld(spec, seedKey);
         this.world.anchors = this.anchors;
         this.world.stirs = this.stirs;
-        this.state = 'playing';
-        this.isPaused = false;
+        this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = 0;
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
@@ -528,7 +533,7 @@ export class CrystalBloomGame {
     }
 
     toMenu() {
-        this.state = 'menu';
+        this.state = 'menu'; this.contextualRestart?.sync();
         this.world = null;
         this.phase = 'draw';
         this.anchors = [];
@@ -621,7 +626,7 @@ export class CrystalBloomGame {
      */
     onLevelFailed(ev) {
         if (this.state !== 'playing') return;
-        this.state = 'failed';
+        this.state = 'failed'; this.contextualRestart?.sync();
         this.syncActionVisibility();
         Sfx.fail();
         vibrate([25, 40, 25]);
@@ -653,7 +658,7 @@ export class CrystalBloomGame {
 
     showClearPanel(stars, cost) {
         const el = this.el;
-        this.state = 'won-level';
+        this.state = 'won-level'; this.contextualRestart?.sync();
         if (el['clear-stars']) el['clear-stars'].textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         if (el['clear-line']) {
             const w = this.world;
@@ -668,7 +673,7 @@ export class CrystalBloomGame {
     }
 
     finishDaily() {
-        this.state = 'won-daily';
+        this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.hide(el['clear']);
         if (el['over-title']) el['over-title'].textContent = this.t('dailyDone');
@@ -816,7 +821,10 @@ export class CrystalBloomGame {
             } else if (e.key === 'f' || e.key === 'F') {
                 if (this.state === 'playing' && !this.isPaused && !e.repeat) this.pressStir();
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing' && !this.isPaused) this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused && !e.repeat) {
+                    e.preventDefault();
+                    this.contextualRestart?.requestRestart();
+                }
             } else if (e.key === 'Escape') {
                 if (this.state === 'playing' && !this.isPaused) this.toMenu();
             }
@@ -871,8 +879,8 @@ export class CrystalBloomGame {
 
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
 
-    pauseQuiet() { this.isPaused = true; }
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
+    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */
