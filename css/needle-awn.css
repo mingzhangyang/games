@@ -641,6 +641,12 @@ body {
     width: 100%;
 }
 
+/* The ranking action adds a fourth result button; keep the whole row tappable. */
+.na-btn-row:has(> .scoreboard-trigger) { flex-wrap: wrap; }
+@media (width <= 480px) {
+    .na-btn-row:has(> .scoreboard-trigger) > button { flex: 1 1 42%; }
+}
+
 .na-btn {
     flex: 1;
     padding: 10px 14px;

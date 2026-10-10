@@ -46,18 +46,24 @@ try {
         });
         try {
             await page.goto(BASE + '/' + game.href, { waitUntil: 'domcontentloaded', timeout: 45000 });
-            await page.waitForSelector('.scoreboard-trigger--icon', { timeout: 18000 });
-            const state = await page.evaluate(() => {
-                const icon = document.querySelector('.scoreboard-trigger--icon');
+            const trigger = game.id === 'math-rain'
+                ? '#start-screen .scoreboard-trigger--icon' : '.scoreboard-trigger--icon';
+            await page.waitForSelector(trigger, { timeout: 18000 });
+            const state = await page.evaluate(selector => {
+                const icon = document.querySelector(selector);
                 const box = icon?.getBoundingClientRect();
                 const visible = icon && getComputedStyle(icon).display !== 'none' && box?.width > 0 && box?.height > 0;
-                return { visible, width: box?.width, height: box?.height, aria: icon?.getAttribute('aria-label') };
-            });
-            if (!state.visible || !state.aria || state.width < 32 || state.height < 32) {
+                const hit = box && document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+                return { visible, width: box?.width, height: box?.height,
+                    insideViewport: !!box && box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight,
+                    tappable: hit === icon || icon?.contains(hit),
+                    aria: icon?.getAttribute('aria-label') };
+            }, trigger);
+            if (!state.visible || !state.aria || !state.tappable || !state.insideViewport || state.width < 32 || state.height < 32) {
                 errors.push(game.id + ': rank entry missing: ' + JSON.stringify(state));
                 continue;
             }
-            await page.click('.scoreboard-trigger--icon');
+            await page.click(trigger);
             await page.waitForFunction(() => document.querySelector('dialog[data-scoreboard-dialog]')?.open, { timeout: 6000 });
             await page.waitForFunction(() =>
                 document.querySelector('dialog[data-scoreboard-dialog] .game-lb-name')?.textContent === 'Test Player',

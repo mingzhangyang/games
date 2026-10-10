@@ -142,7 +142,12 @@ class MathRainGame {
                         zh: '3 分钟完整会话、同一起始难度、未使用道具；分数越高越好。',
                     },
                 })),
-                triggers: [{ before: '#settings-btn', icon: true }],
+                triggers: [
+                    { before: '#help-btn', icon: true },
+                    { before: '#settings-btn', icon: true },
+                    { before: '#play-again-btn' },
+                    { before: '#session-continue-btn' },
+                ],
                 onOpen: () => {
                     pausedForRanking = this.gameStateManager?.gameState === 'playing';
                     if (pausedForRanking) this.gameStateManager.pauseGame();
