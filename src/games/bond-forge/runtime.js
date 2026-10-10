@@ -21,6 +21,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { storageSet } from '../../platform/safe-storage.js';
@@ -421,7 +422,12 @@ class BondForgeGame {
         }
         if (el['reset-btn']) {
             el['reset-btn'].innerHTML = ICONS.retry;
-            el['reset-btn'].addEventListener('click', () => { sfxTone(660, 0.09, 'triangle', 0.12); this.restartLevel(); });
+            bindContextualRestart({
+                button: el['reset-btn'],
+                active: () => this.state === 'playing' && this.mode !== 'sandbox',
+                hasProgress: () => this.drags > 0 || this.usedUndo || this.usedCatalyst,
+                restart: () => { sfxTone(660, 0.09, 'triangle', 0.12); this.restartLevel(); },
+            });
         }
 
         // 静音钮：⚠️ 键名是 soundOn / soundOff（src/platform/icons.js），不是 volumeOn/volumeOff

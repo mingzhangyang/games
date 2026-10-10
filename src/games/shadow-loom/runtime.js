@@ -10,6 +10,7 @@
  *
  * 状态机：menu → playing → solving（收紧 → 金线 → 活影）→ done（结果层）
  */
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { LANGUAGES } from './i18n.js';
 import { ICONS } from '../../platform/icons.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
@@ -1300,7 +1301,12 @@ export class ShadowLoomGame {
         this.el['btn-next']?.addEventListener('click', () => this.nextLevel());
         this.el['btn-replay']?.addEventListener('click', () => this.startLevel(this.levelIdx));
         this.el['btn-menu']?.addEventListener('click', () => this.showMenu());
-        this.el['reset-btn']?.addEventListener('click', () => this.restartLevel());
+        bindContextualRestart({
+                button: this.el['reset-btn'],
+                active: () => this.state === 'playing',
+                hasProgress: () => this.moves > 0,
+                restart: () => { this.restartLevel(); },
+            });
         this.el['target-btn']?.addEventListener('click', () => this.revealTarget());
         window.addEventListener('resize', () => this.resize());
         window.addEventListener('game-frame:changed', () => this.resize());

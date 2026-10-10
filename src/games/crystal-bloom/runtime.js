@@ -19,6 +19,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { LANGUAGES } from './i18n.js';
 
 import {
@@ -296,7 +297,12 @@ export class CrystalBloomGame {
         }
         if (el['reset-btn']) {
             el['reset-btn'].innerHTML = ICONS.retry;
-            el['reset-btn'].addEventListener('click', () => { Sfx.click(); this.restartLevel(); });
+            bindContextualRestart({
+                button: this.el['reset-btn'],
+                active: () => this.state === 'playing',
+                hasProgress: () => this.anchors.length > 0 || this.stirs.length > 0,
+                restart: () => { Sfx.click(); this.restartLevel(); },
+            });
         }
         if (el['mute-btn']) {
             // ⚠️ 键名是 soundOn / soundOff（src/platform/icons.js），写错会把字面量 "undefined" 塞进 innerHTML

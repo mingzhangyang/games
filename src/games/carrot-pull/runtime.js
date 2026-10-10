@@ -1,3 +1,4 @@
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { getLang } from '../../platform/site-settings.js';
 import { track } from '../../platform/analytics.js';
@@ -335,7 +336,13 @@ export function createGame({ i18nBinder = null } = {}) {
         refs['cp-start-btn'].addEventListener('click', start);
         refs['cp-again-btn'].addEventListener('click', start);
         refs['cp-menu-btn'].addEventListener('click', resetToMenu);
-        refs['cp-reset-btn'].addEventListener('click', resetToMenu);
+        bindContextualRestart({
+            button: refs['cp-reset-btn'],
+            active: () => state.mode === 'playing' && !state.paused,
+            hasProgress: () => state.pulls > 0 || state.time < ROUND_TIME - 1,
+            restart: resetToMenu,
+            purpose: 'exit',
+        });
         refs['cp-pull-btn'].addEventListener('pointerdown', (event) => {
             event.preventDefault();
             refs['cp-pull-btn'].classList.add('is-pressed');

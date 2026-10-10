@@ -13,6 +13,7 @@
  * i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import {
     GRID_COLS,
     GRID_ROWS,
@@ -712,7 +713,12 @@ export class CircuitGame {
             });
         }
         if (this.el['reset-btn']) {
-            this.el['reset-btn'].addEventListener('click', () => this.resetLevel());
+            bindContextualRestart({
+                button: this.el['reset-btn'],
+                active: () => this.state === 'playing',
+                hasProgress: () => this.moves > 0,
+                restart: () => { this.resetLevel(); },
+            });
         }
         if (this.el['btn-next']) {
             this.el['btn-next'].addEventListener('click', () => {

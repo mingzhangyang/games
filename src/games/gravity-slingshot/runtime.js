@@ -12,6 +12,7 @@
  * Vanilla JS. No runtime dependencies.
  */
 
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { storageGet, storageSet } from '../../platform/safe-storage.js';
@@ -644,10 +645,13 @@ class GravityGame {
         if (this.el['btn-next']) this.el['btn-next'].addEventListener('click', () => { Sfx.click(); this.nextHole(); });
         if (this.el['btn-replay']) this.el['btn-replay'].addEventListener('click', () => { Sfx.click(); this.loadHole(); });
         if (this.el['btn-again']) this.el['btn-again'].addEventListener('click', () => { Sfx.click(); this.startDailyMode(); });
-        if (this.el['reset-btn']) this.el['reset-btn'].addEventListener('click', () => {
-            Sfx.click();
-            this.resetHole();
-        });
+        if (this.el['reset-btn']) bindContextualRestart({
+                button: this.el['reset-btn'],
+                active: () => ['aiming', 'flying', 'resolved'].includes(this.phase),
+                hasProgress: () => false,
+                restart: () => { Sfx.click(); this.resetHole(); },
+                purpose: 'attempt',
+            });
         if (this.el['btn-copy']) this.el['btn-copy'].addEventListener('click', () => this.copyResult());
 
         // 键盘快捷键：R 重试/中止飞行，M 静音

@@ -13,6 +13,7 @@
  * safe-storage / analytics / game-sfx / boot。
  */
 
+import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import {
     GRID_N,
     LUMEN_LEVELS,
@@ -657,7 +658,12 @@ export class LumenGame {
             });
         }
         if (this.el['reset-btn']) {
-            this.el['reset-btn'].addEventListener('click', () => this.resetLevel());
+            bindContextualRestart({
+                button: this.el['reset-btn'],
+                active: () => this.state === 'playing',
+                hasProgress: () => this.flips > 0,
+                restart: () => { this.resetLevel(); },
+            });
         }
         if (this.el['btn-next']) {
             this.el['btn-next'].addEventListener('click', () => {
