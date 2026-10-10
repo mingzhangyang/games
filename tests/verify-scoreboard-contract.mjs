@@ -58,13 +58,24 @@ assert.equal(encodeFireflyScore(-1, 0.9), null);
 assert.equal(encodeFireflyScore(3, 1.5), null);
 assert.equal(formatFireflyScore(3033, 'zh'), '3 次 · 97.0%');
 assert.equal(formatFireflyScore(3033, 'en'), '3 signals · 97.0%');
-assert.equal(encodeShadowLoomScore(90000, 10), 90010);
+assert.match(read('src/games/carrot-pull/runtime.js'), /saveBest\(\);\s*void scoreboard\.submit/,
+    'Carrot Pull uploads zero-point finished runs');
+const tank = read('src/games/tank-battle/index.js');
+assert.match(tank, /this\.gameState = 'gameOver';\s*void this\.scoreboard\.submit/,
+    'Tank Battle uploads zero-point defeats');
+assert.match(tank, /this\.gameState = 'victory';\s*void this\.scoreboard\.submit/,
+    'Tank Battle uploads every win');
+assert.equal(encodeShadowLoomScore(90000, 10), 90000000010);
+assert.ok(encodeShadowLoomScore(90001, 999999) < encodeShadowLoomScore(90999, 0),
+    'Time must dominate any move count');
+assert.ok(encodeShadowLoomScore(90000.1, 0) > encodeShadowLoomScore(90000, 999999),
+    'Millisecond precision dominates move count');
 assert.ok(encodeShadowLoomScore(89999, 99) < encodeShadowLoomScore(90100, 0));
 assert.ok(encodeShadowLoomScore(90000, 3) < encodeShadowLoomScore(90000, 4));
 assert.equal(encodeShadowLoomScore(-1, 0), null);
-assert.equal(encodeShadowLoomScore(0, 1000), null);
-assert.equal(formatShadowLoomScore(90010, 'zh'), '90 秒 · 10 步');
-assert.equal(formatShadowLoomScore(90010, 'en'), '90s · 10 moves');
+assert.equal(encodeShadowLoomScore(0, 1000000), null);
+assert.equal(formatShadowLoomScore(90000000010, 'zh'), '1:30.000 · 10 步');
+assert.equal(formatShadowLoomScore(90000000010, 'en'), '1:30.000 · 10 moves');
 const needle = read('src/games/needle-awn/runtime.js');
 assert.match(needle, /this\.mode !== 'endless' && this\.mode !== 'daily'/,
     'Needle Awn must exclude trial/duel runs');
@@ -73,8 +84,10 @@ const math = read('src/games/math-rain/index.js');
 for (const event of ['powerup:freeze:used', 'powerup:bomb:used', 'powerup:shield:used']) {
     assert.ok(math.includes(event), 'Math Rain must exclude ' + event);
 }
+assert.match(math, /sessionData\.finalScore >= 0/, 'Math Rain allows completed zero-point sessions');
 assert.match(math, /gameTime >= 175000/, 'Math Rain only submits a full timed session');
 assert.match(math, /baseLevel === run\.level/, 'Math Rain guards the starting difficulty');
+assert.match(needle, /this\.score < 0/, 'Needle Awn allows zero-point terminal runs');
 const shadow = read('src/games/shadow-loom/runtime.js');
 assert.match(shadow, /encodeShadowLoomScore\(rec\.time, rec\.moves\)/,
     'Shadow Loom ranks one run, never combines independent record minima');

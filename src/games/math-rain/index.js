@@ -143,10 +143,10 @@ class MathRainGame {
                     },
                 })),
                 triggers: [
-                    { before: '#help-btn', icon: true },
-                    { before: '#settings-btn', icon: true },
-                    { before: '#play-again-btn' },
-                    { before: '#session-continue-btn' },
+                    { before: '#help-btn', icon: true, boardId: () => String(this.difficultyManager?.baseLevel || 1) },
+                    { before: '#settings-btn', icon: true, boardId: () => String(this.difficultyManager?.baseLevel || 1) },
+                    { before: '#play-again-btn', boardId: () => String(this.difficultyManager?.baseLevel || 1) },
+                    { before: '#session-continue-btn', boardId: () => String(this.difficultyManager?.baseLevel || 1) },
                 ],
                 onOpen: () => {
                     pausedForRanking = this.gameStateManager?.gameState === 'playing';
@@ -463,7 +463,7 @@ class MathRainGame {
             if (run?.eligible && this.sessionManager?.config.sessionDuration === 180000
                 && this.gameStateManager?.gameTime >= 175000
                 && this.difficultyManager?.baseLevel === run.level
-                && Number.isInteger(sessionData.finalScore) && sessionData.finalScore > 0) {
+                && Number.isInteger(sessionData.finalScore) && sessionData.finalScore >= 0) {
                 void this.scoreboard.submit({ boardId: String(run.level), score: sessionData.finalScore });
             }
             // Stop the game when session completes

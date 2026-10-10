@@ -194,7 +194,7 @@ export function createGame({ i18nBinder = null } = {}) {
         state.mode = 'over';
         state.paused = false;
         saveBest();
-        if (state.score > 0) void scoreboard.submit({ boardId: 'all', score: state.score });
+        void scoreboard.submit({ boardId: 'all', score: state.score });
         state.won = won;
         if (won) state.pulls = 0;
         hideToast();

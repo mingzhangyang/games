@@ -1693,7 +1693,7 @@
           "shadow-loom-crane"
         ],
         "order": "asc",
-        "maxScore": 2000000000,
+        "maxScore": 9007199254740991,
         "maxEntries": 50,
         "ui": "dialog"
       }

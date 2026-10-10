@@ -12,7 +12,7 @@ The new `scores.ui: "dialog"` entry declares shared visible UI ownership. `tests
 | Tank Battle | `tank-battle` | High first | Final points on defeat or completion |
 | Needle vs Awn | `needle-awn-endless`, `needle-awn-dYYYYMMDD` | High first | Only Endless / Daily; trials and duels excluded |
 | Firefly Signal | `firefly-signal-{first-light,two-meadows,midsummer}` | Low first | Successful run, encoded as `interventions * 1001 + (1000 - round(harmony * 1000))`; fewer signals then better harmony |
-| Shadow Loom | `shadow-loom-{levelId}` | Low first | One completed run, encoded as `ceil(timeMs / 1000) * 1000 + moves`; faster first then fewer moves |
+| Shadow Loom | `shadow-loom-{levelId}` | Low first | One completed run, encoded as `ceil(timeMs) * 1_000_000 + moves`; millisecond precision is primary, fewer moves break same-millisecond ties |
 | Math Rain | `math-rain-{1..6}` | High first | Completed standard 180-second session at unchanged starting difficulty, no bombs/freeze/shield; premature loss and abandoned runs excluded |
 
 **Scoring note:** Composite rank values are stored as integers in the existing leaderboard Worker, with human-readable formatting in the dialog. Do not build a leaderboard entry from Shadow Loom's independent *best time* and *fewest moves* local records; they may be from different attempts.

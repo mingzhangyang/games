@@ -88,7 +88,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     });
     row.append(nameLabel, nameInput);
 
-    const reload = el('button', 'scoreboard-refresh game-btn');
+    const reload = el('button', 'scoreboard-refresh game-btn game-action-btn');
     reload.type = 'button';
     reload.addEventListener('click', () => { void refresh(); });
     panel.append(header, boardLabel, description, list, status, row, reload);
@@ -169,7 +169,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         }
         const button = el('button', target.icon
             ? 'scoreboard-trigger scoreboard-trigger--icon game-icon-btn'
-            : 'scoreboard-trigger scoreboard-trigger--text game-btn');
+            : 'scoreboard-trigger scoreboard-trigger--text game-btn game-action-btn');
         button.type = 'button';
         button.dataset.scoreboardTrigger = '';
         if (target.icon) {

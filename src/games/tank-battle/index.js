@@ -848,7 +848,7 @@ class TankBattle {
                     this.screenShake = 8;
                     if (this.lives <= 0 && this.gameState === 'playing') {
                         this.gameState = 'gameOver';
-                        if (this.score > 0) void this.scoreboard.submit({ boardId: 'all', score: this.score });
+                        void this.scoreboard.submit({ boardId: 'all', score: this.score });
                         track('tank-battle', 'finish');
                     }
                     this.updateUI();
@@ -907,7 +907,7 @@ class TankBattle {
             
             if (this.level > CONFIG.MAX_LEVEL) {
                 this.gameState = 'victory';
-                if (this.score > 0) void this.scoreboard.submit({ boardId: 'all', score: this.score });
+                void this.scoreboard.submit({ boardId: 'all', score: this.score });
                 track('tank-battle', 'finish');
             } else {
                 // 下一关

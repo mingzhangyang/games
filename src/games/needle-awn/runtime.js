@@ -113,7 +113,10 @@ class GameEngine {
                     description: { en: 'Scores from the same daily seed only.', zh: '仅比较同一天、同一随机种子的成绩。' },
                 },
             ],
-            triggers: [{ before: '#naStatsToggle', icon: true }, { before: '#na-btn-result-home' }],
+            triggers: [
+                { before: '#naStatsToggle', icon: true, boardId: () => this.mode === 'daily' ? 'daily' : 'endless' },
+                { before: '#na-btn-result-home', boardId: () => this.mode === 'daily' ? 'daily' : 'endless' },
+            ],
             onOpen: () => {
                 pausedForRanking = this.isRunning();
                 if (pausedForRanking) this.pauseQuiet();
@@ -938,7 +941,7 @@ class GameEngine {
     }
 
     async submitScore() {
-        if (this.score <= 0 || (this.mode !== 'endless' && this.mode !== 'daily')) return;
+        if (!Number.isFinite(this.score) || this.score < 0 || (this.mode !== 'endless' && this.mode !== 'daily')) return;
 
         // 无尽模式记录更新
         if (this.mode === 'endless' && this.score > this.endlessBest) {

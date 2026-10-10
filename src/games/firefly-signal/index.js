@@ -241,7 +241,7 @@ onReady(() => {
             format: formatFireflyScore,
         })),
         triggers: [
-            { before: '#fs-btn-mute', icon: true },
+            { before: '#fs-btn-mute', icon: true, boardId: () => LEVELS[game.levelIndex].id },
             { before: '#fs-btn-menu', boardId: () => LEVELS[game.levelIndex].id },
         ],
         onOpen: () => {

@@ -44,14 +44,14 @@ const GAMES = {
   'firefly-signal-first-light': { order: 'asc', maxScore: 100000, maxEntries: 50 },
   'firefly-signal-two-meadows': { order: 'asc', maxScore: 100000, maxEntries: 50 },
   'firefly-signal-midsummer': { order: 'asc', maxScore: 100000, maxEntries: 50 },
-  'shadow-loom-rabbit': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
-  'shadow-loom-bird': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
-  'shadow-loom-whale': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
-  'shadow-loom-deer': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
-  'shadow-loom-pagoda': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
-  'shadow-loom-tree': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
-  'shadow-loom-koi': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
-  'shadow-loom-crane': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
+  'shadow-loom-rabbit': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-bird': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-whale': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-deer': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-pagoda': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-tree': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-koi': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
+  'shadow-loom-crane': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
 };
 
 // 每日赛程 / 每日挑战榜：按天一个键，正则白名单 + TTL 自然滚动
