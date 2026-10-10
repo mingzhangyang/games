@@ -230,10 +230,17 @@ computed sidebar `max-height` / `overflow-y` / `overscroll-behavior` 与 scrollb
   `bindFrame` 只认其中 166px，其余经 `extraChrome` 补齐。
   ⚠️ 补齐时**只加高度与 gap，不加页脚的 margin** —— `.game-footer` 带
   `margin-top: auto`，其计算值是「剩余空白」，算进去会让棋盘越缩越小。
-- **tetris** 走完整契约（`--frame-ratio: 0.5`，棋盘 400×800）。三张画布的后端
-  缓冲区固定 400×800、靠 CSS 等比缩放，三者共用同一组宽度来源才不会错位，
-  所以 `#tetris` 与 `#particleCanvas,#lineClearCanvas` 的 `max-width: 400px`
-  必须一起删掉。`.info-panel` 原本的 `width:100%` 会压过 `.game-sidebar` 的
+- **tetris** 走完整契约（`--frame-ratio: 0.5`，棋盘逻辑坐标始终为 400×800）。
+  自 W6b（PR #128）起，400×800 **只定义逻辑世界**（10×20 格、每格 40 单位），
+  不再是固定的 Canvas 后端像素尺寸。主棋盘 `#tetris`、粒子层 `#particleCanvas`、
+  消行层 `#lineClearCanvas` 以及离屏 `gridCanvas` 缓存统一以主棋盘的 CSS
+  `clientWidth` 为尺寸来源：后端宽度 = `ceil(clientWidth × min(max(devicePixelRatio, 1), 2))`，
+  后端高度 = 后端宽度 × 2；各层以幂等 `ctx.setTransform(scale, 0, 0, scale, 0, 0)`
+  映射逻辑坐标，`scale = 后端宽度 / 400`。视口、舞台预算或 DPR 变化时
+  四层同步更新并重新绘制，不能直接把 `canvas.width` 当成游戏坐标，也不能叠加
+  `ctx.scale()`。三张可见画布必须保持相同的 CSS 几何与定位，否则特效会错位。
+  此前 `#tetris` 与 `#particleCanvas,#lineClearCanvas` 的 `max-width: 400px`
+  已一并移除，确保宽屏棋盘不被旧的样式上限截断。`.info-panel` 原本的 `width:100%` 会压过 `.game-sidebar` 的
   300px（实测被撑到 488px，比棋盘还宽），一并移除。
   ⚠️ 侧栏限高后 `.info-box.controls` 必须排在 `#statsPanels` **之前**，
   否则 1280×900 下 Pause / Restart 正好落到滚动区之外 —— 参考内容可以滚，
