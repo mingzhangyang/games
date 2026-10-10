@@ -99,6 +99,9 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
   且会在玩家已有成绩或消耗时间时确认。
 - Gravity Slingshot 的“重试”只重置当前发射，不清除累计发射次数；其文案改为
   “重置本次发射”，不加误导性的进度损失确认。
+- Echo Cave 的重开判断以 `model/rules.js` 的模拟世界为准，包含探索移动（返回起点仍保留）、
+  声波次数、已收集声晶及损失的生命。不得用每帧从 world 同步的 `pulseUsed` 显示缓存
+  作为进度依据。`R` 键复用同一个确认动作，不能绕过顶栏保护。
 - 测试：tests/verify-contextual-restart.mjs 覆盖 12 个游戏的菜单、游戏中、结算态，
   对全部 11 个可能丢失进度的游戏分别执行中/英确认、取消保留与确认后重置；
   `gravity-slingshot` 验证仅复位发射、累计次数不丢；状态变更静态钩子和

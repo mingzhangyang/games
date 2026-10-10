@@ -62,16 +62,18 @@ export function bindContextualRestart({
         button.disabled = !shown;
         return shown;
     }
-    button.addEventListener('click', () => {
-        // A queued click during a lifecycle transition must never restart.
+    const requestRestart = () => {
+        // Click and keyboard shortcuts share the same progress safeguard.
         if (!canShow()) {
             sync();
-            return;
+            return false;
         }
-        if (hasProgress() && !window.confirm(copy()[purpose === 'exit' ? 'abandon' : 'discard'])) return;
+        if (hasProgress() && !window.confirm(copy()[purpose === 'exit' ? 'abandon' : 'discard'])) return false;
         restart();
         sync();
-    });
+        return true;
+    };
+    button.addEventListener('click', requestRestart);
     const observer = new MutationObserver(sync);
     for (const overlay of overlays) {
         observer.observe(overlay, { attributes: true, attributeFilter: ['class', 'hidden'] });
@@ -81,6 +83,7 @@ export function bindContextualRestart({
     sync();
     return {
         sync,
+        requestRestart,
         disconnect() {
             observer.disconnect();
             window.removeEventListener('site-settings:changed', updateLabel);

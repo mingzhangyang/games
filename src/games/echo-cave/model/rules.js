@@ -119,6 +119,8 @@ export function createWorld(spec) {
         cols, rows, cell,
         wallCells,
         player: { x: cave.start.x, y: cave.start.y },
+        // Monotonic progress fact: backtracking still counts as exploring.
+        hasMoved: false,
         crystals: cave.crystals.map((c, i) => ({ ...c, i, taken: false, singT: (i * 0.9) % RULES.crystalSing })),
         exit: { ...cave.exit, humT: RULES.exitHum * 0.5, flash: 0 },
         thorns: cave.thorns.map((t, i) => ({ ...t, i, warnT: (i * 1.7) % RULES.thornWarn, flash: 0 })),
@@ -136,6 +138,19 @@ export function createWorld(spec) {
         deadT: 0, winT: 0,
         events: [],
     };
+}
+
+/**
+ * Discardable progress belongs to the simulation, not the frame-projected
+ * pulseUsed display. These facts cannot decrease during a run.
+ */
+export function hasWorldProgress(world) {
+    return Boolean(world && (
+        world.hasMoved
+        || world.pulseCount > 0
+        || world.got > 0
+        || world.hearts < RULES.hearts
+    ));
 }
 
 function solidAt(world, cx, cy) {
@@ -219,6 +234,8 @@ export function stepWorld(world, dt, input) {
         return;
     }
     const p = world.player;
+    const beforeX = p.x;
+    const beforeY = p.y;
     const invulnBefore = world.invulnT;
     if (world.invulnT > 0) world.invulnT -= dt;
 
@@ -237,6 +254,7 @@ export function stepWorld(world, dt, input) {
     if (!circleHits(world, p.x, ny, RULES.playerR)) p.y = ny;
     p.x = Math.max(RULES.playerR, Math.min(STAGE.w - RULES.playerR, p.x));
     p.y = Math.max(RULES.playerR, Math.min(STAGE.h - RULES.playerR, p.y));
+    if (p.x !== beforeX || p.y !== beforeY) world.hasMoved = true;
 
     // 脉冲
     if (input.pulse) emitPulse(world);

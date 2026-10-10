@@ -23,6 +23,7 @@ import {
     RULES,
     LEVELS,
     createWorld,
+    hasWorldProgress,
     stepWorld,
     dailyCourse,
 } from './model/rules.js';
@@ -257,7 +258,7 @@ export class EchoCaveGame {
             this.contextualRestart = bindContextualRestart({
                 button: el['reset-btn'],
                 active: () => this.state === 'playing' && !this.isPaused,
-                hasProgress: () => this.pulseUsed > 0,
+                hasProgress: () => hasWorldProgress(this.world),
                 restart: () => { Sfx.click(); this.restartLevel(); },
             });
         }
@@ -740,7 +741,10 @@ export class EchoCaveGame {
                     e.preventDefault();
                 }
             } else if (e.key === 'r' || e.key === 'R') {
-                if (this.state === 'playing' && !this.isPaused) this.restartLevel();
+                if (this.state === 'playing' && !this.isPaused) {
+                    e.preventDefault();
+                    this.contextualRestart?.requestRestart();
+                }
             } else if (e.key === 'Escape') {
                 if (this.state === 'playing' && !this.isPaused) this.toMenu();
             }

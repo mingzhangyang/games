@@ -71,7 +71,7 @@ const PROGRESS = {
     'lumen': 'flips',
     'circuit': 'moves',
     'silk-dew': 'drags',
-    'echo-cave': 'pulseUsed',
+    'echo-cave': 'world.pulseCount',
     'bond-forge': 'drags',
     'flame-verse': 'throws',
     'ripple-duet': 'cost',
@@ -224,26 +224,89 @@ try {
                 { timeout: 4000 }, selector);
             check(true, id + ': quiet resume restores retry');
 
+            if (id === 'echo-cave') {
+                checkpoint('movement-only protection');
+                // Traverse the actual simulation without sonar, then require a
+                // confirmation for discardable exploration progress.
+                await page.evaluate(() => { window.ecGame.keys.add('r'); });
+                await page.waitForFunction(() => window.ecGame.world?.hasMoved, { timeout: 3000 });
+                await page.evaluate(() => { window.ecGame.keys.delete('r'); });
+                const moved = await page.evaluate(() => ({
+                    count: window.ecGame.world.pulseCount,
+                    moved: window.ecGame.world.hasMoved,
+                }));
+                check(moved.moved && moved.count === 0,
+                    'echo-cave: moving without a pulse is meaningful progress ' + JSON.stringify(moved));
+
+                dialogAction = 'dismiss';
+                let beforeMovementDialog = dialogs.length;
+                await page.click(selector);
+                const movementDialogs = dialogs.slice(beforeMovementDialog);
+                const retained = await page.evaluate(() => ({
+                    moved: window.ecGame.world.hasMoved,
+                    pulses: window.ecGame.world.pulseCount,
+                }));
+                check(movementDialogs.length === 1
+                    && /Restart this level/.test(movementDialogs[0].message)
+                    && retained.moved && retained.pulses === 0,
+                'echo-cave: cancelled restart preserves exploration-only progress');
+
+                // The R shortcut must not bypass the topbar's confirmation.
+                await page.evaluate(() => document.activeElement?.blur());
+                beforeMovementDialog = dialogs.length;
+                await page.keyboard.press('r');
+                const shortcutDialogs = dialogs.slice(beforeMovementDialog);
+                const shortcutRetained = await page.evaluate(() => window.ecGame.world.hasMoved);
+                check(shortcutDialogs.length === 1 && shortcutRetained,
+                    'echo-cave: R shortcut also requires a discard confirmation');
+
+                dialogAction = 'accept';
+                beforeMovementDialog = dialogs.length;
+                await page.click(selector);
+                dialogAction = 'dismiss';
+                const acceptedMovementDialogs = dialogs.slice(beforeMovementDialog);
+                const clean = await page.evaluate(() => ({
+                    moved: window.ecGame.world.hasMoved,
+                    pulses: window.ecGame.world.pulseCount,
+                    got: window.ecGame.world.got,
+                    hearts: window.ecGame.world.hearts,
+                }));
+                check(acceptedMovementDialogs.length === 1
+                    && clean.moved === false && clean.pulses === 0
+                    && clean.got === 0 && clean.hearts === 3,
+                'echo-cave: confirmed restart creates a clean world ' + JSON.stringify(clean));
+            }
+
             if (id !== 'gravity-slingshot') {
                 const field = PROGRESS[id];
-                const mutateProgress = () => page.evaluate(({ key, path }) => {
-                    const g = window[key];
-                    if (path === 'anchors') {
-                        g.anchors.push({ t: 1, T: g.spec.t0 });
-                        return g.anchors.length;
+                const mutateProgress = async () => {
+                    if (field === 'world.pulseCount') {
+                        // Real sonar input; pulseUsed is overwritten from the world each frame.
+                        await page.evaluate(key => { window[key].wantPulse = true; }, global);
+                        await page.waitForFunction(key => window[key].world?.pulseCount > 0,
+                            { timeout: 3000 }, global);
+                        return page.evaluate(key => window[key].world.pulseCount, global);
                     }
-                    if (path === 'world.spent') {
-                        g.world.spent = 2;
-                        return g.world.spent;
-                    }
-                    const state = path === 'pulls' ? g.state : g;
-                    state[path] = 1;
-                    return state[path];
-                }, { key: global, path: field });
+                    return page.evaluate(({ key, path }) => {
+                        const g = window[key];
+                        if (path === 'anchors') {
+                            g.anchors.push({ t: 1, T: g.spec.t0 });
+                            return g.anchors.length;
+                        }
+                        if (path === 'world.spent') {
+                            g.world.spent = 2;
+                            return g.world.spent;
+                        }
+                        const state = path === 'pulls' ? g.state : g;
+                        state[path] = 1;
+                        return state[path];
+                    }, { key: global, path: field });
+                };
                 const readProgress = () => page.evaluate(({ key, path }) => {
                     const g = window[key];
                     if (path === 'anchors') return g.anchors.length;
                     if (path === 'world.spent') return g.world.spent;
+                    if (path === 'world.pulseCount') return g.world.pulseCount;
                     return (path === 'pulls' ? g.state : g)[path];
                 }, { key: global, path: field });
                 const scoreBefore = await mutateProgress();
