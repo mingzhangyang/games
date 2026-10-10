@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "sourceMainSha": "544e2b5a9ddbc4f6026ea5d1b060f14afe1bcff1",
+  "duplicationDigest": "41255179af1590af2d6dbde645eece5d354b8c3d4100a7c70b23375f5401c977",
+  "minimumRemovableDeclarationCopies": 15,
+  "reviewedFamilies": [
+    {
+      "familyId": "structural-0c75f60253c6",
+      "selectorFamily": ".game-hud-level",
+      "kind": "structural",
+      "removableDeclarationCopies": 42,
+      "disposition": "follow-up-candidate",
+      "paths": [
+        "css/circuit.css",
+        "css/crystal-bloom.css",
+        "css/echo-cave.css",
+        "css/flame-verse.css",
+        "css/lumen.css",
+        "css/maxwell-demon.css",
+        "css/ripple-duet.css",
+        "css/silk-dew.css"
+      ],
+      "reason": "Eight level indicators share font size, weight, letter spacing, no-wrap, and tabular numerics. Theme text color differs. Review a single opt-in typography owner, keeping colors local; do not migrate without DOM and computed-style evidence."
+    },
+    {
+      "familyId": "structural-f3e1e2ce0d45",
+      "selectorFamily": ".game-toast",
+      "kind": "structural",
+      "removableDeclarationCopies": 36,
+      "disposition": "follow-up-candidate",
+      "paths": [
+        "css/crystal-bloom.css",
+        "css/echo-cave.css",
+        "css/flame-verse.css",
+        "css/maxwell-demon.css",
+        "css/ripple-duet.css"
+      ],
+      "reason": "Five status toasts share geometry and typography, but palette, opacity lifecycle and transitions vary. Any opt-in family must preserve wrapping, visibility, warning states and actual animation behavior; never broaden the base .game-toast contract."
+    },
+    {
+      "familyId": "exact-780379580497",
+      "selectorFamily": ".game-shell",
+      "kind": "exact",
+      "removableDeclarationCopies": 24,
+      "disposition": "retain",
+      "paths": [
+        "css/crystal-bloom.css",
+        "css/flame-verse.css",
+        "css/maxwell-demon.css",
+        "css/ripple-duet.css"
+      ],
+      "reason": "These identical rules assign game-specific --frame-* and --frame-shell-* parameters, not competing shell geometry. Identical current values are not grounds to put a shared default in front of all consumers; keep page ownership until a real invariant exists."
+    },
+    {
+      "familyId": "exact-3fe7c87d327a",
+      "selectorFamily": ".game-lang-btn",
+      "kind": "exact",
+      "removableDeclarationCopies": 15,
+      "disposition": "defer",
+      "paths": [
+        "css/circuit.css",
+        "css/gravity.css",
+        "css/lumen.css",
+        "css/minesweeper.css",
+        "css/reversi.css",
+        "css/silk-dew.css"
+      ],
+      "reason": "Six language buttons repeat 13px/600/no-wrap, while game-icon-btn--wide already owns control width and no-wrap. The residual typography is small and other language controls intentionally differ; revisit only with a family-wide variant/cascade proof."
+    }
+  ]
+}
