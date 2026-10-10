@@ -176,6 +176,21 @@ try {
             const start = () => page.evaluate(({ key, method }) => window[key][method](0),
                 { key: global, method: startMethod });
             await start();
+            if (id === 'gravity-slingshot') {
+                checkpoint('idle aiming');
+                check(await page.evaluate(isHidden, selector),
+                    'gravity-slingshot: idle aiming hides its no-op reset');
+                const idleKey = await page.evaluate(key => {
+                    const g = window[key], before = g.launches;
+                    window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'r', bubbles: true }));
+                    return { phase: g.phase, launches: g.launches, unchanged: g.launches === before,
+                        disabled: document.getElementById('gd-reset-btn').disabled };
+                }, global);
+                check(idleKey.phase === 'aiming' && idleKey.unchanged && idleKey.disabled,
+                    'gravity-slingshot: R cannot reset an untouched shot ' + JSON.stringify(idleKey));
+                // A genuine launch makes the contextual action available.
+                await page.evaluate(key => window[key].fire(130, -70), global);
+            }
             await page.waitForFunction(sel => {
                 const b = document.querySelector(sel);
                 return b && !b.disabled && getComputedStyle(b).display !== 'none';
@@ -190,19 +205,31 @@ try {
                 && geometry.width >= 32 && geometry.height >= 32,
             id + ': accessible playing-state action ' + JSON.stringify(geometry));
 
-            // Clock-based games may have elapsed time just from CI startup,
-            // so establish a genuinely fresh run at the moment of the click.
-            if (id === 'carrot-pull') {
-                await page.evaluate(() => { window.cpGame.state.time = 45; });
-            }
             if (id === 'shadow-loom') {
                 await page.evaluate(() => { window.slGame.elapsed = 0; });
             }
             checkpoint('fresh retry');
             const beforeFreshDialog = dialogs.length;
-            await page.click(selector);
+            if (id === 'carrot-pull') {
+                // Even a single animation frame consumes round time, so reset
+                // the clock and click atomically before the next frame.
+                await page.evaluate(sel => {
+                    window.cpGame.state.time = 45;
+                    document.querySelector(sel).click();
+                }, selector);
+            } else if (id === 'gravity-slingshot') {
+                // Resolved flights can auto-return to aiming; keep the shot
+                // active during this single-turn reset assertion.
+                await page.evaluate(sel => {
+                    const g = window.gdGame;
+                    g.phase = 'flying'; g.contextualRestart?.sync();
+                    document.querySelector(sel).click();
+                }, selector);
+            } else {
+                await page.click(selector);
+            }
             check(dialogs.length === beforeFreshDialog,
-                id + ': untouched run should not ask to discard progress: '
+                id + ': non-destructive restart must not ask to discard progress: '
                 + JSON.stringify(dialogs.slice(beforeFreshDialog)));
             const untouched = await page.evaluate(({ key, id: gameId }) => {
                 const g = window[key];
@@ -221,41 +248,67 @@ try {
                 const keepsAttemptCount = await page.evaluate(key => {
                     const g = window[key];
                     g.launches = 2;
-                    g.phase = 'flying';
+                    g.fire(130, -70);
                     document.getElementById('gd-reset-btn').click();
-                    return g.phase === 'aiming' && g.launches === 2;
+                    const b = document.getElementById('gd-reset-btn');
+                    return { phase: g.phase, launches: g.launches,
+                        hidden: b.disabled && getComputedStyle(b).display === 'none' };
                 }, global);
-                check(keepsAttemptCount, 'gravity-slingshot: retry resets shot, not accumulated attempts');
+                check(keepsAttemptCount.phase === 'aiming' && keepsAttemptCount.launches === 3
+                    && keepsAttemptCount.hidden,
+                'gravity-slingshot: reset preserves attempts and becomes hidden '
+                    + JSON.stringify(keepsAttemptCount));
                 const keyboardShot = await page.evaluate(key => {
                     const g = window[key];
                     g.launches = 3;
-                    g.phase = 'flying';
-                    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', bubbles: true }));
-                    const active = { phase: g.phase, launches: g.launches };
-                    g.phase = 'flying';
-                    g.isPaused = true;
-                    g.contextualRestart?.sync();
-                    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', bubbles: true }));
-                    const paused = { phase: g.phase, launches: g.launches };
+                    g.fire(130, -70);
+                    const beforeActive = g.launches;
+                    window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'r', bubbles: true }));
+                    const active = { phase: g.phase, launches: g.launches, before: beforeActive };
+                    g.fire(130, -70);
+                    g.isPaused = true; g.contextualRestart?.sync();
+                    const beforePaused = g.launches;
+                    window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'r', bubbles: true }));
+                    const paused = { phase: g.phase, launches: g.launches, before: beforePaused };
                     g.isPaused = false;
-                    g.phase = 'aiming';
-                    g.contextualRestart?.sync();
+                    g.resetHole();
                     return { active, paused };
                 }, global);
-                check(keyboardShot.active.phase === 'aiming' && keyboardShot.active.launches === 3
-                    && keyboardShot.paused.phase === 'flying' && keyboardShot.paused.launches === 3,
-                'gravity-slingshot: R resets only the current shot and is disabled while paused '
+                check(keyboardShot.active.phase === 'aiming'
+                    && keyboardShot.active.launches === keyboardShot.active.before
+                    && keyboardShot.paused.phase === 'flying'
+                    && keyboardShot.paused.launches === keyboardShot.paused.before,
+                'gravity-slingshot: R resets only current shot; disabled while paused '
                     + JSON.stringify(keyboardShot));
             }
             // The controls also follow quiet drawer / visibility pauses without
             // waiting for a menu-overlay mutation.
-            await page.evaluate(key => window[key].pauseQuiet(), global);
-            await page.waitForFunction(isHidden, { timeout: 4000 }, selector);
-            check(true, id + ': quiet pause immediately hides retry');
-            await page.evaluate(key => window[key].resumeQuiet(), global);
-            await page.waitForFunction(sel => !document.querySelector(sel)?.disabled,
-                { timeout: 4000 }, selector);
-            check(true, id + ': quiet resume restores retry');
+            if (id === 'gravity-slingshot') {
+                // A genuine flight can end between async browser operations.
+                // Verify pause and resume atomically against that same shot.
+                const quiet = await page.evaluate(key => {
+                    const g = window[key], b = document.getElementById('gd-reset-btn');
+                    g.fire(130, -70);
+                    const shown = !b.disabled && getComputedStyle(b).display !== 'none';
+                    g.pauseQuiet();
+                    const hidden = b.disabled && getComputedStyle(b).display === 'none';
+                    g.resumeQuiet();
+                    const restored = !b.disabled && getComputedStyle(b).display !== 'none';
+                    g.resetHole();
+                    return { shown, hidden, restored };
+                }, global);
+                check(quiet.shown && quiet.hidden, id + ': quiet pause hides restart '
+                    + JSON.stringify(quiet));
+                check(quiet.restored, id + ': quiet resume restores restart');
+            } else {
+                await page.evaluate(key => window[key].pauseQuiet(), global);
+                await page.waitForFunction(isHidden, { timeout: 4000 }, selector);
+                check(true, id + ': quiet pause immediately hides retry');
+                await page.evaluate(key => window[key].resumeQuiet(), global);
+                await page.waitForFunction(sel => !document.querySelector(sel)?.disabled,
+                    { timeout: 4000 }, selector);
+                check(true, id + ': quiet resume restores retry');
+            }
 
             if (id === 'echo-cave') {
                 checkpoint('movement-only protection');
@@ -417,6 +470,70 @@ try {
                 }));
             }
 
+            // Progress facts must cover more than visible counters.
+            if (id === 'carrot-pull') {
+                checkpoint('time-only round progress');
+                await start();
+                dialogAction = 'dismiss';
+                const beforeTime = dialogs.length;
+                const timeOnly = await page.evaluate(() => {
+                    const g = window.cpGame;
+                    g.state.score = 0;
+                    g.state.pulls = 0;
+                    g.state.time = 44; // a single miss deducts one second
+                    document.getElementById('cp-reset-btn').click();
+                    return { mode: g.state.mode, time: g.state.time,
+                        pulls: g.state.pulls, score: g.state.score };
+                });
+                const timeDialogs = dialogs.slice(beforeTime);
+                check(timeDialogs.length === 1 && /^结束本局/.test(timeDialogs[0].message)
+                    && timeOnly.mode === 'playing' && timeOnly.time <= 44
+                    && timeOnly.pulls === 0 && timeOnly.score === 0,
+                id + ': time-only progress prompts; cancelling preserves round '
+                    + JSON.stringify({ timeOnly, timeDialogs }));
+                dialogAction = 'accept';
+                const beforeTimeAccept = dialogs.length;
+                await page.evaluate(() => document.getElementById('cp-reset-btn').click());
+                dialogAction = 'dismiss';
+                const reset = await page.evaluate(() => ({
+                    mode: window.cpGame.state.mode, time: window.cpGame.state.time,
+                }));
+                check(dialogs.length === beforeTimeAccept + 1
+                    && reset.mode === 'menu' && reset.time === 45,
+                id + ': confirmed time-only exit returns to menu ' + JSON.stringify(reset));
+            }
+            if (id === 'crystal-bloom') {
+                checkpoint('growth-only progress');
+                dialogAction = 'dismiss';
+                const beforeGrow = dialogs.length;
+                const growth = await page.evaluate(() => {
+                    const g = window.cbGame;
+                    const fresh = g.phase === 'draw' && g.anchors.length === 0 && g.stirs.length === 0;
+                    g.pressGrow();
+                    const before = g.phase;
+                    document.getElementById('cb-reset-btn').click();
+                    return { fresh, before, after: g.phase,
+                        anchors: g.anchors.length, stirs: g.stirs.length };
+                });
+                const growthDialogs = dialogs.slice(beforeGrow);
+                check(growth.fresh && growth.before === 'grow' && growth.after === 'grow'
+                    && growth.anchors === 0 && growth.stirs === 0
+                    && growthDialogs.length === 1 && /^重新开始本关/.test(growthDialogs[0].message),
+                id + ': growth-only progress prompts; cancelling keeps growth '
+                    + JSON.stringify({ growth, growthDialogs }));
+                dialogAction = 'accept';
+                const beforeGrowAccept = dialogs.length;
+                await page.evaluate(() => document.getElementById('cb-reset-btn').click());
+                dialogAction = 'dismiss';
+                const reset = await page.evaluate(() => ({
+                    state: window.cbGame.state, phase: window.cbGame.phase,
+                    anchors: window.cbGame.anchors.length, stirs: window.cbGame.stirs.length,
+                }));
+                check(dialogs.length === beforeGrowAccept + 1 && reset.state === 'playing'
+                    && reset.phase === 'draw' && reset.anchors === 0 && reset.stirs === 0,
+                id + ': confirmed growth-only restart returns to drawing ' + JSON.stringify(reset));
+            }
+
             checkpoint('menu transition');
             if (id === 'carrot-pull') {
                 await start();
@@ -434,8 +551,18 @@ try {
 
             if (id !== 'carrot-pull') {
                 await start();
-                await page.waitForFunction(sel => !document.querySelector(sel)?.disabled,
-                    { timeout: 4000 }, selector);
+                if (id === 'gravity-slingshot') {
+                    const liveShot = await page.evaluate(key => {
+                        const g = window[key];
+                        g.fire(130, -70);
+                        const b = document.getElementById('gd-reset-btn');
+                        return !b.disabled && getComputedStyle(b).display !== 'none';
+                    }, global);
+                    check(liveShot, id + ': launched shot exposes reset');
+                } else {
+                    await page.waitForFunction(sel => !document.querySelector(sel)?.disabled,
+                        { timeout: 4000 }, selector);
+                }
                 const resultId = id === 'shadow-loom' ? prefix + '-result'
                     : id === 'gravity-slingshot' ? prefix + '-over' : prefix + '-clear';
                 // Assert the *state-only* transition before any result DOM change.

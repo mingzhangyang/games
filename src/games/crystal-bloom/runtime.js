@@ -300,7 +300,7 @@ export class CrystalBloomGame {
             this.contextualRestart = bindContextualRestart({
                 button: this.el['reset-btn'],
                 active: () => this.state === 'playing' && !this.isPaused,
-                hasProgress: () => this.anchors.length > 0 || this.stirs.length > 0,
+                hasProgress: () => this.phase !== 'draw' || this.anchors.length > 0 || this.stirs.length > 0,
                 restart: () => { Sfx.click(); this.restartLevel(); },
             });
         }

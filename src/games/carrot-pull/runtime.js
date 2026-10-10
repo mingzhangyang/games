@@ -340,7 +340,7 @@ export function createGame({ i18nBinder = null } = {}) {
         contextualRestart = bindContextualRestart({
             button: refs['cp-reset-btn'],
             active: () => state.mode === 'playing' && !state.paused,
-            hasProgress: () => state.pulls > 0 || state.score > 0 || state.time < ROUND_TIME - 5,
+            hasProgress: () => state.pulls > 0 || state.score > 0 || state.time < ROUND_TIME,
             restart: resetToMenu,
             purpose: 'exit',
         });

@@ -622,7 +622,7 @@ class GravityGame {
     /* ── UI 事件 ── */
 
     resetHole() {
-        if (this.phase === 'flying' || this.phase === 'resolved' || this.phase === 'aiming') {
+        if (this.phase === 'flying' || this.phase === 'resolved') {
             this.phase = 'aiming'; this.contextualRestart?.sync();
             this.loadLevelIntoView(this.level);
             this.updateHud();
@@ -646,7 +646,7 @@ class GravityGame {
         if (this.el['reset-btn']) {
             this.contextualRestart = bindContextualRestart({
                 button: this.el['reset-btn'],
-                active: () => !this.isPaused && ['aiming', 'flying', 'resolved'].includes(this.phase),
+                active: () => !this.isPaused && (this.phase === 'flying' || this.phase === 'resolved'),
                 hasProgress: () => false,
                 restart: () => { Sfx.click(); this.resetHole(); },
                 purpose: 'attempt',
