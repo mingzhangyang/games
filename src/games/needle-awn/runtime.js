@@ -15,6 +15,7 @@ import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey } from '../../platform/daily.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { resolveNeedleAwnDailyDate } from './scoreboard-key.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { I18N } from './i18n.js';
@@ -108,7 +109,7 @@ class GameEngine {
                     description: { en: 'Only endless runs compete. Trials and duels are excluded.', zh: '仅无尽模式参与排名；演武及对决不混入。' },
                 },
                 {
-                    id: 'daily', key: () => 'needle-awn-d' + this.getTodayDateString(),
+                    id: 'daily', key: () => 'needle-awn-d' + resolveNeedleAwnDailyDate(this.mode, this.dailyDateKey, this.getTodayDateString()),
                     label: { en: "Today's challenge", zh: '今日论剑' },
                     description: { en: 'Scores from the same daily seed only.', zh: '仅比较同一天、同一随机种子的成绩。' },
                 },
@@ -526,6 +527,7 @@ class GameEngine {
 
     showMenu() {
         this.state = 'menu';
+        this.dailyDateKey = ''; // Menu uses current date, not old run's seed.
         this.dom.overlayStart.classList.remove('hidden');
         this.dom.overlayPause.classList.add('hidden');
         this.dom.overlayResult.classList.add('hidden');
@@ -949,9 +951,9 @@ class GameEngine {
             NEEDLE_AWN_STORAGE.set(NEEDLE_AWN_STORAGE_SLOTS.ENDLESS_BEST, this.endlessBest);
         }
 
-        const dailyDate = this.mode === 'daily'
-            ? (this.dailyDateKey || this.getTodayDateString())
-            : '';
+        // Submission and result board must share the same seeded start date.
+        if (this.mode === 'daily' && !this.dailyDateKey) return;
+        const dailyDate = this.mode === 'daily' ? this.dailyDateKey : '';
 
         // 每日挑战记录保存
         if (this.mode === 'daily') {

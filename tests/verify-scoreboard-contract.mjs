@@ -11,6 +11,8 @@ import { registry } from './lib/registry.mjs';
 import { collectStaticModuleGraph } from './lib/static-module-graph.mjs';
 import { encodeFireflyScore, formatFireflyScore } from '../src/games/firefly-signal/leaderboard-score.js';
 import { encodeShadowLoomScore, formatShadowLoomScore } from '../src/games/shadow-loom/leaderboard-score.js';
+import { invalidateOnDifficultyChange } from '../src/games/math-rain/leaderboard-eligibility.js';
+import { resolveNeedleAwnDailyDate } from '../src/games/needle-awn/scoreboard-key.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = path => readFileSync(join(ROOT, path), 'utf8');
@@ -93,4 +95,30 @@ assert.match(shadow, /encodeShadowLoomScore\(rec\.time, rec\.moves\)/,
     'Shadow Loom ranks one run, never combines independent record minima');
 const firefly = read('src/games/firefly-signal/index.js');
 assert.match(firefly, /if \(!won\) return;/, 'Firefly Signal excludes failed runs');
+
+// Scores are now serialized per board by SQLite Durable Objects, never KV RMW.
+const scoreConfig = read('Workers/wrangler-game-scores.jsonc');
+assert.ok(scoreConfig.includes('"class_name": "GameScoreBoard"'), 'Durable Object binding must exist');
+assert.ok(scoreConfig.includes('"new_sqlite_classes": ["GameScoreBoard"]'), 'SQLite migration required');
+assert.ok(worker.includes("from './scoreboard-durable.js'"), 'Worker exports durable board class');
+assert.ok(worker.includes('boardStub(env, game).submit'), 'Worker submits through durable storage');
+assert.ok(worker.includes('boardStub(env, game).list'), 'Worker reads the same durable source');
+assert.ok(!worker.includes('GAME_SCORES.put('), 'Worker must never write to legacy KV');
+const pausedRun = { level: 2, eligible: true };
+invalidateOnDifficultyChange(pausedRun, 2, 2);
+assert.equal(pausedRun.eligible, true, 'no-op difficulty selection stays eligible');
+invalidateOnDifficultyChange(pausedRun, 2, 3);
+invalidateOnDifficultyChange(pausedRun, 3, 2);
+assert.equal(pausedRun.eligible, false, 'paused difficulty change and switch-back stay disqualified');
+assert.ok(math.includes('invalidateOnDifficultyChange(this.rankedRun, previousLevel,'),
+    'difficulty handler must check changes even while paused');
+assert.equal(resolveNeedleAwnDailyDate('daily', '20261010', '20261011'), '20261010',
+    'midnight must not shift an active daily board');
+assert.equal(resolveNeedleAwnDailyDate('daily', '', '20261011'), '20261011',
+    'menu should use the current day');
+assert.equal(resolveNeedleAwnDailyDate('endless', '20261010', '20261011'), '20261011');
+assert.ok(needle.includes("this.dailyDateKey = ''; // Menu uses current date"),
+    'menu clears the previous run date');
+assert.ok(needle.includes("this.mode === 'daily' && !this.dailyDateKey"),
+    'a missing run seed must never silently submit on a new date');
 console.log('PASS visible leaderboard contract: six games and metric invariants');

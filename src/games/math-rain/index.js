@@ -21,6 +21,7 @@ import SoundManager from './sound-manager.js';
 import ParticleSystem from './particle-effects.js';
 import { getLocalizedText } from './i18n/language-manager.js';
 import { loadMathRainSfxVolume, loadMathRainMusicVolume } from './storage.js';
+import { invalidateOnDifficultyChange } from './leaderboard-eligibility.js';
 
 const MIN_EXPRESSION_TOUCH_TARGET = 44;
 
@@ -249,10 +250,11 @@ class MathRainGame {
         this.eventSystem.on('ui:powerup:shield', () => this.gameStateManager?.useShield());
         
         this.eventSystem.on('ui:difficulty:selected', (data) => {
-            if (this.rankedRun && this.gameStateManager?.gameState === 'playing') {
-                this.rankedRun.eligible = false;
-            }
+            const previousLevel = this.difficultyManager?.baseLevel;
             this.difficultyManager?.setBaseLevel(data.level);
+            // Settings pauses the game first. Any real change disqualifies the
+            // active run even when paused; returning to the old level cannot fix it.
+            invalidateOnDifficultyChange(this.rankedRun, previousLevel, this.difficultyManager?.baseLevel);
             this.expressionGenerator?.setDifficulty(data.level);
         });
         

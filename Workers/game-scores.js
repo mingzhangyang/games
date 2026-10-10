@@ -1,5 +1,6 @@
+export { GameScoreBoard } from './scoreboard-durable.js';
 // Cloudflare Worker — 共享游戏排行榜（全站唯一榜单 Worker）
-// 一个 KV 命名空间承载所有游戏：键 `top:<game>`；每日榜按天一个键（TTL 自然滚动）
+// SQLite Durable Objects own live scores; KV holds legacy snapshots for one-time read-only migration.
 // 承载游戏：tetris / hoop-shot / planet-merge(+每日) / reversi / tower-defense /
 //           minesweeper-easy|medium|hard / gravity-d<日期>
 // GET  /scores?game=<id>   -> [{ name, score }, ...]（按游戏配置的升降序排好）
@@ -105,22 +106,9 @@ function sanitizeName(value) {
     .slice(0, MAX_NAME_LEN);
 }
 
-function gameKey(game) {
-  return `top:${game}`;
-}
-
-async function readList(env, game) {
-  try {
-    const raw = await env.GAME_SCORES.get(gameKey(game));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function betterThan(a, b, order) {
-  return order === 'asc' ? a < b : a > b;
+function boardStub(env, game) {
+  if (!env.SCORE_BOARDS) throw new Error('SCORE_BOARDS binding unavailable');
+  return env.SCORE_BOARDS.get(env.SCORE_BOARDS.idFromName(game));
 }
 
 export default {
@@ -148,7 +136,11 @@ export default {
         return new Response('Invalid', { status: 400, headers: cors });
       }
       try {
-        const { game, name, score } = await request.json();
+        const payload = await request.json().catch(() => null);
+        if (!payload || typeof payload !== 'object') {
+          return new Response('Invalid', { status: 400, headers: cors });
+        }
+        const { game, name, score } = payload;
         const config = resolveGame(game);
         if (!config) {
           return new Response('Invalid', { status: 400, headers: cors });
@@ -161,21 +153,11 @@ export default {
           return new Response('Invalid', { status: 400, headers: cors });
         }
 
-        const list = await readList(env, game);
-        const idx = list.findIndex(item => item.name === cleanName);
-        if (idx >= 0) {
-          if (betterThan(cleanScore, list[idx].score, config.order)) {
-            list[idx].score = cleanScore;
-          }
-        } else {
-          list.push({ name: cleanName, score: cleanScore });
-        }
-        list.sort((a, b) => config.order === 'asc' ? a.score - b.score : b.score - a.score);
-        const putOptions = config.ttl ? { expirationTtl: config.ttl } : {};
-        await env.GAME_SCORES.put(gameKey(game), JSON.stringify(list.slice(0, config.maxEntries)), putOptions);
+        await boardStub(env, game).submit(game, config, cleanName, cleanScore);
         return new Response('OK', { headers: cors });
       } catch (e) {
-        return new Response('Error', { status: 400, headers: cors });
+        console.error('Leaderboard submit unavailable', e);
+        return new Response('Unavailable', { status: 503, headers: cors });
       }
     }
 
@@ -185,17 +167,15 @@ export default {
       if (!config) {
         return new Response('Invalid', { status: 400, headers: cors });
       }
-      const list = await readList(env, game);
-      const top = list
-        .sort((a, b) => config.order === 'asc' ? a.score - b.score : b.score - a.score)
-        .slice(0, config.maxEntries);
-      return new Response(JSON.stringify(top), {
-        headers: {
-          ...cors,
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store'
-        }
-      });
+      try {
+        const top = await boardStub(env, game).list(game, config);
+        return new Response(JSON.stringify(top), {
+          headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      } catch (error) {
+        console.error('Leaderboard read unavailable', error);
+        return new Response('Unavailable', { status: 503, headers: cors });
+      }
     }
 
     return new Response('Not Found', { status: 404, headers: cors });
