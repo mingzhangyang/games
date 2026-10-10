@@ -165,6 +165,8 @@ const HIDDEN = 0, REVEALED = 1, FLAGGED = 2;
 class MinesweeperGame {
     constructor({ i18nBinder = null } = {}) {
         this.i18nBinder = i18nBinder;
+        this.copyFeedbackTimer = null;
+        this.copyRequestId = 0;
         this.boardEl = document.getElementById('ms-board');
         this.el = {};
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
@@ -201,15 +203,35 @@ class MinesweeperGame {
 
     get TEXT() { return LANGUAGES[this.lang]; }
 
+    // Copy's icon and text have one writer across i18n, success feedback and timer restore.
+    // The active timer is the UI state; never close over an old language table for restore.
+    renderCopyButton(copied = false) {
+        const button = this.el['btn-copy'];
+        if (!button) return;
+        const icon = copied ? ICONS.check : ICONS.copy;
+        const label = copied ? this.TEXT.copied : this.TEXT.copyResult;
+        button.innerHTML = `${icon}<span>${label}</span>`;
+    }
+
+    // A new game, a dismissed result, or another Copy attempt supersedes any
+    // unfinished clipboard promise as well as any displayed feedback timer.
+    // Async continuations may finish, but only the current request may touch UI.
+    invalidateCopyFeedback() {
+        this.copyRequestId++;
+        if (this.copyFeedbackTimer !== null) {
+            clearTimeout(this.copyFeedbackTimer);
+            this.copyFeedbackTimer = null;
+        }
+        this.renderCopyButton();
+        return this.copyRequestId;
+    }
 
     /* ── 语言 ── */
 
     applyLanguage() {
-        const t = this.TEXT;
         this.i18nBinder?.apply(this.lang);
-        // Copy feedback swaps the icon and label temporarily, so it remains a
-        // table-driven compound control rather than a declarative text node.
-        if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
+        // Preserve transient Copied state while relocalizing it; timer restores using current TEXT.
+        this.renderCopyButton(this.copyFeedbackTimer !== null);
         if (this.el['btn-pause']) {
             this.refreshPauseUi();
         }
@@ -233,6 +255,7 @@ class MinesweeperGame {
     /* ── 新局 ── */
 
     newGame() {
+        this.invalidateCopyFeedback();
         const cfg = DIFFICULTIES[this.diff];
         this.cols = cfg.cols;
         this.rows = cfg.rows;
@@ -614,6 +637,7 @@ class MinesweeperGame {
     }
 
     hideResult() {
+        this.invalidateCopyFeedback();
         if (this.el.result) this.el.result.classList.add('hidden');
         Sfx.click();
     }
@@ -732,6 +756,7 @@ class MinesweeperGame {
     /* ── 复制成绩 ── */
 
     async copyResult() {
+        const requestId = this.invalidateCopyFeedback();
         const t = this.TEXT;
         const best = loadMinesweeperBestTime(this.diff);
         const text = `💣 ${t.title} · ${t[this.diff]}\n${t.shareLine}: ${this.elapsed}${t.timeSec}\n${t.personalBest}: ${best}${t.timeSec}\nhttps://games.orangely.xyz/minesweeper.html`;
@@ -740,6 +765,8 @@ class MinesweeperGame {
             await navigator.clipboard.writeText(text);
             ok = true;
         } catch (e) {
+            // Never run the fallback for a copy request superseded by a new game.
+            if (requestId !== this.copyRequestId) return;
             try {
                 const ta = document.createElement('textarea');
                 ta.value = text;
@@ -752,11 +779,15 @@ class MinesweeperGame {
                 ok = false;
             }
         }
-        if (this.el['btn-copy']) {
-            const original = `${ICONS.copy}<span>${t.copyResult}</span>`;
-            this.el['btn-copy'].innerHTML = ok ? `${ICONS.check}<span>${t.copied}</span>` : original;
-            setTimeout(() => {
-                if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = original;
+        // A pending clipboard operation may settle long after Again/Close/difficulty
+        // change or after a newer Copy request has superseded this one.
+        if (requestId !== this.copyRequestId) return;
+        this.renderCopyButton(ok);
+        if (ok) {
+            this.copyFeedbackTimer = setTimeout(() => {
+                if (requestId !== this.copyRequestId) return;
+                this.copyFeedbackTimer = null;
+                this.renderCopyButton(); // restore in the current language
             }, 1600);
         }
     }
