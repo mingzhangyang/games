@@ -114,8 +114,9 @@ assert.deepEqual(findToastWhiteSpace(read('css/layout.css')), [],
 // Mutation probes: later declarations, selector lists and modifier rules must all
 // fail while similarly named classes must not trigger a false positive.
 const cleanToast = '@layer layout { .game-toast { pointer-events: none; } }';
-assert.deepEqual(findToastWhiteSpace(cleanToast
-    + ' @media (width <= 480px) { .game-toast-copy { white-space: nowrap; } }'), [],
+const lookalikeToast = cleanToast
+    + ' @media (width <= 480px) { .game-toast-copy { white-space: nowrap; } }';
+assert.deepEqual(findToastWhiteSpace(lookalikeToast), [],
     'lookalike classes must not be treated as .game-toast');
 for (const mutation of [
     '@media (width <= 480px) { .game-toast { white-space: nowrap; } }',
