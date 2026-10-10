@@ -411,11 +411,11 @@ export class FlameVerseGame {
         box.innerHTML = '';
         for (const [k, v] of rows) {
             const row = document.createElement('div');
-            row.className = 'fv-side-row';
+            row.className = 'fv-side-row game-side-row';
             const kk = document.createElement('span');
             kk.className = 'fv-side-k';
             kk.textContent = k;
-            const vv = document.createElement('span');
+            const vv = document.createElement('b');
             vv.className = 'fv-side-v';
             vv.textContent = v;
             row.appendChild(kk);
@@ -436,7 +436,7 @@ export class FlameVerseGame {
         for (const k of EL_ORDER) {
             const e = ELEMENTS[k];
             const row = document.createElement('div');
-            row.className = 'fv-legend-row';
+            row.className = 'fv-legend-row game-legend-row';
 
             const sym = document.createElement('span');
             sym.className = 'fv-legend-sym';
@@ -459,7 +459,7 @@ export class FlameVerseGame {
             bar.style.backgroundImage = `linear-gradient(90deg, ${stops.join(', ')})`;
 
             const tx = document.createElement('span');
-            tx.className = 'fv-legend-text';
+            tx.className = 'fv-legend-text game-legend-text';
             const nms = e.lines.map(l => `${l.nm}`).join(' / ');
             tx.textContent = `${this.saltName(k)} · ${nms}nm`;
 
@@ -469,9 +469,9 @@ export class FlameVerseGame {
             box.appendChild(row);
         }
         const note = document.createElement('div');
-        note.className = 'fv-legend-row';
+        note.className = 'fv-legend-row game-legend-row';
         const nt = document.createElement('span');
-        nt.className = 'fv-legend-text';
+        nt.className = 'fv-legend-text game-legend-text';
         nt.style.opacity = '0.72';
         nt.textContent = this.t('legendNote');
         note.appendChild(nt);

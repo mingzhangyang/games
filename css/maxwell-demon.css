@@ -315,9 +315,6 @@ body {
 }
 
 .md-card-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: 2px;
     color: var(--tok-gold);
 }
 
@@ -370,45 +367,16 @@ body {
 
 /* ── 侧栏：记录行 ── */
 
-.md-side-records { display: flex; flex-direction: column; }
 
-.md-side-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 13px;
-    padding: 4px 0;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
-.md-side-k { color: var(--tok-text-dim); }
-.md-side-v { color: var(--tok-text); font-weight: 700; }
 
 /* ── 侧栏：热力学图例 ──
    颜色必须与 src/games/maxwell-demon/runtime.js 渲染层的语义色一一对应：
    快分子 --tok-hot / 慢分子 --tok-cold / 未观测灰 / 门 --tok-gold / 温差 = 光谱带 */
 
-.md-side-legend { display: flex; flex-direction: column; gap: 2px; }
 
-.md-legend-row {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    font-size: 12.5px;
-    padding: 3px 0;
-    color: var(--tok-text-dim);
-}
 
-.md-legend-text { flex: 1; min-width: 0; line-height: 1.45; }
 
-.md-legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
 
 .md-legend-fast { background: var(--md-legend-fast-bg); box-shadow: var(--md-legend-fast-shadow); }
 .md-legend-slow { background: var(--md-legend-slow-bg); box-shadow: var(--md-legend-slow-shadow); }

@@ -67,6 +67,15 @@ W5a 结算结果与 HUD 的视觉基线由 `game-over-score` /
 不再留下页面级 `text-shadow`、`background`、`border` 几何规则；
 Science Showcase P0 的特殊展示材质仍冻结。见 `layout.md` §1.1.4。
 
+W5b 侧栏与通关星级标题也采用单一 owner：`game-side-records` /
+`game-side-row`、`game-side-legend` / `game-legend-row` /
+`game-legend-text` / `game-legend-dot` 和 `game-clear-title`。
+同一语义的容器、记录、图例行与字号字距不再因游戏而异。
+科学图例的颜色、渐变、光谱条、非圆形数据纹理属于游戏实际现象，
+无需强制同形；Science Showcase 的冻结外观规则仍优先。
+Ripple Duet 只用 `--game-legend-text-color` 按主题表达图例文字颜色。
+见 `layout.md` §1.1.5 和 `verify-sidebar-family.mjs`。
+
 全站默认值与状态也只有一个 owner：显式加入 `game-reset` root opt-in 的页面（包括非 shell 的 Math Rain、Tank Battle；`class="game-reset"` 位于 `<html>`），其顶层 `margin/padding/box-sizing` reset 由 `layout.css` 提供；首页、Gomoku、Firefly Signal 等未迁移消费者不会被这个新 reset 自动影响。通用的即时隐藏状态由 `html.game-hidden-contract .hidden { display: none !important }` 唯一拥有，只有显式标记 `game-hidden-contract` 的原 `.hidden` 源页面采用；不能把它作为 `layout.css` 所有消费者的隐式行为。Math Rain `.screen.hidden` 控制 `visibility/opacity` 的 180ms 弹层过渡，不等价于即时隐藏，因此保留为页面语义（不加 opt-in）。带 `game-icon-btn` 图标钮的共享 `:active` 缩放仍只有一个 owner；页面前缀类不得复制相同声明，玩法专属的 `*-action-row` / mode / ability 控件除外。
 
 ---

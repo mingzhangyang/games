@@ -413,8 +413,6 @@ body {
 }
 
 .bf-card-title {
-    font-size: 26px;
-    letter-spacing: 0.1em;
     color: var(--tok-gold);
 }
 
@@ -539,25 +537,8 @@ body {
 .bf-side-text { color: var(--tok-text-dim); }
 .bf-side-text b { color: var(--tok-text); }
 
-.bf-side-records {
-    display: flex;
-    flex-direction: column;
-}
 
-.bf-side-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 4px 0;
-    font-size: 13px;
-    color: var(--tok-text-dim);
-}
 
-.bf-side-row b {
-    color: var(--tok-text);
-    font-variant-numeric: tabular-nums;
-}
 
 /* 元素小抄卡：默认展开、可折叠。整卡是个按钮头部 + 内容区。
    ⚠️ 头部用 <button> 而非 <div>：折叠是状态开关，必须有 aria-expanded。 */

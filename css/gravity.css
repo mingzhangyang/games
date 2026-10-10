@@ -160,11 +160,6 @@ body {
     to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-.gd-card-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: 2px;
-}
 
 
 .gd-overlay-title { font-size: 26px; font-weight: 800; }
@@ -232,12 +227,7 @@ body {
 
 /* ── 桌面大屏（≥1024px）：舞台 + 信息侧栏 ── */
 
-@media (width >= 1024px) {
-    .gd-side-row b {
-        color: var(--tok-text);
-        font-variant-numeric: tabular-nums;
-    }
-}
+
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */
 

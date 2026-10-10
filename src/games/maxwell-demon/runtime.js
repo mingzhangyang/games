@@ -403,11 +403,11 @@ export class MaxwellDemonGame {
         box.innerHTML = '';
         for (const [k, v] of rows) {
             const row = document.createElement('div');
-            row.className = 'md-side-row';
+            row.className = 'md-side-row game-side-row';
             const kk = document.createElement('span');
             kk.className = 'md-side-k';
             kk.textContent = k;
-            const vv = document.createElement('span');
+            const vv = document.createElement('b');
             vv.className = 'md-side-v';
             vv.textContent = v;
             row.appendChild(kk);
@@ -429,11 +429,11 @@ export class MaxwellDemonGame {
         box.innerHTML = '';
         for (const [kind, text] of rows) {
             const row = document.createElement('div');
-            row.className = 'md-legend-row';
+            row.className = 'md-legend-row game-legend-row';
             const dot = document.createElement('span');
-            dot.className = `md-legend-dot md-legend-${kind}`;
+            dot.className = `md-legend-dot game-legend-dot md-legend-${kind}`;
             const tx = document.createElement('span');
-            tx.className = 'md-legend-text';
+            tx.className = 'md-legend-text game-legend-text';
             tx.textContent = text;
             row.appendChild(dot);
             row.appendChild(tx);

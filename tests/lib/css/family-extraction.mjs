@@ -101,7 +101,7 @@ const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
 // family's size wins. Layout/behaviour properties (display, position, width, …) stay
 // protected: convergence may restyle a standard surface, never re-lay it out.
 const REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES = new Set([
-    'font-size', 'font-weight', 'font-family', 'padding', 'border-radius', 'transition', 'backdrop-filter',
+    'font-size', 'font-weight', 'font-family', 'font-variant-numeric', 'padding', 'border-radius', 'transition', 'backdrop-filter',
     // Visual dimensions/spacing (leaderboard-v2): sizes and gaps of a standard surface.
     'max-width', 'min-width', 'min-height', 'max-height', 'height', 'gap',
     'letter-spacing', 'line-height', 'margin-top', 'margin-bottom',
@@ -779,6 +779,7 @@ export function verifyExtractionShape(extraction, errors) {
             '--game-cut-surface': 'cut-box-bg',
             '--game-cut-stroke-color': 'cut-box-border',
             '--game-cut-value-color': null,
+            '--game-legend-text-color': 'legend-row-text',
         };
         for (const [prefix, entries] of Object.entries(reviewedIntroductions)) {
             if (!extraction.games?.[prefix] || !Array.isArray(entries) || !entries.length) {
@@ -793,8 +794,10 @@ export function verifyExtractionShape(extraction, errors) {
                     fail('reviewed custom-property introduction has an unsupported selector/token: ' + label);
                     continue;
                 }
+                const isLegendHex = entry.property === '--game-legend-text-color'
+                    && /^#[0-9a-fA-F]{6}$/.test(entry.value || '');
                 if (typeof entry.value !== 'string' || !entry.value.trim()
-                    || !/^(?:rgb\(|transparent$|var\(--tok-text\)$)/.test(entry.value)) {
+                    || (!/^(?:rgb\(|transparent$|var\(--tok-text\)$)/.test(entry.value) && !isLegendHex)) {
                     fail('reviewed custom-property introduction has an invalid reviewed color: ' + label);
                 }
                 const key = entry.selector + '\0' + entry.property;
@@ -948,6 +951,11 @@ export function verifyExtractionShape(extraction, errors) {
             if (!extraction.games?.[retirement.prefix]?.css) {
                 fail('reviewed rule retirement references unknown game prefix ' + retirement.prefix + '.');
             }
+            if (retirement.expectedOccurrences !== undefined
+                && (!Number.isInteger(retirement.expectedOccurrences)
+                    || retirement.expectedOccurrences < 2 || retirement.expectedOccurrences > 8)) {
+                fail('reviewed rule retirement expectedOccurrences must be 2..8 when explicitly set.');
+            }
             if (typeof retirement.context !== 'string'
                 || typeof retirement.selector !== 'string' || !retirement.selector.trim()) {
                 fail('reviewed rule retirement requires a context string and a non-empty selector.');
@@ -970,6 +978,28 @@ export function verifyExtractionShape(extraction, errors) {
             const key = retirement.prefix + '\0' + retirement.context + '\0' + retirement.selector;
             if (retirementKeys.has(key)) fail('duplicate reviewed rule retirement ' + retirement.selector + '.');
             retirementKeys.add(key);
+        }
+    }
+    // A media grouping may be removed only when its sole source rule is retired
+    // in this same extraction. This is intentionally narrower than general @rule
+    // rewrites and cannot authorize edits to unrelated media group contents.
+    const retiredMedia = extraction.reviewedAtRuleRetirements || [];
+    if (!Array.isArray(retiredMedia)) {
+        fail('reviewedAtRuleRetirements must be an array.');
+    } else {
+        const seen = new Set();
+        for (const entry of retiredMedia) {
+            const paired = (extraction.reviewedRuleRetirements || []).some(retirement =>
+                retirement.prefix === entry?.prefix && retirement.context === entry?.context
+                && retirement.selector === entry?.selector);
+            if (!extraction.games?.[entry?.prefix]?.css || entry.context !== '@media (width >= 1024px)'
+                || entry.selector !== '.' + entry.prefix + '-side-row b' || !paired
+                || typeof entry.reason !== 'string' || !entry.reason.trim()) {
+                fail('reviewed media retirement must match the sole reviewed desktop sidebar rule.');
+            }
+            const key = entry?.prefix + '\0' + entry?.context;
+            if (seen.has(key)) fail('duplicate reviewed media retirement ' + key + '.');
+            seen.add(key);
         }
     }
     // A family may introduce a conditional grouping boundary only when that same
@@ -1057,7 +1087,9 @@ function removedTuples(extraction, errors) {
     }
     for (const retirement of extraction.reviewedRuleRetirements || []) {
         if (games[retirement.prefix]?.css) {
-            rows.push([games[retirement.prefix].css, retirement.context, retirement.selector]);
+            for (let index = 0; index < (retirement.expectedOccurrences || 1); index++) {
+                rows.push([games[retirement.prefix].css, retirement.context, retirement.selector]);
+            }
         }
     }
     return rows;
@@ -1388,15 +1420,18 @@ export function verifyReviewedRuleRetirements(
             rule.selector === retirement.selector && !rule.layer
             && (rule.context || []).join(' / ') === retirement.context);
         const baseRules = matches(baseParsedByPath.get(path));
-        if (baseRules.length !== 1) {
-            errors.push(label + ': expected exactly one unlayered base rule, found ' + baseRules.length + '.');
+        const expectedOccurrences = retirement.expectedOccurrences || 1;
+        if (baseRules.length !== expectedOccurrences) {
+            errors.push(label + ': expected exactly ' + expectedOccurrences
+                + ' unlayered base rule occurrence(s), found ' + baseRules.length + '.');
             continue;
         }
         if (matches(currentParsedByPath.get(path)).length) {
             errors.push(label + ': retired rule still exists in current CSS.');
         }
         const layoutProperties = new Set(retirement.reviewedLayoutProperties || []);
-        const baseProperties = (baseRules[0].migrationDeclarations || []).map(declaration => declaration.property);
+        const baseProperties = baseRules.flatMap(rule =>
+            (rule.migrationDeclarations || []).map(declaration => declaration.property));
         const unreviewed = baseProperties.filter(property =>
             !REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES.has(property) && !layoutProperties.has(property));
         if (unreviewed.length) {
@@ -1411,8 +1446,9 @@ export function verifyReviewedRuleRetirements(
         }
         const baseIndexed = (baseCatalogs.get(path) || []).filter(rule =>
             rule.selector === retirement.selector && !rule.layer && rule.context === retirement.context);
-        if (baseIndexed.length === 1) externalRuleChanges.base.push(baseIndexed[0]);
-        else errors.push(label + ': expected exactly one indexed base rule, found ' + baseIndexed.length + '.');
+        if (baseIndexed.length === expectedOccurrences) externalRuleChanges.base.push(...baseIndexed);
+        else errors.push(label + ': expected exactly ' + expectedOccurrences
+            + ' indexed base rule occurrence(s), found ' + baseIndexed.length + '.');
     }
 }
 
@@ -1722,11 +1758,37 @@ export function verifyFamilyExtractions({
         }
     }
 
-    const seenRemoved = new Set();
+    // A legacy stylesheet can legitimately contain several rules with the
+    // same selector in the same media context. Only a single explicitly reviewed
+    // expectedOccurrences retirement may consume those distinct occurrences.
+    // Two independent transactions can never both claim the same tuple.
+    const reviewedMultiplicities = new Map();
+    for (const extraction of currentById.values()) {
+        for (const retirement of extraction.reviewedRuleRetirements || []) {
+            if (!retirement.expectedOccurrences) continue;
+            const key = tupleKey([
+                extraction.games?.[retirement.prefix]?.css, retirement.context, retirement.selector,
+            ]);
+            if (reviewedMultiplicities.has(key)) {
+                errors.push('family extraction duplicate retirement multiplicity claim: ' + key + '.');
+            }
+            reviewedMultiplicities.set(key, retirement.expectedOccurrences);
+        }
+    }
+    const removedCounts = new Map();
     for (const row of removed) {
         const key = tupleKey(row);
-        if (seenRemoved.has(key)) errors.push('family extraction rule is consumed more than once: ' + key + '.');
-        seenRemoved.add(key);
+        const count = (removedCounts.get(key) || 0) + 1;
+        removedCounts.set(key, count);
+        if (count > (reviewedMultiplicities.get(key) || 1)) {
+            errors.push('family extraction rule is consumed more than once: ' + key + '.');
+        }
+    }
+    for (const [key, reviewedCount] of reviewedMultiplicities) {
+        if (removedCounts.get(key) !== reviewedCount) {
+            errors.push('family extraction exact duplicate retirement count disagrees with reviewed multiplicity: '
+                + key + '.');
+        }
     }
 
     const currentCatalogs = new Map([...currentParsedByPath]
@@ -1742,6 +1804,10 @@ export function verifyFamilyExtractions({
     const newReviewedAtRuleAdditions = newExtractions.flatMap(extraction =>
         (extraction.reviewedAtRuleAdditions || []).map(addition => ({
             ...addition, path: extraction.sharedStylesheet, extractionId: extraction.id,
+        })));
+    const newReviewedAtRuleRetirements = newExtractions.flatMap(extraction =>
+        (extraction.reviewedAtRuleRetirements || []).map(retirement => ({
+            ...retirement, path: extraction.games[retirement.prefix].css, extractionId: extraction.id,
         })));
     for (const extraction of newExtractions) {
         verifyNewExtraction(
@@ -1768,6 +1834,7 @@ export function verifyFamilyExtractions({
         extractions: [...currentById.values()],
         newExtractionIds: newExtractions.map(extraction => extraction.id),
         newReviewedAtRuleAdditions,
+        newReviewedAtRuleRetirements,
         newRuleDelta,
     };
 }

@@ -46,7 +46,7 @@
     --rd-username-bg: rgb(255, 255, 255, 0.07);
     --rd-username-border: 1px solid rgb(255, 255, 255, 0.14);
     --rd-username-focus-border: rgb(127, 168, 255, 0.5);
-    --rd-legend-row-text: #cdd9f5;
+    --game-legend-text-color: #cdd9f5;
     --rd-legend-crest-bg: linear-gradient(90deg, #101826 0%, #ff8a40 100%);
     --rd-legend-trough-bg: linear-gradient(90deg, #101826 0%, #4092ff 100%);
     --rd-legend-dark-bg: #101826;
@@ -99,7 +99,7 @@
     --rd-username-bg: rgb(255, 255, 255, 0.76);
     --rd-username-border: 1px solid rgb(15, 23, 42, 0.154);
     --rd-username-focus-border: rgb(127, 168, 255, 0.5);
-    --rd-legend-row-text: #0f172a;
+    --game-legend-text-color: #0f172a;
     --rd-legend-crest-bg: linear-gradient(90deg, #edeff3 0%, #ff8a40 100%);
     --rd-legend-trough-bg: linear-gradient(90deg, #edeff3 0%, #4092ff 100%);
     --rd-legend-dark-bg: #0d232a;
@@ -305,9 +305,6 @@ body {
 }
 
 .rd-card-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: 2px;
     color: var(--tok-gold);
 }
 
@@ -360,57 +357,12 @@ body {
 
 /* ── 侧栏：记录行 ── */
 
-.rd-side-records { display: flex; flex-direction: column; }
 
-.rd-side-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 13px;
-    padding: 4px 0;
-    color: var(--tok-text-dim);
-    font-variant-numeric: tabular-nums;
-}
 
-.rd-side-k { color: var(--tok-text-dim); }
-.rd-side-v { color: var(--tok-text); font-weight: 700; }
 
-/* ── 侧栏：读水 ──
-   参考条码由 src/games/ripple-duet/runtime.js 按真实波长写 linear-gradient 色标，
-   黑底 + 竖线与 canvas 里的条码同一套读法（400nm 在左，700nm 在右） */
+/* W5b: row/text spacing shared; only swatch materials and the note remain local. */
 
-.rd-side-legend { display: flex; flex-direction: column; gap: 2px; }
 
-.rd-legend-row {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    font-size: 12.5px;
-    padding: 3px 0;
-    color: var(--tok-text-dim);
-}
-
-.rd-legend-text { flex: 1; min-width: 0; line-height: 1.45; }
-
-.rd-legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-/* 元素符号牌：宽度写死保证 8 行条码左缘对齐（flex 子项默认会被压缩） */
-/* ── 侧栏：读水图例（与 canvas 里海面同一套配色） ── */
-
-.rd-legend-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 7px;
-    font-size: 12.5px;
-    color: var(--rd-legend-row-text);
-}
 
 .rd-legend-swatch {
     flex: 0 0 28px;

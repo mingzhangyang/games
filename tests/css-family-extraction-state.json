@@ -2948,6 +2948,454 @@
           }
         ]
       }
+    },
+    {
+      "id": "sidebar-family-w5b",
+      "baseDuplicationDigest": "1933141c73fd64f27caa9842bc4e5f0ef0546768e9b2182b5e638114e99b1e6c",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -50,
+      "expectedRemovedUnlayeredRules": 56,
+      "games": {
+        "cc": {
+          "css": "css/circuit.css",
+          "html": "circuit.html",
+          "runtime": "src/games/circuit/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "gd": {
+          "css": "css/gravity.css",
+          "html": "gravity-slingshot.html",
+          "runtime": "src/games/gravity-slingshot/runtime.js"
+        },
+        "lm": {
+          "css": "css/lumen.css",
+          "html": "lumen.html",
+          "runtime": "src/games/lumen/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        },
+        "bf": {
+          "css": "css/bond-forge.css",
+          "html": "bond-forge.html",
+          "runtime": "src/games/bond-forge/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "side-records",
+          "sharedClass": "game-side-records",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "lm",
+            "md",
+            "rd",
+            "sd",
+            "bf"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "lm",
+            "md",
+            "rd",
+            "sd",
+            "bf"
+          ]
+        },
+        {
+          "suffix": "side-legend",
+          "sharedClass": "game-side-legend",
+          "surface": "html",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd"
+          ]
+        },
+        {
+          "suffix": "legend-row",
+          "sharedClass": "game-legend-row",
+          "surface": "runtime",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md"
+          ],
+          "convergedThemeProperties": [
+            "color"
+          ]
+        },
+        {
+          "suffix": "legend-text",
+          "sharedClass": "game-legend-text",
+          "surface": "runtime",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md"
+          ]
+        },
+        {
+          "suffix": "legend-dot",
+          "sharedClass": "game-legend-dot",
+          "surface": "runtime",
+          "participants": [
+            "cb",
+            "ec",
+            "md"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "md"
+          ]
+        },
+        {
+          "suffix": "card-title",
+          "sharedClass": "game-clear-title",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd",
+            "bf"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "gd",
+            "lm"
+          ],
+          "participantConvergedProperties": {
+            "sd": [
+              "font-size",
+              "font-weight",
+              "letter-spacing"
+            ],
+            "bf": [
+              "font-weight",
+              "letter-spacing"
+            ]
+          }
+        }
+      ],
+      "reviewedRuleRetirements": [
+        {
+          "prefix": "cc",
+          "context": "",
+          "selector": ".cc-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "cb",
+          "context": "",
+          "selector": ".cb-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "ec",
+          "context": "",
+          "selector": ".ec-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "fv",
+          "context": "",
+          "selector": ".fv-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "lm",
+          "context": "",
+          "selector": ".lm-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "md",
+          "context": "",
+          "selector": ".md-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "rd",
+          "context": "",
+          "selector": ".rd-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "sd",
+          "context": "",
+          "selector": ".sd-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "bf",
+          "context": "",
+          "selector": ".bf-side-row",
+          "reason": "Existing game-side-row already owns the shared display, alignment, typography and number formatting; remove the redundant unlayered page rule.",
+          "reviewedLayoutProperties": [
+            "display",
+            "justify-content",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "cc",
+          "context": "",
+          "selector": ".cc-side-row b",
+          "reason": "Existing game-side-row b owns the numeric/value emphasis and color."
+        },
+        {
+          "prefix": "lm",
+          "context": "",
+          "selector": ".lm-side-row b",
+          "reason": "Existing game-side-row b owns the numeric/value emphasis and color."
+        },
+        {
+          "prefix": "sd",
+          "context": "",
+          "selector": ".sd-side-row b",
+          "reason": "Existing game-side-row b owns the numeric/value emphasis and color."
+        },
+        {
+          "prefix": "bf",
+          "context": "",
+          "selector": ".bf-side-row b",
+          "reason": "Existing game-side-row b owns the numeric/value emphasis and color."
+        },
+        {
+          "prefix": "cb",
+          "context": "",
+          "selector": ".cb-side-k",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "cb",
+          "context": "",
+          "selector": ".cb-side-v",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "ec",
+          "context": "",
+          "selector": ".ec-side-k",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "ec",
+          "context": "",
+          "selector": ".ec-side-v",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "fv",
+          "context": "",
+          "selector": ".fv-side-k",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "fv",
+          "context": "",
+          "selector": ".fv-side-v",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "md",
+          "context": "",
+          "selector": ".md-side-k",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "md",
+          "context": "",
+          "selector": ".md-side-v",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "rd",
+          "context": "",
+          "selector": ".rd-side-k",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "rd",
+          "context": "",
+          "selector": ".rd-side-v",
+          "reason": "Value and label now inherit the shared record row styling; numeric values render as semantic b elements."
+        },
+        {
+          "prefix": "rd",
+          "context": "",
+          "selector": ".rd-legend-row",
+          "reason": "Two former rules for the same selector competed on gap/padding/margin/color; the shared row owns its geometry, and the accent remains an audited palette token.",
+          "expectedOccurrences": 2,
+          "reviewedLayoutProperties": [
+            "display",
+            "align-items"
+          ]
+        },
+        {
+          "prefix": "rd",
+          "context": "",
+          "selector": ".rd-legend-text",
+          "reason": "Old dead .rd-legend-text selector had no emitted runtime nodes; new renderer emits .game-legend-text directly.",
+          "reviewedLayoutProperties": [
+            "flex"
+          ]
+        },
+        {
+          "prefix": "rd",
+          "context": "",
+          "selector": ".rd-legend-dot",
+          "reason": "Old dead .rd-legend-dot selector had no emitted runtime nodes; ripple legend uses semantic waveform swatches instead.",
+          "reviewedLayoutProperties": [
+            "width",
+            "flex-shrink"
+          ]
+        },
+        {
+          "prefix": "gd",
+          "context": "@media (width >= 1024px)",
+          "selector": ".gd-side-row b",
+          "reason": "The shared game-side-row b values apply at every viewport; drop desktop-only redundant value styling."
+        }
+      ],
+      "reviewedAtRuleRetirements": [
+        {
+          "prefix": "gd",
+          "context": "@media (width >= 1024px)",
+          "selector": ".gd-side-row b",
+          "reason": "The only rule inside this desktop-only media group was retired; do not preserve a now-empty at-rule."
+        }
+      ],
+      "retiredCustomProperties": {
+        "rd": {
+          "properties": [
+            "--rd-legend-row-text"
+          ],
+          "expectedRemovedDefinitions": 2
+        }
+      },
+      "reviewedCustomPropertyIntroductions": {
+        "rd": [
+          {
+            "selector": ":root",
+            "property": "--game-legend-text-color",
+            "value": "#cdd9f5",
+            "replaces": "--rd-legend-row-text",
+            "previousValue": "#cdd9f5"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-legend-text-color",
+            "value": "#0f172a",
+            "replaces": "--rd-legend-row-text",
+            "previousValue": "#0f172a"
+          }
+        ]
+      }
     }
   ]
 }

@@ -372,11 +372,11 @@ export class EchoCaveGame {
         box.innerHTML = '';
         for (const [k, v] of rows) {
             const row = document.createElement('div');
-            row.className = 'ec-side-row';
+            row.className = 'ec-side-row game-side-row';
             const kk = document.createElement('span');
             kk.className = 'ec-side-k';
             kk.textContent = k;
-            const vv = document.createElement('span');
+            const vv = document.createElement('b');
             vv.className = 'ec-side-v';
             vv.textContent = v;
             row.appendChild(kk);
@@ -399,11 +399,11 @@ export class EchoCaveGame {
         box.innerHTML = '';
         for (const [kind, text] of rows) {
             const row = document.createElement('div');
-            row.className = 'ec-legend-row';
+            row.className = 'ec-legend-row game-legend-row';
             const dot = document.createElement('span');
-            dot.className = `ec-legend-dot ec-legend-${kind}`;
+            dot.className = `ec-legend-dot game-legend-dot ec-legend-${kind}`;
             const tx = document.createElement('span');
-            tx.className = 'ec-legend-text';
+            tx.className = 'ec-legend-text game-legend-text';
             tx.textContent = text;
             row.appendChild(dot);
             row.appendChild(tx);
