@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "engine": "postcss-duplication-audit-v1",
-  "expectedOrdinaryRuleCount": 2506,
+  "expectedOrdinaryRuleCount": 2467,
   "minimumCrossFileCount": 2,
   "classifications": [
     "exact-duplicate",
@@ -10,13 +10,13 @@
   ],
   "baseline": {
     "categoryCounts": {
-      "exact-duplicate": 261,
-      "structural-duplicate": 41,
-      "intentional-local": 2204
+      "exact-duplicate": 227,
+      "structural-duplicate": 30,
+      "intentional-local": 2210
     },
-    "classificationDigest": "f1cbd51a1cd0c06aea406c8f375b7d13c23930fb15a6025076b86d408118d3b5",
-    "exactFamilyCount": 73,
-    "structuralFamilyCount": 13
+    "classificationDigest": "1933141c73fd64f27caa9842bc4e5f0ef0546768e9b2182b5e638114e99b1e6c",
+    "exactFamilyCount": 66,
+    "structuralFamilyCount": 11
   },
   "policy": {
     "automaticCssRewrite": false,

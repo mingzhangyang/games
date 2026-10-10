@@ -587,6 +587,46 @@ html.game-reset * {
     }
 }
 
+/* ── W5a: result-overlay score and topbar action counter surfaces ──
+   All geometry, glass opacity and glow strength have one owner.
+   Only the color hue/stroke follows each game's tokens.
+   Five Science Showcase pages retain P0 !important materials. */
+@layer components {
+    .game-over-score {
+        font-size: 42px;
+        font-weight: 800;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 0 26px color-mix(in srgb, var(--game-over-glow-hue) 45%, transparent);
+    }
+
+    .game-over-sub {
+        font-size: 13px;
+        color: var(--tok-text-dim);
+        min-height: 16px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .game-cut-box {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        background: var(--game-cut-surface, rgb(0, 0, 0, 0.4));
+        border: 1px solid var(--game-cut-stroke-color, var(--tok-border));
+        border-radius: 11px;
+        padding: 6px 12px;
+    }
+
+    .game-cut-value {
+        font-size: 19px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: var(--game-cut-value-color, var(--tok-gold));
+        min-width: 2ch;
+        text-align: center;
+    }
+}
+
 /* Both mobile overrides have the exact same semantics on all nine W4a pages.
    Gravity's former repeat(5, 1fr) restatement is already owned by the base grid. */
 @media (width <= 480px) {
@@ -600,8 +640,11 @@ html.game-reset * {
         }
         .game-start-title { font-size: 27px; }
         .game-start-mode { font-size: 13px; padding: 11px 15px; }
+        .game-over-score { font-size: 34px; }
+        .game-cut-value { font-size: 16px; }
     }
 }
+
 
 /* ── 侧栏卡片族 ── */
 @layer components {

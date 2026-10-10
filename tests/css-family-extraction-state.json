@@ -2437,6 +2437,517 @@
           "expectedRemovedDefinitions": 12
         }
       }
+    },
+    {
+      "id": "result-hud-w5a",
+      "baseDuplicationDigest": "f1cbd51a1cd0c06aea406c8f375b7d13c23930fb15a6025076b86d408118d3b5",
+      "sharedStylesheet": "css/layout.css",
+      "sharedLayer": "components",
+      "expectedRuleDelta": -39,
+      "expectedRemovedUnlayeredRules": 45,
+      "games": {
+        "cc": {
+          "css": "css/circuit.css",
+          "html": "circuit.html",
+          "runtime": "src/games/circuit/runtime.js"
+        },
+        "cb": {
+          "css": "css/crystal-bloom.css",
+          "html": "crystal-bloom.html",
+          "runtime": "src/games/crystal-bloom/runtime.js"
+        },
+        "ec": {
+          "css": "css/echo-cave.css",
+          "html": "echo-cave.html",
+          "runtime": "src/games/echo-cave/runtime.js"
+        },
+        "fv": {
+          "css": "css/flame-verse.css",
+          "html": "flame-verse.html",
+          "runtime": "src/games/flame-verse/runtime.js"
+        },
+        "gd": {
+          "css": "css/gravity.css",
+          "html": "gravity-slingshot.html",
+          "runtime": "src/games/gravity-slingshot/runtime.js"
+        },
+        "lm": {
+          "css": "css/lumen.css",
+          "html": "lumen.html",
+          "runtime": "src/games/lumen/runtime.js"
+        },
+        "md": {
+          "css": "css/maxwell-demon.css",
+          "html": "maxwell-demon.html",
+          "runtime": "src/games/maxwell-demon/runtime.js"
+        },
+        "rd": {
+          "css": "css/ripple-duet.css",
+          "html": "ripple-duet.html",
+          "runtime": "src/games/ripple-duet/runtime.js"
+        },
+        "sd": {
+          "css": "css/silk-dew.css",
+          "html": "silk-dew.html",
+          "runtime": "src/games/silk-dew/runtime.js"
+        }
+      },
+      "components": [
+        {
+          "suffix": "over-score",
+          "sharedClass": "game-over-score",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "text-shadow"
+          ]
+        },
+        {
+          "suffix": "over-sub",
+          "sharedClass": "game-over-sub",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ]
+        },
+        {
+          "suffix": "cut-box",
+          "sharedClass": "game-cut-box",
+          "surface": "html",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "background",
+            "border"
+          ]
+        },
+        {
+          "suffix": "cut-value",
+          "sharedClass": "game-cut-value",
+          "surface": "html",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "convergedThemeProperties": [
+            "color"
+          ],
+          "participantConvergedProperties": {
+            "ec": [
+              "min-width"
+            ],
+            "sd": [
+              "min-width"
+            ]
+          }
+        },
+        {
+          "suffix": "over-score",
+          "sharedClass": "game-over-score",
+          "surface": "html",
+          "participants": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cc",
+            "cb",
+            "ec",
+            "fv",
+            "gd",
+            "lm",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "context": "@media (width <= 480px)"
+        },
+        {
+          "suffix": "cut-value",
+          "sharedClass": "game-cut-value",
+          "surface": "html",
+          "participants": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "fullyRemoved": [
+            "cb",
+            "ec",
+            "fv",
+            "md",
+            "rd",
+            "sd"
+          ],
+          "context": "@media (width <= 480px)"
+        }
+      ],
+      "retiredCustomProperties": {
+        "cc": {
+          "properties": [
+            "--cc-over-score-glow"
+          ],
+          "expectedRemovedDefinitions": 2
+        },
+        "cb": {
+          "properties": [
+            "--cb-over-score-glow",
+            "--cb-cut-box-bg",
+            "--cb-cut-box-border"
+          ],
+          "expectedRemovedDefinitions": 6
+        },
+        "md": {
+          "properties": [
+            "--md-over-score-glow",
+            "--md-cut-box-bg",
+            "--md-cut-box-border"
+          ],
+          "expectedRemovedDefinitions": 6
+        },
+        "rd": {
+          "properties": [
+            "--rd-over-score-glow",
+            "--rd-cut-box-bg",
+            "--rd-cut-box-border"
+          ],
+          "expectedRemovedDefinitions": 6
+        },
+        "sd": {
+          "properties": [
+            "--sd-over-score-glow",
+            "--sd-cut-box-bg",
+            "--sd-cut-box-border"
+          ],
+          "expectedRemovedDefinitions": 6
+        }
+      },
+      "reviewedCustomPropertyIntroductions": {
+        "cc": [
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 201, 77)",
+            "replaces": "--cc-over-score-glow",
+            "previousValue": "0 0 26px rgb(255, 201, 77, 0.45)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--cc-over-score-glow",
+            "previousValue": "none"
+          }
+        ],
+        "cb": [
+          {
+            "selector": ":root",
+            "property": "--game-cut-surface",
+            "value": "rgb(0, 0, 0, 0.4)",
+            "replaces": "--cb-cut-box-bg",
+            "previousValue": "rgb(0, 0, 0, 0.4)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--cb-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "replaces": "--cb-over-score-glow",
+            "previousValue": "0 0 26px rgb(255, 211, 77, 0.4)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-surface",
+            "value": "rgb(15, 23, 42, 0.1)",
+            "replaces": "--cb-cut-box-bg",
+            "previousValue": "rgb(15, 23, 42, 0.1)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--cb-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--cb-over-score-glow",
+            "previousValue": "none"
+          }
+        ],
+        "ec": [
+          {
+            "selector": "body",
+            "property": "--game-cut-value-color",
+            "value": "var(--tok-text)",
+            "insertAfter": "color"
+          },
+          {
+            "selector": "body",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(111, 216, 255, 0.16)",
+            "insertAfter": "--game-cut-value-color"
+          },
+          {
+            "selector": "body",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "insertAfter": "--game-cut-stroke-color"
+          }
+        ],
+        "fv": [
+          {
+            "selector": "body",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "insertAfter": "color"
+          },
+          {
+            "selector": "body",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "insertAfter": "--game-cut-stroke-color"
+          }
+        ],
+        "gd": [
+          {
+            "selector": "body",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(125, 250, 208)",
+            "insertAfter": "color"
+          }
+        ],
+        "lm": [
+          {
+            "selector": "body",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(125, 250, 208)",
+            "insertAfter": "color"
+          }
+        ],
+        "md": [
+          {
+            "selector": ":root",
+            "property": "--game-cut-surface",
+            "value": "rgb(0, 0, 0, 0.4)",
+            "replaces": "--md-cut-box-bg",
+            "previousValue": "rgb(0, 0, 0, 0.4)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--md-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "replaces": "--md-over-score-glow",
+            "previousValue": "0 0 26px rgb(255, 211, 77, 0.4)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-surface",
+            "value": "rgb(15, 23, 42, 0.1)",
+            "replaces": "--md-cut-box-bg",
+            "previousValue": "rgb(15, 23, 42, 0.1)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--md-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--md-over-score-glow",
+            "previousValue": "none"
+          }
+        ],
+        "rd": [
+          {
+            "selector": ":root",
+            "property": "--game-cut-surface",
+            "value": "rgb(0, 0, 0, 0.4)",
+            "replaces": "--rd-cut-box-bg",
+            "previousValue": "rgb(0, 0, 0, 0.4)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--rd-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(255, 211, 77)",
+            "replaces": "--rd-over-score-glow",
+            "previousValue": "0 0 26px rgb(255, 211, 77, 0.4)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-surface",
+            "value": "rgb(15, 23, 42, 0.1)",
+            "replaces": "--rd-cut-box-bg",
+            "previousValue": "rgb(15, 23, 42, 0.1)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(168, 184, 255, 0.18)",
+            "replaces": "--rd-cut-box-border",
+            "previousValue": "1px solid rgb(168, 184, 255, 0.18)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--rd-over-score-glow",
+            "previousValue": "none"
+          }
+        ],
+        "sd": [
+          {
+            "selector": ":root",
+            "property": "--game-cut-surface",
+            "value": "rgb(0, 0, 0, 0.4)",
+            "replaces": "--sd-cut-box-bg",
+            "previousValue": "rgb(0, 0, 0, 0.35)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(255, 255, 255, 0.09)",
+            "replaces": "--sd-cut-box-border",
+            "previousValue": "1px solid rgb(255, 255, 255, 0.09)"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-cut-value-color",
+            "value": "var(--tok-text)",
+            "insertAfter": "--game-cut-stroke-color"
+          },
+          {
+            "selector": ":root",
+            "property": "--game-over-glow-hue",
+            "value": "rgb(159, 232, 255)",
+            "replaces": "--sd-over-score-glow",
+            "previousValue": "0 0 26px rgb(159, 232, 255, 0.45)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-surface",
+            "value": "rgb(15, 23, 42, 0.1)",
+            "replaces": "--sd-cut-box-bg",
+            "previousValue": "rgb(15, 23, 42, 0.087)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-cut-stroke-color",
+            "value": "rgb(15, 23, 42, 0.099)",
+            "replaces": "--sd-cut-box-border",
+            "previousValue": "1px solid rgb(15, 23, 42, 0.099)"
+          },
+          {
+            "selector": ":root[data-theme=\"light\"]",
+            "property": "--game-over-glow-hue",
+            "value": "transparent",
+            "replaces": "--sd-over-score-glow",
+            "previousValue": "none"
+          }
+        ]
+      }
     }
   ]
 }

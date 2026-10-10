@@ -3,7 +3,7 @@ import { TokenType } from '@csstools/css-tokenizer';
 import { join } from 'node:path';
 
 import { htmlElementAttributes, parseHtmlElements } from './html-inputs.mjs';
-import { cssTokens } from './model.mjs';
+import { cssTokens, normalizeFragment } from './model.mjs';
 import { indexRuleOccurrences, readGitFile } from './migration-contract.mjs';
 
 export const FAMILY_EXTRACTION_STATE_PATH = 'tests/css-family-extraction-state.json';
@@ -95,7 +95,7 @@ const REVIEWED_SELECTOR_SUFFIXES = new Set(['', ':hover', ':active', ':focus-vis
 const REVIEWED_COMPONENT_CONTEXTS = new Set(['', '@media (width <= 480px)']);
 const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
     'color', 'background', 'background-color', 'border', 'border-color',
-    'box-shadow', 'filter', 'opacity',
+    'box-shadow', 'filter', 'opacity', 'text-shadow',
 ]);
 // Visual geometry/typography a reviewed participant may give up so that the shared
 // family's size wins. Layout/behaviour properties (display, position, width, …) stay
@@ -103,7 +103,7 @@ const REVIEWED_THEME_CONVERGENCE_PROPERTIES = new Set([
 const REVIEWED_GEOMETRY_CONVERGENCE_PROPERTIES = new Set([
     'font-size', 'font-weight', 'font-family', 'padding', 'border-radius', 'transition', 'backdrop-filter',
     // Visual dimensions/spacing (leaderboard-v2): sizes and gaps of a standard surface.
-    'max-width', 'min-height', 'max-height', 'height', 'gap',
+    'max-width', 'min-width', 'min-height', 'max-height', 'height', 'gap',
     'letter-spacing', 'line-height', 'margin-top', 'margin-bottom',
 ]);
 const REVIEWED_PARTICIPANT_CONVERGENCE_PROPERTIES = new Set([
@@ -764,6 +764,58 @@ export function verifyExtractionShape(extraction, errors) {
         }
     }
 
+
+    // W5a's shared hue/material tokens replace audited page variables or are
+    // added to a pre-existing theme rule. Both sides are pinned to exact
+    // declaration values; unlike an unconstrained rebaseline, every new token
+    // must name a real source rule and may not mask unrelated palette changes.
+    const reviewedIntroductions = extraction.reviewedCustomPropertyIntroductions || {};
+    if (!reviewedIntroductions || typeof reviewedIntroductions !== 'object'
+        || Array.isArray(reviewedIntroductions)) {
+        fail('reviewedCustomPropertyIntroductions must be an object keyed by game prefix.');
+    } else {
+        const sharedTokenSuffix = {
+            '--game-over-glow-hue': 'over-score-glow',
+            '--game-cut-surface': 'cut-box-bg',
+            '--game-cut-stroke-color': 'cut-box-border',
+            '--game-cut-value-color': null,
+        };
+        for (const [prefix, entries] of Object.entries(reviewedIntroductions)) {
+            if (!extraction.games?.[prefix] || !Array.isArray(entries) || !entries.length) {
+                fail('reviewed custom-property introductions require a known participant and nonempty entries: ' + prefix);
+                continue;
+            }
+            const seenTargets = new Set();
+            for (const entry of entries) {
+                const label = prefix + '/' + entry?.selector + '/' + entry?.property;
+                if (!entry || ![':root', ':root[data-theme="light"]', 'body'].includes(entry.selector)
+                    || !Object.hasOwn(sharedTokenSuffix, entry.property)) {
+                    fail('reviewed custom-property introduction has an unsupported selector/token: ' + label);
+                    continue;
+                }
+                if (typeof entry.value !== 'string' || !entry.value.trim()
+                    || !/^(?:rgb\(|transparent$|var\(--tok-text\)$)/.test(entry.value)) {
+                    fail('reviewed custom-property introduction has an invalid reviewed color: ' + label);
+                }
+                const key = entry.selector + '\0' + entry.property;
+                if (seenTargets.has(key)) fail('duplicate reviewed custom-property introduction ' + label);
+                seenTargets.add(key);
+                if (entry.replaces !== undefined) {
+                    if (sharedTokenSuffix[entry.property] === null
+                        || entry.replaces !== '--' + prefix + '-' + sharedTokenSuffix[entry.property]
+                        || !(retiredCustomProperties[prefix]?.properties || []).includes(entry.replaces)
+                        || typeof entry.previousValue !== 'string' || !entry.previousValue.trim()
+                        || entry.insertAfter !== undefined) {
+                        fail('reviewed custom-property rename must consume its exact retired source: ' + label);
+                    }
+                } else if (typeof entry.insertAfter !== 'string' || !entry.insertAfter
+                    || entry.insertAfter === entry.property || entry.previousValue !== undefined) {
+                    fail('reviewed custom-property addition requires an insertAfter anchor: ' + label);
+                }
+            }
+        }
+    }
+
     const selectorPrunes = extraction.reviewedSelectorPrunes || [];
     if (!Array.isArray(selectorPrunes)) {
         fail('reviewedSelectorPrunes must be an array.');
@@ -1116,6 +1168,24 @@ export function verifyCurrentRetiredCustomProperties(extraction, currentParsedBy
             }
         }
     }
+
+    for (const [prefix, additions] of Object.entries(extraction.reviewedCustomPropertyIntroductions || {})) {
+        const path = extraction.games?.[prefix]?.css;
+        const rules = (currentParsedByPath.get(path)?.rules || []);
+        for (const entry of additions) {
+            const matches = rules.filter(rule => !rule.layer && !(rule.context || []).length
+                && rule.selector === entry.selector
+                && (rule.migrationDeclarations || []).some(declaration =>
+                    declaration.property === entry.property
+                    && canonical(declaration.value) === canonical(normalizeFragment(entry.value))
+                    && declaration.important === false));
+            if (matches.length !== 1) {
+                errors.push(extraction.id + '/introduced-custom-properties/' + prefix
+                    + ': expected one live ' + entry.selector + ' ' + entry.property
+                    + ' = ' + entry.value + ', found ' + matches.length + '.');
+            }
+        }
+    }
 }
 
 export function verifyRetiredCustomProperties(
@@ -1123,40 +1193,93 @@ export function verifyRetiredCustomProperties(
     currentCatalogs, baseCatalogs, externalRuleChanges, errors,
 ) {
     const retirements = extraction.retiredCustomProperties || {};
-    for (const [prefix, retirement] of Object.entries(retirements)) {
+    const introduced = extraction.reviewedCustomPropertyIntroductions || {};
+    for (const prefix of new Set([...Object.keys(retirements), ...Object.keys(introduced)])) {
         const game = extraction.games?.[prefix];
         if (!game?.css) continue;
-        const label = extraction.id + '/retired-custom-properties/' + prefix;
-        const properties = retirement.properties || [];
-        const retired = new Set(properties);
+        const label = extraction.id + '/reviewed-custom-properties/' + prefix;
+        const retirement = retirements[prefix] || { properties: [], expectedRemovedDefinitions: 0 };
+        const retired = new Set(retirement.properties);
+        const additions = introduced[prefix] || [];
         const baseParsed = baseParsedByPath.get(game.css);
         const currentParsed = currentParsedByPath.get(game.css);
         const baseRules = (baseParsed?.rules || []).filter(rule =>
-            !rule.layer
-            && (rule.context || []).length === 0
-            && (rule.migrationDeclarations || []).some(declaration => retired.has(declaration.property)));
+            !rule.layer && !(rule.context || []).length);
+        const sourceRules = baseRules.filter(rule =>
+            (rule.migrationDeclarations || []).some(d => retired.has(d.property)));
+        const consumedAdditions = new Set();
         const seenBase = new Set();
         let removedDefinitionCount = 0;
+        const selected = [...sourceRules];
 
-        for (const baseRule of baseRules) {
+        // Pure new tokens (e.g. a dark-only game's body theme) do not have a
+        // retired source. Select their existing owner by an exact insertion anchor,
+        // rather than accepting a new unlayered rule or arbitrary selector.
+        for (const selector of new Set(additions.map(entry => entry.selector))) {
+            if (selected.some(rule => rule.selector === selector)) continue;
+            const first = additions.find(entry => entry.selector === selector);
+            const anchor = first?.replaces || first?.insertAfter;
+            const matches = baseRules.filter(rule => rule.selector === selector
+                && (rule.migrationDeclarations || []).some(d => d.property === anchor));
+            if (matches.length !== 1) {
+                errors.push(label + '/' + selector
+                    + ': expected exactly one existing rule with insertion anchor '
+                    + anchor + ', found ' + matches.length + '.');
+                continue;
+            }
+            selected.push(matches[0]);
+        }
+
+        for (const baseRule of selected) {
+            const expected = [...(baseRule.migrationDeclarations || [])];
+            const changes = additions.filter(entry => entry.selector === baseRule.selector);
+            for (const change of changes) {
+                const target = change.replaces || change.insertAfter;
+                const indexes = expected.flatMap((declaration, index) =>
+                    declaration.property === target ? [index] : []);
+                if (indexes.length !== 1) {
+                    errors.push(label + '/' + baseRule.selector + ': expected one '
+                        + target + ' token for ' + change.property + ', got ' + indexes.length + '.');
+                    continue;
+                }
+                const index = indexes[0];
+                if (change.replaces) {
+                    const previous = expected[index];
+                    if (migrationValueText(previous.value) !== change.previousValue
+                        || previous.important) {
+                        errors.push(label + '/' + baseRule.selector
+                            + ': audited source value drifted for ' + change.replaces + '.');
+                        continue;
+                    }
+                    expected[index] = {
+                        property: change.property,
+                        value: normalizeFragment(change.value),
+                        important: false,
+                    };
+                } else {
+                    expected.splice(index + 1, 0, {
+                        property: change.property,
+                        value: normalizeFragment(change.value),
+                        important: false,
+                    });
+                }
+                consumedAdditions.add(change);
+            }
             for (const declaration of baseRule.migrationDeclarations || []) {
                 if (retired.has(declaration.property)) {
                     seenBase.add(declaration.property);
-                    removedDefinitionCount += 1;
+                    removedDefinitionCount++;
                 }
             }
-            const expected = (baseRule.migrationDeclarations || [])
-                .filter(declaration => !retired.has(declaration.property));
+            const finalDeclarations = expected.filter(declaration => !retired.has(declaration.property));
             const currentRule = uniqueRuleByDeclarations(
-                currentParsed, baseRule.selector, null, expected, errors,
+                currentParsed, baseRule.selector, null, finalDeclarations, errors,
                 label + '/' + baseRule.selector + '/current',
             );
             if (!currentRule) {
                 errors.push(label + '/' + baseRule.selector
-                    + ': theme rule changed beyond the declared custom-property retirements.');
-                continue;
+                    + ': theme rule changed beyond exact reviewed token transformations.');
             }
-
             const baseIndexed = uniqueCatalogRuleByDeclarations(
                 baseCatalogs.get(game.css), baseRule.selector, null,
                 baseRule.migrationDeclarations || [], errors,
@@ -1164,19 +1287,24 @@ export function verifyRetiredCustomProperties(
             );
             const currentIndexed = uniqueCatalogRuleByDeclarations(
                 currentCatalogs.get(game.css), baseRule.selector, null,
-                expected, errors, label + '/' + baseRule.selector + '/current-index',
+                finalDeclarations, errors, label + '/' + baseRule.selector + '/current-index',
             );
             if (baseIndexed) externalRuleChanges.base.push(baseIndexed);
             if (currentIndexed) externalRuleChanges.current.push(currentIndexed);
         }
 
+        for (const change of additions) {
+            if (!consumedAdditions.has(change)) {
+                errors.push(label + ': unconsumed introduction '
+                    + change.selector + ' ' + change.property + '.');
+            }
+        }
         if (removedDefinitionCount !== retirement.expectedRemovedDefinitions) {
             errors.push(label + ': base contains ' + removedDefinitionCount
                 + ' retired declaration occurrence(s), expected '
                 + retirement.expectedRemovedDefinitions + '.');
         }
-
-        for (const property of properties) {
+        for (const property of retired) {
             if (!seenBase.has(property)) {
                 errors.push(label + ': ' + property + ' was not defined in the comparison base.');
             }
@@ -1538,6 +1666,7 @@ export function verifyFamilyExtractions({
     const cssPaths = new Set();
     const removed = [];
     const removedCustomPropertyDefinitionsByPath = new Map();
+    const introducedCustomPropertyDefinitionsByPath = new Map();
     const retiredPropertyClaims = new Set();
     let totalRuleDelta = 0;
     for (const extraction of currentById.values()) {
@@ -1567,6 +1696,12 @@ export function verifyFamilyExtractions({
         for (const game of Object.values(extraction.games || {})) if (game?.css) cssPaths.add(game.css);
         for (const narrowing of extraction.reviewedSelectorNarrowings || []) cssPaths.add(narrowing.path);
 
+        for (const [prefix, definitions] of Object.entries(extraction.reviewedCustomPropertyIntroductions || {})) {
+            const path = extraction.games?.[prefix]?.css;
+            if (!path) continue;
+            introducedCustomPropertyDefinitionsByPath.set(path,
+                (introducedCustomPropertyDefinitionsByPath.get(path) || 0) + definitions.length);
+        }
         for (const [prefix, retirement] of Object.entries(extraction.retiredCustomProperties || {})) {
             const path = extraction.games?.[prefix]?.css;
             if (!path) continue;
@@ -1628,6 +1763,7 @@ export function verifyFamilyExtractions({
             errors,
         ),
         removedCustomPropertyDefinitionsByPath,
+        introducedCustomPropertyDefinitionsByPath,
         externalRuleChanges,
         extractions: [...currentById.values()],
         newExtractionIds: newExtractions.map(extraction => extraction.id),
