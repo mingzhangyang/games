@@ -51,8 +51,8 @@
 
 | 缺口 | 登记 | 工作项 |
 |---|---|---|
-| `verify-button-icons` 没覆盖 tetris、minesweeper 的结果按钮 | `docs/backlog.md`，校验器 `exempt` | W6 |
-| tetris 桌面宽屏棋盘发虚（画布后端缓冲固定 400×800） | `docs/backlog.md`，`verify-desktop-frame` knownGaps | W6 |
+| `verify-button-icons` 没覆盖 tetris、minesweeper 的结果按钮 | 已通过 W6a 在校验器中消除豁免（见 §3） | W6a |
+| tetris 桌面宽屏棋盘发虚（画布后端缓冲固定 400×800） | `docs/backlog.md`，`verify-desktop-frame` knownGaps | W6b |
 
 ### 2.3 保留的例外（有充分理由，不在本路线图内）
 
@@ -100,12 +100,12 @@
 
 ### W5 结算结果/顶栏计数 + 侧栏卡片（两个 PR）
 - **W5a（C）— ✅ PR #125 已合并**：九页 `over-score`、`over-sub`，六页 `cut-box`、`cut-value`，包含 480px 移动端规则。退役 45 条原有规则，增加 6 条共享规则，净减少 39 条普通 CSS 规则；由新共享组件拥有 26px/45% 分数发光、40% 黑色玻璃材质/1px 描边和几何/排版。页级仅用主题令牌传递发光色、边框颜色及浅色面板；共退役 13 个旧页面变量。Echo Cave / Silk Dew 的数字最小宽度收敛为 2ch，不留 Gravity 例外，P0 Science Showcase 冻结 `!important` 不变。
-- **W5b（B）— PR #126 待验收**：十页记录容器、记录行和星级标题；五页科学图例外层与标准标记。复用已存在的 `game-side-row`，新建 `game-side-records` / `game-side-legend` / `game-legend-*` / `game-clear-title` 六个共享规则；退役 56 个原规则副本、净 -50 条普通 CSS 规则（2467 → 2417）。Ripple Duet 的 `rd-rec` 动态记录采用共享行、两条同名 `rd-legend-row` 都按出现次数退役；局部波长/渐变/非圆形数据图例保留。每个页面的 DOM 与 runtime 必须实际采用新类，Sci Showcase P0 保持不变。账本 `sidebar-family-w5b` + `verify-sidebar-family.mjs` 完整验收。
+- **W5b（B）— ✅ PR #126 已合并**：十页记录容器、记录行和星级标题；五页科学图例外层与标准标记。复用已存在的 `game-side-row`，新建 `game-side-records` / `game-side-legend` / `game-legend-*` / `game-clear-title` 六个共享规则；退役 56 个原规则副本、净 -50 条普通 CSS 规则（2467 → 2417）。Ripple Duet 的 `rd-rec` 动态记录采用共享行、两条同名 `rd-legend-row` 都按出现次数退役；局部波长/渐变/非圆形数据图例保留。每个页面的 DOM 与 runtime 必须实际采用新类，Sci Showcase P0 保持不变。账本 `sidebar-family-w5b` + `verify-sidebar-family.mjs` 完整验收。
 - 沿用 append-only family extraction、退役审计和真实浏览器 computed-style 验证。
 
 ### W6 真缺口（独立的 bug 修复）
-- tetris / minesweeper 结果按钮补进 `verify-button-icons` 的 `TARGETS`，删掉 `exempt`（见 backlog）。
-- tetris 桌面画布发虚：把逻辑坐标从 `canvas.width` 里剥出来，不再是 knownGap 后删掉降级（见 backlog）。
+- **W6a（按钮校验）— PR #127 待验收**：Tetris 结算 `restartBtn` 采用 SVG + 子 `span data-i18n`（避免翻译擦除 SVG）；Minesweeper 结算 Again/Copy/Close 改用已有 `game-btn` / `game-action-btn` 共享组件，删除结果行的页面私有几何；四个按钮进入 `verify-button-icons`，去除两页 `exempt`。校验器现在强制非空 label、图标宽高 15px、归一化垂直对齐，且以真实结算态、中英/明暗/多视口、复制动态反馈与反向错误注入验证。
+- **W6b（单独 PR）**：tetris 桌面画布发虚；把逻辑坐标从 `canvas.width` 里剥离，同步三层画布与离屏 grid cache，验收通过后删除 `verify-desktop-frame` 的 knownGap（见 backlog）。
 
 ## 4. 可用的契约机制（#117 起）
 
