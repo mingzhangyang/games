@@ -264,17 +264,65 @@ for (const name of ['tetris', 'minesweeper'].filter(keepPage)) {
                     bad++;
                     console.error('  x ' + tag + ': Copied feedback: ' + copyIssues.join(', '));
                 }
+                // Switch locale while "Copied" is active: i18n must keep the check icon and
+                // restore the *new* language, never the text captured at click time.
+                if (testCase.lang === 'en' && testCase.theme === 'dark') {
+                    const switched = await page.evaluate(() => {
+                        localStorage.setItem('site_lang', 'zh');
+                        window.dispatchEvent(new CustomEvent('site-settings:changed'));
+                        return {
+                            lang: window.msGame.lang,
+                            label: document.querySelector('#ms-btn-copy > span')?.textContent,
+                        };
+                    });
+                    const [translated] = await page.evaluate(MEASURE, ['ms-btn-copy']);
+                    const issues = buttonProblems(translated);
+                    if (switched.lang !== 'zh' || switched.label !== '已复制！' || issues.length) {
+                        bad++;
+                        console.error('  x ' + tag + ': live locale Copy feedback: ' + JSON.stringify(switched) + ' ' + issues.join(', '));
+                    }
+                }
+                await page.waitForFunction(() =>
+                    document.querySelector('#ms-btn-copy > span')?.textContent === window.msGame.TEXT.copyResult
+                    && window.msGame.copyFeedbackTimer === null,
+                { timeout: 3500 });
+                const [restored] = await page.evaluate(MEASURE, ['ms-btn-copy']);
+                const restoreIssues = buttonProblems(restored);
+                const currentCopyLabel = await page.evaluate(() => window.msGame.TEXT.copyResult);
+                if (restored.label !== currentCopyLabel || restoreIssues.length) {
+                    bad++;
+                    console.error('  x ' + tag + ': Copy timer restore: ' + restoreIssues.join(', ')
+                        + ' label=' + restored.label + ' expected=' + currentCopyLabel);
+                }
+
                 const actions = await page.evaluate(() => {
+                    const game = window.msGame;
                     document.getElementById('ms-btn-close').click();
                     const closed = document.getElementById('ms-result').classList.contains('hidden');
-                    window.msGame.showResult(false, 12, false);
+
+                    // Seed completed-board state: a mere overlay close must not pass as Again.
+                    game.state = 'lost';
+                    game.placed = true;
+                    game.revealedCount = 3;
+                    game.flagCount = 2;
+                    game.elapsed = 77;
+                    game.mineGrid[1] = 1;
+                    game.stateGrid[0] = 1;
+                    const oldFirstCell = game.cellEls[0];
+                    game.showResult(false, 12, false);
                     document.getElementById('ms-btn-again').click();
                     const replayed = document.getElementById('ms-result').classList.contains('hidden');
-                    return { closed, replayed };
+                    const fresh = game.state === 'idle' && !game.placed
+                        && game.revealedCount === 0 && game.flagCount === 0
+                        && game.elapsed === 0 && game.startTs === 0
+                        && game.stateGrid.every(v => v === 0)
+                        && game.mineGrid.every(v => v === 0)
+                        && game.cellEls[0] !== oldFirstCell;
+                    return { closed, replayed, fresh };
                 });
-                if (!actions.closed || !actions.replayed) {
+                if (!actions.closed || !actions.replayed || !actions.fresh) {
                     bad++;
-                    console.error('  x ' + tag + ': Close or Again did not dismiss results');
+                    console.error('  x ' + tag + ': Close / Again result contract ' + JSON.stringify(actions));
                 }
             }
             if (errors.length) {

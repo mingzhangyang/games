@@ -104,7 +104,7 @@
 - 沿用 append-only family extraction、退役审计和真实浏览器 computed-style 验证。
 
 ### W6 真缺口（独立的 bug 修复）
-- **W6a（按钮校验）— PR #127 待验收**：Tetris 结算 `restartBtn` 采用 SVG + 子 `span data-i18n`（避免翻译擦除 SVG）；Minesweeper 结算 Again/Copy/Close 显式接入已有 `game-btn` 图标排版契约，保留页面外观和现有局部按钮 CSS（不夹带未登记的 CSS 迁移）；四个按钮进入 `verify-button-icons`，去除两页 `exempt`。校验器现在强制非空 label、图标宽高 15px、归一化垂直对齐，且以真实结算态、中英/明暗/多视口、复制动态反馈与反向错误注入验证。
+- **W6a（按钮校验）— PR #127 待验收**：Tetris 结算 `restartBtn` 采用 SVG + 子 `span data-i18n`（避免翻译擦除 SVG）；Minesweeper 结算 Again/Copy/Close 显式接入已有 `game-btn` 图标排版契约，保留页面外观和现有局部按钮 CSS（不夹带未登记的 CSS 迁移）；四个按钮进入 `verify-button-icons`，去除两页 `exempt`。校验器现在强制非空 label、图标宽高 15px、归一化垂直对齐，且以真实结算态、中英/明暗/多视口、复制动态反馈（包括计时恢复/中途切换语言）、Again 棋盘重置和反向错误注入验证。
 - **W6b（单独 PR）**：tetris 桌面画布发虚；把逻辑坐标从 `canvas.width` 里剥离，同步三层画布与离屏 grid cache，验收通过后删除 `verify-desktop-frame` 的 knownGap（见 backlog）。
 
 ## 4. 可用的契约机制（#117 起）

@@ -165,6 +165,7 @@ const HIDDEN = 0, REVEALED = 1, FLAGGED = 2;
 class MinesweeperGame {
     constructor({ i18nBinder = null } = {}) {
         this.i18nBinder = i18nBinder;
+        this.copyFeedbackTimer = null;
         this.boardEl = document.getElementById('ms-board');
         this.el = {};
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
@@ -201,15 +202,23 @@ class MinesweeperGame {
 
     get TEXT() { return LANGUAGES[this.lang]; }
 
+    // Copy's icon and text have one writer across i18n, success feedback and timer restore.
+    // The active timer is the UI state; never close over an old language table for restore.
+    renderCopyButton(copied = false) {
+        const button = this.el['btn-copy'];
+        if (!button) return;
+        const icon = copied ? ICONS.check : ICONS.copy;
+        const label = copied ? this.TEXT.copied : this.TEXT.copyResult;
+        button.innerHTML = `${icon}<span>${label}</span>`;
+    }
 
     /* ── 语言 ── */
 
     applyLanguage() {
         const t = this.TEXT;
         this.i18nBinder?.apply(this.lang);
-        // Copy feedback swaps the icon and label temporarily, so it remains a
-        // table-driven compound control rather than a declarative text node.
-        if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
+        // Preserve transient Copied state while relocalizing it; timer restores using current TEXT.
+        this.renderCopyButton(this.copyFeedbackTimer !== null);
         if (this.el['btn-pause']) {
             this.refreshPauseUi();
         }
@@ -233,6 +242,11 @@ class MinesweeperGame {
     /* ── 新局 ── */
 
     newGame() {
+        if (this.copyFeedbackTimer !== null) {
+            clearTimeout(this.copyFeedbackTimer);
+            this.copyFeedbackTimer = null;
+            this.renderCopyButton();
+        }
         const cfg = DIFFICULTIES[this.diff];
         this.cols = cfg.cols;
         this.rows = cfg.rows;
@@ -752,11 +766,15 @@ class MinesweeperGame {
                 ok = false;
             }
         }
-        if (this.el['btn-copy']) {
-            const original = `${ICONS.copy}<span>${t.copyResult}</span>`;
-            this.el['btn-copy'].innerHTML = ok ? `${ICONS.check}<span>${t.copied}</span>` : original;
-            setTimeout(() => {
-                if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = original;
+        if (this.copyFeedbackTimer !== null) {
+            clearTimeout(this.copyFeedbackTimer);
+            this.copyFeedbackTimer = null;
+        }
+        this.renderCopyButton(ok);
+        if (ok) {
+            this.copyFeedbackTimer = setTimeout(() => {
+                this.copyFeedbackTimer = null;
+                this.renderCopyButton(); // restore in the current language
             }, 1600);
         }
     }
