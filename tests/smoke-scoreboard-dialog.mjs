@@ -53,8 +53,14 @@ try {
                 const icon = document.querySelector(selector);
                 const box = icon?.getBoundingClientRect();
                 const visible = icon && getComputedStyle(icon).display !== 'none' && box?.width > 0 && box?.height > 0;
+                const iconStyle = icon && getComputedStyle(icon);
+                const hitPad = icon && getComputedStyle(icon, '::after');
+                const targetHeight = box && hitPad ? box.height
+                    - parseFloat(hitPad.top || 0) - parseFloat(hitPad.bottom || 0) : 0;
+                const visualSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tok-btn-size'));
                 const hit = box && document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
                 return { visible, width: box?.width, height: box?.height,
+                    visualSize, targetHeight, layoutHeight: iconStyle?.height,
                     insideViewport: !!box && box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight,
                     tappable: hit === icon || icon?.contains(hit),
                     aria: icon?.getAttribute('aria-label') };
@@ -62,6 +68,11 @@ try {
             if (!state.visible || !state.aria || !state.tappable || !state.insideViewport || state.width < 32 || state.height < 32) {
                 errors.push(game.id + ': rank entry missing: ' + JSON.stringify(state));
                 continue;
+            }
+            if (['needle-awn', 'shadow-loom'].includes(game.id)
+                && (Math.abs(state.height - state.visualSize) > 1 || state.targetHeight < 44)) {
+                errors.push(game.id + ': topbar rank control changed frame chrome or lost its 44px hit area: '
+                    + JSON.stringify(state));
             }
             await page.click(trigger);
             await page.waitForFunction(() => document.querySelector('dialog[data-scoreboard-dialog]')?.open, { timeout: 6000 });

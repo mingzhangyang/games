@@ -41,45 +41,46 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         || new Set(boards.map(b => b.id)).size !== boards.length) {
         throw new Error('Scoreboard needs distinct, nonempty boards');
     }
-    const el = (tag, className = '') => {
-        const node = document.createElement(tag);
+    // The audited DOM boundary requires static createElement tag arguments.
+    // Keep only class assignment shared; node creation must remain explicit.
+    const el = (node, className = '') => {
         node.className = className;
         return node;
     };
     const lang = () => getLang() === 'zh' ? 'zh' : 'en';
     const text = key => TEXT[lang()][key];
 
-    const dialog = el('dialog', 'scoreboard-dialog');
+    const dialog = el(document.createElement('dialog'), 'scoreboard-dialog');
     dialog.dataset.scoreboardDialog = '';
-    const panel = el('section', 'scoreboard-panel game-lb');
-    const header = el('div', 'scoreboard-head');
-    const title = el('h2', 'scoreboard-title game-lb-title');
+    const panel = el(document.createElement('section'), 'scoreboard-panel game-lb');
+    const header = el(document.createElement('div'), 'scoreboard-head');
+    const title = el(document.createElement('h2'), 'scoreboard-title game-lb-title');
     title.id = 'scoreboard-title-' + boards[0].id;
-    const close = el('button', 'scoreboard-close game-icon-btn');
+    const close = el(document.createElement('button'), 'scoreboard-close game-icon-btn');
     close.type = 'button';
     close.innerHTML = ICONS.close;
     close.addEventListener('click', () => dialog.close());
     header.append(title, close);
 
-    const boardLabel = el('label', 'scoreboard-label');
-    const select = el('select', 'scoreboard-select');
+    const boardLabel = el(document.createElement('label'), 'scoreboard-label');
+    const select = el(document.createElement('select'), 'scoreboard-select');
     select.setAttribute('aria-label', 'Leaderboard');
     boardLabel.append(select);
     for (const board of boards) {
-        const opt = el('option');
+        const opt = el(document.createElement('option'));
         opt.value = board.id;
         select.append(opt);
     }
 
-    const description = el('p', 'scoreboard-description');
-    const list = el('div', 'scoreboard-list game-lb-list');
+    const description = el(document.createElement('p'), 'scoreboard-description');
+    const list = el(document.createElement('div'), 'scoreboard-list game-lb-list');
     list.setAttribute('aria-live', 'polite');
-    const status = el('p', 'scoreboard-status game-lb-status');
+    const status = el(document.createElement('p'), 'scoreboard-status game-lb-status');
     status.setAttribute('role', 'status');
 
-    const row = el('label', 'scoreboard-player game-lb-username-row');
-    const nameLabel = el('span', 'game-lb-username-label');
-    const nameInput = el('input', 'game-lb-username');
+    const row = el(document.createElement('label'), 'scoreboard-player game-lb-username-row');
+    const nameLabel = el(document.createElement('span'), 'game-lb-username-label');
+    const nameInput = el(document.createElement('input'), 'game-lb-username');
     nameInput.type = 'text';
     nameInput.maxLength = 20;
     nameInput.autocomplete = 'nickname';
@@ -88,7 +89,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     });
     row.append(nameLabel, nameInput);
 
-    const reload = el('button', 'scoreboard-refresh game-btn game-action-btn');
+    const reload = el(document.createElement('button'), 'scoreboard-refresh game-btn game-action-btn');
     reload.type = 'button';
     reload.addEventListener('click', () => { void refresh(); });
     panel.append(header, boardLabel, description, list, status, row, reload);
@@ -105,18 +106,18 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     function renderRows(data, board) {
         list.replaceChildren();
         if (!Array.isArray(data) || !data.length) {
-            const empty = el('p', 'game-lb-empty');
+            const empty = el(document.createElement('p'), 'game-lb-empty');
             empty.textContent = text('empty');
             list.append(empty);
             return;
         }
         data.slice(0, 10).forEach((item, index) => {
-            const entry = el('div', 'game-lb-row');
-            const rank = el('span', 'game-lb-rank');
+            const entry = el(document.createElement('div'), 'game-lb-row');
+            const rank = el(document.createElement('span'), 'game-lb-rank');
             rank.textContent = String(index + 1) + '.';
-            const player = el('span', 'game-lb-name');
+            const player = el(document.createElement('span'), 'game-lb-name');
             player.textContent = String(item?.name || '');
-            const score = el('b', 'game-lb-score');
+            const score = el(document.createElement('b'), 'game-lb-score');
             score.textContent = typeof board.format === 'function'
                 ? board.format(Number(item.score), lang())
                 : Number(item.score).toLocaleString();
@@ -167,7 +168,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         if (!anchor?.parentElement) {
             throw new Error('Missing scoreboard entry anchor: ' + (target.before || target.after));
         }
-        const button = el('button', target.icon
+        const button = el(document.createElement('button'), target.icon
             ? 'scoreboard-trigger scoreboard-trigger--icon game-icon-btn'
             : 'scoreboard-trigger scoreboard-trigger--text game-btn game-action-btn');
         button.type = 'button';
@@ -177,7 +178,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
             button.dataset.scoreboardIcon = 'true';
         } else {
             button.innerHTML = ICONS.trophy;
-            button.append(el('span'));
+            button.append(el(document.createElement('span')));
         }
         anchor.parentElement.insertBefore(button, target.before ? anchor : anchor.nextSibling);
         button.addEventListener('click', () => {
