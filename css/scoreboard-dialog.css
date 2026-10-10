@@ -1,0 +1,79 @@
+@layer components {
+/* Shared dialog presentation: no game-specific leaderboard geometry overrides. */
+.scoreboard-dialog {
+    border: 1px solid var(--tok-border, #526178);
+    background: var(--tok-surface, #121b2b);
+    color: var(--tok-text, #f1f5f9);
+    border-radius: 16px;
+    box-shadow: 0 22px 70px rgb(0 0 0 / 0.45);
+    padding: 0;
+    max-width: min(92vw, 420px);
+    width: 100%;
+    max-height: min(86dvh, 720px);
+    overflow-y: auto;
+    margin: auto;
+    color-scheme: dark light;
+}
+.scoreboard-dialog::backdrop { background: rgb(0 0 0 / 0.72); }
+.scoreboard-panel {
+    box-sizing: border-box;
+    max-width: none;
+    width: 100%;
+    padding: 16px;
+}
+.scoreboard-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.scoreboard-title { margin: 0; font-size: 17px; }
+.scoreboard-close { cursor: pointer; flex: 0 0 40px; min-width: 40px; min-height: 40px; }
+.scoreboard-label { display: block; margin: 10px 0 6px; }
+.scoreboard-select {
+    width: 100%; min-height: 44px; padding: 8px 10px;
+    border-radius: 9px; border: 1px solid var(--tok-border, #697b95);
+    background: var(--tok-surface, #121b2b); color: inherit;
+    font: inherit;
+}
+.scoreboard-description { margin: 7px 0 10px; line-height: 1.5; font-size: 12px; color: var(--tok-text-dim, #b9c8d9); }
+.scoreboard-list { max-height: min(32dvh, 250px); min-height: 100px; }
+.scoreboard-status { min-height: 22px; margin-top: 6px; line-height: 1.4; }
+.scoreboard-player { margin-top: 12px; }
+.scoreboard-player input {
+    border: 1px solid var(--tok-border, #697b95);
+    background: var(--tok-surface, #121b2b);
+    min-height: 40px;
+    font-size: 16px; /* Prevent mobile Safari input zoom. */
+}
+.scoreboard-refresh { margin-top: 12px; min-height: 44px; cursor: pointer; }
+.scoreboard-trigger { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.scoreboard-trigger--icon { min-width: 44px; min-height: 44px; }
+.scoreboard-trigger--text { min-height: 44px; padding-inline: 12px; }
+.scoreboard-trigger svg { width: 20px; height: 20px; flex: 0 0 auto; }
+.scoreboard-dialog button:focus-visible,
+.scoreboard-dialog select:focus-visible,
+.scoreboard-dialog input:focus-visible,
+.scoreboard-trigger:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+    .scoreboard-dialog, .scoreboard-trigger { transition: none; animation: none; }
+}
+
+/* Tank Battle has a non-interactive HUD; only the rank control restores pointer input. */
+.tb-main #gameUI > .scoreboard-trigger {
+    position: absolute;
+    top: 15px;
+    right: calc(var(--tb-minimap-right) + var(--tb-minimap-w) + 59px);
+    z-index: 11;
+    pointer-events: auto;
+    color: var(--tb-hud-label, #d8eee0);
+    background: rgb(0 0 0 / 0.55);
+    border: 1px solid rgb(131 170 141 / 48%);
+    border-radius: var(--tok-radius-btn, 12px);
+}
+@media (height <= 550px) and (orientation: landscape),
+       (hover: none) and (pointer: coarse) and (orientation: landscape) {
+    .tb-main #gameUI > .scoreboard-trigger {
+        top: 6px;
+        right: calc(var(--tb-minimap-right) + var(--tb-minimap-w) + 52px);
+        min-height: 32px;
+        min-width: 32px;
+    }
+}
+
+}

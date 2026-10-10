@@ -14,7 +14,7 @@ import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey } from '../../platform/daily.js';
-import { submitScore } from '../../platform/leaderboard.js';
+import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { I18N } from './i18n.js';
@@ -99,6 +99,30 @@ class GameEngine {
         this.joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0, x: 0, y: 0 };
 
         this.initDOM();
+        let pausedForRanking = false;
+        this.scoreboard = mountScoreboardDialog({
+            boards: [
+                {
+                    id: 'endless', key: 'needle-awn-endless',
+                    label: { en: 'Endless survival', zh: '无尽争锋' },
+                    description: { en: 'Only endless runs compete. Trials and duels are excluded.', zh: '仅无尽模式参与排名；演武及对决不混入。' },
+                },
+                {
+                    id: 'daily', key: () => 'needle-awn-d' + this.getTodayDateString(),
+                    label: { en: "Today's challenge", zh: '今日论剑' },
+                    description: { en: 'Scores from the same daily seed only.', zh: '仅比较同一天、同一随机种子的成绩。' },
+                },
+            ],
+            triggers: [{ before: '#naStatsToggle', icon: true }, { before: '#na-btn-result-home' }],
+            onOpen: () => {
+                pausedForRanking = this.isRunning();
+                if (pausedForRanking) this.pauseQuiet();
+            },
+            onClose: () => {
+                if (pausedForRanking) this.resumeQuiet();
+                pausedForRanking = false;
+            },
+        });
         this.initInput();
         this.bindEvents();
         this.setArtControlsDisabled(true);
@@ -914,7 +938,7 @@ class GameEngine {
     }
 
     async submitScore() {
-        if (this.score <= 0) return;
+        if (this.score <= 0 || (this.mode !== 'endless' && this.mode !== 'daily')) return;
 
         // 无尽模式记录更新
         if (this.mode === 'endless' && this.score > this.endlessBest) {
@@ -932,11 +956,10 @@ class GameEngine {
         }
 
         // 尝试向共享排行榜 Worker 提交分数 (网络可用时)
-        const name = getPlayerName() || ensurePlayerName();
-        const gameKey = this.mode === 'daily' ? `needle-awn-d${dailyDate}` : 'needle-awn';
-
-        // 网络层收敛到 src/platform/leaderboard.js（原无超时/cors，统一补齐；false=未进金榜）
-        const ok = await submitScore({ game: gameKey, name, score: this.score });
+        const gameKey = this.mode === 'daily' ? `needle-awn-d${dailyDate}` : 'needle-awn-endless';
+        const ok = await this.scoreboard.submit({
+            boardId: this.mode, key: gameKey, score: this.score,
+        });
         if (!ok) {
             // 离线环境静默降级，但要让玩家知道未进金榜
             const t = I18N[getLang()] || I18N.zh;

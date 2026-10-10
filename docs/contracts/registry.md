@@ -63,7 +63,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | `sidebar` | 有 `.game-sidebar`（桌面信息侧栏） |
 | `drawer` | 接移动端统计抽屉（`src/platform/game-drawer.js`） |
 | `frame-budget` | 桌面舞台纵向预算（`--frame-shell-max` 覆写 + `bindFrame`，`verify-desktop-frame` 检查） |
-| `leaderboard` | 使用共享排行榜 Worker（入口 import `src/platform/leaderboard.js`；与 `scores` 块同进同出） |
+| `leaderboard` | 使用共享排行榜 Worker（入口的静态模块图可访问 `src/platform/leaderboard.js`；与 `scores` 块同进同出） |
 | `daily` | 有每日挑战（判据：入口 import `src/platform/daily.js`）。带 `scores` 的另有每日榜键 `<dailyKeyPrefix>-d<YYYYMMDD>`；word-daily 有每日玩法但不用共享榜，故只有本 cap |
 | `analytics` | 客户端调用 `hubTrack`（入口 import `src/platform/analytics.js`） |
 | `topbar` | 有 `.game-topbar-center`（Header 三槽位契约，见 `chrome.md`） |
@@ -142,3 +142,8 @@ Shadow Loom 的 `src/generated/shadow-loom/silhouettes.js` 也属于生成缓存
 eslint 忽略，源 SVG、生成器与同步检查才是权威。
 生成器会先合并同一纸片内重叠的外轮廓，再输出 Path2D 与 judge 共用的轮廓缓存；不同纸片的拆分由 SVG 源文件负责，
 应沿自然结构形成相邻边界，不得用包含式矩形裁切。
+
+
+### Dialog leaderboard surface
+
+Games with `scores.ui: "dialog"` use `src/platform/scoreboard-dialog.js` to mount a visible topbar/result entry, locale-aware native dialog, player nickname, leaderboard selection, loading/error/empty states, and read/submission through the shared leaderboard module. This ensures a submit-only implementation cannot masquerade as a functioning leaderboard. `verify-scoreboard-contract.mjs` validates this against the registry and Worker; `smoke-scoreboard-dialog.mjs` exercises the actual dialog. These dialog-hosted `game-lb-*` surfaces are deliberately outside the existing **page-local overlay** geometry fixture.

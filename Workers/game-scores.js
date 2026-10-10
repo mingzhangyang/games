@@ -16,7 +16,14 @@ const ALLOWED_ORIGINS = [
 // ttl 为可选的 KV 过期秒数（用于每日榜的自然滚动）
 // registry:begin games-scores
 const GAMES = {
+  'math-rain-1': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-2': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-3': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-4': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-5': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'math-rain-6': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
   'tetris': { order: 'desc', maxScore: 2000000, maxEntries: 50 },
+  'tank-battle': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'planet-merge': { order: 'desc', maxScore: 10000000, maxEntries: 50 },
   'hoop-shot': { order: 'desc', maxScore: 1000000, maxEntries: 50 },
   'minesweeper-easy': { order: 'asc', maxScore: 9999, maxEntries: 50 },
@@ -31,7 +38,20 @@ const GAMES = {
   'tower-defense-juggernaut': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'tower-defense-singularity': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'needle-awn': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'needle-awn-endless': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
   'sword-flight': { order: 'desc', maxScore: 5000000, maxEntries: 50 },
+  'carrot-pull': { order: 'desc', maxScore: 1000000, maxEntries: 50 },
+  'firefly-signal-first-light': { order: 'asc', maxScore: 100000, maxEntries: 50 },
+  'firefly-signal-two-meadows': { order: 'asc', maxScore: 100000, maxEntries: 50 },
+  'firefly-signal-midsummer': { order: 'asc', maxScore: 100000, maxEntries: 50 },
+  'shadow-loom-rabbit': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
+  'shadow-loom-bird': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
+  'shadow-loom-whale': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
+  'shadow-loom-deer': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
+  'shadow-loom-pagoda': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
+  'shadow-loom-tree': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
+  'shadow-loom-koi': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
+  'shadow-loom-crane': { order: 'asc', maxScore: 2000000000, maxEntries: 50 },
 };
 
 // 每日赛程 / 每日挑战榜：按天一个键，正则白名单 + TTL 自然滚动

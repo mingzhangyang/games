@@ -16,6 +16,8 @@ import { createSfxEngine } from '../../platform/game-sfx.js';
 import { getLang } from '../../platform/site-settings.js';
 import { SHADOW_LOOM_STORAGE, SHADOW_LOOM_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
+import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { encodeShadowLoomScore, formatShadowLoomScore } from './leaderboard-score.js';
 import * as R from './model/rules.js';
 import { LEVELS, CHAPTERS } from './model/levels.js';
 import { createScene } from './render/scene.js';
@@ -128,6 +130,31 @@ export class ShadowLoomGame {
             'side-keys', 'hint', 'toast', 'brand', 'progress', 'target-btn', 'target-icon', 'reset-btn',
         ].forEach(id => { this.el[id] = document.getElementById(`sl-${id}`); });
 
+        let pausedForRanking = false;
+        this.scoreboard = mountScoreboardDialog({
+            boards: LEVELS.map(level => ({
+                id: level.id,
+                key: `shadow-loom-${level.id}`,
+                label: level.name,
+                description: {
+                    en: 'Single completed run. Fastest time wins; fewer moves break ties.',
+                    zh: '仅比较单次真实通关成绩；用时越少越好，操作次数用于平局比较。',
+                },
+                format: formatShadowLoomScore,
+            })),
+            triggers: [
+                { before: '#slStatsToggle', icon: true },
+                { before: '#sl-btn-menu', boardId: () => this.level.id },
+            ],
+            onOpen: () => {
+                pausedForRanking = this.isRunning();
+                if (pausedForRanking) this.pauseQuiet();
+            },
+            onClose: () => {
+                if (pausedForRanking) this.resumeQuiet();
+                pausedForRanking = false;
+            },
+        });
         this.resize();
         this.bindEvents();
         this.applyLanguage();
@@ -386,6 +413,8 @@ export class ShadowLoomGame {
             first: prev.first || rec.first,
         } : rec;
         SHADOW_LOOM_STORAGE.set(SHADOW_LOOM_STORAGE_SLOTS.PROGRESS, this.progress);
+        const rankedScore = encodeShadowLoomScore(rec.time, rec.moves);
+        if (rankedScore !== null) void this.scoreboard.submit({ boardId: this.level.id, score: rankedScore });
         track('shadow-loom', 'finish');
         this.renderRecords();
         this.renderProgress();

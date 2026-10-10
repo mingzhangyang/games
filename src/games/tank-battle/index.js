@@ -2,6 +2,7 @@
 import { getLang } from '../../platform/site-settings.js';
 import { createSfx } from '../../platform/game-sfx.js';
 import { track } from '../../platform/analytics.js';
+import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
 import { CONFIG, WEAPONS, Particle, PowerUp, Bullet, Tank, BossTank, bindTankI18n } from './tank-entities.js';
 import { createTankBattleArt } from './tank-battle-art.js';
 
@@ -244,6 +245,23 @@ class TankBattle {
         this.time = 0; // 游戏内时钟（毫秒）：暂停/切后台时冻结，AI 计时全部基于它
 
         this.init();
+        let pausedForRanking = false;
+        this.scoreboard = mountScoreboardDialog({
+            boards: [{
+                id: 'all', key: 'tank-battle',
+                label: { en: 'Survival high scores', zh: '生存高分榜' },
+                description: { en: 'Final score from a completed run; higher is better.', zh: '以结束时的最终分数排名，分数越高越好。' },
+            }],
+            triggers: [{ after: '.tb-home-btn', icon: true }],
+            onOpen: () => {
+                pausedForRanking = this.gameState === 'playing' && !this.paused;
+                if (pausedForRanking) this.paused = true;
+            },
+            onClose: () => {
+                if (pausedForRanking && this.gameState === 'playing') this.paused = false;
+                pausedForRanking = false;
+            },
+        });
         this.setupEventListeners();
         this.gameLoop();
         track('tank-battle', 'play');
@@ -828,8 +846,9 @@ class TankBattle {
                     this.player.takeDamage(bullet.damage, this);
                     bulletsToRemove.add(bi);
                     this.screenShake = 8;
-                    if (this.lives <= 0) {
+                    if (this.lives <= 0 && this.gameState === 'playing') {
                         this.gameState = 'gameOver';
+                        if (this.score > 0) void this.scoreboard.submit({ boardId: 'all', score: this.score });
                         track('tank-battle', 'finish');
                     }
                     this.updateUI();
@@ -881,12 +900,14 @@ class TankBattle {
     }
 
     checkWinCondition() {
+        if (this.gameState !== 'playing') return;
         if (this.enemies.length === 0) {
             this.level++;
             this.score += 500 * this.level;
             
             if (this.level > CONFIG.MAX_LEVEL) {
                 this.gameState = 'victory';
+                if (this.score > 0) void this.scoreboard.submit({ boardId: 'all', score: this.score });
                 track('tank-battle', 'finish');
             } else {
                 // 下一关
