@@ -52,6 +52,7 @@ npm run verify:changed  # 按 git diff 只跑相关项（单页改动约 40s；�
 ### 其他长青文档
 - `docs/traps.md` — 踩坑日志（事故复盘 + 各自的回归脚本），按领域分组
 - `docs/backlog.md` — 已确认、已定位、待独立改动的缺口；校验器里每处 knownGaps 降级都必须在此有条目
+- `docs/css-w7-final-closure-2026-10.md` — W1–W6 后 CSS 收官审计：剩余高收益组件族的决议、真实 CI 覆盖与有条件的退出标准；`tests/verify-css-w7-closure.mjs` 锁住审计候选、registry HTML 覆盖和静默 knownGap 降级。
 - `docs/archive/` — 已被契约文档取代的历史底稿与评审记录
 
 - Source HTML and page CSS live at the repo root and `css/`; shared platform and game modules live under `src/`, with small compatibility shims under `js/`. `public/` holds static assets copied verbatim into `dist/` (including `404.html` for Cloudflare's `not_found_handling`).
