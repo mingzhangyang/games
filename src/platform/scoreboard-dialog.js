@@ -98,6 +98,9 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
 
     const reload = el(document.createElement('button'), 'scoreboard-refresh game-btn game-action-btn');
     reload.type = 'button';
+    reload.innerHTML = ICONS.retry;
+    const reloadLabel = el(document.createElement('span'));
+    reload.append(reloadLabel);
     reload.addEventListener('click', () => { void refresh(); });
     panel.append(header, boardLabel, description, list, status, row, reload);
     dialog.append(panel);
@@ -176,7 +179,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         boardLabel.setAttribute('aria-label', text('board'));
         select.setAttribute('aria-label', text('board'));
         nameLabel.textContent = text('name');
-        reload.textContent = text('reload');
+        reloadLabel.textContent = text('reload');
         [...select.options].forEach((option, i) => { option.textContent = value(boards[i].label, locale); });
         description.textContent = value(boardFor(select.value)?.description, locale);
         for (const button of buttons) {

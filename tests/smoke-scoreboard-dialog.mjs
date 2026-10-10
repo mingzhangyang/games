@@ -141,6 +141,30 @@ try {
                 || ui.rect[2] > ui.view[0] + 1 || ui.rect[3] > ui.view[1] + 1) {
                 errors.push(game.id + ': dialog not viewable: ' + JSON.stringify(ui));
             }
+            // Text actions keep their semantic icon and dedicated label span
+            // across site-language changes. A textContent assignment on the
+            // button itself would silently destroy the shared retry SVG.
+            const refreshLocales = await page.evaluate(() => {
+                const reload = document.querySelector('dialog[data-scoreboard-dialog] .scoreboard-refresh');
+                const read = () => ({
+                    label: reload.querySelector('span')?.textContent,
+                    icon: reload.querySelectorAll('svg[aria-hidden="true"]').length,
+                });
+                const english = read();
+                localStorage.setItem('site_lang', 'zh');
+                window.dispatchEvent(new Event('site-settings:changed'));
+                const chinese = read();
+                localStorage.setItem('site_lang', 'en');
+                window.dispatchEvent(new Event('site-settings:changed'));
+                return { english, chinese, restored: read() };
+            });
+            if (refreshLocales.english.label !== 'Refresh'
+                || refreshLocales.chinese.label !== '刷新'
+                || refreshLocales.restored.label !== 'Refresh'
+                || Object.values(refreshLocales).some(v => v.icon !== 1)) {
+                errors.push(game.id + ': refresh action lost icon or localization: '
+                    + JSON.stringify(refreshLocales));
+            }
             if (ui.choices > 1) {
                 const beforeKey = requests.at(-1)?.key;
                 await page.evaluate(() => {
