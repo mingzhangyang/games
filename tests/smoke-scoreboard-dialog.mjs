@@ -190,7 +190,24 @@ try {
             });
             await setHeldMovement(page, game.id);
             await page.keyboard.press('Escape');
-            await page.waitForFunction(() => !document.querySelector('dialog[data-scoreboard-dialog]')?.open);
+            // Native <dialog> clears .open before its asynchronous close event
+            // fires. Wait for the input owner's onClose cleanup, not only .open.
+            await page.waitForFunction(id => {
+                if (document.querySelector('dialog[data-scoreboard-dialog]')?.open) return false;
+                if (id === 'tank-battle') {
+                    const game = window.tankBattleInstance;
+                    return !game.keys.w && !game.keys[' ']
+                        && !document.getElementById('btnFire')?.classList.contains('active')
+                        && !document.querySelector('#dpad .dpad-btn.active');
+                }
+                if (id === 'needle-awn') {
+                    const game = window.gameEngine;
+                    return !game.keys.KeyW && !game.joy.active && game.joy.id === null
+                        && game.joy.x === 0 && game.joy.y === 0 && game.aimTouchId === null
+                        && game.dom.joy.classList.contains('hidden');
+                }
+                return true;
+            }, { timeout: 6000 }, game.id);
             if (!await heldMovementReleased(page, game.id)) {
                 errors.push(game.id + ': modal close resumed with stale held controls');
             }

@@ -163,7 +163,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
             if (error instanceof UnsupportedLeaderboardError) {
                 setStatus(text('pendingWorker') + queued);
             } else {
-                setStatus((notices.get(key) || text('offline')) + queued);
+                setStatus(notices.get(key) || (text('offline') + queued));
             }
         }
     }
