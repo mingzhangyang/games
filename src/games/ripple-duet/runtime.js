@@ -1161,12 +1161,14 @@ export class RippleDuetGame {
         window.addEventListener('pointerup', () => this.onPointerUp());
         this.canvas.addEventListener('pointercancel', () => this.onPointerUp());
 
-        if (this.el['reset-btn']) bindContextualRestart({
+        if (this.el['reset-btn']) {
+            bindContextualRestart({
                 button: this.el['reset-btn'],
                 active: () => this.state === 'playing',
                 hasProgress: () => this.cost > 0,
                 restart: () => { this.restartLevel(); },
             });
+        }
         if (el['btn-levels']) el['btn-levels'].addEventListener('click', () => this.startLevel(0));
         if (el['btn-daily']) el['btn-daily'].addEventListener('click', () => this.startDaily());
         if (el['btn-next']) el['btn-next'].addEventListener('click', () => this.nextLevel());

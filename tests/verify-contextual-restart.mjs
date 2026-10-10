@@ -25,6 +25,14 @@ const CASES = {
 
 // Negative contract: adding an unreviewed topbar reset must not silently pass.
 const topbarGames = registry.withCap('topbar').map(g => g.id);
+const discovered = topbarGames.filter(id => {
+    const html = readFileSync(new URL('../' + id + '.html', import.meta.url), 'utf8');
+    return /<button\b[^>]*id="[a-z]{2}-reset-btn"/.test(html);
+});
+if (JSON.stringify(discovered.sort()) !== JSON.stringify(Object.keys(CASES).sort())) {
+    throw new Error('Topbar restart consumers changed without reviewing the contract: '
+        + JSON.stringify(discovered));
+}
 for (const id of Object.keys(CASES)) {
     if (!topbarGames.includes(id)) throw new Error(id + ' is not a topbar page');
     const [pre] = CASES[id];
@@ -94,9 +102,9 @@ try {
             const geometry = await page.evaluate(sel => {
                 const b = document.querySelector(sel);
                 const rect = b.getBoundingClientRect();
-                return { label: b.getAttribute('aria-label'), width: rect.width, height: rect.height };
+                return { label: b.getAttribute('aria-label'), title: b.title, width: rect.width, height: rect.height };
             }, selector);
-            check(geometry.label?.length > 4 && !/^Reset$/.test(geometry.label)
+            check(geometry.label?.length > 4 && geometry.label === geometry.title && !/^Reset$/.test(geometry.label)
                 && geometry.width >= 32 && geometry.height >= 32,
             id + ': accessible playing-state action ' + JSON.stringify(geometry));
 
@@ -110,6 +118,16 @@ try {
             }, { key: global, id });
             check(untouched, id + ': reset without progress works');
 
+            if (id === 'gravity-slingshot') {
+                const keepsAttemptCount = await page.evaluate(key => {
+                    const g = window[key];
+                    g.launches = 2;
+                    g.phase = 'flying';
+                    document.getElementById('gd-reset-btn').click();
+                    return g.phase === 'aiming' && g.launches === 2;
+                }, global);
+                check(keepsAttemptCount, 'gravity-slingshot: retry resets shot, not accumulated attempts');
+            }
             if (['lumen', 'shadow-loom', 'carrot-pull'].includes(id)) {
                 if (id === 'carrot-pull') await start();
                 const field = id === 'lumen' ? 'flips' : id === 'shadow-loom' ? 'moves' : 'pulls';

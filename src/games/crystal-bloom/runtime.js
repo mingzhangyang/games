@@ -365,7 +365,6 @@ export class CrystalBloomGame {
         setBtnText('btn-copy', this.t('copyResult'));
         setBtnText('btn-menu2', this.t('menu'));
 
-        if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
         if (el['budget']) el['budget'].title = this.t('cost');
 
         this.renderLevelGrid();

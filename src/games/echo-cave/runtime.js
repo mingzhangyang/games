@@ -323,7 +323,6 @@ export class EchoCaveGame {
         setBtnText('btn-copy', this.t('copyResult'));
         setBtnText('btn-menu2', this.t('menu'));
 
-        if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
         if (el['pulses']) el['pulses'].title = this.t('pulses');
 
         this.renderLevelGrid();

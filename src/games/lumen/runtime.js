@@ -211,8 +211,6 @@ export class LumenGame {
         if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
         if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['reset-btn']) {
-        }
         if (this.el['btn-home']) {
         }
         // 桌面侧栏

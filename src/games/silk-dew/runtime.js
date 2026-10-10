@@ -360,7 +360,6 @@ export class SilkfallGame {
         setBtnText('btn-copy', this.t('copyResult'));
         setBtnText('btn-menu2', this.t('menu'));
 
-        if (el['reset-btn']) el['reset-btn'].title = this.t('resetTitle');
         if (el['drags']) el['drags'].title = this.t('drags');
         // 开始覆盖层的语言钮走文字（与 lumen/circuit 同口径：显示「切换目标语言的自称」）。
 

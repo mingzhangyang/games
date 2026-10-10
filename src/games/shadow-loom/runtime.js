@@ -1302,11 +1302,11 @@ export class ShadowLoomGame {
         this.el['btn-replay']?.addEventListener('click', () => this.startLevel(this.levelIdx));
         this.el['btn-menu']?.addEventListener('click', () => this.showMenu());
         bindContextualRestart({
-                button: this.el['reset-btn'],
-                active: () => this.state === 'playing',
-                hasProgress: () => this.moves > 0,
-                restart: () => { this.restartLevel(); },
-            });
+            button: this.el['reset-btn'],
+            active: () => this.state === 'playing',
+            hasProgress: () => this.moves > 0 || this.elapsed > 5000,
+            restart: () => { this.restartLevel(); },
+        });
         this.el['target-btn']?.addEventListener('click', () => this.revealTarget());
         window.addEventListener('resize', () => this.resize());
         window.addEventListener('game-frame:changed', () => this.resize());
