@@ -245,7 +245,11 @@ export function resolveComparisonBase(root) {
 export function readGitFile(root, sha, path) {
     if (!sha) return null;
     try {
-        return execFileSync('git', ['show', sha + ':' + path], { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+        // stderr ignored: a file added after the base (e.g. a reviewed feature stylesheet)
+        // is an expected `null`, not a "fatal: path … not in <sha>" line in the gate output.
+        return execFileSync('git', ['show', sha + ':' + path], {
+            cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'],
+        });
     } catch {
         return null;
     }

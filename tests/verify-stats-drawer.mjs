@@ -1,5 +1,11 @@
-// 六个页面「顶部 Stats 钮 + 底部抽屉」快速冒烟测试
+// 「顶部 Stats 钮 + 底部抽屉」快速冒烟测试：覆盖注册表 `drawer` cap 的全部页面，
+// Tetris 除外（其抽屉由 verify-tetris-drawer 承担，见下方 AUGMENT 的 exempt）。
 // 用法：node tests/verify-stats-drawer.mjs <baseUrl> [outDir]
+//
+// 耗时随抽屉页数线性增长：每页移动端 + 桌面两轮，等抽屉 / 暂停动画的固定间隔约 11s，
+// 本脚本实际跑 16 页 ≈ 175s。PR #134 的 CI 上已是 179.6s / 180s 默认上限，任何一次加载变慢都会
+// 被 verify-all 判超时（124）。这里显式声明本项预算，而不是让它压着通用上限。
+// verify-all: timeout=300000
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';

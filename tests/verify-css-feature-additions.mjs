@@ -3,7 +3,12 @@
  * Negative fixtures for additive CSS registration: historic P0 stays immutable.
  */
 import assert from 'node:assert/strict';
-import { stripFeatureLink, FEATURE_LINK } from './lib/css/feature-additions.mjs';
+import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+    stripFeatureLink, FEATURE_LINK, stripMobileFitLink, MOBILE_FIT_LINK, reviewFeatureStyles,
+} from './lib/css/feature-additions.mjs';
 
 const page = 'carrot-pull.html';
 const valid = '<link rel="stylesheet" href="css/layout.css">\n'
@@ -28,4 +33,47 @@ errors = [];
 stripFeatureLink(page,
     FEATURE_LINK + '\n<link rel="stylesheet" href="css/layout.css">', errors);
 assert.ok(errors.some(e => e.includes('must follow layout')), 'cascade link position is guarded');
-console.log('PASS additive scoreboard CSS review contract');
+
+// PR #135 mobile-fit contract: one canonical link between layout and more-games.
+const fit = '<link rel="stylesheet" href="css/layout.css">\n'
+    + MOBILE_FIT_LINK + '\n<link rel="stylesheet" href="css/more-games.css">';
+errors = [];
+assert.equal(stripMobileFitLink('tetris.html', fit, errors), fit.replace(MOBILE_FIT_LINK, ''));
+assert.deepEqual(errors, []);
+errors = [];
+stripMobileFitLink('tetris.html', fit + MOBILE_FIT_LINK, errors);
+assert.ok(errors.some(e => e.includes('exactly one')), 'duplicate mobile-fit link must fail');
+errors = [];
+stripMobileFitLink('tetris.html', fit.replace(MOBILE_FIT_LINK, ''), errors);
+assert.ok(errors.some(e => e.includes('exactly one')), 'missing mobile-fit link must fail');
+errors = [];
+stripMobileFitLink('tetris.html', '<link rel="stylesheet" href="css/more-games.css">\n' + MOBILE_FIT_LINK
+    + '\n<link rel="stylesheet" href="css/layout.css">', errors);
+assert.ok(errors.some(e => e.includes('must follow layout')), 'mobile-fit cascade position is guarded');
+errors = [];
+stripMobileFitLink('tetris.html', '<link rel="stylesheet" href="css/layout.css">\n' + MOBILE_FIT_LINK
+    + '\n<link rel="stylesheet" href="css/tetris.css">\n<link rel="stylesheet" href="css/more-games.css">', errors);
+assert.ok(errors.some(e => e.includes('only more-games.css may follow')),
+    'page CSS placed after mobile-fit must fail (layout → mobile-fit → <game> → more-games)');
+errors = [];
+stripMobileFitLink('sword-flight.html', fit
+    + '\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC">', errors);
+assert.deepEqual(errors, [], 'an external font stylesheet after more-games stays allowed');
+
+// Stylesheet review: unlayered rules or unreviewed selectors cannot ride along.
+function reviewWith(css) {
+    const root = mkdtempSync(join(tmpdir(), 'mobile-fit-'));
+    mkdirSync(join(root, 'css'));
+    writeFileSync(join(root, 'css/scoreboard-dialog.css'), '@layer components { .scoreboard-dialog { color: red; } }');
+    writeFileSync(join(root, 'css/mobile-fit.css'), css);
+    const found = [];
+    reviewFeatureStyles(root, ['css/scoreboard-dialog.css', 'css/mobile-fit.css'], [], found);
+    return found;
+}
+assert.ok(!reviewWith('@layer contracts { .rv-board { width: 1px !important; } }')
+    .some(e => e.startsWith('Mobile-fit')), 'reviewed selector inside contracts passes');
+assert.ok(reviewWith('.rv-board { width: 1px; }').some(e => e.includes('@layer contracts')),
+    'unlayered mobile-fit rule must fail');
+assert.ok(reviewWith('@layer contracts { .ms-cell { width: 1px; } }').some(e => e.includes('unreviewed selectors')),
+    'unreviewed mobile-fit selector must fail');
+console.log('PASS additive scoreboard + mobile-fit CSS review contract');

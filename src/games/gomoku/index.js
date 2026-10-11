@@ -246,7 +246,11 @@ function resizeCanvas() {
     const containerHeight = Math.min(window.innerHeight - chrome, desktopCap);
     // 下限 200：视口极矮时（innerHeight < 200）上式会得到负值，CELL_SIZE 随之为负，
     // 之后 drawPiece 的 arc() 会抛异常并中断整个 resize 回调，棋盘就停在被清空的状态
-    const size = Math.max(200, Math.min(containerWidth, containerHeight));
+    // 移动端触控下限（PR #135）：iPhone Safari 工具栏展开时（375×553）纵向预算只剩 ~200px，
+    // 15 路棋盘每格仅 ~11px，手指根本点不准。触控尺寸优先于「一屏放下」—— 棋盘至少取
+    // min(可用宽度, 320px)（每格 ≥20px），放不下的按钮行让页面自然滚动到。
+    const touchFloor = desktopCap === 600 ? Math.min(containerWidth, 320) : 0;
+    const size = Math.max(200, touchFloor, Math.min(containerWidth, containerHeight));
     cssSize = size;
 
     // 按 devicePixelRatio 放大画布 backing store，让棋盘在高清屏上清晰；

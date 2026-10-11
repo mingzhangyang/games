@@ -31,6 +31,9 @@ const check = (ok, label, detail) => {
 
 const VIEWPORTS = [
     { name: '手机 390×844', width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true },
+    // iPhone Safari 工具栏展开时页面实际拿到的可见视口（SE 375×553 / 14 390×664）
+    { name: 'Safari 375×553', width: 375, height: 553, deviceScaleFactor: 2, hasTouch: true, isMobile: true },
+    { name: 'Safari 390×664', width: 390, height: 664, deviceScaleFactor: 3, hasTouch: true, isMobile: true },
     { name: '手机 360×640', width: 360, height: 640, deviceScaleFactor: 2, hasTouch: true, isMobile: true },
     { name: '手机 320×568', width: 320, height: 568, deviceScaleFactor: 2, hasTouch: true, isMobile: true },
     { name: '平板 700×900', width: 700, height: 900, deviceScaleFactor: 1, hasTouch: true },
@@ -127,9 +130,11 @@ for (const vp of VIEWPORTS) {
 
     const s = await page.evaluate(SNAP);
 
-    // 信息项（非断言）：矮屏上棋盘会被固定底栏压住底部 —— 属另一处布局问题，这里只报数
-    if (s.bar && s.board && s.board.bottom > s.bar.y) {
-        console.log(`  · 注意：未滚动时棋盘底边 ${s.board.bottom} 低于底栏顶边 ${s.bar.y}，被遮 ${(s.board.bottom - s.bar.y).toFixed(0)}px（棋盘 max-height 未随视口高度收敛）`);
+    // 棋盘必须整块落在固定底栏之上（PR #135 起为硬断言）：对局中 ≤480px 的
+    // body.game-locked 禁止滚动，被底栏压住的几行在整局里都看不见。
+    if (s.bar && s.board) {
+        check(s.board.bottom <= s.bar.y + 1, '未滚动时棋盘底边在固定底栏之上',
+            `棋盘底边 ${s.board.bottom} vs 底栏顶边 ${s.bar.y}`);
     }
 
     // ── A ──

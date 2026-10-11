@@ -28,3 +28,23 @@ tank-battle main 升级（P4-2 最小接骨架：layout.css 引入 + `<main clas
 display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不变）。
 
 ---
+
+---
+
+## 移动端 QA（PR #135）确认但未在本 PR 修复的缺口
+
+以下均在 Chromium 手机可见视口（375×553 / 390×664 / 360×680 / 320×454 / 横屏 750×340、839×360）
+截图巡检中确认，详见 `docs/mobile-qa-pr135.md`。均不影响竖屏主流程，按需独立改动。
+
+- **Tetris 手机横屏不可玩**：≤768px 固定底栏 + 竖版棋盘，横屏 340px 高时棋盘被底栏遮住大半。
+  需要「横屏提示」或横屏布局（类似塔防的旋转提示），不是调一个高度预算能解决的。
+- **Gomoku 横屏木质底拉伸**：棋盘画布按高度/触控下限取 320px 正方形，但 `.board-container`
+  同时是 `.game-stage`、宽度铺满舞台，木纹 `::before` 随容器变成宽矩形。纯视觉；修需要让外框
+  贴合画布，要动 stage 几何契约。
+- **Shadow Loom 320×454（SE 一代 Safari）**：`.sl-stage { min-width: 260px }` 高于本次纵向预算，
+  灯可拖区（逻辑 y 672）落在首屏下 2px。降低 min-width 需要另验 260px 以下的纸片拖拽精度。
+- **触屏上的键盘 / 鼠标文案**：Gomoku 页脚「Click a point…」、Planet Merge / Hoop Shot / Sword Flight
+  页脚列快捷键（P pause · M mute …）、Minesweeper「Right-click / long-press」在手机上照常显示。
+  文案层问题，需逐页按 `(pointer: coarse)` 或运行时触控检测切换 hint 文案。
+- **Sword Flight 顶栏印章「九天问道」英文下不翻译**：可能是有意的品牌印章，需产品确认后再定。
+- **Tower Defense 竖屏顶栏 HUD 三行堆叠**：竖屏本就由旋转提示接管，仅视觉。

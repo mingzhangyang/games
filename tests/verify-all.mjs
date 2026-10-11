@@ -53,6 +53,9 @@ export function discover() {
             const script = `tests/${file}`;
             const source = readFileSync(join(ROOT, script), 'utf8');
             const name = file.replace(/\.mjs$/, '');
+            // A checker whose cost scales with the registry can declare its own budget with
+            // `// verify-all: timeout=<ms>` instead of riding the generic 180s default.
+            const budget = /^\/\/ verify-all: timeout=(\d+)$/m.exec(source);
             return {
                 name,
                 script,
@@ -60,6 +63,7 @@ export function discover() {
                 needsServer: /puppeteer-core|\.\/lib\/(?:browser|game-test)\.mjs/.test(source),
                 pages: /\.\/lib\/page-filter\.mjs/.test(source),
                 games: inferGames(name),
+                ...(budget ? { timeoutMs: Number(budget[1]) } : {}),
             };
         });
 }

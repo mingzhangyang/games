@@ -31,6 +31,7 @@ export function renderGameShell(game, {
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="${esc(cssHref)}">
+    <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
     <title>${esc(title)}</title>
 </head>

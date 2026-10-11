@@ -8,7 +8,8 @@
 > 而不是每页自己写一套容器/顶栏/画布/侧栏几何。
 
 - 契约文件：`css/layout.css`（骨架与 `--frame-*` 参数）、`css/tokens.css`（颜色/圆角/控件尺寸）
-- 引入顺序（硬性）：`tokens.css → layout.css → <game>.css → more-games.css`
+- 引入顺序（硬性）：`tokens.css → layout.css → <game>.css → mobile-fit.css → more-games.css`
+  - `mobile-fit.css`（PR #135）：全站移动端可见视口契约，首页与每个注册页各引一次、位于 layout 之后 more-games 之前；由 `tests/lib/css/feature-additions.mjs` 审核（只许 `@layer contracts` + 选择器白名单）。新页脚手架 `src/platform/shell/render-game-shell.js` 已自带。用到 `scoreboard-dialog.css` 的页面把它放在 layout 与 more-games 之间（mobile-fit 之前）
   - 在这之前：gen 的 `head` 区域输出同步脚本 `/theme-boot.js`，必须先于任何样式表（首屏主题，见 `theme.md`）
   - 五个科学实验室游戏（crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet）在 layout 与页面 CSS 之间多一层 `science-showcase.css`；这是源码/生成器的 authoring 顺序，不再依赖构建后 link 重排
 - 历史参考：`tools/archive/migrations/apply-layout-unification.py` 已归档，不用于日常开发。当前直接按本文接入共享 `game-*` 骨架与 `--frame-*` 配置，并运行现行布局校验。
@@ -304,7 +305,7 @@ P6 已在 #112 验收；生产证据、后续变更流程与回滚边界见[最�
 
 - `shared-css-first` 已删除，`CSS_LAYER_CANARY` 也已删除；
 - **物理 `<link>` 顺序不再是生产正确性的独立契约**，不得重新引入 post-build link sorting；
-- 源码/生成器仍按 `tokens → layout → [science-showcase] → 页面 → more-games` 组织，便于审阅和静态分析；
+- 源码/生成器仍按 `tokens → layout → [science-showcase] → 页面 → mobile-fit → more-games` 组织，便于审阅和静态分析；
 - 当前仍存在的未分层规则继续受 immutable P0、append-only migration ledger 与 P5 frozen counts 约束，不能借 P6
   名义重新基线或静默增长；
 - 任何未来 shared cascade 改动都必须通过源码态 + `dist/` 的 P3/P4 行为门禁，而不是依赖人工猜测 link 顺序。
