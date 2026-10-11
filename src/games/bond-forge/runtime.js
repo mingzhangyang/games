@@ -47,7 +47,7 @@ import {
     allowsBonds, usedBonds,
     maxBondsOf, isIonic, isIonicSelf, bondLength,
 } from './model/molecules.js';
-import { bindBondForgePointer, toLogical, unbindBondForgePointer } from './input/pointer.js';
+import { bindBondForgePointer, cancelBondForgeDrag, toLogical, unbindBondForgePointer } from './input/pointer.js';
 import { drawBondForgeScene } from './render/scene.js';
 import { BOND_FORGE_STORAGE, BOND_FORGE_STORAGE_SLOTS } from './storage.js';
 
@@ -729,6 +729,7 @@ class BondForgeGame {
         this.hideOverlays();
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.updateHud();
         this.toast(this.t('sandboxHint'));
     }
@@ -761,6 +762,7 @@ class BondForgeGame {
         this.hideOverlays();
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.updateHud();
         this.renderSideRecords();
         // The analytics Worker accepts the canonical play/finish event names
@@ -846,6 +848,7 @@ class BondForgeGame {
     }
 
     toMenu() {
+        this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.level = null;
@@ -1061,7 +1064,7 @@ class BondForgeGame {
 
     pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
 
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
+    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
 
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
@@ -1458,9 +1461,18 @@ class BondForgeGame {
         const p = this.toLogical(ev);
         const atom = this.hitAtom(p.x, p.y);
         if (atom) {
-            // 从画布上拿起一个原子：它脱离原有键（成键不是永久契约，允许改接线）
+            // Keep a snapshot of the pre-gesture topology. If a drawer or
+            // background interruption cancels the gesture, no bonds are lost.
+            const origin = {
+                x: atom.x, y: atom.y,
+                bonds: this.bonds.filter(b => b.a === atom.id || b.b === atom.id).map(b => ({ ...b })),
+            };
             this.detachAtom(atom.id);
-            this.dragging = { id: atom.id, sym: atom.sym, fromTray: false, x: p.x, y: p.y, hoverId: null, ox: atom.x - p.x, oy: atom.y - p.y };
+            this.dragging = {
+                id: atom.id, sym: atom.sym, fromTray: false, x: p.x, y: p.y,
+                hoverId: null, ox: atom.x - p.x, oy: atom.y - p.y,
+                pointerId: ev.pointerId, origin,
+            };
         } else {
             const slot = this.hitTray(p.x, p.y);
             if (!slot) return;
@@ -1468,7 +1480,7 @@ class BondForgeGame {
             slot.tray.used = true;
             const id = this.nextId++;
             this.atoms.push({ id, sym: slot.tray.sym, x: slot.x, y: slot.y });
-            this.dragging = { id, sym: slot.tray.sym, fromTray: true, x: p.x, y: p.y, hoverId: null, ox: 0, oy: 0 };
+            this.dragging = { id, sym: slot.tray.sym, fromTray: true, trayIndex: slot.index, pointerId: ev.pointerId, x: p.x, y: p.y, hoverId: null, ox: 0, oy: 0 };
         }
         try { this.canvas.setPointerCapture(ev.pointerId); } catch (e) { /* 某些环境不支持则忽略 */ }
         ev.preventDefault();
@@ -1499,6 +1511,10 @@ class BondForgeGame {
             if (dist <= BOND.snapR + this.elemOf(a.sym).radius && dist < bestD) { best = a; bestD = dist; }
         }
         return best;
+    }
+
+    cancelInputDrag() {
+        cancelBondForgeDrag(this);
     }
 
     onUp(ev) {

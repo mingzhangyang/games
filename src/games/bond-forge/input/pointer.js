@@ -16,6 +16,33 @@ export function bindBondForgePointer(game) {
     canvas.style.touchAction = 'none';
 }
 
+/**
+ * Canceling an interrupted pointer gesture must roll back tentative model
+ * mutations, not merely clear the active drag marker.
+ */
+export function cancelBondForgeDrag(game) {
+    const drag = game.dragging;
+    if (!drag) return;
+    game.dragging = null;
+    if (drag.fromTray) {
+        game.atoms = game.atoms.filter(atom => atom.id !== drag.id);
+        if (game.tray[drag.trayIndex]) game.tray[drag.trayIndex].used = false;
+    } else if (drag.origin) {
+        const atom = game.atoms.find(item => item.id === drag.id);
+        if (atom) {
+            atom.x = drag.origin.x;
+            atom.y = drag.origin.y;
+        }
+        game.bonds.push(...drag.origin.bonds);
+    }
+    try {
+        if (game.canvas.hasPointerCapture?.(drag.pointerId)) {
+            game.canvas.releasePointerCapture(drag.pointerId);
+        }
+    } catch { /* Browser may have released capture on backgrounding. */ }
+    game.updateHud();
+}
+
 export function unbindBondForgePointer(game) {
     const canvas = game.canvas;
     if (!canvas || !game._pointerBound) return;

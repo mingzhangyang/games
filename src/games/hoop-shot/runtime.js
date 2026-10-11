@@ -306,9 +306,12 @@ export class HoopShotGame {
         this.updateHud();
         this.ensureLoop();
         track('hoop-shot', 'play');
+        this.pauseOwnership?.invalidate();
+        if (this.pauseOwnership?.isHeld()) this.showOverlay('hs-pause');
     }
 
     togglePause() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (this.state === 'playing') {
             this.state = 'paused';
             this.showOverlay('hs-pause');
@@ -333,6 +336,7 @@ export class HoopShotGame {
     }
 
     resumeQuiet() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (this.state !== 'paused') return;
         this.state = 'playing';
         this.ensureLoop();
@@ -344,6 +348,7 @@ export class HoopShotGame {
     }
 
     goHome() {
+        this.pauseOwnership?.invalidate();
         this.state = 'menu';
         this.ball = null;
         this.ballReady = true;
@@ -455,12 +460,6 @@ export class HoopShotGame {
             }
         });
 
-        // 切换标签页自动暂停
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.state === 'playing') {
-                this.togglePause();
-            }
-        });
     }
 
     flick(dx, dy) {

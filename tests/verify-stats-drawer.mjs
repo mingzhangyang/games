@@ -14,6 +14,13 @@ if (OUT) mkdirSync(OUT, { recursive: true });
 // 抽屉页清单 = 挂 drawer cap 的游戏（tetris 的抽屉由 verify-tetris-drawer.mjs 专检，
 // 其启动路径与共享契约不同，不进本表的 AUGMENT）。
 // pre 前缀来自注册表；gameVar / runningExpr / startMethod 是本脚本自己的测试数据，不进注册表。
+const MIGRATED_DRAWERS = new Set([
+    'planet-merge', 'hoop-shot', 'gravity-slingshot', 'sword-flight',
+    'lumen', 'circuit', 'silk-dew', 'bond-forge', 'echo-cave',
+    'maxwell-demon', 'crystal-bloom', 'flame-verse', 'ripple-duet',
+]);
+const MANUAL_FOREGROUND = new Set(['planet-merge', 'hoop-shot', 'sword-flight']);
+
 const AUGMENT = {
     'planet-merge':      { gameVar: 'planetMergeGame', runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
     'hoop-shot':         { gameVar: 'hoopShotGame',    runningExpr: 'g.state === "playing"', startMethod: 'startGame' },
@@ -402,6 +409,53 @@ for (const P of PAGES) {
                 check(stillPaused === false,
                     '用户先手动暂停时，开合抽屉不会误恢复对局');
             }
+        }
+
+        if (running && MIGRATED_DRAWERS.has(P.name)) {
+            // Exercise the real game start method and drawer controls.
+            // A hidden tab owns its own lease even after the drawer is closed.
+            const startAgain = () => page.evaluate(({ gameVar, startMethod, startArgs }) => {
+                window[gameVar][startMethod](...(startArgs || []));
+            }, P);
+            const stillRunning = () => page.evaluate(({ gameVar, runningExpr }) =>
+                new Function('g', 'return (' + runningExpr + ');')(window[gameVar]), P);
+            const setHidden = value => page.evaluate(hidden => {
+                Object.defineProperty(document, 'hidden', {
+                    configurable: true,
+                    get: () => hidden,
+                });
+                document.dispatchEvent(new Event('visibilitychange'));
+            }, value);
+
+            await startAgain();
+            check(await stillRunning(), '新一轮真实开局可以运行');
+            await domClick(page, '#' + ids.toggle);
+            check(!await stillRunning(), '抽屉暂停新一轮');
+            await setHidden(true);
+            await domClick(page, '#' + ids.close);
+            check(!await stillRunning(), '抽屉先关、页面仍隐藏时不得自动恢复');
+            await setHidden(false);
+            const manual = MANUAL_FOREGROUND.has(P.name);
+            check((await stillRunning()) === !manual,
+                '前台恢复遵循游戏声明的策略', P.name);
+            if (manual) {
+                const pauseOverlay = P.name === 'planet-merge' ? 'pm-pause'
+                    : P.name === 'hoop-shot' ? 'hs-pause' : 'sf-overlay-pause';
+                check(await page.evaluate(id =>
+                    !document.getElementById(id).classList.contains('hidden'), pauseOverlay),
+                '手动恢复游戏保留可见暂停入口');
+                await page.evaluate(({ gameVar, name }) => {
+                    const g = window[gameVar];
+                    if (name === 'sword-flight') g.resumeGame();
+                    else g.togglePause();
+                }, { gameVar: P.gameVar, name: P.name });
+            }
+            check(await stillRunning(), '前台游戏可继续操作');
+            await domClick(page, '#' + ids.toggle);
+            await startAgain();
+            check(!await stillRunning(), '抽屉打开时新对局不得在后台运行');
+            await domClick(page, '#' + ids.close);
+            check(!await stillRunning(), '旧抽屉释放不能恢复新对局');
         }
     } else {
         console.log(`  · 跳过强制暂停断言：${started.why}`);

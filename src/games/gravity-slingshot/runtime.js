@@ -161,12 +161,6 @@ class GravityGame {
         // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 src/platform/game-frame.js）：
         // 后端缓冲区必须在 CSS 尺寸变化之后重算
         window.addEventListener('game-frame:changed', () => this.resize());
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.phase !== 'menu') {
-                // 飞行中切走：直接判负重置，避免追赶
-                if (this.phase === 'flying') this.abortFlight();
-            }
-        });
 
         this.loadLevelIntoView(LEVELS[0]);
         this.startLoop();
@@ -289,9 +283,14 @@ class GravityGame {
     }
 
     loadHole() {
+        // An epoch invalidates pending automatic transitions from older holes.
+        this.holeEpoch = (this.holeEpoch || 0) + 1;
+        this.dailyAdvanceReady = null;
         this.launches = 0;
         this.loadLevelIntoView(this.course[this.holeIdx]);
         this.phase = 'aiming'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.updateHud();
         this.hideOverlays();
         if (this.el.hint) this.el.hint.textContent = this.TEXT.tapToAim;
@@ -310,6 +309,8 @@ class GravityGame {
     }
 
     enterMenu(show = true) {
+        this.dailyAdvanceReady = null;
+        this.pauseOwnership?.invalidate();
         this.phase = 'menu'; this.contextualRestart?.sync();
         if (show) {
             this.loadLevelIntoView(LEVELS[0]);
@@ -442,10 +443,11 @@ class GravityGame {
                 this.finishDaily();
             } else {
                 this.showToast(`✅ ${this.TEXT.holeCleared} ${this.launches} ${this.TEXT.launchesWord}`, 1100);
+                const epoch = this.holeEpoch;
                 setTimeout(() => {
-                    if (this.phase !== 'holed') return;
-                    this.holeIdx++;
-                    this.loadHole();
+                    if (this.phase !== 'holed' || this.holeEpoch !== epoch) return;
+                    this.dailyAdvanceReady = epoch;
+                    this.advanceDailyIfReady();
                 }, 1150);
             }
             return;
@@ -469,6 +471,19 @@ class GravityGame {
         setTimeout(() => {
             if (this.phase === 'holed' && this.el.hole) this.el.hole.classList.remove('hidden');
         }, 620);
+    }
+
+    /**
+     * Daily auto-advance can outlive a 1.15s timer while the page is hidden or
+     * the stats drawer is open. Never transfer old-run resume entitlement.
+     */
+    advanceDailyIfReady() {
+        if (this.dailyAdvanceReady !== this.holeEpoch
+            || this.mode !== 'daily' || this.phase !== 'holed') return;
+        if (this.pauseOwnership?.isHeld() || document.hidden) return;
+        this.dailyAdvanceReady = null;
+        this.holeIdx++;
+        this.loadHole();
     }
 
     nextHole() {
@@ -758,6 +773,7 @@ class GravityGame {
     }
 
     resumeQuiet() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (!this.isPaused) return;
         this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃

@@ -3,6 +3,7 @@ import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { getLang } from '../../platform/site-settings.js';
 import { LANGUAGES } from './i18n.js';
 import { LumenGame, W } from './runtime.js';
@@ -15,6 +16,12 @@ onReady(() => {
     window.addEventListener('site-settings:changed', () => phase6I18n.apply());
     window.lmGame = new LumenGame();
 
+    const game = window.lmGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'playing' && g.isPaused,
+        autoResumeOnForeground: true,
+    });
+
     window.lmRuntime = mountGameRuntime({
         self: 'lumen.html',
         game: window.lmGame,
@@ -22,8 +29,8 @@ onReady(() => {
         more: '#lmSideMore',
         drawer: {
             idPrefix: 'lm',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.lmGame && typeof window.lmGame.isRunning === 'function' && window.lmGame.isRunning()),
             ICONS,
             getText: () => LANGUAGES[getLang()] || LANGUAGES.en,

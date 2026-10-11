@@ -106,6 +106,10 @@ export function startFlight(game, mode = 'stages', stageIndex = 0) {
     game.updateRealmDisplay();
     game.showToast(game.getRealmName(0));
 
+    // No replaced run may progress behind an earlier drawer or hidden lease.
+    game.pauseOwnership?.invalidate();
+    if (game.pauseOwnership?.isHeld()) game.pauseGame();
+
     // Analytics
     track('sword-flight', 'play');
 

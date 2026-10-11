@@ -300,6 +300,7 @@ export class LumenGame {
         this.loadLevel(idx);
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.hideOverlays();
         this.updateHud();
         track('lumen', 'play');
@@ -319,6 +320,7 @@ export class LumenGame {
         this.particles.length = 0;
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.hideOverlays();
         this.updateHud();
         this.showToast(this.TEXT.dailyStartToast, 1800);
@@ -337,6 +339,7 @@ export class LumenGame {
     }
 
     showMenu() {
+        this.pauseOwnership?.invalidate();
         clearTimeout(this.solveTimer);
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
@@ -606,6 +609,7 @@ export class LumenGame {
     }
 
     resumeQuiet() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (!this.isPaused) return;
         this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃

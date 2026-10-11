@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { EchoCaveGame, W } from './runtime.js';
 import { LANGUAGES } from './i18n.js';
 
@@ -16,6 +17,13 @@ onReady(() => {
     window.ecGame = new EchoCaveGame();
     const getText = () => (window.ecGame ? window.ecGame.textTable() : LANGUAGES.en);
 
+    const game = window.ecGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'playing' && g.isPaused,
+        autoResumeOnForeground: true,
+        releaseInputs: g => { g.keys.clear(); g.wantPulse = false; g.joy = null; },
+    });
+
     window.ecRuntime = mountGameRuntime({
         self: 'echo-cave.html',
         game: window.ecGame,
@@ -23,8 +31,8 @@ onReady(() => {
         more: '#ecSideMore',
         drawer: {
             idPrefix: 'ec',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.ecGame && window.ecGame.isRunning()),
             ICONS,
             getText,

@@ -324,6 +324,7 @@ export class CircuitGame {
         this.loadLevel(idx);
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.hideOverlays();
         this.updateHud();
         track('circuit', 'play');
@@ -345,6 +346,7 @@ export class CircuitGame {
         this.flipFx = null;
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.hideOverlays();
         this.updateHud();
         this.showToast(this.TEXT.dailyStartToast, 1800);
@@ -364,6 +366,7 @@ export class CircuitGame {
     }
 
     showMenu() {
+        this.pauseOwnership?.invalidate();
         clearTimeout(this.solveTimer);
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
@@ -659,6 +662,7 @@ export class CircuitGame {
     }
 
     resumeQuiet() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (!this.isPaused) return;
         this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃

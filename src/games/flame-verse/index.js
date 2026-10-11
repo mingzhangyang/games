@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { FlameVerseGame, W } from './runtime.js';
 import { LANGUAGES } from './i18n.js';
 
@@ -16,6 +17,12 @@ onReady(() => {
     window.fvGame = new FlameVerseGame();
     const getText = () => (window.fvGame ? window.fvGame.textTable() : LANGUAGES.en);
 
+    const game = window.fvGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'playing' && g.isPaused,
+        autoResumeOnForeground: true,
+    });
+
     window.fvRuntime = mountGameRuntime({
         self: 'flame-verse.html',
         game: window.fvGame,
@@ -23,8 +30,8 @@ onReady(() => {
         more: '#fvSideMore',
         drawer: {
             idPrefix: 'fv',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.fvGame && window.fvGame.isRunning()),
             ICONS,
             getText,

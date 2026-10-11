@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { initCanvasPalette, CrystalBloomGame, W } from './runtime.js';
 import { LANGUAGES } from './i18n.js';
 
@@ -17,6 +18,12 @@ onReady(() => {
     window.cbGame = new CrystalBloomGame();
     const getText = () => (window.cbGame ? window.cbGame.textTable() : LANGUAGES.en);
 
+    const game = window.cbGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'playing' && g.isPaused,
+        autoResumeOnForeground: true,
+    });
+
     window.cbRuntime = mountGameRuntime({
         self: 'crystal-bloom.html',
         game: window.cbGame,
@@ -24,8 +31,8 @@ onReady(() => {
         more: '#cbSideMore',
         drawer: {
             idPrefix: 'cb',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.cbGame && window.cbGame.isRunning()),
             ICONS,
             getText,

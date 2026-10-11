@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { LANGUAGES } from './i18n.js';
 import { PlanetMergeGame, WORLD_W } from './runtime.js';
 
@@ -16,6 +17,14 @@ onReady(() => {
     window.planetMergeGame = new PlanetMergeGame();
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 
+    const game = window.planetMergeGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'paused',
+        autoResumeOnForeground: false,
+        onHidden: g => { if (g.state === 'paused') g.showOverlay('pm-pause'); },
+        releaseInputs: g => { g.aiming = false; },
+    });
+
     window.pmRuntime = mountGameRuntime({
         self: 'planet-merge.html',
         game: window.planetMergeGame,
@@ -23,8 +32,8 @@ onReady(() => {
         more: '#pmSideMore',
         drawer: {
             idPrefix: 'pm',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.planetMergeGame && window.planetMergeGame.isRunning()),
             ICONS,
             getText,

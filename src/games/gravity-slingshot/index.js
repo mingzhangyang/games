@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { LANGUAGES } from './i18n.js';
 import {
     GravityGame,
@@ -26,6 +27,14 @@ onReady(() => {
     window.__gravityDebug = { LEVELS, simulate, solvePar, buildDailyCourse, DT, SPEED_CAP };
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.phase !== 'menu' && g.isPaused,
+        autoResumeOnForeground: true,
+        onHidden: g => { if (g.phase === 'flying') g.abortFlight(); },
+        onAllReleased: g => g.advanceDailyIfReady(),
+        releaseInputs: g => { g.drag = null; },
+    });
+
     window.gdRuntime = mountGameRuntime({
         self: 'gravity-slingshot.html',
         game,
@@ -33,8 +42,8 @@ onReady(() => {
         more: '#gdSideMore',
         drawer: {
             idPrefix: 'gd',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.gdGame && window.gdGame.isRunning()),
             ICONS,
             getText,
