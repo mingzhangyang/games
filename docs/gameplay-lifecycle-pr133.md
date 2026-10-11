@@ -28,11 +28,11 @@ continues to own simulation, clocks, input and visual overlays.
 | Game | Background return | Rank/dialog pause | Other input protection |
 | --- | --- | --- | --- |
 | Carrot Pull | Auto if uncontested | `ranking` | Pressed button released; Escape blocked while held |
-| Firefly Signal | Auto if uncontested | `ranking` | Fixed-step animation rAF managed by game |
+| Firefly Signal | Auto if uncontested | `ranking` | Menu and result-afterglow rAF pause while hidden, preserving prior visibility behavior |
 | Shadow Loom | Auto if uncontested | `ranking`, `drawer` | Active drag ends on interruption |
 | Tank Battle | **Manual resume** | `ranking` | Keyboard/D-pad/fire released on blur/rotate/interruption |
 | Needle vs Awn | **Manual resume** | `ranking`, `drawer` | Keyboard, joystick and aiming touch released |
-| Math Rain | **Manual resume** | `ranking` | Session deadline compensated exactly once by existing GameStateManager |
+| Math Rain | **Manual resume** | `ranking` | Settings close routes through guarded resume event; session deadline compensated once |
 
 Carrot Pull also uses the shared `drawer` lease. For the other 13 statistics
 drawers the old onPause/onResume adapter stays supported and unchanged; this

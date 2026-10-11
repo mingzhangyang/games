@@ -230,8 +230,10 @@ onReady(() => {
         },
     });
     game.pauseOwnership = createPauseOwnership({
-        isRunning: () => (game.state === 'playing' || game.state === 'ending') && !game.paused,
-        canResume: () => (game.state === 'playing' || game.state === 'ending') && game.paused,
+        // Preserve the previous visibility policy for the animated menu and
+        // the short result afterglow, without restarting a settled result rAF.
+        isRunning: () => !game.paused && (game.state !== 'result' || !!game.raf),
+        canResume: () => game.paused,
         pause: () => game.pauseQuiet(),
         resume: () => game.resumeQuiet(),
     });

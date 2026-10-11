@@ -158,4 +158,12 @@ for (const game of ['carrot-pull', 'needle-awn', 'shadow-loom']) {
     assert.match(entry, /onAcquire:/, game + ': drawer must acquire a reason');
     assert.match(entry, /onRelease:/, game + ': drawer must release its reason');
 }
+// Settings is another resume initiator. It must route through the same
+// application event that checks the current leases and visibility.
+const mathSettings = read('src/games/math-rain/core/UIController.js');
+assert.match(mathSettings, /this\.eventSystem\.emit\('ui:resume:game'\)/,
+    'Math Rain settings closure must use the guarded application resume event');
+assert.doesNotMatch(mathSettings, /this\.gameStateManager\.resumeGame\(\)/,
+    'Settings must not bypass application lifecycle ownership');
+
 console.log('PASS gameplay interruption leases / six-game integration contract');

@@ -93,6 +93,20 @@ try {
                     && !!document.querySelector('.scoreboard-trigger--icon');
             }, { timeout: 30000 }, game.id);
 
+            if (game.id === 'firefly-signal') {
+                // The animated menu used to be stopped by GameRuntime while
+                // backgrounded. Preserve that battery/visibility behavior.
+                await page.evaluate(setHiddenInPage, true);
+                const hiddenMenu = await page.evaluate(readState, game.id);
+                if (hiddenMenu.state !== 'menu' || !hiddenMenu.hidden || !hiddenMenu.paused) {
+                    throw new Error('Firefly menu kept animating in background: ' + JSON.stringify(hiddenMenu));
+                }
+                await page.evaluate(setHiddenInPage, false);
+                const visibleMenu = await page.evaluate(readState, game.id);
+                if (visibleMenu.hidden || visibleMenu.paused) {
+                    throw new Error('Firefly menu did not resume foreground animation: ' + JSON.stringify(visibleMenu));
+                }
+            }
             await page.evaluate(startInPage, game.id);
             const start = await page.evaluate(readState, game.id);
             if (start.paused || start.state !== 'playing') {
@@ -119,6 +133,15 @@ try {
                 throw new Error('stale close event released reopened dialog: ' + JSON.stringify(snap));
             }
             await page.evaluate(setHiddenInPage, true);
+            // Math Rain Settings used to call GameStateManager.resumeGame()
+            // directly, bypassing both the background and ranking leases.
+            if (game.id === 'math-rain') {
+                await page.evaluate(() => {
+                    const ui = window.mathRainGame.uiController;
+                    ui.settingsOpenedDuringGame = true;
+                    ui.hideSettings();
+                });
+            }
             snap = await page.evaluate(readState, game.id);
             if (!snap.hidden || !snap.paused) throw new Error('hidden lease missing: ' + JSON.stringify(snap));
             await page.evaluate(() => document.querySelector('dialog[data-scoreboard-dialog]').close());
