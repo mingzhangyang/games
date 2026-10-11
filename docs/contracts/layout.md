@@ -305,7 +305,7 @@ P6 已在 #112 验收；生产证据、后续变更流程与回滚边界见[最�
 
 - `shared-css-first` 已删除，`CSS_LAYER_CANARY` 也已删除；
 - **物理 `<link>` 顺序不再是生产正确性的独立契约**，不得重新引入 post-build link sorting；
-- 源码/生成器仍按 `tokens → layout → [science-showcase] → 页面 → more-games` 组织，便于审阅和静态分析；
+- 源码/生成器仍按 `tokens → layout → [science-showcase] → 页面 → mobile-fit → more-games` 组织，便于审阅和静态分析；
 - 当前仍存在的未分层规则继续受 immutable P0、append-only migration ledger 与 P5 frozen counts 约束，不能借 P6
   名义重新基线或静默增长；
 - 任何未来 shared cascade 改动都必须通过源码态 + `dist/` 的 P3/P4 行为门禁，而不是依赖人工猜测 link 顺序。
