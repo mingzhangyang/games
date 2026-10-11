@@ -23,7 +23,7 @@ onReady(() => {
     const interruptions = bindDrawerPauseOwnership(game, {
         canResume: g => g.state === 'playing' && g.isPaused,
         autoResumeOnForeground: true,
-        releaseInputs: g => { g.dragging = null; },
+        releaseInputs: g => g.cancelInputDrag(),
     });
 
     window.bfRuntime = mountGameRuntime({

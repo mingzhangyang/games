@@ -17,6 +17,8 @@ instead of competing listeners. Gameplay state/physics remain with each game.
 | Gravity Slingshot | Automatic if uncontested | Abort a flight on page hide, then resume the same hole's aiming state |
 | Lumen, Circuit, Silk Dew, Bond Forge, Echo Cave, Maxwell Demon, Crystal Bloom, Flame Verse, Ripple Duet | Automatic if uncontested | Quietly freeze ongoing simulation and clear held controls where necessary |
 
+Silk Dew cancels interrupted pointer capture and releases the physics world's held drag. Bond Forge restores interrupted atom moves, returning borrowed tray atoms or restoring the original position and bonds instead of silently consuming atoms. These are cancellation paths, not completed moves.
+
 A manual user pause never grants auto-resume permission. A new run, a level
 transition or return to the menu invalidates resume rights held by older
 drawers or hidden-page owners. Active UI leases remain held, so replacing a

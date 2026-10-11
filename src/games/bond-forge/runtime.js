@@ -1461,9 +1461,18 @@ class BondForgeGame {
         const p = this.toLogical(ev);
         const atom = this.hitAtom(p.x, p.y);
         if (atom) {
-            // 从画布上拿起一个原子：它脱离原有键（成键不是永久契约，允许改接线）
+            // Keep a snapshot of the pre-gesture topology. If a drawer or
+            // background interruption cancels the gesture, no bonds are lost.
+            const origin = {
+                x: atom.x, y: atom.y,
+                bonds: this.bonds.filter(b => b.a === atom.id || b.b === atom.id).map(b => ({ ...b })),
+            };
             this.detachAtom(atom.id);
-            this.dragging = { id: atom.id, sym: atom.sym, fromTray: false, x: p.x, y: p.y, hoverId: null, ox: atom.x - p.x, oy: atom.y - p.y };
+            this.dragging = {
+                id: atom.id, sym: atom.sym, fromTray: false, x: p.x, y: p.y,
+                hoverId: null, ox: atom.x - p.x, oy: atom.y - p.y,
+                pointerId: ev.pointerId, origin,
+            };
         } else {
             const slot = this.hitTray(p.x, p.y);
             if (!slot) return;
@@ -1471,7 +1480,7 @@ class BondForgeGame {
             slot.tray.used = true;
             const id = this.nextId++;
             this.atoms.push({ id, sym: slot.tray.sym, x: slot.x, y: slot.y });
-            this.dragging = { id, sym: slot.tray.sym, fromTray: true, x: p.x, y: p.y, hoverId: null, ox: 0, oy: 0 };
+            this.dragging = { id, sym: slot.tray.sym, fromTray: true, trayIndex: slot.index, pointerId: ev.pointerId, x: p.x, y: p.y, hoverId: null, ox: 0, oy: 0 };
         }
         try { this.canvas.setPointerCapture(ev.pointerId); } catch (e) { /* 某些环境不支持则忽略 */ }
         ev.preventDefault();
@@ -1502,6 +1511,30 @@ class BondForgeGame {
             if (dist <= BOND.snapR + this.elemOf(a.sym).radius && dist < bestD) { best = a; bestD = dist; }
         }
         return best;
+    }
+
+    /** An interruption is a cancellation, not a completed drag or spent atom. */
+    cancelInputDrag() {
+        const drag = this.dragging;
+        if (!drag) return;
+        this.dragging = null;
+        if (drag.fromTray) {
+            this.atoms = this.atoms.filter(atom => atom.id !== drag.id);
+            if (this.tray[drag.trayIndex]) this.tray[drag.trayIndex].used = false;
+        } else if (drag.origin) {
+            const atom = this.atoms.find(item => item.id === drag.id);
+            if (atom) {
+                atom.x = drag.origin.x;
+                atom.y = drag.origin.y;
+            }
+            this.bonds.push(...drag.origin.bonds);
+        }
+        try {
+            if (this.canvas.hasPointerCapture?.(drag.pointerId)) {
+                this.canvas.releasePointerCapture(drag.pointerId);
+            }
+        } catch { /* It may already be released by the browser. */ }
+        this.updateHud();
     }
 
     onUp(ev) {

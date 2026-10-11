@@ -28,7 +28,7 @@ onReady(() => {
     const interruptions = bindDrawerPauseOwnership(game, {
         canResume: g => g.state === 'playing' && g.isPaused,
         autoResumeOnForeground: true,
-        releaseInputs: g => { g.isDragging = false; g.pointerId = null; g.dragInput = null; },
+        releaseInputs: g => g.cancelInputDrag(),
     });
 
     window.sdRuntime = mountGameRuntime({

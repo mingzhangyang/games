@@ -36,6 +36,12 @@ for (const id of migrated) {
     assert.match(transition, /pauseOwnership\?\.invalidate\(\)/,
         id + ' must invalidate ownership when replacing gameplay');
 }
+// A canceled input is a rollback, not merely a cleared UI boolean.
+assert.match(read('src/games/silk-dew/index.js'), /g\.cancelInputDrag\(\)/);
+assert.match(read('src/games/silk-dew/runtime.js'), /if \(this\.world\) endDrag\(this\.world\)/);
+assert.match(read('src/games/bond-forge/index.js'), /g\.cancelInputDrag\(\)/);
+assert.match(read('src/games/bond-forge/runtime.js'), /this\.bonds\.push\(\.\.\.drag\.origin\.bonds\)/);
+
 for (const id of existing) {
     const index = read('src/games/' + id + '/index.js');
     assert.match(index, /onAcquire:/);
