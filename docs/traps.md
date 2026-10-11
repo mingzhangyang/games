@@ -172,6 +172,8 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
   教训：新校验器里开 CDP 域前，先想清楚这一页之后还要不要等网络空闲；单项耗时翻倍要当失败对待，不能等它撞上步骤上限。
   编排层同步改了：`verify-all` 离线项全并发、浏览器项 `--jobs` 池（并发输出缓冲成整块），`--changed` 按 diff 选项。
 
+- ⚠️ **verify-all 的单步上限是通用的 180s（在线项）/ 120s（离线项），耗时随注册表线性增长的校验器会悄悄逼近它。** `verify-stats-drawer` 每个抽屉页约 10s 固定动画等待，17 页在 PR #134 的 CI 上已是 179.6s；PR #135 每页多一个样式表请求就被判 124 超时，而本地 `main` 与分支同样是 ~177s —— 不是回归，是预算没人管。这类校验器在文件里声明 `// verify-all: timeout=<ms>`（`discover()` 读成 `step.timeoutMs`），不要靠全局 `VERIFY_STEP_TIMEOUT` 或删等待来凑。
+
 ## codegen 脚本
 
 - ⚠️ **Never mutate a string while iterating its own match offsets.** The dedupe pass in `add-drawer-i18n.py` sliced `block` inside a loop over `finditer(block)` — the offsets are relative to the *original* string, so once the first removal shifts them, every later cut lands on arbitrary characters (it split `'开始新的每日挑战？…'` mid-string), and reassembling with `tail[len(block):]` reused an already-shortened length. All six JS files became syntax errors and had to be hand-repaired, because the damage spanned entire i18n tables and `git checkout` would have discarded the session's real work. Safe form: collect every hit's **absolute** `(start, end)`, delete **backwards on the whole `src`**, return once. Pair it with: `--dry` support, a `cp`'d scratch copy + `node --check` before touching real files, and **`md5sum` twice** to prove idempotence — never trust the script's own printed "skipped" report, since `tail -N` truncates lines and misleads. Related: a dedupe window that starts at `pos` can never see the key it is looking for, because `pos` points at that key's own indentation and the slice has no leading `\n` for `r'\n[ \t]*key:'` to match — start the preview at `pos - 1`

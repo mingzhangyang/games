@@ -68,7 +68,8 @@ CSS P0/P5 冻结后，页面样式表不能直接改（`verify-css-debt` / `veri
   `verify-tetris-drawer` 只因外部统计端点 `games-analytics.orangely.workers.dev` 在容器内
   `ERR_TUNNEL_CONNECTION_FAILED`（`docs/browser-testing-environment.md` 记录过的同类情况）；
   `verify-stats-drawer` 撞上 runner 180s 单步上限 —— 单独运行本分支 176s 全部通过，`main` 上同一脚本 177s，
-  属既有耗时，不是回归。`smoke-carrot-pull` / `smoke-sword-flight` 在第一次 `--jobs=3` 全量里因 CPU 争用
+  属既有耗时，不是回归；PR #134 的 CI 上它已是 179.6s。CI 同样只在这一步超时，因此给 verify-all 加了
+  `// verify-all: timeout=<ms>` 声明，本项预算 300s（见 `docs/traps.md`「校验基础设施」）。`smoke-carrot-pull` / `smoke-sword-flight` 在第一次 `--jobs=3` 全量里因 CPU 争用
   出现过节奏 / 双击时窗失败，单独重跑均通过，`--jobs=2` 全量中也通过。
 - `npm run build`、`gen --check`、lint 通过；`verify-mobile-viewport-fit` 在 `dist/` 产物上同样通过。
 
