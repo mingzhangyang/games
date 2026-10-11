@@ -64,7 +64,7 @@ CSS P0/P5 冻结后，页面样式表不能直接改（`verify-css-debt` / `veri
   并加入 Safari 可见视口 375×553、390×664。旧 CSS 下 4 个视口失败，新 CSS 7 个视口通过。
 - `verify-leaderboard-layout` 标准表：<1024px 时昵称框期望 16px（桌面仍 13px）。
 - 新页脚手架带上 mobile-fit 链接后，`tests/lib/css/runtime-sources.mjs` 的脚手架复核摘要随之更新（注明本次新增的唯一样式表输入）。
-- 全量 `npm run verify -- --jobs=2`（本 PR 最新提交）：197 步中 195 步通过。另外两步与本改动无关：
+- 全量 `npm run verify -- --jobs=2`：132 步中 129 步通过；`verify-css-debt` 报的脚手架摘要已在随后提交中复核更新并单独复验通过。其余两步与本改动无关：
   `verify-tetris-drawer` 只因外部统计端点 `games-analytics.orangely.workers.dev` 在容器内
   `ERR_TUNNEL_CONNECTION_FAILED`（`docs/browser-testing-environment.md` 记录过的同类情况）；
   `verify-stats-drawer` 撞上 runner 180s 单步上限 —— 单独运行本分支 176s 全部通过，`main` 上同一脚本 177s，
