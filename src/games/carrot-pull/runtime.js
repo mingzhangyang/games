@@ -3,6 +3,7 @@ import { createSfxEngine } from '../../platform/game-sfx.js';
 import { getLang } from '../../platform/site-settings.js';
 import { track } from '../../platform/analytics.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 import { LANGUAGES } from './i18n.js';
 import { CARROT_PULL_STORAGE, CARROT_PULL_STORAGE_SLOTS } from './storage.js';
 import { ART_UI, loadCarrotPullArt } from './render/art.js';
@@ -53,12 +54,17 @@ export function createGame({ i18nBinder = null } = {}) {
     let productionScene = null;
     let fallbackScene = null;
     let rafId = 0;
-    let pausedByHidden = false;
     let contextualRestart = null;
     let best = 0;
     let dotsRound = -1;
     let scoreboard;
-    let pausedForRanking = false;
+    const pauseOwnership = createPauseOwnership({
+        isRunning: () => state.mode === 'playing' && !state.paused,
+        canResume: () => state.mode === 'playing' && state.paused,
+        pause: () => setPaused(true),
+        resume: () => setPaused(false),
+        releaseInputs: () => refs['cp-pull-btn']?.classList.remove('is-pressed'),
+    });
 
     function cacheRefs() {
         [
@@ -195,6 +201,7 @@ export function createGame({ i18nBinder = null } = {}) {
         if (state.mode !== 'playing') return;
         state.mode = 'over'; contextualRestart?.sync();
         state.paused = false; contextualRestart?.sync();
+        pauseOwnership.invalidate();
         saveBest();
         void scoreboard.submit({ boardId: 'all', score: state.score });
         state.won = won;
@@ -219,6 +226,7 @@ export function createGame({ i18nBinder = null } = {}) {
         if (!['ready', 'fallback'].includes(refs['cp-stage']?.dataset.artState)) return;
         state.mode = 'playing'; contextualRestart?.sync();
         state.paused = false; contextualRestart?.sync();
+        pauseOwnership.invalidate();
         state.round = 0;
         state.score = 0;
         state.time = ROUND_TIME;
@@ -242,6 +250,7 @@ export function createGame({ i18nBinder = null } = {}) {
     function resetToMenu() {
         state.mode = 'menu'; contextualRestart?.sync();
         state.paused = false; contextualRestart?.sync();
+        pauseOwnership.invalidate();
         state.round = 0;
         state.score = 0;
         state.time = ROUND_TIME;
@@ -299,7 +308,6 @@ export function createGame({ i18nBinder = null } = {}) {
     function setPaused(paused) {
         if (state.mode !== 'playing' || state.paused === paused) return;
         state.paused = paused; contextualRestart?.sync();
-        if (!paused) pausedByHidden = false;
         updateUi();
         updateStatus(currentStatusText());
         ensureLoop();
@@ -368,22 +376,13 @@ export function createGame({ i18nBinder = null } = {}) {
                 event.preventDefault();
                 tryPull();
             }
-            if (event.key === 'Escape' && state.mode === 'playing') {
+            if (event.key === 'Escape' && state.mode === 'playing' && !pauseOwnership.isHeld()) {
                 setPaused(!state.paused);
             }
         });
         window.addEventListener('site-settings:changed', () => applyLanguage(getLang()));
-        // 切到后台暂停；回来时只恢复「因切后台而暂停」的那一次（手机上没有暂停键，否则会卡住）
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                if (state.mode === 'playing' && !state.paused) {
-                    setPaused(true);
-                    pausedByHidden = true;
-                }
-            } else if (pausedByHidden) {
-                setPaused(false);
-            }
-        });
+        // Auto-resume on return only when no other UI owner remains.
+        bindPageVisibility(pauseOwnership, { autoResume: true });
     }
 
     function init() {
@@ -395,14 +394,8 @@ export function createGame({ i18nBinder = null } = {}) {
                 description: { en: 'Each finished run, including timeouts. Highest score wins.', zh: '每局结束（包括超时）均可参赛，分数越高越好。' },
             }],
             triggers: [{ before: '#cpStatsToggle', icon: true }, { before: '#cp-menu-btn' }],
-            onOpen: () => {
-                pausedForRanking = state.mode === 'playing' && !state.paused;
-                if (pausedForRanking) setPaused(true);
-            },
-            onClose: () => {
-                if (pausedForRanking) setPaused(false);
-                pausedForRanking = false;
-            },
+            onOpen: () => pauseOwnership.acquire('ranking'),
+            onClose: () => pauseOwnership.release('ranking'),
         });
         productionScene = createCarrotScene();
         fallbackScene = createCarrotPullFallbackScene();
@@ -432,6 +425,7 @@ export function createGame({ i18nBinder = null } = {}) {
 
     return {
         state,
+        pauseOwnership,
         init,
         applyLanguage,
         start,

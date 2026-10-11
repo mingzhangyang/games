@@ -13,6 +13,7 @@ import ErrorHandler from './core/ErrorHandler.js';
 import UIController from './core/UIController.js';
 import { track } from '../../platform/analytics.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 // P1：外部组件静态 import 直连（替代原 window.* 全局轮询）
 import ExpressionGenerator from './expression-generator.js';
 import QuestionBankManager from './question-bank-manager.js';
@@ -106,6 +107,12 @@ class MathRainGame {
             
             // Initialize core components directly (simplify for now)
             this.gameStateManager = new GameStateManager(this.eventSystem);
+            this.pauseOwnership = createPauseOwnership({
+                isRunning: () => this.gameStateManager?.gameState === 'playing',
+                canResume: () => this.gameStateManager?.gameState === 'paused',
+                pause: () => this.gameStateManager.pauseGame(),
+                resume: () => this.gameStateManager.resumeGame(),
+            });
             this.performanceOptimizer = new PerformanceOptimizer(this.eventSystem);
             
             // Initialize session manager with dependencies
@@ -132,7 +139,6 @@ class MathRainGame {
                 ['Intermediate', '中级'], ['Advanced', '高级'],
                 ['Expert', '专家级'], ['Master', '大师级'],
             ];
-            let pausedForRanking = false;
             this.scoreboard = mountScoreboardDialog({
                 boards: difficultyNames.map(([en, zh], index) => ({
                     id: String(index + 1),
@@ -149,16 +155,8 @@ class MathRainGame {
                     { before: '#play-again-btn', boardId: () => String(this.difficultyManager?.baseLevel || 1) },
                     { before: '#session-continue-btn', boardId: () => String(this.difficultyManager?.baseLevel || 1) },
                 ],
-                onOpen: () => {
-                    pausedForRanking = this.gameStateManager?.gameState === 'playing';
-                    if (pausedForRanking) this.gameStateManager.pauseGame();
-                },
-                onClose: () => {
-                    if (pausedForRanking && this.gameStateManager?.gameState === 'paused') {
-                        this.gameStateManager.resumeGame();
-                    }
-                    pausedForRanking = false;
-                },
+                onOpen: () => this.pauseOwnership.acquire('ranking'),
+                onClose: () => this.pauseOwnership.release('ranking'),
             });
             
             // Load question bank
@@ -242,7 +240,9 @@ class MathRainGame {
             this.startGame();
         });
         this.eventSystem.on('ui:pause:game', () => this.gameStateManager?.pauseGame());
-        this.eventSystem.on('ui:resume:game', () => this.gameStateManager?.resumeGame());
+        this.eventSystem.on('ui:resume:game', () => {
+            if (!this.pauseOwnership.isHeld() && !document.hidden) this.gameStateManager?.resumeGame();
+        });
         this.eventSystem.on('ui:restart:game', () => this.restartGame());
         
         this.eventSystem.on('ui:powerup:freeze', () => this.gameStateManager?.useFreeze());
@@ -369,14 +369,8 @@ class MathRainGame {
         this.eventSystem.on('mobile:orientation:changed', () => this.resizeCanvas());
 
         // 切换标签页时自动暂停（会话计时基于墙钟，切走后时间会白白流逝）
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                const state = this.gameStateManager?.getState();
-                if (state?.gameState === 'playing') {
-                    this.gameStateManager?.pauseGame();
-                }
-            }
-        });
+        // Keep the prior manual-resume policy for timed sessions.
+        bindPageVisibility(this.pauseOwnership, { autoResume: false });
 
         // Expression missed events
         this.eventSystem.on('expression:missed', (data) => {
@@ -490,7 +484,7 @@ class MathRainGame {
         const state = this.gameStateManager?.getState();
         if (state?.gameState === 'playing') {
             this.gameStateManager?.pauseGame();
-        } else if (state?.gameState === 'paused') {
+        } else if (state?.gameState === 'paused' && !this.pauseOwnership.isHeld() && !document.hidden) {
             this.gameStateManager?.resumeGame();
         }
     }
@@ -544,6 +538,7 @@ class MathRainGame {
             
             // Start game state
             this.gameStateManager?.startGame();
+            this.pauseOwnership.invalidate();
             track('math-rain', 'play');
             
             
@@ -1187,6 +1182,7 @@ class MathRainGame {
         
         // Start the game state (this will trigger game:started event)
         this.gameStateManager?.startGame();
+        this.pauseOwnership.invalidate();
         
     }
     

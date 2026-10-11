@@ -86,6 +86,8 @@ export class FireflyGame {
         this.renderer.setScene(level.seed);
         this.paintBackdrop();
         this.state = 'playing';
+        this.paused = false;
+        this.pauseOwnership?.invalidate();
         this.manual = !!opts.manual;
         if (this.manual) this.stopLoop();
         this.pulses = [];
@@ -116,6 +118,8 @@ export class FireflyGame {
 
     toMenu() {
         this.state = 'menu';
+        this.paused = false;
+        this.pauseOwnership?.invalidate();
         this.manual = false;
         this.sim = createSimulation(LEVELS[0]);
         this.renderer.setScene(LEVELS[0].seed);
@@ -257,6 +261,7 @@ export class FireflyGame {
         const level = LEVELS[this.levelIndex];
         if (!won) this.result = { won: false, harmony: sim.harmony, used: sim.interventions.length, max: sim.maxInterventions };
         this.state = 'result';
+        this.pauseOwnership?.invalidate();
         this.resultAt = this.time;
         this.hideCoach();
         this.dom.hud.classList.add('is-faded');

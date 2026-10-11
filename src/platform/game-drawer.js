@@ -41,6 +41,10 @@ export function createStatsDrawer(opts) {
         getGame = () => null,
         onPause = null,
         onResume = null,
+        // Opt-in lease callbacks: unlike legacy onPause/onResume these run
+        // even when another surface has already paused the game.
+        onAcquire = null,
+        onRelease = null,
         isBusy = null,
         ICONS = null,
         getText = null,
@@ -116,7 +120,9 @@ export function createStatsDrawer(opts) {
             this.lastFocus = document.activeElement;
 
             // 强制暂停：先判断忙，再把暂停交给页面适配器
-            if (this.busy()) {
+            if (typeof onAcquire === 'function') {
+                onAcquire(getGame());
+            } else if (this.busy()) {
                 const g = getGame();
                 if (typeof onPause === 'function') {
                     onPause(g);
@@ -166,7 +172,9 @@ export function createStatsDrawer(opts) {
             }
 
             // 只恢复「因打开抽屉而暂停」的那一次
-            if (this.pausedByDrawer) {
+            if (typeof onRelease === 'function') {
+                onRelease(getGame());
+            } else if (this.pausedByDrawer) {
                 this.pausedByDrawer = false;
                 if (typeof onResume === 'function') onResume(getGame());
             }

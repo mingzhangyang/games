@@ -457,8 +457,14 @@ class UIController {
             
             // If settings was opened during game, resume it
             if (this.settingsOpenedDuringGame && gameState && gameState.gameState === 'paused') {
-                this.gameStateManager.resumeGame();
+                // Resume must go through the game owner: the page might have
+                // acquired an independent ranking/background interruption
+                // since Settings first paused the run.
                 this.settingsOpenedDuringGame = false;
+                this.eventSystem.emit('ui:resume:game');
+                if (this.gameStateManager.getState()?.gameState === 'paused') {
+                    this.showScreen('pause-screen');
+                }
                 return;
             }
             

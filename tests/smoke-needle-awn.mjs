@@ -169,17 +169,18 @@ async function assertNormalPage() {
         await page.waitForFunction(() => window.naDrawer?.open && window.gameEngine.state === 'paused', { timeout: 2000 });
         const drawerPause = await page.evaluate(() => ({
             open: window.naDrawer?.open,
-            pausedByDrawer: window.naDrawer?.pausedByDrawer,
+            drawerLease: window.gameEngine.pauseOwnership?.isHeld('drawer'),
             state: window.gameEngine.state,
             activeId: document.activeElement?.id,
         }));
         await page.keyboard.press('p');
         const drawerAfterP = await page.evaluate(() => ({
             open: window.naDrawer?.open,
+            drawerLease: window.gameEngine.pauseOwnership?.isHeld('drawer'),
             state: window.gameEngine.state,
         }));
-        if (!drawerPause.open || !drawerPause.pausedByDrawer || drawerPause.state !== 'paused'
-            || !drawerAfterP.open || drawerAfterP.state !== 'paused') {
+        if (!drawerPause.open || !drawerPause.drawerLease || drawerPause.state !== 'paused'
+            || !drawerAfterP.open || !drawerAfterP.drawerLease || drawerAfterP.state !== 'paused') {
             fail(`统计抽屉打开时 P 不应恢复游戏: before=${JSON.stringify(drawerPause)}, after=${JSON.stringify(drawerAfterP)}`);
         }
 
@@ -187,9 +188,10 @@ async function assertNormalPage() {
         await page.waitForFunction(() => !window.naDrawer?.open, { timeout: 2000 });
         const drawerClosed = await page.evaluate(() => ({
             open: window.naDrawer?.open,
+            drawerLease: window.gameEngine.pauseOwnership?.isHeld('drawer'),
             state: window.gameEngine.state,
         }));
-        if (drawerClosed.open || drawerClosed.state !== 'playing') {
+        if (drawerClosed.open || drawerClosed.drawerLease || drawerClosed.state !== 'playing') {
             fail(`Escape 关闭统计抽屉后未由抽屉恢复游戏: ${JSON.stringify(drawerClosed)}`);
         }
         await page.setViewport({ width: 1280, height: 900 });
