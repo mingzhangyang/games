@@ -216,7 +216,11 @@ try {
                     if (sharedClass) failures.push(`${id}: ${key} is missing .${sharedClass}`);
                 }
                 for (const [subject, expected] of Object.entries(STANDARD)) {
-                    compare(id, subject, snapshot, expected);
+                    // PR #135: below 1024px the nickname field is 16px so iOS Safari does
+                    // not zoom the page on focus (css/mobile-fit.css); desktop keeps 13px.
+                    const wanted = subject === 'input' && viewport.width < 1024
+                        ? { ...expected, fontSize: '16px' } : expected;
+                    compare(id, subject, snapshot, wanted);
                 }
                 for (const error of pageErrors) failures.push(`${id}: pageerror ${error}`);
             } catch (error) {

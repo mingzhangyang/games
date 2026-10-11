@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/sword-flight.css">
+    <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,7 +91,7 @@
 
                     <!-- 进度 / 仙门距离指示器 -->
                     <div class="sf-progress-wrap" id="sf-progress-wrap">
-                        <span class="sf-progress-label" id="sf-progress-label">登仙之路</span>
+                        <span class="sf-progress-label" id="sf-progress-label" data-i18n="hudProgress">登仙之路</span>
                         <div class="sf-progress-track">
                             <div class="sf-progress-fill" id="sf-progress-fill" style="width: 0%;"></div>
                         </div>
@@ -99,9 +100,9 @@
                     <!-- 底部能量槽双翼：左真气，右万剑极意 -->
                     <div class="sf-bottom-bars">
                         <!-- 真气冲刺槽 -->
-                        <div class="sf-energy-bar-wrap" title="真气冲刺 (空格 / 左键 / ⚡)">
+                        <div class="sf-energy-bar-wrap" title="真气冲刺 (空格 / 左键 / ⚡)" data-i18n-title="hudQiTitle">
                             <div class="sf-energy-header">
-                                <span class="sf-energy-label" id="sf-lbl-qi">真气</span>
+                                <span class="sf-energy-label" id="sf-lbl-qi" data-i18n="hudQi">真气</span>
                                 <span class="sf-energy-val" id="sf-val-qi">100%</span>
                             </div>
                             <div class="sf-bar-track qi">
@@ -110,9 +111,9 @@
                         </div>
 
                         <!-- 青莲万剑极意槽 -->
-                        <div class="sf-energy-bar-wrap" title="万剑归宗 (E 键 / 🌸 极意)">
+                        <div class="sf-energy-bar-wrap" title="万剑归宗 (E 键 / 🌸 极意)" data-i18n-title="hudUltTitle">
                             <div class="sf-energy-header">
-                                <span class="sf-energy-label" id="sf-lbl-ult">青莲极意</span>
+                                <span class="sf-energy-label" id="sf-lbl-ult" data-i18n="hudUlt">青莲极意</span>
                                 <span class="sf-energy-val" id="sf-val-ult">0%</span>
                             </div>
                             <div class="sf-bar-track ult">

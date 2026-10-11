@@ -1,0 +1,102 @@
+/* ─────────────────────────────────────────────
+   移动端可见视口契约（PR #135 Mobile QA）
+
+   本文件是 CSS P0/P5 冻结之后的**附加特性样式表**（见 tests/lib/css/feature-additions.mjs）：
+   不改写任何冻结的页面样式，只在 @layer contracts 里收口真机可见视口下发现的缺陷。
+
+   为什么用 !important：被修正的页面规则大多仍是 unlayered（冻结的历史债务），普通的
+   分层声明赢不了它们；而分层 !important 在级联里压过 unlayered 的普通与 !important 声明，
+   且与 <link> 顺序无关（Vite 产物不保证样式表顺序，见 docs/contracts/layout.md）。
+   只有目标规则本身在更早层里的属性（.game-lb-username、html/body touch-action）用普通声明。
+
+   每条规则的选择器都限定在唯一页面上；断言见 tests/verify-mobile-viewport-fit.mjs。
+   ───────────────────────────────────────────── */
+
+@layer contracts {
+    /* ① 禁双击缩放、保留双指缩放：iOS Safari 在 width=device-width 页面上仍会把快速
+       连点同一处识别为双击缩放。画布自身的 touch-action:none 取交集后仍然生效。 */
+    html,
+    body {
+        touch-action: manipulation;
+    }
+
+    /* ② iOS Safari 聚焦字号 <16px 的输入框 / select 会把整页放大且失焦后不复原。
+       触屏与移动布局一律 16px；桌面鼠标场景保留各页原有密度。 */
+    @media (width < 1024px), (pointer: coarse) {
+        .game-lb-username {
+            font-size: 16px;
+        }
+
+        #usernameInput,
+        .wd-input,
+        .na-name-input,
+        .sf-name-input,
+        .gomoku-select,
+        .daily-profile input {
+            font-size: 16px !important;
+        }
+    }
+
+    /* ③ Tetris：棋盘宽度同时受可见视口高度约束。顶栏+外距 56px、固定底栏 76px、8px 间隙
+       与底部安全区之外的高度归棋盘，宽 = 高 / 2。否则 iPhone Safari（375×553 / 390×664）
+       上棋盘底部几行压在底栏下，而对局中 ≤480px 的 body.game-locked 禁止滚动。
+       ≤340px 时顶栏换行高出约 12px，预留随之加大；下限 140px 只为横屏兜底。 */
+    @media (width <= 768px) {
+        .game-container:has(#tetris) {
+            --tt-board-reserve: 140px;
+            --tt-board-fit: max(140px, calc((100dvh - var(--tt-board-reserve) - env(safe-area-inset-bottom, 0px)) / 2));
+            --frame-stage: min(340px, var(--tt-board-fit)) !important;
+        }
+
+        #tetris,
+        #particleCanvas,
+        #lineClearCanvas {
+            max-width: min(340px, var(--tt-board-fit)) !important;
+        }
+    }
+
+    @media (width <= 480px) {
+        .game-container:has(#tetris) {
+            --frame-stage: min(280px, var(--tt-board-fit)) !important;
+        }
+
+        #tetris,
+        #particleCanvas,
+        #lineClearCanvas {
+            max-width: min(280px, var(--tt-board-fit)) !important;
+        }
+    }
+
+    @media (width <= 340px) {
+        .game-container:has(#tetris) {
+            --tt-board-reserve: 154px;
+        }
+    }
+
+    /* ④ Reversi：纵向预算之外加触控下限 288px（每格 ≥ ~33px）。横屏手机 / 矮视口时
+       100vh - 210px 会把棋盘压到 ~130px、每格 ~15px；宁可让页面滚动。桌面规则不受影响。 */
+    @media (width < 1024px) {
+        .rv-board {
+            width: min(100%, 480px, max(calc(100vh - 210px), 288px)) !important;
+        }
+    }
+
+    /* ⑤ Tower Defense 竖屏：旋转提示遮罩铺满 ~1300px 高的菜单舞台，居中会把文案放到
+       页面中段，SE Safari 首屏只看到一片暗色。文案从舞台顶部按首屏高度下移。 */
+    @media (orientation: portrait) and (width < 900px) {
+        .td-rotate-prompt {
+            justify-content: flex-start !important;
+            padding-top: max(24px, calc(50dvh - 170px)) !important;
+        }
+    }
+
+    /* ⑥ Shadow Loom：480×854 舞台按宽铺满时，灯（逻辑 y≈648–672，Lamp Walk 关卡要拖）
+       落在首屏以下，而画布 touch-action:none 几乎满宽、只剩两侧 8px 可起手滚动。舞台宽度
+       同时受可见高度约束：顶栏 ~100px 之外，逻辑 y≤730（灯与托盘）完整可见 ——
+       854 / 480 × (730 / 854) ≈ 1.52。底部纯装饰的书本 / 卡片允许落到首屏外。 */
+    @media (width < 1024px) {
+        .sl-shell {
+            --frame-stage: min(460px, calc((100dvh - 100px) / 1.52)) !important;
+        }
+    }
+}
