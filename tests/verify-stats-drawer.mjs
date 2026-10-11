@@ -170,6 +170,24 @@ for (const P of PAGES) {
     check(s.panelsParent === ids.body, '面板已挂载到抽屉内容区', `parent=${s.panelsParent}`);
     check(s.panelsCardCount > 0, '抽屉里确有面板卡片', `cards=${s.panelsCardCount}`);
     check(s.drawerHidden === true, '未打开时抽屉是 hidden');
+    // User double-taps or hits Escape before the opening animation's first
+    // frame: stale rAF must never re-add drawer-locked after close().
+    const quick = await page.evaluate(async ids => {
+        const toggle = document.getElementById(ids.toggle);
+        const close = document.getElementById(ids.close);
+        const drawer = document.getElementById(ids.drawer);
+        toggle.click();
+        close.click();
+        await new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)));
+        return {
+            hidden: drawer.hidden,
+            expanded: toggle.getAttribute('aria-expanded'),
+            opening: drawer.classList.contains('is-open'),
+            locked: document.body.classList.contains('drawer-locked'),
+        };
+    }, ids);
+    check(quick.hidden && quick.expanded === 'false' && !quick.opening && !quick.locked,
+        '立即开关抽屉不会被延迟动画重新打开/锁住页面', JSON.stringify(quick));
     check(!!s.titleText, '抽屉标题已渲染（非空）', `title=${JSON.stringify(s.titleText)}`);
     check(await page.evaluate((ids) => {
         const panels = document.getElementById(ids.panels);
@@ -290,6 +308,26 @@ for (const P of PAGES) {
     await new Promise(r => setTimeout(r, 450));
     cl = await page.evaluate((ids) => document.getElementById(ids.drawer).classList.contains('is-open'), ids);
     check(cl === false, '点遮罩可关闭抽屉');
+
+    if (P.name === 'planet-merge') {
+        // Old close completion (timer/transitionend) must not hide a drawer
+        // reopened during the 320 ms exit animation.
+        await domClick(page, `#${ids.toggle}`);
+        await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+        await domClick(page, `#${ids.close}`);
+        await domClick(page, `#${ids.toggle}`);
+        await new Promise(r => setTimeout(r, 380));
+        const reopened = await page.evaluate(ids => ({
+            hidden: document.getElementById(ids.drawer).hidden,
+            opening: document.getElementById(ids.drawer).classList.contains('is-open'),
+            locked: document.body.classList.contains('drawer-locked'),
+            expanded: document.getElementById(ids.toggle).getAttribute('aria-expanded'),
+        }), ids);
+        check(!reopened.hidden && reopened.opening && reopened.locked && reopened.expanded === 'true',
+            '关闭动画中重新打开，旧的关闭回调不会隐藏新抽屉', JSON.stringify(reopened));
+        await domClick(page, `#${ids.close}`);
+        await new Promise(r => setTimeout(r, 350));
+    }
 
     const realErr = errors.filter(e => !isNoise(e));
     check(realErr.length === 0, '无 JS 运行时错误', realErr.slice(0, 2).join(' | ') || 'none');

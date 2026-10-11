@@ -55,7 +55,12 @@ try {
     for (const game of games) {
         const page = await browser.newPage();
         const landscape = game.id === 'tank-battle';
-        await page.setViewport({ width: landscape ? 844 : 390, height: landscape ? 390 : 844 });
+        // Set mobile emulation BEFORE navigation. Flipping isMobile/hasTouch
+        // later can reload a Puppeteer page and lose its live modal state.
+        await page.setViewport({
+            width: landscape ? 844 : 390, height: landscape ? 390 : 844,
+            isMobile: true, hasTouch: true, deviceScaleFactor: 2,
+        });
         await page.setBypassServiceWorker(true);
         const pageErrors = [];
         const requests = [];
@@ -140,6 +145,42 @@ try {
                 || ui.rect[0] < -1 || ui.rect[1] < -1
                 || ui.rect[2] > ui.view[0] + 1 || ui.rect[3] > ui.view[1] + 1) {
                 errors.push(game.id + ': dialog not viewable: ' + JSON.stringify(ui));
+            }
+            // A 320 px phone may be narrower than the normal 390 px
+            // verification viewport. Modal controls must still fit and
+            // editable fields must not trigger Safari's sub-16px focus zoom.
+            if (!landscape) {
+                await page.evaluate(() => {
+                    document.querySelector('dialog[data-scoreboard-dialog]').dataset.mobileViewportRun = 'live';
+                });
+                await page.setViewport({ width: 320, height: 640, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+                const narrow = await page.evaluate(() => {
+                    const d = document.querySelector('dialog[data-scoreboard-dialog]');
+                    const rect = d.getBoundingClientRect();
+                    const input = d.querySelector('.game-lb-username');
+                    const select = d.querySelector('.scoreboard-select');
+                    return {
+                        open: d.open,
+                        originalInstance: d.dataset.mobileViewportRun === 'live',
+                        rect: [rect.left, rect.top, rect.right, rect.bottom],
+                        viewport: [innerWidth, innerHeight],
+                        fontSizes: [parseFloat(getComputedStyle(input).fontSize), parseFloat(getComputedStyle(select).fontSize)],
+                        scrollable: getComputedStyle(d).overflowY === 'auto',
+                    };
+                });
+                if (!narrow.open || !narrow.originalInstance
+                    || narrow.rect[0] < -1 || narrow.rect[1] < -1
+                    || narrow.rect[2] > narrow.viewport[0] + 1
+                    || narrow.rect[3] > narrow.viewport[1] + 1
+                    || narrow.fontSizes.some(size => size < 16) || !narrow.scrollable) {
+                    errors.push(game.id + ': 320px modal / Safari input contract: ' + JSON.stringify(narrow));
+                }
+                await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+                const persisted = await page.evaluate(() => {
+                    const d = document.querySelector('dialog[data-scoreboard-dialog]');
+                    return !!d?.open && d.dataset.mobileViewportRun === 'live';
+                });
+                if (!persisted) errors.push(game.id + ': viewport restore reloaded or closed the live dialog');
             }
             // Text actions keep their semantic icon and dedicated label span
             // across site-language changes. A textContent assignment on the

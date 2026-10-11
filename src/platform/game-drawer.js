@@ -68,6 +68,22 @@ export function createStatsDrawer(opts) {
         open: false,
         pausedByDrawer: false,
         lastFocus: null,
+        enterFrame: 0,
+        exitTimer: 0,
+        exitFinish: null,
+
+        // Closing can still be animating when a new open begins. Dispose of
+        // both completion paths so an older close cannot hide the new drawer.
+        cancelCloseAnimation() {
+            if (this.exitTimer) {
+                clearTimeout(this.exitTimer);
+                this.exitTimer = 0;
+            }
+            if (this.exitFinish) {
+                el.removeEventListener('transitionend', this.exitFinish);
+                this.exitFinish = null;
+            }
+        },
 
         isDesktop() {
             return desktopQuery.matches;
@@ -95,6 +111,7 @@ export function createStatsDrawer(opts) {
 
         openDrawer() {
             if (this.open || this.isDesktop()) return;
+            this.cancelCloseAnimation();
             this.open = true;
             this.lastFocus = document.activeElement;
 
@@ -108,10 +125,12 @@ export function createStatsDrawer(opts) {
             }
 
             el.hidden = false;
-            // 先摘 [hidden] 再加类，否则过渡不触发
-            requestAnimationFrame(() => {
-                el.classList.add('is-open');
-                document.body.classList.add('drawer-locked');
+            // Lock synchronously. A quick close (or rotation) before the next
+            // frame must not leave a stale rAF that re-locks the page.
+            document.body.classList.add('drawer-locked');
+            this.enterFrame = requestAnimationFrame(() => {
+                this.enterFrame = 0;
+                if (this.open) el.classList.add('is-open');
             });
             btn.setAttribute('aria-expanded', 'true');
             if (closeBtn) closeBtn.focus();
@@ -119,16 +138,32 @@ export function createStatsDrawer(opts) {
 
         close() {
             if (!this.open) return;
+            const beforeFirstFrame = !!this.enterFrame;
+            if (this.enterFrame) {
+                cancelAnimationFrame(this.enterFrame);
+                this.enterFrame = 0;
+            }
+            this.cancelCloseAnimation();
             this.open = false;
             el.classList.remove('is-open');
             document.body.classList.remove('drawer-locked');
             btn.setAttribute('aria-expanded', 'false');
 
-            const finish = () => {
-                if (!this.open) el.hidden = true;
-            };
-            el.addEventListener('transitionend', finish, { once: true });
-            setTimeout(finish, 320);      // 兜底：reduced-motion 下没有过渡事件
+            if (beforeFirstFrame) {
+                // Nothing ever became visible; no exit transition is needed.
+                el.hidden = true;
+            } else {
+                const finish = event => {
+                    // Child transitions bubble through the backdrop. Only its
+                    // own opacity transition may complete this close.
+                    if (event && (event.target !== el || event.propertyName !== 'opacity')) return;
+                    this.cancelCloseAnimation();
+                    if (!this.open) el.hidden = true;
+                };
+                this.exitFinish = finish;
+                el.addEventListener('transitionend', finish);
+                this.exitTimer = setTimeout(finish, 320); // reduced-motion fallback
+            }
 
             // 只恢复「因打开抽屉而暂停」的那一次
             if (this.pausedByDrawer) {

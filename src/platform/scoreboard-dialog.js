@@ -7,6 +7,7 @@ import { enqueuePendingScore, pendingScoreCount, retryPendingScores } from './sc
 import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { bindDialogToVisualViewport } from './visual-viewport-dialog.js';
 
 const TEXT = {
     en: {
@@ -106,6 +107,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     dialog.append(panel);
     dialog.setAttribute('aria-labelledby', title.id);
     document.body.append(dialog);
+    const visualViewportBinding = bindDialogToVisualViewport(dialog);
 
     let requestId = 0;
     const notices = new Map();
@@ -226,7 +228,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     for (const type of ['keydown', 'keyup', 'keypress']) {
         dialog.addEventListener(type, event => event.stopPropagation());
     }
-    dialog.addEventListener('close', () => { ++requestId; onClose(); });
+    dialog.addEventListener('close', () => { ++requestId; visualViewportBinding.stop(); onClose(); });
     dialog.addEventListener('click', event => {
         if (event.target === dialog) dialog.close();
     });
@@ -240,6 +242,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         sync();
         if (!dialog.open) {
             dialog.showModal();
+            visualViewportBinding.start();
             onOpen();
         }
         void refresh();
