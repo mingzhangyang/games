@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { LANGUAGES } from './i18n.js';
 import { initCanvasPalette, RippleDuetGame, W } from './runtime.js';
 
@@ -17,6 +18,13 @@ onReady(() => {
     window.rdGame = new RippleDuetGame();
     const getText = () => (window.rdGame ? window.rdGame.textTable() : LANGUAGES.en);
 
+    const game = window.rdGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'playing' && g.isPaused,
+        autoResumeOnForeground: true,
+        releaseInputs: g => { if (g.dragIdx >= 0 && g.dragFrom) { Object.assign(g.place[g.dragIdx], g.dragFrom); g.rebuildField(); } g.dragIdx = -1; g.dragFrom = null; },
+    });
+
     window.rdRuntime = mountGameRuntime({
         self: 'ripple-duet.html',
         game: window.rdGame,
@@ -24,8 +32,8 @@ onReady(() => {
         more: '#rdSideMore',
         drawer: {
             idPrefix: 'rd',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.rdGame && window.rdGame.isRunning()),
             ICONS,
             getText,

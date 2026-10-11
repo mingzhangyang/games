@@ -238,6 +238,8 @@ export class RippleDuetGame {
         if (this.levelIdx < 0) this.levelIdx = 0;
         this.loadLevel(spec);
         this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
@@ -253,6 +255,8 @@ export class RippleDuetGame {
         this.daily = { key, display: todayKeyDisplay(), course, cursor: 0, totalCost: 0, stars: 0 };
         this.loadLevel(course[0]);
         this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
@@ -265,11 +269,14 @@ export class RippleDuetGame {
         if (!this.spec) return;
         this.loadLevel(this.spec);
         this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.hide(this.el['clear']);
         this.updateHud();
     }
 
     toMenu() {
+        this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
@@ -286,6 +293,8 @@ export class RippleDuetGame {
             }
             this.loadLevel(this.daily.course[this.daily.cursor]);
             this.state = 'playing'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
             this.hide(this.el['clear']);
             this.updateHud();
             return;
@@ -1226,7 +1235,7 @@ export class RippleDuetGame {
     }
 
     pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
-    resumeQuiet() { this.isPaused = false; this.contextualRestart?.sync(); }
+    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 }
 

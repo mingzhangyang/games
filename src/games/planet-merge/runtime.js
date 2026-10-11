@@ -445,6 +445,8 @@ export class PlanetMergeGame {
         this.updateHud();
         this.updateNextPreview();
         track('planet-merge', 'play');
+        this.pauseOwnership?.invalidate();
+        if (this.pauseOwnership?.isHeld()) this.showOverlay('pm-pause');
     }
 
     pickTier() {
@@ -457,6 +459,7 @@ export class PlanetMergeGame {
     }
 
     togglePause() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (this.state === 'playing') {
             this.state = 'paused';
             this.showOverlay('pm-pause');
@@ -482,6 +485,7 @@ export class PlanetMergeGame {
     }
 
     resumeQuiet() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (this.state !== 'paused') return;
         this.state = 'playing';
         this.ensureLoop();
@@ -493,6 +497,7 @@ export class PlanetMergeGame {
     }
 
     goHome() {
+        this.pauseOwnership?.invalidate();
         this.state = 'menu';
         this.ensureLoop();
         this.render();
@@ -548,12 +553,6 @@ export class PlanetMergeGame {
             }
         });
 
-        // 切换标签页自动暂停
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.state === 'playing') {
-                this.togglePause();
-            }
-        });
     }
 
     currentRadius() {

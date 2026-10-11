@@ -2,6 +2,7 @@
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { getLang } from '../../platform/site-settings.js';
 import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { LANGUAGES } from './i18n.js';
@@ -16,6 +17,12 @@ onReady(() => {
     window.ccGame = new CircuitGame({ i18nBinder });
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 
+    const game = window.ccGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'playing' && g.isPaused,
+        autoResumeOnForeground: true,
+    });
+
     window.ccRuntime = mountGameRuntime({
         self: 'circuit.html',
         game: window.ccGame,
@@ -23,8 +30,8 @@ onReady(() => {
         more: '#ccSideMore',
         drawer: {
             idPrefix: 'cc',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.ccGame && typeof window.ccGame.isRunning === 'function' && window.ccGame.isRunning()),
             ICONS,
             getText,

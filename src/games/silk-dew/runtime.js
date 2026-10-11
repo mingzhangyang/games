@@ -481,6 +481,7 @@ export class SilkfallGame {
         this.world = createWorld(this.spec);
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.lastFrame = 0;
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
@@ -514,6 +515,7 @@ export class SilkfallGame {
     }
 
     toMenu() {
+        this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.world = null;
         this.hide(this.el['clear']);
@@ -889,7 +891,7 @@ export class SilkfallGame {
     // 抽屉调这三元组，页面内部状态不暴露
 
     pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
+    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */

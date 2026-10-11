@@ -10,6 +10,7 @@ import {
 } from '../model/daily.js';
 
 export function returnToMenu(game) {
+    game.pauseOwnership?.invalidate();
     game.isPlaying = false;
     game.isPaused = false;
     game.score = 0;

@@ -1,4 +1,4 @@
-/** Desktop pointer/keyboard controls and page visibility pause. */
+/** Desktop pointer/keyboard controls. Visibility is owned by shared interruptions. */
 import { SFX } from '../audio.js';
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config.js';
 
@@ -29,6 +29,7 @@ export function bindKeyboardInput(game) {
         // Typing a leaderboard name must not toggle sound (M) or pause (P/Esc).
         const tag = e.target && e.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+        if (game.pauseOwnership?.isHeld()) return;
         game.keys[e.code] = true;
 
         if (e.code === 'KeyP' || e.code === 'Escape') {
@@ -61,9 +62,4 @@ export function bindKeyboardInput(game) {
         game.keys[e.code] = false;
     });
 
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden && game.isPlaying && !game.isPaused) {
-            game.pauseGame();
-        }
-    });
 }

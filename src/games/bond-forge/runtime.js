@@ -729,6 +729,7 @@ class BondForgeGame {
         this.hideOverlays();
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.updateHud();
         this.toast(this.t('sandboxHint'));
     }
@@ -761,6 +762,7 @@ class BondForgeGame {
         this.hideOverlays();
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.updateHud();
         this.renderSideRecords();
         // The analytics Worker accepts the canonical play/finish event names
@@ -846,6 +848,7 @@ class BondForgeGame {
     }
 
     toMenu() {
+        this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.level = null;
@@ -1061,7 +1064,7 @@ class BondForgeGame {
 
     pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
 
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
+    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
 
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 

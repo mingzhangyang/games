@@ -501,6 +501,7 @@ export class CrystalBloomGame {
         this.world.stirs = this.stirs;
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.lastFrame = 0;
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
@@ -533,6 +534,7 @@ export class CrystalBloomGame {
     }
 
     toMenu() {
+        this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.world = null;
         this.phase = 'draw';
@@ -880,7 +882,7 @@ export class CrystalBloomGame {
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
 
     pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
+    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */

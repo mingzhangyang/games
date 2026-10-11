@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { bindPalette } from '../../platform/theme.js';
 import { LANGUAGES } from './i18n.js';
 import { BondForgeGame, CANVAS_VARS, setCanvasPalette, W } from './runtime.js';
@@ -18,6 +19,13 @@ onReady(() => {
     window.bfGame = new BondForgeGame();
     const getText = () => (window.bfGame ? window.bfGame.textTable() : LANGUAGES.en);
 
+    const game = window.bfGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'playing' && g.isPaused,
+        autoResumeOnForeground: true,
+        releaseInputs: g => { g.dragging = null; },
+    });
+
     window.bfRuntime = mountGameRuntime({
         self: 'bond-forge.html',
         game: window.bfGame,
@@ -25,8 +33,8 @@ onReady(() => {
         more: '#bfSideMore',
         drawer: {
             idPrefix: 'bf',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.bfGame && window.bfGame.isRunning()),
             ICONS,
             getText,

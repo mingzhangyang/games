@@ -460,6 +460,7 @@ export class EchoCaveGame {
         this.state = 'playing'; this.contextualRestart?.sync();
         this.syncActionVisibility();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.lastFrame = 0;
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
@@ -491,6 +492,7 @@ export class EchoCaveGame {
     }
 
     toMenu() {
+        this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.syncActionVisibility();
         this.world = null;
@@ -797,7 +799,7 @@ export class EchoCaveGame {
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
 
     pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
-    resumeQuiet() { this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
+    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */

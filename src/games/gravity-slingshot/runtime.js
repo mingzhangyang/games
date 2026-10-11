@@ -161,12 +161,6 @@ class GravityGame {
         // 桌面舞台尺寸随 --frame-chrome 实测值变化（见 src/platform/game-frame.js）：
         // 后端缓冲区必须在 CSS 尺寸变化之后重算
         window.addEventListener('game-frame:changed', () => this.resize());
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.phase !== 'menu') {
-                // 飞行中切走：直接判负重置，避免追赶
-                if (this.phase === 'flying') this.abortFlight();
-            }
-        });
 
         this.loadLevelIntoView(LEVELS[0]);
         this.startLoop();
@@ -292,6 +286,8 @@ class GravityGame {
         this.launches = 0;
         this.loadLevelIntoView(this.course[this.holeIdx]);
         this.phase = 'aiming'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership?.invalidate();
         this.updateHud();
         this.hideOverlays();
         if (this.el.hint) this.el.hint.textContent = this.TEXT.tapToAim;
@@ -310,6 +306,7 @@ class GravityGame {
     }
 
     enterMenu(show = true) {
+        this.pauseOwnership?.invalidate();
         this.phase = 'menu'; this.contextualRestart?.sync();
         if (show) {
             this.loadLevelIntoView(LEVELS[0]);
@@ -758,6 +755,7 @@ class GravityGame {
     }
 
     resumeQuiet() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (!this.isPaused) return;
         this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃

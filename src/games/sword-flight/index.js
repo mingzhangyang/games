@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { I18N } from './i18n.js';
 import { SwordFlightGame } from './runtime.js';
 import { setSwordFlightChrome } from './render/hud.js';
@@ -17,14 +18,22 @@ onReady(() => {
     window.game = new SwordFlightGame();
     const getText = () => I18N[getLang()] || I18N.zh;
 
+    const game = window.game;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.isPlaying && g.isPaused,
+        autoResumeOnForeground: false,
+        onHidden: g => { if (g.isPlaying && g.isPaused) g.pauseGame(); },
+        releaseInputs: g => { g.keys = {}; },
+    });
+
     window.sfRuntime = mountGameRuntime({
         self: 'sword-flight.html',
         game: window.game,
         frame: { logicalWidth: 480 },
         drawer: {
             idPrefix: 'sf',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.game && window.game.isRunning()),
             ICONS,
             getText,

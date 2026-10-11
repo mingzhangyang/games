@@ -3,6 +3,7 @@ import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { getLang } from '../../platform/site-settings.js';
 import { LANGUAGES } from './i18n.js';
 import { HoopShotGame, initCanvasPalette, WORLD_W } from './runtime.js';
@@ -22,6 +23,14 @@ onReady(() => {
     window.hoopShotGame = new HoopShotGame();
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
 
+    const game = window.hoopShotGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'paused',
+        autoResumeOnForeground: false,
+        onHidden: g => { if (g.state === 'paused') g.showOverlay('hs-pause'); },
+        releaseInputs: g => { g.dragStart = null; g.dragCurrent = null; },
+    });
+
     window.hsRuntime = mountGameRuntime({
         self: 'hoop-shot.html',
         game: window.hoopShotGame,
@@ -35,8 +44,8 @@ onReady(() => {
         more: '#hsSideMore',
         drawer: {
             idPrefix: 'hs',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.hoopShotGame && window.hoopShotGame.isRunning()),
             ICONS,
             getText,

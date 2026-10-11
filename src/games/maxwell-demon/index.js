@@ -4,6 +4,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { onReady } from '../../platform/boot.js';
 import { ICONS } from '../../platform/icons.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { initCanvasPalette, MaxwellDemonGame, W } from './runtime.js';
 import { LANGUAGES } from './i18n.js';
 
@@ -17,6 +18,13 @@ onReady(() => {
     window.mdGame = new MaxwellDemonGame();
     const getText = () => (window.mdGame ? window.mdGame.textTable() : LANGUAGES.en);
 
+    const game = window.mdGame;
+    const interruptions = bindDrawerPauseOwnership(game, {
+        canResume: g => g.state === 'playing' && g.isPaused,
+        autoResumeOnForeground: true,
+        releaseInputs: g => { g.wantGate = false; g.wantScan = false; },
+    });
+
     window.mdRuntime = mountGameRuntime({
         self: 'maxwell-demon.html',
         game: window.mdGame,
@@ -24,8 +32,8 @@ onReady(() => {
         more: '#mdSideMore',
         drawer: {
             idPrefix: 'md',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: interruptions.onAcquire,
+            onRelease: interruptions.onRelease,
             isBusy: () => !!(window.mdGame && window.mdGame.isRunning()),
             ICONS,
             getText,

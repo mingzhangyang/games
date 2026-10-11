@@ -132,6 +132,7 @@ export function pauseGame(game) {
 }
 
 export function resumeGame(game) {
+    if (game.pauseOwnership?.isHeld()) return;
     game.isPaused = false;
     game.setTouchControlsVisible(true);
     game.refreshPauseButton();
@@ -149,6 +150,7 @@ export function pauseQuiet(game) {
 }
 
 export function resumeQuiet(game) {
+    if (game.pauseOwnership?.isHeld()) return;
     if (!game.isPaused) return;
     game.isPaused = false;
     game.setTouchControlsVisible(true);
