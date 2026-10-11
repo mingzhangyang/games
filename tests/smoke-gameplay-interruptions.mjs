@@ -104,6 +104,20 @@ try {
             await page.waitForFunction(() => document.querySelector('dialog[data-scoreboard-dialog]')?.open);
             let snap = await page.evaluate(readState, game.id);
             if (!snap.paused || !snap.ranking) throw new Error('ranking did not pause: ' + JSON.stringify(snap));
+            // Native close is asynchronous. An old close event must never
+            // release the lease or viewport observers for a newly reopened
+            // instance of the same native dialog.
+            await page.evaluate(() => {
+                const dialog = document.querySelector('dialog[data-scoreboard-dialog]');
+                dialog.close();
+                document.querySelector('.scoreboard-trigger--icon').click();
+            });
+            await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 90)));
+            snap = await page.evaluate(readState, game.id);
+            if (!snap.ranking || !snap.paused || !await page.evaluate(() =>
+                document.querySelector('dialog[data-scoreboard-dialog]')?.open)) {
+                throw new Error('stale close event released reopened dialog: ' + JSON.stringify(snap));
+            }
             await page.evaluate(setHiddenInPage, true);
             snap = await page.evaluate(readState, game.id);
             if (!snap.hidden || !snap.paused) throw new Error('hidden lease missing: ' + JSON.stringify(snap));

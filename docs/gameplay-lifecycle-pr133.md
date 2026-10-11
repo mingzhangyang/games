@@ -20,6 +20,9 @@ continues to own simulation, clocks, input and visual overlays.
 - `releaseInputs` runs on acquisition even when the game is already paused:
   an isolated dialog keyup cannot leave movement, fire or drag asserted.
 - A released lease never restarts a completed or replaced run.
+- Native `dialog.close()` events are queued. A stale close dispatched after
+  a synchronous re-open cannot release the new opening's lease or viewport
+  observers; the browser gate covers this close/reopen race.
 
 ## Explicit policies
 | Game | Background return | Rank/dialog pause | Other input protection |

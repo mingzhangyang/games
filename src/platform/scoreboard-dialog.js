@@ -228,7 +228,15 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     for (const type of ['keydown', 'keyup', 'keypress']) {
         dialog.addEventListener(type, event => event.stopPropagation());
     }
-    dialog.addEventListener('close', () => { ++requestId; visualViewportBinding.stop(); onClose(); });
+    dialog.addEventListener('close', () => {
+        // A native close event is queued, not dispatched synchronously.
+        // close() followed by showModal() in the same turn must not release
+        // the *new* opening's pause lease or detach its viewport listeners.
+        if (dialog.open) return;
+        ++requestId;
+        visualViewportBinding.stop();
+        onClose();
+    });
     dialog.addEventListener('click', event => {
         if (event.target === dialog) dialog.close();
     });
