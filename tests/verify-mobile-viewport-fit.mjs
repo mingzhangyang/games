@@ -31,12 +31,31 @@ const check = (ok, label, detail) => {
     if (!ok) fails.push(label + (detail ? ' — ' + detail : ''));
     console.log(`  ${ok ? '✓' : '✗'} ${label}${detail ? '  (' + detail + ')' : ''}`);
 };
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// 就绪 = load → 字体就绪 → 关注元素与文档高度连续两帧不变（docs/traps.md「校验基础设施」：
+// 不用 networkidle2 / 固定 sleep）。ready 是页面专属的显式条件（运行时写尺寸 / 文案等）。
+async function settle(page, { selector = 'body', ready = null } = {}) {
+    if (ready) await page.waitForFunction(ready, { timeout: 8000 });
+    await page.evaluate(async sel => {
+        await document.fonts.ready;
+        const read = () => {
+            const r = (document.querySelector(sel) || document.body).getBoundingClientRect();
+            return [r.left, r.top, r.width, r.height, document.documentElement.scrollHeight].join();
+        };
+        let last = read();
+        for (let stable = 0, frames = 0; stable < 2 && frames < 120; frames++) {
+            await new Promise(r => requestAnimationFrame(r));
+            const now = read();
+            stable = now === last ? stable + 1 : 0;
+            last = now;
+        }
+    }, selector);
+}
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 const pageErrors = [];
 
-async function open(id, viewport, { lang = 'en' } = {}) {
+async function open(id, viewport, { lang = 'en', selector, ready } = {}) {
     const page = await browser.newPage();
     page.on('pageerror', e => pageErrors.push(`${id}: ${e.message}`));
     await page.setUserAgent(IOS_UA);
@@ -50,14 +69,14 @@ async function open(id, viewport, { lang = 'en' } = {}) {
         try { localStorage.setItem('site_lang', l); } catch { /* private mode */ }
     }, lang);
     await page.goto(`${BASE}/${id}.html`, { waitUntil: 'load' });
-    await sleep(700);
+    await settle(page, { selector, ready });
     return page;
 }
 
-async function tap(page, selector) {
+async function tap(page, selector, settleOn) {
     const el = await page.waitForSelector(selector, { visible: true, timeout: 5000 });
     await el.tap();
-    await sleep(600);
+    await settle(page, { selector: settleOn });
 }
 
 // ── ① + ② 全站：表单控件字号与页面级 touch-action ──
@@ -93,7 +112,8 @@ if (keepPage('planet-merge')) {
 if (keepPage('gomoku')) {
     console.log('\n=== ③ 五子棋 · 375×553 / 横屏 839×360 ===');
     for (const vp of [SE, ANDROID_LAND]) {
-        const page = await open('gomoku', vp);
+        // 棋盘尺寸由运行时 resizeCanvas() 写进内联样式
+        const page = await open('gomoku', vp, { selector: '#gameBoard', ready: () => !!document.getElementById('gameBoard').style.width });
         const size = await page.$eval('#gameBoard', el => el.getBoundingClientRect().width);
         const cell = (size - 40) / 14;
         check(cell >= 18, `gomoku ${vp.width}×${vp.height}: 每格 ≥18px`, `棋盘 ${size.toFixed(0)}px · 每格 ${cell.toFixed(1)}px`);
@@ -102,8 +122,8 @@ if (keepPage('gomoku')) {
 }
 if (keepPage('reversi')) {
     console.log('\n=== ③ 黑白棋 · 横屏 839×360 ===');
-    const page = await open('reversi', ANDROID_LAND);
-    await tap(page, '#rv-btn-play');
+    const page = await open('reversi', ANDROID_LAND, { selector: '#rv-board' });
+    await tap(page, '#rv-btn-play', '#rv-board');
     const w = await page.$eval('#rv-board', el => el.getBoundingClientRect().width);
     check(w >= 280, 'reversi 839×360: 棋盘 ≥280px（每格 ≥ ~33px）', `${w.toFixed(0)}px`);
     await page.close();
@@ -112,7 +132,11 @@ if (keepPage('reversi')) {
 // ── ④ 塔防竖屏旋转提示在首屏 ──
 if (keepPage('tower-defense')) {
     console.log('\n=== ④ 塔防 · 竖屏 375×553 ===');
-    const page = await open('tower-defense', SE);
+    // 旋转提示由运行时 updateRotationPrompt() 按方向切换；等它落定再量
+    const page = await open('tower-defense', SE, {
+        selector: '#td-rotate-prompt',
+        ready: () => document.getElementById('td-rotate-prompt').getAttribute('aria-hidden') !== null,
+    });
     const r = await page.evaluate(() => {
         const prompt = document.getElementById('td-rotate-prompt');
         const title = document.getElementById('td-rotate-title').getBoundingClientRect();
@@ -128,8 +152,8 @@ if (keepPage('tower-defense')) {
 // ── ⑤ 影织：灯与托盘在首屏 ──
 if (keepPage('shadow-loom')) {
     console.log('\n=== ⑤ 影织 · 375×553 ===');
-    const page = await open('shadow-loom', SE);
-    await tap(page, '#sl-btn-begin');
+    const page = await open('shadow-loom', SE, { selector: '#sl-canvas' });
+    await tap(page, '#sl-btn-begin', '#sl-canvas');
     const r = await page.evaluate(() => {
         const c = document.getElementById('sl-canvas').getBoundingClientRect();
         // 逻辑场 480×854；灯可拖区间 y 648–672（LAMP_BOX），托盘装饰到 ~730
@@ -145,7 +169,8 @@ if (keepPage('shadow-loom')) {
 // ── ⑥ 御剑飞行 HUD 英文 ──
 if (keepPage('sword-flight')) {
     console.log('\n=== ⑥ 御剑飞行 · 英文 HUD ===');
-    const page = await open('sword-flight', SE, { lang: 'en' });
+    // applyLanguage() 会改写 <html lang>：以它为「文案已按语言写入」的就绪信号
+    const page = await open('sword-flight', SE, { lang: 'en', ready: () => document.documentElement.lang === 'en' });
     const r = await page.evaluate(() => ['sf-lbl-qi', 'sf-lbl-ult', 'sf-progress-label']
         .map(id => document.getElementById(id))
         .map(el => ({ text: el.textContent, title: el.closest('[title]')?.getAttribute('title') || '' })));
@@ -153,7 +178,7 @@ if (keepPage('sword-flight')) {
     check(r.every(x => !cjk.test(x.text)), 'sword-flight en: HUD 标签无中文', r.map(x => x.text).join(' / '));
     check(r.slice(0, 2).every(x => !cjk.test(x.title)), 'sword-flight en: 能量槽 title 无中文', r.slice(0, 2).map(x => x.title).join(' / '));
     await page.close();
-    const zh = await open('sword-flight', SE, { lang: 'zh' });
+    const zh = await open('sword-flight', SE, { lang: 'zh', ready: () => document.documentElement.lang === 'zh-CN' });
     const zhText = await zh.$eval('#sf-lbl-qi', el => el.textContent);
     check(zhText === '真气', 'sword-flight zh: HUD 标签保留中文', zhText);
     await zh.close();

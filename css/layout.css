@@ -2,7 +2,7 @@
    共享页面骨架 — 全站游戏页统一的布局契约
    ─────────────────────────────────────────────
    引入顺序（每页固定）：
-       css/tokens.css → css/layout.css → css/<game>.css → css/more-games.css
+       css/tokens.css → css/layout.css → css/<game>.css → css/mobile-fit.css → css/more-games.css
    layout.css 在前，因此各页仍可用自己的规则/变量覆盖。
 
    用法：在原有类名上追加通用类，不动 JS 选择器、不改原有命名。
