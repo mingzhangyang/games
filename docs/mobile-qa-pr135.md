@@ -59,7 +59,7 @@ CSS P0/P5 冻结后，页面样式表不能直接改（`verify-css-debt` / `veri
 ## 回归与证据
 
 - 新增 `tests/verify-mobile-viewport-fit.mjs`（M1、M3–M7，跨页、接 `page-filter`）。
-  **反向验证**：在 `main`（42aed17）上运行同一脚本 51 项失败，覆盖全部断言类别；本分支全部通过。
+  **反向验证**：在 `main`（42aed17）上运行同一脚本 52 项失败（含首页 touch-action），覆盖全部断言类别；本分支全部通过。
 - `tests/verify-tetris-topbar-mobile.mjs`：原「棋盘被底栏压住」只打印的提示改为硬断言，
   并加入 Safari 可见视口 375×553、390×664。旧 CSS 下 4 个视口失败，新 CSS 7 个视口通过。
 - `verify-leaderboard-layout` 标准表：<1024px 时昵称框期望 16px（桌面仍 13px）。

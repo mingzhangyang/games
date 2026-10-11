@@ -98,6 +98,17 @@ export function stripMobileFitLink(page, html, errors) {
     if (prior < 0 || current < prior || (later >= 0 && current > later)) {
         errors.push(page + ': mobile-fit CSS must follow layout and precede more-games');
     }
+    // Canonical order is tokens → layout → <page CSS…> → mobile-fit → more-games: only
+    // more-games may follow among local sheets, so page CSS cannot sit after the contract
+    // layer's link. External sheets (Google Fonts @font-face) carry no page rules.
+    const localSheets = [...html.matchAll(/<link\b[^>]*\bhref="(css\/[^"]+)"[^>]*>/g)]
+        .filter(match => /\brel="stylesheet"/.test(match[0]))
+        .map(match => ({ href: match[1], at: match.index }));
+    const trailing = localSheets.filter(sheet => sheet.at > current && sheet.href !== 'css/more-games.css');
+    if (trailing.length) {
+        errors.push(page + ': only more-games.css may follow mobile-fit CSS; found '
+            + trailing.map(sheet => sheet.href).join(', '));
+    }
     return html.replace(MOBILE_FIT_LINK, '');
 }
 

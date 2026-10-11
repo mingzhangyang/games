@@ -92,10 +92,8 @@ for (const id of ALL) {
         body: getComputedStyle(document.body).touchAction,
     }));
     check(r.small.length === 0, `${id}: 表单控件字号 ≥16px（iOS 聚焦不放大）`, r.small.join(', ') || 'ok');
-    if (id !== 'index') {
-        check(r.html === 'manipulation' && r.body === 'manipulation',
-            `${id}: html/body touch-action = manipulation（禁双击缩放）`, `html=${r.html} body=${r.body}`);
-    }
+    check(r.html === 'manipulation' && r.body === 'manipulation',
+        `${id}: html/body touch-action = manipulation（禁双击缩放）`, `html=${r.html} body=${r.body}`);
     await page.close();
 }
 

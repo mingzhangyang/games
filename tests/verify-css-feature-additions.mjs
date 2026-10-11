@@ -50,6 +50,15 @@ errors = [];
 stripMobileFitLink('tetris.html', '<link rel="stylesheet" href="css/more-games.css">\n' + MOBILE_FIT_LINK
     + '\n<link rel="stylesheet" href="css/layout.css">', errors);
 assert.ok(errors.some(e => e.includes('must follow layout')), 'mobile-fit cascade position is guarded');
+errors = [];
+stripMobileFitLink('tetris.html', '<link rel="stylesheet" href="css/layout.css">\n' + MOBILE_FIT_LINK
+    + '\n<link rel="stylesheet" href="css/tetris.css">\n<link rel="stylesheet" href="css/more-games.css">', errors);
+assert.ok(errors.some(e => e.includes('only more-games.css may follow')),
+    'page CSS placed after mobile-fit must fail (layout → mobile-fit → <game> → more-games)');
+errors = [];
+stripMobileFitLink('sword-flight.html', fit
+    + '\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC">', errors);
+assert.deepEqual(errors, [], 'an external font stylesheet after more-games stays allowed');
 
 // Stylesheet review: unlayered rules or unreviewed selectors cannot ride along.
 function reviewWith(css) {
