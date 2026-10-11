@@ -145,7 +145,10 @@ const owners = new Map([
     ['tank-battle', 'src/games/tank-battle/index.js'],
 ]);
 for (const [game, file] of owners) {
-    const source = read(file);
+    // Firefly's page entry owns the leases while the game object owns run
+    // transitions; both files are part of one game-level lifecycle contract.
+    const source = read(file) + (game === 'firefly-signal'
+        ? read('src/games/firefly-signal/game.js') : '');
     assert.match(source, /createPauseOwnership\(/, game + ': missing shared ownership');
     assert.match(source, /bindPageVisibility\(/, game + ': visibility must share ownership');
     assert.match(source, /\.invalidate\(\)/, game + ': run transition invalidation required');
