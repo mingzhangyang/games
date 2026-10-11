@@ -20,15 +20,17 @@ export function bindDialogToVisualViewport(dialog) {
     let frame = 0;
     let original = null;
     let lastGeometry = '';
+    let lastFocused = null;
 
     function restore() {
         if (!original) return;
-        for (const [property, value] of original) {
-            if (value) dialog.style.setProperty(property, value);
+        for (const [property, value, priority] of original) {
+            if (value) dialog.style.setProperty(property, value, priority);
             else dialog.style.removeProperty(property);
         }
         original = null;
         lastGeometry = '';
+        lastFocused = null;
     }
 
     function apply() {
@@ -46,7 +48,10 @@ export function bindDialogToVisualViewport(dialog) {
             return;
         }
         if (!original) {
-            original = OWNED_STYLES.map(property => [property, dialog.style.getPropertyValue(property)]);
+            original = OWNED_STYLES.map(property => [
+                property, dialog.style.getPropertyValue(property),
+                dialog.style.getPropertyPriority(property),
+            ]);
         }
 
         const props = {
@@ -61,14 +66,25 @@ export function bindDialogToVisualViewport(dialog) {
             'max-width': Math.max(1, Math.floor(Math.min(420, viewport.width - 24, window.innerWidth * 0.92))) + 'px',
         };
         const geometry = JSON.stringify(props);
-        if (geometry === lastGeometry) return;
-        lastGeometry = geometry;
-        for (const [property, value] of Object.entries(props)) {
-            dialog.style.setProperty(property, value);
+        if (geometry === lastGeometry && active === lastFocused) return;
+        if (geometry !== lastGeometry) {
+            lastGeometry = geometry;
+            for (const [property, value] of Object.entries(props)) {
+                dialog.style.setProperty(property, value);
+            }
         }
-        // A compact modal scrolls internally; never scroll the game canvas or
-        // change the page body's position when its nickname field is focused.
-        active.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+        lastFocused = active;
+
+        // Only scroll the dialog content. Element.scrollIntoView() could also
+        // scroll the game page and trigger a Safari viewport feedback loop.
+        const box = dialog.getBoundingClientRect();
+        const focusBox = active.getBoundingClientRect();
+        const inset = 12;
+        if (focusBox.bottom > box.bottom - inset) {
+            dialog.scrollTop += focusBox.bottom - (box.bottom - inset);
+        } else if (focusBox.top < box.top + inset) {
+            dialog.scrollTop += focusBox.top - (box.top + inset);
+        }
     }
 
     function schedule() {

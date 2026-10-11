@@ -42,16 +42,29 @@ const viewport = Object.assign(emitter(), {
 globalThis.window = Object.assign(emitter(), {
     innerHeight: 844, innerWidth: 390, visualViewport: viewport,
 });
-const input = { tagName: 'INPUT', scrolls: 0, scrollIntoView() { this.scrolls++; } };
+const input = {
+    tagName: 'INPUT',
+    scrolls: 0,
+    scrollIntoView() { this.scrolls++; },
+    getBoundingClientRect() { return { top: 360, bottom: 430 }; },
+};
 globalThis.document = { activeElement: input };
-const styleValues = new Map([['margin', 'auto']]);
+const styleValues = new Map([['margin', 'auto'], ['position', 'relative']]);
+const priorities = new Map([['position', 'important']]);
 const dialog = Object.assign(emitter(), {
     open: true,
+    scrollTop: 0,
     contains(el) { return el === input; },
+    getBoundingClientRect() { return { top: 200, bottom: 400 }; },
     style: {
         getPropertyValue(name) { return styleValues.get(name) || ''; },
-        setProperty(name, value) { styleValues.set(name, value); },
-        removeProperty(name) { styleValues.delete(name); },
+        getPropertyPriority(name) { return priorities.get(name) || ''; },
+        setProperty(name, value, priority = '') {
+            styleValues.set(name, value);
+            if (priority) priorities.set(name, priority);
+            else priorities.delete(name);
+        },
+        removeProperty(name) { styleValues.delete(name); priorities.delete(name); },
     },
 });
 const css = key => dialog.style.getPropertyValue(key);
@@ -80,13 +93,14 @@ try {
     assert.equal(css('max-width'), '346px');
     assert.equal(css('transform'), 'translate(-50%, -50%)');
     assert.equal(css('margin'), '0');
-    assert.equal(input.scrolls, 1);
+    assert.equal(dialog.scrollTop, 42, 'only modal content may scroll to reveal nickname');
+    assert.equal(input.scrolls, 0, 'must not scroll the underlying page');
 
     viewport.emit('scroll');
     viewport.emit('resize');
     assert.equal(frames.size, 1, 'resize/scroll must coalesce per animation frame');
     flush();
-    assert.equal(input.scrolls, 1, 'unchanged geometry must not scroll again');
+    assert.equal(dialog.scrollTop, 42, 'unchanged geometry must not scroll again');
 
     viewport.offsetTop = 210;
     viewport.emit('scroll');
@@ -100,6 +114,9 @@ try {
     assert.equal(css('max-height'), '');
     assert.equal(css('transform'), '');
     assert.equal(css('margin'), 'auto');
+    assert.equal(css('position'), 'relative');
+    assert.equal(dialog.style.getPropertyPriority('position'), 'important',
+        'original CSS priority must survive modal teardown');
 
     globalThis.document.activeElement = input;
     viewport.emit('resize');

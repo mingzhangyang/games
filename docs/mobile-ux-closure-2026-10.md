@@ -36,9 +36,10 @@ and is not deployed by this PR.
    shrinks/pans the visual viewport. The shared scoreboard dialog now measures
    `visualViewport` on resize/scroll and focus changes, and constrains and
    centers itself **only while a dialog editor is focused and the visual
-   viewport is reduced by keyboard-sized height**. When keyboard focus or
-   dialog ends, every overridden inline property and event listener is
-   restored. The page/body is not fixed or scrolled; no new CSS source,
+   viewport is reduced by keyboard-sized height**. The focused field is
+   revealed by scrolling only the modal content, never the game page.
+   When keyboard focus or dialog ends, overridden inline properties (including
+   CSS priority) and event listeners are restored. No new CSS source,
    runtime poller, or game-owned UI controller is introduced.
 
 ## Acceptance and evidence boundary
