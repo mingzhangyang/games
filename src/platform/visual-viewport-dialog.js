@@ -1,11 +1,14 @@
 /**
- * Keep a native modal dialog in the *visual* viewport while a mobile software
- * keyboard is present. CSS 100dvh and the browser's default dialog centering
- * can still use the layout viewport on Safari, leaving the editor obscured.
+ * Keep a native modal dialog in the visual viewport while a mobile software
+ * keyboard is present. CSS 100dvh can remain tied to the layout viewport on
+ * Safari and leave the input editor obscured.
  *
- * This owns geometry only during keyboard occlusion. When focus/keyboard goes
- * away, native <dialog> positioning is restored (including prior inline CSS).
- * No window-wide scroll lock, viewport-meta mutation or polling.
+ * Idle dialogs install no viewport observers. Focusing a modal editor arms
+ * the observers; focusout or keyboard dismissal disarms them. A pointer tap
+ * re-arms keyboard tracking when a still-focused field opens it again.
+ *
+ * Restore the native dialog position, original inline CSS priorities, and all
+ * listeners after editing. Never scroll or position the underlying game page.
  */
 const OWNED_STYLES = [
     'position', 'top', 'left', 'right', 'bottom',
@@ -16,11 +19,14 @@ export function bindDialogToVisualViewport(dialog) {
     const viewport = window.visualViewport;
     if (!viewport) return { start() {}, stop() {} };
 
+    const isEditor = node => dialog.contains(node) && /^(INPUT|TEXTAREA|SELECT)$/.test(node?.tagName || '');
     let listening = false;
+    let observing = false;
     let frame = 0;
     let original = null;
     let lastGeometry = '';
     let lastFocused = null;
+    let hadOcclusion = false;
 
     function restore() {
         if (!original) return;
@@ -33,20 +39,48 @@ export function bindDialogToVisualViewport(dialog) {
         lastFocused = null;
     }
 
+    function observe() {
+        if (observing) return;
+        observing = true;
+        viewport.addEventListener('resize', schedule);
+        viewport.addEventListener('scroll', schedule);
+        window.addEventListener('resize', schedule);
+    }
+
+    function unobserve() {
+        if (!observing) return;
+        observing = false;
+        viewport.removeEventListener('resize', schedule);
+        viewport.removeEventListener('scroll', schedule);
+        window.removeEventListener('resize', schedule);
+    }
+
     function apply() {
         frame = 0;
         if (!listening || !dialog.open) {
+            unobserve();
             restore();
             return;
         }
         const active = document.activeElement;
-        const editing = dialog.contains(active) && /^(INPUT|TEXTAREA|SELECT)$/.test(active?.tagName || '');
-        // Address-bar collapse is far smaller than an open virtual keyboard.
-        if (!editing || !Number.isFinite(viewport.height) || !Number.isFinite(viewport.width)
-            || viewport.height >= window.innerHeight - 100) {
+        const editing = isEditor(active);
+        const occluded = editing && Number.isFinite(viewport.height)
+            && Number.isFinite(viewport.width)
+            && viewport.height < window.innerHeight - 100;
+        if (!occluded) {
             restore();
+            // Before the first keyboard resize, keep listening so an
+            // asynchronously opening keyboard is not missed. After an actual
+            // occlusion closes, release the listeners even if focus stays.
+            if (!editing || hadOcclusion) {
+                unobserve();
+                hadOcclusion = false;
+            }
             return;
         }
+
+        hadOcclusion = true;
+        observe();
         if (!original) {
             original = OWNED_STYLES.map(property => [
                 property, dialog.style.getPropertyValue(property),
@@ -75,8 +109,8 @@ export function bindDialogToVisualViewport(dialog) {
         }
         lastFocused = active;
 
-        // Only scroll the dialog content. Element.scrollIntoView() could also
-        // scroll the game page and trigger a Safari viewport feedback loop.
+        // Scroll only the dialog. Element.scrollIntoView() can scroll the page
+        // and shift the game world during a keyboard-viewport transition.
         const box = dialog.getBoundingClientRect();
         const focusBox = active.getBoundingClientRect();
         const inset = 12;
@@ -91,15 +125,34 @@ export function bindDialogToVisualViewport(dialog) {
         if (listening && !frame) frame = requestAnimationFrame(apply);
     }
 
+    function onEditorIntent(event) {
+        if (!isEditor(event.target)) return;
+        // Re-arm if the keyboard was dismissed without blurring the field.
+        if (!observing) hadOcclusion = false;
+        observe();
+        schedule();
+    }
+
+    function onEditorBlur(event) {
+        if (!isEditor(event.target)) return;
+        // Do not leave window-wide listeners attached while the user
+        // navigates elsewhere in the open modal.
+        unobserve();
+        hadOcclusion = false;
+        schedule(); // focus has settled by the next animation frame
+    }
+
     function start() {
         if (listening) return;
         listening = true;
-        viewport.addEventListener('resize', schedule);
-        viewport.addEventListener('scroll', schedule);
-        window.addEventListener('resize', schedule);
-        dialog.addEventListener('focusin', schedule);
-        dialog.addEventListener('focusout', schedule);
-        schedule();
+        dialog.addEventListener('focusin', onEditorIntent);
+        dialog.addEventListener('focusout', onEditorBlur);
+        dialog.addEventListener('pointerdown', onEditorIntent);
+        // Covers future autofocus inputs without depending on focusin timing.
+        if (isEditor(document.activeElement)) {
+            observe();
+            schedule();
+        }
     }
 
     function stop() {
@@ -107,11 +160,11 @@ export function bindDialogToVisualViewport(dialog) {
         listening = false;
         if (frame) cancelAnimationFrame(frame);
         frame = 0;
-        viewport.removeEventListener('resize', schedule);
-        viewport.removeEventListener('scroll', schedule);
-        window.removeEventListener('resize', schedule);
-        dialog.removeEventListener('focusin', schedule);
-        dialog.removeEventListener('focusout', schedule);
+        unobserve();
+        dialog.removeEventListener('focusin', onEditorIntent);
+        dialog.removeEventListener('focusout', onEditorBlur);
+        dialog.removeEventListener('pointerdown', onEditorIntent);
+        hadOcclusion = false;
         restore();
     }
 

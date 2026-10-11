@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Isolated, deterministic mobile keyboard/visualViewport regression contract.
+// Deterministic mobile software-keyboard/VisualViewport lifecycle contract.
 import assert from 'node:assert/strict';
 import { bindDialogToVisualViewport } from '../src/platform/visual-viewport-dialog.js';
 
@@ -11,7 +11,7 @@ function emitter() {
             events.get(type).add(fn);
         },
         removeEventListener(type, fn) { events.get(type)?.delete(fn); },
-        emit(type) { for (const fn of events.get(type) || []) fn(); },
+        emit(type, event) { for (const fn of events.get(type) || []) fn(event); },
         count(type) { return events.get(type)?.size || 0; },
     };
 }
@@ -72,18 +72,18 @@ const css = key => dialog.style.getPropertyValue(key);
 try {
     const binding = bindDialogToVisualViewport(dialog);
     binding.start();
-    binding.start(); // repeated opens must not register duplicate handlers
+    binding.start();
     flush();
-    assert.equal(css('top'), '');
-    assert.equal(viewport.count('resize'), 1);
+    assert.equal(css('top'), '', 'idle editor should preserve native dialog position');
+    assert.equal(viewport.count('resize'), 1, 'listeners attached once for focused editor');
 
-    // Normal browser chrome shortening is not the software keyboard.
-    viewport.height = 785;
+    viewport.height = 785; // address bar collapse, not keyboard
     viewport.emit('resize');
     flush();
     assert.equal(css('max-height'), '');
+    assert.equal(viewport.count('resize'), 1,
+        'await real keyboard animation even if focus precedes shrink');
 
-    // Safari keyboard occupies the visual viewport, not layout 100dvh.
     Object.assign(viewport, { height: 310, width: 370, offsetTop: 185, offsetLeft: 8 });
     viewport.emit('resize');
     flush();
@@ -94,46 +94,72 @@ try {
     assert.equal(css('transform'), 'translate(-50%, -50%)');
     assert.equal(css('margin'), '0');
     assert.equal(dialog.scrollTop, 42, 'only modal content may scroll to reveal nickname');
-    assert.equal(input.scrolls, 0, 'must not scroll the underlying page');
+    assert.equal(input.scrolls, 0, 'must not scroll the underlying game');
 
     viewport.emit('scroll');
     viewport.emit('resize');
-    assert.equal(frames.size, 1, 'resize/scroll must coalesce per animation frame');
+    assert.equal(frames.size, 1, 'viewport events must coalesce into one frame');
     flush();
-    assert.equal(dialog.scrollTop, 42, 'unchanged geometry must not scroll again');
+    assert.equal(dialog.scrollTop, 42, 'unchanged geometry must not re-scroll');
 
     viewport.offsetTop = 210;
     viewport.emit('scroll');
     flush();
-    assert.equal(css('top'), '365px', 'visual viewport pan must recenter the dialog');
+    assert.equal(css('top'), '365px', 'visual viewport pan recenters dialog');
 
-    // Keyboard dismissal restores native-dialog layout and prior inline values.
-    globalThis.document.activeElement = { tagName: 'BUTTON' };
-    dialog.emit('focusout');
+    // A dismissed keyboard may leave the editor focused. Observers must still
+    // detach when the viewport returns to normal, while dialog intent remains.
+    viewport.height = 844;
+    viewport.emit('resize');
     flush();
+    assert.equal(css('top'), '');
     assert.equal(css('max-height'), '');
     assert.equal(css('transform'), '');
     assert.equal(css('margin'), 'auto');
     assert.equal(css('position'), 'relative');
-    assert.equal(dialog.style.getPropertyPriority('position'), 'important',
-        'original CSS priority must survive modal teardown');
+    assert.equal(dialog.style.getPropertyPriority('position'), 'important');
+    assert.equal(viewport.count('resize'), 0, 'keyboard dismissal tears down viewport listener');
+    assert.equal(viewport.count('scroll'), 0, 'keyboard dismissal tears down scroll listener');
+    assert.equal(globalThis.window.count('resize'), 0, 'keyboard dismissal tears down window listener');
+    assert.equal(dialog.count('focusin'), 1, 'retain refocus handler during open dialog');
 
-    globalThis.document.activeElement = input;
+    viewport.height = 300;
     viewport.emit('resize');
-    binding.stop(); // close between scheduling and rAF must cancel it
-    assert.equal(frames.size, 0);
+    flush();
+    assert.equal(css('top'), '', 'dismissed editor must not keep reacting');
+    dialog.emit('pointerdown', { target: input });
+    flush();
+    assert.equal(css('top'), '360px', 'a re-tap rearms already-focused editor');
+    assert.equal(css('max-height'), '284px');
+    assert.equal(viewport.count('resize'), 1);
+
+    globalThis.document.activeElement = { tagName: 'BUTTON' };
+    dialog.emit('focusout', { target: input });
+    assert.equal(viewport.count('resize'), 0, 'focusout disarms viewport immediately');
     assert.equal(viewport.count('scroll'), 0);
-    assert.equal(viewport.count('resize'), 0);
-    assert.equal(dialog.count('focusin'), 0);
-    assert.equal(css('margin'), 'auto');
     flush();
     assert.equal(css('max-height'), '');
+    assert.equal(css('margin'), 'auto');
+
+    globalThis.document.activeElement = input;
+    dialog.emit('focusin', { target: input });
+    viewport.emit('resize');
+    assert.equal(frames.size, 1);
+    binding.stop();
+    assert.equal(frames.size, 0, 'close cancels pending frame');
+    assert.equal(viewport.count('resize'), 0);
+    assert.equal(viewport.count('scroll'), 0);
+    assert.equal(dialog.count('focusin'), 0);
+    assert.equal(dialog.count('focusout'), 0);
+    assert.equal(dialog.count('pointerdown'), 0);
+    assert.equal(css('position'), 'relative');
+    assert.equal(dialog.style.getPropertyPriority('position'), 'important');
+    flush();
 
     dialog.open = true;
-    viewport.height = 300;
     binding.start();
     flush();
-    assert.equal(css('max-height'), '284px', 'reopen must recalculate keyboard geometry');
+    assert.equal(css('max-height'), '284px', 'reopen recalculates keyboard geometry');
     binding.stop();
     assert.equal(css('max-height'), '');
 } finally {
@@ -142,4 +168,4 @@ try {
         else globalThis[name] = value;
     }
 }
-console.log('PASS visual viewport dialog: keyboard occlusion, pan, cleanup and reopen');
+console.log('PASS visual viewport dialog: keyboard, focus, teardown, pan and reopen');

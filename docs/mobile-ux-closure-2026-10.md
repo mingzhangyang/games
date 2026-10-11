@@ -38,8 +38,11 @@ and is not deployed by this PR.
    centers itself **only while a dialog editor is focused and the visual
    viewport is reduced by keyboard-sized height**. The focused field is
    revealed by scrolling only the modal content, never the game page.
-   When keyboard focus or dialog ends, overridden inline properties (including
-   CSS priority) and event listeners are restored. No new CSS source,
+   Viewport/window observers are active only while an editor is awaiting the
+   keyboard or while it is open; on focusout or keyboard dismissal they are
+   disconnected immediately, while focus/pointer intent can re-arm them. When
+   the dialog closes, all listeners and overridden inline properties (including
+   CSS priority) are restored. No new CSS source,
    runtime poller, or game-owned UI controller is introduced.
 
 ## Acceptance and evidence boundary
@@ -49,7 +52,7 @@ and is not deployed by this PR.
   on **this PR's latest head**.
 - Regression tests: shared drawer rapid open/close on every registered drawer
   consumer; close/reopen while the old animation completes; leaderboard dialog
-  visible on 320px; 16px native nickname/select input sizing; deterministic
+  visible on 320px without page reload; 16px native nickname/select input sizing; deterministic
   visualViewport keyboard, pan, duplicate-listener and restore tests.
 - Existing gameplay, score compatibility, URL/DOM IDs, storage keys, frame
   geometry and stylesheet ownership remain unchanged.
