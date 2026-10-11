@@ -103,7 +103,7 @@ for (const firstRelease of ['ranking', 'hidden']) {
 // Browser visibility is an idempotent lease, including initial hidden state.
 {
     const previous = globalThis.document;
-    const fake = new EventTarget();
+    const fake = new globalThis.EventTarget();
     let hidden = true;
     Object.defineProperty(fake, 'hidden', { get: () => hidden });
     globalThis.document = fake;
