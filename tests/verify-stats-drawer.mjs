@@ -443,7 +443,7 @@ for (const P of PAGES) {
                     : P.name === 'hoop-shot' ? 'hs-pause' : 'sf-overlay-pause';
                 check(await page.evaluate(id =>
                     !document.getElementById(id).classList.contains('hidden'), pauseOverlay),
-                    '手动恢复游戏保留可见暂停入口');
+                '手动恢复游戏保留可见暂停入口');
                 await page.evaluate(({ gameVar, name }) => {
                     const g = window[gameVar];
                     if (name === 'sword-flight') g.resumeGame();
