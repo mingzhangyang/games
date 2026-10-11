@@ -158,6 +158,12 @@ for (const game of ['carrot-pull', 'needle-awn', 'shadow-loom']) {
     assert.match(entry, /onAcquire:/, game + ': drawer must acquire a reason');
     assert.match(entry, /onRelease:/, game + ': drawer must release its reason');
 }
+// A hidden first load must initialize the menu before acquiring its first
+// visibility lease, otherwise toMenu() invalidates the pending resume.
+const fireflyEntry = read('src/games/firefly-signal/index.js');
+assert.match(fireflyEntry, /game\.toMenu\(\);\s*bindPageVisibility\(game\.pauseOwnership/,
+    'Firefly menu initialization must precede initial hidden visibility lease');
+
 // Settings is another resume initiator. It must route through the same
 // application event that checks the current leases and visibility.
 const mathSettings = read('src/games/math-rain/core/UIController.js');

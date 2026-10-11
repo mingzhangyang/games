@@ -34,6 +34,10 @@ continues to own simulation, clocks, input and visual overlays.
 | Needle vs Awn | **Manual resume** | `ranking`, `drawer` | Keyboard, joystick and aiming touch released |
 | Math Rain | **Manual resume** | `ranking` | Settings close routes through guarded resume event; session deadline compensated once |
 
+Firefly's first hidden-page load is covered by a browser regression: its
+menu must initialize before acquiring the initial visibility lease, stop its
+animation while hidden, and resume after the first foreground transition.
+
 Carrot Pull also uses the shared `drawer` lease. For the other 13 statistics
 drawers the old onPause/onResume adapter stays supported and unchanged; this
 PR does not silently migrate other games or redefine their lifecycle.

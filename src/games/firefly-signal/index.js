@@ -279,6 +279,8 @@ onReady(() => {
         },
         // Visibility shares pause ownership with the ranking dialog.
     });
-    bindPageVisibility(game.pauseOwnership, { autoResume: true });
+    // The initial menu transition invalidates old runs. Perform it before
+    // the initial visibility lease so a hidden first load can later resume.
     game.toMenu();
+    bindPageVisibility(game.pauseOwnership, { autoResume: true });
 });

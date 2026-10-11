@@ -16,16 +16,16 @@ const errors = [];
 function readState(id) {
     const g = id === 'carrot-pull' ? window.cpGame
         : id === 'firefly-signal' ? window.__fireflySignal
-        : id === 'math-rain' ? window.mathRainGame
-        : id === 'needle-awn' ? window.gameEngine
-        : id === 'shadow-loom' ? window.slGame : window.tankBattleInstance;
+            : id === 'math-rain' ? window.mathRainGame
+                : id === 'needle-awn' ? window.gameEngine
+                    : id === 'shadow-loom' ? window.slGame : window.tankBattleInstance;
     const state = id === 'carrot-pull' ? g?.state?.mode
         : id === 'math-rain' ? g?.gameStateManager?.gameState
-        : id === 'tank-battle' ? g?.gameState : g?.state;
+            : id === 'tank-battle' ? g?.gameState : g?.state;
     const paused = id === 'carrot-pull' ? g?.state?.paused
         : id === 'firefly-signal' ? g?.paused
-        : id === 'shadow-loom' ? g?.isPaused
-        : id === 'tank-battle' ? g?.paused : state === 'paused';
+            : id === 'shadow-loom' ? g?.isPaused
+                : id === 'tank-battle' ? g?.paused : state === 'paused';
     return { state, paused, ranking: g?.pauseOwnership?.isHeld('ranking'),
         hidden: g?.pauseOwnership?.isHeld('hidden'),
         available: !!g?.pauseOwnership };
@@ -77,6 +77,16 @@ try {
         await page.evaluateOnNewDocument(() => {
             try { localStorage.setItem('site_lang', 'en'); localStorage.setItem('site_muted', '1'); } catch {}
         });
+        if (game.id === 'firefly-signal') {
+            // Reproduce a genuine first-load background tab: visibility is
+            // hidden before any game modules execute (not after game boot).
+            await page.evaluateOnNewDocument(() => {
+                Object.defineProperty(document, 'hidden', {
+                    configurable: true,
+                    get: () => true,
+                });
+            });
+        }
         try {
             await page.goto(BASE + '/' + game.href, { waitUntil: 'domcontentloaded', timeout: 45000 });
             await page.waitForFunction(id => {
@@ -88,14 +98,34 @@ try {
                 const ready = id === 'carrot-pull'
                     ? ['ready', 'fallback'].includes(document.getElementById('cp-stage')?.dataset.artState)
                     : id === 'needle-awn' ? !!window.gameEngine?.artReady
-                    : id === 'math-rain' ? !!window.__mathRainInitialized : true;
+                        : id === 'math-rain' ? !!window.__mathRainInitialized : true;
                 return ready && !!instances[id]?.pauseOwnership
                     && !!document.querySelector('.scoreboard-trigger--icon');
             }, { timeout: 30000 }, game.id);
 
             if (game.id === 'firefly-signal') {
-                // The animated menu used to be stopped by GameRuntime while
-                // backgrounded. Preserve that battery/visibility behavior.
+                // Initial hidden state must acquire a lease *after* the menu
+                // initializes, without losing its foreground resume right.
+                const initialMenu = await page.evaluate(() => ({
+                    state: window.__fireflySignal.state,
+                    paused: window.__fireflySignal.paused,
+                    held: window.__fireflySignal.pauseOwnership.isHeld('hidden'),
+                    raf: window.__fireflySignal.raf,
+                }));
+                if (initialMenu.state !== 'menu' || !initialMenu.paused || !initialMenu.held || initialMenu.raf) {
+                    throw new Error('Firefly initially hidden menu did not suspend: ' + JSON.stringify(initialMenu));
+                }
+                await page.evaluate(setHiddenInPage, false);
+                const firstForeground = await page.evaluate(() => ({
+                    paused: window.__fireflySignal.paused,
+                    held: window.__fireflySignal.pauseOwnership.isHeld('hidden'),
+                    raf: window.__fireflySignal.raf,
+                }));
+                if (firstForeground.paused || firstForeground.held || !firstForeground.raf) {
+                    throw new Error('Firefly initially hidden menu failed to resume: ' + JSON.stringify(firstForeground));
+                }
+                // Repeated background/foreground transitions still suspend
+                // the menu loop while preserving its resume permission.
                 await page.evaluate(setHiddenInPage, true);
                 const hiddenMenu = await page.evaluate(readState, game.id);
                 if (hiddenMenu.state !== 'menu' || !hiddenMenu.hidden || !hiddenMenu.paused) {
