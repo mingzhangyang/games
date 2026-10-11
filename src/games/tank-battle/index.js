@@ -3,6 +3,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { createSfx } from '../../platform/game-sfx.js';
 import { track } from '../../platform/analytics.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 import { CONFIG, WEAPONS, Particle, PowerUp, Bullet, Tank, BossTank, bindTankI18n } from './tank-entities.js';
 import { createTankBattleArt } from './tank-battle-art.js';
 
@@ -228,6 +229,13 @@ class TankBattle {
         this.lives = 3;
         this.level = 1;
         this.paused = false;
+        this.pauseOwnership = createPauseOwnership({
+            isRunning: () => this.gameState === 'playing' && !this.paused,
+            canResume: () => this.gameState === 'playing' && this.paused,
+            pause: () => { this.paused = true; },
+            resume: () => { this.paused = false; this.lastTime = 0; },
+            releaseInputs: () => this.resetHeldControls(),
+        });
         
         this.player = null;
         this.enemies = [];
@@ -245,7 +253,6 @@ class TankBattle {
         this.time = 0; // 游戏内时钟（毫秒）：暂停/切后台时冻结，AI 计时全部基于它
 
         this.init();
-        let pausedForRanking = false;
         this.scoreboard = mountScoreboardDialog({
             boards: [{
                 id: 'all', key: 'tank-battle',
@@ -253,17 +260,10 @@ class TankBattle {
                 description: { en: 'Final score from a completed run; higher is better.', zh: '以结束时的最终分数排名，分数越高越好。' },
             }],
             triggers: [{ after: '.tb-home-btn', icon: true }],
-            onOpen: () => {
-                pausedForRanking = this.gameState === 'playing' && !this.paused;
-                // Modal keyup is intentionally isolated from document controls:
-                // release keyboard, D-pad and fire *before* pausing.
-                this.resetHeldControls();
-                if (pausedForRanking) this.paused = true;
-            },
+            onOpen: () => this.pauseOwnership.acquire('ranking'),
             onClose: () => {
                 this.resetHeldControls();
-                if (pausedForRanking && this.gameState === 'playing') this.paused = false;
-                pausedForRanking = false;
+                this.pauseOwnership.release('ranking');
             },
         });
         this.setupEventListeners();
@@ -448,11 +448,8 @@ class TankBattle {
         });
 
         // 切换标签页时自动暂停
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.gameState === 'playing' && !this.paused) {
-                this.paused = true;
-            }
-        });
+        // Tank Battle keeps its original manual foreground-resume policy.
+        bindPageVisibility(this.pauseOwnership, { autoResume: false });
 
         // Focus loss and modal transitions share one authoritative reset.
         window.addEventListener('blur', () => this.resetHeldControls());
@@ -622,7 +619,7 @@ class TankBattle {
     }
 
     togglePause() {
-        if (this.gameState === 'playing') {
+        if (this.gameState === 'playing' && !this.pauseOwnership.isHeld() && !document.hidden) {
             this.paused = !this.paused;
         }
     }
@@ -1214,6 +1211,7 @@ class TankBattle {
         }
         this.gameState = 'playing';
         this.paused = false;
+        this.pauseOwnership.invalidate();
         this.score = 0;
         this.lives = 3;
         this.level = 1;

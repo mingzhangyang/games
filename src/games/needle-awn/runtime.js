@@ -15,6 +15,7 @@ import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey } from '../../platform/daily.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 import { resolveNeedleAwnDailyDate } from './scoreboard-key.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
@@ -67,6 +68,13 @@ class GameEngine {
         this.aiDifficulty = 'medium'; // 'easy' | 'medium' | 'hard'
 
         this.state = 'menu'; // 'menu' | 'playing' | 'paused' | 'over'
+        this.pauseOwnership = createPauseOwnership({
+            isRunning: () => this.state === 'playing',
+            canResume: () => this.state === 'paused' && this.dom.overlayPause.classList.contains('hidden'),
+            pause: () => this.pauseQuiet(),
+            resume: () => this.resumeQuiet(),
+            releaseInputs: () => resetNeedleAwnControls(this),
+        });
         this.score = 0;
         this.combo = 1;
         this.comboTimer = 0;
@@ -100,7 +108,6 @@ class GameEngine {
         this.joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0, x: 0, y: 0 };
 
         this.initDOM();
-        let pausedForRanking = false;
         this.scoreboard = mountScoreboardDialog({
             boards: [
                 {
@@ -118,15 +125,10 @@ class GameEngine {
                 { before: '#naStatsToggle', icon: true, boardId: () => this.mode === 'daily' ? 'daily' : 'endless' },
                 { before: '#na-btn-result-home', boardId: () => this.mode === 'daily' ? 'daily' : 'endless' },
             ],
-            onOpen: () => {
-                pausedForRanking = this.isRunning();
-                resetNeedleAwnControls(this);
-                if (pausedForRanking) this.pauseQuiet();
-            },
+            onOpen: () => this.pauseOwnership.acquire('ranking'),
             onClose: () => {
                 resetNeedleAwnControls(this);
-                if (pausedForRanking) this.resumeQuiet();
-                pausedForRanking = false;
+                this.pauseOwnership.release('ranking');
             },
         });
         this.initInput();
@@ -393,10 +395,15 @@ class GameEngine {
         });
 
         // 监听页面可见性
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.state === 'playing') {
-                this.togglePause();
-            }
+        // The old background pause remains manual-resume only; held inputs
+        // are released by the shared lease, not by a lost keyup.
+        bindPageVisibility(this.pauseOwnership, {
+            autoResume: false,
+            // Unlike a transient leaderboard/drawer pause, going to the
+            // background requires a visible Resume action on return.
+            onHidden: () => {
+                if (this.state === 'paused') this.dom.overlayPause.classList.remove('hidden');
+            },
         });
 
         // 监听全局设置变动
@@ -529,6 +536,7 @@ class GameEngine {
 
     showMenu() {
         this.state = 'menu';
+        this.pauseOwnership.invalidate();
         this.dailyDateKey = ''; // Menu uses current date, not old run's seed.
         this.dom.overlayStart.classList.remove('hidden');
         this.dom.overlayPause.classList.add('hidden');
@@ -612,6 +620,7 @@ class GameEngine {
     resumeBattle() {
         if (!this.artReady) return;
         this.state = 'playing';
+        this.pauseOwnership.invalidate();
         this.dom.overlayStart.classList.add('hidden');
         this.dom.overlayPause.classList.add('hidden');
         this.dom.overlayResult.classList.add('hidden');
@@ -624,6 +633,7 @@ class GameEngine {
     }
 
     togglePause() {
+        if (this.pauseOwnership.isHeld() || document.hidden) return;
         if (this.state === 'playing') {
             this.state = 'paused';
             this.dom.overlayPause.classList.remove('hidden');

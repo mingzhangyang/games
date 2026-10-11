@@ -12,6 +12,7 @@ import { createI18nBinder } from '../../platform/i18n/bindings.js';
  */
 import { onReady } from '../../platform/boot.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
+import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 import { makeText } from '../../platform/i18n.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { track } from '../../platform/analytics.js';
@@ -228,7 +229,12 @@ onReady(() => {
             if (score !== null) void scoreboard.submit({ boardId: levelId, score });
         },
     });
-    let pausedForRanking = false;
+    game.pauseOwnership = createPauseOwnership({
+        isRunning: () => (game.state === 'playing' || game.state === 'ending') && !game.paused,
+        canResume: () => (game.state === 'playing' || game.state === 'ending') && game.paused,
+        pause: () => game.pauseQuiet(),
+        resume: () => game.resumeQuiet(),
+    });
     scoreboard = mountScoreboardDialog({
         boards: LEVELS.map(level => ({
             id: level.id,
@@ -244,14 +250,8 @@ onReady(() => {
             { before: '#fs-btn-mute', icon: true, boardId: () => LEVELS[game.levelIndex].id },
             { before: '#fs-btn-menu', boardId: () => LEVELS[game.levelIndex].id },
         ],
-        onOpen: () => {
-            pausedForRanking = (game.state === 'playing' || game.state === 'ending') && !game.paused;
-            if (pausedForRanking) game.pauseQuiet();
-        },
-        onClose: () => {
-            if (pausedForRanking) game.resumeQuiet();
-            pausedForRanking = false;
-        },
+        onOpen: () => game.pauseOwnership.acquire('ranking'),
+        onClose: () => game.pauseOwnership.release('ranking'),
     });
     // 测试钩子（verify-immersive / smoke-firefly-signal 用）：只读快照 + 公开方法，不暴露模拟内部可写引用
     window.__fireflySignal = game;
@@ -275,11 +275,8 @@ onReady(() => {
             isMuted: getMuted,
             onToggleMute: m => { setMuted(m); if (!m) game.audio.prime(); },
         },
-        visibility: {
-            isBusy: g => !g.paused,
-            pause: g => g.pauseQuiet(),
-            resume: g => g.resumeQuiet(),
-        },
+        // Visibility shares pause ownership with the ranking dialog.
     });
+    bindPageVisibility(game.pauseOwnership, { autoResume: true });
     game.toMenu();
 });

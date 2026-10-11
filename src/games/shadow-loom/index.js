@@ -24,8 +24,8 @@ onReady(() => {
         more: '#slSideMore',
         drawer: {
             idPrefix: 'sl',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: g => g && g.pauseOwnership.acquire('drawer'),
+            onRelease: g => g && g.pauseOwnership.release('drawer'),
             isBusy: () => game.isRunning(),
             ICONS,
             getText,

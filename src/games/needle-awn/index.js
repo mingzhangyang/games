@@ -28,8 +28,8 @@ onReady(() => {
         frame: { logicalWidth: ARENA_WIDTH },
         drawer: {
             idPrefix: 'na',
-            onPause: g => g && g.pauseQuiet(),
-            onResume: g => g && g.resumeQuiet(),
+            onAcquire: g => g && g.pauseOwnership.acquire('drawer'),
+            onRelease: g => g && g.pauseOwnership.release('drawer'),
             isBusy: () => !!(window.gameEngine && window.gameEngine.isRunning()),
             ICONS,
             getText,

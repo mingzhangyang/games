@@ -18,6 +18,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { SHADOW_LOOM_STORAGE, SHADOW_LOOM_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 import { encodeShadowLoomScore, formatShadowLoomScore } from './leaderboard-score.js';
 import * as R from './model/rules.js';
 import { LEVELS, CHAPTERS } from './model/levels.js';
@@ -91,7 +92,13 @@ export class ShadowLoomGame {
 
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
-        this.pausedByHidden = false;
+        this.pauseOwnership = createPauseOwnership({
+            isRunning: () => this.isRunning(),
+            canResume: () => this.state === 'playing' && this.isPaused,
+            pause: () => this.pauseQuiet(),
+            resume: () => this.resumeQuiet(),
+            releaseInputs: () => this.onPointerUp(),
+        });
         this.levelIdx = 0;
         this.level = LEVELS[0];
         this.st = R.initialState(this.level);
@@ -131,7 +138,6 @@ export class ShadowLoomGame {
             'side-keys', 'hint', 'toast', 'brand', 'progress', 'target-btn', 'target-icon', 'reset-btn',
         ].forEach(id => { this.el[id] = document.getElementById(`sl-${id}`); });
 
-        let pausedForRanking = false;
         this.scoreboard = mountScoreboardDialog({
             boards: LEVELS.map(level => ({
                 id: level.id,
@@ -147,14 +153,8 @@ export class ShadowLoomGame {
                 { before: '#slStatsToggle', icon: true, boardId: () => this.level.id },
                 { before: '#sl-btn-menu', boardId: () => this.level.id },
             ],
-            onOpen: () => {
-                pausedForRanking = this.isRunning();
-                if (pausedForRanking) this.pauseQuiet();
-            },
-            onClose: () => {
-                if (pausedForRanking) this.resumeQuiet();
-                pausedForRanking = false;
-            },
+            onOpen: () => this.pauseOwnership.acquire('ranking'),
+            onClose: () => this.pauseOwnership.release('ranking'),
         });
         this.resize();
         this.bindEvents();
@@ -351,6 +351,7 @@ export class ShadowLoomGame {
         this.loadLevel(i, true);
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership.invalidate();
         this.el.start?.classList.add('hidden');
         this.el.result?.classList.add('hidden');
         this.renderProgress();
@@ -382,6 +383,7 @@ export class ShadowLoomGame {
     showMenu() {
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
+        this.pauseOwnership.invalidate();
         this.drag = null;
         this.el.result?.classList.add('hidden');
         this.el.start?.classList.remove('hidden');
@@ -392,6 +394,7 @@ export class ShadowLoomGame {
 
     solve() {
         this.state = 'solving'; this.contextualRestart?.sync();
+        this.pauseOwnership.invalidate();
         this.solveT = this.clock;
         // 按住不放也可能完成：这一次拖动同样算一次移动
         if (this.drag && this.drag.moved) this.moves++;
@@ -424,6 +427,7 @@ export class ShadowLoomGame {
 
     showResult() {
         this.state = 'done'; this.contextualRestart?.sync();
+        this.pauseOwnership.invalidate();
         this.renderResult();
         this.el.result?.classList.remove('hidden');
     }
@@ -1346,17 +1350,7 @@ export class ShadowLoomGame {
         window.addEventListener('resize', () => this.resize());
         window.addEventListener('game-frame:changed', () => this.resize());
         window.addEventListener('site-settings:changed', () => this.applyLanguage());
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                if (this.isRunning()) {
-                    this.isPaused = true; this.contextualRestart?.sync();
-                    this.pausedByHidden = true;
-                }
-            } else if (this.pausedByHidden) {
-                this.pausedByHidden = false;
-                this.isPaused = false; this.contextualRestart?.sync();
-            }
-        });
+        bindPageVisibility(this.pauseOwnership, { autoResume: true });
     }
 
     pauseQuiet() {
