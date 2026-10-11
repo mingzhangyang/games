@@ -471,8 +471,15 @@ function verifyProject() {
         errors,
     });
 
+    // Feature stylesheets (mobile-fit / scoreboard) are bounded by their own selector
+    // allowlists in feature-additions.mjs, not by P2 migrations: a reviewed rule added
+    // to one must not read as an unregistered population change.
+    const featureRuleDelta = [...featureStyles.cssPaths].reduce((total, path) =>
+        total + (currentParsedByPath.get(path)?.rules || []).length
+        - (baseParsedByPath.get(path)?.rules || []).length, 0);
+
     verifyStaticRulePopulation({
-        baseCount: baseStaticOrdinaryRules,
+        baseCount: baseStaticOrdinaryRules + featureRuleDelta,
         currentCount: currentCompatibilityCounts.staticOrdinaryRules,
         familyRuleDelta: familyResult.newRuleDelta,
         migrationRuleDelta: migrationResult.newRuleDelta,
