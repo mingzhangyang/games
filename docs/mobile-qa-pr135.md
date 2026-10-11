@@ -53,7 +53,7 @@ CSS P0/P5 冻结后，页面样式表不能直接改（`verify-css-debt` / `veri
 已确认但留待独立改动的条目见 `docs/backlog.md`「移动端 QA（PR #135）」。
 
 巡检中**没有**发现：横向滚动、topbar 图标钮可点区域 <44px（视觉 36px + `::after` 扩展热区）、
-统计抽屉开合 / 遮挡问题（18 个抽屉页截图逐一复核）、Tank Battle / Tower Defense 横屏战场遮挡、
+统计抽屉开合 / 遮挡问题（注册表 17 个 `drawer` 页的抽屉截图逐一复核，另加 Tower Defense 的战术面板）、Tank Battle / Tower Defense 横屏战场遮挡、
 运行时 `pageerror`。
 
 ## 回归与证据
