@@ -31,6 +31,7 @@ onReady(() => {
         canResume: g => g.phase !== 'menu' && g.isPaused,
         autoResumeOnForeground: true,
         onHidden: g => { if (g.phase === 'flying') g.abortFlight(); },
+        onAllReleased: g => g.advanceDailyIfReady(),
         releaseInputs: g => { g.drag = null; },
     });
 

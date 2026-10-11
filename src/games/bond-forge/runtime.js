@@ -47,7 +47,7 @@ import {
     allowsBonds, usedBonds,
     maxBondsOf, isIonic, isIonicSelf, bondLength,
 } from './model/molecules.js';
-import { bindBondForgePointer, toLogical, unbindBondForgePointer } from './input/pointer.js';
+import { bindBondForgePointer, cancelBondForgeDrag, toLogical, unbindBondForgePointer } from './input/pointer.js';
 import { drawBondForgeScene } from './render/scene.js';
 import { BOND_FORGE_STORAGE, BOND_FORGE_STORAGE_SLOTS } from './storage.js';
 
@@ -1513,28 +1513,8 @@ class BondForgeGame {
         return best;
     }
 
-    /** An interruption is a cancellation, not a completed drag or spent atom. */
     cancelInputDrag() {
-        const drag = this.dragging;
-        if (!drag) return;
-        this.dragging = null;
-        if (drag.fromTray) {
-            this.atoms = this.atoms.filter(atom => atom.id !== drag.id);
-            if (this.tray[drag.trayIndex]) this.tray[drag.trayIndex].used = false;
-        } else if (drag.origin) {
-            const atom = this.atoms.find(item => item.id === drag.id);
-            if (atom) {
-                atom.x = drag.origin.x;
-                atom.y = drag.origin.y;
-            }
-            this.bonds.push(...drag.origin.bonds);
-        }
-        try {
-            if (this.canvas.hasPointerCapture?.(drag.pointerId)) {
-                this.canvas.releasePointerCapture(drag.pointerId);
-            }
-        } catch { /* It may already be released by the browser. */ }
-        this.updateHud();
+        cancelBondForgeDrag(this);
     }
 
     onUp(ev) {
