@@ -19,7 +19,10 @@ const INSTALLER_SHA256 = '4650a9991128e625fc639a0df36dfe58bb76198995fdc7cd52fa09
 export const SCAFFOLD = 'src/platform/shell/render-game-shell.js';
 // Reviewed 2026-10-05: the shared scaffold changed only by removing footer
 // Home / More markup; its script and stylesheet inputs are unchanged.
-const SCAFFOLD_SHA256 = 'd73edf29f2a1f8bcfae6208f9b4c1c70f128fcc329cae3538a2226abe3c36aec';
+// Reviewed 2026-10-11 (PR #135): one stylesheet input added — the canonical
+// css/mobile-fit.css link between the page CSS and more-games.css, the same
+// position feature-additions.mjs requires on every registry page.
+const SCAFFOLD_SHA256 = 'b1f9d5690e390c29d811601aee7c3aa2762d67997c7c95662286828616082433';
 const parseJs = source => parse(source, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true });
 const string = node => node?.type === 'Literal' && typeof node.value === 'string' ? node.value
     : node?.type === 'TemplateLiteral' && node.expressions.length === 0 ? node.quasis[0].value.cooked : null;

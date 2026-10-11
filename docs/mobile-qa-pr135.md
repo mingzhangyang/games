@@ -63,6 +63,13 @@ CSS P0/P5 冻结后，页面样式表不能直接改（`verify-css-debt` / `veri
 - `tests/verify-tetris-topbar-mobile.mjs`：原「棋盘被底栏压住」只打印的提示改为硬断言，
   并加入 Safari 可见视口 375×553、390×664。旧 CSS 下 4 个视口失败，新 CSS 7 个视口通过。
 - `verify-leaderboard-layout` 标准表：<1024px 时昵称框期望 16px（桌面仍 13px）。
-- 全量 `npm run verify`、`npm run build`、`gen --check`、lint 在本 PR 最新提交上运行。
+- 新页脚手架带上 mobile-fit 链接后，`tests/lib/css/runtime-sources.mjs` 的脚手架复核摘要随之更新（注明本次新增的唯一样式表输入）。
+- 全量 `npm run verify -- --jobs=2`（本 PR 最新提交）：197 步中 195 步通过。另外两步与本改动无关：
+  `verify-tetris-drawer` 只因外部统计端点 `games-analytics.orangely.workers.dev` 在容器内
+  `ERR_TUNNEL_CONNECTION_FAILED`（`docs/browser-testing-environment.md` 记录过的同类情况）；
+  `verify-stats-drawer` 撞上 runner 180s 单步上限 —— 单独运行本分支 176s 全部通过，`main` 上同一脚本 177s，
+  属既有耗时，不是回归。`smoke-carrot-pull` / `smoke-sword-flight` 在第一次 `--jobs=3` 全量里因 CPU 争用
+  出现过节奏 / 双击时窗失败，单独重跑均通过，`--jobs=2` 全量中也通过。
+- `npm run build`、`gen --check`、lint 通过；`verify-mobile-viewport-fit` 在 `dist/` 产物上同样通过。
 
 不改动：游戏规则、计分与排行榜协议、Worker、存储键、URL / DOM id、桌面布局（≥1024px 鼠标场景）。
