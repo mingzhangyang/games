@@ -49,7 +49,7 @@ for (const id of ['planet-merge', 'hoop-shot', 'gravity-slingshot']) {
 }
 
 const previous = globalThis.document;
-const fakeDocument = new EventTarget();
+const fakeDocument = new globalThis.EventTarget();
 let hidden = false;
 Object.defineProperty(fakeDocument, 'hidden', { get: () => hidden });
 globalThis.document = fakeDocument;

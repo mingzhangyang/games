@@ -608,7 +608,8 @@ export class LumenGame {
         this.isPaused = true; this.contextualRestart?.sync();
     }
 
-    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return;
+    resumeQuiet() {
+        if (this.pauseOwnership?.isHeld()) return;
         if (!this.isPaused) return;
         this.isPaused = false; this.contextualRestart?.sync();
         this.lastFrame = performance.now();   // 丢掉暂停期间的时间跳跃

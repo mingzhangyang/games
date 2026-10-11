@@ -293,8 +293,8 @@ export class RippleDuetGame {
             }
             this.loadLevel(this.daily.course[this.daily.cursor]);
             this.state = 'playing'; this.contextualRestart?.sync();
-        this.isPaused = false; this.contextualRestart?.sync();
-        this.pauseOwnership?.invalidate();
+            this.isPaused = false; this.contextualRestart?.sync();
+            this.pauseOwnership?.invalidate();
             this.hide(this.el['clear']);
             this.updateHud();
             return;
