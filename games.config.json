@@ -1706,7 +1706,8 @@
       "emoji": "⭕",
       "layout": "immersive",
       "title": {
-        "doc": "画牢 Loop Jail — Draw Loops, Trap Monsters",
+        "doc": "Loop Jail — Draw Loops, Trap Monsters",
+        "i18nKey": "pageTitle",
         "seo": "画牢 Loop Jail — Draw Loops, Trap Monsters"
       },
       "name": {

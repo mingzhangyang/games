@@ -24,7 +24,7 @@
     <meta name="twitter:title" content="画牢 Loop Jail — Draw Loops, Trap Monsters">
     <meta name="twitter:description" content="Cross your own line to close a loop and trap the monsters inside. Ink is limited; greed is risky.">
     <meta name="twitter:image" content="assets/seo/og-loop-jail.svg">
-    <title>画牢 Loop Jail — Draw Loops, Trap Monsters</title>
+    <title data-i18n="pageTitle">Loop Jail — Draw Loops, Trap Monsters</title>
     <!-- registry:end head -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b0e1a'/%3E%3Cpath d='M18 40c-4-12 6-24 18-22 11 2 15 15 8 22-6 6-17 4-19-4-2-6 3-12 9-11' fill='none' stroke='%234ff3ff' stroke-width='4.5' stroke-linecap='round'/%3E%3Ccircle cx='34' cy='32' r='5' fill='%23ff4fa3'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
@@ -48,7 +48,6 @@
                 <h1 class="sr-only" id="lj-h1" data-i18n="title">Loop Jail</h1>
                 <div class="lj-title-pill game-title-pill" aria-hidden="true">
                     <span class="lj-title-main" data-i18n="brand">Loop Jail</span>
-                    <span class="lj-title-alt" data-i18n="brandAlt">画牢</span>
                 </div>
             </div>
             <!-- 右簇固定顺序：专属（重开 → 排行榜，由 scoreboard-dialog 插在暂停之前）→ pause → sound -->
@@ -90,7 +89,7 @@
                 <!-- 开始菜单 -->
                 <div class="lj-overlay lj-start game-overlay game-overlay--menu" id="lj-start">
                     <p class="lj-kicker" data-i18n="kicker">Draw · Close · Capture</p>
-                    <h2 class="lj-start-title"><span data-i18n="brand">Loop Jail</span><small class="lj-start-alt" data-i18n="brandAlt">画牢</small></h2>
+                    <h2 class="lj-start-title" data-i18n="brand">Loop Jail</h2>
                     <p class="lj-start-copy" data-i18n="startCopy">Drag to lay down ink. Cross your own line to close a loop and everything inside is jailed.</p>
                     <ol class="lj-howto">
                         <li class="lj-howto-step"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 24c4-10 9-14 16-15"/><circle cx="24" cy="9" r="2.6"/></svg><span data-i18n="howtoDraw">Drag to draw</span></li>

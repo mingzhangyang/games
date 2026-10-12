@@ -152,6 +152,15 @@ try {
         more: document.querySelectorAll('#ljStartMore a').length,
     }));
     check(boot.h1 === 1 && boot.start === 'lj-btn-start', '① 恰好一个 h1；开始按钮带 data-immersive-start');
+    // 游戏名只按当前语言显示一种：顶栏 / 开始菜单 / 标签页标题都不中英并列
+    const names = () => page.evaluate(() => ({
+        pill: document.querySelector('.lj-title-pill').textContent.trim(),
+        menu: document.querySelector('.lj-start-title').textContent.trim(),
+        doc: document.title,
+    }));
+    const zhNames = await names();
+    check(zhNames.pill === '画牢' && zhNames.menu === '画牢' && /^画牢/.test(zhNames.doc)
+        && !/Loop Jail|LOOP JAIL/i.test(Object.values(zhNames).join(' ')), '① 中文：游戏名只显示「画牢」', JSON.stringify(zhNames));
     check(/还没有记录/.test(boot.best), '① 无记录时显示引导文案', boot.best);
     check(boot.trophy, '① 排行榜入口插在暂停钮之前');
     check(boot.more > 10 && !(await page.$('#ljStartMore a[href="loop-jail.html"]')), '① 开始菜单「更多游戏」不含自己', boot.more);
@@ -304,6 +313,9 @@ try {
     });
     check(en.start === 'Start drawing' && /Draw/.test(en.kicker) && /^Best /.test(en.best) && en.lang === 'en', '⑨ 中 → 英即时切换', JSON.stringify({ ...en, text: undefined }));
     check(!/\{\w+\}/.test(en.text), '⑨ 可见文案无 {占位符}');
+    const enNames = await names();
+    check(enNames.pill === 'Loop Jail' && enNames.menu === 'Loop Jail' && /^Loop Jail/.test(enNames.doc)
+        && !/画牢/.test(Object.values(enNames).join(' ')), '⑨ 英文：游戏名只显示「Loop Jail」', JSON.stringify(enNames));
 
     // ⑩ 转屏
     await page.click('#lj-btn-start');

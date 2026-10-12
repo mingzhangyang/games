@@ -5,9 +5,10 @@ import { makeText } from '../../platform/i18n.js';
  */
 export const LANGUAGES = makeText({
     en: {
+        // 游戏名只按当前语言显示一种（顶栏 / 开始菜单 / 标签页标题都不中英并列）
+        pageTitle: 'Loop Jail — Draw Loops, Trap Monsters',
         title: 'Loop Jail',
         brand: 'Loop Jail',
-        brandAlt: '画牢',
         kicker: 'Draw · Close · Capture',
         startCopy: 'Drag to lay down ink. Cross your own line to close a loop and everything inside is jailed. Monsters bite open lines — and ink is limited, so greedy loops are risky.',
         howtoDraw: 'Drag to draw',
@@ -63,9 +64,9 @@ export const LANGUAGES = makeText({
         srOver: 'Game over. Score {score}, wave {wave}.',
     },
     zh: {
+        pageTitle: '画牢 — 画线成环，收监小怪',
         title: '画牢',
         brand: '画牢',
-        brandAlt: 'LOOP JAIL',
         kicker: '画线 · 成环 · 收监',
         startCopy: '拖动画出墨线，墨线与自己相交形成闭环，圈里的小怪统统收监。小怪会咬断没闭合的墨线；墨水有限，贪大圈有风险。',
         howtoDraw: '拖动画线',
