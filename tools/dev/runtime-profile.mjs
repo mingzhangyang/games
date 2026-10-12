@@ -135,6 +135,14 @@ async function waitScene(page, condition, label) {
     }
 }
 
+// A window only counts as active if the run is still active when it closes:
+// games can win or lose on their own mid-sample (e.g. Needle Awn, Sword Flight).
+async function assertStillActive(page, condition, label) {
+    if (!await page.evaluate(checkSceneState, condition)) {
+        throw new Error(`${label} ended during sampling: ${JSON.stringify(condition)}`);
+    }
+}
+
 async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
     const context = await browser.createBrowserContext();
     const page = await context.newPage();
@@ -177,6 +185,7 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
         result.limitations.push('Automation transition times include Puppeteer round-trips; not native input-to-paint latency');
         result.phases.active = { status: 'measured',
             metrics: await sampleWindow(page, client, preset.active, { sampleRaf: scene.activity !== 'discrete' }) };
+        await assertStillActive(page, scene.active, 'active');
         if (scene.activity !== 'discrete' && (result.phases.active.metrics.rafIntervalCount || 0) < 2) {
             throw new Error('foreground active rAF probe collected fewer than two intervals');
         }
@@ -211,6 +220,7 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
             await waitScene(page, scene.active, 'resume');
             result.phases.resume = { status: 'measured',
                 metrics: await sampleWindow(page, client, preset.resume, { sampleRaf: scene.activity !== 'discrete' }) };
+            await assertStillActive(page, scene.active, 'resume');
         } else {
             result.phases.paused = { status: 'not-supported', reason: viewportTag === 'desktop' ? 'Drawer not measured on desktop: topbar control may be hidden' : 'No validated shared-drawer pause hook' };
             result.phases.resume = { status: 'not-supported', reason: viewportTag === 'desktop' ? 'Drawer not measured on desktop: topbar control may be hidden' : 'No validated shared-drawer resume hook' };

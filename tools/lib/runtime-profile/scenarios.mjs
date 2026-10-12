@@ -43,7 +43,7 @@ export const SCENARIOS = Object.freeze({
         activity: 'discrete',
     },
     'planet-merge': {
-        owner: 'planetMergeGame', start: call('startGame'), restart: call('startGame'),
+        owner: 'planetMergeGame', start: call('startGame', 'endless'), restart: call('startGame', 'endless'),
         ready: truthy('planetMergeGame', 'state'), active: state('planetMergeGame', 'state'),
         activity: 'continuous',
     },

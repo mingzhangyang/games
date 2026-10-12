@@ -1,4 +1,4 @@
-import { dirname, resolve } from 'node:path';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registry } from '../registry.mjs';
 import { validateScenarioCoverage } from './scenarios.mjs';
@@ -45,7 +45,9 @@ export function parseArgs(argv, games = registry.all()) {
     const source = flag(argv, 'source') || 'dist';
     if (!['dist', 'source'].includes(source)) throw new Error('--source must be dist or source');
     const out = resolve(ROOT, flag(argv, 'out') || '.tmp-perf/pr136');
-    if (!out.startsWith(ROOT + '/') || out === ROOT) throw new Error('--out must be a subdirectory of the repository');
+    // path.relative keeps the containment check separator-agnostic (Windows paths use backslashes).
+    const rel = relative(ROOT, out);
+    if (!rel || rel.startsWith('..') || isAbsolute(rel)) throw new Error('--out must be a subdirectory of the repository');
     return {
         games: ids, viewports, preset, repeat: assertInt(flag(argv, 'repeat') || '3', '--repeat', 1, 10),
         port: assertInt(flag(argv, 'port') || '18936', '--port', 1024, 65535),
