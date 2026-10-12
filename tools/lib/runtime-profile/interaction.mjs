@@ -6,6 +6,33 @@
  */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+/**
+ * Record genuine DOM input delivery during adapter validation. These passive
+ * observers do not synthesize events or modify the game's state.
+ */
+async function recordInputEvents(page, canvasId) {
+    await page.evaluate(id => {
+        const target = document.getElementById(id);
+        if (!target) throw new Error('missing input canvas: ' + id);
+        const events = [];
+        window.__runtimeProfileInputEvents = events;
+        for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel',
+            'pointerdown', 'pointermove', 'pointerup', 'pointercancel',
+            'lostpointercapture', 'mousedown', 'mouseup']) {
+            target.addEventListener(type, event => {
+                if (events.length >= 30) return;
+                events.push({
+                    type, target: event.target?.id || event.target?.tagName,
+                    pointerType: event.pointerType || null,
+                    clientX: event.clientX ?? event.changedTouches?.[0]?.clientX ?? null,
+                    clientY: event.clientY ?? event.changedTouches?.[0]?.clientY ?? null,
+                    time: +performance.now().toFixed(1),
+                });
+            }, { capture: true, passive: true });
+        }
+    }, canvasId);
+}
+
 /** Include viewport hit-testing in failed browser-input evidence, never silently green. */
 async function diagnoseTouch(page, point, canvasId) {
     return page.evaluate(({ x, y, canvasId }) => {
@@ -23,7 +50,12 @@ async function diagnoseTouch(page, point, canvasId) {
                 visualWidth: v?.width, visualHeight: v?.height,
                 offsetLeft: v?.offsetLeft, offsetTop: v?.offsetTop },
             game: { silkDragging: !!window.sdGame?.world?.dragging,
-                needleJoyActive: !!window.gameEngine?.joy?.active },
+                silkDragCount: window.sdGame?.world?.drags,
+                silkInputDragging: window.sdGame?.isDragging,
+                needleJoyActive: !!window.gameEngine?.joy?.active,
+                needleJoyId: window.gameEngine?.joy?.id,
+                needleMode: window.gameEngine?.mode },
+            eventTrace: window.__runtimeProfileInputEvents || [],
         };
     }, { ...point, canvasId });
 }
@@ -52,6 +84,7 @@ function makeHeldAnchor(page, client, mobile) {
         api: mobile ? 'Puppeteer trusted touch handle' : 'Puppeteer pointer',
         async start() {
             position = await page.evaluate(silkAnchorSnapshot);
+            if (mobile) await recordInputEvents(page, 'sd-canvas');
             if (mobile) {
                 touchHandle = await page.touchscreen.touchStart(position.x, position.y);
                 active = true;
@@ -135,6 +168,7 @@ function makeNeedleSurvival(page, client, mobile) {
         api: mobile ? 'Puppeteer trusted touch joystick' : 'Puppeteer keyboard',
         async start() {
             lastPlayer = await playerPosition();
+            if (mobile) await recordInputEvents(page, 'na-canvas');
             if (mobile) {
                 joystick = await page.evaluate(() => {
                     const r = window.gameEngine?.canvas?.getBoundingClientRect();
