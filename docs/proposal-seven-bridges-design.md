@@ -160,7 +160,7 @@ bridges/                       独立仓库根目录
 
 ## 11 状态 存档与跨视图一致性
 
-页面状态包括 `chapter-map, planning, walking, stuck, discovery, complete`；`city/graph` 是独立展示状态。记录 `levelRevision, finalEditSet, startNode, currentNode, walkedEdgeIds, history, assistance`。visitedEdges 与当前位置必须能由起点和路径重建，读档时校验重建结果；不能同时相信两份互相矛盾的状态。
+页面状态包括 `chapter-map, planning, walking, stuck, discovery, complete`；`city/graph` 是独立展示状态。记录 `levelRevision, finalEditSet, startNode, currentNode, walkedEdgeIds, history, assistance`。`walkedEdgeIds` 与当前位置必须能由起点和路径重建，读档时校验重建结果；不能同时相信两份互相矛盾的状态。
 
 一次行走提交一个命令；一次工程确认提交一份完整最终编辑集合。游戏在后台暂停声景、计时和动画；回前台直接从模型恢复信使位置，不补跑隐藏期间的脚步。开帮助不消耗路线资源。完成事件有 runId 防重入，重复回放不重复解锁或盖章。
 
@@ -184,4 +184,4 @@ bridges/                       独立仓库根目录
 
 正式站点可用并完成验收后，才由 games 的独立接入 PR 添加 `site.home.externalGames` 条目及卡片资源，不加入内置 `games` 数组。单款更新仅由其自身 CI 和部署流程处理。
 
-独立仓库建立时，将本设计及必要示意图、数学来源迁入该仓库 docs，作为唯一持续维护的详细规格；games 此文件随后替换为摘要、稳定文档链接和迁移说明。迁移与反向链接确认完成前，保留当前全文，避免丢失交接信息。
+本仓库已经是七桥漫游的独立维护仓库；本设计、数学来源和交付边界已纳入其 `docs/`，合并后以 `docs/implementation-plan.md` 作为唯一持续维护的详细规格。games 仅保留总体交付摘要、外链边界和交接链接；后续规则变更优先在本仓库更新，必要时回写 games 摘要，不在三个仓库持续编辑同一份详细规格。
