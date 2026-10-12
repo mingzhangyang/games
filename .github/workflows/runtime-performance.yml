@@ -1,0 +1,97 @@
+name: Opt-in runtime performance baseline
+
+on:
+  workflow_dispatch:
+    inputs:
+      preset:
+        description: Sampling preset
+        type: choice
+        options:
+          - baseline
+          - quick
+        default: baseline
+      games:
+        description: Game ids (all or a comma-separated subset)
+        type: string
+        default: all
+      repeat:
+        description: Repetitions per game/viewport (1-10)
+        type: number
+        default: 3
+  pull_request:
+    branches: [main]
+    types: [labeled]
+
+permissions:
+  contents: read
+
+# Labels are explicit, one-time opt-ins for the PR candidate. No automatic
+# performance profiling runs on regular pushes/PR updates.
+concurrency:
+  group: runtime-profile-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  baseline:
+    if: github.event_name == 'workflow_dispatch' || contains(fromJSON('["perf-profile-baseline","perf-profile-smoke"]'), github.event.label.name)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      PROFILE_PRESET: ${{ github.event_name == 'workflow_dispatch' && inputs.preset || (github.event.label.name == 'perf-profile-smoke' && 'quick' || 'baseline') }}
+      PROFILE_REPEAT: ${{ github.event_name == 'workflow_dispatch' && inputs.repeat || (github.event.label.name == 'perf-profile-smoke' && 1 || 3) }}
+      PROFILE_GAMES: ${{ github.event_name == 'workflow_dispatch' && inputs.games || (github.event.label.name == 'perf-profile-smoke' && 'silk-dew,needle-awn' || 'all') }}
+      CI: '1'
+
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          # Don't report the synthetic pull-request merge SHA as a measured game revision.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies and build
+        run: |
+          npm ci
+          npm run gen -- --check
+          npm run build
+
+      - name: Find installed Chrome
+        run: |
+          set -eu
+          for name in google-chrome-stable google-chrome chromium chromium-browser; do
+            if command -v "$name" >/dev/null 2>&1; then
+              echo "CHROME_BIN=$(command -v "$name")" >> "$GITHUB_ENV"
+              exit 0
+            fi
+          done
+          echo "No Chrome browser found on the runner" >&2
+          exit 1
+
+      - name: Run isolated production-build profile
+        run: |
+          if [ "$PROFILE_GAMES" = all ]; then
+            games_arg=--all
+          else
+            games_arg="--games=$PROFILE_GAMES"
+          fi
+          npm run profile:runtime -- \
+            "$games_arg" --viewports=mobile,desktop \
+            --preset="${PROFILE_PRESET}" --repeat="${PROFILE_REPEAT}" \
+            --out=.tmp-perf/pr138
+
+      - name: Preserve all raw checkpoints and reports, even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-profile-${{ github.run_id }}
+          path: .tmp-perf/pr138/
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn

@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { registry } from './lib/registry.mjs';
 import { SCENARIOS, validateScenarioCoverage, checkSceneState } from '../tools/lib/runtime-profile/scenarios.mjs';
 import { percentile, metricMap, metricDelta, summarizeWindow } from '../tools/lib/runtime-profile/metrics.mjs';
-import { reportSummary, renderMarkdown } from '../tools/lib/runtime-profile/report.mjs';
+import { reportSummary, renderMarkdown, summarizeRepeatRows } from '../tools/lib/runtime-profile/report.mjs';
+import { chooseNeedleDirection, captureInputSample } from '../tools/lib/runtime-profile/interaction.mjs';
 import { parseArgs, VIEWPORTS } from '../tools/lib/runtime-profile/options.mjs';
 
 const games = registry.all();
@@ -40,6 +41,18 @@ const levelGame = { lmGame: { state: 'playing', isPaused: true, isRunning() { re
 assert.equal(checkSceneState(SCENARIOS.lumen.active, levelGame), false, 'a quietly paused level game must not count as active');
 levelGame.lmGame.isPaused = false;
 assert.equal(checkSceneState(SCENARIOS.lumen.active, levelGame), true);
+assert.equal(SCENARIOS['silk-dew'].profileInput.kind, 'held-anchor');
+assert.equal(SCENARIOS['needle-awn'].profileInput.kind, 'survival-lane');
+assert.deepEqual(SCENARIOS['needle-awn'].start, { kind: 'click', selector: '#na-btn-endless' },
+    'Needle Awn must enter a real endless run through its visible mode button');
+assert.equal(SCENARIOS['needle-awn'].restart.method, 'startEndlessMode');
+assert.throws(() => validateScenarioCoverage(games, {
+    ...SCENARIOS, 'silk-dew': { ...SCENARIOS['silk-dew'], profileInput: { kind: 'unknown', cadenceMs: 250 } },
+}), /invalid input contract/);
+assert.deepEqual(chooseNeedleDirection({ x: 240, y: 460 }, 0), { x: 0, y: 1 });
+assert.deepEqual(chooseNeedleDirection({ x: 70, y: 610 }, 0), { x: 1, y: 0 });
+assert.deepEqual(chooseNeedleDirection({ x: 420, y: 610 }, 0), { x: -1, y: 0 });
+assert.throws(() => chooseNeedleDirection(null, 0), /position unavailable/);
 assert.deepEqual(SCENARIOS['sword-flight'].start.args, ['zen'],
     'Sword Flight baseline needs a run that survives unattended sampling');
 assert.deepEqual(SCENARIOS['sword-flight'].restart.args, ['zen']);
@@ -94,6 +107,66 @@ const markdown = renderMarkdown({
     summary: reportSummary([measured], expected), results: [measured],
 });
 assert.ok(markdown.includes('Runtime Performance Audit') && markdown.includes('not') && markdown.includes('actual game rendering FPS'));
+assert.ok(markdown.includes('exploratory'), 'single-run reports must not claim a confirmed baseline');
+const repeated = [1, 2, 3].map((repeat, i) => ({
+    ...measured, repeat, workload: 'held-anchor S1',
+    phases: { active: { metrics: { ...m, rafIntervalP95Ms: 30 + 10 * i, taskTimeMs: 100 + 20 * i,
+        longTaskCount: i } , input: { kind: 'held-anchor', api: 'CDP trusted touch', steps: 20 } } },
+}));
+const aggregate = summarizeRepeatRows(repeated);
+assert.equal(aggregate.length, 1);
+assert.equal(aggregate[0].rafP95.n, 3);
+assert.equal(aggregate[0].rafP95.median, 40);
+assert.equal(aggregate[0].rafP95.min, 30);
+assert.equal(aggregate[0].rafP95.max, 50);
+assert.equal(aggregate[0].taskTime.median, 120);
+assert.equal(aggregate[0].tasks.median, 1);
+assert.equal(summarizeRepeatRows([repeated[0], { ...repeated[1], workload: 'different mode' }]).length, 2,
+    'unlike workloads must never be averaged together');
+assert.equal(summarizeRepeatRows([repeated[0], { ...repeated[1], phases: {
+    active: { metrics: m, input: { kind: 'held-anchor', api: 'Puppeteer pointer' } } }]).length, 2,
+    'touch and mouse exercise different input paths');
+assert.equal(summarizeRepeatRows([repeated[0], { ...repeated[1], status: 'incomplete' }])[0].runs, 1,
+    'incomplete measurements must never contaminate medians');
+const repeatedMarkdown = renderMarkdown({
+    meta: { commit: 'b'.repeat(40), source: 'dist', sourceRoot: '/tmp/dist',
+        browserVersion: 'Chrome', os: 'linux', cpu: 'CI', cpuCount: 2,
+        browserFlags: ['--disable-gpu'], gpuMode: 'disabled', preset: 'baseline', repeat: 3 },
+    results: repeated, summary: reportSummary(repeated, repeated.map(({ game, viewport, repeat }) => ({
+        game, viewport, repeat,
+    }))),
+});
+assert.match(repeatedMarkdown, /repeat-confirmed/);
+assert.match(repeatedMarkdown, /40\.0/);
+
+/** Deterministic cancellation/lease tests: input must be released even on failure. */
+const fakeDriver = (failSample = false) => {
+    let seenTick;
+    const tickObserved = new Promise(resolve => { seenTick = resolve; });
+    const driver = { active: false, stopped: 0, steps: 0, api: 'fake trusted input',
+        async start() { this.active = true; },
+        async tick() { this.steps++; seenTick(); },
+        async inspect() { return { movementDistance: 25 }; },
+        async stop() { this.active = false; this.stopped++; } };
+    const sample = async () => {
+        await tickObserved; // no timer-based assertion: waits for an actual input step
+        if (failSample) throw new Error('sample failure');
+        return { taskTimeMs: 25 };
+    };
+    return { driver, sample };
+};
+const okDriver = fakeDriver();
+const captured = await captureInputSample(okDriver.driver,
+    { kind: 'survival-lane', cadenceMs: 1 }, okDriver.sample, 'endless');
+assert.equal(captured.input.kind, 'survival-lane');
+assert.equal(captured.input.workload, 'endless');
+assert.equal(captured.metrics.taskTimeMs, 25);
+assert.equal(okDriver.driver.stopped, 1);
+const badDriver = fakeDriver(true);
+await assert.rejects(() => captureInputSample(badDriver.driver,
+    { kind: 'held-anchor', cadenceMs: 1 }, badDriver.sample), /sample failure/);
+assert.equal(badDriver.driver.stopped, 1, 'failed sample must release held controls');
+
 
 for (const tag of ['mobile', 'small']) {
     for (const game of games) {
@@ -118,4 +191,4 @@ assert.throws(() => parseArgs(['--all', '--out=..']), /--out must be/);
 assert.throws(() => parseArgs(['--all', '--out=.']), /--out must be/);
 assert.throws(() => parseArgs(['--all', '--out=/definitely-outside-repo']), /--out must be/);
 assert.ok(parseArgs(['--all', '--out=.tmp-perf/contract']).out.endsWith('contract'));
-console.log('PASS PR #136 scenario inventory, browser predicate, metric math, report completeness, CLI contracts');
+console.log('PASS PR #138 profile scenarios, native-input ownership, repeat medians, invalidation and CLI contracts');
