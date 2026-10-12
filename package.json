@@ -25,7 +25,8 @@
     "check:shadow-loom-silhouettes": "node tools/generators/shadow-loom-build-silhouettes.mjs --check",
     "verify:shadow-loom": "node tests/verify-shadow-loom-silhouettes.mjs",
     "new:game": "node tools/generators/new-game.mjs",
-    "verify:tank-battle-art": "node tests/verify-tank-battle-art.mjs"
+    "verify:tank-battle-art": "node tests/verify-tank-battle-art.mjs",
+    "profile:runtime": "node tools/dev/runtime-profile.mjs"
   },
   "devDependencies": {
     "@csstools/css-tokenizer": "4.0.1",
