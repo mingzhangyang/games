@@ -23,7 +23,7 @@ export const SCENARIOS = Object.freeze({
         activity: 'continuous',
     },
     'tetris': {
-        owner: 'game', start: click('#startBtn'),
+        owner: 'game', start: { kind: 'visible-choice', selectors: ['#mobileStartBtn', '#startBtn'] },
         ready: truthy('game', 'canvas'), active: { kind: 'all', conditions: [
             truthy('game', 'animationId'), { owner: 'game', path: 'paused', equals: false },
             { owner: 'game', path: 'gameOver', equals: false },

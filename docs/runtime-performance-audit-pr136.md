@@ -174,7 +174,18 @@ npx wrangler deploy --dry-run --outdir .wrangler-dry-run
 
 ### Empirical results status
 
-No full 25-game production-build browser run is recorded in this document yet.
+The first opt-in quick scenario audit on GitHub Actions run **38188564680**
+produced **49/50 measured** scenes. One explicitly incomplete scene was
+**Tetris / mobile**, caused by targeting the desktop-only Start button; the
+scenarios now select the visible Start control. The run also revealed that
+pull-request Actions checkout must use the head SHA (not GitHub synthetic merge
+SHA) and hidden `.tmp-perf` artifacts must be explicitly included. Both
+infrastructure defects are corrected. Quick-run observations, including
+Sword Flight / Shadow Loom mobile rAF-probe p95 near 33 ms, are
+**investigation hypotheses, not gameplay defect claims**, until repeated
+full-baseline measurements validate them.
+
+No full 25-game production-build **baseline** run is recorded in this document yet.
 Do **not** merge as a "measured performance baseline" without attaching a
 real run's `summary.md` and verifying completeness on the same commit. The
 harness and contract tests are valuable independently, but the measured #137

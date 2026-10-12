@@ -77,6 +77,24 @@ async function isolateNetwork(page, base) {
 
 async function act(page, scene, action) {
     if (action.kind === 'already-active') return 'auto (already active)';
+    if (action.kind === 'visible-choice') {
+        await page.waitForFunction(selectors => selectors.some(selector => {
+            const el = document.querySelector(selector);
+            if (!el) return false;
+            const style = getComputedStyle(el);
+            const rect = el.getBoundingClientRect();
+            return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+        }), { timeout: 12000 }, action.selectors);
+        const selector = await page.evaluate(selectors => selectors.find(s => {
+            const el = document.querySelector(s);
+            if (!el) return false;
+            const style = getComputedStyle(el);
+            const rect = el.getBoundingClientRect();
+            return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+        }), action.selectors);
+        await page.click(selector);
+        return `UI click ${selector}`;
+    }
     if (action.kind === 'sequence') {
         const descriptions = [];
         for (const part of action.actions) descriptions.push(await act(page, scene, part));

@@ -21,6 +21,8 @@ const root = {
     game: { state: 'playing', paused: false, method() { return { active: true }; }, owner: { isHeld() { return true; } } },
     document: { querySelector: () => ({ width: 100, height: 100, getBoundingClientRect: () => ({ width: 40 }) }) },
 };
+assert.deepEqual(SCENARIOS.tetris.start, { kind: 'visible-choice', selectors: ['#mobileStartBtn', '#startBtn'] },
+    'Tetris has a separate mobile start button hidden from desktop controls');
 assert.equal(checkSceneState({ owner: 'game', path: 'state', equals: 'playing' }, root), true);
 assert.equal(checkSceneState({ owner: 'game', path: 'method().active', truthy: true }, root), true);
 assert.equal(checkSceneState({ owner: 'game', path: 'owner.isHeld()', equals: true }, root), true);

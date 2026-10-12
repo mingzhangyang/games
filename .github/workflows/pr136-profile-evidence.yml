@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -46,6 +48,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pr136-runtime-profile-evidence
-          path: .tmp-perf/pr136-*/
+          path: .tmp-perf/
+          include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14
