@@ -168,12 +168,44 @@ export const POST_FREEZE_GAMES = Object.freeze([
 export const POST_FREEZE_PAGES = new Set(POST_FREEZE_GAMES.map(game => game.page));
 const POST_FREEZE_ROOT_HOOKS = new Set([':root', ':root[data-theme="light"]']);
 
+/** Split on commas / combinators only outside (), so :is(a, b) stays one unit. */
+function splitTopLevel(text, separator) {
+    const out = [];
+    let depth = 0;
+    let current = '';
+    for (const ch of text) {
+        if (ch === '(') depth++;
+        if (ch === ')') depth--;
+        if (depth === 0 && separator.test(ch)) {
+            out.push(current);
+            current = '';
+        } else current += ch;
+    }
+    out.push(current);
+    return out.map(part => part.trim()).filter(Boolean);
+}
+
+export function selectorArms(selector) {
+    return splitTopLevel(selector, /,/);
+}
+
 export function postFreezeSelectorScoped(selector, prefix) {
     const owned = new RegExp('[.#]' + prefix + '-[A-Za-z0-9_-]');
-    return selector.split(',').map(part => part.trim()).every(part => {
+    return selectorArms(selector).every(part => {
         if (POST_FREEZE_ROOT_HOOKS.has(part) || part === 'html') return true;
-        // A prefixed class inside :not() would *widen* the match, not scope it.
-        return owned.test(part.replace(/:not\([^)]*\)/g, ''));
+        // The element a rule actually styles is the last compound. Its own prefixed
+        // class / id must scope it: an ancestor (`.lj-x .game-btn`) or a token only
+        // inside a functional pseudo (`:not()`, `:has()`, `:is()`, `:where()`)
+        // would still restyle shared families or document elements.
+        const subject = splitTopLevel(part, /[\s>+~]/).pop() || '';
+        let flat = '';
+        let depth = 0;
+        for (const ch of subject) {
+            if (ch === '(') depth++;
+            else if (ch === ')') depth--;
+            else if (depth === 0) flat += ch;
+        }
+        return owned.test(flat);
     });
 }
 
@@ -200,7 +232,7 @@ export function reviewPostFreezeStylesheet(css, game, errors) {
     if (unscoped.length) fail('selectors outside the page prefix: ' + JSON.stringify(unscoped));
     for (const declaration of parsed.declarations || []) {
         const selector = declaration.selector || '';
-        const hook = selector.split(',').map(part => part.trim());
+        const hook = selectorArms(selector);
         if (declaration.property.startsWith('--') && !declaration.property.startsWith('--' + game.prefix + '-')) {
             fail('custom property ' + declaration.property + ' is outside the --' + game.prefix + '-* namespace');
         }

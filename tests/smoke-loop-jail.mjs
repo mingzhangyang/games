@@ -262,7 +262,12 @@ try {
     const scoreBeforeDeath = s.score;
     submitted.length = 0;
     await page.evaluate(() => {
-        const sim = window.ljGame.sim;
+        const g = window.ljGame;
+        // 记录每次 frame() 的 rAF 时间戳：同一时间戳出现两次 = 有两条并行的帧链
+        const frame = g.frame;
+        window.__ljFrameStamps = [];
+        g.frame = t => { window.__ljFrameStamps.push(t); frame(t); };
+        const sim = g.sim;
         sim.lives = 1;
         sim.pen.invuln = 0;
         const m = sim.monsters[0];
@@ -271,6 +276,13 @@ try {
     await page.waitForFunction(() => window.ljGame.state === 'over', { timeout: 3000 });
     s = await snap(page);
     check(!s.resetShown && s.pauseDisabled, '⑧ 结算瞬间：重开隐藏、暂停禁用');
+    await sleep(400);
+    const stamps = await page.evaluate(() => {
+        const list = window.__ljFrameStamps;
+        window.ljGame.frame = Object.getPrototypeOf(window.ljGame).frame.bind(window.ljGame);
+        return { total: list.length, unique: new Set(list).size };
+    });
+    check(stamps.total > 3 && stamps.unique === stamps.total, '⑧ 结算后的特效只有一条 rAF 链（每次刷新 frame() 只跑一次）', JSON.stringify(stamps));
     await page.waitForFunction(() => !document.getElementById('lj-over').classList.contains('hidden'), { timeout: 3000 });
     const over = await page.evaluate(() => ({
         score: document.getElementById('lj-over-score').textContent,

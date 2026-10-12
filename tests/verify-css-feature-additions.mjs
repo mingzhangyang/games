@@ -88,6 +88,10 @@ for (const [selector, scoped] of [
     ['.lj-hud', true], ['#lj-stage .lj-canvas', true], ['body.lj-body', true], [':root', true],
     [':root[data-theme="light"]', true], ['html', true], ['.lj-a, .lj-b:hover', true],
     ['.game-overlay', false], ['.lj-a, body', false], ['div:not(.lj-x)', false], ['.ljx-a', false],
+    ['.lj-a:hover', true], ['.lj-ink.is-low .lj-ink-fill', true], ['.lj-a > .lj-b + .lj-c', true],
+    ['.lj-a:is(.x, .y)', true], ['.lj-a::before', true],
+    ['.game-overlay:has(.lj-x)', false], ['body:has(.lj-x)', false], [':is(.lj-a, div)', false],
+    [':where(.lj-a)', false], ['.lj-x .game-action-btn', false], ['.lj-x > div', false], ['.lj-x svg', false],
 ]) {
     assert.equal(postFreezeSelectorScoped(selector, 'lj'), scoped, 'selector scope: ' + selector);
 }

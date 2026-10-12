@@ -92,14 +92,14 @@
                     <h2 class="lj-start-title" data-i18n="brand">Loop Jail</h2>
                     <p class="lj-start-copy" data-i18n="startCopy">Drag to lay down ink. Cross your own line to close a loop and everything inside is jailed.</p>
                     <ol class="lj-howto">
-                        <li class="lj-howto-step"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 24c4-10 9-14 16-15"/><circle cx="24" cy="9" r="2.6"/></svg><span data-i18n="howtoDraw">Drag to draw</span></li>
-                        <li class="lj-howto-step"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 25c-4-6-2-15 6-17 8-2 13 6 10 12-3 6-12 7-15 1-1-3 1-6 4-6"/><circle cx="17" cy="16" r="2.6" class="lj-howto-dot"/></svg><span data-i18n="howtoLoop">Close a loop</span></li>
-                        <li class="lj-howto-step"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 18h8M19 18h8"/><path d="M16 9l3 4h-6z" class="lj-howto-warn"/></svg><span data-i18n="howtoRisk">Don’t get bitten</span></li>
+                        <li class="lj-howto-step"><svg class="lj-howto-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 24c4-10 9-14 16-15"/><circle cx="24" cy="9" r="2.6"/></svg><span data-i18n="howtoDraw">Drag to draw</span></li>
+                        <li class="lj-howto-step"><svg class="lj-howto-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 25c-4-6-2-15 6-17 8-2 13 6 10 12-3 6-12 7-15 1-1-3 1-6 4-6"/><circle cx="17" cy="16" r="2.6" class="lj-howto-dot"/></svg><span data-i18n="howtoLoop">Close a loop</span></li>
+                        <li class="lj-howto-step"><svg class="lj-howto-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 18h8M19 18h8"/><path d="M16 9l3 4h-6z" class="lj-howto-warn"/></svg><span data-i18n="howtoRisk">Don’t get bitten</span></li>
                     </ol>
                     <ul class="lj-legend">
-                        <li><span class="lj-swatch lj-swatch--circle" aria-hidden="true"></span><span data-i18n="legendCircle">Bouncer · 50</span></li>
-                        <li><span class="lj-swatch lj-swatch--triangle" aria-hidden="true"></span><span data-i18n="legendTriangle">Dasher · 120</span></li>
-                        <li><span class="lj-swatch lj-swatch--square" aria-hidden="true"></span><span data-i18n="legendSquare">Splitter · 80</span></li>
+                        <li class="lj-legend-item"><span class="lj-swatch lj-swatch--circle" aria-hidden="true"></span><span data-i18n="legendCircle">Bouncer · 50</span></li>
+                        <li class="lj-legend-item"><span class="lj-swatch lj-swatch--triangle" aria-hidden="true"></span><span data-i18n="legendTriangle">Dasher · 120</span></li>
+                        <li class="lj-legend-item"><span class="lj-swatch lj-swatch--square" aria-hidden="true"></span><span data-i18n="legendSquare">Splitter · 80</span></li>
                     </ul>
                     <button type="button" class="lj-btn-start game-btn game-action-btn game-action-btn--primary" id="lj-btn-start" data-immersive-start><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span data-i18n="start">Start drawing</span></button>
                     <p class="lj-best-line" id="lj-best-line"></p>
@@ -125,7 +125,7 @@
                     <p class="lj-newbest hidden" id="lj-over-newbest"></p>
                     <h2 class="lj-overlay-title" id="lj-over-title" data-i18n="gameOver">Jailbreak!</h2>
                     <p class="lj-overlay-copy" data-i18n="gameOverCopy">The monsters got the better of your pen this time.</p>
-                    <div class="lj-result-score"><span class="lj-result-label" data-i18n="finalScore">Score</span><b id="lj-over-score">0</b></div>
+                    <div class="lj-result-score"><span class="lj-result-label" data-i18n="finalScore">Score</span><b class="lj-result-value" id="lj-over-score">0</b></div>
                     <p class="lj-result-line" id="lj-over-wave"></p>
                     <p class="lj-result-sub" id="lj-over-detail"></p>
                     <p class="lj-result-sub" id="lj-over-best"></p>

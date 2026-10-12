@@ -362,6 +362,9 @@ export class LoopJailGame {
         if (running || this.state === 'over') this.renderer.update(dt);
         this.renderer.draw({ playing: this.state === 'playing' });
         this.updateHud();
+        // 本帧里的事件（例如 gameOver → finish() → ensureLoop()）可能已经排好下一帧；
+        // 再排一次就会出现两条并行的 rAF 链，每次刷新重复更新 / 绘制
+        if (this.raf) return;
         if (this.isRunning() || (this.state === 'over' && this.renderer.isAnimating())) {
             this.raf = requestAnimationFrame(this.frame);
         }

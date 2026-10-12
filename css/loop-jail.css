@@ -388,7 +388,7 @@
         border: 1px solid var(--lj-glass-line);
     }
 
-    .lj-howto-step svg {
+    .lj-howto-icon {
         width: 30px;
         height: 30px;
         fill: none;
@@ -420,7 +420,7 @@
         color: var(--lj-text-dim);
     }
 
-    .lj-legend li {
+    .lj-legend-item {
         display: inline-flex;
         align-items: center;
         gap: 6px;
@@ -509,7 +509,7 @@
         color: var(--lj-text-dim);
     }
 
-    .lj-result-score b {
+    .lj-result-value {
         font-size: clamp(40px, 12vw, 54px);
         font-weight: 900;
         line-height: 1;
