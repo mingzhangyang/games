@@ -36,6 +36,10 @@ assert.equal(checkSceneState({ kind: 'all', conditions: [
 assert.equal(checkSceneState({ kind: 'canvas', selector: '#board' }, root), true);
 assert.equal(checkSceneState({ kind: 'canvas', selector: '#board' }, { document: { querySelector: () => null } }), false);
 assert.equal(SCENARIOS['tank-battle'].noMenu, true, 'tank battle auto-start must not be called a menu');
+const levelGame = { lmGame: { state: 'playing', isPaused: true, isRunning() { return this.state === 'playing' && !this.isPaused; } } };
+assert.equal(checkSceneState(SCENARIOS.lumen.active, levelGame), false, 'a quietly paused level game must not count as active');
+levelGame.lmGame.isPaused = false;
+assert.equal(checkSceneState(SCENARIOS.lumen.active, levelGame), true);
 assert.deepEqual(SCENARIOS['planet-merge'].start.args, ['endless'], 'Planet Merge must start the UI endless mode, never mode=undefined');
 assert.deepEqual(SCENARIOS['planet-merge'].restart.args, ['endless']);
 const tetris = { game: { currentPiece: {}, animationId: null, paused: false, gameOver: false } };

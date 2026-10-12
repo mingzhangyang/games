@@ -10,7 +10,8 @@ const truthy = (owner, path) => ({ owner, path, truthy: true });
 const call = (method, ...args) => ({ kind: 'test-hook', method, args });
 const click = selector => ({ kind: 'click', selector });
 const auto = () => ({ kind: 'already-active' });
-const level = (owner, method = 'startLevel', arg = 0) => ({ owner, start: call(method, arg), restart: call(method, arg), ready: truthy(owner, 'state'), active: state(owner, 'state') });
+// Level runtimes keep state === 'playing' while pauseQuiet() sets isPaused; isRunning() covers both.
+const level = (owner, method = 'startLevel', arg = 0) => ({ owner, start: call(method, arg), restart: call(method, arg), ready: truthy(owner, 'state'), active: truthy(owner, 'isRunning()') });
 
 // The 16 shared-drawer starts come from tests/verify-stats-drawer.mjs. They
 // intentionally do not mutate difficulty, scores, or the deterministic clock.
