@@ -18,15 +18,18 @@ not a performance verdict. This PR adds no hard FPS thresholds to always-on CI.
 
 In tools/lib/runtime-profile/scenarios.mjs (not the production registry):
 
-- **Silk Dew:** enter real S1 via the existing test-hook start method; use
-  Puppeteer's mouse pointer to grab its first rope anchor, including in the emulated mobile viewport and make small controlled
-  motions while holding it. The game's unmodified rest/stall check deliberately
-  distinguishes active dragging from abandonment. Sampling pauses release the
-  pointer before opening the drawer; resume starts a fresh legitimate drag.
-  This is an **S1 held-anchor workload**, not a complete puzzle solve. A newly
-  won, failed, inert or released interaction invalidates that sample.
+- **Silk Dew:** enter real S1 via the existing test-hook start method;
+  hold the first rope anchor with a browser-delivered mouse pointer, stationary
+  throughout the active window, including on the emulated mobile viewport.
+  The game's unmodified rest/stall check distinguishes held input from
+  abandonment. The profiling driver does **not** solve the puzzle or move the
+  target; label it a **stationary S1 held-anchor workload**, not a representative
+  puzzle-solving trace. Input is released before opening the statistics drawer,
+  then reacquired for the resume window. If the hold is lost or the game ends,
+  that window is incomplete (not a measured result).
 - **Needle Awn:** enter **Endless** with the real visible #na-btn-endless
-  button. Puppeteer keyboard movement on desktop and in the mobile emulated viewport moves the player to the lower arena and sweeps horizontally, while
+  button. Puppeteer keyboard movement on desktop and the mobile emulated
+  viewport moves the player into the lower arena and sweeps horizontally, while
   the game's own enemy waves continue to spawn. The game still owns damage,
   deaths, difficulty and time. This is a **controlled survival-lane workload**,
   not representative combat/dueling or a claim about the old levels-mode run.

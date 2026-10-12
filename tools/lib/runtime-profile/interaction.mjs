@@ -25,7 +25,7 @@ function silkAnchorSnapshot() {
     };
 }
 
-/** A held mouse pointer is a genuine DOM pointerdown/drag, not a game hook. */
+/** A stationary held mouse pointer is a genuine DOM pointerdown, not a game hook. */
 function makeHeldAnchor(page, _client, mobile) {
     let active = false;
     let position = null;
@@ -38,7 +38,6 @@ function makeHeldAnchor(page, _client, mobile) {
             await page.mouse.move(position.x, position.y);
             await page.mouse.down();
             active = true;
-            await this.tick(0);
             try {
                 await page.waitForFunction(before =>
                     window.sdGame?.state === 'playing'
@@ -51,16 +50,18 @@ function makeHeldAnchor(page, _client, mobile) {
                     worldState: window.sdGame?.world?.state,
                     dragCount: window.sdGame?.world?.drags,
                     dragging: window.sdGame?.isDragging,
+                    pointerId: window.sdGame?.pointerId,
                 }));
-                throw new Error('Silk Dew pointer did not maintain live S1 drag: '
+                throw new Error('Silk Dew stationary anchor hold was not accepted: '
                     + JSON.stringify(evidence), { cause: error });
             }
             dragCount = await page.evaluate(() => window.sdGame.world.drags);
         },
-        async tick(index) {
-            const x = position.x + 16 + Math.sin(index / 2) * 6;
-            const y = position.y + 2;
-            await page.mouse.move(x, y);
+        async tick() {
+            // Sampling S1 under a stationary, physically held pointer deliberately
+            // avoids changing rope target/score and cannot provoke pointer cancel
+            // through synthetic, high-frequency mouse movements in mobile emulation.
+            // The active world's drag state and simulation time are checked in inspect().
             movementCount++;
         },
         async inspect() {
@@ -72,7 +73,7 @@ function makeHeldAnchor(page, _client, mobile) {
             }));
             if (!evidence.playing || !evidence.held || evidence.drags < dragCount
                 || movementCount < 2 || !(evidence.worldTime > 0)) {
-                throw new Error('Silk Dew S1 pointer did not remain effective throughout sampling');
+                throw new Error('Silk Dew S1 held-anchor workload did not remain effective throughout sampling');
             }
             return { ...evidence, movementCount };
         },
