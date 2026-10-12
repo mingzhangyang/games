@@ -1,16 +1,10 @@
 /**
  * PR #138: browser-native input scripts for opt-in performance sampling.
  * Read live state to choose inputs; NEVER alter game objects or failure rules.
- * Mobile uses trusted CDP touch events; desktop uses Puppeteer's keyboard/mouse.
+ * Mobile uses Puppeteer's managed touch handles; desktop uses keyboard/mouse.
  * Input is always released before opening the statistics drawer and on errors.
  */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-const touchPoint = (x, y) => ({ x, y, id: 1, radiusX: 1, radiusY: 1, force: 1 });
-
-async function touch(client, type, positions) {
-    await client.send('Input.dispatchTouchEvent', { type, touchPoints: positions });
-}
-
 
 /** Include viewport hit-testing in failed browser-input evidence, never silently green. */
 async function diagnoseTouch(page, point, canvasId) {
@@ -53,13 +47,14 @@ function makeHeldAnchor(page, client, mobile) {
     let position = null;
     let dragCount = 0;
     let movementCount = 0;
+    let touchHandle = null;
     return {
-        api: mobile ? 'CDP trusted touch' : 'Puppeteer pointer',
+        api: mobile ? 'Puppeteer trusted touch handle' : 'Puppeteer pointer',
         async start() {
             position = await page.evaluate(silkAnchorSnapshot);
             if (mobile) {
+                touchHandle = await page.touchscreen.touchStart(position.x, position.y);
                 active = true;
-                await touch(client, 'touchStart', [touchPoint(position.x, position.y)]);
             } else {
                 await page.mouse.move(position.x, position.y);
                 active = true;
@@ -81,7 +76,7 @@ function makeHeldAnchor(page, client, mobile) {
         async tick(index) {
             const x = position.x + 16 + Math.sin(index / 2) * 6;
             const y = position.y + 2;
-            if (mobile) await touch(client, 'touchMove', [touchPoint(x, y)]);
+            if (mobile) await touchHandle.move(x, y);
             else await page.mouse.move(x, y);
             movementCount++;
         },
@@ -101,7 +96,7 @@ function makeHeldAnchor(page, client, mobile) {
         async stop() {
             if (!active) return;
             active = false;
-            if (mobile) await touch(client, 'touchEnd', []);
+            if (mobile) await touchHandle.end();
             else await page.mouse.up();
         },
         get active() { return active; },
@@ -122,6 +117,7 @@ export function chooseNeedleDirection(player, tick) {
 function makeNeedleSurvival(page, client, mobile) {
     let active = false;
     let joystick = null;
+    let touchHandle = null;
     let heldKey = null;
     let lastPlayer = null;
     let travel = 0;
@@ -136,7 +132,7 @@ function makeNeedleSurvival(page, client, mobile) {
             timeElapsed: game.timeElapsed, wave: game.waveIndex };
     });
     return {
-        api: mobile ? 'CDP trusted touch joystick' : 'Puppeteer keyboard',
+        api: mobile ? 'Puppeteer trusted touch joystick' : 'Puppeteer keyboard',
         async start() {
             lastPlayer = await playerPosition();
             if (mobile) {
@@ -145,8 +141,8 @@ function makeNeedleSurvival(page, client, mobile) {
                     if (!r?.width || !r?.height) throw new Error('Needle Awn canvas not laid out');
                     return { x: r.left + r.width * 0.20, y: r.top + r.height * 0.72 };
                 });
+                touchHandle = await page.touchscreen.touchStart(joystick.x, joystick.y);
                 active = true;
-                await touch(client, 'touchStart', [touchPoint(joystick.x, joystick.y)]);
                 try {
                     await page.waitForFunction(() => window.gameEngine?.joy?.active === true,
                         { timeout: 1800 });
@@ -165,9 +161,9 @@ function makeNeedleSurvival(page, client, mobile) {
             lastPlayer = player;
             const direction = chooseNeedleDirection(player, index);
             if (mobile) {
-                await touch(client, 'touchMove', [touchPoint(
+                await touchHandle.move(
                     joystick.x + direction.x * 46, joystick.y + direction.y * 46,
-                )]);
+                );
             } else {
                 const key = keyFor(direction);
                 if (heldKey !== key) {
@@ -190,7 +186,7 @@ function makeNeedleSurvival(page, client, mobile) {
         async stop() {
             if (!active) return;
             active = false;
-            if (mobile) await touch(client, 'touchEnd', []);
+            if (mobile) await touchHandle.end();
             else if (heldKey) { await page.keyboard.up(heldKey); heldKey = null; }
         },
         get active() { return active; },
