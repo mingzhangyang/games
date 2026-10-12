@@ -150,6 +150,89 @@ function reviewMobileFitStyles(root, cssPaths, htmlPaths, errors) {
 }
 
 /*
+ * Stage-status contract: in-round status (round / score / level / progress) lives at
+ * the top of the stage, the topbar keeps only the game name and actions. The status
+ * markup moves inside each page's own HTML; this sheet only positions it. Like
+ * mobile-fit it corrects frozen page rules, so it is @layer contracts only (layered
+ * !important beats the unlayered page debt regardless of link order), bounded by an
+ * exact selector allowlist and one canonical link — after the page / scoreboard CSS,
+ * before mobile-fit — on exactly the reviewed pages.
+ */
+export const STAGE_STATUS_STYLESHEET = 'css/stage-status.css';
+export const STAGE_STATUS_LINK = '<link rel="stylesheet" href="css/stage-status.css">';
+export const STAGE_STATUS_PAGES = new Set([
+    'carrot-pull.html', 'needle-awn.html', 'sword-flight.html', 'shadow-loom.html',
+]);
+export const STAGE_STATUS_SELECTORS = new Set([
+    '.cp-topbar',
+    '.cp-brand-en',
+    '.cp-hud-row',
+    '.cp-hud-row .cp-chip',
+    '.cp-toast',
+    '.na-stage-status, .sf-stage-status',
+    '.na-stage-status',
+    '.sf-stage-status',
+    '.na-stage-status .na-title-pill',
+    '.na-stage-status .na-stage-label',
+    '.sf-stage-status .sf-mode-badge',
+    '.na-in-hud',
+    '.sf-in-hud',
+    '.sf-realm-chip',
+    '.sf-progress-wrap',
+    '.sl-progress',
+    '.sl-toast',
+]);
+
+export function stripStageStatusLink(page, html, errors) {
+    const count = html.split(STAGE_STATUS_LINK).length - 1;
+    const approved = STAGE_STATUS_PAGES.has(page);
+    const possibleLinks = [...html.matchAll(/<link\b[^>]*stage-status\.css[^>]*>/g)].map(m => m[0]);
+    if (!approved) {
+        if (count || possibleLinks.length) errors.push(page + ': unauthorized stage-status stylesheet link');
+        return html;
+    }
+    if (count !== 1 || possibleLinks.length !== 1 || possibleLinks[0] !== STAGE_STATUS_LINK) {
+        errors.push(page + ': expected exactly one canonical stage-status stylesheet link');
+        return html;
+    }
+    const current = html.indexOf(STAGE_STATUS_LINK);
+    const layout = html.indexOf('href="css/layout.css"');
+    const fit = html.indexOf(MOBILE_FIT_LINK);
+    const pageCss = html.indexOf('href="css/' + page.replace(/\.html$/, '.css') + '"');
+    const scoreboard = html.indexOf(FEATURE_LINK);
+    if (layout < 0 || pageCss < 0 || current < layout || current < pageCss
+        || (scoreboard >= 0 && current < scoreboard) || fit < 0 || current > fit) {
+        errors.push(page + ': stage-status CSS must follow the page and scoreboard CSS and precede mobile-fit');
+    }
+    return html.replace(STAGE_STATUS_LINK, '');
+}
+
+function reviewStageStatusStyles(root, cssPaths, htmlPaths, errors) {
+    if (!cssPaths.includes(STAGE_STATUS_STYLESHEET)) {
+        errors.push('Reviewed stage-status stylesheet is missing');
+    } else {
+        const css = readFileSync(join(root, STAGE_STATUS_STYLESHEET), 'utf8');
+        const parsed = parseCssText(css, STAGE_STATUS_STYLESHEET);
+        if (!parsed.rules.length || parsed.rules.some(rule => rule.layer !== 'contracts')) {
+            errors.push('Stage-status stylesheet must contain only rules owned by @layer contracts');
+        }
+        if ((parsed.specialAtRules || []).length || parsed.keyframes.length) {
+            errors.push('Stage-status feature CSS must not add special at-rules or keyframes');
+        }
+        const unknown = parsed.rules.map(rule => rule.selector).filter(selector => !STAGE_STATUS_SELECTORS.has(selector));
+        if (unknown.length) {
+            errors.push('Stage-status feature CSS targets unreviewed selectors: ' + JSON.stringify(unknown));
+        }
+    }
+    for (const page of STAGE_STATUS_PAGES) {
+        if (!htmlPaths.includes(page)) errors.push('Registered stage-status page missing: ' + page);
+    }
+    for (const page of htmlPaths) {
+        stripStageStatusLink(page, readFileSync(join(root, page), 'utf8'), errors);
+    }
+}
+
+/*
  * Games added after the immutable CSS P0/P5 freeze. They have no historical
  * snapshot to project back onto, so instead of being compared with P0 they are
  * admitted only as fully-layered, self-contained additive pages:
@@ -303,16 +386,20 @@ function reviewPostFreezeGames(root, cssPaths, htmlPaths, errors) {
 export function reviewFeatureStyles(root, cssPaths, htmlPaths, errors) {
     reviewScoreboardStyles(root, cssPaths, htmlPaths, errors);
     reviewMobileFitStyles(root, cssPaths, htmlPaths, errors);
+    reviewStageStatusStyles(root, cssPaths, htmlPaths, errors);
     reviewPostFreezeGames(root, cssPaths, htmlPaths, errors);
     return {
-        cssPaths: new Set([FEATURE_STYLESHEET, MOBILE_FIT_STYLESHEET,
+        cssPaths: new Set([FEATURE_STYLESHEET, MOBILE_FIT_STYLESHEET, STAGE_STATUS_STYLESHEET,
             ...POST_FREEZE_GAMES.map(game => game.stylesheet)]),
         postFreezePages: POST_FREEZE_PAGES,
         stripHtml: (page, html) => {
             const withoutScoreboard = stripFeatureLink(page, html, []);
-            return withoutScoreboard.includes(MOBILE_FIT_LINK)
-                ? stripMobileFitLink(page, withoutScoreboard, [])
+            const withoutStatus = withoutScoreboard.includes(STAGE_STATUS_LINK)
+                ? stripStageStatusLink(page, withoutScoreboard, [])
                 : withoutScoreboard;
+            return withoutStatus.includes(MOBILE_FIT_LINK)
+                ? stripMobileFitLink(page, withoutStatus, [])
+                : withoutStatus;
         },
     };
 }

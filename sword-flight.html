@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/sword-flight.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,11 +53,6 @@
             <div class="sf-topbar-center game-topbar-center">
                 <div class="sf-title-pill game-title-pill">
                     <span class="sf-stage-label" id="sf-stage-label" data-i18n="gameTitle">御剑飞行</span>
-                    <span class="sf-mode-badge" id="sf-mode-badge">九天问道</span>
-                </div>
-                <div class="sf-hud-box game-hud-box">
-                    <span class="sf-score-val" id="sf-score-val">0</span>
-                    <span class="sf-combo-val" id="sf-combo-val">×1</span>
                 </div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
@@ -73,6 +69,15 @@
         <main class="sf-main game-main">
             <div class="sf-stage game-stage game-stage--fill" id="sf-stage">
                 <canvas class="game-canvas" id="sf-canvas" width="480" height="640"></canvas>
+
+                <!-- 局内状态在舞台顶部，顶栏只留游戏名（css/stage-status.css） -->
+                <div class="sf-stage-status" id="sf-stage-status">
+                    <span class="sf-mode-badge" id="sf-mode-badge">九天问道</span>
+                    <div class="sf-hud-box game-hud-box">
+                        <span class="sf-score-val" id="sf-score-val">0</span>
+                        <span class="sf-combo-val" id="sf-combo-val">×1</span>
+                    </div>
+                </div>
 
                 <!-- 内部即时 HUD -->
                 <div class="sf-in-hud hidden" id="sf-in-hud">

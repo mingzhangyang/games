@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import {
     stripFeatureLink, FEATURE_LINK, stripMobileFitLink, MOBILE_FIT_LINK, reviewFeatureStyles,
+    stripStageStatusLink, STAGE_STATUS_LINK,
     POST_FREEZE_GAMES, postFreezeSelectorScoped, reviewPostFreezeStylesheet, reviewPostFreezePage,
 } from './lib/css/feature-additions.mjs';
 
@@ -64,6 +65,34 @@ stripMobileFitLink('sword-flight.html', fit
     + '\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC">', errors);
 assert.deepEqual(errors, [], 'an external font stylesheet after more-games stays allowed');
 
+// Stage-status contract: one canonical link after page + scoreboard CSS, before mobile-fit.
+const status = '<link rel="stylesheet" href="css/layout.css">\n<link rel="stylesheet" href="css/carrot-pull.css">\n'
+    + FEATURE_LINK + '\n' + STAGE_STATUS_LINK + '\n' + MOBILE_FIT_LINK + '\n<link rel="stylesheet" href="css/more-games.css">';
+errors = [];
+assert.equal(stripStageStatusLink('carrot-pull.html', status, errors), status.replace(STAGE_STATUS_LINK, ''));
+assert.deepEqual(errors, []);
+errors = [];
+stripStageStatusLink('carrot-pull.html', status + STAGE_STATUS_LINK, errors);
+assert.ok(errors.some(e => e.includes('exactly one')), 'duplicate stage-status link must fail');
+errors = [];
+stripStageStatusLink('carrot-pull.html', status.replace(STAGE_STATUS_LINK, ''), errors);
+assert.ok(errors.some(e => e.includes('exactly one')), 'missing stage-status link on a reviewed page must fail');
+errors = [];
+stripStageStatusLink('gomoku.html', status.replace('carrot-pull.css', 'gomoku.css'), errors);
+assert.ok(errors.some(e => e.includes('unauthorized')), 'unreviewed page cannot link stage-status');
+errors = [];
+stripStageStatusLink('carrot-pull.html', status.replace(FEATURE_LINK + '\n' + STAGE_STATUS_LINK,
+    STAGE_STATUS_LINK + '\n' + FEATURE_LINK), errors);
+assert.ok(errors.some(e => e.includes('must follow')), 'stage-status before scoreboard CSS must fail');
+errors = [];
+stripStageStatusLink('carrot-pull.html', status.replace(STAGE_STATUS_LINK + '\n' + MOBILE_FIT_LINK,
+    MOBILE_FIT_LINK + '\n' + STAGE_STATUS_LINK), errors);
+assert.ok(errors.some(e => e.includes('precede mobile-fit')), 'stage-status after mobile-fit must fail');
+errors = [];
+stripStageStatusLink('carrot-pull.html', status.replace(STAGE_STATUS_LINK,
+    '<link rel="alternate stylesheet" href="css/stage-status.css">'), errors);
+assert.ok(errors.some(e => e.includes('canonical')), 'stage-status link variants cannot bypass review');
+
 // Stylesheet review: unlayered rules or unreviewed selectors cannot ride along.
 function reviewWith(css) {
     const root = mkdtempSync(join(tmpdir(), 'mobile-fit-'));
@@ -74,6 +103,21 @@ function reviewWith(css) {
     reviewFeatureStyles(root, ['css/scoreboard-dialog.css', 'css/mobile-fit.css'], [], found);
     return found;
 }
+function reviewStatusWith(css) {
+    const root = mkdtempSync(join(tmpdir(), 'stage-status-'));
+    mkdirSync(join(root, 'css'));
+    writeFileSync(join(root, 'css/stage-status.css'), css);
+    const found = [];
+    reviewFeatureStyles(root, ['css/stage-status.css'], [], found);
+    return found.filter(e => e.startsWith('Stage-status'));
+}
+assert.deepEqual(reviewStatusWith('@layer contracts { .sl-progress { top: 10px; } }'), [],
+    'reviewed stage-status selector inside contracts passes');
+assert.ok(reviewStatusWith('.sl-progress { top: 10px; }').some(e => e.includes('@layer contracts')),
+    'unlayered stage-status rule must fail');
+assert.ok(reviewStatusWith('@layer contracts { .game-topbar { display: none; } }').some(e => e.includes('unreviewed selectors')),
+    'stage-status cannot restyle an unreviewed selector');
+
 assert.ok(!reviewWith('@layer contracts { .rv-board { width: 1px !important; } }')
     .some(e => e.startsWith('Mobile-fit')), 'reviewed selector inside contracts passes');
 assert.ok(reviewWith('.rv-board { width: 1px; }').some(e => e.includes('@layer contracts')),
@@ -149,4 +193,4 @@ assert.ok(pageReview(pageHtml.replace('<body class="lj-body">', '<body class="lj
     .some(e => e.includes('inline')), 'inline style attribute must fail');
 assert.ok(pageReview(pageHtml.replace('</head>', '<style>.lj-x{color:red}</style></head>'))
     .some(e => e.includes('inline')), 'inline style block must fail');
-console.log('PASS additive scoreboard + mobile-fit + post-freeze game CSS review contract');
+console.log('PASS additive scoreboard + mobile-fit + stage-status + post-freeze game CSS review contract');

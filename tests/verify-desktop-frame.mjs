@@ -439,9 +439,28 @@ if (regressionPage) {
 await browser.close();
 
 // P0 CSS cascade snapshot：冻结代表性页面的桌面舞台宽度，迁移 PR 必须显式对账。
+// 有意的产品改动造成的几何变化：P0 快照本身不可改（verify-css-debt），只能在这里逐条登记。
+// 每条锁死「P0 原值 → 新值」两端：P0 原值必须仍与快照一致，实测必须恰好等于新值 —— 不是放宽阈值。
+const REVIEWED_WIDTH_DELTAS = [
+    {
+        page: 'carrot-pull', viewport: '1280x900', from: 654, to: 662,
+        reason: 'stage-status (2026-10-12): round/score/time chips moved from under the topbar title into the stage; '
+            + 'the single-row topbar returns 8px of height budget to the height-driven stage',
+    },
+];
+for (const delta of REVIEWED_WIDTH_DELTAS) {
+    if (WIDTH_BASELINE_ZH[delta.page]?.[delta.viewport] !== delta.from) {
+        failures.push(`reviewed width delta ${delta.page} ${delta.viewport}: P0 value is `
+            + `${WIDTH_BASELINE_ZH[delta.page]?.[delta.viewport]}px, ledger says ${delta.from}px`);
+    }
+}
+const reviewedWidth = (page, viewport) => REVIEWED_WIDTH_DELTAS
+    .find(delta => delta.page === page && delta.viewport === viewport)?.to;
+
 for (const [page, expectedWidths] of Object.entries(WIDTH_BASELINE_ZH)) {
     if (!Object.hasOwn(PAGES, page)) continue; // VERIFY_PAGES may intentionally narrow measurement only.
-    for (const [viewport, expected] of Object.entries(expectedWidths)) {
+    for (const [viewport, p0] of Object.entries(expectedWidths)) {
+        const expected = reviewedWidth(page, viewport) ?? p0;
         const actual = widthTable[page + '|' + viewport + '|zh'];
         if (actual !== expected) {
             failures.push('CSS P0 geometry baseline ' + page + ' ' + viewport + ' zh changed: '
