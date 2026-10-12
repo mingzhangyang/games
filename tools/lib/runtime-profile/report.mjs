@@ -94,7 +94,24 @@ export function renderMarkdown(report) {
         for (const missing of summary.missing) lines.push(`- Missing: ${missing}`);
         for (const extra of summary.extra) lines.push(`- Extra: ${extra}`);
         for (const duplicate of summary.duplicates) lines.push(`- Duplicate: ${duplicate}`);
-        for (const item of summary.incomplete) lines.push(`- Incomplete: ${item.id}: ${item.reason}`);
+        for (const item of summary.incomplete) {
+            lines.push(`- Incomplete: ${item.id}: ${item.reason}`);
+            const row = results.find(r => `${r.game}|${r.viewport}|${r.repeat}` === item.id
+                && r.status !== 'measured');
+            for (const phaseName of ['active', 'resume']) {
+                const phase = row?.phases?.[phaseName];
+                if (phase?.status !== 'incomplete' || !phase.input) continue;
+                const { input } = phase;
+                lines.push(`  - Failed ${phaseName} input: ${input.kind} via ${input.api}, `
+                    + `stage=${input.failedStage}, attempted ticks=${input.steps}, `
+                    + `sample metrics ${phase.metrics == null ? 'unavailable' : 'retained in results.json'}.`);
+                if (input.evidence != null) {
+                    lines.push(`  - Inspection evidence: \`${JSON.stringify(input.evidence)}\``);
+                }
+                if (input.cleanupError) lines.push(`  - Cleanup error: ${input.cleanupError}`);
+                if (input.tickError) lines.push(`  - Input tick error: ${input.tickError}`);
+            }
+        }
     }
     const repeated = summarizeRepeatRows(results);
     lines.push('', '## Repeated baseline: per-scenario medians and observed ranges', '',

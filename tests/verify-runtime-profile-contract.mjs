@@ -5,7 +5,7 @@ import { registry } from './lib/registry.mjs';
 import { SCENARIOS, validateScenarioCoverage, checkSceneState } from '../tools/lib/runtime-profile/scenarios.mjs';
 import { percentile, metricMap, metricDelta, summarizeWindow } from '../tools/lib/runtime-profile/metrics.mjs';
 import { reportSummary, renderMarkdown, summarizeRepeatRows } from '../tools/lib/runtime-profile/report.mjs';
-import { chooseNeedleDirection, captureInputSample, validateHeldAnchorProgress } from '../tools/lib/runtime-profile/interaction.mjs';
+import { chooseNeedleDirection, captureInputSample, recordProfileInputPhase, validateHeldAnchorProgress } from '../tools/lib/runtime-profile/interaction.mjs';
 import { parseArgs, VIEWPORTS } from '../tools/lib/runtime-profile/options.mjs';
 
 const games = registry.all();
@@ -189,6 +189,143 @@ await assert.rejects(() => captureInputSample(badDriver.driver,
     { kind: 'held-anchor', cadenceMs: 1 }, badDriver.sample), /sample failure/);
 assert.equal(badDriver.driver.stopped, 1, 'failed sample must release held controls');
 
+/**
+ * The bug Copilot found is not only an exception: incomplete run JSON must
+ * preserve the attempted input even when sample, tick or inspect throws.
+ * Exercise the same phase-owner helper that runOne uses for active AND resume.
+ */
+const makeFailingProfileInput = kind => {
+    let notifyTick;
+    const tickSeen = new Promise(resolve => { notifyTick = resolve; });
+    const driver = {
+        api: 'controlled browser input',
+        active: false,
+        stopped: 0,
+        async start() {
+            this.active = true;
+            if (kind === 'start') throw new Error('start rejected');
+        },
+        async tick() {
+            notifyTick();
+            if (kind === 'tick') throw new Error('tick rejected');
+        },
+        async inspect() {
+            if (kind === 'inspect') {
+                const error = new Error('inspection rejected');
+                error.profileEvidence = { worldTime: 8.5, held: false, expectedDrags: 1 };
+                throw error;
+            }
+            return { movementDistance: 25, held: true };
+        },
+        async stop() {
+            this.active = false;
+            this.stopped++;
+            if (kind === 'cleanup') throw new Error('release rejected');
+        },
+    };
+    const sample = async () => {
+        await tickSeen;
+        if (kind === 'sample') throw new Error('sampling rejected');
+        return { taskTimeMs: 25, rafIntervalP95Ms: 44 };
+    };
+    return { driver, sample };
+};
+const failureModes = [
+    { mode: 'start', stage: 'start', keptMetrics: false, steps: 0 },
+    { mode: 'sample', stage: 'sample', keptMetrics: false, steps: 1 },
+    { mode: 'tick', stage: 'tick', keptMetrics: true, steps: 1 },
+    { mode: 'inspect', stage: 'inspect', keptMetrics: true, steps: 1 },
+    { mode: 'cleanup', stage: 'cleanup', keptMetrics: true, steps: 1 },
+];
+let incompleteInspectRow;
+for (const { mode, stage, keptMetrics, steps } of failureModes) {
+    const { driver, sample } = makeFailingProfileInput(mode);
+    const phases = { menu: { status: 'measured', metrics: {} } };
+    await assert.rejects(() => recordProfileInputPhase(phases, 'active',
+        () => captureInputSample(driver, { kind: 'held-anchor', cadenceMs: 1 },
+            sample, 'S1 controlled hold')), error => {
+        assert.equal(error.name, 'ProfileInputAttemptError');
+        assert.equal(error.profilePhase?.status, 'incomplete');
+        return true;
+    }, `failure mode ${mode} must preserve its profile attempt`);
+    const bad = phases.active;
+    assert.equal(bad.status, 'incomplete', `${mode} must never masquerade as measured`);
+    assert.equal(bad.input.kind, 'held-anchor');
+    assert.equal(bad.input.workload, 'S1 controlled hold');
+    assert.equal(bad.input.api, 'controlled browser input');
+    assert.equal(bad.input.steps, steps);
+    assert.equal(bad.input.failedStage, stage);
+    assert.equal(bad.metrics?.taskTimeMs ?? null, keptMetrics ? 25 : null);
+    assert.equal(driver.stopped, 1, `on ${mode} release all held controls`);
+    assert.equal(driver.active, false);
+    if (mode === 'inspect') {
+        assert.deepEqual(bad.input.evidence,
+            { worldTime: 8.5, held: false, expectedDrags: 1 });
+        incompleteInspectRow = {
+            game: 'silk-dew', viewport: 'mobile', repeat: 1,
+            status: 'incomplete', error: bad.error, phases,
+        };
+    }
+}
+// No ticks is a failure even when CDP sampling itself completed.
+const noTick = { api: 'stationary pointer', active: false,
+    async start() { this.active = true; },
+    async tick() { throw new Error('no ticks expected'); },
+    async inspect() { return { ok: true }; },
+    async stop() { this.active = false; } };
+let emptyAttempt;
+await assert.rejects(async () => {
+    try {
+        await captureInputSample(noTick, { kind: 'held-anchor', cadenceMs: 10 },
+            async () => ({ taskTimeMs: 13 }), 'S1 controlled hold');
+    } catch (error) {
+        emptyAttempt = error.profilePhase;
+        throw error;
+    }
+}, /No profile input steps/);
+assert.equal(emptyAttempt.input.failedStage, 'tick');
+assert.equal(emptyAttempt.input.steps, 0);
+assert.equal(emptyAttempt.metrics.taskTimeMs, 13);
+
+// Resume failure must not overwrite an already successful active sample.
+const successActive = { status: 'measured', metrics: { taskTimeMs: 111 } };
+const resumePhases = { active: successActive };
+const resumeProbe = makeFailingProfileInput('inspect');
+await assert.rejects(() => recordProfileInputPhase(resumePhases, 'resume',
+    () => captureInputSample(resumeProbe.driver, { kind: 'survival-lane', cadenceMs: 1 },
+        resumeProbe.sample, 'Endless survival')), /inspection rejected/);
+assert.equal(resumePhases.active, successActive);
+assert.equal(resumePhases.resume.status, 'incomplete');
+assert.equal(resumePhases.resume.metrics.taskTimeMs, 25);
+assert.equal(resumePhases.resume.input.failedStage, 'inspect');
+
+// A game without a profileInput recipe may also lose its CDP sample. Even
+// then, the phase must be explicitly incomplete rather than silently absent.
+const genericPhases = {};
+await assert.rejects(() => recordProfileInputPhase(genericPhases, 'active',
+    async () => { throw new Error('CDP sample unavailable'); }), /CDP sample unavailable/);
+assert.deepEqual(genericPhases.active, {
+    status: 'incomplete', metrics: null, error: 'CDP sample unavailable',
+});
+
+const failExpected = [{ game: 'silk-dew', viewport: 'mobile', repeat: 1 }];
+const failSummary = reportSummary([incompleteInspectRow], failExpected);
+assert.equal(failSummary.measuredRuns, 0);
+assert.equal(failSummary.complete, false);
+const failedJson = JSON.stringify({ results: [incompleteInspectRow] });
+assert.match(failedJson, /controlled browser input/);
+assert.match(failedJson, /worldTime/);
+assert.match(failedJson, /taskTimeMs/);
+const incompleteMarkdown = renderMarkdown({
+    meta: { commit: 'c'.repeat(40), source: 'dist', sourceRoot: '/tmp/dist',
+        browserVersion: 'Chrome', os: 'linux', cpu: 'CI', cpuCount: 2,
+        browserFlags: ['--disable-gpu'], gpuMode: 'disabled', preset: 'quick', repeat: 1 },
+    results: [incompleteInspectRow], summary: failSummary,
+});
+assert.match(incompleteMarkdown, /Failed active input: held-anchor via controlled browser input/);
+assert.match(incompleteMarkdown, /stage=inspect, attempted ticks=1/);
+assert.match(incompleteMarkdown, /Inspection evidence: .*worldTime/);
+assert.doesNotMatch(incompleteMarkdown, /startPath.*as input/);
 
 for (const tag of ['mobile', 'small']) {
     for (const game of games) {
@@ -213,4 +350,4 @@ assert.throws(() => parseArgs(['--all', '--out=..']), /--out must be/);
 assert.throws(() => parseArgs(['--all', '--out=.']), /--out must be/);
 assert.throws(() => parseArgs(['--all', '--out=/definitely-outside-repo']), /--out must be/);
 assert.ok(parseArgs(['--all', '--out=.tmp-perf/contract']).out.endsWith('contract'));
-console.log('PASS PR #138 profile scenarios, input ownership, frozen-world protection, repeat medians, invalidation and CLI contracts');
+console.log('PASS PR #138 profile scenarios, complete failure evidence, cleanup, frozen-world protection, repeat medians and CLI contracts');

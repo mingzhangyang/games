@@ -71,8 +71,10 @@ function makeHeldAnchor(page, _client, mobile) {
                     dragging: window.sdGame?.isDragging,
                     pointerId: window.sdGame?.pointerId,
                 }));
-                throw new Error('Silk Dew stationary anchor hold was not accepted: '
+                const invalid = new Error('Silk Dew stationary anchor hold was not accepted: '
                     + JSON.stringify(evidence), { cause: error });
+                invalid.profileEvidence = evidence;
+                throw invalid;
             }
             // Capture this clock only AFTER the real game input has taken hold:
             // time accumulated before measurement must not validate a frozen sample.
@@ -116,7 +118,9 @@ export function validateHeldAnchorProgress(startWorldTime, evidence, dragCount, 
     if (!evidence?.playing || !evidence.held || !(evidence.drags >= dragCount)
         || holdTicks < 2 || !Number.isFinite(startWorldTime) || startWorldTime < 0
         || !Number.isFinite(evidence.worldTime) || evidence.worldTime <= startWorldTime) {
-        throw new Error('Silk Dew S1 invalid: hold inactive or world time did not advance during sampling');
+        const invalid = new Error('Silk Dew S1 invalid: hold inactive or world time did not advance during sampling');
+        invalid.profileEvidence = { ...evidence, startWorldTime, expectedDrags: dragCount, holdTicks };
+        throw invalid;
     }
     return { ...evidence, worldTimeAdvanceSeconds: evidence.worldTime - startWorldTime,
         holdTickCount: holdTicks };
@@ -170,11 +174,15 @@ function makeNeedleSurvival(page, _client, mobile) {
         async inspect() {
             const player = await playerPosition();
             travel += Math.hypot(player.x - lastPlayer.x, player.y - lastPlayer.y);
+            const evidence = { movementDistance: Math.round(travel), directions,
+                remainingLives: player.lives, elapsedGameSeconds: +player.timeElapsed.toFixed(2),
+                wave: player.wave };
             if (directions < 2 || travel < 10 || !(player.timeElapsed > 0) || player.lives <= 0) {
-                throw new Error('Needle Awn movement was not observable in live Endless mode');
+                const invalid = new Error('Needle Awn movement was not observable in live Endless mode');
+                invalid.profileEvidence = evidence;
+                throw invalid;
             }
-            return { movementDistance: Math.round(travel), directions, remainingLives: player.lives,
-                elapsedGameSeconds: +player.timeElapsed.toFixed(2), wave: player.wave };
+            return evidence;
         },
         async stop() {
             if (!active) return;
@@ -199,14 +207,25 @@ export async function sampleWithInput(page, client, scene, viewportTag, sample) 
     return captureInputSample(driver, spec, sample, scene.workload);
 }
 
-/** Factored from the browser layer for deterministic cancellation regression tests. */
+/**
+ * The sampler owns the full input attempt, including failures. A rejected input
+ * must retain its attempted API, tick count, inspection evidence (if available),
+ * and metrics if sampling had already completed. Such a row remains incomplete:
+ * retaining diagnostics is not a license to publish invalid performance data.
+ */
 export async function captureInputSample(driver, spec, sample, workload = 'test scenario') {
     let running = false;
     let loop = null;
     let steps = 0;
     let tickError = null;
+    let metrics = null;
+    let evidence = null;
+    let stage = 'start';
+    let failure = null;
+    let cleanupError = null;
     try {
         await driver.start();
+        stage = 'sample';
         running = true;
         loop = (async () => {
             while (running) {
@@ -216,16 +235,59 @@ export async function captureInputSample(driver, spec, sample, workload = 'test 
                 catch (error) { tickError = error; running = false; }
             }
         })();
-        const metrics = await sample();
+        metrics = await sample();
         running = false;
         await loop;
-        if (tickError) throw tickError;
-        if (steps < 1) throw new Error('No profile input steps were delivered');
-        const evidence = await driver.inspect();
-        return { metrics, input: { kind: spec.kind, workload, api: driver.api, steps, evidence } };
+        if (tickError) {
+            stage = 'tick';
+            throw tickError;
+        }
+        if (steps < 1) {
+            stage = 'tick';
+            throw new Error('No profile input steps were delivered');
+        }
+        stage = 'inspect';
+        evidence = await driver.inspect();
+    } catch (error) {
+        failure = error;
     } finally {
         running = false;
-        if (loop) await loop;
-        if (driver.active) await driver.stop();
+        try { if (loop) await loop; }
+        catch (error) { cleanupError = error; }
+        try { if (driver.active) await driver.stop(); }
+        catch (error) { cleanupError ??= error; }
+    }
+
+    const input = { kind: spec.kind, workload, api: driver.api, steps,
+        evidence: evidence ?? failure?.profileEvidence ?? null };
+    if (failure || cleanupError) {
+        const reason = failure || cleanupError;
+        input.failedStage = failure ? stage : 'cleanup';
+        if (tickError && tickError !== failure) input.tickError = String(tickError?.message || tickError);
+        if (cleanupError && cleanupError !== reason) input.cleanupError = String(cleanupError?.message || cleanupError);
+        const message = String(reason?.message || reason);
+        const invalid = new Error(message, { cause: reason });
+        invalid.name = 'ProfileInputAttemptError';
+        invalid.profilePhase = { status: 'incomplete', metrics, input, error: message };
+        throw invalid;
+    }
+    return { metrics, input };
+}
+
+/**
+ * Preserve the failed phase on the owning run before rethrowing. This works for
+ * both active and post-drawer resume, without making incomplete rows measured.
+ */
+export async function recordProfileInputPhase(phases, name, sample) {
+    try {
+        const measured = await sample();
+        phases[name] = { status: 'measured', ...measured };
+    } catch (error) {
+        phases[name] = error?.profilePhase ?? {
+            status: 'incomplete',
+            metrics: null,
+            error: String(error?.message || error),
+        };
+        throw error;
     }
 }

@@ -54,8 +54,12 @@ both viewports. No periodic synthetic events are dispatched during sampling.
 The input API, workload, tick count and observable game-state evidence are
 recorded for every run, including the start-to-end world-clock delta for Silk
 Dew so a frozen simulation cannot masquerade as a measured baseline.
-Input is released in a finally block on completion and failure. Failed or
-inert inputs make a run **incomplete**, not measured. On the GPU-disabled
+Input is released in a finally block on completion and failure. A rejected
+input phase remains **incomplete**, not measured, but its API, workload, attempted
+tick count, failure stage, available inspection evidence and any completed CDP
+sample are retained under `phases.active` or `phases.resume` in the raw
+checkpoint and report. The Markdown summary also identifies failed input
+attempts instead of silently substituting the game start path. On the GPU-disabled
 headless runner, real mobile touch emulation failed to sustain a hold despite
 correct canvas hit-testing; this synthetic-event fallback is strictly a
 controlled simulation/rendering workload, **never** device-touch QA. Existing
@@ -105,9 +109,9 @@ included. The normal Architecture v2 CI checks only deterministic contracts.
 
 ### Empirical sign-off (must be filled with measured evidence, never guesses)
 
-- [ ] Local or Action quick browser validation of Silk Dew + Needle Awn
-- [ ] Three repeats, 25 games x two viewports: **150/150 measured**
-- [ ] Save a link to exact-head summary.md, results.json and job logs
+- [x] 4/4 Chromium quick scenes on exact head `3d00a67f`: [run #38265002247](https://github.com/mingzhangyang/games/actions/runs/38265002247)
+- [x] Three repeats, 25 games x two viewports: **150/150 measured** on commit `3d00a67f` with the stricter frozen-world validity check: [run #38265477759](https://github.com/mingzhangyang/games/actions/runs/38265477759)
+- [x] [Exact-commit raw summary.md / results.json / runs.json artifact](https://github.com/mingzhangyang/games/actions/runs/38265477759/artifacts/11758106843) and [job logs](https://github.com/mingzhangyang/games/actions/runs/38265477759) preserved. These are evidence for `3d00a67f`; later tool-only edits require their own latest-head CI / browser validation before merge.
 - [ ] Reassess #136's Sword Flight, Firefly Signal, Shadow Loom and Ripple Duet
       from the three-run distribution, then select actual traces for #139
 - [ ] Check source and built browser smoke, full verify, worker dry-run,
