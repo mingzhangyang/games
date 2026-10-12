@@ -10,7 +10,7 @@ import { registry } from './lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = file => readFileSync(join(ROOT, file), 'utf8');
-const expected = ['carrot-pull', 'firefly-signal', 'math-rain', 'needle-awn', 'shadow-loom', 'tank-battle'];
+const expected = ['carrot-pull', 'firefly-signal', 'loop-jail', 'math-rain', 'needle-awn', 'shadow-loom', 'tank-battle'];
 const actual = registry.withCap('leaderboard').filter(g => g.scores?.ui === 'dialog')
     .map(g => g.id).sort();
 assert.deepEqual(actual, expected, 'audit every shared-dialog game when registry changes');
@@ -139,6 +139,7 @@ for (const firstRelease of ['ranking', 'hidden']) {
 const owners = new Map([
     ['carrot-pull', 'src/games/carrot-pull/runtime.js'],
     ['firefly-signal', 'src/games/firefly-signal/index.js'],
+    ['loop-jail', 'src/games/loop-jail/runtime.js'],
     ['math-rain', 'src/games/math-rain/index.js'],
     ['needle-awn', 'src/games/needle-awn/runtime.js'],
     ['shadow-loom', 'src/games/shadow-loom/runtime.js'],
@@ -172,4 +173,4 @@ assert.match(mathSettings, /this\.eventSystem\.emit\('ui:resume:game'\)/,
 assert.doesNotMatch(mathSettings, /this\.gameStateManager\.resumeGame\(\)/,
     'Settings must not bypass application lifecycle ownership');
 
-console.log('PASS gameplay interruption leases / six-game integration contract');
+console.log('PASS gameplay interruption leases / seven-game integration contract');

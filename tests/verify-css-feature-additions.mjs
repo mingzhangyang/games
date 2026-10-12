@@ -6,8 +6,12 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 import {
     stripFeatureLink, FEATURE_LINK, stripMobileFitLink, MOBILE_FIT_LINK, reviewFeatureStyles,
+    POST_FREEZE_GAMES, postFreezeSelectorScoped, reviewPostFreezeStylesheet, reviewPostFreezePage,
 } from './lib/css/feature-additions.mjs';
 
 const page = 'carrot-pull.html';
@@ -76,4 +80,51 @@ assert.ok(reviewWith('.rv-board { width: 1px; }').some(e => e.includes('@layer c
     'unlayered mobile-fit rule must fail');
 assert.ok(reviewWith('@layer contracts { .ms-cell { width: 1px; } }').some(e => e.includes('unreviewed selectors')),
     'unreviewed mobile-fit selector must fail');
-console.log('PASS additive scoreboard + mobile-fit CSS review contract');
+// Post-freeze game pages: self-contained, fully layered, prefix-scoped additions.
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const game = POST_FREEZE_GAMES.find(item => item.id === 'loop-jail');
+assert.ok(game, 'loop-jail is registered as a post-freeze game');
+for (const [selector, scoped] of [
+    ['.lj-hud', true], ['#lj-stage .lj-canvas', true], ['body.lj-body', true], [':root', true],
+    [':root[data-theme="light"]', true], ['html', true], ['.lj-a, .lj-b:hover', true],
+    ['.game-overlay', false], ['.lj-a, body', false], ['div:not(.lj-x)', false], ['.ljx-a', false],
+]) {
+    assert.equal(postFreezeSelectorScoped(selector, 'lj'), scoped, 'selector scope: ' + selector);
+}
+const sheet = rules => {
+    const found = [];
+    reviewPostFreezeStylesheet(rules, game, found);
+    return found;
+};
+assert.deepEqual(sheet(readFileSync(join(ROOT, game.stylesheet), 'utf8')), [], 'real post-freeze stylesheet passes');
+assert.deepEqual(sheet('@layer pages { :root { --lj-a: 1px; } .lj-x { color: red; } html { background: #000; } }'), []);
+assert.ok(sheet('.lj-x { color: red; }').some(e => e.includes('@layer pages')), 'unlayered rule must fail');
+assert.ok(sheet('@layer components { .lj-x { color: red; } }').some(e => e.includes('@layer pages')), 'other layer must fail');
+assert.ok(sheet('@layer pages { .lj-x { color: red !important; } }').some(e => e.includes('!important')), '!important must fail');
+assert.ok(sheet('@layer pages { @keyframes lj-a { to { opacity: 0; } } .lj-x { color: red; } }')
+    .some(e => e.includes('keyframes')), 'keyframes must fail');
+assert.ok(sheet('@layer pages { .game-action-btn { padding: 0; } }').some(e => e.includes('outside the page prefix')),
+    'restyling a shared family must fail');
+assert.ok(sheet('@layer pages { :root { --tok-text: red; } }').some(e => e.includes('namespace')),
+    'overriding shared tokens must fail');
+assert.ok(sheet('@layer pages { :root { color: red; } }').some(e => e.includes('may only define')),
+    'document hooks only define page custom properties');
+assert.ok(sheet('@layer pages { html { font-size: 20px; } }').some(e => e.includes('background')),
+    'html hook only paints the background');
+const pageHtml = readFileSync(join(ROOT, game.page), 'utf8');
+const pageReview = html => {
+    const found = [];
+    reviewPostFreezePage(ROOT, game, html, found);
+    return found;
+};
+assert.deepEqual(pageReview(pageHtml), [], 'real post-freeze page passes');
+assert.ok(pageReview(pageHtml.replace('<link rel="stylesheet" href="css/loop-jail.css">\n', ''))
+    .some(e => e.includes('stylesheet order')), 'missing page stylesheet must fail');
+assert.ok(pageReview(pageHtml.replace('<link rel="stylesheet" href="css/more-games.css">',
+    '<link rel="stylesheet" href="css/more-games.css">\n    <link rel="stylesheet" href="css/tetris.css">'))
+    .some(e => e.includes('stylesheet order')), 'extra stylesheet must fail');
+assert.ok(pageReview(pageHtml.replace('<body class="lj-body">', '<body class="lj-body" style="color:red">'))
+    .some(e => e.includes('inline')), 'inline style attribute must fail');
+assert.ok(pageReview(pageHtml.replace('</head>', '<style>.lj-x{color:red}</style></head>'))
+    .some(e => e.includes('inline')), 'inline style block must fail');
+console.log('PASS additive scoreboard + mobile-fit + post-freeze game CSS review contract');

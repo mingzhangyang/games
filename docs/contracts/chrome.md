@@ -83,7 +83,7 @@ bindChrome({
 
 ### 1.5 顶栏重置按游玩状态呈现（2026-10-10）
 
-12 个顶栏重开入口（lm/cc/sd/ec/bf/fv/rd/cp/cb/md/sl/gd）由共享模块
+13 个顶栏重开入口（lm/cc/sd/ec/bf/fv/rd/cp/cb/md/sl/gd/lj）由共享模块
 src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一套游戏状态。
 
 - HTML 保留原有 DOM id / game-icon-btn，初始添加 hidden class，避免加载前出现无效按钮；
@@ -111,8 +111,8 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
   包括有进度时的本地化确认、取消保护、无进度时立即重开、暂停/结算时禁止重开。
   `gd` 为不丢累计发射次数的例外，仍通过同一生命周期守卫。
   验证器应从实际运行时代码识别 R 绑定并对照测试清单，避免新增快捷键遗漏。
-- 测试：tests/verify-contextual-restart.mjs 覆盖 12 个游戏的菜单、游戏中、结算态，
-  对全部 11 个可能丢失进度的游戏分别执行中/英确认、取消保留与确认后重置；
+- 测试：tests/verify-contextual-restart.mjs 覆盖 13 个游戏的菜单、游戏中、结算态，
+  对全部 12 个可能丢失进度的游戏分别执行中/英确认、取消保留与确认后重置；
   `gravity-slingshot` 验证仅复位发射、累计次数不丢；状态变更静态钩子和
   solving/clear/over 等结果浮层之前的状态也覆盖。
   所有 R 重开快捷键执行取消与静默暂停断言；另覆盖拔萝卜仅消耗时间、

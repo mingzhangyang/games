@@ -8,6 +8,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseCssText } from './baseline-adapter.mjs';
+import { scanHtml } from './html-inputs.mjs';
+import { auditedJavaScriptFiles } from './runtime-sources.mjs';
+import { pageActivation } from './activation.mjs';
 import { registry } from '../registry.mjs';
 
 export const FEATURE_STYLESHEET = 'css/scoreboard-dialog.css';
@@ -15,6 +18,7 @@ export const FEATURE_LINK = '<link rel="stylesheet" href="css/scoreboard-dialog.
 export const FEATURE_PAGES = new Set([
     'carrot-pull.html', 'tank-battle.html', 'needle-awn.html',
     'firefly-signal.html', 'shadow-loom.html', 'math-rain.html',
+    'loop-jail.html',
 ]);
 
 export function stripFeatureLink(page, html, errors) {
@@ -141,11 +145,128 @@ function reviewMobileFitStyles(root, cssPaths, htmlPaths, errors) {
     }
 }
 
+/*
+ * Games added after the immutable CSS P0/P5 freeze. They have no historical
+ * snapshot to project back onto, so instead of being compared with P0 they are
+ * admitted only as fully-layered, self-contained additive pages:
+ *   - the page stylesheet owns every rule in @layer pages (zero new unlayered
+ *     debt) and adds no !important, keyframes or other special at-rules;
+ *   - every selector is scoped to the page prefix (.xx-* / #xx-* outside :not())
+ *     or is one of the document hooks below, the hooks only define --xx-*
+ *     custom properties (html may also paint the canvas behind the shell), so
+ *     the page never restyles a shared game-* family or another page's tokens;
+ *   - only its own page links it, in the canonical shared order, the page has no
+ *     inline <style>/style="", and its execution graph never reaches the runtime
+ *     stylesheet installer.
+ * Every frozen P0 comparison projects exactly these pages away; nothing else may.
+ */
+export const POST_FREEZE_GAMES = Object.freeze([
+    Object.freeze({ id: 'loop-jail', page: 'loop-jail.html', stylesheet: 'css/loop-jail.css', prefix: 'lj' }),
+]);
+export const POST_FREEZE_PAGES = new Set(POST_FREEZE_GAMES.map(game => game.page));
+const POST_FREEZE_ROOT_HOOKS = new Set([':root', ':root[data-theme="light"]']);
+
+export function postFreezeSelectorScoped(selector, prefix) {
+    const owned = new RegExp('[.#]' + prefix + '-[A-Za-z0-9_-]');
+    return selector.split(',').map(part => part.trim()).every(part => {
+        if (POST_FREEZE_ROOT_HOOKS.has(part) || part === 'html') return true;
+        // A prefixed class inside :not() would *widen* the match, not scope it.
+        return owned.test(part.replace(/:not\([^)]*\)/g, ''));
+    });
+}
+
+export function postFreezeLinkOrder(game) {
+    return ['css/tokens.css', 'css/layout.css', game.stylesheet,
+        ...(FEATURE_PAGES.has(game.page) ? [FEATURE_STYLESHEET] : []),
+        MOBILE_FIT_STYLESHEET, 'css/more-games.css'];
+}
+
+export function reviewPostFreezeStylesheet(css, game, errors) {
+    const parsed = parseCssText(css, game.stylesheet);
+    const fail = message => errors.push(game.stylesheet + ': ' + message);
+    if (!parsed.rules.length || parsed.rules.some(rule => rule.layer !== 'pages')) {
+        fail('post-freeze page CSS must own every rule in @layer pages');
+    }
+    if ((parsed.specialAtRules || []).length || parsed.keyframes.length) {
+        fail('post-freeze page CSS must not add keyframes or other special at-rules');
+    }
+    if ((parsed.declarations || []).some(d => /!\s*important/i.test(d.value) || d.important)) {
+        fail('post-freeze page CSS must not use !important');
+    }
+    const unscoped = parsed.rules.map(rule => rule.selector)
+        .filter(selector => !postFreezeSelectorScoped(selector, game.prefix));
+    if (unscoped.length) fail('selectors outside the page prefix: ' + JSON.stringify(unscoped));
+    for (const declaration of parsed.declarations || []) {
+        const selector = declaration.selector || '';
+        const hook = selector.split(',').map(part => part.trim());
+        if (declaration.property.startsWith('--') && !declaration.property.startsWith('--' + game.prefix + '-')) {
+            fail('custom property ' + declaration.property + ' is outside the --' + game.prefix + '-* namespace');
+        }
+        if (hook.every(part => POST_FREEZE_ROOT_HOOKS.has(part)) && !declaration.property.startsWith('--')) {
+            fail(selector + ' may only define --' + game.prefix + '-* custom properties (found ' + declaration.property + ')');
+        }
+        if (hook.includes('html') && !/^(?:--|background)/.test(declaration.property)) {
+            fail('html may only paint the page background (found ' + declaration.property + ')');
+        }
+    }
+}
+
+export function reviewPostFreezePage(root, game, html, errors) {
+    const fail = message => errors.push(game.page + ': ' + message);
+    const entry = registry.all().find(item => item.id === game.id);
+    if (!entry || entry.href !== game.page) fail('post-freeze page must be the registry href of ' + game.id);
+    const links = [...html.matchAll(/<link\b[^>]*\bhref="(css\/[^"]+)"[^>]*>/g)];
+    if (links.some(match => !/\brel="stylesheet"/.test(match[0])
+        || match[0] !== '<link rel="stylesheet" href="' + match[1] + '">')) {
+        fail('local stylesheet links must use the canonical <link rel="stylesheet" href="…"> form');
+    }
+    const hrefs = links.map(match => match[1]);
+    const expected = postFreezeLinkOrder(game);
+    if (JSON.stringify(hrefs) !== JSON.stringify(expected)) {
+        fail('stylesheet order must be ' + expected.join(' → ') + ' (found ' + hrefs.join(' → ') + ')');
+    }
+    const scanned = scanHtml(game.page, html);
+    if (scanned.styleBlocks.length || scanned.inlineAttributes.length) {
+        fail('post-freeze pages must not carry inline <style> blocks or style attributes');
+    }
+    try {
+        const activation = pageActivation(root, game.page, html, auditedJavaScriptFiles(root));
+        if (activation.runtimeStyleSources.length) {
+            fail('page execution reaches the runtime stylesheet installer');
+        }
+    } catch (error) {
+        fail('activation graph: ' + error.message);
+    }
+}
+
+function reviewPostFreezeGames(root, cssPaths, htmlPaths, errors) {
+    for (const game of POST_FREEZE_GAMES) {
+        if (!cssPaths.includes(game.stylesheet)) errors.push('Post-freeze stylesheet missing: ' + game.stylesheet);
+        else reviewPostFreezeStylesheet(readFileSync(join(root, game.stylesheet), 'utf8'), game, errors);
+        if (!htmlPaths.includes(game.page)) {
+            errors.push('Post-freeze page missing: ' + game.page);
+            continue;
+        }
+        reviewPostFreezePage(root, game, readFileSync(join(root, game.page), 'utf8'), errors);
+    }
+    for (const page of htmlPaths) {
+        const html = readFileSync(join(root, page), 'utf8');
+        for (const game of POST_FREEZE_GAMES) {
+            if (page !== game.page && html.includes('href="' + game.stylesheet + '"')) {
+                errors.push(page + ': only ' + game.page + ' may link ' + game.stylesheet);
+            }
+        }
+    }
+}
+
 export function reviewFeatureStyles(root, cssPaths, htmlPaths, errors) {
     reviewScoreboardStyles(root, cssPaths, htmlPaths, errors);
     reviewMobileFitStyles(root, cssPaths, htmlPaths, errors);
+    reviewPostFreezeGames(root, cssPaths, htmlPaths, errors);
     return {
-        cssPaths: new Set([FEATURE_STYLESHEET, MOBILE_FIT_STYLESHEET]),
+        cssPaths: new Set([FEATURE_STYLESHEET, MOBILE_FIT_STYLESHEET,
+            ...POST_FREEZE_GAMES.map(game => game.stylesheet)]),
+        postFreezePages: POST_FREEZE_PAGES,
         stripHtml: (page, html) => {
             const withoutScoreboard = stripFeatureLink(page, html, []);
             return withoutScoreboard.includes(MOBILE_FIT_LINK)

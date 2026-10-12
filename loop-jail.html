@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" class="game-reset game-hidden-contract">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-support" content="light dark">
+    <meta name="theme-color" content="#0b0e1a" data-light="#eef2f9">
+    <script src="/theme-boot.js"></script>
+    <meta name="description" content="画牢 Loop Jail — a neon line-drawing arcade game. Drag your pen to lay down ink, cross your own line to close a loop and trap every monster inside. Monsters bite open lines and ink is limited, so greedy loops are risky. Endless waves and a global leaderboard.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/loop-jail.html">
+    <meta property="og:title" content="画牢 Loop Jail — Draw Loops, Trap Monsters">
+    <meta property="og:description" content="Draw a loop, close it, and everything inside is jailed — before the monsters bite your line.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-loop-jail.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/loop-jail.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="画牢 Loop Jail — Draw Loops, Trap Monsters">
+    <meta name="twitter:description" content="Cross your own line to close a loop and trap the monsters inside. Ink is limited; greed is risky.">
+    <meta name="twitter:image" content="assets/seo/og-loop-jail.svg">
+    <title>画牢 Loop Jail — Draw Loops, Trap Monsters</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b0e1a'/%3E%3Cpath d='M18 40c-4-12 6-24 18-22 11 2 15 15 8 22-6 6-17 4-19-4-2-6 3-12 9-11' fill='none' stroke='%234ff3ff' stroke-width='4.5' stroke-linecap='round'/%3E%3Ccircle cx='34' cy='32' r='5' fill='%23ff4fa3'/%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/loop-jail.css">
+    <link rel="stylesheet" href="css/scoreboard-dialog.css">
+    <link rel="stylesheet" href="css/mobile-fit.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body class="lj-body">
+    <!-- Immersive Stage（games.config.json layout: "immersive"，契约 docs/contracts/layout.md §7）：
+         顶栏以下的整块视口都是场地；HUD 是场地上的浮层；页脚随流在首屏之下 -->
+    <div class="lj-shell game-shell game-shell--immersive">
+        <header class="lj-topbar game-topbar">
+            <div class="lj-topbar-lead game-topbar-group">
+                <button data-chrome="home" type="button" class="lj-icon-btn game-icon-btn" id="lj-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <div class="lj-topbar-center game-topbar-center">
+                <h1 class="sr-only" id="lj-h1" data-i18n="title">Loop Jail</h1>
+                <div class="lj-title-pill game-title-pill" aria-hidden="true">
+                    <span class="lj-title-main" data-i18n="brand">Loop Jail</span>
+                    <span class="lj-title-alt" data-i18n="brandAlt">画牢</span>
+                </div>
+            </div>
+            <!-- 右簇固定顺序：专属（重开 → 排行榜，由 scoreboard-dialog 插在暂停之前）→ pause → sound -->
+            <div class="lj-topbar-actions game-topbar-group">
+                <button type="button" data-contextual-restart="retry" class="lj-icon-btn game-icon-btn hidden" id="lj-reset-btn" title="Restart" aria-label="Restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button type="button" data-chrome="pause" class="lj-icon-btn game-icon-btn" id="lj-pause-btn" title="Pause" aria-label="Pause" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
+                <button type="button" data-chrome="sound" class="lj-icon-btn game-icon-btn" id="lj-mute-btn" title="Sound" aria-label="Sound"></button>
+            </div>
+        </header>
+
+        <main class="lj-main game-main">
+            <div class="lj-stage game-stage game-stage--immersive" id="lj-stage">
+                <!-- 画布包一层：开始菜单期间舞台让位给菜单高度（layout.css 的 .game-overlay--menu），
+                     那条规则会把舞台的直接子 canvas 设为 height:auto —— 包起来就不受影响 -->
+                <div class="lj-scene" id="lj-scene">
+                    <canvas class="lj-canvas" id="lj-canvas" role="img" aria-label="Loop Jail arena"></canvas>
+                </div>
+
+                <!-- HUD：左上分数 + 波次，顶部中央墨水条（+ 道具剩余时间），右上生命 -->
+                <div class="lj-hud hidden" id="lj-hud" role="group" data-i18n-label="hudAria" aria-label="Score, wave, ink and lives">
+                    <div class="lj-hud-left">
+                        <div class="lj-stat"><span class="lj-stat-label" data-i18n="score">Score</span><b class="lj-stat-value" id="lj-score">0</b></div>
+                        <div class="lj-stat"><span class="lj-stat-label" data-i18n="wave">Wave</span><b class="lj-stat-value" id="lj-wave">1</b></div>
+                    </div>
+                    <div class="lj-hud-center">
+                        <div class="lj-ink" id="lj-ink" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="Ink"><span class="lj-ink-fill" id="lj-ink-fill"></span></div>
+                        <div class="lj-effects" id="lj-effects"></div>
+                    </div>
+                    <div class="lj-lives" id="lj-lives" role="img" aria-label="3 of 3 lives">
+                        <svg class="lj-heart is-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z"/></svg>
+                        <svg class="lj-heart is-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z"/></svg>
+                        <svg class="lj-heart is-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z"/></svg>
+                    </div>
+                </div>
+                <div class="lj-banner" id="lj-banner" aria-hidden="true"></div>
+                <!-- 读屏播报：波次 / 捕获 / 咬断 / 受击（视觉隐藏） -->
+                <p class="sr-only" id="lj-sr-status" aria-live="polite" aria-atomic="true"></p>
+
+                <!-- 开始菜单 -->
+                <div class="lj-overlay lj-start game-overlay game-overlay--menu" id="lj-start">
+                    <p class="lj-kicker" data-i18n="kicker">Draw · Close · Capture</p>
+                    <h2 class="lj-start-title"><span data-i18n="brand">Loop Jail</span><small class="lj-start-alt" data-i18n="brandAlt">画牢</small></h2>
+                    <p class="lj-start-copy" data-i18n="startCopy">Drag to lay down ink. Cross your own line to close a loop and everything inside is jailed.</p>
+                    <ol class="lj-howto">
+                        <li class="lj-howto-step"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 24c4-10 9-14 16-15"/><circle cx="24" cy="9" r="2.6"/></svg><span data-i18n="howtoDraw">Drag to draw</span></li>
+                        <li class="lj-howto-step"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 25c-4-6-2-15 6-17 8-2 13 6 10 12-3 6-12 7-15 1-1-3 1-6 4-6"/><circle cx="17" cy="16" r="2.6" class="lj-howto-dot"/></svg><span data-i18n="howtoLoop">Close a loop</span></li>
+                        <li class="lj-howto-step"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 18h8M19 18h8"/><path d="M16 9l3 4h-6z" class="lj-howto-warn"/></svg><span data-i18n="howtoRisk">Don’t get bitten</span></li>
+                    </ol>
+                    <ul class="lj-legend">
+                        <li><span class="lj-swatch lj-swatch--circle" aria-hidden="true"></span><span data-i18n="legendCircle">Bouncer · 50</span></li>
+                        <li><span class="lj-swatch lj-swatch--triangle" aria-hidden="true"></span><span data-i18n="legendTriangle">Dasher · 120</span></li>
+                        <li><span class="lj-swatch lj-swatch--square" aria-hidden="true"></span><span data-i18n="legendSquare">Splitter · 80</span></li>
+                    </ul>
+                    <button type="button" class="lj-btn-start game-btn game-action-btn game-action-btn--primary" id="lj-btn-start" data-immersive-start><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span data-i18n="start">Start drawing</span></button>
+                    <p class="lj-best-line" id="lj-best-line"></p>
+                    <p class="lj-controls" id="lj-controls"></p>
+                    <div class="lj-start-footer">
+                        <nav class="more-games" id="ljStartMore"></nav>
+                    </div>
+                </div>
+
+                <!-- 暂停 -->
+                <div class="lj-overlay lj-pause game-overlay hidden" id="lj-pause" role="dialog" aria-labelledby="lj-pause-title">
+                    <h2 class="lj-overlay-title" id="lj-pause-title" data-i18n="paused">Paused</h2>
+                    <p class="lj-overlay-copy" data-i18n="pausedCopy">The monsters are frozen mid-step.</p>
+                    <div class="lj-btn-row game-action-row">
+                        <button type="button" class="game-btn game-action-btn game-action-btn--primary" id="lj-btn-resume"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span data-i18n="resume">Resume</span></button>
+                        <button type="button" class="game-btn game-action-btn" id="lj-btn-restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span data-i18n="restart">Restart</span></button>
+                        <button type="button" class="game-btn game-action-btn game-action-btn--ghost" id="lj-btn-pause-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span data-i18n="menu">Menu</span></button>
+                    </div>
+                </div>
+
+                <!-- 结算 -->
+                <div class="lj-overlay lj-over game-overlay hidden" id="lj-over" role="dialog" aria-labelledby="lj-over-title">
+                    <p class="lj-newbest hidden" id="lj-over-newbest"></p>
+                    <h2 class="lj-overlay-title" id="lj-over-title" data-i18n="gameOver">Jailbreak!</h2>
+                    <p class="lj-overlay-copy" data-i18n="gameOverCopy">The monsters got the better of your pen this time.</p>
+                    <div class="lj-result-score"><span class="lj-result-label" data-i18n="finalScore">Score</span><b id="lj-over-score">0</b></div>
+                    <p class="lj-result-line" id="lj-over-wave"></p>
+                    <p class="lj-result-sub" id="lj-over-detail"></p>
+                    <p class="lj-result-sub" id="lj-over-best"></p>
+                    <div class="lj-btn-row game-action-row">
+                        <button type="button" class="game-btn game-action-btn game-action-btn--primary" id="lj-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span data-i18n="again">Play again</span></button>
+                        <button type="button" class="game-btn game-action-btn game-action-btn--ghost" id="lj-btn-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span data-i18n="menu">Menu</span></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 持久页脚：immersive 布局下随流在首屏之下（不占场地高度），只保留操作提示 -->
+        <footer class="lj-footer game-footer">
+            <p class="lj-footer-hint game-footer-hint" id="lj-hint">Mouse moves the pen · hold to draw · cross your own line to close a loop</p>
+        </footer>
+    </div>
+
+    <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-loop-jail.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"画牢 Loop Jail — Draw Loops, Trap Monsters","url":currentUrl,"description":"画牢 Loop Jail — a neon line-drawing arcade game. Drag your pen to lay down ink, cross your own line to close a loop and trap every monster inside. Monsters bite open lines and ink is limited, so greedy loops are risky. Endless waves and a global leaderboard.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["ArcadeGame","ActionGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"画牢 Loop Jail — Draw Loops, Trap Monsters","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <!-- registry:end seo-script -->
+    <script type="module" src="src/games/loop-jail/index.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>
