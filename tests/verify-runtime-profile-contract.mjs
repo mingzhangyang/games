@@ -5,7 +5,7 @@ import { registry } from './lib/registry.mjs';
 import { SCENARIOS, validateScenarioCoverage, checkSceneState } from '../tools/lib/runtime-profile/scenarios.mjs';
 import { percentile, metricMap, metricDelta, summarizeWindow } from '../tools/lib/runtime-profile/metrics.mjs';
 import { reportSummary, renderMarkdown, summarizeRepeatRows } from '../tools/lib/runtime-profile/report.mjs';
-import { chooseNeedleDirection, captureInputSample } from '../tools/lib/runtime-profile/interaction.mjs';
+import { chooseNeedleDirection, captureInputSample, validateHeldAnchorProgress } from '../tools/lib/runtime-profile/interaction.mjs';
 import { parseArgs, VIEWPORTS } from '../tools/lib/runtime-profile/options.mjs';
 
 const games = registry.all();
@@ -111,7 +111,7 @@ assert.ok(markdown.includes('exploratory'), 'single-run reports must not claim a
 const repeated = [1, 2, 3].map((repeat, i) => ({
     ...measured, repeat, workload: 'held-anchor S1',
     phases: { active: { metrics: { ...m, rafIntervalP95Ms: 30 + 10 * i, taskTimeMs: 100 + 20 * i,
-        longTaskCount: i } , input: { kind: 'held-anchor', api: 'Puppeteer pointer (emulated mobile viewport)', steps: 20 } } },
+        longTaskCount: i } , input: { kind: 'held-anchor', api: 'test-only DOM PointerEvent (emulated mobile viewport)', steps: 20 } } },
 }));
 const aggregate = summarizeRepeatRows(repeated);
 assert.equal(aggregate.length, 1);
@@ -123,9 +123,12 @@ assert.equal(aggregate[0].taskTime.median, 120);
 assert.equal(aggregate[0].tasks.median, 1);
 assert.equal(summarizeRepeatRows([repeated[0], { ...repeated[1], workload: 'different mode' }]).length, 2,
     'unlike workloads must never be averaged together');
-assert.equal(summarizeRepeatRows([repeated[0], { ...repeated[1], phases: {
-    active: { metrics: m, input: { kind: 'held-anchor', api: 'Puppeteer pointer' } } }]).length, 2,
-    'touch and mouse exercise different input paths');
+assert.equal(summarizeRepeatRows([
+    repeated[0],
+    { ...repeated[1], phases: {
+        active: { metrics: m, input: { kind: 'held-anchor', api: 'Puppeteer pointer' } },
+    } },
+]).length, 2, 'synthetic mobile and genuine desktop input are different recipes');
 assert.equal(summarizeRepeatRows([repeated[0], { ...repeated[1], status: 'incomplete' }])[0].runs, 1,
     'incomplete measurements must never contaminate medians');
 const repeatedMarkdown = renderMarkdown({
@@ -138,6 +141,25 @@ const repeatedMarkdown = renderMarkdown({
 });
 assert.match(repeatedMarkdown, /repeat-confirmed/);
 assert.match(repeatedMarkdown, /40\.0/);
+assert.match(repeatedMarkdown, /test-only synthetic DOM PointerEvent/,
+    'artifact report must disclose synthetic mobile input rather than claiming physical touch');
+
+// A world that was already at t>0 before holding the anchor may now be frozen.
+// The diagnostic must compare times around the sampled interval, not merely t>0.
+const validHeldEvidence = { playing: true, held: true, drags: 1, worldTime: 8.5 };
+const progress = validateHeldAnchorProgress(6, validHeldEvidence, 1, 4);
+assert.equal(progress.worldTimeAdvanceSeconds, 2.5);
+assert.equal(progress.holdTickCount, 4);
+assert.throws(() => validateHeldAnchorProgress(8.5, validHeldEvidence, 1, 4), /did not advance/,
+    'a stalled simulation with a positive pre-existing world clock must be rejected');
+assert.throws(() => validateHeldAnchorProgress(9, validHeldEvidence, 1, 4), /did not advance/,
+    'a reset or backward world clock cannot prove the sampled game advanced');
+assert.throws(() => validateHeldAnchorProgress(NaN, validHeldEvidence, 1, 4), /did not advance/);
+assert.throws(() => validateHeldAnchorProgress(6, { ...validHeldEvidence, worldTime: NaN }, 1, 4), /did not advance/);
+assert.throws(() => validateHeldAnchorProgress(6, { ...validHeldEvidence, held: false }, 1, 4), /invalid/);
+assert.throws(() => validateHeldAnchorProgress(6, { ...validHeldEvidence, playing: false }, 1, 4), /invalid/);
+assert.throws(() => validateHeldAnchorProgress(6, { ...validHeldEvidence, drags: 0 }, 1, 4), /invalid/);
+assert.throws(() => validateHeldAnchorProgress(6, validHeldEvidence, 1, 0), /invalid/);
 
 /** Deterministic cancellation/lease tests: input must be released even on failure. */
 const fakeDriver = (failSample = false) => {
@@ -191,4 +213,4 @@ assert.throws(() => parseArgs(['--all', '--out=..']), /--out must be/);
 assert.throws(() => parseArgs(['--all', '--out=.']), /--out must be/);
 assert.throws(() => parseArgs(['--all', '--out=/definitely-outside-repo']), /--out must be/);
 assert.ok(parseArgs(['--all', '--out=.tmp-perf/contract']).out.endsWith('contract'));
-console.log('PASS PR #138 profile scenarios, native-input ownership, repeat medians, invalidation and CLI contracts');
+console.log('PASS PR #138 profile scenarios, input ownership, frozen-world protection, repeat medians, invalidation and CLI contracts');

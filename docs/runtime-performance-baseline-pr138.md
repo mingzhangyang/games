@@ -41,21 +41,25 @@ In tools/lib/runtime-profile/scenarios.mjs (not the production registry):
   representative Endless-mode stress test is deliberately outside this PR.
   Never compare the Zen number as if it represented Endless combat.
 
-tools/lib/runtime-profile/interaction.mjs is an external browser driver:
-no internal state writes, no game-clock overriding, no invulnerability or
-synthetic gameplay event injections. Every start, pointer/keyboard input path,
-input tick count and observable effect is attached to raw result JSON.
-Inputs are released in a finally block on completed or failed measurements.
-Unsuccessful controls turn the row **incomplete**, not quietly measured.
-  The mobile viewport uses controlled mouse/keyboard events (not touch); this
-  characterizes its rendering and simulation under a declared workload, **not**
-  touch handling on a phone. PR #135 and existing per-game smoke tests own
-  touchscreen interaction validation independently. Under the GPU-disabled
-  headless performance runner, sustained touch emulation failed to deliver a
-  stable game input, despite correctly hit-tested Canvas coordinates. Rather
-  than tampering with gameplay or counting partial contact as measured, the
-  baseline uses the verified browser pointer/keyboard paths and labels this
-  limitation explicitly. Do not present these runs as device-touch QA.
+tools/lib/runtime-profile/interaction.mjs is an external browser driver.
+It never writes internal game state, overrides clocks, grants invulnerability
+or changes physics, scores or failure rules. **One explicit exception to native
+browser inputs:** the emulated-mobile Silk Dew S1 workload dispatches a
+test-only, untrusted synthetic DOM `PointerEvent` (`pointerType: 'touch'`) at
+the measured rope anchor. This goes through the game's existing canvas event
+handler, not a gameplay hook or a physical touch device. Desktop Silk Dew uses
+a genuine Puppeteer mouse hold; Needle Awn uses Puppeteer keyboard input in
+both viewports. No periodic synthetic events are dispatched during sampling.
+
+The input API, workload, tick count and observable game-state evidence are
+recorded for every run, including the start-to-end world-clock delta for Silk
+Dew so a frozen simulation cannot masquerade as a measured baseline.
+Input is released in a finally block on completion and failure. Failed or
+inert inputs make a run **incomplete**, not measured. On the GPU-disabled
+headless runner, real mobile touch emulation failed to sustain a hold despite
+correct canvas hit-testing; this synthetic-event fallback is strictly a
+controlled simulation/rendering workload, **never** device-touch QA. Existing
+per-game mobile smoke tests separately verify touch interaction.
 
 ## W2 - Comparable repetitions and evidence
 
@@ -64,7 +68,7 @@ Unsuccessful controls turn the row **incomplete**, not quietly measured.
   still rejects missing, duplicate, extra and incomplete rows.
 - The Markdown report retains **all individual results**, and adds per
   game/viewport/**workload/input recipe** medians and observed ranges. Never
-  aggregate unlike starting modes or mobile touch and desktop pointer APIs.
+  aggregate unlike starting modes, or synthetic mobile DOM events with desktop mouse input.
 - A candidate requires at least **three comparable completed samples** with
   median-of-run rAF-probe p95 above 33.3 ms; no actual FPS is inferred.
   Incomplete or single-run data remain exploratory.

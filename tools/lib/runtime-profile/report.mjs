@@ -133,7 +133,7 @@ export function renderMarkdown(report) {
     lines.push('', '## Interpretation limits', '',
         'The lightweight rAF observer adds its own callbacks. Its cadence is **not** the actual game rendering FPS.',
         'The Needle Awn endless survival lane is a controlled movement workload, not a representative combat performance claim.',
-        'The Silk Dew held-anchor S1 workload is real input but is not a full puzzle-solving trace.',
+        'Silk Dew S1: desktop uses a Puppeteer mouse hold; emulated mobile uses an untrusted, test-only synthetic DOM PointerEvent through the existing canvas input handler, not native touch. Neither is a full puzzle-solving trace.',
         'CDP timing counters represent measured main-thread activity during this exact sampling window, not whole-device CPU utilization.',
         'Memory before/after without heap-retention analysis is not proof of a memory leak.',
         'One machine and one Chromium browser cannot certify iOS Safari, Android hardware or 60 FPS on low-end phones.',

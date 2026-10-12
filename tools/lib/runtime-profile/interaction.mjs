@@ -33,12 +33,13 @@ function makeHeldAnchor(page, _client, mobile) {
     let active = false;
     let position = null;
     let dragCount = 0;
+    let sampleStartWorldTime = null;
     let holdTicks = 0;
     const syntheticId = 31415;
     const syntheticPointer = type => page.evaluate(({ type, id, x, y }) => {
         const target = document.getElementById('sd-canvas');
         if (!target) throw new Error('Silk Dew target canvas missing');
-        const event = new PointerEvent(type, {
+        const event = new window.PointerEvent(type, {
             bubbles: true, cancelable: true, pointerId: id,
             pointerType: 'touch', isPrimary: true, buttons: type === 'pointerdown' ? 1 : 0,
             clientX: x, clientY: y,
@@ -73,7 +74,14 @@ function makeHeldAnchor(page, _client, mobile) {
                 throw new Error('Silk Dew stationary anchor hold was not accepted: '
                     + JSON.stringify(evidence), { cause: error });
             }
-            dragCount = await page.evaluate(() => window.sdGame.world.drags);
+            // Capture this clock only AFTER the real game input has taken hold:
+            // time accumulated before measurement must not validate a frozen sample.
+            const sampleStart = await page.evaluate(() => ({
+                drags: window.sdGame.world.drags,
+                worldTime: window.sdGame.world.time,
+            }));
+            dragCount = sampleStart.drags;
+            sampleStartWorldTime = sampleStart.worldTime;
         },
         async tick() {
             // An active held anchor prevents the game's built-in idle-loss rule.
@@ -87,11 +95,7 @@ function makeHeldAnchor(page, _client, mobile) {
                 drags: window.sdGame?.world?.drags,
                 worldTime: window.sdGame?.world?.time,
             }));
-            if (!evidence.playing || !evidence.held || evidence.drags < dragCount
-                || holdTicks < 2 || !(evidence.worldTime > 0)) {
-                throw new Error('Silk Dew S1 held-anchor workload did not remain effective throughout sampling');
-            }
-            return { ...evidence, holdTickCount: holdTicks };
+            return validateHeldAnchorProgress(sampleStartWorldTime, evidence, dragCount, holdTicks);
         },
         async stop() {
             if (!active) return;
@@ -101,6 +105,21 @@ function makeHeldAnchor(page, _client, mobile) {
         },
         get active() { return active; },
     };
+}
+
+/**
+ * Validity is based on clock progression DURING sampling, not the absolute
+ * world clock (which was already positive before the held-anchor driver ran).
+ * This pure check is shared with frozen-simulation regression tests.
+ */
+export function validateHeldAnchorProgress(startWorldTime, evidence, dragCount, holdTicks) {
+    if (!evidence?.playing || !evidence.held || !(evidence.drags >= dragCount)
+        || holdTicks < 2 || !Number.isFinite(startWorldTime) || startWorldTime < 0
+        || !Number.isFinite(evidence.worldTime) || evidence.worldTime <= startWorldTime) {
+        throw new Error('Silk Dew S1 invalid: hold inactive or world time did not advance during sampling');
+    }
+    return { ...evidence, worldTimeAdvanceSeconds: evidence.worldTime - startWorldTime,
+        holdTickCount: holdTicks };
 }
 
 /** A consistent and bounded movement lane, not automated gameplay success. */
