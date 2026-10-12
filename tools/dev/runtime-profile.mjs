@@ -233,14 +233,15 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
         if (preset.memoryCycles > 0 && scene.restart) {
             const cycle = [];
             for (let i = 0; i < preset.memoryCycles; i++) {
-                await act(page, scene, scene.restart);
+                // Every restart is a test-hook today; record it like the start path.
+                const restartPath = await act(page, scene, scene.restart);
                 await waitScene(page, scene.active, 'restart active');
                 try {
                     await client.send('HeapProfiler.collectGarbage');
                     const cdp = await client.send('Performance.getMetrics');
-                    cycle.push(Object.fromEntries(cdp.metrics.filter(x => ['JSHeapUsedSize', 'Nodes'].includes(x.name))
-                        .map(x => [x.name, x.value])));
-                } catch (e) { cycle.push({ unavailable: String(e.message || e) }); }
+                    cycle.push({ restartPath, ...Object.fromEntries(cdp.metrics.filter(x => ['JSHeapUsedSize', 'Nodes'].includes(x.name))
+                        .map(x => [x.name, x.value])) });
+                } catch (e) { cycle.push({ restartPath, unavailable: String(e.message || e) }); }
             }
             result.phases.memoryCycles = { status: 'measured', data: cycle,
                 interpretation: 'post-GC trend only; not proof of a leak' };
