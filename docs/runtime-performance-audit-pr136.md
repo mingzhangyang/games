@@ -96,7 +96,7 @@ explicitly make `summary.complete=false` and cause a nonzero process exit.
 | mobile default | 390×664, DPR 3 / emulated Android UA | Browser emulation only; code using mobile UA takes its mobile branch |
 | landscape mobile | 839×360, DPR 2.625 | Tank Battle and Tower Defense |
 | desktop | 1280×900, DPR 1 | All registered games |
-| small | 320×454, DPR 2 | Opt-in stress profile |
+| small | 320×454, DPR 2 (landscape games: 568×320) | Opt-in stress profile |
 
 The shared browser flags still contain `--disable-gpu`; results are CPU/main-
 thread diagnostics, not hardware-accelerated GPU throughput. Host CPU model,

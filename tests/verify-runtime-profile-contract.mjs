@@ -5,7 +5,7 @@ import { registry } from './lib/registry.mjs';
 import { SCENARIOS, validateScenarioCoverage, checkSceneState } from '../tools/lib/runtime-profile/scenarios.mjs';
 import { percentile, metricMap, metricDelta, summarizeWindow } from '../tools/lib/runtime-profile/metrics.mjs';
 import { reportSummary, renderMarkdown } from '../tools/lib/runtime-profile/report.mjs';
-import { parseArgs } from '../tools/lib/runtime-profile/options.mjs';
+import { parseArgs, VIEWPORTS } from '../tools/lib/runtime-profile/options.mjs';
 
 const games = registry.all();
 assert.ok(games.length > 0, 'registry must supply games');
@@ -95,6 +95,14 @@ const markdown = renderMarkdown({
 });
 assert.ok(markdown.includes('Runtime Performance Audit') && markdown.includes('not') && markdown.includes('actual game rendering FPS'));
 
+for (const tag of ['mobile', 'small']) {
+    for (const game of games) {
+        const vp = VIEWPORTS[tag](game);
+        const wantsLandscape = SCENARIOS[game.id].viewport === 'landscape';
+        assert.equal(vp.width > vp.height, wantsLandscape,
+            `${game.id}@${tag} must match its scenario orientation (rotate overlays block portrait)`);
+    }
+}
 assert.equal(parseArgs(['--all']).games.length, games.length);
 assert.deepEqual(parseArgs(['--games=tetris,word-daily', '--viewports=desktop', '--repeat=1']).games, ['tetris', 'word-daily']);
 assert.throws(() => parseArgs([]), /choose exactly one/);

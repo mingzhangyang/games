@@ -1,7 +1,7 @@
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registry } from '../registry.mjs';
-import { validateScenarioCoverage } from './scenarios.mjs';
+import { SCENARIOS, validateScenarioCoverage } from './scenarios.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 export const PRESETS = {
@@ -9,12 +9,17 @@ export const PRESETS = {
     baseline: { warmup: 2000, menu: 5000, active: 15000, paused: 5000, resume: 10000, memoryCycles: 0 },
     deep: { warmup: 2000, menu: 5000, active: 20000, paused: 5000, resume: 10000, memoryCycles: 5 },
 };
+// Landscape-only games (scenario `viewport: 'landscape'`) get the rotated phone
+// on every touch viewport: in portrait their rotate overlay intercepts Start.
+const landscape = game => SCENARIOS[game.id]?.viewport === 'landscape';
 export const VIEWPORTS = {
-    mobile: game => game.id === 'tank-battle' || game.id === 'tower-defense'
+    mobile: game => landscape(game)
         ? { width: 839, height: 360, deviceScaleFactor: 2.625, isMobile: true, hasTouch: true, isLandscape: true }
         : { width: 390, height: 664, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
     desktop: () => ({ width: 1280, height: 900, deviceScaleFactor: 1, isMobile: false, hasTouch: false }),
-    small: () => ({ width: 320, height: 454, deviceScaleFactor: 2, isMobile: true, hasTouch: true }),
+    small: game => landscape(game)
+        ? { width: 568, height: 320, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true }
+        : { width: 320, height: 454, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
 };
 const flag = (argv, name) => argv.find(x => x.startsWith(`--${name}=`))?.slice(name.length + 3);
 const assertInt = (text, label, lo, hi) => {
