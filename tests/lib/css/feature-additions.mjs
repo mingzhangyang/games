@@ -83,6 +83,7 @@ export const MOBILE_FIT_SELECTORS = new Set([
     '.rv-board',
     '.td-rotate-prompt',
     '.sl-shell',
+    '.perks',
 ]);
 
 export function stripMobileFitLink(page, html, errors) {

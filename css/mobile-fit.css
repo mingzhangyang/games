@@ -99,4 +99,13 @@
             --frame-stage: min(460px, calc((100dvh - 100px) / 1.52)) !important;
         }
     }
+
+    /* ⑦ 首页：≤600px 的 `.games-section, .perks { padding: 0 12px }` 把 .perks 桌面的
+       28px 上内边距一并清零，游戏卡片网格与下方特性卡片贴在一起。用 margin 补回间距 ——
+       没有 unlayered 规则写 .perks 的 margin，普通分层声明即可，无需 !important。 */
+    @media (width <= 600px) {
+        .perks {
+            margin-top: 24px;
+        }
+    }
 }
