@@ -111,7 +111,7 @@ assert.ok(markdown.includes('exploratory'), 'single-run reports must not claim a
 const repeated = [1, 2, 3].map((repeat, i) => ({
     ...measured, repeat, workload: 'held-anchor S1',
     phases: { active: { metrics: { ...m, rafIntervalP95Ms: 30 + 10 * i, taskTimeMs: 100 + 20 * i,
-        longTaskCount: i } , input: { kind: 'held-anchor', api: 'Puppeteer trusted touch handle', steps: 20 } } },
+        longTaskCount: i } , input: { kind: 'held-anchor', api: 'Puppeteer pointer (emulated mobile viewport)', steps: 20 } } },
 }));
 const aggregate = summarizeRepeatRows(repeated);
 assert.equal(aggregate.length, 1);

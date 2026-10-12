@@ -19,15 +19,14 @@ not a performance verdict. This PR adds no hard FPS thresholds to always-on CI.
 In tools/lib/runtime-profile/scenarios.mjs (not the production registry):
 
 - **Silk Dew:** enter real S1 via the existing test-hook start method; use
-  Puppeteer-managed native input to grab its first rope anchor and make small controlled
+  Puppeteer's mouse pointer to grab its first rope anchor, including in the emulated mobile viewport and make small controlled
   motions while holding it. The game's unmodified rest/stall check deliberately
   distinguishes active dragging from abandonment. Sampling pauses release the
   pointer before opening the drawer; resume starts a fresh legitimate drag.
   This is an **S1 held-anchor workload**, not a complete puzzle solve. A newly
   won, failed, inert or released interaction invalidates that sample.
 - **Needle Awn:** enter **Endless** with the real visible #na-btn-endless
-  button. Real keyboard movement on desktop / Puppeteer-managed touch joystick input on
-  mobile moves the player to the lower arena and sweeps horizontally, while
+  button. Puppeteer keyboard movement on desktop and in the mobile emulated viewport moves the player to the lower arena and sweeps horizontally, while
   the game's own enemy waves continue to spawn. The game still owns damage,
   deaths, difficulty and time. This is a **controlled survival-lane workload**,
   not representative combat/dueling or a claim about the old levels-mode run.
@@ -38,10 +37,19 @@ In tools/lib/runtime-profile/scenarios.mjs (not the production registry):
 
 tools/lib/runtime-profile/interaction.mjs is an external browser driver:
 no internal state writes, no game-clock overriding, no invulnerability or
-synthetic gameplay event injections. Every start, pointer/keyboard/managed-touch path,
+synthetic gameplay event injections. Every start, pointer/keyboard input path,
 input tick count and observable effect is attached to raw result JSON.
 Inputs are released in a finally block on completed or failed measurements.
 Unsuccessful controls turn the row **incomplete**, not quietly measured.
+  The mobile viewport uses controlled mouse/keyboard events (not touch); this
+  characterizes its rendering and simulation under a declared workload, **not**
+  touch handling on a phone. PR #135 and existing per-game smoke tests own
+  touchscreen interaction validation independently. Under the GPU-disabled
+  headless performance runner, sustained touch emulation failed to deliver a
+  stable game input, despite correctly hit-tested Canvas coordinates. Rather
+  than tampering with gameplay or counting partial contact as measured, the
+  baseline uses the verified browser pointer/keyboard paths and labels this
+  limitation explicitly. Do not present these runs as device-touch QA.
 
 ## W2 - Comparable repetitions and evidence
 

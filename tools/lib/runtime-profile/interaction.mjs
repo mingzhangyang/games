@@ -1,71 +1,22 @@
 /**
- * PR #138: browser-native input scripts for opt-in performance sampling.
- * Read live state to choose inputs; NEVER alter game objects or failure rules.
- * Mobile uses Puppeteer's managed touch handles; desktop uses keyboard/mouse.
- * Input is always released before opening the statistics drawer and on errors.
+ * PR #138: test-only, controlled gameplay interactions for headless profiling.
+ *
+ * The "mobile" dimension is a Chromium *viewport*; the headless profiler uses
+ * Puppeteer's mouse/keyboard for reliably delivered, trusted browser input.
+ * It does NOT claim these are touch interactions or physical-device results.
+ * Native touch gestures are covered by separate mobile gameplay smoke tests.
+ *
+ * Read game state to choose input; never write game state, scores, clocks,
+ * damage, difficulty, pause state or simulation objects.
  */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Record genuine DOM input delivery during adapter validation. These passive
- * observers do not synthesize events or modify the game's state.
- */
-async function recordInputEvents(page, canvasId) {
-    await page.evaluate(id => {
-        const target = document.getElementById(id);
-        if (!target) throw new Error('missing input canvas: ' + id);
-        const events = [];
-        window.__runtimeProfileInputEvents = events;
-        for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel',
-            'pointerdown', 'pointermove', 'pointerup', 'pointercancel',
-            'lostpointercapture', 'mousedown', 'mouseup']) {
-            target.addEventListener(type, event => {
-                if (events.length >= 30) return;
-                events.push({
-                    type, target: event.target?.id || event.target?.tagName,
-                    pointerType: event.pointerType || null,
-                    clientX: event.clientX ?? event.changedTouches?.[0]?.clientX ?? null,
-                    clientY: event.clientY ?? event.changedTouches?.[0]?.clientY ?? null,
-                    time: +performance.now().toFixed(1),
-                });
-            }, { capture: true, passive: true });
-        }
-    }, canvasId);
-}
-
-/** Include viewport hit-testing in failed browser-input evidence, never silently green. */
-async function diagnoseTouch(page, point, canvasId) {
-    return page.evaluate(({ x, y, canvasId }) => {
-        const el = document.elementFromPoint(x, y);
-        const canvas = document.getElementById(canvasId);
-        const r = canvas?.getBoundingClientRect();
-        const v = window.visualViewport;
-        const name = node => node ? { tag: node.tagName, id: node.id,
-            className: typeof node.className === 'string' ? node.className : '' } : null;
-        return {
-            point: { x: Math.round(x), y: Math.round(y) },
-            hit: name(el), canvas: name(canvas),
-            canvasRect: r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null,
-            viewport: { width: innerWidth, height: innerHeight, scrollX, scrollY,
-                visualWidth: v?.width, visualHeight: v?.height,
-                offsetLeft: v?.offsetLeft, offsetTop: v?.offsetTop },
-            game: { silkDragging: !!window.sdGame?.world?.dragging,
-                silkDragCount: window.sdGame?.world?.drags,
-                silkInputDragging: window.sdGame?.isDragging,
-                needleJoyActive: !!window.gameEngine?.joy?.active,
-                needleJoyId: window.gameEngine?.joy?.id,
-                needleMode: window.gameEngine?.mode },
-            eventTrace: window.__runtimeProfileInputEvents || [],
-        };
-    }, { ...point, canvasId });
-}
 
 function silkAnchorSnapshot() {
     const game = window.sdGame;
     const anchor = game?.world?.ropes?.[0]?.particles?.[0];
     const rect = game?.canvas?.getBoundingClientRect();
     if (game?.state !== 'playing' || !anchor || !rect?.width || !rect?.height) {
-        throw new Error('Silk Dew S1 anchor is not available for physical dragging');
+        throw new Error('Silk Dew S1 rope anchor unavailable');
     }
     return {
         x: rect.left + anchor.x * rect.width / 480,
@@ -74,43 +25,42 @@ function silkAnchorSnapshot() {
     };
 }
 
-function makeHeldAnchor(page, client, mobile) {
+/** A held mouse pointer is a genuine DOM pointerdown/drag, not a game hook. */
+function makeHeldAnchor(page, _client, mobile) {
     let active = false;
     let position = null;
     let dragCount = 0;
     let movementCount = 0;
-    let touchHandle = null;
     return {
-        api: mobile ? 'Puppeteer trusted touch handle' : 'Puppeteer pointer',
+        api: mobile ? 'Puppeteer pointer (emulated mobile viewport)' : 'Puppeteer pointer',
         async start() {
             position = await page.evaluate(silkAnchorSnapshot);
-            if (mobile) await recordInputEvents(page, 'sd-canvas');
-            if (mobile) {
-                touchHandle = await page.touchscreen.touchStart(position.x, position.y);
-                active = true;
-            } else {
-                await page.mouse.move(position.x, position.y);
-                active = true;
-                await page.mouse.down();
-            }
+            await page.mouse.move(position.x, position.y);
+            await page.mouse.down();
+            active = true;
             await this.tick(0);
             try {
                 await page.waitForFunction(before =>
                     window.sdGame?.state === 'playing'
                     && !!window.sdGame?.world?.dragging
                     && window.sdGame.world.drags > before,
-                { timeout: 1800 }, position.drags);
+                { timeout: 3500 }, position.drags);
             } catch (error) {
-                const debug = await diagnoseTouch(page, position, 'sd-canvas');
-                throw new Error('Silk Dew anchor touch not accepted: ' + JSON.stringify(debug), { cause: error });
+                const evidence = await page.evaluate(() => ({
+                    state: window.sdGame?.state,
+                    worldState: window.sdGame?.world?.state,
+                    dragCount: window.sdGame?.world?.drags,
+                    dragging: window.sdGame?.isDragging,
+                }));
+                throw new Error('Silk Dew pointer did not maintain live S1 drag: '
+                    + JSON.stringify(evidence), { cause: error });
             }
             dragCount = await page.evaluate(() => window.sdGame.world.drags);
         },
         async tick(index) {
             const x = position.x + 16 + Math.sin(index / 2) * 6;
             const y = position.y + 2;
-            if (mobile) await touchHandle.move(x, y);
-            else await page.mouse.move(x, y);
+            await page.mouse.move(x, y);
             movementCount++;
         },
         async inspect() {
@@ -122,21 +72,20 @@ function makeHeldAnchor(page, client, mobile) {
             }));
             if (!evidence.playing || !evidence.held || evidence.drags < dragCount
                 || movementCount < 2 || !(evidence.worldTime > 0)) {
-                throw new Error('Silk Dew anchor input did not remain effective throughout sampling');
+                throw new Error('Silk Dew S1 pointer did not remain effective throughout sampling');
             }
             return { ...evidence, movementCount };
         },
         async stop() {
             if (!active) return;
             active = false;
-            if (mobile) await touchHandle.end();
-            else await page.mouse.up();
+            await page.mouse.up();
         },
         get active() { return active; },
     };
 }
 
-/** Choose an ordinary safe lane without ever changing lives, enemies or simulation time. */
+/** A consistent and bounded movement lane, not automated gameplay success. */
 export function chooseNeedleDirection(player, tick) {
     if (!player || !Number.isFinite(player.x) || !Number.isFinite(player.y)) {
         throw new Error('Needle Awn player position unavailable');
@@ -147,10 +96,8 @@ export function chooseNeedleDirection(player, tick) {
     return { x: Math.floor(tick / 8) % 2 === 0 ? 1 : -1, y: 0 };
 }
 
-function makeNeedleSurvival(page, client, mobile) {
+function makeNeedleSurvival(page, _client, mobile) {
     let active = false;
-    let joystick = null;
-    let touchHandle = null;
     let heldKey = null;
     let lastPlayer = null;
     let travel = 0;
@@ -165,46 +112,21 @@ function makeNeedleSurvival(page, client, mobile) {
             timeElapsed: game.timeElapsed, wave: game.waveIndex };
     });
     return {
-        api: mobile ? 'Puppeteer trusted touch joystick' : 'Puppeteer keyboard',
+        api: mobile ? 'Puppeteer keyboard (emulated mobile viewport)' : 'Puppeteer keyboard',
         async start() {
             lastPlayer = await playerPosition();
-            if (mobile) await recordInputEvents(page, 'na-canvas');
-            if (mobile) {
-                joystick = await page.evaluate(() => {
-                    const r = window.gameEngine?.canvas?.getBoundingClientRect();
-                    if (!r?.width || !r?.height) throw new Error('Needle Awn canvas not laid out');
-                    return { x: r.left + r.width * 0.20, y: r.top + r.height * 0.72 };
-                });
-                touchHandle = await page.touchscreen.touchStart(joystick.x, joystick.y);
-                active = true;
-                try {
-                    await page.waitForFunction(() => window.gameEngine?.joy?.active === true,
-                        { timeout: 1800 });
-                } catch (error) {
-                    const debug = await diagnoseTouch(page, joystick, 'na-canvas');
-                    throw new Error('Needle Awn joystick touch not accepted: ' + JSON.stringify(debug), { cause: error });
-                }
-            } else {
-                active = true;
-            }
+            active = true;
             await this.tick(0);
         },
         async tick(index) {
             const player = await playerPosition();
             travel += Math.hypot(player.x - lastPlayer.x, player.y - lastPlayer.y);
             lastPlayer = player;
-            const direction = chooseNeedleDirection(player, index);
-            if (mobile) {
-                await touchHandle.move(
-                    joystick.x + direction.x * 46, joystick.y + direction.y * 46,
-                );
-            } else {
-                const key = keyFor(direction);
-                if (heldKey !== key) {
-                    if (heldKey) await page.keyboard.up(heldKey);
-                    heldKey = key;
-                    await page.keyboard.down(key);
-                }
+            const key = keyFor(chooseNeedleDirection(player, index));
+            if (heldKey !== key) {
+                if (heldKey) await page.keyboard.up(heldKey);
+                heldKey = key;
+                await page.keyboard.down(key);
             }
             directions++;
         },
@@ -212,7 +134,7 @@ function makeNeedleSurvival(page, client, mobile) {
             const player = await playerPosition();
             travel += Math.hypot(player.x - lastPlayer.x, player.y - lastPlayer.y);
             if (directions < 2 || travel < 10 || !(player.timeElapsed > 0) || player.lives <= 0) {
-                throw new Error('Needle Awn input did not cause meaningful live movement');
+                throw new Error('Needle Awn movement was not observable in live Endless mode');
             }
             return { movementDistance: Math.round(travel), directions, remainingLives: player.lives,
                 elapsedGameSeconds: +player.timeElapsed.toFixed(2), wave: player.wave };
@@ -220,17 +142,16 @@ function makeNeedleSurvival(page, client, mobile) {
         async stop() {
             if (!active) return;
             active = false;
-            if (mobile) await touchHandle.end();
-            else if (heldKey) { await page.keyboard.up(heldKey); heldKey = null; }
+            if (heldKey) { await page.keyboard.up(heldKey); heldKey = null; }
         },
         get active() { return active; },
     };
 }
 
 /**
- * Run an actual CDP measurement alongside user input. The input uses live
- * browser events, not a patched game loop. A failed/inert input invalidates
- * the entire measurement, and the finally block releases held controls.
+ * Browser input and CDP metrics run concurrently. Input is released before
+ * the drawer is opened or another sample begins; failure cannot leave a key
+ * or drag held. Inert input invalidates the sample.
  */
 export async function sampleWithInput(page, client, scene, viewportTag, sample) {
     const spec = scene.profileInput;
@@ -241,7 +162,7 @@ export async function sampleWithInput(page, client, scene, viewportTag, sample) 
     return captureInputSample(driver, spec, sample, scene.workload);
 }
 
-/** Factored from the browser layer so cancellation and cleanup can be unit-tested. */
+/** Factored from the browser layer for deterministic cancellation regression tests. */
 export async function captureInputSample(driver, spec, sample, workload = 'test scenario') {
     let running = false;
     let loop = null;
@@ -264,10 +185,7 @@ export async function captureInputSample(driver, spec, sample, workload = 'test 
         if (tickError) throw tickError;
         if (steps < 1) throw new Error('No profile input steps were delivered');
         const evidence = await driver.inspect();
-        return {
-            metrics,
-            input: { kind: spec.kind, workload, api: driver.api, steps, evidence },
-        };
+        return { metrics, input: { kind: spec.kind, workload, api: driver.api, steps, evidence } };
     } finally {
         running = false;
         if (loop) await loop;
