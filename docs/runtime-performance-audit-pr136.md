@@ -136,12 +136,12 @@ reported as N/A/`not-supported`, never a guessed zero or silently green check.
 A p95 rAF-probe interval above 33.3 ms is merely an **investigation candidate**.
 A slow browser in CI is not grounds for a gameplay redesign. Require repeated
 samples on the same host/version, reproducible real-user impacts and ideally
-a targeted trace before proposing a PR #137 change. Suggested priorities:
+a targeted trace before proposing a follow-up change. Suggested priorities:
 
 | Priority | Evidence needed | Action |
 | --- | --- | --- |
 | P0 | Reproducible freeze, incorrect lifecycle or loss of user work | Independent urgent fix |
-| P1 | Clear repeated user-visible slowdown with grounded module owner | PR #137 shortlist |
+| P1 | Clear repeated user-visible slowdown with grounded module owner | Follow-up PR shortlist |
 | P2 | Moderate repeatable slowdown and low-risk fix | Optional follow-up |
 | P3 | Unconfirmed, expected or host-specific variance | Document only |
 
@@ -219,5 +219,5 @@ Shadow Loom (mobile 50.0 ms, 24 long tasks; desktop 33.4 ms),
 Ripple Duet mobile 33.3 ms. Planet Merge mobile p95 was 33.2 ms. Every other
 measured scene stayed at about 16.7 ms with zero or one long task.
 
-The measured #137 priority order remains **unassigned** until repeated runs
+The measured follow-up priority order remains **unassigned** until repeated runs
 (`--repeat=3`) on comparable machines confirm these candidates.

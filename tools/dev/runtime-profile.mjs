@@ -175,8 +175,11 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
         await client.send('Performance.enable');
         await new Promise(resolveWait => setTimeout(resolveWait, preset.warmup));
         if (scene.noMenu) {
-            result.phases.idle = { status: 'measured',
-                metrics: await sampleWindow(page, client, preset.menu, { sampleRaf: false }) };
+            // A loop that already runs at boot (Tank Battle) is gameplay, not idle.
+            result.phases.idle = scene.start.kind === 'already-active' && scene.activity !== 'discrete'
+                ? { status: 'not-applicable', reason: 'Game loop already running at boot; sampled as active' }
+                : { status: 'measured',
+                    metrics: await sampleWindow(page, client, preset.menu, { sampleRaf: false }) };
             result.phases.menu = { status: 'not-applicable', reason: 'No distinct menu state' };
         } else {
             result.phases.menu = { status: 'measured',
