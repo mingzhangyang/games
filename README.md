@@ -33,6 +33,14 @@
 
 全站只有一个排行榜 Worker（`Workers/game-scores.js`，KV 命名空间 `GAME_SCORES`，按 `top:<game>` 键区分；旧三榜 Tetris / Hoop Shot / Planet Merge 已并入，每日榜如 `top:planet-merge-d<日期>`、`top:gravity-d<日期>` 按天滚动），另有全站统计（`games-analytics`）与猜词战报（`word-daily-stats`）两个聚合 Worker。
 
+## 新游戏设计方案
+
+- [四色图志 Fourfold Atlas](docs/proposal-fourfold-atlas-design.md)：地图着色、双色交换与地图册收藏。
+- [七桥漫游 Seven Bridges](docs/proposal-seven-bridges-design.md)：过桥路线、城市图景切换与修桥挑战。
+- [共同方向与交付计划](docs/proposal-graph-puzzles-delivery.md)：平台集成、实施批次和验收标准。
+
+以上为待实现的设计方案，尚未加入可玩游戏列表。
+
 ## 🚀 快速开始
 
 ### 安装依赖
