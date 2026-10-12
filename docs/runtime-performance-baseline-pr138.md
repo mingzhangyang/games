@@ -18,15 +18,18 @@ not a performance verdict. This PR adds no hard FPS thresholds to always-on CI.
 
 In tools/lib/runtime-profile/scenarios.mjs (not the production registry):
 
-- **Silk Dew:** enter real S1 via the existing test-hook start method;
-  hold the first rope anchor with a browser-delivered mouse pointer, stationary
-  throughout the active window, including on the emulated mobile viewport.
-  The game's unmodified rest/stall check distinguishes held input from
-  abandonment. The profiling driver does **not** solve the puzzle or move the
-  target; label it a **stationary S1 held-anchor workload**, not a representative
-  puzzle-solving trace. Input is released before opening the statistics drawer,
-  then reacquired for the resume window. If the hold is lost or the game ends,
-  that window is incomplete (not a measured result).
+- **Silk Dew:** enter real S1 via the existing test-hook start method.
+  On desktop, hold the first rope anchor with Puppeteer's genuine mouse pointer.
+  On emulated mobile, use one clearly identified **test-only synthetic DOM
+  PointerEvent** at the actual on-canvas anchor coordinates: Chromium's mobile
+  pointer emulation automatically releases the hold (also verified without
+  any pointer movement), making it unsuitable for a stationary hold sample.
+  Both routes exercise the game's existing DOM input handler without touching
+  internal state, physics, scores or its rest/stall rule. No events are injected
+  during the sampling window. Label as **stationary S1 held-anchor workload**,
+  *not* real touch or puzzle solving. Release the hold before opening the
+  statistics drawer; reacquire for the resume sample. An inert hold or game
+  end invalidates the window.
 - **Needle Awn:** enter **Endless** with the real visible #na-btn-endless
   button. Puppeteer keyboard movement on desktop and the mobile emulated
   viewport moves the player into the lower arena and sweeps horizontally, while

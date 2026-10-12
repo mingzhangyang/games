@@ -1,10 +1,13 @@
 /**
  * PR #138: test-only, controlled gameplay interactions for headless profiling.
  *
- * The "mobile" dimension is a Chromium *viewport*; the headless profiler uses
- * Puppeteer's mouse/keyboard for reliably delivered, trusted browser input.
- * It does NOT claim these are touch interactions or physical-device results.
- * Native touch gestures are covered by separate mobile gameplay smoke tests.
+ * The "mobile" dimension is a Chromium *viewport*, not a phone:
+ * Needle Awn uses keyboard inputs at both viewport sizes. Silk Dew uses a
+ * genuine Puppeteer pointer hold on desktop and a clearly labeled test-only
+ * DOM PointerEvent on emulated mobile, since the headless mobile pointer
+ * device cancels its hold. Synthetic DOM input tests game update workload,
+ * NOT touch hardware or genuine human interaction. Physical touch remains
+ * covered by separate gameplay smoke tests.
  *
  * Read game state to choose input; never write game state, scores, clocks,
  * damage, difficulty, pause state or simulation objects.
@@ -25,18 +28,33 @@ function silkAnchorSnapshot() {
     };
 }
 
-/** A stationary held mouse pointer is a genuine DOM pointerdown, not a game hook. */
+/** A stationary held anchor exercises S1 physics without modifying its state directly. */
 function makeHeldAnchor(page, _client, mobile) {
     let active = false;
     let position = null;
     let dragCount = 0;
-    let movementCount = 0;
+    let holdTicks = 0;
+    const syntheticId = 31415;
+    const syntheticPointer = type => page.evaluate(({ type, id, x, y }) => {
+        const target = document.getElementById('sd-canvas');
+        if (!target) throw new Error('Silk Dew target canvas missing');
+        const event = new PointerEvent(type, {
+            bubbles: true, cancelable: true, pointerId: id,
+            pointerType: 'touch', isPrimary: true, buttons: type === 'pointerdown' ? 1 : 0,
+            clientX: x, clientY: y,
+        });
+        target.dispatchEvent(event);
+    }, { type, id: syntheticId, x: position.x, y: position.y });
     return {
-        api: mobile ? 'Puppeteer pointer (emulated mobile viewport)' : 'Puppeteer pointer',
+        api: mobile ? 'test-only DOM PointerEvent (emulated mobile viewport)' : 'Puppeteer pointer',
         async start() {
             position = await page.evaluate(silkAnchorSnapshot);
-            await page.mouse.move(position.x, position.y);
-            await page.mouse.down();
+            if (mobile) {
+                await syntheticPointer('pointerdown');
+            } else {
+                await page.mouse.move(position.x, position.y);
+                await page.mouse.down();
+            }
             active = true;
             try {
                 await page.waitForFunction(before =>
@@ -58,11 +76,9 @@ function makeHeldAnchor(page, _client, mobile) {
             dragCount = await page.evaluate(() => window.sdGame.world.drags);
         },
         async tick() {
-            // Sampling S1 under a stationary, physically held pointer deliberately
-            // avoids changing rope target/score and cannot provoke pointer cancel
-            // through synthetic, high-frequency mouse movements in mobile emulation.
-            // The active world's drag state and simulation time are checked in inspect().
-            movementCount++;
+            // An active held anchor prevents the game's built-in idle-loss rule.
+            // No periodic synthetic events enter the sampled CPU/animation window.
+            holdTicks++;
         },
         async inspect() {
             const evidence = await page.evaluate(() => ({
@@ -72,15 +88,16 @@ function makeHeldAnchor(page, _client, mobile) {
                 worldTime: window.sdGame?.world?.time,
             }));
             if (!evidence.playing || !evidence.held || evidence.drags < dragCount
-                || movementCount < 2 || !(evidence.worldTime > 0)) {
+                || holdTicks < 2 || !(evidence.worldTime > 0)) {
                 throw new Error('Silk Dew S1 held-anchor workload did not remain effective throughout sampling');
             }
-            return { ...evidence, movementCount };
+            return { ...evidence, holdTickCount: holdTicks };
         },
         async stop() {
             if (!active) return;
             active = false;
-            await page.mouse.up();
+            if (mobile) await syntheticPointer('pointerup');
+            else await page.mouse.up();
         },
         get active() { return active; },
     };
