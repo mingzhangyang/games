@@ -190,8 +190,34 @@ Sword Flight / Shadow Loom mobile rAF-probe p95 near 33 ms, are
 **investigation hypotheses, not gameplay defect claims**, until repeated
 full-baseline measurements validate them.
 
-No full 25-game production-build **baseline** run is recorded in this document yet.
-Do **not** merge as a "measured performance baseline" without attaching a
-real run's `summary.md` and verifying completeness on the same commit. The
-harness and contract tests are valuable independently, but the measured #137
-priority order remains **unassigned** until real data exists.
+#### First local full baseline (commit `58d45c0`)
+
+`npm run profile:runtime -- --all --viewports=mobile,desktop --preset=baseline --repeat=1`
+on a 4-core Linux container (Chromium 141, `--disable-gpu`, no CPU
+throttling): **47/50 measured, INCOMPLETE**. The full `summary.md` is attached
+to PR #136. One run per scene, so treat every number as a single sample.
+
+Incomplete scenes. In each case the game, not the harness, ended the
+unattended run, and the post-sample `isRunning()` recheck caught it:
+
+- **Silk Dew** mobile + desktop: `active ended during sampling`. The game
+  fails a run whose pearl rests for `restFailSec` = 4 s (by design, so the
+  player has to keep acting), so an idle run cannot survive a 15 s window.
+- **Needle Awn** mobile: `resume ended during sampling`. The idle player is
+  killed; desktop happened to survive this run.
+
+Neither game has a no-fail mode (Sword Flight uses zen for this reason).
+Covering them needs representative scripted input or a shorter active window
+for these scenes; until then `--all --preset=baseline` is not a complete
+25-game baseline.
+
+Diagnostic candidates from this run (probe rAF p95 ≥ 33 ms; hypotheses to
+re-measure on comparable hardware, not defect claims):
+Sword Flight (mobile 66.7 ms, 108 long tasks; desktop 33.4 ms),
+Firefly Signal (mobile 50.1 ms, 28 long tasks; desktop 33.4 ms),
+Shadow Loom (mobile 50.0 ms, 24 long tasks; desktop 33.4 ms),
+Ripple Duet mobile 33.3 ms. Planet Merge mobile p95 was 33.2 ms. Every other
+measured scene stayed at about 16.7 ms with zero or one long task.
+
+The measured #137 priority order remains **unassigned** until repeated runs
+(`--repeat=3`) on comparable machines confirm these candidates.
