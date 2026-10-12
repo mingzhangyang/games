@@ -1,9 +1,11 @@
 # 七桥漫游 Seven Bridges 完整实现方案
 
 > 状态：完整实现方案，尚未实现或发布。
-> 日期：2026-10-12 · 设计版本：1.0 · 名称为工作名。
+> 日期：2026-10-12 · 设计版本：1.1 · 名称为工作名。
 
-共同方向、平台集成、交付批次与数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。
+本游戏在独立仓库 `seven-bridges` 中开发、测试和部署，games 仅提供目录入口。下文代码路径均相对于该独立仓库，不属于 games/src/games。仓库和域名尚未创建。
+
+共同方向、外链接入、交付批次、文档迁移与数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。
 
 ## 1 产品定位与第一分钟
 
@@ -125,22 +127,25 @@ pointercancel、松手、手指移出舞台都只取消未提交的一段，不�
 | 关系层 | 节点、边、选中路线、辅助计数；奇偶提示不仅靠颜色，还用成对短线与落单端头。 |
 | 界面 | 顶部轻量导航；底部撤销、镜片、提示；工程阶段替换成建设工具与预算。 |
 
-首发交付 4 套城区氛围、3 类桥材质、12—16 个建筑变体、1 个信使与短动作、8 枚工程印章、首页封面和 OG 图。水面不必常驻全屏滤镜；可用小幅离散纹理变化或短时动画。声音以脚步、木桥、铃声与轻水声构成，走不同桥仅微调音色，不把音高当通关线索。
+首发交付 4 套城区氛围、3 类桥材质、12—16 个建筑变体、1 个信使与短动作、8 枚工程印章、首页封面和 OG 图。水面不必常驻全屏滤镜；可用小幅离散纹理变化或短时动画。声音以脚步、木桥、铃声与轻水声构成，走不同桥仅微调音色，不把音高当通关线索。音频使用本游戏独立静音设置，默认静音；首次用户手势后才可启用音频，不跨域同步。
 
 ## 10 图模型 求解器与内容管线
 
 ```text
-src/games/seven-bridges/
-  index.js / game.js
-  model/{graph,rules,commands,euler,repair}.js
-  content/{levels,chapters,daily-manifest}.js
-  render/{city,graph-view,morph,traveler}.js
-  input/{pointer,bridge-hit-test,keyboard}.js
-  services/{hints,replay,export}.js
-  storage.js / i18n.js / audio.js
-tools/generators/seven-bridges-build.mjs
-tests/verify-seven-bridges-{rules,levels,repair,daily}.mjs
-tests/smoke-seven-bridges.mjs
+seven-bridges/                       独立仓库根目录
+  index.html
+  package.json
+  src/                       下列游戏模块位于 src 内
+    index.js / game.js
+    model/{graph,rules,commands,euler,repair}.js
+    content/{levels,chapters,daily-manifest}.js
+    render/{city,graph-view,morph,traveler}.js
+    input/{pointer,bridge-hit-test,keyboard}.js
+    services/{settings,daily,hints,replay,export}.js
+    storage.js / i18n.js / audio.js
+  tools/generators/seven-bridges-build.mjs
+  tests/verify-seven-bridges-{rules,levels,repair,daily}.mjs
+  tests/smoke-seven-bridges.mjs
 ```
 
 **模型：**`nodes[{id}], edges[{id,u,v}], requiredNodes, protectedEdges, candidateEdits, objective, fixedStart, fixedEnd`；坐标、桥廊、桥头、建筑和移动端布局属于 geometry/art，不进入规则判断。首发支持平行边，不开放自环；装饰步道不算边。图视图中曲线交叉也不自动成为节点。
@@ -159,7 +164,7 @@ tests/smoke-seven-bridges.mjs
 
 一次行走提交一个命令；一次工程确认提交一份完整最终编辑集合。游戏在后台暂停声景、计时和动画；回前台直接从模型恢复信使位置，不补跑隐藏期间的脚步。开帮助不消耗路线资源。完成事件有 runId 防重入，重复回放不重复解锁或盖章。
 
-存档使用单快照和 GameStorage.trySet。每天固定一个漫游题，周末固定一个工程题，均来自至少 60 天的离线审核清单；日期与 revision 在开始时冻结。每日不要求首次尝试才算完成，使用提示如实标记，重置不能洗掉同一次挑战的辅助事实。
+存档使用本仓库的版本化 storage adapter 和单快照，本地 `trySet` 返回写入成功状态；可参考 GameStorage 设计，但不依赖 games 的模块或运行时。每天固定一个漫游题，周末固定一个工程题，均来自至少 60 天的离线审核清单；日期与 revision 在开始时冻结。每日不要求首次尝试才算完成，使用提示如实标记，重置不能洗掉同一次挑战的辅助事实。
 
 ## 12 验收重点
 
@@ -172,3 +177,11 @@ tests/smoke-seven-bridges.mjs
 | 理解与乐趣 | 5 位试玩者中 4 位在首关理解桥不能重复但陆地能重访；至少 3 位在七桥章后能用自己的话解释无解原因。 |
 | 标志体验 | 城市变图时玩家能追踪当前陆地与桥；工程确认后能理解改变了什么，而不是只看“可以通关”提示。 |
 | 性能目标 | 输入提交模型预算 <8ms；仅行走/切图等短窗口运行 rAF；大图无持续布局抖动。按真实设备测量并记录。 |
+
+## 独立项目接入与文档归属
+
+本仓库独立维护构建、依赖、设置、存档、每日 UTC+8 日期工具和 CI；不加载 games 的 CSS、GameRuntime、统计抽屉或远程脚本。两个游戏之间也不建立共享图论框架。返回合集使用固定链接 `https://games.orangely.xyz/`。首访语言/主题参数只作初始化提示，已保存偏好优先；参数约定见共同交付方案。
+
+正式站点可用并完成验收后，才由 games 的独立接入 PR 添加 `site.home.externalGames` 条目及卡片资源，不加入内置 `games` 数组。单款更新仅由其自身 CI 和部署流程处理。
+
+独立仓库建立时，将本设计及必要示意图、数学来源迁入该仓库 docs，作为唯一持续维护的详细规格；games 此文件随后替换为摘要、稳定文档链接和迁移说明。迁移与反向链接确认完成前，保留当前全文，避免丢失交接信息。

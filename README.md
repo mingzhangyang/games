@@ -39,7 +39,7 @@
 - [七桥漫游 Seven Bridges](docs/proposal-seven-bridges-design.md)：过桥路线、城市图景切换与修桥挑战。
 - [共同方向与交付计划](docs/proposal-graph-puzzles-delivery.md)：平台集成、实施批次和验收标准。
 
-以上为待实现的设计方案，尚未加入可玩游戏列表。
+两款计划各自独立仓库开发、独立部署，正式上线后通过 games 外链卡片接入。以上为待实现的设计方案，尚未创建独立项目或加入可玩游戏列表。
 
 ## 🚀 快速开始
 

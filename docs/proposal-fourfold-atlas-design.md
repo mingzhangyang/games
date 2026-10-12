@@ -1,9 +1,11 @@
 # 四色图志 Fourfold Atlas 完整实现方案
 
 > 状态：完整实现方案，尚未实现或发布。
-> 日期：2026-10-12 · 设计版本：1.0 · 名称为工作名。
+> 日期：2026-10-12 · 设计版本：1.1 · 名称为工作名。
 
-共同方向、平台集成、交付批次与数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。
+本游戏在独立仓库 `fourfold-atlas` 中开发、测试和部署，games 仅提供目录入口。下文代码路径均相对于该独立仓库，不属于 games/src/games。仓库和域名尚未创建。
+
+共同方向、外链接入、交付批次、文档迁移与数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。
 
 ## 1 产品定位与第一分钟
 
@@ -92,7 +94,7 @@ FC26 的小样用于教会工具，不代表正式后期难度。成品交换关
 | 配色 | 基准朱砂、赭黄、青绿、鸢尾；各章可整体重映射，但同关保持稳定。功能文字单独审查对比度。 |
 | 无障碍 | 颜色同时具有点、线、格、圈四种标记；键盘区域导航、1—4 选色、Enter 填色、撤销按钮；可列出邻接关系。 |
 | 动效 | 填色 140—220ms，交换约 250ms，完成演出上限 1.5s 且可跳过；减少动态模式改为淡变或即时反馈。 |
-| 声音 | 干净纸声、颜料印章声、完成短旋律；与全站静音同步，首次用户手势后才启用音频。 |
+| 声音 | 干净纸声、颜料印章声、完成短旋律；使用本游戏独立静音设置，默认静音；首次用户手势后才可启用音频，不跨域同步。 |
 
 手机重点验证 390×664、375×553、320×454 的实际可见视口。关卡应优先保证各区域有足够大的可点内部；狭长区域提供同 ID 的标签按钮。放大命中区不能互相覆盖后随意抢点击；需要时进入局部放大镜或用区域选择列表。主线不要求用户两指缩放才能完成。
 
@@ -101,18 +103,21 @@ FC26 的小样用于教会工具，不代表正式后期难度。成品交换关
 ## 8 数据 几何与求解器
 
 ```text
-src/games/fourfold-atlas/
-  index.js                 组装平台能力
-  game.js                  命令入口与页面状态
-  model/{rules,commands,solver,kempe}.js
-  content/{levels,chapters,daily-manifest}.js
-  render/{atlas,map,feedback}.js
-  input/{pointer,keyboard}.js
-  services/{hints,export}.js
-  storage.js / i18n.js / audio.js
-tools/generators/fourfold-atlas-build.mjs
-tests/verify-fourfold-atlas-{rules,levels,daily}.mjs
-tests/smoke-fourfold-atlas.mjs
+fourfold-atlas/                       独立仓库根目录
+  index.html
+  package.json
+  src/                       下列游戏模块位于 src 内
+    index.js                 组装本游戏服务与界面
+    game.js                  命令入口与页面状态
+    model/{rules,commands,solver,kempe}.js
+    content/{levels,chapters,daily-manifest}.js
+    render/{atlas,map,feedback}.js
+    input/{pointer,keyboard}.js
+    services/{settings,daily,hints,export}.js
+    storage.js / i18n.js / audio.js
+  tools/generators/fourfold-atlas-build.mjs
+  tests/verify-fourfold-atlas-{rules,levels,daily}.mjs
+  tests/smoke-fourfold-atlas.mjs
 ```
 
 **关卡主数据：**`id, revision, mode, chapter, mesh, fixedColors, initialColors, allowedActions, goals, witness, difficultyTags, artAnchors`。mesh 存共享顶点、边与区域环；边界折线通过同一组边 ID 复用。编译器从共享边推导邻接表与 SVG path；运行时加载编译结果，并检查内容校验和。不维护第二份人工邻接表。
@@ -131,7 +136,7 @@ tests/smoke-fourfold-atlas.mjs
 
 动画只是投影，不作为真相来源；动画中出现新输入时，从当前已提交状态合并或结束旧动画。提示 Worker 结果带 `sessionId＋puzzleRevision＋stateRevision`，不匹配就丢弃；跳关、重开、退出均取消旧请求。超时返回“暂时无法给出建议”，不改游戏状态。
 
-通过 GameStorage 保存一个完整快照，避免进度和当前局面跨多个 key 半写入；使用 `trySet` 判定是否成功。快照包含当前谜题、逻辑状态、历史、解锁、收藏和每日会话，限制收藏数量与体积。保存失败显示非阻塞提醒，不能显示“已保存”；历史太长时压缩到 checkpoint＋近期命令，并说明可撤销范围。恢复时验证类型、颜色范围、区域 ID 和 revision。
+通过本仓库的版本化 storage adapter 保存一个完整快照，避免进度和当前局面跨多个 key 半写入；本地 `trySet` 返回写入成功状态。可参考 games 的 GameStorage 设计，但不从 games 仓库或站点导入运行时代码。快照包含当前谜题、逻辑状态、历史、解锁、收藏和每日会话，限制收藏数量与体积。保存失败显示非阻塞提醒，不能显示“已保存”；历史太长时压缩到 checkpoint＋近期命令，并说明可撤销范围。恢复时验证类型、颜色范围、区域 ID 和 revision。
 
 规则或拓扑更新提高 puzzle revision；旧完成记录保留，新局面不得盲套旧颜色数组。每日会话锁定进入时的 UTC+8 日期和内容版本，跨午夜仍完成原题，新日期在返回地图册后提示。多标签页使用写入版本检查和冲突提示，不能默默覆盖另一标签的新进度。
 
@@ -147,3 +152,11 @@ tests/smoke-fourfold-atlas.mjs
 | 机制有价值 | 至少 3 个后期样例让试玩者主动使用双色交换，并能解释其作用；否则重做关卡，不用更长教程补救。 |
 | 输入可靠 | 快速点色、长按、双指、pointercancel、切后台、旋转、刷新恢复及动画中撤销都有浏览器回归。 |
 | 性能目标 | 正常填色主线程逻辑预算 <8ms；静置无持续游戏 rAF；求解超过约 50ms 的任务进入 Worker。真实结果在目标设备上测量。 |
+
+## 独立项目接入与文档归属
+
+本仓库独立维护构建、依赖、设置、存档、每日 UTC+8 日期工具和 CI；不加载 games 的 CSS、GameRuntime、统计抽屉或远程脚本。两个游戏之间也不建立共享图论框架。返回合集使用固定链接 `https://games.orangely.xyz/`。首访语言/主题参数只作初始化提示，已保存偏好优先；参数约定见共同交付方案。
+
+正式站点可用并完成验收后，才由 games 的独立接入 PR 添加 `site.home.externalGames` 条目及卡片资源，不加入内置 `games` 数组。单款更新仅由其自身 CI 和部署流程处理。
+
+独立仓库建立时，将本设计及必要示意图、数学来源迁入该仓库 docs，作为唯一持续维护的详细规格；games 此文件随后替换为摘要、稳定文档链接和迁移说明。迁移与反向链接确认完成前，保留当前全文，避免丢失交接信息。
