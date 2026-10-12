@@ -39,8 +39,15 @@ async function startServer(root, port) {
     server.stderr.on('data', b => { output += b.toString(); });
     server.stdout.on('data', b => { output += b.toString(); });
     const url = `http://127.0.0.1:${port}`;
+    // Only trust the port once *our* child reports it is listening: an unrelated
+    // process on the same port would otherwise answer the probe (child: EADDRINUSE).
+    const listening = `on ${url}`;
     for (let i = 0; i < 70; i++) {
         if (server.exitCode !== null) break;
+        if (!output.includes(listening)) {
+            await new Promise(done => setTimeout(done, 150));
+            continue;
+        }
         try {
             const response = await fetch(url + '/index.html', { signal: AbortSignal.timeout(800) });
             if (response.ok) return { server, url };
@@ -75,23 +82,21 @@ async function isolateNetwork(page, base) {
     });
 }
 
+// Visible *and* enabled: a disabled button (e.g. Carrot Pull's Start before its
+// art is ready) swallows the click and the run would later time out falsely.
+function actionable(selector) {
+    const el = document.querySelector(selector);
+    if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
+    const style = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+}
+
 async function act(page, scene, action) {
     if (action.kind === 'already-active') return 'auto (already active)';
     if (action.kind === 'visible-choice') {
-        await page.waitForFunction(selectors => selectors.some(selector => {
-            const el = document.querySelector(selector);
-            if (!el) return false;
-            const style = getComputedStyle(el);
-            const rect = el.getBoundingClientRect();
-            return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
-        }), { timeout: 12000 }, action.selectors);
-        const selector = await page.evaluate(selectors => selectors.find(s => {
-            const el = document.querySelector(s);
-            if (!el) return false;
-            const style = getComputedStyle(el);
-            const rect = el.getBoundingClientRect();
-            return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
-        }), action.selectors);
+        await page.waitForFunction(`${JSON.stringify(action.selectors)}.some(${actionable})`, { timeout: 12000 });
+        const selector = await page.evaluate(`${JSON.stringify(action.selectors)}.find(${actionable})`);
         await page.click(selector);
         return `UI click ${selector}`;
     }
@@ -112,7 +117,7 @@ async function act(page, scene, action) {
         return `UI canvas click ${action.selector}`;
     }
     if (action.kind === 'click') {
-        await page.waitForSelector(action.selector, { visible: true, timeout: 12000 });
+        await page.waitForFunction(actionable, { timeout: 12000 }, action.selector);
         await page.click(action.selector);
         return `UI click ${action.selector}`;
     }
