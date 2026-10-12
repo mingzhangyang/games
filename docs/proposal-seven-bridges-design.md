@@ -5,7 +5,7 @@
 
 本游戏在独立仓库 `mingzhangyang/bridges` 中开发、测试和部署，games 仅提供目录入口。下文代码路径均相对于该独立仓库，不属于 games/src/games。详细方案副本已加入该仓库的 `docs/implementation-plan.md`。
 
-共同方向、外链接入、交付批次和数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。详细方案的独立仓库副本见 [bridges/docs/implementation-plan.md](https://github.com/mingzhangyang/bridges/blob/main/docs/implementation-plan.md)。
+共同方向、外链接入、交付批次和数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。详细方案当前见 [bridges 文档 PR #1](https://github.com/mingzhangyang/bridges/pull/1)；该 PR 合并后，`bridges/main/docs/implementation-plan.md` 将成为规范副本。
 
 ## 1 产品定位与第一分钟
 

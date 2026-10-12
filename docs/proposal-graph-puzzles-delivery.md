@@ -116,12 +116,12 @@
 - 持久化：写入失败、损坏数据、版本变化、历史过长、多标签冲突、每日跨午夜；不把内存成功显示为持久化成功。
 - 移动端：390×664、375×553、320×454；横屏 839×360；安全区、动态地址栏、触控下限、浏览器缩放。至少一台真实 iPhone Safari 与一台 Android Chrome。
 - 无障碍：完整键盘路径、屏幕阅读器状态、纹理辅助、减少动态、静音、文字对比度；工具栏全称在辅助技术下可读。
-- 独立游戏构建：各仓库在 D0 定义 lint、模型/内容测试、浏览器 smoke 与 build 命令；在本仓库 CI 验证，发布前覆盖本游戏全流程。不要调用 games 的 verify-all 或把另一款作为测试依赖。
+- 独立游戏构建：各仓库在 D0 定义 lint、模型/内容测试、浏览器 smoke 与 build 命令；在各自仓库 CI 验证，发布前覆盖本游戏全流程。不要调用 games 的 verify-all 或把另一款作为测试依赖。
 - games 外链接入：只在添加卡片/注册元数据时执行 `npm run gen`、生成结果检查与现行必要 CI 门槛；验证首页双语文案、图标、正式外链、键盘访问及返回入口。现有注册表变更若要求全量校验，应遵守该门槛；后续独立游戏更新无需再次触发它。
 
 发布顺序为：独立游戏 CI 通过 → 本游戏预览环境验收 → 配置并验证正式域名、资源和深链 → 在 games 添加外链。两款分别发布、分别回滚；预览域名不写入合集正式卡片。games 的自动发布只更新目录，不负责发布两款游戏。
 
-首发不依赖合集计分或统计 Worker，不新增 D1 迁移。以后若接入共享服务，需另行定义 API、跨域策略、数据归属和版本兼容；共享计分 Worker 仍按用户手动发布流程处理，不能把其上线与独立游戏自动部署混为一谈。独立站自身 canonical、sitemap、OG、资源缓存与深链由本仓库负责，games 只维护自己的目录元数据。
+首发不依赖合集计分或统计 Worker，不新增 D1 迁移。以后若接入共享服务，需另行定义 API、跨域策略、数据归属和版本兼容；共享计分 Worker 仍按用户手动发布流程处理，不能把其上线与独立游戏自动部署混为一谈。独立站自身 canonical、sitemap、OG、资源缓存与深链由对应独立仓库负责，games 只维护自己的目录元数据。
 
 性能证据在各自仓库采集，覆盖初次打开、连续操作、动画窗口、闲置和后台恢复；可以参考现有 profile 工具的指标定义，采用少量本地脚本，不为此把外部游戏加入 games 的内置场景清单。不能为了测帧率给待机游戏制造常驻循环。
 
@@ -146,7 +146,7 @@
 1. [games.config.json](https://github.com/mingzhangyang/games/blob/d317af4/games.config.json)；[Architecture v2](https://github.com/mingzhangyang/games/blob/d317af4/docs/architecture-v2.md)；[布局契约](https://github.com/mingzhangyang/games/blob/d317af4/docs/contracts/layout.md)。合集接入时以最新 main 的 externalGames 生成流程为准；独立游戏不采用内置 new-game 流程。
 2. [Robertson、Sanders、Seymour、Thomas 的四色定理说明](https://thomas.math.gatech.edu/FC/fourcolor.html)：平面地图着色、边界相邻定义和证明背景。不能由此推出任意固定颜色线索可扩展。
 3. [Feghali、Johnson、Paulusma，Kempe Equivalence of Colourings of Cubic Graphs](https://arxiv.org/abs/1503.03430)：双色连通分量与颜色交换定义。本方案只使用这一操作定义，不把论文特定图类的结论推广为本游戏任意状态都可互达。
-4. [The Bridges of Königsburg 教学资料](https://fanchung.ucsd.edu/152/class/konig.htm)：原版七桥的度数、连通性和欧拉路径判据，以及进入/离开配对解释。
+4. [The Bridges of Königsberg 教学资料](https://fanchung.ucsd.edu/152/class/konig.htm)：原版七桥的度数、连通性和欧拉路径判据，以及进入/离开配对解释。
 5. [MDN Same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy)：不同 origin 的浏览器存储隔离，包括不同子域名。
 
 **本轮已核对的数学样例：**已用独立穷举检查 K4 的三色不可行与四色可行、C4 两色着色、六区外环对中心的阻塞及重排；已逐桥 ID 回放“两座广场”、七桥加一桥与加两桥的示例路线，并检查原图和改建图度数。其余关卡是待制作的内容规格，不是已生成或已验证的关卡包。
