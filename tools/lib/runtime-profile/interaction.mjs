@@ -11,6 +11,29 @@ async function touch(client, type, positions) {
     await client.send('Input.dispatchTouchEvent', { type, touchPoints: positions });
 }
 
+
+/** Include viewport hit-testing in failed browser-input evidence, never silently green. */
+async function diagnoseTouch(page, point, canvasId) {
+    return page.evaluate(({ x, y, canvasId }) => {
+        const el = document.elementFromPoint(x, y);
+        const canvas = document.getElementById(canvasId);
+        const r = canvas?.getBoundingClientRect();
+        const v = window.visualViewport;
+        const name = node => node ? { tag: node.tagName, id: node.id,
+            className: typeof node.className === 'string' ? node.className : '' } : null;
+        return {
+            point: { x: Math.round(x), y: Math.round(y) },
+            hit: name(el), canvas: name(canvas),
+            canvasRect: r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null,
+            viewport: { width: innerWidth, height: innerHeight, scrollX, scrollY,
+                visualWidth: v?.width, visualHeight: v?.height,
+                offsetLeft: v?.offsetLeft, offsetTop: v?.offsetTop },
+            game: { silkDragging: !!window.sdGame?.world?.dragging,
+                needleJoyActive: !!window.gameEngine?.joy?.active },
+        };
+    }, { ...point, canvasId });
+}
+
 function silkAnchorSnapshot() {
     const game = window.sdGame;
     const anchor = game?.world?.ropes?.[0]?.particles?.[0];
@@ -43,11 +66,16 @@ function makeHeldAnchor(page, client, mobile) {
                 await page.mouse.down();
             }
             await this.tick(0);
-            await page.waitForFunction(before =>
-                window.sdGame?.state === 'playing'
-                && !!window.sdGame?.world?.dragging
-                && window.sdGame.world.drags > before,
-            { timeout: 1800 }, position.drags);
+            try {
+                await page.waitForFunction(before =>
+                    window.sdGame?.state === 'playing'
+                    && !!window.sdGame?.world?.dragging
+                    && window.sdGame.world.drags > before,
+                { timeout: 1800 }, position.drags);
+            } catch (error) {
+                const debug = await diagnoseTouch(page, position, 'sd-canvas');
+                throw new Error('Silk Dew anchor touch not accepted: ' + JSON.stringify(debug), { cause: error });
+            }
             dragCount = await page.evaluate(() => window.sdGame.world.drags);
         },
         async tick(index) {
@@ -119,8 +147,13 @@ function makeNeedleSurvival(page, client, mobile) {
                 });
                 active = true;
                 await touch(client, 'touchStart', [touchPoint(joystick.x, joystick.y)]);
-                await page.waitForFunction(() => window.gameEngine?.joy?.active === true,
-                    { timeout: 1800 });
+                try {
+                    await page.waitForFunction(() => window.gameEngine?.joy?.active === true,
+                        { timeout: 1800 });
+                } catch (error) {
+                    const debug = await diagnoseTouch(page, joystick, 'na-canvas');
+                    throw new Error('Needle Awn joystick touch not accepted: ' + JSON.stringify(debug), { cause: error });
+                }
             } else {
                 active = true;
             }

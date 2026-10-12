@@ -110,7 +110,7 @@ export function renderMarkdown(report) {
             + ' | ' + range + ' | ' + fmt(group.tasks.median)
             + ' | ' + fmt(group.taskTime.median) + ' |');
     }
-    lines.push('', '## Diagnostic candidates (not automatic severity rankings)', '');
+    lines.push('', '## Repeat-confirmed diagnostic candidates (not automatic severity rankings)', '');
     const candidates = repeated.filter(group => group.runs >= 3 && group.rafP95.n >= 3
         && group.rafP95.median > 33.3);
     for (const group of candidates) {
