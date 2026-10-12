@@ -8,7 +8,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseCssText } from './baseline-adapter.mjs';
-import { scanHtml } from './html-inputs.mjs';
+import {
+    scanHtml, parseHtmlElements, htmlTagName, htmlElementAttributes, isStylesheetLink,
+} from './html-inputs.mjs';
 import { auditedJavaScriptFiles } from './runtime-sources.mjs';
 import { pageActivation } from './activation.mjs';
 import { registry } from '../registry.mjs';
@@ -202,7 +204,8 @@ export function reviewPostFreezeStylesheet(css, game, errors) {
         if (declaration.property.startsWith('--') && !declaration.property.startsWith('--' + game.prefix + '-')) {
             fail('custom property ' + declaration.property + ' is outside the --' + game.prefix + '-* namespace');
         }
-        if (hook.every(part => POST_FREEZE_ROOT_HOOKS.has(part)) && !declaration.property.startsWith('--')) {
+        // Any root-hook arm counts: `:root, .lj-x { color: red }` still paints :root.
+        if (hook.some(part => POST_FREEZE_ROOT_HOOKS.has(part)) && !declaration.property.startsWith('--')) {
             fail(selector + ' may only define --' + game.prefix + '-* custom properties (found ' + declaration.property + ')');
         }
         if (hook.includes('html') && !/^(?:--|background)/.test(declaration.property)) {
@@ -215,12 +218,16 @@ export function reviewPostFreezePage(root, game, html, errors) {
     const fail = message => errors.push(game.page + ': ' + message);
     const entry = registry.all().find(item => item.id === game.id);
     if (!entry || entry.href !== game.page) fail('post-freeze page must be the registry href of ' + game.id);
-    const links = [...html.matchAll(/<link\b[^>]*\bhref="(css\/[^"]+)"[^>]*>/g)];
-    if (links.some(match => !/\brel="stylesheet"/.test(match[0])
-        || match[0] !== '<link rel="stylesheet" href="' + match[1] + '">')) {
-        fail('local stylesheet links must use the canonical <link rel="stylesheet" href="…"> form');
+    // Parse links like the browser does (any quoting, any rel token, root-relative or
+    // remote hrefs): every stylesheet-capable or .css link takes part in the order check.
+    const links = parseHtmlElements(html, game.page)
+        .filter(element => htmlTagName(element) === 'link')
+        .map(element => htmlElementAttributes(element))
+        .filter(attrs => isStylesheetLink(attrs) || /\.css(?:[?#]|$)/i.test(attrs.href || ''));
+    if (links.some(attrs => attrs.rel !== 'stylesheet' || Object.keys(attrs).length !== 2)) {
+        fail('stylesheet links must be plain <link rel="stylesheet" href="…"> with no other attributes');
     }
-    const hrefs = links.map(match => match[1]);
+    const hrefs = links.map(attrs => attrs.href);
     const expected = postFreezeLinkOrder(game);
     if (JSON.stringify(hrefs) !== JSON.stringify(expected)) {
         fail('stylesheet order must be ' + expected.join(' → ') + ' (found ' + hrefs.join(' → ') + ')');

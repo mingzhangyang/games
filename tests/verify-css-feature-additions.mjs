@@ -111,6 +111,10 @@ assert.ok(sheet('@layer pages { :root { color: red; } }').some(e => e.includes('
     'document hooks only define page custom properties');
 assert.ok(sheet('@layer pages { html { font-size: 20px; } }').some(e => e.includes('background')),
     'html hook only paints the background');
+assert.ok(sheet('@layer pages { :root, .lj-x { color: red; } }').some(e => e.includes('may only define')),
+    'a mixed root-hook selector cannot paint :root');
+assert.ok(sheet('@layer pages { .lj-x, html { font-size: 20px; } }').some(e => e.includes('background')),
+    'a mixed html selector cannot restyle html');
 const pageHtml = readFileSync(join(ROOT, game.page), 'utf8');
 const pageReview = html => {
     const found = [];
@@ -123,6 +127,20 @@ assert.ok(pageReview(pageHtml.replace('<link rel="stylesheet" href="css/loop-jai
 assert.ok(pageReview(pageHtml.replace('<link rel="stylesheet" href="css/more-games.css">',
     '<link rel="stylesheet" href="css/more-games.css">\n    <link rel="stylesheet" href="css/tetris.css">'))
     .some(e => e.includes('stylesheet order')), 'extra stylesheet must fail');
+for (const extra of [
+    "<link rel='stylesheet' href='css/tetris.css'>",
+    '<link rel="stylesheet" href="/css/tetris.css">',
+    '<link rel=stylesheet href=css/tetris.css>',
+    '<link rel="alternate stylesheet" href="css/tetris.css">',
+    '<link rel="preload" href="css/tetris.css" as="style">',
+    '<link rel="stylesheet" href="https://example.com/x.css">',
+]) {
+    assert.ok(pageReview(pageHtml.replace('</head>', extra + '</head>')).length > 0,
+        'extra stylesheet link must fail: ' + extra);
+}
+assert.ok(pageReview(pageHtml.replace('<link rel="stylesheet" href="css/loop-jail.css">',
+    '<link rel="stylesheet" href="css/loop-jail.css" media="print">'))
+    .some(e => e.includes('no other attributes')), 'link attributes cannot change activation');
 assert.ok(pageReview(pageHtml.replace('<body class="lj-body">', '<body class="lj-body" style="color:red">'))
     .some(e => e.includes('inline')), 'inline style attribute must fail');
 assert.ok(pageReview(pageHtml.replace('</head>', '<style>.lj-x{color:red}</style></head>'))
