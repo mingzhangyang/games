@@ -271,6 +271,10 @@ try {
                         && game.joy.x === 0 && game.joy.y === 0 && game.aimTouchId === null
                         && game.dom.joy.classList.contains('hidden');
                 }
+                // The close event also releases the 'ranking' pause lease. A run
+                // started before that release is paused by invalidate().
+                if (id === 'carrot-pull') return !window.cpGame.pauseOwnership.isHeld('ranking');
+                if (id === 'shadow-loom') return !window.slGame.pauseOwnership.isHeld('ranking');
                 return true;
             }, { timeout: 6000 }, game.id);
             if (!await heldMovementReleased(page, game.id)) {
