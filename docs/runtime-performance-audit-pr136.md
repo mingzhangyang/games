@@ -36,6 +36,11 @@ to physical iOS/Android hardware.
   instead of falsely calling it menu time, and uses a real canvas click.
   Word Daily is already playing at boot: it also records an idle baseline.
   Minesweeper requires a real first reveal after opening its board.
+- Sword Flight is profiled in **zen** mode (the menu's meditation flight):
+  an unattended endless run loses all lives inside the 15 s baseline window,
+  while zen takes no damage and stays active through active/pause/resume.
+  Zen spawns fewer hazards than endless, so its numbers are a lighter workload
+  and must not be read as endless-mode cost.
 - Mobile shared-drawer pages measure a named pause lease and subsequent release,
   not a second synthetic pause variable. Games without this drawer report
   `not-supported` for those phases; desktop drawer buttons may be hidden,

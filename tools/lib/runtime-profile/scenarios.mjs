@@ -89,8 +89,11 @@ export const SCENARIOS = Object.freeze({
         ...level('gameEngine', 'startLevel', 1),
         ready: truthy('gameEngine', 'artReady'), activity: 'continuous',
     },
+    // Zen (the menu's meditation flight) takes no damage, so an unattended run
+    // stays active through the whole active/pause/resume baseline; idle endless
+    // dies inside the 15s window. Zen spawns fewer hazards than endless.
     'sword-flight': {
-        owner: 'game', start: call('startFlight', 'endless'), restart: call('startFlight', 'endless'),
+        owner: 'game', start: call('startFlight', 'zen'), restart: call('startFlight', 'zen'),
         ready: truthy('game', 'canvas'),
         active: { kind: 'all', conditions: [
             truthy('game', 'isPlaying'),

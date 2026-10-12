@@ -40,6 +40,9 @@ const levelGame = { lmGame: { state: 'playing', isPaused: true, isRunning() { re
 assert.equal(checkSceneState(SCENARIOS.lumen.active, levelGame), false, 'a quietly paused level game must not count as active');
 levelGame.lmGame.isPaused = false;
 assert.equal(checkSceneState(SCENARIOS.lumen.active, levelGame), true);
+assert.deepEqual(SCENARIOS['sword-flight'].start.args, ['zen'],
+    'Sword Flight baseline needs a run that survives unattended sampling');
+assert.deepEqual(SCENARIOS['sword-flight'].restart.args, ['zen']);
 assert.deepEqual(SCENARIOS['planet-merge'].start.args, ['endless'], 'Planet Merge must start the UI endless mode, never mode=undefined');
 assert.deepEqual(SCENARIOS['planet-merge'].restart.args, ['endless']);
 const tetris = { game: { currentPiece: {}, animationId: null, paused: false, gameOver: false } };
