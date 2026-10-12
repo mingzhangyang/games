@@ -129,6 +129,9 @@ const snap = page => page.evaluate(() => {
     };
 });
 
+// 等模拟达到某个条件；超时不抛错，交给紧随其后的 check 报出真实状态
+const waitSim = (page, fn, arg) => page.waitForFunction(fn, { timeout: 4000 }, arg).catch(() => {});
+
 const canvasInfo = page => page.evaluate(() => {
     const c = document.getElementById('lj-canvas');
     const g = c.getContext('2d');
@@ -229,7 +232,8 @@ try {
         m.x = sim.w * 0.5; m.y = sim.h * 0.85 - 4;
         sim.pen.invuln = 5;
     });
-    await sleep(120);
+    // 显式条件而不是固定 sleep：整套并发跑时 120ms 内可能一帧都没推进
+    await waitSim(page, b0 => window.ljGame.sim.stats.bites > b0, bites0);
     s = await snap(page);
     check(s.bites === bites0 + 1 && s.strokes === strokes0, '⑤ 小怪碰到墨线：整条咬断', JSON.stringify({ bites: s.bites, strokes: s.strokes }));
 
@@ -241,7 +245,7 @@ try {
     await sleep(300);
     check((await snap(page)).time === t0, '⑥ 暂停期间模拟冻结');
     await page.click('#lj-btn-resume');
-    await sleep(200);
+    await waitSim(page, t => window.ljGame.sim.time > t, t0);
     s = await snap(page);
     check(!s.paused && !s.pause && s.time > t0 && s.pauseLabel === '暂停', '⑥ 继续：恢复推进', JSON.stringify(s));
 

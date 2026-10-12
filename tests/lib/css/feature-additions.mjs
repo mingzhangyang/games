@@ -90,6 +90,8 @@ export const MOBILE_FIT_SELECTORS = new Set([
     '.td-rotate-prompt',
     '.sl-shell',
     '.perks',
+    '.cp-overlay',
+    '.td-overlay',
 ]);
 
 export function stripMobileFitLink(page, html, errors) {
