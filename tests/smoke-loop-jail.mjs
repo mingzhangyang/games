@@ -162,6 +162,10 @@ try {
     check(zhNames.pill === '画牢' && zhNames.menu === '画牢' && /^画牢/.test(zhNames.doc)
         && !/Loop Jail|LOOP JAIL/i.test(Object.values(zhNames).join(' ')), '① 中文：游戏名只显示「画牢」', JSON.stringify(zhNames));
     check(/还没有记录/.test(boot.best), '① 无记录时显示引导文案', boot.best);
+    // 舞台和画布贴边是直角：浮层若带共享圆角，四角会露出画布的直角与场地边框线
+    const radii = await page.evaluate(() => ['lj-start', 'lj-pause', 'lj-over']
+        .map(id => getComputedStyle(document.getElementById(id)).borderTopLeftRadius));
+    check(radii.every(r => r === '0px'), '① 开始 / 暂停 / 结算浮层是直角，与贴边舞台一致', JSON.stringify(radii));
     check(boot.trophy, '① 排行榜入口插在暂停钮之前');
     check(boot.more > 10 && !(await page.$('#ljStartMore a[href="loop-jail.html"]')), '① 开始菜单「更多游戏」不含自己', boot.more);
 

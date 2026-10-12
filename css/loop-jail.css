@@ -326,7 +326,10 @@
     }
 
     /* ── 浮层 ── */
+    /* 沉浸式舞台贴边、画布是直角：浮层也不能有共享的 --frame-radius 圆角，
+       否则四角会露出下面画布的直角和场地边框线（同 firefly-signal） */
     .lj-overlay {
+        border-radius: 0;
         justify-content: safe center;
         gap: 12px;
         padding: 24px 20px;
