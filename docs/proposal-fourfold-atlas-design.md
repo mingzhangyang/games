@@ -3,9 +3,9 @@
 > 状态：完整实现方案，尚未实现或发布。
 > 日期：2026-10-12 · 设计版本：1.1 · 名称为工作名。
 
-本游戏在独立仓库 `fourfold-atlas` 中开发、测试和部署，games 仅提供目录入口。下文代码路径均相对于该独立仓库，不属于 games/src/games。仓库和域名尚未创建。
+本游戏在独立仓库 `mingzhangyang/four-colors` 中开发、测试和部署，games 仅提供目录入口。下文代码路径均相对于该独立仓库，不属于 games/src/games。详细方案副本已加入该仓库的 `docs/implementation-plan.md`。
 
-共同方向、外链接入、交付批次、文档迁移与数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。
+共同方向、外链接入、交付批次和数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。详细方案的独立仓库副本见 [four-colors/docs/implementation-plan.md](https://github.com/mingzhangyang/four-colors/blob/main/docs/implementation-plan.md)。
 
 ## 1 产品定位与第一分钟
 
@@ -103,7 +103,7 @@ FC26 的小样用于教会工具，不代表正式后期难度。成品交换关
 ## 8 数据 几何与求解器
 
 ```text
-fourfold-atlas/                       独立仓库根目录
+four-colors/                       独立仓库根目录
   index.html
   package.json
   src/                       下列游戏模块位于 src 内
@@ -115,9 +115,9 @@ fourfold-atlas/                       独立仓库根目录
     input/{pointer,keyboard}.js
     services/{settings,daily,hints,export}.js
     storage.js / i18n.js / audio.js
-  tools/generators/fourfold-atlas-build.mjs
-  tests/verify-fourfold-atlas-{rules,levels,daily}.mjs
-  tests/smoke-fourfold-atlas.mjs
+  tools/generators/four-colors-build.mjs
+  tests/verify-four-colors-{rules,levels,daily}.mjs
+  tests/smoke-four-colors.mjs
 ```
 
 **关卡主数据：**`id, revision, mode, chapter, mesh, fixedColors, initialColors, allowedActions, goals, witness, difficultyTags, artAnchors`。mesh 存共享顶点、边与区域环；边界折线通过同一组边 ID 复用。编译器从共享边推导邻接表与 SVG path；运行时加载编译结果，并检查内容校验和。不维护第二份人工邻接表。

@@ -3,9 +3,9 @@
 > 状态：完整实现方案，尚未实现或发布。
 > 日期：2026-10-12 · 设计版本：1.1 · 名称为工作名。
 
-本游戏在独立仓库 `seven-bridges` 中开发、测试和部署，games 仅提供目录入口。下文代码路径均相对于该独立仓库，不属于 games/src/games。仓库和域名尚未创建。
+本游戏在独立仓库 `mingzhangyang/bridges` 中开发、测试和部署，games 仅提供目录入口。下文代码路径均相对于该独立仓库，不属于 games/src/games。详细方案副本已加入该仓库的 `docs/implementation-plan.md`。
 
-共同方向、外链接入、交付批次、文档迁移与数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。
+共同方向、外链接入、交付批次和数学来源见 [两款图论游戏交付方案](proposal-graph-puzzles-delivery.md)。详细方案的独立仓库副本见 [bridges/docs/implementation-plan.md](https://github.com/mingzhangyang/bridges/blob/main/docs/implementation-plan.md)。
 
 ## 1 产品定位与第一分钟
 
@@ -132,7 +132,7 @@ pointercancel、松手、手指移出舞台都只取消未提交的一段，不�
 ## 10 图模型 求解器与内容管线
 
 ```text
-seven-bridges/                       独立仓库根目录
+bridges/                       独立仓库根目录
   index.html
   package.json
   src/                       下列游戏模块位于 src 内
@@ -143,9 +143,9 @@ seven-bridges/                       独立仓库根目录
     input/{pointer,bridge-hit-test,keyboard}.js
     services/{settings,daily,hints,replay,export}.js
     storage.js / i18n.js / audio.js
-  tools/generators/seven-bridges-build.mjs
-  tests/verify-seven-bridges-{rules,levels,repair,daily}.mjs
-  tests/smoke-seven-bridges.mjs
+  tools/generators/bridges-build.mjs
+  tests/verify-bridges-{rules,levels,repair,daily}.mjs
+  tests/smoke-bridges.mjs
 ```
 
 **模型：**`nodes[{id}], edges[{id,u,v}], requiredNodes, protectedEdges, candidateEdits, objective, fixedStart, fixedEnd`；坐标、桥廊、桥头、建筑和移动端布局属于 geometry/art，不进入规则判断。首发支持平行边，不开放自环；装饰步道不算边。图视图中曲线交叉也不自动成为节点。
