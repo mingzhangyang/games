@@ -33,6 +33,14 @@ assert.equal(checkSceneState({ kind: 'all', conditions: [
 ] }, root), true);
 assert.equal(checkSceneState({ kind: 'canvas', selector: '#board' }, root), true);
 assert.equal(checkSceneState({ kind: 'canvas', selector: '#board' }, { document: { querySelector: () => null } }), false);
+assert.equal(SCENARIOS['tank-battle'].noMenu, true, 'tank battle auto-start must not be called a menu');
+const tetris = { game: { currentPiece: {}, animationId: null, paused: false, gameOver: false } };
+assert.equal(checkSceneState(SCENARIOS.tetris.active, tetris), false,
+    'the Tetris piece exists at boot but no animation runs until Start');
+tetris.game.animationId = 111;
+assert.equal(checkSceneState(SCENARIOS.tetris.active, tetris), true);
+tetris.game.paused = true;
+assert.equal(checkSceneState(SCENARIOS.tetris.active, tetris), false);
 
 assert.equal(percentile([], 95), null);
 assert.equal(percentile([10, 20, 30], 50), 20);

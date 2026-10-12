@@ -178,7 +178,7 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
         }
         // Stats-drawer lifecycle pause has a reviewed owner in #133/#134; don't
         // invent generic pause controls for games without that capability.
-        if (game.caps?.includes('drawer') && game.id !== 'tetris') {
+        if (viewportTag !== 'desktop' && game.caps?.includes('drawer') && game.id !== 'tetris') {
             const toggle = `#${game.prefix}StatsToggle`;
             const close = `#${game.prefix}StatsClose`;
             await page.waitForSelector(toggle, { visible: true, timeout: 5000 });
@@ -194,8 +194,8 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
             result.phases.resume = { status: 'measured',
                 metrics: await sampleWindow(page, client, preset.resume, { sampleRaf: scene.activity !== 'discrete' }) };
         } else {
-            result.phases.paused = { status: 'not-supported', reason: 'No validated shared-drawer pause hook' };
-            result.phases.resume = { status: 'not-supported', reason: 'No validated shared-drawer resume hook' };
+            result.phases.paused = { status: 'not-supported', reason: viewportTag === 'desktop' ? 'Drawer not measured on desktop: topbar control may be hidden' : 'No validated shared-drawer pause hook' };
+            result.phases.resume = { status: 'not-supported', reason: viewportTag === 'desktop' ? 'Drawer not measured on desktop: topbar control may be hidden' : 'No validated shared-drawer resume hook' };
         }
         if (preset.memoryCycles > 0 && scene.restart) {
             const cycle = [];

@@ -24,11 +24,14 @@ export const SCENARIOS = Object.freeze({
     },
     'tetris': {
         owner: 'game', start: click('#startBtn'),
-        ready: truthy('game', 'canvas'), active: truthy('game', 'currentPiece'),
+        ready: truthy('game', 'canvas'), active: { kind: 'all', conditions: [
+            truthy('game', 'animationId'), { owner: 'game', path: 'paused', equals: false },
+            { owner: 'game', path: 'gameOver', equals: false },
+        ] },
         restart: call('restart'), activity: 'continuous',
     },
     'tank-battle': {
-        owner: 'tankBattleInstance', start: call('restart'),
+        owner: 'tankBattleInstance', start: auto(), noMenu: true,
         ready: truthy('tankBattleInstance', 'art.ready'),
         active: state('tankBattleInstance', 'gameState'),
         activity: 'continuous', viewport: 'landscape',
@@ -69,7 +72,8 @@ export const SCENARIOS = Object.freeze({
     },
     'tower-defense': {
         owner: 'tdGame', start: click('#td-btn-play'),
-        ready: truthy('tdGame', 'canvas'), active: state('tdGame', 'state'),
+        ready: { owner: 'tdGame', path: 'artStatus', notEquals: 'loading' },
+        active: state('tdGame', 'state'),
         activity: 'continuous', viewport: 'landscape',
     },
     'gravity-slingshot': {

@@ -27,13 +27,19 @@ to physical iOS/Android hardware.
 - Standard selectors are clicked via the real browser. Existing public
   debug/test-hook methods are used only where current smoke tests use them;
   the exported report identifies every such start as `test-hook`, not a UI action.
+- Tank Battle starts its game loop during construction, so its baseline is
+  an **already active** run and it is not needlessly restarted. The initial
+  sample is never mislabelled as a menu sample. Tetris already constructs a
+  piece in its menu, so a piece alone is not proof of start; its active
+  predicate also requires a live animation handle and non-paused state.
 - Gomoku has no separate menu: the measurement reports an **idle board**
   instead of falsely calling it menu time, and uses a real canvas click.
   Word Daily is already playing at boot: it also records an idle baseline.
   Minesweeper requires a real first reveal after opening its board.
-- Shared-drawer pages measure a named pause lease and subsequent release,
+- Mobile shared-drawer pages measure a named pause lease and subsequent release,
   not a second synthetic pause variable. Games without this drawer report
-  `not-supported` for those phases; no implicit claim of full pause testing.
+  `not-supported` for those phases; desktop drawer buttons may be hidden,
+  so no attempt is made to click an invisible mobile-only toggle.
 - Deep memory restart cycles run only for explicitly supported in-page
   restart actions, never through fresh reloads masquerading as leak detection.
 
