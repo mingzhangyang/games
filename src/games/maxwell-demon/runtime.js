@@ -449,7 +449,7 @@ export class MaxwellDemonGame {
     /* ---------------------- 模式与关卡流程 ---------------------- */
 
     startLevels() {
-        track('maxwell-demon', 'start_levels');
+        // Analytics play is emitted by startLevel(), after a valid stage is loaded.
         this.mode = 'levels';
         this.daily = null;
         let idx = 0;
@@ -466,7 +466,7 @@ export class MaxwellDemonGame {
         const course = dailyCourse(key);
         this.mode = 'daily';
         this.daily = { key, display: todayKeyDisplay(), course, cursor: 0, totalSpent: 0, stars: 0 };
-        track('maxwell-demon', 'start_daily');
+        // Analytics play is emitted by startLevel(), after a valid stage is loaded.
         this.startLevel(course[0]);
         this.showToast(this.t('dailyStartToast'));
     }
@@ -488,6 +488,7 @@ export class MaxwellDemonGame {
             : spec.id;
         this.world = createWorld(spec, seedKey);
         this.state = 'playing'; this.contextualRestart?.sync();
+        track('maxwell-demon', 'play');
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
         this.lastFrame = 0;
@@ -557,7 +558,7 @@ export class MaxwellDemonGame {
         }
         this.showClearPanel(stars, spent, gap);
         if (stars === 3) Sfx.star3();
-        track('maxwell-demon', 'level_win', stars);
+        track('maxwell-demon', 'finish');
     }
 
     /** 战役全通 → 提交各关最少花费总和（asc 榜） */
@@ -594,7 +595,7 @@ export class MaxwellDemonGame {
         this.syncActionVisibility();
         Sfx.fail();
         vibrate([25, 40, 25]);
-        track('maxwell-demon', 'level_fail', 0);
+        track('maxwell-demon', 'finish');
     }
 
     finishDaily() {

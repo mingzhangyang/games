@@ -3,7 +3,7 @@ import { getLang } from '../../platform/site-settings.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { createSfx } from '../../platform/game-sfx.js';
 import { bindFrame } from '../../platform/game-frame.js';
-import { track } from '../../platform/analytics.js';
+import { track, bindAnalyticsPlaying } from '../../platform/analytics.js';
 import { makeText } from '../../platform/i18n.js';
 import { onReady } from '../../platform/boot.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
@@ -100,6 +100,7 @@ let isComputerThinking = false;
 let winningCells = null; // Fix #7: track winning cells for highlight
 let lastResult = null; // 上一局结果：null=未结束 / 0=平局 / 1=黑胜 / 2=白胜
 let moveCount = 0; // 每局手数（用于统计首手）
+bindAnalyticsPlaying('gomoku', () => gameActive && moveCount > 0);
 let aiTimer = null; // AI 走棋定时器句柄，重置/切换模式时必须清除
 let cssSize = 600; // 画布 CSS 逻辑尺寸（canvas.width 是 DPR 缩放后的设备像素）
 

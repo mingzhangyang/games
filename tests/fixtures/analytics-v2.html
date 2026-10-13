@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><title>Analytics V2 lifecycle fixture</title></head>
+<body>
+<button id="start">Start</button><button id="pause">Pause</button>
+<button id="resume">Resume</button><button id="finish">Finish</button>
+<button id="restart">Restart</button>
+<script>
+window.__fixturePlaying = false;
+window.__gamesAnalyticsPlaying = new Map([['tetris', () => window.__fixturePlaying]]);
+document.querySelector('#start').onclick = () => {
+    window.__fixturePlaying = true;
+    window.hubTrack('tetris', 'play');
+};
+document.querySelector('#restart').onclick = document.querySelector('#start').onclick;
+document.querySelector('#pause').onclick = () => { window.__fixturePlaying = false; };
+document.querySelector('#resume').onclick = () => { window.__fixturePlaying = true; };
+document.querySelector('#finish').onclick = () => {
+    window.__fixturePlaying = false;
+    window.hubTrack('tetris', 'finish');
+};
+</script>
+<script src="/analytics.js" defer data-analytics-game="tetris"></script>
+</body></html>

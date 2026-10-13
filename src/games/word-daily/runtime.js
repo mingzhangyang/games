@@ -350,7 +350,6 @@ export class WordDailyGame {
         } else {
             this.rows = [];
             this.status = 'playing';
-            track('word-daily', 'play');
         }
         this.current = '';
         if (this.el.input) this.el.input.value = '';
@@ -967,6 +966,8 @@ export class WordDailyGame {
     commitGuess(guess) {
         const states = evaluateGuess(guess, this.answer);
         const rowIndex = this.rows.length;
+        // A genuine puzzle begins at the first valid committed guess, not on page load.
+        if (rowIndex === 0) track('word-daily', 'play');
         this.rows.push({ word: guess, states });
         this.revealing = true;
         this.animateReveal(rowIndex, states, () => {
@@ -1020,8 +1021,8 @@ export class WordDailyGame {
             this.showToast(`${this.TEXT.loseMsg}: ${this.answer}`, 3500);
         }
 
+        track('word-daily', 'finish');
         if (this.mode === 'daily') {
-            track('word-daily', 'finish');
             this.recordDaily(won ? this.rows.length : 0);
             this.reportGlobal(won, this.rows.length);
         }

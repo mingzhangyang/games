@@ -1,4 +1,5 @@
 import { onReady } from '../boot.js';
+import { bindAnalyticsPlaying } from '../analytics.js';
 import { bindChrome } from '../game-chrome.js';
 import { bindFrame } from '../game-frame.js';
 import { createStatsDrawer } from '../game-drawer.js';
@@ -20,12 +21,27 @@ export function mountGameRuntime(options = {}) {
         resize = null,
         visibility = null,
         expose = null,
+        analyticsPlaying = null,
     } = options;
 
     const resolveGame = typeof getGame === 'function' ? getGame : () => game;
     const runtime = { frame: null, chrome: null, drawer: null, game: resolveGame() };
 
     if (expose && typeof window !== 'undefined') window[expose] = runtime.game;
+
+    // A single observer reads the game's OWN lifecycle; no mirrored gameplay
+    // state, timers, network calls, or changes to pause ownership.
+    if (self && (game || getGame || analyticsPlaying)) {
+        const gameId = self.replace(/\.html$/, '');
+        bindAnalyticsPlaying(gameId, () => {
+            const current = resolveGame();
+            if (!current) return false;
+            if (typeof analyticsPlaying === 'function') return !!analyticsPlaying(current);
+            if (typeof current.isRunning === 'function') return !!current.isRunning();
+            if (typeof current.isPlaying === 'boolean') return current.isPlaying && !current.isPaused;
+            return current.state === 'playing' && !current.paused && !current.isPaused;
+        });
+    }
 
     if (frame !== false) {
         const frameOptions = frame && typeof frame === 'object' ? frame : {};

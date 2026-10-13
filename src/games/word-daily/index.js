@@ -16,6 +16,8 @@ onReady(() => {
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
     window.wordDailyRuntime = mountGameRuntime({
         self: 'word-daily.html',
+        game: window.wordDailyGame,
+        analyticsPlaying: g => g.status === 'playing' && (g.rows.length > 0 || !!g.current),
         frame: false,
         chrome: {
             getText,

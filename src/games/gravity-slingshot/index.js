@@ -38,6 +38,7 @@ onReady(() => {
     window.gdRuntime = mountGameRuntime({
         self: 'gravity-slingshot.html',
         game,
+        analyticsPlaying: g => !g.isPaused && (g.phase === 'aiming' || g.phase === 'flying'),
         frame: { logicalWidth: 480 },
         more: '#gdSideMore',
         drawer: {

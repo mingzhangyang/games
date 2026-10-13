@@ -731,6 +731,8 @@ class BondForgeGame {
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
         this.updateHud();
+        // Sandbox is a real session without a finish condition.
+        track('bond-forge', 'play');
         this.toast(this.t('sandboxHint'));
     }
 

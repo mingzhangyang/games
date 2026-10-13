@@ -1,9 +1,14 @@
-// 全站唯一的播放统计上报入口（守卫在此唯一实现）。
-// 迁移自 13 个入口 × 3 种守卫写法（typeof === 'function' / 真值判断 /
-// 再查 window 存在）。服务端白名单见 Workers/games-analytics.js（由
-// games.config.json 经 npm run gen 派生）。
+// Shared game telemetry facade. Gameplay owns its states; this module only
+// registers read-only observers for the one per-document Analytics V2 client.
 export function track(gameId, event) {
     if (typeof window !== 'undefined' && typeof window.hubTrack === 'function') {
         window.hubTrack(gameId, event);
     }
+}
+
+export function bindAnalyticsPlaying(gameId, isPlaying) {
+    if (typeof window === 'undefined' || typeof isPlaying !== 'function' || !gameId) return;
+    const observers = window.__gamesAnalyticsPlaying ||= new Map();
+    observers.set(gameId, isPlaying);
+    window.hubAnalytics?.bindPlaying(gameId, isPlaying);
 }

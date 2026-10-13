@@ -1,8 +1,10 @@
 // Games Analytics V2: D1 is the sole source of truth. No KV reads or writes.
 // Legacy: POST /event {game,event:'play'|'finish'}; GET /stats?day=YYYYMMDD|scope=total.
-// V2: POST /event {v:2,game,event,eventId,sessionId[,seconds]}; GET /stats?v=2.
+// V2: POST /event {v:2,game,event,eventId,sessionId[,seconds,playingSeconds,occurredAt]}; GET /stats?v=2.
 
-const ALLOWED_ORIGINS = ['https://games.orangely.xyz', 'https://game.orangely.xyz'];
+// registry:begin analytics-origins
+const ALLOWED_ORIGINS = ['https://games.orangely.xyz', 'https://game.orangely.xyz', 'https://2d-minecraft.orangely.xyz', 'https://dots-and-boxes.orangely.xyz', 'https://steady-hand.orangely.xyz'];
+// registry:end analytics-origins
 
 // registry:begin games-analytics
 const GAMES = ['math-rain', 'tetris', 'tank-battle', 'gomoku', 'planet-merge', 'word-daily', 'hoop-shot', 'minesweeper', 'reversi', 'tower-defense', 'gravity-slingshot', 'needle-awn', 'sword-flight', 'lumen', 'circuit', 'silk-dew', 'bond-forge', 'echo-cave', 'maxwell-demon', 'crystal-bloom', 'flame-verse', 'ripple-duet', 'carrot-pull', 'firefly-signal', 'shadow-loom', 'loop-jail', 'minecraft', 'dots', 'stack'];
@@ -82,45 +84,62 @@ function validateEvent(data) {
   if (!data || !GAMES.includes(data.game)) return null;
   if (!Object.hasOwn(data, 'v')) {
     return data.event === 'play' || data.event === 'finish'
-      ? { version: 1, game: data.game, kind: data.event, seconds: 0, eventId: null, sessionId: null }
+      ? { version: 1, game: data.game, kind: data.event, seconds: 0, playingSeconds: 0, eventId: null, sessionId: null }
       : null;
   }
   if (data.v !== 2 || !V2_KINDS.has(data.event)) return null;
+  const keys = Object.keys(data).sort().join(',');
   const expected = data.event === 'active'
     ? 'event,eventId,game,seconds,sessionId,v'
     : 'event,eventId,game,sessionId,v';
-  if (Object.keys(data).sort().join(',') !== expected) return null;
+  // Additive active-only gameplay duration; all Phase 1 V2 payloads still pass.
+  if (![expected,
+    ...(data.event === 'active'
+      ? ['event,eventId,game,playingSeconds,seconds,sessionId,v',
+        'event,eventId,game,occurredAt,seconds,sessionId,v',
+        'event,eventId,game,occurredAt,playingSeconds,seconds,sessionId,v']
+      : ['event,eventId,game,occurredAt,sessionId,v'])].includes(keys)) return null;
+  // Clock skew / delayed traffic is bounded; an event cannot target arbitrary
+  // historical D1 days. Retries keep their immutable original event time.
+  if (Object.hasOwn(data, 'occurredAt') &&
+    (!Number.isSafeInteger(data.occurredAt) || Math.abs(Date.now() - data.occurredAt) > 86400000))
+    return null;
   if (typeof data.eventId !== 'string' || !UUID_V4.test(data.eventId)
     || typeof data.sessionId !== 'string' || !UUID_V4.test(data.sessionId)) return null;
-  if (data.event === 'active' && (!Number.isInteger(data.seconds) || data.seconds < 1 || data.seconds > 60)) return null;
+  if (data.event === 'active' && (!Number.isInteger(data.seconds) || data.seconds < 1 || data.seconds > 60
+    || (Object.hasOwn(data, 'playingSeconds') && (!Number.isInteger(data.playingSeconds)
+      || data.playingSeconds < 0 || data.playingSeconds > data.seconds)))) return null;
   return { version: 2, game: data.game, kind: data.event,
     seconds: data.event === 'active' ? data.seconds : 0,
+    playingSeconds: data.event === 'active' ? data.playingSeconds ?? 0 : 0,
+    occurredAt: data.occurredAt ?? null,
     eventId: data.eventId, sessionId: data.sessionId };
 }
 
 function sameEvent(row, event) {
   return row && row.game === event.game && row.kind === event.kind
-    && row.session_id === event.sessionId && Number(row.active_seconds) === event.seconds;
+    && row.session_id === event.sessionId && Number(row.active_seconds) === event.seconds
+    && Number(row.playing_seconds) === event.playingSeconds;
 }
 
 async function addEvent(db, event, day) {
   // The AFTER INSERT trigger updates analytics_daily in the SAME SQLite transaction.
   // D1's unique indexes serialize racing V2 retries; there is no read/modify/write step.
   const result = await db.prepare(`
-    INSERT INTO analytics_events (version, event_id, session_id, day, game, kind, active_seconds)
-    VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING
-  `).bind(event.version, event.eventId, event.sessionId, day, event.game, event.kind, event.seconds).run();
+    INSERT INTO analytics_events (version, event_id, session_id, day, game, kind, active_seconds, playing_seconds)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING
+  `).bind(event.version, event.eventId, event.sessionId, day, event.game, event.kind, event.seconds, event.playingSeconds).run();
   if (event.version === 1) return { ok: true };
   if (result.meta?.changes === 1) return { ok: true, duplicate: false };
   if (result.meta?.changes !== 0) throw new Error('Unexpected D1 write result');
 
   let row = await db.prepare(`
-    SELECT event_id, game, kind, session_id, active_seconds FROM analytics_events WHERE event_id = ?
+    SELECT event_id, game, kind, session_id, active_seconds, playing_seconds FROM analytics_events WHERE event_id = ?
   `).bind(event.eventId).first();
   // A session may report one open even if a buggy client changes the event ID.
   if (!row && event.kind === 'open') {
     row = await db.prepare(`
-      SELECT event_id, game, kind, session_id, active_seconds
+      SELECT event_id, game, kind, session_id, active_seconds, playing_seconds
       FROM analytics_events WHERE session_id = ? AND version = 2 AND kind = 'open'
     `).bind(event.sessionId).first();
   }
@@ -140,13 +159,13 @@ async function pruneEvents(db, timestamp = Date.now()) {
   return Number(result.meta?.changes ?? 0);
 }
 
-const DAY_SQL = `SELECT game, plays AS p, finishes AS f, opens, active_seconds
+const DAY_SQL = `SELECT game, plays AS p, finishes AS f, opens, active_seconds, playing_seconds
   FROM analytics_daily WHERE day = ? ORDER BY game`;
 const TOTAL_SQL = `SELECT game, SUM(plays) AS p, SUM(finishes) AS f,
-  SUM(opens) AS opens, SUM(active_seconds) AS active_seconds
+  SUM(opens) AS opens, SUM(active_seconds) AS active_seconds, SUM(playing_seconds) AS playing_seconds
   FROM analytics_daily GROUP BY game ORDER BY game`;
 const RANGE_SQL = `SELECT game, SUM(plays) AS p, SUM(finishes) AS f,
-  SUM(opens) AS opens, SUM(active_seconds) AS active_seconds
+  SUM(opens) AS opens, SUM(active_seconds) AS active_seconds, SUM(playing_seconds) AS playing_seconds
   FROM analytics_daily WHERE day BETWEEN ? AND ? GROUP BY game ORDER BY game`;
 
 async function stats(requestUrl, db, cors) {
@@ -176,13 +195,14 @@ async function stats(requestUrl, db, cors) {
       : db.prepare(DAY_SQL).bind(day);
   const rows = (await query.all()).results || [];
   const games = {};
-  const total = v2 ? { p: 0, f: 0, opens: 0, activeSeconds: 0 } : { p: 0, f: 0 };
+  const total = v2 ? { p: 0, f: 0, opens: 0, activeSeconds: 0, playingSeconds: 0 } : { p: 0, f: 0 };
   for (const row of rows) {
     const pCount = Number(row.p);
     const fCount = Number(row.f);
     if (!v2 && !pCount && !fCount) continue;
     const entry = v2 ? {
       p: pCount, f: fCount, opens: Number(row.opens), activeSeconds: Number(row.active_seconds),
+      playingSeconds: Number(row.playing_seconds),
     } : { p: pCount, f: fCount };
     games[row.game] = entry;
     for (const key of Object.keys(total)) total[key] += entry[key];
@@ -216,7 +236,7 @@ export default {
       const data = await parseBody(request);
       const event = validateEvent(data);
       if (!event) return reply('Invalid', 400, cors);
-      const result = await addEvent(env.ANALYTICS_DB, event, dayKeyUTC8());
+      const result = await addEvent(env.ANALYTICS_DB, event, dayKeyUTC8(event.occurredAt ?? Date.now()));
       if (result.conflict) return jsonReply({ ok: false, error: 'Event ID conflict' }, 409, cors);
       return event.version === 1 ? reply('OK', 200, cors)
         : jsonReply(result, result.duplicate ? 200 : 201, cors);

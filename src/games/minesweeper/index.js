@@ -370,6 +370,7 @@ class MinesweeperGame {
         if (!this.placed) {
             this.placeMines(i);
             this.state = 'playing';
+            track('minesweeper', 'play');
             this.startTs = performance.now();
             this.startTimer();
         }
@@ -733,7 +734,6 @@ class MinesweeperGame {
     hideStart() {
         if (this.el.start) this.el.start.classList.add('hidden');
         Sfx.click();
-        track('minesweeper', 'play');
     }
 
     renderBestChips() {
@@ -960,6 +960,8 @@ onReady(() => {
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
     window.minesweeperRuntime = mountGameRuntime({
         self: 'minesweeper.html',
+        game: window.msGame,
+        analyticsPlaying: g => g.state === 'playing' && !g.paused,
         frame: false,
         chrome: {
             getText,
