@@ -75,7 +75,7 @@ npm run verify -- --jobs=2
 npx wrangler deploy -c Workers/wrangler-games-analytics.jsonc --dry-run
 ```
 
-`verify:analytics` executes the real SQL migration and event HTTP handler with Node 22's embedded SQLite, and checks legacy shapes, UTC+8 boundaries, concurrent/replayed writes, triggers, constraints, request validation, CORS, and independent real Chromium lifecycle verification. Full repo CI exercises this checker along with existing game tests. The `--dry-run` command bundles the analytics Worker without deploying it.
+`verify:analytics` executes the real SQL migration and event HTTP handler with Node 22's embedded SQLite, and checks legacy shapes, UTC+8 boundaries, concurrent/replayed writes, triggers, constraints, request validation, CORS, and independent real Chromium lifecycle verification. Full repo CI exercises this checker, rollout compatibility checks, representative real-game browser lifecycle checks and a separate Analytics Worker dry-run alongside the existing suite. These dry runs do not deploy to production.
 
 A local D1 development run (writes to a **local** database only):
 

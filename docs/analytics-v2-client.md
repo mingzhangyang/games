@@ -40,7 +40,7 @@ The client probes V2 support on approved published origins and sends the additiv
 | lumen | Begin a level/daily puzzle | Puzzle solved | Reset board in same attempt not new play |
 | circuit | Begin level/daily puzzle | Puzzle solved | Reset board not new play |
 | silk-dew | Begin/retry stage | Stage cleared or failed | Former custom names not valid Worker events |
-| bond-forge | Begin stage or free sandbox | Stage complete only | Sandbox has no finish condition (N/A) |
+| bond-forge | Begin each stage attempt or free sandbox | Stage cleared, including daily stages | Daily/campaign summaries do not add finishes; sandbox has none |
 | echo-cave | Begin/retry stage | Stage cleared or failed | Former custom names normalized |
 | maxwell-demon | Begin/retry stage | Stage cleared or failed | Former custom names normalized |
 | crystal-bloom | Begin/retry stage | Stage cleared or failed | Former custom names normalized |
@@ -50,6 +50,8 @@ The client probes V2 support on approved published origins and sends the additiv
 | firefly-signal | Begin real round | Completed result | Idle animations not gameplay |
 | shadow-loom | Begin level/solve attempt | Correct completed shadow | Result overlay and pause excluded |
 | loop-jail | Start/restart run | Run ended | No per-tick play events |
+
+Bond Forge treats a stage attempt as one play: a started or retried level reports `play` and a successful clear reports one `finish`. Neither a campaign/daily summary nor abandoning a stage produces a second finish. Sandbox reports play but has no terminal finish. Word Daily gameplay time begins after the first valid committed guess, not during unsubmitted typing, matching its first `play` event.
 
 Every listed local HTML page automatically gets open and active sampling. Games with shared mount also get playingSeconds with a read-only observer. Non-mount composition roots math-rain, tank-battle and gomoku register an explicit lightweight observer.
 
@@ -72,11 +74,13 @@ In the separately hosted game's real HTML entry (once):
 
 Then, after its own runtime has been constructed, provide a read-only state predicate and replace any direct Worker legacy reporting (otherwise both old and new clients would double count):
 
-    window.hubAnalytics?.bindPlaying('dots', () => game.isRunning && !game.isPaused);
+    window.hubAnalytics?.bindPlaying('dots', () => game.isRunning() && !game.isPaused);
     // In genuine start/new-match path only:
     window.hubTrack?.('dots', 'play');
     // In true end-of-match path only:
     window.hubTrack?.('dots', 'finish');
+
+The example assumes `isRunning()` is a method and `isPaused` a boolean property: adapt both to the actual standalone game API. Do not accidentally test a method reference (`game.isRunning`) as a truthy value; check menu, paused and result states explicitly.
 
 If the runtime initializes before the deferred analytics script, register the callback through window.__gamesAnalyticsPlaying = new Map([['dots', ...]]) before it loads, or bind again on DOM readiness. Every string shown above is an example: use the **registered** ID, never a scoring/daily leaderboard key. Check CSP allows loading the shared script. No need for a new analytics database, Cookie, GA SDK, or dependency.
 
@@ -86,6 +90,8 @@ For new external games: add the canonical origin and ID to games.config.json, ru
 
 - tests/verify-analytics-v2.mjs: Node 22 real SQLite applies migrations 0001 and 0002, exercises D1 trigger/rollups, old API shape, strict V2 validation, duplicate ID, session open uniqueness, concurrency, daily boundaries and external-origin CORS.
 - tests/verify-analytics-browser.mjs: Chromium loads real DOM pages and a local fixture; checks refresh, duplicate script loading, play/finish, pause/resume, visibility restoration, long idle/sleep, bounded retries with immutable IDs, Worker outage and registered external ID. Network interception rejects production analytics requests.
+- tests/verify-analytics-compat.mjs: isolated browser-script tests verify KV legacy, unavailable Worker, Phase 1 D1 V2 and Phase 2 D1 V2 event payloads without production requests.
+- tests/verify-analytics-game-lifecycles.mjs: Chromium checks representative actual game runtimes for stage/daily attempts, first actions, pause, retry and completion.
 - tests/verify-gomoku.mjs: Chromium performs actual legal/illegal board moves on desktop and mobile using a localhost V2 mock, preserving PR #141.
 - Generator, lint, build and all other playable/regression checks remain required: npm run gen -- --check; npm run lint; npm run build; npm run verify -- --jobs=2.
 

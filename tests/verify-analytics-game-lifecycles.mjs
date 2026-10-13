@@ -1,0 +1,170 @@
+// verify-all: timeout=120000
+// Representative REAL game runtimes, not just a synthetic pause/finish fixture.
+// All telemetry is redirected to a loopback mock; production is never contacted.
+import assert from 'node:assert/strict';
+import puppeteer from 'puppeteer-core';
+import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+
+const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
+const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
+try {
+    const page = await browser.newPage();
+    const remoteRequests = [];
+    await page.setRequestInterception(true);
+    page.on('request', request => {
+        if (request.url().includes('games-analytics.orangely.workers.dev')) {
+            remoteRequests.push(request.url());
+            return request.abort();
+        }
+        return request.continue();
+    });
+    await page.evaluateOnNewDocument(() => {
+        window.__ANALYTICS_V2_TEST__ = true;
+        window.__analyticsEvents = [];
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = (url, options) => {
+            const name = String(url);
+            if (name.endsWith('/__analytics/stats?v=2')) {
+                return Promise.resolve({ ok: true, json: async () => ({
+                    scope: 'day', games: {},
+                    total: { p: 0, f: 0, opens: 0, activeSeconds: 0, playingSeconds: 0 },
+                }) });
+            }
+            if (name.endsWith('/__analytics/event')) {
+                window.__analyticsEvents.push(JSON.parse(options.body));
+                return Promise.resolve({ ok: true, status: 201 });
+            }
+            return originalFetch(url, options);
+        };
+        Object.defineProperty(navigator, 'sendBeacon', {
+            configurable: true,
+            value: (url, body) => {
+                if (!String(url).endsWith('/__analytics/event')) return false;
+                window.__analyticsEvents.push(JSON.parse(body));
+                return true;
+            },
+        });
+    });
+    const playing = id => page.evaluate(name =>
+        !!window.__gamesAnalyticsPlaying?.get(name)?.(), id);
+
+    async function expectEvents(id, play, finish) {
+        await page.waitForFunction(({ id, play, finish }) => {
+            const events = window.__analyticsEvents.filter(e => e.game === id);
+            return events.filter(e => e.event === 'open').length >= 1
+                && events.filter(e => e.event === 'play').length >= play
+                && events.filter(e => e.event === 'finish').length >= finish;
+        }, { timeout: 12000 }, { id, play, finish });
+        const actual = await page.evaluate(name => {
+            const events = window.__analyticsEvents.filter(e => e.game === name);
+            return [
+                events.filter(e => e.event === 'open').length,
+                events.filter(e => e.event === 'play').length,
+                events.filter(e => e.event === 'finish').length,
+            ];
+        }, id);
+        assert.deepEqual(actual, [1, play, finish], id + ': exact open/play/finish counts');
+    }
+
+    async function open(id, runtimeName) {
+        await page.goto(BASE + '/' + id + '.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.waitForFunction(name => !!window[name], { timeout: 15000 }, runtimeName);
+        await page.waitForFunction(name =>
+            typeof window.__gamesAnalyticsPlaying?.get(name) === 'function',
+        { timeout: 15000 }, id);
+        await expectEvents(id, 0, 0);
+        assert.equal(await playing(id), false, id + ': no gameplay on menu');
+    }
+
+    // Bond Forge: each level attempt terminates on clear, not on campaign/daily summary.
+    await open('bond-forge', 'bfGame');
+    await page.evaluate(() => window.bfGame.startLevel(0));
+    await expectEvents('bond-forge', 1, 0);
+    assert.equal(await playing('bond-forge'), true);
+    await page.evaluate(() => { window.bfGame.onLevelCleared(); window.bfGame.onLevelCleared(); });
+    await expectEvents('bond-forge', 1, 1);
+    assert.equal(await playing('bond-forge'), false);
+    await page.evaluate(() => window.bfGame.nextLevel());
+    await expectEvents('bond-forge', 2, 1);
+    await page.evaluate(() => window.bfGame.onLevelCleared());
+    await expectEvents('bond-forge', 2, 2);
+    await page.evaluate(() => window.bfGame.startSandbox());
+    await expectEvents('bond-forge', 3, 2);
+    assert.equal(await playing('bond-forge'), true);
+    await page.evaluate(() => window.bfGame.onLevelCleared());
+    await expectEvents('bond-forge', 3, 2);
+
+    // Ripple Duet: the entire daily course is ONE play, ONE finish, regardless of waves.
+    await open('ripple-duet', 'rdGame');
+    await page.evaluate(() => window.rdGame.startDaily());
+    await expectEvents('ripple-duet', 1, 0);
+    const waveCount = await page.evaluate(() => window.rdGame.daily.course.length);
+    assert(waveCount > 1);
+    for (let i = 0; i < waveCount; i++) {
+        await page.evaluate(() => window.rdGame.winLevel());
+        await expectEvents('ripple-duet', 1, i === waveCount - 1 ? 1 : 0);
+        assert.equal(await playing('ripple-duet'), false, 'completed wave is not playing');
+        if (i < waveCount - 1) {
+            await page.evaluate(() => window.rdGame.nextLevel());
+            await expectEvents('ripple-duet', 1, 0);
+            assert.equal(await playing('ripple-duet'), true);
+        }
+    }
+    await page.evaluate(() => window.rdGame.nextLevel());
+    await expectEvents('ripple-duet', 1, 1);
+
+    // Firefly Signal: menu ambient animation is not gameplay; pause and result are excluded.
+    await open('firefly-signal', '__fireflySignal');
+    await page.evaluate(() => window.__fireflySignal.startLevel(0, { manual: true }));
+    await expectEvents('firefly-signal', 1, 0);
+    assert.equal(await playing('firefly-signal'), true);
+    await page.evaluate(() => window.__fireflySignal.pauseQuiet());
+    assert.equal(await playing('firefly-signal'), false);
+    await page.evaluate(() => window.__fireflySignal.resumeQuiet());
+    assert.equal(await playing('firefly-signal'), true);
+    await page.evaluate(() => window.__fireflySignal.finish(false));
+    await expectEvents('firefly-signal', 1, 1);
+    assert.equal(await playing('firefly-signal'), false);
+
+    // Minesweeper: menu dismissal is not a play; first legal reveal is.
+    await open('minesweeper', 'msGame');
+    await page.evaluate(() => window.msGame.hideStart());
+    await expectEvents('minesweeper', 0, 0);
+    await page.evaluate(() => window.msGame.handleReveal(0));
+    await expectEvents('minesweeper', 1, 0);
+    assert.equal(await playing('minesweeper'), true);
+    await page.evaluate(() => window.msGame.lose(0));
+    await expectEvents('minesweeper', 1, 1);
+    assert.equal(await playing('minesweeper'), false);
+
+    // Word Daily: partial word input does not start play; first committed guess does.
+    await open('word-daily', 'wordDailyGame');
+    await page.evaluate(() => {
+        const g = window.wordDailyGame;
+        g.el.input.value = g.answer.slice(0, 1);
+        g.el.input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    assert.equal(await playing('word-daily'), false, 'unsubmitted word is not an attempt');
+    await expectEvents('word-daily', 0, 0);
+    await page.evaluate(() => window.wordDailyGame.commitGuess(window.wordDailyGame.answer));
+    await expectEvents('word-daily', 1, 1);
+    assert.equal(await playing('word-daily'), false);
+
+    // Tetris: page load does not start the run; pause is not finish or a new play.
+    await open('tetris', 'game');
+    await page.evaluate(() => window.game.start());
+    await expectEvents('tetris', 1, 0);
+    assert.equal(await playing('tetris'), true);
+    await page.evaluate(() => window.game.togglePause());
+    assert.equal(await playing('tetris'), false);
+    await page.evaluate(() => window.game.togglePause());
+    assert.equal(await playing('tetris'), true);
+    await expectEvents('tetris', 1, 0);
+    await page.evaluate(() => window.game.restart());
+    await expectEvents('tetris', 2, 0);
+
+    assert.deepEqual(remoteRequests, [], 'no test traffic may reach production analytics');
+    console.log('Analytics real-game lifecycle: stage/daily, pause, first action and restart: PASS');
+} finally {
+    await browser.close();
+}
