@@ -1,13 +1,23 @@
-// 部署配置：全站统计 Worker（聚合计数，无个人信息）
-// 使用方法：把 <KV_NAMESPACE_ID> 替换为 GAMES_ANALYTICS 命名空间的 id，
-// 然后运行：npx wrangler deploy -c Workers/wrangler-games-analytics.jsonc
-// 部署后地址：https://games-analytics.orangely.workers.dev
+// Analytics V2 — operator creates a fresh D1 and replaces the placeholder UUID.
+// No GAMES_ANALYTICS KV binding. This Worker is deployed MANUALLY, never by site CI.
+// See docs/analytics-v2-d1-runbook.md before any production operations.
 {
   "name": "games-analytics",
   "main": "games-analytics.js",
   "compatibility_date": "2025-04-01",
   "workers_dev": true,
-  "kv_namespaces": [
-    { "binding": "GAMES_ANALYTICS", "id": "8288c96118c0425c98877e32783346af" }
+  "triggers": { "crons": ["17 * * * *"] },
+  "ratelimits": [{
+    "name": "ANALYTICS_RATE_LIMITER",
+    "namespace_id": "14202610",
+    "simple": { "limit": 180, "period": 60 }
+  }],
+  "d1_databases": [
+    {
+      "binding": "ANALYTICS_DB",
+      "database_name": "games-analytics-v2",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations/analytics"
+    }
   ]
 }
