@@ -217,6 +217,7 @@ export class LoopJailGame {
         window.clearTimeout(this.resultTimer);
         this.releasePointer();
         this.el.start.classList.add('hidden');
+        this.el.stage.style.removeProperty('touch-action');
         this.el.over.classList.add('hidden');
         this.el.pause.classList.add('hidden');
         this.el.hud.classList.remove('hidden');
@@ -253,6 +254,9 @@ export class LoopJailGame {
         this.el.hud.classList.add('hidden');
         this.hideBanner();
         this.el.start.classList.remove('hidden');
+        // The immersive stage locks touch gestures during play. The menu uses
+        // document-flow scrolling, so override that lock only while it is open.
+        this.el.stage.style.touchAction = 'pan-y';
         // 菜单背景：一局崭新的第 1 波静止摆在场上（不跑循环，省电）
         this.sim.reset(7);
         for (const m of this.sim.monsters) m.spawn = 0;

@@ -135,6 +135,8 @@ for (const [selector, scoped] of [
     ['.game-overlay', false], ['.lj-a, body', false], ['div:not(.lj-x)', false], ['.ljx-a', false],
     ['.lj-a:hover', true], ['.lj-ink.is-low .lj-ink-fill', true], ['.lj-a > .lj-b + .lj-c', true],
     ['.lj-a:is(.x, .y)', true], ['.lj-a::before', true],
+    ['[data-owner=".lj-page"]', false], ['[data-owner="#lj-page"]', false],
+    ['.game-overlay[data-owner=".lj-page"]', false],
     ['.game-overlay:has(.lj-x)', false], ['body:has(.lj-x)', false], [':is(.lj-a, div)', false],
     [':where(.lj-a)', false], ['.lj-x .game-action-btn', false], ['.lj-x > div', false], ['.lj-x svg', false],
 ]) {
@@ -152,6 +154,10 @@ assert.ok(sheet('@layer components { .lj-x { color: red; } }').some(e => e.inclu
 assert.ok(sheet('@layer pages { .lj-x { color: red !important; } }').some(e => e.includes('!important')), '!important must fail');
 assert.ok(sheet('@layer pages { @keyframes lj-a { to { opacity: 0; } } .lj-x { color: red; } }')
     .some(e => e.includes('keyframes')), 'keyframes must fail');
+assert.ok(sheet('@layer pages { html.lj-root { color: red; } }').some(e => e.includes('html may only')),
+    'qualified html hooks cannot restyle the document');
+assert.ok(sheet('@layer pages { :root.lj-root { color: red; } }').some(e => e.includes('may only define')),
+    'qualified root hooks cannot restyle the document');
 assert.ok(sheet('@layer pages { .game-action-btn { padding: 0; } }').some(e => e.includes('outside the page prefix')),
     'restyling a shared family must fail');
 assert.ok(sheet('@layer pages { :root { --tok-text: red; } }').some(e => e.includes('namespace')),

@@ -13,15 +13,6 @@
    ───────────────────────────────────────────── */
 
 @layer contracts {
-    /* Loop Jail: the mobile start menu expands the document (shared menu
-       contract), so swipes over its immersive stage must pan the page.
-       During play the selector stops matching and touch-action:none returns. */
-    @media (width < 1024px) {
-        .lj-stage:has(> #lj-start:not(.hidden)) {
-            touch-action: pan-y !important;
-        }
-    }
-
     /* ① 禁双击缩放、保留双指缩放：iOS Safari 在 width=device-width 页面上仍会把快速
        连点同一处识别为双击缩放。画布自身的 touch-action:none 取交集后仍然生效。 */
     html,
