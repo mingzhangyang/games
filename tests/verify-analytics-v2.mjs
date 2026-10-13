@@ -4,8 +4,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import vm from 'node:vm';
+import { setImmediate } from 'node:timers/promises';
 import worker, { dayKeyUTC8 } from '../Workers/games-analytics.js';
 
+const Request = globalThis.Request;
 const sql = readFileSync(new URL('../Workers/migrations/analytics/0001_analytics_v2.sql', import.meta.url), 'utf8');
 const db = new DatabaseSync(':memory:');
 db.exec(sql);
@@ -104,12 +106,13 @@ for (const bad of [
     { ...open, eventId: 'foo' }, { ...open, sessionId: 'foo' },
     { ...play, event: 'start_levels' },
 ]) assert.equal((await send(bad)).status, 400, JSON.stringify(bad));
-const oversize = await worker.fetch(new Request('https://example.com/event',
-    { method: 'POST', body: JSON.stringify({ game: 'tetris', event: 'play', pad: 'x'.repeat(1100) }) }),
-    { ANALYTICS_DB: binding });
+const oversize = await send({ game: 'tetris', event: 'play', pad: 'x'.repeat(1100) });
 assert.equal(oversize.status, 400);
-assert.equal((await worker.fetch(new Request('https://example.com/event',
-    { method: 'POST', body: '{not json' }), { ANALYTICS_DB: binding })).status, 400);
+const malformed = await worker.fetch(
+    new Request('https://example.com/event', { method: 'POST', body: '{not json' }),
+    { ANALYTICS_DB: binding, ANALYTICS_RATE_LIMITER: limiter },
+);
+assert.equal(malformed.status, 400);
 assert.equal((await worker.fetch(new Request('https://example.com/event',
     { method: 'POST', body: JSON.stringify(open) }), {})).status, 503);
 assert.equal((await worker.fetch(new Request('https://example.com/event',
@@ -142,29 +145,37 @@ assert.equal((await worker.fetch(new Request('https://example.com/stats',
 // Browser script regression: live old KV Worker => legacy, new D1 Worker => V2.
 // There are no actual remote HTTP requests in these cases.
 const browserScript = readFileSync(new URL('../public/analytics.js', import.meta.url), 'utf8');
-async function browserCase(probeResult) {
-    const sent = [], listeners = { window: {}, document: {} }, intervals = [];
+async function browserCase(probeResult, origin = 'https://games.orangely.xyz') {
+    const sent = [], listeners = { window: {}, document: {} }, intervals = [], probes = [];
     let clock = 0, counter = 10;
     const context = {
         performance: { now: () => clock },
         navigator: { sendBeacon: (_, json) => { sent.push(JSON.parse(json)); return true; } },
         document: { visibilityState: 'visible', addEventListener: (name, cb) => { listeners.document[name] = cb; } },
         window: {
-            location: { pathname: '/tetris.html' },
+            location: { pathname: '/tetris.html', origin },
             crypto: { randomUUID: () => 'f1cb914e-5c44-4a0d-9a55-' + (counter++).toString(16).padStart(12, '0') },
             addEventListener: (name, cb) => { listeners.window[name] = cb; },
         },
         setInterval: callback => { intervals.push(callback); },
-        fetch: async () => ({ ok: true, json: async () => probeResult }),
+        fetch: async url => { probes.push(url); return { ok: true, json: async () => probeResult }; },
     };
     vm.runInNewContext(browserScript, context);
-    await new Promise(resolve => setImmediate(resolve)); // settle both .then callbacks
-    return { sent, listeners, intervals, context, advance: ms => { clock += ms; } };
+    await setImmediate(); // settle the V2 availability probe
+    return { sent, listeners, intervals, probes, context, advance: ms => { clock += ms; } };
 }
 const legacy = await browserCase({ tetris: { p: 1, f: 2 }, total: { p: 1, f: 2 } });
 legacy.context.window.hubTrack('tetris', 'play');
 assert.deepEqual(legacy.sent, [{ game: 'tetris', event: 'play' }]);
 assert.equal(legacy.intervals.length, 0);
+// Non-production origins must not request the live V2 probe and trigger CORS
+// noise in browser smoke tests; they retain the compatible legacy contract.
+const preview = await browserCase(
+    { scope: 'day', day: '20261013', games: {}, total: {} }, 'http://127.0.0.1:8930');
+assert.deepEqual(preview.probes, []);
+preview.context.window.hubTrack('tetris', 'play');
+assert.deepEqual(preview.sent, [{ game: 'tetris', event: 'play' }]);
+assert.equal(preview.intervals.length, 0);
 const client = await browserCase({ scope: 'day', day: '20261013', games: {}, total: {} });
 assert.equal(client.sent.length, 1);
 assert.equal(client.sent[0].event, 'open');

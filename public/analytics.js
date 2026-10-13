@@ -6,6 +6,11 @@
     var ENDPOINT = 'https://games-analytics.orangely.workers.dev';
     var page = /\/([a-z0-9-]+)\.html$/.exec(window.location.pathname || '');
     var pageGame = page && page[1] !== 'index' ? page[1] : null;
+    // The Worker only permits our published site origins. Local preview / CI and
+    // third-party domains must not probe the live API: browsers log CORS failures
+    // even when fetch errors are caught. Keep legacy play/finish on those origins.
+    var canProbeV2 = window.location.origin === 'https://games.orangely.xyz'
+        || window.location.origin === 'https://game.orangely.xyz';
     var uuid = window.crypto && typeof window.crypto.randomUUID === 'function'
         ? function () { return window.crypto.randomUUID(); } : null;
     var sessionId = uuid ? uuid() : null;
@@ -60,7 +65,7 @@
 
     // A page opened against the old KV Worker must still be able to send play/finish.
     // A V2-only client would be rejected until the operator deploys the D1 Worker.
-    if (uuid) {
+    if (uuid && canProbeV2) {
         try {
             fetch(ENDPOINT + '/stats?v=2', { cache: 'no-store' })
                 .then(function (response) { return response.ok ? response.json() : null; })
