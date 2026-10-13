@@ -328,6 +328,12 @@
     /* ── 浮层 ── */
     /* 沉浸式舞台贴边、画布是直角：浮层也不能有共享的 --frame-radius 圆角，
        否则四角会露出下面画布的直角和场地边框线（同 firefly-signal） */
+    /* Menu content can exceed the Safari visual viewport. Permit touch scrolling
+       only while the start overlay is visible; active canvas stays gesture-locked. */
+    .lj-stage:has(#lj-start:not(.hidden)) {
+        touch-action: pan-y;
+    }
+
     .lj-overlay {
         border-radius: 0;
         justify-content: safe center;
@@ -338,6 +344,12 @@
         background: var(--lj-overlay-bg);
         backdrop-filter: blur(3px);
         -webkit-backdrop-filter: blur(3px);
+    }
+
+    .lj-overlay:not(.hidden) {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
     }
 
     .lj-kicker {
