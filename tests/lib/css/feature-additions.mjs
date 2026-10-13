@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseCssText } from './baseline-adapter.mjs';
 import {
-    scanHtml, parseHtmlElements, htmlTagName, htmlElementAttributes, isStylesheetLink,
+    scanHtml, parseHtmlElements, htmlTagName, htmlElementAttributes, isStylesheetLink, servedUrl,
 } from './html-inputs.mjs';
 import { auditedJavaScriptFiles } from './runtime-sources.mjs';
 import { pageActivation } from './activation.mjs';
@@ -181,6 +181,10 @@ export const STAGE_STATUS_SELECTORS = new Set([
     '.sf-progress-wrap',
     '.sl-progress',
     '.sl-toast',
+    '.sl-topbar-center',
+    '.sl-brand',
+    '.sl-brand-zh',
+    '.sl-target-btn',
 ]);
 
 export function stripStageStatusLink(page, html, errors) {
@@ -363,6 +367,22 @@ export function reviewPostFreezePage(root, game, html, errors) {
     }
 }
 
+/** Browser-like local link resolution: quoting, root-relative paths and URL suffixes all count. */
+export function postFreezePageLinksStylesheet(page, html, game) {
+    const base = servedUrl(page);
+    const target = new URL(game.stylesheet, base);
+    return parseHtmlElements(html, page)
+        .filter(element => htmlTagName(element) === 'link')
+        .some(element => {
+            const { href } = htmlElementAttributes(element);
+            if (!href) return false;
+            try {
+                const linked = new URL(href, base);
+                return linked.origin === base.origin && linked.pathname === target.pathname;
+            } catch { return false; }
+        });
+}
+
 function reviewPostFreezeGames(root, cssPaths, htmlPaths, errors) {
     for (const game of POST_FREEZE_GAMES) {
         if (!cssPaths.includes(game.stylesheet)) errors.push('Post-freeze stylesheet missing: ' + game.stylesheet);
@@ -376,7 +396,7 @@ function reviewPostFreezeGames(root, cssPaths, htmlPaths, errors) {
     for (const page of htmlPaths) {
         const html = readFileSync(join(root, page), 'utf8');
         for (const game of POST_FREEZE_GAMES) {
-            if (page !== game.page && html.includes('href="' + game.stylesheet + '"')) {
+            if (page !== game.page && postFreezePageLinksStylesheet(page, html, game)) {
                 errors.push(page + ': only ' + game.page + ' may link ' + game.stylesheet);
             }
         }

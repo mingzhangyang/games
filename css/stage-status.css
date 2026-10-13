@@ -105,7 +105,32 @@
         top: 94px !important;
     }
 
-    /* ③ 影织：关卡进度点挂在纸窗框顶部中央，暗色底托住，避免压在木框花纹上看不清；
+    /* ③ 影织：英文名称比中文宽，窄屏时目标按钮与标题不能把顶栏撑成两行。
+       gap 覆盖冻结页面的 unlayered 12px，所以必须用分层 !important。
+       极窄屏保留目标预览的操作热区，文字允许省略，不改变其它游戏。 */
+    @media (width <= 480px) {
+        .sl-topbar-center {
+            flex-wrap: nowrap;
+            gap: 4px !important;
+        }
+
+        .sl-brand {
+            min-width: 0;
+        }
+
+        .sl-brand-zh {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sl-target-btn {
+            flex: 0 0 40px;
+        }
+    }
+
+    /* ④ 影织：关卡进度点挂在纸窗框顶部中央，暗色底托住，避免压在木框花纹上看不清；
        场景提示条随之下移。 */
     .sl-progress {
         position: absolute;

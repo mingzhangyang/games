@@ -19,8 +19,10 @@ import {
     WORLD_AREA, INK_MAX, INK_PER_PX, INK_REGEN, INK_PER_CAPTURE, INK_RESUME, MIN_LOOP_AREA,
     MAX_LIVES, INVULN_TIME, SPAWN_SAFE_RADIUS, MAX_MONSTERS, WAVE_BREAK, POWERUP_INTERVAL,
     POWERUP_MAX, DOUBLE_TIME, SHIELD_TIME, INK_BOTTLE, TWIN_OFFSET, RESUME_RADIUS, MONSTERS,
-    SPLIT_GRACE, ASPECT_MIN, ASPECT_MAX,
+    SPLIT_GRACE, ASPECT_MIN, ASPECT_MAX, MAX_STROKE_POINTS,
+    MAX_RETAINED_STROKES, MAX_RETAINED_SEGMENTS,
 } from '../src/games/loop-jail/simulation.js';
+import { createLoopJailAudio } from '../src/games/loop-jail/audio.js';
 import { idle, circler, DT } from './lib/loop-jail-bot.mjs';
 
 let failed = 0;
@@ -501,6 +503,64 @@ console.log('\n▶ ⑨ 接着画 / 转屏 / 确定性');
     const a = script(42);
     ok(a === script(42), '确定性回放：同 seed + 同输入 = 同结果');
     ok(a !== script(43), '换 seed 结果不同');
+}
+
+/* ── 长局性能 / 重开音效：资源上限、索引一致性、重置边界 ── */
+console.log('\n▶ 长局性能与音效复位');
+{
+    const calls = [];
+    const audio = createLoopJailAudio({ ensure() {}, tone(opts) { calls.push(opts); }, noise() {} });
+    const charges = () => calls.filter(tone => tone.freq === 300).length;
+    audio.charge(60);
+    audio.charge(60.1);
+    ok(charges() === 1, '同一局 250ms 内多只三角蓄力只响一次');
+    audio.charge(0.05);
+    audio.charge(0.15);
+    audio.charge(0.35);
+    ok(charges() === 3, '模拟时间倒退立即重置音效去重，且新局内部仍限频');
+    audio.start();
+    audio.charge(0.36);
+    ok(charges() === 4, '显式重新开始即清除蓄力限频状态');
+}
+{
+    const { sim } = fixture([]);
+    for (let j = 0; j < MAX_RETAINED_STROKES + 24; j++) {
+        const y = 100 + (j % 50) * 10;
+        sim.ink = INK_MAX;
+        sim.penDown(30, y);
+        for (let k = 1; k <= 75; k++) sim.movePen(30 + k * 4.6, y + (k % 2) * 8);
+        sim.penUp();
+    }
+    const total = () => sim.strokes.reduce((n, stroke) => n + stroke.points.length - 1, 0);
+    ok(sim.strokes.length <= MAX_RETAINED_STROKES && sim.segmentGrid.size <= MAX_RETAINED_SEGMENTS,
+        '长局积累的墨线与线段被限制在全局预算内', JSON.stringify({ strokes: sim.strokes.length, segments: sim.segmentGrid.size }));
+    ok(sim.segmentGrid.size === total(), '过期线段已从索引移除，没有悬空索引条目');
+    const retained = sim.strokes.at(-1);
+    const probe = retained.points[Math.floor(retained.points.length / 2)];
+    const monster = sim.addMonster('circle', 0, { x: probe.x, y: probe.y });
+    monster.spawn = 0; monster.vx = 0; monster.vy = 0;
+    sim.resize(1.2);
+    sim.step(DT);
+    ok(!sim.strokes.includes(retained) && sim.stats.bites > 0,
+        '转屏重建空间索引后，最新墨线仍可被准确咬断');
+    ok(sim.segmentGrid.size === total(), '咬断后索引大小仍与渲染笔迹完全一致');
+}
+{
+    const { sim } = fixture([]);
+    sim.penDown(30, 200);
+    for (let i = 1; i <= MAX_STROKE_POINTS + 150; i++) {
+        sim.ink = INK_MAX;
+        sim.movePen(30 + i * 0.5, i % 2 ? 320 : 200);
+    }
+    const live = sim.active.main;
+    ok(!!live && live.points.length <= MAX_STROKE_POINTS,
+        '单条超长未闭合笔迹按块裁剪历史，不会无限变大', live?.points.length);
+    ok(sim.segmentGrid.size === live.points.length - 1,
+        '单笔裁剪后索引与几何一一对应');
+    sim.penUp();
+    sim.reset(12);
+    ok(sim.strokes.length === 0 && sim.segmentGrid.size === 0,
+        '重新开局清空所有旧墨线和网格索引');
 }
 
 /* ── ⑩ 可玩性 ── */

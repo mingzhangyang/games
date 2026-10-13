@@ -13,6 +13,7 @@ import {
     stripFeatureLink, FEATURE_LINK, stripMobileFitLink, MOBILE_FIT_LINK, reviewFeatureStyles,
     stripStageStatusLink, STAGE_STATUS_LINK,
     POST_FREEZE_GAMES, postFreezeSelectorScoped, reviewPostFreezeStylesheet, reviewPostFreezePage,
+    postFreezePageLinksStylesheet,
 } from './lib/css/feature-additions.mjs';
 
 const page = 'carrot-pull.html';
@@ -193,4 +194,24 @@ assert.ok(pageReview(pageHtml.replace('<body class="lj-body">', '<body class="lj
     .some(e => e.includes('inline')), 'inline style attribute must fail');
 assert.ok(pageReview(pageHtml.replace('</head>', '<style>.lj-x{color:red}</style></head>'))
     .some(e => e.includes('inline')), 'inline style block must fail');
+for (const href of [
+    'css/loop-jail.css', '/css/loop-jail.css', './css/loop-jail.css?v=42',
+    '/css/loop-jail.css#theme', 'css/loop-jail.css?version=2#hash',
+]) {
+    for (const link of [
+        `<link rel='stylesheet' href='${href}'>`,
+        `<link rel=stylesheet href=${href}>`,
+        `<link rel="preload" as="style" href="${href}">`,
+    ]) {
+        assert.equal(postFreezePageLinksStylesheet('shadow-loom.html', link, game), true,
+            'all local links to another game stylesheet must be rejected: ' + link);
+    }
+}
+assert.equal(postFreezePageLinksStylesheet('shadow-loom.html',
+    '<link rel="stylesheet" href="https://example.com/css/loop-jail.css">', game), false,
+'third-party URL must not be confused with a local stylesheet');
+assert.equal(postFreezePageLinksStylesheet('shadow-loom.html',
+    '<link rel="stylesheet" href="css/shadow-loom.css">', game), false,
+'own stylesheet must not trigger cross-page ownership');
+
 console.log('PASS additive scoreboard + mobile-fit + stage-status + post-freeze game CSS review contract');

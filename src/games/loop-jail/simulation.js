@@ -53,6 +53,12 @@ export const SEGMENT_MIN = 4;
 export const TWIN_OFFSET = 16;
 /** 按下位置离一条已松开墨线的末端这么近，就接着那条线继续画 */
 export const RESUME_RADIUS = 24;
+/** Resource budget for endless mode. Very old ink fades out before it can stall input/rendering. */
+export const MAX_STROKE_POINTS = 512;
+export const TRIM_STROKE_POINTS = 128;
+export const MAX_RETAINED_STROKES = 64;
+export const MAX_RETAINED_SEGMENTS = 4096;
+const SEGMENT_CELL = 48;
 
 export const POWERUP_INTERVAL = [14, 22];
 export const POWERUP_MAX = 2;
@@ -171,7 +177,7 @@ export function distToSegmentSq(px, py, a, b) {
  * 从最近的线段往回找，取第一个面积达标的闭环（更早处的无意小回环被略过、但仍算进大环里）。
  * 返回 { poly, area } 或 null。
  */
-export function findLoop(points) {
+export function findLoop(points, candidateIndices = null) {
     const k = points.length - 1;
     if (k < 3) return null;
     const a = points[k - 1];
@@ -180,7 +186,12 @@ export function findLoop(points) {
     const maxX = Math.max(a.x, b.x);
     const minY = Math.min(a.y, b.y);
     const maxY = Math.max(a.y, b.y);
-    for (let i = k - 3; i >= 0; i--) {
+    // The grid supplies only nearby older segments; keep newest-first precedence
+    // so small accidental loops still defer to the first large enclosing loop.
+    const candidates = candidateIndices === null ? null
+        : [...new Set(candidateIndices)].filter(i => i >= 0 && i <= k - 3).sort((a, b) => b - a);
+    for (let n = 0, end = candidates ? candidates.length : k - 2; n < end; n++) {
+        const i = candidates ? candidates[n] : k - 3 - n;
         const c = points[i];
         const d = points[i + 1];
         if (Math.max(c.x, d.x) < minX || Math.min(c.x, d.x) > maxX
@@ -201,6 +212,81 @@ export function worldSize(aspect) {
     const a = clamp(Number.isFinite(aspect) && aspect > 0 ? aspect : 420 / 720, ASPECT_MIN, ASPECT_MAX);
     const w = Math.sqrt(WORLD_AREA * a);
     return { w, h: WORLD_AREA / w };
+}
+
+
+/**
+ * Mutable, deterministic broad-phase index. Each line segment is stored in all
+ * 48px cells touched by its bounding box; exact intersection/distance tests
+ * still decide the outcome. Removing/shortening a stroke removes its entries.
+ */
+class SegmentGrid {
+    constructor() {
+        this.cells = new Map();
+        this.byStroke = new Map();
+        this.size = 0;
+    }
+
+    key(x, y) { return x + ':' + y; }
+
+    add(stroke, index) {
+        const a = stroke.points[index], b = stroke.points[index + 1];
+        if (!a || !b) return;
+        const entry = { stroke, index, keys: [] };
+        const x0 = Math.floor(Math.min(a.x, b.x) / SEGMENT_CELL);
+        const x1 = Math.floor(Math.max(a.x, b.x) / SEGMENT_CELL);
+        const y0 = Math.floor(Math.min(a.y, b.y) / SEGMENT_CELL);
+        const y1 = Math.floor(Math.max(a.y, b.y) / SEGMENT_CELL);
+        for (let y = y0; y <= y1; y++) {
+            for (let x = x0; x <= x1; x++) {
+                const key = this.key(x, y);
+                if (!this.cells.has(key)) this.cells.set(key, new Set());
+                this.cells.get(key).add(entry);
+                entry.keys.push(key);
+            }
+        }
+        if (!this.byStroke.has(stroke)) this.byStroke.set(stroke, []);
+        this.byStroke.get(stroke).push(entry);
+        this.size++;
+    }
+
+    remove(stroke) {
+        const entries = this.byStroke.get(stroke);
+        if (!entries) return;
+        for (const entry of entries) {
+            for (const key of entry.keys) {
+                const cell = this.cells.get(key);
+                cell.delete(entry);
+                if (cell.size === 0) this.cells.delete(key);
+            }
+        }
+        this.size -= entries.length;
+        this.byStroke.delete(stroke);
+    }
+
+    rebuildStroke(stroke) {
+        this.remove(stroke);
+        for (let i = 0; i < stroke.points.length - 1; i++) this.add(stroke, i);
+    }
+
+    rebuild(strokes) {
+        this.cells.clear();
+        this.byStroke.clear();
+        this.size = 0;
+        for (const stroke of strokes) {
+            for (let i = 0; i < stroke.points.length - 1; i++) this.add(stroke, i);
+        }
+    }
+
+    query(x0, y0, x1, y1) {
+        const hits = new Set();
+        for (let y = Math.floor(y0 / SEGMENT_CELL); y <= Math.floor(y1 / SEGMENT_CELL); y++) {
+            for (let x = Math.floor(x0 / SEGMENT_CELL); x <= Math.floor(x1 / SEGMENT_CELL); x++) {
+                for (const entry of this.cells.get(this.key(x, y)) || []) hits.add(entry);
+            }
+        }
+        return hits;
+    }
 }
 
 /* ── 模拟 ── */
@@ -227,6 +313,7 @@ export class LoopJailSim {
         this.phaseTimer = 0;
         this.monsters = [];
         this.strokes = [];
+        this.segmentGrid = new SegmentGrid();
         this.powerups = [];
         this.effects = { double: 0, shield: 0 };
         // placed：玩家第一次按下 / 鼠标移入之前，笔尖还没上场 —— 不会被撞、三角不锁定、不拾取道具
@@ -265,6 +352,8 @@ export class LoopJailSim {
         for (const s of this.strokes) s.points.forEach(move);
         this.powerups.forEach(move);
         move(this.pen);
+        // Cell coordinates are world-space; every stroke must be reindexed on rotation.
+        this.segmentGrid.rebuild(this.strokes);
         return true;
     }
 
@@ -353,14 +442,57 @@ export class LoopJailSim {
     newStroke(x, y, twin) {
         const s = { id: this.nextId++, twin, live: true, points: [{ x, y }] };
         this.strokes.push(s);
+        this.enforceStrokeLimits();
         return s;
     }
 
     removeStroke(s) {
+        this.segmentGrid.remove(s);
         const i = this.strokes.indexOf(s);
         if (i >= 0) this.strokes.splice(i, 1);
         if (this.active.main === s) this.active.main = null;
         if (this.active.twin === s) this.active.twin = null;
+    }
+
+    indexedLoop(s) {
+        const k = s.points.length - 1;
+        if (k < 3) return null;
+        const a = s.points[k - 1], b = s.points[k];
+        const nearby = this.segmentGrid.query(
+            Math.min(a.x, b.x), Math.min(a.y, b.y),
+            Math.max(a.x, b.x), Math.max(a.y, b.y),
+        );
+        return findLoop(s.points, [...nearby]
+            .filter(entry => entry.stroke === s && entry.index <= k - 3)
+            .map(entry => entry.index));
+    }
+
+    appendStrokePoint(s, point) {
+        s.points.push(point);
+        // Query before indexing the newly appended segment; older segments keep
+        // their original indices until a bounded prefix is deliberately expired.
+        const loop = this.indexedLoop(s);
+        if (loop) this.capture(s, loop);
+        else {
+            this.segmentGrid.add(s, s.points.length - 2);
+            this.enforceStrokeLimits(s);
+        }
+    }
+
+    enforceStrokeLimits(recent = null) {
+        if (recent && recent.points.length > MAX_STROKE_POINTS) {
+            // Trim in chunks to avoid O(cap) reindexing for each incoming point.
+            // The retained tail is still an exact polyline (no geometric shortcut).
+            recent.points.splice(0, TRIM_STROKE_POINTS);
+            this.segmentGrid.rebuildStroke(recent);
+        }
+        // There can be at most two live strokes (main + twin). Expire the oldest
+        // released ink before it can accumulate beyond either global budget.
+        while (this.strokes.length > MAX_RETAINED_STROKES || this.segmentGrid.size > MAX_RETAINED_SEGMENTS) {
+            const oldest = this.strokes.find(stroke => !stroke.live);
+            if (!oldest) break;
+            this.removeStroke(oldest);
+        }
     }
 
     extendMain(x, y) {
@@ -392,10 +524,8 @@ export class LoopJailSim {
             pen.dirX = mx / ml;
             pen.dirY = my / ml;
             const pt = { x: last.x + dx, y: last.y + dy };
-            s.points.push(pt);
             const twinFrom = this.effects.double > 0 ? last : null;
-            const loop = findLoop(s.points);
-            if (loop) this.capture(s, loop);
+            this.appendStrokePoint(s, pt);
             if (twinFrom) this.extendTwin(twinFrom, pt);
         }
         if (ranDry) {
@@ -423,9 +553,7 @@ export class LoopJailSim {
         const pt = this.twinPoint(to);
         const last = s.points[s.points.length - 1];
         if (Math.hypot(pt.x - last.x, pt.y - last.y) < 1) return;
-        s.points.push(pt);
-        const loop = findLoop(s.points);
-        if (loop) this.capture(s, loop);
+        this.appendStrokePoint(s, pt);
     }
 
     /** 闭环成立：捕获环内小怪 → 计分 / 返还墨水 / 方块分裂 → 清掉这条墨线；仍按住则从笔尖续一条新线 */
@@ -646,25 +774,28 @@ export class LoopJailSim {
 
     /* ── 碰撞 ── */
 
-    touchesStroke(m, s) {
+    touchingStrokes(m) {
         const reach = m.r + LINE_HALF_WIDTH;
         const reachSq = reach * reach;
-        const pts = s.points;
-        for (let i = 0; i < pts.length - 1; i++) {
-            const a = pts[i];
-            const b = pts[i + 1];
-            if (Math.max(a.x, b.x) < m.x - reach || Math.min(a.x, b.x) > m.x + reach
-                || Math.max(a.y, b.y) < m.y - reach || Math.min(a.y, b.y) > m.y + reach) continue;
-            if (distToSegmentSq(m.x, m.y, a, b) <= reachSq) return true;
+        const nearby = this.segmentGrid.query(m.x - reach, m.y - reach, m.x + reach, m.y + reach);
+        const touched = new Set();
+        for (const entry of nearby) {
+            const s = entry.stroke;
+            if (distToSegmentSq(m.x, m.y, s.points[entry.index], s.points[entry.index + 1]) <= reachSq) {
+                touched.add(s);
+            }
         }
-        return false;
+        // The former full scan used stroke insertion order; preserve which line
+        // is bitten first if two overlap (important when a shield is active).
+        return [...touched].sort((a, b) => a.id - b.id);
     }
+
+    touchesStroke(m, s) { return this.touchingStrokes(m).includes(s); }
 
     resolveBites() {
         for (const m of [...this.monsters]) {
             if (m.spawn > 0 || !this.monsters.includes(m)) continue;
-            for (const s of [...this.strokes]) {
-                if (s.points.length < 2 || !this.touchesStroke(m, s)) continue;
+            for (const s of this.touchingStrokes(m)) {
                 if (this.effects.shield > 0) {
                     // 护盾：墨线不断，咬线的小怪直接被消灭（不分裂）
                     this.effects.shield = 0;

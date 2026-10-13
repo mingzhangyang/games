@@ -7,9 +7,8 @@ import { createSfxEngine } from '../../platform/game-sfx.js';
 // C 大调五声音阶：一笔抓得越多，琶音越长越高
 const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98];
 
-export function createLoopJailAudio() {
-    const sfx = createSfxEngine({ masterGain: 0.6 });
-    let lastCharge = -1;
+export function createLoopJailAudio(sfx = createSfxEngine({ masterGain: 0.6 })) {
+    let lastCharge = -Infinity;
 
     return {
         prime() { sfx.ensure(); },
@@ -45,7 +44,7 @@ export function createLoopJailAudio() {
         },
         charge(now) {
             // 同一时刻多只三角一起蓄力只响一次，避免嗡成一片
-            if (now - lastCharge < 0.25) return;
+            if (now >= lastCharge && now - lastCharge < 0.25) return;
             lastCharge = now;
             sfx.tone({ freq: 300, slideTo: 620, type: 'sine', dur: 0.3, vol: 0.025 });
         },
@@ -65,6 +64,8 @@ export function createLoopJailAudio() {
             sfx.tone({ freq: 261.63, slideTo: 98, type: 'triangle', dur: 0.8, vol: 0.07, delay: 0.12 });
         },
         start() {
+            // Audio survives start/restart; simulation time does not.
+            lastCharge = -Infinity;
             sfx.tone({ freq: 392, slideTo: 784, type: 'triangle', dur: 0.2, vol: 0.08 });
         },
     };
