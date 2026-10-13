@@ -9,6 +9,8 @@ import worker, { dayKeyUTC8 } from '../Workers/games-analytics.js';
 const sql = readFileSync(new URL('../Workers/migrations/analytics/0001_analytics_v2.sql', import.meta.url), 'utf8');
 const db = new DatabaseSync(':memory:');
 db.exec(sql);
+const rateKeys = [];
+const limiter = { async limit({ key }) { rateKeys.push(key); return { success: true }; } };
 const binding = {
     prepare(sqlText) {
         const statement = db.prepare(sqlText);
@@ -30,12 +32,12 @@ const now = Date.now;
 Date.now = () => Date.parse('2026-10-13T12:00:00Z');
 const send = async (body, { origin = 'https://games.orangely.xyz', method = 'POST' } = {}) =>
     worker.fetch(new Request('https://example.com/event', {
-        method, headers: origin ? { Origin: origin, 'Content-Type': 'text/plain' } : {},
+        method, headers: origin ? { Origin: origin, 'Content-Type': 'text/plain', 'CF-Connecting-IP': '192.0.2.123' } : {},
         body: JSON.stringify(body),
-    }), { ANALYTICS_DB: binding });
+    }), { ANALYTICS_DB: binding, ANALYTICS_RATE_LIMITER: limiter });
 const get = async (q = '', opts = {}) =>
     worker.fetch(new Request('https://example.com/stats' + q,
-        { headers: opts.origin ? { Origin: opts.origin } : {} }), { ANALYTICS_DB: binding });
+        { headers: opts.origin ? { Origin: opts.origin } : {} }), { ANALYTICS_DB: binding, ANALYTICS_RATE_LIMITER: limiter });
 const fixture = (kind, id, seconds) => ({
     v: 2, game: 'tetris', event: kind,
     eventId: 'f1cb914e-5c44-4a0d-9a55-' + id.toString(16).padStart(12, '0'),
@@ -78,6 +80,7 @@ assert.equal((await send(play)).status, 201);
 assert.equal((await send(finish)).status, 201);
 assert.equal((await send(active)).status, 201);
 assert.equal((await send(active)).status, 200);
+assert(rateKeys.includes('192.0.2.123'), 'native limiter keyed by Cloudflare caller address');
 assert.equal((await send({ ...active, seconds: 16 })).status, 409);
 const metrics = (await result('?v=2&day=' + ymd)).games.tetris;
 assert.deepEqual(metrics, { p: 3, f: 2, opens: 1, activeSeconds: 15 });
@@ -109,6 +112,17 @@ assert.equal((await worker.fetch(new Request('https://example.com/event',
     { method: 'POST', body: '{not json' }), { ANALYTICS_DB: binding })).status, 400);
 assert.equal((await worker.fetch(new Request('https://example.com/event',
     { method: 'POST', body: JSON.stringify(open) }), {})).status, 503);
+assert.equal((await worker.fetch(new Request('https://example.com/event',
+    { method: 'POST', body: JSON.stringify(open) }), { ANALYTICS_DB: binding })).status, 503);
+const beforeThrottle = db.prepare('SELECT count(*) n FROM analytics_events').get().n;
+assert.equal((await worker.fetch(new Request('https://example.com/event',
+    { method: 'POST', body: JSON.stringify(fixture('play', 900)) }), {
+    ANALYTICS_DB: binding, ANALYTICS_RATE_LIMITER: {
+        async limit({ key }) { assert.equal(key, 'unknown'); return { success: false }; },
+    },
+})).status, 429);
+assert.equal(db.prepare('SELECT count(*) n FROM analytics_events').get().n, beforeThrottle);
+
 assert.equal((await get('?v=2&day=20260230')).status, 400);
 assert.equal((await get('?v=2&from=20261013')).status, 400);
 assert.equal((await get('?v=2&from=20261014&to=20261013')).status, 400);
@@ -169,6 +183,13 @@ client.intervals[0]();
 assert.equal(client.sent.length, 5); // open, play, finish, 15s, 5s
 assert.equal(new Set(client.sent.map(e => e.eventId)).size, client.sent.length);
 assert.equal(new Set(client.sent.map(e => e.sessionId)).size, 1);
+// Hourly retention removes expired dedupe rows, never the historical rollups.
+const lifetimeTotals = await result('?v=2&scope=total');
+Date.now = () => Date.parse('2026-12-13T12:00:00Z');
+await worker.scheduled({ scheduledTime: Date.now() }, { ANALYTICS_DB: binding });
+assert.equal(db.prepare('SELECT count(*) n FROM analytics_events').get().n, 0);
+assert.deepEqual((await result('?v=2&scope=total')).total, lifetimeTotals.total);
+assert.deepEqual((await result('?scope=total')).total, { p: 3, f: 2 });
 Date.now = now;
 db.close();
 console.log('Analytics V2 D1 migration, idempotency, UTC+8, legacy HTTP contract, browser rollout: PASS');

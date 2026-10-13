@@ -12,6 +12,9 @@ const MAX_BODY_BYTES = 1024;
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const V2_KINDS = new Set(['open', 'active', 'play', 'finish']);
 const DAY_MILLISECONDS = 86400000;
+// Event IDs are retry-idempotent for 45 days. Rollups live indefinitely.
+const RETRY_WINDOW_DAYS = 45;
+const CLEANUP_BATCH_ROWS = 5000;
 
 export function dayKeyUTC8(timestamp = Date.now()) {
   const d = new Date(timestamp + 8 * 3600000);
@@ -124,6 +127,19 @@ async function addEvent(db, event, day) {
   return sameEvent(row, event) ? { ok: true, duplicate: true } : { ok: false, conflict: true };
 }
 
+// Process at most one bounded batch per hourly cron. The day/game rollup is not deleted.
+async function pruneEvents(db, timestamp = Date.now()) {
+  const oldestKeptDay = dayKeyUTC8(timestamp - RETRY_WINDOW_DAYS * DAY_MILLISECONDS);
+  const result = await db.prepare(`
+    DELETE FROM analytics_events
+    WHERE id IN (
+      SELECT id FROM analytics_events WHERE day < ?
+      ORDER BY day, id LIMIT ?
+    )
+  `).bind(oldestKeptDay, CLEANUP_BATCH_ROWS).run();
+  return Number(result.meta?.changes ?? 0);
+}
+
 const DAY_SQL = `SELECT game, plays AS p, finishes AS f, opens, active_seconds
   FROM analytics_daily WHERE day = ? ORDER BY game`;
 const TOTAL_SQL = `SELECT game, SUM(plays) AS p, SUM(finishes) AS f,
@@ -190,6 +206,13 @@ export default {
     if (!env?.ANALYTICS_DB) return reply('Database unavailable', 503, cors);
     try {
       if (request.method === 'GET') return await stats(url, env.ANALYTICS_DB, cors);
+      // Native Cloudflare rate limiter runs before parsing or database writes.
+      // Use the platform-assigned address only as an ephemeral limiter key;
+      // never persist IPs, cookies, user agents, or user identifiers in D1.
+      if (!env.ANALYTICS_RATE_LIMITER) return reply('Rate limiter unavailable', 503, cors);
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+      const { success } = await env.ANALYTICS_RATE_LIMITER.limit({ key: ip });
+      if (!success) return reply('Too Many Requests', 429, cors);
       const data = await parseBody(request);
       const event = validateEvent(data);
       if (!event) return reply('Invalid', 400, cors);
@@ -201,5 +224,10 @@ export default {
       console.error('Analytics D1 failure', error);
       return reply('Internal Error', 500, cors);
     }
+  },
+  async scheduled(_controller, env) {
+    if (!env?.ANALYTICS_DB) throw new Error('Analytics D1 binding unavailable');
+    const removed = await pruneEvents(env.ANALYTICS_DB);
+    console.log('Analytics dedupe retention: removed', removed);
   },
 };

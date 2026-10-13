@@ -21,6 +21,9 @@ CREATE UNIQUE INDEX idx_analytics_event_id ON analytics_events(event_id) WHERE e
 CREATE UNIQUE INDEX idx_analytics_open_session ON analytics_events(session_id)
   WHERE version = 2 AND kind = 'open';
 
+-- Hourly bounded cleanup uses the day key while retaining all aggregate history.
+CREATE INDEX idx_analytics_event_retention ON analytics_events(day, id);
+
 CREATE TABLE analytics_daily (
   day TEXT NOT NULL,
   game TEXT NOT NULL,

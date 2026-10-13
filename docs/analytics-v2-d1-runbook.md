@@ -7,9 +7,10 @@
 ## Data model
 
 - `Workers/migrations/analytics/0001_analytics_v2.sql` is the initial D1 schema **and** the only migration for this fresh database.
-- `analytics_events` is an append-only ledger. Legacy writes have `version=1` and no event ID; V2 writes have UUIDv4 `event_id` and `session_id`. The unique event ID index rejects retries. A partial unique index prevents more than one `open` per V2 session.
-- `analytics_daily` is the day/game materialized aggregate (`plays`, `finishes`, `opens`, `active_seconds`). A SQLite `AFTER INSERT` trigger maintains it **in the event INSERT transaction**, including when simultaneous Workers ingest the same event. Duplicate events do not fire the trigger.
-- No event expiry or KV state: summary and global totals come from this D1 database alone. This simple ledger has indefinite retention; monitor D1 storage consumption as traffic grows.
+- `analytics_events` is an append-only ledger. Legacy writes have `version=1` and no event ID; V2 writes have UUIDv4 `event_id` and `session_id`. The unique event ID index rejects retries during the documented 45-day window. A partial unique index prevents more than one `open` per V2 session.
+- `analytics_daily` is the day/game materialized aggregate (`plays`, `finishes`, `opens`, `active_seconds`). A SQLite `AFTER INSERT` trigger maintains it **in the event INSERT transaction**, including when simultaneous Workers ingest the same event. Duplicate events do not fire the trigger. The hourly cleanup deletes only old ledger rows, not `analytics_daily`.
+- Event deduplication is **guaranteed only within a 45-day retry window** (older retries can be accepted again). An hourly UTC Cron Trigger at minute 17 deletes up to 5,000 event-ledger rows whose UTC+8 day is more than 45 days old; it never deletes daily summaries. The ledger is a bounded-retry record, **not an indefinitely retained historical baseline**. The deletion query uses an index on `(day,id)`. If traffic grows substantially, monitor the number of expired rows and adjust the maintenance batch, rather than deleting the aggregate history.
+- The `ANALYTICS_RATE_LIMITER` Worker rate-limit binding is configured at 180 POSTs per 60 seconds per Cloudflare connecting IP per Cloudflare location. It runs before D1 ingestion; 429 drops excess traffic. Cloudflare's native counters are approximate, not a global strict rate limit, and IPs shared by multiple visitors can cause false positives. The IP is used only as an ephemeral limiter key; it is never stored in D1. This is abuse resistance, not authentication.
 - UTC+8 is the server-receipt date for both legacy and V2 events. Retries of the same V2 `eventId` after midnight do **not** move an event to the next day.
 - PII is not stored. The UUIDs are random, scoped to the page load/event, and are not shared with other services. No usernames, IP addresses, cookies, player IDs, or user agents are collected.
 
@@ -44,7 +45,7 @@ Content-Type: text/plain
 {"v":2,"game":"tetris","event":"open","eventId":"f1cb914e-5c44-4a0d-9a55-e3994395b8b4","sessionId":"ff99744d-2acd-41e7-bcac-e811f1709b7b"}
 ```
 
-Events: `open`, `play`, `finish`, `active`. `active` must additionally have `"seconds":15` (integer 1..60). All other kinds **must not** include `seconds`. V2 requires exactly `v`, `game`, `event`, `eventId`, `sessionId` (plus `seconds` for `active`) and lowercase RFC 4122 UUIDv4 IDs. Unknown fields, games, kinds, invalid IDs, malformed JSON and overly large request bodies are rejected with HTTP 400. New distinct events return 201 `{ "ok":true, "duplicate":false }`. Replayed identical event IDs (or a repeated `open` for the same session) return 200 `{ "ok":true, "duplicate":true }`; reusing an ID with different details returns HTTP 409 and does not mutate counters.
+Events: `open`, `play`, `finish`, `active`. `active` must additionally have `"seconds":15` (integer 1..60). All other kinds **must not** include `seconds`. V2 requires exactly `v`, `game`, `event`, `eventId`, `sessionId` (plus `seconds` for `active`) and lowercase RFC 4122 UUIDv4 IDs. Unknown fields, games, kinds, invalid IDs, malformed JSON and overly large request bodies are rejected with HTTP 400. New distinct events return 201 `{ "ok":true, "duplicate":false }`. Replayed identical event IDs (or a repeated `open` for the same session) **within 45 days** return 200 `{ "ok":true, "duplicate":true }`; reusing an ID with different details returns HTTP 409 and does not mutate counters.
 
 ```http
 GET /stats?v=2&day=20261013
@@ -58,7 +59,7 @@ V2 returns `{scope, day|from+to, games:{ "tetris": {p,f,opens,activeSeconds} }, 
 
 **Automatic site/Worker rollout safety:** The games website auto-deploys separately from this manually deployed Worker. The new `/analytics.js` first probes `GET /stats?v=2` and enables V2 only if it receives the new `{scope:'day', games, total}` response. Until then, `hubTrack(play/finish)` uses the old two-field payload, so the auto-deployed site remains compatible with the current KV Worker. After manual D1 cutover, new page loads begin reporting V2 without another website release. Events emitted before the V2 probe settles can still use the legacy payload. No dual-write or KV reading exists in the *new* Worker.
 
-This is an **anonymous, public telemetry endpoint**. UUID idempotency prevents accidental duplicate counting, not deliberate event forgery. Do not infer unique people from `sessionId` or `opens`.
+This is an **anonymous, public telemetry endpoint**. UUID idempotency (for 45 days) and native request throttling prevent common accidental duplicate counting and limit single-source floods, not deliberate distributed event forgery. Do not infer unique people from `sessionId` or `opens`.
 
 ## Pre-production validation (no Cloudflare changes)
 
@@ -121,6 +122,6 @@ curl -s 'http://127.0.0.1:8787/stats?v=2'
 
    On initial cutover, legacy result `{}` and V2 zero totals are **correct and expected**. Organic client events begin a fresh history. Do not import or merge old KV counts and do not repair apparent zeroing by adding a fallback.
 
-5. **Remove the obsolete KV binding from Cloudflare dashboard** if it is still separately bound to the Worker. The checked-in Wrangler config already removes it. Deleting the original KV namespace/data is an optional later manual cleanup; do not touch the unrelated score/word-stats KV namespaces.
+5. **Remove the obsolete KV binding from Cloudflare dashboard** if it is still separately bound to the Worker. The checked-in Wrangler config already removes it. The new Wrangler config also installs the hourly retention cron and native write-rate limiter when you manually publish. Deleting the original KV namespace/data is an optional later manual cleanup; do not touch the unrelated score/word-stats KV namespaces.
 
 If the new D1 binding is missing or the schema was not applied, requests fail clearly (HTTP 503 or 500), **never silently write to KV or return fabricated zero successes**. The existing `workers.dev` URL and old client HTTP contract do not change. The cutover is intentionally one-way; there is no historical-data rollback/migration framework.

@@ -13,7 +13,10 @@ if (!Array.isArray(db) || db.length !== 1
     || db[0].binding !== 'ANALYTICS_DB' || db[0].database_name !== 'games-analytics-v2'
     || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(uuid || '')
     || /^0{8}-0{4}-0{4}-0{4}-0{12}$/.test(uuid)
-    || data.kv_namespaces?.length) {
+    || data.kv_namespaces?.length
+    || data.ratelimits?.length !== 1
+    || data.ratelimits[0].name !== 'ANALYTICS_RATE_LIMITER'
+    || data.triggers?.crons?.join(',') !== '17 * * * *') {
     console.error('Analytics deploy blocked: configure the NEW D1 database UUID, without KV; read docs/analytics-v2-d1-runbook.md');
     process.exitCode = 1;
 } else {

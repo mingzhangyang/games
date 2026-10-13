@@ -6,6 +6,12 @@
   "main": "games-analytics.js",
   "compatibility_date": "2025-04-01",
   "workers_dev": true,
+  "triggers": { "crons": ["17 * * * *"] },
+  "ratelimits": [{
+    "name": "ANALYTICS_RATE_LIMITER",
+    "namespace_id": "14202610",
+    "simple": { "limit": 180, "period": 60 }
+  }],
   "d1_databases": [
     {
       "binding": "ANALYTICS_DB",
