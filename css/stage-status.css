@@ -1,0 +1,151 @@
+/* ─────────────────────────────────────────────
+   局内状态归舞台契约（Stage status）
+
+   顶栏只留游戏名和操作按钮；回合 / 分数 / 关卡 / 进度这类局内状态挂在舞台顶部，
+   和画牢（loop-jail）的沉浸式 HUD 同一个做法。原先它们排在顶栏游戏名下方，手机上
+   顶栏被撑成两行、状态字号压到 9–11px，而且离玩家正在看的画面最远。
+
+   本文件是 CSS P0/P5 冻结之后的**附加特性样式表**（见 tests/lib/css/feature-additions.mjs）：
+   冻结页的页面样式一条不改，状态元素的标记在各页 HTML 里移进舞台，这里只补定位与底色。
+   全部规则在 @layer contracts、选择器逐条登记；只有要压过冻结的 unlayered 页面声明时才用
+   !important（分层 !important 与 <link> 顺序无关地胜出），新增属性用普通声明。
+   断言见 tests/verify-stage-status.mjs。
+   ───────────────────────────────────────────── */
+
+@layer contracts {
+    /* ① 拔萝卜：回合 / 得分 / 时间三枚胶囊浮在场景天空上；底色借用遮罩的主题色
+       （--cp-overlay-bg 深浅两套都有定义）才压得住亮色天空。这里不写主题选择器 ——
+       同一文件也挂在仅深色的页面上，registry 的 theme-light 能力按样式表事实推断。
+       顶栏只剩游戏名，按单行居中；名字只按当前语言显示一种（中英并列的 CARROT PULL 隐藏）。
+       场景提示条原本贴着场景顶边，下移让出状态行。 */
+    .cp-topbar {
+        align-items: center !important;
+    }
+
+    .cp-brand-en {
+        display: none !important;
+    }
+
+    .cp-hud-row {
+        --cp-chip-bg: var(--cp-overlay-bg);
+
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        z-index: 6;
+        pointer-events: none;
+    }
+
+    .cp-hud-row .cp-chip {
+        backdrop-filter: blur(6px);
+    }
+
+    .cp-toast {
+        top: 48px !important;
+    }
+
+    /* ② 针尖对麦芒 / 御剑飞行：模式·关卡与分数·连击合成一枚玻璃胶囊，居中贴舞台顶边；
+       原有的局内 HUD（生命 / 姿态 / 极意，或生命 / 境界 / 登仙进度）整体下移一行。 */
+    .na-stage-status,
+    .sf-stage-status {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: calc(100% - 24px);
+        padding: 3px 3px 3px 12px;
+        border: 1px solid rgb(255, 255, 255, 0.1);
+        border-radius: 14px;
+        background: rgb(6, 16, 28, 0.62);
+        backdrop-filter: blur(6px);
+        transform: translateX(-50%);
+        pointer-events: none;
+    }
+
+    .na-stage-status {
+        z-index: 5;
+    }
+
+    .sf-stage-status {
+        z-index: 9;
+    }
+
+    .na-stage-status .na-title-pill {
+        align-items: flex-start;
+        min-width: 0;
+    }
+
+    .na-stage-status .na-stage-label {
+        overflow: hidden;
+        max-width: 100%;
+        text-overflow: ellipsis;
+    }
+
+    .sf-stage-status .sf-mode-badge {
+        margin-top: 0 !important;
+        white-space: nowrap;
+    }
+
+    .na-in-hud {
+        top: 58px !important;
+    }
+
+    .sf-in-hud {
+        padding-top: 60px !important;
+    }
+
+    .sf-realm-chip {
+        top: 60px !important;
+    }
+
+    .sf-progress-wrap {
+        top: 94px !important;
+    }
+
+    /* ③ 影织：英文名称比中文宽，窄屏时目标按钮与标题不能把顶栏撑成两行。
+       gap 覆盖冻结页面的 unlayered 12px，所以必须用分层 !important。
+       极窄屏保留目标预览的操作热区，文字允许省略，不改变其它游戏。 */
+    @media (width <= 480px) {
+        .sl-topbar-center {
+            flex-wrap: nowrap;
+            gap: 4px !important;
+        }
+
+        .sl-brand {
+            min-width: 0;
+        }
+
+        .sl-brand-zh {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sl-target-btn {
+            flex: 0 0 40px;
+        }
+    }
+
+    /* ④ 影织：关卡进度点挂在纸窗框顶部中央，暗色底托住，避免压在木框花纹上看不清；
+       场景提示条随之下移。 */
+    .sl-progress {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        z-index: 4;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgb(20, 12, 6, 0.6);
+        backdrop-filter: blur(4px);
+        transform: translateX(-50%);
+        pointer-events: none;
+    }
+
+    .sl-toast {
+        top: 36px !important;
+    }
+}

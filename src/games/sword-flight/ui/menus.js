@@ -4,6 +4,7 @@ import { ICONS } from '../../../platform/icons.js';
 import { updateMoreGames } from '../../../platform/more-games.js';
 import { submitScore, fetchBoard, escapeHTML } from '../../../platform/leaderboard.js';
 import { I18N } from '../i18n.js';
+import { refreshModeBadge } from '../render/hud.js';
 import {
     getDailyDateKey as dailyDateKey,
     getDailyLeaderboardKey,
@@ -117,6 +118,7 @@ export function applyLanguage(game) {
     const sfHint = document.getElementById('sf-hint');
 
     document.getElementById('sf-howto-box').innerHTML = t.howTo;
+    refreshModeBadge(game);
 
 
     const touchLabels = [

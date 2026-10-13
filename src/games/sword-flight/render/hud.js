@@ -40,7 +40,18 @@ export function refreshPauseButton(game) {
 
 }
 
+// 舞台顶部的模式徽章：跟随当前玩法（原先在顶栏里写死成「九天问道」）
+const MODE_BADGE_KEYS = { stages: 'modeStages', endless: 'modeEndless', daily: 'modeDaily', zen: 'modeZen' };
+
+export function refreshModeBadge(game) {
+    const badge = document.getElementById('sf-mode-badge');
+    const t = I18N[getLang() === 'zh' ? 'zh' : 'en'];
+    const label = t?.[MODE_BADGE_KEYS[game.mode] || 'modeStages'];
+    if (badge && label && badge.textContent !== label) badge.textContent = label;
+}
+
 export function updateHUD(game) {
+    refreshModeBadge(game);
     document.getElementById('sf-score-val').textContent = game.score.toLocaleString();
     const comboEl = document.getElementById('sf-combo-val');
     comboEl.textContent = `×${game.combo}`;

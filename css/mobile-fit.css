@@ -108,4 +108,19 @@
             margin-top: 24px;
         }
     }
+
+    /* ⑧ 铺满直角容器的遮罩不留圆角。.game-overlay 自带 18px 圆角（layout 层），本意是贴合
+       圆角舞台；遮罩一旦铺在直角容器里，四角就露出未模糊、未压暗的场景（tests/verify-overlay-corners.mjs）。
+       圆角来自 layout 层，普通分层声明即可覆盖。
+       Carrot Pull：开始 / 结算遮罩铺满直角的 .cp-scene-wrap（其下还有操作区），底部两角露出
+       场景图；卡片顶部圆角仍由 .cp-stage-card 的 overflow 裁出。 */
+    .cp-overlay {
+        border-radius: 0;
+    }
+
+    /* Tower Defense：沉浸式舞台 .td-stage 本身是直角（border-radius: 0），桌面菜单 / 暂停 /
+       结算遮罩四角露出 .td-scene-frame 的战场；竖屏下遮罩是 fixed 整屏，同样不该有圆角。 */
+    .td-overlay {
+        border-radius: 0;
+    }
 }

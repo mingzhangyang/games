@@ -17,7 +17,7 @@ import { resolveNeedleAwnDailyDate } from '../src/games/needle-awn/scoreboard-ke
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = path => readFileSync(join(ROOT, path), 'utf8');
 const worker = read('Workers/game-scores.js');
-const required = ['needle-awn','carrot-pull','tank-battle','firefly-signal','shadow-loom','math-rain'];
+const required = ['needle-awn','carrot-pull','tank-battle','firefly-signal','shadow-loom','math-rain','loop-jail'];
 const expectedKeys = {
     'needle-awn': ['needle-awn', 'needle-awn-endless'],
     'carrot-pull': ['carrot-pull'],
@@ -25,6 +25,7 @@ const expectedKeys = {
     'firefly-signal': ['first-light','two-meadows','midsummer'].map(id => 'firefly-signal-' + id),
     'shadow-loom': ['rabbit','bird','whale','deer','pagoda','tree','koi','crane'].map(id => 'shadow-loom-' + id),
     'math-rain': [1,2,3,4,5,6].map(level => 'math-rain-' + level),
+    'loop-jail': ['loop-jail'],
 };
 const games = registry.withCap('leaderboard').filter(g => g.scores?.ui === 'dialog');
 assert.deepEqual(games.map(g => g.id).sort(), required.slice().sort(),
@@ -95,6 +96,14 @@ assert.match(shadow, /encodeShadowLoomScore\(rec\.time, rec\.moves\)/,
     'Shadow Loom ranks one run, never combines independent record minima');
 const firefly = read('src/games/firefly-signal/index.js');
 assert.match(firefly, /if \(!won\) return;/, 'Firefly Signal excludes failed runs');
+const loopJail = read('src/games/loop-jail/index.js');
+assert.match(loopJail, /onFinish: \(\{ score \}\) => \{\s*if \(score > 0\) void scoreboard\.submit/,
+    'Loop Jail uploads finished runs with points only');
+const loopJailRuntime = read('src/games/loop-jail/runtime.js');
+assert.equal((loopJailRuntime.match(/this\.onFinish\(/g) || []).length, 1,
+    'Loop Jail reports a run exactly once (restart / menu never submit an abandoned run)');
+assert.match(loopJailRuntime, /finish\(\) \{\s*if \(this\.state !== 'playing'\) return;[\s\S]*?this\.onFinish\(/,
+    'Loop Jail only reports from the playing → over transition');
 
 // Scores are now serialized per board by SQLite Durable Objects, never KV RMW.
 const scoreConfig = read('Workers/wrangler-game-scores.jsonc');
@@ -129,4 +138,4 @@ assert.ok(needle.includes("this.dailyDateKey = ''; // Menu uses current date"),
     'menu clears the previous run date');
 assert.ok(needle.includes("this.mode === 'daily' && !this.dailyDateKey"),
     'a missing run seed must never silently submit on a new date');
-console.log('PASS visible leaderboard contract: six games and metric invariants');
+console.log('PASS visible leaderboard contract: seven games and metric invariants');

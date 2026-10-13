@@ -129,6 +129,15 @@ export const SCENARIOS = Object.freeze({
         ready: truthy('slGame', 'state'),
         active: truthy('slGame', 'isRunning()'), activity: 'simulation',
     },
+    // The pen only enters the field on the first pointer input, so an unattended run
+    // (monsters wandering, nothing drawn) survives the whole baseline. Start through the
+    // hook, not a click: a synthetic mousemove after the menu hides would place the pen
+    // under the cursor and let dashers end the run mid-sample.
+    'loop-jail': {
+        owner: 'ljGame', start: call('start'), restart: call('start'),
+        ready: truthy('ljGame', 'el'),
+        active: truthy('ljGame', 'isRunning()'), activity: 'continuous',
+    },
 });
 
 export function validateScenarioCoverage(games = registry.all(), scenarios = SCENARIOS) {

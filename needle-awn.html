@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/needle-awn.css">
     <link rel="stylesheet" href="css/scoreboard-dialog.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -49,12 +50,7 @@
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="na-topbar-center game-topbar-center">
                 <div class="na-title-pill game-title-pill">
-                    <span class="na-stage-label" id="na-stage-label">针尖对麦芒</span>
-                    <span class="na-mode-badge" id="na-mode-badge">Trials</span>
-                </div>
-                <div class="na-hud-box game-hud-box">
-                    <span class="na-score-val" id="na-score-val">0</span>
-                    <span class="na-combo-val" id="na-combo-val">×1</span>
+                    <span class="na-stage-label" id="na-brand">针尖对麦芒</span>
                 </div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
@@ -71,6 +67,18 @@
         <main class="na-main game-main">
             <div class="na-stage game-stage" id="na-stage" data-art-state="loading">
                 <canvas class="game-canvas" id="na-canvas" width="480" height="640" aria-label="针尖对麦芒演武场"></canvas>
+
+                <!-- 局内状态在舞台顶部，顶栏只留游戏名（css/stage-status.css） -->
+                <div class="na-stage-status" id="na-stage-status">
+                    <div class="na-title-pill game-title-pill">
+                        <span class="na-stage-label" id="na-stage-label">针尖对麦芒</span>
+                        <span class="na-mode-badge" id="na-mode-badge">Trials</span>
+                    </div>
+                    <div class="na-hud-box game-hud-box">
+                        <span class="na-score-val" id="na-score-val">0</span>
+                        <span class="na-combo-val" id="na-combo-val">×1</span>
+                    </div>
+                </div>
 
                 <!-- 内部即时 HUD -->
                 <div class="na-in-hud" id="na-in-hud">

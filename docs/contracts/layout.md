@@ -397,7 +397,7 @@ CSS 契约顺序 + `<main>` 语义 + h1，**不套** shell/topbar/sidebar 几何
 ## 7. Immersive Stage（2026-09-26，`games.config.json` 的 `"layout": "immersive"`）
 
 与标准骨架（§1–§6）**互斥**的第二种页面布局，给「场景就是游戏」的重场景游戏用（消费方包括
-firefly-signal 与 tower-defense；未来《影织》等可复用）。**保留共享顶栏**，顶栏以下的整块视口都属于游戏场景；
+firefly-signal、tower-defense 与 loop-jail；未来《影织》等可复用）。**保留共享顶栏**，顶栏以下的整块视口都属于游戏场景；
 HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向预算。
 
 **为什么是字段不是 cap**：caps 是可以叠加的能力（sidebar + drawer + leaderboard…），布局类型是互斥的

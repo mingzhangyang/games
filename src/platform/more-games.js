@@ -27,6 +27,7 @@ export const MORE_GAMES = [
     { href: 'carrot-pull.html', emoji: '🥕', en: "Carrot Pull", zh: "拔萝卜", light: true },
     { href: 'firefly-signal.html', emoji: '✨', en: "Firefly Signal", zh: "萤火信号" },
     { href: 'shadow-loom.html', emoji: '🕯️', en: "Shadow Loom", zh: "影织" },
+    { href: 'loop-jail.html', emoji: '⭕', en: "Loop Jail", zh: "画牢", light: true },
 ];
 // registry:end more-games
 

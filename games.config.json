@@ -1697,6 +1697,63 @@
         "maxEntries": 50,
         "ui": "dialog"
       }
+    },
+    {
+      "id": "loop-jail",
+      "prefix": "lj",
+      "href": "loop-jail.html",
+      "entry": "src/games/loop-jail/index.js",
+      "emoji": "⭕",
+      "layout": "immersive",
+      "title": {
+        "doc": "Loop Jail — Draw Loops, Trap Monsters",
+        "i18nKey": "pageTitle",
+        "seo": "画牢 Loop Jail — Draw Loops, Trap Monsters"
+      },
+      "name": {
+        "en": "Loop Jail",
+        "zh": "画牢"
+      },
+      "desc": {
+        "meta": "画牢 Loop Jail — a neon line-drawing arcade game. Drag your pen to lay down ink, cross your own line to close a loop and trap every monster inside. Monsters bite open lines and ink is limited, so greedy loops are risky. Endless waves and a global leaderboard.",
+        "og": "Draw a loop, close it, and everything inside is jailed — before the monsters bite your line.",
+        "twitter": "Cross your own line to close a loop and trap the monsters inside. Ink is limited; greed is risky."
+      },
+      "genre": [
+        "ArcadeGame",
+        "ActionGame"
+      ],
+      "caps": [
+        "analytics",
+        "topbar",
+        "leaderboard",
+        "theme-light"
+      ],
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
+      "themeColor": "#0b0e1a",
+      "themeColorLight": "#eef2f9",
+      "home": {
+        "iconClass": "td",
+        "desc": {
+          "en": "Drag to draw ink, cross your own line to close a loop and trap the monsters inside. Monsters bite open lines — and ink is limited.",
+          "zh": "拖动画出墨线，自交成环就能把圈里的小怪统统收监。小怪会咬断没闭合的墨线，墨水有限，贪大圈有风险。"
+        },
+        "tag": {
+          "en": "Arcade",
+          "zh": "画线街机"
+        },
+        "badge": "new"
+      },
+      "scores": {
+        "key": "loop-jail",
+        "order": "desc",
+        "maxScore": 9007199254740991,
+        "maxEntries": 50,
+        "ui": "dialog"
+      }
     }
   ],
   "$schema": "./games.schema.json"

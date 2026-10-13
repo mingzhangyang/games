@@ -423,6 +423,7 @@ class GameEngine {
         // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的 applyLanguage 写）
         const naHint = document.getElementById('na-hint');
 
+        document.getElementById('na-brand').textContent = t.gameTitle;
         document.getElementById('na-canvas').setAttribute('aria-label', t.canvasAria);
         document.getElementById('na-howto-box').innerHTML = t.howTo;
 
@@ -620,6 +621,8 @@ class GameEngine {
     resumeBattle() {
         if (!this.artReady) return;
         this.state = 'playing';
+        // resetGameState 时仍是 menu 态；进入对局后再刷一次，舞台状态胶囊才显示模式 / 关卡
+        this.updateHUDLabels();
         this.pauseOwnership.invalidate();
         this.dom.overlayStart.classList.add('hidden');
         this.dom.overlayPause.classList.add('hidden');
@@ -1182,6 +1185,7 @@ class GameEngine {
                 this.waveTimer = 0;
                 this.waveIndex++;
                 this.spawnEndlessWave();
+                this.updateHUDLabels();
             }
         } else if (this.mode === 'daily') {
             if (this.enemies.length === 0) {

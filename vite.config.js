@@ -70,6 +70,7 @@ main: resolve(__dirname, 'index.html'),
             "carrot-pull": resolve(__dirname, 'carrot-pull.html'),
             "firefly-signal": resolve(__dirname, 'firefly-signal.html'),
             "shadow-loom": resolve(__dirname, 'shadow-loom.html'),
+            "loop-jail": resolve(__dirname, 'loop-jail.html'),
             // registry:end inputs
         },
         output: {

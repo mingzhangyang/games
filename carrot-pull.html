@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/carrot-pull.css">
     <link rel="stylesheet" href="css/scoreboard-dialog.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -48,11 +49,6 @@
                 <div class="cp-brand">
                     <span class="cp-brand-zh" id="cp-brand-zh" data-i18n="brand">拔萝卜</span>
                     <span class="cp-brand-en">CARROT PULL</span>
-                </div>
-                <div class="cp-hud-row" id="cp-hud-row" data-i18n-label="hudAria" aria-label="Game status">
-                    <span class="cp-chip"><span id="cp-round-label" data-i18n="round">Round</span><b id="cp-round">0/6</b></span>
-                    <span class="cp-chip"><span id="cp-score-label" data-i18n="score">Score</span><b id="cp-score">0</b></span>
-                    <span class="cp-chip cp-chip-time"><span id="cp-time-label" data-i18n="time">Time</span><b id="cp-time">45</b></span>
                 </div>
             </div>
             <div class="cp-topbar-actions game-topbar-group">
@@ -120,6 +116,12 @@
                             <path id="cp-carrot-hit" d="M200 300h300v350H200z" fill="#fff" opacity="0" data-i18n-label="pullAria" aria-label="Pull the carrot"/>
                         </svg>
 
+                        <!-- 局内状态在场景顶部，顶栏只留游戏名（css/stage-status.css） -->
+                        <div class="cp-hud-row" id="cp-hud-row" data-i18n-label="hudAria" aria-label="Game status">
+                            <span class="cp-chip"><span id="cp-round-label" data-i18n="round">Round</span><b id="cp-round">0/6</b></span>
+                            <span class="cp-chip"><span id="cp-score-label" data-i18n="score">Score</span><b id="cp-score">0</b></span>
+                            <span class="cp-chip cp-chip-time"><span id="cp-time-label" data-i18n="time">Time</span><b id="cp-time">45</b></span>
+                        </div>
                         <div class="cp-toast game-toast" id="cp-toast" role="status" aria-live="polite"></div>
 
                         <div class="cp-overlay game-overlay" id="cp-start">

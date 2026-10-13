@@ -1,0 +1,555 @@
+/* ─────────────────────────────────────────────
+   画牢 Loop Jail — 线条与几何的霓虹捕获游戏
+   深色 = 深蓝底 + 细网格 + 青色发光墨线；浅色 = 白纸蓝墨（发光减弱、加色混合改为普通叠加）。
+   布局：Immersive Stage（css/layout.css §7 契约），本文件只管配色、字体与浮层内容，
+   不写 shell / topbar / stage 的几何。画布颜色只在这里定义一次（--lj-cv-*），
+   由 src/games/loop-jail/renderer.js 经 bindPalette 读取。
+   CSS 冻结（P0/P5）之后新增的游戏页：全部规则归 @layer pages、选择器只认本页前缀，
+   不新增未分层债务（tests/lib/css/feature-additions.mjs 的 POST_FREEZE_GAMES 校验）。
+   ───────────────────────────────────────────── */
+
+@layer pages {
+    :root {
+        --lj-bg: #0b0e1a;
+        --lj-bg-deep: #05070f;
+        --lj-text: var(--tok-text);
+        --lj-text-dim: var(--tok-text-dim);
+        --lj-cyan: #4ff3ff;
+        --lj-cyan-deep: #1aa9d6;
+        --lj-cyan-glow: rgb(79, 243, 255, 0.45);
+        --lj-accent-text: #4ff3ff;
+        --lj-pink: #ff4fa3;
+        --lj-orange: #ff9a3c;
+        --lj-green: #4dff9a;
+        --lj-violet: #b18cff;
+        --lj-sky: #59b7ff;
+        --lj-danger: #ff3b5c;
+        --lj-danger-2: #ff7a8c;
+        --lj-glass: rgb(11, 14, 26, 0.62);
+        --lj-glass-line: rgb(79, 243, 255, 0.2);
+        --lj-overlay-bg: radial-gradient(ellipse 85% 60% at 50% 40%, rgb(11, 14, 26, 0.72), rgb(5, 7, 15, 0.92));
+        --lj-ink-track: rgb(255, 255, 255, 0.08);
+        --lj-heart: #ff4f7b;
+        --lj-heart-off: rgb(255, 255, 255, 0.28);
+        --lj-heart-glow: rgb(255, 79, 123, 0.6);
+        --lj-title-glow: 0 0 22px rgb(79, 243, 255, 0.55), 0 0 2px rgb(79, 243, 255, 0.9);
+        --lj-banner-glow: 0 0 18px rgb(79, 243, 255, 0.5);
+
+        /* 画布调色板（bindPalette 读取；缺一个就抛错） */
+        --lj-cv-bg: #0b0e1a;
+        --lj-cv-bg-edge: #05070f;
+        --lj-cv-grid: rgb(120, 150, 255, 0.06);
+        --lj-cv-grid-strong: rgb(120, 150, 255, 0.12);
+        --lj-cv-border: rgb(79, 243, 255, 0.22);
+        --lj-cv-ink: #4ff3ff;
+        --lj-cv-ink-core: #e8feff;
+        --lj-cv-twin: #b18cff;
+        --lj-cv-dry: #ff5c7a;
+        --lj-cv-circle: #ff4fa3;
+        --lj-cv-triangle: #ff9a3c;
+        --lj-cv-square: #4dff9a;
+        --lj-cv-eye: #fff;
+        --lj-cv-pen: #fff;
+        --lj-cv-pen-ring: #4ff3ff;
+        --lj-cv-flash: #fff;
+        --lj-cv-bite: #ff3b5c;
+        --lj-cv-text: #fff;
+        --lj-cv-double: #b18cff;
+        --lj-cv-shield: #59b7ff;
+        --lj-cv-inkdrop: #ffe066;
+        --lj-cv-blend: lighter;
+        --lj-cv-glow: 1;
+        --lj-cv-vignette: 0.55;
+    }
+
+    /* 浅色：白纸蓝墨 —— 网格像方格本，墨线是深青，小怪换成能压住白底的深一档霓虹色；
+       'lighter' 加色混合在白底上会消失，改为 source-over，发光只留一层淡晕 */
+    :root[data-theme="light"] {
+        --lj-bg: #eef2f9;
+        --lj-bg-deep: #dde4f1;
+        --lj-cyan: #0a8fb0;
+        --lj-cyan-deep: #0b6f93;
+        --lj-cyan-glow: rgb(10, 143, 176, 0.25);
+        /* 小字强调色：浅底上 ≥ 4.5:1（--lj-cyan 只给大标题 / 图形用） */
+        --lj-accent-text: #0b6f93;
+        --lj-pink: #d42a76;
+        --lj-orange: #d45f00;
+        --lj-green: #138f4f;
+        --lj-violet: #6a45d8;
+        --lj-sky: #1f6fd0;
+        --lj-danger: #d81e3c;
+        --lj-danger-2: #f0546c;
+        --lj-glass: rgb(255, 255, 255, 0.8);
+        --lj-glass-line: rgb(20, 60, 120, 0.16);
+        --lj-overlay-bg: radial-gradient(ellipse 85% 60% at 50% 40%, rgb(246, 248, 252, 0.84), rgb(226, 232, 243, 0.95));
+        --lj-ink-track: rgb(20, 40, 90, 0.1);
+        --lj-heart: #e0284f;
+        --lj-heart-off: rgb(20, 40, 90, 0.25);
+        --lj-heart-glow: rgb(224, 40, 79, 0.25);
+        --lj-title-glow: none;
+        --lj-banner-glow: none;
+
+        /* 画布调色板 · 浅色 */
+        --lj-cv-bg: #f7f9fd;
+        --lj-cv-bg-edge: #dfe6f2;
+        --lj-cv-grid: rgb(40, 70, 140, 0.07);
+        --lj-cv-grid-strong: rgb(40, 70, 140, 0.15);
+        --lj-cv-border: rgb(30, 70, 140, 0.25);
+        --lj-cv-ink: #0a8fb0;
+        --lj-cv-ink-core: #8be8ff;
+        --lj-cv-twin: #6a45d8;
+        --lj-cv-dry: #c62a3e;
+        --lj-cv-circle: #d42a76;
+        --lj-cv-triangle: #d45f00;
+        --lj-cv-square: #138f4f;
+        --lj-cv-eye: #18203a;
+        --lj-cv-pen: #18203a;
+        --lj-cv-pen-ring: #0a8fb0;
+        --lj-cv-flash: #fff1b8;
+        --lj-cv-bite: #d81e3c;
+        --lj-cv-text: #18203a;
+        --lj-cv-double: #6a45d8;
+        --lj-cv-shield: #1f6fd0;
+        --lj-cv-inkdrop: #a86e00;
+        --lj-cv-blend: source-over;
+        --lj-cv-glow: 0.35;
+        --lj-cv-vignette: 0.28;
+    }
+
+    html {
+        background: var(--lj-bg-deep);
+    }
+
+    /* 舞台窄于视口时（平板 / 桌面），两侧是同色网格夜空的自然延展，不留硬边 */
+    body.lj-body {
+        min-height: 100dvh;
+        background:
+            radial-gradient(ellipse 70% 40% at 50% 0%, var(--lj-cyan-glow), transparent 70%),
+            linear-gradient(180deg, var(--lj-bg) 0%, var(--lj-bg-deep) 100%);
+        background-attachment: fixed;
+        color: var(--lj-text);
+        font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        overscroll-behavior: none;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── 顶栏 ── */
+    .lj-icon-btn {
+        color: var(--lj-text);
+        background: var(--lj-glass);
+        border-color: var(--lj-glass-line);
+    }
+
+    .lj-icon-btn:hover { border-color: var(--lj-cyan); }
+
+    .lj-icon-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+
+    .lj-title-pill {
+        line-height: 1.1;
+    }
+
+    .lj-title-main {
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--lj-accent-text);
+        text-shadow: var(--lj-title-glow);
+    }
+
+    /* ── 场地 ── */
+    .lj-scene {
+        position: absolute;
+        inset: 0;
+    }
+
+    .lj-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+        touch-action: none;
+    }
+
+    /* ── HUD：三栏浮层（左：分数 / 波次；中：墨水条 + 道具；右：生命） ── */
+    .lj-hud {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: start;
+        gap: 6px;
+        pointer-events: none;
+    }
+
+    .lj-hud-left {
+        display: flex;
+        gap: 6px;
+    }
+
+    .lj-stat {
+        display: flex;
+        flex-direction: column;
+        min-width: 52px;
+        padding: 3px 9px 4px;
+        border-radius: 10px;
+        background: var(--lj-glass);
+        border: 1px solid var(--lj-glass-line);
+    }
+
+    .lj-stat-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--lj-text-dim);
+    }
+
+    .lj-stat-value {
+        font-size: 17px;
+        font-weight: 800;
+        line-height: 1.15;
+        font-variant-numeric: tabular-nums;
+        color: var(--lj-text);
+    }
+
+    .lj-hud-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        padding-top: 8px;
+    }
+
+    .lj-ink {
+        width: clamp(84px, 26vw, 170px);
+        height: 10px;
+        border-radius: 99px;
+        background: var(--lj-ink-track);
+        border: 1px solid var(--lj-glass-line);
+        overflow: hidden;
+    }
+
+    .lj-ink-fill {
+        display: block;
+        width: 100%;
+        height: 100%;
+        transform-origin: left center;
+        background: linear-gradient(90deg, var(--lj-cyan-deep), var(--lj-cyan));
+        box-shadow: 0 0 10px var(--lj-cyan-glow);
+        transition: transform 0.12s linear;
+    }
+
+    .lj-ink.is-low {
+        border-color: var(--lj-danger);
+        box-shadow: 0 0 10px var(--lj-danger);
+    }
+
+    .lj-ink.is-low .lj-ink-fill {
+        background: linear-gradient(90deg, var(--lj-danger), var(--lj-danger-2));
+        box-shadow: 0 0 10px var(--lj-danger);
+    }
+
+    .lj-effects {
+        display: flex;
+        gap: 4px;
+        min-height: 18px;
+    }
+
+    .lj-effect {
+        padding: 1px 7px;
+        border: 1px solid currentcolor;
+        border-radius: 99px;
+        font-size: 11px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        background: var(--lj-glass);
+    }
+
+    .lj-effect--double { color: var(--lj-violet); }
+    .lj-effect--shield { color: var(--lj-sky); }
+
+    .lj-lives {
+        justify-self: end;
+        display: flex;
+        gap: 2px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        background: var(--lj-glass);
+        border: 1px solid var(--lj-glass-line);
+    }
+
+    .lj-heart {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: var(--lj-heart-off);
+        stroke-width: 2;
+    }
+
+    .lj-heart.is-on {
+        fill: var(--lj-heart);
+        stroke: var(--lj-heart);
+        filter: drop-shadow(0 0 4px var(--lj-heart-glow));
+    }
+
+    /* ── 波次横幅 ── */
+    .lj-banner {
+        position: absolute;
+        left: 50%;
+        top: 36%;
+        z-index: 6;
+        padding: 10px 22px;
+        border-radius: 14px;
+        font-size: clamp(20px, 6vw, 28px);
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+        color: var(--lj-text);
+        background: var(--lj-glass);
+        border: 1px solid var(--lj-glass-line);
+        text-shadow: var(--lj-banner-glow);
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+        transition: opacity 0.25s, transform 0.25s;
+        pointer-events: none;
+    }
+
+    .lj-banner.is-on {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* ── 浮层 ── */
+    /* 沉浸式舞台贴边、画布是直角：浮层也不能有共享的 --frame-radius 圆角，
+       否则四角会露出下面画布的直角和场地边框线（同 firefly-signal） */
+    .lj-overlay {
+        border-radius: 0;
+        justify-content: safe center;
+        gap: 12px;
+        padding: 24px 20px;
+        text-align: center;
+        color: var(--lj-text);
+        background: var(--lj-overlay-bg);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
+    .lj-kicker {
+        margin: 0;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--lj-accent-text);
+    }
+
+    .lj-start-title {
+        margin: 0;
+        font-size: clamp(34px, 10vw, 46px);
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        line-height: 1.05;
+        color: var(--lj-cyan);
+        text-shadow: var(--lj-title-glow);
+    }
+
+    .lj-start-copy,
+    .lj-overlay-copy {
+        margin: 0;
+        max-width: 380px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--lj-text-dim);
+    }
+
+    .lj-howto {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin: 2px 0 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .lj-howto-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        width: 96px;
+        padding: 8px 4px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        background: var(--lj-glass);
+        border: 1px solid var(--lj-glass-line);
+    }
+
+    .lj-howto-icon {
+        width: 30px;
+        height: 30px;
+        fill: none;
+        stroke: var(--lj-cyan);
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .lj-howto-step .lj-howto-dot {
+        fill: var(--lj-pink);
+        stroke: none;
+    }
+
+    .lj-howto-step .lj-howto-warn {
+        fill: var(--lj-danger);
+        stroke: none;
+    }
+
+    .lj-legend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px 14px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 12.5px;
+        color: var(--lj-text-dim);
+    }
+
+    .lj-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .lj-swatch {
+        display: inline-block;
+        width: 13px;
+        height: 13px;
+    }
+
+    .lj-swatch--circle {
+        border: 2px solid var(--lj-pink);
+        border-radius: 50%;
+        box-shadow: 0 0 6px var(--lj-pink);
+    }
+
+    .lj-swatch--triangle {
+        background: var(--lj-orange);
+        clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    }
+
+    .lj-swatch--square {
+        border: 2px solid var(--lj-green);
+        border-radius: 2px;
+        box-shadow: 0 0 6px var(--lj-green);
+    }
+
+    .lj-btn-start {
+        min-width: 200px;
+        margin-top: 4px;
+    }
+
+    .lj-best-line,
+    .lj-controls {
+        margin: 0;
+        max-width: 380px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--lj-text-dim);
+    }
+
+    .lj-best-line {
+        font-weight: 700;
+        color: var(--lj-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .lj-start-footer {
+        width: min(100%, 380px);
+        margin-top: 2px;
+    }
+
+    .lj-overlay-title {
+        margin: 0;
+        font-size: clamp(28px, 8vw, 36px);
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        color: var(--lj-cyan);
+        text-shadow: var(--lj-title-glow);
+    }
+
+    .lj-newbest {
+        margin: 0;
+        padding: 3px 12px;
+        border-radius: 99px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        color: var(--lj-orange);
+        border: 1px solid currentcolor;
+    }
+
+    .lj-result-score {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .lj-result-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--lj-text-dim);
+    }
+
+    .lj-result-value {
+        font-size: clamp(40px, 12vw, 54px);
+        font-weight: 900;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        color: var(--lj-text);
+        text-shadow: var(--lj-title-glow);
+    }
+
+    .lj-result-line {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .lj-result-sub {
+        margin: 0;
+        font-size: 13px;
+        color: var(--lj-text-dim);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .lj-btn-row {
+        margin-top: 8px;
+    }
+
+    /* ── 页脚（首屏之下） ── */
+    .lj-footer-hint { color: var(--lj-text-dim); }
+
+    @media (width <= 380px) {
+        .lj-stat { min-width: 46px; padding: 3px 7px 4px; }
+        .lj-stat-value { font-size: 15px; }
+        .lj-heart { width: 15px; height: 15px; }
+        .lj-howto-step { width: 86px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .lj-ink-fill,
+        .lj-banner { transition: none; }
+    }
+}

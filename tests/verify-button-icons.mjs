@@ -38,6 +38,7 @@ const TARGETS = {
     'carrot-pull': ['cp-start-btn', 'cp-again-btn', 'cp-menu-btn'],
     'firefly-signal': ['fs-btn-next', 'fs-btn-retry', 'fs-btn-menu'],
     'shadow-loom': ['sl-btn-begin', 'sl-btn-next', 'sl-btn-replay', 'sl-btn-menu'],
+    'loop-jail': ['lj-btn-start', 'lj-btn-resume', 'lj-btn-restart', 'lj-btn-pause-menu', 'lj-btn-again', 'lj-btn-menu'],
     'tetris': ['restartBtn'],
     'minesweeper': ['ms-btn-again', 'ms-btn-copy', 'ms-btn-close'],
 };

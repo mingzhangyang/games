@@ -229,7 +229,12 @@ function verifyProject() {
     const expectedCssPaths = [
         ...BASELINE.cssFiles.map(file => file.path), ...featureStyles.cssPaths,
     ].sort();
-    const expectedHtmlPaths = BASELINE.htmlFiles.map(file => file.path).sort();
+    // Post-freeze games are validated as self-contained additions (feature-additions.mjs);
+    // every immutable P0 comparison below projects exactly those pages away.
+    const expectedHtmlPaths = [
+        ...BASELINE.htmlFiles.map(file => file.path), ...featureStyles.postFreezePages,
+    ].sort();
+    const frozenHtmlPaths = htmlPaths.filter(path => !featureStyles.postFreezePages.has(path));
 
     if (!sameJson(cssPaths, expectedCssPaths)) {
         errors.push('CSS source inventory changed; review source ownership in P2 without editing immutable P0.');
@@ -322,7 +327,9 @@ function verifyProject() {
         htmlSources.set(path, html);
         // Subtract only the reviewed additive link for the immutable P0 link snapshot.
         const scanned = scanHtml(path, featureStyles.stripHtml(path, html));
-        stylesheetLinks[path] = scanned.links;
+        // Inline-style debt is still counted for post-freeze pages (it must stay zero);
+        // only the frozen P0 link snapshot excludes them.
+        if (!featureStyles.postFreezePages.has(path)) stylesheetLinks[path] = scanned.links;
         actualDebt.inlineStyleRules.push(...scanned.inlineRules);
         actualDebt.inlineStyleBlocks.push(...scanned.styleBlocks);
         actualDebt.inlineStyleAttributes.push(...scanned.inlineAttributes);
@@ -486,13 +493,13 @@ function verifyProject() {
         errors,
     });
 
-    verifySemanticSnapshot(ROOT, cssPaths, htmlPaths, runtimeStyles, errors, {
+    verifySemanticSnapshot(ROOT, cssPaths, frozenHtmlPaths, runtimeStyles, errors, {
         allowedCssChanges: new Set([
             ...migrationResult.mappedCssPaths, ...familyResult.cssPaths, ...featureStyles.cssPaths,
         ]),
         stripHtml: featureStyles.stripHtml,
     });
-    verifyActivationSnapshot(ROOT, htmlPaths, auditedJavaScriptFiles(ROOT), errors, {
+    verifyActivationSnapshot(ROOT, frozenHtmlPaths, auditedJavaScriptFiles(ROOT), errors, {
         stripHtml: featureStyles.stripHtml,
     });
     verifyPluginRetirementContract(errors);

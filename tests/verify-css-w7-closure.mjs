@@ -9,6 +9,7 @@ import { parseCssText } from './lib/css/baseline-adapter.mjs';
 import { buildCssDuplicationAudit } from './lib/css/duplication-audit.mjs';
 import { discover } from './verify-all.mjs';
 import { registry } from './lib/registry.mjs';
+import { POST_FREEZE_PAGES } from './lib/css/feature-additions.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = path => readFileSync(join(ROOT, path), 'utf8');
@@ -66,11 +67,23 @@ assert.throws(() => verifyReviewedFamilies(audit, wrongDigest), /duplication dig
 
 // All current registered games must participate in the full HTML/CSS activation baseline.
 // Do not substitute a manually shortened per-game fixture for registry membership.
+// Games added after the CSS freeze are the only exception, and only when they are
+// explicitly registered as post-freeze additions (feature-additions.mjs validates them
+// as self-contained, fully layered pages instead of comparing them with P0).
 const htmlBaseline = JSON.parse(read('tests/css-layer-p0-baseline.json'));
-const expectedHtml = ['index.html', 'public/404.html', ...registry.all().map(game => game.href)].sort();
 const observedHtml = htmlBaseline.htmlFiles.map(entry => entry.path).sort();
+const registryHtml = registry.all().map(game => game.href);
+const outsideP0 = registryHtml.filter(href => !observedHtml.includes(href)).sort();
+assert.deepEqual(outsideP0, [...POST_FREEZE_PAGES].sort(),
+    'every registry game outside the P0 HTML baseline must be an explicitly registered post-freeze page');
+for (const page of POST_FREEZE_PAGES) {
+    assert.ok(registryHtml.includes(page), page + ': post-freeze page must be a registry game');
+    assert.ok(!observedHtml.includes(page), page + ': a P0 page cannot also be registered as post-freeze');
+}
+const expectedHtml = ['index.html', 'public/404.html',
+    ...registryHtml.filter(href => !POST_FREEZE_PAGES.has(href))].sort();
 assert.deepEqual(observedHtml, expectedHtml,
-    'P0 HTML activation coverage does not equal home + 404 + every registry game');
+    'P0 HTML activation coverage does not equal home + 404 + every pre-freeze registry game');
 
 // Reuse the full verification runner's actual test discovery rather than a second
 // filename filter; this includes fg-audit, placeholder-leak-check, and future tests.
@@ -128,5 +141,6 @@ for (const mutation of [
 }
 
 console.log('PASS W7 CSS closure: ' + candidateCount + ' reviewed high-return families, '
-    + registry.all().length + ' registered games in P0 activation, '
+    + (registry.all().length - POST_FREEZE_PAGES.size) + ' registered games in P0 activation + '
+    + POST_FREEZE_PAGES.size + ' post-freeze, '
     + 'no silent known-gap downgrade; mutation probes reject drift');
