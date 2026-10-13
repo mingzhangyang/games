@@ -17,6 +17,7 @@ import { registry } from '../lib/registry.mjs';
 import { checkSceneState, SCENARIOS } from '../lib/runtime-profile/scenarios.mjs';
 import { parseArgs, PRESETS, VIEWPORTS } from '../lib/runtime-profile/options.mjs';
 import { sampleWindow } from '../lib/runtime-profile/metrics.mjs';
+import { sampleWithInput, recordProfileInputPhase } from '../lib/runtime-profile/interaction.mjs';
 import { renderMarkdown, reportSummary } from '../lib/runtime-profile/report.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -152,6 +153,7 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
     const context = await browser.createBrowserContext();
     const page = await context.newPage();
     const result = { game: game.id, viewport: viewportTag, repeat, status: 'incomplete',
+        workload: scene.workload || 'default game scenario',
         startPath: null, phases: {}, limitations: [], error: null };
     const errors = [];
     page.on('pageerror', e => errors.push(String(e.message || e).split('\n')[0]));
@@ -191,8 +193,9 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
         result.startTransitionAutomationMs = scene.start.kind === 'already-active'
             ? null : Date.now() - startWall;
         result.limitations.push('Automation transition times include Puppeteer round-trips; not native input-to-paint latency');
-        result.phases.active = { status: 'measured',
-            metrics: await sampleWindow(page, client, preset.active, { sampleRaf: scene.activity !== 'discrete' }) };
+        await recordProfileInputPhase(result.phases, 'active',
+            () => sampleWithInput(page, client, scene, viewportTag,
+                () => sampleWindow(page, client, preset.active, { sampleRaf: scene.activity !== 'discrete' })));
         await assertStillActive(page, scene.active, 'active');
         if (scene.activity !== 'discrete' && (result.phases.active.metrics.rafIntervalCount || 0) < 2) {
             throw new Error('foreground active rAF probe collected fewer than two intervals');
@@ -226,8 +229,9 @@ async function runOne(browser, base, game, scene, viewportTag, repeat, preset) {
             await page.click(close);
             await waitScene(page, { owner: scene.owner, path: 'pauseOwnership.isHeld()', equals: false }, 'drawer release');
             await waitScene(page, scene.active, 'resume');
-            result.phases.resume = { status: 'measured',
-                metrics: await sampleWindow(page, client, preset.resume, { sampleRaf: scene.activity !== 'discrete' }) };
+            await recordProfileInputPhase(result.phases, 'resume',
+                () => sampleWithInput(page, client, scene, viewportTag,
+                    () => sampleWindow(page, client, preset.resume, { sampleRaf: scene.activity !== 'discrete' })));
             await assertStillActive(page, scene.active, 'resume');
         } else {
             result.phases.paused = { status: 'not-supported', reason: viewportTag === 'desktop' ? 'Drawer not measured on desktop: topbar control may be hidden' : 'No validated shared-drawer pause hook' };

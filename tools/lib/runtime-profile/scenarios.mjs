@@ -86,8 +86,10 @@ export const SCENARIOS = Object.freeze({
         ] }, activity: 'simulation',
     },
     'needle-awn': {
-        ...level('gameEngine', 'startLevel', 1),
-        ready: truthy('gameEngine', 'artReady'), activity: 'continuous',
+        owner: 'gameEngine', start: click('#na-btn-endless'), restart: call('startEndlessMode'),
+        ready: truthy('gameEngine', 'artReady'), active: truthy('gameEngine', 'isRunning()'),
+        activity: 'continuous', workload: 'endless wave survival',
+        profileInput: { kind: 'survival-lane', cadenceMs: 250 },
     },
     // Zen (the menu's meditation flight) takes no damage, so an unattended run
     // stays active through the whole active/pause/resume baseline; idle endless
@@ -102,7 +104,10 @@ export const SCENARIOS = Object.freeze({
     },
     'lumen': { ...level('lmGame'), activity: 'simulation' },
     'circuit': { ...level('ccGame'), activity: 'simulation' },
-    'silk-dew': { ...level('sdGame'), activity: 'simulation' },
+    'silk-dew': {
+        ...level('sdGame'), activity: 'simulation', workload: 'S1 held-anchor rope physics',
+        profileInput: { kind: 'held-anchor', cadenceMs: 300 },
+    },
     'bond-forge': { ...level('bfGame'), activity: 'simulation' },
     'echo-cave': { ...level('ecGame'), activity: 'simulation' },
     'maxwell-demon': { ...level('mdGame'), activity: 'simulation' },
@@ -143,6 +148,11 @@ export function validateScenarioCoverage(games = registry.all(), scenarios = SCE
         }
         if (!['continuous', 'simulation', 'discrete'].includes(spec.activity)) {
             throw new Error(`Runtime profile invalid activity class: ${id}`);
+        }
+        if (spec.profileInput && (!['held-anchor', 'survival-lane'].includes(spec.profileInput.kind)
+            || !Number.isInteger(spec.profileInput.cadenceMs) || spec.profileInput.cadenceMs < 100
+            || !spec.workload)) {
+            throw new Error(`Runtime profile invalid input contract: ${id}`);
         }
     }
     return ids;
