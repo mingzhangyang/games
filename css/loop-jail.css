@@ -330,8 +330,10 @@
        否则四角会露出下面画布的直角和场地边框线（同 firefly-signal） */
     /* Menu content can exceed the Safari visual viewport. Permit touch scrolling
        only while the start overlay is visible; active canvas stays gesture-locked. */
-    .lj-stage:has(#lj-start:not(.hidden)) {
-        touch-action: pan-y;
+    .lj-stage:has(> #lj-start:not(.hidden)) {
+        /* Shared immersive stage disables gestures during play. The menu is
+           instead in normal document flow on mobile; let the page scroll. */
+        touch-action: pan-y !important;
     }
 
     .lj-overlay {
@@ -344,12 +346,6 @@
         background: var(--lj-overlay-bg);
         backdrop-filter: blur(3px);
         -webkit-backdrop-filter: blur(3px);
-    }
-
-    .lj-overlay:not(.hidden) {
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        touch-action: pan-y;
     }
 
     .lj-kicker {

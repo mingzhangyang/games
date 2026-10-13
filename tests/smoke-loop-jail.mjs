@@ -175,12 +175,20 @@ try {
     const menuScroll = await page.evaluate(() => {
         const stage = document.getElementById('lj-stage');
         const overlay = document.getElementById('lj-start');
-        const css = getComputedStyle(stage);
-        const inner = getComputedStyle(overlay);
-        return { action: css.touchAction, overflow: inner.overflowY, scrollable: overlay.scrollHeight > overlay.clientHeight };
+        const stageStyle = getComputedStyle(stage);
+        const menuStyle = getComputedStyle(overlay);
+        return {
+            action: stageStyle.touchAction, display: stageStyle.display,
+            position: menuStyle.position, overflow: menuStyle.overflowY,
+            pageHeight: document.documentElement.scrollHeight,
+            viewportHeight: window.innerHeight,
+        };
     });
-    check(menuScroll.action.includes('pan-y') && menuScroll.overflow === 'auto',
-        '① 矮屏开始菜单允许纵向触摸滚动', JSON.stringify(menuScroll));
+    // Shared mobile menu contract expands the document rather than creating a
+    // second nested scroller. A visible scrollbar on the overlay is NOT expected.
+    check(menuScroll.action.includes('pan-y') && menuScroll.display === 'grid'
+        && menuScroll.position === 'relative' && menuScroll.overflow === 'visible',
+        '① 矮屏开始菜单遵守共享文档滚动契约', JSON.stringify(menuScroll));
 
     await page.click('#lj-btn-start');
     await sleep(150);
