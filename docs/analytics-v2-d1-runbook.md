@@ -6,12 +6,12 @@
 
 ## Data model
 
-- `Workers/migrations/analytics/0001_analytics_v2.sql` is the initial D1 schema; Phase 2 adds `0002_playing_seconds.sql`. Migration 0001 remains immutable. Apply both on a fresh database, or only the pending migration on existing Phase 1 D1.
+- `Workers/migrations/analytics/0001_analytics_v2.sql` is the initial D1 schema; Phase 2 adds `0002_playing_seconds.sql` and `0003_event_occurred_at.sql`. Existing migrations remain immutable. Apply all pending migrations on a fresh database, or only pending migrations on an existing D1.
 - `analytics_events` is an append-only ledger. Legacy writes have `version=1` and no event ID; V2 writes have UUIDv4 `event_id` and `session_id`. The unique event ID index rejects retries during the documented 45-day window. A partial unique index prevents more than one `open` per V2 session.
 - `analytics_daily` is the day/game materialized aggregate (`plays`, `finishes`, `opens`, `active_seconds`, `playing_seconds`). A SQLite `AFTER INSERT` trigger maintains it **in the event INSERT transaction**, including when simultaneous Workers ingest the same event. Duplicate events do not fire the trigger. The hourly cleanup deletes only old ledger rows, not `analytics_daily`.
 - Event deduplication is **guaranteed only within a 45-day retry window** (older retries can be accepted again). An hourly UTC Cron Trigger at minute 17 deletes up to 5,000 event-ledger rows whose UTC+8 day is more than 45 days old; it never deletes daily summaries. The ledger is a bounded-retry record, **not an indefinitely retained historical baseline**. The deletion query uses an index on `(day,id)`. If traffic grows substantially, monitor the number of expired rows and adjust the maintenance batch, rather than deleting the aggregate history.
 - The `ANALYTICS_RATE_LIMITER` Worker rate-limit binding is configured at 180 POSTs per 60 seconds per Cloudflare connecting IP per Cloudflare location. It runs before D1 ingestion; 429 drops excess traffic. Cloudflare's native counters are approximate, not a global strict rate limit, and IPs shared by multiple visitors can cause false positives. The IP is used only as an ephemeral limiter key; it is never stored in D1. This is abuse resistance, not authentication.
-- UTC+8 determines daily attribution. Legacy and old V2 events use server-receipt date; Phase 2 V2 events may supply integer UTC-millisecond `occurredAt` within plus/minus 24 hours of Worker time. These use occurrence day, including short midnight retries. A duplicate event ID never double-rolls up. Client 1-second sampling introduces up to one sample of boundary uncertainty; incorrect device clocks may have timestamps rejected.
+- UTC+8 determines daily attribution. Legacy and old V2 events use server-receipt date; Phase 2 V2 events may supply integer UTC-millisecond `occurredAt` within plus/minus 24 hours of Worker time. These use occurrence day, including short midnight retries. A duplicate event ID never double-rolls up; its original nullable `occurred_at` is persisted and compared exactly, including same-day timestamp changes, alongside the rollup day. Omitted timestamps remain distinguishable from explicitly supplied ones. Client 1-second sampling introduces up to one sample of boundary uncertainty; incorrect device clocks may have timestamps rejected.
 - PII is not stored. The UUIDs are random, scoped to the page load/event, and are not shared with other services. No usernames, IP addresses, cookies, player IDs, or user agents are collected.
 
 ## HTTP contract
@@ -75,7 +75,7 @@ npm run verify -- --jobs=2
 npx wrangler deploy -c Workers/wrangler-games-analytics.jsonc --dry-run
 ```
 
-`verify:analytics` executes the real SQL migration and event HTTP handler with Node 22's embedded SQLite, and checks legacy shapes, UTC+8 boundaries, concurrent/replayed writes, triggers, constraints, request validation, CORS, and independent real Chromium lifecycle verification. Full repo CI exercises this checker, rollout compatibility checks, representative real-game browser lifecycle checks and a separate Analytics Worker dry-run alongside the existing suite. These dry runs do not deploy to production.
+`verify:analytics` executes the real SQL migration and event HTTP handler with Node 22's embedded SQLite, and checks legacy shapes, UTC+8 boundaries, concurrent/replayed writes, triggers, constraints, request validation, CORS, ; independent real Chromium lifecycle verification runs through the full `npm run verify` command. Full repo CI exercises this checker, rollout compatibility checks, representative real-game browser lifecycle checks and a separate Analytics Worker dry-run alongside the existing suite. These dry runs do not deploy to production.
 
 A local D1 development run (writes to a **local** database only):
 
@@ -106,7 +106,7 @@ curl -s 'http://127.0.0.1:8787/stats?v=2'
 
    The initial count should be `0`. Inspect `analytics_daily` likewise. If this fails, fix the new database/config and **do not publish**.
 
-   **If Phase 1 D1 is already running:** do not recreate or wipe it. Apply the same remote migration command to run only pending migration 0002, verify the new `analytics_daily.playing_seconds` column, then deploy the Phase 2 Worker. The migration must run before deployment. None of these remote steps run in CI.
+   **If Phase 1 D1 is already running:** do not recreate or wipe it. Apply the same remote migration command to run pending migrations 0002 and 0003 as needed, verify the new `analytics_daily.playing_seconds` and `analytics_events.occurred_at` columns, then deploy the Phase 2 Worker. The migration must run before deployment. None of these remote steps run in CI.
 
 3. **Publish the standalone statistics Worker manually**, only after migration succeeds:
 

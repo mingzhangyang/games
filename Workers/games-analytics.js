@@ -119,27 +119,29 @@ function validateEvent(data) {
 function sameEvent(row, event) {
   return row && row.game === event.game && row.kind === event.kind
     && row.session_id === event.sessionId && Number(row.active_seconds) === event.seconds
-    && Number(row.playing_seconds) === event.playingSeconds;
+    && Number(row.playing_seconds) === event.playingSeconds
+    && (row.occurred_at === null ? null : Number(row.occurred_at)) === event.occurredAt
+    && row.day === dayKeyUTC8(event.occurredAt ?? Date.now());
 }
 
 async function addEvent(db, event, day) {
   // The AFTER INSERT trigger updates analytics_daily in the SAME SQLite transaction.
   // D1's unique indexes serialize racing V2 retries; there is no read/modify/write step.
   const result = await db.prepare(`
-    INSERT INTO analytics_events (version, event_id, session_id, day, game, kind, active_seconds, playing_seconds)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING
-  `).bind(event.version, event.eventId, event.sessionId, day, event.game, event.kind, event.seconds, event.playingSeconds).run();
+    INSERT INTO analytics_events (version, event_id, session_id, day, game, kind, active_seconds, playing_seconds, occurred_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING
+  `).bind(event.version, event.eventId, event.sessionId, day, event.game, event.kind, event.seconds, event.playingSeconds, event.occurredAt ?? null).run();
   if (event.version === 1) return { ok: true };
   if (result.meta?.changes === 1) return { ok: true, duplicate: false };
   if (result.meta?.changes !== 0) throw new Error('Unexpected D1 write result');
 
   let row = await db.prepare(`
-    SELECT event_id, game, kind, session_id, active_seconds, playing_seconds FROM analytics_events WHERE event_id = ?
+    SELECT event_id, game, kind, session_id, active_seconds, playing_seconds, occurred_at, day FROM analytics_events WHERE event_id = ?
   `).bind(event.eventId).first();
   // A session may report one open even if a buggy client changes the event ID.
   if (!row && event.kind === 'open') {
     row = await db.prepare(`
-      SELECT event_id, game, kind, session_id, active_seconds, playing_seconds
+      SELECT event_id, game, kind, session_id, active_seconds, playing_seconds, occurred_at, day
       FROM analytics_events WHERE session_id = ? AND version = 2 AND kind = 'open'
     `).bind(event.sessionId).first();
   }

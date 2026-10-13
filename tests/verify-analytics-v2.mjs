@@ -10,6 +10,7 @@ const sql = readFileSync(new URL('../Workers/migrations/analytics/0001_analytics
 const db = new DatabaseSync(':memory:');
 db.exec(sql);
 db.exec(readFileSync(new URL('../Workers/migrations/analytics/0002_playing_seconds.sql', import.meta.url), 'utf8'));
+db.exec(readFileSync(new URL('../Workers/migrations/analytics/0003_event_occurred_at.sql', import.meta.url), 'utf8'));
 const rateKeys = [];
 const limiter = { async limit({ key }) { rateKeys.push(key); return { success: true }; } };
 const binding = {
@@ -115,6 +116,13 @@ const nextDay = { ...fixture('active', 903, 5),
 assert.equal((await send(priorDay)).status, 201);
 assert.equal((await send(nextDay)).status, 201);
 assert.equal((await send(priorDay)).status, 200);
+assert.equal((await send({ ...priorDay, occurredAt: priorDay.occurredAt + 1000 })).status, 409);
+assert.equal((await send({ ...priorDay, occurredAt: nextDay.occurredAt })).status, 409);
+assert.equal((await send({ ...priorDay, occurredAt: undefined })).status, 400);
+const { occurredAt: omittedTimestamp, ...withoutTimestamp } = priorDay;
+assert.equal((await send(withoutTimestamp)).status, 409);
+assert.equal(db.prepare('SELECT occurred_at FROM analytics_events WHERE event_id = ?').get(priorDay.eventId).occurred_at, priorDay.occurredAt);
+assert.equal((await send({ ...open, occurredAt: priorDay.occurredAt })).status, 409);
 assert.equal((await result('?v=2&day=20261013')).games.tetris.playingSeconds, 10);
 assert.equal((await result('?v=2&day=20261014')).games.tetris.playingSeconds, 4);
 assert.equal((await send({ ...priorDay, occurredAt: Date.parse('2026-09-01') })).status, 400);
