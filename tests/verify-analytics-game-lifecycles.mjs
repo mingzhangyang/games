@@ -12,9 +12,24 @@ try {
     const remoteRequests = [];
     await page.setRequestInterception(true);
     page.on('request', request => {
-        if (request.url().includes('games-analytics.orangely.workers.dev')) {
-            remoteRequests.push(request.url());
+        const url = request.url();
+        if (url.includes('games-analytics.orangely.workers.dev')) {
+            remoteRequests.push(url);
             return request.abort();
+        }
+        // A real win/finish may submit leaderboard or Word Daily stats.
+        // Mock those Workers too: synthetic browser runs must never write production data.
+        if (/^https:\/\/(?:game-scores|word-daily-stats)\.orangely\.workers\.dev\//.test(url)) {
+            return request.respond({
+                status: request.method() === 'OPTIONS' ? 204 : 200,
+                headers: {
+                    'Access-Control-Allow-Origin': new URL(BASE).origin,
+                    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                },
+                contentType: 'application/json',
+                body: request.method() === 'GET' ? '[]' : '',
+            });
         }
         return request.continue();
     });
