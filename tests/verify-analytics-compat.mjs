@@ -2,6 +2,7 @@
 // Isolated script execution: no Cloudflare credentials, browser network or production writes.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { setImmediate } from 'node:timers';
 import vm from 'node:vm';
 
 const code = readFileSync(new URL('../public/analytics.js', import.meta.url), 'utf8');
