@@ -188,7 +188,7 @@ try {
     // second nested scroller. A visible scrollbar on the overlay is NOT expected.
     check(menuScroll.action.includes('pan-y') && menuScroll.display === 'grid'
         && menuScroll.position === 'relative' && menuScroll.overflow === 'visible',
-    '① 矮屏开始菜单遵守共享文档滚动契约', JSON.stringify(menuScroll));
+        '① 矮屏开始菜单遵守共享文档滚动契约', JSON.stringify(menuScroll));
 
     await page.click('#lj-btn-start');
     await sleep(150);
