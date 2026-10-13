@@ -209,7 +209,20 @@ try {
     await sleep(800); // 等出生显形结束
     await freeze(page);
     let target = await pickTarget(page);
+    // The menu is document-flow scrollable on short mobile screens. Clicking Start
+    // can leave the canvas partly below the viewport; an offscreen synthetic
+    // touchscreen move is lost (pointercancel), leaving an unclosed ring. Keep
+    // the actual in-world ring visible before sending real touch input.
+    await page.evaluate(t => {
+        const center = window.ljGame.renderer.clientFromWorld(t.x, t.y);
+        window.scrollBy({ top: center.y - window.innerHeight / 2, behavior: 'instant' });
+    }, target);
     let path = await circlePath(page, target);
+    const ringVisible = await page.evaluate(points => points.every(([x, y]) =>
+        x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight), path);
+    check(ringVisible, '③ 画环全路径位于触屏视口内', JSON.stringify({
+        first: path[0], viewport: [390, 664], scroll: await page.evaluate(() => window.scrollY),
+    }));
     const before = await snap(page);
     const scrollBefore = await page.evaluate(() => window.scrollY);
     await page.touchscreen.touchStart(...path[0]);
