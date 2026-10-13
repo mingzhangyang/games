@@ -426,9 +426,10 @@ function handleCanvasClick(e) {
 }
 
 function makeMove(r, c) {
-    moveCount++;
-    track('gomoku', 'play');
     board[r][c] = currentPlayer;
+    moveCount++;
+    // A play starts with the first committed stone, not every move (including AI replies).
+    if (moveCount === 1) track('gomoku', 'play');
     lastMove = { r, c };
     sfx.play('place');
     drawBoard();

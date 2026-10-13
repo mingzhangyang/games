@@ -25,6 +25,19 @@ const page = await browser.newPage();
 const pageErrors = [];
 page.on('pageerror', e => pageErrors.push((e.stack || e.message).split('\n').slice(0, 4).join('\n    ')));
 
+// Capture the real hubTrack -> sendBeacon path without sending anything to the live Worker.
+// Runs before page scripts, so startup events and every reset are visible to the test.
+await page.evaluateOnNewDocument(() => {
+    window.__gomokuAnalyticsEvents = [];
+    navigator.sendBeacon = (url, payload) => {
+        if (url !== 'https://games-analytics.orangely.workers.dev/event') return false;
+        window.__gomokuAnalyticsEvents.push(JSON.parse(payload));
+        return true;
+    };
+});
+const countEvent = event => page.evaluate(name =>
+    window.__gomokuAnalyticsEvents.filter(e => e.game === 'gomoku' && e.event === name).length, event);
+
 for (const vp of [
     { name: '移动端 390×844', width: 390, height: 844, deviceScaleFactor: 2 },
     { name: '桌面端 1280×900', width: 1280, height: 900, deviceScaleFactor: 1 },
@@ -33,6 +46,7 @@ for (const vp of [
     await page.setViewport(vp);
     await page.goto(BASE + '/gomoku.html', { waitUntil: 'networkidle2' });
     await new Promise(r => setTimeout(r, 800));
+    check(await countEvent('play') === 0, '仅打开五子棋页面不计入游玩');
 
     const info = await page.evaluate(() => {
         const c = document.getElementById('gameBoard');
@@ -63,6 +77,7 @@ for (const vp of [
     await new Promise(r => setTimeout(r, 400));
     const mode = await page.evaluate(() => document.getElementById('modeText').textContent);
     check(/2 Players|双人/.test(mode), '模式可切到双人对战', mode);
+    check(await countEvent('play') === 0, '切换模式、重置空棋盘不计入游玩');
 
     const geom = await page.evaluate(() => {
         const c = document.getElementById('gameBoard');
@@ -94,6 +109,9 @@ for (const vp of [
     await new Promise(r => setTimeout(r, 300));
     const afterOne = await countStones();
     check(afterOne.dark > before.dark, '点击棋盘能落子', `dark ${before.dark} → ${afterOne.dark}`);
+    check(await countEvent('play') === 1, '首次合法落子只上报一次 play');
+    await page.mouse.click(p0.x, p0.y);
+    check(await countEvent('play') === 1, '重复点击已占用交叉点不会上报 play');
 
     // 连点成五连（双人模式）。黑先手已落 (7,7)，之后每一对里白先、黑后：
     //   白 (8,8)~(8,11) 陪跑 4 子，黑 (7,8)~(7,11) 成五连。
@@ -107,6 +125,8 @@ for (const vp of [
     const modalShown = await page.evaluate(() => getComputedStyle(document.getElementById('gameOverModal')).display !== 'none');
     const title = await page.evaluate(() => document.getElementById('modalMessage').textContent);
     check(modalShown, '五连即判胜并弹出结算面板', '文案 "' + title + '"');
+    check(await countEvent('play') === 1, '多次落子仍只算一局 play');
+    check(await countEvent('finish') === 1, '完成一局只上报一次 finish');
 
     // 结算态：状态栏不能还停在「该谁走棋」（面板写「黑方获胜」而状态栏写「黑方走棋」自相矛盾）
     const endStatus = await page.evaluate(() => document.getElementById('statusText').textContent.trim());
@@ -129,6 +149,9 @@ for (const vp of [
         await new Promise(r => setTimeout(r, 400));
         const restarted = await countStones();
         check(restarted.dark + restarted.light === 0, '「再来一局」清空棋盘', `dark=${restarted.dark} light=${restarted.light}`);
+        check(await countEvent('play') === 1, '结束后点「再来一局」不提前上报');
+        await page.mouse.click(p0.x, p0.y);
+        check(await countEvent('play') === 2, '新一局首次落子再次上报一次 play');
     } else {
         check(false, '「再来一局」清空棋盘', '结算面板未出现，跳过');
     }
@@ -153,6 +176,15 @@ const enBoot = await page.evaluate(() => ({
 check(/^en/.test(enBoot.htmlLang), '预置 en 后 boot：<html lang> 以 en 开头', enBoot.htmlLang);
 check(enBoot.homeAria === 'Home', '预置 en 后 boot：顶栏 Home 文案为英文', String(enBoot.homeAria));
 check(!enBoot.langBtn, '预置 en 后 boot：仍无语言钮', String(enBoot.langBtn));
+
+// PvE: the human's first move starts a session; the computer's reply must not create another.
+check(await countEvent('play') === 0, '人机模式：初次加载不计游玩');
+await page.click('#restartBtn');
+check(await countEvent('play') === 0, '人机模式：未落子重开不计游玩');
+await page.click('#gameBoard');
+check(await countEvent('play') === 1, '人机模式：玩家首手上报一次 play');
+await page.waitForFunction(() => document.getElementById('statusText').textContent.trim() === "Black's Turn", { timeout: 10000 });
+check(await countEvent('play') === 1, '人机模式：电脑回手不重复上报 play');
 
 await browser.close();
 console.log('\n' + (fails.length ? '失败 ' + fails.length + ' 项:\n - ' + fails.join('\n - ') : '全部通过'));
