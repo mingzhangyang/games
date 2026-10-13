@@ -348,6 +348,13 @@ export class LoopJailSim {
         for (const m of this.monsters) {
             move(m);
             if (m.target) move(m.target);
+            if (m.state === 'dash') {
+                // Velocity is a world-space vector; transform it with the
+                // position/target so a locked dash stays on its trajectory.
+                m.vx *= sx;
+                m.vy *= sy;
+                m.angle = Math.atan2(m.vy, m.vx);
+            }
         }
         for (const s of this.strokes) s.points.forEach(move);
         this.powerups.forEach(move);

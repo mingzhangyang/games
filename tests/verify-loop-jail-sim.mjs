@@ -486,6 +486,23 @@ console.log('\n▶ ⑨ 接着画 / 转屏 / 确定性');
     ok(sim.resize(1.6) === false, '同一宽高比不重复缩放');
 }
 {
+    const { sim, list } = fixture([{ type: 'triangle', x: 120, y: 160 }]);
+    const tri = list[0];
+    tri.state = 'dash';
+    tri.vx = 300;
+    tri.vy = 180;
+    tri.target = { x: 320, y: 280 };
+    const old = { w: sim.w, h: sim.h, vx: tri.vx, vy: tri.vy };
+    sim.resize(1.6);
+    const sx = sim.w / old.w, sy = sim.h / old.h;
+    ok(near(tri.vx, old.vx * sx) && near(tri.vy, old.vy * sy),
+        '转屏：正在冲刺的三角形速度按坐标比例缩放');
+    ok(near(tri.angle, Math.atan2(tri.vy, tri.vx)),
+        '转屏：冲刺朝向跟随新速度向量');
+    ok(near(tri.target.x, 320 * sx) && near(tri.target.y, 280 * sy),
+        '转屏：冲刺目标与速度保持同一坐标系');
+}
+{
     const script = seed => {
         const sim = new LoopJailSim({ seed, aspect: 0.56 });
         for (let i = 0; i < 60 * 40; i++) {

@@ -92,6 +92,7 @@ export const MOBILE_FIT_SELECTORS = new Set([
     '.perks',
     '.cp-overlay',
     '.td-overlay',
+    '.lj-stage:has(> #lj-start:not(.hidden))',
 ]);
 
 export function stripMobileFitLink(page, html, errors) {
