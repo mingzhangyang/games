@@ -1,3 +1,5 @@
+import { adminWeekly, recoverWeekly } from './analytics-weekly-delivery.js';
+
 // Games Analytics V2: D1 is the sole source of truth. No KV reads or writes.
 // Legacy: POST /event {game,event:'play'|'finish'}; GET /stats?day=YYYYMMDD|scope=total.
 // V2: POST /event {v:2,game,event,eventId,sessionId[,seconds,playingSeconds,occurredAt]}; GET /stats?v=2.
@@ -10,6 +12,12 @@ const ALLOWED_ORIGINS = ['https://games.orangely.xyz', 'https://game.orangely.xy
 const GAMES = ['math-rain', 'tetris', 'tank-battle', 'gomoku', 'planet-merge', 'word-daily', 'hoop-shot', 'minesweeper', 'reversi', 'tower-defense', 'gravity-slingshot', 'needle-awn', 'sword-flight', 'lumen', 'circuit', 'silk-dew', 'bond-forge', 'echo-cave', 'maxwell-demon', 'crystal-bloom', 'flame-verse', 'ripple-duet', 'carrot-pull', 'firefly-signal', 'shadow-loom', 'loop-jail', 'minecraft', 'dots', 'stack'];
 // registry:end games-analytics
 
+// registry:begin analytics-report-names
+const GAME_NAMES = {"math-rain":"Math Rain","tetris":"Tetris","tank-battle":"Tank Battle","gomoku":"Gomoku","planet-merge":"Planet Merge","word-daily":"Word Daily","hoop-shot":"Hoop Shot","minesweeper":"Minesweeper","reversi":"Reversi","tower-defense":"Neon TD","gravity-slingshot":"Gravity Slingshot","needle-awn":"Pinpoint Clash","sword-flight":"Sword Flight","lumen":"Lumen","circuit":"Circuit","silk-dew":"Silkfall","bond-forge":"Bond Forge","echo-cave":"Echo Cave","maxwell-demon":"Maxwell's Demon","crystal-bloom":"Crystal Bloom","flame-verse":"Flame Verse","ripple-duet":"Ripple Duet","carrot-pull":"Carrot Pull","firefly-signal":"Firefly Signal","shadow-loom":"Shadow Loom","loop-jail":"Loop Jail","minecraft":"2D Minecraft","dots":"Dots and Boxes","stack":"The Stack"};
+const STANDALONE_GAMES = ["minecraft","dots","stack"];
+// registry:end analytics-report-names
+
+
 const MAX_BODY_BYTES = 1024;
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const V2_KINDS = new Set(['open', 'active', 'play', 'finish']);
@@ -17,6 +25,9 @@ const DAY_MILLISECONDS = 86400000;
 // Event IDs are retry-idempotent for 45 days. Rollups live indefinitely.
 const RETRY_WINDOW_DAYS = 45;
 const CLEANUP_BATCH_ROWS = 5000;
+const CLEANUP_BATCHES = 10;
+const CLEANUP_CRON = '17 19 * * *'; // 03:17 UTC+8 daily
+const WEEKLY_CRON = '0 1 * * MON'; // 09:00 UTC+8 Mondays
 
 export function dayKeyUTC8(timestamp = Date.now()) {
   const d = new Date(timestamp + 8 * 3600000);
@@ -159,17 +170,27 @@ async function isStoredDuplicate(db, event) {
   return sameEvent(row, event);
 }
 
-// Process at most one bounded batch per hourly cron. The day/game rollup is not deleted.
+// Once per day, bounded at 50,000 rows; never touch analytics_daily.
+// A backlog check makes capacity problems visible instead of silently accumulating.
 async function pruneEvents(db, timestamp = Date.now()) {
   const oldestKeptDay = dayKeyUTC8(timestamp - RETRY_WINDOW_DAYS * DAY_MILLISECONDS);
-  const result = await db.prepare(`
-    DELETE FROM analytics_events
-    WHERE id IN (
-      SELECT id FROM analytics_events WHERE day < ?
-      ORDER BY day, id LIMIT ?
-    )
-  `).bind(oldestKeptDay, CLEANUP_BATCH_ROWS).run();
-  return Number(result.meta?.changes ?? 0);
+  let removed = 0;
+  for (let i = 0; i < CLEANUP_BATCHES; i++) {
+    const result = await db.prepare(`
+      DELETE FROM analytics_events
+      WHERE id IN (
+        SELECT id FROM analytics_events WHERE day < ?
+        ORDER BY day, id LIMIT ?
+      )
+    `).bind(oldestKeptDay, CLEANUP_BATCH_ROWS).run();
+    const count = Number(result.meta?.changes ?? 0);
+    removed += count;
+    if (count < CLEANUP_BATCH_ROWS) break;
+  }
+  const remaining = await db.prepare(`
+    SELECT id FROM analytics_events WHERE day < ? ORDER BY day, id LIMIT 1
+  `).bind(oldestKeptDay).first();
+  return { removed, backlog: Boolean(remaining) };
 }
 
 const DAY_SQL = `SELECT game, plays AS p, finishes AS f, opens, active_seconds, playing_seconds
@@ -233,6 +254,14 @@ export default {
   async fetch(request, env) {
     const cors = corsHeaders(request);
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/admin/weekly/')) {
+      try {
+        return await adminWeekly(request, env, GAME_NAMES, STANDALONE_GAMES);
+      } catch (error) {
+        console.error('Analytics weekly admin failure', error);
+        return reply('Internal Error', 500, {});
+      }
+    }
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (!((request.method === 'POST' && url.pathname === '/event')
       || (request.method === 'GET' && url.pathname === '/stats'))) return reply('Not Found', 404, cors);
@@ -263,9 +292,20 @@ export default {
       return reply('Internal Error', 500, cors);
     }
   },
-  async scheduled(_controller, env) {
+  async scheduled(controller, env) {
     if (!env?.ANALYTICS_DB) throw new Error('Analytics D1 binding unavailable');
-    const removed = await pruneEvents(env.ANALYTICS_DB);
-    console.log('Analytics dedupe retention: removed', removed);
+    // Fall back to maintenance only for older local test callers without a cron.
+    const cron = controller?.cron ?? CLEANUP_CRON;
+    const timestamp = controller?.scheduledTime ?? Date.now();
+    if (cron === CLEANUP_CRON) {
+      const cleanup = await pruneEvents(env.ANALYTICS_DB, timestamp);
+      console.log('Analytics dedupe cleanup', cleanup);
+      if (cleanup.backlog) console.warn('Analytics dedupe cleanup backlog remains');
+      await recoverWeekly(env, GAME_NAMES, STANDALONE_GAMES, timestamp);
+    } else if (cron === WEEKLY_CRON) {
+      await recoverWeekly(env, GAME_NAMES, STANDALONE_GAMES, timestamp, { includeCurrent: true });
+    } else {
+      throw new Error('Unknown Analytics Cron Trigger');
+    }
   },
 };

@@ -355,6 +355,24 @@ function analyticsTransform(src) {
     });
 }
 
+// Canonical report labels are registry-generated, including standalone games.
+function analyticsReportNamesContent() {
+    const all = [...GAMES, ...(SITE.home.externalGames || [])];
+    const names = Object.fromEntries(all.map(g => [g.id, g.name.en]));
+    const standalone = (SITE.home.externalGames || []).map(g => g.id);
+    return `const GAME_NAMES = ${JSON.stringify(names)};\nconst STANDALONE_GAMES = ${JSON.stringify(standalone)};`;
+}
+function analyticsReportNamesTransform(src) {
+    return applyRegion(src, 'analytics-report-names', analyticsReportNamesContent(), (s, body) => {
+        const end = '// registry:end games-analytics';
+        const index = s.indexOf(end);
+        if (index < 0) return null;
+        const after = index + end.length;
+        return s.slice(0, after) + `\n\n// registry:begin analytics-report-names\n${body}\n// registry:end analytics-report-names\n`
+            + s.slice(after);
+    });
+}
+
 // ---------- README.md ----------
 function readmeContent() {
     return GAMES.map(g => `- ${g.name.en}（${g.name.zh}）`).join('\n');
@@ -407,7 +425,7 @@ processFile('public/manifest.json', [manifestTransform]);
 processFile('src/platform/more-games.js', [moreGamesTransform]);
 processFile('vite.config.js', [viteTransform]);
 processFile('Workers/game-scores.js', [scoresTransform]);
-processFile('Workers/games-analytics.js', [analyticsOriginsTransform, analyticsTransform]);
+processFile('Workers/games-analytics.js', [analyticsOriginsTransform, analyticsTransform, analyticsReportNamesTransform]);
 processFile('public/analytics.js', [analyticsClientTransform]);
 processFile('README.md', [readmeTransform]);
 
