@@ -118,7 +118,9 @@ assert.equal((await send(nextDay)).status, 201);
 assert.equal((await send(priorDay)).status, 200);
 assert.equal((await send({ ...priorDay, occurredAt: priorDay.occurredAt + 1000 })).status, 409);
 assert.equal((await send({ ...priorDay, occurredAt: nextDay.occurredAt })).status, 409);
-assert.equal((await send({ ...priorDay, occurredAt: undefined })).status, 400);
+// A present-but-null timestamp is malformed (400); omitting it is valid JSON
+// and must conflict (409) with the earlier immutable timestamped event ID.
+assert.equal((await send({ ...priorDay, occurredAt: null })).status, 400);
 const { occurredAt: omittedTimestamp, ...withoutTimestamp } = priorDay;
 assert.equal((await send(withoutTimestamp)).status, 409);
 assert.equal(db.prepare('SELECT occurred_at FROM analytics_events WHERE event_id = ?').get(priorDay.eventId).occurred_at, priorDay.occurredAt);
