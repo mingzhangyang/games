@@ -170,7 +170,9 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 | `tools/generators/gen-from-registry.mjs` | `homeCardLine()` 输出整卡 `<a>` + 文字胶囊；`homeCardsContent()` 按 `categories` 分组输出分区；zh map 增加分类名；P3 为新上线横排写出 `public/assets/seo/` 里存在的 OG 图**字面** URL（不存在则不输出，§4.4） |
 | `index.html` | 只改 gen 区域外的骨架：筛选条、最近玩过 / 新上线容器、Perks 压缩 |
 | `js/index-page.js` | 筛选 + hash 同步、`site_recent` 记录与渲染、新上线判定、「更多每日」计数；`applyLanguage` 去掉 `.play-btn` / `.card-badge`，改为本地化 `.card-chip`，增加分类标题；`markDarkOnlyCards()` 改挂到 `.card-header`（原来依赖 `.play-btn` 定位）；`injectStructuredData` 改读 `a.game-card[href]` |
-| `css/index.css` | 分区标题、筛选条、≥1280px 4 列、≤600px 单列横条、文字胶囊、横排；删除 `.card-badge*`、`.play-btn` |
+| `css/home-cards.css`（新） | 分区标题、筛选条、≥1280px 4 列、≤600px 单列横条、文字胶囊、横排。**`css/index.css` 不改**：它属于 CSS P0/P5 冻结页，`verify-css-debt` 禁止新增 / 删除 / 改写其中的 unlayered 规则（规则数必须等于 P0 + 已登记迁移）。做法同 `css/stage-status.css`：附加样式表全部写在 `@layer contracts`，只在要压过冻结声明时用 `!important`，链接放在 `index.css` 之后、`mobile-fit.css` 之前 |
+| `tests/lib/css/feature-additions.mjs` | 登记 home-cards 附加样式表：`HOME_CARDS_SELECTORS` 精确选择器白名单、唯一规范 `<link>` 与顺序校验、并入 `reviewFeatureStyles` 的 `cssPaths` / `stripHtml`；`tests/verify-css-feature-additions.mjs` 补负例。P2 / P3 新增的选择器逐条追加 |
+| `css/index.css` 里的死规则 | `.card-badge*`、`.play-btn*` 在 P1 后无 DOM 使用者。可另起 `kind: "retire"` 事务（`tests/css-layer-migrations/rules/`，见 `docs/architecture-v2-css-layer-migration-plan-2026-09.md` P2-K）清理，不和功能改动混在同一 PR |
 | `tests/css-layer-migrations/rules/` + `tests/css-layer-migration-state.json` | `tests/css-layer-p0-baseline.json` 是不可改的 P0 快照，且记录了 `.card-badge*` / `.play-btn` 规则；P1 删除这些规则时须登记 retire 映射（先例 `p2k-retire-*`），新增规则同样走迁移契约。由 `verify-css-debt` / `verify-css-migration-contract` 校验，不能改基线 |
 | `public/icons/home-icons.svg` | P1 删除不再使用的 `bookmark` symbol（与 `verify-index-cards` 的「已删除」断言对应） |
 | `public/assets/seo/` | P3 把 10 张只在 `assets/seo/` 的 OG 图同步进来，补画 crystal-bloom / flame-verse（§4.4） |
@@ -184,7 +186,7 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 
 | 阶段 | 内容 | 解决 | 风险 |
 |---|---|---|---|
-| **P1 卡片修复** | 整卡 `<a>`、文字胶囊（先沿用 `home.badge` 数据）、手机单列横条、桌面 4 列、外站 ↗ | P-2 P-4 P-7 P-8 P-9 | 低：不改 schema、不迁移分类；registry 只动两条 `site.home.ui` 文案（删 `play`、加 `badgeExternal`） |
+| **P1 卡片修复** | 整卡 `<a>`、文字胶囊（先沿用 `home.badge` 数据）、手机单列横条、桌面 4 列、外站 ↗；样式进新附加表 `css/home-cards.css` | P-2 P-4 P-7 P-8 P-9 | 低：不改 schema、不迁移分类、不动冻结的 `index.css`；registry 只动两条 `site.home.ui` 文案（删 `play`、加 `badgeExternal`） |
 | **P2 分类** | `home.category` + `categories`、分区输出、筛选条 + hash、daily 胶囊改由 caps 派生、new 胶囊改由 `addedAt` 运行时判定（与删除 `home.badge` 同一 PR）、`home.tag` 降级 | P-1 P-3 P-5 | 中：gen 与 i18n 同步改 |
 | **P3 发现** | 最近玩过、新上线横排（复用 P2 的 `addedAt` 判定；gen 写字面图片 URL）、「更多每日」、Perks 压缩；把 10 张只在 `assets/seo/` 的 OG 图同步进 `public/assets/seo/`，补画 crystal-bloom / flame-verse | P-6 P-10 | 低 |
 | **P4 可选** | Daily Hub registry 化（`daily.doneKey`）、基于 Analytics V2 的「🔥 热门」标签 | P-6 完整版 | 中：依赖 Analytics V2 上线 |
