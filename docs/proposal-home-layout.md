@@ -47,7 +47,8 @@
 ### 3.1 原则
 
 - **一款游戏只有一个主分类**（`home.category`），决定它出现在哪个分区。
-- **能力是标签，不是分类**：每日、排行榜、双人、支持浅色从 `caps` 自动派生为功能标签，可多选、可筛选，不再手填。
+- **状态是标签，不是分类**：本方案只派生 §3.3 列出的四种标签（每日、新、外站、仅深色），来源分别是 `daily` cap、`home.addedAt`、`externalGames`、缺 `theme-light` cap；不再手填。其中只有「每日」参与筛选（§4.2）。
+  - 排行榜、双人不在本方案范围：`caps` 枚举（`games.schema.json`）没有 multiplayer 能力，排行榜也不是玩家选游戏的维度。若以后要做，需先加 cap + schema + `verify-registry` 断言，再加标签与筛选。
 - **原 `home.tag` 降级为副标签**，只做补充描述（如科学系列的「光谱」「干涉」），保留双语但不参与筛选。
 
 ### 3.2 分类表
@@ -74,7 +75,7 @@
 | 每日 Daily | `caps` 含 `daily` | 卡片小标签 + 筛选「每日挑战」 |
 | 新 New | `home.addedAt` 在 45 天内（运行时判断） | 卡片小标签 + 「新上线」横排 |
 | 外站 ↗ | `externalGames` | 卡片小标签，标题后加 ↗ |
-| 仅深色 | 无 `theme-light` cap（已有逻辑） | 浅色模式下显示，保持现状 |
+| 仅深色 | 无 `theme-light` cap（已有逻辑） | 浅色模式下显示；挂载点从页脚 Play 按钮前移到标题行（`markDarkOnlyCards()` 须同步改，否则删掉 Play 后它会提前 return，标记全部消失） |
 
 `home.badge` 字段废弃：daily 由 cap 派生，new 由日期派生，彻底消除 P-5 这类手填不一致。
 
@@ -112,11 +113,11 @@ Daily Hub（3 个固定任务 + 「更多每日 (11) ›」链接 → #cat=daily
 - 手机单列横条：标题 `white-space: nowrap; text-overflow: ellipsis`，简介 `-webkit-line-clamp: 1`。26 款站内游戏 × 72px + 分区标题 ≈ 2300px，对比现状 3062px 约降 25%；配合筛选，实际滚动更短。
 - **整卡一个 `<a class="game-card">`**（替换 `article onclick`）：去掉内部两个 `<a>`；「Play ›」按钮删除，改为卡片右侧 › 箭头（hover 时位移）。修复 P-8。
 - **徽章改为文字胶囊**：`<span class="card-chip card-chip--new">新</span>`，放在标题行尾；颜色 + 文字双编码，触屏可见。修复 P-4。
-- 外站卡：标题后加 `↗`，`<a … rel="noopener">` 并附 `aria-label` 说明「外站」。修复 P-9。
+- 外站卡：标题行加可见文字胶囊「站外 ↗ / External ↗」。整卡用 `aria-labelledby="<标题 id> <胶囊 id>"` 作为可访问名（读屏读到「点格棋 站外 ↗」），`aria-describedby` 指向简介。修复 P-9。
 
 ### 4.4 新上线横排
 
-- 数据：`home.addedAt`（`YYYY-MM-DD`），由 `index-page.js` 在运行时比较 UTC+8 今天（`src/platform/daily.js` 的 `todayKey`），45 天内为新。
+- 数据：`home.addedAt`（`YYYY-MM-DD`），由 `index-page.js` 在运行时与 UTC+8 今天比较，45 天内为新。注意格式：`src/platform/daily.js` 的 `todayKey()` 返回紧凑 `YYYYMMDD`，与 `addedAt` 同格式的是 `todayKeyDisplay()`（`YYYY-MM-DD`）；比较前统一转成 UTC 毫秒（`Date.UTC(y, m - 1, d)`）再算天数差，不要直接拿两种字符串比大小。
 - **为什么放运行时**：放在 gen 里会让 `gen --check` 的结果随日期变化（今天绿、45 天后红），违反「派生物只取决于 registry」的约束。
 - 视觉：大卡用 `assets/seo/og-<id>.svg` 作背景（已有 23/26；bond-forge / crystal-bloom / flame-verse 缺图，缺图时退回图标 + 渐变）。
 
@@ -150,20 +151,24 @@ Daily Hub（3 个固定任务 + 「更多每日 (11) ›」链接 → #cat=daily
 // externalGames[] 同样新增 category（dots → strategy，其余 → external）
 ```
 
-UI 文案新增 key（`site.home.ui`）：`filterAll`、`filterDaily`、`recentTitle`、`newTitle`、`moreDaily`、`externalLabel`。删除 `play`、`badgeDaily`、`badgeNew`（被文字胶囊取代后改名为 `chipDaily` / `chipNew`）。
+UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保留 `badgeDaily` / `badgeNew` 作为胶囊文案；P2 / P3 再新增 `filterAll`、`filterDaily`、`recentTitle`、`newTitle`、`moreDaily`。
+
+**Schema**：`games.schema.json` 的 `$defs.home` 是 `additionalProperties: false`，且目前只允许 `iconClass` / `desc` / `tag` / `badge`。P2 必须同步修改：新增 `category`（枚举，与 `site.home.categories[].key` 一致）、`rank`（number）、`addedAt`（`pattern: ^\d{4}-\d{2}-\d{2}$`），删除 `badge`。`site.home` 在 schema 里只是 `"type": "object"`，`categories` 与 `ui` 新 key 不受约束；`categories` 的合法性由 `verify-index-cards` 守住。
 
 ## 6. 文件改动清单
 
 | 文件 | 改动 |
 |---|---|
 | `games.config.json` | §5 字段；删除 `home.badge` |
+| `games.schema.json` | `$defs.home` 加 `category` / `rank` / `addedAt`，删 `badge`（§5） |
 | `tools/generators/gen-from-registry.mjs` | `homeCardLine()` 输出整卡 `<a>` + 文字胶囊；`homeCardsContent()` 按 `categories` 分组输出分区；zh map 增加分类名 |
 | `index.html` | 只改 gen 区域外的骨架：筛选条、最近玩过 / 新上线容器、Perks 压缩 |
-| `js/index-page.js` | 筛选 + hash 同步、`site_recent` 记录与渲染、新上线判定、「更多每日」计数；`applyLanguage` 去掉 `.play-btn` / `.card-badge`，增加分类标题；`injectStructuredData` 改读 `a.game-card[href]` |
+| `js/index-page.js` | 筛选 + hash 同步、`site_recent` 记录与渲染、新上线判定、「更多每日」计数；`applyLanguage` 去掉 `.play-btn` / `.card-badge`，改为本地化 `.card-chip`，增加分类标题；`markDarkOnlyCards()` 改挂到 `.card-header`（原来依赖 `.play-btn` 定位）；`injectStructuredData` 改读 `a.game-card[href]` |
 | `css/index.css` | 分区标题、筛选条、≥1280px 4 列、≤600px 单列横条、文字胶囊、横排；删除 `.card-badge*`、`.play-btn` |
-| `tests/verify-index-cards.mjs` | 新增：每款 `home.category` 必填且 ∈ `categories[].key`、`addedAt` 为合法 `YYYY-MM-DD`、无空分区、caps 含 daily ⟺ 卡片含 daily 胶囊、外站卡带 ↗ |
-| `tests/verify-index-layout.mjs` | 新增：390 / 375 / 1280 / 1440 视口列数；手机标题 `scrollWidth ≤ clientWidth`（不断词）；筛选后可见卡数 = registry 计数；整卡仅 1 个 Tab 停靠点 |
-| `tests/smoke-index.mjs` | 点击筛选、hash 往返、点击卡片后 `site_recent` 写入 |
+| `tests/verify-index-cards.mjs` | **替换**现有断言：标题链接 / Play 链接 → 整卡 `<a class="game-card" href>`；切卡片用 `</a>` 而非 `</article>`；「书签 symbol 存在」→「已删除」；新增卡片区无 `article` / `onclick` / 嵌套链接、可访问名接线。P2 再加：`home.category` 必填且 ∈ `categories[].key`、`addedAt` 合法、无空分区、caps 含 daily ⟺ daily 胶囊 |
+| `tests/verify-index-layout.mjs` | 新增：各视口列数（1440→4、1024→3、768→2、≤600→1）；≤600px 卡高 ≤80px；**不断词**单独判定（每个单词宽度 ≤ 标题盒宽，所有视口）；**不截断**只在 ≥360px 要求（`scrollWidth ≤ clientWidth`），320px 允许 §4.3 的省略号；卡片与页面不横向溢出。P2 再加筛选后可见卡数 = registry 计数 |
+| `tests/smoke-index.mjs` | **替换**现有「空文字 + 图标 + tooltip 的 `.card-badge`」断言为：胶囊可见、文案按语言切换、不压标题、不溢出卡片；卡片内无嵌套可聚焦元素。P3 再加点击筛选、hash 往返、`site_recent` 写入 |
+| `tests/verify-theme.mjs` | 「仅深色」标记的游戏 href 改从 `a.game-card` 读（标题不再是链接） |
 | `docs/traps.md` | 若踩坑再补 |
 
 ## 7. 分阶段落地
