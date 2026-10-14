@@ -80,7 +80,7 @@ npx wrangler deploy -c Workers/wrangler-games-analytics.jsonc --dry-run
 A local D1 development run (writes to a **local** database only):
 
 ```bash
-npx wrangler d1 migrations apply games-analytics-v2 -c Workers/wrangler-games-analytics.jsonc --local
+npx wrangler d1 migrations apply games -c Workers/wrangler-games-analytics.jsonc --local
 npx wrangler dev -c Workers/wrangler-games-analytics.jsonc
 # In another shell, against the LOCAL wrangler port:
 curl -s 'http://127.0.0.1:8787/stats?scope=total'
@@ -89,10 +89,12 @@ curl -s 'http://127.0.0.1:8787/stats?v=2'
 
 ## Manual production cutover — operator only
 
+> **Current production database:** `games` (D1 ID `f7ba2f62-92bc-42e4-8974-6811e026a6d1`) was created on 2026-10-14, and the SQL schema for migrations 0001, 0002 and 0003 was verified directly in D1. These changes were made through the Cloudflare Console, so Wrangler migration bookkeeping is not present. **Skip database creation and do not re-apply 0001/0002/0003 with Wrangler** to this database. The checked-in Wrangler configuration now refers to its real ID. Binding/deployment to the `games-analytics` Worker is still a separate, manual production action; verify the running Worker settings after that deployment.
+
 1. **Create a new, empty D1 database** in the intended Cloudflare account (never reuse the old KV namespace):
 
    ```bash
-   npx wrangler d1 create games-analytics-v2
+   npx wrangler d1 create games
    ```
 
    Copy the returned D1 UUID into `Workers/wrangler-games-analytics.jsonc`, replacing `00000000-0000-0000-0000-000000000000`. Do not publish with the placeholder. No KV binding remains in this config. Review and commit this config change before deploying, if needed.
@@ -100,8 +102,8 @@ curl -s 'http://127.0.0.1:8787/stats?v=2'
 2. **Apply the fresh schema to the new database**. This is a deliberate production D1 write, not run automatically by CI:
 
    ```bash
-   npx wrangler d1 migrations apply games-analytics-v2 -c Workers/wrangler-games-analytics.jsonc --remote
-   npx wrangler d1 execute games-analytics-v2 -c Workers/wrangler-games-analytics.jsonc --remote --command 'SELECT COUNT(*) AS events FROM analytics_events'
+   npx wrangler d1 migrations apply games -c Workers/wrangler-games-analytics.jsonc --remote
+   npx wrangler d1 execute games -c Workers/wrangler-games-analytics.jsonc --remote --command 'SELECT COUNT(*) AS events FROM analytics_events'
    ```
 
    The initial count should be `0`. Inspect `analytics_daily` likewise. If this fails, fix the new database/config and **do not publish**.

@@ -1,4 +1,4 @@
-// Analytics V2 — operator creates a fresh D1 and replaces the placeholder UUID.
+// Analytics V2 — production D1 database `games` (created and schema verified 2026-10-14).
 // No GAMES_ANALYTICS KV binding. This Worker is deployed MANUALLY, never by site CI.
 // See docs/analytics-v2-d1-runbook.md before any production operations.
 {
@@ -15,8 +15,8 @@
   "d1_databases": [
     {
       "binding": "ANALYTICS_DB",
-      "database_name": "games-analytics-v2",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_name": "games",
+      "database_id": "f7ba2f62-92bc-42e4-8974-6811e026a6d1",
       "migrations_dir": "migrations/analytics"
     }
   ]
