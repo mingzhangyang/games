@@ -129,6 +129,30 @@ assert.equal((await result('?v=2&day=20261013')).games.tetris.playingSeconds, 10
 assert.equal((await result('?v=2&day=20261014')).games.tetris.playingSeconds, 4);
 assert.equal((await send({ ...priorDay, occurredAt: Date.parse('2026-09-01') })).status, 400);
 
+// Phase 1 V2 supplied no occurredAt. A retry across the UTC+8 day boundary
+// must match the immutable original payload, not its new server-receipt day.
+// This covers both event-ID retries and the one-open-per-session constraint.
+const totalsBeforeMidnightRetry = await result('?v=2&scope=total');
+const originalPlayDay = db.prepare('SELECT day FROM analytics_events WHERE event_id = ?').get(play.eventId).day;
+const beforeRetryClock = Date.now;
+Date.now = () => Date.parse('2026-10-13T16:00:02Z');
+try {
+    assert.equal((await send(play)).status, 200, 'Phase 1 play retry after midnight');
+    assert.equal((await send(active)).status, 200, 'Phase 1 active retry after midnight');
+    assert.equal((await send({ ...open, eventId: fixture('open', 904).eventId })).status, 200,
+        'one open per session remains idempotent across midnight');
+    assert.equal((await send({ ...play, game: 'gomoku' })).status, 409,
+        'changing the game is still a conflict across midnight');
+    assert.equal((await send(priorDay)).status, 200,
+        'explicit occurrence timestamp remains immutable across midnight');
+    assert.equal(db.prepare('SELECT day FROM analytics_events WHERE event_id = ?').get(play.eventId).day,
+        originalPlayDay, 'retries never reassign existing rollup days');
+} finally {
+    Date.now = beforeRetryClock;
+}
+assert.deepEqual(await result('?v=2&scope=total'), totalsBeforeMidnightRetry,
+    'cross-midnight retries must not increment D1 counters');
+
 for (const bad of [
     { game: 'bogus', event: 'play' }, { game: 'tetris', event: 'open' },
     { ...open, v: 3 }, { ...active, seconds: 0 }, { ...active, seconds: 61 },

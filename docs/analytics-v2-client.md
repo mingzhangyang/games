@@ -88,7 +88,7 @@ For new external games: add the canonical origin and ID to games.config.json, ru
 
 ## Validation and manual acceptance
 
-- tests/verify-analytics-v2.mjs: Node 22 real SQLite applies migrations 0001 and 0002, exercises D1 trigger/rollups, old API shape, strict V2 validation, duplicate ID, session open uniqueness, concurrency, daily boundaries and external-origin CORS.
+- tests/verify-analytics-v2.mjs: Node 22 real SQLite applies migrations 0001, 0002 and 0003 in sequence; exercises D1 trigger/rollups, old API shape, strict V2 validation, immutable timestamp/idempotency (including Phase 1 retries across UTC+8 midnight), session open uniqueness, concurrency, daily boundaries and external-origin CORS.
 - tests/verify-analytics-browser.mjs: Chromium loads real DOM pages and a local fixture; checks refresh, duplicate script loading, play/finish, pause/resume, visibility restoration, long idle/sleep, bounded retries with immutable IDs, Worker outage and registered external ID. Network interception rejects production analytics requests.
 - tests/verify-analytics-compat.mjs: isolated browser-script tests verify KV legacy, unavailable Worker, Phase 1 D1 V2 and Phase 2 D1 V2 event payloads without production requests.
 - tests/verify-analytics-game-lifecycles.mjs: Chromium checks representative actual game runtimes for stage/daily attempts, first actions, pause, retry and completion.

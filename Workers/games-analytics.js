@@ -121,7 +121,9 @@ function sameEvent(row, event) {
     && row.session_id === event.sessionId && Number(row.active_seconds) === event.seconds
     && Number(row.playing_seconds) === event.playingSeconds
     && (row.occurred_at === null ? null : Number(row.occurred_at)) === event.occurredAt
-    && row.day === dayKeyUTC8(event.occurredAt ?? Date.now());
+    // Older V2 payloads omit occurredAt: their receipt-day is fixed at insert,
+    // not part of their immutable identity. Do not compare against retry day.
+    && (event.occurredAt === null || row.day === dayKeyUTC8(event.occurredAt));
 }
 
 async function addEvent(db, event, day) {
