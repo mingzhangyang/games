@@ -112,9 +112,9 @@
           "en": "English and Chinese — auto-detected from your browser language.",
           "zh": "英文与中文，根据浏览器语言自动切换。"
         },
-        "play": {
-          "en": "Play ›",
-          "zh": "开始游戏 ›"
+        "badgeExternal": {
+          "en": "External ↗",
+          "zh": "站外 ↗"
         }
       },
       "externalGames": [

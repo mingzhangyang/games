@@ -237,6 +237,85 @@ function reviewStageStatusStyles(root, cssPaths, htmlPaths, errors) {
 }
 
 /*
+ * Home-cards contract (docs/proposal-home-layout.md P1): each landing-page card is
+ * one <a>, status is a visible text chip, phones get single-column rows and wide
+ * desktops four columns. css/index.css stays frozen; this sheet corrects it the
+ * same way as stage-status — @layer contracts only, !important only where a frozen
+ * unlayered declaration must lose, an exact selector allowlist, and one canonical
+ * link on index.html, after index.css and before mobile-fit.
+ */
+export const HOME_CARDS_STYLESHEET = 'css/home-cards.css';
+export const HOME_CARDS_LINK = '<link rel="stylesheet" href="css/home-cards.css">';
+export const HOME_CARDS_PAGES = new Set(['index.html']);
+export const HOME_CARDS_SELECTORS = new Set([
+    ':root',
+    ':root[data-theme="light"]',
+    '.game-card',
+    '.game-card:focus-visible',
+    '.card-body',
+    '.card-icon',
+    '.card-header',
+    '.card-title',
+    '.game-card:hover .card-title',
+    '.card-desc',
+    '.card-footer',
+    '.card-chip',
+    '.card-chip--new',
+    '.card-chip--daily',
+    '.card-chip--external',
+    '.card-go',
+    '.game-card:hover .card-go',
+    '.games-section, .perks',
+    '.games-grid',
+]);
+
+export function stripHomeCardsLink(page, html, errors) {
+    const count = html.split(HOME_CARDS_LINK).length - 1;
+    const approved = HOME_CARDS_PAGES.has(page);
+    const possibleLinks = [...html.matchAll(/<link\b[^>]*home-cards\.css[^>]*>/g)].map(m => m[0]);
+    if (!approved) {
+        if (count || possibleLinks.length) errors.push(page + ': unauthorized home-cards stylesheet link');
+        return html;
+    }
+    if (count !== 1 || possibleLinks.length !== 1 || possibleLinks[0] !== HOME_CARDS_LINK) {
+        errors.push(page + ': expected exactly one canonical home-cards stylesheet link');
+        return html;
+    }
+    const current = html.indexOf(HOME_CARDS_LINK);
+    const pageCss = html.indexOf('href="css/index.css"');
+    const fit = html.indexOf(MOBILE_FIT_LINK);
+    if (pageCss < 0 || current < pageCss || fit < 0 || current > fit) {
+        errors.push(page + ': home-cards CSS must follow index.css and precede mobile-fit');
+    }
+    return html.replace(HOME_CARDS_LINK, '');
+}
+
+function reviewHomeCardsStyles(root, cssPaths, htmlPaths, errors) {
+    if (!cssPaths.includes(HOME_CARDS_STYLESHEET)) {
+        errors.push('Reviewed home-cards stylesheet is missing');
+    } else {
+        const css = readFileSync(join(root, HOME_CARDS_STYLESHEET), 'utf8');
+        const parsed = parseCssText(css, HOME_CARDS_STYLESHEET);
+        if (!parsed.rules.length || parsed.rules.some(rule => rule.layer !== 'contracts')) {
+            errors.push('Home-cards stylesheet must contain only rules owned by @layer contracts');
+        }
+        if ((parsed.specialAtRules || []).length || parsed.keyframes.length) {
+            errors.push('Home-cards feature CSS must not add special at-rules or keyframes');
+        }
+        const unknown = parsed.rules.map(rule => rule.selector).filter(selector => !HOME_CARDS_SELECTORS.has(selector));
+        if (unknown.length) {
+            errors.push('Home-cards feature CSS targets unreviewed selectors: ' + JSON.stringify(unknown));
+        }
+    }
+    for (const page of HOME_CARDS_PAGES) {
+        if (!htmlPaths.includes(page)) errors.push('Registered home-cards page missing: ' + page);
+    }
+    for (const page of htmlPaths) {
+        stripHomeCardsLink(page, readFileSync(join(root, page), 'utf8'), errors);
+    }
+}
+
+/*
  * Games added after the immutable CSS P0/P5 freeze. They have no historical
  * snapshot to project back onto, so instead of being compared with P0 they are
  * admitted only as fully-layered, self-contained additive pages:
@@ -418,16 +497,20 @@ export function reviewFeatureStyles(root, cssPaths, htmlPaths, errors) {
     reviewScoreboardStyles(root, cssPaths, htmlPaths, errors);
     reviewMobileFitStyles(root, cssPaths, htmlPaths, errors);
     reviewStageStatusStyles(root, cssPaths, htmlPaths, errors);
+    reviewHomeCardsStyles(root, cssPaths, htmlPaths, errors);
     reviewPostFreezeGames(root, cssPaths, htmlPaths, errors);
     return {
         cssPaths: new Set([FEATURE_STYLESHEET, MOBILE_FIT_STYLESHEET, STAGE_STATUS_STYLESHEET,
-            ...POST_FREEZE_GAMES.map(game => game.stylesheet)]),
+            HOME_CARDS_STYLESHEET, ...POST_FREEZE_GAMES.map(game => game.stylesheet)]),
         postFreezePages: POST_FREEZE_PAGES,
         stripHtml: (page, html) => {
             const withoutScoreboard = stripFeatureLink(page, html, []);
-            const withoutStatus = withoutScoreboard.includes(STAGE_STATUS_LINK)
+            const withoutStageStatus = withoutScoreboard.includes(STAGE_STATUS_LINK)
                 ? stripStageStatusLink(page, withoutScoreboard, [])
                 : withoutScoreboard;
+            const withoutStatus = withoutStageStatus.includes(HOME_CARDS_LINK)
+                ? stripHomeCardsLink(page, withoutStageStatus, [])
+                : withoutStageStatus;
             return withoutStatus.includes(MOBILE_FIT_LINK)
                 ? stripMobileFitLink(page, withoutStatus, [])
                 : withoutStatus;

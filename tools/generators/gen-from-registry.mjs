@@ -73,11 +73,15 @@ function homeCardLine(g, external = false) {
     const home = external ? g : g.home;
     const prefix = external ? id : homeDomPrefix(id);
     const darkOnly = !external && !(g.caps || []).includes('theme-light');
-    const badge = home.badge;
-    const badgeHtml = badge
-        ? `<span class="card-badge card-badge--${badge}" data-tooltip="${badge === 'daily' ? 'Daily' : 'New'}" aria-label="${badge === 'daily' ? 'Daily' : 'New'}" role="img"><svg viewBox="0 0 24 24" width="24" height="28" aria-hidden="true"><use href="/icons/home-icons.svg#bookmark"></use></svg></span>`
-        : '';
-    return `<article class="game-card" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''} onclick="location.href='${esc(href)}'">${badgeHtml}<div class="card-body"><div class="card-header"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><a class="card-title" href="${esc(href)}" id="${prefix}-name">${esc(name.en)}</a></div><p class="card-desc" id="${prefix}-desc">${esc(home.desc.en)}</p><div class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span><a class="play-btn" href="${esc(href)}" id="${prefix}-play">${esc(SITE.home.ui.play.en)}</a></div></div></article>`;
+    const ui = SITE.home.ui;
+    // 整卡一个 <a>：唯一 Tab 停靠点，可中键 / 新标签打开。状态与外站标识是可见文字胶囊，
+    // 不再是只靠颜色区分、靠 hover 才出文案的图标（docs/proposal-home-layout.md §4.3）。
+    const chips = [];
+    if (home.badge) chips.push({ kind: home.badge, text: (home.badge === 'daily' ? ui.badgeDaily : ui.badgeNew).en });
+    if (external) chips.push({ kind: 'external', text: ui.badgeExternal.en });
+    const chipHtml = chips.map(c => `<span class="card-chip card-chip--${c.kind}" id="${prefix}-chip-${c.kind}">${esc(c.text)}</span>`).join('');
+    const labelledBy = [`${prefix}-name`, ...chips.map(c => `${prefix}-chip-${c.kind}`)].join(' ');
+    return `<a class="game-card" href="${esc(href)}" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''} aria-labelledby="${labelledBy}" aria-describedby="${prefix}-desc"><span class="card-body"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><span class="card-header"><span class="card-title" id="${prefix}-name">${esc(name.en)}</span>${chipHtml}</span><span class="card-desc" id="${prefix}-desc">${esc(home.desc.en)}</span><span class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span></span><span class="card-go" aria-hidden="true">›</span></span></a>`;
 }
 
 function homeCardsContent() {

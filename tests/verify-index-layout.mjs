@@ -5,8 +5,12 @@
 // 不像 body 那样 flex 居中）里被顶到**左边缘**。肉眼在宽屏上很扎眼，但所有既有
 // 校验器都测不到 —— 它们量的是游戏页的画布/侧栏/热区，没人量落地页的居中度。
 //
-// 判据：skew = 左间隙 − 右间隙，|skew| ≤ 2px 视为居中。六档视口全覆盖；
+// 判据：skew = 左间隙 − 右间隙，|skew| ≤ 2px 视为居中。七档视口全覆盖；
 // 同时守住 pages > layout 后首页 footer 在窄屏 / 矮屏 / 两者叠加时的 spacing。
+//
+// 卡片网格（docs/proposal-home-layout.md P1）：每档列数固定；≤600px 是单列横条
+// （≤80px 高）；任何视口下标题都不在单词中间断开（曾经 390px 两列把 Minesweeper
+// 拆成 Minesweep/er）；≥360px 时标题不被省略号截断；卡片不横向溢出。
 // 用法：node tests/verify-index-layout.mjs [baseUrl]（需静态服务器）
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -26,8 +30,10 @@ const VIEWPORTS = [
     { w: 768, h: 900, label: 'mobile-768' },
     { w: 768, h: 680, label: 'short-768' },
     { w: 390, h: 844, label: 'phone-390' },
+    { w: 360, h: 740, label: 'phone-360' },
     { w: 320, h: 568, label: 'phone-320' },
 ];
+const EXPECTED_COLS = { 1440: 4, 1024: 3, 768: 2, 390: 1, 360: 1, 320: 1 };
 
 let failed = 0;
 const page = await browser.newPage();
@@ -75,6 +81,31 @@ for (const vp of VIEWPORTS) {
                 };
             })(),
             cards: document.querySelectorAll('.game-card').length,
+            grid: (() => {
+                const grid = document.querySelector('.games-grid');
+                const cards = [...document.querySelectorAll('.game-card')];
+                const titles = [...document.querySelectorAll('.game-card .card-title')];
+                const probe = document.createElement('span');
+                probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+                document.body.append(probe);
+                // 单词宽于标题盒子 → 浏览器只能在词中断开（或溢出）
+                const brokenWords = titles.filter(t => {
+                    probe.style.font = getComputedStyle(t).font;
+                    return t.textContent.trim().split(/\s+/).some(word => {
+                        probe.textContent = word;
+                        return probe.getBoundingClientRect().width > t.getBoundingClientRect().width + 0.5;
+                    });
+                }).map(t => t.textContent);
+                probe.remove();
+                return {
+                    cols: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+                    maxCardH: Math.round(Math.max(...cards.map(c => c.getBoundingClientRect().height))),
+                    brokenWords,
+                    truncated: titles.filter(t => t.scrollWidth > t.clientWidth + 0.5).map(t => t.textContent),
+                    overflowing: cards.filter(c => c.scrollWidth > c.clientWidth + 1).map(c => c.dataset.gameId),
+                    pageScrollX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+                };
+            })(),
             lumen: !!document.getElementById('lumen-name'),
             circuit: !!document.getElementById('circuit-name'),
         };
@@ -85,6 +116,14 @@ for (const vp of VIEWPORTS) {
         const v = m[k];
         if (v && Math.abs(v.skew) > 2) bad.push(`${k} skew=${v.skew}`);
     }
+
+    const g = m.grid;
+    if (g.cols !== EXPECTED_COLS[vp.w]) bad.push(`grid cols=${g.cols} want ${EXPECTED_COLS[vp.w]}`);
+    if (vp.w <= 600 && g.maxCardH > 80) bad.push(`mobile card height=${g.maxCardH} > 80`);
+    if (g.brokenWords.length) bad.push(`title broken mid-word: ${g.brokenWords.join(' | ')}`);
+    if (vp.w >= 360 && g.truncated.length) bad.push(`title truncated: ${g.truncated.join(' | ')}`);
+    if (g.overflowing.length) bad.push(`card overflow: ${g.overflowing.join(',')}`);
+    if (g.pageScrollX) bad.push('page scrolls horizontally');
 
     // #99: page-layer footer spacing must keep winning over both responsive
     // layout peers. 390×844 = narrow only, 768×680 = short only,
@@ -114,6 +153,7 @@ for (const vp of VIEWPORTS) {
     if (bad.length) failed++;
     const mark = bad.length ? '✗' : '✓';
     console.log(`${mark} ${vp.label.padEnd(14)} vw=${m.vw}  cards=${m.cards}  lumen=${m.lumen} circuit=${m.circuit}`);
+    console.log(`     grid   cols=${g.cols} maxCardH=${g.maxCardH} truncated=${g.truncated.length} brokenWords=${g.brokenWords.length}`);
     for (const k of ['hub', 'games', 'perks']) {
         const v = m[k];
         if (v) console.log(`     ${k.padEnd(6)} w=${String(v.width).padStart(4)} left=${String(v.left).padStart(4)} right=${String(v.right).padStart(4)} skew=${v.skew}`);
@@ -127,5 +167,5 @@ for (const vp of VIEWPORTS) {
 }
 
 await browser.close();
-console.log(failed === 0 ? '\n首页三块均居中 ✅' : `\n${failed} 个视口未居中 ❌`);
+console.log(failed === 0 ? '\n首页三块均居中，卡片网格 / 标题均合规 ✅' : `\n${failed} 个视口回归 ❌`);
 process.exit(failed === 0 ? 0 : 1);

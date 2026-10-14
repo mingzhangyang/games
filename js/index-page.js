@@ -7,6 +7,8 @@ const selectors = '[data-i18n], [data-i18n-placeholder], [data-i18n-label]';
 const defaults = new WeakMap();
 let currentLang = 'en';
 let translations = new Map();
+const CHIP_KEYS = { daily: 'badgeDaily', new: 'badgeNew', external: 'badgeExternal' };
+const CHIP_FALLBACK = { daily: 'Daily', new: 'New', external: 'External ↗' };
 
 function rememberDefaults() {
     document.querySelectorAll(selectors).forEach(el => {
@@ -59,19 +61,16 @@ async function applyLanguage(lang) {
         setText(card.querySelector('.card-title'), `${id}.name`, base.name);
         setText(card.querySelector('.card-desc'), `${id}.desc`, base.desc);
         setText(card.querySelector('.tag:not(.tag--dark-only)'), `${id}.tag`, base.tag);
-        setText(card.querySelector('.play-btn'), 'play', 'Play ›');
         const dark = card.querySelector('.tag--dark-only');
         if (dark) {
             dark.textContent = translations.get('darkOnly') || 'Dark only';
             dark.title = translations.get('darkOnlyTitle') || 'This game is designed for dark mode and always opens dark';
         }
-        const badge = card.querySelector('.card-badge');
-        if (badge) {
-            const badgeKey = badge.classList.contains('card-badge--daily') ? 'badgeDaily' : 'badgeNew';
-            const label = translations.get(badgeKey) || (badgeKey === 'badgeDaily' ? 'Daily' : 'New');
-            badge.dataset.tooltip = label;
-            badge.setAttribute('aria-label', label);
-        }
+        card.querySelectorAll('.card-chip').forEach(chip => {
+            const kind = [...chip.classList].find(c => c.startsWith('card-chip--'))?.slice('card-chip--'.length);
+            const key = CHIP_KEYS[kind];
+            if (key) chip.textContent = translations.get(key) || CHIP_FALLBACK[kind];
+        });
     });
 }
 
@@ -93,7 +92,7 @@ function injectStructuredData() {
         position: i + 1,
         name: defaults.get(card)?.name || card.querySelector('.card-title')?.textContent || '',
         description: defaults.get(card)?.desc || card.querySelector('.card-desc')?.textContent || '',
-        url: new URL(card.querySelector('.card-title')?.getAttribute('href') || '', baseUrl).href,
+        url: new URL(card.getAttribute('href') || '', baseUrl).href,
     }));
     const graph = {
         '@context': 'https://schema.org',
@@ -110,14 +109,27 @@ function injectStructuredData() {
 
 function markDarkOnlyCards() {
     document.querySelectorAll('.game-card[data-dark-only]').forEach(card => {
-        const footer = card.querySelector('.card-footer');
-        const play = footer?.querySelector('.play-btn');
-        if (!footer || !play || footer.querySelector('.tag--dark-only')) return;
+        // 放在标题行而不是页脚：手机单列横条隐藏页脚，「仅深色」仍须在浅色下可见
+        const header = card.querySelector('.card-header');
+        const title = card.querySelector('.card-title');
+        if (!header || !title || header.querySelector('.tag--dark-only')) return;
         const tag = document.createElement('span');
-        tag.className = 'tag tag--dark-only';
-        play.before(tag);
+        tag.className = 'card-chip tag--dark-only';
+        tag.id = title.id.replace(/-name$/, '-chip-dark');
+        header.append(tag);
     });
-    const sync = () => document.body.classList.toggle('theme-light-active', getTheme() === 'light');
+    // 整卡用 aria-labelledby 命名，未引用的子文本不会被读出；而被引用的隐藏元素仍会被读出。
+    // 所以「仅深色」胶囊只在它可见（浅色）时加入可访问名，深色时移除。
+    const sync = () => {
+        const light = getTheme() === 'light';
+        document.body.classList.toggle('theme-light-active', light);
+        document.querySelectorAll('.game-card .tag--dark-only').forEach(tag => {
+            const card = tag.closest('.game-card');
+            const ids = (card.getAttribute('aria-labelledby') || '').split(/\s+/).filter(id => id && id !== tag.id);
+            if (light) ids.push(tag.id);
+            card.setAttribute('aria-labelledby', ids.join(' '));
+        });
+    };
     onThemeChange(sync);
     sync();
 }

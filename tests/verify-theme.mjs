@@ -353,7 +353,7 @@ const contrastAudit = page => page.evaluate(() => {
     // 「仅深色」小标：深色下全隐藏；切到浅色后恰好标在不支持浅色的注册表游戏卡片上
     const badges = () => page.evaluate(() => [...document.querySelectorAll('.tag--dark-only')]
         .filter(el => getComputedStyle(el).display !== 'none')
-        .map(el => el.closest('.game-card').querySelector('.card-title').getAttribute('href')).sort());
+        .map(el => el.closest('.game-card').getAttribute('href')).sort());
     check((await badges()).length === 0, '首页：深色下不显示「仅深色」小标');
     const vis = await page.evaluate(() => {
         const el = document.getElementById('theme-switch');
@@ -376,12 +376,21 @@ const contrastAudit = page => page.evaluate(() => {
         await page.click('#theme-switch [data-theme-pref="light"]');
         const want = registry.all().filter(g => !(g.caps || []).includes('theme-light')).map(g => g.href);
         const got = await badges();
-        const cards = await page.evaluate(() => [...document.querySelectorAll('.game-card .card-title')].map(a => a.getAttribute('href')));
+        const cards = await page.evaluate(() => [...document.querySelectorAll('.game-card[href]')].map(a => a.getAttribute('href')));
         const expect = want.filter(h => cards.includes(h)).sort();
         check((await state(page)).theme === 'light', '首页：点「浅色」后首页即时变浅');
         check(got.join() === expect.join(), '首页：浅色下「仅深色」小标恰好标在不支持浅色的游戏上', `got ${got.length} / want ${expect.length}`);
+        // 整卡由 aria-labelledby 命名：可见的「仅深色」胶囊必须进入可访问名，隐藏时必须移出
+        const labelled = () => page.evaluate(() => [...document.querySelectorAll('.game-card .tag--dark-only')].map(tag => {
+            const ids = (tag.closest('.game-card').getAttribute('aria-labelledby') || '').split(/\s+/);
+            return { id: tag.id, text: tag.textContent.trim(), inName: Boolean(tag.id) && ids.includes(tag.id) };
+        }));
+        const lightLabels = await labelled();
+        check(lightLabels.length > 0 && lightLabels.every(l => l.inName && l.text),
+            '首页：浅色下「仅深色」胶囊进入整卡可访问名', JSON.stringify(lightLabels.filter(l => !l.inName || !l.text).slice(0, 3)));
         await page.click('#theme-switch [data-theme-pref="dark"]');
         check((await badges()).length === 0, '首页：切回深色后小标隐藏');
+        check((await labelled()).every(l => !l.inName), '首页：深色下隐藏的「仅深色」胶囊不在可访问名里');
     }
     const labels = await page.evaluate(() => [...document.querySelectorAll('#theme-switch [data-theme-pref]')].map(b => b.textContent.trim()));
     check(labels.every(Boolean), '首页：开关文案非空', labels.join('/'));
