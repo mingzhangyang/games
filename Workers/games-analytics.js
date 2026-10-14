@@ -99,11 +99,17 @@ function validateEvent(data) {
         'event,eventId,game,occurredAt,seconds,sessionId,v',
         'event,eventId,game,occurredAt,playingSeconds,seconds,sessionId,v']
       : ['event,eventId,game,occurredAt,sessionId,v'])].includes(keys)) return null;
-  // Clock skew / delayed traffic is bounded; an event cannot target arbitrary
-  // historical D1 days. Retries keep their immutable original event time.
-  if (Object.hasOwn(data, 'occurredAt') &&
-    (!Number.isSafeInteger(data.occurredAt) || Math.abs(Date.now() - data.occurredAt) > 86400000))
-    return null;
+  // Clock skew / delayed traffic is bounded; a NEW event cannot target arbitrary
+  // historical D1 days. Retries keep their immutable original event time, so a
+  // timestamp older than 24h (within the 45-day ledger window) is replay-only:
+  // it is accepted solely as an exact duplicate of an already stored event.
+  let replayOnly = false;
+  if (Object.hasOwn(data, 'occurredAt')) {
+    if (!Number.isSafeInteger(data.occurredAt)) return null;
+    const age = Date.now() - data.occurredAt;
+    if (age < -DAY_MILLISECONDS || age > RETRY_WINDOW_DAYS * DAY_MILLISECONDS) return null;
+    replayOnly = age > DAY_MILLISECONDS;
+  }
   if (typeof data.eventId !== 'string' || !UUID_V4.test(data.eventId)
     || typeof data.sessionId !== 'string' || !UUID_V4.test(data.sessionId)) return null;
   if (data.event === 'active' && (!Number.isInteger(data.seconds) || data.seconds < 1 || data.seconds > 60
@@ -112,7 +118,7 @@ function validateEvent(data) {
   return { version: 2, game: data.game, kind: data.event,
     seconds: data.event === 'active' ? data.seconds : 0,
     playingSeconds: data.event === 'active' ? data.playingSeconds ?? 0 : 0,
-    occurredAt: data.occurredAt ?? null,
+    occurredAt: data.occurredAt ?? null, replayOnly,
     eventId: data.eventId, sessionId: data.sessionId };
 }
 
@@ -136,7 +142,10 @@ async function addEvent(db, event, day) {
   if (event.version === 1) return { ok: true };
   if (result.meta?.changes === 1) return { ok: true, duplicate: false };
   if (result.meta?.changes !== 0) throw new Error('Unexpected D1 write result');
+  return await isStoredDuplicate(db, event) ? { ok: true, duplicate: true } : { ok: false, conflict: true };
+}
 
+async function isStoredDuplicate(db, event) {
   let row = await db.prepare(`
     SELECT event_id, game, kind, session_id, active_seconds, playing_seconds, occurred_at, day FROM analytics_events WHERE event_id = ?
   `).bind(event.eventId).first();
@@ -147,7 +156,7 @@ async function addEvent(db, event, day) {
       FROM analytics_events WHERE session_id = ? AND version = 2 AND kind = 'open'
     `).bind(event.sessionId).first();
   }
-  return sameEvent(row, event) ? { ok: true, duplicate: true } : { ok: false, conflict: true };
+  return sameEvent(row, event);
 }
 
 // Process at most one bounded batch per hourly cron. The day/game rollup is not deleted.
@@ -240,6 +249,11 @@ export default {
       const data = await parseBody(request);
       const event = validateEvent(data);
       if (!event) return reply('Invalid', 400, cors);
+      if (event.replayOnly) {
+        // Never insert or roll up a stale timestamp; only acknowledge a retry.
+        return await isStoredDuplicate(env.ANALYTICS_DB, event)
+          ? jsonReply({ ok: true, duplicate: true }, 200, cors) : reply('Invalid', 400, cors);
+      }
       const result = await addEvent(env.ANALYTICS_DB, event, dayKeyUTC8(event.occurredAt ?? Date.now()));
       if (result.conflict) return jsonReply({ ok: false, error: 'Event ID conflict' }, 409, cors);
       return event.version === 1 ? reply('OK', 200, cors)

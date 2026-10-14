@@ -10,7 +10,7 @@ const data = JSON.parse(config);
 const db = data.d1_databases;
 const uuid = db?.[0]?.database_id;
 if (!Array.isArray(db) || db.length !== 1
-    || db[0].binding !== 'ANALYTICS_DB' || db[0].database_name !== 'games-analytics-v2'
+    || db[0].binding !== 'ANALYTICS_DB' || db[0].database_name !== 'games'
     || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(uuid || '')
     || /^0{8}-0{4}-0{4}-0{4}-0{12}$/.test(uuid)
     || data.kv_namespaces?.length

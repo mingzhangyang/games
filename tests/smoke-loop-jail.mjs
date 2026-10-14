@@ -252,7 +252,11 @@ try {
     await page.evaluate(() => {
         // 出生保护只用于测试：画线期间排除背景碰撞，抬笔后只释放目标小怪。
         // 不改游戏代码或咬线算法，真实触控仍完整走 Pointer Events。
-        for (const m of window.ljGame.sim.monsters) m.spawn = 1e6;
+        // spawnMax must move with spawn: the renderer draws spawn / spawnMax as
+        // the fade-in progress, and spawn > spawnMax yields a negative arc
+        // radius that throws inside renderer.draw() (which pauseQuiet() calls),
+        // so P pauses the sim but never reveals the overlay.
+        for (const m of window.ljGame.sim.monsters) { m.spawn = 1e6; m.spawnMax = 1e6; }
     });
     const line = await page.evaluate(() => {
         const r = window.ljGame.renderer;
@@ -341,7 +345,7 @@ try {
                 && x >= 0 && x < innerWidth && y >= 0 && y < innerHeight
                 && !!document.elementFromPoint(x, y)?.closest('#lj-btn-resume'),
             rect: { x: r.x, y: r.y, width: r.width, height: r.height },
-            viewport: { width: innerWidth, height: innerHeight, scrollY },
+            viewport: { width: innerWidth, height: innerHeight, scrollY: window.scrollY },
             overlayDisplay: getComputedStyle(document.getElementById('lj-pause')).display,
         };
     });

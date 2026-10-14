@@ -153,6 +153,35 @@ try {
 assert.deepEqual(await result('?v=2&scope=total'), totalsBeforeMidnightRetry,
     'cross-midnight retries must not increment D1 counters');
 
+// A timestamped retry arriving more than 24h later is still inside the 45-day
+// dedupe window: an exact replay is acknowledged as a duplicate, while a new or
+// altered event carrying a stale timestamp stays rejected and never rolls up.
+const beforeLateRetryClock = Date.now;
+const eventsBeforeLateRetry = db.prepare('SELECT count(*) n FROM analytics_events').get().n;
+Date.now = () => priorDay.occurredAt + 3 * 86400000;
+try {
+    const late = await send(priorDay);
+    assert.equal(late.status, 200, 'exact timestamped replay after 24h is a duplicate');
+    assert.deepEqual(await late.json(), { ok: true, duplicate: true });
+    assert.equal((await send({ ...priorDay, playingSeconds: 1 })).status, 400,
+        'stale timestamp with altered details is not accepted');
+    assert.equal((await send({ ...priorDay, eventId: fixture('active', 905).eventId })).status, 400,
+        'a new event cannot use a stale timestamp');
+    assert.equal((await send({ ...priorDay, occurredAt: Date.now() + 86400000 + 1 })).status, 400,
+        'future clock skew stays bounded at 24h');
+} finally {
+    Date.now = beforeLateRetryClock;
+}
+Date.now = () => priorDay.occurredAt + 46 * 86400000;
+try {
+    assert.equal((await send(priorDay)).status, 400, 'replays beyond the 45-day window are rejected');
+} finally {
+    Date.now = beforeLateRetryClock;
+}
+assert.equal(db.prepare('SELECT count(*) n FROM analytics_events').get().n, eventsBeforeLateRetry);
+assert.deepEqual(await result('?v=2&scope=total'), totalsBeforeMidnightRetry,
+    'late replays must not increment D1 counters');
+
 for (const bad of [
     { game: 'bogus', event: 'play' }, { game: 'tetris', event: 'open' },
     { ...open, v: 3 }, { ...active, seconds: 0 }, { ...active, seconds: 61 },
