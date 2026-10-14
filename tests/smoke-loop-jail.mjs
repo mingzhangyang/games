@@ -296,15 +296,58 @@ try {
     JSON.stringify({ bitesBefore: bites0, bitesAfter: s.bites, targetStrokeId, remainingIds }));
 
     // ⑥ 暂停
+    // Touch gestures may leave the previously focused Start button hidden and
+    // the document scrolled to the tall mobile menu's old position. Test the
+    // keyboard shortcut from an active, foreground game viewport instead of
+    // depending on the focus/scroll state left by the touch scenario.
+    await page.bringToFront();
+    await page.evaluate(() => {
+        document.activeElement?.blur();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    });
     s = await snap(page);
     check(s.state === 'playing' && s.lives > 0,
         '⑥ 暂停验证前仍有可操作的活局', JSON.stringify({ state: s.state, lives: s.lives }));
+    if (s.state !== 'playing' || s.paused || s.lives <= 0) {
+        throw new Error('⑥ P 键验证前状态无效：' + JSON.stringify({
+            state: s.state, paused: s.paused, overlay: s.pause, lives: s.lives,
+            hidden: await page.evaluate(() => document.hidden),
+        }));
+    }
     await page.keyboard.press('p');
     s = await snap(page);
     check(s.paused && s.pause && !s.resetShown && s.pauseLabel === '继续', '⑥ P 键暂停：浮层 + 重开隐藏 + 暂停钮变「继续」', JSON.stringify(s));
+    if (!s.paused || !s.pause) {
+        throw new Error('⑥ P 键未打开可见暂停层：' + JSON.stringify({
+            state: s.state, paused: s.paused, overlay: s.pause,
+            hidden: await page.evaluate(() => document.hidden),
+            lease: await page.evaluate(() => window.ljGame.pauseOwnership.isHeld()),
+            activeElement: await page.evaluate(() => document.activeElement?.id),
+        }));
+    }
     const t0 = s.time;
     await sleep(300);
     check((await snap(page)).time === t0, '⑥ 暂停期间模拟冻结');
+    await page.evaluate(() => document.getElementById('lj-btn-resume').scrollIntoView({
+        block: 'center', inline: 'nearest', behavior: 'instant',
+    }));
+    const resumeHit = await page.evaluate(() => {
+        const button = document.getElementById('lj-btn-resume');
+        const r = button.getBoundingClientRect();
+        const x = (r.left + r.right) / 2;
+        const y = (r.top + r.bottom) / 2;
+        return {
+            visible: r.width > 0 && r.height > 0
+                && x >= 0 && x < innerWidth && y >= 0 && y < innerHeight
+                && !!document.elementFromPoint(x, y)?.closest('#lj-btn-resume'),
+            rect: { x: r.x, y: r.y, width: r.width, height: r.height },
+            viewport: { width: innerWidth, height: innerHeight, scrollY },
+            overlayDisplay: getComputedStyle(document.getElementById('lj-pause')).display,
+        };
+    });
+    if (!resumeHit.visible) {
+        throw new Error('⑥ 暂停后「继续」按钮不在可点击区域：' + JSON.stringify(resumeHit));
+    }
     await page.click('#lj-btn-resume');
     await waitSim(page, t => window.ljGame.sim.time > t, t0);
     s = await snap(page);
