@@ -122,7 +122,8 @@ Daily Hub（3 个固定任务 + 「更多每日 (11) ›」链接 → #cat=daily
 - 视觉：大卡用游戏的 OG 图作背景，缺图时退回图标 + 渐变。
 - **资源路径必须构建可见，禁止运行时拼 `og-${id}.svg`**：Vite 发现不了动态拼出的路径，源码下能用、`dist` 里 404（同类约束见 `docs/art-upgrades/tower-defense-production-art-upgrade-plan.md` §3.3、`src/games/needle-awn/render/art.js` 的字面 URL map）。做法：
   - 只用 `public/assets/seo/`（原样复制进 `dist/`，不 hash）里的文件；
-  - 由 gen 在生成区里写出**字面** URL（`<img src="/assets/seo/og-<id>.svg">` 或 `style` 背景），gen 时检查文件存在，不存在就不输出图片、走回退样式；运行时 JS 只负责显隐，不构造路径。
+  - 由 gen 在生成区里为每个有图的游戏写出**字面** URL，使用真正的 `<img class="new-game-art" src="/assets/seo/og-实际游戏ID.svg" alt="" loading="lazy" decoding="async">` 元素；这里的「实际游戏ID」由生成器在生成时替换成明确值，不能把该占位写入输出 HTML。gen 时先检查文件是否存在，不存在就不输出 `<img>`，仅保留 CSS 渐变和游戏图标兜底。游戏名称已有可见文字，装饰性图片使用空 `alt`；运行时 JS 只负责显隐，不构造路径。
+  - **禁止生成内联 `style` 或 CSS `background-image` 属性来插入图片**：`tests/verify-css-debt.mjs` 冻结了 `index.html` 的内联样式数量，新添 inline style 会导致 CSS debt 校验失败。背景式铺放完全由 `css/home-cards.css` 的 `@layer contracts` 处理（例如 `.new-game-art` 绝对定位、`inset: 0; width: 100%; height: 100%; object-fit: cover`，容器裁剪溢出，图片上方使用 CSS 渐变叠层，文字保持可读）。不要在 JS 中设置 `element.style` 绕过这一约束。
 - **现状覆盖（以实际进 `dist` 的 `public/assets/seo/` 为准）**：26 款里只有 14 款有图；10 款（lumen、circuit、silk-dew、echo-cave、maxwell-demon、ripple-duet、carrot-pull、firefly-signal、shadow-loom、loop-jail）的图只在源目录 `assets/seo/`，不会进 `dist`；crystal-bloom、flame-verse 两处都没有。
 - 附带发现（与本方案无关、建议单独修）：gen 给每个游戏页写的 `og:image` / `twitter:image` 都指向 `assets/seo/og-<id>.svg`，所以上面 10 + 2 款的社交分享预览图在生产环境已经是 404。
 
@@ -170,14 +171,14 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 | `tools/generators/gen-from-registry.mjs` | `homeCardLine()` 输出整卡 `<a>` + 文字胶囊；`homeCardsContent()` 按 `categories` 分组输出分区；zh map 增加分类名；P3 为新上线横排写出 `public/assets/seo/` 里存在的 OG 图**字面** URL（不存在则不输出，§4.4） |
 | `index.html` | 只改 gen 区域外的骨架：筛选条、最近玩过 / 新上线容器、Perks 压缩 |
 | `js/index-page.js` | 筛选 + hash 同步、`site_recent` 记录与渲染、新上线判定、「更多每日」计数；`applyLanguage` 去掉 `.play-btn` / `.card-badge`，改为本地化 `.card-chip`，增加分类标题；`markDarkOnlyCards()` 改挂到 `.card-header`（原来依赖 `.play-btn` 定位）；`injectStructuredData` 改读 `a.game-card[href]` |
-| `css/home-cards.css`（新） | 分区标题、筛选条、≥1280px 4 列、≤600px 单列横条、文字胶囊、横排。**`css/index.css` 不改**：它属于 CSS P0/P5 冻结页，`verify-css-debt` 禁止新增 / 删除 / 改写其中的 unlayered 规则（规则数必须等于 P0 + 已登记迁移）。做法同 `css/stage-status.css`：附加样式表全部写在 `@layer contracts`，只在要压过冻结声明时用 `!important`，链接放在 `index.css` 之后、`mobile-fit.css` 之前 |
+| `css/home-cards.css`（新） | 分区标题、筛选条、≥1280px 4 列、≤600px 单列横条、文字胶囊、横排；P3 在本表内为 `.new-game-art` 实现背景式定位、裁切和渐变遮罩，**不通过生成的内联 `style` 实现**。**`css/index.css` 不改**：它属于 CSS P0/P5 冻结页，`verify-css-debt` 禁止新增 / 删除 / 改写其中的 unlayered 规则（规则数必须等于 P0 + 已登记迁移）。做法同 `css/stage-status.css`：附加样式表全部写在 `@layer contracts`，只在要压过冻结声明时用 `!important`，链接放在 `index.css` 之后、`mobile-fit.css` 之前 |
 | `tests/lib/css/feature-additions.mjs` | 登记 home-cards 附加样式表：`HOME_CARDS_SELECTORS` 精确选择器白名单、唯一规范 `<link>` 与顺序校验、并入 `reviewFeatureStyles` 的 `cssPaths` / `stripHtml`；`tests/verify-css-feature-additions.mjs` 补负例。P2 / P3 新增的选择器逐条追加 |
 | `css/index.css` 里的死规则 | `.card-badge*`、`.play-btn*` 在 P1 后无 DOM 使用者。可另起 `kind: "retire"` 事务（`tests/css-layer-migrations/rules/`，见 `docs/architecture-v2-css-layer-migration-plan-2026-09.md` P2-K）清理，不和功能改动混在同一 PR |
 | `public/icons/home-icons.svg` | P1 删除不再使用的 `bookmark` symbol（与 `verify-index-cards` 的「已删除」断言对应） |
 | `public/assets/seo/` | P3 把 10 张只在 `assets/seo/` 的 OG 图同步进来，补画 crystal-bloom / flame-verse（§4.4） |
 | `tests/verify-index-cards.mjs` | **替换**现有断言：标题链接 / Play 链接 → 整卡 `<a class="game-card" href>`；切卡片用 `</a>` 而非 `</article>`；「书签 symbol 存在」→「已删除」；新增卡片区无 `article` / `onclick` / 嵌套链接、可访问名接线。P2 再加：`home.category` 必填且 ∈ `categories[].key`，`site.home.externalGames[].category` 同样必填且 ∈ `categories[].key`（`site.home` 不受 schema 约束，只能靠这里守住，否则拼错会让外站卡掉出分区）、`addedAt` 合法、无空分区、caps 含 daily ⟺ daily 胶囊 |
 | `tests/verify-index-layout.mjs` | 新增：各视口列数（1440→4、1024→3、768→2、≤600→1）；≤600px 卡高 ≤80px；**不断词**单独判定（每个单词宽度 ≤ 标题盒宽，所有视口）；**不截断**只在 ≥360px 要求（`scrollWidth ≤ clientWidth`），320px 允许 §4.3 的省略号；卡片与页面不横向溢出。P2 再加筛选后可见卡数 = registry 计数 |
-| `tests/smoke-index.mjs` | **替换**现有「空文字 + 图标 + tooltip 的 `.card-badge`」断言为：胶囊可见、文案按语言切换、不压标题、不溢出卡片；卡片内无嵌套可聚焦元素。P3 再加点击筛选、hash 往返、`site_recent` 写入；新上线横排的每张图对 **`dist` 服务器**请求返回 200（`npm run build` 后 `node tests/verify-all.mjs <dist base>` 复验） |
+| `tests/smoke-index.mjs` | **替换**现有「空文字 + 图标 + tooltip 的 `.card-badge`」断言为：胶囊可见、文案按语言切换、不压标题、不溢出卡片；卡片内无嵌套可聚焦元素。P3 再加点击筛选、hash 往返、`site_recent` 写入；新上线横排必须使用静态 `img.new-game-art[src]`（不可为内联背景样式），对每张图在 **`dist` 服务器**验证请求返回 200，并检查缺图回退、可读性与无新增 inline style（`npm run build` 后 `node tests/verify-all.mjs <dist base>` 复验）；`verify-css-debt` 原有内联样式基线须通过 |
 | `tests/verify-theme.mjs` | 「仅深色」标记的游戏 href 改从 `a.game-card` 读（标题不再是链接） |
 | `docs/traps.md` | 若踩坑再补 |
 
@@ -187,7 +188,7 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 |---|---|---|---|
 | **P1 卡片修复** | 整卡 `<a>`、文字胶囊（先沿用 `home.badge` 数据）、手机单列横条、桌面 4 列、外站 ↗；样式进新附加表 `css/home-cards.css` | P-2 P-4 P-7 P-8 P-9 | 低：不改 schema、不迁移分类、不动冻结的 `index.css`；registry 只动两条 `site.home.ui` 文案（删 `play`、加 `badgeExternal`） |
 | **P2 分类** | `home.category` + `categories`、分区输出、筛选条 + hash、daily 胶囊改由 caps 派生、new 胶囊改由 `addedAt` 运行时判定（与删除 `home.badge` 同一 PR）、`home.tag` 降级 | P-1 P-3 P-5 | 中：gen 与 i18n 同步改 |
-| **P3 发现** | 最近玩过、新上线横排（复用 P2 的 `addedAt` 判定；gen 写字面图片 URL）、「更多每日」、Perks 压缩；把 10 张只在 `assets/seo/` 的 OG 图同步进 `public/assets/seo/`，补画 crystal-bloom / flame-verse | P-6 P-10 | 低 |
+| **P3 发现** | 最近玩过、新上线横排（复用 P2 的 `addedAt` 判定；gen 写字面 `<img>` URL，图片定位由 `home-cards.css` 负责，不新增内联 `style`）、「更多每日」、Perks 压缩；把 10 张只在 `assets/seo/` 的 OG 图同步进 `public/assets/seo/`，补画 crystal-bloom / flame-verse | P-6 P-10 | 低 |
 | **P4 可选** | Daily Hub registry 化（`daily.doneKey`）、基于 Analytics V2 的「🔥 热门」标签 | P-6 完整版 | 中：依赖 Analytics V2 上线 |
 
 每个阶段独立 PR，`npm run verify` 全绿后合入；P1 合入前后各截一组 390 / 1440 截图附在 PR 中。
