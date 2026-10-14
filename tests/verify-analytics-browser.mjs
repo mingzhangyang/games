@@ -141,15 +141,32 @@ try {
     await advance(2);
     assert.equal((await seen('active')).length, beforeIdle, 'idle gaps not counted');
 
+    // Movement-only controls (e.g. Sword Flight steering) must keep the idle
+    // clock alive after a long idle gap, without manufacturing time for that gap.
+    // Test pointer events and mouse/touch fallbacks separately.
+    for (const name of ['pointermove', 'mousemove', 'touchmove']) {
+        await page.evaluate(eventName => {
+            window.__analyticsNow += 65000;
+            window.hubAnalytics.flush();
+            document.body.dispatchEvent(new Event(eventName, { bubbles: true }));
+        }, name);
+        const beforeMove = (await seen('active')).length;
+        await advance(2);
+        await page.waitForFunction(n => window.__attempts.filter(e => e.event === 'active').length > n,
+            {}, beforeMove);
+        const resumed = (await seen('active')).at(-1);
+        assert.equal(resumed.seconds, 2, name + ': movement restores active time');
+        assert.equal(resumed.playingSeconds, 2, name + ': movement restores gameplay time');
+    }
+
+    const beforeRetry = (await seen('active')).length;
     await page.evaluate(() => {
         window.__failNextActive = true;
         document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     });
     await advance(2);
-    await page.waitForFunction(() => {
-        const a = window.__attempts.filter(e => e.event === 'active');
-        return a.length >= 7;
-    });
+    await page.waitForFunction(n => window.__attempts.filter(e => e.event === 'active').length > n,
+        {}, beforeRetry);
     const last = (await seen('active')).at(-1);
     await page.evaluate(() => { window.__analyticsNow += 6000; });
     await page.waitForFunction(id => window.__attempts.filter(e => e.eventId === id).length >= 2,

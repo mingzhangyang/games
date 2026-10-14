@@ -208,6 +208,10 @@ try {
     // ③ 触屏画环
     await sleep(800); // 等出生显形结束
     await freeze(page);
+    // Capture, bite and pause checks share one real run. Keep unrelated monster
+    // hits from ending it while CI/browser scheduling varies; the lethal hit is
+    // explicitly restored and tested in step ⑧.
+    await page.evaluate(() => { window.ljGame.sim.pen.invuln = 1e9; });
     let target = await pickTarget(page);
     // The menu is document-flow scrollable on short mobile screens. Clicking Start
     // can leave the canvas partly below the viewport; an offscreen synthetic
@@ -275,7 +279,8 @@ try {
         const m = sim.monsters.find(x => x.type === 'circle') || sim.monsters[0];
         m.x = sim.w * 0.5; m.y = sim.h * 0.85 - 4;
         m.vx = 0; m.vy = 0; m.spawn = 0;
-        sim.pen.invuln = 5;
+        // Do not let the target monster kill the pen during the bite assertion.
+        sim.pen.invuln = 1e9;
     });
     // 不依赖 rAF 运行速度：等待真正咬断目标 ID，而非仅看到其他墨线被咬。
     await waitSim(page, ({ id, before }) => {
@@ -291,6 +296,9 @@ try {
     JSON.stringify({ bitesBefore: bites0, bitesAfter: s.bites, targetStrokeId, remainingIds }));
 
     // ⑥ 暂停
+    s = await snap(page);
+    check(s.state === 'playing' && s.lives > 0,
+        '⑥ 暂停验证前仍有可操作的活局', JSON.stringify({ state: s.state, lives: s.lives }));
     await page.keyboard.press('p');
     s = await snap(page);
     check(s.paused && s.pause && !s.resetShown && s.pauseLabel === '继续', '⑥ P 键暂停：浮层 + 重开隐藏 + 暂停钮变「继续」', JSON.stringify(s));

@@ -226,7 +226,9 @@
     window.addEventListener('focus', function () { lastTick = performance.now(); });
     window.addEventListener('pagehide', interrupt);
     window.addEventListener('pageshow', function () { lastTick = performance.now(); });
-    ['pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(function (name) {
+    // Movement-based games may steer continuously without clicking. Every real
+    // control gesture refreshes the local idle clock; none sends a network event.
+    ['pointerdown', 'pointermove', 'mousemove', 'keydown', 'touchstart', 'touchmove', 'wheel'].forEach(function (name) {
         document.addEventListener(name, function () { lastInteraction = performance.now(); }, { passive: true });
     });
 
