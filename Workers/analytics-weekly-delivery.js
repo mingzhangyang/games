@@ -186,9 +186,12 @@ export async function recoverWeekly(env, names, externalIds, now = Date.now(), {
   const cutoff = iso(now - SIX_HOURS);
   const stale = await db.prepare(`
     SELECT week_start FROM analytics_weekly_delivery
-    WHERE kind = 'weekly' AND status = 'failed' AND attempts < ? AND last_attempt_at <= ?
+    WHERE kind = 'weekly' AND (
+      (status = 'failed' AND attempts < ? AND last_attempt_at <= ?)
+      OR (status = 'preparing' AND lease_until <= ?)
+    )
     ORDER BY week_start ASC LIMIT 2
-  `).bind(MAX_ATTEMPTS, cutoff).all();
+  `).bind(MAX_ATTEMPTS, cutoff, iso(now)).all();
   if (!Array.isArray(stale?.results)) throw new Error('Cannot inspect weekly retry queue');
   const weeks = [...new Set([...(stale.results.map(row => row.week_start)),
     ...(includeCurrent ? [previousCompleteWeek(now)] : [])])];

@@ -273,6 +273,26 @@ try {
     assert.equal(neverSends.length, 0);
     assert.equal(record(interrupted, 'weekly:20261005').status, 'uncertain');
 
+    // A crash before provider handoff leaves a safely re-claimable preparing
+    // lease; the daily recovery cron must resume it without manual action.
+    const preparing = makeDB();
+    seed(preparing);
+    preparing.raw.prepare(`INSERT INTO analytics_weekly_delivery
+      (report_key, week_start, kind, status, attempts, lease_token, lease_until, last_attempt_at)
+      VALUES ('weekly:20261005', '20261005', 'weekly', 'preparing', 1, 'expired-token',
+        '2026-10-12T00:00:00.000Z', '2026-10-12T00:00:00.000Z')`).run();
+    const resumed = [];
+    const preparingEnv = envFor(preparing, async message => {
+        resumed.push(message);
+        return { messageId: 'resumed-after-preparing' };
+    });
+    await worker.scheduled({
+        cron: '17 19 * * *', scheduledTime: Date.parse('2026-10-12T19:17:00Z'),
+    }, preparingEnv);
+    assert.equal(resumed.length, 1, 'expired preparing lease gets a daily retry');
+    assert.equal(record(preparing, 'weekly:20261005').status, 'sent');
+    assert.equal(record(preparing, 'weekly:20261005').attempts, 2);
+
     // Coverage misconfiguration is an explicit failed job, not silent absence.
     const coverage = makeDB();
     seed(coverage);

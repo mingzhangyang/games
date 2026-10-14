@@ -66,7 +66,7 @@ If Cloudflare Email Sending is unavailable, use Resend with a verified sender do
 "triggers": { "crons": ["17 19 * * *", "0 1 * * MON"] }
 ```
 
-- `17 19 * * *` — every day 19:17 UTC, which is **next day 03:17 UTC+8**: at most ten batches of 5,000 old deduplication events are deleted (maximum 50,000 rows/day); daily rollups are untouched. A remaining-backlog warning is written to Worker logs. In the same run, retry **only** previous definitively failed weekly emails after a six-hour cooldown, up to three automatic attempts.
+- `17 19 * * *` — every day 19:17 UTC, which is **next day 03:17 UTC+8**: at most ten batches of 5,000 old deduplication events are deleted (maximum 50,000 rows/day); daily rollups are untouched. A remaining-backlog warning is written to Worker logs. In the same run, retry **only** previous definitively failed weekly emails after a six-hour cooldown (up to three automatic attempts), plus expired pre-send `preparing` leases (safe to reacquire; no provider handoff yet).
 - `0 1 * * MON` — every Monday 01:00 UTC = Monday 09:00 UTC+8: report the **previous completed natural week**, recover eligible previous failures, send once per period.
 - All job dispatches use `controller.cron`; never derive a cron from the Worker local time. Adjust the Cron expression in the reviewed Wrangler configuration to change sending time, and keep `scheduled()` cron dispatch in sync.
 - Trigger updates may take up to 15 minutes to propagate, so verify the effective triggers in the Cloudflare dashboard after manual deployment.
@@ -155,7 +155,7 @@ The API never accepts a recipient address or unauthenticated manual send. Do not
 - **No email on Monday:** check `REPORT_ENABLED`, `REPORT_COMPLETE_SINCE`, UTC Cron timing, scheduled invocation logs and `/admin/weekly/status`. If the coverage baseline is incomplete, the system refuses to report.
 - **`failed`:** check D1 migration 0004 and table structure, secret names, whether all required daily columns exist and the Email domain/recipient verification; check Worker logs for detailed errors. Only the scrubbed failure summary goes into D1. Failed jobs have at most 3 automatic attempts; authenticated manual retry can override the cap after repair.
 - **`uncertain`:** reconcile with provider logs; never blindly retry, including after a Worker crash.
-- **`preparing` expired:** safe to re-acquire, because there has not yet been a provider call.
+- **`preparing` expired:** daily recovery automatically re-acquires these records (up to two old weeks per run), since there has not yet been a provider call.
 - **Retention backlog:** follow "Analytics dedupe cleanup backlog remains", verify `(day,id)` index, adjust `CLEANUP_BATCHES` only when supported by measured volume.
 - **Independent games:** until their own repositories load the shared Analytics V2 client, treat their zero opens/durations as **missing telemetry**, not true zero engagement.
 - **Statistics precision:** recording can be delayed or lost by offline clients/browsers; the configured baseline means instrumentation readiness, not a transactional completeness proof.
