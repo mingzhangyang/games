@@ -11,6 +11,7 @@ const db = new DatabaseSync(':memory:');
 db.exec(sql);
 db.exec(readFileSync(new URL('../Workers/migrations/analytics/0002_playing_seconds.sql', import.meta.url), 'utf8'));
 db.exec(readFileSync(new URL('../Workers/migrations/analytics/0003_event_occurred_at.sql', import.meta.url), 'utf8'));
+db.exec(readFileSync(new URL('../Workers/migrations/analytics/0004_weekly_delivery.sql', import.meta.url), 'utf8'));
 const rateKeys = [];
 const limiter = { async limit({ key }) { rateKeys.push(key); return { success: true }; } };
 const binding = {

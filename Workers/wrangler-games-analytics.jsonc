@@ -6,7 +6,8 @@
   "main": "games-analytics.js",
   "compatibility_date": "2025-04-01",
   "workers_dev": true,
-  "triggers": { "crons": ["17 * * * *"] },
+  "triggers": { "crons": ["17 19 * * *", "0 1 * * MON"] },
+  "send_email": [{ "name": "EMAIL" }],
   "ratelimits": [{
     "name": "ANALYTICS_RATE_LIMITER",
     "namespace_id": "14202610",
