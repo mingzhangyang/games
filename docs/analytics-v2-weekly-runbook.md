@@ -121,6 +121,8 @@ curl -fsS -X POST -H "Authorization: Bearer $REPORT_ADMIN_TOKEN" \
   "$ANALYTICS_URL/admin/weekly/retry?week=20261005"
 ```
 
+**Manual retry safety:** `POST /admin/weekly/retry` is a retry-only action, not a manual first-send endpoint. It performs an atomic `UPDATE` of an existing `weekly:YYYYMMDD` row in the `failed` state. A missing record, a test-only record or a `preparing`/`sending`/`sent`/`uncertain` record returns HTTP 409 (`not_retryable`) with no email and no new row. Only the scheduled weekly handler is allowed to initialize a production delivery record. Operators cannot bypass this by requesting an older completed week. Authenticated manual retries of genuine `failed` rows may override the automated attempt cap after the cause has been corrected.
+
 The `week` parameter is **always the Monday `YYYYMMDD`**, not a seven-day end date. The examples refer to a sample prior week; select an actual completed week. The admin token must be present for every operation, including preview. A test send is idempotent once per week (`test:YYYYMMDD`), preventing repeated accidental test mail; choose another completed sample week if another test is required.
 
 ### Recovery when delivery is ambiguous

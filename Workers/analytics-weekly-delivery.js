@@ -73,7 +73,26 @@ function iso(ms) {
 async function claimDelivery(db, key, weekStart, kind, now, manual) {
   const token = crypto.randomUUID();
   const current = iso(now);
-  const retryCutoff = iso(manual ? now : now - SIX_HOURS);
+  const leaseUntil = iso(now + LEASE_MS);
+
+  if (manual) {
+    // A retry is NOT a first delivery: UPDATE alone cannot create a weekly row.
+    // Check the existing failed status in the same atomic statement that acquires
+    // the lease, so concurrent retries cannot race through a read-then-write.
+    const claimed = await db.prepare(`
+      UPDATE analytics_weekly_delivery SET
+        status = 'preparing', attempts = attempts + 1,
+        lease_token = ?, lease_until = ?, last_attempt_at = ?, last_error = NULL
+      WHERE report_key = ? AND week_start = ? AND kind = 'weekly' AND status = 'failed'
+      RETURNING report_key
+    `).bind(token, leaseUntil, current, key, weekStart).first();
+    return claimed ? token : null;
+  }
+
+  const retryCutoff = iso(now - SIX_HOURS);
+  // Only the scheduler (and isolated test-send path) may create a new record.
+  // The conflict branch handles cooled-down known failures and expired
+  // pre-provider preparing leases; sent/sending/uncertain are never replayed.
   const claimed = await db.prepare(`
     INSERT INTO analytics_weekly_delivery
       (report_key, week_start, kind, status, attempts, lease_token, lease_until, last_attempt_at)
@@ -83,16 +102,15 @@ async function claimDelivery(db, key, weekStart, kind, now, manual) {
       lease_token = excluded.lease_token, lease_until = excluded.lease_until,
       last_attempt_at = excluded.last_attempt_at, last_error = NULL
     WHERE (analytics_weekly_delivery.status = 'failed'
-        AND (? = 1 OR analytics_weekly_delivery.attempts < ?)
-        AND (? = 1 OR analytics_weekly_delivery.last_attempt_at <= ?))
+        AND analytics_weekly_delivery.attempts < ?
+        AND analytics_weekly_delivery.last_attempt_at <= ?)
        OR (analytics_weekly_delivery.status = 'preparing'
         AND analytics_weekly_delivery.lease_until <= ?)
-    RETURNING report_key, attempts
-  `).bind(key, weekStart, kind, token, iso(now + LEASE_MS), current,
-    Number(manual), MAX_ATTEMPTS, Number(manual), retryCutoff, current).first();
+    RETURNING report_key
+  `).bind(key, weekStart, kind, token, leaseUntil, current,
+    MAX_ATTEMPTS, retryCutoff, current).first();
   return claimed ? token : null;
 }
-
 async function setStatus(db, key, token, from, to, error = null, messageId = null) {
   const result = await db.prepare(`
     UPDATE analytics_weekly_delivery SET status = ?, lease_token = NULL,
@@ -122,7 +140,7 @@ export async function sendWeek(env, weekStart, names, externalIds, now = Date.no
   if (!db) throw new Error('Analytics D1 binding unavailable');
   const key = `${test ? 'test' : 'weekly'}:${bounds.start}`;
   const token = await claimDelivery(db, key, bounds.start, test ? 'test' : 'weekly', now, manual);
-  if (!token) return { status: 'already_handled', weekStart };
+  if (!token) return { status: manual ? 'not_retryable' : 'already_handled', weekStart };
 
   let contents;
   try {
@@ -311,8 +329,8 @@ export async function adminWeekly(request, env, names, externalIds) {
   try {
     const result = await sendWeek(env, bounds.start, names, externalIds, Date.now(),
       { test: operation === 'test', manual: operation === 'retry' });
-    return adminReply(result, result.status === 'already_handled' ? 409
-      : result.status === 'coverage_pending' || result.status === 'disabled' ? 409 : 200);
+    return adminReply(result,
+      ['not_retryable', 'already_handled', 'coverage_pending', 'disabled'].includes(result.status) ? 409 : 200);
   } catch (err) {
     console.error('Analytics weekly admin operation failed', { operation, reason: errorSummary(err) });
     return adminReply({ error: errorSummary(err) }, 503);

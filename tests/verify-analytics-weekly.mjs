@@ -156,6 +156,13 @@ try {
     assert.equal((await worker.fetch(request('/admin/weekly/preview?week=20261005'), env)).status, 401);
     assert.equal((await worker.fetch(request('/admin/weekly/status', 'GET', 'wrong'), env)).status, 401);
     assert.equal((await worker.fetch(request('/admin/weekly/retry?week=20261005', 'POST'), env)).status, 401);
+    // Copilot regression: an authenticated retry is NOT allowed to create a
+    // first-delivery record. The scheduler alone owns initial weekly sends.
+    const unsentRetry = await worker.fetch(request('/admin/weekly/retry?week=20261005', 'POST', secret), env);
+    assert.equal(unsentRetry.status, 409);
+    assert.deepEqual(await unsentRetry.json(), { status: 'not_retryable', weekStart: '20261005' });
+    assert.equal(record(db, 'weekly:20261005'), undefined, 'no record created by manual retry');
+    assert.equal(sent.length, 0, 'no production email sent by manual retry');
     assert.equal((await worker.fetch(request('/admin/weekly/preview?week=20261006', 'GET', secret), env)).status, 400);
     const preview = await worker.fetch(request('/admin/weekly/preview?week=20261005&format=html', 'GET', secret), env);
     assert.equal(preview.status, 200);
@@ -188,6 +195,44 @@ try {
     assert(sent[1].subject.startsWith('[TEST / NOT LIVE]'));
     assert.equal(record(db, 'test:20261005').status, 'sent');
     assert.equal((await worker.fetch(request('/admin/weekly/test?week=20261005', 'POST', secret), env)).status, 409);
+    // A test-only delivery must never bootstrap a formal weekly report on retry.
+    const testOnly = makeDB();
+    seed(testOnly);
+    const testOnlySends = [];
+    const testOnlyEnv = envFor(testOnly, async mail => {
+        testOnlySends.push(mail);
+        return { messageId: 'test-only' };
+    });
+    assert.equal((await worker.fetch(request('/admin/weekly/test?week=20261005', 'POST', secret),
+        testOnlyEnv)).status, 200);
+    assert.equal(record(testOnly, 'test:20261005').status, 'sent');
+    assert.equal((await worker.fetch(request('/admin/weekly/retry?week=20261005', 'POST', secret),
+        testOnlyEnv)).status, 409);
+    assert.equal(record(testOnly, 'weekly:20261005'), undefined);
+    assert.equal(testOnlySends.length, 1, 'test mail is never turned into a formal weekly send');
+
+    // The administrative retry rejects all other existing states too. Even an
+    // expired preparing lease belongs to scheduled recovery, not manual retry.
+    for (const status of ['preparing', 'sending', 'uncertain', 'sent']) {
+        const blocked = makeDB();
+        seed(blocked);
+        blocked.raw.prepare(`INSERT INTO analytics_weekly_delivery
+          (report_key, week_start, kind, status, attempts, lease_token, lease_until, last_attempt_at)
+          VALUES ('weekly:20261005', '20261005', 'weekly', ?, 1, 'stale-token',
+            '2026-10-10T00:00:00.000Z', '2026-10-10T00:00:00.000Z')`).run(status);
+        const blockedSends = [];
+        const blockedEnv = envFor(blocked, async mail => {
+            blockedSends.push(mail);
+            return { messageId: 'unexpected' };
+        });
+        const blockedResponse = await worker.fetch(
+            request('/admin/weekly/retry?week=20261005', 'POST', secret), blockedEnv);
+        assert.equal(blockedResponse.status, 409, `cannot manually retry ${status}`);
+        assert.equal(record(blocked, 'weekly:20261005').status, status);
+        assert.equal(record(blocked, 'weekly:20261005').attempts, 1);
+        assert.equal(blockedSends.length, 0);
+    }
+
 
     // A true data query failure must not send blank mail or mark success.
     const failed = makeDB();
@@ -210,7 +255,8 @@ try {
     failQuery = false;
     // An authorized manual retry is immediate; regular retry observes six-hour cool-down.
     assert.equal((await sendWeek(failedEnv, '20261005', names, external, NOW)).status, 'already_handled');
-    assert.equal((await sendWeek(failedEnv, '20261005', names, external, NOW, { manual: true })).status, 'sent');
+    assert.equal((await worker.fetch(request('/admin/weekly/retry?week=20261005', 'POST', secret),
+        failedEnv)).status, 200, 'authenticated retry of actual failed record succeeds');
     assert.equal(recovered.length, 1);
     assert.equal(record(failed, 'weekly:20261005').attempts, 2);
 
@@ -226,7 +272,7 @@ try {
     });
     await assert.rejects(sendWeek(unknownEnv, '20261005', names, external, NOW));
     assert.equal(record(unknown, 'weekly:20261005').status, 'uncertain');
-    assert.equal((await sendWeek(unknownEnv, '20261005', names, external, NOW, { manual: true })).status, 'already_handled');
+    assert.equal((await sendWeek(unknownEnv, '20261005', names, external, NOW, { manual: true })).status, 'not_retryable');
     failProvider = false;
     const retry = await worker.fetch(request('/admin/weekly/retry?week=20261005', 'POST', secret), unknownEnv);
     assert.equal(retry.status, 409);
@@ -254,6 +300,27 @@ try {
         sendWeek(parallelEnv, '20261005', names, external, NOW)));
     assert.equal(parallelSends.length, 1, 'atomic claim prevents parallel duplicate emails');
     assert.equal(results.filter(x => x.status === 'sent').length, 1);
+
+    // Concurrent manual retries must update the same existing failed row
+    // atomically: exactly one claim and provider call, without insertion.
+    const raceDb = makeDB();
+    seed(raceDb);
+    raceDb.raw.prepare(`INSERT INTO analytics_weekly_delivery
+      (report_key, week_start, kind, status, attempts, last_attempt_at)
+      VALUES ('weekly:20261005', '20261005', 'weekly', 'failed', 1,
+        '2026-10-11T00:00:00.000Z')`).run();
+    const manualSends = [];
+    const raceEnv = envFor(raceDb, async mail => {
+        manualSends.push(mail);
+        return { messageId: 'one-manual-retry' };
+    });
+    const manualResponses = await Promise.all(Array.from({ length: 8 }, () =>
+        worker.fetch(request('/admin/weekly/retry?week=20261005', 'POST', secret), raceEnv)));
+    assert.equal(manualResponses.filter(response => response.status === 200).length, 1);
+    assert.equal(manualResponses.filter(response => response.status === 409).length, 7);
+    assert.equal(manualSends.length, 1);
+    assert.equal(record(raceDb, 'weekly:20261005').attempts, 2);
+    assert.equal(record(raceDb, 'weekly:20261005').status, 'sent');
 
     // A crash after provider handoff must not be replayed by daily recovery.
     const interrupted = makeDB();
