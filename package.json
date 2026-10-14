@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "node tools/checks/run-lint.mjs",
     "preview": "wrangler dev",
     "deploy": "vite build && wrangler deploy",
     "deploy:analytics": "node tools/deploy/check-analytics-binding.mjs && wrangler deploy -c Workers/wrangler-games-analytics.jsonc",

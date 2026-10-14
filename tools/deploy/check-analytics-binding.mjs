@@ -16,7 +16,8 @@ if (!Array.isArray(db) || db.length !== 1
     || data.kv_namespaces?.length
     || data.ratelimits?.length !== 1
     || data.ratelimits[0].name !== 'ANALYTICS_RATE_LIMITER'
-    || data.triggers?.crons?.join(',') !== '17 * * * *') {
+    || data.triggers?.crons?.join(',') !== '17 19 * * *,0 1 * * MON'
+    || (data.send_email?.length && (data.send_email.length !== 1 || data.send_email[0].name !== 'EMAIL'))) {
     console.error('Analytics deploy blocked: configure the NEW D1 database UUID, without KV; read docs/analytics-v2-d1-runbook.md');
     process.exitCode = 1;
 } else {

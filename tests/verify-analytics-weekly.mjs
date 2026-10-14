@@ -10,6 +10,8 @@ import {
 } from '../Workers/analytics-weekly.js';
 import { sendWeek } from '../Workers/analytics-weekly-delivery.js';
 
+const Request = globalThis.Request;
+
 const migration = name => readFileSync(new URL(`../Workers/migrations/analytics/${name}`, import.meta.url), 'utf8');
 const names = { tetris: '俄罗斯方块', gomoku: 'Five & <script>alert("x")</script>',
     dots: 'Dots and Boxes' };
@@ -129,8 +131,20 @@ try {
         NOW, { allowEmpty: true });
     assert.equal(previewEmpty.total.opens, 0);
     const corrupt = {
-        prepare() { return { bind() { return { async all() { return { results: [{ day: '20261005',
-            game: 'tetris', opens: -1, plays: 0, finishes: 0, active_seconds: 0, playing_seconds: 0 }] }; } }; } }; },
+        prepare() {
+            return {
+                bind() {
+                    return {
+                        async all() {
+                            return { results: [{
+                                day: '20261005', game: 'tetris', opens: -1,
+                                plays: 0, finishes: 0, active_seconds: 0, playing_seconds: 0,
+                            }] };
+                        },
+                    };
+                },
+            };
+        },
     };
     await assert.rejects(loadWeeklyReport(corrupt, '20261005', names, external, '20260928', NOW));
 
