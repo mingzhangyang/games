@@ -1183,7 +1183,8 @@ class MathRainGame {
         // Start the game state (this will trigger game:started event)
         this.gameStateManager?.startGame();
         this.pauseOwnership.invalidate();
-        
+        // UI restart, session retry and next level each begin a new run.
+        track('math-rain', 'play');
     }
     
     useBomb() {
