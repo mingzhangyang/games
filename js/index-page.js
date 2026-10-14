@@ -111,12 +111,25 @@ function markDarkOnlyCards() {
     document.querySelectorAll('.game-card[data-dark-only]').forEach(card => {
         // 放在标题行而不是页脚：手机单列横条隐藏页脚，「仅深色」仍须在浅色下可见
         const header = card.querySelector('.card-header');
-        if (!header || header.querySelector('.tag--dark-only')) return;
+        const title = card.querySelector('.card-title');
+        if (!header || !title || header.querySelector('.tag--dark-only')) return;
         const tag = document.createElement('span');
         tag.className = 'card-chip tag--dark-only';
+        tag.id = title.id.replace(/-name$/, '-chip-dark');
         header.append(tag);
     });
-    const sync = () => document.body.classList.toggle('theme-light-active', getTheme() === 'light');
+    // 整卡用 aria-labelledby 命名，未引用的子文本不会被读出；而被引用的隐藏元素仍会被读出。
+    // 所以「仅深色」胶囊只在它可见（浅色）时加入可访问名，深色时移除。
+    const sync = () => {
+        const light = getTheme() === 'light';
+        document.body.classList.toggle('theme-light-active', light);
+        document.querySelectorAll('.game-card .tag--dark-only').forEach(tag => {
+            const card = tag.closest('.game-card');
+            const ids = (card.getAttribute('aria-labelledby') || '').split(/\s+/).filter(id => id && id !== tag.id);
+            if (light) ids.push(tag.id);
+            card.setAttribute('aria-labelledby', ids.join(' '));
+        });
+    };
     onThemeChange(sync);
     sync();
 }

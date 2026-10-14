@@ -380,8 +380,17 @@ const contrastAudit = page => page.evaluate(() => {
         const expect = want.filter(h => cards.includes(h)).sort();
         check((await state(page)).theme === 'light', '首页：点「浅色」后首页即时变浅');
         check(got.join() === expect.join(), '首页：浅色下「仅深色」小标恰好标在不支持浅色的游戏上', `got ${got.length} / want ${expect.length}`);
+        // 整卡由 aria-labelledby 命名：可见的「仅深色」胶囊必须进入可访问名，隐藏时必须移出
+        const labelled = () => page.evaluate(() => [...document.querySelectorAll('.game-card .tag--dark-only')].map(tag => {
+            const ids = (tag.closest('.game-card').getAttribute('aria-labelledby') || '').split(/\s+/);
+            return { id: tag.id, text: tag.textContent.trim(), inName: Boolean(tag.id) && ids.includes(tag.id) };
+        }));
+        const lightLabels = await labelled();
+        check(lightLabels.length > 0 && lightLabels.every(l => l.inName && l.text),
+            '首页：浅色下「仅深色」胶囊进入整卡可访问名', JSON.stringify(lightLabels.filter(l => !l.inName || !l.text).slice(0, 3)));
         await page.click('#theme-switch [data-theme-pref="dark"]');
         check((await badges()).length === 0, '首页：切回深色后小标隐藏');
+        check((await labelled()).every(l => !l.inName), '首页：深色下隐藏的「仅深色」胶囊不在可访问名里');
     }
     const labels = await page.evaluate(() => [...document.querySelectorAll('#theme-switch [data-theme-pref]')].map(b => b.textContent.trim()));
     check(labels.every(Boolean), '首页：开关文案非空', labels.join('/'));
