@@ -77,7 +77,7 @@
 | 外站 ↗ | `externalGames` | 卡片小标签，标题后加 ↗ |
 | 仅深色 | 无 `theme-light` cap（已有逻辑） | 浅色模式下显示；挂载点从页脚 Play 按钮前移到标题行（`markDarkOnlyCards()` 须同步改，否则删掉 Play 后它会提前 return，标记全部消失） |
 
-`home.badge` 字段废弃：daily 由 cap 派生，new 由日期派生，彻底消除 P-5 这类手填不一致。
+`home.badge` 字段废弃：daily 由 cap 派生，new 由日期派生，彻底消除 P-5 这类手填不一致。删除 `home.badge` 与 `addedAt` 运行时判定必须在同一个 PR（P2）落地，否则两阶段之间「新」标签会整体消失（§7）。
 
 ## 4. 布局方案
 
@@ -158,7 +158,7 @@ Daily Hub（3 个固定任务 + 「更多每日 (11) ›」链接 → #cat=daily
 
 UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保留 `badgeDaily` / `badgeNew` 作为胶囊文案；P2 / P3 再新增 `filterAll`、`filterDaily`、`recentTitle`、`newTitle`、`moreDaily`。
 
-**Schema**：`games.schema.json` 的 `$defs.home` 是 `additionalProperties: false`，且目前只允许 `iconClass` / `desc` / `tag` / `badge`。P2 必须同步修改：新增 `category`（枚举，与 `site.home.categories[].key` 一致）、`rank`（number）、`addedAt`（`pattern: ^\d{4}-\d{2}-\d{2}$`），删除 `badge`。`site.home` 在 schema 里只是 `"type": "object"`，`categories` 与 `ui` 新 key 不受约束；`categories` 的合法性由 `verify-index-cards` 守住。
+**Schema**：`games.schema.json` 的 `$defs.home` 是 `additionalProperties: false`，且目前只允许 `iconClass` / `desc` / `tag` / `badge`。P2 必须同步修改：新增 `category`（枚举，与 `site.home.categories[].key` 一致）、`rank`（number）、`addedAt`（`pattern: ^\d{4}-\d{2}-\d{2}$`），删除 `badge`；同一 PR 里 `index-page.js` 就要按 `addedAt` 判定「新」胶囊（§4.4 的日期比较），不能留到 P3。`site.home` 在 schema 里只是 `"type": "object"`，`categories` 与 `ui` 新 key 不受约束；`categories` 的合法性由 `verify-index-cards` 守住。
 
 ## 6. 文件改动清单
 
@@ -166,10 +166,14 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 |---|---|
 | `games.config.json` | §5 字段；删除 `home.badge` |
 | `games.schema.json` | `$defs.home` 加 `category` / `rank` / `addedAt`，删 `badge`（§5） |
+| `js/index-i18n-zh.js` | gen 派生，不手改：`site.home.ui` 文案（P1 删 `play`、加 `badgeExternal`）和分类名变化后由 `npm run gen` 重写，随对应 PR 一起提交 |
 | `tools/generators/gen-from-registry.mjs` | `homeCardLine()` 输出整卡 `<a>` + 文字胶囊；`homeCardsContent()` 按 `categories` 分组输出分区；zh map 增加分类名；P3 为新上线横排写出 `public/assets/seo/` 里存在的 OG 图**字面** URL（不存在则不输出，§4.4） |
 | `index.html` | 只改 gen 区域外的骨架：筛选条、最近玩过 / 新上线容器、Perks 压缩 |
 | `js/index-page.js` | 筛选 + hash 同步、`site_recent` 记录与渲染、新上线判定、「更多每日」计数；`applyLanguage` 去掉 `.play-btn` / `.card-badge`，改为本地化 `.card-chip`，增加分类标题；`markDarkOnlyCards()` 改挂到 `.card-header`（原来依赖 `.play-btn` 定位）；`injectStructuredData` 改读 `a.game-card[href]` |
 | `css/index.css` | 分区标题、筛选条、≥1280px 4 列、≤600px 单列横条、文字胶囊、横排；删除 `.card-badge*`、`.play-btn` |
+| `tests/css-layer-migrations/rules/` + `tests/css-layer-migration-state.json` | `tests/css-layer-p0-baseline.json` 是不可改的 P0 快照，且记录了 `.card-badge*` / `.play-btn` 规则；P1 删除这些规则时须登记 retire 映射（先例 `p2k-retire-*`），新增规则同样走迁移契约。由 `verify-css-debt` / `verify-css-migration-contract` 校验，不能改基线 |
+| `public/icons/home-icons.svg` | P1 删除不再使用的 `bookmark` symbol（与 `verify-index-cards` 的「已删除」断言对应） |
+| `public/assets/seo/` | P3 把 10 张只在 `assets/seo/` 的 OG 图同步进来，补画 crystal-bloom / flame-verse（§4.4） |
 | `tests/verify-index-cards.mjs` | **替换**现有断言：标题链接 / Play 链接 → 整卡 `<a class="game-card" href>`；切卡片用 `</a>` 而非 `</article>`；「书签 symbol 存在」→「已删除」；新增卡片区无 `article` / `onclick` / 嵌套链接、可访问名接线。P2 再加：`home.category` 必填且 ∈ `categories[].key`、`addedAt` 合法、无空分区、caps 含 daily ⟺ daily 胶囊 |
 | `tests/verify-index-layout.mjs` | 新增：各视口列数（1440→4、1024→3、768→2、≤600→1）；≤600px 卡高 ≤80px；**不断词**单独判定（每个单词宽度 ≤ 标题盒宽，所有视口）；**不截断**只在 ≥360px 要求（`scrollWidth ≤ clientWidth`），320px 允许 §4.3 的省略号；卡片与页面不横向溢出。P2 再加筛选后可见卡数 = registry 计数 |
 | `tests/smoke-index.mjs` | **替换**现有「空文字 + 图标 + tooltip 的 `.card-badge`」断言为：胶囊可见、文案按语言切换、不压标题、不溢出卡片；卡片内无嵌套可聚焦元素。P3 再加点击筛选、hash 往返、`site_recent` 写入；新上线横排的每张图对 **`dist` 服务器**请求返回 200（`npm run build` 后 `node tests/verify-all.mjs <dist base>` 复验） |
@@ -181,8 +185,8 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 | 阶段 | 内容 | 解决 | 风险 |
 |---|---|---|---|
 | **P1 卡片修复** | 整卡 `<a>`、文字胶囊（先沿用 `home.badge` 数据）、手机单列横条、桌面 4 列、外站 ↗ | P-2 P-4 P-7 P-8 P-9 | 低：不改 schema、不迁移分类；registry 只动两条 `site.home.ui` 文案（删 `play`、加 `badgeExternal`） |
-| **P2 分类** | `home.category` + `categories`、分区输出、筛选条 + hash、daily 胶囊改由 caps 派生、`home.tag` 降级 | P-1 P-3 P-5 | 中：gen 与 i18n 同步改 |
-| **P3 发现** | 最近玩过、`addedAt` 自动过期、新上线横排（gen 写字面图片 URL）、「更多每日」、Perks 压缩；把 10 张只在 `assets/seo/` 的 OG 图同步进 `public/assets/seo/`，补画 crystal-bloom / flame-verse | P-6 P-10 | 低 |
+| **P2 分类** | `home.category` + `categories`、分区输出、筛选条 + hash、daily 胶囊改由 caps 派生、new 胶囊改由 `addedAt` 运行时判定（与删除 `home.badge` 同一 PR）、`home.tag` 降级 | P-1 P-3 P-5 | 中：gen 与 i18n 同步改 |
+| **P3 发现** | 最近玩过、新上线横排（复用 P2 的 `addedAt` 判定；gen 写字面图片 URL）、「更多每日」、Perks 压缩；把 10 张只在 `assets/seo/` 的 OG 图同步进 `public/assets/seo/`，补画 crystal-bloom / flame-verse | P-6 P-10 | 低 |
 | **P4 可选** | Daily Hub registry 化（`daily.doneKey`）、基于 Analytics V2 的「🔥 热门」标签 | P-6 完整版 | 中：依赖 Analytics V2 上线 |
 
 每个阶段独立 PR，`npm run verify` 全绿后合入；P1 合入前后各截一组 390 / 1440 截图附在 PR 中。
