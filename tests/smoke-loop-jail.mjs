@@ -241,8 +241,15 @@ try {
     const ta = await page.$eval('#lj-stage', el => getComputedStyle(el).touchAction);
     check(ta === 'none', '③ 舞台 touch-action:none', ta);
 
-    // ⑤ 咬断：留一条墨线，把一只静止小怪挪到线上
+    // ⑤ 咬断：通过真实触屏留下新墨线，再由单只小怪触发碰撞。
+    // 之前用全局 bites === bites0 + 1 判断目标线是否消失，但场上有多只
+    // 小怪与历史笔迹：它们可以合法地在同一帧咬断多条线。应验证目标线身份。
     await freeze(page);
+    await page.evaluate(() => {
+        // 出生保护只用于测试：画线期间排除背景碰撞，抬笔后只释放目标小怪。
+        // 不改游戏代码或咬线算法，真实触控仍完整走 Pointer Events。
+        for (const m of window.ljGame.sim.monsters) m.spawn = 1e6;
+    });
     const line = await page.evaluate(() => {
         const r = window.ljGame.renderer;
         const sim = window.ljGame.sim;
@@ -250,26 +257,38 @@ try {
         const b = r.clientFromWorld(sim.w * 0.8, sim.h * 0.85);
         return [[a.x, a.y], [b.x, b.y]];
     });
-    const strokes0 = (await snap(page)).strokes;
+    const originalIds = await page.evaluate(() => window.ljGame.sim.strokes.map(x => x.id));
     await page.touchscreen.touchStart(...line[0]);
     for (let i = 1; i <= 12; i++) await page.touchscreen.touchMove(line[0][0] + (line[1][0] - line[0][0]) * i / 12, line[0][1]);
     await page.touchscreen.touchEnd();
     s = await snap(page);
-    check(s.strokes === strokes0 + 1 && !s.penDown, '⑤ 松开后墨线保留在场上');
+    const newStrokes = await page.evaluate(ids => window.ljGame.sim.strokes
+        .filter(x => !ids.includes(x.id))
+        .map(x => ({ id: x.id, live: x.live, points: x.points.length })), originalIds);
+    check(s.strokes === originalIds.length + 1 && !s.penDown
+        && newStrokes.length === 1 && !newStrokes[0].live && newStrokes[0].points >= 2,
+    '⑤ 松开后墨线保留在场上', JSON.stringify({ strokes: s.strokes, newStrokes }));
+    const targetStrokeId = newStrokes[0]?.id;
     const bites0 = s.bites;
     await page.evaluate(() => {
         const sim = window.ljGame.sim;
         const m = sim.monsters.find(x => x.type === 'circle') || sim.monsters[0];
         m.x = sim.w * 0.5; m.y = sim.h * 0.85 - 4;
+        m.vx = 0; m.vy = 0; m.spawn = 0;
         sim.pen.invuln = 5;
     });
-    // 显式条件而不是固定 sleep：整套并发跑时 120ms 内可能一帧都没推进
-    await waitSim(page, b0 => window.ljGame.sim.stats.bites > b0, bites0);
+    // 不依赖 rAF 运行速度：等待真正咬断目标 ID，而非仅看到其他墨线被咬。
+    await waitSim(page, ({ id, before }) => {
+        const sim = window.ljGame.sim;
+        return sim.stats.bites > before && !sim.strokes.some(x => x.id === id);
+    }, { id: targetStrokeId, before: bites0 });
     s = await snap(page);
-    // Other retained strokes are legitimate; verify the exact newly drawn
-    // stroke was removed rather than assuming the total stroke count is fixed.
-    check(s.bites === bites0 + 1 && s.strokes <= strokes0 + 1,
-        '⑤ 小怪碰到墨线：咬断后不增加笔迹', JSON.stringify({ bites: s.bites, strokes: s.strokes }));
+    const remainingIds = await page.evaluate(() => window.ljGame.sim.strokes.map(x => x.id));
+    check(targetStrokeId !== undefined && s.bites > bites0 && !s.penDown
+        && !remainingIds.includes(targetStrokeId)
+        && remainingIds.every(id => originalIds.includes(id)),
+    '⑤ 小怪碰到墨线：目标墨线消失且没有新笔迹',
+    JSON.stringify({ bitesBefore: bites0, bitesAfter: s.bites, targetStrokeId, remainingIds }));
 
     // ⑥ 暂停
     await page.keyboard.press('p');
