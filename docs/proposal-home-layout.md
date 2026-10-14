@@ -158,7 +158,7 @@ Daily Hub（3 个固定任务 + 「更多每日 (11) ›」链接 → #cat=daily
 
 UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保留 `badgeDaily` / `badgeNew` 作为胶囊文案；P2 / P3 再新增 `filterAll`、`filterDaily`、`recentTitle`、`newTitle`、`moreDaily`。
 
-**Schema**：`games.schema.json` 的 `$defs.home` 是 `additionalProperties: false`，且目前只允许 `iconClass` / `desc` / `tag` / `badge`。P2 必须同步修改：新增 `category`（枚举，与 `site.home.categories[].key` 一致）、`rank`（number）、`addedAt`（`pattern: ^\d{4}-\d{2}-\d{2}$`），删除 `badge`；同一 PR 里 `index-page.js` 就要按 `addedAt` 判定「新」胶囊（§4.4 的日期比较），不能留到 P3。`site.home` 在 schema 里只是 `"type": "object"`，`categories` 与 `ui` 新 key 不受约束；`categories` 的合法性由 `verify-index-cards` 守住。
+**Schema**：`games.schema.json` 的 `$defs.home` 是 `additionalProperties: false`，且目前只允许 `iconClass` / `desc` / `tag` / `badge`。P2 必须同步修改：新增 `category`（枚举，与 `site.home.categories[].key` 一致）、`rank`（number）、`addedAt`（`pattern: ^\d{4}-\d{2}-\d{2}$`），删除 `badge`；同一 PR 里 `index-page.js` 就要按 `addedAt` 判定「新」胶囊（§4.4 的日期比较），不能留到 P3。`site.home` 在 schema 里只是 `"type": "object"`，`categories` 与 `ui` 新 key 不受约束；`categories` 以及 `externalGames[].category` 的合法性由 `verify-index-cards` 守住（§6）。
 
 ## 6. 文件改动清单
 
@@ -175,7 +175,7 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 | `css/index.css` 里的死规则 | `.card-badge*`、`.play-btn*` 在 P1 后无 DOM 使用者。可另起 `kind: "retire"` 事务（`tests/css-layer-migrations/rules/`，见 `docs/architecture-v2-css-layer-migration-plan-2026-09.md` P2-K）清理，不和功能改动混在同一 PR |
 | `public/icons/home-icons.svg` | P1 删除不再使用的 `bookmark` symbol（与 `verify-index-cards` 的「已删除」断言对应） |
 | `public/assets/seo/` | P3 把 10 张只在 `assets/seo/` 的 OG 图同步进来，补画 crystal-bloom / flame-verse（§4.4） |
-| `tests/verify-index-cards.mjs` | **替换**现有断言：标题链接 / Play 链接 → 整卡 `<a class="game-card" href>`；切卡片用 `</a>` 而非 `</article>`；「书签 symbol 存在」→「已删除」；新增卡片区无 `article` / `onclick` / 嵌套链接、可访问名接线。P2 再加：`home.category` 必填且 ∈ `categories[].key`、`addedAt` 合法、无空分区、caps 含 daily ⟺ daily 胶囊 |
+| `tests/verify-index-cards.mjs` | **替换**现有断言：标题链接 / Play 链接 → 整卡 `<a class="game-card" href>`；切卡片用 `</a>` 而非 `</article>`；「书签 symbol 存在」→「已删除」；新增卡片区无 `article` / `onclick` / 嵌套链接、可访问名接线。P2 再加：`home.category` 必填且 ∈ `categories[].key`，`site.home.externalGames[].category` 同样必填且 ∈ `categories[].key`（`site.home` 不受 schema 约束，只能靠这里守住，否则拼错会让外站卡掉出分区）、`addedAt` 合法、无空分区、caps 含 daily ⟺ daily 胶囊 |
 | `tests/verify-index-layout.mjs` | 新增：各视口列数（1440→4、1024→3、768→2、≤600→1）；≤600px 卡高 ≤80px；**不断词**单独判定（每个单词宽度 ≤ 标题盒宽，所有视口）；**不截断**只在 ≥360px 要求（`scrollWidth ≤ clientWidth`），320px 允许 §4.3 的省略号；卡片与页面不横向溢出。P2 再加筛选后可见卡数 = registry 计数 |
 | `tests/smoke-index.mjs` | **替换**现有「空文字 + 图标 + tooltip 的 `.card-badge`」断言为：胶囊可见、文案按语言切换、不压标题、不溢出卡片；卡片内无嵌套可聚焦元素。P3 再加点击筛选、hash 往返、`site_recent` 写入；新上线横排的每张图对 **`dist` 服务器**请求返回 200（`npm run build` 后 `node tests/verify-all.mjs <dist base>` 复验） |
 | `tests/verify-theme.mjs` | 「仅深色」标记的游戏 href 改从 `a.game-card` 读（标题不再是链接） |
