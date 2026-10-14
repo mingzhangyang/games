@@ -420,7 +420,7 @@ export class EchoCaveGame {
     /* ---------------------- 模式与关卡流程 ---------------------- */
 
     startLevels() {
-        track('echo-cave', 'start_levels');
+        // Analytics play is emitted by startLevel(), after a valid stage is loaded.
         this.mode = 'levels';
         this.daily = null;
         let idx = 0;
@@ -437,7 +437,7 @@ export class EchoCaveGame {
         const course = dailyCourse(key);
         this.mode = 'daily';
         this.daily = { key, display: todayKeyDisplay(), course, cursor: 0, totalPulses: 0, stars: 0 };
-        track('echo-cave', 'start_daily');
+        // Analytics play is emitted by startLevel(), after a valid stage is loaded.
         this.startLevel(course[0]);
         this.showToast(this.t('dailyStartToast'));
     }
@@ -458,6 +458,7 @@ export class EchoCaveGame {
         this.world = createWorld(this.spec);
         this.memDirty = true;
         this.state = 'playing'; this.contextualRestart?.sync();
+        track('echo-cave', 'play');
         this.syncActionVisibility();
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
@@ -533,7 +534,7 @@ export class EchoCaveGame {
         }
         this.showClearPanel(stars);
         if (stars === 3) Sfx.star3();
-        track('echo-cave', 'level_win', stars);
+        track('echo-cave', 'finish');
     }
 
     /** 战役全通 → 提交 20 关最少脉冲总和（asc 榜） */
@@ -573,7 +574,7 @@ export class EchoCaveGame {
         this.failTimer = 0;
         Sfx.fail();
         vibrate([25, 40, 25]);
-        track('echo-cave', 'level_fail', 0);
+        track('echo-cave', 'finish');
     }
 
     finishDaily() {

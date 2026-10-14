@@ -318,6 +318,26 @@ function scoresTransform(src) {
     });
 }
 
+// Only games.config.json owns client game IDs and cross-origin allowlisting.
+function analyticsOriginsContent() {
+    const urls = [ORIGIN, 'https://game.orangely.xyz',
+        ...(SITE.home.externalGames || []).map(g => new URL(g.url).origin)];
+    return 'const ALLOWED_ORIGINS = [' + [...new Set(urls)].map(jsq).join(', ') + '];';
+}
+function analyticsOriginsTransform(src) {
+    return applyRegion(src, 'analytics-origins', analyticsOriginsContent());
+}
+function analyticsClientContent() {
+    const external = SITE.home.externalGames || [];
+    return [
+        '    var VALID_GAMES = new Set(' + JSON.stringify([...GAMES.map(g => g.id), ...external.map(g => g.id)]) + ');',
+        '    var EXTERNAL_ORIGINS = ' + JSON.stringify(Object.fromEntries(external.map(g => [g.id, new URL(g.url).origin]))) + ';',
+    ].join('\n');
+}
+function analyticsClientTransform(src) {
+    return applyRegion(src, 'analytics-client-games', analyticsClientContent());
+}
+
 // ---------- Workers/games-analytics.js ----------
 // 站外游戏（site.home.externalGames：2d-minecraft / dots-and-boxes / the-stack）
 // 也通过同一 hubTrack 协议上报，用的是它们在登记表里的 id。
@@ -387,7 +407,8 @@ processFile('public/manifest.json', [manifestTransform]);
 processFile('src/platform/more-games.js', [moreGamesTransform]);
 processFile('vite.config.js', [viteTransform]);
 processFile('Workers/game-scores.js', [scoresTransform]);
-processFile('Workers/games-analytics.js', [analyticsTransform]);
+processFile('Workers/games-analytics.js', [analyticsOriginsTransform, analyticsTransform]);
+processFile('public/analytics.js', [analyticsClientTransform]);
 processFile('README.md', [readmeTransform]);
 
 if (CHECK) {

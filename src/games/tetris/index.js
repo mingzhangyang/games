@@ -19,6 +19,7 @@ onReady(() => {
     window.tetrisRuntime = mountGameRuntime({
         self: 'tetris.html',
         game,
+        analyticsPlaying: g => !g.gameOver && !g.paused && g.animationId !== null,
         frame: { logicalWidth: 400 },
         chrome: {
             owns: ['sound'],

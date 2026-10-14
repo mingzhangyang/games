@@ -731,6 +731,8 @@ class BondForgeGame {
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
         this.updateHud();
+        // Sandbox is a real session without a finish condition.
+        track('bond-forge', 'play');
         this.toast(this.t('sandboxHint'));
     }
 
@@ -840,7 +842,6 @@ class BondForgeGame {
         }
         if (this.levelIndex + 1 >= LEVELS.length) {
             this.toast(this.t('levelDone'));
-            track('bond-forge', 'finish');
             this.toMenu();
             return;
         }
@@ -882,7 +883,6 @@ class BondForgeGame {
         if (this.el['over-score']) this.el['over-score'].textContent = String(total);
         if (this.el['over-sub']) this.el['over-sub'].textContent = `${this.t('drags')}: ${total}`;
         if (this.el['over']) this.el['over'].classList.remove('hidden');
-        track('bond-forge', 'finish');
         this.submitDailyScore();
     }
 
@@ -1760,6 +1760,9 @@ class BondForgeGame {
             return;
         }
 
+        // A stage attempt finishes when its target is cleared, once.
+        // Daily/campaign summaries are not separate attempts; sandbox has no finish.
+        track('bond-forge', 'finish');
         if (this.mode === 'daily') this.dailyTotalDrags += this.drags;
 
         const stars = this.checkStars();

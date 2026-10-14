@@ -11,7 +11,7 @@ import SessionManager from './core/SessionManager.js';
 import PerformanceOptimizer from './core/PerformanceOptimizer.js';
 import ErrorHandler from './core/ErrorHandler.js';
 import UIController from './core/UIController.js';
-import { track } from '../../platform/analytics.js';
+import { track, bindAnalyticsPlaying } from '../../platform/analytics.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
 import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 // P1：外部组件静态 import 直连（替代原 window.* 全局轮询）
@@ -1183,7 +1183,8 @@ class MathRainGame {
         // Start the game state (this will trigger game:started event)
         this.gameStateManager?.startGame();
         this.pauseOwnership.invalidate();
-        
+        // UI restart, session retry and next level each begin a new run.
+        track('math-rain', 'play');
     }
     
     useBomb() {
@@ -1283,6 +1284,8 @@ async function initializeMathRainGame() {
         
         // Create game instance
         window.mathRainGame = MathRainGame.getInstance();
+        bindAnalyticsPlaying('math-rain',
+            () => window.mathRainGame?.gameStateManager?.gameState === 'playing');
         
         // Async initialization
         await window.mathRainGame.initializeAsync();

@@ -430,7 +430,7 @@ export class SilkfallGame {
     /* ---------------------- 模式与关卡流程 ---------------------- */
 
     startLevels() {
-        track('silk-dew', 'start_levels');
+        // Analytics play is emitted by startLevel(), after a valid stage is loaded.
         this.mode = 'levels';
         this.daily = null;
         this.lastDailyKey = todayKey();
@@ -457,7 +457,7 @@ export class SilkfallGame {
             totalDrags: 0,
             stars: 0,
         };
-        track('silk-dew', 'start_daily');
+        // Analytics play is emitted by startLevel(), after a valid stage is loaded.
         this.startLevel(course[0]);
         this.showToast(this.t('dailyStartToast'));
     }
@@ -480,6 +480,7 @@ export class SilkfallGame {
         this.particles = [];
         this.world = createWorld(this.spec);
         this.state = 'playing'; this.contextualRestart?.sync();
+        track('silk-dew', 'play');
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
         this.lastFrame = 0;
@@ -562,7 +563,7 @@ export class SilkfallGame {
             this.showClearPanel(stars, improved);
         }
         if (stars === 3) Sfx.star3();
-        track('silk-dew', 'level_win', stars);
+        track('silk-dew', 'finish');
     }
 
     showClearPanel(stars, improved) {
@@ -589,7 +590,7 @@ export class SilkfallGame {
         this.failTimer = 0;
         Sfx.fail();
         vibrate([25, 40, 25]);
-        track('silk-dew', 'level_fail', 0);
+        track('silk-dew', 'finish');
     }
 
     finishDaily() {

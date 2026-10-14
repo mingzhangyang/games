@@ -291,6 +291,7 @@ class ReversiGame {
         this.board[35] = BLACK; this.board[36] = WHITE;
         this.turn = BLACK;
         this.state = 'playing';
+        track('reversi', 'play');
         this.lastMove = -1;
 
         this.renderAll();
@@ -561,7 +562,6 @@ class ReversiGame {
     hideStart() {
         if (this.el.start) this.el.start.classList.add('hidden');
         Sfx.click();
-        track('reversi', 'play');
     }
 
     /* ── 复制成绩 ── */
@@ -714,6 +714,7 @@ onReady(() => {
     const getText = () => LANGUAGES[getLang()] || LANGUAGES.en;
     window.reversiRuntime = mountGameRuntime({
         self: 'reversi.html',
+        game: window.rvGame,
         frame: false,
         chrome: {
             getText,

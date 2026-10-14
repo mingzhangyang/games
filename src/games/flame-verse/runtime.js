@@ -486,7 +486,7 @@ export class FlameVerseGame {
     /* ---------------------- 模式与关卡流程 ---------------------- */
 
     startLevels() {
-        track('flame-verse', 'start_levels');
+        // Analytics play is emitted by startLevel(), after a valid stage is loaded.
         this.mode = 'levels';
         this.daily = null;
         let idx = 0;
@@ -503,7 +503,7 @@ export class FlameVerseGame {
         const course = dailyCourse(key);
         this.mode = 'daily';
         this.daily = { key, display: todayKeyDisplay(), course, cursor: 0, totalCost: 0, stars: 0 };
-        track('flame-verse', 'start_daily');
+        // Analytics play is emitted by startLevel(), after a valid stage is loaded.
         this.startLevel(course[0]);
         this.showToast(this.t('dailyStartToast'));
     }
@@ -518,6 +518,7 @@ export class FlameVerseGame {
         this.refills = 0;
         this.diff = [];
         this.state = 'playing'; this.contextualRestart?.sync();
+        track('flame-verse', 'play');
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
         this.lastFrame = 0;
@@ -664,7 +665,7 @@ export class FlameVerseGame {
         }
         this.showClearPanel(stars, cost);
         if (stars === 3) Sfx.star3();
-        track('flame-verse', 'level_win', stars);
+        track('flame-verse', 'finish');
     }
 
     /** 战役全通 → 提交各关最小代价总和（asc 榜） */

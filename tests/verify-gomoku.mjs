@@ -25,12 +25,26 @@ const page = await browser.newPage();
 const pageErrors = [];
 page.on('pageerror', e => pageErrors.push((e.stack || e.message).split('\n').slice(0, 4).join('\n    ')));
 
-// Capture the real hubTrack -> sendBeacon path without sending anything to the live Worker.
-// Runs before page scripts, so startup events and every reset are visible to the test.
+// V2 local mock: no production Worker requests or test data.
 await page.evaluateOnNewDocument(() => {
+    window.__ANALYTICS_V2_TEST__ = true;
     window.__gomokuAnalyticsEvents = [];
+    const rawFetch = window.fetch.bind(window);
+    window.fetch = (url, options) => {
+        const path = String(url);
+        if (path.endsWith('/__analytics/stats?v=2')) {
+            return Promise.resolve({ ok: true, json: async () => ({
+                scope: 'day', games: {}, total: { p: 0, f: 0, opens: 0, activeSeconds: 0, playingSeconds: 0 },
+            }) });
+        }
+        if (path.endsWith('/__analytics/event')) {
+            window.__gomokuAnalyticsEvents.push(JSON.parse(options.body));
+            return Promise.resolve({ ok: true, status: 201 });
+        }
+        return rawFetch(url, options);
+    };
     navigator.sendBeacon = (url, payload) => {
-        if (url !== 'https://games-analytics.orangely.workers.dev/event') return false;
+        if (!String(url).endsWith('/__analytics/event')) return false;
         window.__gomokuAnalyticsEvents.push(JSON.parse(payload));
         return true;
     };

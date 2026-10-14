@@ -208,8 +208,25 @@ try {
     // ③ 触屏画环
     await sleep(800); // 等出生显形结束
     await freeze(page);
+    // Capture, bite and pause checks share one real run. Keep unrelated monster
+    // hits from ending it while CI/browser scheduling varies; the lethal hit is
+    // explicitly restored and tested in step ⑧.
+    await page.evaluate(() => { window.ljGame.sim.pen.invuln = 1e9; });
     let target = await pickTarget(page);
+    // The menu is document-flow scrollable on short mobile screens. Clicking Start
+    // can leave the canvas partly below the viewport; an offscreen synthetic
+    // touchscreen move is lost (pointercancel), leaving an unclosed ring. Keep
+    // the actual in-world ring visible before sending real touch input.
+    await page.evaluate(t => {
+        const center = window.ljGame.renderer.clientFromWorld(t.x, t.y);
+        window.scrollBy({ top: center.y - window.innerHeight / 2, behavior: 'instant' });
+    }, target);
     let path = await circlePath(page, target);
+    const ringVisible = await page.evaluate(points => points.every(([x, y]) =>
+        x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight), path);
+    check(ringVisible, '③ 画环全路径位于触屏视口内', JSON.stringify({
+        first: path[0], viewport: [390, 664], scroll: await page.evaluate(() => window.scrollY),
+    }));
     const before = await snap(page);
     const scrollBefore = await page.evaluate(() => window.scrollY);
     await page.touchscreen.touchStart(...path[0]);
@@ -228,8 +245,19 @@ try {
     const ta = await page.$eval('#lj-stage', el => getComputedStyle(el).touchAction);
     check(ta === 'none', '③ 舞台 touch-action:none', ta);
 
-    // ⑤ 咬断：留一条墨线，把一只静止小怪挪到线上
+    // ⑤ 咬断：通过真实触屏留下新墨线，再由单只小怪触发碰撞。
+    // 之前用全局 bites === bites0 + 1 判断目标线是否消失，但场上有多只
+    // 小怪与历史笔迹：它们可以合法地在同一帧咬断多条线。应验证目标线身份。
     await freeze(page);
+    await page.evaluate(() => {
+        // 出生保护只用于测试：画线期间排除背景碰撞，抬笔后只释放目标小怪。
+        // 不改游戏代码或咬线算法，真实触控仍完整走 Pointer Events。
+        // spawnMax must move with spawn: the renderer draws spawn / spawnMax as
+        // the fade-in progress, and spawn > spawnMax yields a negative arc
+        // radius that throws inside renderer.draw() (which pauseQuiet() calls),
+        // so P pauses the sim but never reveals the overlay.
+        for (const m of window.ljGame.sim.monsters) { m.spawn = 1e6; m.spawnMax = 1e6; }
+    });
     const line = await page.evaluate(() => {
         const r = window.ljGame.renderer;
         const sim = window.ljGame.sim;
@@ -237,34 +265,93 @@ try {
         const b = r.clientFromWorld(sim.w * 0.8, sim.h * 0.85);
         return [[a.x, a.y], [b.x, b.y]];
     });
-    const strokes0 = (await snap(page)).strokes;
+    const originalIds = await page.evaluate(() => window.ljGame.sim.strokes.map(x => x.id));
     await page.touchscreen.touchStart(...line[0]);
     for (let i = 1; i <= 12; i++) await page.touchscreen.touchMove(line[0][0] + (line[1][0] - line[0][0]) * i / 12, line[0][1]);
     await page.touchscreen.touchEnd();
     s = await snap(page);
-    check(s.strokes === strokes0 + 1 && !s.penDown, '⑤ 松开后墨线保留在场上');
+    const newStrokes = await page.evaluate(ids => window.ljGame.sim.strokes
+        .filter(x => !ids.includes(x.id))
+        .map(x => ({ id: x.id, live: x.live, points: x.points.length })), originalIds);
+    check(s.strokes === originalIds.length + 1 && !s.penDown
+        && newStrokes.length === 1 && !newStrokes[0].live && newStrokes[0].points >= 2,
+    '⑤ 松开后墨线保留在场上', JSON.stringify({ strokes: s.strokes, newStrokes }));
+    const targetStrokeId = newStrokes[0]?.id;
     const bites0 = s.bites;
     await page.evaluate(() => {
         const sim = window.ljGame.sim;
         const m = sim.monsters.find(x => x.type === 'circle') || sim.monsters[0];
         m.x = sim.w * 0.5; m.y = sim.h * 0.85 - 4;
-        sim.pen.invuln = 5;
+        m.vx = 0; m.vy = 0; m.spawn = 0;
+        // Do not let the target monster kill the pen during the bite assertion.
+        sim.pen.invuln = 1e9;
     });
-    // 显式条件而不是固定 sleep：整套并发跑时 120ms 内可能一帧都没推进
-    await waitSim(page, b0 => window.ljGame.sim.stats.bites > b0, bites0);
+    // 不依赖 rAF 运行速度：等待真正咬断目标 ID，而非仅看到其他墨线被咬。
+    await waitSim(page, ({ id, before }) => {
+        const sim = window.ljGame.sim;
+        return sim.stats.bites > before && !sim.strokes.some(x => x.id === id);
+    }, { id: targetStrokeId, before: bites0 });
     s = await snap(page);
-    // Other retained strokes are legitimate; verify the exact newly drawn
-    // stroke was removed rather than assuming the total stroke count is fixed.
-    check(s.bites === bites0 + 1 && s.strokes <= strokes0 + 1,
-        '⑤ 小怪碰到墨线：咬断后不增加笔迹', JSON.stringify({ bites: s.bites, strokes: s.strokes }));
+    const remainingIds = await page.evaluate(() => window.ljGame.sim.strokes.map(x => x.id));
+    check(targetStrokeId !== undefined && s.bites > bites0 && !s.penDown
+        && !remainingIds.includes(targetStrokeId)
+        && remainingIds.every(id => originalIds.includes(id)),
+    '⑤ 小怪碰到墨线：目标墨线消失且没有新笔迹',
+    JSON.stringify({ bitesBefore: bites0, bitesAfter: s.bites, targetStrokeId, remainingIds }));
 
     // ⑥ 暂停
+    // Touch gestures may leave the previously focused Start button hidden and
+    // the document scrolled to the tall mobile menu's old position. Test the
+    // keyboard shortcut from an active, foreground game viewport instead of
+    // depending on the focus/scroll state left by the touch scenario.
+    await page.bringToFront();
+    await page.evaluate(() => {
+        document.activeElement?.blur();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+    s = await snap(page);
+    check(s.state === 'playing' && s.lives > 0,
+        '⑥ 暂停验证前仍有可操作的活局', JSON.stringify({ state: s.state, lives: s.lives }));
+    if (s.state !== 'playing' || s.paused || s.lives <= 0) {
+        throw new Error('⑥ P 键验证前状态无效：' + JSON.stringify({
+            state: s.state, paused: s.paused, overlay: s.pause, lives: s.lives,
+            hidden: await page.evaluate(() => document.hidden),
+        }));
+    }
     await page.keyboard.press('p');
     s = await snap(page);
     check(s.paused && s.pause && !s.resetShown && s.pauseLabel === '继续', '⑥ P 键暂停：浮层 + 重开隐藏 + 暂停钮变「继续」', JSON.stringify(s));
+    if (!s.paused || !s.pause) {
+        throw new Error('⑥ P 键未打开可见暂停层：' + JSON.stringify({
+            state: s.state, paused: s.paused, overlay: s.pause,
+            hidden: await page.evaluate(() => document.hidden),
+            lease: await page.evaluate(() => window.ljGame.pauseOwnership.isHeld()),
+            activeElement: await page.evaluate(() => document.activeElement?.id),
+        }));
+    }
     const t0 = s.time;
     await sleep(300);
     check((await snap(page)).time === t0, '⑥ 暂停期间模拟冻结');
+    await page.evaluate(() => document.getElementById('lj-btn-resume').scrollIntoView({
+        block: 'center', inline: 'nearest', behavior: 'instant',
+    }));
+    const resumeHit = await page.evaluate(() => {
+        const button = document.getElementById('lj-btn-resume');
+        const r = button.getBoundingClientRect();
+        const x = (r.left + r.right) / 2;
+        const y = (r.top + r.bottom) / 2;
+        return {
+            visible: r.width > 0 && r.height > 0
+                && x >= 0 && x < innerWidth && y >= 0 && y < innerHeight
+                && !!document.elementFromPoint(x, y)?.closest('#lj-btn-resume'),
+            rect: { x: r.x, y: r.y, width: r.width, height: r.height },
+            viewport: { width: innerWidth, height: innerHeight, scrollY: window.scrollY },
+            overlayDisplay: getComputedStyle(document.getElementById('lj-pause')).display,
+        };
+    });
+    if (!resumeHit.visible) {
+        throw new Error('⑥ 暂停后「继续」按钮不在可点击区域：' + JSON.stringify(resumeHit));
+    }
     await page.click('#lj-btn-resume');
     await waitSim(page, t => window.ljGame.sim.time > t, t0);
     s = await snap(page);

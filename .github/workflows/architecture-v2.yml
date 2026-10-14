@@ -74,3 +74,6 @@ jobs:
 
       - name: Cloudflare Worker dry run
         run: npx wrangler deploy --dry-run --outdir .wrangler-dry-run
+
+      - name: Analytics Worker dry run (no production deployment)
+        run: npx wrangler deploy -c Workers/wrangler-games-analytics.jsonc --dry-run --outdir .wrangler-analytics-dry-run

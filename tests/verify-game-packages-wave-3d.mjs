@@ -18,7 +18,7 @@ const specs = [
         keys: ["'rd_progress'"],
         runtimeKeys: ["'rd_lb_'"],
         storageFile: 'storage.js',
-        analytics: { play: 2, finish: 1, finalDailyGate: true },
+        analytics: { play: 3, finish: 1, finalDailyGate: true },
         retired: ['js/ripple-duet-rules.js', 'js/ripple-duet-levels.js'],
     },
     {
@@ -95,6 +95,8 @@ for (const spec of selectedSpecs) {
     }
     if (spec.analytics) {
         const count = event => (runtime.match(new RegExp(`track\\('${spec.id}', '${event}'\\)`, 'g')) || []).length;
+        // Start level, start daily, and explicit retry are all new attempts.
+        // Advancing within the daily course is not a new play.
         check(count('play') === spec.analytics.play, `${spec.id}: uses canonical play analytics events`);
         check(count('finish') === spec.analytics.finish, `${spec.id}: uses canonical finish analytics events`);
         if (spec.analytics.finalDailyGate) {

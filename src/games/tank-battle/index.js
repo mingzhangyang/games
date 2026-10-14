@@ -1,7 +1,7 @@
 // 国际化语言支持
 import { getLang } from '../../platform/site-settings.js';
 import { createSfx } from '../../platform/game-sfx.js';
-import { track } from '../../platform/analytics.js';
+import { track, bindAnalyticsPlaying } from '../../platform/analytics.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
 import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 import { CONFIG, WEAPONS, Particle, PowerUp, Bullet, Tank, BossTank, bindTankI18n } from './tank-entities.js';
@@ -1226,6 +1226,7 @@ class TankBattle {
         this.currentWeaponIndex = 0;
         this.init();
         this.gameLoop();
+        track('tank-battle', 'play');
     }
 
     gameLoop(time = 0) {
@@ -1248,6 +1249,9 @@ window.addEventListener('load', () => {
     updateUILabels(); // 初始化UI标签
     bindOrientationArtFallback();
     window.tankBattleInstance = new TankBattle();
+    bindAnalyticsPlaying('tank-battle',
+        () => window.tankBattleInstance?.gameState === 'playing'
+            && !window.tankBattleInstance?.paused);
 });
 window.addEventListener('site-settings:changed', () => {
     currentLanguage = getLang();

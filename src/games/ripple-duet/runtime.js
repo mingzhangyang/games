@@ -268,6 +268,7 @@ export class RippleDuetGame {
     restartLevel() {
         if (!this.spec) return;
         this.loadLevel(this.spec);
+        track('ripple-duet', 'play');
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
@@ -291,6 +292,7 @@ export class RippleDuetGame {
                 this.finishDaily();
                 return;
             }
+            // Daily course is one run across multiple waves; next wave is not another play.
             this.loadLevel(this.daily.course[this.daily.cursor]);
             this.state = 'playing'; this.contextualRestart?.sync();
             this.isPaused = false; this.contextualRestart?.sync();
