@@ -1,0 +1,211 @@
+/* ─────────────────────────────────────────────
+   首页游戏卡片（Home cards）— docs/proposal-home-layout.md P1
+
+   整卡一个 <a class="game-card">（唯一 Tab 停靠点）、可见文字胶囊取代只靠 hover 的书签图标、
+   手机（≤600px）单列横条、宽桌面（≥1280px）四列。
+
+   本文件是 CSS P0/P5 冻结之后的**附加特性样式表**（见 tests/lib/css/feature-additions.mjs）：
+   css/index.css 一条不改；全部规则在 @layer contracts、选择器逐条登记。只有要压过冻结的
+   unlayered 页面声明时才用 !important（分层 !important 与 <link> 顺序无关地胜出），
+   新增属性用普通声明。断言见 tests/verify-index-cards.mjs / verify-index-layout.mjs /
+   smoke-index.mjs。
+   ───────────────────────────────────────────── */
+
+@layer contracts {
+    /* 文字胶囊要在叠了半透明黄 / 绿底的浅色卡片上过 4.5:1；深色沿用原书签配色 */
+    :root {
+        --ix-card-chip--new-text: var(--ix-card-badge--new-text);
+        --ix-card-chip--daily-text: var(--tok-success);
+    }
+
+    :root[data-theme="light"] {
+        --ix-card-chip--new-text: #7a5a00;
+        --ix-card-chip--daily-text: #0d6b4b;
+    }
+
+    /* 整卡是链接：去掉 UA 链接色与下划线，补键盘焦点环 */
+    .game-card {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .game-card:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    /* 桌面 / 平板：图标 + 标题行 / 两行简介 / 标签 + 箭头 */
+    .card-body {
+        display: grid !important;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        grid-template-rows: auto 1fr auto;
+        grid-template-areas:
+            "icon head head"
+            "desc desc desc"
+            "foot foot go";
+        align-items: center;
+        gap: 10px 12px !important;
+    }
+
+    .card-icon {
+        grid-area: icon;
+    }
+
+    .card-header {
+        grid-area: head;
+        flex-wrap: wrap;
+        gap: 4px 8px !important;
+        min-width: 0;
+    }
+
+    /* 只在空格处换行：冻结的 overflow-wrap:anywhere 在 390px 两列时把 Minesweeper 拆成 Minesweep/er */
+    .card-title {
+        overflow-wrap: normal !important;
+    }
+
+    .game-card:hover .card-title {
+        color: var(--color-accent) !important;
+    }
+
+    .card-desc {
+        grid-area: desc;
+        align-self: start;
+        margin: 0 !important;
+    }
+
+    .card-footer {
+        grid-area: foot;
+    }
+
+    /* 状态 / 外站胶囊：文字 + 颜色双编码，触屏也可读。
+       「仅深色」胶囊同时带 .tag--dark-only，显隐仍由 index.css 的冻结规则决定。 */
+    .card-chip {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 7px;
+        border: 1px solid var(--color-border);
+        border-radius: 99px;
+        font-size: 0.68em;
+        font-weight: 700;
+        line-height: 1.5;
+        white-space: nowrap;
+        color: var(--color-text-muted);
+    }
+
+    .card-chip--new {
+        color: var(--ix-card-chip--new-text);
+        background: var(--ix-card-badge--new-bg);
+        border: var(--ix-card-badge--new-border);
+    }
+
+    .card-chip--daily {
+        color: var(--ix-card-chip--daily-text);
+        background: var(--ix-card-badge--daily-bg);
+        border: var(--ix-card-badge--daily-border);
+    }
+
+    .card-chip--external {
+        background: var(--ix-tag-bg);
+    }
+
+    .card-go {
+        grid-area: go;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 99px;
+        background: var(--color-primary);
+        color: var(--ix-play-btn-text);
+        font-size: 1.15em;
+        font-weight: 700;
+        line-height: 1;
+        transition: transform 0.15s;
+    }
+
+    .game-card:hover .card-go {
+        transform: translateX(3px);
+    }
+
+    /* 宽桌面四列：1000px 上限在 1440 屏只排得下三列，两侧大片留白 */
+    @media (width >= 1280px) {
+        .games-section, .perks {
+            max-width: 1200px !important;
+        }
+    }
+
+    /* 手机：单列横条（图标 | 标题 + 一行简介 | 箭头），约 68px 高；页脚标签隐藏 */
+    @media (width <= 600px) {
+        .games-grid {
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+        }
+
+        .card-body {
+            padding: 12px 14px !important;
+            grid-template-columns: 36px minmax(0, 1fr) auto;
+            grid-template-rows: auto auto;
+            grid-template-areas:
+                "icon head go"
+                "icon desc go";
+            gap: 2px 12px !important;
+        }
+
+        .card-icon {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 1.35em !important;
+        }
+
+        .card-header {
+            flex-wrap: nowrap;
+        }
+
+        .card-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .card-desc {
+            font-size: 0.8em !important;
+            line-height: 1.5 !important;
+            -webkit-line-clamp: 1 !important;
+            line-clamp: 1 !important;
+        }
+
+        .card-footer {
+            display: none !important;
+        }
+
+        .card-go {
+            width: 20px;
+            background: transparent;
+            color: var(--color-text-muted);
+        }
+    }
+
+    /* 超窄屏（≤360px）再收一点内距，让「标题 + 胶囊」在 360 宽整行放得下 */
+    @media (width <= 360px) {
+        .card-body {
+            padding: 12px !important;
+            column-gap: 10px !important;
+        }
+
+        .card-header {
+            gap: 6px !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .card-go {
+            transition: none;
+        }
+
+        .game-card:hover .card-go {
+            transform: none;
+        }
+    }
+}

@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import {
     stripFeatureLink, FEATURE_LINK, stripMobileFitLink, MOBILE_FIT_LINK, reviewFeatureStyles,
-    stripStageStatusLink, STAGE_STATUS_LINK,
+    stripStageStatusLink, STAGE_STATUS_LINK, stripHomeCardsLink, HOME_CARDS_LINK,
     POST_FREEZE_GAMES, postFreezeSelectorScoped, reviewPostFreezeStylesheet, reviewPostFreezePage,
     postFreezePageLinksStylesheet,
 } from './lib/css/feature-additions.mjs';
@@ -119,6 +119,44 @@ assert.ok(reviewStatusWith('.sl-progress { top: 10px; }').some(e => e.includes('
 assert.ok(reviewStatusWith('@layer contracts { .game-topbar { display: none; } }').some(e => e.includes('unreviewed selectors')),
     'stage-status cannot restyle an unreviewed selector');
 
+// Home-cards contract: index.html only, one canonical link after index.css, before mobile-fit.
+const home = '<link rel="stylesheet" href="css/layout.css">\n<link rel="stylesheet" href="css/index.css">\n'
+    + HOME_CARDS_LINK + '\n' + MOBILE_FIT_LINK;
+errors = [];
+assert.equal(stripHomeCardsLink('index.html', home, errors), home.replace(HOME_CARDS_LINK, ''));
+assert.deepEqual(errors, []);
+errors = [];
+stripHomeCardsLink('index.html', home + HOME_CARDS_LINK, errors);
+assert.ok(errors.some(e => e.includes('exactly one')), 'duplicate home-cards link must fail');
+errors = [];
+stripHomeCardsLink('index.html', home.replace(HOME_CARDS_LINK, ''), errors);
+assert.ok(errors.some(e => e.includes('exactly one')), 'missing home-cards link on index.html must fail');
+errors = [];
+stripHomeCardsLink('gomoku.html', home, errors);
+assert.ok(errors.some(e => e.includes('unauthorized')), 'a game page cannot link home-cards');
+errors = [];
+stripHomeCardsLink('index.html', home.replace('<link rel="stylesheet" href="css/index.css">\n' + HOME_CARDS_LINK,
+    HOME_CARDS_LINK + '\n<link rel="stylesheet" href="css/index.css">'), errors);
+assert.ok(errors.some(e => e.includes('must follow index.css')), 'home-cards before index.css must fail');
+errors = [];
+stripHomeCardsLink('index.html', home.replace(HOME_CARDS_LINK + '\n' + MOBILE_FIT_LINK,
+    MOBILE_FIT_LINK + '\n' + HOME_CARDS_LINK), errors);
+assert.ok(errors.some(e => e.includes('precede mobile-fit')), 'home-cards after mobile-fit must fail');
+function reviewHomeWith(css) {
+    const root = mkdtempSync(join(tmpdir(), 'home-cards-'));
+    mkdirSync(join(root, 'css'));
+    writeFileSync(join(root, 'css/home-cards.css'), css);
+    const found = [];
+    reviewFeatureStyles(root, ['css/home-cards.css'], [], found);
+    return found.filter(e => e.startsWith('Home-cards'));
+}
+assert.deepEqual(reviewHomeWith('@layer contracts { .card-chip { color: red; } }'), [],
+    'reviewed home-cards selector inside contracts passes');
+assert.ok(reviewHomeWith('.card-chip { color: red; }').some(e => e.includes('@layer contracts')),
+    'unlayered home-cards rule must fail');
+assert.ok(reviewHomeWith('@layer contracts { .daily-hub { display: none; } }').some(e => e.includes('unreviewed selectors')),
+    'home-cards cannot restyle an unreviewed selector');
+
 assert.ok(!reviewWith('@layer contracts { .rv-board { width: 1px !important; } }')
     .some(e => e.startsWith('Mobile-fit')), 'reviewed selector inside contracts passes');
 assert.ok(reviewWith('.rv-board { width: 1px; }').some(e => e.includes('@layer contracts')),
@@ -220,4 +258,4 @@ assert.equal(postFreezePageLinksStylesheet('shadow-loom.html',
     '<link rel="stylesheet" href="css/shadow-loom.css">', game), false,
 'own stylesheet must not trigger cross-page ownership');
 
-console.log('PASS additive scoreboard + mobile-fit + stage-status + post-freeze game CSS review contract');
+console.log('PASS additive scoreboard + mobile-fit + stage-status + home-cards + post-freeze game CSS review contract');
