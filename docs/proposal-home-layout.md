@@ -173,7 +173,6 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 | `css/home-cards.css`（新） | 分区标题、筛选条、≥1280px 4 列、≤600px 单列横条、文字胶囊、横排。**`css/index.css` 不改**：它属于 CSS P0/P5 冻结页，`verify-css-debt` 禁止新增 / 删除 / 改写其中的 unlayered 规则（规则数必须等于 P0 + 已登记迁移）。做法同 `css/stage-status.css`：附加样式表全部写在 `@layer contracts`，只在要压过冻结声明时用 `!important`，链接放在 `index.css` 之后、`mobile-fit.css` 之前 |
 | `tests/lib/css/feature-additions.mjs` | 登记 home-cards 附加样式表：`HOME_CARDS_SELECTORS` 精确选择器白名单、唯一规范 `<link>` 与顺序校验、并入 `reviewFeatureStyles` 的 `cssPaths` / `stripHtml`；`tests/verify-css-feature-additions.mjs` 补负例。P2 / P3 新增的选择器逐条追加 |
 | `css/index.css` 里的死规则 | `.card-badge*`、`.play-btn*` 在 P1 后无 DOM 使用者。可另起 `kind: "retire"` 事务（`tests/css-layer-migrations/rules/`，见 `docs/architecture-v2-css-layer-migration-plan-2026-09.md` P2-K）清理，不和功能改动混在同一 PR |
-| `tests/css-layer-migrations/rules/` + `tests/css-layer-migration-state.json` | `tests/css-layer-p0-baseline.json` 是不可改的 P0 快照，且记录了 `.card-badge*` / `.play-btn` 规则；P1 删除这些规则时须登记 retire 映射（先例 `p2k-retire-*`），新增规则同样走迁移契约。由 `verify-css-debt` / `verify-css-migration-contract` 校验，不能改基线 |
 | `public/icons/home-icons.svg` | P1 删除不再使用的 `bookmark` symbol（与 `verify-index-cards` 的「已删除」断言对应） |
 | `public/assets/seo/` | P3 把 10 张只在 `assets/seo/` 的 OG 图同步进来，补画 crystal-bloom / flame-verse（§4.4） |
 | `tests/verify-index-cards.mjs` | **替换**现有断言：标题链接 / Play 链接 → 整卡 `<a class="game-card" href>`；切卡片用 `</a>` 而非 `</article>`；「书签 symbol 存在」→「已删除」；新增卡片区无 `article` / `onclick` / 嵌套链接、可访问名接线。P2 再加：`home.category` 必填且 ∈ `categories[].key`、`addedAt` 合法、无空分区、caps 含 daily ⟺ daily 胶囊 |
