@@ -30,25 +30,46 @@ async function loadPage(lang) {
     return { page, errs };
 }
 
-async function getBadgeSnapshot(page) {
-    return page.evaluate(() => [...document.querySelectorAll('.card-badge')].map(el => {
+async function getChipSnapshot(page) {
+    return page.evaluate(() => [...document.querySelectorAll('.game-card .card-chip:not(.tag--dark-only)')].map(el => {
         const title = el.closest('.game-card')?.querySelector('.card-title');
-        const badgeRect = el.getBoundingClientRect();
+        const chipRect = el.getBoundingClientRect();
         const titleRect = title?.getBoundingClientRect();
         const intersectsTitle = Boolean(titleRect
-            && titleRect.left < badgeRect.right
-            && titleRect.right > badgeRect.left
-            && titleRect.top < badgeRect.bottom
-            && titleRect.bottom > badgeRect.top);
+            && titleRect.left < chipRect.right
+            && titleRect.right > chipRect.left
+            && titleRect.top < chipRect.bottom
+            && titleRect.bottom > chipRect.top);
+        const kind = [...el.classList].find(c => c.startsWith('card-chip--'))?.slice('card-chip--'.length) || '';
+        const css = getComputedStyle(el);
         return {
+            kind,
             text: el.textContent.trim(),
-            tooltip: el.getAttribute('data-tooltip') || '',
-            title: el.getAttribute('title') || '',
-            aria: el.getAttribute('aria-label') || '',
-            icon: Boolean(el.querySelector('svg')),
+            visible: css.display !== 'none' && css.visibility !== 'hidden' && chipRect.width > 0,
+            insideCard: (() => {
+                const card = el.closest('.game-card').getBoundingClientRect();
+                return chipRect.left >= card.left && chipRect.right <= card.right;
+            })(),
             intersectsTitle,
         };
     }));
+}
+
+const CHIP_TEXT = {
+    zh: { daily: '今日挑战', new: '新上线', external: '站外 ↗' },
+    en: { daily: 'Daily', new: 'New', external: 'External ↗' },
+};
+function checkChips(chips, lang, where) {
+    const want = CHIP_TEXT[lang];
+    if (!chips.length) fail(`${where} 首页没有状态胶囊`);
+    for (const kind of Object.keys(want)) {
+        if (!chips.some(c => c.kind === kind)) fail(`${where} 缺 ${kind} 胶囊`);
+    }
+    const wrong = chips.filter(c => c.text !== want[c.kind]);
+    if (wrong.length) fail(`${where} 胶囊文案未本地化: ${wrong.map(c => `${c.kind}="${c.text}"`).join(', ')}`);
+    if (chips.some(c => !c.visible)) fail(`${where} 有胶囊不可见（文字胶囊必须无需 hover 即可读）`);
+    if (chips.some(c => c.intersectsTitle)) fail(`${where} 胶囊与游戏标题重叠`);
+    if (chips.some(c => !c.insideCard)) fail(`${where} 胶囊溢出卡片`);
 }
 
 // ── zh ──
@@ -61,9 +82,9 @@ async function getBadgeSnapshot(page) {
         hubWord: document.getElementById('hub-task-word-name')?.textContent || '',
         langBtn: !!document.getElementById('lang-toggle'),
         bodyBg: getComputedStyle(document.body).backgroundColor,
-        badges: document.querySelectorAll('.card-badge--daily, .card-badge--new').length,
+        nestedLinks: document.querySelectorAll('.game-card a, .game-card button').length,
+        cardLinks: [...document.querySelectorAll('.game-card')].every(c => c.tagName === 'A' && c.getAttribute('href')),
     }));
-    const badgeDetails = await getBadgeSnapshot(page);
 
     if (errs.length) fail(`zh 页面错误: ${errs.join(' | ')}`);
     if (snap.title !== '单页游戏合集') fail(`zh i18n 注入未生效: main-title="${snap.title}"`);
@@ -74,14 +95,9 @@ async function getBadgeSnapshot(page) {
     if (snap.bodyBg === 'rgba(0, 0, 0, 0)' || snap.bodyBg === 'rgb(255, 255, 255)') {
         fail(`zh CSS 疑似未生效: body 背景=${snap.bodyBg}`);
     }
-    if (snap.badges < 1) fail('zh 首页没有状态书签');
-    if (badgeDetails.some(b => b.text || !b.icon || !b.tooltip || b.title || b.tooltip !== b.aria)) {
-        fail('zh 状态书签缺图标、自定义 tooltip / aria-label 不一致或仍存在原生 title');
-    }
-    if (badgeDetails.some(b => b.intersectsTitle)) fail('zh 状态书签仍与游戏标题重叠');
-    if (!badgeDetails.some(b => b.tooltip === '今日挑战') || !badgeDetails.some(b => b.tooltip === '新上线')) {
-        fail('zh 状态书签没有完成双语文案注入');
-    }
+    if (snap.nestedLinks) fail(`zh 卡片内仍有 ${snap.nestedLinks} 个嵌套可聚焦元素（每卡应只有一个 Tab 停靠点）`);
+    if (!snap.cardLinks) fail('zh 存在不是 <a href> 的游戏卡片');
+    checkChips(await getChipSnapshot(page), 'zh', 'zh');
 
     // 语言切换交互：zh → en
     if (snap.langBtn) {
@@ -89,10 +105,7 @@ async function getBadgeSnapshot(page) {
         await new Promise(r => setTimeout(r, 200));
         const titleEn = await page.evaluate(() => document.getElementById('main-title')?.textContent || '');
         if (titleEn !== 'Mini Games Collection') fail(`语言切换未生效: main-title="${titleEn}"`);
-        const switchedBadges = await getBadgeSnapshot(page);
-        if (!switchedBadges.some(b => b.tooltip === 'Daily') || !switchedBadges.some(b => b.tooltip === 'New')) {
-            fail('zh → en 后状态书签 tooltip 未切换回英文');
-        }
+        checkChips(await getChipSnapshot(page), 'en', 'zh → en 后');
     }
     await page.close();
 }
@@ -103,19 +116,15 @@ async function getBadgeSnapshot(page) {
     const snap = await page.evaluate(() => ({
         title: document.getElementById('main-title')?.textContent || '',
         hubWordStatus: document.getElementById('hub-task-word-status')?.textContent || '',
-        badges: [...document.querySelectorAll('.card-badge--daily, .card-badge--new')].map(el => el.textContent),
     }));
-    const badgeDetails = await getBadgeSnapshot(page);
     if (errs.length) fail(`en 页面错误: ${errs.join(' | ')}`);
     if (snap.title !== 'Mini Games Collection') fail(`en i18n 注入未生效: main-title="${snap.title}"`);
-    if (snap.badges.some(text => text !== '')) fail('en 状态书签仍包含可见文字');
-    if (badgeDetails.some(b => !b.icon || !b.tooltip || b.title || b.tooltip !== b.aria || b.intersectsTitle)) {
-        fail('en 状态书签图标、自定义 tooltip、无障碍文案、原生 title 或标题避让异常');
+    checkChips(await getChipSnapshot(page), 'en', 'en');
+    for (const w of [390, 320]) {
+        await page.setViewport({ width: w, height: 844 });
+        await page.reload({ waitUntil: 'networkidle0', timeout: 30000 });
+        checkChips(await getChipSnapshot(page), 'en', `${w}px`);
     }
-    await page.setViewport({ width: 390, height: 844 });
-    await page.reload({ waitUntil: 'networkidle0', timeout: 30000 });
-    const narrowBadges = await getBadgeSnapshot(page);
-    if (narrowBadges.some(b => b.intersectsTitle)) fail('390px 首页状态书签仍与游戏标题重叠');
     await page.close();
 }
 
@@ -126,4 +135,4 @@ if (fails.length) {
     for (const f of fails) console.error(`  - ${f}`);
     process.exit(1);
 }
-console.log('smoke-index：i18n 注入 / daily hub / 卡片 / 语言切换 / CSS 全部通过 ✅');
+console.log('smoke-index：i18n 注入 / daily hub / 整卡链接 / 状态胶囊 / 语言切换 / CSS 全部通过 ✅');

@@ -353,7 +353,7 @@ const contrastAudit = page => page.evaluate(() => {
     // 「仅深色」小标：深色下全隐藏；切到浅色后恰好标在不支持浅色的注册表游戏卡片上
     const badges = () => page.evaluate(() => [...document.querySelectorAll('.tag--dark-only')]
         .filter(el => getComputedStyle(el).display !== 'none')
-        .map(el => el.closest('.game-card').querySelector('.card-title').getAttribute('href')).sort());
+        .map(el => el.closest('.game-card').getAttribute('href')).sort());
     check((await badges()).length === 0, '首页：深色下不显示「仅深色」小标');
     const vis = await page.evaluate(() => {
         const el = document.getElementById('theme-switch');
@@ -376,7 +376,7 @@ const contrastAudit = page => page.evaluate(() => {
         await page.click('#theme-switch [data-theme-pref="light"]');
         const want = registry.all().filter(g => !(g.caps || []).includes('theme-light')).map(g => g.href);
         const got = await badges();
-        const cards = await page.evaluate(() => [...document.querySelectorAll('.game-card .card-title')].map(a => a.getAttribute('href')));
+        const cards = await page.evaluate(() => [...document.querySelectorAll('.game-card[href]')].map(a => a.getAttribute('href')));
         const expect = want.filter(h => cards.includes(h)).sort();
         check((await state(page)).theme === 'light', '首页：点「浅色」后首页即时变浅');
         check(got.join() === expect.join(), '首页：浅色下「仅深色」小标恰好标在不支持浅色的游戏上', `got ${got.length} / want ${expect.length}`);

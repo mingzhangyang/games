@@ -28,7 +28,7 @@ export default new Map([
     ['perk2Body', '每款游戏均为键盘和移动端触控精心优化。'],
     ['perk3Title', '双语支持'],
     ['perk3Body', '英文与中文，根据浏览器语言自动切换。'],
-    ['play', '开始游戏 ›'],
+    ['badgeExternal', '站外 ↗'],
     ['math-rain.name', '数字雨'],
     ['math-rain.desc', '在等式落地前答对它。在压力下练习算术运算。'],
     ['math-rain.tag', '益智教育'],
