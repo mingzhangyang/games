@@ -29,7 +29,7 @@ const SKIP_DIRS = new Set([
  */
 const SKIP_FILES = new Set([
     'index.html',          // 首页：唯一保留语言切换 UI 的地方
-    'js/index-page.js',    // 首页逻辑：lang-toggle 的 click handler
+    'src/home/index.js',   // 首页组合根：lang-toggle 的 click handler（js/index-page.js 只是入口）
     'src/platform/site-settings.js' // setLang 的定义处，也是合法的调用方
 ]);
 
@@ -79,7 +79,9 @@ const FILES = [
         .filter((n) => n.endsWith('.html'))
         .filter((n) => !SKIP_FILES.has(n)),
     ...walk(join(ROOT, 'js')).map((p) => p),
-    ...walk(join(ROOT, 'src', 'games')).map((p) => p)
+    ...walk(join(ROOT, 'src', 'games')).map((p) => p),
+    // 首页其余模块也扫：只有组合根可以切语言
+    ...walk(join(ROOT, 'src', 'home')).map((p) => p)
 ].filter((rel) => !SKIP_FILES.has(rel));
 
 const failures = [];
@@ -120,12 +122,12 @@ for (const rel of FILES) {
     }
 }
 
-console.log(`扫描 ${scanned} 个源文件（html 页面 + js/** + src/games/**）`);
+console.log(`扫描 ${scanned} 个源文件（html 页面 + js/** + src/games/** + src/home/**）`);
 if (failures.length) {
     console.error(`\n✗ 发现 ${failures.length} 处语言切换残留：\n`);
     failures.forEach((f) => console.error('  · ' + f));
-    console.error('\n语言切换 UI 只允许存在于 index.html / js/index-page.js；');
+    console.error('\n语言切换 UI 只允许存在于 index.html / src/home/index.js；');
     console.error('如需豁免，请在 tests/verify-no-game-lang.mjs 里写明理由。');
     process.exit(1);
 }
-console.log('✓ 无语言切换 UI 残留（index.html / js/index-page.js / src/platform/site-settings.js 已豁免）');
+console.log('✓ 无语言切换 UI 残留（index.html / src/home/index.js / src/platform/site-settings.js 已豁免）');

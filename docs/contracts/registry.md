@@ -88,11 +88,12 @@ caps 是校验器与迁移脚本的唯一判据：
 | 派生点 | 区域哨兵 | 内容 |
 | --- | --- | --- |
 | 各游戏 `<head>` | `head` | viewport / theme-support + theme-color（+`data-light`）+ `theme-boot.js` / description / keywords / canonical / OG / twitter / title；`title.i18nKey` 存在时同时输出对应的 `data-i18n` |
-| 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList） |
+| 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList）；分享图优先 `public/<ogImageDir>/og-<id>.jpg`（`tools/generators/game-covers.mjs` 用游戏美术生成），没有才用 `og-<id>.svg` |
 | `public/sitemap.xml` | `games` | 全部 `<url>` 条目 |
 | `public/manifest.json` | （JSON 感知） | `shortcuts` 数组 |
-| `index.html` | `home-filter` | 首页筛选条（全部 · 每日 · `site.home.categories` 中 `filter !== false` 的分类）；静态 `hidden`，`js/index-page.js` 绑定后显现，状态只存 `#cat=<key>` |
-| `index.html` | `home-cards` | 首页卡片，按 `site.home.categories` 分区输出（`<section class="games-cat">` + 自己的 `.games-grid`）；区内按 `home.rank` 升序、缺省按登记顺序（站内先、外站后）。名称/描述/标签来自 registry，图标引用外部 sprite。胶囊全部派生：「每日」= `daily` cap，「站外」= `externalGames`；「新」依赖日期，gen 只写 `data-added`（`home.addedAt`），由 `index-page.js` 按 UTC+8 今天在 45 天内判定——放进 gen 会让 `gen --check` 随日期变红 |
+| `index.html` | `home-new` | 首页新上线横排：全部带 `home.addedAt` 的游戏（新者在前），45 天窗口由 `src/home/new-row.js` 运行时裁剪；图片是字面 URL：优先 `public/assets/home-covers/<id>.webp`（`tools/generators/game-covers.mjs` 用游戏美术生成），没有才用 `public/<ogImageDir>/og-<id>.svg`（卡片加 `new-card--og`），都没有就不输出 `<img>` |
+| `index.html` | `home-filter` | 首页筛选条（全部 · 每日 · `site.home.categories` 中 `filter !== false` 的分类）；静态 `hidden`，`src/home/filter.js` 绑定后显现，状态只存 `#cat=<key>` |
+| `index.html` | `home-cards` | 首页卡片，按 `site.home.categories` 分区输出（`<section class="games-cat">` + 自己的 `.games-grid`）；区内按 `home.rank` 升序、缺省按登记顺序（站内先、外站后）。名称/描述/标签来自 registry，图标引用外部 sprite。胶囊全部派生：「每日」= `daily` cap，「站外」= `externalGames`；「新」依赖日期，gen 只写 `data-added`（`home.addedAt`），由 `src/home/freshness.js` 按 UTC+8 今天在 45 天内判定——放进 gen 会让 `gen --check` 随日期变红 |
 | `js/index-i18n-zh.js` | `home-i18n-zh` | 首页中文翻译懒加载块；英语直接使用静态 HTML，不重复下载 |
 | `src/platform/more-games.js` | `more-games` | `export const MORE_GAMES = [...]`（各游戏页「更多游戏」运行时数据源） |
 | `vite.config.js` | `inputs` | 多页构建入口 `input: { main, tetris, ... }` |

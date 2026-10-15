@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 首页卡片 / i18n / 图标资源全部由 registry 驱动；同时守住首页源码体积预算。
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from './lib/registry.mjs';
@@ -18,6 +18,10 @@ const games = registry.all();
 const home = registry.site().home;
 const html = read('index.html');
 const pageJs = read('js/index-page.js');
+// 首页实现在 src/home/（组合根 index.js），js/index-page.js 只是注入中文加载器的入口
+const HOME_DIR = 'src/home';
+const homeFiles = existsSync(join(ROOT, HOME_DIR)) ? readdirSync(join(ROOT, HOME_DIR)).filter(f => f.endsWith('.js')).sort() : [];
+const homeJs = homeFiles.map(f => read(`${HOME_DIR}/${f}`)).join('\n');
 const zh = read('js/index-i18n-zh.js');
 const sprite = read('public/icons/home-icons.svg');
 const css = read('css/index.css');
@@ -66,7 +70,8 @@ for (const g of games) {
     ok(sprite.includes(`<symbol id="${g.id}"`), `${g.id}: sprite symbol 存在`);
     ok(new RegExp(`\\.card-icon--${g.home.iconClass}\\s*\\{`).test(css), `${g.id}: icon 配色类存在`);
     const shouldDark = !(g.caps || []).includes('theme-light');
-    const cardStart = html.indexOf(`data-game-id="${g.id}"`);
+    // 从分区卡片切（新上线横排里的 .new-card 也带 data-game-id，且排在前面）
+    const cardStart = html.indexOf(`<a class="game-card" href="${g.href}" data-game-id="${g.id}"`);
     const cardEnd = html.indexOf('</a>', cardStart);
     const card = html.slice(cardStart, cardEnd);
     ok(card.includes('data-dark-only') === shouldDark, `${g.id}: 仅深色标记与 theme-light cap 一致`);
@@ -74,7 +79,7 @@ for (const g of games) {
     const chips = card.match(/class="card-chip card-chip--[a-z]+"/g) || [];
     ok(daily ? chips.length === 1 && card.includes('card-chip--daily"') : chips.length === 0,
         `${g.id}: 静态胶囊只有「每日」且 ⟺ caps 含 daily`, chips.join(','));
-    // 「新」随日期变化，不能进 gen 产物：只写 data-added，由 index-page.js 运行时判定
+    // 「新」随日期变化，不能进 gen 产物：只写 data-added，由 src/home/freshness.js 运行时判定
     ok(g.home.addedAt ? card.includes(` data-added="${g.home.addedAt}"`) : !card.includes('data-added'),
         `${g.id}: data-added ⟺ home.addedAt`);
     ok(card.includes(`aria-describedby="${p}-desc"`) && card.includes(`aria-labelledby="${p}-name${daily ? ` ${p}-chip-daily` : ''}"`),
@@ -124,23 +129,91 @@ ok(!/<a class="game-card"[^>]*>(?:(?!<\/a>).)*<a\b/s.test(region), '卡片内部
 ok(!sprite.includes('<symbol id="bookmark"'), '已删除不再使用的书签 sprite symbol');
 for (const key of ['badgeDaily', 'badgeNew', 'badgeExternal']) ok(zh.includes(`['${key}',`), `中文懒加载含胶囊文案 ${key}`);
 
+console.log('\n▶ P3：新上线横排 / OG 图 / 最近玩过 / 更多每日 / Perks');
+// OG 图单一来源 public/<ogImageDir>/（原样复制进 dist）：og:image 与新上线横排都指向它，缺一张就是生产 404
+const ogDir = registry.site().ogImageDir;
+for (const id of [...games.map(g => g.id), 'collection']) {
+    const has = ['jpg', 'svg'].filter(ext => existsSync(join(ROOT, 'public', ogDir, `og-${id}.${ext}`)));
+    ok(has.length >= 1, `public/${ogDir}/og-${id}.(jpg|svg) 存在（不 404）`, has.join(','));
+    // 有美术的游戏只留 game-covers.mjs 生成的 JPEG，占位 SVG 已清理，不许回来
+    if (has.includes('jpg')) ok(!has.includes('svg'), `og-${id}: 已有美术 JPEG，占位 SVG 已删除`);
+    const page = games.find(g => g.id === id);
+    if (page) {
+        const want = `${ogDir}/og-${id}.${has[0]}`;
+        const src = read(page.href);
+        ok(src.includes(`<meta property="og:image" content="${want}">`) && src.includes(`new URL('${want}', baseUrl)`),
+            `${id}: og:image 与 JSON-LD 脚本指向 ${want}`);
+    }
+}
+ok(!existsSync(join(ROOT, ogDir)), `根目录 ${ogDir}/ 已删除（OG 图只在 public/ 一处，不再双份漂移）`);
+const newRegion = html.slice(html.indexOf('registry:begin home-new'), html.indexOf('registry:end home-new'));
+ok(newRegion.includes('id="home-new"') && /id="home-new"[^>]*\shidden>/.test(newRegion), '新上线横排由 gen 输出且静态 hidden（运行时按 45 天显现）');
+const wantNew = games.filter(g => g.home.addedAt)
+    .sort((a, b) => (a.home.addedAt < b.home.addedAt ? 1 : a.home.addedAt > b.home.addedAt ? -1 : 0)).map(g => g.id);
+const gotNew = [...newRegion.matchAll(/<a class="new-card(?: new-card--og)?" href="[^"]+" data-game-id="([^"]+)" data-added="([^"]+)">/g)].map(m => m[1]);
+ok(JSON.stringify(gotNew) === JSON.stringify(wantNew), '新上线 = 全部带 addedAt 的游戏，新者在前', gotNew.join(','));
+for (const id of wantNew) {
+    const g = games.find(x => x.id === id);
+    const start = newRegion.indexOf(`data-game-id="${id}"`);
+    const card = newRegion.slice(start, newRegion.indexOf('</a>', start));
+    // 优先用游戏自己美术做的封面（tools/generators/game-covers.mjs），没有才退回 OG 图
+    const cover = existsSync(join(ROOT, 'public', 'assets', 'home-covers', `${id}.webp`));
+    const ogExt = ['jpg', 'svg'].find(ext => existsSync(join(ROOT, 'public', ogDir, `og-${id}.${ext}`)));
+    const img = cover
+        ? `<img class="new-game-art" src="/assets/home-covers/${id}.webp" alt="" width="640" height="360" loading="lazy" decoding="async">`
+        : `<img class="new-game-art" src="/${ogDir}/og-${id}.${ogExt}" alt="" width="1200" height="630" loading="lazy" decoding="async">`;
+    ok((cover || ogExt) ? card.includes(img) : !card.includes('<img'), `新上线 ${id}: <img> 为字面 URL，封面优先、分享图兜底（JPEG 先于 SVG）、都没有就不输出`);
+    ok(newRegion.includes(`<a class="new-card${!cover && ogExt === 'svg' ? ' new-card--og' : ''}" href="${g.href}"`), `新上线 ${id}: 只有退回自带标题的 SVG 时带 new-card--og（压深底部）`);
+    ok(card.includes(`data-i18n="${id}.name">`) && card.includes(`data-i18n="${id}.tag">`) && card.includes(`card-icon--${g.home.iconClass}`),
+        `新上线 ${id}: 名称 / 副标签走 i18n，图标配色复用 card-icon--*`);
+}
+ok(!/\sstyle=/.test(newRegion), '新上线横排没有内联 style（图片铺放由 home-cards.css 负责）');
+const coverDir = join(ROOT, 'public', 'assets', 'home-covers');
+const strayCovers = (existsSync(coverDir) ? readdirSync(coverDir) : []).filter(f => !wantNew.includes(f.replace(/\.webp$/, '')));
+ok(strayCovers.length === 0, 'home-covers 里只有会进新上线横排（有 addedAt）的游戏', strayCovers.join(','));
+// 有美术素材的游戏必须用素材做的分享图（及新上线封面），不退回占位 SVG（拔萝卜 / 影织等的占位 SVG 远不如游戏原画）
+for (const id of ['carrot-pull', 'shadow-loom', 'firefly-signal', 'needle-awn', 'math-rain', 'tower-defense', 'tank-battle', 'silk-dew']) {
+    if (wantNew.includes(id)) ok(existsSync(join(ROOT, 'public', 'assets', 'home-covers', `${id}.webp`)), `${id}: 新上线卡片用游戏美术做的封面 public/assets/home-covers/${id}.webp`);
+    ok(existsSync(join(ROOT, 'public', ogDir, `og-${id}.jpg`)), `${id}: 分享图来自游戏美术（og-${id}.jpg）`);
+}
+ok(!/og-\$\{|og-' \+/.test(pageJs + homeJs), '首页运行时不拼 OG 图路径');
+ok(html.includes('id="home-recent"') && html.includes('id="home-recent-list"'), '最近玩过容器存在');
+ok(/<a class="hub-more-daily" id="hub-more-daily" href="#cat=daily" hidden>/.test(html), 'Daily Hub「更多每日」链接 → #cat=daily，静态 hidden');
+ok(!html.includes('class="perks"') && !html.includes('class="hero-logo"'), 'Perks 三卡与 hero 大 emoji 已移除（D-6）');
+ok(html.includes('class="perks-line"') && html.includes('data-i18n="perksLine"'), 'Perks 压成页脚一行');
+for (const key of ['recentTitle', 'newTitle', 'moreDaily', 'perksLine']) ok(zh.includes(`['${key}',`), `中文懒加载含 ${key}`);
+ok(!/\['perk\d(Title|Body)',/.test(zh), '已删除旧 Perks 文案');
+
 console.log('\n▶ 运行时代码去重');
-ok(pageJs.includes("import('./index-i18n-zh.js')"), '中文使用动态 import');
-ok(!pageJs.includes('const i18n ='), '不再内置双语大对象');
-ok(!pageJs.includes('const games = ['), '不再内置 JSON-LD 游戏数组');
-ok(!pageJs.includes('MORE_GAMES'), '首页不再加载 more-games 数据');
-ok(pageJs.includes("querySelectorAll('.game-card[data-game-id]')"), 'JSON-LD 与 i18n 从生成卡片 DOM 派生');
+ok(pageJs.includes("import('./index-i18n-zh.js')"), '中文使用动态 import（入口注入加载器）');
+ok(pageJs.includes("from '../src/home/index.js'") && !/document\.|querySelector|localStorage/.test(pageJs), 'js/index-page.js 只是入口：不碰 DOM / 存储');
+ok(homeFiles.includes('index.js') && homeJs.includes('export function startHome'), 'src/home/index.js 是组合根');
+ok(!homeJs.includes('const i18n ='), '不再内置双语大对象');
+ok(!homeJs.includes('const games = ['), '不再内置 JSON-LD 游戏数组');
+ok(!homeJs.includes('MORE_GAMES'), '首页不再加载 more-games 数据');
+ok(homeJs.includes("querySelectorAll('.game-card[data-game-id]')"), 'JSON-LD 与 i18n 从生成卡片 DOM 派生');
+ok(!/\blocalStorage\b/.test(homeJs), 'src/home 只经 safe-storage 读写存储');
+ok(!/getTimezoneOffset|8 \* 3600/.test(homeJs), 'src/home 的 UTC+8 日期只来自 platform/daily.js');
+ok(homeFiles.filter(f => /\bonReady\(/.test(read(`${HOME_DIR}/${f}`))).join() === 'index.js', '只有组合根接 onReady');
 
 console.log('\n▶ 首页源码体积预算');
 const sizes = {
     'index.html': Buffer.byteLength(html),
     'js/index-page.js': Buffer.byteLength(pageJs),
+    [`${HOME_DIR}/*.js`]: Buffer.byteLength(homeJs),
     'js/index-i18n-zh.js': Buffer.byteLength(zh),
     'public/icons/home-icons.svg': Buffer.byteLength(sprite),
 };
-ok(sizes['index.html'] <= 38 * 1024, 'index.html ≤ 38 KiB', sizes['index.html']);
-// P2 加了筛选 + 「新」胶囊判定，预算从 12 KiB 放到 14 KiB
-ok(sizes['js/index-page.js'] <= 14 * 1024, 'index-page.js ≤ 14 KiB', sizes['js/index-page.js']);
+// P3 加了新上线横排（每卡一张 OG 图 + sprite 图标），预算从 38 KiB 放到 44 KiB
+ok(sizes['index.html'] <= 44 * 1024, 'index.html ≤ 44 KiB', sizes['index.html']);
+// P3 拆成 src/home/ 包：入口只剩注入；整包预算 = 原单文件 14 KiB + P3（最近玩过 / 更多每日 / 新上线裁剪），
+// 单模块再各自封顶，防止又长回一个大文件
+ok(sizes['js/index-page.js'] <= 1024, 'js/index-page.js 入口 ≤ 1 KiB', sizes['js/index-page.js']);
+ok(sizes[`${HOME_DIR}/*.js`] <= 24 * 1024, 'src/home 整包 ≤ 24 KiB', sizes[`${HOME_DIR}/*.js`]);
+for (const f of homeFiles) {
+    const n = Buffer.byteLength(read(`${HOME_DIR}/${f}`));
+    ok(n <= 5 * 1024, `${HOME_DIR}/${f} ≤ 5 KiB`, n);
+}
 ok(sizes['js/index-i18n-zh.js'] <= 8 * 1024, '中文懒加载块 ≤ 8 KiB', sizes['js/index-i18n-zh.js']);
 ok(sizes['public/icons/home-icons.svg'] <= 12 * 1024, '首页 SVG sprite ≤ 12 KiB', sizes['public/icons/home-icons.svg']);
 

@@ -18,12 +18,12 @@
     <meta property="og:description" content="Nudge a few fireflies. Watch the whole meadow blink as one.">
     <meta property="og:site_name" content="Mini Games Collection">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="assets/seo/og-firefly-signal.svg">
+    <meta property="og:image" content="assets/seo/og-firefly-signal.jpg">
     <meta property="og:url" content="https://games.orangely.xyz/firefly-signal.html">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="萤火信号 Firefly Signal — Synchrony Puzzle">
     <meta name="twitter:description" content="Every firefly blinks alone — until you find the one that connects them.">
-    <meta name="twitter:image" content="assets/seo/og-firefly-signal.svg">
+    <meta name="twitter:image" content="assets/seo/og-firefly-signal.jpg">
     <title>萤火信号 Firefly Signal — Synchrony Puzzle</title>
     <!-- registry:end head -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23060b1a'/%3E%3Ccircle cx='32' cy='36' r='18' fill='%23ffc85a' opacity='.22'/%3E%3Cellipse cx='32' cy='38' rx='6' ry='8' fill='%23ffd98a'/%3E%3Cellipse cx='32' cy='26' rx='4.5' ry='5' fill='%23241c16'/%3E%3Cellipse cx='23' cy='30' rx='8' ry='4' fill='%23cfe3ff' opacity='.55' transform='rotate(-25 23 30)'/%3E%3Cellipse cx='41' cy='30' rx='8' ry='4' fill='%23cfe3ff' opacity='.55' transform='rotate(25 41 30)'/%3E%3C/svg%3E">
@@ -127,7 +127,7 @@
             const canonical = document.getElementById('canonical-link');
             if (canonical) canonical.setAttribute('href', currentUrl);
             const baseUrl = new URL('.', currentUrl).href;
-            const socialImage = new URL('assets/seo/og-firefly-signal.svg', baseUrl).href;
+            const socialImage = new URL('assets/seo/og-firefly-signal.jpg', baseUrl).href;
             const ogUrl = document.querySelector('meta[property="og:url"]');
             if (ogUrl) ogUrl.setAttribute('content', currentUrl);
             const ogImage = document.querySelector('meta[property="og:image"]');

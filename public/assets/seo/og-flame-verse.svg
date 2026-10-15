@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="fv-og-title fv-og-desc">
+  <title id="fv-og-title">Flame Verse social card</title>
+  <desc id="fv-og-desc">Social preview for 焰语 Flame Verse — read each salt's emission-line barcode to identify the element and its dose.</desc>
+  <defs>
+    <linearGradient id="fv-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07040b"/>
+      <stop offset="0.6" stop-color="#0c0612"/>
+      <stop offset="1" stop-color="#1c0d26"/>
+    </linearGradient>
+    <linearGradient id="fv-flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#5b8cff"/>
+      <stop offset="0.35" stop-color="#ffd34d"/>
+      <stop offset="1" stop-color="#ff5a3c" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="fv-spec" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7b3cff"/>
+      <stop offset="0.25" stop-color="#3c7bff"/>
+      <stop offset="0.45" stop-color="#3cff9a"/>
+      <stop offset="0.62" stop-color="#ffe23c"/>
+      <stop offset="0.8" stop-color="#ff8a3c"/>
+      <stop offset="1" stop-color="#ff3c3c"/>
+    </linearGradient>
+    <filter id="fv-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#fv-bg)"/>
+  <path d="M880 470c-70 0-110-50-100-110 8-50 50-80 60-140 34 40 26 80 50 100 10-40 30-60 30-100 50 50 80 120 70 170-10 50-50 80-110 80z" fill="url(#fv-flame)" filter="url(#fv-glow)"/>
+  <rect x="800" y="470" width="160" height="14" rx="7" fill="#3a2a48"/>
+  <rect x="640" y="520" width="480" height="40" rx="6" fill="url(#fv-spec)" opacity=".18"/>
+  <g filter="url(#fv-glow)">
+    <rect x="1040" y="512" width="7" height="56" fill="#ff3c3c"/>
+    <rect x="994" y="512" width="7" height="56" fill="#ff7a3c"/>
+    <rect x="938" y="512" width="9" height="56" fill="#ffe23c"/>
+    <rect x="852" y="512" width="6" height="56" fill="#3cff9a"/>
+    <rect x="760" y="512" width="6" height="56" fill="#3c7bff"/>
+    <rect x="700" y="512" width="6" height="56" fill="#9a5cff"/>
+  </g>
+  <g font-family="Trebuchet MS,Segoe UI,sans-serif" font-weight="900">
+    <text x="70" y="170" font-size="104" fill="#ffd34d" filter="url(#fv-glow)">焰语</text>
+    <text x="76" y="236" font-size="36" letter-spacing="9" fill="#fff1e0">FLAME VERSE</text>
+    <text x="76" y="548" font-size="26" fill="#d9b8ff" font-weight="700">Read the barcode. Name the salt.</text>
+  </g>
+</svg>

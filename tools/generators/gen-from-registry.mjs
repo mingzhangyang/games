@@ -9,7 +9,7 @@
 //
 // 自安装：源文件尚无哨兵时，gen 会定位旧行内 SEO 块 / 旧 meta 段并整体替换为哨兵区域；
 // 已有哨兵时只重写区域内部，区域外字节零触碰。
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from '../lib/registry.mjs';
@@ -79,7 +79,7 @@ function homeCardLine(g, external = false) {
     // 胶囊排在简介行首（.card-chips 在 .card-desc 里，简介正文在 .card-desc-text）：标题独占一行，
     // 三枚胶囊同卡时被行数截断的是简介而不是标题（PR #147 review）。
     // 胶囊全部派生，不再手填（§3.3）：「每日」= daily cap；「新」依赖今天的日期，只把 addedAt
-    // 写成 data-added，由 js/index-page.js 运行时判定——放在 gen 里会让 gen --check 随日期变红。
+    // 写成 data-added，由 src/home/freshness.js 运行时判定——放在 gen 里会让 gen --check 随日期变红。
     const chips = [];
     if (!external && (g.caps || []).includes('daily')) chips.push({ kind: 'daily', text: ui.badgeDaily.en });
     if (external) chips.push({ kind: 'external', text: ui.badgeExternal.en });
@@ -119,7 +119,7 @@ function homeCardsTransform(src) {
     return applyRegion(src, 'home-cards', homeCardsContent(), null, 'html');
 }
 
-/** 筛选条：渐进增强，静态 hidden，由 js/index-page.js 绑定后显现；状态只存 location.hash（§4.2）。 */
+/** 筛选条：渐进增强，静态 hidden，由 src/home/filter.js 绑定后显现；状态只存 location.hash（§4.2）。 */
 function homeFilterContent() {
     const ui = SITE.home.ui;
     const btn = (filter, key, text, pressed = false) =>
@@ -135,6 +135,48 @@ function homeFilterContent() {
 
 function homeFilterTransform(src) {
     return applyRegion(src, 'home-filter', homeFilterContent(), null, 'html');
+}
+
+/** 新上线横排（proposal §4.4）：写出全部带 addedAt 的游戏（新者在前），45 天窗口由 src/home/new-row.js
+ *  运行时裁剪——放在 gen 里会让 gen --check 随日期变红。图片必须是构建可见的字面 URL，只用会原样复制进
+ *  dist 的 public/：优先用游戏自己美术做的封面 public/assets/home-covers/<id>.webp（由
+ *  tools/generators/game-covers.mjs 生成），没有才退回 OG 图，都没有就不输出 <img>（只留渐变 + 图标兜底）；
+ *  绝不运行时拼路径。铺放全由 home-cards.css 负责，不生成内联 style（verify-css-debt 冻结了内联样式）。 */
+const HOME_COVER_DIR = 'assets/home-covers';
+/** 分享图：优先 tools/generators/game-covers.mjs 用游戏美术生成的 og-<id>.jpg（多数社交平台不渲染
+ *  SVG og:image），没有美术的游戏才用 og-<id>.svg。路径相对站点根，og:image / twitter:image 共用。 */
+function ogImageFile(id) {
+    const jpg = `${SITE.ogImageDir}/og-${id}.jpg`;
+    return existsSync(join(ROOT, 'public', jpg)) ? jpg : `${SITE.ogImageDir}/og-${id}.svg`;
+}
+function homeNewArt(id) {
+    if (existsSync(join(ROOT, 'public', HOME_COVER_DIR, `${id}.webp`))) return { src: `/${HOME_COVER_DIR}/${id}.webp`, w: 640, h: 360, og: false };
+    const og = ogImageFile(id);
+    // 退回 SVG 时图里自带标题，卡片要压深底部（og: true → new-card--og）
+    if (existsSync(join(ROOT, 'public', og))) return { src: `/${og}`, w: 1200, h: 630, og: og.endsWith('.svg') };
+    return null;
+}
+function homeNewContent() {
+    const entries = GAMES.filter(g => g.home.addedAt)
+        .sort((a, b) => (a.home.addedAt < b.home.addedAt ? 1 : a.home.addedAt > b.home.addedAt ? -1 : 0));
+    const card = g => {
+        const a = homeNewArt(g.id);
+        const art = a ? `<img class="new-game-art" src="${a.src}" alt="" width="${a.w}" height="${a.h}" loading="lazy" decoding="async">` : '';
+        // OG 图自带大标题和标语，用 new-card--og 压深底部；美术封面只压一条浅渐变，让画面露出来
+        return `<a class="new-card${a?.og ? ' new-card--og' : ''}" href="${esc(g.href)}" data-game-id="${g.id}" data-added="${g.home.addedAt}">${art}<span class="new-card-body"><span class="new-icon card-icon--${g.home.iconClass}"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><use href="/icons/home-icons.svg#${g.id}"></use></svg></span><span class="new-card-text"><span class="new-card-name" data-i18n="${g.id}.name">${esc(g.name.en)}</span><span class="new-card-tag" data-i18n="${g.id}.tag">${esc(g.home.tag.en)}</span></span></span></a>`;
+    };
+    return [
+        `<section class="home-row home-new" id="home-new" aria-labelledby="new-title" hidden>`,
+        `<h2 class="home-row-title" id="new-title" data-i18n="newTitle">${esc(SITE.home.ui.newTitle.en)}</h2>`,
+        '<div class="home-row-list">',
+        ...entries.map(card),
+        '</div>',
+        '</section>',
+    ].join('\n');
+}
+
+function homeNewTransform(src) {
+    return applyRegion(src, 'home-new', homeNewContent(), null, 'html');
 }
 
 function homeZhMap() {
@@ -165,7 +207,7 @@ function homeZhTransform(src) {
 // ---------- 每页 <head> 生成 ----------
 function headBlock(g) {
     const u = `${ORIGIN}/${g.href}`;
-    const img = `${SITE.ogImageDir}/og-${g.id}.svg`;
+    const img = ogImageFile(g.id);
     const L = [];
     L.push(`    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">`);
     L.push(`    <meta name="apple-mobile-web-app-capable" content="yes">`);
@@ -224,7 +266,7 @@ function seoScriptBlock(g) {
             const canonical = document.getElementById('canonical-link');
             if (canonical) canonical.setAttribute('href', currentUrl);
             const baseUrl = new URL('.', currentUrl).href;
-            const socialImage = new URL('${SITE.ogImageDir}/og-${g.id}.svg', baseUrl).href;
+            const socialImage = new URL('${ogImageFile(g.id)}', baseUrl).href;
             const ogUrl = document.querySelector('meta[property="og:url"]');
             if (ogUrl) ogUrl.setAttribute('content', currentUrl);
             const ogImage = document.querySelector('meta[property="og:image"]');
@@ -459,7 +501,7 @@ for (const g of GAMES) {
         s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c), 'html'),
     ]);
 }
-processFile('index.html', [homeFilterTransform, homeCardsTransform]);
+processFile('index.html', [homeNewTransform, homeFilterTransform, homeCardsTransform]);
 processFile('js/index-i18n-zh.js', [homeZhTransform]);
 processFile('public/sitemap.xml', [sitemapTransform]);
 processFile('public/manifest.json', [manifestTransform]);

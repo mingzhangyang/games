@@ -1,6 +1,6 @@
 # 首页游戏卡片：布局与分类优化方案
 
-> 状态：P1 已合入（#146）· P2 已实现（分区 + 筛选条 + 派生胶囊，见 §7 落地记录）· 2026-10-15
+> 状态：P1 已合入（#146）· P2 已合入（#147）· P3 已实现（发现区，见 §7.2）· 2026-10-15
 > Repository: `mingzhangyang/games`
 > 范围：`index.html` 游戏卡片区、Daily Hub 入口、`games.config.json` 的 `home` 元数据、生成器 `home-cards` 区域
 > 不在范围：各游戏页面本身、共享 `layout.css` 骨架、排行榜 / 统计 Worker 协议
@@ -125,7 +125,7 @@ Daily Hub（3 个固定任务 + 「更多每日 (11) ›」链接 → #cat=daily
   - 由 gen 在生成区里为每个有图的游戏写出**字面** URL，使用真正的 `<img class="new-game-art" src="/assets/seo/og-实际游戏ID.svg" alt="" loading="lazy" decoding="async">` 元素；这里的「实际游戏ID」由生成器在生成时替换成明确值，不能把该占位写入输出 HTML。gen 时先检查文件是否存在，不存在就不输出 `<img>`，仅保留 CSS 渐变和游戏图标兜底。游戏名称已有可见文字，装饰性图片使用空 `alt`；运行时 JS 只负责显隐，不构造路径。
   - **禁止生成内联 `style` 或 CSS `background-image` 属性来插入图片**：`tests/verify-css-debt.mjs` 冻结了 `index.html` 的内联样式数量，新添 inline style 会导致 CSS debt 校验失败。背景式铺放完全由 `css/home-cards.css` 的 `@layer contracts` 处理（例如 `.new-game-art` 绝对定位、`inset: 0; width: 100%; height: 100%; object-fit: cover`，容器裁剪溢出，图片上方使用 CSS 渐变叠层，文字保持可读）。不要在 JS 中设置 `element.style` 绕过这一约束。
 - **现状覆盖（以实际进 `dist` 的 `public/assets/seo/` 为准）**：26 款里只有 14 款有图；10 款（lumen、circuit、silk-dew、echo-cave、maxwell-demon、ripple-duet、carrot-pull、firefly-signal、shadow-loom、loop-jail）的图只在源目录 `assets/seo/`，不会进 `dist`；crystal-bloom、flame-verse 两处都没有。
-- 附带发现（与本方案无关、建议单独修）：gen 给每个游戏页写的 `og:image` / `twitter:image` 都指向 `assets/seo/og-<id>.svg`，所以上面 10 + 2 款的社交分享预览图在生产环境已经是 404。
+- 附带发现（P3 已一并修复，见 §7.2）：gen 给每个游戏页写的 `og:image` / `twitter:image` 都指向 `assets/seo/og-<id>.svg`，所以上面 10 + 2 款的社交分享预览图在生产环境已经是 404。
 
 ### 4.5 Daily Hub
 
@@ -202,6 +202,19 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 - `index-page.js` 预算从 12 KiB 放到 14 KiB（筛选 + 「新」判定）。
 - **胶囊位置改到简介行首**（修订 §4.3「放在标题行尾」）：P2 让 needle-awn / sword-flight 同时「每日 + 新」，浅色下再加「仅深色」共三枚；手机标题行不换行，中文 360px 时「针尖对麦芒」被挤成省略号，320px 只剩 19px（PR #147 review）。冻结的 `.card-header { display:flex }` 与本表已冻结的 `!important` 排除了纯 CSS 改栅格的路，于是改标记：`.card-desc` 里先是 `.card-chips`、再是 `.card-desc-text`（`aria-describedby` 指向后者，可访问描述不含胶囊文字）。标题独占标题行，被行数截断的只会是简介；隐藏的「仅深色」不占位。`verify-index-layout` 冻结时钟、加中文 + 浅色手机档（且断言确有三枚胶囊同卡），标题被挤到不足自身宽度一半即失败。
 - 筛选后卡数 = registry 计数、hash 往返 / 后退 / 直链 / 非法 hash、「新」胶囊在冻结时钟下的期望集合与远期时钟下为空，都在 `tests/smoke-index.mjs`；registry 侧（分类合法、无空分区、区内顺序、daily ⟺ cap、`data-added` ⟺ `addedAt`、schema 枚举 = categories）在 `tests/verify-index-cards.mjs`。
+
+### 7.2 P3 落地记录（2026-10-15）
+
+- **OG 图单一来源 `public/assets/seo/`**：10 张只在根目录 `assets/seo/` 的图移进 `public/`，补画 crystal-bloom / flame-verse；根目录副本删除（13 张与 `public/` 逐字节相同，`og-tower-defense.svg` 是 #36 美术升级前的旧版，以 `public/` 的新版为准）。dev 与 `tests/lib/serve-static.mjs` 都在根目录缺文件时回退到 `public/`，所以 `og:image` 的相对路径不变，生产 404 一并消失。`verify-index-cards` 断言 26 款 + collection 全在 `public/`、根目录 `assets/seo/` 不存在。
+- **新上线横排**：gen 区域 `home-new` 写出全部带 `addedAt` 的游戏（新者在前，同日按登记顺序），`<img class="new-game-art">` 为字面 URL、文件存在才输出；`index-page.js` 用与「新」胶囊同一个判定移除过期大卡，一张不剩就保持整行 `hidden`。图标用 `new-icon card-icon--<x>`：冻结的 `.card-icon` 只能靠 `!important` 改尺寸，而 home-cards 的 `!important` 数量在 main 上已冻结，配色类只有底色 / 前景色，可以直接复用。
+- **封面用游戏自己的美术**（修订 §4.4「大卡用游戏的 OG 图作背景」）：OG 图里不少是早期占位 SVG（拔萝卜、影织的远不如原画），所以新上线优先用 `public/assets/home-covers/<id>.webp`（640×360），没有才退回 OG 图。封面由 `tools/generators/game-covers.mjs` 从游戏素材生成、产物入库：拔萝卜 / 针尖对麦芒裁概念原画；影织在真实游戏里把「兔」直接摆到内核解；萤火信号用测试求解器在 Node 里解「仲夏」、浏览器按同 seed 同输入回放到通关，取 25/30 只齐闪后的一帧（画布像素，不截 DOM）。画牢、御剑飞行没有手绘素材，仍用 OG 图，卡片带 `new-card--og` 压深底部（图里自带标题），美术封面只压一条浅渐变。`verify-index-cards` 断言这四款必须有素材封面。
+- **分享图也换成美术**：同一个 `tools/generators/game-covers.mjs` 每个配方同时产出 1200×630 的 `public/assets/seo/og-<id>.jpg`（多数社交平台本来就不渲染 SVG 的 og:image），gen 的 `og:image` / JSON-LD 脚本优先用 JPEG、没有才用 SVG；这四款原来的占位 SVG（拔萝卜、影织、萤火信号、针尖对麦芒）已删除，`verify-index-cards` 断言有 JPEG 的游戏不得再留 SVG、且页面 og:image 指向实际存在的那一张。随后把其余有美术素材的四款也换掉：数字雨裁星空天文台原画；霓虹塔防在真实游戏里沿航线铺 8 座四种塔、发第一波后取战场画面；蛛丝引露取第一关夜园（露珠、星点、玉盏）；坦克大战的画布固定 800×600 且开局战场很空，改用它自己的 SVG 精灵（地块 / 砖墙 / 钢板 / 坦克 / 道具）在离屏画布上摆一幕放大的交火，矢量按目标分辨率光栅化不发糊。这四款的 SVG 也已删除（`verify-td-art` 改为：有 JPEG 时不再要求 SVG 卡片文案，退役文案守卫仍覆盖首页文案）。首页封面只给有 `addedAt` 的游戏生成，`verify-index-cards` 断言 `home-covers/` 里没有用不上的文件。其余 18 款没有手绘 / 矢量美术素材，仍用 SVG 分享图。
+- **最近玩过**：`site_recent`（safe-storage，最多 6 个，去重置顶），只记 `.idx-main` 内带 `data-game-id` 的链接点击（含中键）；名字取自当前语言的卡片标题，换语言重渲染；未知 id 跳过。
+- **「更多每日 (N)」**：Daily Hub 内的链接，N = 带「每日」胶囊的卡减去 Hub 已列出的三项（当前 11）；点击走与筛选按钮同一个 `setFilter('daily')` 并跳到分区开头。
+- **D-6**：hero 大 emoji 删除；Perks 三卡删除、压成页脚一行 `perksLine`（删掉 6 条 `perk*` 文案）。都是删标记，没有用 CSS 隐藏冻结规则。
+- 预算：`index.html` 38 → 44 KiB（新上线横排）。
+- **首页运行时模块化**：原 `js/index-page.js`（P3 后约 17.7 KB，混着 i18n / 胶囊 / 筛选 / 最近玩过 / Hub / SEO / 主题开关）拆成 `src/home/` 包，组合根 `src/home/index.js`；`i18n.js` 提供 `onLanguage()`，胶囊文案与最近玩过各自挂钩子，不再由 `applyLanguage` 反向调用。`js/index-page.js` 只剩入口（注入 gen 产物 `js/index-i18n-zh.js` 的懒加载器）。Hub 改用 `platform/daily.js` 的 UTC+8 日期与 safe-storage（原先手写 `+8h` 与裸 `localStorage`）。预算改为入口 ≤1 KiB、单模块 ≤5 KiB、整包 ≤24 KiB；`verify-no-game-lang` 扫描范围加 `src/home/`，豁免从入口移到组合根。`smoke-index` 在拆分前后同样全绿（另补 Hub 完成态与昵称写回的断言）。
+- 新上线 OG 图在 `dist` 服务器上逐张请求 200（`npm run build` 后用 `smoke-index` 跑 `dist/`）。
 
 ## 8. 待决策
 

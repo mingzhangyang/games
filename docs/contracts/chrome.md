@@ -221,7 +221,7 @@ node tests/verify-registry.mjs
 > 补齐手段是静态源扫描守卫 `tests/verify-no-game-lang.mjs`（无需起服务，1 秒内）：
 > 扫全部 `*.html` + `js/**`，禁 `setLang(` / `selectLanguage(` / `switchLanguage(` /
 > `langTitle` / `btnLang` / `langBtn` / `data-chrome="lang"` / `__pendingLanguageSelection =`，
-> 外加「HTML 里名字带 lang 的按钮」结构检查；只豁免 `index.html`、`js/index-page.js`、
+> 外加「HTML 里名字带 lang 的按钮」结构检查；只豁免 `index.html`、`src/home/index.js`（首页组合根；`js/index-page.js` 只是入口）、
 > `src/platform/site-settings.js`，以及 word-daily 的 `#wd-btn-lang`（单词/成语模式切换，非语言）。
 > 已注册进 `verify-all` 全量档与 `--quick` 档。
 

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="cb-og-title cb-og-desc">
+  <title id="cb-og-title">Crystal Bloom social card</title>
+  <desc id="cb-og-desc">Social preview for 晶绽 Crystal Bloom — draw a cooling curve: quench for dendrites, cool gently for facets.</desc>
+  <defs>
+    <linearGradient id="cb-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#05070f"/>
+      <stop offset="0.6" stop-color="#070a18"/>
+      <stop offset="1" stop-color="#0c1a33"/>
+    </linearGradient>
+    <linearGradient id="cb-curve" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff8a5c"/>
+      <stop offset="0.45" stop-color="#ffd34d"/>
+      <stop offset="1" stop-color="#7fe7ff"/>
+    </linearGradient>
+    <filter id="cb-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#cb-bg)"/>
+  <g fill="none" stroke="#9fdcff" stroke-opacity=".18" stroke-width="1.5">
+    <path d="M640 120V520H1130"/><path d="M640 220H1130M640 320H1130M640 420H1130"/>
+  </g>
+  <path d="M650 140C700 150 720 230 760 300S860 330 920 360 1040 420 1120 440" fill="none" stroke="url(#cb-curve)" stroke-width="7" stroke-linecap="round" filter="url(#cb-glow)"/>
+  <g fill="none" stroke="#bff3ff" stroke-width="5" stroke-linecap="round" filter="url(#cb-glow)">
+    <g transform="translate(790 470)">
+      <path d="M0-70V70M-61-35 61 35M-61 35 61-35"/>
+      <path d="M0-48l-14-14M0-48l14-14M0 48l-14 14M0 48l14 14M-42-24l-19 1M-42-24l-6-19M42 24l19-1M42 24l6 19M-42 24l-6 19M-42 24l-19-1M42-24l6-19M42-24l19 1"/>
+    </g>
+  </g>
+  <g filter="url(#cb-glow)">
+    <path d="M1040 230l46 26v53l-46 26-46-26v-53z" fill="#7fe7ff" fill-opacity=".18" stroke="#7fe7ff" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M1040 230v52l46 27M1040 282l-46 27" fill="none" stroke="#e6fbff" stroke-width="2.5" stroke-opacity=".7"/>
+  </g>
+  <g font-family="Trebuchet MS,Segoe UI,sans-serif" font-weight="900">
+    <text x="70" y="170" font-size="104" fill="#bff3ff" filter="url(#cb-glow)">晶绽</text>
+    <text x="76" y="236" font-size="36" letter-spacing="9" fill="#e6fbff">CRYSTAL BLOOM</text>
+    <text x="76" y="520" font-size="26" fill="#ffb27a" font-weight="700">Quench → dendrites</text>
+    <text x="76" y="560" font-size="26" fill="#7fe7ff" font-weight="700">Cool gently → facets</text>
+  </g>
+</svg>

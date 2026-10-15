@@ -7,6 +7,8 @@
  * P2：「新」胶囊按 UTC+8 今天运行时判定，所以页面时钟冻结在 FROZEN_NOW，期望集合从
  * registry 的 addedAt 用同一时刻算出；另验一个远期时钟下没有任何「新」胶囊。筛选条：
  * 每个按钮的可见卡数 = registry 计数、hash 往返、后退、直链 #cat=、非法 hash 退回全部。
+ * P3：新上线横排（45 天、新者在前、OG 图请求 200、无内联 style）、「更多每日」计数与跳转、
+ * 最近玩过（site_recent 最多 6 个去重置顶、重载渲染、名字随语言）、页脚 Perks 行本地化。
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -166,6 +168,37 @@ function checkChips(chips, lang, where) {
     await page.close();
 }
 
+// ── Daily Hub：完成态读各游戏的 UTC+8 存储键；昵称读 player_name（缺省回退旧键）并在 change 时写回 ──
+{
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 900 });
+    await page.evaluateOnNewDocument(fixed => {
+        const R = Date;
+        globalThis.Date = class extends R { constructor(...a) { if (a.length) super(...a); else super(fixed); } static now() { return fixed; } };
+        if (window.sessionStorage.getItem('seeded')) return;
+        window.sessionStorage.setItem('seeded', '1');
+        localStorage.setItem('site_lang', 'en');
+        localStorage.setItem('wd_daily_2026-10-15_zh', '1');   // FROZEN_NOW 的 UTC+8 日期
+        localStorage.setItem('gs_daily_20261015', '1');
+        localStorage.setItem('pm_daily_20261014', '1');        // 昨天的不算
+        localStorage.setItem('tetris_username', 'Legacy');
+    }, FROZEN_NOW);
+    await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle0', timeout: 30000 });
+    const hub = await page.evaluate(() => ({
+        progress: document.getElementById('hub-progress').textContent,
+        done: ['word', 'merge', 'gravity'].map(k => document.getElementById(`hub-task-${k}`).classList.contains('done')),
+        name: document.getElementById('player-name').value,
+    }));
+    if (hub.progress !== '2/3' || JSON.stringify(hub.done) !== '[true,false,true]') fail(`Daily Hub 完成态=${JSON.stringify(hub)} 应为 2/3（词 + 引力，昨天的星球不算）`);
+    if (hub.name !== 'Legacy') fail(`昵称未回退旧键 tetris_username: "${hub.name}"`);
+    await page.$eval('#player-name', el => { el.value = ''; el.focus(); });
+    await page.type('#player-name', '  Ada\u0007 ');
+    await page.keyboard.press('Enter');
+    const saved = await page.evaluate(() => ({ v: document.getElementById('player-name').value, stored: localStorage.getItem('player_name') }));
+    if (saved.v !== 'Ada' || saved.stored !== 'Ada') fail(`昵称未清洗写回 player_name: ${JSON.stringify(saved)}`);
+    await page.close();
+}
+
 // ── 直链 hash / 非法 hash / 远期时钟 ──
 {
     const { page, errs } = await loadPage('en', { hash: '#cat=science' });
@@ -180,6 +213,101 @@ function checkChips(chips, lang, where) {
     const { page } = await loadPage('en', { now: FAR_FUTURE });
     const got = await newChipIds(page);
     if (got.length) fail(`远期时钟下仍有「新」胶囊: ${got}`);
+    const row = await page.evaluate(() => ({ hidden: document.getElementById('home-new')?.hidden, cards: document.querySelectorAll('.new-card').length }));
+    if (!row.hidden || row.cards) fail(`远期时钟下新上线横排应隐藏且无卡: ${JSON.stringify(row)}`);
+    await page.close();
+}
+
+// ── P3：新上线横排 / 更多每日 / 最近玩过 / Perks 行 ──
+{
+    const { page, errs } = await loadPage('en');
+    const wantNew = GAMES.filter(g => expectNew(FROZEN_NOW).includes(g.id))
+        .sort((a, b) => (a.home.addedAt < b.home.addedAt ? 1 : a.home.addedAt > b.home.addedAt ? -1 : 0)).map(g => g.id); // 同日保持登记顺序
+    const row = await page.evaluate(() => ({
+        hidden: document.getElementById('home-new')?.hidden,
+        ids: [...document.querySelectorAll('.new-card')].map(a => a.dataset.gameId),
+        srcs: [...document.querySelectorAll('.new-card img.new-game-art')].map(img => img.getAttribute('src')),
+        styled: document.querySelectorAll('#home-new [style]').length,
+    }));
+    if (row.hidden) fail('冻结时钟下新上线横排未显现');
+    if (JSON.stringify(row.ids) !== JSON.stringify(wantNew)) fail(`新上线横排=${row.ids} 应为 45 天内、新者在前的 ${wantNew}`);
+    if (row.srcs.length !== row.ids.length) fail(`新上线有卡缺 OG 图: ${row.srcs.length}/${row.ids.length}`);
+    if (row.styled) fail(`新上线横排出现 ${row.styled} 个内联 style`);
+    const statuses = await page.evaluate(srcs => Promise.all(srcs.map(src => fetch(src).then(r => `${r.status} ${r.headers.get('content-type')}`))), row.srcs);
+    const bad = statuses.filter(st => !st.startsWith('200') || !/image\/(svg\+xml|webp)/.test(st));
+    if (bad.length) fail(`新上线封面 / OG 图请求失败: ${bad.join(' | ')}`);
+
+    // 更多每日：N = daily cap 的游戏减去 Hub 已列出的三项，点击 → #cat=daily 且跳到分区开头
+    const hubHrefs = await page.$$eval('.daily-task[href]', as => as.map(a => a.getAttribute('href')));
+    const wantMore = GAMES.filter(g => (g.caps || []).includes('daily') && !hubHrefs.includes(g.href)).length;
+    const more = await page.evaluate(() => ({ hidden: document.getElementById('hub-more-daily').hidden, n: document.getElementById('hub-more-count').textContent }));
+    if (more.hidden || more.n !== String(wantMore)) fail(`「更多每日」=${JSON.stringify(more)} 应显示 ${wantMore}`);
+    await page.click('#hub-more-daily');
+    checkFilter(await filterState(page), 'daily', '点「更多每日」后');
+    const labelTop = await page.$eval('#section-label', el => el.getBoundingClientRect().top);
+    if (labelTop < -1 || labelTop > 120) fail(`点「更多每日」后未跳到分区开头（section-label top=${Math.round(labelTop)}）`);
+
+    // 最近玩过：拦下导航只看记录；最多 6 个、去重置顶，重载后按序渲染，换语言后名字跟着变
+    if (!(await page.$eval('#home-recent', el => el.hidden))) fail('没有记录时「最近玩过」应隐藏');
+    await page.evaluate(() => document.addEventListener('click', e => e.preventDefault()));
+    await page.click('#games-filter [data-filter="all"]');
+    const order = ['tetris', 'loop-jail', 'gomoku', 'reversi', 'lumen', 'circuit', 'minesweeper', 'tetris'];
+    for (const id of order) {
+        await page.$eval(`.game-card[data-game-id="${id}"]`, el => el.scrollIntoView({ block: 'center' }));
+        await page.click(`.game-card[data-game-id="${id}"]`);
+    }
+    const wantRecent = ['tetris', 'minesweeper', 'circuit', 'lumen', 'reversi', 'gomoku'];
+    const stored = await page.evaluate(() => localStorage.getItem('site_recent'));
+    if (stored !== JSON.stringify(wantRecent)) fail(`site_recent=${stored} 应为 ${JSON.stringify(wantRecent)}`);
+    const recent = () => page.evaluate(() => ({
+        hidden: document.getElementById('home-recent').hidden,
+        ids: [...document.querySelectorAll('.recent-card')].map(a => a.dataset.gameId),
+        names: [...document.querySelectorAll('.recent-card')].map(a => a.textContent.trim()),
+        hrefs: [...document.querySelectorAll('.recent-card')].map(a => a.getAttribute('href')),
+    }));
+    // 不重载也要更新：中键 / Ctrl·Cmd 点击在新标签打开时首页还留着（PR #148 review）
+    await new Promise(res => setTimeout(res, 50));
+    let r = await recent();
+    if (r.hidden || JSON.stringify(r.ids) !== JSON.stringify(wantRecent)) fail(`点击后未重载时「最近玩过」=${JSON.stringify(r.ids)}，应已更新为 ${JSON.stringify(wantRecent)}`);
+    await page.reload({ waitUntil: 'networkidle0' });
+    r = await recent();
+    if (r.hidden || JSON.stringify(r.ids) !== JSON.stringify(wantRecent)) fail(`「最近玩过」渲染=${JSON.stringify(r.ids)} 应为 ${JSON.stringify(wantRecent)}`);
+    const nameOf = (id, lang) => GAMES.find(g => g.id === id).name[lang];
+    if (JSON.stringify(r.names) !== JSON.stringify(wantRecent.map(id => nameOf(id, 'en')))) fail(`「最近玩过」英文名=${r.names}`);
+    if (JSON.stringify(r.hrefs) !== JSON.stringify(wantRecent.map(id => GAMES.find(g => g.id === id).href))) fail(`「最近玩过」链接=${r.hrefs}`);
+    const perksEn = await page.$eval('#perks-line', el => el.textContent);
+    await page.click('#lang-toggle');
+    await new Promise(res => setTimeout(res, 200));
+    r = await recent();
+    if (JSON.stringify(r.names) !== JSON.stringify(wantRecent.map(id => nameOf(id, 'zh')))) fail(`换中文后「最近玩过」名字=${r.names}`);
+    const perksZh = await page.$eval('#perks-line', el => el.textContent);
+    // 键盘焦点在最近卡上时打开它（Ctrl/Cmd+Enter 新标签），重渲染后焦点要落在同一款游戏的新链接上
+    const focusKept = await page.evaluate(async () => {
+        document.addEventListener('click', e => e.preventDefault(), { once: true });
+        const card = document.querySelectorAll('.recent-card')[2];
+        const id = card.dataset.gameId;
+        card.focus();
+        card.click();
+        await new Promise(res => setTimeout(res, 50));
+        const now = document.activeElement;
+        return { id, active: now?.classList.contains('recent-card') ? now.dataset.gameId : now?.tagName, first: document.querySelector('.recent-card').dataset.gameId };
+    });
+    if (focusKept.active !== focusKept.id || focusKept.first !== focusKept.id) fail(`最近卡重渲染丢了键盘焦点或没置顶: ${JSON.stringify(focusKept)}`);
+    // 站外游戏进最近玩过时保留「站外 ↗」胶囊（此时界面是中文）
+    const extRecent = await page.evaluate(async () => {
+        document.addEventListener('click', e => e.preventDefault(), { once: true });
+        document.querySelector('.game-card[data-game-id="dots"]').click();
+        await new Promise(res => setTimeout(res, 50));
+        const first = document.querySelector('.recent-card');
+        return { id: first.dataset.gameId, chip: first.querySelector('.card-chip--external')?.textContent, text: first.textContent };
+    });
+    if (extRecent.id !== 'dots' || extRecent.chip !== HOME.ui.badgeExternal.zh || !extRecent.text.includes(HOME.ui.badgeExternal.zh)) {
+        fail(`站外游戏的最近卡丢了「站外 ↗」胶囊: ${JSON.stringify(extRecent)}`);
+    }
+    if (perksEn !== HOME.ui.perksLine.en || perksZh !== HOME.ui.perksLine.zh) fail(`Perks 行未本地化: en="${perksEn}" zh="${perksZh}"`);
+    const newZh = await page.$$eval('.new-card .new-card-name', els => els.map(e => e.textContent));
+    if (JSON.stringify(newZh) !== JSON.stringify(wantNew.map(id => nameOf(id, 'zh')))) fail(`换中文后新上线名字=${newZh}`);
+    if (errs.length) fail(`P3 页面错误: ${errs.join(' | ')}`);
     await page.close();
 }
 
@@ -262,4 +390,4 @@ if (fails.length) {
     for (const f of fails) console.error(`  - ${f}`);
     process.exit(1);
 }
-console.log('smoke-index：i18n 注入 / daily hub / 整卡链接 / 状态胶囊 / 「新」判定 / 筛选 + hash / 语言切换 / CSS 全部通过 ✅');
+console.log('smoke-index：i18n 注入 / daily hub / 整卡链接 / 状态胶囊 / 「新」判定 / 筛选 + hash / 新上线 / 更多每日 / 最近玩过 / 语言切换 / CSS 全部通过 ✅');
