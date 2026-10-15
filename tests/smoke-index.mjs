@@ -220,6 +220,19 @@ function checkChips(chips, lang, where) {
     checkFilter(await filterState(page), 'daily', '后退一步');
     await page.click('#games-filter [data-filter="all"]');
     checkFilter(await filterState(page), 'all', '回到全部');
+    // 「每日」把卡片移进暂存 div：回到全部后 DOM 顺序必须复原，暂存期间切语言也要覆盖到
+    const domOrder = () => page.$$eval('.games-cat .games-grid .game-card', cs => cs.map(c => c.dataset.gameId));
+    const orderBefore = await domOrder();
+    await page.click('#games-filter [data-filter="daily"]');
+    await page.click('#lang-toggle');
+    await new Promise(r => setTimeout(r, 200));
+    await page.click('#games-filter [data-filter="all"]');
+    if (JSON.stringify(await domOrder()) !== JSON.stringify(orderBefore)) fail('每日 → 全部 后卡片顺序未复原');
+    const zhTitle = await page.$eval('[data-game-id="tetris"] .card-title', el => el.textContent);
+    const wantZh = GAMES.find(g => g.id === 'tetris').name.zh;
+    if (zhTitle !== wantZh) fail(`暂存期间切中文，回到全部后 tetris 标题="${zhTitle}" 应为 "${wantZh}"`);
+    await page.click('#lang-toggle');
+    await new Promise(r => setTimeout(r, 200));
     const stored = await page.evaluate(() => Object.keys(localStorage).filter(k => /filter|cat/i.test(k)));
     if (stored.length) fail(`筛选状态不应写 localStorage: ${stored}`);
     for (const w of [390, 320]) {

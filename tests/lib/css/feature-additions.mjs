@@ -268,7 +268,7 @@ export const HOME_CARDS_SELECTORS = new Set([
     '.games-section, .perks',
     '.games-grid',
     // P2：分区 + 筛选条
-    '.games-filter[hidden], .games-cat[hidden], .game-card[hidden]',
+    '.games-filter[hidden]',
     '.games-filter',
     '.filter-btn',
     '.filter-btn:hover',

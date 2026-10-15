@@ -110,28 +110,30 @@ function injectStructuredData() {
     document.head.appendChild(script);
 }
 
-// 「新」依赖今天的日期，所以不进 gen（否则 gen --check 会随日期变红）：gen 只写 data-added，
-// 这里按 UTC+8 的今天判定。两边都转成 UTC 毫秒再算天数，不拿 YYYYMMDD 与 YYYY-MM-DD 比字符串。
+// 「新」随日期变化，不进 gen（否则 gen --check 会随日期变红）：gen 只写 data-added，
+// 这里按 UTC+8 今天、都转 UTC 毫秒算天数。
 function markNewCards() {
     const t = todayKey();
     const today = Date.UTC(+t.slice(0, 4), +t.slice(4, 6) - 1, +t.slice(6, 8));
     document.querySelectorAll('.game-card[data-added]').forEach(card => {
         const [y, m, d] = card.dataset.added.split('-').map(Number);
-        const age = (today - Date.UTC(y, m - 1, d)) / 86400000;
-        const header = card.querySelector('.card-header');
-        const title = card.querySelector('.card-title');
-        if (!(age >= 0 && age < NEW_DAYS) || !header || !title || header.querySelector('.card-chip--new')) return;
+        const age = (today - Date.UTC(y, m - 1, d)) / 864e5;
+        if (age < 0 || age >= NEW_DAYS) return;
         const chip = document.createElement('span');
         chip.className = 'card-chip card-chip--new';
-        chip.id = title.id.replace(/-name$/, '-chip-new');
+        chip.id = card.querySelector('.card-title').id.replace(/-name$/, '-chip-new');
         chip.textContent = CHIP_FALLBACK.new;
-        header.append(chip);
+        card.querySelector('.card-header').append(chip);
         card.setAttribute('aria-labelledby', `${card.getAttribute('aria-labelledby')} ${chip.id}`);
     });
 }
 
-// 筛选条（§4.2）：分区是静态 HTML，这里只做显隐。状态只放在 location.hash（#cat=science /
-// #cat=daily），可分享、可后退；不写 localStorage，回访默认「全部」（D-5）。
+// 筛选条（proposal §4.2）：状态只放 location.hash（#cat=science），可分享、可后退；
+// 不写 localStorage，回访默认「全部」（D-5）。
+// 冻结的 .game-card { display:flex } 盖过 hidden 属性，所以「每日」筛选把其余卡片移进
+// 分区内 hidden 的暂存 div（仍在文档里，语言切换 / 主题同步照样覆盖）。
+const sectionCards = new WeakMap();
+
 function applyFilter() {
     const box = document.getElementById('games-filter');
     if (!box) return;
@@ -140,12 +142,20 @@ function applyFilter() {
     const filter = buttons.some(b => b.dataset.filter === wanted) ? wanted : 'all';
     buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
     document.querySelectorAll('.games-cat').forEach(section => {
-        const cards = [...section.querySelectorAll('.game-card')];
-        cards.forEach(card => { card.hidden = filter === 'daily' && !card.querySelector('.card-chip--daily'); });
-        const visible = cards.filter(card => !card.hidden).length;
+        const grid = section.querySelector('.games-grid');
+        if (!sectionCards.has(section)) {
+            const stash = document.createElement('div');
+            stash.hidden = true;
+            section.append(stash);
+            sectionCards.set(section, { cards: [...grid.querySelectorAll('.game-card')], stash });
+        }
+        const { cards, stash } = sectionCards.get(section);
+        const shown = cards.filter(card => filter !== 'daily' || card.querySelector('.card-chip--daily'));
+        grid.append(...shown);
+        stash.append(...cards.filter(card => !shown.includes(card)));
         const count = section.querySelector('.games-cat-count');
-        if (count) count.textContent = String(visible);
-        section.hidden = !visible || !(filter === 'all' || filter === 'daily' || section.dataset.cat === filter);
+        if (count) count.textContent = String(shown.length);
+        section.hidden = !shown.length || !(filter === 'all' || filter === 'daily' || section.dataset.cat === filter);
     });
 }
 
@@ -155,10 +165,9 @@ function bindFilter() {
     box.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => {
         const hash = btn.dataset.filter === 'all' ? '' : `#cat=${btn.dataset.filter}`;
         if (location.hash === hash) return;
-        // pushState 不触发 hashchange，手动刷新；后退 / 前进由 hashchange 接管
         history.pushState(null, '', `${location.pathname}${location.search}${hash}`);
         applyFilter();
-        // 筛选条吸顶时内容高度骤变，回到分区开头，免得落在新列表的中段
+        // 吸顶时内容高度骤变，回到分区开头
         const cats = document.getElementById('games-cats');
         if (cats && cats.getBoundingClientRect().top < box.offsetHeight) document.getElementById('section-label')?.scrollIntoView();
     }));

@@ -26,9 +26,12 @@
         --ix-filter-bg: rgb(236, 238, 243, 0.9);
     }
 
-    /* hidden 属性必须赢过冻结的 .game-card { display:flex } 与本表的 flex 声明（筛选显隐全靠它） */
-    .games-filter[hidden], .games-cat[hidden], .game-card[hidden] {
-        display: none !important;
+    /* 渐进增强前隐藏：本层 .games-filter 的 display:flex 会盖过 UA 的 [hidden]，同层更高特异性压回去。
+       .games-cat 没有任何 display 声明，UA [hidden] 足够；卡片不靠 hidden 隐藏（冻结的
+       .game-card { display:flex } 只能用 !important 压，而本表在 main 上已冻结 !important 数量），
+       「每日」筛选把卡片移进分区里 hidden 的暂存 div，见 js/index-page.js applyFilter()。 */
+    .games-filter[hidden] {
+        display: none;
     }
 
     /* 筛选条：sticky 贴顶，一行横向滚动，不换行挤高 */
