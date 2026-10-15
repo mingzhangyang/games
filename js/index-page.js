@@ -2,6 +2,7 @@
 import { onReady } from '../src/platform/boot.js';
 import { getLang, setLang, getThemePref, setThemePref } from '../src/platform/site-settings.js';
 import { supportsLight, getTheme, onThemeChange } from '../src/platform/theme.js';
+import { todayKey } from '../src/platform/daily.js';
 
 const selectors = '[data-i18n], [data-i18n-placeholder], [data-i18n-label]';
 const defaults = new WeakMap();
@@ -9,6 +10,8 @@ let currentLang = 'en';
 let translations = new Map();
 const CHIP_KEYS = { daily: 'badgeDaily', new: 'badgeNew', external: 'badgeExternal' };
 const CHIP_FALLBACK = { daily: 'Daily', new: 'New', external: 'External ↗' };
+// 「新」胶囊的有效期（docs/proposal-home-layout.md §8 D-3）
+const NEW_DAYS = 45;
 
 function rememberDefaults() {
     document.querySelectorAll(selectors).forEach(el => {
@@ -105,6 +108,64 @@ function injectStructuredData() {
     script.type = 'application/ld+json';
     script.textContent = JSON.stringify(graph);
     document.head.appendChild(script);
+}
+
+// 「新」依赖今天的日期，所以不进 gen（否则 gen --check 会随日期变红）：gen 只写 data-added，
+// 这里按 UTC+8 的今天判定。两边都转成 UTC 毫秒再算天数，不拿 YYYYMMDD 与 YYYY-MM-DD 比字符串。
+function markNewCards() {
+    const t = todayKey();
+    const today = Date.UTC(+t.slice(0, 4), +t.slice(4, 6) - 1, +t.slice(6, 8));
+    document.querySelectorAll('.game-card[data-added]').forEach(card => {
+        const [y, m, d] = card.dataset.added.split('-').map(Number);
+        const age = (today - Date.UTC(y, m - 1, d)) / 86400000;
+        const header = card.querySelector('.card-header');
+        const title = card.querySelector('.card-title');
+        if (!(age >= 0 && age < NEW_DAYS) || !header || !title || header.querySelector('.card-chip--new')) return;
+        const chip = document.createElement('span');
+        chip.className = 'card-chip card-chip--new';
+        chip.id = title.id.replace(/-name$/, '-chip-new');
+        chip.textContent = CHIP_FALLBACK.new;
+        header.append(chip);
+        card.setAttribute('aria-labelledby', `${card.getAttribute('aria-labelledby')} ${chip.id}`);
+    });
+}
+
+// 筛选条（§4.2）：分区是静态 HTML，这里只做显隐。状态只放在 location.hash（#cat=science /
+// #cat=daily），可分享、可后退；不写 localStorage，回访默认「全部」（D-5）。
+function applyFilter() {
+    const box = document.getElementById('games-filter');
+    if (!box) return;
+    const buttons = [...box.querySelectorAll('[data-filter]')];
+    const wanted = (location.hash.match(/^#cat=([a-z-]+)$/) || [])[1];
+    const filter = buttons.some(b => b.dataset.filter === wanted) ? wanted : 'all';
+    buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    document.querySelectorAll('.games-cat').forEach(section => {
+        const cards = [...section.querySelectorAll('.game-card')];
+        cards.forEach(card => { card.hidden = filter === 'daily' && !card.querySelector('.card-chip--daily'); });
+        const visible = cards.filter(card => !card.hidden).length;
+        const count = section.querySelector('.games-cat-count');
+        if (count) count.textContent = String(visible);
+        section.hidden = !visible || !(filter === 'all' || filter === 'daily' || section.dataset.cat === filter);
+    });
+}
+
+function bindFilter() {
+    const box = document.getElementById('games-filter');
+    if (!box) return;
+    box.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => {
+        const hash = btn.dataset.filter === 'all' ? '' : `#cat=${btn.dataset.filter}`;
+        if (location.hash === hash) return;
+        // pushState 不触发 hashchange，手动刷新；后退 / 前进由 hashchange 接管
+        history.pushState(null, '', `${location.pathname}${location.search}${hash}`);
+        applyFilter();
+        // 筛选条吸顶时内容高度骤变，回到分区开头，免得落在新列表的中段
+        const cats = document.getElementById('games-cats');
+        if (cats && cats.getBoundingClientRect().top < box.offsetHeight) document.getElementById('section-label')?.scrollIntoView();
+    }));
+    window.addEventListener('hashchange', applyFilter);
+    window.addEventListener('popstate', applyFilter);
+    box.hidden = false;
+    applyFilter();
 }
 
 function markDarkOnlyCards() {
@@ -204,7 +265,9 @@ onReady(async () => {
     rememberDefaults();
     syncSocialMeta();
     injectStructuredData();
+    markNewCards();
     markDarkOnlyCards();
+    bindFilter();
     await applyLanguage(getLang());
     const toggleLang = async () => {
         const next = currentLang === 'zh' ? 'en' : 'zh';

@@ -1,6 +1,6 @@
 # 首页游戏卡片：布局与分类优化方案
 
-> 状态：提案（待评审） · 2026-10-14
+> 状态：P1 已合入（#146）· P2 已实现（分区 + 筛选条 + 派生胶囊，见 §7 落地记录）· 2026-10-15
 > Repository: `mingzhangyang/games`
 > 范围：`index.html` 游戏卡片区、Daily Hub 入口、`games.config.json` 的 `home` 元数据、生成器 `home-cards` 区域
 > 不在范围：各游戏页面本身、共享 `layout.css` 骨架、排行榜 / 统计 Worker 协议
@@ -192,6 +192,15 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 | **P4 可选** | Daily Hub registry 化（`daily.doneKey`）、基于 Analytics V2 的「🔥 热门」标签 | P-6 完整版 | 中：依赖 Analytics V2 上线 |
 
 每个阶段独立 PR，`npm run verify` 全绿后合入；P1 合入前后各截一组 390 / 1440 截图附在 PR 中。
+
+### 7.1 P2 落地记录（2026-10-15）
+
+- §8 决策全部取建议默认值：D-1 dots → `strategy`；D-2 gravity-slingshot → `puzzle`；D-3 45 天；D-5 不记忆（只用 hash）。
+- `site.home.categories` 新增可选 `filter: false`（只用于 `external`），筛选条因此是「全部 · 每日挑战 · 动作 · 解谜 · 策略 · 科学」，与 §4.1 一致。
+- `home.rank` 只给动作区写了（按 §3.2 表格顺序：needle-awn → … → math-rain）；其余分区的登记顺序本来就等于表格顺序，不写 rank。
+- `home.addedAt` 只写给原先 `badge: "new"` 的 6 款（needle-awn / sword-flight 2026-09-15，carrot-pull / shadow-loom 2026-09-26，firefly-signal 2026-09-27，loop-jail 2026-10-13，取各自首个提交日）。没有写给全部游戏：除最早 4 款外都在 2026-09-12 之后上线，按 45 天窗口当前会有 22 款同时「新」，重新回到 P-4 的「不稀缺」。今天之后新上线的游戏都应写 `addedAt`。
+- `index-page.js` 预算从 12 KiB 放到 14 KiB（筛选 + 「新」判定）。
+- 筛选后卡数 = registry 计数、hash 往返 / 后退 / 直链 / 非法 hash、「新」胶囊在冻结时钟下的期望集合与远期时钟下为空，都在 `tests/smoke-index.mjs`；registry 侧（分类合法、无空分区、区内顺序、daily ⟺ cap、`data-added` ⟺ `addedAt`、schema 枚举 = categories）在 `tests/verify-index-cards.mjs`。
 
 ## 8. 待决策
 

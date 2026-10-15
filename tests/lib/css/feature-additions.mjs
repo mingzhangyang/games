@@ -237,7 +237,7 @@ function reviewStageStatusStyles(root, cssPaths, htmlPaths, errors) {
 }
 
 /*
- * Home-cards contract (docs/proposal-home-layout.md P1): each landing-page card is
+ * Home-cards contract (docs/proposal-home-layout.md P1 + P2): each landing-page card is
  * one <a>, status is a visible text chip, phones get single-column rows and wide
  * desktops four columns. css/index.css stays frozen; this sheet corrects it the
  * same way as stage-status — @layer contracts only, !important only where a frozen
@@ -267,6 +267,17 @@ export const HOME_CARDS_SELECTORS = new Set([
     '.game-card:hover .card-go',
     '.games-section, .perks',
     '.games-grid',
+    // P2：分区 + 筛选条
+    '.games-filter[hidden], .games-cat[hidden], .game-card[hidden]',
+    '.games-filter',
+    '.filter-btn',
+    '.filter-btn:hover',
+    '.filter-btn:focus-visible',
+    '.filter-btn[aria-pressed="true"]',
+    '.games-cats',
+    '.games-cat-title',
+    '.games-cat-icon',
+    '.games-cat-count',
 ]);
 
 export function stripHomeCardsLink(page, html, errors) {

@@ -10,7 +10,8 @@
 //
 // 卡片网格（docs/proposal-home-layout.md P1）：每档列数固定；≤600px 是单列横条
 // （≤80px 高）；任何视口下标题都不在单词中间断开（曾经 390px 两列把 Minesweeper
-// 拆成 Minesweep/er）；≥360px 时标题不被省略号截断；卡片不横向溢出。
+// 拆成 Minesweep/er）；≥360px 时标题不被省略号截断；卡片不横向溢出。P2 起按分区
+// 输出多个网格，每个分区的列数都要等于期望值。
 // 用法：node tests/verify-index-layout.mjs [baseUrl]（需静态服务器）
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -82,7 +83,8 @@ for (const vp of VIEWPORTS) {
             })(),
             cards: document.querySelectorAll('.game-card').length,
             grid: (() => {
-                const grid = document.querySelector('.games-grid');
+                // P2 起每个分区一个 .games-grid：全部分区的列数都要对
+                const grids = [...document.querySelectorAll('.games-grid')];
                 const cards = [...document.querySelectorAll('.game-card')];
                 const titles = [...document.querySelectorAll('.game-card .card-title')];
                 const probe = document.createElement('span');
@@ -98,7 +100,8 @@ for (const vp of VIEWPORTS) {
                 }).map(t => t.textContent);
                 probe.remove();
                 return {
-                    cols: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+                    cols: getComputedStyle(grids[0]).gridTemplateColumns.split(' ').length,
+                    colsMixed: new Set(grids.map(gr => getComputedStyle(gr).gridTemplateColumns.split(' ').length)).size > 1,
                     maxCardH: Math.round(Math.max(...cards.map(c => c.getBoundingClientRect().height))),
                     brokenWords,
                     truncated: titles.filter(t => t.scrollWidth > t.clientWidth + 0.5).map(t => t.textContent),
@@ -119,6 +122,7 @@ for (const vp of VIEWPORTS) {
 
     const g = m.grid;
     if (g.cols !== EXPECTED_COLS[vp.w]) bad.push(`grid cols=${g.cols} want ${EXPECTED_COLS[vp.w]}`);
+    if (g.colsMixed) bad.push('category grids disagree on column count');
     if (vp.w <= 600 && g.maxCardH > 80) bad.push(`mobile card height=${g.maxCardH} > 80`);
     if (g.brokenWords.length) bad.push(`title broken mid-word: ${g.brokenWords.join(' | ')}`);
     if (vp.w >= 360 && g.truncated.length) bad.push(`title truncated: ${g.truncated.join(' | ')}`);
