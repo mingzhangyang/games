@@ -34,6 +34,14 @@ function render() {
             const name = document.createElement('span');
             name.textContent = card.querySelector('.card-title').textContent;
             a.append(badge, name);
+            // 站外游戏保留「站外 ↗」胶囊：可见文字与可访问名都要告诉玩家这会离站
+            const ext = card.querySelector('.card-chip--external');
+            if (ext) {
+                const chip = document.createElement('span');
+                chip.className = 'card-chip card-chip--external';
+                chip.textContent = ext.textContent;
+                a.append(chip);
+            }
             return a;
         });
     // 重渲染会换掉所有链接：键盘焦点在某张最近卡上时（Ctrl/Cmd+Enter 新标签打开、bfcache 恢复），交给它的替身

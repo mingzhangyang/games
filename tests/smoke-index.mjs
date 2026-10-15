@@ -293,6 +293,17 @@ function checkChips(chips, lang, where) {
         return { id, active: now?.classList.contains('recent-card') ? now.dataset.gameId : now?.tagName, first: document.querySelector('.recent-card').dataset.gameId };
     });
     if (focusKept.active !== focusKept.id || focusKept.first !== focusKept.id) fail(`最近卡重渲染丢了键盘焦点或没置顶: ${JSON.stringify(focusKept)}`);
+    // 站外游戏进最近玩过时保留「站外 ↗」胶囊（此时界面是中文）
+    const extRecent = await page.evaluate(async () => {
+        document.addEventListener('click', e => e.preventDefault(), { once: true });
+        document.querySelector('.game-card[data-game-id="dots"]').click();
+        await new Promise(res => setTimeout(res, 50));
+        const first = document.querySelector('.recent-card');
+        return { id: first.dataset.gameId, chip: first.querySelector('.card-chip--external')?.textContent, text: first.textContent };
+    });
+    if (extRecent.id !== 'dots' || extRecent.chip !== HOME.ui.badgeExternal.zh || !extRecent.text.includes(HOME.ui.badgeExternal.zh)) {
+        fail(`站外游戏的最近卡丢了「站外 ↗」胶囊: ${JSON.stringify(extRecent)}`);
+    }
     if (perksEn !== HOME.ui.perksLine.en || perksZh !== HOME.ui.perksLine.zh) fail(`Perks 行未本地化: en="${perksEn}" zh="${perksZh}"`);
     const newZh = await page.$$eval('.new-card .new-card-name', els => els.map(e => e.textContent));
     if (JSON.stringify(newZh) !== JSON.stringify(wantNew.map(id => nameOf(id, 'zh')))) fail(`换中文后新上线名字=${newZh}`);
