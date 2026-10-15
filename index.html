@@ -79,7 +79,7 @@
             </div>
             <span class="daily-task-status" id="hub-task-gravity-status">⚪</span>
         </a>
-        <!-- 其余每日玩法的入口（proposal §4.5）：跳到 #cat=daily；数量由 js/index-page.js 按卡片上的
+        <!-- 其余每日玩法的入口（proposal §4.5）：跳到 #cat=daily；数量由 src/home/daily-hub.js 按卡片上的
              「每日」胶囊减去上面三项算出，绑定后才显现。 -->
         <a class="hub-more-daily" id="hub-more-daily" href="#cat=daily" hidden><span data-i18n="moreDaily">More daily challenges</span><span class="hub-more-count" id="hub-more-count"></span><span aria-hidden="true">›</span></a>
         <div class="daily-profile">
@@ -91,7 +91,7 @@
 
     <!-- Games -->
     <section class="games-section" aria-label="Games">
-        <!-- 最近玩过（proposal §4.2）：首页点卡片时写 site_recent，有记录才由 js/index-page.js 渲染显现。 -->
+        <!-- 最近玩过（proposal §4.2）：首页点卡片时写 site_recent，有记录才由 src/home/recent.js 渲染显现。 -->
         <section class="home-row home-recent" id="home-recent" aria-labelledby="recent-title" hidden>
             <h2 class="home-row-title" id="recent-title" data-i18n="recentTitle">Recently played</h2>
             <div class="home-row-list" id="home-recent-list"></div>
@@ -112,7 +112,7 @@
         <!-- registry:end home-new -->
         <p class="section-label" id="section-label" data-i18n="sectionLabel">Choose a game</p>
         <!-- 筛选条与分区都由 games.config.json 生成（site.home.categories / home.category，见
-             docs/proposal-home-layout.md P2）；筛选条渐进增强，js/index-page.js 绑定后才显现。 -->
+             docs/proposal-home-layout.md P2）；筛选条渐进增强，src/home/filter.js 绑定后才显现。 -->
         <!-- registry:begin home-filter -->
 <div class="games-filter" id="games-filter" role="group" aria-label="Filter games" data-i18n-label="filterLabel" hidden>
 <button type="button" class="filter-btn" data-filter="all" aria-pressed="true" aria-controls="games-cats" data-i18n="filterAll">All</button>
@@ -195,7 +195,7 @@
         <div class="game-footer-actions">
             <button type="button" class="lang-toggle" id="footer-lang-toggle" title="Language" aria-label="Language" data-i18n="langToggle">中文</button>
             <!-- 主题三档（全站唯一写 site_theme 的地方，见 docs/contracts/theme.md）。
-                 首页声明支持浅色之前保持 hidden，由 js/index-page.js 按 theme-support 显现。 -->
+                 首页声明支持浅色之前保持 hidden，由 src/home/theme-switch.js 按 theme-support 显现。 -->
             <div class="theme-switch" id="theme-switch" role="group" aria-label="Theme" data-i18n-label="themeLabel" hidden>
                 <button type="button" class="theme-switch-btn" data-theme-pref="dark" aria-pressed="true" data-i18n="themeDark">Dark</button>
                 <button type="button" class="theme-switch-btn" data-theme-pref="light" aria-pressed="false" data-i18n="themeLight">Light</button>

@@ -101,6 +101,8 @@ function ownerOf(file) {
     if (file.startsWith('src/platform/') || file === 'games.config.json' || file === 'games.schema.json'
         || file === 'vite.config.js' || file.startsWith('css/tokens') || file.startsWith('css/layout')
         || file.startsWith('css/science-showcase') || file.startsWith('css/more-games')) return null;
+    // 首页运行时包（组合根 src/home/index.js）归 index 页，与 src/games/<id>/ 归各自游戏同理
+    if (file.startsWith('src/home/')) return 'index';
     for (const id of PAGE_IDS) {
         if (file === `${id}.html`) return id;
         if (file.startsWith(`js/${id}/`) || file.startsWith(`assets/${id}/`)

@@ -79,7 +79,7 @@ function homeCardLine(g, external = false) {
     // 胶囊排在简介行首（.card-chips 在 .card-desc 里，简介正文在 .card-desc-text）：标题独占一行，
     // 三枚胶囊同卡时被行数截断的是简介而不是标题（PR #147 review）。
     // 胶囊全部派生，不再手填（§3.3）：「每日」= daily cap；「新」依赖今天的日期，只把 addedAt
-    // 写成 data-added，由 js/index-page.js 运行时判定——放在 gen 里会让 gen --check 随日期变红。
+    // 写成 data-added，由 src/home/freshness.js 运行时判定——放在 gen 里会让 gen --check 随日期变红。
     const chips = [];
     if (!external && (g.caps || []).includes('daily')) chips.push({ kind: 'daily', text: ui.badgeDaily.en });
     if (external) chips.push({ kind: 'external', text: ui.badgeExternal.en });
@@ -119,7 +119,7 @@ function homeCardsTransform(src) {
     return applyRegion(src, 'home-cards', homeCardsContent(), null, 'html');
 }
 
-/** 筛选条：渐进增强，静态 hidden，由 js/index-page.js 绑定后显现；状态只存 location.hash（§4.2）。 */
+/** 筛选条：渐进增强，静态 hidden，由 src/home/filter.js 绑定后显现；状态只存 location.hash（§4.2）。 */
 function homeFilterContent() {
     const ui = SITE.home.ui;
     const btn = (filter, key, text, pressed = false) =>
@@ -137,7 +137,7 @@ function homeFilterTransform(src) {
     return applyRegion(src, 'home-filter', homeFilterContent(), null, 'html');
 }
 
-/** 新上线横排（proposal §4.4）：写出全部带 addedAt 的游戏（新者在前），45 天窗口由 index-page.js
+/** 新上线横排（proposal §4.4）：写出全部带 addedAt 的游戏（新者在前），45 天窗口由 src/home/new-row.js
  *  运行时裁剪——放在 gen 里会让 gen --check 随日期变红。OG 图必须是构建可见的字面 URL：只用会原样
  *  复制进 dist 的 public/assets/seo/，文件不存在就不输出 <img>（只留渐变 + 图标兜底），绝不运行时拼路径；
  *  图片铺放全由 home-cards.css 负责，不生成内联 style（verify-css-debt 冻结了 index.html 的内联样式）。 */

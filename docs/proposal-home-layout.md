@@ -210,7 +210,8 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 - **最近玩过**：`site_recent`（safe-storage，最多 6 个，去重置顶），只记 `.idx-main` 内带 `data-game-id` 的链接点击（含中键）；名字取自当前语言的卡片标题，换语言重渲染；未知 id 跳过。
 - **「更多每日 (N)」**：Daily Hub 内的链接，N = 带「每日」胶囊的卡减去 Hub 已列出的三项（当前 11）；点击走与筛选按钮同一个 `setFilter('daily')` 并跳到分区开头。
 - **D-6**：hero 大 emoji 删除；Perks 三卡删除、压成页脚一行 `perksLine`（删掉 6 条 `perk*` 文案）。都是删标记，没有用 CSS 隐藏冻结规则。
-- 预算：`index.html` 38 → 44 KiB（新上线横排），`index-page.js` 14 → 18 KiB。
+- 预算：`index.html` 38 → 44 KiB（新上线横排）。
+- **首页运行时模块化**：原 `js/index-page.js`（P3 后约 17.7 KB，混着 i18n / 胶囊 / 筛选 / 最近玩过 / Hub / SEO / 主题开关）拆成 `src/home/` 包，组合根 `src/home/index.js`；`i18n.js` 提供 `onLanguage()`，胶囊文案与最近玩过各自挂钩子，不再由 `applyLanguage` 反向调用。`js/index-page.js` 只剩入口（注入 gen 产物 `js/index-i18n-zh.js` 的懒加载器）。Hub 改用 `platform/daily.js` 的 UTC+8 日期与 safe-storage（原先手写 `+8h` 与裸 `localStorage`）。预算改为入口 ≤1 KiB、单模块 ≤5 KiB、整包 ≤24 KiB；`verify-no-game-lang` 扫描范围加 `src/home/`，豁免从入口移到组合根。`smoke-index` 在拆分前后同样全绿（另补 Hub 完成态与昵称写回的断言）。
 - 新上线 OG 图在 `dist` 服务器上逐张请求 200（`npm run build` 后用 `smoke-index` 跑 `dist/`）。
 
 ## 8. 待决策

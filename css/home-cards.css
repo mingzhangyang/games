@@ -3,7 +3,7 @@
 
    整卡一个 <a class="game-card">（唯一 Tab 停靠点）、可见文字胶囊取代只靠 hover 的书签图标、
    手机（≤600px）单列横条、宽桌面（≥1280px）四列；P2 起卡片按 home.category 分区输出，
-   上方是渐进增强的 sticky 筛选条（js/index-page.js 绑定后才去掉 hidden）。P3 加最近玩过 / 新上线
+   上方是渐进增强的 sticky 筛选条（src/home/filter.js 绑定后才去掉 hidden）。P3 加最近玩过 / 新上线
    横排 / Daily Hub「更多每日」/ 页脚一行 Perks（docs/proposal-home-layout.md §4.2 / §4.4 / §4.5）。
 
    本文件是 CSS P0/P5 冻结之后的**附加特性样式表**（见 tests/lib/css/feature-additions.mjs）：
@@ -192,7 +192,7 @@
     /* 渐进增强前隐藏：本层 .games-filter 的 display:flex 会盖过 UA 的 [hidden]，同层更高特异性压回去。
        .games-cat 没有任何 display 声明，UA [hidden] 足够；卡片不靠 hidden 隐藏（冻结的
        .game-card { display:flex } 只能用 !important 压，而本表在 main 上已冻结 !important 数量），
-       「每日」筛选把卡片移进分区里 hidden 的暂存 div，见 js/index-page.js applyFilter()。 */
+       「每日」筛选把卡片移进分区里 hidden 的暂存 div，见 src/home/filter.js applyFilter()。 */
     .games-filter[hidden] {
         display: none;
     }

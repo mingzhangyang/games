@@ -168,6 +168,37 @@ function checkChips(chips, lang, where) {
     await page.close();
 }
 
+// ── Daily Hub：完成态读各游戏的 UTC+8 存储键；昵称读 player_name（缺省回退旧键）并在 change 时写回 ──
+{
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 900 });
+    await page.evaluateOnNewDocument(fixed => {
+        const R = Date;
+        globalThis.Date = class extends R { constructor(...a) { if (a.length) super(...a); else super(fixed); } static now() { return fixed; } };
+        if (sessionStorage.getItem('seeded')) return;
+        sessionStorage.setItem('seeded', '1');
+        localStorage.setItem('site_lang', 'en');
+        localStorage.setItem('wd_daily_2026-10-15_zh', '1');   // FROZEN_NOW 的 UTC+8 日期
+        localStorage.setItem('gs_daily_20261015', '1');
+        localStorage.setItem('pm_daily_20261014', '1');        // 昨天的不算
+        localStorage.setItem('tetris_username', 'Legacy');
+    }, FROZEN_NOW);
+    await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle0', timeout: 30000 });
+    const hub = await page.evaluate(() => ({
+        progress: document.getElementById('hub-progress').textContent,
+        done: ['word', 'merge', 'gravity'].map(k => document.getElementById(`hub-task-${k}`).classList.contains('done')),
+        name: document.getElementById('player-name').value,
+    }));
+    if (hub.progress !== '2/3' || JSON.stringify(hub.done) !== '[true,false,true]') fail(`Daily Hub 完成态=${JSON.stringify(hub)} 应为 2/3（词 + 引力，昨天的星球不算）`);
+    if (hub.name !== 'Legacy') fail(`昵称未回退旧键 tetris_username: "${hub.name}"`);
+    await page.$eval('#player-name', el => { el.value = ''; el.focus(); });
+    await page.type('#player-name', '  Ada\u0007 ');
+    await page.keyboard.press('Enter');
+    const saved = await page.evaluate(() => ({ v: document.getElementById('player-name').value, stored: localStorage.getItem('player_name') }));
+    if (saved.v !== 'Ada' || saved.stored !== 'Ada') fail(`昵称未清洗写回 player_name: ${JSON.stringify(saved)}`);
+    await page.close();
+}
+
 // ── 直链 hash / 非法 hash / 远期时钟 ──
 {
     const { page, errs } = await loadPage('en', { hash: '#cat=science' });
