@@ -207,6 +207,7 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 
 - **OG 图单一来源 `public/assets/seo/`**：10 张只在根目录 `assets/seo/` 的图移进 `public/`，补画 crystal-bloom / flame-verse；根目录副本删除（13 张与 `public/` 逐字节相同，`og-tower-defense.svg` 是 #36 美术升级前的旧版，以 `public/` 的新版为准）。dev 与 `tests/lib/serve-static.mjs` 都在根目录缺文件时回退到 `public/`，所以 `og:image` 的相对路径不变，生产 404 一并消失。`verify-index-cards` 断言 26 款 + collection 全在 `public/`、根目录 `assets/seo/` 不存在。
 - **新上线横排**：gen 区域 `home-new` 写出全部带 `addedAt` 的游戏（新者在前，同日按登记顺序），`<img class="new-game-art">` 为字面 URL、文件存在才输出；`index-page.js` 用与「新」胶囊同一个判定移除过期大卡，一张不剩就保持整行 `hidden`。图标用 `new-icon card-icon--<x>`：冻结的 `.card-icon` 只能靠 `!important` 改尺寸，而 home-cards 的 `!important` 数量在 main 上已冻结，配色类只有底色 / 前景色，可以直接复用。
+- **封面用游戏自己的美术**（修订 §4.4「大卡用游戏的 OG 图作背景」）：OG 图里不少是早期占位 SVG（拔萝卜、影织的远不如原画），所以新上线优先用 `public/assets/home-covers/<id>.webp`（640×360），没有才退回 OG 图。封面由 `tools/generators/home-covers.mjs` 从游戏素材生成、产物入库：拔萝卜 / 针尖对麦芒裁概念原画；影织在真实游戏里把「兔」直接摆到内核解；萤火信号用测试求解器在 Node 里解「仲夏」、浏览器按同 seed 同输入回放到通关，取 25/30 只齐闪后的一帧（画布像素，不截 DOM）。画牢、御剑飞行没有手绘素材，仍用 OG 图，卡片带 `new-card--og` 压深底部（图里自带标题），美术封面只压一条浅渐变。`verify-index-cards` 断言这四款必须有素材封面。
 - **最近玩过**：`site_recent`（safe-storage，最多 6 个，去重置顶），只记 `.idx-main` 内带 `data-game-id` 的链接点击（含中键）；名字取自当前语言的卡片标题，换语言重渲染；未知 id 跳过。
 - **「更多每日 (N)」**：Daily Hub 内的链接，N = 带「每日」胶囊的卡减去 Hub 已列出的三项（当前 11）；点击走与筛选按钮同一个 `setFilter('daily')` 并跳到分区开头。
 - **D-6**：hero 大 emoji 删除；Perks 三卡删除、压成页脚一行 `perksLine`（删掉 6 条 `perk*` 文案）。都是删标记，没有用 CSS 隐藏冻结规则。

@@ -140,18 +140,28 @@ const newRegion = html.slice(html.indexOf('registry:begin home-new'), html.index
 ok(newRegion.includes('id="home-new"') && /id="home-new"[^>]*\shidden>/.test(newRegion), '新上线横排由 gen 输出且静态 hidden（运行时按 45 天显现）');
 const wantNew = games.filter(g => g.home.addedAt)
     .sort((a, b) => (a.home.addedAt < b.home.addedAt ? 1 : a.home.addedAt > b.home.addedAt ? -1 : 0)).map(g => g.id);
-const gotNew = [...newRegion.matchAll(/<a class="new-card" href="[^"]+" data-game-id="([^"]+)" data-added="([^"]+)">/g)].map(m => m[1]);
+const gotNew = [...newRegion.matchAll(/<a class="new-card(?: new-card--og)?" href="[^"]+" data-game-id="([^"]+)" data-added="([^"]+)">/g)].map(m => m[1]);
 ok(JSON.stringify(gotNew) === JSON.stringify(wantNew), '新上线 = 全部带 addedAt 的游戏，新者在前', gotNew.join(','));
 for (const id of wantNew) {
     const g = games.find(x => x.id === id);
     const start = newRegion.indexOf(`data-game-id="${id}"`);
     const card = newRegion.slice(start, newRegion.indexOf('</a>', start));
-    const img = `<img class="new-game-art" src="/${ogDir}/og-${id}.svg" alt="" width="1200" height="630" loading="lazy" decoding="async">`;
-    ok(card.includes(img) === existsSync(join(ROOT, 'public', ogDir, `og-${id}.svg`)), `新上线 ${id}: <img> 为字面 URL，且有图 ⟺ 文件存在`);
+    // 优先用游戏自己美术做的封面（tools/generators/home-covers.mjs），没有才退回 OG 图
+    const cover = existsSync(join(ROOT, 'public', 'assets', 'home-covers', `${id}.webp`));
+    const og = existsSync(join(ROOT, 'public', ogDir, `og-${id}.svg`));
+    const img = cover
+        ? `<img class="new-game-art" src="/assets/home-covers/${id}.webp" alt="" width="640" height="360" loading="lazy" decoding="async">`
+        : `<img class="new-game-art" src="/${ogDir}/og-${id}.svg" alt="" width="1200" height="630" loading="lazy" decoding="async">`;
+    ok((cover || og) ? card.includes(img) : !card.includes('<img'), `新上线 ${id}: <img> 为字面 URL，封面优先、OG 图兜底、都没有就不输出`);
+    ok(newRegion.includes(`<a class="new-card${!cover && og ? ' new-card--og' : ''}" href="${g.href}"`), `新上线 ${id}: 只有退回 OG 图的卡带 new-card--og（压深底部）`);
     ok(card.includes(`data-i18n="${id}.name">`) && card.includes(`data-i18n="${id}.tag">`) && card.includes(`card-icon--${g.home.iconClass}`),
         `新上线 ${id}: 名称 / 副标签走 i18n，图标配色复用 card-icon--*`);
 }
 ok(!/\sstyle=/.test(newRegion), '新上线横排没有内联 style（图片铺放由 home-cards.css 负责）');
+// 有美术素材的游戏必须用素材封面，不退回占位 SVG（拔萝卜 / 影织等的占位 SVG 远不如游戏原画）
+for (const id of ['carrot-pull', 'shadow-loom', 'firefly-signal', 'needle-awn']) {
+    ok(existsSync(join(ROOT, 'public', 'assets', 'home-covers', `${id}.webp`)), `${id}: 有用游戏美术做的封面 public/assets/home-covers/${id}.webp`);
+}
 ok(!/og-\$\{|og-' \+/.test(pageJs + homeJs), '首页运行时不拼 OG 图路径');
 ok(html.includes('id="home-recent"') && html.includes('id="home-recent-list"'), '最近玩过容器存在');
 ok(/<a class="hub-more-daily" id="hub-more-daily" href="#cat=daily" hidden>/.test(html), 'Daily Hub「更多每日」链接 → #cat=daily，静态 hidden');

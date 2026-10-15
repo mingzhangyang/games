@@ -175,8 +175,8 @@ function checkChips(chips, lang, where) {
     await page.evaluateOnNewDocument(fixed => {
         const R = Date;
         globalThis.Date = class extends R { constructor(...a) { if (a.length) super(...a); else super(fixed); } static now() { return fixed; } };
-        if (sessionStorage.getItem('seeded')) return;
-        sessionStorage.setItem('seeded', '1');
+        if (window.sessionStorage.getItem('seeded')) return;
+        window.sessionStorage.setItem('seeded', '1');
         localStorage.setItem('site_lang', 'en');
         localStorage.setItem('wd_daily_2026-10-15_zh', '1');   // FROZEN_NOW 的 UTC+8 日期
         localStorage.setItem('gs_daily_20261015', '1');
@@ -234,8 +234,8 @@ function checkChips(chips, lang, where) {
     if (row.srcs.length !== row.ids.length) fail(`新上线有卡缺 OG 图: ${row.srcs.length}/${row.ids.length}`);
     if (row.styled) fail(`新上线横排出现 ${row.styled} 个内联 style`);
     const statuses = await page.evaluate(srcs => Promise.all(srcs.map(src => fetch(src).then(r => `${r.status} ${r.headers.get('content-type')}`))), row.srcs);
-    const bad = statuses.filter(st => !st.startsWith('200') || !st.includes('svg'));
-    if (bad.length) fail(`新上线 OG 图请求失败: ${bad.join(' | ')}`);
+    const bad = statuses.filter(st => !st.startsWith('200') || !/image\/(svg\+xml|webp)/.test(st));
+    if (bad.length) fail(`新上线封面 / OG 图请求失败: ${bad.join(' | ')}`);
 
     // 更多每日：N = daily cap 的游戏减去 Hub 已列出的三项，点击 → #cat=daily 且跳到分区开头
     const hubHrefs = await page.$$eval('.daily-task[href]', as => as.map(a => a.getAttribute('href')));

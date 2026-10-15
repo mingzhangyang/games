@@ -27,6 +27,7 @@
         --ix-new-card-to: #0b1023;
         --ix-new-card-text: #f8fafc;
         --ix-new-card-scrim: rgb(5, 7, 15, 0.92);
+        --ix-new-card-scrim-soft: rgb(5, 7, 15, 0.72);
     }
 
     :root[data-theme="light"] {
@@ -126,13 +127,21 @@
         object-fit: cover;
     }
 
+    /* 美术封面只压一条浅渐变托住文字，画面主体（萝卜、兔影、萤火）不被盖住 */
     .new-card-body {
         position: absolute;
         inset: auto 0 0;
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 44px 12px 10px;
+        padding: 26px 12px 10px;
+        background: linear-gradient(to top, var(--ix-new-card-scrim-soft), transparent);
+        text-shadow: 0 1px 3px rgb(0, 0, 0, 0.75);
+    }
+
+    /* 退回 OG 图时：图里自带标题和标语，压深底部，避免与卡片文字叠在一起 */
+    .new-card--og .new-card-body {
+        padding-top: 44px;
         background: linear-gradient(to top, var(--ix-new-card-scrim) 55%, transparent);
     }
 

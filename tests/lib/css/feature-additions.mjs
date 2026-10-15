@@ -291,6 +291,7 @@ export const HOME_CARDS_SELECTORS = new Set([
     '.recent-card:focus-visible, .new-card:focus-visible, .hub-more-daily:focus-visible',
     '.new-game-art',
     '.new-card-body',
+    '.new-card--og .new-card-body',
     '.new-icon',
     '.new-card-text',
     '.new-card-name',
