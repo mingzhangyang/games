@@ -10,7 +10,7 @@
 //   ④ 塔防竖屏「请旋转」提示居中在 ~1300px 高的舞台中段，首屏看不到
 //   ⑤ 影织 480×854 舞台按宽铺满，灯（Lamp Walk 关卡要拖）落在首屏以下
 //   ⑥ 御剑飞行 HUD 标签（真气 / 青莲极意 / 登仙之路）英文下仍是中文
-//   ⑦ 首页 ≤600px：游戏卡片网格与下方特性卡片（.perks）之间间距为 0
+//   ⑦ 首页 ≤600px：游戏卡片网格与下方特性卡片（.perks）之间间距为 0（首页 P3 删掉 Perks 卡后，改量最后一张卡 → 页脚首行）
 // 俄罗斯方块棋盘被固定底栏遮住的问题由 verify-tetris-topbar-mobile 承担。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -183,14 +183,17 @@ if (keepPage('sword-flight')) {
     await zh.close();
 }
 
-// ── ⑦ 首页：游戏网格与特性卡片之间留出间距 ──
+// ── ⑦ 首页：最后一张游戏卡与其下内容之间留出间距（#137）──
+// 首页 P3 起 Perks 三卡压成页脚一行（.perks-line），紧跟游戏分区的就是页脚第一行。
 if (keepPage('index')) {
-    console.log('\n=== ⑦ 首页 · 375×553 网格 → 特性卡片间距 ===');
-    const page = await open('index', SE, { selector: '.perks' });
-    const gap = await page.evaluate(() =>
-        document.querySelector('.perk').getBoundingClientRect().top
-        - document.querySelector('.games-grid').getBoundingClientRect().bottom);
-    check(gap >= 16, 'index 375×553: 游戏网格与 .perks 间距 ≥16px', `${gap.toFixed(0)}px`);
+    console.log('\n=== ⑦ 首页 · 375×553 最后一张游戏卡 → 页脚间距 ===');
+    const page = await open('index', SE, { selector: '.game-footer .perks-line' });
+    const gap = await page.evaluate(() => {
+        const cards = [...document.querySelectorAll('.games-cat:not([hidden]) .game-card')];
+        return document.querySelector('.game-footer > *').getBoundingClientRect().top
+            - cards[cards.length - 1].getBoundingClientRect().bottom;
+    });
+    check(gap >= 16, 'index 375×553: 最后一张游戏卡与页脚首行间距 ≥16px', `${gap.toFixed(0)}px`);
     await page.close();
 }
 
