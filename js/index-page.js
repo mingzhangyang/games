@@ -26,7 +26,7 @@ function rememberDefaults() {
         if (defaults.has(card)) return;
         defaults.set(card, {
             name: card.querySelector('.card-title')?.textContent || '',
-            desc: card.querySelector('.card-desc')?.textContent || '',
+            desc: card.querySelector('.card-desc-text')?.textContent || '',
             tag: card.querySelector('.tag:not(.tag--dark-only)')?.textContent || '',
         });
     });
@@ -62,7 +62,7 @@ async function applyLanguage(lang) {
         const id = card.dataset.gameId;
         const base = defaults.get(card);
         setText(card.querySelector('.card-title'), `${id}.name`, base.name);
-        setText(card.querySelector('.card-desc'), `${id}.desc`, base.desc);
+        setText(card.querySelector('.card-desc-text'), `${id}.desc`, base.desc);
         setText(card.querySelector('.tag:not(.tag--dark-only)'), `${id}.tag`, base.tag);
         const dark = card.querySelector('.tag--dark-only');
         if (dark) {
@@ -94,7 +94,7 @@ function injectStructuredData() {
         '@type': 'ListItem',
         position: i + 1,
         name: defaults.get(card)?.name || card.querySelector('.card-title')?.textContent || '',
-        description: defaults.get(card)?.desc || card.querySelector('.card-desc')?.textContent || '',
+        description: defaults.get(card)?.desc || card.querySelector('.card-desc-text')?.textContent || '',
         url: new URL(card.getAttribute('href') || '', baseUrl).href,
     }));
     const graph = {
@@ -123,7 +123,7 @@ function markNewCards() {
         chip.className = 'card-chip card-chip--new';
         chip.id = card.querySelector('.card-title').id.replace(/-name$/, '-chip-new');
         chip.textContent = CHIP_FALLBACK.new;
-        card.querySelector('.card-header').append(chip);
+        card.querySelector('.card-chips').append(chip);
         card.setAttribute('aria-labelledby', `${card.getAttribute('aria-labelledby')} ${chip.id}`);
     });
 }
@@ -179,14 +179,14 @@ function bindFilter() {
 
 function markDarkOnlyCards() {
     document.querySelectorAll('.game-card[data-dark-only]').forEach(card => {
-        // 放在标题行而不是页脚：手机单列横条隐藏页脚，「仅深色」仍须在浅色下可见
-        const header = card.querySelector('.card-header');
+        // 进简介行首的胶囊组：手机横条隐藏页脚，「仅深色」仍须在浅色下可见
+        const chips = card.querySelector('.card-chips');
         const title = card.querySelector('.card-title');
-        if (!header || !title || header.querySelector('.tag--dark-only')) return;
+        if (!chips || !title || chips.querySelector('.tag--dark-only')) return;
         const tag = document.createElement('span');
         tag.className = 'card-chip tag--dark-only';
         tag.id = title.id.replace(/-name$/, '-chip-dark');
-        header.append(tag);
+        chips.append(tag);
     });
     // 整卡用 aria-labelledby 命名，未引用的子文本不会被读出；而被引用的隐藏元素仍会被读出。
     // 所以「仅深色」胶囊只在它可见（浅色）时加入可访问名，深色时移除。

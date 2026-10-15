@@ -76,6 +76,8 @@ function homeCardLine(g, external = false) {
     const ui = SITE.home.ui;
     // 整卡一个 <a>：唯一 Tab 停靠点，可中键 / 新标签打开。状态与外站标识是可见文字胶囊，
     // 不再是只靠颜色区分、靠 hover 才出文案的图标（docs/proposal-home-layout.md §4.3）。
+    // 胶囊排在简介行首（.card-chips 在 .card-desc 里，简介正文在 .card-desc-text）：标题独占一行，
+    // 三枚胶囊同卡时被行数截断的是简介而不是标题（PR #147 review）。
     // 胶囊全部派生，不再手填（§3.3）：「每日」= daily cap；「新」依赖今天的日期，只把 addedAt
     // 写成 data-added，由 js/index-page.js 运行时判定——放在 gen 里会让 gen --check 随日期变红。
     const chips = [];
@@ -84,7 +86,7 @@ function homeCardLine(g, external = false) {
     const chipHtml = chips.map(c => `<span class="card-chip card-chip--${c.kind}" id="${prefix}-chip-${c.kind}">${esc(c.text)}</span>`).join('');
     const labelledBy = [`${prefix}-name`, ...chips.map(c => `${prefix}-chip-${c.kind}`)].join(' ');
     const added = home.addedAt ? ` data-added="${home.addedAt}"` : '';
-    return `<a class="game-card" href="${esc(href)}" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''}${added} aria-labelledby="${labelledBy}" aria-describedby="${prefix}-desc"><span class="card-body"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><span class="card-header"><span class="card-title" id="${prefix}-name">${esc(name.en)}</span>${chipHtml}</span><span class="card-desc" id="${prefix}-desc">${esc(home.desc.en)}</span><span class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span></span><span class="card-go" aria-hidden="true">›</span></span></a>`;
+    return `<a class="game-card" href="${esc(href)}" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''}${added} aria-labelledby="${labelledBy}" aria-describedby="${prefix}-desc"><span class="card-body"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><span class="card-header"><span class="card-title" id="${prefix}-name">${esc(name.en)}</span></span><span class="card-desc"><span class="card-chips">${chipHtml}</span><span class="card-desc-text" id="${prefix}-desc">${esc(home.desc.en)}</span></span><span class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span></span><span class="card-go" aria-hidden="true">›</span></span></a>`;
 }
 
 /** 按 site.home.categories 分组：区内按 rank 升序，缺 rank 的排在后面并保持登记顺序（站内先、外站后）。 */

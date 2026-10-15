@@ -166,16 +166,18 @@
         grid-area: foot;
     }
 
-    /* 状态 / 外站胶囊：文字 + 颜色双编码，触屏也可读。
-       「仅深色」胶囊同时带 .tag--dark-only，显隐仍由 index.css 的冻结规则决定。 */
+    /* 状态 / 外站胶囊：文字 + 颜色双编码，触屏也可读。排在简介行首（行内），被行数截断的是简介、
+       不是标题；「仅深色」胶囊同时带 .tag--dark-only，显隐仍由 index.css 的冻结规则决定（隐藏时不占位）。
+       字号用 rem：所在的简介本身是 0.84em，em 会把胶囊缩到 9px。 */
     .card-chip {
-        flex-shrink: 0;
         display: inline-flex;
         align-items: center;
-        padding: 1px 7px;
+        margin-right: 6px;
+        vertical-align: 1px;
+        padding: 0 7px;
         border: 1px solid var(--color-border);
         border-radius: 99px;
-        font-size: 0.68em;
+        font-size: 0.68rem;
         font-weight: 700;
         line-height: 1.5;
         white-space: nowrap;

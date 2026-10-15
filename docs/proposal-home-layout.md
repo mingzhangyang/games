@@ -200,6 +200,7 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 - `home.rank` 只给动作区写了（按 §3.2 表格顺序：needle-awn → … → math-rain）；其余分区的登记顺序本来就等于表格顺序，不写 rank。
 - `home.addedAt` 只写给原先 `badge: "new"` 的 6 款（needle-awn / sword-flight 2026-09-15，carrot-pull / shadow-loom 2026-09-26，firefly-signal 2026-09-27，loop-jail 2026-10-13，取各自首个提交日）。没有写给全部游戏：除最早 4 款外都在 2026-09-12 之后上线，按 45 天窗口当前会有 22 款同时「新」，重新回到 P-4 的「不稀缺」。今天之后新上线的游戏都应写 `addedAt`。
 - `index-page.js` 预算从 12 KiB 放到 14 KiB（筛选 + 「新」判定）。
+- **胶囊位置改到简介行首**（修订 §4.3「放在标题行尾」）：P2 让 needle-awn / sword-flight 同时「每日 + 新」，浅色下再加「仅深色」共三枚；手机标题行不换行，中文 360px 时「针尖对麦芒」被挤成省略号，320px 只剩 19px（PR #147 review）。冻结的 `.card-header { display:flex }` 与本表已冻结的 `!important` 排除了纯 CSS 改栅格的路，于是改标记：`.card-desc` 里先是 `.card-chips`、再是 `.card-desc-text`（`aria-describedby` 指向后者，可访问描述不含胶囊文字）。标题独占标题行，被行数截断的只会是简介；隐藏的「仅深色」不占位。`verify-index-layout` 冻结时钟、加中文 + 浅色手机档（且断言确有三枚胶囊同卡），标题被挤到不足自身宽度一半即失败。
 - 筛选后卡数 = registry 计数、hash 往返 / 后退 / 直链 / 非法 hash、「新」胶囊在冻结时钟下的期望集合与远期时钟下为空，都在 `tests/smoke-index.mjs`；registry 侧（分类合法、无空分区、区内顺序、daily ⟺ cap、`data-added` ⟺ `addedAt`、schema 枚举 = categories）在 `tests/verify-index-cards.mjs`。
 
 ## 8. 待决策

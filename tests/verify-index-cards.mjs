@@ -80,6 +80,11 @@ for (const g of games) {
     ok(card.includes(`aria-describedby="${p}-desc"`) && card.includes(`aria-labelledby="${p}-name${daily ? ` ${p}-chip-daily` : ''}"`),
         `${g.id}: 整卡可访问名 = 标题 + 胶囊，描述 = 简介`);
     ok(card.includes('class="card-go" aria-hidden="true"'), `${g.id}: 卡片箭头存在且对读屏隐藏`);
+    // 胶囊在简介行首、标题独占标题行：三枚胶囊同卡时被截断的只能是简介（PR #147 review）
+    ok(card.includes(`<span class="card-header"><span class="card-title" id="${p}-name">${g.name.en.replace(/&/g, '&amp;')}</span></span>`),
+        `${g.id}: 标题行只有标题`);
+    ok(/<span class="card-desc"><span class="card-chips">(?:<span class="card-chip [^"]+" id="[^"]+">[^<]*<\/span>)*<\/span><span class="card-desc-text" id="/.test(card)
+        && card.includes(`<span class="card-desc-text" id="${p}-desc">`), `${g.id}: 胶囊组在简介行首，aria-describedby 指向简介正文`);
     for (const suffix of ['name', 'desc', 'tag']) ok(zh.includes(`['${g.id}.${suffix}',`), `${g.id}: 中文懒加载含 ${suffix}`);
 }
 for (const g of home.externalGames) {
