@@ -2,6 +2,7 @@
 import { onReady } from '../src/platform/boot.js';
 import { getLang, setLang, getThemePref, setThemePref } from '../src/platform/site-settings.js';
 import { supportsLight, getTheme, onThemeChange } from '../src/platform/theme.js';
+import { todayKey } from '../src/platform/daily.js';
 
 const selectors = '[data-i18n], [data-i18n-placeholder], [data-i18n-label]';
 const defaults = new WeakMap();
@@ -9,6 +10,8 @@ let currentLang = 'en';
 let translations = new Map();
 const CHIP_KEYS = { daily: 'badgeDaily', new: 'badgeNew', external: 'badgeExternal' };
 const CHIP_FALLBACK = { daily: 'Daily', new: 'New', external: 'External ↗' };
+// 「新」胶囊的有效期（docs/proposal-home-layout.md §8 D-3）
+const NEW_DAYS = 45;
 
 function rememberDefaults() {
     document.querySelectorAll(selectors).forEach(el => {
@@ -23,7 +26,7 @@ function rememberDefaults() {
         if (defaults.has(card)) return;
         defaults.set(card, {
             name: card.querySelector('.card-title')?.textContent || '',
-            desc: card.querySelector('.card-desc')?.textContent || '',
+            desc: card.querySelector('.card-desc-text')?.textContent || '',
             tag: card.querySelector('.tag:not(.tag--dark-only)')?.textContent || '',
         });
     });
@@ -59,7 +62,7 @@ async function applyLanguage(lang) {
         const id = card.dataset.gameId;
         const base = defaults.get(card);
         setText(card.querySelector('.card-title'), `${id}.name`, base.name);
-        setText(card.querySelector('.card-desc'), `${id}.desc`, base.desc);
+        setText(card.querySelector('.card-desc-text'), `${id}.desc`, base.desc);
         setText(card.querySelector('.tag:not(.tag--dark-only)'), `${id}.tag`, base.tag);
         const dark = card.querySelector('.tag--dark-only');
         if (dark) {
@@ -91,7 +94,7 @@ function injectStructuredData() {
         '@type': 'ListItem',
         position: i + 1,
         name: defaults.get(card)?.name || card.querySelector('.card-title')?.textContent || '',
-        description: defaults.get(card)?.desc || card.querySelector('.card-desc')?.textContent || '',
+        description: defaults.get(card)?.desc || card.querySelector('.card-desc-text')?.textContent || '',
         url: new URL(card.getAttribute('href') || '', baseUrl).href,
     }));
     const graph = {
@@ -107,16 +110,83 @@ function injectStructuredData() {
     document.head.appendChild(script);
 }
 
+// 「新」随日期变化，不进 gen（否则 gen --check 会随日期变红）：gen 只写 data-added，
+// 这里按 UTC+8 今天、都转 UTC 毫秒算天数。
+function markNewCards() {
+    const t = todayKey();
+    const today = Date.UTC(+t.slice(0, 4), +t.slice(4, 6) - 1, +t.slice(6, 8));
+    document.querySelectorAll('.game-card[data-added]').forEach(card => {
+        const [y, m, d] = card.dataset.added.split('-').map(Number);
+        const age = (today - Date.UTC(y, m - 1, d)) / 864e5;
+        if (age < 0 || age >= NEW_DAYS) return;
+        const chip = document.createElement('span');
+        chip.className = 'card-chip card-chip--new';
+        chip.id = card.querySelector('.card-title').id.replace(/-name$/, '-chip-new');
+        chip.textContent = CHIP_FALLBACK.new;
+        card.querySelector('.card-chips').append(chip);
+        card.setAttribute('aria-labelledby', `${card.getAttribute('aria-labelledby')} ${chip.id}`);
+    });
+}
+
+// 筛选条（proposal §4.2）：状态只放 location.hash（#cat=science），可分享、可后退；
+// 不写 localStorage，回访默认「全部」（D-5）。
+// 冻结的 .game-card { display:flex } 盖过 hidden 属性，所以「每日」筛选把其余卡片移进
+// 分区内 hidden 的暂存 div（仍在文档里，语言切换 / 主题同步照样覆盖）。
+const sectionCards = new WeakMap();
+
+function applyFilter() {
+    const box = document.getElementById('games-filter');
+    if (!box) return;
+    const buttons = [...box.querySelectorAll('[data-filter]')];
+    const wanted = (location.hash.match(/^#cat=([a-z-]+)$/) || [])[1];
+    const filter = buttons.some(b => b.dataset.filter === wanted) ? wanted : 'all';
+    buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    document.querySelectorAll('.games-cat').forEach(section => {
+        const grid = section.querySelector('.games-grid');
+        if (!sectionCards.has(section)) {
+            const stash = document.createElement('div');
+            stash.hidden = true;
+            section.append(stash);
+            sectionCards.set(section, { cards: [...grid.querySelectorAll('.game-card')], stash });
+        }
+        const { cards, stash } = sectionCards.get(section);
+        const shown = cards.filter(card => filter !== 'daily' || card.querySelector('.card-chip--daily'));
+        grid.append(...shown);
+        stash.append(...cards.filter(card => !shown.includes(card)));
+        const count = section.querySelector('.games-cat-count');
+        if (count) count.textContent = String(shown.length);
+        section.hidden = !shown.length || !(filter === 'all' || filter === 'daily' || section.dataset.cat === filter);
+    });
+}
+
+function bindFilter() {
+    const box = document.getElementById('games-filter');
+    if (!box) return;
+    box.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => {
+        const hash = btn.dataset.filter === 'all' ? '' : `#cat=${btn.dataset.filter}`;
+        if (location.hash === hash) return;
+        history.pushState(null, '', `${location.pathname}${location.search}${hash}`);
+        applyFilter();
+        // 吸顶时内容高度骤变，回到分区开头
+        const cats = document.getElementById('games-cats');
+        if (cats && cats.getBoundingClientRect().top < box.offsetHeight) document.getElementById('section-label')?.scrollIntoView();
+    }));
+    window.addEventListener('hashchange', applyFilter);
+    window.addEventListener('popstate', applyFilter);
+    box.hidden = false;
+    applyFilter();
+}
+
 function markDarkOnlyCards() {
     document.querySelectorAll('.game-card[data-dark-only]').forEach(card => {
-        // 放在标题行而不是页脚：手机单列横条隐藏页脚，「仅深色」仍须在浅色下可见
-        const header = card.querySelector('.card-header');
+        // 进简介行首的胶囊组：手机横条隐藏页脚，「仅深色」仍须在浅色下可见
+        const chips = card.querySelector('.card-chips');
         const title = card.querySelector('.card-title');
-        if (!header || !title || header.querySelector('.tag--dark-only')) return;
+        if (!chips || !title || chips.querySelector('.tag--dark-only')) return;
         const tag = document.createElement('span');
         tag.className = 'card-chip tag--dark-only';
         tag.id = title.id.replace(/-name$/, '-chip-dark');
-        header.append(tag);
+        chips.append(tag);
     });
     // 整卡用 aria-labelledby 命名，未引用的子文本不会被读出；而被引用的隐藏元素仍会被读出。
     // 所以「仅深色」胶囊只在它可见（浅色）时加入可访问名，深色时移除。
@@ -204,7 +274,9 @@ onReady(async () => {
     rememberDefaults();
     syncSocialMeta();
     injectStructuredData();
+    markNewCards();
     markDarkOnlyCards();
+    bindFilter();
     await applyLanguage(getLang());
     const toggleLang = async () => {
         const next = currentLang === 'zh' ? 'en' : 'zh';

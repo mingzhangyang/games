@@ -76,34 +76,71 @@ function homeCardLine(g, external = false) {
     const ui = SITE.home.ui;
     // 整卡一个 <a>：唯一 Tab 停靠点，可中键 / 新标签打开。状态与外站标识是可见文字胶囊，
     // 不再是只靠颜色区分、靠 hover 才出文案的图标（docs/proposal-home-layout.md §4.3）。
+    // 胶囊排在简介行首（.card-chips 在 .card-desc 里，简介正文在 .card-desc-text）：标题独占一行，
+    // 三枚胶囊同卡时被行数截断的是简介而不是标题（PR #147 review）。
+    // 胶囊全部派生，不再手填（§3.3）：「每日」= daily cap；「新」依赖今天的日期，只把 addedAt
+    // 写成 data-added，由 js/index-page.js 运行时判定——放在 gen 里会让 gen --check 随日期变红。
     const chips = [];
-    if (home.badge) chips.push({ kind: home.badge, text: (home.badge === 'daily' ? ui.badgeDaily : ui.badgeNew).en });
+    if (!external && (g.caps || []).includes('daily')) chips.push({ kind: 'daily', text: ui.badgeDaily.en });
     if (external) chips.push({ kind: 'external', text: ui.badgeExternal.en });
     const chipHtml = chips.map(c => `<span class="card-chip card-chip--${c.kind}" id="${prefix}-chip-${c.kind}">${esc(c.text)}</span>`).join('');
     const labelledBy = [`${prefix}-name`, ...chips.map(c => `${prefix}-chip-${c.kind}`)].join(' ');
-    return `<a class="game-card" href="${esc(href)}" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''} aria-labelledby="${labelledBy}" aria-describedby="${prefix}-desc"><span class="card-body"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><span class="card-header"><span class="card-title" id="${prefix}-name">${esc(name.en)}</span>${chipHtml}</span><span class="card-desc" id="${prefix}-desc">${esc(home.desc.en)}</span><span class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span></span><span class="card-go" aria-hidden="true">›</span></span></a>`;
+    const added = home.addedAt ? ` data-added="${home.addedAt}"` : '';
+    return `<a class="game-card" href="${esc(href)}" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''}${added} aria-labelledby="${labelledBy}" aria-describedby="${prefix}-desc"><span class="card-body"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><span class="card-header"><span class="card-title" id="${prefix}-name">${esc(name.en)}</span></span><span class="card-desc"><span class="card-chips">${chipHtml}</span><span class="card-desc-text" id="${prefix}-desc">${esc(home.desc.en)}</span></span><span class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span></span><span class="card-go" aria-hidden="true">›</span></span></a>`;
+}
+
+/** 按 site.home.categories 分组：区内按 rank 升序，缺 rank 的排在后面并保持登记顺序（站内先、外站后）。 */
+function homeCategoryGroups() {
+    const entries = [
+        ...GAMES.map(g => ({ g, external: false, home: g.home })),
+        ...(SITE.home.externalGames || []).map(g => ({ g, external: true, home: g })),
+    ].map((e, order) => ({ ...e, order }));
+    const rank = e => (typeof e.home.rank === 'number' ? e.home.rank : Infinity);
+    return SITE.home.categories.map(cat => ({
+        cat,
+        entries: entries.filter(e => e.home.category === cat.key)
+            .sort((a, b) => (rank(a) - rank(b)) || (a.order - b.order)),
+    }));
 }
 
 function homeCardsContent() {
-    const local = GAMES.map(g => homeCardLine(g));
-    const external = (SITE.home.externalGames || []).map(g => homeCardLine(g, true));
-    return [...local, ...external].join('\n');
+    // 分区由 gen 静态输出：无 JS 时完整可用，JSON-LD 仍从卡片 DOM 派生（§4.2）。
+    return homeCategoryGroups().filter(({ entries }) => entries.length).map(({ cat, entries }) => [
+        `<section class="games-cat" data-cat="${cat.key}" aria-labelledby="cat-${cat.key}-title">`,
+        `<h2 class="games-cat-title" id="cat-${cat.key}-title"><span class="games-cat-icon" aria-hidden="true">${esc(cat.icon)}</span><span class="games-cat-name" data-i18n="cat.${cat.key}">${esc(cat.name.en)}</span><span class="games-cat-count">${entries.length}</span></h2>`,
+        '<div class="games-grid">',
+        ...entries.map(e => homeCardLine(e.g, e.external)),
+        '</div>',
+        '</section>',
+    ].join('\n')).join('\n');
 }
 
 function homeCardsTransform(src) {
-    return applyRegion(src, 'home-cards', homeCardsContent(), (s, body) => {
-        const start = s.indexOf('            <!-- Math Rain -->');
-        const end = s.indexOf('\n        </div>\n    </section>\n\n    <!-- Perks -->', start);
-        if (start < 0 || end < 0) return null;
-        return s.slice(0, start)
-            + `            <!-- registry:begin home-cards -->\n${body}\n            <!-- registry:end home-cards -->`
-            + s.slice(end);
-    }, 'html');
+    return applyRegion(src, 'home-cards', homeCardsContent(), null, 'html');
+}
+
+/** 筛选条：渐进增强，静态 hidden，由 js/index-page.js 绑定后显现；状态只存 location.hash（§4.2）。 */
+function homeFilterContent() {
+    const ui = SITE.home.ui;
+    const btn = (filter, key, text, pressed = false) =>
+        `<button type="button" class="filter-btn" data-filter="${filter}" aria-pressed="${pressed}" aria-controls="games-cats" data-i18n="${key}">${esc(text)}</button>`;
+    return [
+        `<div class="games-filter" id="games-filter" role="group" aria-label="${esc(ui.filterLabel.en)}" data-i18n-label="filterLabel" hidden>`,
+        btn('all', 'filterAll', ui.filterAll.en, true),
+        btn('daily', 'filterDaily', ui.filterDaily.en),
+        ...SITE.home.categories.filter(c => c.filter !== false).map(c => btn(c.key, `cat.${c.key}`, c.name.en)),
+        '</div>',
+    ].join('\n');
+}
+
+function homeFilterTransform(src) {
+    return applyRegion(src, 'home-filter', homeFilterContent(), null, 'html');
 }
 
 function homeZhMap() {
     const out = new Map();
     for (const [key, value] of Object.entries(SITE.home.ui)) out.set(key, value.zh);
+    for (const cat of SITE.home.categories) out.set(`cat.${cat.key}`, cat.name.zh);
     for (const g of GAMES) {
         out.set(`${g.id}.name`, g.name.zh);
         out.set(`${g.id}.desc`, g.home.desc.zh);
@@ -422,7 +459,7 @@ for (const g of GAMES) {
         s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c), 'html'),
     ]);
 }
-processFile('index.html', [homeCardsTransform]);
+processFile('index.html', [homeFilterTransform, homeCardsTransform]);
 processFile('js/index-i18n-zh.js', [homeZhTransform]);
 processFile('public/sitemap.xml', [sitemapTransform]);
 processFile('public/manifest.json', [manifestTransform]);

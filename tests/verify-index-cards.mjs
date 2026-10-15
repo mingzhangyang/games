@@ -23,9 +23,28 @@ const sprite = read('public/icons/home-icons.svg');
 const css = read('css/index.css');
 const DOM_ALIAS = { 'tank-battle': 'tank', 'tower-defense': 'td', 'gravity-slingshot': 'gravity' };
 const prefix = id => DOM_ALIAS[id] || id;
+const schema = JSON.parse(read('games.schema.json'));
+const cats = home.categories || [];
+const catKeys = cats.map(c => c.key);
+const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && new Date(`${s}T00:00:00Z`).toISOString().startsWith(s);
 
 console.log('▶ registry 首页元数据');
 ok(home && home.ui && Array.isArray(home.externalGames), 'site.home 配置存在');
+// 分类（docs/proposal-home-layout.md P2）：site.home 不受 schema 约束，categories 与
+// externalGames[].category 的合法性只能在这里守住，拼错会让卡片掉出分区。
+ok(cats.length > 0 && new Set(catKeys).size === catKeys.length, 'site.home.categories 非空且 key 唯一', catKeys.join(','));
+for (const c of cats) ok(c.icon && c.name?.en && c.name?.zh, `分类 ${c.key}: icon + 双语名称齐全`);
+ok(JSON.stringify(schema.$defs.home.properties.category.enum) === JSON.stringify(catKeys),
+    'schema $defs.home.category 枚举 = site.home.categories[].key（同序）', JSON.stringify(schema.$defs.home.properties.category.enum));
+ok(!('badge' in schema.$defs.home.properties), 'schema 已删除 home.badge');
+const homeOf = [...games.map(g => [g.id, g.home]), ...home.externalGames.map(g => [g.id, g])];
+for (const [id, h] of homeOf) {
+    ok(catKeys.includes(h.category), `${id}: category ∈ categories[].key`, h.category);
+    ok(!('badge' in h), `${id}: 不再手填 home.badge（daily 由 cap、new 由 addedAt 派生）`);
+    if ('addedAt' in h) ok(isDate(h.addedAt), `${id}: addedAt 是合法 YYYY-MM-DD`, h.addedAt);
+    if ('rank' in h) ok(Number.isFinite(h.rank), `${id}: rank 是数字`, h.rank);
+}
+for (const key of catKeys) ok(homeOf.some(([, h]) => h.category === key), `分类 ${key}: 至少一款游戏（无空分区）`);
 for (const g of games) {
     ok(g.home?.desc?.en && g.home?.desc?.zh, `${g.id}: home.desc 双语齐全`);
     ok(g.home?.tag?.en && g.home?.tag?.zh, `${g.id}: home.tag 双语齐全`);
@@ -51,13 +70,21 @@ for (const g of games) {
     const cardEnd = html.indexOf('</a>', cardStart);
     const card = html.slice(cardStart, cardEnd);
     ok(card.includes('data-dark-only') === shouldDark, `${g.id}: 仅深色标记与 theme-light cap 一致`);
-    const badge = g.home.badge;
+    const daily = (g.caps || []).includes('daily');
     const chips = card.match(/class="card-chip card-chip--[a-z]+"/g) || [];
-    ok(badge ? chips.length === 1 && card.includes(`card-chip--${badge}"`) : chips.length === 0,
-        `${g.id}: 状态胶囊与 home.badge 一致`, chips.join(','));
-    ok(card.includes(`aria-describedby="${p}-desc"`) && card.includes(`aria-labelledby="${p}-name${badge ? ` ${p}-chip-${badge}` : ''}"`),
+    ok(daily ? chips.length === 1 && card.includes('card-chip--daily"') : chips.length === 0,
+        `${g.id}: 静态胶囊只有「每日」且 ⟺ caps 含 daily`, chips.join(','));
+    // 「新」随日期变化，不能进 gen 产物：只写 data-added，由 index-page.js 运行时判定
+    ok(g.home.addedAt ? card.includes(` data-added="${g.home.addedAt}"`) : !card.includes('data-added'),
+        `${g.id}: data-added ⟺ home.addedAt`);
+    ok(card.includes(`aria-describedby="${p}-desc"`) && card.includes(`aria-labelledby="${p}-name${daily ? ` ${p}-chip-daily` : ''}"`),
         `${g.id}: 整卡可访问名 = 标题 + 胶囊，描述 = 简介`);
     ok(card.includes('class="card-go" aria-hidden="true"'), `${g.id}: 卡片箭头存在且对读屏隐藏`);
+    // 胶囊在简介行首、标题独占标题行：三枚胶囊同卡时被截断的只能是简介（PR #147 review）
+    ok(card.includes(`<span class="card-header"><span class="card-title" id="${p}-name">${g.name.en.replace(/&/g, '&amp;')}</span></span>`),
+        `${g.id}: 标题行只有标题`);
+    ok(/<span class="card-desc"><span class="card-chips">(?:<span class="card-chip [^"]+" id="[^"]+">[^<]*<\/span>)*<\/span><span class="card-desc-text" id="/.test(card)
+        && card.includes(`<span class="card-desc-text" id="${p}-desc">`), `${g.id}: 胶囊组在简介行首，aria-describedby 指向简介正文`);
     for (const suffix of ['name', 'desc', 'tag']) ok(zh.includes(`['${g.id}.${suffix}',`), `${g.id}: 中文懒加载含 ${suffix}`);
 }
 for (const g of home.externalGames) {
@@ -68,6 +95,30 @@ for (const g of home.externalGames) {
     for (const suffix of ['name', 'desc', 'tag']) ok(zh.includes(`['${g.id}.${suffix}',`), `外链 ${g.id}: 中文懒加载含 ${suffix}`);
 }
 const region = html.slice(html.indexOf('registry:begin home-cards'), html.indexOf('registry:end home-cards'));
+
+console.log('\n▶ 分区与筛选条');
+const sections = [...region.matchAll(/<section class="games-cat" data-cat="([a-z]+)"[^>]*>([\s\S]*?)<\/section>/g)]
+    .map(m => ({ key: m[1], body: m[2], ids: [...m[2].matchAll(/data-game-id="([^"]+)"/g)].map(x => x[1]) }));
+ok(JSON.stringify(sections.map(s => s.key)) === JSON.stringify(catKeys), '分区按 categories 顺序输出、一个不少', sections.map(s => s.key).join(','));
+const order = new Map(homeOf.map(([id], i) => [id, i]));
+const rankOf = id => (Number.isFinite(homeOf[order.get(id)][1].rank) ? homeOf[order.get(id)][1].rank : Infinity);
+for (const sec of sections) {
+    const want = homeOf.filter(([, h]) => h.category === sec.key).map(([id]) => id)
+        .sort((a, b) => (rankOf(a) - rankOf(b)) || (order.get(a) - order.get(b)));
+    ok(JSON.stringify(sec.ids) === JSON.stringify(want), `分区 ${sec.key}: 成员与顺序 = category + rank（缺省登记顺序）`, sec.ids.join(','));
+    ok(sec.body.includes(`id="cat-${sec.key}-title"`) && sec.body.includes(`data-i18n="cat.${sec.key}"`)
+        && sec.body.includes(`<span class="games-cat-count">${want.length}</span>`), `分区 ${sec.key}: 标题 / i18n 键 / 数量`);
+    ok((sec.body.match(/class="games-grid"/g) || []).length === 1, `分区 ${sec.key}: 自带一个 .games-grid`);
+}
+const filter = html.slice(html.indexOf('registry:begin home-filter'), html.indexOf('registry:end home-filter'));
+ok(filter.includes('id="games-filter"') && /id="games-filter"[^>]*\shidden>/.test(filter), '筛选条由 gen 输出且静态 hidden（渐进增强）');
+ok(html.includes('<div class="games-cats" id="games-cats">'), '分区容器 #games-cats 存在（筛选按钮 aria-controls 目标）');
+const filters = [...filter.matchAll(/data-filter="([a-z]+)" aria-pressed="(true|false)" aria-controls="games-cats" data-i18n="([^"]+)"/g)];
+const wantFilters = ['all', 'daily', ...cats.filter(c => c.filter !== false).map(c => c.key)];
+ok(JSON.stringify(filters.map(m => m[1])) === JSON.stringify(wantFilters), '筛选按钮 = 全部 · 每日 · 可筛选分类', filters.map(m => m[1]).join(','));
+ok(filters.filter(m => m[2] === 'true').map(m => m[1]).join() === 'all', '默认只有「全部」aria-pressed=true');
+for (const c of cats) ok(zh.includes(`['cat.${c.key}',`), `中文懒加载含分类名 cat.${c.key}`);
+for (const key of ['filterLabel', 'filterAll', 'filterDaily']) ok(zh.includes(`['${key}',`), `中文懒加载含筛选文案 ${key}`);
 ok(!/<article|onclick=|card-badge|play-btn/.test(region), '卡片区不再有 article+onclick、书签图标或 Play 按钮');
 ok(!/<a class="game-card"[^>]*>(?:(?!<\/a>).)*<a\b/s.test(region), '卡片内部不再嵌套链接（每卡只有一个 Tab 停靠点）');
 ok(!sprite.includes('<symbol id="bookmark"'), '已删除不再使用的书签 sprite symbol');
@@ -88,7 +139,8 @@ const sizes = {
     'public/icons/home-icons.svg': Buffer.byteLength(sprite),
 };
 ok(sizes['index.html'] <= 38 * 1024, 'index.html ≤ 38 KiB', sizes['index.html']);
-ok(sizes['js/index-page.js'] <= 12 * 1024, 'index-page.js ≤ 12 KiB', sizes['js/index-page.js']);
+// P2 加了筛选 + 「新」胶囊判定，预算从 12 KiB 放到 14 KiB
+ok(sizes['js/index-page.js'] <= 14 * 1024, 'index-page.js ≤ 14 KiB', sizes['js/index-page.js']);
 ok(sizes['js/index-i18n-zh.js'] <= 8 * 1024, '中文懒加载块 ≤ 8 KiB', sizes['js/index-i18n-zh.js']);
 ok(sizes['public/icons/home-icons.svg'] <= 12 * 1024, '首页 SVG sprite ≤ 12 KiB', sizes['public/icons/home-icons.svg']);
 

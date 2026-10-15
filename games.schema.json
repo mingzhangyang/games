@@ -330,6 +330,7 @@
       "type": "object",
       "required": [
         "iconClass",
+        "category",
         "desc",
         "tag"
       ],
@@ -338,17 +339,30 @@
           "type": "string",
           "minLength": 1
         },
+        "category": {
+          "$comment": "首页分区；必须与 site.home.categories[].key 一致（tests/verify-index-cards.mjs 断言两边相同）",
+          "enum": [
+            "action",
+            "puzzle",
+            "strategy",
+            "science",
+            "external"
+          ]
+        },
+        "rank": {
+          "$comment": "区内排序，小者在前；缺省排在有 rank 的游戏之后，按登记顺序",
+          "type": "number"
+        },
+        "addedAt": {
+          "$comment": "上线日期（UTC+8）；首页运行时在 45 天内显示「新」胶囊",
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
         "desc": {
           "$ref": "#/$defs/bilingual"
         },
         "tag": {
           "$ref": "#/$defs/bilingual"
-        },
-        "badge": {
-          "enum": [
-            "daily",
-            "new"
-          ]
         }
       },
       "additionalProperties": false
