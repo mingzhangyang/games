@@ -168,10 +168,13 @@ for (const id of wantNew) {
         `新上线 ${id}: 名称 / 副标签走 i18n，图标配色复用 card-icon--*`);
 }
 ok(!/\sstyle=/.test(newRegion), '新上线横排没有内联 style（图片铺放由 home-cards.css 负责）');
-// 有美术素材的游戏必须用素材封面，不退回占位 SVG（拔萝卜 / 影织等的占位 SVG 远不如游戏原画）
-for (const id of ['carrot-pull', 'shadow-loom', 'firefly-signal', 'needle-awn']) {
-    ok(existsSync(join(ROOT, 'public', 'assets', 'home-covers', `${id}.webp`)), `${id}: 有用游戏美术做的封面 public/assets/home-covers/${id}.webp`);
-    ok(existsSync(join(ROOT, 'public', ogDir, `og-${id}.jpg`)), `${id}: 分享图也来自游戏美术（og-${id}.jpg）`);
+const coverDir = join(ROOT, 'public', 'assets', 'home-covers');
+const strayCovers = (existsSync(coverDir) ? readdirSync(coverDir) : []).filter(f => !wantNew.includes(f.replace(/\.webp$/, '')));
+ok(strayCovers.length === 0, 'home-covers 里只有会进新上线横排（有 addedAt）的游戏', strayCovers.join(','));
+// 有美术素材的游戏必须用素材做的分享图（及新上线封面），不退回占位 SVG（拔萝卜 / 影织等的占位 SVG 远不如游戏原画）
+for (const id of ['carrot-pull', 'shadow-loom', 'firefly-signal', 'needle-awn', 'math-rain', 'tower-defense', 'tank-battle', 'silk-dew']) {
+    if (wantNew.includes(id)) ok(existsSync(join(ROOT, 'public', 'assets', 'home-covers', `${id}.webp`)), `${id}: 新上线卡片用游戏美术做的封面 public/assets/home-covers/${id}.webp`);
+    ok(existsSync(join(ROOT, 'public', ogDir, `og-${id}.jpg`)), `${id}: 分享图来自游戏美术（og-${id}.jpg）`);
 }
 ok(!/og-\$\{|og-' \+/.test(pageJs + homeJs), '首页运行时不拼 OG 图路径');
 ok(html.includes('id="home-recent"') && html.includes('id="home-recent-list"'), '最近玩过容器存在');

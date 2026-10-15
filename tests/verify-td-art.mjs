@@ -23,7 +23,10 @@ const registryConfig = JSON.parse(readFileSync(join(ROOT, 'games.config.json'), 
 const tdHome = registryConfig.games.find(item => item.id === 'tower-defense')?.home;
 const landingCopy = JSON.stringify(tdHome || {});
 const landingHtml = readFileSync(join(ROOT, 'index.html'), 'utf8');
-const socialPreview = readFileSync(join(ROOT, 'public', 'assets', 'seo', 'og-tower-defense.svg'), 'utf8');
+// 分享图优先是 tools/generators/game-covers.mjs 截的真实战场 JPEG（无文字）；只有退回 SVG 卡片时才检查其文案
+const socialSvgPath = join(ROOT, 'public', 'assets', 'seo', 'og-tower-defense.svg');
+const socialJpgPath = join(ROOT, 'public', 'assets', 'seo', 'og-tower-defense.jpg');
+const socialPreview = existsSync(socialSvgPath) ? readFileSync(socialSvgPath, 'utf8') : null;
 
 const failures = [];
 const passes = [];
@@ -210,11 +213,12 @@ if (!mobileMenuRule || missingMenuStageDeclarations.length) {
 if (!i18n.includes('heroLabel:') || !html.includes('id="td-start-hero"') || !html.includes('data-i18n-label="heroLabel"')) {
     fail('start hero accessible label must be defined in game i18n and declaratively bound in HTML');
 }
-for (const source of [landingCopy, landingHtml, socialPreview]) {
+if (!socialPreview && !existsSync(socialJpgPath)) fail('tower defense needs a social preview (og-tower-defense.jpg or .svg)');
+for (const source of [landingCopy, landingHtml, socialPreview].filter(Boolean)) {
     if (source.includes('25 waves') || source.includes('25 波') || source.includes('neon grid') || source.includes('霓虹网格')) fail('landing/preview copy still advertises the retired 25-wave neon-grid contract');
 }
 if (!tdHome?.desc?.en.includes('six future-city operations') || !tdHome?.desc?.zh.includes('六个未来城市作战行动')) fail('registry home translations must describe the six-operation future-city contract');
-if (!socialPreview.includes('six operations') || !socialPreview.includes('15–40 waves')) fail('social preview must describe the six-operation 15–40-wave contract');
+if (socialPreview && (!socialPreview.includes('six operations') || !socialPreview.includes('15–40 waves'))) fail('social preview must describe the six-operation 15–40-wave contract');
 
 if (failures.length) {
     console.error(failures.map(item => `✗ ${item}`).join('\n'));

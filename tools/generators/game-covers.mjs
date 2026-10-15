@@ -20,13 +20,16 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from '../lib/browser.mjs';
+import { registry } from '../lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PORT = 8931;
 const BASE = `http://127.0.0.1:${PORT}`;
 
+// 首页封面只给会出现在「新上线」横排里的游戏（registry 有 home.addedAt），分享图每款都出
+const isListedAsNew = id => Boolean(registry.all().find(g => g.id === id)?.home?.addedAt);
 const OUTPUTS = [
-    { file: id => `public/assets/home-covers/${id}.webp`, w: 640, h: 360, type: 'image/webp', quality: 0.84 },
+    { file: id => `public/assets/home-covers/${id}.webp`, w: 640, h: 360, type: 'image/webp', quality: 0.84, when: isListedAsNew },
     { file: id => `public/assets/seo/og-${id}.jpg`, w: 1200, h: 630, type: 'image/jpeg', quality: 0.86 },
 ];
 
@@ -39,6 +42,15 @@ const RECIPES = {
     'shadow-loom': { kind: 'game', capture: captureShadowLoom, crop: [0.1, 0.2, 0.8], viewport: { width: 1080, height: 1920, deviceScaleFactor: 2 } },
     // 萤火信号是沉浸式舞台，视口会改变取景；540×960 时湖面 + 草地齐闪的构图最好
     'firefly-signal': { kind: 'game', capture: captureFireflySignal, crop: [0, 0.5], viewport: { width: 540, height: 960, deviceScaleFactor: 2 } },
+    // 数字雨：星空天文台穹顶（就是游戏背景的原画）
+    'math-rain': { kind: 'art', src: '/assets/math-rain/reference/concept-observatory.webp', crop: [0, 0.02] },
+    // 以下三款的美术是 SVG 部件（图层 / 地块 / 精灵图集），单独的概念图很简陋，所以取真实游戏画面
+    'tower-defense': { kind: 'game', capture: captureTowerDefense, crop: [0, 0.12], viewport: { width: 1600, height: 1000, deviceScaleFactor: 2 } },
+    // 坦克大战的画布固定 800×600 且开局战场很空：改用它自己的 SVG 精灵（地块 / 砖墙 / 钢板 / 坦克 / 道具）
+    // 摆一幕放大的交火场景，矢量直接按目标分辨率光栅化，不放大发糊
+    'tank-battle': { kind: 'game', capture: composeTankBattle, crop: [0, 0] },
+    // 蛛丝引露：露珠、星点与玉盏（目标）都在画里
+    'silk-dew': { kind: 'game', capture: captureSilkDew, crop: [0, 0.455], viewport: { width: 540, height: 960, deviceScaleFactor: 2 } },
 };
 
 /** 0–1 比例的裁切框 [x, y, w = 1] → 源像素；高度按输出宽高比由宽度决定，并保证落在图内 */
@@ -126,6 +138,104 @@ async function captureFireflySignal(page) {
     return pickCanvas(page);
 }
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/** 霓虹塔防：开局，沿航线两侧铺 8 座四种塔，发第一波，让真实循环跑几秒（敌人上路、塔在开火） */
+async function captureTowerDefense(page) {
+    await page.goto(`${BASE}/tower-defense.html`, { waitUntil: 'load' });
+    await page.waitForFunction(() => !!window.tdGame && !!window.__TD_GRID__, { timeout: 15000 });
+    await page.click('#td-btn-play');
+    await page.waitForFunction(() => window.tdGame?.state === 'playing', { timeout: 5000 });
+    await page.evaluate(() => {
+        const g = window.tdGame;
+        const grid = window.__TD_GRID__;
+        g.gold = 99999;
+        const cells = [];
+        for (let r = 0; r < grid.ROWS; r++) {
+            for (let c = 0; c < grid.COLS; c++) {
+                if (grid.pathGrid[r * grid.COLS + c] || g.towerAt(c, r) >= 0) continue;
+                const nearPath = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dc, dr]) => {
+                    const nc = c + dc, nr = r + dr;
+                    return nc >= 0 && nc < grid.COLS && nr >= 0 && nr < grid.ROWS && grid.pathGrid[nr * grid.COLS + nc];
+                });
+                if (nearPath) cells.push({ c, r });
+            }
+        }
+        const types = ['pulse', 'frost', 'cannon', 'tesla'];
+        for (let i = 0; i < 8; i++) {
+            g.selectedCell = cells[Math.floor(((i + 0.5) * cells.length) / 8)];
+            g.selectedTowerIdx = -1;
+            g.tryBuild(types[i % types.length]);
+        }
+        g.selectedCell = null;
+        g.startWave();
+    });
+    await sleep(6500);
+    return page.evaluate(() => {
+        window.__coverSrc = document.getElementById('td-canvas');
+        return { w: window.__coverSrc.width, h: window.__coverSrc.height };
+    });
+}
+
+/** 坦克大战：用游戏自己的 SVG 精灵在离屏画布上摆一幕交火（视野 500×262 游戏单位，×4.8 光栅化），
+ *  精灵坐标与朝向都是游戏坐标系（800×600，坦克朝上为 0°） */
+async function composeTankBattle(page) {
+    await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+    return page.evaluate(async () => {
+        const A = '/assets/tank-battle/';
+        const load = f => new Promise((res, rej) => { const i = new window.Image(); i.onload = () => res(i); i.onerror = rej; i.src = A + f; });
+        const [ground, detail, brick, steel, player, enemy, boss, shield, weapon] = await Promise.all([
+            'terrain/ground.svg', 'terrain/ground-detail.svg', 'tiles/brick.svg', 'tiles/steel.svg',
+            'tanks/player.svg', 'tanks/enemy.svg', 'tanks/boss.svg', 'powerups/shield.svg', 'powerups/weapon.svg',
+        ].map(load));
+        const VW = 500, VH = 262.5, S = 4.8;
+        const c = document.createElement('canvas');
+        c.width = VW * S;
+        c.height = VH * S;
+        const ctx = c.getContext('2d');
+        ctx.scale(S, S);
+        for (let x = 0; x < VW; x += 40) for (let y = 0; y < VH; y += 40) ctx.drawImage(ground, x, y, 40, 40);
+        ctx.drawImage(detail, -60, -90, 800, 600);
+        const tile = (img, cx, cy, cols, rows) => { for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) ctx.drawImage(img, cx + i * 20, cy + j * 20, 20, 20); };
+        tile(brick, 150, 60, 3, 2);
+        tile(brick, 330, 150, 2, 3);
+        tile(steel, 230, 170, 2, 1);
+        tile(brick, 40, 40, 1, 3);
+        tile(steel, 420, 40, 1, 2);
+        const sprite = (img, x, y, size, deg) => {
+            ctx.save(); ctx.translate(x, y); ctx.rotate((deg * Math.PI) / 180); ctx.drawImage(img, -size / 2, -size / 2, size, size); ctx.restore();
+        };
+        // 子弹轨迹：玩家朝右上的敌人开火，敌人回击
+        ctx.lineCap = 'round';
+        const shot = (x1, y1, x2, y2, color) => {
+            const g = ctx.createLinearGradient(x1, y1, x2, y2);
+            g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, color);
+            ctx.strokeStyle = g; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x2, y2, 2.2, 0, Math.PI * 2); ctx.fill();
+        };
+        shot(118, 196, 118, 128, '#ffe066');
+        shot(286, 84, 238, 84, '#ff8a5c');
+        sprite(player, 118, 214, 34, 0);
+        sprite(enemy, 304, 84, 30, 270);
+        sprite(enemy, 222, 128, 30, 180);
+        sprite(enemy, 446, 214, 30, 270);
+        sprite(boss, 400, 96, 44, 225);
+        sprite(shield, 60, 150, 18, 0);
+        sprite(weapon, 270, 228, 18, 0);
+        window.__coverSrc = c;
+        return { w: c.width, h: c.height };
+    });
+}
+
+/** 蛛丝引露：进第一关，等露珠与丝线在夜园里落定 */
+async function captureSilkDew(page) {
+    await page.goto(`${BASE}/silk-dew.html`, { waitUntil: 'load' });
+    await page.waitForFunction(() => !!window.sdGame, { timeout: 15000 });
+    await page.evaluate(() => window.sdGame.startLevel(0));
+    await sleep(1500);
+    return pickCanvas(page);
+}
+
 async function main() {
     const only = process.argv.slice(2);
     const ids = only.length ? only : Object.keys(RECIPES);
@@ -146,7 +256,7 @@ async function main() {
                 await page.setViewport(recipe.viewport || { width: 540, height: 960, deviceScaleFactor: 1 });
                 await page.evaluateOnNewDocument(() => { try { localStorage.setItem('site_lang', 'zh'); } catch (e) { /* ignore */ } });
                 const size = recipe.kind === 'art' ? await prepareArt(page, recipe) : await recipe.capture(page);
-                for (const out of OUTPUTS) {
+                for (const out of OUTPUTS.filter(o => !o.when || o.when(id))) {
                     const rect = fracRect(size.w, size.h, recipe.crop, out.w / out.h);
                     const dataUrl = await encodeInPage(page, rect, out);
                     const buf = Buffer.from(dataUrl.split(',')[1], 'base64');
