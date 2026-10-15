@@ -46,9 +46,13 @@ export function bindRecent() {
         if (!link || (e.type === 'auxclick' && e.button !== 1)) return;
         const id = link.dataset.gameId;
         storageSet(RECENT_KEY, JSON.stringify([id, ...readRecent().filter(x => x !== id)].slice(0, RECENT_MAX)));
+        // 中键 / Ctrl·Cmd 点击在新标签打开、首页还留着：记完就重渲染（推迟一拍，先让链接的默认行为走完）
+        setTimeout(render, 0);
     };
     const main = document.querySelector('.idx-main');
     main?.addEventListener('click', record);
     main?.addEventListener('auxclick', record);
+    // 后退回来时浏览器可能从 bfcache 原样恢复页面（脚本不重跑），这时也要按最新记录重渲染
+    window.addEventListener('pageshow', e => { if (e.persisted) render(); });
     onLanguage(render);
 }

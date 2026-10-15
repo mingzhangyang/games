@@ -259,14 +259,18 @@ function checkChips(chips, lang, where) {
     const wantRecent = ['tetris', 'minesweeper', 'circuit', 'lumen', 'reversi', 'gomoku'];
     const stored = await page.evaluate(() => localStorage.getItem('site_recent'));
     if (stored !== JSON.stringify(wantRecent)) fail(`site_recent=${stored} 应为 ${JSON.stringify(wantRecent)}`);
-    await page.reload({ waitUntil: 'networkidle0' });
     const recent = () => page.evaluate(() => ({
         hidden: document.getElementById('home-recent').hidden,
         ids: [...document.querySelectorAll('.recent-card')].map(a => a.dataset.gameId),
         names: [...document.querySelectorAll('.recent-card')].map(a => a.textContent.trim()),
         hrefs: [...document.querySelectorAll('.recent-card')].map(a => a.getAttribute('href')),
     }));
+    // 不重载也要更新：中键 / Ctrl·Cmd 点击在新标签打开时首页还留着（PR #148 review）
+    await new Promise(res => setTimeout(res, 50));
     let r = await recent();
+    if (r.hidden || JSON.stringify(r.ids) !== JSON.stringify(wantRecent)) fail(`点击后未重载时「最近玩过」=${JSON.stringify(r.ids)}，应已更新为 ${JSON.stringify(wantRecent)}`);
+    await page.reload({ waitUntil: 'networkidle0' });
+    r = await recent();
     if (r.hidden || JSON.stringify(r.ids) !== JSON.stringify(wantRecent)) fail(`「最近玩过」渲染=${JSON.stringify(r.ids)} 应为 ${JSON.stringify(wantRecent)}`);
     const nameOf = (id, lang) => GAMES.find(g => g.id === id).name[lang];
     if (JSON.stringify(r.names) !== JSON.stringify(wantRecent.map(id => nameOf(id, 'en')))) fail(`「最近玩过」英文名=${r.names}`);
