@@ -140,12 +140,20 @@ function homeFilterTransform(src) {
 /** 新上线横排（proposal §4.4）：写出全部带 addedAt 的游戏（新者在前），45 天窗口由 src/home/new-row.js
  *  运行时裁剪——放在 gen 里会让 gen --check 随日期变红。图片必须是构建可见的字面 URL，只用会原样复制进
  *  dist 的 public/：优先用游戏自己美术做的封面 public/assets/home-covers/<id>.webp（由
- *  tools/generators/home-covers.mjs 生成），没有才退回 OG 图，都没有就不输出 <img>（只留渐变 + 图标兜底）；
+ *  tools/generators/game-covers.mjs 生成），没有才退回 OG 图，都没有就不输出 <img>（只留渐变 + 图标兜底）；
  *  绝不运行时拼路径。铺放全由 home-cards.css 负责，不生成内联 style（verify-css-debt 冻结了内联样式）。 */
 const HOME_COVER_DIR = 'assets/home-covers';
+/** 分享图：优先 tools/generators/game-covers.mjs 用游戏美术生成的 og-<id>.jpg（多数社交平台不渲染
+ *  SVG og:image），没有美术的游戏才用 og-<id>.svg。路径相对站点根，og:image / twitter:image 共用。 */
+function ogImageFile(id) {
+    const jpg = `${SITE.ogImageDir}/og-${id}.jpg`;
+    return existsSync(join(ROOT, 'public', jpg)) ? jpg : `${SITE.ogImageDir}/og-${id}.svg`;
+}
 function homeNewArt(id) {
     if (existsSync(join(ROOT, 'public', HOME_COVER_DIR, `${id}.webp`))) return { src: `/${HOME_COVER_DIR}/${id}.webp`, w: 640, h: 360, og: false };
-    if (existsSync(join(ROOT, 'public', SITE.ogImageDir, `og-${id}.svg`))) return { src: `/${SITE.ogImageDir}/og-${id}.svg`, w: 1200, h: 630, og: true };
+    const og = ogImageFile(id);
+    // 退回 SVG 时图里自带标题，卡片要压深底部（og: true → new-card--og）
+    if (existsSync(join(ROOT, 'public', og))) return { src: `/${og}`, w: 1200, h: 630, og: og.endsWith('.svg') };
     return null;
 }
 function homeNewContent() {
@@ -199,7 +207,7 @@ function homeZhTransform(src) {
 // ---------- 每页 <head> 生成 ----------
 function headBlock(g) {
     const u = `${ORIGIN}/${g.href}`;
-    const img = `${SITE.ogImageDir}/og-${g.id}.svg`;
+    const img = ogImageFile(g.id);
     const L = [];
     L.push(`    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">`);
     L.push(`    <meta name="apple-mobile-web-app-capable" content="yes">`);
@@ -258,7 +266,7 @@ function seoScriptBlock(g) {
             const canonical = document.getElementById('canonical-link');
             if (canonical) canonical.setAttribute('href', currentUrl);
             const baseUrl = new URL('.', currentUrl).href;
-            const socialImage = new URL('${SITE.ogImageDir}/og-${g.id}.svg', baseUrl).href;
+            const socialImage = new URL('${ogImageFile(g.id)}', baseUrl).href;
             const ogUrl = document.querySelector('meta[property="og:url"]');
             if (ogUrl) ogUrl.setAttribute('content', currentUrl);
             const ogImage = document.querySelector('meta[property="og:image"]');

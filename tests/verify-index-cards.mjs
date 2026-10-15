@@ -133,7 +133,17 @@ console.log('\n▶ P3：新上线横排 / OG 图 / 最近玩过 / 更多每日 /
 // OG 图单一来源 public/<ogImageDir>/（原样复制进 dist）：og:image 与新上线横排都指向它，缺一张就是生产 404
 const ogDir = registry.site().ogImageDir;
 for (const id of [...games.map(g => g.id), 'collection']) {
-    ok(existsSync(join(ROOT, 'public', ogDir, `og-${id}.svg`)), `public/${ogDir}/og-${id}.svg 存在（不 404）`);
+    const has = ['jpg', 'svg'].filter(ext => existsSync(join(ROOT, 'public', ogDir, `og-${id}.${ext}`)));
+    ok(has.length >= 1, `public/${ogDir}/og-${id}.(jpg|svg) 存在（不 404）`, has.join(','));
+    // 有美术的游戏只留 game-covers.mjs 生成的 JPEG，占位 SVG 已清理，不许回来
+    if (has.includes('jpg')) ok(!has.includes('svg'), `og-${id}: 已有美术 JPEG，占位 SVG 已删除`);
+    const page = games.find(g => g.id === id);
+    if (page) {
+        const want = `${ogDir}/og-${id}.${has[0]}`;
+        const src = read(page.href);
+        ok(src.includes(`<meta property="og:image" content="${want}">`) && src.includes(`new URL('${want}', baseUrl)`),
+            `${id}: og:image 与 JSON-LD 脚本指向 ${want}`);
+    }
 }
 ok(!existsSync(join(ROOT, ogDir)), `根目录 ${ogDir}/ 已删除（OG 图只在 public/ 一处，不再双份漂移）`);
 const newRegion = html.slice(html.indexOf('registry:begin home-new'), html.indexOf('registry:end home-new'));
@@ -146,14 +156,14 @@ for (const id of wantNew) {
     const g = games.find(x => x.id === id);
     const start = newRegion.indexOf(`data-game-id="${id}"`);
     const card = newRegion.slice(start, newRegion.indexOf('</a>', start));
-    // 优先用游戏自己美术做的封面（tools/generators/home-covers.mjs），没有才退回 OG 图
+    // 优先用游戏自己美术做的封面（tools/generators/game-covers.mjs），没有才退回 OG 图
     const cover = existsSync(join(ROOT, 'public', 'assets', 'home-covers', `${id}.webp`));
-    const og = existsSync(join(ROOT, 'public', ogDir, `og-${id}.svg`));
+    const ogExt = ['jpg', 'svg'].find(ext => existsSync(join(ROOT, 'public', ogDir, `og-${id}.${ext}`)));
     const img = cover
         ? `<img class="new-game-art" src="/assets/home-covers/${id}.webp" alt="" width="640" height="360" loading="lazy" decoding="async">`
-        : `<img class="new-game-art" src="/${ogDir}/og-${id}.svg" alt="" width="1200" height="630" loading="lazy" decoding="async">`;
-    ok((cover || og) ? card.includes(img) : !card.includes('<img'), `新上线 ${id}: <img> 为字面 URL，封面优先、OG 图兜底、都没有就不输出`);
-    ok(newRegion.includes(`<a class="new-card${!cover && og ? ' new-card--og' : ''}" href="${g.href}"`), `新上线 ${id}: 只有退回 OG 图的卡带 new-card--og（压深底部）`);
+        : `<img class="new-game-art" src="/${ogDir}/og-${id}.${ogExt}" alt="" width="1200" height="630" loading="lazy" decoding="async">`;
+    ok((cover || ogExt) ? card.includes(img) : !card.includes('<img'), `新上线 ${id}: <img> 为字面 URL，封面优先、分享图兜底（JPEG 先于 SVG）、都没有就不输出`);
+    ok(newRegion.includes(`<a class="new-card${!cover && ogExt === 'svg' ? ' new-card--og' : ''}" href="${g.href}"`), `新上线 ${id}: 只有退回自带标题的 SVG 时带 new-card--og（压深底部）`);
     ok(card.includes(`data-i18n="${id}.name">`) && card.includes(`data-i18n="${id}.tag">`) && card.includes(`card-icon--${g.home.iconClass}`),
         `新上线 ${id}: 名称 / 副标签走 i18n，图标配色复用 card-icon--*`);
 }
@@ -161,6 +171,7 @@ ok(!/\sstyle=/.test(newRegion), '新上线横排没有内联 style（图片铺�
 // 有美术素材的游戏必须用素材封面，不退回占位 SVG（拔萝卜 / 影织等的占位 SVG 远不如游戏原画）
 for (const id of ['carrot-pull', 'shadow-loom', 'firefly-signal', 'needle-awn']) {
     ok(existsSync(join(ROOT, 'public', 'assets', 'home-covers', `${id}.webp`)), `${id}: 有用游戏美术做的封面 public/assets/home-covers/${id}.webp`);
+    ok(existsSync(join(ROOT, 'public', ogDir, `og-${id}.jpg`)), `${id}: 分享图也来自游戏美术（og-${id}.jpg）`);
 }
 ok(!/og-\$\{|og-' \+/.test(pageJs + homeJs), '首页运行时不拼 OG 图路径');
 ok(html.includes('id="home-recent"') && html.includes('id="home-recent-list"'), '最近玩过容器存在');

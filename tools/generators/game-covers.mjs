@@ -1,17 +1,19 @@
 #!/usr/bin/env node
-// 首页「新上线」横排的封面图（docs/proposal-home-layout.md §4.4）。
+// 游戏封面图：首页「新上线」卡片封面 + 游戏页 og:image，都从游戏自己的美术生成，不另画占位图。
 //
-//   node tools/generators/home-covers.mjs            生成全部封面
-//   node tools/generators/home-covers.mjs <id> ...   只生成指定游戏
+//   node tools/generators/game-covers.mjs            生成全部
+//   node tools/generators/game-covers.mjs <id> ...   只生成指定游戏
 //
-// 产物是 public/assets/home-covers/<id>.webp（640×360，卡片 260×146 的 2.5 倍），原样复制进 dist；
-// gen 的 home-new 区域有封面就用封面、没有才退回 OG 图（public/assets/seo/og-<id>.svg）。
-// 来源只用游戏自己的美术，不另画：
-//   - art   ：手绘概念图，按 crop 裁出横幅（源坐标为 0–1 比例）；
+// 每个配方产出两张（原样复制进 dist 的 public/）：
+//   public/assets/home-covers/<id>.webp   640×360   首页新上线卡片（卡片 260×146 的 2.5 倍）
+//   public/assets/seo/og-<id>.jpg         1200×630  社交分享预览（多数平台不渲染 SVG og:image，所以用 JPEG）
+// gen 优先用这些产物，没有才退回 og-<id>.svg（docs/proposal-home-layout.md §7.2）。
+// 来源：
+//   - art   ：手绘概念图，按 crop 裁出横幅（源坐标为 0–1 比例，高度按目标宽高比由宽度决定）；
 //   - game  ：在真实游戏里摆到一个好看的状态（影织把「兔」摆到解；萤火信号用测试求解器在 Node 里
 //             解「仲夏」、在浏览器里按同 seed 同输入回放到通关，取全场齐闪的一帧），
 //             直接取画布像素裁切——不截 DOM，所以没有顶栏 / 按钮。
-// 编码由 Chromium 的 canvas.toDataURL('image/webp') 完成；产物入库，不在构建 / CI 里重跑。
+// 编码由 Chromium 的 canvas.toDataURL 完成；产物入库，不在构建 / CI 里重跑。
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -20,55 +22,63 @@ import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from '../lib/browser.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const OUT_DIR = join(ROOT, 'public', 'assets', 'home-covers');
-const W = 640;
-const H = 360;
-const QUALITY = 0.84;
 const PORT = 8931;
 const BASE = `http://127.0.0.1:${PORT}`;
+
+const OUTPUTS = [
+    { file: id => `public/assets/home-covers/${id}.webp`, w: 640, h: 360, type: 'image/webp', quality: 0.84 },
+    { file: id => `public/assets/seo/og-${id}.jpg`, w: 1200, h: 630, type: 'image/jpeg', quality: 0.86 },
+];
 
 const RECIPES = {
     // 拔萝卜：小女孩拔萝卜、鼹鼠扒着萝卜——人物、萝卜、鼹鼠都要在画里
     'carrot-pull': { kind: 'art', src: '/assets/carrot-pull/reference/concept-garden.webp', crop: [0, 0.21] },
     // 针尖对麦芒：月下水墨群山 + 擂台，取月亮与山门
     'needle-awn': { kind: 'art', src: '/assets/needle-awn/reference/concept-arena.webp', crop: [0, 0.03] },
-    'shadow-loom': { kind: 'game', capture: captureShadowLoom },
-    'firefly-signal': { kind: 'game', capture: captureFireflySignal },
+    // 影织的舞台有 CSS 宽度上限，画布像素只能靠更大的视口换来
+    'shadow-loom': { kind: 'game', capture: captureShadowLoom, crop: [0.1, 0.2, 0.8], viewport: { width: 1080, height: 1920, deviceScaleFactor: 2 } },
+    // 萤火信号是沉浸式舞台，视口会改变取景；540×960 时湖面 + 草地齐闪的构图最好
+    'firefly-signal': { kind: 'game', capture: captureFireflySignal, crop: [0, 0.5], viewport: { width: 540, height: 960, deviceScaleFactor: 2 } },
 };
 
-/** 在页面里把一块画布 / 图片的源矩形（像素）缩放进 W×H，导出 webp dataURL */
-const encodeInPage = (page, sourceExpr, rect) => page.evaluate(async ({ sourceExpr, rect, W, H, QUALITY }) => {
-    const source = await new Function(`return (async () => ${sourceExpr})()`)();
-    const out = document.createElement('canvas');
-    out.width = W;
-    out.height = H;
-    const ctx = out.getContext('2d');
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(source, rect.x, rect.y, rect.w, rect.h, 0, 0, W, H);
-    return out.toDataURL('image/webp', QUALITY);
-}, { sourceExpr, rect, W, H, QUALITY });
-
-/** 0–1 比例的裁切框 [x, y, w = 1]（高度按 16:9 由宽度决定）换算成源像素，并保证落在图内 */
-function fracRect(width, height, [fx, fy, fw = 1]) {
+/** 0–1 比例的裁切框 [x, y, w = 1] → 源像素；高度按输出宽高比由宽度决定，并保证落在图内 */
+function fracRect(width, height, [fx, fy, fw = 1], aspect) {
     const w = width * fw;
-    const h = (w * H) / W;
+    const h = w / aspect;
     const y = Math.min(height * fy, height - h);
     return { x: width * fx, y: Math.max(0, y), w, h };
 }
 
-async function captureArt(page, recipe) {
+/** 把 window.__coverSrc（图片或画布）的源矩形缩放进输出尺寸，在页面里编码 */
+const encodeInPage = (page, rect, out) => page.evaluate(({ rect, out }) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = out.w;
+    canvas.height = out.h;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(window.__coverSrc, rect.x, rect.y, rect.w, rect.h, 0, 0, out.w, out.h);
+    return canvas.toDataURL(out.type, out.quality);
+}, { rect, out });
+
+/** 加载概念图到 window.__coverSrc，返回其像素尺寸 */
+async function prepareArt(page, recipe) {
     await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-    const size = await page.evaluate(src => new Promise((res, rej) => {
+    return page.evaluate(src => new Promise((res, rej) => {
         const img = new window.Image();
-        img.onload = () => { window.__coverImg = img; res({ w: img.naturalWidth, h: img.naturalHeight }); };
+        img.onload = () => { window.__coverSrc = img; res({ w: img.naturalWidth, h: img.naturalHeight }); };
         img.onerror = rej;
         img.src = src;
     }), recipe.src);
-    return encodeInPage(page, 'window.__coverImg', fracRect(size.w, size.h, recipe.crop));
 }
 
-/** 影织：进「兔」，把每块纸片直接摆到内核算出的解（与 smoke / verify-shadow-loom-levels 同源），
- *  取纸窗与灯所在的横幅 */
+/** 取舞台里最大的画布作 window.__coverSrc */
+const pickCanvas = page => page.evaluate(() => {
+    const c = [...document.querySelectorAll('.game-stage canvas, canvas')].sort((a, b) => b.width * b.height - a.width * a.height)[0];
+    window.__coverSrc = c;
+    return { w: c.width, h: c.height };
+});
+
+/** 影织：进「兔」，把每块纸片直接摆到内核算出的解（与 smoke / verify-shadow-loom-levels 同源） */
 async function captureShadowLoom(page) {
     const { LEVELS } = await import(pathToFileURL(join(ROOT, 'src/games/shadow-loom/model/levels.js')));
     const R = await import(pathToFileURL(join(ROOT, 'src/games/shadow-loom/model/rules.js')));
@@ -78,12 +88,7 @@ async function captureShadowLoom(page) {
     await page.evaluate(() => window.slGame.startLevel(0));
     await page.evaluate(pieces => pieces.forEach((p, i) => Object.assign(window.slGame.st.pieces[i], p)), sol);
     await new Promise(r => setTimeout(r, 600));
-    const size = await page.evaluate(() => {
-        const c = document.querySelector('.game-stage canvas');
-        window.__coverCanvas = c;
-        return { w: c.width, h: c.height };
-    });
-    return encodeInPage(page, 'window.__coverCanvas', fracRect(size.w, size.h, [0.1, 0.2, 0.8]));
+    return pickCanvas(page);
 }
 
 /** 萤火信号「仲夏」：测试求解器在 Node 里解出 (tick, id) 输入，浏览器按同 seed 同输入回放
@@ -117,13 +122,8 @@ async function captureFireflySignal(page) {
         return { error: '通关后 30 秒内没有出现大半草地齐闪的帧' };
     }, { LEVEL, inputs: plan.inputs });
     if (shot.error) throw new Error(`firefly-signal：${shot.error}`);
-    const size = await page.evaluate(() => {
-        const c = [...document.querySelectorAll('.game-stage canvas, canvas')].sort((a, b) => b.width * b.height - a.width * a.height)[0];
-        window.__coverCanvas = c;
-        return { w: c.width, h: c.height };
-    });
-    console.log(`  firefly-signal: 回放 ${plan.inputs.length} 次点击，tick ${shot.tick} 齐闪 ${shot.flashed}/${shot.total}，画布 ${size.w}×${size.h}`);
-    return encodeInPage(page, 'window.__coverCanvas', fracRect(size.w, size.h, [0, 0.5]));
+    console.log(`  firefly-signal: 回放 ${plan.inputs.length} 次点击，tick ${shot.tick} 齐闪 ${shot.flashed}/${shot.total}`);
+    return pickCanvas(page);
 }
 
 async function main() {
@@ -131,7 +131,6 @@ async function main() {
     const ids = only.length ? only : Object.keys(RECIPES);
     const unknown = ids.filter(id => !RECIPES[id]);
     if (unknown.length) throw new Error(`没有封面配方：${unknown.join(', ')}`);
-    mkdirSync(OUT_DIR, { recursive: true });
     const server = spawn(process.execPath, [join(ROOT, 'tests/lib/serve-static.mjs'), String(PORT)], { cwd: ROOT, stdio: 'ignore' });
     try {
         for (let i = 0; i < 50; i++) {
@@ -143,13 +142,20 @@ async function main() {
             for (const id of ids) {
                 const recipe = RECIPES[id];
                 const page = await browser.newPage();
-                // 竖屏舞台 + DPR 2：画布像素足够裁出 640 宽的横幅
-                await page.setViewport({ width: 540, height: 960, deviceScaleFactor: 2 });
+                // 真实游戏的画布按 CSS 尺寸 × 封顶的 DPR 分配像素，视口按配方定（概念图与视口无关）
+                await page.setViewport(recipe.viewport || { width: 540, height: 960, deviceScaleFactor: 1 });
                 await page.evaluateOnNewDocument(() => { try { localStorage.setItem('site_lang', 'zh'); } catch (e) { /* ignore */ } });
-                const dataUrl = recipe.kind === 'art' ? await captureArt(page, recipe) : await recipe.capture(page);
-                const buf = Buffer.from(dataUrl.split(',')[1], 'base64');
-                writeFileSync(join(OUT_DIR, `${id}.webp`), buf);
-                console.log(`✓ public/assets/home-covers/${id}.webp  ${(buf.length / 1024).toFixed(1)} KiB`);
+                const size = recipe.kind === 'art' ? await prepareArt(page, recipe) : await recipe.capture(page);
+                for (const out of OUTPUTS) {
+                    const rect = fracRect(size.w, size.h, recipe.crop, out.w / out.h);
+                    const dataUrl = await encodeInPage(page, rect, out);
+                    const buf = Buffer.from(dataUrl.split(',')[1], 'base64');
+                    const file = out.file(id);
+                    mkdirSync(dirname(join(ROOT, file)), { recursive: true });
+                    writeFileSync(join(ROOT, file), buf);
+                    const upscale = out.w / rect.w > 1.05 ? `（源 ${Math.round(rect.w)}px 宽，放大 ${(out.w / rect.w).toFixed(2)}×）` : '';
+                    console.log(`✓ ${file}  ${(buf.length / 1024).toFixed(1)} KiB${upscale}`);
+                }
                 await page.close();
             }
         } finally {
