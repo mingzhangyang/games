@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// verify-index-layout.mjs — 首页三块（daily-hub / games-section / perks）横向居中回归。
+// verify-index-layout.mjs — 首页各块（daily-hub / games-section / 最近玩过 / 新上线）横向居中回归。
+// （P3 起 Perks 三卡压成页脚一行，不再单独量。）
 //
 // 背景：`.daily-hub` 曾经左右 margin 对称但宽度受限，在 `.idx-main`（普通块容器，
 // 不像 body 那样 flex 居中）里被顶到**左边缘**。肉眼在宽屏上很扎眼，但所有既有
@@ -52,6 +53,8 @@ for (const vp of VIEWPORTS) {
         try {
             localStorage.setItem('site_lang', lang);
             localStorage.setItem('site_theme', theme);
+            // 有记录时「最近玩过」才渲染：让两条横向滑动行都在页上，一起受「不横向溢出」约束
+            localStorage.setItem('site_recent', JSON.stringify(['needle-awn', 'gravity-slingshot', 'maxwell-demon', 'dots', 'tetris', 'loop-jail']));
         } catch (e) { /* ignore */ }
         const RealDate = Date;
         class FrozenDate extends RealDate {
@@ -82,7 +85,8 @@ for (const vp of VIEWPORTS) {
             vw: document.documentElement.clientWidth,
             hub: pick('.daily-hub'),
             games: pick('.games-section'),
-            perks: pick('.perks'),
+            recent: pick('#home-recent'),
+            newRow: pick('#home-new'),
             footer: footerCss ? {
                 gap: footerCss.gap,
                 paddingTop: footerCss.paddingTop,
@@ -137,7 +141,7 @@ for (const vp of VIEWPORTS) {
     });
 
     const bad = [];
-    for (const k of ['hub', 'games', 'perks']) {
+    for (const k of ['hub', 'games', 'recent', 'newRow']) {
         const v = m[k];
         if (v && Math.abs(v.skew) > 2) bad.push(`${k} skew=${v.skew}`);
     }
@@ -182,7 +186,7 @@ for (const vp of VIEWPORTS) {
     const mark = bad.length ? '✗' : '✓';
     console.log(`${mark} ${vp.label.padEnd(14)} vw=${m.vw}  cards=${m.cards}  lumen=${m.lumen} circuit=${m.circuit}`);
     console.log(`     grid   cols=${g.cols} maxCardH=${g.maxCardH} truncated=${g.truncated.length} brokenWords=${g.brokenWords.length} maxChips=${g.maxChips}`);
-    for (const k of ['hub', 'games', 'perks']) {
+    for (const k of ['hub', 'games', 'recent', 'newRow']) {
         const v = m[k];
         if (v) console.log(`     ${k.padEnd(6)} w=${String(v.width).padStart(4)} left=${String(v.left).padStart(4)} right=${String(v.right).padStart(4)} skew=${v.skew}`);
     }

@@ -278,6 +278,27 @@ export const HOME_CARDS_SELECTORS = new Set([
     '.games-cat-title',
     '.games-cat-icon',
     '.games-cat-count',
+    // P3：最近玩过 / 新上线横排 / 更多每日 / 页脚 Perks 行
+    '.home-row',
+    '.home-row-title',
+    '.home-row-list',
+    '.recent-card',
+    '.recent-card:hover',
+    '.recent-icon, .new-icon',
+    '.recent-icon svg',
+    '.new-card',
+    '.new-card:hover',
+    '.recent-card:focus-visible, .new-card:focus-visible, .hub-more-daily:focus-visible',
+    '.new-game-art',
+    '.new-card-body',
+    '.new-icon',
+    '.new-card-text',
+    '.new-card-name',
+    '.new-card-tag',
+    '.hub-more-daily',
+    '.hub-more-daily[hidden]',
+    '.hub-more-count',
+    '.perks-line',
 ]);
 
 export function stripHomeCardsLink(page, html, errors) {

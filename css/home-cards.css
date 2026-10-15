@@ -3,7 +3,8 @@
 
    整卡一个 <a class="game-card">（唯一 Tab 停靠点）、可见文字胶囊取代只靠 hover 的书签图标、
    手机（≤600px）单列横条、宽桌面（≥1280px）四列；P2 起卡片按 home.category 分区输出，
-   上方是渐进增强的 sticky 筛选条（js/index-page.js 绑定后才去掉 hidden）。
+   上方是渐进增强的 sticky 筛选条（js/index-page.js 绑定后才去掉 hidden）。P3 加最近玩过 / 新上线
+   横排 / Daily Hub「更多每日」/ 页脚一行 Perks（docs/proposal-home-layout.md §4.2 / §4.4 / §4.5）。
 
    本文件是 CSS P0/P5 冻结之后的**附加特性样式表**（见 tests/lib/css/feature-additions.mjs）：
    css/index.css 一条不改；全部规则在 @layer contracts、选择器逐条登记。只有要压过冻结的
@@ -21,12 +22,171 @@
         /* 选中筛选钮的底：深色主色 #6366f1 配白字只有 4.47:1，小字号不够 AA 4.5:1（PR #147 review）；
            #4f46e5 = 6.29:1，与浅色主题的主色相同，所以两套主题共用这一个值 */
         --ix-filter-on-bg: #4f46e5;
+        /* 新上线大卡压在深色 OG 图上：文字两套主题都用浅色，渐变底兜住缺图的情况 */
+        --ix-new-card-from: #1e2547;
+        --ix-new-card-to: #0b1023;
+        --ix-new-card-text: #f8fafc;
+        --ix-new-card-scrim: rgb(5, 7, 15, 0.92);
     }
 
     :root[data-theme="light"] {
         --ix-card-chip--new-text: #7a5a00;
         --ix-card-chip--daily-text: #0d6b4b;
         --ix-filter-bg: rgb(236, 238, 243, 0.9);
+    }
+
+    /* ── P3：最近玩过 / 新上线横排 / 「更多每日」/ 页脚 Perks 行（全是新元素，无需压冻结声明） ── */
+    .home-row {
+        margin: 0 0 22px;
+    }
+
+    .home-row-title {
+        margin: 0 0 10px;
+        font-size: 0.95em;
+        font-weight: 700;
+        color: var(--color-text);
+    }
+
+    /* 一行横向滑动：不换行挤高，触屏可甩 */
+    .home-row-list {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: thin;
+    }
+
+    .recent-card {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 5px 14px 5px 5px;
+        border: 1px solid var(--color-border);
+        border-radius: 99px;
+        background: var(--ix-game-card-bg);
+        color: inherit;
+        font-size: 0.86em;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        scroll-snap-align: start;
+    }
+
+    .recent-card:hover {
+        border-color: var(--ix-game-card-hover-border);
+    }
+
+    /* 图标配色复用冻结的 .card-icon--<x>（只有底色 / 前景色），尺寸自己定，不碰 .card-icon 的 40px */
+    .recent-icon, .new-icon {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 99px;
+    }
+
+    .recent-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* 新上线大卡：OG 图铺满（object-fit），底部渐变压暗托住文字；没有图时只剩渐变底 + 图标 */
+    .new-card {
+        position: relative;
+        flex: 0 0 260px;
+        height: 146px;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--ix-new-card-from), var(--ix-new-card-to));
+        color: var(--ix-new-card-text);
+        text-decoration: none;
+        scroll-snap-align: start;
+    }
+
+    .new-card:hover {
+        border-color: var(--ix-game-card-hover-border);
+    }
+
+    .recent-card:focus-visible, .new-card:focus-visible, .hub-more-daily:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    .new-game-art {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .new-card-body {
+        position: absolute;
+        inset: auto 0 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 44px 12px 10px;
+        background: linear-gradient(to top, var(--ix-new-card-scrim) 55%, transparent);
+    }
+
+    .new-icon {
+        border-radius: 8px;
+    }
+
+    .new-card-text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .new-card-name {
+        overflow: hidden;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .new-card-tag {
+        font-size: 0.75em;
+        opacity: 0.8;
+    }
+
+    .hub-more-daily {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        min-height: 40px;
+        color: var(--color-accent);
+        font-size: 0.85em;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .hub-more-daily[hidden] {
+        display: none;
+    }
+
+    .hub-more-count {
+        padding: 0 7px;
+        border-radius: 99px;
+        background: var(--ix-tag-bg);
+        font-size: 0.9em;
+        line-height: 1.6;
+    }
+
+    .perks-line {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.8em;
+        text-align: center;
     }
 
     /* 渐进增强前隐藏：本层 .games-filter 的 display:flex 会盖过 UA 的 [hidden]，同层更高特异性压回去。

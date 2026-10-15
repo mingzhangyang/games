@@ -88,30 +88,6 @@
           "en": "New",
           "zh": "新上线"
         },
-        "perk1Title": {
-          "en": "Instant play",
-          "zh": "即点即玩"
-        },
-        "perk1Body": {
-          "en": "Single-file builds load fast and cache well. No install, no login.",
-          "zh": "单文件构建，加载迅速，无需安装，无需登录。"
-        },
-        "perk2Title": {
-          "en": "Keyboard & touch",
-          "zh": "键盘 & 触控"
-        },
-        "perk2Body": {
-          "en": "Every game is tuned for laptop keyboards and mobile touch controls.",
-          "zh": "每款游戏均为键盘和移动端触控精心优化。"
-        },
-        "perk3Title": {
-          "en": "Bilingual",
-          "zh": "双语支持"
-        },
-        "perk3Body": {
-          "en": "English and Chinese — auto-detected from your browser language.",
-          "zh": "英文与中文，根据浏览器语言自动切换。"
-        },
         "badgeExternal": {
           "en": "External ↗",
           "zh": "站外 ↗"
@@ -127,6 +103,22 @@
         "filterDaily": {
           "en": "Daily",
           "zh": "每日挑战"
+        },
+        "perksLine": {
+          "en": "Instant play · Keyboard & touch · English / 中文",
+          "zh": "即点即玩 · 键盘 & 触控 · 中文 / English"
+        },
+        "recentTitle": {
+          "en": "Recently played",
+          "zh": "最近玩过"
+        },
+        "newTitle": {
+          "en": "New games",
+          "zh": "新上线"
+        },
+        "moreDaily": {
+          "en": "More daily challenges",
+          "zh": "更多每日挑战"
         }
       },
       "categories": [

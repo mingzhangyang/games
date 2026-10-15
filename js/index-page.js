@@ -3,6 +3,7 @@ import { onReady } from '../src/platform/boot.js';
 import { getLang, setLang, getThemePref, setThemePref } from '../src/platform/site-settings.js';
 import { supportsLight, getTheme, onThemeChange } from '../src/platform/theme.js';
 import { todayKey } from '../src/platform/daily.js';
+import { storageGet, storageSet } from '../src/platform/safe-storage.js';
 
 const selectors = '[data-i18n], [data-i18n-placeholder], [data-i18n-label]';
 const defaults = new WeakMap();
@@ -75,6 +76,8 @@ async function applyLanguage(lang) {
             if (key) chip.textContent = translations.get(key) || CHIP_FALLBACK[kind];
         });
     });
+    // 最近玩过的名字取自卡片标题，换语言后重渲染
+    renderRecent();
 }
 
 function syncSocialMeta() {
@@ -112,13 +115,20 @@ function injectStructuredData() {
 
 // 「新」随日期变化，不进 gen（否则 gen --check 会随日期变红）：gen 只写 data-added，
 // 这里按 UTC+8 今天、都转 UTC 毫秒算天数。
+// 新上线横排同一判定：过期的大卡直接移除，一张不剩就保持整行 hidden（proposal §4.4）。
 function markNewCards() {
     const t = todayKey();
     const today = Date.UTC(+t.slice(0, 4), +t.slice(4, 6) - 1, +t.slice(6, 8));
-    document.querySelectorAll('.game-card[data-added]').forEach(card => {
-        const [y, m, d] = card.dataset.added.split('-').map(Number);
+    const isNew = el => {
+        const [y, m, d] = el.dataset.added.split('-').map(Number);
         const age = (today - Date.UTC(y, m - 1, d)) / 864e5;
-        if (age < 0 || age >= NEW_DAYS) return;
+        return age >= 0 && age < NEW_DAYS;
+    };
+    document.querySelectorAll('.new-card[data-added]').forEach(card => { if (!isNew(card)) card.remove(); });
+    const row = document.getElementById('home-new');
+    if (row) row.hidden = !row.querySelector('.new-card');
+    document.querySelectorAll('.game-card[data-added]').forEach(card => {
+        if (!isNew(card)) return;
         const chip = document.createElement('span');
         chip.className = 'card-chip card-chip--new';
         chip.id = card.querySelector('.card-title').id.replace(/-name$/, '-chip-new');
@@ -159,22 +169,75 @@ function applyFilter() {
     });
 }
 
+// 筛选按钮与 Daily Hub 的「更多每日」共用：pushState 不触发 hashchange，手动刷新
+function setFilter(filter, jump) {
+    const hash = filter === 'all' ? '' : `#cat=${filter}`;
+    if (location.hash !== hash) history.pushState(null, '', `${location.pathname}${location.search}${hash}`);
+    applyFilter();
+    const box = document.getElementById('games-filter');
+    const cats = document.getElementById('games-cats');
+    // 吸顶时内容高度骤变、或从 Hub 跳来时，回到分区开头
+    if (jump || (cats && box && cats.getBoundingClientRect().top < box.offsetHeight)) document.getElementById('section-label')?.scrollIntoView();
+}
+
 function bindFilter() {
     const box = document.getElementById('games-filter');
     if (!box) return;
-    box.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => {
-        const hash = btn.dataset.filter === 'all' ? '' : `#cat=${btn.dataset.filter}`;
-        if (location.hash === hash) return;
-        history.pushState(null, '', `${location.pathname}${location.search}${hash}`);
-        applyFilter();
-        // 吸顶时内容高度骤变，回到分区开头
-        const cats = document.getElementById('games-cats');
-        if (cats && cats.getBoundingClientRect().top < box.offsetHeight) document.getElementById('section-label')?.scrollIntoView();
-    }));
+    box.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => setFilter(btn.dataset.filter)));
     window.addEventListener('hashchange', applyFilter);
     window.addEventListener('popstate', applyFilter);
     box.hidden = false;
     applyFilter();
+    // 「更多每日 (N)」：N = 带「每日」胶囊的卡减去 Hub 已列出的三项
+    const more = document.getElementById('hub-more-daily');
+    if (!more) return;
+    const hub = [...document.querySelectorAll('.daily-task[href]')].map(a => a.getAttribute('href'));
+    const n = [...document.querySelectorAll('.game-card')].filter(c => c.querySelector('.card-chip--daily') && !hub.includes(c.getAttribute('href'))).length;
+    document.getElementById('hub-more-count').textContent = String(n);
+    more.hidden = !n;
+    more.addEventListener('click', e => { e.preventDefault(); setFilter('daily', true); });
+}
+
+// 最近玩过（proposal §4.2）：只记首页上的点击（卡片 / 横排 / 最近本身），最多 6 个、去重置顶。
+// 从 more-games 条或直链进入的游戏不计入，属可接受误差；不改任何游戏页。
+const RECENT_KEY = 'site_recent';
+const readRecent = () => {
+    try { const v = JSON.parse(storageGet(RECENT_KEY) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; }
+    catch (e) { return []; }
+};
+
+function renderRecent() {
+    const row = document.getElementById('home-recent');
+    const list = document.getElementById('home-recent-list');
+    if (!row || !list) return;
+    const items = readRecent().map(id => document.querySelector(`.game-card[data-game-id="${CSS.escape(id)}"]`)).filter(Boolean).map(card => {
+        const a = document.createElement('a');
+        a.className = 'recent-card';
+        a.href = card.getAttribute('href');
+        a.dataset.gameId = card.dataset.gameId;
+        const icon = card.querySelector('.card-icon');
+        const badge = document.createElement('span');
+        badge.className = `recent-icon ${[...icon.classList].find(c => c.startsWith('card-icon--')) || ''}`;
+        badge.innerHTML = icon.innerHTML;
+        const name = document.createElement('span');
+        name.textContent = card.querySelector('.card-title').textContent;
+        a.append(badge, name);
+        return a;
+    });
+    list.replaceChildren(...items);
+    row.hidden = !items.length;
+}
+
+function bindRecent() {
+    const record = e => {
+        const link = e.target.closest?.('a[data-game-id]');
+        if (!link || (e.type === 'auxclick' && e.button !== 1)) return;
+        const ids = [link.dataset.gameId, ...readRecent().filter(id => id !== link.dataset.gameId)].slice(0, 6);
+        storageSet(RECENT_KEY, JSON.stringify(ids));
+    };
+    const main = document.querySelector('.idx-main');
+    main?.addEventListener('click', record);
+    main?.addEventListener('auxclick', record);
 }
 
 function markDarkOnlyCards() {
@@ -277,6 +340,7 @@ onReady(async () => {
     markNewCards();
     markDarkOnlyCards();
     bindFilter();
+    bindRecent();
     await applyLanguage(getLang());
     const toggleLang = async () => {
         const next = currentLang === 'zh' ? 'en' : 'zh';

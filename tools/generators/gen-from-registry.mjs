@@ -9,7 +9,7 @@
 //
 // 自安装：源文件尚无哨兵时，gen 会定位旧行内 SEO 块 / 旧 meta 段并整体替换为哨兵区域；
 // 已有哨兵时只重写区域内部，区域外字节零触碰。
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from '../lib/registry.mjs';
@@ -135,6 +135,32 @@ function homeFilterContent() {
 
 function homeFilterTransform(src) {
     return applyRegion(src, 'home-filter', homeFilterContent(), null, 'html');
+}
+
+/** 新上线横排（proposal §4.4）：写出全部带 addedAt 的游戏（新者在前），45 天窗口由 index-page.js
+ *  运行时裁剪——放在 gen 里会让 gen --check 随日期变红。OG 图必须是构建可见的字面 URL：只用会原样
+ *  复制进 dist 的 public/assets/seo/，文件不存在就不输出 <img>（只留渐变 + 图标兜底），绝不运行时拼路径；
+ *  图片铺放全由 home-cards.css 负责，不生成内联 style（verify-css-debt 冻结了 index.html 的内联样式）。 */
+function homeNewContent() {
+    const entries = GAMES.filter(g => g.home.addedAt)
+        .sort((a, b) => (a.home.addedAt < b.home.addedAt ? 1 : a.home.addedAt > b.home.addedAt ? -1 : 0));
+    const card = g => {
+        const art = existsSync(join(ROOT, 'public', SITE.ogImageDir, `og-${g.id}.svg`))
+            ? `<img class="new-game-art" src="/${SITE.ogImageDir}/og-${g.id}.svg" alt="" width="1200" height="630" loading="lazy" decoding="async">` : '';
+        return `<a class="new-card" href="${esc(g.href)}" data-game-id="${g.id}" data-added="${g.home.addedAt}">${art}<span class="new-card-body"><span class="new-icon card-icon--${g.home.iconClass}"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><use href="/icons/home-icons.svg#${g.id}"></use></svg></span><span class="new-card-text"><span class="new-card-name" data-i18n="${g.id}.name">${esc(g.name.en)}</span><span class="new-card-tag" data-i18n="${g.id}.tag">${esc(g.home.tag.en)}</span></span></span></a>`;
+    };
+    return [
+        `<section class="home-row home-new" id="home-new" aria-labelledby="new-title" hidden>`,
+        `<h2 class="home-row-title" id="new-title" data-i18n="newTitle">${esc(SITE.home.ui.newTitle.en)}</h2>`,
+        '<div class="home-row-list">',
+        ...entries.map(card),
+        '</div>',
+        '</section>',
+    ].join('\n');
+}
+
+function homeNewTransform(src) {
+    return applyRegion(src, 'home-new', homeNewContent(), null, 'html');
 }
 
 function homeZhMap() {
@@ -459,7 +485,7 @@ for (const g of GAMES) {
         s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c), 'html'),
     ]);
 }
-processFile('index.html', [homeFilterTransform, homeCardsTransform]);
+processFile('index.html', [homeNewTransform, homeFilterTransform, homeCardsTransform]);
 processFile('js/index-i18n-zh.js', [homeZhTransform]);
 processFile('public/sitemap.xml', [sitemapTransform]);
 processFile('public/manifest.json', [manifestTransform]);
