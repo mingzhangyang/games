@@ -21,7 +21,9 @@ const BASE_URL = argv.find(a => !a.startsWith('--')) || '';
 
 const REGISTERED_GAMES = registry.all();
 const PAGE_IDS = ['index', ...REGISTERED_GAMES.map(g => g.id)].sort((a, b) => b.length - a.length);
-const GAME_ALIASES = REGISTERED_GAMES.map(game => ({
+// 首页不在 registry 里，但 index.html / js/index-page.js / src/home/ 都归 index 页：
+// 不加这一项，smoke-index / verify-index-layout 推不出 games，首页改动时会被 --changed 漏掉
+const GAME_ALIASES = [{ id: 'index' }, ...REGISTERED_GAMES].map(game => ({
     id: game.id,
     aliases: [game.id, game.prefix].filter(Boolean).map(alias => alias.split('-')),
 }));

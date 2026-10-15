@@ -281,6 +281,18 @@ function checkChips(chips, lang, where) {
     r = await recent();
     if (JSON.stringify(r.names) !== JSON.stringify(wantRecent.map(id => nameOf(id, 'zh')))) fail(`换中文后「最近玩过」名字=${r.names}`);
     const perksZh = await page.$eval('#perks-line', el => el.textContent);
+    // 键盘焦点在最近卡上时打开它（Ctrl/Cmd+Enter 新标签），重渲染后焦点要落在同一款游戏的新链接上
+    const focusKept = await page.evaluate(async () => {
+        document.addEventListener('click', e => e.preventDefault(), { once: true });
+        const card = document.querySelectorAll('.recent-card')[2];
+        const id = card.dataset.gameId;
+        card.focus();
+        card.click();
+        await new Promise(res => setTimeout(res, 50));
+        const now = document.activeElement;
+        return { id, active: now?.classList.contains('recent-card') ? now.dataset.gameId : now?.tagName, first: document.querySelector('.recent-card').dataset.gameId };
+    });
+    if (focusKept.active !== focusKept.id || focusKept.first !== focusKept.id) fail(`最近卡重渲染丢了键盘焦点或没置顶: ${JSON.stringify(focusKept)}`);
     if (perksEn !== HOME.ui.perksLine.en || perksZh !== HOME.ui.perksLine.zh) fail(`Perks 行未本地化: en="${perksEn}" zh="${perksZh}"`);
     const newZh = await page.$$eval('.new-card .new-card-name', els => els.map(e => e.textContent));
     if (JSON.stringify(newZh) !== JSON.stringify(wantNew.map(id => nameOf(id, 'zh')))) fail(`换中文后新上线名字=${newZh}`);

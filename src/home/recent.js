@@ -36,8 +36,11 @@ function render() {
             a.append(badge, name);
             return a;
         });
+    // 重渲染会换掉所有链接：键盘焦点在某张最近卡上时（Ctrl/Cmd+Enter 新标签打开、bfcache 恢复），交给它的替身
+    const focused = list.contains(document.activeElement) ? document.activeElement.dataset.gameId : null;
     list.replaceChildren(...items);
     row.hidden = !items.length;
+    if (focused) list.querySelector(`[data-game-id="${CSS.escape(focused)}"]`)?.focus({ preventScroll: true });
 }
 
 export function bindRecent() {
