@@ -204,6 +204,18 @@ function checkChips(chips, lang, where) {
     // ── 筛选条 ──
     let st = await filterState(page);
     if (!st.barVisible) fail('筛选条未在 JS 绑定后显现');
+    // 选中钮是小字号白字：WCAG AA 要 ≥ 4.5:1（深色主色 #6366f1 只有 4.47，PR #147 review）
+    const pressedContrast = await page.$eval('#games-filter [aria-pressed="true"]', el => {
+        const rgb = v => v.match(/[\d.]+/g).slice(0, 3).map(Number);
+        const lum = c => {
+            const [r, g, b] = c.map(x => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const css = getComputedStyle(el);
+        const [a, b] = [lum(rgb(css.color)), lum(rgb(css.backgroundColor))].sort((x, y) => y - x);
+        return (a + 0.05) / (b + 0.05);
+    });
+    if (pressedContrast < 4.5) fail(`选中筛选钮对比度 ${pressedContrast.toFixed(2)}:1 < 4.5:1`);
     checkFilter(st, 'all', '初始');
     const filters = await page.$$eval('#games-filter [data-filter]', bs => bs.map(b => b.dataset.filter));
     for (const f of filters) {

@@ -18,6 +18,9 @@
         --ix-card-chip--new-text: var(--ix-card-badge--new-text);
         --ix-card-chip--daily-text: var(--tok-success);
         --ix-filter-bg: rgb(15, 23, 42, 0.88);
+        /* 选中筛选钮的底：深色主色 #6366f1 配白字只有 4.47:1，小字号不够 AA 4.5:1（PR #147 review）；
+           #4f46e5 = 6.29:1，与浅色主题的主色相同，所以两套主题共用这一个值 */
+        --ix-filter-on-bg: #4f46e5;
     }
 
     :root[data-theme="light"] {
@@ -74,8 +77,8 @@
     }
 
     .filter-btn[aria-pressed="true"] {
-        border-color: var(--color-primary);
-        background: var(--color-primary);
+        border-color: var(--ix-filter-on-bg);
+        background: var(--ix-filter-on-bg);
         color: var(--ix-play-btn-text);
     }
 
