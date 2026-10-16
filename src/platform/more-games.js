@@ -31,7 +31,7 @@ export const MORE_GAMES = [
 ];
 // registry:end more-games
 
-/** 推荐条最多展示的游戏数（2 列 × 3 行）；其余游戏统一走「全部游戏」入口。 */
+/** 推荐条最多展示的游戏数；完整列表由顶栏 Home（首页）提供，这里不再铺满全站。 */
 export const MORE_GAMES_LIMIT = 6;
 
 const cleanHref = href => String(href || '').split('?')[0].split('#')[0];
@@ -82,11 +82,8 @@ export function pickMoreGames(exclude = '', limit = MORE_GAMES_LIMIT) {
     return picks;
 }
 
-const linkLabel = (g, isZh) =>
-    `<span class="more-games-emoji" aria-hidden="true">${g.emoji}</span><span class="more-games-name">${isZh ? g.zh : g.en}</span>`;
-
 /**
- * 往一个容器里生成「更多游戏」导航条（标题 + 少量推荐 + 全部游戏入口），排除自身。
+ * 往一个容器里生成「更多游戏」导航条（标题 + 少量推荐），排除自身。
  * 静态 <nav class="more-games"> 走 updateMoreGames()；动态侧栏 / 菜单容器
  * 可直接调用本函数生成推荐内容。
  *
@@ -108,8 +105,7 @@ export function renderMoreGames(container, opts = {}) {
     if (title) container.dataset.moreTitle = title;
     container.innerHTML =
         `<div class="more-games-title">${title || (isZh ? '🎮 更多游戏' : '🎮 MORE GAMES')}</div>` +
-        `<div class="more-games-links">${picks.map(g => `<a href="${g.href}">${linkLabel(g, isZh)}</a>`).join('')}</div>` +
-        `<a class="more-games-all" href="index.html">${isZh ? '全部游戏' : 'All games'}<span aria-hidden="true"> →</span></a>`;
+        `<div class="more-games-links">${picks.map(g => `<a href="${g.href}">${g.emoji} ${isZh ? g.zh : g.en}</a>`).join('')}</div>`;
     return picks.length;
 }
 

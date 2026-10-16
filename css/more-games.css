@@ -1,9 +1,7 @@
 @layer components {
 /* ─────────────────────────────────────────────
    交叉推荐条 — 所有游戏页共用的"更多游戏"导航
-   放置在各游戏的开始界面/结算弹窗/侧栏内（flow 布局，自适应宽度）
-   只列少量相关游戏（src/platform/more-games.js pickMoreGames），
-   其余统一走底部「全部游戏」入口，避免整墙标签难以阅读。
+   放置在各游戏的开始界面/结算弹窗内（flow 布局，自适应宽度）
    ───────────────────────────────────────────── */
 
 .more-games {
@@ -18,64 +16,32 @@
     text-transform: uppercase;
     color: var(--tok-text-faint);
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
 }
 
 .more-games-links {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
+    justify-content: center;
 }
 
 .more-games-links a {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    min-width: 0;
-    min-height: 36px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--tok-text-soft);
     text-decoration: none;
     background: var(--tok-panel);
     border: 1px solid var(--tok-border);
-    border-radius: 10px;
-    padding: 6px 10px;
-    transition: background 0.15s, color 0.15s;
-}
-
-.more-games-emoji {
-    flex: none;
-    font-size: 15px;
-    line-height: 1;
-}
-
-.more-games-name {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    border-radius: 99px;
+    padding: 5px 12px;
     white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
 }
 
 .more-games-links a:hover {
     background: var(--tok-chip-hover);
     color: var(--tok-text-strong);
-}
-
-.more-games-all {
-    display: block;
-    margin-top: 8px;
-    padding: 4px 0;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: center;
-    color: var(--tok-text-faint);
-    text-decoration: none;
-}
-
-.more-games-all:hover {
-    color: var(--tok-text-strong);
-    text-decoration: underline;
 }
 
 @media (prefers-reduced-motion: reduce) {
