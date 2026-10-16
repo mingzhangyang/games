@@ -506,7 +506,8 @@ try {
     const dBefore = await snap(dp);
     await dp.mouse.move(...path[0]);
     await dp.mouse.down();
-    for (const p of path.slice(1)) await dp.mouse.move(...p, { steps: 2 });
+    // 逐点发送：插值出的中点短于 SEGMENT_MIN 会被丢弃，留下的点落在第一圈之内、补画段不再相交
+    for (const p of path.slice(1)) await dp.mouse.move(...p, { steps: 1 });
     await dp.mouse.up();
     s = await snap(dp);
     check(s.captured === dBefore.captured + 1 && s.score > dBefore.score, '④ 鼠标画环：捕获并得分', JSON.stringify({ before: dBefore.captured, after: s.captured }));
