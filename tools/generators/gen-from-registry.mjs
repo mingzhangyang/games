@@ -332,10 +332,13 @@ function manifestTransform(src) {
 }
 
 // ---------- more-games.js ----------
+const moreGamesRank = g => (typeof g.home.rank === 'number' ? g.home.rank : Infinity);
 const moreGamesContent = () =>
     `export const MORE_GAMES = [\n` +
     // light: true = 支持浅色（theme-light cap）；首页据此给其余卡片标「仅深色」（docs/contracts/theme.md §5）
-    GAMES.map(g => `    { href: '${g.href}', emoji: '${g.emoji}', en: ${JSON.stringify(g.name.en)}, zh: ${JSON.stringify(g.name.zh)}${(g.caps || []).includes('theme-light') ? ', light: true' : ''} },`).join('\n') +
+    // cat = home.category（推荐条按同类优先挑选；与首页分区同源，区内顺序 = home.rank 再登记序）
+    [...GAMES].sort((a, b) => moreGamesRank(a) - moreGamesRank(b) || GAMES.indexOf(a) - GAMES.indexOf(b))
+        .map(g => `    { href: '${g.href}', emoji: '${g.emoji}', en: ${JSON.stringify(g.name.en)}, zh: ${JSON.stringify(g.name.zh)}, cat: '${g.home.category}'${(g.caps || []).includes('theme-light') ? ', light: true' : ''} },`).join('\n') +
     `\n];`;
 function moreGamesTransform(src) {
     return applyRegion(src, 'more-games', moreGamesContent(), (s, body) => {
