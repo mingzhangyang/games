@@ -225,6 +225,16 @@
     "tests/css-layer-migrations/rules/p2z-pages-td-immersive-overlay.json",
     "tests/css-layer-migrations/rules/w3-components-game-icon-btn-active.json",
     "tests/css-layer-migrations/rules/w3-contracts-hidden.json",
-    "tests/css-layer-migrations/rules/w3-reset-universal-base.json"
+    "tests/css-layer-migrations/rules/w3-reset-universal-base.json",
+    "tests/css-layer-migrations/rules/home-retire-card-badge.json",
+    "tests/css-layer-migrations/rules/home-retire-card-badge-svg.json",
+    "tests/css-layer-migrations/rules/home-retire-card-badge-header-gap.json",
+    "tests/css-layer-migrations/rules/home-retire-card-badge-new.json",
+    "tests/css-layer-migrations/rules/home-retire-card-badge-daily.json",
+    "tests/css-layer-migrations/rules/home-retire-card-badge-tooltip.json",
+    "tests/css-layer-migrations/rules/home-retire-card-badge-tooltip-open.json",
+    "tests/css-layer-migrations/rules/home-retire-card-badge-tooltip-reduced-motion.json",
+    "tests/css-layer-migrations/rules/home-retire-play-btn.json",
+    "tests/css-layer-migrations/rules/home-retire-play-btn-hover.json"
   ]
 }

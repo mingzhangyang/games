@@ -7,6 +7,7 @@
 - 已完成：Architecture v2 Phase 0–9、CSS P0–P6、CSS 去重路线图 W1–W6；W6a = PR #127，W6b = PR #128。
 - 初始 2,912 条 static ordinary CSS rules → **2,417**（净 −495，约 −17%）。这不等于未分层 CSS 全部清零。
 - 当前 2,417 条分类互斥：**174 exact / 30 structural / 2,213 intentional-local**；族数为 **56 exact / 11 structural**。审计 digest：`41255179af1590af2d6dbde645eece5d354b8c3d4100a7c70b23375f5401c977`。
+  - 2026-10-16 后续：首页 P1 遗留的 10 条 `.card-badge*` / `.play-btn*` 死规则以 `home-retire-*` 事务退休（均为 intentional-local、不属任何族）。当前 **2,407** 条：174 exact / 30 structural / **2,203** intentional-local，族数不变；digest `b658a12dad435430a3d7a2a4a0a52d15ca0c089ef7ff62cb3d36f111775fb9ef`。
 - #128 CI 的 CSS debt guard 报告：**2,151 条静态普通规则仍未分层**（另有 15 条 runtime ordinary rules 未分层），这是已记录/受守卫保护的现状，不是新出现的回归。
 - 注册表当前有 **25 个游戏**；P0 HTML 激活清单为 **27 个文件**（含首页与 `public/404.html`）。`tests/verify-css-w7-closure.mjs` 以注册表动态对账，禁止漏页被当成通过。
 - 上述统计来自 #128 的完整 CI 运行日志及当时 `tests/css-duplication-audit-contract.json`；[#128 成功运行记录](https://github.com/mingzhangyang/games/actions/runs/38035365466)。这证明被继承的基线通过过，并非 #129 的新验收。
