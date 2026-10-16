@@ -84,29 +84,48 @@ const freeze = page => page.evaluate(() => {
     sim.nextPowerup = 1e9;
 });
 
-/** 选一只离墙与其他小怪都够远的小怪，返回它的世界坐标与画圈半径 */
+/**
+ * 选一只离墙够远、且其余小怪都完全在环外的小怪，返回它的世界坐标与画圈半径。
+ * 只量到环线的距离（|d − R|）会把圈心附近的小怪也当成「够远」，一圈捕获两只。
+ * 冻结时的站位随浏览器调度而变，偶尔挤成一团、没有一只够空：把选中的那只挪到场上最空处。
+ */
 const pickTarget = page => page.evaluate(() => {
     const sim = window.ljGame.sim;
     const R = 46;
+    const GAP = 6; // 线宽 + 折线弦高的余量
+    const inBounds = (x, y) => x >= R + 6 && y >= R + 60 && x <= sim.w - R - 6 && y <= sim.h - R - 6;
+    const clearAt = (m, x, y) => Math.min(...sim.monsters.filter(o => o !== m)
+        .map(o => Math.hypot(o.x - x, o.y - y) - R - o.r));
     let best = null;
     for (const m of sim.monsters) {
-        if (m.x < R + 6 || m.y < R + 60 || m.x > sim.w - R - 6 || m.y > sim.h - R - 6) continue;
-        const clear = Math.min(...sim.monsters.filter(o => o !== m)
-            .map(o => Math.abs(Math.hypot(o.x - m.x, o.y - m.y) - R) - o.r));
-        if (!best || clear > best.clear) best = { id: m.id, x: m.x, y: m.y, clear };
+        if (!inBounds(m.x, m.y)) continue;
+        const clear = clearAt(m, m.x, m.y);
+        if (!best || clear > best.clear) best = { m, clear };
     }
-    if (best) return { ...best, R };
-    // 兜底：把第一只挪到场地中部
-    const m = sim.monsters[0];
-    m.x = sim.w / 2; m.y = sim.h / 2;
-    return { id: m.id, x: m.x, y: m.y, clear: 0, R };
+    if (!best || best.clear < GAP) {
+        const m = best ? best.m : sim.monsters[0];
+        let spot = null;
+        for (let x = R + 6; x <= sim.w - R - 6; x += 8) {
+            for (let y = R + 60; y <= sim.h - R - 6; y += 8) {
+                const clear = clearAt(m, x, y);
+                if (!spot || clear > spot.clear) spot = { x, y, clear };
+            }
+        }
+        m.x = spot.x; m.y = spot.y;
+        best = { m, clear: spot.clear };
+    }
+    return { id: best.m.id, x: best.m.x, y: best.m.y, clear: best.clear, R };
 });
 
-/** 世界坐标的一圈 → 屏幕坐标（走页面自己的变换） */
+/**
+ * 世界坐标的一圈 → 屏幕坐标（走页面自己的变换）。
+ * 补画的那段错开半步：与第一圈的弦端点交错、真正相交；逐点重描会和第一圈共线，
+ * 闭不闭环全看浮点噪声。
+ */
 const circlePath = (page, t, n = 40, extra = 0.15) => page.evaluate(({ t, n, extra }) => {
     const pts = [];
     for (let i = 0; i <= Math.round(n * (1 + extra)); i++) {
-        const a = (i / n) * Math.PI * 2;
+        const a = ((i <= n ? i : i - 0.5) / n) * Math.PI * 2;
         const p = window.ljGame.renderer.clientFromWorld(t.x + Math.cos(a) * t.R, t.y + Math.sin(a) * t.R);
         pts.push([p.x, p.y]);
     }
@@ -487,7 +506,8 @@ try {
     const dBefore = await snap(dp);
     await dp.mouse.move(...path[0]);
     await dp.mouse.down();
-    for (const p of path.slice(1)) await dp.mouse.move(...p, { steps: 2 });
+    // 逐点发送：插值出的中点短于 SEGMENT_MIN 会被丢弃，留下的点落在第一圈之内、补画段不再相交
+    for (const p of path.slice(1)) await dp.mouse.move(...p, { steps: 1 });
     await dp.mouse.up();
     s = await snap(dp);
     check(s.captured === dBefore.captured + 1 && s.score > dBefore.score, '④ 鼠标画环：捕获并得分', JSON.stringify({ before: dBefore.captured, after: s.captured }));
