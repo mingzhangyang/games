@@ -1,0 +1,56 @@
+{
+  "id": "home-retire-card-badge-tooltip-open",
+  "kind": "retire",
+  "source": {
+    "path": "css/index.css",
+    "context": "",
+    "selector": ".card-badge:hover::after, .card-badge:focus-visible::after",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "19d7b4fa13d52715ebcdf431eb079042af0d2833c21952a171e8e1f32b3fd212",
+    "layer": null,
+    "declarationDigest": "276e1e488d9f1390d9d5a5be4cd33f7fec9557380b0368ca439ba25a7a25426d",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "opacity",
+        "value": [
+          [
+            "number-token",
+            "1"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "visibility",
+        "value": [
+          [
+            "ident-token",
+            "visible"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "transform",
+        "value": [
+          [
+            "function-token",
+            "translateY("
+          ],
+          [
+            "number-token",
+            "0"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "Home layout P1 (#146) replaced the bookmark-icon card badge with visible text chips (.card-chip in css/home-cards.css); no page renders .card-badge any more."
+}

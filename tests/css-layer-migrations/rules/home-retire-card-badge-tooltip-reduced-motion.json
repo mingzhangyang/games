@@ -1,0 +1,28 @@
+{
+  "id": "home-retire-card-badge-tooltip-reduced-motion",
+  "kind": "retire",
+  "source": {
+    "path": "css/index.css",
+    "context": "@media (prefers-reduced-motion: reduce)",
+    "selector": ".card-badge::after",
+    "contextDigest": "177ba5dbc8a28c9f47362211258cd17fab09e4b9edc57c7204e2bbd2c219abe5",
+    "selectorDigest": "36763ab18203a5fe56de10756b74d9781d5ae9a3d0c409f070e36afaa2957beb",
+    "layer": null,
+    "declarationDigest": "09e32326abf1e913bed4ff95f276bbc1eded25cad2051ccaaf953c5c3045d95c",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "transition",
+        "value": [
+          [
+            "ident-token",
+            "none"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "Home layout P1 (#146) replaced the bookmark-icon card badge with visible text chips (.card-chip in css/home-cards.css); no page renders .card-badge any more."
+}

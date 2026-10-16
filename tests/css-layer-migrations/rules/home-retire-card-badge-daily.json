@@ -1,0 +1,36 @@
+{
+  "id": "home-retire-card-badge-daily",
+  "kind": "retire",
+  "source": {
+    "path": "css/index.css",
+    "context": "",
+    "selector": ".card-badge--daily",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "7cdbd86d222fcc47d14213d42261095b97a7b8e96aae038a5bcb35ab0f1505fe",
+    "layer": null,
+    "declarationDigest": "a3c1040eaa0350d6626c54084c542b4a4a5f2409033f0ea9b2af95da6369ca38",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "color",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--tok-success"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "Home layout P1 (#146) replaced the bookmark-icon card badge with visible text chips (.card-chip in css/home-cards.css); no page renders .card-badge any more."
+}

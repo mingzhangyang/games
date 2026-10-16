@@ -1,0 +1,186 @@
+{
+  "id": "home-retire-card-badge",
+  "kind": "retire",
+  "source": {
+    "path": "css/index.css",
+    "context": "",
+    "selector": ".card-badge",
+    "contextDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "selectorDigest": "7ad62968079f222f942d7e9b4046565b7bb42cca4219db5aacfa21ff34394421",
+    "layer": null,
+    "declarationDigest": "311a96b537053968f3bf1a4d827fcfc5a1d5667e5325b05aa08dc1632d2f4fb2",
+    "occurrence": 1,
+    "declarations": [
+      {
+        "property": "position",
+        "value": [
+          [
+            "ident-token",
+            "absolute"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "top",
+        "value": [
+          [
+            "dimension-token",
+            "12px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "right",
+        "value": [
+          [
+            "dimension-token",
+            "12px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "width",
+        "value": [
+          [
+            "dimension-token",
+            "28px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "height",
+        "value": [
+          [
+            "dimension-token",
+            "32px"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "display",
+        "value": [
+          [
+            "ident-token",
+            "inline-flex"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "align-items",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "justify-content",
+        "value": [
+          [
+            "ident-token",
+            "center"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "padding",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "color",
+        "value": [
+          [
+            "function-token",
+            "var("
+          ],
+          [
+            "ident-token",
+            "--color-text-muted"
+          ],
+          [
+            ")-token",
+            ")"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "background",
+        "value": [
+          [
+            "ident-token",
+            "transparent"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "border",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "border-radius",
+        "value": [
+          [
+            "number-token",
+            "0"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "cursor",
+        "value": [
+          [
+            "ident-token",
+            "help"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "pointer-events",
+        "value": [
+          [
+            "ident-token",
+            "auto"
+          ]
+        ],
+        "important": false
+      },
+      {
+        "property": "z-index",
+        "value": [
+          [
+            "number-token",
+            "2"
+          ]
+        ],
+        "important": false
+      }
+    ]
+  },
+  "destinations": [],
+  "reason": "Home layout P1 (#146) replaced the bookmark-icon card badge with visible text chips (.card-chip in css/home-cards.css); no page renders .card-badge any more."
+}
