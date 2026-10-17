@@ -218,6 +218,42 @@
             "en": "Puzzle",
             "zh": "休闲益智"
           }
+        },
+        {
+          "id": "bridges",
+          "url": "https://bridges.orangely.xyz",
+          "iconClass": "dots",
+          "category": "external",
+          "name": {
+            "en": "Seven Bridges",
+            "zh": "七桥漫游"
+          },
+          "desc": {
+            "en": "Trace every bridge through a paper-cut canal city. Plan routes, rebuild crossings, and solve the Seven Bridges puzzle.",
+            "zh": "漫游纸雕水城，尝试一次走遍每座桥。规划路线、改建桥梁，亲手破解七桥难题。"
+          },
+          "tag": {
+            "en": "Graph Puzzle",
+            "zh": "图论解谜"
+          }
+        },
+        {
+          "id": "four-colors",
+          "url": "https://four-colors.orangely.xyz",
+          "iconClass": "tetris",
+          "category": "external",
+          "name": {
+            "en": "Fourfold Atlas",
+            "zh": "四色图志"
+          },
+          "desc": {
+            "en": "Restore a faded atlas using just four colors. Fill each region without giving neighboring regions the same color.",
+            "zh": "用四种颜色修复失色地图，让相邻区域不出现相同颜色，在地图谜题中探索四色规律。"
+          },
+          "tag": {
+            "en": "Color Puzzle",
+            "zh": "四色解谜"
+          }
         }
       ]
     }
