@@ -189,7 +189,7 @@ try {
         .map(id => getComputedStyle(document.getElementById(id)).borderTopLeftRadius));
     check(radii.every(r => r === '0px'), '① 开始 / 暂停 / 结算浮层是直角，与贴边舞台一致', JSON.stringify(radii));
     check(boot.trophy, '① 排行榜入口插在暂停钮之前');
-    check(boot.more > 10 && !(await page.$('#ljStartMore a[href="loop-jail.html"]')), '① 开始菜单「更多游戏」不含自己', boot.more);
+    check(boot.more >= 4 && boot.more <= 6 && !(await page.$('#ljStartMore a[href="loop-jail.html"]')), '① 开始菜单「更多游戏」不含自己', boot.more);
 
     const menuScroll = await page.evaluate(() => {
         const stage = document.getElementById('lj-stage');
