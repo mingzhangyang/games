@@ -34,11 +34,16 @@ export const MORE_GAMES = [
 /** 推荐条最多展示的游戏数；完整列表由顶栏 Home（首页）提供，这里不再铺满全站。 */
 export const MORE_GAMES_LIMIT = 6;
 
-const cleanHref = href => String(href || '').split('?')[0].split('#')[0];
+// 统一成登记表里的 'xxx.html'：去掉 query/hash 与目录，并补上 Cloudflare Assets
+// 默认的无扩展名 URL（/reversi、/reversi/）缺失的 .html，否则同类推荐会查不到自己。
+const cleanHref = href => {
+    const name = String(href || '').split('?')[0].split('#')[0].split('/').filter(Boolean).pop() || '';
+    return name && !name.includes('.') ? name + '.html' : name;
+};
 
 function currentPage() {
     if (typeof location === 'undefined') return '';
-    return cleanHref(location.pathname.split('/').pop());
+    return cleanHref(location.pathname);
 }
 
 /**
