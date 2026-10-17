@@ -22,7 +22,7 @@ const PAGES = registry.withCap('topbar');
 const KEYS = ['sound', 'language', 'moreGames', 'close', 'copied', 'usernameLabel'];
 // Phase 6 收口后，所有 topbar 契约页都必须使用 declarative binder；动态/插值/canvas 文案仍可 table-driven。
 const DECLARATIVE_PAGES = new Set(PAGES.map(g => g.id));
-const BINDING_ATTR_RE = /\b(data-i18n(?:-(?:title|label|placeholder|tooltip))?)\s*=\s*(["'])([^"']+)\2/g;
+const BINDING_ATTR_RE = /\b(data-i18n(?:-(?:title|label|placeholder|tooltip|touch))?)\s*=\s*(["'])([^"']+)\2/g;
 
 function skipQuoted(source, start) {
     const quote = source[start];

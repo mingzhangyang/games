@@ -32,6 +32,7 @@ export const LANGUAGES = makeText({
         comboDisplay: x => `${x}x Combo!`,
         home: 'Home',
         hint: 'Arrows move · Space hard drop · P pause · M mute',
+        hintTouch: 'Swipe to move · swipe up to rotate · double-tap to drop',
     },
     zh: {
         pageTitle: '俄罗斯方块 - 酷炫版',
@@ -64,5 +65,6 @@ export const LANGUAGES = makeText({
         comboDisplay: x => `${x}x 连击!`,
         home: '返回主页',
         hint: '方向键移动 · 空格瞬降 · P 暂停 · M 静音',
+        hintTouch: '左右滑动移动 · 上滑旋转 · 下滑加速 · 双击瞬降',
     }
 });

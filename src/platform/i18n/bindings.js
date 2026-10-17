@@ -1,3 +1,5 @@
+import { isCoarsePointer } from './touch-copy.js';
+
 const ATTRS = [
     ['i18nTitle', 'title'],
     ['i18nLabel', 'aria-label'],
@@ -9,6 +11,8 @@ const ATTRS = [
  * Apply a translation table to declarative DOM bindings.
  * Supported attributes: data-i18n, data-i18n-title, data-i18n-label,
  * data-i18n-placeholder, data-i18n-tooltip.
+ * data-i18n-touch names an alternative text key used instead of data-i18n on
+ * coarse-pointer (touch) devices, e.g. a footer hint without keyboard shortcuts.
  */
 export function applyI18nBindings(root, table, { fallback = null } = {}) {
     if (!root || !table) return 0;
@@ -20,7 +24,9 @@ export function applyI18nBindings(root, table, { fallback = null } = {}) {
     nodes.forEach(node => {
         const key = node.dataset.i18n;
         if (key) {
-            const value = table[key] ?? fallback?.[key];
+            const touchKey = node.dataset.i18nTouch && isCoarsePointer() ? node.dataset.i18nTouch : null;
+            const value = (touchKey ? table[touchKey] : undefined) ?? table[key]
+                ?? (touchKey ? fallback?.[touchKey] : undefined) ?? fallback?.[key];
             if (value != null) {
                 node.textContent = value;
                 writes++;

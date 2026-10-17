@@ -82,6 +82,7 @@ export const LANGUAGES = makeText({
         empBtnTitle: 'EMP Shockwave (Q)',
         overdriveBtnTitle: 'Overdrive (E)',
         hint: 'Click cell to build · Click tower to upgrade · Space to start wave',
+        hintTouch: 'Tap cells to build · tap towers to upgrade · tap ▶ Wave',
 
         // 关卡选择
         selectLevel: 'Select Operation',
@@ -189,6 +190,7 @@ export const LANGUAGES = makeText({
         empBtnTitle: 'EMP 电磁震荡 (Q)',
         overdriveBtnTitle: '战术超频 (E)',
         hint: '点空格建塔 · 点塔升级/集火 · 空格发波',
+        hintTouch: '点空地建塔 · 点塔升级/集火 · 点波次按钮发波',
 
         // 关卡选择
         selectLevel: '选择作战行动',

@@ -9,6 +9,7 @@
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
+import { touchCopy } from '../../platform/i18n/touch-copy.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import {
@@ -58,6 +59,7 @@ const LANGUAGES = makeText({
         again: 'Play Again',
         copyResult: 'Copy',
         hintDefault: 'Right-click / long-press to flag · tap a number to chord',
+        hintDefaultTouch: 'Long-press or flag mode to flag · tap a number to chord',
         hintFlagMode: 'Flag mode on — taps place flags',
         mines: 'Mines',
         time: 'Time',
@@ -96,6 +98,7 @@ const LANGUAGES = makeText({
         again: '再来一局',
         copyResult: '复制',
         hintDefault: '右键 / 长按插旗 · 点数字快开',
+        hintDefaultTouch: '长按或用插旗模式插旗 · 点数字快开',
         hintFlagMode: '插旗模式已开启——点击即插旗',
         mines: '剩余雷数',
         time: '用时',
@@ -244,7 +247,7 @@ class MinesweeperGame {
 
     updateHint() {
         if (this.el.hint) {
-            this.el.hint.textContent = this.flagMode ? this.TEXT.hintFlagMode : this.TEXT.hintDefault;
+            this.el.hint.textContent = this.flagMode ? this.TEXT.hintFlagMode : touchCopy(this.TEXT, 'hintDefault');
         }
     }
 

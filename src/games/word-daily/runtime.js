@@ -17,6 +17,7 @@ import { track } from '../../platform/analytics.js';
 import { hashString, todayKeyDisplay, msUntilNextDay } from '../../platform/daily.js';
 import { LANGUAGES } from './i18n.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
+import { touchCopy } from '../../platform/i18n/touch-copy.js';
 import {
     loadWordDailyHistory,
     loadWordDailyLangMode,
@@ -223,7 +224,7 @@ export class WordDailyGame {
 
         // 页脚操作提示（契约里 hint 不归 chrome，由各页自己的 applyLanguage 写）
         const wdHint = document.getElementById('wd-hint');
-        if (wdHint) wdHint.textContent = this.TEXT.hint;
+        if (wdHint) wdHint.textContent = touchCopy(this.TEXT, 'hint');
 
         document.title = this.lang === 'zh'
             ? '每日猜词 — 每日成语与单词益智解谜'

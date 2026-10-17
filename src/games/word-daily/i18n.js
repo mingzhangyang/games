@@ -74,6 +74,7 @@ export const LANGUAGES = makeText({
         practiceBannerTpl: 'Practice #{n} — not recorded in streaks',
         home: 'Home',
         hint: 'Type your guess · Enter to submit · M mute',
+        hintTouch: 'Type your guess · tap Guess to submit',
     },
     zh: {
         title: '每日猜词',
@@ -148,5 +149,6 @@ export const LANGUAGES = makeText({
         practiceBannerTpl: '练习模式（第 {n} 局）——不计入每日连胜',
         home: '返回主页',
         hint: '输入猜测 · 回车提交 · M 静音',
+        hintTouch: '输入猜测 · 点「猜」提交',
     }
 });

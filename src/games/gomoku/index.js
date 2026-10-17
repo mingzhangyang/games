@@ -52,6 +52,7 @@ const LANGUAGES = makeText({
         leaveConfirm: 'A game is in progress. Leave and discard it?',
         home: 'Home',
         hint: 'Click a point to place your stone',
+        hintTouch: 'Tap a point to place your stone',
     },
     zh: {
         title: '五子棋 - 经典策略棋牌',
@@ -77,6 +78,7 @@ const LANGUAGES = makeText({
         leaveConfirm: '对局进行中，离开将丢失当前进度。确定离开吗？',
         home: '返回主页',
         hint: '点击交叉点落子',
+        hintTouch: '轻点交叉点落子',
     }
 });
 

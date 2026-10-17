@@ -107,6 +107,7 @@ export const I18N = makeText({
             { name: '登仙天门', desc: '云开仙阙，万剑朝宗' }
         ],
         hint: '拖拽御剑 · 空格疾刺 · P 暂停 · M 静音',
+        hintTouch: '拖拽御剑 · 点「破空」疾刺',
     },
     en: {
         stats: 'Stats',
@@ -214,5 +215,6 @@ export const I18N = makeText({
             { name: 'Ascension Gate', desc: 'The golden gate to true immortality' }
         ],
         hint: 'Drag to fly · Space dash · P pause · M mute',
+        hintTouch: 'Drag to fly · tap Dash to strike',
     }
 });
