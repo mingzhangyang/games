@@ -216,6 +216,15 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 - **首页运行时模块化**：原 `js/index-page.js`（P3 后约 17.7 KB，混着 i18n / 胶囊 / 筛选 / 最近玩过 / Hub / SEO / 主题开关）拆成 `src/home/` 包，组合根 `src/home/index.js`；`i18n.js` 提供 `onLanguage()`，胶囊文案与最近玩过各自挂钩子，不再由 `applyLanguage` 反向调用。`js/index-page.js` 只剩入口（注入 gen 产物 `js/index-i18n-zh.js` 的懒加载器）。Hub 改用 `platform/daily.js` 的 UTC+8 日期与 safe-storage（原先手写 `+8h` 与裸 `localStorage`）。预算改为入口 ≤1 KiB、单模块 ≤5 KiB、整包 ≤24 KiB；`verify-no-game-lang` 扫描范围加 `src/home/`，豁免从入口移到组合根。`smoke-index` 在拆分前后同样全绿（另补 Hub 完成态与昵称写回的断言）。
 - 新上线 OG 图在 `dist` 服务器上逐张请求 200（`npm run build` 后用 `smoke-index` 跑 `dist/`）。
 
+### 7.3 P4 前半落地记录（2026-10-18）：Daily Hub registry 化
+
+- 新增游戏级 `daily.doneKey`（存储键模板数组，占位符 `{YYYYMMDD}` / `{YYYY-MM-DD}`，UTC+8）和 `home.hub`（`rank` + 双语 `sub`）。`doneKey` 是游戏事实（当天完成后写下哪个键），`home.hub` 只是首页摆放；目前只给原先的三项写了 `doneKey`，其余每日游戏等「自选置顶」时再补。
+- Hub 头部和任务链接改为 gen 区域 `home-hub`；`site.home.ui` 里逐游戏的 `hubTask*Sub` 三条文案挪进各游戏 `home.hub.sub`，中文键 `<id>.hubSub`。任务 id 从 `hub-task-word` / `-merge` / `-gravity` 改为 `hub-task-<id>`，链接不带 `data-game-id`（不进「最近玩过」，行为不变）。
+- `src/home/daily-hub.js` 不再认识具体游戏：遍历 `.daily-task[data-done-keys]`，展开模板读 safe-storage，进度 = 完成数 / 任务数。
+- 英文副标题以英文界面实际显示的短句为准写进 `home.hub.sub.en`（旧 `hubTask*Sub.en` 是从未上屏的长句，手机 375px 会折两行，弃用），界面文案不变。
+- 守卫：`verify-registry` §5（`doneKey` ⟹ daily cap、模板合法、前缀出现在游戏源码；`home.hub` ⟹ `doneKey`）；`verify-index-cards`「P4」（任务顺序 / `data-done-keys` / i18n 键 / 进度初值、`daily-hub.js` 无硬编码键）；`smoke-index` 用 registry 推期望顺序，并用 `wd_daily_<date>_en_5` 变体验证多键模板。
+- 后半（「🔥 热门」胶囊、玩家自选置顶）仍待 Analytics V2 上线后再做。
+
 ## 8. 待决策
 
 | # | 问题 | 建议默认值 |

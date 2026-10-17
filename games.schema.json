@@ -150,6 +150,9 @@
           "themeColorLight": {
             "$ref": "#/$defs/hexColor"
           },
+          "daily": {
+            "$ref": "#/$defs/daily"
+          },
           "home": {
             "$ref": "#/$defs/home"
           },
@@ -326,6 +329,25 @@
       },
       "additionalProperties": false
     },
+    "daily": {
+      "$comment": "每日挑战的游戏事实（需要 caps 含 daily）。doneKey = 当天完成后该游戏写下的 localStorage 键模板，任一存在即视为今日已完成；占位符只有 {YYYYMMDD} / {YYYY-MM-DD}（UTC+8，src/platform/daily.js 的 todayKey / todayKeyDisplay）。首页 Daily Hub 据此判定完成态（tests/verify-index-cards.mjs 断言前缀确实出现在游戏源码里）",
+      "type": "object",
+      "required": [
+        "doneKey"
+      ],
+      "properties": {
+        "doneKey": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]+\\{(?:YYYYMMDD|YYYY-MM-DD)\\}[A-Za-z0-9_.:-]*$"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "home": {
       "type": "object",
       "required": [
@@ -357,6 +379,22 @@
           "$comment": "上线日期（UTC+8）；首页运行时在 45 天内显示「新」胶囊",
           "type": "string",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "hub": {
+          "$comment": "首页 Daily Hub 固定任务：有此块的游戏按 rank 升序（缺省排后、按登记顺序）出现在 Hub；必须同时有 daily.doneKey",
+          "type": "object",
+          "required": [
+            "sub"
+          ],
+          "properties": {
+            "rank": {
+              "type": "number"
+            },
+            "sub": {
+              "$ref": "#/$defs/bilingual"
+            }
+          },
+          "additionalProperties": false
         },
         "desc": {
           "$ref": "#/$defs/bilingual"

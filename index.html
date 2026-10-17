@@ -50,37 +50,39 @@
     <!-- Daily Hub -->
     <main class="idx-main">
     <section class="daily-hub" aria-label="Daily challenges">
-        <div class="daily-hub-head">
-            <span class="daily-hub-title" id="hub-title" data-i18n="hubTitle">⚡ Daily Challenges</span>
-            <span class="daily-hub-progress" id="hub-progress">0/3</span>
-            <span class="hub-total" id="hub-total" hidden></span>
-        </div>
-        <a class="daily-task" id="hub-task-word" href="word-daily.html">
-            <span class="daily-task-icon">🔤</span>
-            <div class="daily-task-body">
-                <div class="daily-task-name" id="hub-task-word-name" data-i18n="word-daily.name">Word Daily</div>
-                <div class="daily-task-sub" id="hub-task-word-sub" data-i18n="hubTaskWordSub">Guess in 6 tries</div>
-            </div>
-            <span class="daily-task-status" id="hub-task-word-status">⚪</span>
-        </a>
-        <a class="daily-task" id="hub-task-merge" href="planet-merge.html">
-            <span class="daily-task-icon">🪐</span>
-            <div class="daily-task-body">
-                <div class="daily-task-name" id="hub-task-merge-name" data-i18n="planet-merge.name">Planet Merge</div>
-                <div class="daily-task-sub" id="hub-task-merge-sub" data-i18n="hubTaskMergeSub">Daily challenge</div>
-            </div>
-            <span class="daily-task-status" id="hub-task-merge-status">⚪</span>
-        </a>
-        <a class="daily-task" id="hub-task-gravity" href="gravity-slingshot.html">
-            <span class="daily-task-icon">🚀</span>
-            <div class="daily-task-body">
-                <div class="daily-task-name" id="hub-task-gravity-name" data-i18n="gravity-slingshot.name">Gravity Slingshot</div>
-                <div class="daily-task-sub" id="hub-task-gravity-sub" data-i18n="hubTaskGravitySub">Daily course · 5 holes</div>
-            </div>
-            <span class="daily-task-status" id="hub-task-gravity-status">⚪</span>
-        </a>
+        <!-- registry:begin home-hub -->
+<div class="daily-hub-head">
+<span class="daily-hub-title" id="hub-title" data-i18n="hubTitle">⚡ Daily Challenges</span>
+<span class="daily-hub-progress" id="hub-progress">0/3</span>
+<span class="hub-total" id="hub-total" hidden></span>
+</div>
+<a class="daily-task" id="hub-task-word-daily" href="word-daily.html" data-done-keys="wd_daily_{YYYY-MM-DD}_en wd_daily_{YYYY-MM-DD}_en_4 wd_daily_{YYYY-MM-DD}_en_5 wd_daily_{YYYY-MM-DD}_en_6 wd_daily_{YYYY-MM-DD}_zh">
+<span class="daily-task-icon" aria-hidden="true">🔤</span>
+<div class="daily-task-body">
+<div class="daily-task-name" data-i18n="word-daily.name">Word Daily</div>
+<div class="daily-task-sub" data-i18n="word-daily.hubSub">Guess in 6 tries</div>
+</div>
+<span class="daily-task-status">⚪</span>
+</a>
+<a class="daily-task" id="hub-task-planet-merge" href="planet-merge.html" data-done-keys="pm_daily_{YYYYMMDD}">
+<span class="daily-task-icon" aria-hidden="true">🪐</span>
+<div class="daily-task-body">
+<div class="daily-task-name" data-i18n="planet-merge.name">Planet Merge</div>
+<div class="daily-task-sub" data-i18n="planet-merge.hubSub">Daily challenge</div>
+</div>
+<span class="daily-task-status">⚪</span>
+</a>
+<a class="daily-task" id="hub-task-gravity-slingshot" href="gravity-slingshot.html" data-done-keys="gs_daily_{YYYYMMDD}">
+<span class="daily-task-icon" aria-hidden="true">🚀</span>
+<div class="daily-task-body">
+<div class="daily-task-name" data-i18n="gravity-slingshot.name">Gravity Slingshot</div>
+<div class="daily-task-sub" data-i18n="gravity-slingshot.hubSub">Daily course · 5 holes</div>
+</div>
+<span class="daily-task-status">⚪</span>
+</a>
+        <!-- registry:end home-hub -->
         <!-- 其余每日玩法的入口（proposal §4.5）：跳到 #cat=daily；数量由 src/home/daily-hub.js 按卡片上的
-             「每日」胶囊减去上面三项算出，绑定后才显现。 -->
+             「每日」胶囊减去上面 Hub 已列出的任务算出，绑定后才显现。 -->
         <a class="hub-more-daily" id="hub-more-daily" href="#cat=daily" hidden><span data-i18n="moreDaily">More daily challenges</span><span class="hub-more-count" id="hub-more-count"></span><span aria-hidden="true">›</span></a>
         <div class="daily-profile">
             <span class="daily-profile-icon">👤</span>

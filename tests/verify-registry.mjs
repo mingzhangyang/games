@@ -13,6 +13,7 @@
 //   2) caps ⟺ 代码事实（双向）：声明了必须真有，真有了必须声明。
 //   3) scores 块 ⟺ leaderboard cap（两者必须同进同出）。
 //   4) themeColorLight ⟺ theme-light cap（同上）。
+//   5) daily.doneKey 只挂在 daily cap 的游戏上，模板合法，且键前缀真的出现在游戏源码里。
 //   2b) layout 字段（standard | immersive）合法，且与 HTML 骨架 / 入口 bindFrame 双向一致。
 //
 // 用法：node tests/verify-registry.mjs（无需浏览器/服务器）
@@ -170,6 +171,26 @@ for (const g of games) {
     const hasField = typeof g.themeColorLight === 'string' && /^#[0-9a-f]{6}$/i.test(g.themeColorLight);
     const hasCap = (g.caps || []).includes('theme-light');
     ok(hasField === hasCap, `${g.id}: themeColorLight=${hasField} / cap=${hasCap}`);
+}
+
+/* ── 5) daily.doneKey ⟹ daily cap + 游戏真的写这个键 ──
+   首页 Daily Hub 只按 doneKey 读存储判完成态；游戏改了键名而 registry 没跟上，Hub 就会永远显示未完成。
+   前缀（第一个占位符之前的部分）必须字面出现在入口可达的模块里，`'gs_daily_' + date` 与模板字符串都能命中。 */
+console.log('\n▶ daily.doneKey 与 daily cap / 游戏源码');
+const DONE_KEY = /^[A-Za-z0-9_.:-]+\{(?:YYYYMMDD|YYYY-MM-DD)\}[A-Za-z0-9_.:-]*$/;
+for (const g of games.filter(g => g.daily)) {
+    const keys = g.daily.doneKey;
+    ok((g.caps || []).includes('daily'), `${g.id}: 有 daily 块就必须有 daily cap`);
+    ok(Array.isArray(keys) && keys.length > 0 && keys.every(k => DONE_KEY.test(k)),
+        `${g.id}: daily.doneKey 是非空模板数组，占位符只有 {YYYYMMDD} / {YYYY-MM-DD}`, JSON.stringify(keys));
+    if (!Array.isArray(keys)) continue;
+    const source = [...graphFor(g).values()].join('\n');
+    for (const prefix of new Set(keys.map(k => k.slice(0, k.indexOf('{'))))) {
+        ok(source.includes(prefix), `${g.id}: doneKey 前缀 ${prefix} 出现在游戏源码里`);
+    }
+}
+for (const g of games.filter(g => g.home?.hub)) {
+    ok(Boolean(g.daily?.doneKey), `${g.id}: home.hub 需要 daily.doneKey（Hub 靠它判完成态）`);
 }
 
 console.log(failed === 0 ? '\nverify-registry 全部通过 ✅' : `\n${failed} 个失败 ❌`);

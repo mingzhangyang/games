@@ -184,6 +184,32 @@ ok(html.includes('class="perks-line"') && html.includes('data-i18n="perksLine"')
 for (const key of ['recentTitle', 'newTitle', 'moreDaily', 'perksLine']) ok(zh.includes(`['${key}',`), `中文懒加载含 ${key}`);
 ok(!/\['perk\d(Title|Body)',/.test(zh), '已删除旧 Perks 文案');
 
+console.log('\n▶ P4：Daily Hub 由 registry 驱动（home.hub + daily.doneKey）');
+const hubRegion = html.slice(html.indexOf('registry:begin home-hub'), html.indexOf('registry:end home-hub'));
+ok(hubRegion.length > 0, 'home-hub 生成区存在');
+const hubOrder = new Map(games.map((g, i) => [g.id, i]));
+const hubRank = g => (Number.isFinite(g.home.hub.rank) ? g.home.hub.rank : Infinity);
+const wantHub = games.filter(g => g.home.hub)
+    .sort((a, b) => (hubRank(a) - hubRank(b)) || (hubOrder.get(a.id) - hubOrder.get(b.id)));
+ok(wantHub.length > 0, 'registry 至少有一款 home.hub 游戏', wantHub.length);
+const gotHub = [...hubRegion.matchAll(/<a class="daily-task" id="hub-task-([^"]+)" href="([^"]+)" data-done-keys="([^"]+)">/g)];
+ok(JSON.stringify(gotHub.map(m => m[1])) === JSON.stringify(wantHub.map(g => g.id)), 'Hub 任务 = home.hub 游戏，按 rank（缺省登记顺序）', gotHub.map(m => m[1]).join(','));
+for (const g of wantHub) {
+    const m = gotHub.find(x => x[1] === g.id);
+    if (!m) continue;
+    ok(m[2] === g.href && m[3] === g.daily.doneKey.join(' '), `Hub ${g.id}: href 与 data-done-keys = daily.doneKey`, m[3]);
+    const start = hubRegion.indexOf(`id="hub-task-${g.id}"`);
+    const task = hubRegion.slice(start, hubRegion.indexOf('</a>', start));
+    ok(task.includes(`data-i18n="${g.id}.name">${g.name.en.replace(/&/g, '&amp;')}<`) && task.includes(`data-i18n="${g.id}.hubSub">`),
+        `Hub ${g.id}: 名称 / 副标题走 i18n 键 ${g.id}.name / ${g.id}.hubSub`);
+    ok(!task.includes('data-game-id'), `Hub ${g.id}: 不带 data-game-id（最近玩过只记游戏卡片点击）`);
+    ok(zh.includes(`['${g.id}.hubSub', `), `中文懒加载含 ${g.id}.hubSub`);
+}
+ok(hubRegion.includes(`<span class="daily-hub-progress" id="hub-progress">0/${wantHub.length}</span>`), `Hub 进度静态初值 0/${wantHub.length}`);
+ok(!Object.keys(home.ui).some(k => /^hubTask/.test(k)), 'site.home.ui 不再有逐游戏的 hubTask*Sub 文案（挪进 home.hub.sub）');
+const hubJs = read(`${HOME_DIR}/daily-hub.js`);
+ok(!/[a-z]{2}_daily_|hub-task-/.test(hubJs), 'daily-hub.js 不再硬编码游戏存储键或任务 id');
+
 console.log('\n▶ 运行时代码去重');
 ok(pageJs.includes("import('./index-i18n-zh.js')"), '中文使用动态 import（入口注入加载器）');
 ok(pageJs.includes("from '../src/home/index.js'") && !/document\.|querySelector|localStorage/.test(pageJs), 'js/index-page.js 只是入口：不碰 DOM / 存储');

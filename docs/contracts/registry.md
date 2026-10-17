@@ -91,6 +91,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList）；分享图优先 `public/<ogImageDir>/og-<id>.jpg`（`tools/generators/game-covers.mjs` 用游戏美术生成），没有才用 `og-<id>.svg` |
 | `public/sitemap.xml` | `games` | 全部 `<url>` 条目 |
 | `public/manifest.json` | （JSON 感知） | `shortcuts` 数组 |
+| `index.html` | `home-hub` | 首页 Daily Hub 头部（进度初值 `0/N`）+ 固定任务：带 `home.hub` 的游戏按 `home.hub.rank` 升序（缺省按登记顺序）；每项 `data-done-keys` = 该游戏 `daily.doneKey` 模板，`src/home/daily-hub.js` 按 UTC+8 今天展开 `{YYYYMMDD}` / `{YYYY-MM-DD}` 后读存储，任一存在即完成；副标题 i18n 键 `<id>.hubSub` = `home.hub.sub` |
 | `index.html` | `home-new` | 首页新上线横排：全部带 `home.addedAt` 的游戏（新者在前），45 天窗口由 `src/home/new-row.js` 运行时裁剪；图片是字面 URL：优先 `public/assets/home-covers/<id>.webp`（`tools/generators/game-covers.mjs` 用游戏美术生成），没有才用 `public/<ogImageDir>/og-<id>.svg`（卡片加 `new-card--og`），都没有就不输出 `<img>` |
 | `index.html` | `home-filter` | 首页筛选条（全部 · 每日 · `site.home.categories` 中 `filter !== false` 的分类）；静态 `hidden`，`src/home/filter.js` 绑定后显现，状态只存 `#cat=<key>` |
 | `index.html` | `home-cards` | 首页卡片，按 `site.home.categories` 分区输出（`<section class="games-cat">` + 自己的 `.games-grid`）；区内按 `home.rank` 升序、缺省按登记顺序（站内先、外站后）。名称/描述/标签来自 registry，图标引用外部 sprite。胶囊全部派生：「每日」= `daily` cap，「站外」= `externalGames`；「新」依赖日期，gen 只写 `data-added`（`home.addedAt`），由 `src/home/freshness.js` 按 UTC+8 今天在 45 天内判定——放进 gen 会让 `gen --check` 随日期变红 |
@@ -124,6 +125,7 @@ caps 是校验器与迁移脚本的唯一判据：
 3. **scores 块 ⟺ leaderboard cap**：两者必须同进同出。
 4. **themeColorLight ⟺ theme-light cap**：同上。
 5. **layout 字段 ⟺ 页面骨架**（§2.1）。
+6. **`daily.doneKey` ⟹ `daily` cap + 代码事实**：模板只允许 `{YYYYMMDD}` / `{YYYY-MM-DD}` 占位符，第一个占位符之前的前缀必须字面出现在入口可达的模块里（游戏改了存储键而 registry 没跟上，Hub 会永远显示未完成）；`home.hub` 必须配 `daily.doneKey`。
 
 背景教训：caps 曾实测漂移两处（tetris 缺 `leaderboard`、word-daily 缺 `analytics`），
 当时碰巧无害，但只要哪天有校验器改用 `withCap()`，就会静默漏掉一整页 ——

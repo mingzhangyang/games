@@ -179,6 +179,40 @@ function homeNewTransform(src) {
     return applyRegion(src, 'home-new', homeNewContent(), null, 'html');
 }
 
+/** Daily Hub 固定任务（proposal §4.5 / P4）：带 home.hub 的游戏按 rank 排序；完成态由 src/home/daily-hub.js
+ *  按 data-done-keys 里的 daily.doneKey 模板（{YYYYMMDD} / {YYYY-MM-DD}）读存储判定，不再硬编码三项。
+ *  任务链接不带 data-game-id：最近玩过只记游戏卡片点击（src/home/recent.js）。 */
+const hubGames = () => {
+    const rank = g => (typeof g.home.hub.rank === 'number' ? g.home.hub.rank : Infinity);
+    return GAMES.map((g, order) => ({ g, order })).filter(e => e.g.home.hub)
+        .sort((a, b) => (rank(a.g) - rank(b.g)) || (a.order - b.order)).map(e => e.g);
+};
+function homeHubContent() {
+    const games = hubGames();
+    const task = g => [
+        `<a class="daily-task" id="hub-task-${g.id}" href="${esc(g.href)}" data-done-keys="${esc(g.daily.doneKey.join(' '))}">`,
+        `<span class="daily-task-icon" aria-hidden="true">${esc(g.emoji)}</span>`,
+        '<div class="daily-task-body">',
+        `<div class="daily-task-name" data-i18n="${g.id}.name">${esc(g.name.en)}</div>`,
+        `<div class="daily-task-sub" data-i18n="${g.id}.hubSub">${esc(g.home.hub.sub.en)}</div>`,
+        '</div>',
+        '<span class="daily-task-status">⚪</span>',
+        '</a>',
+    ].join('\n');
+    return [
+        '<div class="daily-hub-head">',
+        `<span class="daily-hub-title" id="hub-title" data-i18n="hubTitle">${esc(SITE.home.ui.hubTitle.en)}</span>`,
+        `<span class="daily-hub-progress" id="hub-progress">0/${games.length}</span>`,
+        '<span class="hub-total" id="hub-total" hidden></span>',
+        '</div>',
+        ...games.map(task),
+    ].join('\n');
+}
+
+function homeHubTransform(src) {
+    return applyRegion(src, 'home-hub', homeHubContent(), null, 'html');
+}
+
 function homeZhMap() {
     const out = new Map();
     for (const [key, value] of Object.entries(SITE.home.ui)) out.set(key, value.zh);
@@ -187,6 +221,7 @@ function homeZhMap() {
         out.set(`${g.id}.name`, g.name.zh);
         out.set(`${g.id}.desc`, g.home.desc.zh);
         out.set(`${g.id}.tag`, g.home.tag.zh);
+        if (g.home.hub) out.set(`${g.id}.hubSub`, g.home.hub.sub.zh);
     }
     for (const g of SITE.home.externalGames || []) {
         out.set(`${g.id}.name`, g.name.zh);
@@ -504,7 +539,7 @@ for (const g of GAMES) {
         s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c), 'html'),
     ]);
 }
-processFile('index.html', [homeNewTransform, homeFilterTransform, homeCardsTransform]);
+processFile('index.html', [homeHubTransform, homeNewTransform, homeFilterTransform, homeCardsTransform]);
 processFile('js/index-i18n-zh.js', [homeZhTransform]);
 processFile('public/sitemap.xml', [sitemapTransform]);
 processFile('public/manifest.json', [manifestTransform]);

@@ -28,18 +28,6 @@
           "en": "⚡ Daily Challenges",
           "zh": "⚡ 今日挑战"
         },
-        "hubTaskWordSub": {
-          "en": "Guess the word in 6 tries",
-          "zh": "6 次机会猜出今天的词语"
-        },
-        "hubTaskMergeSub": {
-          "en": "Daily challenge — chase the high score",
-          "zh": "每日固定序列，冲击高分"
-        },
-        "hubTaskGravitySub": {
-          "en": "Daily course — 5 holes, fewest launches",
-          "zh": "每日赛程 5 洞，杆数越少越强"
-        },
         "hubProfileHint": {
           "en": "Leaderboard name",
           "zh": "全站排行榜昵称"
@@ -495,6 +483,11 @@
         "priority": "0.8"
       },
       "themeColor": "#0a0e24",
+      "daily": {
+        "doneKey": [
+          "pm_daily_{YYYYMMDD}"
+        ]
+      },
       "home": {
         "iconClass": "planet",
         "category": "puzzle",
@@ -505,6 +498,13 @@
         "tag": {
           "en": "Casual",
           "zh": "休闲爆款"
+        },
+        "hub": {
+          "rank": 2,
+          "sub": {
+            "en": "Daily challenge",
+            "zh": "每日固定序列，冲击高分"
+          }
         }
       }
     },
@@ -546,6 +546,15 @@
       },
       "themeColor": "#0a0e24",
       "themeColorLight": "#f3f5fa",
+      "daily": {
+        "doneKey": [
+          "wd_daily_{YYYY-MM-DD}_en",
+          "wd_daily_{YYYY-MM-DD}_en_4",
+          "wd_daily_{YYYY-MM-DD}_en_5",
+          "wd_daily_{YYYY-MM-DD}_en_6",
+          "wd_daily_{YYYY-MM-DD}_zh"
+        ]
+      },
       "home": {
         "iconClass": "word",
         "category": "puzzle",
@@ -556,6 +565,13 @@
         "tag": {
           "en": "Daily",
           "zh": "每日智力"
+        },
+        "hub": {
+          "rank": 1,
+          "sub": {
+            "en": "Guess in 6 tries",
+            "zh": "6 次机会猜出今天的词语"
+          }
         }
       }
     },
@@ -851,6 +867,11 @@
         "priority": "0.8"
       },
       "themeColor": "#0a0e24",
+      "daily": {
+        "doneKey": [
+          "gs_daily_{YYYYMMDD}"
+        ]
+      },
       "home": {
         "iconClass": "gravity",
         "category": "puzzle",
@@ -861,6 +882,13 @@
         "tag": {
           "en": "Physics",
           "zh": "物理弹道"
+        },
+        "hub": {
+          "rank": 3,
+          "sub": {
+            "en": "Daily course · 5 holes",
+            "zh": "每日赛程 5 洞，杆数越少越强"
+          }
         }
       }
     },

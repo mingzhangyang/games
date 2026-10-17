@@ -1,5 +1,6 @@
-// Daily Hub：三项固定任务的完成态（读各游戏写下的存储键，均为 UTC+8 日期）、今日对局总数、
-// 「更多每日 (N)」入口、全站昵称输入框。
+// Daily Hub：固定任务的完成态、今日对局总数、「更多每日 (N)」入口、全站昵称输入框。
+// 任务由 gen 从 registry 的 home.hub 输出（registry:begin home-hub），每项的 data-done-keys 是该游戏
+// daily.doneKey 的存储键模板，任一键今天（UTC+8）存在即完成；这里不再认识具体游戏。
 import { todayKey, todayKeyDisplay } from '../platform/daily.js';
 import { storageGet, storageSet } from '../platform/safe-storage.js';
 import { setFilter } from './filter.js';
@@ -8,29 +9,24 @@ import { currentLang, t } from './i18n.js';
 const STATS_URL = 'https://games-analytics.orangely.workers.dev/stats?day=';
 const LEGACY_NAME_KEYS = ['tetris_username', 'pm_username', 'hs_username'];
 
-function setTask(id, done) {
-    const task = document.getElementById(id);
-    if (!task) return;
-    task.classList.toggle('done', done);
-    const status = task.querySelector('.daily-task-status');
-    if (status) status.textContent = done ? '✅' : '⚪';
-}
+const expandKey = (template, compact, iso) => template.replace('{YYYYMMDD}', compact).replace('{YYYY-MM-DD}', iso);
 
 export function updateDailyHub() {
     const iso = todayKeyDisplay();
     const compact = todayKey();
-    const wordDone = [`wd_daily_${iso}_en`, `wd_daily_${iso}_en_4`, `wd_daily_${iso}_en_5`, `wd_daily_${iso}_en_6`, `wd_daily_${iso}_zh`]
-        .some(k => storageGet(k));
-    const mergeDone = !!storageGet(`pm_daily_${compact}`);
-    const gravityDone = !!storageGet(`gs_daily_${compact}`);
-    const doneCount = [wordDone, mergeDone, gravityDone].filter(Boolean).length;
-    setTask('hub-task-word', wordDone);
-    setTask('hub-task-merge', mergeDone);
-    setTask('hub-task-gravity', gravityDone);
+    const tasks = [...document.querySelectorAll('.daily-task[data-done-keys]')];
+    let doneCount = 0;
+    for (const task of tasks) {
+        const done = task.dataset.doneKeys.split(/\s+/).some(k => storageGet(expandKey(k, compact, iso)));
+        if (done) doneCount++;
+        task.classList.toggle('done', done);
+        const status = task.querySelector('.daily-task-status');
+        if (status) status.textContent = done ? '✅' : '⚪';
+    }
     const progress = document.getElementById('hub-progress');
     if (progress) {
-        progress.textContent = `${doneCount}/3`;
-        progress.classList.toggle('all-done', doneCount === 3);
+        progress.textContent = `${doneCount}/${tasks.length}`;
+        progress.classList.toggle('all-done', tasks.length > 0 && doneCount === tasks.length);
     }
     const nameInput = document.getElementById('player-name');
     if (nameInput && document.activeElement !== nameInput) {
@@ -50,7 +46,7 @@ export function updateDailyHub() {
         .catch(() => {});
 }
 
-/** 「更多每日 (N)」：N = 带「每日」胶囊的卡减去 Hub 已列出的三项，点击走筛选条的 #cat=daily */
+/** 「更多每日 (N)」：N = 带「每日」胶囊的卡减去 Hub 已列出的任务，点击走筛选条的 #cat=daily */
 function bindMoreDaily() {
     const more = document.getElementById('hub-more-daily');
     if (!more) return;

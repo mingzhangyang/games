@@ -19,6 +19,9 @@ const FAR_FUTURE = Date.UTC(2030, 0, 1, 4);
 const NEW_DAYS = 45;
 const GAMES = registry.all();
 const HOME = registry.site().home;
+// Daily Hub 任务 = 带 home.hub 的游戏，按 rank（缺省登记顺序）——与 gen 的 home-hub 区同一规则
+const HUB = GAMES.map((g, order) => ({ g, order })).filter(e => e.g.home.hub)
+    .sort((a, b) => ((a.g.home.hub.rank ?? Infinity) - (b.g.home.hub.rank ?? Infinity)) || (a.order - b.order)).map(e => e.g);
 const ALL_HOME = [...GAMES.map(g => ({ id: g.id, h: g.home, daily: (g.caps || []).includes('daily') })),
     ...HOME.externalGames.map(g => ({ id: g.id, h: g, daily: false }))];
 const expectNew = now => {
@@ -137,7 +140,8 @@ function checkChips(chips, lang, where) {
         title: document.getElementById('main-title')?.textContent || '',
         cards: document.querySelectorAll('.game-card').length,
         hubTitle: document.getElementById('hub-title')?.textContent || '',
-        hubWord: document.getElementById('hub-task-word-name')?.textContent || '',
+        hubWord: document.querySelector('#hub-task-word-daily .daily-task-name')?.textContent || '',
+        hubSubs: [...document.querySelectorAll('.daily-task .daily-task-sub')].map(e => e.textContent),
         langBtn: !!document.getElementById('lang-toggle'),
         bodyBg: getComputedStyle(document.body).backgroundColor,
         nestedLinks: document.querySelectorAll('.game-card a, .game-card button').length,
@@ -148,7 +152,9 @@ function checkChips(chips, lang, where) {
     if (snap.title !== '单页游戏合集') fail(`zh i18n 注入未生效: main-title="${snap.title}"`);
     if (snap.cards < 13) fail(`zh 游戏卡片不足: ${snap.cards} < 13`);
     if (!snap.hubTitle) fail('zh daily hub 标题为空（updateDailyHub 未跑？）');
-    if (!snap.hubWord) fail('zh daily task 名称为空');
+    if (snap.hubWord !== registry.byId('word-daily').name.zh) fail(`zh daily task 名称未本地化: "${snap.hubWord}"`);
+    const wantSubs = HUB.map(g => g.home.hub.sub.zh);
+    if (JSON.stringify(snap.hubSubs) !== JSON.stringify(wantSubs)) fail(`zh Hub 副标题=${JSON.stringify(snap.hubSubs)} 应为 registry home.hub.sub.zh ${JSON.stringify(wantSubs)}`);
     if (!snap.langBtn) fail('zh 缺 #lang-toggle');
     if (snap.bodyBg === 'rgba(0, 0, 0, 0)' || snap.bodyBg === 'rgb(255, 255, 255)') {
         fail(`zh CSS 疑似未生效: body 背景=${snap.bodyBg}`);
@@ -178,7 +184,7 @@ function checkChips(chips, lang, where) {
         if (window.sessionStorage.getItem('seeded')) return;
         window.sessionStorage.setItem('seeded', '1');
         localStorage.setItem('site_lang', 'en');
-        localStorage.setItem('wd_daily_2026-10-15_zh', '1');   // FROZEN_NOW 的 UTC+8 日期
+        localStorage.setItem('wd_daily_2026-10-15_en_5', '1'); // FROZEN_NOW 的 UTC+8 日期；按词长分键的变体也算
         localStorage.setItem('gs_daily_20261015', '1');
         localStorage.setItem('pm_daily_20261014', '1');        // 昨天的不算
         localStorage.setItem('tetris_username', 'Legacy');
@@ -186,10 +192,13 @@ function checkChips(chips, lang, where) {
     await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle0', timeout: 30000 });
     const hub = await page.evaluate(() => ({
         progress: document.getElementById('hub-progress').textContent,
-        done: ['word', 'merge', 'gravity'].map(k => document.getElementById(`hub-task-${k}`).classList.contains('done')),
+        ids: [...document.querySelectorAll('.daily-task')].map(a => a.id),
+        done: [...document.querySelectorAll('.daily-task')].map(a => a.classList.contains('done')),
+        status: [...document.querySelectorAll('.daily-task-status')].map(e => e.textContent).join(''),
         name: document.getElementById('player-name').value,
     }));
-    if (hub.progress !== '2/3' || JSON.stringify(hub.done) !== '[true,false,true]') fail(`Daily Hub 完成态=${JSON.stringify(hub)} 应为 2/3（词 + 引力，昨天的星球不算）`);
+    if (JSON.stringify(hub.ids) !== JSON.stringify(HUB.map(g => `hub-task-${g.id}`))) fail(`Daily Hub 任务=${hub.ids} 应为 registry home.hub 顺序`);
+    if (hub.progress !== '2/3' || JSON.stringify(hub.done) !== '[true,false,true]' || hub.status !== '✅⚪✅') fail(`Daily Hub 完成态=${JSON.stringify(hub)} 应为 2/3（词 + 引力，昨天的星球不算）`);
     if (hub.name !== 'Legacy') fail(`昵称未回退旧键 tetris_username: "${hub.name}"`);
     await page.$eval('#player-name', el => { el.value = ''; el.focus(); });
     await page.type('#player-name', '  Ada\u0007 ');
@@ -316,7 +325,7 @@ function checkChips(chips, lang, where) {
     const { page, errs } = await loadPage('en');
     const snap = await page.evaluate(() => ({
         title: document.getElementById('main-title')?.textContent || '',
-        hubWordStatus: document.getElementById('hub-task-word-status')?.textContent || '',
+        hubWordStatus: document.querySelector('#hub-task-word-daily .daily-task-status')?.textContent || '',
     }));
     if (errs.length) fail(`en 页面错误: ${errs.join(' | ')}`);
     if (snap.title !== 'Mini Games Collection') fail(`en i18n 注入未生效: main-title="${snap.title}"`);
