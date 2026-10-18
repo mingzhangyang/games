@@ -37,8 +37,7 @@ const GAME_ALIASES = [{ id: 'index' }, ...REGISTERED_GAMES].map(game => ({
     aliases: [game.id, game.prefix].filter(Boolean).map(alias => alias.split('-')),
 }));
 const CORE = new Set([
-    'verify-architecture-boundaries', 'verify-css-debt', 'verify-css-model', 'verify-css-migration-contract',
-    'verify-boot', 'verify-chunk-isolation', 'verify-daily', 'verify-i18n',
+    'verify-architecture', 'verify-boot', 'verify-chunk-isolation', 'verify-daily', 'verify-i18n',
     'verify-index-cards', 'verify-leaderboard', 'verify-no-game-lang',
     'verify-registry', 'verify-sfx',
 ]);
@@ -46,7 +45,6 @@ const QUICK_BROWSER = new Set(['smoke-index', 'verify-chrome', 'verify-theme', '
 // Re-run against the production build: every page's chrome/theme, the shared layout contracts
 // whose cascade depends on Vite's CSS chunk order, and the smokes that load production art.
 const DIST_SUITE = new Set([
-    'verify-css-p3a', 'verify-css-p3b', 'verify-css-p3c', 'verify-css-p3d', 'verify-css-p3e',
     'verify-chrome', 'verify-theme', 'verify-desktop-frame', 'verify-stats-drawer', 'verify-immersive',
     'verify-start-menus', 'smoke-index', 'smoke-carrot-pull', 'smoke-needle-awn', 'smoke-tower-defense',
     'smoke-sword-flight',

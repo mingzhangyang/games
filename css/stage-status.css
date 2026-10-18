@@ -5,9 +5,8 @@
    和画牢（loop-jail）的沉浸式 HUD 同一个做法。原先它们排在顶栏游戏名下方，手机上
    顶栏被撑成两行、状态字号压到 9–11px，而且离玩家正在看的画面最远。
 
-   本文件是 CSS P0/P5 冻结之后的**附加特性样式表**（见 tests/lib/css/feature-additions.mjs）：
-   冻结页的页面样式一条不改，状态元素的标记在各页 HTML 里移进舞台，这里只补定位与底色。
-   全部规则在 @layer contracts、选择器逐条登记；只有要压过冻结的 unlayered 页面声明时才用
+   附加特性样式表：页面样式一条不改，状态元素的标记在各页 HTML 里移进舞台，这里只补定位与底色。
+   全部规则在 @layer contracts；只有要压过 unlayered 页面声明时才用
    !important（分层 !important 与 <link> 顺序无关地胜出），新增属性用普通声明。
    断言见 tests/verify-stage-status.mjs。
    ───────────────────────────────────────────── */

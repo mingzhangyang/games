@@ -5,7 +5,7 @@
 
 - 契约文件：`css/layout.css`（`.game-topbar-center` / `.game-footer` 系列）
 - 行为实现：`src/platform/game-chrome.js`（`bindChrome`）
-- 历史参考：`tools/archive/migrations/apply-header-footer.py`、`tools/archive/migrations/add-chrome-i18n.py` 已归档，不用于日常开发。当前流程是按本文直接实现 markup、i18n 与 `bindChrome` 接入，再运行现行校验。
+- 按本文直接实现 markup、i18n 与 `bindChrome` 接入，再运行现行校验（当年的一次性迁移脚本已删除，见 git 历史）。
 - 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
 
 ---
@@ -42,7 +42,7 @@ Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇�
 > 关卡 / 进度这类局内状态不再排在游戏名下方，而是挂在舞台顶部 —— 与画牢（loop-jail）的沉浸式 HUD
 > 同一做法。原因：手机上两行顶栏把状态字号压到 9–11px，且离玩家正在看的画面最远。已迁移拔萝卜、
 > 针尖对麦芒、御剑飞行、影织：状态标记在各页 HTML 里移进 `.game-stage`，定位与底色由附加样式表
-> `css/stage-status.css`（`@layer contracts`，选择器逐条登记于 `tests/lib/css/feature-additions.mjs`）
+> `css/stage-status.css`（`@layer contracts`，引入位置由 `tests/verify-architecture.mjs` 校验）
 > 提供；断言见 `tests/verify-stage-status.mjs`。新页面直接在舞台里写状态，不要再往中槽放。
 > 中槽只放关卡号 + 步数这类单行计数器的页面（科学解谜九页、俄罗斯方块、扫雷、黑白棋、塔防等）
 > 没有「名字下方一行状态」的问题，保持原样。

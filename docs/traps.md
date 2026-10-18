@@ -193,7 +193,7 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
   就会按 P2 之前的清单往每页插 `sound` / `moreGames` / `close` —— 而这三个键那时已被收进
   `src/platform/i18n.js` 的 `COMMON_TEXT`，靠 `makeText` 原型链兜底，页面里留副本会被
   `verify-i18n.mjs` 的「无公共键字面量副本」判红。也就是说「修好」的脚本会当场把 12 个页面改红。
-  判据同样不能再抄一份：归档迁移辅助脚本 `tools/archive/migrations/lib/i18n_common.py` 现读 `COMMON_TEXT` 的键集合并剔除；它不属于活动运行路径。
+  判据同样不能再抄一份：当时的迁移辅助脚本改为读 `COMMON_TEXT` 的键集合并剔除（脚本已删除，见 git 历史）。
 - ⚠️ **收紧一条断言时，先确认宽松版不是在容忍某种合法形态。** 给 `add-chrome-i18n.py` 加
   「缺 hint 文案要报错」之后，minesweeper 立刻两条 `!!` —— 它的页脚提示本就是按插旗模式切换的
   `hintDefault` / `hintFlagMode` 两条，不是单个 `hint`。正确做法是按事实放宽成 `hint\w*` 家族，

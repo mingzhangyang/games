@@ -141,7 +141,7 @@ function homeFilterTransform(src) {
  *  运行时裁剪——放在 gen 里会让 gen --check 随日期变红。图片必须是构建可见的字面 URL，只用会原样复制进
  *  dist 的 public/：优先用游戏自己美术做的封面 public/assets/home-covers/<id>.webp（由
  *  tools/generators/game-covers.mjs 生成），没有才退回 OG 图，都没有就不输出 <img>（只留渐变 + 图标兜底）；
- *  绝不运行时拼路径。铺放全由 home-cards.css 负责，不生成内联 style（verify-css-debt 冻结了内联样式）。 */
+ *  绝不运行时拼路径。铺放全由 home-cards.css 负责，不生成内联 style。 */
 const HOME_COVER_DIR = 'assets/home-covers';
 /** 分享图：优先 tools/generators/game-covers.mjs 用游戏美术生成的 og-<id>.jpg（多数社交平台不渲染
  *  SVG og:image），没有美术的游戏才用 og-<id>.svg。路径相对站点根，og:image / twitter:image 共用。 */

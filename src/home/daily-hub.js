@@ -1,12 +1,12 @@
 // Daily Hub：三项固定任务的完成态（读各游戏写下的存储键，均为 UTC+8 日期）、今日对局总数、
 // 「更多每日 (N)」入口、全站昵称输入框。
 import { todayKey, todayKeyDisplay } from '../platform/daily.js';
+import { getPlayerName } from '../platform/player.js';
 import { storageGet, storageSet } from '../platform/safe-storage.js';
 import { setFilter } from './filter.js';
 import { currentLang, t } from './i18n.js';
 
 const STATS_URL = 'https://games-analytics.orangely.workers.dev/stats?day=';
-const LEGACY_NAME_KEYS = ['tetris_username', 'pm_username', 'hs_username'];
 
 function setTask(id, done) {
     const task = document.getElementById(id);
@@ -34,7 +34,7 @@ export function updateDailyHub() {
     }
     const nameInput = document.getElementById('player-name');
     if (nameInput && document.activeElement !== nameInput) {
-        nameInput.value = storageGet('player_name') || LEGACY_NAME_KEYS.map(storageGet).find(Boolean) || '';
+        nameInput.value = getPlayerName() || '';
     }
     fetch(STATS_URL + compact)
         .then(r => (r.ok ? r.json() : Promise.reject(new Error('offline'))))

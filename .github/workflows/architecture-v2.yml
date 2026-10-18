@@ -18,8 +18,6 @@ on:
       - 'js/**'
       - 'tests/**'
       - 'tools/**'
-      # Sentinel: run architecture verification if the retired scripts/ tree is reintroduced.
-      - 'scripts/**'
       - 'css/**'
       - '*.html'
       - 'games.config.json'
@@ -49,13 +47,9 @@ jobs:
     timeout-minutes: 15
     env:
       CI: '1'
-      ARCHITECTURE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          # CSS ledger / architecture ratchet checks compare against the merge base.
-          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
