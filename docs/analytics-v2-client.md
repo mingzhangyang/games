@@ -18,7 +18,7 @@ Activity is sampled about once per second with monotonic performance.now and emi
 
 Events use a bounded **in-memory** queue (16 pending records max, up to three attempts each; 8-second abort bound, backoff). A retried event preserves its payload and event ID and relies on D1 unique indexes. On unload, sendBeacon or fetch keepalive is used best-effort. A tab close or prolonged outage may lose unsent metrics; no persistent backlog is kept. The game never waits for analytics and never fails because telemetry does.
 
-The client probes V2 support on approved published origins and sends the additive duration/time fields only if the Worker advertises playingSeconds in its response; old V2 workers continue to receive their supported schema, and older Workers accept legacy play/finish. On localhost, analytics is silent unless a test deliberately enables an isolated loopback mock. Tests never post to the production Worker.
+The browser client reports **V2 exclusively** from approved published origins. It emits one open per registered document and play/finish/active events with UUIDv4 event/session IDs, gameplay duration and original occurrence timestamps. It does not probe `/stats?v=2`, negotiate an older schema, or send any legacy payload. The V2 Worker is required; outages use bounded V2 retries without fallback. On localhost, analytics is silent unless a test deliberately enables an isolated loopback mock. Tests never post to the production Worker.
 
 ## Lifecycle audit of all registered main-site games
 
@@ -90,7 +90,7 @@ For new external games: add the canonical origin and ID to games.config.json, ru
 
 - tests/verify-analytics-v2.mjs: Node 22 real SQLite applies migrations 0001, 0002 and 0003 in sequence; exercises D1 trigger/rollups, old API shape, strict V2 validation, immutable timestamp/idempotency (including Phase 1 retries across UTC+8 midnight), session open uniqueness, concurrency, daily boundaries and external-origin CORS.
 - tests/verify-analytics-browser.mjs: Chromium loads real DOM pages and a local fixture; checks refresh, duplicate script loading, play/finish, pause/resume, visibility restoration, long idle/sleep, bounded retries with immutable IDs, Worker outage and registered external ID. Network interception rejects production analytics requests.
-- tests/verify-analytics-compat.mjs: isolated browser-script tests verify KV legacy, unavailable Worker, Phase 1 D1 V2 and Phase 2 D1 V2 event payloads without production requests.
+- tests/verify-analytics-client.mjs: isolated V2-only browser-script tests cover opens, events, active/playing durations, original timestamps, offline unload, bounded queues, and origin gating without production requests.
 - tests/verify-analytics-game-lifecycles.mjs: Chromium checks representative actual game runtimes for stage/daily attempts, first actions, pause, retry and completion.
 - tests/verify-gomoku.mjs: Chromium performs actual legal/illegal board moves on desktop and mobile using a localhost V2 mock, preserving PR #141.
 - Generator, lint, build and all other playable/regression checks remain required: npm run gen -- --check; npm run lint; npm run build; npm run verify -- --jobs=2.
