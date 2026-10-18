@@ -28,6 +28,8 @@
  *      刷新后重放到 done 恢复原分数；POST 未返回时成绩已在本地重试队列，确认后移除；进页补交昨天未确认的成绩；
  *      未完成的计分局只有一个主人：另一个标签页续上后，旧标签页回菜单、不再覆盖新进度；
  *      进度写不进存储时，回菜单再进用本页内存检查点（失误不会被「撤销」）
+ *   ⑲ 接手的边界：持有暂停租约（切到后台）时续上存档不会被误判为过期；接手时写不进存储 → 拒绝接手、
+ *      原主人照常继续，存储恢复后再进才正常接手
  *
  * 用法：node tests/smoke-sudoku-mist.mjs [baseUrl]（verify-all 自动传入）
  */
@@ -838,6 +840,82 @@ try {
         '⑱ 进度写不进存储：回菜单再进仍是 6 步、失误 1 次（存储里只有 2 步）', JSON.stringify({ before, back, entryText }));
         check(cerrs.length === 0, '⑱ 写失败：无 pageerror', cerrs.join(' | '));
         await c.close();
+    }
+
+    /* ── ⑲ 接手的边界：暂停租约下续上存档、写不进存储时拒绝接手 ── */
+    {
+        const scores = { posts: [], gets: [], hold: false, held: [] };
+        const key = todayKey();
+        const runSlot = `game:sudoku-mist:v1:daily-run:${key}`;
+        const doneSlot = `game:sudoku-mist:v1:daily:${key}`;
+        const stored = p => p.evaluate(r => JSON.parse(localStorage.getItem(r) || 'null'), runSlot);
+        const front = async p => {
+            await p.bringToFront();
+            await p.evaluate(() => { const g = window.smGame; if (g.state === 'playing' && g.isPaused) g.resume(); });
+        };
+        const setHidden = (p, v) => p.evaluate(h => {
+            Object.defineProperty(document, 'hidden', { configurable: true, get: () => h });
+            document.dispatchEvent(new Event('visibilitychange'));
+        }, v);
+        // 暂停租约（后台）持有时续上：invalidate 静默暂停并存档，不能被当成「被接手」
+        const { page: d, errs: derrs } = await open({ scores });
+        await d.evaluate((r, k) => { localStorage.removeItem(r); localStorage.removeItem(k); window.smGame.toMenu(); }, runSlot, doneSlot);
+        await d.click('#sm-daily-btn');
+        await d.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
+        await stepInPage(d, 2);
+        await d.reload({ waitUntil: 'load' });
+        await d.waitForFunction(() => !!window.smGame?.el);
+        await setHidden(d, true);
+        await d.evaluate(() => window.smGame.startDaily());
+        await sleep(100);
+        const leased = await d.evaluate(() => ({
+            state: window.smGame.state, paused: window.smGame.isPaused, ranked: window.smGame.isRanked(),
+            inputs: window.smGame.session.inputs.length, held: window.smGame.pauseOwnership.isHeld('hidden'),
+        }));
+        const leasedRun = await stored(d);
+        await setHidden(d, false);
+        await d.evaluate(() => window.smGame.resume());
+        const after = await d.evaluate(() => ({ state: window.smGame.state, ranked: window.smGame.isRanked() }));
+        check(leased.state === 'playing' && leased.paused && leased.held && leased.ranked && leased.inputs === 2
+            && leasedRun?.inputs.length === 2 && after.state === 'playing' && after.ranked,
+        '⑲ 后台暂停租约下续上存档：静默暂停、仍是计分局（没被误判为过期）、回前台可继续', JSON.stringify({ leased, leasedRun: leasedRun?.inputs.length, after }));
+
+        // 接手时写不进存储：拒绝接手，原主人照常继续
+        await stepInPage(d, 1);
+        const owner0 = (await stored(d))?.owner;
+        const { page: e, errs: eerrs } = await open({ scores });
+        await e.evaluate(r => {
+            window.__smRealSetItem = window.Storage.prototype.setItem;
+            window.Storage.prototype.setItem = function (k, v) {
+                if (k === r) throw new Error('QuotaExceededError');
+                return window.__smRealSetItem.call(this, k, v);
+            };
+        }, runSlot);
+        await front(e);
+        await e.click('#sm-daily-btn');
+        await e.waitForFunction(() => window.smGame.meta?.kind === 'daily' && window.smGame.state === 'menu'
+            && !document.getElementById('sm-start').hasAttribute('aria-busy'), { timeout: 8000 });
+        const refused = await e.evaluate(() => ({ status: document.getElementById('sm-start-status').textContent, ranked: window.smGame.isRanked() }));
+        await front(d);
+        await stepInPage(d, 2);
+        const dRun = await stored(d);
+        const dState = await d.evaluate(() => ({ state: window.smGame.state, ranked: window.smGame.isRanked() }));
+        check(/无法保存进度/.test(refused.status) && !refused.ranked && dState.state === 'playing' && dState.ranked
+            && dRun?.owner === owner0 && dRun.inputs.length === 5,
+        '⑲ 接手时写不进存储：拒绝接手、原标签页照常存档（5 步、主人不变）', JSON.stringify({ refused, dState, dRun: { owner: dRun?.owner === owner0, n: dRun?.inputs.length } }));
+        // 存储恢复后再进：正常接手 5 步进度，原标签页让出
+        await e.evaluate(() => { window.Storage.prototype.setItem = window.__smRealSetItem; });
+        await front(e);
+        await e.click('#sm-daily-btn');
+        await e.waitForFunction(() => window.smGame.state === 'playing' && window.smGame.isRanked(), { timeout: 8000 });
+        const eTook = await e.evaluate(() => window.smGame.session.inputs.length);
+        await front(d);
+        await sleep(200);
+        const dYield = await d.evaluate(() => window.smGame.state);
+        check(eTook === 5 && dYield === 'menu', '⑲ 存储恢复后再进：接手 5 步进度，原标签页让出', JSON.stringify({ eTook, dYield }));
+        check(derrs.length === 0 && eerrs.length === 0, '⑲ 无 pageerror', [...derrs, ...eerrs].join(' | '));
+        await e.close();
+        await d.close();
     }
 
     /* ── 浅色主题 ── */

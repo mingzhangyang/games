@@ -435,6 +435,10 @@ export class SudokuMistGame {
         this.isPaused = false; this.contextualRestart?.sync();
         this.state = 'playing'; this.contextualRestart?.sync();
         this.runStart = performance.now();
+        // 先接手计分局（拿到写令牌），再作废旧暂停租约：invalidate 可能立刻静默暂停并存档，
+        // 那时还没有令牌就会被误判成「被别的标签页接手」
+        this.runOwner = null;
+        if (this.isRanked()) this.claimDailyRun();
         // 新一局已经在跑之后再作废旧租约：排行榜弹窗还开着时开局，新局要停在弹窗后面，
         // 关掉弹窗也不会被旧租约「顺手」继续
         this.pauseOwnership.invalidate();
@@ -457,7 +461,6 @@ export class SudokuMistGame {
             if (this.state === 'playing') this.el.time.textContent = fmtTime(this.elapsedMs());
         }, 500);
         this.ensureLoop();
-        if (this.isRanked()) this.claimDailyRun(resume);
         // 存档里的输入恰好已经走完（完成标记没写成）：直接结算
         if (this.session.done) this.finish();
     }
@@ -490,23 +493,37 @@ export class SudokuMistGame {
         return !stored || !stored.owner || stored.owner === this.runOwner;
     }
 
-    /** 开始 / 续上计分局：换一个新令牌并立刻写一次，宣告本页接手。写不进去就沿用旧令牌（单标签页存储坏掉的情况） */
-    claimDailyRun(resume) {
+    /**
+     * 开始 / 续上计分局：换一个新令牌并立刻写一次，宣告本页接手。
+     * 写不进去时：存档里没有主人 → 本页照常（没人跟它抢）；主人是本页自己之前的令牌 → 沿用它；
+     * 主人是别的标签页 → 不能接手（否则两页拿着同一个令牌，存储恢复后互相覆盖），回菜单说明原因。
+     */
+    claimDailyRun() {
+        const { dateKey } = this.meta;
+        const mine = this.dailyCheckpoint?.dateKey === dateKey ? this.dailyCheckpoint.owner : null;
         this.runOwner = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-        if (!this.persist({ claim: true }) && resume?.owner) {
-            this.runOwner = resume.owner;
-            this.dailyCheckpoint.owner = resume.owner;
+        if (this.persist({ claim: true })) return;
+        const stored = loadDailyRun(dateKey);
+        if (!stored?.owner) return;
+        if (stored.owner === mine) {
+            this.runOwner = stored.owner;
+            this.dailyCheckpoint.owner = stored.owner;
+            return;
         }
+        const meta = this.meta;
+        meta.stale = true;
+        this.dailyCheckpoint = null;
+        setTimeout(() => { if (this.meta === meta) this.yieldDaily('dailyNoClaim'); }, 0);
     }
 
     /** 另一个标签页接手了这一局：不再存档，回到菜单并说明原因（再点进来就接着那边的进度） */
-    yieldDaily() {
+    yieldDaily(reason = 'dailyMoved') {
         if (this.meta?.kind !== 'daily' || this.meta.yielded) return;
         this.meta.stale = true;
         this.meta.yielded = true;
         this.dailyCheckpoint = null;
         this.toMenu();
-        this.el.status.textContent = this.t().dailyMoved;
+        this.el.status.textContent = this.t()[reason];
     }
 
     /**
