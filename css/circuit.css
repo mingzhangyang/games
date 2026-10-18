@@ -383,3 +383,9 @@ body {
     --cc-cv-amber-rgb: 227, 156, 0;
     --cc-cv-red-rgb: 212, 60, 59;
 }
+
+.cc-level-note {
+    grid-column: 1 / -1;
+    padding-top: 6px;
+    text-align: left;
+}

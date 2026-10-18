@@ -2,10 +2,10 @@
  * Circuit 电路谜题 — 中学物理电路解谜
  * =====================================
  * 玩法：点击开关接通/切断电流，(SPDT) 切换选路，让全部目标灯泡点亮。
- * 小心短路——电池两极被纯导线直连时全灯熄灭（红闪警告）。
+ * 带 × 的灯泡必须保持熄灭。短路——电池两极被纯导线直连——全灯熄灭。
  *
  * 关卡数据 / 电路求解在本包 model/levels.js（纯模块，校验器共用）：
- *   - 20 手工关卡（拓扑合法、初盘未解由 verify-circuit-levels.mjs 锁定）
+ *   - 32 关：前 20 关为原手工关；T1–T12 为初中电路实验关（dark 灯必须熄灭）
  *   - 求解器：节点电压法（导线等电位节点 + 单位电阻灯泡边 + 电池定压）
  *   - 每日谜题：FNV-1a('circuit-'+UTC+8 日期) 选关 × mulberry32 重掷开关初态
  *
@@ -262,6 +262,14 @@ export class CircuitGame {
             const n = this.stars[i] || 0;
             starLine.textContent = n > 0 ? '⭐'.repeat(n) : '☆☆☆';
             chip.append(num, starLine);
+            const topic = LEVELS[i].topic;
+            if (topic) chip.title = topic[this.lang] || topic.en;
+            if (i > 0 && LEVELS[i].diff === 'lab' && LEVELS[i - 1].diff !== 'lab') {
+                const note = document.createElement('div');
+                note.className = 'cc-level-note game-start-level-label';
+                note.textContent = this.TEXT.labSection;
+                grid.appendChild(note);
+            }
             chip.addEventListener('click', () => {
                 Sfx.click();
                 this.startLevel(i);
@@ -327,6 +335,8 @@ export class CircuitGame {
         this.pauseOwnership?.invalidate();
         this.hideOverlays();
         this.updateHud();
+        const topic = this.baseSpec && this.baseSpec.topic;
+        if (topic) this.showToast(topic[this.lang] || topic.en, 1600);
         track('circuit', 'play');
     }
 
@@ -432,6 +442,7 @@ export class CircuitGame {
     /* ── 核心交互：拨动开关 ── */
 
     flipSwitch(stateIdx) {
+        clearTimeout(this.solveTimer);
         this.states[stateIdx] = this.states[stateIdx] ? 0 : 1;
         this.moves += 1;
         this.flipFx = { idx: stateIdx, start: this.time };
@@ -473,6 +484,7 @@ export class CircuitGame {
 
     finishSolved() {
         if (this.state !== 'playing' || !this.sol) return;
+        if (!isCircuitSolved(this.spec, this.states)) return;
         if (this.mode === 'daily') this.finishDaily();
         else this.finishLevel();
     }
@@ -1034,6 +1046,24 @@ export class CircuitGame {
         ctx.lineTo(x + 2, y + 3);
         ctx.lineTo(x + 4.5, y - 3.5);
         ctx.stroke();
+        if (el.dark) {
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = on ? P.red : P.slate;
+            ctx.lineWidth = 1.7;
+            ctx.beginPath();
+            ctx.moveTo(x + 8, y - 16);
+            ctx.lineTo(x + 15, y - 9);
+            ctx.moveTo(x + 15, y - 16);
+            ctx.lineTo(x + 8, y - 9);
+            ctx.stroke();
+            if (on) {
+                ctx.strokeStyle = P.red;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(x, y, 16.5, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
         ctx.restore();
     }
 

@@ -40,7 +40,7 @@ export default new Map([
     ['sword-flight.desc','踏剑穿越仙环与云海，斩开山岩，召出剑阵，一路破境飞升。'],['sword-flight.tag','国风仙侠'],
     ['lumen.name','折光'],['lumen.desc','翻转镜面，偏折光束，点亮全部水晶。20 关手工关卡 + 每日谜题，用最少翻转通关！'],
     ['lumen.tag','光路解谜'],['circuit.name','电路谜题'],
-    ['circuit.desc','拨动开关，接通电流，点亮全部目标灯泡——小心短路！20 关手工关卡 + 每日谜题。'],['circuit.tag','电路解谜'],
+    ['circuit.desc','拨动开关，接通电流，点亮目标灯泡，并让带 × 的灯保持熄灭。32 关（含初中电路实验）+ 每日谜题。'],['circuit.tag','电路解谜'],
     ['silk-dew.name','垂丝引露'],['silk-dew.desc','牵引丝线，带露珠穿过荆棘与气旋，落入玉壶。20 关 + 每日挑战。'],
     ['silk-dew.tag','绳物理'],['bond-forge.name','键合工坊'],
     ['bond-forge.desc','拖动原子成键，填满价键并拼出目标分子。20 关 + 每日挑战。'],['bond-forge.tag','化学'],

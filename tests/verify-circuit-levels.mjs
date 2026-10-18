@@ -49,11 +49,12 @@ function componentCount(spec) {
 }
 
 console.log('== circuit-levels ==');
-assert(LEVELS.length === 20, 'LEVELS 应为 20 关，实际 ' + LEVELS.length);
+assert(LEVELS.length === 32, 'LEVELS 应为 32 关，实际 ' + LEVELS.length);
 for (const diff of ['easy', 'medium', 'hard', 'expert']) {
     assert(LEVELS.filter((l) => l.diff === diff).length === 5, diff + ' 应为 5 关');
 }
-assert(new Set(LEVELS.map((l) => l.id)).size === 20, '关卡 id 不得重复');
+assert(LEVELS.filter((l) => l.diff === 'lab').length === 12, 'lab 应为 12 关');
+assert(new Set(LEVELS.map((l) => l.id)).size === 32, '关卡 id 不得重复');
 
 for (const lv of LEVELS) {
     const els = lv.elements;
@@ -62,7 +63,12 @@ for (const lv of LEVELS) {
     const k = operableIndexes(lv).length;
     assert(bats.length === 1, lv.id + ' 恰好 1 个电池');
     assert(targets.length >= 1, lv.id + ' 至少 1 个目标灯');
+    assert(els.every((e) => !(e.target && e.dark)), lv.id + ' 灯泡不能同时是目标又必须熄灭');
     assert(k >= 1 && k <= 8, lv.id + ' 可操作元件数 1..8，实际 ' + k);
+    if (lv.diff === 'lab') {
+        assert(lv.par >= 4, lv.id + ' 实验关 par 至少 4，实际 ' + lv.par);
+        assert(lv.topic && lv.topic.zh && lv.topic.en, lv.id + ' 实验关要有中英课题');
+    }
 
     const cells = new Set();
     let inBounds = true, noOverlap = true;

@@ -10,7 +10,7 @@
     <meta name="theme-support" content="light dark">
     <meta name="theme-color" content="#0a1230" data-light="#f3f7fd">
     <script src="/theme-boot.js"></script>
-    <meta name="description" content="电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 handcrafted levels plus a daily puzzle for the whole world.">
+    <meta name="description" content="电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 32 handcrafted levels, including a middle-school lab set, plus a daily puzzle for the whole world.">
     <meta name="robots" content="index, follow">
     <meta name="author" content="Orangely">
     <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/circuit.html">
@@ -43,7 +43,7 @@
                 <button data-chrome="home" class="cc-icon-btn game-icon-btn" id="cc-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             </div>
             <div class="cc-topbar-center game-topbar-center">
-                <div class="cc-hud-level" id="cc-hud-level">Level 1/20</div>
+                <div class="cc-hud-level" id="cc-hud-level">Level 1/32</div>
                 <div class="cc-move-box">
                     <span class="cc-move-value" id="cc-moves">0</span>
                     <span class="cc-par game-start-par" id="cc-par">· Par 2</span>
@@ -163,7 +163,7 @@
             if (ogImage) ogImage.setAttribute('content', socialImage);
             const twitterImage = document.querySelector('meta[name="twitter:image"]');
             if (twitterImage) twitterImage.setAttribute('content', socialImage);
-            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"电路谜题 Circuit — Light It Up","url":currentUrl,"description":"电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 handcrafted levels plus a daily puzzle for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"电路谜题 Circuit — Light It Up","url":currentUrl,"description":"电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 32 handcrafted levels, including a middle-school lab set, plus a daily puzzle for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
             const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"电路谜题 Circuit — Light It Up","item":currentUrl}]};
             [gameData, breadcrumb].forEach(data => {
                 const script = document.createElement('script');

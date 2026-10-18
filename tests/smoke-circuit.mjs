@@ -121,7 +121,7 @@ if (after.starsStored !== 3) fail(`L1 翻 1 次应为 3 星，got ${after.starsS
  * （`[o1,o2].forEach(([px,py]) => …)`）⇒ "object is not iterable"。
  * spdt 首次出现在 idx=6 (M2)，而 smoke 原先停在 L1 就结束 ⇒ 该崩溃 100% 漏网。
  * 注意：不能只抽前几关——前 6 关 (S1-S5/M1) 均无 spdt，只测前 5 关等于没测。
- * 这里遍历全部 20 关，逐关强制同步 draw() 若干帧并收集页面异常。 */
+ * 这里遍历全部关卡，逐关强制同步 draw() 若干帧并收集页面异常。 */
 const levelErrors = [];
 const levelCount = await page.evaluate(() => {
     // ⚠ 不要 import('/js/circuit-levels.js')：dist 里源码路径已打包成哈希 chunk，
