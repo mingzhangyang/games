@@ -10,7 +10,7 @@
     <meta name="theme-support" content="light dark">
     <meta name="theme-color" content="#0a1230" data-light="#f3f7fd">
     <script src="/theme-boot.js"></script>
-    <meta name="description" content="电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 handcrafted levels plus a daily puzzle for the whole world.">
+    <meta name="description" content="电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 levels: the one-flip puzzles are gone, and a middle-school lab set remains, plus a daily puzzle.">
     <meta name="robots" content="index, follow">
     <meta name="author" content="Orangely">
     <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/circuit.html">
@@ -44,7 +44,7 @@
             </div>
             <div class="cc-topbar-center game-topbar-center">
                 <div class="cc-hud-level" id="cc-hud-level">Level 1/20</div>
-                <div class="cc-move-box">
+                <div class="cc-move-box" id="cc-move-box">
                     <span class="cc-move-value" id="cc-moves">0</span>
                     <span class="cc-par game-start-par" id="cc-par">· Par 2</span>
                 </div>
@@ -59,7 +59,7 @@
         <!-- 舞台 -->
         <main class="cc-main game-main">
         <div class="cc-stage game-stage" id="cc-stage">
-            <canvas class="game-canvas" id="cc-canvas" width="560" height="420"></canvas>
+            <canvas class="game-canvas" id="cc-canvas" width="560" height="560"></canvas>
             <div class="cc-toast hidden game-toast" id="cc-toast"></div>
 
             <!-- 开始界面 -->
@@ -78,6 +78,7 @@
                 <div class="cc-start-footer game-start-footer">
                     <button class="cc-icon-btn game-icon-btn" id="cc-start-mute" data-i18n-label="sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
                 </div>
+
             </div>
 
             <!-- 过关面板 -->
@@ -163,7 +164,7 @@
             if (ogImage) ogImage.setAttribute('content', socialImage);
             const twitterImage = document.querySelector('meta[name="twitter:image"]');
             if (twitterImage) twitterImage.setAttribute('content', socialImage);
-            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"电路谜题 Circuit — Light It Up","url":currentUrl,"description":"电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 handcrafted levels plus a daily puzzle for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"电路谜题 Circuit — Light It Up","url":currentUrl,"description":"电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 levels: the one-flip puzzles are gone, and a middle-school lab set remains, plus a daily puzzle.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","EducationalGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
             const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"电路谜题 Circuit — Light It Up","item":currentUrl}]};
             [gameData, breadcrumb].forEach(data => {
                 const script = document.createElement('script');

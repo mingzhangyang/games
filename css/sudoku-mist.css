@@ -3,8 +3,7 @@
    深色 = 月下蓝雾、夜色棋盘；浅色 = 清晨白雾、宣纸棋盘。
    棋盘三层：.sm-board-wrap 底色 → 雾层 canvas（.sm-mist）→ 格子（网格线 / 数字 / 笔记 / 选框浮在雾上）。
    雾的颜色只在这里定义一次（--sm-cv-*），由 src/games/sudoku-mist/runtime.js 经 bindPalette 读取。
-   CSS 冻结（P0/P5）之后新增的游戏页：全部规则归 @layer pages、选择器只认本页前缀，
-   不新增未分层债务、不写 keyframes（tests/lib/css/feature-additions.mjs 的 POST_FREEZE_GAMES 校验）。
+   全部规则归 @layer pages、选择器只认本页前缀，不写 keyframes（新游戏页的默认写法）。
    ───────────────────────────────────────────── */
 
 @layer pages {

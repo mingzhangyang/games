@@ -91,16 +91,29 @@ if (!target) fail('L1 启动失败（state/覆盖层/开关缺失）');
 const preMoves = await page.evaluate(() => document.getElementById('cc-moves').textContent);
 if (preMoves !== '0') fail(`初盘 moves 应为 0，got ${preMoves}`);
 
-/* ── 4. 真实点击开关格心 → 电流接通 → solved → 结算 ──
- * L1 par=1 且初盘未解（verify-circuit-levels 锁定）⇒ 翻 1 次必然判胜。 */
+/* ── 4. 真实点击全部开关格心 → 电流接通 → solved → 结算 ──
+ * 第一关是 M5：两只双掷都要从初态拨到另一侧，par=2。点一次不够。 */
 const box = await page.evaluate(() => {
     const r = document.getElementById('cc-canvas').getBoundingClientRect();
     return { left: r.left, top: r.top, width: r.width, height: r.height };
 });
-await page.mouse.click(
-    box.left + (target.c + 0.5) / 14 * box.width,
-    box.top + (target.r + 0.5) / 10 * box.height,
-);
+const targets = await page.evaluate(() => {
+    const g = window.ccGame;
+    const v = g.view || { s: 1, ox: 0, oy: 0 };
+    return g.spec.elements
+        .filter(el => el.t === 'sw' || el.t === 'spdt')
+        .map(el => ({
+            x: (((el.c + 0.5) * 40) * v.s + v.ox) / 560,
+            y: (((el.r + 0.5) * 42) * v.s + v.oy) / 560,
+        }));
+});
+if (targets.length !== 2) fail(`M5 应有 2 个可操作元件，got ${targets.length}`);
+for (const target of targets) {
+    await page.mouse.click(
+        box.left + target.x * box.width,
+        box.top + target.y * box.height,
+    );
+}
 await new Promise(r => setTimeout(r, 1100)); // 650ms solveTimer + 余量
 
 const after = await page.evaluate(() => ({
@@ -108,20 +121,19 @@ const after = await page.evaluate(() => ({
     moves: document.getElementById('cc-moves').textContent,
     clearVisible: !document.getElementById('cc-clear').classList.contains('hidden'),
     stars: document.getElementById('cc-clear-stars').textContent,
-    starsStored: JSON.parse(localStorage.getItem('game:circuit:v1:stars') || '[]')[0],
+    starsStored: JSON.parse(localStorage.getItem('game:circuit:v2:stars') || '[]')[0],
 }));
 if (after.state !== 'won-level') fail(`点击开关后 state=${after.state}（电路/判胜失败）`);
-if (after.moves !== '1') fail(`HUD moves 应为 1，got ${after.moves}`);
+if (after.moves !== '2') fail(`HUD moves 应为 2，got ${after.moves}`);
 if (!after.clearVisible) fail('过关面板未显示');
 if (!after.stars.includes('⭐')) fail(`星级未渲染: ${after.stars}`);
-if (after.starsStored !== 3) fail(`L1 翻 1 次应为 3 星，got ${after.starsStored}`);
+if (after.starsStored !== 3) fail(`M5 拨 2 次应为 3 星，got ${after.starsStored}`);
 
 /* ── 5. 全关卡渲染回归：逐关 loadLevel + 强制 draw，捕获绘制期异常 ──
  * 教训：drawSwitch 的 spdt 分支曾把 {x,y} 对象直接塞进 forEach 解构
  * （`[o1,o2].forEach(([px,py]) => …)`）⇒ "object is not iterable"。
- * spdt 首次出现在 idx=6 (M2)，而 smoke 原先停在 L1 就结束 ⇒ 该崩溃 100% 漏网。
- * 注意：不能只抽前几关——前 6 关 (S1-S5/M1) 均无 spdt，只测前 5 关等于没测。
- * 这里遍历全部 20 关，逐关强制同步 draw() 若干帧并收集页面异常。 */
+ * spdt 就在第一关，draw 回归仍要覆盖后面的关。
+ * 这里遍历全部关卡，逐关强制同步 draw() 若干帧并收集页面异常。 */
 const levelErrors = [];
 const levelCount = await page.evaluate(() => {
     // ⚠ 不要 import('/js/circuit-levels.js')：dist 里源码路径已打包成哈希 chunk，
