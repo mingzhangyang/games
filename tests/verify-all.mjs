@@ -10,14 +10,23 @@ import { registry } from './lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TEST_ROOT = join(ROOT, 'tests');
-const PORT = Number(process.env.VERIFY_PORT || 8930);
 const argv = process.argv.slice(2);
 const QUICK = argv.includes('--quick');
 const CHANGED = argv.includes('--changed');
+// CI splits one full run across parallel jobs: --offline (no browser) and
+// --browser --with-dist --shard=k/n. --dist runs only the built-output gate set (served from
+// dist/); --with-dist appends that set to the selected suite as `dist:<name>` steps.
+const OFFLINE = argv.includes('--offline');
+const BROWSER = argv.includes('--browser');
+const DIST = argv.includes('--dist');
+const WITH_DIST = argv.includes('--with-dist');
 const flag = name => (argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];
 const DIFF_BASE = flag('base') || '';
+const SHARD = flag('shard') || '';
 const JOBS = Math.max(1, Number(flag('jobs') || process.env.VERIFY_JOBS || Math.min(3, Math.floor(cpus().length / 2))) || 1);
 const BASE_URL = argv.find(a => !a.startsWith('--')) || '';
+const PORT = Number(process.env.VERIFY_PORT || 8930);
+const DIST_PORT = PORT + 1;
 
 const REGISTERED_GAMES = registry.all();
 const PAGE_IDS = ['index', ...REGISTERED_GAMES.map(g => g.id)].sort((a, b) => b.length - a.length);
@@ -34,6 +43,27 @@ const CORE = new Set([
     'verify-registry', 'verify-sfx',
 ]);
 const QUICK_BROWSER = new Set(['smoke-index', 'verify-chrome', 'verify-theme', 'verify-start-menus']);
+// Re-run against the production build: every page's chrome/theme, the shared layout contracts
+// whose cascade depends on Vite's CSS chunk order, and the smokes that load production art.
+const DIST_SUITE = new Set([
+    'verify-css-p3a', 'verify-css-p3b', 'verify-css-p3c', 'verify-css-p3d', 'verify-css-p3e',
+    'verify-chrome', 'verify-theme', 'verify-desktop-frame', 'verify-stats-drawer', 'verify-immersive',
+    'verify-start-menus', 'smoke-index', 'smoke-carrot-pull', 'smoke-needle-awn', 'smoke-tower-defense',
+    'smoke-sword-flight',
+]);
+// Approximate CI seconds of the slowest browser steps. Only used to balance --shard; a stale or
+// missing entry costs balance, never coverage. Unlisted browser steps count as DEFAULT_WEIGHT.
+const WEIGHTS = {
+    'verify-stats-drawer': 190, 'verify-theme': 145, 'verify-button-icons': 135, 'verify-chrome': 105,
+    'verify-desktop-frame': 100, 'placeholder-leak-check': 95, 'verify-overlay-corners': 75,
+    'verify-start-menus': 70, 'fg-audit': 65, 'verify-immersive': 60, 'verify-touch-hints': 45,
+    'verify-tetris-drawer': 35, 'verify-stage-status': 30, 'smoke-magnetic-garden': 30,
+    'verify-tetris-topbar-mobile': 30, 'smoke-silk-dew': 25, 'smoke-crystal-bloom': 25,
+    'verify-mobile-viewport-fit': 25, 'smoke-shadow-loom': 20, 'smoke-ripple-duet': 20,
+    'verify-sidebar-family': 20, 'smoke-index': 15, 'smoke-carrot-pull': 15, 'smoke-maxwell-demon': 15,
+};
+const DEFAULT_WEIGHT = 10;
+const weightOf = step => WEIGHTS[step.name.replace(/^dist:/, '')] ?? (step.needsServer ? DEFAULT_WEIGHT : 1);
 
 function inferGames(name) {
     const parts = name.replace(/^(verify|smoke)-/, '').split('-');
@@ -116,7 +146,17 @@ function ownerOf(file) {
     return null;
 }
 
+function distSteps() {
+    return allSteps.filter(step => DIST_SUITE.has(step.name)).map(step => ({
+        ...step,
+        name: `dist:${step.name}`,
+        served: 'dist',
+        env: { ...step.env, VERIFY_BUILT_OUTPUT: '1' },
+    }));
+}
+
 function selectSuite() {
+    if (DIST) return distSteps();
     if (QUICK) {
         return allSteps.filter(step => !step.needsServer || QUICK_BROWSER.has(step.name));
     }
@@ -125,6 +165,29 @@ function selectSuite() {
     const { base, files } = changedFiles();
     console.log(`--changed: ${files.length} files vs ${base}`);
     return selectChangedSuite(files);
+}
+
+// Longest-processing-time-first: deterministic, and every step lands in exactly one shard.
+export function shardSuite(steps, index, count) {
+    const loads = Array.from({ length: count }, () => 0);
+    const owner = new Map();
+    for (const step of [...steps].sort((a, b) => weightOf(b) - weightOf(a) || a.name.localeCompare(b.name))) {
+        const target = loads.indexOf(Math.min(...loads));
+        loads[target] += weightOf(step);
+        owner.set(step.name, target);
+    }
+    return steps.filter(step => owner.get(step.name) === index - 1);
+}
+
+function parseShard(value) {
+    const match = /^(\d+)\/(\d+)$/.exec(value);
+    const index = Number(match?.[1]);
+    const count = Number(match?.[2]);
+    if (!match || count < 1 || index < 1 || index > count) {
+        console.error(`--shard expects k/n with 1 <= k <= n, got "${value}"`);
+        process.exit(2);
+    }
+    return { index, count };
 }
 
 export function selectChangedSuite(files) {
@@ -149,9 +212,9 @@ export function selectChangedSuite(files) {
         : step);
 }
 
-function startServer() {
-    return spawn(process.execPath, [join(ROOT, 'tests', 'lib', 'serve-static.mjs'), String(PORT)], {
-        cwd: ROOT,
+function startServer(port, cwd) {
+    return spawn(process.execPath, [join(ROOT, 'tests', 'lib', 'serve-static.mjs'), String(port)], {
+        cwd,
         stdio: ['ignore', 'pipe', 'pipe'],
     });
 }
@@ -233,30 +296,50 @@ const IS_MAIN = process.argv[1]
     && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 
 if (IS_MAIN) {
-    const suite = selectSuite().filter(step => existsSync(join(ROOT, step.script)));
-    const needsServer = suite.some(step => step.needsServer);
-    const server = !BASE_URL && needsServer ? startServer() : null;
-    const base = BASE_URL || `http://127.0.0.1:${PORT}`;
+    let suite = selectSuite();
+    if (WITH_DIST && !DIST) suite = [...suite, ...distSteps()];
+    suite = suite.filter(step => existsSync(join(ROOT, step.script)));
+    if (OFFLINE) suite = suite.filter(step => !step.needsServer);
+    if (BROWSER) suite = suite.filter(step => step.needsServer);
+    if (SHARD) {
+        const { index, count } = parseShard(SHARD);
+        suite = shardSuite(suite, index, count);
+        console.log(`--shard=${index}/${count}: ${suite.length} steps`);
+    }
+    const needsSource = suite.some(step => step.needsServer && step.served !== 'dist');
+    const needsDist = suite.some(step => step.served === 'dist');
+    if (needsDist && !existsSync(join(ROOT, 'dist', 'index.html'))) {
+        console.error('built-output steps need a production build: run `npm run build` first');
+        process.exit(2);
+    }
+    const servers = [];
+    const sourceBase = BASE_URL || `http://127.0.0.1:${PORT}`;
+    const distBase = `http://127.0.0.1:${DIST_PORT}`;
+    if (needsSource && !BASE_URL) servers.push([startServer(PORT, ROOT), sourceBase]);
+    if (needsDist) servers.push([startServer(DIST_PORT, join(ROOT, 'dist')), distBase]);
     let ready = true;
-    if (server) ready = await waitForServer(base);
+    for (const [, url] of servers) ready = ready && await waitForServer(url);
+    const baseFor = step => (step.served === 'dist' ? distBase : sourceBase);
 
     const started = Date.now();
     let results = [];
     if (!ready) {
         results = [{ name: 'server', ok: false, code: -1, ms: 0 }];
     } else if (JOBS === 1) {
-        for (const step of suite) results.push(await runStep(step, base, false));
+        for (const step of suite) results.push(await runStep(step, baseFor(step), false));
     } else {
         const offline = suite.filter(step => !step.needsServer);
-        const online = suite.filter(step => step.needsServer);
+        // Start the slowest browser steps first so the pool's tail is short.
+        const online = suite.filter(step => step.needsServer)
+            .sort((a, b) => weightOf(b) - weightOf(a) || a.name.localeCompare(b.name));
         const [a, b] = await Promise.all([
-            pool(offline, Math.max(1, Math.min(4, JOBS * 2)), step => runStep(step, base, true)),
-            pool(online, JOBS, step => runStep(step, base, true)),
+            pool(offline, Math.max(1, Math.min(4, JOBS * 2)), step => runStep(step, baseFor(step), true)),
+            pool(online, JOBS, step => runStep(step, baseFor(step), true)),
         ]);
         const byName = new Map([...a, ...b].map(result => [result.name, result]));
         results = suite.map(step => byName.get(step.name));
     }
-    if (server) server.kill();
+    for (const [server] of servers) server.kill();
 
     console.log('\n== verify summary ==');
     let failed = 0;
