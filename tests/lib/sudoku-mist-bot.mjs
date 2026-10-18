@@ -2,7 +2,7 @@
 // 产出的 inputs 可原样交给 replay() 回放。
 //
 //   deducer(level, rng)  —— 「会推理的玩家」：每步在当前知识下跑关卡 cap 档闭包，随机选一个可推格落子。
-//                           找不到可推格就是卡死（stuck: true）——永不卡死的判据。
+//                           无可推格且无可激活题面才是卡死（stuck: true）。
 //   greedy(level)        —— 「贪分的玩家」：在可推格里挑本步得分最高的（档位高、在雾里），近似理想玩家。
 //   guesser(level, rng)  —— 「瞎猜的玩家」：随便挑一个未知格，按随机顺序试数字直到填对。
 import { createSession, prepareLevel } from '../../src/games/sudoku-mist/model/session.js';
@@ -18,13 +18,14 @@ function options(session, cap) {
     return { a, cells: a.order.filter(i => !k[i]) };
 }
 
-export function deducer(level, rng, { cap = prepareLevel(level).cap } = {}) {
+export function deducer(level, rng, { cap = prepareLevel(level).cap, interleave = false } = {}) {
     const s = createSession(prepareLevel(level));
     let fogOnly = 0, steps = 0;
     while (!s.done) {
         const { a, cells } = options(s, cap);
-        if (!cells.length) {
-            const ready = Array.from({ length: CELLS }, (_, i) => i).filter(i => s.isCharged(i));
+        const ready = Array.from({ length: CELLS }, (_, i) => i).filter(i => s.isCharged(i));
+        // Include early activation, not only the fallback used when deductions run out.
+        if (!cells.length || (interleave && ready.length && rng() < 0.5)) {
             if (!ready.length) return { stuck: true, steps, session: s };
             s.activate(pick(ready, rng));
             steps++;

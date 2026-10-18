@@ -102,9 +102,13 @@ console.log('▶ ④ 抽样对局');
     let stuck = 0, runs = 0;
     for (const p of puzzles.slice(0, PLAY_DAYS)) {
         const lv = prepareLevel({ ...p, id: p.id });
-        for (let k = 0; k < PLAY_RUNS; k++, runs++) if (deducer(lv, mulberry32(k + 1), { cap: p.cap }).stuck) stuck++;
+        for (const interleave of [false, true]) {
+            for (let k = 0; k < PLAY_RUNS; k++, runs++) {
+                if (deducer(lv, mulberry32(k + 1), { cap: p.cap, interleave }).stuck) stuck++;
+            }
+        }
     }
-    ok(stuck === 0, `${PLAY_DAYS} 天 × ${PLAY_RUNS} 遍随机顺序，推理玩家（T${PROFILES.daily.cap}）从未卡死`, `${stuck}/${runs} 遍卡死`);
+    ok(stuck === 0, `${PLAY_DAYS} 天 × ${PLAY_RUNS} 遍 × 两种揭雾策略，推理玩家（T${PROFILES.daily.cap}）从未卡死`, `${stuck}/${runs} 遍卡死`);
 }
 
 /* ── ⑤ 耗时 ── */

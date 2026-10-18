@@ -69,6 +69,29 @@ ok(countSolutions(new Int8Array(CELLS)) === 2, '空盘计数到上限 2 即停')
     ok(rejected, 'prepareLevel 拒绝冲突终盘');
 }
 {
+    const malformed = [null, undefined, [], new Int8Array(80), new Int8Array(82)];
+    for (const value of [-1, 10, 256, 1.5, NaN, Infinity, '1']) {
+        const g = Array(CELLS).fill(0);
+        g[0] = value;
+        malformed.push(g);
+    }
+    ok(malformed.every(g => countSolutions(g) === 0 && solve(g) === null),
+        '求解入口拒绝缺失、长度错误、非整数与越界输入');
+    const invalidLevels = [
+        { givens: [261, ...parseGrid(CLASSIC_SOLUTION).slice(1)], window: '1'.repeat(CELLS) },
+        { givens: [5.5, ...parseGrid(CLASSIC_SOLUTION).slice(1)], window: '1'.repeat(CELLS) },
+        { givens: parseGrid('55' + CLASSIC_SOLUTION.slice(2)), solution: parseGrid(CLASSIC_SOLUTION), visible0: new Uint8Array(CELLS).fill(1) },
+    ];
+    ok(invalidLevels.every(lv => {
+        try { prepareLevel(lv); return false; } catch { return true; }
+    }), 'prepareLevel 不能通过类型转换或伪造已准备字段绕过合法性验证');
+    for (const [a, b] of [[0, 1], [0, 27], [0, 10]]) {
+        const g = new Int8Array(CELLS);
+        g[a] = g[b] = 5;
+        ok(countSolutions(g) === 0 && solve(g) === null, `部分题面也拒绝同行/列/宫重复：${a},${b}`);
+    }
+}
+{
     const a = randomSolution(mulberry32(42)), b = randomSolution(mulberry32(42)), c = randomSolution(mulberry32(43));
     ok(a.every(d => d >= 1 && d <= 9) && isConsistent(a), '随机终盘填满且合法');
     ok(formatGrid(a) === formatGrid(b) && formatGrid(a) !== formatGrid(c), '随机终盘由种子决定');
@@ -339,6 +362,30 @@ console.log('▶ ⑥ 对局');
     ok(s.done && played.done && JSON.stringify(played.summary()) === JSON.stringify(s.summary())
         && JSON.stringify(played.view()) === JSON.stringify(s.view()),
     '先填 6 号格的合法顺序可以通关，主动揭雾连同点灯可被确定性回放');
+
+    // Explore the entire reachable state graph, including activating clues before a dead end.
+    // Scores/history do not affect legal actions, so merge only states with identical knowledge,
+    // visibility, and remaining reveal rights. Every action consumes one unknown/charged cell.
+    const visited = new Set();
+    let deadEnds = 0, terminals = 0;
+    function explore(inputs) {
+        const state = replay(lv, inputs);
+        const key = JSON.stringify(state.view());
+        if (visited.has(key)) return;
+        visited.add(key);
+        if (state.done) { terminals++; return; }
+        const a = analyze(state.knowledge(), { cap: lv.cap });
+        const actions = a.order.filter(i => !state.isKnown(i))
+            .map(i => ({ type: 'place', cell: i, digit: a.values[i] }));
+        for (let i = 0; i < CELLS; i++) {
+            if (state.isCharged(i)) actions.push({ type: 'activate', cell: i });
+        }
+        if (!actions.length) deadEnds++;
+        for (const action of actions) explore([...inputs, action]);
+    }
+    explore([]);
+    ok(visited.size > 10 && terminals > 0 && deadEnds === 0,
+        `审查复现穷举全部 ${visited.size} 个可达状态：${terminals} 个终态、${deadEnds} 个死局`);
 }
 
 /* ── ⑦ 确定性 ── */

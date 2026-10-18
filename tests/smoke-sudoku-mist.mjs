@@ -324,10 +324,12 @@ try {
         check(tab.selected === 6 && tab.tabstop === 0 && tab.old === -1,
             '⑭ 鼠标选中格同步 roving tabindex', JSON.stringify(tab));
         await rp.focus('#sm-pad [data-digit="1"]');
-        await rp.keyboard.press('Shift+Tab');
+        await rp.keyboard.down('Shift');
+        await rp.keyboard.press('Tab');
+        await rp.keyboard.up('Shift');
         const returnedFocus = await rp.evaluate(() => document.activeElement?.dataset.cell);
         check(returnedFocus === '6', '⑭ 从数字键盘 Shift+Tab 返回正确选中格', returnedFocus);
-        await clickDigit(rp, 9);
+        await rp.keyboard.press('9');
         const charged = await rp.evaluate(() => ({
             isCharged: window.smGame.session.isCharged(5),
             label: document.querySelector('#sm-board [data-cell="5"]').getAttribute('aria-label'),
@@ -364,6 +366,13 @@ try {
         }));
         check(zero.state === 'result' && zero.score === 0 && JSON.parse(zero.stored || '{}').score === 0
             && badge.done && badge.text.includes('0'), '⑭ 0 分通关持久化，并在菜单显示完成', JSON.stringify({ zero, badge }));
+        await rp.reload({ waitUntil: 'load' });
+        await rp.waitForFunction(() => !!window.smGame?.el);
+        const restored = await rp.$eval('#sm-level-thin-1', el => ({
+            done: el.classList.contains('sm-level--done'),
+            text: el.querySelector('.sm-level-best').textContent,
+        }));
+        check(restored.done && restored.text.includes('0'), '⑭ 刷新后恢复零分通关记录', JSON.stringify(restored));
         check(rerrs.length === 0, '回归场景：无 pageerror', rerrs.join(' | '));
         await rp.close();
     }

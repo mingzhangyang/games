@@ -88,7 +88,7 @@ export function formatGrid(g) {
 
 /** 已填数字之间是否存在冲突（不检查是否可解） */
 export function isConsistent(g) {
-    if (g.length !== CELLS) return false;
+    if (!g || g.length !== CELLS) return false;
     for (const cells of UNITS) {
         let seen = 0;
         for (const i of cells) {

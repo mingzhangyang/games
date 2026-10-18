@@ -12,13 +12,19 @@ import { analyze, MAX_TIER } from './techniques.js';
 import { parseWindow, revealAround, knowledgeOf, DEFAULT_REVEAL } from './fog.js';
 import { placementPoints, WRONG_PENALTY } from './scoring.js';
 
+const preparedLevels = new WeakSet();
+
 /** 关卡 → 求出唯一解；非唯一解直接抛错（关卡数据有误）。已准备好的关卡原样返回 */
 export function prepareLevel(level) {
-    if (level.solution && level.visible0) return level;
-    const givens = typeof level.givens === 'string' ? parseGrid(level.givens) : Int8Array.from(level.givens);
-    const visible0 = typeof level.window === 'string' ? parseWindow(level.window) : Uint8Array.from(level.window);
-    if (countSolutions(givens) !== 1) throw new Error(`level ${level.id || '?'} has no unique solution`);
-    return {
+    if (preparedLevels.has(level)) return level;
+    // Validate before typed-array conversion can truncate fractions or wrap out-of-range digits.
+    // Supplied solution/visible0 fields are not proof that a level has already been validated.
+    const rawGivens = typeof level.givens === 'string' ? parseGrid(level.givens) : level.givens;
+    if (countSolutions(rawGivens) !== 1) throw new Error(`level ${level.id || '?'} has no unique solution`);
+    const givens = Int8Array.from(rawGivens);
+    const window = level.visible0 ?? level.window;
+    const visible0 = typeof window === 'string' ? parseWindow(window) : Uint8Array.from(window);
+    const prepared = {
         id: level.id || null,
         cap: level.cap ?? MAX_TIER,
         givens,
@@ -26,6 +32,8 @@ export function prepareLevel(level) {
         solution: solve(givens),
         reveal: level.reveal || DEFAULT_REVEAL,
     };
+    preparedLevels.add(prepared);
+    return prepared;
 }
 
 export function createSession(level) {
