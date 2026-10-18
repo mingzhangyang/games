@@ -60,6 +60,15 @@ ok(countSolutions(parseGrid(CLASSIC)) === 1, '经典题唯一解');
 ok(formatGrid(solve(parseGrid(CLASSIC))) === CLASSIC_SOLUTION, '经典题解正确');
 ok(countSolutions(new Int8Array(CELLS)) === 2, '空盘计数到上限 2 即停');
 {
+    const invalid = parseGrid('55' + CLASSIC_SOLUTION.slice(2));
+    ok(!isConsistent(invalid) && countSolutions(invalid) === 0 && solve(invalid) === null,
+        '即使是完整终盘，同行重复的 5 也绝不视为解');
+    let rejected = false;
+    try { prepareLevel({ id: 'invalid', givens: invalid, window: '1'.repeat(CELLS) }); }
+    catch { rejected = true; }
+    ok(rejected, 'prepareLevel 拒绝冲突终盘');
+}
+{
     const a = randomSolution(mulberry32(42)), b = randomSolution(mulberry32(42)), c = randomSolution(mulberry32(43));
     ok(a.every(d => d >= 1 && d <= 9) && isConsistent(a), '随机终盘填满且合法');
     ok(formatGrid(a) === formatGrid(b) && formatGrid(a) !== formatGrid(c), '随机终盘由种子决定');
@@ -296,6 +305,40 @@ console.log('▶ ⑥ 对局');
         ok(sm.byTier[1] + sm.byTier[2] + sm.byTier[3] + sm.byTier[4] + sm.luck + sm.hintPlaced === sm.placements && sm.luck === 0 && sm.score > 0,
             '通关统计：各档 + 侥幸 + 点灯 = 落子数；推理玩家没有侥幸');
     }
+}
+
+// 回归：顺序改变导致雾中题面被提前揭开，不能因此丢失它本可触发的揭雾。
+{
+    const visible0 = new Uint8Array(CELLS).fill(1);
+    for (const i of [3, 4, 5, 6, 30, 31]) visible0[i] = 0;
+    const givens = parseGrid(CLASSIC_SOLUTION);
+    const lv = { id: 'order-regression', givens, solution: Int8Array.from(givens), visible0, cap: 2, reveal: 'cross' };
+    const s = createSession(lv);
+    ok(!s.isCharged(0) && !s.activate(0).ok, '开局可见的题面不可二次揭雾');
+    const first = s.place(6, 9);
+    const options = analyze(s.knowledge(), { cap: 2 }).order.filter(i => !s.isKnown(i));
+    ok(first.correct && first.revealed.includes(5) && s.isCharged(5) && s.cell(5).revealReady
+        && options.length === 0 && !s.done, 'Copilot 顺序复现：先填 6 号格后没有可推格，但保留了 5 号题面的揭雾机会');
+    const hint = s.hint();
+    ok(hint?.action === 'activate' && hint.cell === 5, '无可推格时点灯指向可激活的题面');
+    const activated = s.activate(5);
+    ok(activated.ok && activated.revealed.includes(4) && !s.isCharged(5) && !s.activate(5).ok,
+        '题面只可主动揭雾一次，并传播新的待激活题面');
+    let steps = 0;
+    while (!s.done && steps++ < CELLS * 2) {
+        const a = analyze(s.knowledge(), { cap: 2 });
+        const next = a.order.find(i => !s.isKnown(i));
+        if (next !== undefined) s.place(next, a.values[next]);
+        else {
+            const ready = Array.from({ length: CELLS }, (_, i) => i).find(i => s.isCharged(i));
+            if (ready === undefined) break;
+            s.activate(ready);
+        }
+    }
+    const played = replay(lv, s.inputs);
+    ok(s.done && played.done && JSON.stringify(played.summary()) === JSON.stringify(s.summary())
+        && JSON.stringify(played.view()) === JSON.stringify(s.view()),
+    '先填 6 号格的合法顺序可以通关，主动揭雾连同点灯可被确定性回放');
 }
 
 /* ── ⑦ 确定性 ── */

@@ -304,6 +304,70 @@ try {
     check(errs.length === 0, '桌面：无 pageerror', errs.join(' | '));
     await page.close();
 
+    /* ── 关键回归：roving tabIndex、顺序死局、0 分通关 ── */
+    {
+        const { page: rp, errs: rerrs } = await open();
+        const solution = '534678912672195348198342567859761423426853791713924856961537284287419635345286179';
+        const mask = Array(81).fill('1');
+        for (const i of [3, 4, 5, 6, 30, 31]) mask[i] = '0';
+        await rp.evaluate((givens, maskString) => {
+            window.smGame.begin({ kind: 'level', id: 'thin-1', name: { en: 'Regression', zh: '回归' } },
+                { givens, window: maskString, cap: 2, reveal: 'cross' });
+        }, solution, mask.join(''));
+        await clickCell(rp, 6);
+        const tab = await rp.evaluate(() => ({
+            selected: window.smGame.selected,
+            active: document.activeElement?.dataset.cell,
+            tabstop: document.querySelector('#sm-board [data-cell="6"]').tabIndex,
+            old: document.querySelector('#sm-board [data-cell="40"]').tabIndex,
+        }));
+        check(tab.selected === 6 && tab.tabstop === 0 && tab.old === -1,
+            '⑭ 鼠标选中格同步 roving tabindex', JSON.stringify(tab));
+        await rp.focus('#sm-pad [data-digit="1"]');
+        await rp.keyboard.press('Shift+Tab');
+        const returnedFocus = await rp.evaluate(() => document.activeElement?.dataset.cell);
+        check(returnedFocus === '6', '⑭ 从数字键盘 Shift+Tab 返回正确选中格', returnedFocus);
+        await clickDigit(rp, 9);
+        const charged = await rp.evaluate(() => ({
+            isCharged: window.smGame.session.isCharged(5),
+            label: document.querySelector('#sm-board [data-cell="5"]').getAttribute('aria-label'),
+            classes: document.querySelector('#sm-board [data-cell="5"]').className,
+        }));
+        check(charged.isCharged && /sm-cell--charged/.test(charged.classes) && /揭雾/.test(charged.label),
+            '⑭ 被提前揭开的隐藏题面可点按揭雾且有读屏标签', JSON.stringify(charged));
+        await clickCell(rp, 5);
+        const used = await rp.evaluate(() => ({
+            visible: window.smGame.session.isVisible(4),
+            charged: window.smGame.session.isCharged(5),
+            inputs: window.smGame.session.inputs,
+        }));
+        check(used.visible && !used.charged && used.inputs.some(a => a.type === 'activate' && a.cell === 5),
+            '⑭ 真实点击题面释放揭雾机会', JSON.stringify(used));
+
+        // 只剩一处雾中数字；先点灯再落子，整局可以合法地获得 0 分。
+        await rp.evaluate(givens => {
+            localStorage.removeItem('game:sudoku-mist:v1:best:thin-1');
+            window.smGame.begin({ kind: 'level', id: 'thin-1', name: { en: 'Zero score', zh: '零分' } },
+                { givens, window: '0' + '1'.repeat(80), cap: 2, reveal: 'cross' });
+        }, solution);
+        await rp.click('#sm-btn-hint');
+        await rp.keyboard.press('5');
+        const zero = await rp.evaluate(() => ({
+            state: window.smGame.state,
+            score: window.smGame.session.score,
+            stored: localStorage.getItem('game:sudoku-mist:v1:best:thin-1'),
+        }));
+        await rp.evaluate(() => window.smGame.toMenu());
+        const badge = await rp.$eval('#sm-level-thin-1', el => ({
+            done: el.classList.contains('sm-level--done'),
+            text: el.querySelector('.sm-level-best').textContent,
+        }));
+        check(zero.state === 'result' && zero.score === 0 && JSON.parse(zero.stored || '{}').score === 0
+            && badge.done && badge.text.includes('0'), '⑭ 0 分通关持久化，并在菜单显示完成', JSON.stringify({ zero, badge }));
+        check(rerrs.length === 0, '回归场景：无 pageerror', rerrs.join(' | '));
+        await rp.close();
+    }
+
     /* ── 浅色主题 ── */
     {
         const { page: lp, errs: lerrs } = await open({ theme: 'light' });

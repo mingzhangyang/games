@@ -34,6 +34,9 @@ export function createSession(level) {
     const visible = Uint8Array.from(lv.visible0);
     const placed = new Int8Array(CELLS);
     const hinted = new Uint8Array(CELLS);
+    // A fog-hidden given that is revealed before the player places it retains one manual reveal.
+    // This is necessary for order-independent solvability: it must not silently lose its turn.
+    const charged = new Uint8Array(CELLS);
     const inputs = [];
     const log = [];
     let score = 0, streak = 0, maxStreak = 0, mistakes = 0, hintsUsed = 0;
@@ -50,8 +53,32 @@ export function createSession(level) {
     function cellView(i) {
         if (placed[i]) return { state: 'placed', digit: placed[i] };
         if (!visible[i]) return { state: 'fog' };
-        if (givens[i]) return { state: 'given', digit: givens[i] };
+        if (givens[i]) return charged[i]
+            ? { state: 'given', digit: givens[i], revealReady: true }
+            : { state: 'given', digit: givens[i] };
         return { state: 'open' };
+    }
+
+    /** Preserve each newly exposed hidden clue's optional, single-use fog-reveal action. */
+    function revealFrom(i) {
+        const opened = revealAround(visible, i, reveal);
+        for (const j of opened) {
+            if (givens[j] && !placed[j] && !lv.visible0[j]) charged[j] = 1;
+        }
+        cache = null;
+        return opened;
+    }
+
+    /** A revealed clue can release the fog that it could have cleared if placed while hidden. */
+    function activate(i) {
+        if (!Number.isInteger(i) || i < 0 || i >= CELLS || !charged[i]) {
+            return { ok: false, reason: 'unavailable' };
+        }
+        charged[i] = 0;
+        inputs.push({ type: 'activate', cell: i });
+        streak = 0;
+        const revealed = revealFrom(i);
+        return { ok: true, cell: i, revealed, score, done: isDone() };
     }
 
     function place(i, d) {
@@ -79,8 +106,7 @@ export function createSession(level) {
         const points = placementPoints({ tier, intoFog, streak, hinted: wasHinted });
         score += points;
         placed[i] = d;
-        const revealed = revealAround(visible, i, reveal);
-        cache = null;
+        const revealed = revealFrom(i);
         const entry = {
             cell: i, digit: d, correct: true, intoFog, tier,
             via: a.viaOf[i], key: a.keyOf[i], luck: tier === 0, hinted: wasHinted,
@@ -95,7 +121,13 @@ export function createSession(level) {
         if (isDone()) return null;
         const a = analysis();
         const cell = a.order.find(i => !isKnown(i));
-        if (cell === undefined) return null;
+        if (cell === undefined) {
+            const ready = charged.findIndex(Boolean);
+            if (ready < 0) return null;
+            inputs.push({ type: 'hint' });
+            hintsUsed++;
+            return { action: 'activate', cell: ready };
+        }
         inputs.push({ type: 'hint' });
         if (!hinted[cell]) { hinted[cell] = 1; hintsUsed++; }
         return {
@@ -126,10 +158,12 @@ export function createSession(level) {
         view: () => Array.from({ length: CELLS }, (_, i) => cellView(i)),
         cell: cellView,
         isKnown,
+        isCharged: i => !!charged[i],
         isVisible: i => !!visible[i],
         knowledge,
         analysis,
         place,
+        activate,
         hint,
         summary,
     };
@@ -140,6 +174,7 @@ export function replay(level, inputs) {
     const s = createSession(level);
     for (const a of inputs) {
         if (a.type === 'place') s.place(a.cell, a.digit);
+        else if (a.type === 'activate') s.activate(a.cell);
         else if (a.type === 'hint') s.hint();
     }
     return s;

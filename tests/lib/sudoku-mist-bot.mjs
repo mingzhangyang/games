@@ -23,7 +23,13 @@ export function deducer(level, rng, { cap = prepareLevel(level).cap } = {}) {
     let fogOnly = 0, steps = 0;
     while (!s.done) {
         const { a, cells } = options(s, cap);
-        if (!cells.length) return { stuck: true, steps, session: s };
+        if (!cells.length) {
+            const ready = Array.from({ length: CELLS }, (_, i) => i).filter(i => s.isCharged(i));
+            if (!ready.length) return { stuck: true, steps, session: s };
+            s.activate(pick(ready, rng));
+            steps++;
+            continue;
+        }
         if (cells.every(i => !s.isVisible(i))) fogOnly++;
         const i = pick(cells, rng);
         s.place(i, a.values[i]);
@@ -36,7 +42,12 @@ export function greedy(level) {
     const s = createSession(prepareLevel(level));
     while (!s.done) {
         const { a, cells } = options(s, MAX_TIER);
-        if (!cells.length) return { stuck: true, session: s };
+        if (!cells.length) {
+            const ready = Array.from({ length: CELLS }, (_, i) => i).find(i => s.isCharged(i));
+            if (ready === undefined) return { stuck: true, session: s };
+            s.activate(ready);
+            continue;
+        }
         let best = cells[0], bestPts = -1;
         for (const i of cells) {
             const pts = placementPoints({ tier: a.tierOf[i], intoFog: !s.isVisible(i), streak: s.streak + 1 });

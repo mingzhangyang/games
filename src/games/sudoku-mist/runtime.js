@@ -251,7 +251,7 @@ export class SudokuMistGame {
                 btn.className = 'sm-level';
                 btn.id = `sm-level-${level.id}`;
                 const best = loadBest(level.id);
-                btn.classList.toggle('sm-level--done', best > 0);
+                btn.classList.toggle('sm-level--done', best !== null);
                 const num = document.createElement('span');
                 num.className = 'sm-level-num';
                 num.textContent = String(n + 1);
@@ -260,7 +260,7 @@ export class SudokuMistGame {
                 name.textContent = level.name[lang];
                 const sub = document.createElement('span');
                 sub.className = 'sm-level-best';
-                sub.textContent = best > 0 ? fill(t.levelBest, { n: best }) : t.levelNew;
+                sub.textContent = best !== null ? fill(t.levelBest, { n: best }) : t.levelNew;
                 btn.append(num, name, sub);
                 btn.addEventListener('click', () => this.startLevel(level.id));
                 list.appendChild(btn);
@@ -280,7 +280,7 @@ export class SudokuMistGame {
             const best = loadBest(`free-${p.id}`);
             const sub = document.createElement('span');
             sub.className = 'sm-level-best';
-            sub.textContent = best > 0 ? fill(t.levelBest, { n: best }) : '';
+            sub.textContent = best !== null ? fill(t.levelBest, { n: best }) : '';
             btn.append(label, sub);
             btn.addEventListener('click', () => this.startFree(p.id));
             this.el.free.appendChild(btn);
@@ -398,6 +398,11 @@ export class SudokuMistGame {
 
     onCell(i) {
         if (this.state !== 'playing' || this.isPaused) return;
+        if (this.session.isCharged(i)) {
+            this.selected = i;
+            this.activate(i);
+            return;
+        }
         if (this.armed && !this.session.isKnown(i)) {
             this.selected = i;
             this.apply(i, this.armed, { notes: this.notesMode });
@@ -454,6 +459,29 @@ export class SudokuMistGame {
         if (r.done) this.finish();
     }
 
+    /** Voluntary, single-use reveal from a hidden clue that became visible before being placed. */
+    activate(i) {
+        const r = this.session.activate(i);
+        if (!r.ok) return;
+        this.moves++;
+        this.armed = 0;
+        this.hintCell = -1;
+        this.hintUnit = -1;
+        for (const j of r.revealed) {
+            const v = this.session.cell(j);
+            if (v.digit) this.clearNotesFor(j, v.digit);
+        }
+        this.mist.reveal(r.revealed, i);
+        this.mist.ripple(i);
+        this.float(i, this.t().floatRekindle, 'muted');
+        this.audio.hint();
+        this.el.message.textContent = '';
+        this.announce(fill(this.t().srRekindle, { n: r.revealed.length }));
+        this.render();
+        this.ensureLoop();
+        if (r.done) this.finish();
+    }
+
     toggleNote(i, d) {
         if (this.session.isKnown(i)) return;
         this.notes[i] ^= 1 << (d - 1);
@@ -499,6 +527,14 @@ export class SudokuMistGame {
         this.hintCell = h.cell;
         this.hintUnit = h.unit;
         this.armed = 0;
+        if (h.action === 'activate') {
+            this.el.message.textContent = t.hintRekindle;
+            this.announce(t.hintRekindle);
+            this.audio.hint();
+            this.render();
+            this.board.focus(h.cell);
+            return;
+        }
         let text;
         if (h.via === 'nakedSingle') text = fill(t.hintNaked, { d: h.digit });
         else text = fill(h.via === 'fullHouse' ? t.hintFullHouse : t.hintHidden, { u: this.unitName(h.unit), d: h.digit });
@@ -526,9 +562,9 @@ export class SudokuMistGame {
         this.pauseOwnership.invalidate();
         const summary = this.session.summary();
         const prev = loadBest(this.meta.id);
-        const isBest = summary.score > prev;
+        const isBest = prev === null || summary.score > prev;
         if (isBest) saveBest(this.meta.id, summary.score);
-        this.result = { summary, best: Math.max(prev, summary.score), isBest, time: this.elapsed, inputs: this.session.inputs };
+        this.result = { summary, best: prev === null ? summary.score : Math.max(prev, summary.score), isBest, time: this.elapsed, inputs: this.session.inputs };
         this.audio.cleared();
         this.track(GAME_ID, 'finish');
         this.announce(fill(this.t().srCleared, { n: summary.score }));
@@ -614,7 +650,15 @@ export class SudokuMistGame {
                 this.board.flash(a.cell, 'sm-cell--wrong');
                 this.float(a.cell, `−${r.penalty || 0}`, 'wrong');
             }
-        } else {
+        } else if (a.type === 'activate') {
+            const r = this.replaySession.activate(a.cell);
+            this.selected = a.cell;
+            if (r.ok) {
+                this.mist.reveal(r.revealed, a.cell);
+                this.mist.ripple(a.cell);
+                this.float(a.cell, this.t().floatRekindle, 'muted');
+            }
+        } else if (a.type === 'hint') {
             this.replaySession.hint();
         }
         this.render();
@@ -681,7 +725,10 @@ export class SudokuMistGame {
         const t = this.t();
         const parts = [fill(t.cellLabel, { r: ((i / 9) | 0) + 1, c: (i % 9) + 1 })];
         if (v.state === 'fog') parts.push(t.cellFog);
-        else if (v.state === 'given') parts.push(fill(t.cellGiven, { d: v.digit }));
+        else if (v.state === 'given') {
+            parts.push(fill(t.cellGiven, { d: v.digit }));
+            if (v.revealReady) parts.push(t.cellRekindle);
+        }
         else if (v.state === 'placed') parts.push(fill(t.cellPlaced, { d: v.digit }));
         else parts.push(t.cellOpen);
         if (mask) {

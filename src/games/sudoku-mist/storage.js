@@ -7,8 +7,9 @@ const slotFor = id => `best:${id}`;
 
 export function loadBest(id) {
     const raw = SUDOKU_MIST_STORAGE.get(slotFor(id), null);
-    const score = Number(raw?.score);
-    return Number.isFinite(score) && score > 0 ? Math.floor(score) : 0;
+    if (raw?.score === undefined || raw?.score === null || raw.score === '') return null;
+    const score = Number(raw.score);
+    return Number.isFinite(score) && score >= 0 ? Math.floor(score) : null;
 }
 
 export function saveBest(id, score) {

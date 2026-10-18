@@ -59,6 +59,7 @@ export function createBoard(root, { onCell }) {
             const el = cells[i];
             el.classList.toggle('sm-cell--fog', v.state === 'fog');
             el.classList.toggle('sm-cell--given', v.state === 'given');
+            el.classList.toggle('sm-cell--charged', !!v.revealReady);
             el.classList.toggle('sm-cell--placed', v.state === 'placed');
             el.classList.toggle('sm-cell--open', v.state === 'open');
             el.classList.toggle('sm-cell--selected', i === selected);
@@ -71,6 +72,8 @@ export function createBoard(root, { onCell }) {
             for (let d = 1; d <= 9; d++) {
                 notes[i][d - 1].textContent = mask & (1 << (d - 1)) ? String(d) : '';
             }
+            // Update roving keyboard focus together with the pointer-selected cell.
+            el.tabIndex = i === (selected >= 0 ? selected : 40) ? 0 : -1;
             el.setAttribute('aria-label', state.label(i, v, mask));
             el.setAttribute('aria-selected', i === selected ? 'true' : 'false');
         }

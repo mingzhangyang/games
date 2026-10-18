@@ -3,7 +3,7 @@
  * 只做「真值」用途（出题时保证唯一解、运行时求终盘），不参与推理评分 ——
  * 评分只看 techniques.js 的人类技巧梯。
  */
-import { CELLS, PEERS, ALL, bit, popcount } from './grid.js';
+import { CELLS, PEERS, ALL, bit, popcount, isConsistent } from './grid.js';
 
 function candidatesOf(g, i) {
     let used = 0;
@@ -44,6 +44,7 @@ const ascending = m => {
 
 /** 解的个数，数到 limit 就停（默认 2：只关心「唯一」与否） */
 export function countSolutions(grid, limit = 2) {
+    if (!isConsistent(grid)) return 0;
     const g = Int8Array.from(grid);
     let count = 0;
     search(g, ascending, () => ++count >= limit);
@@ -52,6 +53,7 @@ export function countSolutions(grid, limit = 2) {
 
 /** 任意一个解（按升序搜索的第一个）；无解返回 null */
 export function solve(grid) {
+    if (!isConsistent(grid)) return null;
     const g = Int8Array.from(grid);
     let out = null;
     search(g, ascending, sol => { out = Int8Array.from(sol); return true; });
