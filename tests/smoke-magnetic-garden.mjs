@@ -158,13 +158,18 @@ try {
     check(await page.$$eval('[data-level]', buttons => buttons.length === 24 && buttons.every(button => !button.disabled)),
         'all 24 gardens accessible from a new save');
     check(await page.evaluate(() => window.__gardenEvents.length === 0), 'menu view does not count as a play');
+    // The click helper scrollIntoView() on Help/Close may move the document.
+    // Start the native touch-gesture probe at a known top-of-page position,
+    // independent of that earlier accessibility interaction.
+    await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
+    await page.waitForFunction(() => window.scrollY === 0);
     const mobileMenu = await page.evaluate(() => ({
         stageTouch: getComputedStyle(document.getElementById('mg-stage')).touchAction,
         available: document.documentElement.scrollHeight - window.innerHeight,
         initial: window.scrollY,
     }));
     check(mobileMenu.stageTouch.includes('pan-y') && mobileMenu.available > 250 && mobileMenu.initial === 0,
-        'visible mobile level menu exposes native vertical panning without changing play-state touch contract');
+        'visible mobile level menu exposes native vertical panning without changing play-state touch contract: ' + JSON.stringify(mobileMenu));
     await swipeMenuUp(page);
     check(await page.evaluate(() => window.scrollY > 35),
         'real mobile touch swipe scrolls to later garden chapters (not scrollIntoView)');
