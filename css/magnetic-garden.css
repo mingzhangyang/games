@@ -79,10 +79,11 @@
  .mg-inventory-magnet { width:58px; height:58px; padding:6px; display:grid; place-items:center; border:1px dashed var(--mg-line); border-radius:12px; background:var(--mg-panel); cursor:pointer; }
  .mg-inventory-magnet[aria-pressed="true"] { outline:2px solid var(--mg-green); }
  .mg-menu { border-radius:0; display:block; text-align:center; padding:10px 24px 28px; background:var(--mg-bg); color:var(--mg-text); touch-action:pan-y; }
- #mg-hero { width:100%; max-width:470px; margin-inline:auto; }
- .mg-hero-image { display:none; width:100%; height:clamp(175px,52vw,255px); object-fit:cover; object-position:center 65%; border-radius:22px; margin:4px auto 18px; mask-image:linear-gradient(to bottom,#000 88%,transparent); }
- .mg-hero-image.is-ready { display:block; }
- .mg-hero-art.is-retired { display:none; }
+ #mg-hero { width:100%; max-width:470px; margin-inline:auto; display:grid; }
+ #mg-hero > * { grid-area:1 / 1; }
+ .mg-hero-image { display:block; visibility:hidden; width:100%; height:clamp(175px,52vw,255px); object-fit:cover; object-position:center 65%; border-radius:22px; margin:4px auto 18px; mask-image:linear-gradient(to bottom,#000 88%,transparent); }
+ .mg-hero-image.is-ready { visibility:visible; }
+ .mg-hero-art.is-retired { visibility:hidden; }
  .mg-hero-art { width:min(100%,440px); height:auto; display:block; margin:0 auto -8px; color:var(--mg-green); }
  .mg-menu-title { font-family:Georgia,'Songti SC',serif; font-size:clamp(34px,8vw,52px); font-weight:500; letter-spacing:-.035em; margin:10px 0; line-height:1.1; }
  .mg-intro { max-width:410px; margin:0 auto; color:var(--mg-dim); font-size:14px; line-height:1.7; }
