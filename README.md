@@ -30,6 +30,7 @@
 - Firefly Signal（萤火信号）
 - Shadow Loom（影织）
 - Loop Jail（画牢）
+- Magnetic Garden（磁极花园）
 - Sudoku in the Mist（雾隐九宫）
 <!-- registry:end game-list -->
 

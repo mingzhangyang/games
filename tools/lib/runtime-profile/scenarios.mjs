@@ -138,6 +138,11 @@ export const SCENARIOS = Object.freeze({
         ready: truthy('ljGame', 'el'),
         active: truthy('ljGame', 'isRunning()'), activity: 'continuous',
     },
+    'magnetic-garden': {
+        owner: 'mgGame', start: click('#mg-btn-start'),
+        ready: truthy('mgGame', 'state'),
+        active: truthy('mgGame', 'isRunning()'), activity: 'discrete',
+    },
     // The board itself is discrete, but the mist layer drifts on rAF for the whole
     // unpaused round, so the round is profiled as a continuous loop.
     'sudoku-mist': {

@@ -20,6 +20,16 @@
         touch-action: manipulation;
     }
 
+    /* Immersive gameplay owns touch-action:none to prevent gesture interference.
+       A visible, long level menu is document-scrollable on phones, so the stage
+       must temporarily allow native vertical pans. This belongs in contracts:
+       post-freeze page styles in @layer pages cannot override the shared lock. */
+    @media (width < 1024px) {
+        .game-stage.game-stage--immersive:has(> .game-overlay--menu:not(.hidden)) {
+            touch-action: pan-y;
+        }
+    }
+
     /* ② iOS Safari 聚焦字号 <16px 的输入框 / select 会把整页放大且失焦后不复原。
        触屏与移动布局一律 16px；桌面鼠标场景保留各页原有密度。 */
     @media (width < 1024px), (pointer: coarse) {

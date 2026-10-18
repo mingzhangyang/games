@@ -26,6 +26,7 @@ try {
         window.__attempts = [];
         window.__beacons = [];
         window.__failNextActive = false;
+        window.__unexpectedProbes = [];
         Object.defineProperty(performance, 'now', { configurable: true, value: () => window.__analyticsNow });
         Object.defineProperty(document, 'visibilityState',
             { configurable: true, get: () => window.__analyticsVisibility });
@@ -35,15 +36,13 @@ try {
         window.fetch = (url, options) => {
             const target = String(url);
             if (target.endsWith('/__analytics/stats?v=2')) {
-                if (location.search.includes('probe-down')) return Promise.reject(new Error('Worker unavailable'));
-                return Promise.resolve({ ok: true, json: async () => ({
-                    scope: 'day', games: {},
-                    total: { p: 0, f: 0, opens: 0, activeSeconds: 0, playingSeconds: 0 },
-                }) });
+                window.__unexpectedProbes.push(target);
+                return Promise.reject(new Error('capability probe is forbidden in V2-only client'));
             }
             if (target.endsWith('/__analytics/event')) {
                 const event = JSON.parse(options.body);
                 window.__attempts.push(event);
+                if (location.search.includes('event-down')) return Promise.reject(new Error('Worker unavailable'));
                 if (event.event === 'active' && window.__failNextActive) {
                     window.__failNextActive = false;
                     return Promise.reject(new Error('temporary offline'));
@@ -80,6 +79,7 @@ try {
     await page.waitForFunction(() => window.__attempts.some(e => e.event === 'open'));
     assert.equal((await seen('open')).length, 1, 'first load emits one open');
     assert.equal((await seen('play')).length, 0, 'initial menu emits no play');
+    assert.deepEqual(await page.evaluate(() => window.__unexpectedProbes), [], 'no capability probe');
     const firstSession = (await seen('open'))[0].sessionId;
     await page.evaluate(() => {
         const script = document.createElement('script');
@@ -180,10 +180,14 @@ try {
     assert.equal((await seen('open')).length, 1, 'refresh emits exactly one new open');
     assert.notEqual((await seen('open'))[0].sessionId, firstSession, 'new document has new session ID');
 
-    await page.goto(fixture + '?probe-down', { waitUntil: 'domcontentloaded' });
+    await page.goto(fixture + '?event-down', { waitUntil: 'domcontentloaded' });
     await page.click('#start');
     assert.equal(await page.evaluate(() => window.__fixturePlaying), true, 'game works with Worker unavailable');
-    assert.equal((await seen('open')).length, 0, 'failed probe emits no invalid V2 events');
+    const outageAttempts = await events();
+    assert.equal(outageAttempts[0].event, 'open', 'V2 open attempted despite outage');
+    assert(outageAttempts.every(e => e.v === 2 && e.eventId && e.sessionId && e.occurredAt),
+        'Worker failure must not downgrade to legacy payloads');
+    assert.deepEqual(await page.evaluate(() => window.__unexpectedProbes), []);
 
     await page.goto(BASE + '/tests/fixtures/analytics-v2-external.html', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => window.__attempts.some(e => e.event === 'open'));

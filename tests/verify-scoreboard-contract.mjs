@@ -17,7 +17,7 @@ import { resolveNeedleAwnDailyDate } from '../src/games/needle-awn/scoreboard-ke
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = path => readFileSync(join(ROOT, path), 'utf8');
 const worker = read('Workers/game-scores.js');
-const required = ['needle-awn','carrot-pull','tank-battle','firefly-signal','shadow-loom','math-rain','loop-jail'];
+const required = ['needle-awn','carrot-pull','tank-battle','firefly-signal','shadow-loom','math-rain','loop-jail','magnetic-garden'];
 const expectedKeys = {
     'needle-awn': ['needle-awn', 'needle-awn-endless'],
     'carrot-pull': ['carrot-pull'],
@@ -26,6 +26,7 @@ const expectedKeys = {
     'shadow-loom': ['rabbit','bird','whale','deer','pagoda','tree','koi','crane'].map(id => 'shadow-loom-' + id),
     'math-rain': [1,2,3,4,5,6].map(level => 'math-rain-' + level),
     'loop-jail': ['loop-jail'],
+    'magnetic-garden': ['greenhouse', 'twins', 'stonepath', 'aurora'].map(id => 'magnetic-garden-' + id),
 };
 const games = registry.withCap('leaderboard').filter(g => g.scores?.ui === 'dialog');
 assert.deepEqual(games.map(g => g.id).sort(), required.slice().sort(),
@@ -138,4 +139,4 @@ assert.ok(needle.includes("this.dailyDateKey = ''; // Menu uses current date"),
     'menu clears the previous run date');
 assert.ok(needle.includes("this.mode === 'daily' && !this.dailyDateKey"),
     'a missing run seed must never silently submit on a new date');
-console.log('PASS visible leaderboard contract: seven games and metric invariants');
+console.log('PASS visible leaderboard contract: eight games and metric invariants');

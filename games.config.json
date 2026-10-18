@@ -1864,6 +1864,68 @@
       }
     },
     {
+      "id": "magnetic-garden",
+      "prefix": "mg",
+      "href": "magnetic-garden.html",
+      "entry": "src/games/magnetic-garden/index.js",
+      "emoji": "🧲",
+      "layout": "immersive",
+      "title": {
+        "doc": "磁极花园 Magnetic Garden — A Little Garden of Attraction",
+        "i18nKey": "pageTitle",
+        "seo": "磁极花园 Magnetic Garden — Magnetic Logic Puzzle"
+      },
+      "name": {
+        "en": "Magnetic Garden",
+        "zh": "磁极花园"
+      },
+      "desc": {
+        "meta": "Move magnets, flip their poles, and guide little seeds into flowerpots. A deterministic garden puzzle with 24 handcrafted levels, exact previews, unlimited undo, and four chapter leaderboards.",
+        "og": "One little flip. A whole garden in bloom. 24 magnetic puzzles to grow at your own pace.",
+        "twitter": "Move, flip, bloom. Discover the quiet logic of a magnetic garden."
+      },
+      "genre": [
+        "PuzzleGame"
+      ],
+      "caps": [
+        "analytics",
+        "topbar",
+        "leaderboard",
+        "theme-light"
+      ],
+      "scores": {
+        "keys": [
+          "magnetic-garden-greenhouse",
+          "magnetic-garden-twins",
+          "magnetic-garden-stonepath",
+          "magnetic-garden-aurora"
+        ],
+        "order": "asc",
+        "maxScore": 1000000,
+        "maxEntries": 50,
+        "ui": "dialog"
+      },
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
+      "themeColor": "#153b37",
+      "themeColorLight": "#f4f1e7",
+      "home": {
+        "iconClass": "carrot-pull",
+        "category": "puzzle",
+        "addedAt": "2026-10-18",
+        "desc": {
+          "en": "Move magnets and flip their poles to guide tiny seeds home. Solve 24 thoughtful puzzles and watch each garden bloom.",
+          "zh": "移动磁石、翻转磁极，让小种子在恰好的位置生根。解开 24 道谜题，看一座座小花园盛开。"
+        },
+        "tag": {
+          "en": "Magnetic Logic",
+          "zh": "磁力解谜"
+        }
+      }
+    },
+    {
       "id": "sudoku-mist",
       "prefix": "sm",
       "href": "sudoku-mist.html",

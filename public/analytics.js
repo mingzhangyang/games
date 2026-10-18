@@ -9,7 +9,7 @@
 
     var script = document.currentScript;
     // registry:begin analytics-client-games
-    var VALID_GAMES = new Set(["math-rain","tetris","tank-battle","gomoku","planet-merge","word-daily","hoop-shot","minesweeper","reversi","tower-defense","gravity-slingshot","needle-awn","sword-flight","lumen","circuit","silk-dew","bond-forge","echo-cave","maxwell-demon","crystal-bloom","flame-verse","ripple-duet","carrot-pull","firefly-signal","shadow-loom","loop-jail","sudoku-mist","minecraft","dots","stack","bridges","four-colors"]);
+    var VALID_GAMES = new Set(["math-rain","tetris","tank-battle","gomoku","planet-merge","word-daily","hoop-shot","minesweeper","reversi","tower-defense","gravity-slingshot","needle-awn","sword-flight","lumen","circuit","silk-dew","bond-forge","echo-cave","maxwell-demon","crystal-bloom","flame-verse","ripple-duet","carrot-pull","firefly-signal","shadow-loom","loop-jail","magnetic-garden","sudoku-mist","minecraft","dots","stack","bridges","four-colors"]);
     var EXTERNAL_ORIGINS = {"minecraft":"https://2d-minecraft.orangely.xyz","dots":"https://dots-and-boxes.orangely.xyz","stack":"https://steady-hand.orangely.xyz","bridges":"https://bridges.orangely.xyz","four-colors":"https://four-colors.orangely.xyz"};
     // registry:end analytics-client-games
     var explicitGame = script && script.getAttribute('data-analytics-game');
@@ -25,7 +25,7 @@
     var allowedSite = location.origin === 'https://games.orangely.xyz'
         || location.origin === 'https://game.orangely.xyz';
     var externalOptIn = script && script.getAttribute('data-analytics-external') === 'true';
-    var canProbe = localTest || allowedSite
+    var canReport = localTest || allowedSite
         || (externalOptIn && !!explicitGame && EXTERNAL_ORIGINS[explicitGame] === location.origin);
 
     function uuid() {
@@ -42,8 +42,8 @@
     }
 
     var sessionId = uuid();
-    var ready = false;
-    var acceptsPlaying = false;
+    // V2 only. Do not probe Worker capabilities or downgrade to legacy events.
+    var enabled = !!(gameId && sessionId && canReport);
     var inferredPlaying = false;
     var getter = null;
     var queue = [];
@@ -86,26 +86,17 @@
         var wall = Date.now();
         // Flush the previous day's bucket *before* sampling the new day.
         // Large clock/sleep gaps are rejected by the monotonic MAX_SAMPLE_MS guard.
-        if (ready && dayUTC8(wall) !== dayUTC8(lastWallTime)) flush(lastWallTime);
+        if (enabled && dayUTC8(wall) !== dayUTC8(lastWallTime)) flush(lastWallTime);
         lastWallTime = wall;
         var now = performance.now();
         var gap = now - lastTick;
         var start = lastTick;
         lastTick = now;
-        if (!ready || !gameId || !isForeground() || gap <= 0 || gap > MAX_SAMPLE_MS) return;
+        if (!enabled || !isForeground() || gap <= 0 || gap > MAX_SAMPLE_MS) return;
         var observed = Math.min(gap, Math.max(0, lastInteraction + IDLE_MS - start));
         if (observed <= 0) return;
         activeMs += observed;
         if (isPlaying()) playingMs += observed;
-    }
-
-    function legacySend(payload) {
-        try {
-            var body = JSON.stringify(payload);
-            if (navigator.sendBeacon && navigator.sendBeacon(endpoint + '/event', body)) return;
-            fetch(endpoint + '/event', { method: 'POST', body: body, keepalive: true })
-                .catch(function () {});
-        } catch (error) { /* never block a game */ }
     }
 
     function pump() {
@@ -166,18 +157,16 @@
         var id = uuid();
         if (!id) return;
         var event = { v: 2, game: gameId, event: kind, eventId: id, sessionId: sessionId };
-        // Feature-gated by the Phase 2 stats shape so Phase 1 Worker accepts
-        // the same browser bundle during the manual D1 Worker rollout.
-        if (acceptsPlaying) event.occurredAt = occurredAt === undefined ? Date.now() : occurredAt;
+        event.occurredAt = occurredAt === undefined ? Date.now() : occurredAt;
         if (kind === 'active') {
             event.seconds = seconds;
-            if (acceptsPlaying) event.playingSeconds = playSeconds;
+            event.playingSeconds = playSeconds;
         }
         enqueue(event);
     }
 
     function flush(occurredAt) {
-        if (!ready) return;
+        if (!enabled) return;
         var seconds = Math.min(60, Math.floor(activeMs / 1000));
         if (seconds <= 0) return;
         var played = Math.min(seconds, Math.floor(playingMs / 1000));
@@ -189,7 +178,7 @@
 
     function tick() {
         sample();
-        if (ready && performance.now() - lastFlush >= CHECKPOINT_MS) {
+        if (enabled && performance.now() - lastFlush >= CHECKPOINT_MS) {
             flush();
             lastFlush = performance.now();
         }
@@ -239,34 +228,15 @@
         flush: function () { sample(); flush(); }
     };
     window.hubTrack = function (game, event) {
-        if (!gameId || game !== gameId || (event !== 'play' && event !== 'finish')) return;
-        if (ready && gameId) {
-            sample();
-            inferredPlaying = event === 'play';
-            sendV2(event);
-        } else if (canProbe && !localTest) {
-            // Keep the exact legacy API while an older Worker is deployed.
-            legacySend({ game: game, event: event });
-            inferredPlaying = event === 'play';
-        }
+        if (!enabled || game !== gameId || (event !== 'play' && event !== 'finish')) return;
+        sample();
+        inferredPlaying = event === 'play';
+        sendV2(event);
     };
 
-    if (gameId && sessionId && canProbe) {
-        try {
-            fetch(endpoint + '/stats?v=2', { cache: 'no-store' })
-                .then(function (res) { return res.ok ? res.json() : null; })
-                .then(function (stats) {
-                    if (!stats || stats.scope !== 'day' || !stats.games || !stats.total) return;
-                    if (ready) return;
-                    acceptsPlaying = typeof stats.total.playingSeconds === 'number';
-                    ready = true;
-                    lastTick = performance.now();
-                    lastWallTime = Date.now();
-                    lastInteraction = lastTick;
-                    lastFlush = lastTick;
-                    sendV2('open');
-                    if (timer === null) timer = setInterval(tick, 1000);
-                }).catch(function () { /* no production writes in preview/offline */ });
-        } catch (error) { /* telemetry cannot stop startup */ }
+    if (enabled) {
+        // Emit immediately; an unavailable Worker only triggers bounded V2 retries.
+        sendV2('open');
+        timer = setInterval(tick, 1000);
     }
 })();
