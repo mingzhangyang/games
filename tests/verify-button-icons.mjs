@@ -39,6 +39,7 @@ const TARGETS = {
     'firefly-signal': ['fs-btn-next', 'fs-btn-retry', 'fs-btn-menu'],
     'shadow-loom': ['sl-btn-begin', 'sl-btn-next', 'sl-btn-replay', 'sl-btn-menu'],
     'loop-jail': ['lj-btn-start', 'lj-btn-resume', 'lj-btn-restart', 'lj-btn-pause-menu', 'lj-btn-again', 'lj-btn-menu'],
+    'sudoku-mist': ['sm-btn-resume', 'sm-btn-restart', 'sm-btn-pause-menu', 'sm-btn-next', 'sm-btn-again', 'sm-btn-replay', 'sm-btn-menu', 'sm-btn-stop-replay'],
     'tetris': ['restartBtn'],
     'minesweeper': ['ms-btn-again', 'ms-btn-copy', 'ms-btn-close'],
 };

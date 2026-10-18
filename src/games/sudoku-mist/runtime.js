@@ -50,8 +50,10 @@ export class SudokuMistGame {
     constructor(hooks = {}) {
         this.track = typeof hooks.track === 'function' ? hooks.track : () => {};
         this.contextualRestart = null;
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
+        // 本局进度（落子 / 笔记 / 点灯次数）：顶栏重开据此决定要不要先确认
+        this.moves = 0;
         this.meta = null;
         this.level = null;
         this.session = null;
@@ -154,7 +156,7 @@ export class SudokuMistGame {
         this.contextualRestart = bindContextualRestart({
             button: this.el.resetBtn,
             active: () => this.isRunning(),
-            hasProgress: () => !!this.session && this.session.inputs.length > 0,
+            hasProgress: () => this.moves > 0,
             restart: () => this.restart(),
             purpose: 'retry',
         });
@@ -287,8 +289,9 @@ export class SudokuMistGame {
 
     /* ───────────── 开局 ───────────── */
 
+    /** id 也可以是关卡序号（共享校验器以 startLevel(0) 开局） */
     startLevel(id) {
-        const level = levelById(id);
+        const level = typeof id === 'number' ? LEVELS[id] : levelById(id);
         if (!level) throw new Error(`unknown level ${id}`);
         this.begin({ kind: 'level', id: level.id, name: level.name }, level);
     }
@@ -325,8 +328,9 @@ export class SudokuMistGame {
         this.hintUnit = -1;
         this.result = null;
         this.elapsed = 0;
-        this.isPaused = false;
-        this.state = 'playing';
+        this.moves = 0;
+        this.isPaused = false; this.contextualRestart?.sync();
+        this.state = 'playing'; this.contextualRestart?.sync();
         this.runStart = performance.now();
         this.el.start.classList.add('hidden');
         this.el.stage.classList.remove('sm-stage--menu', 'sm-stage--sheet');
@@ -370,8 +374,8 @@ export class SudokuMistGame {
         this.pauseOwnership.invalidate();
         this.stopLoop();
         if (this.state === 'playing') this.elapsed = this.elapsedMs();
-        this.state = 'menu';
-        this.isPaused = false;
+        this.state = 'menu'; this.contextualRestart?.sync();
+        this.isPaused = false; this.contextualRestart?.sync();
         this.el.pause.classList.add('hidden');
         this.el.result.classList.add('hidden');
         this.el.replayBar.classList.add('hidden');
@@ -418,6 +422,7 @@ export class SudokuMistGame {
         if (notes) { this.toggleNote(i, d); return; }
         const r = this.session.place(i, d);
         if (!r.ok) return;
+        this.moves++;
         const t = this.t();
         if (!r.correct) {
             this.audio.wrong();
@@ -452,6 +457,7 @@ export class SudokuMistGame {
     toggleNote(i, d) {
         if (this.session.isKnown(i)) return;
         this.notes[i] ^= 1 << (d - 1);
+        this.moves++;
         this.render();
     }
 
@@ -487,6 +493,7 @@ export class SudokuMistGame {
         if (this.state !== 'playing' || this.isPaused) return;
         const h = this.session.hint();
         if (!h) return;
+        this.moves++;
         const t = this.t();
         this.selected = h.cell;
         this.hintCell = h.cell;
@@ -515,7 +522,7 @@ export class SudokuMistGame {
         this.runStart = 0;
         clearInterval(this.clockTimer);
         this.clockTimer = 0;
-        this.state = 'result';
+        this.state = 'result'; this.contextualRestart?.sync();
         this.pauseOwnership.invalidate();
         const summary = this.session.summary();
         const prev = loadBest(this.meta.id);
@@ -573,7 +580,7 @@ export class SudokuMistGame {
 
     startReplay() {
         if (this.state !== 'result' || !this.result) return;
-        this.state = 'replay';
+        this.state = 'replay'; this.contextualRestart?.sync();
         this.el.result.classList.add('hidden');
         this.el.stage.classList.remove('sm-stage--sheet');
         this.replaySession = createSession(this.level);
@@ -620,7 +627,7 @@ export class SudokuMistGame {
         clearTimeout(this.replayTimer);
         this.replayTimer = 0;
         this.replaySession = null;
-        this.state = 'result';
+        this.state = 'result'; this.contextualRestart?.sync();
         this.el.replayBar.classList.add('hidden');
         this.clearFloats();
         this.mist.sync(i => this.session.isVisible(i), { instant: true });
@@ -654,7 +661,7 @@ export class SudokuMistGame {
     pauseQuiet() {
         if (this.state !== 'playing' || this.isPaused) return;
         this.elapsed = this.elapsedMs();
-        this.isPaused = true;
+        this.isPaused = true; this.contextualRestart?.sync();
         this.runStart = 0;
         this.stopLoop();
         this.syncChrome();
@@ -662,7 +669,7 @@ export class SudokuMistGame {
 
     resumeQuiet() {
         if (this.state !== 'playing' || !this.isPaused) return;
-        this.isPaused = false;
+        this.isPaused = false; this.contextualRestart?.sync();
         this.runStart = performance.now();
         this.syncChrome();
         this.ensureLoop();

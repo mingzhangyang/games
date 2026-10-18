@@ -114,7 +114,7 @@ export default new Map([
     ['loop-jail.desc', '拖动画出墨线，自交成环就能把圈里的小怪统统收监。小怪会咬断没闭合的墨线，墨水有限，贪大圈有风险。'],
     ['loop-jail.tag', '画线街机'],
     ['sudoku-mist.name', '雾隐九宫'],
-    ['sudoku-mist.desc', '藏在晨雾里的数独。每推出一个数字，周围的雾就散开一点；推理越深分越高，瞎猜不得分。'],
+    ['sudoku-mist.desc', '藏在晨雾里的数独：推出一个数字，周围的雾就散开；瞎猜不得分。'],
     ['sudoku-mist.tag', '推理数独'],
     ['minecraft.name', '2D 我的世界'],
     ['minecraft.desc', '浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。'],

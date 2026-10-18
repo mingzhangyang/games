@@ -1902,8 +1902,8 @@
         "category": "puzzle",
         "addedAt": "2026-10-18",
         "desc": {
-          "en": "Sudoku hidden in a morning mist. Every digit you deduce clears the fog around it — reason deeply, guesses score nothing.",
-          "zh": "藏在晨雾里的数独。每推出一个数字，周围的雾就散开一点；推理越深分越高，瞎猜不得分。"
+          "en": "Sudoku hidden in mist: each digit you deduce clears the fog around it. Guesses score nothing.",
+          "zh": "藏在晨雾里的数独：推出一个数字，周围的雾就散开；瞎猜不得分。"
         },
         "tag": {
           "en": "Logic Puzzle",

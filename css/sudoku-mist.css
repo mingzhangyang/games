@@ -43,10 +43,11 @@
         --sm-title-glow: 0 0 22px rgb(223, 231, 247, 0.4);
 
         /* 雾层调色板（bindPalette 读取；缺一个就抛错）。RGB 分量给 ImageData 用 */
-        --sm-cv-fog-rgb: 196, 208, 232;
-        --sm-cv-fog-alpha: 0.9;
-        --sm-cv-wisp-rgb: 238, 243, 255;
-        --sm-cv-wisp-alpha: 0.55;
+        /* 夜雾：比棋盘亮一档的灰蓝（深色页不能被一大片亮雾盖住，verify-theme 的画布底色检查） */
+        --sm-cv-fog-rgb: 66, 80, 112;
+        --sm-cv-fog-alpha: 0.94;
+        --sm-cv-wisp-rgb: 176, 192, 228;
+        --sm-cv-wisp-alpha: 0.5;
         --sm-cv-ripple: #ffd27a;
         --sm-cv-wrong: #ff5c6e;
     }

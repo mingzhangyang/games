@@ -204,8 +204,10 @@ const sizes = {
     'js/index-i18n-zh.js': Buffer.byteLength(zh),
     'public/icons/home-icons.svg': Buffer.byteLength(sprite),
 };
-// P3 加了新上线横排（每卡一张 OG 图 + sprite 图标），预算从 38 KiB 放到 44 KiB
-ok(sizes['index.html'] <= 44 * 1024, 'index.html ≤ 44 KiB', sizes['index.html']);
+// P3 加了新上线横排（每卡一张 OG 图 + sprite 图标），预算从 38 KiB 放到 44 KiB；
+// 2026-10-18 雾隐九宫（第 27 款站内游戏）上线时只剩 1.4 KiB 余量，而每款新游戏约 +1.5 KiB
+// （分类卡片 + 新上线横排卡片），放到 46 KiB
+ok(sizes['index.html'] <= 46 * 1024, 'index.html ≤ 46 KiB', sizes['index.html']);
 // P3 拆成 src/home/ 包：入口只剩注入；整包预算 = 原单文件 14 KiB + P3（最近玩过 / 更多每日 / 新上线裁剪），
 // 单模块再各自封顶，防止又长回一个大文件
 ok(sizes['js/index-page.js'] <= 1024, 'js/index-page.js 入口 ≤ 1 KiB', sizes['js/index-page.js']);
@@ -214,7 +216,8 @@ for (const f of homeFiles) {
     const n = Buffer.byteLength(read(`${HOME_DIR}/${f}`));
     ok(n <= 5 * 1024, `${HOME_DIR}/${f} ≤ 5 KiB`, n);
 }
-ok(sizes['js/index-i18n-zh.js'] <= 8 * 1024, '中文懒加载块 ≤ 8 KiB', sizes['js/index-i18n-zh.js']);
+// 每款游戏三条中文（名字 / 描述 / 标签）约 +0.2 KiB；雾隐九宫上线前只剩 53 B 余量，放到 9 KiB
+ok(sizes['js/index-i18n-zh.js'] <= 9 * 1024, '中文懒加载块 ≤ 9 KiB', sizes['js/index-i18n-zh.js']);
 ok(sizes['public/icons/home-icons.svg'] <= 12 * 1024, '首页 SVG sprite ≤ 12 KiB', sizes['public/icons/home-icons.svg']);
 
 console.log(failed === 0 ? '\n首页 registry / 资源体积检查全部通过 ✅' : `\n${failed} 处失败 ❌`);
