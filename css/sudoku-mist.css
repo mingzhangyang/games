@@ -22,6 +22,7 @@
         --sm-given: #eef3ff;
         --sm-placed: #ffd27a;
         --sm-note: #a9bce6;
+        --sm-note-backing: rgb(8, 15, 28, 0.93);
         --sm-peer: rgb(169, 188, 230, 0.1);
         --sm-same: rgb(255, 210, 122, 0.2);
         --sm-sel: rgb(255, 210, 122, 0.3);
@@ -65,6 +66,7 @@
         --sm-given: #23201b;
         --sm-placed: #a63c25;
         --sm-note: #6b5f4d;
+        --sm-note-backing: rgb(249, 246, 238, 0.94);
         --sm-peer: rgb(74, 62, 44, 0.07);
         --sm-same: rgb(181, 69, 44, 0.13);
         --sm-sel: rgb(181, 69, 44, 0.2);
@@ -100,6 +102,7 @@
         background: radial-gradient(ellipse 120% 70% at 80% -10%, var(--sm-board-bg), var(--sm-bg) 55%, var(--sm-bg-deep));
         color: var(--sm-text);
         min-height: 100dvh;
+        font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     }
 
     /* ── 顶栏 ── */
@@ -327,10 +330,18 @@
     }
 
     .sm-note {
-        font-size: 2.3cqi;
+        font-size: clamp(9px, 2.3cqi, 12px);
         line-height: 1;
         color: var(--sm-note);
         font-weight: 700;
+    }
+
+    /* Notes sit above animated mist. Only occupied slots need a quiet backdrop;
+       the alpha leaves the paper/fog texture visible while bounding contrast. */
+    .sm-note:not(:empty) {
+        padding-inline: 1px;
+        border-radius: 2px;
+        background: var(--sm-note-backing);
     }
 
     /* 浮字：落子得分 / 侥幸 / 扣分，从格中心飘起淡出（transition，非 keyframes） */

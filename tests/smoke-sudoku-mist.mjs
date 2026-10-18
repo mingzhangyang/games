@@ -112,6 +112,52 @@ const firstDeducible = page => page.evaluate(() => {
     return { cell: i, digit: a.values[i], tier: a.tierOf[i], fog: !s.isVisible(i) };
 });
 
+/** WCAG contrast lower bound for note chips over any fog/wisp/selection color.
+ * An arbitrary underlying RGB lies between black and white per channel, and
+ * the backing alpha bounds its resulting luminance between these two extremes.
+ */
+const noteReadability = page => page.evaluate(() => {
+    const game = window.smGame;
+    const cell = game.session.view().findIndex(v => v.state === 'fog');
+    if (cell < 0) return { error: 'no fog cell' };
+    const savedNote = game.notes[cell], savedSelection = game.selected;
+    const luminance = rgb => {
+        const linear = rgb.map(v => {
+            const n = v / 255;
+            return n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4;
+        });
+        return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+    };
+    const channels = value => (value.match(/[\\d.]+/g) || []).map(Number);
+    const results = [];
+    game.notes[cell] |= 1;
+    for (const selected of [-1, cell]) {
+        game.selected = selected;
+        game.render();
+        const el = document.querySelector(`#sm-board [data-cell="${cell}"] .sm-note:not(:empty)`);
+        if (!el) { results.push({ error: 'no visible note' }); continue; }
+        const style = getComputedStyle(el);
+        const fg = channels(style.color);
+        const bg = channels(style.backgroundColor);
+        const alpha = bg[3] ?? 1;
+        const fgLum = luminance(fg.slice(0, 3));
+        const blackLum = luminance(bg.slice(0, 3).map(c => c * alpha));
+        const whiteLum = luminance(bg.slice(0, 3).map(c => c * alpha + 255 * (1 - alpha)));
+        const worst = fgLum <= blackLum ? (blackLum + 0.05) / (fgLum + 0.05)
+            : fgLum >= whiteLum ? (fgLum + 0.05) / (whiteLum + 0.05) : 1;
+        results.push({ selected: selected >= 0, contrast: Number(worst.toFixed(2)) });
+    }
+    game.notes[cell] = savedNote;
+    game.selected = savedSelection;
+    game.render();
+    return {
+        theme: document.documentElement.dataset.theme,
+        results,
+        bodyFont: getComputedStyle(document.body).fontFamily,
+        titleFont: getComputedStyle(document.querySelector('.sm-title-main')).fontFamily,
+    };
+});
+
 const clickCell = (page, i) => page.click(`#sm-board [data-cell="${i}"]`);
 const clickDigit = (page, d) => page.click(`#sm-pad [data-digit="${d}"]`);
 
@@ -182,6 +228,13 @@ try {
     await page.keyboard.press(String(wrong));
     dom = await cells(page);
     check(dom[step2.cell].notes === [step2.digit, wrong].sort().join(''), '⑤ 笔记模式：数字键记笔记', dom[step2.cell].notes);
+    const darkNotes = await noteReadability(page);
+    check(darkNotes.theme === 'dark' && darkNotes.results.length === 2
+        && darkNotes.results.every(x => x.contrast >= 4.5),
+    '⑤ 深色笔记：动态雾层/选中态的保守对比度 ≥ 4.5:1', JSON.stringify(darkNotes));
+    check(darkNotes.bodyFont.includes('sans-serif') && !darkNotes.bodyFont.includes('Times New Roman')
+        && darkNotes.titleFont.includes('serif'),
+    '⑤ 界面使用无衬线字体，同时保留标题衬线字', JSON.stringify(darkNotes));
     const notesPressed = await page.$eval('#sm-btn-notes', el => el.getAttribute('aria-pressed'));
     await page.click('#sm-btn-erase');
     dom = await cells(page);
@@ -396,6 +449,10 @@ try {
         }, fogCell);
         check(light.theme === 'light' && light.fog === '251, 249, 244' && light.board === 'rgb(233, 225, 207)'
             && px[0] > 200 && px[3] > 150, '⑫ 浅色：宣纸棋盘 + 白雾', JSON.stringify({ light, px }));
+        const lightNotes = await noteReadability(lp);
+        check(lightNotes.theme === 'light' && lightNotes.results.length === 2
+            && lightNotes.results.every(x => x.contrast >= 4.5),
+        '⑫ 浅色笔记：选中/未选中均有 ≥ 4.5:1 的保守对比度', JSON.stringify(lightNotes));
         check(lerrs.length === 0, '浅色：无 pageerror', lerrs.join(' | '));
         await lp.close();
     }
