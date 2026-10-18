@@ -16,6 +16,8 @@
  .mg-icon-btn:disabled { opacity:.4; }
  .mg-brand { color:var(--mg-green); font-family:Georgia,'Songti SC',serif; font-size:clamp(14px,3.8vw,20px); letter-spacing:.015em; font-weight:700; white-space:nowrap; }
  .mg-stage { color:var(--mg-text); background:radial-gradient(ellipse at 50% 38%,var(--mg-panel-raised),var(--mg-bg) 80%); touch-action:none; user-select:none; }
+ /* Long menu allows native document panning; gameplay stays touch-locked. */
+ .mg-stage:has(> .mg-menu:not(.hidden)) { touch-action:pan-y; }
  .mg-stage::before { content:''; position:absolute; inset:0; background:url('../assets/magnetic-garden/greenhouse-workbench.webp') center center / cover no-repeat; opacity:var(--mg-backdrop-opacity); pointer-events:none; }
  .mg-play { position:absolute; inset:0; padding:14px 20px 16px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; scrollbar-width:thin; scrollbar-color:var(--mg-line) transparent; }
  .mg-hud { background:color-mix(in srgb,var(--mg-bg) 80%,transparent); border-radius:16px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; max-width:492px; margin:0 auto; flex-shrink:0; }
@@ -69,7 +71,6 @@
  .mg-instruction { min-height:28px; padding:8px 0; font-size:12px; color:var(--mg-dim); line-height:1.4; }
  .mg-tool-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
  .mg-tool { min-height:44px; padding:8px 5px; border-radius:13px; border:1px solid var(--mg-line); background:var(--mg-panel); color:var(--mg-text); font-size:12px; cursor:pointer; }
- .mg-language { padding-inline:14px; }
  .mg-tool:hover { background:var(--mg-panel-raised); }
  .mg-tool:disabled { opacity:.35; cursor:default; }
  .mg-preview-panel { border-top:1px solid var(--mg-line); margin-top:10px; padding-top:10px; color:var(--mg-dim); font-size:11px; line-height:1.5; }
@@ -79,7 +80,7 @@
  .mg-inventory { display:flex; gap:8px; margin-bottom:8px; }
  .mg-inventory-magnet { width:58px; height:58px; padding:6px; display:grid; place-items:center; border:1px dashed var(--mg-line); border-radius:12px; background:var(--mg-panel); cursor:pointer; }
  .mg-inventory-magnet[aria-pressed="true"] { outline:2px solid var(--mg-green); }
- .mg-menu { display:block; text-align:center; padding:10px 24px 28px; background:var(--mg-bg); color:var(--mg-text); touch-action:pan-y; }
+ .mg-menu { border-radius:0; display:block; text-align:center; padding:10px 24px 28px; background:var(--mg-bg); color:var(--mg-text); touch-action:pan-y; }
  #mg-hero { width:100%; max-width:470px; margin-inline:auto; }
  .mg-hero-image { display:none; width:100%; height:clamp(175px,52vw,255px); object-fit:cover; object-position:center 65%; border-radius:22px; margin:4px auto 18px; mask-image:linear-gradient(to bottom,#000 88%,transparent); }
  .mg-hero-image.is-ready { display:block; }
@@ -109,7 +110,8 @@
  .mg-flowers { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:3px; margin-top:14px; }
  .mg-collected-flower { aspect-ratio:4/5; opacity:.12; filter:grayscale(1); }
  .mg-collected-flower.is-earned { opacity:1; filter:none; }
- .mg-modal { background:var(--mg-wash); backdrop-filter:blur(8px); display:grid; place-items:center; padding:20px; color:var(--mg-text); overflow-y:auto; touch-action:pan-y; }
+ /* Full-bleed immersive stage has square corners: overlay scrims must cover them. */
+ .mg-modal { border-radius:0; background:var(--mg-wash); backdrop-filter:blur(8px); display:grid; place-items:center; padding:20px; color:var(--mg-text); overflow-y:auto; touch-action:pan-y; }
  #mg-result { background:rgb(22,43,34,.28); backdrop-filter:none; align-items:end; padding-top:16px; }
  .mg-modal-card { width:100%; max-width:470px; background:var(--mg-panel); border:1px solid var(--mg-line); border-radius:28px; padding:24px; text-align:center; box-shadow:0 18px 60px var(--mg-shadow); }
  .mg-modal-title { font-family:Georgia,'Songti SC',serif; font-size:clamp(25px,6vw,34px); font-weight:500; margin:8px 0 12px; }

@@ -62,6 +62,21 @@ async function open(width = 390, height = 844, lang = 'en', reduced = false) {
     return page;
 }
 const snapshot = page => page.evaluate(() => JSON.parse(JSON.stringify(window.mgGame.sim)));
+async function swipeMenuUp(page) {
+    const client = await page.target().createCDPSession();
+    const x = 190, startY = 710, distance = 410;
+    try {
+        await client.send('Input.dispatchTouchEvent', { type:'touchStart', touchPoints:[{ x, y:startY, id:1 }] });
+        for (let i = 1; i <= 10; i++) {
+            await client.send('Input.dispatchTouchEvent', {
+                type:'touchMove', touchPoints:[{ x, y:startY - distance * i / 10, id:1 }],
+            });
+            await new Promise(resolve => setTimeout(resolve, 22));
+        }
+        await client.send('Input.dispatchTouchEvent', { type:'touchEnd', touchPoints:[] });
+        await new Promise(resolve => setTimeout(resolve, 160));
+    } finally { await client.detach(); }
+}
 async function click(page, selector) {
     await page.waitForSelector(selector, { visible: true });
     await page.$eval(selector, element => element.scrollIntoView({ block: 'center', inline: 'center' }));
@@ -120,6 +135,16 @@ try {
     check(await page.$$eval('[data-level]', buttons => buttons.length === 24 && buttons.every(button => !button.disabled)),
         'all 24 gardens accessible from a new save');
     check(await page.evaluate(() => window.__gardenEvents.length === 0), 'menu view does not count as a play');
+    const mobileMenu = await page.evaluate(() => ({
+        stageTouch: getComputedStyle(document.getElementById('mg-stage')).touchAction,
+        available: document.documentElement.scrollHeight - window.innerHeight,
+        initial: window.scrollY,
+    }));
+    check(mobileMenu.stageTouch.includes('pan-y') && mobileMenu.available > 250 && mobileMenu.initial === 0,
+        'visible mobile level menu exposes native vertical panning without changing play-state touch contract');
+    await swipeMenuUp(page);
+    check(await page.evaluate(() => window.scrollY > 35),
+        'real mobile touch swipe scrolls to later garden chapters (not scrollIntoView)');
     await click(page, '#mg-btn-start');
     check(await page.evaluate(() => window.__gardenEvents.filter(([, event]) => event === 'play').length === 1), 'starting a garden counts one play');
     const untouched = await snapshot(page);

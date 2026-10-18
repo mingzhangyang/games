@@ -46,6 +46,10 @@ assert.equal(SCENARIOS['needle-awn'].profileInput.kind, 'survival-lane');
 assert.deepEqual(SCENARIOS['needle-awn'].start, { kind: 'click', selector: '#na-btn-endless' },
     'Needle Awn must enter a real endless run through its visible mode button');
 assert.equal(SCENARIOS['needle-awn'].restart.method, 'startEndlessMode');
+assert.deepEqual(SCENARIOS['magnetic-garden'].start, { kind: 'click', selector: '#mg-btn-start' },
+    'Magnetic Garden must enter the profiler through the visible level-menu Start control');
+assert.equal(SCENARIOS['magnetic-garden'].activity, 'discrete',
+    'Turn-based magnetic puzzles must not be sampled as a continuous simulation');
 assert.throws(() => validateScenarioCoverage(games, {
     ...SCENARIOS, 'silk-dew': { ...SCENARIOS['silk-dew'], profileInput: { kind: 'unknown', cadenceMs: 250 } },
 }), /invalid input contract/);

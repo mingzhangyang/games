@@ -86,7 +86,7 @@ function homeCardLine(g, external = false) {
     const chipHtml = chips.map(c => `<span class="card-chip card-chip--${c.kind}" id="${prefix}-chip-${c.kind}">${esc(c.text)}</span>`).join('');
     const labelledBy = [`${prefix}-name`, ...chips.map(c => `${prefix}-chip-${c.kind}`)].join(' ');
     const added = home.addedAt ? ` data-added="${home.addedAt}"` : '';
-    return `<a class="game-card" href="${esc(href)}" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''}${added} aria-labelledby="${labelledBy}" aria-describedby="${prefix}-desc"><span class="card-body"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><span class="card-header"><span class="card-title" id="${prefix}-name">${esc(name.en)}</span></span><span class="card-desc"><span class="card-chips">${chipHtml}</span><span class="card-desc-text" id="${prefix}-desc">${esc(home.desc.en)}</span></span><span class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span></span><span class="card-go" aria-hidden="true">›</span></span></a>`;
+    return `<a class="game-card" href="${esc(href)}" data-game-id="${id}"${external ? ' data-external="1"' : ''}${darkOnly ? ' data-dark-only="1"' : ''}${added} aria-labelledby="${labelledBy}" aria-describedby="${prefix}-desc"><span class="card-body"><span class="card-icon card-icon--${home.iconClass}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="/icons/home-icons.svg#${id}"></use></svg></span><span class="card-header"><span class="card-title" id="${prefix}-name">${esc(name.en)}</span></span><span class="card-desc"><span class="card-chips">${chipHtml}</span><span class="card-desc-text" id="${prefix}-desc">${esc(home.desc.en)}</span></span><span class="card-footer"><span class="tag" id="${prefix}-tag">${esc(home.tag.en)}</span></span><span class="card-go" aria-hidden="true">›</span></span></a>`;
 }
 
 /** 按 site.home.categories 分组：区内按 rank 升序，缺 rank 的排在后面并保持登记顺序（站内先、外站后）。 */
@@ -197,7 +197,7 @@ function homeZhMap() {
 }
 
 function homeZhContent() {
-    return `export default new Map([\n${[...homeZhMap()].map(([k, v]) => `    [${jsq(k)}, ${jsq(v)}],`).join('\n')}\n]);`;
+    return `export default new Map([\n${[...homeZhMap()].map(([k, v]) => `  [${jsq(k)},${jsq(v)}],`).join('\n')}\n]);`;
 }
 
 function homeZhTransform(src) {
@@ -286,7 +286,7 @@ function seoScriptBlock(g) {
 }
 
 // seo-script 自安装：定位「无 src 的内联 <script> 且含 ld+json」的块
-function installSeoScript(src, content) {
+function installSeoScript(src, content, game) {
     const re = /<script>[\s\S]*?<\/script>/g;
     for (const m of src.matchAll(re)) {
         if (m[0].includes('ld+json') && !m[0].includes('registry:begin')) {
@@ -295,7 +295,14 @@ function installSeoScript(src, content) {
                 + src.slice(m.index + m[0].length);
         }
     }
-    return null;
+    // New pages have no legacy JSON-LD block. Locate the registered entry
+    // and install the SEO sentinel instead of silently skipping new games.
+    const entry = `<script type="module" src="${game.entry}"></script>`;
+    const at = src.indexOf(entry);
+    if (at < 0) throw new Error(`seo-script: cannot find registered module entry for ${game.id}`);
+    return src.slice(0, at)
+        + `<!-- registry:begin seo-script -->\n${content}\n<!-- registry:end seo-script -->\n`
+        + src.slice(at);
 }
 
 // ---------- sitemap ----------
@@ -501,7 +508,7 @@ function processFile(rel, transforms) {
 for (const g of GAMES) {
     processFile(g.href, [
         s => applyRegion(s, 'head', headBlock(g), (s, c) => installHead(s, c), 'html'),
-        s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c), 'html'),
+        s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c, g), 'html'),
     ]);
 }
 processFile('index.html', [homeNewTransform, homeFilterTransform, homeCardsTransform]);

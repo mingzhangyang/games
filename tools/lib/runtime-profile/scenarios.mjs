@@ -138,6 +138,11 @@ export const SCENARIOS = Object.freeze({
         ready: truthy('ljGame', 'el'),
         active: truthy('ljGame', 'isRunning()'), activity: 'continuous',
     },
+    'magnetic-garden': {
+        owner: 'mgGame', start: click('#mg-btn-start'),
+        ready: truthy('mgGame', 'state'),
+        active: truthy('mgGame', 'isRunning()'), activity: 'discrete',
+    },
 });
 
 export function validateScenarioCoverage(games = registry.all(), scenarios = SCENARIOS) {

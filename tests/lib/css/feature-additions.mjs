@@ -254,6 +254,7 @@ export const HOME_CARDS_SELECTORS = new Set([
     '.game-card:focus-visible',
     '.card-body',
     '.card-icon',
+    '.card-icon > svg',
     '.card-header',
     '.card-title',
     '.game-card:hover .card-title',

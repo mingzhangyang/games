@@ -1,4 +1,4 @@
-import { getLang, setLang } from '../../platform/site-settings.js';
+import { getLang } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
 import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 import { LANGUAGES } from './i18n.js';
@@ -41,7 +41,6 @@ export class MagneticGardenGame {
         on('mg-resume', () => this.resume()); on('mg-restart', () => this.restart()); on('mg-pause-menu', () => this.toMenu());
         on('mg-result-menu', () => this.toMenu()); on('mg-again', () => this.restart());
         on('mg-next', () => { const next = LEVELS[LEVELS.indexOf(this.level) + 1]; next ? this.start(next.id) : this.toMenu(); });
-        on('mg-lang', () => setLang(getLang() === 'en' ? 'zh' : 'en')); on('mg-pause-lang', () => setLang(getLang() === 'en' ? 'zh' : 'en'));
         on('mg-help-btn', () => this.openHelp()); on('mg-help-close', () => this.closeHelp());
         $('mg-chapters').addEventListener('click', e => { const button = e.target.closest('[data-level]'); if (button) this.start(button.dataset.level); });
         $('mg-board').addEventListener('click', e => { const cell = e.target.closest('[data-cell]'); if (cell) this.selectCell(Number(cell.dataset.cell)); });
@@ -305,7 +304,6 @@ export class MagneticGardenGame {
     }
     applyLanguage() {
         const t = this.t(); document.title = t.pageTitle; this.cancelHint();
-        for (const id of ['mg-lang','mg-pause-lang']) { $(id).textContent = t.language; $(id).setAttribute('aria-label', t.switchLanguage); }
         for (const [id, icon, key] of [['mg-home',ICONS.home,'home'],['mg-undo',ICONS.retry,'undo'],['mg-flip',FLIP_ICON,'flip'],['mg-preview-btn',ICONS.play,'preview'],['mg-hint-btn',ICONS.help,this.hintStage ? 'nextHint' : 'hint'],['mg-commit',ICONS.check,'commit'],['mg-clear-preview',ICONS.close,'cancelPreview'],['mg-help-btn',ICONS.help,'how'],['mg-help-close',ICONS.check,'closeHelp'],['mg-resume',ICONS.play,'resume'],['mg-restart',ICONS.retry,'restart'],['mg-pause-menu',ICONS.home,'menu'],['mg-result-undo',ICONS.retry,'undo'],['mg-again',ICONS.retry,'again'],['mg-result-menu',ICONS.home,'menu']]) {
             if (id === 'mg-home') { $(id).innerHTML = icon; $(id).title = t[key]; $(id).setAttribute('aria-label', t[key]); } else iconLabel(id, icon, t[key]);
         }

@@ -311,6 +311,11 @@
     .card-icon {
         grid-area: icon;
     }
+    /* One reviewed rule replaces repeated geometry on every static card SVG. */
+    .card-icon > svg {
+        width: 24px;
+        height: 24px;
+    }
 
     .card-header {
         grid-area: head;
