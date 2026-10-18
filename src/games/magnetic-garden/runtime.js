@@ -72,6 +72,9 @@ export class MagneticGardenGame {
         this.state = 'playing'; this.isPaused = false; this.pauseOwnership.invalidate(); this.selected = this.sim.magnets.find(m => !m.fixed)?.id ?? null;
         this.preview = null; this.hintStage = 0; this.hintMessage = ''; this.focusCell = this.sim.magnets.find(m => m.id === this.selected)?.cell ?? 0;
         this.hideModals(); $('mg-start').classList.add('hidden'); $('mg-play').classList.remove('hidden');
+        // The long mobile menu scrolls the document; play uses a viewport stage.
+        // Reset after hiding the menu, before focus({ preventScroll: true }).
+        if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
         this.track('magnetic-garden', 'play'); this.save(); this.render();
         requestAnimationFrame(() => $('mg-board').querySelector(`[data-cell="${this.focusCell}"]`)?.focus({ preventScroll: true }));
         return true;

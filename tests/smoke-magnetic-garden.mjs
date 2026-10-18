@@ -145,6 +145,16 @@ try {
     check(art.backdropWidth >= 512 && art.backdropHeight >= 512 && art.backdropVisible && art.backdropFetched,
         'production greenhouse workbench is fetched, decoded, and displayed: ' + JSON.stringify(art));
     check(LEVELS.length === 24 && CHAPTERS.length === 4, '24 authored gardens in four chapters');
+    await click(page, '#mg-help-btn');
+    check(await page.evaluate(() => {
+        const overlay = document.getElementById('mg-help');
+        const frame = overlay.getBoundingClientRect();
+        const close = document.getElementById('mg-help-close').getBoundingClientRect();
+        return getComputedStyle(overlay).position === 'fixed'
+            && Math.abs(frame.top) <= 1 && Math.abs(frame.bottom - innerHeight) <= 1
+            && close.top >= 0 && close.bottom <= innerHeight;
+    }), 'mobile help is viewport-bound and Close is visible even over the long menu');
+    await click(page, '#mg-help-close');
     check(await page.$$eval('[data-level]', buttons => buttons.length === 24 && buttons.every(button => !button.disabled)),
         'all 24 gardens accessible from a new save');
     check(await page.evaluate(() => window.__gardenEvents.length === 0), 'menu view does not count as a play');
@@ -349,7 +359,25 @@ try {
             return r.width >= 44 && r.height >= 44 && (hit === button || button.contains(hit)) ? [] : [button.dataset.level];
         }));
         check(inaccessible.length === 0, `${tag}: all 24 level targets reach 44px and can be clicked: ${inaccessible}`);
-        await click(view, `[data-level="${LEVELS.at(-1).id}"]`);
+        if (width < 1024) {
+            await click(view, '#mg-help-btn');
+            check(await view.evaluate(() => {
+                const overlay = document.getElementById('mg-help');
+                const frame = overlay.getBoundingClientRect();
+                const close = document.getElementById('mg-help-close').getBoundingClientRect();
+                return getComputedStyle(overlay).position === 'fixed'
+                    && Math.abs(frame.top) <= 1 && Math.abs(frame.bottom - innerHeight) <= 1
+                    && close.top >= 0 && close.bottom <= innerHeight;
+            }), `${tag}: help overlay and Close remain inside the visible viewport`);
+            await click(view, '#mg-help-close');
+            await view.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+            check(await view.evaluate(() => window.scrollY > 50), `${tag}: long menu really scrolls`);
+            await view.click(`[data-level="${LEVELS.at(-1).id}"]`);
+            check(await view.evaluate(() => {
+                const bar = document.querySelector('.game-topbar').getBoundingClientRect();
+                return window.scrollY <= 1 && bar.top >= -1 && bar.bottom <= innerHeight;
+            }), `${tag}: entering a late level restores document scroll and visible topbar`);
+        } else await click(view, `[data-level="${LEVELS.at(-1).id}"]`);
         const cells = await view.$$eval('[role="gridcell"]', elements => elements.flatMap(element => {
             element.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
             const r = element.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
