@@ -17,7 +17,7 @@ import { resolveNeedleAwnDailyDate } from '../src/games/needle-awn/scoreboard-ke
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = path => readFileSync(join(ROOT, path), 'utf8');
 const worker = read('Workers/game-scores.js');
-const required = ['needle-awn','carrot-pull','tank-battle','firefly-signal','shadow-loom','math-rain','loop-jail','magnetic-garden'];
+const required = ['needle-awn','carrot-pull','tank-battle','firefly-signal','shadow-loom','math-rain','loop-jail','magnetic-garden','sudoku-mist'];
 const expectedKeys = {
     'needle-awn': ['needle-awn', 'needle-awn-endless'],
     'carrot-pull': ['carrot-pull'],
@@ -27,13 +27,16 @@ const expectedKeys = {
     'math-rain': [1,2,3,4,5,6].map(level => 'math-rain-' + level),
     'loop-jail': ['loop-jail'],
     'magnetic-garden': ['greenhouse', 'twins', 'stonepath', 'aurora'].map(id => 'magnetic-garden-' + id),
+    // Daily-only board: no all-time key, only sudoku-mist-d<YYYYMMDD> (DAILY_PATTERNS).
+    'sudoku-mist': [],
 };
 const games = registry.withCap('leaderboard').filter(g => g.scores?.ui === 'dialog');
 assert.deepEqual(games.map(g => g.id).sort(), required.slice().sort(),
     'Leaderboard dialog rollout coverage changed: review expected list');
 for (const game of games) {
     const prefix = game.id + ': ';
-    const declaredKeys = game.scores.keys || [game.scores.key];
+    const declaredKeys = game.scores.keys || (game.scores.key ? [game.scores.key] : []);
+    if (!declaredKeys.length) assert.ok(game.scores.daily, prefix + 'a board without all-time keys must be daily');
     assert.deepEqual(declaredKeys, expectedKeys[game.id], prefix + 'score keys must be complete and stable');
     for (const key of declaredKeys) {
         assert.ok(worker.includes("'" + key + "':"), prefix + key + ' must be accepted by generated Worker');
@@ -139,4 +142,11 @@ assert.ok(needle.includes("this.dailyDateKey = ''; // Menu uses current date"),
     'menu clears the previous run date');
 assert.ok(needle.includes("this.mode === 'daily' && !this.dailyDateKey"),
     'a missing run seed must never silently submit on a new date');
-console.log('PASS visible leaderboard contract: eight games and metric invariants');
+const sudoku = read('src/games/sudoku-mist/runtime.js');
+assert.equal((sudoku.match(/this\.onDailyCleared\(/g) || []).length, 1,
+    'Sudoku in the Mist submits from exactly one place');
+assert.match(sudoku, /if \(ranked\) \{[\s\S]*?this\.onDailyCleared\(/,
+    'Sudoku in the Mist only submits the first (ranked) daily clear, never practice runs');
+assert.match(read('src/games/sudoku-mist/index.js'), /key: `sudoku-mist-d\$\{dateKey\}`/,
+    'Sudoku in the Mist submits to the run\'s own date, not the current one');
+console.log('PASS visible leaderboard contract: nine games and metric invariants');

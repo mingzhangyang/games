@@ -9,6 +9,8 @@
  *
  * 难度指标 = 卡点数 + 只能穿雾的状态数 + 2 × 最高档位 − 平均可推格数（都来自出题器的逐格路径）。
  *
+ * 星级阈值 stars = [★2, ★3]：用 tests/lib/sudoku-mist-bot.mjs 的 starThresholds() 按测试玩家得分算出。
+ *
  * 用法：node tools/generators/sudoku-mist-levels.mjs [--write]
  *   不带 --write 只打印候选统计
  */
@@ -16,6 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generate } from '../../src/games/sudoku-mist/model/generator.js';
+import { starThresholds } from '../../tests/lib/sudoku-mist-bot.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = path.join(ROOT, 'src/games/sudoku-mist/model/levels.js');
@@ -74,6 +77,7 @@ for (const ch of CHAPTERS) {
         window: p.window,
     }));
 }
+for (const l of levels) l.stars = starThresholds(l);
 
 if (WRITE) {
     const q = v => JSON.stringify(v).replace(/"/g, '\'');
@@ -81,7 +85,7 @@ if (WRITE) {
     const body = levels.map(l => [
         '    {',
         `        id: ${q(l.id)}, chapter: ${q(l.chapter)}, name: { en: ${q(l.name.en)}, zh: ${q(l.name.zh)} },`,
-        `        cap: ${l.cap}, reveal: ${q(l.reveal)}, seed: ${l.seed},`,
+        `        cap: ${l.cap}, reveal: ${q(l.reveal)}, seed: ${l.seed}, stars: [${l.stars.join(', ')}],`,
         `        givens: ${q(l.givens)},`,
         `        window: ${q(l.window)},`,
         '    },',
@@ -89,7 +93,7 @@ if (WRITE) {
     const src = `/**
  * 雾隐九宫的关卡（由 tools/generators/sudoku-mist-levels.mjs --write 生成，勿手改）。
  * givens：题面（'.' = 空格）；window：开局视野（'1' = 可见）；cap：通关所需的最高档位；
- * reveal：揭雾核。seed 只用于追溯出处——运行时不再调用生成器，关卡以这里的字符串为准。
+ * reveal：揭雾核；stars：星级阈值 [★2, ★3]（分数 ≥ 阈值）。seed 只用于追溯出处——运行时不再调用生成器，关卡以这里的字符串为准。
  * 可解性、唯一解、永不卡死由 tests/verify-sudoku-mist-levels.mjs 锁住。
  */
 export const CHAPTERS = Object.freeze([

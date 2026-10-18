@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/sudoku-mist.css">
+    <link rel="stylesheet" href="css/scoreboard-dialog.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -47,7 +48,7 @@
                     <span class="sm-title-main" data-i18n="brand">Sudoku in the Mist</span>
                 </div>
             </div>
-            <!-- 右簇固定顺序：专属（重开）→ pause → sound -->
+            <!-- 右簇固定顺序：专属（重开 / 排行榜，排行榜按钮由 scoreboard-dialog 插在暂停前）→ pause → sound -->
             <div class="sm-topbar-actions game-topbar-group">
                 <button type="button" data-contextual-restart="retry" class="sm-icon-btn game-icon-btn hidden" id="sm-reset-btn" title="Restart" aria-label="Restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
                 <button type="button" data-chrome="pause" class="sm-icon-btn game-icon-btn" id="sm-pause-btn" title="Pause" aria-label="Pause" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
@@ -93,6 +94,8 @@
                         <li class="sm-howto-step"><svg class="sm-howto-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 18c4-3 8-3 12.5 0s8.5 3 13.5 0"/><path d="M5 24c3.5-2.4 7-2.4 10.5 0s7 2.4 10.5 0"/><circle cx="16" cy="10" r="3.4" class="sm-howto-dot"/></svg><span data-i18n="howtoFog">Place it — even into the mist</span></li>
                         <li class="sm-howto-step"><svg class="sm-howto-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 25V17M12.7 25V12M19.3 25V8M26 25V5"/></svg><span data-i18n="howtoScore">Deeper reasoning scores more</span></li>
                     </ol>
+                    <h3 class="sm-menu-heading" data-i18n="dailyHeading">Daily mist</h3>
+                    <div class="sm-daily" id="sm-daily"></div>
                     <h3 class="sm-menu-heading" data-i18n="chapters">Chapters</h3>
                     <div class="sm-chapters" id="sm-chapters"></div>
                     <h3 class="sm-menu-heading" data-i18n="freePlay">Free play</h3>
@@ -107,7 +110,7 @@
                 <!-- 暂停 -->
                 <div class="sm-overlay sm-pause game-overlay hidden" id="sm-pause" role="dialog" aria-labelledby="sm-pause-title">
                     <h2 class="sm-overlay-title" id="sm-pause-title" data-i18n="paused">Paused</h2>
-                    <p class="sm-overlay-copy" data-i18n="pausedCopy">The mist waits for you.</p>
+                    <p class="sm-overlay-copy" id="sm-pause-copy">The mist waits for you.</p>
                     <div class="sm-btn-row game-action-row">
                         <button type="button" class="game-btn game-action-btn game-action-btn--primary" id="sm-btn-resume"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span data-i18n="resume">Resume</span></button>
                         <button type="button" class="game-btn game-action-btn" id="sm-btn-restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span data-i18n="restart">Restart</span></button>
@@ -120,6 +123,7 @@
                     <h2 class="sm-overlay-title" id="sm-result-title" data-i18n="cleared">The mist has lifted</h2>
                     <p class="sm-overlay-copy" id="sm-result-copy"></p>
                     <div class="sm-result-score"><span class="sm-result-label" data-i18n="finalScore">Score</span><b class="sm-result-value" id="sm-result-score">0</b></div>
+                    <p class="sm-result-stars hidden" id="sm-result-stars" role="img"></p>
                     <p class="sm-result-best" id="sm-result-best"></p>
                     <ul class="sm-stats" id="sm-result-stats"></ul>
                     <div class="sm-btn-row game-action-row">

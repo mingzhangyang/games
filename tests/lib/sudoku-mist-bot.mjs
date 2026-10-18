@@ -9,6 +9,7 @@ import { createSession, prepareLevel } from '../../src/games/sudoku-mist/model/s
 import { analyze, MAX_TIER } from '../../src/games/sudoku-mist/model/techniques.js';
 import { placementPoints } from '../../src/games/sudoku-mist/model/scoring.js';
 import { CELLS } from '../../src/games/sudoku-mist/model/grid.js';
+import { mulberry32 } from '../../src/platform/daily.js';
 
 const pick = (arr, rng) => arr[Math.floor(rng() * arr.length)];
 
@@ -73,4 +74,17 @@ export function guesser(level, rng) {
         for (const d of digits) if (s.place(i, d).correct) break;
     }
     return { session: s, summary: s.summary() };
+}
+
+// 关卡星级阈值（设计 §8.1）：STAR_RUNS 条固定种子的随机推理玩家（不猜、不错、不点灯）。
+//   ★2 = 最差一条的 90%（一两次失误或侥幸仍能拿到），★3 = 中位数（要比一般的「全推理」走法更会排顺序）。
+// 两个值都向下取整到 10。tools/generators/sudoku-mist-levels.mjs 写入 levels.js，verify-sudoku-mist-levels 复算比对。
+export const STAR_RUNS = 60;
+export function starThresholds(level) {
+    const lv = prepareLevel(level);
+    const xs = [];
+    for (let k = 0; k < STAR_RUNS; k++) xs.push(deducer(lv, mulberry32(0x57a7 + k), { cap: lv.cap }).summary.score);
+    xs.sort((a, b) => a - b);
+    const floor10 = v => Math.floor(v / 10) * 10;
+    return [floor10(xs[0] * 0.9), floor10(xs[Math.floor((xs.length - 1) / 2)])];
 }

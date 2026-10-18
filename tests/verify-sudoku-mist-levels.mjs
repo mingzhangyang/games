@@ -7,6 +7,7 @@
 //   ④ 永不卡死（设计 §7.3）：随机落子及交错手动揭雾，任何未完成状态都有合法推进动作
 //   ⑤ 雾真的在起作用：「穿雾」章每一遍都会遇到只能穿雾的局面，且比「初雾」章多
 //   ⑥ 计分在奖励推理：贪分玩家 ≥ 随机推理玩家的均分，远高于瞎猜玩家
+//   ⑦ 星级：levels.js 的阈值 = starThresholds() 复算值；贪分玩家拿得到 ★3，瞎猜玩家拿不到 ★2
 //
 // 改了关卡（tools/generators/sudoku-mist-levels.mjs --write）或技巧梯 / 揭雾 / 计分之后重跑。
 // 用法：node tests/verify-sudoku-mist-levels.mjs
@@ -18,7 +19,8 @@ import { MAX_TIER } from '../src/games/sudoku-mist/model/techniques.js';
 import { countSolutions } from '../src/games/sudoku-mist/model/brute.js';
 import { isConsistent } from '../src/games/sudoku-mist/model/grid.js';
 import { mulberry32 } from '../src/platform/daily.js';
-import { deducer, greedy, guesser } from './lib/sudoku-mist-bot.mjs';
+import { starsFor } from '../src/games/sudoku-mist/model/scoring.js';
+import { deducer, greedy, guesser, starThresholds } from './lib/sudoku-mist-bot.mjs';
 
 let failed = 0;
 const ok = (cond, label, extra) => {
@@ -38,7 +40,8 @@ ok(new Set(LEVELS.map(l => l.id)).size === LEVELS.length, `${LEVELS.length} 关 
 for (const ch of CHAPTERS) ok(LEVELS.filter(l => l.chapter === ch.id).length === 4, `「${ch.name.zh}」章 4 关`);
 for (const l of LEVELS) {
     ok(chapterIds.has(l.chapter) && l.name.en && l.name.zh && l.cap >= 1 && l.cap <= MAX_TIER && REVEAL_KERNELS.includes(l.reveal)
-        && /^[1-9.]{81}$/.test(l.givens) && /^[01]{81}$/.test(l.window),
+        && /^[1-9.]{81}$/.test(l.givens) && /^[01]{81}$/.test(l.window)
+        && Array.isArray(l.stars) && l.stars.length === 2 && l.stars.every(Number.isInteger) && l.stars[0] > 0 && l.stars[0] < l.stars[1],
     `${l.id}：字段合法（cap ${l.cap}、${l.reveal} 核）`);
 }
 
@@ -77,7 +80,17 @@ for (const level of LEVELS) {
         `贪分玩家 ${g.summary.score} ≥ 随机推理玩家均分 ${deducerMean.toFixed(0)}`);
     ok(guessMean * 10 < deducerMean && guessScores.every(s => s.mistakes > 0),
         `瞎猜玩家均分 ${guessMean.toFixed(0)}（平均填错 ${mean(guessScores.map(s => s.mistakes)).toFixed(0)} 次）远低于推理玩家`);
+
+    /* ── ⑦ 星级 ── */
+    const stars = starThresholds(level);
+    ok(stars[0] === level.stars[0] && stars[1] === level.stars[1],
+        `星级阈值 [${level.stars}] = 复算值（改了计分或关卡就重跑 sudoku-mist-levels --write）`, `复算 [${stars}]`);
+    ok(starsFor(g.summary.score, level.stars) === 3 && guessScores.every(s => starsFor(s.score, level.stars) === 1),
+        `贪分玩家 ★3（${g.summary.score} ≥ ${level.stars[1]}），瞎猜玩家只有 ★1`);
 }
+
+ok(starsFor(null, [1, 2]) === 0 && starsFor(500, undefined) === 0 && starsFor(0, [10, 20]) === 1
+    && starsFor(10, [10, 20]) === 2 && starsFor(20, [10, 20]) === 3, 'starsFor：未通关 / 无阈值 0 星，0 分通关 1 星，阈值含等号');
 
 /* ── ⑤ 雾在起作用 ── */
 console.log('▶ ⑤ 雾');

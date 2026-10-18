@@ -17,6 +17,11 @@
  *   ⑪ 语言：中 → 英即时切换，可见文案无 {占位符}
  *   ⑫ 浅色主题：雾与棋盘换成宣纸配色
  *   ⑬ 手机（390×664，触屏）：轻点格子 + 数字键落子；棋盘与键盘都在首屏内、无横向滚动
+ *   ⑮ 星级：结算星数 = starsFor(模型分数, 关卡阈值)，菜单关卡按钮显示同样的星
+ *   ⑯ 每日一雾：菜单入口 → 计分局不能重开（顶栏 / 暂停浮层都没有重开）；落子后进度写入本地；
+ *      整页刷新后入口显示「继续」，点进去按输入序列恢复（分数、笔记、用时）；排行榜弹窗静默暂停、关闭后继续；
+ *      完成时只 POST 一次到 sudoku-mist-d<今天>（分数 = Node 侧回放）、写完成标记、清进度；
+ *      「再来一局」是练习局：可以重开，完成后不再提交
  *
  * 用法：node tests/smoke-sudoku-mist.mjs [baseUrl]（verify-all 自动传入）
  */
@@ -26,6 +31,9 @@ import { LEVELS, levelById } from '../src/games/sudoku-mist/model/levels.js';
 import { prepareLevel, replay } from '../src/games/sudoku-mist/model/session.js';
 import { revealArea } from '../src/games/sudoku-mist/model/fog.js';
 import { PEERS } from '../src/games/sudoku-mist/model/grid.js';
+import { starsFor } from '../src/games/sudoku-mist/model/scoring.js';
+import { generateDaily } from '../src/games/sudoku-mist/model/generator.js';
+import { todayKey } from '../src/platform/daily.js';
 
 const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
@@ -39,9 +47,24 @@ const PLACEHOLDER = /\{\w+\}/;
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
-async function open({ width = 1280, height = 900, mobile = false, lang = 'zh', theme = 'dark' } = {}) {
+async function open({ width = 1280, height = 900, mobile = false, lang = 'zh', theme = 'dark', scores = null } = {}) {
     const page = await browser.newPage();
     const errs = [];
+    // 排行榜 Worker 打桩：GET 回空榜，POST 记下请求体（不向生产发数据）
+    if (scores) {
+        await page.setRequestInterception(true);
+        page.on('request', req => {
+            const url = req.url();
+            if (!url.startsWith('https://game-scores.orangely.workers.dev/')) { void req.continue(); return; }
+            const key = new URL(url).searchParams.get('game');
+            if (req.method() === 'POST') scores.posts.push(JSON.parse(req.postData() || '{}'));
+            else if (req.method() === 'GET') scores.gets.push(key);
+            const headers = {
+                'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS', 'access-control-allow-headers': 'Content-Type',
+            };
+            void req.respond({ status: 200, contentType: 'application/json', headers, body: req.method() === 'POST' ? '{"ok":true}' : '[]' });
+        });
+    }
     page.on('pageerror', e => errs.push(String(e.message || e).split('\n')[0]));
     await page.setViewport({ width, height, deviceScaleFactor: 2, isMobile: mobile, hasTouch: mobile });
     await page.setBypassServiceWorker(true);
@@ -311,6 +334,15 @@ try {
     check(result.tracked.includes('sudoku-mist:play') && result.tracked.includes('sudoku-mist:finish'), '⑧ 统计上报 play / finish', JSON.stringify(result.tracked));
     s = await snap(page);
     check(!s.panel && !s.reset && s.pauseDisabled, '⑧ 结算：键盘隐藏、重开隐藏、暂停禁用', JSON.stringify(s));
+    const thinStars = starsFor(model.score, levelById('thin-1').stars);
+    const resultStars = await page.$eval('#sm-result-stars', el => ({
+        visible: !el.classList.contains('hidden'), n: Number(el.dataset.stars), text: el.textContent, label: el.getAttribute('aria-label'),
+    }));
+    check(resultStars.visible && resultStars.n === thinStars && resultStars.text === '★'.repeat(thinStars) + '☆'.repeat(3 - thinStars)
+        && resultStars.label.includes(String(thinStars)) && !PLACEHOLDER.test(resultStars.label),
+    `⑮ 结算星级 = starsFor(${model.score}, [${levelById('thin-1').stars}]) = ${thinStars}`, JSON.stringify(resultStars));
+    const resultRank = await page.$eval('#sm-result', el => el.querySelector('.scoreboard-trigger')?.classList.contains('hidden'));
+    check(resultRank === true, '⑮ 关卡结算不显示排行榜入口（只有每日榜）');
 
     // ⑨ 推理回放
     await page.click('#sm-btn-replay');
@@ -334,6 +366,9 @@ try {
     await page.click('#sm-btn-pause-menu');
     const bestText = await page.$eval('#sm-level-thin-1 .sm-level-best', el => el.textContent);
     check(bestText.includes(String(model.score)), '⑩ 菜单显示本关最佳', bestText);
+    const menuStars = await page.$eval('#sm-level-thin-1 .sm-level-stars', el => Number(el.dataset.stars));
+    const unplayedStars = await page.$('#sm-level-thin-3 .sm-level-stars');
+    check(menuStars === thinStars && unplayedStars === null, '⑮ 菜单：通关关卡显示星级，未通关的不显示', String(menuStars));
     await page.click('#sm-free-first');
     await page.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
     s = await snap(page);
@@ -428,6 +463,129 @@ try {
         check(restored.done && restored.text.includes('0'), '⑭ 刷新后恢复零分通关记录', JSON.stringify(restored));
         check(rerrs.length === 0, '回归场景：无 pageerror', rerrs.join(' | '));
         await rp.close();
+    }
+
+    /* ── ⑯ 每日一雾 ── */
+    {
+        const scores = { posts: [], gets: [] };
+        const { page: dp, errs: derrs } = await open({ scores });
+        const key = todayKey();
+        const daily = generateDaily(key);
+        const runSlot = `game:sudoku-mist:v1:daily-run:${key}`;
+        const doneSlot = `game:sudoku-mist:v1:daily:${key}`;
+        const entry = () => dp.$eval('#sm-daily-btn', el => el.textContent);
+        check(/每日一雾/.test(await entry()) && !PLACEHOLDER.test(await entry()), '⑯ 菜单有每日一雾入口', await entry());
+        await dp.click('#sm-daily-btn');
+        await dp.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
+        const meta = await dp.evaluate(() => ({ ...window.smGame.meta, givens: undefined }));
+        check(meta.kind === 'daily' && meta.ranked === true && meta.dateKey === key && meta.seed === daily.seed,
+            `⑯ 开局：今天（${key}）的计分局，题面与 Node 侧 generateDaily 一致`, JSON.stringify(meta));
+        // 三步真实落子 + 一个笔记
+        for (let n = 0; n < 3; n++) {
+            const step = await firstDeducible(dp);
+            await clickCell(dp, step.cell);
+            await clickDigit(dp, step.digit);
+        }
+        const noteCell = await dp.evaluate(() => window.smGame.session.view().findIndex(v => v.state === 'open' || v.state === 'fog'));
+        await clickCell(dp, noteCell);
+        await dp.keyboard.down('Shift');
+        await dp.keyboard.press('7');
+        await dp.keyboard.up('Shift');
+        s = await snap(dp);
+        check(s.state === 'playing' && !s.reset, '⑯ 计分局有进度时顶栏也没有重开', JSON.stringify(s));
+        const saved = await dp.evaluate(k => JSON.parse(localStorage.getItem(k) || 'null'), runSlot);
+        check(saved?.inputs?.length === 3 && saved.seed === daily.seed && saved.notes?.[noteCell] === 1 << 6,
+            '⑯ 每次输入后进度写入本地（输入序列 + 笔记）', JSON.stringify(saved));
+        await dp.keyboard.press('p');
+        const pauseUi = await dp.evaluate(() => ({
+            restart: !document.getElementById('sm-btn-restart').classList.contains('hidden'),
+            copy: document.getElementById('sm-pause-copy').textContent,
+        }));
+        check(!pauseUi.restart && /不能重开/.test(pauseUi.copy), '⑯ 暂停浮层：计分局没有重开按钮、说明已保存', JSON.stringify(pauseUi));
+        await dp.click('#sm-btn-resume');
+        await sleep(1100);
+        const before = await dp.evaluate(() => ({ score: window.smGame.session.score, elapsed: window.smGame.elapsedMs() }));
+        await dp.evaluate(() => window.smGame.persist());
+
+        // 整页刷新 → 继续
+        await dp.reload({ waitUntil: 'load' });
+        await dp.waitForFunction(() => !!window.smGame?.el);
+        check(/继续 · 已走 3 步/.test(await entry()), '⑯ 刷新后入口显示「继续 · 已走 3 步」（笔记不算步）', await entry());
+        await dp.click('#sm-daily-btn');
+        await dp.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
+        const resumed = await dp.evaluate(n => ({
+            inputs: window.smGame.session.inputs,
+            score: window.smGame.session.score,
+            note: window.smGame.notes[n],
+            elapsed: window.smGame.elapsedMs(),
+            message: document.getElementById('sm-message').textContent,
+            tracked: window.__tracked,
+            hud: Number(document.getElementById('sm-score').textContent),
+        }), noteCell);
+        check(resumed.inputs.length === 3 && resumed.score === before.score && resumed.hud === before.score
+            && resumed.score === replay(daily, resumed.inputs).score,
+        `⑯ 恢复：输入序列、分数（${before.score}）与 Node 侧回放一致`, JSON.stringify({ ...resumed, inputs: resumed.inputs.length }));
+        check(resumed.note === 1 << 6 && resumed.elapsed >= 1000 && /恢复/.test(resumed.message) && !resumed.tracked.includes('sudoku-mist:play'),
+            '⑯ 恢复：笔记、用时、提示文案；续玩不重复上报 play', JSON.stringify(resumed));
+
+        // 排行榜弹窗：静默暂停 → 关闭后继续
+        await dp.click('.scoreboard-trigger--icon');
+        await dp.waitForFunction(() => document.querySelector('dialog[data-scoreboard-dialog]')?.open, { timeout: 5000 });
+        await sleep(200);
+        const ranking = await snap(dp);
+        await dp.keyboard.press('Escape');
+        await dp.waitForFunction(() => !document.querySelector('dialog[data-scoreboard-dialog]')?.open && !window.smGame.isPaused, { timeout: 5000 });
+        check(ranking.paused && !ranking.pause && scores.gets.at(-1) === `sudoku-mist-d${key}`,
+            '⑯ 排行榜弹窗：读今天的每日榜、静默暂停、关闭后自动继续', JSON.stringify({ paused: ranking.paused, gets: scores.gets }));
+
+        // 推完：只提交一次
+        for (let n = 0; n < 90; n++) {
+            if (await dp.evaluate(() => window.smGame.state) !== 'playing') break;
+            const step = await firstDeducible(dp);
+            await clickCell(dp, step.cell);
+            await clickDigit(dp, step.digit);
+        }
+        await dp.waitForFunction(() => !document.getElementById('sm-result').classList.contains('hidden'), { timeout: 5000 });
+        await sleep(300);
+        const fin = await dp.evaluate((r, d) => ({
+            inputs: window.smGame.session.inputs,
+            score: Number(document.getElementById('sm-result-score').textContent),
+            best: document.getElementById('sm-result-best').textContent,
+            stars: document.getElementById('sm-result-stars').classList.contains('hidden'),
+            rank: document.querySelector('#sm-result .scoreboard-trigger')?.classList.contains('hidden'),
+            run: localStorage.getItem(r),
+            done: JSON.parse(localStorage.getItem(d) || 'null'),
+        }), runSlot, doneSlot);
+        const dailyModel = replay(daily, fin.inputs).summary();
+        check(dailyModel.done && fin.score === dailyModel.score && scores.posts.length === 1
+            && scores.posts[0].game === `sudoku-mist-d${key}` && scores.posts[0].score === dailyModel.score,
+        `⑯ 完成：POST 一次到 sudoku-mist-d${key}，分数 = 回放 ${dailyModel.score}`, JSON.stringify({ dom: fin.score, posts: scores.posts }));
+        check(fin.done?.score === dailyModel.score && fin.run === null && /排行榜/.test(fin.best) && fin.stars && fin.rank === false,
+            '⑯ 完成标记写入、进度清除、结算说明计入排行榜并显示排行榜入口、无星级', JSON.stringify({ ...fin, inputs: undefined }));
+
+        // 练习局
+        await dp.click('#sm-btn-again');
+        await dp.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
+        const step = await firstDeducible(dp);
+        await clickCell(dp, step.cell);
+        await clickDigit(dp, step.digit);
+        s = await snap(dp);
+        const practice = await dp.evaluate(r => ({ ranked: window.smGame.meta.ranked, run: localStorage.getItem(r) }), runSlot);
+        check(practice.ranked === false && s.reset && practice.run === null, '⑯ 再来一局 = 练习局：可以重开、不存进度', JSON.stringify(practice));
+        for (let n = 0; n < 90; n++) {
+            if (await dp.evaluate(() => window.smGame.state) !== 'playing') break;
+            const st = await firstDeducible(dp);
+            await clickCell(dp, st.cell);
+            await clickDigit(dp, st.digit);
+        }
+        await dp.waitForFunction(() => !document.getElementById('sm-result').classList.contains('hidden'), { timeout: 5000 });
+        const practiceBest = await dp.$eval('#sm-result-best', el => el.textContent);
+        check(scores.posts.length === 1 && practiceBest.includes(String(dailyModel.score)) && /练习/.test(practiceBest),
+            '⑯ 练习局完成不再提交，结算显示今天的计分成绩', JSON.stringify({ posts: scores.posts.length, practiceBest }));
+        await dp.click('#sm-btn-menu');
+        check(/已完成/.test(await entry()) && (await entry()).includes(String(dailyModel.score)), '⑯ 菜单入口显示已完成与分数', await entry());
+        check(derrs.length === 0, '每日局：无 pageerror', derrs.join(' | '));
+        await dp.close();
     }
 
     /* ── 浅色主题 ── */

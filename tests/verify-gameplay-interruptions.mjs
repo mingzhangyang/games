@@ -10,7 +10,7 @@ import { registry } from './lib/registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = file => readFileSync(join(ROOT, file), 'utf8');
-const expected = ['carrot-pull', 'firefly-signal', 'loop-jail', 'magnetic-garden', 'math-rain', 'needle-awn', 'shadow-loom', 'tank-battle'];
+const expected = ['carrot-pull', 'firefly-signal', 'loop-jail', 'magnetic-garden', 'math-rain', 'needle-awn', 'shadow-loom', 'sudoku-mist', 'tank-battle'];
 const actual = registry.withCap('leaderboard').filter(g => g.scores?.ui === 'dialog')
     .map(g => g.id).sort();
 assert.deepEqual(actual, expected, 'audit every shared-dialog game when registry changes');
@@ -144,6 +144,7 @@ const owners = new Map([
     ['math-rain', 'src/games/math-rain/index.js'],
     ['needle-awn', 'src/games/needle-awn/runtime.js'],
     ['shadow-loom', 'src/games/shadow-loom/runtime.js'],
+    ['sudoku-mist', 'src/games/sudoku-mist/runtime.js'],
     ['tank-battle', 'src/games/tank-battle/index.js'],
 ]);
 for (const [game, file] of owners) {
@@ -174,4 +175,4 @@ assert.match(mathSettings, /this\.eventSystem\.emit\('ui:resume:game'\)/,
 assert.doesNotMatch(mathSettings, /this\.gameStateManager\.resumeGame\(\)/,
     'Settings must not bypass application lifecycle ownership');
 
-console.log('PASS gameplay interruption leases / eight-game integration contract');
+console.log('PASS gameplay interruption leases / nine-game integration contract');
