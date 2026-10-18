@@ -122,5 +122,11 @@ export default new Map([
     ['stack.name', '挑棒'],
     ['stack.desc', '经典挑棒游戏的数字版。逐根挑起木棒，别碰动压在上面的那些——三十根木棒，三条命，全看你的手稳不稳。'],
     ['stack.tag', '休闲益智'],
+    ['bridges.name', '七桥漫游'],
+    ['bridges.desc', '漫游纸雕水城，尝试一次走遍每座桥。规划路线、改建桥梁，亲手破解七桥难题。'],
+    ['bridges.tag', '图论解谜'],
+    ['four-colors.name', '四色图志'],
+    ['four-colors.desc', '用四种颜色修复失色地图，让相邻区域不出现相同颜色，在地图谜题中探索四色规律。'],
+    ['four-colors.tag', '四色解谜'],
 ]);
 // registry:end home-i18n-zh

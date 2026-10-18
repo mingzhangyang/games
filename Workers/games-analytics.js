@@ -5,16 +5,16 @@ import { adminWeekly, recoverWeekly } from './analytics-weekly-delivery.js';
 // V2: POST /event {v:2,game,event,eventId,sessionId[,seconds,playingSeconds,occurredAt]}; GET /stats?v=2.
 
 // registry:begin analytics-origins
-const ALLOWED_ORIGINS = ['https://games.orangely.xyz', 'https://game.orangely.xyz', 'https://2d-minecraft.orangely.xyz', 'https://dots-and-boxes.orangely.xyz', 'https://steady-hand.orangely.xyz'];
+const ALLOWED_ORIGINS = ['https://games.orangely.xyz', 'https://game.orangely.xyz', 'https://2d-minecraft.orangely.xyz', 'https://dots-and-boxes.orangely.xyz', 'https://steady-hand.orangely.xyz', 'https://bridges.orangely.xyz', 'https://four-colors.orangely.xyz'];
 // registry:end analytics-origins
 
 // registry:begin games-analytics
-const GAMES = ['math-rain', 'tetris', 'tank-battle', 'gomoku', 'planet-merge', 'word-daily', 'hoop-shot', 'minesweeper', 'reversi', 'tower-defense', 'gravity-slingshot', 'needle-awn', 'sword-flight', 'lumen', 'circuit', 'silk-dew', 'bond-forge', 'echo-cave', 'maxwell-demon', 'crystal-bloom', 'flame-verse', 'ripple-duet', 'carrot-pull', 'firefly-signal', 'shadow-loom', 'loop-jail', 'minecraft', 'dots', 'stack'];
+const GAMES = ['math-rain', 'tetris', 'tank-battle', 'gomoku', 'planet-merge', 'word-daily', 'hoop-shot', 'minesweeper', 'reversi', 'tower-defense', 'gravity-slingshot', 'needle-awn', 'sword-flight', 'lumen', 'circuit', 'silk-dew', 'bond-forge', 'echo-cave', 'maxwell-demon', 'crystal-bloom', 'flame-verse', 'ripple-duet', 'carrot-pull', 'firefly-signal', 'shadow-loom', 'loop-jail', 'minecraft', 'dots', 'stack', 'bridges', 'four-colors'];
 // registry:end games-analytics
 
 // registry:begin analytics-report-names
-const GAME_NAMES = {"math-rain":"Math Rain","tetris":"Tetris","tank-battle":"Tank Battle","gomoku":"Gomoku","planet-merge":"Planet Merge","word-daily":"Word Daily","hoop-shot":"Hoop Shot","minesweeper":"Minesweeper","reversi":"Reversi","tower-defense":"Neon TD","gravity-slingshot":"Gravity Slingshot","needle-awn":"Pinpoint Clash","sword-flight":"Sword Flight","lumen":"Lumen","circuit":"Circuit","silk-dew":"Silkfall","bond-forge":"Bond Forge","echo-cave":"Echo Cave","maxwell-demon":"Maxwell's Demon","crystal-bloom":"Crystal Bloom","flame-verse":"Flame Verse","ripple-duet":"Ripple Duet","carrot-pull":"Carrot Pull","firefly-signal":"Firefly Signal","shadow-loom":"Shadow Loom","loop-jail":"Loop Jail","minecraft":"2D Minecraft","dots":"Dots and Boxes","stack":"The Stack"};
-const STANDALONE_GAMES = ["minecraft","dots","stack"];
+const GAME_NAMES = {"math-rain":"Math Rain","tetris":"Tetris","tank-battle":"Tank Battle","gomoku":"Gomoku","planet-merge":"Planet Merge","word-daily":"Word Daily","hoop-shot":"Hoop Shot","minesweeper":"Minesweeper","reversi":"Reversi","tower-defense":"Neon TD","gravity-slingshot":"Gravity Slingshot","needle-awn":"Pinpoint Clash","sword-flight":"Sword Flight","lumen":"Lumen","circuit":"Circuit","silk-dew":"Silkfall","bond-forge":"Bond Forge","echo-cave":"Echo Cave","maxwell-demon":"Maxwell's Demon","crystal-bloom":"Crystal Bloom","flame-verse":"Flame Verse","ripple-duet":"Ripple Duet","carrot-pull":"Carrot Pull","firefly-signal":"Firefly Signal","shadow-loom":"Shadow Loom","loop-jail":"Loop Jail","minecraft":"2D Minecraft","dots":"Dots and Boxes","stack":"The Stack","bridges":"Seven Bridges","four-colors":"Fourfold Atlas"};
+const STANDALONE_GAMES = ["minecraft","dots","stack","bridges","four-colors"];
 // registry:end analytics-report-names
 
 
