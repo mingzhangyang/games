@@ -3,11 +3,92 @@
 ## Scope and the checked-in contracts
 
 - **Storage:** existing D1 `games`; reporting reads `analytics_daily(day, game, opens, plays, finishes, active_seconds, playing_seconds)` only. It does not scan `analytics_events`, alter the existing public `/event` or `/stats` protocol, or create another analytics pipeline.
-- **Coverage:** `games.config.json` is the canonical list of 26 hosted game IDs/names and 3 independently deployed game IDs (`minecraft`, `dots`, `stack`). `npm run gen -- --check` protects the generated Worker game labels. The external games have allowed origins but their updated activity clients have **not** been installed by Phase 2. Their displayed counts are not necessarily complete.
+- **Coverage:** `games.config.json` is the canonical list of **27 hosted games and five independently deployed games** (`minecraft`, `dots`, `stack`, `bridges`, `four-colors`) as of 2026-10-18. `npm run gen -- --check` protects the generated Worker game IDs, names and allowed origins. All five standalone adapters were merged on 2026-10-18, but their deployment and receipt of real V2 events must be verified separately; missing counters are not proof of zero usage.
 - **Time:** stored `day` keys are UTC+8 calendar dates. Week is Monday 00:00:00 to next Monday 00:00:00, left inclusive/right exclusive. SQL reads 14 days in one parameterized query, `[previousMonday, followingMonday)`. The existing GET `/stats?v=2&from=...&to=...` is inclusive and unchanged.
 - **Precision:** integer seconds and counts are summed without conversion; only email display rounds down into hours/minutes. Ratios are count aggregates, not person-level conversions. A zero denominator yields `N/A`; `plays/opens` can exceed 100%.
 - **Coverage warning:** set `REPORT_COMPLETE_SINCE` to the Monday of the **first entirely covered UTC+8 week** after confirming that the manually deployed Worker and site collect all required telemetry. No historical times are backfilled. A week preceding this date is never auto-emailed, and missing previous-week baselines show as unavailable, not as growth. Even with this flag, individual client requests can be blocked/lost.
 - **No real sends are performed by CI.** Browser collection, stats Worker deployment and website auto-publishing are different workflows; this PR does not change the website deployment model.
+
+
+## Five standalone games — Analytics V2 production acceptance (2026-10-18)
+
+**Do not conflate three distinct gates:** (1) a merged adapter/registry commit, (2) the deployed *production* site and Analytics Worker, (3) actual V2 event reception in D1. Neither a merged PR nor an HTTP 200 from the read-only stats endpoint proves gate 3.
+
+| Standalone game | ID | Canonical production origin | Integration PR | Playing-time contract |
+| --- | --- | --- | --- | --- |
+| 2D Minecraft | `minecraft` | `https://2d-minecraft.orangely.xyz` | `2d-minecraft#3` | Alive, running sandbox; death stops play time; inventory/crafting count |
+| Dots and Boxes | `dots` | `https://dots-and-boxes.orangely.xyz` | `dots-and-boxes#2` | Unfinished match after first accepted move; online match must be ready |
+| The Stack | `stack` | `https://steady-hand.orangely.xyz` | `the-stack#2` | Started, unfinished run, excluding camera rotation |
+| Seven Bridges | `bridges` | `https://bridges.orangely.xyz` | `bridges#6` | Started, non-completed traversal, excluding open dialogs |
+| Fourfold Atlas | `four-colors` | `https://four-colors.orangely.xyz` | `four-colors#5` | Started editable puzzle, excluding settings/completed/non-play views |
+
+The game-owned adapter calls `hubTrack(game, 'play'|'finish')` at genuine start/end boundaries. `open`, `active`, `activeSeconds` and `playingSeconds` are owned by `https://games.orangely.xyz/analytics.js`. The shared client is **V2-only**, sends `v:2` with UUIDv4 event/session IDs and `occurredAt`, **does not probe for capability or fall back to legacy payloads**, and only reports from canonical hosts. No additional D1 migration is required by these five adapters.
+
+### Verified production snapshot — 2026-10-18
+
+- Cloudflare production domains map to the five corresponding Worker services; each standalone service was deployed *after* its Analytics integration PR merged, with its latest deployment at 100% traffic. This strongly supports site rollout, but does not by itself inspect the live browser's loaded `analytics.js` asset.
+- **Blocking dependency:** Cloudflare's `games-analytics` deployment was still version `21538063-d541-4587-8ae3-afd0eefe12c6` (100% traffic), created `2026-10-14 15:31:48 UTC`. Its **actual deployed script** listed only `minecraft`, `dots`, `stack` and their three origins. It did not list `bridges` / `four-colors`. Latest `main` does list all five and must be deployed manually.
+- A read-only query to production D1 `games` found **one V1 `minecraft/play`** event dated `20261016` and **zero V2 events** for any game at inspection time; `analytics_daily` had only `minecraft`: `p=1`, `f=0`, `opens=0`, `active_seconds=0`, `playing_seconds=0`. This is an inspection snapshot, not a claim about future traffic.
+- Production had D1, native rate-limiter and `EMAIL` bindings, both intended Cron schedules, and `analytics_weekly_delivery` schema. The existence of these bindings does not mean weekly email has been enabled.
+- Live HTTP browser/curl `GET /stats?v=2`, cross-origin network traffic and actual V2 ingestion still require separate production observation. Do **not** mark acceptance complete from the D1 snapshot.
+
+### Release gate: deploy **only** the analytics Worker
+
+1. Confirm the reviewed `main` branch, green relevant checks, expected registry (five standalone IDs and seven allowed origins), and `npm run gen -- --check`. Reinspect the latest commit if `main` advanced. Current `Workers/games-analytics.js` lists the five IDs and seven origins: `games.orangely.xyz`, `game.orangely.xyz` and the five standalone hosts.
+2. In GitHub → `mingzhangyang/games` → **Actions → Deploy Workers → Run workflow**, choose **Branch: `main`**, **Target: `analytics`** (not `all`). The workflow rejects non-`main` refs, runs `npm ci` and registry drift verification, then `npm run deploy:analytics`. It requires the existing GitHub Actions secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Never paste their values into documents or logs.
+3. Demand a **successful new** job whose checkout commit contains both games PR #152 and PR #154 (plus the latest registry); a rerun of an older job **is not equivalent**. Independently query the Cloudflare `games-analytics` deployment and script content again: its version/time must advance and its *deployed source* must list `bridges` / `four-colors`, all five external hosts and `V2_KINDS` including `open`, `active`, `play`, `finish`.
+4. Reconfirm D1 `ANALYTICS_DB → games`, `ANALYTICS_RATE_LIMITER`, the unchanged weekly reporting configuration and two Cron schedules. Do not run old migrations or enable `REPORT_ENABLED` just to test collection.
+
+### No-pollution verification: code, CORS, lifecycle, idempotency
+
+Use local fixtures/mocked databases to test acceptance/rejection and failure paths, **not fabricated production POSTs**. The games repository has `npm run verify:analytics` and browser tests, and the standalone repos have focused adapter suites. These are code-level checks, not evidence of actual production reception.
+
+- **CORS (read-only):** request `OPTIONS /event` with `Origin: <each canonical origin>` and `Access-Control-Request-Method: POST`. Expect 204 and the matching `Access-Control-Allow-Origin`, suitable methods/headers and `Vary: Origin`; unexpected origins must not receive an allowed-origin header. The V2 browser client's actual POST body is `text/plain;charset=UTF-8`, so a simple cross-origin POST need not preflight; inspect its actual Network request too. `GET /stats?v=2` with an allowed `Origin` must similarly expose an allowed-origin response.
+- **Events:** one real navigation → exactly one new `open` for a fresh document; no second open after an in-page restart. A real accepted move/action → game-owned `play`; actual completion → `finish`. `active` events carry integer `seconds` (1–60) and `playingSeconds` (0–`seconds`). Foreground-visible, focused, recently interacted time counts as active; only game-owned active play counts as playing; idle, hidden, blurred, pre-game and result screens cannot accumulate playing time.
+- **Deduplication:** local or staging-only tests verify the same immutable `eventId` is accepted as a duplicate without changing aggregates, a colliding ID with different payload returns 409, concurrent retries count once, and session open duplication is suppressed. Observe production passively rather than intentionally resending an event.
+- **Offline:** the shared client uses a bounded in-memory queue, up to three attempts for failed requests, immutable IDs and pagehide beacons/keepalive. Browser operation continues while telemetry is unavailable. **There is no durable cross-reload offline queue** and therefore no guarantee of lossless offline recovery. Test simulated loss/retry locally, not against D1 production.
+- **V2-only:** verify actual `analytics.js` uses `v:2` and never sends an unversioned `{game,event}` or makes a protocol-capability probe. Standalone adapters must never send legacy fetch/beacon calls in parallel.
+
+For end-to-end verification without synthetic-data contamination, observe **ordinary real playing sessions** after deployment (or run controlled full testing against a staging Worker and staging D1). If doing a deliberately played production session, it is legitimate usage and will increment counts; document its day/time so it is not misread as organic acquisition.
+
+### Verify production D1 against the public read-only V2 API
+
+```sh
+ANALYTICS_URL='https://games-analytics.orangely.workers.dev'
+curl -fsS "$ANALYTICS_URL/stats?v=2&scope=total"
+curl -fsS "$ANALYTICS_URL/stats?v=2&day=20261018"
+curl -fsS "$ANALYTICS_URL/stats?v=2&from=20261018&to=20261018"
+# CORS inspection without a POST/event write
+curl -isS -X OPTIONS "$ANALYTICS_URL/event" \
+  -H 'Origin: https://bridges.orangely.xyz' \
+  -H 'Access-Control-Request-Method: POST' \
+  -H 'Access-Control-Request-Headers: content-type'
+```
+
+Read-only D1 inspection in the Cloudflare production console (`games`):
+
+```sql
+SELECT game, kind, COUNT(*) AS accepted_events,
+       SUM(active_seconds) AS active_seconds,
+       SUM(playing_seconds) AS playing_seconds,
+       MIN(day) AS first_day, MAX(day) AS last_day
+FROM analytics_events
+WHERE version = 2
+  AND game IN ('minecraft', 'dots', 'stack', 'bridges', 'four-colors')
+GROUP BY game, kind ORDER BY game, kind;
+
+SELECT game, SUM(opens) AS opens, SUM(plays) AS plays,
+       SUM(finishes) AS finishes, SUM(active_seconds) AS active_seconds,
+       SUM(playing_seconds) AS playing_seconds
+FROM analytics_daily
+WHERE game IN ('minecraft', 'dots', 'stack', 'bridges', 'four-colors')
+GROUP BY game ORDER BY game;
+```
+
+`/stats?v=2` returns camelCase `activeSeconds` / `playingSeconds`, and `p` / `f` for plays/finishes; D1 uses snake_case. Compare per-game values for the **same** day or cumulative scope, accounting for UTC+8 day boundaries and delayed checkpoint delivery. Games with no rows are **omitted** from the `games` map, not returned with explicit zeroes. Do not confuse legacy `p` with page opens. A 200/valid JSON response and the 2026-10-16 legacy event alone do not satisfy five-game V2 receipt acceptance.
+
+Only after the five games show real V2 `open`/`active`/`play`/`finish` as their gameplay allows, counts/durations reconcile with D1, and production origin/network behavior is verified should they be marked production-accepted. Choose `REPORT_COMPLETE_SINCE` only for the **first completely observed UTC+8 Monday-start week**; never backdate it to the date the PRs merged.
+
 
 ## One-time schema change — operator action after merge only
 
@@ -159,7 +240,7 @@ The API never accepts a recipient address or unauthenticated manual send. Do not
 - **`uncertain`:** reconcile with provider logs; never blindly retry, including after a Worker crash.
 - **`preparing` expired:** daily recovery automatically re-acquires these records (up to two old weeks per run), since there has not yet been a provider call.
 - **Retention backlog:** follow "Analytics dedupe cleanup backlog remains", verify `(day,id)` index, adjust `CLEANUP_BATCHES` only when supported by measured volume.
-- **Independent games:** until their own repositories load the shared Analytics V2 client, treat their zero opens/durations as **missing telemetry**, not true zero engagement.
+- **Independent games:** all five repositories have merged production-only shared V2 client adapters. A deployed standalone site still needs the separately deployed Analytics Worker to allow its ID and origin. Until the *live* Worker and the game's real V2 events are verified, treat zero opens/durations as **unverified or missing telemetry**, not zero engagement. In-memory offline retries are bounded and do not guarantee recovery across page reloads.
 - **Statistics precision:** recording can be delayed or lost by offline clients/browsers; the configured baseline means instrumentation readiness, not a transactional completeness proof.
 
 ## Pause and rollback without deleting history
