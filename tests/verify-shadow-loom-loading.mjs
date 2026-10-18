@@ -92,10 +92,29 @@ try {
     await page.evaluate(() => window.slGame.startLevel(0));
     await ready(page, 'playing', 'rabbit');
     await page.evaluate(() => window.slGame.showMenu());
-    await page.evaluate(() => window.slGame.startLevel(0));
-    await ready(page, 'playing', 'rabbit');
-    ok(await page.evaluate(() => window.slGame.moves === 0 && window.slGame.elapsed === 0),
+    const repeatedStart = await page.evaluate(async () => {
+        await window.slGame.startLevel(0);
+        return { moves: window.slGame.moves, elapsed: window.slGame.elapsed };
+    });
+    ok(repeatedStart.moves === 0 && repeatedStart.elapsed === 0,
         'return and repeat enter reset gameplay only, without altering progress');
+
+    // A lease acquired during download must defer scene activation until ALL
+    // leases release; previously this could leave the new scene frozen forever.
+    await page.evaluate(() => {
+        const game = window.slGame;
+        game.showMenu();
+        game.pauseOwnership.acquire('ranking');
+        game.pauseOwnership.acquire('drawer');
+    });
+    await page.evaluate(() => window.slGame.startLevel(2));
+    ok(await page.evaluate(() => window.slGame.state === 'menu' && window.slGame.pendingLevel?.index === 2),
+        'ranking + drawer jointly defer the downloaded scene');
+    await page.evaluate(() => window.slGame.pauseOwnership.release('ranking'));
+    ok(await page.evaluate(() => window.slGame.state === 'menu'), 'one remaining pause lease still prevents scene start');
+    await page.evaluate(() => window.slGame.pauseOwnership.release('drawer'));
+    await ready(page, 'playing', 'whale');
+    ok(await page.evaluate(() => !window.slGame.isPaused), 'final release activates an unpaused, playable scene');
 
     await page.evaluate(() => window.slGame.showMenu());
     await page.evaluate(() => window.slGame.startLevel(3));

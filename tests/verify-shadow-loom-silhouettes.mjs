@@ -8,6 +8,7 @@ import { getSilhouette, hasSilhouettes, loadSilhouettes, SILHOUETTE_VIEWBOX } fr
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dir = path.join(root, 'assets/shadow-loom/layers/silhouettes');
 const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+const covers = fs.readFileSync(path.join(root, 'tools/generators/game-covers.mjs'), 'utf8');
 const generatedReferenceFamilies = new Set(manifest.referenceSource?.generatedReferenceFamilies || []);
 let failed = 0;
 let passed = 0;
@@ -16,6 +17,7 @@ function ok(condition, label) {
     failed++;
     console.error('✗ ' + label);
 }
+ok(covers.includes('await loadSilhouettes(LEVELS[0].id)'), '封面生成器先加载首关 authored SVG 再编译几何');
 ok(manifest.coordinateSystem?.viewBox === SILHOUETTE_VIEWBOX, 'manifest 与运行时 viewBox 一致');
 ok(SILHOUETTE_VIEWBOX === '0 0 480 854', '统一使用 480×854 舞台坐标');
 for (const [family, reference] of Object.entries(manifest.referenceSource?.sourceReferences || {})) {

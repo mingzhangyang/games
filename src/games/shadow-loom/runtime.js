@@ -99,12 +99,22 @@ export class ShadowLoomGame {
             pause: () => this.pauseQuiet(),
             resume: () => this.resumeQuiet(),
             releaseInputs: () => this.onPointerUp(),
+            onAllReleased: () => {
+                // Wait for the *last* interruption (ranking, drawer, hidden tab)
+                // before activating a newly downloaded scene.
+                const pending = this.pendingLevel;
+                if (pending && pending.token === this.loadTicket && !document.hidden) {
+                    this.pendingLevel = null;
+                    void this.startLevel(pending.index);
+                }
+            },
         });
         this.levelIdx = 0;
         this.level = LEVELS[0];
         // Do not compile before the first level's independently loaded geometry arrives.
         this.st = { lamp: { ...this.level.lamp.start }, pieces: [] };
         this.loadTicket = 0;
+        this.pendingLevel = null;
         this.loadStatusKey = null;
         this.sway = [];
         this.sel = -1;              // 选中的纸片（-1 = 无，'lamp' = 灯）
@@ -385,6 +395,7 @@ export class ShadowLoomGame {
     async startLevel(i) {
         const index = clamp(i, 0, LEVELS.length - 1);
         const token = ++this.loadTicket;
+        this.pendingLevel = null;
         const id = LEVELS[index].id;
         if (!hasSilhouettes(id)) {
             this.showLoadStatus('loadingScene');
@@ -410,6 +421,13 @@ export class ShadowLoomGame {
             }
         }
         if (token !== this.loadTicket) return false;
+        if (this.pauseOwnership.isHeld() || document.hidden) {
+            // Never start a new run while a modal/drawer/visibility lease exists:
+            // invalidate() would pause it without granting auto-resume.
+            this.pendingLevel = { index, token };
+            this.showLoadStatus('waitingForFocus');
+            return false;
+        }
         try {
             this.loadLevel(index, true);
         } catch (error) {
@@ -454,6 +472,7 @@ export class ShadowLoomGame {
     showMenu() {
         // Pending imports may finish later; they must never reopen a scene after Menu.
         this.loadTicket++;
+        this.pendingLevel = null;
         this.showLoadStatus();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
