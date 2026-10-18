@@ -131,6 +131,27 @@ for (const vp of VIEWPORTS) {
                     truncated: titles.filter(t => t.scrollWidth > t.clientWidth + 0.5).map(t => t.textContent),
                     squeezed: titles.filter(t => t.clientWidth < t.scrollWidth / 2).map(t => t.textContent),
                     maxChips: Math.max(...cards.map(c => [...c.querySelectorAll('.card-chip')].filter(x => x.getClientRects().length).length)),
+                    // Safari used to clamp the whole second row, painting "Da..." inside a Daily chip.
+                    // Clamp only .card-desc-text and measure visible glyphs as well as chip boxes.
+                    badDescIsolation: cards.filter(c => {
+                        const row = c.querySelector('.card-desc');
+                        const summary = c.querySelector('.card-desc-text');
+                        return getComputedStyle(row).display !== 'flex'
+                            || getComputedStyle(summary).webkitLineClamp !== (innerWidth <= 600 ? '1' : '2');
+                    }).map(c => c.dataset.gameId),
+                    unreadableChips: cards.flatMap(c => {
+                        const row = c.querySelector('.card-desc').getBoundingClientRect();
+                        return [...c.querySelectorAll('.card-desc .card-chip')].filter(chip => {
+                            if (getComputedStyle(chip).display === 'none') return false;
+                            const pill = chip.getBoundingClientRect();
+                            const range = document.createRange();
+                            range.selectNodeContents(chip);
+                            const glyphs = range.getBoundingClientRect();
+                            return pill.left < row.left - 1 || pill.right > row.right + 1
+                                || pill.top < row.top - 1 || pill.bottom > row.bottom + 1
+                                || glyphs.left < pill.left - 1 || glyphs.right > pill.right + 1;
+                        }).map(chip => `${c.dataset.gameId}:${chip.textContent.trim()}`);
+                    }),
                     overflowing: cards.filter(c => c.scrollWidth > c.clientWidth + 1).map(c => c.dataset.gameId),
                     pageScrollX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
                 };
@@ -154,6 +175,8 @@ for (const vp of VIEWPORTS) {
     if (vp.w >= 360 && g.truncated.length) bad.push(`title truncated: ${g.truncated.join(' | ')}`);
     if (g.squeezed.length) bad.push(`title squeezed below half its width: ${g.squeezed.join(' | ')}`);
     if (vp.theme === 'light' && g.maxChips < 3) bad.push(`no card shows 3 chips (maxChips=${g.maxChips}); the combination is not exercised`);
+    if (g.badDescIsolation.length) bad.push(`chip and description share a clamp: ${g.badDescIsolation.join(',')}`);
+    if (g.unreadableChips.length) bad.push(`chips clipped: ${g.unreadableChips.join(',')}`);
     if (g.overflowing.length) bad.push(`card overflow: ${g.overflowing.join(',')}`);
     if (g.pageScrollX) bad.push('page scrolls horizontally');
 
