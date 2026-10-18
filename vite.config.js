@@ -71,6 +71,7 @@ main: resolve(__dirname, 'index.html'),
             "firefly-signal": resolve(__dirname, 'firefly-signal.html'),
             "shadow-loom": resolve(__dirname, 'shadow-loom.html'),
             "loop-jail": resolve(__dirname, 'loop-jail.html'),
+            "magnetic-garden": resolve(__dirname, 'magnetic-garden.html'),
             // registry:end inputs
         },
         output: {

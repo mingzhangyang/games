@@ -197,6 +197,9 @@ ok(!/getTimezoneOffset|8 \* 3600/.test(homeJs), 'src/home 的 UTC+8 日期只来
 ok(homeFiles.filter(f => /\bonReady\(/.test(read(`${HOME_DIR}/${f}`))).join() === 'index.js', '只有组合根接 onReady');
 
 console.log('\n▶ 首页源码体积预算');
+const iconSizing = read('css/home-cards.css').split('.card-icon > svg {')[1]?.split('}')[0] ?? '';
+ok(iconSizing.includes('width: 24px;') && iconSizing.includes('height: 24px;'),
+    '首页卡片图标尺寸集中在共享样式，删除冗余的每卡内联尺寸');
 const sizes = {
     'index.html': Buffer.byteLength(html),
     'js/index-page.js': Buffer.byteLength(pageJs),

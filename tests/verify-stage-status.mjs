@@ -23,6 +23,14 @@ const VIEWPORTS = [
 // name: 顶栏中槽里应当剩下的游戏名；start: 进入对局的点击序列；playing: 对局就绪条件。
 const PAGES = [
     {
+        id: 'magnetic-garden',
+        status: ['#mg-hud'],
+        hud: [],
+        name: { zh: '磁极花园', en: 'Magnetic Garden' },
+        start: ['#mg-btn-start'],
+        playing: () => window.mgGame?.state === 'playing',
+    },
+    {
         id: 'carrot-pull',
         status: ['#cp-hud-row'],
         hud: [],
@@ -115,7 +123,8 @@ for (const spec of PAGES) {
                 const center = topbar.querySelector('.game-topbar-center');
                 const stage = document.querySelector('.game-stage');
                 const visibleText = el => [...el.querySelectorAll('*')].filter(n => n.children.length === 0
-                    && getComputedStyle(n).display !== 'none' && n.getClientRects().length)
+                    && getComputedStyle(n).display !== 'none' && n.getClientRects().length
+                    && n.getBoundingClientRect().width > 1 && n.getBoundingClientRect().height > 1)
                     .map(n => n.textContent.trim()).filter(Boolean);
                 const icon = topbar.querySelector('.game-icon-btn');
                 return {

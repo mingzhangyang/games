@@ -30,6 +30,7 @@
 - Firefly Signal（萤火信号）
 - Shadow Loom（影织）
 - Loop Jail（画牢）
+- Magnetic Garden（磁极花园）
 <!-- registry:end game-list -->
 
 全站只有一个排行榜 Worker（`Workers/game-scores.js`，KV 命名空间 `GAME_SCORES`，按 `top:<game>` 键区分；旧三榜 Tetris / Hoop Shot / Planet Merge 已并入，每日榜如 `top:planet-merge-d<日期>`、`top:gravity-d<日期>` 按天滚动），另有全站统计（`games-analytics`）与猜词战报（`word-daily-stats`）两个聚合 Worker。`games-analytics` 已改为 D1-only Analytics V2（全新数据库、旧数据放弃、旧 HTTP API 保留），需要手动创建数据库、执行 migration、发布 Worker。详见 [Analytics V2 D1 手动切换指南](docs/analytics-v2-d1-runbook.md)。
