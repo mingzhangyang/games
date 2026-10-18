@@ -19,6 +19,10 @@
  */
 import * as R from '../src/games/shadow-loom/model/rules.js';
 import { LEVELS } from '../src/games/shadow-loom/model/levels.js';
+import { loadSilhouettes } from '../src/generated/shadow-loom/silhouettes.js';
+
+// Geometry stays synchronous, but the test explicitly loads every generated level.
+await Promise.all(LEVELS.map(level => loadSilhouettes(level.id)));
 
 let failed = 0;
 let passed = 0;

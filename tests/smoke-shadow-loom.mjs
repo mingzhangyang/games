@@ -20,6 +20,10 @@ import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import * as R from '../src/games/shadow-loom/model/rules.js';
 import { LEVELS } from '../src/games/shadow-loom/model/levels.js';
+import { loadSilhouettes } from '../src/generated/shadow-loom/silhouettes.js';
+
+// Browser page lazy-loads; the Node oracle separately prepares all eight levels.
+await Promise.all(LEVELS.map(level => loadSilhouettes(level.id)));
 
 const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
@@ -88,7 +92,7 @@ console.log('▶ 菜单');
 const chips = await page.$$('#sl-level-grid .sl-chip');
 check(chips.length === LEVELS.length, `场景芯片 = ${LEVELS.length}`, `实到 ${chips.length}`);
 await chips[0].click();
-await wait(250);
+await page.waitForFunction(() => window.slGame.state === 'playing', { timeout: 15000 });
 check(await game(() => window.slGame.state === 'playing' && window.slGame.level.id === 'rabbit'), '点第一个芯片进入「兔」');
 check(await game(() => document.getElementById('sl-start').classList.contains('hidden')), '开始菜单隐藏');
 

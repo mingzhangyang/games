@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEVELS } from '../src/games/shadow-loom/model/levels.js';
-import { getSilhouette, SILHOUETTE_VIEWBOX } from '../src/generated/shadow-loom/silhouettes.js';
+import { getSilhouette, hasSilhouettes, loadSilhouettes, SILHOUETTE_VIEWBOX } from '../src/generated/shadow-loom/silhouettes.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dir = path.join(root, 'assets/shadow-loom/layers/silhouettes');
@@ -41,6 +41,11 @@ for (const full of svgFiles) {
     }
 }
 for (const level of LEVELS) {
+    ok(!hasSilhouettes(level.id), level.id + ': data absent before first import');
+    const data = await loadSilhouettes(level.id);
+    ok(hasSilhouettes(level.id), level.id + ': level chunk loaded');
+    ok(await loadSilhouettes(level.id) === data, level.id + ': repeat uses in-memory cache');
+    ok(Object.keys(data).length === level.pieces.length, level.id + ': generated piece coverage exact');
     for (const piece of level.pieces) {
         const data = getSilhouette(level.id, piece.id);
         ok(!!data, level.id + '/' + piece.id + ': 有 authored SVG 数据');

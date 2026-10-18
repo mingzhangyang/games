@@ -24,6 +24,9 @@ export const LANGUAGES = makeText({
         hint: 'Drag the paper cut-outs (and the lamp, when it glows) until the shadows weave into the shape.',
         hintRotate: 'Drag a cut-out; drag the brass knob on its ring to turn it.',
         resetToast: 'Scene reset',
+        loadingScene: 'Loading this scene…',
+        loadFailed: 'Scene data could not be loaded. Check your connection and reload to try again.',
+        reloadToRetry: 'Reload to retry',
         pinnedToast: 'This piece is pinned — move the lamp instead.',
         lampFixedToast: 'The lamp is fixed in this scene.',
         chapterIntro: {
@@ -70,6 +73,9 @@ export const LANGUAGES = makeText({
         hint: '拖动剪纸（灯亮起光环时也能拖灯），让影子织成目标剪影。',
         hintRotate: '拖动剪纸；拖动圆环上的铜钮可以旋转。',
         resetToast: '场景已重置',
+        loadingScene: '正在加载本幕剪影…',
+        loadFailed: '剪影数据加载失败，请检查网络后重新加载页面。',
+        reloadToRetry: '重新加载并重试',
         pinnedToast: '这片剪纸被钉住了——试试移动灯。',
         lampFixedToast: '这一幕的灯是固定的。',
         chapterIntro: {
