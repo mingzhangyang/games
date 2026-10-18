@@ -487,7 +487,7 @@ class GameEngine {
             const isUnlocked = i <= this.unlockedLevel;
             chip.className = `na-level-chip ${isUnlocked ? 'unlocked' : 'locked'}`;
             const stars = this.levelStars[i] || 0;
-            const starText = '✦'.repeat(stars) + '·'.repeat(3 - stars);
+            const starText = stars ? '✦'.repeat(stars) + '·'.repeat(3 - stars) : '';
 
             chip.innerHTML = `
                 <span>${i}</span>

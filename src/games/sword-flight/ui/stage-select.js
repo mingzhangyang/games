@@ -28,7 +28,7 @@ export function showStageSelect(game) {
         card.innerHTML = `
                 <span class="sf-stage-num">${isUnlocked ? (isZh ? `第${stageNum}重` : `Realm ${stageNum}`) : '🔒'}</span>
                 <span class="sf-stage-name">${st.name}</span>
-                <span class="sf-stage-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>
+                <span class="sf-stage-stars">${stars ? '⭐'.repeat(stars) + '☆'.repeat(3 - stars) : ''}</span>
             `;
 
         if (isUnlocked) {
