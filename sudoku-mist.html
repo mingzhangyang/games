@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" class="game-reset game-hidden-contract">
+<head>
+    <meta charset="UTF-8">
+    <!-- registry:begin head -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-support" content="light dark">
+    <meta name="theme-color" content="#0d1322" data-light="#f1ede4">
+    <script src="/theme-boot.js"></script>
+    <meta name="description" content="雾隐九宫 Sudoku in the Mist — classic 9×9 sudoku rules under a morning mist. Every digit you deduce clears the fog around it and reveals the clues you need next; place digits straight into the mist for a bonus. Scored by how deeply you reason, not how fast you tap — lucky guesses score nothing.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Orangely">
+    <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/sudoku-mist.html">
+    <meta property="og:title" content="雾隐九宫 Sudoku in the Mist — Deduce Through the Fog">
+    <meta property="og:description" content="A sudoku hidden in mist: every digit you deduce clears the fog and reveals the next clue.">
+    <meta property="og:site_name" content="Mini Games Collection">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/seo/og-sudoku-mist.svg">
+    <meta property="og:url" content="https://games.orangely.xyz/sudoku-mist.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="雾隐九宫 Sudoku in the Mist — Deduce Through the Fog">
+    <meta name="twitter:description" content="Classic sudoku rules, hidden in mist. Deduce a digit and the fog lifts — guesses score nothing.">
+    <meta name="twitter:image" content="assets/seo/og-sudoku-mist.svg">
+    <title data-i18n="pageTitle">Sudoku in the Mist — Deduce Through the Fog</title>
+    <!-- registry:end head -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1322'/%3E%3Cpath d='M12 12h40v40H12z' fill='none' stroke='%23a9bce6' stroke-width='3'/%3E%3Cpath d='M25.3 12v40M38.7 12v40M12 25.3h40M12 38.7h40' stroke='%23a9bce6' stroke-width='1.6' stroke-opacity='.6'/%3E%3Cpath d='M6 44c8-6 16-6 26 0s18 6 26 0v14H6z' fill='%23dfe7f7' fill-opacity='.85'/%3E%3Ctext x='18.6' y='23' font-size='10' font-weight='700' fill='%23ffd27a' font-family='Georgia,serif' text-anchor='middle'%3E7%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sudoku-mist.css">
+    <link rel="stylesheet" href="css/mobile-fit.css">
+    <link rel="stylesheet" href="css/more-games.css">
+</head>
+<body class="sm-body">
+    <div class="sm-shell game-shell">
+        <header class="sm-topbar game-topbar">
+            <div class="sm-topbar-lead game-topbar-group">
+                <button data-chrome="home" type="button" class="sm-icon-btn game-icon-btn" id="sm-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
+            </div>
+            <div class="sm-topbar-center game-topbar-center">
+                <h1 class="sr-only" id="sm-h1" data-i18n="title">Sudoku in the Mist</h1>
+                <div class="sm-title-pill game-title-pill" aria-hidden="true">
+                    <span class="sm-title-main" data-i18n="brand">Sudoku in the Mist</span>
+                </div>
+            </div>
+            <!-- 右簇固定顺序：专属（重开）→ pause → sound -->
+            <div class="sm-topbar-actions game-topbar-group">
+                <button type="button" data-contextual-restart="retry" class="sm-icon-btn game-icon-btn hidden" id="sm-reset-btn" title="Restart" aria-label="Restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button type="button" data-chrome="pause" class="sm-icon-btn game-icon-btn" id="sm-pause-btn" title="Pause" aria-label="Pause" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
+                <button type="button" data-chrome="sound" class="sm-icon-btn game-icon-btn" id="sm-mute-btn" title="Sound" aria-label="Sound"></button>
+            </div>
+        </header>
+
+        <main class="sm-main game-main">
+            <div class="sm-stage game-stage" id="sm-stage">
+                <!-- 局内状态在舞台里（chrome.md §1.1）：关卡名 + 分数 / 连推 / 雾 / 失误 / 用时 -->
+                <div class="sm-hud hidden" id="sm-hud" role="group" data-i18n-label="hudAria" aria-label="Score, streak, mist and mistakes">
+                    <p class="sm-hud-level" id="sm-level"></p>
+                    <div class="sm-hud-row">
+                        <div class="sm-hud-stat"><span class="sm-hud-label" data-i18n="score">Score</span><b class="sm-hud-value" id="sm-score">0</b></div>
+                        <div class="sm-hud-stat"><span class="sm-hud-label" data-i18n="streak">Streak</span><b class="sm-hud-value" id="sm-streak">×1.0</b></div>
+                        <div class="sm-hud-stat"><span class="sm-hud-label" data-i18n="mist">Mist</span><b class="sm-hud-value" id="sm-fog">100%</b></div>
+                        <div class="sm-hud-stat"><span class="sm-hud-label" data-i18n="mistakes">Mistakes</span><b class="sm-hud-value" id="sm-mistakes">0</b></div>
+                        <div class="sm-hud-stat"><span class="sm-hud-label" data-i18n="time">Time</span><b class="sm-hud-value" id="sm-time">0:00</b></div>
+                    </div>
+                </div>
+
+                <!-- 棋盘：底色（纸 / 夜）→ 雾层 canvas → 格子（网格线、数字、笔记、选框浮在雾上） -->
+                <div class="sm-board-wrap" id="sm-board-wrap">
+                    <canvas class="sm-mist" id="sm-mist" aria-hidden="true"></canvas>
+                    <div class="sm-board" id="sm-board" role="grid" data-i18n-label="boardLabel" aria-label="Sudoku board"></div>
+                    <div class="sm-floats" id="sm-floats" aria-hidden="true"></div>
+                </div>
+
+                <div class="sm-replay-bar hidden" id="sm-replay-bar">
+                    <span class="sm-replay-text" id="sm-replay-text"></span>
+                    <button type="button" class="sm-replay-stop game-btn game-action-btn game-action-btn--ghost" id="sm-btn-stop-replay"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span data-i18n="stopReplay">Stop</span></button>
+                </div>
+                <!-- 读屏播报：落子 / 填错 / 点灯 / 通关（视觉隐藏） -->
+                <p class="sr-only" id="sm-sr-status" aria-live="polite" aria-atomic="true"></p>
+
+                <!-- 开始菜单 -->
+                <div class="sm-overlay sm-start game-overlay game-overlay--menu" id="sm-start">
+                    <p class="sm-kicker" data-i18n="kicker">Deduce · Clear the mist · Score by reasoning</p>
+                    <h2 class="sm-start-title" data-i18n="brand">Sudoku in the Mist</h2>
+                    <p class="sm-start-copy" data-i18n="startCopy">Classic sudoku rules, hidden in a morning mist.</p>
+                    <ol class="sm-howto">
+                        <li class="sm-howto-step"><svg class="sm-howto-icon" viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="5" width="22" height="22" rx="3"/><path d="M12.3 5v22M19.7 5v22M5 12.3h22M5 19.7h22"/></svg><span data-i18n="howtoDeduce">Deduce a digit</span></li>
+                        <li class="sm-howto-step"><svg class="sm-howto-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 18c4-3 8-3 12.5 0s8.5 3 13.5 0"/><path d="M5 24c3.5-2.4 7-2.4 10.5 0s7 2.4 10.5 0"/><circle cx="16" cy="10" r="3.4" class="sm-howto-dot"/></svg><span data-i18n="howtoFog">Place it — even into the mist</span></li>
+                        <li class="sm-howto-step"><svg class="sm-howto-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 25V17M12.7 25V12M19.3 25V8M26 25V5"/></svg><span data-i18n="howtoScore">Deeper reasoning scores more</span></li>
+                    </ol>
+                    <h3 class="sm-menu-heading" data-i18n="chapters">Chapters</h3>
+                    <div class="sm-chapters" id="sm-chapters"></div>
+                    <h3 class="sm-menu-heading" data-i18n="freePlay">Free play</h3>
+                    <div class="sm-free" id="sm-free"></div>
+                    <p class="sm-start-status" id="sm-start-status" aria-live="polite"></p>
+                    <p class="sm-controls" id="sm-controls"></p>
+                    <div class="sm-start-footer">
+                        <nav class="more-games" id="smStartMore"></nav>
+                    </div>
+                </div>
+
+                <!-- 暂停 -->
+                <div class="sm-overlay sm-pause game-overlay hidden" id="sm-pause" role="dialog" aria-labelledby="sm-pause-title">
+                    <h2 class="sm-overlay-title" id="sm-pause-title" data-i18n="paused">Paused</h2>
+                    <p class="sm-overlay-copy" data-i18n="pausedCopy">The mist waits for you.</p>
+                    <div class="sm-btn-row game-action-row">
+                        <button type="button" class="game-btn game-action-btn game-action-btn--primary" id="sm-btn-resume"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span data-i18n="resume">Resume</span></button>
+                        <button type="button" class="game-btn game-action-btn" id="sm-btn-restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span data-i18n="restart">Restart</span></button>
+                        <button type="button" class="game-btn game-action-btn game-action-btn--ghost" id="sm-btn-pause-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span data-i18n="menu">Menu</span></button>
+                    </div>
+                </div>
+
+                <!-- 结算 -->
+                <div class="sm-overlay sm-result game-overlay hidden" id="sm-result" role="dialog" aria-labelledby="sm-result-title">
+                    <h2 class="sm-overlay-title" id="sm-result-title" data-i18n="cleared">The mist has lifted</h2>
+                    <p class="sm-overlay-copy" id="sm-result-copy"></p>
+                    <div class="sm-result-score"><span class="sm-result-label" data-i18n="finalScore">Score</span><b class="sm-result-value" id="sm-result-score">0</b></div>
+                    <p class="sm-result-best" id="sm-result-best"></p>
+                    <ul class="sm-stats" id="sm-result-stats"></ul>
+                    <div class="sm-btn-row game-action-row">
+                        <button type="button" class="game-btn game-action-btn game-action-btn--primary" id="sm-btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14.5"/><path d="M12.5 6 18.5 12l-6 6"/></svg><span data-i18n="next">Next level</span></button>
+                        <button type="button" class="game-btn game-action-btn" id="sm-btn-again"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg><span data-i18n="again">Play again</span></button>
+                        <button type="button" class="game-btn game-action-btn" id="sm-btn-replay"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2z"/></svg><span data-i18n="replay">Replay deductions</span></button>
+                        <button type="button" class="game-btn game-action-btn game-action-btn--ghost" id="sm-btn-menu"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg><span data-i18n="menu">Menu</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数字键盘：手机在棋盘下方，桌面在棋盘右侧 -->
+            <div class="sm-panel hidden" id="sm-panel">
+                <p class="sm-message" id="sm-message"></p>
+                <div class="sm-pad" id="sm-pad" role="group" data-i18n-label="padLabel" aria-label="Digit pad">
+                    <button type="button" class="sm-key" data-digit="1" aria-pressed="false">1</button>
+                    <button type="button" class="sm-key" data-digit="2" aria-pressed="false">2</button>
+                    <button type="button" class="sm-key" data-digit="3" aria-pressed="false">3</button>
+                    <button type="button" class="sm-key" data-digit="4" aria-pressed="false">4</button>
+                    <button type="button" class="sm-key" data-digit="5" aria-pressed="false">5</button>
+                    <button type="button" class="sm-key" data-digit="6" aria-pressed="false">6</button>
+                    <button type="button" class="sm-key" data-digit="7" aria-pressed="false">7</button>
+                    <button type="button" class="sm-key" data-digit="8" aria-pressed="false">8</button>
+                    <button type="button" class="sm-key" data-digit="9" aria-pressed="false">9</button>
+                    <button type="button" class="sm-tool game-btn" id="sm-btn-notes" aria-pressed="false" title="Notes: off" aria-label="Notes: off"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span data-i18n="notes">Notes</span></button>
+                    <button type="button" class="sm-tool game-btn" id="sm-btn-erase" data-i18n-label="eraseLabel" aria-label="Erase notes in this cell"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span data-i18n="erase">Erase</span></button>
+                    <button type="button" class="sm-tool game-btn" id="sm-btn-hint" data-i18n-label="hint" aria-label="Hint"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg><span data-i18n="hint">Hint</span></button>
+                </div>
+            </div>
+        </main>
+
+        <!-- 持久页脚：随流在底部，只保留操作提示 -->
+        <footer class="sm-footer game-footer">
+            <p class="sm-footer-hint game-footer-hint" id="sm-hint" data-i18n="footerHint" data-i18n-touch="footerHintTouch">Click a cell, then type 1–9 · digits can go straight into the mist · H for a hint</p>
+        </footer>
+    </div>
+
+    <!-- registry:begin seo-script -->
+    <script>
+        // Generated by `npm run gen` from games.config.json — do not edit by hand.
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUrl = window.location.href.split('#')[0];
+            const canonical = document.getElementById('canonical-link');
+            if (canonical) canonical.setAttribute('href', currentUrl);
+            const baseUrl = new URL('.', currentUrl).href;
+            const socialImage = new URL('assets/seo/og-sudoku-mist.svg', baseUrl).href;
+            const ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage) ogImage.setAttribute('content', socialImage);
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage) twitterImage.setAttribute('content', socialImage);
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"雾隐九宫 Sudoku in the Mist — Deduce Through the Fog","url":currentUrl,"description":"雾隐九宫 Sudoku in the Mist — classic 9×9 sudoku rules under a morning mist. Every digit you deduce clears the fog around it and reveals the clues you need next; place digits straight into the mist for a bonus. Scored by how deeply you reason, not how fast you tap — lucky guesses score nothing.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"雾隐九宫 Sudoku in the Mist — Deduce Through the Fog","item":currentUrl}]};
+            [gameData, breadcrumb].forEach(data => {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        });
+    </script>
+    <!-- registry:end seo-script -->
+    <script type="module" src="src/games/sudoku-mist/index.js"></script>
+    <script src="/analytics.js" defer></script>
+    <script src="/sw-register.js" defer></script>
+</body>
+</html>

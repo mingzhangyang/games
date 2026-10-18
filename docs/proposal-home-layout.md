@@ -226,3 +226,23 @@ UI 文案（`site.home.ui`）：P1 删除 `play`，新增 `badgeExternal`，保�
 | D-4 | 手机端是否保留每卡一行简介 | 保留 1 行；若仍嫌长，再降为仅标题 + 胶囊 |
 | D-5 | 筛选状态是否跨访问记忆 | 不记忆（仅 hash），回访默认「全部」 |
 | D-6 | Hero 大 emoji 与 Perks 区是否删除 | Hero 缩矮保留标题；Perks 压成页脚一行 |
+
+## 9. index.html 结构说明（2026-10-18 从页面注释移出）
+
+这些说明原本是 `index.html` 里的 HTML 注释。Vite 不压缩 HTML，注释会原样发给每位访客；而且注释是不重复的文字，几乎压不动（13 段共 1.9 KB，gzip 后约 1.4 KB，占首页传输体积约 16%）。所以移到这里，页面里只保留 gen 的 `registry:begin/end` 哨兵。`tests/verify-index-cards.mjs` 断言首页没有哨兵以外的注释。
+
+| 位置 | 说明 |
+|---|---|
+| `<head>` 主题三行（`theme-support` / `theme-color` / `theme-boot.js`） | 首页不在注册表里，手写；顺序与 gen 的 head 区域一致（`docs/contracts/theme.md` §3）。首页支持浅色（P1），所以页脚的主题开关会显现 |
+| 样式表 `tokens.css → layout.css → index.css` | 共享骨架的 authoring 顺序。index 自己的 54 个类名与共享层的 38 个选择器零交集（已核对），只为页脚复用 `.game-footer` 与 `--tok-*` 配色。P6 后生产构建不再做 stylesheet link 重排，P4/P5 行为门禁已冻结该契约 |
+| `css/home-cards.css` | 首页卡片附加样式表：P0 冻结后不改 `index.css`，见 `tests/lib/css/feature-additions.mjs` |
+| `<header class="hero">` | Hero |
+| `<main class="idx-main">` 开头 | Daily Hub |
+| `#hub-more-daily` | 其余每日玩法的入口（§4.5）：跳到 `#cat=daily`；数量由 `src/home/daily-hub.js` 按卡片上的「每日」胶囊减去上面三项算出，绑定后才显现 |
+| `<section class="games-section">` | Games |
+| `#home-recent` | 最近玩过（§4.2）：首页点卡片时写 `site_recent`，有记录才由 `src/home/recent.js` 渲染显现 |
+| `home-new` 区域 | 新上线横排由 `games.config.json` 的 `home.addedAt` 生成，45 天窗口在运行时裁剪（§4.4） |
+| `home-filter` / `home-cards` 区域 | 筛选条与分区都由 `games.config.json` 生成（`site.home.categories` / `home.category`，P2）；筛选条渐进增强，`src/home/filter.js` 绑定后才显现 |
+| 页脚 `.game-footer` | 接入共享 `.game-footer`（`css/layout.css`）：长页面滚到底也能切语言。index 是「更多游戏」页本身，故不放 More 钮；hero 右上角那颗语言钮保留 |
+| `#perks-line` | 原 Perks 三张卡（对回访玩家没有信息量）压成页脚一行（§8 D-6） |
+| `#theme-switch` | 主题三档（全站唯一写 `site_theme` 的地方，见 `docs/contracts/theme.md`）。首页声明支持浅色之前保持 `hidden`，由 `src/home/theme-switch.js` 按 `theme-support` 显现 |

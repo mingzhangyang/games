@@ -45,6 +45,7 @@ const TARGETS = {
         'mg-result-undo', 'mg-again', 'mg-result-menu', 'mg-help-close'],
     'tetris': ['restartBtn'],
     'minesweeper': ['ms-btn-again', 'ms-btn-copy', 'ms-btn-close'],
+    'sudoku-mist': ['sm-btn-resume', 'sm-btn-restart', 'sm-btn-pause-menu', 'sm-btn-next', 'sm-btn-again', 'sm-btn-replay', 'sm-btn-menu', 'sm-btn-stop-replay'],
 };
 
 // TARGETS 是每页的按钮 id，派生不出来，但漏页必须红：新游戏挂了 topbar cap 却
