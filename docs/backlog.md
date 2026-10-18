@@ -50,3 +50,26 @@ display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不
   被省略号截断（原有文案，未改）。
 - **Sword Flight 顶栏印章「九天问道」英文下不翻译**：可能是有意的品牌印章，需产品确认后再定。
 - **Tower Defense 竖屏顶栏 HUD 三行堆叠**：竖屏本就由旋转提示接管，仅视觉。
+
+---
+
+## 架构评审（2026-10-18）确认、待独立改动的缺口
+
+- **Service Worker 缓存只增不减**：`public/sw.js` 对静态资源缓存优先，但缓存名固定为 `games-cache-v2`，
+  `activate` 只删除「名字不同」的缓存。每次部署产生的新哈希文件（`assets/js/*-[hash].js`、美术 webp）
+  都追加进同一个缓存，旧版本永不清除；老玩家的 Cache Storage 随部署次数线性增长。存储压力下浏览器按
+  origin 整体驱逐时，会连同 localStorage 里的游戏进度一起清掉。修法二选一：构建时把缓存名注入 build id
+  （activate 自然清旧），或在导航响应后按当前页面引用的资源集合修剪 `/assets/`。
+- **`@vitejs/plugin-legacy` 让 JS 产物翻倍**：`targets: ['defaults', 'not IE 11']` 覆盖的浏览器全都支持
+  ES module + 动态 import，但构建仍为每个入口额外输出一份 SystemJS legacy 包（`dist/assets/js` 105 个文件里
+  55 个是 `*-legacy-*`）。去掉插件需要显式设置 `build.target`（例如 `['es2020', 'safari14']`）以保持现有
+  现代包的语法降级；属于浏览器支持范围的产品决定，需确认是否还要照顾无 ESM 的老内核 WebView。
+- **Shadow Loom 入口包 576 KB**：`src/generated/shadow-loom/silhouettes.js`（532 KB 采样数据）被静态
+  import 进入口，手机首屏要先下载并解析整份八关数据。改为按关 `import()` 或作为 JSON 资源按需 fetch。
+- **最慢的浏览器校验靠固定 sleep 串行跑页面**：`verify-stats-drawer`（≈190s，17 页 × 每页约 17 次固定
+  等待）、`verify-theme`（≈145s）、`verify-button-icons`（≈135s）、`verify-chrome`（≈105s）。CI 已按分片
+  并行，但这几项仍决定单个分片的下限；按页面开独立 BrowserContext 并发、把固定 sleep 换成显式条件，
+  可把每项压到 1/3 左右。
+- **排行榜 Worker 没有写入限流**：`Workers/game-scores.js` 的 POST 只校验 Origin、分数上限与名字，
+  没有像 `games-analytics` 那样的 native rate limiter；任何脚本都能刷满 Top 50。纯静态站点无法真正防作弊，
+  但加一个按 IP 的写入限流能挡住批量刷榜。
