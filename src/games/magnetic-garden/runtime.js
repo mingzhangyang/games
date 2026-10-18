@@ -6,6 +6,7 @@ import { LEVELS, CHAPTERS, getLevel } from './model/levels.js';
 import { createState, applyAction, stateKey } from './model/rules.js';
 import { loadProgress, writeProgress } from './storage.js';
 import { flower, HERO, stars, FLIP_ICON } from './art.js';
+import { describePreview } from './preview-description.js';
 const $ = id => document.getElementById(id);
 const fill = (s, values) => s.replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '');
 const chapterIds = CHAPTERS.map(chapter => chapter.id);
@@ -79,7 +80,7 @@ export class MagneticGardenGame {
     toMenu() {
         if (this.state === 'playing') this.save();
         this.cancelHint(); this.animationToken++; this.animating = false; this.state = 'menu'; this.isPaused = false; this.pauseOwnership.invalidate();
-        this.preview = null; this.hideModals(); $('mg-play').classList.add('hidden'); $('mg-start').classList.remove('hidden'); $('mg-start').inert = false;
+        this.preview = null; this.syncPreviewSummary(); this.hideModals(); $('mg-play').classList.add('hidden'); $('mg-start').classList.remove('hidden'); $('mg-start').inert = false;
         this.renderMenu(); this.syncPause();
     }
     currentSnapshot() { return { levelId: this.level.id, levelVersion: this.level.version, actions: clone(this.actions), state: clone(this.sim), history: clone(this.history) }; }
@@ -151,8 +152,13 @@ export class MagneticGardenGame {
         if (!result.valid) { this.announce(this.t().invalid); return false; }
         this.preview = { action: clone(action), result, pinned: true }; this.showPreview(); this.renderTrails(); return true;
     }
-    showPreview() { if (!this.preview) return; this.preview.pinned = true; $('mg-preview-panel').classList.remove('hidden'); $('mg-instruction').textContent = this.t().previewCopy; }
-    clearPreview() { this.preview = null; $('mg-preview-panel')?.classList.add('hidden'); $('mg-trails')?.replaceChildren(); $('mg-board')?.querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end')); if ($('mg-instruction')) $('mg-instruction').textContent = this.selected ? fill(this.t().selected, { id: this.selected }) : this.t().select; }
+    showPreview() { if (!this.preview) return; this.preview.pinned = true; $('mg-preview-panel').classList.remove('hidden'); $('mg-instruction').textContent = this.t().previewCopy; this.syncPreviewSummary(); }
+    syncPreviewSummary() {
+        const status = $('mg-preview-summary');
+        const description = describePreview(this.level, this.sim, this.preview, this.t());
+        if (status.textContent !== description) status.textContent = description;
+    }
+    clearPreview() { this.preview = null; this.syncPreviewSummary(); $('mg-preview-panel')?.classList.add('hidden'); $('mg-trails')?.replaceChildren(); $('mg-board')?.querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end')); if ($('mg-instruction')) $('mg-instruction').textContent = this.selected ? fill(this.t().selected, { id: this.selected }) : this.t().select; }
     flip() { if (this.selected) this.previewAction({ type: 'flip', magnetId: this.selected }); }
     cancelHint() { this.hintToken++; this.hintWorker?.terminate(); this.hintWorker = null; }
     bloomAnimation() {
@@ -161,7 +167,12 @@ export class MagneticGardenGame {
         $('mg-board').querySelectorAll('.is-grown .mg-flower').forEach((node,i) => node.animate([{transform:'scale(.25)',opacity:0},{transform:'scale(1.1)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:600,delay:i*80,easing:'ease-out'}));
     }
     showHintAction(action) {
-        this.selected = action.magnetId; this.previewAction(action);
+        const previous = this.selected;
+        this.selected = action.magnetId;
+        if (!this.previewAction(action)) { this.selected = previous; return; }
+        // Shared by authored-path and Worker hints: retarget the visual and ARIA
+        // selection before the player can clear the preview or flip the magnet.
+        if (previous !== this.selected) { this.renderBoard(); this.renderInventory(); }
         this.hintMessage = fill(this.t().hintMove, { action: action.type === 'flip' ? fill(this.t().flipAction, { id: action.magnetId }) : fill(this.t().moveAction, { id: action.magnetId, r: Math.floor(action.cell / this.level.width) + 1, c: action.cell % this.level.width + 1 }) });
         $('mg-hint-text').classList.remove('hidden'); $('mg-hint-text').textContent = this.hintMessage; this.announce(this.hintMessage);
     }
@@ -256,6 +267,7 @@ export class MagneticGardenGame {
         list.classList.toggle('hidden', !list.children.length);
     }
     renderTrails() {
+        this.syncPreviewSummary();
         const svg = $('mg-trails'); svg.replaceChildren(); $('mg-board').querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end'));
         if (!this.preview) return;
         const w = this.level.width * 100, h = this.level.height * 100; svg.setAttribute('viewBox', `0 0 ${w} ${h}`);

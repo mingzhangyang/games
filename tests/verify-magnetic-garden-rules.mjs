@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { applyAction, createState, getSeedDirection, legalActions, stateKey, validateLevel } from '../src/games/magnetic-garden/model/rules.js';
 import { solveLevel } from '../src/games/magnetic-garden/model/solver.js';
+import { LEVELS } from '../src/games/magnetic-garden/model/levels.js';
+import { LANGUAGES } from '../src/games/magnetic-garden/i18n.js';
+import { describePreview } from '../src/games/magnetic-garden/preview-description.js';
 
 const seed = (id, cell, polarity = 'N') => ({ id, cell, polarity });
 const magnet = (id, cell, polarity = 'N', fixed = false) => ({ id, cell, polarity, fixed });
@@ -127,4 +130,42 @@ const flip = { type: 'flip', magnetId: 'm1' };
     assert.equal(getSeedDirection(inventory, createState(inventory), inventory.seeds[0]), null);
     assert.equal(applyAction(inventory, createState(inventory), { type: 'move', magnetId: 'm1', cell: 10 }).valid, true);
 }
-console.log('✓ Magnetic Garden deterministic rules, collisions, capture, immutability and solver budgets');
+// Exact accessibility descriptions use the already-computed physics result.
+{
+    const level = LEVELS[0], state = createState(level), action = level.solution[0];
+    const result = applyAction(level, state, action);
+    const preview = { action, result };
+    const en = describePreview(level, state, preview, LANGUAGES.en);
+    const zh = describePreview(level, state, preview, LANGUAGES.zh);
+    assert.match(en, /moving magnet m1 to row 1, column 3/);
+    assert.match(en, /N seed s1 will be planted in a pot at Row 3, column 3/);
+    assert.match(zh, /磁铁 m1/);
+    assert.match(zh, /N 极种子 s1/);
+    assert.match(zh, /第 3 行，第 3 列/);
+    assert.notEqual(en, zh);
+    assert.equal(describePreview(level, state, null, LANGUAGES.en), '');
+    const multi = LEVELS.find(item => item.id === 'aurora-3');
+    const multiBefore = createState(multi);
+    const multiAction = multi.solution[0];
+    const multiAfter = applyAction(multi, multiBefore, multiAction);
+    const summary = describePreview(multi, multiBefore,
+        { action: multiAction, result: multiAfter }, LANGUAGES.en);
+    for (const s of multiAfter.state.seeds) {
+        assert.ok(summary.includes(`seed ${s.id}`), 'every seed is described');
+        assert.ok(summary.includes(`Row ${Math.floor(s.cell / multi.width) + 1}, column ${s.cell % multi.width + 1}`),
+            'each exact resulting destination is described');
+    }
+    const still = board({ seeds: [seed('s1', 9)] });
+    const stillBefore = createState(still);
+    assert.match(describePreview(still, stillBefore,
+        { action: flip, result: applyAction(still, stillBefore, flip) }, LANGUAGES.en),
+    /N seed s1 stays at Row 2, column 5/);
+    const planted = board({ pots: [12, 24], seeds: [seed('s1', 12), seed('s2', 11)] });
+    const plantedBefore = createState(planted); plantedBefore.seeds[0].captured = true;
+    const plantedAfter = applyAction(planted, plantedBefore, flip);
+    const plantedSummary = describePreview(planted, plantedBefore,
+        { action: flip, result: plantedAfter }, LANGUAGES.en);
+    assert.match(plantedSummary, /N seed s1 remains planted at Row 3, column 3/);
+    assert.match(plantedSummary, /flipping magnet m1 to the N pole/);
+}
+console.log('✓ Magnetic Garden deterministic rules, collisions, capture, accessible previews, immutability and solver budgets');

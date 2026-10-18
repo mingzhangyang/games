@@ -8,6 +8,8 @@ import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { LEVELS, CHAPTERS } from '../src/games/magnetic-garden/model/levels.js';
 import { applyAction, createState, legalActions, stateKey } from '../src/games/magnetic-garden/model/rules.js';
 import { solveLevel } from '../src/games/magnetic-garden/model/solver.js';
+import { describePreview } from '../src/games/magnetic-garden/preview-description.js';
+import { LANGUAGES } from '../src/games/magnetic-garden/i18n.js';
 
 const BASE = process.argv.find(value => value.startsWith('http')) || 'http://127.0.0.1:8899';
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
@@ -104,7 +106,18 @@ async function perform(page, action, { preview = false } = {}) {
         const expected = applyAction(LEVELS.find(level => level.id === levelId), before, action).state;
         const renderedPreview = await page.evaluate(() => window.mgGame.preview.result.state);
         assert.deepEqual(renderedPreview, expected, 'visible preview uses the independent deterministic result');
-        assertions += 2;
+        const accessibility = await page.evaluate(() => {
+            const status = document.getElementById('mg-preview-summary');
+            return { text: status.textContent, role: status.getAttribute('role'), live: status.getAttribute('aria-live'),
+                describedBy: document.getElementById('mg-commit').getAttribute('aria-describedby') };
+        });
+        check(accessibility.role === 'status' && accessibility.live === 'polite'
+            && accessibility.describedBy === 'mg-preview-summary',
+        'exact preview uses a polite live status linked to the Commit button');
+        assert.equal(accessibility.text, describePreview(LEVELS.find(level => level.id === levelId),
+            before, { action, result: { valid: true, state: expected } }, LANGUAGES.en),
+        'accessible preview matches the exact predicted destinations and captures');
+        assertions += 3;
     }
     const renderedPreview = await page.evaluate(() => window.mgGame.preview.result.state);
     await click(page, '#mg-commit');
@@ -148,6 +161,13 @@ try {
     await click(page, '#mg-btn-start');
     check(await page.evaluate(() => window.__gardenEvents.filter(([, event]) => event === 'play').length === 1), 'starting a garden counts one play');
     const untouched = await snapshot(page);
+    await page.focus('[data-cell="2"]');
+    check(await page.evaluate(() => window.mgGame.preview?.pinned === false
+        && document.getElementById('mg-preview-panel').classList.contains('hidden')
+        && document.getElementById('mg-preview-summary').textContent.includes('N seed s1')),
+    'keyboard focus exposes a transient exact preview through live status');
+    assert.deepEqual(await snapshot(page), untouched, 'keyboard preview does not commit a move');
+    assertions++;
     await click(page, '#mg-pause-btn');
     await page.keyboard.press('f');
     await page.keyboard.press('u');
@@ -239,6 +259,32 @@ try {
     assert.deepEqual(await snapshot(page), hint.next, 'hint search leaves live board unchanged');
     check(workerHint.copy.includes('Try'), 'off-path result is presented as a localized actionable hint');
     assertions += 4;
+
+    // Shared hint renderer must retarget selection across different magnets.
+    const retargetLevel = LEVELS.find(level => level.id === 'aurora-1');
+    await start(page, retargetLevel);
+    await perform(page, retargetLevel.solution[0]);
+    await click(page, '#mg-hint-btn');
+    await click(page, '#mg-hint-btn');
+    const retarget = await page.evaluate(() => {
+        const game = window.mgGame;
+        const states = game.sim.magnets.map(magnet => {
+            const cell = document.querySelector(`[data-cell="${magnet.cell}"]`);
+            return { id: magnet.id, aria: cell?.getAttribute('aria-selected'),
+                highlighted: cell?.classList.contains('is-selected') };
+        });
+        return { selected: game.selected, previewMagnet: game.preview?.action.magnetId, states };
+    });
+    check(retarget.selected === 'm2' && retarget.previewMagnet === 'm2'
+        && retarget.states.every(item => item.aria === String(item.id === 'm2')
+            && item.highlighted === (item.id === 'm2')),
+    'authored hint changes both highlight and aria-selected from m1 to m2');
+    await click(page, '#mg-clear-preview');
+    await click(page, '#mg-flip');
+    check(await page.evaluate(() => window.mgGame.preview?.action.magnetId === 'm2'
+        && window.mgGame.preview.action.type === 'flip'
+        && document.querySelector('.mg-cell.is-selected')?.getAttribute('aria-selected') === 'true'),
+    'after clearing a hint, Flip applies to the highlighted magnet m2');
 
     // Trigger another real Worker and navigate in the same event turn, before
     // its message can race with replacement gameplay. Native Worker remains
