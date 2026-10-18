@@ -63,5 +63,30 @@ for (const level of LEVELS) {
         ok(fs.existsSync(file), level.id + '/' + piece.id + ': SVG 文件存在');
     }
 }
+
+// Production build guard: tests should catch a future static import that pulls
+// all eight authored geometries back into Shadow Loom's first-page entry.
+const distDir = path.join(root, 'dist');
+if (fs.existsSync(path.join(distDir, 'shadow-loom.html'))) {
+    const assetsDir = path.join(distDir, 'assets/js');
+    const files = fs.readdirSync(assetsDir);
+    const chunks = files.filter(name => name.endsWith('.js') && !name.includes('-legacy-'));
+    const entry = chunks.filter(name => /^shadow-loom-[\w-]+\.js$/.test(name));
+    ok(entry.length === 1, 'production build emits exactly one modern Shadow Loom entry');
+    if (entry.length === 1) {
+        const bytes = fs.statSync(path.join(assetsDir, entry[0])).size;
+        ok(bytes <= 96 * 1024, 'modern entry stays under 96 KiB, without eager eight-level geometry (' + bytes + ' bytes)');
+    }
+    const html = fs.readFileSync(path.join(distDir, 'shadow-loom.html'), 'utf8');
+    for (const level of LEVELS) {
+        const matches = chunks.filter(name => name.startsWith(level.id + '-') && /\.js$/.test(name));
+        ok(matches.length === 1, level.id + ': exactly one independently built modern geometry chunk');
+        if (matches.length === 1) {
+            ok(!html.includes('assets/js/' + matches[0]), level.id + ': HTML does not eagerly preload geometry');
+        }
+    }
+} else {
+    console.log('⊘ dist/ not present, skip bundle budget (CI builds before this verification)');
+}
 console.log('\n' + (failed ? '✗' : '✓') + ' shadow-loom silhouettes：' + passed + ' 通过，' + failed + ' 失败');
 process.exit(failed ? 1 : 0);
