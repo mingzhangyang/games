@@ -22,6 +22,8 @@
  *      整页刷新后入口显示「继续」，点进去按输入序列恢复（分数、笔记、用时）；排行榜弹窗静默暂停、关闭后继续；
  *      完成时只 POST 一次到 sudoku-mist-d<今天>（分数 = Node 侧回放）、写完成标记、清进度；
  *      「再来一局」是练习局：可以重开，完成后不再提交
+ *   ⑰ 每日一雾边界：两个标签页各开一局 → 先完成的计分、后完成的降为练习局（只 POST 一次、不覆盖成绩）；
+ *      完成标记写不进存储 → 进度不清、本页「再来一局」仍是练习局；POST 未返回时成绩已在本地重试队列，确认后移除
  *
  * 用法：node tests/smoke-sudoku-mist.mjs [baseUrl]（verify-all 自动传入）
  */
@@ -57,7 +59,11 @@ async function open({ width = 1280, height = 900, mobile = false, lang = 'zh', t
             const url = req.url();
             if (!url.startsWith('https://game-scores.orangely.workers.dev/')) { void req.continue(); return; }
             const key = new URL(url).searchParams.get('game');
-            if (req.method() === 'POST') scores.posts.push(JSON.parse(req.postData() || '{}'));
+            if (req.method() === 'POST') {
+                scores.posts.push(JSON.parse(req.postData() || '{}'));
+                // hold：先不回应，测「请求还在路上」的状态；release() 再放行
+                if (scores.hold) { scores.held.push(req); return; }
+            }
             else if (req.method() === 'GET') scores.gets.push(key);
             const headers = {
                 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS', 'access-control-allow-headers': 'Content-Type',
@@ -182,6 +188,25 @@ const noteReadability = page => page.evaluate(() => {
 });
 
 const clickCell = (page, i) => page.click(`#sm-board [data-cell="${i}"]`);
+
+/** 页内快速推完一局（走 onCell / onDigit，同一条规则路径；只给生命周期类断言用，真实点击另有 ⑧ ⑯） */
+const solveInPage = page => page.evaluate(() => {
+    const g = window.smGame;
+    for (let n = 0; n < 300 && g.state === 'playing'; n++) {
+        const s = g.session;
+        const a = s.analysis();
+        const i = a.order.find(c => !s.isKnown(c));
+        if (i === undefined) {
+            const ready = s.view().findIndex((_, j) => s.isCharged(j));
+            if (ready < 0) break;
+            g.onCell(ready);
+            continue;
+        }
+        g.selected = i;
+        g.onDigit(a.values[i]);
+    }
+    return { state: g.state, score: g.session.score, ranked: g.meta.ranked };
+});
 const clickDigit = (page, d) => page.click(`#sm-pad [data-digit="${d}"]`);
 
 try {
@@ -586,6 +611,85 @@ try {
         check(/已完成/.test(await entry()) && (await entry()).includes(String(dailyModel.score)), '⑯ 菜单入口显示已完成与分数', await entry());
         check(derrs.length === 0, '每日局：无 pageerror', derrs.join(' | '));
         await dp.close();
+    }
+
+    /* ── ⑰ 每日一雾边界 ── */
+    {
+        const scores = { posts: [], gets: [], hold: false, held: [] };
+        const key = todayKey();
+        const runSlot = `game:sudoku-mist:v1:daily-run:${key}`;
+        const doneSlot = `game:sudoku-mist:v1:daily:${key}`;
+        const { page: a, errs: aerrs } = await open({ scores });
+        await a.evaluate((r, d) => { localStorage.removeItem(r); localStorage.removeItem(d); localStorage.removeItem('scoreboard:pending:v1'); }, runSlot, doneSlot);
+        const { page: b, errs: berrs } = await open({ scores });
+        // 两个标签页同时只有一个在前台；后台的那个会自动暂停（且不自动继续）。操作哪页先把它切到前台再继续
+        const front = async p => {
+            await p.bringToFront();
+            await p.evaluate(() => { const g = window.smGame; if (g.state === 'playing' && g.isPaused) g.resume(); });
+        };
+        for (const p of [a, b]) {
+            await front(p);
+            await p.evaluate(() => window.smGame.toMenu());
+            await p.click('#sm-daily-btn');
+            await p.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
+        }
+        const bothRanked = await Promise.all([a, b].map(p => p.evaluate(() => window.smGame.meta.ranked)));
+        // A 先完成：POST 还在路上时，成绩已经在本地重试队列里
+        scores.hold = true;
+        await front(a);
+        const aDone = await solveInPage(a);
+        await sleep(300);
+        const inFlight = await a.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]'));
+        check(bothRanked.every(Boolean) && aDone.state === 'result' && aDone.ranked === true && scores.held.length === 1
+            && inFlight.length === 1 && inFlight[0].game === `sudoku-mist-d${key}` && inFlight[0].score === aDone.score,
+        '⑰ 两个标签页都开了计分局；A 完成后 POST 未返回时成绩已在本地重试队列', JSON.stringify({ bothRanked, aDone, held: scores.held.length, inFlight }));
+        scores.hold = false;
+        for (const req of scores.held.splice(0)) {
+            void req.respond({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{"ok":true}' });
+        }
+        await a.waitForFunction(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length === 0, { timeout: 5000 })
+            .catch(() => {});
+        const afterAck = await a.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length);
+        check(afterAck === 0, '⑰ Worker 确认后成绩从本地重试队列移除', String(afterAck));
+        // B 后完成：降为练习局，不提交、不覆盖 A 的成绩
+        await front(b);
+        const bDone = await solveInPage(b);
+        await sleep(1100);
+        const bView = await b.evaluate(d => ({
+            done: JSON.parse(localStorage.getItem(d) || 'null'),
+            best: document.getElementById('sm-result-best').textContent,
+        }), doneSlot);
+        check(bDone.state === 'result' && bDone.ranked === false && scores.posts.length === 1
+            && bView.done?.score === aDone.score && /练习/.test(bView.best),
+        '⑰ 另一个标签页后完成：降为练习局，只 POST 一次、不覆盖第一次的成绩', JSON.stringify({ bDone, posts: scores.posts.length, bView }));
+        await b.close();
+        await a.close();
+
+        // 完成标记写不进存储：进度不清；本页再进仍是练习局（新开一页：A 的内存里已经记着今天完成过）
+        const { page: c, errs: cerrs } = await open({ scores });
+        await c.evaluate((r, d) => {
+            localStorage.removeItem(r); localStorage.removeItem(d);
+            window.smGame.toMenu();
+        }, runSlot, doneSlot);
+        await c.click('#sm-daily-btn');
+        await c.waitForFunction(() => window.smGame.state === 'playing' && window.smGame.meta.ranked === true, { timeout: 8000 });
+        await c.evaluate(d => {
+            const real = window.Storage.prototype.setItem;
+            window.Storage.prototype.setItem = function (k, v) {
+                if (k === d) throw new Error('QuotaExceededError');
+                return real.call(this, k, v);
+            };
+        }, doneSlot);
+        const posts0 = scores.posts.length;
+        const cDone = await solveInPage(c);
+        const failed = await c.evaluate((r, d) => ({ run: !!localStorage.getItem(r), done: localStorage.getItem(d) }), runSlot, doneSlot);
+        await c.evaluate(() => window.smGame.again());
+        await c.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
+        const again = await c.evaluate(() => window.smGame.meta.ranked);
+        check(cDone.ranked === true && scores.posts.length === posts0 + 1 && failed.run && failed.done === null && again === false,
+            '⑰ 完成标记写失败：照常提交、进度保留可恢复、本页「再来一局」仍是练习局', JSON.stringify({ cDone, failed, again }));
+        check(aerrs.length === 0 && berrs.length === 0 && cerrs.length === 0, '⑰ 无 pageerror', [...aerrs, ...berrs, ...cerrs].join(' | '));
+        await c.close();
     }
 
     /* ── 浅色主题 ── */

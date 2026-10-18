@@ -16,6 +16,8 @@ import { getLang } from '../../platform/site-settings.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey } from '../../platform/daily.js';
 import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
+import { submitScore } from '../../platform/leaderboard.js';
+import { pendingScoreCount, retryPendingScores } from '../../platform/scoreboard-pending.js';
 import { LANGUAGES } from './i18n.js';
 import { SudokuMistGame } from './runtime.js';
 
@@ -29,8 +31,9 @@ onReady(() => {
     // scoreboard 在下方创建，每日局完成时早已初始化
     const game = new SudokuMistGame({
         track,
+        // journal：先记进本地重试队列再 POST——请求没回来就关页，下次进来还能补交
         onDailyCleared: ({ dateKey, score }) => {
-            void scoreboard.submit({ boardId: 'daily', key: `sudoku-mist-d${dateKey}`, score });
+            void scoreboard.submit({ boardId: 'daily', key: `sudoku-mist-d${dateKey}`, score, journal: true });
         },
     });
     // 测试钩子（smoke-sudoku-mist / verify-contextual-restart 等）
@@ -62,6 +65,9 @@ onReady(() => {
         onOpen: () => game.pauseOwnership.acquire('ranking'),
         onClose: () => game.pauseOwnership.release('ranking'),
     });
+
+    // 上次的每日成绩没等到确认就离开了：进页时补交一次（重复 POST 无害，榜上每人只留最好成绩）
+    if (pendingScoreCount(`sudoku-mist-d${todayKey()}`)) void retryPendingScores(submitScore);
 
     game.init();
 });

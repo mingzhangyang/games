@@ -8,6 +8,9 @@
  * 每日一雾（设计 §8.2）：第一次完成之前是「计分局」——每次输入后把输入序列存进本地，
  *   刷新 / 离开后回来按 replay() 原样恢复；不能重开；完成时只提交这一次（onDailyCleared）。
  *   完成后再进是练习局：可重开，不存进度、不提交。
+ *   「今天完成过没有」一律问 dailyDoneFor()：本地完成标记 + 本页内存里的兜底（存储写不进去时
+ *   也不会在本页重新开出计分局）。完成那一刻再查一次——同一天在两个标签页里各开了一局，
+ *   先完成的那个算数，后完成的自动降为练习局，不覆盖、不重复提交。
  * 规则全部在 session 里；本文件只管输入映射、渲染与反馈，不自己判断对错或计分。
  * 主循环：requestAnimationFrame 只在对局 / 回放且未暂停时运行（雾丝漂移 + 揭雾淡出）；
  * 菜单、暂停、结算时停下，状态变化时补画一帧。
@@ -61,6 +64,8 @@ export class SudokuMistGame {
         this.onDailyCleared = typeof hooks.onDailyCleared === 'function' ? hooks.onDailyCleared : () => {};
         // 每日题只按日期生成一次（手机上出题要几百毫秒）
         this.dailyPuzzle = null;
+        // 本页里完成过的每日局 dateKey → { score, time }（完成标记写不进存储时的兜底）
+        this.dailyCleared = new Map();
         this.contextualRestart = null;
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
@@ -105,6 +110,9 @@ export class SudokuMistGame {
 
     /** 今天第一次的每日局：存进度、不能重开、完成时提交排行榜 */
     isRanked() { return this.meta?.kind === 'daily' && this.meta.ranked === true; }
+
+    /** 这一天的第一次完成成绩（本地标记优先，其次本页内存）；null = 还没完成 */
+    dailyDoneFor(dateKey) { return loadDailyDone(dateKey) || this.dailyCleared.get(dateKey) || null; }
 
     /** 当前计时（毫秒）：暂停 / 结算时冻结 */
     elapsedMs() {
@@ -323,7 +331,7 @@ export class SudokuMistGame {
     renderDailyEntry() {
         const t = this.t();
         const key = todayKey();
-        const done = loadDailyDone(key);
+        const done = this.dailyDoneFor(key);
         const run = done ? null : loadDailyRun(key);
         this.el.daily.textContent = '';
         const btn = document.createElement('button');
@@ -384,7 +392,7 @@ export class SudokuMistGame {
                 const { puzzle } = this.dailyPuzzle;
                 this.el.status.textContent = '';
                 this.el.start.removeAttribute('aria-busy');
-                const done = loadDailyDone(dateKey);
+                const done = this.dailyDoneFor(dateKey);
                 const date = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
                 const name = { en: fill(LANGUAGES.en.dailyName, { date }), zh: fill(LANGUAGES.zh.dailyName, { date }) };
                 const run = done ? null : loadDailyRun(dateKey);
@@ -662,14 +670,21 @@ export class SudokuMistGame {
         this.pauseOwnership.invalidate();
         const summary = this.session.summary();
         if (this.meta.kind === 'daily') {
-            const ranked = this.isRanked();
+            const { dateKey } = this.meta;
+            // 另一个标签页先完成了今天的计分局：这一局降为练习局
+            const ranked = this.isRanked() && !this.dailyDoneFor(dateKey);
+            this.meta.ranked = ranked;
             if (ranked) {
-                saveDailyDone(this.meta.dateKey, { score: summary.score, time: this.elapsed });
-                clearDailyRun(this.meta.dateKey);
+                const record = { score: summary.score, time: this.elapsed };
+                this.dailyCleared.set(dateKey, record);
+                // 完成标记写成了才清进度；写不进去时进度留着，本页靠内存兜底不再开计分局
+                if (saveDailyDone(dateKey, record)) clearDailyRun(dateKey);
                 // 只有第一次完成进排行榜；之后再进都是练习局
-                this.onDailyCleared({ dateKey: this.meta.dateKey, score: summary.score });
+                this.onDailyCleared({ dateKey, score: summary.score });
+            } else if (this.dailyDoneFor(dateKey)) {
+                clearDailyRun(dateKey);
             }
-            const first = loadDailyDone(this.meta.dateKey);
+            const first = this.dailyDoneFor(dateKey);
             this.result = { summary, ranked, rankedScore: first ? first.score : summary.score, time: this.elapsed, inputs: this.session.inputs };
         } else {
             const prev = loadBest(this.meta.id);
