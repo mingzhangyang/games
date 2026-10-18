@@ -11,6 +11,10 @@
  *   「今天完成过没有」一律问 dailyDoneFor()：本地完成标记 + 本页内存里的兜底（存储写不进去时
  *   也不会在本页重新开出计分局）。完成那一刻再查一次——同一天在两个标签页里各开了一局，
  *   先完成的那个算数，后完成的自动降为练习局，不覆盖、不重复提交。
+ *   未完成的进度只有一个可写的主人：最近一次开始 / 续上这局的标签页（runOwner 令牌写进存档）。
+ *   别的标签页一旦发现存档换了主人（storage 事件，或下一次存档前的检查），就不再存档并回到菜单，
+ *   免得拿旧进度盖掉新进度、把失误和点灯「撤销」掉。存档写不进去时，本页内存里的检查点
+ *   （dailyCheckpoint）照样更新，回菜单再进也不会丢掉没写成的输入。
  * 规则全部在 session 里；本文件只管输入映射、渲染与反馈，不自己判断对错或计分。
  * 主循环：requestAnimationFrame 只在对局 / 回放且未暂停时运行（雾丝漂移 + 揭雾淡出）；
  * 菜单、暂停、结算时停下，状态变化时补画一帧。
@@ -31,7 +35,7 @@ import { createBoard } from './render/board.js';
 import { createMist } from './render/mist.js';
 import { createSudokuMistAudio } from './audio.js';
 import {
-    loadBest, saveBest, loadDailyRun, saveDailyRun, clearDailyRun, loadDailyDone, saveDailyDone,
+    loadBest, saveBest, loadDailyRun, saveDailyRun, clearDailyRun, loadDailyDone, saveDailyDone, dailyRunKey,
 } from './storage.js';
 
 const GAME_ID = 'sudoku-mist';
@@ -66,6 +70,9 @@ export class SudokuMistGame {
         this.dailyPuzzle = null;
         // 本页里完成过的每日局 dateKey → { score, time }（完成标记写不进存储时的兜底）
         this.dailyCleared = new Map();
+        // 本页对计分局的写令牌 + 最近一次检查点（不管存储有没有写成）
+        this.runOwner = null;
+        this.dailyCheckpoint = null;
         this.contextualRestart = null;
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
@@ -109,7 +116,7 @@ export class SudokuMistGame {
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /** 今天第一次的每日局：存进度、不能重开、完成时提交排行榜 */
-    isRanked() { return this.meta?.kind === 'daily' && this.meta.ranked === true; }
+    isRanked() { return this.meta?.kind === 'daily' && this.meta.ranked === true && !this.meta.stale; }
 
     /** 这一天的第一次完成成绩（本地标记优先，其次本页内存）；null = 还没完成 */
     dailyDoneFor(dateKey) { return loadDailyDone(dateKey) || this.dailyCleared.get(dateKey) || null; }
@@ -195,6 +202,13 @@ export class SudokuMistGame {
         });
         // 直接关页（没有先切到后台）时也把每日局的用时存下来
         window.addEventListener('pagehide', () => this.persist());
+        // 另一个标签页接手了今天的计分局（或已经完成）：本页立刻让出，不再存档
+        window.addEventListener('storage', e => {
+            if (!this.isRanked() || this.state !== 'playing') return;
+            const { dateKey } = this.meta;
+            if (e.key !== null && e.key !== dailyRunKey(dateKey)) return;
+            if (!this.ownsDailyRun()) this.yieldDaily();
+        });
         this.applyLanguage();
         window.addEventListener('site-settings:changed', () => this.applyLanguage());
         this.toMenu();
@@ -332,7 +346,7 @@ export class SudokuMistGame {
         const t = this.t();
         const key = todayKey();
         const done = this.dailyDoneFor(key);
-        const run = done ? null : loadDailyRun(key);
+        const run = done ? null : this.dailyCheckpointFor(key);
         this.el.daily.textContent = '';
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -395,7 +409,7 @@ export class SudokuMistGame {
                 const done = this.dailyDoneFor(dateKey);
                 const date = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
                 const name = { en: fill(LANGUAGES.en.dailyName, { date }), zh: fill(LANGUAGES.zh.dailyName, { date }) };
-                const run = done ? null : loadDailyRun(dateKey);
+                const run = done ? null : this.dailyCheckpointFor(dateKey);
                 // 生成器升过版本（同一天的题变了）就丢掉旧进度，免得拿旧输入重放新题
                 const resume = run && run.seed === puzzle.seed ? run : null;
                 this.begin({ kind: 'daily', id: puzzle.id, dateKey, seed: puzzle.seed, ranked: !done, name }, puzzle, { resume });
@@ -443,6 +457,7 @@ export class SudokuMistGame {
             if (this.state === 'playing') this.el.time.textContent = fmtTime(this.elapsedMs());
         }, 500);
         this.ensureLoop();
+        if (this.isRanked()) this.claimDailyRun(resume);
         // 存档里的输入恰好已经走完（完成标记没写成）：直接结算
         if (this.session.done) this.finish();
     }
@@ -458,12 +473,61 @@ export class SudokuMistGame {
         else this.restart();
     }
 
-    /** 计分中的每日局：每次输入 / 暂停 / 离开后存一次（输入序列 + 用时 + 笔记） */
-    persist() {
-        if (!this.isRanked() || !this.session || this.state !== 'playing') return;
-        saveDailyRun(this.meta.dateKey, {
-            seed: this.meta.seed, inputs: this.session.inputs, elapsed: this.elapsedMs(), notes: this.notes,
-        });
+    /**
+     * 续玩用哪份进度：本页内存检查点 vs 存储。存储没被别的标签页接手（主人还是本页写的那个令牌）时，
+     * 内存检查点至少一样新、而且存储写失败时只有它是对的；被接手了就以存储为准。
+     */
+    dailyCheckpointFor(dateKey) {
+        const stored = loadDailyRun(dateKey);
+        const mem = this.dailyCheckpoint?.dateKey === dateKey ? this.dailyCheckpoint : null;
+        if (mem && (!stored || stored.owner === mem.owner)) return mem;
+        return stored;
+    }
+
+    /** 本页还是不是这局进度的主人（存档没了 / 是旧格式没有主人，也算） */
+    ownsDailyRun() {
+        const stored = loadDailyRun(this.meta.dateKey);
+        return !stored || !stored.owner || stored.owner === this.runOwner;
+    }
+
+    /** 开始 / 续上计分局：换一个新令牌并立刻写一次，宣告本页接手。写不进去就沿用旧令牌（单标签页存储坏掉的情况） */
+    claimDailyRun(resume) {
+        this.runOwner = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+        if (!this.persist({ claim: true }) && resume?.owner) {
+            this.runOwner = resume.owner;
+            this.dailyCheckpoint.owner = resume.owner;
+        }
+    }
+
+    /** 另一个标签页接手了这一局：不再存档，回到菜单并说明原因（再点进来就接着那边的进度） */
+    yieldDaily() {
+        if (this.meta?.kind !== 'daily' || this.meta.yielded) return;
+        this.meta.stale = true;
+        this.meta.yielded = true;
+        this.dailyCheckpoint = null;
+        this.toMenu();
+        this.el.status.textContent = this.t().dailyMoved;
+    }
+
+    /**
+     * 计分中的每日局：每次输入 / 暂停 / 离开后存一次（输入序列 + 用时 + 笔记）。
+     * 先更新内存检查点；再确认本页还是主人才写存储——不是主人就让出（延后执行，别在暂停 / 回菜单流程中间切状态）。
+     * 返回存储有没有写成。
+     */
+    persist({ claim = false } = {}) {
+        if (!this.isRanked() || !this.session || this.state !== 'playing') return false;
+        if (!claim && !this.ownsDailyRun()) {
+            const meta = this.meta;
+            meta.stale = true; // 立刻停写；回菜单延后到当前流程（暂停 / 输入）走完
+            this.dailyCheckpoint = null;
+            setTimeout(() => { if (this.meta === meta) this.yieldDaily(); }, 0);
+            return false;
+        }
+        const run = {
+            seed: this.meta.seed, owner: this.runOwner, inputs: this.session.inputs, elapsed: this.elapsedMs(), notes: Array.from(this.notes),
+        };
+        this.dailyCheckpoint = { dateKey: this.meta.dateKey, ...run };
+        return saveDailyRun(this.meta.dateKey, run);
     }
 
     next() {
@@ -672,7 +736,8 @@ export class SudokuMistGame {
         if (this.meta.kind === 'daily') {
             const { dateKey } = this.meta;
             // 另一个标签页先完成了今天的计分局：这一局降为练习局
-            const ranked = this.isRanked() && !this.dailyDoneFor(dateKey);
+            // 另一个标签页接手了这局进度（本页是过期的那个）也不算
+            const ranked = this.isRanked() && !this.dailyDoneFor(dateKey) && this.ownsDailyRun();
             this.meta.ranked = ranked;
             if (ranked) {
                 const record = { score: summary.score, time: this.elapsed };
@@ -680,8 +745,9 @@ export class SudokuMistGame {
                 // 完成标记写成了才清进度。写不进去时：本页靠内存兜底不再开计分局；进度改存成
                 // 「含最后一步」的完整输入序列（最后一步走的是 finish 不是 persist），
                 // 刷新后 begin() 重放到 done 直接结算出同一个分数
+                this.dailyCheckpoint = null;
                 if (saveDailyDone(dateKey, record)) clearDailyRun(dateKey);
-                else saveDailyRun(dateKey, { seed: this.meta.seed, inputs: this.session.inputs, elapsed: this.elapsed, notes: this.notes });
+                else saveDailyRun(dateKey, { seed: this.meta.seed, owner: this.runOwner, inputs: this.session.inputs, elapsed: this.elapsed, notes: this.notes });
                 // 只有第一次完成进排行榜；之后再进都是练习局
                 this.onDailyCleared({ dateKey, score: summary.score });
             } else if (loadDailyDone(dateKey)) {

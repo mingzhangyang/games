@@ -22,9 +22,12 @@
  *      整页刷新后入口显示「继续」，点进去按输入序列恢复（分数、笔记、用时）；排行榜弹窗静默暂停、关闭后继续；
  *      完成时只 POST 一次到 sudoku-mist-d<今天>（分数 = Node 侧回放）、写完成标记、清进度；
  *      「再来一局」是练习局：可以重开，完成后不再提交
- *   ⑰ 每日一雾边界：两个标签页各开一局 → 先完成的计分、后完成的降为练习局（只 POST 一次、不覆盖成绩）；
+ *   ⑰ 每日一雾边界：两个标签页先后开一局 → 后开的接手计分、先开的让出，再进是练习局（只 POST 一次、不覆盖成绩）；
+ *      完成那一刻发现别处已写完成标记 → 降为练习局；
  *      完成标记写不进存储 → 进度存成含最后一步的完整输入、本页「再来一局」仍是练习局且完成后不删恢复数据、
- *      刷新后重放到 done 恢复原分数；POST 未返回时成绩已在本地重试队列，确认后移除；进页补交昨天未确认的成绩
+ *      刷新后重放到 done 恢复原分数；POST 未返回时成绩已在本地重试队列，确认后移除；进页补交昨天未确认的成绩；
+ *      未完成的计分局只有一个主人：另一个标签页续上后，旧标签页回菜单、不再覆盖新进度；
+ *      进度写不进存储时，回菜单再进用本页内存检查点（失误不会被「撤销」）
  *
  * 用法：node tests/smoke-sudoku-mist.mjs [baseUrl]（verify-all 自动传入）
  */
@@ -189,6 +192,28 @@ const noteReadability = page => page.evaluate(() => {
 });
 
 const clickCell = (page, i) => page.click(`#sm-board [data-cell="${i}"]`);
+
+/** 页内走 n 步推理落子（wrong = true 时最后再填错一次） */
+const stepInPage = (page, n, { wrong = false } = {}) => page.evaluate((k, w) => {
+    const g = window.smGame;
+    const next = () => {
+        const s = g.session;
+        const a = s.analysis();
+        const i = a.order.find(c => !s.isKnown(c));
+        return { i, d: a.values[i] };
+    };
+    for (let m = 0; m < k; m++) {
+        const { i, d } = next();
+        g.selected = i;
+        g.onDigit(d);
+    }
+    if (w) {
+        const { i, d } = next();
+        g.selected = i;
+        g.onDigit(d % 9 + 1);
+    }
+    return { inputs: g.session.inputs.length, mistakes: g.session.summary().mistakes, state: g.state };
+}, n, wrong);
 
 /** 页内快速推完一局（走 onCell / onDigit，同一条规则路径；只给生命周期类断言用，真实点击另有 ⑧ ⑯） */
 const solveInPage = page => page.evaluate(() => {
@@ -634,35 +659,51 @@ try {
             await p.click('#sm-daily-btn');
             await p.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
         }
-        const bothRanked = await Promise.all([a, b].map(p => p.evaluate(() => window.smGame.meta.ranked)));
-        // A 先完成：POST 还在路上时，成绩已经在本地重试队列里
+        // 后开的 B 接手这局，A 让出回菜单（同一时刻只有一个计分局）
+        await sleep(200);
+        const owners = await Promise.all([a, b].map(p => p.evaluate(() => ({ state: window.smGame.state, ranked: window.smGame.isRanked() }))));
+        // B 完成：POST 还在路上时，成绩已经在本地重试队列里
         scores.hold = true;
-        await front(a);
-        const aDone = await solveInPage(a);
+        await front(b);
+        const bDone = await solveInPage(b);
         await sleep(300);
-        const inFlight = await a.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]'));
-        check(bothRanked.every(Boolean) && aDone.state === 'result' && aDone.ranked === true && scores.held.length === 1
-            && inFlight.length === 1 && inFlight[0].game === `sudoku-mist-d${key}` && inFlight[0].score === aDone.score,
-        '⑰ 两个标签页都开了计分局；A 完成后 POST 未返回时成绩已在本地重试队列', JSON.stringify({ bothRanked, aDone, held: scores.held.length, inFlight }));
+        const inFlight = await b.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]'));
+        check(owners[0].state === 'menu' && !owners[0].ranked && owners[1].ranked && bDone.state === 'result' && bDone.ranked === true
+            && scores.held.length === 1 && inFlight.length === 1 && inFlight[0].game === `sudoku-mist-d${key}` && inFlight[0].score === bDone.score,
+        '⑰ 两个标签页先后开今天的计分局：后开的接手、先开的让出；完成后 POST 未返回时成绩已在本地重试队列',
+        JSON.stringify({ owners, bDone, held: scores.held.length, inFlight }));
         scores.hold = false;
         for (const req of scores.held.splice(0)) {
             void req.respond({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{"ok":true}' });
         }
-        await a.waitForFunction(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length === 0, { timeout: 5000 })
+        await b.waitForFunction(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length === 0, { timeout: 5000 })
             .catch(() => {});
-        const afterAck = await a.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length);
+        const afterAck = await b.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length);
         check(afterAck === 0, '⑰ Worker 确认后成绩从本地重试队列移除', String(afterAck));
-        // B 后完成：降为练习局，不提交、不覆盖 A 的成绩
-        await front(b);
-        const bDone = await solveInPage(b);
+        // A 再进：今天已完成，是练习局；完成后不提交、不覆盖 B 的成绩
+        await front(a);
+        await a.click('#sm-daily-btn');
+        await a.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
+        const aDone = await solveInPage(a);
         await sleep(1100);
-        const bView = await b.evaluate(d => ({
+        const aView = await a.evaluate(d => ({
             done: JSON.parse(localStorage.getItem(d) || 'null'),
             best: document.getElementById('sm-result-best').textContent,
         }), doneSlot);
-        check(bDone.state === 'result' && bDone.ranked === false && scores.posts.length === 1
-            && bView.done?.score === aDone.score && /练习/.test(bView.best),
-        '⑰ 另一个标签页后完成：降为练习局，只 POST 一次、不覆盖第一次的成绩', JSON.stringify({ bDone, posts: scores.posts.length, bView }));
+        check(aDone.state === 'result' && aDone.ranked === false && scores.posts.length === 1
+            && aView.done?.score === bDone.score && /练习/.test(aView.best),
+        '⑰ 让出的标签页再进是练习局：只 POST 一次、不覆盖第一次的成绩', JSON.stringify({ aDone, posts: scores.posts.length, aView }));
+        // 完成那一刻再查完成标记：计分局还在手上，但别处已经写了今天的完成标记 → 降为练习局
+        await b.evaluate((r, d) => { localStorage.removeItem(r); localStorage.removeItem(d); window.smGame.dailyCleared.clear(); window.smGame.toMenu(); }, runSlot, doneSlot);
+        await front(b);
+        await b.click('#sm-daily-btn');
+        await b.waitForFunction(() => window.smGame.state === 'playing' && window.smGame.isRanked(), { timeout: 8000 });
+        await b.evaluate(d => localStorage.setItem(d, JSON.stringify({ score: 7, time: 1 })), doneSlot);
+        const posts2 = scores.posts.length;
+        const late = await solveInPage(b);
+        const lateDone = await b.evaluate(d => JSON.parse(localStorage.getItem(d) || 'null'), doneSlot);
+        check(late.ranked === false && scores.posts.length === posts2 && lateDone?.score === 7,
+            '⑰ 完成时发现别处已写完成标记：降为练习局、不提交、不覆盖', JSON.stringify({ late, lateDone }));
         await b.close();
         await a.close();
 
@@ -724,6 +765,78 @@ try {
         check(recovered.some(p => p.game === `sudoku-mist-d${yesterday}` && p.score === 321) && left === 0,
             `⑰ 进页补交昨天（${yesterday}）未确认的每日成绩，确认后出队`, JSON.stringify({ recovered, left }));
         check(aerrs.length === 0 && berrs.length === 0 && cerrs.length === 0, '⑰ 无 pageerror', [...aerrs, ...berrs, ...cerrs].join(' | '));
+        await c.close();
+    }
+
+    /* ── ⑱ 每日一雾：未完成进度的主人与内存检查点 ── */
+    {
+        const scores = { posts: [], gets: [], hold: false, held: [] };
+        const key = todayKey();
+        const runSlot = `game:sudoku-mist:v1:daily-run:${key}`;
+        const doneSlot = `game:sudoku-mist:v1:daily:${key}`;
+        const stored = p => p.evaluate(r => JSON.parse(localStorage.getItem(r) || 'null')?.inputs.length ?? -1, runSlot);
+        const front = async p => {
+            await p.bringToFront();
+            await p.evaluate(() => { const g = window.smGame; if (g.state === 'playing' && g.isPaused) g.resume(); });
+        };
+        const enterDaily = async p => {
+            await p.click('#sm-daily-btn');
+            await p.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
+        };
+        const { page: a, errs: aerrs } = await open({ scores });
+        await a.evaluate((r, d) => { localStorage.removeItem(r); localStorage.removeItem(d); window.smGame.toMenu(); }, runSlot, doneSlot);
+        await enterDaily(a);
+        await stepInPage(a, 3);
+        const { page: b, errs: berrs } = await open({ scores });
+        await front(b);
+        await enterDaily(b);
+        const bResumed = await b.evaluate(() => window.smGame.session.inputs.length);
+        await stepInPage(b, 4);
+        await sleep(200);
+        await front(a);
+        await sleep(200);
+        const aState = await a.evaluate(() => ({
+            state: window.smGame.state, status: document.getElementById('sm-start-status').textContent, ranked: window.smGame.isRanked(),
+        }));
+        await a.evaluate(() => window.smGame.persist());
+        const afterStale = await stored(a);
+        check(bResumed === 3 && aState.state === 'menu' && /另一个标签页/.test(aState.status) && !aState.ranked && afterStale === 7,
+            '⑱ 另一个标签页续上计分局后：旧标签页回菜单说明原因、不再覆盖新进度（7 步）', JSON.stringify({ bResumed, aState, afterStale }));
+        await enterDaily(a);
+        const aTook = await a.evaluate(() => window.smGame.session.inputs.length);
+        await front(b);
+        await sleep(200);
+        const bState = await b.evaluate(() => window.smGame.state);
+        check(aTook === 7 && bState === 'menu', '⑱ 旧标签页重新进入就接着新进度（7 步），另一个标签页随之让出', JSON.stringify({ aTook, bState }));
+        await b.close();
+        check(aerrs.length === 0 && berrs.length === 0, '⑱ 两个标签页：无 pageerror', [...aerrs, ...berrs].join(' | '));
+        await a.close();
+
+        // 进度写不进存储：回菜单再进，用本页内存检查点
+        const { page: c, errs: cerrs } = await open({ scores });
+        await c.evaluate((r, d) => { localStorage.removeItem(r); localStorage.removeItem(d); window.smGame.toMenu(); }, runSlot, doneSlot);
+        await enterDaily(c);
+        await stepInPage(c, 2);
+        await c.evaluate(r => {
+            const real = window.Storage.prototype.setItem;
+            window.Storage.prototype.setItem = function (k, v) {
+                if (k === r) throw new Error('QuotaExceededError');
+                return real.call(this, k, v);
+            };
+        }, runSlot);
+        const before = await stepInPage(c, 3, { wrong: true });
+        await c.evaluate(() => window.smGame.toMenu());
+        const entryText = await c.$eval('#sm-daily-btn', el => el.textContent);
+        await enterDaily(c);
+        const back = await c.evaluate(r => ({
+            inputs: window.smGame.session.inputs.length,
+            mistakes: window.smGame.session.summary().mistakes,
+            stored: JSON.parse(localStorage.getItem(r) || 'null')?.inputs.length ?? -1,
+        }), runSlot);
+        check(before.inputs === 6 && before.mistakes === 1 && back.stored === 2 && back.inputs === 6 && back.mistakes === 1
+            && entryText.includes('6'),
+        '⑱ 进度写不进存储：回菜单再进仍是 6 步、失误 1 次（存储里只有 2 步）', JSON.stringify({ before, back, entryText }));
+        check(cerrs.length === 0, '⑱ 写失败：无 pageerror', cerrs.join(' | '));
         await c.close();
     }
 

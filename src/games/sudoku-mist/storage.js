@@ -3,7 +3,8 @@ import { createGameStorage } from '../../platform/storage/game-storage.js';
 /**
  * 本地存档（新游戏，无历史键可迁移）：
  *   best:<id>          每关 / 每个自由局档位的最佳 { score }
- *   daily-run:<date>   每日局进行中的进度 { seed, inputs, elapsed, notes }——每次输入后写，刷新 / 回来后按 inputs 重放
+ *   daily-run:<date>   每日局进行中的进度 { seed, owner, inputs, elapsed, notes }——每次输入后写，刷新 / 回来后按 inputs 重放；
+ *                      owner = 最近一次接手这局的标签页令牌（别的标签页据此知道自己已过期，不再覆盖）
  *   daily:<date>       每日局第一次完成 { score, time }——完成标记（键 game:sudoku-mist:v1:daily:<YYYYMMDD>，
  *                      首页每日任务区如果接入就读它），之后的练习局不再改它
  */
@@ -37,6 +38,7 @@ export function loadDailyRun(dateKey) {
         && raw.notes.every(n => Number.isInteger(n) && n >= 0 && n < 512) ? raw.notes : null;
     return {
         seed: Number.isInteger(raw.seed) ? raw.seed : null,
+        owner: typeof raw.owner === 'string' ? raw.owner : null,
         inputs: raw.inputs.map(a => (a.type === 'hint' ? { type: 'hint' } : a.type === 'activate'
             ? { type: 'activate', cell: a.cell } : { type: 'place', cell: a.cell, digit: a.digit })),
         elapsed: count(raw.elapsed) ?? 0,
@@ -44,10 +46,13 @@ export function loadDailyRun(dateKey) {
     };
 }
 
-export function saveDailyRun(dateKey, { seed, inputs, elapsed, notes }) {
+/** 存储里这一局进度的完整键（storage 事件比对用） */
+export const dailyRunKey = dateKey => SUDOKU_MIST_STORAGE.key(`daily-run:${dateKey}`);
+
+export function saveDailyRun(dateKey, { seed, owner, inputs, elapsed, notes }) {
     if (!isDate(dateKey)) return false;
     return SUDOKU_MIST_STORAGE.trySet(`daily-run:${dateKey}`, {
-        seed, inputs, elapsed: Math.floor(elapsed), notes: Array.from(notes),
+        seed, owner, inputs, elapsed: Math.floor(elapsed), notes: Array.from(notes),
     });
 }
 
