@@ -128,7 +128,7 @@ const noteReadability = page => page.evaluate(() => {
         });
         return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
     };
-    const channels = value => (value.match(/[\\d.]+/g) || []).map(Number);
+    const channels = value => (value.match(/[0-9.]+/g) || []).map(Number);
     const results = [];
     game.notes[cell] |= 1;
     for (const selected of [-1, cell]) {
