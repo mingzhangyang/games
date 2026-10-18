@@ -15,5 +15,6 @@ export * from './site-settings.js';
 export * from './theme.js';
 export * from './runtime/game-runtime.js';
 export * from './i18n/bindings.js';
+export * from './i18n/touch-copy.js';
 export * from './storage/game-storage.js';
 export * from './shell/render-game-shell.js';

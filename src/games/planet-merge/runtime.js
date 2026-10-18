@@ -18,6 +18,7 @@ import { LANGUAGES } from './i18n.js';
 import { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS, getPlanetMergeBest } from './storage.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { measureHintOnlyFooterReserve } from '../../platform/game-frame.js';
+import { touchCopy } from '../../platform/i18n/touch-copy.js';
 
 /* ────────────────────────── utilities ────────────────────────── */
 
@@ -331,7 +332,7 @@ export class PlanetMergeGame {
         const scoreLabel = document.getElementById('pm-score-label');
         const nextLabel = document.getElementById('pm-next-label');
         const hint = document.querySelector('.pm-footer-hint');
-        if (hint) hint.textContent = t.hint;
+        if (hint) hint.textContent = touchCopy(t, 'hint');
         this.updateStartStats();
         this.renderChainShowcase();
         this.renderSkinPicker();

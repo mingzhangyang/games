@@ -87,6 +87,7 @@ export const I18N = makeText({
             '暴雨梨花', '麦浪连天', '扶摇麦皇', '绝命千本', '针尖麦芒'
         ],
         hint: '移动即突刺 · Q 转锋 · E 极意 · P 暂停',
+        hintTouch: '左半屏摇杆走位 · 右半屏拖动瞄准 · 破空 / 转锋 / 极意按钮',
     },
     en: {
         stats: 'Stats',
@@ -174,5 +175,6 @@ export const I18N = makeText({
             'Blossom Rain', 'Golden Surge', 'Awn Emperor', 'Thousand Needles', 'Grandmaster Duel'
         ],
         hint: 'Move to thrust · Q switch stance · E ultimate · P pause',
+        hintTouch: 'Left joystick moves · right side aims · tap the buttons',
     }
 });
