@@ -688,6 +688,19 @@ try {
         const again = await c.evaluate(() => window.smGame.meta.ranked);
         check(cDone.ranked === true && scores.posts.length === posts0 + 1 && failed.run && failed.done === null && again === false,
             '⑰ 完成标记写失败：照常提交、进度保留可恢复、本页「再来一局」仍是练习局', JSON.stringify({ cDone, failed, again }));
+        // 昨天的每日成绩没等到确认：今天进页也要补交（按它自己的榜单键）
+        const yesterday = todayKey(Date.now() - 24 * 3600 * 1000);
+        await c.evaluate(y => {
+            localStorage.setItem('scoreboard:pending:v1', JSON.stringify([{ game: `sudoku-mist-d${y}`, name: 'Tester', score: 321, at: Date.now() - 3600 * 1000 }]));
+        }, yesterday);
+        const posts1 = scores.posts.length;
+        await c.reload({ waitUntil: 'load' });
+        await c.waitForFunction(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length === 0, { timeout: 5000 })
+            .catch(() => {});
+        const recovered = scores.posts.slice(posts1);
+        const left = await c.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length);
+        check(recovered.some(p => p.game === `sudoku-mist-d${yesterday}` && p.score === 321) && left === 0,
+            `⑰ 进页补交昨天（${yesterday}）未确认的每日成绩，确认后出队`, JSON.stringify({ recovered, left }));
         check(aerrs.length === 0 && berrs.length === 0 && cerrs.length === 0, '⑰ 无 pageerror', [...aerrs, ...berrs, ...cerrs].join(' | '));
         await c.close();
     }
