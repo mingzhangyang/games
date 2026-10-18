@@ -25,7 +25,7 @@
     var allowedSite = location.origin === 'https://games.orangely.xyz'
         || location.origin === 'https://game.orangely.xyz';
     var externalOptIn = script && script.getAttribute('data-analytics-external') === 'true';
-    var canProbe = localTest || allowedSite
+    var canReport = localTest || allowedSite
         || (externalOptIn && !!explicitGame && EXTERNAL_ORIGINS[explicitGame] === location.origin);
 
     function uuid() {
@@ -42,10 +42,8 @@
     }
 
     var sessionId = uuid();
-    var ready = false;
-    var probePending = !!(gameId && sessionId && canProbe);
-    var earlyEvents = [];
-    var acceptsPlaying = false;
+    // V2 only. Do not probe Worker capabilities or downgrade to legacy events.
+    var enabled = !!(gameId && sessionId && canReport);
     var inferredPlaying = false;
     var getter = null;
     var queue = [];
@@ -61,9 +59,6 @@
     var MAX_SAMPLE_MS = 2500;
     var CHECKPOINT_MS = 30000;
     var MAX_PENDING = 16;
-    // The transport reserves one additional slot for the page's 'open' while
-    // replaying all 16 accepted pre-probe play/finish events.
-    var MAX_TRANSPORT_PENDING = MAX_PENDING + 1;
 
     function isForeground() {
         return document.visibilityState === 'visible'
@@ -91,26 +86,17 @@
         var wall = Date.now();
         // Flush the previous day's bucket *before* sampling the new day.
         // Large clock/sleep gaps are rejected by the monotonic MAX_SAMPLE_MS guard.
-        if (ready && dayUTC8(wall) !== dayUTC8(lastWallTime)) flush(lastWallTime);
+        if (enabled && dayUTC8(wall) !== dayUTC8(lastWallTime)) flush(lastWallTime);
         lastWallTime = wall;
         var now = performance.now();
         var gap = now - lastTick;
         var start = lastTick;
         lastTick = now;
-        if (!ready || !gameId || !isForeground() || gap <= 0 || gap > MAX_SAMPLE_MS) return;
+        if (!enabled || !isForeground() || gap <= 0 || gap > MAX_SAMPLE_MS) return;
         var observed = Math.min(gap, Math.max(0, lastInteraction + IDLE_MS - start));
         if (observed <= 0) return;
         activeMs += observed;
         if (isPlaying()) playingMs += observed;
-    }
-
-    function legacySend(payload) {
-        try {
-            var body = JSON.stringify(payload);
-            if (navigator.sendBeacon && navigator.sendBeacon(endpoint + '/event', body)) return;
-            fetch(endpoint + '/event', { method: 'POST', body: body, keepalive: true })
-                .catch(function () {});
-        } catch (error) { /* never block a game */ }
     }
 
     function pump() {
@@ -155,7 +141,7 @@
     function enqueue(payload) {
         try {
             var body = JSON.stringify(payload);
-            if (queue.length >= MAX_TRANSPORT_PENDING) {
+            if (queue.length >= MAX_PENDING) {
                 // Prioritize open/play/finish; never accumulate an infinite offline backlog.
                 var index = queue.findIndex(function (x, i) { return i > 0 && x.kind === 'active'; });
                 if (index < 0) return; // bounded loss under extended outage
@@ -171,18 +157,16 @@
         var id = uuid();
         if (!id) return;
         var event = { v: 2, game: gameId, event: kind, eventId: id, sessionId: sessionId };
-        // Feature-gated by the Phase 2 stats shape so Phase 1 Worker accepts
-        // the same browser bundle during the manual D1 Worker rollout.
-        if (acceptsPlaying) event.occurredAt = occurredAt === undefined ? Date.now() : occurredAt;
+        event.occurredAt = occurredAt === undefined ? Date.now() : occurredAt;
         if (kind === 'active') {
             event.seconds = seconds;
-            if (acceptsPlaying) event.playingSeconds = playSeconds;
+            event.playingSeconds = playSeconds;
         }
         enqueue(event);
     }
 
     function flush(occurredAt) {
-        if (!ready) return;
+        if (!enabled) return;
         var seconds = Math.min(60, Math.floor(activeMs / 1000));
         if (seconds <= 0) return;
         var played = Math.min(seconds, Math.floor(playingMs / 1000));
@@ -194,7 +178,7 @@
 
     function tick() {
         sample();
-        if (ready && performance.now() - lastFlush >= CHECKPOINT_MS) {
+        if (enabled && performance.now() - lastFlush >= CHECKPOINT_MS) {
             flush();
             lastFlush = performance.now();
         }
@@ -229,13 +213,7 @@
     });
     window.addEventListener('blur', interrupt);
     window.addEventListener('focus', function () { lastTick = performance.now(); });
-    window.addEventListener('pagehide', function () {
-        // The browser may unload before the Worker capability request settles.
-        // Best-effort legacy beacons preserve attempts rather than discarding them.
-        // A late probe must not replay these attempts a second time.
-        settleProbe(true);
-        interrupt();
-    });
+    window.addEventListener('pagehide', interrupt);
     window.addEventListener('pageshow', function () { lastTick = performance.now(); });
     // Movement-based games may steer continuously without clicking. Every real
     // control gesture refreshes the local idle clock; none sends a network event.
@@ -249,57 +227,16 @@
         },
         flush: function () { sample(); flush(); }
     };
-    function deliverAttempt(game, event, occurredAt, forceLegacy) {
-        if (!forceLegacy && ready) sendV2(event, undefined, undefined, occurredAt);
-        else if (canProbe && !localTest) legacySend({ game: game, event: event });
-    }
-
-    function settleProbe(forceLegacy) {
-        if (!probePending) return;
-        probePending = false;
-        for (var i = 0; i < earlyEvents.length; i++) {
-            var item = earlyEvents[i];
-            deliverAttempt(gameId, item.event, item.occurredAt, forceLegacy);
-        }
-        earlyEvents.length = 0;
-    }
-
     window.hubTrack = function (game, event) {
-        if (!gameId || game !== gameId || (event !== 'play' && event !== 'finish')) return;
-        if (!canProbe) return;
-        if (ready) sample();
+        if (!enabled || game !== gameId || (event !== 'play' && event !== 'finish')) return;
+        sample();
         inferredPlaying = event === 'play';
-        // During capability detection, sending legacy would lose event IDs and
-        // session linkage. Queue a bounded set, then choose exactly one protocol.
-        if (probePending) {
-            if (earlyEvents.length < MAX_PENDING) {
-                earlyEvents.push({ event: event, occurredAt: Date.now() });
-            }
-            return;
-        }
-        deliverAttempt(game, event);
+        sendV2(event);
     };
 
-    if (gameId && sessionId && canProbe) {
-        try {
-            fetch(endpoint + '/stats?v=2', { cache: 'no-store' })
-                .then(function (res) { return res.ok ? res.json() : null; })
-                .then(function (stats) {
-                    if (!stats || stats.scope !== 'day' || !stats.games || !stats.total) {
-                        settleProbe();
-                        return;
-                    }
-                    if (ready) return;
-                    acceptsPlaying = typeof stats.total.playingSeconds === 'number';
-                    ready = true;
-                    lastTick = performance.now();
-                    lastWallTime = Date.now();
-                    lastInteraction = lastTick;
-                    lastFlush = lastTick;
-                    sendV2('open');
-                    settleProbe();
-                    if (timer === null) timer = setInterval(tick, 1000);
-                }).catch(function () { settleProbe(); /* fallback once if Worker probe fails */ });
-        } catch (error) { settleProbe(); /* telemetry cannot stop startup */ }
+    if (enabled) {
+        // Emit immediately; an unavailable Worker only triggers bounded V2 retries.
+        sendV2('open');
+        timer = setInterval(tick, 1000);
     }
 })();
