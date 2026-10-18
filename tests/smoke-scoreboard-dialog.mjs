@@ -275,6 +275,7 @@ try {
                 // started before that release is paused by invalidate().
                 if (id === 'carrot-pull') return !window.cpGame.pauseOwnership.isHeld('ranking');
                 if (id === 'shadow-loom') return !window.slGame.pauseOwnership.isHeld('ranking');
+                if (id === 'magnetic-garden') return !window.mgGame.pauseOwnership.isHeld('ranking');
                 return true;
             }, { timeout: 6000 }, game.id);
             if (!await heldMovementReleased(page, game.id)) {

@@ -1,0 +1,69 @@
+{
+  "project": "Magnetic Garden",
+  "generatedDate": "2026-10-18",
+  "mode": "built-in image_gen.imagegen",
+  "licenseNote": "Original AI-generated decorative artwork for this project; no external stock assets or artist references.",
+  "runtimeTotalBytes": 466510,
+  "assets": [
+    {
+      "file": "greenhouse-hero.webp",
+      "source": "reference/greenhouse-hero-source.png",
+      "width": 1536,
+      "height": 1024,
+      "aspectRatio": "3:2",
+      "alpha": false,
+      "bytes": 317734,
+      "purpose": "Decorative menu hero",
+      "encoding": {
+        "format": "webp",
+        "quality": 88,
+        "method": 6,
+        "resize": false
+      },
+      "cropGuidance": "16:9 crop safe with object-position:center 65%; magnets sit near lower center.",
+      "prompt": "Use case: stylized-concept\nAsset type: polished landscape background illustration for the menu of a cozy puzzle game called Magnetic Garden; no lettering in the artwork.\nPrimary request: a refined miniature ceramic greenhouse garden with a small pair of whimsical horseshoe magnets, one muted coral and one lake blue, resting among charming potted flowers. The magnets should feel like crafted ceramic garden objects, with smooth rounded ends and no labels. The scene should establish a warm, tranquil, playful world.\nScene/backdrop: sunlit little greenhouse, pale mint painted window frames, softly frosted glass, cream ceramic potting bench. Flowering plants in simple rounded ceramic pots, small leaves and gently curling stems, pink cosmos-like blooms, tiny yellow flowers. A little soil and a few rounded pebbles.\nStyle/medium: exquisite tactile handpainted storybook illustration, subtle gouache surface, soft dimensional ceramic forms, delicate botanical detail, restrained editorial game art, not photorealistic and not a generic plastic 3D render.\nComposition/framing: landscape 3:2 image, delightful cohesive scene with pots and magnets clustered across the lower two thirds, greenhouse architecture framing the scene, light breathing room at upper center; close miniature tabletop viewpoint, no user interface elements.\nLighting/mood: warm diffused morning light, soft short shadows, calm welcoming cozy atmosphere.\nColor palette: warm ivory, sage and pale mint, muted coral pink, deep lake blue accents, ochre flower centers; sophisticated pastel harmony.\nConstraints: opaque background, no text, no letters, no numbers, no logos, no watermark, no puzzle grid, no gameplay tiles, no buttons, no borders. Avoid neon, saturated primary colors, harsh outlines, overly busy background, toy-product packaging, dark fantasy.",
+      "runtimeSha256": "cbc72b552c27974ecb77160d788b7ff00041899287945f7cff779f1f477cdfd9",
+      "sourceSha256": "ee55bce1841b0f9637047e984375132ac85cb03185638a70275b069bf321ce1b"
+    },
+    {
+      "file": "greenhouse-workbench.webp",
+      "source": "reference/greenhouse-workbench-source.png",
+      "width": 1024,
+      "height": 1536,
+      "aspectRatio": "2:3",
+      "alpha": false,
+      "bytes": 148776,
+      "purpose": "Decorative low-contrast play-area perimeter",
+      "encoding": {
+        "format": "webp",
+        "quality": 88,
+        "method": 6,
+        "resize": false
+      },
+      "constraints": "Keep central play grid and every rule-relevant element in DOM/SVG; workbench artwork is ambient only.",
+      "prompt": "Use case: stylized-concept\nAsset type: vertical portrait 2:3 background artwork for a cozy magnetic gardening puzzle game's play area.\nPrimary request: a top-down bird's-eye view of a cream ceramic greenhouse potting workbench with an expansive almost-empty ivory working surface in its center. Only around the far outer perimeter, place lush but restrained botanical foliage, tiny coral pink and white flowers, a few mint-green ceramic pots partially outside the frame, and a little soft moss. This is decorative ambient art behind an interactive grid that will be drawn separately.\nStyle/medium: tactile handpainted gouache storybook illustration with soft ceramic forms, refined organic details, pale glazing, warm subtle grain. Beautiful handcrafted miniature greenhouse garden mood.\nComposition/framing: strict overhead flat-lay portrait image, broad quiet blank central rectangle occupying at least 75 percent of image width and 80 percent of image height. Plants and pots confined to extreme corners and narrow outer rim, very few tiny details touching the blank center. The center must be uniform pale warm ivory with extremely subtle broad wash, low contrast, NO seams or tiles or markings. Keep decoration sparse along middle left and right edges; most botanical detail in far four corners. No magnet objects needed.\nLighting/mood: gently diffuse morning light, very soft shallow shadows, peaceful and warm.\nColor palette: cream ivory center, pale sage and mint foliage, restrained muted coral and lake blue ceramic accents in corners.\nConstraints: opaque background, no text, no numbers, no grid, no borders, no UI, no game pieces, no prominent shadows in center, no watermark, no photorealism, no saturated colors, no neon, no central objects. Central surface is intentionally empty to preserve game readability.",
+      "runtimeSha256": "f6b6df205d2cd5c9a1ae0316037601f2d12c30adfcba65090409c6c8af93337d",
+      "sourceSha256": "7b10585932f7308e594edf8735d3a2a2db5767c335344e8a626ecad7d1023db7"
+    }
+  ],
+  "derivatives": [
+    {
+      "file": "../../public/assets/home-covers/magnetic-garden.webp",
+      "width": 640,
+      "height": 360,
+      "alpha": false,
+      "bytes": 81812,
+      "source": "greenhouse-hero.webp",
+      "crop": "centered x; vertical focus65%"
+    },
+    {
+      "file": "../../public/assets/seo/og-magnetic-garden.jpg",
+      "width": 1200,
+      "height": 630,
+      "alpha": false,
+      "bytes": 212898,
+      "source": "greenhouse-hero.webp",
+      "crop": "centered x; vertical focus65%"
+    }
+  ]
+}

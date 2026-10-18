@@ -20,7 +20,7 @@ export const FEATURE_LINK = '<link rel="stylesheet" href="css/scoreboard-dialog.
 export const FEATURE_PAGES = new Set([
     'carrot-pull.html', 'tank-battle.html', 'needle-awn.html',
     'firefly-signal.html', 'shadow-loom.html', 'math-rain.html',
-    'loop-jail.html',
+    'loop-jail.html', 'magnetic-garden.html',
 ]);
 
 export function stripFeatureLink(page, html, errors) {
@@ -364,6 +364,7 @@ function reviewHomeCardsStyles(root, cssPaths, htmlPaths, errors) {
  * Every frozen P0 comparison projects exactly these pages away; nothing else may.
  */
 export const POST_FREEZE_GAMES = Object.freeze([
+    Object.freeze({ id: 'magnetic-garden', page: 'magnetic-garden.html', stylesheet: 'css/magnetic-garden.css', prefix: 'mg' }),
     Object.freeze({ id: 'loop-jail', page: 'loop-jail.html', stylesheet: 'css/loop-jail.css', prefix: 'lj' }),
 ]);
 export const POST_FREEZE_PAGES = new Set(POST_FREEZE_GAMES.map(game => game.page));

@@ -55,6 +55,10 @@ const GAMES = {
   'shadow-loom-koi': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
   'shadow-loom-crane': { order: 'asc', maxScore: 9007199254740991, maxEntries: 50 },
   'loop-jail': { order: 'desc', maxScore: 9007199254740991, maxEntries: 50 },
+  'magnetic-garden-greenhouse': { order: 'asc', maxScore: 1000000, maxEntries: 50 },
+  'magnetic-garden-twins': { order: 'asc', maxScore: 1000000, maxEntries: 50 },
+  'magnetic-garden-stonepath': { order: 'asc', maxScore: 1000000, maxEntries: 50 },
+  'magnetic-garden-aurora': { order: 'asc', maxScore: 1000000, maxEntries: 50 },
 };
 
 // 每日赛程 / 每日挑战榜：按天一个键，正则白名单 + TTL 自然滚动

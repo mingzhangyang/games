@@ -10,7 +10,7 @@
 //   ④ 默认：无横向滚动且页脚在首屏之下可滚到；TD 手机横屏战斗例外：页脚 display:none
 //   ⑤ 场景是纯手势区：touch-action:none、user-select:none
 //   ⑤b computed contract：immersive shell/stage/topbar/footer 的 named-layer 结构值真实生效；TD 桌面 stats 例外可见
-//   ⑥ 画布后备缓冲 = CSS 尺寸 × min(dpr, 2)（高清且有上限），画面非空
+//   ⑥ canvas: 高清后备缓冲与非空画面；DOM board: 真实可见、命名、可操作的语义网格
 //   ⑦ HUD 在舞台上部 25% 以内（悬浮在天空区域），不是独立面板
 //   ⑧ 转屏 / 缩放后重新满足 ①（ResizeObserver + bindFrame 生效，不靠刷新）
 //   ⑨ 标准布局页零回归抽查：注册表里非 immersive 的页不带 immersive 类、body 不带 has-immersive-stage
@@ -49,6 +49,7 @@ const measure = page => page.evaluate(() => {
     const stage = document.querySelector('.game-stage--immersive');
     const footer = shell.querySelector(':scope > .game-footer');
     const canvas = stage.querySelector('canvas');
+    const grid = stage.querySelector('[role="grid"]');
     const hud = stage.querySelector('[class*="hud"]');
     const cs = getComputedStyle(shell);
     const st = stage.getBoundingClientRect();
@@ -80,6 +81,34 @@ const measure = page => page.evaluate(() => {
         scrollH: document.documentElement.scrollHeight,
         touchAction: scs.touchAction, userSelect: scs.userSelect || scs.webkitUserSelect,
         canvas: canvas ? { w: canvas.width, h: canvas.height, cw: canvas.clientWidth, ch: canvas.clientHeight, lit } : null,
+        grid: grid ? (() => {
+            const cells = [...grid.querySelectorAll('[role="gridcell"]')];
+            const r = grid.getBoundingClientRect();
+            // A tall DOM garden may scroll inside the immersive scene in a
+            // short landscape viewport. Audit every cell after scrolling it
+            // into view, then restore all scroll offsets before HUD geometry.
+            const scrolls = [];
+            for (let node = grid; node; node = node.parentElement) {
+                scrolls.push([node, node.scrollLeft, node.scrollTop]);
+            }
+            const originalX = window.scrollX, originalY = window.scrollY;
+            const operable = cells.filter(cell => {
+                cell.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+                const c = cell.getBoundingClientRect();
+                const control = cell.matches('button,[tabindex]') ? cell : cell.querySelector('button,[tabindex]');
+                const hit = document.elementFromPoint(c.left + c.width / 2, c.top + c.height / 2);
+                return c.width > 0 && c.height > 0 && control
+                    && !!(cell.getAttribute('aria-label') || cell.textContent.trim())
+                    && !!hit && (hit === cell || cell.contains(hit));
+            }).length;
+            for (const [node, left, top] of scrolls) { node.scrollLeft = left; node.scrollTop = top; }
+            window.scrollTo(originalX, originalY);
+            return {
+                count: cells.length, width: r.width, height: r.height,
+                named: !!(grid.getAttribute('aria-label') || grid.getAttribute('aria-labelledby')),
+                operable,
+            };
+        })() : null,
         hud: hud ? { top: hud.getBoundingClientRect().top, bottom: hud.getBoundingClientRect().bottom } : null,
         rootMax,
         immersiveMax,
@@ -202,8 +231,13 @@ for (const g of RUN_PAGES) {
             check(Math.abs(m.canvas.w - m.canvas.cw * k) <= 1 && Math.abs(m.canvas.h - m.canvas.ch * k) <= 1,
                 `⑥ ${tag}：画布后备缓冲 = CSS × min(dpr,2)`, `${m.canvas.w}×${m.canvas.h} vs ${m.canvas.cw}×${m.canvas.ch}×${k}`);
             check(m.canvas.lit > m.canvas.w * 0.5, `⑥ ${tag}：画布画面非空`, m.canvas.lit);
+        } else if (m.grid) {
+            check(m.grid.named && m.grid.count >= 4 && m.grid.width > 100 && m.grid.height > 100,
+                `⑥ ${tag}：DOM board 是可见且命名的语义网格`, JSON.stringify(m.grid));
+            check(m.grid.operable === m.grid.count,
+                `⑥ ${tag}：每个 DOM 网格格子有名称、交互节点且真实可点`, JSON.stringify(m.grid));
         } else {
-            check(false, `⑥ ${tag}：舞台里有 canvas`);
+            check(false, `⑥ ${tag}：舞台里有 canvas 或可操作的语义网格`);
         }
         if (m.hud) check(m.hud.bottom <= m.stage.top + m.stage.height * 0.25 + 1, `⑦ ${tag}：HUD 悬浮在舞台上部 25%`, `${m.hud.bottom} vs ${m.stage.top + m.stage.height * 0.25}`);
         check(/\bhas-immersive-stage\b/.test(m.bodyClass) && !/\bhas-frame-budget\b/.test(m.bodyClass), `${tag}：bindFrame({ layout: 'immersive' }) 打了正确的 body 标记`, m.bodyClass);
