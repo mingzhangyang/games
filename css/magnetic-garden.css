@@ -16,8 +16,6 @@
  .mg-icon-btn:disabled { opacity:.4; }
  .mg-brand { color:var(--mg-green); font-family:Georgia,'Songti SC',serif; font-size:clamp(14px,3.8vw,20px); letter-spacing:.015em; font-weight:700; white-space:nowrap; }
  .mg-stage { color:var(--mg-text); background:radial-gradient(ellipse at 50% 38%,var(--mg-panel-raised),var(--mg-bg) 80%); touch-action:none; user-select:none; }
- /* Long menu allows native document panning; gameplay stays touch-locked. */
- .mg-stage:has(> .mg-menu:not(.hidden)) { touch-action:pan-y; }
  .mg-stage::before { content:''; position:absolute; inset:0; background:url('../assets/magnetic-garden/greenhouse-workbench.webp') center center / cover no-repeat; opacity:var(--mg-backdrop-opacity); pointer-events:none; }
  .mg-play { position:absolute; inset:0; padding:14px 20px 16px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; scrollbar-width:thin; scrollbar-color:var(--mg-line) transparent; }
  .mg-hud { background:color-mix(in srgb,var(--mg-bg) 80%,transparent); border-radius:16px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; max-width:492px; margin:0 auto; flex-shrink:0; }

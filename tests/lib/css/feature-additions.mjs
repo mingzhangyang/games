@@ -83,6 +83,7 @@ export const MOBILE_FIT_LINK = '<link rel="stylesheet" href="css/mobile-fit.css"
 export const MOBILE_FIT_SELECTORS = new Set([
     'html, body',
     '.game-lb-username',
+    '.game-stage.game-stage--immersive:has(> .game-overlay--menu:not(.hidden))',
     '#usernameInput, .wd-input, .na-name-input, .sf-name-input, .gomoku-select, .daily-profile input',
     '.game-container:has(#tetris)',
     '#tetris, #particleCanvas, #lineClearCanvas',
