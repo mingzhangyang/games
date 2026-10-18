@@ -29,6 +29,7 @@ export const MORE_GAMES = [
     { href: 'firefly-signal.html', emoji: '✨', en: "Firefly Signal", zh: "萤火信号", cat: 'puzzle' },
     { href: 'shadow-loom.html', emoji: '🕯️', en: "Shadow Loom", zh: "影织", cat: 'puzzle' },
     { href: 'magnetic-garden.html', emoji: '🧲', en: "Magnetic Garden", zh: "磁极花园", cat: 'puzzle', light: true },
+    { href: 'sudoku-mist.html', emoji: '🌫️', en: "Sudoku in the Mist", zh: "雾隐九宫", cat: 'puzzle', light: true },
 ];
 // registry:end more-games
 

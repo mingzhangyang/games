@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Contextual topbar retry: live only during gameplay, never a dead menu action.
-// The thirteen consumers share one controller and preserve their own game rules.
+// The fourteen consumers share one controller and preserve their own game rules.
 import puppeteer from 'puppeteer-core';
 import { readFileSync } from 'node:fs';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -22,6 +22,7 @@ const CASES = {
     'shadow-loom': ['sl', 'slGame', 'startLevel', 'showMenu'],
     'gravity-slingshot': ['gd', 'gdGame', 'startLevelMode', 'enterMenu'],
     'loop-jail': ['lj', 'ljGame', 'start', 'toMenu'],
+    'sudoku-mist': ['sm', 'smGame', 'startLevel', 'toMenu'],
 };
 
 // Every game with a live R shortcut must route it through the same controller.
@@ -94,6 +95,7 @@ const PROGRESS = {
     'maxwell-demon': 'world.spent',
     'shadow-loom': 'moves',
     'loop-jail': 'strokes',
+    'sudoku-mist': 'moves',
 };
 const expectedDestructive = Object.keys(CASES).filter(id => id !== 'gravity-slingshot').sort();
 if (JSON.stringify(Object.keys(PROGRESS).sort()) !== JSON.stringify(expectedDestructive)) {
@@ -565,7 +567,7 @@ try {
                     await page.waitForFunction(sel => !document.querySelector(sel)?.disabled,
                         { timeout: 4000 }, selector);
                 }
-                const resultId = id === 'shadow-loom' ? prefix + '-result'
+                const resultId = id === 'shadow-loom' || id === 'sudoku-mist' ? prefix + '-result'
                     : id === 'gravity-slingshot' || id === 'loop-jail' ? prefix + '-over' : prefix + '-clear';
                 // Assert the *state-only* transition before any result DOM change.
                 // Shadow Loom enters "solving", Bond Forge "clear" and delays

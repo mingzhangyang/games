@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="moon" cx="0.78" cy="0.12" r="0.7">
+      <stop offset="0" stop-color="#26355a"/><stop offset="1" stop-color="#0d1322"/>
+    </radialGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dfe7f7" stop-opacity="0"/>
+      <stop offset="0.35" stop-color="#dfe7f7" stop-opacity="0.82"/>
+      <stop offset="1" stop-color="#c9d5ee" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="18"/></filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#moon)"/>
+  <rect x="650" y="75" width="477" height="477" rx="10" fill="#141d33"/>
+  <g font-family="Georgia,Songti SC,serif" font-size="34" font-weight="700" fill="#eef3ff">
+    <text x="729.5" y="112.1" text-anchor="middle">5</text><text x="888.5" y="112.1" text-anchor="middle">7</text><text x="676.5" y="165.1" text-anchor="middle">6</text><text x="835.5" y="165.1" text-anchor="middle">1</text><text x="888.5" y="165.1" text-anchor="middle">9</text><text x="729.5" y="218.1" text-anchor="middle">9</text><text x="782.5" y="218.1" text-anchor="middle">8</text><text x="676.5" y="271.1" text-anchor="middle">8</text><text x="888.5" y="271.1" text-anchor="middle">6</text><text x="676.5" y="324.1" text-anchor="middle">4</text><text x="835.5" y="324.1" text-anchor="middle">8</text><text x="782.5" y="112.1" text-anchor="middle">3</text><text x="1047.5" y="218.1" text-anchor="middle">6</text><text x="1100.5" y="377.1" text-anchor="middle">6</text>
+  </g>
+  <g filter="url(#soft)" fill="url(#mist)">
+    <path d="M610 375 C730 315 850 405 950 325 S1120 195 1210 165 V595 H610 Z"/>
+    <ellipse cx="1070" cy="265" rx="110" ry="70"/>
+  </g>
+  <g fill="none"><path d="M650 75V552" stroke="#a9bce6" stroke-opacity="0.55" stroke-width="4"/><path d="M650 75H1127" stroke="#a9bce6" stroke-opacity="0.55" stroke-width="4"/><path d="M703 75V552" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M650 128H1127" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M756 75V552" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M650 181H1127" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M809 75V552" stroke="#a9bce6" stroke-opacity="0.55" stroke-width="4"/><path d="M650 234H1127" stroke="#a9bce6" stroke-opacity="0.55" stroke-width="4"/><path d="M862 75V552" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M650 287H1127" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M915 75V552" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M650 340H1127" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M968 75V552" stroke="#a9bce6" stroke-opacity="0.55" stroke-width="4"/><path d="M650 393H1127" stroke="#a9bce6" stroke-opacity="0.55" stroke-width="4"/><path d="M1021 75V552" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M650 446H1127" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M1074 75V552" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M650 499H1127" stroke="#a9bce6" stroke-opacity="0.22" stroke-width="1.4"/><path d="M1127 75V552" stroke="#a9bce6" stroke-opacity="0.55" stroke-width="4"/><path d="M650 552H1127" stroke="#a9bce6" stroke-opacity="0.55" stroke-width="4"/></g>
+  <circle cx="888.5" cy="366.5" r="20" fill="none" stroke="#ffd27a" stroke-width="4" filter="url(#glow)"/>
+  <g font-family="Songti SC,Noto Serif SC,Georgia,serif" font-weight="900">
+    <text x="70" y="250" font-size="110" fill="#eef3ff" filter="url(#glow)">雾隐九宫</text>
+    <text x="76" y="315" font-size="34" letter-spacing="8" fill="#ffd27a" font-family="Trebuchet MS,Segoe UI,sans-serif">SUDOKU IN THE MIST</text>
+    <text x="76" y="520" font-size="27" fill="#a9bce6" font-weight="700" font-family="Trebuchet MS,Segoe UI,sans-serif">Deduce a digit and the fog lifts.</text>
+    <text x="76" y="560" font-size="27" fill="#a9bce6" font-weight="700" font-family="Trebuchet MS,Segoe UI,sans-serif">Guesses score nothing.</text>
+  </g>
+</svg>

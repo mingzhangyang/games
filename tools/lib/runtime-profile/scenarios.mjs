@@ -143,6 +143,13 @@ export const SCENARIOS = Object.freeze({
         ready: truthy('mgGame', 'state'),
         active: truthy('mgGame', 'isRunning()'), activity: 'discrete',
     },
+    // The board itself is discrete, but the mist layer drifts on rAF for the whole
+    // unpaused round, so the round is profiled as a continuous loop.
+    'sudoku-mist': {
+        owner: 'smGame', start: click('#sm-level-thin-1'), restart: call('startLevel', 0),
+        ready: truthy('smGame', 'el'),
+        active: truthy('smGame', 'isRunning()'), activity: 'continuous',
+    },
 });
 
 export function validateScenarioCoverage(games = registry.all(), scenarios = SCENARIOS) {

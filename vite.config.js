@@ -72,6 +72,7 @@ main: resolve(__dirname, 'index.html'),
             "shadow-loom": resolve(__dirname, 'shadow-loom.html'),
             "loop-jail": resolve(__dirname, 'loop-jail.html'),
             "magnetic-garden": resolve(__dirname, 'magnetic-garden.html'),
+            "sudoku-mist": resolve(__dirname, 'sudoku-mist.html'),
             // registry:end inputs
         },
         output: {

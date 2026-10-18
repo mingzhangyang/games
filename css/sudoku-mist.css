@@ -1,0 +1,771 @@
+/* ─────────────────────────────────────────────
+   雾隐九宫 Sudoku in the Mist — 宣纸 × 晨雾 × 水墨
+   深色 = 月下蓝雾、夜色棋盘；浅色 = 清晨白雾、宣纸棋盘。
+   棋盘三层：.sm-board-wrap 底色 → 雾层 canvas（.sm-mist）→ 格子（网格线 / 数字 / 笔记 / 选框浮在雾上）。
+   雾的颜色只在这里定义一次（--sm-cv-*），由 src/games/sudoku-mist/runtime.js 经 bindPalette 读取。
+   CSS 冻结（P0/P5）之后新增的游戏页：全部规则归 @layer pages、选择器只认本页前缀，
+   不新增未分层债务、不写 keyframes（tests/lib/css/feature-additions.mjs 的 POST_FREEZE_GAMES 校验）。
+   ───────────────────────────────────────────── */
+
+@layer pages {
+    :root {
+        --sm-bg: #0d1322;
+        --sm-bg-deep: #070b15;
+        --sm-text: var(--tok-text);
+        --sm-text-dim: var(--tok-text-dim);
+        --sm-accent: #ffd27a;
+        --sm-accent-text: #ffd27a;
+        --sm-board-bg: #141d33;
+        --sm-board-edge: rgb(169, 188, 230, 0.35);
+        --sm-line: rgb(169, 188, 230, 0.2);
+        --sm-line-strong: rgb(169, 188, 230, 0.55);
+        --sm-given: #eef3ff;
+        --sm-placed: #ffd27a;
+        --sm-note: #a9bce6;
+        --sm-note-backing: rgb(8, 15, 28, 0.93);
+        --sm-peer: rgb(169, 188, 230, 0.1);
+        --sm-same: rgb(255, 210, 122, 0.2);
+        --sm-sel: rgb(255, 210, 122, 0.3);
+        --sm-sel-ring: #ffd27a;
+        --sm-hint-unit: rgb(122, 214, 255, 0.16);
+        --sm-hint-ring: #7ad6ff;
+        --sm-wrong: rgb(255, 92, 110, 0.55);
+        --sm-glass: rgb(13, 19, 34, 0.7);
+        --sm-glass-line: rgb(169, 188, 230, 0.18);
+        --sm-overlay-bg: radial-gradient(ellipse 90% 70% at 50% 35%, rgb(20, 29, 51, 0.9), rgb(7, 11, 21, 0.96));
+        --sm-key-bg: rgb(169, 188, 230, 0.1);
+        --sm-key-bg-hover: rgb(169, 188, 230, 0.2);
+        --sm-key-line: rgb(169, 188, 230, 0.22);
+        --sm-float-ok: #ffd27a;
+        --sm-float-deep: #7ad6ff;
+        --sm-float-muted: #a9bce6;
+        --sm-float-wrong: #ff7a8c;
+        --sm-float-shadow: 0 1px 6px rgb(0, 0, 0, 0.6);
+        --sm-title-glow: 0 0 22px rgb(223, 231, 247, 0.4);
+
+        /* 雾层调色板（bindPalette 读取；缺一个就抛错）。RGB 分量给 ImageData 用 */
+        /* 夜雾：比棋盘亮一档的灰蓝（深色页不能被一大片亮雾盖住，verify-theme 的画布底色检查） */
+        --sm-cv-fog-rgb: 66, 80, 112;
+        --sm-cv-fog-alpha: 0.94;
+        --sm-cv-wisp-rgb: 176, 192, 228;
+        --sm-cv-wisp-alpha: 0.5;
+        --sm-cv-ripple: #ffd27a;
+        --sm-cv-wrong: #ff5c6e;
+    }
+
+    /* 浅色：宣纸棋盘 + 清晨白雾；墨色题面数字、朱砂色落子 */
+    :root[data-theme="light"] {
+        --sm-bg: #f1ede4;
+        --sm-bg-deep: #e4ddcf;
+        --sm-accent: #b5452c;
+        --sm-accent-text: #9c3a24;
+        --sm-board-bg: #e9e1cf;
+        --sm-board-edge: rgb(74, 62, 44, 0.35);
+        --sm-line: rgb(74, 62, 44, 0.2);
+        --sm-line-strong: rgb(74, 62, 44, 0.6);
+        --sm-given: #23201b;
+        --sm-placed: #a63c25;
+        --sm-note: #6b5f4d;
+        --sm-note-backing: rgb(249, 246, 238, 0.94);
+        --sm-peer: rgb(74, 62, 44, 0.07);
+        --sm-same: rgb(181, 69, 44, 0.13);
+        --sm-sel: rgb(181, 69, 44, 0.2);
+        --sm-sel-ring: #b5452c;
+        --sm-hint-unit: rgb(31, 111, 160, 0.12);
+        --sm-hint-ring: #1f6fa0;
+        --sm-wrong: rgb(216, 30, 60, 0.35);
+        --sm-glass: rgb(250, 247, 240, 0.82);
+        --sm-glass-line: rgb(74, 62, 44, 0.16);
+        --sm-overlay-bg: radial-gradient(ellipse 90% 70% at 50% 35%, rgb(250, 247, 240, 0.94), rgb(233, 225, 207, 0.97));
+        --sm-key-bg: rgb(74, 62, 44, 0.07);
+        --sm-key-bg-hover: rgb(74, 62, 44, 0.14);
+        --sm-key-line: rgb(74, 62, 44, 0.2);
+        --sm-float-ok: #a63c25;
+        --sm-float-deep: #1f6fa0;
+        --sm-float-muted: #6b5f4d;
+        --sm-float-wrong: #c8102e;
+        --sm-float-shadow: 0 1px 4px rgb(255, 255, 255, 0.9);
+        --sm-title-glow: none;
+        --sm-cv-fog-rgb: 251, 249, 244;
+        --sm-cv-fog-alpha: 0.93;
+        --sm-cv-wisp-rgb: 170, 158, 136;
+        --sm-cv-wisp-alpha: 0.32;
+        --sm-cv-ripple: #b5452c;
+        --sm-cv-wrong: #c8102e;
+    }
+
+    html {
+        background: var(--sm-bg);
+    }
+
+    .sm-body {
+        background: radial-gradient(ellipse 120% 70% at 80% -10%, var(--sm-board-bg), var(--sm-bg) 55%, var(--sm-bg-deep));
+        color: var(--sm-text);
+        min-height: 100dvh;
+        font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    /* ── 顶栏 ── */
+    .sm-title-main {
+        font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-shadow: var(--sm-title-glow);
+    }
+
+    /* ── 舞台：HUD → 棋盘 → 回放条，浮层铺满整个舞台 ── */
+    .sm-stage {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .sm-hud {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .sm-hud-level {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--sm-accent-text);
+        text-align: center;
+        letter-spacing: 0.06em;
+    }
+
+    .sm-hud-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+        padding: 6px 8px;
+        border-radius: 12px;
+        background: var(--sm-glass);
+        border: 1px solid var(--sm-glass-line);
+    }
+
+    .sm-hud-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .sm-hud-label {
+        font-size: 11px;
+        color: var(--sm-text-dim);
+        white-space: nowrap;
+    }
+
+    .sm-hud-value {
+        font-size: 16px;
+        font-variant-numeric: tabular-nums;
+        color: var(--sm-text);
+    }
+
+    .sm-hud-value--hot {
+        color: var(--sm-accent-text);
+    }
+
+    /* ── 棋盘 ── */
+    .sm-board-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1;
+        container-type: inline-size;
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--sm-board-bg);
+        box-shadow: 0 0 0 2px var(--sm-board-edge), 0 18px 40px rgb(0, 0, 0, 0.35);
+    }
+
+    /* 菜单期间棋盘只占位不显示（否则会透过半透明菜单底色露出来） */
+    .sm-stage--menu > .sm-board-wrap {
+        visibility: hidden;
+    }
+
+    /* 结算期间：HUD 与棋盘退出布局，结算卡随内容撑高舞台（手机上不会被 460px 的棋盘裁掉按钮） */
+    .sm-stage--sheet > .sm-hud,
+    .sm-stage--sheet > .sm-board-wrap {
+        display: none;
+    }
+
+    .sm-result {
+        position: relative;
+        inset: auto;
+    }
+
+    .sm-mist {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: block;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .sm-board {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        grid-template-rows: repeat(9, 1fr);
+    }
+
+    .sm-row {
+        display: contents;
+    }
+
+    .sm-cell {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-right: 1px solid var(--sm-line);
+        border-bottom: 1px solid var(--sm-line);
+        background: transparent;
+        color: var(--sm-given);
+        font: inherit;
+        cursor: pointer;
+        transition: background-color 0.18s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .sm-cell--box-r {
+        border-right: 2px solid var(--sm-line-strong);
+    }
+
+    .sm-cell--box-b {
+        border-bottom: 2px solid var(--sm-line-strong);
+    }
+
+    .sm-cell:last-child {
+        border-right: 0;
+    }
+
+    .sm-row:last-child > .sm-cell {
+        border-bottom: 0;
+    }
+
+    .sm-cell:focus-visible {
+        outline: 2px solid var(--sm-sel-ring);
+        outline-offset: -3px;
+        z-index: 1;
+    }
+
+    .sm-cell--peer {
+        background: var(--sm-peer);
+    }
+
+    .sm-cell--hint-unit {
+        background: var(--sm-hint-unit);
+    }
+
+    .sm-cell--same {
+        background: var(--sm-same);
+    }
+
+    .sm-cell--selected {
+        background: var(--sm-sel);
+        box-shadow: inset 0 0 0 2px var(--sm-sel-ring);
+    }
+
+    .sm-cell--hint {
+        box-shadow: inset 0 0 0 3px var(--sm-hint-ring);
+    }
+
+    /* Newly uncovered clues retain a one-time, player-triggered fog reveal. */
+    .sm-cell--charged:not(.sm-cell--selected, .sm-cell--hint) {
+        box-shadow: inset 0 0 0 1px var(--sm-hint-ring);
+    }
+
+    .sm-cell--charged::after {
+        content: "✦";
+        position: absolute;
+        top: 1px;
+        right: 2px;
+        color: var(--sm-hint-ring);
+        font-size: 2.8cqi;
+        line-height: 1;
+        pointer-events: none;
+    }
+
+    .sm-cell--wrong {
+        background: var(--sm-wrong);
+        transition: none;
+    }
+
+    .sm-cell-digit {
+        font-family: Georgia, "Songti SC", serif;
+        font-size: 6.2cqi;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .sm-cell--given > .sm-cell-digit {
+        font-weight: 700;
+        color: var(--sm-given);
+    }
+
+    .sm-cell--placed > .sm-cell-digit {
+        font-weight: 600;
+        color: var(--sm-placed);
+    }
+
+    .sm-cell-notes {
+        position: absolute;
+        inset: 2px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        place-items: center;
+        pointer-events: none;
+    }
+
+    .sm-note {
+        font-size: clamp(9px, 2.3cqi, 12px);
+        line-height: 1;
+        color: var(--sm-note);
+        font-weight: 700;
+    }
+
+    /* Notes sit above animated mist. Only occupied slots need a quiet backdrop;
+       the alpha leaves the paper/fog texture visible while bounding contrast. */
+    .sm-note:not(:empty) {
+        padding-inline: 1px;
+        border-radius: 2px;
+        background: var(--sm-note-backing);
+    }
+
+    /* 浮字：落子得分 / 侥幸 / 扣分，从格中心飘起淡出（transition，非 keyframes） */
+    .sm-floats {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+    }
+
+    .sm-float {
+        position: absolute;
+        left: var(--sm-x, 50%);
+        top: var(--sm-y, 50%);
+        transform: translate(-50%, -50%);
+        opacity: 1;
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+        text-shadow: var(--sm-float-shadow);
+        transition: transform 1s ease-out, opacity 1s ease-in;
+    }
+
+    .sm-float--go {
+        transform: translate(-50%, -190%);
+        opacity: 0;
+    }
+
+    .sm-float--ok { color: var(--sm-float-ok); }
+    .sm-float--deep { color: var(--sm-float-deep); }
+    .sm-float--muted { color: var(--sm-float-muted); }
+    .sm-float--wrong { color: var(--sm-float-wrong); }
+
+    .sm-replay-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 6px 8px 6px 14px;
+        border-radius: 12px;
+        background: var(--sm-glass);
+        border: 1px solid var(--sm-glass-line);
+        font-size: 14px;
+        color: var(--sm-text-dim);
+    }
+
+    /* ── 键盘面板 ── */
+    .sm-panel {
+        width: 100%;
+        max-width: 460px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .sm-message {
+        min-height: 2.6em;
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.3;
+        color: var(--sm-text-dim);
+        text-align: center;
+    }
+
+    .sm-pad {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 6px;
+    }
+
+    .sm-key,
+    .sm-tool {
+        min-height: 46px;
+        margin: 0;
+        border-radius: 10px;
+        border: 1px solid var(--sm-key-line);
+        background: var(--sm-key-bg);
+        color: var(--sm-text);
+        font: inherit;
+        cursor: pointer;
+        transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .sm-key {
+        font-family: Georgia, "Songti SC", serif;
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .sm-key:hover,
+    .sm-tool:hover {
+        background: var(--sm-key-bg-hover);
+    }
+
+    .sm-key--armed {
+        background: var(--sm-sel);
+        border-color: var(--sm-sel-ring);
+        color: var(--sm-accent-text);
+    }
+
+    .sm-key--done {
+        opacity: 0.38;
+    }
+
+    /* 手机上工具键窄：图标在上、文字在下（game-btn 只负责图标与文字的组合） */
+    .sm-tool {
+        flex-direction: column;
+        justify-content: center;
+        gap: 2px;
+        padding: 0 4px;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    /* 第 1 行：1–5 + 笔记；第 2 行：6–9 + 擦除 + 点灯 */
+    .sm-tool#sm-btn-notes { grid-column: 6; grid-row: 1; }
+
+    .sm-tool--on {
+        background: var(--sm-sel);
+        border-color: var(--sm-sel-ring);
+        color: var(--sm-accent-text);
+    }
+
+    /* ── 浮层 ── */
+    .sm-overlay {
+        background: var(--sm-overlay-bg);
+        color: var(--sm-text);
+        text-align: center;
+    }
+
+    .sm-kicker {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--sm-accent-text);
+    }
+
+    .sm-start-title,
+    .sm-overlay-title {
+        margin: 0;
+        font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+        font-size: 30px;
+        font-weight: 900;
+        text-shadow: var(--sm-title-glow);
+    }
+
+    .sm-start-copy,
+    .sm-overlay-copy {
+        max-width: 34em;
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--sm-text-dim);
+    }
+
+    .sm-howto {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin: 4px 0 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .sm-howto-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        max-width: 8.5em;
+        font-size: 12px;
+        line-height: 1.3;
+        color: var(--sm-text-dim);
+    }
+
+    .sm-howto-icon {
+        width: 32px;
+        height: 32px;
+        fill: none;
+        stroke: var(--sm-note);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .sm-howto-dot {
+        fill: var(--sm-accent);
+        stroke: none;
+    }
+
+    .sm-menu-heading {
+        margin: 8px 0 0;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        color: var(--sm-text-dim);
+    }
+
+    .sm-chapters {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        max-width: 420px;
+    }
+
+    .sm-chapter {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .sm-chapter-title {
+        margin: 0;
+        font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+        font-size: 16px;
+        color: var(--sm-accent-text);
+    }
+
+    .sm-level-list {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+    }
+
+    .sm-free {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        width: 100%;
+        max-width: 420px;
+    }
+
+    .sm-level,
+    .sm-free-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        min-height: 56px;
+        margin: 0;
+        padding: 6px 4px;
+        border-radius: 10px;
+        border: 1px solid var(--sm-key-line);
+        background: var(--sm-key-bg);
+        color: var(--sm-text);
+        font: inherit;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .sm-level:hover,
+    .sm-free-btn:hover {
+        background: var(--sm-key-bg-hover);
+    }
+
+    .sm-level--done {
+        border-color: var(--sm-sel-ring);
+    }
+
+    .sm-level-num {
+        font-family: Georgia, serif;
+        font-size: 12px;
+        color: var(--sm-text-dim);
+    }
+
+    .sm-level-name,
+    .sm-free-name {
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .sm-level-best {
+        font-size: 11px;
+        color: var(--sm-text-dim);
+    }
+
+    .sm-start-status {
+        min-height: 1.2em;
+        margin: 0;
+        font-size: 13px;
+        color: var(--sm-accent-text);
+    }
+
+    .sm-controls {
+        max-width: 34em;
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--sm-text-dim);
+    }
+
+    .sm-start-footer {
+        width: 100%;
+    }
+
+    .sm-btn-row {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .sm-result-score {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .sm-result-label {
+        font-size: 12px;
+        color: var(--sm-text-dim);
+    }
+
+    .sm-result-value {
+        font-family: Georgia, serif;
+        font-size: 44px;
+        line-height: 1.1;
+        color: var(--sm-accent-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .sm-result-best {
+        margin: 0;
+        font-size: 13px;
+        color: var(--sm-text-dim);
+    }
+
+    .sm-result-best--new {
+        color: var(--sm-accent-text);
+        font-weight: 800;
+    }
+
+    .sm-stats {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2px;
+        width: 100%;
+        max-width: 360px;
+        margin: 0;
+        padding: 8px 12px;
+        list-style: none;
+        border-radius: 12px;
+        background: var(--sm-glass);
+        border: 1px solid var(--sm-glass-line);
+    }
+
+    .sm-stat {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--sm-text-dim);
+        text-align: left;
+    }
+
+    .sm-stat-value {
+        color: var(--sm-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ── 桌面：棋盘在左、键盘在右（3×3 数字 + 一行工具） ── */
+    @media (width >= 1024px) {
+        .sm-panel {
+            width: 260px;
+            margin-top: 52px;
+        }
+
+        .sm-pad {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .sm-key {
+            min-height: 60px;
+            font-size: 26px;
+        }
+
+        .sm-tool#sm-btn-notes { grid-column: auto; grid-row: auto; }
+
+        .sm-tool {
+            flex-direction: row;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        /* 菜单比 460px 的舞台高：菜单期间棋盘退出布局，菜单随内容撑高舞台 */
+        .sm-stage--menu > .sm-board-wrap {
+            display: none;
+        }
+
+        .sm-start {
+            position: relative;
+            inset: auto;
+        }
+
+        .sm-message {
+            min-height: 4em;
+            text-align: left;
+        }
+    }
+
+    @media (width <= 380px) {
+        .sm-hud-label { font-size: 10px; }
+        .sm-hud-value { font-size: 14px; }
+
+        .sm-start-title,
+        .sm-overlay-title { font-size: 26px; }
+
+        .sm-level-name,
+        .sm-free-name { font-size: 13px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .sm-cell,
+        .sm-key,
+        .sm-tool,
+        .sm-level,
+        .sm-free-btn,
+        .sm-float {
+            transition: none;
+        }
+    }
+}

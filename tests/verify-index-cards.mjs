@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // 首页卡片 / i18n / 图标资源全部由 registry 驱动；同时守住首页源码体积预算。
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from './lib/registry.mjs';
@@ -207,8 +208,17 @@ const sizes = {
     'js/index-i18n-zh.js': Buffer.byteLength(zh),
     'public/icons/home-icons.svg': Buffer.byteLength(sprite),
 };
-// P3 加了新上线横排（每卡一张 OG 图 + sprite 图标），预算从 38 KiB 放到 44 KiB
-ok(sizes['index.html'] <= 44 * 1024, 'index.html ≤ 44 KiB', sizes['index.html']);
+// 首页 HTML 与中文懒加载块按 gzip（level 9）体积设预算——访客实际下载的是压缩后的字节。
+// 按原始字节算时，每款新游戏约 +1.5 KiB（卡片结构高度重复），每加两三款就得调一次预算；
+// 按 gzip 算每款只 +0.15 KiB 左右，预算衡量的才是真实的传输成本（2026-10-18 改口径，
+// 当时 index.html ≈ 7.2 KiB、中文块 ≈ 3.9 KiB）。
+const gz = text => gzipSync(Buffer.from(text), { level: 9 }).length;
+ok(gz(html) <= 9 * 1024, 'index.html gzip ≤ 9 KiB', gz(html));
+// 开发说明不进页面：Vite 不压缩 HTML，注释会原样发给访客，而且不重复的文字几乎压不动。
+// 只允许 gen 的 registry:begin/end 哨兵；说明写在 docs/proposal-home-layout.md §9
+const strayComments = (html.match(/<!--[\s\S]*?-->/g) || []).filter(c => !/^<!-- registry:(?:begin|end) [\w-]+ -->$/.test(c));
+ok(strayComments.length === 0, 'index.html 只有 registry 哨兵注释（结构说明见 docs/proposal-home-layout.md §9）',
+    strayComments.map(c => c.slice(0, 40)).join(' | '));
 // P3 拆成 src/home/ 包：入口只剩注入；整包预算 = 原单文件 14 KiB + P3（最近玩过 / 更多每日 / 新上线裁剪），
 // 单模块再各自封顶，防止又长回一个大文件
 ok(sizes['js/index-page.js'] <= 1024, 'js/index-page.js 入口 ≤ 1 KiB', sizes['js/index-page.js']);
@@ -217,7 +227,7 @@ for (const f of homeFiles) {
     const n = Buffer.byteLength(read(`${HOME_DIR}/${f}`));
     ok(n <= 5 * 1024, `${HOME_DIR}/${f} ≤ 5 KiB`, n);
 }
-ok(sizes['js/index-i18n-zh.js'] <= 8 * 1024, '中文懒加载块 ≤ 8 KiB', sizes['js/index-i18n-zh.js']);
+ok(gz(zh) <= 5 * 1024, '中文懒加载块 gzip ≤ 5 KiB', gz(zh));
 ok(sizes['public/icons/home-icons.svg'] <= 12 * 1024, '首页 SVG sprite ≤ 12 KiB', sizes['public/icons/home-icons.svg']);
 
 console.log(failed === 0 ? '\n首页 registry / 资源体积检查全部通过 ✅' : `\n${failed} 处失败 ❌`);

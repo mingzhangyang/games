@@ -367,6 +367,7 @@ function reviewHomeCardsStyles(root, cssPaths, htmlPaths, errors) {
  */
 export const POST_FREEZE_GAMES = Object.freeze([
     Object.freeze({ id: 'magnetic-garden', page: 'magnetic-garden.html', stylesheet: 'css/magnetic-garden.css', prefix: 'mg' }),
+    Object.freeze({ id: 'sudoku-mist', page: 'sudoku-mist.html', stylesheet: 'css/sudoku-mist.css', prefix: 'sm' }),
     Object.freeze({ id: 'loop-jail', page: 'loop-jail.html', stylesheet: 'css/loop-jail.css', prefix: 'lj' }),
 ]);
 export const POST_FREEZE_PAGES = new Set(POST_FREEZE_GAMES.map(game => game.page));
