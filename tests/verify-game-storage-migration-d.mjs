@@ -24,6 +24,7 @@ async function verifyStarsMigration({
     legacyKey,
     canonicalKey,
     initial,
+    expected = initial,
     updated,
     storage,
     slot,
@@ -34,8 +35,8 @@ async function verifyStarsMigration({
     mem.set(legacyKey, JSON.stringify(initial));
     for (const [key, value] of protocolEntries) mem.set(key, value);
 
-    assert.deepEqual(storage.get(slot, []), initial, `${name}: imports legacy stars`);
-    assert.equal(mem.get(canonicalKey), JSON.stringify(initial), `${name}: writes canonical stars slot`);
+    assert.deepEqual(storage.get(slot, []), expected, `${name}: imports legacy stars`);
+    assert.equal(mem.get(canonicalKey), JSON.stringify(expected), `${name}: writes canonical stars slot`);
     assert.equal(mem.get(legacyKey), JSON.stringify(initial), `${name}: retains legacy stars key`);
     for (const [key, value] of protocolEntries) {
         assert.equal(mem.get(key), value, `${name}: preserves protocol key ${key}`);
@@ -44,7 +45,7 @@ async function verifyStarsMigration({
     mem.set(legacyKey, JSON.stringify([1, 1, 1]));
     assert.deepEqual(
         storage.get(slot, []),
-        initial,
+        expected,
         `${name}: canonical slot wins after the first import`,
     );
 
@@ -61,11 +62,20 @@ async function verifyStarsMigration({
     }
 }
 
+const legacyCircuit = new Array(20).fill(0);
+legacyCircuit[0] = 1;  // removed S1 cannot be reassigned to the new first level
+legacyCircuit[9] = 3;  // retained M5
+legacyCircuit[12] = 2; // retained H3
+const mappedCircuit = new Array(20).fill(0);
+mappedCircuit[0] = 3;
+mappedCircuit[1] = 2;
+
 await verifyStarsMigration({
     name: 'Circuit',
     legacyKey: 'cc_stars',
     canonicalKey: 'game:circuit:v2:stars',
-    initial: [3, 2, 0, 1],
+    initial: legacyCircuit,
+    expected: mappedCircuit,
     updated: [3, 3, 1, 1],
     storage: CIRCUIT_STORAGE,
     slot: CIRCUIT_STORAGE_SLOTS.STARS,
@@ -75,6 +85,12 @@ await verifyStarsMigration({
     ],
     reimport: async () => (await import('../src/games/circuit/storage.js?reimport=circuit')).CIRCUIT_STORAGE,
 });
+
+reset();
+mem.set('cc_stars', JSON.stringify(legacyCircuit));
+mem.set('game:circuit:v2:stars', JSON.stringify([2, 1, 3]));
+assert.deepEqual(CIRCUIT_STORAGE.get(CIRCUIT_STORAGE_SLOTS.STARS, []), [2, 1, 3],
+    'existing v2 canonical state takes precedence over legacy imports');
 
 reset();
 const previous = new Array(20).fill(0);

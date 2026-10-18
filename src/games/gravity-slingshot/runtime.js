@@ -247,7 +247,7 @@ class GravityGame {
             const starLine = document.createElement('span');
             starLine.className = 'gd-chip-stars game-start-chip-stars';
             const n = this.stars[i] || 0;
-            starLine.textContent = n > 0 ? '⭐'.repeat(n) : '';
+            starLine.textContent = n > 0 ? '⭐'.repeat(n) : '☆☆☆';
             chip.append(num, starLine);
             chip.addEventListener('click', () => {
                 Sfx.click();

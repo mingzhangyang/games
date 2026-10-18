@@ -5,6 +5,7 @@
 // 求解：Union-Find 等电位——导线/tee 全臂/闭合开关/SPDT 当前触点=可传播边；
 //       灯泡/电池不传播；短路=find(+)===find(-)；灯亮=两端分属正负极分量。
 import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
+import { createClassicLevels } from './classic-levels.js';
 
 export const GRID_COLS = 14;
 export const GRID_ROWS = 10;
@@ -244,87 +245,12 @@ function corners(r1, c1, r2, c2) {
 }
 function vline(c, r1, r2) { const a = []; for (let r = r1; r <= r2; r++) a.push(W(r, c, 'v')); return a; }
 
-export const LEVELS = [];
-
-// ---- 中等（并联 / SPDT 选路） ----
-LEVELS.push(
-    { id: 'M5', diff: 'medium', par: 2, elements: [
-        ...corners(2, 3, 5, 10), ...vline(3, 3, 4), ...vline(10, 3, 4),
-        W(2, 4, 'h'), W(2, 5, 'h'), P(2, 6, 'w', 'e', 's', 1), T(2, 7, 'wes'), L(2, 8, 'h', 1), P(2, 9, 'w', 'e', 's', 1),
-        L(3, 6, 'v', 0), W(4, 6, 'v'),
-        W(3, 9, 'v'), W(4, 9, 'nw'), W(4, 8, 'h'), W(4, 7, 'ne'), W(3, 7, 'v'),
-        W(5, 4, 'h'), B(5, 5, 'h'), T(5, 6, 'wen'), W(5, 7, 'h'), W(5, 8, 'h'), W(5, 9, 'h'),
-    ] },
+// Campaign curation must not change the published daily puzzle pool.
+export const ORIGINAL_DAILY_LEVELS = Object.freeze(
+    createClassicLevels({ W, B, L, S, P, T, corners, vline }),
 );
-
-// ---- 困难（短路陷阱 / 旁路 / 串联） ----
-LEVELS.push(
-    { id: 'H3', diff: 'hard', par: 2, elements: [
-        ...corners(1, 3, 5, 10), W(1, 4, 'h'), L(1, 5, 'h', 0), W(1, 6, 'h'), W(1, 7, 'h'), W(1, 8, 'h'), W(1, 9, 'h'),
-        T(2, 3, 'nse'), T(4, 3, 'nse'), T(2, 10, 'nsw'), T(4, 10, 'nsw'), W(3, 3, 'v'), W(3, 10, 'v'),
-        W(2, 4, 'h'), S(2, 5, 'h', 0), L(2, 6, 'h', 1), W(2, 7, 'h'), W(2, 8, 'h'), W(2, 9, 'h'),
-        W(4, 4, 'h'), W(4, 5, 'h'), S(4, 6, 'h', 1), W(4, 7, 'h'), W(4, 8, 'h'), W(4, 9, 'h'),
-        W(5, 4, 'h'), B(5, 5, 'h'), W(5, 6, 'h'), W(5, 7, 'h'), W(5, 8, 'h'), W(5, 9, 'h'),
-    ] },
-    { id: 'H5', diff: 'hard', par: 3, elements: [
-        ...corners(1, 3, 5, 10), W(1, 4, 'h'), L(1, 5, 'h', 0), W(1, 6, 'h'), W(1, 7, 'h'), W(1, 8, 'h'), W(1, 9, 'h'),
-        T(2, 3, 'nse'), T(3, 3, 'nse'), T(4, 3, 'nse'), T(2, 10, 'nsw'), T(3, 10, 'nsw'), T(4, 10, 'nsw'),
-        W(2, 4, 'h'), S(2, 5, 'h', 0), L(2, 6, 'h', 1), W(2, 7, 'h'), W(2, 8, 'h'), W(2, 9, 'h'),
-        W(3, 4, 'h'), S(3, 5, 'h', 0), L(3, 6, 'h', 1), W(3, 7, 'h'), W(3, 8, 'h'), W(3, 9, 'h'),
-        W(4, 4, 'h'), S(4, 5, 'h', 0), L(4, 6, 'h', 1), W(4, 7, 'h'), W(4, 8, 'h'), W(4, 9, 'h'),
-        W(5, 4, 'h'), B(5, 5, 'h'), W(5, 6, 'h'), W(5, 7, 'h'), W(5, 8, 'h'), W(5, 9, 'h'),
-    ] },
-);
-
-// ---- 挑战（多重开关协同 / 短路对抗） ----
-LEVELS.push(
-    { id: 'C1', diff: 'expert', par: 3, elements: [
-        ...corners(1, 3, 6, 10), W(1, 4, 'h'), L(1, 5, 'h', 0), W(1, 6, 'h'), W(1, 7, 'h'), W(1, 8, 'h'), W(1, 9, 'h'),
-        T(2, 3, 'nse'), T(3, 3, 'nse'), T(4, 3, 'nse'), T(5, 3, 'nse'),
-        T(2, 10, 'nsw'), T(3, 10, 'nsw'), T(4, 10, 'nsw'), T(5, 10, 'nsw'),
-        S(2, 4, 'h', 0), S(2, 5, 'h', 1), L(2, 6, 'h', 1), W(2, 7, 'h'), W(2, 8, 'h'), W(2, 9, 'h'),
-        S(3, 4, 'h', 1), S(3, 5, 'h', 0), L(3, 6, 'h', 1), W(3, 7, 'h'), W(3, 8, 'h'), W(3, 9, 'h'),
-        S(4, 4, 'h', 0), S(4, 5, 'h', 0), L(4, 6, 'h', 0), W(4, 7, 'h'), W(4, 8, 'h'), W(4, 9, 'h'),
-        S(5, 4, 'h', 0), S(5, 5, 'h', 1), L(5, 6, 'h', 1), W(5, 7, 'h'), W(5, 8, 'h'), W(5, 9, 'h'),
-        W(6, 4, 'h'), W(6, 5, 'h'), B(6, 6, 'h'), W(6, 7, 'h'), W(6, 8, 'h'), W(6, 9, 'h'),
-    ] },
-    { id: 'C2', diff: 'expert', par: 3, elements: [
-        ...corners(2, 3, 5, 10),
-        T(3, 3, 'nse'), T(4, 3, 'nse'), T(3, 10, 'nsw'), T(4, 10, 'nsw'),
-        W(2, 4, 'h'), S(2, 5, 'h', 0), L(2, 6, 'h', 1), W(2, 7, 'h'), W(2, 8, 'h'), W(2, 9, 'h'),
-        W(3, 4, 'h'), P(3, 5, 'w', 'e', 's', 1), L(3, 6, 'h', 1), W(3, 7, 'h'), W(3, 8, 'h'), W(3, 9, 'h'),
-        W(4, 4, 'h'), T(4, 5, 'nwe'), W(4, 6, 'h'), S(4, 7, 'h', 0), W(4, 8, 'h'), W(4, 9, 'h'),
-        S(5, 4, 'h', 0), W(5, 5, 'h'), B(5, 6, 'h'), W(5, 7, 'h'), W(5, 8, 'h'), W(5, 9, 'h'),
-    ] },
-    { id: 'C3', diff: 'expert', par: 3, elements: [
-        ...corners(2, 3, 5, 10),
-        T(3, 3, 'nse'), T(3, 10, 'nsw'), W(4, 3, 'v'), W(4, 10, 'v'),
-        W(2, 4, 'h'), L(2, 5, 'h', 1), S(2, 6, 'h', 0), L(2, 7, 'h', 1), W(2, 8, 'h'), W(2, 9, 'h'),
-        W(3, 4, 'h'), S(3, 5, 'h', 0), L(3, 6, 'h', 1), W(3, 7, 'h'), W(3, 8, 'h'), W(3, 9, 'h'),
-        S(5, 4, 'h', 0), W(5, 5, 'h'), B(5, 6, 'h'), W(5, 7, 'h'), W(5, 8, 'h'), W(5, 9, 'h'),
-    ] },
-);
-
-LEVELS.push(
-    { id: 'C4', diff: 'expert', par: 3, elements: [
-        ...corners(1, 3, 5, 10), W(1, 4, 'h'), L(1, 5, 'h', 0), W(1, 6, 'h'), W(1, 7, 'h'), W(1, 8, 'h'), W(1, 9, 'h'),
-        T(2, 3, 'nse'), T(4, 3, 'nse'), T(2, 10, 'nsw'), T(3, 10, 'nsw'), T(4, 10, 'nsw'), W(3, 3, 'v'),
-        W(2, 4, 'h'), P(2, 5, 'w', 'e', 's', 1), P(2, 6, 'w', 'e', 's', 1), W(2, 7, 'h'), L(2, 8, 'h', 1), W(2, 9, 'h'),
-        W(3, 5, 'ne'), T(3, 6, 'nwe'), W(3, 7, 'h'), W(3, 8, 'h'), W(3, 9, 'h'),
-        W(4, 4, 'h'), S(4, 5, 'h', 0), L(4, 6, 'h', 0), W(4, 7, 'h'), W(4, 8, 'h'), W(4, 9, 'h'),
-        S(5, 4, 'h', 0), W(5, 5, 'h'), B(5, 6, 'h'), W(5, 7, 'h'), W(5, 8, 'h'), W(5, 9, 'h'),
-    ] },
-    { id: 'C5', diff: 'expert', par: 5, elements: [
-        ...corners(1, 3, 6, 10), W(1, 4, 'h'), L(1, 5, 'h', 0), W(1, 6, 'h'), W(1, 7, 'h'), W(1, 8, 'h'), W(1, 9, 'h'),
-        T(2, 3, 'nse'), T(3, 3, 'nse'), T(4, 3, 'nse'), T(5, 3, 'nse'),
-        T(2, 10, 'nsw'), T(3, 10, 'nsw'), T(4, 10, 'nsw'), T(5, 10, 'nsw'),
-        W(2, 4, 'h'), S(2, 5, 'h', 0), L(2, 6, 'h', 1), W(2, 7, 'h'), W(2, 8, 'h'), W(2, 9, 'h'),
-        W(3, 4, 'h'), S(3, 5, 'h', 0), L(3, 6, 'h', 1), W(3, 7, 'h'), W(3, 8, 'h'), W(3, 9, 'h'),
-        W(4, 4, 'h'), P(4, 5, 'w', 'e', 's', 1), L(4, 6, 'h', 1), W(4, 7, 'h'), W(4, 8, 'h'), W(4, 9, 'h'),
-        W(5, 4, 'h'), T(5, 5, 'wen'), W(5, 6, 'h'), S(5, 7, 'h', 1), W(5, 8, 'h'), W(5, 9, 'h'),
-        S(6, 4, 'h', 0), W(6, 5, 'h'), B(6, 6, 'h'), W(6, 7, 'h'), W(6, 8, 'h'), W(6, 9, 'h'),
-    ] },
-);
+const ACTIVE_CLASSIC_IDS = new Set(['M5', 'H3', 'H5', 'C1', 'C2', 'C3', 'C4', 'C5']);
+export const LEVELS = ORIGINAL_DAILY_LEVELS.filter(lv => ACTIVE_CLASSIC_IDS.has(lv.id));
 
 // ---- 实验（初中电路。暗灯必须熄灭，所以不能把开关全部拨通） ----
 // 拓扑按人教九年级「串联和并联 / 短路」和练习册里的楼梯双控、支路开关、局部短路重画，
@@ -372,8 +298,8 @@ LEVELS.push(...LAB);
 // ---- 每日挑战：FNV 选关 + mulberry32 重掷全部操作元件初态 ----
 // 校验初始 ≠ 解态（重试至多 16 次）；par 按重掷后初态重算。
 export function dailyLevel(todayKey) {
-    const idx = hashStringFNV('circuit-' + todayKey) % LEVELS.length;
-    const base = LEVELS[idx];
+    const idx = hashStringFNV('circuit-' + todayKey) % ORIGINAL_DAILY_LEVELS.length;
+    const base = ORIGINAL_DAILY_LEVELS[idx];
     let spec = base;
     for (let attempt = 0; attempt <= 16; attempt++) {
         const rng = mulberry32(hashStringFNV(todayKey + '#' + attempt));

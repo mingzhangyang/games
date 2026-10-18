@@ -29,4 +29,7 @@ export const CIRCUIT_STORAGE = createGameStorage('circuit', {
     legacy: {
         [CIRCUIT_STORAGE_SLOTS.STARS]: 'cc_stars',
     },
+    legacyMigrations: {
+        [CIRCUIT_STORAGE_SLOTS.STARS]: remapStars,
+    },
 });

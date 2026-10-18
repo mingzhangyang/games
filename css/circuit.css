@@ -388,14 +388,3 @@ body {
     --cc-cv-red-rgb: 212, 60, 59;
 }
 
-.cc-level-grid {
-    grid-template-columns: repeat(4, 1fr);
-}
-
-.cc-chip-stars { min-height: 12px; }
-
-.cc-level-note {
-    grid-column: 1 / -1;
-    padding-top: 6px;
-    text-align: left;
-}

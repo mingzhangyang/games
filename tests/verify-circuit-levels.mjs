@@ -1,6 +1,6 @@
 // verify-circuit-levels.mjs — circuit 数据层黄金断言（node 直跑，无需浏览器）
 import {
-    LEVELS, GRID_COLS, GRID_ROWS, operableIndexes, initStatesOf,
+    LEVELS, ORIGINAL_DAILY_LEVELS, GRID_COLS, GRID_ROWS, operableIndexes, initStatesOf,
     isCircuitSolved, minSteps, dailyLevel, solveCircuit, shortTags,
 } from '../src/games/circuit/model/levels.js';
 
@@ -111,6 +111,12 @@ for (const lv of LEVELS) {
     }
 }
 assert(shortLevels >= 1, '至少一关存在可复现的短路路径');
+
+// Published daily keys must always select the same original level on the same date.
+const oldDailyIds = ['S1','S2','S3','S4','S5','M1','M2','M3','M4','M5',
+    'H1','H2','H3','H4','H5','C1','C2','C3','C4','C5'];
+assert(ORIGINAL_DAILY_LEVELS.map(lv => lv.id).join() === oldDailyIds.join(),
+    '每日题库保持原始 20 道题和顺序');
 
 // ---- 每日挑战：731 天确定性 + 重掷合法性 ----
 const DAY_MS = 86400000;

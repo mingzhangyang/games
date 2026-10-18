@@ -93,13 +93,9 @@ export const MOBILE_FIT_SELECTORS = new Set([
     '.perks',
     '.cp-overlay',
     '.td-overlay',
-    '.game-shell:not(.game-shell--immersive)',
-    '.game-shell:not(.game-shell--immersive) > .game-footer',
-    '.game-shell:not(.game-shell--immersive) .game-stage:has(> .game-overlay--menu) > .game-overlay:not(.game-overlay--menu)',
-    '.game-shell:has(.game-overlay--menu:not(.hidden)) > .game-footer .game-footer-hint',
-    '.game-shell:has(.game-overlay--menu:not(.hidden)) .game-sidebar .game-side-card:first-of-type',
-    '.game-shell:has(.game-overlay--menu:not(.hidden)) .game-topbar .game-cut-box',
-    '.game-start-chip-stars',
+    '.cc-shell .game-start-level-grid',
+    '.cc-shell .game-start-chip-stars',
+    '.cc-shell .cc-level-note',
 ]);
 
 export function stripMobileFitLink(page, html, errors) {

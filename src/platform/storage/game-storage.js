@@ -16,12 +16,14 @@ function encode(value) {
 /**
  * Versioned per-game storage facade.
  * Migrations are functions keyed by the source version: { 1: value => nextValue }.
- * Legacy slots may list old keys to import on first read.
+ * Legacy slots may list old keys to import on first read; legacyMigrations
+ * transform those imported values only, without changing existing canonical slots.
  */
 export function createGameStorage(gameId, {
     version = 1,
     migrations = {},
     legacy = {},
+    legacyMigrations = {},
 } = {}) {
     if (!gameId || !Number.isInteger(version) || version < 1) {
         throw new TypeError('createGameStorage requires a gameId and positive integer version');
@@ -47,7 +49,11 @@ export function createGameStorage(gameId, {
         for (const legacyKey of Array.isArray(legacyKeys) ? legacyKeys : [legacyKeys]) {
             const raw = storageGet(legacyKey);
             if (raw == null) continue;
-            const value = decode(raw, raw);
+            const decoded = decode(raw, raw);
+            const mapLegacy = legacyMigrations[slot];
+            const value = typeof mapLegacy === 'function'
+                ? mapLegacy(decoded, { slot, legacyKey })
+                : decoded;
             storageSet(key(slot), encode(value));
             return value;
         }

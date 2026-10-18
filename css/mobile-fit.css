@@ -134,44 +134,18 @@
         border-radius: 0;
     }
 
-    /* ⑨ 短舞台不再把页脚钉到视口底：layout 的 min-height:100dvh + margin-top:auto
-       会在 4:3 棋盘下方留出一整段空白。沉浸式壳（塔防、飞剑等）自己管满屏，不动。 */
-    @media (width < 1024px) {
-        .game-shell:not(.game-shell--immersive) {
-            min-height: 0 !important;
-        }
-
-        .game-shell:not(.game-shell--immersive) > .game-footer {
-            margin-top: 0 !important;
-        }
-
-        /* 结算 / 暂停卡片按舞台绝对定位时，矮舞台会把卡片裁在棋盘里。菜单在场时
-           改成铺满视口；没有 --menu 的页面（黑白棋、拔萝卜）和沉浸式壳不进这条。 */
-        .game-shell:not(.game-shell--immersive) .game-stage:has(> .game-overlay--menu) > .game-overlay:not(.game-overlay--menu) {
-            position: fixed !important;
-            inset: 0;
-            z-index: 40;
-            border-radius: 0;
-            min-height: 100dvh;
-        }
+    /* Page-scoped Circuit lab menu additions, no frozen unlayered selectors. */
+    .cc-shell .game-start-level-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
 
-    /* ⑩ 开始菜单已经写了玩法：页脚提示和侧栏第一张说明卡是同一段话，菜单开着时收起。
-       记录、更多游戏仍留在侧栏。步骤盒在菜单上没有读数，一并藏掉。 */
-    .game-shell:has(.game-overlay--menu:not(.hidden)) > .game-footer .game-footer-hint {
-        display: none !important;
-    }
-
-    .game-shell:has(.game-overlay--menu:not(.hidden)) .game-sidebar .game-side-card:first-of-type {
-        display: none !important;
-    }
-
-    .game-shell:has(.game-overlay--menu:not(.hidden)) .game-topbar .game-cut-box {
-        display: none !important;
-    }
-
-    /* 未玩过的关卡不再画空星占位；有星的芯片高度不变。 */
-    .game-start-chip-stars {
+    .cc-shell .game-start-chip-stars {
         min-height: 12px;
+    }
+
+    .cc-shell .cc-level-note {
+        grid-column: 1 / -1;
+        padding-top: 6px;
+        text-align: left;
     }
 }

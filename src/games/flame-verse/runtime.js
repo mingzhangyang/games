@@ -388,7 +388,7 @@ export class FlameVerseGame {
             num.textContent = String(i + 1);
             const stars = document.createElement('span');
             stars.className = 'fv-chip-stars game-start-chip-stars';
-            stars.textContent = p.stars ? '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars) : '';
+            stars.textContent = '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
             btn.appendChild(num);
             btn.appendChild(stars);
             btn.addEventListener('click', () => { Sfx.click(); this.startLevel(i); });

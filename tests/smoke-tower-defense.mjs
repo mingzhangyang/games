@@ -56,12 +56,12 @@ const menuNavControls = await page.evaluate(() => ({
 }));
 check(
     menuNavControls.startFooterHomeCount === 0
-        && menuNavControls.startFooterSoundCount === 0
+        && menuNavControls.startFooterSoundCount === 1
         && menuNavControls.headerHomeCount === 1
         && menuNavControls.persistentFooterHintCount === 1
         && menuNavControls.persistentFooterChromeCount === 0
         && menuNavControls.persistentFooterMoreNavCount === 0,
-    '开始菜单不重复 Home / 声音；Header 保留唯一 Home 和声音，Footer 只保留 hint',
+    '开始菜单不重复 Home；Header 保留唯一 Home，Footer 只保留 hint',
     JSON.stringify(menuNavControls),
 );
 
