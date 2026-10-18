@@ -96,6 +96,19 @@ export const MOBILE_FIT_SELECTORS = new Set([
     '.cc-shell .game-start-level-grid',
     '.cc-shell .game-start-chip-stars',
     '.cc-shell .cc-level-note',
+    '.cc-shell',
+    '.cc-shell .cc-hud-level',
+    '.cc-shell .cc-toast',
+]);
+
+/**
+ * Two reviewed new feature-layer overrides for Circuit's lab layout. This is an
+ * exact property-and-value allowlist, not blanket permission to grow CSS debt.
+ * The P0 comparison remains immutable; verify-css-debt requires these exact rows.
+ */
+export const MOBILE_FIT_REVIEWED_IMPORTANTS = Object.freeze([
+    ['css/mobile-fit.css', '', '.cc-shell', '--frame-ratio', '1 !important'],
+    ['css/mobile-fit.css', '', '.cc-shell .cc-toast', 'top', 'auto !important'],
 ]);
 
 export function stripMobileFitLink(page, html, errors) {

@@ -94,10 +94,6 @@ body {
 .cc-icon-btn:hover { background: var(--cc-icon-btn-hover-bg); }
 
 .cc-hud-level {
-    min-width: 0;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
     font-size: 13.5px;
     font-weight: 800;
     color: var(--cc-hud-level-text);
@@ -145,8 +141,7 @@ body {
 /* ── 提示 ── */
 
 .cc-toast {
-    top: auto;
-    bottom: 12px;
+    top: 14px;
     font-size: 13px;
     font-weight: 700;
     color: var(--cc-toast-text);
@@ -317,14 +312,15 @@ body {
 }
 
 /* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
-   560×560 正方形逻辑场 → --frame-ratio: 1；
-   舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
+   560×420 横幅逻辑场 → --frame-ratio: 1.3333 (w/h)；
+   stage-h 取 960（同 lumen）：可用高度主导档位递增，
+   1280 档由 --frame-stage-cap 横向安全网兜住（≈904），1920 档 ≈1240 */
 .cc-shell {
     --frame-max-wide: 940px;
     --frame-stage: 560px;
     --frame-side: 300px;
     --frame-side-gap: 14px;
-    --frame-ratio: 1;
+    --frame-ratio: 1.3333;
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
@@ -335,7 +331,7 @@ body {
 :root {
     --cc-cv-amber-soft: #ffe9b0;
     --cc-cv-amber: #ffc94d;
-    --cc-cv-dim-wire: #8fa4d6;
+    --cc-cv-dim-wire: #3a4a78;
     --cc-cv-red: #e24b4a;
     --cc-cv-bg-a: #0a1230;
     --cc-cv-bg-b: #0b1436;
@@ -387,4 +383,3 @@ body {
     --cc-cv-amber-rgb: 227, 156, 0;
     --cc-cv-red-rgb: 212, 60, 59;
 }
-

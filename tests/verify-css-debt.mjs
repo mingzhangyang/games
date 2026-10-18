@@ -13,7 +13,7 @@ import { scanHtml } from './lib/css/html-inputs.mjs';
 import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
 import { verifyActivationSnapshot } from './lib/css/activation.mjs';
-import { reviewFeatureStyles } from './lib/css/feature-additions.mjs';
+import { reviewFeatureStyles, MOBILE_FIT_REVIEWED_IMPORTANTS } from './lib/css/feature-additions.mjs';
 import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
@@ -528,6 +528,10 @@ function verifyProject() {
                 errors,
                 'importantDeclarations migration',
             );
+            // Add only the two explicitly reviewed feature-layer overrides. Each
+            // tuple pins stylesheet, selector, property and value: unrelated
+            // !important growth remains a failure, as does removing an override.
+            expected.push(...MOBILE_FIT_REVIEWED_IMPORTANTS);
             expected = sortTuples(expected);
         }
         const delta = multisetDelta(actualDebt[key], expected);
