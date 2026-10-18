@@ -133,4 +133,40 @@
     .td-overlay {
         border-radius: 0;
     }
+
+    /* Circuit lab's square canvas requires a 1:1 stage. The 4:3 ratio remains in
+       the frozen page stylesheet; this exact reviewed feature-layer override wins
+       via important-layer precedence, without rewriting P0 evidence. */
+    .cc-shell {
+        --frame-ratio: 1 !important;
+    }
+
+    /* New properties are not present in the old page rule; no !important needed. */
+    .cc-shell .cc-hud-level {
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* The historic top offset is unlayered, so the replacement needs importance. */
+    .cc-shell .cc-toast {
+        top: auto !important;
+        bottom: 12px;
+    }
+
+    /* Page-scoped Circuit lab menu additions, no frozen unlayered selectors. */
+    .cc-shell .game-start-level-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .cc-shell .game-start-chip-stars {
+        min-height: 12px;
+    }
+
+    .cc-shell .cc-level-note {
+        grid-column: 1 / -1;
+        padding-top: 6px;
+        text-align: left;
+    }
 }

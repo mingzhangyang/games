@@ -188,8 +188,9 @@ for (const g of GAMES) {
             const declaredRepeat = /^repeat\(\s*(\d+)\s*,\s*1fr\s*\)$/.exec(gridTemplate);
             const gridTrackCount = declaredRepeat ? Number(declaredRepeat[1])
                 : gridTemplate === 'none' ? 0 : gridTemplate.split(/\s+/).filter(Boolean).length;
-            check(gridTrackCount === 5,
-                `${g.id}@${w}：W4a 选关网格必须保持五列`,
+            const expectedColumns = g.id === 'circuit' ? 4 : 5;
+            check(gridTrackCount === expectedColumns,
+                `${g.id}@${w}：W4a 选关网格必须保持 ${expectedColumns} 列`,
                 `${gridTrackCount} columns (computed grid-template-columns: ${gridTemplate})`);
             // W4b: assert component adoption and resolved geometry, including dynamic
             // level chips. Science Showcase intentionally overrides border radius to

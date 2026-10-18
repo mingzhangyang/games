@@ -1,7 +1,7 @@
 // verify-circuit-levels.mjs — circuit 数据层黄金断言（node 直跑，无需浏览器）
 import {
-    LEVELS, GRID_COLS, GRID_ROWS, operableIndexes, initStatesOf,
-    isCircuitSolved, minSteps, dailyLevel,
+    LEVELS, ORIGINAL_DAILY_LEVELS, GRID_COLS, GRID_ROWS, operableIndexes, initStatesOf,
+    isCircuitSolved, minSteps, dailyLevel, solveCircuit, shortTags,
 } from '../src/games/circuit/model/levels.js';
 
 let passed = 0, failed = 0;
@@ -50,9 +50,10 @@ function componentCount(spec) {
 
 console.log('== circuit-levels ==');
 assert(LEVELS.length === 20, 'LEVELS 应为 20 关，实际 ' + LEVELS.length);
-for (const diff of ['easy', 'medium', 'hard', 'expert']) {
-    assert(LEVELS.filter((l) => l.diff === diff).length === 5, diff + ' 应为 5 关');
-}
+assert(LEVELS.filter((l) => l.diff === 'lab').length === 12, 'lab 应为 12 关');
+assert(LEVELS.filter((l) => l.par < 2).length === 0, '一步就过的关已删除');
+const kept = ['M5', 'H3', 'H5', 'C1', 'C2', 'C3', 'C4', 'C5', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+assert(LEVELS.map((l) => l.id).join() === kept.join(), '关卡顺序应是保留的原关 + 实验关');
 assert(new Set(LEVELS.map((l) => l.id)).size === 20, '关卡 id 不得重复');
 
 for (const lv of LEVELS) {
@@ -62,7 +63,12 @@ for (const lv of LEVELS) {
     const k = operableIndexes(lv).length;
     assert(bats.length === 1, lv.id + ' 恰好 1 个电池');
     assert(targets.length >= 1, lv.id + ' 至少 1 个目标灯');
+    assert(els.every((e) => !(e.target && e.dark)), lv.id + ' 灯泡不能同时是目标又必须熄灭');
     assert(k >= 1 && k <= 8, lv.id + ' 可操作元件数 1..8，实际 ' + k);
+    if (lv.diff === 'lab') {
+        assert(lv.par >= 4, lv.id + ' 实验关 par 至少 4，实际 ' + lv.par);
+        assert(lv.topic && lv.topic.zh && lv.topic.en, lv.id + ' 实验关要有中英课题');
+    }
 
     const cells = new Set();
     let inBounds = true, noOverlap = true;
@@ -87,6 +93,30 @@ for (const lv of LEVELS) {
     assert(ms === lv.par, lv.id + ' par=' + lv.par + ' 应等于 BFS 最少步数 ' + ms);
     assert(ms >= 1, lv.id + ' 至少需要 1 步');
 }
+
+let shortLevels = 0;
+for (const lv of LEVELS) {
+    const k = operableIndexes(lv).length;
+    for (let mask = 0; mask < (1 << k); mask++) {
+        const st = [];
+        for (let i = 0; i < k; i++) st.push((mask >> i) & 1);
+        if (!solveCircuit(lv, st).short) continue;
+        const tags = shortTags(lv, st);
+        assert(tags.size > 0, lv.id + ' 短路要有一条导线路径');
+        let onlyWire = true;
+        for (const tag of tags) if (!tag.startsWith('w:') && !tag.startsWith('t:')) onlyWire = false;
+        assert(onlyWire, lv.id + ' 短路着色不含开关');
+        shortLevels += 1;
+        break;
+    }
+}
+assert(shortLevels >= 1, '至少一关存在可复现的短路路径');
+
+// Published daily keys must always select the same original level on the same date.
+const oldDailyIds = ['S1','S2','S3','S4','S5','M1','M2','M3','M4','M5',
+    'H1','H2','H3','H4','H5','C1','C2','C3','C4','C5'];
+assert(ORIGINAL_DAILY_LEVELS.map(lv => lv.id).join() === oldDailyIds.join(),
+    '每日题库保持原始 20 道题和顺序');
 
 // ---- 每日挑战：731 天确定性 + 重掷合法性 ----
 const DAY_MS = 86400000;

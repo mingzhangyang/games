@@ -13,7 +13,7 @@ import { scanHtml } from './lib/css/html-inputs.mjs';
 import { auditedJavaScriptFiles, scanRuntimeStyleSources } from './lib/css/runtime-sources.mjs';
 import { verifySemanticSnapshot } from './lib/css/semantic-contract.mjs';
 import { verifyActivationSnapshot } from './lib/css/activation.mjs';
-import { reviewFeatureStyles } from './lib/css/feature-additions.mjs';
+import { reviewFeatureStyles, MOBILE_FIT_REVIEWED_IMPORTANTS } from './lib/css/feature-additions.mjs';
 import {
     readGitFile, resolveComparisonBase, verifyRuleMigrations,
 } from './lib/css/migration-contract.mjs';
@@ -528,6 +528,13 @@ function verifyProject() {
                 errors,
                 'importantDeclarations migration',
             );
+            // A comparison base that already includes this change carries the
+            // reviewed tuples in baseImportantDeclarations. Only account for
+            // still-missing rows; adding them twice would break future PRs even
+            // when no stylesheet changes occur.
+            for (const reviewed of MOBILE_FIT_REVIEWED_IMPORTANTS) {
+                if (!expected.some(row => sameJson(row, reviewed))) expected.push(reviewed);
+            }
             expected = sortTuples(expected);
         }
         const delta = multisetDelta(actualDebt[key], expected);

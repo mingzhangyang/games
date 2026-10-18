@@ -1118,7 +1118,7 @@
         "zh": "电路谜题"
       },
       "desc": {
-        "meta": "电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 handcrafted levels plus a daily puzzle for the whole world.",
+        "meta": "电路谜题 Circuit — a physics puzzle of switches and circuits. Flip switches, route the current, light up every target bulb — and beware the short circuit. 20 levels: the one-flip puzzles are gone, and a middle-school lab set remains, plus a daily puzzle.",
         "og": "Flip switches, route the current, light every target bulb — and dodge the short circuit.",
         "twitter": "Flip switches, route current, light every bulb."
       },
@@ -1146,7 +1146,7 @@
       },
       "stage": {
         "w": 560,
-        "h": 420
+        "h": 560
       },
       "sitemap": {
         "changefreq": "daily",
@@ -1158,8 +1158,8 @@
         "iconClass": "circuit",
         "category": "science",
         "desc": {
-          "en": "Flip switches, route the current, light every bulb — and dodge the short circuit. 20 levels plus a daily puzzle.",
-          "zh": "拨动开关，接通电流，点亮全部目标灯泡——小心短路！20 关手工关卡 + 每日谜题。"
+          "en": "Flip switches, route the current, light every bulb — and dodge the short circuit. 20 levels, one-flip puzzles removed, plus a daily puzzle.",
+          "zh": "拨动开关，接通电流，点亮目标灯泡，并让带 × 的灯保持熄灭。20 关（已去掉一步就过的关）+ 每日谜题。"
         },
         "tag": {
           "en": "Puzzle",
