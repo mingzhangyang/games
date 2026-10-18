@@ -158,13 +158,16 @@ try {
         await navigator.serviceWorker.ready;
     });
     await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
-    await waitForOwned(page, ['games-cache-v2', cacheName('v1')]);
+    await waitForOwned(page, [cacheName('v1')]);
+    assert(!('games-cache-v2' in await counts(page)),
+        'first activation immediately deletes all legacy v2 resources');
     await page.setOfflineMode(true);
     await page.reload({ waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.home), 'v1', 'first-install offline homepage');
-    // Prior v2 cache used full navigation URLs. Ignore search while migrating.
-    await page.goto(base + '/old-game.html', { waitUntil: 'domcontentloaded' });
-    assert.equal(await page.title(), 'Old offline game', 'legacy query navigation still works offline');
+    // Legacy cache content must never be served after the new SW activates.
+    await page.goto(base + '/old-game.html', { waitUntil: 'load' });
+    assert.equal(await page.$eval('body', el => el.dataset.home), 'v1',
+        'offline unknown route falls back to current homepage, not legacy HTML');
     await page.setOfflineMode(false);
     await page.goto(base + '/game.html?daily=1', { waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.game), 'v1');
@@ -182,16 +185,18 @@ try {
     await page.setOfflineMode(false);
     await page.close();
     page = await open('/');
-    await waitForOwned(page, [cacheName('v1'), cacheName('v2')]);
+    await waitForOwned(page, [cacheName('v2')]);
     assert.equal(await page.$eval('body', el => el.dataset.home), 'v2');
     await checkSaved(page);
     assert((await keys(page)).includes('unrelated-feature-cache'), 'unowned caches preserved');
-    assert(!('games-cache-v2' in await counts(page)), 'legacy cache is removed on next activation');
+    assert(!(await keys(page)).includes(cacheName('v1')),
+        'previous generation fully deleted on activation');
     console.log('SW growth: legacy ' + legacyCount + ' entries; after v2 ' + JSON.stringify(await counts(page)));
 
     await page.setOfflineMode(true);
     await page.goto(base + '/game.html', { waitUntil: 'load' });
-    assert.equal(await page.$eval('body', el => el.dataset.game), 'v1', 'previous-version offline game entry');
+    assert.equal(await page.$eval('body', el => el.dataset.home), 'v2',
+        'previously visited old game is not served offline after update');
     await page.setOfflineMode(false);
     await page.goto(base + '/game.html', { waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.game), 'v2');
@@ -202,11 +207,21 @@ try {
     await waitForWaiting(page);
     await page.close();
     page = await open('/');
-    await waitForOwned(page, [cacheName('v2'), cacheName('v3')]);
+    await waitForOwned(page, [cacheName('v3')]);
     await checkSaved(page);
     await page.setOfflineMode(true);
     await page.goto(base + '/game.html', { waitUntil: 'load' });
-    assert.equal(await page.$eval('body', el => el.dataset.game), 'v2', 'last version still available offline');
+    assert.equal(await page.$eval('body', el => el.dataset.home), 'v3',
+        'no old v2 game survives a v3 deployment');
+    await page.setOfflineMode(false);
+    await page.goto(base + '/game.html', { waitUntil: 'load' });
+    assert.equal(await page.$eval('body', el => el.dataset.game), 'v3');
+    await page.waitForFunction(async () =>
+        Boolean(await (await caches.open('games-cache-v3-test-v3')).match('/game.html')));
+    await page.setOfflineMode(true);
+    await page.reload({ waitUntil: 'load' });
+    assert.equal(await page.$eval('body', el => el.dataset.game), 'v3',
+        'current version of game works offline after visiting it');
     await page.setOfflineMode(false);
     console.log('SW bounded after three releases: ' + JSON.stringify(await counts(page)));
 
@@ -223,8 +238,8 @@ try {
         const r = await navigator.serviceWorker.getRegistration();
         return !r.installing;
     }, { timeout: 10000 });
-    assert.deepEqual(await owned(page), [cacheName('v2'), cacheName('v3')].sort(),
-        'failed v4 precache removes its partial cache');
+    assert.deepEqual(await owned(page), [cacheName('v3')],
+        'failed v4 precache removes its partial cache without losing current version');
     assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).waiting), null);
     brokenInstall = false;
 
@@ -233,11 +248,13 @@ try {
     await waitForWaiting(page);
     await page.close();
     page = await open('/');
-    await waitForOwned(page, [cacheName('v2'), cacheName('v3')]);
+    await waitForOwned(page, [cacheName('v2')]);
     await page.reload({ waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.home), 'v2', 'rollback to earlier build');
+    assert(!(await keys(page)).includes(cacheName('v3')),
+        'rollback also removes superseded version cache');
     await checkSaved(page);
-    console.log('PASS real Chromium SW: stamped production offline, 3 deploys, open tabs, failed install, rollback, stored data');
+    console.log('PASS real Chromium SW: current-only cache, legacy removal, 3 deploys, old tabs, failed install, rollback, storage preserved');
 } finally {
     if (page && !page.isClosed()) await page.close();
     await browser.close();

@@ -55,11 +55,11 @@ display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不
 
 ## 架构评审（2026-10-18）确认、待独立改动的缺口
 
-- ✅ **Service Worker 缓存长期累积（本 PR 修复）**：构建产物注入内容指纹，SW 更新不再
-  `skipWaiting` 抢占旧页面；激活后只保留当前和前一代 Games 缓存，旧 `games-cache-v2`
-  在第二次切换时淘汰。首页关键资源安装期预缓存并采用失败不切换；支持离线回退。
-  新增真实 SW Chromium 多版本/断网/回退测试，详见 `docs/service-worker-cache.md`。
-  保留一代缓存属于受控的离线取舍；长期打开的旧标签页会延迟激活与清理。
+- ✅ **Service Worker 缓存长期累积（PR #163）**：构建产物注入内容指纹，SW 更新不再
+  `skipWaiting` 抢占旧页面；新 SW 激活时立即清除**所有旧版 Games 缓存**（包括
+  `games-cache-v2`），只保留当前版本。首页关键资源安装期预缓存，失败不切换；
+  离线只使用当前缓存，不回退到旧版。新增真实 SW Chromium 多版本/断网/回退测试，
+  详见 `docs/service-worker-cache.md`。长期打开的旧标签页会延迟激活与清理。
 - **`@vitejs/plugin-legacy` 让 JS 产物翻倍**：`targets: ['defaults', 'not IE 11']` 覆盖的浏览器全都支持
   ES module + 动态 import，但构建仍为每个入口额外输出一份 SystemJS legacy 包（`dist/assets/js` 105 个文件里
   55 个是 `*-legacy-*`）。去掉插件需要显式设置 `build.target`（例如 `['es2020', 'safari14']`）以保持现有

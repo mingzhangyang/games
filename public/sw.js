@@ -1,7 +1,7 @@
 /* Service Worker — Mini Games Collection
- * Navigation: network first, offline fallback to the current/previous cache.
+ * Navigation: network first, offline fallback from the CURRENT cache only.
  * Static assets: immutable cache-first within the current build.
- * The previous build is an offline-only fallback (never serve its assets when online).
+ * Old generations are deleted on activation; no retained previous version.
  * Other origins, non-GET requests and ranged responses are untouched.
  *
  * Build stamp and precache list are injected by tools/build/service-worker-cache.mjs.
@@ -19,23 +19,12 @@ function isOwnedCache(name) {
     return name === LEGACY_CACHE || name.startsWith(CACHE_PREFIX);
 }
 
-async function matchPrevious(request) {
-    // CacheStorage key iteration is insertion-ordered. Search newest first, never
-    // consult unrelated caches from another app sharing this origin.
-    const names = (await caches.keys()).filter(name => isOwnedCache(name) && name !== CACHE);
-    for (const name of names.reverse()) {
-        const response = await (await caches.open(name)).match(request, { ignoreSearch: true });
-        if (response) return response;
-    }
-    return undefined;
-}
-
 self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const existed = (await caches.keys()).includes(CACHE);
         try {
             const cache = await caches.open(CACHE);
-            // An incomplete precache must NOT replace a working offline version.
+            // An incomplete precache must NOT replace the active version.
             await cache.addAll(PRECACHE);
         } catch (error) {
             if (!existed) await caches.delete(CACHE);
@@ -49,11 +38,10 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
     event.waitUntil((async () => {
         const names = (await caches.keys()).filter(isOwnedCache);
-        // Exactly two generations: current + most recently created predecessor.
-        // Keeping one predecessor preserves offline visits across one deployment.
-        const older = names.filter(name => name !== CACHE);
-        const previous = older[older.length - 1];
-        await Promise.all(names.filter(name => name !== CACHE && name !== previous)
+        // Once all clients of the previous SW have closed, remove EVERY older
+        // Games cache including the original unbounded games-cache-v2.
+        // Do not touch caches owned by other apps on this origin.
+        await Promise.all(names.filter(name => name !== CACHE)
             .map(name => caches.delete(name)));
         await self.clients.claim();
     })());
@@ -81,10 +69,10 @@ self.addEventListener('fetch', event => {
                 return response;
             } catch {
                 if (key) {
-                    const exact = await cache.match(key) || await matchPrevious(key);
+                    const exact = await cache.match(key);
                     if (exact) return exact;
                 }
-                return await cache.match('/') || await matchPrevious('/') || Response.error();
+                return await cache.match('/') || Response.error();
             }
         })());
         return;
@@ -105,7 +93,7 @@ self.addEventListener('fetch', event => {
             }
             return fresh;
         } catch {
-            return await matchPrevious(request) || Response.error();
+            return Response.error();
         }
     })());
 });
