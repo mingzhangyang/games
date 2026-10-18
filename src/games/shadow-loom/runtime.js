@@ -389,8 +389,15 @@ export class ShadowLoomGame {
         if (!hasSilhouettes(id)) {
             this.showLoadStatus('loadingScene');
             if (this.state !== 'menu') this.toast(this.t('loadingScene'), 5500);
+            let watchdog;
             try {
-                await loadSilhouettes(id);
+                // A stalled mobile connection must not leave the scene pending forever.
+                await Promise.race([
+                    loadSilhouettes(id),
+                    new Promise((_, reject) => {
+                        watchdog = setTimeout(() => reject(new Error('silhouette request timed out: ' + id)), 20000);
+                    }),
+                ]);
             } catch (error) {
                 if (token !== this.loadTicket) return false;
                 // Keep progress untouched and show an actionable recovery path.
@@ -398,6 +405,8 @@ export class ShadowLoomGame {
                 this.showMenu();
                 this.showLoadStatus('loadFailed');
                 return false;
+            } finally {
+                clearTimeout(watchdog);
             }
         }
         if (token !== this.loadTicket) return false;
@@ -945,7 +954,7 @@ export class ShadowLoomGame {
         sc.background(ctx, rs);
         // Menu can render before any level is downloaded. Never touch geometry
         // in this state; the menu remains interactive during slow/offline loads.
-        if (!hasSilhouettes(this.level.id)) return;
+        if (!hasSilhouettes(this.level.id) || this.st.pieces.length !== this.level.pieces.length) return;
 
         // 纸幕透光：亮区跟着灯走；接近目标时整体增亮，完成时更亮
         const L = R.lampModel(this.st.lamp);
