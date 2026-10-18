@@ -4,8 +4,7 @@
    布局：Immersive Stage（css/layout.css §7 契约），本文件只管配色、字体与浮层内容，
    不写 shell / topbar / stage 的几何。画布颜色只在这里定义一次（--lj-cv-*），
    由 src/games/loop-jail/renderer.js 经 bindPalette 读取。
-   CSS 冻结（P0/P5）之后新增的游戏页：全部规则归 @layer pages、选择器只认本页前缀，
-   不新增未分层债务（tests/lib/css/feature-additions.mjs 的 POST_FREEZE_GAMES 校验）。
+   全部规则归 @layer pages、选择器只认本页前缀（新游戏页的默认写法）。
    ───────────────────────────────────────────── */
 
 @layer pages {

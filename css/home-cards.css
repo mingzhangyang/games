@@ -6,9 +6,8 @@
    上方是渐进增强的 sticky 筛选条（src/home/filter.js 绑定后才去掉 hidden）。P3 加最近玩过 / 新上线
    横排 / Daily Hub「更多每日」/ 页脚一行 Perks（docs/proposal-home-layout.md §4.2 / §4.4 / §4.5）。
 
-   本文件是 CSS P0/P5 冻结之后的**附加特性样式表**（见 tests/lib/css/feature-additions.mjs）：
-   css/index.css 一条不改；全部规则在 @layer contracts、选择器逐条登记。只有要压过冻结的
-   unlayered 页面声明时才用 !important（分层 !important 与 <link> 顺序无关地胜出），
+   附加特性样式表：全部规则在 @layer contracts，链接在 index.css 之后。只有要压过
+   unlayered 的 index.css 声明时才用 !important（分层 !important 与 <link> 顺序无关地胜出），
    新增属性用普通声明。断言见 tests/verify-index-cards.mjs / verify-index-layout.mjs /
    smoke-index.mjs。
    ───────────────────────────────────────────── */

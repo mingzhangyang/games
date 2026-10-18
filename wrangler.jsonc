@@ -16,12 +16,5 @@
 			"pattern": "game.orangely.xyz",
 			"custom_domain": true
 		}
-	],
-	"kv_namespaces": [
-		{
-			"binding": "GAME_SCORES",
-			"id": "fe5897ff187e4ddca2e2430dcfe43e09",
-			"remote": true
-		}
 	]
 }

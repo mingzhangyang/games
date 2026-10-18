@@ -8,11 +8,11 @@
 > 而不是每页自己写一套容器/顶栏/画布/侧栏几何。
 
 - 契约文件：`css/layout.css`（骨架与 `--frame-*` 参数）、`css/tokens.css`（颜色/圆角/控件尺寸）
-- 引入顺序（硬性）：`tokens.css → layout.css → <game>.css → mobile-fit.css → more-games.css`
-  - `mobile-fit.css`（PR #135）：全站移动端可见视口契约，首页与每个注册页各引一次、位于 layout 之后 more-games 之前；由 `tests/lib/css/feature-additions.mjs` 审核（只许 `@layer contracts` + 选择器白名单）。新页脚手架 `src/platform/shell/render-game-shell.js` 已自带。用到 `scoreboard-dialog.css` 的页面把它放在 layout 与 more-games 之间（mobile-fit 之前）
+- 引入顺序（硬性，`tests/verify-architecture.mjs` 逐页校验）：`tokens.css → layout.css → <game>.css → [scoreboard-dialog.css] → [stage-status.css] → mobile-fit.css → more-games.css`（首页：`index.css → home-cards.css → mobile-fit.css`）
+  - `mobile-fit.css`（PR #135）：全站移动端可见视口契约，首页与每个注册页各引一次、位于 layout 之后 more-games 之前，规则只写在 `@layer contracts`。新页脚手架 `src/platform/shell/render-game-shell.js` 已自带。用到 `scoreboard-dialog.css` 的页面把它放在 layout 与 more-games 之间（mobile-fit 之前）
   - 在这之前：gen 的 `head` 区域输出同步脚本 `/theme-boot.js`，必须先于任何样式表（首屏主题，见 `theme.md`）
   - 五个科学实验室游戏（crystal-bloom / echo-cave / maxwell-demon / flame-verse / ripple-duet）在 layout 与页面 CSS 之间多一层 `science-showcase.css`；这是源码/生成器的 authoring 顺序，不再依赖构建后 link 重排
-- 历史参考：`tools/archive/migrations/apply-layout-unification.py` 已归档，不用于日常开发。当前直接按本文接入共享 `game-*` 骨架与 `--frame-*` 配置，并运行现行布局校验。
+- 直接按本文接入共享 `game-*` 骨架与 `--frame-*` 配置，并运行现行布局校验（当年的一次性迁移脚本已删除，见 git 历史）。
 - 校验工具：`tools/dev/layout-metrics.mjs`、`tools/dev/shots.mjs`、`tests/lib/serve-static.mjs`、
   `tests/verify-desktop-frame.mjs`、`tests/verify-stats-drawer.mjs`
 
@@ -59,7 +59,7 @@
 - `layout.css` 的 `@layer reset` 是已接入页面的顶层默认 reset owner：带有 `game-reset` root opt-in（`class="game-reset"` 位于 `<html>`）的页面由 `html.game-reset, html.game-reset *` 统一 `margin: 0`、`padding: 0`、`box-sizing: border-box`，因此 document element 也与原通配符 reset 等价；旁边的 `*, *::before, *::after` 继续负责全站既有的伪元素 `box-sizing`。未迁移的消费者（例如首页、Gomoku、Firefly Signal）不自动获得新的元素级 margin/padding reset；页面 CSS 不得再复制这条 opt-in 规则；Tetris 的额外触控禁选行为仍属于它自己的 reset 例外。
 - `layout.css` 的 `@layer contracts` 是**已 opt-in 页面**的标准 `.hidden` 唯一 owner：选择器为 `html.game-hidden-contract .hidden`，声明固定为 `display: none !important`。仅 20 个原有 `display:none` 的游戏页面在文档 `<html>` 上带 `game-hidden-contract`；共享 layout 的其他消费者不能自动继承这项状态。Math Rain 的 `.screen.hidden` 是 `visibility/opacity` 淡入淡出（180ms），属于有意保留的**不同语义**，不参与这个 opt-in。菜单和结果层仍通过原有 `.hidden` / `:has(...:not(.hidden))` 语义工作。
 - 带有 `game-icon-btn` 的页面图标钮统一使用共享 `.game-icon-btn:active` 缩放；页面前缀的 `*.icon-btn:active` 不得重新出现。玩法按钮（如 `*-action-row`）不是这个语义 family，不能因为选择器形似就并入。
-- 这些跨文件精确重复由 `tests/css-layer-migration-state.json` 的 `w3-*` `kind: "dedupe"` 事务登记。事务必须列出所有源 occurrence、目标是新建还是复用；只要目标选择器不同，就必须附带逐源、逐 stylesheet consumer 的 adoption evidence（图标钮检查 HTML 是否同时带 shared class；reset 检查文档 `<html>` 根元素是否显式 opt-in），并通过 `verify-css-debt` 的声明与规则数 delta 校验；不能直接改 P0 快照来隐藏删除。
+- 行为由 `tests/verify-css-hidden-contract.mjs`（`.hidden` opt-in）与各共享布局浏览器校验锁住；W3 当时的 dedupe 事务记录见 `docs/archive/`。
 
 ### 1.1.2 开始菜单 / 选关共享默认值（W4a，2026-10-09）
 
@@ -299,16 +299,15 @@ computed sidebar `max-height` / `overflow-y` / `overscroll-behavior` 与 scrollb
 `shared-css-first` 因此曾在 `transformIndexHtml` 阶段重排 stylesheet links。P4 已用同一套产物行为门禁证明
 “插件开启 / 插件关闭”在当前架构上等价，P5 又把剩余未分层规则精确冻结为 compatibility allowlist。
 
-P6 已在 #112 验收；生产证据、后续变更流程与回滚边界见[最终交接](../architecture-v2-final-handoff.md)。
+P6 已在 #112 验收；当时的生产证据与回滚边界见[最终交接](../archive/architecture-v2-final-handoff.md)（历史记录）。
 
 从 P6 起：
 
 - `shared-css-first` 已删除，`CSS_LAYER_CANARY` 也已删除；
 - **物理 `<link>` 顺序不再是生产正确性的独立契约**，不得重新引入 post-build link sorting；
 - 源码/生成器仍按 `tokens → layout → [science-showcase] → 页面 → mobile-fit → more-games` 组织，便于审阅和静态分析；
-- 当前仍存在的未分层规则继续受 immutable P0、append-only migration ledger 与 P5 frozen counts 约束，不能借 P6
-  名义重新基线或静默增长；
-- 任何未来 shared cascade 改动都必须通过源码态 + `dist/` 的 P3/P4 行为门禁，而不是依赖人工猜测 link 顺序。
+- 剩余未分层规则是普通页面 CSS；迁移期的 P0 快照 / ledger / frozen counts 已于 2026-10-18 退役（记录见 `docs/archive/`）；
+- 任何 shared cascade 改动都必须通过源码态 + `dist/` 的行为门禁（`npm run verify` + `npm run build && npm run verify:dist`），而不是依赖人工猜测 link 顺序。
 
 修改布局后仍需在实际产物上复验，而不只是 dev server：
 

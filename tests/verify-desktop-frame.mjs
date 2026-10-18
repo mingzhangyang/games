@@ -10,7 +10,6 @@
 //   h. 无 pageerror
 // 用法：node tests/verify-desktop-frame.mjs [baseUrl]
 import puppeteer from 'puppeteer-core';
-import { readFileSync } from 'node:fs';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
@@ -18,23 +17,7 @@ import { registry } from './lib/registry.mjs';
 const CHROME = CHROME_PATH;
 const BASE = process.argv[2] || 'http://127.0.0.1:8899';
 
-// P0 几何 baseline 与 frame-budget registry membership 是同一个契约。
-// 先对未过滤的完整集合做一一对账；VERIFY_PAGES 只能减少本次测量工作量，
-// 不能改变“哪些页面属于 baseline”的事实。
 const FRAME_BUDGET_GAMES = registry.withCap('frame-budget');
-const WIDTH_BASELINE_ZH = JSON.parse(readFileSync(
-    new URL('./css-layer-p0-baseline.json', import.meta.url), 'utf8',
-)).computedBaseline.desktopFrame.widthsZh;
-const FRAME_BUDGET_PAGE_IDS = FRAME_BUDGET_GAMES.map(game => game.id).sort();
-const BASELINE_PAGE_IDS = Object.keys(WIDTH_BASELINE_ZH).sort();
-if (JSON.stringify(FRAME_BUDGET_PAGE_IDS) !== JSON.stringify(BASELINE_PAGE_IDS)) {
-    const registryOnly = FRAME_BUDGET_PAGE_IDS.filter(id => !BASELINE_PAGE_IDS.includes(id));
-    const baselineOnly = BASELINE_PAGE_IDS.filter(id => !FRAME_BUDGET_PAGE_IDS.includes(id));
-    console.error('FAIL desktop-frame P0 coverage contract changed.');
-    if (registryOnly.length) console.error('  frame-budget pages missing from baseline: ' + registryOnly.join(', '));
-    if (baselineOnly.length) console.error('  baseline pages no longer carrying frame-budget: ' + baselineOnly.join(', '));
-    process.exit(1);
-}
 
 // 画幅预算页 = 挂 frame-budget cap 的游戏；ratio 由注册表 stage.w/h 派生（不再手写 0.75）
 const PAGES = Object.fromEntries(
@@ -437,52 +420,6 @@ if (regressionPage) {
 }
 
 await browser.close();
-
-// P0 CSS cascade snapshot：冻结代表性页面的桌面舞台宽度，迁移 PR 必须显式对账。
-// 有意的产品改动造成的几何变化：P0 快照本身不可改（verify-css-debt），只能在这里逐条登记。
-// 每条锁死「P0 原值 → 新值」两端：P0 原值必须仍与快照一致，实测必须恰好等于新值 —— 不是放宽阈值。
-const REVIEWED_WIDTH_DELTAS = [
-    {
-        page: 'carrot-pull', viewport: '1280x900', from: 654, to: 662,
-        reason: 'stage-status (2026-10-12): round/score/time chips moved from under the topbar title into the stage; '
-            + 'the single-row topbar returns 8px of height budget to the height-driven stage',
-    },
-    {
-        page: 'circuit', viewport: '1280x900', from: 928, to: 757,
-        reason: 'square board (2026-10-18): logical canvas 560×420 → 560×560, --frame-ratio 1.3333 → 1. '
-            + 'Height-driven stage gets narrower so the tall lab diagrams can scale up on a phone.',
-    },
-    {
-        page: 'circuit', viewport: '1920x1080', from: 1249, to: 937,
-        reason: 'square board (2026-10-18): logical canvas 560×420 → 560×560, --frame-ratio 1.3333 → 1. '
-            + 'Height-driven stage gets narrower so the tall lab diagrams can scale up on a phone.',
-    },
-    {
-        page: 'circuit', viewport: '2560x1440', from: 1280, to: 960,
-        reason: 'square board (2026-10-18): logical canvas 560×420 → 560×560, --frame-ratio 1.3333 → 1. '
-            + 'Height-driven stage gets narrower so the tall lab diagrams can scale up on a phone.',
-    },
-];
-for (const delta of REVIEWED_WIDTH_DELTAS) {
-    if (WIDTH_BASELINE_ZH[delta.page]?.[delta.viewport] !== delta.from) {
-        failures.push(`reviewed width delta ${delta.page} ${delta.viewport}: P0 value is `
-            + `${WIDTH_BASELINE_ZH[delta.page]?.[delta.viewport]}px, ledger says ${delta.from}px`);
-    }
-}
-const reviewedWidth = (page, viewport) => REVIEWED_WIDTH_DELTAS
-    .find(delta => delta.page === page && delta.viewport === viewport)?.to;
-
-for (const [page, expectedWidths] of Object.entries(WIDTH_BASELINE_ZH)) {
-    if (!Object.hasOwn(PAGES, page)) continue; // VERIFY_PAGES may intentionally narrow measurement only.
-    for (const [viewport, p0] of Object.entries(expectedWidths)) {
-        const expected = reviewedWidth(page, viewport) ?? p0;
-        const actual = widthTable[page + '|' + viewport + '|zh'];
-        if (actual !== expected) {
-            failures.push('CSS P0 geometry baseline ' + page + ' ' + viewport + ' zh changed: '
-                + actual + 'px (expected ' + expected + 'px)');
-        }
-    }
-}
 
 // 画布宽一览（1920 档，中文）
 console.log('\n===== 画布宽 @1920x1080 zh =====');

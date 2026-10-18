@@ -148,7 +148,7 @@ Ripple Duet 只用 `--game-legend-text-color` 按主题表达图例文字颜色�
 
 ### 3.1 范围与豁免
 
-- 覆盖：`js/**/*.js`（保留入口/兼容文件）、`src/platform/**/*.js`、`src/games/**/*.js` 与 `worker/**/*.js`，以及 `tests/**/*.mjs`、`tools/generators/**/*.mjs` 与 `tools/checks/**/*.mjs`（校验器/生成器；不含 tools/dev、tools/archive）、
+- 覆盖：`js/**/*.js`（首页入口）、`src/platform/**/*.js`、`src/games/**/*.js` 与 `worker/**/*.js`，以及 `tests/**/*.mjs`、`tools/generators/**/*.mjs` 与 `tools/checks/**/*.mjs`（校验器/生成器；不含 tools/dev）、
   `src/games/reversi/reversi-worker.js`（Worker 环境单独块）。
 - ignores：`dist/**`、`node_modules/**`、`Workers/**`（Cloudflare 独立域）、
   `src/games/math-rain/**`（专用架构）、`public/**`、`src/platform/more-games.js`

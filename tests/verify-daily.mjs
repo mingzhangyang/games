@@ -158,8 +158,6 @@ okp(distinct.size === TIMEZONES.length,
 
 console.log('\n▶ 源码收敛（防复制粘贴复活）');
 const GAME_IDS = ['planet-merge', 'word-daily', 'gravity-slingshot', 'sword-flight', 'needle-awn'];
-okp(!/function msUntilNextDay/.test(readFileSync(join(ROOT, 'js', 'word-daily.js'), 'utf8')),
-    'word-daily.js 不再自带 msUntilNextDay（收敛到 daily.js）');
 for (const g of GAME_IDS) {
     const entry = registry.all().find(game => game.id === g);
     const graph = entry ? collectStaticModuleGraph(entry.entry, ROOT) : new Map();

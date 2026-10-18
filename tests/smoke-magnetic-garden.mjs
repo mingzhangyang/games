@@ -135,12 +135,22 @@ try {
         const backdrop = getComputedStyle(document.getElementById('mg-stage'), '::before');
         const url = /url\(["']?([^"')]+)["']?\)/.exec(backdrop.backgroundImage)?.[1];
         const image = new window.Image(); image.src = url || ''; await image.decode();
+        // The decoded image must take over without moving the menu: a late swap once shifted
+        // the start button 76px, so a tap aimed at it landed on the intro text.
+        const fallback = document.querySelector('.mg-hero-art');
+        const startTop = () => document.getElementById('mg-btn-start').getBoundingClientRect().top;
+        const readyTop = startTop();
+        hero.classList.remove('is-ready'); fallback.classList.remove('is-retired');
+        const fallbackTop = startTop();
+        hero.classList.add('is-ready'); fallback.classList.add('is-retired');
         return { heroWidth: hero.naturalWidth, heroHeight: hero.naturalHeight,
-            fallbackHidden: getComputedStyle(document.querySelector('.mg-hero-art')).display === 'none',
+            swapShift: Math.abs(readyTop - fallbackTop),
+            fallbackHidden: getComputedStyle(fallback).visibility === 'hidden',
             backdropWidth: image.naturalWidth, backdropHeight: image.naturalHeight,
             backdropVisible: parseFloat(backdrop.opacity) > 0 && backdrop.content !== 'none',
             backdropFetched: performance.getEntriesByName(url).some(entry => entry.responseEnd > 0) };
     });
+    check(art.swapShift < 1, 'hero art swap does not move the start button: ' + art.swapShift + 'px');
     check(art.heroWidth >= 512 && art.heroHeight >= 512 && art.fallbackHidden, 'production hero image is decoded and replaces fallback art');
     check(art.backdropWidth >= 512 && art.backdropHeight >= 512 && art.backdropVisible && art.backdropFetched,
         'production greenhouse workbench is fetched, decoded, and displayed: ' + JSON.stringify(art));

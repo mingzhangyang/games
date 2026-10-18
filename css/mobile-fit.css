@@ -1,10 +1,10 @@
 /* ─────────────────────────────────────────────
    移动端可见视口契约（PR #135 Mobile QA）
 
-   本文件是 CSS P0/P5 冻结之后的**附加特性样式表**（见 tests/lib/css/feature-additions.mjs）：
-   不改写任何冻结的页面样式，只在 @layer contracts 里收口真机可见视口下发现的缺陷。
+   附加特性样式表：不改写页面样式，只在 @layer contracts 里收口真机可见视口下发现的缺陷；
+   引入位置（layout → 页面 → mobile-fit → more-games）由 tests/verify-architecture.mjs 校验。
 
-   为什么用 !important：被修正的页面规则大多仍是 unlayered（冻结的历史债务），普通的
+   为什么用 !important：被修正的页面规则大多仍是 unlayered 的页面 CSS，普通的
    分层声明赢不了它们；而分层 !important 在级联里压过 unlayered 的普通与 !important 声明，
    且与 <link> 顺序无关（Vite 产物不保证样式表顺序，见 docs/contracts/layout.md）。
    只有目标规则本身在更早层里的属性（.game-lb-username、html/body touch-action）用普通声明。
