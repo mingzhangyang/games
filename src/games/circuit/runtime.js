@@ -80,9 +80,9 @@ export function initCanvasPalette(onChange) {
 
 /* ────────────────────────── 常量与几何 ────────────────────────── */
 
-export const W = 560, H = 420;
-const CW = W / GRID_COLS;   // 40
-const CH = H / GRID_ROWS;   // 42
+export const W = 560, H = 560;
+const CW = 40;   // 14 列铺满宽
+const CH = 42;   // 格子保持原比例，不跟着正方形画布拉高
 const HIT_R = 26;           // 画布坐标下的命中半径；屏幕上再保底 22px
 const HIT_CSS = 22;
 
@@ -111,7 +111,7 @@ function cellCenter(r, c) {
     return { x: (c + 0.5) * CW, y: (r + 0.5) * CH };
 }
 
-// 把本关元件缩进 560×420，四周留半格给虚线圈和暗灯 ×。不改关卡坐标。
+// 把本关元件缩进 560×560，四周留半格给虚线圈和暗灯 ×。不改关卡坐标。
 function fitView(spec) {
     const identity = { s: 1, ox: 0, oy: 0 };
     if (!spec || !spec.elements.length) return identity;

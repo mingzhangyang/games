@@ -317,15 +317,14 @@ body {
 }
 
 /* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
-   560×420 横幅逻辑场 → --frame-ratio: 1.3333 (w/h)；
-   stage-h 取 960（同 lumen）：可用高度主导档位递增，
-   1280 档由 --frame-stage-cap 横向安全网兜住（≈904），1920 档 ≈1240 */
+   560×560 正方形逻辑场 → --frame-ratio: 1；
+   舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
 .cc-shell {
     --frame-max-wide: 940px;
     --frame-stage: 560px;
     --frame-side: 300px;
     --frame-side-gap: 14px;
-    --frame-ratio: 1.3333;
+    --frame-ratio: 1;
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));

@@ -103,8 +103,8 @@ const targets = await page.evaluate(() => {
     return g.spec.elements
         .filter(el => el.t === 'sw' || el.t === 'spdt')
         .map(el => ({
-            x: (((el.c + 0.5) * (560 / 14)) * v.s + v.ox) / 560,
-            y: (((el.r + 0.5) * (420 / 10)) * v.s + v.oy) / 420,
+            x: (((el.c + 0.5) * 40) * v.s + v.ox) / 560,
+            y: (((el.r + 0.5) * 42) * v.s + v.oy) / 560,
         }));
 });
 if (targets.length !== 2) fail(`M5 应有 2 个可操作元件，got ${targets.length}`);

@@ -447,6 +447,21 @@ const REVIEWED_WIDTH_DELTAS = [
         reason: 'stage-status (2026-10-12): round/score/time chips moved from under the topbar title into the stage; '
             + 'the single-row topbar returns 8px of height budget to the height-driven stage',
     },
+    {
+        page: 'circuit', viewport: '1280x900', from: 928, to: 776,
+        reason: 'square board (2026-10-18): logical canvas 560×420 → 560×560, --frame-ratio 1.3333 → 1. '
+            + 'Height-driven stage gets narrower so the tall lab diagrams can scale up on a phone.',
+    },
+    {
+        page: 'circuit', viewport: '1920x1080', from: 1249, to: 956,
+        reason: 'square board (2026-10-18): logical canvas 560×420 → 560×560, --frame-ratio 1.3333 → 1. '
+            + 'Height-driven stage gets narrower so the tall lab diagrams can scale up on a phone.',
+    },
+    {
+        page: 'circuit', viewport: '2560x1440', from: 1280, to: 960,
+        reason: 'square board (2026-10-18): logical canvas 560×420 → 560×560, --frame-ratio 1.3333 → 1. '
+            + 'Height-driven stage gets narrower so the tall lab diagrams can scale up on a phone.',
+    },
 ];
 for (const delta of REVIEWED_WIDTH_DELTAS) {
     if (WIDTH_BASELINE_ZH[delta.page]?.[delta.viewport] !== delta.from) {
