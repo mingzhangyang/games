@@ -23,7 +23,8 @@
  *      完成时只 POST 一次到 sudoku-mist-d<今天>（分数 = Node 侧回放）、写完成标记、清进度；
  *      「再来一局」是练习局：可以重开，完成后不再提交
  *   ⑰ 每日一雾边界：两个标签页各开一局 → 先完成的计分、后完成的降为练习局（只 POST 一次、不覆盖成绩）；
- *      完成标记写不进存储 → 进度不清、本页「再来一局」仍是练习局；POST 未返回时成绩已在本地重试队列，确认后移除
+ *      完成标记写不进存储 → 进度存成含最后一步的完整输入、本页「再来一局」仍是练习局且完成后不删恢复数据、
+ *      刷新后重放到 done 恢复原分数；POST 未返回时成绩已在本地重试队列，确认后移除；进页补交昨天未确认的成绩
  *
  * 用法：node tests/smoke-sudoku-mist.mjs [baseUrl]（verify-all 自动传入）
  */
@@ -682,12 +683,33 @@ try {
         }, doneSlot);
         const posts0 = scores.posts.length;
         const cDone = await solveInPage(c);
-        const failed = await c.evaluate((r, d) => ({ run: !!localStorage.getItem(r), done: localStorage.getItem(d) }), runSlot, doneSlot);
+        const failed = await c.evaluate((r, d) => ({
+            run: JSON.parse(localStorage.getItem(r) || 'null')?.inputs.length ?? -1,
+            full: window.smGame.session.inputs.length,
+            done: localStorage.getItem(d),
+        }), runSlot, doneSlot);
         await c.evaluate(() => window.smGame.again());
         await c.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
         const again = await c.evaluate(() => window.smGame.meta.ranked);
-        check(cDone.ranked === true && scores.posts.length === posts0 + 1 && failed.run && failed.done === null && again === false,
-            '⑰ 完成标记写失败：照常提交、进度保留可恢复、本页「再来一局」仍是练习局', JSON.stringify({ cDone, failed, again }));
+        check(cDone.ranked === true && scores.posts.length === posts0 + 1 && failed.run === failed.full && failed.done === null && again === false,
+            '⑰ 完成标记写失败：照常提交、进度存成含最后一步的完整输入、本页「再来一局」仍是练习局', JSON.stringify({ cDone, failed, again }));
+        // 练习局完成：完成标记没落盘，不能删掉恢复数据
+        const practiceDone = await solveInPage(c);
+        const kept = await c.evaluate(r => JSON.parse(localStorage.getItem(r) || 'null')?.inputs.length ?? -1, runSlot);
+        check(practiceDone.state === 'result' && practiceDone.ranked === false && kept === failed.full,
+            '⑰ 完成标记写失败后的练习局完成：恢复数据保留', JSON.stringify({ practiceDone, kept }));
+        // 刷新（存储恢复正常）：按完整输入重放到 done，直接结算出原来的分数并写好完成标记
+        await c.reload({ waitUntil: 'load' });
+        await c.waitForFunction(() => !!window.smGame?.el);
+        await c.click('#sm-daily-btn');
+        await c.waitForFunction(() => !document.getElementById('sm-result').classList.contains('hidden'), { timeout: 8000 });
+        const restoredDone = await c.evaluate((r, d) => ({
+            score: Number(document.getElementById('sm-result-score').textContent),
+            done: JSON.parse(localStorage.getItem(d) || 'null'),
+            run: localStorage.getItem(r),
+        }), runSlot, doneSlot);
+        check(restoredDone.score === cDone.score && restoredDone.done?.score === cDone.score && restoredDone.run === null,
+            `⑰ 刷新后恢复已完成的结果：分数 ${cDone.score}、补写完成标记、清进度`, JSON.stringify(restoredDone));
         // 昨天的每日成绩没等到确认：今天进页也要补交（按它自己的榜单键）
         const yesterday = todayKey(Date.now() - 24 * 3600 * 1000);
         await c.evaluate(y => {

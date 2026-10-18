@@ -677,11 +677,15 @@ export class SudokuMistGame {
             if (ranked) {
                 const record = { score: summary.score, time: this.elapsed };
                 this.dailyCleared.set(dateKey, record);
-                // 完成标记写成了才清进度；写不进去时进度留着，本页靠内存兜底不再开计分局
+                // 完成标记写成了才清进度。写不进去时：本页靠内存兜底不再开计分局；进度改存成
+                // 「含最后一步」的完整输入序列（最后一步走的是 finish 不是 persist），
+                // 刷新后 begin() 重放到 done 直接结算出同一个分数
                 if (saveDailyDone(dateKey, record)) clearDailyRun(dateKey);
+                else saveDailyRun(dateKey, { seed: this.meta.seed, inputs: this.session.inputs, elapsed: this.elapsed, notes: this.notes });
                 // 只有第一次完成进排行榜；之后再进都是练习局
                 this.onDailyCleared({ dateKey, score: summary.score });
-            } else if (this.dailyDoneFor(dateKey)) {
+            } else if (loadDailyDone(dateKey)) {
+                // 只有完成标记真的落盘了才清进度——内存兜底不算，否则练习局会删掉唯一的恢复数据
                 clearDailyRun(dateKey);
             }
             const first = this.dailyDoneFor(dateKey);
