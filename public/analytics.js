@@ -43,6 +43,8 @@
 
     var sessionId = uuid();
     var ready = false;
+    var probePending = !!(gameId && sessionId && canProbe);
+    var earlyEvents = [];
     var acceptsPlaying = false;
     var inferredPlaying = false;
     var getter = null;
@@ -238,17 +240,32 @@
         },
         flush: function () { sample(); flush(); }
     };
+    function deliverAttempt(game, event) {
+        if (ready) sendV2(event);
+        else if (canProbe && !localTest) legacySend({ game: game, event: event });
+    }
+
+    function settleProbe() {
+        if (!probePending) return;
+        probePending = false;
+        for (var i = 0; i < earlyEvents.length; i++) {
+            deliverAttempt(gameId, earlyEvents[i]);
+        }
+        earlyEvents.length = 0;
+    }
+
     window.hubTrack = function (game, event) {
         if (!gameId || game !== gameId || (event !== 'play' && event !== 'finish')) return;
-        if (ready && gameId) {
-            sample();
-            inferredPlaying = event === 'play';
-            sendV2(event);
-        } else if (canProbe && !localTest) {
-            // Keep the exact legacy API while an older Worker is deployed.
-            legacySend({ game: game, event: event });
-            inferredPlaying = event === 'play';
+        if (!canProbe) return;
+        if (ready) sample();
+        inferredPlaying = event === 'play';
+        // During capability detection, sending legacy would lose event IDs and
+        // session linkage. Queue a bounded set, then choose exactly one protocol.
+        if (probePending) {
+            if (earlyEvents.length < MAX_PENDING) earlyEvents.push(event);
+            return;
         }
+        deliverAttempt(game, event);
     };
 
     if (gameId && sessionId && canProbe) {
@@ -256,7 +273,10 @@
             fetch(endpoint + '/stats?v=2', { cache: 'no-store' })
                 .then(function (res) { return res.ok ? res.json() : null; })
                 .then(function (stats) {
-                    if (!stats || stats.scope !== 'day' || !stats.games || !stats.total) return;
+                    if (!stats || stats.scope !== 'day' || !stats.games || !stats.total) {
+                        settleProbe();
+                        return;
+                    }
                     if (ready) return;
                     acceptsPlaying = typeof stats.total.playingSeconds === 'number';
                     ready = true;
@@ -265,8 +285,9 @@
                     lastInteraction = lastTick;
                     lastFlush = lastTick;
                     sendV2('open');
+                    settleProbe();
                     if (timer === null) timer = setInterval(tick, 1000);
-                }).catch(function () { /* no production writes in preview/offline */ });
-        } catch (error) { /* telemetry cannot stop startup */ }
+                }).catch(function () { settleProbe(); /* fallback once if Worker probe fails */ });
+        } catch (error) { settleProbe(); /* telemetry cannot stop startup */ }
     }
 })();

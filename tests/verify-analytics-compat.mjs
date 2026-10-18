@@ -7,8 +7,9 @@ import vm from 'node:vm';
 
 const code = readFileSync(new URL('../public/analytics.js', import.meta.url), 'utf8');
 
-async function testClient(stats, failedProbe = false) {
+async function testClient(stats, failedProbe = false, delayedProbe = false) {
     const sent = [], probes = [], intervals = [];
+    let resolveProbe;
     let clock = 0, counter = 1;
     const location = { origin: 'https://games.orangely.xyz', pathname: '/tetris.html' };
     const window = {
@@ -33,6 +34,7 @@ async function testClient(stats, failedProbe = false) {
         fetch(url, options) {
             if (String(url).endsWith('/stats?v=2')) {
                 probes.push(String(url));
+                if (delayedProbe) return new Promise(resolve => { resolveProbe = resolve; });
                 return failedProbe ? Promise.reject(new Error('offline'))
                     : Promise.resolve({ ok: true, json: async () => stats });
             }
@@ -44,8 +46,31 @@ async function testClient(stats, failedProbe = false) {
     vm.runInNewContext(code, context, { filename: 'analytics.js' });
     const drain = () => new Promise(resolve => setImmediate(resolve));
     await drain();
-    return { window, sent, probes, intervals, drain, advance(ms) { clock += ms; } };
+    return { window, sent, probes, intervals, drain, advance(ms) { clock += ms; },
+        finishProbe(data) { resolveProbe({ ok: true, json: async () => data }); } };
 }
+
+
+const delayed = await testClient(null, false, true);
+delayed.window.hubTrack('tetris', 'play');
+delayed.window.hubTrack('tetris', 'finish');
+assert.equal(delayed.sent.length, 0, 'events stay buffered before V2 capability probe resolves');
+delayed.finishProbe({
+    scope: 'day', games: {},
+    total: { p: 0, f: 0, opens: 0, activeSeconds: 0, playingSeconds: 0 },
+});
+await delayed.drain();
+assert.deepEqual(delayed.sent.map(e => e.event), ['open', 'play', 'finish'],
+    'delayed V2 probe replays attempts after the open as V2 events');
+assert(delayed.sent.every(e => e.v === 2 && e.eventId && e.sessionId));
+
+const delayedOld = await testClient(null, false, true);
+delayedOld.window.hubTrack('tetris', 'play');
+assert.equal(delayedOld.sent.length, 0);
+delayedOld.finishProbe({ tetris: { p: 0, f: 0 }, total: { p: 0, f: 0 } });
+await delayedOld.drain();
+assert.deepEqual(delayedOld.sent, [{ game: 'tetris', event: 'play' }],
+    'legacy fallback happens only once after an invalid/non-V2 capability response');
 
 const legacy = await testClient({ tetris: { p: 1, f: 2 }, total: { p: 1, f: 2 } });
 assert.equal(legacy.probes.length, 1);
