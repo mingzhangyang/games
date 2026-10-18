@@ -1862,6 +1862,54 @@
         "maxEntries": 50,
         "ui": "dialog"
       }
+    },
+    {
+      "id": "sudoku-mist",
+      "prefix": "sm",
+      "href": "sudoku-mist.html",
+      "entry": "src/games/sudoku-mist/index.js",
+      "emoji": "🌫️",
+      "title": {
+        "doc": "Sudoku in the Mist — Deduce Through the Fog",
+        "i18nKey": "pageTitle",
+        "seo": "雾隐九宫 Sudoku in the Mist — Deduce Through the Fog"
+      },
+      "name": {
+        "en": "Sudoku in the Mist",
+        "zh": "雾隐九宫"
+      },
+      "desc": {
+        "meta": "雾隐九宫 Sudoku in the Mist — classic 9×9 sudoku rules under a morning mist. Every digit you deduce clears the fog around it and reveals the clues you need next; place digits straight into the mist for a bonus. Scored by how deeply you reason, not how fast you tap — lucky guesses score nothing.",
+        "og": "A sudoku hidden in mist: every digit you deduce clears the fog and reveals the next clue.",
+        "twitter": "Classic sudoku rules, hidden in mist. Deduce a digit and the fog lifts — guesses score nothing."
+      },
+      "genre": [
+        "PuzzleGame"
+      ],
+      "caps": [
+        "analytics",
+        "topbar",
+        "theme-light"
+      ],
+      "sitemap": {
+        "changefreq": "monthly",
+        "priority": "0.8"
+      },
+      "themeColor": "#0d1322",
+      "themeColorLight": "#f1ede4",
+      "home": {
+        "iconClass": "mines",
+        "category": "puzzle",
+        "addedAt": "2026-10-18",
+        "desc": {
+          "en": "Sudoku hidden in a morning mist. Every digit you deduce clears the fog around it — reason deeply, guesses score nothing.",
+          "zh": "藏在晨雾里的数独。每推出一个数字，周围的雾就散开一点；推理越深分越高，瞎猜不得分。"
+        },
+        "tag": {
+          "en": "Logic Puzzle",
+          "zh": "推理数独"
+        }
+      }
     }
   ],
   "$schema": "./games.schema.json"

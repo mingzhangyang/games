@@ -9,7 +9,7 @@
 
     var script = document.currentScript;
     // registry:begin analytics-client-games
-    var VALID_GAMES = new Set(["math-rain","tetris","tank-battle","gomoku","planet-merge","word-daily","hoop-shot","minesweeper","reversi","tower-defense","gravity-slingshot","needle-awn","sword-flight","lumen","circuit","silk-dew","bond-forge","echo-cave","maxwell-demon","crystal-bloom","flame-verse","ripple-duet","carrot-pull","firefly-signal","shadow-loom","loop-jail","minecraft","dots","stack","bridges","four-colors"]);
+    var VALID_GAMES = new Set(["math-rain","tetris","tank-battle","gomoku","planet-merge","word-daily","hoop-shot","minesweeper","reversi","tower-defense","gravity-slingshot","needle-awn","sword-flight","lumen","circuit","silk-dew","bond-forge","echo-cave","maxwell-demon","crystal-bloom","flame-verse","ripple-duet","carrot-pull","firefly-signal","shadow-loom","loop-jail","sudoku-mist","minecraft","dots","stack","bridges","four-colors"]);
     var EXTERNAL_ORIGINS = {"minecraft":"https://2d-minecraft.orangely.xyz","dots":"https://dots-and-boxes.orangely.xyz","stack":"https://steady-hand.orangely.xyz","bridges":"https://bridges.orangely.xyz","four-colors":"https://four-colors.orangely.xyz"};
     // registry:end analytics-client-games
     var explicitGame = script && script.getAttribute('data-analytics-game');

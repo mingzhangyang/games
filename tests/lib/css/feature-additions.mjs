@@ -365,6 +365,7 @@ function reviewHomeCardsStyles(root, cssPaths, htmlPaths, errors) {
  */
 export const POST_FREEZE_GAMES = Object.freeze([
     Object.freeze({ id: 'loop-jail', page: 'loop-jail.html', stylesheet: 'css/loop-jail.css', prefix: 'lj' }),
+    Object.freeze({ id: 'sudoku-mist', page: 'sudoku-mist.html', stylesheet: 'css/sudoku-mist.css', prefix: 'sm' }),
 ]);
 export const POST_FREEZE_PAGES = new Set(POST_FREEZE_GAMES.map(game => game.page));
 const POST_FREEZE_ROOT_HOOKS = new Set([':root', ':root[data-theme="light"]']);
