@@ -97,14 +97,21 @@ const box = await page.evaluate(() => {
     const r = document.getElementById('cc-canvas').getBoundingClientRect();
     return { left: r.left, top: r.top, width: r.width, height: r.height };
 });
-const targets = await page.evaluate(() => window.ccGame.spec.elements
-    .filter(el => el.t === 'sw' || el.t === 'spdt')
-    .map(el => ({ r: el.r, c: el.c })));
+const targets = await page.evaluate(() => {
+    const g = window.ccGame;
+    const v = g.view || { s: 1, ox: 0, oy: 0 };
+    return g.spec.elements
+        .filter(el => el.t === 'sw' || el.t === 'spdt')
+        .map(el => ({
+            x: (((el.c + 0.5) * (560 / 14)) * v.s + v.ox) / 560,
+            y: (((el.r + 0.5) * (420 / 10)) * v.s + v.oy) / 420,
+        }));
+});
 if (targets.length !== 2) fail(`M5 应有 2 个可操作元件，got ${targets.length}`);
 for (const target of targets) {
     await page.mouse.click(
-        box.left + (target.c + 0.5) / 14 * box.width,
-        box.top + (target.r + 0.5) / 10 * box.height,
+        box.left + target.x * box.width,
+        box.top + target.y * box.height,
     );
 }
 await new Promise(r => setTimeout(r, 1100)); // 650ms solveTimer + 余量

@@ -138,6 +138,56 @@ export function solveCircuit(spec, states) {
     return { short, lit };
 }
 
+// 短路路径：正极到负极的一条最短导通路径上的导线和 tee 臂。
+// 开关可以出现在路径上，但不返回，绘制时保持原色。
+export function shortTags(spec, states) {
+    const ops = operableIndexes(spec);
+    const st = new Map();
+    ops.forEach((idx, k) => st.set(idx, states[k] ? 1 : 0));
+    const base = buildConductionUF(spec, st);
+    const tags = new Set();
+    if (!base.pos || !base.neg || base.uf.find(base.pos) !== base.uf.find(base.neg)) return tags;
+
+    const adj = new Map();
+    const link = (a, b, tag) => {
+        if (!adj.has(a)) adj.set(a, []);
+        if (!adj.has(b)) adj.set(b, []);
+        adj.get(a).push({ to: b, tag });
+        adj.get(b).push({ to: a, tag });
+    };
+    spec.elements.forEach((el, i) => {
+        const keys = endpointsOf(el).map((s) => jk(el.r, el.c, s));
+        if (el.t === 'wire') link(keys[0], keys[1], 'w:' + i);
+        else if (el.t === 'tee') {
+            const hub = 'hub:' + i;
+            el.arms.split('').forEach((arm, ai) => link(hub, keys[ai], 't:' + i + ':' + arm));
+        } else if (el.t === 'sw' && st.get(i)) link(keys[0], keys[1], 's:' + i);
+        else if (el.t === 'spdt') link(keys[0], st.get(i) === 0 ? keys[1] : keys[2], 'p:' + i);
+    });
+
+    const prev = new Map();
+    const queue = [base.pos];
+    prev.set(base.pos, null);
+    for (let q = 0; q < queue.length; q++) {
+        const u = queue[q];
+        if (u === base.neg) break;
+        for (const edge of adj.get(u) || []) {
+            if (prev.has(edge.to)) continue;
+            prev.set(edge.to, { from: u, tag: edge.tag });
+            queue.push(edge.to);
+        }
+    }
+    if (!prev.has(base.neg)) return tags;
+    let cur = base.neg;
+    while (cur !== base.pos) {
+        const step = prev.get(cur);
+        if (!step) break;
+        if (step.tag.startsWith('w:') || step.tag.startsWith('t:')) tags.add(step.tag);
+        cur = step.from;
+    }
+    return tags;
+}
+
 // 胜利判定：无短路 && 所有 target 灯亮 && 所有 dark 灯灭。
 // dark 是实验关的「必须熄灭」灯泡（局部短路、选路）。旧关没有 dark，判定与原先一致。
 export function isCircuitSolved(spec, states) {

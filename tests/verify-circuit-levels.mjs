@@ -1,7 +1,7 @@
 // verify-circuit-levels.mjs — circuit 数据层黄金断言（node 直跑，无需浏览器）
 import {
     LEVELS, GRID_COLS, GRID_ROWS, operableIndexes, initStatesOf,
-    isCircuitSolved, minSteps, dailyLevel,
+    isCircuitSolved, minSteps, dailyLevel, solveCircuit, shortTags,
 } from '../src/games/circuit/model/levels.js';
 
 let passed = 0, failed = 0;
@@ -93,6 +93,24 @@ for (const lv of LEVELS) {
     assert(ms === lv.par, lv.id + ' par=' + lv.par + ' 应等于 BFS 最少步数 ' + ms);
     assert(ms >= 1, lv.id + ' 至少需要 1 步');
 }
+
+let shortLevels = 0;
+for (const lv of LEVELS) {
+    const k = operableIndexes(lv).length;
+    for (let mask = 0; mask < (1 << k); mask++) {
+        const st = [];
+        for (let i = 0; i < k; i++) st.push((mask >> i) & 1);
+        if (!solveCircuit(lv, st).short) continue;
+        const tags = shortTags(lv, st);
+        assert(tags.size > 0, lv.id + ' 短路要有一条导线路径');
+        let onlyWire = true;
+        for (const tag of tags) if (!tag.startsWith('w:') && !tag.startsWith('t:')) onlyWire = false;
+        assert(onlyWire, lv.id + ' 短路着色不含开关');
+        shortLevels += 1;
+        break;
+    }
+}
+assert(shortLevels >= 1, '至少一关存在可复现的短路路径');
 
 // ---- 每日挑战：731 天确定性 + 重掷合法性 ----
 const DAY_MS = 86400000;

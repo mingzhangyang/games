@@ -21,6 +21,7 @@ import {
     dailyLevel,
     solveCircuit,
     isCircuitSolved,
+    shortTags,
     operableIndexes,
     endpointsOf,
     jk,
@@ -82,7 +83,8 @@ export function initCanvasPalette(onChange) {
 export const W = 560, H = 420;
 const CW = W / GRID_COLS;   // 40
 const CH = H / GRID_ROWS;   // 42
-const HIT_R = 26;           // 开关命中半径（≥44px 触控目标：直径 52）
+const HIT_R = 26;           // 画布坐标下的命中半径；屏幕上再保底 22px
+const HIT_CSS = 22;
 
 
 function clamp(v, min, max) {
@@ -107,6 +109,27 @@ function endPx(el, side) {
 
 function cellCenter(r, c) {
     return { x: (c + 0.5) * CW, y: (r + 0.5) * CH };
+}
+
+// 把本关元件缩进 560×420，四周留半格给虚线圈和暗灯 ×。不改关卡坐标。
+function fitView(spec) {
+    const identity = { s: 1, ox: 0, oy: 0 };
+    if (!spec || !spec.elements.length) return identity;
+    let minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
+    for (const el of spec.elements) {
+        if (el.c < minC) minC = el.c;
+        if (el.c > maxC) maxC = el.c;
+        if (el.r < minR) minR = el.r;
+        if (el.r > maxR) maxR = el.r;
+    }
+    const pad = 0.7;
+    const left = (minC - pad) * CW;
+    const top = (minR - pad) * CH;
+    const bw = (maxC - minC + 1 + pad * 2) * CW;
+    const bh = (maxR - minR + 1 + pad * 2) * CH;
+    if (!(bw > 0) || !(bh > 0)) return identity;
+    const s = Math.min(W / bw, H / bh);
+    return { s, ox: (W - bw * s) / 2 - left * s, oy: (H - bh * s) / 2 - top * s };
 }
 
 function roundRectPath(ctx, x, y, w, h, r) {
@@ -171,7 +194,7 @@ export class CircuitGame {
         this.canvas = document.getElementById('cc-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.el = {};
-        ['cc-btn-home', 'cc-hud-level', 'cc-moves', 'cc-par', 'cc-reset-btn', 'cc-mute-btn', 'cc-toast',
+        ['cc-btn-home', 'cc-hud-level', 'cc-move-box', 'cc-moves', 'cc-par', 'cc-reset-btn', 'cc-mute-btn', 'cc-toast',
             'cc-start', 'cc-title', 'cc-subtitle', 'cc-howto', 'cc-btn-levels', 'cc-btn-daily',
             'cc-level-label', 'cc-level-grid', 'cc-daily-best', 'cc-start-mute',
             'cc-side-howto-title', 'cc-side-howto', 'cc-side-records-title', 'cc-side-records',
@@ -209,6 +232,8 @@ export class CircuitGame {
         this.particles = [];
         this.shortAt = -99;     // 进入短路的时刻（红闪强度随时间衰减）
         this.flipFx = null;     // { idx, start } 杠杆弹摆
+        this.view = { s: 1, ox: 0, oy: 0 };
+        this.shortTags = new Set();
 
         this.animationId = null;
         this.lastFrame = 0;
@@ -260,7 +285,7 @@ export class CircuitGame {
             const starLine = document.createElement('span');
             starLine.className = 'cc-chip-stars game-start-chip-stars';
             const n = this.stars[i] || 0;
-            starLine.textContent = n > 0 ? '⭐'.repeat(n) : '☆☆☆';
+            starLine.textContent = n > 0 ? '⭐'.repeat(n) : '';
             chip.append(num, starLine);
             const topic = LEVELS[i].topic;
             if (topic) chip.title = topic[this.lang] || topic.en;
@@ -335,8 +360,6 @@ export class CircuitGame {
         this.pauseOwnership?.invalidate();
         this.hideOverlays();
         this.updateHud();
-        const topic = this.baseSpec && this.baseSpec.topic;
-        if (topic) this.showToast(topic[this.lang] || topic.en, 1600);
         track('circuit', 'play');
     }
 
@@ -399,11 +422,20 @@ export class CircuitGame {
 
     updateHud() {
         const t = this.TEXT;
+        const playing = this.state !== 'menu';
+        const topic = playing && this.mode !== 'daily' && this.baseSpec && this.baseSpec.topic
+            ? (this.baseSpec.topic[this.lang] || this.baseSpec.topic.en)
+            : '';
         if (this.el['hud-level']) {
-            this.el['hud-level'].textContent = this.mode === 'daily'
-                ? `📅 ${t.daily}`
-                : `${t.level} ${this.levelIdx + 1}/${LEVELS.length}`;
+            if (this.mode === 'daily' && playing) {
+                this.el['hud-level'].textContent = `📅 ${t.daily}`;
+            } else {
+                const base = `${t.level} ${this.levelIdx + 1}/${LEVELS.length}`;
+                this.el['hud-level'].textContent = topic ? `${base} · ${topic}` : base;
+            }
+            this.el['hud-level'].title = topic;
         }
+        if (this.el['move-box']) this.el['move-box'].classList.toggle('hidden', !playing);
         if (this.el.moves) this.el.moves.textContent = String(this.moves);
         if (this.el.par) this.el.par.textContent = `· ${t.par} ${this.par}`;
     }
@@ -689,9 +721,15 @@ export class CircuitGame {
 
     toLogical(e) {
         const rect = this.canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width * W;
+        const y = (e.clientY - rect.top) / rect.height * H;
+        const v = this.view || { s: 1, ox: 0, oy: 0 };
+        const cssPerBoard = (rect.width / W) * v.s;
+        const minR = cssPerBoard > 0 ? HIT_CSS / cssPerBoard : HIT_R;
         return {
-            x: (e.clientX - rect.left) / rect.width * W,
-            y: (e.clientY - rect.top) / rect.height * H,
+            x: (x - v.ox) / v.s,
+            y: (y - v.oy) / v.s,
+            hitR: Math.max(HIT_R, minR),
         };
     }
 
@@ -701,8 +739,8 @@ export class CircuitGame {
             e.preventDefault();
             const p = this.toLogical(e);
             const ops = operableIndexes(this.spec);
-            // 命中测试：取距离最近的可操作元件（直径 ~52px ≥ 44px 触控标准）
-            let best = -1, bestD = HIT_R;
+            // 最近的开关。半径至少 HIT_R，并且在屏幕上不小于 HIT_CSS。
+            let best = -1, bestD = p.hitR;
             ops.forEach((elIdx, k) => {
                 const el = this.spec.elements[elIdx];
                 const { x, y } = cellCenter(el.r, el.c);
@@ -861,9 +899,16 @@ export class CircuitGame {
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, W, H);
 
-        // 蓝图网格
+        if (!this.spec) return;
+        this.view = fitView(this.spec);
+        this.shortTags = this.sol && this.sol.short ? shortTags(this.spec, this.states) : new Set();
+        const view = this.view;
+        ctx.save();
+        ctx.translate(view.ox, view.oy);
+        ctx.scale(view.s, view.s);
+
         ctx.strokeStyle = P.grid;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1 / view.s;
         ctx.beginPath();
         for (let i = 1; i < GRID_COLS; i++) {
             ctx.moveTo(i * CW, 0);
@@ -874,8 +919,6 @@ export class CircuitGame {
             ctx.lineTo(W, i * CH);
         }
         ctx.stroke();
-
-        if (!this.spec) return;
 
         const cond = this.conduction();
 
@@ -895,27 +938,28 @@ export class CircuitGame {
             if (el.t === 'sw' || el.t === 'spdt') this.drawSwitch(ctx, el, cond);
         }
 
-        this.drawShortFlash(ctx);
         this.drawParticles(ctx);
+        ctx.restore();
+        this.drawShortFlash(ctx);
     }
 
-    /** 导线/tee：通电琥珀辉光、断电暗蓝、短路红 */
+    /** 导线/tee：通电琥珀、断电钢蓝。短路只涂正极到负极那一条路径。 */
     drawWires(ctx, cond) {
-        const shorted = this.sol && this.sol.short;
         const lineFor = (el) => {
             const eps = endpointsOf(el);
             const a = endPx(el, eps[0]), b = endPx(el, eps[1]);
             return { a, b };
         };
         ctx.lineCap = 'round';
-        for (const el of this.spec.elements) {
-            if (el.t !== 'wire') continue;
+        this.spec.elements.forEach((el, i) => {
+            if (el.t !== 'wire') return;
             const on = this.isEnergized(el, cond);
+            const hot = this.shortTags.has('w:' + i);
             const { a, b } = lineFor(el);
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
-            if (shorted && on) {
+            if (hot) {
                 ctx.shadowColor = P.redGlow;
                 ctx.shadowBlur = 10;
                 ctx.strokeStyle = P.red;
@@ -927,11 +971,11 @@ export class CircuitGame {
                 ctx.shadowBlur = 0;
                 ctx.strokeStyle = P.dimWire;
             }
-            ctx.lineWidth = on ? 4 : 3;
+            ctx.lineWidth = on || hot ? 4 : 3.2;
             ctx.stroke();
             ctx.shadowBlur = 0;
-        }
-        // 通电流动光点（能量体感）
+        });
+        const shorted = this.sol && this.sol.short;
         if (!shorted) {
             for (const el of this.spec.elements) {
                 if (el.t !== 'wire' || !this.isEnergized(el, cond)) continue;
@@ -1036,25 +1080,25 @@ export class CircuitGame {
         ctx.arc(x, y, 11, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
-        // 灯丝
+        // 灯丝：一条浅弧，避免和暗灯 × 都画成折线
         ctx.shadowBlur = 0;
         ctx.strokeStyle = on ? P.filamentOn : P.filamentOff;
-        ctx.lineWidth = 1.4;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.moveTo(x - 4.5, y + 3.5);
-        ctx.lineTo(x - 2, y - 3);
-        ctx.lineTo(x + 2, y + 3);
-        ctx.lineTo(x + 4.5, y - 3.5);
+        ctx.moveTo(x - 5, y + 1.5);
+        ctx.quadraticCurveTo(x, y - 4.5, x + 5, y + 1.5);
         ctx.stroke();
         if (el.dark) {
             ctx.shadowBlur = 0;
             ctx.strokeStyle = on ? P.red : P.slate;
-            ctx.lineWidth = 1.7;
+            ctx.lineWidth = 2.2;
+            const x0 = x + 14;
+            const y0 = y - 24;
             ctx.beginPath();
-            ctx.moveTo(x + 8, y - 16);
-            ctx.lineTo(x + 15, y - 9);
-            ctx.moveTo(x + 15, y - 16);
-            ctx.lineTo(x + 8, y - 9);
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x0 + 9, y0 + 9);
+            ctx.moveTo(x0 + 9, y0);
+            ctx.lineTo(x0, y0 + 9);
             ctx.stroke();
             if (on) {
                 ctx.strokeStyle = P.red;
@@ -1067,20 +1111,21 @@ export class CircuitGame {
         ctx.restore();
     }
 
-    /** tee 三臂结点：配色同导线，中心实心结点 */
+    /** tee 三臂结点：只有落在短路路径上的臂涂红 */
     drawTee(ctx, el, cond) {
         const on = this.isEnergized(el, cond);
-        const shorted = this.sol && this.sol.short;
         const { x, y } = cellCenter(el.r, el.c);
+        const elIdx = this.spec.elements.indexOf(el);
         ctx.save();
         ctx.lineCap = 'round';
-        ctx.strokeStyle = shorted && on ? P.red : on ? P.amber : P.dimWire;
-        ctx.lineWidth = on ? 4 : 3;
-        if (on) {
-            ctx.shadowColor = shorted ? P.redGlow : P.amberGlow;
-            ctx.shadowBlur = 9;
-        }
+        ctx.lineWidth = on ? 4 : 3.2;
+        let hotN = 0;
         for (const arm of el.arms.split('')) {
+            const hot = this.shortTags.has('t:' + elIdx + ':' + arm);
+            if (hot) hotN += 1;
+            ctx.strokeStyle = hot ? P.red : on ? P.amber : P.dimWire;
+            ctx.shadowColor = hot ? P.redGlow : P.amberGlow;
+            ctx.shadowBlur = hot || on ? 9 : 0;
             const p = endPx(el, arm);
             ctx.beginPath();
             ctx.moveTo(x, y);
@@ -1088,7 +1133,7 @@ export class CircuitGame {
             ctx.stroke();
         }
         ctx.shadowBlur = 0;
-        ctx.fillStyle = ctx.strokeStyle;
+        ctx.fillStyle = hotN ? P.red : on ? P.amber : P.dimWire;
         ctx.beginPath();
         ctx.arc(x, y, 3.5, 0, Math.PI * 2);
         ctx.fill();
@@ -1188,17 +1233,13 @@ export class CircuitGame {
         ctx.restore();
     }
 
-    /** 短路红闪：进入瞬间强闪衰减 + 持续期低频红晕 */
+    /** 刚短路时闪一下。持续的红色只留在路径上，不再罩住整张图。 */
     drawShortFlash(ctx) {
         if (!this.sol || !this.sol.short) return;
         const sT = this.time - this.shortAt;
-        if (sT >= 0 && sT < 1.2) {
-            const a = 0.34 * (1 - sT / 1.2) * (0.6 + 0.4 * Math.sin(this.time * 22));
-            ctx.fillStyle = `rgba(${P.redRgb}, ${a.toFixed(3)})`;
-            ctx.fillRect(0, 0, W, H);
-        }
-        const slow = 0.05 + 0.04 * Math.sin(this.time * 2.5);
-        ctx.fillStyle = `rgba(${P.redRgb}, ${slow.toFixed(3)})`;
+        if (sT < 0 || sT >= 0.7) return;
+        const a = 0.22 * (1 - sT / 0.7);
+        ctx.fillStyle = `rgba(${P.redRgb}, ${a.toFixed(3)})`;
         ctx.fillRect(0, 0, W, H);
     }
 
