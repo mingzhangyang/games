@@ -18,8 +18,6 @@
     <meta name="twitter:title" content="Mini Games Collection">
     <meta name="twitter:description" content="A curated collection of instant-play HTML5 games.">
     <meta name="twitter:image" content="assets/seo/og-collection.svg">
-    <!-- 主题三行（首页不在注册表里，手写；顺序与 gen 的 head 区域一致，见 docs/contracts/theme.md §3）。
-         首页支持浅色（P1），所以页脚的主题开关会显现。 -->
     <meta name="theme-support" content="light dark">
     <meta name="theme-color" content="#6366f1" data-light="#f3f5fa">
     <script src="/theme-boot.js"></script>
@@ -27,27 +25,20 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <title id="page-title" data-i18n="pageTitle">Mini Games Collection</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Crect x='12' y='22' width='40' height='22' rx='11' fill='white'/%3E%3Cpath d='M22 27v12M16 33h12' stroke='%23667eea' stroke-width='3.4' stroke-linecap='round'/%3E%3Ccircle cx='39' cy='29' r='3' fill='%23667eea'/%3E%3Ccircle cx='45' cy='36' r='3' fill='%23667eea'/%3E%3C/svg%3E">
-    <!-- 共享骨架：authoring 顺序保持 tokens → layout → index。
-         index 自己的 54 个类名与共享层的 38 个选择器零交集（已核对），
-         这里只为页脚复用 .game-footer 与 --tok-* 配色。
-         P6 后生产构建不再做 stylesheet link 重排；P4/P5 行为门禁已冻结该契约。 -->
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/index.css">
-    <!-- 首页卡片附加样式表（P0 冻结后不改 index.css，见 tests/lib/css/feature-additions.mjs）。 -->
     <link rel="stylesheet" href="css/home-cards.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
 </head>
 <body>
 
-    <!-- Hero -->
     <header class="hero">
         <button class="lang-toggle" id="lang-toggle" title="Language" data-i18n="langToggle">中文</button>
         <h1 id="main-title" data-i18n="mainTitle">Mini Games Collection</h1>
         <p class="hero-sub" id="main-desc" data-i18n="mainDesc">Play instantly · No downloads · No accounts · No ads</p>
     </header>
 
-    <!-- Daily Hub -->
     <main class="idx-main">
     <section class="daily-hub" aria-label="Daily challenges">
         <div class="daily-hub-head">
@@ -79,8 +70,6 @@
             </div>
             <span class="daily-task-status" id="hub-task-gravity-status">⚪</span>
         </a>
-        <!-- 其余每日玩法的入口（proposal §4.5）：跳到 #cat=daily；数量由 src/home/daily-hub.js 按卡片上的
-             「每日」胶囊减去上面三项算出，绑定后才显现。 -->
         <a class="hub-more-daily" id="hub-more-daily" href="#cat=daily" hidden><span data-i18n="moreDaily">More daily challenges</span><span class="hub-more-count" id="hub-more-count"></span><span aria-hidden="true">›</span></a>
         <div class="daily-profile">
             <span class="daily-profile-icon">👤</span>
@@ -89,14 +78,11 @@
         </div>
     </section>
 
-    <!-- Games -->
     <section class="games-section" aria-label="Games">
-        <!-- 最近玩过（proposal §4.2）：首页点卡片时写 site_recent，有记录才由 src/home/recent.js 渲染显现。 -->
         <section class="home-row home-recent" id="home-recent" aria-labelledby="recent-title" hidden>
             <h2 class="home-row-title" id="recent-title" data-i18n="recentTitle">Recently played</h2>
             <div class="home-row-list" id="home-recent-list"></div>
         </section>
-        <!-- 新上线横排由 games.config.json 的 home.addedAt 生成，45 天窗口在运行时裁剪（proposal §4.4）。 -->
         <!-- registry:begin home-new -->
 <section class="home-row home-new" id="home-new" aria-labelledby="new-title" hidden>
 <h2 class="home-row-title" id="new-title" data-i18n="newTitle">New games</h2>
@@ -112,8 +98,6 @@
 </section>
         <!-- registry:end home-new -->
         <p class="section-label" id="section-label" data-i18n="sectionLabel">Choose a game</p>
-        <!-- 筛选条与分区都由 games.config.json 生成（site.home.categories / home.category，见
-             docs/proposal-home-layout.md P2）；筛选条渐进增强，src/home/filter.js 绑定后才显现。 -->
         <!-- registry:begin home-filter -->
 <div class="games-filter" id="games-filter" role="group" aria-label="Filter games" data-i18n-label="filterLabel" hidden>
 <button type="button" class="filter-btn" data-filter="all" aria-pressed="true" aria-controls="games-cats" data-i18n="filterAll">All</button>
@@ -188,18 +172,13 @@
     </section>
 
 
-    <!-- 页脚接入共享 .game-footer（css/layout.css）：长页面滚到底也能切语言。
-         index 是「更多游戏」页本身，故不放 More 钮；hero 右上角那颗语言钮保留。 -->
     </main>
 
     <footer class="game-footer">
-        <!-- 原 Perks 三张卡（对回访玩家没有信息量）压成页脚一行（proposal §8 D-6） -->
         <p class="perks-line" id="perks-line" data-i18n="perksLine">Instant play · Keyboard &amp; touch · English / 中文</p>
         <p id="footer-text">© 2026 orangely.xyz</p>
         <div class="game-footer-actions">
             <button type="button" class="lang-toggle" id="footer-lang-toggle" title="Language" aria-label="Language" data-i18n="langToggle">中文</button>
-            <!-- 主题三档（全站唯一写 site_theme 的地方，见 docs/contracts/theme.md）。
-                 首页声明支持浅色之前保持 hidden，由 src/home/theme-switch.js 按 theme-support 显现。 -->
             <div class="theme-switch" id="theme-switch" role="group" aria-label="Theme" data-i18n-label="themeLabel" hidden>
                 <button type="button" class="theme-switch-btn" data-theme-pref="dark" aria-pressed="true" data-i18n="themeDark">Dark</button>
                 <button type="button" class="theme-switch-btn" data-theme-pref="light" aria-pressed="false" data-i18n="themeLight">Light</button>
