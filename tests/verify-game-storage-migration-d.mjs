@@ -64,7 +64,7 @@ async function verifyStarsMigration({
 await verifyStarsMigration({
     name: 'Circuit',
     legacyKey: 'cc_stars',
-    canonicalKey: 'game:circuit:v1:stars',
+    canonicalKey: 'game:circuit:v2:stars',
     initial: [3, 2, 0, 1],
     updated: [3, 3, 1, 1],
     storage: CIRCUIT_STORAGE,
@@ -75,6 +75,17 @@ await verifyStarsMigration({
     ],
     reimport: async () => (await import('../src/games/circuit/storage.js?reimport=circuit')).CIRCUIT_STORAGE,
 });
+
+reset();
+const previous = new Array(20).fill(0);
+previous[0] = 1; // 已删除的 S1，不能落到新的第一关
+previous[9] = 3; // M5
+previous[12] = 2; // H3
+mem.set('game:circuit:v1:stars', JSON.stringify(previous));
+const migrated = CIRCUIT_STORAGE.get(CIRCUIT_STORAGE_SLOTS.STARS, []);
+assert.deepEqual(migrated.slice(0, 3), [3, 2, 0], 'v1 星级按关卡 id 迁到删关后的顺序');
+assert.equal(migrated.length, 20, '迁完的星级数组跟现关卡数一样长');
+assert.equal(mem.get('game:circuit:v2:stars'), JSON.stringify(migrated), 'v1 星级写入 v2');
 
 await verifyStarsMigration({
     name: 'Lumen',

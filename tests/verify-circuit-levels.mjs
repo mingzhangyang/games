@@ -49,12 +49,12 @@ function componentCount(spec) {
 }
 
 console.log('== circuit-levels ==');
-assert(LEVELS.length === 32, 'LEVELS 应为 32 关，实际 ' + LEVELS.length);
-for (const diff of ['easy', 'medium', 'hard', 'expert']) {
-    assert(LEVELS.filter((l) => l.diff === diff).length === 5, diff + ' 应为 5 关');
-}
+assert(LEVELS.length === 20, 'LEVELS 应为 20 关，实际 ' + LEVELS.length);
 assert(LEVELS.filter((l) => l.diff === 'lab').length === 12, 'lab 应为 12 关');
-assert(new Set(LEVELS.map((l) => l.id)).size === 32, '关卡 id 不得重复');
+assert(LEVELS.filter((l) => l.par < 2).length === 0, '一步就过的关已删除');
+const kept = ['M5', 'H3', 'H5', 'C1', 'C2', 'C3', 'C4', 'C5', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+assert(LEVELS.map((l) => l.id).join() === kept.join(), '关卡顺序应是保留的原关 + 实验关');
+assert(new Set(LEVELS.map((l) => l.id)).size === 20, '关卡 id 不得重复');
 
 for (const lv of LEVELS) {
     const els = lv.elements;
