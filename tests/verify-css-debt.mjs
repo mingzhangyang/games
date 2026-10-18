@@ -528,10 +528,13 @@ function verifyProject() {
                 errors,
                 'importantDeclarations migration',
             );
-            // Add only the two explicitly reviewed feature-layer overrides. Each
-            // tuple pins stylesheet, selector, property and value: unrelated
-            // !important growth remains a failure, as does removing an override.
-            expected.push(...MOBILE_FIT_REVIEWED_IMPORTANTS);
+            // A comparison base that already includes this change carries the
+            // reviewed tuples in baseImportantDeclarations. Only account for
+            // still-missing rows; adding them twice would break future PRs even
+            // when no stylesheet changes occur.
+            for (const reviewed of MOBILE_FIT_REVIEWED_IMPORTANTS) {
+                if (!expected.some(row => sameJson(row, reviewed))) expected.push(reviewed);
+            }
             expected = sortTuples(expected);
         }
         const delta = multisetDelta(actualDebt[key], expected);

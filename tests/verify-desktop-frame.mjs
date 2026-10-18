@@ -448,12 +448,12 @@ const REVIEWED_WIDTH_DELTAS = [
             + 'the single-row topbar returns 8px of height budget to the height-driven stage',
     },
     {
-        page: 'circuit', viewport: '1280x900', from: 928, to: 776,
+        page: 'circuit', viewport: '1280x900', from: 928, to: 757,
         reason: 'square board (2026-10-18): logical canvas 560×420 → 560×560, --frame-ratio 1.3333 → 1. '
             + 'Height-driven stage gets narrower so the tall lab diagrams can scale up on a phone.',
     },
     {
-        page: 'circuit', viewport: '1920x1080', from: 1249, to: 956,
+        page: 'circuit', viewport: '1920x1080', from: 1249, to: 937,
         reason: 'square board (2026-10-18): logical canvas 560×420 → 560×560, --frame-ratio 1.3333 → 1. '
             + 'Height-driven stage gets narrower so the tall lab diagrams can scale up on a phone.',
     },
