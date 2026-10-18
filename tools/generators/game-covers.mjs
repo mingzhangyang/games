@@ -94,6 +94,8 @@ const pickCanvas = page => page.evaluate(() => {
 async function captureShadowLoom(page) {
     const { LEVELS } = await import(pathToFileURL(join(ROOT, 'src/games/shadow-loom/model/levels.js')));
     const R = await import(pathToFileURL(join(ROOT, 'src/games/shadow-loom/model/rules.js')));
+    const { loadSilhouettes } = await import(pathToFileURL(join(ROOT, 'src/generated/shadow-loom/silhouettes.js')));
+    await loadSilhouettes(LEVELS[0].id);
     const sol = R.compileLevel(LEVELS[0]).solution.pieces.map(p => ({ x: p.x, y: p.y }));
     await page.goto(`${BASE}/shadow-loom.html`, { waitUntil: 'load' });
     await page.waitForFunction(() => window.slGame && window.slGame.state === 'menu', { timeout: 15000 });

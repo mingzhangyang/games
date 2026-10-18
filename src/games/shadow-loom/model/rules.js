@@ -201,13 +201,15 @@ export function compileLevel(level) {
     if (compiled.has(level)) return compiled.get(level);
     const pieces = level.pieces.map((p, i) => {
         const svg = getSilhouette(level.id, p.id);
-        const sourcePolys = svg ? svg.outer : shapeToPolys(p.shape, (level.seed || 1) * 13 + i);
-        const sourceHoles = svg ? svg.holes : [];
+        // Never silently judge a procedural fallback when the authored SVG was not loaded.
+        if (!svg) throw new Error(`Shadow Loom silhouette not loaded: ${level.id}/${p.id}`);
+        const sourcePolys = svg.outer;
+        const sourceHoles = svg.holes;
         // Authored SVG paths use absolute stage coordinates. The level's sol point
         // is the shared anchor; converting to local coordinates keeps the existing
         // projection math and makes target/paper/shadow transforms identical.
-        const ax = svg ? svg.anchor[0] : 0;
-        const ay = svg ? svg.anchor[1] : 0;
+        const ax = svg.anchor[0];
+        const ay = svg.anchor[1];
         const polys = sourcePolys.map(poly => poly.map(([x, y]) => [x - ax, y - ay]));
         const holes = sourceHoles.map(poly => poly.map(([x, y]) => [x - ax, y - ay]));
         let minY = Infinity;
