@@ -304,7 +304,7 @@ export class MagneticGardenGame {
     }
     applyLanguage() {
         const t = this.t(); document.title = t.pageTitle; this.cancelHint();
-        for (const [id, icon, key] of [['mg-home',ICONS.home,'home'],['mg-undo',ICONS.retry,'undo'],['mg-flip',FLIP_ICON,'flip'],['mg-preview-btn',ICONS.play,'preview'],['mg-hint-btn',ICONS.help,this.hintStage ? 'nextHint' : 'hint'],['mg-commit',ICONS.check,'commit'],['mg-clear-preview',ICONS.close,'cancelPreview'],['mg-help-btn',ICONS.help,'how'],['mg-help-close',ICONS.check,'closeHelp'],['mg-resume',ICONS.play,'resume'],['mg-restart',ICONS.retry,'restart'],['mg-pause-menu',ICONS.home,'menu'],['mg-result-undo',ICONS.retry,'undo'],['mg-again',ICONS.retry,'again'],['mg-result-menu',ICONS.home,'menu']]) {
+        for (const [id, icon, key] of [['mg-home',ICONS.home,'home'],['mg-undo',ICONS.retry,'undo'],['mg-flip',FLIP_ICON,'flip'],['mg-preview-btn',ICONS.play,'preview'],['mg-hint-btn',ICONS.help,this.hintStage ? 'nextHint' : 'hint'],['mg-commit',ICONS.check,'commit'],['mg-clear-preview',ICONS.close,'cancelPreview'],['mg-help-btn',ICONS.help,'how'],['mg-help-close',ICONS.check,'closeHelp'],['mg-resume',ICONS.play,'resume'],['mg-restart',ICONS.retry,'restart'],['mg-pause-menu',ICONS.home,'menu'],['mg-result-undo',ICONS.retry,'undo'],['mg-again',ICONS.retry,'again'],['mg-result-menu',ICONS.home,'menu'],['mg-next',ICONS.arrowRight,'next']]) {
             if (id === 'mg-home') { $(id).innerHTML = icon; $(id).title = t[key]; $(id).setAttribute('aria-label', t[key]); } else iconLabel(id, icon, t[key]);
         }
         if (this.hintMessage) { this.hintStage = 0; this.hintMessage = ''; }

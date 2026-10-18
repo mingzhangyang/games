@@ -197,7 +197,14 @@ function homeZhMap() {
 }
 
 function homeZhContent() {
-    return `export default new Map([\n${[...homeZhMap()].map(([k, v]) => `  [${jsq(k)},${jsq(v)}],`).join('\n')}\n]);`;
+    // Two compact Map entries per lint-compliant 4-space row. Keep generation
+    // readable without duplicating indentation in the lazy-loaded locale.
+    const entries = [...homeZhMap()].map(([k, v]) => `[${jsq(k)},${jsq(v)}]`);
+    const rows = [];
+    for (let i = 0; i < entries.length; i += 2) {
+        rows.push(`    ${entries.slice(i, i + 2).join(',')},`);
+    }
+    return `export default new Map([\n${rows.join('\n')}\n]);`;
 }
 
 function homeZhTransform(src) {
