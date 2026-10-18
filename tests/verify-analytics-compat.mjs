@@ -8,22 +8,27 @@ import vm from 'node:vm';
 const code = readFileSync(new URL('../public/analytics.js', import.meta.url), 'utf8');
 
 async function testClient(stats, failedProbe = false, delayedProbe = false) {
-    const sent = [], probes = [], intervals = [];
+    const sent = [], probes = [], intervals = [], handlers = new Map();
     let resolveProbe;
     let clock = 0, counter = 1;
+    let wallNow = Date.parse('2026-10-13T15:59:58Z');
+    const TestDate = class extends Date { static now() { return wallNow; } };
     const location = { origin: 'https://games.orangely.xyz', pathname: '/tetris.html' };
     const window = {
         location,
         crypto: { randomUUID: () =>
             'f1cb914e-5c44-4a0d-9a55-' + (counter++).toString(16).padStart(12, '0') },
-        addEventListener() {},
+        addEventListener(name, callback) {
+            if (!handlers.has(name)) handlers.set(name, []);
+            handlers.get(name).push(callback);
+        },
     };
     const document = {
         currentScript: null, visibilityState: 'visible',
         hasFocus: () => true, addEventListener() {},
     };
     const context = {
-        window, document, location,
+        window, document, location, Date: TestDate,
         performance: { now: () => clock },
         navigator: { sendBeacon(url, body) {
             assert(String(url).endsWith('/event'));
@@ -47,9 +52,60 @@ async function testClient(stats, failedProbe = false, delayedProbe = false) {
     const drain = () => new Promise(resolve => setImmediate(resolve));
     await drain();
     return { window, sent, probes, intervals, drain, advance(ms) { clock += ms; },
+        setWall(value) { wallNow = value; },
+        fire(name) { for (const listener of handlers.get(name) || []) listener(); },
         finishProbe(data) { resolveProbe({ ok: true, json: async () => data }); } };
 }
 
+
+const v2Response = {
+    scope: 'day', games: {},
+    total: { p: 0, f: 0, opens: 0, activeSeconds: 0, playingSeconds: 0 },
+};
+
+const fullBuffer = await testClient(null, false, true);
+for (let i = 0; i < 8; i++) {
+    fullBuffer.window.hubTrack('tetris', 'play');
+    fullBuffer.window.hubTrack('tetris', 'finish');
+}
+assert.equal(fullBuffer.sent.length, 0);
+fullBuffer.finishProbe(v2Response);
+await fullBuffer.drain();
+assert.deepEqual(fullBuffer.sent.map(e => e.event),
+    ['open', ...Array.from({ length: 8 }, () => ['play', 'finish']).flat()],
+    'the open and all sixteen accepted attempts fit in the bounded transport');
+assert(fullBuffer.sent.every(e => e.v === 2 && e.eventId && e.sessionId));
+
+const departing = await testClient(null, false, true);
+departing.window.hubTrack('tetris', 'play');
+departing.window.hubTrack('tetris', 'finish');
+departing.fire('pagehide');
+assert.deepEqual(departing.sent, [
+    { game: 'tetris', event: 'play' },
+    { game: 'tetris', event: 'finish' },
+], 'pagehide must send buffered attempts over unload-safe legacy transport');
+departing.finishProbe(v2Response);
+await departing.drain();
+assert.deepEqual(departing.sent.filter(e => e.event === 'play' || e.event === 'finish'),
+    [{ game: 'tetris', event: 'play' }, { game: 'tetris', event: 'finish' }],
+    'late probe resolution does not duplicate pagehide-fallback attempts');
+
+const crossingMidnight = await testClient(null, false, true);
+const beforeMidnight = Date.parse('2026-10-13T15:59:59Z');
+const afterMidnight = Date.parse('2026-10-13T16:00:01Z');
+crossingMidnight.setWall(beforeMidnight);
+crossingMidnight.window.hubTrack('tetris', 'play');
+crossingMidnight.setWall(afterMidnight);
+crossingMidnight.window.hubTrack('tetris', 'finish');
+crossingMidnight.finishProbe(v2Response);
+await crossingMidnight.drain();
+assert.deepEqual(crossingMidnight.sent.map(e => e.event), ['open', 'play', 'finish']);
+assert.equal(crossingMidnight.sent[1].occurredAt, beforeMidnight,
+    'pre-midnight play must retain its occurrence time');
+assert.equal(crossingMidnight.sent[2].occurredAt, afterMidnight,
+    'post-midnight finish must retain its occurrence time');
+assert.equal(crossingMidnight.sent[0].occurredAt, afterMidnight,
+    'the new document open uses probe-resolution time');
 
 const delayed = await testClient(null, false, true);
 delayed.window.hubTrack('tetris', 'play');

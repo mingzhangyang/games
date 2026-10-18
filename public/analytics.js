@@ -61,6 +61,9 @@
     var MAX_SAMPLE_MS = 2500;
     var CHECKPOINT_MS = 30000;
     var MAX_PENDING = 16;
+    // The transport reserves one additional slot for the page's 'open' while
+    // replaying all 16 accepted pre-probe play/finish events.
+    var MAX_TRANSPORT_PENDING = MAX_PENDING + 1;
 
     function isForeground() {
         return document.visibilityState === 'visible'
@@ -152,7 +155,7 @@
     function enqueue(payload) {
         try {
             var body = JSON.stringify(payload);
-            if (queue.length >= MAX_PENDING) {
+            if (queue.length >= MAX_TRANSPORT_PENDING) {
                 // Prioritize open/play/finish; never accumulate an infinite offline backlog.
                 var index = queue.findIndex(function (x, i) { return i > 0 && x.kind === 'active'; });
                 if (index < 0) return; // bounded loss under extended outage
@@ -226,7 +229,13 @@
     });
     window.addEventListener('blur', interrupt);
     window.addEventListener('focus', function () { lastTick = performance.now(); });
-    window.addEventListener('pagehide', interrupt);
+    window.addEventListener('pagehide', function () {
+        // The browser may unload before the Worker capability request settles.
+        // Best-effort legacy beacons preserve attempts rather than discarding them.
+        // A late probe must not replay these attempts a second time.
+        settleProbe(true);
+        interrupt();
+    });
     window.addEventListener('pageshow', function () { lastTick = performance.now(); });
     // Movement-based games may steer continuously without clicking. Every real
     // control gesture refreshes the local idle clock; none sends a network event.
@@ -240,16 +249,17 @@
         },
         flush: function () { sample(); flush(); }
     };
-    function deliverAttempt(game, event) {
-        if (ready) sendV2(event);
+    function deliverAttempt(game, event, occurredAt, forceLegacy) {
+        if (!forceLegacy && ready) sendV2(event, undefined, undefined, occurredAt);
         else if (canProbe && !localTest) legacySend({ game: game, event: event });
     }
 
-    function settleProbe() {
+    function settleProbe(forceLegacy) {
         if (!probePending) return;
         probePending = false;
         for (var i = 0; i < earlyEvents.length; i++) {
-            deliverAttempt(gameId, earlyEvents[i]);
+            var item = earlyEvents[i];
+            deliverAttempt(gameId, item.event, item.occurredAt, forceLegacy);
         }
         earlyEvents.length = 0;
     }
@@ -262,7 +272,9 @@
         // During capability detection, sending legacy would lose event IDs and
         // session linkage. Queue a bounded set, then choose exactly one protocol.
         if (probePending) {
-            if (earlyEvents.length < MAX_PENDING) earlyEvents.push(event);
+            if (earlyEvents.length < MAX_PENDING) {
+                earlyEvents.push({ event: event, occurredAt: Date.now() });
+            }
             return;
         }
         deliverAttempt(game, event);
