@@ -22,14 +22,13 @@
  *      整页刷新后入口显示「继续」，点进去按输入序列恢复（分数、笔记、用时）；排行榜弹窗静默暂停、关闭后继续；
  *      完成时只 POST 一次到 sudoku-mist-d<今天>（分数 = Node 侧回放）、写完成标记、清进度；
  *      「再来一局」是练习局：可以重开，完成后不再提交
- *   ⑰ 每日一雾边界：两个标签页先后开一局 → 后开的接手计分、先开的让出，再进是练习局（只 POST 一次、不覆盖成绩）；
+ *   ⑰ 每日一雾边界：A 在计分局里时 B 进不来（Web Locks，留在菜单说明原因）；A 完成后 B 再进是练习局（只 POST 一次、不覆盖成绩）；
  *      完成那一刻发现别处已写完成标记 → 降为练习局；
  *      完成标记写不进存储 → 进度存成含最后一步的完整输入、本页「再来一局」仍是练习局且完成后不删恢复数据、
- *      刷新后重放到 done 恢复原分数；POST 未返回时成绩已在本地重试队列，确认后移除；进页补交昨天未确认的成绩；
- *      未完成的计分局只有一个主人：另一个标签页续上后，旧标签页回菜单、不再覆盖新进度；
+ *      刷新后重放到 done 恢复原分数；POST 未返回时成绩已在本地重试队列，确认后移除；进页补交昨天未确认的成绩
+ *   ⑱ 同一时刻一个标签页：B 在局里时 A 进不来也覆盖不了；B 离开后 A 再进以存档为准（不用自己过期的内存检查点）；
  *      进度写不进存储时，回菜单再进用本页内存检查点（失误不会被「撤销」）
- *   ⑲ 接手的边界：持有暂停租约（切到后台）时续上存档不会被误判为过期；接手时写不进存储 → 拒绝接手、
- *      原主人照常继续，存储恢复后再进才正常接手
+ *   ⑲ 锁的边界：持有暂停租约（切到后台）时续上存档照常是计分局；拿锁的标签页关掉后锁自动放开
  *
  * 用法：node tests/smoke-sudoku-mist.mjs [baseUrl]（verify-all 自动传入）
  */
@@ -655,55 +654,61 @@ try {
             await p.bringToFront();
             await p.evaluate(() => { const g = window.smGame; if (g.state === 'playing' && g.isPaused) g.resume(); });
         };
-        for (const p of [a, b]) {
-            await front(p);
-            await p.evaluate(() => window.smGame.toMenu());
+        const enterDaily = async p => {
             await p.click('#sm-daily-btn');
-            await p.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
-        }
-        // 后开的 B 接手这局，A 让出回菜单（同一时刻只有一个计分局）
-        await sleep(200);
-        const owners = await Promise.all([a, b].map(p => p.evaluate(() => ({ state: window.smGame.state, ranked: window.smGame.isRanked() }))));
-        // B 完成：POST 还在路上时，成绩已经在本地重试队列里
-        scores.hold = true;
+            await p.waitForFunction(() => !document.getElementById('sm-start').hasAttribute('aria-busy')
+                && (window.smGame.state === 'playing' || document.getElementById('sm-start-status').textContent), { timeout: 8000 });
+        };
+        await front(a);
+        await a.evaluate(() => window.smGame.toMenu());
+        await enterDaily(a);
+        // A 拿着今天的锁：B 点进来被拒绝，留在菜单说明原因
         await front(b);
-        const bDone = await solveInPage(b);
+        await b.evaluate(() => window.smGame.toMenu());
+        await enterDaily(b);
+        const refused = await b.evaluate(() => ({
+            state: window.smGame.state, ranked: window.smGame.isRanked(), status: document.getElementById('sm-start-status').textContent,
+        }));
+        // A 完成：POST 还在路上时，成绩已经在本地重试队列里
+        scores.hold = true;
+        await front(a);
+        const aDone = await solveInPage(a);
         await sleep(300);
-        const inFlight = await b.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]'));
-        check(owners[0].state === 'menu' && !owners[0].ranked && owners[1].ranked && bDone.state === 'result' && bDone.ranked === true
-            && scores.held.length === 1 && inFlight.length === 1 && inFlight[0].game === `sudoku-mist-d${key}` && inFlight[0].score === bDone.score,
-        '⑰ 两个标签页先后开今天的计分局：后开的接手、先开的让出；完成后 POST 未返回时成绩已在本地重试队列',
-        JSON.stringify({ owners, bDone, held: scores.held.length, inFlight }));
+        const inFlight = await a.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]'));
+        check(refused.state === 'menu' && !refused.ranked && /另一个标签页/.test(refused.status)
+            && aDone.state === 'result' && aDone.ranked === true
+            && scores.held.length === 1 && inFlight.length === 1 && inFlight[0].game === `sudoku-mist-d${key}` && inFlight[0].score === aDone.score,
+        '⑰ A 在计分局里时 B 进不来（留在菜单说明原因）；A 完成后 POST 未返回时成绩已在本地重试队列',
+        JSON.stringify({ refused, aDone, held: scores.held.length, inFlight }));
         scores.hold = false;
         for (const req of scores.held.splice(0)) {
             void req.respond({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{"ok":true}' });
         }
-        await b.waitForFunction(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length === 0, { timeout: 5000 })
+        await a.waitForFunction(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length === 0, { timeout: 5000 })
             .catch(() => {});
-        const afterAck = await b.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length);
+        const afterAck = await a.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length);
         check(afterAck === 0, '⑰ Worker 确认后成绩从本地重试队列移除', String(afterAck));
-        // A 再进：今天已完成，是练习局；完成后不提交、不覆盖 B 的成绩
-        await front(a);
-        await a.click('#sm-daily-btn');
-        await a.waitForFunction(() => window.smGame.state === 'playing', { timeout: 8000 });
-        const aDone = await solveInPage(a);
+        // A 完成就放开锁：B 再进是练习局；完成后不提交、不覆盖 A 的成绩
+        await front(b);
+        await enterDaily(b);
+        const bDone = await solveInPage(b);
         await sleep(1100);
-        const aView = await a.evaluate(d => ({
+        const bView = await b.evaluate(d => ({
             done: JSON.parse(localStorage.getItem(d) || 'null'),
             best: document.getElementById('sm-result-best').textContent,
         }), doneSlot);
-        check(aDone.state === 'result' && aDone.ranked === false && scores.posts.length === 1
-            && aView.done?.score === bDone.score && /练习/.test(aView.best),
-        '⑰ 让出的标签页再进是练习局：只 POST 一次、不覆盖第一次的成绩', JSON.stringify({ aDone, posts: scores.posts.length, aView }));
-        // 完成那一刻再查完成标记：计分局还在手上，但别处已经写了今天的完成标记 → 降为练习局
-        await b.evaluate((r, d) => { localStorage.removeItem(r); localStorage.removeItem(d); window.smGame.dailyCleared.clear(); window.smGame.toMenu(); }, runSlot, doneSlot);
-        await front(b);
-        await b.click('#sm-daily-btn');
-        await b.waitForFunction(() => window.smGame.state === 'playing' && window.smGame.isRanked(), { timeout: 8000 });
-        await b.evaluate(d => localStorage.setItem(d, JSON.stringify({ score: 7, time: 1 })), doneSlot);
+        check(bDone.state === 'result' && bDone.ranked === false && scores.posts.length === 1
+            && bView.done?.score === aDone.score && /练习/.test(bView.best),
+        '⑰ A 完成后 B 再进是练习局：只 POST 一次、不覆盖第一次的成绩', JSON.stringify({ bDone, posts: scores.posts.length, bView }));
+        // 完成那一刻再查完成标记（兜底）：计分局还在手上，但别处已经写了今天的完成标记 → 降为练习局
+        await a.evaluate((r, d) => { localStorage.removeItem(r); localStorage.removeItem(d); window.smGame.dailyCleared.clear(); window.smGame.toMenu(); }, runSlot, doneSlot);
+        await front(a);
+        await enterDaily(a);
+        await a.waitForFunction(() => window.smGame.state === 'playing' && window.smGame.isRanked(), { timeout: 8000 });
+        await a.evaluate(d => localStorage.setItem(d, JSON.stringify({ score: 7, time: 1 })), doneSlot);
         const posts2 = scores.posts.length;
-        const late = await solveInPage(b);
-        const lateDone = await b.evaluate(d => JSON.parse(localStorage.getItem(d) || 'null'), doneSlot);
+        const late = await solveInPage(a);
+        const lateDone = await a.evaluate(d => JSON.parse(localStorage.getItem(d) || 'null'), doneSlot);
         check(late.ranked === false && scores.posts.length === posts2 && lateDone?.score === 7,
             '⑰ 完成时发现别处已写完成标记：降为练习局、不提交、不覆盖', JSON.stringify({ late, lateDone }));
         await b.close();
@@ -770,7 +775,7 @@ try {
         await c.close();
     }
 
-    /* ── ⑱ 每日一雾：未完成进度的主人与内存检查点 ── */
+    /* ── ⑱ 每日一雾：同一时刻一个标签页、内存检查点 ── */
     {
         const scores = { posts: [], gets: [], hold: false, held: [] };
         const key = todayKey();
@@ -789,27 +794,29 @@ try {
         await a.evaluate((r, d) => { localStorage.removeItem(r); localStorage.removeItem(d); window.smGame.toMenu(); }, runSlot, doneSlot);
         await enterDaily(a);
         await stepInPage(a, 3);
+        await a.evaluate(() => window.smGame.toMenu());
+        // A 回菜单放开锁；B 接着存档里的 3 步玩到 7 步。B 在局里时 A 进不来
         const { page: b, errs: berrs } = await open({ scores });
         await front(b);
         await enterDaily(b);
         const bResumed = await b.evaluate(() => window.smGame.session.inputs.length);
         await stepInPage(b, 4);
-        await sleep(200);
         await front(a);
-        await sleep(200);
-        const aState = await a.evaluate(() => ({
-            state: window.smGame.state, status: document.getElementById('sm-start-status').textContent, ranked: window.smGame.isRanked(),
-        }));
-        await a.evaluate(() => window.smGame.persist());
-        const afterStale = await stored(a);
-        check(bResumed === 3 && aState.state === 'menu' && /另一个标签页/.test(aState.status) && !aState.ranked && afterStale === 7,
-            '⑱ 另一个标签页续上计分局后：旧标签页回菜单说明原因、不再覆盖新进度（7 步）', JSON.stringify({ bResumed, aState, afterStale }));
+        await a.click('#sm-daily-btn');
+        await a.waitForFunction(() => !document.getElementById('sm-start').hasAttribute('aria-busy') && document.getElementById('sm-start-status').textContent, { timeout: 8000 });
+        const aRefused = await a.evaluate(() => ({ state: window.smGame.state, status: document.getElementById('sm-start-status').textContent }));
+        const whileB = await stored(a);
+        await front(b);
+        await b.evaluate(() => window.smGame.toMenu());
+        // A 再进：存档在它离开后被 B 写过，以存档（7 步）为准，不用自己过期的内存检查点（3 步）
+        await front(a);
         await enterDaily(a);
         const aTook = await a.evaluate(() => window.smGame.session.inputs.length);
-        await front(b);
-        await sleep(200);
-        const bState = await b.evaluate(() => window.smGame.state);
-        check(aTook === 7 && bState === 'menu', '⑱ 旧标签页重新进入就接着新进度（7 步），另一个标签页随之让出', JSON.stringify({ aTook, bState }));
+        await a.evaluate(() => window.smGame.persist());
+        const afterA = await stored(a);
+        check(bResumed === 3 && aRefused.state === 'menu' && /另一个标签页/.test(aRefused.status) && whileB === 7,
+            '⑱ B 在局里时 A 进不来、也不会覆盖 B 的进度（7 步）', JSON.stringify({ bResumed, aRefused, whileB }));
+        check(aTook === 7 && afterA === 7, '⑱ B 离开后 A 再进：接着存档里的 7 步（不用自己过期的 3 步）', JSON.stringify({ aTook, afterA }));
         await b.close();
         check(aerrs.length === 0 && berrs.length === 0, '⑱ 两个标签页：无 pageerror', [...aerrs, ...berrs].join(' | '));
         await a.close();
@@ -842,7 +849,7 @@ try {
         await c.close();
     }
 
-    /* ── ⑲ 接手的边界：暂停租约下续上存档、写不进存储时拒绝接手 ── */
+    /* ── ⑲ 锁的边界：暂停租约下续上存档、关掉拿锁的标签页 ── */
     {
         const scores = { posts: [], gets: [], hold: false, held: [] };
         const key = todayKey();
@@ -880,42 +887,21 @@ try {
             && leasedRun?.inputs.length === 2 && after.state === 'playing' && after.ranked,
         '⑲ 后台暂停租约下续上存档：静默暂停、仍是计分局（没被误判为过期）、回前台可继续', JSON.stringify({ leased, leasedRun: leasedRun?.inputs.length, after }));
 
-        // 接手时写不进存储：拒绝接手，原主人照常继续
+        // 拿着锁的标签页关掉：浏览器自动放锁，另一个标签页就能进来接着玩
         await stepInPage(d, 1);
-        const owner0 = (await stored(d))?.owner;
         const { page: e, errs: eerrs } = await open({ scores });
-        await e.evaluate(r => {
-            window.__smRealSetItem = window.Storage.prototype.setItem;
-            window.Storage.prototype.setItem = function (k, v) {
-                if (k === r) throw new Error('QuotaExceededError');
-                return window.__smRealSetItem.call(this, k, v);
-            };
-        }, runSlot);
         await front(e);
         await e.click('#sm-daily-btn');
-        await e.waitForFunction(() => window.smGame.meta?.kind === 'daily' && window.smGame.state === 'menu'
-            && !document.getElementById('sm-start').hasAttribute('aria-busy'), { timeout: 8000 });
-        const refused = await e.evaluate(() => ({ status: document.getElementById('sm-start-status').textContent, ranked: window.smGame.isRanked() }));
-        await front(d);
-        await stepInPage(d, 2);
-        const dRun = await stored(d);
-        const dState = await d.evaluate(() => ({ state: window.smGame.state, ranked: window.smGame.isRanked() }));
-        check(/无法保存进度/.test(refused.status) && !refused.ranked && dState.state === 'playing' && dState.ranked
-            && dRun?.owner === owner0 && dRun.inputs.length === 5,
-        '⑲ 接手时写不进存储：拒绝接手、原标签页照常存档（5 步、主人不变）', JSON.stringify({ refused, dState, dRun: { owner: dRun?.owner === owner0, n: dRun?.inputs.length } }));
-        // 存储恢复后再进：正常接手 5 步进度，原标签页让出
-        await e.evaluate(() => { window.Storage.prototype.setItem = window.__smRealSetItem; });
-        await front(e);
+        await e.waitForFunction(() => !document.getElementById('sm-start').hasAttribute('aria-busy') && document.getElementById('sm-start-status').textContent, { timeout: 8000 });
+        const refused = await e.evaluate(() => ({ state: window.smGame.state, status: document.getElementById('sm-start-status').textContent }));
+        await d.close();
         await e.click('#sm-daily-btn');
         await e.waitForFunction(() => window.smGame.state === 'playing' && window.smGame.isRanked(), { timeout: 8000 });
         const eTook = await e.evaluate(() => window.smGame.session.inputs.length);
-        await front(d);
-        await sleep(200);
-        const dYield = await d.evaluate(() => window.smGame.state);
-        check(eTook === 5 && dYield === 'menu', '⑲ 存储恢复后再进：接手 5 步进度，原标签页让出', JSON.stringify({ eTook, dYield }));
+        check(refused.state === 'menu' && /另一个标签页/.test(refused.status) && eTook === 3,
+            '⑲ 拿着锁的标签页关掉后锁自动放开：另一个标签页进来接着 3 步', JSON.stringify({ refused, eTook }));
         check(derrs.length === 0 && eerrs.length === 0, '⑲ 无 pageerror', [...derrs, ...eerrs].join(' | '));
         await e.close();
-        await d.close();
     }
 
     /* ── 浅色主题 ── */
