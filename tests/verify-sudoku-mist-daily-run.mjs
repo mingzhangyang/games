@@ -215,16 +215,15 @@ await tick();
 failKey = null;
 await a.acquire(recoveryDate);
 const recovered = a.resumeFor(recoveryDate);
-ok(recovered.ok && recovered.value?.rev === 2 && recovered.value?.baseRev === 1
-    && recovered.value.inputs.length === 3 && recovered.value.notes[4] === 32,
-    '⑦ 新锁与已保存 rev 1 一致：恢复未落盘的 3 步和笔记（rev 2）');
+const restoredRevision = recovered.ok && recovered.value?.rev === 2 && recovered.value?.baseRev === 1;
+const restoredPayload = recovered.value?.inputs.length === 3 && recovered.value?.notes[4] === 32;
+ok(restoredRevision && restoredPayload, '⑦ 新锁与已保存 rev 1 一致：恢复未落盘的 3 步和笔记（rev 2）');
 a.start(recoveryDate, 99, recovered.value);
 ok(a.unsaved, '⑦ 重新绑定新锁后保持 dirty 标记，绝不把输入当成已保存');
 a.release();
-ok(JSON.parse(store.get(recoveryKey)).rev === 2
-    && JSON.parse(store.get(recoveryKey)).inputs.length === 3
-    && JSON.parse(store.get(recoveryKey)).notes[4] === 32,
-    '⑦ 释放新锁时补写原有 3 步和笔记，保持分数所需的完整输入');
+const recoveredOnDisk = JSON.parse(store.get(recoveryKey));
+const savedRecovery = recoveredOnDisk.rev === 2 && recoveredOnDisk.inputs.length === 3 && recoveredOnDisk.notes[4] === 32;
+ok(savedRecovery, '⑦ 释放新锁时补写原有 3 步和笔记，保持分数所需的完整输入');
 await tick();
 
 // 从 rev 0 开始的失败首存也能恢复：磁盘确实没有旧进度才允许复用内存。
@@ -239,9 +238,9 @@ await tick();
 failKey = null;
 await a.acquire(firstSaveDate);
 const recoveredZero = a.resumeFor(firstSaveDate);
-ok(recoveredZero.ok && recoveredZero.value?.inputs.length === 1
-    && recoveredZero.value.baseRev === 0 && store.get(firstSaveKey) === undefined,
-    '⑦ 新锁确认磁盘为空 rev 0：保留第一次写入失败时的那一步');
+const zeroRevision = recoveredZero.ok && recoveredZero.value?.inputs.length === 1;
+const emptyStorage = recoveredZero.value?.baseRev === 0 && store.get(firstSaveKey) === undefined;
+ok(zeroRevision && emptyStorage, '⑦ 新锁确认磁盘为空 rev 0：保留第一次写入失败时的那一步');
 a.start(firstSaveDate, 123, recoveredZero.value);
 a.release();
 ok(JSON.parse(store.get(firstSaveKey)).inputs.length === 1,
