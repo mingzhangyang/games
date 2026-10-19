@@ -92,6 +92,9 @@ self.addEventListener('install', event => {
                 await cache.put(path, response);
             }
         } catch (error) {
+            // Installation errors are otherwise easy to miss because the
+            // registering page deliberately treats registration as optional.
+            console.error('[games/sw] Precache install failed:', error);
             if (!existed) await caches.delete(CACHE);
             throw error;
         }

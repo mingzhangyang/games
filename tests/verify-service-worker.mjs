@@ -102,6 +102,26 @@ const fixtureServer = createServer((req, res) => {
 const prodBase = await listen(distServer);
 const base = await listen(fixtureServer);
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
+// Capture install errors from the Service Worker target, not just the page:
+// navigator.serviceWorker.register() can resolve before install fails.
+browser.on('targetcreated', async target => {
+    if (target.type() !== 'service_worker') return;
+    try {
+        const session = await target.createCDPSession();
+        session.on('Runtime.consoleAPICalled', event => {
+            if (event.type === 'error') {
+                console.error('SW console:', event.args.map(arg => arg.value ?? arg.description).join(' '));
+            }
+        });
+        session.on('Runtime.exceptionThrown', event => {
+            console.error('SW exception:', event.exceptionDetails?.text,
+                event.exceptionDetails?.exception?.description);
+        });
+        await session.send('Runtime.enable');
+    } catch {
+        // The worker can already have exited after a rejected install.
+    }
+});
 let page;
 const keys = p => p.evaluate(() => globalThis.caches.keys());
 const owned = async p => (await keys(p)).filter(name => name.startsWith('games-cache-')).sort();
@@ -153,8 +173,20 @@ try {
     const productionPage = await browser.newPage();
     try {
         await productionPage.goto(prodBase + '/', { waitUntil: 'load', timeout: 30000 });
-        await productionPage.waitForFunction(() => Boolean(navigator.serviceWorker.controller),
-            { timeout: 25000 });
+        try {
+            await productionPage.waitForFunction(() => Boolean(navigator.serviceWorker.controller),
+                { timeout: 25000 });
+        } catch (error) {
+            console.error('Production SW diagnostics:', await productionPage.evaluate(async () => {
+                const reg = await navigator.serviceWorker.getRegistration();
+                return {
+                    registration: reg && { active: reg.active?.state, waiting: reg.waiting?.state,
+                        installing: reg.installing?.state },
+                    caches: await globalThis.caches.keys(),
+                };
+            }));
+            throw error;
+        }
         productionNetworkDown = true;
         await productionPage.setOfflineMode(true);
         await productionPage.reload({ waitUntil: 'domcontentloaded' });
