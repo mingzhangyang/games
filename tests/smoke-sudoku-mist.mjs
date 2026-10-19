@@ -794,6 +794,19 @@ try {
             return { ranked: g.isRanked(), held: g.daily.holds(date) };
         }, key);
         check(!raced.ranked && !raced.held, '拿锁后重读完成标记：等待期间完成的每日题只能练习', JSON.stringify(raced));
+        const cached = await p.evaluate(async () => {
+            const g = window.smGame;
+            await g.startDaily('20261024');
+            g.hint();
+            const length = g.session.inputs.length;
+            window.dispatchEvent(new window.PageTransitionEvent('pagehide', { persisted: true }));
+            window.dispatchEvent(new window.PageTransitionEvent('pageshow', { persisted: true }));
+            const result = { state: g.state, held: g.daily.holds('20261024') };
+            await g.startDaily('20261024');
+            return { ...result, resumed: g.session.inputs.length === length, reacquired: g.daily.holds('20261024') };
+        });
+        check(cached.state === 'menu' && !cached.held && cached.resumed && cached.reacquired,
+            '页面缓存恢复回菜单，续玩必须重新拿锁并恢复输入', JSON.stringify(cached));
         const canceled = await p.evaluate(async () => {
             const g = window.smGame;
             const pending = g.startDaily('20261022');
@@ -890,6 +903,7 @@ try {
         await stepInPage(c, 2);
         await c.evaluate(r => {
             const real = window.Storage.prototype.setItem;
+            window.__restoreProgressWrites = () => { window.Storage.prototype.setItem = real; };
             window.Storage.prototype.setItem = function (k, v) {
                 if (k === r) throw new Error('QuotaExceededError');
                 return real.call(this, k, v);
@@ -907,6 +921,24 @@ try {
         check(before.inputs === 6 && before.mistakes === 1 && back.stored === 2 && back.inputs === 6 && back.mistakes === 1
             && entryText.includes('6'),
         '⑱ 进度写不进存储：回菜单再进仍是 6 步、失误 1 次（存储里只有 2 步）', JSON.stringify({ before, back, entryText }));
+        // 即使原页回了菜单，第二页也不能用旧的 2 步接手；恢复后应交接完整 6 步。
+        await c.evaluate(() => window.smGame.toMenu());
+        const { page: blocked, errs: blockedErrors } = await open({ scores });
+        const refusedDirty = await blocked.evaluate(async () => {
+            await window.smGame.startDaily();
+            return window.smGame.state;
+        });
+        const warning = await c.$eval('#sm-start-status', el => el.textContent);
+        check(refusedDirty === 'menu' && /无法保存/.test(warning),
+            '⑱ 未落盘的检查点保留独占锁并提示未保存，第二页不能从旧进度接手', warning);
+        await c.evaluate(() => { window.__restoreProgressWrites(); window.smGame.toMenu(); });
+        await blocked.evaluate(() => window.smGame.startDaily());
+        const recoveredDirty = await blocked.evaluate(() => ({ inputs: window.smGame.session.inputs.length,
+            mistakes: window.smGame.session.summary().mistakes }));
+        check(recoveredDirty.inputs === 6 && recoveredDirty.mistakes === 1,
+            '⑱ 存储恢复后先补存再交接，另一页保留全部输入和失误', JSON.stringify(recoveredDirty));
+        check(blockedErrors.length === 0, '⑱ 接手页无 pageerror', blockedErrors.join(' | '));
+        await blocked.close();
         check(cerrs.length === 0, '⑱ 写失败：无 pageerror', cerrs.join(' | '));
         await c.close();
     }

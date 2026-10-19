@@ -72,7 +72,7 @@ export class SudokuMistGame {
         // 本页里完成过的每日局 dateKey → { score, time }（完成标记写不进存储时的兜底）
         this.dailyCleared = new Map();
         // 计分局的跨标签页互斥锁 + 本页检查点
-        this.daily = createDailyRunGuard();
+        this.daily = createDailyRunGuard({ onLost: () => { if (this.isRanked()) this.toMenu(); } });
         this.contextualRestart = null;
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
@@ -201,7 +201,15 @@ export class SudokuMistGame {
             onHidden: () => this.showPauseOverlay(),
         });
         // 直接关页（没有先切到后台）时也把每日局的用时存下来
-        window.addEventListener('pagehide', () => this.persist());
+        window.addEventListener('pagehide', () => {
+            // A BFCache-restored page must re-enter through startDaily and take a new lock.
+            if (this.isRanked()) this.toMenu();
+            else {
+                this.dailyStartId++;
+                this.el.start.removeAttribute('aria-busy');
+            }
+            this.daily.release({ force: true });
+        });
         this.applyLanguage();
         window.addEventListener('site-settings:changed', () => this.applyLanguage());
         this.toMenu();
@@ -406,7 +414,8 @@ export class SudokuMistGame {
                 if (!acquired) {
                     if (this.state !== 'menu') this.toMenu();
                     this.el.start.removeAttribute('aria-busy');
-                    this.el.status.textContent = this.daily.supported ? this.t().dailyLocked : this.t().dailyUnsupported;
+                    this.el.status.textContent = this.daily.unsaved ? this.t().dailySaveFailed
+                        : this.daily.supported ? this.t().dailyLocked : this.t().dailyUnsupported;
                     resolve(null);
                     return;
                 }
@@ -487,7 +496,9 @@ export class SudokuMistGame {
     /** 计分中的每日局：每次输入 / 暂停 / 离开后存一次（输入序列 + 用时 + 笔记）；返回存储有没有写成 */
     persist() {
         if (!this.isRanked() || !this.session || this.state !== 'playing') return false;
-        return this.daily.save(this.meta.dateKey, { inputs: this.session.inputs, elapsed: this.elapsedMs(), notes: this.notes });
+        const saved = this.daily.save(this.meta.dateKey, { inputs: this.session.inputs, elapsed: this.elapsedMs(), notes: this.notes });
+        if (!saved) this.el.message.textContent = this.t().dailySaveFailed;
+        return saved;
     }
 
     next() {
@@ -515,6 +526,7 @@ export class SudokuMistGame {
         this.el.message.textContent = '';
         this.clearFloats();
         this.renderMenu();
+        this.el.status.textContent = this.daily.unsaved ? this.t().dailySaveFailed : '';
         this.el.stage.classList.remove('sm-stage--sheet');
         this.el.stage.classList.add('sm-stage--menu');
         this.el.start.classList.remove('hidden');
@@ -867,7 +879,8 @@ export class SudokuMistGame {
     showPauseOverlay() {
         if (this.state !== 'playing' || !this.isPaused) return;
         const t = this.t();
-        this.el.pauseCopy.textContent = this.isRanked() ? t.pausedCopyDaily : t.pausedCopy;
+        this.el.pauseCopy.textContent = this.isRanked()
+            ? (this.daily.unsaved ? t.dailySaveFailed : t.pausedCopyDaily) : t.pausedCopy;
         this.el.pauseRestart.classList.toggle('hidden', this.isRanked());
         this.el.pause.classList.remove('hidden');
         $('sm-btn-resume').focus({ preventScroll: true });
@@ -993,7 +1006,8 @@ export class SudokuMistGame {
     applyLanguage() {
         const t = this.t();
         this.el.controls.textContent = isCoarsePointer() ? t.controlsTouch : t.controls;
-        this.el.pauseCopy.textContent = this.isRanked() ? t.pausedCopyDaily : t.pausedCopy;
+        this.el.pauseCopy.textContent = this.isRanked()
+            ? (this.daily.unsaved ? t.dailySaveFailed : t.pausedCopyDaily) : t.pausedCopy;
         if (this.state === 'menu') this.renderMenu();
         if (this.state === 'result' && !this.el.result.classList.contains('hidden')) this.showResult();
         this.render();

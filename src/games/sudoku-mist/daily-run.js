@@ -3,7 +3,7 @@
  * ===========================================================================
  * 互斥用浏览器自带的 Web Locks（navigator.locks）：进入今天的计分局前独占锁
  * `sudoku-mist:daily:<YYYYMMDD>`，离开（回菜单 / 完成 / 开别的局）时释放；
- * 关页、崩溃时浏览器自动释放。拿不到锁 = 另一个标签页正在这局里，本页不进。
+ * 未落盘的检查点会保留锁直到重试成功；关页、崩溃时浏览器自动释放。拿不到锁 = 另一个标签页正在这局里，本页不进。
  * 所以任何时刻最多一个标签页在写这局的进度——不需要令牌、接手、让出。
  * 不支持 Web Locks 的环境拒绝计分局，不能用无锁降级破坏计分与存档唯一性。
  *
@@ -15,7 +15,7 @@ import { loadDailyRun, saveDailyRun, clearDailyRun } from './storage.js';
 
 const lockName = dateKey => `sudoku-mist:daily:${dateKey}`;
 
-export function createDailyRunGuard({ locks = globalThis.navigator?.locks } = {}) {
+export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLost = () => {} } = {}) {
     let generation = 0;
     const supported = typeof locks?.request === 'function';
     let held = null;       // { dateKey, release }
@@ -24,23 +24,40 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks } = {}
     /** 独占今天这局；已经拿着就直接成功。拿不到（别的标签页拿着）返回 false */
     function acquire(dateKey) {
         if (held?.dateKey === dateKey) return Promise.resolve(true);
-        release();
+        if (!release()) return Promise.resolve(false);
         if (!supported) return Promise.resolve(false);
         const request = generation;
         return new Promise(resolve => {
+            let owner = null;
             locks.request(lockName(dateKey), { ifAvailable: true }, lock => {
                 if (!lock || request !== generation) { resolve(false); return undefined; }
                 // 回调返回的 promise 不结束，锁就一直拿着；release() 让它结束
-                return new Promise(done => { held = { dateKey, release: done }; resolve(true); });
-            }).catch(() => resolve(false));
+                return new Promise(done => {
+                    owner = { dateKey, release: done };
+                    held = owner;
+                    resolve(true);
+                });
+            }).catch(() => {
+                // WebKit can revoke a held lock when suspending the page/BFCache.
+                // Never let the restored document keep its stale writable ownership.
+                if (owner && held === owner) { held = null; onLost(); }
+                resolve(false);
+            });
         });
     }
 
-    function release() {
+    function release({ force = false } = {}) {
         generation++;
+        // 未落盘的检查点仍属于本页。释放前重试；失败时保留锁，避免另一页
+        // 接着旧存档游玩，撤销本页已经发生的失误 / 点灯 / 完成。
+        if (held && checkpoint?.dateKey === held.dateKey && checkpoint.rev !== checkpoint.baseRev) {
+            if (saveDailyRun(checkpoint.dateKey, checkpoint)) checkpoint = { ...checkpoint, baseRev: checkpoint.rev };
+            else if (!force) return false;
+        }
         const h = held;
         held = null;
         h?.release();
+        return true;
     }
 
     /** 续玩用哪份进度：内存检查点（期间没人写过存储）或存储里的 */
@@ -74,5 +91,6 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks } = {}
         if (checkpoint?.dateKey === dateKey) checkpoint = null;
     }
 
-    return { supported, acquire, release, holds: dateKey => held?.dateKey === dateKey, resumeFor, start, save, clear };
+    return { supported, get unsaved() { return !!checkpoint && checkpoint.rev !== checkpoint.baseRev; },
+        acquire, release, holds: dateKey => held?.dateKey === dateKey, resumeFor, start, save, clear };
 }

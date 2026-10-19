@@ -72,6 +72,17 @@ delayed.release();
 deliver();
 ok(await acquiring === false && !delayed.holds(DATE), '② 取消后迟到的锁回调不能重新取得所有权');
 
+// Safari can revoke a held lock on page suspension, rejecting the request promise.
+let revoke;
+let lost = 0;
+const suspended = createDailyRunGuard({ onLost: () => lost++, locks: {
+    request: (name, opts, cb) => new Promise((resolve, reject) => { revoke = reject; cb({ name }); }),
+} });
+await suspended.acquire(DATE);
+revoke(new Error('AbortError'));
+await tick();
+ok(!suspended.holds(DATE) && lost === 1, '② 浏览器挂起撤销锁时立即清除所有权并通知运行时');
+
 /* ── ③ 只有拿着锁才写 ── */
 store.clear();
 await a.acquire(DATE);
@@ -84,12 +95,15 @@ ok(b.save(DATE, { inputs: [], elapsed: 0, notes }) === false && stored().rev ===
 /* ── ④ 续玩选哪份 ── */
 failKey = RUN_KEY;
 ok(a.save(DATE, { inputs: [1, 2, 3].map(() => ({ type: 'hint' })), elapsed: 3000, notes }) === false, '④ 存储写失败时 save 返回 false');
-failKey = null;
-a.release();
+ok(a.release() === false && a.holds(DATE), '④ 写失败时离开仍保留锁保护未落盘检查点');
 await tick();
+ok(await b.acquire(DATE) === false, '④ 另一个标签页不能接着旧存档撤销未保存输入');
 const mem = a.resumeFor(DATE);
 ok(mem?.inputs.length === 3 && stored().inputs.length === 2, '④ 期间没人写过：本页续玩用内存检查点（3 步，存储里 2 步）', { mem: mem?.inputs.length });
-// 另一个标签页接着存储里的 2 步玩了 4 步
+// 存储恢复后先落盘再释放，另一页必须从完整的 3 步继续。
+failKey = null;
+ok(a.release() === true && stored().inputs.length === 3, '④ 恢复后释放锁先补写完整检查点');
+await tick();
 await b.acquire(DATE);
 const fromStore = b.resumeFor(DATE);
 b.start(DATE, 42, fromStore);
@@ -97,13 +111,13 @@ b.save(DATE, { inputs: Array.from({ length: 6 }, () => ({ type: 'hint' })), elap
 b.release();
 await tick();
 const after = a.resumeFor(DATE);
-ok(fromStore?.inputs.length === 2 && stored().rev === 3 && after?.inputs.length === 6,
+ok(fromStore?.inputs.length === 3 && stored().rev === 4 && after?.inputs.length === 6,
     '④ 别的标签页写过之后：本页续玩以存储为准（6 步），不用自己过期的内存检查点', { from: fromStore?.inputs.length, rev: stored().rev, after: after?.inputs.length });
-// 本页续上存储那份，再写就是 rev 4
+// 本页续上存储那份，再写就是 rev 5
 await a.acquire(DATE);
 a.start(DATE, 42, after);
 a.save(DATE, { inputs: Array.from({ length: 7 }, () => ({ type: 'hint' })), elapsed: 7000, notes });
-ok(stored().rev === 4 && stored().inputs.length === 7, '④ 续上后接着递增 rev', stored());
+ok(stored().rev === 5 && stored().inputs.length === 7, '④ 续上后接着递增 rev', stored());
 
 /* ── ⑤ clear ── */
 a.clear(DATE);
