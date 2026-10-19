@@ -152,8 +152,8 @@ const waitForOwned = async (p, names) => {
 };
 
 // A waiting worker may activate only after the last old-client tab closes.
- // Poll Cache Storage through DevTools from an about:blank probe so the probe
- // does not become another controlled client or race its first navigation.
+// Poll Cache Storage through DevTools from an about:blank probe so the probe
+// does not become another controlled client or race its first navigation.
 async function waitForReleasedGeneration(names) {
     const expected = [...names].sort();
     const probe = await browser.newPage();
