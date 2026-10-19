@@ -104,8 +104,9 @@ ok(a.save(DATE, { inputs: [1, 2, 3].map(() => ({ type: 'hint' })), elapsed: 3000
 ok(a.release() === false && a.holds(DATE), '④ 写失败时离开仍保留原锁，保护未落盘检查点');
 await tick();
 ok(await b.acquire(DATE) === false, '④ 另一个标签页不能接着旧存档撤销未保存输入');
-const mem = a.resumeFor(DATE);
-ok(mem?.inputs.length === 3 && mem?.baseRev === 2 && mem?.rev === 3 && stored().inputs.length === 2,
+const memResult = a.resumeFor(DATE);
+const mem = memResult.value;
+ok(memResult.ok && mem?.inputs.length === 3 && mem?.baseRev === 2 && mem?.rev === 3 && stored().inputs.length === 2,
     '④ 读写同时失败、baseRev 非零时，同一租约必须恢复 3 步内存进度',
     { steps: mem?.inputs.length, baseRev: mem?.baseRev, rev: mem?.rev });
 a.start(DATE, 42, mem);
@@ -119,7 +120,7 @@ ok(a.release() === true && stored().inputs.length === 4 && stored().rev === 4,
     '④ 恢复后释放锁先补写 4 步完整检查点');
 await tick();
 await b.acquire(DATE);
-const fromStore = b.resumeFor(DATE);
+const fromStore = b.resumeFor(DATE).value;
 b.start(DATE, 42, fromStore);
 b.save(DATE, { inputs: Array.from({ length: 6 }, () => ({ type: 'hint' })), elapsed: 6000, notes });
 b.release();
@@ -127,10 +128,11 @@ await tick();
 // A's old memory belongs to the released lease, not the newly acquired lock.
 await a.acquire(DATE);
 failReadKey = RUN_KEY;
-ok(a.resumeFor(DATE) === null,
-    '④ 放锁再拿到新锁后，存储不可读时不能误采用旧的 4 步检查点');
+const unreadable = a.resumeFor(DATE);
+ok(!unreadable.ok && unreadable.value === null && stored().inputs.length === 6,
+    '④ 新租约读失败必须显式拒绝，不可把旧 4 步当空存档从头开始');
 failReadKey = null;
-const after = a.resumeFor(DATE);
+const after = a.resumeFor(DATE).value;
 ok(fromStore?.inputs.length === 4 && stored().rev === 5 && after?.inputs.length === 6,
     '④ 其他标签页写过后，新租约以存储的 6 步为准，不再采用 4 步旧内存',
     { from: fromStore?.inputs.length, rev: stored().rev, after: after?.inputs.length });
@@ -141,7 +143,8 @@ ok(stored().rev === 6 && stored().inputs.length === 7, '④ 续上后接着递�
 
 /* ── ⑤ clear ── */
 a.clear(DATE);
-ok(stored() === null && a.resumeFor(DATE) === null, '⑤ clear 清掉存储与内存检查点');
+ok(stored() === null && a.resumeFor(DATE).ok && a.resumeFor(DATE).value === null,
+    '⑤ clear 清掉存储与内存检查点（可读的空存档）');
 a.release();
 
 console.log(failed === 0 ? '\nverify-sudoku-mist-daily-run 全部通过 ✅' : `\n${failed} 个失败 ❌`);

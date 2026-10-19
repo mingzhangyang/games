@@ -42,3 +42,12 @@ export function storageKeys(prefix = '') {
         return [];
     }
 }
+
+/** Report a read failure separately from an absent key (needed for durable ranked checkpoints). */
+export function storageTryGet(key) {
+    try {
+        return { ok: true, value: localStorage.getItem(key) };
+    } catch {
+        return { ok: false, value: null };
+    }
+}

@@ -12,7 +12,7 @@
  * 释放后重新获得的是新租约，必须验证存储 rev 才能重用旧内存检查点，
  * 以免另一标签页的进度被旧数据覆盖。
  */
-import { loadDailyRun, saveDailyRun, clearDailyRun } from './storage.js';
+import { readDailyRun, saveDailyRun, clearDailyRun } from './storage.js';
 
 const lockName = dateKey => `sudoku-mist:daily:${dateKey}`;
 
@@ -62,23 +62,27 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
         return true;
     }
 
-    /** 续玩用哪份进度：内存检查点（期间没人写过存储）或存储里的 */
+    /** Only a continuously held lock makes memory authoritative; all other reads can fail closed. */
     function resumeFor(dateKey) {
         const mem = checkpoint?.dateKey === dateKey ? checkpoint : null;
-        // No other ranked writer can have touched this run while OUR original
-        // lock remains held. A failed localStorage read looks like a missing
-        // checkpoint; it must not discard newer, memory-only ranked inputs.
-        if (mem && held?.dateKey === dateKey && checkpointLease === held) return mem;
-        const stored = loadDailyRun(dateKey);
-        // After releasing/reacquiring a lock, memory is no longer authoritative.
-        // Require an actual stored revision match (null can mean a read error).
-        if (mem && stored?.rev === mem.baseRev) return mem;
+        if (mem && held?.dateKey === dateKey && checkpointLease === held) {
+            return { ok: true, value: mem };
+        }
+        // A new lease does not prove storage is readable. Never interpret an
+        // exception as an empty ranked run or reuse unflushed stale memory.
+        const stored = readDailyRun(dateKey);
+        if (!stored.ok) return stored;
+        if (mem && mem.rev === mem.baseRev && stored.value?.rev === mem.baseRev) {
+            return { ok: true, value: mem };
+        }
         return stored;
     }
 
     /** 开始 / 续上这局：记下起点 rev（之后每次存档 +1） */
     function start(dateKey, seed, resume) {
-        const base = resume && resume === checkpoint ? checkpoint.baseRev : (loadDailyRun(dateKey)?.rev ?? 0);
+        // The caller already verified the read under this lock. Do not re-read
+        // storage here: it could fail between validation and initialization.
+        const base = resume && resume === checkpoint ? checkpoint.baseRev : (resume?.rev ?? 0);
         checkpoint = {
             dateKey, seed, baseRev: base, rev: resume?.rev ?? base,
             inputs: resume?.inputs ?? [], elapsed: resume?.elapsed ?? 0, notes: resume?.notes ?? null,

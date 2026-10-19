@@ -844,6 +844,70 @@ try {
             return { kind: g.meta.kind, held: g.daily.holds('20261022') };
         });
         check(canceled.kind === 'level' && !canceled.held, '切换章节后迟到的每日开局不能覆盖新关卡', JSON.stringify(canceled));
+        // Selecting Free then Daily in the same event loop: only the latest
+        // request may commit a game after the earlier free-play timeout fires.
+        const freeThenDaily = await p.evaluate(async () => {
+            const g = window.smGame;
+            g.toMenu();
+            const free = g.startFree('first', 10101);
+            const daily = g.startDaily('20261027');
+            await Promise.all([free, daily]);
+            return { kind: g.meta?.kind, dateKey: g.meta?.dateKey,
+                ranked: g.isRanked(), held: g.daily.holds('20261027') };
+        });
+        check(freeThenDaily.kind === 'daily' && freeThenDaily.dateKey === '20261027'
+            && freeThenDaily.ranked && freeThenDaily.held,
+        '自由局等待出题时选择每日局：最新的每日选择胜出，不被旧自由回调覆盖', JSON.stringify(freeThenDaily));
+        const readFailure = await p.evaluate(async () => {
+            const g = window.smGame;
+            g.toMenu();
+            const date = '20261026';
+            const slot = `game:sudoku-mist:v1:daily-run:${date}`;
+            await g.startDaily(date);
+            g.hint();
+            const before = { inputs: g.session.inputs.length, score: g.session.summary().score };
+            g.toMenu(); // release and reacquire: in-memory state is now from an old lease
+            const original = Storage.prototype.getItem;
+            let refused;
+            Storage.prototype.getItem = function (k) {
+                if (k === slot) throw new Error('SecurityError');
+                return original.call(this, k);
+            };
+            try {
+                await g.startDaily(date);
+                refused = { state: g.state, status: g.el.status.textContent,
+                    stored: JSON.parse(original.call(localStorage, slot) || 'null')?.inputs.length };
+            } finally { Storage.prototype.getItem = original; }
+            await g.startDaily(date);
+            return { before, refused, after: { state: g.state, ranked: g.isRanked(),
+                inputs: g.session.inputs.length, score: g.session.summary().score } };
+        });
+        check(readFailure.before.inputs > 0 && readFailure.refused.state === 'menu'
+            && /无法读取/.test(readFailure.refused.status)
+            && readFailure.refused.stored === readFailure.before.inputs
+            && readFailure.after.state === 'playing' && readFailure.after.ranked
+            && readFailure.after.inputs === readFailure.before.inputs
+            && readFailure.after.score === readFailure.before.score,
+        '新租约读存档失败：拒绝计分开局；读取恢复后保留原输入和分数', JSON.stringify(readFailure));
+        const completionReadFailure = await p.evaluate(async () => {
+            const g = window.smGame;
+            g.toMenu();
+            const date = '20261029';
+            const slot = `game:sudoku-mist:v1:daily:${date}`;
+            const original = Storage.prototype.getItem;
+            Storage.prototype.getItem = function (k) {
+                if (k === slot) throw new Error('SecurityError');
+                return original.call(this, k);
+            };
+            try {
+                await g.startDaily(date);
+                return { state: g.state, status: g.el.status.textContent,
+                    run: original.call(localStorage, `game:sudoku-mist:v1:daily-run:${date}`) };
+            } finally { Storage.prototype.getItem = original; }
+        });
+        check(completionReadFailure.state === 'menu' && completionReadFailure.run === null
+            && /无法读取/.test(completionReadFailure.status),
+        '完成标记读取失败同样阻止开启新的计分局，不写进度', JSON.stringify(completionReadFailure));
         // 页面启动时离线；连网事件必须补交昨日队列，而不要求刷新/打开榜单。
         scores.offline = true;
         await p.evaluate(() => {

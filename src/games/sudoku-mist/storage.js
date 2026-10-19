@@ -29,10 +29,8 @@ const isInput = a => a && (
     || (a.type === 'activate' && Number.isInteger(a.cell))
     || a.type === 'hint');
 
-/** 进行中的每日局；数据损坏时当作没有（从头开始，而不是带着坏数据重放） */
-export function loadDailyRun(dateKey) {
-    if (!isDate(dateKey)) return null;
-    const raw = SUDOKU_MIST_STORAGE.get(`daily-run:${dateKey}`, null);
+/** A critical daily read must distinguish a missing checkpoint from inaccessible storage. */
+function parseDailyRun(raw) {
     if (!raw || !Array.isArray(raw.inputs) || !raw.inputs.every(isInput)) return null;
     const notes = Array.isArray(raw.notes) && raw.notes.length === 81
         && raw.notes.every(n => Number.isInteger(n) && n >= 0 && n < 512) ? raw.notes : null;
@@ -46,6 +44,17 @@ export function loadDailyRun(dateKey) {
     };
 }
 
+export function readDailyRun(dateKey) {
+    if (!isDate(dateKey)) return { ok: false, value: null };
+    const result = SUDOKU_MIST_STORAGE.readCurrent(`daily-run:${dateKey}`, null);
+    return { ok: result.ok, value: result.ok ? parseDailyRun(result.value) : null };
+}
+
+/** Tolerant read for non-critical UI; ranked entry must use readDailyRun(). */
+export function loadDailyRun(dateKey) {
+    return readDailyRun(dateKey).value;
+}
+
 export function saveDailyRun(dateKey, { seed, rev, inputs, elapsed, notes }) {
     if (!isDate(dateKey)) return false;
     return SUDOKU_MIST_STORAGE.trySet(`daily-run:${dateKey}`, {
@@ -57,12 +66,17 @@ export function clearDailyRun(dateKey) {
     if (isDate(dateKey)) SUDOKU_MIST_STORAGE.remove(`daily-run:${dateKey}`);
 }
 
-/** 第一次完成的每日成绩；null = 今天还没完成 */
+/** Completion markers are just as important as the checkpoint: failing to read one must not reopen ranking. */
+export function readDailyDone(dateKey) {
+    if (!isDate(dateKey)) return { ok: false, value: null };
+    const result = SUDOKU_MIST_STORAGE.readCurrent(`daily:${dateKey}`, null);
+    if (!result.ok) return { ok: false, value: null };
+    const score = count(result.value?.score);
+    return { ok: true, value: score === null ? null : { score, time: count(result.value.time) ?? 0 } };
+}
+
 export function loadDailyDone(dateKey) {
-    if (!isDate(dateKey)) return null;
-    const raw = SUDOKU_MIST_STORAGE.get(`daily:${dateKey}`, null);
-    const score = count(raw?.score);
-    return score === null ? null : { score, time: count(raw.time) ?? 0 };
+    return readDailyDone(dateKey).value;
 }
 
 export function saveDailyDone(dateKey, { score, time }) {

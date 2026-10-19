@@ -35,7 +35,7 @@ import { createMist } from './render/mist.js';
 import { createSudokuMistAudio } from './audio.js';
 import { createDailyRunGuard } from './daily-run.js';
 import {
-    loadBest, saveBest, loadDailyDone, saveDailyDone, clearDailyRun,
+    loadBest, saveBest, loadDailyDone, readDailyDone, saveDailyDone, clearDailyRun,
 } from './storage.js';
 
 const GAME_ID = 'sudoku-mist';
@@ -348,8 +348,11 @@ export class SudokuMistGame {
     renderDailyEntry() {
         const t = this.t();
         const key = todayKey();
-        const done = this.dailyDoneFor(key);
-        const run = done ? null : this.daily.resumeFor(key);
+        const savedDone = readDailyDone(key);
+        const done = savedDone.value || this.dailyCleared.get(key) || null;
+        const savedRun = done || !savedDone.ok ? null : this.daily.resumeFor(key);
+        const run = savedRun?.value;
+        const unreadable = !savedDone.ok || savedRun?.ok === false;
         this.el.daily.textContent = '';
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -362,7 +365,8 @@ export class SudokuMistGame {
         const sub = document.createElement('span');
         sub.className = 'sm-daily-sub';
         sub.textContent = done ? fill(t.dailyDone, { n: done.score })
-            : run?.inputs.length ? fill(t.dailyResume, { n: run.inputs.length }) : t.dailyNew;
+            : unreadable ? t.dailyReadUnavailable
+                : run?.inputs.length ? fill(t.dailyResume, { n: run.inputs.length }) : t.dailyNew;
         btn.append(name, sub);
         btn.addEventListener('click', () => { void this.startDaily(); });
         this.el.daily.appendChild(btn);
@@ -381,10 +385,14 @@ export class SudokuMistGame {
     startFree(profile, seed = (Math.random() * 2 ** 32) >>> 0) {
         const p = FREE_PROFILES.find(x => x.id === profile);
         if (!p) throw new Error(`unknown profile ${profile}`);
+        const request = ++this.dailyStartId;
         this.el.status.textContent = this.t().generating;
         this.el.start.setAttribute('aria-busy', 'true');
         return new Promise(resolve => {
             setTimeout(() => {
+                // Free and Daily share the same generation token: the last
+                // selection wins, even if the first timer has not fired yet.
+                if (request !== this.dailyStartId) { resolve(null); return; }
                 const puzzle = generate(seed, profile);
                 this.el.status.textContent = '';
                 this.el.start.removeAttribute('aria-busy');
@@ -410,9 +418,20 @@ export class SudokuMistGame {
         const promise = new Promise(resolve => {
             setTimeout(async () => {
                 if (request !== this.dailyStartId) { resolve(null); return; }
+                const refuseUnreadable = () => {
+                    // A failed read is not an empty save. Leave ranking untouched,
+                    // and let the player retry after storage becomes accessible.
+                    if (this.state !== 'menu') this.toMenu();
+                    this.daily.release();
+                    this.el.start.removeAttribute('aria-busy');
+                    this.el.status.textContent = this.daily.unsaved ? this.t().dailySaveFailed : this.t().dailyReadFailed;
+                    resolve(null);
+                };
                 if (this.dailyPuzzle?.dateKey !== dateKey) this.dailyPuzzle = { dateKey, puzzle: generateDaily(dateKey) };
                 const { puzzle } = this.dailyPuzzle;
-                let done = this.dailyDoneFor(dateKey);
+                const firstDone = readDailyDone(dateKey);
+                if (!firstDone.ok) { refuseUnreadable(); return; }
+                let done = firstDone.value || this.dailyCleared.get(dateKey) || null;
                 // 计分局要先独占锁；另一个标签页正在这局里就不进，留在菜单说明原因
                 const acquired = done || await this.daily.acquire(dateKey);
                 if (request !== this.dailyStartId) { resolve(null); return; }
@@ -424,14 +443,19 @@ export class SudokuMistGame {
                     resolve(null);
                     return;
                 }
-                // 完成标记也属于锁保护的数据：等待锁期间另一个标签页可能已经完成。
-                done = this.dailyDoneFor(dateKey);
+                // Another tab may have completed while we waited for the lock.
+                // Recheck both pieces of ranked state before allowing a start.
+                const secondDone = readDailyDone(dateKey);
+                if (!secondDone.ok) { refuseUnreadable(); return; }
+                done = secondDone.value || this.dailyCleared.get(dateKey) || null;
+                const savedRun = done ? { ok: true, value: null } : this.daily.resumeFor(dateKey);
+                if (!savedRun.ok) { refuseUnreadable(); return; }
+                const run = savedRun.value;
                 this.el.status.textContent = '';
                 this.el.start.removeAttribute('aria-busy');
                 const date = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
                 const name = { en: fill(LANGUAGES.en.dailyName, { date }), zh: fill(LANGUAGES.zh.dailyName, { date }) };
-                const run = done ? null : this.daily.resumeFor(dateKey);
-                // 生成器升过版本（同一天的题变了）就丢掉旧进度，免得拿旧输入重放新题
+                // A changed generator must not replay inputs onto a different puzzle.
                 const resume = run && run.seed === puzzle.seed ? run : null;
                 this.begin({ kind: 'daily', id: puzzle.id, dateKey, seed: puzzle.seed, ranked: !done, name }, puzzle, { resume });
                 resolve(puzzle);
