@@ -216,6 +216,36 @@ html[lang="zh-CN"] .sl-brand-zh {
     transition: transform 0.12s, box-shadow 0.2s;
 }
 
+.sl-load-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 350px;
+    padding: 10px 14px;
+    border: 1px solid var(--sl-line);
+    border-radius: 8px;
+    color: var(--sl-text);
+    background: rgb(13, 18, 38, 0.86);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.sl-load-status[hidden] { display: none; }
+
+.sl-load-retry {
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid var(--sl-amber);
+    border-radius: 8px;
+    color: var(--sl-amber-soft);
+    background: rgb(13, 18, 38, 0.9);
+    font: inherit;
+    cursor: pointer;
+}
+
 .sl-primary:hover { box-shadow: 0 10px 28px rgb(0, 0, 0, 0.45), 0 0 36px rgb(255, 179, 71, 0.55); }
 .sl-primary:active { transform: scale(0.96); }
 

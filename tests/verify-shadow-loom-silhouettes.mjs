@@ -3,11 +3,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEVELS } from '../src/games/shadow-loom/model/levels.js';
-import { getSilhouette, SILHOUETTE_VIEWBOX } from '../src/generated/shadow-loom/silhouettes.js';
+import { getSilhouette, hasSilhouettes, loadSilhouettes, SILHOUETTE_VIEWBOX } from '../src/generated/shadow-loom/silhouettes.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dir = path.join(root, 'assets/shadow-loom/layers/silhouettes');
 const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+const covers = fs.readFileSync(path.join(root, 'tools/generators/game-covers.mjs'), 'utf8');
 const generatedReferenceFamilies = new Set(manifest.referenceSource?.generatedReferenceFamilies || []);
 let failed = 0;
 let passed = 0;
@@ -16,6 +17,7 @@ function ok(condition, label) {
     failed++;
     console.error('✗ ' + label);
 }
+ok(covers.includes('await loadSilhouettes(LEVELS[0].id)'), '封面生成器先加载首关 authored SVG 再编译几何');
 ok(manifest.coordinateSystem?.viewBox === SILHOUETTE_VIEWBOX, 'manifest 与运行时 viewBox 一致');
 ok(SILHOUETTE_VIEWBOX === '0 0 480 854', '统一使用 480×854 舞台坐标');
 for (const [family, reference] of Object.entries(manifest.referenceSource?.sourceReferences || {})) {
@@ -41,6 +43,11 @@ for (const full of svgFiles) {
     }
 }
 for (const level of LEVELS) {
+    ok(!hasSilhouettes(level.id), level.id + ': data absent before first import');
+    const data = await loadSilhouettes(level.id);
+    ok(hasSilhouettes(level.id), level.id + ': level chunk loaded');
+    ok(await loadSilhouettes(level.id) === data, level.id + ': repeat uses in-memory cache');
+    ok(Object.keys(data).length === level.pieces.length, level.id + ': generated piece coverage exact');
     for (const piece of level.pieces) {
         const data = getSilhouette(level.id, piece.id);
         ok(!!data, level.id + '/' + piece.id + ': 有 authored SVG 数据');
@@ -55,6 +62,31 @@ for (const level of LEVELS) {
         const file = path.join(dir, level.id, piece.id + '.svg');
         ok(fs.existsSync(file), level.id + '/' + piece.id + ': SVG 文件存在');
     }
+}
+
+// Production build guard: tests should catch a future static import that pulls
+// all eight authored geometries back into Shadow Loom's first-page entry.
+const distDir = path.join(root, 'dist');
+if (fs.existsSync(path.join(distDir, 'shadow-loom.html'))) {
+    const assetsDir = path.join(distDir, 'assets/js');
+    const files = fs.readdirSync(assetsDir);
+    const chunks = files.filter(name => name.endsWith('.js') && !name.includes('-legacy-'));
+    const entry = chunks.filter(name => /^shadow-loom-[\w-]+\.js$/.test(name));
+    ok(entry.length === 1, 'production build emits exactly one modern Shadow Loom entry');
+    if (entry.length === 1) {
+        const bytes = fs.statSync(path.join(assetsDir, entry[0])).size;
+        ok(bytes <= 96 * 1024, 'modern entry stays under 96 KiB, without eager eight-level geometry (' + bytes + ' bytes)');
+    }
+    const html = fs.readFileSync(path.join(distDir, 'shadow-loom.html'), 'utf8');
+    for (const level of LEVELS) {
+        const matches = chunks.filter(name => name.startsWith(level.id + '-') && /\.js$/.test(name));
+        ok(matches.length === 1, level.id + ': exactly one independently built modern geometry chunk');
+        if (matches.length === 1) {
+            ok(!html.includes('assets/js/' + matches[0]), level.id + ': HTML does not eagerly preload geometry');
+        }
+    }
+} else {
+    console.log('⊘ dist/ not present, skip bundle budget (CI builds before this verification)');
 }
 console.log('\n' + (failed ? '✗' : '✓') + ' shadow-loom silhouettes：' + passed + ' 通过，' + failed + ' 失败');
 process.exit(failed ? 1 : 0);

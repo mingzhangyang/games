@@ -137,10 +137,11 @@ caps 是校验器与迁移脚本的唯一判据：
 任何 `eslint --fix` 都会破坏 gen 产物 → 下次 `gen --check` 报漂移 → 修复又改回单引号 → **死循环**。
 规则：派生文件 gen 是唯一权威，人（和 linter）不应手改；样式不一致在 gen 模板里改。
 
-Shadow Loom 的 `src/generated/shadow-loom/silhouettes.js` 也属于生成缓存：它由
+Shadow Loom 的 `src/generated/shadow-loom/silhouettes.js`（小型按关 loader）和
+`src/generated/shadow-loom/levels/*.js`（八关独立剪影缓存）也属于生成缓存：它们由
 `assets/shadow-loom/layers/silhouettes/**/*.svg` 与 `manifest.json` 通过
 `npm run build:shadow-loom-silhouettes` 生成，不能直接编辑。提交前运行
-`npm run check:shadow-loom-silhouettes`；该文件因 SVG 路径 JSON 的双引号格式被
+`npm run check:shadow-loom-silhouettes`；生成的剪影轮廓数据因 SVG 路径 JSON 的双引号格式被
 eslint 忽略，源 SVG、生成器与同步检查才是权威。
 生成器会先合并同一纸片内重叠的外轮廓，再输出 Path2D 与 judge 共用的轮廓缓存；不同纸片的拆分由 SVG 源文件负责，
 应沿自然结构形成相邻边界，不得用包含式矩形裁切。

@@ -332,23 +332,53 @@
         color: var(--color-accent) !important;
     }
 
+    /* Keep status pills outside the line-clamped text. Clamping the whole
+       description can ellipsize the pill itself on mobile Safari ("Da..."). */
     .card-desc {
         grid-area: desc;
         align-self: start;
         margin: 0 !important;
+        display: flex !important;
+        align-items: flex-start;
+        gap: 6px;
+        min-width: 0;
+        -webkit-line-clamp: none !important;
+        line-clamp: none !important;
+    }
+
+    .card-chips {
+        display: inline-flex;
+        flex: 0 0 auto;
+        flex-wrap: wrap;
+        gap: 4px;
+        max-width: 100%;
+    }
+
+    .card-chips:empty {
+        display: none;
+    }
+
+    /* Only the game summary can be truncated; pill text stays atomic. */
+    .card-desc-text {
+        display: -webkit-box;
+        flex: 1 1 0%;
+        min-width: 0;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
     }
 
     .card-footer {
         grid-area: foot;
     }
 
-    /* 状态 / 外站胶囊：文字 + 颜色双编码，触屏也可读。排在简介行首（行内），被行数截断的是简介、
-       不是标题；「仅深色」胶囊同时带 .tag--dark-only，显隐仍由 index.css 的冻结规则决定（隐藏时不占位）。
+    /* 状态 / 外站胶囊：文字 + 颜色双编码，触屏也可读。胶囊本身不截断，只有后面的简介允许省略；
+       「仅深色」胶囊同时带 .tag--dark-only，显隐仍由 index.css 的冻结规则决定（隐藏时不占位）。
        字号用 rem：所在的简介本身是 0.84em，em 会把胶囊缩到 9px。 */
     .card-chip {
         display: inline-flex;
         align-items: center;
-        margin-right: 6px;
         vertical-align: 1px;
         padding: 0 7px;
         border: 1px solid var(--color-border);
@@ -439,8 +469,11 @@
         .card-desc {
             font-size: 0.8em !important;
             line-height: 1.5 !important;
-            -webkit-line-clamp: 1 !important;
-            line-clamp: 1 !important;
+        }
+
+        .card-desc-text {
+            -webkit-line-clamp: 1;
+            line-clamp: 1;
         }
 
         .card-footer {
