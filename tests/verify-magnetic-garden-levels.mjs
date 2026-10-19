@@ -8,7 +8,7 @@ import { explorerEffort, previewPlayerWinRate, reachability } from './lib/magnet
 assert.equal(LEVELS.length, 30);
 assert.equal(new Set(LEVELS.map(level => level.id)).size, 30);
 assert.deepEqual(CHAPTERS.map(chapter => chapter.id), ['greenhouse', 'twins', 'stonepath', 'aurora', 'deeproot']);
-const expectedPars = [[1, 1, 2, 3, 4, 5], [4, 5, 5, 6, 8, 8], [5, 6, 7, 7, 8, 9], [5, 6, 7, 8, 8, 9]];
+const expectedPars = [[1, 1, 2, 3, 4, 5], [4, 5, 5, 6, 8, 8], [5, 6, 7, 7, 8, 9], [5, 6, 7, 8, 8, 9], [10, 12, 11, 13, 15, 16]];
 let capturedBrakes = 0;
 let seedBrakes = 0;
 let initialInterference = 0;

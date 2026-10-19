@@ -79,8 +79,11 @@
  .mg-preview-panel .mg-action-row { flex-wrap:nowrap; gap:6px; }
  .mg-preview-panel .mg-action { flex:1 1 0; min-width:0; min-height:44px; padding-inline:10px; }
  .mg-hint-text { color:var(--mg-text); font-size:13px; padding:10px 12px; background:var(--mg-panel-raised); border-radius:12px; margin-top:8px; line-height:1.5; }
- .mg-inventory { display:flex; gap:8px; margin-bottom:8px; }
- .mg-inventory-magnet { width:58px; height:58px; padding:6px; display:grid; place-items:center; border:1px dashed var(--mg-line); border-radius:12px; background:var(--mg-panel); cursor:pointer; }
+ /* The tray shares the instruction line, so a tray magnet never costs the board a row. */
+ .mg-guide { display:flex; align-items:center; gap:8px; }
+ .mg-guide .mg-instruction { flex:1 1 auto; min-width:0; }
+ .mg-inventory { display:flex; flex:none; gap:8px; }
+ .mg-inventory-magnet { width:52px; height:52px; padding:5px; display:grid; place-items:center; border:1px dashed var(--mg-line); border-radius:12px; background:var(--mg-panel); cursor:pointer; }
  .mg-inventory-magnet[aria-pressed="true"] { outline:2px solid var(--mg-green); }
  .mg-menu { border-radius:0; display:block; text-align:center; padding:10px 24px 28px; background:var(--mg-bg); color:var(--mg-text); touch-action:pan-y; }
  #mg-hero { width:100%; max-width:470px; margin-inline:auto; display:grid; }
@@ -174,14 +177,14 @@
  /* Short portrait phones: tighten the chrome around the board so six-row gardens and their
     controls share one screen (375×553, 320×568) instead of scrolling for every confirmation. */
  @media (width <600px) and (height <=720px) {
-  .mg-play { padding:8px 12px 10px; gap:8px; }
+  .mg-play { padding:8px 12px 6px; gap:8px; }
   .mg-hud { padding:6px 10px; }
   #mg-level-title { font-size:19px; margin-top:2px; }
   .mg-move-counter { padding:4px 10px; }
   #mg-moves { font-size:22px; }
   .mg-tools { padding:8px; }
   .mg-instruction { min-height:0; padding:5px 0 6px; }
-  .mg-inventory-magnet { width:48px; height:48px; padding:4px; }
+  .mg-inventory-magnet { width:44px; height:44px; padding:3px; }
  }
 
  @media (height <=600px) and (width >=600px) {

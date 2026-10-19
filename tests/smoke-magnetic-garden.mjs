@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Real pointer/keyboard acceptance: deterministic preview, capture undo, durable
-// replay, all 24 puzzles, and the six-gardens-per-chapter ranking boundary.
+// replay, all 30 puzzles, and the six-gardens-per-chapter ranking boundary.
 // verify-all: timeout=180000
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
@@ -164,7 +164,7 @@ try {
     check(art.heroWidth >= 512 && art.heroHeight >= 512 && art.fallbackHidden, 'production hero image is decoded and replaces fallback art');
     check(art.backdropWidth >= 512 && art.backdropHeight >= 512 && art.backdropVisible && art.backdropFetched,
         'production greenhouse workbench is fetched, decoded, and displayed: ' + JSON.stringify(art));
-    check(LEVELS.length === 24 && CHAPTERS.length === 4, '24 authored gardens in four chapters');
+    check(LEVELS.length === 30 && CHAPTERS.length === 5, '30 authored gardens in five chapters');
     await click(page, '#mg-help-btn');
     check(await page.evaluate(() => {
         const overlay = document.getElementById('mg-help');
@@ -175,8 +175,8 @@ try {
             && close.top >= 0 && close.bottom <= innerHeight;
     }), 'mobile help is viewport-bound and Close is visible even over the long menu');
     await click(page, '#mg-help-close');
-    check(await page.$$eval('[data-level]', buttons => buttons.length === 24 && buttons.every(button => !button.disabled)),
-        'all 24 gardens accessible from a new save');
+    check(await page.$$eval('[data-level]', buttons => buttons.length === 30 && buttons.every(button => !button.disabled)),
+        'all 30 gardens accessible from a new save');
     check(await page.evaluate(() => window.__gardenEvents.length === 0), 'menu view does not count as a play');
     // The click helper scrollIntoView() on Help/Close may move the document.
     // Start the native touch-gesture probe at a known top-of-page position,
@@ -209,7 +209,7 @@ try {
     assert.deepEqual(await snapshot(page), untouched, 'paused keyboard cannot change the garden');
     await click(page, '.scoreboard-trigger--icon');
     await page.waitForFunction(() => document.querySelector('dialog[data-scoreboard-dialog]').open);
-    check(await page.$eval('.scoreboard-select', select => select.options.length === 4), 'ranking dialog offers four chapter boards');
+    check(await page.$eval('.scoreboard-select', select => select.options.length === 5), 'ranking dialog offers five chapter boards');
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !window.mgGame.pauseOwnership.isHeld('ranking'));
     check(await page.evaluate(() => window.mgGame.isPaused), 'rankings preserve the player pause');
@@ -404,6 +404,18 @@ try {
         && !window.mgGame.preview && !window.mgGame.hintMessage, LEVELS[1].id),
     'cancelled hint cannot leak a stale preview or copy into replacement garden');
 
+    // A rooted magnet is visibly different, announced, and never becomes the selection.
+    const rootedLevel = LEVELS.find(level => level.id === 'deeproot-1');
+    const rooted = rootedLevel.magnets.find(magnet => magnet.fixed);
+    await start(page, rootedLevel);
+    await click(page, `[data-cell="${rooted.cell}"]`);
+    check(await page.evaluate(({ cell, id, fixedText }) => {
+        const button = document.querySelector(`[data-cell="${cell}"]`);
+        return window.mgGame.selected !== id && !window.mgGame.preview?.pinned
+            && !!button.querySelector('.mg-magnet--rooted') && button.getAttribute('aria-label').includes(', fixed')
+            && document.getElementById('mg-sr-status').textContent === fixedText;
+    }, { cell: rooted.cell, id: rooted.id, fixedText: LANGUAGES.en.fixed }), 'a rooted magnet is marked, announced as fixed, and cannot be selected');
+
     // All chapter eligibility is exercised by real authored actions. No score
     // is submitted for the first five gardens; the sixth submits their sum.
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
@@ -432,7 +444,7 @@ try {
     }
     await page.reload({ waitUntil: 'load' });
     await page.waitForFunction(() => !!window.mgGame);
-    check(await page.evaluate(() => Object.keys(window.mgGame.best).length === 24), 'all 24 completed records survive reload');
+    check(await page.evaluate(() => Object.keys(window.mgGame.best).length === 30), 'all 30 completed records survive reload');
     await page.close();
 
     for (const [width, height, lang] of [[320, 640, 'en'], [375, 553, 'en'], [390, 664, 'zh'], [667, 375, 'zh'], [844, 390, 'en'], [1280, 800, 'en']]) {
@@ -444,7 +456,7 @@ try {
             const r = button.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
             return r.width >= 44 && r.height >= 44 && (hit === button || button.contains(hit)) ? [] : [button.dataset.level];
         }));
-        check(inaccessible.length === 0, `${tag}: all 24 level targets reach 44px and can be clicked: ${inaccessible}`);
+        check(inaccessible.length === 0, `${tag}: all 30 level targets reach 44px and can be clicked: ${inaccessible}`);
         if (width < 1024) {
             await click(view, '#mg-help-btn');
             check(await view.evaluate(() => {
@@ -496,7 +508,7 @@ try {
         check(await view.$eval('#mg-undo', element => element.textContent.includes('撤销')) === (lang === 'zh'), `${tag}: controls use the selected shared language`);
         // One screen holds the whole garden and its controls: six-row boards, the tray level,
         // and the confirm row that replaces the tools while a move is previewed.
-        for (const id of ['greenhouse-1', 'twins-1', 'aurora-3']) {
+        for (const id of ['greenhouse-1', 'twins-1', 'aurora-3', 'deeproot-5', 'deeproot-6']) {
             const fit = await view.evaluate((levelId, action) => {
                 window.mgGame.start(levelId);
                 const play = document.getElementById('mg-play'); play.scrollTop = 0;
@@ -520,4 +532,4 @@ try {
     await browser.close();
 }
 check(errors.length === 0, 'no runtime errors: ' + errors.join(' | '));
-console.log(`PASS Magnetic Garden: 24 real solves / four chapter rankings / preview / undo / replay / off-path Worker hints and cancellation / decoded art / interruption / keyboard / 320–1280px one-screen fit / reduced motion (${assertions} assertions)`);
+console.log(`PASS Magnetic Garden: 30 real solves / five chapter rankings / preview / undo / replay / off-path Worker hints and cancellation / decoded art / interruption / keyboard / 320–1280px one-screen fit / reduced motion (${assertions} assertions)`);
