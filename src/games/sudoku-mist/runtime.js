@@ -69,6 +69,7 @@ export class SudokuMistGame {
         // 每日题只按日期生成一次（手机上出题要几百毫秒）
         this.dailyPuzzle = null;
         this.dailyStartId = 0;
+        this.dailyStart = null;
         // 本页里完成过的每日局 dateKey → { score, time }（完成标记写不进存储时的兜底）
         this.dailyCleared = new Map();
         // 计分局的跨标签页互斥锁 + 本页检查点
@@ -399,10 +400,13 @@ export class SudokuMistGame {
      * dateKey 只给测试用；排行榜键跟着对局的日期走，跨过午夜也不会串到第二天的榜。
      */
     startDaily(dateKey = todayKey()) {
+        if (this.dailyStart?.id === this.dailyStartId && this.dailyStart.dateKey === dateKey) {
+            return this.dailyStart.promise;
+        }
         const request = ++this.dailyStartId;
         this.el.status.textContent = this.t().generating;
         this.el.start.setAttribute('aria-busy', 'true');
-        return new Promise(resolve => {
+        const promise = new Promise(resolve => {
             setTimeout(async () => {
                 if (request !== this.dailyStartId) { resolve(null); return; }
                 if (this.dailyPuzzle?.dateKey !== dateKey) this.dailyPuzzle = { dateKey, puzzle: generateDaily(dateKey) };
@@ -432,6 +436,10 @@ export class SudokuMistGame {
                 resolve(puzzle);
             }, 30);
         });
+        const pending = { id: request, dateKey, promise };
+        this.dailyStart = pending;
+        void promise.then(() => { if (this.dailyStart === pending) this.dailyStart = null; });
+        return promise;
     }
 
     begin(meta, levelData, { resume = null } = {}) {

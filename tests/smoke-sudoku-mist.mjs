@@ -794,6 +794,31 @@ try {
             return { ranked: g.isRanked(), held: g.daily.holds(date) };
         }, key);
         check(!raced.ranked && !raced.held, '拿锁后重读完成标记：等待期间完成的每日题只能练习', JSON.stringify(raced));
+        const repeated = await p.evaluate(async () => {
+            const g = window.smGame;
+            g.toMenu();
+            const acquire = g.daily.acquire;
+            const callbacks = [];
+            let entered;
+            const waiting = new Promise(resolve => { entered = resolve; });
+            g.daily.acquire = date => new Promise(resolve => {
+                callbacks.push(() => acquire(date).then(resolve));
+                entered();
+            });
+            const first = g.startDaily('20261025');
+            await waiting;
+            const second = g.startDaily('20261025');
+            const third = g.startDaily('20261025');
+            await new Promise(resolve => setTimeout(resolve, 80));
+            await Promise.all(callbacks.map(cb => cb()));
+            await Promise.all([first, second, third]);
+            g.daily.acquire = acquire;
+            return { requests: callbacks.length, shared: first === second && second === third,
+                state: g.state, ranked: g.isRanked(), held: g.daily.holds('20261025'), status: g.el.status.textContent };
+        });
+        check(repeated.requests === 1 && repeated.shared && repeated.state === 'playing' && repeated.ranked
+            && repeated.held && repeated.status === '',
+        '同页连续点击在锁回调延迟时共享同一次开局，不会误报其他标签页', JSON.stringify(repeated));
         const cached = await p.evaluate(async () => {
             const g = window.smGame;
             await g.startDaily('20261024');
