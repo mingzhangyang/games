@@ -33,14 +33,14 @@ function readState(id) {
         hidden: g?.pauseOwnership?.isHeld('hidden'),
         available: !!g?.pauseOwnership };
 }
-function startInPage(id) {
+async function startInPage(id) {
     if (id === 'carrot-pull') window.cpGame.start();
     else if (id === 'firefly-signal') window.__fireflySignal.startLevel(0);
     else if (id === 'loop-jail') window.ljGame.start();
     else if (id === 'magnetic-garden') window.mgGame.start();
     else if (id === 'math-rain') window.mathRainGame.restartGame();
     else if (id === 'needle-awn') window.gameEngine.startEndlessMode();
-    else if (id === 'shadow-loom') window.slGame.startLevel(0);
+    else if (id === 'shadow-loom') await window.slGame.startLevel(0);
     else if (id === 'sudoku-mist') window.smGame.startLevel(0);
     else window.tankBattleInstance.restart();
 }
@@ -245,7 +245,22 @@ try {
                 return !owners[id].pauseOwnership.isHeld('ranking');
             }, { timeout: 6000 }, game.id);
             snap = await page.evaluate(readState, game.id);
-            if (!snap.paused) throw new Error('old dialog resumed a replacement run: ' + JSON.stringify(snap));
+            if (game.id === 'shadow-loom') {
+                // Shadow Loom loads scenes asynchronously. A replacement requested
+                // under a ranking lease stays pending and starts fresh on release,
+                // rather than being created paused with no resume path.
+                const deferred = await page.evaluate(() => ({
+                    state: window.slGame.state,
+                    paused: window.slGame.isPaused,
+                    pending: !!window.slGame.pendingLevel,
+                    moves: window.slGame.moves,
+                }));
+                if (deferred.state !== 'playing' || deferred.paused || deferred.pending || deferred.moves !== 0) {
+                    throw new Error('deferred Shadow Loom replacement did not start cleanly: ' + JSON.stringify(deferred));
+                }
+            } else if (!snap.paused) {
+                throw new Error('old dialog resumed a replacement run: ' + JSON.stringify(snap));
+            }
             if (localErrors.length) throw new Error('page error: ' + localErrors.slice(0, 2).join(' | '));
         } catch (err) {
             errors.push(game.id + ': ' + String(err.message || err));

@@ -68,7 +68,9 @@ onReady(() => {
 
     // 上次的每日成绩没等到确认就离开了：进页时补交（重复 POST 无害，榜上每人只留最好成绩）。
     // 查整个重试队列而不只是今天的键——跨过午夜的昨日成绩也要补；每条按它自己的榜单键提交
-    if (pendingScoreCount()) void retryPendingScores(submitScore);
+    const retryScores = () => { if (pendingScoreCount()) void retryPendingScores(submitScore); };
+    window.addEventListener('online', retryScores);
+    retryScores();
 
     game.init();
 });

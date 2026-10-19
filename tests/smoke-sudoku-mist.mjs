@@ -65,6 +65,7 @@ async function open({ width = 1280, height = 900, mobile = false, lang = 'zh', t
             if (!url.startsWith('https://game-scores.orangely.workers.dev/')) { void req.continue(); return; }
             const key = new URL(url).searchParams.get('game');
             if (req.method() === 'POST') {
+                if (scores.offline) { void req.abort('internetdisconnected'); return; }
                 scores.posts.push(JSON.parse(req.postData() || '{}'));
                 // hold：先不回应，测「请求还在路上」的状态；release() 再放行
                 if (scores.hold) { scores.held.push(req); return; }
@@ -773,6 +774,67 @@ try {
             `⑰ 进页补交昨天（${yesterday}）未确认的每日成绩，确认后出队`, JSON.stringify({ recovered, left }));
         check(aerrs.length === 0 && berrs.length === 0 && cerrs.length === 0, '⑰ 无 pageerror', [...aerrs, ...berrs, ...cerrs].join(' | '));
         await c.close();
+    }
+
+    /* ── 请求竞态、兼容边界与离线补交 ── */
+    {
+        const scores = { posts: [], gets: [] };
+        const { page: p, errs } = await open({ scores });
+        const key = '20261021';
+        // 锁授予前另一个页面完成：必须在锁内重读完成状态，不能开始第二个计分局。
+        const raced = await p.evaluate(async date => {
+            const g = window.smGame;
+            const acquire = g.daily.acquire;
+            g.daily.acquire = async k => {
+                localStorage.setItem(`game:sudoku-mist:v1:daily:${k}`, JSON.stringify({ score: 123, time: 10 }));
+                return acquire(k);
+            };
+            await g.startDaily(date);
+            g.daily.acquire = acquire;
+            return { ranked: g.isRanked(), held: g.daily.holds(date) };
+        }, key);
+        check(!raced.ranked && !raced.held, '拿锁后重读完成标记：等待期间完成的每日题只能练习', JSON.stringify(raced));
+        const canceled = await p.evaluate(async () => {
+            const g = window.smGame;
+            const pending = g.startDaily('20261022');
+            g.startLevel(0);
+            await pending;
+            return { kind: g.meta.kind, held: g.daily.holds('20261022') };
+        });
+        check(canceled.kind === 'level' && !canceled.held, '切换章节后迟到的每日开局不能覆盖新关卡', JSON.stringify(canceled));
+        // 页面启动时离线；连网事件必须补交昨日队列，而不要求刷新/打开榜单。
+        scores.offline = true;
+        await p.evaluate(() => {
+            localStorage.setItem('scoreboard:pending:v1', JSON.stringify([
+                { game: 'sudoku-mist-d20261018', name: 'Offline', score: 234, at: Date.now() },
+            ]));
+            window.dispatchEvent(new Event('online'));
+        });
+        await sleep(500);
+        check(await p.evaluate(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1')).length === 1),
+            '离线失败不会删除补交成绩');
+        scores.offline = false;
+        await p.evaluate(() => window.dispatchEvent(new Event('online')));
+        await p.waitForFunction(() => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length === 0);
+        check(scores.posts.some(x => x.game === 'sudoku-mist-d20261018' && x.score === 234), '重新连网后自动按原日期补交成绩');
+        // 不支持 Web Locks：禁止计分，不写进度；章节仍可用。
+        await p.evaluateOnNewDocument(() => Object.defineProperty(navigator, 'locks', { value: undefined }));
+        await p.reload({ waitUntil: 'load' });
+        await p.waitForFunction(() => !!window.smGame?.el);
+        const unsupported = await p.evaluate(async () => {
+            const g = window.smGame;
+            await g.startDaily('20261023');
+            const result = { state: g.state, ranked: g.isRanked(), status: g.el.status.textContent,
+                run: localStorage.getItem('game:sudoku-mist:v1:daily-run:20261023') };
+            g.startLevel(0);
+            result.chapter = g.state;
+            return result;
+        });
+        check(unsupported.state === 'menu' && !unsupported.ranked && unsupported.run === null
+            && /Web Locks/.test(unsupported.status) && unsupported.chapter === 'playing',
+        '不支持 Web Locks 时拒绝计分并说明原因，章节仍可玩', JSON.stringify(unsupported));
+        check(errs.length === 0, '请求竞态与兼容边界无 pageerror', errs.join(' | '));
+        await p.close();
     }
 
     /* ── ⑱ 每日一雾：同一时刻一个标签页、内存检查点 ── */

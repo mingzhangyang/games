@@ -5,7 +5,7 @@
  * `sudoku-mist:daily:<YYYYMMDD>`，离开（回菜单 / 完成 / 开别的局）时释放；
  * 关页、崩溃时浏览器自动释放。拿不到锁 = 另一个标签页正在这局里，本页不进。
  * 所以任何时刻最多一个标签页在写这局的进度——不需要令牌、接手、让出。
- * 不支持 Web Locks 的环境（极老的浏览器）退化为不加锁，即单标签页行为。
+ * 不支持 Web Locks 的环境拒绝计分局，不能用无锁降级破坏计分与存档唯一性。
  *
  * 检查点带递增的 rev。本页内存里留一份最近的检查点（存储写失败时它才是对的）；
  * 再进这局时，只有存储的 rev 还等于本页最后一次读到 / 写成的 rev（期间没有别的标签页写过），
@@ -16,6 +16,8 @@ import { loadDailyRun, saveDailyRun, clearDailyRun } from './storage.js';
 const lockName = dateKey => `sudoku-mist:daily:${dateKey}`;
 
 export function createDailyRunGuard({ locks = globalThis.navigator?.locks } = {}) {
+    let generation = 0;
+    const supported = typeof locks?.request === 'function';
     let held = null;       // { dateKey, release }
     let checkpoint = null; // { dateKey, seed, rev, baseRev, inputs, elapsed, notes }
 
@@ -23,13 +25,11 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks } = {}
     function acquire(dateKey) {
         if (held?.dateKey === dateKey) return Promise.resolve(true);
         release();
-        if (typeof locks?.request !== 'function') {
-            held = { dateKey, release() {} };
-            return Promise.resolve(true);
-        }
+        if (!supported) return Promise.resolve(false);
+        const request = generation;
         return new Promise(resolve => {
             locks.request(lockName(dateKey), { ifAvailable: true }, lock => {
-                if (!lock) { resolve(false); return undefined; }
+                if (!lock || request !== generation) { resolve(false); return undefined; }
                 // 回调返回的 promise 不结束，锁就一直拿着；release() 让它结束
                 return new Promise(done => { held = { dateKey, release: done }; resolve(true); });
             }).catch(() => resolve(false));
@@ -37,6 +37,7 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks } = {}
     }
 
     function release() {
+        generation++;
         const h = held;
         held = null;
         h?.release();
@@ -73,5 +74,5 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks } = {}
         if (checkpoint?.dateKey === dateKey) checkpoint = null;
     }
 
-    return { acquire, release, holds: dateKey => held?.dateKey === dateKey, resumeFor, start, save, clear };
+    return { supported, acquire, release, holds: dateKey => held?.dateKey === dateKey, resumeFor, start, save, clear };
 }

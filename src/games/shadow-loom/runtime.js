@@ -21,6 +21,7 @@ import { mountScoreboardDialog } from '../../platform/scoreboard-dialog.js';
 import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
 import { encodeShadowLoomScore, formatShadowLoomScore } from './leaderboard-score.js';
 import * as R from './model/rules.js';
+import { hasSilhouettes, loadSilhouettes } from '../../generated/shadow-loom/silhouettes.js';
 import { LEVELS, CHAPTERS } from './model/levels.js';
 import { createScene } from './render/scene.js';
 
@@ -98,10 +99,23 @@ export class ShadowLoomGame {
             pause: () => this.pauseQuiet(),
             resume: () => this.resumeQuiet(),
             releaseInputs: () => this.onPointerUp(),
+            onAllReleased: () => {
+                // Wait for the *last* interruption (ranking, drawer, hidden tab)
+                // before activating a newly downloaded scene.
+                const pending = this.pendingLevel;
+                if (pending && pending.token === this.loadTicket && !document.hidden) {
+                    this.pendingLevel = null;
+                    void this.startLevel(pending.index);
+                }
+            },
         });
         this.levelIdx = 0;
         this.level = LEVELS[0];
-        this.st = R.initialState(this.level);
+        // Do not compile before the first level's independently loaded geometry arrives.
+        this.st = { lamp: { ...this.level.lamp.start }, pieces: [] };
+        this.loadTicket = 0;
+        this.pendingLevel = null;
+        this.loadStatusKey = null;
         this.sway = [];
         this.sel = -1;              // 选中的纸片（-1 = 无，'lamp' = 灯）
         this.drag = null;
@@ -128,6 +142,9 @@ export class ShadowLoomGame {
         this.fret = [];
         this.progress = readStoredObject(SHADOW_LOOM_STORAGE_SLOTS.PROGRESS, {});
         this.seen = readStoredObject(SHADOW_LOOM_STORAGE_SLOTS.SEEN_CHAPTERS, {});
+        this.levelIdx = this.firstOpenLevel();
+        this.level = LEVELS[this.levelIdx];
+        this.st.lamp = { ...this.level.lamp.start };
         this.lastRustle = 0;
 
         this.el = {};
@@ -135,7 +152,7 @@ export class ShadowLoomGame {
             'start', 'result', 'title', 'subtitle', 'copy', 'btn-begin', 'level-label', 'level-grid',
             'result-kicker', 'result-title', 'result-stats', 'btn-next', 'btn-replay', 'btn-menu',
             'side-howto-title', 'side-howto', 'side-records-title', 'side-records', 'side-keys-title',
-            'side-keys', 'hint', 'toast', 'brand', 'progress', 'target-btn', 'target-icon', 'reset-btn',
+            'side-keys', 'hint', 'toast', 'load-status', 'brand', 'progress', 'target-btn', 'target-icon', 'reset-btn',
         ].forEach(id => { this.el[id] = document.getElementById(`sl-${id}`); });
 
         this.scoreboard = mountScoreboardDialog({
@@ -159,7 +176,6 @@ export class ShadowLoomGame {
         this.resize();
         this.bindEvents();
         this.applyLanguage();
-        this.loadLevel(this.firstOpenLevel(), false);
         this.showMenu();
         this.loop = this.loop.bind(this);
         requestAnimationFrame(this.loop);
@@ -191,6 +207,7 @@ export class ShadowLoomGame {
         if (this.el.progress) this.el.progress.setAttribute('aria-label', this.t('progress'));
         this.renderKeys();
         this.renderHint();
+        if (this.loadStatusKey) this.showLoadStatus(this.loadStatusKey);
         this.renderLevelGrid();
         this.renderRecords();
         this.renderProgress();
@@ -323,12 +340,40 @@ export class ShadowLoomGame {
         return i < 0 ? 0 : i;
     }
 
+
+    showLoadStatus(key = null) {
+        this.loadStatusKey = key;
+        const box = this.el['load-status'];
+        if (!box) return;
+        box.replaceChildren();
+        box.hidden = !key;
+        if (!key) return;
+        const message = document.createElement('span');
+        message.textContent = this.t(key);
+        box.appendChild(message);
+        if (key === 'loadFailed') {
+            // Failed ESM module imports may be sticky within a document.
+            // Reloading resets the module map while preserving GameStorage progress.
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'sl-load-retry';
+            retry.textContent = this.t('reloadToRetry');
+            retry.addEventListener('click', () => window.location.reload());
+            box.appendChild(retry);
+        }
+    }
+
     loadLevel(i, playing) {
-        this.levelIdx = clamp(i, 0, LEVELS.length - 1);
-        this.level = LEVELS[this.levelIdx];
-        this.st = R.initialState(this.level);
-        this.sway = this.level.pieces.map(() => ({ a: 0, v: 0 }));
-        const compiled = R.compileLevel(this.level);
+        const nextIdx = clamp(i, 0, LEVELS.length - 1);
+        const next = LEVELS[nextIdx];
+        // Compile before committing a new scene so missing/corrupt geometry cannot
+        // leave the render loop pointed at a half-initialized level.
+        const nextState = R.initialState(next);
+        const compiled = R.compileLevel(next);
+        this.levelIdx = nextIdx;
+        this.level = next;
+        this.st = nextState;
+        this.sway = next.pieces.map(() => ({ a: 0, v: 0 }));
         this.fret = compiled.pieces.map(pc => pc.holes || []);
         this.sel = -1;
         this.drag = null;
@@ -347,8 +392,51 @@ export class ShadowLoomGame {
         this.el['target-btn']?.classList.toggle('is-hint', !!this.level.hideTarget);
     }
 
-    startLevel(i) {
-        this.loadLevel(i, true);
+    async startLevel(i) {
+        const index = clamp(i, 0, LEVELS.length - 1);
+        const token = ++this.loadTicket;
+        this.pendingLevel = null;
+        const id = LEVELS[index].id;
+        if (!hasSilhouettes(id)) {
+            this.showLoadStatus('loadingScene');
+            if (this.state !== 'menu') this.toast(this.t('loadingScene'), 5500);
+            let watchdog;
+            try {
+                // A stalled mobile connection must not leave the scene pending forever.
+                await Promise.race([
+                    loadSilhouettes(id),
+                    new Promise((_, reject) => {
+                        watchdog = setTimeout(() => reject(new Error('silhouette request timed out: ' + id)), 20000);
+                    }),
+                ]);
+            } catch (error) {
+                if (token !== this.loadTicket) return false;
+                // Keep progress untouched and show an actionable recovery path.
+                console.warn('Shadow Loom: level geometry failed to load', id, error);
+                this.showMenu();
+                this.showLoadStatus('loadFailed');
+                return false;
+            } finally {
+                clearTimeout(watchdog);
+            }
+        }
+        if (token !== this.loadTicket) return false;
+        if (this.pauseOwnership.isHeld() || document.hidden) {
+            // Never start a new run while a modal/drawer/visibility lease exists:
+            // invalidate() would pause it without granting auto-resume.
+            this.pendingLevel = { index, token };
+            this.showLoadStatus('waitingForFocus');
+            return false;
+        }
+        try {
+            this.loadLevel(index, true);
+        } catch (error) {
+            console.warn('Shadow Loom: level geometry failed to compile', id, error);
+            this.showMenu();
+            this.showLoadStatus('loadFailed');
+            return false;
+        }
+        this.showLoadStatus();
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership.invalidate();
@@ -364,6 +452,7 @@ export class ShadowLoomGame {
             this.toast(intro, 3800);
         }
         this.sfx.tone({ freq: 294, slideTo: 392, type: 'sine', dur: 0.5, vol: 0.05 });
+        return true;
     }
 
     restartLevel() {
@@ -381,6 +470,10 @@ export class ShadowLoomGame {
     }
 
     showMenu() {
+        // Pending imports may finish later; they must never reopen a scene after Menu.
+        this.loadTicket++;
+        this.pendingLevel = null;
+        this.showLoadStatus();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership.invalidate();
@@ -878,6 +971,9 @@ export class ShadowLoomGame {
         const S = R.SCREEN;
         sc.ensure(rs);
         sc.background(ctx, rs);
+        // Menu can render before any level is downloaded. Never touch geometry
+        // in this state; the menu remains interactive during slow/offline loads.
+        if (!hasSilhouettes(this.level.id) || this.st.pieces.length !== this.level.pieces.length) return;
 
         // 纸幕透光：亮区跟着灯走；接近目标时整体增亮，完成时更亮
         const L = R.lampModel(this.st.lamp);

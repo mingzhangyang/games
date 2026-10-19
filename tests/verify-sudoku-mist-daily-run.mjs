@@ -2,7 +2,7 @@
 // verify-sudoku-mist-daily-run.mjs — 每日计分局的跨标签页互斥与检查点（离线，无需浏览器）
 //
 //   ① 互斥：同名锁 ifAvailable，一个守卫拿着时另一个拿不到；释放后能拿到；同一守卫重复 acquire 直接成功
-//   ② 不支持 Web Locks 的环境退化为不加锁（单标签页行为）
+//   ② 不支持 Web Locks 的环境拒绝计分局；取消中的请求不能迟到拿锁
 //   ③ 只有拿着锁才写存档；rev 每写一次 +1
 //   ④ 续玩选哪份：期间没人写过存储 → 用本页内存检查点（含写失败时没写成的输入）；别人写过 → 以存储为准
 //   ⑤ clear 同时清掉存储与内存检查点
@@ -60,9 +60,17 @@ b.release();
 await tick();
 
 /* ── ② 不支持 Web Locks ── */
-const bare = createDailyRunGuard({ locks: undefined });
-ok(await bare.acquire(DATE) === true && bare.holds(DATE), '② 没有 navigator.locks 时退化为不加锁');
+const bare = createDailyRunGuard({ locks: null });
+ok(await bare.acquire(DATE) === false && !bare.holds(DATE) && !bare.supported, '② 没有 navigator.locks 时拒绝无锁计分');
 bare.release();
+let deliver;
+const delayed = createDailyRunGuard({ locks: { request: (name, opts, cb) => new Promise(resolve => {
+    deliver = () => resolve(cb({ name }));
+}) } });
+const acquiring = delayed.acquire(DATE);
+delayed.release();
+deliver();
+ok(await acquiring === false && !delayed.holds(DATE), '② 取消后迟到的锁回调不能重新取得所有权');
 
 /* ── ③ 只有拿着锁才写 ── */
 store.clear();

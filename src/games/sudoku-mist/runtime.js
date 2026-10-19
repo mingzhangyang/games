@@ -68,6 +68,7 @@ export class SudokuMistGame {
         this.onDailyCleared = typeof hooks.onDailyCleared === 'function' ? hooks.onDailyCleared : () => {};
         // 每日题只按日期生成一次（手机上出题要几百毫秒）
         this.dailyPuzzle = null;
+        this.dailyStartId = 0;
         // 本页里完成过的每日局 dateKey → { score, time }（完成标记写不进存储时的兜底）
         this.dailyCleared = new Map();
         // 计分局的跨标签页互斥锁 + 本页检查点
@@ -390,21 +391,27 @@ export class SudokuMistGame {
      * dateKey 只给测试用；排行榜键跟着对局的日期走，跨过午夜也不会串到第二天的榜。
      */
     startDaily(dateKey = todayKey()) {
+        const request = ++this.dailyStartId;
         this.el.status.textContent = this.t().generating;
         this.el.start.setAttribute('aria-busy', 'true');
         return new Promise(resolve => {
             setTimeout(async () => {
+                if (request !== this.dailyStartId) { resolve(null); return; }
                 if (this.dailyPuzzle?.dateKey !== dateKey) this.dailyPuzzle = { dateKey, puzzle: generateDaily(dateKey) };
                 const { puzzle } = this.dailyPuzzle;
-                const done = this.dailyDoneFor(dateKey);
+                let done = this.dailyDoneFor(dateKey);
                 // 计分局要先独占锁；另一个标签页正在这局里就不进，留在菜单说明原因
-                if (!done && !await this.daily.acquire(dateKey)) {
+                const acquired = done || await this.daily.acquire(dateKey);
+                if (request !== this.dailyStartId) { resolve(null); return; }
+                if (!acquired) {
                     if (this.state !== 'menu') this.toMenu();
                     this.el.start.removeAttribute('aria-busy');
-                    this.el.status.textContent = this.t().dailyLocked;
+                    this.el.status.textContent = this.daily.supported ? this.t().dailyLocked : this.t().dailyUnsupported;
                     resolve(null);
                     return;
                 }
+                // 完成标记也属于锁保护的数据：等待锁期间另一个标签页可能已经完成。
+                done = this.dailyDoneFor(dateKey);
                 this.el.status.textContent = '';
                 this.el.start.removeAttribute('aria-busy');
                 const date = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
@@ -419,6 +426,8 @@ export class SudokuMistGame {
     }
 
     begin(meta, levelData, { resume = null } = {}) {
+        this.dailyStartId++;
+        this.el.start.removeAttribute('aria-busy');
         this.cancelTimers();
         this.meta = meta;
         // 计分局记下检查点起点；其他任何局都不需要锁
@@ -488,6 +497,8 @@ export class SudokuMistGame {
     }
 
     toMenu() {
+        this.dailyStartId++;
+        this.el.start.removeAttribute('aria-busy');
         this.persist();
         this.daily.release();
         this.cancelTimers();
@@ -687,8 +698,8 @@ export class SudokuMistGame {
         const summary = this.session.summary();
         if (this.meta.kind === 'daily') {
             const { dateKey } = this.meta;
-            // 兜底：完成标记已经在了（例如不支持 Web Locks 的环境里另一个标签页先完成）就降为练习局
-            const ranked = this.isRanked() && !this.dailyDoneFor(dateKey);
+            // 完成时仍须持锁；完成标记已存在就降为练习局
+            const ranked = this.isRanked() && this.daily.holds(dateKey) && !this.dailyDoneFor(dateKey);
             this.meta.ranked = ranked;
             if (ranked) {
                 const record = { score: summary.score, time: this.elapsed };
