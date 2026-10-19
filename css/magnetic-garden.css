@@ -190,7 +190,8 @@
  @media (height <=600px) and (width >=600px) {
   /* Short landscape: the board owns the full stage height on the left; HUD and tools stack on the right. */
   .mg-play { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,300px); grid-template-rows:auto minmax(0,1fr); align-items:start; gap:8px 14px; padding:8px 12px; }
-  .mg-board-area { grid-column:1; grid-row:1 / -1; align-self:stretch; }
+  .mg-board-area { --mg-pad:8px; --mg-gap:3px; grid-column:1; grid-row:1 / -1; align-self:stretch; }
+  .mg-board-frame { border-radius:19px; }
   .mg-hud { grid-column:2; grid-row:1; max-width:none; padding:6px 10px; }
   #mg-level-title { font-size:18px; margin-top:3px; }
   .mg-move-counter { grid-template-columns:auto; justify-items:center; gap:0; padding:4px 10px; }

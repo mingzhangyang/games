@@ -72,9 +72,9 @@ The board sizes itself from the space the HUD and tools leave, by its tighter
 dimension, and never below 44px cells. Short portrait phones tighten the chrome;
 short landscape puts the board on the left and HUD and tools on the right. The
 whole garden, its tools and the confirm row then share one screen for all 30
-gardens at 320×568, 375×553, 390×664, 667×375, 844×390 and desktop.
+gardens at 320×568, 375×553, 390×664, 667×362, 844×390 and desktop.
 `smoke-magnetic-garden` locks the six-row and tray gardens at 320×640, 375×553,
-390×664, 667×375, 844×390 and 1280×800.
+390×664, 667×362, 844×390 and 1280×800.
 
 Undo restores one full committed turn, including captured seeds and move count;
 it remains available after completion. Cancelling or interrupting an animation

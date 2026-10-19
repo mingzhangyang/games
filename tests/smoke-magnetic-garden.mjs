@@ -495,7 +495,7 @@ try {
     check(await page.evaluate(() => Object.keys(window.mgGame.best).length === 30), 'all 30 completed records survive reload');
     await page.close();
 
-    for (const [width, height, lang] of [[320, 640, 'en'], [375, 553, 'en'], [390, 664, 'zh'], [667, 375, 'zh'], [844, 390, 'en'], [1280, 800, 'en']]) {
+    for (const [width, height, lang] of [[320, 640, 'en'], [375, 553, 'en'], [390, 664, 'zh'], [667, 362, 'zh'], [844, 390, 'en'], [1280, 800, 'en']]) {
         const view = await open(width, height, lang, true);
         const tag = `${width}x${height} ${lang}`;
         check(await view.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tag}: no horizontal page overflow`);
