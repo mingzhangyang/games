@@ -71,6 +71,7 @@ export class SudokuMistGame {
         this.dailyStartId = 0;
         this.dailyStart = null;
         this.messageText = '';
+        this.saveWarningAnnounced = false;
         // 本页里完成过的每日局 dateKey → { score, time }（完成标记写不进存储时的兜底）
         this.dailyCleared = new Map();
         // 计分局的跨标签页互斥锁 + 本页检查点
@@ -552,8 +553,14 @@ export class SudokuMistGame {
     }
 
     renderMessage() {
-        this.el.message.textContent = this.isRanked() && this.daily.unsaved
-            ? this.t().dailySaveFailed : this.messageText;
+        const saveFailed = this.isRanked() && this.daily.unsaved;
+        const warning = saveFailed ? this.t().dailySaveFailed : null;
+        this.el.message.textContent = warning || this.messageText;
+        // Announce the transition, not each subsequent message/HUD refresh.
+        // A hint or move has already used the live region before persist();
+        // its save failure must be the last announcement for that input.
+        if (saveFailed && !this.saveWarningAnnounced) this.announce(warning);
+        this.saveWarningAnnounced = saveFailed;
     }
 
     next() {

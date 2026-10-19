@@ -10,6 +10,7 @@ for (const hint of [
 ]) {
     for (const saved of [false, true]) {
         let saves = 0;
+        const announcements = [];
         const game = Object.assign(Object.create(SudokuMistGame.prototype), {
             state: 'playing', isPaused: false, moves: 0,
             meta: { kind: 'daily', ranked: true, dateKey: '20261019' },
@@ -22,10 +23,14 @@ for (const hint of [
                 assert.deepEqual(data.inputs, [{ type: 'hint' }]);
                 return saved;
             } },
-            el: { message: { textContent: '' } },
+            el: { message: { textContent: '' }, sr: { textContent: '' } },
             t: () => LANGUAGES.en,
             elapsedMs: () => 1000,
-            announce() {}, render() {},
+            announce(text) {
+                announcements.push(text);
+                SudokuMistGame.prototype.announce.call(this, text);
+            },
+            render() {},
             audio: { hint() {} }, board: { focus() {} },
         });
         game.hint();
@@ -33,20 +38,32 @@ for (const hint of [
         assert.equal(game.moves, 1);
         if (!saved) {
             assert.equal(game.el.message.textContent, LANGUAGES.en.dailySaveFailed);
+            assert.equal(game.el.sr.textContent, LANGUAGES.en.dailySaveFailed,
+                'failed save must replace the earlier hint announcement in the live region');
+            assert.equal(announcements.filter(text => text === LANGUAGES.en.dailySaveFailed).length, 1,
+                'announce the first failure exactly once');
             game.setMessage(LANGUAGES.en.dailyResumed);
             assert.equal(game.el.message.textContent, LANGUAGES.en.dailySaveFailed,
                 'resume messaging cannot conceal a memory-only checkpoint');
             game.setMessage('');
             assert.equal(game.el.message.textContent, LANGUAGES.en.dailySaveFailed,
                 'clearing a transient hint cannot clear a storage warning');
+            game.renderMessage();
+            assert.equal(announcements.filter(text => text === LANGUAGES.en.dailySaveFailed).length, 1,
+                're-rendering while still unsaved must not announce repeatedly');
             game.daily.unsaved = false;
             game.renderMessage();
             assert.equal(game.el.message.textContent, '', 'warning clears when the checkpoint is saved');
+            game.persist();
+            assert.equal(announcements.filter(text => text === LANGUAGES.en.dailySaveFailed).length, 2,
+                'a new failure after a recovered save must be announced again');
         }
         else {
             assert.notEqual(game.el.message.textContent, LANGUAGES.en.dailySaveFailed);
             assert.ok(game.el.message.textContent.length > 0);
+            assert.equal(announcements.filter(text => text === LANGUAGES.en.dailySaveFailed).length, 0,
+                'successful checkpoint writes must not announce a failure');
         }
     }
 }
-console.log('PASS ranked digit/activation hints preserve save warnings across resume/clear; recovery clears the warning');
+console.log('PASS ranked hints announce first checkpoint failure via live region once, preserve visible warning, and re-announce after recovery');
