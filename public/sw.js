@@ -1,69 +1,165 @@
 /* Service Worker — Mini Games Collection
- * 策略：页面导航网络优先（保证更新及时，离线回退缓存）；
- * 静态资源（css/js/图片/字体/题库 json）缓存优先 + 后台刷新。
- * 非 GET、跨域请求（各游戏 Worker 的榜单/统计）一律不拦截。
+ * Navigation: network first, offline fallback from the CURRENT cache only.
+ * Static assets: immutable cache-first within the current build.
+ * Old generations are deleted on activation; no retained previous version.
+ * Other origins, non-GET requests and ranged responses are untouched.
+ *
+ * Build stamp and precache list are injected by tools/build/service-worker-cache.mjs.
  */
 
-const CACHE = 'games-cache-v2';
+const BUILD = '__GAMES_BUILD_ID__';
+const CACHE_PREFIX = 'games-cache-v3-';
+const CACHE = `${CACHE_PREFIX}${BUILD}`;
+const LEGACY_CACHE = 'games-cache-v2';
+const PRECACHE = /* __GAMES_PRECACHE__ */ ['/'];
+const BUILD_ASSETS = new Set(/* __GAMES_ASSETS__ */ []);
+const HTML_ROUTES = new Set(/* __GAMES_HTML_ROUTES__ */ []);
 const ASSET_RE = /\.(css|js|mjs|png|svg|jpg|jpeg|webp|ico|json|woff2?)$/i;
 
-self.addEventListener('install', () => {
-    self.skipWaiting();
+function isOwnedCache(name) {
+    return name === LEGACY_CACHE || name.startsWith(CACHE_PREFIX);
+}
+
+// Cloudflare redirects /game.html to /game by default. Both URLs must share
+// one cache key, and only routes emitted by this build may enter the cache.
+function documentKey(pathname) {
+    if (pathname === '/' || pathname === '/index' || pathname === '/index.html') return '/';
+    const plain = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    const html = plain.endsWith('.html') ? plain : `${plain}.html`;
+    return HTML_ROUTES.has(html) ? html : null;
+}
+
+// An old worker can continue controlling a tab while a new release is online.
+// Never replace its offline document with newer HTML pointing at missing chunks.
+async function isMatchingBuildDocument(response, key) {
+    try {
+        if (!response.ok || response.type !== 'basic'
+            || !response.headers.get('content-type')?.toLowerCase().includes('text/html')) return false;
+        if (documentKey(new URL(response.url).pathname) !== key) return false;
+        return (await response.clone().text())
+            .includes(`<meta name="games-build" content="${BUILD}">`);
+    } catch {
+        return false;
+    }
+}
+
+async function cacheMatchingDocument(cache, key, response) {
+    if (!await isMatchingBuildDocument(response, key)) return;
+    try {
+        await cache.put(key, response);
+    } catch {
+        // Cache writes are best effort and never block the online navigation.
+    }
+}
+
+// Cache names can survive a browser crash in the middle of installation.
+// Never infer completeness from existence; only verified entries are reusable.
+async function precacheEntryError(cache, path) {
+    const stored = await cache.match(path);
+    if (!stored || !stored.ok || stored.type !== 'basic') {
+        return `Precache entry unavailable: ${path}`;
+    }
+    const key = documentKey(path);
+    if (key && !await isMatchingBuildDocument(stored, key)) {
+        return `Precache HTML build mismatch: ${path}`;
+    }
+    if (!key && stored.headers.get('content-type')?.toLowerCase().includes('text/html')) {
+        return `Precache dependency returned HTML: ${path}`;
+    }
+    return null;
+}
+
+self.addEventListener('install', event => {
+    event.waitUntil((async () => {
+        const existed = (await caches.keys()).includes(CACHE);
+        try {
+            const cache = await caches.open(CACHE);
+            const repair = [];
+            for (const path of PRECACHE) {
+                if (await precacheEntryError(cache, path)) repair.push(path);
+            }
+            // A crashed installation may have left this build's cache empty
+            // or incomplete. Fetch only missing/invalid entries, preserving
+            // existing valid HTML and assets (possibly used by an active tab).
+            // addAll() fetches and stores each repair entry exactly once.
+            if (repair.length) await cache.addAll(repair);
+            // Validation must inspect the actual cached responses, not a
+            // second network fetch, before the new worker can activate.
+            for (const path of PRECACHE) {
+                const error = await precacheEntryError(cache, path);
+                if (error) throw new Error(error);
+            }
+        } catch (error) {
+            // A newly created partial cache can be discarded. An older
+            // same-build cache may be in active use, so preserve it: the next
+            // online installation will retry only missing/invalid entries.
+            console.error('[games/sw] Precache install failed:', error);
+            if (!existed) await caches.delete(CACHE);
+            throw error;
+        }
+    })());
+    // Intentionally no skipWaiting(): old tabs keep their old controller and
+    // hashed asset set until they close, including during an offline update.
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
     event.waitUntil((async () => {
-        const keys = await caches.keys();
-        await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+        const names = (await caches.keys()).filter(isOwnedCache);
+        // Once all clients of the previous SW have closed, remove EVERY older
+        // Games cache including the original unbounded games-cache-v2.
+        // Do not touch caches owned by other apps on this origin.
+        await Promise.all(names.filter(name => name !== CACHE)
+            .map(name => caches.delete(name)));
         await self.clients.claim();
     })());
 });
 
-self.addEventListener('fetch', (event) => {
-    const req = event.request;
-    if (req.method !== 'GET') return;
-
+self.addEventListener('fetch', event => {
+    const request = event.request;
+    if (request.method !== 'GET' || request.headers.has('range')) return;
     let url;
-    try {
-        url = new URL(req.url);
-    } catch (e) {
-        return;
-    }
+    try { url = new URL(request.url); } catch { return; }
     if (url.origin !== self.location.origin) return;
 
-    // 页面导航：网络优先，离线回退到缓存（再退到首页）
-    if (req.mode === 'navigate') {
+    if (request.mode === 'navigate') {
+        // Extensionless Cloudflare routes and .html URLs share one build-owned
+        // pathname key. Query parameters never create new cache entries.
+        const key = documentKey(url.pathname);
         event.respondWith((async () => {
+            const cache = await caches.open(CACHE);
             try {
-                const fresh = await fetch(req);
-                const cache = await caches.open(CACHE);
-                cache.put(req, fresh.clone());
-                return fresh;
-            } catch (e) {
-                const cached = await caches.match(req);
-                if (cached) return cached;
-                const home = await caches.match('/');
-                return home || Response.error();
+                const response = await fetch(request);
+                if (key) {
+                    event.waitUntil(cacheMatchingDocument(cache, key, response.clone()));
+                }
+                return response;
+            } catch {
+                if (key) {
+                    const exact = await cache.match(key);
+                    if (exact) return exact;
+                }
+                return await cache.match('/') || Response.error();
             }
         })());
         return;
     }
 
-    // 静态资源：缓存优先 + 后台更新
-    if (ASSET_RE.test(url.pathname)) {
-        event.respondWith((async () => {
-            const cache = await caches.open(CACHE);
-            const cached = await cache.match(req);
-            const network = fetch(req).then((res) => {
-                if (res && res.ok) cache.put(req, res.clone());
-                return res;
-            }).catch(() => null);
-            if (cached) {
-                event.waitUntil(network);
-                return cached;
+    // Query-dependent assets may not be equivalent. Do not cache them under
+    // ever-changing query-string keys or silently collapse distinct responses.
+    if (!ASSET_RE.test(url.pathname) || url.search || !BUILD_ASSETS.has(url.pathname)) return;
+    event.respondWith((async () => {
+        const cache = await caches.open(CACHE);
+        const current = await cache.match(request);
+        // Do not overwrite old-build CSS/JS while the next SW is waiting.
+        if (current) return current;
+        try {
+            const fresh = await fetch(request);
+            if (fresh.ok && fresh.type === 'basic') {
+                event.waitUntil(cache.put(request, fresh.clone()).catch(() => {}));
             }
-            const fresh = await network;
-            return fresh || Response.error();
-        })());
-    }
+            return fresh;
+        } catch {
+            return Response.error();
+        }
+    })());
 });

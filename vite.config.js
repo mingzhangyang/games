@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import legacy from '@vitejs/plugin-legacy';
+import { serviceWorkerCachePlugin } from './tools/build/service-worker-cache.mjs';
 import { resolve } from 'path';
 
 // dev / prod 单文件按 mode 分支：保证两边插件、别名、assetsInclude 完全一致。
@@ -103,6 +104,7 @@ main: resolve(__dirname, 'index.html'),
     plugins: [
       // 兼容性支持（仅生产构建需要）
       ...(isDev ? [] : [legacy({ targets: ['defaults', 'not IE 11'] })]),
+      serviceWorkerCachePlugin(),
     ],
   };
 });

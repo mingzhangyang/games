@@ -4,14 +4,16 @@
  * re-entry, persistence and real Service Worker offline replay.
  *
  * The shared source test server intentionally disables Service Workers. The
- * offline portion therefore uses an isolated test origin with the production SW.
+ * offline portion uses an isolated origin, rendering the exact production SW
+ * template with a finite source-file manifest and build-tagged HTML.
  */
 import puppeteer from 'puppeteer-core';
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { resolve, dirname, join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { renderServiceWorker } from '../tools/build/service-worker-cache.mjs';
 
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -46,17 +48,56 @@ page.on('request', req => {
     void req.continue();
 });
 
+// Exercise the real SW template with the same build injection as Vite, but
+// index SOURCE modules so the test can assert lazy import caching by source URL.
+const SW_BUILD = 'shadow-loom-source-test';
+const SW_ASSET_RE = /\.(css|js|mjs|png|svg|jpg|jpeg|webp|ico|json|woff2?)$/i;
+async function collectAssets(dir, urlPrefix) {
+    const paths = [];
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+        const path = join(dir, entry.name);
+        const url = urlPrefix + '/' + entry.name;
+        if (entry.isDirectory()) paths.push(...await collectAssets(path, url));
+        else if (entry.isFile() && SW_ASSET_RE.test(entry.name)) paths.push(url);
+    }
+    return paths;
+}
+const assetGroups = await Promise.all(['src', 'js', 'css', 'assets', 'public'].map(dir =>
+    collectAssets(join(ROOT, dir), dir === 'public' ? '' : '/' + dir)));
+const testAssets = [...new Set(assetGroups.flat())].sort();
+const swSource = await readFile(join(ROOT, 'public/sw.js'), 'utf8');
+const injectedWorker = renderServiceWorker(swSource, {
+    buildId: SW_BUILD,
+    precache: ['/', '/index.html'],
+    assets: testAssets,
+    htmlRoutes: ['/index.html', '/shadow-loom.html'],
+});
+let serviceWorkerNetworkDown = false;
+
 // Serve the real SW on a separate origin so browser test suites stay isolated.
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
     '.svg': 'image/svg+xml', '.json': 'application/json', '.webp': 'image/webp',
     '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2' };
 function createServiceWorkerTestServer() {
     return createServer(async (req, res) => {
+        // CDP offline emulation may not propagate to the separate SW target.
+        // Reset server connections too, proving that cached code is sufficient.
+        if (serviceWorkerNetworkDown) return req.socket.destroy();
         const relativePath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname).replace(/^\/+/, '') || 'index.html';
+        if (relativePath === 'sw.js') {
+            res.writeHead(200, { 'Content-Type': 'text/javascript', 'Cache-Control': 'no-store' });
+            res.end(injectedWorker);
+            return;
+        }
         const candidates = [join(ROOT, relativePath), join(ROOT, 'public', relativePath)];
         for (const file of candidates) {
             try {
-                const bytes = await readFile(file);
+                let bytes = await readFile(file);
+                if (extname(file) === '.html') {
+                    const html = bytes.toString('utf8').replace(/<head\b[^>]*>/i,
+                        head => `${head}\n<meta name="games-build" content="${SW_BUILD}">`);
+                    bytes = Buffer.from(html);
+                }
                 res.writeHead(200, { 'Content-Type': types[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
                 res.end(bytes);
                 return;
@@ -158,6 +199,7 @@ try {
     }, { timeout: 15000 });
     ok(true, 'Service Worker caches the selected level module');
 
+    serviceWorkerNetworkDown = true;
     await swPage.setOfflineMode(true);
     await swPage.reload({ waitUntil: 'domcontentloaded', timeout: 45000 });
     await ready(swPage, 'menu');
@@ -167,6 +209,7 @@ try {
         'offline reload uses previously cached geometry and remains playable');
     ok(pageErrors.length === 0, 'no uncaught browser exceptions in lifecycle tests');
 } finally {
+    serviceWorkerNetworkDown = false;
     if (swPage) await swPage.close().catch(() => {});
     if (swServer) await new Promise(resolveClose => swServer.close(resolveClose));
     await browser.close();
