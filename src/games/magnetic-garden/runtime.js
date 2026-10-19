@@ -187,16 +187,18 @@ export class MagneticGardenGame {
         if (!panel || panel.classList.contains('hidden') !== pinned) return;
         const refocus = (pinned ? tools : panel).contains(document.activeElement);
         panel.classList.toggle('hidden', !pinned); tools.classList.toggle('hidden', pinned);
-        // Return to the selected magnet: focusing a socket would immediately preview again.
-        const anchor = this.sim.magnets.find(m => m.id === this.selected)?.cell ?? this.focusCell;
-        if (refocus) (pinned ? $('mg-commit') : $('mg-board').querySelector(`[data-cell="${anchor}"]`))?.focus({ preventScroll: true });
+        // Return to the selected magnet, on the board or in the tray: focusing a socket would preview again.
+        const magnet = this.sim.magnets.find(m => m.id === this.selected);
+        const anchor = !magnet ? null : magnet.cell === null ? $('mg-inventory').querySelector(`[data-magnet="${magnet.id}"]`) : $('mg-board').querySelector(`[data-cell="${magnet.cell}"]`);
+        if (refocus) (pinned ? $('mg-commit') : anchor ?? $('mg-board').querySelector(`[data-cell="${this.focusCell}"]`))?.focus({ preventScroll: true });
     }
     syncPreviewSummary() {
         const status = $('mg-preview-summary');
         const description = describePreview(this.level, this.sim, this.preview, this.t());
         if (status.textContent !== description) status.textContent = description;
     }
-    clearPreview() { this.preview = null; this.syncPreviewSummary(); this.syncPreviewPanel(); $('mg-trails')?.replaceChildren(); $('mg-board')?.querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end')); if ($('mg-instruction')) $('mg-instruction').textContent = this.selected ? fill(this.t().selected, { id: this.selected }) : this.t().select; }
+    // Panel last: moving focus may start a fresh transient preview, which must survive the cleanup.
+    clearPreview() { this.preview = null; this.syncPreviewSummary(); $('mg-trails')?.replaceChildren(); $('mg-board')?.querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end')); if ($('mg-instruction')) $('mg-instruction').textContent = this.selected ? fill(this.t().selected, { id: this.selected }) : this.t().select; this.syncPreviewPanel(); }
     flip() { if (this.selected) this.choose({ type: 'flip', magnetId: this.selected }); }
     cancelHint() { this.hintToken++; this.hintWorker?.terminate(); this.hintWorker = null; }
     bloomAnimation() {
@@ -303,13 +305,14 @@ export class MagneticGardenGame {
         this.renderTrails();
     }
     renderInventory() {
-        const list = $('mg-inventory'); list.replaceChildren();
+        const list = $('mg-inventory'); const focused = list.contains(document.activeElement) ? document.activeElement.dataset.magnet : null; list.replaceChildren();
         for (const magnet of this.sim.magnets.filter(m => m.cell === null)) {
             const b = document.createElement('button'); b.type = 'button'; b.dataset.magnet = magnet.id; b.className = 'mg-inventory-magnet';
             b.setAttribute('aria-label', fill(this.t().magnet, { id: magnet.id, pole: magnet.polarity })); b.setAttribute('aria-pressed', String(this.selected === magnet.id));
             b.innerHTML = `<span class="mg-magnet mg-magnet--${magnet.polarity}" aria-hidden="true"><b class="mg-magnet-letter">${magnet.polarity}</b><small class="mg-magnet-id">${magnet.id.replace(/^m/, '')}</small></span>`; list.append(b);
         }
         list.classList.toggle('hidden', !list.children.length);
+        if (focused) list.querySelector(`[data-magnet="${focused}"]`)?.focus({ preventScroll: true });
     }
     renderTrails() {
         this.syncPreviewSummary();
@@ -369,6 +372,8 @@ export class MagneticGardenGame {
     }
     keydown(e) {
         if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+        // A held key never turns a preview into a move: confirming takes a second deliberate press.
+        if (e.repeat && ['enter', ' ', 'f'].includes(e.key.toLowerCase())) { e.preventDefault(); return; }
         if (document.querySelector('dialog[open]')) return;
         const modal = ['mg-help','mg-pause','mg-result'].map($).find(n => !n.classList.contains('hidden'));
         if (modal) {

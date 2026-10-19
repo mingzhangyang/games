@@ -416,6 +416,43 @@ try {
             && document.getElementById('mg-sr-status').textContent === fixedText;
     }, { cell: rooted.cell, id: rooted.id, fixedText: LANGUAGES.en.fixed }), 'a rooted magnet is marked, announced as fixed, and cannot be selected');
 
+    // A held key never confirms: auto-repeat past the double-tap guard is not a second press.
+    const heldLevel = LEVELS.find(level => level.id === 'aurora-1');
+    await start(page, heldLevel);
+    await page.keyboard.down('f');
+    check(await page.evaluate(() => window.mgGame.preview?.pinned && window.mgGame.preview.action.type === 'flip'), 'pressing F previews a flip');
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+    await page.keyboard.down('f');
+    await page.keyboard.up('f');
+    check(await page.evaluate(() => window.mgGame.sim.moves === 0 && window.mgGame.preview?.pinned), 'holding F never confirms the flip');
+    await page.keyboard.press('Escape');
+    const heldSocket = heldLevel.sockets.find(cell => !heldLevel.magnets.some(magnet => magnet.cell === cell));
+    await page.focus(`[data-cell="${heldSocket}"]`);
+    await page.keyboard.down('Enter');
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+    await page.keyboard.down('Enter');
+    await page.keyboard.up('Enter');
+    check(await page.evaluate(cell => window.mgGame.sim.moves === 0 && window.mgGame.preview?.pinned
+        && window.mgGame.preview.action.cell === cell, heldSocket), 'holding Enter on a socket never confirms the move');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => window.mgGame.sim.moves === 1 && !window.mgGame.animating);
+    check(await page.evaluate(() => window.mgGame.sim.moves === 1), 'a deliberate second Enter still makes the move');
+    await page.keyboard.press('u');
+
+    // Clearing a preview while the magnet is still in the tray returns focus to that tray
+    // magnet, so no transient socket preview or stale description is left behind.
+    await start(page, LEVELS[0]);
+    const traySocket = LEVELS[0].sockets[0];
+    await page.focus(`[data-cell="${traySocket}"]`);
+    await page.keyboard.press('Enter');
+    check(await page.evaluate(() => window.mgGame.preview?.pinned), 'Enter previews placing the tray magnet');
+    await page.focus('#mg-clear-preview');
+    await page.keyboard.press('Enter');
+    check(await page.evaluate(id => !window.mgGame.preview && document.activeElement?.dataset.magnet === id
+        && !document.getElementById('mg-trails').children.length
+        && document.getElementById('mg-preview-summary').textContent === '', LEVELS[0].magnets[0].id),
+    'clearing a tray preview focuses the tray magnet and leaves no preview state or description');
+
     // All chapter eligibility is exercised by real authored actions. No score
     // is submitted for the first five gardens; the sixth submits their sum.
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
