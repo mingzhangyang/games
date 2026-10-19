@@ -56,40 +56,27 @@ self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const existed = (await caches.keys()).includes(CACHE);
         try {
-            // Fetch once and validate the exact responses we will cache.
-            // addAll() accepts 200 HTML from a different deploy; a separate
-            // validation fetch followed by addAll() would still race a deploy.
-            const fetched = await Promise.all(PRECACHE.map(async path => {
-                const response = await fetch(new Request(path, { cache: 'no-store' }));
-                if (!response.ok || response.type !== 'basic') {
-                    throw new Error(`Precache request failed: ${path}`);
+            const cache = await caches.open(CACHE);
+            // addAll() is the working native SW precache path. Inspect the
+            // actual responses it stored, not a separate validation fetch:
+            // fetching twice would race a deployment and could validate v1
+            // only to cache v2. The worker cannot activate until this entire
+            // install promise completes successfully.
+            if (!existed) await cache.addAll(PRECACHE);
+            // Never overwrite an existing same-ID cache during retries.
+            for (const path of PRECACHE) {
+                const stored = await cache.match(path);
+                if (!stored || !stored.ok || stored.type !== 'basic') {
+                    throw new Error(`Precache entry unavailable: ${path}`);
                 }
                 const key = documentKey(path);
                 if (key) {
-                    if (!await isMatchingBuildDocument(response, key)) {
+                    if (!await isMatchingBuildDocument(stored, key)) {
                         throw new Error(`Precache HTML build mismatch: ${path}`);
                     }
-                } else if (response.headers.get('content-type')?.toLowerCase().includes('text/html')) {
+                } else if (stored.headers.get('content-type')?.toLowerCase().includes('text/html')) {
                     throw new Error(`Precache dependency returned HTML: ${path}`);
                 }
-                return { path, response };
-            }));
-            const cache = await caches.open(CACHE);
-            if (existed) {
-                // A retry must not overwrite a pre-existing generation. Reuse
-                // it only if the complete, correctly marked shell is present.
-                for (const { path } of fetched) {
-                    const saved = await cache.match(path);
-                    if (!saved || (documentKey(path)
-                        && !await isMatchingBuildDocument(saved, documentKey(path)))) {
-                        throw new Error(`Existing precache entry missing or mismatched: ${path}`);
-                    }
-                }
-                return;
-            }
-            // Never expose a partial new generation after a failed install.
-            for (const { path, response } of fetched) {
-                await cache.put(path, response);
             }
         } catch (error) {
             // Installation errors are otherwise easy to miss because the

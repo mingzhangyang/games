@@ -18,12 +18,14 @@ superseded Games caches safely.
   the marker is ignored when hashing so re-stamping is deterministic.
   The generated SW also embeds the exact set of emitted HTML routes.
 - Install pre-caches /, /index.html, and the JS/CSS dependencies referenced
-  by the built homepage, plus the homepage SVG sprite. It validates every
-  fetched response before writing: both homepage URLs must serve HTML tagged
-  with this worker's `games-build` ID. Assets must not return HTML fallbacks.
-  Responses are fetched only once to avoid a validation/write race. Any failure
-  rejects installation and discards a new partial cache without deleting the
-  active generation; an existing same-ID cache is never overwritten.
+  by the built homepage, plus the homepage SVG sprite. Native `cache.addAll`
+  fetches/stores each resource once, then the install verifies those **exact
+  cached responses** before the worker can activate: both homepage URLs must
+  have this worker's `games-build` ID and assets must not be HTML fallbacks.
+  There is no duplicate validation fetch that could race a deployment. Any
+  failure rejects installation and deletes the newly created generation without
+  deleting the active version. An existing same-ID cache is validated without
+  being overwritten.
 - **No skipWaiting() on updates**: the old worker and its hashed assets remain
   available while any client controlled by it is open. Once these clients close,
   the browser activates the prepared worker.
