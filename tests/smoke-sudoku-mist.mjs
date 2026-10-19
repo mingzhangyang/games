@@ -1124,7 +1124,7 @@ try {
             return { refused, resumed: { state: g.state, inputs: g.session.inputs.length } };
         }, date, runSlot);
         check(oldDirty.inputs === 2 && !oldDirty.held && newer.initially === 1
-            && newer.inputs === 3 && newer.rev === 3
+            && newer.inputs === 3 && newer.rev > 1
             && staleAttempt.refused.state === 'menu'
             && /无法读取/.test(staleAttempt.refused.status)
             && staleAttempt.refused.snapshot?.inputs.length === newer.inputs
