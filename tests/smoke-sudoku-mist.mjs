@@ -946,9 +946,10 @@ try {
             inputs: window.smGame.session.inputs.length,
             mistakes: window.smGame.session.summary().mistakes,
             stored: JSON.parse(localStorage.getItem(r) || 'null')?.inputs.length ?? -1,
+            message: window.smGame.el.message.textContent,
         }), runSlot);
         check(before.inputs === 6 && before.mistakes === 1 && back.stored === 2 && back.inputs === 6 && back.mistakes === 1
-            && entryText.includes('6'),
+            && entryText.includes('6') && /无法保存/.test(back.message),
         '⑱ 进度写不进存储：回菜单再进仍是 6 步、失误 1 次（存储里只有 2 步）', JSON.stringify({ before, back, entryText }));
         // 即使原页回了菜单，第二页也不能用旧的 2 步接手；恢复后应交接完整 6 步。
         await c.evaluate(() => window.smGame.toMenu());

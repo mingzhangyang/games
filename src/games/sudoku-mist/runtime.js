@@ -70,6 +70,7 @@ export class SudokuMistGame {
         this.dailyPuzzle = null;
         this.dailyStartId = 0;
         this.dailyStart = null;
+        this.messageText = '';
         // 本页里完成过的每日局 dateKey → { score, time }（完成标记写不进存储时的兜底）
         this.dailyCleared = new Map();
         // 计分局的跨标签页互斥锁 + 本页检查点
@@ -474,7 +475,7 @@ export class SudokuMistGame {
         this.el.replayBar.classList.add('hidden');
         this.el.hud.classList.remove('hidden');
         this.el.panel.classList.remove('hidden');
-        this.el.message.textContent = resume?.inputs.length ? this.t().dailyResumed : '';
+        this.setMessage(resume?.inputs.length ? this.t().dailyResumed : '');
         this.clearFloats();
         this.mist.resize();
         this.mist.sync(i => this.session.isVisible(i), { instant: true });
@@ -505,8 +506,20 @@ export class SudokuMistGame {
     persist() {
         if (!this.isRanked() || !this.session || this.state !== 'playing') return false;
         const saved = this.daily.save(this.meta.dateKey, { inputs: this.session.inputs, elapsed: this.elapsedMs(), notes: this.notes });
-        if (!saved) this.el.message.textContent = this.t().dailySaveFailed;
+        this.renderMessage();
         return saved;
+    }
+
+    // Save failures are state, not a transient hint. Every message uses this
+    // single renderer so resume/hint text cannot conceal memory-only progress.
+    setMessage(text) {
+        this.messageText = text;
+        this.renderMessage();
+    }
+
+    renderMessage() {
+        this.el.message.textContent = this.isRanked() && this.daily.unsaved
+            ? this.t().dailySaveFailed : this.messageText;
     }
 
     next() {
@@ -531,7 +544,7 @@ export class SudokuMistGame {
         this.el.replayBar.classList.add('hidden');
         this.el.hud.classList.add('hidden');
         this.el.panel.classList.add('hidden');
-        this.el.message.textContent = '';
+        this.setMessage('');
         this.clearFloats();
         this.renderMenu();
         this.el.status.textContent = this.daily.unsaved ? this.t().dailySaveFailed : '';
@@ -604,7 +617,7 @@ export class SudokuMistGame {
         else if (r.luck) this.float(i, t.floatLuck, 'muted');
         else this.float(i, `+${r.points} · ${t['tier' + r.tier]}${r.intoFog ? ` · ${t.floatFog}` : ''}`, r.tier >= 3 ? 'deep' : 'ok');
         if (r.luck) this.audio.luck(); else this.audio.place(r.tier, r.intoFog);
-        this.el.message.textContent = '';
+        this.setMessage('');
         this.announce(fill(t.srPlaced, { d, pts: r.points, n: r.revealed.length }));
         this.render();
         this.ensureLoop();
@@ -627,7 +640,7 @@ export class SudokuMistGame {
         this.mist.ripple(i);
         this.float(i, this.t().floatRekindle, 'muted');
         this.audio.hint();
-        this.el.message.textContent = '';
+        this.setMessage('');
         this.announce(fill(this.t().srRekindle, { n: r.revealed.length }));
         this.render();
         this.ensureLoop();
@@ -682,7 +695,7 @@ export class SudokuMistGame {
         this.hintUnit = h.unit;
         this.armed = 0;
         if (h.action === 'activate') {
-            this.el.message.textContent = t.hintRekindle;
+            this.setMessage(t.hintRekindle);
             this.announce(t.hintRekindle);
             this.audio.hint();
             this.render();
@@ -694,7 +707,7 @@ export class SudokuMistGame {
         if (h.via === 'nakedSingle') text = fill(t.hintNaked, { d: h.digit });
         else text = fill(h.via === 'fullHouse' ? t.hintFullHouse : t.hintHidden, { u: this.unitName(h.unit), d: h.digit });
         if (h.tier >= 3 && NEEDS_KEY[h.key]) text += fill(t.hintNeeds, { t: t[NEEDS_KEY[h.key]] });
-        this.el.message.textContent = text;
+        this.setMessage(text);
         this.announce(text);
         this.audio.hint();
         this.render();
