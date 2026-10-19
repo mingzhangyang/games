@@ -26,7 +26,7 @@ const expectedKeys = {
     'shadow-loom': ['rabbit','bird','whale','deer','pagoda','tree','koi','crane'].map(id => 'shadow-loom-' + id),
     'math-rain': [1,2,3,4,5,6].map(level => 'math-rain-' + level),
     'loop-jail': ['loop-jail'],
-    'magnetic-garden': ['greenhouse', 'twins', 'stonepath', 'aurora'].map(id => 'magnetic-garden-' + id),
+    'magnetic-garden': ['greenhouse', 'twins', 'stonepath', 'aurora', 'deeproot'].map(id => 'magnetic-garden-' + id),
     // Daily-only board: no all-time key, only sudoku-mist-d<YYYYMMDD> (DAILY_PATTERNS).
     'sudoku-mist': [],
 };

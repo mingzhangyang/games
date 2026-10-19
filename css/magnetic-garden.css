@@ -20,12 +20,14 @@
  .mg-play { position:absolute; inset:0; padding:14px 20px 16px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; scrollbar-width:thin; scrollbar-color:var(--mg-line) transparent; }
  .mg-hud { background:color-mix(in srgb,var(--mg-bg) 80%,transparent); border-radius:16px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; max-width:492px; margin:0 auto; flex-shrink:0; }
  .mg-eyebrow { font-size:10px; font-weight:700; letter-spacing:.17em; color:var(--mg-green); text-transform:uppercase; }
- #mg-level-title { font-family:Georgia,'Songti SC',serif; font-size:clamp(20px,4.6vw,26px); font-weight:500; margin-top:5px; }
+ #mg-level-title { font-family:Georgia,'Songti SC',serif; font-size:clamp(20px,4.6vw,26px); font-weight:500; line-height:1.2; margin:5px 0 0; }
  .mg-move-counter { display:grid; grid-template-columns:auto auto; align-items:baseline; gap:7px; padding:8px 12px; border:1px solid var(--mg-line); border-radius:18px; background:var(--mg-panel); color:var(--mg-dim); font-size:11px; }
  #mg-moves { font-size:28px; color:var(--mg-text); font-weight:500; font-variant-numeric:tabular-nums; }
- .mg-board-area { display:grid; place-items:center; flex:1 0 auto; min-height:0; }
- .mg-board-frame { width:min(100%,492px); position:relative; padding:12px; background:var(--mg-tray); border-radius:24px; border:1px solid var(--mg-tile-hi); box-shadow:0 7px 0 var(--mg-tray-edge),0 18px 36px var(--mg-shadow),inset 0 2px 0 rgb(255,255,255,.4); }
- .mg-board { display:grid; grid-template-columns:repeat(var(--mg-cols),minmax(44px,1fr)); gap:4px; width:100%; }
+ /* The board takes whatever height the HUD and tools leave, sized by its tighter dimension.
+    Cells never drop below 44px: past that the play column scrolls instead (10px = border + tray edge). */
+ .mg-board-area { --mg-pad:12px; --mg-gap:4px; --mg-frame-max:492px; --mg-cols:5; --mg-rows:5; container-type:size; display:grid; place-items:center; flex:1 1 0; min-height:calc(var(--mg-rows) * 44px + (var(--mg-rows) - 1) * var(--mg-gap) + 2 * var(--mg-pad) + 10px); }
+ .mg-board-frame { --mg-cell:max(44px,min((min(100cqw,var(--mg-frame-max)) - 2 * var(--mg-pad) - 2px - (var(--mg-cols) - 1) * var(--mg-gap)) / var(--mg-cols),(100cqh - 2 * var(--mg-pad) - 10px - (var(--mg-rows) - 1) * var(--mg-gap)) / var(--mg-rows))); width:calc(var(--mg-cols) * var(--mg-cell) + (var(--mg-cols) - 1) * var(--mg-gap) + 2 * var(--mg-pad) + 2px); position:relative; padding:var(--mg-pad); background:var(--mg-tray); border-radius:24px; border:1px solid var(--mg-tile-hi); box-shadow:0 7px 0 var(--mg-tray-edge),0 18px 36px var(--mg-shadow),inset 0 2px 0 rgb(255,255,255,.4); }
+ .mg-board { display:grid; grid-template-columns:repeat(var(--mg-cols),minmax(44px,1fr)); gap:var(--mg-gap); width:100%; }
  .mg-row { display:contents; }
  .mg-cell { aspect-ratio:1; min-width:44px; min-height:44px; padding:0; position:relative; border:0; border-radius:9px; background:linear-gradient(145deg,var(--mg-tile-hi),var(--mg-tile)); box-shadow:0 3px 0 var(--mg-tile-edge),inset 0 1px 0 rgb(255,255,255,.35); color:var(--mg-ink); cursor:default; outline-offset:-3px; display:grid; place-items:center; transition:background .2s,box-shadow .2s; }
  .mg-cell:focus-visible { outline:3px solid var(--mg-ink); z-index:3; }
@@ -36,6 +38,9 @@
  .mg-socket::after { content:'+'; display:grid; place-items:center; height:100%; color:var(--mg-tray-edge); font-size:19px; font-weight:400; }
  .mg-magnet { width:72%; height:70%; position:relative; display:grid; place-items:center; border-radius:30% 30% 23% 23%; background:linear-gradient(145deg,#e69a85,var(--mg-N) 68%); box-shadow:0 4px 0 #994e4b,0 6px 8px rgb(63,49,29,.22),inset 0 2px 0 rgb(255,255,255,.4); color:#fff7df; transform:translateY(-2px); }
  .mg-magnet--S { background:linear-gradient(145deg,#92bdba,var(--mg-S) 68%); box-shadow:0 4px 0 #356774,0 6px 8px rgb(63,49,29,.22),inset 0 2px 0 rgb(255,255,255,.4); }
+ /* Rooted (fixed) magnets sit in a wooden collar instead of floating: a mark beyond colour. */
+ .mg-magnet--rooted { transform:none; box-shadow:0 0 0 3px var(--mg-tile-hi),0 0 0 6px #8a6a4f,0 5px 8px rgb(63,49,29,.25),inset 0 2px 0 rgb(255,255,255,.4); }
+ .mg-magnet--rooted .mg-magnet-id { background:#8a6a4f; color:#f7efd7; border-color:#6b4f3a; }
  .mg-magnet::before { content:''; position:absolute; left:15%; right:15%; bottom:15%; height:5%; background:rgb(255,255,255,.32); border-radius:20px; }
  .mg-magnet-letter { font-family:Georgia,serif; font-size:clamp(20px,5vw,28px); font-weight:700; line-height:1; }
  .mg-magnet-id { position:absolute; top:-5px; right:-5px; width:16px; height:16px; display:grid; place-items:center; border-radius:50%; background:#f7efd7; color:var(--mg-ink); border:1px solid var(--mg-tray-edge); font-size:9px; font-family:system-ui,sans-serif; font-weight:700; }
@@ -51,7 +56,7 @@
  .mg-pot::after { content:''; position:absolute; left:26%; right:26%; bottom:18%; height:3px; border-radius:50%; background:rgb(250,229,188,.32); }
  .mg-flower { width:100%; height:100%; overflow:visible; }
  .mg-cell.is-grown > .mg-flower { position:absolute; inset:-8% 0 0; height:102%; pointer-events:none; z-index:1; filter:drop-shadow(0 2px 1px rgb(61,80,52,.1)); }
- .mg-trails { position:absolute; top:12px; left:12px; width:calc(100% - 24px); height:calc(100% - 24px); pointer-events:none; overflow:visible; z-index:4; }
+ .mg-trails { position:absolute; top:var(--mg-pad); left:var(--mg-pad); width:calc(100% - 2 * var(--mg-pad)); height:calc(100% - 2 * var(--mg-pad)); pointer-events:none; overflow:visible; z-index:4; }
  .mg-path { fill:none; stroke-width:5; stroke-dasharray:8 8; stroke-linecap:round; stroke-linejoin:round; }
  .mg-path--N { stroke:#904a46; }
  .mg-path--S { stroke:#285d6d; }
@@ -67,16 +72,18 @@
  .mg-tools { background:color-mix(in srgb,var(--mg-bg) 88%,transparent); border-radius:16px; padding:10px; flex-shrink:0; width:100%; max-width:492px; margin:0 auto; }
  .mg-microstats { display:flex; justify-content:space-between; gap:8px; color:var(--mg-dim); font-size:11px; font-variant-numeric:tabular-nums; }
  .mg-instruction { min-height:28px; padding:8px 0; font-size:12px; color:var(--mg-dim); line-height:1.4; }
- .mg-tool-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+ .mg-tool-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
  .mg-tool { min-height:44px; padding:8px 5px; border-radius:13px; border:1px solid var(--mg-line); background:var(--mg-panel); color:var(--mg-text); font-size:12px; cursor:pointer; }
  .mg-tool:hover { background:var(--mg-panel-raised); }
  .mg-tool:disabled { opacity:.35; cursor:default; }
- .mg-preview-panel { border-top:1px solid var(--mg-line); margin-top:10px; padding-top:10px; color:var(--mg-dim); font-size:11px; line-height:1.5; }
- .mg-preview-copy { margin-bottom:10px; }
- .mg-preview-panel .mg-action { min-height:44px; }
+ .mg-preview-panel .mg-action-row { flex-wrap:nowrap; gap:6px; }
+ .mg-preview-panel .mg-action { flex:1 1 0; min-width:0; min-height:44px; padding-inline:10px; }
  .mg-hint-text { color:var(--mg-text); font-size:13px; padding:10px 12px; background:var(--mg-panel-raised); border-radius:12px; margin-top:8px; line-height:1.5; }
- .mg-inventory { display:flex; gap:8px; margin-bottom:8px; }
- .mg-inventory-magnet { width:58px; height:58px; padding:6px; display:grid; place-items:center; border:1px dashed var(--mg-line); border-radius:12px; background:var(--mg-panel); cursor:pointer; }
+ /* The tray shares the instruction line, so a tray magnet never costs the board a row. */
+ .mg-guide { display:flex; align-items:center; gap:8px; }
+ .mg-guide .mg-instruction { flex:1 1 auto; min-width:0; }
+ .mg-inventory { display:flex; flex:none; gap:8px; }
+ .mg-inventory-magnet { width:52px; height:52px; padding:5px; display:grid; place-items:center; border:1px dashed var(--mg-line); border-radius:12px; background:var(--mg-panel); cursor:pointer; }
  .mg-inventory-magnet[aria-pressed="true"] { outline:2px solid var(--mg-green); }
  .mg-menu { border-radius:0; display:block; text-align:center; padding:10px 24px 28px; background:var(--mg-bg); color:var(--mg-text); touch-action:pan-y; }
  #mg-hero { width:100%; max-width:470px; margin-inline:auto; display:grid; }
@@ -106,7 +113,8 @@
  .mg-chapter-score { color:var(--mg-dim); margin-top:11px; font-size:10px; line-height:1.5; }
  .mg-collection { margin:26px 0 18px; padding:20px 12px 6px; border-top:1px solid var(--mg-line); font-size:13px; }
  .mg-collection-copy { font-size:11px; color:var(--mg-dim); margin-top:7px; }
- .mg-flowers { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:3px; margin-top:14px; }
+ /* One row of six flowers per chapter. */
+ .mg-flowers { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:3px; max-width:330px; margin:14px auto 0; }
  .mg-collected-flower { aspect-ratio:4/5; opacity:.12; filter:grayscale(1); }
  .mg-collected-flower.is-earned { opacity:1; filter:none; }
  /* Full-bleed immersive stage has square corners: overlay scrims must cover them. */
@@ -132,7 +140,7 @@
  @media (width >=1024px) {
   .mg-menu { position:absolute; inset:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--mg-line) transparent; }
   .mg-play { padding-top:18px; padding-bottom:24px; gap:16px; }
-  .mg-board-frame { max-width:460px; }
+  .mg-board-area { --mg-frame-max:460px; }
  }
 
  /* Mobile menu extends the stage, but Help must stay inside the viewport.
@@ -146,9 +154,8 @@
 
  @media (width <=480px) {
   .mg-play { padding:10px 12px 14px; gap:10px; }
-  .mg-board-frame { padding:9px; border-radius:19px; }
-  .mg-board { gap:3px; }
-  .mg-trails { top:9px; left:9px; width:calc(100% - 18px); height:calc(100% - 18px); }
+  .mg-board-area { --mg-pad:9px; --mg-gap:3px; }
+  .mg-board-frame { border-radius:19px; }
   .mg-menu { padding-inline:16px; }
   .mg-chapter { padding:13px; }
   .mg-levels { gap:5px; }
@@ -162,16 +169,36 @@
   .mg-levels { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .mg-level { min-height:52px; }
   .mg-tool { flex-direction:column; font-size:10px; padding:7px 3px; }
+  .mg-preview-panel .mg-action { font-size:13px; padding-inline:6px; }
   .mg-hero-art { margin-top:-10px; }
   .mg-menu-title { font-size:35px; }
  }
 
+ /* Short portrait phones: tighten the chrome around the board so six-row gardens and their
+    controls share one screen (375×553, 320×568) instead of scrolling for every confirmation. */
+ @media (width <600px) and (height <=720px) {
+  .mg-play { padding:8px 12px 6px; gap:8px; }
+  .mg-hud { padding:6px 10px; }
+  #mg-level-title { font-size:19px; margin-top:2px; }
+  .mg-move-counter { padding:4px 10px; }
+  #mg-moves { font-size:22px; }
+  .mg-tools { padding:8px; }
+  .mg-instruction { min-height:0; padding:5px 0 6px; }
+  .mg-inventory-magnet { width:44px; height:44px; padding:3px; }
+ }
+
  @media (height <=600px) and (width >=600px) {
-  .mg-play { display:grid; grid-template-columns:minmax(264px,1fr) minmax(180px,.7fr); align-items:start; padding:12px; }
-  .mg-hud { grid-column:1/-1; }
-  .mg-board-area { width:100%; }
-  .mg-tools { padding:0 0 12px 6px; }
-  .mg-tool-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  /* Short landscape: the board owns the full stage height on the left; HUD and tools stack on the right. */
+  .mg-play { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,300px); grid-template-rows:auto minmax(0,1fr); align-items:start; gap:8px 14px; padding:8px 12px; }
+  .mg-board-area { --mg-pad:8px; --mg-gap:3px; grid-column:1; grid-row:1 / -1; align-self:stretch; }
+  .mg-board-frame { border-radius:19px; }
+  .mg-hud { grid-column:2; grid-row:1; max-width:none; padding:6px 10px; }
+  #mg-level-title { font-size:18px; margin-top:3px; }
+  .mg-move-counter { grid-template-columns:auto; justify-items:center; gap:0; padding:4px 10px; }
+  #mg-moves { font-size:22px; }
+  .mg-tools { grid-column:2; grid-row:2; max-width:none; }
+  .mg-preview-panel .mg-action-row { flex-direction:column; }
+  .mg-preview-panel .mg-action { flex:none; }
   .mg-microstats { flex-wrap:wrap; }
   .mg-modal { place-items:start center; }
   .mg-result-flower { width:74px; height:88px; }

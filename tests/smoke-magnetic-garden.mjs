@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Real pointer/keyboard acceptance: deterministic preview, capture undo, durable
-// replay, all 24 puzzles, and the six-gardens-per-chapter ranking boundary.
+// replay, all 30 puzzles, and the six-gardens-per-chapter ranking boundary.
 // verify-all: timeout=180000
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
@@ -94,10 +94,13 @@ async function start(page, level) {
     await page.waitForFunction(id => window.mgGame.state === 'playing' && window.mgGame.level.id === id,
         {}, level.id);
 }
-async function perform(page, action, { preview = false } = {}) {
+async function perform(page, action, { preview = false, observeSlide = false } = {}) {
     const before = await snapshot(page);
     const magnet = before.magnets.find(item => item.id === action.magnetId);
-    await click(page, magnet.cell === null ? `[data-magnet="${magnet.id}"]` : `[data-cell="${magnet.cell}"]`);
+    // Choosing the already selected magnet previews its flip, so only select when needed.
+    if (await page.evaluate(() => window.mgGame.selected) !== magnet.id) {
+        await click(page, magnet.cell === null ? `[data-magnet="${magnet.id}"]` : `[data-cell="${magnet.cell}"]`);
+    }
     if (action.type === 'flip') await click(page, '#mg-flip');
     else await click(page, `[data-cell="${action.cell}"]`);
     if (preview) {
@@ -121,10 +124,17 @@ async function perform(page, action, { preview = false } = {}) {
     }
     const renderedPreview = await page.evaluate(() => window.mgGame.preview.result.state);
     await click(page, '#mg-commit');
+    // Sampled in the commit's own slide: what the player sees before the animation settles.
+    const slide = observeSlide ? await page.evaluate(key => ({
+        animating: window.mgGame.animating, state: window.mgGame.state,
+        resultHidden: document.getElementById('mg-result').classList.contains('hidden'),
+        saved: JSON.parse(localStorage.getItem(key)),
+    }), storageKey) : null;
     await page.waitForFunction(moves => window.mgGame.sim.moves === moves, {}, before.moves + 1);
     await page.waitForFunction(() => !window.mgGame.animating);
     assert.deepEqual(await snapshot(page), renderedPreview, 'committed state exactly matches the shown preview');
     assertions++;
+    return slide;
 }
 try {
     const page = await open();
@@ -154,7 +164,7 @@ try {
     check(art.heroWidth >= 512 && art.heroHeight >= 512 && art.fallbackHidden, 'production hero image is decoded and replaces fallback art');
     check(art.backdropWidth >= 512 && art.backdropHeight >= 512 && art.backdropVisible && art.backdropFetched,
         'production greenhouse workbench is fetched, decoded, and displayed: ' + JSON.stringify(art));
-    check(LEVELS.length === 24 && CHAPTERS.length === 4, '24 authored gardens in four chapters');
+    check(LEVELS.length === 30 && CHAPTERS.length === 5, '30 authored gardens in five chapters');
     await click(page, '#mg-help-btn');
     check(await page.evaluate(() => {
         const overlay = document.getElementById('mg-help');
@@ -165,8 +175,8 @@ try {
             && close.top >= 0 && close.bottom <= innerHeight;
     }), 'mobile help is viewport-bound and Close is visible even over the long menu');
     await click(page, '#mg-help-close');
-    check(await page.$$eval('[data-level]', buttons => buttons.length === 24 && buttons.every(button => !button.disabled)),
-        'all 24 gardens accessible from a new save');
+    check(await page.$$eval('[data-level]', buttons => buttons.length === 30 && buttons.every(button => !button.disabled)),
+        'all 30 gardens accessible from a new save');
     check(await page.evaluate(() => window.__gardenEvents.length === 0), 'menu view does not count as a play');
     // The click helper scrollIntoView() on Help/Close may move the document.
     // Start the native touch-gesture probe at a known top-of-page position,
@@ -199,15 +209,21 @@ try {
     assert.deepEqual(await snapshot(page), untouched, 'paused keyboard cannot change the garden');
     await click(page, '.scoreboard-trigger--icon');
     await page.waitForFunction(() => document.querySelector('dialog[data-scoreboard-dialog]').open);
-    check(await page.$eval('.scoreboard-select', select => select.options.length === 4), 'ranking dialog offers four chapter boards');
+    check(await page.$eval('.scoreboard-select', select => select.options.length === 5), 'ranking dialog offers five chapter boards');
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !window.mgGame.pauseOwnership.isHeld('ranking'));
     check(await page.evaluate(() => window.mgGame.isPaused), 'rankings preserve the player pause');
     await click(page, '#mg-resume');
     check(await page.evaluate(() => window.__gardenEvents.length === 1), 'pause and dialog interruption do not emit play or finish');
-    await perform(page, LEVELS[0].solution[0], { preview: true });
+    const slide = await perform(page, LEVELS[0].solution[0], { preview: true, observeSlide: true });
+    check(slide.animating && slide.state === 'playing' && slide.resultHidden,
+        'the winning slide plays on the board before the result card covers it');
+    check(slide.saved.best[LEVELS[0].id]?.moves === 1 && slide.saved.current === null,
+        'the win is persisted before its slide finishes, so leaving mid-animation keeps the record');
     check(await page.evaluate(() => window.mgGame.sim.won && window.mgGame.state === 'over'), 'real first-level input completes garden');
     check(await page.$eval('#mg-result', element => !element.classList.contains('hidden')), 'visible completion result');
+    check(await page.$eval('#mg-sr-status', element => element.textContent) === LANGUAGES.en.srWin.replace('{n}', '1'),
+        'the completion announcement is the last live status, not overwritten by the move count');
     check(posts.length === 0, 'one completed level is ineligible for chapter ranking');
     check(await page.evaluate(() => window.__gardenEvents.filter(([, event]) => event === 'finish').length === 1), 'one finish analytics event per completion');
     const savedBest = await page.evaluate(key => JSON.parse(localStorage.getItem(key)).best, storageKey);
@@ -219,6 +235,52 @@ try {
     await perform(page, LEVELS[0].solution[0]);
     check(await page.evaluate(() => window.__gardenEvents.filter(([, event]) => event === 'finish').length === 1),
         'undo and re-completion do not duplicate finish analytics');
+    await click(page, '#mg-result-menu');
+    check(await page.$eval('#mg-btn-start', button => button.textContent.trim()) === LANGUAGES.en.continue,
+        'a collection with earned flowers offers to continue growing');
+    await click(page, '#mg-btn-start');
+    await page.waitForFunction(() => window.mgGame.state === 'playing');
+    check(await page.evaluate(() => window.mgGame.level.id) === LEVELS[1].id,
+        'after a completed garden the primary action opens the first unplanted garden, not garden 1');
+
+    // Choosing the previewed target again makes the move, so the board alone is playable.
+    // Garden 2 is solved by flipping its selected magnet.
+    const flipMagnet = LEVELS[1].magnets[0];
+    assert.deepEqual(LEVELS[1].solution, [{ type: 'flip', magnetId: flipMagnet.id }], 'garden 2 fixture is a single flip');
+    await click(page, `[data-cell="${flipMagnet.cell}"]`);
+    check(await page.evaluate(() => window.mgGame.preview?.pinned && window.mgGame.preview.action.type === 'flip'
+        && window.mgGame.sim.moves === 0
+        && document.getElementById('mg-tool-row').classList.contains('hidden')
+        && !document.getElementById('mg-preview-panel').classList.contains('hidden')),
+    'choosing the selected magnet previews its flip, and the confirm row takes the tool row place');
+    await page.$eval(`[data-cell="${flipMagnet.cell}"]`, cell => cell.click());
+    check(await page.evaluate(() => window.mgGame.sim.moves === 0 && window.mgGame.preview?.pinned),
+        'an immediate repeat is a double tap, not a confirmation');
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+    await click(page, `[data-cell="${flipMagnet.cell}"]`);
+    await page.waitForFunction(() => window.mgGame.state === 'over');
+    check(await page.evaluate(() => window.mgGame.sim.won && window.mgGame.sim.moves === 1),
+        'choosing the previewed magnet again makes the flip');
+    await click(page, '#mg-result-undo');
+    const socket = LEVELS[1].sockets.find(cell => cell !== flipMagnet.cell);
+    await page.focus(`[data-cell="${socket}"]`);
+    await page.keyboard.press('Enter');
+    check(await page.evaluate(cell => window.mgGame.preview?.pinned && window.mgGame.preview.action.cell === cell
+        && window.mgGame.sim.moves === 0, socket), 'Enter on a socket previews the move');
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => window.mgGame.sim.moves === 1 && !window.mgGame.animating);
+    check(await page.evaluate(cell => window.mgGame.sim.magnets[0].cell === cell
+        && !document.getElementById('mg-tool-row').classList.contains('hidden'), socket),
+    'Enter again on the previewed socket makes the move and restores the tools');
+    await click(page, '#mg-undo');
+    await click(page, '#mg-flip');
+    check(await page.evaluate(() => document.activeElement?.id === 'mg-commit'),
+        'when the Flip button hides behind the confirm row, focus moves to Make this move');
+    await click(page, '#mg-clear-preview');
+    check(await page.evaluate(() => !window.mgGame.preview && document.activeElement?.getAttribute('role') === 'gridcell'
+        && !document.getElementById('mg-tool-row').classList.contains('hidden')),
+    'clearing a preview returns focus to the garden and restores the tools');
 
     // A captured seed is part of undo and saved-state replay, not a permanent
     // side effect of the flower visual. Find an intermediate partial capture.
@@ -310,6 +372,15 @@ try {
         && window.mgGame.preview.action.type === 'flip'
         && document.querySelector('.mg-cell.is-selected')?.getAttribute('aria-selected') === 'true'),
     'after clearing a hint, Flip applies to the highlighted magnet m2');
+    await page.keyboard.press('Escape');
+    check(await page.evaluate(() => !window.mgGame.preview && !window.mgGame.isPaused
+        && document.getElementById('mg-pause').classList.contains('hidden')),
+    'Esc clears a pinned preview instead of pausing');
+    check(await page.$eval('#mg-hint-btn', button => button.textContent.trim()) === LANGUAGES.en.nextHint,
+        'after a hint the button offers the next hint stage');
+    await perform(page, retargetLevel.solution[1]);
+    check(await page.$eval('#mg-hint-btn', button => button.textContent.trim()) === LANGUAGES.en.hint,
+        'a committed move resets the hint button label together with its hint stage');
 
     // Trigger another real Worker and navigate in the same event turn, before
     // its message can race with replacement gameplay. Native Worker remains
@@ -333,6 +404,55 @@ try {
         && !window.mgGame.preview && !window.mgGame.hintMessage, LEVELS[1].id),
     'cancelled hint cannot leak a stale preview or copy into replacement garden');
 
+    // A rooted magnet is visibly different, announced, and never becomes the selection.
+    const rootedLevel = LEVELS.find(level => level.id === 'deeproot-1');
+    const rooted = rootedLevel.magnets.find(magnet => magnet.fixed);
+    await start(page, rootedLevel);
+    await click(page, `[data-cell="${rooted.cell}"]`);
+    check(await page.evaluate(({ cell, id, fixedText }) => {
+        const button = document.querySelector(`[data-cell="${cell}"]`);
+        return window.mgGame.selected !== id && !window.mgGame.preview?.pinned
+            && !!button.querySelector('.mg-magnet--rooted') && button.getAttribute('aria-label').includes(', fixed')
+            && document.getElementById('mg-sr-status').textContent === fixedText;
+    }, { cell: rooted.cell, id: rooted.id, fixedText: LANGUAGES.en.fixed }), 'a rooted magnet is marked, announced as fixed, and cannot be selected');
+
+    // A held key never confirms: auto-repeat past the double-tap guard is not a second press.
+    const heldLevel = LEVELS.find(level => level.id === 'aurora-1');
+    await start(page, heldLevel);
+    await page.keyboard.down('f');
+    check(await page.evaluate(() => window.mgGame.preview?.pinned && window.mgGame.preview.action.type === 'flip'), 'pressing F previews a flip');
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+    await page.keyboard.down('f');
+    await page.keyboard.up('f');
+    check(await page.evaluate(() => window.mgGame.sim.moves === 0 && window.mgGame.preview?.pinned), 'holding F never confirms the flip');
+    await page.keyboard.press('Escape');
+    const heldSocket = heldLevel.sockets.find(cell => !heldLevel.magnets.some(magnet => magnet.cell === cell));
+    await page.focus(`[data-cell="${heldSocket}"]`);
+    await page.keyboard.down('Enter');
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+    await page.keyboard.down('Enter');
+    await page.keyboard.up('Enter');
+    check(await page.evaluate(cell => window.mgGame.sim.moves === 0 && window.mgGame.preview?.pinned
+        && window.mgGame.preview.action.cell === cell, heldSocket), 'holding Enter on a socket never confirms the move');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => window.mgGame.sim.moves === 1 && !window.mgGame.animating);
+    check(await page.evaluate(() => window.mgGame.sim.moves === 1), 'a deliberate second Enter still makes the move');
+    await page.keyboard.press('u');
+
+    // Clearing a preview while the magnet is still in the tray returns focus to that tray
+    // magnet, so no transient socket preview or stale description is left behind.
+    await start(page, LEVELS[0]);
+    const traySocket = LEVELS[0].sockets[0];
+    await page.focus(`[data-cell="${traySocket}"]`);
+    await page.keyboard.press('Enter');
+    check(await page.evaluate(() => window.mgGame.preview?.pinned), 'Enter previews placing the tray magnet');
+    await page.focus('#mg-clear-preview');
+    await page.keyboard.press('Enter');
+    check(await page.evaluate(id => !window.mgGame.preview && document.activeElement?.dataset.magnet === id
+        && !document.getElementById('mg-trails').children.length
+        && document.getElementById('mg-preview-summary').textContent === '', LEVELS[0].magnets[0].id),
+    'clearing a tray preview focuses the tray magnet and leaves no preview state or description');
+
     // All chapter eligibility is exercised by real authored actions. No score
     // is submitted for the first five gardens; the sixth submits their sum.
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
@@ -341,6 +461,17 @@ try {
         await start(page, level);
         for (const action of level.solution) await perform(page, action);
         check(await page.evaluate(() => window.mgGame.state === 'over' && window.mgGame.sim.won), `${level.id}: actual controls solve garden`);
+        if (level.id === 'deeproot-6') {
+            // The result card waits for the whole staggered bloom, including the last flower.
+            const bloom = await page.evaluate(() => {
+                const wait = window.mgGame.bloomBoard();
+                const ends = [...document.querySelectorAll('#mg-board .mg-flower')].flatMap(node => node.getAnimations())
+                    .map(animation => animation.effect.getComputedTiming().endTime);
+                return { wait, ends };
+            });
+            check(bloom.ends.length === 3 && bloom.wait >= Math.max(...bloom.ends),
+                `the bloom wait covers every flower's staggered animation: ${JSON.stringify(bloom)}`);
+        }
         const expectedPosts = Math.floor((index + 1) / 6);
         if ((index + 1) % 6 === 0) {
             await page.waitForFunction(count => Object.keys(window.mgGame.best).length >= count, {}, index + 1);
@@ -361,10 +492,10 @@ try {
     }
     await page.reload({ waitUntil: 'load' });
     await page.waitForFunction(() => !!window.mgGame);
-    check(await page.evaluate(() => Object.keys(window.mgGame.best).length === 24), 'all 24 completed records survive reload');
+    check(await page.evaluate(() => Object.keys(window.mgGame.best).length === 30), 'all 30 completed records survive reload');
     await page.close();
 
-    for (const [width, height, lang] of [[320, 640, 'en'], [390, 664, 'zh'], [844, 390, 'en'], [1280, 800, 'en']]) {
+    for (const [width, height, lang] of [[320, 640, 'en'], [375, 553, 'en'], [390, 664, 'zh'], [667, 362, 'zh'], [844, 390, 'en'], [1280, 800, 'en']]) {
         const view = await open(width, height, lang, true);
         const tag = `${width}x${height} ${lang}`;
         check(await view.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tag}: no horizontal page overflow`);
@@ -373,7 +504,7 @@ try {
             const r = button.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
             return r.width >= 44 && r.height >= 44 && (hit === button || button.contains(hit)) ? [] : [button.dataset.level];
         }));
-        check(inaccessible.length === 0, `${tag}: all 24 level targets reach 44px and can be clicked: ${inaccessible}`);
+        check(inaccessible.length === 0, `${tag}: all 30 level targets reach 44px and can be clicked: ${inaccessible}`);
         if (width < 1024) {
             await click(view, '#mg-help-btn');
             check(await view.evaluate(() => {
@@ -399,7 +530,7 @@ try {
             return r.width >= 43.9 && r.height >= 43.9 && (hit === element || element.contains(hit)) && element.getAttribute('aria-label') ? [] : [element.dataset.cell];
         }));
         check(cells.length === 0, `${tag}: every named grid cell has a reachable 44px target: ${cells}`);
-        const smallControls = await view.evaluate(() => ['mg-home', 'mg-pause-btn', 'mg-sound', 'mg-undo', 'mg-flip', 'mg-preview-btn', 'mg-hint-btn'].flatMap(id => {
+        const smallControls = await view.evaluate(() => ['mg-home', 'mg-pause-btn', 'mg-sound', 'mg-undo', 'mg-flip', 'mg-hint-btn'].flatMap(id => {
             const element = document.getElementById(id); const r = element.getBoundingClientRect();
             const after = getComputedStyle(element, '::after');
             const pad = edge => Math.max(0, -(parseFloat(after[edge]) || 0));
@@ -423,10 +554,30 @@ try {
         }));
         check(still, `${tag}: reduced motion removes decorative animation and transitions`);
         check(await view.$eval('#mg-undo', element => element.textContent.includes('撤销')) === (lang === 'zh'), `${tag}: controls use the selected shared language`);
+        // One screen holds the whole garden and its controls: six-row boards, the tray level,
+        // and the confirm row that replaces the tools while a move is previewed.
+        for (const id of ['greenhouse-1', 'twins-1', 'aurora-3', 'deeproot-5', 'deeproot-6']) {
+            const fit = await view.evaluate((levelId, action) => {
+                window.mgGame.start(levelId);
+                const play = document.getElementById('mg-play'); play.scrollTop = 0;
+                const stage = document.getElementById('mg-stage').getBoundingClientRect();
+                const inside = element => { const r = element.getBoundingClientRect(); return r.height > 0 && r.top >= stage.top - 1 && r.bottom <= stage.bottom + 1; };
+                const result = {
+                    board: inside(document.querySelector('.mg-board-frame')), tools: inside(document.getElementById('mg-tool-row')),
+                    cell: document.querySelector('.mg-cell').getBoundingClientRect().width, scroll: play.scrollHeight - play.clientHeight,
+                };
+                window.mgGame.previewAction(action);
+                result.commit = inside(document.getElementById('mg-commit')) && inside(document.getElementById('mg-clear-preview'));
+                window.mgGame.clearPreview();
+                return result;
+            }, id, LEVELS.find(level => level.id === id).solution[0]);
+            check(fit.board && fit.tools && fit.commit && fit.scroll <= 1 && fit.cell >= 43.9,
+                `${tag} ${id}: board, tools and confirm row share one screen with 44px cells: ${JSON.stringify(fit)}`);
+        }
         await view.close();
     }
 } finally {
     await browser.close();
 }
 check(errors.length === 0, 'no runtime errors: ' + errors.join(' | '));
-console.log(`PASS Magnetic Garden: 24 real solves / four chapter rankings / preview / undo / replay / off-path Worker hints and cancellation / decoded art / interruption / keyboard / 320–1280px / reduced motion (${assertions} assertions)`);
+console.log(`PASS Magnetic Garden: 30 real solves / five chapter rankings / preview / undo / replay / off-path Worker hints and cancellation / decoded art / interruption / keyboard / 320–1280px one-screen fit / reduced motion (${assertions} assertions)`);

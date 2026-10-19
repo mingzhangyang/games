@@ -3,7 +3,7 @@
 > Implementation specification · 2026-10-18 · `magnetic-garden`
 >
 > Extends the discrete push/pull direction in `proposal-new-game-ideas.md` §3.2.
-> This document is the rule and release contract for the first 24 gardens.
+> This document is the rule and release contract for the 30 gardens.
 
 ## Experience
 
@@ -12,9 +12,10 @@ completed puzzle becomes a miniature flowering garden. The player reasons about
 shared influence, stopping positions and the order in which seeds take root.
 
 The game is untimed. There is no currency, energy, waiting, date unlock or random
-physics. All four chapters and all 24 levels are available from the collection.
+physics. All five chapters and all 30 levels are available from the collection.
 The suggested order teaches one relationship at a time; later gardens combine
-multiple seeds, shielding, temporary blockers and competing magnets.
+multiple seeds, shielding, temporary blockers and competing magnets. The fifth chapter
+is the depth chapter for players who have finished the first four.
 
 ## Authoritative rules
 
@@ -54,12 +55,26 @@ action, not a double-tap or a gesture players must discover. Show a candidate
 action's exact path and final seed positions before confirmation. Preview and
 execution call the same transition function.
 
+Choosing the previewed target again (the same socket, or the selected magnet for
+a flip; Enter again on the keyboard) confirms it, so the board alone is playable.
+A repeat within 250 ms is an accidental double tap and only keeps the preview.
+While a preview is shown, the Make this move / Clear preview row takes the tool
+row's place instead of growing the panel.
+
 Keep the board orthogonal, with clear N/S lettering and distinct marks beyond
-colour. Use native controls, a semantic grid, keyboard movement/selection and a
+colour. A rooted magnet sits in a wooden collar with a • badge and is announced as fixed. Use native controls, a semantic grid, keyboard movement/selection and a
 live status announcement. Important controls and board hit targets must remain
 at least 44 CSS pixels at the supported mobile sizes. On short landscape screens,
 keep controls reachable through an intentional inner layout/scroll treatment
 rather than shrinking the entire board into unusable targets.
+
+The board sizes itself from the space the HUD and tools leave, by its tighter
+dimension, and never below 44px cells. Short portrait phones tighten the chrome;
+short landscape puts the board on the left and HUD and tools on the right. The
+whole garden, its tools and the confirm row then share one screen for all 30
+gardens at 320×568, 375×553, 390×664, 667×362, 844×390 and desktop.
+`smoke-magnetic-garden` locks the six-row and tray gardens at 320×640, 375×553,
+390×664, 667×362, 844×390 and 1280×800.
 
 Undo restores one full committed turn, including captured seeds and move count;
 it remains available after completion. Cancelling or interrupting an animation
@@ -80,6 +95,7 @@ normal input for an unbounded period.
 | `twins` | 双生花圃 | A shared magnet controls more than one seed |
 | `stonepath` | 石径庭院 | Shielding, temporary blockers and completion order |
 | `aurora` | 极光苗圃 | Multiple magnets, interference and combined routes |
+| `deeproot` | 深根温室 | Rooted magnets, a tray magnet, four seeds and long plans |
 
 Each chapter has six individually authored/curated boards, bilingual names and
 conceptual hints. They must not be mere mirrored copies used to inflate the count.
@@ -97,10 +113,37 @@ returns `unknown`, never `unsolvable` or an invented optimal score.
   for all six gardens in that chapter. Incomplete chapters cannot be submitted.
   Lower is better. Equal scores tie; elapsed time is not a tiebreaker.
 - Keys: `magnetic-garden-greenhouse`, `magnetic-garden-twins`,
-  `magnetic-garden-stonepath`, `magnetic-garden-aurora`.
+  `magnetic-garden-stonepath`, `magnetic-garden-aurora`, `magnetic-garden-deeproot`.
 - A content or rule change that changes comparable scores requires an explicit
   record/leaderboard versioning decision. Never silently reuse an old competition
   for different puzzles.
+
+## Depth: Deep Roots
+
+The first four chapters teach; a player who previews every move can solve most of them by
+scanning previews for the one that looks like progress. Deep Roots (`deeproot-1`–`6`, pars
+10–16) is built so that strategy fails and planning is needed. It uses the rooted (fixed)
+magnet, a magnet that starts in the tray, four seeds with a spare pot, and 6×6 boards.
+
+Depth is measured with the production rules against a player who sees every exact preview
+and can undo (`tests/lib/magnetic-garden-depth.mjs`), and `verify-magnetic-garden-levels`
+holds each Deep Roots garden to it:
+
+- **Explorer effort** (positions a best-first explorer opens before a win, most promising
+  first) rises garden by garden, starting above every earlier garden (aurora-6, about 500)
+  and ending above 13,000.
+- A **preview-scanning player** (best-looking new position, 15% random) wins at most 10%.
+- **Fair traps:** at most 55% of reachable positions are dead ends and at most 30% of
+  opening moves are fatal. Earlier chapters have no fatal openers.
+- **Hints always resolve:** the whole reachable space fits the in-game hint budget
+  (`HINT_SEARCH`, 60,000 positions), so a hint is always a next move or a proven dead end.
+- **Mechanics matter:** removing a rooted magnet makes the garden unsolvable or changes its
+  par, every movable magnet appears in the proof, and at least half of the optimal moves
+  move a seed rather than only rearranging magnets.
+
+The boards came from a seeded search scored by these measures and were then curated:
+read through their solution traces, named, and given hints that describe what that
+solution actually does.
 
 ## Visual direction
 
@@ -146,7 +189,7 @@ work in production. This addition does not need a D1 schema migration.
 
 ## Acceptance gates
 
-1. All 24 levels finish through replay and have verified shortest solutions.
+1. All 30 levels finish through replay and have verified shortest solutions.
 2. Reordering seed/magnet arrays leaves semantic results unchanged; tied magnets,
    same-cell conflicts, vacating-cell blocks, captures and invalid actions have
    explicit regression cases.
