@@ -1,6 +1,7 @@
 // verify-all: timeout=120000
 // Real Chromium Service Worker lifecycle test: no setBypassServiceWorker().
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
@@ -11,14 +12,21 @@ import { renderServiceWorker } from '../tools/build/service-worker-cache.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const source = await readFile(join(ROOT, 'public/sw.js'), 'utf8');
-const built = await readFile(join(ROOT, 'dist/sw.js'), 'utf8');
-for (const marker of ['__GAMES_BUILD_ID__', '__GAMES_PRECACHE__', '__GAMES_ASSETS__',
-    '__GAMES_HTML_ROUTES__']) {
-    assert(!built.includes(marker), `production SW contains unexpanded marker ${marker}`);
+// Source-only verification needs no build. If either build entry point
+// exists, require the other too: partial output should fail, not be skipped.
+const distDir = join(ROOT, 'dist');
+const hasBuiltOutput = ['sw.js', 'index.html']
+    .some(name => existsSync(join(distDir, name)));
+if (hasBuiltOutput) {
+    const built = await readFile(join(distDir, 'sw.js'), 'utf8');
+    for (const marker of ['__GAMES_BUILD_ID__', '__GAMES_PRECACHE__', '__GAMES_ASSETS__',
+        '__GAMES_HTML_ROUTES__']) {
+        assert(!built.includes(marker), `production SW contains unexpanded marker ${marker}`);
+    }
+    const builtHome = await readFile(join(distDir, 'index.html'), 'utf8');
+    assert(/<meta name="games-build" content="[a-f0-9]{16}">/.test(builtHome),
+        'production HTML embeds the same build ID as the generated Service Worker');
 }
-const builtHome = await readFile(join(ROOT, 'dist/index.html'), 'utf8');
-assert(/<meta name="games-build" content="[a-f0-9]{16}">/.test(builtHome),
-    'production HTML embeds the same build ID as the generated Service Worker');
 
 function send(res, code, type, body) {
     res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store' });
@@ -101,7 +109,7 @@ const fixtureServer = createServer((req, res) => {
     }
     send(res, 404, 'text/plain', 'missing');
 });
-const prodBase = await listen(distServer);
+const prodBase = hasBuiltOutput ? await listen(distServer) : null;
 const base = await listen(fixtureServer);
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 // Capture install errors from the Service Worker target, not just the page:
@@ -169,9 +177,12 @@ async function checkSaved(p) {
     ]);
     assert.deepEqual(values, ['{"level":7}', '[{"score":25,"game":"sample"}]', 'zh', 'dark']);
 }
-try {
-    // Use the real Vite build, not just a fixture copy of the worker:
-    // registration, first-install precache and offline entry must work together.
+async function verifyProductionBuild() {
+    if (!hasBuiltOutput) {
+        console.log('SKIP built-output Service Worker checks: no dist build (run npm run build)');
+        return;
+    }
+    // Real Vite output: registration, shell precaching and offline reentry.
     const productionPage = await browser.newPage();
     try {
         await productionPage.goto(prodBase + '/', { waitUntil: 'load', timeout: 30000 });
@@ -200,6 +211,10 @@ try {
         productionNetworkDown = false;
         await productionPage.close();
     }
+}
+
+try {
+    await verifyProductionBuild();
 
     page = await open('/');
     await page.evaluate(async () => {
@@ -415,5 +430,5 @@ try {
     if (page && !page.isClosed()) await page.close();
     await browser.close();
     await stop(fixtureServer);
-    await stop(distServer);
+    if (hasBuiltOutput) await stop(distServer);
 }

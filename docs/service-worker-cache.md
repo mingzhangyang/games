@@ -80,8 +80,13 @@ pinning mechanism would be a separate feature.
 
 - node tests/verify-service-worker-stamp.mjs tests stamp determinism,
   unhashed-file invalidation, dependency collection and broken references.
-- npm run build && node tests/verify-service-worker.mjs runs a **real Service
-  Worker** in Chromium (no bypass), using successive distinct deploys on the
+- node tests/verify-service-worker.mjs runs **real Chromium Service Worker**
+  fixture lifecycle tests without requiring `dist/`. When built output exists,
+  it additionally validates the generated worker and offline homepage. If only
+  one of `dist/sw.js` or `dist/index.html` is present, verification fails
+  rather than silently skipping an incomplete build. CI runs the source-only
+  test **before** build, then runs built-output checks in the browser shards
+  after `npm run build`. The fixture tests use successive distinct deploys on the
   same origin. It inspects Cache Storage after each update: legacy v2 growth,
   first install, redirected extensionless routes, home and game offline navigation,
   old tab waiting with an online-then-offline reload, immediate deletion of old
