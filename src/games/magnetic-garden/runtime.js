@@ -11,6 +11,9 @@ const $ = id => document.getElementById(id);
 const fill = (s, values) => s.replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '');
 const chapterIds = CHAPTERS.map(chapter => chapter.id);
 const clone = value => JSON.parse(JSON.stringify(value));
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+// The finished garden blooms on the board before the result card covers it.
+const BLOOM_BEAT_MS = 600;
 const iconLabel = (id, icon, label) => { $(id).innerHTML = `${icon || ''}<span></span>`; $(id).lastElementChild.textContent = label; };
 
 export class MagneticGardenGame {
@@ -34,7 +37,7 @@ export class MagneticGardenGame {
     init() {
         $('mg-hero').innerHTML = HERO; this.loadHeroArt(); $('mg-pause-flower').innerHTML = flower(4);
         const on = (id, fn) => $(id).addEventListener('click', fn);
-        on('mg-btn-start', () => this.start(this.savedCurrent?.level.id || LEVELS[0].id, !!this.savedCurrent));
+        on('mg-btn-start', () => this.start(this.resumeLevelId(), !!this.savedCurrent));
         on('mg-undo', () => this.undo()); on('mg-result-undo', () => this.undo()); on('mg-flip', () => this.flip());
         on('mg-preview-btn', () => this.preview ? this.showPreview() : this.flip());
         on('mg-commit', () => this.commit(this.preview?.action)); on('mg-clear-preview', () => this.clearPreview());
@@ -80,6 +83,8 @@ export class MagneticGardenGame {
         return true;
     }
     restart() { return this.start(this.level.id); }
+    /** An unfinished run first, then the first unplanted garden, then the first one short of perfect. */
+    resumeLevelId() { return this.savedCurrent?.level.id ?? (LEVELS.find(l => !this.best[l.id]) || LEVELS.find(l => this.best[l.id].moves > l.par) || LEVELS[0]).id; }
     toMenu() {
         if (this.state === 'playing') this.save();
         this.cancelHint(); this.animationToken++; this.animating = false; this.state = 'menu'; this.isPaused = false; this.pauseOwnership.invalidate();
@@ -89,9 +94,11 @@ export class MagneticGardenGame {
     currentSnapshot() { return { levelId: this.level.id, levelVersion: this.level.version, actions: clone(this.actions), state: clone(this.sim), history: clone(this.history) }; }
     save() {
         let current = this.savedCurrent ? { levelId: this.savedCurrent.level.id, levelVersion: this.savedCurrent.level.version, actions: this.savedCurrent.actions, state: this.savedCurrent.state, history: this.savedCurrent.history } : null;
-        if (this.state === 'playing') {
+        // A won garden is a record, not resumable progress, even while its winning slide still plays.
+        if (this.state === 'over' || (this.state === 'playing' && this.sim.won)) { current = null; this.savedCurrent = null; }
+        else if (this.state === 'playing') {
             current = this.currentSnapshot(); this.savedCurrent = { level: this.level, state: clone(this.sim), actions: clone(this.actions), history: clone(this.history) };
-        } else if (this.state === 'over') { current = null; this.savedCurrent = null; }
+        }
         if (!writeProgress(this.best, current)) this.announce(this.t().saveNotice);
     }
     async commit(action) {
@@ -99,21 +106,28 @@ export class MagneticGardenGame {
         const result = applyAction(this.level, this.sim, action);
         if (!result.valid) { this.announce(this.t().invalid); return false; }
         this.cancelHint(); this.history.push(clone(this.sim)); this.actions.push(clone(action)); this.preview = null; this.hintStage = 0; this.hintMessage = '';
-        this.sim = result.state; this.save(); this.render();
-        if (this.sim.won) this.finish();
-        const token = ++this.animationToken;
-        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && result.frames.length) {
+        this.sim = result.state;
+        // Record the win before the slide plays, so leaving mid-animation never loses it;
+        // the result card waits until the last seed has visibly bloomed (or a resume shows it).
+        if (this.sim.won) this.recordWin();
+        this.save(); this.render();
+        const token = ++this.animationToken; const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (motion && result.frames.length) {
             this.animating = true;
             for (const frame of result.frames) {
                 if (token !== this.animationToken) return true;
                 this.renderBoard({ ...this.sim, seeds: frame.seeds });
-                await new Promise(resolve => setTimeout(resolve, 95));
+                await wait(95);
             }
         }
         if (token !== this.animationToken) return true;
-        this.animating = false; this.render();
-        this.announce(fill(this.t().srMove, { n: this.sim.moves, planted: this.plantedText() }));
-        if (this.sim.won) this.finish();
+        this.render();
+        if (this.sim.won && motion) {
+            this.animating = true; this.bloomBoard(); await wait(BLOOM_BEAT_MS);
+            if (token !== this.animationToken) return true;
+        }
+        this.animating = false;
+        if (this.sim.won) this.finish(); else this.announce(fill(this.t().srMove, { n: this.sim.moves, planted: this.plantedText() }));
         return true;
     }
     undo() {
@@ -123,14 +137,16 @@ export class MagneticGardenGame {
         this.animationToken++; this.animating = false; this.sim = this.history.pop(); this.actions.pop(); this.clearPreview(); this.hintStage = 0; this.hintMessage = '';
         this.save(); this.render(); this.announce(fill(this.t().srMove, { n: this.sim.moves, planted: this.plantedText() })); return true;
     }
-    finish() {
-        if (this.state !== 'playing') return;
+    recordWin() {
         const old = this.best[this.level.id]; this.newBest = !old || this.sim.moves < old.moves;
         if (this.newBest) this.best[this.level.id] = { version: this.level.version, moves: this.sim.moves, actions: clone(this.actions) };
-        this.state = 'over'; this.isPaused = false; this.pauseOwnership.invalidate(); this.save();
         if (!this.sessionFinished) { this.track('magnetic-garden', 'finish'); this.sessionFinished = true; }
         const total = this.chapterTotal(this.level.chapter);
         if (total !== null && this.newBest) this.onChapter({ chapter: this.level.chapter, score: total });
+    }
+    finish() {
+        if (this.state !== 'playing') return;
+        this.state = 'over'; this.isPaused = false; this.pauseOwnership.invalidate(); this.save();
         this.renderResult(); this.openModal('mg-result', 'mg-next'); this.bloomAnimation(); this.syncPause(); this.announce(fill(this.t().srWin, { n: this.sim.moves }));
     }
     chapterTotal(chapter) { const levels = LEVELS.filter(l => l.chapter === chapter); return levels.every(l => this.best[l.id]) ? levels.reduce((n, l) => n + this.best[l.id].moves, 0) : null; }
@@ -167,6 +183,8 @@ export class MagneticGardenGame {
     bloomAnimation() {
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         $('mg-result-flower').animate([{ transform:'translateY(16px) scale(.65)', opacity:0 },{ transform:'translateY(-7px) scale(1.07)', opacity:1 },{ transform:'translateY(0) scale(1)', opacity:1 }], { duration:650, easing:'cubic-bezier(.22,.7,.3,1)' });
+    }
+    bloomBoard() {
         $('mg-board').querySelectorAll('.is-grown .mg-flower').forEach((node,i) => node.animate([{transform:'scale(.25)',opacity:0},{transform:'scale(1.1)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:600,delay:i*80,easing:'ease-out'}));
     }
     showHintAction(action) {
@@ -223,6 +241,7 @@ export class MagneticGardenGame {
         $('mg-best').textContent = `${t.best} ${this.best[this.level.id]?.moves ?? t.noBest}`; $('mg-target').textContent = `${t.target} ${this.level.par}`;
         $('mg-instruction').textContent = this.preview?.pinned ? t.previewCopy : this.selected ? fill(t.selected, { id: this.selected }) : t.select;
         $('mg-undo').disabled = !this.history.length || !this.isRunning(); $('mg-flip').disabled = !this.selected || !this.isRunning(); $('mg-preview-btn').disabled = !this.selected || !this.isRunning(); $('mg-hint-btn').disabled = !this.isRunning();
+        iconLabel('mg-hint-btn', ICONS.help, this.hintStage ? t.nextHint : t.hint);
         $('mg-hint-text').classList.toggle('hidden', !this.hintMessage); $('mg-hint-text').textContent = this.hintMessage || '';
         $('mg-preview-panel').classList.toggle('hidden', !this.preview?.pinned);
         this.renderBoard(); this.renderInventory(); this.syncPause();
@@ -286,7 +305,7 @@ export class MagneticGardenGame {
     }
     renderMenu() {
         const t = this.t(); const count = Object.keys(this.best).length;
-        iconLabel('mg-btn-start', ICONS.play, this.savedCurrent ? t.continue : t.start); $('mg-earned').textContent = fill(t.earned, { n: count });
+        iconLabel('mg-btn-start', ICONS.play, this.savedCurrent || count ? t.continue : t.start); $('mg-earned').textContent = fill(t.earned, { n: count });
         const list = $('mg-chapters'); list.replaceChildren();
         for (const [chapterIndex, chapter] of chapterIds.entries()) {
             const section = document.createElement('section'); section.className = 'mg-chapter'; section.dataset.chapter = chapter;
@@ -319,7 +338,7 @@ export class MagneticGardenGame {
     }
     applyLanguage() {
         const t = this.t(); document.title = t.pageTitle; this.cancelHint();
-        for (const [id, icon, key] of [['mg-home',ICONS.home,'home'],['mg-undo',ICONS.retry,'undo'],['mg-flip',FLIP_ICON,'flip'],['mg-preview-btn',ICONS.play,'preview'],['mg-hint-btn',ICONS.help,this.hintStage ? 'nextHint' : 'hint'],['mg-commit',ICONS.check,'commit'],['mg-clear-preview',ICONS.close,'cancelPreview'],['mg-help-btn',ICONS.help,'how'],['mg-help-close',ICONS.check,'closeHelp'],['mg-resume',ICONS.play,'resume'],['mg-restart',ICONS.retry,'restart'],['mg-pause-menu',ICONS.home,'menu'],['mg-result-undo',ICONS.retry,'undo'],['mg-again',ICONS.retry,'again'],['mg-result-menu',ICONS.home,'menu'],['mg-next',ICONS.arrowRight,'next']]) {
+        for (const [id, icon, key] of [['mg-home',ICONS.home,'home'],['mg-undo',ICONS.retry,'undo'],['mg-flip',FLIP_ICON,'flip'],['mg-preview-btn',ICONS.play,'preview'],['mg-commit',ICONS.check,'commit'],['mg-clear-preview',ICONS.close,'cancelPreview'],['mg-help-btn',ICONS.help,'how'],['mg-help-close',ICONS.check,'closeHelp'],['mg-resume',ICONS.play,'resume'],['mg-restart',ICONS.retry,'restart'],['mg-pause-menu',ICONS.home,'menu'],['mg-result-undo',ICONS.retry,'undo'],['mg-again',ICONS.retry,'again'],['mg-result-menu',ICONS.home,'menu'],['mg-next',ICONS.arrowRight,'next']]) {
             if (id === 'mg-home') { $(id).innerHTML = icon; $(id).title = t[key]; $(id).setAttribute('aria-label', t[key]); } else iconLabel(id, icon, t[key]);
         }
         if (this.hintMessage) { this.hintStage = 0; this.hintMessage = ''; }
@@ -336,6 +355,7 @@ export class MagneticGardenGame {
         }
         if (this.state !== 'playing' || this.pauseOwnership.isHeld()) return;
         const key = e.key.toLowerCase();
+        if (key === 'escape' && this.preview?.pinned) { e.preventDefault(); this.clearPreview(); return; }
         if (key === 'escape' || key === 'p') { e.preventDefault(); this.togglePause(); return; }
         if (!this.isRunning()) return;
         if (['arrowup','arrowdown','arrowleft','arrowright'].includes(key) && $('mg-board').contains(e.target)) {

@@ -94,7 +94,7 @@ async function start(page, level) {
     await page.waitForFunction(id => window.mgGame.state === 'playing' && window.mgGame.level.id === id,
         {}, level.id);
 }
-async function perform(page, action, { preview = false } = {}) {
+async function perform(page, action, { preview = false, observeSlide = false } = {}) {
     const before = await snapshot(page);
     const magnet = before.magnets.find(item => item.id === action.magnetId);
     await click(page, magnet.cell === null ? `[data-magnet="${magnet.id}"]` : `[data-cell="${magnet.cell}"]`);
@@ -121,10 +121,17 @@ async function perform(page, action, { preview = false } = {}) {
     }
     const renderedPreview = await page.evaluate(() => window.mgGame.preview.result.state);
     await click(page, '#mg-commit');
+    // Sampled in the commit's own slide: what the player sees before the animation settles.
+    const slide = observeSlide ? await page.evaluate(key => ({
+        animating: window.mgGame.animating, state: window.mgGame.state,
+        resultHidden: document.getElementById('mg-result').classList.contains('hidden'),
+        saved: JSON.parse(localStorage.getItem(key)),
+    }), storageKey) : null;
     await page.waitForFunction(moves => window.mgGame.sim.moves === moves, {}, before.moves + 1);
     await page.waitForFunction(() => !window.mgGame.animating);
     assert.deepEqual(await snapshot(page), renderedPreview, 'committed state exactly matches the shown preview');
     assertions++;
+    return slide;
 }
 try {
     const page = await open();
@@ -205,9 +212,15 @@ try {
     check(await page.evaluate(() => window.mgGame.isPaused), 'rankings preserve the player pause');
     await click(page, '#mg-resume');
     check(await page.evaluate(() => window.__gardenEvents.length === 1), 'pause and dialog interruption do not emit play or finish');
-    await perform(page, LEVELS[0].solution[0], { preview: true });
+    const slide = await perform(page, LEVELS[0].solution[0], { preview: true, observeSlide: true });
+    check(slide.animating && slide.state === 'playing' && slide.resultHidden,
+        'the winning slide plays on the board before the result card covers it');
+    check(slide.saved.best[LEVELS[0].id]?.moves === 1 && slide.saved.current === null,
+        'the win is persisted before its slide finishes, so leaving mid-animation keeps the record');
     check(await page.evaluate(() => window.mgGame.sim.won && window.mgGame.state === 'over'), 'real first-level input completes garden');
     check(await page.$eval('#mg-result', element => !element.classList.contains('hidden')), 'visible completion result');
+    check(await page.$eval('#mg-sr-status', element => element.textContent) === LANGUAGES.en.srWin.replace('{n}', '1'),
+        'the completion announcement is the last live status, not overwritten by the move count');
     check(posts.length === 0, 'one completed level is ineligible for chapter ranking');
     check(await page.evaluate(() => window.__gardenEvents.filter(([, event]) => event === 'finish').length === 1), 'one finish analytics event per completion');
     const savedBest = await page.evaluate(key => JSON.parse(localStorage.getItem(key)).best, storageKey);
@@ -219,6 +232,13 @@ try {
     await perform(page, LEVELS[0].solution[0]);
     check(await page.evaluate(() => window.__gardenEvents.filter(([, event]) => event === 'finish').length === 1),
         'undo and re-completion do not duplicate finish analytics');
+    await click(page, '#mg-result-menu');
+    check(await page.$eval('#mg-btn-start', button => button.textContent.trim()) === LANGUAGES.en.continue,
+        'a collection with earned flowers offers to continue growing');
+    await click(page, '#mg-btn-start');
+    await page.waitForFunction(() => window.mgGame.state === 'playing');
+    check(await page.evaluate(() => window.mgGame.level.id) === LEVELS[1].id,
+        'after a completed garden the primary action opens the first unplanted garden, not garden 1');
 
     // A captured seed is part of undo and saved-state replay, not a permanent
     // side effect of the flower visual. Find an intermediate partial capture.
@@ -310,6 +330,15 @@ try {
         && window.mgGame.preview.action.type === 'flip'
         && document.querySelector('.mg-cell.is-selected')?.getAttribute('aria-selected') === 'true'),
     'after clearing a hint, Flip applies to the highlighted magnet m2');
+    await page.keyboard.press('Escape');
+    check(await page.evaluate(() => !window.mgGame.preview && !window.mgGame.isPaused
+        && document.getElementById('mg-pause').classList.contains('hidden')),
+    'Esc clears a pinned preview instead of pausing');
+    check(await page.$eval('#mg-hint-btn', button => button.textContent.trim()) === LANGUAGES.en.nextHint,
+        'after a hint the button offers the next hint stage');
+    await perform(page, retargetLevel.solution[1]);
+    check(await page.$eval('#mg-hint-btn', button => button.textContent.trim()) === LANGUAGES.en.hint,
+        'a committed move resets the hint button label together with its hint stage');
 
     // Trigger another real Worker and navigate in the same event turn, before
     // its message can race with replacement gameplay. Native Worker remains
