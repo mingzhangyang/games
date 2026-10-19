@@ -152,28 +152,32 @@ const waitForOwned = async (p, names) => {
 };
 
 // A waiting worker may activate only after the last old-client tab closes.
-// Poll Cache Storage through DevTools from an about:blank probe so the probe
-// does not become another controlled client or race its first navigation.
+// Inspect the actual worker target: a new page would become another client
+// and could race or prevent the activation we are trying to verify.
 async function waitForReleasedGeneration(names) {
-    const expected = [...names].sort();
-    const probe = await browser.newPage();
-    const session = await probe.createCDPSession();
-    let current = [];
-    try {
-        for (let attempt = 0; attempt < 120; attempt++) {
-            const result = await session.send('CacheStorage.requestCacheNames', {
-                securityOrigin: base,
-            });
-            current = result.caches.map(entry => entry.cacheName)
-                .filter(name => name.startsWith('games-cache-')).sort();
-            if (JSON.stringify(current) === JSON.stringify(expected)) return;
-            await new Promise(resolve => setTimeout(resolve, 100));
+    const expected = JSON.stringify([...names].sort());
+    let observed = [];
+    for (let attempt = 0; attempt < 120; attempt++) {
+        const targets = browser.targets().filter(target =>
+            target.type() === 'service_worker' && target.url() === base + '/sw.js');
+        for (const target of targets) {
+            try {
+                const worker = await target.worker();
+                if (!worker) continue;
+                const state = await worker.evaluate(async () => ({
+                    active: self.registration.active?.state,
+                    caches: (await caches.keys()).filter(name => name.startsWith('games-cache-')).sort(),
+                }));
+                observed = [state.active, ...state.caches];
+                if (state.active === 'activated'
+                    && JSON.stringify(state.caches) === expected) return;
+            } catch {
+                // Old worker targets can detach as activation finishes.
+            }
         }
-        throw new Error(`Waiting for SW cache activation: expected ${JSON.stringify(expected)}, got ${JSON.stringify(current)}`);
-    } finally {
-        await session.detach();
-        await probe.close();
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
+    throw new Error(`Worker generation never activated: expected ${expected}, observed ${JSON.stringify(observed)}`);
 }
 async function open(path) {
     const next = await browser.newPage();
