@@ -52,35 +52,47 @@ async function cacheMatchingDocument(cache, key, response) {
     }
 }
 
+// Cache names can survive a browser crash in the middle of installation.
+// Never infer completeness from existence; only verified entries are reusable.
+async function precacheEntryError(cache, path) {
+    const stored = await cache.match(path);
+    if (!stored || !stored.ok || stored.type !== 'basic') {
+        return `Precache entry unavailable: ${path}`;
+    }
+    const key = documentKey(path);
+    if (key && !await isMatchingBuildDocument(stored, key)) {
+        return `Precache HTML build mismatch: ${path}`;
+    }
+    if (!key && stored.headers.get('content-type')?.toLowerCase().includes('text/html')) {
+        return `Precache dependency returned HTML: ${path}`;
+    }
+    return null;
+}
+
 self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const existed = (await caches.keys()).includes(CACHE);
         try {
             const cache = await caches.open(CACHE);
-            // addAll() is the working native SW precache path. Inspect the
-            // actual responses it stored, not a separate validation fetch:
-            // fetching twice would race a deployment and could validate v1
-            // only to cache v2. The worker cannot activate until this entire
-            // install promise completes successfully.
-            if (!existed) await cache.addAll(PRECACHE);
-            // Never overwrite an existing same-ID cache during retries.
+            const repair = [];
             for (const path of PRECACHE) {
-                const stored = await cache.match(path);
-                if (!stored || !stored.ok || stored.type !== 'basic') {
-                    throw new Error(`Precache entry unavailable: ${path}`);
-                }
-                const key = documentKey(path);
-                if (key) {
-                    if (!await isMatchingBuildDocument(stored, key)) {
-                        throw new Error(`Precache HTML build mismatch: ${path}`);
-                    }
-                } else if (stored.headers.get('content-type')?.toLowerCase().includes('text/html')) {
-                    throw new Error(`Precache dependency returned HTML: ${path}`);
-                }
+                if (await precacheEntryError(cache, path)) repair.push(path);
+            }
+            // A crashed installation may have left this build's cache empty
+            // or incomplete. Fetch only missing/invalid entries, preserving
+            // existing valid HTML and assets (possibly used by an active tab).
+            // addAll() fetches and stores each repair entry exactly once.
+            if (repair.length) await cache.addAll(repair);
+            // Validation must inspect the actual cached responses, not a
+            // second network fetch, before the new worker can activate.
+            for (const path of PRECACHE) {
+                const error = await precacheEntryError(cache, path);
+                if (error) throw new Error(error);
             }
         } catch (error) {
-            // Installation errors are otherwise easy to miss because the
-            // registering page deliberately treats registration as optional.
+            // A newly created partial cache can be discarded. An older
+            // same-build cache may be in active use, so preserve it: the next
+            // online installation will retry only missing/invalid entries.
             console.error('[games/sw] Precache install failed:', error);
             if (!existed) await caches.delete(CACHE);
             throw error;

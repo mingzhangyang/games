@@ -54,6 +54,7 @@ let brokenInstall = false;
 let failedInstallRequests = 0;
 let mismatchedInstallPath = null;
 let mismatchedInstallRequests = 0;
+let v4HomeAssetRequests = 0;
 const cacheName = version => 'games-cache-v3-test-' + version;
 const swFor = version => renderServiceWorker(source, {
     buildId: 'test-' + version,
@@ -94,6 +95,7 @@ const fixtureServer = createServer((req, res) => {
     }
     const match = /^\/assets\/js\/(home|game|extra)-(v\d+)\.js$/.exec(path);
     if (match && match[2] === release) {
+        if (match[1] === 'home' && match[2] === 'v4') v4HomeAssetRequests++;
         return send(res, 200, 'text/javascript',
             'document.body.dataset.' + match[1] + ' = "' + match[2] + '";');
     }
@@ -210,6 +212,9 @@ try {
                 headers: { 'Content-Type': 'text/html' },
             }));
         await globalThis.caches.open('unrelated-feature-cache');
+        // The prior install died immediately after creating its cache.
+        const interrupted = await globalThis.caches.open('games-cache-v3-test-v1');
+        if ((await interrupted.keys()).length !== 0) throw new Error('expected empty interrupted cache');
         localStorage.setItem('game:sample:v1:save', '{"level":7}');
         localStorage.setItem('scoreboard:pending:v1', '[{"score":25,"game":"sample"}]');
         localStorage.setItem('site_lang', 'zh');
@@ -223,6 +228,8 @@ try {
     });
     await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
     await waitForOwned(page, [cacheName('v1')]);
+    assert.equal((await counts(page))[cacheName('v1')], 3,
+        'first install repairs an already-existing empty cache');
     assert(!('games-cache-v2' in await counts(page)),
         'first activation immediately deletes all legacy v2 resources');
     await offline(page, true);
@@ -306,6 +313,18 @@ try {
     console.log('SW bounded after three releases: ' + JSON.stringify(await counts(page)));
 
     release = 'v4';
+    // Simulate a crashed v4 install with one valid script and missing HTML.
+    // Repair must not fetch or overwrite the already-cached script.
+    const stagingPaths = await page.evaluate(async () => {
+        const staged = await globalThis.caches.open('games-cache-v3-test-v4');
+        const script = await fetch('/assets/js/home-v4.js');
+        if (!script.ok || script.type !== 'basic') throw new Error('invalid staging fixture');
+        await staged.put('/assets/js/home-v4.js', script);
+        return (await staged.keys()).map(request => new URL(request.url).pathname);
+    });
+    assert.deepEqual(stagingPaths, ['/assets/js/home-v4.js'],
+        'reproduce a partial cache from an interrupted installation');
+    assert.equal(v4HomeAssetRequests, 1, 'only the staging fixture fetched v4 script');
     mismatchedInstallPath = '/index.html';
     await update(page).catch(() => {});
     // The other homepage URL and all shell assets return 200; only this
@@ -318,10 +337,11 @@ try {
         const r = await navigator.serviceWorker.getRegistration();
         return !r.installing;
     }, { timeout: 10000 });
-    assert.deepEqual(await owned(page), [cacheName('v3')],
-        'mismatched-build HTML rejects install without deleting current cache');
+    assert.deepEqual(await owned(page), [cacheName('v3'), cacheName('v4')],
+        'failed v4 install preserves old active cache and incomplete v4 staging');
     assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).waiting), null,
         'mismatched-build install must not leave a waiting worker');
+    assert.equal(v4HomeAssetRequests, 1, 'failed install did not re-fetch valid staged script');
     mismatchedInstallPath = null;
     await offline(page, true);
     await page.reload({ waitUntil: 'load' });
@@ -329,6 +349,39 @@ try {
         'previous version remains playable offline after mismatched install');
     await offline(page, false);
 
+    // Retrying the exact same v4 release must repair the old staging cache,
+    // without clearing site data or overwriting its valid script.
+    await update(page);
+    await waitForWaiting(page);
+    assert.equal(v4HomeAssetRequests, 1, 'retry reuses valid script without fetching it again');
+    const repaired = await page.evaluate(async () => {
+        const cache = await globalThis.caches.open('games-cache-v3-test-v4');
+        const root = await cache.match('/');
+        const index = await cache.match('/index.html');
+        const script = await cache.match('/assets/js/home-v4.js');
+        return {
+            entries: (await cache.keys()).length,
+            root: root && await root.text(),
+            index: index && await index.text(),
+            script: script && await script.text(),
+        };
+    });
+    assert.equal(repaired.entries, 3, 'recovered cache has all required shell entries');
+    assert(repaired.root?.includes('content="test-v4"')
+        && repaired.index?.includes('content="test-v4"'),
+        'recovered HTML uses exactly the expected build marker');
+    assert(repaired.script?.includes('dataset.home'), 'existing valid script survived recovery');
+    await page.close();
+    page = await open('/');
+    await waitForOwned(page, [cacheName('v4')]);
+    await checkSaved(page);
+    await offline(page, true);
+    await page.reload({ waitUntil: 'load' });
+    assert.equal(await page.$eval('body', el => el.dataset.home), 'v4',
+        'recovered version works offline after activation');
+    await offline(page, false);
+
+    release = 'v5';
     brokenInstall = true;
     await update(page).catch(() => {});
     // Observe the actual failed server request: checking !installing alone may
@@ -336,13 +389,13 @@ try {
     for (let attempt = 0; attempt < 100 && failedInstallRequests === 0; attempt++) {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
-    assert(failedInstallRequests > 0, 'v4 install really requested the broken URL');
+    assert(failedInstallRequests > 0, 'v5 install really requested the broken URL');
     await page.waitForFunction(async () => {
         const r = await navigator.serviceWorker.getRegistration();
         return !r.installing;
     }, { timeout: 10000 });
-    assert.deepEqual(await owned(page), [cacheName('v3')],
-        'failed v4 precache removes its partial cache without losing current version');
+    assert.deepEqual(await owned(page), [cacheName('v4')],
+        'failed v5 precache removes its partial cache without losing current version');
     assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).waiting), null);
     brokenInstall = false;
 
@@ -354,10 +407,10 @@ try {
     await waitForOwned(page, [cacheName('v2')]);
     await page.reload({ waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.home), 'v2', 'rollback to earlier build');
-    assert(!(await keys(page)).includes(cacheName('v3')),
+    assert(!(await keys(page)).includes(cacheName('v4')),
         'rollback also removes superseded version cache');
     await checkSaved(page);
-    console.log('PASS real Chromium SW: current-only cache, legacy removal, 3 deploys, old tabs, mismatched HTML, failed install, rollback, storage preserved');
+    console.log('PASS real Chromium SW: current-only cache, crash recovery, selective precache repair, old tabs, mismatched HTML, failed install, rollback, storage preserved');
 } finally {
     if (page && !page.isClosed()) await page.close();
     await browser.close();

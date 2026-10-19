@@ -22,10 +22,14 @@ superseded Games caches safely.
   fetches/stores each resource once, then the install verifies those **exact
   cached responses** before the worker can activate: both homepage URLs must
   have this worker's `games-build` ID and assets must not be HTML fallbacks.
-  There is no duplicate validation fetch that could race a deployment. Any
-  failure rejects installation and deletes the newly created generation without
-  deleting the active version. An existing same-ID cache is validated without
-  being overwritten.
+  There is no duplicate validation fetch that could race a deployment.
+  Installation always checks precache completeness even if the named cache
+  exists: an interrupted attempt can leave it empty or partially populated.
+  Only missing or invalid entries are repaired via `addAll`; previously valid
+  HTML/assets remain unchanged. Then **all** cached responses are revalidated
+  before activation. A new failed staging cache is removed, while a previously
+  existing same-ID cache is retained for safe retry without disturbing any
+  active version. The next online install can self-heal an incomplete cache.
 - **No skipWaiting() on updates**: the old worker and its hashed assets remain
   available while any client controlled by it is open. Once these clients close,
   the browser activates the prepared worker.
@@ -81,9 +85,11 @@ pinning mechanism would be a separate feature.
   same origin. It inspects Cache Storage after each update: legacy v2 growth,
   first install, redirected extensionless routes, home and game offline navigation,
   old tab waiting with an online-then-offline reload, immediate deletion of old
-  caches after each release, an all-200 mismatched-build HTML install,
-  an unavailable dependency install, rollback and local
-  save/settings/pending-score preservation. CI discovers it in the browser shard.
+  caches after each release, an empty cache left by interrupted installation,
+  incomplete same-ID cache recovery (preserving valid entries), an all-200
+  mismatched-build HTML install followed by a successful retry, an unavailable
+  dependency install, rollback and local save/settings/pending-score
+  preservation. CI discovers it in the browser shard.
 - The browser test uses an HTTP fixture generated from the **same SW source and
   stamp renderer** as production; it also loads the built homepage and SW from
   dist/ and checks an offline refresh.
