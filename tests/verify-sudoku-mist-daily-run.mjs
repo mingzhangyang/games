@@ -172,8 +172,8 @@ ok(takeoverBase.ok && takeoverBase.value?.inputs.length === 1, '⑥ B 在新锁�
 b.start(takeoverDate, 88, takeoverBase.value);
 const bInputs = [{ type: 'hint' }, { type: 'place', cell: 12, digit: 8 }, { type: 'hint' }];
 b.save(takeoverDate, { inputs: bInputs, elapsed: 5000, notes });
-const winner = stored();
-const beforeTakeover = JSON.stringify(store.get(takeoverKey));
+const winner = JSON.parse(store.get(takeoverKey));
+const beforeTakeover = store.get(takeoverKey);
 b.release();
 await tick();
 await a.acquire(takeoverDate);
