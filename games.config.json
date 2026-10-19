@@ -1880,8 +1880,8 @@
         "zh": "磁极花园"
       },
       "desc": {
-        "meta": "Move magnets, flip their poles, and guide little seeds into flowerpots. A deterministic garden puzzle with 24 handcrafted levels, exact previews, unlimited undo, and four chapter leaderboards.",
-        "og": "One little flip. A whole garden in bloom. 24 magnetic puzzles to grow at your own pace.",
+        "meta": "Move magnets, flip their poles, and guide little seeds into flowerpots. A deterministic garden puzzle with 30 handcrafted levels, exact previews, unlimited undo, and five chapter leaderboards.",
+        "og": "One little flip. A whole garden in bloom. 30 magnetic puzzles to grow at your own pace.",
         "twitter": "Move, flip, bloom. Discover the quiet logic of a magnetic garden."
       },
       "genre": [
@@ -1898,7 +1898,8 @@
           "magnetic-garden-greenhouse",
           "magnetic-garden-twins",
           "magnetic-garden-stonepath",
-          "magnetic-garden-aurora"
+          "magnetic-garden-aurora",
+          "magnetic-garden-deeproot"
         ],
         "order": "asc",
         "maxScore": 1000000,
@@ -1916,8 +1917,8 @@
         "category": "puzzle",
         "addedAt": "2026-10-18",
         "desc": {
-          "en": "Move magnets and flip their poles to guide tiny seeds home. Solve 24 thoughtful puzzles and watch each garden bloom.",
-          "zh": "移动磁石、翻转磁极，让小种子在恰好的位置生根。解开 24 道谜题，看一座座小花园盛开。"
+          "en": "Move magnets and flip their poles to guide tiny seeds home. Solve 30 thoughtful puzzles and watch each garden bloom.",
+          "zh": "移动磁石、翻转磁极，让小种子在恰好的位置生根。解开 30 道谜题，看一座座小花园盛开。"
         },
         "tag": {
           "en": "Magnetic Logic",

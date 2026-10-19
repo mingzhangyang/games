@@ -254,7 +254,7 @@ export class MagneticGardenGame {
     announce(message) { $('mg-sr-status').textContent = message; }
     render() {
         const t = this.t(); const n = LEVELS.indexOf(this.level) + 1;
-        $('mg-chapter-label').textContent = `${this.chapterText(this.level.chapter)} · ${String(n).padStart(2, '0')} / 24`;
+        $('mg-chapter-label').textContent = `${this.chapterText(this.level.chapter)} · ${String(n).padStart(2, '0')} / ${LEVELS.length}`;
         $('mg-level-title').textContent = this.level.title[getLang()] || this.level.title.en;
         $('mg-moves').textContent = this.sim.moves; $('mg-planted').textContent = this.plantedText();
         $('mg-best').textContent = `${t.best} ${this.best[this.level.id]?.moves ?? t.noBest}`; $('mg-target').textContent = `${t.target} ${this.level.par}`;
@@ -289,7 +289,7 @@ export class MagneticGardenGame {
             const magnet = state.magnets.find(m => m.cell === cell);
             if (magnet) {
                 b.classList.add('has-magnet'); b.classList.toggle('is-selected', magnet.id === this.selected); b.setAttribute('aria-selected', String(magnet.id === this.selected));
-                b.innerHTML = `<span class="mg-magnet mg-magnet--${magnet.polarity}" aria-hidden="true"><b class="mg-magnet-letter">${magnet.polarity}</b><small class="mg-magnet-id">${magnet.fixed ? '•' : magnet.id.replace(/^m/, '')}</small></span>`;
+                b.innerHTML = `<span class="mg-magnet mg-magnet--${magnet.polarity}${magnet.fixed ? ' mg-magnet--rooted' : ''}" aria-hidden="true"><b class="mg-magnet-letter">${magnet.polarity}</b><small class="mg-magnet-id">${magnet.fixed ? '•' : magnet.id.replace(/^m/, '')}</small></span>`;
                 label = fill(this.t().magnet, { pole: magnet.polarity, id: magnet.id }) + (magnet.fixed ? `, ${this.t().rooted}` : '');
             }
             b.setAttribute('aria-label', `${fill(this.t().cell, { r: Math.floor(cell / this.level.width) + 1, c: cell % this.level.width + 1 })}: ${label}`);
@@ -325,7 +325,7 @@ export class MagneticGardenGame {
     }
     renderMenu() {
         const t = this.t(); const count = Object.keys(this.best).length;
-        iconLabel('mg-btn-start', ICONS.play, this.savedCurrent || count ? t.continue : t.start); $('mg-earned').textContent = fill(t.earned, { n: count });
+        iconLabel('mg-btn-start', ICONS.play, this.savedCurrent || count ? t.continue : t.start); $('mg-earned').textContent = fill(t.earned, { n: count, total: LEVELS.length }); $('mg-all-open').textContent = fill(t.allOpen, { n: LEVELS.length });
         const list = $('mg-chapters'); list.replaceChildren();
         for (const [chapterIndex, chapter] of chapterIds.entries()) {
             const section = document.createElement('section'); section.className = 'mg-chapter'; section.dataset.chapter = chapter;

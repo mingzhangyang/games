@@ -58,7 +58,7 @@ export default new Map([
     ['shadow-loom.desc','移动悬在不同深度的剪纸和那盏灯，让散乱的影子慢慢重合，织成一个会动的生命。'],['shadow-loom.tag','纸影解谜'],
     ['loop-jail.name','画牢'],['loop-jail.desc','拖动画出墨线，自交成环就能把圈里的小怪统统收监。小怪会咬断没闭合的墨线，墨水有限，贪大圈有风险。'],
     ['loop-jail.tag','画线街机'],['magnetic-garden.name','磁极花园'],
-    ['magnetic-garden.desc','移动磁石、翻转磁极，让小种子在恰好的位置生根。解开 24 道谜题，看一座座小花园盛开。'],['magnetic-garden.tag','磁力解谜'],
+    ['magnetic-garden.desc','移动磁石、翻转磁极，让小种子在恰好的位置生根。解开 30 道谜题，看一座座小花园盛开。'],['magnetic-garden.tag','磁力解谜'],
     ['sudoku-mist.name','雾隐九宫'],['sudoku-mist.desc','藏在晨雾里的数独：推出一个数字，周围的雾就散开；瞎猜不得分。'],
     ['sudoku-mist.tag','推理数独'],['minecraft.name','2D 我的世界'],
     ['minecraft.desc','浏览器中的 2D 我的世界。挖矿、合成工具、建造你的世界。'],['minecraft.tag','沙盒游戏'],

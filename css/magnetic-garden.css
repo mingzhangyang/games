@@ -38,6 +38,9 @@
  .mg-socket::after { content:'+'; display:grid; place-items:center; height:100%; color:var(--mg-tray-edge); font-size:19px; font-weight:400; }
  .mg-magnet { width:72%; height:70%; position:relative; display:grid; place-items:center; border-radius:30% 30% 23% 23%; background:linear-gradient(145deg,#e69a85,var(--mg-N) 68%); box-shadow:0 4px 0 #994e4b,0 6px 8px rgb(63,49,29,.22),inset 0 2px 0 rgb(255,255,255,.4); color:#fff7df; transform:translateY(-2px); }
  .mg-magnet--S { background:linear-gradient(145deg,#92bdba,var(--mg-S) 68%); box-shadow:0 4px 0 #356774,0 6px 8px rgb(63,49,29,.22),inset 0 2px 0 rgb(255,255,255,.4); }
+ /* Rooted (fixed) magnets sit in a wooden collar instead of floating: a mark beyond colour. */
+ .mg-magnet--rooted { transform:none; box-shadow:0 0 0 3px var(--mg-tile-hi),0 0 0 6px #8a6a4f,0 5px 8px rgb(63,49,29,.25),inset 0 2px 0 rgb(255,255,255,.4); }
+ .mg-magnet--rooted .mg-magnet-id { background:#8a6a4f; color:#f7efd7; border-color:#6b4f3a; }
  .mg-magnet::before { content:''; position:absolute; left:15%; right:15%; bottom:15%; height:5%; background:rgb(255,255,255,.32); border-radius:20px; }
  .mg-magnet-letter { font-family:Georgia,serif; font-size:clamp(20px,5vw,28px); font-weight:700; line-height:1; }
  .mg-magnet-id { position:absolute; top:-5px; right:-5px; width:16px; height:16px; display:grid; place-items:center; border-radius:50%; background:#f7efd7; color:var(--mg-ink); border:1px solid var(--mg-tray-edge); font-size:9px; font-family:system-ui,sans-serif; font-weight:700; }
@@ -107,7 +110,8 @@
  .mg-chapter-score { color:var(--mg-dim); margin-top:11px; font-size:10px; line-height:1.5; }
  .mg-collection { margin:26px 0 18px; padding:20px 12px 6px; border-top:1px solid var(--mg-line); font-size:13px; }
  .mg-collection-copy { font-size:11px; color:var(--mg-dim); margin-top:7px; }
- .mg-flowers { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:3px; margin-top:14px; }
+ /* One row of six flowers per chapter. */
+ .mg-flowers { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:3px; max-width:330px; margin:14px auto 0; }
  .mg-collected-flower { aspect-ratio:4/5; opacity:.12; filter:grayscale(1); }
  .mg-collected-flower.is-earned { opacity:1; filter:none; }
  /* Full-bleed immersive stage has square corners: overlay scrims must cover them. */

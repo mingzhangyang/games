@@ -59,6 +59,7 @@ const GAMES = {
   'magnetic-garden-twins': { order: 'asc', maxScore: 1000000, maxEntries: 50 },
   'magnetic-garden-stonepath': { order: 'asc', maxScore: 1000000, maxEntries: 50 },
   'magnetic-garden-aurora': { order: 'asc', maxScore: 1000000, maxEntries: 50 },
+  'magnetic-garden-deeproot': { order: 'asc', maxScore: 1000000, maxEntries: 50 },
 };
 
 // 每日赛程 / 每日挑战榜：按天一个键，正则白名单 + TTL 自然滚动

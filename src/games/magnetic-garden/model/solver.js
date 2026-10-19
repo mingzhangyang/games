@@ -1,5 +1,9 @@
 import { applyAction, createState, legalActions, stateKey } from './rules.js';
 
+/** In-game hint budget. It covers the whole reachable space of every Deep Roots garden, so
+ *  there a hint is always a next move or a proven dead end (verify-magnetic-garden-levels). */
+export const HINT_SEARCH = Object.freeze({ maxStates: 60000, maxDepth: 40 });
+
 /** Offline breadth-first proof. A budget exit is unknown, never proof of impossibility. */
 export function solveLevel(level, { maxStates = 100000, maxDepth = Infinity, start = createState(level) } = {}) {
     if (start.won) return { status: 'solved', solution: [], depth: 0, visited: 1 };
