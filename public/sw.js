@@ -13,10 +13,35 @@ const CACHE = `${CACHE_PREFIX}${BUILD}`;
 const LEGACY_CACHE = 'games-cache-v2';
 const PRECACHE = /* __GAMES_PRECACHE__ */ ['/'];
 const BUILD_ASSETS = new Set(/* __GAMES_ASSETS__ */ []);
+const HTML_ROUTES = new Set(/* __GAMES_HTML_ROUTES__ */ []);
 const ASSET_RE = /\.(css|js|mjs|png|svg|jpg|jpeg|webp|ico|json|woff2?)$/i;
 
 function isOwnedCache(name) {
     return name === LEGACY_CACHE || name.startsWith(CACHE_PREFIX);
+}
+
+// Cloudflare redirects /game.html to /game by default. Both URLs must share
+// one cache key, and only routes emitted by this build may enter the cache.
+function documentKey(pathname) {
+    if (pathname === '/' || pathname === '/index' || pathname === '/index.html') return '/';
+    const plain = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    const html = plain.endsWith('.html') ? plain : `${plain}.html`;
+    return HTML_ROUTES.has(html) ? html : null;
+}
+
+// An old worker can continue controlling a tab while a new release is online.
+// Never replace its offline document with newer HTML pointing at missing chunks.
+async function cacheMatchingDocument(cache, key, response) {
+    try {
+        if (!response.ok || response.type !== 'basic'
+            || !response.headers.get('content-type')?.toLowerCase().includes('text/html')) return;
+        if (documentKey(new URL(response.url).pathname) !== key) return;
+        const html = await response.clone().text();
+        if (!html.includes(`<meta name="games-build" content="${BUILD}">`)) return;
+        await cache.put(key, response);
+    } catch {
+        // Cache writes are best effort and never block the online navigation.
+    }
 }
 
 self.addEventListener('install', event => {
@@ -55,16 +80,15 @@ self.addEventListener('fetch', event => {
     if (url.origin !== self.location.origin) return;
 
     if (request.mode === 'navigate') {
-        const path = url.pathname;
-        // Normalise navigation queries: URLs like /?cat=x must not add unlimited
-        // cache entries. Never cache arbitrary API/redirect navigations.
-        const key = path === '/' || path.endsWith('.html') ? path : null;
+        // Extensionless Cloudflare routes and .html URLs share one build-owned
+        // pathname key. Query parameters never create new cache entries.
+        const key = documentKey(url.pathname);
         event.respondWith((async () => {
             const cache = await caches.open(CACHE);
             try {
                 const response = await fetch(request);
-                if (key && response.ok && response.type === 'basic') {
-                    event.waitUntil(cache.put(key, response.clone()).catch(() => {}));
+                if (key) {
+                    event.waitUntil(cacheMatchingDocument(cache, key, response.clone()));
                 }
                 return response;
             } catch {

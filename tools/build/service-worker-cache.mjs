@@ -9,15 +9,29 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const STAMP = "'__GAMES_BUILD_ID__'";
 const PRELOAD = "/* __GAMES_PRECACHE__ */ ['/']";
 const ASSET_LIST = "/* __GAMES_ASSETS__ */ []";
+const HTML_LIST = "/* __GAMES_HTML_ROUTES__ */ []";
+const BUILD_META = /\n[ \t]*<meta name="games-build" content="[A-Za-z0-9_-]+">/g;
 
-export function renderServiceWorker(source, { buildId, precache, assets = [] }) {
-    if (!source.includes(STAMP) || !source.includes(PRELOAD) || !source.includes(ASSET_LIST)) {
+function unstampedHtml(html) {
+    // Also makes calling the stamp function twice on the same dist idempotent.
+    return html.replace(BUILD_META, '');
+}
+
+function addBuildMeta(html, buildId) {
+    if (!/<head\b[^>]*>/i.test(html)) throw new Error('HTML document has no <head>');
+    return unstampedHtml(html).replace(/<head\b[^>]*>/i,
+        head => `${head}\n    <meta name="games-build" content="${buildId}">`);
+}
+
+export function renderServiceWorker(source, { buildId, precache, assets = [], htmlRoutes = [] }) {
+    if (![STAMP, PRELOAD, ASSET_LIST, HTML_LIST].every(marker => source.includes(marker))) {
         throw new Error('Service Worker injection markers are missing');
     }
     if (!/^[a-zA-Z0-9_-]{1,64}$/.test(buildId)) throw new Error('Invalid Service Worker build ID');
     return source.replace(STAMP, JSON.stringify(buildId))
         .replace(PRELOAD, JSON.stringify(precache))
-        .replace(ASSET_LIST, JSON.stringify(assets));
+        .replace(ASSET_LIST, JSON.stringify(assets))
+        .replace(HTML_LIST, JSON.stringify(htmlRoutes));
 }
 
 async function outputFiles(dir) {
@@ -41,11 +55,12 @@ export async function stampServiceWorker(distDir, sourceFile = join(ROOT, 'publi
         // trigger a new generation when their content changes.
         digest.update(relative(distDir, path).replaceAll(sep, '/'));
         digest.update('\0');
-        digest.update(await readFile(path));
+        const raw = await readFile(path);
+        digest.update(path.endsWith('.html') ? unstampedHtml(raw.toString('utf8')) : raw);
         digest.update('\0');
     }
     const buildId = digest.digest('hex').slice(0, 16);
-    const html = await readFile(join(distDir, 'index.html'), 'utf8');
+    const html = unstampedHtml(await readFile(join(distDir, 'index.html'), 'utf8'));
     const precache = new Set(['/', '/index.html']);
     for (const tag of html.match(/<(?:script|link)\b[^>]*>/gi) || []) {
         const attr = /\b(?:href|src)\s*=\s*(["'])(.*?)\1/i.exec(tag);
@@ -66,12 +81,20 @@ export async function stampServiceWorker(distDir, sourceFile = join(ROOT, 'publi
     if ((await stat(join(distDir, 'icons/home-icons.svg')).catch(() => null))?.isFile()) {
         precache.add('/icons/home-icons.svg');
     }
+    const routes = files.filter(path => path.endsWith('.html'))
+        .map(path => '/' + relative(distDir, path).replaceAll(sep, '/'))
+        .sort();
     await writeFile(join(distDir, 'sw.js'), renderServiceWorker(source, {
         buildId, precache: [...precache].sort(),
         assets: files.map(path => '/' + relative(distDir, path).replaceAll(sep, '/'))
             .filter(path => /\.(css|js|mjs|png|svg|jpg|jpeg|webp|ico|json|woff2?)$/i.test(path)),
+        htmlRoutes: routes,
     }));
-    return { buildId, precache: [...precache].sort() };
+    for (const path of files.filter(path => path.endsWith('.html'))) {
+        const original = await readFile(path, 'utf8');
+        await writeFile(path, addBuildMeta(original, buildId));
+    }
+    return { buildId, precache: [...precache].sort(), htmlRoutes: routes };
 }
 
 export function serviceWorkerCachePlugin() {

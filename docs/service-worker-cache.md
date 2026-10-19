@@ -14,6 +14,9 @@ superseded Games caches safely.
 - Vite closeBundle stamps dist/sw.js with the SHA-256 digest (16 hex chars)
   of emitted files (excluding sw.js). The digest covers unhashed public
   assets too. Identical output has an identical ID; no timestamps or git SHA.
+  Every emitted HTML document gets a matching `games-build` meta marker;
+  the marker is ignored when hashing so re-stamping is deterministic.
+  The generated SW also embeds the exact set of emitted HTML routes.
 - Install pre-caches /, /index.html, and the JS/CSS dependencies referenced
   by the built homepage, plus the homepage SVG sprite. The install fails without
   replacing the active worker if any critical resource is unavailable.
@@ -24,8 +27,11 @@ superseded Games caches safely.
   generations, including the original `games-cache-v2` immediately. Never
   delete caches not owned by Games. No previous-build offline fallback.
 - Navigation uses network-first, falling back to the current cache, then its
-  cached homepage. Success responses for HTML navigations are stored using
-  their pathname to avoid growth from query strings.
+  cached homepage. Both `/game.html` and Cloudflare's extensionless `/game`
+  redirect use the same canonical cache key from the built route list, ignoring
+  query strings. The active worker may cache HTML only when its embedded
+  `games-build` marker matches its own build ID, preventing a waiting update
+  from replacing an old offline document with incompatible new chunks.
 - Static JS/CSS/images/fonts/JSON are served from the **current** cache first;
   that generation's cached content is never silently rewritten. On a miss,
   network is attempted; failure does **not** search any old cache. Query-bearing
@@ -67,8 +73,9 @@ pinning mechanism would be a separate feature.
 - npm run build && node tests/verify-service-worker.mjs runs a **real Service
   Worker** in Chromium (no bypass), using successive distinct deploys on the
   same origin. It inspects Cache Storage after each update: legacy v2 growth,
-  first install, home and game offline navigation, old tab waiting, immediate
-  removal of every previous cache after each release, failed install, rollback and local
+  first install, redirected extensionless routes, home and game offline navigation,
+  old tab waiting with an online-then-offline reload, immediate deletion of old
+  caches after each release, failed install, rollback and local
   save/settings/pending-score preservation. CI discovers it in the browser shard.
 - The browser test uses an HTTP fixture generated from the **same SW source and
   stamp renderer** as production; it also loads the built homepage and SW from
