@@ -56,9 +56,9 @@ try {
     await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller),
         { timeout: 15000 });
     const cached = await page.evaluate(async () => {
-        const names = await caches.keys();
+        const names = await globalThis.caches.keys();
         if (names.includes('games-cache-v2')) throw new Error('legacy cache survived initial activation');
-        const cache = await caches.open('games-cache-v3-test-source');
+        const cache = await globalThis.caches.open('games-cache-v3-test-source');
         return (await cache.keys()).map(request => new URL(request.url).pathname).sort();
     });
     assert.deepEqual(cached, ['/', '/assets/js/home.js', '/index.html'],
