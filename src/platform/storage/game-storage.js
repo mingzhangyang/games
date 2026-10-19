@@ -1,4 +1,4 @@
-import { storageGet, storageSet, storageRemove } from '../safe-storage.js';
+import { storageGet, storageSet, storageRemove, storageTryGet } from '../safe-storage.js';
 
 function keyFor(id, version, slot) {
     return `game:${id}:v${version}:${slot}`;
@@ -67,6 +67,12 @@ export function createGameStorage(gameId, {
         get(slot, fallback = null) {
             const raw = storageGet(key(slot));
             return raw == null ? migrate(slot, fallback) : decode(raw, fallback);
+        },
+        // Strict read of the canonical versioned slot; unlike get(), it does not
+        // silently equate a browser read exception with a missing key or migrate.
+        readCurrent(slot, fallback = null) {
+            const { ok, value } = storageTryGet(key(slot));
+            return { ok, value: ok ? decode(value, fallback) : fallback };
         },
         set(slot, value) {
             storageSet(key(slot), encode(value));

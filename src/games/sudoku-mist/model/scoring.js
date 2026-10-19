@@ -17,3 +17,13 @@ export function placementPoints({ tier, intoFog, streak, hinted = false }) {
     if (hinted || !tier) return 0;
     return Math.round(BASE_POINTS[tier] * (intoFog ? FOG_MULTIPLIER : 1) * streakMultiplier(streak));
 }
+
+/**
+ * 关卡星级（设计 §8.1）：通关 ★1；分数 ≥ stars[0] ★2；≥ stars[1] ★3。
+ * 阈值由 tools/generators/sudoku-mist-levels.mjs 按测试玩家的得分算出并写进 levels.js；
+ * 没有阈值（自由局 / 每日题）或没通关时返回 0。
+ */
+export function starsFor(score, thresholds) {
+    if (!Array.isArray(thresholds) || score === null || score === undefined || !Number.isFinite(score)) return 0;
+    return 1 + (score >= thresholds[0] ? 1 : 0) + (score >= thresholds[1] ? 1 : 0);
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Actual eight-game interruption integration on live DOM + state machines.
+// Actual nine-game interruption integration on live DOM + state machines.
 // The deterministic lease algebra is also covered by verify-gameplay-interruptions.
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -7,7 +7,7 @@ import { registry } from './lib/registry.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
-const IDS = new Set(['carrot-pull', 'firefly-signal', 'loop-jail', 'magnetic-garden', 'math-rain', 'needle-awn', 'shadow-loom', 'tank-battle']);
+const IDS = new Set(['carrot-pull', 'firefly-signal', 'loop-jail', 'magnetic-garden', 'math-rain', 'needle-awn', 'shadow-loom', 'sudoku-mist', 'tank-battle']);
 const games = registry.withCap('leaderboard').filter(g => g.scores?.ui === 'dialog'
     && IDS.has(g.id) && keepPage(g.href));
 exitIfNoPages(games, 'smoke-gameplay-interruptions');
@@ -20,13 +20,14 @@ function readState(id) {
                 : id === 'magnetic-garden' ? window.mgGame
                     : id === 'math-rain' ? window.mathRainGame
                         : id === 'needle-awn' ? window.gameEngine
-                            : id === 'shadow-loom' ? window.slGame : window.tankBattleInstance;
+                            : id === 'shadow-loom' ? window.slGame
+                                : id === 'sudoku-mist' ? window.smGame : window.tankBattleInstance;
     const state = id === 'carrot-pull' ? g?.state?.mode
         : id === 'math-rain' ? g?.gameStateManager?.gameState
             : id === 'tank-battle' ? g?.gameState : g?.state;
     const paused = id === 'carrot-pull' ? g?.state?.paused
         : id === 'firefly-signal' ? g?.paused
-            : id === 'shadow-loom' || id === 'loop-jail' || id === 'magnetic-garden' ? g?.isPaused
+            : id === 'shadow-loom' || id === 'loop-jail' || id === 'magnetic-garden' || id === 'sudoku-mist' ? g?.isPaused
                 : id === 'tank-battle' ? g?.paused : state === 'paused';
     return { state, paused, ranking: g?.pauseOwnership?.isHeld('ranking'),
         hidden: g?.pauseOwnership?.isHeld('hidden'),
@@ -40,6 +41,7 @@ async function startInPage(id) {
     else if (id === 'math-rain') window.mathRainGame.restartGame();
     else if (id === 'needle-awn') window.gameEngine.startEndlessMode();
     else if (id === 'shadow-loom') await window.slGame.startLevel(0);
+    else if (id === 'sudoku-mist') window.smGame.startLevel(0);
     else window.tankBattleInstance.restart();
 }
 function pauseManuallyInPage(id) {
@@ -50,12 +52,14 @@ function pauseManuallyInPage(id) {
     else if (id === 'needle-awn') window.gameEngine.togglePause();
     else if (id === 'shadow-loom') window.slGame.pauseQuiet();
     else if (id === 'magnetic-garden') window.mgGame.pauseQuiet();
+    else if (id === 'sudoku-mist') window.smGame.pause(); // 顶栏暂停钮 / P 键的同一条路径（带暂停浮层）
     else window.tankBattleInstance.togglePause();
 }
 function resumeManuallyInPage(id) {
     if (id === 'math-rain') window.mathRainGame.togglePauseResume();
     else if (id === 'magnetic-garden') window.mgGame.resumeQuiet();
     else if (id === 'loop-jail') window.ljGame.resume(); // 暂停浮层的「继续」
+    else if (id === 'sudoku-mist') window.smGame.resume();
     else if (id === 'needle-awn') window.gameEngine.togglePause();
     else window.tankBattleInstance.togglePause();
 }
@@ -102,7 +106,7 @@ try {
                     'carrot-pull': window.cpGame, 'firefly-signal': window.__fireflySignal,
                     'loop-jail': window.ljGame, 'magnetic-garden': window.mgGame,
                     'math-rain': window.mathRainGame, 'needle-awn': window.gameEngine,
-                    'shadow-loom': window.slGame, 'tank-battle': window.tankBattleInstance,
+                    'shadow-loom': window.slGame, 'sudoku-mist': window.smGame, 'tank-battle': window.tankBattleInstance,
                 };
                 const ready = id === 'carrot-pull'
                     ? ['ready', 'fallback'].includes(document.getElementById('cp-stage')?.dataset.artState)
@@ -189,7 +193,7 @@ try {
                     'carrot-pull': window.cpGame, 'firefly-signal': window.__fireflySignal,
                     'loop-jail': window.ljGame, 'magnetic-garden': window.mgGame,
                     'math-rain': window.mathRainGame, 'needle-awn': window.gameEngine,
-                    'shadow-loom': window.slGame, 'tank-battle': window.tankBattleInstance,
+                    'shadow-loom': window.slGame, 'sudoku-mist': window.smGame, 'tank-battle': window.tankBattleInstance,
                 };
                 return !owners[id].pauseOwnership.isHeld('ranking');
             }, { timeout: 6000 }, game.id);
@@ -218,7 +222,7 @@ try {
                 const owners = { 'carrot-pull': window.cpGame, 'firefly-signal': window.__fireflySignal,
                     'loop-jail': window.ljGame, 'magnetic-garden': window.mgGame,
                     'math-rain': window.mathRainGame, 'needle-awn': window.gameEngine,
-                    'shadow-loom': window.slGame, 'tank-battle': window.tankBattleInstance };
+                    'shadow-loom': window.slGame, 'sudoku-mist': window.smGame, 'tank-battle': window.tankBattleInstance };
                 return !owners[id].pauseOwnership.isHeld('ranking');
             }, { timeout: 6000 }, game.id);
             snap = await page.evaluate(readState, game.id);
@@ -237,7 +241,7 @@ try {
                 const owners = { 'carrot-pull': window.cpGame, 'firefly-signal': window.__fireflySignal,
                     'loop-jail': window.ljGame, 'magnetic-garden': window.mgGame,
                     'math-rain': window.mathRainGame, 'needle-awn': window.gameEngine,
-                    'shadow-loom': window.slGame, 'tank-battle': window.tankBattleInstance };
+                    'shadow-loom': window.slGame, 'sudoku-mist': window.smGame, 'tank-battle': window.tankBattleInstance };
                 return !owners[id].pauseOwnership.isHeld('ranking');
             }, { timeout: 6000 }, game.id);
             snap = await page.evaluate(readState, game.id);

@@ -1,17 +1,85 @@
 import { createGameStorage } from '../../platform/storage/game-storage.js';
 
-/** 本地最佳：每关 / 每个自由局档位一个槽位 { score }（新游戏，无历史键可迁移） */
+/**
+ * 本地存档（新游戏，无历史键可迁移）：
+ *   best:<id>          每关 / 每个自由局档位的最佳 { score }
+ *   daily-run:<date>   每日局进行中的进度 { seed, rev, inputs, elapsed, notes }——每次输入后写，刷新 / 回来后按 inputs 重放；
+ *                      rev 每写一次 +1；只有持有 Web Lock 的标签页写（见 daily-run.js）
+ *   daily:<date>       每日局第一次完成 { score, time }——完成标记（键 game:sudoku-mist:v1:daily:<YYYYMMDD>，
+ *                      首页每日任务区如果接入就读它），之后的练习局不再改它
+ */
 export const SUDOKU_MIST_STORAGE = createGameStorage('sudoku-mist', { version: 1 });
 
 const slotFor = id => `best:${id}`;
+const isDate = key => /^\d{8}$/.test(String(key));
+const count = v => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Math.floor(Number(v)) : null);
 
 export function loadBest(id) {
     const raw = SUDOKU_MIST_STORAGE.get(slotFor(id), null);
     if (raw?.score === undefined || raw?.score === null || raw.score === '') return null;
-    const score = Number(raw.score);
-    return Number.isFinite(score) && score >= 0 ? Math.floor(score) : null;
+    return count(raw.score);
 }
 
 export function saveBest(id, score) {
     return SUDOKU_MIST_STORAGE.set(slotFor(id), { score: Math.floor(score) });
+}
+
+const isInput = a => a && (
+    (a.type === 'place' && Number.isInteger(a.cell) && Number.isInteger(a.digit))
+    || (a.type === 'activate' && Number.isInteger(a.cell))
+    || a.type === 'hint');
+
+/** A critical daily read must distinguish a missing checkpoint from inaccessible storage. */
+function parseDailyRun(raw) {
+    if (!raw || !Array.isArray(raw.inputs) || !raw.inputs.every(isInput)) return null;
+    const notes = Array.isArray(raw.notes) && raw.notes.length === 81
+        && raw.notes.every(n => Number.isInteger(n) && n >= 0 && n < 512) ? raw.notes : null;
+    return {
+        seed: Number.isInteger(raw.seed) ? raw.seed : null,
+        rev: Number.isInteger(raw.rev) && raw.rev >= 0 ? raw.rev : 0,
+        inputs: raw.inputs.map(a => (a.type === 'hint' ? { type: 'hint' } : a.type === 'activate'
+            ? { type: 'activate', cell: a.cell } : { type: 'place', cell: a.cell, digit: a.digit })),
+        elapsed: count(raw.elapsed) ?? 0,
+        notes,
+    };
+}
+
+export function readDailyRun(dateKey) {
+    if (!isDate(dateKey)) return { ok: false, value: null };
+    const result = SUDOKU_MIST_STORAGE.readCurrent(`daily-run:${dateKey}`, null);
+    return { ok: result.ok, value: result.ok ? parseDailyRun(result.value) : null };
+}
+
+/** Tolerant read for non-critical UI; ranked entry must use readDailyRun(). */
+export function loadDailyRun(dateKey) {
+    return readDailyRun(dateKey).value;
+}
+
+export function saveDailyRun(dateKey, { seed, rev, inputs, elapsed, notes }) {
+    if (!isDate(dateKey)) return false;
+    return SUDOKU_MIST_STORAGE.trySet(`daily-run:${dateKey}`, {
+        seed, rev, inputs, elapsed: Math.floor(elapsed), notes: Array.from(notes),
+    });
+}
+
+export function clearDailyRun(dateKey) {
+    if (isDate(dateKey)) SUDOKU_MIST_STORAGE.remove(`daily-run:${dateKey}`);
+}
+
+/** Completion markers are just as important as the checkpoint: failing to read one must not reopen ranking. */
+export function readDailyDone(dateKey) {
+    if (!isDate(dateKey)) return { ok: false, value: null };
+    const result = SUDOKU_MIST_STORAGE.readCurrent(`daily:${dateKey}`, null);
+    if (!result.ok) return { ok: false, value: null };
+    const score = count(result.value?.score);
+    return { ok: true, value: score === null ? null : { score, time: count(result.value.time) ?? 0 } };
+}
+
+export function loadDailyDone(dateKey) {
+    return readDailyDone(dateKey).value;
+}
+
+export function saveDailyDone(dateKey, { score, time }) {
+    if (!isDate(dateKey)) return false;
+    return SUDOKU_MIST_STORAGE.trySet(`daily:${dateKey}`, { score: Math.floor(score), time: Math.floor(time) });
 }

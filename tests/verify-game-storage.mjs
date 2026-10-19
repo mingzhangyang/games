@@ -40,4 +40,14 @@ if (blockedStore.trySet('seen', true) !== false) {
 }
 localStorage.setItem = originalSetItem;
 
-console.log('✓ versioned game storage legacy + schema migration');
+const snapshot = createGameStorage('strict', { version: 1 });
+assert.deepEqual(snapshot.readCurrent('run'), { ok: true, value: null }, 'absent key is a valid empty result');
+snapshot.set('run', { rev: 4 });
+assert.deepEqual(snapshot.readCurrent('run'), { ok: true, value: { rev: 4 } });
+const originalGetItem = localStorage.getItem;
+localStorage.getItem = () => { throw new Error('SecurityError'); };
+assert.deepEqual(snapshot.readCurrent('run'), { ok: false, value: null }, 'read errors must not appear as missing data');
+localStorage.getItem = originalGetItem;
+assert.deepEqual(snapshot.readCurrent('run'), { ok: true, value: { rev: 4 } }, 'successful retry recovers the same record');
+
+console.log('✓ versioned game storage legacy + schema migration + strict read');

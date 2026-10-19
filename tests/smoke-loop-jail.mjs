@@ -484,6 +484,18 @@ try {
     await dp.click('#lj-btn-start');
     await sleep(900);
     await freeze(dp);
+    // Zero velocity alone does not isolate input assertions: a randomly placed
+    // monster can bite the horizontal stroke, or a pen hit can give it velocity
+    // again. Keep monsters clear of the hover/line paths and put one target in
+    // the middle for the ring. Collision behavior remains covered by ⑤ and ⑧.
+    await dp.evaluate(() => {
+        const sim = window.ljGame.sim;
+        sim.pen.invuln = 1e9;
+        sim.monsters.forEach((m, i) => {
+            m.x = i === 0 ? sim.w * 0.5 : 40 + i * 40;
+            m.y = i === 0 ? sim.h * 0.4 : 40;
+        });
+    });
     const hover = await dp.evaluate(() => {
         const sim = window.ljGame.sim;
         const p = window.ljGame.renderer.clientFromWorld(sim.w * 0.25, sim.h * 0.9);
@@ -499,9 +511,10 @@ try {
     check(s.penDown && s.strokes === 1, '④ 按住左键：画线');
     await dp.mouse.up();
     s = await snap(dp);
-    check(!s.penDown && s.strokes === 1, '④ 松开：墨线保留');
+    check(!s.penDown && s.strokes === 1, '④ 松开：墨线保留', JSON.stringify(s));
     await freeze(dp);
     target = await pickTarget(dp);
+    check(target.clear >= 6, '④ 鼠标画环：其他小怪完整位于环外', JSON.stringify(target));
     path = await circlePath(dp, target);
     const dBefore = await snap(dp);
     await dp.mouse.move(...path[0]);

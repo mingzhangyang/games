@@ -2,7 +2,7 @@
 // Independent website/score Worker releases need a bounded local retry journal.
 import assert from 'node:assert/strict';
 import {
-    SCORE_PENDING_KEY, enqueuePendingScore, pendingScoreCount, retryPendingScores,
+    SCORE_PENDING_KEY, enqueuePendingScore, dequeuePendingScore, pendingScoreCount, retryPendingScores,
 } from '../src/platform/scoreboard-pending.js';
 
 const storage = new Map();
@@ -53,6 +53,14 @@ try {
     await Promise.all([a, b]);
     assert.equal(calls, 1, 'simultaneous refreshes share the same retry attempt');
     assert.equal(pendingScoreCount(), 0);
+
+    // Journal-before-POST: an acknowledged entry is dropped, other entries stay.
+    enqueuePendingScore(first);
+    enqueuePendingScore(previousDay);
+    assert.equal(dequeuePendingScore(first), true);
+    assert.equal(pendingScoreCount(first.game), 0, 'acknowledged score leaves the journal');
+    assert.equal(pendingScoreCount(previousDay.game), 1, 'unrelated pending score is kept');
+    dequeuePendingScore(previousDay);
 
     // A bounded journal must never grow indefinitely during a long outage.
     for (let i = 0; i < 40; i++) {

@@ -3,7 +3,17 @@
  * ===========================================================================
  * 状态机：menu → playing（isPaused 叠加）→ result → replay（回放结束回到 result）。
  *   - 手动暂停（顶栏暂停钮 / P / Esc / 切到后台）显示暂停浮层，必须手动继续，计时同时停下；
- *   - 顶栏重开（contextual-restart）只在对局中可见，有落子时先确认。
+ *   - 顶栏重开（contextual-restart）只在对局中可见，有落子时先确认；
+ *   - 排行榜弹窗走 pauseOwnership 的 'ranking' 租约，静默暂停、关闭后自动继续。
+ * 每日一雾（设计 §8.2）：第一次完成之前是「计分局」——每次输入后把输入序列存进本地，
+ *   刷新 / 离开后回来按 replay() 原样恢复；不能重开；完成时只提交这一次（onDailyCleared）。
+ *   完成后再进是练习局：可重开，不存进度、不提交。
+ *   「今天完成过没有」一律问 dailyDoneFor()：本地完成标记 + 本页内存里的兜底（存储写不进去时
+ *   也不会在本页重新开出计分局）。完成那一刻再查一次——同一天在两个标签页里各开了一局，
+ *   先完成的那个算数，后完成的自动降为练习局，不覆盖、不重复提交。
+ *   同一时刻只有一个标签页能在今天的计分局里（daily-run.js：Web Locks 独占，离开就释放），
+ *   别的标签页点进来会被拒绝并说明原因；所以进度只有一个写入者，不会互相覆盖、把失误和点灯「撤销」掉。
+ *   存档写不进去时，本页内存检查点照样更新，回菜单再进也不会丢掉没写成的输入。
  * 规则全部在 session 里；本文件只管输入映射、渲染与反馈，不自己判断对错或计分。
  * 主循环：requestAnimationFrame 只在对局 / 回放且未暂停时运行（雾丝漂移 + 揭雾淡出）；
  * 菜单、暂停、结算时停下，状态变化时补画一帧。
@@ -13,15 +23,20 @@ import { getLang } from '../../platform/site-settings.js';
 import { bindPalette } from '../../platform/theme.js';
 import { isCoarsePointer } from '../../platform/i18n/touch-copy.js';
 import { createPauseOwnership, bindPageVisibility } from '../../platform/runtime/pause-ownership.js';
-import { createSession, prepareLevel } from './model/session.js';
-import { generate } from './model/generator.js';
+import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
+import { createSession, prepareLevel, replay } from './model/session.js';
+import { generate, generateDaily } from './model/generator.js';
+import { starsFor } from './model/scoring.js';
 import { CHAPTERS, LEVELS, levelById } from './model/levels.js';
 import { PEERS, CELLS } from './model/grid.js';
 import { LANGUAGES } from './i18n.js';
 import { createBoard } from './render/board.js';
 import { createMist } from './render/mist.js';
 import { createSudokuMistAudio } from './audio.js';
-import { loadBest, saveBest } from './storage.js';
+import { createDailyRunGuard } from './daily-run.js';
+import {
+    loadBest, saveBest, loadDailyDone, readDailyDone, saveDailyDone, clearDailyRun,
+} from './storage.js';
 
 const GAME_ID = 'sudoku-mist';
 const RESULT_DELAY_MS = 900;
@@ -40,15 +55,27 @@ const NEEDS_KEY = Object.freeze({
 const $ = id => document.getElementById(id);
 /** 占位符的唯一展开点 */
 const fill = (template, vars) => String(template).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+const starText = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 const fmtTime = ms => {
     const s = Math.floor(ms / 1000);
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
 export class SudokuMistGame {
-    /** @param {object} hooks { track(gameId, event) } */
+    /** @param {object} hooks { track(gameId, event), onDailyCleared({ dateKey, score }) } */
     constructor(hooks = {}) {
         this.track = typeof hooks.track === 'function' ? hooks.track : () => {};
+        this.onDailyCleared = typeof hooks.onDailyCleared === 'function' ? hooks.onDailyCleared : () => {};
+        // 每日题只按日期生成一次（手机上出题要几百毫秒）
+        this.dailyPuzzle = null;
+        this.dailyStartId = 0;
+        this.dailyStart = null;
+        this.messageText = '';
+        this.saveWarningAnnounced = false;
+        // 本页里完成过的每日局 dateKey → { score, time }（完成标记写不进存储时的兜底）
+        this.dailyCleared = new Map();
+        // 计分局的跨标签页互斥锁 + 本页检查点
+        this.daily = createDailyRunGuard({ onLost: () => { if (this.isRanked()) this.toMenu(); } });
         this.contextualRestart = null;
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
@@ -91,6 +118,12 @@ export class SudokuMistGame {
 
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
+    /** 今天第一次的每日局：存进度、不能重开、完成时提交排行榜 */
+    isRanked() { return this.meta?.kind === 'daily' && this.meta.ranked === true; }
+
+    /** 这一天的第一次完成成绩（本地标记优先，其次本页内存）；null = 还没完成 */
+    dailyDoneFor(dateKey) { return loadDailyDone(dateKey) || this.dailyCleared.get(dateKey) || null; }
+
     /** 当前计时（毫秒）：暂停 / 结算时冻结 */
     elapsedMs() {
         return this.elapsed + (this.isRunning() && this.runStart ? performance.now() - this.runStart : 0);
@@ -120,16 +153,20 @@ export class SudokuMistGame {
             message: $('sm-message'),
             sr: $('sm-sr-status'),
             start: $('sm-start'),
+            daily: $('sm-daily'),
             chapters: $('sm-chapters'),
             free: $('sm-free'),
             status: $('sm-start-status'),
             controls: $('sm-controls'),
             pause: $('sm-pause'),
+            pauseCopy: $('sm-pause-copy'),
+            pauseRestart: $('sm-btn-restart'),
             result: $('sm-result'),
             resultTitle: $('sm-result-title'),
             resultCopy: $('sm-result-copy'),
             resultScore: $('sm-result-score'),
             resultBest: $('sm-result-best'),
+            resultStars: $('sm-result-stars'),
             resultStats: $('sm-result-stats'),
             nextBtn: $('sm-btn-next'),
             replayBar: $('sm-replay-bar'),
@@ -155,7 +192,8 @@ export class SudokuMistGame {
         this.bindResize();
         this.contextualRestart = bindContextualRestart({
             button: this.el.resetBtn,
-            active: () => this.isRunning(),
+            // 计分中的每日局不能重开（否则记住雾的布局再来一遍，分数就失真了）
+            active: () => this.isRunning() && !this.isRanked(),
             hasProgress: () => this.moves > 0,
             restart: () => this.restart(),
             purpose: 'retry',
@@ -164,6 +202,16 @@ export class SudokuMistGame {
             autoResume: false,
             // 回到前台不自动继续：显示暂停浮层，由玩家决定何时继续
             onHidden: () => this.showPauseOverlay(),
+        });
+        // 直接关页（没有先切到后台）时也把每日局的用时存下来
+        window.addEventListener('pagehide', () => {
+            // A BFCache-restored page must re-enter through startDaily and take a new lock.
+            if (this.isRanked()) this.toMenu();
+            else {
+                this.dailyStartId++;
+                this.el.start.removeAttribute('aria-busy');
+            }
+            this.daily.release({ force: true });
         });
         this.applyLanguage();
         window.addEventListener('site-settings:changed', () => this.applyLanguage());
@@ -236,6 +284,7 @@ export class SudokuMistGame {
     renderMenu() {
         const t = this.t();
         const lang = getLang() === 'zh' ? 'zh' : 'en';
+        this.renderDailyEntry();
         this.el.chapters.textContent = '';
         for (const ch of CHAPTERS) {
             const section = document.createElement('section');
@@ -262,6 +311,15 @@ export class SudokuMistGame {
                 sub.className = 'sm-level-best';
                 sub.textContent = best !== null ? fill(t.levelBest, { n: best }) : t.levelNew;
                 btn.append(num, name, sub);
+                if (best !== null) {
+                    const n = starsFor(best, level.stars);
+                    const stars = document.createElement('span');
+                    stars.className = 'sm-level-stars';
+                    stars.dataset.stars = String(n);
+                    stars.textContent = starText(n);
+                    stars.setAttribute('aria-label', fill(t.starsLabel, { n }));
+                    btn.appendChild(stars);
+                }
                 btn.addEventListener('click', () => this.startLevel(level.id));
                 list.appendChild(btn);
             });
@@ -287,6 +345,43 @@ export class SudokuMistGame {
         }
     }
 
+    /** 菜单顶部的每日一雾入口：未开始 / 进行中（第几步）/ 已完成（成绩 · 练习） */
+    renderDailyEntry() {
+        const t = this.t();
+        const key = todayKey();
+        const savedDone = readDailyDone(key);
+        const done = savedDone.value || this.dailyCleared.get(key) || null;
+        const savedRun = done || !savedDone.ok ? null : this.daily.resumeFor(key);
+        const run = savedRun?.value;
+        const unreadable = !savedDone.ok || savedRun?.ok === false;
+        this.el.daily.textContent = '';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sm-daily-btn';
+        btn.id = 'sm-daily-btn';
+        btn.classList.toggle('sm-daily-btn--done', !!done);
+        const name = document.createElement('span');
+        name.className = 'sm-daily-name';
+        name.textContent = fill(t.dailyName, { date: todayKeyDisplay() });
+        const sub = document.createElement('span');
+        sub.className = 'sm-daily-sub';
+        sub.textContent = done ? fill(t.dailyDone, { n: done.score })
+            : unreadable ? t.dailyReadUnavailable
+                : run?.inputs.length ? fill(t.dailyResume, { n: run.inputs.length }) : t.dailyNew;
+        btn.append(name, sub);
+        btn.addEventListener('click', () => {
+            // Never let yesterday's advertised practice entry start today's
+            // non-restartable ranked attempt when the menu spans UTC+8 midnight.
+            if (todayKey() !== key) {
+                this.renderDailyEntry();
+                this.el.status.textContent = this.t().dailyDateChanged;
+                return;
+            }
+            void this.startDaily(key);
+        });
+        this.el.daily.appendChild(btn);
+    }
+
     /* ───────────── 开局 ───────────── */
 
     /** id 也可以是关卡序号（共享校验器以 startLevel(0) 开局） */
@@ -300,10 +395,14 @@ export class SudokuMistGame {
     startFree(profile, seed = (Math.random() * 2 ** 32) >>> 0) {
         const p = FREE_PROFILES.find(x => x.id === profile);
         if (!p) throw new Error(`unknown profile ${profile}`);
+        const request = ++this.dailyStartId;
         this.el.status.textContent = this.t().generating;
         this.el.start.setAttribute('aria-busy', 'true');
         return new Promise(resolve => {
             setTimeout(() => {
+                // Free and Daily share the same generation token: the last
+                // selection wins, even if the first timer has not fired yet.
+                if (request !== this.dailyStartId) { resolve(null); return; }
                 const puzzle = generate(seed, profile);
                 this.el.status.textContent = '';
                 this.el.start.removeAttribute('aria-busy');
@@ -315,23 +414,95 @@ export class SudokuMistGame {
         });
     }
 
-    begin(meta, levelData) {
+    /**
+     * 每日一雾：今天第一次完成之前是计分局（有存档就按输入序列恢复），之后是练习局。
+     * dateKey 只给测试用；排行榜键跟着对局的日期走，跨过午夜也不会串到第二天的榜。
+     */
+    startDaily(dateKey = todayKey()) {
+        if (this.dailyStart?.id === this.dailyStartId && this.dailyStart.dateKey === dateKey) {
+            return this.dailyStart.promise;
+        }
+        const request = ++this.dailyStartId;
+        this.el.status.textContent = this.t().generating;
+        this.el.start.setAttribute('aria-busy', 'true');
+        const promise = new Promise(resolve => {
+            setTimeout(async () => {
+                if (request !== this.dailyStartId) { resolve(null); return; }
+                const refuseUnreadable = () => {
+                    // A failed read is not an empty save. Leave ranking untouched,
+                    // and let the player retry after storage becomes accessible.
+                    if (this.state !== 'menu') this.toMenu();
+                    const released = this.daily.release();
+                    this.el.start.removeAttribute('aria-busy');
+                    this.el.status.textContent = !released && this.daily.unsaved
+                        ? this.t().dailySaveFailed : this.t().dailyReadFailed;
+                    resolve(null);
+                };
+                if (this.dailyPuzzle?.dateKey !== dateKey) this.dailyPuzzle = { dateKey, puzzle: generateDaily(dateKey) };
+                const { puzzle } = this.dailyPuzzle;
+                const firstDone = readDailyDone(dateKey);
+                if (!firstDone.ok) { refuseUnreadable(); return; }
+                let done = firstDone.value || this.dailyCleared.get(dateKey) || null;
+                // 计分局要先独占锁；另一个标签页正在这局里就不进，留在菜单说明原因
+                const acquired = done || await this.daily.acquire(dateKey);
+                if (request !== this.dailyStartId) { resolve(null); return; }
+                if (!acquired) {
+                    if (this.state !== 'menu') this.toMenu();
+                    this.el.start.removeAttribute('aria-busy');
+                    this.el.status.textContent = this.daily.unsaved ? this.t().dailySaveFailed
+                        : this.daily.supported ? this.t().dailyLocked : this.t().dailyUnsupported;
+                    resolve(null);
+                    return;
+                }
+                // Another tab may have completed while we waited for the lock.
+                // Recheck both pieces of ranked state before allowing a start.
+                const secondDone = readDailyDone(dateKey);
+                if (!secondDone.ok) { refuseUnreadable(); return; }
+                done = secondDone.value || this.dailyCleared.get(dateKey) || null;
+                const savedRun = done ? { ok: true, value: null } : this.daily.resumeFor(dateKey);
+                if (!savedRun.ok) { refuseUnreadable(); return; }
+                const run = savedRun.value;
+                this.el.status.textContent = '';
+                this.el.start.removeAttribute('aria-busy');
+                const date = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
+                const name = { en: fill(LANGUAGES.en.dailyName, { date }), zh: fill(LANGUAGES.zh.dailyName, { date }) };
+                // A changed generator must not replay inputs onto a different puzzle.
+                const resume = run && run.seed === puzzle.seed ? run : null;
+                this.begin({ kind: 'daily', id: puzzle.id, dateKey, seed: puzzle.seed, ranked: !done, name }, puzzle, { resume });
+                resolve(puzzle);
+            }, 30);
+        });
+        const pending = { id: request, dateKey, promise };
+        this.dailyStart = pending;
+        void promise.then(() => { if (this.dailyStart === pending) this.dailyStart = null; });
+        return promise;
+    }
+
+    begin(meta, levelData, { resume = null } = {}) {
+        this.dailyStartId++;
+        this.el.start.removeAttribute('aria-busy');
         this.cancelTimers();
-        this.pauseOwnership.invalidate();
         this.meta = meta;
+        // 计分局记下检查点起点；其他任何局都不需要锁
+        if (this.isRanked()) this.daily.start(meta.dateKey, meta.seed, resume);
+        else this.daily.release();
         this.level = prepareLevel({ ...levelData, id: meta.id });
-        this.session = createSession(this.level);
+        this.session = resume ? replay(this.level, resume.inputs) : createSession(this.level);
         this.notes.fill(0);
+        if (resume?.notes) this.notes.set(resume.notes);
         this.selected = -1;
         this.armed = 0;
         this.hintCell = -1;
         this.hintUnit = -1;
         this.result = null;
-        this.elapsed = 0;
-        this.moves = 0;
+        this.elapsed = resume ? resume.elapsed : 0;
+        this.moves = resume ? resume.inputs.length : 0;
         this.isPaused = false; this.contextualRestart?.sync();
         this.state = 'playing'; this.contextualRestart?.sync();
         this.runStart = performance.now();
+        // 新一局已经在跑之后再作废旧租约：排行榜弹窗还开着时开局，新局要停在弹窗后面，
+        // 关掉弹窗也不会被旧租约「顺手」继续
+        this.pauseOwnership.invalidate();
         this.el.start.classList.add('hidden');
         this.el.stage.classList.remove('sm-stage--menu', 'sm-stage--sheet');
         this.el.pause.classList.add('hidden');
@@ -339,28 +510,57 @@ export class SudokuMistGame {
         this.el.replayBar.classList.add('hidden');
         this.el.hud.classList.remove('hidden');
         this.el.panel.classList.remove('hidden');
-        this.el.message.textContent = '';
+        this.setMessage(resume?.inputs.length ? this.t().dailyResumed : '');
         this.clearFloats();
         this.mist.resize();
         this.mist.sync(i => this.session.isVisible(i), { instant: true });
         this.render();
         this.syncChrome();
-        this.track(GAME_ID, 'play');
+        if (!resume) this.track(GAME_ID, 'play');
         // 计时显示独立于雾的动画循环（减弱动效时循环会停）
         this.clockTimer = setInterval(() => {
             if (this.state === 'playing') this.el.time.textContent = fmtTime(this.elapsedMs());
         }, 500);
         this.ensureLoop();
+        // 存档里的输入恰好已经走完（完成标记没写成）：直接结算
+        if (this.session.done) this.finish();
     }
 
     restart() {
-        if (!this.meta) return;
+        if (!this.meta || this.isRanked()) return;
         this.begin(this.meta, this.level);
     }
 
     again() {
         if (this.meta?.kind === 'free') void this.startFree(this.meta.profile);
+        else if (this.meta?.kind === 'daily') void this.startDaily(this.meta.dateKey);
         else this.restart();
+    }
+
+    /** 计分中的每日局：每次输入 / 暂停 / 离开后存一次（输入序列 + 用时 + 笔记）；返回存储有没有写成 */
+    persist() {
+        if (!this.isRanked() || !this.session || this.state !== 'playing') return false;
+        const saved = this.daily.save(this.meta.dateKey, { inputs: this.session.inputs, elapsed: this.elapsedMs(), notes: this.notes });
+        this.renderMessage();
+        return saved;
+    }
+
+    // Save failures are state, not a transient hint. Every message uses this
+    // single renderer so resume/hint text cannot conceal memory-only progress.
+    setMessage(text) {
+        this.messageText = text;
+        this.renderMessage();
+    }
+
+    renderMessage() {
+        const saveFailed = this.isRanked() && this.daily.unsaved;
+        const warning = saveFailed ? this.t().dailySaveFailed : null;
+        this.el.message.textContent = warning || this.messageText;
+        // Announce the transition, not each subsequent message/HUD refresh.
+        // A hint or move has already used the live region before persist();
+        // its save failure must be the last announcement for that input.
+        if (saveFailed && !this.saveWarningAnnounced) this.announce(warning);
+        this.saveWarningAnnounced = saveFailed;
     }
 
     next() {
@@ -370,6 +570,10 @@ export class SudokuMistGame {
     }
 
     toMenu() {
+        this.dailyStartId++;
+        this.el.start.removeAttribute('aria-busy');
+        this.persist();
+        this.daily.release();
         this.cancelTimers();
         this.pauseOwnership.invalidate();
         this.stopLoop();
@@ -381,9 +585,10 @@ export class SudokuMistGame {
         this.el.replayBar.classList.add('hidden');
         this.el.hud.classList.add('hidden');
         this.el.panel.classList.add('hidden');
-        this.el.message.textContent = '';
+        this.setMessage('');
         this.clearFloats();
         this.renderMenu();
+        this.el.status.textContent = this.daily.unsaved ? this.t().dailySaveFailed : '';
         this.el.stage.classList.remove('sm-stage--sheet');
         this.el.stage.classList.add('sm-stage--menu');
         this.el.start.classList.remove('hidden');
@@ -437,6 +642,7 @@ export class SudokuMistGame {
             this.announce(fill(t.srWrong, { d, n: r.penalty || 0 }));
             this.render();
             this.ensureLoop();
+            this.persist();
             return;
         }
         // 笔记清理：这一格、以及同行列宫里同一个数字的笔记；揭开的题面数字同理
@@ -452,11 +658,11 @@ export class SudokuMistGame {
         else if (r.luck) this.float(i, t.floatLuck, 'muted');
         else this.float(i, `+${r.points} · ${t['tier' + r.tier]}${r.intoFog ? ` · ${t.floatFog}` : ''}`, r.tier >= 3 ? 'deep' : 'ok');
         if (r.luck) this.audio.luck(); else this.audio.place(r.tier, r.intoFog);
-        this.el.message.textContent = '';
+        this.setMessage('');
         this.announce(fill(t.srPlaced, { d, pts: r.points, n: r.revealed.length }));
         this.render();
         this.ensureLoop();
-        if (r.done) this.finish();
+        if (r.done) this.finish(); else this.persist();
     }
 
     /** Voluntary, single-use reveal from a hidden clue that became visible before being placed. */
@@ -475,11 +681,11 @@ export class SudokuMistGame {
         this.mist.ripple(i);
         this.float(i, this.t().floatRekindle, 'muted');
         this.audio.hint();
-        this.el.message.textContent = '';
+        this.setMessage('');
         this.announce(fill(this.t().srRekindle, { n: r.revealed.length }));
         this.render();
         this.ensureLoop();
-        if (r.done) this.finish();
+        if (r.done) this.finish(); else this.persist();
     }
 
     toggleNote(i, d) {
@@ -487,6 +693,7 @@ export class SudokuMistGame {
         this.notes[i] ^= 1 << (d - 1);
         this.moves++;
         this.render();
+        this.persist();
     }
 
     clearNotesFor(i, d) {
@@ -498,6 +705,7 @@ export class SudokuMistGame {
         if (this.state !== 'playing' || this.isPaused || this.selected < 0) return;
         this.notes[this.selected] = 0;
         this.render();
+        this.persist();
     }
 
     toggleNotesMode() {
@@ -528,22 +736,24 @@ export class SudokuMistGame {
         this.hintUnit = h.unit;
         this.armed = 0;
         if (h.action === 'activate') {
-            this.el.message.textContent = t.hintRekindle;
+            this.setMessage(t.hintRekindle);
             this.announce(t.hintRekindle);
             this.audio.hint();
             this.render();
             this.board.focus(h.cell);
+            this.persist();
             return;
         }
         let text;
         if (h.via === 'nakedSingle') text = fill(t.hintNaked, { d: h.digit });
         else text = fill(h.via === 'fullHouse' ? t.hintFullHouse : t.hintHidden, { u: this.unitName(h.unit), d: h.digit });
         if (h.tier >= 3 && NEEDS_KEY[h.key]) text += fill(t.hintNeeds, { t: t[NEEDS_KEY[h.key]] });
-        this.el.message.textContent = text;
+        this.setMessage(text);
         this.announce(text);
         this.audio.hint();
         this.render();
         this.board.focus(h.cell);
+        this.persist();
     }
 
     unitName(u) {
@@ -561,10 +771,35 @@ export class SudokuMistGame {
         this.state = 'result'; this.contextualRestart?.sync();
         this.pauseOwnership.invalidate();
         const summary = this.session.summary();
-        const prev = loadBest(this.meta.id);
-        const isBest = prev === null || summary.score > prev;
-        if (isBest) saveBest(this.meta.id, summary.score);
-        this.result = { summary, best: prev === null ? summary.score : Math.max(prev, summary.score), isBest, time: this.elapsed, inputs: this.session.inputs };
+        if (this.meta.kind === 'daily') {
+            const { dateKey } = this.meta;
+            // 完成时仍须持锁；完成标记已存在就降为练习局
+            const ranked = this.isRanked() && this.daily.holds(dateKey) && !this.dailyDoneFor(dateKey);
+            this.meta.ranked = ranked;
+            if (ranked) {
+                const record = { score: summary.score, time: this.elapsed };
+                this.dailyCleared.set(dateKey, record);
+                // 完成标记写成了才清进度。写不进去时：本页靠内存兜底不再开计分局；进度改存成
+                // 「含最后一步」的完整输入序列（最后一步走的是 finish 不是 persist），
+                // 刷新后 begin() 重放到 done 直接结算出同一个分数
+                if (saveDailyDone(dateKey, record)) this.daily.clear(dateKey);
+                else this.daily.save(dateKey, { inputs: this.session.inputs, elapsed: this.elapsed, notes: this.notes });
+                // 只有第一次完成进排行榜；之后再进都是练习局
+                this.onDailyCleared({ dateKey, score: summary.score });
+            } else if (loadDailyDone(dateKey)) {
+                // 只有完成标记真的落盘了才清进度——内存兜底不算，否则练习局会删掉唯一的恢复数据
+                clearDailyRun(dateKey);
+            }
+            // 这一局结束了，放开锁（别的标签页可以进来：已完成就是练习局）
+            this.daily.release();
+            const first = this.dailyDoneFor(dateKey);
+            this.result = { summary, ranked, rankedScore: first ? first.score : summary.score, time: this.elapsed, inputs: this.session.inputs };
+        } else {
+            const prev = loadBest(this.meta.id);
+            const isBest = prev === null || summary.score > prev;
+            if (isBest) saveBest(this.meta.id, summary.score);
+            this.result = { summary, best: prev === null ? summary.score : Math.max(prev, summary.score), isBest, time: this.elapsed, inputs: this.session.inputs };
+        }
         this.audio.cleared();
         this.track(GAME_ID, 'finish');
         this.announce(fill(this.t().srCleared, { n: summary.score }));
@@ -582,11 +817,26 @@ export class SudokuMistGame {
         const t = this.t();
         const { summary, best, isBest, time } = this.result;
         const lang = getLang() === 'zh' ? 'zh' : 'en';
+        const daily = this.meta.kind === 'daily';
         this.el.resultTitle.textContent = t.cleared;
         this.el.resultCopy.textContent = fill(t.clearedCopy, { name: this.meta.name[lang] });
         this.el.resultScore.textContent = String(summary.score);
-        this.el.resultBest.textContent = isBest ? t.newBest : fill(t.bestLine, { n: best });
-        this.el.resultBest.classList.toggle('sm-result-best--new', isBest);
+        if (daily) {
+            this.el.resultBest.textContent = this.result.ranked ? t.dailyRanked : fill(t.dailyPractice, { n: this.result.rankedScore });
+            this.el.resultBest.classList.toggle('sm-result-best--new', this.result.ranked);
+        } else {
+            this.el.resultBest.textContent = isBest ? t.newBest : fill(t.bestLine, { n: best });
+            this.el.resultBest.classList.toggle('sm-result-best--new', isBest);
+        }
+        // 星级只给章节关卡（阈值在 levels.js）；自由局 / 每日题没有
+        const level = levelById(this.meta.id);
+        const stars = this.meta.kind === 'level' && level ? starsFor(summary.score, level.stars) : 0;
+        this.el.resultStars.classList.toggle('hidden', !stars);
+        this.el.resultStars.dataset.stars = String(stars);
+        this.el.resultStars.textContent = stars ? starText(stars) : '';
+        this.el.resultStars.setAttribute('aria-label', stars ? fill(t.starsLabel, { n: stars }) : '');
+        // 结算卡上的排行榜入口只在每日局出现（排行榜只有每日榜）
+        this.el.result.querySelector('.scoreboard-trigger')?.classList.toggle('hidden', !daily);
         const rows = [
             [t.statT1, summary.byTier[1]], [t.statT2, summary.byTier[2]],
             [t.statT3, summary.byTier[3]], [t.statT4, summary.byTier[4]],
@@ -691,6 +941,10 @@ export class SudokuMistGame {
 
     showPauseOverlay() {
         if (this.state !== 'playing' || !this.isPaused) return;
+        const t = this.t();
+        this.el.pauseCopy.textContent = this.isRanked()
+            ? (this.daily.unsaved ? t.dailySaveFailed : t.pausedCopyDaily) : t.pausedCopy;
+        this.el.pauseRestart.classList.toggle('hidden', this.isRanked());
         this.el.pause.classList.remove('hidden');
         $('sm-btn-resume').focus({ preventScroll: true });
         this.syncChrome();
@@ -704,6 +958,7 @@ export class SudokuMistGame {
 
     pauseQuiet() {
         if (this.state !== 'playing' || this.isPaused) return;
+        this.persist();
         this.elapsed = this.elapsedMs();
         this.isPaused = true; this.contextualRestart?.sync();
         this.runStart = 0;
@@ -814,6 +1069,8 @@ export class SudokuMistGame {
     applyLanguage() {
         const t = this.t();
         this.el.controls.textContent = isCoarsePointer() ? t.controlsTouch : t.controls;
+        this.el.pauseCopy.textContent = this.isRanked()
+            ? (this.daily.unsaved ? t.dailySaveFailed : t.pausedCopyDaily) : t.pausedCopy;
         if (this.state === 'menu') this.renderMenu();
         if (this.state === 'result' && !this.el.result.classList.contains('hidden')) this.showResult();
         this.render();

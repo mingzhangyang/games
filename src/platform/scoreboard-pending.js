@@ -39,7 +39,8 @@ export function enqueuePendingScore({ game, name, score }) {
     return storageSet(SCORE_PENDING_KEY, JSON.stringify(queue.slice(-MAX_ENTRIES)));
 }
 
-function removePendingScore(item) {
+/** Drop an entry once the Worker acknowledged it (journal-before-POST callers). */
+export function dequeuePendingScore(item) {
     const queue = readPending();
     return storageSet(SCORE_PENDING_KEY, JSON.stringify(queue.filter(old => identity(old) !== identity(item))));
 }
@@ -58,7 +59,7 @@ export function retryPendingScores(submit) {
         for (const item of readPending()) {
             let accepted = false;
             try { accepted = await submit(item); } catch { /* Remain pending. */ }
-            if (accepted && removePendingScore(item)) uploadedGames.add(item.game);
+            if (accepted && dequeuePendingScore(item)) uploadedGames.add(item.game);
         }
         return [...uploadedGames];
     })();

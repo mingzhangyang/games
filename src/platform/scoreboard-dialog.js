@@ -3,7 +3,7 @@
  * Gameplay owns the score and eligibility; this module owns identity, network and DOM.
  */
 import { fetchBoard, submitScore, UnsupportedLeaderboardError } from './leaderboard.js';
-import { enqueuePendingScore, pendingScoreCount, retryPendingScores } from './scoreboard-pending.js';
+import { enqueuePendingScore, dequeuePendingScore, pendingScoreCount, retryPendingScores } from './scoreboard-pending.js';
 import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang } from './site-settings.js';
 import { ICONS } from './icons.js';
@@ -256,13 +256,22 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         void refresh();
     }
 
-    async function submit({ boardId, score, key }) {
+    /**
+     * journal: write the score to the local retry journal BEFORE the POST and drop it
+     * on acknowledgement, so closing the page mid-request still leaves it retryable.
+     * For one-shot scores the game will never offer again (a daily first clear).
+     * A duplicate POST is harmless: each board keeps one best score per name.
+     */
+    async function submit({ boardId, score, key, journal = false }) {
         const board = boardFor(boardId);
         if (!board || !isFiniteScore(score)) return false;
         const resolved = key || resolvedKey(board);
         const name = getPlayerName() || ensurePlayerName();
-        const ok = await submitScore({ game: resolved, name, score });
-        const locallySaved = !ok && enqueuePendingScore({ game: resolved, name, score });
+        const entry = { game: resolved, name, score };
+        const journaled = journal && enqueuePendingScore(entry);
+        const ok = await submitScore(entry);
+        if (ok && journaled) dequeuePendingScore(entry);
+        const locallySaved = !ok && (journaled || enqueuePendingScore(entry));
         notices.set(resolved, text(ok ? 'sent' : (locallySaved ? 'queued' : 'notSaved')));
         if (dialog.open && resolvedKey(boardFor(select.value)) === resolved) void refresh();
         return ok; // Only remote acknowledgement counts as success.

@@ -1949,10 +1949,21 @@
         "PuzzleGame"
       ],
       "caps": [
+        "leaderboard",
+        "daily",
         "analytics",
         "topbar",
         "theme-light"
       ],
+      "scores": {
+        "order": "desc",
+        "maxScore": 50000,
+        "maxEntries": 50,
+        "daily": true,
+        "dailyKeyPrefix": "sudoku-mist",
+        "dailyTtlDays": 14,
+        "ui": "dialog"
+      },
       "sitemap": {
         "changefreq": "monthly",
         "priority": "0.8"

@@ -623,6 +623,55 @@
         color: var(--sm-text-dim);
     }
 
+    .sm-level-stars {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: var(--sm-accent-text);
+    }
+
+    /* 每日一雾入口：菜单里唯一的宽按钮 */
+    .sm-daily {
+        width: 100%;
+        max-width: 420px;
+    }
+
+    .sm-daily-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        width: 100%;
+        min-height: 56px;
+        margin: 0;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--sm-sel-ring);
+        background: var(--sm-same);
+        color: var(--sm-text);
+        font: inherit;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .sm-daily-btn:hover {
+        background: var(--sm-sel);
+    }
+
+    .sm-daily-btn--done {
+        border-color: var(--sm-key-line);
+        background: var(--sm-key-bg);
+    }
+
+    .sm-daily-name {
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .sm-daily-sub {
+        font-size: 12px;
+        color: var(--sm-text-dim);
+    }
+
     .sm-start-status {
         min-height: 1.2em;
         margin: 0;
@@ -664,6 +713,14 @@
         line-height: 1.1;
         color: var(--sm-accent-text);
         font-variant-numeric: tabular-nums;
+    }
+
+    .sm-result-stars {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 0.12em;
+        line-height: 1.1;
+        color: var(--sm-accent-text);
     }
 
     .sm-result-best {
@@ -763,6 +820,7 @@
         .sm-tool,
         .sm-level,
         .sm-free-btn,
+        .sm-daily-btn,
         .sm-float {
             transition: none;
         }
