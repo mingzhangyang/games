@@ -14,6 +14,7 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 // The finished garden blooms on the board before the result card covers it.
 const BLOOM_BEAT_MS = 600;
+const CONFIRM_GUARD_MS = 250;
 const iconLabel = (id, icon, label) => { $(id).innerHTML = `${icon || ''}<span></span>`; $(id).lastElementChild.textContent = label; };
 
 export class MagneticGardenGame {
@@ -39,7 +40,6 @@ export class MagneticGardenGame {
         const on = (id, fn) => $(id).addEventListener('click', fn);
         on('mg-btn-start', () => this.start(this.resumeLevelId(), !!this.savedCurrent));
         on('mg-undo', () => this.undo()); on('mg-result-undo', () => this.undo()); on('mg-flip', () => this.flip());
-        on('mg-preview-btn', () => this.preview ? this.showPreview() : this.flip());
         on('mg-commit', () => this.commit(this.preview?.action)); on('mg-clear-preview', () => this.clearPreview());
         on('mg-hint-btn', () => this.hint()); on('mg-pause-btn', () => this.togglePause());
         on('mg-resume', () => this.resume()); on('mg-restart', () => this.restart()); on('mg-pause-menu', () => this.toMenu());
@@ -155,9 +155,18 @@ export class MagneticGardenGame {
         const magnet = this.sim.magnets.find(m => m.cell === cell);
         if (magnet) {
             if (magnet.fixed) { this.announce(this.t().fixed); return; }
-            if (this.selected === magnet.id) this.previewAction({ type: 'flip', magnetId: magnet.id });
+            if (this.selected === magnet.id) this.choose({ type: 'flip', magnetId: magnet.id });
             else { this.selected = magnet.id; this.clearPreview(); this.render(); this.announce(fill(this.t().selected, { id: magnet.id })); }
-        } else if (this.selected && this.level.sockets.includes(cell)) this.previewAction({ type: 'move', magnetId: this.selected, cell });
+        } else if (this.selected && this.level.sockets.includes(cell)) this.choose({ type: 'move', magnetId: this.selected, cell });
+    }
+    /** Choosing the previewed action again makes the move; a too-quick repeat is a double tap, not a decision. */
+    choose(action) {
+        const shown = this.preview?.pinned ? this.preview : null;
+        if (shown && shown.action.type === action.type && shown.action.magnetId === action.magnetId && shown.action.cell === action.cell) {
+            if (performance.now() - shown.at >= CONFIRM_GUARD_MS) void this.commit(action);
+            return;
+        }
+        this.previewAction(action);
     }
     hoverCell(cell) {
         if (!this.isRunning() || !this.selected || this.animating || this.preview?.pinned) return;
@@ -169,16 +178,26 @@ export class MagneticGardenGame {
         if (!this.isRunning() || this.animating || !action) return false;
         const result = applyAction(this.level, this.sim, action);
         if (!result.valid) { this.announce(this.t().invalid); return false; }
-        this.preview = { action: clone(action), result, pinned: true }; this.showPreview(); this.renderTrails(); return true;
+        this.preview = { action: clone(action), result, pinned: true, at: performance.now() }; this.showPreview(); this.renderTrails(); return true;
     }
-    showPreview() { if (!this.preview) return; this.preview.pinned = true; $('mg-preview-panel').classList.remove('hidden'); $('mg-instruction').textContent = this.t().previewCopy; this.syncPreviewSummary(); }
+    showPreview() { if (!this.preview) return; this.syncPreviewPanel(); $('mg-instruction').textContent = this.t().previewCopy; this.syncPreviewSummary(); }
+    /** The confirm row takes the tool row's place, so a preview never pushes controls below the fold. */
+    syncPreviewPanel() {
+        const panel = $('mg-preview-panel'), tools = $('mg-tool-row'), pinned = !!this.preview?.pinned;
+        if (!panel || panel.classList.contains('hidden') !== pinned) return;
+        const refocus = (pinned ? tools : panel).contains(document.activeElement);
+        panel.classList.toggle('hidden', !pinned); tools.classList.toggle('hidden', pinned);
+        // Return to the selected magnet: focusing a socket would immediately preview again.
+        const anchor = this.sim.magnets.find(m => m.id === this.selected)?.cell ?? this.focusCell;
+        if (refocus) (pinned ? $('mg-commit') : $('mg-board').querySelector(`[data-cell="${anchor}"]`))?.focus({ preventScroll: true });
+    }
     syncPreviewSummary() {
         const status = $('mg-preview-summary');
         const description = describePreview(this.level, this.sim, this.preview, this.t());
         if (status.textContent !== description) status.textContent = description;
     }
-    clearPreview() { this.preview = null; this.syncPreviewSummary(); $('mg-preview-panel')?.classList.add('hidden'); $('mg-trails')?.replaceChildren(); $('mg-board')?.querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end')); if ($('mg-instruction')) $('mg-instruction').textContent = this.selected ? fill(this.t().selected, { id: this.selected }) : this.t().select; }
-    flip() { if (this.selected) this.previewAction({ type: 'flip', magnetId: this.selected }); }
+    clearPreview() { this.preview = null; this.syncPreviewSummary(); this.syncPreviewPanel(); $('mg-trails')?.replaceChildren(); $('mg-board')?.querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end')); if ($('mg-instruction')) $('mg-instruction').textContent = this.selected ? fill(this.t().selected, { id: this.selected }) : this.t().select; }
+    flip() { if (this.selected) this.choose({ type: 'flip', magnetId: this.selected }); }
     cancelHint() { this.hintToken++; this.hintWorker?.terminate(); this.hintWorker = null; }
     bloomAnimation() {
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -240,15 +259,16 @@ export class MagneticGardenGame {
         $('mg-moves').textContent = this.sim.moves; $('mg-planted').textContent = this.plantedText();
         $('mg-best').textContent = `${t.best} ${this.best[this.level.id]?.moves ?? t.noBest}`; $('mg-target').textContent = `${t.target} ${this.level.par}`;
         $('mg-instruction').textContent = this.preview?.pinned ? t.previewCopy : this.selected ? fill(t.selected, { id: this.selected }) : t.select;
-        $('mg-undo').disabled = !this.history.length || !this.isRunning(); $('mg-flip').disabled = !this.selected || !this.isRunning(); $('mg-preview-btn').disabled = !this.selected || !this.isRunning(); $('mg-hint-btn').disabled = !this.isRunning();
+        $('mg-undo').disabled = !this.history.length || !this.isRunning(); $('mg-flip').disabled = !this.selected || !this.isRunning(); $('mg-hint-btn').disabled = !this.isRunning();
         iconLabel('mg-hint-btn', ICONS.help, this.hintStage ? t.nextHint : t.hint);
         $('mg-hint-text').classList.toggle('hidden', !this.hintMessage); $('mg-hint-text').textContent = this.hintMessage || '';
-        $('mg-preview-panel').classList.toggle('hidden', !this.preview?.pinned);
+        this.syncPreviewPanel();
         this.renderBoard(); this.renderInventory(); this.syncPause();
     }
     renderBoard(state = this.sim) {
         const board = $('mg-board'); const focus = board.contains(document.activeElement) ? Number(document.activeElement.dataset.cell) : null;
-        board.style.setProperty('--mg-cols', this.level.width); board.style.setProperty('--mg-rows', this.level.height);
+        // The board area sizes the frame from both of its dimensions (css/magnetic-garden.css).
+        $('mg-board-area').style.setProperty('--mg-cols', this.level.width); $('mg-board-area').style.setProperty('--mg-rows', this.level.height);
         board.setAttribute('aria-label', `${this.t().title}: ${this.level.title[getLang()] || this.level.title.en}`);
         board.setAttribute('aria-rowcount', this.level.height); board.setAttribute('aria-colcount', this.level.width);
         const cells = document.createDocumentFragment(); let row;
@@ -338,7 +358,7 @@ export class MagneticGardenGame {
     }
     applyLanguage() {
         const t = this.t(); document.title = t.pageTitle; this.cancelHint();
-        for (const [id, icon, key] of [['mg-home',ICONS.home,'home'],['mg-undo',ICONS.retry,'undo'],['mg-flip',FLIP_ICON,'flip'],['mg-preview-btn',ICONS.play,'preview'],['mg-commit',ICONS.check,'commit'],['mg-clear-preview',ICONS.close,'cancelPreview'],['mg-help-btn',ICONS.help,'how'],['mg-help-close',ICONS.check,'closeHelp'],['mg-resume',ICONS.play,'resume'],['mg-restart',ICONS.retry,'restart'],['mg-pause-menu',ICONS.home,'menu'],['mg-result-undo',ICONS.retry,'undo'],['mg-again',ICONS.retry,'again'],['mg-result-menu',ICONS.home,'menu'],['mg-next',ICONS.arrowRight,'next']]) {
+        for (const [id, icon, key] of [['mg-home',ICONS.home,'home'],['mg-undo',ICONS.retry,'undo'],['mg-flip',FLIP_ICON,'flip'],['mg-commit',ICONS.check,'commit'],['mg-clear-preview',ICONS.close,'cancelPreview'],['mg-help-btn',ICONS.help,'how'],['mg-help-close',ICONS.check,'closeHelp'],['mg-resume',ICONS.play,'resume'],['mg-restart',ICONS.retry,'restart'],['mg-pause-menu',ICONS.home,'menu'],['mg-result-undo',ICONS.retry,'undo'],['mg-again',ICONS.retry,'again'],['mg-result-menu',ICONS.home,'menu'],['mg-next',ICONS.arrowRight,'next']]) {
             if (id === 'mg-home') { $(id).innerHTML = icon; $(id).title = t[key]; $(id).setAttribute('aria-label', t[key]); } else iconLabel(id, icon, t[key]);
         }
         if (this.hintMessage) { this.hintStage = 0; this.hintMessage = ''; }

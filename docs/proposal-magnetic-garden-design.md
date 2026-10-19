@@ -54,12 +54,26 @@ action, not a double-tap or a gesture players must discover. Show a candidate
 action's exact path and final seed positions before confirmation. Preview and
 execution call the same transition function.
 
+Choosing the previewed target again (the same socket, or the selected magnet for
+a flip; Enter again on the keyboard) confirms it, so the board alone is playable.
+A repeat within 250 ms is an accidental double tap and only keeps the preview.
+While a preview is shown, the Make this move / Clear preview row takes the tool
+row's place instead of growing the panel.
+
 Keep the board orthogonal, with clear N/S lettering and distinct marks beyond
 colour. Use native controls, a semantic grid, keyboard movement/selection and a
 live status announcement. Important controls and board hit targets must remain
 at least 44 CSS pixels at the supported mobile sizes. On short landscape screens,
 keep controls reachable through an intentional inner layout/scroll treatment
 rather than shrinking the entire board into unusable targets.
+
+The board sizes itself from the space the HUD and tools leave, by its tighter
+dimension, and never below 44px cells. Short portrait phones tighten the chrome;
+short landscape puts the board on the left and HUD and tools on the right. The
+whole garden, its tools and the confirm row then share one screen for all 24
+gardens at 320×568, 375×553, 390×664, 667×375, 844×390 and desktop.
+`smoke-magnetic-garden` locks the six-row and tray gardens at 320×640, 375×553,
+390×664, 667×375, 844×390 and 1280×800.
 
 Undo restores one full committed turn, including captured seeds and move count;
 it remains available after completion. Cancelling or interrupting an animation

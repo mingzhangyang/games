@@ -97,7 +97,10 @@ async function start(page, level) {
 async function perform(page, action, { preview = false, observeSlide = false } = {}) {
     const before = await snapshot(page);
     const magnet = before.magnets.find(item => item.id === action.magnetId);
-    await click(page, magnet.cell === null ? `[data-magnet="${magnet.id}"]` : `[data-cell="${magnet.cell}"]`);
+    // Choosing the already selected magnet previews its flip, so only select when needed.
+    if (await page.evaluate(() => window.mgGame.selected) !== magnet.id) {
+        await click(page, magnet.cell === null ? `[data-magnet="${magnet.id}"]` : `[data-cell="${magnet.cell}"]`);
+    }
     if (action.type === 'flip') await click(page, '#mg-flip');
     else await click(page, `[data-cell="${action.cell}"]`);
     if (preview) {
@@ -239,6 +242,45 @@ try {
     await page.waitForFunction(() => window.mgGame.state === 'playing');
     check(await page.evaluate(() => window.mgGame.level.id) === LEVELS[1].id,
         'after a completed garden the primary action opens the first unplanted garden, not garden 1');
+
+    // Choosing the previewed target again makes the move, so the board alone is playable.
+    // Garden 2 is solved by flipping its selected magnet.
+    const flipMagnet = LEVELS[1].magnets[0];
+    assert.deepEqual(LEVELS[1].solution, [{ type: 'flip', magnetId: flipMagnet.id }], 'garden 2 fixture is a single flip');
+    await click(page, `[data-cell="${flipMagnet.cell}"]`);
+    check(await page.evaluate(() => window.mgGame.preview?.pinned && window.mgGame.preview.action.type === 'flip'
+        && window.mgGame.sim.moves === 0
+        && document.getElementById('mg-tool-row').classList.contains('hidden')
+        && !document.getElementById('mg-preview-panel').classList.contains('hidden')),
+    'choosing the selected magnet previews its flip, and the confirm row takes the tool row place');
+    await page.$eval(`[data-cell="${flipMagnet.cell}"]`, cell => cell.click());
+    check(await page.evaluate(() => window.mgGame.sim.moves === 0 && window.mgGame.preview?.pinned),
+        'an immediate repeat is a double tap, not a confirmation');
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+    await click(page, `[data-cell="${flipMagnet.cell}"]`);
+    await page.waitForFunction(() => window.mgGame.state === 'over');
+    check(await page.evaluate(() => window.mgGame.sim.won && window.mgGame.sim.moves === 1),
+        'choosing the previewed magnet again makes the flip');
+    await click(page, '#mg-result-undo');
+    const socket = LEVELS[1].sockets.find(cell => cell !== flipMagnet.cell);
+    await page.focus(`[data-cell="${socket}"]`);
+    await page.keyboard.press('Enter');
+    check(await page.evaluate(cell => window.mgGame.preview?.pinned && window.mgGame.preview.action.cell === cell
+        && window.mgGame.sim.moves === 0, socket), 'Enter on a socket previews the move');
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => window.mgGame.sim.moves === 1 && !window.mgGame.animating);
+    check(await page.evaluate(cell => window.mgGame.sim.magnets[0].cell === cell
+        && !document.getElementById('mg-tool-row').classList.contains('hidden'), socket),
+    'Enter again on the previewed socket makes the move and restores the tools');
+    await click(page, '#mg-undo');
+    await click(page, '#mg-flip');
+    check(await page.evaluate(() => document.activeElement?.id === 'mg-commit'),
+        'when the Flip button hides behind the confirm row, focus moves to Make this move');
+    await click(page, '#mg-clear-preview');
+    check(await page.evaluate(() => !window.mgGame.preview && document.activeElement?.getAttribute('role') === 'gridcell'
+        && !document.getElementById('mg-tool-row').classList.contains('hidden')),
+    'clearing a preview returns focus to the garden and restores the tools');
 
     // A captured seed is part of undo and saved-state replay, not a permanent
     // side effect of the flower visual. Find an intermediate partial capture.
@@ -393,7 +435,7 @@ try {
     check(await page.evaluate(() => Object.keys(window.mgGame.best).length === 24), 'all 24 completed records survive reload');
     await page.close();
 
-    for (const [width, height, lang] of [[320, 640, 'en'], [390, 664, 'zh'], [844, 390, 'en'], [1280, 800, 'en']]) {
+    for (const [width, height, lang] of [[320, 640, 'en'], [375, 553, 'en'], [390, 664, 'zh'], [667, 375, 'zh'], [844, 390, 'en'], [1280, 800, 'en']]) {
         const view = await open(width, height, lang, true);
         const tag = `${width}x${height} ${lang}`;
         check(await view.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tag}: no horizontal page overflow`);
@@ -428,7 +470,7 @@ try {
             return r.width >= 43.9 && r.height >= 43.9 && (hit === element || element.contains(hit)) && element.getAttribute('aria-label') ? [] : [element.dataset.cell];
         }));
         check(cells.length === 0, `${tag}: every named grid cell has a reachable 44px target: ${cells}`);
-        const smallControls = await view.evaluate(() => ['mg-home', 'mg-pause-btn', 'mg-sound', 'mg-undo', 'mg-flip', 'mg-preview-btn', 'mg-hint-btn'].flatMap(id => {
+        const smallControls = await view.evaluate(() => ['mg-home', 'mg-pause-btn', 'mg-sound', 'mg-undo', 'mg-flip', 'mg-hint-btn'].flatMap(id => {
             const element = document.getElementById(id); const r = element.getBoundingClientRect();
             const after = getComputedStyle(element, '::after');
             const pad = edge => Math.max(0, -(parseFloat(after[edge]) || 0));
@@ -452,10 +494,30 @@ try {
         }));
         check(still, `${tag}: reduced motion removes decorative animation and transitions`);
         check(await view.$eval('#mg-undo', element => element.textContent.includes('撤销')) === (lang === 'zh'), `${tag}: controls use the selected shared language`);
+        // One screen holds the whole garden and its controls: six-row boards, the tray level,
+        // and the confirm row that replaces the tools while a move is previewed.
+        for (const id of ['greenhouse-1', 'twins-1', 'aurora-3']) {
+            const fit = await view.evaluate((levelId, action) => {
+                window.mgGame.start(levelId);
+                const play = document.getElementById('mg-play'); play.scrollTop = 0;
+                const stage = document.getElementById('mg-stage').getBoundingClientRect();
+                const inside = element => { const r = element.getBoundingClientRect(); return r.height > 0 && r.top >= stage.top - 1 && r.bottom <= stage.bottom + 1; };
+                const result = {
+                    board: inside(document.querySelector('.mg-board-frame')), tools: inside(document.getElementById('mg-tool-row')),
+                    cell: document.querySelector('.mg-cell').getBoundingClientRect().width, scroll: play.scrollHeight - play.clientHeight,
+                };
+                window.mgGame.previewAction(action);
+                result.commit = inside(document.getElementById('mg-commit')) && inside(document.getElementById('mg-clear-preview'));
+                window.mgGame.clearPreview();
+                return result;
+            }, id, LEVELS.find(level => level.id === id).solution[0]);
+            check(fit.board && fit.tools && fit.commit && fit.scroll <= 1 && fit.cell >= 43.9,
+                `${tag} ${id}: board, tools and confirm row share one screen with 44px cells: ${JSON.stringify(fit)}`);
+        }
         await view.close();
     }
 } finally {
     await browser.close();
 }
 check(errors.length === 0, 'no runtime errors: ' + errors.join(' | '));
-console.log(`PASS Magnetic Garden: 24 real solves / four chapter rankings / preview / undo / replay / off-path Worker hints and cancellation / decoded art / interruption / keyboard / 320–1280px / reduced motion (${assertions} assertions)`);
+console.log(`PASS Magnetic Garden: 24 real solves / four chapter rankings / preview / undo / replay / off-path Worker hints and cancellation / decoded art / interruption / keyboard / 320–1280px one-screen fit / reduced motion (${assertions} assertions)`);

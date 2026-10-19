@@ -40,7 +40,7 @@ const TARGETS = {
     'shadow-loom': ['sl-btn-begin', 'sl-btn-next', 'sl-btn-replay', 'sl-btn-menu'],
     'loop-jail': ['lj-btn-start', 'lj-btn-resume', 'lj-btn-restart', 'lj-btn-pause-menu', 'lj-btn-again', 'lj-btn-menu'],
     'magnetic-garden': ['mg-btn-start', 'mg-help-btn', 'mg-undo', 'mg-flip',
-        'mg-preview-btn', 'mg-hint-btn', 'mg-commit', 'mg-clear-preview',
+        'mg-hint-btn', 'mg-commit', 'mg-clear-preview',
         'mg-resume', 'mg-restart', 'mg-pause-menu', 'mg-next',
         'mg-result-undo', 'mg-again', 'mg-result-menu', 'mg-help-close'],
     'tetris': ['restartBtn'],
