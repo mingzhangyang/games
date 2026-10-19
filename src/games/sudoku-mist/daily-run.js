@@ -8,8 +8,9 @@
  * 不支持 Web Locks 的环境拒绝计分局，不能用无锁降级破坏计分与存档唯一性。
  *
  * 检查点带递增的 rev。本页内存里留一份最近的检查点（存储写失败时它才是对的）；
- * 再进这局时，只有存储的 rev 还等于本页最后一次读到 / 写成的 rev（期间没有别的标签页写过），
- * 才用内存这份，否则以存储为准。
+ * 原 Web Lock 没释放时，内存检查点是权威数据：存储读取失败也不能丢掉它。
+ * 释放后重新获得的是新租约，必须验证存储 rev 才能重用旧内存检查点，
+ * 以免另一标签页的进度被旧数据覆盖。
  */
 import { loadDailyRun, saveDailyRun, clearDailyRun } from './storage.js';
 
@@ -20,6 +21,7 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
     const supported = typeof locks?.request === 'function';
     let held = null;       // { dateKey, release }
     let checkpoint = null; // { dateKey, seed, rev, baseRev, inputs, elapsed, notes }
+    let checkpointLease = null; // Web Lock holder that created the in-memory checkpoint
 
     /** 独占今天这局；已经拿着就直接成功。拿不到（别的标签页拿着）返回 false */
     function acquire(dateKey) {
@@ -62,9 +64,15 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
 
     /** 续玩用哪份进度：内存检查点（期间没人写过存储）或存储里的 */
     function resumeFor(dateKey) {
-        const stored = loadDailyRun(dateKey);
         const mem = checkpoint?.dateKey === dateKey ? checkpoint : null;
-        if (mem && (stored?.rev ?? 0) === mem.baseRev) return mem;
+        // No other ranked writer can have touched this run while OUR original
+        // lock remains held. A failed localStorage read looks like a missing
+        // checkpoint; it must not discard newer, memory-only ranked inputs.
+        if (mem && held?.dateKey === dateKey && checkpointLease === held) return mem;
+        const stored = loadDailyRun(dateKey);
+        // After releasing/reacquiring a lock, memory is no longer authoritative.
+        // Require an actual stored revision match (null can mean a read error).
+        if (mem && stored?.rev === mem.baseRev) return mem;
         return stored;
     }
 
@@ -75,6 +83,7 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
             dateKey, seed, baseRev: base, rev: resume?.rev ?? base,
             inputs: resume?.inputs ?? [], elapsed: resume?.elapsed ?? 0, notes: resume?.notes ?? null,
         };
+        checkpointLease = held?.dateKey === dateKey ? held : null;
     }
 
     /** 存一次检查点（只有拿着锁的标签页写）；返回存储有没有写成，内存检查点总会更新 */
@@ -88,7 +97,10 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
 
     function clear(dateKey) {
         clearDailyRun(dateKey);
-        if (checkpoint?.dateKey === dateKey) checkpoint = null;
+        if (checkpoint?.dateKey === dateKey) {
+            checkpoint = null;
+            checkpointLease = null;
+        }
     }
 
     return { supported, get unsaved() { return !!checkpoint && checkpoint.rev !== checkpoint.baseRev; },

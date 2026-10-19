@@ -4,7 +4,8 @@
 //   ① 互斥：同名锁 ifAvailable，一个守卫拿着时另一个拿不到；释放后能拿到；同一守卫重复 acquire 直接成功
 //   ② 不支持 Web Locks 的环境拒绝计分局；取消中的请求不能迟到拿锁
 //   ③ 只有拿着锁才写存档；rev 每写一次 +1
-//   ④ 续玩选哪份：期间没人写过存储 → 用本页内存检查点（含写失败时没写成的输入）；别人写过 → 以存储为准
+//   ④ 续玩选哪份：持有原锁期间，即使存储读写同时失败，也用内存检查点；
+//      放锁后被别人写过或新租约无法核对 rev 时，不采用旧检查点
 //   ⑤ clear 同时清掉存储与内存检查点
 // 浏览器里的真实 Web Locks 由 smoke-sudoku-mist ⑰–⑲ 覆盖。
 import { createDailyRunGuard } from '../src/games/sudoku-mist/daily-run.js';
@@ -19,8 +20,12 @@ const ok = (cond, label, extra) => {
 // 内存 localStorage（可让指定键写失败）
 const store = new Map();
 let failKey = null;
+let failReadKey = null;
 globalThis.localStorage = {
-    getItem: k => (store.has(k) ? store.get(k) : null),
+    getItem: k => {
+        if (k === failReadKey) throw new Error('SecurityError');
+        return store.has(k) ? store.get(k) : null;
+    },
     setItem: (k, v) => { if (k === failKey) throw new Error('QuotaExceededError'); store.set(k, String(v)); },
     removeItem: k => { store.delete(k); },
 };
@@ -94,15 +99,24 @@ ok(b.save(DATE, { inputs: [], elapsed: 0, notes }) === false && stored().rev ===
 
 /* ── ④ 续玩选哪份 ── */
 failKey = RUN_KEY;
-ok(a.save(DATE, { inputs: [1, 2, 3].map(() => ({ type: 'hint' })), elapsed: 3000, notes }) === false, '④ 存储写失败时 save 返回 false');
-ok(a.release() === false && a.holds(DATE), '④ 写失败时离开仍保留锁保护未落盘检查点');
+failReadKey = RUN_KEY;
+ok(a.save(DATE, { inputs: [1, 2, 3].map(() => ({ type: 'hint' })), elapsed: 3000, notes }) === false, '④ 成功保存 rev 2 后，存储读写均失败');
+ok(a.release() === false && a.holds(DATE), '④ 写失败时离开仍保留原锁，保护未落盘检查点');
 await tick();
 ok(await b.acquire(DATE) === false, '④ 另一个标签页不能接着旧存档撤销未保存输入');
 const mem = a.resumeFor(DATE);
-ok(mem?.inputs.length === 3 && stored().inputs.length === 2, '④ 期间没人写过：本页续玩用内存检查点（3 步，存储里 2 步）', { mem: mem?.inputs.length });
-// 存储恢复后先落盘再释放，另一页必须从完整的 3 步继续。
+ok(mem?.inputs.length === 3 && mem?.baseRev === 2 && mem?.rev === 3 && stored().inputs.length === 2,
+    '④ 读写同时失败、baseRev 非零时，同一租约必须恢复 3 步内存进度',
+    { steps: mem?.inputs.length, baseRev: mem?.baseRev, rev: mem?.rev });
+a.start(DATE, 42, mem);
+ok(a.save(DATE, { inputs: [1, 2, 3, 4].map(() => ({ type: 'hint' })), elapsed: 4000, notes }) === false && a.unsaved,
+    '④ 同一租约下重新进入后还能继续累积到 4 步，不会清空未保存状态');
+ok(a.release() === false && a.holds(DATE), '④ 读写未恢复前继续持锁');
+// 存储恢复后先落盘再释放，另一页必须从完整的 4 步继续。
 failKey = null;
-ok(a.release() === true && stored().inputs.length === 3, '④ 恢复后释放锁先补写完整检查点');
+failReadKey = null;
+ok(a.release() === true && stored().inputs.length === 4 && stored().rev === 4,
+    '④ 恢复后释放锁先补写 4 步完整检查点');
 await tick();
 await b.acquire(DATE);
 const fromStore = b.resumeFor(DATE);
@@ -110,14 +124,20 @@ b.start(DATE, 42, fromStore);
 b.save(DATE, { inputs: Array.from({ length: 6 }, () => ({ type: 'hint' })), elapsed: 6000, notes });
 b.release();
 await tick();
-const after = a.resumeFor(DATE);
-ok(fromStore?.inputs.length === 3 && stored().rev === 4 && after?.inputs.length === 6,
-    '④ 别的标签页写过之后：本页续玩以存储为准（6 步），不用自己过期的内存检查点', { from: fromStore?.inputs.length, rev: stored().rev, after: after?.inputs.length });
-// 本页续上存储那份，再写就是 rev 5
+// A's old memory belongs to the released lease, not the newly acquired lock.
 await a.acquire(DATE);
+failReadKey = RUN_KEY;
+ok(a.resumeFor(DATE) === null,
+    '④ 放锁再拿到新锁后，存储不可读时不能误采用旧的 4 步检查点');
+failReadKey = null;
+const after = a.resumeFor(DATE);
+ok(fromStore?.inputs.length === 4 && stored().rev === 5 && after?.inputs.length === 6,
+    '④ 其他标签页写过后，新租约以存储的 6 步为准，不再采用 4 步旧内存',
+    { from: fromStore?.inputs.length, rev: stored().rev, after: after?.inputs.length });
+// 本页续上存储那份，再写就是 rev 6
 a.start(DATE, 42, after);
 a.save(DATE, { inputs: Array.from({ length: 7 }, () => ({ type: 'hint' })), elapsed: 7000, notes });
-ok(stored().rev === 5 && stored().inputs.length === 7, '④ 续上后接着递增 rev', stored());
+ok(stored().rev === 6 && stored().inputs.length === 7, '④ 续上后接着递增 rev', stored());
 
 /* ── ⑤ clear ── */
 a.clear(DATE);
