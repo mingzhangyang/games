@@ -368,7 +368,16 @@ export class SudokuMistGame {
             : unreadable ? t.dailyReadUnavailable
                 : run?.inputs.length ? fill(t.dailyResume, { n: run.inputs.length }) : t.dailyNew;
         btn.append(name, sub);
-        btn.addEventListener('click', () => { void this.startDaily(); });
+        btn.addEventListener('click', () => {
+            // Never let yesterday's advertised practice entry start today's
+            // non-restartable ranked attempt when the menu spans UTC+8 midnight.
+            if (todayKey() !== key) {
+                this.renderDailyEntry();
+                this.el.status.textContent = this.t().dailyDateChanged;
+                return;
+            }
+            void this.startDaily(key);
+        });
         this.el.daily.appendChild(btn);
     }
 
@@ -422,9 +431,10 @@ export class SudokuMistGame {
                     // A failed read is not an empty save. Leave ranking untouched,
                     // and let the player retry after storage becomes accessible.
                     if (this.state !== 'menu') this.toMenu();
-                    this.daily.release();
+                    const released = this.daily.release();
                     this.el.start.removeAttribute('aria-busy');
-                    this.el.status.textContent = this.daily.unsaved ? this.t().dailySaveFailed : this.t().dailyReadFailed;
+                    this.el.status.textContent = !released && this.daily.unsaved
+                        ? this.t().dailySaveFailed : this.t().dailyReadFailed;
                     resolve(null);
                 };
                 if (this.dailyPuzzle?.dateKey !== dateKey) this.dailyPuzzle = { dateKey, puzzle: generateDaily(dateKey) };

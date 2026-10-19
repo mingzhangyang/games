@@ -908,6 +908,34 @@ try {
         check(completionReadFailure.state === 'menu' && completionReadFailure.run === null
             && /无法读取/.test(completionReadFailure.status),
         '完成标记读取失败同样阻止开启新的计分局，不写进度', JSON.stringify(completionReadFailure));
+        // A stale menu must not open today's ranked run after UTC+8 midnight.
+        const rollover = await p.evaluate(async () => {
+            const g = window.smGame;
+            g.toMenu();
+            const now = Date.now;
+            const oldKey = '20261018', newKey = '20261019';
+            const oldDone = `game:sudoku-mist:v1:daily:${oldKey}`;
+            localStorage.setItem(oldDone, JSON.stringify({ score: 432, time: 12000 }));
+            try {
+                Date.now = () => Date.UTC(2026, 9, 18, 15, 59, 50);
+                g.renderDailyEntry();
+                const advertised = g.el.daily.textContent;
+                Date.now = () => Date.UTC(2026, 9, 18, 16, 0, 10);
+                document.getElementById('sm-daily-btn').click();
+                await new Promise(resolve => setTimeout(resolve, 110));
+                return { advertised, updated: g.el.daily.textContent,
+                    state: g.state, status: g.el.status.textContent,
+                    held: g.daily.holds(newKey),
+                    todayRun: localStorage.getItem(`game:sudoku-mist:v1:daily-run:${newKey}`) };
+            } finally {
+                Date.now = now;
+                g.toMenu();
+            }
+        });
+        check(rollover.advertised.includes('2026-10-18') && rollover.advertised.includes('432')
+            && rollover.updated.includes('2026-10-19') && rollover.state === 'menu'
+            && /新的一天/.test(rollover.status) && !rollover.held && rollover.todayRun === null,
+        '跨 UTC+8 午夜后，旧练习入口只刷新日期，不误开启今天的计分局', JSON.stringify(rollover));
         // 页面启动时离线；连网事件必须补交昨日队列，而不要求刷新/打开榜单。
         scores.offline = true;
         await p.evaluate(() => {
@@ -1035,6 +1063,114 @@ try {
         await blocked.close();
         check(cerrs.length === 0, '⑱ 写失败：无 pageerror', cerrs.join(' | '));
         await c.close();
+    }
+
+    /* ── ⑳ 锁丢失后跨标签页接管/恢复的端到端回归 ── */
+    {
+        const context = await browser.createBrowserContext();
+        const { page: a, errs: aerrs } = await open({ context });
+        const date = '20261030';
+        const runSlot = `game:sudoku-mist:v1:daily-run:${date}`;
+        const oldDirty = await a.evaluate(async (key, slot) => {
+            const g = window.smGame;
+            await g.startDaily(key);
+            g.hint(); // rev 1 reaches localStorage
+            const originalSet = window.Storage.prototype.setItem;
+            try {
+                window.Storage.prototype.setItem = function (k, v) {
+                    if (k === slot) throw new Error('QuotaExceededError');
+                    return originalSet.call(this, k, v);
+                };
+                g.hint(); // rev 2 lives only in A's memory
+                const inputs = g.session.inputs.length;
+                g.toMenu(); // failed flush retains the original lock
+                window.dispatchEvent(new window.PageTransitionEvent('pagehide', { persisted: true }));
+                return { inputs, held: g.daily.holds(key) };
+            } finally {
+                window.Storage.prototype.setItem = originalSet;
+            }
+        }, date, runSlot);
+        const { page: b, errs: berrs } = await open({ context });
+        await b.bringToFront();
+        const newer = await b.evaluate(async (key, slot) => {
+            const g = window.smGame;
+            await g.startDaily(key);
+            if (g.isPaused) g.resume();
+            const initially = g.session.inputs.length;
+            g.hint();
+            g.hint();
+            g.toMenu();
+            const stored = JSON.parse(localStorage.getItem(slot) || 'null');
+            return { initially, inputs: stored?.inputs.length, rev: stored?.rev };
+        }, date, runSlot);
+        await a.bringToFront();
+        const staleAttempt = await a.evaluate(async (key, slot) => {
+            const g = window.smGame;
+            const originalGet = window.Storage.prototype.getItem;
+            window.Storage.prototype.getItem = function (k) {
+                if (k === slot) throw new Error('SecurityError');
+                return originalGet.call(this, k);
+            };
+            let refused;
+            try {
+                await g.startDaily(key);
+                const raw = originalGet.call(localStorage, slot);
+                refused = { state: g.state, status: g.el.status.textContent,
+                    snapshot: raw && JSON.parse(raw) };
+            } finally {
+                window.Storage.prototype.getItem = originalGet;
+            }
+            await g.startDaily(key);
+            return { refused, resumed: { state: g.state, inputs: g.session.inputs.length } };
+        }, date, runSlot);
+        check(oldDirty.inputs === 2 && !oldDirty.held && newer.initially === 1
+            && newer.inputs === 3 && newer.rev === 3
+            && staleAttempt.refused.state === 'menu'
+            && /无法读取/.test(staleAttempt.refused.status)
+            && staleAttempt.refused.snapshot?.inputs.length === newer.inputs
+            && staleAttempt.refused.snapshot?.rev === newer.rev
+            && staleAttempt.resumed.state === 'playing'
+            && staleAttempt.resumed.inputs === newer.inputs,
+        '⑳ A 失锁、B 写入新版进度后，A 新锁读失败绝不回写旧 dirty；恢复后采用 B 的 3 步',
+        JSON.stringify({ oldDirty, newer, staleAttempt }));
+
+        const recoveredDirty = await a.evaluate(async () => {
+            const g = window.smGame;
+            g.toMenu();
+            const key = '20261031';
+            const slot = `game:sudoku-mist:v1:daily-run:${key}`;
+            await g.startDaily(key);
+            if (g.isPaused) g.resume();
+            g.hint(); // persist base rev 1
+            const originalSet = window.Storage.prototype.setItem;
+            let inputs;
+            try {
+                window.Storage.prototype.setItem = function (k, v) {
+                    if (k === slot) throw new Error('QuotaExceededError');
+                    return originalSet.call(this, k, v);
+                };
+                g.hint(); // newer memory only
+                inputs = g.session.inputs.length;
+                g.toMenu();
+                window.dispatchEvent(new window.PageTransitionEvent('pagehide', { persisted: true }));
+            } finally {
+                window.Storage.prototype.setItem = originalSet;
+            }
+            await g.startDaily(key);
+            const restored = { state: g.state, ranked: g.isRanked(),
+                inputs: g.session.inputs.length, dirty: g.daily.unsaved };
+            g.toMenu();
+            const finalSave = JSON.parse(localStorage.getItem(slot) || 'null');
+            return { inputs, restored, saved: finalSave?.inputs.length };
+        });
+        check(recoveredDirty.inputs === 2 && recoveredDirty.restored.state === 'playing'
+            && recoveredDirty.restored.ranked && recoveredDirty.restored.inputs === 2
+            && recoveredDirty.restored.dirty && recoveredDirty.saved === 2,
+        '⑳ 未被其他标签页修改的 dirty 检查点，失锁重获后保留全部输入并补存',
+        JSON.stringify(recoveredDirty));
+        check(aerrs.length === 0 && berrs.length === 0,
+            '⑳ 锁恢复的双标签页回归没有 pageerror', [...aerrs, ...berrs].join(' | '));
+        await context.close();
     }
 
     /* ── ⑲ 锁的边界：暂停租约下续上存档、关掉拿锁的标签页 ── */

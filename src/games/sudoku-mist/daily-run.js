@@ -9,8 +9,9 @@
  *
  * 检查点带递增的 rev。本页内存里留一份最近的检查点（存储写失败时它才是对的）；
  * 原 Web Lock 没释放时，内存检查点是权威数据：存储读取失败也不能丢掉它。
- * 释放后重新获得的是新租约，必须验证存储 rev 才能重用旧内存检查点，
- * 以免另一标签页的进度被旧数据覆盖。
+ * 释放后重新获得的是新租约：旧检查点没有写入权，须读到真实存储并验证
+ * baseRev 才能复用（含失败写入产生的 dirty 检查点，且空存档相当于 rev 0）。
+ * 存储不可读或被别的标签页推进后，不允许旧租约写入或清除存档。
  */
 import { readDailyRun, saveDailyRun, clearDailyRun } from './storage.js';
 
@@ -21,7 +22,12 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
     const supported = typeof locks?.request === 'function';
     let held = null;       // { dateKey, release }
     let checkpoint = null; // { dateKey, seed, rev, baseRev, inputs, elapsed, notes }
-    let checkpointLease = null; // Web Lock holder that created the in-memory checkpoint
+    let checkpointLease = null; // Web Lock holder that validated the checkpoint
+
+    // A date match alone is not ownership: browser suspension can revoke the
+    // original Web Lock, then grant a new one while dirty memory still exists.
+    const ownsCheckpoint = dateKey => held?.dateKey === dateKey
+        && checkpoint?.dateKey === dateKey && checkpointLease === held;
 
     /** 独占今天这局；已经拿着就直接成功。拿不到（别的标签页拿着）返回 false */
     function acquire(dateKey) {
@@ -52,10 +58,12 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
         generation++;
         // 未落盘的检查点仍属于本页。释放前重试；失败时保留锁，避免另一页
         // 接着旧存档游玩，撤销本页已经发生的失误 / 点灯 / 完成。
-        if (held && checkpoint?.dateKey === held.dateKey && checkpoint.rev !== checkpoint.baseRev) {
+        if (held && ownsCheckpoint(held.dateKey) && checkpoint.rev !== checkpoint.baseRev) {
             if (saveDailyRun(checkpoint.dateKey, checkpoint)) checkpoint = { ...checkpoint, baseRev: checkpoint.rev };
             else if (!force) return false;
         }
+        // Never flush a dirty checkpoint from a revoked/previous lock lease:
+        // another tab may have advanced this same date during the gap.
         const h = held;
         held = null;
         h?.release();
@@ -65,14 +73,15 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
     /** Only a continuously held lock makes memory authoritative; all other reads can fail closed. */
     function resumeFor(dateKey) {
         const mem = checkpoint?.dateKey === dateKey ? checkpoint : null;
-        if (mem && held?.dateKey === dateKey && checkpointLease === held) {
-            return { ok: true, value: mem };
-        }
+        if (mem && ownsCheckpoint(dateKey)) return { ok: true, value: mem };
         // A new lease does not prove storage is readable. Never interpret an
-        // exception as an empty ranked run or reuse unflushed stale memory.
+        // exception as an empty ranked run or reuse unvalidated dirty memory.
         const stored = readDailyRun(dateKey);
         if (!stored.ok) return stored;
-        if (mem && mem.rev === mem.baseRev && stored.value?.rev === mem.baseRev) {
+        // When no writer advanced storage after losing the lock, the dirty
+        // snapshot is still valid. An absent, successfully read save is rev 0.
+        // start() rebinds ownership to the new lease after this comparison.
+        if (mem && (stored.value?.rev ?? 0) === mem.baseRev) {
             return { ok: true, value: mem };
         }
         return stored;
@@ -92,7 +101,7 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
 
     /** 存一次检查点（只有拿着锁的标签页写）；返回存储有没有写成，内存检查点总会更新 */
     function save(dateKey, { inputs, elapsed, notes }) {
-        if (held?.dateKey !== dateKey || checkpoint?.dateKey !== dateKey) return false;
+        if (!ownsCheckpoint(dateKey)) return false;
         const rev = checkpoint.rev + 1;
         const ok = saveDailyRun(dateKey, { seed: checkpoint.seed, rev, inputs, elapsed, notes });
         checkpoint = { ...checkpoint, rev, baseRev: ok ? rev : checkpoint.baseRev, inputs, elapsed, notes: Array.from(notes) };
@@ -100,11 +109,11 @@ export function createDailyRunGuard({ locks = globalThis.navigator?.locks, onLos
     }
 
     function clear(dateKey) {
+        if (!ownsCheckpoint(dateKey)) return false;
         clearDailyRun(dateKey);
-        if (checkpoint?.dateKey === dateKey) {
-            checkpoint = null;
-            checkpointLease = null;
-        }
+        checkpoint = null;
+        checkpointLease = null;
+        return true;
     }
 
     return { supported, get unsaved() { return !!checkpoint && checkpoint.rev !== checkpoint.baseRev; },
