@@ -367,9 +367,9 @@ try {
         };
     });
     assert.equal(repaired.entries, 3, 'recovered cache has all required shell entries');
-    assert(repaired.root?.includes('content="test-v4"')
-        && repaired.index?.includes('content="test-v4"'),
-        'recovered HTML uses exactly the expected build marker');
+    const htmlBuildMatches = repaired.root?.includes('content="test-v4"')
+        && repaired.index?.includes('content="test-v4"');
+    assert(htmlBuildMatches, 'recovered HTML uses exactly the expected build marker');
     assert(repaired.script?.includes('dataset.home'), 'existing valid script survived recovery');
     await page.close();
     page = await open('/');
