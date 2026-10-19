@@ -867,9 +867,9 @@ try {
             g.hint();
             const before = { inputs: g.session.inputs.length, score: g.session.summary().score };
             g.toMenu(); // release and reacquire: in-memory state is now from an old lease
-            const original = Storage.prototype.getItem;
+            const original = window.Storage.prototype.getItem;
             let refused;
-            Storage.prototype.getItem = function (k) {
+            window.Storage.prototype.getItem = function (k) {
                 if (k === slot) throw new Error('SecurityError');
                 return original.call(this, k);
             };
@@ -877,7 +877,7 @@ try {
                 await g.startDaily(date);
                 refused = { state: g.state, status: g.el.status.textContent,
                     stored: JSON.parse(original.call(localStorage, slot) || 'null')?.inputs.length };
-            } finally { Storage.prototype.getItem = original; }
+            } finally { window.Storage.prototype.getItem = original; }
             await g.startDaily(date);
             return { before, refused, after: { state: g.state, ranked: g.isRanked(),
                 inputs: g.session.inputs.length, score: g.session.summary().score } };
@@ -894,8 +894,8 @@ try {
             g.toMenu();
             const date = '20261029';
             const slot = `game:sudoku-mist:v1:daily:${date}`;
-            const original = Storage.prototype.getItem;
-            Storage.prototype.getItem = function (k) {
+            const original = window.Storage.prototype.getItem;
+            window.Storage.prototype.getItem = function (k) {
                 if (k === slot) throw new Error('SecurityError');
                 return original.call(this, k);
             };
@@ -903,7 +903,7 @@ try {
                 await g.startDaily(date);
                 return { state: g.state, status: g.el.status.textContent,
                     run: original.call(localStorage, `game:sudoku-mist:v1:daily-run:${date}`) };
-            } finally { Storage.prototype.getItem = original; }
+            } finally { window.Storage.prototype.getItem = original; }
         });
         check(completionReadFailure.state === 'menu' && completionReadFailure.run === null
             && /无法读取/.test(completionReadFailure.status),
