@@ -54,8 +54,8 @@ const PLACEHOLDER = /\{\w+\}/;
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
-async function open({ width = 1280, height = 900, mobile = false, lang = 'zh', theme = 'dark', scores = null } = {}) {
-    const page = await browser.newPage();
+async function open({ width = 1280, height = 900, mobile = false, lang = 'zh', theme = 'dark', scores = null, context = browser } = {}) {
+    const page = await context.newPage();
     const errs = [];
     // 排行榜 Worker 打桩：GET 回空榜，POST 记下请求体（不向生产发数据）
     if (scores) {
@@ -779,7 +779,11 @@ try {
     /* ── 请求竞态、兼容边界与离线补交 ── */
     {
         const scores = { posts: [], gets: [] };
-        const { page: p, errs } = await open({ scores });
+        // Fixed-date fixtures must not share today's completion left by earlier scenarios.
+        const context = await browser.createBrowserContext();
+        const { page: p, errs } = await open({ scores, context });
+        check(await p.evaluate(() => !Object.keys(localStorage).some(k => k.startsWith('game:sudoku-mist:v1:daily'))),
+            '固定日期回归使用独立存储，不受此前每日完成记录影响');
         const key = '20261021';
         // 锁授予前另一个页面完成：必须在锁内重读完成状态，不能开始第二个计分局。
         const raced = await p.evaluate(async date => {
@@ -872,7 +876,7 @@ try {
             && /Web Locks/.test(unsupported.status) && unsupported.chapter === 'playing',
         '不支持 Web Locks 时拒绝计分并说明原因，章节仍可玩', JSON.stringify(unsupported));
         check(errs.length === 0, '请求竞态与兼容边界无 pageerror', errs.join(' | '));
-        await p.close();
+        await context.close();
     }
 
     /* ── ⑱ 每日一雾：同一时刻一个标签页、内存检查点 ── */

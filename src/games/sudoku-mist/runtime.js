@@ -676,7 +676,6 @@ export class SudokuMistGame {
         const h = this.session.hint();
         if (!h) return;
         this.moves++;
-        this.persist();
         const t = this.t();
         this.selected = h.cell;
         this.hintCell = h.cell;
@@ -688,6 +687,7 @@ export class SudokuMistGame {
             this.audio.hint();
             this.render();
             this.board.focus(h.cell);
+            this.persist();
             return;
         }
         let text;
@@ -699,6 +699,7 @@ export class SudokuMistGame {
         this.audio.hint();
         this.render();
         this.board.focus(h.cell);
+        this.persist();
     }
 
     unitName(u) {
